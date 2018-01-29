@@ -98,6 +98,10 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
+    <PostBuildEvent>
+      <Command>xcopy /S /Y "..\..\..\Lib\Win\*.dll" "$(TargetDir)"
+xcopy /S /Y "..\..\..\Lib\Win\$(Configuration)\*.dll" "$(TargetDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -124,6 +128,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /S /Y "..\..\..\Lib\Win\*.dll" "$(TargetDir)"
+xcopy /S /Y "..\..\..\Lib\Win\$(Configuration)\*.dll" "$(TargetDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
   </ItemGroup>

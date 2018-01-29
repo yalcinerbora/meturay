@@ -33,9 +33,9 @@ TEST(VectorCPU, Construction)
 	Vector4 vec8;
 	vec8 = vec7;
 
-	//
+	//	
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(vec0),
-								   static_cast<const float*>(vec0) + 4),
+								  static_cast<const float*>(vec0) + 4),
 				ElementsAre(0.0f, 0.0f, 0.0f, 0.0f));
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(vec1),
 								   static_cast<const float*>(vec1) + 4),

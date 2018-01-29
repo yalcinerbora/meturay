@@ -337,5 +337,20 @@ __pycache__/
 # By default, sensitive information, such as encrypted password
 # should be stored in the .pubxml.user file.
 
-
 # End of https://www.gitignore.io/api/c++,visualstudio,visualstudiocode
+
+# Keep Provided Libraries
+!Lib/**/*.out
+!Lib/**/*.exe
+!Lib/**/*.lai
+!Lib/**/*.la
+!Lib/**/*.a
+!Lib/**/*.lib
+!Lib/**/*.pdb
+!Lib/**/*.so
+!Lib/**/*.dvlib
+!Lib/**/*.dll
+!Lib/**/*.pch
+
+
+

@@ -1,6 +1,32 @@
 #pragma once
 
-template <unsigned int N>
+template <int N>
+constexpr __host__ Vector<N>::Vector()
+	: vector{0.0f}
+{}
+
+template <int N>
+__host__ Vector<N>::Vector(float data)
+{
+	std::fill_n(vector, N, data);
+}
+
+template <int N>
+__host__ Vector<N>::Vector(const float data[N])
+{
+	std::copy_n(data, N, vector);
+}
+
+template <int N>
+template <int M>
+__host__ Vector<N>::Vector(const Vector<M>& other)
+	: vector{0.0f}
+{
+	static_assert(M < N, "Cannot copy large vector into small vector");
+	std::copy_n(static_cast<const float*>(other), N, vector);
+}
+
+template <int N>
 template <class... Args>
 __host__ Vector<N>::Vector(const Args... dataList)
 	: vector{static_cast<float>(dataList) ...}
@@ -10,21 +36,30 @@ __host__ Vector<N>::Vector(const Args... dataList)
 											"as arguments");
 }
 
-//
-//
-//IEVector3::IEVector3(const IEVector4& cp)
-//	: x(cp.getX())
-//	, y(cp.getY())
-//	, z(cp.getZ())
-//{}
-//
-//void IEVector3::operator+=(const IEVector3& vector)
-//{
-//	x += vector.x;
-//	y += vector.y;
-//	z += vector.z;
-//}
-//
+template <int N>
+__host__ Vector<N>::operator float*()
+{
+	return vector;
+}
+
+template <int N>
+__host__ Vector<N>::operator const float *() const
+{
+	return vector;
+}
+
+template <int N>
+float& Vector<N>::operator[](int i)
+{
+	return vector[i];
+}
+
+template <int N>
+const float& Vector<N>::operator[](int i) const
+{
+	return vector[i];
+}
+
 //void IEVector3::operator-=(const IEVector3& vector)
 //{
 //	x -= vector.x;
