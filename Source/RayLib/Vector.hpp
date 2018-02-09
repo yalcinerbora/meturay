@@ -1,258 +1,402 @@
 #pragma once
 
-template <int N>
-constexpr __host__ Vector<N>::Vector()
-	: vector{0.0f}
-{}
-
-template <int N>
-__host__ Vector<N>::Vector(float data)
+template <int N, class T>
+__device__ __host__
+inline constexpr Vector<N, T>::Vector()
 {
-	std::fill_n(vector, N, data);
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] = 0.0f;
+	}
 }
 
-template <int N>
-__host__ Vector<N>::Vector(const float data[N])
+template <int N, class T>
+__device__ __host__
+inline constexpr Vector<N, T>::Vector(float data)
 {
-	std::copy_n(data, N, vector);
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] = data;
+	}
 }
 
-template <int N>
-template <int M>
-__host__ Vector<N>::Vector(const Vector<M>& other)
-	: vector{0.0f}
+template <int N, class T>
+__device__ __host__
+inline constexpr Vector<N, T>::Vector(const float* data)
 {
-	static_assert(M < N, "Cannot copy large vector into small vector");
-	std::copy_n(static_cast<const float*>(other), N, vector);
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] = data[i];
+	}
 }
 
-template <int N>
+template <int N, class T>
 template <class... Args>
-__host__ Vector<N>::Vector(const Args... dataList)
+__device__ __host__
+inline constexpr Vector<N, T>::Vector(const Args... dataList)
 	: vector{static_cast<float>(dataList) ...}
 {
 	static_assert(sizeof...(dataList) == N, "Vector constructor should have exact "
-											"same count of template count " 
-											"as arguments");
+				  "same count of template count "
+				  "as arguments");
 }
 
-template <int N>
-__host__ Vector<N>::operator float*()
+template <int N, class T>
+template <int M>
+__device__ __host__
+inline Vector<N, T>::Vector(const Vector<M, T>& other)
+{
+	static_assert(M < N, "Cannot copy large vector into small vector");
+	UNROLL_LOOP
+	for(int i = 0; i < M; i++)
+	{
+		vector[i] = other[i];
+	}
+	UNROLL_LOOP
+	for(int i = M; i < N; i++)
+	{
+		vector[i] = 0.0f;
+	}
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T>::operator float*()
 {
 	return vector;
 }
 
-template <int N>
-__host__ Vector<N>::operator const float *() const
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T>::operator const float *() const
 {
 	return vector;
 }
 
-template <int N>
-float& Vector<N>::operator[](int i)
+template <int N, class T>
+__device__ __host__
+inline float& Vector<N, T>::operator[](int i)
 {
 	return vector[i];
 }
 
-template <int N>
-const float& Vector<N>::operator[](int i) const
+template <int N, class T>
+__device__ __host__
+inline const float& Vector<N, T>::operator[](int i) const
 {
 	return vector[i];
 }
 
-//void IEVector3::operator-=(const IEVector3& vector)
-//{
-//	x -= vector.x;
-//	y -= vector.y;
-//	z -= vector.z;
-//}
-//
-//void IEVector3::operator*=(const IEVector3& vector)
-//{
-//	x *= vector.x;
-//	y *= vector.y;
-//	z *= vector.z;
-//}
-//
-//void IEVector3::operator*=(float t)
-//{
-//	x *= t;
-//	y *= t;
-//	z *= t;
-//}
-//
-//void IEVector3::operator/=(const IEVector3& vector)
-//{
-//	x /= vector.x;
-//	y /= vector.y;
-//	z /= vector.z;
-//}
-//
-//void IEVector3::operator/=(float t)
-//{
-//	assert(t != 0.0f);
-//	float tinv = 1.0f / t;
-//	x *= tinv;
-//	y *= tinv;
-//	z *= tinv;
-//}
-//
-//IEVector3 IEVector3::operator+(const IEVector3& vector) const
-//{
-//	return IEVector3(x + vector.x,
-//		y + vector.y,
-//		z + vector.z);
-//}
-//
-//IEVector3 IEVector3::operator-(const IEVector3& vector) const
-//{
-//	return IEVector3(x - vector.x,
-//		y - vector.y,
-//		z - vector.z);
-//}
-//
-//IEVector3 IEVector3::operator-() const
-//{
-//	return IEVector3(-x, -y, -z);
-//}
-//
-//IEVector3 IEVector3::operator*(const IEVector3& vector) const
-//{
-//	return IEVector3(x * vector.x,
-//		y * vector.y,
-//		z * vector.z);
-//}
-//
-//IEVector3 IEVector3::operator*(float t) const
-//{
-//	return IEVector3(x * t,
-//		y * t,
-//		z * t);
-//}
-//
-//IEVector3 IEVector3::operator/(const IEVector3& vector) const
-//{
-//	assert(vector.x != 0.0f && vector.y != 0.0f && vector.z != 0.0f);
-//	return IEVector3(x / vector.x,
-//		y / vector.y,
-//		z / vector.z);
-//}
-//
-//IEVector3 IEVector3::operator/(float t) const
-//{
-//	assert(t != 0.0f);
-//	float tinv = 1.0f / t;
-//	return IEVector3(x * tinv,
-//		y *	tinv,
-//		z * tinv);
-//}
-//
-//float IEVector3::DotProduct(const IEVector3& vector) const
-//{
-//	return x * vector.x + y * vector.y + z * vector.z;
-//}
-//
-//IEVector3 IEVector3::CrossProduct(const IEVector3& vector) const
-//{
-//	return IEVector3(y * vector.z - z * vector.y,
-//		z * vector.x - x * vector.z,
-//		x * vector.y - y * vector.x);
-//}
-//
-//float IEVector3::Length() const
-//{
-//	return std::sqrt(LengthSqr());
-//}
-//
-//float IEVector3::LengthSqr() const
-//{
-//	return x * x + y * y + z * z;
-//}
-//
-//IEVector3 IEVector3::Normalize() const
-//{
-//	float length = Length();
-//	if (length != 0.0f)
-//		length = 1.0f / length;
-//
-//	return IEVector3(x * length,
-//		y * length,
-//		z * length);
-//}
-//
-//IEVector3& IEVector3::NormalizeSelf()
-//{
-//	float length = Length();
-//	if (length != 0.0f)
-//		length = 1.0f / length;
-//
-//	x *= length;
-//	y *= length;
-//	z *= length;
-//	return *this;
-//}
-//
-//IEVector3 IEVector3::Clamp(const IEVector3& min, const IEVector3& max) const
-//{
-//	return
-//	{
-//		(x < min.x) ? min.x : ((x > max.x) ? max.x : x),
-//		(y < min.y) ? min.y : ((y > max.y) ? max.y : y),
-//		(z < min.z) ? min.z : ((z > max.z) ? max.z : z)
-//	};
-//}
-//
-//IEVector3 IEVector3::Clamp(float min, float max) const
-//{
-//	return
-//	{
-//		(x < min) ? min : ((x > max) ? max : x),
-//		(y < min) ? min : ((y > max) ? max : y),
-//		(z < min) ? min : ((z > max) ? max : z)
-//	};
-//}
-//
-//IEVector3& IEVector3::ClampSelf(const IEVector3&  min, const IEVector3& max)
-//{
-//	x = (x < min.x) ? min.x : ((x > max.x) ? max.x : x);
-//	y = (y < min.y) ? min.y : ((y > max.y) ? max.y : y);
-//	z = (z < min.z) ? min.z : ((z > max.z) ? max.z : z);
-//	return *this;
-//}
-//
-//IEVector3& IEVector3::ClampSelf(float min, float max)
-//{
-//	x = (x < min) ? min : ((x > max) ? max : x);
-//	y = (y < min) ? min : ((y > max) ? max : y);
-//	z = (z < min) ? min : ((z > max) ? max : z);
-//	return *this;
-//}
-//
-//bool IEVector3::operator==(const IEVector3& vector) const
-//{
-//	return  std::equal(v, v + VectorW, vector.v);
-//}
-//
-//bool IEVector3::operator!=(const IEVector3& vector) const
-//{
-//	return !std::equal(v, v + VectorW, vector.v);
-//}
-//
-//// Left Scalar Operators
-//IEVector3 operator*(float scalar, const IEVector3& vector)
-//{
-//	return  vector * scalar;
-//}
-//
-//template<>
-//IEVector3 IEFunctions::Lerp(const IEVector3& start, const IEVector3& end, float percent)
-//{
-//	percent = IEFunctions::Clamp(percent, 0.0f, 1.0f);
-//	return (start + percent * (end - start));
-//}
-//
-//template<>
-//IEVector3 IEFunctions::Clamp(const IEVector3& vec, const IEVector3& min, const IEVector3& max)
-//{
-//	return vec.Clamp(min, max);
-//}
+template <int N, class T>
+__device__ __host__
+inline void Vector<N, T>::operator+=(const Vector& right)
+{
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] += right[i];
+	}
+}
+
+template <int N, class T>
+__device__ __host__
+inline void Vector<N, T>::operator-=(const Vector& right)
+{
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] -= right[i];
+	}
+}
+
+template <int N, class T>
+__device__ __host__
+inline void Vector<N, T>::operator*=(const Vector& right)
+{
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] *= right[i];
+	}
+}
+
+template <int N, class T>
+__device__ __host__
+inline void Vector<N, T>::operator*=(float right)
+{
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] *= right;
+	}
+}
+
+template <int N, class T>
+__device__ __host__
+inline void Vector<N, T>::operator/=(const Vector& right)
+{
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] /= right[i];
+	}
+}
+
+template <int N, class T>
+__device__ __host__
+inline void Vector<N, T>::operator/=(float right)
+{
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] /= right;
+	}
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T> Vector<N, T>::operator+(const Vector& right) const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = vector[i] + right[i];
+	}
+	return v;
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T> Vector<N, T>::operator-(const Vector& right) const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = vector[i] - right[i];
+	}
+	return v;
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T> Vector<N, T>::operator-() const
+{
+	Vector<N, T> v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = -vector[i];
+	}
+	return v;
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T> Vector<N, T>::operator*(const Vector& right) const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = vector[i] * right[i];
+	}
+	return v;
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T> Vector<N, T>::operator*(float right) const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = vector[i] * right;
+	}
+	return v;
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T> Vector<N, T>::operator/(const Vector& right) const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = vector[i] / right[i];
+	}
+	return v;
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T> Vector<N, T>::operator/(float right) const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = vector[i] / right;
+	}
+	return v;
+}
+
+template <int N, class T>
+__device__ __host__
+inline bool Vector<N, T>::operator==(const Vector& right) const
+{
+	bool b = true;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		b &= vector[i] == right[i];
+	}
+	return b;
+}
+
+template <int N, class T>
+__device__ __host__
+inline bool Vector<N, T>::operator!=(const Vector& right) const
+{
+	return !(*this == right);
+}
+
+template <int N, class T>
+__device__ __host__
+inline float Vector<N, T>::Dot(const Vector& right) const
+{
+	float data = 0;
+	for(int i = 0; i < N; i++)
+	{
+		data += vector[i] * right[i];
+	}
+	return data;
+}
+
+template <int N, class T>
+__device__ __host__
+inline float Vector<N, T>::Length() const
+{
+	return std::sqrt(LengthSqr());
+}
+
+template <int N, class T>
+__device__ __host__
+inline float Vector<N, T>::LengthSqr() const
+{
+	return Dot(*this);
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T> Vector<N, T>::Normalize() const
+{
+	float lengthInv = 1.0f / Length();
+	
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = vector[i] * lengthInv;
+	}
+	return v;
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T>& Vector<N, T>::NormalizeSelf()
+{
+	float lengthInv = 1.0f / Length();	
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] *= lengthInv;
+	}
+	return *this;
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T> Vector<N, T>::Clamp(const Vector& min, const Vector& max) const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = std::min(std::max(min[i], vector[i]), max[i]);
+	}
+	return v;
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T> Vector<N, T>::Clamp(float min, float max) const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = std::min(std::max(min, vector[i]), max);
+	}
+	return v;
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T>& Vector<N, T>::ClampSelf(const Vector& min, const Vector& max)
+{
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] = std::min(std::max(min[i], vector[i]), max[i]);
+	}
+	return *this;
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T>& Vector<N, T>::ClampSelf(float min, float max)
+{
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] = std::min(std::max(min, vector[i]), max);
+	}
+	return *this;
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T> Vector<N, T>::Lerp(const Vector& v0, const Vector& v1, float t)
+{
+	assert(t >= 0.0f && t <= 1.0f);
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = (1.0f - t) * v0[i] + t * v1[i];
+	}
+	return v;
+}
+
+template<class Vector>
+inline Vector operator*(float left, const Vector& vec)
+{
+	return vec * left;
+}
+
+// Cross product (only for 3d vectors)
+__device__ __host__
+inline Vector3 Cross(const Vector3& v0, const Vector3& v1)
+{
+	Vector3 result(v0[1] * v1[2] - v0[2] * v1[1],
+				   v0[2] * v1[0] - v0[0] * v1[2],
+				   v0[0] * v1[1] - v0[1] * v1[0]);
+	return result;
+}

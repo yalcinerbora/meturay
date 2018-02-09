@@ -42,12 +42,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)..\..\Bin\Windows\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)..\..\Bin\Windows\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)..\..\Bin\Windows\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)..\..\Bin\Windows\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -97,8 +97,12 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\Tests\main.cpp" />
+    <ClCompile Include="..\..\..\Source\Tests\TextureCPUTest.cpp" />
+    <ClCompile Include="..\..\..\Source\Tests\TextureGPUTest.cpp" />
     <ClCompile Include="..\..\..\Source\Tests\VectorCPUTest.cpp" />
-    <ClCompile Include="..\..\..\Source\Tests\VectorGPUTest.cpp" />
+    <CudaCompile Include="..\..\..\Source\Tests\VectorGPUTest.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

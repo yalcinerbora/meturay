@@ -16,23 +16,21 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\CudaCheck.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.hpp">
-      <Filter>LinearAlgb\C++</Filter>
+      <Filter>LinearAlgb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Texture.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Texture.hpp">
+      <Filter>Memory</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="LinearAlgb">
       <UniqueIdentifier>{4701e9e3-7079-4316-af75-17b80bd69e82}</UniqueIdentifier>
     </Filter>
-    <Filter Include="LinearAlgb\CUDA">
-      <UniqueIdentifier>{63757713-fc06-4e75-90d7-8fcd32877ba2}</UniqueIdentifier>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{8a3dbe82-44f6-451f-a478-02ad96121997}</UniqueIdentifier>
     </Filter>
-    <Filter Include="LinearAlgb\C++">
-      <UniqueIdentifier>{75329ac2-bd91-4d9e-98c1-d25f40cc95f5}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\Source\RayLib\Vector.cuh">
-      <Filter>LinearAlgb\CUDA</Filter>
-    </None>
   </ItemGroup>
 </Project>
