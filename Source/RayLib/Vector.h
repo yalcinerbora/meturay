@@ -11,14 +11,14 @@ N should be 2, 3, 4 at most.
 
 #include <algorithm>
 #include <type_traits>
+#include <tuple>
 #include "CudaCheck.h"
-
-//template <int N, class T, typename Enable = void>
-//class Vector
-//{};
 
 template<class T>
 using ArithmeticEnable = typename std::enable_if<std::is_arithmetic<T>::value>::type;
+
+template<class... Args>
+using AllArithmeticEnable = typename std::enable_if<std::conjunction<std::is_arithmetic<Args>...>::value>::type;
 
 template<int N, class T, typename = ArithmeticEnable<T>>
 class Vector;
@@ -27,7 +27,7 @@ template<int N, class T>
 class Vector<N, T>
 {
 	static_assert(N == 2 || N == 3 || N == 4, "Vector size should be 2, 3 or 4");
-
+	
 	private:
 		T									vector[N];
 
@@ -37,18 +37,18 @@ class Vector<N, T>
 		constexpr __device__ __host__		Vector();
 		constexpr __device__ __host__		Vector(float);
 		constexpr __device__ __host__		Vector(const float* data);
-		template <class... Args, typename = std::enable_if_t<std::is_same<T, Args>::value>::value>
+		template <class... Args, typename = AllArithmeticEnable<Args...>>
 		constexpr __device__ __host__		Vector(const Args... dataList);
-		template <class... Args, typename = std::enable_if_t<std::isgreater(1, N - sizeof...(Args))>::value>
-		constexpr __device__ __host__		Vector(const Vector<N - sizeof...(Args), T>&, 
+		template <class... Args, typename = std::enable_if_t<((N - sizeof...(Args)) > 1)>>
+		constexpr __device__ __host__		Vector(const Vector<N - sizeof...(Args), T>&,
 												   const Args... dataList);
 		template <int M>
 		__device__ __host__					Vector(const Vector<M, T>&);
 											~Vector() = default;
 
 		// MVC bug? these trigger std::trivially_copyable static assert
-										Vector(const Vector&) = default;
-		Vector&							operator=(const Vector&) = default;
+		//									Vector(const Vector&) = default;
+		//Vector&							operator=(const Vector&) = default;
 
 		// Accessors
 		__device__ __host__	explicit		operator float*();
@@ -115,9 +115,9 @@ using Vector2f = Vector<2, float>;
 using Vector3f = Vector<3, float>;
 using Vector4f = Vector<4, float>;
 // Double Type
-using Vector2d= Vector<2, double>;
-using Vector3d= Vector<3, double>;
-using Vector4d= Vector<4, double>;
+using Vector2d = Vector<2, double>;
+using Vector3d = Vector<3, double>;
+using Vector4d = Vector<4, double>;
 // Integer Type
 using Vector2i = Vector<2, int>;
 using Vector3i = Vector<3, int>;

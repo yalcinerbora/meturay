@@ -49,7 +49,6 @@ template <class... Args, typename>
 __device__ __host__
 inline constexpr Vector<N, T>::Vector(const Vector<N - sizeof...(Args), T>& v,
 									  const Args... dataList)
-	: vector{v.vector}
 {
 	constexpr int vectorSize = N - sizeof...(dataList);
 	static_assert(sizeof...(dataList) + vectorSize == N, "Total type count of the partial vector"
@@ -60,11 +59,11 @@ inline constexpr Vector<N, T>::Vector(const Vector<N - sizeof...(Args), T>& v,
 	{
 		vector[i] = v[i];
 	}
-	auto tuple = std::forward_as_tuple(dataList...);
+	const T arr[] = {dataList...};
 	UNROLL_LOOP
 	for(int i = vectorSize; i < N; i++)
 	{
-		vector[i] = tuple[i];
+		vector[i] = arr[i - vectorSize];
 	}
 }
 
@@ -353,7 +352,12 @@ inline Vector<N, T> Vector<N, T>::Clamp(const Vector& min, const Vector& max) co
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		v[i] = std::min(std::max(min[i], vector[i]), max[i]);
+		#ifdef __CUDA_ARCH__
+			v[i] = fminf(fmaxf(min[i], vector[i]), max[i]);
+		#else 
+			v[i] = std::min(std::max(min[i], vector[i]), max[i]);
+		#endif
+		
 	}
 	return v;
 }
@@ -366,7 +370,12 @@ inline Vector<N, T> Vector<N, T>::Clamp(float min, float max) const
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		v[i] = std::min(std::max(min, vector[i]), max);
+		#ifdef __CUDA_ARCH__
+			v[i] = fminf(fmaxf(min, vector[i]), max);
+		#else 
+			v[i] = std::min(std::max(min, vector[i]), max);
+		#endif
+		
 	}
 	return v;
 }
@@ -378,7 +387,11 @@ inline Vector<N, T>& Vector<N, T>::ClampSelf(const Vector& min, const Vector& ma
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		vector[i] = std::min(std::max(min[i], vector[i]), max[i]);
+		#ifdef __CUDA_ARCH__
+			vector[i] = fminf(fmaxf(min[i], vector[i]), max[i]);
+		#else 
+			vector[i] = std::min(std::max(min[i], vector[i]), max[i]);
+		#endif	
 	}
 	return *this;
 }
@@ -390,9 +403,116 @@ inline Vector<N, T>& Vector<N, T>::ClampSelf(float min, float max)
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		vector[i] = std::min(std::max(min, vector[i]), max);
+		#ifdef __CUDA_ARCH__
+			vector[i] = fminf(fmaxf(min, vector[i]), max);
+		#else 
+			vector[i] = std::min(std::max(min, vector[i]), max);
+		#endif		
 	}
 	return *this;
+}
+
+template <int N, class T>
+__device__ __host__ 
+Vector<N, T> Vector<N, T>::Abs() const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		#ifdef __CUDA_ARCH__
+			v[i] = fabsf(vector[i]);
+		#else 
+			v[i] = std::abs(vector[i]);
+		#endif	
+	}
+	return v;
+}
+
+template <int N, class T>
+__device__ __host__ 
+Vector<N, T>& Vector<N, T>::AbsSelf()
+{
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		#ifdef __CUDA_ARCH__
+			vector[i] = fabsf(vector[i]);
+		#else 
+			vector[i] = std::abs(vector[i]);
+		#endif			
+	}
+	return *this;
+}
+
+template <int N, class T>
+__device__ __host__ 
+Vector<N, T> Vector<N, T>::Round() const
+{
+
+}
+
+template <int N, class T>
+__device__ __host__ 
+Vector<N, T>& Vector<N, T>::RoundSelf()
+{
+
+}
+
+template <int N, class T>
+__device__ __host__ 
+Vector<N, T> Vector<N, T>::Floor() const
+{
+
+}
+
+template <int N, class T>
+__device__ __host__ 
+Vector<N, T>& Vector<N, T>::FloorSelf()
+{
+
+}
+
+template <int N, class T>
+__device__ __host__ 
+Vector<N, T> Vector<N, T>::Ceil() const
+{
+
+}
+
+template <int N, class T>
+__device__ __host__ 
+Vector<N, T>& Vector<N, T>::CeilSelf()
+{
+
+}
+
+template <int N, class T>
+__device__ __host__ 
+Vector<N, T> Vector<N, T>::Min(const Vector&, const Vector&)
+{
+
+}
+
+template <int N, class T>
+__device__ __host__ 
+Vector<N, T> Vector<N, T>::Min(const Vector&, float)
+{
+
+}
+
+template <int N, class T>
+__device__ __host__ 
+Vector<N, T> Vector<N, T>::Max(const Vector&, const Vector&)
+{
+
+}
+
+template <int N, class T>
+__device__ __host__ 
+Vector<N, T> Vector<N, T>::Max(const Vector&, float)
+{
+
 }
 
 template <int N, class T>

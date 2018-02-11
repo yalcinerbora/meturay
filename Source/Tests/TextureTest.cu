@@ -5,8 +5,8 @@
 
 TEST(Texture, Construction)
 {
-	InterpolationType t = InterpolationType::LINEAR;
-	EdgeResolveType e = EdgeResolveType::WRAP;
+//	InterpolationType t = InterpolationType::LINEAR;
+//	EdgeResolveType e = EdgeResolveType::WRAP;
 
 //	Texture2<float> t0(t, e, Vector2i(16, 32));
 

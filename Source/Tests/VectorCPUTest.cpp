@@ -8,9 +8,8 @@ using ::testing::FloatEq;
 
 TEST(VectorCPU, Construction)
 {
-	const float dataArray[] = { 1.0f, 2.0f, 3.0f, 4.0f};
-	const float dataArraySmall[] = { 1.0f, 2.0f, 3.0f};
-	const float dataArrayLarge[] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f };
+	const float dataArray[] = {1.0f, 2.0f, 3.0f, 4.0f};
+	const float dataArrayLarge[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
 
 	Vector2 vecAssign0(1.0f, 2.0f);
 	Vector3 vecAssign1(1.0f, 2.0f, 3.0f);
@@ -22,6 +21,7 @@ TEST(VectorCPU, Construction)
 	Vector4 vec2(1.0f, 1u, 2.0f, 3.0f);
 	Vector4 vec3(dataArray);
 	Vector4 vec4(dataArrayLarge);
+	
 	
 	//
 	Vector4 vec5(vecAssign0);
