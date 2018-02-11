@@ -18,10 +18,23 @@
     <ClInclude Include="..\..\..\Source\RayLib\Vector.hpp">
       <Filter>LinearAlgb</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\Texture.h">
+    <ClInclude Include="..\..\..\Source\RayLib\Texture.cuh">
       <Filter>Memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Texture.hpp">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Random.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\Matrix.hpp">
+      <Filter>LinearAlgb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Ray.hpp">
+      <Filter>LinearAlgb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Quaternion.hpp">
+      <Filter>LinearAlgb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\DeviceMemory.h">
       <Filter>Memory</Filter>
     </ClInclude>
   </ItemGroup>

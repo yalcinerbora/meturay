@@ -5,7 +5,7 @@
 Arbitrary sized vector. Vector is column vector (N x 1 matrix)
 which means that it can only be multipled with matrices from right.
 
-S should be 2, 3, 4 at most.
+N should be 2, 3, 4 at most.
 
 */
 
@@ -44,8 +44,8 @@ class Vector<N, T>
 											~Vector() = default;
 
 		// MVC bug? these trigger std::trivially_copyable static assert
-		//__device__ __host__					Vector(const Vector<N>&) = default;
-		//__device__ __host__ Vector<S>&		operator=(const Vector<N>) = default;
+										Vector(const Vector&) = default;
+		Vector&							operator=(const Vector&) = default;
 
 		// Accessors
 		__device__ __host__	explicit		operator float*();
@@ -100,8 +100,8 @@ class Vector<N, T>
 };
 
 // Left scalars
-template<class Vector>
-static __device__ __host__ Vector operator*(float, const Vector&);
+template<int N, class T>
+static __device__ __host__ Vector<N,T> operator*(float, const Vector<N, T>&);
 
 // Typeless vectors are defaulted to float
 using Vector2 = Vector<2, float>;
@@ -134,11 +134,12 @@ static __device__ __host__ Vector3 Cross(const Vector3&, const Vector3&);
 
 // Implementation
 #include "Vector.hpp"	// CPU & GPU
-//#ifndef __CUDA_ARCH__
-//	
-//#else
-//	#include "Vector.cuh"	// GPU (CUDA)
-//#endif
 
 // Basic Constants
-//static const Vector3 XAxis = Vector3({ 1.0f, 0.0f, 0.0f });
+static constexpr Vector3 XAxis = Vector3(1.0f, 0.0f, 0.0f);
+static constexpr Vector3 YAxis = Vector3(0.0f, 1.0f, 0.0f);
+static constexpr Vector3 ZAxis = Vector3(0.0f, 0.0f, 1.0f);
+
+static constexpr Vector2 Zero2 = Vector2(0.0f, 0.0f);
+static constexpr Vector3 Zero3 = Vector3(0.0f, 0.0f, 0.0f);
+static constexpr Vector4 Zero4 = Vector4(0.0f, 0.0f, 0.0f, 0.0f);

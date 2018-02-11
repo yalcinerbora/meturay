@@ -385,8 +385,9 @@ inline Vector<N, T> Vector<N, T>::Lerp(const Vector& v0, const Vector& v1, float
 	return v;
 }
 
-template<class Vector>
-inline Vector operator*(float left, const Vector& vec)
+template<int N, class T>
+__device__ __host__
+inline Vector<N, T> operator*(float left, const Vector<N, T>& vec)
 {
 	return vec * left;
 }
