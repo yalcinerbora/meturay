@@ -1,17 +1,4 @@
 
-
-template<int D, class T>
-__device__ const T Texture<D, T>::operator()(const Vector<D, int>& index) const
-{
-
-}
-
-template<int D, class T>
-__device__ const T Texture<D, T>::operator()(const Vector<D + 1, int>& index) const
-{
-
-}
-
 template<int D, class T>
 __device__ const T Texture<D, T>::operator()(const Vector<D, float>& index) const
 {

@@ -34,14 +34,38 @@ inline constexpr Vector<N, T>::Vector(const float* data)
 }
 
 template <int N, class T>
-template <class... Args>
+template <class... Args, typename>
 __device__ __host__
 inline constexpr Vector<N, T>::Vector(const Args... dataList)
-	: vector{static_cast<float>(dataList) ...}
+	: vector{static_cast<T>(dataList) ...}
 {
 	static_assert(sizeof...(dataList) == N, "Vector constructor should have exact "
-				  "same count of template count "
-				  "as arguments");
+											"same count of template count "
+											"as arguments");
+}
+
+template <int N, class T>
+template <class... Args, typename>
+__device__ __host__
+inline constexpr Vector<N, T>::Vector(const Vector<N - sizeof...(Args), T>& v,
+									  const Args... dataList)
+	: vector{v.vector}
+{
+	constexpr int vectorSize = N - sizeof...(dataList);
+	static_assert(sizeof...(dataList) + vectorSize == N, "Total type count of the partial vector"
+														 "constructor should exactly match vector size");
+
+	UNROLL_LOOP
+	for(int i = 0; i < vectorSize; i++)
+	{
+		vector[i] = v[i];
+	}
+	auto tuple = std::forward_as_tuple(dataList...);
+	UNROLL_LOOP
+	for(int i = vectorSize; i < N; i++)
+	{
+		vector[i] = tuple[i];
+	}
 }
 
 template <int N, class T>

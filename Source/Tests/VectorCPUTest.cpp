@@ -34,6 +34,10 @@ TEST(VectorCPU, Construction)
 	Vector4 vec8;
 	vec8 = vec7;
 
+	// Partial Constructor
+	Vector4 vec9(vecAssign0, 3.0f, 4.0f);
+	Vector4 vec10(vecAssign1, 4.0f);
+
 	//	
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(vec0),
 								  static_cast<const float*>(vec0) + 4),
@@ -63,6 +67,13 @@ TEST(VectorCPU, Construction)
 				ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(3.0f), FloatEq(4.0f)));
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(vec8),
 								   static_cast<const float*>(vec8) + 4),
+				ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(3.0f), FloatEq(4.0f)));
+
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(vec9),
+								   static_cast<const float*>(vec9) + 4),
+				ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(3.0f), FloatEq(4.0f)));
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(vec10),
+								   static_cast<const float*>(vec10) + 4),
 				ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(3.0f), FloatEq(4.0f)));
 }
 

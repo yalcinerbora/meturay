@@ -37,8 +37,11 @@ class Vector<N, T>
 		constexpr __device__ __host__		Vector();
 		constexpr __device__ __host__		Vector(float);
 		constexpr __device__ __host__		Vector(const float* data);
-		template <class... Args>
+		template <class... Args, typename = std::enable_if_t<std::is_same<T, Args>::value>::value>
 		constexpr __device__ __host__		Vector(const Args... dataList);
+		template <class... Args, typename = std::enable_if_t<std::isgreater(1, N - sizeof...(Args))>::value>
+		constexpr __device__ __host__		Vector(const Vector<N - sizeof...(Args), T>&, 
+												   const Args... dataList);
 		template <int M>
 		__device__ __host__					Vector(const Vector<M, T>&);
 											~Vector() = default;

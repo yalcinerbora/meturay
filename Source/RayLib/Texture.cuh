@@ -42,17 +42,20 @@ class Texture : public DeviceLocalMemoryI
 		__device__ __host__				Texture(InterpolationType,
 												EdgeResolveType,
 												const Vector<D, int>& dim,
-												const T* data);
+												const T* data = nullptr);
 		__device__ __host__				Texture(InterpolationType,
 												EdgeResolveType,
 												const Vector<D + 1, int>& dim,
-												const T* data);
+												const T* data = nullptr);
 
 		// Accessors (D + 1 variants are uses mip map)
 		__device__ const T				operator()(const Vector<D, float>&) const;
 		__device__ const T				operator()(const Vector<D + 1, float>&) const;
 
-		// Special
+		// Special Access
+
+		// Memory Migration
+		void							MigrateToOtherDevice(int deviceTo, cudaStream_t stream = nullptr) override;
 };
 
 template<int D, class T>
@@ -71,11 +74,11 @@ class TextureArray : public DeviceLocalMemoryI
 		__device__ __host__				TextureArray(InterpolationType,
 													 EdgeResolveType,
 													 const Vector<D + 1, int>& dim,
-													 const T* data);
+													 const T* data = nullptr);
 		__device__ __host__				TextureArray(InterpolationType,
 													 EdgeResolveType,
 													 const Vector<D + 2, int>& dim,
-													 const T* data);
+													 const T* data = nullptr);
 
 		__device__ 						operator cudaTextureObject_t();
 
@@ -83,7 +86,10 @@ class TextureArray : public DeviceLocalMemoryI
 		__device__ const T				operator()(const Vector<D + 1, float>&) const;
 		__device__ const T				operator()(const Vector<D + 2, float>&) const;
 
-		// Special
+		// Special Access
+
+		// Memory Migration
+		void							MigrateToOtherDevice(int deviceTo, cudaStream_t stream = nullptr) override;
 };
 
 template<class T>
@@ -98,16 +104,19 @@ class TextureCube : public DeviceLocalMemoryI
 		__device__ __host__				TextureCube(InterpolationType,
 													EdgeResolveType,
 													const Vector2i& dim,
-													const T* data);
+													const T* data = nullptr);
 		__device__ __host__				TextureCube(InterpolationType,
 													EdgeResolveType,
 													const Vector3i& dim,
-													const T* data);
+													const T* data = nullptr);
 		// Accessors (3D vector variant uses mipmap)
 		__device__ const T				operator()(const Vector2&) const;
 		__device__ const T				operator()(const Vector3&) const;
 
-		// Special
+		// Special Access
+
+		// Memory Migration
+		void							MigrateToOtherDevice(int deviceTo, cudaStream_t stream = nullptr) override;
 };
 
 template< class T>
@@ -122,16 +131,19 @@ class TextureCubeArray : public DeviceLocalMemoryI
 		__device__ __host__				TextureCubeArray(InterpolationType,
 														 EdgeResolveType,
 														 const Vector3i& dim,
-														 const T* data);
+														 const T* data = nullptr);
 		__device__ __host__				TextureCubeArray(InterpolationType,
 														 EdgeResolveType,
 														 const Vector4i& dim,
-														 const T* data);
+														 const T* data = nullptr);
 		// Accessors (4D variant uses mipmap)
 		__device__ const T				operator()(const Vector3&) const;
 		__device__ const T				operator()(const Vector4&) const;
 
-		// Special
+		// Special Access
+
+		// Memory Migration
+		void							MigrateToOtherDevice(int deviceTo, cudaStream_t stream = nullptr) override;
 };
 
 // Ease of use Template Types
