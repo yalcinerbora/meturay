@@ -13,6 +13,8 @@ N should be 2, 3, 4 at most.
 #include "CudaCheck.h"
 #include "Vector.h"
 
+class Quaternion;
+
 template<class T>
 using ArithmeticEnable = typename std::enable_if<std::is_arithmetic<T>::value>::type;
 
@@ -30,14 +32,15 @@ class Matrix<N, T>
 	protected:
 	public:
 		// Constructors & Destructor
-		constexpr __device__ __host__		Matrix();
-		constexpr __device__ __host__		Matrix(float);
-		constexpr __device__ __host__		Matrix(const float* data);
-		template <class... Args>
+		__device__ __host__					Matrix();
+		__device__ __host__					Matrix(float);
+		__device__ __host__					Matrix(const float* data);
+		template <class... Args, typename = AllArithmeticEnable<Args...>>
 		constexpr __device__ __host__		Matrix(const Args... dataList);
+		__device__ __host__					Matrix(const Vector<N,T> columns[N]);
 		template <int M>
 		__device__ __host__					Matrix(const Matrix<M, T>&);
-		~Matrix() = default;
+											~Matrix() = default;
 		
 
 		// MVC bug? these trigger std::trivially_copyable static assert
@@ -47,8 +50,10 @@ class Matrix<N, T>
 		// Accessors
 		__device__ __host__	explicit		operator float*();
 		__device__ __host__	explicit		operator const float *() const;
-		__device__ __host__ float&			operator[](int);
-		__device__ __host__ const float&	operator[](int) const;
+		__device__ __host__ T&				operator[](int);
+		__device__ __host__ const T&		operator[](int) const;
+		__device__ __host__ T&				operator()(int, int);
+		__device__ __host__ const T&		operator()(int, int) const;
 
 		// Modify
 		__device__ __host__ void			operator+=(const Matrix&);
@@ -73,51 +78,46 @@ class Matrix<N, T>
 		__device__ __host__ bool			operator!=(const Matrix&) const;
 
 		// Utilty	
-		__device__ __host__ float			Determinant() const;
+		__device__ __host__ T				Determinant() const;
+		template<typename = FloatEnable<T>>
 		__device__ __host__ Matrix			Inverse() const;
+		template<typename = FloatEnable<T>>
 		__device__ __host__ Matrix&			InverseSelf();
 		__device__ __host__ Matrix			Transpose() const;
 		__device__ __host__ Matrix			TransposeSelf();
+
 		__device__ __host__ Matrix			Clamp(const Matrix&, const Matrix&) const;
-		__device__ __host__ Matrix			Clamp(float min, float max) const;
+		__device__ __host__ Matrix			Clamp(T min, T max) const;
 		__device__ __host__ Matrix&			ClampSelf(const Matrix&, const Matrix&);
-		__device__ __host__ Matrix&			ClampSelf(float min, float max);
+		__device__ __host__ Matrix&			ClampSelf(T min, T max);
 		__device__ __host__ Matrix			Abs() const;
 		__device__ __host__ Matrix&			AbsSelf();
+
+		template<typename = FloatEnable<T>>
 		__device__ __host__ Matrix			Round() const;
+		template<typename = FloatEnable<T>>
 		__device__ __host__ Matrix&			RoundSelf();
+		template<typename = FloatEnable<T>>
 		__device__ __host__ Matrix			Floor() const;
+		template<typename = FloatEnable<T>>
 		__device__ __host__ Matrix&			FloorSelf();
+		template<typename = FloatEnable<T>>
 		__device__ __host__ Matrix			Ceil() const;
+		template<typename = FloatEnable<T>>
 		__device__ __host__ Matrix&			CeilSelf();
 
 		static __device__ __host__ Matrix	Min(const Matrix&, const Matrix&);
-		static __device__ __host__ Matrix	Min(const Matrix&, float);
+		static __device__ __host__ Matrix	Min(const Matrix&, T);
 		static __device__ __host__ Matrix	Max(const Matrix&, const Matrix&);
-		static __device__ __host__ Matrix	Max(const Matrix&, float);
-		static __device__ __host__ Matrix	Lerp(const Matrix&, const Matrix&, float);
+		static __device__ __host__ Matrix	Max(const Matrix&, T);
 
-		// Transfor Matrix Generation
-		static __device__ __host__ Matrix	Translate(const IEVector3&);
-		static __device__ __host__ Matrix	Scale(float);
-		static __device__ __host__ Matrix	Scale(float x, float y, float z);
-		static __device__ __host__ Matrix	Rotate(float angle, const Vector3&);
-		static __device__ __host__ Matrix	Rotate(const IEQuaternion&);
-		static __device__ __host__ Matrix	Perspective(float fovXRadians, float aspectRatio,
-														float nearPlane, float farPlane);
-		static __device__ __host__ Matrix	Ortogonal(float left, float right,
-													  float top, float bottom,
-													  float nearPlane, float farPlane);
-		static __device__ __host__ Matrix	Ortogonal(float width, float height,
-													  float nearPlane, float farPlane);
-		static __device__ __host__ Matrix	LookAt(const Vector3& eyePos,
-												   const Vector3& at,
-												   const Vector3& up);
+		template<typename = FloatEnable<T>>
+		static __device__ __host__ Matrix	Lerp(const Matrix&, const Matrix&, T);
 };
 
 // Left Scalar operators
 template<int N, class T>
-static __device__ __host__ Matrix<N, T> operator*(float, const Matrix<N,T>&);
+static __device__ __host__ Matrix<N, T>		operator*(float, const Matrix<N,T>&);
 
 // Typeless vectors are defaulted to float
 using Matrix2x2 = Matrix<2, float>;
@@ -147,5 +147,34 @@ static_assert(std::is_polymorphic<Matrix3x3>::value == false, "Matrices should n
 
 // Special 4x4 Matrix Operation
 static __device__ __host__ Vector3 ExtractScaleInfo(const Matrix4x4&);
+
+// Transformation Matrix Generation
+namespace TransformGen
+{
+	template<class T, typename = FloatEnable<T>>
+	static __device__ __host__ Matrix<4, T>		Translate(const Vector<3, T>&);
+	template<class T, typename = FloatEnable<T>>
+	static __device__ __host__ Matrix<4, T>		Scale(T);
+	template<class T, typename = FloatEnable<T>>
+	static __device__ __host__ Matrix <4, T>	Scale(T x, T y, T z);
+	template<class T, typename = FloatEnable<T>>
+	static __device__ __host__ Matrix<4, T>		Rotate(T angle, const Vector<3, T>&);
+	template<class T, typename = FloatEnable<T>>
+	static __device__ __host__ Matrix<4, T>		Rotate(const Quaternion&);
+	template<class T, typename = FloatEnable<T>>
+	static __device__ __host__ Matrix<4, T>		Perspective(T fovXRadians, T aspectRatio,
+															T nearPlane, T farPlane);
+	template<class T, typename = FloatEnable<T>>
+	static __device__ __host__ Matrix<4, T>		Ortogonal(T left, T right,
+														  T top, T bottom,
+														  T nearPlane, T farPlane);
+	template<class T, typename = FloatEnable<T>>
+	static __device__ __host__ Matrix<4, T>		Ortogonal(T width, T height,
+														  T nearPlane, T farPlane);
+	template<class T, typename = FloatEnable<T>>
+	static __device__ __host__ Matrix<4, T>		LookAt(const Vector<3, T>& eyePos,
+													   const Vector<3, T>& at,
+													   const Vector<3, T>& up);
+}
 
 #include "Matrix.hpp"	// CPU & GPU

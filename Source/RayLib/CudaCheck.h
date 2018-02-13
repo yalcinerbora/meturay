@@ -19,3 +19,8 @@ Utility header for header only cuda vector and cpu vector implementations
 #else 
 	#define UNROLL_LOOP
 #endif
+
+#ifdef METU_DEBUG
+	#define CUDA_CHECK
+#else
+#endif

@@ -17,6 +17,9 @@ N should be 2, 3, 4 at most.
 template<class T>
 using ArithmeticEnable = typename std::enable_if<std::is_arithmetic<T>::value>::type;
 
+template<class T>
+using FloatEnable = typename std::enable_if<std::is_floating_point<T>::value>::type;
+
 template<class... Args>
 using AllArithmeticEnable = typename std::enable_if<std::conjunction<std::is_arithmetic<Args>...>::value>::type;
 
@@ -88,18 +91,28 @@ class Vector<N, T>
 		__device__ __host__ Vector&			ClampSelf(float min, float max);
 		__device__ __host__ Vector			Abs() const;
 		__device__ __host__ Vector&			AbsSelf();
+
+		// Only float types
+		template<typename = FloatEnable<T>>
 		__device__ __host__ Vector			Round() const;
+		template<typename = FloatEnable<T>>
 		__device__ __host__ Vector&			RoundSelf();
+		template<typename = FloatEnable<T>>
 		__device__ __host__ Vector			Floor() const;
+		template<typename = FloatEnable<T>>
 		__device__ __host__ Vector&			FloorSelf();
+		template<typename = FloatEnable<T>>
 		__device__ __host__ Vector			Ceil() const;
+		template<typename = FloatEnable<T>>
 		__device__ __host__ Vector&			CeilSelf();
 
 		static __device__ __host__ Vector	Min(const Vector&, const Vector&);
-		static __device__ __host__ Vector	Min(const Vector&, float);
+		static __device__ __host__ Vector	Min(const Vector&, T);
 		static __device__ __host__ Vector	Max(const Vector&, const Vector&);
-		static __device__ __host__ Vector	Max(const Vector&, float);		
-		static __device__ __host__ Vector	Lerp(const Vector&, const Vector&, float);
+		static __device__ __host__ Vector	Max(const Vector&, T);
+
+		template<typename = FloatEnable<T>>
+		static __device__ __host__ Vector	Lerp(const Vector&, const Vector&, T);
 };
 
 // Left scalars

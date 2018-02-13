@@ -352,12 +352,7 @@ inline Vector<N, T> Vector<N, T>::Clamp(const Vector& min, const Vector& max) co
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		#ifdef __CUDA_ARCH__
-			v[i] = fminf(fmaxf(min[i], vector[i]), max[i]);
-		#else 
-			v[i] = std::min(std::max(min[i], vector[i]), max[i]);
-		#endif
-		
+		v[i] = std::min(std::max(min[i], vector[i]), max[i]);	
 	}
 	return v;
 }
@@ -370,12 +365,7 @@ inline Vector<N, T> Vector<N, T>::Clamp(float min, float max) const
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		#ifdef __CUDA_ARCH__
-			v[i] = fminf(fmaxf(min, vector[i]), max);
-		#else 
-			v[i] = std::min(std::max(min, vector[i]), max);
-		#endif
-		
+		v[i] = std::min(std::max(min, vector[i]), max);
 	}
 	return v;
 }
@@ -387,11 +377,7 @@ inline Vector<N, T>& Vector<N, T>::ClampSelf(const Vector& min, const Vector& ma
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		#ifdef __CUDA_ARCH__
-			vector[i] = fminf(fmaxf(min[i], vector[i]), max[i]);
-		#else 
-			vector[i] = std::min(std::max(min[i], vector[i]), max[i]);
-		#endif	
+		vector[i] = std::min(std::max(min[i], vector[i]), max[i]);
 	}
 	return *this;
 }
@@ -403,11 +389,7 @@ inline Vector<N, T>& Vector<N, T>::ClampSelf(float min, float max)
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		#ifdef __CUDA_ARCH__
-			vector[i] = fminf(fmaxf(min, vector[i]), max);
-		#else 
-			vector[i] = std::min(std::max(min, vector[i]), max);
-		#endif		
+		vector[i] = std::min(std::max(min, vector[i]), max);
 	}
 	return *this;
 }
@@ -420,11 +402,7 @@ Vector<N, T> Vector<N, T>::Abs() const
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		#ifdef __CUDA_ARCH__
-			v[i] = fabsf(vector[i]);
-		#else 
-			v[i] = std::abs(vector[i]);
-		#endif	
+		v[i] = std::abs(vector[i]);
 	}
 	return v;
 }
@@ -436,88 +414,148 @@ Vector<N, T>& Vector<N, T>::AbsSelf()
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		#ifdef __CUDA_ARCH__
-			vector[i] = fabsf(vector[i]);
-		#else 
-			vector[i] = std::abs(vector[i]);
-		#endif			
+		vector[i] = std::abs(vector[i]);
+	}
+	return *this;
+}
+
+template <int N, class T>
+template<typename>
+__device__ __host__ 
+Vector<N, T> Vector<N, T>::Round() const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = std::round(vector[i]);
+	}
+	return v;
+}
+
+template <int N, class T>
+template<typename>
+__device__ __host__ 
+Vector<N, T>& Vector<N, T>::RoundSelf()
+{
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] = std::round(vector[i]);
+	}
+	return *this;
+}
+
+template <int N, class T>
+template<typename>
+__device__ __host__ 
+Vector<N, T> Vector<N, T>::Floor() const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = std::floor(vector[i]);
+	}
+	return v;
+}
+
+template <int N, class T>
+template<typename>
+__device__ __host__ 
+Vector<N, T>& Vector<N, T>::FloorSelf()
+{
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] = std::floor(vector[i]);
+	}
+	return *this;
+}
+
+template <int N, class T>
+template<typename>
+__device__ __host__ 
+Vector<N, T> Vector<N, T>::Ceil() const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = std::ceil(vector[i]);
+	}
+	return v;
+}
+
+template <int N, class T>
+template<typename>
+__device__ __host__ 
+Vector<N, T>& Vector<N, T>::CeilSelf()
+{
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		vector[i] = std::ceil(vector[i]);
 	}
 	return *this;
 }
 
 template <int N, class T>
 __device__ __host__ 
-Vector<N, T> Vector<N, T>::Round() const
+Vector<N, T> Vector<N, T>::Min(const Vector& v0, const Vector& v1)
 {
-
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = std::min(v0[i], v1[i]);
+	}
+	return v;
 }
 
 template <int N, class T>
 __device__ __host__ 
-Vector<N, T>& Vector<N, T>::RoundSelf()
+Vector<N, T> Vector<N, T>::Min(const Vector& v0, T v1)
 {
-
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = std::min(v0[i], v1);
+	}
+	return v;
 }
 
 template <int N, class T>
 __device__ __host__ 
-Vector<N, T> Vector<N, T>::Floor() const
+Vector<N, T> Vector<N, T>::Max(const Vector& v0, const Vector& v1)
 {
-
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = std::max(v0[i], v1[i]);
+	}
+	return v;
 }
 
 template <int N, class T>
 __device__ __host__ 
-Vector<N, T>& Vector<N, T>::FloorSelf()
+Vector<N, T> Vector<N, T>::Max(const Vector& v0, T v1)
 {
-
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = std::max(v0[i], v1);
+	}
+	return v;
 }
 
 template <int N, class T>
-__device__ __host__ 
-Vector<N, T> Vector<N, T>::Ceil() const
-{
-
-}
-
-template <int N, class T>
-__device__ __host__ 
-Vector<N, T>& Vector<N, T>::CeilSelf()
-{
-
-}
-
-template <int N, class T>
-__device__ __host__ 
-Vector<N, T> Vector<N, T>::Min(const Vector&, const Vector&)
-{
-
-}
-
-template <int N, class T>
-__device__ __host__ 
-Vector<N, T> Vector<N, T>::Min(const Vector&, float)
-{
-
-}
-
-template <int N, class T>
-__device__ __host__ 
-Vector<N, T> Vector<N, T>::Max(const Vector&, const Vector&)
-{
-
-}
-
-template <int N, class T>
-__device__ __host__ 
-Vector<N, T> Vector<N, T>::Max(const Vector&, float)
-{
-
-}
-
-template <int N, class T>
+template <typename>
 __device__ __host__
-inline Vector<N, T> Vector<N, T>::Lerp(const Vector& v0, const Vector& v1, float t)
+inline Vector<N, T> Vector<N, T>::Lerp(const Vector& v0, const Vector& v1, T t)
 {
 	assert(t >= 0.0f && t <= 1.0f);
 	Vector v;

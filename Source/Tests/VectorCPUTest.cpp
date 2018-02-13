@@ -223,13 +223,81 @@ TEST(VectorCPU, Functions1)
 
 TEST(VectorCPU, Functions2)
 {
-	Vector4 a(2.12f, 2.5f, 2.60f, 2.3f);
-	Vector4 b(-2.12f, -2.5f, -2.60f, -2.3f);
+	Vector4 b(-2.12f, -2.5f, 2.60f, 2.3f);
 	Vector4 c(-1.0f, 0.0f, -0.0f, 1.0f);
 
 	Vector4 v0 = c.Abs();
-
+	Vector4 v1 = b.Round();
+	Vector4 v2 = b.Floor();
+	Vector4 v3 = b.Ceil();
+	//
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v0),
 								   static_cast<const float*>(v0) + 4),
 				ElementsAre(FloatEq(1.0f), FloatEq(0.0f), FloatEq(-0.0f), FloatEq(1.0f)));
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v1),
+								   static_cast<const float*>(v1) + 4),
+				ElementsAre(FloatEq(-2.0f), FloatEq(-3.0f), FloatEq(3.0f), FloatEq(2.0f)));
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v2),
+								   static_cast<const float*>(v2) + 4),
+				ElementsAre(FloatEq(-3.0f), FloatEq(-3.0f), FloatEq(2.0f), FloatEq(2.0f)));
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v3),
+								   static_cast<const float*>(v3) + 4),
+				ElementsAre(FloatEq(-2.0f), FloatEq(-2.0f), FloatEq(3.0f), FloatEq(3.0f)));
+	
+	// Self Equavilents
+	Vector4 v4 = c;
+	v4.AbsSelf();
+	Vector4 v5 = b;
+	v5.RoundSelf();
+	Vector4 v6 = b;
+	v6.FloorSelf();
+	Vector4 v7 = b;
+	v7.CeilSelf();
+	//
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v4),
+								   static_cast<const float*>(v4) + 4),
+				ElementsAre(FloatEq(1.0f), FloatEq(0.0f), FloatEq(-0.0f), FloatEq(1.0f)));
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v5),
+								   static_cast<const float*>(v5) + 4),
+				ElementsAre(FloatEq(-2.0f), FloatEq(-3.0f), FloatEq(3.0f), FloatEq(2.0f)));
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v6),
+								   static_cast<const float*>(v6) + 4),
+				ElementsAre(FloatEq(-3.0f), FloatEq(-3.0f), FloatEq(2.0f), FloatEq(2.0f)));
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v7),
+								   static_cast<const float*>(v7) + 4),
+				ElementsAre(FloatEq(-2.0f), FloatEq(-2.0f), FloatEq(3.0f), FloatEq(3.0f)));
+}
+
+TEST(VectorCPU, Functions3)
+{
+	Vector4 a(2.12f, 2.5f, -2.60f, -2.3f);
+	Vector4 b(-2.12f, -2.5f, 2.60f, 2.3f);
+	Vector4 c(0.0f);
+	Vector4 d(1.0f);
+
+	Vector4 v0 = Vector4::Max(a, b);
+	Vector4 v1 = Vector4::Max(a, 999.0f);
+
+	Vector4 v2 = Vector4::Min(a, b);
+	Vector4 v3 = Vector4::Min(a, -999.0f);
+
+	Vector4 v4 = Vector4::Lerp(c, d, 0.5f);
+	//
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v0),
+								   static_cast<const float*>(v0) + 4),
+				ElementsAre(FloatEq(2.12f), FloatEq(2.5f), FloatEq(2.6f), FloatEq(2.3f)));
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v1),
+								   static_cast<const float*>(v1) + 4),
+				ElementsAre(FloatEq(999.0f), FloatEq(999.0f), FloatEq(999.0f), FloatEq(999.0f)));
+
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v2),
+								   static_cast<const float*>(v2) + 4),
+				ElementsAre(FloatEq(-2.12f), FloatEq(-2.5f), FloatEq(-2.6f), FloatEq(-2.3f)));
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v3),
+								   static_cast<const float*>(v3) + 4),
+				ElementsAre(FloatEq(-999.0f), FloatEq(-999.0f), FloatEq(-999.0f), FloatEq(-999.0f)));
+
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v4),
+								   static_cast<const float*>(v4) + 4),
+				ElementsAre(FloatEq(0.5f), FloatEq(0.5f), FloatEq(0.5f), FloatEq(0.5f)));
 }

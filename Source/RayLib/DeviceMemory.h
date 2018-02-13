@@ -14,6 +14,7 @@ All of the operations (execpt allocation) are asyncronious.
 TODO: should we interface these?
 
 */
+#include <cuda_runtime.h>
 
 // Basic semi-interface for memories that are static for each GPU
 // Textures are one example
@@ -27,7 +28,7 @@ class DeviceLocalMemoryI
 		virtual					~DeviceLocalMemoryI() = default;
 
 		// Interface
-		virtual void			MigrateToOtherDevice(int deviceTo, cudaStream_t stream = nullptr) = 0;
+		virtual void			MigrateToOtherDevice(int deviceTo, cudaStream_t stream = (cudaStream_t)0) = 0;
 };
 
 // Has a CPU Image of current memory
@@ -40,11 +41,13 @@ class DeviceMemoryCPUBacked : public DeviceLocalMemoryI
 		void*						h_ptr;
 		void*						d_ptr;
 
+		size_t						size;
+
 	protected:
 	public:
 		// Constructors & Destructor
 									DeviceMemoryCPUBacked() = delete;
-									DeviceMemoryCPUBacked(size_t sizeInBytes);
+									DeviceMemoryCPUBacked(size_t sizeInBytes, int deviceId = 0);
 									DeviceMemoryCPUBacked(const DeviceMemoryCPUBacked&);
 									DeviceMemoryCPUBacked(DeviceMemoryCPUBacked&&);
 									~DeviceMemoryCPUBacked();
@@ -52,8 +55,22 @@ class DeviceMemoryCPUBacked : public DeviceLocalMemoryI
 		DeviceMemoryCPUBacked&		operator=(DeviceMemoryCPUBacked&&);
 	
 		// Memcopy
-		void						CopyToDevice(cudaStream_t stream = nullptr);
-		void						CopyToHost(cudaStream_t stream = nullptr);
+		void						CopyToDevice(cudaStream_t stream = (cudaStream_t)0);
+		void						CopyToHost(cudaStream_t stream = (cudaStream_t)0);
+
+		// Access
+		template<class T>
+		constexpr T*				DeviceData();
+		template<class T>
+		constexpr const T*			DeviceData() const;
+		template<class T>
+		constexpr T*				HostData();
+		template<class T>
+		constexpr const T*			HostData() const;
+		// Misc
+		size_t						Size() const;
+		// Interface
+		void						MigrateToOtherDevice(int deviceTo, cudaStream_t stream = (cudaStream_t)0);
 };
 
 // Generic Device Memory (most of the cases this should be used)
@@ -63,6 +80,8 @@ class DeviceMemory
 {
 	private:
 		void*						m_ptr;	// managed pointer
+
+		size_t						size;
 
 	protected:
 	public:
@@ -82,4 +101,6 @@ class DeviceMemory
 		constexpr explicit			operator const T*() const;
 		constexpr 					operator void*();
 		constexpr 					operator const void*() const;
+		// Misc
+		size_t						Size() const;
 };

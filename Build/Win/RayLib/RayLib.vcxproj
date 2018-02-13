@@ -32,6 +32,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.1.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -86,7 +87,11 @@
     <ClInclude Include="..\..\..\Source\RayLib\Vector.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.1.targets" />
   </ImportGroup>
 </Project>
