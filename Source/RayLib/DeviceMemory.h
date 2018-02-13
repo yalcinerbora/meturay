@@ -15,6 +15,7 @@ TODO: should we interface these?
 
 */
 #include <cuda_runtime.h>
+#include <limits>
 
 // Basic semi-interface for memories that are static for each GPU
 // Textures are one example
@@ -55,8 +56,8 @@ class DeviceMemoryCPUBacked : public DeviceLocalMemoryI
 		DeviceMemoryCPUBacked&		operator=(DeviceMemoryCPUBacked&&);
 	
 		// Memcopy
-		void						CopyToDevice(cudaStream_t stream = (cudaStream_t)0);
-		void						CopyToHost(cudaStream_t stream = (cudaStream_t)0);
+		void						CopyToDevice(size_t offset = 0, size_t copySize = std::numeric_limits<size_t>::max(), cudaStream_t stream = (cudaStream_t)0);
+		void						CopyToHost(size_t offset = 0, size_t copySize = std::numeric_limits<size_t>::max(), cudaStream_t stream = (cudaStream_t)0);
 
 		// Access
 		template<class T>
@@ -104,3 +105,39 @@ class DeviceMemory
 		// Misc
 		size_t						Size() const;
 };
+
+template<class T>
+inline constexpr T* DeviceMemoryCPUBacked::DeviceData()
+{
+	return reinterpret_cast<T*>(d_ptr);
+}
+
+template<class T>
+inline constexpr const T* DeviceMemoryCPUBacked::DeviceData() const
+{
+	return reinterpret_cast<T*>(d_ptr);
+}
+
+template<class T>
+inline constexpr T* DeviceMemoryCPUBacked::HostData()
+{
+	return reinterpret_cast<T*>(h_ptr);
+}
+
+template<class T>
+inline constexpr const T* DeviceMemoryCPUBacked::HostData() const
+{
+	return reinterpret_cast<T*>(h_ptr);
+}
+
+template<class T>
+inline constexpr DeviceMemory::operator T*()
+{
+	return reinterpret_cast<T*>(m_ptr);
+}
+
+template<class T>
+inline constexpr DeviceMemory::operator const T*() const
+{
+	return reinterpret_cast<T*>(m_ptr);
+}

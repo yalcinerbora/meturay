@@ -26,8 +26,22 @@ using AllArithmeticEnable = typename std::enable_if<std::conjunction<std::is_ari
 template<int N, class T, typename = ArithmeticEnable<T>>
 class Vector;
 
+static constexpr size_t ChooseVectorAlignment(size_t totalSize)
+{
+	if(totalSize <= 4)
+		return 4;
+	else if(totalSize <= 8)
+		return 8;
+	else if(totalSize < 16)
+		return 4;
+	else
+		return 16;
+}
+
+//alignas((N * sizeof(T) < 16) ? 8 : N * sizeof(T))
+
 template<int N, class T>
-class Vector<N, T>
+class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 {
 	static_assert(N == 2 || N == 3 || N == 4, "Vector size should be 2, 3 or 4");
 	
@@ -144,6 +158,11 @@ using Vector4ui = Vector<4, unsigned int>;
 static_assert(std::is_literal_type<Vector3>::value == true, "Vectors has to be literal types");
 static_assert(std::is_trivially_copyable<Vector3>::value == true, "Vectors has to be trivially copyable");
 static_assert(std::is_polymorphic<Vector3>::value == false, "Vectors should not be polymorphic");
+
+// Alignment Checks
+static_assert(sizeof(Vector2) == 8, "Vector2 should be tightly packed");
+static_assert(sizeof(Vector3) == 12, "Vector3 should be tightly packed");
+static_assert(sizeof(Vector4) == 16, "Vector4 should be tightly packed");
 
 // Cross product (only for 3d vectors)
 static __device__ __host__ Vector3 Cross(const Vector3&, const Vector3&);

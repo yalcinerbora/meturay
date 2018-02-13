@@ -27,7 +27,7 @@ class Matrix<N, T>
 	static_assert(N == 2 || N == 3 || N == 4, "Matrix size should be 2x2, 3x3 or 4x4");
 
 	private:
-		T									vector[N*N];
+		T									matrix[N*N];
 
 	protected:
 	public:

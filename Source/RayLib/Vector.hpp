@@ -7,7 +7,7 @@ inline constexpr Vector<N, T>::Vector()
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		vector[i] = 0.0f;
+		vector[i] = 0;
 	}
 }
 
