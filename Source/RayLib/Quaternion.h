@@ -8,17 +8,21 @@ where; v[0] = w, v[1] = x, v[2] = y, v[3] = z
 
 #include "Vector.h"
 
-class Quaternion
+
+template<class T, typename = FloatEnable<T>>
+class Quaternion;
+
+template<class T>
+class Quaternion<T>
 {
 	private:
-			Vector4								vec;
+			Vector<4,T>							vec;
 
 	protected:
 		
 	public:
 		// Constructors & Destructor
 		constexpr __device__ __host__			Quaternion();
-
 		constexpr __device__ __host__			Quaternion(float w, float x, float y, float z);
 		constexpr __device__ __host__			Quaternion(const float*);
 		__device__ __host__						Quaternion(float angle, const Vector3& axis);
@@ -29,8 +33,8 @@ class Quaternion
 		//
 		__device__ __host__	explicit			operator Vector4&();
 		__device__ __host__	explicit			operator const Vector4&() const;
-		__device__ __host__ float&				operator[](int);
-		__device__ __host__ const float&		operator[](int) const;
+		__device__ __host__ T&					operator[](int);
+		__device__ __host__ const T&			operator[](int) const;
 
 		// Operators
 		__device__ __host__ Quaternion			operator*(const Quaternion&) const;
@@ -53,12 +57,12 @@ class Quaternion
 		// Utility
 		__device__ __host__ Quaternion			Normalize() const;
 		__device__ __host__ Quaternion&			NormalizeSelf();
-		__device__ __host__ float				Length() const;
-		__device__ __host__ float				LengthSqr() const;
+		__device__ __host__ T					Length() const;
+		__device__ __host__ T					LengthSqr() const;
 		__device__ __host__ Quaternion			Conjugate() const;
 		__device__ __host__ Quaternion&			ConjugateSelf();
-		__device__ __host__ float				DotProduct(const Quaternion&) const;
-		__device__ __host__ Vector3				ApplyRotation(const Vector3&) const;
+		__device__ __host__ T					DotProduct(const Quaternion&) const;
+		__device__ __host__ Vector<3,T>			ApplyRotation(const Vector<3, T>&) const;
 
 		// Static Utility
 		static __device__ __host__ Quaternion	NLerp(const Quaternion& start, const Quaternion& end, float t);
@@ -68,15 +72,22 @@ class Quaternion
 		static __device__ __host__ Quaternion	RotationBetweenZAxis(const Vector3& b);
 };
 
-// Constants
-static constexpr Quaternion	IdentityQuat = Quaternion(1.0f, 0.0f, 0.0f, 0.0f);
+// Quaternion Alias
+using QuatF = Quaternion<float>;
+using QuatD = Quaternion<double>;
 
 // Requirements of IEQuaternion
-static_assert(std::is_trivially_copyable<Quaternion>::value == true, "IEQuaternion has to be trivially copyable");
-static_assert(std::is_polymorphic<Quaternion>::value == false, "IEQuaternion should not be polymorphic");
-static_assert(sizeof(Quaternion) == sizeof(float) * 4, "IEQuaternion size is not 16 bytes");
+static_assert(std::is_trivially_copyable<QuatF>::value == true, "IEQuaternion has to be trivially copyable");
+static_assert(std::is_polymorphic<QuatF>::value == false, "IEQuaternion should not be polymorphic");
+static_assert(sizeof(QuatF) == sizeof(float) * 4, "IEQuaternion size is not 16 bytes");
 
 // Left Scalar operators
-static __device__ __host__ Quaternion operator*(float, const Quaternion&);
+template<class T>
+static __device__ __host__ Quaternion<T> operator*(float, const Quaternion<T>&);
 
+// Implementation
 #include "Quaternion.hpp"
+
+// Constants
+static constexpr QuatF	IdentityQuatF = QuatF(1.0f, 0.0f, 0.0f, 0.0f);
+static constexpr QuatD	IdentityQuatD = QuatD(1.0, 0.0, 0.0, 0.0);

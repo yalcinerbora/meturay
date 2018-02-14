@@ -12,8 +12,7 @@ N should be 2, 3, 4 at most.
 #include <type_traits>
 #include "CudaCheck.h"
 #include "Vector.h"
-
-class Quaternion;
+#include "Quaternion.h"
 
 template<class T>
 using ArithmeticEnable = typename std::enable_if<std::is_arithmetic<T>::value>::type;
@@ -22,7 +21,7 @@ template<int N, class T, typename = ArithmeticEnable<T>>
 class Matrix;
 
 template<int N, class T>
-class Matrix<N, T>
+class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
 {
 	static_assert(N == 2 || N == 3 || N == 4, "Matrix size should be 2x2, 3x3 or 4x4");
 
@@ -32,12 +31,12 @@ class Matrix<N, T>
 	protected:
 	public:
 		// Constructors & Destructor
-		__device__ __host__					Matrix();
+		constexpr __device__ __host__		Matrix();
 		__device__ __host__					Matrix(float);
 		__device__ __host__					Matrix(const float* data);
 		template <class... Args, typename = AllArithmeticEnable<Args...>>
 		constexpr __device__ __host__		Matrix(const Args... dataList);
-		__device__ __host__					Matrix(const Vector<N,T> columns[N]);
+		__device__ __host__					Matrix(const Vector<N,T> columns[]);
 		template <int M>
 		__device__ __host__					Matrix(const Matrix<M, T>&);
 											~Matrix() = default;
@@ -84,7 +83,7 @@ class Matrix<N, T>
 		template<typename = FloatEnable<T>>
 		__device__ __host__ Matrix&			InverseSelf();
 		__device__ __host__ Matrix			Transpose() const;
-		__device__ __host__ Matrix			TransposeSelf();
+		__device__ __host__ Matrix&			TransposeSelf();
 
 		__device__ __host__ Matrix			Clamp(const Matrix&, const Matrix&) const;
 		__device__ __host__ Matrix			Clamp(T min, T max) const;
@@ -115,9 +114,29 @@ class Matrix<N, T>
 		static __device__ __host__ Matrix	Lerp(const Matrix&, const Matrix&, T);
 };
 
+// Determinants
+template<class T>
+static T Determinant2(const Matrix<2, T>&);
+
+template<class T>
+static T Determinant3(const Matrix<3, T>&);
+
+template<class T>
+static T Determinant4(const Matrix<4, T>&);
+
+// Inverse
+template<class T>
+static T Inverse2(const Matrix<2, T>&);
+
+template<class T>
+static T Inverse3(const Matrix<3, T>&);
+
+template<class T>
+static T Inverse4(const Matrix<4, T>&);
+
 // Left Scalar operators
 template<int N, class T>
-static __device__ __host__ Matrix<N, T>		operator*(float, const Matrix<N,T>&);
+static __device__ __host__ Matrix<N, T> operator*(float, const Matrix<N,T>&);
 
 // Typeless vectors are defaulted to float
 using Matrix2x2 = Matrix<2, float>;
@@ -146,7 +165,8 @@ static_assert(std::is_trivially_copyable<Matrix3x3>::value == true, "Matrices ha
 static_assert(std::is_polymorphic<Matrix3x3>::value == false, "Matrices should not be polymorphic");
 
 // Special 4x4 Matrix Operation
-static __device__ __host__ Vector3 ExtractScaleInfo(const Matrix4x4&);
+template<class T>
+static __device__ __host__ Vector<3,T> ExtractScaleInfo(const Matrix<4, T>&);
 
 // Transformation Matrix Generation
 namespace TransformGen
@@ -160,7 +180,7 @@ namespace TransformGen
 	template<class T, typename = FloatEnable<T>>
 	static __device__ __host__ Matrix<4, T>		Rotate(T angle, const Vector<3, T>&);
 	template<class T, typename = FloatEnable<T>>
-	static __device__ __host__ Matrix<4, T>		Rotate(const Quaternion&);
+	static __device__ __host__ Matrix<4, T>		Rotate(const Quaternion<T>&);
 	template<class T, typename = FloatEnable<T>>
 	static __device__ __host__ Matrix<4, T>		Perspective(T fovXRadians, T aspectRatio,
 															T nearPlane, T farPlane);

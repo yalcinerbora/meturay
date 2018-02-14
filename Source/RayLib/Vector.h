@@ -28,17 +28,15 @@ class Vector;
 
 static constexpr size_t ChooseVectorAlignment(size_t totalSize)
 {
-	if(totalSize <= 4)
-		return 4;
-	else if(totalSize <= 8)
-		return 8;
-	else if(totalSize < 16)
-		return 4;
-	else
-		return 16;
+	if(totalSize <= 4)		
+		return 4;			// 1byte Vector Types
+	else if(totalSize <= 8)	
+		return 8;			// 4byte Vector2 Types
+	else if(totalSize < 16)	
+		return 4;			// 4byte Vector3 Types
+	else					
+		return 16;			// 4byte Vector4 Types
 }
-
-//alignas((N * sizeof(T) < 16) ? 8 : N * sizeof(T))
 
 template<int N, class T>
 class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
@@ -51,13 +49,13 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 	protected:
 	public:
 		// Constructors & Destructor
-		constexpr __device__ __host__		Vector();
-		constexpr __device__ __host__		Vector(float);
-		constexpr __device__ __host__		Vector(const float* data);
+		__device__ __host__					Vector();
+		__device__ __host__					Vector(float);
+		__device__ __host__					Vector(const float* data);
 		template <class... Args, typename = AllArithmeticEnable<Args...>>
 		constexpr __device__ __host__		Vector(const Args... dataList);
 		template <class... Args, typename = std::enable_if_t<((N - sizeof...(Args)) > 1)>>
-		constexpr __device__ __host__		Vector(const Vector<N - sizeof...(Args), T>&,
+		__device__ __host__					Vector(const Vector<N - sizeof...(Args), T>&,
 												   const Args... dataList);
 		template <int M>
 		__device__ __host__					Vector(const Vector<M, T>&);

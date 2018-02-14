@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -107,9 +107,11 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\Tests\main.cpp" />
+    <CudaCompile Include="..\..\..\Source\Tests\MatrixGPUTest.cu" />
     <CudaCompile Include="..\..\..\Source\Tests\TextureTest.cu">
       <FileType>Document</FileType>
     </CudaCompile>
+    <ClCompile Include="..\..\..\Source\Tests\MatrixCPUTest.cpp" />
     <ClCompile Include="..\..\..\Source\Tests\VectorCPUTest.cpp" />
     <CudaCompile Include="..\..\..\Source\Tests\VectorGPUTest.cu">
       <FileType>Document</FileType>

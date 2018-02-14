@@ -2,7 +2,7 @@
 
 template <int N, class T>
 __device__ __host__
-inline constexpr Vector<N, T>::Vector()
+inline Vector<N, T>::Vector()
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
@@ -13,7 +13,7 @@ inline constexpr Vector<N, T>::Vector()
 
 template <int N, class T>
 __device__ __host__
-inline constexpr Vector<N, T>::Vector(float data)
+inline Vector<N, T>::Vector(float data)
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
@@ -24,7 +24,7 @@ inline constexpr Vector<N, T>::Vector(float data)
 
 template <int N, class T>
 __device__ __host__
-inline constexpr Vector<N, T>::Vector(const float* data)
+inline Vector<N, T>::Vector(const float* data)
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
@@ -47,8 +47,8 @@ inline constexpr Vector<N, T>::Vector(const Args... dataList)
 template <int N, class T>
 template <class... Args, typename>
 __device__ __host__
-inline constexpr Vector<N, T>::Vector(const Vector<N - sizeof...(Args), T>& v,
-									  const Args... dataList)
+inline Vector<N, T>::Vector(const Vector<N - sizeof...(Args), T>& v,
+							const Args... dataList)
 {
 	constexpr int vectorSize = N - sizeof...(dataList);
 	static_assert(sizeof...(dataList) + vectorSize == N, "Total type count of the partial vector"
@@ -294,7 +294,7 @@ template <int N, class T>
 __device__ __host__
 inline float Vector<N, T>::Dot(const Vector& right) const
 {
-	float data = 0;
+	T data = 0;
 	for(int i = 0; i < N; i++)
 	{
 		data += vector[i] * right[i];
@@ -557,12 +557,12 @@ template <typename>
 __device__ __host__
 inline Vector<N, T> Vector<N, T>::Lerp(const Vector& v0, const Vector& v1, T t)
 {
-	assert(t >= 0.0f && t <= 1.0f);
+	assert(t >= 0 && t <= 1);
 	Vector v;
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		v[i] = (1.0f - t) * v0[i] + t * v1[i];
+		v[i] = (1 - t) * v0[i] + t * v1[i];
 	}
 	return v;
 }
