@@ -33,6 +33,8 @@ class Quaternion<T>
 		//
 		__device__ __host__	explicit			operator Vector4&();
 		__device__ __host__	explicit			operator const Vector4&() const;
+		__device__ __host__	explicit			operator float*();
+		__device__ __host__	explicit			operator const float*() const;
 		__device__ __host__ T&					operator[](int);
 		__device__ __host__ const T&			operator[](int) const;
 
@@ -68,8 +70,8 @@ class Quaternion<T>
 		static __device__ __host__ Quaternion	NLerp(const Quaternion& start, const Quaternion& end, float t);
 		static __device__ __host__ Quaternion	SLerp(const Quaternion& start, const Quaternion& end, float t);
 
-		static __device__ __host__ Quaternion	RotationBetween(const Vector3& a, const Vector3& b);
-		static __device__ __host__ Quaternion	RotationBetweenZAxis(const Vector3& b);
+		static __device__ __host__ Quaternion	RotationBetween(const Vector<3,T>& a, const Vector<3,T>& b);
+		static __device__ __host__ Quaternion	RotationBetweenZAxis(const Vector<3,T>& b);
 };
 
 // Quaternion Alias

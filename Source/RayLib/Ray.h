@@ -3,77 +3,84 @@
 #include "Matrix.h"
 #include "Vector.h"
 
-class Ray
+template<class T, typename = ArithmeticEnable<T>>
+class Ray;
+
+template<class T>
+class Ray<T>
 {
 	private:
-		Vector3								direction;
-		Vector3								position;
+		Vector<3,T>&								direction;
+		Vector<3,T>&								position;
 
 	protected:
 	public:
 		// Constructors & Destructor
-		constexpr __device__ __host__		Ray();
-		constexpr __device__ __host__		Ray(float dX, float dY, float dZ,
-												float pX, float pY, float pZ);
-		__device__ __host__					Ray(const Vector3& direction, const Vector3& position);
-		__device__ __host__					Ray(const Vector3[2]);
-											Ray(const Ray&) = default;
-											~Ray() = default;
-		Ray&								operator=(const Ray&) = default;
+		constexpr __device__ __host__				Ray();
+		constexpr __device__ __host__				Ray(float dX, float dY, float dZ,
+														float pX, float pY, float pZ);
+		constexpr __device__ __host__				Ray(const Vector3& direction, const Vector3& position);
+		constexpr __device__ __host__				Ray(const Vector3[2]);
+													Ray(const Ray&) = default;
+													~Ray() = default;
+		Ray&										operator=(const Ray&) = default;
 
 		// Assignment Operators
-		__device__ __host__ Ray&			operator=(const Vector3[2]);
+		__device__ __host__ Ray&					operator=(const Vector3[2]);
 
-		__device__ __host__ const Vector3&	getDirection() const;
-		__device__ __host__ const Vector3&	getPosition() const;
+		__device__ __host__ const Vector<3,T>&		getDirection() const;
+		__device__ __host__ const Vector<3,T>&		getPosition() const;
 
 		// Intersections
-		__device__ __host__ bool			IntersectsSphere(Vector3& pos,
-															 float& t,
-															 const Vector3& sphereCenter,
-															 float sphereRadius) const;
-		__device__ __host__ bool			IntersectsTriangle(Vector3& baryCoords,
-															   float& t,
-															   bool cullFace,
-															   const Vector3 triCorners[3]) const;
-		__device__ __host__ bool			IntersectsTriangle(Vector3& baryCoords,
-															   float& t,
-															   bool cullFace,
-															   const Vector3& t0,
-															   const Vector3& t1,
-															   const Vector3& t2) const;
-		__device__ __host__ bool			IntersectsAABB(const Vector3& min,
-														   const Vector3& max) const;
+		__device__ __host__ bool					IntersectsSphere(Vector<3, T>& pos,
+																	 float& t,
+																	 const Vector<3, T>& sphereCenter,
+																	 float sphereRadius) const;
+		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords,
+																	   float& t,
+																	   bool cullFace,
+																	   const Vector<3, T> triCorners[3]) const;
+		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords,
+																	   float& t,
+																	   bool cullFace,
+																	   const Vector<3, T>& t0,
+																	   const Vector<3, T>& t1,
+																	   const Vector<3, T>& t2) const;
+		__device__ __host__ bool					IntersectsAABB(const Vector<3, T>& min,
+																   const Vector<3, T>& max) const;
 
 		// Utility
-		__device__ __host__ Ray				Reflect(const Vector3& normal) const;
-		__device__ __host__ Ray&			ReflectSelf(const Vector3& normal);
-		__device__ __host__ bool			Refract(Ray& out, const Vector3& normal,
-													float fromMedium, float toMedium) const;
-		__device__ __host__ bool			RefractSelf(const Vector3& normal,
-														float fromMedium, float toMedium);
+		__device__ __host__ Ray						Reflect(const Vector<3, T>& normal) const;
+		__device__ __host__ Ray&					ReflectSelf(const Vector<3, T>& normal);
+		__device__ __host__ bool					Refract(Ray& out, const Vector<3, T>& normal,
+															float fromMedium, float toMedium) const;
+		__device__ __host__ bool					RefractSelf(const Vector<3, T>& normal,
+																float fromMedium, float toMedium);
 		
 		// Randomization (Hemi spherical)
-		__device__ __host__ static Ray		RandomRayCosine(float xi0, float xi1,
-															const Vector3& normal,
-															const Vector3& position);
-		__device__ __host__ static Ray		RandomRayUnfirom(float xi0, float xi1,
-															 const Vector3& normal,
-															 const Vector3& position);
+		__device__ __host__ static Ray				RandomRayCosine(float xi0, float xi1,
+																	const Vector<3, T>& normal,
+																	const Vector<3, T>& position);
+		__device__ __host__ static Ray				RandomRayUnfirom(float xi0, float xi1,
+																	 const Vector<3, T>& normal,
+																	 const Vector<3, T>& position);
 
-		__device__ __host__ Ray				NormalizeDir() const;
-		__device__ __host__ Ray&			NormalizeDirSelf();
-		__device__ __host__ Ray				Advance(float) const;
-		__device__ __host__ Ray&			AdvanceSelf(float);
-		__device__ __host__ Ray				Transform(const Matrix4x4&) const;
-		__device__ __host__ Ray&			TransformSelf(const Matrix4x4&);
-		__device__ __host__ Vector3			AdvancedPos(float t) const;
+		__device__ __host__ Ray						NormalizeDir() const;
+		__device__ __host__ Ray&					NormalizeDirSelf();
+		__device__ __host__ Ray						Advance(float) const;
+		__device__ __host__ Ray&					AdvanceSelf(float);
+		__device__ __host__ Ray						Transform(const Matrix4x4&) const;
+		__device__ __host__ Ray&					TransformSelf(const Matrix4x4&);
+		__device__ __host__ Vector<3,T>				AdvancedPos(float t) const;
 };
 
+using RayF = Ray<float>;
+using RayD = Ray<double>;
+
 // Requirements of IERay
-static_assert(std::is_literal_type<Ray>::value == true, "IERay has to be literal type");
-static_assert(std::is_trivially_copyable<Ray>::value == true, "IERay has to be trivially copyable");
-static_assert(std::is_polymorphic<Ray>::value == false, "IERay should not be polymorphic");
-static_assert(sizeof(Ray) == sizeof(float) * 6, "IERay size is not 24 bytes");
+static_assert(std::is_literal_type<RayF>::value == true, "IERay has to be literal type");
+static_assert(std::is_trivially_copyable<RayF>::value == true, "IERay has to be trivially copyable");
+static_assert(std::is_polymorphic<RayF>::value == false, "IERay should not be polymorphic");
+static_assert(sizeof(RayF) == sizeof(float) * 8, "IERay size is not 24 bytes");
 
 #include "Ray.hpp"

@@ -69,7 +69,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
 		__device__ __host__ Matrix			operator/(float) const;
 
 		__device__ __host__ Matrix			operator*(const Matrix&) const;
-		__device__ __host__ Vector<N, T>	operator*(const Vector<N, T>&) const;
+		template<int M>
+		__device__ __host__ Vector<M, T>	operator*(const Vector<M, T>&) const;
 		__device__ __host__ Matrix			operator*(float) const;
 
 		// Logic
@@ -116,23 +117,23 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
 
 // Determinants
 template<class T>
-static T Determinant2(const Matrix<2, T>&);
+static T Determinant2(const T*);
 
 template<class T>
-static T Determinant3(const Matrix<3, T>&);
+static T Determinant3(const T*);
 
 template<class T>
-static T Determinant4(const Matrix<4, T>&);
+static T Determinant4(const T*);
 
 // Inverse
 template<class T>
-static T Inverse2(const Matrix<2, T>&);
+static Matrix<2, T> Inverse2(const T*);
 
 template<class T>
-static T Inverse3(const Matrix<3, T>&);
+static Matrix<3, T> Inverse3(const T*);
 
 template<class T>
-static T Inverse4(const Matrix<4, T>&);
+static Matrix<4, T> Inverse4(const T*);
 
 // Left Scalar operators
 template<int N, class T>
@@ -197,4 +198,16 @@ namespace TransformGen
 													   const Vector<3, T>& up);
 }
 
+// Implementation
 #include "Matrix.hpp"	// CPU & GPU
+
+// Constants
+static constexpr Matrix2x2  Indentity2x2 = Matrix2x2(1.0f, 0.0f,
+													 0.0f, 1.0f);
+static constexpr Matrix3x3  Indentity3x3 = Matrix3x3(1.0f, 0.0f, 0.0f,
+													 0.0f, 1.0f, 0.0f,
+													 0.0f, 0.0f, 1.0f);
+static constexpr Matrix4x4  Indentity4x4 = Matrix4x4(1.0f, 0.0f, 0.0f, 0.0f,
+													 0.0f, 1.0f, 0.0f, 0.0f,
+													 0.0f, 0.0f, 1.0f, 0.0f,
+													 0.0f, 0.0f, 0.0f, 1.0f);

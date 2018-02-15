@@ -46,9 +46,9 @@ __device__ __host__
 inline constexpr Matrix<N,T>::Matrix(const Args... dataList)
 	: matrix{static_cast<T>(dataList) ...}
 {
-	static_assert(sizeof...(dataList) == N, "Matrix constructor should have exact "
-											"same count of template count "
-											"as arguments");
+	static_assert(sizeof...(dataList) == N * N, "Matrix constructor should have exact "
+												"same count of template count "
+												"as arguments");
 }
 
 template <int N, class T>
@@ -112,7 +112,7 @@ inline T& Matrix<N, T>::operator[](int i)
 
 template <int N, class T>
 __device__ __host__ 
-inline const T& Matrix<N, T>::operator[](int) const
+inline const T& Matrix<N, T>::operator[](int i) const
 {
 	return matrix[i];
 }
@@ -157,11 +157,8 @@ template <int N, class T>
 __device__ __host__ 
 inline void Matrix<N, T>::operator*=(const Matrix& right)
 {
-	UNROLL_LOOP
-	for(int i =0; i < N*N; i++)
-	{
-		matrix[i] *= right.matrix[i];
-	}
+	Matrix m = (*this) * right;
+	*this = m;
 }
 
 template <int N, class T>
@@ -188,7 +185,7 @@ inline void Matrix<N, T>::operator/=(const Matrix& right)
 
 template <int N, class T>
 __device__ __host__ 
-inline void Matrix<N, T>::operator/=(float)
+inline void Matrix<N, T>::operator/=(float right)
 {
 	UNROLL_LOOP
 	for(int i =0; i < N*N; i++)
@@ -280,23 +277,26 @@ inline Matrix<N, T> Matrix<N, T>::operator*(const Matrix& right) const
 				result += matrix[j + N * k] * right[i * N + k];
 			}
 			// Dot Product
-			m.matrix(j, i) = result;
+			m(j, i) = result;
 		}
 	}
 	return m;
 }
 
 template <int N, class T>
+template <int M>
 __device__ __host__ 
-inline Vector<N, T>	Matrix<N, T>::operator*(const Vector<N, T>& right) const
+inline Vector<M, T>	Matrix<N, T>::operator*(const Vector<M, T>& right) const
 {
-	Vector<N, T> v;
+	static_assert(M <= N, "Cannot Multiply with large vector.");
+
+	Vector<M, T> v;
 	UNROLL_LOOP
-	for(int i = 0; i < N; i++)
+	for(int i = 0; i < M; i++)
 	{
 		T result = 0;
 		UNROLL_LOOP
-		for(int k = 0; k < N; k++)
+		for(int k = 0; k < M; k++)
 		{
 			result += matrix[i + N * k] * right[k];
 		}
@@ -327,7 +327,7 @@ inline bool Matrix<N, T>::operator==(const Matrix& right) const
 	UNROLL_LOOP
 	for(int i =0; i < N*N; i++)
 	{
-		eq &= matrix[i] = right.matrix[i];
+		eq &= matrix[i] == right.matrix[i];
 	}
 	return eq;
 }
@@ -344,12 +344,12 @@ __device__ __host__
 inline T Matrix<N, T>::Determinant() const
 {
 	// TODO: use constexpr if when CUDA supports it
-	if(N == 2) 
-		return Determinant2(*this);
-	else if(N == 3) 
-		return Determinant3(*this);
+	if (N == 2) 
+		return Determinant2<T>(static_cast<const T*>(*this));
+	else if (N == 3) 
+		return Determinant3<T>(static_cast<const T*>(*this));
 	else 
-		return Determinant4(*this);
+		return Determinant4<T>(static_cast<const T*>(*this));
 }
 
 template <int N, class T>
@@ -358,12 +358,12 @@ __device__ __host__
 inline Matrix<N, T> Matrix<N, T>::Inverse() const
 {
 	// TODO: use constexpr if when CUDA supports it
-	if(N == 2)
-		return Inverse2(*this);
-	else if(N == 3)
-		return Inverse3(*this);
+	if (N == 2)
+		return Inverse2<T>(static_cast<const T*>(*this));
+	else if (N == 3)
+		return Inverse3<T>(static_cast<const T*>(*this));
 	else
-		return Inverse4(*this);
+		return Inverse4<T>(static_cast<const T*>(*this));
 }
 
 template <int N, class T>
@@ -372,12 +372,12 @@ __device__ __host__
 inline Matrix<N, T>& Matrix<N, T>::InverseSelf()
 {
 	// TODO: use constexpr if when CUDA supports it
-	if(N == 2)
-		(*this) = Inverse2(*this);
-	else if(N == 3)
-		(*this) = Inverse3(*this);
+	if (N == 2)
+		(*this) = Inverse2<T>(static_cast<const T*>(*this));
+	else if (N == 3)
+		(*this) = Inverse3<T>(static_cast<const T*>(*this));
 	else
-		(*this) = Inverse4(*this);
+		(*this) = Inverse4<T>(static_cast<const T*>(*this));
 	return *this;
 }
 
@@ -631,74 +631,93 @@ inline Matrix<N, T> Matrix<N, T>::Lerp(const Matrix& mat0, const Matrix& mat1, T
 }
 
 template<class T>
-inline static T Determinant2(const Matrix<2, T>& m)
+inline static T Determinant2(const T* m)
 {
-	return m(0, 0) * m(1, 1) - m(1, 0) * m(0, 1);
+	return m[0] * m[3] - m[2] * m[1];
 }
 
 template<class T>
-inline static T Determinant3(const Matrix<3, T>& m)
+inline static T Determinant3(const T* m)
 {
-	return m(0, 0) * m(1, 1) * m(2, 2) - 
-		   m(0, 0) * m(1, 2) * m(2, 1) +
-		   m(0, 1) * m(1, 2) * m(2, 0) -
-		   m(0, 1) * m(1, 0) * m(2, 2) +			
-		   m(0, 2) * m(1, 0) * m(2, 1) -
-		   m(0, 2) * m(1, 1) * m(2, 0);
+	T det1 = m[0] * (m[4] * m[8] - m[7] * m[5]);
+	T det2 = m[3] * (m[1] * m[8] - m[7] * m[2]);
+	T det3 = m[6] * (m[1] * m[5] - m[4] * m[2]);
+	return det1 - det2 + det3;
 }
 
 template<class T>
-inline static T Determinant4(const Matrix<4, T>& m)
+inline static T Determinant4(const T* m)
 {
 	// Hardcoded should be most optimizer friendly
-	// TODO: Maybe register size etc.. for GPU 
-	
+	// TODO: Maybe register size etc.. for GPU 	
 	// YOLO
-	return m(0, 3) * m(1, 2) * m(2, 1) * m(3, 0) - m(0, 2) * m(1, 3) * m(2, 1) * m(3, 0) -
-		   m(0, 3) * m(1, 1) * m(2, 2) * m(3, 0) + m(0, 1) * m(1, 3) * m(2, 2) * m(3, 0) +
-		   m(0, 2) * m(1, 1) * m(2, 3) * m(3, 0) - m(0, 1) * m(1, 2) * m(2, 3) * m(3, 0) -
-		   m(0, 3) * m(1, 2) * m(2, 0) * m(3, 1) + m(0, 2) * m(1, 3) * m(2, 0) * m(3, 1) +
-		   m(0, 3) * m(1, 0) * m(2, 2) * m(3, 1) - m(0, 0) * m(1, 3) * m(2, 2) * m(3, 1) -
-		   m(0, 2) * m(1, 0) * m(2, 3) * m(3, 1) + m(0, 0) * m(1, 2) * m(2, 3) * m(3, 1) +
-		   m(0, 3) * m(1, 1) * m(2, 0) * m(3, 2) - m(0, 1) * m(1, 3) * m(2, 0) * m(3, 2) -
-		   m(0, 3) * m(1, 0) * m(2, 1) * m(3, 2) + m(0, 0) * m(1, 3) * m(2, 1) * m(3, 2) +
-		   m(0, 1) * m(1, 0) * m(2, 3) * m(3, 2) - m(0, 0) * m(1, 1) * m(2, 3) * m(3, 2) -
-		   m(0, 2) * m(1, 1) * m(2, 0) * m(3, 3) + m(0, 1) * m(1, 2) * m(2, 0) * m(3, 3) +
-		   m(0, 2) * m(1, 0) * m(2, 1) * m(3, 3) - m(0, 0) * m(1, 2) * m(2, 1) * m(3, 3) -
-		   m(0, 1) * m(1, 0) * m(2, 2) * m(3, 3) + m(0, 0) * m(1, 1) * m(2, 2) * m(3, 3);
+	T det1 = m[0] * (  m[5] * m[10] * m[15] 
+					 + m[9] * m[14] * m[7] 
+					 + m[6] * m[11] * m[13]
+					 - m[13] * m[10] * m[7]
+					 - m[9] * m[6] * m[15]
+					 - m[5] * m[14] * m[11]);
+
+	T det2 = m[4] * (  m[1] * m[10] * m[15] 
+					 + m[9] * m[14] * m[3] 
+					 + m[2] * m[11] * m[13]
+					 - m[3] * m[10] * m[13]
+					 - m[2] * m[9] * m[15]
+					 - m[1] * m[11] * m[14]);
+
+	T det3 =  m[8] * (  m[1] * m[6] * m[15] 
+					  + m[5] * m[14] * m[3] 
+					  + m[2] * m[7] * m[13]
+					  - m[3] * m[6] * m[13]
+					  - m[2] * m[5] * m[15]
+					  - m[14] * m[7] * m[1]);
+
+	T det4 = m[12] * (  m[1] * m[6] * m[11] 
+					  + m[5] * m[10] * m[3] 
+					  + m[2] * m[7] * m[9]
+					  - m[9] * m[6] * m[3]
+					  - m[2] * m[5] * m[11]
+					  - m[1] * m[10] * m[7]);
+	return det1 - det2 + det3 - det4;
 }
 
 template<class T>
-inline static Matrix<2, T> Inverse2(const Matrix<2, T>& m)
+inline static Matrix<2, T> Inverse2(const T* m)
 {
 	Matrix<2, T> result;
-	T detRecip = 1 / Determinant2(m);
+	T detRecip = 1 / Determinant2<T>(m);
 
-	result(0, 0) = detRecip * m(1, 1);
-	result(0, 1) = -1 * detRecip * m(0, 1);
-	result(1, 0) = -1 * detRecip * m(1, 0);
-	result(1, 1) = detRecip * m(0, 0);
+	result(0, 0) = detRecip * m[3];
+	result(0, 1) = detRecip * m[1] * -1;
+	result(1, 0) = detRecip * m[2] * -1;
+	result(1, 1) = detRecip * m[0];
+	return result;
 }
 
 template<class T>
-inline static Matrix<3, T> Inverse3(const Matrix<3, T>& m)
+inline static Matrix<3, T> Inverse3(const T* m)
 {
-	Matrix<3, T> result;
-	T detRecip = 1 / Determinant3(m);
+	T m11 = m[4] * m[8] - m[7] * m[5];
+	T m12 = -(m[1] * m[8] - m[7] * m[2]);
+	T m13 = m[1] * m[5] - m[4] * m[2];
 
-	result(0, 0) = detRecip * (m(0, 0) * m(0, 0) - m(0, 0) * m(0, 0));
-	result(0, 1) = detRecip * (m(0, 0) * m(0, 0) - m(0, 0) * m(0, 0)) * -1;
-	result(0, 2) = detRecip * (m(0, 0) * m(0, 0) - m(0, 0) * m(0, 0));
-	result(1, 0) = detRecip * (m(0, 0) * m(0, 0) - m(0, 0) * m(0, 0)) * -1;
-	result(1, 1) = detRecip * (m(0, 0) * m(0, 0) - m(0, 0) * m(0, 0));
-	result(1, 2) = detRecip * (m(0, 0) * m(0, 0) - m(0, 0) * m(0, 0)) * -1;
-	result(2, 0) = detRecip * (m(0, 0) * m(0, 0) - m(0, 0) * m(0, 0));
-	result(2, 1) = detRecip * (m(0, 0) * m(0, 0) - m(0, 0) * m(0, 0)) * -1;
-	result(2, 2) = detRecip * (m(0, 0) * m(0, 0) - m(0, 0) * m(0, 0));
+	T m21 = -(m[3] * m[8] - m[6] * m[5]);
+	T m22 = m[0] * m[8] - m[6] * m[2];
+	T m23 = -(m[0] * m[5] - m[3] * m[2]);
+
+	T m31 = m[3] * m[7] - m[6] * m[4];
+	T m32 = -(m[0] * m[7] - m[6] * m[1]);
+	T m33 = m[0] * m[4] - m[3] * m[1];
+
+	T det = m[0] * m11 + m[3] * m12 + m[6] * m13;
+	T detInv = 1 / det;
+	return detInv * Matrix<3, T>(m11, m12, m13,
+								 m21, m22, m23,
+								 m31, m32, m33);
 }
 
 template<class T>
-inline static Matrix<4, T> Inverse4(const Matrix<4, T>& m)
+inline static Matrix<4, T> Inverse4(const T* m)
 {
 	// MESA GLUT Copy Paste
 	Matrix<4, T> inv;
@@ -924,25 +943,25 @@ inline Matrix<4, T> TransformGen::Rotate(const Quaternion<T>& q)
 	T zz = q[3] * q[3];
 	T zw = q[3] * q[0];
 
-	result.v[0]  = 1 - (2 * (yy + zz));
-	result.v[4]  =     (2 * (xy - zw));
-	result.v[8]  =     (2 * (xz + yw));
-	result.v[12] = 0;
+	result[0]  = 1 - (2 * (yy + zz));
+	result[4]  =     (2 * (xy - zw));
+	result[8]  =     (2 * (xz + yw));
+	result[12] = 0;
 
-	result.v[1]  =     (2 * (xy + zw));
-	result.v[5]  = 1 - (2 * (xx + zz));
-	result.v[9]  =     (2 * (yz - xw));
-	result.v[13] = 0;
+	result[1]  =     (2 * (xy + zw));
+	result[5]  = 1 - (2 * (xx + zz));
+	result[9]  =     (2 * (yz - xw));
+	result[13] = 0;
 
-	result.v[2]  =     (2 * (xz - yw));
-	result.v[6]  =     (2 * (yz + xw));
-	result.v[10] = 1 - (2 * (xx + yy));
-	result.v[14] = 0;
+	result[2]  =     (2 * (xz - yw));
+	result[6]  =     (2 * (yz + xw));
+	result[10] = 1 - (2 * (xx + yy));
+	result[14] = 0;
 
-	result.v[3]	 = 0;
-	result.v[7]  = 0;
-	result.v[11] = 0;
-	result.v[15] = 1;
+	result[3]  = 0;
+	result[7]  = 0;
+	result[11] = 0;
+	result[15] = 1;
 
 	return result;
 }
