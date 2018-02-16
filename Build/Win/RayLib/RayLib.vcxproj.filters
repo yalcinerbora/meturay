@@ -39,6 +39,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Constans.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CoreStructs.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\BVH.h">
+      <Filter>Acceleration</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="LinearAlgb">
@@ -46,6 +49,9 @@
     </Filter>
     <Filter Include="Memory">
       <UniqueIdentifier>{8a3dbe82-44f6-451f-a478-02ad96121997}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Acceleration">
+      <UniqueIdentifier>{fba64469-a7e4-45d4-82b5-aeed9a35ee50}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

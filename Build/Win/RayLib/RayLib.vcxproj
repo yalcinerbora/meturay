@@ -96,6 +96,7 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\Source\RayLib\BVH.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Constans.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CoreStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaCheck.h" />
