@@ -38,6 +38,7 @@
       <Filter>Memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Constans.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\CoreStructs.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="LinearAlgb">

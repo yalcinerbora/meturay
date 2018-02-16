@@ -16,10 +16,7 @@ class Ray<T>
 	protected:
 	public:
 		// Constructors & Destructor
-		constexpr __device__ __host__				Ray();
-		constexpr __device__ __host__				Ray(float dX, float dY, float dZ,
-														float pX, float pY, float pZ);
-		constexpr __device__ __host__				Ray(const Vector3& direction, const Vector3& position);
+		constexpr __device__ __host__				Ray(const Vector<3,T>& direction, const Vector<3, T>& position);
 		constexpr __device__ __host__				Ray(const Vector3[2]);
 													Ray(const Ray&) = default;
 													~Ray() = default;
