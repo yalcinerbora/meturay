@@ -69,7 +69,8 @@ class BVH
 		// Construction & Allocation
 		__host__ void					ReDetermineAllocation(ObjectAABBList&);
 		__host__ void					ReDetermineAllocation(VertexDataReference&);
-		__device__ __host__	void		Construct();
+		__device__ __host__	void		Construct(VertexDataReference&);
+		__device__ __host__	void		Construct(ObjectAABBList&);
 
 		// Intersection Related
 		__device__ __host__	bool		IntersectsFull(float& distance,
