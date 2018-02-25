@@ -10,8 +10,8 @@ template<class T>
 class Ray<T>
 {
 	private:
-		Vector<3,T>&								direction;
-		Vector<3,T>&								position;
+		Vector<3,T>									direction;
+		Vector<3,T>									position;
 
 	protected:
 	public:
@@ -29,21 +29,21 @@ class Ray<T>
 		__device__ __host__ const Vector<3,T>&		getPosition() const;
 
 		// Intersections
-		__device__ __host__ bool					IntersectsSphere(Vector<3, T>& pos,
-																	 float& t,
+		__device__ __host__ bool					IntersectsSphere(Vector<3, T>& pos, float& t,
 																	 const Vector<3, T>& sphereCenter,
 																	 float sphereRadius) const;
-		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords,
-																	   float& t,
-																	   bool cullFace,
-																	   const Vector<3, T> triCorners[3]) const;
-		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords,
-																	   float& t,
-																	   bool cullFace,
+		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords, float& t,
+																	   const Vector<3, T> triCorners[3],
+																	   bool cullFace = true) const;
+		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords, float& t,																	   
 																	   const Vector<3, T>& t0,
 																	   const Vector<3, T>& t1,
-																	   const Vector<3, T>& t2) const;
+																	   const Vector<3, T>& t2,
+																	   bool cullFace = true) const;
 		__device__ __host__ bool					IntersectsAABB(const Vector<3, T>& min,
+																   const Vector<3, T>& max) const;
+		__device__ __host__ bool					IntersectsAABB(Vector<3,T>& pos, float& t,
+																   const Vector<3, T>& min,
 																   const Vector<3, T>& max) const;
 
 		// Utility
@@ -75,9 +75,9 @@ using RayF = Ray<float>;
 using RayD = Ray<double>;
 
 // Requirements of IERay
-static_assert(std::is_literal_type<RayF>::value == true, "IERay has to be literal type");
-static_assert(std::is_trivially_copyable<RayF>::value == true, "IERay has to be trivially copyable");
-static_assert(std::is_polymorphic<RayF>::value == false, "IERay should not be polymorphic");
-static_assert(sizeof(RayF) == sizeof(float) * 8, "IERay size is not 24 bytes");
+static_assert(std::is_literal_type<RayF>::value == true, "Ray has to be literal type");
+static_assert(std::is_trivially_copyable<RayF>::value == true, "Ray has to be trivially copyable");
+static_assert(std::is_polymorphic<RayF>::value == false, "Ray should not be polymorphic");
+static_assert(sizeof(RayF) == sizeof(float) * 6, "Ray<float> size is not 24 bytes");
 
 #include "Ray.hpp"
