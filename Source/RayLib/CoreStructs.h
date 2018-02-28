@@ -13,13 +13,14 @@ struct alignas(64) RayStack
 	Vector3			position;
 	float			currentMedium;
 	Vector3			direction;
-
+	unsigned int	pixelId;
 	
 	Vector3			totalRadiance;
-	
-
-	unsigned int	pixelId;
 	unsigned int	sampleId;	
+
+	// 4 more word available
+	Vector4 asd;
+
 };
 
 struct HitRecord

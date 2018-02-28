@@ -2,6 +2,7 @@
 
 #include "Matrix.h"
 #include "Vector.h"
+#include "CoreStructs.h"
 
 template<class T, typename = ArithmeticEnable<T>>
 class Ray;
@@ -18,6 +19,7 @@ class Ray<T>
 		// Constructors & Destructor
 		constexpr __device__ __host__				Ray(const Vector<3,T>& direction, const Vector<3, T>& position);
 		constexpr __device__ __host__				Ray(const Vector3[2]);
+		constexpr __device__ __host__				Ray(const RayStack&);
 													Ray(const Ray&) = default;
 													~Ray() = default;
 		Ray&										operator=(const Ray&) = default;
