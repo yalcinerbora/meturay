@@ -79,10 +79,10 @@ template<class T>
 __device__ __host__ 
 inline Quaternion<T> Quaternion<T>::operator*(const Quaternion& right) const
 {
-	return Quaternion(vec[0] * quat[0] - vec[1] * quat[1] - vec[2] * quat[2] - vec[3] * quat[3],		// W
-					  vec[0] * quat[1] + vec[1] * quat[0] + vec[2] * quat[3] - vec[3] * quat[2],		// X
-					  vec[0] * quat[2] + vec[2] * quat[0] + vec[3] * quat[1] - vec[1] * quat[3],		// Y
-					  vec[0] * quat[3] + vec[3] * quat[0] + vec[1] * quat[2] - vec[2] * quat[1]);		// Z
+	return Quaternion(vec[0] * right[0] - vec[1] * right[1] - vec[2] * right[2] - vec[3] * right[3],		// W
+					  vec[0] * right[1] + vec[1] * right[0] + vec[2] * right[3] - vec[3] * right[2],		// X
+					  vec[0] * right[2] + vec[2] * right[0] + vec[3] * right[1] - vec[1] * right[3],		// Y
+					  vec[0] * right[3] + vec[3] * right[0] + vec[1] * right[2] - vec[2] * right[1]);		// Z
 }
 
 template<class T>
@@ -257,7 +257,7 @@ template<class T>
 __device__ __host__ 
 inline Quaternion<T> Quaternion<T>::RotationBetween(const Vector<3,T>& a, const Vector<3,T>& b)
 {
-	IEVector3 aCrossB = a.Cross(b);
+	Vector3 aCrossB = a.Cross(b);
 	float aDotB = a.Dot(b);
 	if(aCrossB != Zero3)
 		aCrossB.NormalizeSelf();

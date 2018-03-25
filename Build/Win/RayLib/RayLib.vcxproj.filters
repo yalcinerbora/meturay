@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="..\..\..\Source\RayLib\TracerI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.h">
       <Filter>LinearAlgb</Filter>
     </ClInclude>
@@ -42,6 +41,26 @@
     <ClInclude Include="..\..\..\Source\RayLib\BVH.h">
       <Filter>Acceleration</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\VisorI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Types.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\Log.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\TracerI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\MayaCacheIO.h">
+      <Filter>FileI-O</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\IOError.h">
+      <Filter>FileI-O</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\System.h">
+      <Filter>System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Endian.h">
+      <Filter>System</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="LinearAlgb">
@@ -53,10 +72,22 @@
     <Filter Include="Acceleration">
       <UniqueIdentifier>{fba64469-a7e4-45d4-82b5-aeed9a35ee50}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Interfaces">
+      <UniqueIdentifier>{ffc61ecf-ed27-41a3-841d-51e14123abab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FileI-O">
+      <UniqueIdentifier>{df1a67ea-65ee-47f3-8d9c-8336216d49bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="System">
+      <UniqueIdentifier>{68580eec-75d4-4e7b-87e5-aefdc1ca832c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp">
       <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp">
+      <Filter>FileI-O</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

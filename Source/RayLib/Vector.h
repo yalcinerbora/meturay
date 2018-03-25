@@ -68,8 +68,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 		// Accessors
 		__device__ __host__	explicit		operator float*();
 		__device__ __host__	explicit		operator const float *() const;
-		__device__ __host__ float&			operator[](int);
-		__device__ __host__ const float&	operator[](int) const;
+		__device__ __host__ T&				operator[](int);
+		__device__ __host__ const T&		operator[](int) const;
 
 		// Modify
 		__device__ __host__ void			operator+=(const Vector&);

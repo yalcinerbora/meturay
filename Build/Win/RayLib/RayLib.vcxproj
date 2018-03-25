@@ -58,6 +58,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>METU_DEBUG;METU_CUDA;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source\;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <CudaCompile>
       <GenerateLineInfo>false</GenerateLineInfo>
@@ -79,6 +80,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>METU_CUDA;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source\;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -101,21 +103,29 @@
     <ClInclude Include="..\..\..\Source\RayLib\CoreStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaCheck.h" />
     <ClInclude Include="..\..\..\Source\RayLib\DeviceMemory.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\Endian.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\IOError.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\Log.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Matrix.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Matrix.hpp" />
+    <ClInclude Include="..\..\..\Source\RayLib\MayaCacheIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Quaternion.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Quaternion.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\Random.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Ray.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Ray.hpp" />
+    <ClInclude Include="..\..\..\Source\RayLib\System.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Texture.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Texture.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\Types.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.hpp" />
+    <ClInclude Include="..\..\..\Source\RayLib\VisorI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

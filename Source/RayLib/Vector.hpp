@@ -101,14 +101,14 @@ inline Vector<N, T>::operator const float *() const
 
 template <int N, class T>
 __device__ __host__
-inline float& Vector<N, T>::operator[](int i)
+inline T& Vector<N, T>::operator[](int i)
 {
 	return vector[i];
 }
 
 template <int N, class T>
 __device__ __host__
-inline const float& Vector<N, T>::operator[](int i) const
+inline const T& Vector<N, T>::operator[](int i) const
 {
 	return vector[i];
 }
