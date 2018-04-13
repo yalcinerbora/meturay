@@ -17,11 +17,11 @@ N should be 2, 3, 4 at most.
 template<class T>
 using ArithmeticEnable = typename std::enable_if<std::is_arithmetic<T>::value>::type;
 
-template<class T>
-using FloatEnable = typename std::enable_if<std::is_floating_point<T>::value>::type;
-
 template<class... Args>
 using AllArithmeticEnable = typename std::enable_if<std::conjunction<std::is_arithmetic<Args>...>::value>::type;
+
+template<class T, class RType = void>
+using FloatEnable = typename std::enable_if<std::is_floating_point<T>::value, RType>::type;
 
 template<int N, class T, typename = ArithmeticEnable<T>>
 class Vector;
@@ -86,10 +86,17 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 		__device__ __host__ Vector			operator*(float) const;
 		__device__ __host__ Vector			operator/(const Vector&) const;
 		__device__ __host__ Vector			operator/(float) const;
+		__device__ __host__ Vector			operator%(const Vector&) const;
+		__device__ __host__ Vector			operator%(float) const;
 
 		// Logic
 		__device__ __host__ bool			operator==(const Vector&) const;
 		__device__ __host__ bool			operator!=(const Vector&) const;
+		__device__ __host__ bool			operator<(const Vector&) const;
+		__device__ __host__ bool			operator<=(const Vector&) const;
+		__device__ __host__ bool			operator>(const Vector&) const;
+		__device__ __host__ bool			operator>=(const Vector&) const;
+
 
 		// Utilty
 		__device__ __host__ float			Dot(const Vector&) const;
@@ -105,26 +112,28 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 		__device__ __host__ Vector&			AbsSelf();
 
 		// Only float types
-		template<typename = FloatEnable<T>>
-		__device__ __host__ Vector			Round() const;
-		template<typename = FloatEnable<T>>
-		__device__ __host__ Vector&			RoundSelf();
-		template<typename = FloatEnable<T>>
-		__device__ __host__ Vector			Floor() const;
-		template<typename = FloatEnable<T>>
-		__device__ __host__ Vector&			FloorSelf();
-		template<typename = FloatEnable<T>>
-		__device__ __host__ Vector			Ceil() const;
-		template<typename = FloatEnable<T>>
-		__device__ __host__ Vector&			CeilSelf();
+		template<class Q = T>
+		__device__ __host__ FloatEnable<Q, Vector>	Round() const;
+		template<class Q = T>
+		__device__ __host__ FloatEnable<Q, Vector&>	RoundSelf();
+		template<class Q = T>
+		__device__ __host__ FloatEnable<Q, Vector>	Floor() const;
+		template<class Q = T>
+		__device__ __host__ FloatEnable<Q, Vector&>	FloorSelf();
+		template<class Q = T>
+		__device__ __host__ FloatEnable<Q, Vector>	Ceil() const;
+		template<class Q = T>
+		__device__ __host__ FloatEnable<Q, Vector&>	CeilSelf();
 
 		static __device__ __host__ Vector	Min(const Vector&, const Vector&);
 		static __device__ __host__ Vector	Min(const Vector&, T);
 		static __device__ __host__ Vector	Max(const Vector&, const Vector&);
 		static __device__ __host__ Vector	Max(const Vector&, T);
 
-		template<typename = FloatEnable<T>>
-		static __device__ __host__ Vector	Lerp(const Vector&, const Vector&, T);
+		template<class Q = T>
+		static __device__ __host__ FloatEnable<Q, Vector>	Lerp(const Vector&,
+																 const Vector&,
+																 T);
 };
 
 // Left scalars

@@ -15,13 +15,6 @@ inline constexpr Ray<T>::Ray(const Vector3 vec[2])
 {}
 
 template<class T>
-__device__ __host__
-inline constexpr Ray<T>::Ray(const RayStack& r)
-	: direction(r.direction)
-	, position(r.position)
-{}
-
-template<class T>
 __device__ __host__ 
 inline Ray<T>& Ray<T>::operator=(const Vector3 vec[2])
 {

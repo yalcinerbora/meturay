@@ -99,8 +99,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\RayLib\BVH.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\Camera.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Constans.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\CoreStructs.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\RayHitStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaCheck.h" />
     <ClInclude Include="..\..\..\Source\RayLib\DeviceMemory.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Endian.h" />
@@ -111,7 +113,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\MayaCacheIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Quaternion.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Quaternion.hpp" />
-    <ClInclude Include="..\..\..\Source\RayLib\Random.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\Random.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Ray.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Ray.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
@@ -122,6 +124,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\Vector.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorI.h" />
+    <ClInclude Include="DistributorI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp" />

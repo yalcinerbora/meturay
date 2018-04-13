@@ -23,7 +23,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\Texture.hpp">
       <Filter>Memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\Random.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Matrix.hpp">
       <Filter>LinearAlgb</Filter>
     </ClInclude>
@@ -37,7 +36,6 @@
       <Filter>Memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Constans.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\CoreStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\BVH.h">
       <Filter>Acceleration</Filter>
     </ClInclude>
@@ -61,6 +59,17 @@
     <ClInclude Include="..\..\..\Source\RayLib\Endian.h">
       <Filter>System</Filter>
     </ClInclude>
+    <ClInclude Include="DistributorI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\RayHitStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Camera.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Random.cuh" />
+    <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="LinearAlgb">
@@ -80,6 +89,9 @@
     </Filter>
     <Filter Include="System">
       <UniqueIdentifier>{68580eec-75d4-4e7b-87e5-aefdc1ca832c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Structs">
+      <UniqueIdentifier>{5662f70e-59b8-4c30-a7fc-b865a663335f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

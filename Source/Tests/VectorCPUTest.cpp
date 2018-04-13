@@ -227,9 +227,9 @@ TEST(VectorCPU, Functions2)
 	Vector4 c(-1.0f, 0.0f, -0.0f, 1.0f);
 
 	Vector4 v0 = c.Abs();
-	Vector4 v1 = b.Round();
-	Vector4 v2 = b.Floor();
-	Vector4 v3 = b.Ceil();
+	Vector4 v1 = b.Round<float>();
+	Vector4 v2 = b.Floor<float>();
+	Vector4 v3 = b.Ceil<float>();
 	//
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v0),
 								   static_cast<const float*>(v0) + 4),

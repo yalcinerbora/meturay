@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Kernels">
+      <UniqueIdentifier>{4dd183f7-1605-4e68-aad1-6afae2f26692}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\CameraKernels.cuh">
+      <Filter>Kernels</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\CameraKernels.cu">
+      <Filter>Kernels</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>

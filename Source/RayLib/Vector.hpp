@@ -272,6 +272,32 @@ inline Vector<N, T> Vector<N, T>::operator/(float right) const
 
 template <int N, class T>
 __device__ __host__
+inline Vector<N, T> Vector<N, T>::operator%(const Vector& right) const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = vector[i] % right[i];
+	}
+	return v;
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T> Vector<N, T>::operator%(float right) const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = vector[i] % right;
+	}
+	return v;
+}
+
+template <int N, class T>
+__device__ __host__
 inline bool Vector<N, T>::operator==(const Vector& right) const
 {
 	bool b = true;
@@ -288,6 +314,46 @@ __device__ __host__
 inline bool Vector<N, T>::operator!=(const Vector& right) const
 {
 	return !(*this == right);
+}
+
+template <int N, class T>
+__device__ __host__
+inline bool Vector<N, T>::operator<(const Vector& right) const
+{
+	bool b = true;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		b &= vector[i] < right[i];
+	}
+	return b;
+}
+
+template <int N, class T>
+__device__ __host__
+inline bool Vector<N, T>::operator<=(const Vector& right) const
+{
+	bool b = true;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		b &= vector[i] >= right[i];
+	}
+	return b;
+}
+
+template <int N, class T>
+__device__ __host__
+inline bool Vector<N, T>::operator>(const Vector& right) const
+{
+	return !(*this <= right);
+}
+
+template <int N, class T>
+__device__ __host__
+inline bool Vector<N, T>::operator>=(const Vector& right) const
+{
+	return !(*this < right);
 }
 
 template <int N, class T>
@@ -396,7 +462,7 @@ inline Vector<N, T>& Vector<N, T>::ClampSelf(float min, float max)
 
 template <int N, class T>
 __device__ __host__ 
-Vector<N, T> Vector<N, T>::Abs() const
+inline Vector<N, T> Vector<N, T>::Abs() const
 {
 	Vector v;
 	UNROLL_LOOP
@@ -409,7 +475,7 @@ Vector<N, T> Vector<N, T>::Abs() const
 
 template <int N, class T>
 __device__ __host__ 
-Vector<N, T>& Vector<N, T>::AbsSelf()
+inline Vector<N, T>& Vector<N, T>::AbsSelf()
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
@@ -420,9 +486,9 @@ Vector<N, T>& Vector<N, T>::AbsSelf()
 }
 
 template <int N, class T>
-template<typename>
+template<class Q>
 __device__ __host__ 
-Vector<N, T> Vector<N, T>::Round() const
+inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Round() const
 {
 	Vector v;
 	UNROLL_LOOP
@@ -434,9 +500,9 @@ Vector<N, T> Vector<N, T>::Round() const
 }
 
 template <int N, class T>
-template<typename>
+template<class Q>
 __device__ __host__ 
-Vector<N, T>& Vector<N, T>::RoundSelf()
+inline FloatEnable<Q, Vector<N, T>&> Vector<N, T>::RoundSelf()
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
@@ -447,9 +513,9 @@ Vector<N, T>& Vector<N, T>::RoundSelf()
 }
 
 template <int N, class T>
-template<typename>
+template<class Q>
 __device__ __host__ 
-Vector<N, T> Vector<N, T>::Floor() const
+inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Floor() const
 {
 	Vector v;
 	UNROLL_LOOP
@@ -461,9 +527,9 @@ Vector<N, T> Vector<N, T>::Floor() const
 }
 
 template <int N, class T>
-template<typename>
+template<class Q>
 __device__ __host__ 
-Vector<N, T>& Vector<N, T>::FloorSelf()
+inline FloatEnable<Q, Vector<N, T>&> Vector<N, T>::FloorSelf()
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
@@ -474,9 +540,9 @@ Vector<N, T>& Vector<N, T>::FloorSelf()
 }
 
 template <int N, class T>
-template<typename>
+template<class Q>
 __device__ __host__ 
-Vector<N, T> Vector<N, T>::Ceil() const
+inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Ceil() const
 {
 	Vector v;
 	UNROLL_LOOP
@@ -488,9 +554,9 @@ Vector<N, T> Vector<N, T>::Ceil() const
 }
 
 template <int N, class T>
-template<typename>
+template<class Q>
 __device__ __host__ 
-Vector<N, T>& Vector<N, T>::CeilSelf()
+inline FloatEnable<Q, Vector<N, T>&> Vector<N, T>::CeilSelf()
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
@@ -502,7 +568,7 @@ Vector<N, T>& Vector<N, T>::CeilSelf()
 
 template <int N, class T>
 __device__ __host__ 
-Vector<N, T> Vector<N, T>::Min(const Vector& v0, const Vector& v1)
+inline Vector<N, T> Vector<N, T>::Min(const Vector& v0, const Vector& v1)
 {
 	Vector v;
 	UNROLL_LOOP
@@ -515,7 +581,7 @@ Vector<N, T> Vector<N, T>::Min(const Vector& v0, const Vector& v1)
 
 template <int N, class T>
 __device__ __host__ 
-Vector<N, T> Vector<N, T>::Min(const Vector& v0, T v1)
+inline Vector<N, T> Vector<N, T>::Min(const Vector& v0, T v1)
 {
 	Vector v;
 	UNROLL_LOOP
@@ -528,7 +594,7 @@ Vector<N, T> Vector<N, T>::Min(const Vector& v0, T v1)
 
 template <int N, class T>
 __device__ __host__ 
-Vector<N, T> Vector<N, T>::Max(const Vector& v0, const Vector& v1)
+inline Vector<N, T> Vector<N, T>::Max(const Vector& v0, const Vector& v1)
 {
 	Vector v;
 	UNROLL_LOOP
@@ -541,7 +607,7 @@ Vector<N, T> Vector<N, T>::Max(const Vector& v0, const Vector& v1)
 
 template <int N, class T>
 __device__ __host__ 
-Vector<N, T> Vector<N, T>::Max(const Vector& v0, T v1)
+inline Vector<N, T> Vector<N, T>::Max(const Vector& v0, T v1)
 {
 	Vector v;
 	UNROLL_LOOP
@@ -553,9 +619,9 @@ Vector<N, T> Vector<N, T>::Max(const Vector& v0, T v1)
 }
 
 template <int N, class T>
-template <typename>
+template<class Q>
 __device__ __host__
-inline Vector<N, T> Vector<N, T>::Lerp(const Vector& v0, const Vector& v1, T t)
+inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Lerp(const Vector& v0, const Vector& v1, T t)
 {
 	assert(t >= 0 && t <= 1);
 	Vector v;

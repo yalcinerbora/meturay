@@ -110,6 +110,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\Tests\main.cpp" />
     <CudaCompile Include="..\..\..\Source\Tests\MatrixGPUTest.cu" />
+    <CudaCompile Include="..\..\..\Source\Tests\RandomGPUTest.cu" />
     <CudaCompile Include="..\..\..\Source\Tests\TextureTest.cu">
       <FileType>Document</FileType>
     </CudaCompile>
