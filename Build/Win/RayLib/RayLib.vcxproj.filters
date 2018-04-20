@@ -36,9 +36,6 @@
       <Filter>Memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Constans.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\BVH.h">
-      <Filter>Acceleration</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\VisorI.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
@@ -70,6 +67,13 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Random.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\WorkerThread.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\BVHDevice.cuh">
+      <Filter>Acceleration</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\MeshStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="LinearAlgb">
@@ -101,5 +105,7 @@
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp">
       <Filter>FileI-O</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\CudaConstants.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
   </ItemGroup>
 </Project>

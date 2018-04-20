@@ -4,15 +4,38 @@
     <Filter Include="Kernels">
       <UniqueIdentifier>{4dd183f7-1605-4e68-aad1-6afae2f26692}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Material">
+      <UniqueIdentifier>{b529f690-fc4c-4475-8ac8-c9be305b939f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Accelerators">
+      <UniqueIdentifier>{63c10153-70fe-44e5-a436-cc80dca433ab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerCUDA\CameraKernels.cuh">
       <Filter>Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDA.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDAEntry.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialI.h">
+      <Filter>Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ObjAcceleratorBatchI.h">
+      <Filter>Accelerators</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SceneAcceleratorI.h">
+      <Filter>Accelerators</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SceneAcceleratorBVH.h">
+      <Filter>Accelerators</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\CameraKernels.cu">
       <Filter>Kernels</Filter>
     </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Source\TracerCUDA\TracerCUDAEntry.cpp" />
   </ItemGroup>
 </Project>

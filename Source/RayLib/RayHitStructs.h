@@ -9,17 +9,28 @@ in tracing. Memory optimized for GPU batch fetch
 #include "Vector.h"
 #include "Ray.h"
 
+
+
 struct alignas(16) Vec3AndUInt
 {
-	Vector3			vec;
-	unsigned int	uint;
+	Vector3				vec;
+	unsigned int		uint;
+};
+
+struct ConstRayStackGMem
+{
+	const Vector4*		posAndMedium;
+	const Vec3AndUInt*	dirAndPixId;
+	const Vec3AndUInt*	radAndSampId;
 };
 
 struct RayStackGMem
 {
-	Vector4*		posAndMedium;
-	Vec3AndUInt*	dirAndPixId;
-	Vec3AndUInt*	radAndSampId;
+	Vector4*			posAndMedium;
+	Vec3AndUInt*		dirAndPixId;
+	Vec3AndUInt*		radAndSampId;
+
+	constexpr operator	ConstRayStackGMem();
 };
 
 // Ray Stack should not be used on GMem since its not optimized
@@ -39,6 +50,26 @@ struct HitRecordGMem
 {
 	Vec3AndUInt*	baryAndObjId;
 	unsigned int*	triId;
+
+	constexpr operator ConstHitRecordGMem();
+};
+
+struct ConstHitRecordGMem
+{
+	const Vec3AndUInt*	baryAndObjId;
+	const unsigned int*	triId;
+};
+
+struct RayRecodCPU
+{
+	HitRecordGMem cpuHits;
+	RayStackGMem cpuRays;
+};
+
+struct ConstRayRecodCPU
+{
+	ConstHitRecordGMem cpuHits;
+	ConstRayStackGMem cpuRays;
 };
 
 // Hit record should not be used on GMem since its not optimized
@@ -48,11 +79,31 @@ struct HitRecord
 	int				objectId;
 	int				triangleId;
 
+	// Constructor & Destrctor
 					HitRecord() = default;
 					HitRecord(const HitRecordGMem& mem, unsigned int loc);
 };
 
 // Implementations
+constexpr RayStackGMem::operator ConstRayStackGMem()
+{
+	return 
+	{
+		posAndMedium,
+		dirAndPixId,
+		radAndSampId
+	};
+}
+
+constexpr HitRecordGMem::operator ConstHitRecordGMem()
+{
+	return
+	{
+		baryAndObjId,
+		triId
+	};
+}
+
 inline RayStack::RayStack(const RayStackGMem& mem, unsigned int loc)
 	: ray(Zero3, Zero3)
 {

@@ -1,30 +1,16 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <random>
 
-#include "RayLib/Random.cuh"
+#include "RayLib/CudaConstants.h"
 #include "RayLib/DeviceMemory.h"
 #include "RayLib/Log.h"
+#include "TracerCUDA/CameraKernels.cuh"
 
-__global__ void KRandomNumbers(RandomStackGMem gMemory,
-							   uint32_t* randomNumbers,
-							   size_t numberPerThread)
+TEST(CameraRayGPU, Test)
 {
-	extern __shared__ uint32_t sStates[];
 
-	RandomGPU rand(gMemory.state, sStates);
+	bool b = CudaSystem::Initialize();
 
-	for(int i = 0; i < numberPerThread; i++)
-	{		
-		int loc = i * blockDim.x + threadIdx.x;
-
-		uint32_t r = rand.Generate();
-		randomNumbers[loc] = r;
-	}
-}
-
-TEST(RandomGPU, All)
-{
 	static constexpr size_t ThreadCount = 32;
 	static constexpr size_t StateSize = 32 * sizeof(uint32_t);
 
@@ -34,19 +20,21 @@ TEST(RandomGPU, All)
 
 	DeviceMemory randomState(StateSize);
 	DeviceMemory numbers(NumberSize);
-	
-	// Set State
-	std::mt19937 engine;
-	uint32_t* seeds = static_cast<uint32_t*>(randomState);
-	for(size_t i = 0; i < ThreadCount; i++)
-	{
-		seeds[i] = engine();
-	}
+
+	//// Set State
+	//std::mt19937 engine;
+	//uint32_t* seeds = static_cast<uint32_t*>(randomState);
+	//for(size_t i = 0; i < ThreadCount; i++)
+	//{
+	//	seeds[i] = engine();
+	//}
 
 	// Kernel Call
 	uint32_t* h_data = static_cast<uint32_t*>(numbers);
-	KRandomNumbers<<<1, ThreadCount, StateSize>>>({seeds}, h_data,
-												  NumberPerThread);
+
+	//KCGenerateCameraRays();
+
+
 	CUDA_KERNEL_CHECK();
 	CUDA_CHECK(cudaDeviceSynchronize());
 

@@ -142,6 +142,7 @@ class TextureCubeArray : public DeviceLocalMemoryI
 
 		// Special Access
 
+
 		// Memory Migration
 		void							MigrateToOtherDevice(int deviceTo, cudaStream_t stream = nullptr) override;
 };

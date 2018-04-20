@@ -98,10 +98,11 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Source\RayLib\BVH.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\BVHDevice.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Constans.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\MeshStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\RayHitStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaCheck.h" />
     <ClInclude Include="..\..\..\Source\RayLib\DeviceMemory.h" />
@@ -124,11 +125,14 @@
     <ClInclude Include="..\..\..\Source\RayLib\Vector.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\WorkerThread.h" />
     <ClInclude Include="DistributorI.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\Source\RayLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

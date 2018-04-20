@@ -50,8 +50,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 	public:
 		// Constructors & Destructor
 		__device__ __host__					Vector();
-		__device__ __host__					Vector(float);
-		__device__ __host__					Vector(const float* data);
+		__device__ __host__					Vector(T);
+		__device__ __host__					Vector(const T* data);
 		template <class... Args, typename = AllArithmeticEnable<Args...>>
 		constexpr __device__ __host__		Vector(const Args... dataList);
 		template <class... Args, typename = std::enable_if_t<((N - sizeof...(Args)) > 1)>>
@@ -66,8 +66,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 		//Vector&							operator=(const Vector&) = default;
 
 		// Accessors
-		__device__ __host__	explicit		operator float*();
-		__device__ __host__	explicit		operator const float *() const;
+		__device__ __host__	explicit		operator T*();
+		__device__ __host__	explicit		operator const T*() const;
 		__device__ __host__ T&				operator[](int);
 		__device__ __host__ const T&		operator[](int) const;
 
@@ -75,19 +75,19 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 		__device__ __host__ void			operator+=(const Vector&);
 		__device__ __host__ void			operator-=(const Vector&);
 		__device__ __host__ void			operator*=(const Vector&);
-		__device__ __host__ void			operator*=(float);
+		__device__ __host__ void			operator*=(T);
 		__device__ __host__ void			operator/=(const Vector&);
-		__device__ __host__ void			operator/=(float);
+		__device__ __host__ void			operator/=(T);
 
 		__device__ __host__ Vector			operator+(const Vector&) const;
 		__device__ __host__ Vector			operator-(const Vector&) const;
 		__device__ __host__ Vector			operator-() const;
 		__device__ __host__ Vector			operator*(const Vector&) const;
-		__device__ __host__ Vector			operator*(float) const;
+		__device__ __host__ Vector			operator*(T) const;
 		__device__ __host__ Vector			operator/(const Vector&) const;
-		__device__ __host__ Vector			operator/(float) const;
+		__device__ __host__ Vector			operator/(T) const;
 		__device__ __host__ Vector			operator%(const Vector&) const;
-		__device__ __host__ Vector			operator%(float) const;
+		__device__ __host__ Vector			operator%(T) const;
 
 		// Logic
 		__device__ __host__ bool			operator==(const Vector&) const;
@@ -99,15 +99,15 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 
 
 		// Utilty
-		__device__ __host__ float			Dot(const Vector&) const;
-		__device__ __host__ float			Length() const;
-		__device__ __host__ float			LengthSqr() const;
+		__device__ __host__ T				Dot(const Vector&) const;
+		__device__ __host__ T				Length() const;
+		__device__ __host__ T				LengthSqr() const;
 		__device__ __host__ Vector			Normalize() const;
 		__device__ __host__ Vector&			NormalizeSelf();
 		__device__ __host__ Vector			Clamp(const Vector&, const Vector&) const;
-		__device__ __host__ Vector			Clamp(float min, float max) const;
+		__device__ __host__ Vector			Clamp(T min, T max) const;
 		__device__ __host__ Vector&			ClampSelf(const Vector&, const Vector&);
-		__device__ __host__ Vector&			ClampSelf(float min, float max);
+		__device__ __host__ Vector&			ClampSelf(T min, T max);
 		__device__ __host__ Vector			Abs() const;
 		__device__ __host__ Vector&			AbsSelf();
 
@@ -138,7 +138,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 
 // Left scalars
 template<int N, class T>
-static __device__ __host__ Vector<N,T> operator*(float, const Vector<N, T>&);
+static __device__ __host__ Vector<N,T> operator*(T, const Vector<N, T>&);
 
 // Typeless vectors are defaulted to float
 using Vector2 = Vector<2, float>;
