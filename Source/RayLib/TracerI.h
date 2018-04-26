@@ -123,21 +123,39 @@ class TracerTI : public TracerI
 		std::future<void>		AddMaterialRays(const ConstRayRecodCPU&, uint32_t rayCount, uint32_t matId) override;
 		std::future<void>		BounceRays() override;
 		std::future<uint32_t>	RayCount() override;
+
+
+		//// DELETE THOSE THOSE ARE FOR FAST BAREBONES EXECUTION
+
+		//void					LoadFluidToGPU(const std::vector<float>& density,
+		//									   const std::vector<float>& velocity);
+
+		//void					GenerateCameraRays(const std::vector<float>)
+
+
+
+
+
+
+
+
+
+
 };
 
-TracerTI::TracerTI()
+inline TracerTI::TracerTI()
 {
 	thread.Start();
 }
 
-TracerTI::~TracerTI()
+inline TracerTI::~TracerTI()
 {
 	thread.Stop();
 }
 
 inline std::future<void> TracerTI::AssignScene(const SceneI& s)
 {
-	return thread.AddWork(&TracerTI::THRDAssignScene, this, s);
+	return thread.AddWork(&TracerTI::THRDAssignScene, this, std::ref(s));
 }
 
 inline std::future<void> TracerTI::SetParams(const TracerParameters& p)
@@ -187,7 +205,7 @@ inline std::future<void> TracerTI::GenerateCameraRays(const CameraPerspective& c
 											   const uint32_t samplePerPixel)
 {
 	return thread.AddWork(&TracerTI::THRDGenerateCameraRays, this, 
-						  camera, samplePerPixel);
+						  std::ref(camera), samplePerPixel);
 }
 
 inline std::future<void> TracerTI::HitRays()

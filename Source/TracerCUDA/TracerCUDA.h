@@ -77,4 +77,6 @@ class TracerCUDA : public TracerTI
 		TracerCUDA&		operator=(const TracerCUDA&) = delete;
 						~TracerCUDA();
 
+		// Main Thread Only Calls
+		void			Initialize() override;
 };

@@ -467,7 +467,7 @@ IOError MayaCache::LoadNCacheNavierStokes(std::vector<float>& densityData,
 	}
 	else if(fourCC == FOR4)
 	{
-		return LoadCacheNavierStokes<int64_t>(densityData, velocityData, info, file);
+		return LoadCacheNavierStokes<int32_t>(densityData, velocityData, info, file);
 	}
 	else return IOError::NCACHE_INVALID_FOURCC;
 }

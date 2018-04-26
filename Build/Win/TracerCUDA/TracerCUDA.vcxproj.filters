@@ -37,5 +37,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerCUDAEntry.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\TracerCUDA.cpp" />
   </ItemGroup>
 </Project>

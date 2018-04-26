@@ -26,6 +26,11 @@
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerCUDA.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerCUDAEntry.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RayLib\RayLib.vcxproj">
+      <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{17F548CF-9F20-471F-999A-FE56D9FB9B26}</ProjectGuid>
     <RootNamespace>TracerCUDA</RootNamespace>

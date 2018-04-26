@@ -46,18 +46,18 @@ struct RayStack
 					RayStack(const RayStackGMem& mem, unsigned int loc);
 };
 
+struct ConstHitRecordGMem
+{
+	const Vec3AndUInt*	baryAndObjId;
+	const unsigned int*	triId;
+};
+
 struct HitRecordGMem
 {
 	Vec3AndUInt*	baryAndObjId;
 	unsigned int*	triId;
 
 	constexpr operator ConstHitRecordGMem();
-};
-
-struct ConstHitRecordGMem
-{
-	const Vec3AndUInt*	baryAndObjId;
-	const unsigned int*	triId;
 };
 
 struct RayRecodCPU
