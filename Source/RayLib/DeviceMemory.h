@@ -1,6 +1,5 @@
 #pragma once
 
-
 /**
 
 CUDA Device Memory RAII principle classes
@@ -14,8 +13,8 @@ All of the operations (execpt allocation) are asyncronious.
 TODO: should we interface these?
 
 */
-#include <cuda_runtime.h>
 #include <limits>
+#include <cuda_runtime.h>
 
 // Basic semi-interface for memories that are static for each GPU
 // Textures are one example

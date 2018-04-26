@@ -1,5 +1,7 @@
 #include "DeviceMemory.h"
 #include "CudaCheck.h"
+
+#include <cuda_runtime.h>
 #include <cstring>
 #include <algorithm>
 #include <cstddef>

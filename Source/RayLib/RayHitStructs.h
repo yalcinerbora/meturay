@@ -9,8 +9,6 @@ in tracing. Memory optimized for GPU batch fetch
 #include "Vector.h"
 #include "Ray.h"
 
-
-
 struct alignas(16) Vec3AndUInt
 {
 	Vector3				vec;
@@ -36,14 +34,17 @@ struct RayStackGMem
 // Ray Stack should not be used on GMem since its not optimized
 struct RayStack
 {
-	RayF			ray;
-	float			medium;
-	unsigned int	pixelId;
-	unsigned int	sampleId;
-	Vector3			totalRadiance;
+	RayF					ray;
+	float					medium;
+	unsigned int			pixelId;
+	unsigned int			sampleId;
+	Vector3					totalRadiance;
 
-					RayStack() = default;
-					RayStack(const RayStackGMem& mem, unsigned int loc);
+							RayStack() = default;
+	__device__ __host__		RayStack(const ConstRayStackGMem& mem,
+									 unsigned int loc);
+	__device__ __host__		RayStack(const RayStackGMem& mem, 
+									 unsigned int loc);
 };
 
 struct ConstHitRecordGMem
@@ -75,13 +76,13 @@ struct ConstRayRecodCPU
 // Hit record should not be used on GMem since its not optimized
 struct HitRecord
 {
-	Vector3			baryCoord;
-	int				objectId;
-	int				triangleId;
+	Vector3					baryCoord;
+	int						objectId;
+	int						triangleId;
 
 	// Constructor & Destrctor
-					HitRecord() = default;
-					HitRecord(const HitRecordGMem& mem, unsigned int loc);
+							HitRecord() = default;
+	__device__ __host__		HitRecord(const HitRecordGMem& mem, unsigned int loc);
 };
 
 // Implementations
@@ -104,6 +105,7 @@ constexpr HitRecordGMem::operator ConstHitRecordGMem()
 	};
 }
 
+__device__ __host__
 inline RayStack::RayStack(const RayStackGMem& mem, unsigned int loc)
 	: ray(Zero3, Zero3)
 {
@@ -120,6 +122,25 @@ inline RayStack::RayStack(const RayStackGMem& mem, unsigned int loc)
 	totalRadiance = radSam.vec;
 }
 
+__device__ __host__
+inline RayStack::RayStack(const ConstRayStackGMem& mem,
+						  unsigned int loc)
+	: ray(Zero3, Zero3)
+{
+	// Load coalesced
+	Vector4 posMed = mem.posAndMedium[loc];
+	Vec3AndUInt dirPix = mem.dirAndPixId[loc];
+	Vec3AndUInt radSam = mem.radAndSampId[loc];
+
+	// Assign in register memory of the Multiprocessor
+	ray = RayF(dirPix.vec, Vector3(posMed[0], posMed[1], posMed[2]));
+	medium = posMed[3];
+	pixelId = dirPix.uint;
+	sampleId = radSam.uint;
+	totalRadiance = radSam.vec;
+}
+
+__device__ __host__
 inline HitRecord::HitRecord(const HitRecordGMem& mem, unsigned int loc)
 {
 	// Load coalesced

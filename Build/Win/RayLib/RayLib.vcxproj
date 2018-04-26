@@ -69,7 +69,15 @@
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>
       <CodeGeneration>compute_52,sm_52</CodeGeneration>
+      <AdditionalOptions>--expt-relaxed-constexpr %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
+    <Lib>
+      <AdditionalDependencies>FreeImage.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration)</AdditionalLibraryDirectories>
+    </Lib>
+    <PostBuildEvent>
+      <Command>xcopy /Y "..\..\..\Lib\Win\FreeImage.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -95,14 +103,24 @@
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>
       <CodeGeneration>compute_52,sm_52</CodeGeneration>
+      <AdditionalOptions>--expt-relaxed-constexpr %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
+    <Lib>
+      <AdditionalDependencies>FreeImage.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration)</AdditionalLibraryDirectories>
+    </Lib>
+    <PostBuildEvent>
+      <Command>xcopy /Y "..\..\..\Lib\Win\FreeImage.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\RayLib\BVHDevice.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Constans.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MeshStructs.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\RandomStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\RayHitStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaCheck.h" />
     <ClInclude Include="..\..\..\Source\RayLib\DeviceMemory.h" />
@@ -131,6 +149,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
   </ItemGroup>

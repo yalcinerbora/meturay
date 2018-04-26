@@ -2,8 +2,7 @@
 /**
 
 */
-
-
+typedef unsigned char byte;
 
 enum class PixelFormat
 {

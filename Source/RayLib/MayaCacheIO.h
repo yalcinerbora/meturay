@@ -26,7 +26,7 @@ namespace MayaCache
 
 	struct MayaNSCacheInfo
 	{
-		Vector3i						dim;
+		Vector3ui						dim;
 		Vector3f						size;	
 		// Color Interpolation
 		std::vector<Vector3f>			color;
@@ -42,8 +42,7 @@ namespace MayaCache
 
 	IOError			LoadNCacheNavierStokesXML(MayaNSCacheInfo&,
 											  const std::string& fileName);
-	IOError			LoadNCacheNavierStokes(std::vector<float>& densityData,
-										   std::vector<float>& velocityData,
+	IOError			LoadNCacheNavierStokes(std::vector<float>& velocityDensityData,
 										   const MayaNSCacheInfo&,
 										   const std::string& fileName);
 };

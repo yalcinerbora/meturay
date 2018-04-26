@@ -39,8 +39,8 @@ Utility header for header only cuda vector and cpu vector implementations
 #ifdef METU_DEBUG
 	#define CUDA_CHECK(func) {GPUAssert((func), __FILE__, __LINE__);}
 	#define CUDA_KERNEL_CHECK() \
-				CUDA_CHECK(cudaGetLastError()); \
-				CUDA_CHECK(cudaDeviceSynchronize());
+				CUDA_CHECK(cudaDeviceSynchronize()); \
+				CUDA_CHECK(cudaGetLastError());
 #else
 	#define CUDA_CHECK(func) func;
 	#define CUDA_KERNEL_CHECK()

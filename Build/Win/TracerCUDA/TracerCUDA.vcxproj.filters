@@ -34,9 +34,9 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\CameraKernels.cu">
       <Filter>Kernels</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerCUDA.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerCUDAEntry.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerCUDA\TracerCUDA.cpp" />
   </ItemGroup>
 </Project>

@@ -74,6 +74,12 @@
     <ClInclude Include="..\..\..\Source\RayLib\MeshStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\RandomStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h">
+      <Filter>ImageIO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="LinearAlgb">
@@ -97,6 +103,9 @@
     <Filter Include="Structs">
       <UniqueIdentifier>{5662f70e-59b8-4c30-a7fc-b865a663335f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ImageIO">
+      <UniqueIdentifier>{4b35a7d7-da23-43ce-979f-0ea483ccca04}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp">
@@ -107,5 +116,8 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp">
+      <Filter>ImageIO</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

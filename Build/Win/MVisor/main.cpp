@@ -8,13 +8,15 @@
 
 #include "TracerCUDA/TracerCUDAEntry.h"
 
-using asio::ip::tcp;
-
-
+#include "RayLib/TracerI.h"
 #include "RayLib/MayaCacheIO.h"
 #include "RayLib/Log.h"
+#include "RayLib/Camera.h"
+#include "RayLib/ImageIO.h"
 
 #include <fstream>
+
+using asio::ip::tcp;
 
 int main(int argc, const char* argv[])
 {
@@ -31,32 +33,50 @@ int main(int argc, const char* argv[])
 	}
 
 	// Load Cache
-	std::vector<float> density, velocity;
-	const std::string fileNameMCX("C:\\Users\\Coastal GPU\\Desktop\\CS568\\fluidCacheFrame135.mcx");
+	std::vector<float> velocityDensity;
+	const std::string fileNameMCX("C:\\Users\\Coastal GPU\\Desktop\\CS568\\fluidCacheFrame200.mcx");
 	//const std::string fileNameMCX("C:\\Users\\Coastal GPU\\Documents\\maya\\projects\\default\\cache\\nCache\\fluid\\smallFluid\\smallFluidShape1Frame4.mcx");
-	if(IOError e; (e = MayaCache::LoadNCacheNavierStokes(density, velocity, info, fileNameMCX)) != IOError::OK)
+	if(IOError e; (e = MayaCache::LoadNCacheNavierStokes(velocityDensity, info, fileNameMCX)) != IOError::OK)
 	{
 		METU_ERROR_LOG(GetIOErrorString(e));
 		return 1;
 	}
-	
+
 	// CPU Load Successfull
+	auto tracer = CreateTracerCUDA();
+	tracer->Initialize();
 
+	Vector2ui resolution = Vector2ui(512, 512);
 
-	// Generate CUDA Tracer Interface
-	auto CUDATracer = CreateTracerCUDA();
-
-	// Do super barebones
-	
 	// Generate Camera Rays
+	CameraPerspective cam;
+	cam.apertureSize = 1.0f;
+	cam.fov = Vector2f(MathConstants::DegToRadCoef * 60.0f,
+					   MathConstants::DegToRadCoef * 60.0f);
+	//cam.position = Vector3f(-15.7f, 15.59f, -4.708f);
+	//cam.gazePoint = Vector3f(0.0f, 6.0f, 0.0f);
+	cam.position = Vector3f(0.0f, 5.0f, 20.0f);
+	cam.gazePoint = Vector3f(0.0f, 5.0f, 0.0f);
+	cam.farPlane = 1000.0f;
+	cam.nearPlane = 0.1f;
+	cam.up = -YAxis;
 
-	// 
+	tracer->CS568GenerateCameraRays(cam, resolution, 1);
 
+	// Load Fluid
+	tracer->LoadFluidToGPU(velocityDensity, info.dim);
 
+	// Ray loop
+	tracer->LaunchRays(Vector3(1.0f, 0.0f, 0.0f),
+					   info.dim,
+					   Vector3(-5.0f, 0.0f, -5.0f),
+					   Vector3(10.0f, 10.0f, 10.0f));
 
+	// Get Image
+	auto image = tracer->GetImage(resolution);
 
-
-
+	// Write Image
+	ImageIO::WriteAsPNG(image, resolution, "test.png");
 
 	//// Visor Determination
 	//std::unique_ptr<VisorGL> visorView = CreateVisorGL();
@@ -92,7 +112,6 @@ int main(int argc, const char* argv[])
 	//	{
 	//		std::array<char, 128> buf;
 	//		asio::error_code error;
-
 	//		//size_t len = socket.read_some(asio::buffer(buf), error);
 
 	//		if(error == asio::error::eof)

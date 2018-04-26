@@ -26,7 +26,7 @@ template<class T>
 __device__ __host__ 
 inline const Vector<3, T>& Ray<T>::getDirection() const
 {
-	return directon;
+	return direction;
 }
 
 template<class T>
@@ -148,16 +148,17 @@ inline Ray<T>& Ray<T>::NormalizeDirSelf()
 
 template<class T>
 __device__ __host__ 
-inline Ray<T> Ray<T>::Advance(float) const
+inline Ray<T> Ray<T>::Advance(float t) const
 {
-
+	return Ray<T>(direction, position + t * direction);
 }
 
 template<class T>
 __device__ __host__ 
-inline Ray<T>& Ray<T>::AdvanceSelf(float)
+inline Ray<T>& Ray<T>::AdvanceSelf(float t)
 {
-
+	position += t * direction;
+	return *this;
 }
 
 template<class T>

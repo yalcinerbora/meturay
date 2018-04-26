@@ -7,6 +7,7 @@
 #endif
 
 #include <memory>
-#include "TracerCUDA.h"
 
-METU_SHARED_TRACERCUDA_ENTRY_POINT std::unique_ptr<TracerCUDA> CreateTracerCUDA();
+class TracerI;
+
+METU_SHARED_TRACERCUDA_ENTRY_POINT std::unique_ptr<TracerI> CreateTracerCUDA();

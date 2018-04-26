@@ -63,23 +63,24 @@ class CudaSystem
 	protected:
 	public:
 		// Constructors & Destructor
-									CudaSystem() = delete;
-									CudaSystem(const CudaSystem&) = delete;
+											CudaSystem() = delete;
+											CudaSystem(const CudaSystem&) = delete;
 
-		//
-		static bool					Initialize();
+		static bool							Initialize();
 
 		// Convenience Functions For Kernel Call
 		template<class Function, class... Args>
-		__host__ void				GPUCallX(int deviceId,
-											 cudaStream_t stream,
-											 size_t sharedMemSize,
-											 Function&& f, Args&&...);
+		__host__ void						GPUCallX(int deviceId,
+													 cudaStream_t stream,
+													 size_t sharedMemSize,
+													 Function&& f, Args&&...);
 		template<class Function, class... Args>
-		__host__ void				GPUCallXY(int deviceId,
-											 cudaStream_t stream,
-											 size_t sharedMemSize,
-											 Function&& f, Args&&...);
+		__host__ void						GPUCallXY(int deviceId,
+													  cudaStream_t stream,
+													  size_t sharedMemSize,
+													  Function&& f, Args&&...);
+
+		static const std::vector<CudaGPU>	GPUList();
 };
 
 template<class Function, class... Args>
@@ -112,4 +113,9 @@ inline void CudaSystem::GPUCallXY(int deviceId,
 	dim3 blockSize = dim3(StaticThreadPerBlock2D[0], StaticThreadPerBlock2D[1]);
 	f<<<blockCount, blockSize, sharedMemsize, stream>>>(args...);
 	CUDA_KERNEL_CHECK();
+}
+
+inline const std::vector<CudaGPU> CudaSystem::GPUList()
+{
+	return gpus;
 }

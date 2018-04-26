@@ -118,8 +118,7 @@ namespace MayaCache
 	}
 
 	template<class T, int WordSize = sizeof(T)>
-	IOError LoadCacheNavierStokes(std::vector<float>& densityData,
-								  std::vector<float>& velocityData,
+	IOError LoadCacheNavierStokes(std::vector<float>& velocityDensityData,
 								  const MayaNSCacheInfo& info,
 								  std::ifstream& file)
 	{		
@@ -166,33 +165,40 @@ namespace MayaCache
 			file.seekg(paddedByteSize, std::ifstream::cur);
 		}
 
+		// Setsize
+		const size_t totalCount = info.dim[0] * info.dim[1] * info.dim[2];
+		velocityDensityData.resize(totalCount * 4);
+		
 		// Channel Headers read. Now read actual data
 		// Unfortunately we need to read word by word
 		for(const NSChannelHeader& h : channels)
 		{
-			std::vector<float>* dataSelect = nullptr;
+			size_t offset = 0;
+			size_t stride = 4;
 			if(h.logic == DENSITY)
 			{
-				dataSelect = &densityData;
+				offset = 3;
 			}
 			else if(h.logic == VELOCITY)
 			{
-				dataSelect = &velocityData;
 			}
 			else continue;
-			std::vector<float>& data = *dataSelect;
 
 			// Seek fileptr there
 			file.seekg(h.fileDataLoc);
-			const int typeSize = NSChannelHeader::DataTypeSizes[h.type];
-						
-			// Setsize
-			const size_t totalCount = h.byteSize / typeSize;
-			data.resize(totalCount);
 
 			for(size_t i = 0; i < totalCount; i++)
 			{
-				data[i] = ReadFloat(file);
+				if(h.logic == DENSITY)
+				{
+					velocityDensityData[offset + i * stride] = ReadFloat(file);
+				}
+				else
+				{
+					velocityDensityData[i * stride    ] = ReadFloat(file);
+					velocityDensityData[i * stride + 1] = ReadFloat(file);
+					velocityDensityData[i * stride + 2] = ReadFloat(file);
+				}
 			}
 		}
 		return IOError::OK;
@@ -444,8 +450,7 @@ IOError MayaCache::LoadNCacheNavierStokesXML(MayaNSCacheInfo& info,
 	return IOError::OK;
 }
 
-IOError MayaCache::LoadNCacheNavierStokes(std::vector<float>& densityData,
-										  std::vector<float>& velocityData,
+IOError MayaCache::LoadNCacheNavierStokes(std::vector<float>& velocityDensityData,
 										  const MayaNSCacheInfo& info,
 										  const std::string& fileName)
 {
@@ -463,11 +468,11 @@ IOError MayaCache::LoadNCacheNavierStokes(std::vector<float>& densityData,
 	// Determine Read
 	if(fourCC == FOR8)
 	{
-		return LoadCacheNavierStokes<int64_t>(densityData, velocityData, info, file);
+		return LoadCacheNavierStokes<int64_t>(velocityDensityData, info, file);
 	}
 	else if(fourCC == FOR4)
 	{
-		return LoadCacheNavierStokes<int32_t>(densityData, velocityData, info, file);
+		return LoadCacheNavierStokes<int32_t>(velocityDensityData, info, file);
 	}
 	else return IOError::NCACHE_INVALID_FOURCC;
 }

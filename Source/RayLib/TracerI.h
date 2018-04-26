@@ -66,6 +66,21 @@ class TracerI
 		virtual std::future<void>		AddMaterialRays(const ConstRayRecodCPU&, uint32_t rayCount, uint32_t matId) = 0;
 		virtual std::future<void>		BounceRays() = 0;
 		virtual std::future<uint32_t>	RayCount() = 0;
+
+
+
+		// DELETE THOSE THOSE ARE FOR FAST BAREBONES EXECUTION
+		virtual void					LoadBackgroundCubeMap(const std::vector<float>& cubemap) = 0;
+		virtual void					LoadFluidToGPU(const std::vector<float>& velocityDensity,
+													   const Vector3ui& size) = 0;
+		virtual void					CS568GenerateCameraRays(const CameraPerspective& cam,
+																const Vector2ui resolution,
+																const uint32_t samplePerPixel) = 0;
+		virtual void					LaunchRays(const Vector3f& backgroundColor,
+												   const Vector3ui& textureSize,
+												   const Vector3f& bottomLeft,
+												   const Vector3f& length) = 0;
+		virtual std::vector<Vector3f>	GetImage(const Vector2ui& resolution) = 0;
 };
 
 // Threading wrapper Interface for Tracer
@@ -123,24 +138,6 @@ class TracerTI : public TracerI
 		std::future<void>		AddMaterialRays(const ConstRayRecodCPU&, uint32_t rayCount, uint32_t matId) override;
 		std::future<void>		BounceRays() override;
 		std::future<uint32_t>	RayCount() override;
-
-
-		//// DELETE THOSE THOSE ARE FOR FAST BAREBONES EXECUTION
-
-		//void					LoadFluidToGPU(const std::vector<float>& density,
-		//									   const std::vector<float>& velocity);
-
-		//void					GenerateCameraRays(const std::vector<float>)
-
-
-
-
-
-
-
-
-
-
 };
 
 inline TracerTI::TracerTI()

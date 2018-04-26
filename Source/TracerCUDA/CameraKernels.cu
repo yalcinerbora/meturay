@@ -14,12 +14,12 @@ __global__ void KCGenerateCameraRays(RayStackGMem gRays,
 	extern __shared__ uint32_t sRandState[];
 	RandomGPU rng(gRand.state, sRandState);
 	
-	//
+	// Total work
 	const uint32_t totalWorkCount = pixelCount[0] * pixelCount[1] * samplePerPixel * samplePerPixel;
 
 	// Find world space window sizes
-	float widthHalf = atanf(cam.fov[0] * 0.5f) * cam.near;
-	float heightHalf = atanf(cam.fov[1] * 0.5f) * cam.near;
+	float widthHalf = atanf(cam.fov[0] * 0.5f) * cam.nearPlane;
+	float heightHalf = atanf(cam.fov[1] * 0.5f) * cam.nearPlane;
 
 	// Camera Space pixel sizes
 	Vector2 delta = Vector2((widthHalf * 2.0f) / static_cast<float>(resolution[0] * samplePerPixel),
@@ -29,13 +29,13 @@ __global__ void KCGenerateCameraRays(RayStackGMem gRays,
 	Vector3 gaze = cam.gazePoint - cam.position;
 	Vector3 right = Cross(gaze, cam.up).Normalize();
 	Vector3 up = Cross(right, gaze).Normalize();
-	gaze = Cross(up, right);
+	gaze = Cross(up, right).Normalize();
 
 	// Camera parameters
 	Vector3 topLeft = cam.position
 						- right *  widthHalf
 						+ up * heightHalf
-						+ gaze * cam.near;
+						+ gaze * cam.nearPlane;
 	Vector3 pos = cam.position;
 
 	// Kernel Grid-Stride Loop
@@ -50,8 +50,8 @@ __global__ void KCGenerateCameraRays(RayStackGMem gRays,
 		Vector2ui localSampleId = pixelStart + (threadId2d % samplePerPixel);
 
 		// Create random location over sample rectangle
-		float dX = RandFloat01(rng);
-		float dY = RandFloat01(rng);
+		float dX = 0.0f; //RandFloat01(rng);
+		float dY = 0.0f; //RandFloat01(rng);
 		Vector2 randomOffset = Vector2(dX, dY);
 
 		// Ray's world position over canvas
