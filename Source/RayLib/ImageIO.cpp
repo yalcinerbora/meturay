@@ -1,11 +1,30 @@
 #include "ImageIO.h"
 #include "FreeImage.h"
 
-bool ImageIO::WriteAsPNG(const std::vector<Vector3>& image,
-						 const Vector2ui& size,
-						 const std::string& fileName)
+std::unique_ptr<ImageIO> ImageIO::instance = nullptr;
+
+inline ImageIO::ImageIO()
 {
 	FreeImage_Initialise();
+}
+
+ImageIO::~ImageIO()
+{
+	FreeImage_DeInitialise();
+}
+
+ImageIO& ImageIO::System()
+{
+	if(instance == nullptr)
+		instance = std::make_unique<ImageIO>();
+
+	return *instance;
+}
+
+bool ImageIO::WriteAsPNG(const std::vector<Vector3>& image,
+						 const Vector2ui& size,
+						 const std::string& fileName) const
+{
 	auto* bitmap = FreeImage_Allocate(size[0], size[1], 24);
 
 	for(uint32_t j = 0; j < size[1]; j++)
@@ -27,6 +46,5 @@ bool ImageIO::WriteAsPNG(const std::vector<Vector3>& image,
 	}
 	bool result = FreeImage_Save(FIF_PNG, bitmap, fileName.c_str());
 	FreeImage_Unload(bitmap);
-	FreeImage_DeInitialise();
 	return result;
 }

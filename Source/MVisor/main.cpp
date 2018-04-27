@@ -76,20 +76,22 @@ int main(int argc, const char* argv[])
 	auto image = tracer->GetImage(resolution);
 
 	// Write Image
-	ImageIO::WriteAsPNG(image, resolution, "test.png");
+	ImageIO::System().WriteAsPNG(image, resolution, "test.png");
 
-	//// Visor Determination
-	//std::unique_ptr<VisorGL> visorView = CreateVisorGL();
-	//visorView->ResetImageBuffer({1280, 720}, PixelFormat::RGB32_UNORM);
-	//// Main Poll Loop
-	//while(visorView->IsOpen())
-	//{
-	//	// Do Stuff
-	//	//...
-	//	
-	//	// Present Back Buffer
-	//	visorView->Present();
-	//}
+
+
+	// Visor Determination
+	std::unique_ptr<VisorGL> visorView = CreateVisorGL();
+	visorView->ResetImageBuffer({1280, 720}, PixelFormat::RGB32_UNORM);
+	// Main Poll Loop
+	while(visorView->IsOpen())
+	{
+		// Do Stuff
+		//...
+		
+		// Present Back Buffer
+		visorView->Present();
+	}
 	
 	//try
 	//{

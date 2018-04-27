@@ -93,9 +93,6 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">
       <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
     </ProjectReference>
@@ -105,6 +102,9 @@
     <ProjectReference Include="..\VisorGL\VisorGL.vcxproj">
       <Project>{73e98dc9-d340-4704-9db7-b3f7156f97d3}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Source\MVisor\main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

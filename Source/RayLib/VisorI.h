@@ -15,6 +15,8 @@ Visor
 #include "Types.h"
 #include "Vector.h"
 
+class VisorInputI;
+
 class VisorViewI
 {
 	public:
@@ -24,6 +26,9 @@ class VisorViewI
 		virtual bool		IsOpen() = 0;
 		virtual void		Present() = 0;
 
+		// Input System
+		virtual void		SetInputScheme(VisorInputI*) = 0;
+
 		// Data Related
 		virtual void		ResetImageBuffer(const Vector2i& imageSize, PixelFormat) = 0;
 		virtual void		SetImagePortion(const Vector2i& start,
@@ -32,12 +37,4 @@ class VisorViewI
 		// Misc
 		virtual void		SetWindowSize(const Vector2i& size) = 0;
 		virtual void		SetFPSLimit(float) = 0;
-
-
-		
-		// Keyboard I-O (To External Systems)
-		//virtual bool		SetSystem() = 0;
-
-
-
 };

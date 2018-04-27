@@ -118,6 +118,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Constans.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MeshStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\RandomStructs.h" />
@@ -143,8 +144,8 @@
     <ClInclude Include="..\..\..\Source\RayLib\Vector.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\VisorInputI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\WorkerThread.h" />
-    <ClInclude Include="DistributorI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\CudaConstants.cpp" />

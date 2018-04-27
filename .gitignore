@@ -353,4 +353,7 @@ __pycache__/
 !Lib/**/*.pch
 
 
+# Working Dir
+WorkingDir/*
+
 

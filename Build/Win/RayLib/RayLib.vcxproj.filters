@@ -56,9 +56,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\Endian.h">
       <Filter>System</Filter>
     </ClInclude>
-    <ClInclude Include="DistributorI.h">
-      <Filter>Interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\RayHitStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
@@ -79,6 +76,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h">
       <Filter>ImageIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\VisorInputI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h">
+      <Filter>Interfaces</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
