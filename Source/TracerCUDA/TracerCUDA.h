@@ -35,7 +35,7 @@ struct GPUMemory
 using GPUMaterialPtr = std::unique_ptr<GPUMaterialI>;
 using ObjAcceleratorPtr = std::unique_ptr<ObjAcceleratorBatchI>;
 
-class TracerCUDA : public TracerTI
+class TracerCUDA : public TracerI
 {
 	private:
 		// Common Memory between GPUs (for multi-gpu systems)	
@@ -66,26 +66,31 @@ class TracerCUDA : public TracerTI
 		uint32_t									totalRayCount;
 				
 	protected:
-		void			THRDAssignScene(const SceneI&) override;
-		void			THRDSetParams(const TracerParameters&) override;
+		void			AssignScene(const SceneI&) override;
+		void			SetParams(const TracerParameters&) override;
 
-		void			THRDGenerateSceneAccelerator() override;
-		void			THRDGenerateAccelerator(uint32_t objId) override;
-		void			THRDAssignImageSegment(const Vector2ui& pixelStart,
-											   const Vector2ui& pixelEnd) override;
+		void			GenerateSceneAccelerator() override;
+		void			GenerateAccelerator(uint32_t objId) override;
+		void			AssignImageSegment(const Vector2ui& pixelStart,
+										   const Vector2ui& pixelEnd) override;
 
-		void			THRDAssignAllMaterials() override;
-		void			THRDAssignMaterial(uint32_t matId) override;
-		void			THRDLoadMaterial(uint32_t matId) override;
-		void			THRDUnloadMaterial(uint32_t matId) override;
+		void			AssignAllMaterials() override;
+		void			AssignMaterial(uint32_t matId) override;
+		void			LoadMaterial(uint32_t matId) override;
+		void			UnloadMaterial(uint32_t matId) override;
 
-		void			THRDGenerateCameraRays(const CameraPerspective& camera,
-											   const uint32_t samplePerPixel) override;
-		void			THRDHitRays() override;
-		void			THRDGetMaterialRays(const RayRecodCPU&, uint32_t rayCount, uint32_t matId) override;
-		void			THRDAddMaterialRays(const ConstRayRecodCPU&, uint32_t rayCount, uint32_t matId) override;
-		void			THRDBounceRays() override;
-		uint32_t		THRDRayCount() override;
+		void			GenerateCameraRays(const CameraPerspective& camera,
+										   const Vector2ui& resolution,
+										   const uint32_t samplePerPixel,
+										   const Vector2ui& offset = Vector2ui(0, 0),
+										   const Vector2ui& size = Vector2ui(0, 0)) override;
+		void			HitRays() override;
+		void			GetMaterialRays(const RayRecodCPU&, 
+										uint32_t rayCount, uint32_t matId) override;
+		void			AddMaterialRays(const ConstRayRecodCPU&, 
+										uint32_t rayCount, uint32_t matId) override;
+		void			BounceRays() override;
+		uint32_t		RayCount() override;
 
 	public:
 		// Constructors & Destructor

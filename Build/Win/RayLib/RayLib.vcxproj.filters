@@ -64,7 +64,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Random.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\WorkerThread.h" />
     <ClInclude Include="..\..\..\Source\RayLib\BVHDevice.cuh">
       <Filter>Acceleration</Filter>
     </ClInclude>
@@ -82,6 +81,21 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h">
       <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerThread.h">
+      <Filter>Threads</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\WorkerThread.h">
+      <Filter>Threads</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\ThreadData.h">
+      <Filter>Threads</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\ArrayPortion.h">
+      <Filter>Structs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -109,6 +123,9 @@
     <Filter Include="ImageIO">
       <UniqueIdentifier>{4b35a7d7-da23-43ce-979f-0ea483ccca04}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Threads">
+      <UniqueIdentifier>{5e8e629d-f2d5-4197-9a8e-6d84e19db046}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp">
@@ -118,9 +135,14 @@
       <Filter>FileI-O</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\CudaConstants.cpp" />
-    <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp">
       <Filter>ImageIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\TracerThread.cpp">
+      <Filter>Threads</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp">
+      <Filter>Threads</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

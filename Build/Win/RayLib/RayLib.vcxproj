@@ -139,10 +139,14 @@
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Texture.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Texture.hpp" />
+    <ClInclude Include="..\..\..\Source\RayLib\ThreadData.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\TracerStructs.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\TracerThread.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Types.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.hpp" />
+    <ClInclude Include="..\..\..\Source\RayLib\ArrayPortion.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorInputI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\WorkerThread.h" />
@@ -152,6 +156,7 @@
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\TracerThread.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
