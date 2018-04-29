@@ -13,11 +13,13 @@ void TracerThread::THRDLoop(DistributorI& distributor)
 		SceneI* newScene;
 		uint32_t newSample;
 		TracerParameters newParams;
+		ImageSegment newSegment;
 		bool camChanged = camera.CheckChanged(newCam);
 		bool sceneChanged = scene.CheckChanged(newScene);
 		bool resolutionChanged= resolution.CheckChanged(newResolution);		
 		bool sampleChanged = sample.CheckChanged(newSample);
 		bool paramsChanged = parameters.CheckChanged(newParams);
+		bool segmentChanged = segment.CheckChanged(newSegment);
 
 		// Reset Image if images changed
 		if(resolutionChanged)
@@ -26,15 +28,16 @@ void TracerThread::THRDLoop(DistributorI& distributor)
 			tracer.ResetImage();
 
 		if(sceneChanged)
-			tracer.AssignScene(*newScene);
-
+			tracer.SetScene(*newScene);
 		if(paramsChanged)
 			tracer.SetParams(newParams);
+		if(segmentChanged)
+			tracer.ReportionImage(newSegment.pixelStart,
+								  newSegment.pixelStart);
 		
-
 		// Initialize Rays
 		// Camera ray generation
-		tracer.GenerateCameraRays(newCam, newResolution, newSample);
+		tracer.GenerateCameraRays(newCam, newSample);
 				
 		//=====================//
 		//		RenderLoop	   //
@@ -48,12 +51,13 @@ void TracerThread::THRDLoop(DistributorI& distributor)
 			if(!distributor.Alone())
 			{
 				// Send rays that are not for your responsibility
-				tracer.GetMaterialRays();
-				distributor.SendMaterialRays();
+				//tracer.GetMaterialRays();
+				//distributor.SendMaterialRays();
 				
 				// Recieve Rays that are responsible
-				distributor.RequestMaterialRays();
-				tracer.AddMaterialRays();
+				// by this thread
+				//distributor.RequestMaterialRays();
+				//tracer.AddMaterialRays();
 			}
 			
 			// We are ready to bounce rays now
@@ -67,12 +71,10 @@ void TracerThread::THRDLoop(DistributorI& distributor)
 		// Image is ready now send according to the callbacks
 		if(distributor.CheckIfRenderRequested(renderCount))
 		{
-			distributor.SendImage(tracer.GetImage(resolution),
-
-
-								  ....
-
-								  );
+			distributor.SendImage(tracer.GetImage(),
+								  newResolution,
+								  newSegment.pixelStart,
+								  newSegment.pixelCount);
 		}
 		renderCount++;
 
@@ -86,9 +88,7 @@ void TracerThread::THRDLoop(DistributorI& distributor)
 			});
 		}
 	}
-
 	// Do cleanup
-
 }
 
 // State Change
@@ -115,4 +115,10 @@ void TracerThread::ChangeSampleCount(uint32_t sampleCount)
 void TracerThread::ChangeParams(const TracerParameters& p)
 {
 	parameters = p;
+}
+
+void TracerThread::ChangeImageSegment(const Vector2ui& pixelStart,
+									  const Vector2ui& pixelCount)
+{
+	segment = {pixelStart, pixelCount};
 }

@@ -67,79 +67,104 @@ void TracerCUDA::AllocateRandomStack()
 	}
 }
 
-void TracerCUDA::THRDAssignScene(const SceneI& )
+void TracerCUDA::SetScene(const SceneI&)
 {
 
 }
 
-void TracerCUDA::THRDSetParams(const TracerParameters&)
+void TracerCUDA::SetParams(const TracerParameters&)
 {
 
 }
 
-void TracerCUDA::THRDGenerateSceneAccelerator()
+void TracerCUDA::GenerateSceneAccelerator()
 {
 
 }
 
-void TracerCUDA::THRDGenerateAccelerator(uint32_t objId)
+void TracerCUDA::GenerateAccelerator(uint32_t objId)
 {
 
 }
 
-void TracerCUDA::THRDAssignImageSegment(const Vector2ui& pixelStart,
-										const Vector2ui& pixelEnd)
+void TracerCUDA::ReportionImage(const Vector2ui& offset,
+								const Vector2ui& size)
+{
+	imageOffset = offset;
+	imageSegmentSize = size;
+}
+
+void TracerCUDA::ResizeImage(const Vector2ui& resolution)
+{
+	imageResolution = resolution;
+
+
+}
+
+void TracerCUDA::ResetImage()
 {
 
 }
 
-void TracerCUDA::THRDAssignAllMaterials()
+std::vector<Vector3f> TracerCUDA::GetImage()
+{
+	CUDA_CHECK(cudaDeviceSynchronize());
+	size_t pixelCount = imageSegmentSize[0] * imageSegmentSize[1];
+	std::vector<Vector3> out(pixelCount);
+	memcpy(out.data(), dOutImage, sizeof(Vector3f) * pixelCount);
+
+	return out;
+}
+
+void TracerCUDA::AssignAllMaterials()
 {
 
 }
 
-void TracerCUDA::THRDAssignMaterial(uint32_t matId)
+void TracerCUDA::AssignMaterial(uint32_t matId)
 {
 
 }
 
-void TracerCUDA::THRDLoadMaterial(uint32_t matId)
+void TracerCUDA::LoadMaterial(uint32_t matId)
 {
 
 }
 
-void TracerCUDA::THRDUnloadMaterial(uint32_t matId)
+void TracerCUDA::UnloadMaterial(uint32_t matId)
 {
 
 }
 
-void TracerCUDA::THRDGenerateCameraRays(const CameraPerspective& camera,
-										const uint32_t samplePerPixel)
+void TracerCUDA::GenerateCameraRays(const CameraPerspective& camera,
+									const uint32_t samplePerPixel)
 {
 
 }
 
-void TracerCUDA::THRDHitRays()
+void TracerCUDA::HitRays()
 {
 
 }
 
-void TracerCUDA::THRDGetMaterialRays(const RayRecodCPU&, uint32_t rayCount, uint32_t matId)
+void TracerCUDA::GetMaterialRays(RayRecordCPU&, HitRecordCPU&,
+								 uint32_t rayCount, uint32_t matId)
 {
 
 }
 
-void TracerCUDA::THRDAddMaterialRays(const ConstRayRecodCPU&, uint32_t rayCount, uint32_t matId)
+void TracerCUDA::AddMaterialRays(const RayRecordCPU&, const HitRecordCPU&,
+								 uint32_t rayCount, uint32_t matId)
 {
 
 }
 
-void TracerCUDA::THRDBounceRays()
+void TracerCUDA::BounceRays()
 {
 
 }
 
-uint32_t TracerCUDA::THRDRayCount()
+uint32_t TracerCUDA::RayCount()
 {
 	return 0;
 }
@@ -306,7 +331,7 @@ __device__ bool CheckIntersection(float& distance,
 // Delete this kernel
 __global__ void KernelLoop(Vector3f* outImage,
 
-						   ConstRayStackGMem gRays,
+						   ConstRayRecordGMem gRays,
 						   RandomStackGMem gRand,
 						   const uint32_t totalRayCount,
 
@@ -329,7 +354,7 @@ __global__ void KernelLoop(Vector3f* outImage,
 		threadId += (blockDim.x * gridDim.x))
 	{
 		// Load Ray to registers
-		RayStack rayData(gRays, threadId);
+		RayRecord rayData(gRays, threadId);
 		rayData.totalRadiance = Vector3(1.0f);
 
 		// Accumulate

@@ -19,6 +19,13 @@ class DistributorI;
 class TracerThread
 {
 	private:
+		struct ImageSegment
+		{
+			Vector2ui pixelStart;
+			Vector2ui pixelCount;
+		};
+
+	private:
 		// Threading and thread management
 		std::thread						thread;
 		std::mutex						mutex;
@@ -26,6 +33,7 @@ class TracerThread
 		bool							stopSignal;
 		bool							pauseSignal;
 
+		// Actual Tracer
 		TracerI&						tracer;
 
 		// Current Settings
@@ -34,6 +42,7 @@ class TracerThread
 		ThreadData<Vector2ui>			resolution;
 		ThreadData<uint32_t>			sample;
 		ThreadData<TracerParameters>	parameters;
+		ThreadData<ImageSegment>		segment;
 				
 		// Actual Thread Loop
 		void						THRDLoop(DistributorI&);
@@ -53,6 +62,8 @@ class TracerThread
 
 		void						ChangeSampleCount(uint32_t);
 		void						ChangeParams(const TracerParameters&);
+		void						ChangeImageSegment(const Vector2ui& pixelStart,
+													   const Vector2ui& pixelCount);
 
 		// Render Loop Related
 		void						Start(DistributorI&);
@@ -73,7 +84,7 @@ inline TracerThread::~TracerThread()
 
 inline void TracerThread::Start(DistributorI& d)
 {
-	thread = std::thread(&TracerThread::THRDLoop, this, &d);
+	thread = std::thread(&TracerThread::THRDLoop, this, std::ref(d));
 }
 
 inline void TracerThread::Stop()

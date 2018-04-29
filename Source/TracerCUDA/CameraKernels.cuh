@@ -9,10 +9,10 @@ Camera Ray Generation Kernel
 #include "RayLib/Vector.h"
 
 struct CameraPerspective;
-struct RayStackGMem;
+struct RayRecordGMem;
 struct RandomStackGMem;
 
-__global__ void KCGenerateCameraRays(RayStackGMem gRays,
+__global__ void KCGenerateCameraRays(RayRecordGMem gRays,
 									 RandomStackGMem gRand,
 									 const CameraPerspective cam,
 									 const uint32_t samplePerPixel,

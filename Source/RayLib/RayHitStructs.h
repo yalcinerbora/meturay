@@ -6,6 +6,7 @@ in tracing. Memory optimized for GPU batch fetch
 
 */
 
+#include <vector>
 #include "Vector.h"
 #include "Ray.h"
 
@@ -15,24 +16,31 @@ struct alignas(16) Vec3AndUInt
 	unsigned int		uint;
 };
 
-struct ConstRayStackGMem
+struct ConstRayRecordGMem
 {
 	const Vector4*		posAndMedium;
 	const Vec3AndUInt*	dirAndPixId;
 	const Vec3AndUInt*	radAndSampId;
 };
 
-struct RayStackGMem
+struct RayRecordGMem
 {
 	Vector4*			posAndMedium;
 	Vec3AndUInt*		dirAndPixId;
 	Vec3AndUInt*		radAndSampId;
 
-	constexpr operator	ConstRayStackGMem();
+	constexpr operator	ConstRayRecordGMem();
 };
 
-// Ray Stack should not be used on GMem since its not optimized
-struct RayStack
+struct RayRecordCPU
+{
+	std::vector<Vector4>		posAndMedium;
+	std::vector<Vec3AndUInt>	dirAndPixId;
+	std::vector<Vec3AndUInt>	radAndSampId;
+};
+
+// RayRecord struct is allocated inside thread (GPU register)
+struct RayRecord
 {
 	RayF					ray;
 	float					medium;
@@ -40,11 +48,11 @@ struct RayStack
 	unsigned int			sampleId;
 	Vector3					totalRadiance;
 
-							RayStack() = default;
-	__device__ __host__		RayStack(const ConstRayStackGMem& mem,
-									 unsigned int loc);
-	__device__ __host__		RayStack(const RayStackGMem& mem, 
-									 unsigned int loc);
+							RayRecord() = default;
+	__device__ __host__		RayRecord(const ConstRayRecordGMem& mem,
+									  unsigned int loc);
+	__device__ __host__		RayRecord(const RayRecordGMem& mem,
+									  unsigned int loc);
 };
 
 struct ConstHitRecordGMem
@@ -61,19 +69,13 @@ struct HitRecordGMem
 	constexpr operator ConstHitRecordGMem();
 };
 
-struct RayRecodCPU
+struct HitRecordCPU
 {
-	HitRecordGMem cpuHits;
-	RayStackGMem cpuRays;
+	std::vector<Vec3AndUInt>	baryAndObjId;
+	std::vector<unsigned int>	triId;
 };
 
-struct ConstRayRecodCPU
-{
-	ConstHitRecordGMem cpuHits;
-	ConstRayStackGMem cpuRays;
-};
-
-// Hit record should not be used on GMem since its not optimized
+// HitRecord struct is allocated inside thread (GPU register)
 struct HitRecord
 {
 	Vector3					baryCoord;
@@ -86,7 +88,7 @@ struct HitRecord
 };
 
 // Implementations
-constexpr RayStackGMem::operator ConstRayStackGMem()
+constexpr RayRecordGMem::operator ConstRayRecordGMem()
 {
 	return 
 	{
@@ -106,7 +108,7 @@ constexpr HitRecordGMem::operator ConstHitRecordGMem()
 }
 
 __device__ __host__
-inline RayStack::RayStack(const RayStackGMem& mem, unsigned int loc)
+inline RayRecord::RayRecord(const RayRecordGMem& mem, unsigned int loc)
 	: ray(Zero3, Zero3)
 {
 	// Load coalesced
@@ -123,8 +125,8 @@ inline RayStack::RayStack(const RayStackGMem& mem, unsigned int loc)
 }
 
 __device__ __host__
-inline RayStack::RayStack(const ConstRayStackGMem& mem,
-						  unsigned int loc)
+inline RayRecord::RayRecord(const ConstRayRecordGMem& mem,
+							unsigned int loc)
 	: ray(Zero3, Zero3)
 {
 	// Load coalesced

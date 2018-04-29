@@ -33,14 +33,13 @@ class TracerI
 		virtual void					Initialize() = 0;
 
 		// Main Calls
-		virtual void					AssignScene(const SceneI&) = 0;
+		virtual void					SetScene(const SceneI&) = 0;
 		virtual void					SetParams(const TracerParameters&) = 0;
 	
 		// Initial Generations
 		virtual void					GenerateSceneAccelerator() = 0;
 		virtual void					GenerateAccelerator(uint32_t objId) = 0;
-		virtual void					AssignImageSegment(const Vector2ui& pixelStart,
-														   const Vector2ui& pixelEnd) = 0;
+
 		// Material Related
 		// Main memory bottleneck is materials.
 		// Tracers are designed around this bottlenech considering GPU memory limitations.
@@ -55,21 +54,21 @@ class TracerI
 		// Loop HitRays/BounceRays until ray count is zero
 		// Transfer Material rays between tracer nodes using Get/AddMaterialRays
 		virtual void					GenerateCameraRays(const CameraPerspective& camera,
-														   const Vector2ui& resolution,
-														   const uint32_t samplePerPixel,
-														   const Vector2ui& offset = Vector2ui(0, 0),
-														   const Vector2ui& size = Vector2ui(0, 0)) = 0;
+														   const uint32_t samplePerPixel) = 0;
 		virtual void					HitRays() = 0;		
-		virtual void					GetMaterialRays(const RayRecodCPU&, uint32_t rayCount, uint32_t matId) = 0;
-		virtual void					AddMaterialRays(const ConstRayRecodCPU&, uint32_t rayCount, uint32_t matId) = 0;
+		virtual void					GetMaterialRays(RayRecordCPU&, HitRecordCPU&, 
+														uint32_t rayCount, uint32_t matId) = 0;
+		virtual void					AddMaterialRays(const RayRecordCPU&, const HitRecordCPU&,
+														uint32_t rayCount, uint32_t matId) = 0;
 		virtual void					BounceRays() = 0;
 		virtual uint32_t				RayCount() = 0;
 
 		// Image Reated
-		virtual std::vector<Vector3f>	GetImage(const Vector2ui& offset,
-												 const Vector2ui& size) = 0;
-		virtual void					ResetImage() = 0;
+		virtual void					ReportionImage(const Vector2ui& offset = Vector2ui(0, 0),
+													   const Vector2ui& size = Vector2ui(0, 0)) = 0;
 		virtual void					ResizeImage(const Vector2ui& resolution) = 0;
+		virtual void					ResetImage() = 0;
+		virtual std::vector<Vector3f>	GetImage() = 0;
 		
 		// DELETE THOSE THOSE ARE FOR FAST BAREBONES EXECUTION
 		virtual void					LoadBackgroundCubeMap(const std::vector<float>& cubemap) = 0;

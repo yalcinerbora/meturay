@@ -29,68 +29,115 @@ Single thread will
 struct GPUMemory
 {
 	//TextureCube<float4> backgroundImage;
-	RandomStackGMem		randomStack;
+	RandomStackGMem			randomStack;
 };
 
 using GPUMaterialPtr = std::unique_ptr<GPUMaterialI>;
 using ObjAcceleratorPtr = std::unique_ptr<ObjAcceleratorBatchI>;
 
+class ImageMemory
+{
+	private:
+		DeviceMemory	imageMem;
+	protected:
+	public:
+		Vector3f*		imagePtr;
+
+};
+
+class RayMemory
+{
+	//private:
+	//	DeviceMemory				memRayOut;
+	//	DeviceMemory				memRayIn;
+	//	DeviceMemory				memHit;
+
+	//	RayRecordGMem				rayStackIn;
+	//	RayRecordGMem				rayStackOut;
+	//	HitRecordGMem				hitRecord;
+
+	//	static RayRecordGMem		GenerateRayPtrs(void* mem, size_t rayCount);
+
+	//public:
+	//	// Constructors & Destructor
+	//								RayMemory(size_t rayCount);
+	//								RayMemory(const RayMemory&) = delete;
+	//								RayMemory(RayMemory&&) = default;
+	//	RayMemory&					operator=(const RayMemory&) = delete;
+	//	RayMemory&					operator=(RayMemory&&) = default;
+	//								~RayMemory() = default;
+
+	//	RayRecordGMem				RayStackIn();
+	//	RayRecordGMem				RayStackOut();
+	//	HitRecordGMem				HitRecord();
+
+	//	const ConstRayRecordGMem	RayStackIn() const;
+	//	const ConstRayRecordGMem	RayStackOut() const;
+	//	const ConstHitRecordGMem	HitRecord() const;
+
+	//	void						Realloc();
+	//	void						SwapRays();
+
+	//	size_t						AllocatedBytes() const;
+};
+
 class TracerCUDA : public TracerI
 {
 	private:
-		// Common Memory between GPUs (for multi-gpu systems)	
-		std::deque<DeviceMemory>					commonMemory;
 		// GPU Specific Memory (Mostly Textures)
-		std::vector<GPUMemory>						gpuSpecificMemory;
-		std::deque<GPUMaterialPtr>					materials;
-		
-		// Common Memory
-		// Ray Memory
-		RayStackGMem								rayStackIn;
-		RayStackGMem								rayStackOut;
-		HitRecordGMem								hitRecord;
-		// Accelerators
-		ObjAcceleratorPtr							objAccelerators;
-		
-		// Allocate
-		void										AllocateRayStack(size_t count);
-		void										AllocateRandomStack();
-		void										AllocateImage(Vector2ui resolution);
+		std::vector<GPUMemory>				gpuSpecificMemory;
+		std::deque<GPUMaterialPtr>			materials;
 
-		Vector3f*									dOutImage;
+		// Common Memory
+		RayMemory							rayMemory;
+		// Accelerators
+		std::vector<ObjAcceleratorPtr>		objAccelerators;
+		// Image
+		ImageMemory							image;
+		// Properties
+		Vector2ui							imageSegmentSize;
+		Vector2ui							imageOffset;
+		Vector2ui							imageResolution;
+
+		//// Allocate
+		//void								AllocateRayStack(size_t count);
+		//void								AllocateRandomStack();
+		//void								AllocateImage(Vector2ui resolution);
 		
 		// DELETE THESE MEMEBERS
-//		TextureCube<float4>							backgroundTexture;
-		Texture3<float4>							velocityDensityTexture;
-		RandomStackGMem								random;
-		uint32_t									totalRayCount;
+//		TextureCube<float4>					backgroundTexture;
+		Texture3<float4>					velocityDensityTexture;
+		RandomStackGMem						random;
+		uint32_t							totalRayCount;
 				
 	protected:
-		void			AssignScene(const SceneI&) override;
-		void			SetParams(const TracerParameters&) override;
+		void					SetScene(const SceneI&) override;
+		void					SetParams(const TracerParameters&) override;
 
-		void			GenerateSceneAccelerator() override;
-		void			GenerateAccelerator(uint32_t objId) override;
-		void			AssignImageSegment(const Vector2ui& pixelStart,
-										   const Vector2ui& pixelEnd) override;
+		void					GenerateSceneAccelerator() override;
+		void					GenerateAccelerator(uint32_t objId) override;
 
-		void			AssignAllMaterials() override;
-		void			AssignMaterial(uint32_t matId) override;
-		void			LoadMaterial(uint32_t matId) override;
-		void			UnloadMaterial(uint32_t matId) override;
+		void					AssignAllMaterials() override;
+		void					AssignMaterial(uint32_t matId) override;
+		void					LoadMaterial(uint32_t matId) override;
+		void					UnloadMaterial(uint32_t matId) override;
 
-		void			GenerateCameraRays(const CameraPerspective& camera,
-										   const Vector2ui& resolution,
-										   const uint32_t samplePerPixel,
-										   const Vector2ui& offset = Vector2ui(0, 0),
-										   const Vector2ui& size = Vector2ui(0, 0)) override;
-		void			HitRays() override;
-		void			GetMaterialRays(const RayRecodCPU&, 
-										uint32_t rayCount, uint32_t matId) override;
-		void			AddMaterialRays(const ConstRayRecodCPU&, 
-										uint32_t rayCount, uint32_t matId) override;
-		void			BounceRays() override;
-		uint32_t		RayCount() override;
+		void					GenerateCameraRays(const CameraPerspective& camera,
+												   const uint32_t samplePerPixel) override;
+		void					HitRays() override;
+		void					GetMaterialRays(RayRecordCPU&, HitRecordCPU&,
+												uint32_t rayCount, uint32_t matId) override;
+		void					AddMaterialRays(const RayRecordCPU&, const HitRecordCPU&,
+												uint32_t rayCount, uint32_t matId) override;
+		void					BounceRays() override;
+		uint32_t				RayCount() override;
+
+		// Image Reated
+		void					ReportionImage(const Vector2ui& offset = Vector2ui(0, 0),
+											   const Vector2ui& size = Vector2ui(0, 0)) override;
+		void					ResizeImage(const Vector2ui& resolution) override;
+		void					ResetImage() override;
+		std::vector<Vector3f>	GetImage() override;
 
 	public:
 		// Constructors & Destructor

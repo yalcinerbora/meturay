@@ -2,13 +2,19 @@
 
 #include <cstdint>
 
+struct RayRecordGMem;
+struct ConstHitRecordGMem;
+struct ConstRayRecordGMem;
+
 class GPUMaterialI
 {
 	public:
-		//virtual						~GPUMaterialI() = default;
+		virtual						~GPUMaterialI() = default;
 
-		//virtual void uint32_t		LocatedGPU() const = 0;
-		virtual void				BounceRays(RayStackGMem& gOutRays,
-											   const ConstHitRecordGMem gHits,
-											   const ConstRayStackGMem& gRays) = 0;
+		// Interface
+		virtual void				BounceRays(RayRecordGMem& gOutRays,
+											   const ConstHitRecordGMem& gHits,
+											   const ConstRayRecordGMem& gRays,
+											   size_t rayCount) = 0;
+
 };

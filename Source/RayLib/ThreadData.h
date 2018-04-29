@@ -14,27 +14,27 @@ template <class T>
 class ThreadData
 {
 	private:
-		std::atomic_bool	changedOutside;
-		T					data;
+		std::atomic_bool		changedOutside;
+		T						data;
 
 	protected:
 	public:
-		void ThreadData&	operator=(const T& t);
-		bool				CheckChanged(T& newData);
+		ThreadData&				operator=(const T& t);
+		bool					CheckChanged(T& newData);
 };	
 
 template <class T>
-inline void ThreadData<T>& ThreadData<T>::operator=(const T& t)
+inline ThreadData<T>& ThreadData<T>::operator=(const T& t)
 {
-	queueData = t;
+	data = t;
 	changedOutside = true;
+	return *this;
 }
 
 template <class T>
 inline bool ThreadData<T>::CheckChanged(T& newData)
 {
-	bool changed = changedOutside.exchange(false))
-	if(changed) 
-		newData = data;
+	bool changed = changedOutside.exchange(false);
+	newData = data;
 	return changed;
 }
