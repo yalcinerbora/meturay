@@ -10,6 +10,9 @@
     <Filter Include="Accelerators">
       <UniqueIdentifier>{63c10153-70fe-44e5-a436-cc80dca433ab}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Implementations">
+      <UniqueIdentifier>{ff3067b6-433a-4f21-b744-4cac46d313c1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerCUDA\CameraKernels.cuh">
@@ -28,6 +31,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneAcceleratorBVH.h">
       <Filter>Accelerators</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\MeshGPU.h">
+      <Filter>Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SceneGPU.h">
+      <Filter>Implementations</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -2,6 +2,7 @@
 
 #include "Matrix.h"
 #include "Vector.h"
+#include "Quaternion.h"
 #include "RayHitStructs.h"
 
 template<class T, typename = ArithmeticEnable<T>>
@@ -51,9 +52,9 @@ class Ray<T>
 		__device__ __host__ Ray						Reflect(const Vector<3, T>& normal) const;
 		__device__ __host__ Ray&					ReflectSelf(const Vector<3, T>& normal);
 		__device__ __host__ bool					Refract(Ray& out, const Vector<3, T>& normal,
-															float fromMedium, float toMedium) const;
+															T fromMedium, T toMedium) const;
 		__device__ __host__ bool					RefractSelf(const Vector<3, T>& normal,
-																float fromMedium, float toMedium);
+																T fromMedium, T toMedium);
 		
 		// Randomization (Hemi spherical)
 		__device__ __host__ static Ray				RandomRayCosine(float xi0, float xi1,
@@ -65,11 +66,11 @@ class Ray<T>
 
 		__device__ __host__ Ray						NormalizeDir() const;
 		__device__ __host__ Ray&					NormalizeDirSelf();
-		__device__ __host__ Ray						Advance(float) const;
-		__device__ __host__ Ray&					AdvanceSelf(float);
-		__device__ __host__ Ray						Transform(const Matrix4x4&) const;
-		__device__ __host__ Ray&					TransformSelf(const Matrix4x4&);
-		__device__ __host__ Vector<3,T>				AdvancedPos(float t) const;
+		__device__ __host__ Ray						Advance(T) const;
+		__device__ __host__ Ray&					AdvanceSelf(T);
+		__device__ __host__ Ray						Transform(const Matrix<4, T>&) const;
+		__device__ __host__ Ray&					TransformSelf(const Matrix<4, T>&);
+		__device__ __host__ Vector<3,T>				AdvancedPos(T t) const;
 };
 
 using RayF = Ray<float>;

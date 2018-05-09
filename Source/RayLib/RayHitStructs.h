@@ -10,6 +10,8 @@ in tracing. Memory optimized for GPU batch fetch
 #include "Vector.h"
 #include "Ray.h"
 
+#include <thrust/sort.h>
+
 struct alignas(16) Vec3AndUInt
 {
 	Vector3				vec;
@@ -29,7 +31,7 @@ struct RayRecordGMem
 	Vec3AndUInt*		dirAndPixId;
 	Vec3AndUInt*		radAndSampId;
 
-	constexpr operator	ConstRayRecordGMem();
+	constexpr operator	ConstRayRecordGMem() const;
 };
 
 struct RayRecordCPU
@@ -59,20 +61,23 @@ struct ConstHitRecordGMem
 {
 	const Vec3AndUInt*	baryAndObjId;
 	const unsigned int*	triId;
+	const float*		distance;
 };
 
 struct HitRecordGMem
 {
-	Vec3AndUInt*	baryAndObjId;
-	unsigned int*	triId;
+	Vec3AndUInt*		baryAndObjId;
+	unsigned int*		triId;
+	float*				distance;
 
-	constexpr operator ConstHitRecordGMem();
+	constexpr operator	ConstHitRecordGMem() const;
 };
 
 struct HitRecordCPU
 {
 	std::vector<Vec3AndUInt>	baryAndObjId;
 	std::vector<unsigned int>	triId;
+	std::vector<float>			distance;
 };
 
 // HitRecord struct is allocated inside thread (GPU register)
@@ -81,14 +86,18 @@ struct HitRecord
 	Vector3					baryCoord;
 	int						objectId;
 	int						triangleId;
+	float					distance;
 
 	// Constructor & Destrctor
 							HitRecord() = default;
-	__device__ __host__		HitRecord(const HitRecordGMem& mem, unsigned int loc);
+	__device__ __host__		HitRecord(const HitRecordGMem& mem, 
+									  unsigned int loc);
+	__device__ __host__		HitRecord(const ConstHitRecordGMem& mem,
+									  unsigned int loc);
 };
 
 // Implementations
-constexpr RayRecordGMem::operator ConstRayRecordGMem()
+constexpr RayRecordGMem::operator ConstRayRecordGMem() const
 {
 	return 
 	{
@@ -98,17 +107,19 @@ constexpr RayRecordGMem::operator ConstRayRecordGMem()
 	};
 }
 
-constexpr HitRecordGMem::operator ConstHitRecordGMem()
+constexpr HitRecordGMem::operator ConstHitRecordGMem() const
 {
 	return
 	{
 		baryAndObjId,
-		triId
+		triId,
+		distance
 	};
 }
 
 __device__ __host__
-inline RayRecord::RayRecord(const RayRecordGMem& mem, unsigned int loc)
+inline RayRecord::RayRecord(const RayRecordGMem& mem, 
+							unsigned int loc)
 	: ray(Zero3, Zero3)
 {
 	// Load coalesced
@@ -148,6 +159,22 @@ inline HitRecord::HitRecord(const HitRecordGMem& mem, unsigned int loc)
 	// Load coalesced
 	Vec3AndUInt baryObj = mem.baryAndObjId[loc];
 	triangleId = mem.triId[loc];
+	distance = mem.distance[loc];
+
+	// Assign in register memory of the Multiprocessor
+	baryCoord = baryObj.vec;
+	objectId = baryObj.uint;
+	
+}
+
+__device__ __host__
+inline HitRecord::HitRecord(const ConstHitRecordGMem& mem,
+							unsigned int loc)
+{
+	// Load coalesced
+	Vec3AndUInt baryObj = mem.baryAndObjId[loc];
+	triangleId = mem.triId[loc];
+	distance = mem.distance[loc];
 
 	// Assign in register memory of the Multiprocessor
 	baryCoord = baryObj.vec;

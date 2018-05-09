@@ -33,7 +33,7 @@ class TracerI
 		virtual void					Initialize() = 0;
 
 		// Main Calls
-		virtual void					SetScene(const SceneI&) = 0;
+		virtual void					LoadScene(const std::string& sceneFileName) = 0;
 		virtual void					SetParams(const TracerParameters&) = 0;
 	
 		// Initial Generations

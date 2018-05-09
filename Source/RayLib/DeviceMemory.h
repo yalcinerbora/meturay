@@ -46,7 +46,7 @@ class DeviceMemoryCPUBacked : public DeviceLocalMemoryI
 	protected:
 	public:
 		// Constructors & Destructor
-									DeviceMemoryCPUBacked() = delete;
+									DeviceMemoryCPUBacked();
 									DeviceMemoryCPUBacked(size_t sizeInBytes, int deviceId = 0);
 									DeviceMemoryCPUBacked(const DeviceMemoryCPUBacked&);
 									DeviceMemoryCPUBacked(DeviceMemoryCPUBacked&&);
@@ -86,7 +86,7 @@ class DeviceMemory
 	protected:
 	public:
 		// Constructors & Destructor
-									DeviceMemory() = delete;
+									DeviceMemory();
 									DeviceMemory(size_t sizeInBytes);
 									DeviceMemory(const DeviceMemory&);
 									DeviceMemory(DeviceMemory&&);

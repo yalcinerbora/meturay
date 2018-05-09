@@ -18,7 +18,8 @@ enum class IOError
 	// Maya nCache Navier-Stokes Fluid
 	NCACHE_DENSITY_NOT_FOUND,
 	NCACHE_VELOCITY_NOT_FOUND,
-	
+	// Scene Json
+	//....
 
 	// End
 	END

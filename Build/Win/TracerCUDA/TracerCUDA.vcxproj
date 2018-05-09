@@ -11,11 +11,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\MeshGPU.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ObjAcceleratorBatchI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CameraKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneAcceleratorBVH.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneAcceleratorI.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SceneGPU.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDA.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDAEntry.h" />
   </ItemGroup>

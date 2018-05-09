@@ -67,9 +67,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\BVHDevice.cuh">
       <Filter>Acceleration</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\MeshStructs.h">
-      <Filter>Structs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\RandomStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
@@ -96,6 +93,24 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\ArrayPortion.h">
       <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SceneI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\MeshI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\AnimateI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\VolumeI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SurfaceI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\MaterialI.h">
+      <Filter>Interfaces</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

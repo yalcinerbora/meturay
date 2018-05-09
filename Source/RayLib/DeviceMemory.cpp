@@ -6,6 +6,12 @@
 #include <algorithm>
 #include <cstddef>
 
+DeviceMemoryCPUBacked::DeviceMemoryCPUBacked()
+	: h_ptr(nullptr)
+	, d_ptr(nullptr)
+	, size(0)
+{}
+
 DeviceMemoryCPUBacked::DeviceMemoryCPUBacked(size_t sizeInBytes, int deviceId)
 	: DeviceLocalMemoryI(deviceId)
 	, size(sizeInBytes)
@@ -148,6 +154,11 @@ void DeviceMemoryCPUBacked::MigrateToOtherDevice(int deviceTo, cudaStream_t stre
 	d_ptr = d_new;
 	currentDevice = deviceTo;
 }
+
+DeviceMemory::DeviceMemory()
+	: size(0)
+	, m_ptr(nullptr)
+{}
 
 DeviceMemory::DeviceMemory(size_t sizeInBytes)
 	: size(sizeInBytes)
