@@ -7,7 +7,6 @@
 #endif
 
 #include <memory>
-
-class TracerI;
+#include "RayLib/TracerI.h"
 
 METU_SHARED_TRACERCUDA_ENTRY_POINT std::unique_ptr<TracerI> CreateTracerCUDA();

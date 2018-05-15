@@ -116,8 +116,8 @@ class TracerCUDA : public TracerI
 	private:
 		// GPU Specific Memory (Mostly Textures)
 		RNGMemory							rngMemory;		
-		//std::deque<GPUMaterialPtr>			materials;
-		//std::vector<GPUMemory>				gpuSpecificMemory;
+		//std::deque<GPUMaterialPtr>		materials;
+		//std::vector<GPUMemory>			gpuSpecificMemory;
 
 		// Common Memory
 		RayMemory							rayMemory;
@@ -140,14 +140,9 @@ class TracerCUDA : public TracerI
 		void								SortRaysByMaterial();
 		void								SortRaysBySurface();
 
-//		// DELETE THESE MEMEBERS
-////		TextureCube<float4>					backgroundTexture;
-//		Texture3<float4>					velocityDensityTexture;
-//		RandomStackGMem						random;
-//		uint32_t							totalRayCount;
 
 	protected:
-		void							LoadScene(const std::string& sceneFileName) override;
+		void							SetScene(const std::string& sceneFileName) override;
 		void							SetParams(const TracerParameters&) override;
 
 		void							GenerateSceneAccelerator() override;

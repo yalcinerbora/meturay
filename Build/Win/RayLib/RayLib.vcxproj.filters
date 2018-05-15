@@ -64,9 +64,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Random.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\BVHDevice.cuh">
-      <Filter>Acceleration</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\RandomStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
@@ -74,9 +71,6 @@
       <Filter>ImageIO</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\VisorInputI.h">
-      <Filter>Interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\TracerThread.h">
@@ -112,6 +106,25 @@
     <ClInclude Include="..\..\..\Source\RayLib\MaterialI.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h">
+      <Filter>Distribitors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SelfDistributor.h">
+      <Filter>Distribitors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h">
+      <Filter>Distribitors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\VisorDistributorI.h">
+      <Filter>Distribitors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerDistributorI.h">
+      <Filter>Distribitors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\AnalyticDistributorI.h">
+      <Filter>Distribitors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\VisorWindowInput.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="LinearAlgb">
@@ -119,9 +132,6 @@
     </Filter>
     <Filter Include="Memory">
       <UniqueIdentifier>{8a3dbe82-44f6-451f-a478-02ad96121997}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Acceleration">
-      <UniqueIdentifier>{fba64469-a7e4-45d4-82b5-aeed9a35ee50}</UniqueIdentifier>
     </Filter>
     <Filter Include="Interfaces">
       <UniqueIdentifier>{ffc61ecf-ed27-41a3-841d-51e14123abab}</UniqueIdentifier>
@@ -141,6 +151,9 @@
     <Filter Include="Threads">
       <UniqueIdentifier>{5e8e629d-f2d5-4197-9a8e-6d84e19db046}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Distribitors">
+      <UniqueIdentifier>{23956a57-33b5-4e95-85d0-847ecec816e2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp">
@@ -159,5 +172,12 @@
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp">
       <Filter>Threads</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\MDistributor.cpp">
+      <Filter>Distribitors</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\SelfDistributor.cpp">
+      <Filter>Distribitors</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\VisorWindowInput.cpp" />
   </ItemGroup>
 </Project>

@@ -11,6 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BVHDevice.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\HitKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MeshGPU.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ObjAcceleratorBatchI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CameraKernels.cuh" />
@@ -18,13 +20,18 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneAcceleratorBVH.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneAcceleratorI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneGPU.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SVODevice.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDA.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDAEntry.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\VolumeGPU.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\CameraKernels.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\Source\TracerCUDA\SceneGPU.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\VolumeGPU.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\SVODevice.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerCUDA.cu">
       <FileType>Document</FileType>
     </CudaCompile>

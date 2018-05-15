@@ -7,5 +7,5 @@ class AnimateI
 		virtual				~AnimateI() = default;
 
 		// Interface
-		virtual void		ChangeTime(double time) = 0;
+		virtual void		ChangeFrame(double time) = 0;
 };

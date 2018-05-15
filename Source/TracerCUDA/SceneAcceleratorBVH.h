@@ -6,7 +6,7 @@
 */
 
 #include "SceneAcceleratorI.h"
-#include "RayLib/BVHDevice.cuh"
+#include "BVHDevice.cuh"
 
 class SceneAcceleratorBVH : SceneAcceleratorI
 {		

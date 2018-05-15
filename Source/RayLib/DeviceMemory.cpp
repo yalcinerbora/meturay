@@ -205,16 +205,6 @@ DeviceMemory& DeviceMemory::operator=(DeviceMemory&& other)
 	return *this;
 }
 
-constexpr DeviceMemory::operator void*()
-{
-	return m_ptr;
-}
-
-constexpr DeviceMemory::operator const void*() const
-{
-	return m_ptr;
-}
-
 size_t DeviceMemory::Size() const
 {
 	return size;

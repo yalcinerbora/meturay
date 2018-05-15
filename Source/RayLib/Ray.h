@@ -3,7 +3,6 @@
 #include "Matrix.h"
 #include "Vector.h"
 #include "Quaternion.h"
-#include "RayHitStructs.h"
 
 template<class T, typename = ArithmeticEnable<T>>
 class Ray;

@@ -1,8 +1,8 @@
 #include "TracerThread.h"
 #include "TracerI.h"
-#include "DistributorI.h"
+#include "TracerDistributorI.h"
 
-void TracerThread::THRDLoop(DistributorI& distributor)
+void TracerThread::THRDLoop(TracerDistributorI& distributor)
 {
 	// Render Loop
 	while(!stopSignal)
@@ -10,10 +10,12 @@ void TracerThread::THRDLoop(DistributorI& distributor)
 		// Check if data is changed
 		CameraPerspective newCam;
 		Vector2ui newResolution;
-		SceneI* newScene;
+		std::string newScene;
 		uint32_t newSample;
 		TracerParameters newParams;
 		ImageSegment newSegment;
+		double newTime;
+		bool timeChanged = time.CheckChanged(newTime);
 		bool camChanged = camera.CheckChanged(newCam);
 		bool sceneChanged = scene.CheckChanged(newScene);
 		bool resolutionChanged= resolution.CheckChanged(newResolution);		
@@ -24,11 +26,13 @@ void TracerThread::THRDLoop(DistributorI& distributor)
 		// Reset Image if images changed
 		if(resolutionChanged)
 			tracer.ResizeImage(newResolution);
-		else if(camChanged || sceneChanged)
+		else if(camChanged || sceneChanged || timeChanged)
 			tracer.ResetImage();
 
+		if(timeChanged)
+			tracer.SetTime(newTime);
 		if(sceneChanged)
-			tracer.SetScene(*newScene);
+			tracer.SetScene(newScene);
 		if(paramsChanged)
 			tracer.SetParams(newParams);
 		if(segmentChanged)
@@ -69,7 +73,7 @@ void TracerThread::THRDLoop(DistributorI& distributor)
 		//=====================//
 
 		// Image is ready now send according to the callbacks
-		if(distributor.CheckIfRenderRequested(renderCount))
+		if(distributor.ShouldSendImage(renderCount))
 		{
 			distributor.SendImage(tracer.GetImage(),
 								  newResolution,
@@ -97,9 +101,9 @@ void TracerThread::ChangeCamera(const CameraPerspective& persp)
 	camera = persp;
 }
 
-void TracerThread::ChangeScene(SceneI& s)
+void TracerThread::ChangeScene(const std::string& s)
 {
-	scene = &s;
+	scene = s;
 }
 
 void TracerThread::ChangeResolution(const Vector2ui& res)
@@ -115,6 +119,11 @@ void TracerThread::ChangeSampleCount(uint32_t sampleCount)
 void TracerThread::ChangeParams(const TracerParameters& p)
 {
 	parameters = p;
+}
+
+void TracerThread::ChangeTime(double seconds)
+{
+	time = seconds;
 }
 
 void TracerThread::ChangeImageSegment(const Vector2ui& pixelStart,

@@ -31,7 +31,7 @@ RNGMemory::RNGMemory(uint32_t seed)
 	size_t totalOffset = 0;
 	for(const auto& gpu : CudaSystem::GPUList())
 	{
-		randomStacks.emplace_back(ConstRandomStackGMem{d_ptr + totalOffset});
+		randomStacks.emplace_back(RandomStackGMem{d_ptr + totalOffset});
 		totalOffset += gpu.RecommendedBlockCount() * StaticThreadPerBlock1D;
 	}
 	assert(totalCount == totalOffset);
@@ -105,9 +105,9 @@ size_t RayMemory::TotalMemoryForRay(size_t rayCount)
 
 size_t RayMemory::TotalMemoryForHit(size_t rayCount)
 {
-	static_assert(sizeof(HitRecord) == sizeof(Vec3AndUInt) + sizeof(unsigned int),
+	static_assert(sizeof(::HitRecord) == sizeof(Vector3) + sizeof(unsigned int) * 2 + sizeof(float),
 				  "Hit record size sanity check.");
-	return sizeof(HitRecord) * rayCount;
+	return sizeof(::HitRecord) * rayCount;
 }
 
 RayMemory::RayMemory()
@@ -289,14 +289,14 @@ void RayMemory::SwapRays(size_t rayCount)
 	GenerateHitPtrs(memHit, rayCount);
 }
 
-void TracerCUDA::LoadScene(const std::string& sceneFileName)
+void TracerCUDA::SetScene(const std::string& sceneFileName)
 {
 	scene = std::move(SceneGPU(sceneFileName));
 }
 
 void TracerCUDA::SetParams(const TracerParameters& p)
 {
-	parameters = p
+	parameters = p;
 }
 
 void TracerCUDA::GenerateSceneAccelerator()
@@ -365,7 +365,7 @@ void TracerCUDA::GenerateCameraRays(const CameraPerspective& camera,
 
 	const uint32_t blockCount = CudaSystem::GPUList()[gpuId].RecommendedBlockCount();
 	const uint32_t threadCount = StaticThreadPerBlock1D;
-	const uint32_t sharedSize = rngMemory.SharedMemorySize(gpuId);
+	const size_t sharedSize = rngMemory.SharedMemorySize(gpuId);
 
 	KCGenerateCameraRays<<<blockCount, threadCount, sharedSize>>>(rayMemory.RayStackIn(),
 																  rngMemory.RandomStack(gpuId),

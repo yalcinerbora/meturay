@@ -228,7 +228,7 @@ inline Vector<3, T> Quaternion<T>::ApplyRotation(const Vector<3, T>& vector) con
 {
 	// q * v * qInv
 	// .Normalize();
-	Quaternion qInv = ConjugateSelf();
+	Quaternion qInv = Conjugate();
 	Quaternion vectorQ(0.0f, vector[0], vector[1], vector[2]);
 
 	Quaternion result((*this) * (vectorQ * qInv));

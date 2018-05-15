@@ -38,14 +38,35 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneGPU.h">
       <Filter>Implementations</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\VolumeGPU.h">
+      <Filter>Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\HitKernels.cuh">
+      <Filter>Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BVHDevice.cuh">
+      <Filter>Accelerators</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SVODevice.cuh">
+      <Filter>Accelerators</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\CameraKernels.cu">
       <Filter>Kernels</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerCUDA.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\SVODevice.cu">
+      <Filter>Accelerators</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerCUDAEntry.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\VolumeGPU.cpp">
+      <Filter>Implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerCUDA\SceneGPU.cpp">
+      <Filter>Implementations</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

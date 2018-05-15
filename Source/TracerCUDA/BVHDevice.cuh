@@ -13,13 +13,14 @@ It can probably be improved a lot.
 #include <cstdint>
 #include <vector>
 
-#include "Vector.h"
-#include "DeviceMemory.h"
-#include "Ray.h"
+#include "RayLib/Vector.h"
+#include "RayLib/DeviceMemory.h"
+#include "RayLib/Ray.h"
 
 class MeshBatch;
 struct Mesh;
 struct ObjectAABBListDevice;
+struct HitRecord;
 
 class BVHDevice
 {
@@ -88,13 +89,10 @@ class BVHDevice
 		__device__ void					ConstructDevice(const MeshBatch&, const Mesh&);
 		__device__ void					ConstructDevice(const std::vector<Mesh>&);		
 
-		__host__ void					ConstructHost(const MeshBatch&, const Mesh&);
-		__host__ void					ConstructHost(const ObjectAABBListDevice&);
-
 		// Intersection
-		__device__ bool					IntersectsFull(float& distance,
+		__device__ bool					IntersectsFull(HitRecord&,
 													   const RayF&) const;
 		__device__ 	bool				IntersectsPartial(uint32_t& index,
-														  float& distance,	
+														  HitRecord&,
 														  const RayF&) const;
 };

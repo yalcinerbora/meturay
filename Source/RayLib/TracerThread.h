@@ -10,7 +10,7 @@
 
 class SceneI;
 class TracerI;
-class DistributorI;
+class TracerDistributorI;
 
 /** Thread wrapper
 	TracerI encapsulates system
@@ -37,38 +37,42 @@ class TracerThread
 		TracerI&						tracer;
 
 		// Current Settings
+		ThreadData<double>				time;
 		ThreadData<CameraPerspective>	camera;
-		ThreadData<SceneI*>				scene;
+		ThreadData<std::string>			scene;
 		ThreadData<Vector2ui>			resolution;
 		ThreadData<uint32_t>			sample;
 		ThreadData<TracerParameters>	parameters;
 		ThreadData<ImageSegment>		segment;
-				
+		
+		int								currentFPS;
+		int								currentFrame;
+
 		// Actual Thread Loop
-		void						THRDLoop(DistributorI&);
+		void							THRDLoop(TracerDistributorI&);
 
 	protected:
 	public:
 		// Constructors & Destructor
-									TracerThread(TracerI&);
-									TracerThread(const TracerThread&) = delete;
-		TracerThread&				operator=(const TracerThread&) = delete;
-									~TracerThread();
+										TracerThread(TracerI&);
+										TracerThread(const TracerThread&) = delete;
+		TracerThread&					operator=(const TracerThread&) = delete;
+										~TracerThread();
 
 		// State Change
-		void						ChangeCamera(const CameraPerspective&);
-		void						ChangeScene(SceneI&);
-		void						ChangeResolution(const Vector2ui&);
+		void							ChangeCamera(const CameraPerspective&);
+		void							ChangeScene(const std::string&);
+		void							ChangeResolution(const Vector2ui&);
+		void							ChangeTime(double seconds);
 
-		void						ChangeSampleCount(uint32_t);
-		void						ChangeParams(const TracerParameters&);
-		void						ChangeImageSegment(const Vector2ui& pixelStart,
-													   const Vector2ui& pixelCount);
-
+		void							ChangeSampleCount(uint32_t);
+		void							ChangeParams(const TracerParameters&);
+		void							ChangeImageSegment(const Vector2ui& pixelStart,
+														   const Vector2ui& pixelCount);
 		// Render Loop Related
-		void						Start(DistributorI&);
-		void						Stop();
-		void						Pause(bool);
+		void							Start(TracerDistributorI&);
+		void							Stop();
+		void							Pause(bool);
 };
 
 inline TracerThread::TracerThread(TracerI& t)
@@ -82,7 +86,7 @@ inline TracerThread::~TracerThread()
 	Stop();
 }
 
-inline void TracerThread::Start(DistributorI& d)
+inline void TracerThread::Start(TracerDistributorI& d)
 {
 	thread = std::thread(&TracerThread::THRDLoop, this, std::ref(d));
 }

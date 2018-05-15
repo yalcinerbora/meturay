@@ -33,7 +33,8 @@ class TracerI
 		virtual void					Initialize() = 0;
 
 		// Main Calls
-		virtual void					LoadScene(const std::string& sceneFileName) = 0;
+		virtual void					SetTime(double seconds) = 0;
+		virtual void					SetScene(const std::string& sceneFileName) = 0;
 		virtual void					SetParams(const TracerParameters&) = 0;
 	
 		// Initial Generations
@@ -70,16 +71,16 @@ class TracerI
 		virtual void					ResetImage() = 0;
 		virtual std::vector<Vector3f>	GetImage() = 0;
 		
-		// DELETE THOSE THOSE ARE FOR FAST BAREBONES EXECUTION
-		virtual void					LoadBackgroundCubeMap(const std::vector<float>& cubemap) = 0;
-		virtual void					LoadFluidToGPU(const std::vector<float>& velocityDensity,
-													   const Vector3ui& size) = 0;
-		virtual void					CS568GenerateCameraRays(const CameraPerspective& cam,
-																const Vector2ui resolution,
-																const uint32_t samplePerPixel) = 0;
-		virtual void					LaunchRays(const Vector3f& backgroundColor,
-												   const Vector3ui& textureSize,
-												   const Vector3f& bottomLeft,
-												   const Vector3f& length) = 0;
-		virtual std::vector<Vector3f>	GetImage(const Vector2ui& resolution) = 0;
+		//// DELETE THOSE THOSE ARE FOR FAST BAREBONES EXECUTION
+		//virtual void					LoadBackgroundCubeMap(const std::vector<float>& cubemap) = 0;
+		//virtual void					LoadFluidToGPU(const std::vector<float>& velocityDensity,
+		//											   const Vector3ui& size) = 0;
+		//virtual void					CS568GenerateCameraRays(const CameraPerspective& cam,
+		//														const Vector2ui resolution,
+		//														const uint32_t samplePerPixel) = 0;
+		//virtual void					LaunchRays(const Vector3f& backgroundColor,
+		//										   const Vector3ui& textureSize,
+		//										   const Vector3f& bottomLeft,
+		//										   const Vector3f& length) = 0;
+		//virtual std::vector<Vector3f>	GetImage(const Vector2ui& resolution) = 0;
 };

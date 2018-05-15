@@ -140,3 +140,13 @@ inline constexpr DeviceMemory::operator const T*() const
 {
 	return reinterpret_cast<T*>(m_ptr);
 }
+
+inline constexpr DeviceMemory::operator void*()
+{
+	return m_ptr;
+}
+
+inline constexpr DeviceMemory::operator const void*() const
+{
+	return m_ptr;
+}

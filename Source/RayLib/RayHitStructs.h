@@ -10,8 +10,6 @@ in tracing. Memory optimized for GPU batch fetch
 #include "Vector.h"
 #include "Ray.h"
 
-#include <thrust/sort.h>
-
 struct alignas(16) Vec3AndUInt
 {
 	Vector3				vec;
@@ -39,38 +37,41 @@ struct RayRecordCPU
 	std::vector<Vector4>		posAndMedium;
 	std::vector<Vec3AndUInt>	dirAndPixId;
 	std::vector<Vec3AndUInt>	radAndSampId;
+
+								RayRecordCPU(RayRecordCPU&&) = default;
+	RayRecordCPU&				operator=(RayRecordCPU&&) = default;
 };
 
 // RayRecord struct is allocated inside thread (GPU register)
 struct RayRecord
 {
-	RayF					ray;
-	float					medium;
-	unsigned int			pixelId;
-	unsigned int			sampleId;
-	Vector3					totalRadiance;
+	RayF						ray;
+	float						medium;
+	unsigned int				pixelId;
+	unsigned int				sampleId;
+	Vector3						totalRadiance;
 
-							RayRecord() = default;
-	__device__ __host__		RayRecord(const ConstRayRecordGMem& mem,
-									  unsigned int loc);
-	__device__ __host__		RayRecord(const RayRecordGMem& mem,
+								RayRecord() = default;
+	__device__ __host__			RayRecord(const ConstRayRecordGMem& mem,
+										  unsigned int loc);
+	__device__ __host__			RayRecord(const RayRecordGMem& mem,
 									  unsigned int loc);
 };
 
 struct ConstHitRecordGMem
 {
-	const Vec3AndUInt*	baryAndObjId;
-	const unsigned int*	triId;
-	const float*		distance;
+	const Vec3AndUInt*			baryAndObjId;
+	const unsigned int*			triId;
+	const float*				distance;
 };
 
 struct HitRecordGMem
 {
-	Vec3AndUInt*		baryAndObjId;
-	unsigned int*		triId;
-	float*				distance;
+	Vec3AndUInt*				baryAndObjId;
+	unsigned int*				triId;
+	float*						distance;
 
-	constexpr operator	ConstHitRecordGMem() const;
+	constexpr operator			ConstHitRecordGMem() const;
 };
 
 struct HitRecordCPU
@@ -83,17 +84,17 @@ struct HitRecordCPU
 // HitRecord struct is allocated inside thread (GPU register)
 struct HitRecord
 {
-	Vector3					baryCoord;
-	int						objectId;
-	int						triangleId;
-	float					distance;
+	Vector3						baryCoord;
+	int							objectId;
+	int							triangleId;
+	float						distance;
 
 	// Constructor & Destrctor
-							HitRecord() = default;
-	__device__ __host__		HitRecord(const HitRecordGMem& mem, 
-									  unsigned int loc);
-	__device__ __host__		HitRecord(const ConstHitRecordGMem& mem,
-									  unsigned int loc);
+								HitRecord() = default;
+	__device__ __host__			HitRecord(const HitRecordGMem& mem, 
+										  unsigned int loc);
+	__device__ __host__			HitRecord(const ConstHitRecordGMem& mem,
+										  unsigned int loc);
 };
 
 // Implementations

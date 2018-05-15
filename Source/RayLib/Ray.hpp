@@ -38,7 +38,7 @@ inline const Vector<3, T>& Ray<T>::getPosition() const
 
 template<class T>
 __device__ __host__
-inline bool Ray<T>::IntersectsSphere(Vector<3, T>& pos, float& t,
+inline bool Ray<T>::IntersectsSphere(Vector<3, T>& intersectPos, float& t,
 									 const Vector<3, T>& sphereCenter,
 									 float sphereRadius) const
 {
@@ -93,7 +93,7 @@ inline bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, float& t,
 	if(cullFace)
 	{
 		// TODO this is wrong??
-		IEVector3 normal = abDiff.CrossProduct(acDiff).Normalize();
+		Vector3 normal = Cross(abDiff, acDiff).Normalize();
 		T cos = direction.DotProduct(normal);
 		if(cos > 0) return false;
 	}
@@ -134,7 +134,7 @@ inline bool Ray<T>::IntersectsAABB(const Vector<3, T>& min,
 	float tMin = -std::numeric_limits<float>::max();
 	float tMax = std::numeric_limits<float>::max();
 
-	#pragma unroll
+	UNROLL_LOOP
 	for(int i = 0; i < 3; i++)
 	{
 		tMin = std::max(tMin, std::min(t0[i], t1[i]));
@@ -145,7 +145,7 @@ inline bool Ray<T>::IntersectsAABB(const Vector<3, T>& min,
 
 template<class T>
 __device__ __host__
-inline bool Ray<T>::IntersectsAABB(Vector<3, T>& pos, float& t,
+inline bool Ray<T>::IntersectsAABB(Vector<3, T>& pos, float& tOut,
 								   const Vector<3, T>& min,
 								   const Vector<3, T>& max) const
 {
@@ -157,7 +157,7 @@ inline bool Ray<T>::IntersectsAABB(Vector<3, T>& pos, float& t,
 	float tMax = std::numeric_limits<float>::max();
 	float t = std::numeric_limits<float>::max();
 
-	#pragma unroll
+	UNROLL_LOOP
 	for(int i = 0; i < 3; i++)
 	{
 		tMin = std::max(tMin, std::min(t0[i], t1[i]));
@@ -165,8 +165,13 @@ inline bool Ray<T>::IntersectsAABB(Vector<3, T>& pos, float& t,
 		t = (t0[i] > 0.0f) ? std::min(t, t0[i]) : t;
 		t = (t1[i] > 0.0f) ? std::min(t, t1[i]) : t;
 	}
-	pos = position + t * direction;
-	return (tMax >= tMin) ? t : FLT_MAX;	
+
+	if(tMax >= tMin)
+	{
+		tOut = t;
+		pos = position + t * direction;
+	}	
+	return (tMax >= tMin);
 }
 
 template<class T>
@@ -293,7 +298,7 @@ inline Ray<T> Ray<T>::Transform(const Matrix<4, T>& mat) const
 
 template<class T>
 __device__ __host__ 
-inline Ray<T>& Ray<T>::TransformSelf(const Matrix<4, T>&)
+inline Ray<T>& Ray<T>::TransformSelf(const Matrix<4, T>& mat)
 {
 	direction = (mat * Vector<4, T>(direction, 0.0f)).Normalize();
 	position = mat * Vector<4, T>(position, 1.0f);

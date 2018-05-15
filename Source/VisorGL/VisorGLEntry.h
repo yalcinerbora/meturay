@@ -7,6 +7,6 @@
 #endif
 
 #include <memory>
-#include "VisorGL.h"
+#include "RayLib/VisorI.h"
 
-METU_SHARED_VISORGL_ENTRY_POINT std::unique_ptr<VisorGL> CreateVisorGL();
+METU_SHARED_VISORGL_ENTRY_POINT std::unique_ptr<VisorViewI> CreateVisorGL();

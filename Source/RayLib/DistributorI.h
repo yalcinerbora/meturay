@@ -2,20 +2,13 @@
 
 /**
 
-Distributor Interface
+Tracer Distributor Interface
 
 Main interface for data distribution between nodes
 Implementation has distributed system logics for creating cluster
 
-It also is responsible for data transfer between nodes.
-Distributer is not user interfaceable, and can only be used by Tracer, 
-Visor and Analytic Classes/Programs.
-
-Distributor is interfaces because it may have different implementations depending on the
-distribution (symmetric/asymmetric computers, node types etc.)
-
-Distributor has single thread per connection. Mostly 1-2 for neig
-Other is for sending
+It also is responsible for data transfer between nodes. 
+Distributor is main backend for all nodes (Analytic / Visor, Tracer)
 
 */
 
@@ -23,18 +16,40 @@ Other is for sending
 #include <vector>
 
 #include "ArrayPortion.h"
+#include "Vector.h"
 
-class TracerI;
-struct RayStack;
+namespace asio::ip
+{
+	class adress;
+}
+
+enum class DistError
+{
+	OK,
+};
 
 class DistributorI
 {
 	public:
-		enum NodeTypes
+		enum CommandType
 		{
-			WORK_NODE,
-			UI_NODE
+			REQUEST,
+			RECIEVE
 		};
+
+		enum CommandTag
+		{
+			ACCELERATOR,
+			SCENE,
+			MATERIAL,
+			OBJECT,
+
+			// Most important tag (used in per-bounce basis)
+			MAT_RAY,
+		};
+
+		// Main Recieve
+		typedef void(*RecieveFunc)(CommandTag, std::vector<const char*>);
 
 	private:
 	protected:
@@ -52,41 +67,23 @@ class DistributorI
 		virtual void			PollNode(uint32_t) = 0;				// PollNode to check if its not dead
 
 		// Distributed Non-Leader
-		virtual void			RequestLeaderElection() = 0;	// Request a Leader election
-		virtual void			RedirectCandidateNode() = 0;	// Redirect new node to leader
+		virtual void			RequestLeaderElection() = 0;		// Request a Leader election
+		virtual void			RedirectCandidateNode() = 0;		// Redirect new node to leader
 
 	public:
 		virtual					~DistributorI() = default;
 
-		// Check if distributed system is distributed at all
-		virtual bool			Alone() = 0;
+		// Main Interface
+		virtual DistError		Connect(asio::ip::adress, int port) = 0;
 
-		//
-		virtual bool			CheckIfRenderRequested(uint32_t renderCount) = 0;
+		// Sending Data (non-block)
+		virtual void			Request(const CommandTag) = 0;
+		virtual void			Send(const CommandTag, 
+									 const std::vector<const char*>) = 0;
 
-		// Sending (All non-blocking)
-		virtual void			SendMaterialRays(uint32_t materialId, 
-												 const std::vector<RayStack>) = 0;
-		virtual void			SendMaterialRays(const std::vector<ArrayPortion<uint32_t>> materialIds,
-												 const std::vector<RayStack>) = 0;
-		virtual void			SendImage(const std::vector<Vector3f> image,
-										  const Vector2ui resolution,
-										  const Vector2ui offset = Vector2ui(0, 0),
-										  const Vector2ui size = Vector2ui(0, 0)) = 0;
-		
-		// Requesting (All are blocking)
-		virtual void			RequestObjectAccelerator() = 0;
-		virtual void			RequestObjectAccelerator(uint32_t objId) = 0;
-		virtual void			RequestObjectAccelerator(const std::vector<uint32_t>& objIds) = 0;
+		// Recieving Data
+		virtual	void			AttachRecieveCallback(RecieveFunc) = 0;
 
-		virtual void			RequestScene() = 0;
-		virtual void			RequestSceneMaterial(uint32_t) = 0;
-		virtual void			RequestSceneObject(uint32_t) = 0;
-		
-		// Request rays that are responsible by this node
-		virtual void			RequestMaterialRays(const std::vector<RayStack>&) = 0;
-
-		// Misc.
+		// Misc
 		virtual uint64_t		NodeId() = 0;
-		virtual uint64_t		TotalMemory() = 0; // Returns entire node cluster's memory
 };

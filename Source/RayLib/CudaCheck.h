@@ -11,8 +11,6 @@ Utility header for header only cuda vector and cpu vector implementations
 #ifdef METU_CUDA
 	#include <cuda.h>
 	#include <cuda_runtime.h>
-	#define METU_UNROLL #pragma unroll
-
 	inline static constexpr void GPUAssert(cudaError_t code, const char *file, int line)
 	{
 		if(code != cudaSuccess)
@@ -24,7 +22,6 @@ Utility header for header only cuda vector and cpu vector implementations
 #else
 	#define __device__
 	#define __host__
-	#define METU_UNROLL
 	typedef int cudaError_t;
 
 	inline static constexpr void GPUAssert(cudaError_t code, const char *file, int line) {}

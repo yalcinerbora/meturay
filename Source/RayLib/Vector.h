@@ -185,3 +185,11 @@ static constexpr Vector3 ZAxis = Vector3(0.0f, 0.0f, 1.0f);
 static constexpr Vector2 Zero2 = Vector2(0.0f, 0.0f);
 static constexpr Vector3 Zero3 = Vector3(0.0f, 0.0f, 0.0f);
 static constexpr Vector4 Zero4 = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+
+static constexpr Vector2i Zero2i = Vector2i(0, 0);
+static constexpr Vector3i Zero3i = Vector3i(0, 0, 0);
+static constexpr Vector4i Zero4i = Vector4i(0, 0, 0, 0);
+
+static constexpr Vector2ui Zero2ui = Vector2ui(0u, 0u);
+static constexpr Vector3ui Zero3ui = Vector3ui(0u, 0u, 0u);
+static constexpr Vector4ui Zero4ui = Vector4ui(0u, 0u, 0u, 0u);
