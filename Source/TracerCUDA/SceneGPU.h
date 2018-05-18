@@ -2,9 +2,19 @@
 
 #include "RayLib/SceneI.h"
 
+using LightList = std::vector<std::reference_wrapper<LightI>>;
+
 class SceneGPU : SceneI
 {
 	private:
+	MaterialList		materials;
+	SurfaceList			surfaces;
+	AnimatableList		animatables;
+	LightList			lights;
+	VolumeList			volumes;
+	MeshBatchList		batches;
+
+
 	protected:
 	public:
 		// Constructors & Destructor
@@ -13,7 +23,7 @@ class SceneGPU : SceneI
 
 
 		// Material(Shading) Related	
-		const MaterialI&				Material(uint32_t) const override;
+		const MaterialI&				Material(uint32_t id) const override;
 		const MaterialList&				Materials() const override;
 
 		// Hit Related

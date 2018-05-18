@@ -20,7 +20,7 @@ class MeshI;
 class LightI;
 
 using SurfaceList = std::vector<std::reference_wrapper<SurfaceI>>;
-using MaterialList = std::vector<std::reference_wrapper<SurfaceI>>;
+using MaterialList = std::vector<std::reference_wrapper<MaterialI>>;
 using AnimatableList = std::vector<std::reference_wrapper<AnimateI>>;
 using VolumeList = std::vector<std::reference_wrapper<VolumeI>>;
 using MeshBatchList = std::vector<std::reference_wrapper<MeshBatchI>>;
@@ -35,7 +35,7 @@ class SceneI
 		virtual								~SceneI() = default;
 
 		// Material(Shading) Related
-		virtual const MaterialI&			Material(uint32_t) const = 0;
+		virtual const MaterialI&			Material(uint32_t id) const = 0;
 		virtual const MaterialList&			Materials() const = 0;
 
 		// Hit Related

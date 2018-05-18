@@ -140,6 +140,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\Ray.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Ray.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\SceneIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SelfDistributor.h" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceI.h" />
@@ -167,6 +168,7 @@
     <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MDistributor.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\SceneIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SelfDistributor.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\TracerThread.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\VisorWindowInput.cpp" />

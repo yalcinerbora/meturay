@@ -142,6 +142,7 @@ class TracerCUDA : public TracerI
 
 
 	protected:
+		void							SetTime(double seconds) override;
 		void							SetScene(const std::string& sceneFileName) override;
 		void							SetParams(const TracerParameters&) override;
 

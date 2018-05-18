@@ -15,8 +15,12 @@ Volume is dense/sparse volume representation of a phenomena (i.e. smoke, water)
 
 enum class VolumeType
 {
-	MAYA_NCACHE_FLUID
+	MAYA_NCACHE_FLUID,
+
+	END
 };
+
+static constexpr size_t VolumeTypeSize = static_cast<size_t>(VolumeType::END);
 
 class VolumeI : public SurfaceI, public AnimateI
 {

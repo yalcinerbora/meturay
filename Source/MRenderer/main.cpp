@@ -25,12 +25,7 @@ int main(int argc, const char* argv[])
 
 	// Set Scene
 	tracer.ChangeScene(std::string(argv[1]));
-
-
-
-
-
-
+	
 
 	// Window Loop
 	auto visorView = CreateVisorGL();

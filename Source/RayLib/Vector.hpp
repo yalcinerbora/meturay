@@ -100,6 +100,19 @@ inline Vector<N, T>::operator const T*() const
 }
 
 template <int N, class T>
+template<class C>
+inline Vector<N, T>::operator Vector<N, C>() const
+{
+	Vector<N, C> result;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		result[i] = static_cast<C>(vector[i]);
+	}
+	return result;
+}
+
+template <int N, class T>
 __device__ __host__
 inline T& Vector<N, T>::operator[](int i)
 {

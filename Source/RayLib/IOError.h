@@ -11,6 +11,8 @@ enum class IOError
 	// General
 	OK,
 	FILE_NOT_FOUND,
+	// Scene
+	SCENE_CORRUPTED,
 	// Maya nCache
 	NCACHE_XML_ERROR,
 	NCACHE_INVALID_FOURCC,
@@ -32,6 +34,8 @@ static constexpr const char* GetIOErrorString(IOError e)
 		// General
 		"OK.",
 		"File not found.",
+		// Scene
+		"Scene file is corrupted.",
 		// Maya nCache
 		"nCache XML parse error.",
 		"nCache invalid fourcc code.",

@@ -289,6 +289,11 @@ void RayMemory::SwapRays(size_t rayCount)
 	GenerateHitPtrs(memHit, rayCount);
 }
 
+void TracerCUDA::SetTime(double seconds)
+{
+
+}
+
 void TracerCUDA::SetScene(const std::string& sceneFileName)
 {
 	scene = std::move(SceneGPU(sceneFileName));

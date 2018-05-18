@@ -62,14 +62,18 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 											~Vector() = default;
 
 		// MVC bug? these trigger std::trivially_copyable static assert
-		//									Vector(const Vector&) = default;
-		//Vector&							operator=(const Vector&) = default;
-
+		// __device__ __host__				Vector(const Vector&) = default;
+		// __device__ __host__ Vector&		operator=(const Vector&) = default;
+											
 		// Accessors
 		__device__ __host__	explicit		operator T*();
 		__device__ __host__	explicit		operator const T*() const;
 		__device__ __host__ T&				operator[](int);
 		__device__ __host__ const T&		operator[](int) const;
+
+		// Type cast
+		template<class C>
+		__device__ __host__	explicit		operator Vector<N, C>() const;
 
 		// Modify
 		__device__ __host__ void			operator+=(const Vector&);

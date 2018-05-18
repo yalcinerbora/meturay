@@ -67,9 +67,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\RandomStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h">
-      <Filter>ImageIO</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\VisorInputI.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
@@ -125,6 +122,12 @@
       <Filter>Distribitors</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\VisorWindowInput.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\SceneIO.h">
+      <Filter>FileI-O</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h">
+      <Filter>FileI-O</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="LinearAlgb">
@@ -145,9 +148,6 @@
     <Filter Include="Structs">
       <UniqueIdentifier>{5662f70e-59b8-4c30-a7fc-b865a663335f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ImageIO">
-      <UniqueIdentifier>{4b35a7d7-da23-43ce-979f-0ea483ccca04}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Threads">
       <UniqueIdentifier>{5e8e629d-f2d5-4197-9a8e-6d84e19db046}</UniqueIdentifier>
     </Filter>
@@ -163,9 +163,6 @@
       <Filter>FileI-O</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\CudaConstants.cpp" />
-    <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp">
-      <Filter>ImageIO</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\TracerThread.cpp">
       <Filter>Threads</Filter>
     </ClCompile>
@@ -179,5 +176,11 @@
       <Filter>Distribitors</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\VisorWindowInput.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp">
+      <Filter>FileI-O</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\SceneIO.cpp">
+      <Filter>FileI-O</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

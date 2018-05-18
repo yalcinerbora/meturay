@@ -7,7 +7,7 @@ VolumeGPU::VolumeGPU()
 
 Vector3ui VolumeGPU::Size()
 {
-
+	return size;
 }
 
 IOError VolumeGPU::Load(const std::string& fileName, VolumeType t)
@@ -19,17 +19,18 @@ IOError VolumeGPU::Load(const std::string& fileName, VolumeType t)
 		default:
 			break;
 	}
+	return IOError::OK;
 }
 
 // From Surface Interface
 uint32_t VolumeGPU::Id() const
 {
-
+	return surfaceId;
 }
 
 uint32_t VolumeGPU::MaterialId() const
 {
-
+	return materialId;
 }
 
 void VolumeGPU::HitRays(const HitRecordGMem hits,

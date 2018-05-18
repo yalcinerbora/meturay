@@ -13,7 +13,7 @@ in tracing. Memory optimized for GPU batch fetch
 struct alignas(16) Vec3AndUInt
 {
 	Vector3				vec;
-	unsigned int		uint;
+	uint32_t			uint;
 };
 
 struct ConstRayRecordGMem
@@ -77,16 +77,20 @@ struct HitRecordGMem
 struct HitRecordCPU
 {
 	std::vector<Vec3AndUInt>	baryAndObjId;
-	std::vector<unsigned int>	triId;
+	std::vector<uint32_t>		triId;
 	std::vector<float>			distance;
 };
 
 // HitRecord struct is allocated inside thread (GPU register)
 struct HitRecord
 {
+	// Statics
+	static constexpr uint32_t	VOLUME_SAMPLE = 0xFFFFFFFF;
+
+	// Members
 	Vector3						baryCoord;
-	int							objectId;
-	int							triangleId;
+	uint32_t					objectId;
+	uint32_t					triangleId;
 	float						distance;
 
 	// Constructor & Destrctor
