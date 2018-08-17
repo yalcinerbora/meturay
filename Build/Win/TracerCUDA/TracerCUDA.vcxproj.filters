@@ -1,28 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Kernels">
-      <UniqueIdentifier>{4dd183f7-1605-4e68-aad1-6afae2f26692}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Material">
       <UniqueIdentifier>{b529f690-fc4c-4475-8ac8-c9be305b939f}</UniqueIdentifier>
     </Filter>
     <Filter Include="Accelerators">
       <UniqueIdentifier>{63c10153-70fe-44e5-a436-cc80dca433ab}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Implementations">
+    <Filter Include="Surfaces">
       <UniqueIdentifier>{ff3067b6-433a-4f21-b744-4cac46d313c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DeviceCode">
+      <UniqueIdentifier>{4dd183f7-1605-4e68-aad1-6afae2f26692}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerCUDA\CameraKernels.cuh">
-      <Filter>Kernels</Filter>
+      <Filter>DeviceCode</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDA.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDAEntry.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialI.h">
-      <Filter>Material</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\ObjAcceleratorBatchI.h">
       <Filter>Accelerators</Filter>
     </ClInclude>
@@ -33,16 +30,10 @@
       <Filter>Accelerators</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\MeshGPU.h">
-      <Filter>Implementations</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\SceneGPU.h">
-      <Filter>Implementations</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\VolumeGPU.h">
-      <Filter>Implementations</Filter>
+      <Filter>Surfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\HitKernels.cuh">
-      <Filter>Kernels</Filter>
+      <Filter>DeviceCode</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\BVHDevice.cuh">
       <Filter>Accelerators</Filter>
@@ -50,23 +41,34 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\SVODevice.cuh">
       <Filter>Accelerators</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\VolumeGPU.cuh">
+      <Filter>Surfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SceneGPU.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialGPU.cuh">
+      <Filter>Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SurfaceDeviceI.cuh">
+      <Filter>DeviceCode</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\CameraKernels.cu">
-      <Filter>Kernels</Filter>
+      <Filter>DeviceCode</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerCUDA.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\SVODevice.cu">
       <Filter>Accelerators</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\MaterialGPU.cu">
+      <Filter>Material</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerCUDAEntry.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\VolumeGPU.cpp">
-      <Filter>Implementations</Filter>
+      <Filter>Surfaces</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerCUDA\SceneGPU.cpp">
-      <Filter>Implementations</Filter>
-    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerCUDA\SceneGPU.cpp" />
   </ItemGroup>
 </Project>

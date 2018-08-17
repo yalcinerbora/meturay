@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Constans.h"
+#include "Constants.h"
 
 template<class T>
 __device__ __host__

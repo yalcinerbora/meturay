@@ -41,10 +41,33 @@ using MaterialHitsCPU = std::map<uint32_t, HitRecordCPU>;
 class ImageMemory
 {
 	private:
-		DeviceMemory	imageMem;
+		DeviceMemory			imageMem;
+
+		Vector2ui				imageSegmentSize;
+		Vector2ui				imageOffset;
+		Vector2ui				imageResolution;
+
+		Vector3f*				imagePtr;
+
 	protected:
 	public:
-		Vector3f*		imagePtr;
+		// Constructors & Destructors
+								ImageMemory();
+								ImageMemory(const ImageMemory&) = delete;
+		ImageMemory&			operator=(const ImageMemory&) = delete;
+								~ImageMemory() = default;
+					
+		void					ReportionImage(const Vector2ui& offset,
+											   const Vector2ui& size);
+		void					ResizeImage(const Vector2ui& resolution);
+		void					ResetImage();
+		std::vector<Vector3f>	GetImage();
+
+		// Getters
+		Vector2ui				ImageSegment() const;
+		Vector2ui				ImageOffset() const;
+		Vector2ui				ImageResolution() const;
+		Vector3f*				ImageGMem();
 };
 
 class RNGMemory
@@ -55,6 +78,7 @@ class RNGMemory
 
 	protected:
 	public:
+		// Constructors & Destructor
 											RNGMemory() = default;
 											RNGMemory(uint32_t seed);
 											RNGMemory(const RNGMemory&) = delete;
@@ -128,20 +152,36 @@ class TracerCUDA : public TracerI
 		SceneGPU							scene;
 
 		// Properties
+		uint32_t							sampleCount;
 		uint32_t							currentRayCount;
 		TracerParameters					parameters;
-		Vector2ui							imageSegmentSize;
-		Vector2ui							imageOffset;
-		Vector2ui							imageResolution;
-
+		
+		// Portioning of Material Rays
 		MaterialRays						materialRayPortions;
 		
+		// Error Callback
+		ErrorCallbackFunction				errorFunc;
+
 		// Internals
 		void								SortRaysByMaterial();
 		void								SortRaysBySurface();
 
+		// Delete These
+		cudaTextureObject_t					backgroundTex;
+		cudaArray_t							texArray;
 
-	protected:
+	public:
+		// Constructors & Destructor
+										TracerCUDA();
+										TracerCUDA(const TracerCUDA&) = delete;
+		TracerCUDA&						operator=(const TracerCUDA&) = delete;
+										~TracerCUDA();
+
+		// Main Thread Only Calls
+		void							Initialize(uint32_t seed) override;
+		virtual void					SetErrorCallback(ErrorCallbackFunction) override;
+
+		// Main Calls
 		void							SetTime(double seconds) override;
 		void							SetScene(const std::string& sceneFileName) override;
 		void							SetParams(const TracerParameters&) override;
@@ -156,7 +196,7 @@ class TracerCUDA : public TracerI
 
 		void							GenerateCameraRays(const CameraPerspective& camera,
 														   const uint32_t samplePerPixel) override;
-		void							HitRays() override;
+		void							HitRays(int frame) override;
 		void							GetMaterialRays(RayRecordCPU&, HitRecordCPU&,
 														uint32_t rayCount, uint32_t matId) override;
 		void							AddMaterialRays(const RayRecordCPU&, const HitRecordCPU&,
@@ -170,20 +210,6 @@ class TracerCUDA : public TracerI
 		void							ResizeImage(const Vector2ui& resolution) override;
 		void							ResetImage() override;
 		std::vector<Vector3f>			GetImage() override;
-
-	public:
-		// Constructors & Destructor
-										TracerCUDA();
-										TracerCUDA(const TracerCUDA&) = delete;
-		TracerCUDA&						operator=(const TracerCUDA&) = delete;
-										~TracerCUDA();
-
-		// Main Thread Only Calls
-		void							Initialize() override;
-
-
-
-
 
 		//// DELETE THOSE
 		//void							LoadBackgroundCubeMap(const std::vector<float>& cubemap) override;

@@ -11,6 +11,7 @@
 
 #include "RayLib/VisorInputI.h"
 #include "RayLib/Camera.h"
+#include "ThreadData.h"
 
 class VisorDistributorI;
 
@@ -40,7 +41,6 @@ class VisorWindowInput : VisorInputI
 								VisorWindowInput(double sensitivity,
 												 double moveRatio,
 												 double moveRatioModifier,
-												 const CameraPerspective&,
 												 VisorDistributorI&);
 								~VisorWindowInput() = default;
 

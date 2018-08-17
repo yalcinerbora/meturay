@@ -1,5 +1,6 @@
 #pragma once
 
+struct Error;
 
 class AnimateI
 {
@@ -7,5 +8,5 @@ class AnimateI
 		virtual				~AnimateI() = default;
 
 		// Interface
-		virtual void		ChangeFrame(double time) = 0;
+		virtual Error		ChangeFrame(double time) = 0;
 };

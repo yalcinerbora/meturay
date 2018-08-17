@@ -51,6 +51,7 @@ class SelfDistributor
 												  const Vector2ui resolution,
 												  const Vector2ui offset = Vector2ui(0, 0),
 												  const Vector2ui size = Vector2ui(0, 0)) override;
+		void					SendError(uint32_t errorEnum, ErrorType) override;
 
 		// Checking image should be sent
 		bool					ShouldSendImage(uint32_t renderCount) override;

@@ -32,6 +32,11 @@ void SelfDistributor::SendImage(const std::vector<Vector3f> image,
 	if(imgFunc) imgFunc(image, resolution, offset, size);
 }
 
+void SelfDistributor::SendError(uint32_t errorEnum, ErrorType e)
+{
+	// TODO::Error
+}
+
 bool SelfDistributor::ShouldSendImage(uint32_t renderCount)
 {
 	return imgStreamOn && (renderCount % sendPerIteration == 0);

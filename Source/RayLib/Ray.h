@@ -1,4 +1,9 @@
 #pragma once
+/**
+
+Ray struct for cnvenient usability.
+
+*/
 
 #include "Matrix.h"
 #include "Vector.h"
@@ -17,6 +22,7 @@ class Ray<T>
 	protected:
 	public:
 		// Constructors & Destructor
+		constexpr									Ray() = default;
 		constexpr __device__ __host__				Ray(const Vector<3,T>& direction, const Vector<3, T>& position);
 		constexpr __device__ __host__				Ray(const Vector3[2]);
 													Ray(const Ray&) = default;
@@ -36,7 +42,7 @@ class Ray<T>
 		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords, float& t,
 																	   const Vector<3, T> triCorners[3],
 																	   bool cullFace = true) const;
-		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords, float& t,																	   
+		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords, float& t,
 																	   const Vector<3, T>& t0,
 																	   const Vector<3, T>& t1,
 																	   const Vector<3, T>& t2,

@@ -49,7 +49,7 @@ class TracerThread
 		int								currentFrame;
 
 		// Actual Thread Loop
-		void							THRDLoop(TracerDistributorI&);
+		void							THRDLoop(TracerDistributorI&, uint32_t seed);
 
 	protected:
 	public:
@@ -70,7 +70,7 @@ class TracerThread
 		void							ChangeImageSegment(const Vector2ui& pixelStart,
 														   const Vector2ui& pixelCount);
 		// Render Loop Related
-		void							Start(TracerDistributorI&);
+		void							Start(TracerDistributorI&, uint32_t seed = 0);
 		void							Stop();
 		void							Pause(bool);
 };
@@ -86,9 +86,9 @@ inline TracerThread::~TracerThread()
 	Stop();
 }
 
-inline void TracerThread::Start(TracerDistributorI& d)
+inline void TracerThread::Start(TracerDistributorI& d, uint32_t seed)
 {
-	thread = std::thread(&TracerThread::THRDLoop, this, std::ref(d));
+	thread = std::thread(&TracerThread::THRDLoop, this, std::ref(d), seed);
 }
 
 inline void TracerThread::Stop()

@@ -7,7 +7,6 @@
 VisorWindowInput::VisorWindowInput(double sensitivity,
 								   double moveRatio,
 								   double moveRatioModifier,
-								   const CameraPerspective& camera,
 								   VisorDistributorI& d)
 	: Sensitivity(sensitivity)
 	, MoveRatio(moveRatio)
@@ -70,6 +69,8 @@ void VisorWindowInput::MouseMoved(double x, double y)
 		camera.up[0] = 0.0f;
 		camera.up[1] = (camera.up[1] < 0.0f) ? -1.0f : 1.0f;
 		camera.up[2] = 0.0f;
+
+		visorDelegate.ChangeCamera(camera);
 	}
 	mouseX = x;
 	mouseY = y;

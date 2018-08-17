@@ -7,9 +7,9 @@ I-O Error Enumeration
 */
 
 enum class IOError
-{
-	// General
+{	
 	OK,
+	// General
 	FILE_NOT_FOUND,
 	// Scene
 	SCENE_CORRUPTED,
@@ -30,9 +30,9 @@ enum class IOError
 static constexpr const char* GetIOErrorString(IOError e)
 {
 	constexpr const char* ErrorStrings[] = 
-	{
-		// General
+	{		
 		"OK.",
+		// General
 		"File not found.",
 		// Scene
 		"Scene file is corrupted.",

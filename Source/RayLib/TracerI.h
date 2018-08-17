@@ -19,6 +19,7 @@ which does send commands to GPU to do ray tracing
 #include <future>
 #include "Vector.h"
 #include "RayHitStructs.h"
+#include "Error.h"
 
 class SceneI;
 struct CameraPerspective;
@@ -30,12 +31,13 @@ class TracerI
 		virtual							~TracerI() = default;
 
 		// Main Thread Only Calls
-		virtual void					Initialize() = 0;
+		virtual void					Initialize(uint32_t seed) = 0;
+		virtual void					SetErrorCallback(ErrorCallbackFunction) = 0;
 
 		// Main Calls
 		virtual void					SetTime(double seconds) = 0;
-		virtual void					SetScene(const std::string& sceneFileName) = 0;
 		virtual void					SetParams(const TracerParameters&) = 0;
+		virtual void					SetScene(const std::string& sceneFileName) = 0;
 	
 		// Initial Generations
 		virtual void					GenerateSceneAccelerator() = 0;
@@ -56,7 +58,7 @@ class TracerI
 		// Transfer Material rays between tracer nodes using Get/AddMaterialRays
 		virtual void					GenerateCameraRays(const CameraPerspective& camera,
 														   const uint32_t samplePerPixel) = 0;
-		virtual void					HitRays() = 0;		
+		virtual void					HitRays(int) = 0;		
 		virtual void					GetMaterialRays(RayRecordCPU&, HitRecordCPU&, 
 														uint32_t rayCount, uint32_t matId) = 0;
 		virtual void					AddMaterialRays(const RayRecordCPU&, const HitRecordCPU&,
@@ -70,17 +72,4 @@ class TracerI
 		virtual void					ResizeImage(const Vector2ui& resolution) = 0;
 		virtual void					ResetImage() = 0;
 		virtual std::vector<Vector3f>	GetImage() = 0;
-		
-		//// DELETE THOSE THOSE ARE FOR FAST BAREBONES EXECUTION
-		//virtual void					LoadBackgroundCubeMap(const std::vector<float>& cubemap) = 0;
-		//virtual void					LoadFluidToGPU(const std::vector<float>& velocityDensity,
-		//											   const Vector3ui& size) = 0;
-		//virtual void					CS568GenerateCameraRays(const CameraPerspective& cam,
-		//														const Vector2ui resolution,
-		//														const uint32_t samplePerPixel) = 0;
-		//virtual void					LaunchRays(const Vector3f& backgroundColor,
-		//										   const Vector3ui& textureSize,
-		//										   const Vector3f& bottomLeft,
-		//										   const Vector3f& length) = 0;
-		//virtual std::vector<Vector3f>	GetImage(const Vector2ui& resolution) = 0;
 };

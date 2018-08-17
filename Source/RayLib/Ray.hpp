@@ -179,7 +179,7 @@ __device__ __host__
 inline Ray<T> Ray<T>::Reflect(const Vector<3, T>& normal) const
 {
 	Vector<3, T> nDir = -direction;
-	nDir = 2.0f * nDir.DotProduct(normal) * normal - nDir;
+	nDir = 2.0f * nDir.Dot(normal) * normal - nDir;
 	return Ray(nDir, position);
 }
 
@@ -197,7 +197,7 @@ __device__ __host__
 inline bool Ray<T>::Refract(Ray& out, const Vector<3, T>& normal,
 							T fromMedium, T toMedium) const
 {
-	T cosTetha = -normal.DotProduct(direction);
+	T cosTetha = -normal.Dot(direction);
 	T indexRatio = fromMedium / toMedium;
 
 	float delta = 1.0f - indexRatio * indexRatio * (1.0f - cosTetha * cosTetha);
@@ -263,7 +263,7 @@ template<class T>
 __device__ __host__ 
 inline Ray<T> Ray<T>::NormalizeDir() const
 {
-	Ray(direction.Normalize(), position);
+	return Ray(direction.Normalize(), position);
 }
 
 template<class T>
@@ -271,6 +271,7 @@ __device__ __host__
 inline Ray<T>& Ray<T>::NormalizeDirSelf()
 {
 	direction.NormalizeSelf();
+	return *this;
 }
 
 template<class T>

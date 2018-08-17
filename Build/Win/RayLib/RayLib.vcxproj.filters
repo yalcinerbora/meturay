@@ -35,7 +35,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\DeviceMemory.h">
       <Filter>Memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\Constans.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorI.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
@@ -47,17 +46,11 @@
     <ClInclude Include="..\..\..\Source\RayLib\MayaCacheIO.h">
       <Filter>FileI-O</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\IOError.h">
-      <Filter>FileI-O</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\System.h">
       <Filter>System</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Endian.h">
       <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\RayHitStructs.h">
-      <Filter>Structs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h">
       <Filter>Structs</Filter>
@@ -128,6 +121,25 @@
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h">
       <Filter>FileI-O</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\IOError.h">
+      <Filter>Errors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Error.h">
+      <Filter>Errors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerError.h">
+      <Filter>Errors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Constants.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\RayStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\AcceleratorGPU.h">
+      <Filter>GPU Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\GPUCode.h">
+      <Filter>GPU Templates</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="LinearAlgb">
@@ -153,6 +165,12 @@
     </Filter>
     <Filter Include="Distribitors">
       <UniqueIdentifier>{23956a57-33b5-4e95-85d0-847ecec816e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Errors">
+      <UniqueIdentifier>{d287c8ab-af03-459a-9175-425b71fad642}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GPU Templates">
+      <UniqueIdentifier>{d1856759-1119-4b2a-941f-174323653ed2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

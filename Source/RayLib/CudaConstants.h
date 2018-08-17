@@ -70,17 +70,20 @@ class CudaSystem
 
 		// Convenience Functions For Kernel Call
 		template<class Function, class... Args>
-		__host__ void						GPUCallX(int deviceId,
-													 cudaStream_t stream,
-													 size_t sharedMemSize,
-													 Function&& f, Args&&...);
+		static __host__ void						GPUCallX(int deviceId,
+															 cudaStream_t stream,
+															 size_t sharedMemSize,
+															 Function&& f, Args&&...);
 		template<class Function, class... Args>
-		__host__ void						GPUCallXY(int deviceId,
-													  cudaStream_t stream,
-													  size_t sharedMemSize,
-													  Function&& f, Args&&...);
+		static __host__ void						GPUCallXY(int deviceId,
+															  cudaStream_t stream,
+															  size_t sharedMemSize,
+															  Function&& f, Args&&...);
 
 		static const std::vector<CudaGPU>	GPUList();
+
+
+		static constexpr int				CURRENT_DEVICE = -1;
 };
 
 template<class Function, class... Args>
@@ -90,28 +93,38 @@ inline void CudaSystem::GPUCallX(int deviceId,
 								 size_t sharedMemSize,
 								 Function&& f, Args&&... args)
 {
-	const CudaGPU& gpu = gpus[deviceId];
+	if(deviceId != CURRENT_DEVICE)
+	{
+		CUDA_CHECK(cudaSetDevice(deviceId));
+	}
+	else
+	{
+		CUDA_CHECK(cudaGetDevice(&deviceId));
+	}
 
-	CUDA_CHECK(cudaSetDevice(deviceId));
+	const CudaGPU& gpu = gpus[deviceId];
 	uint32_t blockCount = gpu.RecommendedBlockCount();
 	uint32_t blockSize = StaticThreadPerBlock1D;
-	f<<<blockCount, blockSize, sharedMemsize, stream>>>(args...);
+	f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);
 	CUDA_KERNEL_CHECK();
 }
 
 template<class Function, class... Args>
 __host__
-inline void CudaSystem::GPUCallXY(int deviceId, 
+inline void CudaSystem::GPUCallXY(int deviceId,
 								  cudaStream_t stream,
-								 size_t sharedMemSize,
-								 Function&& f, Args&&... args)
+								  size_t sharedMemSize,
+								  Function&& f, Args&&... args)
 {
 	const CudaGPU& gpu = gpus[deviceId];
 
-	CUDA_CHECK(cudaSetDevice(deviceId));
+	if(deviceId != CURRENT_DEVICE)
+	{
+		CUDA_CHECK(cudaSetDevice(deviceId));
+	}
 	uint32_t blockCount = gpu.RecommendedBlockCount();
 	dim3 blockSize = dim3(StaticThreadPerBlock2D[0], StaticThreadPerBlock2D[1]);
-	f<<<blockCount, blockSize, sharedMemsize, stream>>>(args...);
+	f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);
 	CUDA_KERNEL_CHECK();
 }
 

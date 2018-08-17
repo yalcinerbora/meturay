@@ -17,12 +17,13 @@ This interface defines process behaviour between
 struct CameraPerspective;
 struct TracerParameters;
 struct RayRecordCPU;
+enum class ErrorType;
 
 enum AcceleratorType
 {
 	BVH_SCENE,
 	BVH_OBJECT,
-	SVO_OBJECT,
+	SVO_OBJECT
 };
 
 typedef void(*FileRecieveFunc)(const std::string fileName,
@@ -53,6 +54,7 @@ class TracerDistributorI
 										  const Vector2ui resolution,
 										  const Vector2ui offset = Vector2ui(0, 0),
 										  const Vector2ui size = Vector2ui(0, 0)) = 0;
+		virtual void			SendError(uint32_t errorEnum, ErrorType) = 0;
 
 		// Checking image should be sent
 		virtual bool			ShouldSendImage(uint32_t renderCount) = 0;
