@@ -1,9 +1,17 @@
 #include "TracerThread.h"
 #include "TracerI.h"
 #include "TracerDistributorI.h"
+#include "SceneIO.h"
+#include "RayLib/Log.h"
 
-void TracerThread::THRDLoop(TracerDistributorI& distributor)
+void TracerThread::THRDLoop(TracerDistributorI& distributor,
+							uint32_t seed)
 {
+	uint32_t renderCount = 0;
+
+	// Initialize
+	tracer.Initialize(seed);
+
 	// Render Loop
 	while(!stopSignal)
 	{
@@ -18,59 +26,68 @@ void TracerThread::THRDLoop(TracerDistributorI& distributor)
 		bool timeChanged = time.CheckChanged(newTime);
 		bool camChanged = camera.CheckChanged(newCam);
 		bool sceneChanged = scene.CheckChanged(newScene);
-		bool resolutionChanged= resolution.CheckChanged(newResolution);		
+		bool resolutionChanged = resolution.CheckChanged(newResolution);		
 		bool sampleChanged = sample.CheckChanged(newSample);
 		bool paramsChanged = parameters.CheckChanged(newParams);
 		bool segmentChanged = segment.CheckChanged(newSegment);
 
 		// Reset Image if images changed
-		if(resolutionChanged)
-			tracer.ResizeImage(newResolution);
+		if(segmentChanged)
+			tracer.ReportionImage(newSegment.pixelStart,
+								  newSegment.pixelCount);
 		else if(camChanged || sceneChanged || timeChanged)
 			tracer.ResetImage();
-
+		
+		if(resolutionChanged)
+			tracer.ResizeImage(newResolution);
 		if(timeChanged)
 			tracer.SetTime(newTime);
 		if(sceneChanged)
 			tracer.SetScene(newScene);
 		if(paramsChanged)
 			tracer.SetParams(newParams);
-		if(segmentChanged)
-			tracer.ReportionImage(newSegment.pixelStart,
-								  newSegment.pixelStart);
-		
+			
+
+		// Old
+		for(int i = 1; i <= 200; i++)
+		{
+			tracer.ResetImage();
+			tracer.GenerateCameraRays(newCam, newSample);
+			tracer.HitRays(i);
+		}
+		METU_LOG("Done");
+
 		// Initialize Rays
 		// Camera ray generation
-		tracer.GenerateCameraRays(newCam, newSample);
+		//tracer.GenerateCameraRays(newCam, newSample);
 				
 		//=====================//
 		//		RenderLoop	   //
 		//=====================//
-		uint32_t renderCount = 0;
-		while(tracer.RayCount() > 0)
-		{			
-			tracer.HitRays();
+		//while(tracer.RayCount() > 0)
+		//{			
+		//	tracer.HitRays();
 
-			// Check if we are distributed system
-			if(!distributor.Alone())
-			{
-				// Send rays that are not for your responsibility
-				//tracer.GetMaterialRays();
-				//distributor.SendMaterialRays();
-				
-				// Recieve Rays that are responsible
-				// by this thread
-				//distributor.RequestMaterialRays();
-				//tracer.AddMaterialRays();
-			}
-			
-			// We are ready to bounce rays now
-			tracer.BounceRays();
+		//	// Check if we are distributed system
+		//	if(!distributor.Alone())
+		//	{
+		//		// Send rays that are not for your responsibility
+		//		//tracer.GetMaterialRays();
+		//		//distributor.SendMaterialRays();
+		//		
+		//		// Recieve Rays that are responsible
+		//		// by this thread
+		//		//distributor.RequestMaterialRays();
+		//		//tracer.AddMaterialRays();
+		//	}
+		//	
+		//	// We are ready to bounce rays now
+		//	tracer.BounceRays();
 
-		}
+		//}
 		//=====================//
 		//	  RenderLoop END   //
-		//=====================//
+		//=====================//		
 
 		// Image is ready now send according to the callbacks
 		if(distributor.ShouldSendImage(renderCount))

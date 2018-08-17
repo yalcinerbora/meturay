@@ -12,23 +12,46 @@ the VisorGL singleton.
 #include <gl\glew.h>
 #include <glfw/glfw3.h>
 #include <memory>
+#include <mutex>
 
 #include "RayLib/VisorI.h"
 #include "RayLib/VisorInputI.h"
 
+struct ImagePortion
+{
+	Vector2i				start;
+	Vector2i				end;
+	std::vector<Vector3>	data;
+};
+
 class VisorGL : public VisorViewI
 {
 	private:
-		static std::unique_ptr<VisorGL>	instance;
+		//static std::unique_ptr<VisorGL>	instance;
+		static VisorGL*				instance;
+		
+		static constexpr float		PostProcessTriData[6] =
+		{
+			3.0f, -1.0f,
+			-1.0f, 3.0f,
+			-1.0f, -1.0f
+		};
 
 	private:
-		VisorInputI*		input;
-		GLFWwindow*			window;
-		bool				open;
+		VisorInputI*				input;
+		GLFWwindow*					window;
+		bool						open;
 
-		
-		
+		// Image portion list
+		std::mutex					mutex;
+		std::vector<ImagePortion>	portionList;
 
+		//
+		GLuint						linearSampler;
+		GLuint						texture;
+
+		GLuint						vao;
+		GLuint						vBuffer;
 
 		static KeyAction		DetermineAction(int);
 		static MouseButtonType	DetermineMouseButton(int);
@@ -59,6 +82,7 @@ class VisorGL : public VisorViewI
 												  const char* message,
 												  const void* userParam);
 
+
 	protected:
 	public:
 		// Constructors & Destructor
@@ -68,11 +92,12 @@ class VisorGL : public VisorViewI
 								~VisorGL();
 
 		// Singleton Accessor 
-		static VisorGL&			Instance();
+	//	static VisorGL&			Instance();				
 		
 		// Interface
 		bool					IsOpen() override;
 		void					Present() override;
+		void					Render() override;
 
 		// Input System
 		void					SetInputScheme(VisorInputI*) override;
@@ -82,7 +107,7 @@ class VisorGL : public VisorViewI
 												 PixelFormat) override;
 		void					SetImagePortion(const Vector2i& start,
 												const Vector2i& end,
-												const std::byte* data) override;
+												const std::vector<Vector3> data) override;
 		// Misc
 		void					SetWindowSize(const Vector2i&) override;
 		void					SetFPSLimit(float) override;

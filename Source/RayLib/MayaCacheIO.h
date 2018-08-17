@@ -28,6 +28,9 @@ namespace MayaCache
 	{
 		Vector3ui						dim;
 		Vector3f						size;	
+		// Channels
+		std::vector<MayaChannelType>	channels;
+
 		// Color Interpolation
 		std::vector<Vector3f>			color;
 		std::vector<float>				colorInterp;
@@ -35,10 +38,10 @@ namespace MayaCache
 		std::vector<float>				opacity;
 		std::vector<float>				opacityInterp;
 		// Transparency
-		Vector3f						transparency;
-		// Channels
-		std::vector<MayaChannelType>	channels;
+		Vector3f						transparency;		
 	};
+
+	std::string		GenerateNCacheFrameFile(const std::string& xmlFile, int frame);
 
 	IOError			LoadNCacheNavierStokesXML(MayaNSCacheInfo&,
 											  const std::string& fileName);

@@ -15,65 +15,81 @@ and traversal.
 #include "RayLib/DeviceMemory.h"
 #include "RayLib/Vector.h"
 
+struct VolumeDeviceData;
+struct SVODeviceData;
 struct HitRecord;
 class VolumeI;
 
-class SVODevice
+struct SVODeviceData
 {
-	private:	
-		static constexpr uint32_t	DATA_LEAF = 0xFFFFFFFE;
-		static constexpr uint32_t	NULL_CHILD = 0xFFFFFFFF;
+	struct alignas(sizeof(uint32_t)) Node
+	{
+		uint32_t					next;
+	};
 
-		struct Node
-		{
-			uint32_t				next;
-			uint32_t				parent;
-		};
+	static constexpr uint32_t		DATA_LEAF = 0xFFFFFFFD;
+	static constexpr uint32_t		ALLOCATION_IN_PROGRESS = 0xFFFFFFFE;
+	static constexpr uint32_t		NULL_CHILD = 0xFFFFFFFF;
 
-		// Extents
-		Vector3						aabbMin;
-		Vector3						aabbMax;
+	// Extents
+	Vector3							aabbMin;
+	Vector3							aabbMax;
 
-		Vector3ui					dimensions;
-		uint32_t					totalLevel;
+	Vector3ui						dimensions;
+	uint32_t						totalLevel;
 
-		uint32_t					volumeId;
+	uint32_t						volumeId;
 
-		// Helper Functions
-		__device__ static uint32_t	CalculateLevelChildId(const Vector3i& voxelPos,
-														  const unsigned int maxLevel,
-														  const unsigned int currentLevel);
-		__device__ static Vector3i	CalculateParentVoxId(const Vector3i& voxelPos,
-														 const unsigned int maxLevel,
-														 const unsigned int currentLevel);
-	protected:
-		DeviceMemory				 mem;
+	Node*							d_root;
+
+	// Intersection
+	__device__ bool					Intersects(HitRecord&, const RayF&) const;
+
+	// Helper Functions
+	__device__ static uint32_t		CalculateLevelChildId(const Vector3i& voxelPos,
+															const unsigned int maxLevel,
+															const unsigned int currentLevel);
+	__device__ static Vector3i		CalculateParentVoxId(const Vector3i& voxelPos,
+															const unsigned int maxLevel,
+															const unsigned int currentLevel);
+	__device__ uint32_t				AtomicAllocateNode(Node* gNode, uint32_t* gLevelAllocator);
+};
+
+class SVODevice : public SVODeviceData
+{
+	private:			
+		DeviceMemory					mem;
 		
-		// Ptrs
-		Node*						root;
+		uint32_t*						d_allocator;
+		uint32_t						totalNodeCount;
 
+		static constexpr size_t			InitialNodeCount = 256 * 256 * 256 * 4;
+		static constexpr float			NodeIncrementRatio = 2.0f;
+
+		//
+		void							IncreaseMemory(uint32_t nodeCount);
 
 	public:
 		// Constructors & Destructor
 										SVODevice();
-										SVODevice(const SVODevice&) = default;
+										SVODevice(const SVODevice&) = delete;
 										SVODevice(SVODevice&&) = default;
-		SVODevice&						operator=(const SVODevice&) = default;
+		SVODevice&						operator=(const SVODevice&) = delete;
 		SVODevice&						operator=(SVODevice&&) = default;
 										~SVODevice() = default;
 
 		// Construction & Allocation
-		void							DetermineAllocationSize(const Vector3ui& volumeSize);
-		void							ConstructDevice(const Vector3ui& volumeSize, const VolumeI&);
+		void							ConstructDevice(const Vector3ui& volumeSize, 
+														const VolumeI&);
 
-		// Intersection
-		__device__ bool					Intersects(HitRecord&, const RayF&) const;
+		// Misc
+		size_t							TotalNodeSize();
 };
 
 __device__
-inline unsigned int SVODevice::CalculateLevelChildId(const Vector3i& voxelPos,
-													 const unsigned int parentLevel,
-													 const unsigned int currentLevel)
+inline unsigned int SVODeviceData::CalculateLevelChildId(const Vector3i& voxelPos,
+														 const unsigned int parentLevel,
+														 const unsigned int currentLevel)
 {
 	unsigned int bitSet = 0;
 	bitSet |= ((voxelPos[2] >> (currentLevel - parentLevel)) & 0x000000001) << 2;
@@ -83,9 +99,9 @@ inline unsigned int SVODevice::CalculateLevelChildId(const Vector3i& voxelPos,
 }
 
 __device__
-inline Vector3i SVODevice::CalculateParentVoxId(const Vector3i& voxelPos,
-												const unsigned int parentLevel,
-												const unsigned int currentLevel)
+inline Vector3i SVODeviceData::CalculateParentVoxId(const Vector3i& voxelPos,
+													const unsigned int parentLevel,
+													const unsigned int currentLevel)
 {
 	assert(currentLevel >= parentLevel);
 	Vector3i levelVoxelId;
@@ -96,7 +112,7 @@ inline Vector3i SVODevice::CalculateParentVoxId(const Vector3i& voxelPos,
 }
 
 __device__ 
-inline bool SVODevice::Intersects(HitRecord& record, const RayF& ray) const
+inline bool SVODeviceData::Intersects(HitRecord& record, const RayF& ray) const
 {
 	Vector3 pos;
 	float t, tTotal = 0;
@@ -124,7 +140,7 @@ inline bool SVODevice::Intersects(HitRecord& record, const RayF& ray) const
 
 		// Traverse through tree for that location
 		// and find its aabb				
-		Node* n = root;
+		Node* n = d_root;
 		uint32_t depth = 0;
 		while(depth < totalLevel)
 		{
@@ -133,11 +149,11 @@ inline bool SVODevice::Intersects(HitRecord& record, const RayF& ray) const
 			depth++;
 
 			uint32_t childLoc = CalculateLevelChildId(index, depth, totalLevel);
-			n = root + nextNode + childLoc;
+			n = d_root + nextNode + childLoc;
 		}
 
 		// Generate Traversed AABB
-		Vector3f depthExtents = extents * (0x1 << (totalLevel - depth));
+		Vector3f depthExtents = extents * static_cast<float>(0x1 << (totalLevel - depth));
 		Vector3f remainder = Vector3f(fmodf(location[0], depthExtents[0]),
 									  fmodf(location[1], depthExtents[1]),
 									  fmodf(location[2], depthExtents[2]));		

@@ -57,7 +57,6 @@ namespace MayaCache
 		size_t				fileDataLoc;
 	};
 	
-
 	std::string ParseNCacheFirstName(const std::string& s)
 	{
 		if(s.find_first_of('.') == s.find_last_of('.'))
@@ -269,6 +268,15 @@ namespace MayaCache
 	}
 }
 
+std::string MayaCache::GenerateNCacheFrameFile(const std::string& xmlFile, int frameNo)
+{
+	std::filesystem::path path = std::filesystem::u8path(xmlFile);
+	std::filesystem::path fileNameOnly = path.stem();
+	fileNameOnly += (std::string("Frame") + std::to_string(frameNo) + std::string(".mcx"));
+	std::filesystem::path framePath = path.parent_path() / fileNameOnly;
+	return framePath.u8string();
+}
+
 IOError MayaCache::LoadNCacheNavierStokesXML(MayaNSCacheInfo& info,
 											 const std::string& fileName)
 {
@@ -278,7 +286,7 @@ IOError MayaCache::LoadNCacheNavierStokesXML(MayaNSCacheInfo& info,
 	if(size == std::numeric_limits<std::uintmax_t>::max())
 		return IOError::FILE_NOT_FOUND;
 
-	std::ifstream file(fileName);
+	std::ifstream file(std::filesystem::u8path(fileName));
 	if(!file.is_open()) return IOError::FILE_NOT_FOUND;
 	
 	// Parse XML
@@ -455,7 +463,8 @@ IOError MayaCache::LoadNCacheNavierStokes(std::vector<float>& velocityDensityDat
 										  const std::string& fileName)
 {
 	static constexpr int FourCCSize = 4;
-	std::ifstream file(fileName, std::iostream::binary);
+	std::ifstream file(std::filesystem::u8path(fileName), 
+					   std::iostream::binary);
 
 	if(!file.is_open())
 		return IOError::FILE_NOT_FOUND;

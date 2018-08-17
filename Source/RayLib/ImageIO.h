@@ -24,9 +24,13 @@ class ImageIO
 										
 		// Usage
 		// Read
+		bool							ReadHDR(std::vector<Vector4>& image,
+												Vector2ui& size,
+												const std::string& fileName) const;
+
 
 		// Write
-		bool							WriteAsPNG(const std::vector<Vector3>& image,
+		bool							WriteAsPNG(const Vector3* image,
 												   const Vector2ui& size,
 												   const std::string& fileName) const;
 };

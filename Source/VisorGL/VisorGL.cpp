@@ -2,7 +2,61 @@
 #include "RayLib/Log.h"
 #include <map>
 
-std::unique_ptr<VisorGL> VisorGL::instance = nullptr;
+//std::unique_ptr<VisorGL> VisorGL::instance = nullptr;
+
+
+/*
+
+Load Shader
+
+*/
+constexpr const char* PostProcessVert =
+"#version 330\n"
+"// Definitions\n"
+"#define IN_POS layout(location = 0)\n"
+"#define OUT_UV layout(location = 0)\n"
+""
+"// Input\n"
+"in IN_POS vec2 vPos;\n"
+""
+"// Output\n"
+"out gl_PerVertex{vec4 gl_Position; };	// Mandatory"
+"out OUT_UV vec2 fUV;\n"
+""
+"void main(void)\n"
+"{\n"
+"	//		Pos					UV\n"
+"	//	-1.0f, 3.0f,	-->	0.0f, 2.0f,\n"
+"	//	3.0f, -1.0f,	-->	2.0f, 0.0f,\n"
+"	//	-1.0f, -1.0f,	-->	0.0f, 0.0f\n"
+"	fUV = (vPos + 1.0f) * 0.5f;\n"
+"	gl_Position = vec4(vPos.xy, 0.0f, 1.0f);\n"
+"}\n";
+
+constexpr const char* PostProcessFrag =
+"#version 330\n"
+"// Definitions\n"
+"#define IN_UV layout(location = 0)\n"
+"#define OUT_COLOR layout(location = 0)\n"
+""
+"#define T_COLOR layout(binding = 0)\n"
+"#define T_INTENSITY layout(binding = 3)\n"
+""
+"// Input\n"
+"in IN_UV vec2 fUV;\n"
+""
+"// Output\n"
+"out OUT_COLOR vec4 fboColor;\n"
+""
+"// Textures\n"
+"uniform T_COLOR sampler2D gBuffColor;\n"
+""
+"void main(void)\n"
+"{\n"
+"	fboColor = vec4(texture(gBuffColor, fUV).rgb, 1.0f);\n"
+"}\n";
+
+VisorGL* VisorGL::instance = nullptr;
 
 KeyAction VisorGL::DetermineAction(int action)
 {
@@ -178,71 +232,71 @@ void VisorGL::ErrorCallbackGLFW(int error, const char* description)
 void VisorGL::WindowPosGLFW(GLFWwindow* w, int x, int y)
 {
 	assert(instance->window == w);
-	instance->input->WindowPosChanged(x, y);
+	if(instance->input) instance->input->WindowPosChanged(x, y);
 }
 
 void VisorGL::WindowFBGLFW(GLFWwindow* w, int width, int height)
 {
 	assert(instance->window == w);
-	instance->input->WindowFBChanged(width, height);
+	if(instance->input) instance->input->WindowFBChanged(width, height);
 }
 
 void VisorGL::WindowSizeGLFW(GLFWwindow* w, int width, int height)
 {
 	assert(instance->window == w);
-	instance->input->WindowSizeChanged(width, height);
+	if(instance->input) instance->input->WindowSizeChanged(width, height);
 }
 
 void VisorGL::WindowCloseGLFW(GLFWwindow* w)
 {
 	assert(instance->window == w);
-	instance->input->WindowClosed();
+	if(instance->input) instance->input->WindowClosed();
 	instance->open = false;
 }
 
 void VisorGL::WindowRefreshGLFW(GLFWwindow* w)
 {
 	assert(instance->window == w);
-	instance->input->WindowRefreshed();
+	if(instance->input) instance->input->WindowRefreshed();
 }
 
 void VisorGL::WindowFocusedGLFW(GLFWwindow* w, int b)
 {
 	assert(instance->window == w);
-	instance->input->WindowFocused(b);
+	if(instance->input) instance->input->WindowFocused(b);
 }
 
 void VisorGL::WindowMinimizedGLFW(GLFWwindow* w, int b)
 {
 	assert(instance->window == w);
-	instance->input->WindowMinimized(b);
+	if(instance->input) instance->input->WindowMinimized(b);
 }
 
 void VisorGL::KeyboardUsedGLFW(GLFWwindow* w, int key, int scanCode, 
 							   int action, int modifiers)
 {
 	assert(instance->window == w);
-	instance->input->KeyboardUsed(DetermineKey(key), DetermineAction(action));
+	if(instance->input) instance->input->KeyboardUsed(DetermineKey(key), DetermineAction(action));
 }
 
 void VisorGL::MouseMovedGLFW(GLFWwindow* w, double x, double y)
 {
 	assert(instance->window == w);
-	instance->input->MouseMoved(x, y);
+	if(instance->input) instance->input->MouseMoved(x, y);
 
 }
 
 void VisorGL::MousePressedGLFW(GLFWwindow* w, int button, int action, int modifier)
 {
 	assert(instance->window == w);
-	instance->input->MouseButtonUsed(DetermineMouseButton(button),
-									 DetermineAction(action));
+	if(instance->input) instance->input->MouseButtonUsed(DetermineMouseButton(button),
+														 DetermineAction(action));
 }
 
 void VisorGL::MouseScrolledGLFW(GLFWwindow* w, double x, double y)
 {
 	assert(instance->window == w);
-	instance->input->MouseScrolled(x, y);
+	if(instance->input) instance->input->MouseScrolled(x, y);
 }
 
 void __stdcall VisorGL::OGLCallbackRender(GLenum,
@@ -303,9 +357,12 @@ void __stdcall VisorGL::OGLCallbackRender(GLenum,
 }
 
 VisorGL::VisorGL()
-	: window(nullptr)
+	: input(nullptr)
+	, window(nullptr)
 	, open(false)
 {
+	instance = this;
+
 	if(!glfwInit())
 	{
 		METU_ERROR_LOG("Could not Init GLFW");
@@ -393,8 +450,7 @@ VisorGL::VisorGL()
 							  nullptr,
 							  GL_TRUE);
 	}
-
-
+	
 	// Set Callbacks
 	glfwSetWindowPosCallback(window, VisorGL::WindowPosGLFW);
 	glfwSetFramebufferSizeCallback(window, VisorGL::WindowFBGLFW);
@@ -411,6 +467,23 @@ VisorGL::VisorGL()
 
 	glfwShowWindow(window);
 	open = true;
+
+
+	// Shaders
+
+	// Texture
+
+	// Sampler
+
+	// Buffer
+	// PostProcess VAO
+	//glGenVertexArrays(1, &postProcessTriVao);
+	//glBindVertexArray(postProcessTriVao);
+	//glBindVertexBuffer(0, gpuData.getGLBuffer(), postTriOffset, sizeof(float) * 2);
+	//glEnableVertexAttribArray(IN_POS);
+	//glVertexAttribFormat(IN_POS, 2, GL_FLOAT, false, 0);
+	//glVertexAttribBinding(IN_POS, 0);
+
 }
 
 VisorGL::~VisorGL()
@@ -419,12 +492,12 @@ VisorGL::~VisorGL()
 	glfwTerminate();
 }
 
-VisorGL& VisorGL::Instance()
-{
-	if(instance == nullptr)
-		instance = std::make_unique<VisorGL>();
-	return *instance;
-}
+//VisorGL& VisorGL::Instance()
+//{
+//	if(instance == nullptr)
+//		instance = std::make_unique<VisorGL>();
+//	return *instance;
+//}
 
 bool VisorGL::IsOpen()
 {
@@ -435,6 +508,22 @@ void VisorGL::Present()
 {
 	glfwSwapBuffers(window);
 	glfwPollEvents();
+}
+
+void VisorGL::Render()
+{
+	// Load requested images
+	{
+		std::unique_lock<std::mutex> lock(mutex);
+
+		while(!portionList.empty())
+		{
+			ImagePortion p = std::move(portionList.back());
+			portionList.pop_back();
+
+			//glTextureSubImage2D()
+		}
+	}
 }
 
 void VisorGL::SetInputScheme(VisorInputI* input)
@@ -451,9 +540,15 @@ void VisorGL::ResetImageBuffer(const Vector2i& imageSize, PixelFormat)
 
 void VisorGL::SetImagePortion(const Vector2i& start,
 							  const Vector2i& end,
-							  const std::byte* data)
+							  const std::vector<Vector3> data)
 {
-	
+	{
+		std::unique_lock<std::mutex> lock(mutex);
+		portionList.emplace_back();
+		portionList.back().start = start;
+		portionList.back().end = end;
+		portionList.back().data = std::move(data);
+	}	
 }
 
 void VisorGL::SetWindowSize(const Vector2i& size)

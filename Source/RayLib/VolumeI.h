@@ -11,7 +11,8 @@ Volume is dense/sparse volume representation of a phenomena (i.e. smoke, water)
 #include "SurfaceI.h"
 #include "AnimateI.h"
 #include "Vector.h"
-#include "IOError.h"
+
+struct Error;
 
 enum class VolumeType
 {
@@ -25,10 +26,11 @@ static constexpr size_t VolumeTypeSize = static_cast<size_t>(VolumeType::END);
 class VolumeI : public SurfaceI, public AnimateI
 {
 	public:
-		virtual					~VolumeI() = default;
+		virtual						~VolumeI() = default;
 
 		// Interface
-		virtual Vector3ui		Size() = 0;
+		virtual Vector3ui			Size() const = 0;
+		virtual const std::string&	FileName() const = 0;
 
-		virtual IOError			Load(const std::string& fileName, VolumeType) = 0;
+		virtual Error				Load() = 0;
 };

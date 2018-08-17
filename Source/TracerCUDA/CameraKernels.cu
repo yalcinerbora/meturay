@@ -50,8 +50,8 @@ __global__ void KCGenerateCameraRays(RayRecordGMem gRays,
 		Vector2ui localSampleId = pixelStart + (threadId2d % samplePerPixel);
 
 		// Create random location over sample rectangle
-		float dX = 0.0f; //RandFloat01(rng);
-		float dY = 0.0f; //RandFloat01(rng);
+		float dX = RandFloat01(rng);
+		float dY = RandFloat01(rng);
 		Vector2 randomOffset = Vector2(dX, dY);
 
 		// Ray's world position over canvas
@@ -59,11 +59,12 @@ __global__ void KCGenerateCameraRays(RayRecordGMem gRays,
 										 static_cast<float>(globalSampleId[1])) * delta;
 		Vector3 sampleTopLeft = topLeft + (sampleDistance[0] * right)
 										- (sampleDistance[1] * up);		
-		Vector3 samplePoint = sampleTopLeft + randomOffset;
+		Vector3 samplePoint = sampleTopLeft + randomOffset * delta;
 		
 
 		// Generate Required Parameters
-		uint32_t pixelIdLinear = globalPixelId[1] * resolution[0] + globalPixelId[0];
+		Vector2ui localPixelId = globalPixelId - pixelStart;
+		uint32_t pixelIdLinear = localPixelId[1] * pixelCount[0] + localPixelId[0];
 		uint32_t sampleIdLinear = localSampleId[1] * samplePerPixel + localSampleId[0];
 		Vector3 rayDir = (samplePoint - pos).Normalize();
 

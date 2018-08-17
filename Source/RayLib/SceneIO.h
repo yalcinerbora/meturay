@@ -4,10 +4,7 @@
 Scene file json interpeter and writer
 
 */
-
 #include "IOError.h"
-#include <json.hpp>
-
 #include "Camera.h"
 #include "Vector.h"
 #include "VolumeI.h"
@@ -28,18 +25,25 @@ struct SceneFile
 
 		struct FluidMaterial : public Material
 		{
-			Vector3				diffuseAlbedo;
-			Vector3				specularAlbedo;
-			float				ior;
+			std::vector<Vector3f>	colors;
+			std::vector<float>		colorInterp;
+
+			float					absorbtionCoeff;
+			float					scatteringCoeff;
+
+			std::vector<float>		opacities;
+			std::vector<float>		opacityInterp;
+
+			Vector3f				transparency;		
+			float					ior;
 		};
 
 		struct Volume : public Surface
 		{
 			VolumeType			type;
-			const std::string	fileName;
+			std::string			fileName;
 		};
 
-	private:
 		//  Camera Related
 		static constexpr const char*		TCamera				= "Cameras";
 		static constexpr const char*		TCameraGaze			= "gaze";
@@ -56,10 +60,15 @@ struct SceneFile
 		// Material Related
 		static constexpr const char*		TMaterialBatches = "Materials";
 		static constexpr const char*		TMaterialId = "material_id";
-		static constexpr const char*		TMaterialDiffuseAlbedo = "d_albedo";
-		static constexpr const char*		TMaterialSpecularAlbedo = "s_albedo";
 		// Fluid Material
-		static constexpr const char*		TMaterialFluid = "Fluid Materials";				
+		static constexpr const char*		TMaterialFluid = "Fluid Materials";
+		static constexpr const char*		TMaterialColors = "colors";
+		static constexpr const char*		TMaterialColorFactors = "colorInterp";
+		static constexpr const char*		TMaterialOpacities = "opacities";
+		static constexpr const char*		TMaterialOpacityFactors = "opacityInterp";
+		static constexpr const char*		TMaterialAbsorbtionCoeff = "absorbtion";
+		static constexpr const char*		TMaterialScatteringCoeff = "scattering";
+		static constexpr const char*		TMaterialTranparency = "transparency";
 		static constexpr const char*		TMaterialFluidIOR = "ior";
 				
 		// Mesh Batch Related
@@ -75,18 +84,8 @@ struct SceneFile
 		// Volume Type Strings
 		static constexpr const char*		VolumeTypes[VolumeTypeSize] = {"maya_ncache_fluid"};
 	
-		
+	private:
 		void								Clean();
-		// Conversion Utilities
-		static Vector3						JsonToVec3(const nlohmann::json&);
-		static nlohmann::json				Vec3ToJson(const Vector3&);
-
-		static const char*					VolumeTypeToString(const VolumeType&);
-		static VolumeType					StringToVolumeType(const char*);
-
-		static nlohmann::json				CameraToJson(const CameraPerspective&);
-		static nlohmann::json				VolumeToJson(const Volume&);
-		static nlohmann::json				FMatToJson(const FluidMaterial&);
 
 	public:
 		std::string							fileName;
