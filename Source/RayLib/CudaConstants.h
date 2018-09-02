@@ -13,9 +13,12 @@ Thread per Block etc..
 #include "Vector.h"
 
 // Thread Per Block
-static constexpr int BlockPerSM = 16;
-static constexpr int StaticThreadPerBlock1D = 256;					
-static constexpr Vector2i StaticThreadPerBlock2D = Vector2i(16, 16);
+static constexpr unsigned int BlockPerSM = 16;
+static constexpr unsigned int StaticThreadPerBlock1D = 256;
+static constexpr unsigned int StaticThreadPerBlock2D_X = 16;
+static constexpr unsigned int StaticThreadPerBlock2D_Y = 16;
+static constexpr Vector2ui StaticThreadPerBlock2D = Vector2ui(StaticThreadPerBlock2D_X,
+															  StaticThreadPerBlock2D_Y);
 
 class CudaGPU
 {

@@ -109,6 +109,9 @@ __global__ void BVHIntersection(RayGMem* rays,
 		depth++;
 	};
 
+	int a = 10'000'000;
+
+
 	// GlobalId determination
 	uint32_t globalId = 0;
 

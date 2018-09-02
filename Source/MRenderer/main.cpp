@@ -3,6 +3,7 @@
 #include "RayLib/TracerThread.h"
 #include "RayLib/System.h"
 #include "RayLib/Log.h"
+#include "RayLib/Constants.h"
 
 #include "RayLib/SelfDistributor.h"
 #include "RayLib/VisorWindowInput.h"

@@ -1,22 +1,22 @@
 #pragma once
 
-template <int N, class T>
-__device__ __host__
-inline constexpr Matrix<N, T>::Matrix() 
-{
-	//UNROLL_LOOP
-	//for(int i = 0; i < N; i++)
-	//{
-	//	UNROLL_LOOP
-	//	for(int j = 0; j < N; j++)
-	//	{
-	//		if(i == j)
-	//			matrix[i * N + j] = 1;
-	//		else
-	//			matrix[i * N + j] = 0;
-	//	}
-	//}
-}
+//template <int N, class T>
+//__device__ __host__
+//inline constexpr Matrix<N, T>::Matrix() 
+//{
+//	UNROLL_LOOP
+//	for(int i = 0; i < N; i++)
+//	{
+//		UNROLL_LOOP
+//		for(int j = 0; j < N; j++)
+//		{
+//			if(i == j)
+//				matrix[i * N + j] = 1;
+//			else
+//				matrix[i * N + j] = 0;
+//		}
+//	}
+//}
 
 template <int N, class T>
 __device__ __host__	
@@ -353,9 +353,9 @@ inline T Matrix<N, T>::Determinant() const
 }
 
 template <int N, class T>
-template<typename>
+template <class Q>
 __device__ __host__ 
-inline Matrix<N, T> Matrix<N, T>::Inverse() const
+inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Inverse() const
 {
 	// TODO: use constexpr if when CUDA supports it
 	if (N == 2)
@@ -367,9 +367,9 @@ inline Matrix<N, T> Matrix<N, T>::Inverse() const
 }
 
 template <int N, class T>
-template<typename>
+template <class Q>
 __device__ __host__ 
-inline Matrix<N, T>& Matrix<N, T>::InverseSelf()
+inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::InverseSelf()
 {
 	// TODO: use constexpr if when CUDA supports it
 	if (N == 2)
@@ -483,9 +483,9 @@ inline Matrix<N, T>& Matrix<N, T>::AbsSelf()
 }
 
 template <int N, class T>
-template<typename>
+template <class Q>
 __device__ __host__ 
-inline Matrix<N, T> Matrix<N, T>::Round() const
+inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Round() const
 {
 	Matrix m;
 	UNROLL_LOOP
@@ -497,9 +497,9 @@ inline Matrix<N, T> Matrix<N, T>::Round() const
 }
 
 template <int N, class T>
-template<typename>
+template <class Q>
 __device__ __host__ 
-inline Matrix<N, T>& Matrix<N, T>::RoundSelf()
+inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::RoundSelf()
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
@@ -510,9 +510,9 @@ inline Matrix<N, T>& Matrix<N, T>::RoundSelf()
 }
 
 template <int N, class T>
-template<typename>
+template <class Q>
 __device__ __host__ 
-inline Matrix<N, T> Matrix<N, T>::Floor() const
+inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Floor() const
 {
 	Matrix m;
 	UNROLL_LOOP
@@ -524,9 +524,9 @@ inline Matrix<N, T> Matrix<N, T>::Floor() const
 }
 
 template <int N, class T>
-template<typename>
+template <class Q>
 __device__ __host__ 
-inline Matrix<N, T>& Matrix<N, T>::FloorSelf()
+inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::FloorSelf()
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
@@ -537,9 +537,9 @@ inline Matrix<N, T>& Matrix<N, T>::FloorSelf()
 }
 
 template <int N, class T>
-template<typename>
+template <class Q>
 __device__ __host__ 
-inline Matrix<N, T> Matrix<N, T>::Ceil() const
+inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Ceil() const
 {
 	Matrix m;
 	UNROLL_LOOP
@@ -551,9 +551,9 @@ inline Matrix<N, T> Matrix<N, T>::Ceil() const
 }
 
 template <int N, class T>
-template<typename>
+template <class Q>
 __device__ __host__ 
-inline Matrix<N, T>& Matrix<N, T>::CeilSelf()
+inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::CeilSelf()
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
@@ -616,9 +616,9 @@ inline Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, T t)
 }
 
 template <int N, class T>
-template<typename>
+template <class Q>
 __device__ __host__ 
-inline Matrix<N, T> Matrix<N, T>::Lerp(const Matrix& mat0, const Matrix& mat1, T t)
+inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Lerp(const Matrix& mat0, const Matrix& mat1, T t)
 {
 	assert(t >= 0 && t <= 1);
 	Matrix m;

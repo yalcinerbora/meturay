@@ -1,15 +1,15 @@
 #pragma once
 
-template <int N, class T>
-__device__ __host__
-inline Vector<N, T>::Vector()
-{
-	UNROLL_LOOP
-	for(int i = 0; i < N; i++)
-	{
-		vector[i] = 0;
-	}
-}
+//template <int N, class T>
+//__device__ __host__
+//inline Vector<N, T>::Vector()
+//{
+//	UNROLL_LOOP
+//	for(int i = 0; i < N; i++)
+//	{
+//		vector[i] = 0;
+//	}
+//}
 
 template <int N, class T>
 __device__ __host__
@@ -499,7 +499,7 @@ inline Vector<N, T>& Vector<N, T>::AbsSelf()
 }
 
 template <int N, class T>
-template<class Q>
+template <class Q>
 __device__ __host__ 
 inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Round() const
 {
@@ -513,7 +513,7 @@ inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Round() const
 }
 
 template <int N, class T>
-template<class Q>
+template <class Q>
 __device__ __host__ 
 inline FloatEnable<Q, Vector<N, T>&> Vector<N, T>::RoundSelf()
 {
@@ -526,7 +526,7 @@ inline FloatEnable<Q, Vector<N, T>&> Vector<N, T>::RoundSelf()
 }
 
 template <int N, class T>
-template<class Q>
+template <class Q>
 __device__ __host__ 
 inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Floor() const
 {
@@ -540,7 +540,7 @@ inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Floor() const
 }
 
 template <int N, class T>
-template<class Q>
+template <class Q>
 __device__ __host__ 
 inline FloatEnable<Q, Vector<N, T>&> Vector<N, T>::FloorSelf()
 {
@@ -553,7 +553,7 @@ inline FloatEnable<Q, Vector<N, T>&> Vector<N, T>::FloorSelf()
 }
 
 template <int N, class T>
-template<class Q>
+template <class Q>
 __device__ __host__ 
 inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Ceil() const
 {
@@ -567,7 +567,7 @@ inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Ceil() const
 }
 
 template <int N, class T>
-template<class Q>
+template <class Q>
 __device__ __host__ 
 inline FloatEnable<Q, Vector<N, T>&> Vector<N, T>::CeilSelf()
 {

@@ -1,6 +1,6 @@
 #include "VolumeGPU.cuh"
 
-#include "RayLib/RayHitStructs.h"
+//#include "RayLib/RayHitStructs.h"
 #include "RayLib/Error.h"
 #include "RayLib/Log.h"
 
@@ -36,12 +36,12 @@ uint32_t VolumeGPU::MaterialId() const
 	return materialId;
 }
 
-void VolumeGPU::HitRays(const HitRecordGMem hits,
-						const ConstRayRecordGMem rays,
-						uint64_t rayCount) const
-{
-
-}
+//void VolumeGPU::HitRays(const HitRecordGMem hits,
+//						const ConstRayRecordGMem rays,
+//						uint64_t rayCount) const
+//{
+//
+//}
 
 NCVolumeGPU::NCVolumeGPU(const std::string& fileName,
 						 uint32_t materialId,

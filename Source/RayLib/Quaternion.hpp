@@ -2,11 +2,11 @@
 
 #include "Constants.h"
 
-template<class T>
-__device__ __host__
-inline constexpr Quaternion<T>::Quaternion()
-	: vec(1, 0, 0, 0)
-{}
+//template<class T>
+//__device__ __host__
+//inline constexpr Quaternion<T>::Quaternion()
+//	: vec(1, 0, 0, 0)
+//{}
 
 template<class T>
 __device__ __host__

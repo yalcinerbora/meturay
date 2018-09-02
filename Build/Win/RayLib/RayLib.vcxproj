@@ -117,6 +117,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\AcceleratorGPU.h" />
     <ClInclude Include="..\..\..\Source\RayLib\AnalyticDistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\AnimateI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\BitonicSort.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Constants.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
@@ -127,6 +128,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\MaterialI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MeshI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\ParallelReduction.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\RandomStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\RayStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaCheck.h" />
@@ -177,6 +179,9 @@
     <ClCompile Include="..\..\..\Source\RayLib\TracerThread.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\VisorWindowInput.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\..\Source\RayLib\ParallelReduction.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

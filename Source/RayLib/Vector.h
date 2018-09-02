@@ -49,8 +49,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 	protected:
 	public:
 		// Constructors & Destructor
-		__device__ __host__					Vector();
-		__device__ __host__					Vector(T);
+		constexpr							Vector() = default;
+		__device__ __host__					Vector(T);		
 		__device__ __host__					Vector(const T* data);
 		template <class... Args, typename = AllArithmeticEnable<Args...>>
 		constexpr __device__ __host__		Vector(const Args... dataList);
@@ -197,3 +197,22 @@ static constexpr Vector4i Zero4i = Vector4i(0, 0, 0, 0);
 static constexpr Vector2ui Zero2ui = Vector2ui(0u, 0u);
 static constexpr Vector3ui Zero3ui = Vector3ui(0u, 0u, 0u);
 static constexpr Vector4ui Zero4ui = Vector4ui(0u, 0u, 0u, 0u);
+
+// Vector Traits
+template<class T>
+struct IsVectorType
+{
+	static constexpr bool value =
+		std::is_same<T, Vector2f>::value ||
+		std::is_same<T, Vector2d>::value ||
+		std::is_same<T, Vector2i>::value ||
+		std::is_same<T, Vector2ui>::value ||
+		std::is_same<T, Vector3f>::value ||
+		std::is_same<T, Vector3d>::value ||
+		std::is_same<T, Vector3i>::value ||
+		std::is_same<T, Vector3ui>::value ||
+		std::is_same<T, Vector4f>::value ||
+		std::is_same<T, Vector4d>::value ||
+		std::is_same<T, Vector4i>::value ||
+		std::is_same<T, Vector4ui>::value;
+};

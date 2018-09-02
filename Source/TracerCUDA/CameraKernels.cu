@@ -1,9 +1,9 @@
 #include "CameraKernels.cuh"
 #include "RayLib/Camera.h"
-#include "RayLib/RayHitStructs.h"
+//#include "RayLib/RayHitStructs.h"
 #include "RayLib/Random.cuh"
 
-__global__ void KCGenerateCameraRays(RayRecordGMem gRays,
+__global__ void KCGenerateCameraRays(//RayRecordGMem gRays,
 									 RandomStackGMem gRand,
 									 const CameraPerspective cam,
 									 const uint32_t samplePerPixel,
@@ -68,13 +68,13 @@ __global__ void KCGenerateCameraRays(RayRecordGMem gRays,
 		uint32_t sampleIdLinear = localSampleId[1] * samplePerPixel + localSampleId[0];
 		Vector3 rayDir = (samplePoint - pos).Normalize();
 
-		// Write to GMem
-		Vector4 posAndMed = Vector4(pos, 1.0f);
-		Vec3AndUInt dirAndPix = {rayDir, pixelIdLinear};		
-		Vec3AndUInt radAndSamp = {Zero3, sampleIdLinear};
-		gRays.posAndMedium[threadId] = posAndMed;
-		gRays.dirAndPixId[threadId] = dirAndPix;
-		gRays.radAndSampId[threadId] = radAndSamp;
+		//// Write to GMem
+		//Vector4 posAndMed = Vector4(pos, 1.0f);
+		//Vec3AndUInt dirAndPix = {rayDir, pixelIdLinear};		
+		//Vec3AndUInt radAndSamp = {Zero3, sampleIdLinear};
+		//gRays.posAndMedium[threadId] = posAndMed;
+		//gRays.dirAndPixId[threadId] = dirAndPix;
+		//gRays.radAndSampId[threadId] = radAndSamp;
 	}
 
 	

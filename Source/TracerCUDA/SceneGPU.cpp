@@ -1,5 +1,5 @@
 #include "SceneGPU.h"
-#include "RayLib/RayHitStructs.h"
+//#include "RayLib/RayHitStructs.h"
 #include "RayLib/SceneIO.h"
 #include "RayLib/Error.h"
 
@@ -97,13 +97,13 @@ const LightI& SceneGPU::Light(uint32_t id)
 void SceneGPU::ChangeTime(double timeSec)
 {
 }
-
-void SceneGPU::HitRays(uint32_t* location,
-					   const ConstRayRecordGMem,
-					   uint32_t rayCount) const
-{
-
-}
+//
+//void SceneGPU::HitRays(uint32_t* location,
+//					   const ConstRayRecordGMem,
+//					   uint32_t rayCount) const
+//{
+//
+//}
 
 
 #define _USE_MATH_DEFINES

@@ -8,21 +8,23 @@ where; v[0] = w, v[1] = x, v[2] = y, v[3] = z
 
 #include "Vector.h"
 
+template<class T>
+using QuatFloatEnable = typename std::enable_if<std::is_floating_point<T>::value>::type;
 
-template<class T, typename = FloatEnable<T>>
+template<class T, typename = QuatFloatEnable<T>>
 class Quaternion;
 
 template<class T>
 class Quaternion<T>
 {
 	private:
-			Vector<4,T>							vec;
+			Vector<4, T>						vec;
 
 	protected:
 		
 	public:
 		// Constructors & Destructor
-		constexpr __device__ __host__			Quaternion();
+		constexpr								Quaternion() = default;
 		constexpr __device__ __host__			Quaternion(float w, float x, float y, float z);
 		constexpr __device__ __host__			Quaternion(const float*);
 		__device__ __host__						Quaternion(float angle, const Vector3& axis);

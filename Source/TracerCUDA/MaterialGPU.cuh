@@ -9,27 +9,27 @@
 struct RandomStackGMem;
 struct HitRecord;
 
-
-
-class BasicMaterialGPU :public MaterialI, public BasicMaterialDeviceData
-{
-	private:
-		DeviceMemory					mem;
-
-		uint32_t						materialId;
-
-		Vector3f						diffuseAlbedo;
-		Vector3f						specularAlbedo;
-
-		Vector3f						
-
-	// Color Interpolation
-	const std::vector<Vector3f>		color;
-	const std::vector<float>		colorInterp;
-	// Opacity Interpolation
-	const std::vector<float>		opacity;
-	const std::vector<float>		opacityInterp;
-};
+//
+//
+//class BasicMaterialGPU :public MaterialI, public BasicMaterialDeviceData
+//{
+//	private:
+//		DeviceMemory					mem;
+//
+//		uint32_t						materialId;
+//
+//		Vector3f						diffuseAlbedo;
+//		Vector3f						specularAlbedo;
+//
+//		Vector3f						
+//
+//	// Color Interpolation
+//	const std::vector<Vector3f>		color;
+//	const std::vector<float>		colorInterp;
+//	// Opacity Interpolation
+//	const std::vector<float>		opacity;
+//	const std::vector<float>		opacityInterp;
+//};
 
 
 
@@ -58,12 +58,12 @@ struct FluidMaterialDeviceData
 	// IoR
 	float						ior;
 
-	// Bounces rays from records
-	template <class T>
-	__device__ void				Bounce(RayRecord outRays[],
-									   const HitRecord& inputHit,
-									   const RayRecord& inputRay,
-									   const RequiredMeshData& dataIn);
+	//// Bounces rays from records
+	//template <class T>
+	//__device__ void				Bounce(RayRecord outRays[],
+	//								   const HitRecord& inputHit,
+	//								   const RayRecord& inputRay,
+	//								   const RequiredMeshData& dataIn);
 
 	// Loads required material from the Mesh
 	template <class T, class Mesh>
@@ -132,99 +132,99 @@ class FluidMaterialGPU : public MaterialI, public FluidMaterialDeviceData
 													const VolumeDeviceData&);
 };
 
-template <class DataFetchFunc, class T>
-__device__
-inline void FluidMaterialDeviceData::Bounce(RayRecord& reflectRecord,
-									 RayRecord& refractRecord,
-									 const HitRecord& hRecord,
-									 const RayRecord& rRecord,
-									 const T& surface)
-{
-
-	// Data Fetch
-	Vector3 velocity, normal, position;
-	float density;
-	DataFetchFunc(velocity, normal, position, density,
-				  hRecord, surface);
-
-	// Beer Term
-	Vector3 beerFactor = Vector3(absorbtionCoeff * density);
-	float distance = (position - rRecord.ray.getPosition()).Length();
-	beerFactor[0] = expf(logf(beerFactor[0]) * distance);
-	beerFactor[1] = expf(logf(beerFactor[1]) * distance);
-	beerFactor[2] = expf(logf(beerFactor[2]) * distance);
-
-	// All required data is available now do shade
-	// Volume normal sample can be zero (still on medium)
-	if(normal.Abs() >= Vector3(MathConstants::Epsilon))
-	{
-		normal.NormalizeSelf();
-
-		// Split
-		bool exitCase = rRecord.ray.getDirection().Dot(normal) > 0.0f;
-		Vector3 adjustedNormal = (exitCase) ? -normal : normal;
-		float hitMedium = (exitCase) ? 1.0f : ior;
-
-		// Total Reflection Case
-		Vector3 reflectionFactor = Vector3(1.0f);
-
-		RayF refractedRay;
-		bool refracted = rRecord.ray.Refract(refractedRay, adjustedNormal,
-											 rRecord.medium, hitMedium);
-		if(refracted)
-		{
-			// Fresnel Term
-			// Schclick's Approx
-			float cosTetha = (exitCase)
-								? -normal.Dot(refractedRay.getDirection())
-								: -normal.Dot(rRecord.ray.getDirection());
-			float r0 = (rRecord.medium - hitMedium) / (rRecord.medium + hitMedium);
-			float cosTerm = 1.0f - cosTetha;
-			cosTerm = cosTerm * cosTerm * cosTerm * cosTerm * cosTerm;
-			r0 = r0 * r0;
-			float fresnel = r0 + (1.0f - r0) * cosTerm;
-
-			beerFactor = (exitCase) ? Vector3(1.0f) : beerFactor;
-
-			// Energy Factors
-			Vector3 refractionFactor = Vector3(1.0f - fresnel) * beerFactor;
-			reflectionFactor = Vector3(fresnel) * beerFactor;
-
-			// Write this
-			refractedRay.NormalizeDirSelf();
-			refractedRay.AdvanceSelf(hRecord.distance + MathConstants::Epsilon);
-
-			// Record Save
-			refractRecord.ray = refractedRay;
-			refractRecord.medium = hitMedium;
-			refractRecord.pixelId = rRecord.pixelId;
-			refractRecord.sampleId = rRecord.sampleId;
-			refractRecord.totalRadiance = rRecord.totalRadiance * refractionFactor;
-		}
-
-		// Reflection
-		RayF reflectedRay = rRecord.ray.Reflect(adjustedNormal);
-
-		// Write this
-		reflectedRay.NormalizeDirSelf();
-		reflectedRay.AdvanceSelf(hRecord.distance + MathConstants::Epsilon);
-
-		refractRecord.ray = reflectedRay;
-		refractRecord.medium = rRecord.medium;
-		refractRecord.pixelId = rRecord.pixelId;
-		refractRecord.sampleId = rRecord.sampleId;
-		refractRecord.totalRadiance = rRecord.totalRadiance * reflectionFactor;
-	}
-	else
-	{
-		// Ray is traversing through same medium		
-		refractRecord.ray = rRecord.ray.Advance(hRecord.distance + MathConstants::Epsilon);
-		refractRecord.medium = rRecord.medium;
-		refractRecord.pixelId = rRecord.pixelId;
-		refractRecord.sampleId = rRecord.sampleId;
-		refractRecord.totalRadiance = rRecord.totalRadiance * beerFactor;
-	}
-}
+//template <class DataFetchFunc, class T>
+//__device__
+//inline void FluidMaterialDeviceData::Bounce(RayRecord& reflectRecord,
+//									 RayRecord& refractRecord,
+//									 const HitRecord& hRecord,
+//									 const RayRecord& rRecord,
+//									 const T& surface)
+//{
+//
+//	// Data Fetch
+//	Vector3 velocity, normal, position;
+//	float density;
+//	DataFetchFunc(velocity, normal, position, density,
+//				  hRecord, surface);
+//
+//	// Beer Term
+//	Vector3 beerFactor = Vector3(absorbtionCoeff * density);
+//	float distance = (position - rRecord.ray.getPosition()).Length();
+//	beerFactor[0] = expf(logf(beerFactor[0]) * distance);
+//	beerFactor[1] = expf(logf(beerFactor[1]) * distance);
+//	beerFactor[2] = expf(logf(beerFactor[2]) * distance);
+//
+//	// All required data is available now do shade
+//	// Volume normal sample can be zero (still on medium)
+//	if(normal.Abs() >= Vector3(MathConstants::Epsilon))
+//	{
+//		normal.NormalizeSelf();
+//
+//		// Split
+//		bool exitCase = rRecord.ray.getDirection().Dot(normal) > 0.0f;
+//		Vector3 adjustedNormal = (exitCase) ? -normal : normal;
+//		float hitMedium = (exitCase) ? 1.0f : ior;
+//
+//		// Total Reflection Case
+//		Vector3 reflectionFactor = Vector3(1.0f);
+//
+//		RayF refractedRay;
+//		bool refracted = rRecord.ray.Refract(refractedRay, adjustedNormal,
+//											 rRecord.medium, hitMedium);
+//		if(refracted)
+//		{
+//			// Fresnel Term
+//			// Schclick's Approx
+//			float cosTetha = (exitCase)
+//								? -normal.Dot(refractedRay.getDirection())
+//								: -normal.Dot(rRecord.ray.getDirection());
+//			float r0 = (rRecord.medium - hitMedium) / (rRecord.medium + hitMedium);
+//			float cosTerm = 1.0f - cosTetha;
+//			cosTerm = cosTerm * cosTerm * cosTerm * cosTerm * cosTerm;
+//			r0 = r0 * r0;
+//			float fresnel = r0 + (1.0f - r0) * cosTerm;
+//
+//			beerFactor = (exitCase) ? Vector3(1.0f) : beerFactor;
+//
+//			// Energy Factors
+//			Vector3 refractionFactor = Vector3(1.0f - fresnel) * beerFactor;
+//			reflectionFactor = Vector3(fresnel) * beerFactor;
+//
+//			// Write this
+//			refractedRay.NormalizeDirSelf();
+//			refractedRay.AdvanceSelf(hRecord.distance + MathConstants::Epsilon);
+//
+//			// Record Save
+//			refractRecord.ray = refractedRay;
+//			refractRecord.medium = hitMedium;
+//			refractRecord.pixelId = rRecord.pixelId;
+//			refractRecord.sampleId = rRecord.sampleId;
+//			refractRecord.totalRadiance = rRecord.totalRadiance * refractionFactor;
+//		}
+//
+//		// Reflection
+//		RayF reflectedRay = rRecord.ray.Reflect(adjustedNormal);
+//
+//		// Write this
+//		reflectedRay.NormalizeDirSelf();
+//		reflectedRay.AdvanceSelf(hRecord.distance + MathConstants::Epsilon);
+//
+//		refractRecord.ray = reflectedRay;
+//		refractRecord.medium = rRecord.medium;
+//		refractRecord.pixelId = rRecord.pixelId;
+//		refractRecord.sampleId = rRecord.sampleId;
+//		refractRecord.totalRadiance = rRecord.totalRadiance * reflectionFactor;
+//	}
+//	else
+//	{
+//		// Ray is traversing through same medium		
+//		refractRecord.ray = rRecord.ray.Advance(hRecord.distance + MathConstants::Epsilon);
+//		refractRecord.medium = rRecord.medium;
+//		refractRecord.pixelId = rRecord.pixelId;
+//		refractRecord.sampleId = rRecord.sampleId;
+//		refractRecord.totalRadiance = rRecord.totalRadiance * beerFactor;
+//	}
+//}
 
 __device__
 inline void FluidMaterialGPU::FetchVolume(Vector3& velocity,

@@ -11,7 +11,7 @@ and traversal.
 
 #include <cstdint>
 
-#include "RayLib/RayHitStructs.h"
+//#include "RayLib/RayHitStructs.h"
 #include "RayLib/DeviceMemory.h"
 #include "RayLib/Vector.h"
 
@@ -43,7 +43,7 @@ struct SVODeviceData
 	Node*							d_root;
 
 	// Intersection
-	__device__ bool					Intersects(HitRecord&, const RayF&) const;
+	//__device__ bool					Intersects(HitRecord&, const RayF&) const;
 
 	// Helper Functions
 	__device__ static uint32_t		CalculateLevelChildId(const Vector3i& voxelPos,
@@ -111,75 +111,75 @@ inline Vector3i SVODeviceData::CalculateParentVoxId(const Vector3i& voxelPos,
 	return levelVoxelId;
 }
 
-__device__ 
-inline bool SVODeviceData::Intersects(HitRecord& record, const RayF& ray) const
-{
-	Vector3 pos;
-	float t, tTotal = 0;
-	Vector3 extents = (aabbMax - aabbMin) / static_cast<Vector3>(dimensions - Vector3ui(1u));
-
-	// Initially check if ray is outside of the box
-	// And advance it to the nearest edge + epsilon
-	RayF currentRay = ray;
-	if(currentRay.IntersectsAABB(pos, t, aabbMin, aabbMax) &&
-	   pos[0] == aabbMin[0] ||
-	   pos[1] == aabbMin[1] || 
-	   pos[2] == aabbMin[2])
-	{
-		currentRay.AdvanceSelf(t + MathConstants::Epsilon);
-		tTotal += (t + MathConstants::Epsilon);
-	}
-
-	// Traverse through volume until ray is outside
-	// Or code will break out if it hits
-	while(currentRay.IntersectsAABB(pos, t, aabbMin, aabbMax))
-	{
-		// Find relative index of position
-		Vector3f location = ray.getPosition();
-		Vector3i index = static_cast<Vector3i>((location - aabbMin) / extents);
-
-		// Traverse through tree for that location
-		// and find its aabb				
-		Node* n = d_root;
-		uint32_t depth = 0;
-		while(depth < totalLevel)
-		{
-			const uint32_t nextNode = n->next;
-			if(nextNode == NULL_CHILD) break;
-			depth++;
-
-			uint32_t childLoc = CalculateLevelChildId(index, depth, totalLevel);
-			n = d_root + nextNode + childLoc;
-		}
-
-		// Generate Traversed AABB
-		Vector3f depthExtents = extents * static_cast<float>(0x1 << (totalLevel - depth));
-		Vector3f remainder = Vector3f(fmodf(location[0], depthExtents[0]),
-									  fmodf(location[1], depthExtents[1]),
-									  fmodf(location[2], depthExtents[2]));		
-		Vector3f localAABBMin = location - remainder;
-		Vector3f localAABBMax = localAABBMin + depthExtents;
-
-		// Do an intersection with that level of the AABB
-		// This should always enter (by definition)
-		if(currentRay.IntersectsAABB(pos, t, localAABBMin, localAABBMax))
-		{
-			currentRay.AdvanceSelf(t + MathConstants::Epsilon);
-			tTotal += (t + MathConstants::Epsilon);
-		}
-		
-		// Chcek if we found a node
-		if(n->next == DATA_LEAF)
-		{
-			// Float index of location
-			record.baryCoord = (currentRay.getPosition() - (aabbMin + extents * 0.5f)) / extents;
-			record.distance = tTotal;
-			
-			record.objectId = volumeId;
-			record.triangleId = HitRecord::VOLUME_SAMPLE;
-
-			return true;
-		}
-	}
-	return false;
-}
+//__device__ 
+//inline bool SVODeviceData::Intersects(HitRecord& record, const RayF& ray) const
+//{
+//	Vector3 pos;
+//	float t, tTotal = 0;
+//	Vector3 extents = (aabbMax - aabbMin) / static_cast<Vector3>(dimensions - Vector3ui(1u));
+//
+//	// Initially check if ray is outside of the box
+//	// And advance it to the nearest edge + epsilon
+//	RayF currentRay = ray;
+//	if(currentRay.IntersectsAABB(pos, t, aabbMin, aabbMax) &&
+//	   pos[0] == aabbMin[0] ||
+//	   pos[1] == aabbMin[1] || 
+//	   pos[2] == aabbMin[2])
+//	{
+//		currentRay.AdvanceSelf(t + MathConstants::Epsilon);
+//		tTotal += (t + MathConstants::Epsilon);
+//	}
+//
+//	// Traverse through volume until ray is outside
+//	// Or code will break out if it hits
+//	while(currentRay.IntersectsAABB(pos, t, aabbMin, aabbMax))
+//	{
+//		// Find relative index of position
+//		Vector3f location = ray.getPosition();
+//		Vector3i index = static_cast<Vector3i>((location - aabbMin) / extents);
+//
+//		// Traverse through tree for that location
+//		// and find its aabb				
+//		Node* n = d_root;
+//		uint32_t depth = 0;
+//		while(depth < totalLevel)
+//		{
+//			const uint32_t nextNode = n->next;
+//			if(nextNode == NULL_CHILD) break;
+//			depth++;
+//
+//			uint32_t childLoc = CalculateLevelChildId(index, depth, totalLevel);
+//			n = d_root + nextNode + childLoc;
+//		}
+//
+//		// Generate Traversed AABB
+//		Vector3f depthExtents = extents * static_cast<float>(0x1 << (totalLevel - depth));
+//		Vector3f remainder = Vector3f(fmodf(location[0], depthExtents[0]),
+//									  fmodf(location[1], depthExtents[1]),
+//									  fmodf(location[2], depthExtents[2]));		
+//		Vector3f localAABBMin = location - remainder;
+//		Vector3f localAABBMax = localAABBMin + depthExtents;
+//
+//		// Do an intersection with that level of the AABB
+//		// This should always enter (by definition)
+//		if(currentRay.IntersectsAABB(pos, t, localAABBMin, localAABBMax))
+//		{
+//			currentRay.AdvanceSelf(t + MathConstants::Epsilon);
+//			tTotal += (t + MathConstants::Epsilon);
+//		}
+//		
+//		// Chcek if we found a node
+//		if(n->next == DATA_LEAF)
+//		{
+//			// Float index of location
+//			record.baryCoord = (currentRay.getPosition() - (aabbMin + extents * 0.5f)) / extents;
+//			record.distance = tTotal;
+//			
+//			record.objectId = volumeId;
+//			record.triangleId = HitRecord::VOLUME_SAMPLE;
+//
+//			return true;
+//		}
+//	}
+//	return false;
+//}

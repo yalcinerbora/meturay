@@ -98,9 +98,9 @@ class RayMemory
 		DeviceMemory				memRayOut;		
 		DeviceMemory				memHit;
 
-		RayRecordGMem				rayStackIn;
-		RayRecordGMem				rayStackOut;
-		HitRecordGMem				hitRecord;
+		//RayRecordGMem				rayStackIn;
+		//RayRecordGMem				rayStackOut;
+		//HitRecordGMem				hitRecord;
 
 		static RayRecordGMem		GenerateRayPtrs(void* mem, size_t rayCount);
 		static HitRecordGMem		GenerateHitPtrs(void* mem, size_t rayCount);

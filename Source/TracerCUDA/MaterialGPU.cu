@@ -1,5 +1,5 @@
 #include "MaterialGPU.cuh"
-#include "RayLib/RayHitStructs.h"
+//#include "RayLib/RayHitStructs.h"
 #include "RayLib/CudaConstants.h"
 #include "RayLib/Error.h"
 #include "RayLib/Random.cuh"
@@ -7,56 +7,56 @@
 
 #include "SurfaceDeviceI.cuh"
 
-
-template <class DataFetchFunc, class T>
-__global__ 
-void KCBounceRays(// Outgoing Rays
-				  RayRecordGMem gOutRays,
-				  // Incoming Rays
-				  const ConstHitRecordGMem gHits,
-				  const ConstRayRecordGMem gRays,
-				  const FluidMaterialDeviceData materialData,
-				  // SM Data
-				  RandomStackGMem gRand,
-				  // Surface Data
-				  const Vector2ui* gSurfaceIndexList,
-				  const T* gSurfaces,
-				  // Limits
-				  uint32_t rayCount)
-{
-	extern __shared__ uint32_t sRandState[];
-	RandomGPU rng(gRand.state, sRandState);
-
-	// Kernel Grid-Stride Loop
-	for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
-		threadId < rayCount;
-		threadId += (blockDim.x * gridDim.x))
-	{
-		// Input
-		HitRecord hRecord(gHits, threadId);
-		RayRecord rRecord(gRays, threadId);
-		// Output
-		RayRecord outRecord[2]
-
-		// Actual Call
-		materialData.Bounce<DataFetchFunc, T>
-		(
-			outRecord,			
-			hRecord, 
-			rRecord,			
-		);
-		
-		// Write
-		if(outRecord[0].medium != 0.0f)
-		{
-			gOutRays.Save(refractRecord, threadId);
-		}
-		if(outRecord[1].medium != 0.0f)
-		{
-			gOutRays.Save(reflectRecord, threadId + rayCount);
-		}		
-	}
-}
+//
+//template <class DataFetchFunc, class T>
+//__global__ 
+//void KCBounceRays(// Outgoing Rays
+//				  RayRecordGMem gOutRays,
+//				  // Incoming Rays
+//				  const ConstHitRecordGMem gHits,
+//				  const ConstRayRecordGMem gRays,
+//				  const FluidMaterialDeviceData materialData,
+//				  // SM Data
+//				  RandomStackGMem gRand,
+//				  // Surface Data
+//				  const Vector2ui* gSurfaceIndexList,
+//				  const T* gSurfaces,
+//				  // Limits
+//				  uint32_t rayCount)
+//{
+//	extern __shared__ uint32_t sRandState[];
+//	RandomGPU rng(gRand.state, sRandState);
+//
+//	// Kernel Grid-Stride Loop
+//	for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+//		threadId < rayCount;
+//		threadId += (blockDim.x * gridDim.x))
+//	{
+//		// Input
+//		HitRecord hRecord(gHits, threadId);
+//		RayRecord rRecord(gRays, threadId);
+//		// Output
+//		RayRecord outRecord[2]
+//
+//		// Actual Call
+//		materialData.Bounce<DataFetchFunc, T>
+//		(
+//			outRecord,			
+//			hRecord, 
+//			rRecord,			
+//		);
+//		
+//		// Write
+//		if(outRecord[0].medium != 0.0f)
+//		{
+//			gOutRays.Save(refractRecord, threadId);
+//		}
+//		if(outRecord[1].medium != 0.0f)
+//		{
+//			gOutRays.Save(reflectRecord, threadId + rayCount);
+//		}		
+//	}
+//}
 
 FluidMaterialGPU::FluidMaterialGPU(uint32_t materialId,
 								   float indexOfRefraction,
@@ -88,22 +88,22 @@ uint32_t FluidMaterialGPU::Id() const
 	return materialId;
 }
 
-void FluidMaterialGPU::BounceRays(// Outgoing Rays
-								  RayRecordGMem gOutRays,
-								  // Incoming Rays
-								  const ConstHitRecordGMem gHits,
-								  const ConstRayRecordGMem gRays,
-								  // Limits
-								  uint64_t rayCount,
-								  // Surfaces
-								  const Vector2ui* gSurfaceIndexList,
-								  const void* gSurfaces,
-								  SurfaceType t)
-{
-
-	//.... 
-	//CudaSystem::GPUCallX(CudaSystem::CURRENT_DEVICE, 0, 0, 0);
-}
+//void FluidMaterialGPU::BounceRays(// Outgoing Rays
+//								  RayRecordGMem gOutRays,
+//								  // Incoming Rays
+//								  const ConstHitRecordGMem gHits,
+//								  const ConstRayRecordGMem gRays,
+//								  // Limits
+//								  uint64_t rayCount,
+//								  // Surfaces
+//								  const Vector2ui* gSurfaceIndexList,
+//								  const void* gSurfaces,
+//								  SurfaceType t)
+//{
+//
+//	//.... 
+//	//CudaSystem::GPUCallX(CudaSystem::CURRENT_DEVICE, 0, 0, 0);
+//}
 
 Error FluidMaterialGPU::Load()
 {

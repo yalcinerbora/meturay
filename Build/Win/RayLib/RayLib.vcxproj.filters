@@ -55,7 +55,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\Random.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\RayLib\RandomStructs.h">
       <Filter>Structs</Filter>
@@ -140,6 +139,15 @@
     <ClInclude Include="..\..\..\Source\RayLib\GPUCode.h">
       <Filter>GPU Templates</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\BitonicSort.cuh">
+      <Filter>GPU Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\ParallelReduction.cuh">
+      <Filter>GPU Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Random.cuh">
+      <Filter>GPU Algorithms</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="LinearAlgb">
@@ -172,6 +180,9 @@
     <Filter Include="GPU Templates">
       <UniqueIdentifier>{d1856759-1119-4b2a-941f-174323653ed2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GPU Algorithms">
+      <UniqueIdentifier>{21f0835c-4d85-482c-ac06-3d9dd4950154}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp">
@@ -200,5 +211,10 @@
     <ClCompile Include="..\..\..\Source\RayLib\SceneIO.cpp">
       <Filter>FileI-O</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\..\Source\RayLib\ParallelReduction.cu">
+      <Filter>GPU Algorithms</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

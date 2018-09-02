@@ -14,9 +14,6 @@ N should be 2, 3, 4 at most.
 #include "Vector.h"
 #include "Quaternion.h"
 
-template<class T>
-using ArithmeticEnable = typename std::enable_if<std::is_arithmetic<T>::value>::type;
-
 template<int N, class T, typename = ArithmeticEnable<T>>
 class Matrix;
 
@@ -31,7 +28,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
 	protected:
 	public:
 		// Constructors & Destructor
-		constexpr __device__ __host__		Matrix();
+		constexpr							Matrix() = default;
 		__device__ __host__					Matrix(float);
 		__device__ __host__					Matrix(const float* data);
 		template <class... Args, typename = AllArithmeticEnable<Args...>>
@@ -78,41 +75,41 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
 		__device__ __host__ bool			operator!=(const Matrix&) const;
 
 		// Utilty	
-		__device__ __host__ T				Determinant() const;
-		template<typename = FloatEnable<T>>
-		__device__ __host__ Matrix			Inverse() const;
-		template<typename = FloatEnable<T>>
-		__device__ __host__ Matrix&			InverseSelf();
-		__device__ __host__ Matrix			Transpose() const;
-		__device__ __host__ Matrix&			TransposeSelf();
+		__device__ __host__ T								Determinant() const;
+		template<class Q = T>
+		__device__ __host__ FloatEnable<Q, Matrix>			Inverse() const;
+		template<class Q = T>
+		__device__ __host__ FloatEnable<Q, Matrix&>			InverseSelf();
+		__device__ __host__ Matrix							Transpose() const;
+		__device__ __host__ Matrix&							TransposeSelf();
 
-		__device__ __host__ Matrix			Clamp(const Matrix&, const Matrix&) const;
-		__device__ __host__ Matrix			Clamp(T min, T max) const;
-		__device__ __host__ Matrix&			ClampSelf(const Matrix&, const Matrix&);
-		__device__ __host__ Matrix&			ClampSelf(T min, T max);
-		__device__ __host__ Matrix			Abs() const;
-		__device__ __host__ Matrix&			AbsSelf();
+		__device__ __host__ Matrix							Clamp(const Matrix&, const Matrix&) const;
+		__device__ __host__ Matrix							Clamp(T min, T max) const;
+		__device__ __host__ Matrix&							ClampSelf(const Matrix&, const Matrix&);
+		__device__ __host__ Matrix&							ClampSelf(T min, T max);
+		__device__ __host__ Matrix							Abs() const;
+		__device__ __host__ Matrix&							AbsSelf();
 
-		template<typename = FloatEnable<T>>
-		__device__ __host__ Matrix			Round() const;
-		template<typename = FloatEnable<T>>
-		__device__ __host__ Matrix&			RoundSelf();
-		template<typename = FloatEnable<T>>
-		__device__ __host__ Matrix			Floor() const;
-		template<typename = FloatEnable<T>>
-		__device__ __host__ Matrix&			FloorSelf();
-		template<typename = FloatEnable<T>>
-		__device__ __host__ Matrix			Ceil() const;
-		template<typename = FloatEnable<T>>
-		__device__ __host__ Matrix&			CeilSelf();
+		template<class Q = T>
+		__device__ __host__ FloatEnable<Q, Matrix>			Round() const;
+		template<class Q = T>
+		__device__ __host__ FloatEnable<Q, Matrix&>			RoundSelf();
+		template<class Q = T>
+		__device__ __host__ FloatEnable<Q, Matrix>			Floor() const;
+		template<class Q = T>
+		__device__ __host__ FloatEnable<Q, Matrix&>			FloorSelf();
+		template<class Q = T>
+		__device__ __host__ FloatEnable<Q, Matrix>			Ceil() const;
+		template<class Q = T>
+		__device__ __host__ FloatEnable<Q, Matrix&>			CeilSelf();
+		
+		template<class Q = T>
+		static __device__ __host__ FloatEnable<Q, Matrix>	Lerp(const Matrix&, const Matrix&, T);
 
-		static __device__ __host__ Matrix	Min(const Matrix&, const Matrix&);
-		static __device__ __host__ Matrix	Min(const Matrix&, T);
-		static __device__ __host__ Matrix	Max(const Matrix&, const Matrix&);
-		static __device__ __host__ Matrix	Max(const Matrix&, T);
-
-		template<typename = FloatEnable<T>>
-		static __device__ __host__ Matrix	Lerp(const Matrix&, const Matrix&, T);
+		static __device__ __host__ Matrix					Min(const Matrix&, const Matrix&);
+		static __device__ __host__ Matrix					Min(const Matrix&, T);
+		static __device__ __host__ Matrix					Max(const Matrix&, const Matrix&);
+		static __device__ __host__ Matrix					Max(const Matrix&, T);
 };
 
 // Determinants
@@ -211,3 +208,22 @@ static constexpr Matrix4x4  Indentity4x4 = Matrix4x4(1.0f, 0.0f, 0.0f, 0.0f,
 													 0.0f, 1.0f, 0.0f, 0.0f,
 													 0.0f, 0.0f, 1.0f, 0.0f,
 													 0.0f, 0.0f, 0.0f, 1.0f);
+
+// Matrix Traits
+template<class T>
+struct IsMatrixType
+{
+	static constexpr bool value =
+		std::is_same<T, Matrix2x2f>::value ||
+		std::is_same<T, Matrix2x2d>::value ||
+		std::is_same<T, Matrix2x2i>::value ||
+		std::is_same<T, Matrix2x2ui>::value ||
+		std::is_same<T, Matrix3x3f>::value ||
+		std::is_same<T, Matrix3x3d>::value ||
+		std::is_same<T, Matrix3x3i>::value ||
+		std::is_same<T, Matrix3x3ui>::value ||
+		std::is_same<T, Matrix4x4f>::value ||
+		std::is_same<T, Matrix4x4d>::value ||
+		std::is_same<T, Matrix4x4i>::value ||
+		std::is_same<T, Matrix4x4ui>::value;
+};

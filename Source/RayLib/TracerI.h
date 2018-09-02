@@ -18,12 +18,14 @@ which does send commands to GPU to do ray tracing
 #include <cstdint>
 #include <future>
 #include "Vector.h"
-#include "RayHitStructs.h"
+//#include "RayHitStructs.h"
 #include "Error.h"
 
 class SceneI;
 struct CameraPerspective;
 struct TracerParameters;
+struct HitRecordCPU;
+struct RayRecordCPU;
 
 class TracerI
 {

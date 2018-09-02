@@ -74,7 +74,7 @@ __global__ void KConstruction(Vector4* results)
 	Vector3 vecAssign1(1.0f, 2.0f, 3.0f);
 	Vector4 vecAssign2(1.0f, 2.0f, 3.0f, 4.0f);
 	//
-	Vector4 vec0;
+	Vector4 vec0(0.0f);
 	Vector4 vec1(1.0f);
 	Vector4 vec2(1.0f, 1u, 2.0f, 3.0f);
 	Vector4 vec3(dataArray);
