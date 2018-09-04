@@ -12,7 +12,10 @@ Thread per Block etc..
 #include <vector>
 #include "Vector.h"
 
-// Thread Per Block
+// Except first generation this did not change having this compile time constant is a bliss
+static constexpr unsigned int WarpSize = 32;
+
+// Thread Per Block Constants
 static constexpr unsigned int BlockPerSM = 16;
 static constexpr unsigned int StaticThreadPerBlock1D = 256;
 static constexpr unsigned int StaticThreadPerBlock2D_X = 16;

@@ -1,9 +1,11 @@
 #include "VisorGL.h"
 #include "RayLib/Log.h"
 #include <map>
+#include <cassert>
 
 //std::unique_ptr<VisorGL> VisorGL::instance = nullptr;
 
+//#include "RayLib/CudaCheck.h"
 
 /*
 

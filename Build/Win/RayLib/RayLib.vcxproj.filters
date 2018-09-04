@@ -148,6 +148,12 @@
     <ClInclude Include="..\..\..\Source\RayLib\Random.cuh">
       <Filter>GPU Algorithms</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\OperatorFunctions.cuh">
+      <Filter>GPU Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\ParallelScan.cuh">
+      <Filter>GPU Algorithms</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="LinearAlgb">
@@ -215,6 +221,12 @@
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\RayLib\ParallelReduction.cu">
       <Filter>GPU Algorithms</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\RayLib\Matrix.cu">
+      <Filter>LinearAlgb</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\RayLib\Vector.cu">
+      <Filter>LinearAlgb</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

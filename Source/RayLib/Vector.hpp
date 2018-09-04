@@ -121,7 +121,7 @@ inline T& Vector<N, T>::operator[](int i)
 
 template <int N, class T>
 __device__ __host__
-inline const T& Vector<N, T>::operator[](int i) const
+inline constexpr const T& Vector<N, T>::operator[](int i) const
 {
 	return vector[i];
 }
@@ -219,8 +219,9 @@ inline Vector<N, T> Vector<N, T>::operator-(const Vector& right) const
 }
 
 template <int N, class T>
+template <class Q>
 __device__ __host__
-inline Vector<N, T> Vector<N, T>::operator-() const
+inline SignedEnable<Q, Vector<N, T>> Vector<N, T>::operator-() const
 {
 	Vector<N, T> v;
 	UNROLL_LOOP
@@ -284,8 +285,9 @@ inline Vector<N, T> Vector<N, T>::operator/(T right) const
 }
 
 template <int N, class T>
+template<class Q>
 __device__ __host__
-inline Vector<N, T> Vector<N, T>::operator%(const Vector& right) const
+inline IntegralEnable<Q, Vector<N, T>> Vector<N, T>::operator%(const Vector& right) const
 {
 	Vector v;
 	UNROLL_LOOP
@@ -297,14 +299,43 @@ inline Vector<N, T> Vector<N, T>::operator%(const Vector& right) const
 }
 
 template <int N, class T>
+template<class Q>
 __device__ __host__
-inline Vector<N, T> Vector<N, T>::operator%(T right) const
+inline IntegralEnable<Q, Vector<N, T>> Vector<N, T>::operator%(T right) const
 {
 	Vector v;
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
 		v[i] = vector[i] % right;
+	}
+	return v;
+}
+
+template <int N, class T>
+template<class Q>
+__device__ __host__
+inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::operator%(const Vector& right) const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = std::fmod(vector[i], right[i]);
+	}
+	return v;
+}
+
+template <int N, class T>
+template<class Q>
+__device__ __host__
+inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::operator%(T right) const
+{
+	Vector v;
+	UNROLL_LOOP
+	for(int i = 0; i < N; i++)
+	{
+		v[i] = std::fmod(vector[i], right);
 	}
 	return v;
 }
@@ -382,8 +413,9 @@ inline T Vector<N, T>::Dot(const Vector& right) const
 }
 
 template <int N, class T>
+template <class Q>
 __device__ __host__
-inline T Vector<N, T>::Length() const
+inline FloatEnable<Q, T> Vector<N, T>::Length() const
 {
 	return std::sqrt(LengthSqr());
 }
@@ -396,10 +428,11 @@ inline T Vector<N, T>::LengthSqr() const
 }
 
 template <int N, class T>
+template <class Q>
 __device__ __host__
-inline Vector<N, T> Vector<N, T>::Normalize() const
+inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Normalize() const
 {
-	float lengthInv = 1.0f / Length();
+	T lengthInv = static_cast<T>(1) / Length();
 	
 	Vector v;
 	UNROLL_LOOP
@@ -411,10 +444,11 @@ inline Vector<N, T> Vector<N, T>::Normalize() const
 }
 
 template <int N, class T>
+template <class Q>
 __device__ __host__
-inline Vector<N, T>& Vector<N, T>::NormalizeSelf()
+inline FloatEnable<Q, Vector<N, T>&> Vector<N, T>::NormalizeSelf()
 {
-	float lengthInv = 1.0f / Length();	
+	T lengthInv = static_cast<T>(1) / Length();	
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
@@ -474,8 +508,9 @@ inline Vector<N, T>& Vector<N, T>::ClampSelf(T min, T max)
 }
 
 template <int N, class T>
+template <class Q>
 __device__ __host__ 
-inline Vector<N, T> Vector<N, T>::Abs() const
+inline SignedEnable<Q, Vector<N, T>> Vector<N, T>::Abs() const
 {
 	Vector v;
 	UNROLL_LOOP
@@ -487,8 +522,9 @@ inline Vector<N, T> Vector<N, T>::Abs() const
 }
 
 template <int N, class T>
+template <class Q>
 __device__ __host__ 
-inline Vector<N, T>& Vector<N, T>::AbsSelf()
+inline SignedEnable<Q, Vector<N, T>&> Vector<N, T>::AbsSelf()
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)

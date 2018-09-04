@@ -2,6 +2,8 @@
 #include "Camera.h"
 //#include "RayHitStructs.h"
 
+struct RayRecordCPU {};
+
 SelfDistributor::SelfDistributor()
 	: camFunc(nullptr)
 	, timeFunc(nullptr)
@@ -16,13 +18,13 @@ SelfDistributor::SelfDistributor()
 	, currentFrame(0)
 {}
 
-//void SelfDistributor::SendMaterialRays(uint32_t materialId,
-//									   const RayRecordCPU)
-//{}
-//
-//void SelfDistributor::SendMaterialRays(const std::vector<ArrayPortion<uint32_t>> materialIds,
-//									   const RayRecordCPU)
-//{}
+void SelfDistributor::SendMaterialRays(uint32_t materialId,
+									   const RayRecordCPU)
+{}
+
+void SelfDistributor::SendMaterialRays(const std::vector<ArrayPortion<uint32_t>> materialIds,
+									   const RayRecordCPU)
+{}
 
 void SelfDistributor::SendImage(const std::vector<Vector3f> image,
 								const Vector2ui resolution,

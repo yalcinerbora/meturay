@@ -78,6 +78,10 @@
     <PostBuildEvent>
       <Command>xcopy /Y "..\..\..\Lib\Win\FreeImage.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -93,6 +97,8 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
     </Link>
     <CudaCompile>
       <GenerateLineInfo>true</GenerateLineInfo>
@@ -128,7 +134,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\MaterialI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MeshI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\OperatorFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\ParallelReduction.cuh" />
+    <ClInclude Include="..\..\..\Source\RayLib\ParallelScan.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\RandomStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\RayStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaCheck.h" />
@@ -181,7 +189,9 @@
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="..\..\..\Source\RayLib\Matrix.cu" />
     <CudaCompile Include="..\..\..\Source\RayLib\ParallelReduction.cu" />
+    <CudaCompile Include="..\..\..\Source\RayLib\Vector.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

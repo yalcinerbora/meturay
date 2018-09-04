@@ -69,7 +69,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <AdditionalOptions>--expt-relaxed-constexpr %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>--expt-relaxed-constexpr --expt-extended-lambda %(AdditionalOptions)</AdditionalOptions>
       <GenerateLineInfo>false</GenerateLineInfo>
       <MaxRegCount>32</MaxRegCount>
       <PtxAsOptionV>true</PtxAsOptionV>
@@ -100,7 +100,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <AdditionalOptions>--expt-relaxed-constexpr %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>--expt-relaxed-constexpr --expt-extended-lambda %(AdditionalOptions)</AdditionalOptions>
       <GenerateLineInfo>true</GenerateLineInfo>
       <MaxRegCount>32</MaxRegCount>
       <PtxAsOptionV>true</PtxAsOptionV>
@@ -111,7 +111,8 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClCompile Include="..\..\..\Source\Tests\main.cpp" />
     <CudaCompile Include="..\..\..\Source\Tests\CameraRayGPUTest.cu" />
     <CudaCompile Include="..\..\..\Source\Tests\T_MatrixGPU.cu" />
-    <CudaCompile Include="..\..\..\Source\Tests\T_ParalelReduction.cu" />
+    <CudaCompile Include="..\..\..\Source\Tests\T_ParallelReduction.cu" />
+    <CudaCompile Include="..\..\..\Source\Tests\T_ParallelScan.cu" />
     <CudaCompile Include="..\..\..\Source\Tests\T_RandomGPU.cu" />
     <CudaCompile Include="..\..\..\Source\Tests\T_Texture.cu">
       <FileType>Document</FileType>

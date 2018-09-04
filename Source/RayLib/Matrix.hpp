@@ -20,7 +20,7 @@
 
 template <int N, class T>
 __device__ __host__	
-inline Matrix<N, T>::Matrix(float t)
+inline Matrix<N, T>::Matrix(T t)
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N*N; i++)
@@ -31,7 +31,7 @@ inline Matrix<N, T>::Matrix(float t)
 
 template <int N, class T>
 __device__ __host__
-inline Matrix<N, T>::Matrix(const float* data)
+inline Matrix<N, T>::Matrix(const T* data)
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N*N; i++)
@@ -91,14 +91,14 @@ inline Matrix<N, T>::Matrix(const Matrix<M, T>& other)
 
 template <int N, class T>
 __device__ __host__	
-inline Matrix<N, T>::operator float*()
+inline Matrix<N, T>::operator T*()
 {
 	return matrix;
 }
 
 template <int N, class T>
 __device__ __host__	
-inline Matrix<N, T>::operator const float *() const
+inline Matrix<N, T>::operator const T*() const
 {
 	return matrix;
 }
@@ -163,7 +163,7 @@ inline void Matrix<N, T>::operator*=(const Matrix& right)
 
 template <int N, class T>
 __device__ __host__ 
-inline void Matrix<N, T>::operator*=(float right)
+inline void Matrix<N, T>::operator*=(T right)
 {
 		UNROLL_LOOP
 	for(int i =0; i < N*N; i++)
@@ -185,7 +185,7 @@ inline void Matrix<N, T>::operator/=(const Matrix& right)
 
 template <int N, class T>
 __device__ __host__ 
-inline void Matrix<N, T>::operator/=(float right)
+inline void Matrix<N, T>::operator/=(T right)
 {
 	UNROLL_LOOP
 	for(int i =0; i < N*N; i++)
@@ -221,8 +221,9 @@ inline Matrix<N, T> Matrix<N, T>::operator-(const Matrix& right) const
 }
 
 template <int N, class T>
+template <class Q>
 __device__ __host__ 
-inline Matrix<N, T> Matrix<N, T>::operator-() const
+inline SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::operator-() const
 {
 	Matrix m;
 	UNROLL_LOOP
@@ -248,7 +249,7 @@ inline Matrix<N, T> Matrix<N, T>::operator/(const Matrix& right) const
 
 template <int N, class T>
 __device__ __host__ 
-inline Matrix<N, T> Matrix<N, T>::operator/(float right) const
+inline Matrix<N, T> Matrix<N, T>::operator/(T right) const
 {
 	Matrix m;
 	UNROLL_LOOP
@@ -308,7 +309,7 @@ inline Vector<M, T>	Matrix<N, T>::operator*(const Vector<M, T>& right) const
 
 template <int N, class T>
 __device__ __host__ 
-inline Matrix<N, T> Matrix<N, T>::operator*(float right) const
+inline Matrix<N, T> Matrix<N, T>::operator*(T right) const
 {
 	Matrix m;
 	UNROLL_LOOP
@@ -425,7 +426,7 @@ inline Matrix<N, T> Matrix<N, T>::Clamp(const Matrix& min, const Matrix& max) co
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		m[i] = std::min(std::max(min[i], matrix[i]), max[i]);	
+		m[i] = std::min(std::max(min[i], matrix[i]), max[i]);
 	}
 	return m;
 }
@@ -445,21 +446,32 @@ inline Matrix<N, T> Matrix<N, T>::Clamp(T min, T max) const
 
 template <int N, class T>
 __device__ __host__ 
-inline Matrix<N, T>& Matrix<N, T>::ClampSelf(const Matrix&, const Matrix&)
+inline Matrix<N, T>& Matrix<N, T>::ClampSelf(const Matrix& min, const Matrix& max)
 {
-
+	UNROLL_LOOP
+	for(int i = 0; i < N * N; i++)
+	{
+		matrix[i] = std::min(std::max(min[i], matrix[i]), max[i]);
+	}
+	return *this;
 }
 
 template <int N, class T>
 __device__ __host__ 
 inline Matrix<N, T>& Matrix<N, T>::ClampSelf(T min, T max)
 {
-
+	UNROLL_LOOP
+	for(int i = 0; i < N * N; i++)
+	{
+		matrix[i] = std::min(std::max(min, matrix[i]), max);
+	}
+	return *this;
 }
 
 template <int N, class T>
+template <class Q>
 __device__ __host__ 
-inline Matrix<N, T> Matrix<N, T>::Abs() const
+inline SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::Abs() const
 {
 	Matrix m;
 	UNROLL_LOOP
@@ -471,8 +483,9 @@ inline Matrix<N, T> Matrix<N, T>::Abs() const
 }
 
 template <int N, class T>
+template <class Q>
 __device__ __host__ 
-inline Matrix<N, T>& Matrix<N, T>::AbsSelf()
+inline SignedEnable<Q, Matrix<N, T>&> Matrix<N, T>::AbsSelf()
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
@@ -631,12 +644,14 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Lerp(const Matrix& mat0, const
 }
 
 template<class T>
+__device__ __host__
 inline static T Determinant2(const T* m)
 {
 	return m[0] * m[3] - m[2] * m[1];
 }
 
 template<class T>
+__device__ __host__
 inline static T Determinant3(const T* m)
 {
 	T det1 = m[0] * (m[4] * m[8] - m[7] * m[5]);
@@ -646,6 +661,7 @@ inline static T Determinant3(const T* m)
 }
 
 template<class T>
+__device__ __host__
 inline static T Determinant4(const T* m)
 {
 	// Hardcoded should be most optimizer friendly
@@ -682,6 +698,7 @@ inline static T Determinant4(const T* m)
 }
 
 template<class T>
+__device__ __host__
 inline static Matrix<2, T> Inverse2(const T* m)
 {
 	Matrix<2, T> result;
@@ -695,6 +712,7 @@ inline static Matrix<2, T> Inverse2(const T* m)
 }
 
 template<class T>
+__device__ __host__
 inline static Matrix<3, T> Inverse3(const T* m)
 {
 	T m11 = m[4] * m[8] - m[7] * m[5];
@@ -717,6 +735,7 @@ inline static Matrix<3, T> Inverse3(const T* m)
 }
 
 template<class T>
+__device__ __host__
 inline static Matrix<4, T> Inverse4(const T* m)
 {
 	// MESA GLUT Copy Paste

@@ -286,3 +286,9 @@ inline Quaternion<T> Quaternion<T>::RotationBetweenZAxis(const Vector<3, T>& b)
 	}
 	return Quaternion(w, x, y, z);
 }
+
+template<class T>
+static __device__ __host__ Quaternion<T> operator*(float t, const Quaternion<T>& q)
+{
+	return q * t;
+}

@@ -95,3 +95,12 @@ static __device__ __host__ Quaternion<T> operator*(float, const Quaternion<T>&);
 // Constants
 static constexpr QuatF	IdentityQuatF = QuatF(1.0f, 0.0f, 0.0f, 0.0f);
 static constexpr QuatD	IdentityQuatD = QuatD(1.0, 0.0, 0.0, 0.0);
+
+// Quaternion Traits
+template<class T>
+struct IsQuatType
+{
+	static constexpr bool value =
+		std::is_same<T, QuatF>::value ||
+		std::is_same<T, QuatD>::value;
+};
