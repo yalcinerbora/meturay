@@ -6,20 +6,128 @@ with custom Key/Value pairs
 Can define custom types and comparison operators
 */
 
-#include <thrust\reduce.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include "ComparisonFunctions.cuh"
 
-
-template<class Type>
-using Comparator = bool(*)(const Type&, const Type&);
-
-template <class Type, class Key, Comparator<Key> Comp>
-__host__ void BitonicSort(Type* data,  Key* key,
-						  size_t elementCount)
+// Out ones
+template <class Type, class Key, CompFunc<Key> Comp>
+__host__ void BitonicSort(Type* data, Key* key,
+						  size_t elementCount,
+						  cudaStream_t stream = (cudaStream_t)0)
 {
-	// Kernel Loops etc
-
-	thrust::reduce_by_key()
 }
+
+template <class Type, class Key, CompFunc<Key> Comp>
+__host__ void BitonicSort(Type* data,  Key* key,
+						  const Type* data, const Key* key,
+						  size_t elementCount,
+						  cudaStream_t stream = (cudaStream_t)0)
+{
+}
+
+// Inplace Ones
+template <class Type, CompFunc<Key> Comp>
+__host__ void BitonicSort(Type* data, size_t elementCount,
+						  cudaStream_t stream = (cudaStream_t)0)
+{
+}
+
+template <class Type, class Key, CompFunc<Key> Comp>
+__host__ void BitonicSort(Type* data, Key* key, size_t elementCount,
+						  cudaStream_t stream = (cudaStream_t)0)
+{
+}
+
+// Meta Definitions
+#define DEFINE_BITONIC_VALUE(type, key, comp) \
+	template \
+	__host__ void BitonicSort<type, comp>(type*, const type*, \
+											   size_t, \
+											   cudaStream_t);
+
+#define DEFINE_BITONIC_VALUE_INPLACE(type, comp) \
+	__host__ void BitonicSort<type, key, comp>(type*, const type*, \
+										   size_t, int, int, \
+										   cudaStream_t);
+
+#define DEFINE_BITONIC_KEY(type, key, comp) \
+	__host__ void BitonicSort<type, comp>(type*, const type*, \
+										  size_t, int, int, \
+										  cudaStream_t);
+
+#define DEFINE_BITONIC_KEY_INPLACE(type, key, comp) \
+	__host__ void BitonicSort<type, comp>(type*, const type*, \
+										  size_t, int, int, \
+										  cudaStream_t);
+
+#define DEFINE_BITONIC_KEY_VALUE(key, type, order) \
+	template \
+	__host__ void KCRadixSortArray<type, key, order>(type*, key*, \
+													 const type*, const key*, \
+													 size_t, int, int, \
+													 cudaStream_t);
+
+#define DEFINE_RADIX_VALUE_BOTH(type) \
+	DEFINE_RADIX_VALUE(type, true); \
+	DEFINE_RADIX_VALUE(type, false);
+
+#define DEFINE_RADIX_KEY_VALUE_BOTH(key, type) \
+	DEFINE_RADIX_KEY_VALUE(key, type, true); \
+	DEFINE_RADIX_KEY_VALUE(key, type, false);
+
+#define EXTERN_RADIX_VALUE_BOTH(type) \
+	extern DEFINE_RADIX_VALUE(type, true); \
+	extern DEFINE_RADIX_VALUE(type, false);
+
+#define EXTERN_RADIX_KEY_VALUE_BOTH(key, type) \
+	extern DEFINE_RADIX_KEY_VALUE(key, type, true); \
+	extern DEFINE_RADIX_KEY_VALUE(key, type, false);
+
+#define EXTERN_RADIX_KEY_VALUE_ALL(type) \
+	EXTERN_RADIX_KEY_VALUE_BOTH(int, type) \
+	EXTERN_RADIX_KEY_VALUE_BOTH(unsigned int, type) \
+	EXTERN_RADIX_KEY_VALUE_BOTH(float, type) \
+	EXTERN_RADIX_KEY_VALUE_BOTH(double, type) \
+	EXTERN_RADIX_KEY_VALUE_BOTH(int64_t, type) \
+	EXTERN_RADIX_KEY_VALUE_BOTH(uint64_t, type)
+
+#define DEFINE_RADIX_KEY_VALUE_ALL(type) \
+	DEFINE_RADIX_KEY_VALUE_BOTH(int, type) \
+	DEFINE_RADIX_KEY_VALUE_BOTH(unsigned int, type) \
+	DEFINE_RADIX_KEY_VALUE_BOTH(float, type) \
+	DEFINE_RADIX_KEY_VALUE_BOTH(double, type) \
+	DEFINE_RADIX_KEY_VALUE_BOTH(int64_t, type) \
+	DEFINE_RADIX_KEY_VALUE_BOTH(uint64_t, type)
+
+//// Meta Definitions
+//#define DEFINE_RADIX_OUT(type, func) \
+//	template \
+//	__host__ void KCExclusiveScanArray<type, key>(type*, const type*, \
+//												  size_t, \
+//												  cudaStream_t);
+//
+//#define DEFINE_RADIX_INOUT(type, func) \
+//	template \
+//	__host__ void KCRadixSortArray<type, func>(type*, size_t, \
+//											   cudaStream_t);
+//
+//#define DEFINE_RADIX_BOTH(type, func) \
+//	DEFINE_RADIX_OUT(type, func) \
+//	DEFINE_RADIX_INOUT(type, func)
+//
+//#define DEFINE_RADIX_ALL(type) \
+//	DEFINE_RADIX_BOTH(type, ReduceST) \
+//	DEFINE_RADIX_BOTH(type, ReduceGT)
+//
+//// Extern Definitions
+//#define EXTERN_RADIX_BOTH(type, func) \
+//	extern DEFINE_RADIX_OUT(type, func) \
+//	extern DEFINE_RADIX_INOUT(type, func)
+//
+//#define EXTERN_RADIX_ALL(type) \
+//	EXTERN_RADIX_BOTH(type, ReduceST) \
+//	EXTERN_RADIX_BOTH(type, ReduceGT)
 
 //void BitonicSort::Sort(
 //	ID3D12GraphicsCommandList *pCommandList,

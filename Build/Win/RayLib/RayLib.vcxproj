@@ -58,7 +58,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>METU_DEBUG;METU_CUDA;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source\;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
+      <MinimalRebuild>false</MinimalRebuild>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <CudaCompile>
       <GenerateLineInfo>false</GenerateLineInfo>
@@ -92,7 +94,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>METU_CUDA;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source\;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -120,23 +123,27 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Source\RayLib\AcceleratorGPU.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\BVHAcceleratorGPU.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\AnalyticDistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\AnimateI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\BitonicSort.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\ComparisonFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Constants.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Error.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\FunctionEnablers.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\GPUCode.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\MaterialGPU.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\MaterialI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MeshI.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\OperatorFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\RayLib\ReduceFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\ParallelReduction.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\ParallelScan.cuh" />
+    <ClInclude Include="..\..\..\Source\RayLib\RadixSort.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\RandomStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\RayStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaCheck.h" />
@@ -191,6 +198,13 @@
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\RayLib\Matrix.cu" />
     <CudaCompile Include="..\..\..\Source\RayLib\ParallelReduction.cu" />
+    <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanArithmetic.cu" />
+    <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanMatrix2x2.cu" />
+    <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanMatrix3x3.cu" />
+    <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanMatrix4x4.cu" />
+    <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanQuaternion.cu" />
+    <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanVector.cu" />
+    <CudaCompile Include="..\..\..\Source\RayLib\RadixSort.cu" />
     <CudaCompile Include="..\..\..\Source\RayLib\Vector.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

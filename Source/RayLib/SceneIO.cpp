@@ -172,7 +172,7 @@ IOError SceneFile::Load(SceneFile& s, const std::string& fileName)
 		// Volume
 		auto volumes = jsonFile[TVolume][0];
 		Volume v;
-		v.fileName = volumes[TVolumeFile];
+		v.fileName = std::move<std::string>(volumes[TVolumeFile]);
 		v.type = StringToVolumeType(volumes[TVolumeType]);
 		v.surfaceId = 0;
 		v.materialId = 0;

@@ -118,7 +118,6 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 		__device__ __host__ bool						operator>(const Vector&) const;
 		__device__ __host__ bool						operator>=(const Vector&) const;
 
-
 		// Utilty
 		__device__ __host__ T							Dot(const Vector&) const;
 

@@ -13,7 +13,7 @@ http://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler/
 #include "DeviceMemory.h"
 #include "CudaCheck.h"
 #include "CudaConstants.h"
-#include "OperatorFunctions.cuh"
+#include "ReduceFunctions.cuh"
 
 template <class Type, ReduceFunc<Type> F>
 __device__ inline void WarpReduce(Type& val)
@@ -132,21 +132,21 @@ __global__ void ParalelReductionTex(Type* gOut,
 template<class Type, ReduceFunc<Type> F, cudaMemcpyKind cpyKind = cudaMemcpyDeviceToDevice>
 __host__ void KCReduceArray(Type& result,
 							const Type* dData,
-							size_t size,
+							size_t elementCount,
 							Type identityElement,
 							cudaStream_t stream = (cudaStream_t)0)
 {
 	static constexpr unsigned int TPB = StaticThreadPerBlock1D;
 	static constexpr unsigned int SharedSize = (TPB / WarpSize) * sizeof(Type);
 
-	unsigned int allocBig = (static_cast<unsigned int>(size) + TPB - 1) / TPB;
+	unsigned int allocBig = (static_cast<unsigned int>(elementCount) + TPB - 1) / TPB;
 	unsigned int allocSmall = (allocBig + TPB - 1) / TPB;
 	DeviceMemory buffer(allocBig * sizeof(Type) + 
 						allocSmall * sizeof(Type));
 	Type* dRead = static_cast<Type*>(buffer) + allocBig;
 	Type* dWrite = static_cast<Type*>(buffer);
 
-	unsigned int dataSize = static_cast<unsigned int>(size);
+	unsigned int dataSize = static_cast<unsigned int>(elementCount);
 	unsigned int gridSize;
 
 	const Type* inData = dData;
@@ -252,11 +252,11 @@ __host__ void KCReduceTexture(Type& result,
 
 #define EXTERN_REDUCE_TEXTURE_ALL(type) \
 	EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceAdd) \
-	//EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceSubtract) \
-	//EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceMultiply) \
-	//EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceDivide) \
-	//EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceMin) \
-	//EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceMax)
+	EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceSubtract) \
+	EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceMultiply) \
+	EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceDivide) \
+	EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceMin) \
+	EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceMax)
 
 // Integral Types
 EXTERN_REDUCE_ARRAY_ALL(int)

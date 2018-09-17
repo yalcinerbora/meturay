@@ -17,7 +17,7 @@ Implementation of Warp Std Generator
 #define GLOBAL_ID_X (threadIdx.x + blockDim.x * blockIdx.x)
 #define GLOBAL_ID_Y (threadIdx.y + blockDim.y * blockIdx.y)
 #define LINEAR_GLOBAL_ID (GLOBAL_ID_X + GLOBAL_ID_Y * gridDim.x)
-#define LINEAR_THREAD_ID (threadIdx.x + threadIdx.y * blockDim.x)
+#define LINEAR_LOCAL_ID (threadIdx.x + threadIdx.y * blockDim.x)
 
 class RandomGPU
 {
@@ -29,7 +29,8 @@ class RandomGPU
 	private:		 
 		 uint32_t*					gStates;
 		 uint32_t*					sStates;
-		 const Vector3ui			regs;		 
+		 const Vector3ui			regs;
+
 	protected:
 	public:
 		// Constructor
@@ -70,12 +71,12 @@ __device__
 inline RandomGPU::RandomGPU(uint32_t* gStates, uint32_t* sStates)
 	: gStates(gStates)
 	, sStates(sStates)
-	, regs(													  WarpStandard_Z1[LINEAR_THREAD_ID % warpSize],
-		   LINEAR_THREAD_ID - (LINEAR_THREAD_ID % warpSize) + WarpStandard_Q[0][LINEAR_THREAD_ID % warpSize],
-		   LINEAR_THREAD_ID - (LINEAR_THREAD_ID % warpSize) + WarpStandard_Q[1][LINEAR_THREAD_ID % warpSize])
+	, regs(													WarpStandard_Z1[LINEAR_LOCAL_ID % warpSize],
+		   LINEAR_LOCAL_ID - (LINEAR_LOCAL_ID % warpSize) + WarpStandard_Q[0][LINEAR_LOCAL_ID % warpSize],
+		   LINEAR_LOCAL_ID - (LINEAR_LOCAL_ID % warpSize) + WarpStandard_Q[1][LINEAR_LOCAL_ID % warpSize])
 {
 	unsigned int stateOff = LINEAR_GLOBAL_ID;
-	sStates[LINEAR_THREAD_ID] = gStates[stateOff];
+	sStates[LINEAR_LOCAL_ID] = gStates[stateOff];
 }
 
 __device__
@@ -86,8 +87,7 @@ inline uint32_t RandomGPU::Generate()
 	unsigned int res = (t0 << WarpStandard_Z0) ^ (t1 >> regs[0]);
 
 	__syncthreads();
-	sStates[LINEAR_THREAD_ID] = res;
-	__syncthreads();
+	sStates[LINEAR_LOCAL_ID] = res;
 
 	return t0 + t1;
 }
@@ -96,7 +96,7 @@ __device__
 inline RandomGPU::~RandomGPU()
 {
 	unsigned int stateOff = LINEAR_GLOBAL_ID;
-	gStates[stateOff] = sStates[LINEAR_THREAD_ID];
+	gStates[stateOff] = sStates[LINEAR_LOCAL_ID];
 }
 
 // Pseduo Uniform Generation
