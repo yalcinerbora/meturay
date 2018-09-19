@@ -104,3 +104,7 @@ struct IsQuatType
 		std::is_same<T, QuatF>::value ||
 		std::is_same<T, QuatD>::value;
 };
+
+// Quaternion Extern
+extern template class Quaternion<float>;
+extern template class Quaternion<double>;

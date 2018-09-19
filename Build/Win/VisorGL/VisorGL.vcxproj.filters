@@ -3,9 +3,24 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\VisorGL\VisorGL.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\VisorGLEntry.h" />
+    <ClInclude Include="..\..\..\Source\VisorGL\ShaderGL.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGL.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGLEntry.cpp" />
+    <ClCompile Include="..\..\..\Source\VisorGL\ShaderGL.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{2eecf741-8052-44bf-9915-2569eafa5ad4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\..\WorkingDir\Shaders\PProcessGeneric.vert">
+      <Filter>Shaders</Filter>
+    </Text>
+    <Text Include="..\..\..\WorkingDir\Shaders\PProcessGeneric.frag">
+      <Filter>Shaders</Filter>
+    </Text>
   </ItemGroup>
 </Project>

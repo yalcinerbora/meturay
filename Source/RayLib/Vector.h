@@ -5,7 +5,7 @@
 Arbitrary sized vector. Vector is column vector (N x 1 matrix)
 which means that it can only be multipled with matrices from right.
 
-N should be 2, 3, 4 at most.
+N should be 2, 3 or 4 at most.
 
 */
 

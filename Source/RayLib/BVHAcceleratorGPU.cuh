@@ -7,11 +7,7 @@ with custom Intersection and Hit acceptance
 */
 
 #include "RayStructs.h"
-
-class AABB3f
-{
-
-};
+#include "AABB.h"
 
 template <class LeafStruct, class PrimitiveData>
 __device__ float(*IntersctionFunc)(const RayReg& r,
@@ -31,23 +27,26 @@ __device__  float(*AreaGenFunc)(uint32_t primitiveId, const PrimitiveData&);
 
 // Fundamental BVH Tree Node
 template<class LeafStruct>
-struct alignas(8) SceneNode
+struct alignas(8) BVHNode
 {
 	static constexpr uint32_t NULL_NODE = std::numeric_limits<uint32_t>::max();
 
-	// Pointers 
-	uint64_t left;
-	uint64_t right;			
+	// Pointers	
 	union
 	{
 		struct
-		{
+		{			
+			// 8 Word
 			Vector3 aabbMin;
+			uint32_t left;
 			Vector3 aabbMax;
+			uint32_t right;
+			// 1 Word
+			uint32_t parent;
 		};
 		LeafStruct leaf;
 	};
-	uint64_t parent;
+	bool isLeaf;	
 };
 
 
@@ -63,18 +62,22 @@ __global__ void KCIntersectBVH(RayGMem* rays,
 							   HitGMem hits,
 							   uint32_t rayCount,
 							   // Constants
-							   const SceneNode<LeafStruct>* gBVHList,
+							   const BVHNode<LeafStruct>* gBVHList,
 							   const PrimitiveData gPrimData,
-							   const uint32_t* initalLoc)
+							   const Vector2ui* gInitialListAndNode)
 {
 	// Convenience Functions
 	auto IsAlreadyTraversed = [](uint64_t list, uint32_t depth) -> bool
 	{
 		return ((list >> depth) & 0x1) == 1;
 	};
-	auto Pop = [](uint64_t& list, uint32_t& depth)
+	auto MarkAsTraversed(uint64_t& list, uint32_t depth)
 	{
 		list += (1 << depth);
+	};
+	auto Pop = [](uint64_t& list, uint32_t& depth)
+	{
+		MarkAsTraversed(list, depth);
 		depth++;
 	};
 
@@ -83,16 +86,17 @@ __global__ void KCIntersectBVH(RayGMem* rays,
 		globalId < rayCount; i += blockDim.x * gridDim.x)
 	{
 		// Load initial traverse point if available
-		uint32_t startList = (initalLoc != nullptr) initalLoc[globalId] ? : 0;
+		uint32_t startList = (gInitialListAndNode != nullptr) ? initalLoc[globalId][0] : 0;
+		uint32_t initalLoc = (gInitialListAndNode != nullptr) ? initalLoc[globalId][1] : 0;		
 
 		// Load Ray to Register
 		RayReg ray(rays, globalId);
 		HitReg hit(hits, globalId);
 
 		// Depth First Search over BVH
-		uint32_t depth = sizeof(uint64_t) * 8;
-		BVHAcceleratorGPU::SceneNode<LeafStruct> currentNode = bvhList[0];
-		for(uint64_t& list = startList; i < 0xFFFFFFFF;)
+		const uint32_t depth = sizeof(uint64_t) * 8;
+		BVHNode<LeafStruct> currentNode = bvhList[initalLoc];
+		for(uint64_t& list = startList; list < 0xFFFFFFFF;)
 		{
 			// Fast pop if both of the children is carries current node is zero
 			// (This means that bit is carried)
@@ -101,9 +105,19 @@ __global__ void KCIntersectBVH(RayGMem* rays,
 				currentNode = bvhList[currentNode.parent];
 				Pop(list, depth);
 			}
+			// Check if we already traversed left child
+			// If child bit is on this means lower left child is traversed
+			else if(IsAlreadyTraversed(list, depth - 1) &&
+					currentNode.right != BVHNode<LeafStruct>::NULL_NODE)
+			{
+				// Go to right child
+				currentNode = bvhList[currentNode.right];
+				depth--;
+			}
+			// Now this means that we entered to this node first time
+			// Check if this node is leaf or internal
 			// Check if it is leaf node
-			else if(currentNode.left == SceneNode<LeafStruct>::NULL_NODE &&
-					currentNode.right == SceneNode<LeafStruct>::NULL_NODE)
+			else if(isLeaf)
 			{
 				// Do Intersection Test
 				float newT = IFunc(ray, node.leaf, primitiveList);
@@ -113,24 +127,38 @@ __global__ void KCIntersectBVH(RayGMem* rays,
 				// Continue
 				Pop(list, depth);
 			}
-			else if(ray.Intersects(currentNode.aabbMin,
-								   currentNode.aabbMax))
+			// Not leaf so check AABB
+			else if(ray.Intersects(currentNode.aabbMin, currentNode.aabbMax)
 			{
-				// Continue Traversal (And check if we traversed left node already
-				if(currentNode.left != SceneNode<LeafStruct>::NULL_NODE &&
-				   !IsAlreadyTraversed(list, depth - 1))
+				// Go left if avail
+				if(currentNode.left != BVHNode<LeafStruct>::NULL_NODE)
 				{
 					currentNode = bvhList[currentNode.left];
 					depth--;
-					continue;
 				}
-				else if(currentNode.right != SceneNode<LeafStruct>::NULL_NODE)
+				// If not avail and since we are first time on this node
+				// Try to go right
+				else if(currentNode.left != BVHNode<LeafStruct>::NULL_NODE)
 				{
+					// In this case dont forget to mark left child as traversed
+					MarkAsTraversed(list, depth - 1);
+
 					currentNode = bvhList[currentNode.right];
 					depth--;
-					continue;
+				}
+				else
+				{
+					// This should not happen
+					// since we have "isNode" boolean
+					assert(false);
+
+					// Well in order to be correct mark this node traversed also
+					// In the next iteration node will pop itself
+					MarkAsTraversed(list, depth - 1);
 				}
 			}
+			// Finally no ray is intersected
+			// Go to parent
 			else
 			{
 				// Skip Leafs
@@ -138,8 +166,8 @@ __global__ void KCIntersectBVH(RayGMem* rays,
 				Pop(list, depth);
 			}
 		}
-			// Write Updated Stuff
-			// Only tMax of ray can be changed
+		// Write Updated Stuff
+		// Only tMax of ray can be changed
 		ray.UpdateTMax(rays, globalId);
 		hit.Update(hits, globalId);
 	}
@@ -167,9 +195,10 @@ __global__ void KCGeneratePrimitiveAreaBVH(float* gOutArea,
 	}
 }
 
-// Determines how many cells should cover a primitive
+// Determines how many cells should a primitive cover
 template <class PrimitiveData,
-		  BoxGenFunc<PrimitiveData> BoxFunc>
+		  BoxGenFunc<PrimitiveData> BoxFunc,
+		  AreaGenFunc<PrimitiveData> AreaFunc>
 __global__ void KCDetermineCellCountBVH(uint32_t* gOutCount,
 										// Input
 										const PrimitiveData gPrimData,
@@ -180,11 +209,15 @@ __global__ void KCDetermineCellCountBVH(uint32_t* gOutCount,
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
 		globalId < primtiveCount; i += blockDim.x * gridDim.x)
 	{
+		// Generate your data
 		AABB3f aabb = BoxFunc(globalId, gPrimData);
+		float primitiveArea = AreaGenFunc(globalId, gPrimData);
 
-		// Using this and optimal area,
-		// find total sub-primtivie count
-		uint32_t cellCount = 0;
+		// Compare yoursef with area to generate triangles
+		// Find how many splits are on you
+		// Get limitation
+		uint32_t splitCount;
+
 		// TODO: implement
 
 		gOutCount[globalId] = cellCount;
@@ -196,34 +229,47 @@ __global__ void KCDetermineCellCountBVH(uint32_t* gOutCount,
 // Generates Partial AABB and morton numbers for each partial data
 template <class PrimitiveData, BoxGenFunc<PrimitiveData> BoxFunc>
 __global__ void KCGenerateParitalDataBVH(AABB3f* gSubAABBs,
-										 uint64_t gMortonCodes,
+										 uint64_t* gMortonCodes,
 										 // Input
 										 const uint32_t* gPrimId,
 										 const PrimitiveData gPrimData,
 										 const uint32_t subPrimtiveCount,
+										 const AABB3f& extents,
 										 const float optimalArea)
 {
 	// Grid Stride Loop
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
 		globalId < subPrimtiveCount; i += blockDim.x * gridDim.x)
 	{
-		uint32_t primitiveId = gPrimId[globalId];
-		AABB3f area = BoxFunc(primitiveId, gPrimData);
+		// Generate parent data
+		uint32_t parentId = gPrimId[globalId];
+		AABB3f aabb = BoxFunc(parentId, gPrimData);
+		float primitiveArea = AreaGenFunc(parentId, gPrimData);
 
-		// Using this and optimal area,
-		// find total sub-primtivie count
-		uint32_t cellCount = 0;
-		// TODO: implement
+		// Using parent primitive data and relative index
+		// Find subAABB
+		// And generate Morton code for that AABB centroid
+		AABB3f subAABB = aabb; // TODO: calculate
+		uint64_t morton = DiscretizePointMorton(subAABB.Centroid(),
+												extents, optimalArea);
 
-		gOutCount[globalId] = cellCount;
+		gSubAABBs[globalId] = subAABB;
+		gMortonCodes[globalId] = morton;
 	}
 }
 
-__global__ void KCPartialCount()
+// After that do a sort over morton codes
+template <class LeafStruct, class PrimitiveData>
+__global__ void KCGenerateBVH(BVHNode<LeafStruct>* gBVHList,
+							  //
+							  const uint32_t* gPrimId,
+							  const uint32_t subPrimtiveCount)
 {
+	// Grid Stride Loop
+	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+		globalId < subPrimtiveCount; i += blockDim.x * gridDim.x)
+	{
 
+
+	}
 }
-
-
-template <class LeafStruct, class PrimitiveData,
-		  F<LeafStruct, PrimitiveData> 

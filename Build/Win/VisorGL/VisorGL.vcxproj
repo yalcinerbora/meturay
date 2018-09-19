@@ -93,10 +93,12 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\Source\VisorGL\ShaderGL.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\VisorGL.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\VisorGLEntry.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\Source\VisorGL\ShaderGL.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGL.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGLEntry.cpp" />
   </ItemGroup>
@@ -104,6 +106,14 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">
       <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\..\WorkingDir\Shaders\PProcessGeneric.frag">
+      <FileType>Document</FileType>
+    </Text>
+    <Text Include="..\..\..\WorkingDir\Shaders\PProcessGeneric.vert">
+      <FileType>Document</FileType>
+    </Text>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -3,63 +3,6 @@
 #include <map>
 #include <cassert>
 
-//std::unique_ptr<VisorGL> VisorGL::instance = nullptr;
-
-//#include "RayLib/CudaCheck.h"
-
-/*
-
-Load Shader
-
-*/
-constexpr const char* PostProcessVert =
-"#version 330\n"
-"// Definitions\n"
-"#define IN_POS layout(location = 0)\n"
-"#define OUT_UV layout(location = 0)\n"
-""
-"// Input\n"
-"in IN_POS vec2 vPos;\n"
-""
-"// Output\n"
-"out gl_PerVertex{vec4 gl_Position; };	// Mandatory"
-"out OUT_UV vec2 fUV;\n"
-""
-"void main(void)\n"
-"{\n"
-"	//		Pos					UV\n"
-"	//	-1.0f, 3.0f,	-->	0.0f, 2.0f,\n"
-"	//	3.0f, -1.0f,	-->	2.0f, 0.0f,\n"
-"	//	-1.0f, -1.0f,	-->	0.0f, 0.0f\n"
-"	fUV = (vPos + 1.0f) * 0.5f;\n"
-"	gl_Position = vec4(vPos.xy, 0.0f, 1.0f);\n"
-"}\n";
-
-constexpr const char* PostProcessFrag =
-"#version 330\n"
-"// Definitions\n"
-"#define IN_UV layout(location = 0)\n"
-"#define OUT_COLOR layout(location = 0)\n"
-""
-"#define T_COLOR layout(binding = 0)\n"
-"#define T_INTENSITY layout(binding = 3)\n"
-""
-"// Input\n"
-"in IN_UV vec2 fUV;\n"
-""
-"// Output\n"
-"out OUT_COLOR vec4 fboColor;\n"
-""
-"// Textures\n"
-"uniform T_COLOR sampler2D gBuffColor;\n"
-""
-"void main(void)\n"
-"{\n"
-"	fboColor = vec4(texture(gBuffColor, fUV).rgb, 1.0f);\n"
-"}\n";
-
-VisorGL* VisorGL::instance = nullptr;
-
 KeyAction VisorGL::DetermineAction(int action)
 {
 	if(action == GLFW_PRESS)
@@ -358,7 +301,109 @@ void __stdcall VisorGL::OGLCallbackRender(GLenum,
 	METU_DEBUG_LOG("---------------------OGL-Callback-Render-End--------------");
 }
 
-VisorGL::VisorGL()
+GLenum VisorGL::PixelFormatToGL(PixelFormat f)
+{
+	static constexpr GLenum TypeList[] =
+	{
+		GL_R,
+		GL_RG,
+		GL_RGB,
+		GL_RGBA,
+
+		GL_R,
+		GL_RG,
+		GL_RGB,
+		GL_RGBA,
+
+		GL_R,
+		GL_RG,
+		GL_RGB,
+		GL_RGBA,
+
+		GL_R,
+		GL_RG,
+		GL_RGB,
+		GL_RGBA
+	};
+	return TypeList[static_cast<int>(f)];
+}
+
+GLenum VisorGL::PixelFormatToSizedGL(PixelFormat f)
+{
+	static constexpr GLenum TypeList[] =
+	{
+		GL_R8,
+		GL_RG8,
+		GL_RGB8,
+		GL_RGBA8,
+
+		GL_R16,
+		GL_RG16,
+		GL_RGB16,
+		GL_RGBA16,
+
+		GL_R16F,
+		GL_RG16F,
+		GL_RGB16F,
+		GL_RGBA16F,
+
+		GL_R32F,
+		GL_RG32F,
+		GL_RGB32F,
+		GL_RGBA32F
+	};
+	return TypeList[static_cast<int>(f)];
+}
+
+void VisorGL::ProcessCommand(const VisorGLCommand& c)
+{
+	switch(c.type)
+	{
+		case VisorGLCommand::RESET_IMAGE:
+		{
+			// Unbind and Delete
+			glBindTexture(GL_TEXTURE_2D, 0);
+			glDeleteTextures(1, &texture);
+			glGenTextures(1, &texture);
+
+			// Set Storage
+			glBindTexture(GL_TEXTURE_2D, texture);
+			glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(c.format),
+						   c.startOrSize[0], c.startOrSize[1]);
+
+			// Clear with black
+			GLuint clearData[4] = {0, 0, 0, 0};
+			glClearTexImage(GL_TEXTURE_2D, 1, GL_RGBA, GL_UNSIGNED_INT, clearData);
+
+			texPixFormat = c.format;
+			break;
+		}
+		case VisorGLCommand::SET_PORTION:
+		{
+			Vector2i size = c.end - c.startOrSize;
+
+			glBindTexture(GL_TEXTURE_2D, texture);
+			glTexSubImage2D(GL_TEXTURE_2D, 1,
+							c.startOrSize[0], c.startOrSize[1],
+							size[0], size[1],
+							PixelFormatToGL(texPixFormat),
+							GL_FLOAT,
+							c.data.data());
+			break;
+		}
+	};
+}
+
+void VisorGL::RenderImage()
+{
+	// Clear
+	glViewport(0, 0, viewportSize[0], viewportSize[1]);
+	glClear(GL_COLOR_BUFFER_BIT);
+	// Draw
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+VisorGL::VisorGL(const VisorOptions& opts)
 	: input(nullptr)
 	, window(nullptr)
 	, open(false)
@@ -390,6 +435,9 @@ VisorGL::VisorGL()
 
 	glfwWindowHint(GLFW_CONTEXT_RELEASE_BEHAVIOR, GLFW_RELEASE_BEHAVIOR_NONE);
 
+	if(opts.stereoOn)
+		glfwWindowHint(GLFW_STEREO, GL_TRUE);
+
 	// Debug Context
 	if constexpr(IS_DEBUG_MODE)
 		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
@@ -400,7 +448,6 @@ VisorGL::VisorGL()
 	glfwWindowHint(GLFW_SAMPLES, 16);
 
 	// Pixel of WindowFBO
-
 	// Full precision output 
 	glfwWindowHint(GLFW_RED_BITS, 32);
 	glfwWindowHint(GLFW_GREEN_BITS, 32);
@@ -467,25 +514,57 @@ VisorGL::VisorGL()
 	glfwSetMouseButtonCallback(window, VisorGL::MousePressedGLFW);
 	glfwSetScrollCallback(window, VisorGL::MouseScrolledGLFW);
 
-	glfwShowWindow(window);
-	open = true;
-
-
 	// Shaders
+	vertPP = ShaderGL(ShaderType::VERTEX, "PProcessGeneric.vert");
+	fragPP = ShaderGL(ShaderType::VERTEX, "PProcessGeneric.frag");
 
 	// Texture
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(opts.iFormat),
+				   opts.iSize[0], opts.iSize[1]);
 
 	// Sampler
+	glGenSamplers(1, &linearSampler);
+	glSamplerParameteri(linearSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glSamplerParameteri(linearSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	// Buffer
-	// PostProcess VAO
-	//glGenVertexArrays(1, &postProcessTriVao);
-	//glBindVertexArray(postProcessTriVao);
-	//glBindVertexBuffer(0, gpuData.getGLBuffer(), postTriOffset, sizeof(float) * 2);
-	//glEnableVertexAttribArray(IN_POS);
-	//glVertexAttribFormat(IN_POS, 2, GL_FLOAT, false, 0);
-	//glVertexAttribBinding(IN_POS, 0);
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	glBindVertexBuffer(0, vBuffer, 0, sizeof(float) * 2);
+	glEnableVertexAttribArray(IN_POS);
+	glVertexAttribFormat(IN_POS, 2, GL_FLOAT, false, 0);
+	glVertexAttribBinding(IN_POS, 0);
 
+	// Pre-Bind Everything
+	// States
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+
+	// FBO
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glColorMask(true, true, true, true);
+	glDepthMask(false);
+	glStencilMask(false);
+	
+	// Bind Shaders
+	vertPP.Bind();
+	fragPP.Bind();
+
+	// Bind Texture & Sampler
+	glActiveTexture(GL_TEXTURE0 + T_INPUT);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glBindSampler(T_INPUT, linearSampler);
+
+	// Bind VAO
+	glBindVertexArray(vao);
+
+
+	// Finally Show Window
+	glfwShowWindow(window);
+	open = true;
 }
 
 VisorGL::~VisorGL()
@@ -514,18 +593,22 @@ void VisorGL::Present()
 
 void VisorGL::Render()
 {
-	// Load requested images
+	// Consume commands
+	// TODO: optimize this skip multiple reset commands
+	// just process the last and other commands afterwards
+	while(!commandList.empty())
 	{
-		std::unique_lock<std::mutex> lock(mutex);
-
-		while(!portionList.empty())
+		VisorGLCommand c;
 		{
-			ImagePortion p = std::move(portionList.back());
-			portionList.pop_back();
-
-			//glTextureSubImage2D()
+			std::unique_lock<std::mutex> lock(mutexCommand);
+			c = std::move(commandList.back());
+			commandList.pop_back();
 		}
+		ProcessCommand(c);
 	}
+
+	// Render Image
+	RenderImage();
 }
 
 void VisorGL::SetInputScheme(VisorInputI* input)
@@ -533,29 +616,38 @@ void VisorGL::SetInputScheme(VisorInputI* input)
 	// TODO:
 }
 
-void VisorGL::ResetImageBuffer(const Vector2i& imageSize, PixelFormat)
+void VisorGL::ResetImageBuffer(const Vector2i& imageSize, PixelFormat f)
 {
-	glfwSetWindowSize(window, imageSize[0], imageSize[1]);
-	//....
-	glfwShowWindow(window);
+	VisorGLCommand command;
+	command.type = VisorGLCommand::RESET_IMAGE;
+	command.format = f;
+	command.startOrSize = imageSize;
+	{
+		std::unique_lock<std::mutex> lock(mutexCommand);
+		commandList.push_back(command);
+	}
 }
 
 void VisorGL::SetImagePortion(const Vector2i& start,
 							  const Vector2i& end,
-							  const std::vector<Vector3> data)
+							  const std::vector<float> data)
 {
+
+	VisorGLCommand command;
+	command.type = VisorGLCommand::SET_PORTION;
+	command.startOrSize = start;
+	command.end = end;
+	command.data = std::move(data);
 	{
-		std::unique_lock<std::mutex> lock(mutex);
-		portionList.emplace_back();
-		portionList.back().start = start;
-		portionList.back().end = end;
-		portionList.back().data = std::move(data);
-	}	
+		std::unique_lock<std::mutex> lock(mutexCommand);
+		commandList.push_back(command);
+	}
 }
 
 void VisorGL::SetWindowSize(const Vector2i& size)
 {
-
+	glfwSetWindowSize(window, size[0], size[1]);
+	viewportSize = size;
 }
 
 void VisorGL::SetFPSLimit(float f)

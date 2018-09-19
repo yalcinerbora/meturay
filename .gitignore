@@ -353,7 +353,12 @@ __pycache__/
 !Lib/**/*.dll
 !Lib/**/*.pch
 
-# Working Dir
+# Working Dir Except Shaders
 WorkingDir/*
+!WorkingDir/**/*.qrc
+!WorkingDir/Shaders/
+!WorkingDir/Shaders/*.frag
+!WorkingDir/Shaders/*.geom
+!WorkingDir/Shaders/*.vert
 
 

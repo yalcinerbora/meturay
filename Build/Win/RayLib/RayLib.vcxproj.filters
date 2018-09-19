@@ -164,6 +164,12 @@
     <ClInclude Include="..\..\..\Source\RayLib\MaterialGPU.cuh">
       <Filter>GPU Static Templates</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\AABB.h">
+      <Filter>LinearAlgb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\AABB.hpp">
+      <Filter>LinearAlgb</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="LinearAlgb">
@@ -264,6 +270,15 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\RayLib\RadixSort.cu">
       <Filter>GPU Algorithms\Implementations</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\RayLib\Quaternion.cu">
+      <Filter>LinearAlgb</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\RayLib\Ray.cu">
+      <Filter>LinearAlgb</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\RayLib\AABB.cu">
+      <Filter>LinearAlgb</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

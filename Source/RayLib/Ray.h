@@ -88,3 +88,7 @@ static_assert(std::is_polymorphic<RayF>::value == false, "Ray should not be poly
 static_assert(sizeof(RayF) == sizeof(float) * 6, "Ray<float> size is not 24 bytes");
 
 #include "Ray.hpp"
+
+// Ray Extern
+extern template class Ray<float>;
+extern template class Ray<double>;

@@ -123,6 +123,8 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\Source\RayLib\AABB.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\AABB.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\BVHAcceleratorGPU.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\AnalyticDistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\AnimateI.h" />
@@ -196,6 +198,7 @@
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="..\..\..\Source\RayLib\AABB.cu" />
     <CudaCompile Include="..\..\..\Source\RayLib\Matrix.cu" />
     <CudaCompile Include="..\..\..\Source\RayLib\ParallelReduction.cu" />
     <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanArithmetic.cu" />
@@ -204,7 +207,9 @@
     <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanMatrix4x4.cu" />
     <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanQuaternion.cu" />
     <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanVector.cu" />
+    <CudaCompile Include="..\..\..\Source\RayLib\Quaternion.cu" />
     <CudaCompile Include="..\..\..\Source\RayLib\RadixSort.cu" />
+    <CudaCompile Include="..\..\..\Source\RayLib\Ray.cu" />
     <CudaCompile Include="..\..\..\Source\RayLib\Vector.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

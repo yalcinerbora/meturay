@@ -18,6 +18,13 @@ Visor
 
 class VisorInputI;
 
+struct VisorOptions
+{
+	bool				stereoOn;
+	PixelFormat			iFormat;
+	Vector2i			iSize;
+};
+
 class VisorViewI
 {
 	public:
@@ -35,7 +42,7 @@ class VisorViewI
 		virtual void		ResetImageBuffer(const Vector2i& imageSize, PixelFormat) = 0;
 		virtual void		SetImagePortion(const Vector2i& start,
 											const Vector2i& end,
-											const std::vector<Vector3> data) = 0;
+											const std::vector<float> data) = 0;
 		// Misc
 		virtual void		SetWindowSize(const Vector2i& size) = 0;
 		virtual void		SetFPSLimit(float) = 0;
