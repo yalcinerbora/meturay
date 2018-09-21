@@ -56,9 +56,6 @@
       <Filter>Structs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\RandomStructs.h">
-      <Filter>Structs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\VisorInputI.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
@@ -133,9 +130,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\RayStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\GPUCode.h">
-      <Filter>GPU Static Templates</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\BitonicSort.cuh">
       <Filter>GPU Algorithms</Filter>
     </ClInclude>
@@ -158,17 +152,47 @@
     <ClInclude Include="..\..\..\Source\RayLib\ComparisonFunctions.cuh">
       <Filter>GPU Algorithms\Functions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\BVHAcceleratorGPU.cuh">
-      <Filter>GPU Static Templates</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\MaterialGPU.cuh">
-      <Filter>GPU Static Templates</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\AABB.h">
       <Filter>LinearAlgb</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\AABB.hpp">
       <Filter>LinearAlgb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.h">
+      <Filter>CPU Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.hpp">
+      <Filter>CPU Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\LoopingThreadI.h">
+      <Filter>Threads</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\HitStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\RNGStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\CameraKernels.cuh">
+      <Filter>GPU Template Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\ImageMemory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\RNGMemory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\RayMemory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\RayMemory.hpp">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\MaterialKernels.cuh">
+      <Filter>GPU Template Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\BVHAcceleratorKernels.cuh">
+      <Filter>GPU Template Kernels</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -208,7 +232,10 @@
     <Filter Include="GPU Algorithms\Implementations">
       <UniqueIdentifier>{c1967bd1-2a77-4744-8d73-5804f97fe2c6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="GPU Static Templates">
+    <Filter Include="CPU Containers">
+      <UniqueIdentifier>{49249b08-c8e2-49e8-b7d6-2401beb33104}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GPU Template Kernels">
       <UniqueIdentifier>{d1856759-1119-4b2a-941f-174323653ed2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -238,6 +265,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\SceneIO.cpp">
       <Filter>FileI-O</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\ImageMemory.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\RNGMemory.cpp">
+      <Filter>Memory</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

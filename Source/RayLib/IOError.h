@@ -1,35 +1,56 @@
 #pragma once
 /**
 
-I-O Error Enumeration
-
+I-O error "Enumeration"
 
 */
 
-enum class IOError
-{	
-	OK,
-	// General
-	FILE_NOT_FOUND,
-	// Scene
-	SCENE_CORRUPTED,
-	// Maya nCache
-	NCACHE_XML_ERROR,
-	NCACHE_INVALID_FOURCC,
-	NCACHE_INVALID_FORMAT,
-	// Maya nCache Navier-Stokes Fluid
-	NCACHE_DENSITY_NOT_FOUND,
-	NCACHE_VELOCITY_NOT_FOUND,
-	// Scene Json
-	//....
+#include "Error.h"
 
-	// End
-	END
+struct IOError : public ErrorI
+{
+	public:
+		enum Type
+		{
+			OK,
+			// General
+			FILE_NOT_FOUND,
+			// Scene
+			SCENE_CORRUPTED,
+			// Maya nCache
+			NCACHE_XML_ERROR,
+			NCACHE_INVALID_FOURCC,
+			NCACHE_INVALID_FORMAT,
+			// Maya nCache Navier-Stokes Fluid
+			NCACHE_DENSITY_NOT_FOUND,
+			NCACHE_VELOCITY_NOT_FOUND,
+			// Scene Json
+			//....
+
+			// End
+			END
+		};
+
+	private:
+		Type	type;
+
+	public:
+		// Constructors & Destructor 
+							IOError() = default;
+							IOError(Type);
+							~IOError() = default;
+
+		operator			Type() const { return type; }
+		operator			std::string() const override;
 };
 
-static constexpr const char* GetIOErrorString(IOError e)
+inline IOError::IOError(IOError::Type t)
+	: type(t)
+{}
+
+inline IOError::operator std::string() const
 {
-	constexpr const char* ErrorStrings[] = 
+	const char* const ErrorStrings[] =
 	{		
 		"OK.",
 		// General
@@ -47,5 +68,5 @@ static constexpr const char* GetIOErrorString(IOError e)
 	static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(IOError::END), 
 				  "Enum and enum string list size mismatch.");
 
-	return ErrorStrings[static_cast<int>(e)];
+	return ErrorStrings[static_cast<int>(type)];
 }

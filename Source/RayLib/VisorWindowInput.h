@@ -15,7 +15,7 @@
 
 class VisorDistributorI;
 
-class VisorWindowInput : VisorInputI
+class VisorWindowInput : public VisorInputI
 {
 	private:
 		static constexpr int			PredefinedFPS[] = {24, 30, 60, 90, 120, 240};

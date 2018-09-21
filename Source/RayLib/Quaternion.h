@@ -25,34 +25,35 @@ class Quaternion<T>
 	public:
 		// Constructors & Destructor
 		constexpr								Quaternion() = default;
-		constexpr __device__ __host__			Quaternion(float w, float x, float y, float z);
-		constexpr __device__ __host__			Quaternion(const float*);
-		__device__ __host__						Quaternion(float angle, const Vector3& axis);
+		constexpr __device__ __host__			Quaternion(T w, T x, T y, T z);
+		constexpr __device__ __host__			Quaternion(const T*);
+		__device__ __host__						Quaternion(T angle, const Vector<3, T>& axis);
+		__device__ __host__						Quaternion(const Vector<4, T>& vec);
 												Quaternion(const Quaternion&) = default;
 												~Quaternion() = default;
 		Quaternion&								operator=(const Quaternion&) = default;
 
 		//
-		__device__ __host__	explicit			operator Vector4&();
-		__device__ __host__	explicit			operator const Vector4&() const;
-		__device__ __host__	explicit			operator float*();
-		__device__ __host__	explicit			operator const float*() const;
+		__device__ __host__	explicit			operator Vector<4, T>&();
+		__device__ __host__	explicit			operator const Vector<4, T>&() const;
+		__device__ __host__	explicit			operator T*();
+		__device__ __host__	explicit			operator const T*() const;
 		__device__ __host__ T&					operator[](int);
 		__device__ __host__ const T&			operator[](int) const;
 
 		// Operators
 		__device__ __host__ Quaternion			operator*(const Quaternion&) const;
-		__device__ __host__ Quaternion			operator*(float) const;
+		__device__ __host__ Quaternion			operator*(T) const;
 		__device__ __host__ Quaternion			operator+(const Quaternion&) const;
 		__device__ __host__ Quaternion			operator-(const Quaternion&) const;
 		__device__ __host__ Quaternion			operator-() const;
-		__device__ __host__ Quaternion			operator/(float) const;
+		__device__ __host__ Quaternion			operator/(T) const;
 
 		__device__ __host__ void				operator*=(const Quaternion&);
-		__device__ __host__ void				operator*=(float);
+		__device__ __host__ void				operator*=(T);
 		__device__ __host__ void				operator+=(const Quaternion&);
 		__device__ __host__ void				operator-=(const Quaternion&);
-		__device__ __host__ void				operator/=(float);
+		__device__ __host__ void				operator/=(T);
 
 		// Logic
 		__device__ __host__ bool				operator==(const Quaternion&);
@@ -65,12 +66,12 @@ class Quaternion<T>
 		__device__ __host__ T					LengthSqr() const;
 		__device__ __host__ Quaternion			Conjugate() const;
 		__device__ __host__ Quaternion&			ConjugateSelf();
-		__device__ __host__ T					DotProduct(const Quaternion&) const;
+		__device__ __host__ T					Dot(const Quaternion&) const;
 		__device__ __host__ Vector<3,T>			ApplyRotation(const Vector<3, T>&) const;
 
 		// Static Utility
-		static __device__ __host__ Quaternion	NLerp(const Quaternion& start, const Quaternion& end, float t);
-		static __device__ __host__ Quaternion	SLerp(const Quaternion& start, const Quaternion& end, float t);
+		static __device__ __host__ Quaternion	NLerp(const Quaternion& start, const Quaternion& end, T t);
+		static __device__ __host__ Quaternion	SLerp(const Quaternion& start, const Quaternion& end, T t);
 
 		static __device__ __host__ Quaternion	RotationBetween(const Vector<3,T>& a, const Vector<3,T>& b);
 		static __device__ __host__ Quaternion	RotationBetweenZAxis(const Vector<3,T>& b);
@@ -87,7 +88,7 @@ static_assert(sizeof(QuatF) == sizeof(float) * 4, "IEQuaternion size is not 16 b
 
 // Left Scalar operators
 template<class T>
-static __device__ __host__ Quaternion<T> operator*(float, const Quaternion<T>&);
+static __device__ __host__ Quaternion<T> operator*(T, const Quaternion<T>&);
 
 // Implementation
 #include "Quaternion.hpp"

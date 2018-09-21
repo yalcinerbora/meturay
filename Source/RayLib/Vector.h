@@ -59,14 +59,16 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 	public:
 		// Constructors & Destructor
 		constexpr							Vector() = default;
-		__device__ __host__					Vector(T);		
-		__device__ __host__					Vector(const T* data);
+		template<class C, typename = ArithmeticEnable<C>>
+		__device__ __host__					Vector(C);		
+		template<class C, typename = ArithmeticEnable<C>>
+		__device__ __host__					Vector(const C* data);
 		template <class... Args, typename = AllArithmeticEnable<Args...>>
 		constexpr __device__ __host__		Vector(const Args... dataList);
 		template <class... Args, typename = std::enable_if_t<((N - sizeof...(Args)) > 1)>>
 		__device__ __host__					Vector(const Vector<N - sizeof...(Args), T>&,
 												   const Args... dataList);
-		template <int M>
+		template <int M, typename = std::enable_if_t<(M > N)>>
 		__device__ __host__					Vector(const Vector<M, T>&);
 											~Vector() = default;
 
@@ -81,8 +83,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 		__device__ __host__ constexpr const T&	operator[](int) const;
 
 		// Type cast
-		template<class C>
-		__device__ __host__	explicit					operator Vector<N, C>() const;
+		template<int M, class C, typename = std::enable_if_t<(M <= N)>>
+		__device__ __host__	explicit					operator Vector<M, C>() const;
 
 		// Modify
 		__device__ __host__ void						operator+=(const Vector&);
@@ -197,7 +199,8 @@ static_assert(sizeof(Vector3) == 12, "Vector3 should be tightly packed");
 static_assert(sizeof(Vector4) == 16, "Vector4 should be tightly packed");
 
 // Cross product (only for 3d vectors)
-static __device__ __host__ Vector3 Cross(const Vector3&, const Vector3&);
+template <class T>
+static __device__ __host__ Vector<3, T> Cross(const Vector<3, T>&, const Vector<3, T>&);
 
 // Implementation
 #include "Vector.hpp"	// CPU & GPU

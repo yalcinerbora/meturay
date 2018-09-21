@@ -1,126 +1,160 @@
 #include <random>
 
 #include "TracerCUDA.h"
-#include "CameraKernels.cuh"
 #include "RayLib/Camera.h"
 #include "RayLib/CudaConstants.h"
 #include "RayLib/Log.h"
 #include "RayLib/SceneIO.h"
 #include "RayLib/Random.cuh"
 #include "RayLib/ImageIO.h"
-//
-//ImageMemory::ImageMemory()
-//	: imageSegmentSize(0u, 0u)
-//	, imageOffset(0u, 0u)
-//	, imageResolution(0u, 0u)
-//	, imagePtr(nullptr)
-//{}
-//
-//void ImageMemory::ReportionImage(const Vector2ui& offset,
-//								const Vector2ui& size)
-//{
-//	imageOffset = offset;
-//	imageSegmentSize = size;
-//	
-//	size_t linearSize = size[0] * size[1] * sizeof(Vector3f);
-//	
-//	if(linearSize != 0)
-//	{
-//		imageMem = std::move(DeviceMemory(linearSize));
-//		imagePtr = static_cast<Vector3f*>(imageMem);
-//		ResetImage();
-//	}
-//}
-//
-//void ImageMemory::ResizeImage(const Vector2ui& resolution)
-//{
-//	assert(imageSegmentSize <= resolution);
-//	imageResolution = resolution;
-//}
-//
-//void ImageMemory::ResetImage()
-//{
-//	CUDA_CHECK(cudaDeviceSynchronize());
-//	size_t pixelCount = imageSegmentSize[0] * imageSegmentSize[1];
-//	if(pixelCount != 0)
-//		CUDA_CHECK(cudaMemset(imagePtr, 0x0, sizeof(Vector3f) * pixelCount));
-//}
-//
-//std::vector<Vector3f> ImageMemory::GetImage()
-//{
-//	CUDA_CHECK(cudaDeviceSynchronize());
-//	size_t pixelCount = imageSegmentSize[0] * imageSegmentSize[1];
-//	std::vector<Vector3> out(pixelCount);
-//	std::memcpy(out.data(), imagePtr, sizeof(Vector3f) * pixelCount);
-//
-//	return out;
-//}
-//
-//Vector2ui ImageMemory::ImageSegment() const
-//{
-//	return imageSegmentSize;
-//}
-//
-//Vector2ui ImageMemory::ImageOffset() const
-//{
-//	return imageOffset;
-//}
-//
-//Vector2ui ImageMemory::ImageResolution() const
-//{
-//	return imageResolution;
-//}
-//
-//Vector3f* ImageMemory::ImageGMem()
-//{
-//	return imagePtr;
-//}
-//
-//RNGMemory::RNGMemory(uint32_t seed)
-//{
-//	assert(CudaSystem::GPUList().size() > 0);
-//
-//	// CPU Mersenne Twister
-//	std::mt19937 rng;
-//	rng.seed(seed);
-//
-//	// Determine GPU
-//	size_t totalCount = 0;
-//	for(const auto& gpu : CudaSystem::GPUList())
-//	{
-//		totalCount += gpu.RecommendedBlockCount() * StaticThreadPerBlock1D;
-//	}
-//
-//	// Actual Allocation
-//	size_t totalSize = totalCount * sizeof(uint32_t);
-//	memRandom = std::move(DeviceMemory(totalSize));
-//	uint32_t* d_ptr = static_cast<uint32_t*>(memRandom);
-//
-//	size_t totalOffset = 0;
-//	for(const auto& gpu : CudaSystem::GPUList())
-//	{
-//		randomStacks.emplace_back(RandomStackGMem{d_ptr + totalOffset});
-//		totalOffset += gpu.RecommendedBlockCount() * StaticThreadPerBlock1D;
-//	}
-//	assert(totalCount == totalOffset);
-//
-//	// Init all seeds
-//	std::vector<uint32_t> seeds(totalCount);
-//	for(size_t i = 0; i < totalCount; i++)
-//	{
-//		d_ptr[i] = rng();
-//	}
-//}
-//
-//RandomStackGMem RNGMemory::RandomStack(uint32_t gpuId)
-//{
-//	return randomStacks[gpuId];
-//}
-//
-//size_t RNGMemory::SharedMemorySize(uint32_t gpuId)
-//{
-//	return StaticThreadPerBlock1D * sizeof(uint32_t);
-//}
+
+void TracerCUDA::SendError(TracerError e, bool isFatal)
+{
+	if(errorFunc) errorFunc(e);
+	healthy = isFatal;
+}
+
+TracerCUDA::TracerCUDA()
+	: rayDelegateFunc(nullptr)
+	, errorFunc(nullptr)
+	, analyticFunc(nullptr)
+	, imageFunc(nullptr)
+{}
+
+void TracerCUDA::SetRayDelegateCallback(TracerRayDelegateFunc f)
+{
+	rayDelegateFunc = f;
+}
+
+void TracerCUDA::SetErrorCallback(TracerErrorFunc f)
+{
+	errorFunc = f;
+}
+
+void TracerCUDA::SetAnalyticCallback(int sendRate, TracerAnalyticFunc f)
+{
+	// TODO: 
+	analyticFunc = f;
+}
+
+void TracerCUDA::SetSendImageCallback(int sendRate, TracerImageSendFunc f)
+{
+	// TODO: 
+	imageFunc = f;
+}
+
+void TracerCUDA::Initialize(uint32_t seed)
+{}
+
+void TracerCUDA::SetTime(double seconds)
+{}
+
+void TracerCUDA::SetParams(const TracerParameters&)
+{}
+
+void TracerCUDA::SetScene(const std::string& sceneFileName)
+{}
+
+void TracerCUDA::GenerateSceneAccelerator()
+{}
+
+void TracerCUDA::GenerateAccelerator(uint32_t objId)
+{}
+
+void TracerCUDA::AssignAllMaterials()
+{}
+
+void TracerCUDA::AssignMaterial(uint32_t matId)
+{}
+
+void TracerCUDA::LoadMaterial(uint32_t matId)
+{}
+
+void TracerCUDA::UnloadMaterial(uint32_t matId)
+{}
+
+void TracerCUDA::GenerateCameraRays(const CameraPerspective& camera,
+									const uint32_t samplePerPixel)
+{
+
+	//size_t samples = samplePerPixel *  samplePerPixel;
+	//Vector2i pixel2D = outputImage.
+	//size_t rayCount = outputImage.
+	//rayMemory.Reset(samples * )
+}
+
+bool TracerCUDA::Continue()
+{
+	return (currentRayCount > 0) && healthy;
+}
+
+void TracerCUDA::Render()
+{
+	if(!healthy) return;
+
+
+	// Now we have inital rays in memory
+	
+
+
+
+
+}
+
+void TracerCUDA::FinishSamples() 
+{
+	if(!healthy) return;
+}
+
+bool TracerCUDA::IsCrashed()
+{
+	return (!healthy);
+}
+
+void TracerCUDA::AddMaterialRays(const RayRecordCPU&, const HitRecordCPU&,
+								 uint32_t rayCount, uint32_t matId)
+{}
+
+void TracerCUDA::SetImagePixelFormat(PixelFormat)
+{}
+
+void TracerCUDA::ReportionImage(const Vector2ui& offset,
+								const Vector2ui& size)
+{}
+
+void TracerCUDA::ResizeImage(const Vector2ui& resolution)
+{}
+
+void TracerCUDA::ResetImage()
+{}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //
 //RayRecordGMem RayMemory::GenerateRayPtrs(void* mem, size_t rayCount)
 //{

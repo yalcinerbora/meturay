@@ -25,7 +25,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
 		// Constructors & Destructor
 		constexpr									AABB() = default;
 		__device__ __host__							AABB(const Vector<N, T>& min,
-														 const Vector<N, T>& min);
+														 const Vector<N, T>& max);
 		__device__ __host__							AABB(const T* data);
 		template <class... Args, typename =			AllArithmeticEnable<Args...>>
 		constexpr __device__ __host__				AABB(const Args... dataList);			

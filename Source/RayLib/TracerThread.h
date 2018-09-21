@@ -4,6 +4,7 @@
 #include <mutex>
 #include <condition_variable>
 
+#include "LoopingThreadI.h"
 #include "ThreadData.h"
 #include "Camera.h"
 #include "TracerStructs.h"
@@ -16,7 +17,7 @@ class TracerDistributorI;
 	TracerI encapsulates system
 	TracerThread is used to command Tracers using callbacks futures etc.
 */
-class TracerThread
+class TracerThread : public LoopingThreadI
 {
 	private:
 		struct ImageSegment
@@ -26,13 +27,6 @@ class TracerThread
 		};
 
 	private:
-		// Threading and thread management
-		std::thread						thread;
-		std::mutex						mutex;
-		std::condition_variable			conditionVar;
-		bool							stopSignal;
-		bool							pauseSignal;
-
 		// Actual Tracer
 		TracerI&						tracer;
 
@@ -48,8 +42,9 @@ class TracerThread
 		int								currentFPS;
 		int								currentFrame;
 
-		// Actual Thread Loop
-		void							THRDLoop(TracerDistributorI&, uint32_t seed);
+		// Thread work
+		void							LoopWork() override;
+		bool							InternallyTerminated() const override;
 
 	protected:
 	public:
@@ -69,42 +64,13 @@ class TracerThread
 		void							ChangeParams(const TracerParameters&);
 		void							ChangeImageSegment(const Vector2ui& pixelStart,
 														   const Vector2ui& pixelCount);
-		// Render Loop Related
-		void							Start(TracerDistributorI&, uint32_t seed = 0);
-		void							Stop();
-		void							Pause(bool);
 };
 
 inline TracerThread::TracerThread(TracerI& t)
 	: tracer(t)
-	, pauseSignal(false)
-	, stopSignal(false)
 {}
 
 inline TracerThread::~TracerThread()
 {
 	Stop();
-}
-
-inline void TracerThread::Start(TracerDistributorI& d, uint32_t seed)
-{
-	thread = std::thread(&TracerThread::THRDLoop, this, std::ref(d), seed);
-}
-
-inline void TracerThread::Stop()
-{
-	mutex.lock();
-	stopSignal = true;
-	mutex.unlock();
-	conditionVar.notify_one();
-	if(thread.joinable()) thread.join();
-	stopSignal = false;
-}
-
-inline void TracerThread::Pause(bool pause)
-{
-	mutex.lock();
-	pauseSignal = pause;
-	mutex.unlock();
-	conditionVar.notify_one();
 }

@@ -18,23 +18,43 @@ which does send commands to GPU to do ray tracing
 #include <cstdint>
 #include <future>
 #include "Vector.h"
-//#include "RayHitStructs.h"
-#include "Error.h"
+#include "TracerError.h"
+#include "Types.h"
 
 class SceneI;
 struct CameraPerspective;
 struct TracerParameters;
 struct HitRecordCPU;
 struct RayRecordCPU;
+struct TracerAnalyticData;
+
+// Callbacks for tracer
+typedef void(*TracerRayDelegateFunc)(const RayRecordCPU&, const HitRecordCPU&,
+									 uint32_t rayCount, uint32_t matId);
+
+typedef void(*TracerErrorFunc)(TracerError);
+typedef void(*TracerAnalyticFunc)(TracerAnalyticData);
+typedef void(*TracerImageSendFunc)(const Vector2ui& offset, 
+								   const Vector2ui& size, 
+								   const std::vector<float> imagePortion);
 
 class TracerI
 {
 	public:
 		virtual							~TracerI() = default;
 
-		// Main Thread Only Calls
+		// COMMANDS FROM TRACER
+		// Delegate material ray callback
+		// Tracer will use this function to send material rays to other tracers
+		virtual void					SetRayDelegateCallback(TracerRayDelegateFunc) = 0;
+		// Error callaback for Tracer
+		virtual void					SetErrorCallback(TracerErrorFunc) = 0;
+		// Data send callbacks
+		virtual void					SetAnalyticCallback(int sendRate, TracerAnalyticFunc) = 0;
+		virtual void					SetSendImageCallback(int sendRate, TracerImageSendFunc) = 0;
+		
+		// COMMANDS TO TRACER
 		virtual void					Initialize(uint32_t seed) = 0;
-		virtual void					SetErrorCallback(ErrorCallbackFunction) = 0;
 
 		// Main Calls
 		virtual void					SetTime(double seconds) = 0;
@@ -56,22 +76,34 @@ class TracerI
 		virtual void					UnloadMaterial(uint32_t matId) = 0;
 
 		// Rendering
-		// Loop HitRays/BounceRays until ray count is zero
-		// Transfer Material rays between tracer nodes using Get/AddMaterialRays
+		// Generate camera rays (initialize ray pool)
 		virtual void					GenerateCameraRays(const CameraPerspective& camera,
 														   const uint32_t samplePerPixel) = 0;
-		virtual void					HitRays(int) = 0;		
-		virtual void					GetMaterialRays(RayRecordCPU&, HitRecordCPU&, 
-														uint32_t rayCount, uint32_t matId) = 0;
+
+		// Continue hit/bounce looping (consume ray pool)
+		virtual bool					Continue() = 0;
+		// Render rays
+		virtual void					Render() = 0;
+		// Finish samples (this mostly normalizes image with prob density etc.)
+		virtual void					FinishSamples() = 0;
+		// Check if the tracer is crashed
+		virtual bool					IsCrashed() = 0;
+
+		// Add extra rays for a specific material (from other tracers)
+		// This is required because of memory limit of GPU 
+		// (only specific tracers will handle specific materials)
+		// Tracer will consume these rays when avaialble
 		virtual void					AddMaterialRays(const RayRecordCPU&, const HitRecordCPU&,
 														uint32_t rayCount, uint32_t matId) = 0;
-		virtual void					BounceRays() = 0;
-		virtual uint32_t				RayCount() = 0;
 
 		// Image Reated
+		// Set pixel format		
+		virtual void					SetImagePixelFormat(PixelFormat) = 0;
+		// Reassign a new portion of image
 		virtual void					ReportionImage(const Vector2ui& offset = Vector2ui(0, 0),
 													   const Vector2ui& size = Vector2ui(0, 0)) = 0;
+		// Resize entire image
 		virtual void					ResizeImage(const Vector2ui& resolution) = 0;
+		// Clear image
 		virtual void					ResetImage() = 0;
-		virtual std::vector<Vector3f>	GetImage() = 0;
 };

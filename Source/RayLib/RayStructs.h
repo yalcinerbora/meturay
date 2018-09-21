@@ -13,6 +13,7 @@ Ray Struct that is mandatory for hit acceleration
 #include "Vector.h"
 #include "Ray.h"
 
+// Global memory Layout for Rays
 struct alignas(32) RayGMem
 {
 	Vector3		pos;
@@ -21,13 +22,14 @@ struct alignas(32) RayGMem
 	float		tMax;
 };
 
+// GPU register layout for rays
 struct RayReg
 {
-	RayF		ray;
-	float		tMin;
-	float		tMax;
+	RayF						ray;
+	float						tMin;
+	float						tMax;
 
-	/*__device__ __host__*/		RayReg() = default;
+								RayReg() = default;
 	__device__ __host__			RayReg(const RayGMem* mem,
 									   unsigned int loc);
 
@@ -62,8 +64,9 @@ inline void RayReg::Update(RayGMem* mem,
 	mem[loc] = rayGMem;
 }
 
-__device__ __host__ void RayReg::UpdateTMax(RayGMem* mem,
-											unsigned int loc)
+__device__ __host__
+inline void RayReg::UpdateTMax(RayGMem* mem,
+							   unsigned int loc)
 {
 	mem[loc].tMax = tMax;
 }

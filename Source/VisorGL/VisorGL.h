@@ -17,6 +17,9 @@ the VisorGL singleton.
 #include "RayLib/VisorI.h"
 #include "RayLib/VisorInputI.h"
 
+#include "RayLib/MPMCQueue.h"
+#include "RayLib/ThreadData.h"
+
 #include "ShaderGL.h"
 
 // Basic command list implementation
@@ -71,9 +74,8 @@ class VisorGL : public VisorViewI
 		bool						open;
 
 		// Image portion list
-		std::mutex					mutexCommand;
-		std::vector<VisorGLCommand>	commandList;
-		Vector2i					viewportSize;
+		MPMCQueue<VisorGLCommand>	commandList;
+		ThreadData<Vector2i>		viewportSize;
 
 		// Image Texture		
 		GLuint						linearSampler;
@@ -133,9 +135,9 @@ class VisorGL : public VisorViewI
 								~VisorGL();
 		
 		// Interface
-		bool					IsOpen() override;
-		void					Present() override;
+		bool					IsOpen() override;		
 		void					Render() override;
+		void					ProcessInputs() override;
 
 		// Input System
 		void					SetInputScheme(VisorInputI*) override;

@@ -19,24 +19,26 @@
 //}
 
 template <int N, class T>
+template <class C , typename>
 __device__ __host__	
-inline Matrix<N, T>::Matrix(T t)
+inline Matrix<N, T>::Matrix(C t)
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N*N; i++)
 	{
-		matrix[i] = t;
+		matrix[i] = static_cast<C>(t);
 	}
 }
 
 template <int N, class T>
+template <class C, typename>
 __device__ __host__
-inline Matrix<N, T>::Matrix(const T* data)
+inline Matrix<N, T>::Matrix(const C* data)
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N*N; i++)
 	{
-		matrix[i] = data[i];
+		matrix[i] = static_cast<C>(data[i]);
 	}
 }
 

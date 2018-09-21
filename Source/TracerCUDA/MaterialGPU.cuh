@@ -32,105 +32,105 @@ struct HitRecord;
 //};
 
 
-
-
-struct FluidMaterialDeviceData
-{
-	struct RequiredMeshData
-	{
-		Vector3 position;
-		Vector3 normal;
-		Vector3 velocity;
-		float density;
-	};
-
-	// Color Interpolation
-	const Vector3f*				gColor;
-	const float*				gColorInterp;
-	// Opacity Interpolation
-	const float*				gOpacity;
-	const float*				gOpacityInterp;
-	// Transparency
-	const Vector3f				transparency;
-	// Volumetric Parameters
-	const float					absorbtionCoeff;
-	const float					scatteringCoeff;
-	// IoR
-	float						ior;
-
-	//// Bounces rays from records
-	//template <class T>
-	//__device__ void				Bounce(RayRecord outRays[],
-	//								   const HitRecord& inputHit,
-	//								   const RayRecord& inputRay,
-	//								   const RequiredMeshData& dataIn);
-
-	// Loads required material from the Mesh
-	template <class T, class Mesh>
-	__device__ void				FragmentData(T&, const Mesh&);
-
-};
-
-class FluidMaterialGPU : public MaterialI, public FluidMaterialDeviceData
-{
-	private:
-		DeviceMemory					mem;
-
-		uint32_t						materialId;
-
-		// Color Interpolation
-		const std::vector<Vector3f>		color;
-		const std::vector<float>		colorInterp;
-		// Opacity Interpolation
-		const std::vector<float>		opacity;
-		const std::vector<float>		opacityInterp;
-		
-	protected:
-	public:
-		// Constructors & Destructor
-										FluidMaterialGPU(uint32_t materialId,
-														 float indexOfRefraction,
-														 // Color Interpolation
-														 const std::vector<Vector3f>& color,
-														 const std::vector<float>& colorInterp,
-														 // Opacity Interpolation
-														 const std::vector<float>& opacity,
-														 const std::vector<float>& opacityInterp,
-														 // Transparency
-														 Vector3f transparency,
-														 // Volumetric Parameters
-														 float absorbtionCoeff,
-														 float scatteringCoeff);
-										FluidMaterialGPU(const FluidMaterialGPU&) = default;
-										FluidMaterialGPU(FluidMaterialGPU&&) = delete;
-		FluidMaterialGPU&				operator=(const FluidMaterialGPU&) = delete;
-		FluidMaterialGPU&				operator=(FluidMaterialGPU&&) = default;
-		
-		uint32_t						Id() const override;
-
-		void							BounceRays(// Outgoing Rays
-												   RayRecordGMem gOutRays,
-												   // Incoming Rays
-												   const ConstHitRecordGMem gHits,
-												   const ConstRayRecordGMem gRays,
-												   // Limits
-												   uint64_t rayCount,
-												   // Surfaces
-												   const Vector2ui* gSurfaceIndexList,
-												   const void* gSurfaces,
-												   SurfaceType) override;
-		Error							Load() override;
-		void							Unload() override;
-
-
-		// Data Fetch Functions
-		static __device__ void			FetchVolume(Vector3& velocity,
-													Vector3& normal,
-													Vector3& position,
-													float& density,
-													const HitRecord&,
-													const VolumeDeviceData&);
-};
+//
+//
+//struct FluidMaterialDeviceData
+//{
+//	struct RequiredMeshData
+//	{
+//		Vector3 position;
+//		Vector3 normal;
+//		Vector3 velocity;
+//		float density;
+//	};
+//
+//	// Color Interpolation
+//	const Vector3f*				gColor;
+//	const float*				gColorInterp;
+//	// Opacity Interpolation
+//	const float*				gOpacity;
+//	const float*				gOpacityInterp;
+//	// Transparency
+//	const Vector3f				transparency;
+//	// Volumetric Parameters
+//	const float					absorbtionCoeff;
+//	const float					scatteringCoeff;
+//	// IoR
+//	float						ior;
+//
+//	//// Bounces rays from records
+//	//template <class T>
+//	//__device__ void				Bounce(RayRecord outRays[],
+//	//								   const HitRecord& inputHit,
+//	//								   const RayRecord& inputRay,
+//	//								   const RequiredMeshData& dataIn);
+//
+//	// Loads required material from the Mesh
+//	template <class T, class Mesh>
+//	__device__ void				FragmentData(T&, const Mesh&);
+//
+//};
+//
+//class FluidMaterialGPU : public MaterialI, public FluidMaterialDeviceData
+//{
+//	private:
+//		DeviceMemory					mem;
+//
+//		uint32_t						materialId;
+//
+//		// Color Interpolation
+//		const std::vector<Vector3f>		color;
+//		const std::vector<float>		colorInterp;
+//		// Opacity Interpolation
+//		const std::vector<float>		opacity;
+//		const std::vector<float>		opacityInterp;
+//		
+//	protected:
+//	public:
+//		// Constructors & Destructor
+//										FluidMaterialGPU(uint32_t materialId,
+//														 float indexOfRefraction,
+//														 // Color Interpolation
+//														 const std::vector<Vector3f>& color,
+//														 const std::vector<float>& colorInterp,
+//														 // Opacity Interpolation
+//														 const std::vector<float>& opacity,
+//														 const std::vector<float>& opacityInterp,
+//														 // Transparency
+//														 Vector3f transparency,
+//														 // Volumetric Parameters
+//														 float absorbtionCoeff,
+//														 float scatteringCoeff);
+//										FluidMaterialGPU(const FluidMaterialGPU&) = default;
+//										FluidMaterialGPU(FluidMaterialGPU&&) = delete;
+//		FluidMaterialGPU&				operator=(const FluidMaterialGPU&) = delete;
+//		FluidMaterialGPU&				operator=(FluidMaterialGPU&&) = default;
+//		
+//		uint32_t						Id() const override;
+//
+//		void							BounceRays(// Outgoing Rays
+//												   RayRecordGMem gOutRays,
+//												   // Incoming Rays
+//												   const ConstHitRecordGMem gHits,
+//												   const ConstRayRecordGMem gRays,
+//												   // Limits
+//												   uint64_t rayCount,
+//												   // Surfaces
+//												   const Vector2ui* gSurfaceIndexList,
+//												   const void* gSurfaces,
+//												   SurfaceType) override;
+//		Error							Load() override;
+//		void							Unload() override;
+//
+//
+//		// Data Fetch Functions
+//		static __device__ void			FetchVolume(Vector3& velocity,
+//													Vector3& normal,
+//													Vector3& position,
+//													float& density,
+//													const HitRecord&,
+//													const VolumeDeviceData&);
+//};
 
 //template <class DataFetchFunc, class T>
 //__device__
@@ -226,56 +226,56 @@ class FluidMaterialGPU : public MaterialI, public FluidMaterialDeviceData
 //	}
 //}
 
-__device__
-inline void FluidMaterialGPU::FetchVolume(Vector3& velocity,
-										  Vector3& normal,
-										  Vector3& position,
-										  float& density,
-										  const HitRecord& record,
-										  const VolumeDeviceData& volume)
-{
-	//// Trilinear Interp
-	//Vector3f integral, fraction;
-	//fraction[0] = modff(record.baryCoord[0], &(integral[0]));
-	//fraction[1] = modff(record.baryCoord[1], &(integral[1]));
-	//fraction[2] = modff(record.baryCoord[2], &(integral[2]));
-	//Vector3ui index = static_cast<Vector3ui>(integral);
-
-	//Vector4f data[8];
-	//normal = Zero3;
-
-	//// Position Generation
-	////TODO:
-
-
-	//UNROLL_LOOP
-	//for(int i = 0; i < 8; i++)
-	//{
-	//	Vector3ui offset((i >> 0) & 0x1,
-	//					 (i >> 1) & 0x1,
-	//					 (i >> 2) & 0x1);
-	//	Vector3ui neighbourIndex = index + offset;
-
-	//	data[i] = volume.data[volume.LinearIndex(neighbourIndex)];
-
-	//	float density = data[i][3];
-	//	normal += (static_cast<Vector3f>(offset) * Vector3f(2.0f) - Vector3f(1.0f)) * density;
-	//}
-
-	//// Interpolate velocity & Density
-	//data[0] = Vector4f::Lerp(data[0], data[1], fraction[0]);
-	//data[1] = Vector4f::Lerp(data[2], data[3], fraction[0]);
-	//data[2] = Vector4f::Lerp(data[4], data[5], fraction[0]);
-	//data[3] = Vector4f::Lerp(data[6], data[7], fraction[0]);
-
-	//data[0] = Vector4f::Lerp(data[0], data[1], fraction[1]);
-	//data[1] = Vector4f::Lerp(data[2], data[3], fraction[1]);
-
-	//data[0] = Vector4f::Lerp(data[0], data[1], fraction[2]);
-
-
-	//// Out
-	//velocity = Vector3(data[0][0], data[0][1], data[0][2]);
-	//density = data[0][3];
-	//normal = -normal;
-}
+//__device__
+//inline void FluidMaterialGPU::FetchVolume(Vector3& velocity,
+//										  Vector3& normal,
+//										  Vector3& position,
+//										  float& density,
+//										  const HitRecord& record,
+//										  const VolumeDeviceData& volume)
+//{
+//	//// Trilinear Interp
+//	//Vector3f integral, fraction;
+//	//fraction[0] = modff(record.baryCoord[0], &(integral[0]));
+//	//fraction[1] = modff(record.baryCoord[1], &(integral[1]));
+//	//fraction[2] = modff(record.baryCoord[2], &(integral[2]));
+//	//Vector3ui index = static_cast<Vector3ui>(integral);
+//
+//	//Vector4f data[8];
+//	//normal = Zero3;
+//
+//	//// Position Generation
+//	////TODO:
+//
+//
+//	//UNROLL_LOOP
+//	//for(int i = 0; i < 8; i++)
+//	//{
+//	//	Vector3ui offset((i >> 0) & 0x1,
+//	//					 (i >> 1) & 0x1,
+//	//					 (i >> 2) & 0x1);
+//	//	Vector3ui neighbourIndex = index + offset;
+//
+//	//	data[i] = volume.data[volume.LinearIndex(neighbourIndex)];
+//
+//	//	float density = data[i][3];
+//	//	normal += (static_cast<Vector3f>(offset) * Vector3f(2.0f) - Vector3f(1.0f)) * density;
+//	//}
+//
+//	//// Interpolate velocity & Density
+//	//data[0] = Vector4f::Lerp(data[0], data[1], fraction[0]);
+//	//data[1] = Vector4f::Lerp(data[2], data[3], fraction[0]);
+//	//data[2] = Vector4f::Lerp(data[4], data[5], fraction[0]);
+//	//data[3] = Vector4f::Lerp(data[6], data[7], fraction[0]);
+//
+//	//data[0] = Vector4f::Lerp(data[0], data[1], fraction[1]);
+//	//data[1] = Vector4f::Lerp(data[2], data[3], fraction[1]);
+//
+//	//data[0] = Vector4f::Lerp(data[0], data[1], fraction[2]);
+//
+//
+//	//// Out
+//	//velocity = Vector3(data[0][0], data[0][1], data[0][2]);
+//	//density = data[0][3];
+//	//normal = -normal;
+//}

@@ -1,10 +1,25 @@
-#include "CameraKernels.cuh"
+#pragma once
+
+/**
+
+Camera Ray Generation Kernel
+
+*/
+
+#include <cstdint>
+#include <cuda_runtime.h>
+
+#include "RayLib/Vector.h"
 #include "RayLib/Camera.h"
-//#include "RayLib/RayHitStructs.h"
+#include "RayLib/RayStructs.h"
+
 #include "RayLib/Random.cuh"
 
-__global__ void KCGenerateCameraRays(//RayRecordGMem gRays,
-									 RandomStackGMem gRand,
+template<class RayAux>
+__global__ void KCGenerateCameraRays(RayGMem* gRays,
+
+									 // Input
+									 RNGGMem gRNGStates,
 									 const CameraPerspective cam,
 									 const uint32_t samplePerPixel,
 									 const Vector2ui resolution,
@@ -12,8 +27,8 @@ __global__ void KCGenerateCameraRays(//RayRecordGMem gRays,
 									 const Vector2ui pixelCount)
 {
 	extern __shared__ uint32_t sRandState[];
-	RandomGPU rng(gRand.state, sRandState);
-	
+	RandomGPU rng(gRNGStates.state, sRandState);
+
 	// Total work
 	const uint32_t totalWorkCount = pixelCount[0] * pixelCount[1] * samplePerPixel * samplePerPixel;
 
@@ -33,16 +48,16 @@ __global__ void KCGenerateCameraRays(//RayRecordGMem gRays,
 
 	// Camera parameters
 	Vector3 topLeft = cam.position
-						- right *  widthHalf
-						+ up * heightHalf
-						+ gaze * cam.nearPlane;
+		- right *  widthHalf
+		+ up * heightHalf
+		+ gaze * cam.nearPlane;
 	Vector3 pos = cam.position;
 
 	// Kernel Grid-Stride Loop
 	for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
 		threadId < totalWorkCount;
 		threadId += (blockDim.x * gridDim.x))
-	{		
+	{
 		Vector2ui threadId2d = Vector2ui(threadId % (pixelCount[0] * samplePerPixel),
 										 threadId / (pixelCount[0] * samplePerPixel));
 		Vector2ui globalSampleId = (pixelStart * samplePerPixel) + threadId2d;
@@ -57,10 +72,9 @@ __global__ void KCGenerateCameraRays(//RayRecordGMem gRays,
 		// Ray's world position over canvas
 		Vector2 sampleDistance = Vector2(static_cast<float>(globalSampleId[0]),
 										 static_cast<float>(globalSampleId[1])) * delta;
-		Vector3 sampleTopLeft = topLeft + (sampleDistance[0] * right)
-										- (sampleDistance[1] * up);		
-		Vector3 samplePoint = sampleTopLeft + randomOffset * delta;
-		
+		Vector2 samplePointDistance = sampleDistance + randomOffset * delta;
+		Vector3 samplePoint = topLeft + (samplePointDistance[0] * right) - (samplePointDistance[1] * up);
+	
 
 		// Generate Required Parameters
 		Vector2ui localPixelId = globalPixelId - pixelStart;
@@ -77,5 +91,5 @@ __global__ void KCGenerateCameraRays(//RayRecordGMem gRays,
 		//gRays.radAndSampId[threadId] = radAndSamp;
 	}
 
-	
+
 }

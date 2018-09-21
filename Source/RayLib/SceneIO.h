@@ -82,7 +82,7 @@ struct SceneFile
 		static constexpr const char*		TVolumeFile = "file";
 
 		// Volume Type Strings
-		static constexpr const char*		VolumeTypes[VolumeTypeSize] = {"maya_ncache_fluid"};
+//		static constexpr const char*		VolumeTypes[VolumeTypeSize] = {"maya_ncache_fluid"};
 	
 	private:
 		void								Clean();

@@ -85,7 +85,7 @@ int main(int argc, const char* argv[])
 	}
 
 	// Self Distributor
-	SelfDistributor selfDistributor;
+	//SelfDistributor selfDistributor;
 	// Create Cuda Tracer
 	auto tracerI = CreateTracerCUDA();
 
@@ -109,23 +109,28 @@ int main(int argc, const char* argv[])
 	tracer.ChangeImageSegment(Vector2ui(0, 0), Vector2ui(1920, 1080));
 	tracer.ChangeParams(TracerParameters{10});
 	tracer.ChangeCamera(cam);
-	tracer.Start(selfDistributor);
+	tracer.Start();
 
 	// Visor Input
-	VisorWindowInput input(1.0, 1.0, 2.0, selfDistributor);
+	//VisorWindowInput input(1.0, 1.0, 2.0, selfDistributor);
+
+	VisorOptions opts;
+	opts.iFormat = PixelFormat::RGBA_FLOAT;
+	opts.iSize = {1280, 720};
+	opts.stereoOn = false;
 
 	// Window Loop
-	auto visorView = CreateVisorGL();
-	visorView->ResetImageBuffer({1280, 720}, PixelFormat::RGB32_UNORM);
+	auto visorView = CreateVisorGL(opts);
+	visorView->ResetImageBuffer({1280, 720}, PixelFormat::RGBA_FLOAT);
+	//visorView->SetInputScheme(&input);
+
 	// Main Poll Loop
 	while(visorView->IsOpen())
 	{
-		// Do Stuff
-		//...
-
+		visorView->Render();
 
 		// Present Back Buffer
-		//visorView->Present();
+		visorView->ProcessInputs();
 	}
 	tracer.Stop();
 	return 0;

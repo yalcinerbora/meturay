@@ -14,6 +14,10 @@ N should be 2, 3, 4 at most.
 #include "Vector.h"
 #include "Quaternion.h"
 
+
+template<int N, class T, class... Args>
+using AllVectorEnable = typename std::enable_if<std::conjunction<std::is_same<Vector<N, T>, Args>...>::value>::type;
+
 template<int N, class T, typename = ArithmeticEnable<T>>
 class Matrix;
 
@@ -29,8 +33,10 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
 	public:
 		// Constructors & Destructor
 		constexpr							Matrix() = default;
-		__device__ __host__					Matrix(T);
-		__device__ __host__					Matrix(const T* data);
+		template <class C, typename = ArithmeticEnable<C>>
+		__device__ __host__					Matrix(C);
+		template <class C, typename = ArithmeticEnable<C>>
+		__device__ __host__					Matrix(const C* data);
 		template <class... Args, typename = AllArithmeticEnable<Args...>>
 		constexpr __device__ __host__		Matrix(const Args... dataList);
 		__device__ __host__					Matrix(const Vector<N,T> columns[]);

@@ -24,8 +24,8 @@ TEST(VectorCPU, Construction)
 	
 	
 	//
-	Vector4 vec5(vecAssign0);
-	Vector4 vec6(vecAssign1);
+	Vector2 vec5(vecAssign1);
+	Vector2 vec6(vecAssign2);
 	
 	// Copy Constructor (default)
 	Vector4 vec7(vecAssign2);
@@ -57,11 +57,11 @@ TEST(VectorCPU, Construction)
 
 
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(vec5),
-								   static_cast<const float*>(vec5) + 4),
-				ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(0.0f), FloatEq(0.0f)));
+								   static_cast<const float*>(vec5) + 2),
+				ElementsAre(FloatEq(1.0f), FloatEq(2.0f)));
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(vec6),
-								   static_cast<const float*>(vec6) + 4),
-				ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(3.0f), FloatEq(0.0f)));
+								   static_cast<const float*>(vec6) + 2),
+				ElementsAre(FloatEq(1.0f), FloatEq(2.0f)));
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(vec7),
 								   static_cast<const float*>(vec7) + 4),
 				ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(3.0f), FloatEq(4.0f)));

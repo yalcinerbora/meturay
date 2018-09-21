@@ -3,6 +3,8 @@
 #include <map>
 #include <cassert>
 
+VisorGL* VisorGL::instance = nullptr;
+
 KeyAction VisorGL::DetermineAction(int action)
 {
 	if(action == GLFW_PRESS)
@@ -397,7 +399,11 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
 void VisorGL::RenderImage()
 {
 	// Clear
-	glViewport(0, 0, viewportSize[0], viewportSize[1]);
+	Vector2i size;
+	if(viewportSize.CheckChanged(size))
+	{
+		glViewport(0, 0, size[0], size[1]);
+	}
 	glClear(GL_COLOR_BUFFER_BIT);
 	// Draw
 	glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -407,14 +413,16 @@ VisorGL::VisorGL(const VisorOptions& opts)
 	: input(nullptr)
 	, window(nullptr)
 	, open(false)
+	, commandList(opts.eventBufferSize)
 {
-	instance = this;
-
+	if(instance != nullptr) return;
+	
 	if(!glfwInit())
 	{
 		METU_ERROR_LOG("Could not Init GLFW");
 		assert(false);
 	}
+
 	glfwSetErrorCallback(ErrorCallbackGLFW);
 
 	// Common Window Hints
@@ -561,7 +569,6 @@ VisorGL::VisorGL(const VisorOptions& opts)
 	// Bind VAO
 	glBindVertexArray(vao);
 
-
 	// Finally Show Window
 	glfwShowWindow(window);
 	open = true;
@@ -585,7 +592,7 @@ bool VisorGL::IsOpen()
 	return open;
 }
 
-void VisorGL::Present()
+void VisorGL::ProcessInputs()
 {
 	glfwSwapBuffers(window);
 	glfwPollEvents();
@@ -596,24 +603,23 @@ void VisorGL::Render()
 	// Consume commands
 	// TODO: optimize this skip multiple reset commands
 	// just process the last and other commands afterwards
-	while(!commandList.empty())
+
+	VisorGLCommand command;
+	while(commandList.TryDequeue(command))
 	{
-		VisorGLCommand c;
-		{
-			std::unique_lock<std::mutex> lock(mutexCommand);
-			c = std::move(commandList.back());
-			commandList.pop_back();
-		}
-		ProcessCommand(c);
+		ProcessCommand(command);
 	}
 
 	// Render Image
 	RenderImage();
+
+	// Swap Buffer
+	glfwSwapBuffers(window);
 }
 
-void VisorGL::SetInputScheme(VisorInputI* input)
+void VisorGL::SetInputScheme(VisorInputI* i)
 {
-	// TODO:
+	input = i;
 }
 
 void VisorGL::ResetImageBuffer(const Vector2i& imageSize, PixelFormat f)
@@ -622,10 +628,8 @@ void VisorGL::ResetImageBuffer(const Vector2i& imageSize, PixelFormat f)
 	command.type = VisorGLCommand::RESET_IMAGE;
 	command.format = f;
 	command.startOrSize = imageSize;
-	{
-		std::unique_lock<std::mutex> lock(mutexCommand);
-		commandList.push_back(command);
-	}
+
+	commandList.Enqueue(std::move(command));
 }
 
 void VisorGL::SetImagePortion(const Vector2i& start,
@@ -638,10 +642,8 @@ void VisorGL::SetImagePortion(const Vector2i& start,
 	command.startOrSize = start;
 	command.end = end;
 	command.data = std::move(data);
-	{
-		std::unique_lock<std::mutex> lock(mutexCommand);
-		commandList.push_back(command);
-	}
+	
+	commandList.Enqueue(std::move(command));
 }
 
 void VisorGL::SetWindowSize(const Vector2i& size)

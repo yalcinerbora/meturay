@@ -16,7 +16,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\HitKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MeshGPU.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ObjAcceleratorBatchI.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\CameraKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneAcceleratorBVH.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneAcceleratorI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneGPU.h" />
@@ -25,9 +24,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDA.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDAEntry.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\VolumeGPU.cuh" />
-  </ItemGroup>
-  <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\CameraKernels.cu" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\MaterialGPU.cu" />

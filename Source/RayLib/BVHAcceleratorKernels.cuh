@@ -9,19 +9,37 @@ with custom Intersection and Hit acceptance
 #include "RayStructs.h"
 #include "AABB.h"
 
+// Intersection function is used to determine if a leaf node data;
+// which is custom, is intersects with ray. Returns valid float if such hit exists
+// return NAN otherwise.
+// Primitive data is custom structure that holds gpu pointers or static data globally
+// Leaf struct is custom structure that holds in the leaf.
+// User then can determine outcome using both.
+//
+// (i.e. leafStruct holds triangle index and primitive index, Primitive data holds triangles
+// of multiple primitives)
+//
+// (i.e. leafStruct holds parameters for a sphere with necessary inverse transformation, Primitive
+// data holds nothing at all)
+// etc.
 template <class LeafStruct, class PrimitiveData>
 __device__ float(*IntersctionFunc)(const RayReg& r,
 								   const LeafStruct& data,
 								   const PrimitiveData& gPrimData);
 
+// Accept hit function is used to update hit structure of the ray
+// It returns immidiate termination if necessary (i.e. when any hit is enough like
+// in volume rendering).
 template <class HitStruct>
 __device__  bool (*AcceptHitFunc)(HitStruct& data, 
 								  RayReg& r, 
 								  float newT);
 
+// Custom bounding box generation function for primitive
 template <class PrimitiveData>
 __device__  AABB3f(*BoxGenFunc)(uint32_t primitiveId, const PrimitiveData&);
 
+// Surface area generation function for primitive
 template <class PrimitiveData>
 __device__  float(*AreaGenFunc)(uint32_t primitiveId, const PrimitiveData&);
 
@@ -262,13 +280,18 @@ __global__ void KCGenerateParitalDataBVH(AABB3f* gSubAABBs,
 template <class LeafStruct, class PrimitiveData>
 __global__ void KCGenerateBVH(BVHNode<LeafStruct>* gBVHList,
 							  //
-							  const uint32_t* gPrimId,
+							  const uint32_t* gPrimId,							  
+							  const uint64_t* gMortonCodes,
+
 							  const uint32_t subPrimtiveCount)
 {
+	uint32_t internalNodeCount = subPrimtiveCount - 1;
+
 	// Grid Stride Loop
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-		globalId < subPrimtiveCount; i += blockDim.x * gridDim.x)
+		globalId < internalNodeCount; i += blockDim.x * gridDim.x)
 	{
+		// Binary Search
 
 
 	}

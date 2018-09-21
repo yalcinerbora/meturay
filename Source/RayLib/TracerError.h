@@ -1,21 +1,46 @@
 #pragma once
+/**
 
-enum class TracerError
+Tracer error "Enumeration"
+
+*/
+
+#include "Error.h"
+
+struct TracerError : public ErrorI
 {
-	OK,
-	// General
-	OUT_OF_MEMORY,
-	// ...
+	public:
+		enum Type
+		{
+			OK,
+			// General
+			OUT_OF_MEMORY,
+			// ...
 
 
 
-	// End
-	END
+			// End
+			END
+		};
+
+	private:
+		Type			 type;
+
+	public:
+		// Constructors & Destructor 
+					TracerError(Type);
+					~TracerError() = default;
+
+		operator	std::string() const override;
 };
 
-static constexpr const char* GetTracerErrorErrorString(TracerError e)
+inline TracerError::TracerError(TracerError::Type t)
+	: type(t)
+{}
+
+inline TracerError::operator std::string() const
 {
-	constexpr const char* ErrorStrings[] =
+	const char* const ErrorStrings[] =
 	{
 		"OK.",
 		// General
@@ -24,5 +49,5 @@ static constexpr const char* GetTracerErrorErrorString(TracerError e)
 	static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(TracerError::END),
 				  "Enum and enum string list size mismatch.");
 
-	return ErrorStrings[static_cast<int>(e)];
+	return ErrorStrings[static_cast<int>(type)];
 }

@@ -82,8 +82,8 @@ __global__ void KConstruction(Vector4* results)
 	Vector4 vec4(dataArrayLarge);
 
 	//
-	Vector4 vec5(vecAssign0);
-	Vector4 vec6(vecAssign1);
+	Vector2 vec5(vecAssign1);
+	Vector2 vec6(vecAssign2);
 
 	// Copy Constructor (default)
 	Vector4 vec7(vecAssign2);
@@ -101,8 +101,8 @@ __global__ void KConstruction(Vector4* results)
 	results[2] = vec2;
 	results[3] = vec3;
 	results[4] = vec4;
-	results[5] = vec5;
-	results[6] = vec6;
+	results[5] = Vector4(vec5, 0.0f, 0.0f);
+	results[6] = Vector4(vec6, 0.0f, 0.0f);
 	results[7] = vec7;
 	results[8] = vec8;
 	results[9] = vec9;
@@ -330,12 +330,12 @@ TEST(VectorGPU, Construction)
 				ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(3.0f), FloatEq(4.0f)));
 
 
-	EXPECT_THAT(std::vector<float>(static_cast<const float*>(h_data[5]),
-								   static_cast<const float*>(h_data[5]) + 4),
-				ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(0.0f), FloatEq(0.0f)));
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(h_data[5]), 
+								   static_cast<const float*>(h_data[5]) + 2),
+				ElementsAre(FloatEq(1.0f), FloatEq(2.0f)));
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(h_data[6]),
-								   static_cast<const float*>(h_data[6]) + 4),
-				ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(3.0f), FloatEq(0.0f)));
+								   static_cast<const float*>(h_data[6]) + 2),
+				ElementsAre(FloatEq(1.0f), FloatEq(2.0f)));
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(h_data[7]),
 								   static_cast<const float*>(h_data[7]) + 4),
 				ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(3.0f), FloatEq(4.0f)));

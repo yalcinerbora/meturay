@@ -12,24 +12,26 @@
 //}
 
 template <int N, class T>
+template<class C, typename>
 __device__ __host__
-inline Vector<N, T>::Vector(T data)
+inline Vector<N, T>::Vector(C data)
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		vector[i] = data;
+		vector[i] = static_cast<T>(data);
 	}
 }
 
 template <int N, class T>
+template<class C, typename>
 __device__ __host__
-inline Vector<N, T>::Vector(const T* data)
+inline Vector<N, T>::Vector(const C* data)
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		vector[i] = data[i];
+		vector[i] = static_cast<T>(data[i]);
 	}
 }
 
@@ -40,7 +42,7 @@ inline constexpr Vector<N, T>::Vector(const Args... dataList)
 	: vector{static_cast<T>(dataList) ...}
 {
 	static_assert(sizeof...(dataList) == N, "Vector constructor should have exact "
-											"same count of template count "
+											"same template count "
 											"as arguments");
 }
 
@@ -68,20 +70,15 @@ inline Vector<N, T>::Vector(const Vector<N - sizeof...(Args), T>& v,
 }
 
 template <int N, class T>
-template <int M>
+template <int M, typename>
 __device__ __host__
 inline Vector<N, T>::Vector(const Vector<M, T>& other)
 {
-	static_assert(M < N, "Cannot copy large vector into small vector");
+	static_assert(M > N, "enable_if sanity check.");
 	UNROLL_LOOP
-	for(int i = 0; i < M; i++)
+	for(int i = 0; i < N; i++)
 	{
 		vector[i] = other[i];
-	}
-	UNROLL_LOOP
-	for(int i = M; i < N; i++)
-	{
-		vector[i] = 0.0f;
 	}
 }
 
@@ -100,12 +97,12 @@ inline Vector<N, T>::operator const T*() const
 }
 
 template <int N, class T>
-template<class C>
-inline Vector<N, T>::operator Vector<N, C>() const
+template<int M, class C, typename>
+inline Vector<N, T>::operator Vector<M, C>() const
 {
-	Vector<N, C> result;
+	Vector<M, C> result;
 	UNROLL_LOOP
-	for(int i = 0; i < N; i++)
+	for(int i = 0; i < M; i++)
 	{
 		result[i] = static_cast<C>(vector[i]);
 	}
@@ -690,11 +687,12 @@ inline Vector<N, T> operator*(T left, const Vector<N, T>& vec)
 }
 
 // Cross product (only for 3d vectors)
+template<class T>
 __device__ __host__
-inline Vector3 Cross(const Vector3& v0, const Vector3& v1)
+inline Vector<3, T> Cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
 {
-	Vector3 result(v0[1] * v1[2] - v0[2] * v1[1],
-				   v0[2] * v1[0] - v0[0] * v1[2],
-				   v0[0] * v1[1] - v0[1] * v1[0]);
+	Vector<3, T> result(v0[1] * v1[2] - v0[2] * v1[1],
+						v0[2] * v1[0] - v0[0] * v1[2],
+						v0[0] * v1[1] - v0[1] * v1[0]);
 	return result;
 }

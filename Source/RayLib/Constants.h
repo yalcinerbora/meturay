@@ -21,10 +21,10 @@ namespace MathConstants
 
 	static constexpr double Epsilon_d = 0.00001;
 
-	static constexpr float PI = static_cast<float>(Pi_d);
-	static constexpr float PISqr = static_cast<float>(PiSqr_d);
-	static constexpr float InvPI = static_cast<float>(InvPi_d);
-	static constexpr float InvPISqr = static_cast<float>(InvPiSqr_d);
+	static constexpr float Pi = static_cast<float>(Pi_d);
+	static constexpr float PiSqr = static_cast<float>(PiSqr_d);
+	static constexpr float InvPi = static_cast<float>(InvPi_d);
+	static constexpr float InvPiSqr = static_cast<float>(InvPiSqr_d);
 	static constexpr float Sqrt2 = static_cast<float>(Sqrt2_d);
 	static constexpr float Sqrt3 = static_cast<float>(Sqrt3_d);
 	static constexpr float E = static_cast<float>(E_d);

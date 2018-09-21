@@ -12,7 +12,7 @@ Implementation of Warp Std Generator
 #include <cuda_runtime.h>
 #include "CudaConstants.h"
 #include "Vector.h"
-#include "RandomStructs.h"
+#include "RNGStructs.h"
 
 #define GLOBAL_ID_X (threadIdx.x + blockDim.x * blockIdx.x)
 #define GLOBAL_ID_Y (threadIdx.y + blockDim.y * blockIdx.y)

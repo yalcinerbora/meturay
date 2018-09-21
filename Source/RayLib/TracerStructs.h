@@ -9,6 +9,7 @@ Structures that is related to TracerI
 
 struct TracerParameters
 {
-	uint32_t depth;
+	uint32_t		depth;
+	uint32_t		sampleCount;
 };
 

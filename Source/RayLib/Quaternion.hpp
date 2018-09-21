@@ -10,19 +10,19 @@
 
 template<class T>
 __device__ __host__
-inline constexpr Quaternion<T>::Quaternion(float w, float x, float y, float z)
+inline constexpr Quaternion<T>::Quaternion(T w, T x, T y, T z)
 	: vec(w, x, y, z)
 {}
 
 template<class T>
 __device__ __host__
-inline constexpr Quaternion<T>::Quaternion(const float* v)
+inline constexpr Quaternion<T>::Quaternion(const T* v)
 	: vec(v)
 {}
 
 template<class T>
 __device__ __host__ 
-inline Quaternion<T>::Quaternion(float angle, const Vector3& axis)
+inline Quaternion<T>::Quaternion(T angle, const Vector<3, T>& axis)
 {
 	angle *= 0.5;
 	T sinAngle = std::sin(angle);
@@ -34,31 +34,36 @@ inline Quaternion<T>::Quaternion(float angle, const Vector3& axis)
 }
 
 template<class T>
+inline __device__ __host__ Quaternion<T>::Quaternion(const Vector<4, T>& vec)
+	: vec(vec)
+{}
+
+template<class T>
 __device__ __host__	
-inline Quaternion<T>::operator Vector4&()
+inline Quaternion<T>::operator Vector<4, T>&()
 {
 	return vec;
 }
 
 template<class T>
 __device__ __host__	
-inline Quaternion<T>::operator const Vector4&() const
+inline Quaternion<T>::operator const Vector<4, T>&() const
 {
 	return vec;
 }
 
 template<class T>
 __device__ __host__	
-inline Quaternion<T>::operator float*()
+inline Quaternion<T>::operator T*()
 {
-	return static_cast<float*>(vec);
+	return static_cast<T*>(vec);
 }
 
 template<class T>
 __device__ __host__	
-inline Quaternion<T>::operator const float*() const
+inline Quaternion<T>::operator const T*() const
 {
-	return static_cast<const float*>(vec);
+	return static_cast<const T*>(vec);
 }
 
 template<class T>
@@ -87,9 +92,9 @@ inline Quaternion<T> Quaternion<T>::operator*(const Quaternion& right) const
 
 template<class T>
 __device__ __host__ 
-inline Quaternion<T> Quaternion<T>::operator*(float right) const
+inline Quaternion<T> Quaternion<T>::operator*(T right) const
 {
-	return Quaternion(vec * t);
+	return Quaternion<T>(vec * right);
 }
 
 template<class T>
@@ -115,9 +120,9 @@ inline Quaternion<T> Quaternion<T>::operator-() const
 
 template<class T>
 __device__ __host__ 
-inline Quaternion<T> Quaternion<T>::operator/(float right) const
+inline Quaternion<T> Quaternion<T>::operator/(T right) const
 {
-	return Quaternion(vec / right);
+	return Quaternion<T>(vec / right);
 }
 
 template<class T>
@@ -130,7 +135,7 @@ inline void Quaternion<T>::operator*=(const Quaternion& right)
 
 template<class T>
 __device__ __host__ 
-inline void Quaternion<T>::operator*=(float right)
+inline void Quaternion<T>::operator*=(T right)
 {
 	vec *= right;
 }
@@ -139,19 +144,19 @@ template<class T>
 __device__ __host__ 
 inline void Quaternion<T>::operator+=(const Quaternion& right)
 {
-	vec += right;
+	vec += right.vec;
 }
 
 template<class T>
 __device__ __host__ 
 inline void Quaternion<T>::operator-=(const Quaternion& right)
 {
-	vec -= right;
+	vec -= right.vec;
 }
 
 template<class T>
 __device__ __host__ 
-inline void Quaternion<T>::operator/=(float right)
+inline void Quaternion<T>::operator/=(T right)
 {
 	vec /= right;
 }
@@ -182,6 +187,7 @@ __device__ __host__
 inline Quaternion<T>& Quaternion<T>::NormalizeSelf()
 {
 	vec.NormalizeSelf();
+	return *this;
 }
 
 template<class T>
@@ -217,9 +223,9 @@ inline Quaternion<T>& Quaternion<T>::ConjugateSelf()
 
 template<class T>
 __device__ __host__ 
-inline T Quaternion<T>::DotProduct(const Quaternion& right) const
+inline T Quaternion<T>::Dot(const Quaternion& right) const
 {
-	vec.Dot(right.vec);
+	return vec.Dot(right.vec);
 }
 
 template<class T>
@@ -237,31 +243,30 @@ inline Vector<3, T> Quaternion<T>::ApplyRotation(const Vector<3, T>& vector) con
 
 template<class T>
 __device__ __host__ 
-inline Quaternion<T> Quaternion<T>::NLerp(const Quaternion& start, const Quaternion& end, float t)
+inline Quaternion<T> Quaternion<T>::NLerp(const Quaternion& start, const Quaternion& end, T t)
 {
 	return (start + t * (end - start));// .Normalize();
 }
 
 template<class T>
 __device__ __host__ 
-inline Quaternion<T> Quaternion<T>::SLerp(const Quaternion& start, const Quaternion& end, float t)
+inline Quaternion<T> Quaternion<T>::SLerp(const Quaternion& start, const Quaternion& end, T t)
 {
-	float cosTetha = start.DotProduct(end);
+	T cosTetha = start.Dot(end);
 	// SLerp
-	float angle = std::acos(cosTetha);
-	return (start * std::sin(angle * (1.0f - t)) + end * std::sin(angle * t)) 
-		/ std::sin(angle);
+	T angle = std::acos(cosTetha);
+	return (start * std::sin(angle * (1.0f - t)) + end * std::sin(angle * t)) / std::sin(angle);
 }
 
 template<class T>
 __device__ __host__ 
 inline Quaternion<T> Quaternion<T>::RotationBetween(const Vector<3,T>& a, const Vector<3,T>& b)
 {
-	Vector3 aCrossB = a.Cross(b);
-	float aDotB = a.Dot(b);
-	if(aCrossB != Zero3)
+	Vector<3, T> aCrossB = Cross(a, b);
+	T aDotB = a.Dot(b);
+	if(aCrossB != Vector<3, T>(static_cast<T>(0)))
 		aCrossB.NormalizeSelf();
-	return Quaternion(std::acos(aDotB), aCrossB);
+	return Quaternion<T>(std::acos(aDotB), aCrossB);
 }
 
 template<class T>
@@ -269,26 +274,27 @@ __device__ __host__
 inline Quaternion<T> Quaternion<T>::RotationBetweenZAxis(const Vector<3, T>& b)
 {
 	Vector<3, T> zCrossD(-b[1], b[0], 0.0f);
-	float zDotD = b[2];
+	T zDotD = b[2];
 
 	// Half angle teorem
-	float sin = std::sqrt((1.0f - zDotD) * 0.5f);
-	float cos = std::sqrt((zDotD + 1.0f) * 0.5f);
+	T sin = std::sqrt((1.0f - zDotD) * 0.5f);
+	T cos = std::sqrt((zDotD + 1.0f) * 0.5f);
 
 	zCrossD.NormalizeSelf();
-	float x = zCrossD[0] * sin;
-	float y = zCrossD[1] * sin;
-	float z = zCrossD[2] * sin;
-	float w = cos;
+	T x = zCrossD[0] * sin;
+	T y = zCrossD[1] * sin;
+	T z = zCrossD[2] * sin;
+	T w = cos;
 	if(std::abs(zDotD + 1.0f) < MathConstants::Epsilon)
 	{
-		return Quaternion(MathConstants::PI, Vector<3, T>::YAxis);
+		return Quaternion(static_cast<T>(MathConstants::Pi_d), 
+						  Vector<3,T>(0, 1, 0));
 	}
 	return Quaternion(w, x, y, z);
 }
 
 template<class T>
-static __device__ __host__ Quaternion<T> operator*(float t, const Quaternion<T>& q)
+static __device__ __host__ Quaternion<T> operator*(T t, const Quaternion<T>& q)
 {
 	return q * t;
 }

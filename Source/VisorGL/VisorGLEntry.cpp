@@ -1,7 +1,7 @@
 #include "VisorGLEntry.h"
 #include "VisorGL.h"
 
-METU_SHARED_VISORGL_ENTRY_POINT std::unique_ptr<VisorViewI> CreateVisorGL()
+METU_SHARED_VISORGL_ENTRY_POINT std::unique_ptr<VisorViewI> CreateVisorGL(const VisorOptions& opts)
 {
-	return std::make_unique<VisorGL>();
+	return std::make_unique<VisorGL>(opts);
 }

@@ -58,35 +58,35 @@
 //	}
 //}
 
-FluidMaterialGPU::FluidMaterialGPU(uint32_t materialId,
-								   float indexOfRefraction,
-								   // Color Interpolation
-								   const std::vector<Vector3f>& color,
-								   const std::vector<float>& colorInterp,
-								   // Opacity Interpolation
-								   const std::vector<float>& opacity,
-								   const std::vector<float>& opacityInterp,
-								   // Transparency
-								   Vector3f transparency,
-								   // Volumetric Parameters
-								   float absorbtionCoeff,
-								   float scatteringCoeff)
-	: color(std::move(color))
-	, colorInterp(std::move(colorInterp))
-	, opacity(std::move(opacity))
-	, opacityInterp(std::move(opacityInterp))
-	, FluidMaterialDeviceData 
-		{ 
-			nullptr, nullptr, nullptr, nullptr, 
-			transparency, absorbtionCoeff, 
-			scatteringCoeff, indexOfRefraction 
-		}
-{}
-
-uint32_t FluidMaterialGPU::Id() const
-{
-	return materialId;
-}
+//FluidMaterialGPU::FluidMaterialGPU(uint32_t materialId,
+//								   float indexOfRefraction,
+//								   // Color Interpolation
+//								   const std::vector<Vector3f>& color,
+//								   const std::vector<float>& colorInterp,
+//								   // Opacity Interpolation
+//								   const std::vector<float>& opacity,
+//								   const std::vector<float>& opacityInterp,
+//								   // Transparency
+//								   Vector3f transparency,
+//								   // Volumetric Parameters
+//								   float absorbtionCoeff,
+//								   float scatteringCoeff)
+//	: color(std::move(color))
+//	, colorInterp(std::move(colorInterp))
+//	, opacity(std::move(opacity))
+//	, opacityInterp(std::move(opacityInterp))
+//	, FluidMaterialDeviceData 
+//		{ 
+//			nullptr, nullptr, nullptr, nullptr, 
+//			transparency, absorbtionCoeff, 
+//			scatteringCoeff, indexOfRefraction 
+//		}
+//{}
+//
+//uint32_t FluidMaterialGPU::Id() const
+//{
+//	return materialId;
+//}
 
 //void FluidMaterialGPU::BounceRays(// Outgoing Rays
 //								  RayRecordGMem gOutRays,
@@ -105,36 +105,36 @@ uint32_t FluidMaterialGPU::Id() const
 //	//CudaSystem::GPUCallX(CudaSystem::CURRENT_DEVICE, 0, 0, 0);
 //}
 
-Error FluidMaterialGPU::Load()
-{
-	//Determine total
-	size_t totalSize = color.size() * sizeof(Vector3f) +
-					   colorInterp.size() * sizeof(float) +
-					   opacity.size() * sizeof(float) +
-					   opacityInterp.size() * sizeof(float);
-	mem = std::move(DeviceMemory(totalSize));
-	char* memPtr = static_cast<char*>(mem);
-
-	// Pointers
-	size_t offset = 0;
-	gColor = reinterpret_cast<Vector3f*>(memPtr + offset);
-	offset += color.size() * sizeof(Vector3f);
-	gColorInterp = reinterpret_cast<float*>(memPtr + offset);
-	offset += colorInterp.size() * sizeof(float);
-	gOpacity = reinterpret_cast<float*>(memPtr + offset);
-	offset += opacity.size() * sizeof(float);
-	gOpacityInterp = reinterpret_cast<float*>(memPtr + offset);
-	offset += opacityInterp.size() * sizeof(float);
-	assert(totalSize == offset);
-
-	return Error{ErrorType::ANY_ERROR, Error::OK};
-}
-
-void FluidMaterialGPU::Unload()
-{
-	mem = std::move(DeviceMemory());
-	gColor = nullptr;
-	gColorInterp = nullptr;
-	gOpacity = nullptr;
-	gOpacityInterp = nullptr;
-}
+//Error FluidMaterialGPU::Load()
+//{
+//	//Determine total
+//	size_t totalSize = color.size() * sizeof(Vector3f) +
+//					   colorInterp.size() * sizeof(float) +
+//					   opacity.size() * sizeof(float) +
+//					   opacityInterp.size() * sizeof(float);
+//	mem = std::move(DeviceMemory(totalSize));
+//	char* memPtr = static_cast<char*>(mem);
+//
+//	// Pointers
+//	size_t offset = 0;
+//	gColor = reinterpret_cast<Vector3f*>(memPtr + offset);
+//	offset += color.size() * sizeof(Vector3f);
+//	gColorInterp = reinterpret_cast<float*>(memPtr + offset);
+//	offset += colorInterp.size() * sizeof(float);
+//	gOpacity = reinterpret_cast<float*>(memPtr + offset);
+//	offset += opacity.size() * sizeof(float);
+//	gOpacityInterp = reinterpret_cast<float*>(memPtr + offset);
+//	offset += opacityInterp.size() * sizeof(float);
+//	assert(totalSize == offset);
+//
+//	return Error{ErrorType::ANY_ERROR, Error::OK};
+//}
+//
+//void FluidMaterialGPU::Unload()
+//{
+//	mem = std::move(DeviceMemory());
+//	gColor = nullptr;
+//	gColorInterp = nullptr;
+//	gOpacity = nullptr;
+//	gOpacityInterp = nullptr;
+//}

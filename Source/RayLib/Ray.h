@@ -23,33 +23,34 @@ class Ray<T>
 	public:
 		// Constructors & Destructor
 		constexpr									Ray() = default;
-		constexpr __device__ __host__				Ray(const Vector<3,T>& direction, const Vector<3, T>& position);
-		constexpr __device__ __host__				Ray(const Vector3[2]);
+		constexpr __device__ __host__				Ray(const Vector<3,T>& direction, 
+														const Vector<3, T>& position);
+		constexpr __device__ __host__				Ray(const Vector<3, T>[2]);
 													Ray(const Ray&) = default;
 													~Ray() = default;
 		Ray&										operator=(const Ray&) = default;
 
 		// Assignment Operators
-		__device__ __host__ Ray&					operator=(const Vector3[2]);
+		__device__ __host__ Ray&					operator=(const Vector<3, T>[2]);
 
 		__device__ __host__ const Vector<3,T>&		getDirection() const;
 		__device__ __host__ const Vector<3,T>&		getPosition() const;
 
-		// Intersections
-		__device__ __host__ bool					IntersectsSphere(Vector<3, T>& pos, float& t,
+		 // Intersections
+		__device__ __host__ bool					IntersectsSphere(Vector<3, T>& pos, T& t,
 																	 const Vector<3, T>& sphereCenter,
-																	 float sphereRadius) const;
-		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords, float& t,
+																	 T sphereRadius) const;
+		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
 																	   const Vector<3, T> triCorners[3],
 																	   bool cullFace = true) const;
-		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords, float& t,
+		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
 																	   const Vector<3, T>& t0,
 																	   const Vector<3, T>& t1,
 																	   const Vector<3, T>& t2,
 																	   bool cullFace = true) const;
 		__device__ __host__ bool					IntersectsAABB(const Vector<3, T>& min,
 																   const Vector<3, T>& max) const;
-		__device__ __host__ bool					IntersectsAABB(Vector<3,T>& pos, float& t,
+		__device__ __host__ bool					IntersectsAABB(Vector<3,T>& pos, T& t,
 																   const Vector<3, T>& min,
 																   const Vector<3, T>& max) const;
 
@@ -62,10 +63,10 @@ class Ray<T>
 																T fromMedium, T toMedium);
 		
 		// Randomization (Hemi spherical)
-		__device__ __host__ static Ray				RandomRayCosine(float xi0, float xi1,
+		__device__ __host__ static Ray				RandomRayCosine(T xi0, T xi1,
 																	const Vector<3, T>& normal,
 																	const Vector<3, T>& position);
-		__device__ __host__ static Ray				RandomRayUnfirom(float xi0, float xi1,
+		__device__ __host__ static Ray				RandomRayUnfirom(T xi0, T xi1,
 																	 const Vector<3, T>& normal,
 																	 const Vector<3, T>& position);
 

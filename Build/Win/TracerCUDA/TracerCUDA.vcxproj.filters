@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\CameraKernels.cuh">
-      <Filter>DeviceCode</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDA.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDAEntry.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ObjAcceleratorBatchI.h">
@@ -53,9 +50,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\CameraKernels.cu">
-      <Filter>DeviceCode</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerCUDA.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\SVODevice.cu">
       <Filter>Accelerators</Filter>
