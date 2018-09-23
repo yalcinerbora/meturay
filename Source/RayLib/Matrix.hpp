@@ -1,23 +1,5 @@
 #pragma once
 
-//template <int N, class T>
-//__device__ __host__
-//inline constexpr Matrix<N, T>::Matrix() 
-//{
-//	UNROLL_LOOP
-//	for(int i = 0; i < N; i++)
-//	{
-//		UNROLL_LOOP
-//		for(int j = 0; j < N; j++)
-//		{
-//			if(i == j)
-//				matrix[i * N + j] = 1;
-//			else
-//				matrix[i * N + j] = 0;
-//		}
-//	}
-//}
-
 template <int N, class T>
 template <class C , typename>
 __device__ __host__	
@@ -422,50 +404,50 @@ inline Matrix<N, T>& Matrix<N, T>::TransposeSelf()
 
 template <int N, class T>
 __device__ __host__ 
-inline Matrix<N, T> Matrix<N, T>::Clamp(const Matrix& min, const Matrix& max) const
+inline Matrix<N, T> Matrix<N, T>::Clamp(const Matrix& minVal, const Matrix& maxVal) const
 {
 	Matrix m;
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		m[i] = std::min(std::max(min[i], matrix[i]), max[i]);
+		m[i] = min(max(minVal[i], matrix[i]), maxVal[i]);
 	}
 	return m;
 }
 
 template <int N, class T>
 __device__ __host__ 
-inline Matrix<N, T> Matrix<N, T>::Clamp(T min, T max) const
+inline Matrix<N, T> Matrix<N, T>::Clamp(T minVal, T maxVal) const
 {
 	Matrix m;
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		m[i] = std::min(std::max(min, matrix[i]), max);
+		m[i] = min(max(minVal, matrix[i]), maxVal);
 	}
 	return m;
 }
 
 template <int N, class T>
 __device__ __host__ 
-inline Matrix<N, T>& Matrix<N, T>::ClampSelf(const Matrix& min, const Matrix& max)
+inline Matrix<N, T>& Matrix<N, T>::ClampSelf(const Matrix& minVal, const Matrix& maxVal)
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		matrix[i] = std::min(std::max(min[i], matrix[i]), max[i]);
+		matrix[i] = min(max(minVal[i], matrix[i]), maxVal[i]);
 	}
 	return *this;
 }
 
 template <int N, class T>
 __device__ __host__ 
-inline Matrix<N, T>& Matrix<N, T>::ClampSelf(T min, T max)
+inline Matrix<N, T>& Matrix<N, T>::ClampSelf(T minVal, T maxVal)
 {
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		matrix[i] = std::min(std::max(min, matrix[i]), max);
+		matrix[i] = min(max(minVal, matrix[i]), maxVal);
 	}
 	return *this;
 }
@@ -479,7 +461,7 @@ inline SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::Abs() const
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		m[i] = std::abs(matrix[i]);
+		m[i] = abs(matrix[i]);
 	}
 	return m;
 }
@@ -492,7 +474,7 @@ inline SignedEnable<Q, Matrix<N, T>&> Matrix<N, T>::AbsSelf()
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		matrix[i] = std::abs(matrix[i]);
+		matrix[i] = abs(matrix[i]);
 	}
 	return *this;
 }
@@ -506,7 +488,7 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Round() const
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		m[i] = std::round(matrix[i]);
+		m[i] = round(matrix[i]);
 	}
 	return m;
 }
@@ -519,7 +501,7 @@ inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::RoundSelf()
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		matrix[i] = std::round(matrix[i]);
+		matrix[i] = round(matrix[i]);
 	}
 	return *this;
 }
@@ -533,7 +515,7 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Floor() const
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		m[i] = std::floor(matrix[i]);
+		m[i] = floor(matrix[i]);
 	}
 	return m;
 }
@@ -546,7 +528,7 @@ inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::FloorSelf()
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		matrix[i] = std::floor(matrix[i]);
+		matrix[i] = floor(matrix[i]);
 	}
 	return *this;
 }
@@ -560,7 +542,7 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Ceil() const
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		m[i] = std::ceil(matrix[i]);
+		m[i] = ceil(matrix[i]);
 	}
 	return m;
 }
@@ -573,7 +555,7 @@ inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::CeilSelf()
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		matrix[i] = std::ceil(matrix[i]);
+		matrix[i] = ceil(matrix[i]);
 	}
 	return *this;
 }
@@ -586,7 +568,7 @@ inline Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, const Matrix& mat1)
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		m[i] = std::min(mat0[i], mat1[i]);
+		m[i] = min(mat0[i], mat1[i]);
 	}
 	return m;
 }
@@ -599,7 +581,7 @@ inline Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, T t)
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		m[i] = std::min(mat0[i], t);
+		m[i] = min(mat0[i], t);
 	}
 	return m;
 }
@@ -612,7 +594,7 @@ inline Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, const Matrix& mat1)
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		m[i] = std::max(mat0[i], mat1[i]);
+		m[i] = max(mat0[i], mat1[i]);
 	}
 	return m;
 }
@@ -625,7 +607,7 @@ inline Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, T t)
 	UNROLL_LOOP
 	for(int i = 0; i < N * N; i++)
 	{
-		m[i] = std::max(mat0[i], t);
+		m[i] = max(mat0[i], t);
 	}
 	return m;
 }
@@ -920,8 +902,8 @@ inline Matrix<4, T> TransformGen::Rotate(T angle, const Vector<3, T>& axis)
 	//	0		0		0		1
 	T tmp1, tmp2;
 
-	T cosAngle = std::cos(angle);
-	T sinAngle = std::sin(angle);
+	T cosAngle = cos(angle);
+	T sinAngle = sin(angle);
 	T t = 1 - cosAngle;
 
 	tmp1 = axis[0] * axis[1] * t;
@@ -997,15 +979,15 @@ static Vector<3, T> ExtractScaleInfo(const Matrix<4, T>& m)
 	// Second it should fail if transform matrix has shear (didnt tested tho)
 	return Vector<3,T>
 	(
-		std::sqrtf(m(1, 1) * m(1, 1) +
-				   m(1, 2) * m(1, 2) +
-				   m(1, 3) * m(1, 3)),
-		std::sqrtf(m(2, 1) * m(2, 1) +
-				   m(2, 2) * m(2, 2) +
-				   m(2, 3) * m(2, 3)),
-		std::sqrtf(m(3, 1) * m(3, 1) +
-				   m(3, 2) * m(3, 2) +
-				   m(3, 3) * m(3, 3))
+		sqrt(m(1, 1) * m(1, 1) +
+			 m(1, 2) * m(1, 2) +
+			 m(1, 3) * m(1, 3)),
+		sqrt(m(2, 1) * m(2, 1) +
+			 m(2, 2) * m(2, 2) +
+			 m(2, 3) * m(2, 3)),
+		sqrt(m(3, 1) * m(3, 1) +
+			 m(3, 2) * m(3, 2) +
+			 m(3, 3) * m(3, 3))
 	);
 }
 
@@ -1018,7 +1000,7 @@ inline Matrix<4, T> TransformGen::Perspective(T fovXRadians, T aspectRatio,
 	//	0		p		0		0
 	//	0		0		p		-1
 	//	0		0		p		0
-	T f = 1 / std::tan(fovXRadians * 0.5);
+	T f = 1 / std::tan(fovXRadians * static_cast<T>(0.5));
 	T m33 = (farPlane + nearPlane) / (nearPlane - farPlane);
 	T m34 = (2 * farPlane * nearPlane) /  (nearPlane - farPlane);
 	//float m33 = farPlane / (nearPlane - farPlane);

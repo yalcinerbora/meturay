@@ -14,11 +14,22 @@ void TracerCUDA::SendError(TracerError e, bool isFatal)
 	healthy = isFatal;
 }
 
+void TracerCUDA::HitRays()
+{
+
+}
+
+void TracerCUDA::ShadeRays()
+{
+
+}
+
 TracerCUDA::TracerCUDA()
 	: rayDelegateFunc(nullptr)
 	, errorFunc(nullptr)
 	, analyticFunc(nullptr)
 	, imageFunc(nullptr)
+	, hitManager(DefaultHitmanOptions)
 {}
 
 void TracerCUDA::SetRayDelegateCallback(TracerRayDelegateFunc f)
@@ -91,14 +102,13 @@ bool TracerCUDA::Continue()
 void TracerCUDA::Render()
 {
 	if(!healthy) return;
-
-
-	// Now we have inital rays in memory
+	if(currentRayCount == 0) return;
 	
-
-
-
-
+	// We know that we have some valid rays in the system
+	// First we hit rays until we could not find anything
+	void							HitRays();
+	// Then we use these rays to shade and create more rays
+	void							ShadeRays();
 }
 
 void TracerCUDA::FinishSamples() 

@@ -4,7 +4,7 @@
 #include "RayLib/CudaConstants.h"
 #include "RayLib/DeviceMemory.h"
 #include "RayLib/Log.h"
-#include "TracerCUDA/CameraKernels.cuh"
+#include "RayLib/CameraKernels.cuh"
 
 TEST(CameraRayGPU, Test)
 {

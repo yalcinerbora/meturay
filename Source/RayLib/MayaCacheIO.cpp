@@ -8,7 +8,6 @@
 #include <map>
 
 #include <filesystem>
-namespace std { namespace filesystem = experimental::filesystem; }
 
 namespace MayaCache
 {

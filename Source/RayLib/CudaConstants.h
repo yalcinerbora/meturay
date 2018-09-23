@@ -16,7 +16,7 @@ Thread per Block etc..
 static constexpr unsigned int WarpSize = 32;
 
 // Thread Per Block Constants
-static constexpr unsigned int BlockPerSM = 16;
+static constexpr unsigned int BlocksPerSM = 32;
 static constexpr unsigned int StaticThreadPerBlock1D = 256;
 static constexpr unsigned int StaticThreadPerBlock2D_X = 16;
 static constexpr unsigned int StaticThreadPerBlock2D_Y = 16;
@@ -39,9 +39,7 @@ class CudaGPU
 	private:
 		int						deviceId;
 		cudaDeviceProp			props;
-
 		// Generated Data
-		int32_t					gridStrideBlockCount;
 		GPUTier					tier;
 
 	protected:
@@ -57,7 +55,11 @@ class CudaGPU
 
 		size_t					TotalMemory() const;
 		Vector2i				MaxTexture2DSize() const;
-		int32_t					RecommendedBlockCount() const;
+
+		uint32_t				SMCount() const;
+		uint32_t				RecommendedBlockCountPerSM(void* kernkernelFuncelPtr,
+														   uint32_t threadsPerBlock = StaticThreadPerBlock1D,
+														   uint32_t sharedMemSize = 0) const;
 
 };
 
@@ -76,14 +78,14 @@ class CudaSystem
 
 		// Convenience Functions For Kernel Call
 		template<class Function, class... Args>
-		static __host__ void						GPUCallX(int deviceId,
-															 cudaStream_t stream,
+		static __host__ void						GPUCallX(int gpuIndex, 
 															 size_t sharedMemSize,
+															 cudaStream_t stream,
 															 Function&& f, Args&&...);
 		template<class Function, class... Args>
-		static __host__ void						GPUCallXY(int deviceId,
-															  cudaStream_t stream,
+		static __host__ void						GPUCallXY(int gpuIndex, 
 															  size_t sharedMemSize,
+															  cudaStream_t stream,															  
 															  Function&& f, Args&&...);
 
 		static const std::vector<CudaGPU>	GPUList();
@@ -94,22 +96,15 @@ class CudaSystem
 
 template<class Function, class... Args>
 __host__
-inline void CudaSystem::GPUCallX(int deviceId, 
-								 cudaStream_t stream,
-								 size_t sharedMemSize,
+inline void CudaSystem::GPUCallX(int gpuIndex,
+								 size_t sharedMemSize, 
+								 cudaStream_t stream,								 
 								 Function&& f, Args&&... args)
 {
-	if(deviceId != CURRENT_DEVICE)
-	{
-		CUDA_CHECK(cudaSetDevice(deviceId));
-	}
-	else
-	{
-		CUDA_CHECK(cudaGetDevice(&deviceId));
-	}
-
-	const CudaGPU& gpu = gpus[deviceId];
-	uint32_t blockCount = gpu.RecommendedBlockCount();
+	const CudaGPU& gpu = gpus[gpuIndex];
+	uint32_t blockCount = gpu.RecommendedBlockCountPerSM(&f, StaticThreadPerBlock1D,
+														 sharedMemSize);
+	blockCount *= gpu.SMCount();
 	uint32_t blockSize = StaticThreadPerBlock1D;
 	f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);
 	CUDA_KERNEL_CHECK();
@@ -117,18 +112,17 @@ inline void CudaSystem::GPUCallX(int deviceId,
 
 template<class Function, class... Args>
 __host__
-inline void CudaSystem::GPUCallXY(int deviceId,
-								  cudaStream_t stream,
+inline void CudaSystem::GPUCallXY(int gpuIndex,
 								  size_t sharedMemSize,
+								  cudaStream_t stream,
 								  Function&& f, Args&&... args)
 {
-	const CudaGPU& gpu = gpus[deviceId];
-
-	if(deviceId != CURRENT_DEVICE)
-	{
-		CUDA_CHECK(cudaSetDevice(deviceId));
-	}
-	uint32_t blockCount = gpu.RecommendedBlockCount();
+	const CudaGPU& gpu = gpus[gpuIndex];
+	uint32_t blockCount = gpu.RecommendedBlockCountPerSM(&f,
+														 StaticThreadPerBlock2D[0] *
+														 StaticThreadPerBlock2D[1],
+														 sharedMemSize);
+	blockCount *= gpu.SMCount();
 	dim3 blockSize = dim3(StaticThreadPerBlock2D[0], StaticThreadPerBlock2D[1]);
 	f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);
 	CUDA_KERNEL_CHECK();

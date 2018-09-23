@@ -14,7 +14,7 @@ RNGMemory::RNGMemory(uint32_t seed)
 	size_t totalCount = 0;
 	for(const auto& gpu : CudaSystem::GPUList())
 	{
-		totalCount += gpu.RecommendedBlockCount() * StaticThreadPerBlock1D;
+		totalCount += BlocksPerSM * gpu.SMCount() * StaticThreadPerBlock1D;
 	}
 
 	// Actual Allocation
@@ -26,7 +26,7 @@ RNGMemory::RNGMemory(uint32_t seed)
 	for(const auto& gpu : CudaSystem::GPUList())
 	{
 		randomStacks.emplace_back(RNGGMem{d_ptr + totalOffset});
-		totalOffset += gpu.RecommendedBlockCount() * StaticThreadPerBlock1D;
+		totalOffset += BlocksPerSM * gpu.SMCount() * StaticThreadPerBlock1D;
 	}
 	assert(totalCount == totalOffset);
 

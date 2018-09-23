@@ -36,13 +36,13 @@ inline __device__ EnableRest<T, T> ReduceDivide(const T& a, const T&b)
 template<class T>
 inline __device__  EnableArithmetic<T, T> ReduceMin(const T& a, const T&b)
 {
-	return std::min(a, b);
+	return min(a, b);
 }
 
 template<class T>
 inline __device__ EnableArithmetic<T, T> ReduceMax(const T& a, const T&b)
 {
-	return std::max(a, b);
+	return max(a, b);
 }
 
 template<class T>
@@ -85,13 +85,13 @@ inline __device__ EnableNV1Type<T, T> ReduceDivide(const T& a, const T&b)
 template<class T>
 inline __device__  EnableNV1Type<T, T> ReduceMin(const T& a, const T&b)
 {
-	return T{std::min(a.x, b.x)};
+	return T{min(a.x, b.x)};
 }
 
 template<class T>
 inline __device__ EnableNV1Type<T, T> ReduceMax(const T& a, const T&b)
 {
-	return T{std::max(a.x, b.x)};
+	return T{max(a.x, b.x)};
 }
 
 // Dim 2
@@ -140,8 +140,8 @@ inline __device__  EnableNV2Type<T, T> ReduceMin(const T& a, const T&b)
 {
 	return T
 	{
-		std::min(a.x, b.x),
-		std::min(a.y, b.y)
+		min(a.x, b.x),
+		min(a.y, b.y)
 	};
 }
 
@@ -150,8 +150,8 @@ inline __device__ EnableNV2Type<T, T> ReduceMax(const T& a, const T&b)
 {
 	return T
 	{
-		std::max(a.x, b.x),
-		std::max(a.y, b.y)
+		max(a.x, b.x),
+		max(a.y, b.y)
 	};
 }
 
@@ -205,9 +205,9 @@ inline __device__  EnableNV3Type<T, T> ReduceMin(const T& a, const T&b)
 {
 	return T
 	{
-		std::min(a.x, b.x),
-		std::min(a.y, b.y),
-		std::min(a.z, b.z),
+		min(a.x, b.x),
+		min(a.y, b.y),
+		min(a.z, b.z),
 	};
 }
 
@@ -216,9 +216,9 @@ inline __device__ EnableNV3Type<T, T> ReduceMax(const T& a, const T&b)
 {
 	return T
 	{
-		std::max(a.x, b.x),
-		std::max(a.y, b.y),
-		std::max(a.z, b.z)
+		max(a.x, b.x),
+		max(a.y, b.y),
+		max(a.z, b.z)
 	};
 }
 
@@ -276,10 +276,10 @@ inline __device__  EnableNV4Type<T, T> ReduceMin(const T& a, const T&b)
 {
 	return T
 	{
-		std::min(a.x, b.x),
-		std::min(a.y, b.y),
-		std::min(a.z, b.z),
-		std::min(a.w, b.w),
+		min(a.x, b.x),
+		min(a.y, b.y),
+		min(a.z, b.z),
+		min(a.w, b.w),
 	};
 }
 
@@ -288,10 +288,10 @@ inline __device__ EnableNV4Type<T, T> ReduceMax(const T& a, const T&b)
 {
 	return T
 	{
-		std::max(a.x, b.x),
-		std::max(a.y, b.y),
-		std::min(a.z, b.z),
-		std::max(a.w, b.w),
+		max(a.x, b.x),
+		max(a.y, b.y),
+		min(a.z, b.z),
+		max(a.w, b.w),
 	};
 }
 

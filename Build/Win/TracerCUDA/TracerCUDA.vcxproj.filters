@@ -48,6 +48,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\SurfaceDeviceI.cuh">
       <Filter>DeviceCode</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\Hitman.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerCUDA.cu" />
@@ -64,5 +65,6 @@
       <Filter>Surfaces</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerCUDA\SceneGPU.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\Hitman.cpp" />
   </ItemGroup>
 </Project>

@@ -43,7 +43,7 @@ class RandomGPU
 		__device__  uint32_t		Generate();
 };
 
-static constexpr uint32_t WarpStandard_N = 1024;
+//static constexpr uint32_t WarpStandard_N = 1024;
 static constexpr uint32_t WarpStandard_W = 32;
 static constexpr uint32_t WarpStandard_G = 16;
 static constexpr uint32_t WarpStandard_SR = 0;
@@ -52,7 +52,7 @@ static constexpr uint32_t WarpStandard_Z0 = 2;
 __device__ static const uint32_t WarpStandard_Z1[32] =
 {
 	0,1,0,1,1,1,0,0,1,0,0,1,0,0,1,0,
-	0,1,0,1,0,1,0,1,0,1,0,1,1,1,0,1
+	0,1,0,1,0,1,0,1,0,1,0,1,1,1,0,1	
 };
 
 __device__ static const uint32_t WarpStandard_Q[2][32] =
@@ -82,11 +82,11 @@ inline RandomGPU::RandomGPU(uint32_t* gStates, uint32_t* sStates)
 __device__
 inline uint32_t RandomGPU::Generate()
 {
-	unsigned int t0 = sStates[regs[1]];
-	unsigned int t1 = sStates[regs[2]];
-	unsigned int res = (t0 << WarpStandard_Z0) ^ (t1 >> regs[0]);
+	uint32_t t0 = sStates[regs[1]];
+	uint32_t t1 = sStates[regs[2]];
+	uint32_t res = (t0 << WarpStandard_Z0) ^ (t1 >> regs[0]);
 
-	__syncthreads();
+	//__syncthreads();
 	sStates[LINEAR_LOCAL_ID] = res;
 
 	return t0 + t1;

@@ -52,7 +52,7 @@ inline bool Ray<T>::IntersectsSphere(Vector<3, T>& intersectPos, T& t,
 	if(beamHalfLengthSqr > 0.0f)
 	{
 		// Inside Square
-		T beamHalfLength = std::sqrt(beamHalfLengthSqr);
+		T beamHalfLength = sqrt(beamHalfLengthSqr);
 		T t0 = beamCenterDistance - beamHalfLength;
 		T t1 = beamCenterDistance + beamHalfLength;
 		if(t1 >= 0.0f)
@@ -130,21 +130,21 @@ inline bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
 
 template<class T>
 __device__ __host__
-inline bool Ray<T>::IntersectsAABB(const Vector<3, T>& min,
-								   const Vector<3, T>& max) const
+inline bool Ray<T>::IntersectsAABB(const Vector<3, T>& aabbMin,
+								   const Vector<3, T>& aabbMax) const
 {
 	Vector<3,T> invD = Vector<3, T>(1) / direction;
-	Vector<3,T> t0 = (min - position) * invD;
-	Vector<3,T> t1 = (max - position) * invD;
+	Vector<3,T> t0 = (aabbMin - position) * invD;
+	Vector<3,T> t1 = (aabbMax - position) * invD;
 
-	T tMin = -std::numeric_limits<T>::max();
-	T tMax = std::numeric_limits<T>::max();
+	T tMin = INFINITY;
+	T tMax = -INFINITY;
 
 	UNROLL_LOOP
 	for(int i = 0; i < 3; i++)
 	{
-		tMin = std::max(tMin, std::min(t0[i], t1[i]));
-		tMax = std::min(tMax, std::max(t0[i], t1[i]));
+		tMin = max(tMin, min(t0[i], t1[i]));
+		tMax = min(tMax, max(t0[i], t1[i]));
 	}
 	return tMax >= tMin;
 }
@@ -152,24 +152,24 @@ inline bool Ray<T>::IntersectsAABB(const Vector<3, T>& min,
 template<class T>
 __device__ __host__
 inline bool Ray<T>::IntersectsAABB(Vector<3, T>& pos, T& tOut,
-								   const Vector<3, T>& min,
-								   const Vector<3, T>& max) const
+								   const Vector<3, T>& aabbMin,
+								   const Vector<3, T>& aabbMax) const
 {
 	Vector<3, T> invD = Vector<3, T>(1) / direction;
-	Vector<3, T> t0 = (min - position) * invD;
-	Vector<3, T> t1 = (max - position) * invD;
+	Vector<3, T> t0 = (aabbMin - position) * invD;
+	Vector<3, T> t1 = (aabbMax - position) * invD;
 
-	T tMin = -std::numeric_limits<T>::max();
-	T tMax = std::numeric_limits<T>::max();
-	T t = std::numeric_limits<T>::max();
+	T tMin = -INFINITY;
+	T tMax = INFINITY;
+	T t = -INFINITY;
 
 	UNROLL_LOOP
 	for(int i = 0; i < 3; i++)
 	{
-		tMin = std::max(tMin, std::min(t0[i], t1[i]));
-		tMax = std::min(tMax, std::max(t0[i], t1[i]));
-		t = (t0[i] > 0.0f) ? std::min(t, t0[i]) : t;
-		t = (t1[i] > 0.0f) ? std::min(t, t1[i]) : t;
+		tMin = max(tMin, min(t0[i], t1[i]));
+		tMax = min(tMax, max(t0[i], t1[i]));
+		t = (t0[i] > 0.0f) ? min(t, t0[i]) : t;
+		t = (t1[i] > 0.0f) ? min(t, t1[i]) : t;
 	}
 
 	if(tMax >= tMin)
@@ -209,7 +209,7 @@ inline bool Ray<T>::Refract(Ray& out, const Vector<3, T>& normal,
 	T delta = static_cast<T>(1.0) - indexRatio * indexRatio * (static_cast<T>(1.0) - cosTetha * cosTetha);
 	if(delta > static_cast<T>(0.0))
 	{
-		out.direction = indexRatio * direction + normal * (cosTetha * indexRatio - std::sqrt(delta));
+		out.direction = indexRatio * direction + normal * (cosTetha * indexRatio - sqrt(delta));
 		out.position = position;
 		return true;
 	}
@@ -227,7 +227,7 @@ inline bool Ray<T>::RefractSelf(const Vector<3, T>& normal,
 	T delta = static_cast<T>(1.0) - indexRatio * indexRatio * (static_cast<T>(1.0) - cosTetha * cosTetha);
 	if(delta > static_cast<T>(0.0))
 	{
-		direction = indexRatio * direction + normal * (cosTetha * indexRatio - std::sqrt(delta));
+		direction = indexRatio * direction + normal * (cosTetha * indexRatio - sqrt(delta));
 		return true;
 	}
 	return false;
@@ -240,9 +240,9 @@ inline Ray<T> Ray<T>::RandomRayCosine(T xi0, T xi1,
 									  const Vector<3, T>& position)
 {
 	Vector<3, T> randomDir;
-	randomDir[0] = std::sqrt(xi0) * std::cos(static_cast<T>(2.0) * MathConstants::Pi * xi1);
-	randomDir[1] = std::sqrt(xi0) * std::sin(static_cast<T>(2.0) * MathConstants::Pi * xi1);
-	randomDir[2] = std::sqrt(static_cast<T>(1.0) - xi0);
+	randomDir[0] = sqrt(xi0) * cos(static_cast<T>(2.0) * MathConstants::Pi * xi1);
+	randomDir[1] = sqrt(xi0) * sin(static_cast<T>(2.0) * MathConstants::Pi * xi1);
+	randomDir[2] = sqrt(static_cast<T>(1.0) - xi0);
 
 	Quaternion<T> q = Quaternion<T>::RotationBetweenZAxis(normal);
 	Vector<3, T> rotatedDir = q.ApplyRotation(randomDir);
@@ -256,8 +256,8 @@ inline Ray<T> Ray<T>::RandomRayUnfirom(T xi0, T xi1,
 									   const Vector<3, T>& position)
 {
 	Vector<3, T> randomDir;
-	randomDir[0] = std::sqrt(static_cast<T>(1.0) - xi0 * xi0) * std::cos(static_cast<T>(2.0) * MathConstants::Pi * xi1);
-	randomDir[1] = std::sqrt(static_cast<T>(1.0) - xi0 * xi0) * std::sin(static_cast<T>(2.0) * MathConstants::Pi * xi1);
+	randomDir[0] = sqrt(static_cast<T>(1.0) - xi0 * xi0) * cos(static_cast<T>(2.0) * MathConstants::Pi * xi1);
+	randomDir[1] = sqrt(static_cast<T>(1.0) - xi0 * xi0) * sin(static_cast<T>(2.0) * MathConstants::Pi * xi1);
 	randomDir[2] = xi0;
 
 	Quaternion<T> q = Quaternion<T>::RotationBetweenZAxis(normal);

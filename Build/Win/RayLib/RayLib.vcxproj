@@ -14,7 +14,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{DFCD1274-CD37-4E84-A1DC-96F619B04EEA}</ProjectGuid>
     <RootNamespace>RayLib</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -32,7 +32,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.2.props" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -57,21 +57,21 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>METU_DEBUG;METU_CUDA;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
     </ClCompile>
     <CudaCompile>
       <GenerateLineInfo>false</GenerateLineInfo>
     </CudaCompile>
     <CudaCompile>
-      <MaxRegCount>32</MaxRegCount>
+      <MaxRegCount>
+      </MaxRegCount>
     </CudaCompile>
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>
-      <CodeGeneration>compute_52,sm_52</CodeGeneration>
-      <AdditionalOptions>--expt-relaxed-constexpr %(AdditionalOptions)</AdditionalOptions>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
@@ -93,9 +93,9 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>METU_CUDA;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -111,8 +111,7 @@
     </CudaCompile>
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>
-      <CodeGeneration>compute_52,sm_52</CodeGeneration>
-      <AdditionalOptions>--expt-relaxed-constexpr %(AdditionalOptions)</AdditionalOptions>
+      <CodeGeneration>compute_52,sm_52;compute_30,sm_30</CodeGeneration>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
@@ -137,6 +136,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Error.h" />
     <ClInclude Include="..\..\..\Source\RayLib\FunctionEnablers.cuh" />
+    <ClInclude Include="..\..\..\Source\RayLib\GPUAcceleratorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\HitStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageMemory.h" />
@@ -149,7 +149,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\RNGMemory.h" />
     <ClInclude Include="..\..\..\Source\RayLib\RayMemory.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\RayMemory.hpp" />
+    <CudaCompile Include="..\..\..\Source\RayLib\RayMemory.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <ClInclude Include="..\..\..\Source\RayLib\ReduceFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\ParallelReduction.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\ParallelScan.cuh" />
@@ -224,6 +226,6 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.2.targets" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />
   </ImportGroup>
 </Project>

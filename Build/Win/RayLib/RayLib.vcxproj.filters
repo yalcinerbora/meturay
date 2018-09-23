@@ -185,14 +185,14 @@
     <ClInclude Include="..\..\..\Source\RayLib\RayMemory.h">
       <Filter>Memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\RayMemory.hpp">
-      <Filter>Memory</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\MaterialKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\BVHAcceleratorKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\GPUAcceleratorI.h">
+      <Filter>Interfaces</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -312,6 +312,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\RayLib\AABB.cu">
       <Filter>LinearAlgb</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\RayLib\RayMemory.cu">
+      <Filter>Memory</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

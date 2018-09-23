@@ -6,7 +6,7 @@
 #include "RayLib/DeviceMemory.h"
 #include "RayLib/Log.h"
 
-__global__ void KRandomNumbers(RandomStackGMem gMemory,
+__global__ void KRandomNumbers(RNGGMem gMemory,
 							   uint32_t* randomNumbers,
 							   size_t numberPerThread)
 {
@@ -25,18 +25,18 @@ __global__ void KRandomNumbers(RandomStackGMem gMemory,
 
 TEST(RandomGPU, All)
 {
-	static constexpr size_t ThreadCount = 32;
-	static constexpr size_t StateSize = 32 * sizeof(uint32_t);
+	static uint32_t ThreadCount = 32;
+	static size_t StateSize = ThreadCount * sizeof(uint32_t);
 
-	static constexpr size_t NumberPerThread = 2;
-	static constexpr size_t NumberCount = NumberPerThread * ThreadCount;
-	static constexpr size_t NumberSize = NumberCount * sizeof(uint32_t);
+	static size_t NumberPerThread = 2;
+	static size_t NumberCount = NumberPerThread * ThreadCount;
+	static size_t NumberSize = NumberCount * sizeof(uint32_t);
 
 	DeviceMemory randomState(StateSize);
 	DeviceMemory numbers(NumberSize);
 	
 	// Set State
-	std::mt19937 engine;
+	std::mt19937 engine(2109);
 	uint32_t* seeds = static_cast<uint32_t*>(randomState);
 	for(size_t i = 0; i < ThreadCount; i++)
 	{
@@ -50,6 +50,7 @@ TEST(RandomGPU, All)
 	CUDA_KERNEL_CHECK();
 	CUDA_CHECK(cudaDeviceSynchronize());
 
+	
 	//for(int i = 0; i < NumberCount; i++)
 	//{
 	//	METU_LOG("%u", h_data[i]);

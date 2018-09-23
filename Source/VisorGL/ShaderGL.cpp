@@ -5,8 +5,8 @@
 #include "ShaderGL.h"
 #include "RayLib/Log.h"
 
-#include <experimental/filesystem>
-namespace std { namespace filesystem = std::experimental::filesystem; }
+#include <filesystem>
+//namespace std { namespace filesystem = std::experimental::filesystem; }
 
 GLuint ShaderGL::shaderPipelineID = 0;
 

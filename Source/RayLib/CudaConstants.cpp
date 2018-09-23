@@ -4,7 +4,6 @@ CudaGPU::CudaGPU(int deviceId)
 	: deviceId(deviceId)
 {
 	CUDA_CHECK(cudaGetDeviceProperties(&props, deviceId));
-	gridStrideBlockCount = props.multiProcessorCount * BlockPerSM;
 	tier = DetermineGPUTier(props);
 }
 
@@ -44,10 +43,25 @@ Vector2i CudaGPU::MaxTexture2DSize() const
 					props.maxTexture2D[1]);
 }
 
-int32_t CudaGPU::RecommendedBlockCount() const
+uint32_t CudaGPU::SMCount() const
 {
-	return gridStrideBlockCount;
+	return static_cast<uint32_t>(props.multiProcessorCount);
 }
+
+uint32_t CudaGPU::RecommendedBlockCountPerSM(void* kernelFunc,
+											 uint32_t threadsPerBlock,
+											 uint32_t sharedSize) const
+{
+	int32_t numBlocks = 0;
+	CUDA_CHECK(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks,
+															 kernelFunc,
+															 threadsPerBlock,
+															 sharedSize));
+
+	return static_cast<uint32_t>(numBlocks);
+}
+
+
 
 std::vector<CudaGPU> CudaSystem::gpus;
 

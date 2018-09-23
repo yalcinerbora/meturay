@@ -30,6 +30,7 @@ Single thread will
 #include "RayLib/HitStructs.h"
 #include "RayLib/RayStructs.h"
 
+#include "Hitman.h"
 
 //#include "RayLib/Texture.cuh"
 //#include "RayLib/ArrayPortion.h"
@@ -51,33 +52,33 @@ class TracerCUDA : public TracerI
 {
 	private:
 		// Callbacks
-		TracerRayDelegateFunc				rayDelegateFunc;
-		TracerErrorFunc						errorFunc;
-		TracerAnalyticFunc					analyticFunc;
-		TracerImageSendFunc					imageFunc;
+		TracerRayDelegateFunc			rayDelegateFunc;
+		TracerErrorFunc					errorFunc;
+		TracerAnalyticFunc				analyticFunc;
+		TracerImageSendFunc				imageFunc;
 
 		// GPU Specific Memory (Mostly Textures)
-		RNGMemory							rngMemory;
+		RNGMemory						rngMemory;
 
 		// Common Memory
-		RayMemory<RayAuxData>				rayMemory;
-		ImageMemory							outputImage;		
-				
+		RayMemory						rayMemory;
+		ImageMemory						outputImage;		
+			
 		// Properties
-		uint32_t							currentRayCount;
-		TracerParameters					parameters;
-		
+		uint32_t						currentRayCount;
+		TracerParameters				parameters;
+	
+		//
+		Hitman							hitManager;
+
 		// Error related
-		bool								healthy;
+		bool							healthy;
 
 		// Internals
-		void								SendError(TracerError e, bool isFatal);
+		void							SendError(TracerError e, bool isFatal);
+		void							HitRays();
+		void							ShadeRays();
 		
-
-		// Delete These
-		cudaTextureObject_t					backgroundTex;
-		cudaArray_t							texArray;
-
 	public:
 		// Constructors & Destructor
 										TracerCUDA();
@@ -121,7 +122,7 @@ class TracerCUDA : public TracerI
 		// Rendering
 		// Generate camera rays (initialize ray pool)
 		void					GenerateCameraRays(const CameraPerspective& camera,
-														   const uint32_t samplePerPixel) override;
+												   const uint32_t samplePerPixel) override;
 
 		// Continue hit/bounce looping (consume ray pool)
 		bool					Continue() override;

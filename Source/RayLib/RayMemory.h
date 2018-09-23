@@ -6,34 +6,43 @@ General Device memory manager for ray and it's auxiliary data
 
 */
 
+#include "DeviceMemory.h"
 #include "RayStructs.h"
 #include "HitStructs.h"
 
 #include <cstdint>
 #include <cassert>
 
-template<class RayAuxData>
+//template<class RayAuxData>
 class RayMemory
 {
+	public:
+		static constexpr size_t		AlignByteCount = 16;
+
 	private:
-		DeviceMemory				memRayIn;
-		DeviceMemory				memRayOut;		
+		DeviceMemory				sortMemory;
+
 		DeviceMemory				memHit;
+		DeviceMemory				memIn;
+		DeviceMemory				memOut;
 
 		// Ray Related
-		RayGMem*					dRayStackIn;
-		RayGMem*					dRayStackOut;
-		RayAuxData*					dRayAuxIn;
-		RayAuxData*					dRayAuxOut;
+		RayGMem*					dRayIn;
+		RayGMem*					dRayOut;
+		void*						dRayAuxIn;
+		void*						dRayAuxOut;
 
 		// Hit Related
-		HitId*						dHitRecord;
-		HitKey*						dHitKeys;
-
-		//static RayGMem				GenerateRayPtrs(void* mem, size_t rayCount);
-		//static HitGMem				GenerateHitPtrs(void* mem, size_t rayCount);
-		//static size_t				TotalMemoryForRay(size_t rayCount);
-		//static size_t				TotalMemoryForHit(size_t rayCount);
+		void*						dSortAuxiliary;
+		HitId*						dIds0, *dIds1;		
+		HitKey*						dKeys0, *dKeys1;
+		HitId*						dIds;
+		HitKey*						dKeys;
+		
+		static void					ResizeRayMemory(RayGMem*& dRays, void*& dRayAxData,
+													DeviceMemory&, 
+													size_t rayCount,
+													size_t perRayAuxSize);
 
 	public:
 		// Constructors & Destructor
@@ -44,25 +53,56 @@ class RayMemory
 		RayMemory&					operator=(RayMemory&&) = default;
 									~RayMemory() = default;
 
-		//// Accessors
-		//RayGMem*					RayStackIn();
-		//RayGMem*					RayStackOut();
-		//HitGMem*					HitRecord();
-
-		//const RayGMem*				RayStackIn() const;
-		//const RayGMem*				RayStackOut() const;
-		//const HitGMem*				HitRecord() const;
-		
+		// Accessors
+		RayGMem*					Rays();
+		const RayGMem*				Rays() const;
+		HitId*						HitIds();
+		const HitId*				HitIds() const;
+		HitKey*						HitKeys();
+		const HitKey*				HitKeys() const;
+				
 		// Memory Arrangement
 		// Reset memory system (allocates for initial ray count)
 		void						Reset(size_t rayCount);
-		// Resize rayIn and Out
-		void						ResizeRayIn(size_t rayCount);
-		void						ResizeRayOut(size_t rayCount);
-		void						ResizeHit(size_t rayCount);
-		// Swap in and outs
+
+		// Ray Related
+		void						ResizeRayIn(size_t rayCount, size_t perRayAuxSize);
+		void						ResizeRayOut(size_t rayCount, size_t perRayAuxSize);
 		void						SwapRays(size_t rayCount);
+
+		// Accelerator
+		void						ResizeHitMemory(size_t rayCount);
+		void						SortKeys(HitId*& ids, HitKey*& keys,
+											 size_t count,
+											 const Vector2i& bitRange);
 };
 
-// Implementation
-#include "RayMemory.hpp"
+inline RayGMem* RayMemory::Rays()
+{
+	return dRayStackIn;
+}
+
+inline const RayGMem* RayMemory::Rays() const
+{
+	return dRayStackIn;
+}
+
+inline HitId* RayMemory::HitIds()
+{
+	return dIds;
+}
+
+inline const HitId* RayMemory::HitIds() const
+{
+	return dIds;
+}
+
+inline HitKey* RayMemory::HitKeys()
+{
+	return dKeys;
+}
+
+inline const HitKey* RayMemory::HitKeys() const
+{
+	return dKeys;
+}

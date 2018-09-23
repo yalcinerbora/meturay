@@ -183,7 +183,7 @@ __host__ void KCReduceTexture(Type& result,
 							  cudaStream_t stream = (cudaStream_t)0)
 {
 	static constexpr Vector2ui TPB = StaticThreadPerBlock2D;
-	static constexpr unsigned int SharedSize = (TPB[0] * TPB[1] / WarpSize) * sizeof(Type);
+	static constexpr unsigned int SharedSize = (TPB[0] * TPB[1]);// / WarpSize) * sizeof(Type);
 
 	dim3 blockSize = dim3(TPB[0], TPB[1]);
 	dim3 gridSize;

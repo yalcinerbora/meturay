@@ -5,12 +5,7 @@
 #include "Log.h"
 
 // VS2017 lacking behind
-#ifdef _WIN32
-	#include <experimental\filesystem>
-	namespace std { namespace filesystem = std::experimental::filesystem; }
-#else
-	#include <filesystem>
-#endif
+#include <filesystem>
 
 using namespace nlohmann;
 
