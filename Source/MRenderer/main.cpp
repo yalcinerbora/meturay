@@ -77,12 +77,14 @@ int main(int argc, const char* argv[])
 	//}
 
 
-	// First arg is scene name
-	if(argc <= 1)
-	{
-		METU_ERROR_LOG("Insufficient args...");
-		return 1;
-	}
+	//// First arg is scene name
+	//if(argc <= 1)
+	//{
+	//	METU_ERROR_LOG("Insufficient args...");
+	//	return 1;
+	//}
+
+	uint32_t seed = 0;
 
 	// Self Distributor
 	//SelfDistributor selfDistributor;
@@ -102,8 +104,8 @@ int main(int argc, const char* argv[])
 	cam.gazePoint = Vector3f(0.0f, 5.0f, 0.0f);
 
 	// Start Tracer Thread and Set scene
-	TracerThread tracer(*tracerI);
-	tracer.ChangeScene(std::string(argv[1]));
+	TracerThread tracer(*tracerI, seed);
+	//tracer.ChangeScene(std::string(argv[1]));
 	tracer.ChangeResolution(Vector2ui(1920, 1080));
 	tracer.ChangeSampleCount(5);
 	tracer.ChangeImageSegment(Vector2ui(0, 0), Vector2ui(1920, 1080));
@@ -118,6 +120,7 @@ int main(int argc, const char* argv[])
 	opts.iFormat = PixelFormat::RGBA_FLOAT;
 	opts.iSize = {1280, 720};
 	opts.stereoOn = false;
+	opts.eventBufferSize = 128;
 
 	// Window Loop
 	auto visorView = CreateVisorGL(opts);

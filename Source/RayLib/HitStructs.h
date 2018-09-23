@@ -7,7 +7,7 @@
 
 typedef uint32_t HitKey;
 
-struct alignas(16) HitId
+struct alignas(8) HitId
 {
 	uint32_t rayId;
 	uint32_t innerId;

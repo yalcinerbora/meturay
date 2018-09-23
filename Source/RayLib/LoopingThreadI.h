@@ -31,7 +31,9 @@ class LoopingThreadI
 
 	protected:
 		virtual bool				InternallyTerminated() const = 0;
+		virtual void				InitialWork() = 0;
 		virtual void				LoopWork() = 0;
+		virtual void				FinalWork() = 0;
 
 	public:
 		// Constructors & Destructor
@@ -46,7 +48,9 @@ class LoopingThreadI
 
 inline void LoopingThreadI::THRDEntry()
 {
-	while(!InternallyTerminated())
+	InitialWork();
+
+	while(!InternallyTerminated() || stopSignal)
 	{
 		LoopWork();
 
@@ -59,8 +63,9 @@ inline void LoopingThreadI::THRDEntry()
 				return stopSignal || !pauseSignal;
 			});
 		}
-		if(stopSignal) return;
+		//if(stopSignal) return;
 	}
+	FinalWork();
 }
 
 inline LoopingThreadI::LoopingThreadI()

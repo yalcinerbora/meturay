@@ -12,19 +12,33 @@ General Device memory manager for ray and it's auxiliary data
 
 #include <cstdint>
 #include <cassert>
+#include <set>
 
-//template<class RayAuxData>
+#include "RayLib/ArrayPortion.h"
+
+template<class T>
+using RayPartitions = std::set<ArrayPortion<T>>;
+
 class RayMemory
 {
 	public:
 		static constexpr size_t		AlignByteCount = 16;
+		static constexpr int		ByteSize = 8;
+
+		static constexpr HitKey		InvalidKey = 0xFFFFFFFF;
+		static constexpr uint32_t	InvalidData = 0xFFFFFFFF;
 
 	private:
-		DeviceMemory				sortMemory;
+		//DeviceMemory				sortMemory;
+		int							leaderDeviceId;
+
 
 		DeviceMemory				memHit;
 		DeviceMemory				memIn;
 		DeviceMemory				memOut;
+
+		size_t						memInMaxRayCount;
+		size_t						memOutMaxRayCount;
 
 		// Ray Related
 		RayGMem*					dRayIn;
@@ -36,6 +50,9 @@ class RayMemory
 		void*						dSortAuxiliary;
 		HitId*						dIds0, *dIds1;		
 		HitKey*						dKeys0, *dKeys1;
+
+		//
+
 		HitId*						dIds;
 		HitKey*						dKeys;
 		
@@ -61,30 +78,44 @@ class RayMemory
 		HitKey*						HitKeys();
 		const HitKey*				HitKeys() const;
 				
-		// Memory Arrangement
-		// Reset memory system (allocates for initial ray count)
+		// Misc
+		// Sets leader device which is responsible for sort and partition kernel calls
+		void						SetLeaderDevice(int);
+
+	
+
 		void						Reset(size_t rayCount);
 
-		// Ray Related
+		// Memory ALlocation and reset
+		void						ResizeHitMemory(size_t rayCount);
 		void						ResizeRayIn(size_t rayCount, size_t perRayAuxSize);
 		void						ResizeRayOut(size_t rayCount, size_t perRayAuxSize);
 		void						SwapRays(size_t rayCount);
 
-		// Accelerator
-		void						ResizeHitMemory(size_t rayCount);
+		// Common Functions
+		// Sorts the hit list for multi-kernel calls
 		void						SortKeys(HitId*& ids, HitKey*& keys,
 											 size_t count,
 											 const Vector2i& bitRange);
+		// Partitions the segments for multi-kernel calls
+		// Updates the ray count where the rays with 0xFF..F are considered done
+		RayPartitions<uint32_t>		Partition(uint32_t& rayCount,
+											  const Vector2i& bitRange);
 };
+
+inline void RayMemory::SetLeaderDevice(int deviceId)
+{
+	leaderDeviceId = deviceId;
+}
 
 inline RayGMem* RayMemory::Rays()
 {
-	return dRayStackIn;
+	return dRayIn;
 }
 
 inline const RayGMem* RayMemory::Rays() const
 {
-	return dRayStackIn;
+	return dRayIn;
 }
 
 inline HitId* RayMemory::HitIds()

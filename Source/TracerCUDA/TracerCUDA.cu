@@ -32,30 +32,17 @@ TracerCUDA::TracerCUDA()
 	, hitManager(DefaultHitmanOptions)
 {}
 
-void TracerCUDA::SetRayDelegateCallback(TracerRayDelegateFunc f)
-{
-	rayDelegateFunc = f;
-}
-
-void TracerCUDA::SetErrorCallback(TracerErrorFunc f)
-{
-	errorFunc = f;
-}
-
-void TracerCUDA::SetAnalyticCallback(int sendRate, TracerAnalyticFunc f)
-{
-	// TODO: 
-	analyticFunc = f;
-}
-
-void TracerCUDA::SetSendImageCallback(int sendRate, TracerImageSendFunc f)
-{
-	// TODO: 
-	imageFunc = f;
-}
-
 void TracerCUDA::Initialize(uint32_t seed)
-{}
+{
+	// Device initalization
+	CudaSystem::Initialize();
+
+	// Select a leader device that is responsible
+	// for sorting and partitioning works
+	// for different materials / accelerators
+	// TODO: Determine a leader Device
+	rayMemory.SetLeaderDevice(0);	   
+}
 
 void TracerCUDA::SetTime(double seconds)
 {}
@@ -87,11 +74,15 @@ void TracerCUDA::UnloadMaterial(uint32_t matId)
 void TracerCUDA::GenerateCameraRays(const CameraPerspective& camera,
 									const uint32_t samplePerPixel)
 {
+	currentRayCount = 512;
+	rayMemory.ResizeRayIn(4096, 0);
 
 	//size_t samples = samplePerPixel *  samplePerPixel;
 	//Vector2i pixel2D = outputImage.
 	//size_t rayCount = outputImage.
 	//rayMemory.Reset(samples * )
+
+
 }
 
 bool TracerCUDA::Continue()
@@ -106,9 +97,10 @@ void TracerCUDA::Render()
 	
 	// We know that we have some valid rays in the system
 	// First we hit rays until we could not find anything
-	void							HitRays();
+	rayMemory.ResizeHitMemory(currentRayCount);
+	hitManager.Process(rayMemory, currentRayCount);
+
 	// Then we use these rays to shade and create more rays
-	void							ShadeRays();
 }
 
 void TracerCUDA::FinishSamples() 

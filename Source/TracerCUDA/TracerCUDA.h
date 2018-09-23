@@ -76,8 +76,6 @@ class TracerCUDA : public TracerI
 
 		// Internals
 		void							SendError(TracerError e, bool isFatal);
-		void							HitRays();
-		void							ShadeRays();
 		
 	public:
 		// Constructors & Destructor
@@ -151,3 +149,25 @@ class TracerCUDA : public TracerI
 		// Clear image
 		void					ResetImage() override;
 };
+
+inline void TracerCUDA::SetRayDelegateCallback(TracerRayDelegateFunc f)
+{
+	rayDelegateFunc = f;
+}
+
+inline void TracerCUDA::SetErrorCallback(TracerErrorFunc f)
+{
+	errorFunc = f;
+}
+
+inline void TracerCUDA::SetAnalyticCallback(int sendRate, TracerAnalyticFunc f)
+{
+	// TODO: 
+	analyticFunc = f;
+}
+
+inline void TracerCUDA::SetSendImageCallback(int sendRate, TracerImageSendFunc f)
+{
+	// TODO: 
+	imageFunc = f;
+}

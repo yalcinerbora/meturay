@@ -79,12 +79,12 @@ class CudaSystem
 		// Convenience Functions For Kernel Call
 		template<class Function, class... Args>
 		static __host__ void						GPUCallX(int gpuIndex, 
-															 size_t sharedMemSize,
+															 uint32_t sharedMemSize,
 															 cudaStream_t stream,
 															 Function&& f, Args&&...);
 		template<class Function, class... Args>
 		static __host__ void						GPUCallXY(int gpuIndex, 
-															  size_t sharedMemSize,
+															  uint32_t sharedMemSize,
 															  cudaStream_t stream,															  
 															  Function&& f, Args&&...);
 
@@ -97,7 +97,7 @@ class CudaSystem
 template<class Function, class... Args>
 __host__
 inline void CudaSystem::GPUCallX(int gpuIndex,
-								 size_t sharedMemSize, 
+								 uint32_t sharedMemSize, 
 								 cudaStream_t stream,								 
 								 Function&& f, Args&&... args)
 {
@@ -113,7 +113,7 @@ inline void CudaSystem::GPUCallX(int gpuIndex,
 template<class Function, class... Args>
 __host__
 inline void CudaSystem::GPUCallXY(int gpuIndex,
-								  size_t sharedMemSize,
+								  uint32_t sharedMemSize,
 								  cudaStream_t stream,
 								  Function&& f, Args&&... args)
 {

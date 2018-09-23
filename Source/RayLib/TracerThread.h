@@ -29,6 +29,7 @@ class TracerThread : public LoopingThreadI
 	private:
 		// Actual Tracer
 		TracerI&						tracer;
+		const uint32_t					seed;
 
 		// Current Settings
 		ThreadData<double>				time;
@@ -43,13 +44,15 @@ class TracerThread : public LoopingThreadI
 		int								currentFrame;
 
 		// Thread work
+		void							InitialWork() override;
 		void							LoopWork() override;
+		void							FinalWork() override;
 		bool							InternallyTerminated() const override;
 
 	protected:
 	public:
 		// Constructors & Destructor
-										TracerThread(TracerI&);
+										TracerThread(TracerI&, uint32_t seed);
 										TracerThread(const TracerThread&) = delete;
 		TracerThread&					operator=(const TracerThread&) = delete;
 										~TracerThread();
@@ -66,8 +69,9 @@ class TracerThread : public LoopingThreadI
 														   const Vector2ui& pixelCount);
 };
 
-inline TracerThread::TracerThread(TracerI& t)
+inline TracerThread::TracerThread(TracerI& t, uint32_t seed)
 	: tracer(t)
+	, seed(seed)
 {}
 
 inline TracerThread::~TracerThread()

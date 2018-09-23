@@ -4,6 +4,11 @@
 #include "SceneIO.h"
 #include "RayLib/Log.h"
 
+void TracerThread::InitialWork()
+{
+	tracer.Initialize(seed);
+}
+
 void TracerThread::LoopWork()
 {
 	// Check if data is changed
@@ -57,6 +62,9 @@ void TracerThread::LoopWork()
 	// Tracer consumed all of the rays 
 	// now loop over and generate new camera rays
 }
+
+void TracerThread::FinalWork()
+{}
 
 bool TracerThread::InternallyTerminated() const
 {

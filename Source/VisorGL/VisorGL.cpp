@@ -406,7 +406,7 @@ void VisorGL::RenderImage()
 	}
 	glClear(GL_COLOR_BUFFER_BIT);
 	// Draw
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	//glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 VisorGL::VisorGL(const VisorOptions& opts)
@@ -416,7 +416,8 @@ VisorGL::VisorGL(const VisorOptions& opts)
 	, commandList(opts.eventBufferSize)
 {
 	if(instance != nullptr) return;
-	
+	instance = this;
+
 	if(!glfwInit())
 	{
 		METU_ERROR_LOG("Could not Init GLFW");
@@ -523,8 +524,8 @@ VisorGL::VisorGL(const VisorOptions& opts)
 	glfwSetScrollCallback(window, VisorGL::MouseScrolledGLFW);
 
 	// Shaders
-	vertPP = ShaderGL(ShaderType::VERTEX, "PProcessGeneric.vert");
-	fragPP = ShaderGL(ShaderType::VERTEX, "PProcessGeneric.frag");
+	vertPP = ShaderGL(ShaderType::VERTEX, "Shaders/PProcessGeneric.vert");
+	fragPP = ShaderGL(ShaderType::VERTEX, "Shaders/PProcessGeneric.frag");
 
 	// Texture
 	glGenTextures(1, &texture);
@@ -612,9 +613,6 @@ void VisorGL::Render()
 
 	// Render Image
 	RenderImage();
-
-	// Swap Buffer
-	glfwSwapBuffers(window);
 }
 
 void VisorGL::SetInputScheme(VisorInputI* i)

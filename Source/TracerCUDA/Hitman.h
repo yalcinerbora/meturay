@@ -7,15 +7,14 @@ Manages hits
 
 #include <map>
 #include <set>
+
 #include "RayLib/DeviceMemory.h"
-#include "RayLib/ArrayPortion.h"
+
 //#include "RayLib/HitStructs.h"
 #include "RayLib/Vector.h"
 
 class GPUAcceleratorI;
 class RayMemory;
-
-using RayPartitionsAccelerator = std::set<ArrayPortion<uint16_t>>;
 
 struct HitmanOptions
 {
@@ -35,9 +34,6 @@ class Hitman
 		GPUAcceleratorI*						baseAccelerator;
 		std::map<uint16_t, GPUAcceleratorI*>	subAccelerators;
 
-		// Internal
-		RayPartitionsAccelerator				Partition(uint32_t& rayCount);
-
 	protected:
 	public:
 		// Constructors & Destructor
@@ -47,7 +43,6 @@ class Hitman
 		Hitman&							operator=(const Hitman&) = delete;
 		Hitman&							operator=(Hitman&&) = default;
 										~Hitman() = default;
-
 
 		// Interface
 		void							Process(RayMemory& memory,

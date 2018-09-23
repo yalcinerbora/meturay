@@ -2,17 +2,6 @@
 #include "RayLib/RayMemory.h"
 #include "RayLib/GPUAcceleratorI.h"
 
-RayPartitionsAccelerator Hitman::Partition(uint32_t& rayCount)
-{
-
-
-
-
-	return RayPartitionsAccelerator();
-}
-
-
-
 Hitman::Hitman(const HitmanOptions& opts)
 	: opts(opts)
 {}
@@ -45,11 +34,14 @@ void Hitman::Process(RayMemory& memory,
 		// Parition to sub accelerators
 		// reduce end count accordingly
 		memory.SortKeys(dHitIds, dHitKeys, currentRayCount, opts.keyBitRange);
-		auto portions = Partition(currentRayCount);
+		auto portions = memory.Partition(currentRayCount, opts.keyBitRange);
 	
 		// For each partition
 		for(const auto& p : portions)
 		{
+			// Skip
+			if(p.portionId == RayMemory::InvalidKey) continue;
+
 			auto loc = subAccelerators.find(p.portionId);
 			if(loc == subAccelerators.end()) continue;
 
