@@ -5,11 +5,11 @@
 #include "RayLib/DeviceMemory.h"
 #include "RayLib/Log.h"
 #include "RayLib/CameraKernels.cuh"
+#include "RayLib/TracerError.h"
 
 TEST(CameraRayGPU, Test)
 {
-
-	bool b = CudaSystem::Initialize();
+	TracerError e = CudaSystem::Initialize();
 
 	static constexpr size_t ThreadCount = 32;
 	static constexpr size_t StateSize = 32 * sizeof(uint32_t);

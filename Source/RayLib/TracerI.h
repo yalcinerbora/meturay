@@ -21,17 +21,20 @@ which does send commands to GPU to do ray tracing
 #include "TracerError.h"
 #include "Types.h"
 
-class SceneI;
+struct HitCPU;
+struct RayCPU;
+
+// Callback
 struct CameraPerspective;
 struct TracerParameters;
-struct HitRecordCPU;
-struct RayRecordCPU;
 struct TracerAnalyticData;
 
-// Callbacks for tracer
-typedef void(*TracerRayDelegateFunc)(const RayRecordCPU&, const HitRecordCPU&,
-									 uint32_t rayCount, uint32_t matId);
+// Main Tracer Logicc
+class TracerLogicI;
 
+// Callbacks for tracer
+typedef void(*TracerRayDelegateFunc)(const RayCPU&, const HitCPU&,
+									 uint32_t rayCount, uint32_t matId);
 typedef void(*TracerErrorFunc)(TracerError);
 typedef void(*TracerAnalyticFunc)(TracerAnalyticData);
 typedef void(*TracerImageSendFunc)(const Vector2ui& offset, 
@@ -54,7 +57,8 @@ class TracerI
 		virtual void					SetSendImageCallback(int sendRate, TracerImageSendFunc) = 0;
 		
 		// COMMANDS TO TRACER
-		virtual void					Initialize(uint32_t seed) = 0;
+		virtual void					Initialize(uint32_t seed, 
+												   TracerLogicI*) = 0;
 
 		// Main Calls
 		virtual void					SetTime(double seconds) = 0;
@@ -72,8 +76,8 @@ class TracerI
 		// to that mat will be transferred to that tracer
 		virtual void					AssignAllMaterials() = 0;
 		virtual void					AssignMaterial(uint32_t matId) = 0;
-		virtual void					LoadMaterial(uint32_t matId) = 0;
-		virtual void					UnloadMaterial(uint32_t matId) = 0;
+		//virtual void					LoadMaterial(uint32_t matId) = 0;
+		//virtual void					UnloadMaterial(uint32_t matId) = 0;
 
 		// Rendering
 		// Generate camera rays (initialize ray pool)
@@ -93,7 +97,7 @@ class TracerI
 		// This is required because of memory limit of GPU 
 		// (only specific tracers will handle specific materials)
 		// Tracer will consume these rays when avaialble
-		virtual void					AddMaterialRays(const RayRecordCPU&, const HitRecordCPU&,
+		virtual void					AddMaterialRays(const RayCPU&, const HitCPU&,
 														uint32_t rayCount, uint32_t matId) = 0;
 
 		// Image Reated

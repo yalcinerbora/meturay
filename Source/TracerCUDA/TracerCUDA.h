@@ -81,7 +81,7 @@ class TracerCUDA : public TracerI
 
 	public:
 		// Constructors & Destructor
-										TracerCUDA(TracerLogicI*);
+										TracerCUDA();
 										TracerCUDA(const TracerCUDA&) = delete;
 		TracerCUDA&						operator=(const TracerCUDA&) = delete;
 										~TracerCUDA() = default;
@@ -98,7 +98,8 @@ class TracerCUDA : public TracerI
 		
 		// COMMANDS TO TRACER
 		// Main Thread Only Calls
-		void					Initialize(uint32_t seed) override;
+		void					Initialize(uint32_t seed,
+										   TracerLogicI*) override;
 
 		// Main Calls
 		void					SetTime(double seconds) override;
@@ -136,8 +137,8 @@ class TracerCUDA : public TracerI
 		// This is required because of memory limit of GPU 
 		// (only specific tracers will handle specific materials)
 		// Tracer will consume these rays when avaialble
-		void					AddMaterialRays(const RayRecordCPU&, const HitRecordCPU&,
-														uint32_t rayCount, uint32_t matId) override;
+		void					AddMaterialRays(const RayCPU&, const HitCPU&,
+												uint32_t rayCount, uint32_t matId) override;
 
 		// Image Reated
 		// Set pixel format

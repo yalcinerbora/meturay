@@ -6,7 +6,7 @@
 
 void TracerThread::InitialWork()
 {
-	tracer.Initialize(seed);
+	tracer.Initialize(seed, &logic);
 }
 
 void TracerThread::LoopWork()

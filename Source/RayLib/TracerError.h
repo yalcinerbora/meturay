@@ -13,6 +13,9 @@ struct TracerError : public ErrorI
 		enum Type
 		{
 			OK,
+			// Initalization
+			CUDA_OLD_DRIVER,
+			CUDA_NO_DEVICE,
 			// General
 			OUT_OF_MEMORY,
 			// ...
@@ -31,6 +34,7 @@ struct TracerError : public ErrorI
 					TracerError(Type);
 					~TracerError() = default;
 
+		operator	Type() const;
 		operator	std::string() const override;
 };
 
@@ -38,11 +42,19 @@ inline TracerError::TracerError(TracerError::Type t)
 	: type(t)
 {}
 
+inline TracerError::operator Type() const
+{
+	return type;
+}
+
 inline TracerError::operator std::string() const
 {
 	const char* const ErrorStrings[] =
 	{
 		"OK.",
+		// Initalization
+		"Old CUDA Runtime found. Please update your driver.",
+		"CUDA Device not found.",
 		// General
 		"File not found.",
 	};

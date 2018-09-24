@@ -1,5 +1,3 @@
-
-
 #include "RayLib/TracerThread.h"
 #include "RayLib/System.h"
 #include "RayLib/Log.h"
@@ -18,73 +16,8 @@ int main(int argc, const char* argv[])
 {
 	EnableVTMode();
 
-	//float aspectRatio = (16.0f / 9.0f);
-	//Vector2ui resolution(1280, 720);
-	//CameraPerspective cam;
-	//cam.apertureSize = 1.0f;
-	//cam.farPlane = 100.0f;
-	//cam.nearPlane = 0.1f;
-	//cam.fov = Vector2f(MathConstants::DegToRadCoef * 70.0f,
-	//				   MathConstants::DegToRadCoef * 60.0f * (1.0f / aspectRatio));
-	//cam.up = YAxis;
-	//cam.position = Vector3f(0.0f, 5.0f, 10.0f);
-	//cam.gazePoint = Vector3f(0.0f, 5.0f, 0.0f);
-	//SceneFile::FluidMaterial fMat;
-	//fMat.colors = 
-	//{	
-	//	Vector3f(1.0f, 1.0f, 1.0f),
-	//	Vector3f(1.0f, 1.0f, 1.0f),
-	//	Vector3f(0.1278f, 0.1611f, 0.272f),
-	//};
-	//fMat.colorInterp = 
-	//{
-	//	0.0f,
-	//	0.5913f,
-	//	1.0f
-	//};
-	//fMat.opacities =
-	//{
-	//	0.0f,
-	//	0.06f,
-	//	1.0f
-	//};
-	//fMat.opacityInterp =
-	//{
-	//	0.0f,
-	//	0.313f,
-	//	1.0f
-	//};
-	//fMat.transparency = Vector3f(0.1814f);
-	//fMat.absorbtionCoeff = 0.3f;
-	//fMat.scatteringCoeff = 0.7f;
-	//fMat.ior = 1.34f;
-	//fMat.materialId = 1;
-	//
-	//SceneFile::Volume volume;
-	//volume.materialId = 1;
-	//volume.surfaceId = 1;
-	//volume.type = VolumeType::MAYA_NCACHE_FLUID;
-	//volume.fileName = "C:/Users/Coastal GPU/Desktop/CS568/fluidCache.xml";
-	////
-	//SceneFile s;
-	//s.cameras.push_back(cam);
-	//s.fluidMaterials.push_back(fMat);
-	//s.volumes.push_back(volume);
-	//auto e = s.Save(s, "testScene.jsn");
-	//if(e != IOError::OK)
-	//{
-	//	return 1;
-	//}
-
-
-	//// First arg is scene name
-	//if(argc <= 1)
-	//{
-	//	METU_ERROR_LOG("Insufficient args...");
-	//	return 1;
-	//}
-
 	uint32_t seed = 0;
+	TracerLogicI* logic = nullptr;
 
 	// Self Distributor
 	//SelfDistributor selfDistributor;
@@ -104,7 +37,7 @@ int main(int argc, const char* argv[])
 	cam.gazePoint = Vector3f(0.0f, 5.0f, 0.0f);
 
 	// Start Tracer Thread and Set scene
-	TracerThread tracer(*tracerI, seed);
+	TracerThread tracer(*tracerI, *logic, seed);
 	//tracer.ChangeScene(std::string(argv[1]));
 	tracer.ChangeResolution(Vector2ui(1920, 1080));
 	tracer.ChangeSampleCount(5);

@@ -1,4 +1,5 @@
 #include "CudaConstants.h"
+#include "TracerError.h"
 
 CudaGPU::CudaGPU(int deviceId)
 	: deviceId(deviceId)
@@ -65,7 +66,7 @@ uint32_t CudaGPU::RecommendedBlockCountPerSM(void* kernelFunc,
 
 std::vector<CudaGPU> CudaSystem::gpus;
 
-bool CudaSystem::Initialize()
+TracerError CudaSystem::Initialize()
 {	
 	int deviceCount;	
 	cudaError err;
@@ -73,11 +74,11 @@ bool CudaSystem::Initialize()
 	err = cudaGetDeviceCount(&deviceCount);
 	if(err == cudaErrorInsufficientDriver)
 	{
-		return false;
+		return TracerError::CUDA_OLD_DRIVER;
 	}
 	else if(err == cudaErrorNoDevice)
 	{
-		return false;
+		return TracerError::CUDA_NO_DEVICE;
 	}
 
 	// All Fine Start Query Devices
@@ -85,5 +86,5 @@ bool CudaSystem::Initialize()
 	{
 		gpus.emplace_back(i);
 	}
-	return true;
+	return TracerError::OK;
 }

@@ -112,9 +112,8 @@ void TracerCUDA::ShadeRays()
 	uint32_t rayCount = currentRayCount;
 
 	// Copy Keys (which are stored in HitGMem) to HitKeys
-	// And Ids before sorting
-	// TODO: 
-	//CudaSystem::GPUCallX();
+	// Make ready for sorting
+	rayMemory.FillRayIdsForSort(rayCount);
 
 	// Sort with respect to the hits that are returned
 	rayMemory.SortKeys(dRayIds, dHitKeys, rayCount, Vector2i(0, 32));
@@ -157,8 +156,14 @@ void TracerCUDA::ShadeRays()
 		RayId* dRayIdStart = dRayIds + p.offset;
 		RayGMem* dRayOutStart = dRaysOut + outOffset;
 		void* dAuxOutStart = dAuxOut + (outOffset * tracerSystem->PerRayAuxDataSize());
-		
+	
 		// Actual Shade Call
+		// TODO: Defer this call if p.count is too low
+		// Problem: What if it is always low ?
+		// Probably it is better to launch it
+		//
+		// Another TODO: Implement multi-gpu load balancing
+		// More TODO: Implement single-gpu SM load balacing
 		loc->second->ShadeRays(dRayOutStart, dAuxOutStart,
 							   dRays, dHits, dAux,
 							   dRayIdStart,
@@ -166,30 +171,33 @@ void TracerCUDA::ShadeRays()
 		
 	}
 	assert(totalOutRayCount == outOffset);	
-	currentRayCount = totalOutRayCount;
+	currentRayCount = static_cast<uint32_t>(totalOutRayCount);
 
 	// Shading complete
 	// Now make "RayOut" to "RayIn"
 	rayMemory.SwapRays();
 }
 
-TracerCUDA::TracerCUDA(TracerLogicI* logic)
+TracerCUDA::TracerCUDA()
 	: rayDelegateFunc(nullptr)
 	, errorFunc(nullptr)
 	, analyticFunc(nullptr)
 	, imageFunc(nullptr)
 	, currentRayCount(0)
-	, tracerSystem(logic)
+	
 {}
 
-void TracerCUDA::Initialize(uint32_t seed)
+void TracerCUDA::Initialize(uint32_t seed, TracerLogicI* logic)
 {
 	// Device initalization
-	if(!CudaSystem::Initialize())
+	TracerError e(TracerError::END);
+	if((e = CudaSystem::Initialize()) != TracerError::OK)
 	{
-		METU_ERROR_LOG("Unable to Init CUDA");
-		if(errorFunc) errorFunc();
+		if(errorFunc) errorFunc(e);
 	}
+
+	// Set Tracer System
+	tracerSystem = logic;
 
 	// Select a leader device that is responsible
 	// for sorting and partitioning works
@@ -260,7 +268,7 @@ bool TracerCUDA::IsCrashed()
 	return (!healthy);
 }
 
-void TracerCUDA::AddMaterialRays(const RayRecordCPU&, const HitRecordCPU&,
+void TracerCUDA::AddMaterialRays(const RayCPU&, const HitCPU&,
 								 uint32_t rayCount, uint32_t matId)
 {}
 

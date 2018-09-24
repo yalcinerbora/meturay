@@ -36,9 +36,6 @@ class RayMemory
 		DeviceMemory				memIn;
 		DeviceMemory				memOut;
 
-		size_t						memInMaxRayCount;
-		size_t						memOutMaxRayCount;
-
 		// Ray Related
 		RayGMem*					dRayIn;
 		RayGMem*					dRayOut;
@@ -46,7 +43,8 @@ class RayMemory
 		void*						dRayAuxOut;
 
 		// Hit Related
-		void*						dSortAuxiliary;
+		size_t						tempMemorySize;
+		void*						dTempMemory;
 		RayId*						dIds0, *dIds1;		
 		HitKey*						dKeys0, *dKeys1;
 		//
@@ -101,7 +99,7 @@ class RayMemory
 		void						Reset(size_t rayCount);
 
 		// Memory ALlocation and reset
-		void						ResizeHitMemory(size_t rayCount);
+		void						ResetHitMemory(size_t rayCount);
 		void						ResizeRayIn(size_t rayCount, size_t perRayAuxSize);
 		void						ResizeRayOut(size_t rayCount, size_t perRayAuxSize);
 		void						SwapRays();
@@ -115,6 +113,8 @@ class RayMemory
 		// Updates the ray count where the rays with 0xFF..F are considered done
 		RayPartitions<uint32_t>		Partition(uint32_t& rayCount,
 											  const Vector2i& bitRange);
+		// Initialize HitIds and Indices
+		void						FillRayIdsForSort(uint32_t rayCount);
 };
 
 inline void RayMemory::SetLeaderDevice(int deviceId)
@@ -144,12 +144,12 @@ inline T* RayMemory::RayAuxOut()
 	return static_cast<T*>(dRayAuxIn);
 }
 
-HitGMem* RayMemory::Hits()
+inline HitGMem* RayMemory::Hits()
 {
 	return dHits;
 }
 
-const HitGMem* RayMemory::Hits() const
+inline const HitGMem* RayMemory::Hits() const
 {
 	return dHits;
 }

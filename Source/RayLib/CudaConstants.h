@@ -12,6 +12,8 @@ Thread per Block etc..
 #include <vector>
 #include "Vector.h"
 
+struct TracerError;
+
 // Except first generation this did not change having this compile time constant is a bliss
 static constexpr unsigned int WarpSize = 32;
 
@@ -74,7 +76,7 @@ class CudaSystem
 											CudaSystem() = delete;
 											CudaSystem(const CudaSystem&) = delete;
 
-		static bool							Initialize();
+		static TracerError					Initialize();
 
 		// Convenience Functions For Kernel Call
 		template<class Function, class... Args>
