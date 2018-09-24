@@ -44,9 +44,8 @@ Single thread will
 //using MaterialRaysCPU = std::map<uint32_t, RayRecordCPU>;
 //using MaterialHitsCPU = std::map<uint32_t, HitRecordCPU>;
 
-
-struct RayAuxData
-{};
+class TracerLogicI;
+struct RayAuxData;
 
 class TracerCUDA : public TracerI
 {
@@ -68,18 +67,21 @@ class TracerCUDA : public TracerI
 		uint32_t						currentRayCount;
 		TracerParameters				parameters;
 	
-		//
-		Hitman							hitManager;
+		// Base tracer logic
+		TracerLogicI*					tracerSystem;
 
 		// Error related
 		bool							healthy;
 
 		// Internals
 		void							SendError(TracerError e, bool isFatal);
-		
+		void							HitRays();
+		void							SendAndRecieveRays();
+		void							ShadeRays();
+
 	public:
 		// Constructors & Destructor
-										TracerCUDA();
+										TracerCUDA(TracerLogicI*);
 										TracerCUDA(const TracerCUDA&) = delete;
 		TracerCUDA&						operator=(const TracerCUDA&) = delete;
 										~TracerCUDA() = default;
@@ -109,13 +111,12 @@ class TracerCUDA : public TracerI
 
 		// Material Related
 		// Main memory bottleneck is materials.
-		// Tracers are designed around this bottlenech considering GPU memory limitations.
+		// Tracers are designed around this bottleneck considering GPU memory limitations.
 		// A tracer will be assigned with a specific material and those rays that hits
 		// to that mat will be transferred to that tracer
 		void					AssignAllMaterials() override;
 		void					AssignMaterial(uint32_t matId) override;
-		void					LoadMaterial(uint32_t matId) override;
-		void					UnloadMaterial(uint32_t matId) override;
+
 
 		// Rendering
 		// Generate camera rays (initialize ray pool)

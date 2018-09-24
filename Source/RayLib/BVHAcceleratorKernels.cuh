@@ -23,25 +23,25 @@ with custom Intersection and Hit acceptance
 // data holds nothing at all)
 // etc.
 template <class LeafStruct, class PrimitiveData>
-__device__ float(*IntersctionFunc)(const RayReg& r,
-								   const LeafStruct& data,
-								   const PrimitiveData& gPrimData);
+using IntersctionFunc = __device__ float(*)(const RayReg& r,
+											const LeafStruct& data,
+											const PrimitiveData& gPrimData);
 
 // Accept hit function is used to update hit structure of the ray
 // It returns immidiate termination if necessary (i.e. when any hit is enough like
 // in volume rendering).
 template <class HitStruct>
-__device__  bool (*AcceptHitFunc)(HitStruct& data, 
-								  RayReg& r, 
-								  float newT);
+using AcceptHitFunc = __device__  bool(*)(HitStruct& data,
+										  RayReg& r,
+										  float newT);
 
 // Custom bounding box generation function for primitive
 template <class PrimitiveData>
-__device__  AABB3f(*BoxGenFunc)(uint32_t primitiveId, const PrimitiveData&);
+using BoxGenFunc = __device__  AABB3f(*)(uint32_t primitiveId, const PrimitiveData&);
 
 // Surface area generation function for primitive
 template <class PrimitiveData>
-__device__  float(*AreaGenFunc)(uint32_t primitiveId, const PrimitiveData&);
+using AreaGenFunc = __device__  float(*)(uint32_t primitiveId, const PrimitiveData&);
 
 // Fundamental BVH Tree Node
 template<class LeafStruct>

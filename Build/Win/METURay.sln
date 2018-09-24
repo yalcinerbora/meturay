@@ -17,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TracerCUDA", "TracerCUDA\Tr
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MRenderer", "MRenderer\MRenderer.vcxproj", "{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TracerSystems", "TracerSystems", "{2EAF14DD-D88F-42DE-A731-EA7901227CE1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

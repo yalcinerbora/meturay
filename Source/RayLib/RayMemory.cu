@@ -13,15 +13,14 @@ struct ValidSplit
 	}
 };
 
-__global__ void FillHitIds(HitKey* gKeys, HitId* gIds, uint32_t rayCount)
+__global__ void FillHitIds(HitKey* gKeys, RayId* gIds, uint32_t rayCount)
 {
 	// Grid Stride Loop
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
 		globalId < rayCount; 
 		globalId += blockDim.x * gridDim.x)
 	{
-		gIds[globalId].rayId = globalId;
-		gIds[globalId].innerId = RayMemory::InvalidData;
+		gIds[globalId] = globalId;
 		gKeys[globalId] = RayMemory::InvalidKey;
 	}
 }
@@ -112,7 +111,7 @@ void RayMemory::ResizeRayOut(size_t rayCount, size_t perRayAuxSize)
 	ResizeRayMemory(dRayOut, dRayAuxOut, memOut, rayCount, perRayAuxSize);
 }
 
-void RayMemory::SwapRays(size_t rayCount)
+void RayMemory::SwapRays()
 {
 	DeviceMemory temp = std::move(memIn);
 	memIn = std::move(memOut);
@@ -136,12 +135,12 @@ void RayMemory::ResizeHitMemory(size_t rayCount)
 	size_t sizeOfKeys = sizeof(HitKey) * rayCount;
 	sizeOfKeys = AlignByteCount * ((sizeOfKeys + (AlignByteCount - 1)) / AlignByteCount);
 
-	size_t sizeOfIds = sizeof(HitId) * rayCount;
+	size_t sizeOfIds = sizeof(RayId) * rayCount;
 	sizeOfIds = AlignByteCount * ((sizeOfIds + (AlignByteCount - 1)) / AlignByteCount);
 
 	// Find out sort auxiliary storage
 	cub::DoubleBuffer<HitKey> dbKeys;
-	cub::DoubleBuffer<HitId> dbIds;
+	cub::DoubleBuffer<RayId> dbIds;
 	size_t sizeOfSort = 0;
 	CUDA_CHECK(cub::DeviceRadixSort::SortPairs(nullptr, sizeOfSort,
 											   dbKeys, dbIds,
@@ -173,11 +172,11 @@ void RayMemory::ResizeHitMemory(size_t rayCount)
 	// Populate pointers
 	size_t offset = 0;
 	std::uint8_t* dHit = static_cast<uint8_t*>(memHit);
-	dIds0 = reinterpret_cast<HitId*>(dHit + offset);
+	dIds0 = reinterpret_cast<RayId*>(dHit + offset);
 	offset += sizeOfIds;
 	dKeys0 = reinterpret_cast<HitKey*>(dHit + offset);
 	offset += sizeOfKeys;
-	dIds1 = reinterpret_cast<HitId*>(dHit + offset);
+	dIds1 = reinterpret_cast<RayId*>(dHit + offset);
 	offset += sizeOfIds;
 	dKeys1 = reinterpret_cast<HitKey*>(dHit + offset);
 	offset += sizeOfKeys;
@@ -192,14 +191,14 @@ void RayMemory::ResizeHitMemory(size_t rayCount)
 	CudaSystem::GPUCallX(leaderDeviceId, 0, 0, FillHitIds, dKeys, dIds, static_cast<uint32_t>(rayCount));
 }
 
-void RayMemory::SortKeys(HitId*& ids, HitKey*& keys, 
+void RayMemory::SortKeys(RayId*& ids, HitKey*& keys, 
 						 size_t count,
 						 const Vector2i& bitRange)
 {
 	// Sort Call over buffers
 	size_t sizeOfSort = 0;
 	cub::DoubleBuffer<HitKey> dbKeys(dKeys, (dKeys == dKeys0) ? dKeys1 : dKeys0);
-	cub::DoubleBuffer<HitId> dbIds(dIds, (dIds == dIds0) ? dIds1 : dIds0);	
+	cub::DoubleBuffer<RayId> dbIds(dIds, (dIds == dIds0) ? dIds1 : dIds0);
 	cub::DeviceRadixSort::SortPairs(dSortAuxiliary, sizeOfSort,
 									dbKeys, dbIds,
 									static_cast<int>(count),
@@ -216,11 +215,11 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t& rayCount,
 											 const Vector2i& bitRange)
 {
 	// Use double buffers for partition auxilary data		
-	HitId* dEmptyIds = (dIds == dIds0) ? dIds1 : dIds0;
+	RayId* dEmptyIds = (dIds == dIds0) ? dIds1 : dIds0;
 	HitKey* dEmptyKeys = (dKeys == dKeys0) ? dKeys1 : dKeys0;
 
 	// Generate Names that make sense for the operation
-	static_assert(sizeof(HitId) == 2 * sizeof(HitKey), "Size Mismatch");
+	static_assert(sizeof(RayId) == 2 * sizeof(HitKey), "Size Mismatch");
 	uint32_t* dSparseSplitIndices = dEmptyKeys;
 	uint32_t* dDenseSplitIndices = reinterpret_cast<uint32_t*>(dEmptyIds);	
 	uint32_t* dSelectCount = static_cast<uint32_t*>(dSortAuxiliary);
@@ -261,16 +260,21 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t& rayCount,
 	CUDA_CHECK(cudaMemcpy(hDenseIndices.data(), dDenseSplitIndices,
 						  sizeof(uint32_t) * hSelectCount,
 						  cudaMemcpyDeviceToHost));
-	
-	// Check if last split contains invalids.
-	// Then update rayCount acordingly
-	uint32_t initialRayCount = 0;
+
+	// Save old ray count
+	uint32_t initialRayCount = rayCount;
+
+	// If last split contains empty / invalids
+	// Do not add it to partition list
 	uint32_t InvalidKeyPartition = InvalidKey;
 	InvalidKeyPartition >>= bitRange[0];
 	InvalidKeyPartition &= ((0x1 << (bitRange[1] - bitRange[0])) - 1);
 	if(hDenseKeys.back() == InvalidKeyPartition)
 	{
+		// Last one contains invalid rays
+		// Do not add rayCount
 		rayCount = hDenseIndices.back();
+		hSelectCount--;
 	}
 
 	// Construct The Set

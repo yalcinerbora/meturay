@@ -26,12 +26,11 @@ class RayMemory
 		static constexpr int		ByteSize = 8;
 
 		static constexpr HitKey		InvalidKey = 0xFFFFFFFF;
+		static constexpr HitKey		OutsideMatKey = 0xFFFFFFFE;
 		static constexpr uint32_t	InvalidData = 0xFFFFFFFF;
 
 	private:
-		//DeviceMemory				sortMemory;
 		int							leaderDeviceId;
-
 
 		DeviceMemory				memHit;
 		DeviceMemory				memIn;
@@ -48,12 +47,11 @@ class RayMemory
 
 		// Hit Related
 		void*						dSortAuxiliary;
-		HitId*						dIds0, *dIds1;		
+		RayId*						dIds0, *dIds1;		
 		HitKey*						dKeys0, *dKeys1;
-
 		//
-
-		HitId*						dIds;
+		HitGMem*					dHits;
+		RayId*						dIds;
 		HitKey*						dKeys;
 		
 		static void					ResizeRayMemory(RayGMem*& dRays, void*& dRayAxData,
@@ -71,10 +69,26 @@ class RayMemory
 									~RayMemory() = default;
 
 		// Accessors
-		RayGMem*					Rays();
+		//RayGMem*					Rays();
 		const RayGMem*				Rays() const;
-		HitId*						HitIds();
-		const HitId*				HitIds() const;
+		/*template<class T>
+		T*							RayAux();*/
+		template<class T>
+		const T*					RayAux() const;
+
+		RayGMem*					RaysOut();
+		//const RayGMem*				Rays() const;
+		template<class T>
+		T*							RayAuxOut();
+		//template<class T>
+		//const T*					RayAux() const;
+
+
+		// Hit Related
+		HitGMem*					Hits();
+		const HitGMem*				Hits() const;
+		RayId*						RayIds();
+		const RayId*				RayIds() const;
 		HitKey*						HitKeys();
 		const HitKey*				HitKeys() const;
 				
@@ -90,11 +104,11 @@ class RayMemory
 		void						ResizeHitMemory(size_t rayCount);
 		void						ResizeRayIn(size_t rayCount, size_t perRayAuxSize);
 		void						ResizeRayOut(size_t rayCount, size_t perRayAuxSize);
-		void						SwapRays(size_t rayCount);
+		void						SwapRays();
 
 		// Common Functions
 		// Sorts the hit list for multi-kernel calls
-		void						SortKeys(HitId*& ids, HitKey*& keys,
+		void						SortKeys(RayId*& ids, HitKey*& keys,
 											 size_t count,
 											 const Vector2i& bitRange);
 		// Partitions the segments for multi-kernel calls
@@ -108,22 +122,44 @@ inline void RayMemory::SetLeaderDevice(int deviceId)
 	leaderDeviceId = deviceId;
 }
 
-inline RayGMem* RayMemory::Rays()
-{
-	return dRayIn;
-}
-
 inline const RayGMem* RayMemory::Rays() const
 {
 	return dRayIn;
 }
 
-inline HitId* RayMemory::HitIds()
+template<class T>
+inline const T* RayMemory::RayAux() const
+{
+	return static_cast<const T*>(dRayAuxIn);
+}
+
+inline RayGMem* RayMemory::RaysOut()
+{
+	return dRayIn;
+}
+
+template<class T>
+inline T* RayMemory::RayAuxOut()
+{
+	return static_cast<T*>(dRayAuxIn);
+}
+
+HitGMem* RayMemory::Hits()
+{
+	return dHits;
+}
+
+const HitGMem* RayMemory::Hits() const
+{
+	return dHits;
+}
+
+inline RayId* RayMemory::RayIds()
 {
 	return dIds;
 }
 
-inline const HitId* RayMemory::HitIds() const
+inline const RayId* RayMemory::RayIds() const
 {
 	return dIds;
 }

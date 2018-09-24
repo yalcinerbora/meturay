@@ -192,7 +192,13 @@
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\GPUAcceleratorI.h">
-      <Filter>Interfaces</Filter>
+      <Filter>GPU Logic Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerLogicI.h">
+      <Filter>GPU Logic Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\GPUMaterialI.h">
+      <Filter>GPU Logic Interfaces</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -237,6 +243,9 @@
     </Filter>
     <Filter Include="GPU Template Kernels">
       <UniqueIdentifier>{d1856759-1119-4b2a-941f-174323653ed2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GPU Logic Interfaces">
+      <UniqueIdentifier>{29b86e2d-4f6d-4c2a-ba04-632a61523034}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

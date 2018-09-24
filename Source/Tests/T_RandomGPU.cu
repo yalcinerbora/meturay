@@ -51,8 +51,8 @@ TEST(RandomGPU, All)
 	CUDA_CHECK(cudaDeviceSynchronize());
 
 	
-	//for(int i = 0; i < NumberCount; i++)
-	//{
-	//	METU_LOG("%u", h_data[i]);
-	//}
+	for(int i = 0; i < NumberCount; i++)
+	{
+		METU_LOG("%u", h_data[i]);
+	}
 }

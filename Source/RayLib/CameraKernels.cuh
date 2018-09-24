@@ -15,16 +15,31 @@ Camera Ray Generation Kernel
 
 #include "RayLib/Random.cuh"
 
-template<class RayAux>
-__global__ void KCGenerateCameraRays(RayGMem* gRays,
+// Commands that initialize ray auxiliary data
+template <class RayAuxGMem, class RayAuxBaseData>
+using AuxInitFunc = void(*)(const RayAuxGMem gAux,
+							const uint32_t writeLocation,
+							// Input
+							const RayAuxBaseData baseData,
+							// Index
+							const Vector2ui& globalPixelId,
+							const Vector2ui& localSampleId,
+							const uint32_t samplePerPixel);
 
+// Templated Camera Ray Generation Kernel
+template<class RayAuxGMem, class RayAuxBaseData,
+		 AuxInitFunc<RayAuxGMem, RayAuxBaseData> AuxFunc>
+__global__ void KCGenerateCameraRays(RayGMem* gRays,
+									 RayAuxGMem gAuxiliary,
 									 // Input
 									 RNGGMem gRNGStates,
 									 const CameraPerspective cam,
 									 const uint32_t samplePerPixel,
 									 const Vector2ui resolution,
 									 const Vector2ui pixelStart,
-									 const Vector2ui pixelCount)
+									 const Vector2ui pixelCount,
+									 // Data to initialize auxiliary base data
+									 const RayAuxBaseData auxBaseData)
 {
 	extern __shared__ uint32_t sRandState[];
 	RandomGPU rng(gRNGStates.state, sRandState);
@@ -48,9 +63,9 @@ __global__ void KCGenerateCameraRays(RayGMem* gRays,
 
 	// Camera parameters
 	Vector3 topLeft = cam.position
-		- right *  widthHalf
-		+ up * heightHalf
-		+ gaze * cam.nearPlane;
+						- right *  widthHalf
+						+ up * heightHalf
+						+ gaze * cam.nearPlane;
 	Vector3 pos = cam.position;
 
 	// Kernel Grid-Stride Loop
@@ -75,21 +90,25 @@ __global__ void KCGenerateCameraRays(RayGMem* gRays,
 		Vector2 samplePointDistance = sampleDistance + randomOffset * delta;
 		Vector3 samplePoint = topLeft + (samplePointDistance[0] * right) - (samplePointDistance[1] * up);
 	
-
 		// Generate Required Parameters
 		Vector2ui localPixelId = globalPixelId - pixelStart;
 		uint32_t pixelIdLinear = localPixelId[1] * pixelCount[0] + localPixelId[0];
 		uint32_t sampleIdLinear = localSampleId[1] * samplePerPixel + localSampleId[0];
 		Vector3 rayDir = (samplePoint - pos).Normalize();
 
-		//// Write to GMem
-		//Vector4 posAndMed = Vector4(pos, 1.0f);
-		//Vec3AndUInt dirAndPix = {rayDir, pixelIdLinear};		
-		//Vec3AndUInt radAndSamp = {Zero3, sampleIdLinear};
-		//gRays.posAndMedium[threadId] = posAndMed;
-		//gRays.dirAndPixId[threadId] = dirAndPix;
-		//gRays.radAndSampId[threadId] = radAndSamp;
-	}
+		RayGMem ray =
+		{
+			pos,
+			0,
+			rayDir,
+			FLT_MAX
+		};
 
-
+		// Initialize Auxiliary Data
+		AuxFunc(gAuxiliary, auxBaseData,
+				threadId,
+				globalPixelId,
+				localSampleId,
+				samplePerPixel);
+	}	
 }

@@ -13,6 +13,9 @@
     <Filter Include="DeviceCode">
       <UniqueIdentifier>{4dd183f7-1605-4e68-aad1-6afae2f26692}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{70b132b2-b6ad-45b1-b2c5-910e6f387aaf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDA.h" />

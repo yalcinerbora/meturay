@@ -71,7 +71,7 @@
     </CudaCompile>
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>
-      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+      <CodeGeneration>compute_52,sm_52</CodeGeneration>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
@@ -111,7 +111,7 @@
     </CudaCompile>
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>
-      <CodeGeneration>compute_52,sm_52;compute_30,sm_30</CodeGeneration>
+      <CodeGeneration>compute_52,sm_52</CodeGeneration>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
@@ -137,6 +137,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\Error.h" />
     <ClInclude Include="..\..\..\Source\RayLib\FunctionEnablers.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\GPUAcceleratorI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\GPUMaterialI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\HitStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageMemory.h" />
@@ -182,6 +183,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\TracerDistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerError.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\TracerLogicI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerThread.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Types.h" />

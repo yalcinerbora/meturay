@@ -31,8 +31,7 @@ class Hitman
 	private:				
 		HitmanOptions							opts;
 
-		GPUAcceleratorI*						baseAccelerator;
-		std::map<uint16_t, GPUAcceleratorI*>	subAccelerators;
+		
 
 	protected:
 	public:
