@@ -38,6 +38,12 @@ ImageMemory::ImageMemory(const Vector2ui& offset,
 	, pixelSize(PixelFormatToSize(format))
 {}
 
+void ImageMemory::SetPixelFormat(PixelFormat f)
+{
+	format = f;
+	Reportion(segmentOffset, segmentSize);
+}
+
 void ImageMemory::Reportion(const Vector2ui& offset,
 							const Vector2ui& size)
 {
@@ -67,12 +73,12 @@ void ImageMemory::Reset()
 		CUDA_CHECK(cudaMemset(memory, 0x0, PixelFormatToSize(format) * pixelCount));
 }
 
-Vector2ui ImageMemory::Segment() const
+Vector2ui ImageMemory::SegmentSize() const
 {
 	return segmentSize;
 }
 
-Vector2ui ImageMemory::Offset() const
+Vector2ui ImageMemory::SegmentOffset() const
 {
 	return segmentOffset;
 }

@@ -30,20 +30,6 @@ Single thread will
 #include "RayLib/HitStructs.h"
 #include "RayLib/RayStructs.h"
 
-#include "Hitman.h"
-
-//#include "RayLib/Texture.cuh"
-//#include "RayLib/ArrayPortion.h"
-//#include "SceneGPU.h"
-//#include "ObjAcceleratorBatchI.h"
-//#include "RayLib/MaterialI.h"
-//
-////using GPUMaterialPtr = std::unique_ptr<GPUMaterialI>;
-//using ObjAcceleratorPtr = std::unique_ptr<ObjAcceleratorBatchI>;
-//using MaterialRays = std::set<ArrayPortion<uint32_t>>;
-//using MaterialRaysCPU = std::map<uint32_t, RayRecordCPU>;
-//using MaterialHitsCPU = std::map<uint32_t, HitRecordCPU>;
-
 class TracerLogicI;
 struct RayAuxData;
 
@@ -57,9 +43,10 @@ class TracerCUDA : public TracerI
 		TracerImageSendFunc				imageFunc;
 
 		// GPU Specific Memory (Mostly Textures)
-		RNGMemory						rngMemory;
+		//-----
 
 		// Common Memory
+		RNGMemory						rngMemory;
 		RayMemory						rayMemory;
 		ImageMemory						outputImage;		
 			
@@ -117,7 +104,8 @@ class TracerCUDA : public TracerI
 		// to that mat will be transferred to that tracer
 		void					AssignAllMaterials() override;
 		void					AssignMaterial(uint32_t matId) override;
-
+		void					UnassignAllMaterials() override;
+		void					UnassignMaterial(uint32_t matId) override;
 
 		// Rendering
 		// Generate camera rays (initialize ray pool)

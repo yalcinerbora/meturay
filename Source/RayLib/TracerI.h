@@ -76,6 +76,9 @@ class TracerI
 		// to that mat will be transferred to that tracer
 		virtual void					AssignAllMaterials() = 0;
 		virtual void					AssignMaterial(uint32_t matId) = 0;
+		virtual void					UnassignAllMaterials() = 0;
+		virtual void					UnassignMaterial(uint32_t matId) = 0;
+		
 		//virtual void					LoadMaterial(uint32_t matId) = 0;
 		//virtual void					UnloadMaterial(uint32_t matId) = 0;
 

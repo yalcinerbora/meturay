@@ -96,6 +96,7 @@ __global__ void KCGenerateCameraRays(RayGMem* gRays,
 		uint32_t sampleIdLinear = localSampleId[1] * samplePerPixel + localSampleId[0];
 		Vector3 rayDir = (samplePoint - pos).Normalize();
 
+		// Initialize Ray
 		RayGMem ray =
 		{
 			pos,
@@ -103,10 +104,14 @@ __global__ void KCGenerateCameraRays(RayGMem* gRays,
 			rayDir,
 			FLT_MAX
 		};
+		gRays[threadId] = ray;
 
 		// Initialize Auxiliary Data
-		AuxFunc(gAuxiliary, auxBaseData,
+		AuxFunc(gAuxiliary,
 				threadId,
+				// Input
+				auxBaseData,
+				// Index
 				globalPixelId,
 				localSampleId,
 				samplePerPixel);

@@ -25,19 +25,22 @@ void TracerCUDA::HitRays()
 	GPUBaseAcceleratorI* baseAccelerator = tracerSystem->BaseAcelerator();
 	std::map<uint16_t, GPUAcceleratorI*> subAccelerators = tracerSystem->Accelerators();
 
+	// Reset Hit Memory for hit loop
+	rayMemory.ResetHitMemory(currentRayCount);
+
 	// Ray Memory Pointers
 	const RayGMem* dRays = rayMemory.Rays();
 	HitGMem* dHits = rayMemory.Hits();
 	HitKey* dHitKeys = rayMemory.HitKeys();	
 	RayId*	dRayIds = rayMemory.RayIds();
-
+	
 	// Try to hit rays until no ray is left 
 	// (these rays will be assigned with a material)
 	// outside rays are also assigned with a material (which is special)
 	uint32_t rayCount = currentRayCount;
 	while(rayCount > 0)
 	{
-		// Traverse accelerator
+		// Traverse accelerator		
 		baseAccelerator->Hit(dHitKeys, dRays, dRayIds,
 							 rayCount);
 		// Base accelerator traverses the data partially
@@ -47,8 +50,10 @@ void TracerCUDA::HitRays()
 		// After that systems sorts ray hit list and key
 		// and partitions the array this partitioning scheme 
 
-		// Sort initial results (to partition and launch kernels accordingly)		
-		
+		// Sort and Partition happens on the leader device
+		CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice()));
+
+		// Sort initial results (to partition and launch kernels accordingly)				
 		rayMemory.SortKeys(dRayIds, dHitKeys, rayCount, accBitRange);
 		// Parition to sub accelerators
 		// Remove the rays that are invalid.
@@ -83,6 +88,9 @@ void TracerCUDA::HitRays()
 
 		}
 		// Iteration is done
+		// We cant continue loop untill these kernels are finished 
+		// on gpu(s)
+		CUDA_CHECK(cudaDeviceSynchronize());
 	}
 	// At the end of iteration each accelerator holds its custom struct array
 	// And hit ids holds a index for that struct	
@@ -110,6 +118,9 @@ void TracerCUDA::ShadeRays()
 	// Now here conside incoming rays from different tracers
 	// Consume ray array
 	uint32_t rayCount = currentRayCount;
+
+	// Sort and Partition happens on leader device
+	CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice()));
 
 	// Copy Keys (which are stored in HitGMem) to HitKeys
 	// Make ready for sorting
@@ -167,7 +178,8 @@ void TracerCUDA::ShadeRays()
 		loc->second->ShadeRays(dRayOutStart, dAuxOutStart,
 							   dRays, dHits, dAux,
 							   dRayIdStart,
-							   static_cast<uint32_t>(p.count));
+							   static_cast<uint32_t>(p.count),
+							   rngMemory);
 		
 	}
 	assert(totalOutRayCount == outOffset);	
@@ -231,17 +243,36 @@ void TracerCUDA::AssignAllMaterials()
 void TracerCUDA::AssignMaterial(uint32_t matId)
 {}
 
-//void TracerCUDA::LoadMaterial(uint32_t matId)
-//{}
-//
-//void TracerCUDA::UnloadMaterial(uint32_t matId)
-//{}
+void TracerCUDA::UnassignAllMaterials()
+{}
+
+void TracerCUDA::UnassignMaterial(uint32_t matId)
+{}
 
 void TracerCUDA::GenerateCameraRays(const CameraPerspective& camera,
 									const uint32_t samplePerPixel)
 {
+	// Initial ray count
+	currentRayCount = outputImage.SegmentSize()[0] *
+		outputImage.SegmentSize()[1] *
+		samplePerPixel *
+		samplePerPixel;
+
+	// Allocate enough space for ray
+	rayMemory.ResizeRayOut(currentRayCount, tracerSystem->PerRayAuxDataSize());
+
 	// Delegate camera ray generation to tracer system
-	tracerSystem->GenerateCameraRays(rayMemory, camera, samplePerPixel);
+	tracerSystem->GenerateCameraRays(rayMemory, rngMemory,
+									 camera, samplePerPixel,
+									 outputImage.Resolution(),
+									 outputImage.SegmentOffset(),
+									 outputImage.SegmentSize());
+
+	
+
+	// You can only write to out buffer of the ray memory
+	// Make that memory in rays for hit/shade system
+	rayMemory.SwapRays();
 }
 
 bool TracerCUDA::Continue()
@@ -272,15 +303,23 @@ void TracerCUDA::AddMaterialRays(const RayCPU&, const HitCPU&,
 								 uint32_t rayCount, uint32_t matId)
 {}
 
-void TracerCUDA::SetImagePixelFormat(PixelFormat)
-{}
+void TracerCUDA::SetImagePixelFormat(PixelFormat f)
+{
+	outputImage.SetPixelFormat(f);
+}
 
 void TracerCUDA::ReportionImage(const Vector2ui& offset,
 								const Vector2ui& size)
-{}
+{
+	outputImage.Reportion(offset, size);
+}
 
 void TracerCUDA::ResizeImage(const Vector2ui& resolution)
-{}
+{
+	outputImage.Resize(resolution);
+}
 
 void TracerCUDA::ResetImage()
-{}
+{
+	outputImage.Reset();
+}

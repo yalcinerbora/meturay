@@ -38,6 +38,7 @@ class ImageMemory
 		ImageMemory&			operator=(ImageMemory&&) = default;
 								~ImageMemory() = default;
 					
+		void					SetPixelFormat(PixelFormat);
 		void					Reportion(const Vector2ui& offset,
 										  const Vector2ui& size);
 		void					Resize(const Vector2ui& resolution);
@@ -47,8 +48,8 @@ class ImageMemory
 		std::vector<T>			MoveImageToCPU();
 	
 		// Getters
-		Vector2ui				Segment() const;
-		Vector2ui				Offset() const;
+		Vector2ui				SegmentSize() const;
+		Vector2ui				SegmentOffset() const;
 		Vector2ui				Resolution() const;
 		
 		template <class T>

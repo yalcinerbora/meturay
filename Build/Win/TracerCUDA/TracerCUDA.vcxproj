@@ -12,7 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerCUDA\BVHDevice.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\Hitman.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialGPU.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\HitKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MeshGPU.h" />
@@ -28,7 +27,6 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\MaterialGPU.cu" />
-    <ClCompile Include="..\..\..\Source\TracerCUDA\Hitman.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\SceneGPU.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\VolumeGPU.cpp" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\SVODevice.cu" />

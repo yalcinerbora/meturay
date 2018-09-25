@@ -79,6 +79,7 @@ class CudaSystem
 		static TracerError					Initialize();
 
 		// Convenience Functions For Kernel Call
+		// Simple stream "0" full GPU utilizing calls
 		template<class Function, class... Args>
 		static __host__ void						GPUCallX(int gpuIndex, 
 															 uint32_t sharedMemSize,
@@ -90,7 +91,13 @@ class CudaSystem
 															  cudaStream_t stream,															  
 															  Function&& f, Args&&...);
 
-		static const std::vector<CudaGPU>	GPUList();
+		// Smart GPU Calls
+
+
+		// Misc
+		static const std::vector<CudaGPU>			GPUList();
+		static bool									SingleGPUSystem();
+		static void									SyncAllGPUs();
 
 
 		static constexpr int				CURRENT_DEVICE = -1;
@@ -133,4 +140,22 @@ inline void CudaSystem::GPUCallXY(int gpuIndex,
 inline const std::vector<CudaGPU> CudaSystem::GPUList()
 {
 	return gpus;
+}
+
+inline bool CudaSystem::SingleGPUSystem()
+{
+	return gpus.size() == 1;
+}
+
+inline void CudaSystem::SyncAllGPUs()
+{
+	int currentDevice;
+	CUDA_CHECK(cudaGetDevice(&currentDevice));
+
+	for(int i = 0; i < static_cast<int>(gpus.size()); i++)
+	{
+		CUDA_CHECK(cudaSetDevice(i));
+		CUDA_CHECK(cudaDeviceSynchronize());
+	}
+	CUDA_CHECK(cudaSetDevice(currentDevice));
 }
