@@ -66,21 +66,16 @@ class RayMemory
 		RayMemory&					operator=(RayMemory&&) = default;
 									~RayMemory() = default;
 
+
 		// Accessors
-		//RayGMem*					Rays();
-		const RayGMem*				Rays() const;
-		/*template<class T>
-		T*							RayAux();*/
+		// Ray In
+		const RayGMem*				Rays() const;		
 		template<class T>
 		const T*					RayAux() const;
-
+		// Ray Out
 		RayGMem*					RaysOut();
-		//const RayGMem*				Rays() const;
 		template<class T>
 		T*							RayAuxOut();
-		//template<class T>
-		//const T*					RayAux() const;
-
 
 		// Hit Related
 		HitGMem*					Hits();
@@ -93,14 +88,11 @@ class RayMemory
 		// Misc
 		// Sets leader device which is responsible for sort and partition kernel calls
 		void						SetLeaderDevice(int);
-
+		int							LeaderDevice() const;
 	
-
-		void						Reset(size_t rayCount);
-
-		// Memory ALlocation and reset
+		// Memory Allocation
 		void						ResetHitMemory(size_t rayCount);
-		void						ResizeRayIn(size_t rayCount, size_t perRayAuxSize);
+//		void						ResizeRayIn(size_t rayCount, size_t perRayAuxSize);
 		void						ResizeRayOut(size_t rayCount, size_t perRayAuxSize);
 		void						SwapRays();
 
@@ -120,6 +112,11 @@ class RayMemory
 inline void RayMemory::SetLeaderDevice(int deviceId)
 {
 	leaderDeviceId = deviceId;
+}
+
+inline int RayMemory::LeaderDevice() const
+{
+	return leaderDeviceId;
 }
 
 inline const RayGMem* RayMemory::Rays() const
@@ -172,4 +169,14 @@ inline HitKey* RayMemory::HitKeys()
 inline const HitKey* RayMemory::HitKeys() const
 {
 	return dKeys;
+}
+
+//inline void RayMemory::ResizeRayIn(size_t rayCount, size_t perRayAuxSize)
+//{
+//	ResizeRayMemory(dRayIn, dRayAuxIn, memIn, rayCount, perRayAuxSize);
+//}
+
+inline void RayMemory::ResizeRayOut(size_t rayCount, size_t perRayAuxSize)
+{
+	ResizeRayMemory(dRayOut, dRayAuxOut, memOut, rayCount, perRayAuxSize);
 }

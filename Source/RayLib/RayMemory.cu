@@ -113,19 +113,6 @@ void RayMemory::ResizeRayMemory(RayGMem*& dRays, void*& dRayAxData,
 RayMemory::RayMemory()
 {}
 
-void RayMemory::Reset(size_t rayCount)
-{}
-
-void RayMemory::ResizeRayIn(size_t rayCount, size_t perRayAuxSize)
-{
-	ResizeRayMemory(dRayIn, dRayAuxIn, memIn, rayCount, perRayAuxSize);
-}
-
-void RayMemory::ResizeRayOut(size_t rayCount, size_t perRayAuxSize)
-{
-	ResizeRayMemory(dRayOut, dRayAuxOut, memOut, rayCount, perRayAuxSize);
-}
-
 void RayMemory::SwapRays()
 {
 	DeviceMemory temp = std::move(memIn);

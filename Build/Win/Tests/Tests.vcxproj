@@ -110,7 +110,6 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\Tests\main.cpp" />
-    <CudaCompile Include="..\..\..\Source\Tests\CameraRayGPUTest.cu" />
     <CudaCompile Include="..\..\..\Source\Tests\T_MatrixGPU.cu" />
     <CudaCompile Include="..\..\..\Source\Tests\T_ParallelReduction.cu" />
     <CudaCompile Include="..\..\..\Source\Tests\T_ParallelScan.cu" />
@@ -119,6 +118,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <FileType>Document</FileType>
     </CudaCompile>
     <ClCompile Include="..\..\..\Source\Tests\T_MatrixCPU.cpp" />
+    <CudaCompile Include="..\..\..\Source\Tests\T_MockTracerCUDA.cu" />
     <ClCompile Include="..\..\..\Source\Tests\T_VectorCPU.cpp" />
     <CudaCompile Include="..\..\..\Source\Tests\T_VectorGPU.cu">
       <FileType>Document</FileType>
@@ -127,6 +127,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   <ItemGroup>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">
       <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\TracerCUDA\TracerCUDA.vcxproj">
+      <Project>{17f548cf-9f20-471f-999a-fe56d9fb9b26}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

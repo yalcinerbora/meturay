@@ -8,7 +8,7 @@
 #include "HitStructs.h"
 
 struct RayGMem;
-
+class RNGMemory;
 
 class GPUMaterialI
 {
@@ -24,7 +24,8 @@ class GPUMaterialI
 										  const void* dRayAuxIn,
 										  const RayId* dRayId,
 
-										  const uint32_t rayCount) = 0;
+										  const uint32_t rayCount,
+										  RNGMemory& rngMem) = 0;
 
 		virtual uint8_t			MaxOutRayPerRay() const = 0;
 };
