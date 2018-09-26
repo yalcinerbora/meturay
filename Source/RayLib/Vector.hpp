@@ -367,7 +367,7 @@ inline bool Vector<N, T>::operator<=(const Vector& right) const
 	UNROLL_LOOP
 	for(int i = 0; i < N; i++)
 	{
-		b &= vector[i] >= right[i];
+		b &= vector[i] <= right[i];
 	}
 	return b;
 }

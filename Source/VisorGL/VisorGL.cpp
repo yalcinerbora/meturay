@@ -305,7 +305,7 @@ void __stdcall VisorGL::OGLCallbackRender(GLenum,
 
 GLenum VisorGL::PixelFormatToGL(PixelFormat f)
 {
-	static constexpr GLenum TypeList[] =
+	static constexpr GLenum TypeList[static_cast<int>(PixelFormat::END)] =
 	{
 		GL_R,
 		GL_RG,
@@ -332,7 +332,7 @@ GLenum VisorGL::PixelFormatToGL(PixelFormat f)
 
 GLenum VisorGL::PixelFormatToSizedGL(PixelFormat f)
 {
-	static constexpr GLenum TypeList[] =
+	static constexpr GLenum TypeList[static_cast<int>(PixelFormat::END)] =
 	{
 		GL_R8,
 		GL_RG8,

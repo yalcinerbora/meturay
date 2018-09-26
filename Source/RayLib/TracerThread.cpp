@@ -6,7 +6,7 @@
 
 void TracerThread::InitialWork()
 {
-	tracer.Initialize(seed, &logic);
+	tracer.Initialize(seed, logic);
 }
 
 void TracerThread::LoopWork()
@@ -18,6 +18,7 @@ void TracerThread::LoopWork()
 	uint32_t newSample;
 	TracerParameters newParams;
 	ImageSegment newSegment;
+	PixelFormat newFormat;
 	double newTime;
 	bool timeChanged = time.CheckChanged(newTime);
 	bool camChanged = camera.CheckChanged(newCam);
@@ -26,11 +27,14 @@ void TracerThread::LoopWork()
 	bool sampleChanged = sample.CheckChanged(newSample);
 	bool paramsChanged = parameters.CheckChanged(newParams);
 	bool segmentChanged = segment.CheckChanged(newSegment);
+	bool imageFormatChanged = pixFormat.CheckChanged(newFormat);
 
 	// Reset Image if images changed
+	if(imageFormatChanged)
+		tracer.SetImagePixelFormat(newFormat);
 	if(segmentChanged)
 		tracer.ReportionImage(newSegment.pixelStart,
-								newSegment.pixelCount);
+							  newSegment.pixelCount);
 	else if(camChanged || sceneChanged || timeChanged)
 		tracer.ResetImage();
 		
@@ -85,6 +89,11 @@ void TracerThread::ChangeScene(const std::string& s)
 void TracerThread::ChangeResolution(const Vector2ui& res)
 {
 	resolution = res;
+}
+
+void TracerThread::ChangePixelFormat(PixelFormat f)
+{
+	pixFormat = f;
 }
 
 void TracerThread::ChangeSampleCount(uint32_t sampleCount)

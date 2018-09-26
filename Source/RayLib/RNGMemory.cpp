@@ -48,7 +48,7 @@ ConstRNGGMem RNGMemory::RNGData(uint32_t gpuId) const
 	return randomStacks[gpuId];
 }
 
-size_t RNGMemory::SharedMemorySize(uint32_t gpuId)
+uint32_t RNGMemory::SharedMemorySize(uint32_t gpuId)
 {
 	return StaticThreadPerBlock1D * sizeof(uint32_t);
 }

@@ -2,7 +2,7 @@
 
 size_t ImageMemory::PixelFormatToSize(PixelFormat f)
 {
-	static constexpr size_t SizeList[] =
+	static constexpr size_t SizeList[static_cast<int>(PixelFormat::END)] =
 	{
 		1,
 		2,
@@ -27,6 +27,13 @@ size_t ImageMemory::PixelFormatToSize(PixelFormat f)
 	return SizeList[static_cast<int>(f)];
 }
 
+ImageMemory::ImageMemory()
+	: segmentSize(Zero3ui)
+	, resolution(Zero3ui)
+	, segmentOffset(Zero3ui)
+	, format(PixelFormat::END)
+{}
+
 ImageMemory::ImageMemory(const Vector2ui& offset,
 						 const Vector2ui& size,
 						 const Vector2ui& resolution,
@@ -48,10 +55,10 @@ void ImageMemory::Reportion(const Vector2ui& offset,
 							const Vector2ui& size)
 {
 	segmentOffset = offset;
-	segmentSize = size;
+	if(size == Zero2ui) segmentSize = resolution;
+	else segmentSize = size;
 
 	size_t linearSize = size[0] * size[1] * PixelFormatToSize(format);
-
 	if(linearSize != 0)
 	{
 		memory = std::move(DeviceMemory(linearSize));

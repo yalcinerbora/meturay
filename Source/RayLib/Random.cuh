@@ -113,7 +113,7 @@ __device__ inline float RandMMFloat(RandomGPU& r, const Vector2& minMax)
 	return minMax[0] + f / range;
 }
 
-__device__ inline float RandMMInt(RandomGPU& r, const Vector2i minMax)
+__device__ inline int RandMMInt(RandomGPU& r, const Vector2i minMax)
 {
 	float f = RandMMFloat(r, Vector2(static_cast<float>(minMax[0]),
 								   static_cast<float>(minMax[1])));
@@ -121,10 +121,10 @@ __device__ inline float RandMMInt(RandomGPU& r, const Vector2i minMax)
 	return minMax[0] + static_cast<int>(roundf(f / range));
 }
 
-__device__ inline float RandMMUInt(RandomGPU& r, const Vector2ui minMax)
+__device__ inline unsigned int RandMMUInt(RandomGPU& r, const Vector2ui minMax)
 {
 	float f = RandMMFloat(r, Vector2(static_cast<float>(minMax[0]),
 									 static_cast<float>(minMax[1])));
 	float range = static_cast<float>(minMax[1] - minMax[0]);
-	return minMax[0] + static_cast<uint32_t>(roundf(f / range));
+	return minMax[0] + static_cast<unsigned int>(roundf(f / range));
 }

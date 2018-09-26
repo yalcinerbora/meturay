@@ -20,19 +20,20 @@ TEST(ParallelScan, GenericExclusive)
 	std::fill_n(static_cast<float*>(fDataIn), ElementCount, 1.0f);
 
 	// Integer Kernel
-	KCExclusiveScanArray<int, ReduceAdd>
-	(
-		static_cast<int*>(iDataOut),
-		static_cast<int*>(iDataIn),
-		ElementCount, 0
-	);
-	// Float Kernel
-	KCExclusiveScanArray<float, ReduceAdd>
-	(
-		static_cast<float*>(fDataOut),
-		static_cast<float*>(fDataIn),
-		ElementCount, 0.0f
-	);
+	//KCExclusiveScanArray<int, ReduceAdd>
+	//(
+	//	static_cast<int*>(iDataOut),
+	//	static_cast<int*>(iDataIn),
+	//	ElementCount, 0
+	//);
+	//// Float Kernel
+	//KCExclusiveScanArray<float, ReduceAdd>
+	//(
+	//	static_cast<float*>(fDataOut),
+	//	static_cast<float*>(fDataIn),
+	//	ElementCount, 0.0f
+	//);
+	EXPECT_TRUE(false);
 
 	// Wait Kernel Finish and Check
 	CUDA_CHECK(cudaDeviceSynchronize());
@@ -58,19 +59,19 @@ TEST(ParallelScan, GenericInclusive)
 	std::fill_n(static_cast<float*>(fDataIn), ElementCount, 1.0f);
 
 	// Integer Kernel
-	KCInclusiveScanArray<int, ReduceAdd>
-	(
-		static_cast<int*>(iDataOut),
-		static_cast<int*>(iDataIn),
-		ElementCount
-	);
-	// Float Kernel
-	KCInclusiveScanArray<float, ReduceAdd>
-	(
-		static_cast<float*>(fDataOut),
-		static_cast<float*>(fDataIn),
-		ElementCount
-	);
+	//KCInclusiveScanArray<int, ReduceAdd>
+	//(
+	//	static_cast<int*>(iDataOut),
+	//	static_cast<int*>(iDataIn),
+	//	ElementCount
+	//);
+	//// Float Kernel
+	//KCInclusiveScanArray<float, ReduceAdd>
+	//(
+	//	static_cast<float*>(fDataOut),
+	//	static_cast<float*>(fDataIn),
+	//	ElementCount
+	//);
 
 	// Wait Kernel Finish and Check
 	CUDA_CHECK(cudaDeviceSynchronize());

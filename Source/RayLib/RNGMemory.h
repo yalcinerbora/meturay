@@ -25,5 +25,5 @@ class RNGMemory
 
 		RNGGMem								RNGData(uint32_t gpuId);
 		ConstRNGGMem						RNGData(uint32_t gpuId) const;
-		size_t								SharedMemorySize(uint32_t gpuId);
+		uint32_t							SharedMemorySize(uint32_t gpuId);
 };

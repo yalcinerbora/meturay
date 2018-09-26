@@ -93,14 +93,16 @@ void TracerCUDA::HitRays()
 		CUDA_CHECK(cudaDeviceSynchronize());
 	}
 	// At the end of iteration each accelerator holds its custom struct array
-	// And hit ids holds a index for that struct	
+	// And hit ids holds a index for that struct
+
+	METU_LOG("Rays are hit.");
 }
 
 void TracerCUDA::SendAndRecieveRays()
 {
 	// Here also generate RayOut and use that
-
 	// Also pre allocate sort buffers
+	// TODO:
 }
 
 void TracerCUDA::ShadeRays()
@@ -194,12 +196,13 @@ TracerCUDA::TracerCUDA()
 	: rayDelegateFunc(nullptr)
 	, errorFunc(nullptr)
 	, analyticFunc(nullptr)
-	, imageFunc(nullptr)
+	, imageFunc(nullptr)	
 	, currentRayCount(0)
-	
+	, tracerSystem(nullptr)
+	, healthy(false)	
 {}
 
-void TracerCUDA::Initialize(uint32_t seed, TracerLogicI* logic)
+void TracerCUDA::Initialize(uint32_t seed, TracerLogicI& logic)
 {
 	// Device initalization
 	TracerError e(TracerError::END);
@@ -208,8 +211,12 @@ void TracerCUDA::Initialize(uint32_t seed, TracerLogicI* logic)
 		if(errorFunc) errorFunc(e);
 	}
 
-	// Set Tracer System
-	tracerSystem = logic;
+	// Init and set Tracer System
+	if((e = logic.Initialize()) != TracerError::OK)
+	{
+		if(errorFunc) errorFunc(e);
+	}
+	tracerSystem = &logic;
 
 	// Select a leader device that is responsible
 	// for sorting and partitioning works
@@ -220,6 +227,9 @@ void TracerCUDA::Initialize(uint32_t seed, TracerLogicI* logic)
 
 	// Initialize RNG Memory
 	rngMemory = RNGMemory(seed);
+
+	// All seems fine mark tracer as healthy
+	healthy = true;
 }
 
 void TracerCUDA::SetTime(double seconds)
@@ -252,11 +262,12 @@ void TracerCUDA::UnassignMaterial(uint32_t matId)
 void TracerCUDA::GenerateCameraRays(const CameraPerspective& camera,
 									const uint32_t samplePerPixel)
 {
+	if(!healthy) return;
+
 	// Initial ray count
 	currentRayCount = outputImage.SegmentSize()[0] *
-		outputImage.SegmentSize()[1] *
-		samplePerPixel *
-		samplePerPixel;
+					  outputImage.SegmentSize()[1] *
+					  samplePerPixel * samplePerPixel;
 
 	// Allocate enough space for ray
 	rayMemory.ResizeRayOut(currentRayCount, tracerSystem->PerRayAuxDataSize());

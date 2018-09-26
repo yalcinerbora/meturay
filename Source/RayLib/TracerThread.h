@@ -8,6 +8,7 @@
 #include "ThreadData.h"
 #include "Camera.h"
 #include "TracerStructs.h"
+#include "Types.h"
 
 class SceneI;
 class TracerI;
@@ -40,7 +41,8 @@ class TracerThread : public LoopingThreadI
 		ThreadData<uint32_t>			sample;
 		ThreadData<TracerParameters>	parameters;
 		ThreadData<ImageSegment>		segment;
-		
+		ThreadData<PixelFormat>			pixFormat;
+
 		int								currentFPS;
 		int								currentFrame;
 
@@ -65,6 +67,7 @@ class TracerThread : public LoopingThreadI
 		void							ChangeResolution(const Vector2ui&);
 		void							ChangeTime(double seconds);
 
+		void							ChangePixelFormat(PixelFormat);
 		void							ChangeSampleCount(uint32_t);
 		void							ChangeParams(const TracerParameters&);
 		void							ChangeImageSegment(const Vector2ui& pixelStart,

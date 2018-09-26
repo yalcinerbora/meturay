@@ -81,6 +81,8 @@ __global__ void FindSplitKeys(HitKey* gDenseKeys,
 	{
 		uint32_t index = gDenseIds[globalId];
 		HitKey key = gSparseKeys[index];
+		printf("key %u", key);
+
 		key >>= bitRange[0];
 		key &= ((0x1 << (bitRange[1] - bitRange[0])) - 1);
 
@@ -203,10 +205,31 @@ void RayMemory::ResetHitMemory(size_t rayCount)
 						 static_cast<uint32_t>(rayCount));
 }
 
+#include <sstream>
+#include <iomanip>
+#include "RayLib/Log.h"
+void PrintArray(RayId* ids, HitKey* keys, size_t count)
+{
+	CUDA_CHECK(cudaDeviceSynchronize());
+
+	// In this do stuff
+	std::stringstream s;
+	for(size_t i = 0; i < count; i++)
+	{
+		s << "{" << std::hex << std::setw(8) << std::setfill('0') << keys[i] << ", " 
+				 << std::dec << std::setw(0) << std::setfill(' ') << ids[i] << "}" << " ";
+	}
+
+	METU_LOG("%s", s.str().c_str());
+}
+
 void RayMemory::SortKeys(RayId*& ids, HitKey*& keys, 
 						 size_t count,
 						 const Vector2i& bitRange)
 {
+	METU_LOG("BEFORE SORT %zu", count);
+	PrintArray(ids, keys, count);
+
 	// Sort Call over buffers
 	cub::DoubleBuffer<HitKey> dbKeys(dKeys, (dKeys == dKeys0) ? dKeys1 : dKeys0);
 	cub::DoubleBuffer<RayId> dbIds(dIds, (dIds == dIds0) ? dIds1 : dIds0);
@@ -220,6 +243,10 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
 	keys = dbKeys.Current();
 	dIds = ids;
 	dKeys = keys;
+
+
+	METU_LOG("AFTER SORT %zu", count);
+	PrintArray(ids, keys, count);
 }
 
 RayPartitions<uint32_t> RayMemory::Partition(uint32_t& rayCount,

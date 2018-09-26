@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <random>
 #include <chrono>
 using namespace std::chrono_literals;
 
@@ -11,8 +12,10 @@ using namespace std::chrono_literals;
 #include "RayLib/Random.cuh"
 #include "RayLib/RNGMemory.h"
 #include "RayLib/RayMemory.h"
+#include "RayLib/Log.h"
 
 #include "RayLib/CameraKernels.cuh"
+
 
 struct RayAuxGMem {};
 struct RayAuxBaseData{};
@@ -34,81 +37,96 @@ class MockTracerLogic : public TracerLogicI
 		class BaseAcceleratorMock : public GPUBaseAcceleratorI
 		{
 			private:
-				RNGMemory& 		rngMemory;
+				MockTracerLogic& 	mockLogic;
 
 			public:
 				// Constructors & Destructor
-								BaseAcceleratorMock(RNGMemory& r) : rngMemory(r) {}
-								~BaseAcceleratorMock() = default;
+									BaseAcceleratorMock(MockTracerLogic& r) : mockLogic(r) {}
+									~BaseAcceleratorMock() = default;
 
-				void			Hit(// Output
-									HitKey* dKeys,
-									// Inputs
-									const RayGMem* dRays,
-									const RayId* dRayIds,
-									uint32_t rayCount) override;
+				void				Hit(// Output
+										HitKey* dKeys,
+										// Inputs
+										const RayGMem* dRays,
+										const RayId* dRayIds,
+										uint32_t rayCount) override;
 		};
 
 		class AcceleratorMock : public GPUAcceleratorI
 		{
 			private:
-				RNGMemory& 		rngMemory;
+				MockTracerLogic& 	mockLogic;
+				uint32_t			myKey;
 
 			public:
 				// Constructors & Destructor
-								AcceleratorMock(RNGMemory& r) : rngMemory(r) {}
-								~AcceleratorMock() = default;
+									AcceleratorMock(MockTracerLogic& r, uint32_t myKey) 
+										: mockLogic(r), myKey(myKey)  {}
+									~AcceleratorMock() = default;
 
 
-				void			Hit(// Output
-									HitGMem* dHits,
-									// Inputs
-									const RayGMem* dRays,
-									const RayId* dRayIds,
-									uint32_t rayCount) override;
+				void				Hit(// Output
+										HitGMem* dHits,
+										// Inputs
+										const RayGMem* dRays,
+										const RayId* dRayIds,
+										uint32_t rayCount) override;
 		};
 
 		class MaterialMock : public GPUMaterialI
 		{
 			private:
-				RNGMemory& 		rngMemory;
+				MockTracerLogic& 	mockLogic;
 
 
 			public:
 				// Constructors & Destructor
-								MaterialMock(RNGMemory& r) : rngMemory(r) {}
-								~MaterialMock() = default;
+									MaterialMock(MockTracerLogic& r) : mockLogic(r) {}
+									~MaterialMock() = default;
 
-				void			ShadeRays(RayGMem* dRayOut,
-										  void* dRayAuxOut,
-										  //  Input
-										  const RayGMem* dRayIn,
-										  const HitGMem* dHitId,
-										  const void* dRayAuxIn,
-										  const RayId* dRayId,
+				void				ShadeRays(RayGMem* dRayOut,
+											  void* dRayAuxOut,
+											  //  Input
+											  const RayGMem* dRayIn,
+											  const HitGMem* dHitId,
+											  const void* dRayAuxIn,
+											  const RayId* dRayIds,
 
-										  const uint32_t rayCount,
-										  RNGMemory& rngMem) override;
+											  const uint32_t rayCount,
+											  RNGMemory& rngMem) override;
 
-				uint8_t			MaxOutRayPerRay() const override { return 2; }
+				uint8_t				MaxOutRayPerRay() const override { return 0; }
 		};
 
 	private:
-		RNGMemory									rngMemory;
+		std::mt19937								rng;	
+		std::uniform_int_distribution<>				uniformRNGMaterial;
+		std::uniform_int_distribution<>				uniformRNGAcceleratorl;
+
+		uint32_t									seed;
 
 		HitOpts										optsHit;
 		ShadeOpts									optsShade;
 
 		static constexpr Vector2i					MaterialRange = Vector2i(0, 24);
 		static constexpr Vector2i					AcceleratorRange = Vector2i(24, 32);
-		
+
 		static const std::string					HitName;
 		static const std::string					ShadeName;
 
 		// Mock Implementations
-		BaseAcceleratorMock							baseAccelerator;
+		std::unique_ptr<BaseAcceleratorMock>		baseAccelerator;
+		std::vector<AcceleratorMock>				mockAccelerators;
+		std::vector<MaterialMock>					mockMaterials;
+
 		std::map<uint16_t, GPUAcceleratorI*>		accelerators;
-		const std::map<uint32_t, GPUMaterialI*>		materials;
+		std::map<uint32_t, GPUMaterialI*>			materials;
+		
+		// Convenience
+		std::vector<HitKey>							materialKeys;
+			   
+		static constexpr int						AcceleratorCount = 2;
+		static constexpr int						MaterialCount = 4;
 
 	protected:
 	public:
@@ -116,6 +134,8 @@ class MockTracerLogic : public TracerLogicI
 													MockTracerLogic(uint32_t seed);
 		virtual										~MockTracerLogic() = default;
 
+
+		TracerError									Initialize() override;
 
 		// Generate Camera Rays
 		void										GenerateCameraRays(RayMemory&, RNGMemory&,
@@ -131,7 +151,7 @@ class MockTracerLogic : public TracerLogicI
 		const std::string&								ShademanName() const override { return ShadeName; }
 
 		// Interface fetching for logic
-		GPUBaseAcceleratorI*							BaseAcelerator() override { return &baseAccelerator; }
+		GPUBaseAcceleratorI*							BaseAcelerator() override { return &(*baseAccelerator); }
 		const std::map<uint16_t, GPUAcceleratorI*>&		Accelerators() override { return accelerators; }
 		const std::map<uint32_t, GPUMaterialI*>&		Materials() override { return materials; }
 
@@ -166,7 +186,22 @@ void MockTracerLogic::BaseAcceleratorMock::Hit(// Output
 											   const RayId* dRayIds,
 											   uint32_t rayCount)
 {
+	// Go To CPU
+	CUDA_CHECK(cudaDeviceSynchronize());
 
+	METU_LOG("-----------------------------");
+
+	// Delegate Stuff Interleaved
+	for(uint32_t i = 0; i < rayCount; i++)
+	{
+		uint32_t index = i % (AcceleratorCount * MaterialCount + 1);
+
+		// Each Iteration some of the rays are missed
+		if(index == 0)
+			dKeys[i] = RayMemory::OutsideMatKey;
+		else
+			dKeys[i] = mockLogic.materialKeys[index - 1];
+	}
 }
 
 void MockTracerLogic::AcceleratorMock::Hit(// Output
@@ -176,7 +211,32 @@ void MockTracerLogic::AcceleratorMock::Hit(// Output
 										   const RayId* dRayIds,
 										   uint32_t rayCount)
 {
+	// Go To CPU
+	CUDA_CHECK(cudaDeviceSynchronize());
 
+	// Each Individual Hit segment writes the actual hit result
+	for(uint32_t i = 0; i < rayCount; i++)
+	{
+		RayId rayId = dRayIds[i];
+
+
+		double random01 = static_cast<double>(mockLogic.rng()) /
+						  static_cast<double>(mockLogic.rng.max());
+
+		// %50 Make it hit
+		if(random01 <= 0.5)
+		{
+			// Randomly select a material for hit			
+			uint32_t materialId = static_cast<uint32_t>(mockLogic.uniformRNGMaterial(mockLogic.rng));
+			uint32_t combinedIndex = myKey << MaterialRange[1];
+			combinedIndex |= materialId;
+
+			dHits[rayId].hitKey = combinedIndex;
+			dHits[rayId].innerId = 0;
+		}
+	}
+
+	METU_LOG("Stub Accelerator Work {%u, %u}", dRayIds[0], dRayIds[rayCount - 1]);
 }
 
 void MockTracerLogic::MaterialMock::ShadeRays(RayGMem* dRayOut,
@@ -185,12 +245,58 @@ void MockTracerLogic::MaterialMock::ShadeRays(RayGMem* dRayOut,
 											  const RayGMem* dRayIn,
 											  const HitGMem* dHitId,
 											  const void* dRayAuxIn,
-											  const RayId* dRayId,
+											  const RayId* dRayIds,
 
 											  const uint32_t rayCount,
 											  RNGMemory& rngMem)
 {
+	// Go To CPU
+	CUDA_CHECK(cudaDeviceSynchronize());
 
+	METU_LOG("Stub Material Work {%u, %u}", dRayIds[0], dRayIds[rayCount - 1]);
+
+}
+
+TracerError MockTracerLogic::Initialize()
+{
+	// Initialize Single Here Also
+	TracerError e(TracerError::END);
+	if((e = CudaSystem::Initialize()) != TracerError::OK)
+	{
+		return e;
+	}
+
+	rng.seed(seed);
+	baseAccelerator = std::make_unique<BaseAcceleratorMock>(*this);
+
+	mockAccelerators.reserve(AcceleratorCount);
+	mockMaterials.reserve(MaterialCount * AcceleratorCount);
+
+	for(int i = 0; i < AcceleratorCount; i++)
+	{
+		mockAccelerators.emplace_back(*this, static_cast<uint32_t>(i));
+		accelerators.emplace(std::make_pair(static_cast<uint32_t>(i),
+											&mockAccelerators.back()));
+
+		for(int j = 0; j < MaterialCount; j++)
+		{
+			int combinedIndex = i << MaterialRange[1];
+			combinedIndex |= j;
+
+			mockMaterials.emplace_back(*this);
+			materials.emplace(std::make_pair(static_cast<uint32_t>(combinedIndex),
+											 &mockMaterials.back()));
+			materialKeys.emplace_back(static_cast<uint32_t>(combinedIndex));
+		}
+	}
+
+	// Create miss material
+	mockMaterials.emplace_back(*this);
+	materials.emplace(std::make_pair(static_cast<uint32_t>(RayMemory::OutsideMatKey),
+									 &mockMaterials.back()));
+
+	// We have total of 8 material seperated by 2 accelerators
+	return TracerError::OK;
 }
 
 void MockTracerLogic::GenerateCameraRays(RayMemory& rMem,
@@ -205,37 +311,32 @@ void MockTracerLogic::GenerateCameraRays(RayMemory& rMem,
 	RayAuxBaseData rAuxBase;
 
 	// Camera Ray Generation Kernel Check
-	KCGenerateCameraRays<RayAuxGMem, RayAuxBaseData, AuxInitEmpty><<<1, 1>>>
-	(
-		rMem.RaysOut(),
-		rAux,
-		// Input
-		rngMemory.RNGData(0),
-		camera,
-		samplePerPixel,
-		resolution,
-		pixelStart,
-		pixelCount,
-		//
-		rAuxBase
-	);
-	CUDA_KERNEL_CHECK();
+	constexpr int GPUId = 0;
+	CudaSystem::GPUCallX(GPUId, rngMemory.SharedMemorySize(GPUId), 0,
+						 KCGenerateCameraRays<RayAuxGMem, RayAuxBaseData, AuxInitEmpty>,
+						 rMem.RaysOut(),
+						 rAux,
+						 // Input
+						 rngMemory.RNGData(GPUId),
+						 camera,
+						 samplePerPixel,
+						 resolution,
+						 pixelStart,
+						 pixelCount,
+						 //
+						 rAuxBase);
+	// We do not use this actual data but w/e
 }
 
 MockTracerLogic::MockTracerLogic(uint32_t seed)
-	: rngMemory(seed)
-	, baseAccelerator(rngMemory)
+	: seed(seed)
+	, uniformRNGMaterial(0, MaterialCount - 1)
+	, uniformRNGAcceleratorl(0, MaterialCount - 1)
+{}
+
+TEST(MockTracerTest, Test)
 {
-
-	// Generate Fake stuff
-	// 
-
-
-}
-
-TEST(CameraRayGPU, Test)
-{
-	constexpr Vector2ui resolution = Vector2ui(100, 100);
+	constexpr Vector2ui resolution = Vector2ui(3, 3);
 	constexpr uint32_t seed = 0;
 
 	// Create our mock
@@ -243,7 +344,7 @@ TEST(CameraRayGPU, Test)
 
 	// Load Tracer DLL
 	auto tracerI = CreateTracerCUDA();
-	tracerI->Initialize(seed, &mockLogic);
+	tracerI->Initialize(seed, mockLogic);
 	tracerI->ResizeImage(resolution);
 	tracerI->ReportionImage();
 

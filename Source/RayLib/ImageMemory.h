@@ -27,7 +27,7 @@ class ImageMemory
 	protected:
 	public:
 		// Constructors & Destructors
-								ImageMemory() = default;
+								ImageMemory();
 								ImageMemory(const Vector2ui& offset,
 											const Vector2ui& size,
 											const Vector2ui& resolution,

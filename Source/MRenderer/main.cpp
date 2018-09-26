@@ -37,8 +37,12 @@ int main(int argc, const char* argv[])
 	cam.gazePoint = Vector3f(0.0f, 5.0f, 0.0f);
 
 	// Start Tracer Thread and Set scene
+	const PixelFormat pixFormat = PixelFormat::RGBA_FLOAT;
+
 	TracerThread tracer(*tracerI, *logic, seed);
 	//tracer.ChangeScene(std::string(argv[1]));
+
+	tracer.ChangePixelFormat(pixFormat);
 	tracer.ChangeResolution(Vector2ui(1920, 1080));
 	tracer.ChangeSampleCount(5);
 	tracer.ChangeImageSegment(Vector2ui(0, 0), Vector2ui(1920, 1080));
@@ -50,14 +54,13 @@ int main(int argc, const char* argv[])
 	//VisorWindowInput input(1.0, 1.0, 2.0, selfDistributor);
 
 	VisorOptions opts;
-	opts.iFormat = PixelFormat::RGBA_FLOAT;
+	opts.iFormat = pixFormat;
 	opts.iSize = {1280, 720};
 	opts.stereoOn = false;
 	opts.eventBufferSize = 128;
 
 	// Window Loop
 	auto visorView = CreateVisorGL(opts);
-	visorView->ResetImageBuffer({1280, 720}, PixelFormat::RGBA_FLOAT);
 	//visorView->SetInputScheme(&input);
 
 	// Main Poll Loop

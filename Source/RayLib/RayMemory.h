@@ -132,7 +132,7 @@ inline const T* RayMemory::RayAux() const
 
 inline RayGMem* RayMemory::RaysOut()
 {
-	return dRayIn;
+	return dRayOut;
 }
 
 template<class T>

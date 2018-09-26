@@ -118,7 +118,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <FileType>Document</FileType>
     </CudaCompile>
     <ClCompile Include="..\..\..\Source\Tests\T_MatrixCPU.cpp" />
-    <CudaCompile Include="..\..\..\Source\Tests\T_MockTracerCUDA.cu" />
+    <CudaCompile Include="..\..\..\Source\Tests\T_MockTracerCUDA.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <ClCompile Include="..\..\..\Source\Tests\T_VectorCPU.cpp" />
     <CudaCompile Include="..\..\..\Source\Tests\T_VectorGPU.cu">
       <FileType>Document</FileType>

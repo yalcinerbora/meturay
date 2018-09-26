@@ -57,8 +57,8 @@ class TracerI
 		virtual void					SetSendImageCallback(int sendRate, TracerImageSendFunc) = 0;
 		
 		// COMMANDS TO TRACER
-		virtual void					Initialize(uint32_t seed, 
-												   TracerLogicI*) = 0;
+		virtual void					Initialize(uint32_t seed,
+												   TracerLogicI&) = 0;
 
 		// Main Calls
 		virtual void					SetTime(double seconds) = 0;

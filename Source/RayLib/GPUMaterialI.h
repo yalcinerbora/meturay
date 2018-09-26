@@ -13,7 +13,7 @@ class RNGMemory;
 class GPUMaterialI
 {
 	public:
-		virtual					~GPUMaterialI() = 0;
+		virtual					~GPUMaterialI() = default;
 
 		// Interface
 		virtual void			ShadeRays(RayGMem* dRayOut,
@@ -22,7 +22,7 @@ class GPUMaterialI
 										  const RayGMem* dRayIn,
 										  const HitGMem* dHitId,
 										  const void* dRayAuxIn,
-										  const RayId* dRayId,
+										  const RayId* dRayIds,
 
 										  const uint32_t rayCount,
 										  RNGMemory& rngMem) = 0;

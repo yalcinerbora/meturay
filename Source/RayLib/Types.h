@@ -24,5 +24,7 @@ enum class PixelFormat
 	R_FLOAT,
 	RG_FLOAT,
 	RGB_FLOAT,
-	RGBA_FLOAT
+	RGBA_FLOAT,
+
+	END
 };

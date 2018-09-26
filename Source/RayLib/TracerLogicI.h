@@ -40,6 +40,9 @@ class TracerLogicI
 	public:
 		virtual												~TracerLogicI() = default;
 
+
+		virtual TracerError									Initialize() = 0;
+
 		// Generate Camera Rays
 		virtual void										GenerateCameraRays(RayMemory&, RNGMemory&,
 																			   const CameraPerspective& camera,

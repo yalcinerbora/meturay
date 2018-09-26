@@ -85,8 +85,7 @@ class TracerCUDA : public TracerI
 		
 		// COMMANDS TO TRACER
 		// Main Thread Only Calls
-		void					Initialize(uint32_t seed,
-										   TracerLogicI*) override;
+		void					Initialize(uint32_t seed, TracerLogicI&) override;
 
 		// Main Calls
 		void					SetTime(double seconds) override;
