@@ -18,6 +18,9 @@ void TracerCUDA::SendError(TracerError e, bool isFatal)
 	healthy = isFatal;
 }
 
+#include <sstream>
+#include <iomanip>
+
 void TracerCUDA::HitRays()
 {
 	// Tracer Logic interface
@@ -96,6 +99,19 @@ void TracerCUDA::HitRays()
 	// And hit ids holds a index for that struct
 
 	METU_LOG("Rays are hit.");
+	METU_LOG("Final Hit situation:");
+
+	const HitGMem* gHits = rayMemory.Hits();
+
+	std::stringstream s;
+	for(uint32_t i = 0; i < currentRayCount; i++)
+	{
+		s << i << " {" << std::hex << std::setw(8) << std::setfill('0') << gHits[i].hitKey << ", "
+					   << std::dec << std::setw(0) << std::setfill(' ') << gHits[i].innerId << "}" << ", ";
+	}
+
+	METU_LOG("%s", s.str().c_str());
+
 }
 
 void TracerCUDA::SendAndRecieveRays()

@@ -61,7 +61,7 @@ __global__ void FindSplitsSparse(uint32_t* gPartLoc,
 		keyN &= ((0x1 << (bitRange[1] - bitRange[0])) - 1);
 
 		// Write location if split is found
-		if(key != keyN) gPartLoc[globalId + 1] = globalId;
+		if(key != keyN) gPartLoc[globalId + 1] = globalId + 1;
 		else gPartLoc[globalId + 1] = RayMemory::InvalidData;
 	}
 
@@ -81,7 +81,6 @@ __global__ void FindSplitKeys(HitKey* gDenseKeys,
 	{
 		uint32_t index = gDenseIds[globalId];
 		HitKey key = gSparseKeys[index];
-		printf("key %u", key);
 
 		key >>= bitRange[0];
 		key &= ((0x1 << (bitRange[1] - bitRange[0])) - 1);
@@ -301,7 +300,7 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t& rayCount,
 	// We need to get dDenseIndices & dDenseKeys
 	// Memcopy to vectors
 	std::vector<HitKey> hDenseKeys(hSelectCount);
-	std::vector<uint32_t> hDenseIndices(hSelectCount + 1);
+	std::vector<uint32_t> hDenseIndices(hSelectCount);
 	CUDA_CHECK(cudaMemcpy(hDenseKeys.data(), dDenseKeys,
 						  sizeof(HitKey) * hSelectCount,
 						  cudaMemcpyDeviceToHost));
@@ -320,14 +319,14 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t& rayCount,
 	if(hDenseKeys.back() == InvalidKeyPartition)
 	{
 		// Last one contains invalid rays
-		// Do not add rayCount
+		// Adjust Ray Count accordingly
 		rayCount = hDenseIndices.back();
 		hSelectCount--;
 	}
 
 	// Construct The Set
 	// Add extra index to end as rayCount for cleaner code
-	hDenseIndices.back() = initialRayCount;
+	hDenseIndices.push_back(initialRayCount);
 	RayPartitions<uint32_t> partitions;
 	for(uint32_t i = 0; i < hSelectCount; i++)
 	{

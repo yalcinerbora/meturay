@@ -194,9 +194,11 @@ void MockTracerLogic::BaseAcceleratorMock::Hit(// Output
 	// Delegate Stuff Interleaved
 	for(uint32_t i = 0; i < rayCount; i++)
 	{
-		uint32_t index = i % (AcceleratorCount * MaterialCount + 1);
+		// Key index is used to acces RayGMem (this program does not care about actual ray)
+		//uint32_t keyIndex = dRayIds[i];
 
-		// Each Iteration some of the rays are missed
+		// Each Iteration some of the rays are missed (only first ray in this case)
+		uint32_t index = i % (AcceleratorCount * MaterialCount + 1);
 		if(index == 0)
 			dKeys[i] = RayMemory::OutsideMatKey;
 		else
@@ -236,7 +238,7 @@ void MockTracerLogic::AcceleratorMock::Hit(// Output
 		}
 	}
 
-	METU_LOG("Stub Accelerator Work {%u, %u}", dRayIds[0], dRayIds[rayCount - 1]);
+	METU_LOG("Stub Accelerator Work [%u, %u]", dRayIds[0], dRayIds[rayCount - 1]);
 }
 
 void MockTracerLogic::MaterialMock::ShadeRays(RayGMem* dRayOut,
