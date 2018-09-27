@@ -216,7 +216,9 @@ void MockTracerLogic::AcceleratorMock::Hit(// Output
 	// Go To CPU
 	CUDA_CHECK(cudaDeviceSynchronize());
 
+
 	// Each Individual Hit segment writes the actual hit result
+	std::stringstream s;	
 	for(uint32_t i = 0; i < rayCount; i++)
 	{
 		RayId rayId = dRayIds[i];
@@ -237,8 +239,7 @@ void MockTracerLogic::AcceleratorMock::Hit(// Output
 			dHits[rayId].innerId = 0;
 		}
 	}
-
-	METU_LOG("Stub Accelerator Work [%u, %u]", dRayIds[0], dRayIds[rayCount - 1]);
+	METU_LOG("Stub Accelerator Work [%u, %u]", dRayIds[0], dRayIds[rayCount - 1]);	
 }
 
 void MockTracerLogic::MaterialMock::ShadeRays(RayGMem* dRayOut,
@@ -271,9 +272,12 @@ TracerError MockTracerLogic::Initialize()
 	rng.seed(seed);
 	baseAccelerator = std::make_unique<BaseAcceleratorMock>(*this);
 
+	// Generate Accelerators and Id Mappings
+	// Be careful pointers will be invalidated 
+	// if vector reallocates. Thus pre-allocate for all
+	// the data.
 	mockAccelerators.reserve(AcceleratorCount);
-	mockMaterials.reserve(MaterialCount * AcceleratorCount);
-
+	mockMaterials.reserve((MaterialCount * AcceleratorCount) + 1);
 	for(int i = 0; i < AcceleratorCount; i++)
 	{
 		mockAccelerators.emplace_back(*this, static_cast<uint32_t>(i));

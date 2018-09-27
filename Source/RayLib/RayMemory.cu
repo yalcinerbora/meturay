@@ -285,7 +285,6 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t& rayCount,
 	CUDA_CHECK(cudaMemcpy(&hSelectCount, dSelectCount,
 						  sizeof(uint32_t), cudaMemcpyDeviceToHost));
 
-
 	// Find The Hit Keys for each split
 	// From dEmptyIds, dKeys -> dEmptyKeys
 	HitKey* dDenseKeys = reinterpret_cast<HitKey*>(dSparseSplitIndices);
