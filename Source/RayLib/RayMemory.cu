@@ -1,5 +1,9 @@
 #include "RayMemory.h"
+
 #include "RayLib/CudaConstants.h"
+#include "RayLib/Debug.h"
+#include "RayLib/Log.h"
+
 #include <cub/cub.cuh>
 #include <cstddef>
 #include <type_traits>
@@ -28,17 +32,26 @@ __global__ void FillHitIdsForSort(HitKey* gKeys, RayId* gIds,
 }
 
 __global__ void ResetHitIds(HitKey* gKeys, RayId* gIds, 
-							HitGMem* gHits, uint32_t rayCount)
+							HitGMem* gHits, const RayGMem* gRays,
+							uint32_t rayCount)
 {
 	// Grid Stride Loop
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
 		globalId < rayCount; 
 		globalId += blockDim.x * gridDim.x)
 	{
+		HitKey initalKey = RayMemory::OutsideMatKey;
+		if(gRays[globalId].tMin == INFINITY)
+		{
+			initalKey = RayMemory::InvalidKey;
+		}
+
 		gIds[globalId] = globalId;
-		gKeys[globalId] = RayMemory::InvalidKey;
-		gHits[globalId].hitKey = RayMemory::InvalidKey;
+		gKeys[globalId] = RayMemory::InvalidKey;		
 		gHits[globalId].innerId = RayMemory::InvalidData;
+		gHits[globalId].hitKey = initalKey;
+
+		
 	}
 }
 
@@ -200,34 +213,16 @@ void RayMemory::ResetHitMemory(size_t rayCount)
 	// Initialize memory
 	CudaSystem::GPUCallX(leaderDeviceId, 0, 0,
 						 ResetHitIds,
-						 dKeys, dIds, dHits,
+						 dKeys, dIds, dHits, dRayIn,
 						 static_cast<uint32_t>(rayCount));
-}
-
-#include <sstream>
-#include <iomanip>
-#include "RayLib/Log.h"
-void PrintArray(RayId* ids, HitKey* keys, size_t count)
-{
-	CUDA_CHECK(cudaDeviceSynchronize());
-
-	// In this do stuff
-	std::stringstream s;
-	for(size_t i = 0; i < count; i++)
-	{
-		s << "{" << std::hex << std::setw(8) << std::setfill('0') << keys[i] << ", " 
-				 << std::dec << std::setw(0) << std::setfill(' ') << ids[i] << "}" << " ";
-	}
-
-	METU_LOG("%s", s.str().c_str());
 }
 
 void RayMemory::SortKeys(RayId*& ids, HitKey*& keys, 
 						 size_t count,
 						 const Vector2i& bitRange)
 {
-	METU_LOG("BEFORE SORT %zu", count);
-	PrintArray(ids, keys, count);
+	//METU_LOG("BEFORE SORT %zu", count);
+	//Debug::PrintHitPairs(ids, keys, count);
 
 	// Sort Call over buffers
 	cub::DoubleBuffer<HitKey> dbKeys(dKeys, (dKeys == dKeys0) ? dKeys1 : dKeys0);
@@ -245,7 +240,7 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
 
 
 	METU_LOG("AFTER SORT %zu", count);
-	PrintArray(ids, keys, count);
+	Debug::PrintHitPairs(ids, keys, count);
 }
 
 RayPartitions<uint32_t> RayMemory::Partition(uint32_t& rayCount,

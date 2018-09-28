@@ -71,7 +71,7 @@
     </CudaCompile>
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>
-      <CodeGeneration>compute_52,sm_52</CodeGeneration>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
@@ -111,7 +111,7 @@
     </CudaCompile>
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>
-      <CodeGeneration>compute_52,sm_52</CodeGeneration>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
@@ -126,13 +126,13 @@
     <ClInclude Include="..\..\..\Source\RayLib\AABB.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\BVHAcceleratorKernels.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\AnalyticDistributorI.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\AnimateI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\BitonicSort.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CameraKernels.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\ComparisonFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Constants.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\Debug.h" />
     <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Error.h" />
     <ClInclude Include="..\..\..\Source\RayLib\FunctionEnablers.cuh" />
@@ -143,7 +143,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\ImageMemory.h" />
     <ClInclude Include="..\..\..\Source\RayLib\LoopingThreadI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MaterialKernels.cuh" />
-    <ClInclude Include="..\..\..\Source\RayLib\MaterialI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MeshI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.h" />
@@ -172,11 +171,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\Random.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Ray.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Ray.hpp" />
-    <ClInclude Include="..\..\..\Source\RayLib\SceneI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SelfDistributor.h" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\SurfaceI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Texture.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Texture.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\ThreadData.h" />
@@ -194,11 +191,11 @@
     <ClInclude Include="..\..\..\Source\RayLib\VisorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorInputI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorWindowInput.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\VolumeI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\WorkerThread.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\CudaConstants.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\Debug.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\ImageMemory.cpp" />

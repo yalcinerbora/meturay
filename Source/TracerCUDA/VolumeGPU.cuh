@@ -1,6 +1,5 @@
 #pragma once
 
-#include "RayLib/VolumeI.h"
 #include "RayLib/DeviceMemory.h"
 #include "RayLib/Vector.h"
 #include "RayLib/Texture.cuh"

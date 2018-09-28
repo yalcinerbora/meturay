@@ -12,21 +12,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerCUDA\BVHDevice.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialGPU.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\HitKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MeshGPU.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ObjAcceleratorBatchI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneAcceleratorBVH.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneAcceleratorI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneGPU.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\SurfaceDeviceI.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SVODevice.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDA.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerCUDAEntry.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\VolumeGPU.cuh" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\MaterialGPU.cu" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\SceneGPU.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\VolumeGPU.cpp" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\SVODevice.cu" />
@@ -102,7 +98,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_52,sm_52</CodeGeneration>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
       <GenerateLineInfo>false</GenerateLineInfo>
       <MaxRegCount>
       </MaxRegCount>
@@ -135,7 +131,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_52,sm_52</CodeGeneration>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
       <GenerateLineInfo>true</GenerateLineInfo>
       <MaxRegCount>32</MaxRegCount>
       <PtxAsOptionV>true</PtxAsOptionV>

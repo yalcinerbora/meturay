@@ -77,11 +77,13 @@ class MockTracerLogic : public TracerLogicI
 		{
 			private:
 				MockTracerLogic& 	mockLogic;
-
+				bool				isMissMaterial;
 
 			public:
 				// Constructors & Destructor
-									MaterialMock(MockTracerLogic& r) : mockLogic(r) {}
+									MaterialMock(MockTracerLogic& r, bool missMat) 
+										: mockLogic(r)
+										, isMissMaterial(missMat) {}
 									~MaterialMock() = default;
 
 				void				ShadeRays(RayGMem* dRayOut,
@@ -95,7 +97,7 @@ class MockTracerLogic : public TracerLogicI
 											  const uint32_t rayCount,
 											  RNGMemory& rngMem) override;
 
-				uint8_t				MaxOutRayPerRay() const override { return 0; }
+				uint8_t				MaxOutRayPerRay() const override { return isMissMaterial ? 0 : 1; }
 		};
 
 	private:
@@ -218,10 +220,12 @@ void MockTracerLogic::AcceleratorMock::Hit(// Output
 
 
 	// Each Individual Hit segment writes the actual hit result
+	METU_LOG("Stub Accelerator Work %u", rayCount);
 	std::stringstream s;	
 	for(uint32_t i = 0; i < rayCount; i++)
 	{
 		RayId rayId = dRayIds[i];
+		printf("%d, ", rayId);
 
 
 		double random01 = static_cast<double>(mockLogic.rng()) /
@@ -239,7 +243,7 @@ void MockTracerLogic::AcceleratorMock::Hit(// Output
 			dHits[rayId].innerId = 0;
 		}
 	}
-	METU_LOG("Stub Accelerator Work [%u, %u]", dRayIds[0], dRayIds[rayCount - 1]);	
+	printf("\n");
 }
 
 void MockTracerLogic::MaterialMock::ShadeRays(RayGMem* dRayOut,
@@ -256,8 +260,13 @@ void MockTracerLogic::MaterialMock::ShadeRays(RayGMem* dRayOut,
 	// Go To CPU
 	CUDA_CHECK(cudaDeviceSynchronize());
 
-	METU_LOG("Stub Material Work {%u, %u}", dRayIds[0], dRayIds[rayCount - 1]);
-
+	METU_LOG("Stub Material Work %u", rayCount);
+	for(uint32_t i = 0; i < rayCount; i++)
+	{
+		RayId rayId = dRayIds[i];
+		printf("%d, ", rayId);
+	}
+	printf("\n");
 }
 
 TracerError MockTracerLogic::Initialize()
@@ -289,7 +298,7 @@ TracerError MockTracerLogic::Initialize()
 			int combinedIndex = i << MaterialRange[1];
 			combinedIndex |= j;
 
-			mockMaterials.emplace_back(*this);
+			mockMaterials.emplace_back(*this, false);
 			materials.emplace(std::make_pair(static_cast<uint32_t>(combinedIndex),
 											 &mockMaterials.back()));
 			materialKeys.emplace_back(static_cast<uint32_t>(combinedIndex));
@@ -297,7 +306,7 @@ TracerError MockTracerLogic::Initialize()
 	}
 
 	// Create miss material
-	mockMaterials.emplace_back(*this);
+	mockMaterials.emplace_back(*this, true);
 	materials.emplace(std::make_pair(static_cast<uint32_t>(RayMemory::OutsideMatKey),
 									 &mockMaterials.back()));
 

@@ -2,20 +2,20 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\RayLib\Vector.h">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Matrix.h">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Quaternion.h">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Ray.h">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\CudaCheck.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.hpp">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Texture.cuh">
       <Filter>Memory</Filter>
@@ -24,13 +24,13 @@
       <Filter>Memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Matrix.hpp">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Ray.hpp">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Quaternion.hpp">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\DeviceMemory.h">
       <Filter>Memory</Filter>
@@ -74,22 +74,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\ArrayPortion.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\SceneI.h">
-      <Filter>Interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\MeshI.h">
-      <Filter>Interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\AnimateI.h">
-      <Filter>Interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\VolumeI.h">
-      <Filter>Interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\SurfaceI.h">
-      <Filter>Interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\MaterialI.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h">
@@ -153,10 +138,10 @@
       <Filter>GPU Algorithms\Functions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\AABB.h">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\AABB.hpp">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.h">
       <Filter>CPU Containers</Filter>
@@ -200,11 +185,11 @@
     <ClInclude Include="..\..\..\Source\RayLib\GPUMaterialI.h">
       <Filter>GPU Logic Interfaces</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Debug.h">
+      <Filter>Debug</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="LinearAlgb">
-      <UniqueIdentifier>{4701e9e3-7079-4316-af75-17b80bd69e82}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Memory">
       <UniqueIdentifier>{8a3dbe82-44f6-451f-a478-02ad96121997}</UniqueIdentifier>
     </Filter>
@@ -247,6 +232,12 @@
     <Filter Include="GPU Logic Interfaces">
       <UniqueIdentifier>{29b86e2d-4f6d-4c2a-ba04-632a61523034}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Debug">
+      <UniqueIdentifier>{3a3bbd1b-665b-4fa5-8194-11419be06213}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math">
+      <UniqueIdentifier>{4701e9e3-7079-4316-af75-17b80bd69e82}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp">
@@ -281,13 +272,16 @@
     <ClCompile Include="..\..\..\Source\RayLib\RNGMemory.cpp">
       <Filter>Memory</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\Debug.cpp">
+      <Filter>Debug</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\RayLib\Matrix.cu">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\RayLib\Vector.cu">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanArithmetic.cu">
       <Filter>GPU Algorithms\Implementations</Filter>
@@ -314,13 +308,13 @@
       <Filter>GPU Algorithms\Implementations</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\RayLib\Quaternion.cu">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\RayLib\Ray.cu">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\RayLib\AABB.cu">
-      <Filter>LinearAlgb</Filter>
+      <Filter>Math</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\RayLib\RayMemory.cu">
       <Filter>Memory</Filter>

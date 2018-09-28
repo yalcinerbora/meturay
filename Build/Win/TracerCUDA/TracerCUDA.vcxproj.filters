@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Material">
-      <UniqueIdentifier>{b529f690-fc4c-4475-8ac8-c9be305b939f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Accelerators">
       <UniqueIdentifier>{63c10153-70fe-44e5-a436-cc80dca433ab}</UniqueIdentifier>
     </Filter>
@@ -12,9 +9,6 @@
     </Filter>
     <Filter Include="DeviceCode">
       <UniqueIdentifier>{4dd183f7-1605-4e68-aad1-6afae2f26692}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Memory">
-      <UniqueIdentifier>{70b132b2-b6ad-45b1-b2c5-910e6f387aaf}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -32,9 +26,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\MeshGPU.h">
       <Filter>Surfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\HitKernels.cuh">
-      <Filter>DeviceCode</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\BVHDevice.cuh">
       <Filter>Accelerators</Filter>
     </ClInclude>
@@ -45,20 +36,11 @@
       <Filter>Surfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneGPU.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialGPU.cuh">
-      <Filter>Material</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\SurfaceDeviceI.cuh">
-      <Filter>DeviceCode</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerCUDA.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\SVODevice.cu">
       <Filter>Accelerators</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\MaterialGPU.cu">
-      <Filter>Material</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

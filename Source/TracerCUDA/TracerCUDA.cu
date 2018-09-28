@@ -109,9 +109,16 @@ void TracerCUDA::HitRays()
 		s << i << " {" << std::hex << std::setw(8) << std::setfill('0') << gHits[i].hitKey << ", "
 					   << std::dec << std::setw(0) << std::setfill(' ') << gHits[i].innerId << "}" << ", ";
 	}
-
 	METU_LOG("%s", s.str().c_str());
 
+	const RayId* gIds = rayMemory.RayIds();
+	std::stringstream s2;
+	for(uint32_t i = 0; i < currentRayCount; i++)
+	{
+		s2 << std::dec << std::setw(0) << std::setfill(' ') << gIds[i] << ", ";
+	}
+
+	METU_LOG("%s", s2.str().c_str());
 }
 
 void TracerCUDA::SendAndRecieveRays()
@@ -143,6 +150,17 @@ void TracerCUDA::ShadeRays()
 	// Copy Keys (which are stored in HitGMem) to HitKeys
 	// Make ready for sorting
 	rayMemory.FillRayIdsForSort(rayCount);
+
+	METU_LOG("After FillRayIds:");
+	const RayId* gIds = rayMemory.RayIds();
+	std::stringstream s2;
+	for(uint32_t i = 0; i < currentRayCount; i++)
+	{
+		s2 << std::dec << std::setw(0) << std::setfill(' ') << gIds[i] << ", ";
+	}
+
+	METU_LOG("%s", s2.str().c_str());
+
 
 	// Sort with respect to the hits that are returned
 	rayMemory.SortKeys(dRayIds, dHitKeys, rayCount, Vector2i(0, 32));
@@ -314,6 +332,9 @@ void TracerCUDA::Render()
 	
 	HitRays();
 	ShadeRays();
+
+	METU_LOG("-----------------------------");
+	METU_LOG("-----------------------------");
 }
 
 void TracerCUDA::FinishSamples() 

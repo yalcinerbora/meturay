@@ -78,9 +78,6 @@ class TracerI
 		virtual void					AssignMaterial(uint32_t matId) = 0;
 		virtual void					UnassignAllMaterials() = 0;
 		virtual void					UnassignMaterial(uint32_t matId) = 0;
-		
-		//virtual void					LoadMaterial(uint32_t matId) = 0;
-		//virtual void					UnloadMaterial(uint32_t matId) = 0;
 
 		// Rendering
 		// Generate camera rays (initialize ray pool)

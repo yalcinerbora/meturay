@@ -7,7 +7,6 @@ Scene file json interpeter and writer
 #include "IOError.h"
 #include "Camera.h"
 #include "Vector.h"
-#include "VolumeI.h"
 
 struct SceneFile
 {
@@ -38,11 +37,11 @@ struct SceneFile
 			float					ior;
 		};
 
-		struct Volume : public Surface
-		{
-			VolumeType			type;
-			std::string			fileName;
-		};
+		//struct Volume : public Surface
+		//{
+		//	VolumeType			type;
+		//	std::string			fileName;
+		//};
 
 		//  Camera Related
 		static constexpr const char*		TCamera				= "Cameras";
@@ -94,7 +93,7 @@ struct SceneFile
 		// Materials
 		std::vector<FluidMaterial>			fluidMaterials;
 		// Volumes
-		std::vector<Volume>					volumes;
+//		std::vector<Volume>					volumes;
 		// TODO: add full materials
 		
 		// 
