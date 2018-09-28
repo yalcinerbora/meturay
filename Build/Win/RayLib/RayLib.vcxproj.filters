@@ -188,6 +188,12 @@
     <ClInclude Include="..\..\..\Source\RayLib\Debug.h">
       <Filter>Debug</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\LinearAcceleratorKernels.h">
+      <Filter>GPU Template Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\AcceleratorDeviceFunctions.h">
+      <Filter>GPU Template Kernels</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Memory">

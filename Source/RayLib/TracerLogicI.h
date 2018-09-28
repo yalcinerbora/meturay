@@ -58,7 +58,7 @@ class TracerLogicI
 
 		// Interface fetching for logic
 		virtual GPUBaseAcceleratorI*							BaseAcelerator() = 0;
-		virtual const std::map<uint16_t, GPUAcceleratorI*>&		Accelerators() = 0;
+		virtual const std::map<uint16_t, GPUAcceleratorI*>&		AcceleratorGroups() = 0;
 		virtual const std::map<uint32_t, GPUMaterialI*>&		Materials() = 0;
 
 		// Returns bitrange of keys (should complement each other to 32-bit)

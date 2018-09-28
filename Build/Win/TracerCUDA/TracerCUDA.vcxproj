@@ -98,7 +98,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+      <CodeGeneration>compute_52,sm_52</CodeGeneration>
       <GenerateLineInfo>false</GenerateLineInfo>
       <MaxRegCount>
       </MaxRegCount>
@@ -131,7 +131,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+      <CodeGeneration>compute_52,sm_52</CodeGeneration>
       <GenerateLineInfo>true</GenerateLineInfo>
       <MaxRegCount>32</MaxRegCount>
       <PtxAsOptionV>true</PtxAsOptionV>

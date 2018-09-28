@@ -10,10 +10,10 @@ Base Interface for GPU accelerators
 
 struct RayGMem;
 
-class GPUAcceleratorI
+class GPUAcceleratorGroupI
 {
 	public:
-		virtual					~GPUAcceleratorI() = default;
+		virtual					~GPUAcceleratorGroupI() = default;
 
 		// Interface
 		// Kernel Logic: For each ray (but dRays & dHit

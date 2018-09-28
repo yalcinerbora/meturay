@@ -221,9 +221,6 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
 						 size_t count,
 						 const Vector2i& bitRange)
 {
-	//METU_LOG("BEFORE SORT %zu", count);
-	//Debug::PrintHitPairs(ids, keys, count);
-
 	// Sort Call over buffers
 	cub::DoubleBuffer<HitKey> dbKeys(dKeys, (dKeys == dKeys0) ? dKeys1 : dKeys0);
 	cub::DoubleBuffer<RayId> dbIds(dIds, (dIds == dIds0) ? dIds1 : dIds0);
@@ -237,10 +234,6 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
 	keys = dbKeys.Current();
 	dIds = ids;
 	dKeys = keys;
-
-
-	METU_LOG("AFTER SORT %zu", count);
-	Debug::PrintHitPairs(ids, keys, count);
 }
 
 RayPartitions<uint32_t> RayMemory::Partition(uint32_t& rayCount,
@@ -264,9 +257,11 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t& rayCount,
 
 	// Find Split Locations
 	// Read from dKeys -> dEmptyKeys
+	uint32_t locCount = rayCount - 1;
 	CudaSystem::GPUCallX(leaderDeviceId, 0, 0,
 						 FindSplitsSparse,
-						 dSparseSplitIndices, dKeys, rayCount, bitRange);
+						 dSparseSplitIndices, dKeys, locCount, bitRange);
+
 	// Make Splits Dense
 	// From dEmptyKeys -> dEmptyIds	
 	size_t selectTempMemorySize = (tempMemorySize - sizeof(uint32_t));

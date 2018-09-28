@@ -71,7 +71,7 @@
     </CudaCompile>
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>
-      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+      <CodeGeneration>compute_52,sm_52</CodeGeneration>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
@@ -111,7 +111,7 @@
     </CudaCompile>
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>
-      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+      <CodeGeneration>compute_52,sm_52</CodeGeneration>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
@@ -124,6 +124,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\RayLib\AABB.h" />
     <ClInclude Include="..\..\..\Source\RayLib\AABB.hpp" />
+    <ClInclude Include="..\..\..\Source\RayLib\AcceleratorDeviceFunctions.h" />
     <ClInclude Include="..\..\..\Source\RayLib\BVHAcceleratorKernels.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\AnalyticDistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\BitonicSort.cuh" />
@@ -141,6 +142,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\HitStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageMemory.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\LinearAcceleratorKernels.h" />
     <ClInclude Include="..\..\..\Source\RayLib\LoopingThreadI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MaterialKernels.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h" />

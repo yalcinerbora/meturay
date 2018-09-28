@@ -7,6 +7,7 @@
 #include "RayLib/SceneIO.h"
 #include "RayLib/Random.cuh"
 #include "RayLib/ImageIO.h"
+#include "RayLib/Debug.h"
 
 #include "RayLib/GPUAcceleratorI.h"
 #include "RayLib/GPUMaterialI.h"
@@ -46,6 +47,7 @@ void TracerCUDA::HitRays()
 		// Traverse accelerator		
 		baseAccelerator->Hit(dHitKeys, dRays, dRayIds,
 							 rayCount);
+
 		// Base accelerator traverses the data partially
 		// It delegates the rays to smaller accelerators
 		// by writing their Id's to its portion in the key.
@@ -75,6 +77,7 @@ void TracerCUDA::HitRays()
 		// where ray may be only reflected (instead of refrating and reflecting) because
 		// of the total internal reflection phenomena.
 		auto portions = rayMemory.Partition(rayCount, accBitRange);
+
 		// For each partition
 		for(const auto& p : portions)
 		{
@@ -97,28 +100,6 @@ void TracerCUDA::HitRays()
 	}
 	// At the end of iteration each accelerator holds its custom struct array
 	// And hit ids holds a index for that struct
-
-	METU_LOG("Rays are hit.");
-	METU_LOG("Final Hit situation:");
-
-	const HitGMem* gHits = rayMemory.Hits();
-
-	std::stringstream s;
-	for(uint32_t i = 0; i < currentRayCount; i++)
-	{
-		s << i << " {" << std::hex << std::setw(8) << std::setfill('0') << gHits[i].hitKey << ", "
-					   << std::dec << std::setw(0) << std::setfill(' ') << gHits[i].innerId << "}" << ", ";
-	}
-	METU_LOG("%s", s.str().c_str());
-
-	const RayId* gIds = rayMemory.RayIds();
-	std::stringstream s2;
-	for(uint32_t i = 0; i < currentRayCount; i++)
-	{
-		s2 << std::dec << std::setw(0) << std::setfill(' ') << gIds[i] << ", ";
-	}
-
-	METU_LOG("%s", s2.str().c_str());
 }
 
 void TracerCUDA::SendAndRecieveRays()
@@ -150,17 +131,6 @@ void TracerCUDA::ShadeRays()
 	// Copy Keys (which are stored in HitGMem) to HitKeys
 	// Make ready for sorting
 	rayMemory.FillRayIdsForSort(rayCount);
-
-	METU_LOG("After FillRayIds:");
-	const RayId* gIds = rayMemory.RayIds();
-	std::stringstream s2;
-	for(uint32_t i = 0; i < currentRayCount; i++)
-	{
-		s2 << std::dec << std::setw(0) << std::setfill(' ') << gIds[i] << ", ";
-	}
-
-	METU_LOG("%s", s2.str().c_str());
-
 
 	// Sort with respect to the hits that are returned
 	rayMemory.SortKeys(dRayIds, dHitKeys, rayCount, Vector2i(0, 32));
