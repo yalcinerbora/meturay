@@ -202,7 +202,7 @@ void MockTracerLogic::BaseAcceleratorMock::Hit(// Output
 		// Each Iteration some of the rays are missed (only first ray in this case)
 		uint32_t index = i % (AcceleratorCount * MaterialCount + 1);
 		if(index == 0)
-			dKeys[i] = RayMemory::OutsideMatKey;
+			dKeys[i] = HitConstants::OutsideMatKey;
 		else
 			dKeys[i] = mockLogic.materialKeys[index - 1];
 	}
@@ -307,7 +307,7 @@ TracerError MockTracerLogic::Initialize()
 
 	// Create miss material
 	mockMaterials.emplace_back(*this, true);
-	materials.emplace(std::make_pair(static_cast<uint32_t>(RayMemory::OutsideMatKey),
+	materials.emplace(std::make_pair(static_cast<uint32_t>(HitConstants::OutsideMatKey),
 									 &mockMaterials.back()));
 
 	// We have total of 8 material seperated by 2 accelerators

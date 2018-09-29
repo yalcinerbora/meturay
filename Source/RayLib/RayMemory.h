@@ -25,10 +25,6 @@ class RayMemory
 		static constexpr size_t		AlignByteCount = 16;
 		static constexpr int		ByteSize = 8;
 
-		static constexpr HitKey		InvalidKey = 0xFFFFFFFF;
-		static constexpr HitKey		OutsideMatKey = 0xFFFFFFFE;
-		static constexpr uint32_t	InvalidData = 0xFFFFFFFF;
-
 	private:
 		int							leaderDeviceId;
 
@@ -41,17 +37,19 @@ class RayMemory
 		RayGMem*					dRayOut;
 		void*						dRayAuxIn;
 		void*						dRayAuxOut;
-
+	
 		// Hit Related
 		size_t						tempMemorySize;
 		void*						dTempMemory;
 		RayId*						dIds0, *dIds1;		
 		HitKey*						dKeys0, *dKeys1;
 		//
-		HitGMem*					dHits;
-		RayId*						dIds;
-		HitKey*						dKeys;
-		
+		HitKey*						dCurrentHits;		
+		RayId*						dIds;		
+		//
+		HitKey*						dPotentialHits;
+		void*						dHitStructs;
+
 		static void					ResizeRayMemory(RayGMem*& dRays, void*& dRayAxData,
 													DeviceMemory&, 
 													size_t rayCount,
@@ -78,12 +76,16 @@ class RayMemory
 		T*							RayAuxOut();
 
 		// Hit Related
-		HitGMem*					Hits();
-		const HitGMem*				Hits() const;
+		void*						HitStructs();
+		void*						HitStructs() const;
+		HitKey*						CurrentHits();
+		const HitKey*				CurrentHits() const;
+		//
+		HitKey*						PotentialHits();
+		const HitKey*				PotentialHits() const;
 		RayId*						RayIds();
 		const RayId*				RayIds() const;
-		HitKey*						HitKeys();
-		const HitKey*				HitKeys() const;
+		
 				
 		// Misc
 		// Sets leader device which is responsible for sort and partition kernel calls
@@ -91,7 +93,7 @@ class RayMemory
 		int							LeaderDevice() const;
 	
 		// Memory Allocation
-		void						ResetHitMemory(size_t rayCount);
+		void						ResetHitMemory(size_t rayCount, size_t hitStructSize);
 //		void						ResizeRayIn(size_t rayCount, size_t perRayAuxSize);
 		void						ResizeRayOut(size_t rayCount, size_t perRayAuxSize);
 		void						SwapRays();
@@ -141,12 +143,12 @@ inline T* RayMemory::RayAuxOut()
 	return static_cast<T*>(dRayAuxIn);
 }
 
-inline HitGMem* RayMemory::Hits()
+inline HitKey* RayMemory::HitFinals()
 {
 	return dHits;
 }
 
-inline const HitGMem* RayMemory::Hits() const
+inline const HitKey* RayMemory::HitFinals() const
 {
 	return dHits;
 }

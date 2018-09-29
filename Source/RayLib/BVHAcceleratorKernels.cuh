@@ -7,6 +7,7 @@ with custom Intersection and Hit acceptance
 */
 
 #include "AcceleratorDeviceFunctions.h"
+#include "HitStructs.h"
 
 // Fundamental BVH Tree Node
 template<class LeafStruct>
@@ -41,13 +42,17 @@ template <class HitGMem, class HitReg,
 		  class LeafStruct, class PrimitiveData,
 		  IntersctionFunc<LeafStruct, PrimitiveData> IFunc,
 		  AcceptHitFunc<HitReg> AFunc>
-__global__ void KCIntersectBVH(RayGMem* rays,
-							   HitGMem hits,
-							   uint32_t rayCount,
+__global__ void KCIntersectBVH(// I-O
+							   RayGMem* gRays,
+							   HitGMem gHits,
+							   // Input
+							   const RayId* gRayIds,
+							   const HitKey* gHitKeys,
+							   const uint32_t rayCount,
 							   // Constants
-							   const BVHNode<LeafStruct>* gBVHList,
-							   const PrimitiveData gPrimData,
-							   const Vector2ui* gInitialListAndNode)
+							   const BVHNode<LeafStruct>** gBVHList,
+							   const Matrix4x4* gInverseTransforms,
+							   const PrimitiveData gPrimData)
 {
 	// Convenience Functions
 	auto IsAlreadyTraversed = [](uint64_t list, uint32_t depth) -> bool
@@ -66,26 +71,36 @@ __global__ void KCIntersectBVH(RayGMem* rays,
 
 	// Grid Stride Loop
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-		globalId < rayCount; i += blockDim.x * gridDim.x)
+		globalId < rayCount; globalId += blockDim.x * gridDim.x)
 	{
-		// Load initial traverse point if available
-		uint32_t startList = (gInitialListAndNode != nullptr) ? initalLoc[globalId][0] : 0;
-		uint32_t initalLoc = (gInitialListAndNode != nullptr) ? initalLoc[globalId][1] : 0;		
+		const RayId id = gRayIds[globalId];
+		const HitKey key = gHitKeys[id];
+
+		// Key is the index of the inner BVH
+		const BVHNode<LeafStruct>* gBVH = gBVHList[key];
 
 		// Load Ray/Hit to Register
-		RayReg ray(rays, globalId);
-		HitReg hit(hits, globalId);
+		RayReg ray(gRays, id);
+		HitReg hit(gHits, id);
+
+		// Transform the ray to the local space
+		// If applicable
+		if(gInverseTransforms != nullptr)
+		{
+			const Matrix4x4 t = gInverseTransforms[key];
+			ray.ray.TransformSelf(t);
+		}
 
 		// Depth First Search over BVH
 		const uint32_t depth = sizeof(uint64_t) * 8;
-		BVHNode<LeafStruct> currentNode = bvhList[initalLoc];
-		for(uint64_t& list = startList; list < 0xFFFFFFFF;)
+		BVHNode<LeafStruct> currentNode = gBVH[0];
+		for(uint64_t& list = 0; list < 0xFFFFFFFF;)
 		{
 			// Fast pop if both of the children is carries current node is zero
 			// (This means that bit is carried)
 			if(IsAlreadyTraversed(list, depth))
 			{
-				currentNode = bvhList[currentNode.parent];
+				currentNode = gBVH[currentNode.parent];
 				Pop(list, depth);
 			}
 			// Check if we already traversed left child
@@ -94,33 +109,29 @@ __global__ void KCIntersectBVH(RayGMem* rays,
 					currentNode.right != BVHNode<LeafStruct>::NULL_NODE)
 			{
 				// Go to right child
-				currentNode = bvhList[currentNode.right];
+				currentNode = gBVH[currentNode.right];
 				depth--;
 			}
 			// Now this means that we entered to this node first time
 			// Check if this node is leaf or internal
 			// Check if it is leaf node
-			else if(isLeaf)
+			else if(currentNode.isLeaf)
 			{
 				// Do Intersection Test
 				float newT = IFunc(ray, node.leaf, primitiveList);
 				// Do Hit Acceptance break traversal if terminate is called
-				if(AFunc(hit, ray, newT))
-				{
-					ray.UpdateTMax(rays, globalId);
-					hit.Update(hits, globalId);
-					break;
-				}
+				if(AFunc(hit, ray, newT)) break;
+
 				// Continue
 				Pop(list, depth);
 			}
 			// Not leaf so check AABB
-			else if(ray.Intersects(currentNode.aabbMin, currentNode.aabbMax)
+			else if(ray.ray.IntersectsAABB(currentNode.aabbMin, currentNode.aabbMax)
 			{
 				// Go left if avail
 				if(currentNode.left != BVHNode<LeafStruct>::NULL_NODE)
 				{
-					currentNode = bvhList[currentNode.left];
+					currentNode = gBVH[currentNode.left];
 					depth--;
 				}
 				// If not avail and since we are first time on this node
@@ -130,7 +141,7 @@ __global__ void KCIntersectBVH(RayGMem* rays,
 					// In this case dont forget to mark left child as traversed
 					MarkAsTraversed(list, depth - 1);
 
-					currentNode = bvhList[currentNode.right];
+					currentNode = gBVH[currentNode.right];
 					depth--;
 				}
 				else
@@ -139,7 +150,7 @@ __global__ void KCIntersectBVH(RayGMem* rays,
 					// since we have "isNode" boolean
 					assert(false);
 
-					// Well in order to be correct mark this node traversed also
+					// Well in order to be correctly mark this node traversed also
 					// In the next iteration node will pop itself
 					MarkAsTraversed(list, depth - 1);
 				}
@@ -149,7 +160,7 @@ __global__ void KCIntersectBVH(RayGMem* rays,
 			else
 			{
 				// Skip Leafs
-				currentNode = bvhList[currentNode.parent];
+				currentNode = gBVH[currentNode.parent];
 				Pop(list, depth);
 			}
 		}
@@ -160,11 +171,129 @@ __global__ void KCIntersectBVH(RayGMem* rays,
 	}
 }
 
+__global__ void KCIntersectBaseBVH(// I-O
+								   HitKey* gHitKeys,
+								   uint32_t* gPrevNode,
+								   uint64_t* gPrevList,
+								   // Input
+								   const RayGMem* gRays,
+								   const RayId* gRayIds,
+								   const uint32_t rayCount,
+								   // Constants
+								   const BVHNode<BaseLeaf>* gBVH)
+{
+	// Convenience Functions
+	auto IsAlreadyTraversed = [](uint64_t list, uint32_t depth) -> bool
+	{
+		return ((list >> depth) & 0x1) == 1;
+	};
+	auto MarkAsTraversed(uint64_t& list, uint32_t depth)
+	{
+		list += (1 << depth);
+	};
+	auto Pop = [](uint64_t& list, uint32_t& depth)
+	{
+		MarkAsTraversed(list, depth);
+		depth++;
+	};
+
+	// Grid Stride Loop
+	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+		globalId < rayCount; globalId += blockDim.x * gridDim.x)
+	{
+		const RayId id = gRayIds[globalId];
+		
+		// Load initial traverse point if available
+		uint32_t initalLoc = gPrevNode[id];
+		uint64_t list = gPrevList[id];
+
+		// Load Ray/Hit to Register
+		RayReg ray(gRays, id);
+		HitKey key = gHitKeys[globalId];
+		if(key == HitConstants::InvalidKey) continue;
+
+		// Depth First Search over BVH
+		uint32_t depth = sizeof(uint64_t) * 8;
+		BVHNode<BaseLeaf> currentNode = gBVH[initalLoc];
+		while(list < 0xFFFFFFFF)
+		{
+			// Fast pop if both of the children is carries current node is zero
+			// (This means that bit is carried)
+			if(IsAlreadyTraversed(list, depth))
+			{
+				currentNode = gBVH[currentNode.parent];
+				initalLoc = currentNode.parent;
+				Pop(list, depth);
+			}
+			// Check if we already traversed left child
+			// If child bit is on this means lower left child is traversed
+			else if(IsAlreadyTraversed(list, depth - 1) &&
+					currentNode.right != BVHNode<BaseLeaf>::NULL_NODE)
+			{
+				// Go to right child
+				currentNode = gBVH[currentNode.right];
+				initalLoc = currentNode.right;
+				depth--;
+			}
+			// Now this means that we entered to this node first time
+			// Check if this node is leaf or internal
+			// Check if it is leaf node
+			else if(currentNode.isLeaf)
+			{
+				key = currentNode.leaf.key;
+				break;
+			}
+			// Not leaf so check AABB
+			else if(ray.ray.IntersectsAABB(currentNode.aabbMin, currentNode.aabbMax))
+			{
+				// Go left if avail
+				if(currentNode.left != BVHNode<BaseLeaf>::NULL_NODE)
+				{
+					currentNode = gBVH[currentNode.left];
+					initalLoc = currentNode.left;
+					depth--;
+				}
+				// If not avail and since we are first time on this node
+				// Try to go right
+				else if(currentNode.left != BVHNode<BaseLeaf>::NULL_NODE)
+				{
+					// In this case dont forget to mark left child as traversed
+					MarkAsTraversed(list, depth - 1);
+
+					currentNode = gBVH[currentNode.right];
+					initalLoc = currentNode.left;
+					depth--;
+				}
+				else
+				{
+					// This should not happen
+					// since we have "isNode" boolean
+					assert(false);
+					// Well in order to be correctly mark this node traversed also
+					// In the next iteration node will pop itself
+					MarkAsTraversed(list, depth - 1);
+				}
+			}
+			// Finally no ray is intersected
+			// Go to parent
+			else
+			{
+				// Skip Leafs
+				currentNode = gBVH[currentNode.parent];
+				initalLoc = currentNode.parent;
+				Pop(list, depth);
+			}
+		}
+		// Write Updated Stuff
+		gPrevNode[id] = initalLoc;
+		gPrevList[id] = list;
+		gHitKeys[globalId] = key;
+	}
+}
 
 
-// This is fundamental BVH generation Kernels
+// These are fundamental BVH generation Kernels
 // These can be implemented by custom aabb fetch functions
-
 
 // Writes surface area of each primitive
 // These will be reduced to an average value.

@@ -13,7 +13,7 @@ struct ValidSplit
 	__device__ __host__ 
 	__forceinline__ bool operator()(const uint32_t &ids) const
 	{
-		return (ids != RayMemory::InvalidData);
+		return (ids != HitConstants::InvalidData);
 	}
 };
 
@@ -43,12 +43,12 @@ __global__ void ResetHitIds(HitKey* gKeys, RayId* gIds,
 		HitKey initalKey = RayMemory::OutsideMatKey;
 		if(gRays[globalId].tMin == INFINITY)
 		{
-			initalKey = RayMemory::InvalidKey;
+			initalKey = HitConstants::InvalidKey;
 		}
 
 		gIds[globalId] = globalId;
-		gKeys[globalId] = RayMemory::InvalidKey;		
-		gHits[globalId].innerId = RayMemory::InvalidData;
+		gKeys[globalId] = HitConstants::InvalidKey;
+		gHits[globalId].innerId = HitConstants::InvalidData;
 		gHits[globalId].hitKey = initalKey;
 
 		
@@ -75,7 +75,7 @@ __global__ void FindSplitsSparse(uint32_t* gPartLoc,
 
 		// Write location if split is found
 		if(key != keyN) gPartLoc[globalId + 1] = globalId + 1;
-		else gPartLoc[globalId + 1] = RayMemory::InvalidData;
+		else gPartLoc[globalId + 1] = HitConstants::InvalidData;
 	}
 
 	if((blockIdx.x * blockDim.x + threadIdx.x) == 0)
