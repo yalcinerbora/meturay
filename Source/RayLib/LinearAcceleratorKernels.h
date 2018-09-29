@@ -13,85 +13,82 @@ with ustom Intersection and Hit
 // This is fundemental Linear traversal kernel
 
 template <class HitGMem, class HitReg,
-		  class LeafStruct, class PrimitiveData,
-		  IntersctionFunc<LeafStruct, PrimitiveData> IFunc,
-		  AcceptHitFunc<HitReg> AFunc>
-__global__ void KCIntersectLinear(RayGMem* gRays,
-								  HitGMem* gHits,
-								  const RayId* gIds,
-								  uint32_t rayCount,
-								  // Constants
-								  const PrimitiveData gPrimData,
-								  const Vector2ui* gPrimStartEnd)
-
+	class LeafStruct, class PrimitiveData,
+	IntersctionFunc<LeafStruct, PrimitiveData> IFunc,
+	AcceptHitFunc<HitReg> AFunc>
+	__global__ void KCIntersectLinear(// I-O
+									  RayGMem* gRays,
+									  HitGMem gHits,
+									  // Input
+									  const RayId* gRayIds,
+									  const HitKey* gHitKeys,
+									  const uint32_t rayCount,
+									  // Constants
+									  const LeafStruct** gLeafList,
+									  const uint32_t* gEndCountList,
+									  const Matrix4x4* gInverseTransforms,
+									  const PrimitiveData gPrimData)
 {
 	// Grid Stride Loop
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-		globalId < rayCount; i += blockDim.x * gridDim.x)
+		globalId < rayCount; globalId += blockDim.x * gridDim.x)
 	{
+		const uint32_t id = gRayIds[globalId];
+
 		// Load Ray/Hit to Register
-		RayReg ray(rays, globalId);
-		HitReg hit(hits, globalId);
+		RayReg ray(gRays, id);
+		HitReg hit(gHits, id);
+
+		// Key is the index of the inner Linear Array
+		const LeafStruct* gLeaf = gLeafList[key];
+		const uint32_t* gEndCount = gEndCountList[key];
 
 		// Linear check over array
-		for(uint32_t i = gPrimStartEnd[0]; i < gPrimStartEnd[1]; i++)
+		for(uint32_t i = 0; i < gEndCount; i++)
 		{
 			// Do Intersection Test
-			float newT = IntersctionFunc(r, LeafStruct{i}, gPrimData);
-			if(AFunc(hit, ray, newT))
-			{
-				ray.UpdateTMax(rays, globalId);
-				hit.Update(hits, globalId);
-				break;
-			}
+			float newT = IFunc(r, gLeaf[i], gPrimData);
+			if(AFunc(hit, ray, newT)) break;
+			
 		}
 		// Write Updated Stuff
-		// Only tMax of ray which could have changed
 		ray.UpdateTMax(rays, globalId);
 		hit.Update(hits, globalId);
 	}
 }
 
 
-template <class LeafStruct, class PrimitiveData>
-__global__ void KCNextIntersectLinear(// Outputs
-									  HitKey* dKeys,	
-									  // I-O
-									  uint32_t* gPrevLocation,
-									  // Inputs
+__global__ void KCIntersectBaseLinear(// I-O
+									  HitKey* gHitKeys,
+									  uint32_t* gPrevLoc,
+									  // Input
 									  const RayGMem* gRays,
-									  const RayId* gIds,
-									  uint32_t rayCount,
+									  const RayId* gRayIds,
+									  const uint32_t rayCount,
+
 									  // Constants
-									  const PrimitiveData gPrimData,
-									  const Vector2ui* gPrimStartEnd)
+									  const BaseLeaf* gKeys)
 {
 		// Grid Stride Loop
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-		globalId < rayCount; i += blockDim.x * gridDim.x)
-	{		
+		globalId < rayCount; globalId += blockDim.x * gridDim.x)
+	{
+		const uint32_t id = gRayIds[globalId];
+
 		// Load Ray/Hit to Register
-		RayId id = gIds[globalId]
-		RayReg ray(rays, id);
-		HitReg hit(hits, id);
+		RayReg ray(gRays, id);
+		HitKey key = gHitKeys[globalId];
+		if(key == HitConstants::InvalidKey) continue;
 
-		// Linear check over array
-		for(uint32_t i = gPrevLocation; i < gPrimStartEnd[1]; i++)
-		{
-			//
+		// Load initial traverse extentds
+		uint32_t primStart = gPrevLoc[id];
 
-			// Do Intersection Test
-			float newT = IntersctionFunc(r, LeafStruct{i}, gPrimData);
-			if(AFunc(hit, ray, newT))
-			{
-				ray.UpdateTMax(rays, globalId);
-				hit.Update(hits, globalId);
-				break;
-			}
-		}
+		// Check next
+		key = gKeys[primStart].key;
+		primStart++;
+
 		// Write Updated Stuff
-		// Only tMax of ray which could have changed
-		ray.UpdateTMax(rays, id);
-		hit.Update(hits, id);
+		gPrevLoc[id] = primStart;
+		gHitKeys[globalId] = key;
 	}
 }
