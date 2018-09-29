@@ -27,16 +27,18 @@ void TracerCUDA::HitRays()
 	// Tracer Logic interface
 	const Vector2i accBitRange = tracerSystem->AcceleratorBitRange();
 	GPUBaseAcceleratorI* baseAccelerator = tracerSystem->BaseAcelerator();
-	std::map<uint16_t, GPUAcceleratorI*> subAccelerators = tracerSystem->Accelerators();
+	std::map<uint16_t, GPUAcceleratorGroupI*> subAccelerators = tracerSystem->AcceleratorGroups();
 
 	// Reset Hit Memory for hit loop
-	rayMemory.ResetHitMemory(currentRayCount);
+	rayMemory.ResetHitMemory(currentRayCount, tracerSystem->HitStructMaxSize());
 
 	// Ray Memory Pointers
-	const RayGMem* dRays = rayMemory.Rays();
-	HitGMem* dHits = rayMemory.Hits();
-	HitKey* dHitKeys = rayMemory.HitKeys();	
-	RayId*	dRayIds = rayMemory.RayIds();
+	RayGMem* dRays = rayMemory.Rays();	
+	HitKey* dCurrentHits = rayMemory.CurrentHits();
+	void* dHitStructs = rayMemory.HitStructs<unsigned char>();
+	// These are sorted etc.
+	HitKey* dPotentialHits = rayMemory.PotentialHits();	
+	RayId*	dRayIds = rayMemory.RayIds();	
 	
 	// Try to hit rays until no ray is left 
 	// (these rays will be assigned with a material)
@@ -44,8 +46,10 @@ void TracerCUDA::HitRays()
 	uint32_t rayCount = currentRayCount;
 	while(rayCount > 0)
 	{
-		// Traverse accelerator		
-		baseAccelerator->Hit(dHitKeys, dRays, dRayIds,
+		// Traverse accelerator
+		// Base accelerator provides potential hits
+		// Cannot provide an absolute hit (its not its job)
+		baseAccelerator->Hit(dPotentialHits, dRays, dRayIds,
 							 rayCount);
 
 		// Base accelerator traverses the data partially
@@ -59,7 +63,7 @@ void TracerCUDA::HitRays()
 		CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice()));
 
 		// Sort initial results (to partition and launch kernels accordingly)				
-		rayMemory.SortKeys(dRayIds, dHitKeys, rayCount, accBitRange);
+		rayMemory.SortKeys(dRayIds, dPotentialHits, rayCount, accBitRange);
 		// Parition to sub accelerators
 		// Remove the rays that are invalid.
 		//
@@ -85,8 +89,13 @@ void TracerCUDA::HitRays()
 			if(loc == subAccelerators.end()) continue;
 
 			// Run local hit kernels
+			// These hit kernels can only modify actual hits
+			// Potential HitKeys are used to fetch inner data
 			RayId* dRayIdStart = dRayIds + p.offset;
-			loc->second->Hit(dHits, dRays, dRayIdStart,
+			HitKey* dPotentialHitStart = dPotentialHits + p.offset;
+
+			loc->second->Hit(dRays, dHitStructs, dCurrentHits,
+							 dRayIdStart, dPotentialHitStart,
 							 static_cast<uint32_t>(p.count));
 
 			// Hit function updates the hitIds structure with its appropirate data,
@@ -113,8 +122,8 @@ void TracerCUDA::ShadeRays()
 {
 	// Ray Memory Pointers	
 	const RayGMem* dRays = rayMemory.Rays();
-	const HitGMem* dHits = rayMemory.Hits();
-	HitKey* dHitKeys = rayMemory.HitKeys();
+	const HitKey* dCurrentHits = rayMemory.CurrentHits();
+	HitKey* dPotentialHits = rayMemory.PotentialHits();
 	RayId*	dRayIds = rayMemory.RayIds();
 	const void* dAux = rayMemory.RayAux<void>();
 	
@@ -133,7 +142,7 @@ void TracerCUDA::ShadeRays()
 	rayMemory.FillRayIdsForSort(rayCount);
 
 	// Sort with respect to the hits that are returned
-	rayMemory.SortKeys(dRayIds, dHitKeys, rayCount, Vector2i(0, 32));
+	rayMemory.SortKeys(dRayIds, dPotentialHits, rayCount, Vector2i(0, 32));
 
 	// Parition w.r.t. material (full range sort is required here)
 	// Each same material on accelerator is actually considered a unique material
@@ -182,7 +191,7 @@ void TracerCUDA::ShadeRays()
 		// Another TODO: Implement multi-gpu load balancing
 		// More TODO: Implement single-gpu SM load balacing
 		loc->second->ShadeRays(dRayOutStart, dAuxOutStart,
-							   dRays, dHits, dAux,
+							   dRays, dCurrentHits, dAux,
 							   dRayIdStart,
 							   static_cast<uint32_t>(p.count),
 							   rngMemory);

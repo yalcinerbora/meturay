@@ -44,10 +44,10 @@ class RayMemory
 		RayId*						dIds0, *dIds1;		
 		HitKey*						dKeys0, *dKeys1;
 		//
-		HitKey*						dCurrentHits;		
+		HitKey*						dPotentialHits;
 		RayId*						dIds;		
 		//
-		HitKey*						dPotentialHits;
+		HitKey*						dCurrentHits;
 		void*						dHitStructs;
 
 		static void					ResizeRayMemory(RayGMem*& dRays, void*& dRayAxData,
@@ -67,7 +67,7 @@ class RayMemory
 
 		// Accessors
 		// Ray In
-		const RayGMem*				Rays() const;		
+		RayGMem*					Rays() const;		
 		template<class T>
 		const T*					RayAux() const;
 		// Ray Out
@@ -96,7 +96,6 @@ class RayMemory
 	
 		// Memory Allocation
 		void						ResetHitMemory(size_t rayCount, size_t hitStructSize);
-//		void						ResizeRayIn(size_t rayCount, size_t perRayAuxSize);
 		void						ResizeRayOut(size_t rayCount, size_t perRayAuxSize);
 		void						SwapRays();
 
@@ -123,7 +122,7 @@ inline int RayMemory::LeaderDevice() const
 	return leaderDeviceId;
 }
 
-inline const RayGMem* RayMemory::Rays() const
+inline RayGMem* RayMemory::Rays() const
 {
 	return dRayIn;
 }
@@ -145,14 +144,36 @@ inline T* RayMemory::RayAuxOut()
 	return static_cast<T*>(dRayAuxIn);
 }
 
-inline HitKey* RayMemory::HitFinals()
+inline HitKey* RayMemory::CurrentHits()
 {
-	return dHits;
+	return dCurrentHits;
 }
 
-inline const HitKey* RayMemory::HitFinals() const
+template<class T>
+T* RayMemory::HitStructs()
 {
-	return dHits;
+	return static_cast<T*>(dHitStructs);
+}
+
+template<class T>
+const T* RayMemory::HitStructs() const
+{
+	return static_cast<const T*>(dHitStructs);
+}
+
+inline const HitKey* RayMemory::CurrentHits() const
+{
+	return dCurrentHits;
+}
+
+inline HitKey* RayMemory::PotentialHits()
+{
+	return dPotentialHits;
+}
+
+inline const HitKey* RayMemory::PotentialHits() const
+{
+	return dPotentialHits;
 }
 
 inline RayId* RayMemory::RayIds()
@@ -164,21 +185,6 @@ inline const RayId* RayMemory::RayIds() const
 {
 	return dIds;
 }
-
-inline HitKey* RayMemory::HitKeys()
-{
-	return dKeys;
-}
-
-inline const HitKey* RayMemory::HitKeys() const
-{
-	return dKeys;
-}
-
-//inline void RayMemory::ResizeRayIn(size_t rayCount, size_t perRayAuxSize)
-//{
-//	ResizeRayMemory(dRayIn, dRayAuxIn, memIn, rayCount, perRayAuxSize);
-//}
 
 inline void RayMemory::ResizeRayOut(size_t rayCount, size_t perRayAuxSize)
 {

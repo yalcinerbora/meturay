@@ -44,10 +44,11 @@ template <class HitGMem, class HitReg,
 		  AcceptHitFunc<HitReg> AFunc>
 __global__ void KCIntersectBVH(// I-O
 							   RayGMem* gRays,
-							   HitGMem gHits,
+							   HitGMem* gHitStructs,
+							   HitKey*	gCurrentHits,
 							   // Input
 							   const RayId* gRayIds,
-							   const HitKey* gHitKeys,
+							   const HitKey* gPotentialHits,
 							   const uint32_t rayCount,
 							   // Constants
 							   const BVHNode<LeafStruct>** gBVHList,

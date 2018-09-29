@@ -20,7 +20,7 @@ class GPUMaterialI
 										  void* dRayAuxOut,
 										  //  Input
 										  const RayGMem* dRayIn,
-										  const HitGMem* dHitId,
+										  const HitKey* dCurrentHits,
 										  const void* dRayAuxIn,
 										  const RayId* dRayIds,
 
