@@ -18,7 +18,7 @@ template <class HitGMem, class HitReg,
 	AcceptHitFunc<HitReg> AFunc>
 	__global__ void KCIntersectLinear(// I-O
 									  RayGMem* gRays,
-									  HitGMem gHits,
+									  HitGMem* gHits,
 									  // Input
 									  const RayId* gRayIds,
 									  const HitKey* gHitKeys,

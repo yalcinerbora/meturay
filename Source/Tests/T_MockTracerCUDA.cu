@@ -52,7 +52,7 @@ class MockTracerLogic : public TracerLogicI
 										uint32_t rayCount) override;
 		};
 
-		class AcceleratorMock : public GPUAcceleratorI
+		class AcceleratorMock : public GPUAcceleratorGroupI
 		{
 			private:
 				MockTracerLogic& 	mockLogic;
@@ -65,12 +65,14 @@ class MockTracerLogic : public TracerLogicI
 									~AcceleratorMock() = default;
 
 
-				void				Hit(// Output
-										HitGMem* dHits,
-										// Inputs
-										const RayGMem* dRays,
+				void				Hit(// I-O
+										RayGMem* dRays,
+										void* dHitStructs,
+										HitKey* dCurrentHits,
+										// Input
 										const RayId* dRayIds,
-										uint32_t rayCount) override;
+										const HitKey* dPotentialHits,
+										const uint32_t rayCount)  override;
 		};
 
 		class MaterialMock : public GPUMaterialI
@@ -90,7 +92,7 @@ class MockTracerLogic : public TracerLogicI
 											  void* dRayAuxOut,
 											  //  Input
 											  const RayGMem* dRayIn,
-											  const HitGMem* dHitId,
+											  const HitKey* dCurrentHits,
 											  const void* dRayAuxIn,
 											  const RayId* dRayIds,
 
@@ -121,7 +123,7 @@ class MockTracerLogic : public TracerLogicI
 		std::vector<AcceleratorMock>				mockAccelerators;
 		std::vector<MaterialMock>					mockMaterials;
 
-		std::map<uint16_t, GPUAcceleratorI*>		accelerators;
+		std::map<uint16_t, GPUAcceleratorGroupI*>	accelerators;
 		std::map<uint32_t, GPUMaterialI*>			materials;
 		
 		// Convenience
@@ -149,13 +151,13 @@ class MockTracerLogic : public TracerLogicI
 
 		// Accessors for Managers
 		// Hitman is responsible for
-		const std::string&								HitmanName() const override { return HitName; }
-		const std::string&								ShademanName() const override { return ShadeName; }
+		const std::string&									HitmanName() const override { return HitName; }
+		const std::string&									ShademanName() const override { return ShadeName; }
 
 		// Interface fetching for logic
-		GPUBaseAcceleratorI*							BaseAcelerator() override { return &(*baseAccelerator); }
-		const std::map<uint16_t, GPUAcceleratorI*>&		Accelerators() override { return accelerators; }
-		const std::map<uint32_t, GPUMaterialI*>&		Materials() override { return materials; }
+		GPUBaseAcceleratorI*								BaseAcelerator() override { return &(*baseAccelerator); }
+		const std::map<uint16_t, GPUAcceleratorGroupI*>&	AcceleratorGroups() override { return accelerators; }
+		const std::map<uint32_t, GPUMaterialI*>&			Materials() override { return materials; }
 
 		// Returns bitrange of keys (should complement each other to 32-bit)
 		const Vector2i&									MaterialBitRange() const override { return MaterialRange; }
@@ -176,6 +178,7 @@ class MockTracerLogic : public TracerLogicI
 		// Misc
 		// Retuns "sizeof(RayAux)"
 		size_t											PerRayAuxDataSize() override { return 0; }
+		size_t											HitStructMaxSize() { return sizeof(uint32_t); };
 };
 
 const std::string MockTracerLogic::HitName = "";
@@ -208,12 +211,14 @@ void MockTracerLogic::BaseAcceleratorMock::Hit(// Output
 	}
 }
 
-void MockTracerLogic::AcceleratorMock::Hit(// Output
-										   HitGMem* dHits,
-										   // Inputs
-										   const RayGMem* dRays,
+void MockTracerLogic::AcceleratorMock::Hit(// I-O
+										   RayGMem* dRays,
+										   void* dHitStructs,
+										   HitKey* dCurrentHits,
+										   // Input
 										   const RayId* dRayIds,
-										   uint32_t rayCount)
+										   const HitKey* dPotentialHits,
+										   const uint32_t rayCount)
 {
 	// Go To CPU
 	CUDA_CHECK(cudaDeviceSynchronize());
@@ -239,8 +244,7 @@ void MockTracerLogic::AcceleratorMock::Hit(// Output
 			uint32_t combinedIndex = myKey << MaterialRange[1];
 			combinedIndex |= materialId;
 
-			dHits[rayId].hitKey = combinedIndex;
-			dHits[rayId].innerId = 0;
+			dCurrentHits[rayId] = combinedIndex;
 		}
 	}
 	printf("\n");
@@ -250,7 +254,7 @@ void MockTracerLogic::MaterialMock::ShadeRays(RayGMem* dRayOut,
 											  void* dRayAuxOut,
 											  //  Input
 											  const RayGMem* dRayIn,
-											  const HitGMem* dHitId,
+											  const HitKey* dCurrentHits,
 											  const void* dRayAuxIn,
 											  const RayId* dRayIds,
 

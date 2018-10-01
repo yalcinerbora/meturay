@@ -17,12 +17,14 @@ class GPUAcceleratorGroupI
 
 		// Interface
 		// Kernel Logic: For each ray (but dRays & dHit
-		virtual void			Hit(// Output
-									HitGMem* dHits,
-									// Inputs
-									const RayGMem* dRays,
+		virtual void			Hit(// I-O
+									RayGMem* dRays,
+									void* dHitStructs,
+									HitKey* dCurrentHits,
+									// Input
 									const RayId* dRayIds,
-									uint32_t rayCount) = 0;
+									const HitKey* dPotentialHits,
+									const uint32_t rayCount) = 0;
 
 };
 
@@ -36,9 +38,9 @@ class GPUBaseAcceleratorI
 		// It can return invalid key,
 		// which is either means data is out of bounds or ray is invalid.
 		virtual void			Hit(// Output
-									HitKey* dKeys,
+									HitKey* dPotentialHits,
 									// Inputs
 									const RayGMem* dRays,									
 									const RayId* dRayIds,
-									uint32_t rayCount) = 0;
+									const uint32_t rayCount) = 0;
 };
