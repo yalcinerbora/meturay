@@ -20,6 +20,7 @@ which does send commands to GPU to do ray tracing
 #include "Vector.h"
 #include "TracerError.h"
 #include "Types.h"
+#include "HitStructs.h"
 
 struct HitCPU;
 struct RayCPU;
@@ -37,16 +38,20 @@ typedef void(*TracerRayDelegateFunc)(const RayCPU&, const HitCPU&,
 									 uint32_t rayCount, uint32_t matId);
 typedef void(*TracerErrorFunc)(TracerError);
 typedef void(*TracerAnalyticFunc)(TracerAnalyticData);
-typedef void(*TracerImageSendFunc)(const Vector2ui& offset, 
-								   const Vector2ui& size, 
+typedef void(*TracerImageSendFunc)(const Vector2ui& offset,
+								   const Vector2ui& size,
 								   const std::vector<float> imagePortion);
+typedef void(*TracerAcceleratorSendFunc)(HitKey key, const std::vector<std::byte> data);
+typedef void(*TracerBaseAcceleratorSendFunc)(const std::vector<std::byte> data);
 
 class TracerI
 {
 	public:
 		virtual							~TracerI() = default;
 
-		// COMMANDS FROM TRACER
+		// =====================//
+		// RESPONSE FROM TRACER //
+		// =====================//
 		// Delegate material ray callback
 		// Tracer will use this function to send material rays to other tracers
 		virtual void					SetRayDelegateCallback(TracerRayDelegateFunc) = 0;
@@ -55,19 +60,25 @@ class TracerI
 		// Data send callbacks
 		virtual void					SetAnalyticCallback(int sendRate, TracerAnalyticFunc) = 0;
 		virtual void					SetSendImageCallback(int sendRate, TracerImageSendFunc) = 0;
+		// Accelerator sharing
+		virtual void					SetSendAcceleratorCallback(TracerAcceleratorSendFunc) = 0;
+		virtual void					SetSendBaseAcceleratorCallback(TracerBaseAcceleratorSendFunc) = 0;
 		
-		// COMMANDS TO TRACER
-		virtual void					Initialize(uint32_t seed,
-												   TracerLogicI&) = 0;
+		// ===================//
+		// COMMANDS TO TRACER //
+		// ===================//
+		virtual void					Initialize(uint32_t seed, TracerLogicI&) = 0;
 
 		// Main Calls
 		virtual void					SetTime(double seconds) = 0;
 		virtual void					SetParams(const TracerParameters&) = 0;
 		virtual void					SetScene(const std::string& sceneFileName) = 0;
 	
-		// Initial Generations
-		virtual void					GenerateSceneAccelerator() = 0;
-		virtual void					GenerateAccelerator(uint32_t objId) = 0;
+		// Requests
+		virtual void					RequestBaseAccelerator() = 0;
+		virtual void					RequestAccelerator(HitKey key) = 0;
+		// TODO: add sharing of other generated data (maybe interpolations etc.)
+		// and their equavilent callbacks
 
 		// Material Related
 		// Main memory bottleneck is materials.

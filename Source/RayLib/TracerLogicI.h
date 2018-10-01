@@ -51,10 +51,9 @@ class TracerLogicI
 																			   const Vector2ui& pixelStart,
 																			   const Vector2ui& pixelCount) = 0;
 
-		// Accessors for Managers
 		// Hitman is responsible for
-		virtual const std::string&								HitmanName() const = 0;
-		virtual const std::string&								ShademanName() const = 0;
+		//virtual const std::string&								HitmanName() const = 0;
+		//virtual const std::string&								ShademanName() const = 0;
 
 		// Interface fetching for logic
 		virtual GPUBaseAcceleratorI*							BaseAcelerator() = 0;
@@ -70,13 +69,13 @@ class TracerLogicI
 		virtual const ShadeOpts&								ShadeOptions() const = 0;
 
 		// Loads/Unloads material to GPU Memory
-		virtual void											LoadMaterial(int gpuId, uint32_t matId) = 0;
-		virtual void											UnloadMaterial(int gpuId, uint32_t matId) = 0;
+		virtual void											LoadMaterial(int gpuId, HitKey key) = 0;
+		virtual void											UnloadMaterial(int gpuId, HitKey matId) = 0;
 
 		// Generates/Removes accelerator
-		virtual void											GenerateAccelerator(uint32_t accId) = 0;
-		virtual void											RemoveAccelerator(uint32_t accId) = 0;
-
+		virtual void											GenerateAccelerator(HitKey key) = 0;
+		virtual void											LoadAccelerator(HitKey key, const std::byte* data, size_t size) = 0;
+	
 		// Misc
 		// Retuns "sizeof(RayAux)"
 		virtual size_t											PerRayAuxDataSize() = 0;
