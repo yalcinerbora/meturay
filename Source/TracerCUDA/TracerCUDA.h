@@ -41,6 +41,8 @@ class TracerCUDA : public TracerI
 		TracerErrorFunc					errorFunc;
 		TracerAnalyticFunc				analyticFunc;
 		TracerImageSendFunc				imageFunc;
+		TracerAcceleratorSendFunc		accSendFunc;
+		TracerBaseAcceleratorSendFunc	baseSendFunc;
 
 		// GPU Specific Memory (Mostly Textures)
 		//-----
@@ -73,7 +75,9 @@ class TracerCUDA : public TracerI
 		TracerCUDA&						operator=(const TracerCUDA&) = delete;
 										~TracerCUDA() = default;
 
-		// COMMANDS FROM TRACER
+										// =====================//
+								// RESPONSE FROM TRACER //
+								// =====================//
 		// Delegate material ray callback
 		// Tracer will use this function to send material rays to other tracers
 		void					SetRayDelegateCallback(TracerRayDelegateFunc) override;
@@ -82,8 +86,13 @@ class TracerCUDA : public TracerI
 		// Data send callbacks
 		void					SetAnalyticCallback(int sendRate, TracerAnalyticFunc) override;
 		void					SetSendImageCallback(int sendRate, TracerImageSendFunc) override;
-		
-		// COMMANDS TO TRACER
+		// Accelerator sharing
+		void					SetSendAcceleratorCallback(TracerAcceleratorSendFunc) override;
+		void					SetSendBaseAcceleratorCallback(TracerBaseAcceleratorSendFunc) override;
+
+		// ===================//
+		// COMMANDS TO TRACER //
+		// ===================//
 		// Main Thread Only Calls
 		void					Initialize(uint32_t seed, TracerLogicI&) override;
 
@@ -92,9 +101,11 @@ class TracerCUDA : public TracerI
 		void					SetParams(const TracerParameters&) override;
 		void					SetScene(const std::string& sceneFileName) override;
 	
-		// Initial Generations
-		void					GenerateSceneAccelerator() override;
-		void					GenerateAccelerator(uint32_t objId) override;
+		// Requests
+		void					RequestBaseAccelerator() override;
+		void					RequestAccelerator(HitKey key) override;
+		// TODO: add sharing of other generated data (maybe interpolations etc.)
+		// and their equavilent callbacks
 
 		// Material Related
 		// Main memory bottleneck is materials.
@@ -151,12 +162,20 @@ inline void TracerCUDA::SetErrorCallback(TracerErrorFunc f)
 
 inline void TracerCUDA::SetAnalyticCallback(int sendRate, TracerAnalyticFunc f)
 {
-	// TODO: 
 	analyticFunc = f;
 }
 
 inline void TracerCUDA::SetSendImageCallback(int sendRate, TracerImageSendFunc f)
 {
-	// TODO: 
 	imageFunc = f;
+}
+
+inline void TracerCUDA::SetSendAcceleratorCallback(TracerAcceleratorSendFunc f)
+{
+	accSendFunc = f;
+}
+
+inline void TracerCUDA::SetSendBaseAcceleratorCallback(TracerBaseAcceleratorSendFunc f)
+{
+	baseSendFunc = f;
 }

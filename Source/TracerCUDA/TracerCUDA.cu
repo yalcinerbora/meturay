@@ -19,15 +19,12 @@ void TracerCUDA::SendError(TracerError e, bool isFatal)
 	healthy = isFatal;
 }
 
-#include <sstream>
-#include <iomanip>
-
 void TracerCUDA::HitRays()
 {
 	// Tracer Logic interface
 	const Vector2i accBitRange = tracerSystem->AcceleratorBitRange();
-	GPUBaseAcceleratorI* baseAccelerator = tracerSystem->BaseAcelerator();
-	std::map<uint16_t, GPUAcceleratorGroupI*> subAccelerators = tracerSystem->AcceleratorGroups();
+	const GPUBaseAcceleratorI* baseAccelerator = tracerSystem->BaseAcelerator();
+	const AcceleratorGroupMappings& subAccelerators = tracerSystem->AcceleratorGroups();
 
 	// Reset Hit Memory for hit loop
 	rayMemory.ResetHitMemory(currentRayCount, tracerSystem->HitStructMaxSize());
@@ -121,14 +118,14 @@ void TracerCUDA::SendAndRecieveRays()
 void TracerCUDA::ShadeRays()
 {
 	// Ray Memory Pointers	
-	const RayGMem* dRays = rayMemory.Rays();
-	const HitKey* dCurrentHits = rayMemory.CurrentHits();
+	const RayGMem* dRays = rayMemory.Rays();	
 	HitKey* dPotentialHits = rayMemory.PotentialHits();
+	const void* dHitStructs = rayMemory.HitStructs<void>();
 	RayId*	dRayIds = rayMemory.RayIds();
 	const void* dAux = rayMemory.RayAux<void>();
 	
 	// Material Interfaces
-	const std::map<uint32_t, GPUMaterialI*>	materials = tracerSystem->Materials();
+	const MaterialGroupMappings& materials = tracerSystem->MaterialGroups();
 		
 	// Now here conside incoming rays from different tracers
 	// Consume ray array
@@ -191,7 +188,7 @@ void TracerCUDA::ShadeRays()
 		// Another TODO: Implement multi-gpu load balancing
 		// More TODO: Implement single-gpu SM load balacing
 		loc->second->ShadeRays(dRayOutStart, dAuxOutStart,
-							   dRays, dCurrentHits, dAux,
+							   dRays, dHitStructs, dAux,
 							   dRayIdStart,
 							   static_cast<uint32_t>(p.count),
 							   rngMemory);
@@ -209,7 +206,9 @@ TracerCUDA::TracerCUDA()
 	: rayDelegateFunc(nullptr)
 	, errorFunc(nullptr)
 	, analyticFunc(nullptr)
-	, imageFunc(nullptr)	
+	, imageFunc(nullptr)
+	, baseSendFunc(nullptr)
+	, accSendFunc(nullptr)
 	, currentRayCount(0)
 	, tracerSystem(nullptr)
 	, healthy(false)	
@@ -254,10 +253,10 @@ void TracerCUDA::SetParams(const TracerParameters&)
 void TracerCUDA::SetScene(const std::string& sceneFileName)
 {}
 
-void TracerCUDA::GenerateSceneAccelerator()
+void TracerCUDA::RequestBaseAccelerator()
 {}
 
-void TracerCUDA::GenerateAccelerator(uint32_t objId)
+void TracerCUDA::RequestAccelerator(HitKey key)
 {}
 
 void TracerCUDA::AssignAllMaterials()

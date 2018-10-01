@@ -49,7 +49,7 @@ class MockTracerLogic : public TracerLogicI
 										// Inputs
 										const RayGMem* dRays,
 										const RayId* dRayIds,
-										uint32_t rayCount) override;
+										uint32_t rayCount) const override;
 		};
 
 		class AcceleratorMock : public GPUAcceleratorGroupI
@@ -72,10 +72,10 @@ class MockTracerLogic : public TracerLogicI
 										// Input
 										const RayId* dRayIds,
 										const HitKey* dPotentialHits,
-										const uint32_t rayCount)  override;
+										const uint32_t rayCount) const override;
 		};
 
-		class MaterialMock : public GPUMaterialI
+		class MaterialMock : public GPUMaterialGroupI
 		{
 			private:
 				MockTracerLogic& 	mockLogic;
@@ -92,12 +92,12 @@ class MockTracerLogic : public TracerLogicI
 											  void* dRayAuxOut,
 											  //  Input
 											  const RayGMem* dRayIn,
-											  const HitKey* dCurrentHits,
+											  const void* dHitStructs,
 											  const void* dRayAuxIn,
 											  const RayId* dRayIds,
 
 											  const uint32_t rayCount,
-											  RNGMemory& rngMem) override;
+											  RNGMemory& rngMem) const override;
 
 				uint8_t				MaxOutRayPerRay() const override { return isMissMaterial ? 0 : 1; }
 		};
@@ -123,8 +123,8 @@ class MockTracerLogic : public TracerLogicI
 		std::vector<AcceleratorMock>				mockAccelerators;
 		std::vector<MaterialMock>					mockMaterials;
 
-		std::map<uint16_t, GPUAcceleratorGroupI*>	accelerators;
-		std::map<uint32_t, GPUMaterialI*>			materials;
+		AcceleratorGroupMappings					accelerators;
+		MaterialGroupMappings						materials;
 		
 		// Convenience
 		std::vector<HitKey>							materialKeys;
@@ -151,34 +151,34 @@ class MockTracerLogic : public TracerLogicI
 
 		// Accessors for Managers
 		// Hitman is responsible for
-		const std::string&									HitmanName() const override { return HitName; }
-		const std::string&									ShademanName() const override { return ShadeName; }
+		//const std::string&									HitmanName() const override { return HitName; }
+		//const std::string&									ShademanName() const override { return ShadeName; }
 
 		// Interface fetching for logic
-		GPUBaseAcceleratorI*								BaseAcelerator() override { return &(*baseAccelerator); }
-		const std::map<uint16_t, GPUAcceleratorGroupI*>&	AcceleratorGroups() override { return accelerators; }
-		const std::map<uint32_t, GPUMaterialI*>&			Materials() override { return materials; }
+		GPUBaseAcceleratorI*						BaseAcelerator() override { return &(*baseAccelerator); }
+		const AcceleratorGroupMappings&				AcceleratorGroups() override { return accelerators; }
+		const MaterialGroupMappings&				MaterialGroups() override { return materials; }
 
 		// Returns bitrange of keys (should complement each other to 32-bit)
-		const Vector2i&									MaterialBitRange() const override { return MaterialRange; }
-		const Vector2i&									AcceleratorBitRange() const override { return AcceleratorRange; }
+		const Vector2i&								MaterialBitRange() const override { return MaterialRange; }
+		const Vector2i&								AcceleratorBitRange() const override { return AcceleratorRange; }
 
 		// Options of the Hitman & Shademan
-		const HitOpts&									HitOptions() const override { return optsHit; }
-		const ShadeOpts&								ShadeOptions() const override { return optsShade; }
+		const HitOpts&								HitOptions() const override { return optsHit; }
+		const ShadeOpts&							ShadeOptions() const override { return optsShade; }
 
 		// Loads/Unloads material to GPU Memory
-		void											LoadMaterial(int gpuId, uint32_t matId) override {}
-		void											UnloadMaterial(int gpuId, uint32_t matId) override {}
+		void										LoadMaterial(int gpuId, uint32_t matId) override {}
+		void										UnloadMaterial(int gpuId, uint32_t matId) override {}
 
 		// Generates/Removes accelerator
-		void											GenerateAccelerator(uint32_t accId) override {}
-		void											RemoveAccelerator(uint32_t accId) override {}
+		void										GenerateAccelerator(HitKey key) override {};
+		void										LoadAccelerator(HitKey key, const byte* data, size_t size) override {};
 
 		// Misc
 		// Retuns "sizeof(RayAux)"
-		size_t											PerRayAuxDataSize() override { return 0; }
-		size_t											HitStructMaxSize() { return sizeof(uint32_t); };
+		size_t										PerRayAuxDataSize() const override { return 0; }
+		size_t										HitStructMaxSize() const override { return sizeof(uint32_t); };
 };
 
 const std::string MockTracerLogic::HitName = "";
@@ -189,7 +189,7 @@ void MockTracerLogic::BaseAcceleratorMock::Hit(// Output
 											   // Inputs
 											   const RayGMem* dRays,
 											   const RayId* dRayIds,
-											   uint32_t rayCount)
+											   uint32_t rayCount) const
 {
 	// Go To CPU
 	CUDA_CHECK(cudaDeviceSynchronize());
@@ -218,7 +218,7 @@ void MockTracerLogic::AcceleratorMock::Hit(// I-O
 										   // Input
 										   const RayId* dRayIds,
 										   const HitKey* dPotentialHits,
-										   const uint32_t rayCount)
+										   const uint32_t rayCount) const
 {
 	// Go To CPU
 	CUDA_CHECK(cudaDeviceSynchronize());
@@ -254,12 +254,12 @@ void MockTracerLogic::MaterialMock::ShadeRays(RayGMem* dRayOut,
 											  void* dRayAuxOut,
 											  //  Input
 											  const RayGMem* dRayIn,
-											  const HitKey* dCurrentHits,
+											  const void* dHitStructs,
 											  const void* dRayAuxIn,
 											  const RayId* dRayIds,
 
 											  const uint32_t rayCount,
-											  RNGMemory& rngMem)
+											  RNGMemory& rngMem) const
 {
 	// Go To CPU
 	CUDA_CHECK(cudaDeviceSynchronize());

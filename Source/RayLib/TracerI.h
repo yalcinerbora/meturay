@@ -16,7 +16,8 @@ which does send commands to GPU to do ray tracing
 */
 
 #include <cstdint>
-#include <future>
+#include <vector>
+
 #include "Vector.h"
 #include "TracerError.h"
 #include "Types.h"
@@ -41,8 +42,8 @@ typedef void(*TracerAnalyticFunc)(TracerAnalyticData);
 typedef void(*TracerImageSendFunc)(const Vector2ui& offset,
 								   const Vector2ui& size,
 								   const std::vector<float> imagePortion);
-typedef void(*TracerAcceleratorSendFunc)(HitKey key, const std::vector<std::byte> data);
-typedef void(*TracerBaseAcceleratorSendFunc)(const std::vector<std::byte> data);
+typedef void(*TracerAcceleratorSendFunc)(HitKey key, const std::vector<byte> data);
+typedef void(*TracerBaseAcceleratorSendFunc)(const std::vector<byte> data);
 
 class TracerI
 {

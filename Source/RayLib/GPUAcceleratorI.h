@@ -24,7 +24,7 @@ class GPUAcceleratorGroupI
 									// Input
 									const RayId* dRayIds,
 									const HitKey* dPotentialHits,
-									const uint32_t rayCount) = 0;
+									const uint32_t rayCount) const = 0;
 
 };
 
@@ -42,5 +42,5 @@ class GPUBaseAcceleratorI
 									// Inputs
 									const RayGMem* dRays,									
 									const RayId* dRayIds,
-									const uint32_t rayCount) = 0;
+									const uint32_t rayCount) const = 0;
 };

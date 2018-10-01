@@ -13,9 +13,9 @@ with ustom Intersection and Hit
 // This is fundemental Linear traversal kernel
 
 template <class HitGMem, class HitReg,
-	class LeafStruct, class PrimitiveData,
-	IntersctionFunc<LeafStruct, PrimitiveData> IFunc,
-	AcceptHitFunc<HitReg> AFunc>
+		  class LeafStruct, class PrimitiveData,
+		  IntersctionFunc<LeafStruct, PrimitiveData> IFunc,
+		  AcceptHitFunc<HitReg> AFunc>
 	__global__ void KCIntersectLinear(// I-O
 									  RayGMem* gRays,
 									  HitGMem* gHits,
