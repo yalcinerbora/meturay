@@ -4,7 +4,6 @@
 #include "RayLib/Camera.h"
 #include "RayLib/CudaConstants.h"
 #include "RayLib/Log.h"
-#include "RayLib/SceneIO.h"
 #include "RayLib/Random.cuh"
 #include "RayLib/ImageIO.h"
 #include "RayLib/Debug.h"

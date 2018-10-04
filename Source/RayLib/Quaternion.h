@@ -56,8 +56,8 @@ class Quaternion<T>
 		__device__ __host__ void				operator/=(T);
 
 		// Logic
-		__device__ __host__ bool				operator==(const Quaternion&);
-		__device__ __host__ bool				operator!=(const Quaternion&);
+		__device__ __host__ bool				operator==(const Quaternion&) const;
+		__device__ __host__ bool				operator!=(const Quaternion&) const;
 
 		// Utility
 		__device__ __host__ Quaternion			Normalize() const;

@@ -1,231 +1,182 @@
-#include <fstream>
-#include <json.hpp>
-
 #include "SceneIO.h"
-#include "Log.h"
+#include "Camera.h"
 
-// VS2017 lacking behind
-#include <filesystem>
+namespace SceneIO
+{
+	// Common Names
+	static constexpr const char*	POSITION = "position";
+	static constexpr const char*	DATA = "data";
 
-using namespace nlohmann;
+	// Camera Related Names	
+	static constexpr const char*	CAMERA_APERTURE = "apertureSize";
+	static constexpr const char*	CAMERA_FOCUS = "focusDistance";
+	static constexpr const char*	CAMERA_PLANES = "planes";
+	static constexpr const char*	CAMERA_FOV = "fov";
+	static constexpr const char*	CAMERA_GAZE = "gaze";
+	static constexpr const char*	CAMERA_UP = "up";
 
-//static Vector3 JsonToVec3(const json& j)
-//{
-//	float x = j[0];
-//	float y = j[1];
-//	float z = j[2];
-//	return Vector3(x, y, z);
-//}
-//
-//static json Vec3ToJson(const Vector3& v)
-//{
-//	json j = json::array();
-//	j.push_back(v[0]);
-//	j.push_back(v[1]);
-//	j.push_back(v[2]);
-//	return j;
-//}
-//
-//static const char* VolumeTypeToString(const VolumeType& v)
-//{
-//	assert(static_cast<size_t>(v) < VolumeTypeSize);
-//	return SceneFile::VolumeTypes[static_cast<size_t>(v)];
-//}
-//
-//static VolumeType StringToVolumeType(const std::string& s)
-//{
-//	for(size_t i = 0; i < VolumeTypeSize; i++)
-//	{
-//		if(std::string(SceneFile::VolumeTypes[i]) == s)
-//		{
-//			return static_cast<VolumeType>(i);
-//		}
-//	}
-//	assert(false);
-//	return VolumeType::END;
-//}
-//
-//static json CameraToJson(const CameraPerspective& c)
-//{
-//	json r = json::object();
-//	r[SceneFile::TCameraGaze] = Vec3ToJson(c.gazePoint);
-//	r[SceneFile::TCameraPos] = Vec3ToJson(c.position);
-//	r[SceneFile::TCameraUp] = Vec3ToJson(c.up);
-//	r[SceneFile::TCameraAperture] = c.apertureSize;
-//	r[SceneFile::TCameraNear] = c.nearPlane;
-//	r[SceneFile::TCameraFar] = c.farPlane;
-//	r[SceneFile::TCameraFovX] = c.fov[0];
-//	r[SceneFile::TCameraFovY] = c.fov[1];
-//	return r;
-//}
-//
-//static json VolumeToJson(const SceneFile::Volume& v)
-//{
-//	json r = json::object();
-//	r[SceneFile::TVolumeType] = VolumeTypeToString(v.type);
-//	r[SceneFile::TVolumeFile] = v.fileName;
-//	return r;
-//}
-//
-//static json FMatToJson(const SceneFile::FluidMaterial& fMat)
-//{
-//	json r = json::object();
-//	//
-//	json colorArray = json::array(); 
-//	for(const auto& c : fMat.colors)
-//	{
-//		colorArray.push_back(Vec3ToJson(c));
-//	}
-//	r[SceneFile::TMaterialColors] = colorArray;
-//	//
-//	json colorFactors = json::array();
-//	for(const auto& c : fMat.colorInterp)
-//	{
-//		colorFactors.push_back(c);
-//	}
-//	r[SceneFile::TMaterialColorFactors] = colorFactors;
-//	//
-//	json opacities = json::array();
-//	for(const auto& o : fMat.opacities)
-//	{
-//		opacities.push_back(o);
-//	}
-//	r[SceneFile::TMaterialOpacities] = opacities;
-//	//
-//	json opacityFactors = json::array();
-//	for(const auto& o : fMat.opacityInterp)
-//	{
-//		opacityFactors.push_back(o);
-//	}
-//	r[SceneFile::TMaterialOpacityFactors] = opacityFactors;
-//
-//	r[SceneFile::TMaterialId] = fMat.materialId;
-//	r[SceneFile::TMaterialAbsorbtionCoeff] = fMat.absorbtionCoeff;
-//	r[SceneFile::TMaterialScatteringCoeff] = fMat.scatteringCoeff;
-//	r[SceneFile::TMaterialTranparency] = Vec3ToJson(fMat.transparency);
-//	r[SceneFile::TMaterialFluidIOR] = fMat.ior;
-//	return r;
-//}
-//
-//static SceneFile::FluidMaterial JsonToFMat(const json& jsonNode)
-//{
-//	SceneFile::FluidMaterial r;
-//
-//	//
-//	//auto colorArray = ;
-//	for(const auto& c : jsonNode.at(SceneFile::TMaterialColors))
-//	{
-//		r.colors.push_back(JsonToVec3(c));
-//	}
-//	//
-//	auto colorFactors = jsonNode.at(SceneFile::TMaterialColorFactors);
-//	for(const float& c : colorFactors)
-//	{
-//		r.colorInterp.push_back(c);
-//	}
-//	//
-//	auto opacities = jsonNode.at(SceneFile::TMaterialOpacities);
-//	for(const float& o : opacities)
-//	{
-//		r.opacities.push_back(o);
-//	}
-//	//
-//	auto opacityFactors = jsonNode.at(SceneFile::TMaterialOpacityFactors);
-//	for(const float& o : opacityFactors)
-//	{
-//		r.opacityInterp.push_back(o);
-//	}	
-//	r.materialId = jsonNode[SceneFile::TMaterialId];
-//	r.absorbtionCoeff = jsonNode[SceneFile::TMaterialAbsorbtionCoeff];
-//	r.scatteringCoeff = jsonNode[SceneFile::TMaterialScatteringCoeff];
-//	r.transparency = JsonToVec3(jsonNode[SceneFile::TMaterialTranparency]);
-//	r.ior = jsonNode[SceneFile::TMaterialFluidIOR];
-//	return r;
-//}
-//
-//void SceneFile::Clean()
-//{
-//	fileName.clear();
-//	cameras.clear();
-//	fluidMaterials.clear();
-//	volumes.clear();
-//}
-//
-//IOError SceneFile::Load(SceneFile& s, const std::string& fileName)
-//{
-//	s.Clean();
-//	try
-//	{
-//		s.fileName = fileName;
-//
-//		json jsonFile;
-//		std::ifstream fileIn(std::filesystem::u8path(fileName));
-//		if(!fileIn.is_open()) return IOError::FILE_NOT_FOUND;
-//		fileIn >> jsonFile;
-//
-//		// Fast load
-//		// Volume
-//		auto volumes = jsonFile[TVolume][0];
-//		Volume v;
-//		v.fileName = std::move<std::string>(volumes[TVolumeFile]);
-//		v.type = StringToVolumeType(volumes[TVolumeType]);
-//		v.surfaceId = 0;
-//		v.materialId = 0;
-//		s.volumes.push_back(v);
-//
-//		// Material
-//		auto material = jsonFile[TMaterialBatches][TMaterialFluid][0];
-//		FluidMaterial fm = JsonToFMat(material);
-//		s.fluidMaterials.push_back(fm);
-//	}
-//	catch(std::logic_error(e))
-//	{
-//		s.Clean();
-//		METU_ERROR_LOG("Scene(Json) Exception: %s.", e.what());
-//		return IOError::SCENE_CORRUPTED;
-//	}
-//	return IOError::OK;
-//}
-//
-//IOError SceneFile::Save(const SceneFile& s,
-//						const std::string& fileName)
-//{
-//	// Camera
-//	json cameraArray = json::array();
-//	for(const CameraPerspective& c : s.cameras)
-//	{
-//		json camObject = CameraToJson(c);
-//		cameraArray.push_back(camObject);
-//	}
-//
-//	// Volumes
-//	json volumeArray = json::array();
-//	for(const Volume& v : s.volumes)
-//	{
-//		json volObject = VolumeToJson(v);
-//		volumeArray.push_back(volObject);
-//	}
-//
-//	// Materials
-//	json materialObject = json::object();
-//	// Fluid Materials
-//	json fluidMaterials = json::array();
-//	for(const FluidMaterial& fm : s.fluidMaterials)
-//	{
-//		fluidMaterials.push_back(FMatToJson(fm));
-//	}
-//	materialObject[TMaterialFluid] = fluidMaterials;
-//	// ....
-//
-//	// Assignment of Objects
-//	json jsonFile;
-//	jsonFile[TCamera] = cameraArray;
-//	jsonFile[TMaterialBatches] = materialObject;
-//	jsonFile[TVolume] = volumeArray;
-//	
-//	// Actual writing
-//	std::ofstream outputFile(std::filesystem::u8path(fileName));
-//	if(!outputFile.is_open()) return IOError::FILE_NOT_FOUND;
-//	outputFile << jsonFile.dump(2);
-//	return IOError::OK;
-//}
+	// Light Related Names	
+	// Light Type Values
+	static constexpr const char*	LIGHT_PONT = "point";
+	static constexpr const char*	LIGHT_DIRECTIONAL = "directional";
+	static constexpr const char*	LIGHT_SPOT = "spot";
+	static constexpr const char*	LIGHT_RECTANGULAR = "rectangular";
+	// Common
+	static constexpr const char*	LIGHT_COLOR = "color";
+	static constexpr const char*	LIGHT_INTENSITY = "intensity";
+	// Point
+	// Directional
+	static constexpr const char*	LIGHT_DIRECTION = "direction";
+	// Spot
+	static constexpr const char*	LIGHT_COVERAGE_ANGLE = "direction";
+	static constexpr const char*	LIGHT_FALLOFF_ANGLE = "direction";
+	// Rectangular
+	static constexpr const char*	LIGHT_EDGE0 = "edge0";
+	static constexpr const char*	LIGHT_EDGE1 = "edge1";
+	// Transform Related Names			
+	// Common
+	static constexpr const char*	TRANSFORM_FORM = "form";
+	// Transform Form Values
+	static constexpr const char*	TRANSFORM_FORM_MATRIX4 = "matrix4x4";
+	static constexpr const char*	TRANSFORM_FORM_T_R_S = "transformRotateScale";
+
+	//
+	LightStruct						LoadPoint(const nlohmann::json&, double time = 0.0);
+	LightStruct						LoadDirectional(const nlohmann::json&, double time = 0.0);
+	LightStruct						LoadSpot(const nlohmann::json&, double time = 0.0);
+	LightStruct						LoadRectangular(const nlohmann::json&, double time = 0.0);
+
+}
+
+LightStruct SceneIO::LoadPoint(const nlohmann::json& jsn, double time)
+{
+	LightStruct s = {};
+	s.t = LightType::POINT;
+	s.point.position = LoadVector<3, float>(jsn[POSITION], time);
+	s.point.color = LoadVector<3, float>(jsn[LIGHT_COLOR], time);
+	s.point.intensity = LoadNumber<float>(jsn[LIGHT_INTENSITY], time);
+	return s;
+}
+
+LightStruct SceneIO::LoadDirectional(const nlohmann::json& jsn, double time)
+{
+	LightStruct s = {};
+	s.t = LightType::DIRECTIONAL;
+	s.directional.direction = LoadVector<3, float>(jsn[LIGHT_DIRECTION], time);
+	s.directional.color = LoadVector<3, float>(jsn[LIGHT_COLOR], time);
+	s.directional.intensity = LoadNumber<float>(jsn[LIGHT_INTENSITY], time);
+	return s;
+}
+
+LightStruct SceneIO::LoadSpot(const nlohmann::json& jsn, double time)
+{
+	LightStruct s = {};
+	s.t = LightType::SPOT;
+	s.spot.position = LoadVector<3, float>(jsn[POSITION], time);
+	s.spot.direction = LoadVector<3, float>(jsn[LIGHT_DIRECTION], time);
+	s.spot.intensity = LoadNumber<float>(jsn[LIGHT_INTENSITY], time);
+	s.spot.falloffAngle = LoadNumber<float>(jsn[LIGHT_FALLOFF_ANGLE], time);
+	s.spot.coverageAngle = LoadNumber<float>(jsn[LIGHT_COVERAGE_ANGLE], time);
+	return s;
+}
+
+LightStruct SceneIO::LoadRectangular(const nlohmann::json& jsn, double time)
+{
+	LightStruct s = {};
+	s.t = LightType::SPOT;
+	s.rectangular.position = LoadVector<3, float>(jsn[POSITION], time);		
+	s.rectangular.edge0 = LoadVector<3, float>(jsn[LIGHT_EDGE0], time);
+	s.rectangular.edge1 = LoadVector<3, float>(jsn[LIGHT_EDGE1], time);
+	s.rectangular.intensity = LoadNumber<float>(jsn[LIGHT_INTENSITY], time);
+	Vector3f color = LoadVector<3, float>(jsn[LIGHT_COLOR], time);
+	s.rectangular.red = color[0];
+	s.rectangular.green = color[1];
+	s.rectangular.blue = color[2];
+	return s;
+}
+
+TransformStruct SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
+{
+	if(jsn.is_string())
+	{
+		return LoadFromAnim<TransformStruct>(jsn, time);
+	}
+	else if(jsn.is_object())
+	{
+		std::string type = LoadString(jsn, time);
+		if(type == TRANSFORM_FORM_MATRIX4)
+		{
+			Matrix4x4 mat = LoadMatrix<4, float>(jsn[DATA], time);
+			return mat;
+		}
+		else if(type == TRANSFORM_FORM_T_R_S)
+		{
+			Vector3 translation = LoadVector<3, float>(jsn[DATA][0], time);
+			Vector3 rotation = LoadVector<3, float>(jsn[DATA][1], time);
+			Vector3 scale = LoadVector<3, float>(jsn[DATA][1], time);
+
+			Matrix4x4 mat = (TransformGen::Translate(translation) *
+							 TransformGen::Scale(scale[0], scale[1], scale[2])*
+							 TransformGen::Rotate(rotation[2] * MathConstants::DegToRadCoef, ZAxis) *
+							 TransformGen::Rotate(rotation[1] * MathConstants::DegToRadCoef, YAxis) *
+							 TransformGen::Rotate(rotation[0] * MathConstants::DegToRadCoef, XAxis));
+			return mat;
+		}
+		else throw SceneException(SceneError::UNKNOWN_TRANSFORM_TYPE);
+		
+	}
+	else throw SceneException(SceneError::TYPE_MISMATCH);
+}
+
+CameraPerspective SceneIO::LoadCamera(const nlohmann::json& jsn, double time)
+{
+	if(jsn.is_string())
+	{
+		return LoadFromAnim<CameraPerspective>(jsn, time);
+	}
+	else if(jsn.is_object())
+	{
+		CameraPerspective cam = {};
+		cam.position = LoadVector<3, float>(jsn[POSITION], time);
+		cam.up = LoadVector<3, float>(jsn[CAMERA_UP], time);
+		cam.gazePoint = LoadVector<3, float>(jsn[CAMERA_GAZE], time);
+		Vector2 planes = LoadVector<2, float>(jsn[CAMERA_PLANES], time);
+		cam.nearPlane = planes[0];
+		cam.farPlane = planes[1];
+		cam.fov = LoadVector<2, float>(jsn[CAMERA_FOV], time);
+		cam.apertureSize = LoadNumber<float>(jsn[CAMERA_APERTURE], time);
+
+		return cam;
+	}
+	else throw SceneException(SceneError::TYPE_MISMATCH);
+}
+
+LightStruct SceneIO::LoadLight(const nlohmann::json& jsn, double time)
+{
+	if(jsn.is_string())
+	{
+		return LoadFromAnim<LightStruct>(jsn, time);
+	}
+	else if(jsn.is_object())
+	{
+		std::string type = jsn[TYPE];
+		if(type == LIGHT_PONT)
+		{
+			return LoadPoint(jsn, time);
+		}
+		else if(type == LIGHT_DIRECTIONAL)
+		{
+			return LoadDirectional(jsn, time);
+		}
+		else if(type == LIGHT_SPOT)
+		{
+			return LoadSpot(jsn, time);
+		}
+		else if(type == LIGHT_RECTANGULAR)
+		{
+			return LoadRectangular(jsn, time);
+		}
+		else throw SceneException(SceneError::UNKNOWN_LIGHT_TYPE);
+	}
+	else throw SceneException(SceneError::TYPE_MISMATCH);
+}

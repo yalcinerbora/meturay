@@ -139,6 +139,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\FunctionEnablers.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\GPUAcceleratorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\GPUMaterialI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\GPUSceneI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\HitStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageMemory.h" />
@@ -173,7 +174,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\Random.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Ray.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Ray.hpp" />
+    <ClInclude Include="..\..\..\Source\RayLib\SceneError.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneIO.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\SceneStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SelfDistributor.h" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Texture.cuh" />
@@ -199,6 +202,7 @@
     <ClCompile Include="..\..\..\Source\RayLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\Debug.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\GPUSceneI.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\ImageMemory.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp" />

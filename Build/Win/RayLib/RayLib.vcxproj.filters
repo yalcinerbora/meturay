@@ -36,13 +36,10 @@
       <Filter>Memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\VisorI.h">
-      <Filter>Interfaces</Filter>
+      <Filter>Render Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Types.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Log.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\TracerI.h">
-      <Filter>Interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\MayaCacheIO.h">
       <Filter>FileI-O</Filter>
     </ClInclude>
@@ -57,7 +54,7 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorInputI.h">
-      <Filter>Interfaces</Filter>
+      <Filter>Render Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\TracerThread.h">
       <Filter>Threads</Filter>
@@ -75,7 +72,7 @@
       <Filter>Structs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\MeshI.h">
-      <Filter>Interfaces</Filter>
+      <Filter>Render Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h">
       <Filter>Distribitors</Filter>
@@ -194,13 +191,22 @@
     <ClInclude Include="..\..\..\Source\RayLib\AcceleratorDeviceFunctions.h">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SceneError.h">
+      <Filter>Errors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerI.h">
+      <Filter>GPU Logic Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\GPUSceneI.h">
+      <Filter>GPU Logic Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SceneStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Memory">
       <UniqueIdentifier>{8a3dbe82-44f6-451f-a478-02ad96121997}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Interfaces">
-      <UniqueIdentifier>{ffc61ecf-ed27-41a3-841d-51e14123abab}</UniqueIdentifier>
     </Filter>
     <Filter Include="FileI-O">
       <UniqueIdentifier>{df1a67ea-65ee-47f3-8d9c-8336216d49bc}</UniqueIdentifier>
@@ -244,6 +250,9 @@
     <Filter Include="Math">
       <UniqueIdentifier>{4701e9e3-7079-4316-af75-17b80bd69e82}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Render Interfaces">
+      <UniqueIdentifier>{ffc61ecf-ed27-41a3-841d-51e14123abab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp">
@@ -280,6 +289,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\Debug.cpp">
       <Filter>Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\GPUSceneI.cpp">
+      <Filter>GPU Logic Interfaces</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

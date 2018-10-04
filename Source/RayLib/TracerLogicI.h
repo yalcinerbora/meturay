@@ -18,6 +18,7 @@ That interface is responsible for fetching
 
 #include "Vector.h"
 #include "Camera.h"
+#include "SceneError.h"
 
 class GPUBaseAcceleratorI;
 class GPUAcceleratorGroupI;
@@ -43,8 +44,10 @@ class TracerLogicI
 	public:
 		virtual											~TracerLogicI() = default;
 
-
-		virtual TracerError								Initialize() = 0;
+		// Interface
+		// Init & Load
+		virtual TracerError								Initialize() = 0;		
+		virtual SceneError								LoadScene(const std::string&) = 0;
 
 		// Generate Camera Rays
 		virtual void									GenerateCameraRays(RayMemory&, RNGMemory&,
@@ -53,11 +56,7 @@ class TracerLogicI
 																		   const Vector2ui& resolution,
 																		   const Vector2ui& pixelStart,
 																		   const Vector2ui& pixelCount) = 0;
-
-		// Hitman is responsible for
-		//virtual const std::string&					HitmanName() const = 0;
-		//virtual const std::string&					ShademanName() const = 0;
-
+		
 		// Interface fetching for logic
 		virtual GPUBaseAcceleratorI*					BaseAcelerator() = 0;
 		virtual const AcceleratorGroupMappings&			AcceleratorGroups() = 0;
@@ -83,4 +82,5 @@ class TracerLogicI
 		// Retuns "sizeof(RayAux)"
 		virtual size_t									PerRayAuxDataSize() const = 0;
 		virtual size_t									HitStructMaxSize() const = 0;
+
 };

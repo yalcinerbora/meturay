@@ -4,101 +4,187 @@
 Scene file json interpeter and writer
 
 */
-#include "IOError.h"
-#include "Camera.h"
+#include "SceneError.h"
 #include "Vector.h"
+#include "Matrix.h"
+#include "Quaternion.h"
+#include "SceneStructs.h"
 
-struct SceneFile
+#include <fstream>
+#include <json.hpp>
+
+struct CameraPerspective;
+
+namespace SceneIO
 {
-	public:
-		struct Material
-		{
-			uint32_t			materialId;
-		};
+	static constexpr const char* SCENE_EXT = "mscene";
+	static constexpr const char* ANIM_EXT = "manim";
+	// Common Base Arrays
+	static constexpr const char* CAMERA_BASE = "Cameras";
+	static constexpr const char* LIGHT_BASE = "Lights";
+	static constexpr const char* TRANSFORM_BASE = "Transforms";
+	// Common Names
+	static constexpr const char* ID = "id";
+	static constexpr const char* TYPE = "type";
+	static constexpr const char* name = "name";
 
-		struct Surface
-		{
-			uint32_t			surfaceId;
-			uint32_t			materialId;
-		};
+	// Generic Time Dependency Check
+	bool				IsTimeDependent(const nlohmann::json&);
 
-		struct FluidMaterial : public Material
-		{
-			std::vector<Vector3f>	colors;
-			std::vector<float>		colorInterp;
+	// Load from anim
+	template <class T>
+	T					LoadFromAnim(const std::string& fileName, double time = 0.0);
 
-			float					absorbtionCoeff;
-			float					scatteringCoeff;
+	// Static Loads	
+	std::string			LoadString(const nlohmann::json&, double time = 0.0);
+	template <class T>
+	T					LoadNumber(const nlohmann::json&, double time = 0.0);	
+	template <class T>
+	Quaternion<T>		LoadQuaternion(const nlohmann::json&, double time = 0.0);
+	template <int N, class T>
+	Vector<N, T>		LoadVector(const nlohmann::json&, double time = 0.0);
+	template <int N, class T>
+	Matrix<N, T>		LoadMatrix(const nlohmann::json&, double time = 0.0);
 
-			std::vector<float>		opacities;
-			std::vector<float>		opacityInterp;
-
-			Vector3f				transparency;		
-			float					ior;
-		};
-
-		//struct Volume : public Surface
-		//{
-		//	VolumeType			type;
-		//	std::string			fileName;
-		//};
-
-		//  Camera Related
-		static constexpr const char*		TCamera				= "Cameras";
-		static constexpr const char*		TCameraGaze			= "gaze";
-		static constexpr const char*		TCameraPos			= "pos";
-		static constexpr const char*		TCameraNear			= "near";
-		static constexpr const char*		TCameraFar			= "far";
-		static constexpr const char*		TCameraUp			= "up";
-		static constexpr const char*		TCameraAperture		= "aperture";
-		static constexpr const char*		TCameraFovX			= "fovX";
-		static constexpr const char*		TCameraFovY			= "fovY";
-		
-		// Light Related
-
-		// Material Related
-		static constexpr const char*		TMaterialBatches = "Materials";
-		static constexpr const char*		TMaterialId = "material_id";
-		// Fluid Material
-		static constexpr const char*		TMaterialFluid = "Fluid Materials";
-		static constexpr const char*		TMaterialColors = "colors";
-		static constexpr const char*		TMaterialColorFactors = "colorInterp";
-		static constexpr const char*		TMaterialOpacities = "opacities";
-		static constexpr const char*		TMaterialOpacityFactors = "opacityInterp";
-		static constexpr const char*		TMaterialAbsorbtionCoeff = "absorbtion";
-		static constexpr const char*		TMaterialScatteringCoeff = "scattering";
-		static constexpr const char*		TMaterialTranparency = "transparency";
-		static constexpr const char*		TMaterialFluidIOR = "ior";
-				
-		// Mesh Batch Related
-
-		// Object & Volume Common
-		static constexpr const char*		TSurfaceId = "surface_id";
-		// Object Related
-		// Volume Related
-		static constexpr const char*		TVolume = "Volumes";
-		static constexpr const char*		TVolumeType = "type";
-		static constexpr const char*		TVolumeFile = "file";
-
-		// Volume Type Strings
-//		static constexpr const char*		VolumeTypes[VolumeTypeSize] = {"maya_ncache_fluid"};
-	
-	private:
-		void								Clean();
-
-	public:
-		std::string							fileName;
-		// Data Types
-		std::vector<CameraPerspective>		cameras;
-		// Materials
-		std::vector<FluidMaterial>			fluidMaterials;
-		// Volumes
-//		std::vector<Volume>					volumes;
-		// TODO: add full materials
-		
-		// 
-		static IOError						Load(SceneFile&,
-												 const std::string& fileName);
-		static IOError						Save(const SceneFile&,
-												 const std::string& fileName);
+	// Common Types
+	LightStruct			LoadLight(const nlohmann::json&, double time = 0.0);
+	TransformStruct		LoadTransform(const nlohmann::json&, double time = 0.0);
+	CameraPerspective	LoadCamera(const nlohmann::json&, double time = 0.0);
 };
+
+inline bool SceneIO::IsTimeDependent(const nlohmann::json& jsn)
+{
+	std::string s;
+	if(jsn.is_string() && (s = jsn).at(0) == '_')
+	{
+		return true;
+	}
+	return false;
+}
+
+template <class T>
+T SceneIO::LoadFromAnim(const std::string& fileName, double time)
+{
+	// Strip '_'
+	std::string filePath = fileName.substr(1);
+	// Open File
+	std::ifstream file(filePath);
+	if(!file.is_open()) throw SceneException(SceneError::ANIMATION_FILE_NOT_FOUND);
+
+	// TODO:
+	// Read etc....
+	return T();
+}
+
+inline std::string SceneIO::LoadString(const nlohmann::json& jsn, double time)
+{
+	if(IsTimeDependent(jsn))
+		return LoadFromAnim<std::string>(jsn, time);
+	else if(jsn.is_string())
+	{
+		std::string val = jsn;
+		return val;
+	}
+	else throw SceneException(SceneError::TYPE_MISMATCH);
+}
+
+template <class T>
+T SceneIO::LoadNumber(const nlohmann::json& jsn, double time) 
+{
+	if(IsTimeDependent(jsn))
+		return LoadFromAnim<T>(jsn, time);
+	else if(jsn.is_number() && jsn.size() == 1)
+	{
+		T val = jsn;
+		return val;
+	}
+	else throw SceneException(SceneError::TYPE_MISMATCH);
+}
+
+template <class T>
+Quaternion<T> SceneIO::LoadQuaternion(const nlohmann::json& jsn, double time)
+{
+	if(IsTimeDependent(jsn)) 
+		return LoadFromAnim<Quaternion<T>>(jsn, time);
+	else if(jsn.is_array() && jsn.size() == 4)
+	{
+		std::array<T, 4> array = jsn;
+		return Quaternion<T>(array.data());
+	}
+	else throw SceneException(SceneError::TYPE_MISMATCH);
+}
+
+template <int N, class T>
+Vector<N, T> SceneIO::LoadVector(const nlohmann::json& jsn, double time)
+{
+	if(IsTimeDependent(jsn))
+		return LoadFromAnim<Vector<N, T>>(jsn, time);
+	else if(jsn.is_array() && jsn.size() == N)
+	{
+		std::array<T, N> array = jsn;
+		return Vector<N, T>(array.data());
+	}
+	else throw SceneException(SceneError::TYPE_MISMATCH);
+}
+
+template <int N, class T>
+Matrix<N, T> SceneIO::LoadMatrix(const nlohmann::json& jsn, double time)
+{
+	if(IsTimeDependent(jsn))
+		return LoadFromAnim<Matrix<N, T>>(jsn, time);
+	else if(jsn.is_array() && jsn.size() == N * N)
+	{
+		std::array<T, N * N> array = jsn;
+		return Matrix<N, T>(array.data());
+	}
+	else throw SceneException(SceneError::TYPE_MISMATCH);
+}
+
+
+
+//namespace SceneIO
+//{
+//	// Typeless vectors are defaulted to float
+//	const auto LoadVector2 = LoadVector<2, float>;
+//	const auto LoadVector3 = LoadVector<3, float>;
+//	const auto LoadVector4 = LoadVector<4, float>;
+//	// Float Type
+//	const auto LoadVector2f = LoadVector<2, float>;
+//	const auto LoadVector3f = LoadVector<3, float>;
+//	const auto LoadVector4f = LoadVector<4, float>;
+//	// Double Type
+//	const auto LoadVector2d = LoadVector<2, double>;
+//	const auto LoadVector3d = LoadVector<3, double>;
+//	const auto LoadVector4d = LoadVector<4, double>;
+//	// Integer Type
+//	const auto LoadVector2i = LoadVector<2, int>;
+//	const auto LoadVector3i = LoadVector<3, int>;
+//	const auto LoadVector4i = LoadVector<4, int>;
+//	// Unsigned Integer Type
+//	const auto LoadVector2ui = LoadVector<2, unsigned int>;
+//	const auto LoadVector3ui = LoadVector<3, unsigned int>;
+//	const auto LoadVector4ui = LoadVector<4, unsigned int>;
+//	// Quaternion Type
+//	const auto LoadQuatF = LoadQuaternion<float>;
+//	const auto LoadQuatD = LoadQuaternion<double>;
+//	// Typeless vectors are defaulted to float
+//	const auto LoadMatrix2x2 = LoadMatrix<2, float>;
+//	const auto LoadMatrix3x3 = LoadMatrix<3, float>;
+//	const auto LoadMatrix4x4 = LoadMatrix<4, float>;
+//	// Float Type
+//	const auto LoadMatrix2x2f = LoadMatrix<2, float>;
+//	const auto LoadMatrix3x3f = LoadMatrix<3, float>;
+//	const auto LoadMatrix4x4f = LoadMatrix<4, float>;
+//	// Double Type
+//	const auto LoadMatrix2x2d = LoadMatrix<2, double>;
+//	const auto LoadMatrix3x3d = LoadMatrix<3, double>;
+//	const auto LoadMatrix4x4d = LoadMatrix<4, double>;
+//	// Integer Type
+//	const auto LoadMatrix2x2i = LoadMatrix<2, int>;
+//	const auto LoadMatrix3x3i = LoadMatrix<3, int>;
+//	const auto LoadMatrix4x4i = LoadMatrix<4, int>;
+//	// Unsigned Integer Type
+//	const auto LoadMatrix2x2ui = LoadMatrix<2, unsigned int>;
+//	const auto LoadMatrix3x3ui = LoadMatrix<3, unsigned int>;
+//	const auto LoadMatrix4x4ui = LoadMatrix<4, unsigned int>;
+//}

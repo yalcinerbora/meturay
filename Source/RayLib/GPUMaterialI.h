@@ -4,6 +4,7 @@
 
 */
 
+#include <string>
 #include <cstdint>
 #include "HitStructs.h"
 
@@ -28,18 +29,21 @@ class GPUMaterialGroupI
 										  RNGMemory& rngMem) const = 0;
 
 		virtual uint8_t			MaxOutRayPerRay() const = 0;
-};
 
+		virtual std::string		LogicName() = 0;
+		virtual size_t			UsedGPUMemory() = 0;
+};
 
 class GPUMaterialI
 {
-	public:
-		
+	public:		
 		// Load/Unload Material
 		virtual void			LoadMaterial(int gpuId) = 0;
 		virtual void			UnloadMaterial() = 0;
 		// Query if it is loaded
 		virtual bool			IsLoaded() = 0;
+
+		virtual size_t			UsedGPUMemory() = 0;
 
 
 };

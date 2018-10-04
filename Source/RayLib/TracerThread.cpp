@@ -1,7 +1,6 @@
 #include "TracerThread.h"
 #include "TracerI.h"
 #include "TracerDistributorI.h"
-#include "SceneIO.h"
 #include "RayLib/Log.h"
 
 void TracerThread::InitialWork()

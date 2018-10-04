@@ -144,7 +144,7 @@ static __device__ __host__ Matrix<4, T> Inverse4(const T*);
 template<int N, class T>
 static __device__ __host__ Matrix<N, T> operator*(float, const Matrix<N,T>&);
 
-// Typeless vectors are defaulted to float
+// Typeless matrices are defaulted to float
 using Matrix2x2 = Matrix<2, float>;
 using Matrix3x3 = Matrix<3, float>;
 using Matrix4x4 = Matrix<4, float>;

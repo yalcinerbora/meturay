@@ -10,8 +10,6 @@
 #include "TracerCUDA/TracerCUDAEntry.h"
 #include "VisorGL/VisorGLEntry.h"
 
-#include "RayLib/SceneIO.h"
-
 int main(int argc, const char* argv[])
 {
 	EnableVTMode();

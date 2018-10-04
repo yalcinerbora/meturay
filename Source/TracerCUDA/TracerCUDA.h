@@ -44,9 +44,6 @@ class TracerCUDA : public TracerI
 		TracerAcceleratorSendFunc		accSendFunc;
 		TracerBaseAcceleratorSendFunc	baseSendFunc;
 
-		// GPU Specific Memory (Mostly Textures)
-		//-----
-
 		// Common Memory
 		RNGMemory						rngMemory;
 		RayMemory						rayMemory;
@@ -75,9 +72,9 @@ class TracerCUDA : public TracerI
 		TracerCUDA&						operator=(const TracerCUDA&) = delete;
 										~TracerCUDA() = default;
 
-										// =====================//
-								// RESPONSE FROM TRACER //
-								// =====================//
+		// =====================//
+		// RESPONSE FROM TRACER //
+		// =====================//
 		// Delegate material ray callback
 		// Tracer will use this function to send material rays to other tracers
 		void					SetRayDelegateCallback(TracerRayDelegateFunc) override;

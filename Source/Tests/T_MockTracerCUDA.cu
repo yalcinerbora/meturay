@@ -100,6 +100,9 @@ class MockTracerLogic : public TracerLogicI
 											  RNGMemory& rngMem) const override;
 
 				uint8_t				MaxOutRayPerRay() const override { return isMissMaterial ? 0 : 1; }
+
+				std::string			LogicName() override { return ""; }
+				size_t				UsedGPUMemory() override { return 0; }
 		};
 
 	private:
@@ -138,8 +141,9 @@ class MockTracerLogic : public TracerLogicI
 													MockTracerLogic(uint32_t seed);
 		virtual										~MockTracerLogic() = default;
 
-
+		// Init & Load
 		TracerError									Initialize() override;
+		SceneError									LoadScene(const std::string&) override { return SceneError::OK; };
 
 		// Generate Camera Rays
 		void										GenerateCameraRays(RayMemory&, RNGMemory&,
@@ -148,11 +152,7 @@ class MockTracerLogic : public TracerLogicI
 																	   const Vector2ui& resolution,
 																	   const Vector2ui& pixelStart,
 																	   const Vector2ui& pixelCount) override;
-
-		// Accessors for Managers
-		// Hitman is responsible for
-		//const std::string&									HitmanName() const override { return HitName; }
-		//const std::string&									ShademanName() const override { return ShadeName; }
+		
 
 		// Interface fetching for logic
 		GPUBaseAcceleratorI*						BaseAcelerator() override { return &(*baseAccelerator); }

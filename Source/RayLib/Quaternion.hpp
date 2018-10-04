@@ -163,14 +163,14 @@ inline void Quaternion<T>::operator/=(T right)
 
 template<class T>
 __device__ __host__ 
-inline bool Quaternion<T>::operator==(const Quaternion& right)
+inline bool Quaternion<T>::operator==(const Quaternion& right) const
 {
 	return vec == right.vec;
 }
 
 template<class T>
 __device__ __host__ 
-inline bool Quaternion<T>::operator!=(const Quaternion& right)
+inline bool Quaternion<T>::operator!=(const Quaternion& right) const
 {
 	return vec != right.vec;
 }
