@@ -34,9 +34,11 @@
     <ClInclude Include="..\..\..\Source\TracerLib\FunctionEnablers.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialI.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUSceneI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\HitStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\LinearAcceleratorKernels.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ParallelReduction.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ParallelScan.cuh" />

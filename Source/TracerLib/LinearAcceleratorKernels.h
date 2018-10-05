@@ -38,7 +38,7 @@ template <class HitGMem, class HitReg,
 		// Load Ray/Hit to Register
 		RayReg ray(gRays, id);
 		HitReg hit(gHits, id);
-
+	
 		// Key is the index of the inner Linear Array
 		const LeafStruct* gLeaf = gLeafList[key];
 		const uint32_t* gEndCount = gEndCountList[key];

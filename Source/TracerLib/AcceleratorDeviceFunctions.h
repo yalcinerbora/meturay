@@ -1,7 +1,8 @@
 #pragma once
 
 #include "RayStructs.h"
-#include "AABB.h"
+#include "RayLib/AABB.h"
+
 
 // This is Leaf of Base Accelerator
 // It points to another accelerator/material pair
@@ -29,9 +30,7 @@ using IntersctionFunc = __device__ float(*)(const RayReg& r,
 // It returns immidiate termination if necessary (i.e. when any hit is enough like
 // in volume rendering).
 template <class HitStruct>
-using AcceptHitFunc = __device__  bool(*)(HitStruct& data,
-										  RayReg& r,
-										  float newT);
+using AcceptHitFunc = __device__  bool(*)(HitStruct& data, RayReg& r, float newT);
 
 // Custom bounding box generation function for primitive
 template <class PrimitiveData>

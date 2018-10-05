@@ -27,6 +27,9 @@
     <ClCompile Include="..\..\..\Source\Tests\T_SceneIOCommon.cpp">
       <Filter>SceneIO</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\Tests\T_GPUSceneI.cpp">
+      <Filter>SceneIO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="SceneIO">

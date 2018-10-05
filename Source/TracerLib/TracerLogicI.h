@@ -23,6 +23,7 @@ That interface is responsible for fetching
 class GPUBaseAcceleratorI;
 class GPUAcceleratorGroupI;
 class GPUMaterialGroupI;
+class GPUPrimitiveGroupI;
 class RayMemory;
 class RNGMemory;
 
@@ -83,4 +84,18 @@ class TracerLogicI
 		virtual size_t									PerRayAuxDataSize() const = 0;
 		virtual size_t									HitStructMaxSize() const = 0;
 
+};
+
+
+class TracerTypeGeneratorI
+{
+	public:
+		virtual SceneError	GetPrimitiveGroup(GPUPrimitiveGroupI*&,
+											  const std::string& primitiveType) = 0;
+		virtual SceneError	GetAcceleratorGroup(GPUAcceleratorGroupI*&,
+												GPUPrimitiveGroupI*,
+												const std::string& accelType) = 0;
+		virtual SceneError	GetMaterialGroup(GPUMaterialGroupI*&,
+											 GPUPrimitiveGroupI*, 
+											 const std::string& materialType) = 0;
 };

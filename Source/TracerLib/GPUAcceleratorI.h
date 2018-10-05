@@ -13,18 +13,21 @@ struct RayGMem;
 class GPUAcceleratorGroupI
 {
 	public:
-		virtual					~GPUAcceleratorGroupI() = default;
+		virtual							~GPUAcceleratorGroupI() = default;
 
 		// Interface
-		// Kernel Logic: For each ray (but dRays & dHit
-		virtual void			Hit(// I-O
-									RayGMem* dRays,
-									void* dHitStructs,
-									HitKey* dCurrentHits,
-									// Input
-									const RayId* dRayIds,
-									const HitKey* dPotentialHits,
-									const uint32_t rayCount) const = 0;
+		// Kernel Logic
+		virtual void					Hit(// I-O
+											RayGMem* dRays,
+											void* dHitStructs,
+											HitKey* dCurrentHits,
+											// Input
+											const RayId* dRayIds,
+											const HitKey* dPotentialHits,
+											const uint32_t rayCount) const = 0;
+
+		virtual const std::string&		AcceleratorType() const = 0;
+		virtual const std::string&		PrimitiveType() const = 0;
 
 };
 

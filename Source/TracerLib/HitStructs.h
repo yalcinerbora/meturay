@@ -7,6 +7,7 @@
 
 typedef uint32_t HitKey;
 typedef uint32_t RayId;
+typedef uint32_t MatId;
 
 namespace HitConstants
 {

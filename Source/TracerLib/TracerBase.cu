@@ -113,6 +113,8 @@ void TracerBase::SendAndRecieveRays()
 
 void TracerBase::ShadeRays()
 {
+	const Vector2i matBitRange = tracerSystem->MaterialBitRange();
+
 	// Ray Memory Pointers	
 	const RayGMem* dRays = rayMemory.Rays();	
 	HitKey* dPotentialHits = rayMemory.PotentialHits();
@@ -135,14 +137,14 @@ void TracerBase::ShadeRays()
 	rayMemory.FillRayIdsForSort(rayCount);
 
 	// Sort with respect to the hits that are returned
-	rayMemory.SortKeys(dRayIds, dPotentialHits, rayCount, Vector2i(0, 32));
+	rayMemory.SortKeys(dRayIds, dPotentialHits, rayCount, matBitRange);
 
 	// Parition w.r.t. material (full range sort is required here)
 	// Each same material on accelerator is actually considered a unique material
 	// this is why we sort full range.
 	// This is required since same material may fetch is data differently 
 	// from different objects
-	auto portions = rayMemory.Partition(rayCount, Vector2i(0, 32));
+	auto portions = rayMemory.Partition(rayCount, matBitRange);
 
 	// Use partition lis to find out
 	// total potential output ray count

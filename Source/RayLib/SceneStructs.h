@@ -53,3 +53,19 @@ struct LightStruct
 };
 
 typedef Matrix4x4 TransformStruct;
+
+//
+struct AcceleraorStruct
+{
+	uint32_t id;
+	uint32_t type;
+};
+
+struct SurfaceStruct
+{
+	uint32_t transformId;
+	uint32_t materialId;
+	uint32_t primitiveId;
+	uint32_t acceleratorId;
+	uint32_t dataId;	
+};
