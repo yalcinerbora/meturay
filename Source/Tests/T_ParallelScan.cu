@@ -3,7 +3,8 @@
 
 #include "RayLib/Vector.h"
 #include "RayLib/DeviceMemory.h"
-#include "RayLib/ParallelScan.cuh"
+
+#include "TracerLib/ParallelScan.cuh"
 
 using ::testing::FloatEq;
 

@@ -4,18 +4,19 @@
 #include <chrono>
 using namespace std::chrono_literals;
 
-#include "TracerCUDA/TracerCUDAEntry.h"
-#include "RayLib/TracerLogicI.h"
-#include "RayLib/GPUAcceleratorI.h"
-#include "RayLib/GPUMaterialI.h"
-
-#include "RayLib/Random.cuh"
-#include "RayLib/RNGMemory.h"
-#include "RayLib/RayMemory.h"
 #include "RayLib/Log.h"
+#include "RayLib/TracerError.h"
 
-#include "RayLib/CameraKernels.cuh"
+#include "TracerLib/TracerBase.h"
+#include "TracerLib/TracerLogicI.h"
+#include "TracerLib/GPUAcceleratorI.h"
+#include "TracerLib/GPUMaterialI.h"
 
+#include "TracerLib/Random.cuh"
+#include "TracerLib/RNGMemory.h"
+#include "TracerLib/RayMemory.h"
+
+#include "TracerLib/CameraKernels.cuh"
 
 struct RayAuxGMem {};
 struct RayAuxBaseData{};
@@ -362,7 +363,8 @@ TEST(MockTracerTest, Test)
 	MockTracerLogic mockLogic(seed);
 
 	// Load Tracer DLL
-	auto tracerI = CreateTracerCUDA();
+	TracerBase tracer;
+	TracerI* tracerI = &tracer;
 	tracerI->Initialize(seed, mockLogic);
 	tracerI->ResizeImage(resolution);
 	tracerI->ReportionImage();

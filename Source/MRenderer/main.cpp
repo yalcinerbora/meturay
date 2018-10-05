@@ -1,4 +1,3 @@
-#include "RayLib/TracerThread.h"
 #include "RayLib/System.h"
 #include "RayLib/Log.h"
 #include "RayLib/Constants.h"
@@ -7,7 +6,7 @@
 #include "RayLib/VisorWindowInput.h"
 
 // DLLs
-#include "TracerCUDA/TracerCUDAEntry.h"
+#include "TracerLib/TracerLoader.h"
 #include "VisorGL/VisorGLEntry.h"
 
 int main(int argc, const char* argv[])
@@ -15,12 +14,12 @@ int main(int argc, const char* argv[])
 	EnableVTMode();
 
 	uint32_t seed = 0;
-	TracerLogicI* logic = nullptr;
+	//TracerLogicI* logic = nullptr;
 
 	// Self Distributor
 	//SelfDistributor selfDistributor;
 	// Create Cuda Tracer
-	auto tracerI = CreateTracerCUDA();
+	//auto tracerI = CreateTracerCUDA();
 
 	// Camera
 	float aspectRatio = 16.0f / 9.0f;
@@ -37,16 +36,16 @@ int main(int argc, const char* argv[])
 	// Start Tracer Thread and Set scene
 	const PixelFormat pixFormat = PixelFormat::RGBA_FLOAT;
 
-	TracerThread tracer(*tracerI, *logic, seed);
+	//TracerThread tracer(*tracerI, *logic, seed);
 	//tracer.ChangeScene(std::string(argv[1]));
 
-	tracer.ChangePixelFormat(pixFormat);
-	tracer.ChangeResolution(Vector2ui(1920, 1080));
-	tracer.ChangeSampleCount(5);
-	tracer.ChangeImageSegment(Vector2ui(0, 0), Vector2ui(1920, 1080));
-	tracer.ChangeParams(TracerParameters{10});
-	tracer.ChangeCamera(cam);
-	tracer.Start();
+	//tracer.ChangePixelFormat(pixFormat);
+	//tracer.ChangeResolution(Vector2ui(1920, 1080));
+	//tracer.ChangeSampleCount(5);
+	//tracer.ChangeImageSegment(Vector2ui(0, 0), Vector2ui(1920, 1080));
+	//tracer.ChangeParams(TracerParameters{10});
+	//tracer.ChangeCamera(cam);
+	//tracer.Start();
 
 	// Visor Input
 	//VisorWindowInput input(1.0, 1.0, 2.0, selfDistributor);
@@ -69,6 +68,6 @@ int main(int argc, const char* argv[])
 		// Present Back Buffer
 		visorView->ProcessInputs();
 	}
-	tracer.Stop();
+//	tracer.Stop();
 	return 0;
 }

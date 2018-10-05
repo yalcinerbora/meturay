@@ -2,7 +2,7 @@
 #include <gmock/gmock.h>
 #include <random>
 
-#include "RayLib/Random.cuh"
+#include "TracerLib/Random.cuh"
 #include "RayLib/DeviceMemory.h"
 #include "RayLib/Log.h"
 

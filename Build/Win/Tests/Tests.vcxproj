@@ -132,8 +132,8 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">
       <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\TracerCUDA\TracerCUDA.vcxproj">
-      <Project>{17f548cf-9f20-471f-999a-fe56d9fb9b26}</Project>
+    <ProjectReference Include="..\TracerLib\TracerLib.vcxproj">
+      <Project>{a34190e5-275d-415a-a865-5ceb65b4bc7d}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

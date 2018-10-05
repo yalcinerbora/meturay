@@ -124,43 +124,17 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\RayLib\AABB.h" />
     <ClInclude Include="..\..\..\Source\RayLib\AABB.hpp" />
-    <ClInclude Include="..\..\..\Source\RayLib\AcceleratorDeviceFunctions.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\BVHAcceleratorKernels.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\AnalyticDistributorI.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\BitonicSort.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\CameraKernels.cuh" />
-    <ClInclude Include="..\..\..\Source\RayLib\ComparisonFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Constants.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\CudaConstants.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\Debug.h" />
     <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Error.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\FunctionEnablers.cuh" />
-    <ClInclude Include="..\..\..\Source\RayLib\GPUAcceleratorI.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\GPUMaterialI.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\GPUSceneI.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\HitStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\ImageMemory.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\LinearAcceleratorKernels.h" />
     <ClInclude Include="..\..\..\Source\RayLib\LoopingThreadI.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\MaterialKernels.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MeshI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.hpp" />
-    <ClInclude Include="..\..\..\Source\RayLib\RNGMemory.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\RayMemory.h" />
-    <CudaCompile Include="..\..\..\Source\RayLib\RayMemory.cu">
-      <FileType>Document</FileType>
-    </CudaCompile>
-    <ClInclude Include="..\..\..\Source\RayLib\ReduceFunctions.cuh" />
-    <ClInclude Include="..\..\..\Source\RayLib\ParallelReduction.cuh" />
-    <ClInclude Include="..\..\..\Source\RayLib\ParallelScan.cuh" />
-    <ClInclude Include="..\..\..\Source\RayLib\RadixSort.cuh" />
-    <ClInclude Include="..\..\..\Source\RayLib\RNGStructs.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\RayStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaCheck.h" />
     <ClInclude Include="..\..\..\Source\RayLib\DeviceMemory.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Endian.h" />
@@ -171,7 +145,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\MayaCacheIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Quaternion.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Quaternion.hpp" />
-    <ClInclude Include="..\..\..\Source\RayLib\Random.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Ray.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Ray.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneError.h" />
@@ -184,10 +157,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\ThreadData.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerDistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerError.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\TracerI.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\TracerLogicI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerStructs.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\TracerThread.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Types.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorDistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.h" />
@@ -199,33 +169,19 @@
     <ClInclude Include="..\..\..\Source\RayLib\WorkerThread.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\RayLib\CudaConstants.cpp" />
-    <ClCompile Include="..\..\..\Source\RayLib\Debug.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp" />
-    <ClCompile Include="..\..\..\Source\RayLib\GPUSceneI.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp" />
-    <ClCompile Include="..\..\..\Source\RayLib\ImageMemory.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MDistributor.cpp" />
-    <ClCompile Include="..\..\..\Source\RayLib\RNGMemory.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SceneIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SelfDistributor.cpp" />
-    <ClCompile Include="..\..\..\Source\RayLib\TracerThread.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\VisorWindowInput.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\RayLib\AABB.cu" />
     <CudaCompile Include="..\..\..\Source\RayLib\Matrix.cu" />
-    <CudaCompile Include="..\..\..\Source\RayLib\ParallelReduction.cu" />
-    <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanArithmetic.cu" />
-    <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanMatrix2x2.cu" />
-    <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanMatrix3x3.cu" />
-    <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanMatrix4x4.cu" />
-    <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanQuaternion.cu" />
-    <CudaCompile Include="..\..\..\Source\RayLib\ParallelScanVector.cu" />
     <CudaCompile Include="..\..\..\Source\RayLib\Quaternion.cu" />
-    <CudaCompile Include="..\..\..\Source\RayLib\RadixSort.cu" />
     <CudaCompile Include="..\..\..\Source\RayLib\Ray.cu" />
     <CudaCompile Include="..\..\..\Source\RayLib\Vector.cu" />
   </ItemGroup>

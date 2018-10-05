@@ -28,8 +28,8 @@ namespace SceneIO
 	// Directional
 	static constexpr const char*	LIGHT_DIRECTION = "direction";
 	// Spot
-	static constexpr const char*	LIGHT_COVERAGE_ANGLE = "direction";
-	static constexpr const char*	LIGHT_FALLOFF_ANGLE = "direction";
+	static constexpr const char*	LIGHT_COVERAGE_ANGLE = "coverageAngle";
+	static constexpr const char*	LIGHT_FALLOFF_ANGLE = "falloffAngle";
 	// Rectangular
 	static constexpr const char*	LIGHT_EDGE0 = "edge0";
 	static constexpr const char*	LIGHT_EDGE1 = "edge1";
@@ -77,6 +77,7 @@ LightStruct SceneIO::LoadSpot(const nlohmann::json& jsn, double time)
 	s.spot.intensity = LoadNumber<float>(jsn[LIGHT_INTENSITY], time);
 	s.spot.falloffAngle = LoadNumber<float>(jsn[LIGHT_FALLOFF_ANGLE], time);
 	s.spot.coverageAngle = LoadNumber<float>(jsn[LIGHT_COVERAGE_ANGLE], time);
+	s.spot.color = LoadVector<3, float>(jsn[LIGHT_COLOR], time);
 	return s;
 }
 
@@ -103,7 +104,7 @@ TransformStruct SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
 	}
 	else if(jsn.is_object())
 	{
-		std::string type = LoadString(jsn, time);
+		std::string type = LoadString(jsn[TYPE], time);
 		if(type == TRANSFORM_FORM_MATRIX4)
 		{
 			Matrix4x4 mat = LoadMatrix<4, float>(jsn[DATA], time);
@@ -113,13 +114,14 @@ TransformStruct SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
 		{
 			Vector3 translation = LoadVector<3, float>(jsn[DATA][0], time);
 			Vector3 rotation = LoadVector<3, float>(jsn[DATA][1], time);
-			Vector3 scale = LoadVector<3, float>(jsn[DATA][1], time);
+			Vector3 scale = LoadVector<3, float>(jsn[DATA][2], time);
 
-			Matrix4x4 mat = (TransformGen::Translate(translation) *
-							 TransformGen::Scale(scale[0], scale[1], scale[2])*
-							 TransformGen::Rotate(rotation[2] * MathConstants::DegToRadCoef, ZAxis) *
-							 TransformGen::Rotate(rotation[1] * MathConstants::DegToRadCoef, YAxis) *
-							 TransformGen::Rotate(rotation[0] * MathConstants::DegToRadCoef, XAxis));
+			Matrix4x4 mat = TransformGen::Translate(translation);
+			mat *= TransformGen::Scale(scale[0], scale[1], scale[2]);
+			mat *= TransformGen::Rotate(rotation[2] * MathConstants::DegToRadCoef, ZAxis);
+			mat *= TransformGen::Rotate(rotation[1] * MathConstants::DegToRadCoef, YAxis);
+			mat *= TransformGen::Rotate(rotation[0] * MathConstants::DegToRadCoef, XAxis);
+			
 			return mat;
 		}
 		else throw SceneException(SceneError::UNKNOWN_TRANSFORM_TYPE);

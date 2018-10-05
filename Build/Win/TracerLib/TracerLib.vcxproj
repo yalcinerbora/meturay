@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RayLib\RayLib.vcxproj">
+      <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneI.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\ImageMemory.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\RNGMemory.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\TracerLoader.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\TracerThread.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorDeviceFunctions.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\BitonicSort.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\BVHAcceleratorKernels.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\CameraKernels.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\ComparisonFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\FunctionEnablers.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorI.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialI.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUSceneI.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\HitStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\MaterialKernels.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\ParallelReduction.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\ParallelScan.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\RadixSort.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\Random.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\RayMemory.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\RayStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\ReduceFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\RNGMemory.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\RNGStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerBase.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerLoader.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerDebug.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerI.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicI.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerThread.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\..\Source\TracerLib\ParallelReduction.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanArithmetic.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanMatrix2x2.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanMatrix3x3.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanMatrix4x4.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanQuaternion.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanVector.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\RadixSort.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\TracerBase.cu" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A34190E5-275D-415A-A865-5CEB65B4BC7D}</ProjectGuid>
+    <RootNamespace>TracerLib</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>METU_DEBUG;METU_CUDA;WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>cudart_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <CodeGeneration>compute_52,sm_52</CodeGeneration>
+      <PtxAsOptionV>true</PtxAsOptionV>
+      <GenerateLineInfo>false</GenerateLineInfo>
+    </CudaCompile>
+    <Lib>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>METU_CUDA;WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>cudart_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <CodeGeneration>compute_52,sm_52</CodeGeneration>
+      <PtxAsOptionV>true</PtxAsOptionV>
+      <MaxRegCount>32</MaxRegCount>
+      <GenerateLineInfo>true</GenerateLineInfo>
+    </CudaCompile>
+    <Lib>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />
+  </ImportGroup>
+</Project>

@@ -17,7 +17,6 @@ User can define internal terminate condition where thread automatically ends
 #include <mutex>
 #include <condition_variable>
 
-
 class LoopingThreadI
 {
 		private:
