@@ -118,7 +118,7 @@ void TracerBase::HitRays()
 			if(portion.portionId == HitKey::NullBatch ||
 			   portion.portionId == HitKey::OutsideBatch)
 			{
-				rayCount = portion.offset;
+				rayCount = static_cast<uint32_t>(portion.offset);
 			}			
 			iterator++;
 		}
@@ -178,7 +178,7 @@ void TracerBase::ShadeRays()
 	if(!portions.empty() &&
 	   portions.rbegin()->portionId == HitKey::NullBatch)
 	{
-		rayCount = portions.rbegin()->offset;
+		rayCount = static_cast<uint32_t>(portions.rbegin()->offset);
 	}
 
 	// Use partition lis to find out

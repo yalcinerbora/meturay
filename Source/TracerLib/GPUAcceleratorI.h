@@ -5,7 +5,7 @@ Base Interface for GPU accelerators
 
 */
 
-#include <json.hpp>
+//#include <json.hpp>
 #include <cstdint>
 #include "HitStructs.cuh"
 
@@ -26,8 +26,8 @@ class GPUAcceleratorGroupI
 		virtual								~GPUAcceleratorGroupI() = default;
 
 		// Interface
-		virtual SceneError					InitializeGroup(const GPUPrimitiveGroupI&,
-															nlohmann::json& surfaceDefinitions) = 0;
+		virtual SceneError					InitializeGroup(const GPUPrimitiveGroupI&
+															/*nlohmann::json& surfaceDefinitions*/) = 0;
 
 		// Batched and singular construction
 		//virtual void						ConstructAccelerators(uint32_t surfaceId) = 0;
@@ -83,7 +83,7 @@ class GPUBaseAcceleratorI
 									const RayId* dRayIds,
 									const uint32_t rayCount) const = 0;
 
-
+		//TODO: define params of functions
 		virtual void			Constrcut() = 0;
 		virtual void			Reconstruct() = 0;
 };

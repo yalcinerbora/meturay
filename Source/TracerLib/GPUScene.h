@@ -34,11 +34,15 @@ class GPUScene
 		nlohmann::json						sceneJson;
 		std::string							fileName;
 		double								currentTime;
+		
+		// GPU Pointers
+		LightStruct*						dLights;
+		TransformStruct*					dTransforms;
+			
+		// Inners
 		// Helper Logic
 		SceneError							OpenFile(const std::string& fileName);
 
-	protected:
-		// Inners
 		bool								FindNode(nlohmann::json& node, const char* name);
 		static SceneError					GenIdLookup(std::map<uint32_t, uint32_t>&,
 														const nlohmann::json& array,

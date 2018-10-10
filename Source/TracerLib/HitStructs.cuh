@@ -27,10 +27,10 @@ struct HitStructPtr
 					{}
 
 		template<class T>
-		T* operator[](int i) { return reinterpret_cast<T*>(dPtr + variantSize * i); }
+		T* operator[](int i) { return reinterpret_cast<T*>(dPtr + combinedSize * i); }
 
 		template<class T>
-		const T* operator[](int i) const { return reinterpret_cast<const T*>(dPtr + variantSize * i); }
+		const T* operator[](int i) const { return reinterpret_cast<const T*>(dPtr + combinedSize * i); }
 };
 
 template <class T, uint32_t BatchBits, uint32_t IdBits>
@@ -40,7 +40,7 @@ struct alignas(sizeof(T)) HitKeyT
 
 	// Constructors & Destructor
 									HitKeyT() = default;
-									HitKeyT(T v) : value(v) {}
+	__device__ __host__				HitKeyT(T v) : value(v) {}
 
 	// Props
 	uint32_t						value;
@@ -77,13 +77,13 @@ struct alignas(sizeof(T)) HitKeyT
 template <class T, uint32_t BatchBits, uint32_t IdBits>
 __device__ __host__ HitKeyT<T, BatchBits, IdBits>::operator const T&() const
 {
-	return  val;
+	return  value;
 }
 
 template <class T, uint32_t BatchBits, uint32_t IdBits>
 __device__ __host__ HitKeyT<T, BatchBits, IdBits>::operator T&()
 {
-	return val;
+	return value;
 }
 
 template <class T, uint32_t BatchBits, uint32_t IdBits>

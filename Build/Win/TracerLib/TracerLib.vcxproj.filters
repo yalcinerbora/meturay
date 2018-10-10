@@ -42,9 +42,7 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\TracerThread.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerLoader.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp">
-      <Filter>GPU Logic Interfaces</Filter>
-    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -123,9 +121,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\LinearAcceleratorKernels.h">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h">
-      <Filter>GPU Logic Interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterial.cuh">
       <Filter>GPU Logic Template Classes</Filter>
     </ClInclude>
@@ -138,6 +133,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\HitStructs.cuh">
       <Filter>Structs</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

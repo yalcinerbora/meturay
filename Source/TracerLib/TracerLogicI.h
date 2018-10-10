@@ -31,6 +31,8 @@ class GPUMaterialGroupI;
 // Common Memory
 class RayMemory;
 class RNGMemory;
+//
+struct TracerError;
 
 using AcceleratorBatchMappings = std::map<uint32_t, GPUAcceleratorBatchI*>;
 using MaterialBatchMappings = std::map<uint32_t, GPUMaterialBatchI*>;
@@ -76,23 +78,14 @@ class TracerBaseLogicI
 		virtual const AcceleratorBatchMappings&			AcceleratorBatches() = 0;
 		virtual const MaterialBatchMappings&			MaterialBatches() = 0;
 
-		// Returns bitrange of keys (should complement each other to 32-bit)
+		// Returns max bits of keys (for batch and id respectively)
 		virtual const Vector2i							SceneMaterialMaxBits() const = 0;
 		virtual const Vector2i							SceneAcceleratorMaxBits() const = 0;
 
 		// Options of the Hitman & Shademan
 		virtual const HitOpts&							HitOptions() const = 0;
 		virtual const ShadeOpts&						ShadeOptions() const = 0;
-
-		//// Loads/Unloads material to GPU Memory
-		//virtual SceneError							LoadScene(const std::string&) = 0;
-		//virtual void									LoadMaterial(int gpuId, HitKey key) = 0;
-		//virtual void									UnloadMaterial(int gpuId, HitKey matId) = 0;
-
-		//// Generates/Removes accelerator
-		//virtual void									GenerateAccelerator(HitKey key) = 0;
-		//virtual void									LoadAccelerator(HitKey key, const Byte* data, size_t size) = 0;
-
+	
 		// Misc
 		// Retuns "sizeof(RayAux)"
 		virtual size_t									PerRayAuxDataSize() const = 0;

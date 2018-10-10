@@ -28,7 +28,8 @@ SceneError GPUScene::OpenFile(const std::string& fileName)
 
 	if(!file.is_open()) return SceneError::FILE_NOT_FOUND;
 	// Parse Json
-	sceneJson << file;
+	file >> sceneJson;
+	return SceneError::OK;
 }
 
 GPUScene::GPUScene(const std::string& s)
@@ -57,6 +58,7 @@ SceneError GPUScene::GenIdLookup(std::map<uint32_t, uint32_t>& result,
 		}
 		i++;
 	}
+	return SceneError::OK;
 }
 
 void GPUScene::LoadCommon(double time)
@@ -97,15 +99,12 @@ void GPUScene::LoadCommon(double time)
 	size_t lightSize = lightsCPU.size() * sizeof(LightStruct);
 	
 	memory = DeviceMemory(transformSize + lightSize);
-	dTransforms = reinterpret_cast<const TransformStruct*>(static_cast<Byte*>(memory));
-	dLights = reinterpret_cast<const LightStruct*>(static_cast<Byte*>(memory) + transformSize);
+	dTransforms = reinterpret_cast<TransformStruct*>(static_cast<Byte*>(memory));
+	dLights = reinterpret_cast<LightStruct*>(static_cast<Byte*>(memory) + transformSize);
 	
-	CUDA_CHECK(cudaMemcpy(const_cast<LightStruct*>(dLights), 
-						  lightsCPU.data(), lightsCPU.size() * sizeof(LightStruct),
+	CUDA_CHECK(cudaMemcpy(dLights, lightsCPU.data(), lightsCPU.size() * sizeof(LightStruct),
 						  cudaMemcpyHostToDevice));
-
-	CUDA_CHECK(cudaMemcpy(const_cast<TransformStruct*>(dTransforms),
-						  transformsCPU.data(), transformsCPU.size() * sizeof(TransformStruct),
+	CUDA_CHECK(cudaMemcpy(dTransforms, transformsCPU.data(), transformsCPU.size() * sizeof(TransformStruct),
 						  cudaMemcpyHostToDevice));
 
 
@@ -120,7 +119,6 @@ void GPUScene::LoadCommon(double time)
 			cameraMemory[i] = SceneIO::LoadCamera(cameraJson, time);
 			i++;
 		}
-		hCameras = cameraMemory.data();
 	};
 }
 
@@ -155,27 +153,29 @@ SceneError GPUScene::LoadLogicRelated(TracerLogicGeneratorI* l, double time)
 	// Load Surface Nodes
 	std::vector<SurfaceStruct> surfacesCPU;
 	surfacesCPU.reserve(surfaceData.size());
-	for(const auto& jsn : surfaces) 
-		surfacesCPU.push_back(SceneIO::LoadSurface(jsn));
+	for(const auto& jsn : surfaces)
+	{
+		//surfacesCPU.push_back(SceneIO::LoadSurface(jsn));
+	}
 	
 	// Partition surface nodes for generation etcs
-	SortedSurfaces primBasedSurfaces(SurfaceStruct::SortComparePrimitive);
-	SortedSurfaces primAccelBasedSurfaces(SurfaceStruct::SortComparePrimAccel);
-	SortedSurfaces primMaterialBasedSurfaces(SurfaceStruct::SortComparePrimMaterial);
+//	SortedSurfaces primBasedSurfaces(SurfaceStruct::SortComparePrimitive);
+//	SortedSurfaces primAccelBasedSurfaces(SurfaceStruct::SortComparePrimAccel);
+//	SortedSurfaces primMaterialBasedSurfaces(SurfaceStruct::SortComparePrimMaterial);
 	for(const auto& surface : surfacesCPU)
 	{		
-		auto locPrim = primBasedSurfaces.emplace(&surface, std::vector<nlohmann::json>());
-		auto locPrimAccel = primAccelBasedSurfaces.emplace(&surface, std::vector<nlohmann::json>());
-		auto locPrimMat = primMaterialBasedSurfaces.emplace(&surface, std::vector<nlohmann::json>());
+		//auto locPrim = primBasedSurfaces.emplace(&surface, std::vector<nlohmann::json>());
+		//auto locPrimAccel = primAccelBasedSurfaces.emplace(&surface, std::vector<nlohmann::json>());
+		//auto locPrimMat = primMaterialBasedSurfaces.emplace(&surface, std::vector<nlohmann::json>());
 
-		std::vector<nlohmann::json>& primVec = locPrim.first->second;
-		std::vector<nlohmann::json>& primAcelVec = locPrimAccel.first->second;
-		std::vector<nlohmann::json>& primMatVec = locPrimMat.first->second;
-		
-		// Push Surface Data for Primitive Generation
-		auto loc = surfaceDataList.find(surface.dataId);
-		if(loc == primList.end()) return SceneError::SURFACE_DATA_ID_NOT_FOUND;
-		else primVec.push_back(surfaces[loc->second]);
+		//std::vector<nlohmann::json>& primVec = locPrim.first->second;
+		//std::vector<nlohmann::json>& primAcelVec = locPrimAccel.first->second;
+		//std::vector<nlohmann::json>& primMatVec = locPrimMat.first->second;
+		//
+		//// Push Surface Data for Primitive Generation
+		//auto loc = surfaceDataList.find(surface.dataId);
+		//if(loc == primList.end()) return SceneError::SURFACE_DATA_ID_NOT_FOUND;
+		//else primVec.push_back(surfaces[loc->second]);
 		
 		// Accelerator
 
@@ -188,35 +188,35 @@ SceneError GPUScene::LoadLogicRelated(TracerLogicGeneratorI* l, double time)
 	//{
 	//}
 
-		const SurfaceStruct& surface = surfacesCPU[i - 1];
-		// Check splits
-		if(surfacesCPU[i].primitiveId != surface.primitiveId)
-		{
-			// Find Split load to system
-			auto loc = primList.find(surface.primitiveId);
-			if(loc == primList.end()) return SceneError::PRIMITIVE_ID_NOT_FOUND;
-			const std::string& surfacePrimitiveType = surfaces[loc->second][SceneIO::TYPE];
-
-			GPUPrimitiveGroupI* primGroup;
-			SceneError e = l->GetPrimitiveGroup(primGroup, surfacePrimitiveType);
-			if(e != SceneError::OK) return e;
-
-			// Actual Load
-			primGroup->LoadSurfaces(std::vector<nlohmann::>surfacesCPU, Vector2ui(start, i),
-									{surfaceDataList, surfaceData});
-
-			// Mark the other start
-			start = i;
-		}
-	}
-
-
-	// Then sort w.r.t. primitive/accelerator
-	std::sort(surfacesCPU.begin(), surfacesCPU.end(), SurfaceStruct::SortComparePrimAccel);
-
-
-	// Finally we sort w.r.t. primitive/material
-	std::sort(surfacesCPU.begin(), surfacesCPU.end(), SurfaceStruct::SortComparePrimMaterial);
+////		const SurfaceStruct& surface = surfacesCPU[i - 1];
+//		// Check splits
+//		if(surfacesCPU[i].primitiveId != surface.primitiveId)
+//		{
+//			// Find Split load to system
+//			auto loc = primList.find(surface.primitiveId);
+//			if(loc == primList.end()) return SceneError::PRIMITIVE_ID_NOT_FOUND;
+//			const std::string& surfacePrimitiveType = surfaces[loc->second][SceneIO::TYPE];
+//
+//			GPUPrimitiveGroupI* primGroup;
+//			SceneError e = l->GetPrimitiveGroup(primGroup, surfacePrimitiveType);
+//			if(e != SceneError::OK) return e;
+//
+//			// Actual Load
+//			primGroup->LoadSurfaces(std::vector<nlohmann::>surfacesCPU, Vector2ui(start, i),
+//									{surfaceDataList, surfaceData});
+//
+//			// Mark the other start
+//			start = i;
+//		}
+//	}
+//
+//
+//	// Then sort w.r.t. primitive/accelerator
+//	std::sort(surfacesCPU.begin(), surfacesCPU.end(), SurfaceStruct::SortComparePrimAccel);
+//
+//
+//	// Finally we sort w.r.t. primitive/material
+//	std::sort(surfacesCPU.begin(), surfacesCPU.end(), SurfaceStruct::SortComparePrimMaterial);
 
 
 	// All of the data is generated
@@ -228,19 +228,22 @@ void GPUScene::ChangeCommon(double time)
 	// TODO:
 }
 
-SceneError GPUScene::ChangeLogicRelated(double time)
+SceneError GPUScene::ChangeLogicRelated(TracerLogicGeneratorI*, double time)
 {
 	// TODO:
+	return SceneError::OK;
 }
 
 size_t GPUScene::UsedGPUMemory()
 {
 	//return transformMemory.Size() + lightMemory.Size();
+	return 0;
 }
 
 size_t GPUScene::UsedCPUMemory()
 {
 	//return cameraMemory.size() * sizeof(CameraPerspective);
+	return 0;
 }
 
 SceneError GPUScene::LoadScene(TracerLogicGeneratorI* l, double time)
@@ -256,7 +259,7 @@ SceneError GPUScene::LoadScene(TracerLogicGeneratorI* l, double time)
 	{
 		return e;
 	}
-	catch(std::exception const& e)
+	catch(std::exception const&)
 	{
 		return SceneError::JSON_FILE_PARSE_ERROR;
 	}
@@ -275,10 +278,11 @@ SceneError GPUScene::ChangeTime(TracerLogicGeneratorI* l, double time)
 	{
 		return e;
 	}
-	catch(std::exception const& e)
+	catch(std::exception const&)
 	{
 		return SceneError::JSON_FILE_PARSE_ERROR;
 	}
+	return SceneError::OK;
 }
 
 const LightStruct* GPUScene::LightsGPU()
@@ -293,5 +297,5 @@ const TransformStruct* GPUScene::TransformsGPU()
 
 const CameraPerspective* GPUScene::CamerasCPU()
 {
-	return cameras;
+	return cameraMemory.data();
 }

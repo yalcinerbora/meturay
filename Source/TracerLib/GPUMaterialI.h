@@ -6,7 +6,7 @@
 
 #include <string>
 #include <cstdint>
-#include <json.hpp>
+//#include <json.hpp>
 #include "HitStructs.cuh"
 
 struct RayGMem;

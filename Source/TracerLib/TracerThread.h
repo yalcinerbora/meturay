@@ -8,7 +8,7 @@
 
 class SceneI;
 class TracerI;
-class TracerLogicI;
+class TracerBaseLogicI;
 
 /** Thread wrapper
 	TracerI encapsulates system
@@ -26,7 +26,7 @@ class TracerThread : public LoopingThreadI
 	private:
 		// Actual Tracer
 		TracerI&						tracer;
-		TracerLogicI&					logic;
+		TracerBaseLogicI&				logic;
 		const uint32_t					seed;
 
 		// Current Settings
@@ -51,7 +51,7 @@ class TracerThread : public LoopingThreadI
 	protected:
 	public:
 		// Constructors & Destructor
-										TracerThread(TracerI&, TracerLogicI&,
+										TracerThread(TracerI&, TracerBaseLogicI&,
 													 uint32_t seed);
 										TracerThread(const TracerThread&) = delete;
 		TracerThread&					operator=(const TracerThread&) = delete;
@@ -71,7 +71,7 @@ class TracerThread : public LoopingThreadI
 };
 
 inline TracerThread::TracerThread(TracerI& t, 
-								  TracerLogicI& l,
+								  TracerBaseLogicI& l,
 								  uint32_t seed)
 	: tracer(t)
 	, logic(l)

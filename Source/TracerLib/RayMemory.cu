@@ -207,7 +207,7 @@ void RayMemory::ResetHitMemory(size_t rayCount, size_t hitStructSize)
 	offset += sizeOfTransformIds;
 	dPrimitiveIds = reinterpret_cast<PrimitiveId*>(dBasePtr + offset);
 	offset += sizeOfPrimitiveIds;
-	dHitStructs = HitStructPtr(reinterpret_cast<void*>(dBasePtr + offset), hitStructSize);
+	dHitStructs = HitStructPtr(reinterpret_cast<void*>(dBasePtr + offset), static_cast<int>(hitStructSize));
 	offset += sizeOfHitStructs;
 	dIds0 = reinterpret_cast<RayId*>(dBasePtr + offset);
 	offset += sizeOfIds;

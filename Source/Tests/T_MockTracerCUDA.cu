@@ -61,32 +61,39 @@ class MockTracerLogic : public TracerBaseLogicI
 										const RayGMem* dRays,
 										const RayId* dRayIds,
 										const uint32_t rayCount) const override;
+
+				void			Constrcut() override {};
+				void			Reconstruct() override {};
 		};
 
 		class AcceleratorMock : public GPUAcceleratorBatchI
 		{
 			private:
-				MockTracerLogic& 	mockLogic;
-				uint32_t			myKey;
+				MockTracerLogic& 				mockLogic;
+				uint32_t						myKey;
+				const void*						groupNullPtr = nullptr;
 
 			public:
 				// Constructors & Destructor
-									AcceleratorMock(MockTracerLogic& r, uint32_t myKey) 
-										: mockLogic(r), myKey(myKey)  {}
-									~AcceleratorMock() = default;
+												AcceleratorMock(MockTracerLogic& r, uint32_t myKey) 
+													: mockLogic(r), myKey(myKey)  {}
+												~AcceleratorMock() = default;
 
+				
+				void							Hit(// O
+													HitKey* dMaterialKeys,
+													PrimitiveId* dPrimitiveIds,
+													HitStructPtr dHitStructs,
+													// I-O													
+													RayGMem* dRays,
+													// Input
+													const TransformId* dTransformIds,
+													const RayId* dRayIds,
+													const HitKey* dAcceleratorKeys,
+													const uint32_t rayCount) const override;
 
-				void				Hit(// O
-										HitKey* dMaterialKeys,
-										PrimitiveId* dPrimitiveIds,
-										HitStructPtr dHitStructs,
-										// I-O													
-										RayGMem* dRays,
-										// Input
-										const TransformId* dTransformIds,
-										const RayId* dRayIds,
-										const HitKey* dAcceleratorKeys,
-										const uint32_t rayCount) const override;
+				const GPUPrimitiveGroupI&		PrimitiveGroup() const override;
+				const GPUAcceleratorGroupI&		AcceleratorGroup() const override;
 		};
 
 		class MaterialMock : public GPUMaterialBatchI
@@ -94,35 +101,40 @@ class MockTracerLogic : public TracerBaseLogicI
 			private:
 				MockTracerLogic& 	mockLogic;
 				bool				isMissMaterial;
+				const void*			groupNullPtr = nullptr;
 
 			public:
 				// Constructors & Destructor
-									MaterialMock(MockTracerLogic& r, bool missMat) 
-										: mockLogic(r)
-										, isMissMaterial(missMat) {}
-									~MaterialMock() = default;
+											MaterialMock(MockTracerLogic& r, bool missMat) 
+												: mockLogic(r)
+												, isMissMaterial(missMat) {}
+											~MaterialMock() = default;
 
-				void				ShadeRays(RayGMem* dRayOut,
-											  void* dRayAuxOut,
-											  //  Input
-											  const RayGMem* dRayIn,
-											  const void* dHitStructs,
-											  const void* dRayAuxIn,
-											  const RayId* dRayIds,
+				void						ShadeRays(// Output
+													  RayGMem* dRayOut,
+													  void* dRayAuxOut,
+													  //  Input
+													  const RayGMem* dRayIn,
+													  const void* dRayAuxIn,
+													  const PrimitiveId* dPrimitiveIds,
+													  const HitStructPtr dHitStructs,
+													  //
+													  const HitKey* dMatIds,
+													  const RayId* dRayIds,
 
-											  const uint32_t rayCount,
-											  RNGMemory& rngMem) const override;
+													  const uint32_t rayCount,
+													  RNGMemory& rngMem) const override;
 
-				uint8_t				MaxOutRayPerRay() const override { return isMissMaterial ? 0 : 1; }
+				// Every MaterialBatch is available for a specific primitive / material data
+				const GPUPrimitiveGroupI&	PrimitiveGroup() const override;
+				const GPUMaterialGroupI&	MaterialGroup() const override;
 
-				std::string			LogicName() const override { return ""; }
-				size_t				UsedGPUMemory() const override { return 0; }
+				uint8_t						MaxOutRayPerRay() const override { return isMissMaterial ? 0 : 1; }
 		};
 
 	private:
 		std::mt19937								rng;	
 		std::uniform_int_distribution<>				matIndexGenerator;
-		std::uniform_int_distribution<>				uniformRNGAcceleratorl;
 
 		uint32_t									seed;
 
@@ -158,8 +170,7 @@ class MockTracerLogic : public TracerBaseLogicI
 
 		// Init & Load
 		TracerError									Initialize() override;
-		SceneError									LoadScene(const std::string&) override { return SceneError::OK; };
-
+	
 		// Generate Camera Rays
 		void										GenerateCameraRays(RayMemory&, RNGMemory&,
 																	   const CameraPerspective& camera,
@@ -174,27 +185,39 @@ class MockTracerLogic : public TracerBaseLogicI
 		const AcceleratorBatchMappings&				AcceleratorBatches() override { return accelerators; }
 		const MaterialBatchMappings&				MaterialBatches() override { return materials; }
 
-		// Returns bitrange of keys (should complement each other to 32-bit)
-		const Vector2i&								MaterialBitRange() const override { return MaterialRange; }
-		const Vector2i&								AcceleratorBitRange() const override { return AcceleratorRange; }
+		// Returns max bits of keys (for batch and id respectively)
+		const Vector2i								SceneMaterialMaxBits() const override { return MaterialRange; }
+		const Vector2i								SceneAcceleratorMaxBits() const override { return AcceleratorRange; }
 
 		// Options of the Hitman & Shademan
 		const HitOpts&								HitOptions() const override { return optsHit; }
 		const ShadeOpts&							ShadeOptions() const override { return optsShade; }
 
-		// Loads/Unloads material to GPU Memory
-		void										LoadMaterial(int gpuId, uint32_t matId) override {}
-		void										UnloadMaterial(int gpuId, uint32_t matId) override {}
-
-		// Generates/Removes accelerator
-		void										GenerateAccelerator(HitKey key) override {};
-		void										LoadAccelerator(HitKey key, const Byte* data, size_t size) override {};
-
 		// Misc
 		// Retuns "sizeof(RayAux)"
 		size_t										PerRayAuxDataSize() const override { return 0; }
-		size_t										HitStructMaxSize() const override { return sizeof(uint32_t); };
+		// Return mimimum size of an arbitrary struct which holds all hit results
+		size_t										HitStructSize() const override { return sizeof(uint32_t); };
 };
+
+const GPUPrimitiveGroupI& MockTracerLogic::AcceleratorMock::PrimitiveGroup() const 
+{ 
+	return *static_cast<const GPUPrimitiveGroupI*>(groupNullPtr);
+}
+const GPUAcceleratorGroupI& MockTracerLogic::AcceleratorMock::AcceleratorGroup() const
+{
+	return *static_cast<const GPUAcceleratorGroupI*>(groupNullPtr);
+}
+
+const GPUPrimitiveGroupI& MockTracerLogic::MaterialMock::PrimitiveGroup() const
+{
+	return *static_cast<const GPUPrimitiveGroupI*>(groupNullPtr);
+}
+
+const GPUMaterialGroupI& MockTracerLogic::MaterialMock::MaterialGroup() const
+{
+	return *static_cast<const GPUMaterialGroupI*>(groupNullPtr);
+}
 
 const std::string MockTracerLogic::HitName = "";
 const std::string MockTracerLogic::ShadeName = "";
@@ -216,7 +239,7 @@ void MockTracerLogic::BaseAcceleratorMock::Hit(// Output
 	for(uint32_t i = 0; i < rayCount; i++)
 	{
 		// Key index is used to acces RayGMem (this program does not care about actual ray)
-		uint32_t keyIndex = dRayIds[i];
+		//uint32_t keyIndex = dRayIds[i];
 
 		// Each Iteration some of the rays are missed (only first ray in this case)
 		uint32_t index = i % (AcceleratorCount * MaterialCount + 1);
@@ -260,6 +283,7 @@ void MockTracerLogic::AcceleratorMock::Hit(// O
 			// We found a hit,
 			// Randomly select a material for hit			
 			HitKey materialId = mockLogic.materialKeys[mockLogic.matIndexGenerator(mockLogic.rng)];
+			dMaterialKeys[rayId] = materialId;
 			// Put primitive id
 			dPrimitiveIds[rayId] = 0;
 			// Put a struct
@@ -267,31 +291,24 @@ void MockTracerLogic::AcceleratorMock::Hit(// O
 			{
 				int i;
 			};
-			Test a;
-			dHitStructs[static_cast<int>(i)] = a;
+			//Test a;
+			//dHitStructs[static_cast<int>(i)] = a;
 			
-
-			//
-			HitKey* dMaterialKeys,
-				PrimitiveId* dPrimitiveIds,
-				HitStructPtr dHitStructs
-
-			dPrimitiveIds[rayId] = ma;
-			
-			dPrimitiveIds[rayId] = 0;
-
-			dCurrentHits[rayId] = combinedIndex;
 		}
 	}
 	printf("\n");
 }
 
-void MockTracerLogic::MaterialMock::ShadeRays(RayGMem* dRayOut,
+void MockTracerLogic::MaterialMock::ShadeRays(// Output
+											  RayGMem* dRayOut,
 											  void* dRayAuxOut,
 											  //  Input
 											  const RayGMem* dRayIn,
-											  const void* dHitStructs,
 											  const void* dRayAuxIn,
+											  const PrimitiveId* dPrimitiveIds,
+											  const HitStructPtr dHitStructs,
+											  //
+											  const HitKey* dMatIds,
 											  const RayId* dRayIds,
 
 											  const uint32_t rayCount,
@@ -347,7 +364,7 @@ TracerError MockTracerLogic::Initialize()
 
 	// Create miss material
 	mockMaterials.emplace_back(*this, true);
-	materials.emplace(std::make_pair(static_cast<uint32_t>(HitConstants::OutsideMatKey),
+	materials.emplace(std::make_pair(static_cast<uint32_t>(HitKey::OutsideMatKey),
 									 &mockMaterials.back()));
 
 	// We have total of 8 material seperated by 2 accelerators
@@ -385,8 +402,7 @@ void MockTracerLogic::GenerateCameraRays(RayMemory& rMem,
 
 MockTracerLogic::MockTracerLogic(uint32_t seed)
 	: seed(seed)
-	, uniformRNGMaterial(0, MaterialCount - 1)
-	, uniformRNGAcceleratorl(0, MaterialCount - 1)
+	, matIndexGenerator(0, MaterialCount - 1)
 {}
 
 TEST(MockTracerTest, Test)
