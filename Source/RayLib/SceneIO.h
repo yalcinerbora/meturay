@@ -23,6 +23,11 @@ namespace SceneIO
 	static constexpr const char* CAMERA_BASE = "Cameras";
 	static constexpr const char* LIGHT_BASE = "Lights";
 	static constexpr const char* TRANSFORM_BASE = "Transforms";
+	static constexpr const char* PRIMITIVE_BASE = "Primitives";
+	static constexpr const char* ACCELERATOR_BASE = "Accelerators";
+	static constexpr const char* MATERIAL_BASE = "Accelerators";
+	static constexpr const char* SURFACE_BASE = "Surfaces";
+	static constexpr const char* SURFACE_DATA_BASE = "SurfaceData";
 	// Common Names
 	static constexpr const char* ID = "id";
 	static constexpr const char* TYPE = "type";

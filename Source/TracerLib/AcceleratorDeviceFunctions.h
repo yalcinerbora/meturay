@@ -6,7 +6,7 @@
 
 // This is Leaf of Base Accelerator
 // It points to another accelerator/material pair
-struct BaseLeaf { uint32_t key; };
+struct BaseLeaf { uint64_t accKey; TransformId transformId; };
 
 // Intersection function is used to determine if a leaf node data;
 // which is custom, is intersects with ray. Returns valid float if such hit exists

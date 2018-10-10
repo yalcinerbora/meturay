@@ -117,7 +117,7 @@ __device__ const T Texture<D, T>::operator()(const Vector<D + 1, float>& index) 
 
 
 template<int D, class T>
-void Texture<D, T>::Copy(const byte* sourceData,
+void Texture<D, T>::Copy(const Byte* sourceData,
 						 const Vector<D, unsigned int>& size,
 						 int mipLevel)
 {
@@ -132,7 +132,7 @@ void Texture<D, T>::Copy(const byte* sourceData,
 	p.dstPos = make_cudaPos(0, 0, 0);
 	
 	p.srcPos = make_cudaPos(0, 0, 0);
-	p.srcPtr = make_cudaPitchedPtr(const_cast<byte*>(sourceData),
+	p.srcPtr = make_cudaPitchedPtr(const_cast<Byte*>(sourceData),
 								   size[0] * sizeof(T),
 								   size[0], size[1]);
 	

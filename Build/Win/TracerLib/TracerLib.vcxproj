@@ -17,7 +17,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneI.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\ImageMemory.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\RNGMemory.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerLoader.cpp" />
@@ -31,12 +31,14 @@
     <ClInclude Include="..\..\..\Source\TracerLib\CameraKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ComparisonFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\FunctionEnablers.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveI.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUSceneI.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\HitStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\HitFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\HitStructs.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\LinearAcceleratorKernels.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialKernels.cuh" />
@@ -53,6 +55,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLoader.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerDebug.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerI.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogic.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerThread.h" />
   </ItemGroup>
@@ -113,6 +116,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>METU_DEBUG;METU_CUDA;WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

@@ -5,12 +5,14 @@
     <CudaCompile Include="..\..\..\Source\Tests\T_ParallelScan.cu" />
     <CudaCompile Include="..\..\..\Source\Tests\T_RandomGPU.cu" />
     <CudaCompile Include="..\..\..\Source\Tests\T_Texture.cu" />
-    <CudaCompile Include="..\..\..\Source\Tests\T_MockTracerCUDA.cu" />
     <CudaCompile Include="..\..\..\Source\Tests\T_MatrixGPU.cu">
       <Filter>Math</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\Tests\T_VectorGPU.cu">
       <Filter>Math</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\Tests\T_MockTracerCUDA.cu">
+      <Filter>TracerMock</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
@@ -27,7 +29,7 @@
     <ClCompile Include="..\..\..\Source\Tests\T_SceneIOCommon.cpp">
       <Filter>SceneIO</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\Tests\T_GPUSceneI.cpp">
+    <ClCompile Include="..\..\..\Source\Tests\T_GPUScene.cpp">
       <Filter>SceneIO</Filter>
     </ClCompile>
   </ItemGroup>
@@ -37,6 +39,9 @@
     </Filter>
     <Filter Include="Math">
       <UniqueIdentifier>{4c16e8d5-60ea-4de1-824f-aa8e495e64b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TracerMock">
+      <UniqueIdentifier>{7a674633-d085-4983-83e2-20ed80c90cbb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -23,30 +23,30 @@ since this API is being developed for customization this is mandatory.
 
 struct SceneError;
 
-struct EditList
-{
-	uint32_t index;
-	nlohmann::json ...;
-};
-
 class GPUPrimitiveGroupI
 {
+	public:
+		struct SurfaceData
+		{
+			uint32_t surfaceDataId;
+			nlohmann::json json;
+		};
+
 	public:
 		virtual						~GPUPrimitiveGroupI() = default;
 
 		// Interface
 		// Pirmitive type is used for delegating scene info to this class
 		virtual const std::string&		PrimitiveType() const = 0;
-
 		// Allocates and Generates Data
-		virtual SceneError				InitializeData(const std::vector<...>& surfaceDataList,
+		virtual SceneError				InitializeData(const std::vector<SurfaceData>& surfaceDataList,
 													   double time) = 0;
-		// Load
-		virtual SceneError				RefreshData(const std::vector<...>& editedDataList, 
+		virtual SceneError				RefreshData(const std::vector<SurfaceData>& editedDataList,
 													double time) = 0;
-	
+
 		// Error check
 		// Queries in order to check if this primitive group supports certain primitive data
-		// Material may need this
+		// Material may need that data
 		virtual bool					CanGenerateData(const std::string& s) const = 0;
+
 };

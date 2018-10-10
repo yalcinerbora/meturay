@@ -9,76 +9,75 @@
 #include <json.hpp>
 
 struct SceneError;
-class TracerTypeGenerator;
+class TracerLogicGeneratorI;
 
 class GPUScene
 {
-	private:
-			SceneError					OpenFile(const std::string&);
-
-	protected:
-		virtual SceneError				LoadCommon(double time) = 0;
-		virtual SceneError				LoadMaterials(double time) = 0;
-		virtual SceneError				LoadSurfaces(double time) = 0;
-
-		virtual SceneError				ChangeTimeCommon(double time) = 0;
-		virtual SceneError				ChangeTimeMaterials(double time) = 0;
-		virtual SceneError				ChangeTimeSurfaces(double time) = 0;
-
-		// Current File & Time
-		nlohmann::json					sceneJson;
-		std::string						fileName;
-		double							currentTime;
-
 	public:
-										GPUScene(const std::string&);
-		virtual							~GPUScene() = default;
+		enum IdBasedNodeType
+		{
+			ACCELERATOR,
+			MATERIAL,
+			PRIMITIVE,
+			TRANSFORM,
+			SURFACE_DATA
+		};
 
-		//
-		SceneError						LoadScene(double);
-		SceneError						ChangeTime(double);
-
-		virtual size_t					UsedGPUMemory() = 0;
-		virtual size_t					UsedCPUMemory() = 0;
-};
-
-// Load Common Data of MRay Scene format.
-class GPUSceneCommon : public GPUScene
-{
 	private:
+		static constexpr const size_t		AlignByteCount = 128;
+
 		// GPU Memory
-		DeviceMemory						transformMemory;
-		DeviceMemory						lightMemory;
-
+		DeviceMemory						memory;
 		// CPU Memory
-		std::vector<CameraPerspective>		cameraMemory;
-		//std::vector<AcceleraorStruct>		acceleratorDefinitionMemory;
-		//std::vector<SurfaceStruct>			surfaceDefinitionMemory;
-		
+		std::vector<CameraPerspective>		cameraMemory;		
+		// File Related
+		nlohmann::json						sceneJson;
+		std::string							fileName;
+		double								currentTime;
+		// Helper Logic
+		SceneError							OpenFile(const std::string& fileName);
+
 	protected:
-		// Access GPU
-		const LightStruct*					dLights;
-		const TransformStruct*				dTransforms;
-		// Access CPU
-		const CameraPerspective*			cameras;
-		//const AcceleraorStruct*			acceleratorDefinitions;
-		//const SurfaceStruct*				surfaceDefinitions;
+		// Inners
+		bool								FindNode(nlohmann::json& node, const char* name);
+		static SceneError					GenIdLookup(std::map<uint32_t, uint32_t>&,
+														const nlohmann::json& array,
+														IdBasedNodeType);
+		//
+		void								LoadCommon(double time);
+		SceneError							LoadLogicRelated(TracerLogicGeneratorI*, double time);
 
-		// Implementations
-		SceneError							LoadCommon(double time) override;
+		void								ChangeCommon(double time);
+		SceneError							ChangeLogicRelated(TracerLogicGeneratorI*, double time);
 
+
+		//void								LoadMaterials(double time);
+		//void								LoadSurfaces(double time);
+		//
+		//void								ChangeTimeCommon(double time);
+		//void								ChangeTimeMaterials(double time);
+		//void								ChangeTimeSurfaces(double time);
 	public:
-											GPUSceneCommon(const std::string&);
-		virtual								~GPUSceneCommon() = default;
+		// Constructors & Destructor
+											GPUScene(const std::string&);
+											GPUScene(const GPUScene&) = delete;
+											GPUScene(GPUScene&&) = default;
+		GPUScene&							operator=(const GPUScene&) = delete;
+		GPUScene&							operator=(GPUScene&&) = default;
+		virtual								~GPUScene() = default;
 
-		// Implementation
-		virtual size_t						UsedGPUMemory() override;
-		virtual size_t						UsedCPUMemory() override;
-
-
+		// Members
+		size_t								UsedGPUMemory();
+		size_t								UsedCPUMemory();
+		//
+		SceneError							LoadScene(TracerLogicGeneratorI*, double);
+		SceneError							ChangeTime(TracerLogicGeneratorI*, double);
 		// Access GPU
 		const LightStruct*					LightsGPU();
 		const TransformStruct*				TransformsGPU();
 		// Access CPU
 		const CameraPerspective*			CamerasCPU();
+
+		// Further Required Data for Construction
+		const SurfaceStruct*				SurfaceList;
 };

@@ -92,7 +92,7 @@ class Texture : public DeviceLocalMemoryI
 		__device__ const T				operator()(const Vector<D + 1, float>&) const;
 
 		// Copy Data
-		void							Copy(const byte* sourceData,
+		void							Copy(const Byte* sourceData,
 											 const Vector<D, unsigned int>& size,
 											 int mipLevel = 0);
 

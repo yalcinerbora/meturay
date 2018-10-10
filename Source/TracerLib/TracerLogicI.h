@@ -20,15 +20,20 @@ That interface is responsible for fetching
 #include "RayLib/Camera.h"
 #include "RayLib/SceneError.h"
 
+// Execution Related Abstraction
 class GPUBaseAcceleratorI;
+class GPUAcceleratorBatchI;
+class GPUMaterialBatchI;
+// Data Related Abstraction
+class GPUPrimitiveGroupI;
 class GPUAcceleratorGroupI;
 class GPUMaterialGroupI;
-class GPUPrimitiveGroupI;
+// Common Memory
 class RayMemory;
 class RNGMemory;
 
-using AcceleratorGroupMappings = std::map<uint16_t, GPUAcceleratorGroupI*>;
-using MaterialGroupMappings = std::map<uint16_t, GPUMaterialGroupI*>;
+using AcceleratorBatchMappings = std::map<uint32_t, GPUAcceleratorBatchI*>;
+using MaterialBatchMappings = std::map<uint32_t, GPUMaterialBatchI*>;
 
 struct ShadeOpts
 {
@@ -40,15 +45,23 @@ struct HitOpts
 	int j;
 };
 
-class TracerLogicI
+struct TracerOptions
+{
+	Vector2i		materialKeyRange;
+	Vector2i		acceleratorKeyRange;
+
+	uint32_t		seed;
+};
+
+class TracerBaseLogicI
 {
 	public:
-		virtual											~TracerLogicI() = default;
+		virtual											~TracerBaseLogicI() = default;
 
 		// Interface
-		// Init & Load
+		// Init
 		virtual TracerError								Initialize() = 0;		
-		virtual SceneError								LoadScene(const std::string&) = 0;
+		
 
 		// Generate Camera Rays
 		virtual void									GenerateCameraRays(RayMemory&, RNGMemory&,
@@ -60,42 +73,48 @@ class TracerLogicI
 		
 		// Interface fetching for logic
 		virtual GPUBaseAcceleratorI*					BaseAcelerator() = 0;
-		virtual const AcceleratorGroupMappings&			AcceleratorGroups() = 0;
-		virtual const MaterialGroupMappings&			MaterialGroups() = 0;
+		virtual const AcceleratorBatchMappings&			AcceleratorBatches() = 0;
+		virtual const MaterialBatchMappings&			MaterialBatches() = 0;
 
 		// Returns bitrange of keys (should complement each other to 32-bit)
-		virtual const Vector2i&							MaterialBitRange() const = 0;
-		virtual const Vector2i&							AcceleratorBitRange() const = 0;
+		virtual const Vector2i							SceneMaterialMaxBits() const = 0;
+		virtual const Vector2i							SceneAcceleratorMaxBits() const = 0;
 
 		// Options of the Hitman & Shademan
 		virtual const HitOpts&							HitOptions() const = 0;
 		virtual const ShadeOpts&						ShadeOptions() const = 0;
 
-		// Loads/Unloads material to GPU Memory
-		virtual void									LoadMaterial(int gpuId, HitKey key) = 0;
-		virtual void									UnloadMaterial(int gpuId, HitKey matId) = 0;
+		//// Loads/Unloads material to GPU Memory
+		//virtual SceneError							LoadScene(const std::string&) = 0;
+		//virtual void									LoadMaterial(int gpuId, HitKey key) = 0;
+		//virtual void									UnloadMaterial(int gpuId, HitKey matId) = 0;
 
-		// Generates/Removes accelerator
-		virtual void									GenerateAccelerator(HitKey key) = 0;
-		virtual void									LoadAccelerator(HitKey key, const byte* data, size_t size) = 0;
+		//// Generates/Removes accelerator
+		//virtual void									GenerateAccelerator(HitKey key) = 0;
+		//virtual void									LoadAccelerator(HitKey key, const Byte* data, size_t size) = 0;
 
 		// Misc
 		// Retuns "sizeof(RayAux)"
 		virtual size_t									PerRayAuxDataSize() const = 0;
-		virtual size_t									HitStructMaxSize() const = 0;
-
+		// Return mimimum size of an arbitrary struct which holds all hit results
+		virtual size_t									HitStructSize() const = 0;
 };
 
 
-class TracerTypeGeneratorI
+class TracerLogicGeneratorI
 {
 	public:
-		virtual SceneError	GetPrimitiveGroup(GPUPrimitiveGroupI*&,
-											  const std::string& primitiveType) = 0;
-		virtual SceneError	GetAcceleratorGroup(GPUAcceleratorGroupI*&,
-												GPUPrimitiveGroupI*,
-												const std::string& accelType) = 0;
-		virtual SceneError	GetMaterialGroup(GPUMaterialGroupI*&,
-											 GPUPrimitiveGroupI*, 
-											 const std::string& materialType) = 0;
+	virtual								~TracerLogicGeneratorI() = default;
+
+	// Logic Generators
+	virtual SceneError					GetPrimitiveGroup(GPUPrimitiveGroupI*&,
+														  const std::string& primitiveType) = 0;
+	virtual SceneError					GetAcceleratorGroup(GPUAcceleratorGroupI*&,
+															const GPUPrimitiveGroupI&,
+															const std::string& accelType) = 0;
+	virtual SceneError					GetMaterialGroup(GPUMaterialGroupI*&,
+														 const GPUPrimitiveGroupI&,
+														 const std::string& materialType) = 0;
+
+	virtual size_t						CurrentMinHitSize() const = 0;
 };

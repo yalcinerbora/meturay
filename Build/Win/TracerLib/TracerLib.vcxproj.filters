@@ -25,6 +25,9 @@
     <Filter Include="Debug">
       <UniqueIdentifier>{aee221d1-f5fa-4986-baae-fad81e87373b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GPU Logic Template Classes">
+      <UniqueIdentifier>{ae3c2665-f7ff-44c1-ba19-142e87e5767c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerLib\ImageMemory.cpp">
@@ -33,15 +36,15 @@
     <ClCompile Include="..\..\..\Source\TracerLib\RNGMemory.cpp">
       <Filter>Memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneI.cpp">
-      <Filter>GPU Logic Interfaces</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\TracerThread.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerLoader.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp">
+      <Filter>GPU Logic Interfaces</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -71,17 +74,11 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialI.h">
       <Filter>GPU Logic Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUSceneI.h">
-      <Filter>GPU Logic Interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\TracerI.h">
       <Filter>GPU Logic Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicI.h">
       <Filter>GPU Logic Interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\HitStructs.h">
-      <Filter>Structs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\RayStructs.h">
       <Filter>Structs</Filter>
@@ -125,6 +122,21 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\LinearAcceleratorKernels.h">
       <Filter>GPU Template Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h">
+      <Filter>GPU Logic Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterial.cuh">
+      <Filter>GPU Logic Template Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogic.h">
+      <Filter>GPU Logic Template Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\HitFunctions.cuh">
+      <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\HitStructs.cuh">
+      <Filter>Structs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

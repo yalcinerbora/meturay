@@ -7,7 +7,7 @@
 
 #include "RayLib/Log.h"
 
-#include "HitStructs.h"
+#include "HitStructs.cuh"
 #include "CudaConstants.h"
 
 namespace Debug

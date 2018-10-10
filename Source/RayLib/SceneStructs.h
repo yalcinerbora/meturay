@@ -1,9 +1,11 @@
 #pragma once
 
+#include <vector>
+
 #include "Vector.h"
 #include "Matrix.h"
-
 #include "SceneError.h"
+#include "Types.h"
 
 enum LightType
 {
@@ -54,18 +56,55 @@ struct LightStruct
 
 typedef Matrix4x4 TransformStruct;
 
-//
-struct AcceleraorStruct
-{
-	uint32_t id;
-	uint32_t type;
-};
-
 struct SurfaceStruct
 {
 	uint32_t transformId;
 	uint32_t materialId;
 	uint32_t primitiveId;
 	uint32_t acceleratorId;
-	uint32_t dataId;	
+	uint32_t dataId;
+
+	static bool SortComparePrimitive(const SurfaceStruct* a,
+									 const SurfaceStruct* b);
+	static bool SortComparePrimAccel(const SurfaceStruct* a,
+									 const SurfaceStruct* b);
+	static bool SortComparePrimMaterial(const SurfaceStruct* a,
+										const SurfaceStruct* b);
 };
+
+struct PrimitiveStruct
+{
+	struct PrimitiveData
+	{
+		std::string logic;		// Logic of the data (used by accelerator / material)
+		uint32_t intake;		// Intake index (if data is stored multiple linear portions)
+		uint32_t stride;		// Byte stride of the data
+		uint32_t offset;		// Byte offset from the start of the index
+		DataType type;			// Data type
+	};
+
+	// Members
+	std::vector<PrimitiveData>	dataDefinitions;
+	std::string					type;
+	uint32_t					id;
+};
+
+inline bool SurfaceStruct::SortComparePrimitive(const SurfaceStruct* a,
+												const SurfaceStruct* b)
+{
+	return a->primitiveId < b->primitiveId;
+}
+
+inline bool SurfaceStruct::SortComparePrimAccel(const SurfaceStruct* a,
+												const SurfaceStruct* b)
+{
+	return (a->primitiveId < b->primitiveId ||
+		   (a->primitiveId == b->primitiveId && a->acceleratorId < b->acceleratorId));
+}
+
+inline bool SurfaceStruct::SortComparePrimMaterial(const SurfaceStruct* a,
+												   const SurfaceStruct* b)
+{
+	return (a->primitiveId < b->primitiveId ||
+		   (a->primitiveId == b->primitiveId && a->materialId < b->materialId));
+}

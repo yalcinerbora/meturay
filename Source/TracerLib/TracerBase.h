@@ -27,10 +27,8 @@ Single thread will
 #include "RayMemory.h"
 #include "ImageMemory.h"
 
-#include "HitStructs.h"
-#include "RayStructs.h"
-
-class TracerLogicI;
+class TracerBaseLogicI;
+class TracerLogicGeneratorI;
 struct TracerError;
 
 class TracerBase : public TracerI
@@ -54,7 +52,8 @@ class TracerBase : public TracerI
 		TracerParameters				parameters;
 	
 		// Base tracer logic
-		TracerLogicI*					tracerSystem;
+		TracerBaseLogicI*				tracerSystem;
+		TracerLogicGeneratorI*			logicGenerator;
 
 		// Error related
 		bool							healthy;
@@ -91,7 +90,7 @@ class TracerBase : public TracerI
 		// COMMANDS TO TRACER //
 		// ===================//
 		// Main Thread Only Calls
-		void					Initialize(uint32_t seed, TracerLogicI&) override;
+		void					Initialize(uint32_t seed, TracerBaseLogicI&) override;
 
 		// Main Calls
 		void					SetTime(double seconds) override;
@@ -100,7 +99,7 @@ class TracerBase : public TracerI
 	
 		// Requests
 		void					RequestBaseAccelerator() override;
-		void					RequestAccelerator(HitKey key) override;
+		void					RequestAccelerator(int key) override;
 		// TODO: add sharing of other generated data (maybe interpolations etc.)
 		// and their equavilent callbacks
 

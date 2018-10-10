@@ -20,7 +20,6 @@ which does send commands to GPU to do ray tracing
 
 #include "RayLib/Vector.h"
 #include "RayLib/Types.h"
-#include "HitStructs.h"
 
 struct HitCPU;
 struct RayCPU;
@@ -32,7 +31,7 @@ struct TracerParameters;
 struct TracerAnalyticData;
 
 // Main Tracer Logicc
-class TracerLogicI;
+class TracerBaseLogicI;
 
 // Callbacks for tracer
 typedef void(*TracerRayDelegateFunc)(const RayCPU&, const HitCPU&,
@@ -42,8 +41,8 @@ typedef void(*TracerAnalyticFunc)(TracerAnalyticData);
 typedef void(*TracerImageSendFunc)(const Vector2ui& offset,
 								   const Vector2ui& size,
 								   const std::vector<float> imagePortion);
-typedef void(*TracerAcceleratorSendFunc)(HitKey key, const std::vector<byte> data);
-typedef void(*TracerBaseAcceleratorSendFunc)(const std::vector<byte> data);
+typedef void(*TracerAcceleratorSendFunc)(int key, const std::vector<Byte> data);
+typedef void(*TracerBaseAcceleratorSendFunc)(const std::vector<Byte> data);
 
 class TracerI
 {
@@ -68,7 +67,7 @@ class TracerI
 		// ===================//
 		// COMMANDS TO TRACER //
 		// ===================//
-		virtual void					Initialize(uint32_t seed, TracerLogicI&) = 0;
+		virtual void					Initialize(uint32_t seed, TracerBaseLogicI&) = 0;
 
 		// Main Calls
 		virtual void					SetTime(double seconds) = 0;
@@ -77,7 +76,7 @@ class TracerI
 	
 		// Requests
 		virtual void					RequestBaseAccelerator() = 0;
-		virtual void					RequestAccelerator(HitKey key) = 0;
+		virtual void					RequestAccelerator(int key) = 0;
 		// TODO: add sharing of other generated data (maybe interpolations etc.)
 		// and their equavilent callbacks
 

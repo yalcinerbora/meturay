@@ -18,20 +18,22 @@ void TracerBase::SendError(TracerError e, bool isFatal)
 void TracerBase::HitRays()
 {
 	// Tracer Logic interface
-	const Vector2i accBitRange = tracerSystem->AcceleratorBitRange();
+	const Vector2i& accBitCounts = tracerSystem->SceneAcceleratorMaxBits();
 	const GPUBaseAcceleratorI* baseAccelerator = tracerSystem->BaseAcelerator();
-	const AcceleratorGroupMappings& subAccelerators = tracerSystem->AcceleratorGroups();
+	const AcceleratorBatchMappings& subAccelerators = tracerSystem->AcceleratorBatches();
 
 	// Reset Hit Memory for hit loop
-	rayMemory.ResetHitMemory(currentRayCount, tracerSystem->HitStructMaxSize());
+	rayMemory.ResetHitMemory(currentRayCount, tracerSystem->HitStructSize());
 
 	// Ray Memory Pointers
-	RayGMem* dRays = rayMemory.Rays();	
-	HitKey* dCurrentHits = rayMemory.CurrentHits();
-	void* dHitStructs = rayMemory.HitStructs<unsigned char>();
+	RayGMem* dRays = rayMemory.Rays();
+	HitKey* dMaterialKeys = rayMemory.CurrentKeys();
+	TransformId* dTransfomIds = rayMemory.TransformIds();
+	PrimitiveId* dPrimitiveIds = rayMemory.PrimitiveIds();
+	HitStructPtr dHitStructs = rayMemory.HitStructs();
 	// These are sorted etc.
-	HitKey* dPotentialHits = rayMemory.PotentialHits();	
-	RayId*	dRayIds = rayMemory.RayIds();	
+	HitKey* dCurrentKeys = rayMemory.CurrentKeys();	
+	RayId*	dCurrentRayIds = rayMemory.CurrentIds();	
 	
 	// Try to hit rays until no ray is left 
 	// (these rays will be assigned with a material)
@@ -42,30 +44,27 @@ void TracerBase::HitRays()
 		// Traverse accelerator
 		// Base accelerator provides potential hits
 		// Cannot provide an absolute hit (its not its job)
-		baseAccelerator->Hit(dPotentialHits, dRays, dRayIds,
+		baseAccelerator->Hit(dTransfomIds, dCurrentKeys, dRays, dCurrentRayIds,
 							 rayCount);
 
 		// Base accelerator traverses the data partially
-		// It delegates the rays to smaller accelerators
-		// by writing their Id's to its portion in the key.
-
-		// After that systems sorts ray hit list and key
-		// and partitions the array this partitioning scheme 
+		// Updates current key (which represents innter accelerator batch and id)
+		
+		// After that, system sorts rays according to the keys
+		// and partitions the array according to batches
 
 		// Sort and Partition happens on the leader device
 		CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice()));
 
-		// Sort initial results (to partition and launch kernels accordingly)				
-		rayMemory.SortKeys(dRayIds, dPotentialHits, rayCount, accBitRange);
-		// Parition to sub accelerators
-		// Remove the rays that are invalid.
+		// Sort initial results (in order to partition and launch kernels accordingly)
+		// Sort is radix sort.
+		// We sort inner indices in addition to batches results for better data locality
+		// We only sort up-to a certain bit (radix sort) which is tied to 
+		// accelerator count
+		rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, rayCount, accBitCounts);
+		// Parition to sub accelerators		
 		//
-		// Partition code does not return invalid rays.
-		// Invalid rays include empty rays (which are holes in the array)
-		// or missed rays (that does not hit anything).
-		// If accelerator bit segment is used for partitioning,
-		// portions structure omits both of these type of rays.
-		//
+		// There may be invalid rays sprinkled along the array.
 		// Holes occur in the structure since in previous iteration,
 		// a material may required to write N rays for its output (which is defined
 		// by the material) but it wrote < N rays.
@@ -73,35 +72,67 @@ void TracerBase::HitRays()
 		// One of the main examples for such behaviour can be transparent objects
 		// where ray may be only reflected (instead of refrating and reflecting) because
 		// of the total internal reflection phenomena.
-		auto portions = rayMemory.Partition(rayCount, accBitRange);
+		auto portions = rayMemory.Partition(rayCount);
 
 		// For each partition
 		for(const auto& p : portions)
 		{
+			// Find Accelerator
+			// Since there is no batch for invalid keys
+			// that partition will be automatically be skipped
 			auto loc = subAccelerators.find(p.portionId);
 			if(loc == subAccelerators.end()) continue;
 
-			// Run local hit kernels
-			// These hit kernels can only modify actual hits
-			// Potential HitKeys are used to fetch inner data
-			RayId* dRayIdStart = dRayIds + p.offset;
-			HitKey* dPotentialHitStart = dPotentialHits + p.offset;
+			RayId* dRayIdStart = dCurrentRayIds + p.offset;
+			HitKey* dCurrentKeyStart = dCurrentKeys + p.offset;
 
-			loc->second->Hit(dRays, dHitStructs, dCurrentHits,
-							 dRayIdStart, dPotentialHitStart,
+			// Run local hit kernels
+			// Local hit kernels returns a material key 
+			// and primitive inner id.
+			// Since materials are batched for both material and
+			loc->second->Hit(// O
+							dMaterialKeys,
+							 dPrimitiveIds, 
+							 dHitStructs,
+							 // I-O
+							 dRays,
+							 // Input
+							 dTransfomIds,
+							 dRayIdStart, 
+							 dCurrentKeyStart,
 							 static_cast<uint32_t>(p.count));
 
-			// Hit function updates the hitIds structure with its appropirate data,
-			// internally, also it changes HitId structure if new hit is found
-
+			// Hit function updates material key,
+			// primitive id and struct if this hit is accepted
 		}
+
+		// Update new ray count
+		// On partition array check last two partitions
+		// Those partitions may contain outside/invalid batches
+		// Reduce ray count accordingly
+		int iterationCount = std::min(static_cast<int>(portions.size()), 2);
+		auto iterator = portions.rbegin();
+		for(int i = 0; i < iterationCount; ++i)
+		{
+			const auto& portion = *iterator;
+			if(portion.portionId == HitKey::NullBatch ||
+			   portion.portionId == HitKey::OutsideBatch)
+			{
+				rayCount = portion.offset;
+			}			
+			iterator++;
+		}
+		
 		// Iteration is done
 		// We cant continue loop untill these kernels are finished 
 		// on gpu(s)
-		CUDA_CHECK(cudaDeviceSynchronize());
+		//
+		// Tracer logic mostly utilizies mutiple GPUs so we need to
+		// wait all GPUs to finish
+		CudaSystem::SyncAllGPUs();
 	}
-	// At the end of iteration each accelerator holds its custom struct array
-	// And hit ids holds a index for that struct
+	// At the end of iteration all rays found a material, primitive
+	// and interpolation weights (which should be on hitStruct)
 }
 
 void TracerBase::SendAndRecieveRays()
@@ -113,38 +144,42 @@ void TracerBase::SendAndRecieveRays()
 
 void TracerBase::ShadeRays()
 {
-	const Vector2i matBitRange = tracerSystem->MaterialBitRange();
+	const Vector2i matMaxBits = tracerSystem->SceneMaterialMaxBits();
 
 	// Ray Memory Pointers	
 	const RayGMem* dRays = rayMemory.Rays();	
-	HitKey* dPotentialHits = rayMemory.PotentialHits();
-	const void* dHitStructs = rayMemory.HitStructs<void>();
-	RayId*	dRayIds = rayMemory.RayIds();
-	const void* dAux = rayMemory.RayAux<void>();
-	
-	// Material Interfaces
-	const MaterialGroupMappings& materials = tracerSystem->MaterialGroups();
+	const void* dRayAux = rayMemory.RayAux<void>();
+	const HitStructPtr dHitStructs = rayMemory.HitStructs();
+	const PrimitiveId* dPrimitiveIds = rayMemory.PrimitiveIds();	
+	// These are sorted etc.
+	HitKey* dCurrentKeys = rayMemory.CurrentKeys();
+	RayId* dCurrentRayIds = rayMemory.CurrentIds();
 		
-	// Now here conside incoming rays from different tracers
-	// Consume ray array
+	// Material Interfaces
+	const MaterialBatchMappings& materials = tracerSystem->MaterialBatches();
 	uint32_t rayCount = currentRayCount;
 
 	// Sort and Partition happens on leader device
 	CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice()));
 
-	// Copy Keys (which are stored in HitGMem) to HitKeys
-	// Make ready for sorting
+	// Copy materialKeys to currentKeys
+	// to make it ready for sorting
 	rayMemory.FillRayIdsForSort(rayCount);
 
-	// Sort with respect to the hits that are returned
-	rayMemory.SortKeys(dRayIds, dPotentialHits, rayCount, matBitRange);
+	// Sort with respect to the materials keys
+	rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, rayCount, matMaxBits);
 
-	// Parition w.r.t. material (full range sort is required here)
-	// Each same material on accelerator is actually considered a unique material
-	// this is why we sort full range.
-	// This is required since same material may fetch is data differently 
-	// from different objects
-	auto portions = rayMemory.Partition(rayCount, matBitRange);
+	// Parition w.r.t. material batch
+	auto portions = rayMemory.Partition(rayCount);
+
+	// Update new ray count
+	// Last partition may be invalid partition
+	// Skip those partition and adjust ray count accordingly
+	if(!portions.empty() &&
+	   portions.rbegin()->portionId == HitKey::NullBatch)
+	{
+		rayCount = portions.rbegin()->offset;
+	}
 
 	// Use partition lis to find out
 	// total potential output ray count
@@ -157,7 +192,7 @@ void TracerBase::ShadeRays()
 		totalOutRayCount += p.count * loc->second->MaxOutRayPerRay();
 	}
 
-	// Allocate
+	// Allocate output ray memory
 	rayMemory.ResizeRayOut(totalOutRayCount, tracerSystem->PerRayAuxDataSize());
 	unsigned char* dAuxOut = rayMemory.RayAuxOut<unsigned char>();
 	RayGMem* dRaysOut = rayMemory.RaysOut();
@@ -173,21 +208,25 @@ void TracerBase::ShadeRays()
 		// add offsets to find proper count
 		outOffset += p.count * loc->second->MaxOutRayPerRay();
 		
-		// Run local hit kernels
-		RayId* dRayIdStart = dRayIds + p.offset;
+		// Relativize input & output pointers
+		const RayId* dRayIdStart = dCurrentRayIds + p.offset;
+		const HitKey* dKeyStart = dCurrentKeys + p.offset;
 		RayGMem* dRayOutStart = dRaysOut + outOffset;
 		void* dAuxOutStart = dAuxOut + (outOffset * tracerSystem->PerRayAuxDataSize());
 	
 		// Actual Shade Call
-		// TODO: Defer this call if p.count is too low
-		// Problem: What if it is always low ?
-		// Probably it is better to launch it
-		//
-		// Another TODO: Implement multi-gpu load balancing
-		// More TODO: Implement single-gpu SM load balacing
-		loc->second->ShadeRays(dRayOutStart, dAuxOutStart,
-							   dRays, dHitStructs, dAux,
+		loc->second->ShadeRays(// Output
+							   dRayOutStart,
+							   dAuxOutStart,
+							   //  Input
+							   dRays,
+							   dRayAux,
+							   dPrimitiveIds,
+							   dHitStructs,
+							   //
+							   dKeyStart,
 							   dRayIdStart,
+
 							   static_cast<uint32_t>(p.count),
 							   rngMemory);
 		
@@ -195,8 +234,13 @@ void TracerBase::ShadeRays()
 	assert(totalOutRayCount == outOffset);	
 	currentRayCount = static_cast<uint32_t>(totalOutRayCount);
 
+	// Again wait all of the GPU's since
+	// CUDA functions will be on multiple-gpus
+	CudaSystem::SyncAllGPUs();
+	
 	// Shading complete
 	// Now make "RayOut" to "RayIn"
+	// and continue
 	rayMemory.SwapRays();
 }
 
@@ -212,7 +256,7 @@ TracerBase::TracerBase()
 	, healthy(false)	
 {}
 
-void TracerBase::Initialize(uint32_t seed, TracerLogicI& logic)
+void TracerBase::Initialize(uint32_t seed, TracerBaseLogicI& logic)
 {
 	// Device initalization
 	TracerError e(TracerError::END);
@@ -254,7 +298,7 @@ void TracerBase::SetScene(const std::string& sceneFileName)
 void TracerBase::RequestBaseAccelerator()
 {}
 
-void TracerBase::RequestAccelerator(HitKey key)
+void TracerBase::RequestAccelerator(int key)
 {}
 
 void TracerBase::AssignAllMaterials()
