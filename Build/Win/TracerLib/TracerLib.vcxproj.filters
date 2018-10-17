@@ -28,6 +28,9 @@
     <Filter Include="GPU Logic Template Classes">
       <UniqueIdentifier>{ae3c2665-f7ff-44c1-ba19-142e87e5767c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Basic Implementations">
+      <UniqueIdentifier>{fa8f17fc-c3f8-49d3-b593-5a1d135f853d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerLib\ImageMemory.cpp">
@@ -42,6 +45,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\TracerThread.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerLoader.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp">
+      <Filter>Basic Implementations</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -133,7 +139,11 @@
     <ClInclude Include="..\..\..\Source\TracerLib\HitStructs.cuh">
       <Filter>Structs</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.h">
+      <Filter>Basic Implementations</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\PrimitiveDataTypes.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

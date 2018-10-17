@@ -18,35 +18,32 @@ since this API is being developed for customization this is mandatory.
 
 */
 
+#include <cstdint>
 #include <vector>
 #include <string>
 
+#include "RayLib/Vector.h"
+
 struct SceneError;
+struct SceneFileNode;
 
 class GPUPrimitiveGroupI
 {
-	public:
-		struct SurfaceData
-		{
-			uint32_t surfaceDataId;
-			nlohmann::json json;
-		};
-
-	public:
-		virtual						~GPUPrimitiveGroupI() = default;
-
+	public:	
+		virtual								~GPUPrimitiveGroupI() = default;
+	
 		// Interface
-		// Pirmitive type is used for delegating scene info to this class
-		virtual const std::string&		PrimitiveType() const = 0;
+		// Type (as string) of the primitive group
+		virtual const std::string&			PrimitiveType() const = 0;
 		// Allocates and Generates Data
-		virtual SceneError				InitializeData(const std::vector<SurfaceData>& surfaceDataList,
-													   double time) = 0;
-		virtual SceneError				RefreshData(const std::vector<SurfaceData>& editedDataList,
-													double time) = 0;
-
+		virtual SceneError					InitializeGroup(const std::vector<SceneFileNode>& surfaceDatalNodes, double time) = 0;
+		virtual SceneError					ChangeTime(const std::vector<SceneFileNode>& surfaceDatalNodes, double time) = 0;
+	
+		// Access primitive range from Id		
+		virtual Vector2ui					PrimitiveBatchRange(uint32_t surfaceDataId) = 0;
+			
 		// Error check
 		// Queries in order to check if this primitive group supports certain primitive data
 		// Material may need that data
-		virtual bool					CanGenerateData(const std::string& s) const = 0;
-
+		virtual bool						CanGenerateData(const std::string& s) const = 0;
 };

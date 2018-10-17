@@ -6,11 +6,11 @@
 
 #include <string>
 #include <cstdint>
-//#include <json.hpp>
+#include <vector>
 #include "HitStructs.cuh"
 
 struct RayGMem;
-struct SceneHandle;
+struct SceneFileNode;
 struct SceneError;
 
 class RNGMemory;
@@ -27,8 +27,8 @@ class GPUMaterialGroupI
 		virtual								~GPUMaterialGroupI() = default;
 
 		// Interface
-		virtual SceneError					InitializeGroup(const SceneHandle& handle, double time) = 0;
-		virtual SceneError					ChangeTime(const SceneHandle& handle, double time) = 0;
+		virtual SceneError					InitializeGroup(const std::vector<SceneFileNode>& materialNodes, double time) = 0;
+		virtual SceneError					ChangeTime(const std::vector<SceneFileNode>& materialNodes, double time) = 0;
 
 		// Load/Unload Material				
 		virtual void						LoadMaterial(uint32_t materialId, int gpuId) = 0;

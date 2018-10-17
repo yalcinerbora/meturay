@@ -151,6 +151,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\SceneIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SelfDistributor.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\SurfaceDataIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Texture.cuh" />
     <ClInclude Include="..\..\..\Source\RayLib\Texture.hpp" />
