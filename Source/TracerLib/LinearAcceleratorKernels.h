@@ -7,32 +7,39 @@ with ustom Intersection and Hit
 */
 
 
-#include "HitStructs.h"
+#include "HitStructs.cuh"
 #include "AcceleratorDeviceFunctions.h"
 
 #include "RayLib/SceneStructs.h"
 
 // This is fundemental Linear traversal kernel
 
-template <class HitGMem, class HitReg,
-		  class LeafStruct, class PrimitiveData,
-		  IntersctionFunc<LeafStruct, PrimitiveData> IFunc,
-		  AcceptHitFunc<HitReg> AFunc>
-	__global__ void KCIntersectLinear(// I-O
-									  RayGMem* gRays,
-									  HitGMem* gHits,
-									  HitId* gHitIds,
-									  // Input
-									  const TransformId* dTransformIds,
-									  const RayId* gRayIds,
-									  const HitKey* gHitKeys,
-									  const uint32_t rayCount,
-									  // Constants
-									  const LeafStruct** gLeafList,
-									  const uint32_t* gEndCountList,
-									  const TransformStruct* gInverseTransforms,
-									  const PrimitiveData gPrimData)
+//template <class HitGMem, class HitReg,
+//		  class LeafStruct, class PrimitiveData,
+//		  IntersctionFunc<LeafStruct, PrimitiveData> IFunc,
+//		  AcceptHitFunc<HitReg> AFunc>
+template <class PGroup>
+__global__ void KCIntersectLinear(// O
+								  HitKey* gMaterialKeys,
+								  PrimitiveId* gPrimitiveIds,
+								  HitStructPtr gHitStructs,
+								  // I-O
+								  RayGMem* gRays,								  
+								  // Input
+								  const TransformId* dTransformIds,
+								  const RayId* gRayIds,
+								  const HitKey* gHitKeys,
+								  const uint32_t rayCount,
+								  // Constants
+								  const PGroup::LeafStruct** gLeafList,
+								  const uint32_t* gLeafCounts,
+								  const TransformStruct* gInverseTransforms,
+								  const PGroup::PrimitiveData primData)
 {
+	// Fetch Types from Template Classes
+	using HitReg = typename PGroup::HitReg;			// HitRegister is defined by primitive
+	using LeafStruct = typename PGroup::LeafStruct;	// LeafStruct is defined by primitive
+
 	// Grid Stride Loop
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
 		globalId < rayCount; globalId += blockDim.x * gridDim.x)
@@ -43,12 +50,12 @@ template <class HitGMem, class HitReg,
 
 		// Load Ray/Hit to Register
 		RayReg ray(gRays, id);
-		HitReg hit(gHits, id);
-		HitId hitId = gHitIds[id];
+		//HitReg hit(gHitStructs, id);
+		//HitId hitId = gHitKeys[id];
 
 		// Key is the index of the inner Linear Array
 		const LeafStruct* gLeaf = gLeafList[accId];
-		const uint32_t* gEndCount = gEndCountList[accId];
+		const uint32_t* gEndCount = gLeafCounts[accId];
 
 		// Zero means identity so skip
 		if(transformId != 0)
@@ -57,22 +64,40 @@ template <class HitGMem, class HitReg,
 			ray.ray.TransformSelf(s);
 		}	
 
+
+		
+		// Hit determination
+		bool hitModified = false;
+		HitKey materialKey;
+		PrimitiveId primitiveId;
+		HitReg hit;
+
 		// Linear check over array
 		for(uint32_t i = 0; i < gEndCount; i++)
 		{
-			// Do Intersection
-
-			// Accept Hit
-
-			// Do Intersection Test
-			float newT = IFunc(r, gLeaf[i], gPrimData);
-			if(AFunc(hit, hitId, ray, newT)) break;
-			
+			// Get Leaf Data
+			// 
+			const LeafStruct leaf = gLeaf[i];			
+			HitResult result = PGroup::AFunc(// Ooutput											 
+											 materialKey,
+											 primitiveId,
+											 hit,
+											 // I-O
+											 ray, 
+											 // Input
+											 primData,
+											 leaf);
+			hitModified = result[1];
+			if(result[0]) break;
 		}
 		// Write Updated Stuff
-		ray.UpdateTMax(rays, globalId);
-		hit.Update(hits, globalId);
-		gHitIds[id] = hitId;
+		if(hitModified)
+		{
+			ray.UpdateTMax(ray, globalId);
+			hit.Update(gHitStructs, globalId);
+			gMaterialKeys[id] = materialKey;
+			gPrimitiveIds[id] = primitiveId;
+		}
 	}
 }
 

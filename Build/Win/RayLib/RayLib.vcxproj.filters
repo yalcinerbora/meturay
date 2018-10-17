@@ -128,6 +128,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\Types.h">
       <Filter>System</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SurfaceDataIO.h">
+      <Filter>FileI-O</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Memory">
