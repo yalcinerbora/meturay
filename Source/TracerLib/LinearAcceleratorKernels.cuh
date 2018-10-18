@@ -6,18 +6,77 @@ with ustom Intersection and Hit
 
 */
 
+#include <array>
 
 #include "HitStructs.cuh"
 #include "AcceleratorDeviceFunctions.h"
 
 #include "RayLib/SceneStructs.h"
 
-// This is fundemental Linear traversal kernel
+using HitKeyList = const std::array<HitKey*, SceneConstants::MaxSurfacePerAccelerator>;
+using PrimitiveRangeList = const std::array<Vector2ul, SceneConstants::MaxSurfacePerAccelerator>;
 
-//template <class HitGMem, class HitReg,
-//		  class LeafStruct, class PrimitiveData,
-//		  IntersctionFunc<LeafStruct, PrimitiveData> IFunc,
-//		  AcceptHitFunc<HitReg> AFunc>
+// Fundamental Construction Kernel
+template <class PGroup>
+__global__ void KCConstructLinear(// O
+								  PGroup::LeafStruct* gLeafOut,
+
+								  // Input
+								  const HitKeyList materialKeys,
+								  const PrimitiveRangeList primRanges,
+								  const PGroup::PrimitiveData primData,
+								  const uint32_t leafCount)
+{
+	// Fetch Types from Template Classes
+	using LeafStruct = typename PGroup::LeafStruct;	// LeafStruct is defined by primitive
+
+	// SceneConstants
+	uint32_t RangeLocation[SceneConstants::MaxSurfacePerAccelerator];
+	
+	auto FindIndex = [&](uint32_t globalId) -> int
+	{
+		static constexpr LastLocation = SceneConstants::MaxSurfacePerAccelerator - 1;
+		#pragma unroll
+		for(int i = 0; i < LastLocation; i++)
+		{
+			//
+			if(globalId >= RangeLocation[i] &&
+			   globalId < RangeLocation[i + 1]) 
+				return i;
+		}
+		return LastLocation;
+	};
+
+	// Initialize Offsets
+	uint32_t totalPrimCount = 0;
+	#pragma unroll
+	for(int i = 0; i < SceneConstants::MaxSurfacePerAccelerator; i++)
+	{
+		uint32_t primCount = static_cast<uint32_t>(primRanges[i][1] - primRanges[i][0]);
+		totalPrimCount += primCount;
+
+		RangeLocation[i] = totalPrimCount;
+	}
+
+	// Grid Stride Loop
+	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+		globalId < rayCount; globalId += blockDim.x * gridDim.x)
+	{
+		// Find index of range
+		const uint32_t pairIndex = FindIndex(globalId);
+		const uint32_t localIndex = globalId - RangeLocation[i];
+
+		// Determine 
+		uint64_t primitiveId = primRanges[pairIndex][0] + localIndex;
+		HitKey matKey = materialKeys[pairIndex];		
+		// Gen Leaf and write
+		gLeafs[globalId] = PGroup::GenLeafFunc(hitKey,
+											   primitiveId,
+											   primData);
+	}
+}
+
+// This is fundemental Linear traversal kernel
 template <class PGroup>
 __global__ void KCIntersectLinear(// O
 								  HitKey* gMaterialKeys,
@@ -26,9 +85,9 @@ __global__ void KCIntersectLinear(// O
 								  // I-O
 								  RayGMem* gRays,								  
 								  // Input
-								  const TransformId* dTransformIds,
+								  const TransformId* gTransformIds,
 								  const RayId* gRayIds,
-								  const HitKey* gHitKeys,
+								  const HitKey* gAccelKeys,
 								  const uint32_t rayCount,
 								  // Constants
 								  const PGroup::LeafStruct** gLeafList,
@@ -45,8 +104,8 @@ __global__ void KCIntersectLinear(// O
 		globalId < rayCount; globalId += blockDim.x * gridDim.x)
 	{
 		const uint32_t id = gRayIds[globalId];
-		const uint64_t accId = HitConstants::FetchIdMask(gHitKeys[globalId]);
-		const TransformId transformId = dTransformIds[id];
+		const uint64_t accId = HitConstants::FetchIdMask(gAccelKeys[globalId]);
+		const TransformId transformId = gTransformIds[id];
 
 		// Load Ray/Hit to Register
 		RayReg ray(gRays, id);
@@ -75,8 +134,8 @@ __global__ void KCIntersectLinear(// O
 		// Linear check over array
 		for(uint32_t i = 0; i < gEndCount; i++)
 		{
-			// Get Leaf Data
-			// 
+			// Get Leaf Data and
+			// Do acceptance check
 			const LeafStruct leaf = gLeaf[i];			
 			HitResult result = PGroup::AFunc(// Ooutput											 
 											 materialKey,

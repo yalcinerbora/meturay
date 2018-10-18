@@ -18,7 +18,9 @@ class SurfaceDataLoaderI
 
 		// Load Functionality
 		virtual const std::string&		SufaceDataFileExt() const = 0;
-
+		virtual const uint32_t			SurfaceDataId() const = 0;
+		
+		//
 		virtual SceneError				LoadPrimitiveData(float*,
 														  const std::string& primitiveDataType) = 0;
 		virtual SceneError				LoadPrimitiveData(int*,

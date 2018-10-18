@@ -15,3 +15,6 @@ template class Vector<4, float>;
 template class Vector<4, double>;
 template class Vector<4, int>;
 template class Vector<4, unsigned int>;
+
+template class Vector<2, int64_t>;
+template class Vector<2, uint64_t>;

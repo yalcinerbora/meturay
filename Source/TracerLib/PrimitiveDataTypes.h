@@ -6,6 +6,7 @@ enum class PrimitiveBasicDataType
 	POSITION,
 	NORMAL,
 	UV,
+	RADIUS,
 
 	END
 };
@@ -14,7 +15,8 @@ static constexpr const char* PrimitiveBasicDataTypeNames[static_cast<int>(Primit
 {
 	"position",
 	"normal",
-	"uv"
+	"uv",
+	"radius"
 };
 
 static_assert(sizeof(PrimitiveBasicDataTypeNames) / sizeof(const char*) ==

@@ -6,7 +6,8 @@
 
 // Generics
 GPUPrimitiveTriangle::GPUPrimitiveTriangle()
-	: data{ nullptr, nullptr}
+	: dData{ nullptr, nullptr}
+	, totalPrimitiveCount(0)
 {}
 
 const std::string& GPUPrimitiveTriangle::PrimitiveType() const
@@ -25,16 +26,20 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::vector<SceneFileNode
 	}
 
 	SceneError e = SceneError::OK;
-	size_t totalPrimCount = 0;
+	totalPrimitiveCount = 0;
 	for(const auto& loader : loaders)
 	{
-		totalPrimCount = loader->PrimitiveCount();
+		uint32_t surfId = loader->SurfaceDataId();
+		uint64_t start = totalPrimitiveCount;
+		uint64_t end = start + loader->PrimitiveCount();
+		totalPrimitiveCount = end;
+
+		batchRanges.emplace(surfId, Vector2ul(start, end));
 	}
 
-	std::vector<float> postitionsCPU(totalPrimCount * 3);
-	std::vector<float> normalsCPU(totalPrimCount * 3);
-	std::vector<float> uvsCPU(totalPrimCount * 2);
-
+	std::vector<float> postitionsCPU(totalPrimitiveCount * 3);
+	std::vector<float> normalsCPU(totalPrimitiveCount * 3);
+	std::vector<float> uvsCPU(totalPrimitiveCount * 2);
 	size_t offset = 0;
 	for(const auto& loader : loaders)
 	{
@@ -50,26 +55,89 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::vector<SceneFileNode
 		
 		offset += loader->PrimitiveCount();
 	}
-	assert(offset == totalPrimCount);
+	assert(offset == totalPrimitiveCount);
 
+	// All loaded to CPU
+	// Now copy to GPU
+	// Alloc
+	memory = std::move(DeviceMemory(sizeof(Vector4f) * 2 * totalPrimitiveCount));
+	float* dPositionsU = static_cast<float*>(memory);
+	float* dNormalsV = static_cast<float*>(memory) + totalPrimitiveCount;
 
-	// All loaded to CPU now copy to GPU
+	CUDA_CHECK(cudaMemcpy2D(dPositionsU, sizeof(Vector4f),
+							postitionsCPU.data(), sizeof(float) * 3,
+							sizeof(float) * 3, totalPrimitiveCount,
+							cudaMemcpyHostToDevice));
+	CUDA_CHECK(cudaMemcpy2D(dNormalsV, sizeof(Vector4f),
+							 normalsCPU.data(), sizeof(float) * 3,
+							 sizeof(float) * 3, totalPrimitiveCount,
+							 cudaMemcpyHostToDevice));
+	// Strided Copy of UVs
+	CUDA_CHECK(cudaMemcpy2D(dPositionsU + 3, sizeof(Vector4f),
+							uvsCPU.data(), sizeof(float) * 2,
+							sizeof(float), totalPrimitiveCount,
+							cudaMemcpyHostToDevice));
+	CUDA_CHECK(cudaMemcpy2D(dNormalsV + 3, sizeof(Vector4f),
+							uvsCPU.data() + 1, sizeof(float) * 2,
+							sizeof(float), totalPrimitiveCount,
+							cudaMemcpyHostToDevice));
 
-	CUDA_CHECK(cudaMemcpy2D());
-	CUDA_CHECK(cudaMemcpy2D());
-	CUDA_CHECK(cudaMemcpy2D());
+	// Set Main Pointers of batch
+	dData.positionsU = reinterpret_cast<Vector4f*>(dPositionsU);
+	dData.normalsV = reinterpret_cast<Vector4f*>(dNormalsV);
 }
 
 SceneError GPUPrimitiveTriangle::ChangeTime(const const std::vector<SceneFileNode>& surfaceDatalNodes, double time)
 {
-	//
+	// Generate Loaders
+	std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
 	for(const SceneFileNode& s : surfaceDatalNodes)
 	{
-		std::vector<Vector3f> postitionsCPU;
-		std::vector<Vector3f> normalsCPU;
-		std::vector<Vector2f> uvsCPU;
+		loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s)));
+	}
 
-		// Copy partially
+	SceneError e = SceneError::OK;
+	for(const auto& loader : loaders)
+	{
+		Vector2ui range = batchRanges[loader->SurfaceDataId()];
+		size_t primitiveCount = loader->PrimitiveCount();
+		assert((range[1] - range[0]) == primitiveCount);
+
+		std::vector<float> postitionsCPU(primitiveCount * 3);
+		std::vector<float> normalsCPU(primitiveCount * 2);
+		std::vector<float> uvsCPU(primitiveCount * 2);
+
+		if(e != loader->LoadPrimitiveData(postitionsCPU.data(),
+										  PrimBasicDataTypeToString(PrimitiveBasicDataType::POSITION)))
+			return e;
+		if(e != loader->LoadPrimitiveData(normalsCPU.data(),
+										  PrimBasicDataTypeToString(PrimitiveBasicDataType::NORMAL)))
+			return e;
+		if(e != loader->LoadPrimitiveData(uvsCPU.data(), PrimBasicDataTypeToString(PrimitiveBasicDataType::UV)))
+			return e;
+		
+		// Copy
+		float* dPositionsU = static_cast<float*>(memory);
+		float* dNormalsV = static_cast<float*>(memory) + totalPrimitiveCount;
+		
+		// Pos and Normal
+		CUDA_CHECK(cudaMemcpy2D(dPositionsU + range[0], sizeof(Vector4f),
+								postitionsCPU.data(), sizeof(float) * 3,
+								sizeof(float) * 3, primitiveCount,
+								cudaMemcpyHostToDevice));
+		CUDA_CHECK(cudaMemcpy2D(dNormalsV + range[0], sizeof(Vector4f),
+								normalsCPU.data(), sizeof(float) * 3,
+								sizeof(float) * 3, primitiveCount,
+								cudaMemcpyHostToDevice));
+		// Strided Copy of UVs
+		CUDA_CHECK(cudaMemcpy2D(dPositionsU + range[0] + 3, sizeof(Vector4f),
+								uvsCPU.data(), sizeof(float) * 2,
+								sizeof(float), primitiveCount,
+								cudaMemcpyHostToDevice));
+		CUDA_CHECK(cudaMemcpy2D(dNormalsV + range[0] + 3, sizeof(Vector4f),
+								uvsCPU.data() + 1, sizeof(float) * 2,
+								sizeof(float), primitiveCount,
+								cudaMemcpyHostToDevice));
 	}
 }
 

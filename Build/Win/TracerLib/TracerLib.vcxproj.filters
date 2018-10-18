@@ -49,6 +49,9 @@
       <Filter>Basic Implementations</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp">
+      <Filter>Basic Implementations</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -124,9 +127,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveI.h">
       <Filter>GPU Logic Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\LinearAcceleratorKernels.h">
-      <Filter>GPU Template Kernels</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterial.cuh">
       <Filter>GPU Logic Template Classes</Filter>
     </ClInclude>
@@ -144,6 +144,21 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\PrimitiveDataTypes.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.h">
+      <Filter>Basic Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h">
+      <Filter>Basic Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULinearAccelerator.h">
+      <Filter>Basic Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULinearAccelerator.hpp">
+      <Filter>Basic Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\LinearAcceleratorKernels.cuh">
+      <Filter>GPU Template Kernels</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">
@@ -174,5 +189,8 @@
       <Filter>GPU Algorithms\Implementations</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\TracerBase.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPULinearAccelerator.cu">
+      <Filter>Basic Implementations</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

@@ -5,6 +5,12 @@ Many Constants that are used throught the tracer
 
 */
 
+namespace SceneConstants
+{
+	// Fundamental Limitations (for convenience)
+	static constexpr const int	MaxSurfacePerAccelerator = 8;
+}
+
 namespace MathConstants
 {
 	static constexpr double	Pi_d = 3.1415926535897932384626433;

@@ -1,17 +1,12 @@
 #pragma once
 /**
 
-Some default implementations for triangle primitive
+Default Triangle Implementation
 
-Triangle primitive is packed as struct of array
+Has three types of data
+Position, Normal and UV.
 
-each classification has a tag wich represents
-
-P: position
-N: normal
-U: uv
-
-
+All of them should be provided
 
 */
 
@@ -19,49 +14,42 @@ U: uv
 #include <type_traits>
 
 #include "GPUPrimitiveI.h"
-#include "HitStructs.cuh"
+#include "DefaultLeaf.h"
 #include "AcceleratorDeviceFunctions.h"
 
 #include "RayLib/DeviceMemory.h"
 #include "RayLib/Vector.h"
 
-// Triangle Data Layouts
+// Triangle Memory Layout
 struct TriData
 {
-	Vector4f* positionsU;
-	Vector4f* normalsV;
+	const Vector4f* positionsU;
+	const Vector4f* normalsV;
 };
 
-// Triangle Hits
+// Triangle Hit is barycentric coordinates
+// c is (1-a-b) thus it is not stored.
 using TriangleHit = Vector2f;
 
-// Triangle Leaf Structs
-struct Leaf
-{
-	PrimitiveId		primitiveId;
-	HitKey			matId;
-};
-
 // Triangle Hit Acceptance
-__device__ 
-HitResult TriangleClosestHit(// Output
-							 HitKey& newMat,
-							 PrimitiveId& newPrimitive,
-							 TriangleHit& newHit,
-							 // I-O
-							 RayReg& rayData,
-							 // Input
-							 const TriData& primData,
-							 const Leaf& leaf)
+__device__
+inline HitResult TriangleClosestHit(// Output
+									HitKey& newMat,
+									PrimitiveId& newPrimitive,
+									TriangleHit& newHit,
+									// I-O
+									RayReg& rayData,
+									// Input
+									const TriData& primData,
+									const DefaultLeaf& leaf)
 {
 	// Get Position
 	Vector3 position0 = primData.positionsU[leaf.primitiveId * 3 + 0];
 	Vector3 position1 = primData.positionsU[leaf.primitiveId * 3 + 1];
 	Vector3 position2 = primData.positionsU[leaf.primitiveId * 3 + 2];
 
-	// Do Intersecton test
-	float newT;
-	Vector3 baryCoords;
+	// Do Intersecton test	
+	Vector3 baryCoords; float newT;
 	bool intersects = rayData.ray.IntersectsTriangle(baryCoords, newT,
 													 position0, position1, position2,
 													 false);
@@ -80,26 +68,22 @@ HitResult TriangleClosestHit(// Output
 class GPUPrimitiveTriangle final : public GPUPrimitiveGroupI
 {
 	public:	
-		struct TriData
-		{
-			Vector4f*							positionsU;
-			Vector4f*							normalsV;
-		};
-
-		// Type Definitions for kernel generations
+	   	// Type Definitions for kernel generations
 		using PrimitiveData						= TriData;
-		using HitReg							= Vector2f; // Barycentric coords
+		using HitReg							= TriangleHit;
 		static constexpr auto AcceptFunc		= TriangleClosestHit;
+		static constexpr auto GenLeafFunc		= GenerateLeaf<PrimitiveData>;
 		// 
 		static constexpr auto AABBGenFunc		= TriangleClosestHit;
 		static constexpr auto AreaGenFunc		= TriangleClosestHit;
 
 	private:
 		DeviceMemory							memory;
-		PrimitiveData							data;
+		PrimitiveData							dData;
 
 		// List of ranges for each batch
-		std::map<uint32_t, Vector2ui>			batchRanges;
+		uint64_t								totalPrimitiveCount;
+		std::map<uint32_t, Vector2ul>			batchRanges;
 	
 	public:
 		// Constructors & Destructor

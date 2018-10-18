@@ -5,15 +5,24 @@ Base Interface for GPU accelerators
 
 */
 
-//#include <json.hpp>
+#include <map>
+#include <vector>
 #include <cstdint>
+#include <functional>
+
 #include "HitStructs.cuh"
 
 struct RayGMem;
 struct SceneError;
-class GPUPrimitiveGroupI;
+struct SceneFileNode;
 
-using AcceleratorPairings = std::vector<std::vector<uint32_t>>;
+class GPUPrimitiveGroupI;
+class GPUMaterialGroupI;
+
+
+//template <class T>
+//using Reference = std::reference_wrapper<T>;
+
 
 // Accelerator Group defines same type of accelerators
 // This struct holds accelerator data
@@ -26,19 +35,23 @@ class GPUAcceleratorGroupI
 		virtual								~GPUAcceleratorGroupI() = default;
 
 		// Interface
-		virtual SceneError					InitializeGroup(const GPUPrimitiveGroupI&
-															/*nlohmann::json& surfaceDefinitions*/) = 0;
+		// Loads required data to CPU cache for
+		virtual SceneError					InitializeGroup(const std::map<uint32_t, HitKey>&,
+															// List of surface nodes
+															// that uses this accelerator type
+															// w.r.t. this prim group
+															const std::vector<SceneFileNode>&) = 0;
 
 		// Batched and singular construction
-		//virtual void						ConstructAccelerators(uint32_t surfaceId) = 0;
-		//virtual void						ConstructAccelerator(const std::vector<uint32_t>& surfaces) = 0;
-		virtual void						ConstructAccelerators(const AcceleratorPairings& surfaceGroups) = 0;
-		virtual void						ReconstructAccelerator(uint32_t surfaceId) = 0;
-		virtual void						ReconstructAccelerator(const std::vector<uint32_t>& surfaces) = 0;
-	
+		virtual void						ConstructAccelerator(uint32_t surface) = 0;
+		virtual void						ConstructAccelerators(const std::vector<uint32_t>& surfaces) = 0;
+		virtual void						DestroyAccelerator(uint32_t surface) = 0;
+		virtual void						DestroyAccelerators(const std::vector<uint32_t>& surfaces) = 0;
+
 		virtual size_t						UsedGPUMemory() const = 0;
 		virtual size_t						UsedCPUMemory() const = 0;
 
+		virtual const GPUPrimitiveGroupI&	PrimitiveGroup() const = 0;
 };
 
 //
