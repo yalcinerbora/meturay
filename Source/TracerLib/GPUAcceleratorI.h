@@ -35,6 +35,8 @@ class GPUAcceleratorGroupI
 		virtual								~GPUAcceleratorGroupI() = default;
 
 		// Interface
+		// Type(as string) of the accelerator group
+		virtual const std::string&			Type() const = 0;
 		// Loads required data to CPU cache for
 		virtual SceneError					InitializeGroup(const std::map<uint32_t, HitKey>&,
 															// List of surface nodes
@@ -52,6 +54,7 @@ class GPUAcceleratorGroupI
 		virtual size_t						UsedCPUMemory() const = 0;
 
 		virtual const GPUPrimitiveGroupI&	PrimitiveGroup() const = 0;
+		virtual const std::string&			Type() const = 0;
 };
 
 //
@@ -61,6 +64,8 @@ class GPUAcceleratorBatchI
 		virtual									~GPUAcceleratorBatchI() = default;
 
 		// Interface
+		// Type(as string) of the accelerator group
+		virtual const std::string&				Type() const = 0;
 		// Kernel Logic
 		virtual void							Hit(// O
 													HitKey* dMaterialKeys,

@@ -73,20 +73,26 @@ class GPUPrimitiveSphere final : public GPUPrimitiveGroupI
 		// Type Definitions for kernel generations
 		using PrimitiveData						= SphereData;
 		using HitReg							= SphereHit;
+		using LeafStruct						= DefaultLeaf;
 		static constexpr auto AcceptFunc		= SphereClosestHit;
 		static constexpr auto GenLeafFunc		= GenerateLeaf<PrimitiveData>;
 		// 		
 		static constexpr auto AABBGenFunc		= SphereClosestHit;
 		static constexpr auto AreaGenFunc		= SphereClosestHit;
 
-	private:
+		static const std::string				TypeName;
+
+	private:		
 		DeviceMemory							memory;
 		PrimitiveData							dData;
 
 		// List of ranges for each batch
 		uint64_t								totalPrimitiveCount;
-		std::map<uint32_t, Vector2ui>			batchRanges;
+		std::map<uint32_t, Vector2ul>			batchRanges;
 	
+		// Friend Declarations
+		friend struct							PrimDataAccessor;
+		
 	public:
 		// Constructors & Destructor
 												GPUPrimitiveSphere();
@@ -94,16 +100,22 @@ class GPUPrimitiveSphere final : public GPUPrimitiveGroupI
 
 		// Interface
 		// Pirmitive type is used for delegating scene info to this class
-		const std::string&						PrimitiveType() const override;
+		const std::string&						Type() const override;
 		// Allocates and Generates Data
 		SceneError								InitializeGroup(const std::vector<SceneFileNode>& surfaceDatalNodes, double time) override;
 		SceneError								ChangeTime(const std::vector<SceneFileNode>& surfaceDatalNodes, double time) override;
 
 		// Access primitive range from Id			
-		Vector2ui								PrimitiveBatchRange(uint32_t surfaceDataId) override;
+		Vector2ul								PrimitiveBatchRange(uint32_t surfaceDataId) override;
 
 		// Error check
 		// Queries in order to check if this primitive group supports certain primitive data
 		// Material may need that data
 		bool									CanGenerateData(const std::string& s) const override;
 };
+
+template<>
+inline GPUPrimitiveSphere::PrimitiveData PrimDataAccessor::Data(const GPUPrimitiveSphere& primTri)
+{
+	return primTri.dData;
+}

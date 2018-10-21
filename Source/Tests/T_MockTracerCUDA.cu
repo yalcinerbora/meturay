@@ -20,14 +20,10 @@ using namespace std::chrono_literals;
 
 
 #include "TracerLib/GPUMaterial.cuh"
+#include "TracerLib/TracerLoader.h"
 
 struct RayAuxGMem {};
 struct RayAuxBaseData{};
-
-
-
-
-
 
 //template <class RayAuxGMem, class RayAuxBaseData>
 __device__ void AuxInitEmpty(const RayAuxGMem,
@@ -39,7 +35,6 @@ __device__ void AuxInitEmpty(const RayAuxGMem,
 							 const Vector2ui& localSampleId,
 							 const uint32_t samplePerPixel)
 {}
-
 
 class MockTracerLogic : public TracerBaseLogicI
 {
@@ -204,6 +199,7 @@ const GPUPrimitiveGroupI& MockTracerLogic::AcceleratorMock::PrimitiveGroup() con
 { 
 	return *static_cast<const GPUPrimitiveGroupI*>(groupNullPtr);
 }
+
 const GPUAcceleratorGroupI& MockTracerLogic::AcceleratorMock::AcceleratorGroup() const
 {
 	return *static_cast<const GPUAcceleratorGroupI*>(groupNullPtr);

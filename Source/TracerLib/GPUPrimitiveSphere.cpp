@@ -3,6 +3,9 @@
 
 #include "RayLib/SurfaceDataIO.h"
 #include "RayLib/SceneError.h"
+#include "RayLib/SceneFileNode.h"
+
+const std::string GPUPrimitiveSphere::TypeName = "Sphere";
 
 // Generics
 GPUPrimitiveSphere::GPUPrimitiveSphere()
@@ -10,9 +13,9 @@ GPUPrimitiveSphere::GPUPrimitiveSphere()
 	, totalPrimitiveCount(0)
 {}
 
-const std::string& GPUPrimitiveSphere::PrimitiveType() const
+const std::string& GPUPrimitiveSphere::Type() const
 {
-	return "DefaultSphere";
+	return TypeName;
 }
 
 SceneError GPUPrimitiveSphere::InitializeGroup(const std::vector<SceneFileNode>& surfaceDatalNodes,
@@ -30,11 +33,11 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const std::vector<SceneFileNode>&
 	for(const auto& loader : loaders)
 	{
 		uint32_t surfId = loader->SurfaceDataId();
-		uint32_t start = totalPrimitiveCount;
-		uint32_t end = start + loader->PrimitiveCount();
+		uint64_t start = totalPrimitiveCount;
+		uint64_t end = start + loader->PrimitiveCount();
 		totalPrimitiveCount = end;
 
-		batchRanges.emplace(surfId, Vector2ui(start, end));
+		batchRanges.emplace(surfId, Vector2ul(start, end));
 	}
 
 	std::vector<float> postitionsCPU(totalPrimitiveCount * 3);
@@ -70,9 +73,10 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const std::vector<SceneFileNode>&
 
 	// Set Main Pointers of batch
 	dData.centersRadius = reinterpret_cast<Vector4f*>(dCentersRadius);
+	return e;
 }
 
-SceneError GPUPrimitiveSphere::ChangeTime(const const std::vector<SceneFileNode>& surfaceDatalNodes, double time)
+SceneError GPUPrimitiveSphere::ChangeTime(const std::vector<SceneFileNode>& surfaceDatalNodes, double time)
 {
 	// Generate Loaders
 	std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
@@ -85,7 +89,7 @@ SceneError GPUPrimitiveSphere::ChangeTime(const const std::vector<SceneFileNode>
 	std::vector<float> postitionsCPU, radiusCPU;
 	for(const auto& loader : loaders)
 	{
-		Vector2ui range = batchRanges[loader->SurfaceDataId()];
+		Vector2ul range = batchRanges[loader->SurfaceDataId()];
 		size_t primitiveCount = loader->PrimitiveCount();
 		assert((range[1] - range[0]) == primitiveCount);
 
@@ -111,9 +115,10 @@ SceneError GPUPrimitiveSphere::ChangeTime(const const std::vector<SceneFileNode>
 								sizeof(float), primitiveCount,
 								cudaMemcpyHostToDevice));
 	}
+	return e;
 }
 
-Vector2ui GPUPrimitiveSphere::PrimitiveBatchRange(uint32_t surfaceDataId)
+Vector2ul GPUPrimitiveSphere::PrimitiveBatchRange(uint32_t surfaceDataId)
 {
 	return batchRanges[surfaceDataId];
 }

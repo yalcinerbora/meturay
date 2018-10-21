@@ -24,6 +24,8 @@
     <ClCompile Include="..\..\..\Source\TracerLib\RNGMemory.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerLoader.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\TracerLogic.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\TracerLogicGenerator.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerThread.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -34,8 +36,9 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ComparisonFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULinearAccelerator.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULinearAccelerator.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerLib\DefaultTypeGenerators.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.hpp" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\FunctionEnablers.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorI.h" />
@@ -64,11 +67,13 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TracerDebug.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogic.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGenerator.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGeneratorI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerThread.h" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPULinearAccelerator.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\ParallelReduction.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanArithmetic.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanMatrix2x2.cu" />

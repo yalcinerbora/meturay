@@ -13,7 +13,7 @@ with ustom Intersection and Hit
 
 #include "RayLib/SceneStructs.h"
 
-using HitKeyList = const std::array<HitKey*, SceneConstants::MaxSurfacePerAccelerator>;
+using HitKeyList = const std::array<HitKey, SceneConstants::MaxSurfacePerAccelerator>;
 using PrimitiveRangeList = const std::array<Vector2ul, SceneConstants::MaxSurfacePerAccelerator>;
 
 // Fundamental Construction Kernel
@@ -35,7 +35,7 @@ __global__ void KCConstructLinear(// O
 	
 	auto FindIndex = [&](uint32_t globalId) -> int
 	{
-		static constexpr LastLocation = SceneConstants::MaxSurfacePerAccelerator - 1;
+		static constexpr int LastLocation = SceneConstants::MaxSurfacePerAccelerator - 1;
 		#pragma unroll
 		for(int i = 0; i < LastLocation; i++)
 		{
@@ -60,19 +60,19 @@ __global__ void KCConstructLinear(// O
 
 	// Grid Stride Loop
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-		globalId < rayCount; globalId += blockDim.x * gridDim.x)
+		globalId < leafCount; globalId += blockDim.x * gridDim.x)
 	{
 		// Find index of range
 		const uint32_t pairIndex = FindIndex(globalId);
-		const uint32_t localIndex = globalId - RangeLocation[i];
+		const uint32_t localIndex = globalId - RangeLocation[pairIndex];
 
 		// Determine 
 		uint64_t primitiveId = primRanges[pairIndex][0] + localIndex;
 		HitKey matKey = materialKeys[pairIndex];		
 		// Gen Leaf and write
-		gLeafs[globalId] = PGroup::GenLeafFunc(hitKey,
-											   primitiveId,
-											   primData);
+		gLeafOut[globalId] = PGroup::GenLeafFunc(matKey,
+												 primitiveId,
+												 primData);
 	}
 }
 
@@ -104,7 +104,7 @@ __global__ void KCIntersectLinear(// O
 		globalId < rayCount; globalId += blockDim.x * gridDim.x)
 	{
 		const uint32_t id = gRayIds[globalId];
-		const uint64_t accId = HitConstants::FetchIdMask(gAccelKeys[globalId]);
+		const uint64_t accId = HitKey::FetchIdPortion(gAccelKeys[globalId]);
 		const TransformId transformId = gTransformIds[id];
 
 		// Load Ray/Hit to Register
@@ -114,7 +114,7 @@ __global__ void KCIntersectLinear(// O
 
 		// Key is the index of the inner Linear Array
 		const LeafStruct* gLeaf = gLeafList[accId];
-		const uint32_t* gEndCount = gLeafCounts[accId];
+		const uint32_t gEndCount = gLeafCounts[accId];
 
 		// Zero means identity so skip
 		if(transformId != 0)
@@ -137,23 +137,23 @@ __global__ void KCIntersectLinear(// O
 			// Get Leaf Data and
 			// Do acceptance check
 			const LeafStruct leaf = gLeaf[i];			
-			HitResult result = PGroup::AFunc(// Ooutput											 
-											 materialKey,
-											 primitiveId,
-											 hit,
-											 // I-O
-											 ray, 
-											 // Input
-											 primData,
-											 leaf);
+			HitResult result = PGroup::AcceptFunc(// Ooutput											 
+												  materialKey,
+												  primitiveId,
+												  hit,
+												  // I-O
+												  ray,
+												  // Input
+												  primData,
+												  leaf);
 			hitModified = result[1];
 			if(result[0]) break;
 		}
 		// Write Updated Stuff
 		if(hitModified)
 		{
-			ray.UpdateTMax(ray, globalId);
-			hit.Update(gHitStructs, globalId);
+			ray.UpdateTMax(gRays, globalId);
+			gHitStructs.Ref<HitReg>(globalId) = hit;
 			gMaterialKeys[id] = materialKey;
 			gPrimitiveIds[id] = primitiveId;
 		}
@@ -183,7 +183,7 @@ __global__ void KCIntersectBaseLinear(// I-O
 		RayReg ray(gRays, id);
 		HitKey key = gHitKeys[globalId];				
 		TransformId transformId = gTransformIds[id];		
-		if(key == HitConstants::InvalidKey) continue;
+		if(key == HitKey::InvalidKey) continue;
 
 		// Load initial traverse extentds
 		uint32_t primStart = gPrevLoc[id];

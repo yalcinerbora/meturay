@@ -131,6 +131,15 @@
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceDataIO.h">
       <Filter>FileI-O</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SceneFileNode.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\ObjectFuncDefinitions.h">
+      <Filter>System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SharedLib.h">
+      <Filter>System</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Memory">
@@ -186,6 +195,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\SceneIO.cpp">
       <Filter>FileI-O</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\SharedLib.cpp">
+      <Filter>System</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

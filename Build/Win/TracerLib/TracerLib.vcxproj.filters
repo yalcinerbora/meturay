@@ -25,11 +25,17 @@
     <Filter Include="Debug">
       <UniqueIdentifier>{aee221d1-f5fa-4986-baae-fad81e87373b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="GPU Logic Template Classes">
+    <Filter Include="Logic Implementations">
       <UniqueIdentifier>{ae3c2665-f7ff-44c1-ba19-142e87e5767c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Basic Implementations">
+    <Filter Include="Default Accelerators">
+      <UniqueIdentifier>{6c5602af-4af7-4ce9-8305-16346e29109f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Default Primitives">
       <UniqueIdentifier>{fa8f17fc-c3f8-49d3-b593-5a1d135f853d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SharedLib">
+      <UniqueIdentifier>{93ef73af-4c1a-47c7-8a2b-c673dda9aeb0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -43,14 +49,24 @@
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\TracerThread.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\TracerLoader.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp">
-      <Filter>Basic Implementations</Filter>
+      <Filter>Default Primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp">
-      <Filter>Basic Implementations</Filter>
+      <Filter>Default Primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\TracerLogic.cpp">
+      <Filter>Logic Implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\TracerLoader.cpp">
+      <Filter>SharedLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\TracerThread.cpp">
+      <Filter>SharedLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\TracerLogicGenerator.cpp">
+      <Filter>SharedLib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -122,16 +138,14 @@
       <Filter>Debug</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\TracerBase.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerThread.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerLoader.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveI.h">
       <Filter>GPU Logic Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterial.cuh">
-      <Filter>GPU Logic Template Classes</Filter>
+      <Filter>Logic Implementations</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogic.h">
-      <Filter>GPU Logic Template Classes</Filter>
+      <Filter>Logic Implementations</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\HitFunctions.cuh">
       <Filter>Structs</Filter>
@@ -140,24 +154,39 @@
       <Filter>Structs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.h">
-      <Filter>Basic Implementations</Filter>
+      <Filter>Default Primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\PrimitiveDataTypes.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.h">
-      <Filter>Basic Implementations</Filter>
+      <Filter>Default Primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h">
-      <Filter>Basic Implementations</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULinearAccelerator.h">
-      <Filter>Basic Implementations</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULinearAccelerator.hpp">
-      <Filter>Basic Implementations</Filter>
+      <Filter>Default Primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\LinearAcceleratorKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerThread.h">
+      <Filter>SharedLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerLoader.h">
+      <Filter>SharedLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\DefaultTypeGenerators.h">
+      <Filter>SharedLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGeneratorI.h">
+      <Filter>SharedLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGenerator.h">
+      <Filter>SharedLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.h">
+      <Filter>Default Accelerators</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.hpp">
+      <Filter>Default Accelerators</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -189,8 +218,8 @@
       <Filter>GPU Algorithms\Implementations</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\TracerBase.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPULinearAccelerator.cu">
-      <Filter>Basic Implementations</Filter>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cu">
+      <Filter>Default Accelerators</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

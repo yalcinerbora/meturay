@@ -14,7 +14,6 @@ Single thread will
 
 */
 
-
 #include <deque>
 #include <functional>
 #include <set>

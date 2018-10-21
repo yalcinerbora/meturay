@@ -15,6 +15,8 @@ Scene file json interpeter and writer
 
 struct CameraPerspective;
 
+
+
 namespace SceneIO
 {
 	static constexpr const char* SCENE_EXT = "mscene";

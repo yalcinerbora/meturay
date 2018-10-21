@@ -27,6 +27,9 @@ class GPUMaterialGroupI
 		virtual								~GPUMaterialGroupI() = default;
 
 		// Interface
+		// Type (as string) of the primitive group
+		virtual const std::string&			Type() const = 0;
+		// Allocates and Generates Data
 		virtual SceneError					InitializeGroup(const std::vector<SceneFileNode>& materialNodes, double time) = 0;
 		virtual SceneError					ChangeTime(const std::vector<SceneFileNode>& materialNodes, double time) = 0;
 
@@ -54,6 +57,10 @@ class GPUMaterialBatchI
 		virtual								~GPUMaterialBatchI() = default;
 
 		// Interface
+		// Interface
+		// Type (as string) of the primitive group
+		virtual const std::string&			Type() const = 0;
+		// Kernel Call
 		virtual void						ShadeRays(// Output
 													  RayGMem* dRayOut,
 													  void* dRayAuxOut,

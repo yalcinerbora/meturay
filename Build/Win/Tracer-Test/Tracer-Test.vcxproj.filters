@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Implementations">
+      <UniqueIdentifier>{982ec2ab-3283-4dc1-83de-9076a6d53e38}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu">
+      <Filter>Implementations</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h">
+      <Filter>Implementations</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

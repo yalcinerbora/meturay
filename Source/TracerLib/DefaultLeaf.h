@@ -13,7 +13,7 @@ struct DefaultLeaf
 
 template <class PrimData>
 __device__ __host__
-inline DefaultLeaf GenerateLeaf(const HitKey key,
+inline DefaultLeaf GenerateLeaf(const HitKey matId,
 								const PrimitiveId primitiveId,
 								const PrimData& primData)
 {

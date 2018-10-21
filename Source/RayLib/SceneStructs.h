@@ -54,7 +54,7 @@ struct LightStruct
 	};
 };
 
-typedef Matrix4x4 TransformStruct;
+using TransformStruct = Matrix4x4;
 
 struct SurfaceStruct
 {

@@ -1,6 +1,7 @@
 #pragma once
 
 #ifdef _WIN32
+	#define METURAY_WIN
 	#ifndef NOMINMAX
 		#define NOMINMAX
 	#endif
@@ -32,3 +33,12 @@
 	static inline bool EnableVTMode()
 	{}
 #endif
+
+
+#ifdef __linux__
+	#define METURAY_UNIX
+#else
+
+#endif
+
+

@@ -30,20 +30,33 @@ struct SceneFileNode;
 class GPUPrimitiveGroupI
 {
 	public:	
-		virtual								~GPUPrimitiveGroupI() = default;
+		virtual												~GPUPrimitiveGroupI() = default;
 	
 		// Interface
 		// Type (as string) of the primitive group
-		virtual const std::string&			PrimitiveType() const = 0;
+		virtual const std::string&							Type() const = 0;
 		// Allocates and Generates Data
-		virtual SceneError					InitializeGroup(const std::vector<SceneFileNode>& surfaceDatalNodes, double time) = 0;
-		virtual SceneError					ChangeTime(const std::vector<SceneFileNode>& surfaceDatalNodes, double time) = 0;
+		virtual SceneError									InitializeGroup(const std::vector<SceneFileNode>& surfaceDatalNodes, double time) = 0;
+		virtual SceneError									ChangeTime(const std::vector<SceneFileNode>& surfaceDatalNodes, double time) = 0;
 	
-		// Access primitive range from Id		
-		virtual Vector2ui					PrimitiveBatchRange(uint32_t surfaceDataId) = 0;
-			
+		// Access primitive range from Id						
+		virtual Vector2ul									PrimitiveBatchRange(uint32_t surfaceDataId) = 0;
+
 		// Error check
 		// Queries in order to check if this primitive group supports certain primitive data
 		// Material may need that data
-		virtual bool						CanGenerateData(const std::string& s) const = 0;
+		virtual bool										CanGenerateData(const std::string& s) const = 0;
+
+
+};
+
+struct PrimDataAccessor
+{
+	// Data fetch function of the primitive
+	// This struct should contain all necessary data required for kernel calls
+	// related to this primitive
+	// I dont know any design pattern for converting from static polymorphism
+	// to dynamic one. This is my solution (it is quite werid)
+	template<class GPUPrimitiveGroup>
+	static typename  GPUPrimitiveGroup::PrimitiveData		Data(const GPUPrimitiveGroup&);
 };

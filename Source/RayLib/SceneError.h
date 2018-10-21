@@ -47,7 +47,13 @@ struct SceneError : public ErrorI
 			// Special Type Values
 			UNKNOWN_TRANSFORM_TYPE,
 			UNKNOWN_LIGHT_TYPE,
-
+			// Custom Type Query
+			ACCELERATOR_LOGIC_NOT_FOUND,
+			MATERIAL_LOGIC_NOT_FOUND,
+			PRIMITIVE_LOGIC_NOT_FOUND,
+			//
+			PRIM_ACCEL_MISMATCH,
+			PRIM_MAT_MISMATCH,
 			// End
 			END
 		};
@@ -122,7 +128,14 @@ inline SceneError::operator std::string() const
 		"JSON file could not be parsed properly.",
 		// Special Type Values
 		"Transform type name is unknown.",
-		"Light type name is unknown."
+		"Light type name is unknown.",
+		// Custom Type Related Errors
+		"Accelerator implementation not found.",
+		"Material implementation not found.",
+		"Primitive implementation not found.",
+		//
+		"Primitive-Material mismatch.",
+		"Primitive-Accelerator mismatch."
 	};
 	static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(SceneError::END),
 				  "Enum and enum string list size mismatch.");

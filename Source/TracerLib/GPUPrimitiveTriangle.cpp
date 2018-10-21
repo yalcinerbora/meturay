@@ -3,6 +3,9 @@
 
 #include "RayLib/SurfaceDataIO.h"
 #include "RayLib/SceneError.h"
+#include "RayLib/SceneFileNode.h"
+
+const std::string GPUPrimitiveTriangle::TypeName = "Triangle";
 
 // Generics
 GPUPrimitiveTriangle::GPUPrimitiveTriangle()
@@ -10,9 +13,9 @@ GPUPrimitiveTriangle::GPUPrimitiveTriangle()
 	, totalPrimitiveCount(0)
 {}
 
-const std::string& GPUPrimitiveTriangle::PrimitiveType() const
-{
-	return "Triangle";
+const std::string& GPUPrimitiveTriangle::Type() const
+{	
+	return TypeName;
 }
 
 SceneError GPUPrimitiveTriangle::InitializeGroup(const std::vector<SceneFileNode>& surfaceDatalNodes, 
@@ -69,9 +72,9 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::vector<SceneFileNode
 							sizeof(float) * 3, totalPrimitiveCount,
 							cudaMemcpyHostToDevice));
 	CUDA_CHECK(cudaMemcpy2D(dNormalsV, sizeof(Vector4f),
-							 normalsCPU.data(), sizeof(float) * 3,
-							 sizeof(float) * 3, totalPrimitiveCount,
-							 cudaMemcpyHostToDevice));
+							normalsCPU.data(), sizeof(float) * 3,
+							sizeof(float) * 3, totalPrimitiveCount,
+							cudaMemcpyHostToDevice));
 	// Strided Copy of UVs
 	CUDA_CHECK(cudaMemcpy2D(dPositionsU + 3, sizeof(Vector4f),
 							uvsCPU.data(), sizeof(float) * 2,
@@ -85,9 +88,10 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::vector<SceneFileNode
 	// Set Main Pointers of batch
 	dData.positionsU = reinterpret_cast<Vector4f*>(dPositionsU);
 	dData.normalsV = reinterpret_cast<Vector4f*>(dNormalsV);
+	return e;
 }
 
-SceneError GPUPrimitiveTriangle::ChangeTime(const const std::vector<SceneFileNode>& surfaceDatalNodes, double time)
+SceneError GPUPrimitiveTriangle::ChangeTime(const std::vector<SceneFileNode>& surfaceDatalNodes, double time)
 {
 	// Generate Loaders
 	std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
@@ -99,7 +103,7 @@ SceneError GPUPrimitiveTriangle::ChangeTime(const const std::vector<SceneFileNod
 	SceneError e = SceneError::OK;
 	for(const auto& loader : loaders)
 	{
-		Vector2ui range = batchRanges[loader->SurfaceDataId()];
+		Vector2ul range = batchRanges[loader->SurfaceDataId()];
 		size_t primitiveCount = loader->PrimitiveCount();
 		assert((range[1] - range[0]) == primitiveCount);
 
@@ -139,9 +143,10 @@ SceneError GPUPrimitiveTriangle::ChangeTime(const const std::vector<SceneFileNod
 								sizeof(float), primitiveCount,
 								cudaMemcpyHostToDevice));
 	}
+	return e;
 }
 
-Vector2ui GPUPrimitiveTriangle::PrimitiveBatchRange(uint32_t surfaceDataId)
+Vector2ul GPUPrimitiveTriangle::PrimitiveBatchRange(uint32_t surfaceDataId)
 {
 	return batchRanges[surfaceDataId];
 }

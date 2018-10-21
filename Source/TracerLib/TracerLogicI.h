@@ -18,21 +18,15 @@ That interface is responsible for fetching
 
 #include "RayLib/Vector.h"
 #include "RayLib/Camera.h"
-#include "RayLib/SceneError.h"
 
-// Execution Related Abstraction
-class GPUBaseAcceleratorI;
-class GPUAcceleratorBatchI;
-class GPUMaterialBatchI;
-// Data Related Abstraction
-class GPUPrimitiveGroupI;
-class GPUAcceleratorGroupI;
-class GPUMaterialGroupI;
 // Common Memory
 class RayMemory;
 class RNGMemory;
 //
 struct TracerError;
+
+class GPUAccelratorBatchI;
+class GPUMaterialBatchI;
 
 using AcceleratorBatchMappings = std::map<uint32_t, GPUAcceleratorBatchI*>;
 using MaterialBatchMappings = std::map<uint32_t, GPUMaterialBatchI*>;
@@ -64,14 +58,18 @@ class TracerBaseLogicI
 		// Init
 		virtual TracerError								Initialize() = 0;		
 		
-
-		// Generate Camera Rays
+		// Generate camera rays
 		virtual void									GenerateCameraRays(RayMemory&, RNGMemory&,
 																		   const CameraPerspective& camera,
 																		   const uint32_t samplePerPixel,
 																		   const Vector2ui& resolution,
 																		   const Vector2ui& pixelStart,
 																		   const Vector2ui& pixelCount) = 0;
+		// Custom ray generation logic
+		virtual void									GenerateRays(RayMemory&, RNGMemory&,
+																	 const uint32_t rayCount) = 0;
+
+
 		
 		// Interface fetching for logic
 		virtual GPUBaseAcceleratorI*					BaseAcelerator() = 0;
@@ -91,23 +89,4 @@ class TracerBaseLogicI
 		virtual size_t									PerRayAuxDataSize() const = 0;
 		// Return mimimum size of an arbitrary struct which holds all hit results
 		virtual size_t									HitStructSize() const = 0;
-};
-
-
-class TracerLogicGeneratorI
-{
-	public:
-	virtual								~TracerLogicGeneratorI() = default;
-
-	// Logic Generators
-	virtual SceneError					GetPrimitiveGroup(GPUPrimitiveGroupI*&,
-														  const std::string& primitiveType) = 0;
-	virtual SceneError					GetAcceleratorGroup(GPUAcceleratorGroupI*&,
-															const GPUPrimitiveGroupI&,
-															const std::string& accelType) = 0;
-	virtual SceneError					GetMaterialGroup(GPUMaterialGroupI*&,
-														 const GPUPrimitiveGroupI&,
-														 const std::string& materialType) = 0;
-
-	virtual size_t						CurrentMinHitSize() const = 0;
 };

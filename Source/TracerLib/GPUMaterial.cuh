@@ -8,8 +8,8 @@ template <class TLogic, class PGroup, class MGroup>
 class GPUMaterialBatch final : public GPUMaterialBatchI
 {
 	public:
-		MGroup&								mGroup;
-		PGroup&								pGroup;
+		MGroup&								materialGroup;
+		PGroup&								primitiveGroup;
 
 	private:
 	protected:
@@ -19,12 +19,16 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
 											~GPUMaterialBatch() = default;
 
 		// Interface
-		void								ShadeRays(RayGMem* dRayOut,
+		void								ShadeRays(// Output
+													  RayGMem* dRayOut,
 													  void* dRayAuxOut,
 													  //  Input
 													  const RayGMem* dRayIn,
-													  const void* dHitStructs,
 													  const void* dRayAuxIn,
+													  const PrimitiveId* dPrimitiveIds,
+													  const HitStructPtr dHitStructs,
+													  //
+													  const HitKey* dMatIds,
 													  const RayId* dRayIds,
 
 													  const uint32_t rayCount,
@@ -39,37 +43,51 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
 													 const PGroup::PData&);
 };
 
-template <class TLogic, class PGroup, class MGroup>
-void GPUMaterialBatch<TLogic, PGroup, MGroup>::ShadeRays(RayGMem* dRayOut,
-														 void* dRayAuxOut,
-														 //  Input
-														 const RayGMem* dRayIn,
-														 const void* dHitStructs,
-														 const void* dRayAuxIn,
-														 const RayId* dRayIds,
+template <class T, class P, class M>
+void GPUMaterialBatch<T, P, M>::ShadeRays(// Output
+										  RayGMem* dRayOut,
+										  void* dRayAuxOut,
+										  //  Input
+										  const RayGMem* dRayIn,
+										  const void* dRayAuxIn,
+										  const PrimitiveId* dPrimitiveIds,
+										  const HitStructPtr dHitStructs,
+										  //
+										  const HitKey* dMatIds,
+										  const RayId* dRayIds,
 
-														 const uint32_t rayCount,
-														 RNGMemory& rngMem) const
+										  const uint32_t rayCount,
+										  RNGMemory& rngMem) const
 {	
-	// TODO: Delegate properly using gpuIds etc.
+	// TODO: Is there a better way to implement this
+	using PrimitiveData = typename P::PrimitiveData;
+	using MaterialData = typename M::MaterialData;
+	using RayAuxiliary = typename T::RayAuxiliary;
 
+	PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
+	MaterialData matData = MaterialDataAccessor::Data(materialGroup);
 
 	// Test
-	KCMaterialShade<TLogic,  PGroup, MGroup><<<1, 1>>>
+	KCMaterialShade<T, P, M>//<<<1, 1>>>
 	(
+		// Output
 		dRayOut,
-		dRayAuxOut,
-		// RayRelated
+		static_cast<RayAuxiliary*>(dRayAuxOut),
+		materialGroup.MaxOutRay(),
+		// Input
 		dRayIn,
+		static_cast<RayAuxiliary*>(dRayAuxIn),
+		dPrimitiveIds,
 		dHitStructs,
-		dRayAuxIn,
+		//
+		dMatIds,
 		dRayIds,
-		rayCount,
-		// RNG Related
+		//
+		rayCount,		
 		rngMem,
 		// Material Related
-		mGroup.Data(),
+		matData,
 		// Primitive Related
-		pGroup.Data()
+		primData
 	);
 }

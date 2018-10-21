@@ -15,9 +15,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MTracer", "MTracer\MTracer.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MRenderer", "MRenderer\MRenderer.vcxproj", "{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TracerSystems", "TracerSystems", "{2EAF14DD-D88F-42DE-A731-EA7901227CE1}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tracers", "Tracers", "{2EAF14DD-D88F-42DE-A731-EA7901227CE1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TracerLib", "TracerLib\TracerLib.vcxproj", "{A34190E5-275D-415A-A865-5CEB65B4BC7D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tracer-Test", "Tracer-Test\Tracer-Test.vcxproj", "{35A7DFF2-069C-46C6-8187-2E119A052C2F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,9 +55,16 @@ Global
 		{A34190E5-275D-415A-A865-5CEB65B4BC7D}.Debug|x64.Build.0 = Debug|x64
 		{A34190E5-275D-415A-A865-5CEB65B4BC7D}.Release|x64.ActiveCfg = Release|x64
 		{A34190E5-275D-415A-A865-5CEB65B4BC7D}.Release|x64.Build.0 = Release|x64
+		{35A7DFF2-069C-46C6-8187-2E119A052C2F}.Debug|x64.ActiveCfg = Debug|x64
+		{35A7DFF2-069C-46C6-8187-2E119A052C2F}.Debug|x64.Build.0 = Debug|x64
+		{35A7DFF2-069C-46C6-8187-2E119A052C2F}.Release|x64.ActiveCfg = Release|x64
+		{35A7DFF2-069C-46C6-8187-2E119A052C2F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{35A7DFF2-069C-46C6-8187-2E119A052C2F} = {2EAF14DD-D88F-42DE-A731-EA7901227CE1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B8FE119A-E48D-43CE-A3AF-C172D561FE1E}

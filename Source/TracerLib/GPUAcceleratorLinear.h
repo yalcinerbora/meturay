@@ -21,26 +21,32 @@ tree constructio would provide additional overhead.
 #include "RayLib/Constants.h"
 
 #include "GPUAcceleratorI.h"
+#include "GPUPrimitiveI.h"
 
-// This should be and array?
+// This should be an array?
 // Most of the time each accelerator will be constructred with a 
 // Singular primitive batch, it should be better to put size constraint
 //using SurfaceDataList = std::vector<uint32_t>;
 using SurfaceMaterialPairs = std::array<Vector2ui, SceneConstants::MaxSurfacePerAccelerator>;
 
-template <class GPUPrimitiveGroup>
-class GPUAcceleratorLinear final 
-	: public GPUAcceleratorGroupI
-	, public GPUAcceleratorBatchI
+class LinearAccelTypeName
 {
 	public:
-		using LeafStruct							= GPUPrimitiveGroup::LeafStruct;
+		static const std::string					TypeName;
+};
 
-	private:
+template <class PGroup>
+class GPUAccLinearGroup final 
+	: public GPUAcceleratorGroupI
+	, public LinearAccelTypeName
+{
+	public:
+		using LeafStruct							= PGroup::LeafStruct;
+
+	private:		
 		// From Tracer
-		const GPUPrimitiveGroup&					primitiveGroup;
-		const TransformStruct*						dInverseTransforms;
-			   		 
+		const PGroup&								primitiveGroup;
+		const TransformStruct*						dInverseTransforms;			   		 
 		// CPU Memory
 		std::map<uint32_t, SurfaceMaterialPairs>	acceleratorData;
 
@@ -53,11 +59,13 @@ class GPUAcceleratorLinear final
 
 	public:
 		// Constructors & Destructor
-										GPUAcceleratorLinear(const GPUPrimitiveGroup&,
-															 const TransformStruct*);
-										~GPUAcceleratorLinear() = default;
+										GPUAccLinearGroup(const PGroup&,
+														  const TransformStruct*);
+										~GPUAccLinearGroup() = default;
 
 		// Interface
+		// Type(as string) of the accelerator group
+		const std::string&				Type() const override;
 		// Loads required data to CPU cache for
 		SceneError						InitializeGroup(const std::map<uint32_t, HitKey>&,
 														// List of surface nodes
@@ -73,7 +81,26 @@ class GPUAcceleratorLinear final
 
 		size_t							UsedGPUMemory() const override;
 		size_t							UsedCPUMemory() const override;
+};
 
+template <class AGroup, class PGroup>
+class GPUAccLinearBatch 
+	: public GPUAcceleratorBatchI
+	, public LinearAccelTypeName
+{
+	private:
+		friend class					AGroup;
+		AGroup&							acceleratorGroup;
+		PGroup&							primitiveGroup;
+		
+	protected:
+	public:
+										GPUAccLinearBatch(const GPUAcceleratorGroupI&,
+														  const GPUPrimitiveGroupI&);
+										~GPUAccLinearBatch() = default;
+		// Type(as string) of the accelerator group
+		const std::string&				Type() const override;
+		
 		void							Hit(// O
 											HitKey* dMaterialKeys,
 											PrimitiveId* dPrimitiveIds,
@@ -89,10 +116,5 @@ class GPUAcceleratorLinear final
 		// Every MaterialBatch is available for a specific primitive / accelerator data
 		const GPUPrimitiveGroupI&		PrimitiveGroup() const override;
 		const GPUAcceleratorGroupI&		AcceleratorGroup() const override;
-
 };
-
-#include "GPULinearAccelerator.hpp"
-
-extern template class GPUAcceleratorLinear<GPUPrimitiveTriangle>;
-extern template class GPUAcceleratorLinear<GPUPrimitiveSphere>;
+#include "GPUAcceleratorLinear.hpp"

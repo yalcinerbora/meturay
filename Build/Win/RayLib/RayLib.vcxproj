@@ -143,14 +143,17 @@
     <ClInclude Include="..\..\..\Source\RayLib\Matrix.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Matrix.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\MayaCacheIO.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\ObjectFuncDefinitions.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Quaternion.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Quaternion.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\Ray.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Ray.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneError.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\SceneFileNode.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SelfDistributor.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\SharedLib.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceDataIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Texture.cuh" />
@@ -176,6 +179,7 @@
     <ClCompile Include="..\..\..\Source\RayLib\MDistributor.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SceneIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SelfDistributor.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\SharedLib.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\VisorWindowInput.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
   </ItemGroup>
