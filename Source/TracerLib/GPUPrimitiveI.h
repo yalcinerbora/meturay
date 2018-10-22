@@ -34,7 +34,7 @@ class GPUPrimitiveGroupI
 	
 		// Interface
 		// Type (as string) of the primitive group
-		virtual const std::string&							Type() const = 0;
+		virtual const char*									Type() const = 0;
 		// Allocates and Generates Data
 		virtual SceneError									InitializeGroup(const std::vector<SceneFileNode>& surfaceDatalNodes, double time) = 0;
 		virtual SceneError									ChangeTime(const std::vector<SceneFileNode>& surfaceDatalNodes, double time) = 0;

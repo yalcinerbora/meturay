@@ -9,10 +9,15 @@
     <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu">
       <Filter>Implementations</Filter>
     </CudaCompile>
+    <CudaCompile Include="Materials.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h">
       <Filter>Implementations</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cpp" />
   </ItemGroup>
 </Project>

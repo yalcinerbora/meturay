@@ -24,8 +24,9 @@
     <ClCompile Include="..\..\..\Source\TracerLib\RNGMemory.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerLoader.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\TracerLogic.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\TracerLogicGenerator.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\TracerLogicGenerator.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\TracerThread.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -37,19 +38,21 @@
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultTypeGenerators.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.hpp" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterial.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorP.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\FunctionEnablers.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveI.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\HitFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\HitStructs.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\LinearAcceleratorKernels.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinearKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ParallelReduction.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ParallelScan.cuh" />
@@ -66,7 +69,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLoader.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerDebug.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerI.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogic.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGenerator.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGeneratorI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicI.h" />

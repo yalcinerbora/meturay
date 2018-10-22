@@ -25,7 +25,8 @@ class RNGMemory;
 //
 struct TracerError;
 
-class GPUAccelratorBatchI;
+class GPUBaseAcceleratorI;
+class GPUAcceleratorBatchI;
 class GPUMaterialBatchI;
 
 using AcceleratorBatchMappings = std::map<uint32_t, GPUAcceleratorBatchI*>;

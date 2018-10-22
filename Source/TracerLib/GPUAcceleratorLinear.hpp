@@ -1,18 +1,17 @@
-#include "LinearAcceleratorKernels.cuh"
 
 template <class P>
-GPUAccLinearGroup<P>::GPUAccLinearGroup(const P& pGroup,
+GPUAccLinearGroup<P>::GPUAccLinearGroup(const GPUPrimitiveGroupI& pGroup,
 										const TransformStruct* dInvTransforms)
 	: dInverseTransforms(dInvTransforms)
-	, primitiveGroup(pGroup)
+	, primitiveGroup(static_cast<const P&>(pGroup))
 	, dLeafCounts(nullptr)
 	, dLeafList(nullptr)
 {}
 
 template <class P>
-const std::string& GPUAccLinearGroup<P>::Type() const
+const char* GPUAccLinearGroup<P>::Type() const
 {
-	return TypeName;
+	return TypeName.c_str();
 }
 
 template <class P>
@@ -65,17 +64,23 @@ size_t GPUAccLinearGroup<P>::UsedCPUMemory() const
 	return 0;
 }
 
+template <class P>
+const GPUPrimitiveGroupI& GPUAccLinearGroup<P>::PrimitiveGroup() const
+{
+	return primitiveGroup;
+}
+
 template<class A, class P>
-GPUAccLinearBatch<A, P>::GPUAccLinearBatch(GPUAcceleratorGroupI& a,
-										   GPUPrimitiveGroupI& p)
-	: acceleratorGroup(static_cast<A*>(a))
-	, primitiveGroup(static_cast<P*>(p))
+GPUAccLinearBatch<A, P>::GPUAccLinearBatch(const GPUAcceleratorGroupI& a,
+										   const GPUPrimitiveGroupI& p)
+	: acceleratorGroup(static_cast<const A&>(a))
+	, primitiveGroup(static_cast<const P&>(p))
 {}
 
 template<class A, class P>
-const std::string& GPUAccLinearBatch<A, P>::Type() const
+const char* GPUAccLinearBatch<A, P>::Type() const
 {
-	return TypeName;
+	return TypeName.c_str();
 }
 
 template<class A, class P>
@@ -95,7 +100,7 @@ void GPUAccLinearBatch<A, P>::Hit(// O
 	// TODO: Is there a better way to implement this
 	using PrimitiveData = typename P::PrimitiveData;
 	PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
-
+	
 	//TODO:.....
 	KCIntersectLinear<P><<<1,1>>>
 	(
@@ -111,9 +116,9 @@ void GPUAccLinearBatch<A, P>::Hit(// O
 		dAcceleratorKeys,
 		rayCount,
 		// Constants
-		dLeafList,
-		dLeafCounts,
-		dInverseTransforms,
+		acceleratorGroup.dLeafList,
+		acceleratorGroup.dLeafCounts,
+		acceleratorGroup.dInverseTransforms,
 		//								   								   
 		primData
 	);

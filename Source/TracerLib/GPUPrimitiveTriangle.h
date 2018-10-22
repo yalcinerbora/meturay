@@ -78,7 +78,7 @@ class GPUPrimitiveTriangle final : public GPUPrimitiveGroupI
 		static constexpr auto AABBGenFunc		= TriangleClosestHit;
 		static constexpr auto AreaGenFunc		= TriangleClosestHit;
 
-		static const std::string				TypeName;
+		static constexpr const char*			TypeName = "Triangle";
 
 	private:		
 		DeviceMemory							memory;
@@ -98,7 +98,7 @@ class GPUPrimitiveTriangle final : public GPUPrimitiveGroupI
 
 		// Interface
 		// Pirmitive type is used for delegating scene info to this class
-		const std::string&						Type() const override;
+		const char*								Type() const override;
 		// Allocates and Generates Data
 		SceneError								InitializeGroup(const std::vector<SceneFileNode>& surfaceDatalNodes, double time) override;
 		SceneError								ChangeTime(const std::vector<SceneFileNode>& surfaceDatalNodes, double time) override;

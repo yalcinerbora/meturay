@@ -23,22 +23,28 @@ tree constructio would provide additional overhead.
 #include "GPUAcceleratorI.h"
 #include "GPUPrimitiveI.h"
 
+#include "GPUAcceleratorLinearKC.cuh"
+
 // This should be an array?
 // Most of the time each accelerator will be constructred with a 
 // Singular primitive batch, it should be better to put size constraint
 //using SurfaceDataList = std::vector<uint32_t>;
 using SurfaceMaterialPairs = std::array<Vector2ui, SceneConstants::MaxSurfacePerAccelerator>;
 
+template<class PGroup>
 class LinearAccelTypeName
 {
 	public:
-		static const std::string					TypeName;
+		static const std::string TypeName;
 };
+
+template <class AGroup, class PGroup>
+class GPUAccLinearBatch;
 
 template <class PGroup>
 class GPUAccLinearGroup final 
 	: public GPUAcceleratorGroupI
-	, public LinearAccelTypeName
+	, public LinearAccelTypeName<PGroup>
 {
 	public:
 		using LeafStruct							= PGroup::LeafStruct;
@@ -53,19 +59,21 @@ class GPUAccLinearGroup final
 		// GPU Memory
 		DeviceMemory								memory;
 		const uint32_t*								dLeafCounts;
-		const LeafStruct**							dLeafList;
+		const LeafStruct**							dLeafList;	
+
+		friend class								GPUAccLinearBatch<GPUAccLinearGroup, PGroup>;
 
 	protected:
 
 	public:
 		// Constructors & Destructor
-										GPUAccLinearGroup(const PGroup&,
+										GPUAccLinearGroup(const GPUPrimitiveGroupI&,
 														  const TransformStruct*);
 										~GPUAccLinearGroup() = default;
 
 		// Interface
 		// Type(as string) of the accelerator group
-		const std::string&				Type() const override;
+		const char*						Type() const override;
 		// Loads required data to CPU cache for
 		SceneError						InitializeGroup(const std::map<uint32_t, HitKey>&,
 														// List of surface nodes
@@ -81,17 +89,20 @@ class GPUAccLinearGroup final
 
 		size_t							UsedGPUMemory() const override;
 		size_t							UsedCPUMemory() const override;
+		
+		const GPUPrimitiveGroupI&		PrimitiveGroup() const override;
+
+		
 };
 
 template <class AGroup, class PGroup>
 class GPUAccLinearBatch 
 	: public GPUAcceleratorBatchI
-	, public LinearAccelTypeName
+	, public LinearAccelTypeName<PGroup>
 {
-	private:
-		friend class					AGroup;
-		AGroup&							acceleratorGroup;
-		PGroup&							primitiveGroup;
+	private:		
+		const AGroup&					acceleratorGroup;
+		const PGroup&					primitiveGroup;
 		
 	protected:
 	public:
@@ -99,7 +110,7 @@ class GPUAccLinearBatch
 														  const GPUPrimitiveGroupI&);
 										~GPUAccLinearBatch() = default;
 		// Type(as string) of the accelerator group
-		const std::string&				Type() const override;
+		const char*						Type() const override;
 		
 		void							Hit(// O
 											HitKey* dMaterialKeys,

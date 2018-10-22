@@ -22,13 +22,13 @@ primitive data fetching etc.)
 
 #include <memory>
 #include "TracerLogicI.h"
-#include "TracerBase.h"
+#include "TracerLogicGeneratorI.h"
+#include "TracerI.h"
 #include "TracerThread.h"
 
-#include "RayLib/SharedLibLoader.h"
+#include "RayLib/SharedLib.h"
 
-using LogicInterfaces = std::pair<SharedLibPtr<TracerBaseLogicI>,
-								  SharedLibPtr<TracerLogicGeneratorI>>;
+using LogicInterface = SharedLibPtr<TracerLogicGeneratorI>;
 
 namespace TracerLoader
 {
@@ -41,20 +41,20 @@ namespace TracerLoader
 	// Load Tracer Logic From DLL
 	// Default named load
 	// This should be the usage for tracer
-	LogicInterfaces					LoadTracerLogic(SharedLib& s);
+	LogicInterface					LoadTracerLogic(SharedLib& s);
 
 	// Custom name load
 	// This is provided for test tracer
 	// Sine different test cases may need different tracer implementations
 	// This makes many different tracers to reside ona single dll
 	// This may be usefull
-	LogicInterfaces				LoadTracerLogic(SharedLib& s,
+	LogicInterface				LoadTracerLogic(SharedLib& s,
 												const char* baseConst,
 												const char* baseDest,
 												const char* logicConst,
 												const char* logicDest);
 
-	TracerThread				GenerateTracerThread(TracerBase&, 
+	TracerThread				GenerateTracerThread(TracerI&, 
 													 TracerBaseLogicI&, 
 													 uint32_t seed);
 }

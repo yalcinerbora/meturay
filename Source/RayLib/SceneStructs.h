@@ -7,7 +7,7 @@
 #include "SceneError.h"
 #include "Types.h"
 
-enum LightType
+enum class LightType
 {
 	POINT,
 	DIRECTIONAL,

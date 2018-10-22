@@ -80,7 +80,7 @@ class GPUPrimitiveSphere final : public GPUPrimitiveGroupI
 		static constexpr auto AABBGenFunc		= SphereClosestHit;
 		static constexpr auto AreaGenFunc		= SphereClosestHit;
 
-		static const std::string				TypeName;
+		static constexpr const char*			TypeName = "Sphere";
 
 	private:		
 		DeviceMemory							memory;
@@ -100,7 +100,7 @@ class GPUPrimitiveSphere final : public GPUPrimitiveGroupI
 
 		// Interface
 		// Pirmitive type is used for delegating scene info to this class
-		const std::string&						Type() const override;
+		const char*								Type() const override;
 		// Allocates and Generates Data
 		SceneError								InitializeGroup(const std::vector<SceneFileNode>& surfaceDatalNodes, double time) override;
 		SceneError								ChangeTime(const std::vector<SceneFileNode>& surfaceDatalNodes, double time) override;

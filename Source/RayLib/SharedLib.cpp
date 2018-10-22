@@ -70,13 +70,4 @@ SharedLib::~SharedLib()
 	#elif defined METURAY_LINUX
 		dlclose(libHandle);
 	#endif
-}template <class T>
-SharedLibPtr<T> SharedLib::GenerateObject(const std::string& mangledConstructorName,
-										  const std::string& mangledDestructorName)
-{
-	ObjGeneratorFunc genFunc = GetProcAdress(mangledConstructorName);
-	ObjDestroyerFunc destFunc = GetProcAdress(mangledDestructorName);
-
-	return std::make_unqiue()
-
 }

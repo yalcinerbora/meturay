@@ -13,8 +13,8 @@ with ustom Intersection and Hit
 
 #include "RayLib/SceneStructs.h"
 
-using HitKeyList = const std::array<HitKey, SceneConstants::MaxSurfacePerAccelerator>;
-using PrimitiveRangeList = const std::array<Vector2ul, SceneConstants::MaxSurfacePerAccelerator>;
+using HitKeyList = std::array<HitKey, SceneConstants::MaxSurfacePerAccelerator>;
+using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxSurfacePerAccelerator>;
 
 // Fundamental Construction Kernel
 template <class PGroup>
@@ -161,17 +161,17 @@ __global__ void KCIntersectLinear(// O
 }
 
 
-__global__ void KCIntersectBaseLinear(// I-O
-									  TransformId* gTransformIds,
-									  HitKey* gHitKeys,
-									  uint32_t* gPrevLoc,
-									  // Input
-									  const RayGMem* gRays,
-									  const RayId* gRayIds,
-									  const uint32_t rayCount,
+static __global__ void KCIntersectBaseLinear(// I-O
+											 TransformId* gTransformIds,
+											 HitKey* gHitKeys,
+											 uint32_t* gPrevLoc,
+											 // Input
+											 const RayGMem* gRays,
+											 const RayId* gRayIds,
+											 const uint32_t rayCount,
 
-									  // Constants
-									  const BaseLeaf* gKeys)
+											 // Constants
+											 const BaseLeaf* gKeys)
 {
 		// Grid Stride Loop
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;

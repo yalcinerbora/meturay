@@ -27,6 +27,7 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu" />
+    <CudaCompile Include="Materials.cu" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{35A7DFF2-069C-46C6-8187-2E119A052C2F}</ProjectGuid>

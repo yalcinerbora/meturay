@@ -2,7 +2,7 @@
 
 #include "GPUPrimitiveSphere.h"
 #include "GPUPrimitiveTriangle.h"
-#include "GPUAcceleratorLinear.h"
+#include "GPUAcceleratorLinear.cuh"
 
 #include "GPUMaterialI.h"
 
@@ -56,9 +56,6 @@ TracerLogicGenerator::TracerLogicGenerator()
 {
 	using namespace TypeGenWrappers;
 
-	const auto Deff = DefaultConstruct<GPUPrimitiveGroupI, GPUPrimitiveTriangle>;
-	const auto Destt = DefaultDestruct<GPUPrimitiveGroupI>;
-
 	// Primitive Defaults
 	primGroupGenerators.emplace(GPUPrimitiveTriangle::TypeName,
 								GPUPrimGroupGen(DefaultConstruct<GPUPrimitiveGroupI, GPUPrimitiveTriangle>,
@@ -66,9 +63,6 @@ TracerLogicGenerator::TracerLogicGenerator()
 	primGroupGenerators.emplace(GPUPrimitiveSphere::TypeName,
 								GPUPrimGroupGen(DefaultConstruct<GPUPrimitiveGroupI, GPUPrimitiveSphere>,
 												DefaultDestruct<GPUPrimitiveGroupI>));
-
-	........................................................
-	// Combine to gen names
 
 	// Accelerator Types
 	accelGroupGenerators.emplace(GPUAccTriLinearGroup::TypeName,
@@ -148,7 +142,7 @@ SceneError TracerLogicGenerator::GetMaterialGroup(GPUMaterialGroupI*& mg,
 
 		GPUMatGPtr ptr = loc->second();
 		mg = ptr.get();
-		accelGroups.emplace(materialType, std::move(ptr));
+		matGroups.emplace(materialType, std::move(ptr));
 	}
 	else mg = loc->second.get();
 	return SceneError::OK;
@@ -158,7 +152,7 @@ SceneError TracerLogicGenerator::GetAcceleratorBatch(GPUAcceleratorBatchI*& ab,
 													 const GPUAcceleratorGroupI& ag,
 													 const GPUPrimitiveGroupI& pg)
 {
-	const std::string& batchType = ag.Type();
+	const std::string batchType = std::string(ag.Type()) + pg.Type();
 
 	auto loc = accelBatches.find(batchType);
 	if(loc == accelBatches.end())
@@ -170,7 +164,7 @@ SceneError TracerLogicGenerator::GetAcceleratorBatch(GPUAcceleratorBatchI*& ab,
 
 		GPUAccelBPtr ptr = loc->second(ag, pg);
 		ab = ptr.get();
-		accelGroups.emplace(batchType, std::move(ptr));
+		accelBatches.emplace(batchType, std::move(ptr));
 	}
 	else ab = loc->second.get();
 	return SceneError::OK;
@@ -180,7 +174,7 @@ SceneError TracerLogicGenerator::GetMaterialBatch(GPUMaterialBatchI*& mb,
 												  const GPUMaterialGroupI& mg,
 												  const GPUPrimitiveGroupI& pg)
 {
-	const std::string& batchType = mg.Type();
+	const std::string batchType = std::string(mg.Type()) + pg.Type();
 
 	auto loc = matBatches.find(batchType);
 	if(loc == matBatches.end())
@@ -192,7 +186,7 @@ SceneError TracerLogicGenerator::GetMaterialBatch(GPUMaterialBatchI*& mb,
 
 		GPUMatBPtr ptr = loc->second(mg, pg);
 		mb = ptr.get();
-		accelGroups.emplace(batchType, std::move(ptr));
+		matBatches.emplace(batchType, std::move(ptr));
 	}
 	else mb = loc->second.get();
 	return SceneError::OK;
