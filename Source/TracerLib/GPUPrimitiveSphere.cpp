@@ -5,15 +5,13 @@
 #include "RayLib/SceneError.h"
 #include "RayLib/SceneFileNode.h"
 
-const std::string GPUPrimitiveSphere::TypeName = "Sphere";
-
 // Generics
 GPUPrimitiveSphere::GPUPrimitiveSphere()
 	: dData{nullptr}
 	, totalPrimitiveCount(0)
 {}
 
-const std::string& GPUPrimitiveSphere::Type() const
+const char* GPUPrimitiveSphere::Type() const
 {
 	return TypeName;
 }

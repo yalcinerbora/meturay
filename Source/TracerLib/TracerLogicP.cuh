@@ -12,12 +12,12 @@ template<class RayAuxStruct>
 class TracerBaseLogic : public TracerBaseLogicI
 {
 	public:
-		using RayAux						= RayAuxType;
+		using RayAux						= RayAuxStruct;
 
-		static __device__ void				AuxInitEmpty(const RayAuxGMem*,
+		static __device__ void				AuxInitEmpty(const RayAux*,
 														 const uint32_t writeLoc,
 														 // Input
-														 const RayAuxStruct,
+														 const RayAux,
 														 // Index
 														 const Vector2ui& globalPixelId,
 														 const Vector2ui& localSampleId,
@@ -28,7 +28,7 @@ class TracerBaseLogic : public TracerBaseLogicI
 		ShadeOpts							optsShade;
 		const TracerOptions					options;
 		//
-		const RayAuxStruct					initalValues;
+		const RayAux						initalValues;
 		// Mappings for Kernel Calls (A.K.A. Batches)
 		const GPUBaseAcceleratorI*			baseAccelerator;
 		const AcceleratorBatchMappings&		accelerators;

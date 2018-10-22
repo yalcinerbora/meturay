@@ -5,15 +5,13 @@
 #include "RayLib/SceneError.h"
 #include "RayLib/SceneFileNode.h"
 
-const std::string GPUPrimitiveTriangle::TypeName = "Triangle";
-
 // Generics
 GPUPrimitiveTriangle::GPUPrimitiveTriangle()
 	: dData{ nullptr, nullptr}
 	, totalPrimitiveCount(0)
 {}
 
-const std::string& GPUPrimitiveTriangle::Type() const
+const char* GPUPrimitiveTriangle::Type() const
 {	
 	return TypeName;
 }

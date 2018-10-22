@@ -1,6 +1,6 @@
 #include "TracerLoader.h"
 
-LogicInterfaces TracerLoader::LoadTracerLogic(SharedLib& s)
+LogicInterface TracerLoader::LoadTracerLogic(SharedLib& s)
 {
 	return LoadTracerLogic(s,
 						   BaseInterfaceConstructorName,
@@ -9,21 +9,20 @@ LogicInterfaces TracerLoader::LoadTracerLogic(SharedLib& s)
 						   LogicInterfaceDestructorName);
 }
 
-LogicInterfaces TracerLoader::LoadTracerLogic(SharedLib& s,
-											  const char* baseConst,
-											  const char* baseDest,
-											  const char* logicConst,
-											  const char* logicDest)
+LogicInterface TracerLoader::LoadTracerLogic(SharedLib& s,
+											 const char* baseConst,
+											 const char* baseDest,
+											 const char* logicConst,
+											 const char* logicDest)
 {
-	// Load DLL
-	SharedLibPtr<TracerBaseLogicI> baseLogic = s.GenerateObject<TracerBaseLogicI>(baseConst, baseDest);
+	// Load DLL	
 	SharedLibPtr<TracerLogicGeneratorI> logicGen = s.GenerateObject<TracerLogicGeneratorI>(logicConst,
 																						   logicDest);
 
-	return std::make_pair(baseLogic, logicGen);
+	return logicGen;
 }
 
-TracerThread TracerLoader::GenerateTracerThread(TracerBase& base, 
+TracerThread TracerLoader::GenerateTracerThread(TracerI& base, 
 												TracerBaseLogicI& logic,
 												uint32_t seed)
 {

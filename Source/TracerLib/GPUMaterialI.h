@@ -28,7 +28,7 @@ class GPUMaterialGroupI
 
 		// Interface
 		// Type (as string) of the primitive group
-		virtual const std::string&			Type() const = 0;
+		virtual const char*					Type() const = 0;
 		// Allocates and Generates Data
 		virtual SceneError					InitializeGroup(const std::vector<SceneFileNode>& materialNodes, double time) = 0;
 		virtual SceneError					ChangeTime(const std::vector<SceneFileNode>& materialNodes, double time) = 0;
@@ -57,9 +57,8 @@ class GPUMaterialBatchI
 		virtual								~GPUMaterialBatchI() = default;
 
 		// Interface
-		// Interface
 		// Type (as string) of the primitive group
-		virtual const std::string&			Type() const = 0;
+		virtual const char*					Type() const = 0;
 		// Kernel Call
 		virtual void						ShadeRays(// Output
 													  RayGMem* dRayOut,
@@ -77,8 +76,19 @@ class GPUMaterialBatchI
 													  RNGMemory& rngMem) const = 0;
 
 		// Every MaterialBatch is available for a specific primitive / material data
-		virtual const GPUPrimitiveGroupI&	PrimitiveGroup() const = 0;
-		virtual const GPUMaterialGroupI&	MaterialGroup() const = 0;
+		virtual const GPUPrimitiveGroupI&				PrimitiveGroup() const = 0;
+		virtual const GPUMaterialGroupI&				MaterialGroup() const = 0;
 
-		virtual uint8_t						MaxOutRayPerRay() const = 0;
+		virtual uint8_t									MaxOutRayPerRay() const = 0;
+};
+
+struct MatDataAccessor
+{
+	// Data fetch function of the material
+	// This struct should contain all necessary data required for kernel calls
+	// related to this material
+	// I dont know any design pattern for converting from static polymorphism
+	// to dynamic one. This is my solution (it is quite werid)
+	template<class GPUMaterialGroup>
+	static typename  GPUMaterialGroup::MaterialData		Data(const GPUMaterialGroup&);
 };

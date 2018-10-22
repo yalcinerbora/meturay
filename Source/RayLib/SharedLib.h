@@ -41,8 +41,8 @@ template <class T>
 SharedLibPtr<T> SharedLib::GenerateObject(const std::string& mangledConstructorName,
 										  const std::string& mangledDestructorName)
 {
-	ObjGeneratorFunc<T> genFunc = GetProcAdress(mangledConstructorName);
-	ObjDestroyerFunc<T> destFunc = GetProcAdress(mangledDestructorName);
+	ObjGeneratorFunc<T> genFunc = static_cast<ObjGeneratorFunc<T>>(GetProcAdressInternal(mangledConstructorName));
+	ObjDestroyerFunc<T> destFunc = static_cast<ObjDestroyerFunc<T>>(GetProcAdressInternal(mangledDestructorName));
 
-	return std::make_unqiue(ObjGeneratorFunc(), *destFunc);
+	return SharedLibPtr<T>(genFunc(), *destFunc);
 }

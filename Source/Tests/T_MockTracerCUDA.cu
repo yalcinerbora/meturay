@@ -18,8 +18,6 @@ using namespace std::chrono_literals;
 
 #include "TracerLib/CameraKernels.cuh"
 
-
-#include "TracerLib/GPUMaterial.cuh"
 #include "TracerLib/TracerLoader.h"
 
 struct RayAuxGMem {};
@@ -48,7 +46,10 @@ class MockTracerLogic : public TracerBaseLogicI
 				// Constructors & Destructor
 									BaseAcceleratorMock(MockTracerLogic& r) : mockLogic(r) {}
 									~BaseAcceleratorMock() = default;
-
+				
+				// Type(as string) of the accelerator group
+				const char*			Type() const override { return "MockBaseAccel"; }
+				// KC
 				void				Hit(// Output
 										TransformId* dTransformIds,
 										HitKey* dAcceleratorKeys,
@@ -74,7 +75,9 @@ class MockTracerLogic : public TracerBaseLogicI
 													: mockLogic(r), myKey(myKey)  {}
 												~AcceleratorMock() = default;
 
-				
+				// Type(as string) of the accelerator group
+				const char*						Type() const override { return "MockAccelBatch"; }
+				// KC
 				void							Hit(// O
 													HitKey* dMaterialKeys,
 													PrimitiveId* dPrimitiveIds,
@@ -105,6 +108,9 @@ class MockTracerLogic : public TracerBaseLogicI
 												, isMissMaterial(missMat) {}
 											~MaterialMock() = default;
 
+				// Type(as string) of the accelerator group
+				const char*					Type() const override { return "MockMatBatch"; }
+				// KC
 				void						ShadeRays(// Output
 													  RayGMem* dRayOut,
 													  void* dRayAuxOut,
@@ -173,6 +179,9 @@ class MockTracerLogic : public TracerBaseLogicI
 																	   const Vector2ui& resolution,
 																	   const Vector2ui& pixelStart,
 																	   const Vector2ui& pixelCount) override;
+		void										GenerateRays(RayMemory&, RNGMemory&,
+																 const uint32_t rayCount) override;
+
 		
 
 		// Interface fetching for logic
@@ -367,6 +376,7 @@ TracerError MockTracerLogic::Initialize()
 	return TracerError::OK;
 }
 
+
 void MockTracerLogic::GenerateCameraRays(RayMemory& rMem,
 										 RNGMemory& rngMemory,
 										 const CameraPerspective& camera,
@@ -395,6 +405,10 @@ void MockTracerLogic::GenerateCameraRays(RayMemory& rMem,
 						 rAuxBase);
 	// We do not use this actual data but w/e
 }
+
+void MockTracerLogic::GenerateRays(RayMemory&, RNGMemory&,
+								   const uint32_t rayCount)
+{}
 
 MockTracerLogic::MockTracerLogic(uint32_t seed)
 	: seed(seed)

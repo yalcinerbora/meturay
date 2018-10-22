@@ -43,7 +43,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 									TracerLogicGenerator();
 									TracerLogicGenerator(const TracerLogicGenerator&) = delete;
 		TracerLogicGenerator&		operator=(const TracerLogicGenerator&) = delete;
-									TracerLogicGenerator() = default;
+									~TracerLogicGenerator() = default;
 
 		// Groups
 		SceneError					GetPrimitiveGroup(GPUPrimitiveGroupI*&,
