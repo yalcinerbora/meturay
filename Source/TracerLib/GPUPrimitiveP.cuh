@@ -13,56 +13,34 @@ proper for combined templates
 #include "GPUPrimitiveI.h"
 #include "AcceleratorDeviceFunctions.h"
 
-template<class T, std::enable_if_t<std::is_function_v<T::AcceptFunc> &&
-				  std::is_function_v<T::GenLeafFunc> &&
-				  (sizeof(T) > 0)>>
-struct is_valid_primitive_group//<T>
-	: std::true_type
-{};
-
-
 template <class T, template <class> class... Ps>
 constexpr bool satisfies_all_v = std::conjunction<Ps<T>...>::value;
 
-//template <class PrimitiveData, class HitStruct, class LeafStruct,
-//Func, Func, Func>
-//class GPUPrimitiveGroup : public GPUPrimitiveGroupI
-//{
-//	public:	
-//	   	// Type Definitions for kernel generations
-//		using PrimitiveData						= PrimitiveData;
-//		using HitReg							= HitStruct;
-//		using LeafStruct						= LeafStruct;
-//		static constexpr auto AcceptFunc		= TriangleClosestHit;
-//		static constexpr auto GenLeafFunc		= GenerateLeaf<PrimitiveData>;
-//		// 
-//		static constexpr auto AABBGenFunc		= TriangleClosestHit;
-//		static constexpr auto AreaGenFunc		= TriangleClosestHit;
-//		
-//	private:
-//		__device__ __host__
-//		static HitResult TriangleClosestHit(// Output
-//											HitKey& newMat,
-//											PrimitiveId& newPrimitive,
-//											TriangleHit& newHit,
-//											// I-O
-//											RayReg& rayData,
-//											// Input
-//											const TriData& primData,
-//											const DefaultLeaf& leaf);
-//
-//		__device__ __host__
-//		static LeafStruct GenerateLeaf(const HitKey matId,
-//									   const PrimitiveId primitiveId,
-//									   const PrimData& primData);
-//
-//		stat
-//		__device__ __host__
-//
-//	protected:
-//		PrimitiveData					dData = PrimitiveData{};
-//
-//	public:
-//										GPUPrimitiveGroup() = default;
-//										~GPUPrimitiveGroup() = default;
-//};
+template <class HitData, class PrimitiveData, class LeafData,
+		  AcceptHitFunction<HitData, PrimitiveData, LeafData> HitFunc,
+		  LeafGenFunction<PrimitiveData, LeafData> LeafFunc,
+		  BoxGenFunction<PrimitiveData> BoxFunc,
+		  AreaGenFunction<PrimitiveData> AreaFunc>
+class GPUPrimitiveGroup : public GPUPrimitiveGroupI
+{
+	public:	
+	   	// Type Definitions for kernel generations
+		using PrimitiveData						= PrimitiveData;
+		using HitData							= HitData;
+		using LeafStruct						= LeafStruct;
+		// Function Definitions
+		// Used by accelerator definitions etc.
+		static constexpr auto HitFunc			= HitFunc;
+		static constexpr auto LeafFunc			= LeafFunc;		
+		static constexpr auto BoxFunc			= BoxFunc;
+		static constexpr auto AreaFunc			= AreaFunc;
+		
+	private:
+	protected:
+		PrimitiveData					dData = PrimitiveData{};
+
+	public:
+		// Constructors & Destructor
+										GPUPrimitiveGroup() = default;
+		virtual							~GPUPrimitiveGroup() = default;
+};

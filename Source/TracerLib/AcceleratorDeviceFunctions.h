@@ -23,22 +23,27 @@ struct BaseLeaf { uint64_t accKey; TransformId transformId; };
 //
 // PrimitiveData struct holds the array of the primitive data
 // (normal, position etc..)
-template <class Hit, class LeafStruct, class PrimitiveData>
-HitResult AcceptHitFunction(// Output
-							HitKey&,
-							PrimitiveId&,
-							Hit&,
-							// I-O
-							RayReg& r,
-							// Input
-							const LeafStruct& data,
-							const PrimitiveData& gPrimData);
+template <class HitData, class PrimitiveData, class LeafData>
+using AcceptHitFunction = HitResult(*)(// Output
+									   HitKey&,
+									   PrimitiveId&,
+									   HitData&,
+									   // I-O
+									   RayReg& r,
+									   // Input
+									   const LeafData& data,
+									   const PrimitiveData& gPrimData);
+
+template <class PrimitiveData, class LeafData>
+using LeafGenFunction = LeafData(*)(const HitKey matId,
+									const PrimitiveId primitiveId,
+									const PrimitiveData& primData);
 
 // Custom bounding box generation function
 // For primitive
 template <class PrimitiveData>
-using BoxGenFunc = AABB3f(*)(PrimitiveId primitiveId, const PrimitiveData&);
+using BoxGenFunction = AABB3f(*)(PrimitiveId primitiveId, const PrimitiveData&);
 
 // Surface area generation function for bound hierarcy generation
 template <class PrimitiveData>
-using AreaGenFunc = float(*)(PrimitiveId primitiveId, const PrimitiveData&);
+using AreaGenFunction = float(*)(PrimitiveId primitiveId, const PrimitiveData&);

@@ -70,7 +70,7 @@ class GPUPrimitiveTriangle final : public GPUPrimitiveGroupI
 	public:	
 	   	// Type Definitions for kernel generations
 		using PrimitiveData						= TriData;
-		using HitReg							= TriangleHit;
+		using HitData							= TriangleHit;
 		using LeafStruct						= DefaultLeaf;
 		static constexpr auto AcceptFunc		= TriangleClosestHit;
 		static constexpr auto GenLeafFunc		= GenerateLeaf<PrimitiveData>;

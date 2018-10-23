@@ -90,7 +90,7 @@ class GPUAccLinearGroup final
 		size_t							UsedGPUMemory() const override;
 		size_t							UsedCPUMemory() const override;
 		
-		const GPUPrimitiveGroupI&		PrimitiveGroup() const override;
+		/*const GPUPrimitiveGroupI&		PrimitiveGroup() const override;*/
 
 		
 };
