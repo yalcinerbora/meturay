@@ -20,7 +20,7 @@ tree constructio would provide additional overhead.
 #include "RayLib/Vector.h"
 #include "RayLib/Constants.h"
 
-#include "GPUAcceleratorI.h"
+#include "GPUAcceleratorP.cuh"
 #include "GPUPrimitiveI.h"
 
 #include "GPUAcceleratorLinearKC.cuh"
@@ -38,31 +38,28 @@ class LinearAccelTypeName
 		static const std::string TypeName;
 };
 
-template <class AGroup, class PGroup>
+template<class PGroup>
 class GPUAccLinearBatch;
 
 template <class PGroup>
 class GPUAccLinearGroup final 
-	: public GPUAcceleratorGroupI
+	: public GPUAcceleratorGroup<PGroup>
 	, public LinearAccelTypeName<PGroup>
 {
 	public:
-		using LeafStruct							= PGroup::LeafStruct;
+		using LeafData								= PGroup::LeafData;
 
 	private:		
-		// From Tracer
-		const PGroup&								primitiveGroup;
-		const TransformStruct*						dInverseTransforms;			   		 
 		// CPU Memory
 		std::map<uint32_t, SurfaceMaterialPairs>	acceleratorData;
 
 		// GPU Memory
 		DeviceMemory								memory;
 		const uint32_t*								dLeafCounts;
-		const LeafStruct**							dLeafList;	
+		const LeafData**							dLeafList;	
 
-		friend class								GPUAccLinearBatch<GPUAccLinearGroup, PGroup>;
-
+		friend class								GPUAccLinearBatch<PGroup>;
+		
 	protected:
 
 	public:
@@ -88,44 +85,36 @@ class GPUAccLinearGroup final
 		 void							DestroyAccelerators(const std::vector<uint32_t>& surfaces) override;
 
 		size_t							UsedGPUMemory() const override;
-		size_t							UsedCPUMemory() const override;
-		
-		/*const GPUPrimitiveGroupI&		PrimitiveGroup() const override;*/
-
-		
+		size_t							UsedCPUMemory() const override;		
 };
 
-template <class AGroup, class PGroup>
-class GPUAccLinearBatch 
-	: public GPUAcceleratorBatchI
+
+template<class PGroup>
+class GPUAccLinearBatch final
+	: public GPUAcceleratorBatch<GPUAccLinearGroup<PGroup>, PGroup>
 	, public LinearAccelTypeName<PGroup>
 {
-	private:		
-		const AGroup&					acceleratorGroup;
-		const PGroup&					primitiveGroup;
-		
-	protected:
 	public:
-										GPUAccLinearBatch(const GPUAcceleratorGroupI&,
-														  const GPUPrimitiveGroupI&);
-										~GPUAccLinearBatch() = default;
-		// Type(as string) of the accelerator group
-		const char*						Type() const override;
-		
-		void							Hit(// O
-											HitKey* dMaterialKeys,
-											PrimitiveId* dPrimitiveIds,
-											HitStructPtr dHitStructs,
-											// I-O													
-											RayGMem* dRays,
-											// Input
-											const TransformId* dTransformIds,
-											const RayId* dRayIds,
-											const HitKey* dAcceleratorKeys,
-											const uint32_t rayCount) const override;
+		// Constructors & Destructor
+							GPUAccLinearBatch(const GPUAcceleratorGroupI&,
+											  const GPUPrimitiveGroupI&);
+							~GPUAccLinearBatch() = default;
 
-		// Every MaterialBatch is available for a specific primitive / accelerator data
-		const GPUPrimitiveGroupI&		PrimitiveGroup() const override;
-		const GPUAcceleratorGroupI&		AcceleratorGroup() const override;
+		// Interface
+		// Type(as string) of the accelerator group
+		const char*			Type() const override;
+		// Kernel Logic
+		void				Hit(// O
+								HitKey* dMaterialKeys,
+								PrimitiveId* dPrimitiveIds,
+								HitStructPtr dHitStructs,
+								// I-O													
+								RayGMem* dRays,
+								// Input
+								const TransformId* dTransformIds,
+								const RayId* dRayIds,
+								const HitKey* dAcceleratorKeys,
+								const uint32_t rayCount) const override;
 };
+
 #include "GPUAcceleratorLinear.hpp"

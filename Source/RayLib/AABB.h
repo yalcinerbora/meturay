@@ -22,6 +22,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
 		Vector<N, T> min;
 		Vector<N, T> max;
 
+	protected:
+	public:
 		// Constructors & Destructor
 		constexpr									AABB() = default;
 		__device__ __host__							AABB(const Vector<N, T>& min,

@@ -9,19 +9,15 @@
 // Default Generations
 extern template class GPUAccLinearGroup<GPUPrimitiveTriangle>;
 extern template class GPUAccLinearGroup<GPUPrimitiveSphere>;
-extern template class GPUAccLinearBatch<GPUPrimitiveTriangle,
-										GPUAccLinearGroup<GPUPrimitiveTriangle>>;
-extern template class GPUAccLinearBatch<GPUPrimitiveSphere,
-										GPUAccLinearGroup<GPUPrimitiveSphere>>;
+extern template class GPUAcceleratorBatch<GPUAccLinearGroup<GPUPrimitiveTriangle>, GPUPrimitiveTriangle>;
+extern template class GPUAcceleratorBatch<GPUAccLinearGroup<GPUPrimitiveSphere>, GPUPrimitiveSphere>;
 
 // Typedefs for ease of read
 using GPUAccTriLinearGroup = GPUAccLinearGroup<GPUPrimitiveTriangle>;
 using GPUAccSphrLinearGroup = GPUAccLinearGroup<GPUPrimitiveSphere>;
 
-using GPUAccTriLinearBatch = GPUAccLinearBatch<GPUPrimitiveTriangle,
-											   GPUAccLinearGroup<GPUPrimitiveTriangle>>;
-using GPUAccSphrLinearBatch = GPUAccLinearBatch<GPUPrimitiveSphere,
-												GPUAccLinearGroup<GPUPrimitiveSphere>>;
+using GPUAccTriLinearBatch = GPUAccLinearBatch<GPUPrimitiveTriangle>;
+using GPUAccSphrLinearBatch = GPUAccLinearBatch<GPUPrimitiveSphere>;
 
 // Some Instantiations
 // Constructors

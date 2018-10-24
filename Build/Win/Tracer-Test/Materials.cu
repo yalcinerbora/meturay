@@ -7,12 +7,13 @@
 #include "TracerLib/TracerLogicP.cuh"
 
 
-// Materials
-GPUMaterialGroup<>;
-
-
-
-
-
-
-GPUMaterialBatch<GPUPrimitiveTriangle,
+//// Materials
+//GPUMaterialGroup<>;
+//
+//
+//
+//
+//
+//
+//GPUMaterialBatch<GPUPrimitiveTriangle,
+//

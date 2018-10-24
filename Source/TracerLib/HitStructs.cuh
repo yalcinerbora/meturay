@@ -29,10 +29,13 @@ struct HitStructPtr
 		template<class T>
 		__device__ __host__
 		T& Ref(int i) { return *reinterpret_cast<T*>(dPtr + combinedSize * i); }
-
 		template<class T>
 		__device__ __host__
-		const T& operator[](int i) const { return *reinterpret_cast<const T&>(dPtr + combinedSize * i); }
+		const T& Ref(int i) const { return *reinterpret_cast<T*>(dPtr + combinedSize * i); }
+
+		//template<class T>
+		//__device__ __host__
+		//const T& operator[](int i) const { return *reinterpret_cast<const T&>(dPtr + combinedSize * i); }
 };
 
 template <class T, uint32_t BatchBits, uint32_t IdBits>

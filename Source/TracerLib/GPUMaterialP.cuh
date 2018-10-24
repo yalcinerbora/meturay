@@ -4,16 +4,16 @@
 #include "MaterialKernels.cuh"
 
 // Partial Implementations
-template <class TLogic, class MaterialData, class Surface,
-	ShadeFunc<TLogic, Surface, MaterialData> ShadeFunction>
+template <class TLogic, class MaterialD, class SurfaceD,
+		  ShadeFunc<TLogic, SurfaceD, MaterialD> ShadeF>
 class GPUMaterialGroup : public GPUMaterialGroupI
 {
 	public:
 		// Types from 
-		using MaterialData				= typename MaterialData;
-		using Surface					= typename Surface;
+		using MaterialData				= typename MaterialD;
+		using Surface					= typename SurfaceD;
 
-		static const auto ShadeFunc		= ShadeFunction;
+		static const auto ShadeFunc		= ShadeF;
 
 	private:
 
@@ -27,11 +27,11 @@ class GPUMaterialGroup : public GPUMaterialGroupI
 };
 
 template <class TLogic, class MGroup, class PGroup,
-		  SurfaceFunc<MGroup, PGroup> SurfaceFunc>
+		  SurfaceFunc<MGroup, PGroup> SurfaceF>
 class GPUMaterialBatch : public GPUMaterialBatchI
 {
 	public:
-		static constexpr auto SurfFunc		= SurfaceFunc;
+		//static constexpr auto SurfFunc		= SurfaceF;
 
 	private:
 		const MGroup&						materialGroup;
@@ -60,45 +60,48 @@ class GPUMaterialBatch : public GPUMaterialBatchI
 													  //
 													  const uint32_t rayCount,
 													  RNGMemory& rngMem) const override;
-
 	
-		const GPUPrimitiveGroupI&			PrimitiveGroup() const override { return pGroup; }
-		const GPUMaterialGroupI&			MaterialGroup() const override { return mGroup; }
+		const GPUPrimitiveGroupI&			PrimitiveGroup() const override;
+		const GPUMaterialGroupI&			MaterialGroup() const override;
 };
 
-template <class T, class M, class P, SurfaceFunc<M, P> SF>
-GPUMaterialBatch<T, M, P, SF>::GPUMaterialBatch(const GPUMaterialGroupI& m,
+//template <class T, class M, class P, SurfaceFunc<M, P> SF>
+template <class TLogic, class MGroup, class PGroup,
+		  SurfaceFunc<MGroup, PGroup> SurfaceF>
+GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::GPUMaterialBatch(const GPUMaterialGroupI& m,
 												const GPUPrimitiveGroupI& p)
-	: materialGroup(static_cast<const M&>(m))
-	, primitiveGroup(static_cast<const P&>(p))
+	: materialGroup(static_cast<const MGroup&>(m))
+	, primitiveGroup(static_cast<const PGroup&>(p))
 {}
 
-template <class T, class M, class P, SurfaceFunc<M, P> SF>
-void GPUMaterialBatch<T, M, P, SF>::ShadeRays(// Output
-											  RayGMem* dRayOut,
-											  void* dRayAuxOut,
-											  //  Input
-											  const RayGMem* dRayIn,
-											  const void* dRayAuxIn,
-											  const PrimitiveId* dPrimitiveIds,
-											  const HitStructPtr dHitStructs,
-											  //
-											  const HitKey* dMatIds,
-											  const RayId* dRayIds,
+template <class TLogic, class MGroup, class PGroup,
+		  SurfaceFunc<MGroup, PGroup> SurfaceF>
+void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
+																   RayGMem* dRayOut,
+																   void* dRayAuxOut,
+																   //  Input
+																   const RayGMem* dRayIn,
+																   const void* dRayAuxIn,
+																   const PrimitiveId* dPrimitiveIds,
+																   const HitStructPtr dHitStructs,
+																   //
+																   const HitKey* dMatIds,
+																   const RayId* dRayIds,
 
-											  const uint32_t rayCount,
-											  RNGMemory& rngMem) const
+																   const uint32_t rayCount,
+																   RNGMemory& rngMem) const
 {	
-	using PrimitiveData = typename P::PrimitiveData;
-	using MaterialData = typename M::MaterialData;
-	using RayAuxiliary = typename T::RayAuxiliary;
+	using PrimitiveData = typename PGroup::PrimitiveData;
+	using MaterialData = typename MGroup::MaterialData;
+	using RayAuxiliary = typename TLogic::RayAuxiliary;
 	
 	// TODO: Is there a better way to implement this
 	PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
 	MaterialData matData = MatDataAccessor::Data(materialGroup);
 
 	// Test
-	KCMaterialShade<T, M, P, decltype(*this)>>//<<<1, 1>>>
+	KCMaterialShade<TLogic, MGroup, PGroup, 
+					GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>><<<1, 1>>>
 	(
 		// Output
 		dRayOut,
@@ -122,14 +125,16 @@ void GPUMaterialBatch<T, M, P, SF>::ShadeRays(// Output
 	);
 }
 
-template <class T, class M, class P, SurfaceFunc<M, P> SF>
-const GPUPrimitiveGroupI& GPUMaterialBatch<T, M, P, SF>::PrimitiveGroup() const
+template <class TLogic, class MGroup, class PGroup,
+		  SurfaceFunc<MGroup, PGroup> SurfaceF>
+const GPUPrimitiveGroupI& GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::PrimitiveGroup() const
 { 
 	return pGroup;
 }
 
-template <class T, class M, class P, SurfaceFunc<M, P> SF>
-const GPUMaterialGroupI& GPUMaterialBatch<T, M, P, SF>::MaterialGroup() const
+template <class TLogic, class MGroup, class PGroup,
+		  SurfaceFunc<MGroup, PGroup> SurfaceF>
+const GPUMaterialGroupI& GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::MaterialGroup() const
 {
 	return mGroup;
 }

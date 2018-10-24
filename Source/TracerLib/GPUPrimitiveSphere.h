@@ -14,9 +14,8 @@ All of them should be provided
 #include <map>
 #include <type_traits>
 
-#include "GPUPrimitiveI.h"
 #include "DefaultLeaf.h"
-#include "AcceleratorDeviceFunctions.h"
+#include "GPUPrimitiveP.cuh"
 
 #include "RayLib/DeviceMemory.h"
 #include "RayLib/Vector.h"
@@ -38,9 +37,9 @@ inline HitResult SphereClosestHit(// Output
 								  SphereHit& newHit,
 								  // I-O
 								  RayReg& rayData,
-								  // Input
-								  const SphereData& primData,
-								  const DefaultLeaf& leaf)
+								  // Input								  
+								  const DefaultLeaf& leaf,
+								  const SphereData& primData)
 {
 	// Get Packed data and unpack
 	Vector4f data = primData.centersRadius[leaf.primitiveId];
@@ -67,32 +66,44 @@ inline HitResult SphereClosestHit(// Output
 	return HitResult{false, closerHit};
 }
 
-class GPUPrimitiveSphere final : public GPUPrimitiveGroupI
+__device__ __host__
+inline AABB3f GenerateAABBTriangle(PrimitiveId primitiveId, const SphereData& primData)
+{
+	// Get Packed data and unpack
+	Vector4f data = primData.centersRadius[primitiveId];
+	Vector3f center = data;
+	float radius = data[3];
+
+	AABB3f aabb(center - data, center + data);
+	return aabb;
+}
+
+__device__ __host__
+float GenerateAreaTriangle(PrimitiveId primitiveId, const SphereData& primData)
+{
+	Vector4f data = primData.centersRadius[primitiveId];	
+	float radius = data[3];
+
+	// Surface area is related to radius only (wrt of its square)
+	// TODO: check if this is a good estimation
+	return radius * radius;
+}
+
+class GPUPrimitiveSphere final 
+	: public GPUPrimitiveGroup<SphereHit, SphereData, DefaultLeaf,
+							   SphereClosestHit, GenerateLeaf,
+							   GenerateAABBTriangle, GenerateAreaTriangle>
 {
 	public:	
-		// Type Definitions for kernel generations
-		using PrimitiveData						= SphereData;
-		using HitReg							= SphereHit;
-		using LeafStruct						= DefaultLeaf;
-		static constexpr auto AcceptFunc		= SphereClosestHit;
-		static constexpr auto GenLeafFunc		= GenerateLeaf<PrimitiveData>;
-		// 		
-		static constexpr auto AABBGenFunc		= SphereClosestHit;
-		static constexpr auto AreaGenFunc		= SphereClosestHit;
-
 		static constexpr const char*			TypeName = "Sphere";
 
 	private:		
 		DeviceMemory							memory;
-		PrimitiveData							dData;
 
 		// List of ranges for each batch
 		uint64_t								totalPrimitiveCount;
 		std::map<uint32_t, Vector2ul>			batchRanges;
-	
-		// Friend Declarations
-		friend struct							PrimDataAccessor;
-		
+			
 	public:
 		// Constructors & Destructor
 												GPUPrimitiveSphere();
@@ -113,9 +124,3 @@ class GPUPrimitiveSphere final : public GPUPrimitiveGroupI
 		// Material may need that data
 		bool									CanGenerateData(const std::string& s) const override;
 };
-
-template<>
-inline GPUPrimitiveSphere::PrimitiveData PrimDataAccessor::Data(const GPUPrimitiveSphere& primTri)
-{
-	return primTri.dData;
-}

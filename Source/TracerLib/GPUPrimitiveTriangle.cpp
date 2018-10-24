@@ -7,8 +7,7 @@
 
 // Generics
 GPUPrimitiveTriangle::GPUPrimitiveTriangle()
-	: dData{ nullptr, nullptr}
-	, totalPrimitiveCount(0)
+	: totalPrimitiveCount(0)
 {}
 
 const char* GPUPrimitiveTriangle::Type() const

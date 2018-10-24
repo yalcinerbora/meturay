@@ -49,14 +49,3 @@ class GPUPrimitiveGroupI
 
 
 };
-
-struct PrimDataAccessor
-{
-	// Data fetch function of the primitive
-	// This struct should contain all necessary data required for kernel calls
-	// related to this primitive
-	// I dont know any design pattern for converting from static polymorphism
-	// to dynamic one. This is my solution (it is quite werid)
-	template<class GPUPrimitiveGroup>
-	static typename  GPUPrimitiveGroup::PrimitiveData		Data(const GPUPrimitiveGroup&);
-};

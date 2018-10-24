@@ -7,8 +7,7 @@
 
 // Generics
 GPUPrimitiveSphere::GPUPrimitiveSphere()
-	: dData{nullptr}
-	, totalPrimitiveCount(0)
+	: totalPrimitiveCount(0)
 {}
 
 const char* GPUPrimitiveSphere::Type() const

@@ -48,6 +48,7 @@ struct TracerOptions
 	Vector2i		acceleratorKeyRange;
 
 	uint32_t		seed;
+	uint32_t		hitStructMaxSize;
 };
 
 class TracerBaseLogicI
@@ -73,7 +74,7 @@ class TracerBaseLogicI
 
 		
 		// Interface fetching for logic
-		virtual GPUBaseAcceleratorI*					BaseAcelerator() = 0;
+		virtual const GPUBaseAcceleratorI&				BaseAcelerator() = 0;
 		virtual const AcceleratorBatchMappings&			AcceleratorBatches() = 0;
 		virtual const MaterialBatchMappings&			MaterialBatches() = 0;
 

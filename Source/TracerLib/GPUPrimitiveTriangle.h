@@ -13,9 +13,8 @@ All of them should be provided
 #include <map>
 #include <type_traits>
 
-#include "GPUPrimitiveI.h"
 #include "DefaultLeaf.h"
-#include "AcceleratorDeviceFunctions.h"
+#include "GPUPrimitiveP.cuh"
 
 #include "RayLib/DeviceMemory.h"
 #include "RayLib/Vector.h"
@@ -32,16 +31,16 @@ struct TriData
 using TriangleHit = Vector2f;
 
 // Triangle Hit Acceptance
-__device__
+__device__ __host__
 inline HitResult TriangleClosestHit(// Output
 									HitKey& newMat,
 									PrimitiveId& newPrimitive,
 									TriangleHit& newHit,
 									// I-O
 									RayReg& rayData,
-									// Input
-									const TriData& primData,
-									const DefaultLeaf& leaf)
+									// Input									
+									const DefaultLeaf& leaf,
+									const TriData& primData)
 {
 	// Get Position
 	Vector3 position0 = primData.positionsU[leaf.primitiveId * 3 + 0];
@@ -65,32 +64,56 @@ inline HitResult TriangleClosestHit(// Output
 	return HitResult{false, closerHit};
 }
 
-class GPUPrimitiveTriangle final : public GPUPrimitiveGroupI
+
+__device__ __host__
+inline AABB3f GenerateAABBTriangle(PrimitiveId primitiveId, const TriData& primData)
 {
-	public:	
-	   	// Type Definitions for kernel generations
-		using PrimitiveData						= TriData;
-		using HitData							= TriangleHit;
-		using LeafStruct						= DefaultLeaf;
-		static constexpr auto AcceptFunc		= TriangleClosestHit;
-		static constexpr auto GenLeafFunc		= GenerateLeaf<PrimitiveData>;
-		// 
-		static constexpr auto AABBGenFunc		= TriangleClosestHit;
-		static constexpr auto AreaGenFunc		= TriangleClosestHit;
+	// Get Position
+	Vector3 position0 = primData.positionsU[primitiveId * 3 + 0];
+	Vector3 position1 = primData.positionsU[primitiveId * 3 + 1];
+	Vector3 position2 = primData.positionsU[primitiveId * 3 + 2];
 
+	AABB3f aabb(Vector3f(FLT_MAX), Vector3f(-FLT_MAX));
+	aabb.SetMax(Vector3f::Max(aabb.Max(), position0));
+	aabb.SetMin(Vector3f::Min(aabb.Min(), position0));
+
+	aabb.SetMin(Vector3f::Min(aabb.Min(), position1));
+	aabb.SetMin(Vector3f::Min(aabb.Min(), position1));
+
+	aabb.SetMin(Vector3f::Min(aabb.Min(), position2));
+	aabb.SetMin(Vector3f::Min(aabb.Min(), position2));
+	return aabb;
+}
+
+__device__ __host__
+float GenerateAreaTriangle(PrimitiveId primitiveId, const TriData& primData )
+{
+	// Get Position
+	Vector3 position0 = primData.positionsU[primitiveId * 3 + 0];
+	Vector3 position1 = primData.positionsU[primitiveId * 3 + 1];
+	Vector3 position2 = primData.positionsU[primitiveId * 3 + 2];
+	// CCW
+	Vector3 vec0 = position1 - position0;
+	Vector3 vec1 = position2 - position0;
+
+	return 0.0f;//Cross(vec0, vec1).Length() * 0.5f;
+}
+
+class GPUPrimitiveTriangle final
+	: public GPUPrimitiveGroup<TriangleHit, TriData, DefaultLeaf,
+							   TriangleClosestHit, GenerateLeaf,
+							   GenerateAABBTriangle, GenerateAreaTriangle>
+{
+	public:
 		static constexpr const char*			TypeName = "Triangle";
-
 	private:		
 		DeviceMemory							memory;
-		PrimitiveData							dData;
 
 		// List of ranges for each batch
 		uint64_t								totalPrimitiveCount;
 		std::map<uint32_t, Vector2ul>			batchRanges;
 
-		// Friend Declarations
-		friend struct							PrimDataAccessor;
-
+	protected:
 	public:
 		// Constructors & Destructor
 												GPUPrimitiveTriangle();
@@ -111,9 +134,3 @@ class GPUPrimitiveTriangle final : public GPUPrimitiveGroupI
 		// Material may need that data
 		bool									CanGenerateData(const std::string& s) const override;
 };
-
-template<>
-inline GPUPrimitiveTriangle::PrimitiveData PrimDataAccessor::Data(const GPUPrimitiveTriangle& primTri)
-{
-	return primTri.dData;
-}

@@ -13,34 +13,55 @@ proper for combined templates
 #include "GPUPrimitiveI.h"
 #include "AcceleratorDeviceFunctions.h"
 
-template <class T, template <class> class... Ps>
-constexpr bool satisfies_all_v = std::conjunction<Ps<T>...>::value;
+template <class PrimitiveData>
+class GPUPrimitiveGroupP
+{
+	friend struct		PrimDataAccessor;
 
-template <class HitData, class PrimitiveData, class LeafData,
-		  AcceptHitFunction<HitData, PrimitiveData, LeafData> HitFunc,
-		  LeafGenFunction<PrimitiveData, LeafData> LeafFunc,
-		  BoxGenFunction<PrimitiveData> BoxFunc,
-		  AreaGenFunction<PrimitiveData> AreaFunc>
-class GPUPrimitiveGroup : public GPUPrimitiveGroupI
+	protected:
+		PrimitiveData	 dData = {};
+};
+
+template <class HitD, class PrimitiveD, class LeafD,
+		  AcceptHitFunction<HitD, PrimitiveD, LeafD> HitF,
+		  LeafGenFunction<PrimitiveD, LeafD> LeafF,
+		  BoxGenFunction<PrimitiveD> BoxF,
+		  AreaGenFunction<PrimitiveD> AreaF>
+class GPUPrimitiveGroup 
+	: public GPUPrimitiveGroupP<PrimitiveD>
+	, public GPUPrimitiveGroupI
 {
 	public:	
 	   	// Type Definitions for kernel generations
-		using PrimitiveData						= PrimitiveData;
-		using HitData							= HitData;
-		using LeafStruct						= LeafStruct;
+		using PrimitiveData						= PrimitiveD;
+		using HitData							= HitD;
+		using LeafData							= LeafD;
 		// Function Definitions
 		// Used by accelerator definitions etc.
-		static constexpr auto HitFunc			= HitFunc;
-		static constexpr auto LeafFunc			= LeafFunc;		
-		static constexpr auto BoxFunc			= BoxFunc;
-		static constexpr auto AreaFunc			= AreaFunc;
+		static constexpr auto HitFunc			= HitF;
+		static constexpr auto LeafFunc			= LeafF;		
+		static constexpr auto BoxFunc			= BoxF;
+		static constexpr auto AreaFunc			= AreaF;
 		
 	private:
 	protected:
-		PrimitiveData					dData = PrimitiveData{};
-
 	public:
 		// Constructors & Destructor
 										GPUPrimitiveGroup() = default;
 		virtual							~GPUPrimitiveGroup() = default;
+};
+
+struct PrimDataAccessor
+{
+	// Data fetch function of the primitive
+	// This struct should contain all necessary data required for kernel calls
+	// related to this primitive
+	// I dont know any design pattern for converting from static polymorphism
+	// to dynamic one. This is my solution (it is quite werid)
+	template <class PrimitiveGroupS>
+	static typename PrimitiveGroupS::PrimitiveData Data(const PrimitiveGroupS& pg)
+	{
+		using P = typename PrimitiveGroupS::PrimitiveData;
+		return static_cast<const GPUPrimitiveGroupP<P>&>(pg).dData;
+	}
 };

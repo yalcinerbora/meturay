@@ -30,22 +30,8 @@ class GPUAcceleratorGroup : public GPUAcceleratorGroupI
 		const GPUPrimitiveGroupI&		PrimitiveGroup() const override;
 };
 
-template <class P>
-GPUAcceleratorGroup<P>::GPUAcceleratorGroup(const GPUPrimitiveGroupI& pg,
-											const TransformStruct* t)
-	: primitiveGroup(static_cast<const PGroup&>(pg))
-	, dInverseTransforms(t)
-{}
-
-template <class P>
-const GPUPrimitiveGroupI& GPUAcceleratorGroup<P>::PrimitiveGroup() const
-{
-	return primitiveGroup;
-}
-
 template <class AGroup, class PGroup>
 class GPUAcceleratorBatch : public GPUAcceleratorBatchI
-
 {
 	private:				
 	protected:
@@ -62,6 +48,19 @@ class GPUAcceleratorBatch : public GPUAcceleratorBatchI
 		const GPUPrimitiveGroupI&		PrimitiveGroup() const override;
 		const GPUAcceleratorGroupI&		AcceleratorGroup() const override;
 };
+
+template <class P>
+GPUAcceleratorGroup<P>::GPUAcceleratorGroup(const GPUPrimitiveGroupI& pg,
+											const TransformStruct* t)
+	: primitiveGroup(static_cast<const P&>(pg))
+	, dInverseTransforms(t)
+{}
+
+template <class P>
+const GPUPrimitiveGroupI& GPUAcceleratorGroup<P>::PrimitiveGroup() const
+{
+	return primitiveGroup;
+}
 
 template<class A, class P>
 GPUAcceleratorBatch<A, P>::GPUAcceleratorBatch(const GPUAcceleratorGroupI& a,

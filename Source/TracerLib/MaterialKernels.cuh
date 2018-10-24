@@ -5,7 +5,7 @@
 #include "Random.cuh"
 
 template <class MGroup, class PGroup>
-using SurfaceFunc = MGroup::Surface(&)(const PGroup::PrimitiveData&,
+using SurfaceFunc = MGroup::Surface(*)(const PGroup::PrimitiveData&,
 									   const PGroup::HitData&,
 									   PrimitiveId);
 //
@@ -68,7 +68,7 @@ __global__ void KCMaterialShade(// Output
 		const PrimitiveId gPrimitiveId = gPrimitiveIds[rayId];
 
 		// Generate surface data from hit
-		const HitData hit = gHitStructs[rayId];
+		const HitData hit = gHitStructs.Ref<HitData>(rayId);
 		const Surface surface = BGroup::SurfFunc(hit, primData,
 												 gPrimitiveId);
 

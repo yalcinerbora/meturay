@@ -5,32 +5,33 @@
 #include "TracerLogicI.h"
 #include "GPUPrimitiveI.h"
 
-
 struct TracerError;
 
-template<class RayAuxStruct>
+template<class RayAuxData>
+using AuxInitFunc = void(*)(const RayAuxData*,
+							const uint32_t writeLoc,
+							// Input
+							const RayAuxData,
+							// Index
+							const Vector2ui& globalPixelId,
+							const Vector2ui& localSampleId,
+							const uint32_t samplePerPixel);
+
+template<class RayAuxD, AuxInitFunc<RayAuxD>>
 class TracerBaseLogic : public TracerBaseLogicI
 {
 	public:
-		using RayAux						= RayAuxStruct;
+		using RayAuxData					= RayAuxD;
 
-		static __device__ void				AuxInitEmpty(const RayAux*,
-														 const uint32_t writeLoc,
-														 // Input
-														 const RayAux,
-														 // Index
-														 const Vector2ui& globalPixelId,
-														 const Vector2ui& localSampleId,
-														 const uint32_t samplePerPixel);
 	private:
 		// Options
 		HitOpts								optsHit;
 		ShadeOpts							optsShade;
 		const TracerOptions					options;
 		//
-		const RayAux						initalValues;
+		const RayAuxData					initalValues;
 		// Mappings for Kernel Calls (A.K.A. Batches)
-		const GPUBaseAcceleratorI*			baseAccelerator;
+		const GPUBaseAcceleratorI&			baseAccelerator;
 		const AcceleratorBatchMappings&		accelerators;
 		const MaterialBatchMappings&		materials;
 
@@ -56,7 +57,7 @@ class TracerBaseLogic : public TracerBaseLogicI
 															   const Vector2ui& pixelCount) override;
 
 		// Interface fetching for logic
-		GPUBaseAcceleratorI*				BaseAcelerator() override { return baseAccelerator; }
+		const GPUBaseAcceleratorI&			BaseAcelerator() override { return baseAccelerator; }
 		const AcceleratorBatchMappings&		AcceleratorBatches() override { return accelerators; }
 		const MaterialBatchMappings&		MaterialBatches() override { return materials; }
 
@@ -78,5 +79,5 @@ class TracerBaseLogic : public TracerBaseLogicI
 		// Misc
 		// Retuns "sizeof(RayAux)"
 		size_t							   PerRayAuxDataSize() const override { return sizeof(RayAux); }
-		size_t							   HitStructSize() const override { return typeGenerator.CurrentMinHitSize(); };
+		size_t							   HitStructSize() const override { return options.hitStructMaxSize; };
 };

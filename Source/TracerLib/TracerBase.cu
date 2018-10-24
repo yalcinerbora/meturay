@@ -19,7 +19,7 @@ void TracerBase::HitRays()
 {
 	// Tracer Logic interface
 	const Vector2i& accBitCounts = tracerSystem->SceneAcceleratorMaxBits();
-	const GPUBaseAcceleratorI* baseAccelerator = tracerSystem->BaseAcelerator();
+	const GPUBaseAcceleratorI& baseAccelerator = tracerSystem->BaseAcelerator();
 	const AcceleratorBatchMappings& subAccelerators = tracerSystem->AcceleratorBatches();
 
 	// Reset Hit Memory for hit loop
@@ -44,7 +44,7 @@ void TracerBase::HitRays()
 		// Traverse accelerator
 		// Base accelerator provides potential hits
 		// Cannot provide an absolute hit (its not its job)
-		baseAccelerator->Hit(dTransfomIds, dCurrentKeys, dRays, dCurrentRayIds,
+		baseAccelerator.Hit(dTransfomIds, dCurrentKeys, dRays, dCurrentRayIds,
 							 rayCount);
 
 		// Base accelerator traverses the data partially

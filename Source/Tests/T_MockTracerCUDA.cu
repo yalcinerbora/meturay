@@ -185,7 +185,7 @@ class MockTracerLogic : public TracerBaseLogicI
 		
 
 		// Interface fetching for logic
-		GPUBaseAcceleratorI*						BaseAcelerator() override { return &(*baseAccelerator); }
+		const GPUBaseAcceleratorI&					BaseAcelerator() override { return *baseAccelerator; }
 		const AcceleratorBatchMappings&				AcceleratorBatches() override { return accelerators; }
 		const MaterialBatchMappings&				MaterialBatches() override { return materials; }
 

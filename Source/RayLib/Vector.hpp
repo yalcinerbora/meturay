@@ -1,5 +1,3 @@
-#pragma once
-
 template <int N, class T>
 template<class C, typename>
 __device__ __host__
