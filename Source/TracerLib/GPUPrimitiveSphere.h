@@ -67,7 +67,7 @@ inline HitResult SphereClosestHit(// Output
 }
 
 __device__ __host__
-inline AABB3f GenerateAABBTriangle(PrimitiveId primitiveId, const SphereData& primData)
+inline AABB3f GenerateAABBSphere(PrimitiveId primitiveId, const SphereData& primData)
 {
 	// Get Packed data and unpack
 	Vector4f data = primData.centersRadius[primitiveId];
@@ -79,7 +79,7 @@ inline AABB3f GenerateAABBTriangle(PrimitiveId primitiveId, const SphereData& pr
 }
 
 __device__ __host__
-float GenerateAreaTriangle(PrimitiveId primitiveId, const SphereData& primData)
+inline float GenerateAreaSphere(PrimitiveId primitiveId, const SphereData& primData)
 {
 	Vector4f data = primData.centersRadius[primitiveId];	
 	float radius = data[3];
@@ -92,7 +92,7 @@ float GenerateAreaTriangle(PrimitiveId primitiveId, const SphereData& primData)
 class GPUPrimitiveSphere final 
 	: public GPUPrimitiveGroup<SphereHit, SphereData, DefaultLeaf,
 							   SphereClosestHit, GenerateLeaf,
-							   GenerateAABBTriangle, GenerateAreaTriangle>
+							   GenerateAABBSphere, GenerateAreaSphere>
 {
 	public:	
 		static constexpr const char*			TypeName = "Sphere";

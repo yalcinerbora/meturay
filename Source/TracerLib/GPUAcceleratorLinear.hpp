@@ -76,39 +76,39 @@ const char* GPUAccLinearBatch<P>::Type() const
 
 template <class PGroup>
 void GPUAccLinearBatch<PGroup>::Hit(// O
-							   HitKey* dMaterialKeys,
-							   PrimitiveId* dPrimitiveIds,
-							   HitStructPtr dHitStructs,
-							   // I-O													
-							   RayGMem* dRays,
-							   // Input
-							   const TransformId* dTransformIds,
-							   const RayId* dRayIds,
-							   const HitKey* dAcceleratorKeys,
-							   const uint32_t rayCount) const
+									HitKey* dMaterialKeys,
+									PrimitiveId* dPrimitiveIds,
+									HitStructPtr dHitStructs,
+									// I-O													
+									RayGMem* dRays,
+									// Input
+									const TransformId* dTransformIds,
+									const RayId* dRayIds,
+									const HitKey* dAcceleratorKeys,
+									const uint32_t rayCount) const
 {
 	// TODO: Is there a better way to implement this
 	using PrimitiveData = typename PGroup::PrimitiveData;
-	PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
+	const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
 
-	//KCIntersectLinear<PGroup><<<1, 1>>>
-	//(
-	//	// O
-	//	dMaterialKeys,
-	//	dPrimitiveIds,
-	//	dHitStructs,
-	//	// I-O
-	//	dRays,
-	//	// Input
-	//	dTransformIds,
-	//	dRayIds,
-	//	dAcceleratorKeys,
-	//	rayCount,
-	//	// Constants
-	//	acceleratorGroup.dLeafList,
-	//	acceleratorGroup.dLeafCounts,
-	//	acceleratorGroup.dInverseTransforms,
-	//	//								   								   
-	//	primData
-	//);
+	KCIntersectLinear<PGroup><<<1, 1>>>
+	(
+		// O
+		dMaterialKeys,
+		dPrimitiveIds,
+		dHitStructs,
+		// I-O
+		dRays,
+		// Input
+		dTransformIds,
+		dRayIds,
+		dAcceleratorKeys,
+		rayCount,
+		// Constants
+		acceleratorGroup.dLeafList,
+		acceleratorGroup.dLeafCounts,
+		acceleratorGroup.dInverseTransforms,
+		//								   								   
+		primData
+	);
 }

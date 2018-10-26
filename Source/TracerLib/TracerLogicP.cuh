@@ -17,11 +17,12 @@ using AuxInitFunc = void(*)(const RayAuxData*,
 							const Vector2ui& localSampleId,
 							const uint32_t samplePerPixel);
 
-template<class RayAuxD, AuxInitFunc<RayAuxD>>
+template<class RayAuxD, AuxInitFunc<RayAuxD> AuxFunc>
 class TracerBaseLogic : public TracerBaseLogicI
 {
 	public:
 		using RayAuxData					= RayAuxD;
+		static const auto AuxInitFunc		= AuxFunc;
 
 	private:
 		// Options

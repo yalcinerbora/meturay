@@ -86,7 +86,7 @@ inline AABB3f GenerateAABBTriangle(PrimitiveId primitiveId, const TriData& primD
 }
 
 __device__ __host__
-float GenerateAreaTriangle(PrimitiveId primitiveId, const TriData& primData )
+inline float GenerateAreaTriangle(PrimitiveId primitiveId, const TriData& primData)
 {
 	// Get Position
 	Vector3 position0 = primData.positionsU[primitiveId * 3 + 0];
@@ -96,7 +96,7 @@ float GenerateAreaTriangle(PrimitiveId primitiveId, const TriData& primData )
 	Vector3 vec0 = position1 - position0;
 	Vector3 vec1 = position2 - position0;
 
-	return 0.0f;//Cross(vec0, vec1).Length() * 0.5f;
+	return Cross(vec0, vec1).Length() * 0.5f;
 }
 
 class GPUPrimitiveTriangle final

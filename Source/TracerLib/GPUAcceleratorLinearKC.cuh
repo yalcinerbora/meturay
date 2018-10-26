@@ -18,14 +18,15 @@ using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxSurfacePerAc
 
 // Fundamental Construction Kernel
 template <class PGroup>
-__global__ void KCConstructLinear(// O
-								  PGroup::LeafStruct* gLeafOut,
+__global__
+static void KCConstructLinear(// O
+							  PGroup::LeafStruct* gLeafOut,
 
-								  // Input
-								  const HitKeyList materialKeys,
-								  const PrimitiveRangeList primRanges,
-								  const PGroup::PrimitiveData primData,
-								  const uint32_t leafCount)
+							  // Input
+							  const HitKeyList materialKeys,
+							  const PrimitiveRangeList primRanges,
+							  const PGroup::PrimitiveData primData,
+							  const uint32_t leafCount)
 {
 	// Fetch Types from Template Classes
 	using LeafStruct = typename PGroup::LeafStruct;	// LeafStruct is defined by primitive
@@ -78,26 +79,28 @@ __global__ void KCConstructLinear(// O
 
 // This is fundemental Linear traversal kernel
 template <class PGroup>
-__global__ void KCIntersectLinear(// O
-								  HitKey* gMaterialKeys,
-								  PrimitiveId* gPrimitiveIds,
-								  HitStructPtr gHitStructs,
-								  // I-O
-								  RayGMem* gRays,								  
-								  // Input
-								  const TransformId* gTransformIds,
-								  const RayId* gRayIds,
-								  const HitKey* gAccelKeys,
-								  const uint32_t rayCount,
-								  // Constants
-								  const PGroup::LeafStruct** gLeafList,
-								  const uint32_t* gLeafCounts,
-								  const TransformStruct* gInverseTransforms,
-								  const PGroup::PrimitiveData primData)
+__global__
+static void KCIntersectLinear(// O
+					   HitKey* gMaterialKeys,
+					   PrimitiveId* gPrimitiveIds,
+					   HitStructPtr gHitStructs,
+					   // I-O
+					   RayGMem* gRays,
+					   // Input
+					   const TransformId* gTransformIds,
+					   const RayId* gRayIds,
+					   const HitKey* gAccelKeys,
+					   const uint32_t rayCount,
+					   // Constants
+					   const PGroup::LeafData** gLeafList,
+					   const uint32_t* gLeafCounts,
+					   const TransformStruct* gInverseTransforms,
+					   //
+					   const PGroup::PrimitiveData primData)
 {
 	// Fetch Types from Template Classes
-	using HitReg = typename PGroup::HitReg;			// HitRegister is defined by primitive
-	using LeafStruct = typename PGroup::LeafStruct;	// LeafStruct is defined by primitive
+	using HitData = typename PGroup::HitData;			// HitRegister is defined by primitive
+	using LeafData = typename PGroup::LeafData;		// LeafStruct is defined by primitive
 
 	// Grid Stride Loop
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
@@ -113,7 +116,7 @@ __global__ void KCIntersectLinear(// O
 		//HitId hitId = gHitKeys[id];
 
 		// Key is the index of the inner Linear Array
-		const LeafStruct* gLeaf = gLeafList[accId];
+		const LeafData* gLeaf = gLeafList[accId];
 		const uint32_t gEndCount = gLeafCounts[accId];
 
 		// Zero means identity so skip
@@ -129,23 +132,23 @@ __global__ void KCIntersectLinear(// O
 		bool hitModified = false;
 		HitKey materialKey;
 		PrimitiveId primitiveId;
-		HitReg hit;
+		HitData hit;
 
 		// Linear check over array
 		for(uint32_t i = 0; i < gEndCount; i++)
 		{
 			// Get Leaf Data and
 			// Do acceptance check
-			const LeafStruct leaf = gLeaf[i];			
-			HitResult result = PGroup::AcceptFunc(// Ooutput											 
-												  materialKey,
-												  primitiveId,
-												  hit,
-												  // I-O
-												  ray,
-												  // Input
-												  primData,
-												  leaf);
+			const LeafData leaf = gLeaf[i];
+			HitResult result = PGroup::HitFunc(// Ooutput											 
+											   materialKey,
+											   primitiveId,
+											   hit,
+											   // I-O
+											   ray,
+											   // Input
+											   leaf,
+											   primData);
 			hitModified = result[1];
 			if(result[0]) break;
 		}
@@ -153,7 +156,7 @@ __global__ void KCIntersectLinear(// O
 		if(hitModified)
 		{
 			ray.UpdateTMax(gRays, globalId);
-			gHitStructs.Ref<HitReg>(globalId) = hit;
+			gHitStructs.Ref<HitData>(globalId) = hit;
 			gMaterialKeys[id] = materialKey;
 			gPrimitiveIds[id] = primitiveId;
 		}
@@ -161,17 +164,18 @@ __global__ void KCIntersectLinear(// O
 }
 
 
-static __global__ void KCIntersectBaseLinear(// I-O
-											 TransformId* gTransformIds,
-											 HitKey* gHitKeys,
-											 uint32_t* gPrevLoc,
-											 // Input
-											 const RayGMem* gRays,
-											 const RayId* gRayIds,
-											 const uint32_t rayCount,
+__global__
+static void KCIntersectBaseLinear(// I-O
+								  TransformId* gTransformIds,
+								  HitKey* gHitKeys,
+								  uint32_t* gPrevLoc,
+								  // Input
+								  const RayGMem* gRays,
+								  const RayId* gRayIds,
+								  const uint32_t rayCount,
 
-											 // Constants
-											 const BaseLeaf* gKeys)
+								  // Constants
+								  const BaseLeaf* gKeys)
 {
 		// Grid Stride Loop
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;

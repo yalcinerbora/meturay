@@ -9,7 +9,6 @@ const std::string LinearAccelTypeName<PGroup>::TypeName = std::string("Linear") 
 
 // Accelerator
 template class GPUAccLinearGroup<GPUPrimitiveTriangle>;
-//template class GPUAccLinearGroup<GPUPrimitiveSphere>;
+template class GPUAccLinearGroup<GPUPrimitiveSphere>;
 template class GPUAccLinearBatch<GPUPrimitiveTriangle>;
-//template class GPUAccLinearBatch<GPUPrimitiveSphere>;
-
+template class GPUAccLinearBatch<GPUPrimitiveSphere>;

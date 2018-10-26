@@ -28,9 +28,14 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
 		constexpr									AABB() = default;
 		__device__ __host__							AABB(const Vector<N, T>& min,
 														 const Vector<N, T>& max);
-		__device__ __host__							AABB(const T* data);
-		template <class... Args, typename =			AllArithmeticEnable<Args...>>
-		constexpr __device__ __host__				AABB(const Args... dataList);			
+		__device__ __host__							AABB(const T* dataMin,
+														 const T* dataMax);
+
+		template <class... Args0, class... Args1,  
+				  typename = AllArithmeticEnable<Args1...>,
+				  typename = AllArithmeticEnable<Args0...>>
+		constexpr __device__ __host__				AABB(const Args0... dataList0,
+														 const Args1... dataList1);
 													~AABB() = default;
 
 		// Accessors
@@ -68,7 +73,7 @@ static_assert(std::is_polymorphic<AABB3>::value == false, "AABBs should not be p
 // Implementation
 #include "AABB.hpp"	// CPU & GPU
 
-// AABB Etern
+// AABB Extern
 extern template class AABB<2, float>;
 extern template class AABB<3, float>;
 extern template class AABB<4, float>;
