@@ -1,11 +1,6 @@
 #pragma once
 
-#include "Tracers.h"
+#include "TracerLib/TracerLogicGeneratorI.h"
 
 //
-extern "C" _declspec(dllexport) void __stdcall GenBasicTracer()
-{
-
-}
-
-void
+extern "C" _declspec(dllexport) TracerLogicGeneratorI* __stdcall GenBasicTracer();

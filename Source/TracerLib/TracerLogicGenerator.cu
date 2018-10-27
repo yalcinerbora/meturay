@@ -187,3 +187,24 @@ SceneError TracerLogicGenerator::GetMaterialBatch(GPUMaterialBatchI*& mb,
 	else mb = loc->second.get();
 	return SceneError::OK;
 }
+
+SceneError TracerLogicGenerator::IncludeAcceleratorsFromDLL(const SharedLib&,
+															const std::string& mangledName) const
+{
+	// TODO: Implement
+	return SceneError::OK;
+}
+
+SceneError TracerLogicGenerator::IncludeMaterialsFromDLL(const SharedLib&,
+														 const std::string& mangledName) const
+{
+	// TODO: Implement
+	return SceneError::OK;
+}
+
+SceneError TracerLogicGenerator::IncludePrimitivesFromDLL(const SharedLib&,
+														  const std::string& mangledName) const
+{
+	// TODO: Implement
+	return SceneError::OK;
+}

@@ -1,12 +1,12 @@
 #pragma once
 
 #include <vector>
+#include <json.hpp>
 
-#include "RayLib/DeviceMemory.h"
 #include "RayLib/Camera.h"
 #include "RayLib/SceneStructs.h"
 
-#include <json.hpp>
+#include "DeviceMemory.h"
 
 struct SceneError;
 class TracerLogicGeneratorI;

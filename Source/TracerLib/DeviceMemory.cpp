@@ -1,5 +1,5 @@
 #include "DeviceMemory.h"
-#include "CudaCheck.h"
+#include "RayLib/CudaCheck.h"
 
 #include <cuda_runtime.h>
 #include <cstring>

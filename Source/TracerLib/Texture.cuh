@@ -8,12 +8,13 @@ Object oriented design and openGL like access
 
 */
 
-#include "CudaCheck.h"
-#include "DeviceMemory.h"
-#include "Vector.h"
-#include "Types.h"
-#include <cuda_runtime.h>
+#include "RayLib/CudaCheck.h"
+#include "RayLib/Vector.h"
+#include "RayLib/Types.h"
 
+#include "DeviceMemory.h"
+
+#include <cuda_runtime.h>
 #include <cstddef>
 
 enum class InterpolationType

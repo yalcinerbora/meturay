@@ -9,13 +9,18 @@
     <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu">
       <Filter>Implementations</Filter>
     </CudaCompile>
-    <CudaCompile Include="Materials.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\Materials.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerLogics.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerGenerators.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h">
       <Filter>Implementations</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\Materials.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerLogics.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerGenerators.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cpp" />

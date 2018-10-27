@@ -130,7 +130,7 @@ class MockTracerLogic : public TracerBaseLogicI
 				const GPUPrimitiveGroupI&	PrimitiveGroup() const override;
 				const GPUMaterialGroupI&	MaterialGroup() const override;
 
-				uint8_t						MaxOutRayPerRay() const override { return isMissMaterial ? 0 : 1; }
+				uint8_t						OutRayCount() const override { return isMissMaterial ? 0 : 1; }
 		};
 
 	private:

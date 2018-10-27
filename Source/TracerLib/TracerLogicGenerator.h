@@ -64,4 +64,13 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 													 const GPUMaterialGroupI&,
 													 const GPUPrimitiveGroupI&) override;
 
+		// Inclusion Functionality
+		// Additionally includes the materials from these libraries
+		// No exclusion functionality provided just add what you need
+		SceneError					IncludeAcceleratorsFromDLL(const SharedLib&,
+															   const std::string& mangledName = "\0") const override;
+		SceneError					IncludeMaterialsFromDLL(const SharedLib&,
+															const std::string& mangledName = "\0") const override;
+		SceneError					IncludePrimitivesFromDLL(const SharedLib&,
+															 const std::string& mangledName = "\0") const override;
 };

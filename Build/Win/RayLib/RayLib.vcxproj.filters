@@ -17,12 +17,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\Vector.hpp">
       <Filter>Math</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\Texture.cuh">
-      <Filter>Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\Texture.hpp">
-      <Filter>Memory</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Matrix.hpp">
       <Filter>Math</Filter>
     </ClInclude>
@@ -31,9 +25,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Quaternion.hpp">
       <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\DeviceMemory.h">
-      <Filter>Memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\VisorI.h">
       <Filter>Render Interfaces</Filter>
@@ -142,9 +133,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Memory">
-      <UniqueIdentifier>{8a3dbe82-44f6-451f-a478-02ad96121997}</UniqueIdentifier>
-    </Filter>
     <Filter Include="FileI-O">
       <UniqueIdentifier>{df1a67ea-65ee-47f3-8d9c-8336216d49bc}</UniqueIdentifier>
     </Filter>
@@ -174,9 +162,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp">
-      <Filter>Memory</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp">
       <Filter>FileI-O</Filter>
     </ClCompile>
@@ -198,6 +183,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\SharedLib.cpp">
       <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\SurfaceDataIO.cpp">
+      <Filter>FileI-O</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

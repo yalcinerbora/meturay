@@ -189,7 +189,7 @@ void TracerBase::ShadeRays()
 		auto loc = materials.find(p.portionId);
 		if(loc == materials.end()) continue;
 
-		totalOutRayCount += p.count * loc->second->MaxOutRayPerRay();
+		totalOutRayCount += p.count * loc->second->OutRayCount();
 	}
 
 	// Allocate output ray memory
@@ -206,7 +206,7 @@ void TracerBase::ShadeRays()
 
 		// Since output is dynamic (each material may write multiple rays)
 		// add offsets to find proper count
-		outOffset += p.count * loc->second->MaxOutRayPerRay();
+		outOffset += p.count * loc->second->OutRayCount();
 		
 		// Relativize input & output pointers
 		const RayId* dRayIdStart = dCurrentRayIds + p.offset;
