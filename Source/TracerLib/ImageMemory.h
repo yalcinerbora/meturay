@@ -7,9 +7,10 @@ Basic output image memory
 
 #include <vector>
 
-#include "RayLib/DeviceMemory.h"
 #include "RayLib/Types.h"
 #include "RayLib/Vector.h"
+
+#include "DeviceMemory.h"
 
 class ImageMemory
 {

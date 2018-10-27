@@ -100,31 +100,23 @@ inline RandomGPU::~RandomGPU()
 }
 
 // Pseduo Uniform Generation
-__device__ inline float RandFloat01(RandomGPU& r)
+namespace GPURand
 {
-	return static_cast<float>(RandomGPU::Min) +
-			static_cast<float>(r.Generate()) / static_cast<float>(RandomGPU::Range);
+	template <class T, typename = ArithmeticEnable<T>>
+	__device__
+	inline T ZeroOne(RandomGPU& r)
+	{
+		return static_cast<T>(RandomGPU::Min) +
+			   static_cast<T>(r.Generate()) / static_cast<T>(RandomGPU::Range);
+	}
+
+	template <class T, typename = ArithmeticEnable<T>>
+	__device__
+	inline T Range(RandomGPU& r, const Vector2& minMax)
+	{
+		T f = ZeroOne<T>(r);
+		T range = minMax[1] - minMax[0];
+		return minMax[0] + f / range;
+	}
 }
 
-__device__ inline float RandMMFloat(RandomGPU& r, const Vector2& minMax)
-{
-	float f = RandFloat01(r);
-	float range = minMax[1] - minMax[0];
-	return minMax[0] + f / range;
-}
-
-__device__ inline int RandMMInt(RandomGPU& r, const Vector2i minMax)
-{
-	float f = RandMMFloat(r, Vector2(static_cast<float>(minMax[0]),
-								   static_cast<float>(minMax[1])));
-	float range = static_cast<float>(minMax[1] - minMax[0]);
-	return minMax[0] + static_cast<int>(roundf(f / range));
-}
-
-__device__ inline unsigned int RandMMUInt(RandomGPU& r, const Vector2ui minMax)
-{
-	float f = RandMMFloat(r, Vector2(static_cast<float>(minMax[0]),
-									 static_cast<float>(minMax[1])));
-	float range = static_cast<float>(minMax[1] - minMax[0]);
-	return minMax[0] + static_cast<unsigned int>(roundf(f / range));
-}

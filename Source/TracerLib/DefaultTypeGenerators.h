@@ -16,12 +16,23 @@ as an input. (since those types are storngly tied)
 */
 #include "RayLib/ObjectFuncDefinitions.h"
 #include "RayLib/SceneStructs.h"
+#include "TracerStructs.h"
+
+class TracerBaseLogicI;
+class GPUBaseAcceleratorI;
 
 class GPUAcceleratorGroupI;
 class GPUPrimitiveGroupI;
+class GPUMaterialGroupI;
+
+class GPUAcceleratorBatchI;
+class GPUMaterialBatchI;
 
 // Fundamental Pointers whichalso support creation-deletion
 // across dll boundaries
+using GPUTracerPtr = SharedLibPtr<TracerBaseLogicI>;
+using GPUBaseAccelPtr = SharedLibPtr<GPUBaseAcceleratorI>;
+
 using GPUAccelGPtr = SharedLibPtr<GPUAcceleratorGroupI>;
 using GPUPrimGPtr = SharedLibPtr<GPUPrimitiveGroupI>;
 using GPUMatGPtr = SharedLibPtr<GPUMaterialGroupI>;
@@ -30,6 +41,12 @@ using GPUAccelBPtr = SharedLibPtr<GPUAcceleratorBatchI>;
 using GPUMatBPtr = SharedLibPtr<GPUMaterialBatchI>;
 
 // Statically Inerfaced Generators
+template<class TracerLogic>
+using TracerLogicGeneratorFunc = TracerLogic* (&)(const GPUBaseAcceleratorI& ba,
+											      const AcceleratorBatchMappings& am,
+											      const MaterialBatchMappings& mm,
+											      const TracerOptions& op);
+
 template<class Accel>
 using AccelGroupGeneratorFunc = Accel* (&)(const GPUPrimitiveGroupI&,
 										   const TransformStruct*);
@@ -45,25 +62,53 @@ using MaterialBatchGeneratorFunc = MaterialBatch* (&)(const GPUMaterialGroupI&,
 //=========================//
 // Shared Ptr Construction //
 //=========================//
-// Group
-class GPUPrimGroupGen
+// Tracer
+template <class Interface>
+class GeneratorNoArg
 {
 	private:
-		ObjGeneratorFunc<GPUPrimitiveGroupI>	gFunc;
-		ObjDestroyerFunc<GPUPrimitiveGroupI>	dFunc;
+		ObjGeneratorFunc<Interface>	gFunc;
+		ObjDestroyerFunc<Interface>	dFunc;
 
 	public:
 		// Constructor & Destructor
-		GPUPrimGroupGen(ObjGeneratorFunc<GPUPrimitiveGroupI> g,
-						ObjDestroyerFunc<GPUPrimitiveGroupI> d)
+		GeneratorNoArg(ObjGeneratorFunc<Interface> g,
+					   ObjDestroyerFunc<Interface> d)
 			: gFunc(g)
 			, dFunc(d) 
 		{}
 
-		GPUPrimGPtr operator()()
+		SharedLibPtr<Interface> operator()()
 		{
-			GPUPrimitiveGroupI* mat = gFunc();
-			return GPUPrimGPtr(mat, dFunc);
+			Interface* prim = gFunc();
+			return GPUPrimGPtr(prim, dFunc);
+		}
+};
+
+using GPUBaseAccelGen = GeneratorNoArg<GPUBaseAcceleratorI>;
+using GPUPrimGroupGen = GeneratorNoArg<GPUPrimitiveGroupI>;
+
+class GPUTracerGen
+{
+	private:
+		TracerLogicGeneratorFunc<TracerBaseLogicI>	gFunc;
+		ObjDestroyerFunc<TracerBaseLogicI>			dFunc;
+
+	public:
+		// Constructor & Destructor
+		GPUTracerGen(TracerLogicGeneratorFunc<TracerBaseLogicI> g,
+					 ObjDestroyerFunc<TracerBaseLogicI> d)
+			: gFunc(g)
+			, dFunc(d)
+		{}
+
+		GPUTracerPtr operator()(const GPUBaseAcceleratorI& ba,
+								const AcceleratorBatchMappings& am,
+								const MaterialBatchMappings& mm,
+								const TracerOptions& op)
+		{
+			TracerBaseLogicI* mat = gFunc(ba, am, mm, op);
+			return GPUTracerPtr(mat, dFunc);
 		}
 };
 
@@ -105,8 +150,8 @@ class GPUAccelGroupGen
 		GPUAccelGPtr operator()(const GPUPrimitiveGroupI& pg,
 								const TransformStruct* ts)
 		{
-			GPUAcceleratorGroupI* mat = gFunc(pg, ts);
-			return GPUAccelGPtr(mat, dFunc);
+			GPUAcceleratorGroupI* accel = gFunc(pg, ts);
+			return GPUAccelGPtr(accel, dFunc);
 		}
 };
 // Batch
@@ -149,8 +194,8 @@ class GPUMatBatchGen
 		GPUMatBPtr operator()(const GPUMaterialGroupI& mg,
 							  const GPUPrimitiveGroupI& pg)
 		{
-			GPUMaterialBatchI* accel = gFunc(mg, pg);
-			return GPUMatBPtr(accel, dFunc);
+			GPUMaterialBatchI* mat = gFunc(mg, pg);
+			return GPUMatBPtr(mat, dFunc);
 		}
 };
 
@@ -168,12 +213,22 @@ namespace TypeGenWrappers
 	template <class T>
 	void DefaultDestruct(T* t)
 	{
-		return delete t;
+		if(t) delete t;
 	}
 
 	template <class T>
 	void EmptyDestruct(T* t) {}
 
+
+	template <class Base, class TracerLogic>
+	Base* TracerLogicConstruct(const GPUBaseAcceleratorI& ba, 
+							   const AcceleratorBatchMappings& am,
+							   const MaterialBatchMappings& mm,
+							   const TracerOptions& op)
+	{
+		return new TracerLogic(ba, am, mm, op);
+	}
+	
 	template <class Base, class AccelGroup>
 	Base* AccelGroupConstruct(const GPUPrimitiveGroupI& p,
 							  const TransformStruct* t)

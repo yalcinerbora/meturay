@@ -13,11 +13,11 @@ All of them should be provided
 #include <map>
 #include <type_traits>
 
+#include "RayLib/Vector.h"
+
 #include "DefaultLeaf.h"
 #include "GPUPrimitiveP.cuh"
-
-#include "RayLib/DeviceMemory.h"
-#include "RayLib/Vector.h"
+#include "DeviceMemory.h"
 
 // Triangle Memory Layout
 struct TriData

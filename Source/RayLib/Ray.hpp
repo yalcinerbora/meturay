@@ -1,3 +1,5 @@
+#pragma once
+
 template<class T>
 __device__ __host__
 inline constexpr Ray<T>::Ray(const Vector<3, T>& direction, const Vector<3, T>& position)

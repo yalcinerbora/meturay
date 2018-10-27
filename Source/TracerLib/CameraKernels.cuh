@@ -80,8 +80,8 @@ __global__ void KCGenerateCameraRays(RayGMem* gRays,
 		Vector2ui localSampleId = pixelStart + (threadId2d % samplePerPixel);
 
 		// Create random location over sample rectangle
-		float dX = RandFloat01(rng);
-		float dY = RandFloat01(rng);
+		float dX = GPURand::ZeroOne<float>(rng);
+		float dY = GPURand::ZeroOne<float>(rng);
 		Vector2 randomOffset = Vector2(dX, dY);
 
 		// Ray's world position over canvas

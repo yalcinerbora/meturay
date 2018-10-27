@@ -3,7 +3,7 @@
 */
 
 #include <vector>
-#include "RayLib/DeviceMemory.h"
+#include "DeviceMemory.h"
 #include "RNGStructs.h"
 
 class RNGMemory

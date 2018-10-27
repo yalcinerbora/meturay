@@ -15,11 +15,11 @@ tree constructio would provide additional overhead.
 
 #include <array>
 
-#include "RayLib/DeviceMemory.h"
 #include "RayLib/SceneStructs.h"
 #include "RayLib/Vector.h"
 #include "RayLib/Constants.h"
 
+#include "DeviceMemory.h"
 #include "GPUAcceleratorP.cuh"
 #include "GPUPrimitiveI.h"
 
@@ -88,7 +88,6 @@ class GPUAccLinearGroup final
 		size_t							UsedCPUMemory() const override;		
 };
 
-
 template<class PGroup>
 class GPUAccLinearBatch final
 	: public GPUAcceleratorBatch<GPUAccLinearGroup<PGroup>, PGroup>
@@ -115,6 +114,30 @@ class GPUAccLinearBatch final
 								const RayId* dRayIds,
 								const HitKey* dAcceleratorKeys,
 								const uint32_t rayCount) const override;
+};
+
+class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
+{
+	private:
+	protected:
+	public:
+		// Interface
+		// Type(as string) of the accelerator group
+		const char*					Type() const override;
+		// Base accelerator only points to the next accelerator key.
+		// It can return invalid key,
+		// which is either means data is out of bounds or ray is invalid.
+		void						Hit(// Output
+										TransformId* dTransformIds,
+										HitKey* dAcceleratorKeys,
+										// Inputs
+										const RayGMem* dRays,
+										const RayId* dRayIds,
+										const uint32_t rayCount) const override;
+
+		//TODO: define params of functions
+		void						Constrcut() override;
+		void						Reconstruct() override;
 };
 
 #include "GPUAcceleratorLinear.hpp"

@@ -9,8 +9,8 @@ Uses cub backend.
 
 #include <cub/cub.cuh>
 
-#include "RayLib/DeviceMemory.h"
 #include "RayLib/CudaCheck.h"
+#include "DeviceMemory.h"
 #include "CudaConstants.h"
 
 template<class Type, bool isAscending = true>

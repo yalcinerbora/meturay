@@ -10,8 +10,8 @@ Utilizing new Kepler warp data transfer discussed here
 http://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler/
 */
 
-#include "RayLib/DeviceMemory.h"
 #include "RayLib/CudaCheck.h"
+#include "DeviceMemory.h"
 #include "CudaConstants.h"
 #include "ReduceFunctions.cuh"
 

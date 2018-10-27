@@ -2,7 +2,8 @@
 #include <gmock/gmock.h>
 
 #include "RayLib/Matrix.h"
-#include "RayLib/DeviceMemory.h"
+
+#include "TracerLib/DeviceMemory.h"
 
 #include <cuda_runtime.h>
 

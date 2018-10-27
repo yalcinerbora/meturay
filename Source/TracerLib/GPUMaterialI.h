@@ -22,7 +22,6 @@ class GPUPrimitiveGroupI;
 // These are singular and can be shared by multiple accelrator batches
 class GPUMaterialGroupI
 {
-
 	public:
 		virtual								~GPUMaterialGroupI() = default;
 
@@ -42,10 +41,10 @@ class GPUMaterialGroupI
 
 		virtual size_t						UsedGPUMemory() const = 0;
 		virtual size_t						UsedCPUMemory() const = 0;
+		virtual size_t						UsedGPUMemory(uint32_t materialId) const = 0;
+		virtual size_t						UsedCPUMemory(uint32_t materialId) const = 0;
 
-		virtual size_t						GPUMemoryUsage(uint32_t materialId) const = 0;
-		virtual size_t						CPUMemoryUsage(uint32_t materialId) const = 0;
-
+		virtual uint8_t						OutRayCount() const = 0;
 };
 
 // Defines call group over a certain material group
@@ -79,16 +78,5 @@ class GPUMaterialBatchI
 		virtual const GPUPrimitiveGroupI&				PrimitiveGroup() const = 0;
 		virtual const GPUMaterialGroupI&				MaterialGroup() const = 0;
 
-		virtual uint8_t									MaxOutRayPerRay() const = 0;
-};
-
-struct MatDataAccessor
-{
-	// Data fetch function of the material
-	// This struct should contain all necessary data required for kernel calls
-	// related to this material
-	// I dont know any design pattern for converting from static polymorphism
-	// to dynamic one. This is my solution (it is quite werid)
-	template<class GPUMaterialGroup>
-	static typename  GPUMaterialGroup::MaterialData		Data(const GPUMaterialGroup&);
+		virtual uint8_t									OutRayCount() const = 0;
 };

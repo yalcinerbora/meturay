@@ -13,13 +13,15 @@ proper for combined templates
 #include "GPUPrimitiveI.h"
 #include "AcceleratorDeviceFunctions.h"
 
-template <class PrimitiveData>
+struct PrimDataAccessor;
+
+template <class PrimitiveD>
 class GPUPrimitiveGroupP
 {
-	friend struct		PrimDataAccessor;
+	friend struct PrimDataAccessor;
 
 	protected:
-		PrimitiveData	 dData = {};
+		PrimitiveD dData = PrimitiveD{};
 };
 
 template <class HitD, class PrimitiveD, class LeafD,
@@ -28,8 +30,8 @@ template <class HitD, class PrimitiveD, class LeafD,
 		  BoxGenFunction<PrimitiveD> BoxF,
 		  AreaGenFunction<PrimitiveD> AreaF>
 class GPUPrimitiveGroup 
-	: public GPUPrimitiveGroupP<PrimitiveD>
-	, public GPUPrimitiveGroupI
+	: public GPUPrimitiveGroupI
+	, public GPUPrimitiveGroupP<PrimitiveD>
 {
 	public:	
 	   	// Type Definitions for kernel generations
@@ -45,6 +47,7 @@ class GPUPrimitiveGroup
 		
 	private:
 	protected:
+
 	public:
 		// Constructors & Destructor
 										GPUPrimitiveGroup() = default;

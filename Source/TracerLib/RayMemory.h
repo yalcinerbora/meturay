@@ -6,12 +6,11 @@ General Device memory manager for ray and it's auxiliary data
 
 */
 
-
 #include <set>
 
-#include "RayLib/DeviceMemory.h"
 #include "RayLib/ArrayPortion.h"
 
+#include "DeviceMemory.h"
 #include "RayStructs.h"
 #include "HitStructs.cuh"
 

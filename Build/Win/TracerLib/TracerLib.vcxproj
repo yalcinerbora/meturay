@@ -17,6 +17,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp" />
@@ -38,6 +39,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultTypeGenerators.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\DeviceMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.hpp" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorP.cuh" />
@@ -65,6 +67,8 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ReduceFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\RNGMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\RNGStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\Texture.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\Texture.hpp" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerBase.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLoader.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerDebug.h" />
@@ -73,6 +77,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGenerator.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGeneratorI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicI.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerThread.h" />
   </ItemGroup>
   <ItemGroup>

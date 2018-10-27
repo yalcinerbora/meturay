@@ -3,7 +3,7 @@
 #include <random>
 
 #include "TracerLib/Random.cuh"
-#include "RayLib/DeviceMemory.h"
+#include "TracerLib/DeviceMemory.h"
 #include "RayLib/Log.h"
 
 __global__ void KRandomNumbers(RNGGMem gMemory,

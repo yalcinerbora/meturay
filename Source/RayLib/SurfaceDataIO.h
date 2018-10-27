@@ -32,5 +32,5 @@ class SurfaceDataLoaderI
 
 namespace SurfaceDataIO
 {
-	std::unique_ptr<SurfaceDataLoaderI>		GenSurfaceDataLoader(const SceneFileNode& properties);
+	std::unique_ptr<SurfaceDataLoaderI>		GenSurfaceDataLoader(const SceneFileNode& properties);	
 }

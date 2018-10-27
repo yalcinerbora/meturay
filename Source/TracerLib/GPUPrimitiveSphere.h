@@ -16,14 +16,14 @@ All of them should be provided
 
 #include "DefaultLeaf.h"
 #include "GPUPrimitiveP.cuh"
+#include "DeviceMemory.h"
 
-#include "RayLib/DeviceMemory.h"
 #include "RayLib/Vector.h"
 
 // Sphere memory layout
 struct SphereData
 {
-	const Vector4f* centersRadius;
+	const Vector4f* centerRadius;
 };
 
 // Hit of sphere is spherical coordinates
@@ -42,7 +42,7 @@ inline HitResult SphereClosestHit(// Output
 								  const SphereData& primData)
 {
 	// Get Packed data and unpack
-	Vector4f data = primData.centersRadius[leaf.primitiveId];
+	Vector4f data = primData.centerRadius[leaf.primitiveId];
 	Vector3f center = data;
 	float radius = data[3];
 
@@ -70,7 +70,7 @@ __device__ __host__
 inline AABB3f GenerateAABBSphere(PrimitiveId primitiveId, const SphereData& primData)
 {
 	// Get Packed data and unpack
-	Vector4f data = primData.centersRadius[primitiveId];
+	Vector4f data = primData.centerRadius[primitiveId];
 	Vector3f center = data;
 	float radius = data[3];
 
@@ -81,7 +81,7 @@ inline AABB3f GenerateAABBSphere(PrimitiveId primitiveId, const SphereData& prim
 __device__ __host__
 inline float GenerateAreaSphere(PrimitiveId primitiveId, const SphereData& primData)
 {
-	Vector4f data = primData.centersRadius[primitiveId];	
+	Vector4f data = primData.centerRadius[primitiveId];	
 	float radius = data[3];
 
 	// Surface area is related to radius only (wrt of its square)

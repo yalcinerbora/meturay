@@ -62,6 +62,9 @@
     <ClCompile Include="..\..\..\Source\TracerLib\TracerThread.cpp">
       <Filter>SharedLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -187,6 +190,18 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveP.cuh">
       <Filter>Partial Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\DeviceMemory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\Texture.cuh">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\Texture.hpp">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerStructs.h">
+      <Filter>Structs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

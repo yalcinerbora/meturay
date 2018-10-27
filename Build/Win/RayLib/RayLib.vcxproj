@@ -136,7 +136,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaCheck.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\DeviceMemory.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Endian.h" />
     <ClInclude Include="..\..\..\Source\RayLib\IOError.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Log.h" />
@@ -156,8 +155,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\SharedLib.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceDataIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\Texture.cuh" />
-    <ClInclude Include="..\..\..\Source\RayLib\Texture.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\ThreadData.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerDistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerError.h" />
@@ -173,13 +170,13 @@
     <ClInclude Include="..\..\..\Source\RayLib\WorkerThread.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\RayLib\DeviceMemory.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MDistributor.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SceneIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SelfDistributor.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SharedLib.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\SurfaceDataIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\VisorWindowInput.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
   </ItemGroup>
