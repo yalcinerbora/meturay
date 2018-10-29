@@ -2,16 +2,12 @@
 
 #include "TracerLib/GPUPrimitiveSphere.h"
 #include "TracerLib/GPUPrimitiveTriangle.h"
-
-#include "TracerLogics.cuh"
 #include "TracerLib/GPUMaterialP.cuh"
 
 #include "RayLib/CosineDistribution.h"
 
-struct ColorMaterialData
-{
-	Vector3 albedo;
-};
+#include "TracerLogics.cuh"
+#include "MaterialStructs.h"
 
 struct BasicSurface
 {
@@ -81,7 +77,7 @@ inline void ColorMatShade(// Output
 
 	// Illumination Calculation
 	Vector3 irrad = auxIn.totalIrradiance;
-	auxOut.totalIrradiance = irrad * gMatData.albedo;
+	auxOut.totalIrradiance = irrad * gMatData.dAlbedo[matId];
 	
 	// Material calculation is done 
 	// continue to the determination of
@@ -122,6 +118,7 @@ class ColorMaterial final
 		static constexpr const char*	TypeName = "ColorM";
 	private:
 		DeviceMemory					memory;
+		ColorMaterialData				matData;
 
 	protected:
 	public:
@@ -132,15 +129,15 @@ class ColorMaterial final
 		// Type (as string) of the primitive group
 		const char*				Type() const override;
 		// Allocates and Generates Data
-		SceneError				InitializeGroup(const std::vector<SceneFileNode>& materialNodes, double time) override;
-		SceneError				ChangeTime(const std::vector<SceneFileNode>& materialNodes, double time) override;
+		SceneError				InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time) override;
+		SceneError				ChangeTime(const std::set<SceneFileNode>& materialNodes, double time) override;
 
 		// Load/Unload Material			
 		void					LoadMaterial(uint32_t materialId, int gpuId) override;
 		void					UnloadMaterial(uint32_t material) override;
 		// Material Queries
-		int						InnerId(uint32_t materialId) override;
-		bool					IsLoaded(uint32_t materialId) override;
+		int						InnerId(uint32_t materialId) const override;
+		bool					IsLoaded(uint32_t materialId) const override;
 
 		size_t					UsedGPUMemory() const override;
 		size_t					UsedCPUMemory() const override;

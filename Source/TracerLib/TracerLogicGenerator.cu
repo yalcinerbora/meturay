@@ -51,6 +51,7 @@ template void TypeGenWrappers::DefaultDestruct(GPUMaterialBatchI*);
 TracerLogicGenerator::TracerLogicGenerator()
 	: outerIdAccel(0)
 	, outerIdMaterial(0)
+	, baseAccelerator(nullptr, TypeGenWrappers::DefaultDestruct<GPUBaseAcceleratorI>)
 {
 	using namespace TypeGenWrappers;
 
@@ -77,6 +78,11 @@ TracerLogicGenerator::TracerLogicGenerator()
 								 GPUAccelBatchGen(AccelBatchConstruct<GPUAcceleratorBatchI, GPUAccSphrLinearBatch>,
 												  DefaultDestruct<GPUAcceleratorBatchI>));
 
+	// Base Accelerator
+	baseAccelGenerators.emplace(GPUBaseAcceleratorLinear::TypeName,
+								GPUBaseAccelGen(DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorLinear>,
+												DefaultDestruct<GPUBaseAcceleratorI>));
+
 	// Default Types are loaded
 	// Other Types are strongly tied to base tracer logic
 	// i.e. Auxiliary Struct Etc.
@@ -92,7 +98,7 @@ SceneError TracerLogicGenerator::GetPrimitiveGroup(GPUPrimitiveGroupI*& pg,
 		// Cannot Find Already Constructed Type
 		// Generate
 		auto loc = primGroupGenerators.find(primitiveType);
-		if(loc == primGroupGenerators.end()) return SceneError::PRIMITIVE_LOGIC_NOT_FOUND;
+		if(loc == primGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_PRIMITIVE;
 
 		GPUPrimGPtr ptr = loc->second();
 		pg = ptr.get();
@@ -113,7 +119,7 @@ SceneError TracerLogicGenerator::GetAcceleratorGroup(GPUAcceleratorGroupI*& ag,
 		// Cannot Find Already Constructed Type
 		// Generate
 		auto loc = accelGroupGenerators.find(accelType);
-		if(loc == accelGroupGenerators.end()) return SceneError::ACCELERATOR_LOGIC_NOT_FOUND;
+		if(loc == accelGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_ACCELERATOR;
 
 		GPUAccelGPtr ptr = loc->second(pg, t);
 		ag = ptr.get();
@@ -132,7 +138,7 @@ SceneError TracerLogicGenerator::GetMaterialGroup(GPUMaterialGroupI*& mg,
 		// Cannot Find Already Constructed Type
 		// Generate
 		auto loc = matGroupGenerators.find(materialType);
-		if(loc == matGroupGenerators.end()) return SceneError::MATERIAL_LOGIC_NOT_FOUND;
+		if(loc == matGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
 
 		GPUMatGPtr ptr = loc->second();
 		mg = ptr.get();
@@ -154,7 +160,7 @@ SceneError TracerLogicGenerator::GetAcceleratorBatch(GPUAcceleratorBatchI*& ab, 
 		// Cannot Find Already Constructed Type
 		// Generate
 		auto loc = accelBatchGenerators.find(batchType);
-		if(loc == accelBatchGenerators.end()) return SceneError::ACCELERATOR_LOGIC_NOT_FOUND;
+		if(loc == accelBatchGenerators.end()) return SceneError::NO_LOGIC_FOR_ACCELERATOR;
 
 		GPUAccelBPtr ptr = loc->second(ag, pg);
 		ab = ptr.get();
@@ -179,7 +185,7 @@ SceneError TracerLogicGenerator::GetMaterialBatch(GPUMaterialBatchI*& mb, uint32
 		// Cannot Find Already Constructed Type
 		// Generate
 		auto loc = matBatchGenerators.find(batchType);
-		if(loc == matBatchGenerators.end()) return SceneError::MATERIAL_LOGIC_NOT_FOUND;
+		if(loc == matBatchGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
 
 		GPUMatBPtr ptr = loc->second(mg, pg);
 		mb = ptr.get();
@@ -189,6 +195,22 @@ SceneError TracerLogicGenerator::GetMaterialBatch(GPUMaterialBatchI*& mb, uint32
 		outerIdMaterial++;
 	}
 	else mb = loc->second.get();
+	return SceneError::OK;
+}
+
+SceneError TracerLogicGenerator::GetBaseAccelerator(GPUBaseAcceleratorI*& baseAccel,
+													const std::string& accelType)
+{
+	if(baseAccelerator.get() == nullptr)
+	{
+		// Cannot Find Already Constructed Type
+		// Generate
+		auto loc = baseAccelGenerators.find(accelType);
+		if(loc == baseAccelGenerators.end()) return SceneError::NO_LOGIC_FOR_ACCELERATOR;		
+		baseAccelerator = loc->second();		
+		baseAccel = baseAccelerator.get();
+	}
+	else baseAccel = baseAccelerator.get();
 	return SceneError::OK;
 }
 

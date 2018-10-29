@@ -19,8 +19,6 @@ class BasicTracerLogicGenerator final : public TracerLogicGenerator
 							BasicTracerLogicGenerator();
 							~BasicTracerLogicGenerator() = default;
 
-		// Base Accelerator should be fetched after all the stuff is generated
-		SceneError			GetBaseAccelerator(const std::string& accelType) override;
 		// Finally get the tracer logic
 		// Tracer logic will be constructed with respect to
 		// Constructed batches

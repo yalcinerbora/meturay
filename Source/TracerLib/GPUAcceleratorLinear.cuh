@@ -73,12 +73,25 @@ class GPUAccLinearGroup final
 		// Type(as string) of the accelerator group
 		const char*						Type() const override;
 		// Loads required data to CPU cache for
-		SceneError						InitializeGroup(const std::map<uint32_t, HitKey>&,
-														// List of surface nodes
-														// that uses this accelerator type
-														// w.r.t. this prim group
-														const std::vector<SceneFileNode>&,
+		SceneError						InitializeGroup(// Map of hit keys for all materials
+														// w.r.t matId and primitive type
+														const std::map<TypeIdPair, HitKey>&,
+														// List of surface/material
+														// pairings that uses this accelerator type
+														// and primitive type
+														const std::map<uint32_t, IdPairings>& pairingList,
 														double time) override;
+		SceneError						ChangeTime(// Map of hit keys for all materials
+												   // w.r.t matId and primitive type
+												   const std::map<TypeIdPair, HitKey>&,
+												   // List of surface/material
+												   // pairings that uses this accelerator type
+												   // and primitive type
+												   const std::map<uint32_t, IdPairings>& pairingList,
+												   double time) override;
+
+		// Surface Queries
+		int							InnerId(uint32_t surfaceId) const override;
 
 		// Batched and singular construction
 		 void							ConstructAccelerator(uint32_t surface) override;
@@ -120,6 +133,8 @@ class GPUAccLinearBatch final
 
 class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
 {
+	public:
+		static const std::string	TypeName;
 	private:
 	protected:
 	public:
@@ -138,8 +153,15 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
 										const uint32_t rayCount) const override;
 
 		//TODO: define params of functions
-		void						Constrcut() override;
-		void						Reconstruct() override;
+		void						Constrcut(// List of allocator hitkeys of surfaces
+											  const std::map<uint32_t, HitKey>&,
+											  // List of all Surface/Transform pairs
+											  // that will be constructed
+											  const std::map<uint32_t, uint32_t>&) override;
+		void						Reconstruct(// List of allocator hitkeys of surfaces
+												const std::map<uint32_t, HitKey>&,
+												// List of changed Surface/Transform pairs
+												const std::map<uint32_t, uint32_t>&) override;
 };
 
 #include "GPUAcceleratorLinear.hpp"

@@ -9,9 +9,14 @@
 #include "SceneError.h"
 #include "Types.h"
 
-using SurfaceDataId = uint32_t;
 using MaterialId = uint32_t;
-using IdPairings = std::array<std::pair<MaterialId, SurfaceDataId>, SceneConstants::MaxSurfacePerAccelerator>;
+using SurfaceId = uint32_t;
+using SurfaceDataId = uint32_t;
+
+using TypeIdPair = std::pair<std::string, uint32_t>;
+using IdPairing = std::pair<uint32_t, uint32_t>;
+using IdTriplet = std::tuple<uint32_t, uint32_t, uint32_t>;
+using IdPairings = std::array<IdPairing, SceneConstants::MaxSurfacePerAccelerator>;
 
 enum class LightType
 {
@@ -64,13 +69,10 @@ using TransformStruct = Matrix4x4;
 
 struct SurfaceStruct
 {
+	std::string		acceleratorType;
 	uint32_t		transformId;	
-	uint32_t		primitiveId;
-	uint32_t		acceleratorId;
-	IdPairings		matDataPairs;
+	IdPairings		matPrimPairs;
 	int8_t			pairCount;
-
-	//bool			operator<(const SurfaceStruct& right) const;
 };
 
 struct PrimitiveStruct

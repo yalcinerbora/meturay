@@ -81,7 +81,7 @@ class GeneratorNoArg
 		SharedLibPtr<Interface> operator()()
 		{
 			Interface* prim = gFunc();
-			return GPUPrimGPtr(prim, dFunc);
+			return SharedLibPtr<Interface>(prim, dFunc);
 		}
 };
 

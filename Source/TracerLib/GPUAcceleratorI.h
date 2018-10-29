@@ -12,6 +12,7 @@ Base Interface for GPU accelerators
 #include <functional>
 
 #include "HitStructs.cuh"
+#include "RayLib/SceneStructs.h"
 
 struct RayGMem;
 struct SceneError;
@@ -34,26 +35,24 @@ class GPUAcceleratorGroupI
 		// Type(as string) of the accelerator group
 		virtual const char*		Type() const = 0;
 		// Loads required data to CPU cache for
-		virtual SceneError		InitializeGroup(SceneFileNode acceleratorNode,
-												// Map of hit keys for all materials
-												// can be queried by material file id
-												const std::map<uint32_t, HitKey>&,
+		virtual SceneError		InitializeGroup(// Map of hit keys for all materials
+												// w.r.t matId and primitive type
+												const std::map<TypeIdPair, HitKey>&,
 												// List of surface/material
 												// pairings that uses this accelerator type
 												// and primitive type
-												const std::set<IdPairings>& pairingList,
+												const std::map<uint32_t, IdPairings>& pairingList,
 												double time) = 0;
-		virtual SceneError		ChangeTime(SceneFileNode acceleratorNode,
-										   // Map of hit keys for all materials
-										   // can be queried by material file id
-										   const std::map<uint32_t, HitKey>&,
+		virtual SceneError		ChangeTime(// Map of hit keys for all materials
+										   // w.r.t matId and primitive type
+										   const std::map<TypeIdPair, HitKey>&,
 										   // List of surface/material
 										   // pairings that uses this accelerator type
 										   // and primitive type
-										   const std::set<IdPairings>& pairingList,
+										   const std::map<uint32_t, IdPairings>& pairingList,
 										   double time) = 0;
 		// Surface Queries
-		virtual int							InnerId(uint32_t surface) = 0;
+		virtual int							InnerId(uint32_t surfaceId) const = 0;
 
 		// Batched and singular construction
 		virtual void						ConstructAccelerator(uint32_t surface) = 0;
@@ -114,6 +113,13 @@ class GPUBaseAcceleratorI
 									const uint32_t rayCount) const = 0;
 
 		//TODO: define params of functions
-		virtual void			Constrcut() = 0;
-		virtual void			Reconstruct() = 0;
+		virtual void			Constrcut(// List of allocator hitkeys of surfaces
+										  const std::map<uint32_t, HitKey>&,
+										  // List of all Surface/Transform pairs
+										  // that will be constructed
+										  const std::map<uint32_t, uint32_t>&) = 0;
+		virtual void			Reconstruct(// List of allocator hitkeys of surfaces
+											const std::map<uint32_t, HitKey>&,
+											// List of changed Surface/Transform pairs
+											const std::map<uint32_t, uint32_t>&) = 0;
 };

@@ -9,7 +9,23 @@
 #include "DeviceMemory.h"
 
 struct SceneError;
+struct SceneFileNode;
 class TracerLogicGeneratorI;
+
+using NodeListing = std::set<SceneFileNode>;
+using TypeNameNodeListings = std::map<std::string, NodeListing>;
+
+struct AccelGroupData
+{
+	std::string						primName;
+	std::map<uint32_t, IdPairings>	matPrimIdPairs;
+};
+struct MatBatchData
+{
+	std::string			primType;
+	std::string			matType;
+	std::set<uint32_t>	matIds;
+};
 
 class GPUScene
 {
@@ -52,6 +68,25 @@ class GPUScene
 														const nlohmann::json& array,
 														IdBasedNodeType);
 		//
+		SceneError							GenerateConstructionData(TracerLogicGeneratorI*,
+																	 // Group Data
+																	 std::map<std::string, std::set<SceneFileNode>>& matGroupNodes,
+																	 std::map<std::string, std::set<SceneFileNode>>& primGroupNodes,
+																	 // Batch Data
+																	 std::map<std::string, AccelGroupData>& accelGroupListings,
+																	 std::map<std::string, MatBatchData>& matBatchListings,
+																	 // Base Accelerator required data
+																	 std::map<uint32_t, uint32_t>& surfaceTransformListings,
+																	 double time = 0.0);
+
+		SceneError							GenerateMaterialGroups(TracerLogicGeneratorI*,
+																   const TypeNameNodeListings&,
+																   double time = 0.0);
+		SceneError							GeneratePrimitiveGroups(TracerLogicGeneratorI*,
+																	const TypeNameNodeListings&,
+																	double time = 0.0);
+
+		// Private Load Functionality
 		void								LoadCommon(double time);
 		SceneError							LoadLogicRelated(TracerLogicGeneratorI*, double time);
 

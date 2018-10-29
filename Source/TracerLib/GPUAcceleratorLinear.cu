@@ -7,7 +7,7 @@
 
 const char* GPUBaseAcceleratorLinear::Type() const
 {
-	return "Linear";
+	return TypeName.c_str();
 }
 
 void GPUBaseAcceleratorLinear::Hit(// Output
@@ -21,18 +21,27 @@ void GPUBaseAcceleratorLinear::Hit(// Output
 
 }
 
-void GPUBaseAcceleratorLinear::Constrcut()
+void GPUBaseAcceleratorLinear::Constrcut(// List of allocator hitkeys of surfaces
+										 const std::map<uint32_t, HitKey>&,
+										 // List of all Surface/Transform pairs
+										 // that will be constructed
+										 const std::map<uint32_t, uint32_t>&)
 {
 
 }
 
-void GPUBaseAcceleratorLinear::Reconstruct()
+void GPUBaseAcceleratorLinear::Reconstruct(// List of allocator hitkeys of surfaces
+										   const std::map<uint32_t, HitKey>&,
+										   // List of changed Surface/Transform pairs
+										   const std::map<uint32_t, uint32_t>&)
 {
 
 }
 
 template<class PGroup>
 const std::string LinearAccelTypeName<PGroup>::TypeName = std::string("Linear") + PGroup::TypeName;
+
+const std::string GPUBaseAcceleratorLinear::TypeName = "Linear";
 
 // Accelerator
 template class GPUAccLinearGroup<GPUPrimitiveTriangle>;

@@ -99,7 +99,7 @@ static void KCIntersectLinear(// O
 							  const PGroup::PrimitiveData primData)
 {
 	// Fetch Types from Template Classes
-	using HitData = typename PGroup::HitData;			// HitRegister is defined by primitive
+	using HitData = typename PGroup::HitData;		// HitRegister is defined by primitive
 	using LeafData = typename PGroup::LeafData;		// LeafStruct is defined by primitive
 
 	// Grid Stride Loop

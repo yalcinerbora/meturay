@@ -1,30 +1,22 @@
-
 #include "Materials.cuh"
-#include "MaterialNodeRead.h"
-
-// Materials
+#include "MaterialNodeReaders.h"
 
 ColorMaterial::ColorMaterial()
-{
-
-}
+{}
 
 const char* ColorMaterial::Type() const
 {
 	return TypeName;
 }
 	
-SceneError ColorMaterial::InitializeGroup(const std::vector<SceneFileNode>& materialNodes, double time)
+SceneError ColorMaterial::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)
 {
-	for(const SceneFileNode& s : materialNodes)
-	{
-		Vector3 albedo = DataRead::ColorMaterial(s);
-	}
+	matData = ColorMaterialRead(memory, materialNodes, time);
 
 	return SceneError::OK;
 }
 
-SceneError ColorMaterial::ChangeTime(const std::vector<SceneFileNode>& materialNodes, double time)
+SceneError ColorMaterial::ChangeTime(const std::set<SceneFileNode>& materialNodes, double time)
 {
 	return SceneError::OK;
 }
@@ -38,12 +30,12 @@ void ColorMaterial::UnloadMaterial(uint32_t material)
 {
 }
 
-int ColorMaterial::InnerId(uint32_t materialId)
+int ColorMaterial::InnerId(uint32_t materialId) const
 {
 	return 0;
 }
 
-bool ColorMaterial::IsLoaded(uint32_t materialId)
+bool ColorMaterial::IsLoaded(uint32_t materialId) const
 {
 	return false;
 }

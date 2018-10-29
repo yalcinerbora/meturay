@@ -46,7 +46,8 @@ class TracerLogicGeneratorI
 												 const GPUPrimitiveGroupI&) = 0;
 
 		// Base Accelerator should be fetched after all the stuff is generated
-		virtual SceneError		GetBaseAccelerator(const std::string& accelType) = 0;
+		virtual SceneError		GetBaseAccelerator(GPUBaseAcceleratorI*&,
+												   const std::string& accelType) = 0;
 
 		// Finally get the tracer logic
 		// Tracer logic will be constructed with respect to

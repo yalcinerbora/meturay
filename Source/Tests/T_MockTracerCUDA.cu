@@ -58,8 +58,15 @@ class MockTracerLogic : public TracerBaseLogicI
 										const RayId* dRayIds,
 										const uint32_t rayCount) const override;
 
-				void			Constrcut() override {};
-				void			Reconstruct() override {};
+				void			Constrcut(// List of allocator hitkeys of surfaces
+										  const std::map<uint32_t, HitKey>&,
+										  // List of all Surface/Transform pairs
+										  // that will be constructed
+										  const std::map<uint32_t, uint32_t>&) override {};
+				void			Reconstruct(// List of allocator hitkeys of surfaces
+											const std::map<uint32_t, HitKey>&,
+											// List of changed Surface/Transform pairs
+											const std::map<uint32_t, uint32_t>&) override {};
 		};
 
 		class AcceleratorMock : public GPUAcceleratorBatchI

@@ -51,12 +51,146 @@ SceneError GPUScene::GenIdLookup(std::map<uint32_t, uint32_t>& result,
 		auto r = result.emplace(jsn[SceneIO::ID], i);
 		if(!r.second)
 		{			
-			unsigned int i = static_cast<int>(SceneError::DUPLICATE_ACCEL_ID) + t;
+			unsigned int i = static_cast<int>(SceneError::DUPLICATE_MATERIAL_ID) + t;
 			return static_cast<SceneError::Type>(i);
 		}
 		i++;
 	}
 	return SceneError::OK;
+}
+
+SceneError GPUScene::GenerateConstructionData(TracerLogicGeneratorI*,
+											  // Group Data
+											  std::map<std::string, std::set<SceneFileNode>>& matGroupNodes,
+											  std::map<std::string, std::set<SceneFileNode>>& primGroupNodes,
+											  // Batch Data
+											  std::map<std::string, AccelGroupData>& accelGroupListings,
+											  std::map<std::string, MatBatchData>& matBatchListings,
+											  // Base Accelerator required data
+											  std::map<uint32_t, uint32_t>& surfaceTransformListings,
+											  double time)
+{
+	SceneError e = SceneError::OK;
+
+	// Load Id Based Arrays
+	nlohmann::json surfaces;
+	nlohmann::json primitives;
+	nlohmann::json materials;
+	if(FindNode(surfaces, SceneIO::SURFACE_BASE)) return SceneError::SURFACES_ARRAY_NOT_FOUND;
+	if(FindNode(primitives, SceneIO::PRIMITIVE_BASE)) return SceneError::PRIMITIVES_ARRAY_NOT_FOUND;
+	if(FindNode(materials, SceneIO::MATERIAL_BASE)) return SceneError::MATERIALS_ARRAY_NOT_FOUND;
+	std::map<uint32_t, uint32_t> primList;
+	std::map<uint32_t, uint32_t> materialList;
+	GenIdLookup(primList, primitives, PRIMITIVE);
+	GenIdLookup(materialList, materials, MATERIAL);
+
+	// Iterate over surfaces
+	// and collect data for groups and batches
+	uint32_t surfId = 0;
+	for(const auto& jsn : surfaces)
+	{
+		SurfaceStruct surf = SceneIO::LoadSurface(jsn, time);
+		// Start loading mats and surface datas
+		// Iterate mat surface pairs
+		std::string primGroupType;
+		for(int i = 0; i < surf.pairCount; i++)
+		{
+			const auto& pairs = surf.matPrimPairs;
+			const uint32_t primId = pairs[i].second;
+			const uint32_t matId = pairs[i].first;
+			
+			std::string matGroupType;
+			// Check if primitive exists
+			// add it to primitive group list for later construction
+			if(auto loc = primList.find(primId);
+			   loc == primList.end())
+			{				
+				const auto jsnNode = primitives[loc->second];
+				std::string currentType = jsnNode[SceneIO::TYPE];
+				if((i != 0) && primGroupType != currentType)
+					return SceneError::PRIM_TYPE_NOT_CONSISTENT_ON_SURFACE;
+				else primGroupType = currentType;
+				auto& primSet = primGroupNodes.emplace(primGroupType,
+													   std::set<SceneFileNode>()).first->second;
+				primSet.emplace(SceneFileNode{primId, jsnNode});
+			}
+			else return SceneError::PRIMITIVE_ID_NOT_FOUND;
+
+			if(auto loc = materialList.find(matId);
+			   loc == materialList.end())
+			{
+				const auto jsnNode = materials[loc->second];
+				matGroupType = jsnNode[SceneIO::TYPE];
+				auto& matSet = matGroupNodes.emplace(matGroupType,
+													   std::set<SceneFileNode>()).first->second;
+				matSet.emplace(SceneFileNode{matId, jsnNode});
+
+				// Generate its mat batch also
+				MatBatchData batchData = MatBatchData
+				{
+					primGroupType,
+					matGroupType,
+					std::set<uint32_t>()
+				};
+				const auto& matBatch = matBatchListings.emplace(matGroupType + primGroupType,
+																batchData).first;
+				matBatch->second.matIds.emplace(matId);
+			}
+			else return SceneError::MATERIAL_ID_NOT_FOUND;
+		}
+		// Generate Accelerator Group
+		AccelGroupData accGData =
+		{
+			primGroupType,
+			std::map<uint32_t, IdPairings>()
+		};
+		const auto& result = accelGroupListings.emplace(surf.acceleratorType + primGroupType,
+														accGData).first;
+		result->second.matPrimIdPairs.emplace(surfId, surf.matPrimPairs);
+
+		// Generate transform pair also
+		surfaceTransformListings.emplace(surfId, surf.transformId);
+		surfId++;
+	}
+	return e;
+}
+
+SceneError GPUScene::GenerateMaterialGroups(TracerLogicGeneratorI* l,
+											const TypeNameNodeListings& matGroupNodes, 
+											double time)
+{
+	SceneError e = SceneError::OK;
+	for(const auto& matGroup : matGroupNodes)
+	{
+		std::string matTypeName = matGroup.first;
+		const auto& matNodes = matGroup.second;
+		//
+		GPUMaterialGroupI* matGroup;
+		if(e = l->GetMaterialGroup(matGroup, matTypeName))
+			return e;
+		if(e = matGroup->InitializeGroup(matNodes, time))
+			return e;
+	}
+	return e;
+}
+
+SceneError GPUScene::GeneratePrimitiveGroups(TracerLogicGeneratorI* l,
+											 const TypeNameNodeListings& primGroupNodes,
+											 double time)
+{
+	SceneError e = SceneError::OK;
+	for(const auto& primGroup : primGroupNodes)
+	{
+		std::string primTypeName = primGroup.first;
+		const auto& primNodes = primGroup.second;
+		//
+		GPUPrimitiveGroupI* primGroup;
+		if(e = l->GetPrimitiveGroup(primGroup, primTypeName))
+			return e;
+		if(e = primGroup->InitializeGroup(primNodes, time))
+			return e;
+	}
+	return e;
 }
 
 void GPUScene::LoadCommon(double time)
@@ -122,280 +256,115 @@ void GPUScene::LoadCommon(double time)
 
 SceneError GPUScene::LoadLogicRelated(TracerLogicGeneratorI* l, double time)
 {
-	using SurfaceId = uint32_t;
 	SceneError e = SceneError::OK;
-	std::set<SceneFileNode> emptySet;
-
-	// Load Id Based Arrays
-	// Surface Data
-	// Primitive
-	// Accelerator
-	// Definitions
-	nlohmann::json surfaces;
-	nlohmann::json primitives;
-	nlohmann::json surfaceData;
-	nlohmann::json materials;
-	nlohmann::json accelerators;
-	if(FindNode(surfaces, SceneIO::SURFACE_BASE)) return SceneError::SURFACES_ARRAY_NOT_FOUND;
-	if(FindNode(primitives, SceneIO::PRIMITIVE_BASE)) return SceneError::PRIMITIVES_ARRAY_NOT_FOUND;
-	if(FindNode(surfaceData, SceneIO::SURFACE_DATA_BASE)) return SceneError::SURFACE_DATA_ARRAY_NOT_FOUND;
-	if(FindNode(materials, SceneIO::MATERIAL_BASE)) return SceneError::MATERIALS_ARRAY_NOT_FOUND;
-	if(FindNode(accelerators, SceneIO::ACCELERATOR_BASE)) return SceneError::ACCELERATORS_ARRAY_NOT_FOUND;
-	
-	std::map<uint32_t, uint32_t> primList;
-	std::map<uint32_t, uint32_t> surfaceDataList;
-	std::map<uint32_t, uint32_t> materialList;
-	std::map<uint32_t, uint32_t> acceleratorList;
-	GenIdLookup(primList, primitives, PRIMITIVE);
-	GenIdLookup(surfaceDataList, surfaceData, SURFACE_DATA);
-	GenIdLookup(materialList, materials, MATERIAL);
-	GenIdLookup(acceleratorList, accelerators, ACCELERATOR);
-
-	// Load Surface Nodes
-	std::vector<SurfaceStruct> surfacesCPU;
-	surfacesCPU.reserve(surfaceData.size());
-	for(const auto& jsn : surfaces)
-	{
-		SurfaceStruct surfSturct = SceneIO::LoadSurface(jsn, time);
-		surfacesCPU.push_back(surfSturct);
-	}
-	// Sort w.r.t. primitive type and accelerator type
-	//std::sort(surfacesCPU.begin(), surfacesCPU.end());
-	struct AccelGroupData
-	{
-		uint32_t				outerId;
-		std::string				primName;
-		SceneFileNode			accelNode;
-		std::set<IdPairings>	matIdPairs;
-	};
-	struct MatBatchData
-	{
-		uint32_t			outerId;
-		std::string			primType;
-		std::string			matType;
-		std::set<uint32_t>	matIds;
-	};
-	
-	// Data groupings
+	// Group Data
 	std::map<std::string, std::set<SceneFileNode>> matGroupNodes;
 	std::map<std::string, std::set<SceneFileNode>> primGroupNodes;
-	// Batch data
-	std::map<std::string, AccelGroupData> accelGroupNodes;
-	std::map<std::string, MatBatchData> matBatchNodes;
-	// Key values for material and accelerator
-	std::map<IdPairings, HitKey> matBatchMaterialListings;
-	std::map<uint32_t, HitKey> accBatchAcceleratorListings;
+	// Batch Data
+	std::map<std::string, AccelGroupData> accelGroupListings;
+	std::map<std::string, MatBatchData> matBatchListings;
+	// Base Accelerator required data
+	std::map<uint32_t, uint32_t> surfaceTransformListings;
 
-	// Iterate over surfaces
-	// and collect data for groups and batches
-	for(const auto& surf : surfacesCPU)
-	{
-		std::string primGroupType;
-		std::string accelGroupType;
-		AccelGroupData* accelGroup;
-		std::set<SceneFileNode>* primGroup;
-		nlohmann::json accelNode;
+	if((e = GenerateConstructionData(l,
+									 matGroupNodes,
+									 primGroupNodes,
+									 accelGroupListings,
+									 matBatchListings,
+									 surfaceTransformListings,
+									 time)) != SceneError::OK)
+		return e;
 
-		// Try Find Prim Group		
-		if(auto loc = primList.find(surf.primitiveId);
-		   loc == primList.end())
-		{
-			const auto jsnNode = primitives[loc->second];
-			primGroupType = jsnNode[SceneIO::NAME];
-			primGroup = &primGroupNodes.emplace(primGroupType, 
-												emptySet).first->second;
-		}		   
-		else return SceneError::PRIMITIVE_ID_NOT_FOUND;
-
-		// Now try find accelerator group
-		// First find accelrator name
-		if(auto loc = acceleratorList.find(surf.acceleratorId);
-		   loc == acceleratorList.end())
-		{
-			accelNode = accelerators[loc->second];
-			accelGroupType = accelNode[SceneIO::NAME];
-		}
-		else return SceneError::ACCEL_ID_NOT_FOUND;
-
-		// Then combine name with primitive and find
-		AccelGroupData accelGroupData = 
-		{
-			0,
-			primGroupType,
-			SceneFileNode{surf.acceleratorId, accelNode},
-			std::set<IdPairings>()
-		};
-		accelGroup = &accelGroupNodes.emplace(accelGroupType + primGroupType,
-											  std::make_pair(surf.primitiveId, 
-															 accelGroupData)).first->second;
-
-		// Start loading mats and surface datas
-		// Iterate mat surface pairs
-		for(int i = 0; i < surf.pairCount; i++)
-		{
-			const auto& pairs = surf.matDataPairs;
-			const uint32_t surfId = pairs[i].second;
-			const uint32_t matId = pairs[i].first;
-							
-			// Check if surfData[i] exits
-			if(auto loc = surfaceDataList.find(surfId);
-			   loc == surfaceDataList.end())
-			{
-				const auto jsnNode = surfaceData[loc->second];
-				// Add surface to prim group
-				primGroup->emplace(SceneFileNode{surfId, jsnNode});
-			}
-			else return SceneError::SURFACE_DATA_ID_NOT_FOUND;
-
-			// Check if surfMats[i] exists
-			if(auto loc = materialList.find(matId);
-			   loc != materialList.end())
-			{
-				// Material exists
-				// Append it to its group
-				const auto jsnNode = materials[loc->second];
-				std::string matTypeName = jsnNode[SceneIO::NAME];
-
-				const auto& matGroup = matGroupNodes.emplace(matTypeName, 
-															 emptySet).first;
-				matGroup->second.emplace(SceneFileNode{matId, jsnNode});
-
-				// Generate its mat batch also
-				MatBatchData batchData = MatBatchData
-				{
-					0,
-					primGroupType,
-					matTypeName,
-					std::set<uint32_t>()
-				};
-				const auto& matBatch = matBatchNodes.emplace(matTypeName + primGroupType,
-															 batchData).first;
-				matBatch->second.matIds.emplace(matId);
-			}
-			else return SceneError::MATERIAL_ID_NOT_FOUND;
-		}
-		// Looks like this pairing is valid
-		// add it
-		accelGroup->matIdPairs.emplace(surf.matDataPairs);
-	}
-
-	// After iteration we know 
-	// which groups should be instatiated
-	// 
+	// Using those constructs generate
 	// Material Groups
-	for(const auto& matGroup : matGroupNodes)
-	{
-		// Allocate mat group
-		std::string matTypeName = matGroup.first;
-		const auto& matNodes = matGroup.second;
-		//
-		GPUMaterialGroupI* matGroup;
-		if(e = l->GetMaterialGroup(matGroup, matTypeName))
-			return e;
-		if(e = matGroup->InitializeGroup(matNodes, time))
-			return e;
-	}
+	if((e = GenerateMaterialGroups(l, matGroupNodes, time)) != SceneError::OK)
+		return e;
 	// Primitive Groups
-	for(const auto& primGroup : primGroupNodes)
-	{
-		// Allocate mat group
-		std::string primTypeName = primGroup.first;
-		const auto& primNodes = primGroup.second;
-		//
-		GPUPrimitiveGroupI* primGroup;
-		if(e = l->GetPrimitiveGroup(primGroup, primTypeName))
-			return e;
-		if(e = primGroup->InitializeGroup(primNodes, time))
-			return e;
-	}	
-	// Material Batches
-	for(auto& materialBatch : matBatchNodes)
+	if((e = GeneratePrimitiveGroups(l, primGroupNodes, time)) != SceneError::OK)
+		return e;
+	
+	// Material Batches &
+	// Material HitKey List	
+	std::map<TypeIdPair, HitKey> matHitKeyList;
+	for(auto& materialBatch : matBatchListings)
 	{
 		const std::string& accelGroupName = materialBatch.first;
 		const std::string& primTName = materialBatch.second.matType;
 		const std::string& matTName = materialBatch.second.primType;
-		
+		//
 		GPUPrimitiveGroupI* pGroup;
 		GPUMaterialGroupI* mGroup;
 		l->GetPrimitiveGroup(pGroup, primTName);
 		l->GetMaterialGroup(mGroup, matTName);
-
-		GPUMaterialBatchI* matBatch;
-		uint32_t id;
-		if(e = l->GetMaterialBatch(matBatch, id, *mGroup, *pGroup))
+		// Generation
+		GPUMaterialBatchI* matBatch; uint32_t id;
+		if((e = l->GetMaterialBatch(matBatch, id, *mGroup, *pGroup)) != SceneError::OK)
 			return e;
 
-
-
-		// Generate Keys..
+		// Now Keys
+		// Generate Keys...
 		const GPUMaterialGroupI& matGroup = *mGroup;
 		for(const auto& matId : materialBatch.second.matIds)
 		{
 			uint32_t innerId = matGroup.InnerId(matId);
 			HitKey key = HitKey::CombinedKey(id, innerId);
+			matHitKeyList.emplace(std::make_pair(primTName, matId), key);
 		}
-
-		l->
-
 	}
-
-	// Re-iterate surfaces
-	// Now populate material key listings and
-	// Primitive key listings	
-	std::map<SurfaceId, HitKey> surfaceMatKeys;
-	for(auto& surf : surfacesCPU)
-	{
-
-
-
-		//GPUMaterialBatchI* matBatch;
-		//if(e = l->GetMaterialBatch(matBatch, *mGroup, *pGroup))
-		//	return e;
-		//.......................................
-	}
-
-	//.....
 
 	// Accelerator Groups & Batches
-	for(const auto& accelGroup : accelGroupNodes)
+	// and surface hit keys
+	std::map<uint32_t, HitKey> accHitKeyList;
+	for(const auto& accelGroup : accelGroupListings)
 	{
 		const std::string& accelGroupName = accelGroup.first;
 		const auto& primTName = accelGroup.second.primName;
-		const auto& pairings = accelGroup.second.matIdPairs;
-		const auto& accelNode = accelGroup.second.accelNode;
-
+		const auto& pairings = accelGroup.second.matPrimIdPairs;
+		
+		// Fetch Primitive
 		GPUPrimitiveGroupI* pGroup;
-		l->GetPrimitiveGroup(pGroup, primTName);
+		if((e = l->GetPrimitiveGroup(pGroup, primTName)) != SceneError::OK)
+			return e;
 
+		// Group Generation
 		GPUAcceleratorGroupI* aGroup;
-		if(e = l->GetAcceleratorGroup(aGroup, *pGroup, dTransforms, accelGroupName))
+		if((e = l->GetAcceleratorGroup(aGroup, *pGroup, dTransforms, accelGroupName)) != SceneError::OK)
 			return e;
-		if(e = aGroup->InitializeGroup(accelNode, materialKeyListings, pairings, time))
+		if((e = aGroup->InitializeGroup(matHitKeyList, pairings, time)) != SceneError::OK)
 			return e;
 
-		// Batch
-		GPUAcceleratorBatchI* accelBatch;
-		if(e = l->GetAcceleratorBatch(accelBatch, *accelGroup, *pGroup))
+		// Batch Generation
+		GPUAcceleratorBatchI* accelBatch; uint32_t id;
+		if((e = l->GetAcceleratorBatch(accelBatch, id, *aGroup, *pGroup)) != SceneError::OK)
 			return e;
-	}
-	// Re-iterate surfaces
-	// Now populate material key listings and
-	// Primitive key listings	
-	std::map<SurfaceId, HitKey> acceleratorKeyListings;
-	for(const auto& surf : surfacesCPU)
-	{
-		matBatchMaterialListings
 
-		GPUMaterialBatchI* matBatch;
-		if(e = l->GetMaterialBatch(matBatch, *mGroup, *pGroup))
-			return e;
-		.......................................
+		// Now Keys
+		// Generate Keys...
+		const GPUAcceleratorGroupI& accGroup = *aGroup;
+		for(const auto& pairings : accelGroup.second.matPrimIdPairs)
+		{
+			const uint32_t surfId = pairings.first;
+			uint32_t innerId = accGroup.InnerId(surfId);
+			HitKey key = HitKey::CombinedKey(id, innerId);
+			accHitKeyList.emplace(surfId, key);
+		}
 	}
 
-	// Generate Base Logic
+	// Find Base Accelerator Type and generate
+	nlohmann::json baseAccel;
+	if(FindNode(baseAccel, SceneIO::BASE_ACCELERATOR_BASE)) return SceneError::BASE_ACCELERATOR_NODE_NOT_FOUND;
+	// Generating..
+	std::string baseAccelType = baseAccel;
+	GPUBaseAcceleratorI* baseAccelerator;
+	l->GetBaseAccelerator(baseAccelerator, baseAccelType);
+	// Constructing..
+	baseAccelerator->Constrcut(accHitKeyList,
+							   surfaceTransformListings);
 
-	// Generate Base Accelerator
-
+	// Finally generate 
+	TracerBaseLogicI* logic;
+	if((e = l->GetBaseLogic(logic)) != SceneError::OK)
+		return e;
 
 	// All of the data is generated
 	return SceneError::OK;

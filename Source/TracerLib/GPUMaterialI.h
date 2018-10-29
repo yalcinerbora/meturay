@@ -36,8 +36,8 @@ class GPUMaterialGroupI
 		virtual void						LoadMaterial(uint32_t materialId, int gpuId) = 0;
 		virtual void						UnloadMaterial(uint32_t material) = 0;
 		// Material Queries
-		virtual int							InnerId(uint32_t materialId) = 0;
-		virtual bool						IsLoaded(uint32_t materialId) = 0;
+		virtual int							InnerId(uint32_t materialId) const = 0;
+		virtual bool						IsLoaded(uint32_t materialId) const = 0;
 
 		virtual size_t						UsedGPUMemory() const = 0;
 		virtual size_t						UsedCPUMemory() const = 0;

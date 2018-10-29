@@ -190,7 +190,7 @@ LightStruct SceneIO::LoadLight(const nlohmann::json& jsn, double time)
 	else throw SceneException(SceneError::TYPE_MISMATCH);
 }
 
-SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn, double time = 0.0)
+SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn, double time)
 {
 	if(jsn.is_string())
 	{
@@ -200,24 +200,23 @@ SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn, double time = 0.0)
 	{
 		SurfaceStruct s = {};
 		s.transformId = jsn[TRANSFORM];
-		s.acceleratorId = jsn[ACCELERATOR];
-		s.primitiveId = jsn[PRIMITIVE];
-		s.matDataPairs.fill(std::make_pair(std::numeric_limits<uint32_t>::max(),
+		s.acceleratorType = jsn[ACCELERATOR];
+		s.matPrimPairs.fill(std::make_pair(std::numeric_limits<uint32_t>::max(),
 										   std::numeric_limits<uint32_t>::max()));
 		
 		// Array Like Couples
-		const auto surfaceDataIdArray = jsn[DATA];
-		const auto materialIdArray = jsn[DATA];
-		if(surfaceDataIdArray.size() != materialIdArray.size())
-			throw SceneException(SceneError::DATA_MATERIAL_NOT_SAME_SIZE);
-		if(surfaceDataIdArray.size() >= SceneConstants::MaxSurfacePerAccelerator)
+		const auto primIdArray = jsn[PRIMITIVE];
+		const auto materialIdArray = jsn[MATERIAL];
+		if(primIdArray.size() != materialIdArray.size())
+			throw SceneException(SceneError::PRIM_MATERIAL_NOT_SAME_SIZE);
+		if(primIdArray.size() >= SceneConstants::MaxSurfacePerAccelerator)
 			throw SceneException(SceneError::TOO_MANY_SURFACE_ON_NODE);
 
-		for(int i = 0; i < static_cast<int>(surfaceDataIdArray.size()); i++)
-			s.matDataPairs[i] = std::make_pair(materialIdArray[i], surfaceDataIdArray[i]);
+		for(int i = 0; i < static_cast<int>(primIdArray.size()); i++)
+			s.matPrimPairs[i] = std::make_pair(materialIdArray[i], primIdArray[i]);
 
-		std::sort(s.matDataPairs.begin(), s.matDataPairs.end());
-		s.pairCount = static_cast<int8_t>(surfaceDataIdArray.size());
+		std::sort(s.matPrimPairs.begin(), s.matPrimPairs.end());
+		s.pairCount = static_cast<int8_t>(primIdArray.size());
 		return s;
 	}
 }

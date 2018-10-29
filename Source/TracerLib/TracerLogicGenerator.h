@@ -29,6 +29,8 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		std::map<std::string, GPUAccelBatchGen>			accelBatchGenerators;
 		std::map<std::string, GPUMatBatchGen>			matBatchGenerators;
 
+		std::map<std::string, GPUBaseAccelGen>			baseAccelGenerators;
+
 		// Generated Types
 		// These hold ownership of classes (thus these will force destruction)
 		std::map<std::string, GPUAccelGPtr>				accelGroups;
@@ -38,6 +40,8 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		std::map<std::string, GPUAccelBPtr>				accelBatches;
 		std::map<std::string, GPUMatBPtr>				matBatches;
 
+		GPUBaseAccelPtr									baseAccelerator;
+		
 		// Generated Batch Mappings		
 		AcceleratorBatchMappings						accelBatchMap;
 		MaterialBatchMappings							matBatchMap;
@@ -68,9 +72,9 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 													 const GPUMaterialGroupI&,
 													 const GPUPrimitiveGroupI&) override;
 
-
-		//uint32_t					GetAccBatchOuterId() override;
-		//uint32_t					GetMatBatchOuterId() override;
+		// Base Accelerator should be fetched after all the stuff is generated
+		SceneError					GetBaseAccelerator(GPUBaseAcceleratorI*&,
+													   const std::string& accelType) override;
 
 		// Inclusion Functionality
 		// Additionally includes the materials from these libraries

@@ -43,11 +43,6 @@ BasicTracerLogicGenerator::BasicTracerLogicGenerator()
 											  DefaultDestruct<GPUMaterialBatchI>));
 }
 
-SceneError BasicTracerLogicGenerator::GetBaseAccelerator(const std::string& accelType)
-{	
-	return SceneError::OK;
-}
-
 SceneError BasicTracerLogicGenerator::GetBaseLogic(TracerBaseLogicI*&)
 {
 	return SceneError::OK;

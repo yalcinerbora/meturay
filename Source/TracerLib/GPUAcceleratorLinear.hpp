@@ -13,18 +13,35 @@ const char* GPUAccLinearGroup<P>::Type() const
 }
 
 template <class P>
-SceneError GPUAccLinearGroup<P>::InitializeGroup(const std::map<uint32_t, HitKey>& materialKeyList,												 
-												 const std::vector<SceneFileNode>& nodeList,
+SceneError GPUAccLinearGroup<P>::InitializeGroup(// Map of hit keys for all materials
+												// w.r.t matId and primitive type
+												 const std::map<TypeIdPair, HitKey>&,
+												 // List of surface/material
+												 // pairings that uses this accelerator type
+												 // and primitive type
+												 const std::map<uint32_t, IdPairings>& pairingList,
 												 double time)
 {
-	for(const SceneFileNode& s : nodeList)
-	{
-		MaterialList l = NodeDataRead::LinearAcceleator(s, time);
-		PrimList l = 
-	}
-
-	//....
 	return SceneError::OK;
+}
+
+template <class P>
+SceneError GPUAccLinearGroup<P>::ChangeTime(// Map of hit keys for all materials
+										   // w.r.t matId and primitive type
+											const std::map<TypeIdPair, HitKey>&,
+											// List of surface/material
+											// pairings that uses this accelerator type
+											// and primitive type
+											const std::map<uint32_t, IdPairings>& pairingList,
+											double time)
+{
+	return SceneError::OK;
+}
+
+template <class P>
+int GPUAccLinearGroup<P>::InnerId(uint32_t surfaceId) const
+{
+	return 0;
 }
 
 template <class P>
