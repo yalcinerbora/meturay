@@ -6,7 +6,7 @@
 
 #include <string>
 #include <cstdint>
-#include <vector>
+#include <set>
 #include "HitStructs.cuh"
 
 struct RayGMem;
@@ -29,8 +29,8 @@ class GPUMaterialGroupI
 		// Type (as string) of the primitive group
 		virtual const char*					Type() const = 0;
 		// Allocates and Generates Data
-		virtual SceneError					InitializeGroup(const std::vector<SceneFileNode>& materialNodes, double time) = 0;
-		virtual SceneError					ChangeTime(const std::vector<SceneFileNode>& materialNodes, double time) = 0;
+		virtual SceneError					InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time) = 0;
+		virtual SceneError					ChangeTime(const std::set<SceneFileNode>& materialNodes, double time) = 0;
 
 		// Load/Unload Material				
 		virtual void						LoadMaterial(uint32_t materialId, int gpuId) = 0;

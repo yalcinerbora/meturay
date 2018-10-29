@@ -16,6 +16,10 @@ and it adds default accelerators and primitives as default types.
 class TracerLogicGenerator : public TracerLogicGeneratorI
 {
 	private:
+		// Outer Id States
+		uint32_t										outerIdAccel;
+		uint32_t										outerIdMaterial;
+
 	protected:
 		// Type Generation Functions
 		std::map<std::string, GPUPrimGroupGen>			primGroupGenerators;
@@ -34,9 +38,9 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		std::map<std::string, GPUAccelBPtr>				accelBatches;
 		std::map<std::string, GPUMatBPtr>				matBatches;
 
-		// Generated Batch Mappings
-		std::map<uint32_t, GPUAcceleratorBatchI*>		accelBatchMap;
-		std::map<uint32_t, GPUMaterialBatchI*>			matBatchMap;
+		// Generated Batch Mappings		
+		AcceleratorBatchMappings						accelBatchMap;
+		MaterialBatchMappings							matBatchMap;
 
 	public:
 		// Constructor & Destructor
@@ -57,12 +61,16 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 
 		// Batches are the abstraction of kernel calls
 		// Each batch instance is equavilent to a kernel call	
-		SceneError					GetAcceleratorBatch(GPUAcceleratorBatchI*&,
+		SceneError					GetAcceleratorBatch(GPUAcceleratorBatchI*&, uint32_t& id,
 														const GPUAcceleratorGroupI&,
 														const GPUPrimitiveGroupI&) override;
-		SceneError					GetMaterialBatch(GPUMaterialBatchI*&,
+		SceneError					GetMaterialBatch(GPUMaterialBatchI*&, uint32_t& id,
 													 const GPUMaterialGroupI&,
 													 const GPUPrimitiveGroupI&) override;
+
+
+		//uint32_t					GetAccBatchOuterId() override;
+		//uint32_t					GetMatBatchOuterId() override;
 
 		// Inclusion Functionality
 		// Additionally includes the materials from these libraries

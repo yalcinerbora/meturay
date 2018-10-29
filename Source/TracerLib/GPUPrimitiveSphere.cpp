@@ -1,6 +1,6 @@
 #include "GPUPrimitiveSphere.h"
-#include "PrimitiveDataTypes.h"
 
+#include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/SurfaceDataIO.h"
 #include "RayLib/SceneError.h"
 #include "RayLib/SceneFileNode.h"
@@ -22,7 +22,7 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const std::vector<SceneFileNode>&
 	std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
 	for(const SceneFileNode& s : surfaceDatalNodes)
 	{
-		loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s)));
+		loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s, time)));
 	}
 
 	SceneError e = SceneError::OK;
@@ -43,10 +43,10 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const std::vector<SceneFileNode>&
 	for(const auto& loader : loaders)
 	{
 		if(e != loader->LoadPrimitiveData(postitionsCPU.data() + offset,
-										  PrimBasicDataTypeToString(PrimitiveBasicDataType::POSITION)))
+										  PrimitiveDataTypeToString(PrimitiveDataType::POSITION)))
 			return e;
 		if(e != loader->LoadPrimitiveData(radiusCPU.data() + offset,
-										  PrimBasicDataTypeToString(PrimitiveBasicDataType::RADIUS)))
+										  PrimitiveDataTypeToString(PrimitiveDataType::RADIUS)))
 			return e;
 		offset += loader->PrimitiveCount();
 	}
@@ -79,7 +79,7 @@ SceneError GPUPrimitiveSphere::ChangeTime(const std::vector<SceneFileNode>& surf
 	std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
 	for(const SceneFileNode& s : surfaceDatalNodes)
 	{
-		loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s)));
+		loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s, time)));
 	}
 
 	SceneError e = SceneError::OK;
@@ -94,10 +94,10 @@ SceneError GPUPrimitiveSphere::ChangeTime(const std::vector<SceneFileNode>& surf
 		radiusCPU.resize(primitiveCount);
 	
 		if(e != loader->LoadPrimitiveData(postitionsCPU.data(),
-										  PrimBasicDataTypeToString(PrimitiveBasicDataType::POSITION)))
+										  PrimitiveDataTypeToString(PrimitiveDataType::POSITION)))
 			return e;
 		if(e != loader->LoadPrimitiveData(radiusCPU.data(),
-										  PrimBasicDataTypeToString(PrimitiveBasicDataType::RADIUS)))
+										  PrimitiveDataTypeToString(PrimitiveDataType::RADIUS)))
 			return e;
 
 		// Copy
@@ -122,7 +122,7 @@ Vector2ul GPUPrimitiveSphere::PrimitiveBatchRange(uint32_t surfaceDataId)
 
 bool GPUPrimitiveSphere::CanGenerateData(const std::string& s) const
 {
-	return (s == PrimBasicDataTypeToString(PrimitiveBasicDataType::POSITION) ||
-			s == PrimBasicDataTypeToString(PrimitiveBasicDataType::NORMAL) ||
-			s == PrimBasicDataTypeToString(PrimitiveBasicDataType::UV));
+	return (s == PrimitiveDataTypeToString(PrimitiveDataType::POSITION) ||
+			s == PrimitiveDataTypeToString(PrimitiveDataType::NORMAL) ||
+			s == PrimitiveDataTypeToString(PrimitiveDataType::UV));
 }

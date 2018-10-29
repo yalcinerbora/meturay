@@ -1,5 +1,6 @@
 #include "SceneIO.h"
 #include "Camera.h"
+#include "Constants.h"
 
 namespace SceneIO
 {
@@ -7,6 +8,12 @@ namespace SceneIO
 	static constexpr const char*	POSITION = "position";
 	static constexpr const char*	DATA = "data";
 
+	// Surface Related Names
+	static constexpr const char*	TRANSFORM = "transform";
+	static constexpr const char*	PRIMITIVE = "primitive";
+	static constexpr const char*	ACCELERATOR = "accelerator";
+	static constexpr const char*	MATERIAL = "material";
+	
 	// Camera Related Names	
 	static constexpr const char*	CAMERA_APERTURE = "apertureSize";
 	static constexpr const char*	CAMERA_FOCUS = "focusDistance";
@@ -181,4 +188,36 @@ LightStruct SceneIO::LoadLight(const nlohmann::json& jsn, double time)
 		else throw SceneException(SceneError::UNKNOWN_LIGHT_TYPE);
 	}
 	else throw SceneException(SceneError::TYPE_MISMATCH);
+}
+
+SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn, double time = 0.0)
+{
+	if(jsn.is_string())
+	{
+		return LoadFromAnim<SurfaceStruct>(jsn, time);
+	}
+	else
+	{
+		SurfaceStruct s = {};
+		s.transformId = jsn[TRANSFORM];
+		s.acceleratorId = jsn[ACCELERATOR];
+		s.primitiveId = jsn[PRIMITIVE];
+		s.matDataPairs.fill(std::make_pair(std::numeric_limits<uint32_t>::max(),
+										   std::numeric_limits<uint32_t>::max()));
+		
+		// Array Like Couples
+		const auto surfaceDataIdArray = jsn[DATA];
+		const auto materialIdArray = jsn[DATA];
+		if(surfaceDataIdArray.size() != materialIdArray.size())
+			throw SceneException(SceneError::DATA_MATERIAL_NOT_SAME_SIZE);
+		if(surfaceDataIdArray.size() >= SceneConstants::MaxSurfacePerAccelerator)
+			throw SceneException(SceneError::TOO_MANY_SURFACE_ON_NODE);
+
+		for(int i = 0; i < static_cast<int>(surfaceDataIdArray.size()); i++)
+			s.matDataPairs[i] = std::make_pair(materialIdArray[i], surfaceDataIdArray[i]);
+
+		std::sort(s.matDataPairs.begin(), s.matDataPairs.end());
+		s.pairCount = static_cast<int8_t>(surfaceDataIdArray.size());
+		return s;
+	}
 }

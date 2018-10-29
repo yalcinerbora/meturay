@@ -13,12 +13,16 @@ const char* GPUAccLinearGroup<P>::Type() const
 }
 
 template <class P>
-SceneError GPUAccLinearGroup<P>::InitializeGroup(const std::map<uint32_t, HitKey>& materialKeyList,
-												 // List of surface nodes
-												 // that uses this accelerator type
-												 // w.r.t. this prim group
-												 const std::vector<SceneFileNode>&)
+SceneError GPUAccLinearGroup<P>::InitializeGroup(const std::map<uint32_t, HitKey>& materialKeyList,												 
+												 const std::vector<SceneFileNode>& nodeList,
+												 double time)
 {
+	for(const SceneFileNode& s : nodeList)
+	{
+		MaterialList l = NodeDataRead::LinearAcceleator(s, time);
+		PrimList l = 
+	}
+
 	//....
 	return SceneError::OK;
 }

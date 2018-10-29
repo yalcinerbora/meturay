@@ -65,6 +65,9 @@
     <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp">
       <Filter>Memory</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cpp">
+      <Filter>Default Accelerators</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -148,7 +151,6 @@
       <Filter>Default Primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\PrimitiveDataTypes.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.h">
       <Filter>Default Primitives</Filter>
     </ClInclude>
@@ -202,6 +204,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\TracerStructs.h">
       <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.h">
+      <Filter>Default Accelerators</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

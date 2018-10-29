@@ -1,11 +1,17 @@
 #pragma once
 
 #include <vector>
+#include <array>
+#include <set>
 
 #include "Vector.h"
 #include "Matrix.h"
 #include "SceneError.h"
 #include "Types.h"
+
+using SurfaceDataId = uint32_t;
+using MaterialId = uint32_t;
+using IdPairings = std::array<std::pair<MaterialId, SurfaceDataId>, SceneConstants::MaxSurfacePerAccelerator>;
 
 enum class LightType
 {
@@ -58,18 +64,13 @@ using TransformStruct = Matrix4x4;
 
 struct SurfaceStruct
 {
-	uint32_t transformId;
-	uint32_t materialId;
-	uint32_t primitiveId;
-	uint32_t acceleratorId;
-	uint32_t dataId;
+	uint32_t		transformId;	
+	uint32_t		primitiveId;
+	uint32_t		acceleratorId;
+	IdPairings		matDataPairs;
+	int8_t			pairCount;
 
-	static bool SortComparePrimitive(const SurfaceStruct* a,
-									 const SurfaceStruct* b);
-	static bool SortComparePrimAccel(const SurfaceStruct* a,
-									 const SurfaceStruct* b);
-	static bool SortComparePrimMaterial(const SurfaceStruct* a,
-										const SurfaceStruct* b);
+	//bool			operator<(const SurfaceStruct& right) const;
 };
 
 struct PrimitiveStruct
@@ -89,22 +90,10 @@ struct PrimitiveStruct
 	uint32_t					id;
 };
 
-inline bool SurfaceStruct::SortComparePrimitive(const SurfaceStruct* a,
-												const SurfaceStruct* b)
-{
-	return a->primitiveId < b->primitiveId;
-}
-
-inline bool SurfaceStruct::SortComparePrimAccel(const SurfaceStruct* a,
-												const SurfaceStruct* b)
-{
-	return (a->primitiveId < b->primitiveId ||
-		   (a->primitiveId == b->primitiveId && a->acceleratorId < b->acceleratorId));
-}
-
-inline bool SurfaceStruct::SortComparePrimMaterial(const SurfaceStruct* a,
-												   const SurfaceStruct* b)
-{
-	return (a->primitiveId < b->primitiveId ||
-		   (a->primitiveId == b->primitiveId && a->materialId < b->materialId));
-}
+//inline bool SurfaceStruct::operator<(const SurfaceStruct& right)
+//{
+//	bool case0 = primitiveId < right.primitiveId;
+//	bool case1 = (primitiveId == right.primitiveId &&
+//				  acceleratorId < right.acceleratorId);
+//	return (case0 || case1);
+//}

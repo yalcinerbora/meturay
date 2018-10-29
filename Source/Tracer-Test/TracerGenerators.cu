@@ -29,14 +29,18 @@ BasicTracerLogicGenerator::BasicTracerLogicGenerator()
 	, baseAccelerator(nullptr, DefaultDestruct<GPUBaseAcceleratorI>)
 {
 	// Add Basic Mat and Batch
-
 	// Material Types
 	matGroupGenerators.emplace(ColorMaterial::TypeName,
 							   GPUMatGroupGen(DefaultConstruct<GPUMaterialGroupI, ColorMaterial>,
 											  DefaultDestruct<GPUMaterialGroupI>));
 
 	// Material Batches
-
+	matBatchGenerators.emplace(ColorMatSphrBatch::TypeName,
+							   GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ColorMatSphrBatch>,
+											  DefaultDestruct<GPUMaterialBatchI>));
+	matBatchGenerators.emplace(ColorMatTriBatch::TypeName,
+							   GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ColorMatTriBatch>,
+											  DefaultDestruct<GPUMaterialBatchI>));
 }
 
 SceneError BasicTracerLogicGenerator::GetBaseAccelerator(const std::string& accelType)

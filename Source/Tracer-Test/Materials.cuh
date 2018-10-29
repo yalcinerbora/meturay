@@ -119,7 +119,7 @@ class ColorMaterial final
 							  ColorMatShade>
 {
 	public:
-		static constexpr const char*	TypeName = "Sphere";
+		static constexpr const char*	TypeName = "ColorM";
 	private:
 		DeviceMemory					memory;
 

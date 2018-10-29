@@ -23,7 +23,7 @@ class GPUAcceleratorGroup : public GPUAcceleratorGroupI
 	public:
 		// Constructors & Destructor
 										GPUAcceleratorGroup(const GPUPrimitiveGroupI&,
-														  const TransformStruct*);
+														    const TransformStruct*);
 										~GPUAcceleratorGroup() = default;
 
 

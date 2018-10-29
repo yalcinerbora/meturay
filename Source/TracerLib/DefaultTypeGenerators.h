@@ -218,8 +218,7 @@ namespace TypeGenWrappers
 
 	template <class T>
 	void EmptyDestruct(T* t) {}
-
-
+	
 	template <class Base, class TracerLogic>
 	Base* TracerLogicConstruct(const GPUBaseAcceleratorI& ba, 
 							   const AcceleratorBatchMappings& am,

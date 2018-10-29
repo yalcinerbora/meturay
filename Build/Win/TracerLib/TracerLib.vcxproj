@@ -18,6 +18,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp" />
@@ -41,6 +42,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultTypeGenerators.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DeviceMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.hpp" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialP.cuh" />
@@ -59,7 +61,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ParallelReduction.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ParallelScan.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\PrimitiveDataTypes.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\RadixSort.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\Random.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\RayMemory.h" />

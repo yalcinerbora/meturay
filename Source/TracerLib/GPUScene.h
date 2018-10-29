@@ -39,6 +39,10 @@ class GPUScene
 		LightStruct*						dLights;
 		TransformStruct*					dTransforms;
 			
+		////
+		//std::map<uint32_t, HitKey>			materialIdKeyPairings;
+		//std::map<uint32_t, HitKey>			surfaceIdKeyPairings;
+
 		// Inners
 		// Helper Logic
 		SceneError							OpenFile(const std::string& fileName);
