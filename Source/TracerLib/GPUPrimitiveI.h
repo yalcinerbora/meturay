@@ -23,6 +23,7 @@ since this API is being developed for customization this is mandatory.
 #include <string>
 
 #include "RayLib/Vector.h"
+#include "RayLib/AABB.h"
 
 struct SceneError;
 struct SceneFileNode;
@@ -40,12 +41,12 @@ class GPUPrimitiveGroupI
 		virtual SceneError									ChangeTime(const std::set<SceneFileNode>& surfaceDatalNodes, double time) = 0;
 	
 		// Access primitive range from Id						
-		virtual Vector2ul									PrimitiveBatchRange(uint32_t surfaceDataId) = 0;
+		virtual Vector2ul									PrimitiveBatchRange(uint32_t surfaceDataId) const = 0;
+		virtual AABB3										PrimitiveBatchAABB(uint32_t surfaceDataId) const = 0;
 
 		// Error check
 		// Queries in order to check if this primitive group supports certain primitive data
 		// Material may need that data
 		virtual bool										CanGenerateData(const std::string& s) const = 0;
-
 
 };

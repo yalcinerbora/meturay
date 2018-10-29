@@ -35,6 +35,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& 
 		totalPrimitiveCount = end;
 
 		batchRanges.emplace(surfId, Vector2ul(start, end));
+		batchAABBs.emplace(surfId, loader->PrimitiveAABB());
 	}
 
 	std::vector<float> postitionsCPU(totalPrimitiveCount * 3);
@@ -144,9 +145,14 @@ SceneError GPUPrimitiveTriangle::ChangeTime(const std::set<SceneFileNode>& surfa
 	return e;
 }
 
-Vector2ul GPUPrimitiveTriangle::PrimitiveBatchRange(uint32_t surfaceDataId)
+Vector2ul GPUPrimitiveTriangle::PrimitiveBatchRange(uint32_t surfaceDataId) const
 {
-	return batchRanges[surfaceDataId];
+	return batchRanges.at(surfaceDataId);
+}
+
+AABB3 GPUPrimitiveTriangle::PrimitiveBatchAABB(uint32_t surfaceDataId) const
+{
+	return batchAABBs.at(surfaceDataId);
 }
 
 bool GPUPrimitiveTriangle::CanGenerateData(const std::string& s) const

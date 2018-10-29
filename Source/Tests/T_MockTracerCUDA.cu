@@ -49,6 +49,8 @@ class MockTracerLogic : public TracerBaseLogicI
 				
 				// Type(as string) of the accelerator group
 				const char*			Type() const override { return "MockBaseAccel"; }
+				// Get ready for hit loop
+				void				GetReady(uint32_t rayCount) override {};
 				// KC
 				void				Hit(// Output
 										TransformId* dTransformIds,
@@ -58,15 +60,10 @@ class MockTracerLogic : public TracerBaseLogicI
 										const RayId* dRayIds,
 										const uint32_t rayCount) const override;
 
-				void			Constrcut(// List of allocator hitkeys of surfaces
-										  const std::map<uint32_t, HitKey>&,
-										  // List of all Surface/Transform pairs
-										  // that will be constructed
-										  const std::map<uint32_t, uint32_t>&) override {};
-				void			Reconstruct(// List of allocator hitkeys of surfaces
-											const std::map<uint32_t, HitKey>&,
-											// List of changed Surface/Transform pairs
-											const std::map<uint32_t, uint32_t>&) override {};
+				void			Constrcut(// List of surface to transform id hit key mappings
+										  const std::map<uint32_t, BaseLeaf>&) override {};
+				void			Reconstruct(// List of only changed surface to transform id hit key mappings
+											const std::map<uint32_t, BaseLeaf>&) override {};
 		};
 
 		class AcceleratorMock : public GPUAcceleratorBatchI
@@ -192,7 +189,7 @@ class MockTracerLogic : public TracerBaseLogicI
 		
 
 		// Interface fetching for logic
-		const GPUBaseAcceleratorI&					BaseAcelerator() override { return *baseAccelerator; }
+		GPUBaseAcceleratorI&						BaseAcelerator() override { return *baseAccelerator; }
 		const AcceleratorBatchMappings&				AcceleratorBatches() override { return accelerators; }
 		const MaterialBatchMappings&				MaterialBatches() override { return materials; }
 

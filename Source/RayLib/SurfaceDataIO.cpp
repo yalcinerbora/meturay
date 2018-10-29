@@ -3,6 +3,9 @@
 #include "SceneFileNode.h"
 #include "PrimitiveDataTypes.h"
 
+#include "RayLib/Sphere.h"
+#include "RayLib/Triangle.h"
+
 class SurfaceDataLoader : public SurfaceDataLoaderI
 {
 	private:		
@@ -40,6 +43,7 @@ class InNodeTriLoader : public SurfaceDataLoader
 		// Size Determination
 		size_t					PrimitiveCount() const override;
 		size_t					PrimitiveDataSize(const std::string& primitiveDataType) const override;
+		AABB3f					PrimitiveAABB() const override;
 
 		// Load Functionality
 		const char*				SufaceDataFileExt() const override;
@@ -69,6 +73,18 @@ size_t InNodeTriLoader::PrimitiveDataSize(const std::string& primitiveDataType) 
 	else throw SceneException(SceneError::SURFACE_DATA_TYPE_NOT_FOUND);
 }
 
+AABB3f InNodeTriLoader::PrimitiveAABB() const
+{
+	int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
+	std::array<Vector3, 3> data =
+	{
+		SceneIO::LoadVector<3, float>(node.jsn[posIndex][0], time),
+		SceneIO::LoadVector<3, float>(node.jsn[posIndex][1], time),
+		SceneIO::LoadVector<3, float>(node.jsn[posIndex][2], time)
+	};
+	return Triangle::BoundingBox(data[0], data[1], data[2]);
+}
+
 const char* InNodeTriLoader::SufaceDataFileExt() const
 {
 	return "";
@@ -83,17 +99,30 @@ SceneError InNodeTriLoader::LoadPrimitiveData(float* dataOut, const std::string&
 	if(primitiveDataType == PrimitiveDataTypeNames[static_cast<int>(PrimitiveDataType::POSITION)] ||
 	   primitiveDataType == PrimitiveDataTypeNames[static_cast<int>(PrimitiveDataType::NORMAL)])
 	{
-		Vector3 data = SceneIO::LoadVector<3, float>(node.jsn[primitiveDataType], time);
-		dataOut[0] = data[0];
-		dataOut[1] = data[1];
-		dataOut[2] = data[2];
+		std::array<Vector3, 3> data = 
+		{
+			SceneIO::LoadVector<3, float>(node.jsn[primitiveDataType][0], time),
+			SceneIO::LoadVector<3, float>(node.jsn[primitiveDataType][1], time),
+			SceneIO::LoadVector<3, float>(node.jsn[primitiveDataType][2], time)
+		};
+		for(int i = 0; i < 9; i++)
+		{
+			dataOut[i] = data[i / 3][i % 3];
+		}		
 		return SceneError::OK;
 	}
 	else if(primitiveDataType == PrimitiveDataTypeNames[static_cast<int>(PrimitiveDataType::UV)])
-	{		
-		Vector2 uv = SceneIO::LoadVector<2, float>(node.jsn[primitiveDataType], time);
-		dataOut[0] = uv[0];
-		dataOut[1] = uv[1];
+	{	
+		std::array<Vector2, 3> data =
+		{
+			SceneIO::LoadVector<2, float>(node.jsn[primitiveDataType][0], time),
+			SceneIO::LoadVector<2, float>(node.jsn[primitiveDataType][1], time),
+			SceneIO::LoadVector<2, float>(node.jsn[primitiveDataType][2], time)
+		};
+		for(int i = 0; i < 6; i++)
+		{
+			dataOut[i] = data[i / 2][i % 2];
+		}		
 		return SceneError::OK;
 	}
 	else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
@@ -133,6 +162,7 @@ class InNodeSphrLoader : public SurfaceDataLoader
 		// Size Determination
 		size_t					PrimitiveCount() const override;
 		size_t					PrimitiveDataSize(const std::string& primitiveDataType) const override;
+		AABB3f					PrimitiveAABB() const override;
 
 		// Load Functionality
 		const char*				SufaceDataFileExt() const override;
@@ -150,7 +180,7 @@ size_t InNodeSphrLoader::PrimitiveCount() const
 
 size_t InNodeSphrLoader::PrimitiveDataSize(const std::string& primitiveDataType) const
 {
-	if(primitiveDataType == PrimitiveDataTypeNames[static_cast<int>(PrimitiveDataType::POSITION)])
+	if(primitiveDataType == PrimitiveDataTypeNames[static_cast<int>(PrimitiveDataType::CENTER)])
 	{
 		return sizeof(float) * 3;
 	}
@@ -159,6 +189,17 @@ size_t InNodeSphrLoader::PrimitiveDataSize(const std::string& primitiveDataType)
 		return sizeof(float);
 	}
 	else throw SceneException(SceneError::SURFACE_DATA_TYPE_NOT_FOUND);
+}
+
+AABB3f InNodeSphrLoader::PrimitiveAABB() const
+{
+	int centerIndex = static_cast<int>(PrimitiveDataType::CENTER);
+	int radIndex = static_cast<int>(PrimitiveDataType::RADIUS);
+
+	Vector3 center = SceneIO::LoadVector<3, float>(node.jsn[centerIndex], time);
+	float radius = SceneIO::LoadNumber<float>(node.jsn[radIndex], time);
+
+	return Sphere::BoundingBox(center, radius);
 }
 
 const char* InNodeSphrLoader::SufaceDataFileExt() const

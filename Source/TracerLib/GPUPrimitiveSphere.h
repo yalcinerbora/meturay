@@ -19,6 +19,7 @@ All of them should be provided
 #include "DeviceMemory.h"
 
 #include "RayLib/Vector.h"
+#include "RayLib/Sphere.h"
 
 // Sphere memory layout
 struct SphereData
@@ -73,9 +74,8 @@ inline AABB3f GenerateAABBSphere(PrimitiveId primitiveId, const SphereData& prim
 	Vector4f data = primData.centerRadius[primitiveId];
 	Vector3f center = data;
 	float radius = data[3];
-
-	AABB3f aabb(center - data, center + data);
-	return aabb;
+	
+	return Sphere::BoundingBox(center, radius);
 }
 
 __device__ __host__
@@ -103,6 +103,7 @@ class GPUPrimitiveSphere final
 		// List of ranges for each batch
 		uint64_t								totalPrimitiveCount;
 		std::map<uint32_t, Vector2ul>			batchRanges;
+		std::map<uint32_t, AABB3>				batchAABBs;
 			
 	public:
 		// Constructors & Destructor
@@ -117,7 +118,8 @@ class GPUPrimitiveSphere final
 		SceneError								ChangeTime(const std::set<SceneFileNode>& surfaceDatalNodes, double time) override;
 
 		// Access primitive range from Id			
-		Vector2ul								PrimitiveBatchRange(uint32_t surfaceDataId) override;
+		Vector2ul								PrimitiveBatchRange(uint32_t surfaceDataId) const override;
+		AABB3									PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
 
 		// Error check
 		// Queries in order to check if this primitive group supports certain primitive data

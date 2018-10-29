@@ -19,11 +19,14 @@ void TracerBase::HitRays()
 {
 	// Tracer Logic interface
 	const Vector2i& accBitCounts = tracerSystem->SceneAcceleratorMaxBits();
-	const GPUBaseAcceleratorI& baseAccelerator = tracerSystem->BaseAcelerator();
+	GPUBaseAcceleratorI& baseAccelerator = tracerSystem->BaseAcelerator();
 	const AcceleratorBatchMappings& subAccelerators = tracerSystem->AcceleratorBatches();
 
 	// Reset Hit Memory for hit loop
 	rayMemory.ResetHitMemory(currentRayCount, tracerSystem->HitStructSize());
+
+	// Make Base Accelerator to get ready for hitting
+	baseAccelerator.GetReady(currentRayCount);
 
 	// Ray Memory Pointers
 	RayGMem* dRays = rayMemory.Rays();

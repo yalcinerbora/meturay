@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 #include "RayLib/Vector.h"
+#include "RayLib/AABB.h"
+
 
 struct SceneError;
 struct SceneFileNode;
@@ -18,6 +20,7 @@ class SurfaceDataLoaderI
 		// Size Determination
 		virtual size_t					PrimitiveCount() const = 0;
 		virtual size_t					PrimitiveDataSize(const std::string& primitiveDataType) const = 0;
+		virtual AABB3f					PrimitiveAABB() const = 0;
 
 		// Load Functionality
 		virtual const char*				SufaceDataFileExt() const = 0;

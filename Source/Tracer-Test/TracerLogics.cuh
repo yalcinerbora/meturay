@@ -28,7 +28,7 @@ class TracerBasic : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
 	protected:
 	public:
 		// Constructors & Destructor
-										TracerBasic(const GPUBaseAcceleratorI& baseAccelerator,
+										TracerBasic(GPUBaseAcceleratorI& baseAccelerator,
 													const AcceleratorBatchMappings&,
 													const MaterialBatchMappings&,
 													const TracerOptions& options);

@@ -6,7 +6,8 @@
 
 enum class PrimitiveDataType
 {
-	POSITION,
+	CENTER,
+	POSITION = CENTER,
 	NORMAL,
 	UV,
 	RADIUS,

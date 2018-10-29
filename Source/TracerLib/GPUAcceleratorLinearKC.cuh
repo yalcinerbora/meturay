@@ -173,7 +173,8 @@ static void KCIntersectBaseLinear(// I-O
 								  const uint32_t rayCount,
 
 								  // Constants
-								  const BaseLeaf* gKeys)
+								  const BaseLeaf* gLeafs,
+								  const uint32_t leafCount)
 {
 		// Grid Stride Loop
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
@@ -181,24 +182,33 @@ static void KCIntersectBaseLinear(// I-O
 	{
 		const uint32_t id = gRayIds[globalId];
 		
-		// Load Ray/Hit to Register
-		RayReg ray(gRays, id);
-		HitKey key = gHitKeys[globalId];				
-		TransformId transformId = gTransformIds[id];		
-		if(key == HitKey::InvalidKey) continue;
+		// Load Ray to Register
+		RayReg ray(gRays, id);	
 
-		// Load initial traverse extentds
+		// Load initial traverse location
 		uint32_t primStart = gPrevLoc[id];
 
-		// Check next
-		key = gKeys[primStart].accKey;
-		transformId = gKeys->transformId;
-		
-		primStart++;
-
-		// Write Updated Stuff
-		gPrevLoc[id] = primStart;
-		gHitKeys[globalId] = key;
-		gTransformIds[id] = transformId;
+		// Check next potential hit		
+		HitKey key = HitKey::InvalidKey;
+		TransformId transformId = 0;
+		while(primStart < leafCount)
+		{
+			BaseLeaf l = gLeafs[primStart];
+			primStart++;
+			if(ray.ray.IntersectsAABB(l.aabbMin, l.aabbMax))
+			{
+				key = l.accKey;
+				transformId = l.transformId;				
+				break;
+			}			
+		}
+		// Write next potential hit
+		if(primStart < leafCount)
+		{
+			// Write Updated Stuff
+			gPrevLoc[id] = primStart;
+			gHitKeys[globalId] = key;
+			gTransformIds[id] = transformId;
+		}
 	}
 }

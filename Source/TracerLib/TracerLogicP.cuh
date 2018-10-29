@@ -31,13 +31,13 @@ class TracerBaseLogic : public TracerBaseLogicI
 		//
 		const RayAuxData					initalValues;
 		// Mappings for Kernel Calls (A.K.A. Batches)
-		const GPUBaseAcceleratorI&			baseAccelerator;
+		GPUBaseAcceleratorI&				baseAccelerator;
 		const AcceleratorBatchMappings&		accelerators;
 		const MaterialBatchMappings&		materials;
 
 	public:
 		// Constructors & Destructor
-											TracerBaseLogic(const GPUBaseAcceleratorI& baseAccelerator,
+											TracerBaseLogic(GPUBaseAcceleratorI& baseAccelerator,
 															const AcceleratorBatchMappings&,
 															const MaterialBatchMappings&,
 															const TracerOptions& options,
@@ -54,7 +54,7 @@ class TracerBaseLogic : public TracerBaseLogicI
 															   const Vector2ui& pixelCount) override;
 
 		// Interface fetching for logic
-		const GPUBaseAcceleratorI&			BaseAcelerator() override { return baseAccelerator; }
+		GPUBaseAcceleratorI&				BaseAcelerator() override { return baseAccelerator; }
 		const AcceleratorBatchMappings&		AcceleratorBatches() override { return accelerators; }
 		const MaterialBatchMappings&		MaterialBatches() override { return materials; }
 
@@ -74,7 +74,7 @@ class TracerBaseLogic : public TracerBaseLogicI
 };
 
 template<class RayAuxD, AuxInitFunc<RayAuxD> AuxFunc>
-TracerBaseLogic<RayAuxD, AuxFunc>::TracerBaseLogic(const GPUBaseAcceleratorI& baseAccelerator,
+TracerBaseLogic<RayAuxD, AuxFunc>::TracerBaseLogic(GPUBaseAcceleratorI& baseAccelerator,
 												   const AcceleratorBatchMappings& a,
 												   const MaterialBatchMappings& m,
 												   const TracerOptions& options,

@@ -67,7 +67,7 @@ SceneError GPUScene::GenerateConstructionData(TracerLogicGeneratorI*,
 											  std::map<std::string, AccelGroupData>& accelGroupListings,
 											  std::map<std::string, MatBatchData>& matBatchListings,
 											  // Base Accelerator required data
-											  std::map<uint32_t, uint32_t>& surfaceTransformListings,
+											  std::map<uint32_t, BaseLeaf>& surfaceListings,
 											  double time)
 {
 	SceneError e = SceneError::OK;
@@ -149,7 +149,14 @@ SceneError GPUScene::GenerateConstructionData(TracerLogicGeneratorI*,
 		result->second.matPrimIdPairs.emplace(surfId, surf.matPrimPairs);
 
 		// Generate transform pair also
-		surfaceTransformListings.emplace(surfId, surf.transformId);
+		BaseLeaf leaf =
+		{
+			Vector3f(std::numeric_limits<float>::max()),
+			HitKey::InvalidKey,
+			Vector3f(-std::numeric_limits<float>::max()),
+			surf.transformId
+		};
+		surfaceListings.emplace(surfId, leaf);
 		surfId++;
 	}
 	return e;
@@ -264,14 +271,14 @@ SceneError GPUScene::LoadLogicRelated(TracerLogicGeneratorI* l, double time)
 	std::map<std::string, AccelGroupData> accelGroupListings;
 	std::map<std::string, MatBatchData> matBatchListings;
 	// Base Accelerator required data
-	std::map<uint32_t, uint32_t> surfaceTransformListings;
+	std::map<uint32_t, BaseLeaf> surfaceListings;
 
 	if((e = GenerateConstructionData(l,
 									 matGroupNodes,
 									 primGroupNodes,
 									 accelGroupListings,
 									 matBatchListings,
-									 surfaceTransformListings,
+									 surfaceListings,
 									 time)) != SceneError::OK)
 		return e;
 
@@ -327,12 +334,21 @@ SceneError GPUScene::LoadLogicRelated(TracerLogicGeneratorI* l, double time)
 			return e;
 
 		// Group Generation
+		std::map<uint32_t, AABB3> aabbs;
 		GPUAcceleratorGroupI* aGroup;
 		if((e = l->GetAcceleratorGroup(aGroup, *pGroup, dTransforms, accelGroupName)) != SceneError::OK)
 			return e;
-		if((e = aGroup->InitializeGroup(matHitKeyList, pairings, time)) != SceneError::OK)
+		if((e = aGroup->InitializeGroup(aabbs, matHitKeyList, pairings, time)) != SceneError::OK)
 			return e;
 
+		// Attach aabbs to surface listings
+		for(const auto& aabb : aabbs)
+		{
+			auto& baseLeaf = surfaceListings[aabb.first]; 
+			baseLeaf.aabbMin = aabb.second.Min();
+			baseLeaf.aabbMax = aabb.second.Max();
+		}
+		
 		// Batch Generation
 		GPUAcceleratorBatchI* accelBatch; uint32_t id;
 		if((e = l->GetAcceleratorBatch(accelBatch, id, *aGroup, *pGroup)) != SceneError::OK)
@@ -347,6 +363,9 @@ SceneError GPUScene::LoadLogicRelated(TracerLogicGeneratorI* l, double time)
 			uint32_t innerId = accGroup.InnerId(surfId);
 			HitKey key = HitKey::CombinedKey(id, innerId);
 			accHitKeyList.emplace(surfId, key);
+
+			// Attach keys of accelerators
+			surfaceListings[surfId].accKey = key;
 		}
 	}
 
@@ -358,8 +377,7 @@ SceneError GPUScene::LoadLogicRelated(TracerLogicGeneratorI* l, double time)
 	GPUBaseAcceleratorI* baseAccelerator;
 	l->GetBaseAccelerator(baseAccelerator, baseAccelType);
 	// Constructing..
-	baseAccelerator->Constrcut(accHitKeyList,
-							   surfaceTransformListings);
+	baseAccelerator->Constrcut(surfaceListings);
 
 	// Finally generate 
 	TracerBaseLogicI* logic;

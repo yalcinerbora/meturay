@@ -14,6 +14,7 @@ All of them should be provided
 #include <type_traits>
 
 #include "RayLib/Vector.h"
+#include "RayLib/Triangle.h"
 
 #include "DefaultLeaf.h"
 #include "GPUPrimitiveP.cuh"
@@ -72,17 +73,8 @@ inline AABB3f GenerateAABBTriangle(PrimitiveId primitiveId, const TriData& primD
 	Vector3 position0 = primData.positionsU[primitiveId * 3 + 0];
 	Vector3 position1 = primData.positionsU[primitiveId * 3 + 1];
 	Vector3 position2 = primData.positionsU[primitiveId * 3 + 2];
-
-	AABB3f aabb(Vector3f(FLT_MAX), Vector3f(-FLT_MAX));
-	aabb.SetMax(Vector3f::Max(aabb.Max(), position0));
-	aabb.SetMin(Vector3f::Min(aabb.Min(), position0));
-
-	aabb.SetMin(Vector3f::Min(aabb.Min(), position1));
-	aabb.SetMin(Vector3f::Min(aabb.Min(), position1));
-
-	aabb.SetMin(Vector3f::Min(aabb.Min(), position2));
-	aabb.SetMin(Vector3f::Min(aabb.Min(), position2));
-	return aabb;
+	
+	return Triangle::BoundingBox(position0, position1, position2);
 }
 
 __device__ __host__
@@ -113,6 +105,7 @@ class GPUPrimitiveTriangle final
 		// List of ranges for each batch
 		uint64_t								totalPrimitiveCount;
 		std::map<uint32_t, Vector2ul>			batchRanges;
+		std::map<uint32_t, AABB3>				batchAABBs;
 
 	protected:
 	public:
@@ -128,7 +121,8 @@ class GPUPrimitiveTriangle final
 		SceneError								ChangeTime(const std::set<SceneFileNode>& surfaceDatalNodes, double time) override;
 
 		// Access primitive range from Id			
-		Vector2ul								PrimitiveBatchRange(uint32_t surfaceDataId) override;
+		Vector2ul								PrimitiveBatchRange(uint32_t surfaceDataId) const override;
+		AABB3									PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
 
 		// Error check
 		// Queries in order to check if this primitive group supports certain primitive data

@@ -13,6 +13,8 @@ Base Interface for GPU accelerators
 
 #include "HitStructs.cuh"
 #include "RayLib/SceneStructs.h"
+#include "RayLib/AABB.h"
+#include "AcceleratorDeviceFunctions.h"
 
 struct RayGMem;
 struct SceneError;
@@ -35,7 +37,8 @@ class GPUAcceleratorGroupI
 		// Type(as string) of the accelerator group
 		virtual const char*		Type() const = 0;
 		// Loads required data to CPU cache for
-		virtual SceneError		InitializeGroup(// Map of hit keys for all materials
+		virtual SceneError		InitializeGroup(std::map<uint32_t, AABB3>& aabbOut,
+												// Map of hit keys for all materials
 												// w.r.t matId and primitive type
 												const std::map<TypeIdPair, HitKey>&,
 												// List of surface/material
@@ -43,7 +46,8 @@ class GPUAcceleratorGroupI
 												// and primitive type
 												const std::map<uint32_t, IdPairings>& pairingList,
 												double time) = 0;
-		virtual SceneError		ChangeTime(// Map of hit keys for all materials
+		virtual SceneError		ChangeTime(std::map<uint32_t, AABB3>& aabbOut,
+										   // Map of hit keys for all materials
 										   // w.r.t matId and primitive type
 										   const std::map<TypeIdPair, HitKey>&,
 										   // List of surface/material
@@ -101,25 +105,22 @@ class GPUBaseAcceleratorI
 		// Interface
 		// Type(as string) of the accelerator group
 		virtual const char*		Type() const = 0;
+		// Get ready for hit loop
+		virtual void			GetReady(uint32_t rayCount) = 0;
 		// Base accelerator only points to the next accelerator key.
 		// It can return invalid key,
 		// which is either means data is out of bounds or ray is invalid.
 		virtual void			Hit(// Output
 									TransformId* dTransformIds,
-									HitKey* dAcceleratorKeys,
+									HitKey* dMaterialKeys,
 									// Inputs
 									const RayGMem* dRays,									
 									const RayId* dRayIds,
 									const uint32_t rayCount) const = 0;
 
 		//TODO: define params of functions
-		virtual void			Constrcut(// List of allocator hitkeys of surfaces
-										  const std::map<uint32_t, HitKey>&,
-										  // List of all Surface/Transform pairs
-										  // that will be constructed
-										  const std::map<uint32_t, uint32_t>&) = 0;
-		virtual void			Reconstruct(// List of allocator hitkeys of surfaces
-											const std::map<uint32_t, HitKey>&,
-											// List of changed Surface/Transform pairs
-											const std::map<uint32_t, uint32_t>&) = 0;
+		virtual void			Constrcut(// List of surface to transform id hit key mappings
+										  const std::map<uint32_t, BaseLeaf>&) = 0;
+		virtual void			Reconstruct(// List of only changed surface to transform id hit key mappings
+											const std::map<uint32_t, BaseLeaf>&) = 0;
 };

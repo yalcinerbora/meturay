@@ -73,7 +73,8 @@ class GPUAccLinearGroup final
 		// Type(as string) of the accelerator group
 		const char*						Type() const override;
 		// Loads required data to CPU cache for
-		SceneError						InitializeGroup(// Map of hit keys for all materials
+		SceneError						InitializeGroup(std::map<uint32_t, AABB3>& aabbOut,
+														// Map of hit keys for all materials
 														// w.r.t matId and primitive type
 														const std::map<TypeIdPair, HitKey>&,
 														// List of surface/material
@@ -81,7 +82,8 @@ class GPUAccLinearGroup final
 														// and primitive type
 														const std::map<uint32_t, IdPairings>& pairingList,
 														double time) override;
-		SceneError						ChangeTime(// Map of hit keys for all materials
+		SceneError						ChangeTime(std::map<uint32_t, AABB3>& aabbOut,
+												   // Map of hit keys for all materials
 												   // w.r.t matId and primitive type
 												   const std::map<TypeIdPair, HitKey>&,
 												   // List of surface/material
@@ -134,16 +136,30 @@ class GPUAccLinearBatch final
 class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
 {
 	public:
-		static const std::string	TypeName;
+		static const std::string		TypeName;
 	private:
+		DeviceMemory					leafMemory;
+		DeviceMemory					rayLocMemory;
+
+		// GPU
+		const BaseLeaf*					dLeafs;		
+		uint32_t*						dPrevLocList;
+
+		// CPU
+		std::map<uint32_t, uint32_t>	innerIds;
+		uint32_t						leafCount;
+
 	protected:
 	public:
 		// Interface
 		// Type(as string) of the accelerator group
 		const char*					Type() const override;
+
+		// Get ready for hit loop
+		void						GetReady(uint32_t rayCount) override;
 		// Base accelerator only points to the next accelerator key.
 		// It can return invalid key,
-		// which is either means data is out of bounds or ray is invalid.
+		// which is either means data is out of bounds or ray is invalid.		
 		void						Hit(// Output
 										TransformId* dTransformIds,
 										HitKey* dAcceleratorKeys,
@@ -153,15 +169,10 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
 										const uint32_t rayCount) const override;
 
 		//TODO: define params of functions
-		void						Constrcut(// List of allocator hitkeys of surfaces
-											  const std::map<uint32_t, HitKey>&,
-											  // List of all Surface/Transform pairs
-											  // that will be constructed
-											  const std::map<uint32_t, uint32_t>&) override;
-		void						Reconstruct(// List of allocator hitkeys of surfaces
-												const std::map<uint32_t, HitKey>&,
-												// List of changed Surface/Transform pairs
-												const std::map<uint32_t, uint32_t>&) override;
+		void						Constrcut(// List of surface to transform id hit key mappings
+											  const std::map<uint32_t, BaseLeaf>&) override;
+		void						Reconstruct(// List of only changed surface to transform id hit key mappings
+												const std::map<uint32_t, BaseLeaf>& keys) override;
 };
 
 #include "GPUAcceleratorLinear.hpp"

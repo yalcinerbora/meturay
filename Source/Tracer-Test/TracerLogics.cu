@@ -1,7 +1,7 @@
 #include "TracerLogics.cuh"
 #include "RayLib/TracerError.h"
 
-TracerBasic::TracerBasic(const GPUBaseAcceleratorI& baseAccelerator,
+TracerBasic::TracerBasic(GPUBaseAcceleratorI& baseAccelerator,
 						 const AcceleratorBatchMappings& a,
 						 const MaterialBatchMappings& m,
 						 const TracerOptions& options)

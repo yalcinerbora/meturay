@@ -42,7 +42,7 @@ using GPUMatBPtr = SharedLibPtr<GPUMaterialBatchI>;
 
 // Statically Inerfaced Generators
 template<class TracerLogic>
-using TracerLogicGeneratorFunc = TracerLogic* (&)(const GPUBaseAcceleratorI& ba,
+using TracerLogicGeneratorFunc = TracerLogic* (&)(GPUBaseAcceleratorI& ba,
 											      const AcceleratorBatchMappings& am,
 											      const MaterialBatchMappings& mm,
 											      const TracerOptions& op);
@@ -102,7 +102,7 @@ class GPUTracerGen
 			, dFunc(d)
 		{}
 
-		GPUTracerPtr operator()(const GPUBaseAcceleratorI& ba,
+		GPUTracerPtr operator()(GPUBaseAcceleratorI& ba,
 								const AcceleratorBatchMappings& am,
 								const MaterialBatchMappings& mm,
 								const TracerOptions& op)
@@ -220,7 +220,7 @@ namespace TypeGenWrappers
 	void EmptyDestruct(T* t) {}
 	
 	template <class Base, class TracerLogic>
-	Base* TracerLogicConstruct(const GPUBaseAcceleratorI& ba, 
+	Base* TracerLogicConstruct(GPUBaseAcceleratorI& ba, 
 							   const AcceleratorBatchMappings& am,
 							   const MaterialBatchMappings& mm,
 							   const TracerOptions& op)

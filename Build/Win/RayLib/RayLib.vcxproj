@@ -154,6 +154,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\SceneStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SelfDistributor.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SharedLib.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\Sphere.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceDataIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\PrimitiveDataTypes.h" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
@@ -161,6 +162,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\TracerDistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerError.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerStructs.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\Triangle.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Types.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorDistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.h" />

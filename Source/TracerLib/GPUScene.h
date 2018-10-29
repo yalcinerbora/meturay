@@ -7,6 +7,7 @@
 #include "RayLib/SceneStructs.h"
 
 #include "DeviceMemory.h"
+#include "AcceleratorDeviceFunctions.h"
 
 struct SceneError;
 struct SceneFileNode;
@@ -20,6 +21,7 @@ struct AccelGroupData
 	std::string						primName;
 	std::map<uint32_t, IdPairings>	matPrimIdPairs;
 };
+
 struct MatBatchData
 {
 	std::string			primType;
@@ -55,10 +57,6 @@ class GPUScene
 		LightStruct*						dLights;
 		TransformStruct*					dTransforms;
 			
-		////
-		//std::map<uint32_t, HitKey>			materialIdKeyPairings;
-		//std::map<uint32_t, HitKey>			surfaceIdKeyPairings;
-
 		// Inners
 		// Helper Logic
 		SceneError							OpenFile(const std::string& fileName);
@@ -76,7 +74,7 @@ class GPUScene
 																	 std::map<std::string, AccelGroupData>& accelGroupListings,
 																	 std::map<std::string, MatBatchData>& matBatchListings,
 																	 // Base Accelerator required data
-																	 std::map<uint32_t, uint32_t>& surfaceTransformListings,
+																	 std::map<uint32_t, BaseLeaf>& surfaceListings,
 																	 double time = 0.0);
 
 		SceneError							GenerateMaterialGroups(TracerLogicGeneratorI*,

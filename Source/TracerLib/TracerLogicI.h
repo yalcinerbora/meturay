@@ -54,7 +54,7 @@ class TracerBaseLogicI
 
 		
 		// Interface fetching for logic
-		virtual const GPUBaseAcceleratorI&				BaseAcelerator() = 0;
+		virtual GPUBaseAcceleratorI&					BaseAcelerator() = 0;
 		virtual const AcceleratorBatchMappings&			AcceleratorBatches() = 0;
 		virtual const MaterialBatchMappings&			MaterialBatches() = 0;
 

@@ -6,7 +6,7 @@
 
 
 
-template TracerBaseLogicI* TypeGenWrappers::TracerLogicConstruct<TracerBaseLogicI, TracerBasic>(const GPUBaseAcceleratorI&,
+template TracerBaseLogicI* TypeGenWrappers::TracerLogicConstruct<TracerBaseLogicI, TracerBasic>(GPUBaseAcceleratorI&,
 																								const AcceleratorBatchMappings&,
 																								const MaterialBatchMappings&,
 																								const TracerOptions&);

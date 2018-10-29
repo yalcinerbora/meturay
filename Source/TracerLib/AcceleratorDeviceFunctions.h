@@ -1,13 +1,20 @@
 #pragma once
 
 #include "RayStructs.h"
+#include "HitStructs.cuh"
 #include "RayLib/AABB.h"
 
 using HitResult = Vector<2, bool>;
 
 // This is Leaf of Base Accelerator
 // It points to another accelerator/material pair
-struct BaseLeaf { uint64_t accKey; TransformId transformId; };
+struct alignas(16) BaseLeaf
+{
+	Vector3f aabbMin;
+	HitKey accKey;
+	Vector3f aabbMax;
+	TransformId transformId;
+};
 
 // Accept hit function
 // Return two booleans first boolean tells control flow to terminate
