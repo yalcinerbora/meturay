@@ -23,6 +23,7 @@ tree constructio would provide additional overhead.
 #include "GPUAcceleratorP.cuh"
 #include "GPUPrimitiveI.h"
 
+#include "GPUAcceleratorLinear.h"
 #include "GPUAcceleratorLinearKC.cuh"
 
 // This should be an array?
@@ -76,7 +77,8 @@ class GPUAccLinearGroup final
 														// List of surface nodes
 														// that uses this accelerator type
 														// w.r.t. this prim group
-														const std::vector<SceneFileNode>&) override;
+														const std::vector<SceneFileNode>&,
+														double time) override;
 
 		// Batched and singular construction
 		 void							ConstructAccelerator(uint32_t surface) override;

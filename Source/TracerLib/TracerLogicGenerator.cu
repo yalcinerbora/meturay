@@ -49,6 +49,8 @@ template void TypeGenWrappers::DefaultDestruct(GPUMaterialBatchI*);
 
 // Constructor & Destructor
 TracerLogicGenerator::TracerLogicGenerator()
+	: outerIdAccel(0)
+	, outerIdMaterial(0)
 {
 	using namespace TypeGenWrappers;
 
@@ -75,11 +77,7 @@ TracerLogicGenerator::TracerLogicGenerator()
 								 GPUAccelBatchGen(AccelBatchConstruct<GPUAcceleratorBatchI, GPUAccSphrLinearBatch>,
 												  DefaultDestruct<GPUAcceleratorBatchI>));
 
-	// TODO:
-
-
-
-	// Basic Types are loaded
+	// Default Types are loaded
 	// Other Types are strongly tied to base tracer logic
 	// i.e. Auxiliary Struct Etc.
 }
@@ -144,7 +142,7 @@ SceneError TracerLogicGenerator::GetMaterialGroup(GPUMaterialGroupI*& mg,
 	return SceneError::OK;
 }
 
-SceneError TracerLogicGenerator::GetAcceleratorBatch(GPUAcceleratorBatchI*& ab,
+SceneError TracerLogicGenerator::GetAcceleratorBatch(GPUAcceleratorBatchI*& ab, uint32_t& id,
 													 const GPUAcceleratorGroupI& ag,
 													 const GPUPrimitiveGroupI& pg)
 {
@@ -161,12 +159,15 @@ SceneError TracerLogicGenerator::GetAcceleratorBatch(GPUAcceleratorBatchI*& ab,
 		GPUAccelBPtr ptr = loc->second(ag, pg);
 		ab = ptr.get();
 		accelBatches.emplace(batchType, std::move(ptr));
+		accelBatchMap.emplace(outerIdAccel, ab);
+		id = outerIdAccel;
+		outerIdAccel++;
 	}
 	else ab = loc->second.get();
 	return SceneError::OK;
 }
 
-SceneError TracerLogicGenerator::GetMaterialBatch(GPUMaterialBatchI*& mb,
+SceneError TracerLogicGenerator::GetMaterialBatch(GPUMaterialBatchI*& mb, uint32_t& id,
 												  const GPUMaterialGroupI& mg,
 												  const GPUPrimitiveGroupI& pg)
 {
@@ -183,6 +184,9 @@ SceneError TracerLogicGenerator::GetMaterialBatch(GPUMaterialBatchI*& mb,
 		GPUMatBPtr ptr = loc->second(mg, pg);
 		mb = ptr.get();
 		matBatches.emplace(batchType, std::move(ptr));
+		matBatchMap.emplace(outerIdMaterial, mb);
+		id = outerIdMaterial;
+		outerIdMaterial++;
 	}
 	else mb = loc->second.get();
 	return SceneError::OK;

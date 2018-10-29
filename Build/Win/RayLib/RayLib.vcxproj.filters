@@ -131,6 +131,10 @@
     <ClInclude Include="..\..\..\Source\RayLib\SharedLib.h">
       <Filter>System</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\PrimitiveDataTypes.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\CompileTimeString.h">
+      <Filter>System</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

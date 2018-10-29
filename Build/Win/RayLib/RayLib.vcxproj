@@ -126,6 +126,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\AABB.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\AnalyticDistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\CompileTimeString.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Constants.h" />
     <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Error.h" />
@@ -154,6 +155,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\SelfDistributor.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SharedLib.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceDataIO.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\PrimitiveDataTypes.h" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ThreadData.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerDistributorI.h" />

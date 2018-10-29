@@ -1,5 +1,6 @@
 
 #include "Materials.cuh"
+#include "MaterialNodeRead.h"
 
 // Materials
 
@@ -15,6 +16,11 @@ const char* ColorMaterial::Type() const
 	
 SceneError ColorMaterial::InitializeGroup(const std::vector<SceneFileNode>& materialNodes, double time)
 {
+	for(const SceneFileNode& s : materialNodes)
+	{
+		Vector3 albedo = DataRead::ColorMaterial(s);
+	}
+
 	return SceneError::OK;
 }
 

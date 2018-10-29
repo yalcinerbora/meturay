@@ -6,7 +6,8 @@ Base Interface for GPU accelerators
 */
 
 #include <map>
-#include <vector>
+#include <set>
+#include <array>
 #include <cstdint>
 #include <functional>
 
@@ -19,11 +20,6 @@ struct SceneFileNode;
 class GPUPrimitiveGroupI;
 class GPUMaterialGroupI;
 
-
-//template <class T>
-//using Reference = std::reference_wrapper<T>;
-
-
 // Accelerator Group defines same type of accelerators
 // This struct holds accelerator data
 // Unlike material group there is one to one relationship between
@@ -32,17 +28,32 @@ class GPUMaterialGroupI;
 class GPUAcceleratorGroupI
 {
 	public:
-		virtual								~GPUAcceleratorGroupI() = default;
+		virtual					~GPUAcceleratorGroupI() = default;
 
 		// Interface
 		// Type(as string) of the accelerator group
-		virtual const char*					Type() const = 0;
+		virtual const char*		Type() const = 0;
 		// Loads required data to CPU cache for
-		virtual SceneError					InitializeGroup(const std::map<uint32_t, HitKey>&,
-															// List of surface nodes
-															// that uses this accelerator type
-															// w.r.t. this prim group
-															const std::vector<SceneFileNode>&) = 0;
+		virtual SceneError		InitializeGroup(SceneFileNode acceleratorNode,
+												// Map of hit keys for all materials
+												// can be queried by material file id
+												const std::map<uint32_t, HitKey>&,
+												// List of surface/material
+												// pairings that uses this accelerator type
+												// and primitive type
+												const std::set<IdPairings>& pairingList,
+												double time) = 0;
+		virtual SceneError		ChangeTime(SceneFileNode acceleratorNode,
+										   // Map of hit keys for all materials
+										   // can be queried by material file id
+										   const std::map<uint32_t, HitKey>&,
+										   // List of surface/material
+										   // pairings that uses this accelerator type
+										   // and primitive type
+										   const std::set<IdPairings>& pairingList,
+										   double time) = 0;
+		// Surface Queries
+		virtual int							InnerId(uint32_t surface) = 0;
 
 		// Batched and singular construction
 		virtual void						ConstructAccelerator(uint32_t surface) = 0;

@@ -15,8 +15,6 @@ Scene file json interpeter and writer
 
 struct CameraPerspective;
 
-
-
 namespace SceneIO
 {
 	static constexpr const char* SCENE_EXT = "mscene";
@@ -33,7 +31,7 @@ namespace SceneIO
 	// Common Names
 	static constexpr const char* ID = "id";
 	static constexpr const char* TYPE = "type";
-	static constexpr const char* name = "name";
+	static constexpr const char* NAME = "name";
 
 	// Generic Time Dependency Check
 	bool				IsTimeDependent(const nlohmann::json&);
@@ -53,10 +51,15 @@ namespace SceneIO
 	template <int N, class T>
 	Matrix<N, T>		LoadMatrix(const nlohmann::json&, double time = 0.0);
 
+	// Utility
+	std::string			StripFileExt(const std::string& string);
+
 	// Common Types
 	LightStruct			LoadLight(const nlohmann::json&, double time = 0.0);
 	TransformStruct		LoadTransform(const nlohmann::json&, double time = 0.0);
 	CameraPerspective	LoadCamera(const nlohmann::json&, double time = 0.0);
+
+	SurfaceStruct		LoadSurface(const nlohmann::json&, double time = 0.0);
 };
 
 inline bool SceneIO::IsTimeDependent(const nlohmann::json& jsn)
@@ -145,4 +148,9 @@ Matrix<N, T> SceneIO::LoadMatrix(const nlohmann::json& jsn, double time)
 		return Matrix<N, T>(array.data());
 	}
 	else throw SceneException(SceneError::TYPE_MISMATCH);
+}
+
+inline std::string SceneIO::StripFileExt(const std::string& string)
+{
+	return string.substr(string.find_last_of('.'));
 }

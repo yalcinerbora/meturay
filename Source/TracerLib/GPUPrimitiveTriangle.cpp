@@ -1,6 +1,6 @@
 #include "GPUPrimitiveTriangle.h"
-#include "PrimitiveDataTypes.h"
 
+#include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/SurfaceDataIO.h"
 #include "RayLib/SceneError.h"
 #include "RayLib/SceneFileNode.h"
@@ -22,7 +22,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::vector<SceneFileNode
 	std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
 	for(const SceneFileNode& s : surfaceDatalNodes)
 	{
-		loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s)));		
+		loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s, time)));		
 	}
 
 	SceneError e = SceneError::OK;
@@ -44,13 +44,13 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::vector<SceneFileNode
 	for(const auto& loader : loaders)
 	{
 		if(e != loader->LoadPrimitiveData(postitionsCPU.data() + offset,
-										  PrimBasicDataTypeToString(PrimitiveBasicDataType::POSITION)))
+										  PrimitiveDataTypeToString(PrimitiveDataType::POSITION)))
 			return e;
 		if(e != loader->LoadPrimitiveData(normalsCPU.data() + offset,
-										  PrimBasicDataTypeToString(PrimitiveBasicDataType::NORMAL)))
+										  PrimitiveDataTypeToString(PrimitiveDataType::NORMAL)))
 			return e;
 		if(e != loader->LoadPrimitiveData(uvsCPU.data() + offset,
-										  PrimBasicDataTypeToString(PrimitiveBasicDataType::UV)))
+										  PrimitiveDataTypeToString(PrimitiveDataType::UV)))
 			return e;
 		
 		offset += loader->PrimitiveCount();
@@ -94,7 +94,7 @@ SceneError GPUPrimitiveTriangle::ChangeTime(const std::vector<SceneFileNode>& su
 	std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
 	for(const SceneFileNode& s : surfaceDatalNodes)
 	{
-		loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s)));
+		loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s, time)));
 	}
 
 	SceneError e = SceneError::OK;
@@ -109,12 +109,13 @@ SceneError GPUPrimitiveTriangle::ChangeTime(const std::vector<SceneFileNode>& su
 		std::vector<float> uvsCPU(primitiveCount * 2);
 
 		if(e != loader->LoadPrimitiveData(postitionsCPU.data(),
-										  PrimBasicDataTypeToString(PrimitiveBasicDataType::POSITION)))
+										  PrimitiveDataTypeToString(PrimitiveDataType::POSITION)))
 			return e;
 		if(e != loader->LoadPrimitiveData(normalsCPU.data(),
-										  PrimBasicDataTypeToString(PrimitiveBasicDataType::NORMAL)))
+										  PrimitiveDataTypeToString(PrimitiveDataType::NORMAL)))
 			return e;
-		if(e != loader->LoadPrimitiveData(uvsCPU.data(), PrimBasicDataTypeToString(PrimitiveBasicDataType::UV)))
+		if(e != loader->LoadPrimitiveData(uvsCPU.data(), 
+										  PrimitiveDataTypeToString(PrimitiveDataType::UV)))
 			return e;
 		
 		// Copy
@@ -150,7 +151,7 @@ Vector2ul GPUPrimitiveTriangle::PrimitiveBatchRange(uint32_t surfaceDataId)
 
 bool GPUPrimitiveTriangle::CanGenerateData(const std::string& s) const
 {
-	return (s == PrimBasicDataTypeToString(PrimitiveBasicDataType::POSITION) ||
-			s == PrimBasicDataTypeToString(PrimitiveBasicDataType::NORMAL) ||
-			s == PrimBasicDataTypeToString(PrimitiveBasicDataType::UV));
+	return (s == PrimitiveDataTypeToString(PrimitiveDataType::POSITION) ||
+			s == PrimitiveDataTypeToString(PrimitiveDataType::NORMAL) ||
+			s == PrimitiveDataTypeToString(PrimitiveDataType::UV));
 }

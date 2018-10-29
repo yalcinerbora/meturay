@@ -38,10 +38,10 @@ class TracerLogicGeneratorI
 		
 		// Batches are the abstraction of kernel calls
 		// Each batch instance is equavilent to a kernel call	
-		virtual SceneError		GetAcceleratorBatch(GPUAcceleratorBatchI*&,
+		virtual SceneError		GetAcceleratorBatch(GPUAcceleratorBatchI*&, uint32_t& id,
 													const GPUAcceleratorGroupI&,
 													const GPUPrimitiveGroupI&) = 0;
-		virtual SceneError		GetMaterialBatch(GPUMaterialBatchI*&,
+		virtual SceneError		GetMaterialBatch(GPUMaterialBatchI*&, uint32_t& id,
 												 const GPUMaterialGroupI&,
 												 const GPUPrimitiveGroupI&) = 0;
 

@@ -7,6 +7,9 @@
 struct SceneError;
 struct SceneFileNode;
 
+constexpr const char* NodeSphereName = "nodeSphere";
+constexpr const char* NodeTriangleName = "nodeTriangle";
+
 class SurfaceDataLoaderI
 {
 	public:
@@ -17,7 +20,7 @@ class SurfaceDataLoaderI
 		virtual size_t					PrimitiveDataSize(const std::string& primitiveDataType) const = 0;
 
 		// Load Functionality
-		virtual const std::string&		SufaceDataFileExt() const = 0;
+		virtual const char*				SufaceDataFileExt() const = 0;
 		virtual const uint32_t			SurfaceDataId() const = 0;
 		
 		//
@@ -29,8 +32,8 @@ class SurfaceDataLoaderI
 														  const std::string& primitiveDataType) = 0;
 };
 
-
 namespace SurfaceDataIO
 {
-	std::unique_ptr<SurfaceDataLoaderI>		GenSurfaceDataLoader(const SceneFileNode& properties);	
+	std::unique_ptr<SurfaceDataLoaderI>		GenSurfaceDataLoader(const SceneFileNode& properties,
+																 double time);	
 }

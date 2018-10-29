@@ -81,22 +81,22 @@ static void KCConstructLinear(// O
 template <class PGroup>
 __global__
 static void KCIntersectLinear(// O
-					   HitKey* gMaterialKeys,
-					   PrimitiveId* gPrimitiveIds,
-					   HitStructPtr gHitStructs,
-					   // I-O
-					   RayGMem* gRays,
-					   // Input
-					   const TransformId* gTransformIds,
-					   const RayId* gRayIds,
-					   const HitKey* gAccelKeys,
-					   const uint32_t rayCount,
-					   // Constants
-					   const PGroup::LeafData** gLeafList,
-					   const uint32_t* gLeafCounts,
-					   const TransformStruct* gInverseTransforms,
-					   //
-					   const PGroup::PrimitiveData primData)
+							  HitKey* gMaterialKeys,
+							  PrimitiveId* gPrimitiveIds,
+							  HitStructPtr gHitStructs,
+							  // I-O
+							  RayGMem* gRays,
+							  // Input
+							  const TransformId* gTransformIds,
+							  const RayId* gRayIds,
+							  const HitKey* gAccelKeys,
+							  const uint32_t rayCount,
+							  // Constants
+							  const PGroup::LeafData** gLeafList,
+							  const uint32_t* gLeafCounts,
+							  const TransformStruct* gInverseTransforms,
+							  //
+							  const PGroup::PrimitiveData primData)
 {
 	// Fetch Types from Template Classes
 	using HitData = typename PGroup::HitData;			// HitRegister is defined by primitive
@@ -125,9 +125,7 @@ static void KCIntersectLinear(// O
 			TransformStruct s = gInverseTransforms[transformId];
 			ray.ray.TransformSelf(s);
 		}	
-
-
-		
+			   		
 		// Hit determination
 		bool hitModified = false;
 		HitKey materialKey;

@@ -28,13 +28,14 @@ struct SceneError : public ErrorI
 			NO_LOGIC_FOR_ACCELERATOR,
 			NO_LOGIC_FOR_MATERIAL,
 			NO_LOGIC_FOR_PRIMITIVE,
+			NO_LOGIC_FOR_SURFACE_DATA,
 			// Id Errors
 			DUPLICATE_ACCEL_ID,
 			DUPLICATE_MATERIAL_ID,
 			DUPLICATE_PRIMITIVE_ID,
 			DUPLICATE_TRANSFORM_ID,
 			DUPLICATE_SURFACE_DATA_ID,
-			// 
+			// Id not found
 			ACCEL_ID_NOT_FOUND,
 			MATERIAL_ID_NOT_FOUND,
 			PRIMITIVE_ID_NOT_FOUND,
@@ -51,9 +52,15 @@ struct SceneError : public ErrorI
 			ACCELERATOR_LOGIC_NOT_FOUND,
 			MATERIAL_LOGIC_NOT_FOUND,
 			PRIMITIVE_LOGIC_NOT_FOUND,
+			// Loading Surface Data
+			SURFACE_DATA_TYPE_NOT_FOUND,
+			SURFACE_DATA_INVALID_READ,
 			//
 			PRIM_ACCEL_MISMATCH,
 			PRIM_MAT_MISMATCH,
+			// Misc
+			TOO_MANY_SURFACE_ON_NODE,
+			DATA_MATERIAL_NOT_SAME_SIZE,
 			// End
 			END
 		};
@@ -110,6 +117,7 @@ inline SceneError::operator std::string() const
 		"No logic found for that accelerator.",
 		"No logic found for that material.",
 		"No logic found for that primitive.",
+		"No logic found for loading that surface data.",
 		// Id Errors
 		"Duplicate accelerator id.",
 		"Duplicate material id.",
@@ -133,9 +141,15 @@ inline SceneError::operator std::string() const
 		"Accelerator implementation not found.",
 		"Material implementation not found.",
 		"Primitive implementation not found.",
+		// Loading Surface Data
+		"Surface data type not found.",
+		"Surface data unknown type.",
 		//
 		"Primitive-Material mismatch.",
-		"Primitive-Accelerator mismatch."
+		"Primitive-Accelerator mismatch.",
+		// Misc
+		"Too many data/material pairs per surface node.",
+		"Data/Material lists on surface node does not have same size."
 	};
 	static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(SceneError::END),
 				  "Enum and enum string list size mismatch.");
