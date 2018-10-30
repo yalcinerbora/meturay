@@ -2,7 +2,7 @@
 
 template<int N, class T>
 __device__ __host__
-inline AABB<N, T>::AABB(const Vector<N, T>& min,
+constexpr AABB<N, T>::AABB(const Vector<N, T>& min,
 						const Vector<N, T>& max)
 	: min(min)
 	, max(max)
@@ -72,4 +72,21 @@ __device__ __host__
 inline Vector<N, T> AABB<N, T>::Centroid() const
 {
 	return (max - min) * static_cast<T>(0.5);
+}
+
+template<int N, class T>
+__device__ __host__ 
+inline AABB<N, T> AABB<N, T>::Union(const AABB<N, T>& aabb) const
+{
+	return AABB<N, T>(Vector<N, T>::Min(min, aabb.min),
+					  Vector<N, T>::Max(max, aabb.max));
+}
+
+template<int N, class T>
+__device__ __host__ 
+inline AABB<N, T>& AABB<N, T>::UnionSelf(const AABB<N, T>& aabb)
+{
+	min = Vector<N, T>::Min(min, aabb.min),
+	max = Vector<N, T>::Max(max, aabb.max);
+	return *this;
 }
