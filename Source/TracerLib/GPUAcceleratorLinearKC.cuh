@@ -20,16 +20,24 @@ using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxSurfacePerAc
 template <class PGroup>
 __global__
 static void KCConstructLinear(// O
-							  PGroup::LeafStruct* gLeafOut,
+							  PGroup::LeafData* gLeafOut,
 
 							  // Input
-							  const HitKeyList materialKeys,
-							  const PrimitiveRangeList primRanges,
+							  const Vector2ul* gAccRanges,
+							  //const HitKeyList materialKeys,
+							  HitKey materialKeys[SceneConstants::MaxSurfacePerAccelerator],
+							  PrimitiveRangeList primRanges[SceneConstants::MaxSurfacePerAccelerator],
+							  //const PrimitiveRangeList primRanges,
 							  const PGroup::PrimitiveData primData,
-							  const uint32_t leafCount)
+							  const uint32_t leafIndex)
 {
 	// Fetch Types from Template Classes
-	using LeafStruct = typename PGroup::LeafStruct;	// LeafStruct is defined by primitive
+	using LeafData = typename PGroup::LeafData;	// LeafStruct is defined by primitive
+
+	// Your Data
+	const Vector2ul accRange = gAccRanges[leafIndex];
+	const uint32_t leafCount = static_cast<const uint32_t>(accRange[1]);
+	LeafData* gAccLeafs = gLeafOut + accRange[0];
 
 	// SceneConstants
 	uint32_t RangeLocation[SceneConstants::MaxSurfacePerAccelerator];
@@ -71,9 +79,9 @@ static void KCConstructLinear(// O
 		uint64_t primitiveId = primRanges[pairIndex][0] + localIndex;
 		HitKey matKey = materialKeys[pairIndex];		
 		// Gen Leaf and write
-		gLeafOut[globalId] = PGroup::GenLeafFunc(matKey,
-												 primitiveId,
-												 primData);
+		gAccLeafs[globalId] = PGroup::LeafFunc(matKey,
+											   primitiveId,
+											   primData);
 	}
 }
 
@@ -92,8 +100,8 @@ static void KCIntersectLinear(// O
 							  const HitKey* gAccelKeys,
 							  const uint32_t rayCount,
 							  // Constants
-							  const PGroup::LeafData** gLeafList,
-							  const uint32_t* gLeafCounts,
+							  const PGroup::LeafData* gLeafList,
+							  const Vector2ul* gAccRanges,
 							  const TransformStruct* gInverseTransforms,
 							  //
 							  const PGroup::PrimitiveData primData)
@@ -116,8 +124,9 @@ static void KCIntersectLinear(// O
 		//HitId hitId = gHitKeys[id];
 
 		// Key is the index of the inner Linear Array
-		const LeafData* gLeaf = gLeafList[accId];
-		const uint32_t gEndCount = gLeafCounts[accId];
+		const Vector2ul accRange = gAccRanges[accId];
+		const LeafData* gLeaf = gLeafList + accRange[0];
+		const uint32_t endCount = static_cast<uint32_t>(accRange[1]);
 
 		// Zero means identity so skip
 		if(transformId != 0)
@@ -133,7 +142,7 @@ static void KCIntersectLinear(// O
 		HitData hit;
 
 		// Linear check over array
-		for(uint32_t i = 0; i < gEndCount; i++)
+		for(uint32_t i = 0; i < endCount; i++)
 		{
 			// Get Leaf Data and
 			// Do acceptance check

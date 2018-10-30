@@ -56,7 +56,7 @@ class GPUAcceleratorGroupI
 										   const std::map<uint32_t, IdPairings>& pairingList,
 										   double time) = 0;
 		// Surface Queries
-		virtual int							InnerId(uint32_t surfaceId) const = 0;
+		virtual uint32_t					InnerId(uint32_t surfaceId) const = 0;
 
 		// Batched and singular construction
 		virtual void						ConstructAccelerator(uint32_t surface) = 0;

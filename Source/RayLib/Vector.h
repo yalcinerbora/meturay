@@ -230,6 +230,8 @@ static constexpr Vector2ui Zero2ui = Vector2ui(0u, 0u);
 static constexpr Vector3ui Zero3ui = Vector3ui(0u, 0u, 0u);
 static constexpr Vector4ui Zero4ui = Vector4ui(0u, 0u, 0u, 0u);
 
+static constexpr Vector2ul Zero2ul = Vector2ul(0ul, 0ul);
+
 static constexpr Vector2 Zero2 = Zero2f;
 static constexpr Vector3 Zero3 = Zero3f;
 static constexpr Vector4 Zero4 = Zero4f;

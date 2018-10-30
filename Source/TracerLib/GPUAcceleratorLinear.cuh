@@ -30,7 +30,7 @@ tree constructio would provide additional overhead.
 // Most of the time each accelerator will be constructred with a 
 // Singular primitive batch, it should be better to put size constraint
 //using SurfaceDataList = std::vector<uint32_t>;
-using SurfaceMaterialPairs = std::array<Vector2ui, SceneConstants::MaxSurfacePerAccelerator>;
+using SurfaceMaterialPairs = std::array<Vector2ul, SceneConstants::MaxSurfacePerAccelerator>;
 
 template<class PGroup>
 class LinearAccelTypeName
@@ -50,14 +50,18 @@ class GPUAccLinearGroup final
 	public:
 		using LeafData								= PGroup::LeafData;
 
-	private:		
+	private:	
 		// CPU Memory
-		std::map<uint32_t, SurfaceMaterialPairs>	acceleratorData;
+		//std::vector<Vector2ul>						acceleratorRanges;
+		std::vector<PrimitiveRangeList>				primitiveRanges;
+		std::vector<HitKeyList>						primitiveMaterialKeys;
+		std::map<uint32_t, uint32_t>				idLookup;
+	
 
 		// GPU Memory
 		DeviceMemory								memory;
-		const uint32_t*								dLeafCounts;
-		const LeafData**							dLeafList;	
+		Vector2ul*									dAccRanges;
+		LeafData*									dLeafList;	
 
 		friend class								GPUAccLinearBatch<PGroup>;
 		
@@ -93,7 +97,7 @@ class GPUAccLinearGroup final
 												   double time) override;
 
 		// Surface Queries
-		int							InnerId(uint32_t surfaceId) const override;
+		uint32_t						InnerId(uint32_t surfaceId) const override;
 
 		// Batched and singular construction
 		 void							ConstructAccelerator(uint32_t surface) override;

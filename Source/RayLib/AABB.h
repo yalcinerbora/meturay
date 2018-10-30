@@ -26,7 +26,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
 	public:
 		// Constructors & Destructor
 		constexpr									AABB() = default;
-		__device__ __host__							AABB(const Vector<N, T>& min,
+		constexpr __device__ __host__				AABB(const Vector<N, T>& min,
 														 const Vector<N, T>& max);
 		__device__ __host__							AABB(const T* dataMin,
 														 const T* dataMax);
@@ -50,6 +50,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
 
 		// Functionality
 		__device__ __host__ Vector<N, T>			Centroid() const;
+		__device__ __host__ AABB					Union(const AABB&) const;
+		__device__ __host__ AABB&					UnionSelf(const AABB&);
 };
 
 // Typeless aabbs are defaulted to float
@@ -72,6 +74,26 @@ static_assert(std::is_polymorphic<AABB3>::value == false, "AABBs should not be p
 
 // Implementation
 #include "AABB.hpp"	// CPU & GPU
+
+// Zero Constants
+static constexpr AABB2f CoveringAABB2f = AABB2f(Vector2f(-FLT_MAX, -FLT_MAX),
+												Vector2f(FLT_MAX, FLT_MAX));
+static constexpr AABB3f CoveringAABB3f = AABB3f(Vector3f(-FLT_MAX, -FLT_MAX, -FLT_MAX),
+												Vector3f(FLT_MAX, FLT_MAX, FLT_MAX));
+static constexpr AABB4f CoveringAABB4f = AABB4f(Vector4f(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX),
+												Vector4f(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX));
+
+static constexpr AABB2d CoveringAABB2d = AABB2d(Vector2d(-DBL_MAX, -DBL_MAX),
+												Vector2d(DBL_MAX, DBL_MAX));
+static constexpr AABB3d CoveringAABB3d = AABB3d(Vector3d(-DBL_MAX, -DBL_MAX, -DBL_MAX),
+												Vector3d(DBL_MAX, DBL_MAX, DBL_MAX));
+static constexpr AABB4d CoveringAABB4d = AABB4d(Vector4d(-DBL_MAX, -DBL_MAX, -DBL_MAX, -DBL_MAX),
+												Vector4d(DBL_MAX, DBL_MAX, DBL_MAX, DBL_MAX));
+
+static constexpr AABB2 CoveringAABB2 = CoveringAABB2f;
+static constexpr AABB3 CoveringAABB3 = CoveringAABB3f;
+static constexpr AABB4 CoveringAABB4 = CoveringAABB4f;
+
 
 // AABB Extern
 extern template class AABB<2, float>;
