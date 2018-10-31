@@ -110,6 +110,7 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
 	const PrimitiveRangeList& rangeList = primitiveRanges[index];
 	const HitKeyList& hitList = primitiveMaterialKeys[index];
 
+	// TODO: check this array copy works
 	// KC
 	KCConstructLinear<PGroup><<<1,1>>>(// O
 									   dLeafList,
@@ -119,6 +120,7 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
 									   rangeList.data(),
 									   primData,
 									   index);
+	CUDA_KERNEL_CHECK();
 
 }
 
@@ -208,4 +210,5 @@ void GPUAccLinearBatch<PGroup>::Hit(// O
 		//
 		primData
 	);
+	CUDA_KERNEL_CHECK();
 }

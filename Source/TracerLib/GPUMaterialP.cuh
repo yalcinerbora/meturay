@@ -179,6 +179,7 @@ void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
 		// Primitive Related
 		primData
 	);
+	CUDA_KERNEL_CHECK();
 }
 
 template <class TLogic, class MGroup, class PGroup,

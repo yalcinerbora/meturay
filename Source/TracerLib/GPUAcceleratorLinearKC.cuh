@@ -13,10 +13,16 @@ with ustom Intersection and Hit
 
 #include "RayLib/SceneStructs.h"
 
-struct HitKeyList
-{
+//struct HitKeyList
+//{
+//	HitKey list[SceneConstants::MaxSurfacePerAccelerator];
+//};
+//struct PrimitiveRangeList
+//{
+//	Vector2ul list[SceneConstants::MaxSurfacePerAccelerator];
+//};
 
-} = std::array<HitKey, SceneConstants::MaxSurfacePerAccelerator>;
+using HitKeyList = std::array<HitKey, SceneConstants::MaxSurfacePerAccelerator>;
 using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxSurfacePerAccelerator>;
 
 // Fundamental Construction Kernel
@@ -28,8 +34,10 @@ static void KCConstructLinear(// O
 							  // Input
 							  const Vector2ul* gAccRanges,
 							  //const HitKeyList materialKeys,
-							  HitKey materialKeys[SceneConstants::MaxSurfacePerAccelerator],
-							  PrimitiveRangeList primRanges[SceneConstants::MaxSurfacePerAccelerator],
+							  //HitKeyList hkList,
+							  //PrimitiveRangeList prList,
+							  const HitKey hkList[SceneConstants::MaxSurfacePerAccelerator],
+							  const Vector2ul prList[SceneConstants::MaxSurfacePerAccelerator],
 							  //const PrimitiveRangeList primRanges,
 							  const PGroup::PrimitiveData primData,
 							  const uint32_t leafIndex)
@@ -64,7 +72,7 @@ static void KCConstructLinear(// O
 	#pragma unroll
 	for(int i = 0; i < SceneConstants::MaxSurfacePerAccelerator; i++)
 	{
-		uint32_t primCount = static_cast<uint32_t>(primRanges[i][1] - primRanges[i][0]);
+		uint32_t primCount = static_cast<uint32_t>(prList[i][1] - prList[i][0]);
 		totalPrimCount += primCount;
 
 		RangeLocation[i] = totalPrimCount;
@@ -79,8 +87,8 @@ static void KCConstructLinear(// O
 		const uint32_t localIndex = globalId - RangeLocation[pairIndex];
 
 		// Determine 
-		uint64_t primitiveId = primRanges[pairIndex][0] + localIndex;
-		HitKey matKey = materialKeys[pairIndex];		
+		uint64_t primitiveId = prList[pairIndex][0] + localIndex;
+		HitKey matKey = hkList[pairIndex];
 		// Gen Leaf and write
 		gAccLeafs[globalId] = PGroup::LeafFunc(matKey,
 											   primitiveId,

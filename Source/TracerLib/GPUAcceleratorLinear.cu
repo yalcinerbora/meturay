@@ -41,6 +41,7 @@ void GPUBaseAcceleratorLinear::Hit(// Output
 								   // Constants
 								   dLeafs,
 								   leafCount);
+	CUDA_KERNEL_CHECK();
 }
 
 void GPUBaseAcceleratorLinear::Constrcut(// List of surface to transform id hit key mappings
