@@ -20,6 +20,8 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		uint32_t										outerIdAccel;
 		uint32_t										outerIdMaterial;
 
+		static constexpr uint32_t						OutsideMatId = HitKey::OutsideBatch;
+
 	protected:
 		// Type Generation Functions
 		std::map<std::string, GPUPrimGroupGen>			primGroupGenerators;

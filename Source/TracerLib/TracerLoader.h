@@ -49,10 +49,8 @@ namespace TracerLoader
 	// This makes many different tracers to reside ona single dll
 	// This may be usefull
 	LogicInterface				LoadTracerLogic(SharedLib& s,
-												const char* baseConst,
-												const char* baseDest,
-												const char* logicConst,
-												const char* logicDest);
+												const char* generatorConstructor,
+												const char* generatorDestructor);
 
 	TracerThread				GenerateTracerThread(TracerI&, 
 													 TracerBaseLogicI&, 

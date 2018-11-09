@@ -212,7 +212,11 @@ SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn, double time)
 		if(primIdArray.size() >= SceneConstants::MaxSurfacePerAccelerator)
 			throw SceneException(SceneError::TOO_MANY_SURFACE_ON_NODE);
 
-		for(int i = 0; i < static_cast<int>(primIdArray.size()); i++)
+		if(primIdArray.size() == 1)
+		{
+			s.matPrimPairs[0] = std::make_pair(materialIdArray, primIdArray);
+		}
+		else for(int i = 0; i < static_cast<int>(primIdArray.size()); i++)
 			s.matPrimPairs[i] = std::make_pair(materialIdArray[i], primIdArray[i]);
 
 		std::sort(s.matPrimPairs.begin(), s.matPrimPairs.end());

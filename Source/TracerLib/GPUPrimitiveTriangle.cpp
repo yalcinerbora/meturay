@@ -15,6 +15,8 @@ const char* GPUPrimitiveTriangle::Type() const
 	return TypeName;
 }
 
+#include "RayLib/Log.h"
+
 SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& surfaceDatalNodes, 
 												 double time)
 {
@@ -38,9 +40,10 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& 
 		batchAABBs.emplace(surfId, loader->PrimitiveAABB());
 	}
 
-	std::vector<float> postitionsCPU(totalPrimitiveCount * 3);
-	std::vector<float> normalsCPU(totalPrimitiveCount * 3);
-	std::vector<float> uvsCPU(totalPrimitiveCount * 2);
+	const uint32_t totalVertexCount = totalPrimitiveCount * 3;
+	std::vector<float> postitionsCPU(totalVertexCount * 3);
+	std::vector<float> normalsCPU(totalVertexCount * 3);
+	std::vector<float> uvsCPU(totalVertexCount * 2);
 	size_t offset = 0;
 	for(const auto& loader : loaders)
 	{
@@ -61,26 +64,26 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& 
 	// All loaded to CPU
 	// Now copy to GPU
 	// Alloc
-	memory = std::move(DeviceMemory(sizeof(Vector4f) * 2 * totalPrimitiveCount));
+	memory = std::move(DeviceMemory(sizeof(Vector4f) * 2 * totalVertexCount));
 	float* dPositionsU = static_cast<float*>(memory);
-	float* dNormalsV = static_cast<float*>(memory) + totalPrimitiveCount;
+	float* dNormalsV = static_cast<float*>(memory) + totalVertexCount * 4;
 
 	CUDA_CHECK(cudaMemcpy2D(dPositionsU, sizeof(Vector4f),
 							postitionsCPU.data(), sizeof(float) * 3,
-							sizeof(float) * 3, totalPrimitiveCount,
+							sizeof(float) * 3, totalVertexCount,
 							cudaMemcpyHostToDevice));
 	CUDA_CHECK(cudaMemcpy2D(dNormalsV, sizeof(Vector4f),
 							normalsCPU.data(), sizeof(float) * 3,
-							sizeof(float) * 3, totalPrimitiveCount,
+							sizeof(float) * 3, totalVertexCount,
 							cudaMemcpyHostToDevice));
 	// Strided Copy of UVs
 	CUDA_CHECK(cudaMemcpy2D(dPositionsU + 3, sizeof(Vector4f),
 							uvsCPU.data(), sizeof(float) * 2,
-							sizeof(float), totalPrimitiveCount,
+							sizeof(float), totalVertexCount,
 							cudaMemcpyHostToDevice));
 	CUDA_CHECK(cudaMemcpy2D(dNormalsV + 3, sizeof(Vector4f),
 							uvsCPU.data() + 1, sizeof(float) * 2,
-							sizeof(float), totalPrimitiveCount,
+							sizeof(float), totalVertexCount,
 							cudaMemcpyHostToDevice));
 
 	// Set Main Pointers of batch

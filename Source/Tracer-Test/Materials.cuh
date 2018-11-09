@@ -115,7 +115,7 @@ class ColorMaterial final
 							  ColorMatShade>
 {
 	public:
-		static constexpr const char*	TypeName = "ColorM";
+		static constexpr const char*	TypeName = "ConstantAlbedo";
 	private:
 		DeviceMemory					memory;
 		ColorMaterialData				matData;

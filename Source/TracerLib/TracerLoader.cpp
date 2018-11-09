@@ -4,20 +4,16 @@ LogicInterface TracerLoader::LoadTracerLogic(SharedLib& s)
 {
 	return LoadTracerLogic(s,
 						   BaseInterfaceConstructorName,
-						   BaseInterfaceDestructorName,
-						   LogicInterfaceConstructorName,
-						   LogicInterfaceDestructorName);
+						   BaseInterfaceDestructorName);
 }
 
 LogicInterface TracerLoader::LoadTracerLogic(SharedLib& s,
-											 const char* baseConst,
-											 const char* baseDest,
-											 const char* logicConst,
-											 const char* logicDest)
+											 const char* generatorConstructor,
+											 const char* generatorDestructor)
 {
 	// Load DLL	
-	SharedLibPtr<TracerLogicGeneratorI> logicGen = s.GenerateObject<TracerLogicGeneratorI>(logicConst,
-																						   logicDest);
+	SharedLibPtr<TracerLogicGeneratorI> logicGen = s.GenerateObject<TracerLogicGeneratorI>(generatorConstructor,
+																						   generatorDestructor);
 
 	return logicGen;
 }

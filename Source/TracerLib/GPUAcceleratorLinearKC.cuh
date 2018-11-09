@@ -13,11 +13,18 @@ with ustom Intersection and Hit
 
 #include "RayLib/SceneStructs.h"
 
-struct HitKeyList
-{
-
-} = std::array<HitKey, SceneConstants::MaxSurfacePerAccelerator>;
+using HitKeyList = std::array<HitKey, SceneConstants::MaxSurfacePerAccelerator>;
 using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxSurfacePerAccelerator>;
+
+struct HKList
+{
+	HitKey materialKeys[SceneConstants::MaxSurfacePerAccelerator];
+};
+
+struct PRList
+{
+	Vector2ul primRanges[SceneConstants::MaxSurfacePerAccelerator];
+};
 
 // Fundamental Construction Kernel
 template <class PGroup>
@@ -28,8 +35,8 @@ static void KCConstructLinear(// O
 							  // Input
 							  const Vector2ul* gAccRanges,
 							  //const HitKeyList materialKeys,
-							  HitKey materialKeys[SceneConstants::MaxSurfacePerAccelerator],
-							  PrimitiveRangeList primRanges[SceneConstants::MaxSurfacePerAccelerator],
+							  HKList mkList,
+							  PRList prList,
 							  //const PrimitiveRangeList primRanges,
 							  const PGroup::PrimitiveData primData,
 							  const uint32_t leafIndex)
@@ -64,9 +71,9 @@ static void KCConstructLinear(// O
 	#pragma unroll
 	for(int i = 0; i < SceneConstants::MaxSurfacePerAccelerator; i++)
 	{
-		uint32_t primCount = static_cast<uint32_t>(primRanges[i][1] - primRanges[i][0]);
+		uint32_t primCount = static_cast<uint32_t>(prList.primRanges[i][1] - 
+												   prList.primRanges[i][0]);
 		totalPrimCount += primCount;
-
 		RangeLocation[i] = totalPrimCount;
 	}
 
@@ -79,8 +86,8 @@ static void KCConstructLinear(// O
 		const uint32_t localIndex = globalId - RangeLocation[pairIndex];
 
 		// Determine 
-		uint64_t primitiveId = primRanges[pairIndex][0] + localIndex;
-		HitKey matKey = materialKeys[pairIndex];		
+		uint64_t primitiveId = prList.primRanges[pairIndex][0] + localIndex;
+		HitKey matKey = mkList.materialKeys[pairIndex];
 		// Gen Leaf and write
 		gAccLeafs[globalId] = PGroup::LeafFunc(matKey,
 											   primitiveId,

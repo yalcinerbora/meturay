@@ -97,7 +97,7 @@ class GPUPrimitiveTriangle final
 							   GenerateAABBTriangle, GenerateAreaTriangle>
 {
 	public:
-		static constexpr const char*			TypeName = "Triangles";
+		static constexpr const char*			TypeName = "Triangle";
 
 	private:		
 		DeviceMemory							memory;

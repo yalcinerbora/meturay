@@ -11,7 +11,7 @@
     <CudaCompile Include="..\..\..\Source\Tests\T_VectorGPU.cu">
       <Filter>Math</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tests\T_MockTracerCUDA.cu">
+    <CudaCompile Include="..\..\..\Source\Tests\T_MockTracer.cu">
       <Filter>TracerMock</Filter>
     </CudaCompile>
   </ItemGroup>
@@ -31,6 +31,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\Tests\T_GPUScene.cpp">
       <Filter>SceneIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\Tests\T_HelloTriangle.cpp">
+      <Filter>TracerMock</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -65,9 +65,6 @@
     <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp">
       <Filter>Memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cpp">
-      <Filter>Default Accelerators</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -205,9 +202,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TracerStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.h">
-      <Filter>Default Accelerators</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">
@@ -238,11 +232,11 @@
       <Filter>GPU Algorithms\Implementations</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\TracerBase.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cu">
-      <Filter>Default Accelerators</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\TracerLogicGenerator.cu">
       <Filter>SharedLib</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cu">
+      <Filter>Default Accelerators</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

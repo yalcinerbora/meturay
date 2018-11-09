@@ -47,6 +47,9 @@ template <class TLogic, class MGroup, class PGroup,
 		  SurfaceFunc<MGroup, PGroup> SurfaceF>
 class GPUMaterialBatch final : public GPUMaterialBatchI
 {
+	private:
+		static const std::string			TypeNamePriv;
+
 	public:
 		static constexpr auto SurfFunc		= SurfaceF;
 		static const char*					TypeName;
@@ -54,9 +57,6 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
 	private:
 		const MGroup&						materialGroup;
 		const PGroup&						primitiveGroup;
-
-		static const std::string			TypeNamePriv;
-
 
 	protected:		
 	public:
@@ -114,13 +114,14 @@ GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::GPUMaterialBatch(const GPUMa
 	, primitiveGroup(static_cast<const PGroup&>(p))
 {}
 
-template <class TLogic, class MGroup, class PGroup,
-		  SurfaceFunc<MGroup, PGroup> SurfaceF>
-const char* GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::TypeName = TypeNamePriv.c_str();
 
 template <class TLogic, class MGroup, class PGroup,
 	SurfaceFunc<MGroup, PGroup> SurfaceF>
 	const std::string GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::TypeNamePriv = std::string(MGroup::TypeName) + PGroup::TypeName;
+
+template <class TLogic, class MGroup, class PGroup,
+	SurfaceFunc<MGroup, PGroup> SurfaceF>
+	const char* GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::TypeName = TypeNamePriv.c_str();
 
 template <class TLogic, class MGroup, class PGroup,
 		  SurfaceFunc<MGroup, PGroup> SurfaceF>

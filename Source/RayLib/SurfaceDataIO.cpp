@@ -43,7 +43,7 @@ class InNodeTriLoader : public SurfaceDataLoader
 		// Size Determination
 		size_t					PrimitiveCount() const override;
 		size_t					PrimitiveDataSize(const std::string& primitiveDataType) const override;
-		AABB3f					PrimitiveAABB() const override;
+		AABB3					PrimitiveAABB() const override;
 
 		// Load Functionality
 		const char*				SufaceDataFileExt() const override;
@@ -73,14 +73,15 @@ size_t InNodeTriLoader::PrimitiveDataSize(const std::string& primitiveDataType) 
 	else throw SceneException(SceneError::SURFACE_DATA_TYPE_NOT_FOUND);
 }
 
-AABB3f InNodeTriLoader::PrimitiveAABB() const
+AABB3 InNodeTriLoader::PrimitiveAABB() const
 {
 	int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
+	const std::string positionName = PrimitiveDataTypeNames[posIndex];
 	std::array<Vector3, 3> data =
 	{
-		SceneIO::LoadVector<3, float>(node.jsn[posIndex][0], time),
-		SceneIO::LoadVector<3, float>(node.jsn[posIndex][1], time),
-		SceneIO::LoadVector<3, float>(node.jsn[posIndex][2], time)
+		SceneIO::LoadVector<3, float>(node.jsn[positionName][0], time),
+		SceneIO::LoadVector<3, float>(node.jsn[positionName][1], time),
+		SceneIO::LoadVector<3, float>(node.jsn[positionName][2], time)
 	};
 	return Triangle::BoundingBox(data[0], data[1], data[2]);
 }
@@ -162,7 +163,7 @@ class InNodeSphrLoader : public SurfaceDataLoader
 		// Size Determination
 		size_t					PrimitiveCount() const override;
 		size_t					PrimitiveDataSize(const std::string& primitiveDataType) const override;
-		AABB3f					PrimitiveAABB() const override;
+		AABB3					PrimitiveAABB() const override;
 
 		// Load Functionality
 		const char*				SufaceDataFileExt() const override;

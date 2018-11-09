@@ -110,13 +110,20 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
 	const PrimitiveRangeList& rangeList = primitiveRanges[index];
 	const HitKeyList& hitList = primitiveMaterialKeys[index];
 
+	HKList hkList;
+	PRList prList;
+	std::memcpy(&hkList.materialKeys, hitList.data(),
+				sizeof(HitKey) * SceneConstants::MaxSurfacePerAccelerator);
+	std::memcpy(&prList.primRanges, rangeList.data(),
+				sizeof(Vector2ul) * SceneConstants::MaxSurfacePerAccelerator);
+
 	// KC
 	KCConstructLinear<PGroup><<<1,1>>>(// O
 									   dLeafList,
 									   // Input
 									   dAccRanges,
-									   hitList.data(),
-									   rangeList.data(),
+									   hkList,
+									   prList,
 									   primData,
 									   index);
 
@@ -136,6 +143,8 @@ template <class PGroup>
 void GPUAccLinearGroup<PGroup>::DestroyAccelerator(uint32_t surface)
 {
 	//...
+	// Define destory??
+	// There is no destruction or deallocation
 }
 
 template <class PGroup>

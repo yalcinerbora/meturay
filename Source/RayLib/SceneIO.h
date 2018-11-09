@@ -24,8 +24,7 @@ namespace SceneIO
 	static constexpr const char* LIGHT_BASE = "Lights";
 	static constexpr const char* TRANSFORM_BASE = "Transforms";
 	static constexpr const char* PRIMITIVE_BASE = "Primitives";
-	static constexpr const char* ACCELERATOR_BASE = "Accelerators";
-	static constexpr const char* MATERIAL_BASE = "Accelerators";
+	static constexpr const char* MATERIAL_BASE = "Materials";
 	static constexpr const char* SURFACE_BASE = "Surfaces";
 	static constexpr const char* SURFACE_DATA_BASE = "SurfaceData";
 	static constexpr const char* BASE_ACCELERATOR_BASE = "BaseAccelerator";
@@ -153,5 +152,5 @@ Matrix<N, T> SceneIO::LoadMatrix(const nlohmann::json& jsn, double time)
 
 inline std::string SceneIO::StripFileExt(const std::string& string)
 {
-	return string.substr(string.find_last_of('.'));
+	return string.substr(string.find_last_of('.') + 1);
 }

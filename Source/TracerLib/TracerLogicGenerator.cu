@@ -49,8 +49,8 @@ template void TypeGenWrappers::DefaultDestruct(GPUMaterialBatchI*);
 
 // Constructor & Destructor
 TracerLogicGenerator::TracerLogicGenerator()
-	: outerIdAccel(0)
-	, outerIdMaterial(0)
+	: outerIdAccel(1)
+	, outerIdMaterial(2)
 	, baseAccelerator(nullptr, TypeGenWrappers::DefaultDestruct<GPUBaseAcceleratorI>)
 {
 	using namespace TypeGenWrappers;
@@ -92,6 +92,7 @@ TracerLogicGenerator::TracerLogicGenerator()
 SceneError TracerLogicGenerator::GetPrimitiveGroup(GPUPrimitiveGroupI*& pg,
 												   const std::string& primitiveType)
 {
+	pg = nullptr;
 	auto loc = primGroups.find(primitiveType);
 	if(loc == primGroups.end())
 	{
@@ -113,8 +114,9 @@ SceneError TracerLogicGenerator::GetAcceleratorGroup(GPUAcceleratorGroupI*& ag,
 													 const TransformStruct* t,
 													 const std::string& accelType)
 {
+	ag = nullptr;
 	auto loc = accelGroups.find(accelType);
-	if(loc == accelGroups.end())
+	if(loc != accelGroups.end())
 	{
 		// Cannot Find Already Constructed Type
 		// Generate
@@ -132,6 +134,7 @@ SceneError TracerLogicGenerator::GetAcceleratorGroup(GPUAcceleratorGroupI*& ag,
 SceneError TracerLogicGenerator::GetMaterialGroup(GPUMaterialGroupI*& mg,												 
 												  const std::string& materialType)
 {
+	mg = nullptr;
 	auto loc = matGroups.find(materialType);
 	if(loc == matGroups.end())
 	{
@@ -152,6 +155,7 @@ SceneError TracerLogicGenerator::GetAcceleratorBatch(GPUAcceleratorBatchI*& ab, 
 													 const GPUAcceleratorGroupI& ag,
 													 const GPUPrimitiveGroupI& pg)
 {
+	ab = nullptr;
 	const std::string batchType = std::string(ag.Type()) + pg.Type();
 
 	auto loc = accelBatches.find(batchType);
@@ -177,6 +181,7 @@ SceneError TracerLogicGenerator::GetMaterialBatch(GPUMaterialBatchI*& mb, uint32
 												  const GPUMaterialGroupI& mg,
 												  const GPUPrimitiveGroupI& pg)
 {
+	mb = nullptr;
 	const std::string batchType = std::string(mg.Type()) + pg.Type();
 
 	auto loc = matBatches.find(batchType);

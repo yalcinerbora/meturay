@@ -33,12 +33,15 @@ SceneError GPUScene::OpenFile(const std::string& fileName)
 GPUScene::GPUScene(const std::string& s)
 	: fileName(s)
 	, currentTime(0.0)
+	, dLights(nullptr)
+	, dTransforms(nullptr)
 {}
 
 bool GPUScene::FindNode(nlohmann::json& jsn, const char* c)
 {
 	auto i = sceneJson.find(c);
-	return(i != sceneJson.end());
+	jsn = *i;
+	return (i != sceneJson.end());
 };
 
 SceneError GPUScene::GenIdLookup(std::map<uint32_t, uint32_t>& result,
@@ -76,9 +79,9 @@ SceneError GPUScene::GenerateConstructionData(TracerLogicGeneratorI*,
 	nlohmann::json surfaces;
 	nlohmann::json primitives;
 	nlohmann::json materials;
-	if(FindNode(surfaces, SceneIO::SURFACE_BASE)) return SceneError::SURFACES_ARRAY_NOT_FOUND;
-	if(FindNode(primitives, SceneIO::PRIMITIVE_BASE)) return SceneError::PRIMITIVES_ARRAY_NOT_FOUND;
-	if(FindNode(materials, SceneIO::MATERIAL_BASE)) return SceneError::MATERIALS_ARRAY_NOT_FOUND;
+	if(!FindNode(surfaces, SceneIO::SURFACE_BASE)) return SceneError::SURFACES_ARRAY_NOT_FOUND;
+	if(!FindNode(primitives, SceneIO::PRIMITIVE_BASE)) return SceneError::PRIMITIVES_ARRAY_NOT_FOUND;
+	if(!FindNode(materials, SceneIO::MATERIAL_BASE)) return SceneError::MATERIALS_ARRAY_NOT_FOUND;
 	std::map<uint32_t, uint32_t> primList;
 	std::map<uint32_t, uint32_t> materialList;
 	GenIdLookup(primList, primitives, PRIMITIVE);
@@ -103,7 +106,7 @@ SceneError GPUScene::GenerateConstructionData(TracerLogicGeneratorI*,
 			// Check if primitive exists
 			// add it to primitive group list for later construction
 			if(auto loc = primList.find(primId);
-			   loc == primList.end())
+			   loc != primList.end())
 			{				
 				const auto jsnNode = primitives[loc->second];
 				std::string currentType = jsnNode[SceneIO::TYPE];
@@ -117,7 +120,7 @@ SceneError GPUScene::GenerateConstructionData(TracerLogicGeneratorI*,
 			else return SceneError::PRIMITIVE_ID_NOT_FOUND;
 
 			if(auto loc = materialList.find(matId);
-			   loc == materialList.end())
+			   loc != materialList.end())
 			{
 				const auto jsnNode = materials[loc->second];
 				matGroupType = jsnNode[SceneIO::TYPE];
@@ -239,14 +242,16 @@ void GPUScene::LoadCommon(double time)
 	
 	memory = DeviceMemory(transformSize + lightSize);
 	dTransforms = reinterpret_cast<TransformStruct*>(static_cast<Byte*>(memory));
-	dLights = reinterpret_cast<LightStruct*>(static_cast<Byte*>(memory) + transformSize);
+	CUDA_CHECK(cudaMemcpy(dTransforms, transformsCPU.data(), 
+						  transformsCPU.size() * sizeof(TransformStruct),
+						  cudaMemcpyHostToDevice));
+	if(lightsCPU.size() != 0)
+	{
+		dLights = reinterpret_cast<LightStruct*>(static_cast<Byte*>(memory) + transformSize);
+		CUDA_CHECK(cudaMemcpy(dLights, lightsCPU.data(), lightsCPU.size() * sizeof(LightStruct),
+							  cudaMemcpyHostToDevice));
+	}
 	
-	CUDA_CHECK(cudaMemcpy(dLights, lightsCPU.data(), lightsCPU.size() * sizeof(LightStruct),
-						  cudaMemcpyHostToDevice));
-	CUDA_CHECK(cudaMemcpy(dTransforms, transformsCPU.data(), transformsCPU.size() * sizeof(TransformStruct),
-						  cudaMemcpyHostToDevice));
-
-
 	// Now Load Camera
 	nlohmann::json camerasJson;
 	if(FindNode(camerasJson, SceneIO::CAMERA_BASE))
@@ -296,11 +301,11 @@ SceneError GPUScene::LoadLogicRelated(TracerLogicGeneratorI* l, double time)
 	for(auto& materialBatch : matBatchListings)
 	{
 		const std::string& accelGroupName = materialBatch.first;
-		const std::string& primTName = materialBatch.second.matType;
-		const std::string& matTName = materialBatch.second.primType;
+		const std::string& matTName = materialBatch.second.matType;
+		const std::string& primTName = materialBatch.second.primType;
 		//
-		GPUPrimitiveGroupI* pGroup;
-		GPUMaterialGroupI* mGroup;
+		GPUPrimitiveGroupI* pGroup = nullptr;
+		GPUMaterialGroupI* mGroup = nullptr;
 		l->GetPrimitiveGroup(pGroup, primTName);
 		l->GetMaterialGroup(mGroup, matTName);
 		// Generation
@@ -424,7 +429,7 @@ SceneError GPUScene::LoadScene(TracerLogicGeneratorI* l, double time)
 	{
 		return e;
 	}
-	catch(std::exception const&)
+	catch(std::exception const& e)
 	{
 		return SceneError::JSON_FILE_PARSE_ERROR;
 	}

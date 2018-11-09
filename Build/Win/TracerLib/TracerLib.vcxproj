@@ -18,7 +18,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp" />
@@ -26,6 +25,7 @@
     <ClCompile Include="..\..\..\Source\TracerLib\RNGMemory.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerLoader.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\TracerLogicGenerator.cu">
       <FileType>Document</FileType>
     </CudaCompile>
@@ -42,7 +42,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultTypeGenerators.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DeviceMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.hpp" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialP.cuh" />
@@ -82,7 +81,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TracerThread.h" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\ParallelReduction.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanArithmetic.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanMatrix2x2.cu" />

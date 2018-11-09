@@ -20,7 +20,7 @@ class SurfaceDataLoaderI
 		// Size Determination
 		virtual size_t					PrimitiveCount() const = 0;
 		virtual size_t					PrimitiveDataSize(const std::string& primitiveDataType) const = 0;
-		virtual AABB3f					PrimitiveAABB() const = 0;
+		virtual AABB3					PrimitiveAABB() const = 0;
 
 		// Load Functionality
 		virtual const char*				SufaceDataFileExt() const = 0;
