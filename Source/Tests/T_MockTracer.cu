@@ -21,13 +21,12 @@ using namespace std::chrono_literals;
 #include "TracerLib/TracerLoader.h"
 
 struct RayAuxGMem {};
-struct RayAuxBaseData{};
 
 //template <class RayAuxGMem, class RayAuxBaseData>
-__device__ void AuxInitEmpty(const RayAuxGMem,
+__device__ void AuxInitEmpty(RayAuxGMem*,
 							 const uint32_t writeLoc,
 							 // Input
-							 const RayAuxBaseData,
+							 const RayAuxGMem,
 							 // Index
 							 const Vector2ui& globalPixelId,
 							 const Vector2ui& localSampleId,
@@ -388,27 +387,7 @@ void MockTracerLogic::GenerateCameraRays(RayMemory& rMem,
 										 const Vector2ui& resolution,
 										 const Vector2ui& pixelStart,
 										 const Vector2ui& pixelCount)
-{
-	RayAuxGMem rAux;
-	RayAuxBaseData rAuxBase;
-
-	// Camera Ray Generation Kernel Check
-	constexpr int GPUId = 0;
-	CudaSystem::GPUCallX(GPUId, rngMemory.SharedMemorySize(GPUId), 0,
-						 KCGenerateCameraRays<RayAuxGMem, RayAuxBaseData, AuxInitEmpty>,
-						 rMem.RaysOut(),
-						 rAux,
-						 // Input
-						 rngMemory.RNGData(GPUId),
-						 camera,
-						 samplePerPixel,
-						 resolution,
-						 pixelStart,
-						 pixelCount,
-						 //
-						 rAuxBase);
-	// We do not use this actual data but w/e
-}
+{}
 
 void MockTracerLogic::GenerateRays(RayMemory&, RNGMemory&,
 								   const uint32_t rayCount)

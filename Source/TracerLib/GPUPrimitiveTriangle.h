@@ -93,7 +93,7 @@ inline float GenerateAreaTriangle(PrimitiveId primitiveId, const TriData& primDa
 
 class GPUPrimitiveTriangle final
 	: public GPUPrimitiveGroup<TriangleHit, TriData, DefaultLeaf,
-							   TriangleClosestHit, GenerateLeaf,
+							   TriangleClosestHit, GenerateDefaultLeaf,
 							   GenerateAABBTriangle, GenerateAreaTriangle>
 {
 	public:

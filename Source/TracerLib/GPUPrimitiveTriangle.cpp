@@ -40,7 +40,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& 
 		batchAABBs.emplace(surfId, loader->PrimitiveAABB());
 	}
 
-	const uint32_t totalVertexCount = totalPrimitiveCount * 3;
+	const size_t totalVertexCount = totalPrimitiveCount * 3;
 	std::vector<float> postitionsCPU(totalVertexCount * 3);
 	std::vector<float> normalsCPU(totalVertexCount * 3);
 	std::vector<float> uvsCPU(totalVertexCount * 2);

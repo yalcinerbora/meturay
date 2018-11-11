@@ -11,11 +11,23 @@ struct DefaultLeaf
 	HitKey			matId;
 };
 
+struct EmptyLeaf {};
+
+
 template <class PrimData>
 __device__ __host__
-inline DefaultLeaf GenerateLeaf(const HitKey matId,
-								const PrimitiveId primitiveId,
-								const PrimData& primData)
+inline EmptyLeaf GenerateEmptyLeaf(const HitKey matId,
+								   const PrimitiveId primitiveId,
+								   const PrimData& primData)
+{
+	return {};
+}
+
+template <class PrimData>
+__device__ __host__
+inline DefaultLeaf GenerateDefaultLeaf(const HitKey matId,
+									   const PrimitiveId primitiveId,
+									   const PrimData& primData)
 {
 	return DefaultLeaf{primitiveId, matId};
 }

@@ -11,7 +11,8 @@ __device__ __host__
 inline void RayInitBasic(RayAuxBasic* gOutBasic,
 						 const uint32_t writeLoc,
 						 // Input
-						 const RayAuxBasic defaults,
+						 const RayAuxBasic& defaults,
+						 const RayReg& ray,
 						 // Index
 						 const Vector2ui& globalPixelId,
 						 const Vector2ui& localSampleId,
@@ -20,7 +21,18 @@ inline void RayInitBasic(RayAuxBasic* gOutBasic,
 	gOutBasic[writeLoc] = defaults;
 }
 
-class TracerBasic : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
+__device__ __host__
+inline void RayFinalizeBasic(// Output
+							 Vector4* gImage,
+							 // Input
+							 const RayAuxBasic& auxData,
+							 const RayReg& ray,
+							 //
+							 RandomGPU& rng)
+{}
+
+class TracerBasic : public TracerBaseLogic<RayAuxBasic, RayInitBasic, 
+										   RayFinalizeBasic>
 {
 	private:
 		static constexpr RayAuxBasic	initals = {Zero3f};

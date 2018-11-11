@@ -23,6 +23,7 @@ struct SceneError : public ErrorI
 			PRIMITIVES_ARRAY_NOT_FOUND,
 			SURFACES_ARRAY_NOT_FOUND,
 			BASE_ACCELERATOR_NODE_NOT_FOUND,
+			OUTSIDE_MAT_NODE_NOT_FOUND,
 			// No Logic
 			NO_LOGIC_FOR_ACCELERATOR,
 			NO_LOGIC_FOR_MATERIAL,
@@ -104,6 +105,7 @@ inline SceneError::operator std::string() const
 		"\"Primitives\" array not found.",
 		"\"Surfaces\" array not found.",
 		"\"BaseAccelerator\" node not found.",
+		"\"OutsideMaterial\" node not found.",
 		// No Logic
 		"No logic found for that accelerator.",
 		"No logic found for that material.",

@@ -2,25 +2,19 @@
 
 #include "TracerLogicI.h"
 #include "GPUPrimitiveI.h"
+#include "AuxiliaryDataKernels.cuh"
+#include "CameraKernels.cuh"
 
 struct TracerError;
 
-template<class RayAuxData>
-using AuxInitFunc = void(*)(RayAuxData*,
-							const uint32_t writeLoc,
-							// Input
-							const RayAuxData,
-							// Index
-							const Vector2ui& globalPixelId,
-							const Vector2ui& localSampleId,
-							const uint32_t samplePerPixel);
-
-template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>
+template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF,
+		 RayFinalizeFunc<RayAuxD> FinalizeF>
 class TracerBaseLogic : public TracerBaseLogicI
 {
 	public:
 		using RayAuxData					= RayAuxD;
 		static constexpr auto AuxFunc		= AuxF;
+		static constexpr auto FinalizeFunc	= FinalizeF;
 
 	private:
 	protected:
@@ -73,12 +67,14 @@ class TracerBaseLogic : public TracerBaseLogicI
 		size_t							   HitStructSize() const override { return options.hitStructMaxSize; };
 };
 
-template<class RayAuxD, AuxInitFunc<RayAuxD> AuxFunc>
-TracerBaseLogic<RayAuxD, AuxFunc>::TracerBaseLogic(GPUBaseAcceleratorI& baseAccelerator,
-												   const AcceleratorBatchMappings& a,
-												   const MaterialBatchMappings& m,
-												   const TracerOptions& options,
-												   const RayAuxData& initialValues)
+template<class RayAuxD,
+		 AuxInitFunc<RayAuxD> AuxF,
+		 RayFinalizeFunc<RayAuxD> FinalizeF>
+TracerBaseLogic<RayAuxD, AuxF, FinalizeF>::TracerBaseLogic(GPUBaseAcceleratorI& baseAccelerator,
+															   const AcceleratorBatchMappings& a,
+															   const MaterialBatchMappings& m,
+															   const TracerOptions& options,
+															   const RayAuxData& initialValues)
 	: baseAccelerator(baseAccelerator)
 	, accelerators(a)
 	, materials(m)
@@ -86,27 +82,33 @@ TracerBaseLogic<RayAuxD, AuxFunc>::TracerBaseLogic(GPUBaseAcceleratorI& baseAcce
 	, initalValues(initalValues)
 {}
 
-template<class RayAuxD, AuxInitFunc<RayAuxD> AuxFunc>
-const Vector2i TracerBaseLogic<RayAuxD, AuxFunc>::SceneMaterialMaxBits() const
+template<class RayAuxD,
+		 AuxInitFunc<RayAuxD> AuxF,
+		 RayFinalizeFunc<RayAuxD> FinalizeF>
+const Vector2i TracerBaseLogic<RayAuxD, AuxF, FinalizeF>::SceneMaterialMaxBits() const
 {
 	//
 	return Zero2i;
 }
 
-template<class RayAuxD, AuxInitFunc<RayAuxD> AuxFunc>
-const Vector2i TracerBaseLogic<RayAuxD, AuxFunc>::SceneAcceleratorMaxBits() const
+template<class RayAuxD,
+		 AuxInitFunc<RayAuxD> AuxF,
+		 RayFinalizeFunc<RayAuxD> FinalizeF>
+const Vector2i TracerBaseLogic<RayAuxD, AuxF, FinalizeF>::SceneAcceleratorMaxBits() const
 {
 	//
 	return Zero2i;
 }
 
-template<class RayAuxD, AuxInitFunc<RayAuxD> AuxFunc>
-void TracerBaseLogic<RayAuxD, AuxFunc>::GenerateCameraRays(RayMemory&, RNGMemory&,
-														   const CameraPerspective& camera,
-														   const uint32_t samplePerPixel,
-														   const Vector2ui& resolution,
-														   const Vector2ui& pixelStart,
-														   const Vector2ui& pixelCount)
+template<class RayAuxD,
+	AuxInitFunc<RayAuxD> AuxF,
+	RayFinalizeFunc<RayAuxD> FinalizeF>
+	void TracerBaseLogic<RayAuxD, AuxF, FinalizeF>::GenerateCameraRays(RayMemory&, RNGMemory&,
+																	   const CameraPerspective& camera,
+																	   const uint32_t samplePerPixel,
+																	   const Vector2ui& resolution,
+																	   const Vector2ui& pixelStart,
+																	   const Vector2ui& pixelCount)
 {
 	// 
 }

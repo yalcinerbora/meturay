@@ -2,6 +2,7 @@
 
 #include "GPUPrimitiveSphere.h"
 #include "GPUPrimitiveTriangle.h"
+#include "GPUPrimitiveEmpty.h"
 #include "GPUAcceleratorLinear.cuh"
 
 #include "GPUMaterialI.h"
@@ -52,6 +53,9 @@ TracerLogicGenerator::TracerLogicGenerator()
 	: outerIdAccel(1)
 	, outerIdMaterial(2)
 	, baseAccelerator(nullptr, TypeGenWrappers::DefaultDestruct<GPUBaseAcceleratorI>)
+	, outsideMaterial(nullptr, TypeGenWrappers::DefaultDestruct<GPUMaterialGroupI>)
+	, outsideMatBatch(nullptr, TypeGenWrappers::DefaultDestruct<GPUMaterialBatchI>)
+	, emptyPrimitive(nullptr)
 {
 	using namespace TypeGenWrappers;
 
@@ -61,6 +65,9 @@ TracerLogicGenerator::TracerLogicGenerator()
 												DefaultDestruct<GPUPrimitiveGroupI>));
 	primGroupGenerators.emplace(GPUPrimitiveSphere::TypeName,
 								GPUPrimGroupGen(DefaultConstruct<GPUPrimitiveGroupI, GPUPrimitiveSphere>,
+												DefaultDestruct<GPUPrimitiveGroupI>));
+	primGroupGenerators.emplace(GPUPrimitiveEmpty::TypeName,
+								GPUPrimGroupGen(DefaultConstruct<GPUPrimitiveGroupI, GPUPrimitiveEmpty>,
 												DefaultDestruct<GPUPrimitiveGroupI>));
 
 	// Accelerator Types
@@ -82,6 +89,14 @@ TracerLogicGenerator::TracerLogicGenerator()
 	baseAccelGenerators.emplace(GPUBaseAcceleratorLinear::TypeName,
 								GPUBaseAccelGen(DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorLinear>,
 												DefaultDestruct<GPUBaseAcceleratorI>));
+
+
+	// Inistantiate empty primitive since it is used by outside material	
+	const std::string emptyTypeName = GPUPrimitiveEmpty::TypeName;
+	auto loc = primGroupGenerators.find(emptyTypeName);
+	GPUPrimGPtr ptr = loc->second();
+	emptyPrimitive = ptr.get();
+	primGroups.emplace(emptyTypeName, std::move(ptr));
 
 	// Default Types are loaded
 	// Other Types are strongly tied to base tracer logic
@@ -216,6 +231,31 @@ SceneError TracerLogicGenerator::GetBaseAccelerator(GPUBaseAcceleratorI*& baseAc
 		baseAccel = baseAccelerator.get();
 	}
 	else baseAccel = baseAccelerator.get();
+	return SceneError::OK;
+}
+
+SceneError TracerLogicGenerator::GetOutsideMaterial(GPUMaterialGroupI*& outMat,
+													const std::string& materialType)
+{
+	if(outsideMaterial.get() == nullptr)
+	{
+		// Cannot Find Already Constructed Type
+		// Generate
+		auto loc = matGroupGenerators.find(materialType);
+		if(loc == matGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
+		outsideMaterial = loc->second();
+		outMat = outsideMaterial.get();
+
+		// Additionally Generate a batch for it
+		auto batchLoc = matBatchGenerators.find(materialType);
+		if(batchLoc == matBatchGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
+
+		outsideMatBatch = batchLoc->second(*outMat, *emptyPrimitive);
+		GPUMaterialBatchI* mb = outsideMatBatch.get();
+
+		matBatchMap.emplace(OutsideMatId, mb);
+	}
+	else outMat = outsideMaterial.get();
 	return SceneError::OK;
 }
 

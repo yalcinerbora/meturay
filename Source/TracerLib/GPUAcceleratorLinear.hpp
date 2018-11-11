@@ -14,8 +14,8 @@ const char* GPUAccLinearGroup<PGroup>::Type() const
 
 template <class PGroup>
 SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(std::map<uint32_t, AABB3>& aabbOut,
-												 // Map of hit keys for all materials
-												 // w.r.t matId and primitive type
+													  // Map of hit keys for all materials
+													  // w.r.t matId and primitive type
 													  const std::map<TypeIdPair, HitKey>& allHitKeys,
 													  // List of surface/material
 													  // pairings that uses this accelerator type

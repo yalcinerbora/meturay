@@ -324,6 +324,21 @@ SceneError GPUScene::LoadLogicRelated(TracerLogicGeneratorI* l, double time)
 		}
 	}
 
+	// Attach Outside Material
+	auto outMatNode = sceneJson.find(SceneIO::BASE_OUTSIDE_MATERIAL);
+	if(outMatNode == sceneJson.end()) return SceneError::OUTSIDE_MAT_NODE_NOT_FOUND;
+	const nlohmann::json& node = *outMatNode;
+	const std::string matTypeName = node[SceneIO::TYPE];
+
+	GPUMaterialGroupI* matGroup;
+	if((e = l->GetOutsideMaterial(matGroup, matTypeName)) != SceneError::OK)
+		return e;
+
+	// Initialize
+	std::set<SceneFileNode> groupNodes = {SceneFileNode{node}};
+	if((e = matGroup->InitializeGroup(groupNodes, time)) != SceneError::OK)
+		return e;
+		
 	// Accelerator Groups & Batches
 	// and surface hit keys
 	std::map<uint32_t, HitKey> accHitKeyList;
@@ -429,7 +444,7 @@ SceneError GPUScene::LoadScene(TracerLogicGeneratorI* l, double time)
 	{
 		return e;
 	}
-	catch(std::exception const& e)
+	catch(std::exception const&)
 	{
 		return SceneError::JSON_FILE_PARSE_ERROR;
 	}

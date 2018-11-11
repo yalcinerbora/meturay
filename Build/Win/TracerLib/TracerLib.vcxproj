@@ -18,6 +18,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveEmpty.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp" />
@@ -33,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorDeviceFunctions.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\AuxiliaryDataKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\BitonicSort.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\BVHAcceleratorKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\CameraKernels.cuh" />
@@ -48,6 +50,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\FunctionEnablers.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialI.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveEmpty.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.h" />

@@ -25,8 +25,10 @@ TEST(HelloTriangle, Test)
 																   "DeleteBasicTracer");
 
 	// Load Scene
-	GPUScene scene("TestScenes/helloTriangle.json");
-	scene.LoadScene(tracerGenerator.get(), 0.0);
+	GPUScene scene("TestScenes/helloTriangle.json");	
+	SceneError e = scene.LoadScene(tracerGenerator.get(), 0.0);
+	if(e != SceneError::OK)
+		ASSERT_FALSE(true);
 	
 
 	//...

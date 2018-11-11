@@ -10,6 +10,7 @@ and it adds default accelerators and primitives as default types.
 
 #include <map>
 
+#include "RayLib/Types.h"
 #include "TracerLogicGeneratorI.h"
 #include "DefaultTypeGenerators.h"
 
@@ -20,7 +21,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		uint32_t										outerIdAccel;
 		uint32_t										outerIdMaterial;
 
-		static constexpr uint32_t						OutsideMatId = HitKey::OutsideBatch;
+		static constexpr uint32_t						OutsideMatId = OutsideBatchId;
 
 	protected:
 		// Type Generation Functions
@@ -43,6 +44,9 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		std::map<std::string, GPUMatBPtr>				matBatches;
 
 		GPUBaseAccelPtr									baseAccelerator;
+		GPUMatGPtr										outsideMaterial;
+		GPUMatBPtr										outsideMatBatch;
+		GPUPrimitiveGroupI*								emptyPrimitive;
 		
 		// Generated Batch Mappings		
 		AcceleratorBatchMappings						accelBatchMap;
@@ -73,6 +77,10 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		SceneError					GetMaterialBatch(GPUMaterialBatchI*&, uint32_t& id,
 													 const GPUMaterialGroupI&,
 													 const GPUPrimitiveGroupI&) override;
+
+		// Outside Material is special material and has its own group		
+		SceneError					GetOutsideMaterial(GPUMaterialGroupI*&,
+													   const std::string& materialType) override;
 
 		// Base Accelerator should be fetched after all the stuff is generated
 		SceneError					GetBaseAccelerator(GPUBaseAcceleratorI*&,

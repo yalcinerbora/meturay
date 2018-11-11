@@ -7,6 +7,7 @@
 #include <string>
 #include <cstdint>
 #include <set>
+
 #include "HitStructs.cuh"
 
 struct RayGMem;
@@ -79,4 +80,13 @@ class GPUMaterialBatchI
 		virtual const GPUMaterialGroupI&				MaterialGroup() const = 0;
 
 		virtual uint8_t									OutRayCount() const = 0;
+};
+
+class GPUBoundaryMatGroupI : public GPUMaterialGroupI
+{
+	public:
+		virtual							~GPUBoundaryMatGroupI() = default;
+
+		// Interface
+		virtual void					AttachOutputImage(Vector4* pixels) = 0;
 };

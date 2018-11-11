@@ -2,6 +2,7 @@
 
 #include "TracerLib/GPUPrimitiveSphere.h"
 #include "TracerLib/GPUPrimitiveTriangle.h"
+#include "TracerLib/GPUPrimitiveEmpty.h"
 #include "TracerLib/GPUMaterialP.cuh"
 
 #include "RayLib/CosineDistribution.h"
@@ -12,6 +13,11 @@
 struct BasicSurface
 {
 	Vector3 normal;
+};
+
+struct EmptySurface
+{
+
 };
 
 // Surface Functions
@@ -51,7 +57,35 @@ inline BasicSurface BasicSurfaceFromSphr(const GPUPrimitiveSphere::PrimitiveData
 	return {(position - center).Normalize()};
 }
 
+
+__device__ __host__
+inline EmptySurface SurfaceFromEmpty(const GPUPrimitiveEmpty::PrimitiveData& pData,
+									 const GPUPrimitiveEmpty::HitData& hData,
+									 PrimitiveId id)
+{
+	return {};
+}
+
+
 // Shade Functions
+__device__
+inline void ColorMatShade(// Output
+						  RayGMem* gOutRays,
+						  RayAuxBasic* gOutRayAux,
+						  const uint32_t maxOutRay,
+						  // Input as registers
+						  const RayReg& ray,
+						  const EmptySurface& surface,
+						  const RayAuxBasic& aux,
+						  // 
+						  RandomGPU& rng,
+						  // Input as global memory
+						 // const OutsideColorMaterialData& gMatData,
+						  const HitKey::Type& matId)
+{
+	
+}
+
 __device__
 inline void ColorMatShade(// Output
 						  RayGMem* gOutRays,

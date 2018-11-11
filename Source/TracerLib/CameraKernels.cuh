@@ -16,21 +16,21 @@ Camera Ray Generation Kernel
 #include "Random.cuh"
 
 // Commands that initialize ray auxiliary data
-template <class RayAuxGMem, class RayAuxBaseData>
-using AuxInitFunc = void(*)(const RayAuxGMem gAux,
-							const uint32_t writeLocation,
+template<class RayAuxData>
+using AuxInitFunc = void(*)(RayAuxData*,
+							const uint32_t writeLoc,
 							// Input
-							const RayAuxBaseData baseData,
+							const RayAuxData&,
+							const RayReg&,
 							// Index
 							const Vector2ui& globalPixelId,
 							const Vector2ui& localSampleId,
 							const uint32_t samplePerPixel);
 
 // Templated Camera Ray Generation Kernel
-template<class RayAuxGMem, class RayAuxBaseData,
-		 AuxInitFunc<RayAuxGMem, RayAuxBaseData> AuxFunc>
+template<class RayAuxData, AuxInitFunc<RayAuxData> AuxFunc>
 __global__ void KCGenerateCameraRays(RayGMem* gRays,
-									 RayAuxGMem gAuxiliary,
+									 RayAuxData* gAuxiliary,
 									 // Input
 									 RNGGMem gRNGStates,
 									 const CameraPerspective cam,
@@ -39,7 +39,7 @@ __global__ void KCGenerateCameraRays(RayGMem* gRays,
 									 const Vector2ui pixelStart,
 									 const Vector2ui pixelCount,
 									 // Data to initialize auxiliary base data
-									 const RayAuxBaseData auxBaseData)
+									 const RayAuxData auxBaseData)
 {
 	extern __shared__ uint32_t sRandState[];
 	RandomGPU rng(gRNGStates.state, sRandState);
@@ -111,6 +111,7 @@ __global__ void KCGenerateCameraRays(RayGMem* gRays,
 				threadId,
 				// Input
 				auxBaseData,
+				ray,
 				// Index
 				globalPixelId,
 				localSampleId,

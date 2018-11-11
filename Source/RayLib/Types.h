@@ -4,6 +4,9 @@
 */
 typedef unsigned char Byte;
 
+static constexpr uint16_t NullBatchId = 0;
+static constexpr uint16_t OutsideBatchId = 1;
+
 enum class PixelFormat
 {
 	R8_UNORM,

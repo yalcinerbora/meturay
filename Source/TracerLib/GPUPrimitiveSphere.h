@@ -91,7 +91,7 @@ inline float GenerateAreaSphere(PrimitiveId primitiveId, const SphereData& primD
 
 class GPUPrimitiveSphere final 
 	: public GPUPrimitiveGroup<SphereHit, SphereData, DefaultLeaf,
-							   SphereClosestHit, GenerateLeaf,
+							   SphereClosestHit, GenerateDefaultLeaf,
 							   GenerateAABBSphere, GenerateAreaSphere>
 {
 	public:	

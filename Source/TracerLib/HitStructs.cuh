@@ -73,8 +73,8 @@ struct alignas(sizeof(T)) HitKeyT
 				  "Masks representing portions of HitKey should complement each other.");
 
 
-	static constexpr uint16_t		NullBatch = 0;
-	static constexpr uint16_t		OutsideBatch = 1;
+	static constexpr uint16_t		NullBatch = NullBatchId;
+	static constexpr uint16_t		OutsideBatch = OutsideBatchId;
 	static constexpr T				InvalidKey = CombinedKey(NullBatch, 0);
 	static constexpr T				OutsideMatKey = CombinedKey(OutsideBatch, 0);
 };
