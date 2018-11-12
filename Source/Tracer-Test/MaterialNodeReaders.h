@@ -2,10 +2,15 @@
 
 #include <set>
 
-struct ColorMaterialData;
+struct ConstantAlbedoMatData;
+struct ConstantBoundaryMatData;
 struct SceneFileNode;
+
 class DeviceMemory;
 
-extern ColorMaterialData ColorMaterialRead(DeviceMemory&,
-										   const std::set<SceneFileNode>& materialNodes,
-										   double);
+extern ConstantAlbedoMatData ConstantAlbedoMatRead(DeviceMemory&,
+												   const std::set<SceneFileNode>& materialNodes,
+												   double);
+
+extern ConstantBoundaryMatData ConstantBoundaryMatRead(const std::set<SceneFileNode>& materialNodes,
+													   double);

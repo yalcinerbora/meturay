@@ -6,9 +6,9 @@
 
 #include "TracerLib/DeviceMemory.h"
 
-ColorMaterialData ColorMaterialRead(DeviceMemory& mem,
-									const std::set<SceneFileNode>& materialNodes,
-									double time)
+ConstantAlbedoMatData ConstantAlbedoMatRead(DeviceMemory& mem,
+											const std::set<SceneFileNode>& materialNodes,
+											double time)
 {
 	constexpr const char* ALBEDO = "albedo";
 
@@ -24,4 +24,14 @@ ColorMaterialData ColorMaterialRead(DeviceMemory& mem,
 	mem = std::move(DeviceMemory(albedoCPU.size() * sizeof(Vector3)));
 	Vector3f* ptr = static_cast<Vector3f*>(mem);
 	return {ptr};
+}
+
+ConstantBoundaryMatData ConstantBoundaryMatRead(const std::set<SceneFileNode>& materialNodes,
+												double time)
+{
+	constexpr const char* BACKGROUND = "background";
+	if(materialNodes.size() == 0) return {};
+
+	Vector3 background = SceneIO::LoadVector<3, float>(materialNodes.begin()->jsn[BACKGROUND], time);
+	return {background};
 }

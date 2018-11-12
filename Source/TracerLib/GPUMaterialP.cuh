@@ -120,7 +120,7 @@ class GPUBoundaryMatGroup
 			virtual						~GPUBoundaryMatGroup() = default;
 };
 
-template <class TLogic, class MGroup, class PGroup>
+template <class TLogic, class MGroup>
 class GPUBoundaryMatBatch final : public GPUMaterialBatchI
 {
 	private:
@@ -131,7 +131,7 @@ class GPUBoundaryMatBatch final : public GPUMaterialBatchI
 
 	private:
 		const MGroup&						materialGroup;
-		const PGroup&						primitiveGroup;
+		static const GPUPrimitiveGroupI*	primitiveGroup;
 
 	protected:		
 	public:
@@ -283,37 +283,40 @@ uint8_t GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::OutRayCount() const
 	return materialGroup.OutRayCount();
 }
 
-template <class TLogic, class MGroup, class PGroup>
-GPUBoundaryMatBatch<TLogic, MGroup, PGroup>::GPUBoundaryMatBatch(const GPUMaterialGroupI& m,
-																 const GPUPrimitiveGroupI& p)
+template <class TLogic, class MGroup>
+GPUBoundaryMatBatch<TLogic, MGroup>::GPUBoundaryMatBatch(const GPUMaterialGroupI& m,
+														 const GPUPrimitiveGroupI& p)
 	: materialGroup(static_cast<const MGroup&>(m))
-	, primitiveGroup(static_cast<const PGroup&>(p))
+	, primitiveGroup(p)
 {}
 
-template <class TLogic, class MGroup, class PGroup>
-const std::string GPUBoundaryMatBatch<TLogic, MGroup, PGroup>::TypeNamePriv = std::string(MGroup::TypeName);
+template <class TLogic, class MGroup>
+const std::string GPUBoundaryMatBatch<TLogic, MGroup>::TypeNamePriv = std::string(MGroup::TypeName);
 
-template <class TLogic, class MGroup, class PGroup>
-const char* GPUBoundaryMatBatch<TLogic, MGroup, PGroup>::Type() const
+template <class TLogic, class MGroup>
+const GPUPrimitiveGroupI* GPUBoundaryMatBatch<TLogic, MGroup>::primitiveGroup = nullptr;
+
+template <class TLogic, class MGroup>
+const char* GPUBoundaryMatBatch<TLogic, MGroup>::Type() const
 {
 	return TypeNamePriv.c_str();
 }
 
-template <class TLogic, class MGroup, class PGroup>
-void GPUBoundaryMatBatch<TLogic, MGroup, PGroup>::ShadeRays(// Output
-											  RayGMem* dRayOut,
-											  void* dRayAuxOut,
-											  //  Input
-											  const RayGMem* dRayIn,
-											  const void* dRayAuxIn,
-											  const PrimitiveId* dPrimitiveIds,
-											  const HitStructPtr dHitStructs,
-											  //
-											  const HitKey* dMatIds,
-											  const RayId* dRayIds,
-											  //
-											  const uint32_t rayCount,
-											  RNGMemory& rngMem) const
+template <class TLogic, class MGroup>
+void GPUBoundaryMatBatch<TLogic, MGroup>::ShadeRays(// Output
+													RayGMem* dRayOut,
+													void* dRayAuxOut,
+													//  Input
+													const RayGMem* dRayIn,
+													const void* dRayAuxIn,
+													const PrimitiveId* dPrimitiveIds,
+													const HitStructPtr dHitStructs,
+													//
+													const HitKey* dMatIds,
+													const RayId* dRayIds,
+													//
+													const uint32_t rayCount,
+													RNGMemory& rngMem) const
 {
 	using MaterialData = typename MGroup::MaterialData;
 	using RayAuxData = typename TLogic::RayAuxData;
@@ -341,20 +344,20 @@ void GPUBoundaryMatBatch<TLogic, MGroup, PGroup>::ShadeRays(// Output
 	CUDA_KERNEL_CHECK();
 }
 
-template <class TLogic, class MGroup, class PGroup>
-const GPUPrimitiveGroupI& GPUBoundaryMatBatch<TLogic, MGroup, PGroup>::PrimitiveGroup() const
+template <class TLogic, class MGroup>
+const GPUPrimitiveGroupI& GPUBoundaryMatBatch<TLogic, MGroup>::PrimitiveGroup() const
 {
-	return primitiveGroup;
+	return *primitiveGroup;
 }
 
-template <class TLogic, class MGroup, class PGroup>
-const GPUMaterialGroupI& GPUBoundaryMatBatch<TLogic, MGroup, PGroup>::MaterialGroup() const
+template <class TLogic, class MGroup>
+const GPUMaterialGroupI& GPUBoundaryMatBatch<TLogic, MGroup>::MaterialGroup() const
 {
 	return materialGroup;
 }
 
-template <class TLogic, class MGroup, class PGroup>
-uint8_t GPUBoundaryMatBatch<TLogic, MGroup, PGroup>::OutRayCount() const
+template <class TLogic, class MGroup>
+uint8_t GPUBoundaryMatBatch<TLogic, MGroup>::OutRayCount() const
 {
 	return materialGroup.OutRayCount();
 }

@@ -16,7 +16,7 @@ const char* GPUPrimitiveSphere::Type() const
 }
 
 SceneError GPUPrimitiveSphere::InitializeGroup(const std::set<SceneFileNode>& surfaceDatalNodes,
-												 double time)
+											   double time)
 {
 	// Generate Loaders
 	std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;

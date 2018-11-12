@@ -16,9 +16,7 @@ struct BasicSurface
 };
 
 struct EmptySurface
-{
-
-};
+{};
 
 // Surface Functions
 __device__ __host__
@@ -69,37 +67,33 @@ inline EmptySurface SurfaceFromEmpty(const GPUPrimitiveEmpty::PrimitiveData& pDa
 
 // Shade Functions
 __device__
-inline void ColorMatShade(// Output
-						  RayGMem* gOutRays,
-						  RayAuxBasic* gOutRayAux,
-						  const uint32_t maxOutRay,
-						  // Input as registers
-						  const RayReg& ray,
-						  const EmptySurface& surface,
-						  const RayAuxBasic& aux,
-						  // 
-						  RandomGPU& rng,
-						  // Input as global memory
-						 // const OutsideColorMaterialData& gMatData,
-						  const HitKey::Type& matId)
+inline void ConstantBoundaryMatShade(// Output
+									 Vector4* gImage,
+									 // Input as registers
+									 const RayReg& ray,
+									 const RayAuxBasic& aux,
+									 // 
+									 RandomGPU& rng,
+									 // Input as global memory
+									 const ConstantBoundaryMatData& gMatData)
 {
 	
 }
 
 __device__
-inline void ColorMatShade(// Output
-						  RayGMem* gOutRays,
-						  RayAuxBasic* gOutRayAux,
-						  const uint32_t maxOutRay,
-						  // Input as registers
-						  const RayReg& ray,
-						  const BasicSurface& surface,
-						  const RayAuxBasic& aux,
-						  // 
-						  RandomGPU& rng,
-						  // Input as global memory
-						  const ColorMaterialData& gMatData,
-						  const HitKey::Type& matId)
+inline void ConstantAlbedoMatShade(// Output
+								   RayGMem* gOutRays,
+								   RayAuxBasic* gOutRayAux,
+								   const uint32_t maxOutRay,
+								   // Input as registers
+								   const RayReg& ray,
+								   const BasicSurface& surface,
+								   const RayAuxBasic& aux,
+								   // 
+								   RandomGPU& rng,
+								   // Input as global memory
+								   const ConstantAlbedoMatData& gMatData,
+								   const HitKey::Type& matId)
 {
 	assert(maxOutRay == 0);
 	// Inputs
@@ -142,22 +136,64 @@ inline void ColorMatShade(// Output
 }
 
 // Material Groups
-class ColorMaterial final
+class ConstantBoundaryMat final
+	: public GPUBoundaryMatGroup<TracerBasic,
+								 ConstantBoundaryMatData,
+								 ConstantBoundaryMatShade>
+{
+	public:
+		static constexpr const char*	TypeName = "ConstantBoundary";
+	private:
+		DeviceMemory					memory;
+		ConstantBoundaryMatData			matData;
+
+		// CPU
+		std::map<uint32_t, uint32_t>	innerIds;
+
+	public:
+		// Constructors & Destructor
+									ConstantBoundaryMat();
+									~ConstantBoundaryMat() = default;
+	
+		// Interface
+		// Type (as string) of the primitive group
+		const char*					Type() const override;
+		// Allocates and Generates Data
+		SceneError					InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time) override;
+		SceneError					ChangeTime(const std::set<SceneFileNode>& materialNodes, double time) override;
+
+		// Load/Unload Material			
+		void						LoadMaterial(uint32_t materialId, int gpuId) override;
+		void						UnloadMaterial(uint32_t material) override;
+		// Material Queries
+		int							InnerId(uint32_t materialId) const override;
+		bool						IsLoaded(uint32_t materialId) const override;
+
+		size_t						UsedGPUMemory() const override;
+		size_t						UsedCPUMemory() const override;
+
+		size_t						UsedGPUMemory(uint32_t materialId) const override;
+		size_t						UsedCPUMemory(uint32_t materialId) const override;
+
+		uint8_t						OutRayCount() const override;
+};
+
+class ConstantAlbedoMat final
 	: public GPUMaterialGroup<TracerBasic,
-							  ColorMaterialData,
+							  ConstantAlbedoMatData,
 							  BasicSurface,
-							  ColorMatShade>
+							  ConstantAlbedoMatShade>
 {
 	public:
 		static constexpr const char*	TypeName = "ConstantAlbedo";
 	private:
 		DeviceMemory					memory;
-		ColorMaterialData				matData;
+		ConstantAlbedoMatData			matData;
 
 	protected:
 	public:
-										ColorMaterial();
-										~ColorMaterial() = default;
+										ConstantAlbedoMat();
+										~ConstantAlbedoMat() = default;
 		
 		// Interface
 		// Type (as string) of the primitive group
@@ -183,22 +219,26 @@ class ColorMaterial final
 };
 
 // Material Batches
+extern template class GPUBoundaryMatBatch<TracerBasic, ConstantAlbedoMatData>;
+
+using ConstantBoundaryMatBatch = GPUBoundaryMatBatch<TracerBasic, ConstantAlbedoMatData>;
+
 extern template class GPUMaterialBatch<TracerBasic,
-									   ColorMaterial,
+									   ConstantAlbedoMatData,
 									   GPUPrimitiveTriangle,
 									   BasicSurfaceFromTri>;
 
-using ColorMatTriBatch = GPUMaterialBatch<TracerBasic,
-									      ColorMaterial,
-									      GPUPrimitiveTriangle,
-									      BasicSurfaceFromTri>;
+using ConstantAlbedoTriBatch = GPUMaterialBatch<TracerBasic,
+												ConstantAlbedoMatData,
+												GPUPrimitiveTriangle,
+												BasicSurfaceFromTri>;
 
 extern template class GPUMaterialBatch<TracerBasic,
-									   ColorMaterial,
+									   ConstantAlbedoMatData,
 									   GPUPrimitiveSphere,
 									   BasicSurfaceFromSphr>;
 
-using ColorMatSphrBatch = GPUMaterialBatch<TracerBasic,
-									       ColorMaterial,
-									       GPUPrimitiveSphere,
-									       BasicSurfaceFromSphr>;
+using ConstantAlbedoSphrBatch = GPUMaterialBatch<TracerBasic,
+									             ConstantAlbedoMatData,
+									             GPUPrimitiveSphere,
+									             BasicSurfaceFromSphr>;

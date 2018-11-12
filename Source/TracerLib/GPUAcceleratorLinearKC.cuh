@@ -18,12 +18,12 @@ using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxSurfacePerAc
 
 struct HKList
 {
-	HitKey materialKeys[SceneConstants::MaxSurfacePerAccelerator];
+	const HitKey materialKeys[SceneConstants::MaxSurfacePerAccelerator];
 };
 
 struct PRList
 {
-	Vector2ul primRanges[SceneConstants::MaxSurfacePerAccelerator];
+	const Vector2ul primRanges[SceneConstants::MaxSurfacePerAccelerator];
 };
 
 // Fundamental Construction Kernel
