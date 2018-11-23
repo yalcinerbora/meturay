@@ -124,12 +124,13 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\RayLib\AABB.h" />
     <ClInclude Include="..\..\..\Source\RayLib\AABB.hpp" />
-    <ClInclude Include="..\..\..\Source\RayLib\AnalyticDistributorI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\AnalyticNodeI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CompileTimeString.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Constants.h" />
     <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Error.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\HitStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\LoopingThreadI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h" />
@@ -152,19 +153,19 @@
     <ClInclude Include="..\..\..\Source\RayLib\SceneFileNode.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneStructs.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\SelfDistributor.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\SelfNode.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SharedLib.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Sphere.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceDataIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\PrimitiveDataTypes.h" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ThreadData.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\TracerDistributorI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\TracerNodeI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerError.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Triangle.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Types.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\VisorDistributorI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\VisorNodeI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\ArrayPortion.h" />
@@ -178,7 +179,7 @@
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MDistributor.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SceneIO.cpp" />
-    <ClCompile Include="..\..\..\Source\RayLib\SelfDistributor.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\SelfNode.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SharedLib.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SurfaceDataIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\VisorWindowInput.cpp" />

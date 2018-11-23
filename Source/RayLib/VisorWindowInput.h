@@ -13,7 +13,7 @@
 #include "RayLib/Camera.h"
 #include "ThreadData.h"
 
-class VisorDistributorI;
+class VisorNodeI;
 
 class VisorWindowInput : public VisorInputI
 {
@@ -33,7 +33,7 @@ class VisorWindowInput : public VisorInputI
 		unsigned int					currentFPS;
 
 		CameraPerspective				camera;
-		VisorDistributorI&				visorDelegate;
+		VisorNodeI&						visorDelegate;
 
 	protected:
 	public:
@@ -41,7 +41,7 @@ class VisorWindowInput : public VisorInputI
 								VisorWindowInput(double sensitivity,
 												 double moveRatio,
 												 double moveRatioModifier,
-												 VisorDistributorI&);
+												 VisorNodeI&);
 								~VisorWindowInput() = default;
 
 		// Implementation		

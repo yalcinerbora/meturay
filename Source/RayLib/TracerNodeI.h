@@ -11,12 +11,14 @@ This interface defines process behaviour between
 
 #include <cstdint>
 #include <vector>
+
 #include "Vector.h"
 #include "ArrayPortion.h"
+#include "SceneStructs.h"
 
 struct CameraPerspective;
 struct TracerParameters;
-struct RayRecordCPU;
+struct MatBatchRayDataCPU;
 enum class ErrorType;
 
 enum AcceleratorType
@@ -40,16 +42,15 @@ typedef void(*SetParameterFunc)(const TracerParameters);
 typedef void(*StartStopFunc)(const bool);
 typedef void(*PauseContFunc)(const bool);
 
-class TracerDistributorI
+class TracerNodeI
 {
 	public:
-		virtual					~TracerDistributorI() = default;
+		virtual					~TracerNodeI() = default;
+
+		// Static Initialization Time Data
 
 		// Sending (All non-blocking)
-		virtual void			SendMaterialRays(uint32_t materialId,
-												 const RayRecordCPU) = 0;
-		virtual void			SendMaterialRays(const std::vector<ArrayPortion<uint32_t>> materialIds,
-												 const RayRecordCPU) = 0;
+		virtual void			SendMaterialRays(const std::vector<MatBatchRayDataCPU> matRayData) = 0;
 		virtual void			SendImage(const std::vector<Vector3f> image,
 										  const Vector2ui resolution,
 										  const Vector2ui offset = Vector2ui(0, 0),
@@ -73,11 +74,12 @@ class TracerDistributorI
 
 		// Waiting (Synchronized operation)
 		virtual void			WaitAccelerators() = 0;
-		virtual void			WaitForMaterialRays(RayRecordCPU&) = 0;
+		virtual void			WaitForMaterialRays(std::vector<MatBatchRayDataCPU>&) = 0;
 
 		// Misc.
 		virtual uint64_t		TotalCPUMemory() = 0;
 		virtual uint64_t		TotalGPUMemory() = 0;
+		virtual uint64_t		GPUMemory(int GPUId) = 0;
 		virtual bool			Alone() = 0;
 
 		// Command Callbacks (From Visors)

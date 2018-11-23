@@ -31,12 +31,13 @@ typedef void(*SetImageSegmentFunc)(const std::vector<Vector3> image,
 								   const Vector2ui resolution,
 								   const Vector2ui offset,
 								   const Vector2ui size);
-class VisorDistributorI
+class VisorNodeI
 {
 
 	private:
 	protected:
 	public:
+		virtual					~VisorNodeI() = default;
 
 		// Visor Commands
 		virtual void			SetImageStream(bool) = 0;

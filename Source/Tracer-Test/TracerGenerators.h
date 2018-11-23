@@ -6,12 +6,7 @@ class BasicTracerLogicGenerator final : public TracerLogicGenerator
 {
 	private:
 		GPUTracerGen		tracerGenerator;
-		GPUBaseAccelGen		baseAccelGenerator;
-
 		GPUTracerPtr		tracerLogic;
-		GPUBaseAccelPtr		baseAccelerator;
-		
-		
 
 	protected:
 	public:

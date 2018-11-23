@@ -219,26 +219,26 @@ class ConstantAlbedoMat final
 };
 
 // Material Batches
-extern template class GPUBoundaryMatBatch<TracerBasic, ConstantAlbedoMatData>;
+extern template class GPUBoundaryMatBatch<TracerBasic, ConstantBoundaryMat>;
 
-using ConstantBoundaryMatBatch = GPUBoundaryMatBatch<TracerBasic, ConstantAlbedoMatData>;
+using ConstantBoundaryMatBatch = GPUBoundaryMatBatch<TracerBasic, ConstantBoundaryMat>;
 
 extern template class GPUMaterialBatch<TracerBasic,
-									   ConstantAlbedoMatData,
+									   ConstantAlbedoMat,
 									   GPUPrimitiveTriangle,
 									   BasicSurfaceFromTri>;
 
 using ConstantAlbedoTriBatch = GPUMaterialBatch<TracerBasic,
-												ConstantAlbedoMatData,
+												ConstantAlbedoMat,
 												GPUPrimitiveTriangle,
 												BasicSurfaceFromTri>;
 
 extern template class GPUMaterialBatch<TracerBasic,
-									   ConstantAlbedoMatData,
+									   ConstantAlbedoMat,
 									   GPUPrimitiveSphere,
 									   BasicSurfaceFromSphr>;
 
 using ConstantAlbedoSphrBatch = GPUMaterialBatch<TracerBasic,
-									             ConstantAlbedoMatData,
+									             ConstantAlbedoMat,
 									             GPUPrimitiveSphere,
 									             BasicSurfaceFromSphr>;

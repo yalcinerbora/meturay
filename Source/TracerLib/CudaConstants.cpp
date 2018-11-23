@@ -10,7 +10,7 @@ CudaGPU::CudaGPU(int deviceId)
 
 CudaGPU::GPUTier CudaGPU::DetermineGPUTier(cudaDeviceProp p)
 {
-	return KEPLER;
+	return GPU_KEPLER;
 }
 
 int CudaGPU::DeviceId() const
@@ -62,11 +62,15 @@ uint32_t CudaGPU::RecommendedBlockCountPerSM(void* kernelFunc,
 	return static_cast<uint32_t>(numBlocks);
 }
 
+std::vector<CudaGPU> CudaSystem::systemGPUs;
 
-
-std::vector<CudaGPU> CudaSystem::gpus;
 
 TracerError CudaSystem::Initialize()
+{
+	return Initialize(systemGPUs);
+}
+
+TracerError CudaSystem::Initialize(std::vector<CudaGPU>& gpus)
 {	
 	int deviceCount;	
 	cudaError err;

@@ -6,8 +6,8 @@
 #include <fstream>
 
 #include "RayLib/Log.h"
+#include "RayLib/HitStructs.h"
 
-#include "HitStructs.cuh"
 #include "CudaConstants.h"
 
 namespace Debug

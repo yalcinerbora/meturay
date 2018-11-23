@@ -132,6 +132,7 @@ class MockTracerLogic : public TracerBaseLogicI
 				// Every MaterialBatch is available for a specific primitive / material data
 				const GPUPrimitiveGroupI&	PrimitiveGroup() const override;
 				const GPUMaterialGroupI&	MaterialGroup() const override;
+				int							GPUId() const override { return 0; }
 
 				uint8_t						OutRayCount() const override { return isMissMaterial ? 0 : 1; }
 		};
@@ -252,7 +253,7 @@ void MockTracerLogic::BaseAcceleratorMock::Hit(// Output
 		// Each Iteration some of the rays are missed (only first ray in this case)
 		uint32_t index = i % (AcceleratorCount * MaterialCount + 1);
 		if(index == 0)
-			dAcceleratorKeys[i] = HitKey::OutsideMatKey;
+			dAcceleratorKeys[i] = HitKey::BoundaryMatKey;
 		else
 			dAcceleratorKeys[i] = mockLogic.acceleratorKeys[index - 1];
 	}
@@ -372,7 +373,7 @@ TracerError MockTracerLogic::Initialize()
 
 	// Create miss material
 	mockMaterials.emplace_back(*this, true);
-	materials.emplace(std::make_pair(static_cast<uint32_t>(HitKey::OutsideMatKey),
+	materials.emplace(std::make_pair(static_cast<uint32_t>(HitKey::BoundaryMatKey),
 									 &mockMaterials.back()));
 
 	// We have total of 8 material seperated by 2 accelerators

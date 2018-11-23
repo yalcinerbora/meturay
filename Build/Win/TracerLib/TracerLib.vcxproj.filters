@@ -45,7 +45,6 @@
     <ClCompile Include="..\..\..\Source\TracerLib\RNGMemory.cpp">
       <Filter>Memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
@@ -68,6 +67,7 @@
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveEmpty.cpp">
       <Filter>Default Primitives</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -133,7 +133,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\BitonicSort.cuh">
       <Filter>GPU Algorithms</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerDebug.h">
       <Filter>Debug</Filter>
     </ClInclude>
@@ -142,9 +141,6 @@
       <Filter>GPU Logic Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\HitFunctions.cuh">
-      <Filter>Structs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\HitStructs.cuh">
       <Filter>Structs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.h">
@@ -211,6 +207,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\AuxiliaryDataKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

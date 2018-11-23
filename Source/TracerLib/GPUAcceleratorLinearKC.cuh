@@ -8,7 +8,7 @@ with ustom Intersection and Hit
 
 #include <array>
 
-#include "HitStructs.cuh"
+#include "RayLib/HitStructs.h"
 #include "AcceleratorDeviceFunctions.h"
 
 #include "RayLib/SceneStructs.h"
@@ -18,12 +18,12 @@ using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxSurfacePerAc
 
 struct HKList
 {
-	const HitKey materialKeys[SceneConstants::MaxSurfacePerAccelerator];
+	HitKey materialKeys[SceneConstants::MaxSurfacePerAccelerator];
 };
 
 struct PRList
 {
-	const Vector2ul primRanges[SceneConstants::MaxSurfacePerAccelerator];
+	Vector2ul primRanges[SceneConstants::MaxSurfacePerAccelerator];
 };
 
 // Fundamental Construction Kernel
@@ -35,8 +35,8 @@ static void KCConstructLinear(// O
 							  // Input
 							  const Vector2ul* gAccRanges,
 							  //const HitKeyList materialKeys,
-							  HKList mkList,
-							  PRList prList,
+							  const HKList mkList,
+							  const PRList prList,
 							  //const PrimitiveRangeList primRanges,
 							  const PGroup::PrimitiveData primData,
 							  const uint32_t leafIndex)

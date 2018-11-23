@@ -56,7 +56,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\HitFunctions.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\HitStructs.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinearKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialKernels.cuh" />

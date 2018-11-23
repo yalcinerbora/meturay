@@ -86,4 +86,4 @@ class DistributorI
 
 		// Misc
 		virtual uint64_t		NodeId() = 0;
-};
+	};

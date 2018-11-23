@@ -1,13 +1,13 @@
 #include "VisorWindowInput.h"
 #include "RayLib/Vector.h"
 #include "RayLib/Camera.h"
-#include "RayLib/VisorDistributorI.h"
+#include "RayLib/VisorNodeI.h"
 #include "RayLib/Quaternion.h"
 
 VisorWindowInput::VisorWindowInput(double sensitivity,
 								   double moveRatio,
 								   double moveRatioModifier,
-								   VisorDistributorI& d)
+								   VisorNodeI& d)
 	: Sensitivity(sensitivity)
 	, MoveRatio(moveRatio)
 	, MoveRatioModifier(moveRatioModifier)

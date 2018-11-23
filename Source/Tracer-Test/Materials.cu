@@ -17,7 +17,8 @@ SceneError ConstantBoundaryMat::InitializeGroup(const std::set<SceneFileNode>& m
 
 SceneError ConstantBoundaryMat::ChangeTime(const std::set<SceneFileNode>& materialNodes, double time)
 {
-
+	// TODO: Implement
+	return SceneError::OK;
 }
 
 // Load/Unload Material			
@@ -28,22 +29,34 @@ void ConstantBoundaryMat::UnloadMaterial(uint32_t material)
 {}
 
 int ConstantBoundaryMat::InnerId(uint32_t materialId) const
-{}
+{
+	return 0;
+}
 
 bool ConstantBoundaryMat::IsLoaded(uint32_t materialId) const
-{}
+{
+	return true;
+}
 
 size_t ConstantBoundaryMat::UsedGPUMemory() const
-{}
+{
+	return 0;
+}
 
 size_t ConstantBoundaryMat::UsedCPUMemory() const
-{}
+{
+	return sizeof(Vector3);
+}
 
 size_t ConstantBoundaryMat::UsedGPUMemory(uint32_t materialId) const
-{}
+{
+	return UsedGPUMemory();
+}
 
 size_t ConstantBoundaryMat::UsedCPUMemory(uint32_t materialId) const
-{}
+{
+	return UsedCPUMemory();
+}
 
 uint8_t ConstantBoundaryMat::OutRayCount() const 
 {
@@ -115,14 +128,14 @@ uint8_t ConstantAlbedoMat::OutRayCount() const
 }
 
 // Material Batches
-template class GPUBoundaryMatBatch<TracerBasic, ConstantAlbedoMatData>;
+template class GPUBoundaryMatBatch<TracerBasic, ConstantBoundaryMat>;
 
 template class GPUMaterialBatch<TracerBasic,
-	ConstantAlbedoMatData,
-	GPUPrimitiveTriangle,
-	BasicSurfaceFromTri>;
+								ConstantAlbedoMat,
+								GPUPrimitiveTriangle,
+								BasicSurfaceFromTri>;
 
 template class GPUMaterialBatch<TracerBasic,
-	ConstantAlbedoMatData,
-	GPUPrimitiveSphere,
-	BasicSurfaceFromSphr>;
+								ConstantAlbedoMat,
+								GPUPrimitiveSphere,
+								BasicSurfaceFromSphr>;

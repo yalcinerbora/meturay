@@ -54,6 +54,9 @@ struct SceneError : public ErrorI
 			TOO_MANY_SURFACE_ON_NODE,
 			PRIM_MATERIAL_NOT_SAME_SIZE,
 			PRIM_TYPE_NOT_CONSISTENT_ON_SURFACE,
+			// Internal Errors
+			INTERNAL_DUPLICATE_MAT_ID,
+			INTERNAL_DUPLICATE_ACCEL_ID,
 			// End
 			END
 		};
@@ -135,7 +138,10 @@ inline SceneError::operator std::string() const
 		// Misc
 		"Too many data/material pairs per surface node.",
 		"Prim/Material pairs on surface node does not have same size.",
-		"Primitive types are not consistent in a surface."
+		"Primitive types are not consistent in a surface.",
+		// Internal Errors
+		"Internal Error, Duplicate material id",
+		"Internal Error, Duplicate accelerator id"
 	};
 	static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(SceneError::END),
 				  "Enum and enum string list size mismatch.");

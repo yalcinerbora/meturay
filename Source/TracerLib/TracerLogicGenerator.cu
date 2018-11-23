@@ -50,9 +50,7 @@ template void TypeGenWrappers::DefaultDestruct(GPUMaterialBatchI*);
 
 // Constructor & Destructor
 TracerLogicGenerator::TracerLogicGenerator()
-	: outerIdAccel(1)
-	, outerIdMaterial(2)
-	, baseAccelerator(nullptr, TypeGenWrappers::DefaultDestruct<GPUBaseAcceleratorI>)
+	: baseAccelerator(nullptr, TypeGenWrappers::DefaultDestruct<GPUBaseAcceleratorI>)
 	, outsideMaterial(nullptr, TypeGenWrappers::DefaultDestruct<GPUMaterialGroupI>)
 	, outsideMatBatch(nullptr, TypeGenWrappers::DefaultDestruct<GPUMaterialBatchI>)
 	, emptyPrimitive(nullptr)
@@ -166,11 +164,16 @@ SceneError TracerLogicGenerator::GetMaterialGroup(GPUMaterialGroupI*& mg,
 	return SceneError::OK;
 }
 
-SceneError TracerLogicGenerator::GetAcceleratorBatch(GPUAcceleratorBatchI*& ab, uint32_t& id,
-													 const GPUAcceleratorGroupI& ag,
-													 const GPUPrimitiveGroupI& pg)
+SceneError TracerLogicGenerator::GenerateAcceleratorBatch(GPUAcceleratorBatchI*& ab,
+														  const GPUAcceleratorGroupI& ag,
+														  const GPUPrimitiveGroupI& pg,
+														  uint32_t keyBatchId)
 {
 	ab = nullptr;
+	// Check duplicate batchId
+	if(accelBatchMap.find(keyBatchId) != accelBatchMap.end())
+		return SceneError::INTERNAL_DUPLICATE_ACCEL_ID;
+	
 	const std::string batchType = std::string(ag.Type()) + pg.Type();
 
 	auto loc = accelBatches.find(batchType);
@@ -184,22 +187,25 @@ SceneError TracerLogicGenerator::GetAcceleratorBatch(GPUAcceleratorBatchI*& ab, 
 		GPUAccelBPtr ptr = loc->second(ag, pg);
 		ab = ptr.get();
 		accelBatches.emplace(batchType, std::move(ptr));
-		accelBatchMap.emplace(outerIdAccel, ab);
-		id = outerIdAccel;
-		outerIdAccel++;
+		accelBatchMap.emplace(keyBatchId, ab);
 	}
 	else ab = loc->second.get();
 	return SceneError::OK;
 }
 
-SceneError TracerLogicGenerator::GetMaterialBatch(GPUMaterialBatchI*& mb, uint32_t& id,
-												  const GPUMaterialGroupI& mg,
-												  const GPUPrimitiveGroupI& pg)
+SceneError TracerLogicGenerator::GenerateMaterialBatch(GPUMaterialBatchI*& mb,
+													   const GPUMaterialGroupI& mg,
+													   const GPUPrimitiveGroupI& pg,
+													   uint32_t keyBatchId,
+													   int gpuId)
 {
 	mb = nullptr;
+	if(matBatchMap.find(keyBatchId) != matBatchMap.end())
+		return SceneError::INTERNAL_DUPLICATE_MAT_ID;
+	
 	const std::string batchType = std::string(mg.Type()) + pg.Type();
 
-	auto loc = matBatches.find(batchType);
+	auto loc = matBatches.find(std::make_pair(batchType, gpuId));
 	if(loc == matBatches.end())
 	{
 		// Cannot Find Already Constructed Type
@@ -207,12 +213,10 @@ SceneError TracerLogicGenerator::GetMaterialBatch(GPUMaterialBatchI*& mb, uint32
 		auto loc = matBatchGenerators.find(batchType);
 		if(loc == matBatchGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
 
-		GPUMatBPtr ptr = loc->second(mg, pg);
+		GPUMatBPtr ptr = loc->second(mg, pg, gpuId);
 		mb = ptr.get();
-		matBatches.emplace(batchType, std::move(ptr));
-		matBatchMap.emplace(outerIdMaterial, mb);
-		id = outerIdMaterial;
-		outerIdMaterial++;
+		matBatches.emplace(std::make_pair(batchType, gpuId), std::move(ptr));
+		matBatchMap.emplace(keyBatchId, mb);
 	}
 	else mb = loc->second.get();
 	return SceneError::OK;
@@ -235,7 +239,8 @@ SceneError TracerLogicGenerator::GetBaseAccelerator(GPUBaseAcceleratorI*& baseAc
 }
 
 SceneError TracerLogicGenerator::GetOutsideMaterial(GPUMaterialGroupI*& outMat,
-													const std::string& materialType)
+													const std::string& materialType, 
+													int gpuId)
 {
 	if(outsideMaterial.get() == nullptr)
 	{
@@ -250,10 +255,10 @@ SceneError TracerLogicGenerator::GetOutsideMaterial(GPUMaterialGroupI*& outMat,
 		auto batchLoc = matBatchGenerators.find(materialType);
 		if(batchLoc == matBatchGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
 
-		outsideMatBatch = batchLoc->second(*outMat, *emptyPrimitive);
+		outsideMatBatch = batchLoc->second(*outMat, *emptyPrimitive, gpuId);
 		GPUMaterialBatchI* mb = outsideMatBatch.get();
 
-		matBatchMap.emplace(OutsideMatId, mb);
+		matBatchMap.emplace(BoundaryMatId, mb);
 	}
 	else outMat = outsideMaterial.get();
 	return SceneError::OK;

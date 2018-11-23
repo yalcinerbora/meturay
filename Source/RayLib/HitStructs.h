@@ -4,9 +4,9 @@
 
 */
 #include <cstdint>
-#include <cuda_runtime.h>
 
-#include "RayLib/Types.h"
+#include "CudaCheck.h"
+#include "Types.h"
 
 // Auxiliary Ids for transforms and primitives
 typedef uint32_t TransformId;
@@ -54,7 +54,7 @@ struct alignas(sizeof(T)) HitKeyT
 	__device__ __host__				operator T&();
 
 	__device__ __host__
-	static constexpr T				CombinedKey(uint16_t batch, uint64_t id);
+	static constexpr T				CombinedKey(uint32_t batch, uint64_t id);
 	__device__ __host__
 	static constexpr T				FetchIdPortion(HitKeyT key);
 	__device__ __host__
@@ -74,9 +74,9 @@ struct alignas(sizeof(T)) HitKeyT
 
 
 	static constexpr uint16_t		NullBatch = NullBatchId;
-	static constexpr uint16_t		OutsideBatch = OutsideBatchId;
+	static constexpr uint16_t		BoundaryBatch = BoundaryBatchId;
 	static constexpr T				InvalidKey = CombinedKey(NullBatch, 0);
-	static constexpr T				OutsideMatKey = CombinedKey(OutsideBatch, 0);
+	static constexpr T				BoundaryMatKey = CombinedKey(BoundaryBatch, 0);
 };
 
 template <class T, uint32_t BatchBits, uint32_t IdBits>
@@ -93,7 +93,7 @@ __device__ __host__ HitKeyT<T, BatchBits, IdBits>::operator T&()
 
 template <class T, uint32_t BatchBits, uint32_t IdBits>
 __device__ __host__
-constexpr T HitKeyT<T, BatchBits, IdBits>::CombinedKey(uint16_t batch, uint64_t id)
+constexpr T HitKeyT<T, BatchBits, IdBits>::CombinedKey(uint32_t batch, uint64_t id)
 {
 	return (static_cast<T>(batch) << IdBits) | (id & BatchMask);
 }

@@ -43,7 +43,7 @@ __global__ void ResetHitIds(HitKey* gAcceleratorKeys, RayId* gIds,
 		globalId < rayCount; 
 		globalId += blockDim.x * gridDim.x)
 	{
-		HitKey initalKey = HitKey::OutsideMatKey;
+		HitKey initalKey = HitKey::BoundaryMatKey;
 		if(gRays[globalId].tMin == INFINITY)
 		{
 			initalKey = HitKey::InvalidKey;
@@ -225,10 +225,10 @@ void RayMemory::ResetHitMemory(size_t rayCount, size_t hitStructSize)
 	dCurrentKeys = dKeys0;
 
 	// Initialize memory
-	CudaSystem::GPUCallX(leaderDeviceId, 0, 0,
-						 ResetHitIds,
-						 dCurrentKeys, dCurrentIds, dMaterialKeys, dRayIn,
-						 static_cast<uint32_t>(rayCount));
+	CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
+							   ResetHitIds,
+							   dCurrentKeys, dCurrentIds, dMaterialKeys, dRayIn,
+							   static_cast<uint32_t>(rayCount));
 }
 
 void RayMemory::SortKeys(RayId*& ids, HitKey*& keys, 
@@ -294,9 +294,9 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
 	// Find Split Locations
 	// Read from dKeys -> dEmptyKeys
 	uint32_t locCount = rayCount - 1;
-	CudaSystem::GPUCallX(leaderDeviceId, 0, 0,
-						 FindSplitsSparse,
-						 dSparseSplitIndices, dCurrentKeys, locCount);
+	CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
+							   FindSplitsSparse,
+							   dSparseSplitIndices, dCurrentKeys, locCount);
 
 	// Make Splits Dense
 	// From dEmptyKeys -> dEmptyIds	
@@ -314,12 +314,12 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
 	// Find The Hit Keys for each split
 	// From dEmptyIds, dKeys -> dEmptyKeys
 	uint16_t* dBatches = reinterpret_cast<uint16_t*>(dSparseSplitIndices);
-	CudaSystem::GPUCallX(leaderDeviceId, 0, 0,
-						 FindSplitBatches,
-						 dBatches,
-						 dDenseSplitIndices,
-						 dCurrentKeys,
-						 hSelectCount);
+	CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
+							   FindSplitBatches,
+							   dBatches,
+							   dDenseSplitIndices,
+							   dCurrentKeys,
+							   hSelectCount);
 
 	// We need to get dDenseIndices & dDenseKeys
 	// Memcopy to vectors
@@ -350,8 +350,8 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
 
 void RayMemory::FillRayIdsForSort(uint32_t rayCount)
 {
-	CudaSystem::GPUCallX(leaderDeviceId, 0, 0,
-						 FillMatIdsForSort,
-						 dCurrentKeys, dCurrentIds, dMaterialKeys,
-						 static_cast<uint32_t>(rayCount));
+	CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
+							   FillMatIdsForSort,
+							   dCurrentKeys, dCurrentIds, dMaterialKeys,
+							   static_cast<uint32_t>(rayCount));
 }

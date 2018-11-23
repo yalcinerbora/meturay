@@ -38,12 +38,15 @@ class TracerLogicGeneratorI
 
 		// Batches are the abstraction of kernel calls
 		// Each batch instance is equavilent to a kernel call	
-		virtual SceneError		GetAcceleratorBatch(GPUAcceleratorBatchI*&, uint32_t& id,
-													const GPUAcceleratorGroupI&,
-													const GPUPrimitiveGroupI&) = 0;
-		virtual SceneError		GetMaterialBatch(GPUMaterialBatchI*&, uint32_t& id,
-												 const GPUMaterialGroupI&,
-												 const GPUPrimitiveGroupI&) = 0;
+		virtual SceneError		GenerateAcceleratorBatch(GPUAcceleratorBatchI*&,
+														 const GPUAcceleratorGroupI&,
+														 const GPUPrimitiveGroupI&,
+														 uint32_t keyBatchId) = 0;
+		virtual SceneError		GenerateMaterialBatch(GPUMaterialBatchI*&,
+													  const GPUMaterialGroupI&,
+													  const GPUPrimitiveGroupI&,
+													  uint32_t keyBatchId,
+													  int gpuId) = 0;
 
 		// Base Accelerator should be fetched after all the stuff is generated
 		virtual SceneError		GetBaseAccelerator(GPUBaseAcceleratorI*&,
@@ -51,7 +54,8 @@ class TracerLogicGeneratorI
 
 		// Outside Material is special material and has its own group
 		virtual SceneError		GetOutsideMaterial(GPUMaterialGroupI*&,
-												   const std::string& materialType) = 0;
+												   const std::string& materialType,
+												   int gpuId) = 0;
 
 		// Finally get the tracer logic
 		// Tracer logic will be constructed with respect to

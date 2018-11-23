@@ -10,6 +10,10 @@
 #include "TracerLib/TracerLoader.h"
 #include "TracerLib/GPUScene.h"
 
+// Node
+#include "RayLib/SelfNode.h"
+#include "RayLib/TracerError.h"
+
 // Visor Realted
 #include "RayLib/VisorWindowInput.h"
 #include "VisorGL/VisorGLEntry.h"
@@ -26,15 +30,25 @@ TEST(HelloTriangle, Test)
 
 	// Load Scene
 	GPUScene scene("TestScenes/helloTriangle.json");	
-	SceneError e = scene.LoadScene(tracerGenerator.get(), 0.0);
-	if(e != SceneError::OK)
+	SceneError scnE = scene.LoadScene(tracerGenerator.get(), 0.0);
+	if(scnE != SceneError::OK)
 		ASSERT_FALSE(true);
 	
+	// Scene is Partially Loaded
+	// At the moment it requires to assign materials to nodes(and thier GPUs)
+	// We need to profive
+	std::vector<std::vector<CudaGPU>> gpuList(1);
+	TracerError err = CudaSystem::Initialize(gpuList[0]);
+	if(err != TracerError::OK)
+		ASSERT_FALSE(true);
 
-	//...
+	scnE = scene.PartitionSceneData(tracerGenerator.get(), 0.0, gpuList);
+	if(scnE != SceneError::OK)
+		ASSERT_FALSE(true);
+	
+	// ...
 	uint32_t seed = 0;
-
-
+	//tracer
 
 	// Camera
 	float aspectRatio = 16.0f / 9.0f;
@@ -62,8 +76,12 @@ TEST(HelloTriangle, Test)
 	//tracer.ChangeCamera(cam);
 	//tracer.Start();
 
+	// Get a Distributor
+	// For this basic testing we use self node
+	SelfNode selfNode;
+
 	// Visor Input
-	//VisorWindowInput input(1.0, 1.0, 2.0, selfDistributor);
+	VisorWindowInput input(1.0, 1.0, 2.0, selfNode);
 
 	VisorOptions opts;
 	opts.iFormat = pixFormat;
@@ -73,7 +91,7 @@ TEST(HelloTriangle, Test)
 
 	// Window Loop
 	auto visorView = CreateVisorGL(opts);
-	//visorView->SetInputScheme(&input);
+	visorView->SetInputScheme(&input);
 
 	// Main Poll Loop
 	while(visorView->IsOpen())
@@ -83,5 +101,4 @@ TEST(HelloTriangle, Test)
 		// Present Back Buffer
 		visorView->ProcessInputs();
 	}
-//	tracer.Stop();
 }

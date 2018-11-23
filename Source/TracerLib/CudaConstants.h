@@ -31,10 +31,11 @@ class CudaGPU
 	public:
 		enum GPUTier
 		{
-			UNSUPPORTED,
-			KEPLER,
-			MAXWELL,
-			PASCAL
+			GPU_UNSUPPORTED,
+			GPU_KEPLER,
+			GPU_MAXWELL,
+			GPU_PASCAL,			
+			GPU_TURING
 		};
 
 		static GPUTier			DetermineGPUTier(cudaDeviceProp);
@@ -63,13 +64,12 @@ class CudaGPU
 		uint32_t				RecommendedBlockCountPerSM(void* kernkernelFuncelPtr,
 														   uint32_t threadsPerBlock = StaticThreadPerBlock1D,
 														   uint32_t sharedMemSize = 0) const;
-
 };
 
 class CudaSystem
 {
 	private:
-		static std::vector<CudaGPU>	gpus;
+		static std::vector<CudaGPU>			systemGPUs;
 
 	protected:
 	public:
@@ -77,62 +77,140 @@ class CudaSystem
 											CudaSystem() = delete;
 											CudaSystem(const CudaSystem&) = delete;
 
+		static TracerError					Initialize(std::vector<CudaGPU>& gpus);
 		static TracerError					Initialize();
 
+		// Classic GPU Calls
+		// Create just enough blocks according to work size
+		template<class Function, class... Args>
+		static __host__ void						KC_X(int gpuIndex,
+														 uint32_t sharedMemSize,
+														 cudaStream_t stream,
+														 size_t workCount,
+														 //
+														 Function&& f, Args&&...);
+		template<class Function, class... Args>
+		static __host__ void						KC_XY(int gpuIndex,
+														  uint32_t sharedMemSize,
+														  cudaStream_t stream,
+														  size_t workCount,
+														  //
+														  Function&& f, Args&&...);
+		
+		// Grid-Stride Kernels
 		// Convenience Functions For Kernel Call
-		// Simple stream "0" full GPU utilizing calls
+		// Simple full GPU utilizing calls over a stream		
 		template<class Function, class... Args>
-		static __host__ void						GPUCallX(int gpuIndex, 
-															 uint32_t sharedMemSize,
-															 cudaStream_t stream,
-															 Function&& f, Args&&...);
+		static __host__ void						GridStrideKC_X(int gpuIndex,
+																   uint32_t sharedMemSize,
+																   cudaStream_t stream,
+																   size_t workCount,
+																   //
+																   Function&&, Args&&...);
+
 		template<class Function, class... Args>
-		static __host__ void						GPUCallXY(int gpuIndex, 
-															  uint32_t sharedMemSize,
-															  cudaStream_t stream,															  
-															  Function&& f, Args&&...);
+		static __host__ void						GridStrideKC_XY(int gpuIndex,
+																	uint32_t sharedMemSize,
+																	cudaStream_t stream,
+																	size_t workCount,
+																	//
+																	Function&&, Args&&...);
 
 		// Smart GPU Calls
+		// Automatic stream split
+		// TODO:
 
+		// Multi-Device Splittable Smart GPU Calls
+		// Automatic device split and stream split
+		//TODO:
 
 		// Misc
 		static const std::vector<CudaGPU>			GPUList();
 		static bool									SingleGPUSystem();
 		static void									SyncAllGPUs();
 
-
-		static constexpr int				CURRENT_DEVICE = -1;
+		static constexpr int						CURRENT_DEVICE = -1;
 };
 
 template<class Function, class... Args>
-__host__
-inline void CudaSystem::GPUCallX(int gpuIndex,
-								 uint32_t sharedMemSize, 
-								 cudaStream_t stream,								 
-								 Function&& f, Args&&... args)
+__host__ 
+void CudaSystem::KC_X(int gpuIndex,
+					  uint32_t sharedMemSize,
+					  cudaStream_t stream,
+					  size_t workCount,
+					  //
+					  Function&& f, Args&&... args)
 {
-	const CudaGPU& gpu = gpus[gpuIndex];
-	uint32_t blockCount = gpu.RecommendedBlockCountPerSM(&f, StaticThreadPerBlock1D,
-														 sharedMemSize);
-	blockCount *= gpu.SMCount();
+	CUDA_CHECK(cudaSetDevice(gpuIndex));
+	uint32_t blockCount = static_cast<uint32_t>((workCount + (StaticThreadPerBlock1D - 1)) / StaticThreadPerBlock1D);
 	uint32_t blockSize = StaticThreadPerBlock1D;
 	f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);
 	CUDA_KERNEL_CHECK();
 }
 
 template<class Function, class... Args>
-__host__
-inline void CudaSystem::GPUCallXY(int gpuIndex,
-								  uint32_t sharedMemSize,
-								  cudaStream_t stream,
-								  Function&& f, Args&&... args)
+__host__ 
+void CudaSystem::KC_XY(int gpuIndex,
+					   uint32_t sharedMemSize,
+					   cudaStream_t stream,
+					   size_t workCount,
+					   //
+					   Function&& f, Args&&... args)
 {
-	const CudaGPU& gpu = gpus[gpuIndex];
-	uint32_t blockCount = gpu.RecommendedBlockCountPerSM(&f,
-														 StaticThreadPerBlock2D[0] *
-														 StaticThreadPerBlock2D[1],
+	CUDA_CHECK(cudaSetDevice(gpuIndex));
+	size_t linearThreadCount = StaticThreadPerBlock2D[0] * StaticThreadPerBlock2D[1];
+	size_t blockCount = (workCount + (linearThreadCount - 1)) / StaticThreadPerBlock1D;
+	uint32_t blockSize = StaticThreadPerBlock1D;
+	f<<<blockCount, blockSize, sharedMemSize, stream>>> (args...);
+	CUDA_KERNEL_CHECK();
+}
+
+template<class Function, class... Args>
+__host__
+inline void CudaSystem::GridStrideKC_X(int gpuIndex,									   
+									   uint32_t sharedMemSize,
+									   cudaStream_t stream,									   
+									   size_t workCount,
+									   //
+									   Function&& f, Args&&... args)
+{
+	CUDA_CHECK(cudaSetDevice(gpuIndex));
+	const CudaGPU& gpu = systemGPUs[gpuIndex];
+	const size_t threadCount = StaticThreadPerBlock1D;
+	uint32_t blockPerSM = gpu.RecommendedBlockCountPerSM(&f, StaticThreadPerBlock1D,
 														 sharedMemSize);
-	blockCount *= gpu.SMCount();
+	// Only call enough SM
+	uint32_t totalRequiredBlocks = static_cast<uint32_t>((workCount + (threadCount - 1)) / threadCount);
+	uint32_t requiredSMCount = totalRequiredBlocks / blockPerSM;
+	uint32_t smCount = std::min(gpu.SMCount(), requiredSMCount);
+	uint32_t blockCount = smCount * blockPerSM;
+
+	// Full potential GPU Call
+	uint32_t blockSize = StaticThreadPerBlock1D;
+	f<<<blockCount, blockSize, sharedMemSize, stream>>> (args...);
+	CUDA_KERNEL_CHECK();
+}
+
+template<class Function, class... Args>
+__host__
+inline void CudaSystem::GridStrideKC_XY(int gpuIndex,									
+										uint32_t sharedMemSize,										
+										cudaStream_t stream,
+										size_t workCount,
+										//
+										Function&& f, Args&&... args)
+{
+	CUDA_CHECK(cudaSetDevice(gpuIndex));
+	const CudaGPU& gpu = systemGPUs[gpuIndex];
+	const size_t threadCount = StaticThreadPerBlock2D[0] * StaticThreadPerBlock2D[1];
+	uint32_t blockPerSM = gpu.RecommendedBlockCountPerSM(&f, threadCount,
+														 sharedMemSize);
+	// Only call enough SM
+	uint32_t totalRequiredBlocks = static_cast<uint32_t>((workCount + (threadCount - 1)) / threadCount);
+	uint32_t requiredSMCount = totalRequiredBlocks / blockPerSM;
+	uint32_t smCount = std::min(gpu.SMCount(), requiredSMCount);
+	uint32_t blockCount = smCount * blockPerSM;
+	
 	dim3 blockSize = dim3(StaticThreadPerBlock2D[0], StaticThreadPerBlock2D[1]);
 	f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);
 	CUDA_KERNEL_CHECK();
@@ -140,12 +218,12 @@ inline void CudaSystem::GPUCallXY(int gpuIndex,
 
 inline const std::vector<CudaGPU> CudaSystem::GPUList()
 {
-	return gpus;
+	return systemGPUs;
 }
 
 inline bool CudaSystem::SingleGPUSystem()
 {
-	return gpus.size() == 1;
+	return systemGPUs.size() == 1;
 }
 
 inline void CudaSystem::SyncAllGPUs()
@@ -153,7 +231,7 @@ inline void CudaSystem::SyncAllGPUs()
 	int currentDevice;
 	CUDA_CHECK(cudaGetDevice(&currentDevice));
 
-	for(int i = 0; i < static_cast<int>(gpus.size()); i++)
+	for(int i = 0; i < static_cast<int>(systemGPUs.size()); i++)
 	{
 		CUDA_CHECK(cudaSetDevice(i));
 		CUDA_CHECK(cudaDeviceSynchronize());

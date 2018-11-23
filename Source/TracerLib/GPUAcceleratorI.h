@@ -11,7 +11,7 @@ Base Interface for GPU accelerators
 #include <cstdint>
 #include <functional>
 
-#include "HitStructs.cuh"
+#include "RayLib/HitStructs.h"
 #include "RayLib/SceneStructs.h"
 #include "RayLib/AABB.h"
 #include "AcceleratorDeviceFunctions.h"

@@ -1,7 +1,8 @@
 #pragma once
 
 #include "RayStructs.h"
-#include "HitStructs.cuh"
+
+#include "RayLib/HitStructs.h"
 #include "RayLib/AABB.h"
 
 using HitResult = Vector<2, bool>;

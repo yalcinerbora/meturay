@@ -142,13 +142,14 @@ SceneError GPUScene::GenerateConstructionData(TracerLogicGeneratorI*,
 			else return SceneError::MATERIAL_ID_NOT_FOUND;
 		}
 		// Generate Accelerator Group
+		const std::string acceleratorroupType = surf.acceleratorType + primGroupType;
 		AccelGroupData accGData =
 		{
+			acceleratorroupType,
 			primGroupType,
 			std::map<uint32_t, IdPairings>()
 		};
-		const auto& result = accelGroupListings.emplace(surf.acceleratorType + primGroupType,
-														accGData).first;
+		const auto& result = accelGroupListings.emplace(acceleratorroupType, accGData).first;
 		result->second.matPrimIdPairs.emplace(surfId, surf.matPrimPairs);
 
 		// Generate transform pair also
@@ -201,6 +202,136 @@ SceneError GPUScene::GeneratePrimitiveGroups(TracerLogicGeneratorI* l,
 			return e;
 	}
 	return e;
+}
+
+SceneError GPUScene::AssignMaterials(TracerLogicGeneratorI* l, double time,
+									 const RequestedMatBatches& requestedMatBatches,
+									 const MatBatchGPUPairings& requestedGPUIds,
+									 int outsideMaterialGPUId)
+{
+	//
+	SceneError e = SceneError::OK;
+
+	auto matBatchIt = requestedMatBatches.begin();
+	auto gpuIdIt = requestedGPUIds.begin();
+	while(matBatchIt != requestedMatBatches.end())
+	{
+		const auto& materialBatch = *matBatchIt;
+		const auto& gpuId = *gpuIdIt;
+
+		//
+		//const std::string& matGroupName = materialBatch.first;
+		const std::string& matTName = materialBatch.second.matType;
+		const std::string& primTName = materialBatch.second.primType;
+		//
+		GPUPrimitiveGroupI* pGroup = nullptr;
+		GPUMaterialGroupI* mGroup = nullptr;
+		l->GetPrimitiveGroup(pGroup, primTName);
+		l->GetMaterialGroup(mGroup, matTName);
+		// Generation
+		GPUMaterialBatchI* matBatch;
+		if((e = l->GenerateMaterialBatch(matBatch, *mGroup, *pGroup,
+										 materialBatch.first,
+										 gpuId.second)) != SceneError::OK)
+			return e;
+
+		// Allocation of Requested Materials on GPUs
+		for(const uint32_t matId : materialBatch.second.matIds)
+		{
+			mGroup->LoadMaterial(matId, gpuId.second);
+		}
+
+		matBatchIt++;
+		gpuIdIt++;
+	}
+
+	// Attach Outside Material
+	auto outMatNode = sceneJson.find(SceneIO::BASE_OUTSIDE_MATERIAL);
+	if(outMatNode == sceneJson.end()) return SceneError::OUTSIDE_MAT_NODE_NOT_FOUND;
+	const nlohmann::json& node = *outMatNode;
+	const std::string matTypeName = node[SceneIO::TYPE];
+
+	// Generate its batch also
+	GPUMaterialGroupI* matGroup;
+	if((e = l->GetOutsideMaterial(matGroup, matTypeName, outsideMaterialGPUId)) != SceneError::OK)
+		return e;
+
+	// Initialize
+	std::set<SceneFileNode> groupNodes = {SceneFileNode{node}};
+	if((e = matGroup->InitializeGroup(groupNodes, time)) != SceneError::OK)
+		return e;
+	return SceneError::OK;
+}
+
+SceneError GPUScene::AssignAccelerators(TracerLogicGeneratorI* l, double time,
+										const RequestedAccelBatches& requestedAccelBatches,
+										const MaterialKeyListing& matHitKeyList)
+{
+	SceneError e = SceneError::OK;
+	// Accelerator Groups & Batches
+	// and surface hit keys
+	std::map<uint32_t, HitKey> accHitKeyList;
+	for(const auto& accelGroupBatch : requestedAccelBatches)
+	{
+		const std::string& accelGroupName = accelGroupBatch.second.accelType;
+		const auto& primTName = accelGroupBatch.second.primType;
+		const auto& pairings = accelGroupBatch.second.matPrimIdPairs;
+
+		// Fetch Primitive
+		GPUPrimitiveGroupI* pGroup;
+		if((e = l->GetPrimitiveGroup(pGroup, primTName)) != SceneError::OK)
+			return e;
+
+		// Group Generation
+		std::map<uint32_t, AABB3> aabbs;
+		GPUAcceleratorGroupI* aGroup;
+		if((e = l->GetAcceleratorGroup(aGroup, *pGroup, dTransforms, accelGroupName)) != SceneError::OK)
+			return e;
+		if((e = aGroup->InitializeGroup(aabbs, matHitKeyList, pairings, time)) != SceneError::OK)
+			return e;
+
+		// Attach aabbs to surface listings
+		for(const auto& aabb : aabbs)
+		{
+			auto& baseLeaf = surfaceListings[aabb.first];
+			baseLeaf.aabbMin = aabb.second.Min();
+			baseLeaf.aabbMax = aabb.second.Max();
+		}
+
+		// Batch Generation
+		GPUAcceleratorBatchI* accelBatch; //uint32_t id;
+		if((e = l->GenerateAcceleratorBatch(accelBatch, *aGroup, *pGroup,
+											accelGroupBatch.first)) != SceneError::OK)
+			return e;
+
+		// Now Keys
+		// Generate Accelerator Keys...
+		const GPUAcceleratorGroupI& accGroup = *aGroup;
+		for(const auto& pairings : accelGroupBatch.second.matPrimIdPairs)
+		{
+			const uint32_t surfId = pairings.first;
+			uint32_t innerId = accGroup.InnerId(surfId);
+			HitKey key = HitKey::CombinedKey(accelGroupBatch.first, innerId);
+			accHitKeyList.emplace(surfId, key);
+
+			// Attach keys of accelerators
+			surfaceListings[surfId].accKey = key;
+		}
+	}
+
+	// Find Base Accelerator Type and generate
+	nlohmann::json baseAccel;
+	if(FindNode(baseAccel, SceneIO::BASE_ACCELERATOR_BASE))
+		return SceneError::BASE_ACCELERATOR_NODE_NOT_FOUND;
+	const std::string baseAccelType = baseAccel;
+
+	// Generate Base Accelerator..
+	GPUBaseAcceleratorI* baseAccelerator;
+	if((e = l->GetBaseAccelerator(baseAccelerator, baseAccelType)) != SceneError::OK)
+		return e;
+	// Construct Base accelerator...
+	baseAccelerator->Constrcut(surfaceListings);
+	return SceneError::OK;
 }
 
 void GPUScene::LoadCommon(double time)
@@ -272,17 +403,12 @@ SceneError GPUScene::LoadLogicRelated(TracerLogicGeneratorI* l, double time)
 	// Group Data
 	std::map<std::string, std::set<SceneFileNode>> matGroupNodes;
 	std::map<std::string, std::set<SceneFileNode>> primGroupNodes;
-	// Batch Data
-	std::map<std::string, AccelGroupData> accelGroupListings;
-	std::map<std::string, MatBatchData> matBatchListings;
-	// Base Accelerator required data
-	std::map<uint32_t, BaseLeaf> surfaceListings;
 
 	if((e = GenerateConstructionData(l,
 									 matGroupNodes,
 									 primGroupNodes,
-									 accelGroupListings,
-									 matBatchListings,
+									 requiredAccelGroupListings,
+									 requiredMatBatchListings,
 									 surfaceListings,
 									 time)) != SceneError::OK)
 		return e;
@@ -295,110 +421,6 @@ SceneError GPUScene::LoadLogicRelated(TracerLogicGeneratorI* l, double time)
 	if((e = GeneratePrimitiveGroups(l, primGroupNodes, time)) != SceneError::OK)
 		return e;
 	
-	// Material Batches &
-	// Material HitKey List	
-	std::map<TypeIdPair, HitKey> matHitKeyList;
-	for(auto& materialBatch : matBatchListings)
-	{
-		const std::string& accelGroupName = materialBatch.first;
-		const std::string& matTName = materialBatch.second.matType;
-		const std::string& primTName = materialBatch.second.primType;
-		//
-		GPUPrimitiveGroupI* pGroup = nullptr;
-		GPUMaterialGroupI* mGroup = nullptr;
-		l->GetPrimitiveGroup(pGroup, primTName);
-		l->GetMaterialGroup(mGroup, matTName);
-		// Generation
-		GPUMaterialBatchI* matBatch; uint32_t id;
-		if((e = l->GetMaterialBatch(matBatch, id, *mGroup, *pGroup)) != SceneError::OK)
-			return e;
-
-		// Now Keys
-		// Generate Keys...
-		const GPUMaterialGroupI& matGroup = *mGroup;
-		for(const auto& matId : materialBatch.second.matIds)
-		{
-			uint32_t innerId = matGroup.InnerId(matId);
-			HitKey key = HitKey::CombinedKey(id, innerId);
-			matHitKeyList.emplace(std::make_pair(primTName, matId), key);
-		}
-	}
-
-	// Attach Outside Material
-	auto outMatNode = sceneJson.find(SceneIO::BASE_OUTSIDE_MATERIAL);
-	if(outMatNode == sceneJson.end()) return SceneError::OUTSIDE_MAT_NODE_NOT_FOUND;
-	const nlohmann::json& node = *outMatNode;
-	const std::string matTypeName = node[SceneIO::TYPE];
-
-	GPUMaterialGroupI* matGroup;
-	if((e = l->GetOutsideMaterial(matGroup, matTypeName)) != SceneError::OK)
-		return e;
-
-	// Initialize
-	std::set<SceneFileNode> groupNodes = {SceneFileNode{node}};
-	if((e = matGroup->InitializeGroup(groupNodes, time)) != SceneError::OK)
-		return e;
-		
-	// Accelerator Groups & Batches
-	// and surface hit keys
-	std::map<uint32_t, HitKey> accHitKeyList;
-	for(const auto& accelGroup : accelGroupListings)
-	{
-		const std::string& accelGroupName = accelGroup.first;
-		const auto& primTName = accelGroup.second.primName;
-		const auto& pairings = accelGroup.second.matPrimIdPairs;
-		
-		// Fetch Primitive
-		GPUPrimitiveGroupI* pGroup;
-		if((e = l->GetPrimitiveGroup(pGroup, primTName)) != SceneError::OK)
-			return e;
-
-		// Group Generation
-		std::map<uint32_t, AABB3> aabbs;
-		GPUAcceleratorGroupI* aGroup;
-		if((e = l->GetAcceleratorGroup(aGroup, *pGroup, dTransforms, accelGroupName)) != SceneError::OK)
-			return e;
-		if((e = aGroup->InitializeGroup(aabbs, matHitKeyList, pairings, time)) != SceneError::OK)
-			return e;
-
-		// Attach aabbs to surface listings
-		for(const auto& aabb : aabbs)
-		{
-			auto& baseLeaf = surfaceListings[aabb.first]; 
-			baseLeaf.aabbMin = aabb.second.Min();
-			baseLeaf.aabbMax = aabb.second.Max();
-		}
-		
-		// Batch Generation
-		GPUAcceleratorBatchI* accelBatch; uint32_t id;
-		if((e = l->GetAcceleratorBatch(accelBatch, id, *aGroup, *pGroup)) != SceneError::OK)
-			return e;
-
-		// Now Keys
-		// Generate Keys...
-		const GPUAcceleratorGroupI& accGroup = *aGroup;
-		for(const auto& pairings : accelGroup.second.matPrimIdPairs)
-		{
-			const uint32_t surfId = pairings.first;
-			uint32_t innerId = accGroup.InnerId(surfId);
-			HitKey key = HitKey::CombinedKey(id, innerId);
-			accHitKeyList.emplace(surfId, key);
-
-			// Attach keys of accelerators
-			surfaceListings[surfId].accKey = key;
-		}
-	}
-
-	// Find Base Accelerator Type and generate
-	nlohmann::json baseAccel;
-	if(FindNode(baseAccel, SceneIO::BASE_ACCELERATOR_BASE)) return SceneError::BASE_ACCELERATOR_NODE_NOT_FOUND;
-	// Generating..
-	std::string baseAccelType = baseAccel;
-	GPUBaseAcceleratorI* baseAccelerator;
-	l->GetBaseAccelerator(baseAccelerator, baseAccelType);
-	// Constructing..
-	baseAccelerator->Constrcut(surfaceListings);
-
 	// Finally generate 
 	TracerBaseLogicI* logic;
 	if((e = l->GetBaseLogic(logic)) != SceneError::OK)
@@ -468,6 +490,79 @@ SceneError GPUScene::ChangeTime(TracerLogicGeneratorI* l, double time)
 		return SceneError::JSON_FILE_PARSE_ERROR;
 	}
 	return SceneError::OK;
+}
+
+SceneError GPUScene::PartitionSceneData(TracerLogicGeneratorI* l, double time, 
+										const std::vector<std::vector<CudaGPU>>& nodeGPUList)
+{
+	SceneError e = SceneError::OK;
+
+	MaterialKeyListing		allMatKeys;
+	RequestedAccelBatches	accelBatches;
+	RequestedMatBatches		materialBatches;
+	MatBatchGPUPairings		gpuIdPairings;
+
+	// TODO: Implement Multi-GPU Multi-PC partition code
+	//=============================================================
+	assert(nodeGPUList.size() == 1);
+	assert(nodeGPUList[0].size() == 1);
+
+	// Single GPU code
+	int boundaryMatGPUId = 0;
+	// First do materials
+	uint32_t batchId = BoundaryBatchId;
+	for(const auto& requiredMat : requiredMatBatchListings)
+	{	
+		batchId++;
+		const std::string& accelGroupName = requiredMat.first;
+		const std::string& matTName = requiredMat.second.matType;
+		const std::string& primTName = requiredMat.second.primType;
+
+		GPUPrimitiveGroupI* pGroup = nullptr;
+		GPUMaterialGroupI* mGroup = nullptr;
+		l->GetPrimitiveGroup(pGroup, primTName);
+		l->GetMaterialGroup(mGroup, matTName);
+		
+
+		// Generate Requestd Batch as full batch of the material
+		// Since single GPU, id is always 0
+		materialBatches.emplace(batchId, requiredMat.second);	
+		gpuIdPairings.emplace(batchId, 0);
+
+		// Now Keys
+		// Generate Keys...
+		const GPUMaterialGroupI& matGroup = *mGroup;
+		for(const auto& matId : requiredMat.second.matIds)
+		{
+			uint32_t innerId = matGroup.InnerId(matId);
+			HitKey key = HitKey::CombinedKey(batchId, innerId);
+			allMatKeys.emplace(std::make_pair(primTName, matId), key);
+		}
+	}
+	// Then do accelerators
+	batchId = 0;
+	for(const auto& requiredAccel : requiredAccelGroupListings)
+	{
+		accelBatches.emplace(batchId, requiredAccel.second);
+		batchId++;
+	}
+	// TODO: End
+	// Here only your portion should be send to these two functions
+	// below
+	//=============================================================
+	   
+	// Do Loading
+	if((e = AssignMaterials(l, time, materialBatches, gpuIdPairings,
+							boundaryMatGPUId)) != SceneError::OK)
+	{
+		return e;
+	}
+	// Assign Accelerators using this material mapping
+	if((e = AssignAccelerators(l, time, accelBatches, allMatKeys)) != SceneError::OK)
+	{
+		return e;
+	}
+	return e;
 }
 
 const LightStruct* GPUScene::LightsGPU()

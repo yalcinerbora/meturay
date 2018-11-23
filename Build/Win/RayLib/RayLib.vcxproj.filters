@@ -60,24 +60,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\MeshI.h">
       <Filter>Render Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h">
-      <Filter>Distribitors</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\SelfDistributor.h">
-      <Filter>Distribitors</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h">
-      <Filter>Distribitors</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\VisorDistributorI.h">
-      <Filter>Distribitors</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\TracerDistributorI.h">
-      <Filter>Distribitors</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\AnalyticDistributorI.h">
-      <Filter>Distribitors</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\VisorWindowInput.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneIO.h">
       <Filter>FileI-O</Filter>
@@ -141,6 +123,27 @@
     <ClInclude Include="..\..\..\Source\RayLib\Triangle.h">
       <Filter>Math</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\HitStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\AnalyticNodeI.h">
+      <Filter>Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h">
+      <Filter>Distributor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h">
+      <Filter>Distributor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerNodeI.h">
+      <Filter>Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\VisorNodeI.h">
+      <Filter>Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SelfNode.h">
+      <Filter>Nodes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">
@@ -155,9 +158,6 @@
     <Filter Include="Threads">
       <UniqueIdentifier>{5e8e629d-f2d5-4197-9a8e-6d84e19db046}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Distribitors">
-      <UniqueIdentifier>{23956a57-33b5-4e95-85d0-847ecec816e2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Errors">
       <UniqueIdentifier>{d287c8ab-af03-459a-9175-425b71fad642}</UniqueIdentifier>
     </Filter>
@@ -170,6 +170,12 @@
     <Filter Include="Render Interfaces">
       <UniqueIdentifier>{ffc61ecf-ed27-41a3-841d-51e14123abab}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Nodes">
+      <UniqueIdentifier>{23956a57-33b5-4e95-85d0-847ecec816e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Distributor">
+      <UniqueIdentifier>{eaa1da4c-461c-449c-a75c-0b3d26c4967d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp">
@@ -177,12 +183,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp">
       <Filter>Threads</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Source\RayLib\MDistributor.cpp">
-      <Filter>Distribitors</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Source\RayLib\SelfDistributor.cpp">
-      <Filter>Distribitors</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\VisorWindowInput.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp">
@@ -196,6 +196,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\SurfaceDataIO.cpp">
       <Filter>FileI-O</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\MDistributor.cpp">
+      <Filter>Distributor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\SelfNode.cpp">
+      <Filter>Nodes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

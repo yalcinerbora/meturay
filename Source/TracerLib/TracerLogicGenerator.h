@@ -14,14 +14,12 @@ and it adds default accelerators and primitives as default types.
 #include "TracerLogicGeneratorI.h"
 #include "DefaultTypeGenerators.h"
 
+using NameIdPair = std::pair<std::string, int>;
+
 class TracerLogicGenerator : public TracerLogicGeneratorI
 {
-	private:
-		// Outer Id States
-		uint32_t										outerIdAccel;
-		uint32_t										outerIdMaterial;
-
-		static constexpr uint32_t						OutsideMatId = OutsideBatchId;
+	private:		
+		static constexpr uint32_t						BoundaryMatId = BoundaryBatchId;
 
 	protected:
 		// Type Generation Functions
@@ -41,7 +39,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		std::map<std::string, GPUMatGPtr>				matGroups;
 
 		std::map<std::string, GPUAccelBPtr>				accelBatches;
-		std::map<std::string, GPUMatBPtr>				matBatches;
+		std::map<NameIdPair, GPUMatBPtr>				matBatches;
 
 		GPUBaseAccelPtr									baseAccelerator;
 		GPUMatGPtr										outsideMaterial;
@@ -71,16 +69,20 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 
 		// Batches are the abstraction of kernel calls
 		// Each batch instance is equavilent to a kernel call	
-		SceneError					GetAcceleratorBatch(GPUAcceleratorBatchI*&, uint32_t& id,
-														const GPUAcceleratorGroupI&,
-														const GPUPrimitiveGroupI&) override;
-		SceneError					GetMaterialBatch(GPUMaterialBatchI*&, uint32_t& id,
-													 const GPUMaterialGroupI&,
-													 const GPUPrimitiveGroupI&) override;
+		SceneError					GenerateAcceleratorBatch(GPUAcceleratorBatchI*&,															 
+															 const GPUAcceleratorGroupI&,
+															 const GPUPrimitiveGroupI&,
+															 uint32_t keyBatchId) override;
+		SceneError					GenerateMaterialBatch(GPUMaterialBatchI*&,														  
+														  const GPUMaterialGroupI&,
+														  const GPUPrimitiveGroupI&,
+														  uint32_t keyBatchId,
+														  int gpuId) override;
 
 		// Outside Material is special material and has its own group		
 		SceneError					GetOutsideMaterial(GPUMaterialGroupI*&,
-													   const std::string& materialType) override;
+													   const std::string& materialType,
+													   int gpuId) override;
 
 		// Base Accelerator should be fetched after all the stuff is generated
 		SceneError					GetBaseAccelerator(GPUBaseAcceleratorI*&,

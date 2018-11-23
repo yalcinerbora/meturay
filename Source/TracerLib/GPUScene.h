@@ -8,6 +8,7 @@
 
 #include "DeviceMemory.h"
 #include "AcceleratorDeviceFunctions.h"
+#include "CudaConstants.h"
 
 struct SceneError;
 struct SceneFileNode;
@@ -16,18 +17,6 @@ class TracerLogicGeneratorI;
 using NodeListing = std::set<SceneFileNode>;
 using TypeNameNodeListings = std::map<std::string, NodeListing>;
 
-struct AccelGroupData
-{
-	std::string						primName;
-	std::map<uint32_t, IdPairings>	matPrimIdPairs;
-};
-
-struct MatBatchData
-{
-	std::string			primType;
-	std::string			matType;
-	std::set<uint32_t>	matIds;
-};
 
 class GPUScene
 {
@@ -52,11 +41,16 @@ class GPUScene
 		nlohmann::json						sceneJson;
 		std::string							fileName;
 		double								currentTime;
-		
+
+		// CPU Helper Data		
+		RequiredAccelBatches				requiredAccelGroupListings;
+		RequiredMatBatches					requiredMatBatchListings;		
+		std::map<uint32_t, BaseLeaf>		surfaceListings;
+
 		// GPU Pointers
 		LightStruct*						dLights;
 		TransformStruct*					dTransforms;
-			
+		
 		// Inners
 		// Helper Logic
 		SceneError							OpenFile(const std::string& fileName);
@@ -83,6 +77,15 @@ class GPUScene
 		SceneError							GeneratePrimitiveGroups(TracerLogicGeneratorI*,
 																	const TypeNameNodeListings&,
 																	double time = 0.0);
+				// Material Assignment
+		SceneError							AssignMaterials(TracerLogicGeneratorI* l, double time,
+															const RequestedMatBatches& requestedMatBatches,
+															const MatBatchGPUPairings& requestedGPUIds,
+															int boundaryMaterialGPUId);
+		// Assign Accelerators using this material mapping
+		SceneError							AssignAccelerators(TracerLogicGeneratorI*, double,
+															   const RequestedAccelBatches& requestedAccelBatches,
+															   const MaterialKeyListing& matHitKeyList);
 
 		// Private Load Functionality
 		void								LoadCommon(double time);
@@ -113,6 +116,11 @@ class GPUScene
 		//
 		SceneError							LoadScene(TracerLogicGeneratorI*, double);
 		SceneError							ChangeTime(TracerLogicGeneratorI*, double);
+		//
+		SceneError							PartitionSceneData(TracerLogicGeneratorI* l, double time,
+															   const std::vector<std::vector<CudaGPU>>&);
+			
+
 		// Access GPU
 		const LightStruct*					LightsGPU();
 		const TransformStruct*				TransformsGPU();

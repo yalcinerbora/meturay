@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <set>
 
-#include "HitStructs.cuh"
+#include "RayLib/HitStructs.h"
 
 struct RayGMem;
 struct SceneFileNode;
@@ -78,6 +78,7 @@ class GPUMaterialBatchI
 		// Every MaterialBatch is available for a specific primitive / material data
 		virtual const GPUPrimitiveGroupI&				PrimitiveGroup() const = 0;
 		virtual const GPUMaterialGroupI&				MaterialGroup() const = 0;
+		virtual int										GPUId() const = 0;
 
 		virtual uint8_t									OutRayCount() const = 0;
 };

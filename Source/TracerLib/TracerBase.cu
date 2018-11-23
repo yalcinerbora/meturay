@@ -119,7 +119,7 @@ void TracerBase::HitRays()
 		{
 			const auto& portion = *iterator;
 			if(portion.portionId == HitKey::NullBatch ||
-			   portion.portionId == HitKey::OutsideBatch)
+			   portion.portionId == HitKey::BoundaryBatch)
 			{
 				rayCount = static_cast<uint32_t>(portion.offset);
 			}			

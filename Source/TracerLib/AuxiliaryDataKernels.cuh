@@ -1,6 +1,6 @@
 #pragma once
 
-#include "HitStructs.cuh"
+#include "RayLib/HitStructs.h"
 #include "RayStructs.h"
 #include "Random.cuh"
 

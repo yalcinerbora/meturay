@@ -1,6 +1,6 @@
 #pragma once
 
-#include "HitStructs.cuh"
+#include "RayLib/HitStructs.h"
 
 // Default Leaf Struct
 // Most of the leaf structs will have these

@@ -57,7 +57,8 @@ using AccelBatchGeneratorFunc = AccelBatch* (&)(const GPUAcceleratorGroupI&,
 
 template<class MaterialBatch>
 using MaterialBatchGeneratorFunc = MaterialBatch* (&)(const GPUMaterialGroupI&,
-													  const GPUPrimitiveGroupI&);
+													  const GPUPrimitiveGroupI&,
+													  int gpuId);
 
 //=========================//
 // Shared Ptr Construction //
@@ -192,9 +193,10 @@ class GPUMatBatchGen
 		{}
 
 		GPUMatBPtr operator()(const GPUMaterialGroupI& mg,
-							  const GPUPrimitiveGroupI& pg)
+							  const GPUPrimitiveGroupI& pg,
+							  int gpuId)
 		{
-			GPUMaterialBatchI* mat = gFunc(mg, pg);
+			GPUMaterialBatchI* mat = gFunc(mg, pg, gpuId);
 			return GPUMatBPtr(mat, dFunc);
 		}
 };
@@ -244,8 +246,9 @@ namespace TypeGenWrappers
 
 	template <class Base, class MatBatch>
 	Base* MaterialBatchConstruct(const GPUMaterialGroupI& m,
-								 const GPUPrimitiveGroupI& p)
+								 const GPUPrimitiveGroupI& p,
+								 int gpuId)
 	{
-		return new MatBatch(m, p);
+		return new MatBatch(m, p, gpuId);
 	}	
 }

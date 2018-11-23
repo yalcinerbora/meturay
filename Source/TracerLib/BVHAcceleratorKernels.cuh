@@ -7,7 +7,7 @@ with custom Intersection and Hit acceptance
 */
 
 #include "AcceleratorDeviceFunctions.h"
-#include "HitStructs.cuh"
+#include "RayLib/HitStructs.h"
 //
 //// Fundamental BVH Tree Node
 //template<class LeafStruct>
