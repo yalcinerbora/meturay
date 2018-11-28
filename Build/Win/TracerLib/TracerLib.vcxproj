@@ -79,7 +79,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGenerator.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGeneratorI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicI.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerThread.h" />
   </ItemGroup>
   <ItemGroup>

@@ -9,17 +9,6 @@ Visor and Analytic Classes/Programs.
 This deleagtes user input and recieves user output (image)
 
 */
-//class TracerI;
-//struct RayStack;
-//struct TracerParameters;
-
-//
-//
-//typedef void(*SetCameraFunc)(const CameraPerspective);
-//typedef void(*SetTimeFunc)(const float);
-//typedef void(*SetParameterFunc)(const TracerParameters);
-//typedef void(*SetFPSFunc)(const uint32_t);
-//typedef void(*SetFrameCallback)(const bool);
 
 #include <cstdint>
 #include <vector>

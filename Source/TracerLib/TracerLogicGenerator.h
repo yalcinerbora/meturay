@@ -46,13 +46,20 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		GPUMatBPtr										outsideMatBatch;
 		GPUPrimitiveGroupI*								emptyPrimitive;
 		
+		// Tracer Related
+		GPUTracerGen									tracerGenerator;
+		GPUTracerPtr									tracerLogic;
+
 		// Generated Batch Mappings		
 		AcceleratorBatchMappings						accelBatchMap;
 		MaterialBatchMappings							matBatchMap;
 
+		// Helper Func
+		uint32_t										CalculateHitStruct();
+
 	public:
 		// Constructor & Destructor
-									TracerLogicGenerator();
+									TracerLogicGenerator(GPUTracerGen, GPUTracerPtr);
 									TracerLogicGenerator(const TracerLogicGenerator&) = delete;
 		TracerLogicGenerator&		operator=(const TracerLogicGenerator&) = delete;
 									~TracerLogicGenerator() = default;
@@ -87,6 +94,14 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		// Base Accelerator should be fetched after all the stuff is generated
 		SceneError					GetBaseAccelerator(GPUBaseAcceleratorI*&,
 													   const std::string& accelType) override;
+
+		// Finally get the tracer logic
+		// Tracer logic will be constructed with respect to
+		// Constructed batches
+		SceneError					GenerateBaseLogic(TracerBaseLogicI*&,
+													  const TracerParameters& opts,
+													  const Vector2i maxMats,
+													  const Vector2i maxAccels) override;
 
 		// Inclusion Functionality
 		// Additionally includes the materials from these libraries

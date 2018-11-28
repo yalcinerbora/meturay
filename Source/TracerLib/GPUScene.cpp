@@ -30,8 +30,14 @@ SceneError GPUScene::OpenFile(const std::string& fileName)
 	return SceneError::OK;
 }
 
-GPUScene::GPUScene(const std::string& s)
-	: fileName(s)
+GPUScene::GPUScene(const std::string& fileName,
+				   const std::vector<std::vector<CudaGPU>>&,
+				   TracerLogicGeneratorI& lg)
+	: logicGenerator(lg)
+	, gpuList(gpuList)
+	, maxAccelIds(Zero2i)
+	, maxMatIds(Zero2i)
+	, fileName(fileName)
 	, currentTime(0.0)
 	, dLights(nullptr)
 	, dTransforms(nullptr)
@@ -62,8 +68,7 @@ SceneError GPUScene::GenIdLookup(std::map<uint32_t, uint32_t>& result,
 	return SceneError::OK;
 }
 
-SceneError GPUScene::GenerateConstructionData(TracerLogicGeneratorI*,
-											  // Group Data
+SceneError GPUScene::GenerateConstructionData(// Group Data
 											  std::map<std::string, std::set<SceneFileNode>>& matGroupNodes,
 											  std::map<std::string, std::set<SceneFileNode>>& primGroupNodes,
 											  // Batch Data
@@ -166,8 +171,7 @@ SceneError GPUScene::GenerateConstructionData(TracerLogicGeneratorI*,
 	return e;
 }
 
-SceneError GPUScene::GenerateMaterialGroups(TracerLogicGeneratorI* l,
-											const TypeNameNodeListings& matGroupNodes, 
+SceneError GPUScene::GenerateMaterialGroups(const TypeNameNodeListings& matGroupNodes, 
 											double time)
 {
 	SceneError e = SceneError::OK;
@@ -177,7 +181,7 @@ SceneError GPUScene::GenerateMaterialGroups(TracerLogicGeneratorI* l,
 		const auto& matNodes = matGroup.second;
 		//
 		GPUMaterialGroupI* matGroup;
-		if(e = l->GetMaterialGroup(matGroup, matTypeName))
+		if(e = logicGenerator.GetMaterialGroup(matGroup, matTypeName))
 			return e;
 		if(e = matGroup->InitializeGroup(matNodes, time))
 			return e;
@@ -185,8 +189,7 @@ SceneError GPUScene::GenerateMaterialGroups(TracerLogicGeneratorI* l,
 	return e;
 }
 
-SceneError GPUScene::GeneratePrimitiveGroups(TracerLogicGeneratorI* l,
-											 const TypeNameNodeListings& primGroupNodes,
+SceneError GPUScene::GeneratePrimitiveGroups(const TypeNameNodeListings& primGroupNodes,
 											 double time)
 {
 	SceneError e = SceneError::OK;
@@ -196,7 +199,7 @@ SceneError GPUScene::GeneratePrimitiveGroups(TracerLogicGeneratorI* l,
 		const auto& primNodes = primGroup.second;
 		//
 		GPUPrimitiveGroupI* primGroup;
-		if(e = l->GetPrimitiveGroup(primGroup, primTypeName))
+		if(e = logicGenerator.GetPrimitiveGroup(primGroup, primTypeName))
 			return e;
 		if(e = primGroup->InitializeGroup(primNodes, time))
 			return e;
@@ -204,7 +207,80 @@ SceneError GPUScene::GeneratePrimitiveGroups(TracerLogicGeneratorI* l,
 	return e;
 }
 
-SceneError GPUScene::AssignMaterials(TracerLogicGeneratorI* l, double time,
+SceneError GPUScene::PartitionSceneData(double time)
+{
+	SceneError e = SceneError::OK;
+	MaterialKeyListing		allMatKeys;
+	RequestedAccelBatches	accelBatches;
+	RequestedMatBatches		materialBatches;
+	MatBatchGPUPairings		gpuIdPairings;
+
+	// TODO: Implement Multi-GPU Multi-PC partition code
+	//=============================================================
+	assert(gpuList.size() == 1);
+	assert(gpuList[0].size() == 1);
+
+	// Single GPU code
+	int boundaryMatGPUId = 0;
+	// First do materials
+	uint32_t batchId = BoundaryBatchId;
+	for(const auto& requiredMat : requiredMatBatchListings)
+	{
+		batchId++;
+		const std::string& accelGroupName = requiredMat.first;
+		const std::string& matTName = requiredMat.second.matType;
+		const std::string& primTName = requiredMat.second.primType;
+
+		GPUPrimitiveGroupI* pGroup = nullptr;
+		GPUMaterialGroupI* mGroup = nullptr;
+		logicGenerator.GetPrimitiveGroup(pGroup, primTName);
+		logicGenerator.GetMaterialGroup(mGroup, matTName);
+
+
+		// Generate Requestd Batch as full batch of the material
+		// Since single GPU, id is always 0
+		materialBatches.emplace(batchId, requiredMat.second);
+		gpuIdPairings.emplace(batchId, 0);
+
+		// Now Keys
+		// Generate Keys...
+		const GPUMaterialGroupI& matGroup = *mGroup;
+		for(const auto& matId : requiredMat.second.matIds)
+		{
+			uint32_t innerId = matGroup.InnerId(matId);
+			HitKey key = HitKey::CombinedKey(batchId, innerId);
+			allMatKeys.emplace(std::make_pair(primTName, matId), key);
+
+			maxMatIds = Vector2i::Max(maxMatIds, Vector2i(batchId, innerId));
+		}
+	}
+	// Then do accelerators
+	batchId = 0;
+	for(const auto& requiredAccel : requiredAccelGroupListings)
+	{
+		accelBatches.emplace(batchId, requiredAccel.second);
+		batchId++;
+	}
+	// TODO: End
+	// Here only your portion should be send to these two functions
+	// below
+	//=============================================================
+
+	// Do Loading
+	if((e = AssignMaterials(time, materialBatches, gpuIdPairings,
+							boundaryMatGPUId)) != SceneError::OK)
+	{
+		return e;
+	}
+	// Assign Accelerators using this material mapping
+	if((e = AssignAccelerators(time, accelBatches, allMatKeys)) != SceneError::OK)
+	{
+		return e;
+	}
+	return e;
+}
+
+SceneError GPUScene::AssignMaterials(double time,
 									 const RequestedMatBatches& requestedMatBatches,
 									 const MatBatchGPUPairings& requestedGPUIds,
 									 int outsideMaterialGPUId)
@@ -226,13 +302,13 @@ SceneError GPUScene::AssignMaterials(TracerLogicGeneratorI* l, double time,
 		//
 		GPUPrimitiveGroupI* pGroup = nullptr;
 		GPUMaterialGroupI* mGroup = nullptr;
-		l->GetPrimitiveGroup(pGroup, primTName);
-		l->GetMaterialGroup(mGroup, matTName);
+		logicGenerator.GetPrimitiveGroup(pGroup, primTName);
+		logicGenerator.GetMaterialGroup(mGroup, matTName);
 		// Generation
 		GPUMaterialBatchI* matBatch;
-		if((e = l->GenerateMaterialBatch(matBatch, *mGroup, *pGroup,
-										 materialBatch.first,
-										 gpuId.second)) != SceneError::OK)
+		if((e = logicGenerator.GenerateMaterialBatch(matBatch, *mGroup, *pGroup,
+													 materialBatch.first,
+													 gpuId.second)) != SceneError::OK)
 			return e;
 
 		// Allocation of Requested Materials on GPUs
@@ -253,7 +329,9 @@ SceneError GPUScene::AssignMaterials(TracerLogicGeneratorI* l, double time,
 
 	// Generate its batch also
 	GPUMaterialGroupI* matGroup;
-	if((e = l->GetOutsideMaterial(matGroup, matTypeName, outsideMaterialGPUId)) != SceneError::OK)
+	if((e = logicGenerator.GetOutsideMaterial(matGroup,
+											  matTypeName,
+											  outsideMaterialGPUId)) != SceneError::OK)
 		return e;
 
 	// Initialize
@@ -263,7 +341,7 @@ SceneError GPUScene::AssignMaterials(TracerLogicGeneratorI* l, double time,
 	return SceneError::OK;
 }
 
-SceneError GPUScene::AssignAccelerators(TracerLogicGeneratorI* l, double time,
+SceneError GPUScene::AssignAccelerators(double time,
 										const RequestedAccelBatches& requestedAccelBatches,
 										const MaterialKeyListing& matHitKeyList)
 {
@@ -279,13 +357,13 @@ SceneError GPUScene::AssignAccelerators(TracerLogicGeneratorI* l, double time,
 
 		// Fetch Primitive
 		GPUPrimitiveGroupI* pGroup;
-		if((e = l->GetPrimitiveGroup(pGroup, primTName)) != SceneError::OK)
+		if((e = logicGenerator.GetPrimitiveGroup(pGroup, primTName)) != SceneError::OK)
 			return e;
 
 		// Group Generation
 		std::map<uint32_t, AABB3> aabbs;
 		GPUAcceleratorGroupI* aGroup;
-		if((e = l->GetAcceleratorGroup(aGroup, *pGroup, dTransforms, accelGroupName)) != SceneError::OK)
+		if((e = logicGenerator.GetAcceleratorGroup(aGroup, *pGroup, dTransforms, accelGroupName)) != SceneError::OK)
 			return e;
 		if((e = aGroup->InitializeGroup(aabbs, matHitKeyList, pairings, time)) != SceneError::OK)
 			return e;
@@ -300,8 +378,8 @@ SceneError GPUScene::AssignAccelerators(TracerLogicGeneratorI* l, double time,
 
 		// Batch Generation
 		GPUAcceleratorBatchI* accelBatch; //uint32_t id;
-		if((e = l->GenerateAcceleratorBatch(accelBatch, *aGroup, *pGroup,
-											accelGroupBatch.first)) != SceneError::OK)
+		if((e = logicGenerator.GenerateAcceleratorBatch(accelBatch, *aGroup, *pGroup,
+														accelGroupBatch.first)) != SceneError::OK)
 			return e;
 
 		// Now Keys
@@ -313,6 +391,8 @@ SceneError GPUScene::AssignAccelerators(TracerLogicGeneratorI* l, double time,
 			uint32_t innerId = accGroup.InnerId(surfId);
 			HitKey key = HitKey::CombinedKey(accelGroupBatch.first, innerId);
 			accHitKeyList.emplace(surfId, key);
+
+			maxAccelIds = Vector2i::Max(maxAccelIds, Vector2i(accelGroupBatch.first, innerId));
 
 			// Attach keys of accelerators
 			surfaceListings[surfId].accKey = key;
@@ -327,7 +407,7 @@ SceneError GPUScene::AssignAccelerators(TracerLogicGeneratorI* l, double time,
 
 	// Generate Base Accelerator..
 	GPUBaseAcceleratorI* baseAccelerator;
-	if((e = l->GetBaseAccelerator(baseAccelerator, baseAccelType)) != SceneError::OK)
+	if((e = logicGenerator.GetBaseAccelerator(baseAccelerator, baseAccelType)) != SceneError::OK)
 		return e;
 	// Construct Base accelerator...
 	baseAccelerator->Constrcut(surfaceListings);
@@ -397,15 +477,14 @@ void GPUScene::LoadCommon(double time)
 	};
 }
 
-SceneError GPUScene::LoadLogicRelated(TracerLogicGeneratorI* l, double time)
+SceneError GPUScene::LoadLogicRelated(double time)
 {
 	SceneError e = SceneError::OK;
 	// Group Data
 	std::map<std::string, std::set<SceneFileNode>> matGroupNodes;
 	std::map<std::string, std::set<SceneFileNode>> primGroupNodes;
 
-	if((e = GenerateConstructionData(l,
-									 matGroupNodes,
+	if((e = GenerateConstructionData(matGroupNodes,
 									 primGroupNodes,
 									 requiredAccelGroupListings,
 									 requiredMatBatchListings,
@@ -415,17 +494,16 @@ SceneError GPUScene::LoadLogicRelated(TracerLogicGeneratorI* l, double time)
 
 	// Using those constructs generate
 	// Material Groups
-	if((e = GenerateMaterialGroups(l, matGroupNodes, time)) != SceneError::OK)
+	if((e = GenerateMaterialGroups(matGroupNodes, time)) != SceneError::OK)
 		return e;
 	// Primitive Groups
-	if((e = GeneratePrimitiveGroups(l, primGroupNodes, time)) != SceneError::OK)
-		return e;
-	
-	// Finally generate 
-	TracerBaseLogicI* logic;
-	if((e = l->GetBaseLogic(logic)) != SceneError::OK)
+	if((e = GeneratePrimitiveGroups(primGroupNodes, time)) != SceneError::OK)
 		return e;
 
+	// Do partitioon
+	if((e = PartitionSceneData(time)) != SceneError::OK)
+		return e;
+	
 	// All of the data is generated
 	return SceneError::OK;
 }
@@ -435,10 +513,10 @@ void GPUScene::ChangeCommon(double time)
 	// TODO:
 }
 
-SceneError GPUScene::ChangeLogicRelated(TracerLogicGeneratorI*, double time)
+SceneError GPUScene::ChangeLogicRelated(double time)
 {
 	// TODO:
-	return SceneError::OK;
+	return SceneError::BASE_ACCELERATOR_NODE_NOT_FOUND;
 }
 
 size_t GPUScene::UsedGPUMemory()
@@ -453,14 +531,14 @@ size_t GPUScene::UsedCPUMemory()
 	return 0;
 }
 
-SceneError GPUScene::LoadScene(TracerLogicGeneratorI* l, double time)
+SceneError GPUScene::LoadScene(double time)
 {
 	SceneError e(SceneError::OK);
 	try
 	{
 		OpenFile(fileName);
 		LoadCommon(time);
-		e = LoadLogicRelated(l, time);
+		e = LoadLogicRelated(time);
 	}
 	catch (SceneException const& e)
 	{
@@ -473,13 +551,13 @@ SceneError GPUScene::LoadScene(TracerLogicGeneratorI* l, double time)
 	return e;
 }
 
-SceneError GPUScene::ChangeTime(TracerLogicGeneratorI* l, double time)
+SceneError GPUScene::ChangeTime(double time)
 {
 	try
 	{
 		OpenFile(fileName);
 		ChangeCommon(time);
-		ChangeLogicRelated(l, time);
+		ChangeLogicRelated(time);
 	}
 	catch(SceneException const& e)
 	{
@@ -492,77 +570,14 @@ SceneError GPUScene::ChangeTime(TracerLogicGeneratorI* l, double time)
 	return SceneError::OK;
 }
 
-SceneError GPUScene::PartitionSceneData(TracerLogicGeneratorI* l, double time, 
-										const std::vector<std::vector<CudaGPU>>& nodeGPUList)
+Vector2i GPUScene::MaxMatIds()
 {
-	SceneError e = SceneError::OK;
+	return maxMatIds;
+}
 
-	MaterialKeyListing		allMatKeys;
-	RequestedAccelBatches	accelBatches;
-	RequestedMatBatches		materialBatches;
-	MatBatchGPUPairings		gpuIdPairings;
-
-	// TODO: Implement Multi-GPU Multi-PC partition code
-	//=============================================================
-	assert(nodeGPUList.size() == 1);
-	assert(nodeGPUList[0].size() == 1);
-
-	// Single GPU code
-	int boundaryMatGPUId = 0;
-	// First do materials
-	uint32_t batchId = BoundaryBatchId;
-	for(const auto& requiredMat : requiredMatBatchListings)
-	{	
-		batchId++;
-		const std::string& accelGroupName = requiredMat.first;
-		const std::string& matTName = requiredMat.second.matType;
-		const std::string& primTName = requiredMat.second.primType;
-
-		GPUPrimitiveGroupI* pGroup = nullptr;
-		GPUMaterialGroupI* mGroup = nullptr;
-		l->GetPrimitiveGroup(pGroup, primTName);
-		l->GetMaterialGroup(mGroup, matTName);
-		
-
-		// Generate Requestd Batch as full batch of the material
-		// Since single GPU, id is always 0
-		materialBatches.emplace(batchId, requiredMat.second);	
-		gpuIdPairings.emplace(batchId, 0);
-
-		// Now Keys
-		// Generate Keys...
-		const GPUMaterialGroupI& matGroup = *mGroup;
-		for(const auto& matId : requiredMat.second.matIds)
-		{
-			uint32_t innerId = matGroup.InnerId(matId);
-			HitKey key = HitKey::CombinedKey(batchId, innerId);
-			allMatKeys.emplace(std::make_pair(primTName, matId), key);
-		}
-	}
-	// Then do accelerators
-	batchId = 0;
-	for(const auto& requiredAccel : requiredAccelGroupListings)
-	{
-		accelBatches.emplace(batchId, requiredAccel.second);
-		batchId++;
-	}
-	// TODO: End
-	// Here only your portion should be send to these two functions
-	// below
-	//=============================================================
-	   
-	// Do Loading
-	if((e = AssignMaterials(l, time, materialBatches, gpuIdPairings,
-							boundaryMatGPUId)) != SceneError::OK)
-	{
-		return e;
-	}
-	// Assign Accelerators using this material mapping
-	if((e = AssignAccelerators(l, time, accelBatches, allMatKeys)) != SceneError::OK)
-	{
-		return e;
-	}
-	return e;
+Vector2i GPUScene::MaxAccelIds()
+{
+	return maxAccelIds;
 }
 
 const LightStruct* GPUScene::LightsGPU()

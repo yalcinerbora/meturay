@@ -17,7 +17,7 @@ This interface defines process behaviour between
 #include "SceneStructs.h"
 
 struct CameraPerspective;
-struct TracerParameters;
+struct TracerOptions;
 struct MatBatchRayDataCPU;
 enum class ErrorType;
 
@@ -38,7 +38,7 @@ typedef void(*AcceleratorRecieveFunc)(const uint32_t objId,
 typedef void(*SetSceneFunc)(const std::string);
 typedef void(*SetCameraFunc)(const CameraPerspective);
 typedef void(*SetTimeFunc)(const double);
-typedef void(*SetParameterFunc)(const TracerParameters);
+typedef void(*SetOptionFunc)(const TracerOptions);
 typedef void(*StartStopFunc)(const bool);
 typedef void(*PauseContFunc)(const bool);
 
@@ -85,7 +85,7 @@ class TracerNodeI
 		// Command Callbacks (From Visors)
 		virtual void			AttachCameraCallback(SetCameraFunc) = 0;
 		virtual void			AttachTimeCallback(SetTimeFunc) = 0;
-		virtual void			AttachParamCallback(SetParameterFunc) = 0;
+		virtual void			AttachOptionCallback(SetOptionFunc) = 0;
 		virtual void			AttachStartStopCallback(StartStopFunc) = 0;
 		virtual void			AttachPauseContCallback(PauseContFunc) = 0;
 		virtual void			AttachSceneCallback(SetSceneFunc) = 0;		

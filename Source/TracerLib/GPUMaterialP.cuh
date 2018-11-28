@@ -20,14 +20,6 @@ class GPUMaterialGroupP
 		MaterialD dData = MaterialD{};
 };
 
-class GPUBoundaryMatGroupP
-{
-	friend struct MatDataAccessor;
-
-	protected:	
-		Vector4* dImage = nullptr;
-};
-
 // Partial Implementations
 template <class TLogic, class MaterialD, class SurfaceD,
 		  ShadeFunc<TLogic, SurfaceD, MaterialD> ShadeF>
@@ -44,7 +36,7 @@ class GPUMaterialGroup
 
 	private:
 	protected:
-	
+
 	public:
 		// Constructors & Destructor
 										GPUMaterialGroup() = default;
@@ -80,6 +72,8 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
 		// Interface
 		// KC
 		void								ShadeRays(// Output
+													  Vector4* dPixels,
+													  //
 													  RayGMem* dRayOut,
 													  void* dRayAuxOut,
 													  //  Input
@@ -104,9 +98,8 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
 template <class TLogic, class MaterialD,
 		  BoundaryShadeFunc<TLogic, MaterialD> ShadeF>
 class GPUBoundaryMatGroup	
-	: public GPUBoundaryMatGroupI
+	: public GPUMaterialGroupI
 	, public GPUMaterialGroupP<MaterialD>
-	, public GPUBoundaryMatGroupP
 {	
 	public:
 		// Types from 
@@ -116,15 +109,11 @@ class GPUBoundaryMatGroup
 
 		private:
 		protected:
-			Vector4*					dPixels;
 
 		public:
 			// Constructors & Destructor
 										GPUBoundaryMatGroup() = default;
 			virtual						~GPUBoundaryMatGroup() = default;
-
-			// Interface
-			void						AttachOutputImage(Vector4* dPixels) override;
 };
 
 template <class TLogic, class MGroup>
@@ -154,6 +143,8 @@ class GPUBoundaryMatBatch final : public GPUMaterialBatchI
 		// Interface
 		// KC
 		void								ShadeRays(// Output
+													  Vector4* dPixels,
+													  //
 													  RayGMem* dRayOut,
 													  void* dRayAuxOut,
 													  //  Input
@@ -188,12 +179,6 @@ struct MatDataAccessor
 		using M = typename MaterialGroupS::MaterialData;
 		return static_cast<const GPUMaterialGroupP<M>&>(mg).dData;
 	}
-
-	template <class MaterialGroupS>
-	static Vector4* Image(const MaterialGroupS& mg)
-	{
-		return static_cast<const GPUBoundaryMatGroupP&>(mg).dImage;
-	}
 };
 
 template <class TLogic, class MGroup, class PGroup,
@@ -224,6 +209,8 @@ const char* GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::Type() const
 template <class TLogic, class MGroup, class PGroup,
 		  SurfaceFunc<MGroup, PGroup> SurfaceF>
 void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
+																   Vector4* dPixels,
+																   //
 																   RayGMem* dRayOut,
 																   void* dRayAuxOut,
 																   //  Input
@@ -252,6 +239,8 @@ void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
 	KCMaterialShade<TLogic, MGroup, PGroup, SurfFunc><<<1,1>>>
 	(
 		// Output
+		dPixels,
+		//
 		dRayOut,
 		static_cast<RayAuxData*>(dRayAuxOut),
 		outRayCount,
@@ -310,13 +299,6 @@ GPUBoundaryMatBatch<TLogic, MGroup>::GPUBoundaryMatBatch(const GPUMaterialGroupI
 	, gpuId(gpuId)
 {}
 
-template <class TLogic, class MaterialD,
-		  BoundaryShadeFunc<TLogic, MaterialD> ShadeF>
-void GPUBoundaryMatGroup<TLogic, MaterialD, ShadeF>::AttachOutputImage(Vector4* dPixels)
-{
-	this->dPixels = dPixels;
-};
-
 template <class TLogic, class MGroup>
 const std::string GPUBoundaryMatBatch<TLogic, MGroup>::TypeNamePriv = std::string(MGroup::TypeName);
 
@@ -331,6 +313,8 @@ const char* GPUBoundaryMatBatch<TLogic, MGroup>::Type() const
 
 template <class TLogic, class MGroup>
 void GPUBoundaryMatBatch<TLogic, MGroup>::ShadeRays(// Output
+													Vector4* dPixels,
+													//
 													RayGMem* dRayOut,
 													void* dRayAuxOut,
 													//  Input
@@ -349,14 +333,13 @@ void GPUBoundaryMatBatch<TLogic, MGroup>::ShadeRays(// Output
 	using RayAuxData = typename TLogic::RayAuxData;
 	
 	// TODO: Is there a better way to implement this
-	const MaterialData matData = MatDataAccessor::Data(materialGroup);
-	Vector4* dImage = MatDataAccessor::Image(materialGroup);
+	const MaterialData matData = MatDataAccessor::Data(materialGroup);	
 
 	// Test
 	KCBoundaryMatShade<TLogic, MGroup><<<1,1>>>
 	(
 		// Output
-		dImage,
+		dPixels,
 		// Input
 		dRayIn,
 		static_cast<const RayAuxData*>(dRayAuxIn),		

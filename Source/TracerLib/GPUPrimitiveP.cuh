@@ -52,7 +52,10 @@ class GPUPrimitiveGroup
 		// Constructors & Destructor
 										GPUPrimitiveGroup() = default;
 		virtual							~GPUPrimitiveGroup() = default;
+
+		uint32_t						PrimitiveHitSize() const override { return sizeof(HitD); };
 };
+
 
 struct PrimDataAccessor
 {

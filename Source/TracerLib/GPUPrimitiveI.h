@@ -44,6 +44,8 @@ class GPUPrimitiveGroupI
 		virtual Vector2ul									PrimitiveBatchRange(uint32_t surfaceDataId) const = 0;
 		virtual AABB3										PrimitiveBatchAABB(uint32_t surfaceDataId) const = 0;
 
+		virtual uint32_t									PrimitiveHitSize() const = 0;
+
 		// Error check
 		// Queries in order to check if this primitive group supports certain primitive data
 		// Material may need that data

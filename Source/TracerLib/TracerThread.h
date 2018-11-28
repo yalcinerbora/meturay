@@ -27,15 +27,16 @@ class TracerThread : public LoopingThreadI
 		// Actual Tracer
 		TracerI&						tracer;
 		TracerBaseLogicI&				logic;
-		const uint32_t					seed;
 
 		// Current Settings
 		ThreadData<double>				time;
 		ThreadData<CameraPerspective>	camera;
-		ThreadData<std::string>			scene;
+
+
 		ThreadData<Vector2ui>			resolution;
 		ThreadData<uint32_t>			sample;
-		ThreadData<TracerParameters>	parameters;
+		ThreadData<TracerOptions>		options;
+
 		ThreadData<ImageSegment>		segment;
 		ThreadData<PixelFormat>			pixFormat;
 
@@ -51,31 +52,25 @@ class TracerThread : public LoopingThreadI
 	protected:
 	public:
 		// Constructors & Destructor
-										TracerThread(TracerI&, TracerBaseLogicI&,
-													 uint32_t seed);
+										TracerThread(TracerI&, TracerBaseLogicI&);
 										TracerThread(const TracerThread&) = delete;
 		TracerThread&					operator=(const TracerThread&) = delete;
 										~TracerThread();
 
 		// State Change
 		void							ChangeCamera(const CameraPerspective&);
-		void							ChangeScene(const std::string&);
 		void							ChangeResolution(const Vector2ui&);
 		void							ChangeTime(double seconds);
-
 		void							ChangePixelFormat(PixelFormat);
 		void							ChangeSampleCount(uint32_t);
-		void							ChangeParams(const TracerParameters&);
+		void							ChangeOptions(const TracerOptions&);
 		void							ChangeImageSegment(const Vector2ui& pixelStart,
 														   const Vector2ui& pixelCount);
 };
 
-inline TracerThread::TracerThread(TracerI& t, 
-								  TracerBaseLogicI& l,
-								  uint32_t seed)
+inline TracerThread::TracerThread(TracerI& t, TracerBaseLogicI& l)
 	: tracer(t)
 	, logic(l)
-	, seed(seed)
 {}
 
 inline TracerThread::~TracerThread()

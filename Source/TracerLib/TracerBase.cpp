@@ -256,7 +256,7 @@ TracerBase::TracerBase()
 	, healthy(false)	
 {}
 
-void TracerBase::Initialize(uint32_t seed, TracerBaseLogicI& logic)
+void TracerBase::Initialize(TracerBaseLogicI& logic)
 {
 	// Device initalization
 	TracerError e(TracerError::END);
@@ -280,20 +280,16 @@ void TracerBase::Initialize(uint32_t seed, TracerBaseLogicI& logic)
 	CUDA_CHECK(cudaSetDevice(0));
 
 	// Initialize RNG Memory
-	rngMemory = RNGMemory(seed);
+	rngMemory = RNGMemory(logic.Seed());
 
 	// All seems fine mark tracer as healthy
 	healthy = true;
 }
 
-void TracerBase::SetTime(double seconds)
-{}
-
-void TracerBase::SetParams(const TracerParameters&)
-{}
-
-void TracerBase::SetScene(const std::string& sceneFileName)
-{}
+void TracerBase::SetOptions(const TracerParameters& opts)
+{
+	options = opts;
+}
 
 void TracerBase::RequestBaseAccelerator()
 {}

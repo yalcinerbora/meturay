@@ -16,7 +16,7 @@ as an input. (since those types are storngly tied)
 */
 #include "RayLib/ObjectFuncDefinitions.h"
 #include "RayLib/SceneStructs.h"
-#include "TracerStructs.h"
+#include "RayLib/TracerStructs.h"
 
 class TracerBaseLogicI;
 class GPUBaseAcceleratorI;
@@ -45,7 +45,10 @@ template<class TracerLogic>
 using TracerLogicGeneratorFunc = TracerLogic* (&)(GPUBaseAcceleratorI& ba,
 											      const AcceleratorBatchMappings& am,
 											      const MaterialBatchMappings& mm,
-											      const TracerOptions& op);
+											      const TracerParameters& op,
+												  uint32_t hitStructMaxSize,
+												  const Vector2i maxMats,
+												  const Vector2i maxAccels);
 
 template<class Accel>
 using AccelGroupGeneratorFunc = Accel* (&)(const GPUPrimitiveGroupI&,
@@ -106,9 +109,13 @@ class GPUTracerGen
 		GPUTracerPtr operator()(GPUBaseAcceleratorI& ba,
 								const AcceleratorBatchMappings& am,
 								const MaterialBatchMappings& mm,
-								const TracerOptions& op)
+								const TracerParameters& op,
+								uint32_t hitStructSize,
+								const Vector2i maxMats,
+								const Vector2i maxAccels)
 		{
-			TracerBaseLogicI* mat = gFunc(ba, am, mm, op);
+			TracerBaseLogicI* mat = gFunc(ba, am, mm, op, hitStructSize,
+										  maxMats, maxAccels);
 			return GPUTracerPtr(mat, dFunc);
 		}
 };
@@ -225,9 +232,14 @@ namespace TypeGenWrappers
 	Base* TracerLogicConstruct(GPUBaseAcceleratorI& ba, 
 							   const AcceleratorBatchMappings& am,
 							   const MaterialBatchMappings& mm,
-							   const TracerOptions& op)
+							   const TracerParameters& op,
+							   uint32_t hitStrctSize,
+							   const Vector2i maxMats,
+							   const Vector2i maxAccels)
 	{
-		return new TracerLogic(ba, am, mm, op);
+		return new TracerLogic(ba, am, mm, op, 
+							   hitStrctSize,
+							   maxMats, maxAccels);
 	}
 	
 	template <class Base, class AccelGroup>

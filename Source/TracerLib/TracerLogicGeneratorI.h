@@ -15,6 +15,7 @@ class GPUAcceleratorGroupI;
 class GPUMaterialGroupI;
 // Base Logic
 class TracerBaseLogicI;
+struct TracerParameters;
 
 class TracerLogicGeneratorI
 {
@@ -60,7 +61,10 @@ class TracerLogicGeneratorI
 		// Finally get the tracer logic
 		// Tracer logic will be constructed with respect to
 		// Constructed batches
-		virtual SceneError		GetBaseLogic(TracerBaseLogicI*&) = 0;
+		virtual SceneError			GenerateBaseLogic(TracerBaseLogicI*&, 
+													  const TracerParameters& opts,
+													  const Vector2i maxMats,
+													  const Vector2i maxAccels) = 0;
 		
 		// Inclusion Functionality
 		// Additionally includes the materials from these libraries

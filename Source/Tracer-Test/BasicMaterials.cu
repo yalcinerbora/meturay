@@ -1,4 +1,4 @@
-#include "Materials.cuh"
+#include "BasicMaterials.cuh"
 #include "MaterialNodeReaders.h"
 
 ConstantBoundaryMat::ConstantBoundaryMat()
@@ -63,79 +63,79 @@ uint8_t ConstantBoundaryMat::OutRayCount() const
 	return 0;
 }
 
-ConstantAlbedoMat::ConstantAlbedoMat()
+BasicMat::BasicMat()
 {}
 
-const char* ConstantAlbedoMat::Type() const
+const char* BasicMat::Type() const
 {
 	return TypeName;
 }
 	
-SceneError ConstantAlbedoMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)
+SceneError BasicMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)
 {
 	matData = ConstantAlbedoMatRead(memory, materialNodes, time);
 	return SceneError::OK;
 }
 
-SceneError ConstantAlbedoMat::ChangeTime(const std::set<SceneFileNode>& materialNodes, double time)
+SceneError BasicMat::ChangeTime(const std::set<SceneFileNode>& materialNodes, double time)
 {
 	return SceneError::OK;
 }
 
-void ConstantAlbedoMat::LoadMaterial(uint32_t materialId, int gpuId)
+void BasicMat::LoadMaterial(uint32_t materialId, int gpuId)
 {
 	// Consider Textures here since no textures are avail ignore
 }
 
-void ConstantAlbedoMat::UnloadMaterial(uint32_t material)
+void BasicMat::UnloadMaterial(uint32_t material)
 {
 	// Consider Textures here since no textures are avail ignore
 }
 
-int ConstantAlbedoMat::InnerId(uint32_t materialId) const
+int BasicMat::InnerId(uint32_t materialId) const
 {
 	return 0;
 }
 
-bool ConstantAlbedoMat::IsLoaded(uint32_t materialId) const
+bool BasicMat::IsLoaded(uint32_t materialId) const
 {
 	return false;
 }
 
-size_t ConstantAlbedoMat::UsedGPUMemory() const
+size_t BasicMat::UsedGPUMemory() const
+{
+	return memory.Size();
+}
+
+size_t BasicMat::UsedCPUMemory() const
 {
 	return 0;
 }
 
-size_t ConstantAlbedoMat::UsedCPUMemory() const
+size_t BasicMat::UsedGPUMemory(uint32_t materialId) const
+{
+	return sizeof(Vector3f);
+}
+
+size_t BasicMat::UsedCPUMemory(uint32_t materialId) const
 {
 	return 0;
 }
 
-size_t ConstantAlbedoMat::UsedGPUMemory(uint32_t materialId) const
+uint8_t BasicMat::OutRayCount() const
 {
 	return 0;
-}
-
-size_t ConstantAlbedoMat::UsedCPUMemory(uint32_t materialId) const
-{
-	return 0;
-}
-
-uint8_t ConstantAlbedoMat::OutRayCount() const
-{
-	return 1;
 }
 
 // Material Batches
 template class GPUBoundaryMatBatch<TracerBasic, ConstantBoundaryMat>;
 
 template class GPUMaterialBatch<TracerBasic,
-								ConstantAlbedoMat,
-								GPUPrimitiveTriangle,
-								BasicSurfaceFromTri>;
+							    BasicMat,
+							    GPUPrimitiveTriangle,
+							    EmptySurfaceFromTri>;
 
 template class GPUMaterialBatch<TracerBasic,
-								ConstantAlbedoMat,
-								GPUPrimitiveSphere,
-								BasicSurfaceFromSphr>;
+							    BasicMat,
+							    GPUPrimitiveSphere,
+							    EmptySurfaceFromSphr>;

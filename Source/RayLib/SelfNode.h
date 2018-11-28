@@ -21,7 +21,7 @@ class SelfNode
 		// Callbacks
 		SetCameraFunc				camFunc;
 		SetTimeFunc					timeFunc;
-		SetParameterFunc			paramFunc;
+		SetOptionFunc				optFunc;
 		StartStopFunc				startStopFunc;
 		PauseContFunc				pauseContFunc;
 		SetSceneFunc				sceneFunc;
@@ -80,7 +80,7 @@ class SelfNode
 		// Command Callbacks (From Visors)
 		void					AttachCameraCallback(SetCameraFunc) override;
 		void					AttachTimeCallback(SetTimeFunc) override;
-		void					AttachParamCallback(SetParameterFunc) override;
+		void					AttachOptionCallback(SetOptionFunc) override;
 		void					AttachStartStopCallback(StartStopFunc) override;
 		void					AttachPauseContCallback(PauseContFunc) override;
 		void					AttachSceneCallback(SetSceneFunc) override;

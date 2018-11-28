@@ -17,10 +17,3 @@ LogicInterface TracerLoader::LoadTracerLogic(SharedLib& s,
 
 	return logicGen;
 }
-
-TracerThread TracerLoader::GenerateTracerThread(TracerI& base, 
-												TracerBaseLogicI& logic,
-												uint32_t seed)
-{
-	return TracerThread(base, logic, seed);
-}

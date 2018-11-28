@@ -97,14 +97,11 @@ __global__ void KCGenerateCameraRays(RayGMem* gRays,
 		Vector3 rayDir = (samplePoint - pos).Normalize();
 
 		// Initialize Ray
-		RayGMem ray =
-		{
-			pos,
-			0,
-			rayDir,
-			FLT_MAX
-		};
-		gRays[threadId] = ray;
+		RayReg ray;
+		ray.ray = RayF(rayDir, pos);
+		ray.tMin = 0;
+		ray.tMax = FLT_MAX;
+		ray.Update(gRays, threadId);
 
 		// Initialize Auxiliary Data
 		AuxFunc(gAuxiliary,

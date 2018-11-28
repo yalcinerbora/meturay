@@ -14,7 +14,10 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerLogics.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerGenerators.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\Materials.cu">
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\GIMaterials.cu">
+      <Filter>Materials</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\BasicMaterials.cu">
       <Filter>Materials</Filter>
     </CudaCompile>
   </ItemGroup>
@@ -28,10 +31,16 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialStructs.h">
       <Filter>Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\Materials.cuh">
+    <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialNodeReaders.h">
       <Filter>Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialNodeReaders.h">
+    <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterials.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\Surfaces.h">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\GIMaterials.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
   </ItemGroup>

@@ -48,12 +48,24 @@ template void TypeGenWrappers::DefaultDestruct(GPUAcceleratorGroupI*);
 template void TypeGenWrappers::DefaultDestruct(GPUAcceleratorBatchI*);
 template void TypeGenWrappers::DefaultDestruct(GPUMaterialBatchI*);
 
-// Constructor & Destructor
-TracerLogicGenerator::TracerLogicGenerator()
+uint32_t TracerLogicGenerator::CalculateHitStruct()
+{
+	uint32_t currentSize = std::numeric_limits<uint32_t>::min();
+	for(const auto& primPtr : primGroups)
+		std::max(primPtr.second->PrimitiveHitSize(), currentSize);
+	// Properly Align
+	currentSize = ((currentSize + sizeof(uint32_t) - 1) / sizeof(uint32_t)) * sizeof(uint32_t);
+	return currentSize;
+}
+
+TracerLogicGenerator::TracerLogicGenerator(GPUTracerGen tracerGenerator,
+										   GPUTracerPtr tracerPtr)
 	: baseAccelerator(nullptr, TypeGenWrappers::DefaultDestruct<GPUBaseAcceleratorI>)
 	, outsideMaterial(nullptr, TypeGenWrappers::DefaultDestruct<GPUMaterialGroupI>)
 	, outsideMatBatch(nullptr, TypeGenWrappers::DefaultDestruct<GPUMaterialBatchI>)
 	, emptyPrimitive(nullptr)
+	, tracerGenerator(tracerGenerator)
+	, tracerLogic(std::move(tracerPtr))
 {
 	using namespace TypeGenWrappers;
 
@@ -101,7 +113,6 @@ TracerLogicGenerator::TracerLogicGenerator()
 	// i.e. Auxiliary Struct Etc.
 }
 
-// Groups
 SceneError TracerLogicGenerator::GetPrimitiveGroup(GPUPrimitiveGroupI*& pg,
 												   const std::string& primitiveType)
 {
@@ -261,6 +272,24 @@ SceneError TracerLogicGenerator::GetOutsideMaterial(GPUMaterialGroupI*& outMat,
 		matBatchMap.emplace(BoundaryMatId, mb);
 	}
 	else outMat = outsideMaterial.get();
+	return SceneError::OK;
+}
+
+SceneError TracerLogicGenerator::GenerateBaseLogic(TracerBaseLogicI*& bl,
+												   const TracerParameters& opts,
+												   const Vector2i maxMats,
+												   const Vector2i maxAccels)
+{
+	uint32_t hitStructSize = CalculateHitStruct();
+
+	bl = nullptr;
+	if(tracerLogic == nullptr)
+		tracerLogic = tracerGenerator(*baseAccelerator.get(),
+									  accelBatchMap, matBatchMap,
+									  opts, hitStructSize,
+									  maxMats, maxAccels);
+	bl = tracerLogic.get();
+
 	return SceneError::OK;
 }
 

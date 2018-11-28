@@ -4,7 +4,7 @@
 
 void TracerThread::InitialWork()
 {
-	tracer.Initialize(seed, logic);
+	tracer.Initialize(logic);
 }
 
 void TracerThread::LoopWork()
@@ -14,16 +14,15 @@ void TracerThread::LoopWork()
 	Vector2ui newResolution;
 	std::string newScene;
 	uint32_t newSample;
-	TracerParameters newParams;
+	TracerOptions newOptions;
 	ImageSegment newSegment;
 	PixelFormat newFormat;
 	double newTime;
 	bool timeChanged = time.CheckChanged(newTime);
 	bool camChanged = camera.CheckChanged(newCam);
-	bool sceneChanged = scene.CheckChanged(newScene);
 	bool resolutionChanged = resolution.CheckChanged(newResolution);		
 	bool sampleChanged = sample.CheckChanged(newSample);
-	bool paramsChanged = parameters.CheckChanged(newParams);
+	bool optsChanged = options.CheckChanged(newOptions);
 	bool segmentChanged = segment.CheckChanged(newSegment);
 	bool imageFormatChanged = pixFormat.CheckChanged(newFormat);
 
@@ -33,18 +32,22 @@ void TracerThread::LoopWork()
 	if(segmentChanged)
 		tracer.ReportionImage(newSegment.pixelStart,
 							  newSegment.pixelCount);
-	else if(camChanged || sceneChanged || timeChanged)
+	else if(camChanged || timeChanged)
 		tracer.ResetImage();
 		
 	if(resolutionChanged)
 		tracer.ResizeImage(newResolution);
-	if(timeChanged)
-		tracer.SetTime(newTime);
-	if(sceneChanged)
-		tracer.SetScene(newScene);
-	if(paramsChanged)
-		tracer.SetParams(newParams);
+	if(optsChanged)
+		tracer.SetOptions(newOptions);
 	
+
+	// TODO:
+	// Wait Untill Scene Change
+	// Continue when signal applies
+
+
+
+
 	// Initialize Rays
 	// Camera ray generation
 	tracer.GenerateCameraRays(newCam, newSample);
@@ -79,11 +82,6 @@ void TracerThread::ChangeCamera(const CameraPerspective& persp)
 	camera = persp;
 }
 
-void TracerThread::ChangeScene(const std::string& s)
-{
-	scene = s;
-}
-
 void TracerThread::ChangeResolution(const Vector2ui& res)
 {
 	resolution = res;
@@ -99,9 +97,9 @@ void TracerThread::ChangeSampleCount(uint32_t sampleCount)
 	sample = sampleCount;
 }
 
-void TracerThread::ChangeParams(const TracerParameters& p)
+void TracerThread::ChangeOptions(const TracerOptions& opt)
 {
-	parameters = p;
+	options = opt;
 }
 
 void TracerThread::ChangeTime(double seconds)

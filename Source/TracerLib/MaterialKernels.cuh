@@ -11,6 +11,8 @@ using SurfaceFunc = MGroup::Surface(*)(const PGroup::PrimitiveData&,
 //
 template <class TLogic, class Surface, class MaterialData>
 using ShadeFunc = void(*)(// Output
+						  Vector4* gImage,
+						  //
 						  RayGMem* gOutRays,
 						  TLogic::RayAuxData* gOutRayAux,
 						  const uint32_t maxOutRay,
@@ -85,6 +87,8 @@ __global__ void KCBoundaryMatShade(// Output
 template <class TLogic, class MGroup, class PGroup,
 		  SurfaceFunc<MGroup, PGroup> SurfFunc>
 __global__ void KCMaterialShade(// Output
+								Vector4f* gImage,
+								//
 								RayGMem* gOutRays,
 								TLogic::RayAuxData* gOutRayAux,
 								const uint32_t maxOutRay,
@@ -136,6 +140,8 @@ __global__ void KCMaterialShade(// Output
 		RayAuxData* gLocalAuxOut = gOutRayAux + globalId * maxOutRay;
 		// Actual Shading
 		MGroup::ShadeFunc(// Output
+						  gImage,
+						  //
 						  gLocalRayOut,
 						  gLocalAuxOut,
 						  maxOutRay,

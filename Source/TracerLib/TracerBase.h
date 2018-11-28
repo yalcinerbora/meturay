@@ -48,7 +48,7 @@ class TracerBase : public TracerI
 			
 		// Properties
 		uint32_t						currentRayCount;
-		TracerParameters				parameters;
+		TracerOptions					options;
 	
 		// Base tracer logic
 		TracerBaseLogicI*				tracerSystem;
@@ -89,13 +89,11 @@ class TracerBase : public TracerI
 		// COMMANDS TO TRACER //
 		// ===================//
 		// Main Thread Only Calls
-		void					Initialize(uint32_t seed, TracerBaseLogicI&) override;
+		void					Initialize(TracerBaseLogicI&) override;
 
 		// Main Calls
-		void					SetTime(double seconds) override;
-		void					SetParams(const TracerParameters&) override;
-		void					SetScene(const std::string& sceneFileName) override;
-	
+		void					SetOptions(const TracerOptions&) override;
+
 		// Requests
 		void					RequestBaseAccelerator() override;
 		void					RequestAccelerator(int key) override;

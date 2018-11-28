@@ -18,8 +18,7 @@ That interface is responsible for fetching
 
 #include "RayLib/Vector.h"
 #include "RayLib/Camera.h"
-
-#include "TracerStructs.h"
+#include "RayLib/TracerStructs.h"
 
 // Common Memory
 class RayMemory;
@@ -71,4 +70,6 @@ class TracerBaseLogicI
 		virtual size_t									PerRayAuxDataSize() const = 0;
 		// Return mimimum size of an arbitrary struct which holds all hit results
 		virtual size_t									HitStructSize() const = 0;
+		// Random seed
+		virtual uint32_t								Seed() const = 0;
 };

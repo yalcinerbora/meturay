@@ -31,37 +31,45 @@ class GPUScene
 		};
 
 	private:
-		static constexpr const size_t		AlignByteCount = 128;
+		static constexpr const size_t			AlignByteCount = 128;
+
+		// Fundamental
+		TracerLogicGeneratorI&					logicGenerator;
+		const std::vector<std::vector<CudaGPU>>	gpuList;
+
+		// Loaded
+		Vector2i								maxAccelIds;
+		Vector2i								maxMatIds;
 
 		// GPU Memory
-		DeviceMemory						memory;
+		DeviceMemory							memory;
 		// CPU Memory
-		std::vector<CameraPerspective>		cameraMemory;		
+		std::vector<CameraPerspective>			cameraMemory;		
+
 		// File Related
-		nlohmann::json						sceneJson;
-		std::string							fileName;
-		double								currentTime;
+		nlohmann::json							sceneJson;
+		std::string								fileName;
+		double									currentTime;
 
 		// CPU Helper Data		
-		RequiredAccelBatches				requiredAccelGroupListings;
-		RequiredMatBatches					requiredMatBatchListings;		
-		std::map<uint32_t, BaseLeaf>		surfaceListings;
+		RequiredAccelBatches					requiredAccelGroupListings;
+		RequiredMatBatches						requiredMatBatchListings;		
+		std::map<uint32_t, BaseLeaf>			surfaceListings;
 
 		// GPU Pointers
-		LightStruct*						dLights;
-		TransformStruct*					dTransforms;
+		LightStruct*							dLights;
+		TransformStruct*						dTransforms;
 		
 		// Inners
 		// Helper Logic
 		SceneError							OpenFile(const std::string& fileName);
-
 		bool								FindNode(nlohmann::json& node, const char* name);
 		static SceneError					GenIdLookup(std::map<uint32_t, uint32_t>&,
 														const nlohmann::json& array,
 														IdBasedNodeType);
-		//
-		SceneError							GenerateConstructionData(TracerLogicGeneratorI*,
-																	 // Group Data
+
+		// Private Load Functionality
+		SceneError							GenerateConstructionData(// Group Data
 																	 std::map<std::string, std::set<SceneFileNode>>& matGroupNodes,
 																	 std::map<std::string, std::set<SceneFileNode>>& primGroupNodes,
 																	 // Batch Data
@@ -70,40 +78,33 @@ class GPUScene
 																	 // Base Accelerator required data
 																	 std::map<uint32_t, BaseLeaf>& surfaceListings,
 																	 double time = 0.0);
-
-		SceneError							GenerateMaterialGroups(TracerLogicGeneratorI*,
-																   const TypeNameNodeListings&,
+		SceneError							GenerateMaterialGroups(const TypeNameNodeListings&,
 																   double time = 0.0);
-		SceneError							GeneratePrimitiveGroups(TracerLogicGeneratorI*,
-																	const TypeNameNodeListings&,
+		SceneError							GeneratePrimitiveGroups(const TypeNameNodeListings&,
 																	double time = 0.0);
-				// Material Assignment
-		SceneError							AssignMaterials(TracerLogicGeneratorI* l, double time,
+		SceneError							PartitionSceneData(double);
+		SceneError							AssignMaterials(double time,
 															const RequestedMatBatches& requestedMatBatches,
 															const MatBatchGPUPairings& requestedGPUIds,
 															int boundaryMaterialGPUId);
-		// Assign Accelerators using this material mapping
-		SceneError							AssignAccelerators(TracerLogicGeneratorI*, double,
-															   const RequestedAccelBatches& requestedAccelBatches,
-															   const MaterialKeyListing& matHitKeyList);
+		SceneError							AssignAccelerators(double time,
+														   const RequestedAccelBatches& requestedAccelBatches,
+														   const MaterialKeyListing& matHitKeyList);
 
-		// Private Load Functionality
+		
+
+		
 		void								LoadCommon(double time);
-		SceneError							LoadLogicRelated(TracerLogicGeneratorI*, double time);
+		SceneError							LoadLogicRelated(double time);
 
 		void								ChangeCommon(double time);
-		SceneError							ChangeLogicRelated(TracerLogicGeneratorI*, double time);
+		SceneError							ChangeLogicRelated(double time);
 
-
-		//void								LoadMaterials(double time);
-		//void								LoadSurfaces(double time);
-		//
-		//void								ChangeTimeCommon(double time);
-		//void								ChangeTimeMaterials(double time);
-		//void								ChangeTimeSurfaces(double time);
 	public:
 		// Constructors & Destructor
-											GPUScene(const std::string&);
+											GPUScene(const std::string&,
+													 const std::vector<std::vector<CudaGPU>>&,
+													 TracerLogicGeneratorI&);
 											GPUScene(const GPUScene&) = delete;
 											GPUScene(GPUScene&&) = default;
 		GPUScene&							operator=(const GPUScene&) = delete;
@@ -114,13 +115,11 @@ class GPUScene
 		size_t								UsedGPUMemory();
 		size_t								UsedCPUMemory();
 		//
-		SceneError							LoadScene(TracerLogicGeneratorI*, double);
-		SceneError							ChangeTime(TracerLogicGeneratorI*, double);
+		SceneError							LoadScene(double);
+		SceneError							ChangeTime(double);
 		//
-		SceneError							PartitionSceneData(TracerLogicGeneratorI* l, double time,
-															   const std::vector<std::vector<CudaGPU>>&);
-			
-
+		Vector2i							MaxMatIds();
+		Vector2i							MaxAccelIds();
 		// Access GPU
 		const LightStruct*					LightsGPU();
 		const TransformStruct*				TransformsGPU();

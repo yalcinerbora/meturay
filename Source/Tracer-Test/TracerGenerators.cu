@@ -1,6 +1,8 @@
 #include "TracerGenerators.h"
 #include "TracerLogics.cuh"
-#include "Materials.cuh"
+
+#include "BasicMaterials.cuh"
+#include "GIMaterials.cuh"
 
 #include "TracerLib/GPUAcceleratorLinear.cuh"
 
@@ -10,7 +12,10 @@
 template TracerBaseLogicI* TypeGenWrappers::TracerLogicConstruct<TracerBaseLogicI, TracerBasic>(GPUBaseAcceleratorI&,
 																								const AcceleratorBatchMappings&,
 																								const MaterialBatchMappings&,
-																								const TracerOptions&);
+																								const TracerParameters&,
+																								uint32_t,
+																								const Vector2i,
+																								const Vector2i);
 template GPUBaseAcceleratorI* TypeGenWrappers::DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorLinear>();
 
 template void TypeGenWrappers::DefaultDestruct(TracerBaseLogicI*);
@@ -19,34 +24,37 @@ template void TypeGenWrappers::DefaultDestruct(GPUBaseAcceleratorI*);
 using namespace TypeGenWrappers;
 
 BasicTracerLogicGenerator::BasicTracerLogicGenerator()
-	: tracerGenerator(TracerLogicConstruct<TracerBaseLogicI, TracerBasic>,
-					  DefaultDestruct<TracerBaseLogicI>)
-	, tracerLogic(nullptr, DefaultDestruct<TracerBaseLogicI>)
+	: TracerLogicGenerator(GPUTracerGen(TracerLogicConstruct<TracerBaseLogicI, TracerBasic>,
+										DefaultDestruct<TracerBaseLogicI>),
+						   GPUTracerPtr(nullptr, DefaultDestruct<TracerBaseLogicI>))
 {
 	// Add Basic Mat and Batch
 	// Material Types
-	matGroupGenerators.emplace(ConstantAlbedoMat::TypeName,
-							   GPUMatGroupGen(DefaultConstruct<GPUMaterialGroupI, ConstantAlbedoMat>,
+	matGroupGenerators.emplace(BasicMat::TypeName,
+							   GPUMatGroupGen(DefaultConstruct<GPUMaterialGroupI, BasicMat>,
+											  DefaultDestruct<GPUMaterialGroupI>));
+	matGroupGenerators.emplace(GIAlbedoMat::TypeName,
+							   GPUMatGroupGen(DefaultConstruct<GPUMaterialGroupI, GIAlbedoMat>,
 											  DefaultDestruct<GPUMaterialGroupI>));
 	matGroupGenerators.emplace(ConstantBoundaryMat::TypeName,
 							   GPUMatGroupGen(DefaultConstruct<GPUMaterialGroupI, ConstantBoundaryMat>,
 											  DefaultDestruct<GPUMaterialGroupI>));
-
 	// Material Batches
-	matBatchGenerators.emplace(ConstantAlbedoTriBatch::TypeName,
-							   GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ConstantAlbedoTriBatch>,
+	matBatchGenerators.emplace(GIAlbedoTriBatch::TypeName,
+							   GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, GIAlbedoTriBatch>,
 											  DefaultDestruct<GPUMaterialBatchI>));
-	matBatchGenerators.emplace(ConstantAlbedoSphrBatch::TypeName,
-							   GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ConstantAlbedoSphrBatch>,
+	matBatchGenerators.emplace(GIAlbedoSphrBatch::TypeName,
+							   GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, GIAlbedoSphrBatch>,
 											  DefaultDestruct<GPUMaterialBatchI>));
+	//
+	matBatchGenerators.emplace(BasicMatTriBatch::TypeName,
+							   GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, BasicMatTriBatch>,
+											  DefaultDestruct<GPUMaterialBatchI>));
+	matBatchGenerators.emplace(BasicMatSphrBatch::TypeName,
+							   GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, BasicMatSphrBatch>,
+											  DefaultDestruct<GPUMaterialBatchI>));
+	//
 	matBatchGenerators.emplace(ConstantBoundaryMat::TypeName,
 							   GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ConstantBoundaryMatBatch>,
 											  DefaultDestruct<GPUMaterialBatchI>));
-
-}
-
-SceneError BasicTracerLogicGenerator::GetBaseLogic(TracerBaseLogicI*&)
-{
-	assert(false);
-	return SceneError::OK;
 }

@@ -61,6 +61,8 @@ class GPUMaterialBatchI
 		virtual const char*					Type() const = 0;
 		// Kernel Call
 		virtual void						ShadeRays(// Output
+													  Vector4* dPixels,
+													  //
 													  RayGMem* dRayOut,
 													  void* dRayAuxOut,
 													  //  Input
@@ -76,18 +78,9 @@ class GPUMaterialBatchI
 													  RNGMemory& rngMem) const = 0;
 
 		// Every MaterialBatch is available for a specific primitive / material data
-		virtual const GPUPrimitiveGroupI&				PrimitiveGroup() const = 0;
-		virtual const GPUMaterialGroupI&				MaterialGroup() const = 0;
-		virtual int										GPUId() const = 0;
+		virtual const GPUPrimitiveGroupI&	PrimitiveGroup() const = 0;
+		virtual const GPUMaterialGroupI&	MaterialGroup() const = 0;
+		virtual int							GPUId() const = 0;
 
-		virtual uint8_t									OutRayCount() const = 0;
-};
-
-class GPUBoundaryMatGroupI : public GPUMaterialGroupI
-{
-	public:
-		virtual							~GPUBoundaryMatGroupI() = default;
-
-		// Interface
-		virtual void					AttachOutputImage(Vector4* pixels) = 0;
+		virtual uint8_t						OutRayCount() const = 0;
 };

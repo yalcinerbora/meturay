@@ -52,7 +52,4 @@ namespace TracerLoader
 												const char* generatorConstructor,
 												const char* generatorDestructor);
 
-	TracerThread				GenerateTracerThread(TracerI&, 
-													 TracerBaseLogicI&, 
-													 uint32_t seed);
 }

@@ -4,8 +4,17 @@
 TracerBasic::TracerBasic(GPUBaseAcceleratorI& baseAccelerator,
 						 const AcceleratorBatchMappings& a,
 						 const MaterialBatchMappings& m,
-						 const TracerOptions& options)
-	:TracerBaseLogic(baseAccelerator, a, m, options, initals)
+						 const TracerParameters& options,
+						 uint32_t hitStructSize,
+						 const Vector2i maxMats,
+						 const Vector2i maxAccels)
+	: TracerBaseLogic(baseAccelerator, 
+					  a, m, 
+					  options, 
+					  initals,
+					  hitStructSize,
+					  maxMats,
+					  maxAccels)
 {}
 
 TracerError TracerBasic::Initialize()

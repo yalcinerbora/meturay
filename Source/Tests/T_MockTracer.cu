@@ -115,6 +115,8 @@ class MockTracerLogic : public TracerBaseLogicI
 				const char*					Type() const override { return "MockMatBatch"; }
 				// KC
 				void						ShadeRays(// Output
+													  Vector4f* dImage,
+													  //
 													  RayGMem* dRayOut,
 													  void* dRayAuxOut,
 													  //  Input
@@ -206,6 +208,7 @@ class MockTracerLogic : public TracerBaseLogicI
 		size_t										PerRayAuxDataSize() const override { return 0; }
 		// Return mimimum size of an arbitrary struct which holds all hit results
 		size_t										HitStructSize() const override { return sizeof(uint32_t); };
+		uint32_t									Seed() const override { return seed; }
 };
 
 const GPUPrimitiveGroupI& MockTracerLogic::AcceleratorMock::PrimitiveGroup() const 
@@ -309,6 +312,8 @@ void MockTracerLogic::AcceleratorMock::Hit(// O
 }
 
 void MockTracerLogic::MaterialMock::ShadeRays(// Output
+											  Vector4f* dImage,
+
 											  RayGMem* dRayOut,
 											  void* dRayAuxOut,
 											  //  Input
@@ -410,7 +415,7 @@ TEST(MockTracerTest, Test)
 	// Load Tracer DLL
 	TracerBase tracer;
 	TracerI* tracerI = &tracer;
-	tracerI->Initialize(seed, mockLogic);
+	tracerI->Initialize(mockLogic);
 	tracerI->ResizeImage(resolution);
 	tracerI->ReportionImage();
 

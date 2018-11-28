@@ -21,21 +21,24 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cpp" />
     <ClCompile Include="..\..\..\Source\Tracer-Test\MaterialNodeReaders.cpp" />
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\GIMaterials.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerGenerators.cu">
       <FileType>Document</FileType>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\GIMaterials.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialNodeReaders.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\Materials.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterials.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialStructs.h" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\Surfaces.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerGenerators.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerLogics.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\Materials.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\BasicMaterials.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerLogics.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu" />
   </ItemGroup>

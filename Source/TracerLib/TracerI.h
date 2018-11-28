@@ -24,10 +24,10 @@ which does send commands to GPU to do ray tracing
 struct HitCPU;
 struct RayCPU;
 struct TracerError;
+struct TracerOptions;
 
 // Callback
 struct CameraPerspective;
-struct TracerParameters;
 struct TracerAnalyticData;
 
 // Main Tracer Logicc
@@ -67,12 +67,10 @@ class TracerI
 		// ===================//
 		// COMMANDS TO TRACER //
 		// ===================//
-		virtual void					Initialize(uint32_t seed, TracerBaseLogicI&) = 0;
+		virtual void					Initialize(TracerBaseLogicI&) = 0;
 
 		// Main Calls
-		virtual void					SetTime(double seconds) = 0;
-		virtual void					SetParams(const TracerParameters&) = 0;
-		virtual void					SetScene(const std::string& sceneFileName) = 0;
+		virtual void					SetOptions(const TracerOptions&) = 0;
 	
 		// Requests
 		virtual void					RequestBaseAccelerator() = 0;

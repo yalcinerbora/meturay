@@ -5,7 +5,7 @@
 SelfNode::SelfNode()
 	: camFunc(nullptr)
 	, timeFunc(nullptr)
-	, paramFunc(nullptr)
+	, optFunc(nullptr)
 	, startStopFunc(nullptr)
 	, pauseContFunc(nullptr)
 	, sceneFunc(nullptr)
@@ -76,9 +76,9 @@ void SelfNode::AttachTimeCallback(SetTimeFunc f)
 	timeFunc = f;
 }
 
-void SelfNode::AttachParamCallback(SetParameterFunc f)
+void SelfNode::AttachOptionCallback(SetOptionFunc f)
 {
-	paramFunc = f;
+	optFunc = f;
 }
 
 void SelfNode::AttachStartStopCallback(StartStopFunc f)

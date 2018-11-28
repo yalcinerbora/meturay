@@ -9,6 +9,7 @@
 // Tracer
 #include "TracerLib/TracerLoader.h"
 #include "TracerLib/GPUScene.h"
+#include "TracerLib/TracerBase.h"
 
 // Node
 #include "RayLib/SelfNode.h"
@@ -22,35 +23,41 @@ TEST(HelloTriangle, Test)
 {
 	EnableVTMode();
 
+	TracerParameters tracerParams =
+	{
+		0,
+	};
+
 	// Load Tracer Genrator from DLL
 	SharedLib testLib("Tracer-Test");
 	LogicInterface tracerGenerator = TracerLoader::LoadTracerLogic(testLib,
 																   "GenerateBasicTracer",
 																   "DeleteBasicTracer");
-
-	// Load Scene
-	GPUScene scene("TestScenes/helloTriangle.json");	
-	SceneError scnE = scene.LoadScene(tracerGenerator.get(), 0.0);
-	if(scnE != SceneError::OK)
-		ASSERT_FALSE(true);
 	
-	// Scene is Partially Loaded
-	// At the moment it requires to assign materials to nodes(and thier GPUs)
-	// We need to profive
+	// Generate GPU List
+	// We are a self node so only this GPU's ptrs
 	std::vector<std::vector<CudaGPU>> gpuList(1);
 	TracerError err = CudaSystem::Initialize(gpuList[0]);
 	if(err != TracerError::OK)
 		ASSERT_FALSE(true);
 
-	scnE = scene.PartitionSceneData(tracerGenerator.get(), 0.0, gpuList);
+	// Load Scene
+	GPUScene scene("TestScenes/helloTriangle.json",
+				   gpuList, *tracerGenerator.get());
+	SceneError scnE = scene.LoadScene(0.0);
 	if(scnE != SceneError::OK)
 		ASSERT_FALSE(true);
-	
-	// ...
-	uint32_t seed = 0;
-	//tracer
 
-	// Camera
+	// Finally generate logic after successfull load
+	TracerBaseLogicI* logic;
+	scnE = tracerGenerator.get()->GenerateBaseLogic(logic, tracerParams,
+													scene.MaxMatIds(),
+													scene.MaxAccelIds());
+	if(scnE != SceneError::OK)
+		ASSERT_FALSE(true);
+
+	// Camera (Dont use scenes camera)
+	//CameraPerspective cam = scene.CamerasCPU()[0];
 	float aspectRatio = 16.0f / 9.0f;
 	CameraPerspective cam;
 	cam.apertureSize = 1.0f;
@@ -64,38 +71,40 @@ TEST(HelloTriangle, Test)
 
 	// Start Tracer Thread and Set scene
 	const PixelFormat pixFormat = PixelFormat::RGBA_FLOAT;
-
-	//TracerThread tracer(*tracerI, *logic, seed);
-	//tracer.ChangeScene(std::string(argv[1]));
-
-	//tracer.ChangePixelFormat(pixFormat);
-	//tracer.ChangeResolution(Vector2ui(1920, 1080));
-	//tracer.ChangeSampleCount(5);
-	//tracer.ChangeImageSegment(Vector2ui(0, 0), Vector2ui(1920, 1080));
-	//tracer.ChangeParams(TracerParameters{10});
-	//tracer.ChangeCamera(cam);
-	//tracer.Start();
-
-	// Get a Distributor
-	// For this basic testing we use self node
+	
+	// Tracer Generation
+	TracerBase tracerBase;
+	// Get a Self-Node
 	SelfNode selfNode;
-
 	// Visor Input
 	VisorWindowInput input(1.0, 1.0, 2.0, selfNode);
-
-	VisorOptions opts;
-	opts.iFormat = pixFormat;
-	opts.iSize = {1280, 720};
-	opts.stereoOn = false;
-	opts.eventBufferSize = 128;
+	// Window Params
+	VisorOptions visorOpts;
+	visorOpts.iFormat = pixFormat;
+	visorOpts.iSize = {1280, 720};
+	visorOpts.stereoOn = false;
+	visorOpts.eventBufferSize = 128;
 
 	// Window Loop
-	auto visorView = CreateVisorGL(opts);
+	auto visorView = CreateVisorGL(visorOpts);
 	visorView->SetInputScheme(&input);
+
+	// Init & Run tracer
+	tracerBase.Initialize(*logic);
+	tracerBase.GenerateCameraRays(cam, 1);
+	while(tracerBase.Continue())
+	{
+		tracerBase.Render();
+	}
+	tracerBase.FinishSamples();
 
 	// Main Poll Loop
 	while(visorView->IsOpen())
 	{
+		// Before try to show do render loop
+
+
+
 		visorView->Render();
 
 		// Present Back Buffer
