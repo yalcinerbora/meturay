@@ -8,8 +8,15 @@ Thread per Block etc..
 
 */
 
+#ifdef METU_SHARED_TRACER
+#define METU_SHARED_TRACER_ENTRY_POINT __declspec(dllexport)
+#else
+#define METU_SHARED_TRACER_ENTRY_POINT __declspec(dllimport)
+#endif
+
 #include <cuda.h>
 #include <vector>
+#include <array>
 
 #include "RayLib/Vector.h"
 
@@ -34,22 +41,42 @@ class CudaGPU
 			GPU_UNSUPPORTED,
 			GPU_KEPLER,
 			GPU_MAXWELL,
-			GPU_PASCAL,			
-			GPU_TURING
+			GPU_PASCAL,
+			GPU_TURING_VOLTA
 		};
 
-		static GPUTier			DetermineGPUTier(cudaDeviceProp);
+		static GPUTier				DetermineGPUTier(cudaDeviceProp);
 
 	private:
-		int						deviceId;
-		cudaDeviceProp			props;
-		// Generated Data
-		GPUTier					tier;
+		template<int Count>
+		struct WorkGroup
+		{
+			std::array<cudaStream_t, Count>	works = {};
+			mutable int						currentIndex = 0;
 
+			// Constructors
+											WorkGroup();
+											WorkGroup(const WorkGroup&);
+											WorkGroup(WorkGroup&&);
+			WorkGroup&						operator=(const WorkGroup&) = delete;
+											~WorkGroup();
+
+			cudaStream_t					UseGroup() const;
+		};
+
+		int							deviceId;
+		cudaDeviceProp				props;
+		// Generated Data
+		GPUTier						tier;	
+		//
+		WorkGroup<8>				smallWorkList;
+		WorkGroup<4>				mediumWorkList;
+		WorkGroup<2>				largeWorkList;
+		
 	protected:
 	public:
 		// Constrctors & Destructor
-								CudaGPU(int deviceId);
+								CudaGPU(int deviceId);								
 								~CudaGPU() = default;
 		//
 		int						DeviceId() const;
@@ -64,13 +91,19 @@ class CudaGPU
 		uint32_t				RecommendedBlockCountPerSM(void* kernkernelFuncelPtr,
 														   uint32_t threadsPerBlock = StaticThreadPerBlock1D,
 														   uint32_t sharedMemSize = 0) const;
+		cudaStream_t			DetermineStream(uint32_t requiredSMCount) const;
 };
 
 class CudaSystem
 {
 	private:
-		static std::vector<CudaGPU>			systemGPUs;
+		static METU_SHARED_TRACER_ENTRY_POINT std::vector<CudaGPU> systemGPUs;
 
+		static uint32_t						DetermineGridStrideBlock(int gpuIndex,
+																	 uint32_t sharedMemSize,
+																	 uint32_t threadCount,
+																	 size_t workCount,
+																	 void* func);
 	protected:
 	public:
 		// Constructors & Destructor
@@ -79,6 +112,8 @@ class CudaSystem
 
 		static TracerError					Initialize(std::vector<CudaGPU>& gpus);
 		static TracerError					Initialize();
+
+		
 
 		// Classic GPU Calls
 		// Create just enough blocks according to work size
@@ -118,19 +153,86 @@ class CudaSystem
 
 		// Smart GPU Calls
 		// Automatic stream split
+		// Only for grid strided kernels, and for specific GPU
+		// Material calls require difrrent GPUs (texture sharing)
 		// TODO:
+		template<class Function, class... Args>
+		static __host__ void						AsyncGridStrideKC_X(int gpuIndex,
+																		uint32_t sharedMemSize,
+																		size_t workCount,
+																		//
+																		Function&&, Args&&...);
+
+		template<class Function, class... Args>
+		static __host__ void						AsyncGridStrideKC_XY(int gpuIndex,
+																		 uint32_t sharedMemSize,
+																		 size_t workCount,
+																		 //
+																		 Function&&, Args&&...);
 
 		// Multi-Device Splittable Smart GPU Calls
-		// Automatic device split and stream split
-		//TODO:
+		// Automatic device split and stream split on devices
+		static const std::vector<size_t>			GridStrideMultiGPUSplit(size_t workCount,
+																			uint32_t threadCount,
+																			uint32_t sharedMemSize,
+																			void* f);
+
 
 		// Misc
-		static const std::vector<CudaGPU>			GPUList();
+		static const std::vector<CudaGPU>&			GPUList();
 		static bool									SingleGPUSystem();
 		static void									SyncAllGPUs();
 
 		static constexpr int						CURRENT_DEVICE = -1;
 };
+
+template<int Count>
+CudaGPU::WorkGroup<Count>::WorkGroup()
+	: currentIndex(0)
+{
+	for(int i = 0; i < Count; i++)
+	{
+		CUDA_CHECK(cudaStreamCreate(&works[i]));
+	}
+}
+
+template<int Count>
+CudaGPU::WorkGroup<Count>::WorkGroup(const WorkGroup& other)
+{
+	// Default construct here also (TODO: fix)
+	for(int i = 0; i < Count; i++)
+	{
+		CUDA_CHECK(cudaStreamCreate(&works[i]));
+	}
+}
+
+template<int Count>
+CudaGPU::WorkGroup<Count>::WorkGroup(WorkGroup&& other)
+	: currentIndex(0)
+{
+	for(int i = 0; i < Count; i++)
+	{
+		works[i] = other.works[i];
+		other.works[i] = nullptr;
+	}
+}
+
+template<int Count>
+CudaGPU::WorkGroup<Count>::~WorkGroup()
+{
+	for(int i = 0; i < Count; i++)
+	{
+		if(works[i]) CUDA_CHECK(cudaStreamDestroy(works[i]));
+	}
+}
+
+template<int Count>
+cudaStream_t CudaGPU::WorkGroup<Count>::UseGroup() const
+{
+	int i = currentIndex;
+	currentIndex = (currentIndex + 1) % Count;
+	return works[i];
+}
 
 template<class Function, class... Args>
 __host__ 
@@ -174,18 +276,12 @@ inline void CudaSystem::GridStrideKC_X(int gpuIndex,
 									   //
 									   Function&& f, Args&&... args)
 {
-	CUDA_CHECK(cudaSetDevice(gpuIndex));
-	const CudaGPU& gpu = systemGPUs[gpuIndex];
 	const size_t threadCount = StaticThreadPerBlock1D;
-	uint32_t blockPerSM = gpu.RecommendedBlockCountPerSM(&f, StaticThreadPerBlock1D,
-														 sharedMemSize);
-	// Only call enough SM
-	uint32_t totalRequiredBlocks = static_cast<uint32_t>((workCount + (threadCount - 1)) / threadCount);
-	uint32_t requiredSMCount = totalRequiredBlocks / blockPerSM;
-	uint32_t smCount = std::min(gpu.SMCount(), requiredSMCount);
-	uint32_t blockCount = smCount * blockPerSM;
+	uint32_t blockCount = DetermineGridStrideBlock(gpuIndex, sharedMemSize,
+												   threadCount, workCount, &f);
 
 	// Full potential GPU Call
+	CUDA_CHECK(cudaSetDevice(gpuIndex));
 	uint32_t blockSize = StaticThreadPerBlock1D;
 	f<<<blockCount, blockSize, sharedMemSize, stream>>> (args...);
 	CUDA_KERNEL_CHECK();
@@ -200,23 +296,54 @@ inline void CudaSystem::GridStrideKC_XY(int gpuIndex,
 										//
 										Function&& f, Args&&... args)
 {
-	CUDA_CHECK(cudaSetDevice(gpuIndex));
-	const CudaGPU& gpu = systemGPUs[gpuIndex];
 	const size_t threadCount = StaticThreadPerBlock2D[0] * StaticThreadPerBlock2D[1];
-	uint32_t blockPerSM = gpu.RecommendedBlockCountPerSM(&f, threadCount,
-														 sharedMemSize);
-	// Only call enough SM
-	uint32_t totalRequiredBlocks = static_cast<uint32_t>((workCount + (threadCount - 1)) / threadCount);
-	uint32_t requiredSMCount = totalRequiredBlocks / blockPerSM;
-	uint32_t smCount = std::min(gpu.SMCount(), requiredSMCount);
-	uint32_t blockCount = smCount * blockPerSM;
+	uint32_t blockCount = DetermineGridStrideBlock(gpuIndex, sharedMemSize,
+												   threadCount, workCount, &f);
 	
+	CUDA_CHECK(cudaSetDevice(gpuIndex));
 	dim3 blockSize = dim3(StaticThreadPerBlock2D[0], StaticThreadPerBlock2D[1]);
 	f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);
 	CUDA_KERNEL_CHECK();
 }
 
-inline const std::vector<CudaGPU> CudaSystem::GPUList()
+
+template<class Function, class... Args>
+__host__ void CudaSystem::AsyncGridStrideKC_X(int gpuIndex,
+											  uint32_t sharedMemSize,
+											  size_t workCount,
+											  //
+											  Function&& f, Args&&... args)
+{
+	const size_t threadCount = StaticThreadPerBlock1D;
+	uint32_t requiredSMCount = DetermineGridStrideBlock(gpuIndex, sharedMemSize,
+														threadCount, workCount, &f);
+	cudaStream_t stream = systemGPUs[gpuIndex].DetermineStream(requiredSMCount);
+	
+	CUDA_CHECK(cudaSetDevice(gpuIndex));
+	uint32_t blockSize = StaticThreadPerBlock1D;
+	f<<<requiredSMCount, blockSize, sharedMemSize, stream>>>(args...);
+	CUDA_KERNEL_CHECK();
+}
+
+template<class Function, class... Args>
+__host__ void CudaSystem::AsyncGridStrideKC_XY(int gpuIndex,
+											   uint32_t sharedMemSize,
+											   size_t workCount,
+											   //
+											   Function&& f, Args&&... args)
+{
+	const size_t threadCount = StaticThreadPerBlock2D[0] * StaticThreadPerBlock2D[1];
+	uint32_t requiredSMCount = DetermineGridStrideBlock(gpuIndex, sharedMemSize,
+														thread, workCount, &f);
+	cudaStream_t stream = systemGPUs[gpuIndex].DetermineStream(requiredSMCount);
+	
+	CUDA_CHECK(cudaSetDevice(gpuIndex));
+	dim3 blockSize = dim3(StaticThreadPerBlock2D[0], StaticThreadPerBlock2D[1]);
+	f<<<requiredSMCount, blockSize, sharedMemSize, stream>>>(args...);
+	CUDA_KERNEL_CHECK();
+}
+
+inline const std::vector<CudaGPU>& CudaSystem::GPUList()
 {
 	return systemGPUs;
 }

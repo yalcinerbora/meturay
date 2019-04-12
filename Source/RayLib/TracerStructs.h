@@ -15,6 +15,11 @@ class GPUMaterialBatchI;
 using AcceleratorBatchMappings = std::map<uint32_t, GPUAcceleratorBatchI*>;
 using MaterialBatchMappings = std::map<uint32_t, GPUMaterialBatchI*>;
 
+struct MaterialOptions
+{
+	bool fullLoadTextures;
+};
+
 struct ShadeOpts
 {
 	int i;

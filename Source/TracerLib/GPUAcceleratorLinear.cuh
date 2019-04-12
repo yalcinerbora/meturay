@@ -51,12 +51,11 @@ class GPUAccLinearGroup final
 
 	private:	
 		// CPU Memory
-		//std::vector<Vector2ul>						acceleratorRanges;
+		//std::vector<Vector2ul>					acceleratorRanges;
 		std::vector<PrimitiveRangeList>				primitiveRanges;
 		std::vector<HitKeyList>						primitiveMaterialKeys;
 		std::map<uint32_t, uint32_t>				idLookup;
 	
-
 		// GPU Memory
 		DeviceMemory								memory;
 		Vector2ul*									dAccRanges;
@@ -76,7 +75,8 @@ class GPUAccLinearGroup final
 		// Type(as string) of the accelerator group
 		const char*						Type() const override;
 		// Loads required data to CPU cache for
-		SceneError						InitializeGroup(std::map<uint32_t, AABB3>& aabbOut,
+		SceneError						InitializeGroup(// Append AABBs for each surface
+														std::map<uint32_t, AABB3>& aabbOut,
 														// Map of hit keys for all materials
 														// w.r.t matId and primitive type
 														const std::map<TypeIdPair, HitKey>&,

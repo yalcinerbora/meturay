@@ -76,6 +76,18 @@ static_assert(std::is_polymorphic<AABB3>::value == false, "AABBs should not be p
 #include "AABB.hpp"	// CPU & GPU
 
 // Zero Constants
+static constexpr AABB2f ZeroAABB2f = AABB2f(Vector2f(0.0f, 0.0f),
+											Vector2f(0.0f, 0.0f));
+static constexpr AABB3f ZeroAABB3f = AABB3f(Vector3f(0.0f, 0.0f, 0.0f),
+											Vector3f(0.0f, 0.0f, 0.0f));
+static constexpr AABB4f ZeroAABB4f = AABB4f(Vector4f(0.0f, 0.0f, 0.0f, 0.0f),
+											Vector4f(0.0f, 0.0f, 0.0f, 0.0f));
+
+static constexpr AABB2d ZeroAABB2d = AABB2d(Vector2d(0.0, 0.0), Vector2d(0.0, 0.0));
+static constexpr AABB3d ZeroAABB3d = AABB3d(Vector3d(0.0, 0.0, 0.0), Vector3d(0.0, 0.0, 0.0));
+static constexpr AABB4d ZeroAABB4d = AABB4d(Vector4d(0.0, 0.0, 0.0, 0.0),
+											Vector4d(0.0, 0.0, 0.0, 0.0));
+
 static constexpr AABB2f CoveringAABB2f = AABB2f(Vector2f(-FLT_MAX, -FLT_MAX),
 												Vector2f(FLT_MAX, FLT_MAX));
 static constexpr AABB3f CoveringAABB3f = AABB3f(Vector3f(-FLT_MAX, -FLT_MAX, -FLT_MAX),
@@ -93,6 +105,10 @@ static constexpr AABB4d CoveringAABB4d = AABB4d(Vector4d(-DBL_MAX, -DBL_MAX, -DB
 static constexpr AABB2 CoveringAABB2 = CoveringAABB2f;
 static constexpr AABB3 CoveringAABB3 = CoveringAABB3f;
 static constexpr AABB4 CoveringAABB4 = CoveringAABB4f;
+
+static constexpr AABB2 ZeroAABB2 = ZeroAABB2f;
+static constexpr AABB3 ZeroAABB3 = ZeroAABB3f;
+static constexpr AABB4 ZeroAABB4 = ZeroAABB4f;
 
 
 // AABB Extern

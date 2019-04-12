@@ -19,8 +19,8 @@ class TracerThread : public LoopingThreadI
 	private:
 		struct ImageSegment
 		{
-			Vector2ui pixelStart;
-			Vector2ui pixelCount;
+			Vector2i pixelStart;
+			Vector2i pixelCount;
 		};
 
 	private:
@@ -33,7 +33,7 @@ class TracerThread : public LoopingThreadI
 		ThreadData<CameraPerspective>	camera;
 
 
-		ThreadData<Vector2ui>			resolution;
+		ThreadData<Vector2i>			resolution;
 		ThreadData<uint32_t>			sample;
 		ThreadData<TracerOptions>		options;
 
@@ -59,13 +59,13 @@ class TracerThread : public LoopingThreadI
 
 		// State Change
 		void							ChangeCamera(const CameraPerspective&);
-		void							ChangeResolution(const Vector2ui&);
+		void							ChangeResolution(const Vector2i&);
 		void							ChangeTime(double seconds);
 		void							ChangePixelFormat(PixelFormat);
 		void							ChangeSampleCount(uint32_t);
 		void							ChangeOptions(const TracerOptions&);
-		void							ChangeImageSegment(const Vector2ui& pixelStart,
-														   const Vector2ui& pixelCount);
+		void							ChangeImageSegment(const Vector2i& pixelStart,
+														   const Vector2i& pixelCount);
 };
 
 inline TracerThread::TracerThread(TracerI& t, TracerBaseLogicI& l)

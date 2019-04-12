@@ -15,13 +15,8 @@ Distributor is main backend for all nodes (Analytic / Visor, Tracer)
 #include <cstdint>
 #include <vector>
 
-#include "ArrayPortion.h"
 #include "Vector.h"
-
-namespace asio::ip
-{
-	class adress;
-}
+#include "Types.h"
 
 enum class DistError
 {
@@ -42,14 +37,11 @@ class DistributorI
 			ACCELERATOR,
 			SCENE,
 			MATERIAL,
-			OBJECT,
-
-			// Most important tag (used in per-bounce basis)
-			MAT_RAY,
+			OBJECT
 		};
 
 		// Main Recieve
-		typedef void(*RecieveFunc)(CommandTag, std::vector<const char*>);
+		typedef void(*RecieveFunc)(CommandTag, std::vector<Byte>);
 
 	private:
 	protected:
@@ -74,7 +66,7 @@ class DistributorI
 		virtual					~DistributorI() = default;
 
 		// Main Interface
-		virtual DistError		Connect(asio::ip::adress, int port) = 0;
+		virtual DistError		Connect(const std::string&, int port) = 0;
 
 		// Sending Data (non-block)
 		virtual void			Request(const CommandTag) = 0;

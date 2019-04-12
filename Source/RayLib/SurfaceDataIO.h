@@ -2,9 +2,10 @@
 
 #include <memory>
 #include <vector>
+#include <nlohmann/json_fwd.hpp>
+
 #include "RayLib/Vector.h"
 #include "RayLib/AABB.h"
-
 
 struct SceneError;
 struct SceneFileNode;
@@ -37,6 +38,6 @@ class SurfaceDataLoaderI
 
 namespace SurfaceDataIO
 {
-	std::unique_ptr<SurfaceDataLoaderI>		GenSurfaceDataLoader(const SceneFileNode& properties,
+	std::unique_ptr<SurfaceDataLoaderI>		GenSurfaceDataLoader(const nlohmann::json& properties,
 																 double time);	
 }

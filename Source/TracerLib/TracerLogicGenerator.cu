@@ -140,7 +140,7 @@ SceneError TracerLogicGenerator::GetAcceleratorGroup(GPUAcceleratorGroupI*& ag,
 {
 	ag = nullptr;
 	auto loc = accelGroups.find(accelType);
-	if(loc != accelGroups.end())
+	if(loc == accelGroups.end())
 	{
 		// Cannot Find Already Constructed Type
 		// Generate
@@ -185,7 +185,7 @@ SceneError TracerLogicGenerator::GenerateAcceleratorBatch(GPUAcceleratorBatchI*&
 	if(accelBatchMap.find(keyBatchId) != accelBatchMap.end())
 		return SceneError::INTERNAL_DUPLICATE_ACCEL_ID;
 	
-	const std::string batchType = std::string(ag.Type()) + pg.Type();
+	const std::string batchType = std::string(ag.Type());
 
 	auto loc = accelBatches.find(batchType);
 	if(loc == accelBatches.end())

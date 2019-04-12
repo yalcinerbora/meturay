@@ -1,20 +1,24 @@
 #include "VisorWindowInput.h"
 #include "RayLib/Vector.h"
 #include "RayLib/Camera.h"
-#include "RayLib/VisorNodeI.h"
+#include "RayLib/VisorCallbacksI.h"
 #include "RayLib/Quaternion.h"
 
 VisorWindowInput::VisorWindowInput(double sensitivity,
 								   double moveRatio,
-								   double moveRatioModifier,
-								   VisorNodeI& d)
+								   double moveRatioModifier)
 	: Sensitivity(sensitivity)
 	, MoveRatio(moveRatio)
 	, MoveRatioModifier(moveRatioModifier)
 	, fpsMode(false)
 	, camera(camera)
-	, visorDelegate(d)
+	, visorCallbacks(nullptr)
 {}
+
+ void VisorWindowInput::AttachVisorCallback(VisorCallbacksI& vc)
+{	
+	visorCallbacks = &vc;
+}
 
 void VisorWindowInput::WindowPosChanged(int posX, int posY)
 {}
@@ -26,7 +30,9 @@ void VisorWindowInput::WindowSizeChanged(int width, int height)
 {}
 
 void VisorWindowInput::WindowClosed()
-{}
+{
+	visorCallbacks->WindowCloseAction();
+}
 
 void VisorWindowInput::WindowRefreshed()
 {}
@@ -36,7 +42,7 @@ void VisorWindowInput::WindowFocused(bool)
 
 void VisorWindowInput::WindowMinimized(bool minimized)
 {
-	visorDelegate.SetImageStream(!minimized);
+	visorCallbacks->WindowMinimizeAction(minimized);
 }
 
 void VisorWindowInput::MouseScrolled(double xOffset, double yOffset)
@@ -70,7 +76,7 @@ void VisorWindowInput::MouseMoved(double x, double y)
 		camera.up[1] = (camera.up[1] < 0.0f) ? -1.0f : 1.0f;
 		camera.up[2] = 0.0f;
 
-		visorDelegate.ChangeCamera(camera);
+		visorCallbacks->SendCamera(camera);
 	}
 	mouseX = x;
 	mouseY = y;
@@ -137,25 +143,12 @@ void VisorWindowInput::KeyboardUsed(KeyboardKeyType key,
 			// Next-Previous frame
 			case KeyboardKeyType::RIGHT:
 			{
-				visorDelegate.NextFrame();
+				visorCallbacks->IncreaseTime(1.0f/ static_cast<float>(currentFPS));
 				break;
 			}
 			case KeyboardKeyType::LEFT:
 			{
-				visorDelegate.PreviousFrame();
-				break;
-			}
-			// FPS
-			case KeyboardKeyType::UP:
-			{
-				currentFPS = (currentFPS + 1) % FPSCount;
-				visorDelegate.ChangeFPS(PredefinedFPS[currentFPS]);
-				break;
-			}
-			case KeyboardKeyType::DOWN:
-			{
-				currentFPS = (currentFPS - 1) % FPSCount;
-				visorDelegate.ChangeFPS(PredefinedFPS[currentFPS]);
+				visorCallbacks->DecreaseTime(1.0f / static_cast<float>(currentFPS));
 				break;
 			}
 			default:
@@ -165,8 +158,7 @@ void VisorWindowInput::KeyboardUsed(KeyboardKeyType key,
 	}
 
 	// Check if Camera Changed
-	if(camChanged)
-		visorDelegate.ChangeCamera(camera);
+	if(camChanged) visorCallbacks->SendCamera(camera);
 }
 
 void VisorWindowInput::MouseButtonUsed(MouseButtonType button, KeyAction action)

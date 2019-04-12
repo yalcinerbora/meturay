@@ -2,6 +2,7 @@
 /**
 
 Basic output image memory
+Used by tracers
 
 */
 
@@ -19,9 +20,9 @@ class ImageMemory
 		PixelFormat				format;
 		size_t					pixelSize;
 
-		Vector2ui				segmentSize;
-		Vector2ui				segmentOffset;
-		Vector2ui				resolution;
+		Vector2i				segmentSize;
+		Vector2i				segmentOffset;
+		Vector2i				resolution;
 
 		static size_t			PixelFormatToSize(PixelFormat);
 
@@ -29,9 +30,9 @@ class ImageMemory
 	public:
 		// Constructors & Destructors
 								ImageMemory();
-								ImageMemory(const Vector2ui& offset,
-											const Vector2ui& size,
-											const Vector2ui& resolution,
+								ImageMemory(const Vector2i& offset,
+											const Vector2i& size,
+											const Vector2i& resolution,
 											PixelFormat f);
 								ImageMemory(const ImageMemory&) = delete;
 								ImageMemory(ImageMemory&&) = default;
@@ -40,18 +41,18 @@ class ImageMemory
 								~ImageMemory() = default;
 					
 		void					SetPixelFormat(PixelFormat);
-		void					Reportion(const Vector2ui& offset,
-										  const Vector2ui& size);
-		void					Resize(const Vector2ui& resolution);
+		void					Reportion(Vector2i offset,
+										  Vector2i size);
+		void					Resize(Vector2i resolution);
 		void					Reset();
 
 		template<class T>
 		std::vector<T>			MoveImageToCPU();
 	
 		// Getters
-		Vector2ui				SegmentSize() const;
-		Vector2ui				SegmentOffset() const;
-		Vector2ui				Resolution() const;
+		Vector2i				SegmentSize() const;
+		Vector2i				SegmentOffset() const;
+		Vector2i				Resolution() const;
 		
 		template <class T>
 		T*						GMem();

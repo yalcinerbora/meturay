@@ -15,9 +15,9 @@ inline void RayInitBasic(RayAuxBasic* gOutBasic,
 						 const RayAuxBasic& defaults,
 						 const RayReg& ray,
 						 // Index
-						 const Vector2ui& globalPixelId,
-						 const Vector2ui& localSampleId,
-						 const uint32_t samplePerPixel)
+						 const Vector2i& globalPixelId,
+						 const Vector2i& localSampleId,
+						 const uint32_t samplePerLocation)
 {
 	gOutBasic[writeLoc] = defaults;
 }
@@ -44,17 +44,22 @@ class TracerBasic : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
 	protected:
 	public:
 		// Constructors & Destructor
-										TracerBasic(GPUBaseAcceleratorI& baseAccelerator,
-													const AcceleratorBatchMappings&,
-													const MaterialBatchMappings&,
-													const TracerParameters& parameters,
-													uint32_t hitStructSize,													
-													const Vector2i maxMats,
-													const Vector2i maxAccels);
-										~TracerBasic() = default;
+						TracerBasic(GPUBaseAcceleratorI& baseAccelerator,
+									const AcceleratorBatchMappings&,
+									const MaterialBatchMappings&,
+									const TracerParameters& parameters,
+									uint32_t hitStructSize,													
+									const Vector2i maxMats,
+									const Vector2i maxAccels);
+						~TracerBasic() = default;
 
-		TracerError						Initialize() override;
+		TracerError		Initialize() override;
 
-		void							GenerateRays(RayMemory&, RNGMemory&,
-													 const uint32_t rayCount) override;
+		size_t			GenerateRays(RayMemory&, RNGMemory&,
+									 const GPUScene& scene,
+									 int cameraId,
+									 int samplePerLocation,
+									 Vector2i resolution,
+									 Vector2i pixelStart = Zero2i,
+									 Vector2i pixelEnd = BaseConstants::IMAGE_MAX_SIZE) override;
 };

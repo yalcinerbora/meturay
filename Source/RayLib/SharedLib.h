@@ -44,5 +44,5 @@ SharedLibPtr<T> SharedLib::GenerateObject(const std::string& mangledConstructorN
 	ObjGeneratorFunc<T> genFunc = static_cast<ObjGeneratorFunc<T>>(GetProcAdressInternal(mangledConstructorName));
 	ObjDestroyerFunc<T> destFunc = static_cast<ObjDestroyerFunc<T>>(GetProcAdressInternal(mangledDestructorName));
 
-	return SharedLibPtr<T>(genFunc(), *destFunc);
+	return SharedLibPtr<T>(genFunc(), destFunc);
 }

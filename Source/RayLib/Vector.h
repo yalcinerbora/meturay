@@ -192,7 +192,7 @@ using Vector2l = Vector<2, int64_t>;
 using Vector2ul = Vector<2, uint64_t>;
 
 // Requirements of Vectors
-static_assert(std::is_literal_type<Vector3>::value == true, "Vectors has to be literal types");
+//static_assert(std::is_literal_type<Vector3>::value == true, "Vectors has to be literal types");
 static_assert(std::is_trivially_copyable<Vector3>::value == true, "Vectors has to be trivially copyable");
 static_assert(std::is_polymorphic<Vector3>::value == false, "Vectors should not be polymorphic");
 

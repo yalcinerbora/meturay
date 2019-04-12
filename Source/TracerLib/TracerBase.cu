@@ -3,27 +3,29 @@
 #include "RayLib/Camera.h"
 #include "RayLib/Log.h"
 #include "RayLib/TracerError.h"
+#include "RayLib/TracerCallbacksI.h"
 
 #include "TracerDebug.h"
 #include "GPUAcceleratorI.h"
 #include "GPUMaterialI.h"
 #include "TracerLogicI.h"
 
+
 void TracerBase::SendError(TracerError e, bool isFatal)
 {
-	if(errorFunc) errorFunc(e);
+	if(callbacks) callbacks->SendError(e);
 	healthy = isFatal;
 }
 
 void TracerBase::HitRays()
 {
 	// Tracer Logic interface
-	const Vector2i& accBitCounts = tracerSystem->SceneAcceleratorMaxBits();
-	GPUBaseAcceleratorI& baseAccelerator = tracerSystem->BaseAcelerator();
-	const AcceleratorBatchMappings& subAccelerators = tracerSystem->AcceleratorBatches();
+	const Vector2i& accBitCounts = currentLogic->SceneAcceleratorMaxBits();
+	GPUBaseAcceleratorI& baseAccelerator = currentLogic->BaseAcelerator();
+	const AcceleratorBatchMappings& subAccelerators = currentLogic->AcceleratorBatches();
 
 	// Reset Hit Memory for hit loop
-	rayMemory.ResetHitMemory(currentRayCount, tracerSystem->HitStructSize());
+	rayMemory.ResetHitMemory(currentRayCount, currentLogic->HitStructSize());
 
 	// Make Base Accelerator to get ready for hitting
 	baseAccelerator.GetReady(currentRayCount);
@@ -77,6 +79,11 @@ void TracerBase::HitRays()
 		// of the total internal reflection phenomena.
 		auto portions = rayMemory.Partition(rayCount);
 
+		// Reorder partitions for efficient calls
+		// (sort by gpu and order for better async access)
+		// ....
+		// TODO:
+
 		// For each partition
 		for(const auto& p : portions)
 		{
@@ -94,14 +101,14 @@ void TracerBase::HitRays()
 			// and primitive inner id.
 			// Since materials are batched for both material and
 			loc->second->Hit(// O
-							dMaterialKeys,
-							 dPrimitiveIds, 
+							 dMaterialKeys,
+							 dPrimitiveIds,
 							 dHitStructs,
 							 // I-O
 							 dRays,
 							 // Input
 							 dTransfomIds,
-							 dRayIdStart, 
+							 dRayIdStart,
 							 dCurrentKeyStart,
 							 static_cast<uint32_t>(p.count));
 
@@ -138,16 +145,9 @@ void TracerBase::HitRays()
 	// and interpolation weights (which should be on hitStruct)
 }
 
-void TracerBase::SendAndRecieveRays()
-{
-	// Here also generate RayOut and use that
-	// Also pre allocate sort buffers
-	// TODO:
-}
-
 void TracerBase::ShadeRays()
 {
-	const Vector2i matMaxBits = tracerSystem->SceneMaterialMaxBits();
+	const Vector2i matMaxBits = currentLogic->SceneMaterialMaxBits();
 
 	// Ray Memory Pointers	
 	const RayGMem* dRays = rayMemory.Rays();	
@@ -159,7 +159,7 @@ void TracerBase::ShadeRays()
 	RayId* dCurrentRayIds = rayMemory.CurrentIds();
 		
 	// Material Interfaces
-	const MaterialBatchMappings& materials = tracerSystem->MaterialBatches();
+	const MaterialBatchMappings& materials = currentLogic->MaterialBatches();
 	uint32_t rayCount = currentRayCount;
 
 	// Sort and Partition happens on leader device
@@ -196,10 +196,15 @@ void TracerBase::ShadeRays()
 	}
 
 	// Allocate output ray memory
-	rayMemory.ResizeRayOut(totalOutRayCount, tracerSystem->PerRayAuxDataSize());
+	rayMemory.ResizeRayOut(totalOutRayCount, currentLogic->PerRayAuxDataSize());
 	unsigned char* dAuxOut = rayMemory.RayAuxOut<unsigned char>();
 	RayGMem* dRaysOut = rayMemory.RaysOut();
 
+	// Reorder partitions for efficient calls
+	// (sort by gpu and order for better async access)
+	// ....
+	// TODO:
+	
 	// For each partition
 	size_t outOffset = 0;
 	for(const auto& p : portions)
@@ -215,7 +220,7 @@ void TracerBase::ShadeRays()
 		const RayId* dRayIdStart = dCurrentRayIds + p.offset;
 		const HitKey* dKeyStart = dCurrentKeys + p.offset;
 		RayGMem* dRayOutStart = dRaysOut + outOffset;
-		void* dAuxOutStart = dAuxOut + (outOffset * tracerSystem->PerRayAuxDataSize());
+		void* dAuxOutStart = dAuxOut + (outOffset * currentLogic->PerRayAuxDataSize());
 	
 		// Actual Shade Call
 		loc->second->ShadeRays(// Output
@@ -250,42 +255,22 @@ void TracerBase::ShadeRays()
 }
 
 TracerBase::TracerBase()
-	: rayDelegateFunc(nullptr)
-	, errorFunc(nullptr)
-	, analyticFunc(nullptr)
-	, imageFunc(nullptr)
-	, baseSendFunc(nullptr)
-	, accSendFunc(nullptr)
+	: callbacks(nullptr)	
 	, currentRayCount(0)
-	, tracerSystem(nullptr)
+	, currentLogic(nullptr)
 	, healthy(false)	
 {}
 
-void TracerBase::Initialize(TracerBaseLogicI& logic)
+void TracerBase::Initialize(int leaderGPUId)
 {
 	// Device initalization
 	TracerError e(TracerError::END);
 	if((e = CudaSystem::Initialize()) != TracerError::OK)
 	{
-		if(errorFunc) errorFunc(e);
+		if(callbacks) callbacks->SendError(e);
 	}
-
-	// Init and set Tracer System
-	if((e = logic.Initialize()) != TracerError::OK)
-	{
-		if(errorFunc) errorFunc(e);
-	}
-	tracerSystem = &logic;
-
-	// Select a leader device that is responsible
-	// for sorting and partitioning works
-	// for different materials / accelerators
-	// TODO: Determine a leader Device
-	rayMemory.SetLeaderDevice(0);
-	CUDA_CHECK(cudaSetDevice(0));
-
-	// Initialize RNG Memory
-	rngMemory = RNGMemory(logic.Seed());
+	rayMemory.SetLeaderDevice(leaderGPUId);
+	CUDA_CHECK(cudaSetDevice(leaderGPUId));
 
 	// All seems fine mark tracer as healthy
 	healthy = true;
@@ -299,42 +284,35 @@ void TracerBase::SetOptions(const TracerOptions& opts)
 void TracerBase::RequestBaseAccelerator()
 {}
 
-void TracerBase::RequestAccelerator(int key)
+void TracerBase::RequestAccelerator(HitKey key)
 {}
 
-void TracerBase::AssignAllMaterials()
-{}
+void TracerBase::AttachLogic(TracerBaseLogicI& logic)
+{
+	// Init and set Tracer System
+	TracerError e = TracerError::OK;
+	if((e = logic.Initialize()) != TracerError::OK)
+	{
+		if(callbacks) callbacks->SendError(e);
+	}
+	currentLogic = &logic;
 
-void TracerBase::AssignMaterial(uint32_t matId)
-{}
+	// Initialize RNG Memory
+	rngMemory = RNGMemory(logic.Seed());
+}
 
-void TracerBase::UnassignAllMaterials()
-{}
-
-void TracerBase::UnassignMaterial(uint32_t matId)
-{}
-
-void TracerBase::GenerateCameraRays(const CameraPerspective& camera,
-									const uint32_t samplePerPixel)
+void TracerBase::GenerateInitialRays(const GPUScene& scene,
+									 int cameraId,
+									 int samplePerLocation)
 {
 	if(!healthy) return;
 
-	// Initial ray count
-	currentRayCount = outputImage.SegmentSize()[0] *
-					  outputImage.SegmentSize()[1] *
-					  samplePerPixel * samplePerPixel;
-
-	// Allocate enough space for ray
-	rayMemory.ResizeRayOut(currentRayCount, tracerSystem->PerRayAuxDataSize());
-
 	// Delegate camera ray generation to tracer system
-	tracerSystem->GenerateCameraRays(rayMemory, rngMemory,
-									 camera, samplePerPixel,
-									 outputImage.Resolution(),
-									 outputImage.SegmentOffset(),
-									 outputImage.SegmentSize());
-
-	
+	currentRayCount = static_cast<uint32_t>(currentLogic->GenerateRays(rayMemory, rngMemory,
+																	   scene, cameraId, samplePerLocation,
+																	   outputImage.Resolution(),
+																	   outputImage.SegmentOffset(),
+																	   outputImage.SegmentSize()));
 
 	// You can only write to out buffer of the ray memory
 	// Make that memory in rays for hit/shade system
@@ -363,27 +341,18 @@ void TracerBase::FinishSamples()
 	if(!healthy) return;
 }
 
-bool TracerBase::IsCrashed()
-{
-	return (!healthy);
-}
-
-void TracerBase::AddMaterialRays(const RayCPU&, const HitCPU&,
-								 uint32_t rayCount, uint32_t matId)
-{}
-
 void TracerBase::SetImagePixelFormat(PixelFormat f)
 {
 	outputImage.SetPixelFormat(f);
 }
 
-void TracerBase::ReportionImage(const Vector2ui& offset,
-								const Vector2ui& size)
+void TracerBase::ReportionImage(Vector2i start,
+								Vector2i end)
 {
-	outputImage.Reportion(offset, size);
+	outputImage.Reportion(start, end);
 }
 
-void TracerBase::ResizeImage(const Vector2ui& resolution)
+void TracerBase::ResizeImage(Vector2i resolution)
 {
 	outputImage.Resize(resolution);
 }

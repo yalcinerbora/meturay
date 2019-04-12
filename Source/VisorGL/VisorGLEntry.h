@@ -9,4 +9,4 @@
 #include <memory>
 #include "RayLib/VisorI.h"
 
-METU_SHARED_VISORGL_ENTRY_POINT std::unique_ptr<VisorViewI> CreateVisorGL(const VisorOptions&);
+METU_SHARED_VISORGL_ENTRY_POINT std::unique_ptr<VisorI> CreateVisorGL(const VisorOptions&);

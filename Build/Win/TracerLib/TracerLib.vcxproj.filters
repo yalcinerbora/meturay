@@ -68,6 +68,7 @@
       <Filter>Default Primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\SceneFileNode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -95,9 +96,6 @@
       <Filter>GPU Logic Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialI.h">
-      <Filter>GPU Logic Interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerI.h">
       <Filter>GPU Logic Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicI.h">
@@ -205,6 +203,7 @@
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\SceneFileNode.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

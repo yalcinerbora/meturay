@@ -73,9 +73,6 @@ class ConstantBoundaryMat final
 		SceneError					InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time) override;
 		SceneError					ChangeTime(const std::set<SceneFileNode>& materialNodes, double time) override;
 
-		// Load/Unload Material			
-		void						LoadMaterial(uint32_t materialId, int gpuId) override;
-		void						UnloadMaterial(uint32_t material) override;
 		// Material Queries
 		int							InnerId(uint32_t materialId) const override;
 		bool						IsLoaded(uint32_t materialId) const override;
@@ -113,9 +110,6 @@ class BasicMat final
 		SceneError						InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time) override;
 		SceneError						ChangeTime(const std::set<SceneFileNode>& materialNodes, double time) override;
 
-		// Load/Unload Material					
-		void							LoadMaterial(uint32_t materialId, int gpuId) override;
-		void							UnloadMaterial(uint32_t material) override;
 		// Material Queries
 		int								InnerId(uint32_t materialId) const override;
 		bool							IsLoaded(uint32_t materialId) const override;

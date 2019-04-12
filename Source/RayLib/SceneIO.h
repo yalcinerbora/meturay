@@ -11,7 +11,7 @@ Scene file json interpeter and writer
 #include "SceneStructs.h"
 
 #include <fstream>
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
 struct CameraPerspective;
 

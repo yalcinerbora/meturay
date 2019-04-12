@@ -20,16 +20,6 @@ SceneError GIAlbedoMat::ChangeTime(const std::set<SceneFileNode>& materialNodes,
 	return SceneError::OK;
 }
 
-void GIAlbedoMat::LoadMaterial(uint32_t materialId, int gpuId)
-{
-	// Consider Textures here since no textures are avail ignore
-}
-
-void GIAlbedoMat::UnloadMaterial(uint32_t material)
-{
-	// Consider Textures here since no textures are avail ignore
-}
-
 int GIAlbedoMat::InnerId(uint32_t materialId) const
 {
 	return 0;

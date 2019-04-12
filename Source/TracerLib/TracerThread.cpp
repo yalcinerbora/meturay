@@ -1,17 +1,18 @@
 #include "TracerThread.h"
-#include "TracerI.h"
+
+#include "RayLib/TracerI.h"
 #include "RayLib/Log.h"
 
 void TracerThread::InitialWork()
 {
-	tracer.Initialize(logic);
+	tracer.AttachLogic(logic);
 }
 
 void TracerThread::LoopWork()
 {
 	// Check if data is changed
 	CameraPerspective newCam;
-	Vector2ui newResolution;
+	Vector2i newResolution;
 	std::string newScene;
 	uint32_t newSample;
 	TracerOptions newOptions;
@@ -46,11 +47,9 @@ void TracerThread::LoopWork()
 	// Continue when signal applies
 
 
-
-
 	// Initialize Rays
 	// Camera ray generation
-	tracer.GenerateCameraRays(newCam, newSample);
+	//tracer.GenerateCameraRays(newCam, newSample);
 				
 	//=====================//
 	//		RenderLoop	   //
@@ -73,7 +72,8 @@ void TracerThread::FinalWork()
 
 bool TracerThread::InternallyTerminated() const
 {
-	return tracer.IsCrashed();
+//	return tracer.IsCrashed();
+	return false;
 }
 
 // State Change
@@ -82,7 +82,7 @@ void TracerThread::ChangeCamera(const CameraPerspective& persp)
 	camera = persp;
 }
 
-void TracerThread::ChangeResolution(const Vector2ui& res)
+void TracerThread::ChangeResolution(const Vector2i& res)
 {
 	resolution = res;
 }
@@ -107,8 +107,8 @@ void TracerThread::ChangeTime(double seconds)
 	time = seconds;
 }
 
-void TracerThread::ChangeImageSegment(const Vector2ui& pixelStart,
-									  const Vector2ui& pixelCount)
+void TracerThread::ChangeImageSegment(const Vector2i& pixelStart,
+									  const Vector2i& pixelEnd)
 {
-	segment = {pixelStart, pixelCount};
+	//segment = {pixelStart, pixelEnd};
 }

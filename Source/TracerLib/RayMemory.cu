@@ -185,14 +185,15 @@ void RayMemory::ResetHitMemory(size_t rayCount, size_t hitStructSize)
 	// uses backbuffer ids other half as auxiliary buffer
 	// This code tries to increase it accordingly
 	size_t sizeOfTempMemory = std::max(sortTempMemorySize, selectTempMemorySize);
-	sizeOfTempMemory = (AlignByteCount * ((selectTempMemorySize + (AlignByteCount - 1)) / AlignByteCount));
+	sizeOfTempMemory = (AlignByteCount * ((sizeOfTempMemory + (AlignByteCount - 1)) / AlignByteCount));
 
 	// Finally allocate
 	size_t requiredSize = ((sizeOfIds + sizeOfAcceleratorKeys) * 2 +
 						   sizeOfMaterialKeys +
 						   sizeOfTransformIds +
 						   sizeOfPrimitiveIds +
-						   sizeOfHitStructs);
+						   sizeOfHitStructs + 
+						   sizeOfTempMemory);
 
 	// Reallocate if memory is not enough
 	if(memHit.Size() < requiredSize)

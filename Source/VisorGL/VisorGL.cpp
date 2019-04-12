@@ -357,40 +357,94 @@ GLenum VisorGL::PixelFormatToSizedGL(PixelFormat f)
 	return TypeList[static_cast<int>(f)];
 }
 
+GLenum VisorGL::PixelFormatToTypeGL(PixelFormat f)
+{
+	static constexpr GLenum TypeList[static_cast<int>(PixelFormat::END)] =
+	{
+		GL_UNSIGNED_BYTE,
+		GL_UNSIGNED_BYTE,
+		GL_UNSIGNED_BYTE,
+		GL_UNSIGNED_BYTE,
+
+		GL_UNSIGNED_SHORT,
+		GL_UNSIGNED_SHORT,
+		GL_UNSIGNED_SHORT,
+		GL_UNSIGNED_SHORT,
+
+		GL_SHORT,  // TODO: Wrong
+		GL_SHORT,  // TODO: Wrong
+		GL_SHORT,  // TODO: Wrong
+		GL_SHORT,  // TODO: Wrong
+
+		GL_FLOAT,
+		GL_FLOAT,
+		GL_FLOAT,
+		GL_FLOAT
+	};
+	return TypeList[static_cast<int>(f)];
+}
+
 void VisorGL::ProcessCommand(const VisorGLCommand& c)
 {
+	const Vector2i size = c.end - c.start;
+
 	switch(c.type)
 	{
 		case VisorGLCommand::RESET_IMAGE:
 		{
-			// Unbind and Delete
-			glBindTexture(GL_TEXTURE_2D, 0);
-			glDeleteTextures(1, &texture);
-			glGenTextures(1, &texture);
-
-			// Set Storage
-			glBindTexture(GL_TEXTURE_2D, texture);
-			glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(c.format),
-						   c.startOrSize[0], c.startOrSize[1]);
-
-			// Clear with black
-			GLuint clearData[4] = {0, 0, 0, 0};
-			glClearTexImage(GL_TEXTURE_2D, 1, GL_RGBA, GL_UNSIGNED_INT, clearData);
-
-			texPixFormat = c.format;
+			// Just clear the sample count to zero
+			const GLuint clearData = 0;
+			glBindTexture(GL_TEXTURE_2D, sampleCountTexture);			
+			glClearTexSubImage(GL_TEXTURE_2D, 0, c.start[0], c.start[1], 0,
+							   size[0], size[1], 1, 
+							   GL_R, GL_UNSIGNED_INT, &clearData);
 			break;
 		}
 		case VisorGLCommand::SET_PORTION:
 		{
-			Vector2i size = c.end - c.startOrSize;
-
-			glBindTexture(GL_TEXTURE_2D, texture);
+			// Copy (Let OGL do the conversion)
+			glBindTexture(GL_TEXTURE_2D, bufferTexture);
 			glTexSubImage2D(GL_TEXTURE_2D, 1,
-							c.startOrSize[0], c.startOrSize[1],
-							size[0], size[1],
-							PixelFormatToGL(texPixFormat),
-							GL_FLOAT,
+							0, 0, size[0], size[1],
+							PixelFormatToGL(c.format),
+							PixelFormatToTypeGL(c.format),
 							c.data.data());
+
+			// After Copy
+			// Accumulate data
+			int nextIndex = (currentIndex + 1) % 2;
+			GLuint outTexture = outputTextures[currentIndex];
+			GLuint inTexture = outputTextures[nextIndex];
+
+			// Shader
+			compAccum.Bind();
+
+			// Textures
+			glActiveTexture(GL_TEXTURE0 + T_IN_BUFFER);
+			glBindTexture(GL_TEXTURE_2D, bufferTexture);
+			glActiveTexture(GL_TEXTURE0 + T_IN_COLOR);
+			glBindTexture(GL_TEXTURE_2D, inTexture);
+	
+			// Images
+			glBindImageTexture(I_SAMPLE, sampleCountTexture,
+							   0, false, 0, GL_READ_WRITE, GL_R32I);
+			glBindImageTexture(I_OUT_COLOR, outTexture,
+							   0, false, 0, GL_WRITE_ONLY, PixelFormatToSizedGL(texPixFormat));
+
+			// Uniforms
+			glUniform2iv(U_RES, 1, static_cast<const int*>(imageRes));
+			glUniform2iv(U_START, 1, static_cast<const int*>(c.start));
+			glUniform2iv(U_END, 1, static_cast<const int*>(c.end));
+			glUniform1i(U_SAMPLE, c.sampleCount);
+
+			// Call
+			GLuint gridX = (imageRes[0] + 16 - 1) / 16;
+			GLuint gridY = (imageRes[1] + 16 - 1) / 16;
+			glDispatchCompute(gridX, gridY, 1);
+			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+			// Swap input and output
+			currentIndex = nextIndex;
 			break;
 		}
 	};
@@ -404,16 +458,36 @@ void VisorGL::RenderImage()
 	{
 		glViewport(0, 0, size[0], size[1]);
 	}
+
+	// Clear Buffer
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	// Bind Shaders
+	vertPP.Bind();
+	fragPP.Bind();
+
+	// Bind Texture
+	glActiveTexture(GL_TEXTURE0 + T_IN_COLOR);
+	glBindTexture(GL_TEXTURE_2D, outputTextures[currentIndex]);
+	
 	// Draw
-	//glDrawArrays(GL_TRIANGLES, 0, 3);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 VisorGL::VisorGL(const VisorOptions& opts)
-	: input(nullptr)
+	: callbacks(nullptr)
+	, input(nullptr)
 	, window(nullptr)
 	, open(false)
 	, commandList(opts.eventBufferSize)
+	, outputTextures{0, 0}
+	, sampleCountTexture(0)
+	, currentIndex(0)
+	, texPixFormat(opts.iFormat)
+	, linearSampler(0)
+	, vBuffer(0)
+	, vao(0)
+	, vOpts(opts)
 {
 	if(instance != nullptr) return;
 	instance = this;
@@ -436,7 +510,7 @@ VisorGL::VisorGL(const VisorOptions& opts)
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
 
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -496,7 +570,7 @@ VisorGL::VisorGL(const VisorOptions& opts)
 	METU_LOG("Device\t: %s", glGetString(GL_RENDERER));
 	METU_LOG("");
 
-	if constexpr (IS_DEBUG_MODE)
+	if constexpr(IS_DEBUG_MODE)
 	{
 		// Add Callback
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -526,10 +600,25 @@ VisorGL::VisorGL(const VisorOptions& opts)
 	// Shaders
 	vertPP = ShaderGL(ShaderType::VERTEX, "Shaders/PProcessGeneric.vert");
 	fragPP = ShaderGL(ShaderType::VERTEX, "Shaders/PProcessGeneric.frag");
+	compAccum = ShaderGL(ShaderType::COMPUTE, "Shaders/AccumInput.comp");
 
-	// Texture
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	// Textures
+	// Buffered output textures
+	glGenTextures(2, outputTextures);
+	for(int i = 0; i < 2; i++)
+	{
+		glBindTexture(GL_TEXTURE_2D, outputTextures[i]);
+		glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(opts.iFormat),
+					   opts.iSize[0], opts.iSize[1]);
+	}
+	// Sample count texture
+	glGenTextures(1, &sampleCountTexture);
+	glBindTexture(GL_TEXTURE_2D, sampleCountTexture);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32I,
+				   opts.iSize[0], opts.iSize[1]);
+	// Buffer input texture
+	glGenTextures(1, &bufferTexture);
+	glBindTexture(GL_TEXTURE_2D, bufferTexture);
 	glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(opts.iFormat),
 				   opts.iSize[0], opts.iSize[1]);
 
@@ -539,6 +628,11 @@ VisorGL::VisorGL(const VisorOptions& opts)
 	glSamplerParameteri(linearSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	// Buffer
+	glGenBuffers(1, &vBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6, PostProcessTriData, GL_STATIC_DRAW);
+
+	// Vertex Buffer
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	glBindVertexBuffer(0, vBuffer, 0, sizeof(float) * 2);
@@ -557,16 +651,10 @@ VisorGL::VisorGL(const VisorOptions& opts)
 	glColorMask(true, true, true, true);
 	glDepthMask(false);
 	glStencilMask(false);
+
+	// Sampler
+	glBindSampler(T_IN_COLOR, linearSampler);
 	
-	// Bind Shaders
-	vertPP.Bind();
-	fragPP.Bind();
-
-	// Bind Texture & Sampler
-	glActiveTexture(GL_TEXTURE0 + T_INPUT);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glBindSampler(T_INPUT, linearSampler);
-
 	// Bind VAO
 	glBindVertexArray(vao);
 
@@ -577,16 +665,10 @@ VisorGL::VisorGL(const VisorOptions& opts)
 
 VisorGL::~VisorGL()
 {
+	// TODO: Delete buffers etc..
 	if(window != nullptr) glfwDestroyWindow(window);
 	glfwTerminate();
 }
-
-//VisorGL& VisorGL::Instance()
-//{
-//	if(instance == nullptr)
-//		instance = std::make_unique<VisorGL>();
-//	return *instance;
-//}
 
 bool VisorGL::IsOpen()
 {
@@ -620,28 +702,45 @@ void VisorGL::SetInputScheme(VisorInputI* i)
 	input = i;
 }
 
-void VisorGL::ResetImageBuffer(const Vector2i& imageSize, PixelFormat f)
+void VisorGL::SetCallbacks(VisorCallbacksI* cb)
 {
+	callbacks = cb;
+}
+
+void VisorGL::ResetSamples(Vector2i start, Vector2i end)
+{
+	end = Vector2i::Min(end, imageRes);
+
 	VisorGLCommand command;
 	command.type = VisorGLCommand::RESET_IMAGE;
-	command.format = f;
-	command.startOrSize = imageSize;
-
+	command.format = texPixFormat;
+	command.start = start;
+	command.end = end;
+	
 	commandList.Enqueue(std::move(command));
 }
 
-void VisorGL::SetImagePortion(const Vector2i& start,
-							  const Vector2i& end,
-							  const std::vector<float> data)
+void VisorGL::AccumulatePortion(const std::vector<Byte> data,
+								PixelFormat f, int sampleCount,
+								Vector2i start,
+								Vector2i end)
 {
+	end = Vector2i::Min(end, imageRes);
 
 	VisorGLCommand command;
 	command.type = VisorGLCommand::SET_PORTION;
-	command.startOrSize = start;
+	command.start = start;
 	command.end = end;
+	command.format = f;
+	command.sampleCount = sampleCount;
 	command.data = std::move(data);
 	
 	commandList.Enqueue(std::move(command));
+}
+
+const VisorOptions& VisorGL::VisorOpts() const
+{
+	return vOpts;
 }
 
 void VisorGL::SetWindowSize(const Vector2i& size)

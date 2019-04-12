@@ -14,7 +14,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{DFCD1274-CD37-4E84-A1DC-96F619B04EEA}</ProjectGuid>
     <RootNamespace>RayLib</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -32,7 +32,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.props" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.1.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -124,8 +124,10 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\RayLib\AABB.h" />
     <ClInclude Include="..\..\..\Source\RayLib\AABB.hpp" />
+    <ClInclude Include="..\..\..\Source\RayLib\AnalyticData.h" />
     <ClInclude Include="..\..\..\Source\RayLib\AnalyticNodeI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\CommandCallbacksI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CompileTimeString.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Constants.h" />
     <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h" />
@@ -134,7 +136,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\LoopingThreadI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\MeshI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaCheck.h" />
@@ -150,7 +151,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\Ray.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Ray.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneError.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\SceneFileNode.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SelfNode.h" />
@@ -160,12 +160,15 @@
     <ClInclude Include="..\..\..\Source\RayLib\PrimitiveDataTypes.h" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ThreadData.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\TracerNodeI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\TracerCallbacksI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\TracerI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\TracerNode.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerError.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Triangle.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Types.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\VisorNodeI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\VisorCallbacksI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\VisorNode.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\ArrayPortion.h" />
@@ -194,6 +197,6 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.1.targets" />
   </ImportGroup>
 </Project>

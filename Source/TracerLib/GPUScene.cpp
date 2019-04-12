@@ -2,14 +2,15 @@
 
 #include "RayLib/SceneIO.h"
 #include "RayLib/Types.h"
-#include "RayLib/SceneFileNode.h"
 
 #include "TracerLogicI.h"
 #include "GPUAcceleratorI.h"
 #include "GPUPrimitiveI.h"
 #include "GPUMaterialI.h"
 #include "TracerLogicGeneratorI.h"
+#include "SceneFileNode.h"
 
+#include <nlohmann/json.hpp>
 #include <filesystem>
 #include <set>
 
@@ -26,28 +27,72 @@ SceneError GPUScene::OpenFile(const std::string& fileName)
 
 	if(!file.is_open()) return SceneError::FILE_NOT_FOUND;
 	// Parse Json
-	file >> sceneJson;
+	sceneJson = new nlohmann::json();
+	file >> (*sceneJson);
 	return SceneError::OK;
 }
 
 GPUScene::GPUScene(const std::string& fileName,
-				   const std::vector<std::vector<CudaGPU>>&,
+				   const std::vector<CudaGPU>& gpuList,
 				   TracerLogicGeneratorI& lg)
 	: logicGenerator(lg)
 	, gpuList(gpuList)
-	, maxAccelIds(Zero2i)
-	, maxMatIds(Zero2i)
+	, maxAccelIds(Vector2i(-1))
+	, maxMatIds(Vector2i(-1))
 	, fileName(fileName)
 	, currentTime(0.0)
 	, dLights(nullptr)
 	, dTransforms(nullptr)
+	, sceneJson(nullptr)
 {}
+
+GPUScene::GPUScene(GPUScene&& other)
+	: logicGenerator(other.logicGenerator)
+	, gpuList(other.gpuList)
+	, maxAccelIds(other.maxAccelIds)
+	, maxMatIds(other.maxMatIds)
+	, memory(std::move(other.memory))
+	, cameraMemory(std::move(other.cameraMemory))
+	, sceneJson(other.sceneJson)
+	, fileName(other.fileName)
+	, currentTime(other.currentTime)
+	, requiredAccelGroupListings(std::move(other.requiredAccelGroupListings))
+	, requiredMatBatchListings(std::move(other.requiredMatBatchListings))
+	, surfaceListings(std::move(other.surfaceListings))
+	, dLights(other.dLights)
+	, dTransforms(other.dTransforms)
+{}
+
+//GPUScene& GPUScene::operator=(GPUScene&& other)
+//{
+//	assert(this != &other);
+//	logicGenerator = std::move(other.logicGenerator);
+//	gpuList = std::move(other.gpuList);
+//	maxAccelIds = other.maxAccelIds;
+//	maxMatIds = other.maxMatIds;
+//	memory = std::move(other.memory);
+//	cameraMemory = std::move(other.cameraMemory);
+//	sceneJson = other.sceneJson;
+//	fileName = other.fileName;
+//	currentTime = other.currentTime;
+//	requiredAccelGroupListings = std::move(other.requiredAccelGroupListings);
+//	requiredMatBatchListings = std::move(other.requiredMatBatchListings);
+//	surfaceListings = std::move(other.surfaceListings);
+//	dLights = other.dLights;
+//	dTransforms = other.dTransforms;
+//	return *this;
+//}
+
+GPUScene::~GPUScene()
+{
+	if(sceneJson) delete sceneJson;
+}
 
 bool GPUScene::FindNode(nlohmann::json& jsn, const char* c)
 {
-	auto i = sceneJson.find(c);
+	auto i = sceneJson->find(c);
 	jsn = *i;
-	return (i != sceneJson.end());
+	return (i != sceneJson->end());
 };
 
 SceneError GPUScene::GenIdLookup(std::map<uint32_t, uint32_t>& result,
@@ -120,7 +165,7 @@ SceneError GPUScene::GenerateConstructionData(// Group Data
 				else primGroupType = currentType;
 				auto& primSet = primGroupNodes.emplace(primGroupType,
 													   std::set<SceneFileNode>()).first->second;
-				primSet.emplace(SceneFileNode{primId, jsnNode});
+				primSet.emplace(jsnNode, primId);
 			}
 			else return SceneError::PRIMITIVE_ID_NOT_FOUND;
 
@@ -131,7 +176,7 @@ SceneError GPUScene::GenerateConstructionData(// Group Data
 				matGroupType = jsnNode[SceneIO::TYPE];
 				auto& matSet = matGroupNodes.emplace(matGroupType,
 													   std::set<SceneFileNode>()).first->second;
-				matSet.emplace(SceneFileNode{matId, jsnNode});
+				matSet.emplace(jsnNode, matId);
 
 				// Generate its mat batch also
 				MatBatchData batchData = MatBatchData
@@ -215,11 +260,10 @@ SceneError GPUScene::PartitionSceneData(double time)
 	RequestedMatBatches		materialBatches;
 	MatBatchGPUPairings		gpuIdPairings;
 
-	// TODO: Implement Multi-GPU Multi-PC partition code
+	// TODO: Implement Multi-GPU partition code
 	//=============================================================
 	assert(gpuList.size() == 1);
-	assert(gpuList[0].size() == 1);
-
+	
 	// Single GPU code
 	int boundaryMatGPUId = 0;
 	// First do materials
@@ -294,7 +338,6 @@ SceneError GPUScene::AssignMaterials(double time,
 	{
 		const auto& materialBatch = *matBatchIt;
 		const auto& gpuId = *gpuIdIt;
-
 		//
 		//const std::string& matGroupName = materialBatch.first;
 		const std::string& matTName = materialBatch.second.matType;
@@ -311,31 +354,25 @@ SceneError GPUScene::AssignMaterials(double time,
 													 gpuId.second)) != SceneError::OK)
 			return e;
 
-		// Allocation of Requested Materials on GPUs
-		for(const uint32_t matId : materialBatch.second.matIds)
-		{
-			mGroup->LoadMaterial(matId, gpuId.second);
-		}
-
 		matBatchIt++;
 		gpuIdIt++;
 	}
 
 	// Attach Outside Material
-	auto outMatNode = sceneJson.find(SceneIO::BASE_OUTSIDE_MATERIAL);
-	if(outMatNode == sceneJson.end()) return SceneError::OUTSIDE_MAT_NODE_NOT_FOUND;
+	auto outMatNode = sceneJson->find(SceneIO::BASE_OUTSIDE_MATERIAL);
+	if(outMatNode == sceneJson->end()) return SceneError::OUTSIDE_MAT_NODE_NOT_FOUND;
 	const nlohmann::json& node = *outMatNode;
 	const std::string matTypeName = node[SceneIO::TYPE];
 
 	// Generate its batch also
 	GPUMaterialGroupI* matGroup;
-	if((e = logicGenerator.GetOutsideMaterial(matGroup,
-											  matTypeName,
+	if((e = logicGenerator.GetOutsideMaterial(matGroup, matTypeName,
 											  outsideMaterialGPUId)) != SceneError::OK)
 		return e;
 
 	// Initialize
-	std::set<SceneFileNode> groupNodes = {SceneFileNode{node}};
+	SceneFileNode s(node);
+	std::set<SceneFileNode> groupNodes = { std::move(s) };
 	if((e = matGroup->InitializeGroup(groupNodes, time)) != SceneError::OK)
 		return e;
 	return SceneError::OK;
@@ -401,7 +438,7 @@ SceneError GPUScene::AssignAccelerators(double time,
 
 	// Find Base Accelerator Type and generate
 	nlohmann::json baseAccel;
-	if(FindNode(baseAccel, SceneIO::BASE_ACCELERATOR_BASE))
+	if(!FindNode(baseAccel, SceneIO::BASE_ACCELERATOR_BASE))
 		return SceneError::BASE_ACCELERATOR_NODE_NOT_FOUND;
 	const std::string baseAccelType = baseAccel;
 
@@ -504,6 +541,11 @@ SceneError GPUScene::LoadLogicRelated(double time)
 	if((e = PartitionSceneData(time)) != SceneError::OK)
 		return e;
 	
+	// MaxIds are generated but those are inclusive
+	// Make them exclusve
+	maxAccelIds += Vector2i(1);
+	maxMatIds += Vector2i(1);
+
 	// All of the data is generated
 	return SceneError::OK;
 }
@@ -580,17 +622,17 @@ Vector2i GPUScene::MaxAccelIds()
 	return maxAccelIds;
 }
 
-const LightStruct* GPUScene::LightsGPU()
+const LightStruct* GPUScene::LightsGPU() const
 {
 	return dLights;
 }
 
-const TransformStruct* GPUScene::TransformsGPU()
+const TransformStruct* GPUScene::TransformsGPU() const
 {
 	return dTransforms;
 }
 
-const CameraPerspective* GPUScene::CamerasCPU()
+const CameraPerspective* GPUScene::CamerasCPU() const
 {
 	return cameraMemory.data();
 }

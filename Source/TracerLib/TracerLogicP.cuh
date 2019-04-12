@@ -1,5 +1,7 @@
 #pragma once
 
+#include "RayLib/Constants.h"
+
 #include "TracerLogicI.h"
 #include "GPUPrimitiveI.h"
 #include "AuxiliaryDataKernels.cuh"
@@ -27,7 +29,7 @@ class TracerBaseLogic : public TracerBaseLogicI
 		const TracerParameters				params;
 		uint32_t							hitStructMaxSize;
 		//
-		const RayAuxData					initalValues;
+		const RayAuxData					initialValues;
 		// Mappings for Kernel Calls (A.K.A. Batches)
 		GPUBaseAcceleratorI&				baseAccelerator;
 		const AcceleratorBatchMappings&		accelerators;
@@ -49,14 +51,6 @@ class TracerBaseLogic : public TracerBaseLogicI
 		virtual								~TracerBaseLogic() = default;
 
 		// Interface
-		// Generate Camera Rays
-		void								GenerateCameraRays(RayMemory&, RNGMemory&,
-															   const CameraPerspective& camera,
-															   const uint32_t samplePerPixel,
-															   const Vector2ui& resolution,
-															   const Vector2ui& pixelStart,
-															   const Vector2ui& pixelCount) override;
-
 		// Interface fetching for logic
 		GPUBaseAcceleratorI&				BaseAcelerator() override { return baseAccelerator; }
 		const AcceleratorBatchMappings&		AcceleratorBatches() override { return accelerators; }
@@ -88,21 +82,23 @@ TracerBaseLogic<RayAuxD, AuxF>::TracerBaseLogic(GPUBaseAcceleratorI& baseAcceler
 												uint32_t hitStructSize,
 												const Vector2i maxMats,
 												const Vector2i maxAccels)
-	: baseAccelerator(baseAccelerator)
+	: optsShade(TracerConstants::DefaultShadeOptions)
+	, optsHit(TracerConstants::DefaultHitOptions)
+	, baseAccelerator(baseAccelerator)
 	, accelerators(a)
 	, materials(m)
 	, params(params)
-	, hitStructMaxSize(hitStructMaxSize)
-	, initalValues(initalValues)
+	, hitStructMaxSize(hitStructSize)
+	, initialValues(initialValues)
 	, maxAccelBits(Zero2i)
 	, maxMatBits(Zero2i)
 {
 	// Change count to bit
-	maxMatBits[0] = std::bitset<sizeof(int) * 8>(maxMats[0]).count();
-	maxMatBits[1] = std::bitset<sizeof(int) * 8>(maxMats[1]).count();
+	maxMatBits[0] = static_cast<int>(std::bitset<sizeof(int) * 8>(maxMats[0]).count());
+	maxMatBits[1] = static_cast<int>(std::bitset<sizeof(int) * 8>(maxMats[1]).count());
 
-	maxAccelBits[0] = std::bitset<sizeof(int) * 8>(maxAccels[0]).count();
-	maxAccelBits[1] = std::bitset<sizeof(int) * 8>(maxAccels[1]).count();
+	maxAccelBits[0] = static_cast<int>(std::bitset<sizeof(int) * 8>(maxAccels[0]).count());
+	maxAccelBits[1] = static_cast<int>(std::bitset<sizeof(int) * 8>(maxAccels[1]).count());
 }
 
 template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>		
@@ -115,26 +111,4 @@ template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>
 const Vector2i TracerBaseLogic<RayAuxD, AuxF>::SceneAcceleratorMaxBits() const
 {
 	return maxAccelBits;
-}
-
-template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>
-	void TracerBaseLogic<RayAuxD, AuxF>::GenerateCameraRays(RayMemory& rayMem, RNGMemory& rngMem,
-															const CameraPerspective& camera,
-															const uint32_t samplePerPixel,
-															const Vector2ui& resolution,
-															const Vector2ui& pixelStart,
-															const Vector2ui& pixelCount)
-{
-	int deviceId = 0;
-	KCGenerateCameraRays<RayAuxData, AuxF><<<1, 1>>>(rayMem.RaysOut(),
-												     rayMem.RayAuxOut<RayAuxData>(),
-												     // Input
-												     rngMem.RNGData(deviceId),
-												     camera,
-												     samplePerPixel,
-												     resolution,
-												     pixelStart,
-												     pixelCount,
-												     // Data to initialize auxiliary base data
-												     initalValues);
 }

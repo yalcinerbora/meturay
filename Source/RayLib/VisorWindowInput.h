@@ -13,8 +13,6 @@
 #include "RayLib/Camera.h"
 #include "ThreadData.h"
 
-class VisorNodeI;
-
 class VisorWindowInput : public VisorInputI
 {
 	private:
@@ -30,21 +28,26 @@ class VisorWindowInput : public VisorInputI
 		double							mouseX;
 		double							mouseY;
 		double							currentRatio;
+
+
+		// Scene Times
 		unsigned int					currentFPS;
 
+
 		CameraPerspective				camera;
-		VisorNodeI&						visorDelegate;
+		VisorCallbacksI*				visorCallbacks;
 
 	protected:
 	public:
 		// Constructor & Destructor
 								VisorWindowInput(double sensitivity,
 												 double moveRatio,
-												 double moveRatioModifier,
-												 VisorNodeI&);
+												 double moveRatioModifier);
 								~VisorWindowInput() = default;
 
 		// Implementation		
+		void					AttachVisorCallback(VisorCallbacksI&) override;
+
 		void					WindowPosChanged(int posX, int posY) override;
 		void					WindowFBChanged(int fbWidth, int fbHeight) override;
 		void					WindowSizeChanged(int width, int height) override;

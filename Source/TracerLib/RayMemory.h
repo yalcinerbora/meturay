@@ -14,7 +14,6 @@ General Device memory manager for ray and it's auxiliary data
 #include "DeviceMemory.h"
 #include "RayStructs.h"
 
-
 template<class T>
 using RayPartitions = std::set<ArrayPortion<T>>;
 
@@ -173,7 +172,7 @@ inline RayGMem* RayMemory::RaysOut()
 template<class T>
 inline T* RayMemory::RayAuxOut()
 {
-	return static_cast<T*>(dRayAuxIn);
+	return static_cast<T*>(dRayAuxOut);
 }
 
 inline HitStructPtr RayMemory::HitStructs()

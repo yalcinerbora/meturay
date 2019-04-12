@@ -27,7 +27,7 @@
       <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\VisorI.h">
-      <Filter>Render Interfaces</Filter>
+      <Filter>Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Log.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MayaCacheIO.h">
@@ -43,7 +43,7 @@
       <Filter>Structs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\VisorInputI.h">
-      <Filter>Render Interfaces</Filter>
+      <Filter>Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\TracerStructs.h">
       <Filter>Structs</Filter>
@@ -56,9 +56,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\ArrayPortion.h">
       <Filter>Structs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\MeshI.h">
-      <Filter>Render Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\VisorWindowInput.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneIO.h">
@@ -104,9 +101,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceDataIO.h">
       <Filter>FileI-O</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\SceneFileNode.h">
-      <Filter>Structs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\ObjectFuncDefinitions.h">
       <Filter>System</Filter>
     </ClInclude>
@@ -135,14 +129,29 @@
     <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h">
       <Filter>Distributor</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\TracerNodeI.h">
-      <Filter>Nodes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\VisorNodeI.h">
-      <Filter>Nodes</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\SelfNode.h">
       <Filter>Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\VisorNode.h">
+      <Filter>Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerNode.h">
+      <Filter>Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\CommandCallbacksI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\VisorCallbacksI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerCallbacksI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\AnalyticData.h">
+      <Filter>Structs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -167,14 +176,14 @@
     <Filter Include="Math">
       <UniqueIdentifier>{4701e9e3-7079-4316-af75-17b80bd69e82}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Render Interfaces">
-      <UniqueIdentifier>{ffc61ecf-ed27-41a3-841d-51e14123abab}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Nodes">
       <UniqueIdentifier>{23956a57-33b5-4e95-85d0-847ecec816e2}</UniqueIdentifier>
     </Filter>
     <Filter Include="Distributor">
       <UniqueIdentifier>{eaa1da4c-461c-449c-a75c-0b3d26c4967d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interfaces">
+      <UniqueIdentifier>{ffc61ecf-ed27-41a3-841d-51e14123abab}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

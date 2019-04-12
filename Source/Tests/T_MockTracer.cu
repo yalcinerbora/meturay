@@ -20,6 +20,7 @@ using namespace std::chrono_literals;
 
 #include "TracerLib/TracerLoader.h"
 
+
 struct RayAuxGMem {};
 
 //template <class RayAuxGMem, class RayAuxBaseData>
@@ -28,9 +29,9 @@ __device__ void AuxInitEmpty(RayAuxGMem*,
 							 // Input
 							 const RayAuxGMem,
 							 // Index
-							 const Vector2ui& globalPixelId,
-							 const Vector2ui& localSampleId,
-							 const uint32_t samplePerPixel)
+							 const Vector2i& globalPixelId,
+							 const Vector2i& localSampleId,
+							 const uint32_t samplePerLocation)
 {}
 
 class MockTracerLogic : public TracerBaseLogicI
@@ -179,16 +180,13 @@ class MockTracerLogic : public TracerBaseLogicI
 		TracerError									Initialize() override;
 	
 		// Generate Camera Rays
-		void										GenerateCameraRays(RayMemory&, RNGMemory&,
-																	   const CameraPerspective& camera,
-																	   const uint32_t samplePerPixel,
-																	   const Vector2ui& resolution,
-																	   const Vector2ui& pixelStart,
-																	   const Vector2ui& pixelCount) override;
-		void										GenerateRays(RayMemory&, RNGMemory&,
-																 const uint32_t rayCount) override;
-
-		
+		size_t										GenerateRays(RayMemory&, RNGMemory&,
+																 const GPUScene& scene,
+																 int cameraId,
+																 int samplePerLocation,
+																 Vector2i resolution,
+																 Vector2i pixelStart = Zero2i,
+																 Vector2i pixelEnd = BaseConstants::IMAGE_MAX_SIZE) override;
 
 		// Interface fetching for logic
 		GPUBaseAcceleratorI&						BaseAcelerator() override { return *baseAccelerator; }
@@ -386,18 +384,21 @@ TracerError MockTracerLogic::Initialize()
 }
 
 
-void MockTracerLogic::GenerateCameraRays(RayMemory& rMem,
-										 RNGMemory& rngMemory,
-										 const CameraPerspective& camera,
-										 const uint32_t samplePerPixel,
-										 const Vector2ui& resolution,
-										 const Vector2ui& pixelStart,
-										 const Vector2ui& pixelCount)
-{}
+size_t MockTracerLogic::GenerateRays(RayMemory&, RNGMemory&,
+									 const GPUScene& scene,
+									 int cameraId,
+									 int samplePerLocation,
+									 Vector2i resolution,
+									 Vector2i pixelStart,
+									 Vector2i pixelEnd)
+{
+	pixelEnd = Vector2i::Max(resolution, pixelEnd);
+	Vector2i pixelCount = (pixelEnd - pixelStart);
+	size_t currentRayCount = pixelCount[0] * samplePerLocation *
+							 pixelCount[1] * samplePerLocation;
+	return 0;
+}
 
-void MockTracerLogic::GenerateRays(RayMemory&, RNGMemory&,
-								   const uint32_t rayCount)
-{}
 
 MockTracerLogic::MockTracerLogic(uint32_t seed)
 	: seed(seed)
@@ -406,7 +407,7 @@ MockTracerLogic::MockTracerLogic(uint32_t seed)
 
 TEST(MockTracerTest, Test)
 {
-	constexpr Vector2ui resolution = Vector2ui(3, 3);
+	constexpr Vector2i resolution = Vector2i(3, 3);
 	constexpr uint32_t seed = 0;
 
 	// Create our mock
@@ -415,13 +416,14 @@ TEST(MockTracerTest, Test)
 	// Load Tracer DLL
 	TracerBase tracer;
 	TracerI* tracerI = &tracer;
-	tracerI->Initialize(mockLogic);
+	tracerI->Initialize(0);
 	tracerI->ResizeImage(resolution);
 	tracerI->ReportionImage();
 
 	// Generate Camera Rays
 	// Mock Tracer only cares about pixel count and sample size
-	tracerI->GenerateCameraRays(CameraPerspective{}, 1);
+	tracerI->AttachLogic(mockLogic);
+	//tracerI->GenerateInitialRays(, 0, 1);
 	// Loop until all rays are processed
 	while(tracerI->Continue())
 	{

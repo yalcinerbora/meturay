@@ -15,8 +15,10 @@ Visor
 #include <vector>
 #include "Types.h"
 #include "Vector.h"
+#include "Constants.h"
 
 class VisorInputI;
+class VisorCallbacksI;
 
 struct VisorOptions
 {
@@ -29,38 +31,33 @@ struct VisorOptions
 	Vector2i			iSize;
 };
 
-template <class T>
-class VisorSystemI
+class VisorI
 {
 	public:
-		virtual				~VisorSystemI() = default;
+		virtual							~VisorI() = default;
 
 		// Interface
-		virtual void		CreateSystem() = 0;
-		virtual void		TerminateSystem() = 0;
-		
-		//T					CreateWindow(VisorOptions);
-		//void				DestroyWindow(T&);
-};
-
-class VisorViewI
-{
-	public:
-		virtual				~VisorViewI() = default;
-
-		// Interface
-		virtual bool		IsOpen() = 0;		
-		virtual void		Render() = 0;
-		virtual void		ProcessInputs() = 0;
+		virtual bool					IsOpen() = 0;		
+		virtual void					Render() = 0;
+		virtual void					ProcessInputs() = 0;
 		// Input System
-		virtual void		SetInputScheme(VisorInputI*) = 0;
+		virtual void					SetInputScheme(VisorInputI*) = 0;
+		virtual void					SetCallbacks(VisorCallbacksI*) = 0;
 
-		// Data Related
-		virtual void		ResetImageBuffer(const Vector2i& imageSize, PixelFormat) = 0;
-		virtual void		SetImagePortion(const Vector2i& start,
-											const Vector2i& end,
-											const std::vector<float> data) = 0;
-		// Misc
-		virtual void		SetWindowSize(const Vector2i& size) = 0;
-		virtual void		SetFPSLimit(float) = 0;
+		// Data Related					
+		// Reset Data (Clears the RGB(A) Buffer of the Image)
+		// and resets total accumulated rays
+		virtual void					ResetSamples(Vector2i start = Zero2i, 
+													 Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
+		// Append incoming data from 
+		virtual void					AccumulatePortion(const std::vector<Byte> data,														  
+														  PixelFormat, int sampleCount,
+														  Vector2i start = Zero2i,
+														  Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
+		// Options
+		virtual const VisorOptions&		VisorOpts() const = 0;
+		// Misc		
+		virtual void					SetWindowSize(const Vector2i& size) = 0;
+		virtual void					SetFPSLimit(float) = 0;
+		
 };

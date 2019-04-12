@@ -33,9 +33,6 @@ class GPUMaterialGroupI
 		virtual SceneError					InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time) = 0;
 		virtual SceneError					ChangeTime(const std::set<SceneFileNode>& materialNodes, double time) = 0;
 
-		// Load/Unload Material				
-		virtual void						LoadMaterial(uint32_t materialId, int gpuId) = 0;
-		virtual void						UnloadMaterial(uint32_t material) = 0;
 		// Material Queries
 		virtual int							InnerId(uint32_t materialId) const = 0;
 		virtual bool						IsLoaded(uint32_t materialId) const = 0;
@@ -45,10 +42,10 @@ class GPUMaterialGroupI
 		virtual size_t						UsedGPUMemory(uint32_t materialId) const = 0;
 		virtual size_t						UsedCPUMemory(uint32_t materialId) const = 0;
 
-		virtual uint8_t						OutRayCount() const = 0;
+		virtual uint8_t						OutRayCount() const = 0;		
 };
 
-// Defines call group over a certain material group
+// Defines call action over a certain material group
 // The batch further specializes over a primitive logic
 // which defines how certain primitive data could be fetched
 class GPUMaterialBatchI

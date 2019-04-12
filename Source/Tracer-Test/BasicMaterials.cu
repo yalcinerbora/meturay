@@ -21,13 +21,6 @@ SceneError ConstantBoundaryMat::ChangeTime(const std::set<SceneFileNode>& materi
 	return SceneError::OK;
 }
 
-// Load/Unload Material			
-void ConstantBoundaryMat::LoadMaterial(uint32_t materialId, int gpuId)
-{}
-
-void ConstantBoundaryMat::UnloadMaterial(uint32_t material)
-{}
-
 int ConstantBoundaryMat::InnerId(uint32_t materialId) const
 {
 	return 0;
@@ -80,16 +73,6 @@ SceneError BasicMat::InitializeGroup(const std::set<SceneFileNode>& materialNode
 SceneError BasicMat::ChangeTime(const std::set<SceneFileNode>& materialNodes, double time)
 {
 	return SceneError::OK;
-}
-
-void BasicMat::LoadMaterial(uint32_t materialId, int gpuId)
-{
-	// Consider Textures here since no textures are avail ignore
-}
-
-void BasicMat::UnloadMaterial(uint32_t material)
-{
-	// Consider Textures here since no textures are avail ignore
 }
 
 int BasicMat::InnerId(uint32_t materialId) const

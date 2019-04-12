@@ -1,9 +1,12 @@
 #include "GPUPrimitiveTriangle.h"
+#include "SceneFileNode.h"
 
 #include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/SurfaceDataIO.h"
 #include "RayLib/SceneError.h"
-#include "RayLib/SceneFileNode.h"
+
+//#include <nlohmann/json.hpp>
+
 
 // Generics
 GPUPrimitiveTriangle::GPUPrimitiveTriangle()
@@ -24,6 +27,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& 
 	std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
 	for(const SceneFileNode& s : surfaceDatalNodes)
 	{
+		//const nlohmann::json& node = static_cast<const nlohmann::json&>(s);
 		loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s, time)));		
 	}
 

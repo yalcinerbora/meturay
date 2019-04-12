@@ -16,12 +16,15 @@
 #include "RayLib/TracerError.h"
 
 // Visor Realted
+#include "RayLib/VisorI.h"
 #include "RayLib/VisorWindowInput.h"
 #include "VisorGL/VisorGLEntry.h"
 
 TEST(HelloTriangle, Test)
 {
 	EnableVTMode();
+
+	static constexpr Vector2i IMAGE_RESOLUTION = { 1280, 720 };
 
 	TracerParameters tracerParams =
 	{
@@ -33,17 +36,18 @@ TEST(HelloTriangle, Test)
 	LogicInterface tracerGenerator = TracerLoader::LoadTracerLogic(testLib,
 																   "GenerateBasicTracer",
 																   "DeleteBasicTracer");
-	
+
+
 	// Generate GPU List
 	// We are a self node so only this GPU's ptrs
-	std::vector<std::vector<CudaGPU>> gpuList(1);
-	TracerError err = CudaSystem::Initialize(gpuList[0]);
+	//std::vector<CudaGPU> gpuList;
+	TracerError err = CudaSystem::Initialize();
 	if(err != TracerError::OK)
 		ASSERT_FALSE(true);
 
 	// Load Scene
 	GPUScene scene("TestScenes/helloTriangle.json",
-				   gpuList, *tracerGenerator.get());
+				   CudaSystem::GPUList(), *tracerGenerator.get());
 	SceneError scnE = scene.LoadScene(0.0);
 	if(scnE != SceneError::OK)
 		ASSERT_FALSE(true);
@@ -55,6 +59,7 @@ TEST(HelloTriangle, Test)
 													scene.MaxAccelIds());
 	if(scnE != SceneError::OK)
 		ASSERT_FALSE(true);
+	
 
 	// Camera (Dont use scenes camera)
 	//CameraPerspective cam = scene.CamerasCPU()[0];
@@ -71,32 +76,43 @@ TEST(HelloTriangle, Test)
 
 	// Start Tracer Thread and Set scene
 	const PixelFormat pixFormat = PixelFormat::RGBA_FLOAT;
-	
 	// Tracer Generation
-	TracerBase tracerBase;
-	// Get a Self-Node
-	SelfNode selfNode;
+	TracerBase tracerBase;	
 	// Visor Input
-	VisorWindowInput input(1.0, 1.0, 2.0, selfNode);
+	VisorWindowInput input(1.0, 1.0, 2.0);
 	// Window Params
 	VisorOptions visorOpts;
 	visorOpts.iFormat = pixFormat;
-	visorOpts.iSize = {1280, 720};
+	visorOpts.iSize = IMAGE_RESOLUTION;
 	visorOpts.stereoOn = false;
 	visorOpts.eventBufferSize = 128;
-
-	// Window Loop
+	
+	// Create Visor
 	auto visorView = CreateVisorGL(visorOpts);
 	visorView->SetInputScheme(&input);
 
-	// Init & Run tracer
-	tracerBase.Initialize(*logic);
-	tracerBase.GenerateCameraRays(cam, 1);
+	// Attach the logic & Image format
+	tracerBase.Initialize(0);
+	tracerBase.AttachLogic(*logic);
+	tracerBase.SetImagePixelFormat(pixFormat);
+	tracerBase.ResizeImage(IMAGE_RESOLUTION);
+	tracerBase.ReportionImage();
+	tracerBase.ResetImage();	
+
+	// Get a Self-Node
+	VisorI& v = *visorView;
+	SelfNode selfNode(v, tracerBase);
+	input.AttachVisorCallback(selfNode);
+	tracerBase.AttachTracerCallbacks(selfNode);
+
+	// Run tracer
+	tracerBase.GenerateInitialRays(scene, 0, 1);
 	while(tracerBase.Continue())
 	{
 		tracerBase.Render();
 	}
 	tracerBase.FinishSamples();
+
 
 	// Main Poll Loop
 	while(visorView->IsOpen())

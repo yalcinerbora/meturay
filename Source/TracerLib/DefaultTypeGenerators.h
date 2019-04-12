@@ -42,7 +42,7 @@ using GPUMatBPtr = SharedLibPtr<GPUMaterialBatchI>;
 
 // Statically Inerfaced Generators
 template<class TracerLogic>
-using TracerLogicGeneratorFunc = TracerLogic* (&)(GPUBaseAcceleratorI& ba,
+using TracerLogicGeneratorFunc = TracerLogic* (*)(GPUBaseAcceleratorI& ba,
 											      const AcceleratorBatchMappings& am,
 											      const MaterialBatchMappings& mm,
 											      const TracerParameters& op,
@@ -51,15 +51,15 @@ using TracerLogicGeneratorFunc = TracerLogic* (&)(GPUBaseAcceleratorI& ba,
 												  const Vector2i maxAccels);
 
 template<class Accel>
-using AccelGroupGeneratorFunc = Accel* (&)(const GPUPrimitiveGroupI&,
+using AccelGroupGeneratorFunc = Accel* (*)(const GPUPrimitiveGroupI&,
 										   const TransformStruct*);
 
 template<class AccelBatch>
-using AccelBatchGeneratorFunc = AccelBatch* (&)(const GPUAcceleratorGroupI&,
+using AccelBatchGeneratorFunc = AccelBatch* (*)(const GPUAcceleratorGroupI&,
 												const GPUPrimitiveGroupI&);
 
 template<class MaterialBatch>
-using MaterialBatchGeneratorFunc = MaterialBatch* (&)(const GPUMaterialGroupI&,
+using MaterialBatchGeneratorFunc = MaterialBatch* (*)(const GPUMaterialGroupI&,
 													  const GPUPrimitiveGroupI&,
 													  int gpuId);
 
@@ -114,9 +114,9 @@ class GPUTracerGen
 								const Vector2i maxMats,
 								const Vector2i maxAccels)
 		{
-			TracerBaseLogicI* mat = gFunc(ba, am, mm, op, hitStructSize,
-										  maxMats, maxAccels);
-			return GPUTracerPtr(mat, dFunc);
+			TracerBaseLogicI* logic = gFunc(ba, am, mm, op, hitStructSize,
+											maxMats, maxAccels);
+			return GPUTracerPtr(logic, dFunc);
 		}
 };
 

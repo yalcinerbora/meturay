@@ -28,5 +28,5 @@ void main(void)
 	//	3.0f, -1.0f,	-->	2.0f, 0.0f,
 	//	-1.0f, -1.0f,	-->	0.0f, 0.0f
 	fUV = (vPos + 1.0f) * 0.5f;
-	gl_Position = vec4(vPos.xy, 0.0f, 1.0f);
+	gl_Position = vec4(vPos, 0.0f, 1.0f);
 }

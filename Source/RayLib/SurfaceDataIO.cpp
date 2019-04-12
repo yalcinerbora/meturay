@@ -1,34 +1,36 @@
 #include "SurfaceDataIO.h"
 #include "SceneIO.h"
-#include "SceneFileNode.h"
+//#include "SceneFileNode.h"
 #include "PrimitiveDataTypes.h"
 
 #include "RayLib/Sphere.h"
 #include "RayLib/Triangle.h"
 
+#include <nlohmann/json.hpp>
+
 class SurfaceDataLoader : public SurfaceDataLoaderI
 {
 	private:		
 	protected:
-		SceneFileNode			node;
-		double					time;
+		const nlohmann::json		node;
+		double						time;
 
 	public:
 		// Constructor & Destructor
-								SurfaceDataLoader(const SceneFileNode& node, double time = 0.0);
+								SurfaceDataLoader(const nlohmann::json& node, double time = 0.0);
 								~SurfaceDataLoader() = default;
 
 		const uint32_t			SurfaceDataId() const override;
 };
 
-SurfaceDataLoader::SurfaceDataLoader(const SceneFileNode& node, double time)
+SurfaceDataLoader::SurfaceDataLoader(const nlohmann::json& node, double time)
 	: node(node)
 	, time(time)
 {}
 
 const uint32_t SurfaceDataLoader::SurfaceDataId() const
 {
-	return SceneIO::LoadNumber<const uint32_t>(node.jsn[SceneIO::ID]); 
+	return SceneIO::LoadNumber<const uint32_t>(node[SceneIO::ID]); 
 }
 
 class InNodeTriLoader : public SurfaceDataLoader
@@ -37,7 +39,7 @@ class InNodeTriLoader : public SurfaceDataLoader
 	protected:
 	public:
 		// Constructors & Destructor
-								InNodeTriLoader(const SceneFileNode& node, double time = 0.0);
+								InNodeTriLoader(const nlohmann::json& node, double time = 0.0);
 								~InNodeTriLoader() = default;
 
 		// Size Determination
@@ -79,9 +81,9 @@ AABB3 InNodeTriLoader::PrimitiveAABB() const
 	const std::string positionName = PrimitiveDataTypeNames[posIndex];
 	std::array<Vector3, 3> data =
 	{
-		SceneIO::LoadVector<3, float>(node.jsn[positionName][0], time),
-		SceneIO::LoadVector<3, float>(node.jsn[positionName][1], time),
-		SceneIO::LoadVector<3, float>(node.jsn[positionName][2], time)
+		SceneIO::LoadVector<3, float>(node[positionName][0], time),
+		SceneIO::LoadVector<3, float>(node[positionName][1], time),
+		SceneIO::LoadVector<3, float>(node[positionName][2], time)
 	};
 	return Triangle::BoundingBox(data[0], data[1], data[2]);
 }
@@ -91,7 +93,7 @@ const char* InNodeTriLoader::SufaceDataFileExt() const
 	return "";
 }
 
-InNodeTriLoader::InNodeTriLoader(const SceneFileNode& node, double time)
+InNodeTriLoader::InNodeTriLoader(const nlohmann::json& node, double time)
 	: SurfaceDataLoader(node, time)
 {}
 
@@ -102,9 +104,9 @@ SceneError InNodeTriLoader::LoadPrimitiveData(float* dataOut, const std::string&
 	{
 		std::array<Vector3, 3> data = 
 		{
-			SceneIO::LoadVector<3, float>(node.jsn[primitiveDataType][0], time),
-			SceneIO::LoadVector<3, float>(node.jsn[primitiveDataType][1], time),
-			SceneIO::LoadVector<3, float>(node.jsn[primitiveDataType][2], time)
+			SceneIO::LoadVector<3, float>(node[primitiveDataType][0], time),
+			SceneIO::LoadVector<3, float>(node[primitiveDataType][1], time),
+			SceneIO::LoadVector<3, float>(node[primitiveDataType][2], time)
 		};
 		for(int i = 0; i < 9; i++)
 		{
@@ -116,9 +118,9 @@ SceneError InNodeTriLoader::LoadPrimitiveData(float* dataOut, const std::string&
 	{	
 		std::array<Vector2, 3> data =
 		{
-			SceneIO::LoadVector<2, float>(node.jsn[primitiveDataType][0], time),
-			SceneIO::LoadVector<2, float>(node.jsn[primitiveDataType][1], time),
-			SceneIO::LoadVector<2, float>(node.jsn[primitiveDataType][2], time)
+			SceneIO::LoadVector<2, float>(node[primitiveDataType][0], time),
+			SceneIO::LoadVector<2, float>(node[primitiveDataType][1], time),
+			SceneIO::LoadVector<2, float>(node[primitiveDataType][2], time)
 		};
 		for(int i = 0; i < 6; i++)
 		{
@@ -157,7 +159,7 @@ class InNodeSphrLoader : public SurfaceDataLoader
 	protected:
 	public:
 		// Constructors & Destructor
-								InNodeSphrLoader(const SceneFileNode& node, double time = 0.0);
+								InNodeSphrLoader(const nlohmann::json& node, double time = 0.0);
 								~InNodeSphrLoader() = default;
 
 		// Size Determination
@@ -197,8 +199,8 @@ AABB3f InNodeSphrLoader::PrimitiveAABB() const
 	int centerIndex = static_cast<int>(PrimitiveDataType::CENTER);
 	int radIndex = static_cast<int>(PrimitiveDataType::RADIUS);
 
-	Vector3 center = SceneIO::LoadVector<3, float>(node.jsn[centerIndex], time);
-	float radius = SceneIO::LoadNumber<float>(node.jsn[radIndex], time);
+	Vector3 center = SceneIO::LoadVector<3, float>(node[centerIndex], time);
+	float radius = SceneIO::LoadNumber<float>(node[radIndex], time);
 
 	return Sphere::BoundingBox(center, radius);
 }
@@ -208,7 +210,7 @@ const char* InNodeSphrLoader::SufaceDataFileExt() const
 	return "";
 }
 
-InNodeSphrLoader::InNodeSphrLoader(const SceneFileNode& node, double time)
+InNodeSphrLoader::InNodeSphrLoader(const nlohmann::json& node, double time)
 	: SurfaceDataLoader(node, time)
 {}
 
@@ -216,7 +218,7 @@ SceneError InNodeSphrLoader::LoadPrimitiveData(float* dataOut, const std::string
 {
 	if(primitiveDataType == PrimitiveDataTypeNames[static_cast<int>(PrimitiveDataType::POSITION)])
 	{
-		Vector3 pos = SceneIO::LoadVector<3, float>(node.jsn[primitiveDataType], time);
+		Vector3 pos = SceneIO::LoadVector<3, float>(node[primitiveDataType], time);
 		dataOut[0] = pos[0];
 		dataOut[1] = pos[1];
 		dataOut[2] = pos[2];
@@ -224,7 +226,7 @@ SceneError InNodeSphrLoader::LoadPrimitiveData(float* dataOut, const std::string
 	}
 	else if(primitiveDataType == PrimitiveDataTypeNames[static_cast<int>(PrimitiveDataType::RADIUS)])
 	{		
-		dataOut[0] = SceneIO::LoadNumber<float>(node.jsn[primitiveDataType], time);
+		dataOut[0] = SceneIO::LoadNumber<float>(node[primitiveDataType], time);
 		return SceneError::OK;
 	}
 	else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
@@ -250,9 +252,9 @@ SceneError InNodeSphrLoader::LoadPrimitiveData(unsigned int*, const std::string&
 	else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
 }
 
-std::unique_ptr<SurfaceDataLoaderI> SurfaceDataIO::GenSurfaceDataLoader(const SceneFileNode& properties, double time)
+std::unique_ptr<SurfaceDataLoaderI> SurfaceDataIO::GenSurfaceDataLoader(const nlohmann::json& properties, double time)
 {
-	const std::string ext = SceneIO::StripFileExt(properties.jsn[SceneIO::NAME]);
+	const std::string ext = SceneIO::StripFileExt(properties[SceneIO::NAME]);
 
 	// There shoudl
 	if(ext == NodeSphereName)

@@ -5,6 +5,22 @@ Many Constants that are used throught the tracer
 
 */
 
+#include <limits>
+#include "Vector.h"
+#include "TracerStructs.h"
+
+namespace TracerConstants
+{
+	static constexpr HitOpts DefaultHitOptions = { 0 };
+	static constexpr ShadeOpts DefaultShadeOptions = { 0 };
+}
+
+namespace BaseConstants
+{
+	static constexpr Vector2i IMAGE_MAX_SIZE = Vector2i(std::numeric_limits<int>::max(),
+														std::numeric_limits<int>::max());
+}
+
 namespace SceneConstants
 {
 	// Fundamental Limitations (for convenience)

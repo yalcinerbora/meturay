@@ -33,13 +33,14 @@ struct VisorGLCommand
 		};
 
 	public:
-		Type type;
+		Type					type;
 
 		// Data will be
+		std::vector<Byte>		data;
 		PixelFormat				format;
-		Vector2i				startOrSize;
-		Vector2i				end;
-		std::vector<float>		data;
+		Vector2i				start;
+		Vector2i				end;		
+		int						sampleCount;
 
 		// Commands should not be copied
 		VisorGLCommand() = default;
@@ -49,7 +50,7 @@ struct VisorGLCommand
 		VisorGLCommand& operator=(VisorGLCommand&&) = default;
 };
 
-class VisorGL : public VisorViewI
+class VisorGL : public VisorI
 {
 	private:	
 		static VisorGL*				instance;
@@ -63,32 +64,55 @@ class VisorGL : public VisorViewI
 
 		// Shader Location Cnstants
 		// T: Texture Object
+		// I: Image Object
 		// IN: Shader Inputs
-		// OUT: SHader Outputs
-		static constexpr GLenum		T_INPUT = 0;
+		// OUT: Shader Outputs
+		// U: Uniforms
+		static constexpr GLenum		T_IN_COLOR = 0;
+		static constexpr GLenum		T_IN_BUFFER = 1;
+
+		static constexpr GLenum		I_OUT_COLOR = 0;
+		static constexpr GLenum		I_SAMPLE = 1;
+
 		static constexpr GLenum		IN_POS = 0;
+		static constexpr GLenum		IN_UV = 0;
+
+		static constexpr GLenum		U_RES = 0;
+		static constexpr GLenum		U_START = 1;
+		static constexpr GLenum		U_END = 2;
+		static constexpr GLenum		U_SAMPLE = 3;
 
 	private:
+		VisorCallbacksI*			callbacks;
 		VisorInputI*				input;
 		GLFWwindow*					window;
 		bool						open;
+
+		const VisorOptions			vOpts;
 
 		// Image portion list
 		MPMCQueue<VisorGLCommand>	commandList;
 		ThreadData<Vector2i>		viewportSize;
 
-		// Image Texture		
-		GLuint						linearSampler;
-		GLuint						texture;
-		PixelFormat					texPixFormat;
+		// Texture Related
+		GLuint						outputTextures[2];
+		GLuint						sampleCountTexture;
+		GLuint						bufferTexture;
+		int							currentIndex;
 
+		Vector2i					imageRes;
+		PixelFormat					texPixFormat;
+		GLuint						linearSampler;
+		
 		// Shader
 		ShaderGL					vertPP;
 		ShaderGL					fragPP;
+		ShaderGL					compAccum;
 
 		// Vertex
 		GLuint						vao;
 		GLuint						vBuffer;
+
 
 		static KeyAction			DetermineAction(int);
 		static MouseButtonType		DetermineMouseButton(int);
@@ -121,7 +145,8 @@ class VisorGL : public VisorViewI
 		// Visor to OGL conversions
 		static GLenum				PixelFormatToGL(PixelFormat);
 		static GLenum				PixelFormatToSizedGL(PixelFormat);
-
+		static GLenum				PixelFormatToTypeGL(PixelFormat);
+				
 		// Internal Command Handling
 		void						ProcessCommand(const VisorGLCommand&);
 		void						RenderImage();
@@ -138,17 +163,23 @@ class VisorGL : public VisorViewI
 		bool					IsOpen() override;		
 		void					Render() override;
 		void					ProcessInputs() override;
-
 		// Input System
 		void					SetInputScheme(VisorInputI*) override;
-
-		// Data Related (Any Thread Callable
-		void					ResetImageBuffer(const Vector2i& imageSize, 
-												 PixelFormat) override;
-		void					SetImagePortion(const Vector2i& start,
-												const Vector2i& end,
-												const std::vector<float> data) override;
-		// Misc (Only main thread callable)
+		void					SetCallbacks(VisorCallbacksI*) override;
+		// Data Related					
+		// Reset Data (Clears the RGB(A) Buffer of the Image)
+		// and resets total accumulated rays
+		void					ResetSamples(Vector2i start = Zero2i,
+											 Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+		// Append incoming data from 
+		void					AccumulatePortion(const std::vector<Byte> data,
+												  PixelFormat, int sampleCount,
+												  Vector2i start = Zero2i,
+												  Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+		// Options
+		const VisorOptions&		VisorOpts() const override;
+		// Misc
+	
 		void					SetWindowSize(const Vector2i& size) override;
 		void					SetFPSLimit(float) override;
 };

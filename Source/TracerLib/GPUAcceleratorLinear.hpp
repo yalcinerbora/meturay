@@ -13,7 +13,8 @@ const char* GPUAccLinearGroup<PGroup>::Type() const
 }
 
 template <class PGroup>
-SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(std::map<uint32_t, AABB3>& aabbOut,
+SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Append AABBs for each surface
+													  std::map<uint32_t, AABB3>& aabbOut,
 													  // Map of hit keys for all materials
 													  // w.r.t matId and primitive type
 													  const std::map<TypeIdPair, HitKey>& allHitKeys,
@@ -24,8 +25,10 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(std::map<uint32_t, AABB3>&
 													  double time)
 {
 	std::vector<Vector2ul> acceleratorRanges;
-
+	const char* primGroupTypeName = primitiveGroup.Type();
+	
 	// Iterate over pairings
+	int j = 0;
 	size_t totalSize = 0;
 	for(const auto& pairings : pairingList)
 	{
@@ -38,7 +41,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(std::map<uint32_t, AABB3>&
 		
 		uint32_t i = 0;
 		size_t localSize = 0;
-		AABB3 combinedAABB = CoveringAABB3;
+		AABB3 combinedAABB = ZeroAABB3;
 		const IdPairings& pList = pairings.second;
 		for(const auto& p : pList)
 		{
@@ -48,7 +51,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(std::map<uint32_t, AABB3>&
 			AABB3 aabb = primitiveGroup.PrimitiveBatchAABB(p.first);
 			combinedAABB = combinedAABB.Union(aabb);
 			primRangeList[i] = primitiveGroup.PrimitiveBatchRange(p.first);
-			hitKeyList[i] = allHitKeys.at(std::make_pair(primitiveGroup.Type(), p.second));
+			hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.second));
 			i++;
 		}
 		range[1] = localSize;
@@ -59,6 +62,8 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(std::map<uint32_t, AABB3>&
 		primitiveRanges.push_back(primRangeList);
 		primitiveMaterialKeys.push_back(hitKeyList);
 		acceleratorRanges.push_back(range);
+		idLookup.emplace(pairings.first, j);
+		j++;
 	}
 	assert(aabbOut.size() == primitiveRanges.size());
 	assert(primitiveRanges.size() == primitiveMaterialKeys.size());

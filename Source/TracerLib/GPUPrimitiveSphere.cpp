@@ -3,7 +3,8 @@
 #include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/SurfaceDataIO.h"
 #include "RayLib/SceneError.h"
-#include "RayLib/SceneFileNode.h"
+
+#include "TracerLib/SceneFileNode.h"
 
 // Generics
 GPUPrimitiveSphere::GPUPrimitiveSphere()

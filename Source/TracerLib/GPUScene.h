@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #include "RayLib/Camera.h"
 #include "RayLib/SceneStructs.h"
@@ -31,34 +31,34 @@ class GPUScene
 		};
 
 	private:
-		static constexpr const size_t			AlignByteCount = 128;
+		static constexpr const size_t				AlignByteCount = 128;
 
 		// Fundamental
-		TracerLogicGeneratorI&					logicGenerator;
-		const std::vector<std::vector<CudaGPU>>	gpuList;
+		TracerLogicGeneratorI&						logicGenerator;
+		const std::vector<CudaGPU>&					gpuList;
 
 		// Loaded
-		Vector2i								maxAccelIds;
-		Vector2i								maxMatIds;
+		Vector2i									maxAccelIds;
+		Vector2i									maxMatIds;
 
 		// GPU Memory
-		DeviceMemory							memory;
+		DeviceMemory								memory;
 		// CPU Memory
-		std::vector<CameraPerspective>			cameraMemory;		
+		std::vector<CameraPerspective>				cameraMemory;		
 
 		// File Related
-		nlohmann::json							sceneJson;
-		std::string								fileName;
-		double									currentTime;
+		nlohmann::json*								sceneJson;
+		std::string									fileName;
+		double										currentTime;
 
 		// CPU Helper Data		
-		RequiredAccelBatches					requiredAccelGroupListings;
-		RequiredMatBatches						requiredMatBatchListings;		
-		std::map<uint32_t, BaseLeaf>			surfaceListings;
+		RequiredAccelBatches						requiredAccelGroupListings;
+		RequiredMatBatches							requiredMatBatchListings;		
+		std::map<uint32_t, BaseLeaf>				surfaceListings;
 
 		// GPU Pointers
-		LightStruct*							dLights;
-		TransformStruct*						dTransforms;
+		LightStruct*								dLights;
+		TransformStruct*							dTransforms;
 		
 		// Inners
 		// Helper Logic
@@ -88,8 +88,8 @@ class GPUScene
 															const MatBatchGPUPairings& requestedGPUIds,
 															int boundaryMaterialGPUId);
 		SceneError							AssignAccelerators(double time,
-														   const RequestedAccelBatches& requestedAccelBatches,
-														   const MaterialKeyListing& matHitKeyList);
+															   const RequestedAccelBatches& requestedAccelBatches,
+															   const MaterialKeyListing& matHitKeyList);
 
 		
 
@@ -103,13 +103,13 @@ class GPUScene
 	public:
 		// Constructors & Destructor
 											GPUScene(const std::string&,
-													 const std::vector<std::vector<CudaGPU>>&,
+													 const std::vector<CudaGPU>&,
 													 TracerLogicGeneratorI&);
 											GPUScene(const GPUScene&) = delete;
-											GPUScene(GPUScene&&) = default;
+											GPUScene(GPUScene&&);
 		GPUScene&							operator=(const GPUScene&) = delete;
-		GPUScene&							operator=(GPUScene&&) = default;
-		virtual								~GPUScene() = default;
+		//GPUScene&							operator=(GPUScene&&);
+											~GPUScene();
 
 		// Members
 		size_t								UsedGPUMemory();
@@ -121,10 +121,10 @@ class GPUScene
 		Vector2i							MaxMatIds();
 		Vector2i							MaxAccelIds();
 		// Access GPU
-		const LightStruct*					LightsGPU();
-		const TransformStruct*				TransformsGPU();
+		const LightStruct*					LightsGPU() const;
+		const TransformStruct*				TransformsGPU() const;
 		// Access CPU
-		const CameraPerspective*			CamerasCPU();
+		const CameraPerspective*			CamerasCPU() const;
 
 		// Further Required Data for Construction
 		const SurfaceStruct*				SurfaceList;

@@ -12,8 +12,6 @@ All of them should be provided
 */
 
 #include <map>
-#include <type_traits>
-
 #include "DefaultLeaf.h"
 #include "GPUPrimitiveP.cuh"
 #include "DeviceMemory.h"

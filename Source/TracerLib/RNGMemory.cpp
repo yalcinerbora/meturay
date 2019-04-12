@@ -48,7 +48,9 @@ ConstRNGGMem RNGMemory::RNGData(uint32_t gpuId) const
 	return randomStacks[gpuId];
 }
 
-uint32_t RNGMemory::SharedMemorySize(uint32_t gpuId)
+uint32_t RNGMemory::SharedMemorySize(uint32_t threadPerBlock)
 {
-	return StaticThreadPerBlock1D * sizeof(uint32_t);
+	uint32_t warpCount = (threadPerBlock + WarpSize - 1) / WarpSize;
+
+	return  warpCount * WarpSize * sizeof(uint32_t);
 }

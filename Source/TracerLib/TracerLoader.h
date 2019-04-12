@@ -21,12 +21,13 @@ primitive data fetching etc.)
 //METU_SHARED_TRACERCUDA_ENTRY_POINT std::unique_ptr<TracerI> CreateTracerCUDA();
 
 #include <memory>
+
 #include "TracerLogicI.h"
 #include "TracerLogicGeneratorI.h"
-#include "TracerI.h"
 #include "TracerThread.h"
 
 #include "RayLib/SharedLib.h"
+#include "RayLib/TracerI.h"
 
 using LogicInterface = SharedLibPtr<TracerLogicGeneratorI>;
 

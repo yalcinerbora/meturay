@@ -1,10 +1,10 @@
 #include "MaterialNodeReaders.h"
 #include "MaterialStructs.h"
 
-#include "RayLib/SceneFileNode.h"
 #include "RayLib/SceneIO.h"
 
 #include "TracerLib/DeviceMemory.h"
+#include "TracerLib/SceneFileNode.h"
 
 ConstantAlbedoMatData ConstantAlbedoMatRead(DeviceMemory& mem,
 											const std::set<SceneFileNode>& materialNodes,
@@ -15,9 +15,10 @@ ConstantAlbedoMatData ConstantAlbedoMatRead(DeviceMemory& mem,
 	std::vector<Vector3> albedoCPU;
 	albedoCPU.reserve(materialNodes.size());
 
-	for(const auto& node : materialNodes)
+	for(const auto& sceneNode : materialNodes)
 	{
-		albedoCPU.push_back(SceneIO::LoadVector<3, float>(node.jsn[ALBEDO], time));
+		const nlohmann::json& node = sceneNode;
+		albedoCPU.push_back(SceneIO::LoadVector<3, float>(node[ALBEDO], time));
 	}
 
 	// Alloc etc
@@ -29,9 +30,11 @@ ConstantAlbedoMatData ConstantAlbedoMatRead(DeviceMemory& mem,
 ConstantBoundaryMatData ConstantBoundaryMatRead(const std::set<SceneFileNode>& materialNodes,
 												double time)
 {
-	constexpr const char* BACKGROUND = "background";
+	constexpr const char* ALBEDO = "albedo";
 	if(materialNodes.size() == 0) return {};
 
-	Vector3 background = SceneIO::LoadVector<3, float>(materialNodes.begin()->jsn[BACKGROUND], time);
+	const SceneFileNode& sceneNode = *materialNodes.begin();
+	const nlohmann::json& node = sceneNode;
+	Vector3 background = SceneIO::LoadVector<3, float>(node[ALBEDO], time);
 	return {background};
 }

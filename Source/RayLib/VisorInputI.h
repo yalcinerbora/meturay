@@ -11,6 +11,8 @@ Can be attached to a Visor to capture window actions
 #include <functional>
 #include <map>
 
+class VisorCallbacksI;
+
 enum class KeyboardKeyType
 {
 	SPACE,
@@ -170,7 +172,9 @@ class VisorInputI
 	public:
 		virtual								~VisorInputI() = default;
 
-		// Implementation
+		// Interface
+		virtual void						AttachVisorCallback(VisorCallbacksI&) = 0;
+
 		virtual void						WindowPosChanged(int posX, int posY) = 0;
 		virtual void						WindowFBChanged(int fbWidth, int fbHeight) = 0;
 		virtual void						WindowSizeChanged(int width, int height) = 0;

@@ -22,5 +22,8 @@
     <Text Include="..\..\..\WorkingDir\Shaders\PProcessGeneric.frag">
       <Filter>Shaders</Filter>
     </Text>
+    <Text Include="..\..\..\WorkingDir\Shaders\AccumInput.comp">
+      <Filter>Shaders</Filter>
+    </Text>
   </ItemGroup>
 </Project>

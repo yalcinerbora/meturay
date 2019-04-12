@@ -34,9 +34,9 @@ ImageMemory::ImageMemory()
 	, format(PixelFormat::END)
 {}
 
-ImageMemory::ImageMemory(const Vector2ui& offset,
-						 const Vector2ui& size,
-						 const Vector2ui& resolution,
+ImageMemory::ImageMemory(const Vector2i& offset,
+						 const Vector2i& size,
+						 const Vector2i& resolution,
 						 PixelFormat f)
 	: segmentSize(size)
 	, segmentOffset(offset)
@@ -51,14 +51,14 @@ void ImageMemory::SetPixelFormat(PixelFormat f)
 	Reportion(segmentOffset, segmentSize);
 }
 
-void ImageMemory::Reportion(const Vector2ui& offset,
-							const Vector2ui& size)
+void ImageMemory::Reportion(Vector2i start,
+							Vector2i end)
 {
-	segmentOffset = offset;
-	if(size == Zero2ui) segmentSize = resolution;
-	else segmentSize = size;
-
-	size_t linearSize = size[0] * size[1] * PixelFormatToSize(format);
+	end = Vector2i::Min(resolution, end);
+	segmentOffset = start;
+	segmentSize = end - start;
+	
+	size_t linearSize = segmentSize[0] * segmentSize[1] * PixelFormatToSize(format);
 	if(linearSize != 0)
 	{
 		memory = std::move(DeviceMemory(linearSize));
@@ -66,7 +66,7 @@ void ImageMemory::Reportion(const Vector2ui& offset,
 	}
 }
 
-void ImageMemory::Resize(const Vector2ui& res)
+void ImageMemory::Resize(Vector2i res)
 {
 	assert(segmentSize <= res);
 	resolution = res;
@@ -80,17 +80,17 @@ void ImageMemory::Reset()
 		CUDA_CHECK(cudaMemset(memory, 0x0, PixelFormatToSize(format) * pixelCount));
 }
 
-Vector2ui ImageMemory::SegmentSize() const
+Vector2i ImageMemory::SegmentSize() const
 {
 	return segmentSize;
 }
 
-Vector2ui ImageMemory::SegmentOffset() const
+Vector2i ImageMemory::SegmentOffset() const
 {
 	return segmentOffset;
 }
 
-Vector2ui ImageMemory::Resolution() const
+Vector2i ImageMemory::Resolution() const
 {
 	return resolution;
 }
