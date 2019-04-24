@@ -27,37 +27,34 @@ class TracerLogicGeneratorI
 		// of the DLL (A.K.A abstract factory)
 		// It generates or returns (if already constructed) types
 		// w.r.t. a type name and parent type if applicable
-		// Groups
-		virtual SceneError		GetPrimitiveGroup(GPUPrimitiveGroupI*&,
-												  const std::string& primitiveType) = 0;
-		virtual SceneError		GetMaterialGroup(GPUMaterialGroupI*&,
-												 const std::string& materialType) = 0;
-		virtual SceneError		GetAcceleratorGroup(GPUAcceleratorGroupI*&,
-													const GPUPrimitiveGroupI&,
-													const TransformStruct* t,
-													const std::string& accelType) = 0;
-
-		// Batches are the abstraction of kernel calls
-		// Each batch instance is equavilent to a kernel call	
+		// Pritimive
+		virtual SceneError		GeneratePrimitiveGroup(GPUPrimitiveGroupI*&,
+													   const std::string& primitiveType) = 0;
+		// Accelerator
+		virtual SceneError		GenerateAcceleratorGroup(GPUAcceleratorGroupI*&,
+														 const GPUPrimitiveGroupI&,
+														 const TransformStruct* t,
+														 const std::string& accelType) = 0;
 		virtual SceneError		GenerateAcceleratorBatch(GPUAcceleratorBatchI*&,
 														 const GPUAcceleratorGroupI&,
 														 const GPUPrimitiveGroupI&,
 														 uint32_t keyBatchId) = 0;
+		// Material
+		virtual SceneError		GenerateMaterialGroup(GPUMaterialGroupI*&,
+													  const std::string& materialType,
+													  const int gpuId) = 0;
 		virtual SceneError		GenerateMaterialBatch(GPUMaterialBatchI*&,
 													  const GPUMaterialGroupI&,
 													  const GPUPrimitiveGroupI&,
-													  uint32_t keyBatchId,
-													  int gpuId) = 0;
-
+													  uint32_t keyBatchId) = 0;
 		// Base Accelerator should be fetched after all the stuff is generated
-		virtual SceneError		GetBaseAccelerator(GPUBaseAcceleratorI*&,
-												   const std::string& accelType) = 0;
+		virtual SceneError		GenerateBaseAccelerator(GPUBaseAcceleratorI*&,
+														const std::string& accelType) = 0;
 
 		// Outside Material is special material and has its own group
-		virtual SceneError		GetOutsideMaterial(GPUMaterialGroupI*&,
-												   const std::string& materialType,
-												   int gpuId) = 0;
-
+		virtual SceneError		GenerateOutsideMaterial(GPUMaterialGroupI*&,
+														const std::string& materialType,
+														const int gpuId) = 0;
 		// Finally get the tracer logic
 		// Tracer logic will be constructed with respect to
 		// Constructed batches
@@ -66,6 +63,14 @@ class TracerLogicGeneratorI
 													  const Vector2i maxMats,
 													  const Vector2i maxAccels) = 0;
 		
+		// Get all generated stuff on a vector
+		virtual std::vector<GPUPrimitiveGroupI*>		GetPrimitiveGroups() const = 0;
+		virtual std::vector<GPUAcceleratorGroupI*>		GetAcceleratorGroups() const = 0;
+		virtual std::vector<GPUAcceleratorBatchI*>		GetAcceleratorBatches() const = 0;
+		virtual std::vector<GPUMaterialGroupI*>			GetMaterialGroups() const = 0;
+		virtual std::vector<GPUMaterialBatchI*>			GetMaterialBatches() const = 0;
+		virtual GPUBaseAcceleratorI*					GetBaseAccelerator() const = 0;
+
 		// Inclusion Functionality
 		// Additionally includes the materials from these libraries
 		// No exclusion functionality provided just add what you need

@@ -1,7 +1,8 @@
 #include "BasicMaterials.cuh"
 #include "MaterialNodeReaders.h"
 
-ConstantBoundaryMat::ConstantBoundaryMat()
+ConstantBoundaryMat::ConstantBoundaryMat(int gpuId)
+	: GPUBoundaryMatGroup(gpuId)
 {}
 
 const char* ConstantBoundaryMat::Type() const
@@ -56,7 +57,8 @@ uint8_t ConstantBoundaryMat::OutRayCount() const
 	return 0;
 }
 
-BasicMat::BasicMat()
+BasicMat::BasicMat(int gpuId)
+	: GPUMaterialGroup(gpuId)
 {}
 
 const char* BasicMat::Type() const

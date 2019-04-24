@@ -77,7 +77,7 @@ class GIAlbedoMat final
 
 	protected:
 	public:
-								GIAlbedoMat();
+								GIAlbedoMat(int gpuId);
 								~GIAlbedoMat() = default;
 		
 		// Interface

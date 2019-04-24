@@ -60,10 +60,15 @@ class MockTracerLogic : public TracerBaseLogicI
 										const RayId* dRayIds,
 										const uint32_t rayCount) const override;
 
-				void			Constrcut(// List of surface to transform id hit key mappings
-										  const std::map<uint32_t, BaseLeaf>&) override {};
-				void			Reconstruct(// List of only changed surface to transform id hit key mappings
-											const std::map<uint32_t, BaseLeaf>&) override {};
+				// Initialization
+				SceneError			Initialize(// List of surface to transform id hit key mappings
+											   const std::map<uint32_t, BaseLeaf>&)  override { return SceneError::OK; }
+				SceneError			Change(// List of only changed surface to transform id hit key mappings
+										   const std::map<uint32_t, BaseLeaf>&) override { return SceneError::OK; }
+
+				// Construction & Destruction
+				void				Constrcut() override {};
+				void				Destruct() override {};
 		};
 
 		class AcceleratorMock : public GPUAcceleratorBatchI
@@ -82,7 +87,8 @@ class MockTracerLogic : public TracerBaseLogicI
 				// Type(as string) of the accelerator group
 				const char*						Type() const override { return "MockAccelBatch"; }
 				// KC
-				void							Hit(// O
+				void							Hit(int gpuId,
+													// O
 													HitKey* dMaterialKeys,
 													PrimitiveId* dPrimitiveIds,
 													HitStructPtr dHitStructs,
@@ -135,8 +141,7 @@ class MockTracerLogic : public TracerBaseLogicI
 				// Every MaterialBatch is available for a specific primitive / material data
 				const GPUPrimitiveGroupI&	PrimitiveGroup() const override;
 				const GPUMaterialGroupI&	MaterialGroup() const override;
-				int							GPUId() const override { return 0; }
-
+	
 				uint8_t						OutRayCount() const override { return isMissMaterial ? 0 : 1; }
 		};
 
@@ -260,7 +265,8 @@ void MockTracerLogic::BaseAcceleratorMock::Hit(// Output
 	}
 }
 
-void MockTracerLogic::AcceleratorMock::Hit(// O
+void MockTracerLogic::AcceleratorMock::Hit(int gpuId,
+										   // O
 										   HitKey* dMaterialKeys,
 										   PrimitiveId* dPrimitiveIds,
 										   HitStructPtr dHitStructs,
@@ -340,13 +346,6 @@ void MockTracerLogic::MaterialMock::ShadeRays(// Output
 
 TracerError MockTracerLogic::Initialize()
 {
-	// Initialize Single Here Also
-	TracerError e(TracerError::END);
-	if((e = CudaSystem::Initialize()) != TracerError::OK)
-	{
-		return e;
-	}
-
 	rng.seed(seed);
 	baseAccelerator = std::make_unique<BaseAcceleratorMock>(*this);
 

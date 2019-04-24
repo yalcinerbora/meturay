@@ -63,7 +63,7 @@ class ConstantBoundaryMat final
 
 	public:
 		// Constructors & Destructor
-									ConstantBoundaryMat();
+									ConstantBoundaryMat(int gpuId);
 									~ConstantBoundaryMat() = default;
 	
 		// Interface
@@ -100,7 +100,7 @@ class BasicMat final
 
 	protected:
 	public:
-										BasicMat();
+										BasicMat(int gpuId);
 										~BasicMat() = default;
 		
 		// Interface

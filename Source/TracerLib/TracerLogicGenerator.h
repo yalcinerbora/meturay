@@ -24,7 +24,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 	protected:
 		// Type Generation Functions
 		std::map<std::string, GPUPrimGroupGen>			primGroupGenerators;
-		std::map<std::string, GPUAccelGroupGen>			accelGroupGenerators;		
+		std::map<std::string, GPUAccelGroupGen>			accelGroupGenerators;
 		std::map<std::string, GPUMatGroupGen>			matGroupGenerators;
 
 		std::map<std::string, GPUAccelBatchGen>			accelBatchGenerators;
@@ -34,11 +34,13 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 
 		// Generated Types
 		// These hold ownership of classes (thus these will force destruction)
-		std::map<std::string, GPUAccelGPtr>				accelGroups;
+		// Primitives
 		std::map<std::string, GPUPrimGPtr>				primGroups;
-		std::map<std::string, GPUMatGPtr>				matGroups;
-
+		// Accelerators (Batch and Group)
+		std::map<std::string, GPUAccelGPtr>				accelGroups;
 		std::map<std::string, GPUAccelBPtr>				accelBatches;
+		// Materials (Batch and Group)
+		std::map<NameIdPair, GPUMatGPtr>				matGroups;
 		std::map<NameIdPair, GPUMatBPtr>				matBatches;
 
 		GPUBaseAccelPtr									baseAccelerator;
@@ -64,37 +66,35 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		TracerLogicGenerator&		operator=(const TracerLogicGenerator&) = delete;
 									~TracerLogicGenerator() = default;
 
-		// Groups
-		SceneError					GetPrimitiveGroup(GPUPrimitiveGroupI*&,
-													  const std::string& primitiveType) override;
-		SceneError					GetMaterialGroup(GPUMaterialGroupI*&,
-													 const std::string& materialType) override;
-		SceneError					GetAcceleratorGroup(GPUAcceleratorGroupI*&,
-														const GPUPrimitiveGroupI&,
-														const TransformStruct* t,
-														const std::string& accelType) override;
-
-		// Batches are the abstraction of kernel calls
-		// Each batch instance is equavilent to a kernel call	
-		SceneError					GenerateAcceleratorBatch(GPUAcceleratorBatchI*&,															 
+		// Pritimive
+		SceneError					GeneratePrimitiveGroup(GPUPrimitiveGroupI*&,
+														   const std::string& primitiveType) override;
+		// Accelerator
+		SceneError					GenerateAcceleratorGroup(GPUAcceleratorGroupI*&,
+															 const GPUPrimitiveGroupI&,
+															 const TransformStruct* t,
+															 const std::string& accelType) override;
+		SceneError					GenerateAcceleratorBatch(GPUAcceleratorBatchI*&,
 															 const GPUAcceleratorGroupI&,
 															 const GPUPrimitiveGroupI&,
 															 uint32_t keyBatchId) override;
-		SceneError					GenerateMaterialBatch(GPUMaterialBatchI*&,														  
+		// Material
+		SceneError					GenerateMaterialGroup(GPUMaterialGroupI*&,
+														  const std::string& materialType,
+														  const int gpuId) override;
+		SceneError					GenerateMaterialBatch(GPUMaterialBatchI*&,
 														  const GPUMaterialGroupI&,
 														  const GPUPrimitiveGroupI&,
-														  uint32_t keyBatchId,
-														  int gpuId) override;
+														  uint32_t keyBatchId) override;
 
 		// Outside Material is special material and has its own group		
-		SceneError					GetOutsideMaterial(GPUMaterialGroupI*&,
-													   const std::string& materialType,
-													   int gpuId) override;
+		SceneError					GenerateOutsideMaterial(GPUMaterialGroupI*&,
+															const std::string& materialType,
+															const int gpuId) override;
 
 		// Base Accelerator should be fetched after all the stuff is generated
-		SceneError					GetBaseAccelerator(GPUBaseAcceleratorI*&,
-													   const std::string& accelType) override;
-
+		SceneError					GenerateBaseAccelerator(GPUBaseAcceleratorI*&,
+															const std::string& accelType) override;
 		// Finally get the tracer logic
 		// Tracer logic will be constructed with respect to
 		// Constructed batches
@@ -102,6 +102,13 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 													  const TracerParameters& opts,
 													  const Vector2i maxMats,
 													  const Vector2i maxAccels) override;
+
+		std::vector<GPUPrimitiveGroupI*>		GetPrimitiveGroups() const override;
+		std::vector<GPUAcceleratorGroupI*>		GetAcceleratorGroups() const override;
+		std::vector<GPUAcceleratorBatchI*>		GetAcceleratorBatches() const override;
+		std::vector<GPUMaterialGroupI*>			GetMaterialGroups() const override;
+		std::vector<GPUMaterialBatchI*>			GetMaterialBatches() const override;
+		GPUBaseAcceleratorI*					GetBaseAccelerator() const override;
 
 		// Inclusion Functionality
 		// Additionally includes the materials from these libraries

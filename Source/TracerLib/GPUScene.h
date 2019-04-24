@@ -9,14 +9,15 @@
 #include "DeviceMemory.h"
 #include "AcceleratorDeviceFunctions.h"
 #include "CudaConstants.h"
+#include "ScenePartitionerI.h"
 
 struct SceneError;
 struct SceneFileNode;
+class ScenePartitionerI;
 class TracerLogicGeneratorI;
 
-using NodeListing = std::set<SceneFileNode>;
-using TypeNameNodeListings = std::map<std::string, NodeListing>;
-
+using PrimitiveNodeList = std::map<std::string, NodeListing>;
+using AcceleratorBatchList = std::map<std::string, AccelGroupData>;
 
 class GPUScene
 {
@@ -35,8 +36,8 @@ class GPUScene
 
 		// Fundamental
 		TracerLogicGeneratorI&						logicGenerator;
-		const std::vector<CudaGPU>&					gpuList;
-
+		ScenePartitionerI&							partitioner;
+		
 		// Loaded
 		Vector2i									maxAccelIds;
 		Vector2i									maxMatIds;
@@ -51,11 +52,6 @@ class GPUScene
 		std::string									fileName;
 		double										currentTime;
 
-		// CPU Helper Data		
-		RequiredAccelBatches						requiredAccelGroupListings;
-		RequiredMatBatches							requiredMatBatchListings;		
-		std::map<uint32_t, BaseLeaf>				surfaceListings;
-
 		// GPU Pointers
 		LightStruct*								dLights;
 		TransformStruct*							dTransforms;
@@ -69,30 +65,32 @@ class GPUScene
 														IdBasedNodeType);
 
 		// Private Load Functionality
-		SceneError							GenerateConstructionData(// Group Data
-																	 std::map<std::string, std::set<SceneFileNode>>& matGroupNodes,
-																	 std::map<std::string, std::set<SceneFileNode>>& primGroupNodes,
-																	 // Batch Data
-																	 std::map<std::string, AccelGroupData>& accelGroupListings,
-																	 std::map<std::string, MatBatchData>& matBatchListings,
+		SceneError							GenerateConstructionData(// Striped Listings (Striped from unsued nodes)											  
+																	 PrimitiveNodeList& primGroupNodes,																	 
+																	 //
+																	 MaterialNodeList& matGroupNodes,
+																	 MaterialBatchList& matBatchListings,
+																	 AcceleratorBatchList& accelBatchListings,
 																	 // Base Accelerator required data
-																	 std::map<uint32_t, BaseLeaf>& surfaceListings,
+																	 std::map<uint32_t, uint32_t>& surfaceTransformIds,
 																	 double time = 0.0);
-		SceneError							GenerateMaterialGroups(const TypeNameNodeListings&,
-																   double time = 0.0);
-		SceneError							GeneratePrimitiveGroups(const TypeNameNodeListings&,
+		SceneError							GeneratePrimitiveGroups(const PrimitiveNodeList&,
 																	double time = 0.0);
-		SceneError							PartitionSceneData(double);
-		SceneError							AssignMaterials(double time,
-															const RequestedMatBatches& requestedMatBatches,
-															const MatBatchGPUPairings& requestedGPUIds,
-															int boundaryMaterialGPUId);
-		SceneError							AssignAccelerators(double time,
-															   const RequestedAccelBatches& requestedAccelBatches,
-															   const MaterialKeyListing& matHitKeyList);
-
-		
-
+		SceneError							GenerateMaterialGroups(const MultiGPUMatNodes&,
+																   double time = 0.0);
+		SceneError							GenerateMaterialBatches(MaterialKeyListing&,
+																	const MultiGPUMatBatches&,
+																	double time = 0.0);
+		SceneError							GenerateAccelerators(std::map<uint32_t, AABB3>& accAABBs,
+																 std::map<uint32_t, HitKey>& accHitKeyList,
+																 //
+																 const AcceleratorBatchList& acceleratorBatchList,
+																 const MaterialKeyListing& matHitKeyList,
+																 double time = 0.0);
+		SceneError							GenerateBaseAccelerator(const std::map<uint32_t, AABB3>& accAABBs,
+																	const std::map<uint32_t, HitKey>& accHitKeyList,
+																	const std::map<uint32_t, uint32_t>& surfaceTransformIds,
+																	double time = 0.0);
 		
 		void								LoadCommon(double time);
 		SceneError							LoadLogicRelated(double time);
@@ -103,7 +101,7 @@ class GPUScene
 	public:
 		// Constructors & Destructor
 											GPUScene(const std::string&,
-													 const std::vector<CudaGPU>&,
+													 ScenePartitionerI& partitioner,
 													 TracerLogicGeneratorI&);
 											GPUScene(const GPUScene&) = delete;
 											GPUScene(GPUScene&&);

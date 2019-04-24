@@ -113,8 +113,8 @@ TracerLogicGenerator::TracerLogicGenerator(GPUTracerGen tracerGenerator,
 	// i.e. Auxiliary Struct Etc.
 }
 
-SceneError TracerLogicGenerator::GetPrimitiveGroup(GPUPrimitiveGroupI*& pg,
-												   const std::string& primitiveType)
+SceneError TracerLogicGenerator::GeneratePrimitiveGroup(GPUPrimitiveGroupI*& pg,
+														const std::string& primitiveType)
 {
 	pg = nullptr;
 	auto loc = primGroups.find(primitiveType);
@@ -133,10 +133,10 @@ SceneError TracerLogicGenerator::GetPrimitiveGroup(GPUPrimitiveGroupI*& pg,
 	return SceneError::OK;
 }
 
-SceneError TracerLogicGenerator::GetAcceleratorGroup(GPUAcceleratorGroupI*& ag,
-													 const GPUPrimitiveGroupI& pg,
-													 const TransformStruct* t,
-													 const std::string& accelType)
+SceneError TracerLogicGenerator::GenerateAcceleratorGroup(GPUAcceleratorGroupI*& ag,
+														  const GPUPrimitiveGroupI& pg,
+														  const TransformStruct* t,
+														  const std::string& accelType)
 {
 	ag = nullptr;
 	auto loc = accelGroups.find(accelType);
@@ -155,26 +155,6 @@ SceneError TracerLogicGenerator::GetAcceleratorGroup(GPUAcceleratorGroupI*& ag,
 	return SceneError::OK;
 }
 
-SceneError TracerLogicGenerator::GetMaterialGroup(GPUMaterialGroupI*& mg,												 
-												  const std::string& materialType)
-{
-	mg = nullptr;
-	auto loc = matGroups.find(materialType);
-	if(loc == matGroups.end())
-	{
-		// Cannot Find Already Constructed Type
-		// Generate
-		auto loc = matGroupGenerators.find(materialType);
-		if(loc == matGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
-
-		GPUMatGPtr ptr = loc->second();
-		mg = ptr.get();
-		matGroups.emplace(materialType, std::move(ptr));
-	}
-	else mg = loc->second.get();
-	return SceneError::OK;
-}
-
 SceneError TracerLogicGenerator::GenerateAcceleratorBatch(GPUAcceleratorBatchI*& ab,
 														  const GPUAcceleratorGroupI& ag,
 														  const GPUPrimitiveGroupI& pg,
@@ -184,7 +164,7 @@ SceneError TracerLogicGenerator::GenerateAcceleratorBatch(GPUAcceleratorBatchI*&
 	// Check duplicate batchId
 	if(accelBatchMap.find(keyBatchId) != accelBatchMap.end())
 		return SceneError::INTERNAL_DUPLICATE_ACCEL_ID;
-	
+
 	const std::string batchType = std::string(ag.Type());
 
 	auto loc = accelBatches.find(batchType);
@@ -204,11 +184,31 @@ SceneError TracerLogicGenerator::GenerateAcceleratorBatch(GPUAcceleratorBatchI*&
 	return SceneError::OK;
 }
 
+SceneError TracerLogicGenerator::GenerateMaterialGroup(GPUMaterialGroupI*& mg,
+													   const std::string& materialType,
+													   const int gpuId)
+{
+	mg = nullptr;
+	auto loc = matGroups.find(std::make_pair(materialType, gpuId));
+	if(loc == matGroups.end())
+	{
+		// Cannot Find Already Constructed Type
+		// Generate
+		auto loc = matGroupGenerators.find(materialType);
+		if(loc == matGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
+
+		GPUMatGPtr ptr = loc->second(gpuId);
+		mg = ptr.get();
+		matGroups.emplace(std::make_pair(materialType, gpuId), std::move(ptr));
+	}
+	else mg = loc->second.get();
+	return SceneError::OK;
+}
+
 SceneError TracerLogicGenerator::GenerateMaterialBatch(GPUMaterialBatchI*& mb,
 													   const GPUMaterialGroupI& mg,
 													   const GPUPrimitiveGroupI& pg,
-													   uint32_t keyBatchId,
-													   int gpuId)
+													   uint32_t keyBatchId)
 {
 	mb = nullptr;
 	if(matBatchMap.find(keyBatchId) != matBatchMap.end())
@@ -216,7 +216,7 @@ SceneError TracerLogicGenerator::GenerateMaterialBatch(GPUMaterialBatchI*& mb,
 	
 	const std::string batchType = std::string(mg.Type()) + pg.Type();
 
-	auto loc = matBatches.find(std::make_pair(batchType, gpuId));
+	auto loc = matBatches.find(std::make_pair(batchType, mg.GPUId()));
 	if(loc == matBatches.end())
 	{
 		// Cannot Find Already Constructed Type
@@ -224,17 +224,17 @@ SceneError TracerLogicGenerator::GenerateMaterialBatch(GPUMaterialBatchI*& mb,
 		auto loc = matBatchGenerators.find(batchType);
 		if(loc == matBatchGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
 
-		GPUMatBPtr ptr = loc->second(mg, pg, gpuId);
+		GPUMatBPtr ptr = loc->second(mg, pg);
 		mb = ptr.get();
-		matBatches.emplace(std::make_pair(batchType, gpuId), std::move(ptr));
+		matBatches.emplace(std::make_pair(batchType, mg.GPUId()), std::move(ptr));
 		matBatchMap.emplace(keyBatchId, mb);
 	}
 	else mb = loc->second.get();
 	return SceneError::OK;
 }
 
-SceneError TracerLogicGenerator::GetBaseAccelerator(GPUBaseAcceleratorI*& baseAccel,
-													const std::string& accelType)
+SceneError TracerLogicGenerator::GenerateBaseAccelerator(GPUBaseAcceleratorI*& baseAccel,
+														 const std::string& accelType)
 {
 	if(baseAccelerator.get() == nullptr)
 	{
@@ -249,9 +249,9 @@ SceneError TracerLogicGenerator::GetBaseAccelerator(GPUBaseAcceleratorI*& baseAc
 	return SceneError::OK;
 }
 
-SceneError TracerLogicGenerator::GetOutsideMaterial(GPUMaterialGroupI*& outMat,
-													const std::string& materialType, 
-													int gpuId)
+SceneError TracerLogicGenerator::GenerateOutsideMaterial(GPUMaterialGroupI*& outMat,
+														 const std::string& materialType,
+														 const int gpuId)
 {
 	if(outsideMaterial.get() == nullptr)
 	{
@@ -259,14 +259,14 @@ SceneError TracerLogicGenerator::GetOutsideMaterial(GPUMaterialGroupI*& outMat,
 		// Generate
 		auto loc = matGroupGenerators.find(materialType);
 		if(loc == matGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
-		outsideMaterial = loc->second();
+		outsideMaterial = loc->second(gpuId);
 		outMat = outsideMaterial.get();
 
 		// Additionally Generate a batch for it
 		auto batchLoc = matBatchGenerators.find(materialType);
 		if(batchLoc == matBatchGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
 
-		outsideMatBatch = batchLoc->second(*outMat, *emptyPrimitive, gpuId);
+		outsideMatBatch = batchLoc->second(*outMat, *emptyPrimitive);
 		GPUMaterialBatchI* mb = outsideMatBatch.get();
 
 		matBatchMap.emplace(BoundaryMatId, mb);
@@ -291,6 +291,61 @@ SceneError TracerLogicGenerator::GenerateBaseLogic(TracerBaseLogicI*& bl,
 	bl = tracerLogic.get();
 
 	return SceneError::OK;
+}
+
+std::vector<GPUPrimitiveGroupI*> TracerLogicGenerator::GetPrimitiveGroups() const
+{
+	std::vector<GPUPrimitiveGroupI*> result(primGroups.size());
+	for(const auto& p : primGroups)
+	{
+		result.push_back(p.second.get());
+	}
+	return std::move(result);
+}
+
+std::vector<GPUAcceleratorGroupI*> TracerLogicGenerator::GetAcceleratorGroups() const
+{
+	std::vector<GPUAcceleratorGroupI*> result(accelGroups.size());
+	for(const auto& p : accelGroups)
+	{
+		result.push_back(p.second.get());
+	}
+	return std::move(result);
+}
+
+std::vector<GPUAcceleratorBatchI*> TracerLogicGenerator::GetAcceleratorBatches() const
+{
+	std::vector<GPUAcceleratorBatchI*> result(accelBatches.size());
+	for(const auto& p : accelBatches)
+	{
+		result.push_back(p.second.get());
+	}
+	return std::move(result);
+}
+
+std::vector<GPUMaterialGroupI*> TracerLogicGenerator::GetMaterialGroups() const
+{
+	std::vector<GPUMaterialGroupI*> result(matGroups.size());
+	for(const auto& p : matGroups)
+	{
+		result.push_back(p.second.get());
+	}
+	return std::move(result);
+}
+
+std::vector<GPUMaterialBatchI*> TracerLogicGenerator::GetMaterialBatches() const
+{
+	std::vector<GPUMaterialBatchI*> result(matBatches.size());
+	for(const auto& p : matBatches)
+	{
+		result.push_back(p.second.get());
+	}
+	return std::move(result);
+}
+
+GPUBaseAcceleratorI* TracerLogicGenerator::GetBaseAccelerator() const
+{
+	return baseAccelerator.get();
 }
 
 SceneError TracerLogicGenerator::IncludeAcceleratorsFromDLL(const SharedLib&,

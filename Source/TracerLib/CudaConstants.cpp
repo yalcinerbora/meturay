@@ -1,5 +1,4 @@
 #include "CudaConstants.h"
-#include "RayLib/TracerError.h"
 
 CudaGPU::CudaGPU(int deviceId)
 	: deviceId(deviceId)
@@ -7,12 +6,6 @@ CudaGPU::CudaGPU(int deviceId)
 	CUDA_CHECK(cudaGetDeviceProperties(&props, deviceId));
 	tier = DetermineGPUTier(props);
 }
-
-//CudaGPU::CudaGPU(CudaGPU&& other)
-//	other
-//{
-//
-//}
 
 CudaGPU::GPUTier CudaGPU::DetermineGPUTier(cudaDeviceProp p)
 {
@@ -48,6 +41,11 @@ size_t CudaGPU::TotalMemory() const
 	return props.totalGlobalMem;
 }
 
+CudaGPU::GPUTier CudaGPU::Tier() const
+{
+	return tier;
+}
+
 Vector2i CudaGPU::MaxTexture2DSize() const
 {
 	return Vector2i(props.maxTexture2D[0],
@@ -81,14 +79,10 @@ cudaStream_t CudaGPU::DetermineStream(uint32_t requiredSMCount) const
 		return smallWorkList.UseGroup();
 }
 
-METU_SHARED_TRACER_ENTRY_POINT std::vector<CudaGPU> CudaSystem::systemGPUs;
+std::vector<CudaGPU> CudaSystem::systemGPUs;
+CudaSystem::CudaError CudaSystem::systemStatus = CudaSystem::CUDA_SYSTEM_UNINIALIZED;
 
-TracerError CudaSystem::Initialize()
-{
-	return Initialize(systemGPUs);
-}
-
-TracerError CudaSystem::Initialize(std::vector<CudaGPU>& gpus)
+CudaSystem::CudaError CudaSystem::Initialize()
 {	
 	int deviceCount;	
 	cudaError err;
@@ -96,22 +90,31 @@ TracerError CudaSystem::Initialize(std::vector<CudaGPU>& gpus)
 	err = cudaGetDeviceCount(&deviceCount);
 	if(err == cudaErrorInsufficientDriver)
 	{
-		return TracerError::CUDA_OLD_DRIVER;
+		return OLD_DRIVER;
 	}
 	else if(err == cudaErrorNoDevice)
 	{
-		return TracerError::CUDA_NO_DEVICE;
+		return NO_DEVICE;
 	}
 
 	// All Fine Start Query Devices
 	for(int i = 0; i < deviceCount; i++)
 	{
-		gpus.emplace_back(i);
+		systemGPUs.emplace_back(i);
 	}
 
 	// Strip unsupported processors
+	for(auto i = systemGPUs.begin(); i != systemGPUs.end(); i++)
+	{
+		if(i->Tier() == CudaGPU::GPU_UNSUPPORTED)
+			i = systemGPUs.erase(i);
+	}
+	return OK;
+}
 
-	return TracerError::OK;
+CudaSystem::CudaError CudaSystem::SystemStatus()
+{
+	return systemStatus;
 }
 
 uint32_t CudaSystem::DetermineGridStrideBlock(int gpuIndex,
@@ -120,7 +123,7 @@ uint32_t CudaSystem::DetermineGridStrideBlock(int gpuIndex,
 											  size_t workCount,
 											  void* func)
 {
-	const CudaGPU& gpu = systemGPUs[gpuIndex];
+	const CudaGPU& gpu = GPUList()[gpuIndex];
 	
 	uint32_t blockPerSM = gpu.RecommendedBlockCountPerSM(func, threadCount,
 														 sharedMemSize);
@@ -141,22 +144,32 @@ const std::vector<size_t> CudaSystem::GridStrideMultiGPUSplit(size_t workCount,
 	std::vector<size_t> workPerGPU;
 	// Split work into all GPUs
 	uint32_t totalAvailBlocks = 0;
-	for(CudaGPU g : systemGPUs)
+	for(const CudaGPU& g : GPUList())
 	{
 		uint32_t blockPerSM = g.RecommendedBlockCountPerSM(f, threadCount, sharedMemSize);
-		totalAvailBlocks += blockPerSM * g.SMCount();
+		uint32_t blockGPU = blockPerSM * g.SMCount();
+		workPerGPU.push_back(blockGPU);
+		totalAvailBlocks += blockGPU;
 	}
+
+	// Total Threads
+	size_t totalThreads = threadCount * totalAvailBlocks;
+	uint32_t iterationPerThread = static_cast<uint32_t>((workCount + totalThreads - 1) / totalThreads);
 
 	size_t workDispatched = 0;
 	//const uint32_t totalWorkPerSM = (workCount + totalSMs - 1) / totalSMs;
-	for(CudaGPU g : systemGPUs)
+	int i = 0;
+	for(const CudaGPU& g : GPUList())
 	{
-		uint32_t blockPerSM = g.RecommendedBlockCountPerSM(f, threadCount, sharedMemSize);
-		uint32_t gpuBlocks = blockPerSM * g.SMCount();
-		size_t gpuWorkCount = StaticThreadPerBlock1D * gpuBlocks;
+		// Send Data
+		size_t workPerBlock = threadCount * iterationPerThread;
+		size_t gpuWorkCount = workPerGPU[i] * workPerBlock;
 		gpuWorkCount = std::min(gpuWorkCount, workCount - workDispatched);
 		workDispatched += gpuWorkCount;
-		workPerGPU.emplace_back(gpuWorkCount);
+		workPerGPU[i] = gpuWorkCount;
+
+		i++;
 	}
+	// Block per gpu holds
 	return std::move(workPerGPU);
 }

@@ -80,9 +80,11 @@ void TracerBase::HitRays()
 		auto portions = rayMemory.Partition(rayCount);
 
 		// Reorder partitions for efficient calls
-		// (sort by gpu and order for better async access)
+		// (group partitions into gpus and order for better async access)
 		// ....
 		// TODO:
+		const int totalGPU = static_cast<int>(CudaSystem::GPUList().size());
+		int currentGPU = 0;
 
 		// For each partition
 		for(const auto& p : portions)
@@ -100,7 +102,8 @@ void TracerBase::HitRays()
 			// Local hit kernels returns a material key 
 			// and primitive inner id.
 			// Since materials are batched for both material and
-			loc->second->Hit(// O
+			loc->second->Hit(currentGPU,
+							 // O
 							 dMaterialKeys,
 							 dPrimitiveIds,
 							 dHitStructs,
@@ -111,6 +114,9 @@ void TracerBase::HitRays()
 							 dRayIdStart,
 							 dCurrentKeyStart,
 							 static_cast<uint32_t>(p.count));
+
+			// Split to GPUs
+			currentGPU = (currentGPU + 1) % totalGPU;			
 
 			// Hit function updates material key,
 			// primitive id and struct if this hit is accepted
@@ -264,12 +270,17 @@ TracerBase::TracerBase()
 void TracerBase::Initialize(int leaderGPUId)
 {
 	// Device initalization
-	TracerError e(TracerError::END);
-	if((e = CudaSystem::Initialize()) != TracerError::OK)
-	{
-		if(callbacks) callbacks->SendError(e);
-	}
 	rayMemory.SetLeaderDevice(leaderGPUId);
+	
+	
+	//...............
+	//Initialize...
+	//currentLogic->
+
+	//for()
+	
+	
+	
 	CUDA_CHECK(cudaSetDevice(leaderGPUId));
 
 	// All seems fine mark tracer as healthy

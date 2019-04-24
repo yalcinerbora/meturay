@@ -22,6 +22,7 @@ tree constructio would provide additional overhead.
 #include "DeviceMemory.h"
 #include "GPUAcceleratorP.cuh"
 #include "GPUPrimitiveI.h"
+#include "CudaConstants.h"
 
 #include "GPUAcceleratorLinearKC.cuh"
 
@@ -51,11 +52,11 @@ class GPUAccLinearGroup final
 
 	private:	
 		// CPU Memory
-		//std::vector<Vector2ul>					acceleratorRanges;
 		std::vector<PrimitiveRangeList>				primitiveRanges;
 		std::vector<HitKeyList>						primitiveMaterialKeys;
+		std::vector<Vector2ul>						accRanges;
 		std::map<uint32_t, uint32_t>				idLookup;
-	
+			
 		// GPU Memory
 		DeviceMemory								memory;
 		Vector2ul*									dAccRanges;
@@ -75,9 +76,7 @@ class GPUAccLinearGroup final
 		// Type(as string) of the accelerator group
 		const char*						Type() const override;
 		// Loads required data to CPU cache for
-		SceneError						InitializeGroup(// Append AABBs for each surface
-														std::map<uint32_t, AABB3>& aabbOut,
-														// Map of hit keys for all materials
+		SceneError						InitializeGroup(// Map of hit keys for all materials
 														// w.r.t matId and primitive type
 														const std::map<TypeIdPair, HitKey>&,
 														// List of surface/material
@@ -99,10 +98,12 @@ class GPUAccLinearGroup final
 		uint32_t						InnerId(uint32_t surfaceId) const override;
 
 		// Batched and singular construction
-		 void							ConstructAccelerator(uint32_t surface) override;
-		 void							ConstructAccelerators(const std::vector<uint32_t>& surfaces) override;
-		 void							DestroyAccelerator(uint32_t surface) override;
-		 void							DestroyAccelerators(const std::vector<uint32_t>& surfaces) override;
+		void							ConstructAccelerators() override;
+		void							ConstructAccelerator(uint32_t surface) override;
+		void							ConstructAccelerators(const std::vector<uint32_t>& surfaces) override;
+		void							DestroyAccelerators() override;
+		void							DestroyAccelerator(uint32_t surface) override;
+		void							DestroyAccelerators(const std::vector<uint32_t>& surfaces) override;
 
 		size_t							UsedGPUMemory() const override;
 		size_t							UsedCPUMemory() const override;		
@@ -123,7 +124,8 @@ class GPUAccLinearBatch final
 		// Type(as string) of the accelerator group
 		const char*			Type() const override;
 		// Kernel Logic
-		void				Hit(// O
+		void				Hit(int gpuId,
+								// O
 								HitKey* dMaterialKeys,
 								PrimitiveId* dPrimitiveIds,
 								HitStructPtr dHitStructs,
@@ -171,11 +173,14 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
 										const RayId* dRayIds,
 										const uint32_t rayCount) const override;
 
-		//TODO: define params of functions
-		void						Constrcut(// List of surface to transform id hit key mappings
-											  const std::map<uint32_t, BaseLeaf>&) override;
-		void						Reconstruct(// List of only changed surface to transform id hit key mappings
-												const std::map<uint32_t, BaseLeaf>& keys) override;
+
+		SceneError					Initialize(// List of surface to transform id hit key mappings
+											   const std::map<uint32_t, BaseLeaf>&) override;
+		SceneError					Change(// List of only changed surface to transform id hit key mappings
+										   const std::map<uint32_t, BaseLeaf>&) override;
+		
+		void						Constrcut() override;
+		void						Destruct() override;
 };
 
 #include "GPUAcceleratorLinear.hpp"
