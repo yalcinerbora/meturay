@@ -31,13 +31,13 @@ BasicTracerLogicGenerator::BasicTracerLogicGenerator()
 	// Add Basic Mat and Batch
 	// Material Types
 	matGroupGenerators.emplace(BasicMat::TypeName,
-							   GPUMatGroupGen(DefaultConstruct<GPUMaterialGroupI, BasicMat>,
+							   GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BasicMat>,
 											  DefaultDestruct<GPUMaterialGroupI>));
 	matGroupGenerators.emplace(GIAlbedoMat::TypeName,
-							   GPUMatGroupGen(DefaultConstruct<GPUMaterialGroupI, GIAlbedoMat>,
+							   GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, GIAlbedoMat>,
 											  DefaultDestruct<GPUMaterialGroupI>));
 	matGroupGenerators.emplace(ConstantBoundaryMat::TypeName,
-							   GPUMatGroupGen(DefaultConstruct<GPUMaterialGroupI, ConstantBoundaryMat>,
+							   GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, ConstantBoundaryMat>,
 											  DefaultDestruct<GPUMaterialGroupI>));
 	// Material Batches
 	matBatchGenerators.emplace(GIAlbedoTriBatch::TypeName,

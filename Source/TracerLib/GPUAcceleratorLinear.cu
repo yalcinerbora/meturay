@@ -29,23 +29,45 @@ void GPUBaseAcceleratorLinear::Hit(// Output
 								   const RayId* dRayIds,
 								   const uint32_t rayCount) const
 {
-	KCIntersectBaseLinear<<<1,1>>>(// Output
-								   dTransformIds,
-								   dAcceleratorKeys,
-								   // I-O
-								   dPrevLocList,
-								   // Input
-								   dRays,
-								   dRayIds,
-								   rayCount,
-								   // Constants
-								   dLeafs,
-								   leafCount);
-	CUDA_KERNEL_CHECK();
+
+	// Split work
+	const auto splits = CudaSystem::GridStrideMultiGPUSplit(rayCount,
+															StaticThreadPerBlock1D,
+															0,
+															KCIntersectBaseLinear);
+
+	// Split work into multiple GPU's
+	size_t offset = 0;
+	for(int i = 0; i < static_cast<int>(CudaSystem::GPUList().size()); i++)
+	{
+		if(splits[i] == 0) break;
+		// Generic
+		const CudaGPU& g = CudaSystem::GPUList()[i];
+		int gpuIndex = g.DeviceId();
+		const uint32_t workCount = static_cast<uint32_t>(splits[i]);
+
+		CudaSystem::AsyncGridStrideKC_X(gpuIndex, 0,
+										workCount,
+										//
+										KCIntersectBaseLinear,
+										// Output
+										dTransformIds,
+										dAcceleratorKeys + offset,
+										// I-O
+										dPrevLocList,
+										// Input
+										dRays,
+										dRayIds + offset,
+										workCount,
+										// Constants
+										dLeafs,
+										leafCount);
+
+	}
 }
 
-void GPUBaseAcceleratorLinear::Constrcut(// List of surface to transform id hit key mappings
-										 const std::map<uint32_t, BaseLeaf>& map)
+SceneError GPUBaseAcceleratorLinear::Initialize(// List of surface to transform id hit key mappings
+												const std::map<uint32_t, BaseLeaf>& map)
 {
 	innerIds.clear();
 
@@ -69,10 +91,11 @@ void GPUBaseAcceleratorLinear::Constrcut(// List of surface to transform id hit 
 	CUDA_CHECK(cudaMemcpy(const_cast<BaseLeaf*>(dLeafs),
 						  leafCPU.data(), sizeof(BaseLeaf) * leafCount,
 						  cudaMemcpyHostToDevice));
+	return SceneError::OK;
 }
 
-void GPUBaseAcceleratorLinear::Reconstruct(// List of only changed surface to transform id hit key mappings
-										   const std::map<uint32_t, BaseLeaf>& map)
+SceneError GPUBaseAcceleratorLinear::Change(// List of only changed surface to transform id hit key mappings
+											const std::map<uint32_t, BaseLeaf>& map)
 {
 	for(const auto& pair : map)
 	{
@@ -80,6 +103,17 @@ void GPUBaseAcceleratorLinear::Reconstruct(// List of only changed surface to tr
 		uint32_t index = innerIds[pair.first];
 		const_cast<BaseLeaf*>(dLeafs)[index] = pair.second;
 	}
+	return SceneError::OK;
+}
+
+void GPUBaseAcceleratorLinear::Constrcut()
+{
+
+}
+
+void GPUBaseAcceleratorLinear::Destruct()
+{
+
 }
 
 template<class PGroup>

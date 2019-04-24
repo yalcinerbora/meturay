@@ -8,7 +8,7 @@ Thread per Block etc..
 
 */
 
-#ifdef METU_SHARED_TRACER
+#ifdef METU_SHARED_GPULIST
 #define METU_SHARED_TRACER_ENTRY_POINT __declspec(dllexport)
 #else
 #define METU_SHARED_TRACER_ENTRY_POINT __declspec(dllimport)
@@ -19,8 +19,6 @@ Thread per Block etc..
 #include <array>
 
 #include "RayLib/Vector.h"
-
-struct TracerError;
 
 // Except first generation this did not change having this compile time constant is a bliss
 static constexpr unsigned int WarpSize = 32;
@@ -44,7 +42,7 @@ class CudaGPU
 			GPU_PASCAL,
 			GPU_TURING_VOLTA
 		};
-
+		
 		static GPUTier				DetermineGPUTier(cudaDeviceProp);
 
 	private:
@@ -56,9 +54,10 @@ class CudaGPU
 
 			// Constructors
 											WorkGroup();
-											WorkGroup(const WorkGroup&);
+											WorkGroup(const WorkGroup&) = delete;
 											WorkGroup(WorkGroup&&);
 			WorkGroup&						operator=(const WorkGroup&) = delete;
+			WorkGroup&						operator=(WorkGroup&&);
 											~WorkGroup();
 
 			cudaStream_t					UseGroup() const;
@@ -76,14 +75,19 @@ class CudaGPU
 	protected:
 	public:
 		// Constrctors & Destructor
-								CudaGPU(int deviceId);								
+								CudaGPU(int deviceId);
+								CudaGPU(const CudaGPU&) = delete;
+								CudaGPU(CudaGPU&&) = default;
+		CudaGPU&				operator=(const CudaGPU&) = delete;
+		CudaGPU&				operator=(CudaGPU&&) = default;
 								~CudaGPU() = default;
 		//
 		int						DeviceId() const;
 		std::string				Name() const;
 		double					TotalMemoryMB() const;
 		double					TotalMemoryGB() const;
-
+		GPUTier					Tier() const;
+		
 		size_t					TotalMemory() const;
 		Vector2i				MaxTexture2DSize() const;
 
@@ -96,8 +100,20 @@ class CudaGPU
 
 class CudaSystem
 {
+	public:
+		enum CudaError
+		{
+			CUDA_SYSTEM_UNINIALIZED,
+			// Initalization Errors
+			OLD_DRIVER,
+			NO_DEVICE,
+			// Ok
+			OK
+		};
+
 	private:
-		static METU_SHARED_TRACER_ENTRY_POINT std::vector<CudaGPU> systemGPUs;
+		static std::vector<CudaGPU>			systemGPUs;
+		static CudaError					systemStatus;
 
 		static uint32_t						DetermineGridStrideBlock(int gpuIndex,
 																	 uint32_t sharedMemSize,
@@ -110,8 +126,10 @@ class CudaSystem
 											CudaSystem() = delete;
 											CudaSystem(const CudaSystem&) = delete;
 
-		static TracerError					Initialize(std::vector<CudaGPU>& gpus);
-		static TracerError					Initialize();
+		static CudaError					Initialize(std::vector<CudaGPU>& gpus);
+		static CudaError					Initialize();
+
+		static CudaError					SystemStatus();
 
 		
 
@@ -177,7 +195,6 @@ class CudaSystem
 																			uint32_t sharedMemSize,
 																			void* f);
 
-
 		// Misc
 		static const std::vector<CudaGPU>&			GPUList();
 		static bool									SingleGPUSystem();
@@ -186,20 +203,13 @@ class CudaSystem
 		static constexpr int						CURRENT_DEVICE = -1;
 };
 
+// Verbosity
+using SystemGPUs = std::vector<CudaGPU>;
+
 template<int Count>
 CudaGPU::WorkGroup<Count>::WorkGroup()
 	: currentIndex(0)
 {
-	for(int i = 0; i < Count; i++)
-	{
-		CUDA_CHECK(cudaStreamCreate(&works[i]));
-	}
-}
-
-template<int Count>
-CudaGPU::WorkGroup<Count>::WorkGroup(const WorkGroup& other)
-{
-	// Default construct here also (TODO: fix)
 	for(int i = 0; i < Count; i++)
 	{
 		CUDA_CHECK(cudaStreamCreate(&works[i]));
@@ -215,6 +225,19 @@ CudaGPU::WorkGroup<Count>::WorkGroup(WorkGroup&& other)
 		works[i] = other.works[i];
 		other.works[i] = nullptr;
 	}
+}
+
+template<int Count>
+CudaGPU::WorkGroup<Count>& CudaGPU::WorkGroup<Count>::operator=(WorkGroup&& other)
+{
+	assert(this != &other);
+	currentIndex = other.currentIndex;
+	for(int i = 0; i < Count; i++)
+	{		
+		works[i] = other.works[i];
+		other.works[i] = nullptr;
+	}
+	return *this;
 }
 
 template<int Count>
@@ -317,7 +340,7 @@ __host__ void CudaSystem::AsyncGridStrideKC_X(int gpuIndex,
 	const size_t threadCount = StaticThreadPerBlock1D;
 	uint32_t requiredSMCount = DetermineGridStrideBlock(gpuIndex, sharedMemSize,
 														threadCount, workCount, &f);
-	cudaStream_t stream = systemGPUs[gpuIndex].DetermineStream(requiredSMCount);
+	cudaStream_t stream = GPUList()[gpuIndex].DetermineStream(requiredSMCount);
 	
 	CUDA_CHECK(cudaSetDevice(gpuIndex));
 	uint32_t blockSize = StaticThreadPerBlock1D;
@@ -335,7 +358,7 @@ __host__ void CudaSystem::AsyncGridStrideKC_XY(int gpuIndex,
 	const size_t threadCount = StaticThreadPerBlock2D[0] * StaticThreadPerBlock2D[1];
 	uint32_t requiredSMCount = DetermineGridStrideBlock(gpuIndex, sharedMemSize,
 														thread, workCount, &f);
-	cudaStream_t stream = systemGPUs[gpuIndex].DetermineStream(requiredSMCount);
+	cudaStream_t stream = GPUList()[gpuIndex].DetermineStream(requiredSMCount);
 	
 	CUDA_CHECK(cudaSetDevice(gpuIndex));
 	dim3 blockSize = dim3(StaticThreadPerBlock2D[0], StaticThreadPerBlock2D[1]);
@@ -345,12 +368,14 @@ __host__ void CudaSystem::AsyncGridStrideKC_XY(int gpuIndex,
 
 inline const std::vector<CudaGPU>& CudaSystem::GPUList()
 {
+	if(systemGPUs.size() == 0)
+		systemStatus = Initialize();
 	return systemGPUs;
 }
 
 inline bool CudaSystem::SingleGPUSystem()
 {
-	return systemGPUs.size() == 1;
+	return GPUList().size() == 1;
 }
 
 inline void CudaSystem::SyncAllGPUs()
@@ -358,7 +383,7 @@ inline void CudaSystem::SyncAllGPUs()
 	int currentDevice;
 	CUDA_CHECK(cudaGetDevice(&currentDevice));
 
-	for(int i = 0; i < static_cast<int>(systemGPUs.size()); i++)
+	for(int i = 0; i < static_cast<int>(GPUList().size()); i++)
 	{
 		CUDA_CHECK(cudaSetDevice(i));
 		CUDA_CHECK(cudaDeviceSynchronize());

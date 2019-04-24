@@ -10,6 +10,7 @@
 #include "TracerLib/TracerLoader.h"
 #include "TracerLib/GPUScene.h"
 #include "TracerLib/TracerBase.h"
+#include "TracerLib/ScenePartitioner.h"
 
 // Node
 #include "RayLib/SelfNode.h"
@@ -38,25 +39,29 @@ TEST(HelloTriangle, Test)
 																   "DeleteBasicTracer");
 
 
-	// Generate GPU List
-	// We are a self node so only this GPU's ptrs
-	//std::vector<CudaGPU> gpuList;
-	TracerError err = CudaSystem::Initialize();
-	if(err != TracerError::OK)
+	// Generate GPU List & A Partitioner
+	// Check cuda system error here
+	
+	const std::vector<CudaGPU>& gpuList = CudaSystem::GPUList();	
+	if(CudaSystem::SystemStatus() != CudaSystem::OK)
 		ASSERT_FALSE(true);
+	int leaderDevice = gpuList[0].DeviceId();
+
+	// GPU Data Partitioner
+	SingleGPUScenePartitioner partitioner(gpuList);
 
 	// Load Scene
-	GPUScene scene("TestScenes/helloTriangle.json",
-				   CudaSystem::GPUList(), *tracerGenerator.get());
+	GPUScene scene("TestScenes/helloTriangle.json", partitioner,
+				   *tracerGenerator.get());
 	SceneError scnE = scene.LoadScene(0.0);
 	if(scnE != SceneError::OK)
 		ASSERT_FALSE(true);
 
 	// Finally generate logic after successfull load
 	TracerBaseLogicI* logic;
-	scnE = tracerGenerator.get()->GenerateBaseLogic(logic, tracerParams,
-													scene.MaxMatIds(),
-													scene.MaxAccelIds());
+	scnE = tracerGenerator->GenerateBaseLogic(logic, tracerParams,
+											  scene.MaxMatIds(),
+											  scene.MaxAccelIds());
 	if(scnE != SceneError::OK)
 		ASSERT_FALSE(true);
 	
@@ -92,7 +97,7 @@ TEST(HelloTriangle, Test)
 	visorView->SetInputScheme(&input);
 
 	// Attach the logic & Image format
-	tracerBase.Initialize(0);
+	tracerBase.Initialize(leaderDevice);
 	tracerBase.AttachLogic(*logic);
 	tracerBase.SetImagePixelFormat(pixFormat);
 	tracerBase.ResizeImage(IMAGE_RESOLUTION);

@@ -41,7 +41,7 @@ class GPUAcceleratorBatch : public GPUAcceleratorBatchI
 	public:
 		// Constructors & Destructor
 										GPUAcceleratorBatch(const GPUAcceleratorGroupI&,
-														  const GPUPrimitiveGroupI&);
+														    const GPUPrimitiveGroupI&);
 										~GPUAcceleratorBatch() = default;
 
 		// Every MaterialBatch is available for a specific primitive / accelerator data

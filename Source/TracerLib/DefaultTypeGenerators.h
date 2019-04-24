@@ -58,10 +58,12 @@ template<class AccelBatch>
 using AccelBatchGeneratorFunc = AccelBatch* (*)(const GPUAcceleratorGroupI&,
 												const GPUPrimitiveGroupI&);
 
+template<class MaterialGroup>
+using MaterialGroupGeneratorFunc = MaterialGroup* (*)(int gpuId);
+
 template<class MaterialBatch>
 using MaterialBatchGeneratorFunc = MaterialBatch* (*)(const GPUMaterialGroupI&,
-													  const GPUPrimitiveGroupI&,
-													  int gpuId);
+													  const GPUPrimitiveGroupI&);
 
 //=========================//
 // Shared Ptr Construction //
@@ -123,20 +125,20 @@ class GPUTracerGen
 class GPUMatGroupGen
 {
 	private:
-		ObjGeneratorFunc<GPUMaterialGroupI>	gFunc;
-		ObjDestroyerFunc<GPUMaterialGroupI>	dFunc;
+		MaterialGroupGeneratorFunc<GPUMaterialGroupI>	gFunc;
+		ObjDestroyerFunc<GPUMaterialGroupI>				dFunc;
 
 	public:
 		// Constructor & Destructor
-		GPUMatGroupGen(ObjGeneratorFunc<GPUMaterialGroupI> g,
+		GPUMatGroupGen(MaterialGroupGeneratorFunc<GPUMaterialGroupI> g,
 					   ObjDestroyerFunc<GPUMaterialGroupI> d)
 			: gFunc(g)
 			, dFunc(d) 
 		{}
 
-		GPUMatGPtr operator()()
+		GPUMatGPtr operator()(int gpuId)
 		{
-			GPUMaterialGroupI* mat = gFunc();
+			GPUMaterialGroupI* mat = gFunc(gpuId);
 			return GPUMatGPtr(mat, dFunc);
 		}
 };
@@ -200,10 +202,9 @@ class GPUMatBatchGen
 		{}
 
 		GPUMatBPtr operator()(const GPUMaterialGroupI& mg,
-							  const GPUPrimitiveGroupI& pg,
-							  int gpuId)
+							  const GPUPrimitiveGroupI& pg)
 		{
-			GPUMaterialBatchI* mat = gFunc(mg, pg, gpuId);
+			GPUMaterialBatchI* mat = gFunc(mg, pg);
 			return GPUMatBPtr(mat, dFunc);
 		}
 };
@@ -257,10 +258,15 @@ namespace TypeGenWrappers
 	}
 
 	template <class Base, class MatBatch>
-	Base* MaterialBatchConstruct(const GPUMaterialGroupI& m,
-								 const GPUPrimitiveGroupI& p,
-								 int gpuId)
+	Base* MaterialGroupConstruct(int gpuId)
 	{
-		return new MatBatch(m, p, gpuId);
-	}	
+		return new MatBatch(gpuId);
+	}
+
+	template <class Base, class MatBatch>
+	Base* MaterialBatchConstruct(const GPUMaterialGroupI& m,
+								 const GPUPrimitiveGroupI& p)
+	{
+		return new MatBatch(m, p);
+	}
 }

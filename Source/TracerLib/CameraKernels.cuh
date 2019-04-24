@@ -4,6 +4,8 @@
 
 Camera Ray Generation Kernel
 
+Uses statified sampling
+
 */
 
 #include <cstdint>
@@ -44,7 +46,7 @@ __global__ void KCGenerateCameraRays(// Output
 {
 	extern __shared__ uint32_t sRandState[];
 	RandomGPU rng(gRNGStates.state, sRandState);
-
+	
 	// Total work
 	const uint32_t totalWorkCount = pixelCount[0] * samplePerLocation *
 									pixelCount[1] * samplePerLocation;

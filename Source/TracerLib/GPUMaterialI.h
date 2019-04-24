@@ -36,13 +36,15 @@ class GPUMaterialGroupI
 		// Material Queries
 		virtual int							InnerId(uint32_t materialId) const = 0;
 		virtual bool						IsLoaded(uint32_t materialId) const = 0;
+		virtual int							GPUId() const = 0;
 
 		virtual size_t						UsedGPUMemory() const = 0;
 		virtual size_t						UsedCPUMemory() const = 0;
 		virtual size_t						UsedGPUMemory(uint32_t materialId) const = 0;
 		virtual size_t						UsedCPUMemory(uint32_t materialId) const = 0;
+		
 
-		virtual uint8_t						OutRayCount() const = 0;		
+		virtual uint8_t						OutRayCount() const = 0;				
 };
 
 // Defines call action over a certain material group
@@ -77,7 +79,6 @@ class GPUMaterialBatchI
 		// Every MaterialBatch is available for a specific primitive / material data
 		virtual const GPUPrimitiveGroupI&	PrimitiveGroup() const = 0;
 		virtual const GPUMaterialGroupI&	MaterialGroup() const = 0;
-		virtual int							GPUId() const = 0;
 
 		virtual uint8_t						OutRayCount() const = 0;
 };

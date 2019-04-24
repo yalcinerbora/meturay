@@ -37,6 +37,9 @@
     <Filter Include="Partial Implementations">
       <UniqueIdentifier>{ae3c2665-f7ff-44c1-ba19-142e87e5767c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Scene">
+      <UniqueIdentifier>{2f7fe44b-c256-47b5-863e-2cca623b5075}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerLib\ImageMemory.cpp">
@@ -51,7 +54,6 @@
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp">
       <Filter>Default Primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp">
       <Filter>Default Primitives</Filter>
     </ClCompile>
@@ -68,7 +70,15 @@
       <Filter>Default Primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\SceneFileNode.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\SceneFileNode.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\ScenePartitioner.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -144,7 +154,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.h">
       <Filter>Default Primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.h">
       <Filter>Default Primitives</Filter>
     </ClInclude>
@@ -203,7 +212,18 @@
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\SceneFileNode.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\SceneFileNode.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\ScenePartitionerI.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\ScenePartitioner.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

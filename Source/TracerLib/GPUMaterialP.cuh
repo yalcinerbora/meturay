@@ -35,12 +35,16 @@ class GPUMaterialGroup
 		static constexpr auto ShadeFunc	= ShadeF;
 
 	private:
+		const int							gpuId;
+
 	protected:
 
 	public:
 		// Constructors & Destructor
-										GPUMaterialGroup() = default;
+										GPUMaterialGroup(int gpuId);
 		virtual							~GPUMaterialGroup() = default;
+
+		int									GPUId() const override;
 };
 
 template <class TLogic, class MGroup, class PGroup,
@@ -56,15 +60,13 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
 
 	private:
 		const MGroup&						materialGroup;
-		const PGroup&						primitiveGroup;
-		const int							gpuId;
+		const PGroup&						primitiveGroup;		
 
 	protected:		
 	public:
 		// Constrcutors & Destructor
 											GPUMaterialBatch(const GPUMaterialGroupI& m,
-															 const GPUPrimitiveGroupI& p,
-															 int gpuId);
+															 const GPUPrimitiveGroupI& p);
 											~GPUMaterialBatch() = default;
 											
 		// Type (as string) of the primitive group
@@ -90,7 +92,6 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
 	
 		const GPUPrimitiveGroupI&			PrimitiveGroup() const override;
 		const GPUMaterialGroupI&			MaterialGroup() const override;
-		int									GPUId() const override;
 
 		uint8_t								OutRayCount() const override;
 };
@@ -107,13 +108,17 @@ class GPUBoundaryMatGroup
 
 		static constexpr auto ShadeFunc = ShadeF;
 
-		private:
-		protected:
+	private:
+		const int						gpuId;
 
-		public:
-			// Constructors & Destructor
-										GPUBoundaryMatGroup() = default;
-			virtual						~GPUBoundaryMatGroup() = default;
+	protected:
+
+	public:
+		// Constructors & Destructor
+										GPUBoundaryMatGroup(int gpuId);
+		virtual							~GPUBoundaryMatGroup() = default;
+
+		int								GPUId() const override;
 };
 
 template <class TLogic, class MGroup>
@@ -127,15 +132,13 @@ class GPUBoundaryMatBatch final : public GPUMaterialBatchI
 
 	private:
 		const MGroup&						materialGroup;
-		static const GPUPrimitiveGroupI*	primitiveGroup;
-		const int							gpuId;
+		static const GPUPrimitiveGroupI*	primitiveGroup;		
 
 	protected:		
 	public:
 		// Constrcutors & Destructor
 											GPUBoundaryMatBatch(const GPUMaterialGroupI& m,
-															    const GPUPrimitiveGroupI& p,
-																int gpuId);
+															    const GPUPrimitiveGroupI& p);
 											~GPUBoundaryMatBatch() = default;
 											
 		// Type (as string) of the primitive group
@@ -161,7 +164,6 @@ class GPUBoundaryMatBatch final : public GPUMaterialBatchI
 	
 		const GPUPrimitiveGroupI&			PrimitiveGroup() const override;
 		const GPUMaterialGroupI&			MaterialGroup() const override;
-		int									GPUId() const override;
 
 		uint8_t								OutRayCount() const override;
 };
@@ -181,14 +183,26 @@ struct MatDataAccessor
 	}
 };
 
+template <class TLogic, class MaterialD, class SurfaceD,
+		  ShadeFunc<TLogic, SurfaceD, MaterialD> ShadeF>
+GPUMaterialGroup<TLogic, MaterialD, SurfaceD, ShadeF>::GPUMaterialGroup(int gpuId)
+	: gpuId()
+{}
+
+template <class TLogic, class MaterialD, class SurfaceD,
+		  ShadeFunc<TLogic, SurfaceD, MaterialD> ShadeF>
+int GPUMaterialGroup<TLogic, MaterialD, SurfaceD, ShadeF>::GPUId() const
+{
+	return gpuId;
+}
+
+
 template <class TLogic, class MGroup, class PGroup,
 	SurfaceFunc<MGroup, PGroup> SurfaceF>
 	GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::GPUMaterialBatch(const GPUMaterialGroupI& m,
-																		 const GPUPrimitiveGroupI& p,
-																		 int gpuId)
+																		 const GPUPrimitiveGroupI& p)
 	: materialGroup(static_cast<const MGroup&>(m))
 	, primitiveGroup(static_cast<const PGroup&>(p))
-	, gpuId(gpuId)
 {}
 
 template <class TLogic, class MGroup, class PGroup,
@@ -234,10 +248,17 @@ void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
 	const MaterialData matData = MatDataAccessor::Data(materialGroup);
 
 	const uint32_t outRayCount = materialGroup.OutRayCount();
+	const int gpuId = materialGroup.GPUId();
 
 	// Test
-	KCMaterialShade<TLogic, MGroup, PGroup, SurfFunc><<<1,1>>>
+	CudaSystem::AsyncGridStrideKC_X
 	(
+		gpuId,
+		rngMem.SharedMemorySize(StaticThreadPerBlock1D),
+		rayCount,
+		//
+		KCMaterialShade<TLogic, MGroup, PGroup, SurfFunc>,
+		// Args
 		// Output
 		dPixels,
 		//
@@ -253,14 +274,13 @@ void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
 		dMatIds,
 		dRayIds,
 		//
-		rayCount,		
+		rayCount,
 		rngMem.RNGData(gpuId),
 		// Material Related
 		matData,
 		// Primitive Related
 		primData
 	);
-	CUDA_KERNEL_CHECK();
 }
 
 template <class TLogic, class MGroup, class PGroup,
@@ -279,24 +299,28 @@ const GPUMaterialGroupI& GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::Mat
 
 template <class TLogic, class MGroup, class PGroup,
 		  SurfaceFunc<MGroup, PGroup> SurfaceF>
-int GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::GPUId() const
-{
-	return gpuId;
-}
-
-template <class TLogic, class MGroup, class PGroup,
-		  SurfaceFunc<MGroup, PGroup> SurfaceF>
 uint8_t GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::OutRayCount() const
 {
 	return materialGroup.OutRayCount();
 }
 
+template <class TLogic, class MaterialD,
+		  BoundaryShadeFunc<TLogic, MaterialD> ShadeF>
+GPUBoundaryMatGroup<TLogic, MaterialD, ShadeF>::GPUBoundaryMatGroup(int gpuId)
+	: gpuId(gpuId)
+{}
+
+template <class TLogic, class MaterialD,
+	BoundaryShadeFunc<TLogic, MaterialD> ShadeF>
+int GPUBoundaryMatGroup<TLogic, MaterialD, ShadeF>::GPUId() const
+{
+	return gpuId;
+}
+
 template <class TLogic, class MGroup>
 GPUBoundaryMatBatch<TLogic, MGroup>::GPUBoundaryMatBatch(const GPUMaterialGroupI& m,
-														 const GPUPrimitiveGroupI& p,
-														 int gpuId)
+														 const GPUPrimitiveGroupI& p)
 	: materialGroup(static_cast<const MGroup&>(m))
-	, gpuId(gpuId)
 {}
 
 template <class TLogic, class MGroup>
@@ -334,24 +358,30 @@ void GPUBoundaryMatBatch<TLogic, MGroup>::ShadeRays(// Output
 	
 	// TODO: Is there a better way to implement this
 	const MaterialData matData = MatDataAccessor::Data(materialGroup);	
+	const int gpuId = materialGroup.GPUId();
 
 	// Test
-	KCBoundaryMatShade<TLogic, MGroup><<<1,1>>>
+	CudaSystem::AsyncGridStrideKC_X
 	(
+		gpuId,
+		rngMem.SharedMemorySize(StaticThreadPerBlock1D),
+		rayCount,
+		//
+		KCBoundaryMatShade<TLogic, MGroup>,
+		// Args
 		// Output
 		dPixels,
 		// Input
 		dRayIn,
-		static_cast<const RayAuxData*>(dRayAuxIn),		
+		static_cast<const RayAuxData*>(dRayAuxIn),
 		//
 		dRayIds,
 		//
-		rayCount,		
+		rayCount,
 		rngMem.RNGData(gpuId),
 		// Material Related
 		matData
-	);
-	CUDA_KERNEL_CHECK();
+	);		
 }
 
 template <class TLogic, class MGroup>
@@ -364,12 +394,6 @@ template <class TLogic, class MGroup>
 const GPUMaterialGroupI& GPUBoundaryMatBatch<TLogic, MGroup>::MaterialGroup() const
 {
 	return materialGroup;
-}
-
-template <class TLogic, class MGroup>
-int GPUBoundaryMatBatch<TLogic, MGroup>::GPUId() const
-{
-	return gpuId;
 }
 
 template <class TLogic, class MGroup>

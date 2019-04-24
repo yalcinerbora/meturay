@@ -13,9 +13,7 @@ const char* GPUAccLinearGroup<PGroup>::Type() const
 }
 
 template <class PGroup>
-SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Append AABBs for each surface
-													  std::map<uint32_t, AABB3>& aabbOut,
-													  // Map of hit keys for all materials
+SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Map of hit keys for all materials
 													  // w.r.t matId and primitive type
 													  const std::map<TypeIdPair, HitKey>& allHitKeys,
 													  // List of surface/material
@@ -24,7 +22,11 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Append AABBs for each s
 													  const std::map<uint32_t, IdPairings>& pairingList,
 													  double time)
 {
-	std::vector<Vector2ul> acceleratorRanges;
+	accRanges.clear();
+	primitiveRanges.clear();
+	primitiveMaterialKeys.clear();
+	idLookup.clear();
+
 	const char* primGroupTypeName = primitiveGroup.Type();
 	
 	// Iterate over pairings
@@ -41,15 +43,11 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Append AABBs for each s
 		
 		uint32_t i = 0;
 		size_t localSize = 0;
-		AABB3 combinedAABB = ZeroAABB3;
 		const IdPairings& pList = pairings.second;
 		for(const auto& p : pList)
 		{
 			if(p.first == std::numeric_limits<uint32_t>::max()) break;
 
-			// Union of AABBs
-			AABB3 aabb = primitiveGroup.PrimitiveBatchAABB(p.first);
-			combinedAABB = combinedAABB.Union(aabb);
 			primRangeList[i] = primitiveGroup.PrimitiveBatchRange(p.first);
 			hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.second));
 			i++;
@@ -58,17 +56,15 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Append AABBs for each s
 		totalSize += localSize;
 		
 		// Put generated AABB
-		aabbOut.emplace(pairings.first, combinedAABB);
 		primitiveRanges.push_back(primRangeList);
 		primitiveMaterialKeys.push_back(hitKeyList);
-		acceleratorRanges.push_back(range);
+		accRanges.push_back(range);
 		idLookup.emplace(pairings.first, j);
 		j++;
-	}
-	assert(aabbOut.size() == primitiveRanges.size());
+	}	
 	assert(primitiveRanges.size() == primitiveMaterialKeys.size());
 	assert(primitiveMaterialKeys.size() == idLookup.size());
-	assert(idLookup.size() == acceleratorRanges.size());
+	assert(idLookup.size() == accRanges.size());
 
 	// Allocate memory
 	size_t leafDataSize = totalSize * sizeof(LeafData);
@@ -78,7 +74,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Append AABBs for each s
 	dAccRanges = reinterpret_cast<Vector2ul*>(static_cast<uint8_t*>(memory) + leafDataSize);
 
 	// Copy Leaf counts to cpu memory
-	CUDA_CHECK(cudaMemcpy(dAccRanges, acceleratorRanges.data(), accRangeSize,
+	CUDA_CHECK(cudaMemcpy(dAccRanges, accRanges.data(), accRangeSize,
 						  cudaMemcpyHostToDevice));
 	return SceneError::OK;
 }
@@ -105,6 +101,16 @@ uint32_t GPUAccLinearGroup<PGroup>::InnerId(uint32_t surfaceId) const
 }
 
 template <class PGroup>
+void GPUAccLinearGroup<PGroup>::ConstructAccelerators()
+{
+	// TODO: make this a single KC
+	for(const auto& id : idLookup)
+	{
+		ConstructAccelerator(id.second);
+	}
+}
+
+template <class PGroup>
 void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
 {
 	using PrimitiveData = typename PGroup::PrimitiveData;
@@ -122,16 +128,27 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
 	std::memcpy(&prList.primRanges, rangeList.data(),
 				sizeof(Vector2ul) * SceneConstants::MaxSurfacePerAccelerator);
 
-	// KC
-	KCConstructLinear<PGroup><<<1,1>>>(// O
-									   dLeafList,
-									   // Input
-									   dAccRanges,
-									   hkList,
-									   prList,
-									   primData,
-									   index);
+	size_t workCount = accRanges[index][1] - accRanges[index][0];
+	int gpuIndex = 0;
 
+	// KC
+	CudaSystem::AsyncGridStrideKC_X
+	(
+		gpuIndex,
+		0,
+		workCount,
+		//
+		KCConstructLinear<PGroup>,
+		// Args
+		// O
+		dLeafList,
+		// Input
+		dAccRanges,
+		hkList,
+		prList,
+		primData,
+		index
+	);
 }
 
 template <class PGroup>
@@ -142,6 +159,14 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerators(const std::vector<uint32_t
 	{
 		ConstructAccelerator(id);
 	}
+}
+
+template <class PGroup>
+void GPUAccLinearGroup<PGroup>::DestroyAccelerators()
+{
+	//...
+	// Define destory??
+	// There is no destruction or deallocation
 }
 
 template <class PGroup>
@@ -186,7 +211,8 @@ const char* GPUAccLinearBatch<PGroup>::Type() const
 }
 
 template <class PGroup>
-void GPUAccLinearBatch<PGroup>::Hit(// O
+void GPUAccLinearBatch<PGroup>::Hit(int gpuId,
+									// O
 									HitKey* dMaterialKeys,
 									PrimitiveId* dPrimitiveIds,
 									HitStructPtr dHitStructs,
@@ -202,8 +228,14 @@ void GPUAccLinearBatch<PGroup>::Hit(// O
 	using PrimitiveData = typename PGroup::PrimitiveData;
 	const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
 
-	KCIntersectLinear<PGroup><<<1, 1>>>
+	CudaSystem::AsyncGridStrideKC_X
 	(
+		gpuId,
+		0,
+		rayCount,
+		//
+		KCIntersectLinear<PGroup>,
+		// Args
 		// O
 		dMaterialKeys,
 		dPrimitiveIds,

@@ -1,7 +1,8 @@
 #include "GIMaterials.cuh"
 #include "MaterialNodeReaders.h"
 
-GIAlbedoMat::GIAlbedoMat()
+GIAlbedoMat::GIAlbedoMat(int gpuId)
+	: GPUMaterialGroup(gpuId)
 {}
 
 const char* GIAlbedoMat::Type() const

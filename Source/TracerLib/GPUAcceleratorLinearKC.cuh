@@ -195,9 +195,10 @@ static void KCIntersectBaseLinear(// I-O
 								  const BaseLeaf* gLeafs,
 								  const uint32_t leafCount)
 {
-		// Grid Stride Loop
+	// Grid Stride Loop
 	for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-		globalId < rayCount; globalId += blockDim.x * gridDim.x)
+		globalId < rayCount; 
+		globalId += blockDim.x * gridDim.x)
 	{
 		const uint32_t id = gRayIds[globalId];
 		
@@ -225,8 +226,8 @@ static void KCIntersectBaseLinear(// I-O
 		if(primStart < leafCount)
 		{
 			// Write Updated Stuff
-			gPrevLoc[id] = primStart;
 			gHitKeys[globalId] = key;
+			gPrevLoc[id] = primStart;			
 			gTransformIds[id] = transformId;
 		}
 	}

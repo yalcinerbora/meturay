@@ -12,10 +12,7 @@ struct TracerError : public ErrorI
 	public:
 		enum Type
 		{
-			OK,
-			// Initalization
-			CUDA_OLD_DRIVER,
-			CUDA_NO_DEVICE,
+			OK,			
 			// General
 			OUT_OF_MEMORY,
 			// ...
@@ -52,11 +49,8 @@ inline TracerError::operator std::string() const
 	const char* const ErrorStrings[] =
 	{
 		"OK.",
-		// Initalization
-		"Old CUDA Runtime found. Please update your driver.",
-		"CUDA Device not found.",
 		// General
-		"File not found.",
+		"Out of Memory."
 	};
 	static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(TracerError::END),
 				  "Enum and enum string list size mismatch.");
