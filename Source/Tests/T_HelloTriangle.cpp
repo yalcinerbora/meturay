@@ -25,7 +25,7 @@ TEST(HelloTriangle, Test)
 {
 	EnableVTMode();
 
-	static constexpr Vector2i IMAGE_RESOLUTION = { 1280, 720 };
+	static constexpr Vector2i IMAGE_RESOLUTION = {32, 32};
 
 	TracerParameters tracerParams =
 	{
@@ -37,7 +37,6 @@ TEST(HelloTriangle, Test)
 	LogicInterface tracerGenerator = TracerLoader::LoadTracerLogic(testLib,
 																   "GenerateBasicTracer",
 																   "DeleteBasicTracer");
-
 
 	// Generate GPU List & A Partitioner
 	// Check cuda system error here

@@ -41,3 +41,5 @@ namespace SurfaceDataIO
 	std::unique_ptr<SurfaceDataLoaderI>		GenSurfaceDataLoader(const nlohmann::json& properties,
 																 double time);	
 }
+
+using SurfaceDataLoaders = std::vector<std::unique_ptr<SurfaceDataLoaderI>>;

@@ -131,18 +131,21 @@ inline bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
 template<class T>
 __device__ __host__
 inline bool Ray<T>::IntersectsAABB(const Vector<3, T>& aabbMin,
-								   const Vector<3, T>& aabbMax) const
+								   const Vector<3, T>& aabbMax,
+								   const Vector<2, T>& tMinMax) const
 {
 	Vector<3,T> invD = Vector<3, T>(1) / direction;
 	Vector<3,T> t0 = (aabbMin - position) * invD;
 	Vector<3,T> t1 = (aabbMax - position) * invD;
 
-	T tMin = INFINITY;
-	T tMax = -INFINITY;
+	T tMin = tMinMax[0];
+	T tMax = tMinMax[1];
 
 	UNROLL_LOOP
 	for(int i = 0; i < 3; i++)
 	{
+		if(invD[i] < 0) HybridFuncs::Swap(t0[i], t1[i]);
+
 		tMin = max(tMin, min(t0[i], t1[i]));
 		tMax = min(tMax, max(t0[i], t1[i]));
 	}
@@ -153,30 +156,35 @@ template<class T>
 __device__ __host__
 inline bool Ray<T>::IntersectsAABB(Vector<3, T>& pos, T& tOut,
 								   const Vector<3, T>& aabbMin,
-								   const Vector<3, T>& aabbMax) const
+								   const Vector<3, T>& aabbMax,
+								   const Vector<2, T>& tMinMax) const
 {
-	Vector<3, T> invD = Vector<3, T>(1) / direction;
-	Vector<3, T> t0 = (aabbMin - position) * invD;
-	Vector<3, T> t1 = (aabbMax - position) * invD;
+	Vector<3,T> invD = Vector<3, T>(1) / direction;
+	Vector<3,T> t0 = (aabbMin - position) * invD;
+	Vector<3,T> t1 = (aabbMax - position) * invD;
 
-	T tMin = -INFINITY;
-	T tMax = INFINITY;
-	T t = -INFINITY;
+	T tMin = tMinMax[0];
+	T tMax = tMinMax[1];
+	T t = tMin;
 
 	UNROLL_LOOP
 	for(int i = 0; i < 3; i++)
 	{
+		if(invD[i] < 0) HybridFuncs::Swap(t0[i], t1[i]);
+
 		tMin = max(tMin, min(t0[i], t1[i]));
 		tMax = min(tMax, max(t0[i], t1[i]));
+
 		t = (t0[i] > 0.0f) ? min(t, t0[i]) : t;
 		t = (t1[i] > 0.0f) ? min(t, t1[i]) : t;
 	}
 
+	// Calculate intersect position and the multiplier t
 	if(tMax >= tMin)
 	{
 		tOut = t;
 		pos = position + t * direction;
-	}	
+	}
 	return (tMax >= tMin);
 }
 

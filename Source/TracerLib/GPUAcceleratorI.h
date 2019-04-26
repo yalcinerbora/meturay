@@ -45,8 +45,7 @@ class GPUAcceleratorGroupI
 												// and primitive type
 												const std::map<uint32_t, IdPairings>& pairingList,
 												double time) = 0;
-		virtual SceneError		ChangeTime(std::map<uint32_t, AABB3>& aabbOut,
-										   // Map of hit keys for all materials
+		virtual SceneError		ChangeTime(// Map of hit keys for all materials
 										   // w.r.t matId and primitive type
 										   const std::map<TypeIdPair, HitKey>&,
 										   // List of surface/material

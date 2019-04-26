@@ -123,15 +123,15 @@ uint32_t CudaSystem::DetermineGridStrideBlock(int gpuIndex,
 											  size_t workCount,
 											  void* func)
 {
+	// TODO: Make better SM determination
 	const CudaGPU& gpu = GPUList()[gpuIndex];
-	
 	uint32_t blockPerSM = gpu.RecommendedBlockCountPerSM(func, threadCount,
 														 sharedMemSize);
 	// Only call enough SM
-	uint32_t totalRequiredBlocks = static_cast<uint32_t>((workCount + (threadCount - 1)) / threadCount);
-	uint32_t requiredSMCount = totalRequiredBlocks / blockPerSM;
+	uint32_t totalRequiredBlocks = static_cast<uint32_t>((workCount + threadCount - 1) / threadCount);
+	uint32_t requiredSMCount = (totalRequiredBlocks + blockPerSM - 1) / blockPerSM;
 	uint32_t smCount = std::min(gpu.SMCount(), requiredSMCount);
-	uint32_t blockCount = smCount * blockPerSM;
+	uint32_t blockCount = std::min(requiredSMCount, smCount * blockPerSM);
 	return blockCount;
 }
 

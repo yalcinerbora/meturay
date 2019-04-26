@@ -160,31 +160,28 @@ void RayMemory::ResetHitMemory(size_t rayCount, size_t hitStructSize)
 	sizeOfAcceleratorKeys = AlignByteCount * ((sizeOfAcceleratorKeys + (AlignByteCount - 1)) / AlignByteCount);
 	
 	// Find out sort auxiliary storage
-	cub::DoubleBuffer<HitKey::Type> dbKeys;
-	cub::DoubleBuffer<RayId> dbIds;
-	size_t sortTempMemorySize = 0;
-	CUDA_CHECK(cub::DeviceRadixSort::SortPairs(nullptr, sortTempMemorySize,
+	cub::DoubleBuffer<HitKey::Type> dbKeys(nullptr, nullptr);
+	cub::DoubleBuffer<RayId> dbIds(nullptr, nullptr);
+	CUDA_CHECK(cub::DeviceRadixSort::SortPairs(nullptr, cubSortMemSize,
 											   dbKeys, dbIds,
 											   static_cast<int>(rayCount)));
 	
 
 	// Check if while partitioning  double buffer data is 
 	// enough for using (Unique and Scan) algos	
-	size_t selectTempMemorySize = 0;
 	uint32_t* in = nullptr;
 	uint32_t* out = nullptr;
 	uint32_t* count = nullptr;
-	CUDA_CHECK(cub::DeviceSelect::If(nullptr, selectTempMemorySize,
+	CUDA_CHECK(cub::DeviceSelect::If(nullptr, cubIfMemSize,
 									 in, out, count,
 									 static_cast<int>(rayCount),
 									 ValidSplit()));
-	// Output Count of If also should be considered
-	selectTempMemorySize += sizeof(uint32_t);
 
 	// Select algo reads from split locations and writes to backbuffer Ids (half is used)
 	// uses backbuffer ids other half as auxiliary buffer
 	// This code tries to increase it accordingly
-	size_t sizeOfTempMemory = std::max(sortTempMemorySize, selectTempMemorySize);
+	// Output Count of If also should be considered (add sizeof uint32_t)
+	size_t sizeOfTempMemory = std::max(cubSortMemSize, cubIfMemSize + sizeof(uint32_t));
 	sizeOfTempMemory = (AlignByteCount * ((sizeOfTempMemory + (AlignByteCount - 1)) / AlignByteCount));
 
 	// Finally allocate
@@ -225,6 +222,10 @@ void RayMemory::ResetHitMemory(size_t rayCount, size_t hitStructSize)
 	dCurrentIds = dIds0;
 	dCurrentKeys = dKeys0;
 
+	// Make nullptr if no hitstruct is needed
+	if(sizeOfHitStructs == 0) 
+		dHitStructs = HitStructPtr(nullptr, static_cast<int>(hitStructSize));
+
 	// Initialize memory
 	CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
 							   ResetHitIds,
@@ -236,24 +237,27 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
 						 size_t count,
 						 const Vector2i& bitMaxValues)
 {
-
-
 	// Sort Call over buffers
 	HitKey* keysOther = (dCurrentKeys == dKeys0) ? dKeys1 : dKeys0;
+	RayId* idsOther = (dCurrentIds == dIds0) ? dIds1 : dIds0;
 	cub::DoubleBuffer<HitKey::Type> dbKeys(reinterpret_cast<HitKey::Type*>(dCurrentKeys),
 										   reinterpret_cast<HitKey::Type*>(keysOther));
-	cub::DoubleBuffer<RayId> dbIds(dCurrentIds, (dCurrentIds == dIds0) ? dIds1 : dIds0);
+	cub::DoubleBuffer<RayId> dbIds(dCurrentIds, 
+								   idsOther);
 	int bitStart = 0;
 	int bitEnd = bitMaxValues[1];
+
+	CUDA_CHECK(cudaDeviceSynchronize());
 
 	// First sort internals
 	if(bitStart != bitEnd)
 	{
-		cub::DeviceRadixSort::SortPairsDescending(dTempMemory, tempMemorySize,
-												  dbKeys, dbIds,
-												  static_cast<int>(count),
-												  bitStart, bitEnd);
-		CUDA_KERNEL_CHECK();
+		CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(dTempMemory, cubSortMemSize,
+															 dbKeys, dbIds,
+															 static_cast<int>(count),
+															 bitStart, bitEnd,
+															 (cudaStream_t)0,
+															 METU_DEBUG_BOOL));
 	}
 
 	// Then sort batches
@@ -261,11 +265,12 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
 	bitEnd = HitKey::IdBits + bitMaxValues[0];
 	if(bitStart != bitEnd)
 	{
-		cub::DeviceRadixSort::SortPairsDescending(dTempMemory, tempMemorySize,
-												  dbKeys, dbIds,
-												  static_cast<int>(count),
-												  bitStart, bitEnd);
-		CUDA_KERNEL_CHECK();
+		CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(dTempMemory, cubSortMemSize,
+															 dbKeys, dbIds,
+															 static_cast<int>(count),
+															 bitStart, bitEnd,
+															 (cudaStream_t)0,
+															 METU_DEBUG_BOOL));
 	}
 	
 	ids = dbIds.Current();
@@ -299,13 +304,18 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
 							   FindSplitsSparse,
 							   dSparseSplitIndices, dCurrentKeys, locCount);
 
+
+	Debug::DumpMemToFile("rayIds", dCurrentIds, rayCount);
+	Debug::DumpMemToFile("keys", dCurrentKeys, rayCount);
+
 	// Make Splits Dense
 	// From dEmptyKeys -> dEmptyIds	
-	size_t selectTempMemorySize = (tempMemorySize - sizeof(uint32_t));
-	CUDA_CHECK(cub::DeviceSelect::If(dSelectTempMemory, selectTempMemorySize,
+	CUDA_CHECK(cub::DeviceSelect::If(dSelectTempMemory, cubIfMemSize,
 									 dSparseSplitIndices, dDenseSplitIndices, dSelectCount,
 									 static_cast<int>(rayCount),
-									 ValidSplit()));
+									 ValidSplit(),
+									 (cudaStream_t)0,
+									 METU_DEBUG_BOOL));
 
 	// Copy Reduced Count
 	uint32_t hSelectCount;
@@ -327,12 +337,11 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
 	std::vector<uint16_t> hDenseKeys(hSelectCount);
 	std::vector<uint32_t> hDenseIndices(hSelectCount);
 	CUDA_CHECK(cudaMemcpy(hDenseKeys.data(), dBatches,
-						  sizeof(HitKey) * hSelectCount,
+						  sizeof(uint16_t) * hSelectCount,
 						  cudaMemcpyDeviceToHost));
 	CUDA_CHECK(cudaMemcpy(hDenseIndices.data(), dDenseSplitIndices,
 						  sizeof(uint32_t) * hSelectCount,
 						  cudaMemcpyDeviceToHost));
-
 
 	// Construct The Set
 	// Add extra index to end as rayCount for cleaner code
@@ -346,7 +355,7 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
 		partitions.emplace(ArrayPortion<uint32_t>{id,offset, count});
 	}
 	// Done!
-	return partitions;
+	return std::move(partitions);
 }
 
 void RayMemory::FillRayIdsForSort(uint32_t rayCount)

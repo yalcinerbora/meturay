@@ -31,3 +31,22 @@ void Debug::WriteHitPairs(const RayId* ids, const HitKey* keys, size_t count, co
 	std::ofstream f(file);
 	Detail::OutputHitPairs(f, ids, keys, count);
 }
+
+std::ostream& operator<<(std::ostream& stream, const RayGMem& r)
+{
+	stream << std::setw(0)
+		   << "{" << r.pos[0] << ", " << r.pos[1] << ", " << r.pos[2] << "} "
+		   << "{" << r.dir[0] << ", " << r.dir[1] << ", " << r.dir[2] << "} "
+		   << "{" << r.tMin << ", " << r.tMax;
+	return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const HitKey& key)
+{
+	stream << std::hex << std::setfill('0')
+		   << std::setw(HitKey::BatchBits / 4) << HitKey::FetchBatchPortion(key)
+		   << ":"
+		   << std::setw(HitKey::IdBits / 4) << HitKey::FetchIdPortion(key);
+	stream << std::dec;
+	return stream;
+}

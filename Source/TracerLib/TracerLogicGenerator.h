@@ -40,8 +40,8 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		std::map<std::string, GPUAccelGPtr>				accelGroups;
 		std::map<std::string, GPUAccelBPtr>				accelBatches;
 		// Materials (Batch and Group)
-		std::map<NameIdPair, GPUMatGPtr>				matGroups;
-		std::map<NameIdPair, GPUMatBPtr>				matBatches;
+		std::map<NameIdPair, GPUMatGPtr>					matGroups;
+		std::map<NameIdPair, GPUMatBPtr>					matBatches;
 
 		GPUBaseAccelPtr									baseAccelerator;
 		GPUMatGPtr										outsideMaterial;
@@ -49,15 +49,15 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		GPUPrimitiveGroupI*								emptyPrimitive;
 		
 		// Tracer Related
-		GPUTracerGen									tracerGenerator;
-		GPUTracerPtr									tracerLogic;
+		GPUTracerGen										tracerGenerator;
+		GPUTracerPtr										tracerLogic;
 
 		// Generated Batch Mappings		
-		AcceleratorBatchMappings						accelBatchMap;
+		AcceleratorBatchMappings							accelBatchMap;
 		MaterialBatchMappings							matBatchMap;
 
 		// Helper Func
-		uint32_t										CalculateHitStruct();
+		uint32_t											CalculateHitStruct();
 
 	public:
 		// Constructor & Destructor
@@ -103,12 +103,16 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 													  const Vector2i maxMats,
 													  const Vector2i maxAccels) override;
 
-		std::vector<GPUPrimitiveGroupI*>		GetPrimitiveGroups() const override;
-		std::vector<GPUAcceleratorGroupI*>		GetAcceleratorGroups() const override;
-		std::vector<GPUAcceleratorBatchI*>		GetAcceleratorBatches() const override;
-		std::vector<GPUMaterialGroupI*>			GetMaterialGroups() const override;
-		std::vector<GPUMaterialBatchI*>			GetMaterialBatches() const override;
-		GPUBaseAcceleratorI*					GetBaseAccelerator() const override;
+		PrimitiveGroupList			GetPrimitiveGroups() const override;
+		AcceleratorGroupList			GetAcceleratorGroups() const override;
+		AcceleratorBatchMappings		GetAcceleratorBatches() const override;
+		MaterialGroupList			GetMaterialGroups() const override;
+		MaterialBatchMappings		GetMaterialBatches() const override;
+
+		GPUBaseAcceleratorI*			GetBaseAccelerator() const override;
+
+		// Resetting all generated Groups and Batches
+		void							ClearAll() override;
 
 		// Inclusion Functionality
 		// Additionally includes the materials from these libraries

@@ -42,11 +42,14 @@ using GPUMatBPtr = SharedLibPtr<GPUMaterialBatchI>;
 
 // Statically Inerfaced Generators
 template<class TracerLogic>
-using TracerLogicGeneratorFunc = TracerLogic* (*)(GPUBaseAcceleratorI& ba,
-											      const AcceleratorBatchMappings& am,
-											      const MaterialBatchMappings& mm,
-											      const TracerParameters& op,
-												  uint32_t hitStructMaxSize,
+using TracerLogicGeneratorFunc = TracerLogic* (*)(GPUBaseAcceleratorI& baseAccelerator,
+												  AcceleratorGroupList&& ag,
+												  AcceleratorBatchMappings&& ab,
+												  MaterialGroupList&& mg,
+												  MaterialBatchMappings&& mb,
+												  //
+												  const TracerParameters& params,
+												  uint32_t hitStructSize,
 												  const Vector2i maxMats,
 												  const Vector2i maxAccels);
 
@@ -109,14 +112,20 @@ class GPUTracerGen
 		{}
 
 		GPUTracerPtr operator()(GPUBaseAcceleratorI& ba,
-								const AcceleratorBatchMappings& am,
-								const MaterialBatchMappings& mm,
+								AcceleratorGroupList&& ag,
+								AcceleratorBatchMappings&& ab,
+								MaterialGroupList&& mg,
+								MaterialBatchMappings&& mb,
+								//
 								const TracerParameters& op,
 								uint32_t hitStructSize,
 								const Vector2i maxMats,
 								const Vector2i maxAccels)
 		{
-			TracerBaseLogicI* logic = gFunc(ba, am, mm, op, hitStructSize,
+			TracerBaseLogicI* logic = gFunc(ba, 
+											std::move(ag), std::move(ab), 
+											std::move(mg), std::move(mb),
+											op, hitStructSize,
 											maxMats, maxAccels);
 			return GPUTracerPtr(logic, dFunc);
 		}
@@ -230,16 +239,21 @@ namespace TypeGenWrappers
 	void EmptyDestruct(T* t) {}
 	
 	template <class Base, class TracerLogic>
-	Base* TracerLogicConstruct(GPUBaseAcceleratorI& ba, 
-							   const AcceleratorBatchMappings& am,
-							   const MaterialBatchMappings& mm,
+	Base* TracerLogicConstruct(GPUBaseAcceleratorI& ba,
+							   AcceleratorGroupList&& ag,
+							   AcceleratorBatchMappings&& ab,
+							   MaterialGroupList&& mg,
+							   MaterialBatchMappings&& mb,
+
 							   const TracerParameters& op,
 							   uint32_t hitStrctSize,
 							   const Vector2i maxMats,
 							   const Vector2i maxAccels)
 	{
-		return new TracerLogic(ba, am, mm, op, 
-							   hitStrctSize,
+		return new TracerLogic(ba, 
+							   std::move(ag), std::move(ab), 
+							   std::move(mg), std::move(mb), 
+							   op, hitStrctSize,
 							   maxMats, maxAccels);
 	}
 	

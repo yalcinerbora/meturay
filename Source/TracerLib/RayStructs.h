@@ -25,7 +25,7 @@ struct alignas(32) RayGMem
 // GPU register layout for rays
 struct RayReg
 {
-	RayF						ray;
+	RayF							ray;
 	float						tMin;
 	float						tMax;
 
@@ -34,9 +34,9 @@ struct RayReg
 									   unsigned int loc);
 
 	// Save
-	__device__ __host__ void	Update(RayGMem* mem,
+	__device__ __host__ void		Update(RayGMem* mem,
 									   unsigned int loc);
-	__device__ __host__ void	UpdateTMax(RayGMem* mem,
+	__device__ __host__ void		UpdateTMax(RayGMem* mem,
 										   unsigned int loc);
 };
 

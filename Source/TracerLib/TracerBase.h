@@ -39,7 +39,7 @@ class TracerBase : public TracerI
 		ImageMemory			outputImage;		
 
 		// Properties
-		uint32_t			currentRayCount;
+		uint32_t				currentRayCount;
 		TracerOptions		options;
 
 		// Base tracer logic
@@ -47,12 +47,12 @@ class TracerBase : public TracerI
 		TracerCallbacksI*	callbacks;
 
 		// Error related
-		bool				healthy;
+		bool					healthy;
 
 		// Internals
-		void				SendError(TracerError e, bool isFatal);
-		void				HitRays();
-		void				ShadeRays();
+		void					SendError(TracerError e, bool isFatal);
+		void					HitRays();
+		void					ShadeRays();
 
 	public:
 		// Constructors & Destructor
@@ -82,16 +82,16 @@ class TracerBase : public TracerI
 		// Rendering Related
 		void				AttachLogic(TracerBaseLogicI&) override;
 		void				GenerateInitialRays(const GPUScene& scene,
-												int cameraId,
-												int samplePerLocation) override;
-		bool				Continue() override;		// Continue hit/bounce looping (consume ray pool)
+											int cameraId,
+											int samplePerLocation) override;
+		bool				Continue() override;			// Continue hit/bounce looping (consume ray pool)
 		void				Render() override;			// Render rays	(do hit, then bounce)		
 		void				FinishSamples() override;	// Finish samples (write to image)
 
 		// Image Reated
 		void				SetImagePixelFormat(PixelFormat) override;
 		void				ReportionImage(Vector2i start = Zero2i,
-										   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+									   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
 		void				ResizeImage(Vector2i resolution) override;
 		void				ResetImage() override;
 };

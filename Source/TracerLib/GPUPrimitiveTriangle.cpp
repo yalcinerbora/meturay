@@ -4,9 +4,7 @@
 #include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/SurfaceDataIO.h"
 #include "RayLib/SceneError.h"
-
-//#include <nlohmann/json.hpp>
-
+#include "RayLib/Log.h"
 
 // Generics
 GPUPrimitiveTriangle::GPUPrimitiveTriangle()
@@ -18,17 +16,15 @@ const char* GPUPrimitiveTriangle::Type() const
 	return TypeName;
 }
 
-#include "RayLib/Log.h"
-
-SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& surfaceDatalNodes, 
+SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& surfaceDataNodes, 
 												 double time)
 {
 	// Generate Loaders
 	std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
-	for(const SceneFileNode& s : surfaceDatalNodes)
+	for(const SceneFileNode& s : surfaceDataNodes)
 	{
 		//const nlohmann::json& node = static_cast<const nlohmann::json&>(s);
-		loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s, time)));		
+		loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s, time)));
 	}
 
 	SceneError e = SceneError::OK;
@@ -52,15 +48,15 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& 
 	for(const auto& loader : loaders)
 	{
 		if(e != loader->LoadPrimitiveData(postitionsCPU.data() + offset,
-										  PrimitiveDataTypeToString(PrimitiveDataType::POSITION)))
+											PrimitiveDataTypeToString(PrimitiveDataType::POSITION)))
 			return e;
 		if(e != loader->LoadPrimitiveData(normalsCPU.data() + offset,
-										  PrimitiveDataTypeToString(PrimitiveDataType::NORMAL)))
+											PrimitiveDataTypeToString(PrimitiveDataType::NORMAL)))
 			return e;
 		if(e != loader->LoadPrimitiveData(uvsCPU.data() + offset,
-										  PrimitiveDataTypeToString(PrimitiveDataType::UV)))
+											PrimitiveDataTypeToString(PrimitiveDataType::UV)))
 			return e;
-		
+
 		offset += loader->PrimitiveCount();
 	}
 	assert(offset == totalPrimitiveCount);
@@ -106,15 +102,19 @@ SceneError GPUPrimitiveTriangle::ChangeTime(const std::set<SceneFileNode>& surfa
 	}
 
 	SceneError e = SceneError::OK;
+	std::vector<float> postitionsCPU, normalsCPU, uvsCPU;
 	for(const auto& loader : loaders)
 	{
-		Vector2ul range = batchRanges[loader->SurfaceDataId()];
+		uint32_t surfId = loader->SurfaceDataId();
+		Vector2ul range = batchRanges.at(loader->SurfaceDataId());
 		size_t primitiveCount = loader->PrimitiveCount();
 		assert((range[1] - range[0]) == primitiveCount);
 
-		std::vector<float> postitionsCPU(primitiveCount * 3);
-		std::vector<float> normalsCPU(primitiveCount * 2);
-		std::vector<float> uvsCPU(primitiveCount * 2);
+		batchAABBs.at(surfId) = loader->PrimitiveAABB();
+		// Alloc enough CPU space
+		postitionsCPU.resize(primitiveCount * 3);
+		normalsCPU.resize(primitiveCount * 2);
+		uvsCPU.resize(primitiveCount * 2);
 
 		if(e != loader->LoadPrimitiveData(postitionsCPU.data(),
 										  PrimitiveDataTypeToString(PrimitiveDataType::POSITION)))
@@ -148,6 +148,9 @@ SceneError GPUPrimitiveTriangle::ChangeTime(const std::set<SceneFileNode>& surfa
 								uvsCPU.data() + 1, sizeof(float) * 2,
 								sizeof(float), primitiveCount,
 								cudaMemcpyHostToDevice));
+
+		// Wait on Default Stream
+		CUDA_CHECK(cudaStreamSynchronize((cudaStream_t)0));
 	}
 	return e;
 }

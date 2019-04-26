@@ -71,7 +71,7 @@
     </CudaCompile>
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>
-      <CodeGeneration>compute_52,sm_52</CodeGeneration>
+      <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
@@ -111,7 +111,7 @@
     </CudaCompile>
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>
-      <CodeGeneration>compute_52,sm_52</CodeGeneration>
+      <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
@@ -133,6 +133,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Error.h" />
     <ClInclude Include="..\..\..\Source\RayLib\HitStructs.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\HybridFunctions.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\LoopingThreadI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h" />

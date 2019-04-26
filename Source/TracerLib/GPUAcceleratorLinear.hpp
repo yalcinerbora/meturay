@@ -80,8 +80,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Map of hit keys for all
 }
 
 template <class PGroup>
-SceneError GPUAccLinearGroup<PGroup>::ChangeTime(std::map<uint32_t, AABB3>& aabbOut,
-											     // Map of hit keys for all materials
+SceneError GPUAccLinearGroup<PGroup>::ChangeTime(// Map of hit keys for all materials
 											     // w.r.t matId and primitive type
 												 const std::map<TypeIdPair, HitKey>&,
 												 // List of surface/material

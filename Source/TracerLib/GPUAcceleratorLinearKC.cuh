@@ -203,7 +203,9 @@ static void KCIntersectBaseLinear(// I-O
 		const uint32_t id = gRayIds[globalId];
 		
 		// Load Ray to Register
-		RayReg ray(gRays, id);	
+		RayReg rayData(gRays, id);
+		Vector2f tMinMax(rayData.tMin, rayData.tMax);
+		RayF& ray = rayData.ray;
 
 		// Load initial traverse location
 		uint32_t primStart = gPrevLoc[id];
@@ -211,24 +213,26 @@ static void KCIntersectBaseLinear(// I-O
 		// Check next potential hit		
 		HitKey key = HitKey::InvalidKey;
 		TransformId transformId = 0;
-		while(primStart < leafCount)
+		for(; primStart < leafCount; primStart++)
 		{
 			BaseLeaf l = gLeafs[primStart];
-			primStart++;
-			if(ray.ray.IntersectsAABB(l.aabbMin, l.aabbMax))
+			if(ray.IntersectsAABB(l.aabbMin, l.aabbMax, tMinMax))
 			{
 				key = l.accKey;
-				transformId = l.transformId;				
+				transformId = l.transformId;
 				break;
-			}			
+			}
 		}
+
 		// Write next potential hit
 		if(primStart < leafCount)
 		{
 			// Write Updated Stuff
 			gHitKeys[globalId] = key;
-			gPrevLoc[id] = primStart;			
+			gPrevLoc[id] = primStart + 1;
 			gTransformIds[id] = transformId;
 		}
+		// If we are out of bounds write invalid key
+		else gHitKeys[globalId] = HitKey::InvalidKey;
 	}
 }

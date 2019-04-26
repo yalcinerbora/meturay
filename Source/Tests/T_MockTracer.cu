@@ -50,9 +50,9 @@ class MockTracerLogic : public TracerBaseLogicI
 				// Type(as string) of the accelerator group
 				const char*			Type() const override { return "MockBaseAccel"; }
 				// Get ready for hit loop
-				void				GetReady(uint32_t rayCount) override {};
+				void					GetReady(uint32_t rayCount) override {};
 				// KC
-				void				Hit(// Output
+				void					Hit(// Output
 										TransformId* dTransformIds,
 										HitKey* dAcceleratorKeys,
 										// Inputs
@@ -75,7 +75,7 @@ class MockTracerLogic : public TracerBaseLogicI
 		{
 			private:
 				MockTracerLogic& 				mockLogic;
-				uint32_t						myKey;
+				uint32_t							myKey;
 				const void*						groupNullPtr = nullptr;
 
 			public:
@@ -147,15 +147,15 @@ class MockTracerLogic : public TracerBaseLogicI
 
 	private:
 		std::mt19937								rng;	
-		std::uniform_int_distribution<>				matIndexGenerator;
+		std::uniform_int_distribution<>			matIndexGenerator;
 
 		uint32_t									seed;
 
-		HitOpts										optsHit;
-		ShadeOpts									optsShade;
+		HitOpts									optsHit;
+		ShadeOpts								optsShade;
 
-		static constexpr Vector2i					MaterialRange = Vector2i(0, 24);
-		static constexpr Vector2i					AcceleratorRange = Vector2i(24, 32);
+		static constexpr Vector2i				MaterialRange = Vector2i(0, 24);
+		static constexpr Vector2i				AcceleratorRange = Vector2i(24, 32);
 
 		static const std::string					HitName;
 		static const std::string					ShadeName;
@@ -163,14 +163,16 @@ class MockTracerLogic : public TracerBaseLogicI
 		// Mock Implementations
 		std::unique_ptr<BaseAcceleratorMock>		baseAccelerator;
 		std::vector<AcceleratorMock>				mockAccelerators;
-		std::vector<MaterialMock>					mockMaterials;
+		std::vector<MaterialMock>				mockMaterials;
+		AcceleratorGroupList						accelGroups;
+		MaterialGroupList						matGroups;
 
 		AcceleratorBatchMappings					accelerators;
-		MaterialBatchMappings						materials;
+		MaterialBatchMappings					materials;
 		
 		// Convenience
-		std::vector<HitKey>							materialKeys;
-		std::vector<HitKey>							acceleratorKeys;
+		std::vector<HitKey>						materialKeys;
+		std::vector<HitKey>						acceleratorKeys;
 			   
 		static constexpr int						AcceleratorCount = 2;
 		static constexpr int						MaterialCount = 4;
@@ -178,39 +180,41 @@ class MockTracerLogic : public TracerBaseLogicI
 	protected:
 	public:
 		// Constructors & Destructor
-													MockTracerLogic(uint32_t seed);
-		virtual										~MockTracerLogic() = default;
+												MockTracerLogic(uint32_t seed);
+		virtual									~MockTracerLogic() = default;
 
 		// Init & Load
-		TracerError									Initialize() override;
-	
+		TracerError								Initialize() override;
+
 		// Generate Camera Rays
-		size_t										GenerateRays(RayMemory&, RNGMemory&,
-																 const GPUScene& scene,
-																 int cameraId,
-																 int samplePerLocation,
-																 Vector2i resolution,
-																 Vector2i pixelStart = Zero2i,
-																 Vector2i pixelEnd = BaseConstants::IMAGE_MAX_SIZE) override;
+		size_t									GenerateRays(RayMemory&, RNGMemory&,
+															 const GPUScene& scene,
+															 int cameraId,
+															 int samplePerLocation,
+															 Vector2i resolution,
+															 Vector2i pixelStart = Zero2i,
+															 Vector2i pixelEnd = BaseConstants::IMAGE_MAX_SIZE) override;
 
 		// Interface fetching for logic
 		GPUBaseAcceleratorI&						BaseAcelerator() override { return *baseAccelerator; }
-		const AcceleratorBatchMappings&				AcceleratorBatches() override { return accelerators; }
+		const AcceleratorBatchMappings&			AcceleratorBatches() override { return accelerators; }
 		const MaterialBatchMappings&				MaterialBatches() override { return materials; }
+		const AcceleratorGroupList&				AcceleratorGroups() override { return accelGroups; }
+		const MaterialGroupList&					MaterialGroups() override { return matGroups; }
 
 		// Returns max bits of keys (for batch and id respectively)
-		const Vector2i								SceneMaterialMaxBits() const override { return MaterialRange; }
-		const Vector2i								SceneAcceleratorMaxBits() const override { return AcceleratorRange; }
+		const Vector2i							SceneMaterialMaxBits() const override { return MaterialRange; }
+		const Vector2i							SceneAcceleratorMaxBits() const override { return AcceleratorRange; }
 
 		// Options of the Hitman & Shademan
-		const HitOpts&								HitOptions() const override { return optsHit; }
+		const HitOpts&							HitOptions() const override { return optsHit; }
 		const ShadeOpts&							ShadeOptions() const override { return optsShade; }
 
 		// Misc
 		// Retuns "sizeof(RayAux)"
-		size_t										PerRayAuxDataSize() const override { return 0; }
+		size_t									PerRayAuxDataSize() const override { return 0; }
 		// Return mimimum size of an arbitrary struct which holds all hit results
-		size_t										HitStructSize() const override { return sizeof(uint32_t); };
+		size_t									HitStructSize() const override { return sizeof(uint32_t); };
 		uint32_t									Seed() const override { return seed; }
 };
 

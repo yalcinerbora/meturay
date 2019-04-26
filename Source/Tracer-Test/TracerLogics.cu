@@ -4,15 +4,19 @@
 #include "TracerLib/GPUScene.h"
 #include "TracerLib/RayMemory.h"
 
-TracerBasic::TracerBasic(GPUBaseAcceleratorI& baseAccelerator,
-						 const AcceleratorBatchMappings& a,
-						 const MaterialBatchMappings& m,
+TracerBasic::TracerBasic(GPUBaseAcceleratorI& ba,
+						 AcceleratorGroupList&& ag,
+						 AcceleratorBatchMappings&& ab,
+						 MaterialGroupList&& mg,
+						 MaterialBatchMappings&& mb,
+						 //
 						 const TracerParameters& options,
 						 uint32_t hitStructSize,
 						 const Vector2i maxMats,
 						 const Vector2i maxAccels)
 	: TracerBaseLogic(baseAccelerator, 
-					  a, m, 
+					  std::move(ag), std::move(ab), 
+					  std::move(mg), std::move(mb),
 					  options, 
 					  initals,
 					  hitStructSize,

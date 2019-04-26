@@ -20,9 +20,9 @@ AABB<3, T> Triangle::BoundingBox(const Vector<3, T>& p0,
 {
 	AABB3f aabb(p0, p0);	
 	aabb.SetMin(Vector3f::Min(aabb.Min(), p1));
-	aabb.SetMin(Vector3f::Min(aabb.Min(), p1));
-										  
 	aabb.SetMin(Vector3f::Min(aabb.Min(), p2));
-	aabb.SetMin(Vector3f::Min(aabb.Min(), p2));
+
+	aabb.SetMax(Vector3f::Max(aabb.Max(), p1));
+	aabb.SetMax(Vector3f::Max(aabb.Max(), p2));
 	return aabb;
 }

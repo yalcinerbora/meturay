@@ -47,9 +47,18 @@ struct SceneError : public ErrorI
 			// Loading Surface Data
 			SURFACE_DATA_TYPE_NOT_FOUND,
 			SURFACE_DATA_INVALID_READ,
-			//
+			// Some Mat/Accel Logic 
+			// may not support certain prims
 			PRIM_ACCEL_MISMATCH,
 			PRIM_MAT_MISMATCH,
+			// Updating the Scene
+			// Primitive Update Size Mismmatch
+			PRIM_UPDATE_SIZE_MISMATCH,
+			// Too many types than key system can handle
+			TOO_MANY_ACCELERATOR_GROUPS,
+			TOO_MANY_ACCELERATOR_IN_GROUP,
+			TOO_MANY_MATERIAL_GROUPS,
+			TOO_MANY_MATERIAL_IN_GROUP,
 			// Misc
 			TOO_MANY_SURFACE_ON_NODE,
 			PRIM_MATERIAL_NOT_SAME_SIZE,
@@ -132,9 +141,18 @@ inline SceneError::operator std::string() const
 		// Loading Surface Data
 		"Surface data type not found.",
 		"Surface data unknown type.",
-		//
+		// Some Mat/Accel Logic 
+		// may not support certain prims
 		"Primitive-Material mismatch.",
 		"Primitive-Accelerator mismatch.",
+		// Updating the scene
+		// Primitive Update Size Mismmatch
+		"Updating primitive has more nodes than older itself.",
+		// Too many types than key system can handle
+		"Accelerator groups required for this scene exceeds limit.",
+		"Accelerator groups required for this scene exceeds limit.",
+		"Accelerator groups required for this scene exceeds limit.",	
+		"Accelerator groups required for this scene exceeds limit.",	
 		// Misc
 		"Too many data/material pairs per surface node.",
 		"Prim/Material pairs on surface node does not have same size.",

@@ -9,10 +9,16 @@ Structures that is related to TracerI
 #include <vector>
 #include <map>
 
+class GPUPrimitiveGroupI;
+class GPUAcceleratorGroupI;
 class GPUAcceleratorBatchI;
+class GPUMaterialGroupI;
 class GPUMaterialBatchI;
 
+using PrimitiveGroupList = std::vector<GPUPrimitiveGroupI*>;
+using AcceleratorGroupList = std::vector<GPUAcceleratorGroupI*>;
 using AcceleratorBatchMappings = std::map<uint32_t, GPUAcceleratorBatchI*>;
+using MaterialGroupList = std::vector<GPUMaterialGroupI*>;
 using MaterialBatchMappings = std::map<uint32_t, GPUMaterialBatchI*>;
 
 struct MaterialOptions

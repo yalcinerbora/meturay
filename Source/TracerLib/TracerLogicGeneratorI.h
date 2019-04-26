@@ -58,18 +58,22 @@ class TracerLogicGeneratorI
 		// Finally get the tracer logic
 		// Tracer logic will be constructed with respect to
 		// Constructed batches
-		virtual SceneError			GenerateBaseLogic(TracerBaseLogicI*&, 
-													  const TracerParameters& opts,
-													  const Vector2i maxMats,
-													  const Vector2i maxAccels) = 0;
+		virtual SceneError		GenerateBaseLogic(TracerBaseLogicI*&,
+												  const TracerParameters& opts,
+												  const Vector2i maxMats,
+												  const Vector2i maxAccels) = 0;
 		
 		// Get all generated stuff on a vector
-		virtual std::vector<GPUPrimitiveGroupI*>		GetPrimitiveGroups() const = 0;
-		virtual std::vector<GPUAcceleratorGroupI*>		GetAcceleratorGroups() const = 0;
-		virtual std::vector<GPUAcceleratorBatchI*>		GetAcceleratorBatches() const = 0;
-		virtual std::vector<GPUMaterialGroupI*>			GetMaterialGroups() const = 0;
-		virtual std::vector<GPUMaterialBatchI*>			GetMaterialBatches() const = 0;
-		virtual GPUBaseAcceleratorI*					GetBaseAccelerator() const = 0;
+		virtual PrimitiveGroupList			GetPrimitiveGroups() const = 0;
+		virtual AcceleratorGroupList			GetAcceleratorGroups() const = 0;
+		virtual AcceleratorBatchMappings		GetAcceleratorBatches() const = 0;
+		virtual MaterialGroupList			GetMaterialGroups() const = 0;
+		virtual MaterialBatchMappings		GetMaterialBatches() const = 0;
+
+		virtual GPUBaseAcceleratorI*			GetBaseAccelerator() const = 0;
+
+		// Resetting all generated Groups and Batches
+		virtual void							ClearAll() = 0;
 
 		// Inclusion Functionality
 		// Additionally includes the materials from these libraries

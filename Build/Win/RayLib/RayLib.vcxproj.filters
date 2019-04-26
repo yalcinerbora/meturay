@@ -153,6 +153,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\AnalyticData.h">
       <Filter>Structs</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\HybridFunctions.h">
+      <Filter>Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

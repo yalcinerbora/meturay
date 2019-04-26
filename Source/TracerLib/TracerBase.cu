@@ -32,14 +32,14 @@ void TracerBase::HitRays()
 
 	// Ray Memory Pointers
 	RayGMem* dRays = rayMemory.Rays();
-	HitKey* dMaterialKeys = rayMemory.CurrentKeys();
+	HitKey* dMaterialKeys = rayMemory.MaterialKeys();
 	TransformId* dTransfomIds = rayMemory.TransformIds();
 	PrimitiveId* dPrimitiveIds = rayMemory.PrimitiveIds();
 	HitStructPtr dHitStructs = rayMemory.HitStructs();
 	// These are sorted etc.
 	HitKey* dCurrentKeys = rayMemory.CurrentKeys();	
 	RayId*	dCurrentRayIds = rayMemory.CurrentIds();	
-	
+
 	// Try to hit rays until no ray is left 
 	// (these rays will be assigned with a material)
 	// outside rays are also assigned with a material (which is special)
@@ -98,6 +98,9 @@ void TracerBase::HitRays()
 			RayId* dRayIdStart = dCurrentRayIds + p.offset;
 			HitKey* dCurrentKeyStart = dCurrentKeys + p.offset;
 
+			Debug::DumpMemToFile("rayIds", dCurrentRayIds, currentRayCount);
+			Debug::DumpMemToFile("keys", dCurrentKeys, currentRayCount);
+
 			// Run local hit kernels
 			// Local hit kernels returns a material key 
 			// and primitive inner id.
@@ -123,22 +126,15 @@ void TracerBase::HitRays()
 		}
 
 		// Update new ray count
-		// On partition array check last two partitions
-		// Those partitions may contain outside/invalid batches
-		// Reduce ray count accordingly
-		int iterationCount = std::min(static_cast<int>(portions.size()), 2);
-		auto iterator = portions.rbegin();
-		for(int i = 0; i < iterationCount; ++i)
+		// On partition array check last partition
+		// it may contain invalid key meaning
+		// those rays are totally processed
+		auto iterator = portions.begin();
+		if(iterator->portionId == HitKey::NullBatch)
 		{
-			const auto& portion = *iterator;
-			if(portion.portionId == HitKey::NullBatch ||
-			   portion.portionId == HitKey::BoundaryBatch)
-			{
-				rayCount = static_cast<uint32_t>(portion.offset);
-			}			
-			iterator++;
+			rayCount = static_cast<uint32_t>(iterator->offset);
 		}
-		
+
 		// Iteration is done
 		// We cant continue loop untill these kernels are finished 
 		// on gpu(s)
@@ -272,6 +268,8 @@ void TracerBase::Initialize(int leaderGPUId)
 	// Device initalization
 	rayMemory.SetLeaderDevice(leaderGPUId);
 	
+	// Construct Accelerators
+	//for
 	
 	//...............
 	//Initialize...

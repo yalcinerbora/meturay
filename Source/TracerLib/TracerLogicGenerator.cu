@@ -282,10 +282,18 @@ SceneError TracerLogicGenerator::GenerateBaseLogic(TracerBaseLogicI*& bl,
 {
 	uint32_t hitStructSize = CalculateHitStruct();
 
+	auto ag = GetAcceleratorGroups();
+	auto ab = GetAcceleratorBatches();
+	auto mg = GetMaterialGroups();
+	auto mb = GetMaterialBatches();
+
 	bl = nullptr;
 	if(tracerLogic == nullptr)
 		tracerLogic = tracerGenerator(*baseAccelerator.get(),
-									  accelBatchMap, matBatchMap,
+									  std::move(ag), 
+									  std::move(ab), 
+									  std::move(mg), 
+									  std::move(mb),
 									  opts, hitStructSize,
 									  maxMats, maxAccels);
 	bl = tracerLogic.get();
@@ -293,7 +301,7 @@ SceneError TracerLogicGenerator::GenerateBaseLogic(TracerBaseLogicI*& bl,
 	return SceneError::OK;
 }
 
-std::vector<GPUPrimitiveGroupI*> TracerLogicGenerator::GetPrimitiveGroups() const
+PrimitiveGroupList TracerLogicGenerator::GetPrimitiveGroups() const
 {
 	std::vector<GPUPrimitiveGroupI*> result(primGroups.size());
 	for(const auto& p : primGroups)
@@ -303,7 +311,7 @@ std::vector<GPUPrimitiveGroupI*> TracerLogicGenerator::GetPrimitiveGroups() cons
 	return std::move(result);
 }
 
-std::vector<GPUAcceleratorGroupI*> TracerLogicGenerator::GetAcceleratorGroups() const
+AcceleratorGroupList TracerLogicGenerator::GetAcceleratorGroups() const
 {
 	std::vector<GPUAcceleratorGroupI*> result(accelGroups.size());
 	for(const auto& p : accelGroups)
@@ -313,19 +321,14 @@ std::vector<GPUAcceleratorGroupI*> TracerLogicGenerator::GetAcceleratorGroups() 
 	return std::move(result);
 }
 
-std::vector<GPUAcceleratorBatchI*> TracerLogicGenerator::GetAcceleratorBatches() const
+AcceleratorBatchMappings TracerLogicGenerator::GetAcceleratorBatches() const
 {
-	std::vector<GPUAcceleratorBatchI*> result(accelBatches.size());
-	for(const auto& p : accelBatches)
-	{
-		result.push_back(p.second.get());
-	}
-	return std::move(result);
+	return std::move(accelBatchMap);
 }
 
-std::vector<GPUMaterialGroupI*> TracerLogicGenerator::GetMaterialGroups() const
+MaterialGroupList TracerLogicGenerator::GetMaterialGroups() const
 {
-	std::vector<GPUMaterialGroupI*> result(matGroups.size());
+	MaterialGroupList result(matGroups.size());
 	for(const auto& p : matGroups)
 	{
 		result.push_back(p.second.get());
@@ -333,19 +336,37 @@ std::vector<GPUMaterialGroupI*> TracerLogicGenerator::GetMaterialGroups() const
 	return std::move(result);
 }
 
-std::vector<GPUMaterialBatchI*> TracerLogicGenerator::GetMaterialBatches() const
+MaterialBatchMappings TracerLogicGenerator::GetMaterialBatches() const
 {
-	std::vector<GPUMaterialBatchI*> result(matBatches.size());
-	for(const auto& p : matBatches)
-	{
-		result.push_back(p.second.get());
-	}
-	return std::move(result);
+	return std::move(matBatchMap);
 }
 
 GPUBaseAcceleratorI* TracerLogicGenerator::GetBaseAccelerator() const
 {
 	return baseAccelerator.get();
+}
+
+void TracerLogicGenerator::ClearAll()
+{
+	primGroups.clear();
+	
+	accelGroups.clear();
+	accelBatches.clear();
+
+	matGroups.clear();
+	matBatches.clear();
+
+	baseAccelerator.reset(nullptr);
+
+	outsideMaterial.reset(nullptr);
+	outsideMatBatch.reset(nullptr);
+
+	// Inistantiate empty primitive since it is used by outside material	
+	const std::string emptyTypeName = GPUPrimitiveEmpty::TypeName;
+	auto loc = primGroupGenerators.find(emptyTypeName);
+	GPUPrimGPtr ptr = loc->second();
+	emptyPrimitive = ptr.get();
+	primGroups.emplace(emptyTypeName, std::move(ptr));
 }
 
 SceneError TracerLogicGenerator::IncludeAcceleratorsFromDLL(const SharedLib&,

@@ -1,0 +1,71 @@
+#version 430
+/*	
+	**Accumulate Input Generic Shader**
+	
+	File Name	: AccumInput.frag
+	Author		: Bora Yalciner
+	Description	:
+
+		Pass Trough Shader
+*/
+
+// Defines
+#define I_OUT_COLOR layout(binding = 0) restrict writeonly
+#define I_SAMPLE layout(r32i, binding = 1) restrict
+
+#define U_RES layout(location = 0)
+#define U_START layout(location = 1)
+#define U_END layout(location = 2)
+#define U_SAMPLE layout(location = 3)
+
+#define T_IN_COLOR layout(binding = 0)
+#define T_IN_BUFFER layout(binding = 1)
+
+// Images
+uniform I_OUT_COLOR image2D iColor;
+uniform I_SAMPLE iimage2D iSample;
+
+// Textures
+uniform T_IN_COLOR sampler2D tInColor;
+uniform T_IN_BUFFER sampler2D tInBuffer;
+
+// Uniforms
+U_RES uniform ivec2 resolution;
+U_START uniform ivec2 start;
+U_END uniform ivec2 end;
+U_SAMPLE uniform int inSamples;
+
+// 16x16 block is always nice
+layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+void main(void)
+{
+	// Call logic is per pixel
+	uvec2 globalId = gl_GlobalInvocationID.xy;
+	// Generate pixelIds
+	ivec2 pixIdOut = ivec2(globalId);
+	ivec2 pixIdIn = ivec2(globalId) - start;
+	
+	if(any(greaterThanEqual(globalId, resolution))) return;
+
+	// Read from current color buffers	
+	vec4 colorIn = texelFetch(tInColor, pixIdOut, 0);
+
+	vec4 colorOut = colorIn;
+	if(all(greaterThanEqual(pixIdOut, start)) &&
+	   all(lessThan(pixIdOut, end)))
+	{
+		// We are at pixel update range
+		// Do update
+		int sampleCount = imageLoad(iSample, pixIdOut).x;
+		// Read the requested from 
+		vec4 bufferIn = texelFetch(tInBuffer, pixIdIn, 0);
+		// Calculate
+		int totalSamples = sampleCount + inSamples;
+		colorOut = (sampleCount * colorIn + bufferIn * inSamples) / totalSamples;
+
+		// Write
+		imageStore(iSample, pixIdOut, ivec4(totalSamples));
+	}
+	// Copy
+	imageStore(iColor, pixIdOut, colorOut);
+}

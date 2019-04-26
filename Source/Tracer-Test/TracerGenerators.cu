@@ -9,9 +9,12 @@
 #include "TracerLib/GPUAcceleratorI.h"
 #include "TracerLib/TracerLogicI.h"
 
-template TracerBaseLogicI* TypeGenWrappers::TracerLogicConstruct<TracerBaseLogicI, TracerBasic>(GPUBaseAcceleratorI&,
-																								const AcceleratorBatchMappings&,
-																								const MaterialBatchMappings&,
+template TracerBaseLogicI* TypeGenWrappers::TracerLogicConstruct<TracerBaseLogicI, TracerBasic>(GPUBaseAcceleratorI& ba,
+																								AcceleratorGroupList&& ag,
+																								AcceleratorBatchMappings&& ab,
+																								MaterialGroupList&& mg,
+																								MaterialBatchMappings&& mb,
+																								//
 																								const TracerParameters&,
 																								uint32_t,
 																								const Vector2i,

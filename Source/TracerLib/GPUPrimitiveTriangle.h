@@ -20,6 +20,9 @@ All of them should be provided
 #include "GPUPrimitiveP.cuh"
 #include "DeviceMemory.h"
 
+class SurfaceDataLoaderI;
+using SurfaceDataLoaders = std::vector<std::unique_ptr<SurfaceDataLoaderI>>;
+
 // Triangle Memory Layout
 struct TriData
 {
@@ -100,10 +103,10 @@ class GPUPrimitiveTriangle final
 		static constexpr const char*			TypeName = "Triangle";
 
 	private:		
-		DeviceMemory							memory;
+		DeviceMemory								memory;
 
 		// List of ranges for each batch
-		uint64_t								totalPrimitiveCount;
+		uint64_t									totalPrimitiveCount;
 		std::map<uint32_t, Vector2ul>			batchRanges;
 		std::map<uint32_t, AABB3>				batchAABBs;
 
@@ -117,8 +120,8 @@ class GPUPrimitiveTriangle final
 		// Pirmitive type is used for delegating scene info to this class
 		const char*								Type() const override;
 		// Allocates and Generates Data
-		SceneError								InitializeGroup(const std::set<SceneFileNode>& surfaceDatalNodes, double time) override;
-		SceneError								ChangeTime(const std::set<SceneFileNode>& surfaceDatalNodes, double time) override;
+		SceneError								InitializeGroup(const std::set<SceneFileNode>& surfaceDataNodes, double time) override;
+		SceneError								ChangeTime(const std::set<SceneFileNode>& surfaceDataNodes, double time) override;
 
 		// Access primitive range from Id			
 		Vector2ul								PrimitiveBatchRange(uint32_t surfaceDataId) const override;
@@ -127,5 +130,5 @@ class GPUPrimitiveTriangle final
 		// Error check
 		// Queries in order to check if this primitive group supports certain primitive data
 		// Material may need that data
-		bool									CanGenerateData(const std::string& s) const override;
+		bool										CanGenerateData(const std::string& s) const override;
 };

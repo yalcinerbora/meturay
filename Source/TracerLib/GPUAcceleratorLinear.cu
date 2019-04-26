@@ -29,13 +29,11 @@ void GPUBaseAcceleratorLinear::Hit(// Output
 								   const RayId* dRayIds,
 								   const uint32_t rayCount) const
 {
-
 	// Split work
 	const auto splits = CudaSystem::GridStrideMultiGPUSplit(rayCount,
 															StaticThreadPerBlock1D,
 															0,
 															KCIntersectBaseLinear);
-
 	// Split work into multiple GPU's
 	size_t offset = 0;
 	for(int i = 0; i < static_cast<int>(CudaSystem::GPUList().size()); i++)
@@ -62,8 +60,10 @@ void GPUBaseAcceleratorLinear::Hit(// Output
 										// Constants
 										dLeafs,
 										leafCount);
-
 	}
+
+	// Wait all gpus to finish
+	CudaSystem::SyncAllGPUs();
 }
 
 SceneError GPUBaseAcceleratorLinear::Initialize(// List of surface to transform id hit key mappings

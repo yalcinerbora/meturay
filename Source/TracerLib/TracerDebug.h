@@ -8,17 +8,29 @@
 #include "RayLib/Log.h"
 #include "RayLib/HitStructs.h"
 
+#include "RayStructs.h"
 #include "CudaConstants.h"
 
 namespace Debug
 {
-	void PrintHitPairs(const RayId* ids, const HitKey* keys, size_t count);
-	void WriteHitPairs(const RayId* ids, const HitKey* keys, size_t count, const std::string& file);
+	void				PrintHitPairs(const RayId* ids, const HitKey* keys, size_t count);
+	void				WriteHitPairs(const RayId* ids, const HitKey* keys, size_t count, const std::string& file);
 
-	template <class T>
-	void PrintData(const T* ids, size_t count);
-	template <class T>
-	void WriteData(const T* ids, size_t count, const std::string& fileName);
+	// Memory Debugging
+	template<class T>
+	static void		DumpMemToFile(const std::string& fName,
+								  const T* mPtr, size_t count,
+								  const char* seperator = "\n",
+								  bool hex = false);
+	template<class T>
+	static void		DumpMemToStdout(const T* mPtr, size_t count,
+									const char* seperator = "\n",
+									bool hex = false);
+	template<class T>
+	static void		DumpMemToStream(std::ostream& s,
+									const T* mPtr, size_t count,
+									const char* seperator = "\n",
+									bool hex = false);
 
 	namespace Detail
 	{
@@ -27,27 +39,36 @@ namespace Debug
 	}
 }
 
-template <class T>
-void Debug::PrintData(const T* data, size_t count)
+// Some Print Func Definitions
+extern std::ostream& operator<<(std::ostream& stream, const RayGMem&);
+extern std::ostream& operator<<(std::ostream& stream, const HitKey&);
+
+template<class T>
+void Debug::DumpMemToFile(const std::string& fName,
+						  const T* mPtr, size_t count,
+						  const char* seperator, bool hex)
 {
-	std::stringstream s;
-	Detail::OutputData(s, data, count);
-	METU_LOG("%s", s.str().c_str());
+	std::ofstream file(fName);
+	DumpMemToStream(file, mPtr, count, seperator, hex);
 }
 
-template <class T>
-void Debug::WriteData(const T* data, size_t count, const std::string& fileName)
+template<class T>
+void Debug::DumpMemToStdout(const T* mPtr, size_t count,
+							const char* seperator, bool hex)
 {
-	std::ofstream f(fileName);
-	Detail::OutputData(f, data, count);
+	DumpMemToStream(std::cout, mPtr, count, seperator, hex);
 }
 
-template <class T>
-void Debug::Detail::OutputData(std::ostream& s, const T* data, size_t count)
+template<class T>
+void Debug::DumpMemToStream(std::ostream& s,
+							const T* mPtr, size_t count,
+							const char* seperator, bool hex)
 {
 	CUDA_CHECK(cudaDeviceSynchronize());
+	if(hex) s << std::hex;
 	for(size_t i = 0; i < count; i++)
 	{
-		s << std::dec << std::setw(0) << std::setfill(' ') << data[i] << ", ";
+		s << mPtr[i] << seperator;
 	}
+	if(hex) s << std::dec;
 }

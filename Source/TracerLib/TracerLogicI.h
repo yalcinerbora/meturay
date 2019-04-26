@@ -35,25 +35,27 @@ class GPUMaterialBatchI;
 class TracerBaseLogicI
 {
 	public:
-		virtual										~TracerBaseLogicI() = default;
+		virtual					~TracerBaseLogicI() = default;
 
 		// Interface
-		virtual TracerError							Initialize() = 0;		
-	
+		virtual TracerError		Initialize() = 0;		
+
 		// Generate Rays
-		virtual size_t								GenerateRays(RayMemory&, RNGMemory&,
-																 const GPUScene& scene,
-																 int cameraId,
-																 int samplePerLocation,
-																 Vector2i resolution,
-																 Vector2i pixelStart = Zero2i,
-																 Vector2i pixelEnd = BaseConstants::IMAGE_MAX_SIZE) = 0;
+		virtual size_t			GenerateRays(RayMemory&, RNGMemory&,
+											 const GPUScene& scene,
+											 int cameraId,
+											 int samplePerLocation,
+											 Vector2i resolution,
+											 Vector2i pixelStart = Zero2i,
+											 Vector2i pixelEnd = BaseConstants::IMAGE_MAX_SIZE) = 0;
 
 
 		// Interface fetching for logic
-		virtual GPUBaseAcceleratorI&				BaseAcelerator() = 0;
+		virtual GPUBaseAcceleratorI&					BaseAcelerator() = 0;
 		virtual const AcceleratorBatchMappings&		AcceleratorBatches() = 0;
-		virtual const MaterialBatchMappings&		MaterialBatches() = 0;
+		virtual const MaterialBatchMappings&			MaterialBatches() = 0;
+		virtual const AcceleratorGroupList&			AcceleratorGroups() = 0;
+		virtual const MaterialGroupList&				MaterialGroups() = 0;
 
 		// Returns max bits of keys (for batch and id respectively)
 		virtual const Vector2i						SceneMaterialMaxBits() const = 0;
@@ -61,7 +63,7 @@ class TracerBaseLogicI
 
 		// Options of the Hitman & Shademan
 		virtual const HitOpts&						HitOptions() const = 0;
-		virtual const ShadeOpts&					ShadeOptions() const = 0;
+		virtual const ShadeOpts&						ShadeOptions() const = 0;
 
 		// Misc
 		// Retuns "sizeof(RayAux)"
@@ -69,5 +71,5 @@ class TracerBaseLogicI
 		// Return mimimum size of an arbitrary struct which holds all hit results
 		virtual size_t								HitStructSize() const = 0;
 		// Random seed
-		virtual uint32_t							Seed() const = 0;
+		virtual uint32_t								Seed() const = 0;
 };

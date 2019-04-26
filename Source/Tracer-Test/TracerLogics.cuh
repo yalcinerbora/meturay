@@ -44,9 +44,12 @@ class TracerBasic : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
 	protected:
 	public:
 		// Constructors & Destructor
-						TracerBasic(GPUBaseAcceleratorI& baseAccelerator,
-									const AcceleratorBatchMappings&,
-									const MaterialBatchMappings&,
+						TracerBasic(GPUBaseAcceleratorI& ba,
+									AcceleratorGroupList&& ag,
+									AcceleratorBatchMappings&& ab,
+									MaterialGroupList&& mg,
+									MaterialBatchMappings&& mb,
+									//
 									const TracerParameters& parameters,
 									uint32_t hitStructSize,													
 									const Vector2i maxMats,

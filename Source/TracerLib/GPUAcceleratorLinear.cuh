@@ -48,21 +48,21 @@ class GPUAccLinearGroup final
 	, public LinearAccelTypeName<PGroup>
 {
 	public:
-		using LeafData								= PGroup::LeafData;
+		using LeafData						= PGroup::LeafData;
 
 	private:	
 		// CPU Memory
-		std::vector<PrimitiveRangeList>				primitiveRanges;
-		std::vector<HitKeyList>						primitiveMaterialKeys;
-		std::vector<Vector2ul>						accRanges;
-		std::map<uint32_t, uint32_t>				idLookup;
-			
+		std::vector<PrimitiveRangeList>		primitiveRanges;
+		std::vector<HitKeyList>				primitiveMaterialKeys;
+		std::vector<Vector2ul>				accRanges;
+		std::map<uint32_t, uint32_t>			idLookup;
+	
 		// GPU Memory
-		DeviceMemory								memory;
-		Vector2ul*									dAccRanges;
-		LeafData*									dLeafList;	
+		DeviceMemory							memory;
+		Vector2ul*							dAccRanges;
+		LeafData*							dLeafList;	
 
-		friend class								GPUAccLinearBatch<PGroup>;
+		friend class							GPUAccLinearBatch<PGroup>;
 		
 	protected:
 
@@ -84,8 +84,7 @@ class GPUAccLinearGroup final
 														// and primitive type
 														const std::map<uint32_t, IdPairings>& pairingList,
 														double time) override;
-		SceneError						ChangeTime(std::map<uint32_t, AABB3>& aabbOut,
-												   // Map of hit keys for all materials
+		SceneError						ChangeTime(// Map of hit keys for all materials
 												   // w.r.t matId and primitive type
 												   const std::map<TypeIdPair, HitKey>&,
 												   // List of surface/material
@@ -105,8 +104,8 @@ class GPUAccLinearGroup final
 		void							DestroyAccelerator(uint32_t surface) override;
 		void							DestroyAccelerators(const std::vector<uint32_t>& surfaces) override;
 
-		size_t							UsedGPUMemory() const override;
-		size_t							UsedCPUMemory() const override;		
+		size_t						UsedGPUMemory() const override;
+		size_t						UsedCPUMemory() const override;		
 };
 
 template<class PGroup>
@@ -124,18 +123,18 @@ class GPUAccLinearBatch final
 		// Type(as string) of the accelerator group
 		const char*			Type() const override;
 		// Kernel Logic
-		void				Hit(int gpuId,
-								// O
-								HitKey* dMaterialKeys,
-								PrimitiveId* dPrimitiveIds,
-								HitStructPtr dHitStructs,
-								// I-O													
-								RayGMem* dRays,
-								// Input
-								const TransformId* dTransformIds,
-								const RayId* dRayIds,
-								const HitKey* dAcceleratorKeys,
-								const uint32_t rayCount) const override;
+		void					Hit(int gpuId,
+									// O
+									HitKey* dMaterialKeys,
+									PrimitiveId* dPrimitiveIds,
+									HitStructPtr dHitStructs,
+									// I-O													
+									RayGMem* dRays,
+									// Input
+									const TransformId* dTransformIds,
+									const RayId* dRayIds,
+									const HitKey* dAcceleratorKeys,
+									const uint32_t rayCount) const override;
 };
 
 class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI

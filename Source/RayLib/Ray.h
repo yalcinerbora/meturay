@@ -8,6 +8,7 @@ Ray struct for cnvenient usability.
 #include "Matrix.h"
 #include "Vector.h"
 #include "Quaternion.h"
+#include "HybridFunctions.h"
 
 template<class T, typename = ArithmeticEnable<T>>
 class Ray;
@@ -28,10 +29,10 @@ class Ray<T>
 		constexpr __device__ __host__				Ray(const Vector<3, T>[2]);
 													Ray(const Ray&) = default;
 													~Ray() = default;
-		Ray&										operator=(const Ray&) = default;
+		Ray&											operator=(const Ray&) = default;
 
 		// Assignment Operators
-		__device__ __host__ Ray&					operator=(const Vector<3, T>[2]);
+		__device__ __host__ Ray&						operator=(const Vector<3, T>[2]);
 
 		__device__ __host__ const Vector<3,T>&		getDirection() const;
 		__device__ __host__ const Vector<3,T>&		getPosition() const;
@@ -49,10 +50,12 @@ class Ray<T>
 																	   const Vector<3, T>& t2,
 																	   bool cullFace = true) const;
 		__device__ __host__ bool					IntersectsAABB(const Vector<3, T>& min,
-																   const Vector<3, T>& max) const;
+															   const Vector<3, T>& max,
+															   const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
 		__device__ __host__ bool					IntersectsAABB(Vector<3,T>& pos, T& t,
-																   const Vector<3, T>& min,
-																   const Vector<3, T>& max) const;
+															   const Vector<3, T>& min,
+															   const Vector<3, T>& max,
+															   const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
 
 		// Utility
 		__device__ __host__ Ray						Reflect(const Vector<3, T>& normal) const;

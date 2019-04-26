@@ -16,6 +16,9 @@ TODO: should we interface these?
 #include <limits>
 #include <cuda_runtime.h>
 
+#include <fstream>
+#include <iostream>
+
 // Basic semi-interface for memories that are static for each GPU
 // Textures are one example
 class DeviceLocalMemoryI

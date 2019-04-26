@@ -27,7 +27,7 @@ class RayMemory
 		// Leader GPU device that is responsible for
 		// parititoning and sorting the ray data
 		// (Only usefull in multi-GPU systems)
-		int							leaderDeviceId;
+		int						leaderDeviceId;
 
 		// Ray Related
 		DeviceMemory				memIn;
@@ -42,15 +42,15 @@ class RayMemory
 		// Single auxiliary struct can be defined per tracer system
 		// and it is common. 
 		// (i.e. such struct may hold pixelId total accumulation etc)
-		void*						dRayAuxIn;
-		void*						dRayAuxOut;
+		void*					dRayAuxIn;
+		void*					dRayAuxOut;
 		//---------------------------------------------------------
 		// Hit Related
 		// Entire Hit related memory is allocated in bulk.
 		DeviceMemory				memHit;
 		// MatKey holds the material group id and material group local id
 		// This is used to sort rays to match kernels
-		HitKey*						dMaterialKeys;
+		HitKey*					dMaterialKeys;
 		// Transform of the hit
 		// Base accelerator fill this value with a potential hit
 		TransformId*				dTransformIds;
@@ -71,29 +71,33 @@ class RayMemory
 		// --
 		// Double buffer and temporary memory for sorting
 		// Key/Index pair (key can either be accelerator or material)
-		size_t						tempMemorySize;
-		void*						dTempMemory;
-		RayId*						dIds0, *dIds1;		
-		HitKey*						dKeys0, *dKeys1;
+		void*					dTempMemory;
+		RayId*					dIds0, *dIds1;		
+		HitKey*					dKeys0, *dKeys1;
 		// Current pointers to the double buffer
 		// In hit portion of the code it holds accelerator ids etc.
-		HitKey*						dCurrentKeys;
-		RayId*						dCurrentIds;		
+		HitKey*					dCurrentKeys;
+		RayId*					dCurrentIds;		
 		
+		// Cub Requires acutal tempMemory size
+		// It sometimes crash if you give larger memory size
+		// I dunno why
+		size_t					cubIfMemSize;
+		size_t					cubSortMemSize;
 
-		static void					ResizeRayMemory(RayGMem*& dRays, void*& dRayAxData,
-													DeviceMemory&, 
-													size_t rayCount,
-													size_t perRayAuxSize);
+		static void				ResizeRayMemory(RayGMem*& dRays, void*& dRayAxData,
+												DeviceMemory&, 
+												size_t rayCount,
+												size_t perRayAuxSize);
 
 	public:
 		// Constructors & Destructor
-									RayMemory();
-									RayMemory(const RayMemory&) = delete;
-									RayMemory(RayMemory&&) = default;
-		RayMemory&					operator=(const RayMemory&) = delete;
-		RayMemory&					operator=(RayMemory&&) = default;
-									~RayMemory() = default;
+								RayMemory();
+								RayMemory(const RayMemory&) = delete;
+								RayMemory(RayMemory&&) = default;
+		RayMemory&				operator=(const RayMemory&) = delete;
+		RayMemory&				operator=(RayMemory&&) = default;
+								~RayMemory() = default;
 
 
 		// Accessors
@@ -104,28 +108,28 @@ class RayMemory
 		// Ray Out
 		RayGMem*					RaysOut();
 		template<class T>
-		T*							RayAuxOut();
+		T*						RayAuxOut();
 
 		// Hit Related		
 		HitStructPtr				HitStructs();
-		const HitStructPtr			HitStructs() const;
-		HitKey*						MaterialKeys();
-		const HitKey*				MaterialKeys() const;
+		const HitStructPtr		HitStructs() const;
+		HitKey*					MaterialKeys();
+		const HitKey*			MaterialKeys() const;
 		TransformId*				TransformIds();
-		const TransformId*			TransformIds() const;
+		const TransformId*		TransformIds() const;
 		PrimitiveId*				PrimitiveIds();
-		const PrimitiveId*			PrimitiveIds() const;
+		const PrimitiveId*		PrimitiveIds() const;
 		//		
-		HitKey*						CurrentKeys();
-		const HitKey*				CurrentKeys() const;
-		RayId*						CurrentIds();
+		HitKey*					CurrentKeys();
+		const HitKey*			CurrentKeys() const;
+		RayId*					CurrentIds();
 		const RayId*				CurrentIds() const;
 		
 				
 		// Misc
 		// Sets leader device which is responsible for sort and partition kernel calls
 		void						SetLeaderDevice(int);
-		int							LeaderDevice() const;
+		int						LeaderDevice() const;
 	
 		// Memory Allocation
 		void						ResetHitMemory(size_t rayCount, size_t hitStructSize);
@@ -138,7 +142,7 @@ class RayMemory
 											 size_t count,
 											 const Vector2i& bitRange);
 		// Partitions the segments for multi-kernel calls		
-		RayPartitions<uint32_t>		Partition(uint32_t rayCount);
+		RayPartitions<uint32_t>	Partition(uint32_t rayCount);
 		// Initialize HitIds and Indices
 		void						FillRayIdsForSort(uint32_t rayCount);
 };

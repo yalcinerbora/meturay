@@ -234,6 +234,8 @@ SceneError GPUScene::GenerateMaterialBatches(MaterialKeyListing& allMatKeys,
 	for(const auto& requiredMat : materialBatches)
 	{		
 		batchId++;
+		if(batchId >= (1 << HitKey::BatchBits))
+			return SceneError::TOO_MANY_MATERIAL_GROUPS;
 
 		const int gpuId = requiredMat.first.second;
 		const std::string& batchName = requiredMat.first.first;
@@ -296,11 +298,16 @@ SceneError GPUScene::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABBs,
 										  const MaterialKeyListing& matHitKeyList,
 										  double time)
 {
-	uint32_t accelBatch = 0;
 	SceneError e = SceneError::OK;
+	uint32_t accelBatch = 0;
 	// Accelerator Groups & Batches and surface hit keys
 	for(const auto& accelGroupBatch : acceleratorBatchList)
 	{
+		// Too many accelerators
+		accelBatch++;
+		if(accelBatch >= (1 << HitKey::BatchBits))
+			return SceneError::TOO_MANY_ACCELERATOR_GROUPS;
+	
 		const uint32_t accelId = accelBatch;
 		const std::string& accelGroupName = accelGroupBatch.second.accelType;
 		const auto& primTName = accelGroupBatch.second.primType;
@@ -357,7 +364,6 @@ SceneError GPUScene::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABBs,
 			}
 			accAABBs.emplace(pairs.first, std::move(combinedAABB));
 		}
-		accelBatch++;
 	}
 	return e;
 }
@@ -785,10 +791,11 @@ size_t GPUScene::UsedCPUMemory()
 
 SceneError GPUScene::LoadScene(double time)
 {
-	SceneError e(SceneError::OK);
+	SceneError e = SceneError::OK;
 	try
 	{
-		OpenFile(fileName);
+		if((e = OpenFile(fileName)) != SceneError::OK)
+		   return e;
 		LoadCommon(time);
 		e = LoadLogicRelated(time);
 	}
