@@ -125,6 +125,10 @@ inline bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
 	//}
 	//else
 	//	return false;
+
+	// Fake hit
+	baryCoords = Vector<3,T>(0.0f);
+	t = 1.0f;
 	return true;
 }
 

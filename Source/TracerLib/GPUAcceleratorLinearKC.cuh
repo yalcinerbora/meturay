@@ -13,17 +13,17 @@ with ustom Intersection and Hit
 
 #include "RayLib/SceneStructs.h"
 
-using HitKeyList = std::array<HitKey, SceneConstants::MaxSurfacePerAccelerator>;
-using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxSurfacePerAccelerator>;
+using HitKeyList = std::array<HitKey, SceneConstants::MaxPrimitivePerSurface>;
+using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxPrimitivePerSurface>;
 
 struct HKList
 {
-	HitKey materialKeys[SceneConstants::MaxSurfacePerAccelerator];
+	const HitKey materialKeys[SceneConstants::MaxPrimitivePerSurface];
 };
 
 struct PRList
 {
-	Vector2ul primRanges[SceneConstants::MaxSurfacePerAccelerator];
+	const Vector2ul primRanges[SceneConstants::MaxPrimitivePerSurface];
 };
 
 // Fundamental Construction Kernel
@@ -31,7 +31,6 @@ template <class PGroup>
 __global__
 static void KCConstructLinear(// O
 							  PGroup::LeafData* gLeafOut,
-
 							  // Input
 							  const Vector2ul* gAccRanges,
 							  //const HitKeyList materialKeys,
@@ -50,11 +49,11 @@ static void KCConstructLinear(// O
 	LeafData* gAccLeafs = gLeafOut + accRange[0];
 
 	// SceneConstants
-	uint32_t RangeLocation[SceneConstants::MaxSurfacePerAccelerator];
+	uint32_t RangeLocation[SceneConstants::MaxPrimitivePerSurface];
 	
 	auto FindIndex = [&](uint32_t globalId) -> int
 	{
-		static constexpr int LastLocation = SceneConstants::MaxSurfacePerAccelerator - 1;
+		static constexpr int LastLocation = SceneConstants::MaxPrimitivePerSurface - 1;
 		#pragma unroll
 		for(int i = 0; i < LastLocation; i++)
 		{
@@ -69,12 +68,12 @@ static void KCConstructLinear(// O
 	// Initialize Offsets
 	uint32_t totalPrimCount = 0;
 	#pragma unroll
-	for(int i = 0; i < SceneConstants::MaxSurfacePerAccelerator; i++)
+	for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
 	{
+		RangeLocation[i] = totalPrimCount;
 		uint32_t primCount = static_cast<uint32_t>(prList.primRanges[i][1] - 
 												   prList.primRanges[i][0]);
 		totalPrimCount += primCount;
-		RangeLocation[i] = totalPrimCount;
 	}
 
 	// Grid Stride Loop
@@ -136,7 +135,7 @@ static void KCIntersectLinear(// O
 		// Key is the index of the inner Linear Array
 		const Vector2ul accRange = gAccRanges[accId];
 		const LeafData* gLeaf = gLeafList + accRange[0];
-		const uint32_t endCount = static_cast<uint32_t>(accRange[1]);
+		const uint32_t endCount = static_cast<uint32_t>(accRange[1] - accRange[0]);
 
 		// Zero means identity so skip
 		if(transformId != 0)

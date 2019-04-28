@@ -91,6 +91,7 @@ class GPUScene
 												const std::map<uint32_t, HitKey>& accHitKeyList,
 												const std::map<uint32_t, uint32_t>& surfaceTransformIds,
 												double time = 0.0);
+		SceneError		GenerateBoundaryMaterial(int gpuId);
 
 		void				LoadCommon(double time);
 		SceneError		LoadLogicRelated(double time);

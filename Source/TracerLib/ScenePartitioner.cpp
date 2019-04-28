@@ -11,6 +11,7 @@ SingleGPUScenePartitioner::SingleGPUScenePartitioner(const std::vector<CudaGPU>&
 // Algo assumes a single healthy GPU
 SceneError SingleGPUScenePartitioner::PartitionMaterials(MultiGPUMatNodes& multiGroups,
 														 MultiGPUMatBatches& multiBatches,
+														 int& boundaryMaterialGPU,
 														 // Single Input
 														 const MaterialNodeList& materialGroups,
 														 const MaterialBatchList& materialBatches) const
@@ -18,6 +19,8 @@ SceneError SingleGPUScenePartitioner::PartitionMaterials(MultiGPUMatNodes& multi
 	// Just use the first gpu avail
 	assert(!systemGPUs.empty());
 	const int GPUId = systemGPUs[0].DeviceId();
+
+	boundaryMaterialGPU = 0;
 
 	for(const auto& mg : materialGroups)
 	{

@@ -252,12 +252,12 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
 	// First sort internals
 	if(bitStart != bitEnd)
 	{
-		CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(dTempMemory, cubSortMemSize,
-															 dbKeys, dbIds,
-															 static_cast<int>(count),
-															 bitStart, bitEnd,
-															 (cudaStream_t)0,
-															 METU_DEBUG_BOOL));
+		CUDA_CHECK(cub::DeviceRadixSort::SortPairs(dTempMemory, cubSortMemSize,
+												   dbKeys, dbIds,
+												   static_cast<int>(count),
+												   bitStart, bitEnd,
+												   (cudaStream_t)0,
+												   METU_DEBUG_BOOL));
 	}
 
 	// Then sort batches
@@ -265,12 +265,12 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
 	bitEnd = HitKey::IdBits + bitMaxValues[0];
 	if(bitStart != bitEnd)
 	{
-		CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(dTempMemory, cubSortMemSize,
-															 dbKeys, dbIds,
-															 static_cast<int>(count),
-															 bitStart, bitEnd,
-															 (cudaStream_t)0,
-															 METU_DEBUG_BOOL));
+		CUDA_CHECK(cub::DeviceRadixSort::SortPairs(dTempMemory, cubSortMemSize,
+												   dbKeys, dbIds,
+												   static_cast<int>(count),
+												   bitStart, bitEnd,
+												   (cudaStream_t)0,
+												   METU_DEBUG_BOOL));
 	}
 	
 	ids = dbIds.Current();
@@ -352,7 +352,7 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
 		uint32_t id = hDenseKeys[i];
 		uint32_t offset = hDenseIndices[i];
 		size_t count = hDenseIndices[i + 1] - hDenseIndices[i];
-		partitions.emplace(ArrayPortion<uint32_t>{id,offset, count});
+		partitions.emplace(ArrayPortion<uint32_t>{id, offset, count});
 	}
 	// Done!
 	return std::move(partitions);

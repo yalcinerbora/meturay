@@ -36,7 +36,7 @@ class TracerBase : public TracerI
 		// Common Memory
 		RNGMemory			rngMemory;
 		RayMemory			rayMemory;
-		ImageMemory			outputImage;		
+		ImageMemory			outputImage;	
 
 		// Properties
 		uint32_t				currentRayCount;
@@ -71,7 +71,7 @@ class TracerBase : public TracerI
 		// COMMANDS TO TRACER //
 		// ===================//	
 		// Main Calls
-		void				Initialize(int leaderGPUId = 0) override;
+		TracerError		Initialize(int leaderGPUId = 0) override;
 		void				SetOptions(const TracerOptions&) override;
 		// Requests
 		void				RequestBaseAccelerator() override;

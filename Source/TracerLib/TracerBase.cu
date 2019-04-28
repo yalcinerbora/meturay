@@ -145,6 +145,7 @@ void TracerBase::HitRays()
 	}
 	// At the end of iteration all rays found a material, primitive
 	// and interpolation weights (which should be on hitStruct)
+	Debug::DumpMemToFile("matKeys", dMaterialKeys, currentRayCount);
 }
 
 void TracerBase::ShadeRays()
@@ -177,20 +178,16 @@ void TracerBase::ShadeRays()
 	// Parition w.r.t. material batch
 	auto portions = rayMemory.Partition(rayCount);
 
-	// Update new ray count
-	// Last partition may be invalid partition
-	// Skip those partition and adjust ray count accordingly
-	if(!portions.empty() &&
-	   portions.rbegin()->portionId == HitKey::NullBatch)
-	{
-		rayCount = static_cast<uint32_t>(portions.rbegin()->offset);
-	}
+	Debug::DumpMemToFile("rayIds", dCurrentRayIds, currentRayCount);
+	Debug::DumpMemToFile("keys", dCurrentKeys, currentRayCount);
 
 	// Use partition lis to find out
 	// total potential output ray count
 	size_t totalOutRayCount = 0;
 	for(const auto& p : portions)
 	{
+		// Skip if null batch or unfound material
+		if(p.portionId == HitKey::NullBatch) continue;
 		auto loc = materials.find(p.portionId);
 		if(loc == materials.end()) continue;
 
@@ -211,6 +208,8 @@ void TracerBase::ShadeRays()
 	size_t outOffset = 0;
 	for(const auto& p : portions)
 	{
+		// Skip if null batch or unfound material
+		if(p.portionId == HitKey::NullBatch) continue;
 		auto loc = materials.find(p.portionId);
 		if(loc == materials.end()) continue;
 
@@ -249,7 +248,7 @@ void TracerBase::ShadeRays()
 	// Again wait all of the GPU's since
 	// CUDA functions will be on multiple-gpus
 	CudaSystem::SyncAllGPUs();
-	
+
 	// Shading complete
 	// Now make "RayOut" to "RayIn"
 	// and continue
@@ -263,26 +262,29 @@ TracerBase::TracerBase()
 	, healthy(false)	
 {}
 
-void TracerBase::Initialize(int leaderGPUId)
+TracerError TracerBase::Initialize(int leaderGPUId)
 {
+	// No logic set for initalization
+	if(currentLogic == nullptr) return TracerError::NO_LOGIC_SET;
+
 	// Device initalization
 	rayMemory.SetLeaderDevice(leaderGPUId);
 	
 	// Construct Accelerators
-	//for
+	GPUBaseAcceleratorI& baseAccelerator = currentLogic->BaseAcelerator();
+	const AcceleratorGroupList& acceleratorGroups = currentLogic->AcceleratorGroups();
 	
-	//...............
-	//Initialize...
-	//currentLogic->
-
-	//for()
-	
-	
+	baseAccelerator.Constrcut();
+	for(const auto& accel : acceleratorGroups)
+	{
+		accel->ConstructAccelerators();
+	}
 	
 	CUDA_CHECK(cudaSetDevice(leaderGPUId));
 
 	// All seems fine mark tracer as healthy
 	healthy = true;
+	return TracerError::OK;
 }
 
 void TracerBase::SetOptions(const TracerOptions& opts)

@@ -18,7 +18,7 @@ using SurfaceDataId = uint32_t;
 using TypeIdPair = std::pair<std::string, uint32_t>;
 using IdPairing = std::pair<uint32_t, uint32_t>;
 using IdTriplet = std::tuple<uint32_t, uint32_t, uint32_t>;
-using IdPairings = std::array<IdPairing, SceneConstants::MaxSurfacePerAccelerator>;
+using IdPairings = std::array<IdPairing, SceneConstants::MaxPrimitivePerSurface>;
 
 struct AccelGroupData
 {

@@ -209,7 +209,7 @@ SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn, double time)
 		const auto materialIdArray = jsn[MATERIAL];
 		if(primIdArray.size() != materialIdArray.size())
 			throw SceneException(SceneError::PRIM_MATERIAL_NOT_SAME_SIZE);
-		if(primIdArray.size() >= SceneConstants::MaxSurfacePerAccelerator)
+		if(primIdArray.size() >= SceneConstants::MaxPrimitivePerSurface)
 			throw SceneException(SceneError::TOO_MANY_SURFACE_ON_NODE);
 
 		if(primIdArray.size() == 1)

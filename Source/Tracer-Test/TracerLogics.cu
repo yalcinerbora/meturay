@@ -14,7 +14,7 @@ TracerBasic::TracerBasic(GPUBaseAcceleratorI& ba,
 						 uint32_t hitStructSize,
 						 const Vector2i maxMats,
 						 const Vector2i maxAccels)
-	: TracerBaseLogic(baseAccelerator, 
+	: TracerBaseLogic(ba, 
 					  std::move(ag), std::move(ab), 
 					  std::move(mg), std::move(mb),
 					  options, 

@@ -12,7 +12,9 @@ struct TracerError : public ErrorI
 	public:
 		enum Type
 		{
-			OK,			
+			OK,
+			// Logical
+			NO_LOGIC_SET,
 			// General
 			OUT_OF_MEMORY,
 			// ...
@@ -49,6 +51,7 @@ inline TracerError::operator std::string() const
 	const char* const ErrorStrings[] =
 	{
 		"OK.",
+		"No Tracer Logic is set.",
 		// General
 		"Out of Memory."
 	};

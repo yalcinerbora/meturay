@@ -44,8 +44,8 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		std::map<NameIdPair, GPUMatBPtr>					matBatches;
 
 		GPUBaseAccelPtr									baseAccelerator;
-		GPUMatGPtr										outsideMaterial;
-		GPUMatBPtr										outsideMatBatch;
+		GPUMatGPtr										boundaryMaterial;
+		GPUMatBPtr										boundaryMatBatch;
 		GPUPrimitiveGroupI*								emptyPrimitive;
 		
 		// Tracer Related
@@ -88,9 +88,9 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 														  uint32_t keyBatchId) override;
 
 		// Outside Material is special material and has its own group		
-		SceneError					GenerateOutsideMaterial(GPUMaterialGroupI*&,
-															const std::string& materialType,
-															const int gpuId) override;
+		SceneError					GenerateBoundaryMaterial(GPUMaterialGroupI*&,
+															 const std::string& materialType,
+															 const int gpuId) override;
 
 		// Base Accelerator should be fetched after all the stuff is generated
 		SceneError					GenerateBaseAccelerator(GPUBaseAcceleratorI*&,

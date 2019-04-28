@@ -24,7 +24,7 @@ namespace BaseConstants
 namespace SceneConstants
 {
 	// Fundamental Limitations (for convenience)
-	static constexpr const int	MaxSurfacePerAccelerator = 8;
+	static constexpr const int	MaxPrimitivePerSurface = 8;
 }
 
 namespace MathConstants

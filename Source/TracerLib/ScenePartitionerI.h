@@ -25,6 +25,7 @@ class ScenePartitionerI
 		// Interface
 		virtual SceneError		PartitionMaterials(MultiGPUMatNodes&,
 												   MultiGPUMatBatches&,
+												   int& boundaryMaterialGPU,
 												   // Single Input
 												   const MaterialNodeList& materialGroups,
 												   const MaterialBatchList& materialBatches) const = 0;

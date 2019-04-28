@@ -39,7 +39,7 @@ inline void GIAlbedoMatShade(// Output
 	// ray direction over path
 
 	// Ray Selection
-	Vector3 position = rayIn.ray.AdvancedPos(rayIn.tMin);
+	Vector3 position = rayIn.ray.AdvancedPos(rayIn.tMax);
 	Vector3 normal = surface.normal;
 	// Generate New Ray Directiion
 	Vector2 xi(GPURand::ZeroOne<float>(rng),
@@ -51,10 +51,13 @@ inline void GIAlbedoMatShade(// Output
 	QuatF q = QuatF::RotationBetweenZAxis(normal);
 	direction = q.ApplyRotation(direction);
 
+	// Advance slightly to prevent self intersection
+	position += direction * MathConstants::Epsilon;
+
 	// Write Ray
 	rayOut.ray = {direction, position};
-	rayOut.tMin = MathConstants::Epsilon;
-	rayOut.tMax = rayIn.tMax;
+	rayOut.tMin = 0.0f;
+	rayOut.tMax = INFINITY;
 
 	// All done!
 	// Write to global memory
@@ -72,7 +75,7 @@ class GIAlbedoMat final
 		static constexpr const char*	TypeName = "GIAlbedo";
 
 	private:
-		DeviceMemory			memory;
+		DeviceMemory				memory;
 		ConstantAlbedoMatData	matData;
 
 	protected:
@@ -89,7 +92,7 @@ class GIAlbedoMat final
 
 		// Material Queries
 		int						InnerId(uint32_t materialId) const override;
-		bool					IsLoaded(uint32_t materialId) const override;
+		bool						IsLoaded(uint32_t materialId) const override;
 
 		size_t					UsedGPUMemory() const override;
 		size_t					UsedCPUMemory() const override;

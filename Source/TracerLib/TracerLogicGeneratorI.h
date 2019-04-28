@@ -52,7 +52,7 @@ class TracerLogicGeneratorI
 														const std::string& accelType) = 0;
 
 		// Outside Material is special material and has its own group
-		virtual SceneError		GenerateOutsideMaterial(GPUMaterialGroupI*&,
+		virtual SceneError		GenerateBoundaryMaterial(GPUMaterialGroupI*&,
 														const std::string& materialType,
 														const int gpuId) = 0;
 		// Finally get the tracer logic

@@ -54,13 +54,16 @@ inline HitResult TriangleClosestHit(// Output
 	// Do Intersecton test	
 	Vector3 baryCoords; float newT;
 	bool intersects = rayData.ray.IntersectsTriangle(baryCoords, newT,
-													 position0, position1, position2,
+													 position0, 
+													 position1, 
+													 position2,
 													 false);
 
 	// Check if the hit is closer
-	bool closerHit = intersects && (newT < rayData.tMin);
+	bool closerHit = intersects && (newT < rayData.tMax);
 	if(closerHit)
 	{
+		rayData.tMax = newT;
 		newMat = leaf.matId;
 		newPrimitive = leaf.primitiveId;
 		newHit = Vector2(baryCoords[0], baryCoords[1]);

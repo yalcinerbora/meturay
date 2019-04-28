@@ -96,12 +96,16 @@ TEST(HelloTriangle, Test)
 	visorView->SetInputScheme(&input);
 
 	// Attach the logic & Image format
-	tracerBase.Initialize(leaderDevice);
 	tracerBase.AttachLogic(*logic);
 	tracerBase.SetImagePixelFormat(pixFormat);
 	tracerBase.ResizeImage(IMAGE_RESOLUTION);
 	tracerBase.ReportionImage();
 	tracerBase.ResetImage();	
+
+	// Tracer Init
+	TracerError trcE = tracerBase.Initialize(leaderDevice);
+	if(trcE != TracerError::OK)
+		ASSERT_TRUE(false);
 
 	// Get a Self-Node
 	VisorI& v = *visorView;

@@ -40,17 +40,17 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Map of hit keys for all
 		hitKeyList.fill(HitKey::InvalidKey);
 		
 		Vector2ul range = Vector2ul(totalSize, 0);
-		
-		uint32_t i = 0;
+
 		size_t localSize = 0;
 		const IdPairings& pList = pairings.second;
-		for(const auto& p : pList)
+		for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
 		{
+			const auto& p = pList[i];
 			if(p.first == std::numeric_limits<uint32_t>::max()) break;
 
 			primRangeList[i] = primitiveGroup.PrimitiveBatchRange(p.first);
 			hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.second));
-			i++;
+			localSize += primRangeList[i][1] - primRangeList[i][0];
 		}
 		range[1] = localSize;
 		totalSize += localSize;
@@ -120,12 +120,12 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
 	const PrimitiveRangeList& rangeList = primitiveRanges[index];
 	const HitKeyList& hitList = primitiveMaterialKeys[index];
 
-	HKList hkList;
-	PRList prList;
-	std::memcpy(&hkList.materialKeys, hitList.data(),
-				sizeof(HitKey) * SceneConstants::MaxSurfacePerAccelerator);
-	std::memcpy(&prList.primRanges, rangeList.data(),
-				sizeof(Vector2ul) * SceneConstants::MaxSurfacePerAccelerator);
+	HKList hkList = {{}};
+	PRList prList = {{}};
+	std::memcpy(const_cast<HitKey*>(hkList.materialKeys), hitList.data(),
+				sizeof(HitKey) * SceneConstants::MaxPrimitivePerSurface);
+	std::memcpy(const_cast<Vector2ul*>(prList.primRanges), rangeList.data(),
+				sizeof(Vector2ul) * SceneConstants::MaxPrimitivePerSurface);
 
 	size_t workCount = accRanges[index][1] - accRanges[index][0];
 	int gpuIndex = 0;

@@ -35,25 +35,25 @@ class GPUPrimitiveGroup
 {
 	public:	
 	   	// Type Definitions for kernel generations
-		using PrimitiveData						= PrimitiveD;
-		using HitData							= HitD;
-		using LeafData							= LeafD;
+		using PrimitiveData					= PrimitiveD;
+		using HitData						= HitD;
+		using LeafData						= LeafD;
 		// Function Definitions
 		// Used by accelerator definitions etc.
-		static constexpr auto HitFunc			= HitF;
-		static constexpr auto LeafFunc			= LeafF;		
-		static constexpr auto BoxFunc			= BoxF;
-		static constexpr auto AreaFunc			= AreaF;
+		static constexpr auto HitFunc		= HitF;
+		static constexpr auto LeafFunc		= LeafF;		
+		static constexpr auto BoxFunc		= BoxF;
+		static constexpr auto AreaFunc		= AreaF;
 		
 	private:
 	protected:
 
 	public:
 		// Constructors & Destructor
-										GPUPrimitiveGroup() = default;
-		virtual							~GPUPrimitiveGroup() = default;
+							GPUPrimitiveGroup() = default;
+		virtual				~GPUPrimitiveGroup() = default;
 
-		uint32_t						PrimitiveHitSize() const override { return sizeof(HitD); };
+		uint32_t				PrimitiveHitSize() const override { return sizeof(HitData); };
 };
 
 
