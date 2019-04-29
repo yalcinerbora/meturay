@@ -7,6 +7,11 @@
 #include "TracerLib/GPUPrimitiveTriangle.h"
 #include "TracerLib/GPUPrimitiveEmpty.h"
 
+struct BarySurface
+{
+	Vector3 baryCoords;
+};
+
 struct BasicSurface
 {
 	Vector3 normal;
@@ -17,6 +22,17 @@ struct EmptySurface
 
 // Surface Functions
 __device__ __host__
+inline BarySurface BarySurfaceFromTri(const GPUPrimitiveTriangle::PrimitiveData& pData,
+									  const GPUPrimitiveTriangle::HitData& hData,
+									  PrimitiveId id)
+{
+	Vector3 baryCoord = Vector3(hData[0],
+								hData[1],
+								1 - hData[0] - hData[1]);
+	return {baryCoord};
+}
+
+__device__ __host__
 inline BasicSurface BasicSurfaceFromTri(const GPUPrimitiveTriangle::PrimitiveData& pData,
 										const GPUPrimitiveTriangle::HitData& hData,
 										PrimitiveId id)
@@ -25,9 +41,9 @@ inline BasicSurface BasicSurfaceFromTri(const GPUPrimitiveTriangle::PrimitiveDat
 	Vector3 n1 = pData.normalsV[id + 1];
 	Vector3 n2 = pData.normalsV[id + 2];
 
-	Vector3 baryCoord = Vector3(baryCoord[0],
-								baryCoord[1],
-								1 - baryCoord[0] - baryCoord[1]);
+	Vector3 baryCoord = Vector3(hData[0],
+								hData[1],
+								1 - hData[0] - hData[1]);
 
 	Vector3 nAvg = (baryCoord[0] * n0 +
 					baryCoord[1] * n1 +

@@ -4,8 +4,9 @@
 
 struct RayAuxBasic
 {
-	Vector3f	totalRadiance;
-	uint32_t	pixelId;
+	Vector3f		totalRadiance;
+	uint32_t		pixelId;
+	uint32_t		pixelSampleId;
 };
 
 __device__ __host__
@@ -15,11 +16,14 @@ inline void RayInitBasic(RayAuxBasic* gOutBasic,
 						 const RayAuxBasic& defaults,
 						 const RayReg& ray,
 						 // Index
-						 const Vector2i& globalPixelId,
-						 const Vector2i& localSampleId,
-						 const uint32_t samplePerLocation)
+						 const uint32_t localPixelId,
+						 const uint32_t pixelSampleId)
 {
-	gOutBasic[writeLoc] = defaults;
+	RayAuxBasic init = defaults;
+	init.pixelId = localPixelId;
+	init.pixelSampleId = pixelSampleId;
+
+	gOutBasic[writeLoc] = init;
 }
 
 //__device__ __host__

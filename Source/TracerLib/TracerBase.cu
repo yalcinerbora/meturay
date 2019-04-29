@@ -98,9 +98,6 @@ void TracerBase::HitRays()
 			RayId* dRayIdStart = dCurrentRayIds + p.offset;
 			HitKey* dCurrentKeyStart = dCurrentKeys + p.offset;
 
-			Debug::DumpMemToFile("rayIds", dCurrentRayIds, currentRayCount);
-			Debug::DumpMemToFile("keys", dCurrentKeys, currentRayCount);
-
 			// Run local hit kernels
 			// Local hit kernels returns a material key 
 			// and primitive inner id.
@@ -145,12 +142,13 @@ void TracerBase::HitRays()
 	}
 	// At the end of iteration all rays found a material, primitive
 	// and interpolation weights (which should be on hitStruct)
-	Debug::DumpMemToFile("matKeys", dMaterialKeys, currentRayCount);
 }
 
 void TracerBase::ShadeRays()
 {
 	const Vector2i matMaxBits = currentLogic->SceneMaterialMaxBits();
+	// Image Memory Pointers
+	Vector4f* dImageMem = outputImage.GMem<Vector4f>();
 
 	// Ray Memory Pointers	
 	const RayGMem* dRays = rayMemory.Rays();	
@@ -177,9 +175,6 @@ void TracerBase::ShadeRays()
 
 	// Parition w.r.t. material batch
 	auto portions = rayMemory.Partition(rayCount);
-
-	Debug::DumpMemToFile("rayIds", dCurrentRayIds, currentRayCount);
-	Debug::DumpMemToFile("keys", dCurrentKeys, currentRayCount);
 
 	// Use partition lis to find out
 	// total potential output ray count
@@ -225,7 +220,7 @@ void TracerBase::ShadeRays()
 	
 		// Actual Shade Call
 		loc->second->ShadeRays(// Output
-							   outputImage.GMem<Vector4f>(),
+							   dImageMem,
 							   //
 							   dRayOutStart,
 							   dAuxOutStart,
@@ -248,6 +243,8 @@ void TracerBase::ShadeRays()
 	// Again wait all of the GPU's since
 	// CUDA functions will be on multiple-gpus
 	CudaSystem::SyncAllGPUs();
+
+	Debug::DumpImage("debug.png", outputImage);
 
 	// Shading complete
 	// Now make "RayOut" to "RayIn"

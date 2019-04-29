@@ -35,7 +35,7 @@ class GPUMaterialGroup
 		static constexpr auto ShadeFunc	= ShadeF;
 
 	private:
-		const int							gpuId;
+		const int						gpuId;
 
 	protected:
 
@@ -44,7 +44,7 @@ class GPUMaterialGroup
 										GPUMaterialGroup(int gpuId);
 		virtual							~GPUMaterialGroup() = default;
 
-		int									GPUId() const override;
+		int								GPUId() const override;
 };
 
 template <class TLogic, class MGroup, class PGroup,
@@ -55,22 +55,22 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
 		static const std::string			TypeNamePriv;
 
 	public:
-		static constexpr auto SurfFunc		= SurfaceF;
-		static const char*					TypeName;
+		static constexpr auto SurfFunc	= SurfaceF;
+		static const char*				TypeName;
 
 	private:
-		const MGroup&						materialGroup;
-		const PGroup&						primitiveGroup;		
+		const MGroup&					materialGroup;
+		const PGroup&					primitiveGroup;		
 
 	protected:		
 	public:
 		// Constrcutors & Destructor
-											GPUMaterialBatch(const GPUMaterialGroupI& m,
+										GPUMaterialBatch(const GPUMaterialGroupI& m,
 															 const GPUPrimitiveGroupI& p);
-											~GPUMaterialBatch() = default;
+										~GPUMaterialBatch() = default;
 											
 		// Type (as string) of the primitive group
-		const char*							Type() const override;
+		const char*						Type() const override;
 		// Interface
 		// KC
 		void								ShadeRays(// Output
@@ -90,10 +90,10 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
 													  const uint32_t rayCount,
 													  RNGMemory& rngMem) const override;
 	
-		const GPUPrimitiveGroupI&			PrimitiveGroup() const override;
+		const GPUPrimitiveGroupI&		PrimitiveGroup() const override;
 		const GPUMaterialGroupI&			MaterialGroup() const override;
 
-		uint8_t								OutRayCount() const override;
+		uint8_t							OutRayCount() const override;
 };
 
 template <class TLogic, class MaterialD,
@@ -125,24 +125,24 @@ template <class TLogic, class MGroup>
 class GPUBoundaryMatBatch final : public GPUMaterialBatchI
 {
 	private:
-		static const std::string			TypeNamePriv;
+		static const std::string				TypeNamePriv;
 
 	public:
 		static const char*					TypeName;
 
 	private:
 		const MGroup&						materialGroup;
-		static const GPUPrimitiveGroupI*	primitiveGroup;		
+		static const GPUPrimitiveGroupI*		primitiveGroup;		
 
 	protected:		
 	public:
 		// Constrcutors & Destructor
-											GPUBoundaryMatBatch(const GPUMaterialGroupI& m,
-															    const GPUPrimitiveGroupI& p);
-											~GPUBoundaryMatBatch() = default;
+										GPUBoundaryMatBatch(const GPUMaterialGroupI& m,
+															const GPUPrimitiveGroupI& p);
+										~GPUBoundaryMatBatch() = default;
 											
 		// Type (as string) of the primitive group
-		const char*							Type() const override;
+		const char*						Type() const override;
 		// Interface
 		// KC
 		void								ShadeRays(// Output
@@ -162,10 +162,10 @@ class GPUBoundaryMatBatch final : public GPUMaterialBatchI
 													  const uint32_t rayCount,
 													  RNGMemory& rngMem) const override;
 	
-		const GPUPrimitiveGroupI&			PrimitiveGroup() const override;
+		const GPUPrimitiveGroupI&		PrimitiveGroup() const override;
 		const GPUMaterialGroupI&			MaterialGroup() const override;
 
-		uint8_t								OutRayCount() const override;
+		uint8_t							OutRayCount() const override;
 };
 
 struct MatDataAccessor

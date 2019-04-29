@@ -22,9 +22,16 @@ ConstantAlbedoMatData ConstantAlbedoMatRead(DeviceMemory& mem,
 	}
 
 	// Alloc etc
-	mem = std::move(DeviceMemory(albedoCPU.size() * sizeof(Vector3)));
-	Vector3f* ptr = static_cast<Vector3f*>(mem);
-	return {ptr};
+	size_t dAlbedoSize = albedoCPU.size() * sizeof(Vector3);
+	mem = std::move(DeviceMemory(dAlbedoSize));
+	Vector3f* dAlbedo = static_cast<Vector3f*>(mem);
+	CUDA_CHECK(cudaMemcpy(dAlbedo, albedoCPU.data(), dAlbedoSize,
+						  cudaMemcpyHostToDevice));
+
+	return ConstantAlbedoMatData
+	{
+		dAlbedo
+	};
 }
 
 ConstantBoundaryMatData ConstantBoundaryMatRead(const std::set<SceneFileNode>& materialNodes,
