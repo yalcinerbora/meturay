@@ -407,20 +407,24 @@ SceneError GPUScene::GenerateBaseAccelerator(const std::map<uint32_t, AABB3>& ac
 	return e;
 }
 
-SceneError GPUScene::GenerateBoundaryMaterial(int gpuId)
+SceneError GPUScene::GenerateBoundaryMaterial(int gpuId, double time)
 {
 	SceneError e = SceneError::OK;
+	NodeListing nodeList;
 
 	nlohmann::json node;
 	if(!FindNode(node, SceneIO::BASE_OUTSIDE_MATERIAL))
 		return SceneError::OUTSIDE_MAT_NODE_NOT_FOUND;
+	nodeList.emplace(node);
 	  
 	GPUMaterialGroupI* boundaryMat = nullptr;
 	const std::string matTypeName = node[SceneIO::TYPE];
 	if((e = logicGenerator.GenerateBoundaryMaterial(boundaryMat, 
 													matTypeName,
 													gpuId)) != SceneError::OK)
-		return e;	  
+		return e;
+	if((e = boundaryMat->InitializeGroup(nodeList, time)) != SceneError::OK)
+		return e;
 	return e;
 }
 

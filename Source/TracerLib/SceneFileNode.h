@@ -13,8 +13,8 @@ with nvcc
 struct SceneFileNode
 {
 	private:
-		const nlohmann::json* node;
-		uint32_t			  id;
+		const nlohmann::json*	node;
+		uint32_t					id;
 
 	protected:
 	public:

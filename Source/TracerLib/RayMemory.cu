@@ -304,10 +304,6 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
 							   FindSplitsSparse,
 							   dSparseSplitIndices, dCurrentKeys, locCount);
 
-
-	Debug::DumpMemToFile("rayIds", dCurrentIds, rayCount);
-	Debug::DumpMemToFile("keys", dCurrentKeys, rayCount);
-
 	// Make Splits Dense
 	// From dEmptyKeys -> dEmptyIds	
 	CUDA_CHECK(cub::DeviceSelect::If(dSelectTempMemory, cubIfMemSize,

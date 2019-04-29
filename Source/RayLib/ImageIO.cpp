@@ -28,7 +28,6 @@ bool ImageIO::ReadHDR(std::vector<Vector4>& image,
 	FIBITMAP *dib2 = nullptr;
 	FREE_IMAGE_FORMAT fif = FreeImage_GetFIFFromFilename(fileName.c_str());
 
-
 	dib2 = FreeImage_Load(fif, fileName.c_str());
 	if(dib2 == nullptr)
 	{
@@ -80,7 +79,7 @@ bool ImageIO::ReadHDR(std::vector<Vector4>& image,
 	return true;
 }
 
-bool ImageIO::WriteAsPNG(const Vector3* image,
+bool ImageIO::WriteAsPNG(const Vector4f* image,
 						 const Vector2ui& size,
 						 const std::string& fileName) const
 {
@@ -92,7 +91,7 @@ bool ImageIO::WriteAsPNG(const Vector3* image,
 		uint32_t jImg = size[1] - j - 1;
 
 		RGBQUAD color;
-		Vector3 rgbImage = image[jImg * size[0] + i];
+		Vector4f rgbImage = image[jImg * size[0] + i];
 
 		rgbImage.ClampSelf(0.0f, 1.0f);
 		rgbImage *= 255.0f;

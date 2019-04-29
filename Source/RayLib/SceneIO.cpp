@@ -155,6 +155,9 @@ CameraPerspective SceneIO::LoadCamera(const nlohmann::json& jsn, double time)
 		cam.fov = LoadVector<2, float>(jsn[CAMERA_FOV], time);
 		cam.apertureSize = LoadNumber<float>(jsn[CAMERA_APERTURE], time);
 
+		// Convert FOV to Radians
+		cam.fov *= MathConstants::DegToRadCoef;
+
 		return cam;
 	}
 	else throw SceneException(SceneError::TYPE_MISMATCH);

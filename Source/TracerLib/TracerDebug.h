@@ -11,10 +11,14 @@
 #include "RayStructs.h"
 #include "CudaConstants.h"
 
+class ImageMemory;
+
 namespace Debug
 {
 	void				PrintHitPairs(const RayId* ids, const HitKey* keys, size_t count);
 	void				WriteHitPairs(const RayId* ids, const HitKey* keys, size_t count, const std::string& file);
+	void				DumpImage(const std::string& fName,
+							  const ImageMemory&);
 
 	// Memory Debugging
 	template<class T>
@@ -42,6 +46,7 @@ namespace Debug
 // Some Print Func Definitions
 extern std::ostream& operator<<(std::ostream& stream, const RayGMem&);
 extern std::ostream& operator<<(std::ostream& stream, const HitKey&);
+extern std::ostream& operator<<(std::ostream& stream, const Vector2f&);
 
 template<class T>
 void Debug::DumpMemToFile(const std::string& fName,

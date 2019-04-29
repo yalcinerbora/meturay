@@ -1,4 +1,7 @@
 #include "TracerDebug.h"
+#include "ImageMemory.h"
+
+#include "RayLib/ImageIO.h"
 
 namespace Debug
 {
@@ -19,6 +22,17 @@ void Debug::Detail::OutputHitPairs(std::ostream& s, const RayId* ids, const HitK
 	}	
 }
 
+void Debug::DumpImage(const std::string& fName,
+					  const ImageMemory& iMem)
+{
+	ImageIO io;
+	Vector2ui size(iMem.SegmentSize()[0],
+				   iMem.SegmentSize()[1]);
+
+	std::vector<Vector4f> image = iMem.MoveImageToCPU<Vector4f>();
+	io.WriteAsPNG(image.data(), size, fName);
+}
+
 void Debug::PrintHitPairs(const RayId* ids, const HitKey* keys, size_t count)
 {
 	std::stringstream s;
@@ -32,12 +46,20 @@ void Debug::WriteHitPairs(const RayId* ids, const HitKey* keys, size_t count, co
 	Detail::OutputHitPairs(f, ids, keys, count);
 }
 
+std::ostream& operator<<(std::ostream& stream, const Vector2f& v)
+{
+	stream << std::setw(0)
+		   << v[0] << ", "
+		   << v[1];
+	return stream;
+}
+
 std::ostream& operator<<(std::ostream& stream, const RayGMem& r)
 {
 	stream << std::setw(0)
 		   << "{" << r.pos[0] << ", " << r.pos[1] << ", " << r.pos[2] << "} "
 		   << "{" << r.dir[0] << ", " << r.dir[1] << ", " << r.dir[2] << "} "
-		   << "{" << r.tMin << ", " << r.tMax;
+		   << "{" << r.tMin << ", " << r.tMax << "}";
 	return stream;
 }
 

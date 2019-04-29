@@ -14,13 +14,13 @@ class ImageIO
 	protected:
 	public:
 		// Constructors & Destructor
-										ImageIO();
-										ImageIO(const ImageIO&) = delete;
+									ImageIO();
+									ImageIO(const ImageIO&) = delete;
 		ImageIO&						operator=(const ImageIO&) = delete;
-										~ImageIO();
+									~ImageIO();
 
 		// Singleton Accessor
-		static ImageIO&					System();
+		static ImageIO&				System();
 										
 		// Usage
 		// Read
@@ -30,7 +30,7 @@ class ImageIO
 
 
 		// Write
-		bool							WriteAsPNG(const Vector3* image,
-												   const Vector2ui& size,
-												   const std::string& fileName) const;
+		bool							WriteAsPNG(const Vector4f* image,
+											   const Vector2ui& size,
+											   const std::string& fileName) const;
 };

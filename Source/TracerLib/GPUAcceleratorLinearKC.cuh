@@ -171,8 +171,8 @@ static void KCIntersectLinear(// O
 		// Write Updated Stuff
 		if(hitModified)
 		{
-			ray.UpdateTMax(gRays, globalId);
-			gHitStructs.Ref<HitData>(globalId) = hit;
+			ray.UpdateTMax(gRays, id);
+			gHitStructs.Ref<HitData>(id) = hit;
 			gMaterialKeys[id] = materialKey;
 			gPrimitiveIds[id] = primitiveId;
 		}

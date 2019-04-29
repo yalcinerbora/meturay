@@ -25,9 +25,8 @@ using AuxInitFunc = void(*)(RayAuxData*,
 							const RayAuxData&,
 							const RayReg&,
 							// Index
-							const Vector2i& globalPixelId,
-							const Vector2i& localSampleId,
-							const uint32_t samplePerLocation);
+							const uint32_t localPixelId,
+							const uint32_t pixelSampleId);
 
 // Templated Camera Ray Generation Kernel
 template<class RayAuxData, AuxInitFunc<RayAuxData> AuxFunc>
@@ -52,8 +51,8 @@ __global__ void KCGenerateCameraRays(// Output
 									pixelCount[1] * samplePerLocation;
 
 	// Find world space window sizes
-	float widthHalf = atanf(cam.fov[0] * 0.5f) * cam.nearPlane;
-	float heightHalf = atanf(cam.fov[1] * 0.5f) * cam.nearPlane;
+	float widthHalf = tanf(cam.fov[0] * 0.5f) * cam.nearPlane;
+	float heightHalf = tanf(cam.fov[1] * 0.5f) * cam.nearPlane;
 
 	// Camera Space pixel sizes
 	Vector2 delta = Vector2((widthHalf * 2.0f) / static_cast<float>(resolution[0] * samplePerLocation),
@@ -81,30 +80,31 @@ __global__ void KCGenerateCameraRays(// Output
 									   threadId / (pixelCount[0] * samplePerLocation));
 		Vector2i globalSampleId = (pixelStart * samplePerLocation) + threadId2d;
 		Vector2i globalPixelId = pixelStart + (threadId2d / samplePerLocation);
-		Vector2i localSampleId = pixelStart + (threadId2d % samplePerLocation);
 
 		// Create random location over sample rectangle
 		float dX = GPURand::ZeroOne<float>(rng);
 		float dY = GPURand::ZeroOne<float>(rng);
-		Vector2 randomOffset = Vector2(dX, dY);
+		//Vector2 randomOffset = Vector2(dX, dY);
+		Vector2 randomOffset = Vector2(0.5f);
 
 		// Ray's world position over canvas
 		Vector2 sampleDistance = Vector2(static_cast<float>(globalSampleId[0]),
 										 static_cast<float>(globalSampleId[1])) * delta;
 		Vector2 samplePointDistance = sampleDistance + randomOffset * delta;
 		Vector3 samplePoint = topLeft + (samplePointDistance[0] * right) - (samplePointDistance[1] * up);
-	
+		Vector3 rayDir = (samplePoint - pos).Normalize();
+
 		// Generate Required Parameters
+		Vector2i pixelSampleId = threadId2d % samplePerLocation;
 		Vector2i localPixelId = globalPixelId - pixelStart;
 		uint32_t pixelIdLinear = localPixelId[1] * pixelCount[0] + localPixelId[0];
-		uint32_t sampleIdLinear = localSampleId[1] * samplePerLocation + localSampleId[0];
-		Vector3 rayDir = (samplePoint - pos).Normalize();
+		uint32_t sampleIdLinear = pixelSampleId[1] * samplePerLocation + pixelSampleId[0];
 
 		// Initialize Ray
 		RayReg ray;
 		ray.ray = RayF(rayDir, pos);
-		ray.tMin = 0;
-		ray.tMax = FLT_MAX;
+		ray.tMin = 0; // cam.nearPlane;
+		ray.tMax = FLT_MAX; // cam.farPlane;
 		ray.Update(gRays, threadId);
 
 		// Initialize Auxiliary Data
@@ -114,8 +114,7 @@ __global__ void KCGenerateCameraRays(// Output
 				auxBaseData,
 				ray,
 				// Index
-				globalPixelId,
-				localSampleId,
-				samplePerLocation);
+				pixelIdLinear,
+				sampleIdLinear);
 	}	
 }
