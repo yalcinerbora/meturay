@@ -1,59 +1,59 @@
 #include "WorkerThread.h"
 
 WorkerThread::WorkerThread()
-	: stopSignal(false)
+    : stopSignal(false)
 {}
 
 void WorkerThread::THRDEntryPoint()
 {
-	// Thread Entry Point
-	while(ProcessJob());
+    // Thread Entry Point
+    while(ProcessJob());
 }
 
 bool WorkerThread::ProcessJob()
 {
-	std::function<void()> func;
+    std::function<void()> func;
 
-	// Handling Job Queue pop
-	{
-		std::unique_lock<std::mutex> lock(mutex);
+    // Handling Job Queue pop
+    {
+        std::unique_lock<std::mutex> lock(mutex);
 
-		// Wait if queue is empty
-		conditionVar.wait(lock, [&]
-		{
-			return stopSignal || !assignedJobs.empty();
-		});
+        // Wait if queue is empty
+        conditionVar.wait(lock, [&]
+        {
+            return stopSignal || !assignedJobs.empty();
+        });
 
-		// Exit if Stop is Signaled and There is no other
-		if(stopSignal && assignedJobs.empty())
-			return false;
+        // Exit if Stop is Signaled and There is no other
+        if(stopSignal && assignedJobs.empty())
+            return false;
 
-		func = assignedJobs.front();
-		assignedJobs.pop();
-	}
+        func = assignedJobs.front();
+        assignedJobs.pop();
+    }
 
-	// Actual function call (out of critical section)
-	func();
-	return true;
+    // Actual function call (out of critical section)
+    func();
+    return true;
 }
 
 void WorkerThread::Start()
 {
-	workerThread = std::thread(&WorkerThread::THRDEntryPoint, this);
+    workerThread = std::thread(&WorkerThread::THRDEntryPoint, this);
 }
 
 void WorkerThread::Stop()
 {
-	mutex.lock();
-	stopSignal = true;
-	mutex.unlock();
-	conditionVar.notify_one();
-	workerThread.join();
-	stopSignal = false;
+    mutex.lock();
+    stopSignal = true;
+    mutex.unlock();
+    conditionVar.notify_one();
+    workerThread.join();
+    stopSignal = false;
 }
 
 int WorkerThread::QueuedJobs() const
 {
-	std::unique_lock<std::mutex> lock(mutex);
-	return static_cast<int>(assignedJobs.size());
+    std::unique_lock<std::mutex> lock(mutex);
+    return static_cast<int>(assignedJobs.size());
 }

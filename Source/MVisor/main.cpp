@@ -18,145 +18,145 @@
 
 int main(int argc, const char* argv[])
 {
-	EnableVTMode();
+    EnableVTMode();
 
-	//// =========================//
-	////        PLACEHOLDER		//
-	//// =========================//
+    //// =========================//
+    ////        PLACEHOLDER     //
+    //// =========================//
 
-	//// Placeholder Args
-	//// First arg is scene name
-	//if(argc <= 1)
-	//{
-	//	METU_ERROR_LOG("Insufficient args...");
-	//	return 1;
-	//}
+    //// Placeholder Args
+    //// First arg is scene name
+    //if(argc <= 1)
+    //{
+    //  METU_ERROR_LOG("Insufficient args...");
+    //  return 1;
+    //}
 
-	//// Create Cuda Tracer
-	//auto tracerI = CreateTracerCUDA();
-	//TracerThread tracer(*tracerI);
+    //// Create Cuda Tracer
+    //auto tracerI = CreateTracerCUDA();
+    //TracerThread tracer(*tracerI);
 
-	//// Set Scene
-	//tracer.ChangeScene(std::string(argv[1]));
+    //// Set Scene
+    //tracer.ChangeScene(std::string(argv[1]));
 
-	//// Launch Tracer
+    //// Launch Tracer
 
-	//// =========================//
-	////        PLACEHOLDER		//
-	//// =========================//
-
-
-
-	//// Visor Determination
-	//std::unique_ptr<VisorGL> visorView = CreateVisorGL();
-	//visorView->ResetImageBuffer({1280, 720}, PixelFormat::RGB32_UNORM);
-	//// Main Poll Loop
-	//while(visorView->IsOpen())
-	//{
-	//	// Do Stuff
-	//	//...
-
-	//	// Present Back Buffer
-	//	visorView->Present();
-	//}
+    //// =========================//
+    ////        PLACEHOLDER     //
+    //// =========================//
 
 
 
-	//// Load Maya Cache
-	//MayaCache::MayaNSCacheInfo info;
-	//const std::string fileName("C:\\Users\\Coastal GPU\\Desktop\\CS568\\fluidCache.xml");
-	////const std::string fileName("C:\\Users\\Coastal GPU\\Documents\\maya\\projects\\default\\cache\\nCache\\fluid\\smallFluid\\smallFluidShape1.xml");
-	//if(IOError e; (e = MayaCache::LoadNCacheNavierStokesXML(info, fileName)) != IOError::OK)
-	//{
-	//	METU_ERROR_LOG(GetIOErrorString(e));
-	//	return 1;
-	//}
+    //// Visor Determination
+    //std::unique_ptr<VisorGL> visorView = CreateVisorGL();
+    //visorView->ResetImageBuffer({1280, 720}, PixelFormat::RGB32_UNORM);
+    //// Main Poll Loop
+    //while(visorView->IsOpen())
+    //{
+    //  // Do Stuff
+    //  //...
 
-	//// Load Cache
-	//std::vector<float> velocityDensity;
-	//const std::string fileNameMCX("C:\\Users\\Coastal GPU\\Desktop\\CS568\\fluidCacheFrame200.mcx");
-	////const std::string fileNameMCX("C:\\Users\\Coastal GPU\\Documents\\maya\\projects\\default\\cache\\nCache\\fluid\\smallFluid\\smallFluidShape1Frame4.mcx");
-	//if(IOError e; (e = MayaCache::LoadNCacheNavierStokes(velocityDensity, info, fileNameMCX)) != IOError::OK)
-	//{
-	//	METU_ERROR_LOG(GetIOErrorString(e));
-	//	return 1;
-	//}
-
-	//// CPU Load Successfull
-	//auto tracer = CreateTracerCUDA();
-	//tracer->Initialize();
-
-	//Vector2ui resolution = Vector2ui(512, 512);
-
-	//// Generate Camera Rays
-	//CameraPerspective cam;
-	//cam.apertureSize = 1.0f;
-	//cam.fov = Vector2f(MathConstants::DegToRadCoef * 60.0f,
-	//				   MathConstants::DegToRadCoef * 60.0f);
-	////cam.position = Vector3f(-15.7f, 15.59f, -4.708f);
-	////cam.gazePoint = Vector3f(0.0f, 6.0f, 0.0f);
-	//cam.position = Vector3f(0.0f, 5.0f, 20.0f);
-	//cam.gazePoint = Vector3f(0.0f, 5.0f, 0.0f);
-	//cam.farPlane = 1000.0f;
-	//cam.nearPlane = 0.1f;
-	//cam.up = -YAxis;
-
-	//tracer->CS568GenerateCameraRays(cam, resolution, 1);
-
-	//// Load Fluid
-	//tracer->LoadFluidToGPU(velocityDensity, info.dim);
-
-	//// Ray loop
-	//tracer->LaunchRays(Vector3(1.0f, 0.0f, 0.0f),
-	//				   info.dim,
-	//				   Vector3(-5.0f, 0.0f, -5.0f),
-	//				   Vector3(10.0f, 10.0f, 10.0f));
-
-	//// Get Image
-	//auto image = tracer->GetImage(resolution);
-
-	//// Write Image
-	//ImageIO::System().WriteAsPNG(image, resolution, "test.png");
+    //  // Present Back Buffer
+    //  visorView->Present();
+    //}
 
 
 
-	
-	
-	//try
-	//{
-	//	if(argc != 2)
-	//	{
-	//		std::cerr << "Usage: client <host>" << std::endl;
-	//		return 1;
-	//	}
+    //// Load Maya Cache
+    //MayaCache::MayaNSCacheInfo info;
+    //const std::string fileName("C:\\Users\\Coastal GPU\\Desktop\\CS568\\fluidCache.xml");
+    ////const std::string fileName("C:\\Users\\Coastal GPU\\Documents\\maya\\projects\\default\\cache\\nCache\\fluid\\smallFluid\\smallFluidShape1.xml");
+    //if(IOError e; (e = MayaCache::LoadNCacheNavierStokesXML(info, fileName)) != IOError::OK)
+    //{
+    //  METU_ERROR_LOG(GetIOErrorString(e));
+    //  return 1;
+    //}
 
-	//	asio::io_service io_service;
+    //// Load Cache
+    //std::vector<float> velocityDensity;
+    //const std::string fileNameMCX("C:\\Users\\Coastal GPU\\Desktop\\CS568\\fluidCacheFrame200.mcx");
+    ////const std::string fileNameMCX("C:\\Users\\Coastal GPU\\Documents\\maya\\projects\\default\\cache\\nCache\\fluid\\smallFluid\\smallFluidShape1Frame4.mcx");
+    //if(IOError e; (e = MayaCache::LoadNCacheNavierStokes(velocityDensity, info, fileNameMCX)) != IOError::OK)
+    //{
+    //  METU_ERROR_LOG(GetIOErrorString(e));
+    //  return 1;
+    //}
 
-	//	tcp::resolver resolver(io_service);
-	//	tcp::resolver::query query(argv[1], "daytime");
-	//	tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+    //// CPU Load Successfull
+    //auto tracer = CreateTracerCUDA();
+    //tracer->Initialize();
 
-	//	tcp::socket socket(io_service);
-	//	asio::connect(socket, endpoint_iterator);
+    //Vector2ui resolution = Vector2ui(512, 512);
 
-	//	for(;;)
-	//	{
-	//		std::array<char, 128> buf;
-	//		asio::error_code error;
-	//		//size_t len = socket.read_some(asio::buffer(buf), error);
+    //// Generate Camera Rays
+    //CameraPerspective cam;
+    //cam.apertureSize = 1.0f;
+    //cam.fov = Vector2f(MathConstants::DegToRadCoef * 60.0f,
+    //                 MathConstants::DegToRadCoef * 60.0f);
+    ////cam.position = Vector3f(-15.7f, 15.59f, -4.708f);
+    ////cam.gazePoint = Vector3f(0.0f, 6.0f, 0.0f);
+    //cam.position = Vector3f(0.0f, 5.0f, 20.0f);
+    //cam.gazePoint = Vector3f(0.0f, 5.0f, 0.0f);
+    //cam.farPlane = 1000.0f;
+    //cam.nearPlane = 0.1f;
+    //cam.up = -YAxis;
 
-	//		if(error == asio::error::eof)
-	//			break; // Connection closed cleanly by peer.
-	//		else if(error)
-	//			throw asio::system_error(error); // Some other error.
+    //tracer->CS568GenerateCameraRays(cam, resolution, 1);
 
-	//		//std::cout.write(buf.data(), len);
-	//	}
-	//}
-	//catch(std::exception& e)
-	//{
-	//	std::cerr << e.what() << std::endl;
-	//}
+    //// Load Fluid
+    //tracer->LoadFluidToGPU(velocityDensity, info.dim);
 
-	return 0;
+    //// Ray loop
+    //tracer->LaunchRays(Vector3(1.0f, 0.0f, 0.0f),
+    //                 info.dim,
+    //                 Vector3(-5.0f, 0.0f, -5.0f),
+    //                 Vector3(10.0f, 10.0f, 10.0f));
+
+    //// Get Image
+    //auto image = tracer->GetImage(resolution);
+
+    //// Write Image
+    //ImageIO::System().WriteAsPNG(image, resolution, "test.png");
+
+
+
+    
+    
+    //try
+    //{
+    //  if(argc != 2)
+    //  {
+    //      std::cerr << "Usage: client <host>" << std::endl;
+    //      return 1;
+    //  }
+
+    //  asio::io_service io_service;
+
+    //  tcp::resolver resolver(io_service);
+    //  tcp::resolver::query query(argv[1], "daytime");
+    //  tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+
+    //  tcp::socket socket(io_service);
+    //  asio::connect(socket, endpoint_iterator);
+
+    //  for(;;)
+    //  {
+    //      std::array<char, 128> buf;
+    //      asio::error_code error;
+    //      //size_t len = socket.read_some(asio::buffer(buf), error);
+
+    //      if(error == asio::error::eof)
+    //          break; // Connection closed cleanly by peer.
+    //      else if(error)
+    //          throw asio::system_error(error); // Some other error.
+
+    //      //std::cout.write(buf.data(), len);
+    //  }
+    //}
+    //catch(std::exception& e)
+    //{
+    //  std::cerr << e.what() << std::endl;
+    //}
+
+    return 0;
 }

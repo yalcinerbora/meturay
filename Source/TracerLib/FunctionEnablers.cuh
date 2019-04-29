@@ -10,16 +10,16 @@
 #include "RayLib/Quaternion.h"
 
 #define ENABLE_NV_TYPE(count) \
-		std::is_same<T, float##count>::value		|| \
-		std::is_same<T, double##count>::value		|| \
-		std::is_same<T, short##count>::value		|| \
-		std::is_same<T, ushort##count>::value		|| \
-		std::is_same<T, int##count>::value			|| \
-		std::is_same<T, uint##count>::value			|| \
-		std::is_same<T, long##count>::value			|| \
-		std::is_same<T, ulong##count>::value		|| \
-		std::is_same<T, long##count>::value			|| \
-		std::is_same<T, ulong##count>::value
+        std::is_same<T, float##count>::value        || \
+        std::is_same<T, double##count>::value       || \
+        std::is_same<T, short##count>::value        || \
+        std::is_same<T, ushort##count>::value       || \
+        std::is_same<T, int##count>::value          || \
+        std::is_same<T, uint##count>::value         || \
+        std::is_same<T, long##count>::value         || \
+        std::is_same<T, ulong##count>::value        || \
+        std::is_same<T, long##count>::value         || \
+        std::is_same<T, ulong##count>::value
 
 // Enable Ifs
 template<class T, class O>
@@ -39,10 +39,10 @@ using EnableArithmetic = typename std::enable_if<std::is_arithmetic<T>::value, O
 
 template<class T, class O>
 using EnableVectorOrMatrix = typename std::enable_if<IsVectorType<T>::value ||
-													 IsMatrixType<T>::value, O>::type;
+                                                     IsMatrixType<T>::value, O>::type;
 
 template<class T, class O>
 using EnableRest = typename std::enable_if<IsVectorType<T>::value ||
-										   IsMatrixType<T>::value ||
-										   IsQuatType<T>::value ||
-										   std::is_arithmetic<T>::value, O>::type;
+                                           IsMatrixType<T>::value ||
+                                           IsQuatType<T>::value ||
+                                           std::is_arithmetic<T>::value, O>::type;

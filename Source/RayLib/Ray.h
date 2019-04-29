@@ -16,70 +16,70 @@ class Ray;
 template<class T>
 class Ray<T>
 {
-	private:
-		Vector<3,T>									direction;
-		Vector<3,T>									position;
+    private:
+        Vector<3,T>                                 direction;
+        Vector<3,T>                                 position;
 
-	protected:
-	public:
-		// Constructors & Destructor
-		constexpr									Ray() = default;
-		constexpr __device__ __host__				Ray(const Vector<3,T>& direction,
-														const Vector<3, T>& position);
-		constexpr __device__ __host__				Ray(const Vector<3, T>[2]);
-													Ray(const Ray&) = default;
-													~Ray() = default;
-		Ray&										operator=(const Ray&) = default;
+    protected:
+    public:
+        // Constructors & Destructor
+        constexpr                                   Ray() = default;
+        constexpr __device__ __host__               Ray(const Vector<3,T>& direction,
+                                                        const Vector<3, T>& position);
+        constexpr __device__ __host__               Ray(const Vector<3, T>[2]);
+                                                    Ray(const Ray&) = default;
+                                                    ~Ray() = default;
+        Ray&                                        operator=(const Ray&) = default;
 
-		// Assignment Operators
-		__device__ __host__ Ray&					operator=(const Vector<3, T>[2]);
+        // Assignment Operators
+        __device__ __host__ Ray&                    operator=(const Vector<3, T>[2]);
 
-		__device__ __host__ const Vector<3,T>&		getDirection() const;
-		__device__ __host__ const Vector<3,T>&		getPosition() const;
+        __device__ __host__ const Vector<3,T>&      getDirection() const;
+        __device__ __host__ const Vector<3,T>&      getPosition() const;
 
-		 // Intersections
-		__device__ __host__ bool					IntersectsSphere(Vector<3, T>& pos, T& t,
-																	 const Vector<3, T>& sphereCenter,
-																	 T sphereRadius) const;
-		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
-																	   const Vector<3, T> triCorners[3],
-																	   bool cullFace = true) const;
-		__device__ __host__ bool					IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
-																	   const Vector<3, T>& t0,
-																	   const Vector<3, T>& t1,
-																	   const Vector<3, T>& t2,
-																	   bool cullFace = true) const;
-		__device__ __host__ bool					IntersectsAABB(const Vector<3, T>& min,
-															   const Vector<3, T>& max,
-															   const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
-		__device__ __host__ bool					IntersectsAABB(Vector<3,T>& pos, T& t,
-															   const Vector<3, T>& min,
-															   const Vector<3, T>& max,
-															   const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
+         // Intersections
+        __device__ __host__ bool                    IntersectsSphere(Vector<3, T>& pos, T& t,
+                                                                     const Vector<3, T>& sphereCenter,
+                                                                     T sphereRadius) const;
+        __device__ __host__ bool                    IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
+                                                                       const Vector<3, T> triCorners[3],
+                                                                       bool cullFace = true) const;
+        __device__ __host__ bool                    IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
+                                                                       const Vector<3, T>& t0,
+                                                                       const Vector<3, T>& t1,
+                                                                       const Vector<3, T>& t2,
+                                                                       bool cullFace = true) const;
+        __device__ __host__ bool                    IntersectsAABB(const Vector<3, T>& min,
+                                                               const Vector<3, T>& max,
+                                                               const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
+        __device__ __host__ bool                    IntersectsAABB(Vector<3,T>& pos, T& t,
+                                                               const Vector<3, T>& min,
+                                                               const Vector<3, T>& max,
+                                                               const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
 
-		// Utility
-		__device__ __host__ Ray						Reflect(const Vector<3, T>& normal) const;
-		__device__ __host__ Ray&					ReflectSelf(const Vector<3, T>& normal);
-		__device__ __host__ bool					Refract(Ray& out, const Vector<3, T>& normal,
-															T fromMedium, T toMedium) const;
-		__device__ __host__ bool					RefractSelf(const Vector<3, T>& normal,
-																T fromMedium, T toMedium);
+        // Utility
+        __device__ __host__ Ray                     Reflect(const Vector<3, T>& normal) const;
+        __device__ __host__ Ray&                    ReflectSelf(const Vector<3, T>& normal);
+        __device__ __host__ bool                    Refract(Ray& out, const Vector<3, T>& normal,
+                                                            T fromMedium, T toMedium) const;
+        __device__ __host__ bool                    RefractSelf(const Vector<3, T>& normal,
+                                                                T fromMedium, T toMedium);
 
-		// Randomization (Hemi spherical)
-		__device__ __host__ static Ray				RandomRayCosine(T xi0, T xi1,
-																	const Vector<3, T>& normal,
-																	const Vector<3, T>& position);
-		__device__ __host__ static Ray				RandomRayUnfirom(T xi0, T xi1,
-																	 const Vector<3, T>& normal,
-																	 const Vector<3, T>& position);
+        // Randomization (Hemi spherical)
+        __device__ __host__ static Ray              RandomRayCosine(T xi0, T xi1,
+                                                                    const Vector<3, T>& normal,
+                                                                    const Vector<3, T>& position);
+        __device__ __host__ static Ray              RandomRayUnfirom(T xi0, T xi1,
+                                                                     const Vector<3, T>& normal,
+                                                                     const Vector<3, T>& position);
 
-		__device__ __host__ Ray						NormalizeDir() const;
-		__device__ __host__ Ray&					NormalizeDirSelf();
-		__device__ __host__ Ray						Advance(T) const;
-		__device__ __host__ Ray&					AdvanceSelf(T);
-		__device__ __host__ Ray						Transform(const Matrix<4, T>&) const;
-		__device__ __host__ Ray&					TransformSelf(const Matrix<4, T>&);
-		__device__ __host__ Vector<3,T>				AdvancedPos(T t) const;
+        __device__ __host__ Ray                     NormalizeDir() const;
+        __device__ __host__ Ray&                    NormalizeDirSelf();
+        __device__ __host__ Ray                     Advance(T) const;
+        __device__ __host__ Ray&                    AdvanceSelf(T);
+        __device__ __host__ Ray                     Transform(const Matrix<4, T>&) const;
+        __device__ __host__ Ray&                    TransformSelf(const Matrix<4, T>&);
+        __device__ __host__ Vector<3,T>             AdvancedPos(T t) const;
 };
 
 using RayF = Ray<float>;

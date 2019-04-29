@@ -1,256 +1,256 @@
 template <class PGroup>
 GPUAccLinearGroup<PGroup>::GPUAccLinearGroup(const GPUPrimitiveGroupI& pGroup,
-											 const TransformStruct* dInvTransforms)
-	: GPUAcceleratorGroup<PGroup>(pGroup, dInvTransforms)
-	, dAccRanges(nullptr)
-	, dLeafList(nullptr)
+                                             const TransformStruct* dInvTransforms)
+    : GPUAcceleratorGroup<PGroup>(pGroup, dInvTransforms)
+    , dAccRanges(nullptr)
+    , dLeafList(nullptr)
 {}
 
 template <class PGroup>
 const char* GPUAccLinearGroup<PGroup>::Type() const
 {
-	return TypeName.c_str();
+    return TypeName.c_str();
 }
 
 template <class PGroup>
 SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Map of hit keys for all materials
-													  // w.r.t matId and primitive type
-													  const std::map<TypeIdPair, HitKey>& allHitKeys,
-													  // List of surface/material
-													  // pairings that uses this accelerator type
-													  // and primitive type
-													  const std::map<uint32_t, IdPairings>& pairingList,
-													  double time)
+                                                      // w.r.t matId and primitive type
+                                                      const std::map<TypeIdPair, HitKey>& allHitKeys,
+                                                      // List of surface/material
+                                                      // pairings that uses this accelerator type
+                                                      // and primitive type
+                                                      const std::map<uint32_t, IdPairings>& pairingList,
+                                                      double time)
 {
-	accRanges.clear();
-	primitiveRanges.clear();
-	primitiveMaterialKeys.clear();
-	idLookup.clear();
+    accRanges.clear();
+    primitiveRanges.clear();
+    primitiveMaterialKeys.clear();
+    idLookup.clear();
 
-	const char* primGroupTypeName = primitiveGroup.Type();
-	
-	// Iterate over pairings
-	int j = 0;
-	size_t totalSize = 0;
-	for(const auto& pairings : pairingList)
-	{
-		PrimitiveRangeList primRangeList;
-		HitKeyList hitKeyList;
-		primRangeList.fill(Zero2ul);
-		hitKeyList.fill(HitKey::InvalidKey);
-		
-		Vector2ul range = Vector2ul(totalSize, 0);
+    const char* primGroupTypeName = primitiveGroup.Type();
+    
+    // Iterate over pairings
+    int j = 0;
+    size_t totalSize = 0;
+    for(const auto& pairings : pairingList)
+    {
+        PrimitiveRangeList primRangeList;
+        HitKeyList hitKeyList;
+        primRangeList.fill(Zero2ul);
+        hitKeyList.fill(HitKey::InvalidKey);
+        
+        Vector2ul range = Vector2ul(totalSize, 0);
 
-		size_t localSize = 0;
-		const IdPairings& pList = pairings.second;
-		for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
-		{
-			const auto& p = pList[i];
-			if(p.first == std::numeric_limits<uint32_t>::max()) break;
+        size_t localSize = 0;
+        const IdPairings& pList = pairings.second;
+        for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
+        {
+            const auto& p = pList[i];
+            if(p.first == std::numeric_limits<uint32_t>::max()) break;
 
-			primRangeList[i] = primitiveGroup.PrimitiveBatchRange(p.first);
-			hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.second));
-			localSize += primRangeList[i][1] - primRangeList[i][0];
-		}
-		range[1] = localSize;
-		totalSize += localSize;
-		
-		// Put generated AABB
-		primitiveRanges.push_back(primRangeList);
-		primitiveMaterialKeys.push_back(hitKeyList);
-		accRanges.push_back(range);
-		idLookup.emplace(pairings.first, j);
-		j++;
-	}	
-	assert(primitiveRanges.size() == primitiveMaterialKeys.size());
-	assert(primitiveMaterialKeys.size() == idLookup.size());
-	assert(idLookup.size() == accRanges.size());
+            primRangeList[i] = primitiveGroup.PrimitiveBatchRange(p.first);
+            hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.second));
+            localSize += primRangeList[i][1] - primRangeList[i][0];
+        }
+        range[1] = localSize;
+        totalSize += localSize;
+        
+        // Put generated AABB
+        primitiveRanges.push_back(primRangeList);
+        primitiveMaterialKeys.push_back(hitKeyList);
+        accRanges.push_back(range);
+        idLookup.emplace(pairings.first, j);
+        j++;
+    }   
+    assert(primitiveRanges.size() == primitiveMaterialKeys.size());
+    assert(primitiveMaterialKeys.size() == idLookup.size());
+    assert(idLookup.size() == accRanges.size());
 
-	// Allocate memory
-	size_t leafDataSize = totalSize * sizeof(LeafData);
-	size_t accRangeSize = idLookup.size() * sizeof(Vector2ul);
-	memory = std::move(DeviceMemory(leafDataSize + accRangeSize));
-	dLeafList = static_cast<LeafData*>(memory);
-	dAccRanges = reinterpret_cast<Vector2ul*>(static_cast<uint8_t*>(memory) + leafDataSize);
+    // Allocate memory
+    size_t leafDataSize = totalSize * sizeof(LeafData);
+    size_t accRangeSize = idLookup.size() * sizeof(Vector2ul);
+    memory = std::move(DeviceMemory(leafDataSize + accRangeSize));
+    dLeafList = static_cast<LeafData*>(memory);
+    dAccRanges = reinterpret_cast<Vector2ul*>(static_cast<uint8_t*>(memory) + leafDataSize);
 
-	// Copy Leaf counts to cpu memory
-	CUDA_CHECK(cudaMemcpy(dAccRanges, accRanges.data(), accRangeSize,
-						  cudaMemcpyHostToDevice));
-	return SceneError::OK;
+    // Copy Leaf counts to cpu memory
+    CUDA_CHECK(cudaMemcpy(dAccRanges, accRanges.data(), accRangeSize,
+                          cudaMemcpyHostToDevice));
+    return SceneError::OK;
 }
 
 template <class PGroup>
 SceneError GPUAccLinearGroup<PGroup>::ChangeTime(// Map of hit keys for all materials
-											     // w.r.t matId and primitive type
-												 const std::map<TypeIdPair, HitKey>&,
-												 // List of surface/material
-												 // pairings that uses this accelerator type
-												 // and primitive type
-												 const std::map<uint32_t, IdPairings>& pairingList,
-												 double time)
+                                                 // w.r.t matId and primitive type
+                                                 const std::map<TypeIdPair, HitKey>&,
+                                                 // List of surface/material
+                                                 // pairings that uses this accelerator type
+                                                 // and primitive type
+                                                 const std::map<uint32_t, IdPairings>& pairingList,
+                                                 double time)
 {
-	// TODO:
-	return SceneError::OK;
+    // TODO:
+    return SceneError::OK;
 }
 
 template <class PGroup>
 uint32_t GPUAccLinearGroup<PGroup>::InnerId(uint32_t surfaceId) const
 {
-	return idLookup.at(surfaceId);
+    return idLookup.at(surfaceId);
 }
 
 template <class PGroup>
 void GPUAccLinearGroup<PGroup>::ConstructAccelerators()
 {
-	// TODO: make this a single KC
-	for(const auto& id : idLookup)
-	{
-		ConstructAccelerator(id.second);
-	}
+    // TODO: make this a single KC
+    for(const auto& id : idLookup)
+    {
+        ConstructAccelerator(id.second);
+    }
 }
 
 template <class PGroup>
 void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
 {
-	using PrimitiveData = typename PGroup::PrimitiveData;
-	const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
+    using PrimitiveData = typename PGroup::PrimitiveData;
+    const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
 
-	const uint32_t index = idLookup[surface];
-	//const Vector2ul& accelRange = acceleratorRanges[index];
-	const PrimitiveRangeList& rangeList = primitiveRanges[index];
-	const HitKeyList& hitList = primitiveMaterialKeys[index];
+    const uint32_t index = idLookup[surface];
+    //const Vector2ul& accelRange = acceleratorRanges[index];
+    const PrimitiveRangeList& rangeList = primitiveRanges[index];
+    const HitKeyList& hitList = primitiveMaterialKeys[index];
 
-	HKList hkList = {{}};
-	PRList prList = {{}};
-	std::memcpy(const_cast<HitKey*>(hkList.materialKeys), hitList.data(),
-				sizeof(HitKey) * SceneConstants::MaxPrimitivePerSurface);
-	std::memcpy(const_cast<Vector2ul*>(prList.primRanges), rangeList.data(),
-				sizeof(Vector2ul) * SceneConstants::MaxPrimitivePerSurface);
+    HKList hkList = {{}};
+    PRList prList = {{}};
+    std::memcpy(const_cast<HitKey*>(hkList.materialKeys), hitList.data(),
+                sizeof(HitKey) * SceneConstants::MaxPrimitivePerSurface);
+    std::memcpy(const_cast<Vector2ul*>(prList.primRanges), rangeList.data(),
+                sizeof(Vector2ul) * SceneConstants::MaxPrimitivePerSurface);
 
-	size_t workCount = accRanges[index][1] - accRanges[index][0];
-	int gpuIndex = 0;
+    size_t workCount = accRanges[index][1] - accRanges[index][0];
+    int gpuIndex = 0;
 
-	// KC
-	CudaSystem::AsyncGridStrideKC_X
-	(
-		gpuIndex,
-		0,
-		workCount,
-		//
-		KCConstructLinear<PGroup>,
-		// Args
-		// O
-		dLeafList,
-		// Input
-		dAccRanges,
-		hkList,
-		prList,
-		primData,
-		index
-	);
+    // KC
+    CudaSystem::AsyncGridStrideKC_X
+    (
+        gpuIndex,
+        0,
+        workCount,
+        //
+        KCConstructLinear<PGroup>,
+        // Args
+        // O
+        dLeafList,
+        // Input
+        dAccRanges,
+        hkList,
+        prList,
+        primData,
+        index
+    );
 }
 
 template <class PGroup>
 void GPUAccLinearGroup<PGroup>::ConstructAccelerators(const std::vector<uint32_t>& surfaces)
 {
-	// TODO: make this a single KC
-	for(const uint32_t& id : surfaces)
-	{
-		ConstructAccelerator(id);
-	}
+    // TODO: make this a single KC
+    for(const uint32_t& id : surfaces)
+    {
+        ConstructAccelerator(id);
+    }
 }
 
 template <class PGroup>
 void GPUAccLinearGroup<PGroup>::DestroyAccelerators()
 {
-	//...
-	// Define destory??
-	// There is no destruction or deallocation
+    //...
+    // Define destory??
+    // There is no destruction or deallocation
 }
 
 template <class PGroup>
 void GPUAccLinearGroup<PGroup>::DestroyAccelerator(uint32_t surface)
 {
-	//...
-	// Define destory??
-	// There is no destruction or deallocation
+    //...
+    // Define destory??
+    // There is no destruction or deallocation
 }
 
 template <class PGroup>
 void GPUAccLinearGroup<PGroup>::DestroyAccelerators(const std::vector<uint32_t>& surfaces)
 {
-	//...
+    //...
 }
 
 template <class PGroup>
 size_t GPUAccLinearGroup<PGroup>::UsedGPUMemory() const
 {
-	return memory.Size();
+    return memory.Size();
 }
 
 template <class PGroup>
 size_t GPUAccLinearGroup<PGroup>::UsedCPUMemory() const
 {
-	// TODO:
-	// Write allocator wrapper for which keeps track of total bytes allocated
-	// and deallocated
-	return 0;
+    // TODO:
+    // Write allocator wrapper for which keeps track of total bytes allocated
+    // and deallocated
+    return 0;
 }
 
 template <class PGroup>
 GPUAccLinearBatch<PGroup>::GPUAccLinearBatch(const GPUAcceleratorGroupI& a,
-											 const GPUPrimitiveGroupI& p)
-	: GPUAcceleratorBatch(a, p)
+                                             const GPUPrimitiveGroupI& p)
+    : GPUAcceleratorBatch(a, p)
 {}
 
 template <class PGroup>
 const char* GPUAccLinearBatch<PGroup>::Type() const
 {
-	return TypeName.c_str();
+    return TypeName.c_str();
 }
 
 template <class PGroup>
 void GPUAccLinearBatch<PGroup>::Hit(int gpuId,
-									// O
-									HitKey* dMaterialKeys,
-									PrimitiveId* dPrimitiveIds,
-									HitStructPtr dHitStructs,
-									// I-O													
-									RayGMem* dRays,
-									// Input
-									const TransformId* dTransformIds,
-									const RayId* dRayIds,
-									const HitKey* dAcceleratorKeys,
-									const uint32_t rayCount) const
+                                    // O
+                                    HitKey* dMaterialKeys,
+                                    PrimitiveId* dPrimitiveIds,
+                                    HitStructPtr dHitStructs,
+                                    // I-O                                                  
+                                    RayGMem* dRays,
+                                    // Input
+                                    const TransformId* dTransformIds,
+                                    const RayId* dRayIds,
+                                    const HitKey* dAcceleratorKeys,
+                                    const uint32_t rayCount) const
 {
-	// TODO: Is there a better way to implement this
-	using PrimitiveData = typename PGroup::PrimitiveData;
-	const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
+    // TODO: Is there a better way to implement this
+    using PrimitiveData = typename PGroup::PrimitiveData;
+    const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
 
-	CudaSystem::AsyncGridStrideKC_X
-	(
-		gpuId,
-		0,
-		rayCount,
-		//
-		KCIntersectLinear<PGroup>,
-		// Args
-		// O
-		dMaterialKeys,
-		dPrimitiveIds,
-		dHitStructs,
-		// I-O
-		dRays,
-		// Input
-		dTransformIds,
-		dRayIds,
-		dAcceleratorKeys,
-		rayCount,
-		// Constants
-		acceleratorGroup.dLeafList,
-		acceleratorGroup.dAccRanges,
-		acceleratorGroup.dInverseTransforms,
-		//
-		primData
-	);
+    CudaSystem::AsyncGridStrideKC_X
+    (
+        gpuId,
+        0,
+        rayCount,
+        //
+        KCIntersectLinear<PGroup>,
+        // Args
+        // O
+        dMaterialKeys,
+        dPrimitiveIds,
+        dHitStructs,
+        // I-O
+        dRays,
+        // Input
+        dTransformIds,
+        dRayIds,
+        dAcceleratorKeys,
+        rayCount,
+        // Constants
+        acceleratorGroup.dLeafList,
+        acceleratorGroup.dAccRanges,
+        acceleratorGroup.dInverseTransforms,
+        //
+        primData
+    );
 }

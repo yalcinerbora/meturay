@@ -2,29 +2,29 @@
 
 // Cluster Definitions ARRAY
 #define DEFINE_REDUCE_ARRAY_BOTH(type, func) \
-	DEFINE_REDUCE_ARRAY_SINGLE(type, func, cudaMemcpyDeviceToHost) \
-	DEFINE_REDUCE_ARRAY_SINGLE(type, func, cudaMemcpyDeviceToDevice)
+    DEFINE_REDUCE_ARRAY_SINGLE(type, func, cudaMemcpyDeviceToHost) \
+    DEFINE_REDUCE_ARRAY_SINGLE(type, func, cudaMemcpyDeviceToDevice)
 
 #define DEFINE_REDUCE_ARRAY_ALL(type) \
-	DEFINE_REDUCE_ARRAY_BOTH(type, ReduceAdd) \
-	DEFINE_REDUCE_ARRAY_BOTH(type, ReduceSubtract) \
-	DEFINE_REDUCE_ARRAY_BOTH(type, ReduceMultiply) \
-	DEFINE_REDUCE_ARRAY_BOTH(type, ReduceDivide) \
-	DEFINE_REDUCE_ARRAY_BOTH(type, ReduceMin) \
-	DEFINE_REDUCE_ARRAY_BOTH(type, ReduceMax)
+    DEFINE_REDUCE_ARRAY_BOTH(type, ReduceAdd) \
+    DEFINE_REDUCE_ARRAY_BOTH(type, ReduceSubtract) \
+    DEFINE_REDUCE_ARRAY_BOTH(type, ReduceMultiply) \
+    DEFINE_REDUCE_ARRAY_BOTH(type, ReduceDivide) \
+    DEFINE_REDUCE_ARRAY_BOTH(type, ReduceMin) \
+    DEFINE_REDUCE_ARRAY_BOTH(type, ReduceMax)
 
 // Cluster Definitions TEXTURE
 #define DEFINE_REDUCE_TEXTURE_BOTH(type, func) \
-	DEFINE_REDUCE_TEXTURE_SINGLE(type, func, cudaMemcpyDeviceToHost) \
-	DEFINE_REDUCE_TEXTURE_SINGLE(type, func, cudaMemcpyDeviceToDevice)
+    DEFINE_REDUCE_TEXTURE_SINGLE(type, func, cudaMemcpyDeviceToHost) \
+    DEFINE_REDUCE_TEXTURE_SINGLE(type, func, cudaMemcpyDeviceToDevice)
 
 #define DEFINE_REDUCE_TEXTURE_ALL(type) \
-	DEFINE_REDUCE_TEXTURE_BOTH(type, ReduceAdd) \
-	DEFINE_REDUCE_TEXTURE_BOTH(type, ReduceSubtract) \
-	DEFINE_REDUCE_TEXTURE_BOTH(type, ReduceMultiply) \
-	DEFINE_REDUCE_TEXTURE_BOTH(type, ReduceDivide) \
-	DEFINE_REDUCE_TEXTURE_BOTH(type, ReduceMin) \
-	DEFINE_REDUCE_TEXTURE_BOTH(type, ReduceMax)
+    DEFINE_REDUCE_TEXTURE_BOTH(type, ReduceAdd) \
+    DEFINE_REDUCE_TEXTURE_BOTH(type, ReduceSubtract) \
+    DEFINE_REDUCE_TEXTURE_BOTH(type, ReduceMultiply) \
+    DEFINE_REDUCE_TEXTURE_BOTH(type, ReduceDivide) \
+    DEFINE_REDUCE_TEXTURE_BOTH(type, ReduceMin) \
+    DEFINE_REDUCE_TEXTURE_BOTH(type, ReduceMax)
 
 // Integral Types
 DEFINE_REDUCE_ARRAY_ALL(int)

@@ -10,8 +10,8 @@ Generic Error
 
 struct ErrorI
 {
-	public:
-		virtual					~ErrorI() = default;
-		// Interface
-		virtual operator		std::string() const = 0;
+    public:
+        virtual                 ~ErrorI() = default;
+        // Interface
+        virtual operator        std::string() const = 0;
 };

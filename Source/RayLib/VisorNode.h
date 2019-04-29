@@ -14,8 +14,8 @@ This deleagtes user input and recieves user output (image)
 #include "DistributorI.h"
 
 class VisorNodeI
-	: public VisorCallbacksI
-	, public DistributorI
+    : public VisorCallbacksI
+    , public DistributorI
 {
 
 };

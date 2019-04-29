@@ -3,5 +3,5 @@
 
 struct AnalyticData
 {
-	double		raysPerSec;
+    double      raysPerSec;
 };

@@ -31,40 +31,40 @@ class TracerBaseLogicI;
 
 class TracerI
 {
-	public:
-		virtual							~TracerI() = default;
+    public:
+        virtual                         ~TracerI() = default;
 
-		// =====================//
-		// RESPONSE FROM TRACER //
-		// =====================//
-		// Callbacks
-		virtual void					AttachTracerCallbacks(TracerCallbacksI&) = 0;
+        // =====================//
+        // RESPONSE FROM TRACER //
+        // =====================//
+        // Callbacks
+        virtual void                    AttachTracerCallbacks(TracerCallbacksI&) = 0;
 
-		// ===================//
-		// COMMANDS TO TRACER //
-		// ===================//
-		// Main Calls
-		virtual TracerError			Initialize(int leaderGPUId = 0)  = 0;
-		virtual void					SetOptions(const TracerOptions&) = 0;
-		// Requests
-		virtual void					RequestBaseAccelerator() = 0;
-		virtual void					RequestAccelerator(HitKey key) = 0;
-		// TODO: add sharing of other generated data (maybe interpolations etc.)
-		// and their equavilent callbacks
+        // ===================//
+        // COMMANDS TO TRACER //
+        // ===================//
+        // Main Calls
+        virtual TracerError         Initialize(int leaderGPUId = 0)  = 0;
+        virtual void                    SetOptions(const TracerOptions&) = 0;
+        // Requests
+        virtual void                    RequestBaseAccelerator() = 0;
+        virtual void                    RequestAccelerator(HitKey key) = 0;
+        // TODO: add sharing of other generated data (maybe interpolations etc.)
+        // and their equavilent callbacks
 
-		// Rendering Related
-		virtual void					AttachLogic(TracerBaseLogicI&) = 0;
-		virtual void					GenerateInitialRays(const GPUScene& scene,
-															int cameraId,
-															int samplePerLocation) = 0;
-		virtual bool					Continue() = 0;			// Continue hit/bounce looping (consume ray pool)
-		virtual void					Render() = 0;			// Render rays	(do hit, then bounce)
-		virtual void					FinishSamples() = 0;	// Finish samples (write to image)
+        // Rendering Related
+        virtual void                    AttachLogic(TracerBaseLogicI&) = 0;
+        virtual void                    GenerateInitialRays(const GPUScene& scene,
+                                                            int cameraId,
+                                                            int samplePerLocation) = 0;
+        virtual bool                    Continue() = 0;         // Continue hit/bounce looping (consume ray pool)
+        virtual void                    Render() = 0;           // Render rays  (do hit, then bounce)
+        virtual void                    FinishSamples() = 0;    // Finish samples (write to image)
 
-		// Image Reated
-		virtual void					SetImagePixelFormat(PixelFormat) = 0;
-		virtual void					ReportionImage(Vector2i start = Zero2i,
-													   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
-		virtual void					ResizeImage(Vector2i resolution) = 0;
-		virtual void					ResetImage() = 0;
+        // Image Reated
+        virtual void                    SetImagePixelFormat(PixelFormat) = 0;
+        virtual void                    ReportionImage(Vector2i start = Zero2i,
+                                                       Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
+        virtual void                    ResizeImage(Vector2i resolution) = 0;
+        virtual void                    ResetImage() = 0;
 };

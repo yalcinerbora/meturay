@@ -4,9 +4,9 @@
 
 class VisorCallbacksI : public CommandCallbacksI
 {
-	public:
-		virtual			~VisorCallbacksI() = default;
+    public:
+        virtual         ~VisorCallbacksI() = default;
 
-		virtual void	WindowMinimizeAction(bool minimized) = 0;
-		virtual void	WindowCloseAction() = 0;
+        virtual void    WindowMinimizeAction(bool minimized) = 0;
+        virtual void    WindowCloseAction() = 0;
 };

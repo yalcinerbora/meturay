@@ -13,8 +13,8 @@ This interface defines process behaviour between
 #include "DistributorI.h"
 
 class TracerNode
-	: public TracerCallbacksI
-	, public DistributorI
+    : public TracerCallbacksI
+    , public DistributorI
 {
 
 

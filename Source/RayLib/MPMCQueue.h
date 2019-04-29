@@ -16,40 +16,40 @@ TODO: improve, atomic etc...
 template<class T>
 class MPMCQueue
 {
-	private:
-		std::vector<T>			data;
+    private:
+        std::vector<T>          data;
 
-		size_t 					enqueueLoc;
-		size_t					dequeueLoc;
+        size_t                  enqueueLoc;
+        size_t                  dequeueLoc;
 
-		std::condition_variable enqueWake;
-		std::condition_variable dequeueWake;
+        std::condition_variable enqueWake;
+        std::condition_variable dequeueWake;
 
-		std::mutex				mutex;
-		bool					terminate;
+        std::mutex              mutex;
+        bool                    terminate;
 
-		bool					Empty();
-		bool					Full();
-		void					Increment(size_t&);
+        bool                    Empty();
+        bool                    Full();
+        void                    Increment(size_t&);
 
-	protected:
-	public:
-		// Constructors & Destructor
-								MPMCQueue(size_t bufferSize);
-								MPMCQueue(const MPMCQueue&) = delete;
-								MPMCQueue(MPMCQueue&&) = delete;
-		MPMCQueue&				operator=(const MPMCQueue&) = delete;
-		MPMCQueue&				operator=(MPMCQueue&&) = delete;
-								~MPMCQueue() = default;
+    protected:
+    public:
+        // Constructors & Destructor
+                                MPMCQueue(size_t bufferSize);
+                                MPMCQueue(const MPMCQueue&) = delete;
+                                MPMCQueue(MPMCQueue&&) = delete;
+        MPMCQueue&              operator=(const MPMCQueue&) = delete;
+        MPMCQueue&              operator=(MPMCQueue&&) = delete;
+                                ~MPMCQueue() = default;
 
-		// Interface
-		void					Dequeue(T&);
-		bool					TryDequeue(T&);
-		void					Enqueue(T&&);
-		bool					TryEnqueue(T&&);
+        // Interface
+        void                    Dequeue(T&);
+        bool                    TryDequeue(T&);
+        void                    Enqueue(T&&);
+        bool                    TryEnqueue(T&&);
 
-		// Awakes all threads and forces them to leave queue
-		void					Terminate();
+        // Awakes all threads and forces them to leave queue
+        void                    Terminate();
 };
 
 #include "MPMCQueue.hpp"

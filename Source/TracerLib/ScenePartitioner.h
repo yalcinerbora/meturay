@@ -6,20 +6,20 @@
 // Basic Partitioner (Throws everything to first GPU)
 class SingleGPUScenePartitioner : public ScenePartitionerI
 {
-	private:
-		const std::vector<CudaGPU>&		systemGPUs;
+    private:
+        const std::vector<CudaGPU>&     systemGPUs;
 
-	protected:
-	public:
-		// Constructors & Destructor
-										SingleGPUScenePartitioner(const std::vector<CudaGPU>&);
-										~SingleGPUScenePartitioner() = default;
+    protected:
+    public:
+        // Constructors & Destructor
+                                        SingleGPUScenePartitioner(const std::vector<CudaGPU>&);
+                                        ~SingleGPUScenePartitioner() = default;
 
-		// Interface
-		SceneError		PartitionMaterials(MultiGPUMatNodes&,
-										   MultiGPUMatBatches&,
-										   int&,
-										   // Single Input
-										   const MaterialNodeList& materialGroups,
-										   const MaterialBatchList& materialBatches) const override;
+        // Interface
+        SceneError      PartitionMaterials(MultiGPUMatNodes&,
+                                           MultiGPUMatBatches&,
+                                           int&,
+                                           // Single Input
+                                           const MaterialNodeList& materialGroups,
+                                           const MaterialBatchList& materialBatches) const override;
 };

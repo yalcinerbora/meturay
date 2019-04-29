@@ -37,130 +37,130 @@ class Vector;
 
 static constexpr size_t ChooseVectorAlignment(size_t totalSize)
 {
-	if(totalSize <= 4)
-		return 4;			// 1byte Vector Types
-	else if(totalSize <= 8)
-		return 8;			// 4byte Vector2 Types
-	else if(totalSize < 16)
-		return 4;			// 4byte Vector3 Types
-	else
-		return 16;			// 4byte Vector4 Types
+    if(totalSize <= 4)
+        return 4;           // 1byte Vector Types
+    else if(totalSize <= 8)
+        return 8;           // 4byte Vector2 Types
+    else if(totalSize < 16)
+        return 4;           // 4byte Vector3 Types
+    else
+        return 16;          // 4byte Vector4 Types
 }
 
 template<int N, class T>
 class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 {
-	static_assert(N == 2 || N == 3 || N == 4, "Vector size should be 2, 3 or 4");
+    static_assert(N == 2 || N == 3 || N == 4, "Vector size should be 2, 3 or 4");
 
-	private:
-		T									vector[N];
+    private:
+        T                                   vector[N];
 
-	protected:
-	public:
-		// Constructors & Destructor
-		constexpr							Vector() = default;
-		template<class C, typename = ArithmeticEnable<C>>
-		__device__ __host__					Vector(C);
-		template<class C, typename = ArithmeticEnable<C>>
-		__device__ __host__					Vector(const C* data);
-		template <class... Args, typename = AllArithmeticEnable<Args...>>
-		constexpr __device__ __host__		Vector(const Args... dataList);
-		template <class... Args, typename = std::enable_if_t<((N - sizeof...(Args)) > 1)>>
-		__device__ __host__					Vector(const Vector<N - sizeof...(Args), T>&,
-												   const Args... dataList);
-		template <int M, typename = std::enable_if_t<(M > N)>>
-		__device__ __host__					Vector(const Vector<M, T>&);
-											~Vector() = default;
+    protected:
+    public:
+        // Constructors & Destructor
+        constexpr                           Vector() = default;
+        template<class C, typename = ArithmeticEnable<C>>
+        __device__ __host__                 Vector(C);
+        template<class C, typename = ArithmeticEnable<C>>
+        __device__ __host__                 Vector(const C* data);
+        template <class... Args, typename = AllArithmeticEnable<Args...>>
+        constexpr __device__ __host__       Vector(const Args... dataList);
+        template <class... Args, typename = std::enable_if_t<((N - sizeof...(Args)) > 1)>>
+        __device__ __host__                 Vector(const Vector<N - sizeof...(Args), T>&,
+                                                   const Args... dataList);
+        template <int M, typename = std::enable_if_t<(M > N)>>
+        __device__ __host__                 Vector(const Vector<M, T>&);
+                                            ~Vector() = default;
 
-		// MVC bug? these trigger std::trivially_copyable static assert
-		// __device__ __host__				Vector(const Vector&) = default;
-		// __device__ __host__ Vector&		operator=(const Vector&) = default;
+        // MVC bug? these trigger std::trivially_copyable static assert
+        // __device__ __host__              Vector(const Vector&) = default;
+        // __device__ __host__ Vector&      operator=(const Vector&) = default;
 
-		// Accessors
-		__device__ __host__	explicit			operator T*();
-		__device__ __host__	explicit			operator const T*() const;
-		__device__ __host__ T&					operator[](int);
-		__device__ __host__ constexpr const T&	operator[](int) const;
+        // Accessors
+        __device__ __host__ explicit            operator T*();
+        __device__ __host__ explicit            operator const T*() const;
+        __device__ __host__ T&                  operator[](int);
+        __device__ __host__ constexpr const T&  operator[](int) const;
 
-		// Type cast
-		template<int M, class C, typename = std::enable_if_t<(M <= N)>>
-		__device__ __host__	explicit					operator Vector<M, C>() const;
+        // Type cast
+        template<int M, class C, typename = std::enable_if_t<(M <= N)>>
+        __device__ __host__ explicit                    operator Vector<M, C>() const;
 
-		// Modify
-		__device__ __host__ void						operator+=(const Vector&);
-		__device__ __host__ void						operator-=(const Vector&);
-		__device__ __host__ void						operator*=(const Vector&);
-		__device__ __host__ void						operator*=(T);
-		__device__ __host__ void						operator/=(const Vector&);
-		__device__ __host__ void						operator/=(T);
+        // Modify
+        __device__ __host__ void                        operator+=(const Vector&);
+        __device__ __host__ void                        operator-=(const Vector&);
+        __device__ __host__ void                        operator*=(const Vector&);
+        __device__ __host__ void                        operator*=(T);
+        __device__ __host__ void                        operator/=(const Vector&);
+        __device__ __host__ void                        operator/=(T);
 
-		__device__ __host__ Vector						operator+(const Vector&) const;
-		__device__ __host__ Vector						operator-(const Vector&) const;
-		template<class Q = T>
-		__device__ __host__ SignedEnable<Q, Vector>		operator-() const;
-		__device__ __host__ Vector						operator*(const Vector&) const;
-		__device__ __host__ Vector						operator*(T) const;
-		__device__ __host__ Vector						operator/(const Vector&) const;
-		__device__ __host__ Vector						operator/(T) const;
+        __device__ __host__ Vector                      operator+(const Vector&) const;
+        __device__ __host__ Vector                      operator-(const Vector&) const;
+        template<class Q = T>
+        __device__ __host__ SignedEnable<Q, Vector>     operator-() const;
+        __device__ __host__ Vector                      operator*(const Vector&) const;
+        __device__ __host__ Vector                      operator*(T) const;
+        __device__ __host__ Vector                      operator/(const Vector&) const;
+        __device__ __host__ Vector                      operator/(T) const;
 
-		template<class Q = T>
-		__device__ __host__ FloatEnable<Q, Vector>		operator%(const Vector&) const;
-		template<class Q = T>
-		__device__ __host__ FloatEnable<Q, Vector>		operator%(T) const;
-		template<class Q = T>
-		__device__ __host__ IntegralEnable<Q, Vector>	operator%(const Vector&) const;
-		template<class Q = T>
-		__device__ __host__ IntegralEnable<Q, Vector>	operator%(T) const;
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Vector>      operator%(const Vector&) const;
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Vector>      operator%(T) const;
+        template<class Q = T>
+        __device__ __host__ IntegralEnable<Q, Vector>   operator%(const Vector&) const;
+        template<class Q = T>
+        __device__ __host__ IntegralEnable<Q, Vector>   operator%(T) const;
 
-		// Logic
-		__device__ __host__ bool						operator==(const Vector&) const;
-		__device__ __host__ bool						operator!=(const Vector&) const;
-		__device__ __host__ bool						operator<(const Vector&) const;
-		__device__ __host__ bool						operator<=(const Vector&) const;
-		__device__ __host__ bool						operator>(const Vector&) const;
-		__device__ __host__ bool						operator>=(const Vector&) const;
+        // Logic
+        __device__ __host__ bool                        operator==(const Vector&) const;
+        __device__ __host__ bool                        operator!=(const Vector&) const;
+        __device__ __host__ bool                        operator<(const Vector&) const;
+        __device__ __host__ bool                        operator<=(const Vector&) const;
+        __device__ __host__ bool                        operator>(const Vector&) const;
+        __device__ __host__ bool                        operator>=(const Vector&) const;
 
-		// Utilty
-		__device__ __host__ T							Dot(const Vector&) const;
+        // Utilty
+        __device__ __host__ T                           Dot(const Vector&) const;
 
-		template<class Q = T>
-		__device__ __host__ FloatEnable<Q, T>			Length() const;
-		__device__ __host__ T							LengthSqr() const;
-		template<class Q = T>
-		__device__ __host__ FloatEnable<Q, Vector>		Normalize() const;
-		template<class Q = T>
-		__device__ __host__ FloatEnable<Q, Vector&>		NormalizeSelf();
-		__device__ __host__ Vector						Clamp(const Vector&, const Vector&) const;
-		__device__ __host__ Vector						Clamp(T min, T max) const;
-		__device__ __host__ Vector&						ClampSelf(const Vector&, const Vector&);
-		__device__ __host__ Vector&						ClampSelf(T min, T max);
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, T>           Length() const;
+        __device__ __host__ T                           LengthSqr() const;
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Vector>      Normalize() const;
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Vector&>     NormalizeSelf();
+        __device__ __host__ Vector                      Clamp(const Vector&, const Vector&) const;
+        __device__ __host__ Vector                      Clamp(T min, T max) const;
+        __device__ __host__ Vector&                     ClampSelf(const Vector&, const Vector&);
+        __device__ __host__ Vector&                     ClampSelf(T min, T max);
 
-		template<class Q = T>
-		__device__ __host__ SignedEnable<Q, Vector>		Abs() const;
-		template<class Q = T>
-		__device__ __host__ SignedEnable<Q, Vector&>	AbsSelf();
-		template<class Q = T>
-		__device__ __host__ FloatEnable<Q, Vector>		Round() const;
-		template<class Q = T>
-		__device__ __host__ FloatEnable<Q, Vector&>		RoundSelf();
-		template<class Q = T>
-		__device__ __host__ FloatEnable<Q, Vector>		Floor() const;
-		template<class Q = T>
-		__device__ __host__ FloatEnable<Q, Vector&>		FloorSelf();
-		template<class Q = T>
-		__device__ __host__ FloatEnable<Q, Vector>		Ceil() const;
-		template<class Q = T>
-		__device__ __host__ FloatEnable<Q, Vector&>		CeilSelf();
+        template<class Q = T>
+        __device__ __host__ SignedEnable<Q, Vector>     Abs() const;
+        template<class Q = T>
+        __device__ __host__ SignedEnable<Q, Vector&>    AbsSelf();
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Vector>      Round() const;
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Vector&>     RoundSelf();
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Vector>      Floor() const;
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Vector&>     FloorSelf();
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Vector>      Ceil() const;
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Vector&>     CeilSelf();
 
-		static __device__ __host__ Vector				Min(const Vector&, const Vector&);
-		static __device__ __host__ Vector				Min(const Vector&, T);
-		static __device__ __host__ Vector				Max(const Vector&, const Vector&);
-		static __device__ __host__ Vector				Max(const Vector&, T);
+        static __device__ __host__ Vector               Min(const Vector&, const Vector&);
+        static __device__ __host__ Vector               Min(const Vector&, T);
+        static __device__ __host__ Vector               Max(const Vector&, const Vector&);
+        static __device__ __host__ Vector               Max(const Vector&, T);
 
-		template<class Q = T>
-		static __device__ __host__ FloatEnable<Q, Vector>	Lerp(const Vector&,
-																 const Vector&,
-																 T);
+        template<class Q = T>
+        static __device__ __host__ FloatEnable<Q, Vector>   Lerp(const Vector&,
+                                                                 const Vector&,
+                                                                 T);
 };
 
 // Left scalars
@@ -206,7 +206,7 @@ template <class T>
 static __device__ __host__ Vector<3, T> Cross(const Vector<3, T>&, const Vector<3, T>&);
 
 // Implementation
-#include "Vector.hpp"	// CPU & GPU
+#include "Vector.hpp"   // CPU & GPU
 
 // Basic Constants
 static constexpr Vector3 XAxis = Vector3(1.0f, 0.0f, 0.0f);
@@ -240,19 +240,19 @@ static constexpr Vector4 Zero4 = Zero4f;
 template<class T>
 struct IsVectorType
 {
-	static constexpr bool value =
-		std::is_same<T, Vector2f>::value ||
-		std::is_same<T, Vector2d>::value ||
-		std::is_same<T, Vector2i>::value ||
-		std::is_same<T, Vector2ui>::value ||
-		std::is_same<T, Vector3f>::value ||
-		std::is_same<T, Vector3d>::value ||
-		std::is_same<T, Vector3i>::value ||
-		std::is_same<T, Vector3ui>::value ||
-		std::is_same<T, Vector4f>::value ||
-		std::is_same<T, Vector4d>::value ||
-		std::is_same<T, Vector4i>::value ||
-		std::is_same<T, Vector4ui>::value;
+    static constexpr bool value =
+        std::is_same<T, Vector2f>::value ||
+        std::is_same<T, Vector2d>::value ||
+        std::is_same<T, Vector2i>::value ||
+        std::is_same<T, Vector2ui>::value ||
+        std::is_same<T, Vector3f>::value ||
+        std::is_same<T, Vector3d>::value ||
+        std::is_same<T, Vector3i>::value ||
+        std::is_same<T, Vector3ui>::value ||
+        std::is_same<T, Vector4f>::value ||
+        std::is_same<T, Vector4d>::value ||
+        std::is_same<T, Vector4i>::value ||
+        std::is_same<T, Vector4ui>::value;
 };
 
 // Vector Etern

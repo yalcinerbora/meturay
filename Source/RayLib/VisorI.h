@@ -22,42 +22,42 @@ class VisorCallbacksI;
 
 struct VisorOptions
 {
-	// Technical
-	size_t				eventBufferSize;
+    // Technical
+    size_t              eventBufferSize;
 
-	// Window Related
-	bool				stereoOn;
-	PixelFormat			iFormat;
-	Vector2i			iSize;
+    // Window Related
+    bool                stereoOn;
+    PixelFormat         iFormat;
+    Vector2i            iSize;
 };
 
 class VisorI
 {
-	public:
-		virtual							~VisorI() = default;
+    public:
+        virtual                         ~VisorI() = default;
 
-		// Interface
-		virtual bool					IsOpen() = 0;
-		virtual void					Render() = 0;
-		virtual void					ProcessInputs() = 0;
-		// Input System
-		virtual void					SetInputScheme(VisorInputI*) = 0;
-		virtual void					SetCallbacks(VisorCallbacksI*) = 0;
+        // Interface
+        virtual bool                    IsOpen() = 0;
+        virtual void                    Render() = 0;
+        virtual void                    ProcessInputs() = 0;
+        // Input System
+        virtual void                    SetInputScheme(VisorInputI*) = 0;
+        virtual void                    SetCallbacks(VisorCallbacksI*) = 0;
 
-		// Data Related
-		// Reset Data (Clears the RGB(A) Buffer of the Image)
-		// and resets total accumulated rays
-		virtual void					ResetSamples(Vector2i start = Zero2i,
-													 Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
-		// Append incoming data from
-		virtual void					AccumulatePortion(const std::vector<Byte> data,
-														  PixelFormat, int sampleCount,
-														  Vector2i start = Zero2i,
-														  Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
-		// Options
-		virtual const VisorOptions&		VisorOpts() const = 0;
-		// Misc
-		virtual void					SetWindowSize(const Vector2i& size) = 0;
-		virtual void					SetFPSLimit(float) = 0;
+        // Data Related
+        // Reset Data (Clears the RGB(A) Buffer of the Image)
+        // and resets total accumulated rays
+        virtual void                    ResetSamples(Vector2i start = Zero2i,
+                                                     Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
+        // Append incoming data from
+        virtual void                    AccumulatePortion(const std::vector<Byte> data,
+                                                          PixelFormat, int sampleCount,
+                                                          Vector2i start = Zero2i,
+                                                          Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
+        // Options
+        virtual const VisorOptions&     VisorOpts() const = 0;
+        // Misc
+        virtual void                    SetWindowSize(const Vector2i& size) = 0;
+        virtual void                    SetFPSLimit(float) = 0;
 
 };

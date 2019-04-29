@@ -33,24 +33,24 @@ using LogicInterface = SharedLibPtr<TracerLogicGeneratorI>;
 
 namespace TracerLoader
 {
-	static constexpr const char*	BaseInterfaceConstructorName = "GenBaseTracer";
-	static constexpr const char*	BaseInterfaceDestructorName	= "FreeBaseTracer";
+    static constexpr const char*    BaseInterfaceConstructorName = "GenBaseTracer";
+    static constexpr const char*    BaseInterfaceDestructorName = "FreeBaseTracer";
 
-	static constexpr const char*	LogicInterfaceConstructorName = "GenLogicGenerator";
-	static constexpr const char*	LogicInterfaceDestructorName = "FreeLogicGenerator";
+    static constexpr const char*    LogicInterfaceConstructorName = "GenLogicGenerator";
+    static constexpr const char*    LogicInterfaceDestructorName = "FreeLogicGenerator";
 
-	// Load Tracer Logic From DLL
-	// Default named load
-	// This should be the usage for tracer
-	LogicInterface					LoadTracerLogic(SharedLib& s);
+    // Load Tracer Logic From DLL
+    // Default named load
+    // This should be the usage for tracer
+    LogicInterface                  LoadTracerLogic(SharedLib& s);
 
-	// Custom name load
-	// This is provided for test tracer
-	// Sine different test cases may need different tracer implementations
-	// This makes many different tracers to reside ona single dll
-	// This may be usefull
-	LogicInterface				LoadTracerLogic(SharedLib& s,
-												const char* generatorConstructor,
-												const char* generatorDestructor);
+    // Custom name load
+    // This is provided for test tracer
+    // Sine different test cases may need different tracer implementations
+    // This makes many different tracers to reside ona single dll
+    // This may be usefull
+    LogicInterface              LoadTracerLogic(SharedLib& s,
+                                                const char* generatorConstructor,
+                                                const char* generatorDestructor);
 
 }

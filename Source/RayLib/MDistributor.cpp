@@ -4,60 +4,60 @@
 //// Distributed Leader
 //void MDistributor::EliminateNode()
 //{
-//	assert(isLeader);
-//	//TODO
+//  assert(isLeader);
+//  //TODO
 //}
 //
 //void MDistributor::IntroduceNode()
 //{
-//	assert(isLeader);
-//	//TODO
+//  assert(isLeader);
+//  //TODO
 //}
 //
 //void MDistributor::StartFrame()
 //{
-//	assert(isLeader);
-//	//TODO
+//  assert(isLeader);
+//  //TODO
 //}
 //
 //void MDistributor::RenderIntersect()
 //{
-//	assert(isLeader);
-//	//TODO
+//  assert(isLeader);
+//  //TODO
 //}
 //
 //void MDistributor::RenderGenRays()
 //{
-//	assert(isLeader);
-//	//TODO
+//  assert(isLeader);
+//  //TODO
 //}
 //
 //void MDistributor::RenderEnd()
 //{
-//	assert(isLeader);
-//	//TODO
+//  assert(isLeader);
+//  //TODO
 //}
 //
 //void MDistributor::AssignMaterial(uint32_t material,
-//								  uint32_t node)
+//                                uint32_t node)
 //{
-//	assert(isLeader);
-//	//TODO
+//  assert(isLeader);
+//  //TODO
 //}
 //void MDistributor::PollNode(uint32_t)
 //{
-//	assert(isLeader);
-//	//TODO
+//  assert(isLeader);
+//  //TODO
 //}
 //
 //void MDistributor::RequestLeaderElection()
 //{
-//	//TODO
+//  //TODO
 //}
 //
 //void MDistributor::RedirectCandidateNode()
 //{
-//	//TODO
+//  //TODO
 //}
 //
 //MDistributor::MDistributor()
@@ -65,7 +65,7 @@
 //
 //bool MDistributor::Alone()
 //{
-//	//TODO:
+//  //TODO:
 //}
 //
 //bool MDistributor::CheckIfRenderRequested(uint32_t renderCount)
@@ -74,25 +74,25 @@
 //}
 //
 //void MDistributor::SendMaterialRays(uint32_t materialId,
-//									const std::vector<RayStack>)
+//                                  const std::vector<RayStack>)
 //{
 //
 //}
 //
 //void MDistributor::SendMaterialRays(const std::vector<ArrayPortion<uint32_t>> materialIds,
-//									const std::vector<RayStack>)
+//                                  const std::vector<RayStack>)
 //{
 //
 //}
 //
 //void MDistributor::SendImage(const std::vector<Vector3f> image,
-//							 const Vector2ui resolution,
-//							 const Vector2ui offset,
-//							 const Vector2ui size)
+//                           const Vector2ui resolution,
+//                           const Vector2ui offset,
+//                           const Vector2ui size)
 //{
-//	// PLACEHOLDER
-//	if(displayCallback)
-//		displayCallback(std::move(image), resolution, size, offset);
+//  // PLACEHOLDER
+//  if(displayCallback)
+//      displayCallback(std::move(image), resolution, size, offset);
 //}
 //
 //void MDistributor::RequestObjectAccelerator()

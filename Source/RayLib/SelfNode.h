@@ -15,39 +15,39 @@ class VisorI;
 class TracerI;
 
 class SelfNode
-	: public VisorCallbacksI
-	, public TracerCallbacksI
+    : public VisorCallbacksI
+    , public TracerCallbacksI
 {
-	private:
-		VisorI&		visor;
-		TracerI&		tracer;
+    private:
+        VisorI&     visor;
+        TracerI&        tracer;
 
-	protected:
-	public:
-		// Constructor & Destructor
-					SelfNode(VisorI&, TracerI&);
-					~SelfNode() = default;
+    protected:
+    public:
+        // Constructor & Destructor
+                    SelfNode(VisorI&, TracerI&);
+                    ~SelfNode() = default;
 
-		// From Command Callbacks
-		void		SendScene(const std::string) override;
-		void		SendTime(const double) override;
-		void		IncreaseTime(const double) override;
-		void		DecreaseTime(const double) override;
-		void		SendCamera(const CameraPerspective) override;
-		void		SendOptions(const TracerOptions) override;
-		void		StartStopTrace(const bool) override;
-		void		PauseContTrace(const bool) override;
+        // From Command Callbacks
+        void        SendScene(const std::string) override;
+        void        SendTime(const double) override;
+        void        IncreaseTime(const double) override;
+        void        DecreaseTime(const double) override;
+        void        SendCamera(const CameraPerspective) override;
+        void        SendOptions(const TracerOptions) override;
+        void        StartStopTrace(const bool) override;
+        void        PauseContTrace(const bool) override;
 
-		void		WindowMinimizeAction(bool minimized) override;
-		void		WindowCloseAction() override;
+        void        WindowMinimizeAction(bool minimized) override;
+        void        WindowCloseAction() override;
 
-		// From Tracer Callbacks
-		void		SendError(TracerError) override;
-		void		SendAnalyticData(AnalyticData) override;
-		void		SendImage(const std::vector<Byte> data,
-							  PixelFormat, int sampleCount,
-							  Vector2i start = Zero2i,
-							  Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-		void		SendAccelerator(HitKey key, const std::vector<Byte> data) override;
-		void		SendBaseAccelerator(const std::vector<Byte> data) override;
+        // From Tracer Callbacks
+        void        SendError(TracerError) override;
+        void        SendAnalyticData(AnalyticData) override;
+        void        SendImage(const std::vector<Byte> data,
+                              PixelFormat, int sampleCount,
+                              Vector2i start = Zero2i,
+                              Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+        void        SendAccelerator(HitKey key, const std::vector<Byte> data) override;
+        void        SendBaseAccelerator(const std::vector<Byte> data) override;
 };

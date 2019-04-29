@@ -3,7 +3,7 @@
 
 int main(int argc, const char* argv[])
 {
-	EnableVTMode();
+    EnableVTMode();
 
-	return 0;
+    return 0;
 }

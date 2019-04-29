@@ -7,8 +7,8 @@
 // data but still it is user defined.
 struct DefaultLeaf
 {
-	PrimitiveId		primitiveId;
-	HitKey			matId;
+    PrimitiveId     primitiveId;
+    HitKey          matId;
 };
 
 struct EmptyLeaf {};
@@ -17,17 +17,17 @@ struct EmptyLeaf {};
 template <class PrimData>
 __device__ __host__
 inline EmptyLeaf GenerateEmptyLeaf(const HitKey matId,
-								   const PrimitiveId primitiveId,
-								   const PrimData& primData)
+                                   const PrimitiveId primitiveId,
+                                   const PrimData& primData)
 {
-	return {};
+    return {};
 }
 
 template <class PrimData>
 __device__ __host__
 inline DefaultLeaf GenerateDefaultLeaf(const HitKey matId,
-									   const PrimitiveId primitiveId,
-									   const PrimData& primData)
+                                       const PrimitiveId primitiveId,
+                                       const PrimData& primData)
 {
-	return DefaultLeaf{primitiveId, matId};
+    return DefaultLeaf{primitiveId, matId};
 }

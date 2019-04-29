@@ -11,10 +11,10 @@ using HitResult = Vector<2, bool>;
 // It points to another accelerator/material pair
 struct alignas(16) BaseLeaf
 {
-	Vector3f aabbMin;
-	HitKey accKey;
-	Vector3f aabbMax;
-	TransformId transformId;
+    Vector3f aabbMin;
+    HitKey accKey;
+    Vector3f aabbMax;
+    TransformId transformId;
 };
 
 // Accept hit function
@@ -33,19 +33,19 @@ struct alignas(16) BaseLeaf
 // (normal, position etc..)
 template <class HitData, class PrimitiveData, class LeafData>
 using AcceptHitFunction = HitResult(*)(// Output
-									   HitKey&,
-									   PrimitiveId&,
-									   HitData&,
-									   // I-O
-									   RayReg& r,
-									   // Input
-									   const LeafData& data,
-									   const PrimitiveData& gPrimData);
+                                       HitKey&,
+                                       PrimitiveId&,
+                                       HitData&,
+                                       // I-O
+                                       RayReg& r,
+                                       // Input
+                                       const LeafData& data,
+                                       const PrimitiveData& gPrimData);
 
 template <class PrimitiveData, class LeafData>
 using LeafGenFunction = LeafData(*)(const HitKey matId,
-									const PrimitiveId primitiveId,
-									const PrimitiveData& primData);
+                                    const PrimitiveId primitiveId,
+                                    const PrimitiveData& primData);
 
 // Custom bounding box generation function
 // For primitive

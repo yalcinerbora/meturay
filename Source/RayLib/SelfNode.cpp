@@ -7,8 +7,8 @@
 //#include "VisorI.h"
 
 SelfNode::SelfNode(VisorI& v, TracerI& t)
-	: visor(v)
-	, tracer(t)
+    : visor(v)
+    , tracer(t)
 {}
 
 void SelfNode::SendScene(const std::string s)
@@ -72,8 +72,8 @@ void SelfNode::SendAnalyticData(AnalyticData data)
 }
 
 void SelfNode::SendImage(const std::vector<Byte> data,
-					  PixelFormat, int sampleCount,
-					  Vector2i start, Vector2i end)
+                      PixelFormat, int sampleCount,
+                      Vector2i start, Vector2i end)
 {
 
 }

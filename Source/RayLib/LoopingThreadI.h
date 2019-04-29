@@ -19,83 +19,83 @@ User can define internal terminate condition where thread automatically ends
 
 class LoopingThreadI
 {
-		private:
-		std::thread					thread;
-		std::mutex					mutex;
-		std::condition_variable		conditionVar;
-		bool						stopSignal;
-		bool						pauseSignal;
+        private:
+        std::thread                 thread;
+        std::mutex                  mutex;
+        std::condition_variable     conditionVar;
+        bool                        stopSignal;
+        bool                        pauseSignal;
 
-		void						THRDEntry();
+        void                        THRDEntry();
 
-	protected:
-		virtual bool				InternallyTerminated() const = 0;
-		virtual void				InitialWork() = 0;
-		virtual void				LoopWork() = 0;
-		virtual void				FinalWork() = 0;
+    protected:
+        virtual bool                InternallyTerminated() const = 0;
+        virtual void                InitialWork() = 0;
+        virtual void                LoopWork() = 0;
+        virtual void                FinalWork() = 0;
 
-	public:
-		// Constructors & Destructor
-									LoopingThreadI();
-		virtual 					~LoopingThreadI();
+    public:
+        // Constructors & Destructor
+                                    LoopingThreadI();
+        virtual                     ~LoopingThreadI();
 
-		void						Start();
-		void						Stop();
-		void						Pause(bool pause);
+        void                        Start();
+        void                        Stop();
+        void                        Pause(bool pause);
 
 };
 
 inline void LoopingThreadI::THRDEntry()
 {
-	InitialWork();
+    InitialWork();
 
-	while(!InternallyTerminated() || stopSignal)
-	{
-		LoopWork();
+    while(!InternallyTerminated() || stopSignal)
+    {
+        LoopWork();
 
-		// Condition
-		{
-			std::unique_lock<std::mutex> lock(mutex);
-			// Wait if queue is empty
-			conditionVar.wait(lock, [&]
-			{
-				return stopSignal || !pauseSignal;
-			});
-		}
-		//if(stopSignal) return;
-	}
-	FinalWork();
+        // Condition
+        {
+            std::unique_lock<std::mutex> lock(mutex);
+            // Wait if queue is empty
+            conditionVar.wait(lock, [&]
+            {
+                return stopSignal || !pauseSignal;
+            });
+        }
+        //if(stopSignal) return;
+    }
+    FinalWork();
 }
 
 inline LoopingThreadI::LoopingThreadI()
-	: pauseSignal(false)
-	, stopSignal(false)
+    : pauseSignal(false)
+    , stopSignal(false)
 {}
 
 inline LoopingThreadI::~LoopingThreadI()
 {
-	Stop();
+    Stop();
 };
 
 inline void LoopingThreadI::Start()
 {
-	thread = std::thread(&LoopingThreadI::THRDEntry, this);
+    thread = std::thread(&LoopingThreadI::THRDEntry, this);
 }
 
 inline void LoopingThreadI::Stop()
 {
-	mutex.lock();
-	stopSignal = true;
-	mutex.unlock();
-	conditionVar.notify_one();
-	if(thread.joinable()) thread.join();
-	stopSignal = false;
+    mutex.lock();
+    stopSignal = true;
+    mutex.unlock();
+    conditionVar.notify_one();
+    if(thread.joinable()) thread.join();
+    stopSignal = false;
 }
 
 inline void LoopingThreadI::Pause(bool pause)
 {
-	mutex.lock();
-	pauseSignal = pause;
-	mutex.unlock();
-	conditionVar.notify_one();
+    mutex.lock();
+    pauseSignal = pause;
+    mutex.unlock();
+    conditionVar.notify_one();
 }

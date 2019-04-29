@@ -4,11 +4,11 @@
 
 class BasicTracerLogicGenerator final : public TracerLogicGenerator
 {
-	private:
+    private:
 
-	protected:
-	public:
-		// Constructors & Destructor
-							BasicTracerLogicGenerator();
-							~BasicTracerLogicGenerator() = default;
+    protected:
+    public:
+        // Constructors & Destructor
+                            BasicTracerLogicGenerator();
+                            ~BasicTracerLogicGenerator() = default;
 };

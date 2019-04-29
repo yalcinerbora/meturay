@@ -12,287 +12,287 @@ using ReduceFunc = Type(*)(const Type&, const Type&);
 template <class T>
 inline __device__ EnableRest<T, T> ReduceAdd(const T& a, const T&b)
 {
-	return a + b;
+    return a + b;
 }
 
 template <class T>
 inline __device__ EnableRest<T, T> ReduceSubtract(const T& a, const T&b)
 {
-	return a - b;
+    return a - b;
 }
 
 template <class T>
 inline __device__ EnableRest<T, T> ReduceMultiply(const T& a, const T&b)
 {
-	return a * b;
+    return a * b;
 }
 
 template <class T>
 inline __device__ EnableRest<T, T> ReduceDivide(const T& a, const T&b)
 {
-	return a / b;
+    return a / b;
 }
 
 template<class T>
 inline __device__  EnableArithmetic<T, T> ReduceMin(const T& a, const T&b)
 {
-	return min(a, b);
+    return min(a, b);
 }
 
 template<class T>
 inline __device__ EnableArithmetic<T, T> ReduceMax(const T& a, const T&b)
 {
-	return max(a, b);
+    return max(a, b);
 }
 
 template<class T>
 inline __device__  EnableVectorOrMatrix<T, T> ReduceMin(const T& a, const T&b)
 {
-	return T::Min(a, b);
+    return T::Min(a, b);
 }
 
 template<class T>
 inline __device__  EnableVectorOrMatrix<T, T> ReduceMax(const T& a, const T&b)
 {
-	return T::Max(a, b);
+    return T::Max(a, b);
 }
 
 // Dim 1
 template <class T>
 inline __device__ EnableNV1Type<T, T> ReduceAdd(const T& a, const T&b)
 {
-	return T{a.x + b.x};
+    return T{a.x + b.x};
 }
 
 template <class T>
 inline __device__ EnableNV1Type<T, T> ReduceSubtract(const T& a, const T&b)
 {
-	return T{a.x - b.x};
+    return T{a.x - b.x};
 }
 
 template <class T>
 inline __device__ EnableNV1Type<T, T> ReduceMultiply(const T& a, const T&b)
 {
-	return T{a.x * b.x};
+    return T{a.x * b.x};
 }
 
 template <class T>
 inline __device__ EnableNV1Type<T, T> ReduceDivide(const T& a, const T&b)
 {
-	return T{a.x / b.x};
+    return T{a.x / b.x};
 }
 
 template<class T>
 inline __device__  EnableNV1Type<T, T> ReduceMin(const T& a, const T&b)
 {
-	return T{min(a.x, b.x)};
+    return T{min(a.x, b.x)};
 }
 
 template<class T>
 inline __device__ EnableNV1Type<T, T> ReduceMax(const T& a, const T&b)
 {
-	return T{max(a.x, b.x)};
+    return T{max(a.x, b.x)};
 }
 
 // Dim 2
 template <class T>
 inline __device__ EnableNV2Type<T, T> ReduceAdd(const T& a, const T&b)
 {
-	return T
-	{
-		a.x + b.x,
-		a.y + b.y
-	};
+    return T
+    {
+        a.x + b.x,
+        a.y + b.y
+    };
 }
 
 template <class T>
 inline __device__ EnableNV2Type<T, T> ReduceSubtract(const T& a, const T&b)
 {
-	return T
-	{
-		a.x - b.x,
-		a.y - b.y
-	};
+    return T
+    {
+        a.x - b.x,
+        a.y - b.y
+    };
 }
 
 template <class T>
 inline __device__ EnableNV2Type<T, T> ReduceMultiply(const T& a, const T&b)
 {
-	return T
-	{
-		a.x * b.x,
-		a.y * b.y
-	};
+    return T
+    {
+        a.x * b.x,
+        a.y * b.y
+    };
 }
 
 template <class T>
 inline __device__ EnableNV2Type<T, T> ReduceDivide(const T& a, const T&b)
 {
-	return T
-	{
-		a.x / b.x,
-		a.y / b.y
-	};
+    return T
+    {
+        a.x / b.x,
+        a.y / b.y
+    };
 }
 
 template<class T>
 inline __device__  EnableNV2Type<T, T> ReduceMin(const T& a, const T&b)
 {
-	return T
-	{
-		min(a.x, b.x),
-		min(a.y, b.y)
-	};
+    return T
+    {
+        min(a.x, b.x),
+        min(a.y, b.y)
+    };
 }
 
 template<class T>
 inline __device__ EnableNV2Type<T, T> ReduceMax(const T& a, const T&b)
 {
-	return T
-	{
-		max(a.x, b.x),
-		max(a.y, b.y)
-	};
+    return T
+    {
+        max(a.x, b.x),
+        max(a.y, b.y)
+    };
 }
 
 // Dim 3
 template <class T>
 inline __device__ EnableNV3Type<T, T> ReduceAdd(const T& a, const T&b)
 {
-	return T
-	{
-		a.x + b.x,
-		a.y + b.y,
-		a.z + b.z
-	};
+    return T
+    {
+        a.x + b.x,
+        a.y + b.y,
+        a.z + b.z
+    };
 }
 
 template <class T>
 inline __device__ EnableNV3Type<T, T> ReduceSubtract(const T& a, const T&b)
 {
-	return T
-	{
-		a.x - b.x,
-		a.y - b.y,
-		a.z - b.z
-	};
+    return T
+    {
+        a.x - b.x,
+        a.y - b.y,
+        a.z - b.z
+    };
 }
 
 template <class T>
 inline __device__ EnableNV3Type<T, T> ReduceMultiply(const T& a, const T&b)
 {
-	return T
-	{
-		a.x * b.x,
-		a.y * b.y,
-		a.z * b.z
-	};
+    return T
+    {
+        a.x * b.x,
+        a.y * b.y,
+        a.z * b.z
+    };
 }
 
 template <class T>
 inline __device__ EnableNV3Type<T, T> ReduceDivide(const T& a, const T&b)
 {
-	return T
-	{
-		a.x / b.x,
-		a.y / b.y,
-		a.z / b.z
-	};
+    return T
+    {
+        a.x / b.x,
+        a.y / b.y,
+        a.z / b.z
+    };
 }
 
 template<class T>
 inline __device__  EnableNV3Type<T, T> ReduceMin(const T& a, const T&b)
 {
-	return T
-	{
-		min(a.x, b.x),
-		min(a.y, b.y),
-		min(a.z, b.z),
-	};
+    return T
+    {
+        min(a.x, b.x),
+        min(a.y, b.y),
+        min(a.z, b.z),
+    };
 }
 
 template<class T>
 inline __device__ EnableNV3Type<T, T> ReduceMax(const T& a, const T&b)
 {
-	return T
-	{
-		max(a.x, b.x),
-		max(a.y, b.y),
-		max(a.z, b.z)
-	};
+    return T
+    {
+        max(a.x, b.x),
+        max(a.y, b.y),
+        max(a.z, b.z)
+    };
 }
 
 // Dim 4
 template <class T>
 inline __device__ EnableNV4Type<T, T> ReduceAdd(const T& a, const T&b)
 {
-	return T
-	{
-		a.x + b.x,
-		a.y + b.y,
-		a.z + b.z,
-		a.w + b.w
-	};
+    return T
+    {
+        a.x + b.x,
+        a.y + b.y,
+        a.z + b.z,
+        a.w + b.w
+    };
 }
 
 template <class T>
 inline __device__ EnableNV4Type<T, T> ReduceSubtract(const T& a, const T&b)
 {
-	return T
-	{
-		a.x - b.x,
-		a.y - b.y,
-		a.z - b.z,
-		a.w - b.w
-	};
+    return T
+    {
+        a.x - b.x,
+        a.y - b.y,
+        a.z - b.z,
+        a.w - b.w
+    };
 }
 
 template <class T>
 inline __device__ EnableNV4Type<T, T> ReduceMultiply(const T& a, const T&b)
 {
-	return T
-	{
-		a.x * b.x,
-		a.y * b.y,
-		a.z * b.z,
-		a.w * b.w
-	};
+    return T
+    {
+        a.x * b.x,
+        a.y * b.y,
+        a.z * b.z,
+        a.w * b.w
+    };
 }
 
 template <class T>
 inline __device__ EnableNV4Type<T, T> ReduceDivide(const T& a, const T&b)
 {
-	return T
-	{
-		a.x / b.x,
-		a.y / b.y,
-		a.z / b.z,
-		a.w / b.w
-	};
+    return T
+    {
+        a.x / b.x,
+        a.y / b.y,
+        a.z / b.z,
+        a.w / b.w
+    };
 }
 
 template<class T>
 inline __device__  EnableNV4Type<T, T> ReduceMin(const T& a, const T&b)
 {
-	return T
-	{
-		min(a.x, b.x),
-		min(a.y, b.y),
-		min(a.z, b.z),
-		min(a.w, b.w),
-	};
+    return T
+    {
+        min(a.x, b.x),
+        min(a.y, b.y),
+        min(a.z, b.z),
+        min(a.w, b.w),
+    };
 }
 
 template<class T>
 inline __device__ EnableNV4Type<T, T> ReduceMax(const T& a, const T&b)
 {
-	return T
-	{
-		max(a.x, b.x),
-		max(a.y, b.y),
-		min(a.z, b.z),
-		max(a.w, b.w),
-	};
+    return T
+    {
+        max(a.x, b.x),
+        max(a.y, b.y),
+        min(a.z, b.z),
+        max(a.w, b.w),
+    };
 }
 
 // We have to wrap out functions to Functors
@@ -302,9 +302,9 @@ inline __device__ EnableNV4Type<T, T> ReduceMax(const T& a, const T&b)
 template<class Type, ReduceFunc<Type> F>
 struct ReduceWrapper
 {
-	__host__ __device__ __forceinline__
-	Type operator()(const Type &a, const Type &b) const
-	{
-		return F(a, b);
-	}
+    __host__ __device__ __forceinline__
+    Type operator()(const Type &a, const Type &b) const
+    {
+        return F(a, b);
+    }
 };

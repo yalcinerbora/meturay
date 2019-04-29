@@ -13,39 +13,39 @@ Reads are not universal. Specific options are required
 
 namespace MayaCache
 {
-	constexpr const char* FrameTag = "Frame";
-	constexpr const char* Extension = "mcx";
+    constexpr const char* FrameTag = "Frame";
+    constexpr const char* Extension = "mcx";
 
-	enum MayaChannelType
-	{
-		DENSITY,
-		VELOCITY,
-		RESOLUTION,
-		OFFSET
-	};
+    enum MayaChannelType
+    {
+        DENSITY,
+        VELOCITY,
+        RESOLUTION,
+        OFFSET
+    };
 
-	struct MayaNSCacheInfo
-	{
-		Vector3ui						dim;
-		Vector3f						size;
-		// Channels
-		std::vector<MayaChannelType>	channels;
+    struct MayaNSCacheInfo
+    {
+        Vector3ui                       dim;
+        Vector3f                        size;
+        // Channels
+        std::vector<MayaChannelType>    channels;
 
-		// Color Interpolation
-		std::vector<Vector3f>			color;
-		std::vector<float>				colorInterp;
-		// Opacity Interpolation
-		std::vector<float>				opacity;
-		std::vector<float>				opacityInterp;
-		// Transparency
-		Vector3f						transparency;
-	};
+        // Color Interpolation
+        std::vector<Vector3f>           color;
+        std::vector<float>              colorInterp;
+        // Opacity Interpolation
+        std::vector<float>              opacity;
+        std::vector<float>              opacityInterp;
+        // Transparency
+        Vector3f                        transparency;
+    };
 
-	std::string		GenerateNCacheFrameFile(const std::string& xmlFile, int frame);
+    std::string     GenerateNCacheFrameFile(const std::string& xmlFile, int frame);
 
-	IOError			LoadNCacheNavierStokesXML(MayaNSCacheInfo&,
-											  const std::string& fileName);
-	IOError			LoadNCacheNavierStokes(std::vector<float>& velocityDensityData,
-										   const MayaNSCacheInfo&,
-										   const std::string& fileName);
+    IOError         LoadNCacheNavierStokesXML(MayaNSCacheInfo&,
+                                              const std::string& fileName);
+    IOError         LoadNCacheNavierStokes(std::vector<float>& velocityDensityData,
+                                           const MayaNSCacheInfo&,
+                                           const std::string& fileName);
 };

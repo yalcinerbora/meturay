@@ -6,29 +6,29 @@
 
 enum class PrimitiveDataType
 {
-	CENTER,
-	POSITION = CENTER,
-	NORMAL,
-	UV,
-	RADIUS,
+    CENTER,
+    POSITION = CENTER,
+    NORMAL,
+    UV,
+    RADIUS,
 
-	END
+    END
 };
 
 static constexpr const char* PrimitiveDataTypeNames[static_cast<int>(PrimitiveDataType::END)] =
 {
-	"position",
-	"normal",
-	"uv",
-	"radius"
+    "position",
+    "normal",
+    "uv",
+    "radius"
 };
 
 static_assert(sizeof(PrimitiveDataTypeNames) / sizeof(const char*) ==
-			  static_cast<int>(PrimitiveDataType::END), "String array and enum count mismatch.");
+              static_cast<int>(PrimitiveDataType::END), "String array and enum count mismatch.");
 
 static constexpr const char* PrimitiveDataTypeToString(PrimitiveDataType t)
 {
-	return PrimitiveDataTypeNames[static_cast<int>(t)];
+    return PrimitiveDataTypeNames[static_cast<int>(t)];
 }
 
 

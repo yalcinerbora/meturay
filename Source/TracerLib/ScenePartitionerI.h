@@ -19,14 +19,14 @@ using MultiGPUMatBatches = std::map<std::pair<std::string, int>, MatBatchData>;
 
 class ScenePartitionerI
 {
-	public:
-		virtual					~ScenePartitionerI() = default;
+    public:
+        virtual                 ~ScenePartitionerI() = default;
 
-		// Interface
-		virtual SceneError		PartitionMaterials(MultiGPUMatNodes&,
-												   MultiGPUMatBatches&,
-												   int& boundaryMaterialGPU,
-												   // Single Input
-												   const MaterialNodeList& materialGroups,
-												   const MaterialBatchList& materialBatches) const = 0;
+        // Interface
+        virtual SceneError      PartitionMaterials(MultiGPUMatNodes&,
+                                                   MultiGPUMatBatches&,
+                                                   int& boundaryMaterialGPU,
+                                                   // Single Input
+                                                   const MaterialNodeList& materialGroups,
+                                                   const MaterialBatchList& materialBatches) const = 0;
 };

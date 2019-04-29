@@ -32,71 +32,71 @@ struct TracerError;
 
 class TracerBase : public TracerI
 {
-	private:
-		// Common Memory
-		RNGMemory				rngMemory;
-		RayMemory				rayMemory;
-		ImageMemory				outputImage;
+    private:
+        // Common Memory
+        RNGMemory               rngMemory;
+        RayMemory               rayMemory;
+        ImageMemory             outputImage;
 
-		// Properties
-		uint32_t				currentRayCount;
-		TracerOptions			options;
+        // Properties
+        uint32_t                currentRayCount;
+        TracerOptions           options;
 
-		// Base tracer logic
-		TracerBaseLogicI*		currentLogic;
-		TracerCallbacksI*		callbacks;
+        // Base tracer logic
+        TracerBaseLogicI*       currentLogic;
+        TracerCallbacksI*       callbacks;
 
-		// Error related
-		bool					healthy;
+        // Error related
+        bool                    healthy;
 
-		// Internals
-		void					SendError(TracerError e, bool isFatal);
-		void					HitRays();
-		void					ShadeRays();
+        // Internals
+        void                    SendError(TracerError e, bool isFatal);
+        void                    HitRays();
+        void                    ShadeRays();
 
-	public:
-		// Constructors & Destructor
-							TracerBase();
-							TracerBase(const TracerBase&) = delete;
-		TracerBase&			operator=(const TracerBase&) = delete;
-							~TracerBase() = default;
+    public:
+        // Constructors & Destructor
+                            TracerBase();
+                            TracerBase(const TracerBase&) = delete;
+        TracerBase&         operator=(const TracerBase&) = delete;
+                            ~TracerBase() = default;
 
-		// =====================//
-		// RESPONSE FROM TRACER //
-		// =====================//
-		// Callbacks
-		void				AttachTracerCallbacks(TracerCallbacksI&) override;
+        // =====================//
+        // RESPONSE FROM TRACER //
+        // =====================//
+        // Callbacks
+        void                AttachTracerCallbacks(TracerCallbacksI&) override;
 
-		// ===================//
-		// COMMANDS TO TRACER //
-		// ===================//
-		// Main Calls
-		TracerError			Initialize(int leaderGPUId = 0) override;
-		void				SetOptions(const TracerOptions&) override;
-		// Requests
-		void				RequestBaseAccelerator() override;
-		void				RequestAccelerator(HitKey key) override;
-		// TODO: add sharing of other generated data (maybe interpolations etc.)
-		// and their equavilent callbacks
+        // ===================//
+        // COMMANDS TO TRACER //
+        // ===================//
+        // Main Calls
+        TracerError         Initialize(int leaderGPUId = 0) override;
+        void                SetOptions(const TracerOptions&) override;
+        // Requests
+        void                RequestBaseAccelerator() override;
+        void                RequestAccelerator(HitKey key) override;
+        // TODO: add sharing of other generated data (maybe interpolations etc.)
+        // and their equavilent callbacks
 
-		// Rendering Related
-		void    			AttachLogic(TracerBaseLogicI&) override;
-        void				GenerateInitialRays(const GPUScene& scene,
+        // Rendering Related
+        void                AttachLogic(TracerBaseLogicI&) override;
+        void                GenerateInitialRays(const GPUScene& scene,
                                                 int cameraId,
                                                 int samplePerLocation) override;
-		bool				Continue() override;		// Continue hit/bounce looping (consume ray pool)
-		void				Render() override;			// Render rays	(do hit, then bounce)
-		void				FinishSamples() override;	// Finish samples (write to image)
+        bool                Continue() override;        // Continue hit/bounce looping (consume ray pool)
+        void                Render() override;          // Render rays  (do hit, then bounce)
+        void                FinishSamples() override;   // Finish samples (write to image)
 
-		// Image Reated
-		void				SetImagePixelFormat(PixelFormat) override;
-        void				ReportionImage(Vector2i start = Zero2i,
+        // Image Reated
+        void                SetImagePixelFormat(PixelFormat) override;
+        void                ReportionImage(Vector2i start = Zero2i,
                                            Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-		void				ResizeImage(Vector2i resolution) override;
-		void				ResetImage() override;
+        void                ResizeImage(Vector2i resolution) override;
+        void                ResetImage() override;
 };
 
 inline void TracerBase::AttachTracerCallbacks(TracerCallbacksI& tc)
 {
-	callbacks = &tc;
+    callbacks = &tc;
 }

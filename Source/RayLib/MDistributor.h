@@ -19,114 +19,114 @@
 //class MDistributor : public DistributorI
 //{
 //
-//	public:
-//		enum Type
-//		{
-//			TRACER,
-//			VISOR
-//		};
+//  public:
+//      enum Type
+//      {
+//          TRACER,
+//          VISOR
+//      };
 //
-//		struct Node
-//		{
-//			uint32_t id;
-//			asio::ip::address adress;
-//
-//
-//		};
+//      struct Node
+//      {
+//          uint32_t id;
+//          asio::ip::address adress;
 //
 //
-//	private:
-//		bool					isLeader;
-//		std::deque<Node>		nodes;
-//		Node*					leader;
-//
-//		// Visor Callback (If this distributor is visor distributor)
-//		SetImageSegmentFunc		displayCallback;
-//
-//		// ...
+//      };
 //
 //
-//	protected:
-//		// Interface
-//		// Distributed Leader
-//		void					EliminateNode() override;				// Leader removes node from the pool
-//		void					IntroduceNode() override;				// Leader sends new node to pairs
+//  private:
+//      bool                    isLeader;
+//      std::deque<Node>        nodes;
+//      Node*                   leader;
 //
-//		void					StartFrame() override;					// Send Start Frame Command
-//		void					RenderIntersect() override;				// Main intersect command
-//		void					RenderGenRays() override;				// Main ray generation command
-//		void					RenderEnd() override;					// Main rendering end command
-//		void					AssignMaterial(uint32_t material,		// Assign material to node
-//											   uint32_t node) override;
-//		void					PollNode(uint32_t) override;			// PollNode to check if its not dead
+//      // Visor Callback (If this distributor is visor distributor)
+//      SetImageSegmentFunc     displayCallback;
 //
-//		// Distributed Non-Leader
-//		void					RequestLeaderElection() override;		// Request a Leader election
-//		void					RedirectCandidateNode() override;		// Redirect new node to leader
+//      // ...
 //
-//	public:
-//		// Constructors & Destructor
-//								MDistributor();
-//								~MDistributor() = default;
 //
-//		// ================= //
-//		//	Tracer Related	 //
-//		// ================= //
-//		// Sending (All non-blocking)
-//		void					SendMaterialRays(uint32_t materialId,
-//												 const std::vector<RayStack>) override;
-//		void					SendMaterialRays(const std::vector<ArrayPortion<uint32_t>> materialIds,
-//												 const std::vector<RayStack>) override;
-//		void					SendImage(const std::vector<Vector3f> image,
-//										  const Vector2ui resolution,
-//										  const Vector2ui offset = Vector2ui(0, 0),
-//										  const Vector2ui size = Vector2ui(0, 0)) override;
+//  protected:
+//      // Interface
+//      // Distributed Leader
+//      void                    EliminateNode() override;               // Leader removes node from the pool
+//      void                    IntroduceNode() override;               // Leader sends new node to pairs
 //
-//		// Requesting (All are blocking)
-//		void					RequestObjectAccelerator() override;
-//		void					RequestObjectAccelerator(uint32_t objId) override;
-//		void					RequestObjectAccelerator(const std::vector<uint32_t>& objIds) override;
+//      void                    StartFrame() override;                  // Send Start Frame Command
+//      void                    RenderIntersect() override;             // Main intersect command
+//      void                    RenderGenRays() override;               // Main ray generation command
+//      void                    RenderEnd() override;                   // Main rendering end command
+//      void                    AssignMaterial(uint32_t material,       // Assign material to node
+//                                             uint32_t node) override;
+//      void                    PollNode(uint32_t) override;            // PollNode to check if its not dead
 //
-//		void					RequestScene() override;
-//		void					RequestSceneMaterial(uint32_t) override;
-//		void					RequestSceneObject(uint32_t) override;
+//      // Distributed Non-Leader
+//      void                    RequestLeaderElection() override;       // Request a Leader election
+//      void                    RedirectCandidateNode() override;       // Redirect new node to leader
 //
-//		// Request rays that are responsible by this node
-//		void					RequestMaterialRays(const std::vector<RayStack>&) override;
+//  public:
+//      // Constructors & Destructor
+//                              MDistributor();
+//                              ~MDistributor() = default;
 //
-//		// Misc.
-//		uint64_t				NodeId() override;
-//		uint64_t				TotalCPUMemory() override;
-//		uint64_t				TotalGPUMemory() override;
+//      // ================= //
+//      //  Tracer Related   //
+//      // ================= //
+//      // Sending (All non-blocking)
+//      void                    SendMaterialRays(uint32_t materialId,
+//                                               const std::vector<RayStack>) override;
+//      void                    SendMaterialRays(const std::vector<ArrayPortion<uint32_t>> materialIds,
+//                                               const std::vector<RayStack>) override;
+//      void                    SendImage(const std::vector<Vector3f> image,
+//                                        const Vector2ui resolution,
+//                                        const Vector2ui offset = Vector2ui(0, 0),
+//                                        const Vector2ui size = Vector2ui(0, 0)) override;
 //
-//		// Check if render is requested for this frame
-//		bool					CheckIfRenderRequested(uint32_t renderCount) override;
-//		// Check if distributed system is distributed at all
-//		bool					Alone() override;
+//      // Requesting (All are blocking)
+//      void                    RequestObjectAccelerator() override;
+//      void                    RequestObjectAccelerator(uint32_t objId) override;
+//      void                    RequestObjectAccelerator(const std::vector<uint32_t>& objIds) override;
 //
-//		// Recieving data from callbacks
-//		void					AttachCameraCallback(SetCameraFunc) override;
-//		void					AttachTimeCallback(SetTimeFunc) override;
-//		void					AttachParamCallback(SetParameterFunc) override;
-//		void					AttachFPSCallback(SetFPSFunc) override;
-//		void					AttachFrameCallback(SetFrameCallback) override;
+//      void                    RequestScene() override;
+//      void                    RequestSceneMaterial(uint32_t) override;
+//      void                    RequestSceneObject(uint32_t) override;
 //
-//		// ================= //
-//		//	 Visor Related	 //
-//		// ================= //
-//		void					SetImageStream(bool) override;
-//		void					SetImagePeriod(double seconds) override;
+//      // Request rays that are responsible by this node
+//      void                    RequestMaterialRays(const std::vector<RayStack>&) override;
 //
-//		// Visor Window I-O
-//		void					ChangeCamera(const CameraPerspective&) override;
-//		void					ChangeTime(double seconds) override;
-//		void					ChangeParameters() override;
-//		void					ChangeFPS(int fps) override;
-//		void					NextFrame() override;
-//		void					PreviousFrame() override;
+//      // Misc.
+//      uint64_t                NodeId() override;
+//      uint64_t                TotalCPUMemory() override;
+//      uint64_t                TotalGPUMemory() override;
 //
-//		void					AttachDisplayCallback(SetImageSegmentFunc) override;
+//      // Check if render is requested for this frame
+//      bool                    CheckIfRenderRequested(uint32_t renderCount) override;
+//      // Check if distributed system is distributed at all
+//      bool                    Alone() override;
 //
-//		// Visor CLI
-//		//...
+//      // Recieving data from callbacks
+//      void                    AttachCameraCallback(SetCameraFunc) override;
+//      void                    AttachTimeCallback(SetTimeFunc) override;
+//      void                    AttachParamCallback(SetParameterFunc) override;
+//      void                    AttachFPSCallback(SetFPSFunc) override;
+//      void                    AttachFrameCallback(SetFrameCallback) override;
+//
+//      // ================= //
+//      //   Visor Related   //
+//      // ================= //
+//      void                    SetImageStream(bool) override;
+//      void                    SetImagePeriod(double seconds) override;
+//
+//      // Visor Window I-O
+//      void                    ChangeCamera(const CameraPerspective&) override;
+//      void                    ChangeTime(double seconds) override;
+//      void                    ChangeParameters() override;
+//      void                    ChangeFPS(int fps) override;
+//      void                    NextFrame() override;
+//      void                    PreviousFrame() override;
+//
+//      void                    AttachDisplayCallback(SetImageSegmentFunc) override;
+//
+//      // Visor CLI
+//      //...
 //};

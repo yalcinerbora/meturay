@@ -10,43 +10,43 @@ Shader Class that Compiles and Binds Shaders
 
 enum class ShaderType
 {
-	VERTEX,
-	TESS_C,
-	TESS_E,
-	GEOMETRY,
-	FRAGMENT,
-	COMPUTE
+    VERTEX,
+    TESS_C,
+    TESS_E,
+    GEOMETRY,
+    FRAGMENT,
+    COMPUTE
 };
 
 class ShaderGL
 {
-	private:
-		// Global Variables
-		static GLuint		shaderPipelineID;
+    private:
+        // Global Variables
+        static GLuint       shaderPipelineID;
 
-		// Properties
-		GLuint				shaderID;
-        ShaderType			shaderType;
-		bool				valid;
+        // Properties
+        GLuint              shaderID;
+        ShaderType          shaderType;
+        bool                valid;
 
-		static GLenum		ShaderTypeToGL(ShaderType);
-		static GLenum		ShaderTypeToGLBit(ShaderType);
+        static GLenum       ShaderTypeToGL(ShaderType);
+        static GLenum       ShaderTypeToGLBit(ShaderType);
 
-	protected:
+    protected:
 
-	public:
-		// Constructors & Destructor
-							ShaderGL();
-							ShaderGL(ShaderType, const std::string& path);
-							ShaderGL(ShaderGL&&);
-							ShaderGL(const ShaderGL&) = delete;
-		ShaderGL&			operator=(ShaderGL&&);
-		ShaderGL&			operator=(const ShaderGL&) = delete;
-							~ShaderGL();
+    public:
+        // Constructors & Destructor
+                            ShaderGL();
+                            ShaderGL(ShaderType, const std::string& path);
+                            ShaderGL(ShaderGL&&);
+                            ShaderGL(const ShaderGL&) = delete;
+        ShaderGL&           operator=(ShaderGL&&);
+        ShaderGL&           operator=(const ShaderGL&) = delete;
+                            ~ShaderGL();
 
-		// Renderer Usage
-		void				Bind();
-		bool				IsValid() const;
+        // Renderer Usage
+        void                Bind();
+        bool                IsValid() const;
 
-		static void			Unbind(ShaderType);
+        static void         Unbind(ShaderType);
 };

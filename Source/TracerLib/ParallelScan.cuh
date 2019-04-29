@@ -23,86 +23,86 @@ Wrapping functions to it from now on.
 
 template<class Type, ReduceFunc<Type> F>
 __host__ void KCExclusiveScanArray(Type* out, const Type* in,
-								   size_t elementCount, Type identityElement,
-								   cudaStream_t stream = (cudaStream_t)0)
+                                   size_t elementCount, Type identityElement,
+                                   cudaStream_t stream = (cudaStream_t)0)
 {
-	// Delegating to cub here
-	size_t bufferSize = 0;
-	cub::DeviceScan::ExclusiveScan(nullptr, bufferSize,
-								   in, out,
-								   ReduceWrapper<Type, F>(),
-								   identityElement,
-								   static_cast<int>(elementCount),
-								   stream);
+    // Delegating to cub here
+    size_t bufferSize = 0;
+    cub::DeviceScan::ExclusiveScan(nullptr, bufferSize,
+                                   in, out,
+                                   ReduceWrapper<Type, F>(),
+                                   identityElement,
+                                   static_cast<int>(elementCount),
+                                   stream);
 
-	DeviceMemory buffer(bufferSize);
-	cub::DeviceScan::ExclusiveScan(buffer, bufferSize,
-								   in, out,
-								   ReduceWrapper<Type, F>(),
-								   identityElement,
-								   static_cast<int>(elementCount),
-								   stream);
-	CUDA_KERNEL_CHECK();
+    DeviceMemory buffer(bufferSize);
+    cub::DeviceScan::ExclusiveScan(buffer, bufferSize,
+                                   in, out,
+                                   ReduceWrapper<Type, F>(),
+                                   identityElement,
+                                   static_cast<int>(elementCount),
+                                   stream);
+    CUDA_KERNEL_CHECK();
 }
 
 template<class Type, ReduceFunc<Type> F>
 __host__ void KCInclusiveScanArray(Type* out, const Type* in, size_t elementCount,
-								   cudaStream_t stream = (cudaStream_t)0)
+                                   cudaStream_t stream = (cudaStream_t)0)
 {
-	// Delegating to cub here
-	size_t bufferSize = 0;
-	cub::DeviceScan::InclusiveScan(nullptr, bufferSize,
-								   in, out,
-								   ReduceWrapper<Type, F>(),
-								   static_cast<int>(elementCount),
-								   stream);
+    // Delegating to cub here
+    size_t bufferSize = 0;
+    cub::DeviceScan::InclusiveScan(nullptr, bufferSize,
+                                   in, out,
+                                   ReduceWrapper<Type, F>(),
+                                   static_cast<int>(elementCount),
+                                   stream);
 
-	DeviceMemory buffer(bufferSize);
-	cub::DeviceScan::InclusiveScan(buffer, bufferSize,
-								   in, out,
-								   ReduceWrapper<Type, F>(),
-								   static_cast<int>(elementCount),
-								   stream);
-	CUDA_KERNEL_CHECK();
+    DeviceMemory buffer(bufferSize);
+    cub::DeviceScan::InclusiveScan(buffer, bufferSize,
+                                   in, out,
+                                   ReduceWrapper<Type, F>(),
+                                   static_cast<int>(elementCount),
+                                   stream);
+    CUDA_KERNEL_CHECK();
 }
 
 // Meta Definitions
 #define DEFINE_EXCLUSIVE_SCAN(type, func) \
-	template \
-	__host__ void KCExclusiveScanArray<type, func>(type*, const type*, \
-												   size_t, type, \
-												   cudaStream_t);
+    template \
+    __host__ void KCExclusiveScanArray<type, func>(type*, const type*, \
+                                                   size_t, type, \
+                                                   cudaStream_t);
 
 #define DEFINE_INCLUSIVE_SCAN(type, func) \
-	template \
-	__host__ void KCInclusiveScanArray<type, func>(type*, const type*, \
-												   size_t, \
-												   cudaStream_t);
+    template \
+    __host__ void KCInclusiveScanArray<type, func>(type*, const type*, \
+                                                   size_t, \
+                                                   cudaStream_t);
 
 #define DEFINE_SCAN_BOTH(type, func) \
-	DEFINE_EXCLUSIVE_SCAN(type, func) \
-	DEFINE_INCLUSIVE_SCAN(type, func)
+    DEFINE_EXCLUSIVE_SCAN(type, func) \
+    DEFINE_INCLUSIVE_SCAN(type, func)
 
 #define DEFINE_SCAN_ALL(type) \
-	DEFINE_SCAN_BOTH(type, ReduceAdd) \
-	DEFINE_SCAN_BOTH(type, ReduceSubtract) \
-	DEFINE_SCAN_BOTH(type, ReduceMultiply) \
-	DEFINE_SCAN_BOTH(type, ReduceDivide) \
-	DEFINE_SCAN_BOTH(type, ReduceMin) \
-	DEFINE_SCAN_BOTH(type, ReduceMax)
+    DEFINE_SCAN_BOTH(type, ReduceAdd) \
+    DEFINE_SCAN_BOTH(type, ReduceSubtract) \
+    DEFINE_SCAN_BOTH(type, ReduceMultiply) \
+    DEFINE_SCAN_BOTH(type, ReduceDivide) \
+    DEFINE_SCAN_BOTH(type, ReduceMin) \
+    DEFINE_SCAN_BOTH(type, ReduceMax)
 
 // Extern Definitions
 #define EXTERN_SCAN_BOTH(type, func) \
-	extern DEFINE_EXCLUSIVE_SCAN(type, func) \
-	extern DEFINE_INCLUSIVE_SCAN(type, func)
+    extern DEFINE_EXCLUSIVE_SCAN(type, func) \
+    extern DEFINE_INCLUSIVE_SCAN(type, func)
 
 #define EXTERN_SCAN_ALL(type) \
-	EXTERN_SCAN_BOTH(type, ReduceAdd) \
-	EXTERN_SCAN_BOTH(type, ReduceSubtract) \
-	EXTERN_SCAN_BOTH(type, ReduceMultiply) \
-	EXTERN_SCAN_BOTH(type, ReduceDivide) \
-	EXTERN_SCAN_BOTH(type, ReduceMin) \
-	EXTERN_SCAN_BOTH(type, ReduceMax)
+    EXTERN_SCAN_BOTH(type, ReduceAdd) \
+    EXTERN_SCAN_BOTH(type, ReduceSubtract) \
+    EXTERN_SCAN_BOTH(type, ReduceMultiply) \
+    EXTERN_SCAN_BOTH(type, ReduceDivide) \
+    EXTERN_SCAN_BOTH(type, ReduceMin) \
+    EXTERN_SCAN_BOTH(type, ReduceMax)
 
 // Integral Types
 EXTERN_SCAN_ALL(int)
