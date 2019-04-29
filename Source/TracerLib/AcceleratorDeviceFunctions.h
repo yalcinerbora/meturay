@@ -19,7 +19,7 @@ struct alignas(16) BaseLeaf
 
 // Accept hit function
 // Return two booleans first boolean tells control flow to terminate
-// intersection checking (when finding any hit is enough), 
+// intersection checking (when finding any hit is enough),
 // other boolean is returns that the hit is accepted or not.
 //
 // If hit is accepted Accept hit function should return

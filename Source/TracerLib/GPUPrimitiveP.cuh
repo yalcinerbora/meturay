@@ -3,7 +3,7 @@
 
 Template Wrapper for Primitives
 P tag on name is for partial implementation
-to guide the primitive implementor to make creations 
+to guide the primitive implementor to make creations
 proper for combined templates
 
 */
@@ -29,11 +29,11 @@ template <class HitD, class PrimitiveD, class LeafD,
 		  LeafGenFunction<PrimitiveD, LeafD> LeafF,
 		  BoxGenFunction<PrimitiveD> BoxF,
 		  AreaGenFunction<PrimitiveD> AreaF>
-class GPUPrimitiveGroup 
+class GPUPrimitiveGroup
 	: public GPUPrimitiveGroupI
 	, public GPUPrimitiveGroupP<PrimitiveD>
 {
-	public:	
+	public:
 	   	// Type Definitions for kernel generations
 		using PrimitiveData					= PrimitiveD;
 		using HitData						= HitD;
@@ -41,10 +41,10 @@ class GPUPrimitiveGroup
 		// Function Definitions
 		// Used by accelerator definitions etc.
 		static constexpr auto HitFunc		= HitF;
-		static constexpr auto LeafFunc		= LeafF;		
+		static constexpr auto LeafFunc		= LeafF;
 		static constexpr auto BoxFunc		= BoxF;
 		static constexpr auto AreaFunc		= AreaF;
-		
+
 	private:
 	protected:
 
@@ -53,7 +53,7 @@ class GPUPrimitiveGroup
 							GPUPrimitiveGroup() = default;
 		virtual				~GPUPrimitiveGroup() = default;
 
-		uint32_t				PrimitiveHitSize() const override { return sizeof(HitData); };
+		uint32_t			PrimitiveHitSize() const override { return sizeof(HitData); };
 };
 
 

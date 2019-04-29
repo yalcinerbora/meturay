@@ -26,7 +26,7 @@ class RandomGPU
 		static constexpr uint32_t	Min = std::numeric_limits<uint32_t>::min();
 		static constexpr uint32_t	Range = Max-Min;
 
-	private:		 
+	private:
 		 uint32_t*					gStates;
 		 uint32_t*					sStates;
 		 const Vector3ui			regs;
@@ -52,7 +52,7 @@ static constexpr uint32_t WarpStandard_Z0 = 2;
 __device__ static const uint32_t WarpStandard_Z1[32] =
 {
 	0,1,0,1,1,1,0,0,1,0,0,1,0,0,1,0,
-	0,1,0,1,0,1,0,1,0,1,0,1,1,1,0,1	
+	0,1,0,1,0,1,0,1,0,1,0,1,1,1,0,1
 };
 
 __device__ static const uint32_t WarpStandard_Q[2][32] =

@@ -18,7 +18,7 @@ template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>
 class TracerBaseLogic : public TracerBaseLogicI
 {
 	public:
-		using RayAuxData						= RayAuxD;
+		using RayAuxData					= RayAuxD;
 		static constexpr auto AuxFunc		= AuxF;
 
 	private:
@@ -27,20 +27,20 @@ class TracerBaseLogic : public TracerBaseLogicI
 		HitOpts								optsHit;
 		ShadeOpts							optsShade;
 		const TracerParameters				params;
-		uint32_t								hitStructMaxSize;
+		uint32_t							hitStructMaxSize;
 		//
-		const RayAuxData						initialValues;
+		const RayAuxData					initialValues;
 		// Mappings for Kernel Calls (A.K.A. Batches)
-		GPUBaseAcceleratorI&					baseAccelerator;
+		GPUBaseAcceleratorI&				baseAccelerator;
 
-		AcceleratorGroupList					acceleratorGroups;
-		AcceleratorBatchMappings				acceleratorBatches;
-	
+		AcceleratorGroupList				acceleratorGroups;
+		AcceleratorBatchMappings			acceleratorBatches;
+
 		MaterialGroupList					materialGroups;
 		MaterialBatchMappings				materialBatches;
 
-		Vector2i								maxAccelBits;
-		Vector2i								maxMatBits;
+		Vector2i							maxAccelBits;
+		Vector2i							maxMatBits;
 
 	public:
 		// Constructors & Destructor
@@ -59,11 +59,11 @@ class TracerBaseLogic : public TracerBaseLogicI
 
 		// Interface
 		// Interface fetching for logic
-		GPUBaseAcceleratorI&					BaseAcelerator() override { return baseAccelerator; }
+		GPUBaseAcceleratorI&				BaseAcelerator() override { return baseAccelerator; }
 		const AcceleratorBatchMappings&		AcceleratorBatches() override { return acceleratorBatches; }
-		const MaterialBatchMappings&			MaterialBatches() override { return materialBatches; }
+		const MaterialBatchMappings&		MaterialBatches() override { return materialBatches; }
 		const AcceleratorGroupList&			AcceleratorGroups() override { return acceleratorGroups; }
-		const MaterialGroupList&				MaterialGroups() override { return materialGroups; }
+		const MaterialGroupList&			MaterialGroups() override { return materialGroups; }
 
 		// Returns bitrange of keys (should complement each other to 32-bit)
 		const Vector2i						SceneMaterialMaxBits() const override;
@@ -71,7 +71,7 @@ class TracerBaseLogic : public TracerBaseLogicI
 
 		// Options of the Hitman & Shademan
 		const HitOpts&						HitOptions() const override { return optsHit; }
-		const ShadeOpts&						ShadeOptions() const override { return optsShade; }
+		const ShadeOpts&					ShadeOptions() const override { return optsShade; }
 
 		// Misc
 		// Retuns "sizeof(RayAux)"
@@ -79,7 +79,7 @@ class TracerBaseLogic : public TracerBaseLogicI
 		// Return mimimum size of an arbitrary struct which holds all hit results
 		size_t								HitStructSize() const override { return hitStructMaxSize; };
 		// Random seed
-		uint32_t								Seed() const override { return params.seed; }
+		uint32_t							Seed() const override { return params.seed; }
 };
 
 template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>
@@ -115,7 +115,7 @@ TracerBaseLogic<RayAuxD, AuxF>::TracerBaseLogic(GPUBaseAcceleratorI& baseAcceler
 	maxAccelBits[1] = static_cast<int>(std::bitset<sizeof(int) * 8>(maxAccels[1]).count());
 }
 
-template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>		
+template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>
 const Vector2i TracerBaseLogic<RayAuxD, AuxF>::SceneMaterialMaxBits() const
 {
 	return maxMatBits;

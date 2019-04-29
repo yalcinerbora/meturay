@@ -22,7 +22,7 @@ Wrapping functions to it from now on.
 #include "ReduceFunctions.cuh"
 
 template<class Type, ReduceFunc<Type> F>
-__host__ void KCExclusiveScanArray(Type* out, const Type* in, 
+__host__ void KCExclusiveScanArray(Type* out, const Type* in,
 								   size_t elementCount, Type identityElement,
 								   cudaStream_t stream = (cudaStream_t)0)
 {

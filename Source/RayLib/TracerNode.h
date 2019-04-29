@@ -16,6 +16,6 @@ class TracerNode
 	: public TracerCallbacksI
 	, public DistributorI
 {
-	
+
 
 };

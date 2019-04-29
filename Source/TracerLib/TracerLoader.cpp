@@ -11,7 +11,7 @@ LogicInterface TracerLoader::LoadTracerLogic(SharedLib& s,
 											 const char* generatorConstructor,
 											 const char* generatorDestructor)
 {
-	// Load DLL	
+	// Load DLL
 	SharedLibPtr<TracerLogicGeneratorI> logicGen = s.GenerateObject<TracerLogicGeneratorI>(generatorConstructor,
 																						   generatorDestructor);
 

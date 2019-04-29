@@ -47,10 +47,10 @@ bool ImageIO::ReadHDR(std::vector<Vector4>& image,
 
 	FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib1);
 	for(int j = 0; j < header->biHeight; j++)
-	{		
+	{
 		FIRGBAF *bits = (FIRGBAF *)FreeImage_GetScanLine(dib1, j);;
 		for(int i = 0; i < header->biWidth; i++)
-		{				
+		{
 		/*	RGBQUAD rgb;
 			bool fetched = FreeImage_GetPixelColor(dib1, i, header->biHeight - j - 1, &rgb);*/
 

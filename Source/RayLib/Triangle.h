@@ -18,7 +18,7 @@ AABB<3, T> Triangle::BoundingBox(const Vector<3, T>& p0,
 								 const Vector<3, T>& p1,
 								 const Vector<3, T>& p2)
 {
-	AABB3f aabb(p0, p0);	
+	AABB3f aabb(p0, p0);
 	aabb.SetMin(Vector3f::Min(aabb.Min(), p1));
 	aabb.SetMin(Vector3f::Min(aabb.Min(), p2));
 

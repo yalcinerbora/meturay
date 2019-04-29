@@ -2,7 +2,7 @@
 /**
 
 OGL Implementation of Visor View
-Uses GLFW glfw has c style interface and required to be initalized 
+Uses GLFW glfw has c style interface and required to be initalized
 at start of the program. We will need single window thus making
 the VisorGL singleton.
 
@@ -39,7 +39,7 @@ struct VisorGLCommand
 		std::vector<Byte>		data;
 		PixelFormat				format;
 		Vector2i				start;
-		Vector2i				end;		
+		Vector2i				end;
 		int						sampleCount;
 
 		// Commands should not be copied
@@ -52,9 +52,9 @@ struct VisorGLCommand
 
 class VisorGL : public VisorI
 {
-	private:	
+	private:
 		static VisorGL*				instance;
-		
+
 		static constexpr float		PostProcessTriData[6] =
 		{
 			3.0f, -1.0f,
@@ -103,7 +103,7 @@ class VisorGL : public VisorI
 		Vector2i					imageRes;
 		PixelFormat					texPixFormat;
 		GLuint						linearSampler;
-		
+
 		// Shader
 		ShaderGL					vertPP;
 		ShaderGL					fragPP;
@@ -146,7 +146,7 @@ class VisorGL : public VisorI
 		static GLenum				PixelFormatToGL(PixelFormat);
 		static GLenum				PixelFormatToSizedGL(PixelFormat);
 		static GLenum				PixelFormatToTypeGL(PixelFormat);
-				
+
 		// Internal Command Handling
 		void						ProcessCommand(const VisorGLCommand&);
 		void						RenderImage();
@@ -158,20 +158,20 @@ class VisorGL : public VisorI
 								VisorGL(const VisorGL&) = delete;
 		VisorGL&				operator=(const VisorGL&) = delete;
 								~VisorGL();
-		
+
 		// Interface
-		bool					IsOpen() override;		
+		bool					IsOpen() override;
 		void					Render() override;
 		void					ProcessInputs() override;
 		// Input System
 		void					SetInputScheme(VisorInputI*) override;
 		void					SetCallbacks(VisorCallbacksI*) override;
-		// Data Related					
+		// Data Related
 		// Reset Data (Clears the RGB(A) Buffer of the Image)
 		// and resets total accumulated rays
 		void					ResetSamples(Vector2i start = Zero2i,
 											 Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-		// Append incoming data from 
+		// Append incoming data from
 		void					AccumulatePortion(const std::vector<Byte> data,
 												  PixelFormat, int sampleCount,
 												  Vector2i start = Zero2i,
@@ -179,7 +179,7 @@ class VisorGL : public VisorI
 		// Options
 		const VisorOptions&		VisorOpts() const override;
 		// Misc
-	
+
 		void					SetWindowSize(const Vector2i& size) override;
 		void					SetFPSLimit(float) override;
 };

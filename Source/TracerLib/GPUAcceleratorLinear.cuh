@@ -27,7 +27,7 @@ tree constructio would provide additional overhead.
 #include "GPUAcceleratorLinearKC.cuh"
 
 // This should be an array?
-// Most of the time each accelerator will be constructred with a 
+// Most of the time each accelerator will be constructred with a
 // Singular primitive batch, it should be better to put size constraint
 //using SurfaceDataList = std::vector<uint32_t>;
 using SurfaceMaterialPairs = std::array<Vector2ul, SceneConstants::MaxPrimitivePerSurface>;
@@ -43,27 +43,27 @@ template<class PGroup>
 class GPUAccLinearBatch;
 
 template <class PGroup>
-class GPUAccLinearGroup final 
+class GPUAccLinearGroup final
 	: public GPUAcceleratorGroup<PGroup>
 	, public LinearAccelTypeName<PGroup>
 {
 	public:
 		using LeafData						= PGroup::LeafData;
 
-	private:	
+	private:
 		// CPU Memory
 		std::vector<PrimitiveRangeList>		primitiveRanges;
 		std::vector<HitKeyList>				primitiveMaterialKeys;
 		std::vector<Vector2ul>				accRanges;
 		std::map<uint32_t, uint32_t>			idLookup;
-	
+
 		// GPU Memory
 		DeviceMemory							memory;
 		Vector2ul*							dAccRanges;
-		LeafData*							dLeafList;	
+		LeafData*							dLeafList;
 
 		friend class							GPUAccLinearBatch<PGroup>;
-		
+
 	protected:
 
 	public:
@@ -105,7 +105,7 @@ class GPUAccLinearGroup final
 		void							DestroyAccelerators(const std::vector<uint32_t>& surfaces) override;
 
 		size_t						UsedGPUMemory() const override;
-		size_t						UsedCPUMemory() const override;		
+		size_t						UsedCPUMemory() const override;
 };
 
 template<class PGroup>
@@ -123,47 +123,47 @@ class GPUAccLinearBatch final
 		// Type(as string) of the accelerator group
 		const char*			Type() const override;
 		// Kernel Logic
-		void					Hit(int gpuId,
-									// O
-									HitKey* dMaterialKeys,
-									PrimitiveId* dPrimitiveIds,
-									HitStructPtr dHitStructs,
-									// I-O													
-									RayGMem* dRays,
-									// Input
-									const TransformId* dTransformIds,
-									const RayId* dRayIds,
-									const HitKey* dAcceleratorKeys,
-									const uint32_t rayCount) const override;
+		void				Hit(int gpuId,
+								// O
+								HitKey* dMaterialKeys,
+								PrimitiveId* dPrimitiveIds,
+								HitStructPtr dHitStructs,
+								// I-O
+								RayGMem* dRays,
+								// Input
+								const TransformId* dTransformIds,
+								const RayId* dRayIds,
+								const HitKey* dAcceleratorKeys,
+								const uint32_t rayCount) const override;
 };
 
 class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
 {
 	public:
-		static const std::string			TypeName;
+		static const std::string		TypeName;
 	private:
-		DeviceMemory						leafMemory;
-		DeviceMemory						rayLocMemory;
+		DeviceMemory					leafMemory;
+		DeviceMemory					rayLocMemory;
 
 		// GPU
-		const BaseLeaf*					dLeafs;		
+		const BaseLeaf*					dLeafs;
 		uint32_t*						dPrevLocList;
 
 		// CPU
-		std::map<uint32_t, uint32_t>		innerIds;
-		uint32_t							leafCount;
+		std::map<uint32_t, uint32_t>	innerIds;
+		uint32_t						leafCount;
 
 	protected:
 	public:
 		// Interface
 		// Type(as string) of the accelerator group
-		const char*				Type() const override;
+		const char*					Type() const override;
 
 		// Get ready for hit loop
 		void						GetReady(uint32_t rayCount) override;
 		// Base accelerator only points to the next accelerator key.
 		// It can return invalid key,
-		// which is either means data is out of bounds or ray is invalid.		
+		// which is either means data is out of bounds or ray is invalid.
 		void						Hit(// Output
 									TransformId* dTransformIds,
 									HitKey* dAcceleratorKeys,
@@ -173,11 +173,11 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
 									const uint32_t rayCount) const override;
 
 
-		SceneError				Initialize(// List of surface to transform id hit key mappings
+		SceneError					Initialize(// List of surface to transform id hit key mappings
+												   const std::map<uint32_t, BaseLeaf>&) override;
+		SceneError					Change(// List of only changed surface to transform id hit key mappings
 											   const std::map<uint32_t, BaseLeaf>&) override;
-		SceneError				Change(// List of only changed surface to transform id hit key mappings
-										   const std::map<uint32_t, BaseLeaf>&) override;
-		
+
 		void						Constrcut() override;
 		void						Destruct() override;
 };

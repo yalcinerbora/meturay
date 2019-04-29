@@ -37,13 +37,13 @@ class Vector;
 
 static constexpr size_t ChooseVectorAlignment(size_t totalSize)
 {
-	if(totalSize <= 4)		
+	if(totalSize <= 4)
 		return 4;			// 1byte Vector Types
-	else if(totalSize <= 8)	
+	else if(totalSize <= 8)
 		return 8;			// 4byte Vector2 Types
-	else if(totalSize < 16)	
+	else if(totalSize < 16)
 		return 4;			// 4byte Vector3 Types
-	else					
+	else
 		return 16;			// 4byte Vector4 Types
 }
 
@@ -51,7 +51,7 @@ template<int N, class T>
 class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 {
 	static_assert(N == 2 || N == 3 || N == 4, "Vector size should be 2, 3 or 4");
-	
+
 	private:
 		T									vector[N];
 
@@ -60,7 +60,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 		// Constructors & Destructor
 		constexpr							Vector() = default;
 		template<class C, typename = ArithmeticEnable<C>>
-		__device__ __host__					Vector(C);		
+		__device__ __host__					Vector(C);
 		template<class C, typename = ArithmeticEnable<C>>
 		__device__ __host__					Vector(const C* data);
 		template <class... Args, typename = AllArithmeticEnable<Args...>>
@@ -75,7 +75,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 		// MVC bug? these trigger std::trivially_copyable static assert
 		// __device__ __host__				Vector(const Vector&) = default;
 		// __device__ __host__ Vector&		operator=(const Vector&) = default;
-											
+
 		// Accessors
 		__device__ __host__	explicit			operator T*();
 		__device__ __host__	explicit			operator const T*() const;

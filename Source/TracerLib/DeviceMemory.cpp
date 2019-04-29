@@ -25,7 +25,7 @@ DeviceMemoryCPUBacked::DeviceMemoryCPUBacked(const DeviceMemoryCPUBacked& other)
 	: DeviceMemoryCPUBacked(other.size, other.currentDevice)
 {
 	CUDA_CHECK(cudaMemcpy(d_ptr, other.d_ptr, size, cudaMemcpyDeviceToDevice));
-	std::memcpy(h_ptr, other.h_ptr, size);	
+	std::memcpy(h_ptr, other.h_ptr, size);
 }
 
 DeviceMemoryCPUBacked::DeviceMemoryCPUBacked(DeviceMemoryCPUBacked&& other)
@@ -48,14 +48,14 @@ DeviceMemoryCPUBacked::~DeviceMemoryCPUBacked()
 DeviceMemoryCPUBacked& DeviceMemoryCPUBacked::operator=(const DeviceMemoryCPUBacked& other)
 {
 	assert(this != &other);
-		
+
 	// Det Device
 	CUDA_CHECK(cudaSetDevice(currentDevice));
-	
+
 	// Realloc if necessary
 	if(size != other.size)
-	{		
-		CUDA_CHECK(cudaFree(d_ptr));		
+	{
+		CUDA_CHECK(cudaFree(d_ptr));
 		CUDA_CHECK(cudaMalloc(&d_ptr, other.size));
 
 		free(h_ptr);
@@ -121,8 +121,8 @@ void DeviceMemoryCPUBacked::CopyToDevice(size_t offset, size_t copySize, cudaStr
 
 	// Det Device
 	CUDA_CHECK(cudaSetDevice(currentDevice));
-	CUDA_CHECK(cudaMemcpyAsync(reinterpret_cast<char*>(d_ptr) + offset, 
-							   reinterpret_cast<char*>(h_ptr) + offset, 
+	CUDA_CHECK(cudaMemcpyAsync(reinterpret_cast<char*>(d_ptr) + offset,
+							   reinterpret_cast<char*>(h_ptr) + offset,
 							   copySize, cudaMemcpyHostToDevice));
 }
 
@@ -190,7 +190,7 @@ DeviceMemory& DeviceMemory::operator=(const DeviceMemory& other)
 	{
 		CUDA_CHECK(cudaFree(m_ptr));
 		cudaMallocManaged(&m_ptr, other.size);
-	}	
+	}
 	CUDA_CHECK(cudaMemcpy(m_ptr, other.m_ptr, other.size, cudaMemcpyDeviceToDevice));
 	size = other.size;
 	return *this;

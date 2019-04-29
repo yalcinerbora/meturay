@@ -10,7 +10,7 @@ split implementation from actual call.)
 This is a Threaded Implementation.
 This is multi-gpu aware implementation.
 
-Single thread will 
+Single thread will
 
 */
 
@@ -34,17 +34,17 @@ class TracerBase : public TracerI
 {
 	private:
 		// Common Memory
-		RNGMemory			rngMemory;
-		RayMemory			rayMemory;
-		ImageMemory			outputImage;	
+		RNGMemory				rngMemory;
+		RayMemory				rayMemory;
+		ImageMemory				outputImage;
 
 		// Properties
 		uint32_t				currentRayCount;
-		TracerOptions		options;
+		TracerOptions			options;
 
 		// Base tracer logic
-		TracerBaseLogicI*	currentLogic;
-		TracerCallbacksI*	callbacks;
+		TracerBaseLogicI*		currentLogic;
+		TracerCallbacksI*		callbacks;
 
 		// Error related
 		bool					healthy;
@@ -69,9 +69,9 @@ class TracerBase : public TracerI
 
 		// ===================//
 		// COMMANDS TO TRACER //
-		// ===================//	
+		// ===================//
 		// Main Calls
-		TracerError		Initialize(int leaderGPUId = 0) override;
+		TracerError			Initialize(int leaderGPUId = 0) override;
 		void				SetOptions(const TracerOptions&) override;
 		// Requests
 		void				RequestBaseAccelerator() override;
@@ -80,18 +80,18 @@ class TracerBase : public TracerI
 		// and their equavilent callbacks
 
 		// Rendering Related
-		void				AttachLogic(TracerBaseLogicI&) override;
-		void				GenerateInitialRays(const GPUScene& scene,
-											int cameraId,
-											int samplePerLocation) override;
-		bool				Continue() override;			// Continue hit/bounce looping (consume ray pool)
-		void				Render() override;			// Render rays	(do hit, then bounce)		
+		void    			AttachLogic(TracerBaseLogicI&) override;
+        void				GenerateInitialRays(const GPUScene& scene,
+                                                int cameraId,
+                                                int samplePerLocation) override;
+		bool				Continue() override;		// Continue hit/bounce looping (consume ray pool)
+		void				Render() override;			// Render rays	(do hit, then bounce)
 		void				FinishSamples() override;	// Finish samples (write to image)
 
 		// Image Reated
 		void				SetImagePixelFormat(PixelFormat) override;
-		void				ReportionImage(Vector2i start = Zero2i,
-									   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+        void				ReportionImage(Vector2i start = Zero2i,
+                                           Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
 		void				ResizeImage(Vector2i resolution) override;
 		void				ResetImage() override;
 };

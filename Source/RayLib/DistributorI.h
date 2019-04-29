@@ -7,7 +7,7 @@ Tracer Distributor Interface
 Main interface for data distribution between nodes
 Implementation has distributed system logics for creating cluster
 
-It also is responsible for data transfer between nodes. 
+It also is responsible for data transfer between nodes.
 Distributor is main backend for all nodes (Analytic / Visor, Tracer)
 
 */
@@ -70,7 +70,7 @@ class DistributorI
 
 		// Sending Data (non-block)
 		virtual void			Request(const CommandTag) = 0;
-		virtual void			Send(const CommandTag, 
+		virtual void			Send(const CommandTag,
 									 const std::vector<const char*>) = 0;
 
 		// Recieving Data

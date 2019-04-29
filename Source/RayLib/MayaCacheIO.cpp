@@ -55,7 +55,7 @@ namespace MayaCache
 		size_t				byteSize;
 		size_t				fileDataLoc;
 	};
-	
+
 	std::string ParseNCacheFirstName(const std::string& s)
 	{
 		if(s.find_first_of('.') == s.find_last_of('.'))
@@ -119,7 +119,7 @@ namespace MayaCache
 	IOError LoadCacheNavierStokes(std::vector<float>& velocityDensityData,
 								  const MayaNSCacheInfo& info,
 								  std::ifstream& file)
-	{		
+	{
 		static_assert(WordSize == 4 || WordSize == 8);
 		// File stream should aready read the first 4 byte
 		if constexpr(WordSize == 8)
@@ -141,7 +141,7 @@ namespace MayaCache
 		T dataSize = ReadInt<T>(file);
 		// Read MYCH
 		std::string tagMYCH = ReadTag<4>(file);
-		
+
 		// Read First Data Part
 		std::vector<NSChannelHeader> channels;
 		//size_t initalPtr = file.tellg();
@@ -155,7 +155,7 @@ namespace MayaCache
 			{
 				return e;
 			}
-			
+
 			// Save Header
 			channels.push_back(header);
 			// Goto next Header
@@ -166,7 +166,7 @@ namespace MayaCache
 		// Setsize
 		const size_t totalCount = info.dim[0] * info.dim[1] * info.dim[2];
 		velocityDensityData.resize(totalCount * 4);
-		
+
 		// Channel Headers read. Now read actual data
 		// Unfortunately we need to read word by word
 		for(const NSChannelHeader& h : channels)
@@ -200,7 +200,7 @@ namespace MayaCache
 			}
 		}
 		return IOError::OK;
-	}	
+	}
 
 	template<class T, int WordSize = sizeof(T)>
 	IOError LoadCacheDataHeader(NSChannelHeader& header,
@@ -225,13 +225,13 @@ namespace MayaCache
 			header.logic = NSChannelHeader::NS_VELOCITY;
 		}
 		else header.logic = NSChannelHeader::NS_UNNECESARY;
-		
+
 		// Size part
 		std::string tagSIZE = ReadTag<WordSize>(file);
 		T blockSize = ReadInt<T>(file);
 		T channelDataCount = ReadInt<int32_t>(file);
 		// Dummy Read (Entire Data format is super inconsistent...)
-		if constexpr(WordSize == 8) ReadInt<uint32_t>(file);		
+		if constexpr(WordSize == 8) ReadInt<uint32_t>(file);
 		// Format Tag
 		std::string tagFORMAT = ReadTag<WordSize>(file);
 		// Byte Size
@@ -260,7 +260,7 @@ namespace MayaCache
 		}
 		else return IOError::NCACHE_INVALID_FORMAT;
 
-		// Current ifstream ptr is on the data part now 
+		// Current ifstream ptr is on the data part now
 		// Save it
 		header.fileDataLoc = file.tellg();
 		return IOError::OK;
@@ -287,12 +287,12 @@ IOError MayaCache::LoadNCacheNavierStokesXML(MayaNSCacheInfo& info,
 
 	std::ifstream file(std::filesystem::u8path(fileName));
 	if(!file.is_open()) return IOError::FILE_NOT_FOUND;
-	
+
 	// Parse XML
 	std::vector<char> xmlFile(size + 1);
 	file.read(xmlFile.data(), xmlFile.size());
 	xmlFile.back() = '\0';
-	
+
 	rapidxml::xml_document<> xml;
 	xml.parse<rapidxml::parse_default>(xmlFile.data());
 
@@ -349,7 +349,7 @@ IOError MayaCache::LoadNCacheNavierStokesXML(MayaNSCacheInfo& info,
 		else if(nodeName == "transparencyB")
 		{
 			info.transparency[2] = std::stof(nodeValue);
-		}		
+		}
 		// Regex Parsing
 		std::string subscript = "\\[[0-9*]\\]";
 		if(std::regex_match(nodeName, std::regex("color" + subscript)))
@@ -365,7 +365,7 @@ IOError MayaCache::LoadNCacheNavierStokesXML(MayaNSCacheInfo& info,
 				std::string nodeSecondName = ParseNCacheSecondName(node->value());
 				if(nodeSecondName == "color_Position")
 				{
-					interp = std::stof(nodeValue);			
+					interp = std::stof(nodeValue);
 				}
 				else if(nodeSecondName == "color_ColorR")
 				{
@@ -378,7 +378,7 @@ IOError MayaCache::LoadNCacheNavierStokesXML(MayaNSCacheInfo& info,
 				else if(nodeSecondName == "color_ColorB")
 				{
 					color[2] = std::stof(nodeValue);
-				}				
+				}
 				// Advance
 				node = node->next_sibling("extra");
 				nodeName = ParseNCacheFirstName(node->value());
@@ -415,7 +415,7 @@ IOError MayaCache::LoadNCacheNavierStokesXML(MayaNSCacheInfo& info,
 			opacities.emplace(interp, opacity);
 		}
 	}
-	
+
 	// Write to Arrays
 	for(const auto& pair : colors)
 	{
@@ -427,7 +427,7 @@ IOError MayaCache::LoadNCacheNavierStokesXML(MayaNSCacheInfo& info,
 		info.opacity.push_back(pair.second);
 		info.opacityInterp.push_back(pair.first);
 	}
-	
+
 	// Channels
 	auto channelNode = mainNode->first_node("Channels");
 	for(auto channel = channelNode->first_node();
@@ -453,7 +453,7 @@ IOError MayaCache::LoadNCacheNavierStokesXML(MayaNSCacheInfo& info,
 		{
 			info.channels.push_back(OFFSET);
 		}
-	}	
+	}
 	return IOError::OK;
 }
 
@@ -462,7 +462,7 @@ IOError MayaCache::LoadNCacheNavierStokes(std::vector<float>& velocityDensityDat
 										  const std::string& fileName)
 {
 	static constexpr int FourCCSize = 4;
-	std::ifstream file(std::filesystem::u8path(fileName), 
+	std::ifstream file(std::filesystem::u8path(fileName),
 					   std::iostream::binary);
 
 	if(!file.is_open())

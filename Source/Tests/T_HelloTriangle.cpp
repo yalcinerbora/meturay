@@ -41,8 +41,8 @@ TEST(HelloTriangle, Test)
 
 	// Generate GPU List & A Partitioner
 	// Check cuda system error here
-	
-	const std::vector<CudaGPU>& gpuList = CudaSystem::GPUList();	
+
+	const std::vector<CudaGPU>& gpuList = CudaSystem::GPUList();
 	if(CudaSystem::SystemStatus() != CudaSystem::OK)
 		ASSERT_FALSE(true);
 	int leaderDevice = gpuList[0].DeviceId();
@@ -64,7 +64,7 @@ TEST(HelloTriangle, Test)
 											  scene.MaxAccelIds());
 	if(scnE != SceneError::OK)
 		ASSERT_FALSE(true);
-	
+
 
 	// Camera (Dont use scenes camera)
 	//CameraPerspective cam = scene.CamerasCPU()[0];
@@ -81,7 +81,7 @@ TEST(HelloTriangle, Test)
 	// Start Tracer Thread and Set scene
 	const PixelFormat pixFormat = PixelFormat::RGBA_FLOAT;
 	// Tracer Generation
-	TracerBase tracerBase;	
+	TracerBase tracerBase;
 	// Visor Input
 	VisorWindowInput input(1.0, 1.0, 2.0);
 	// Window Params
@@ -90,7 +90,7 @@ TEST(HelloTriangle, Test)
 	visorOpts.iSize = IMAGE_RESOLUTION;
 	visorOpts.stereoOn = false;
 	visorOpts.eventBufferSize = 128;
-	
+
 	// Create Visor
 	auto visorView = CreateVisorGL(visorOpts);
 	visorView->SetInputScheme(&input);
@@ -100,7 +100,7 @@ TEST(HelloTriangle, Test)
 	tracerBase.SetImagePixelFormat(pixFormat);
 	tracerBase.ResizeImage(IMAGE_RESOLUTION);
 	tracerBase.ReportionImage();
-	tracerBase.ResetImage();	
+	tracerBase.ResetImage();
 
 	// Tracer Init
 	TracerError trcE = tracerBase.Initialize(leaderDevice);
@@ -121,6 +121,7 @@ TEST(HelloTriangle, Test)
 	}
 	tracerBase.FinishSamples();
 
+	// Send rendered image to visor
 
 	// Main Poll Loop
 	while(visorView->IsOpen())

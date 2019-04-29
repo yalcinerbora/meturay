@@ -1,7 +1,7 @@
 #version 430
-/*	
+/*
 	**Accumulate Input Generic Shader**
-	
+
 	File Name	: AccumInput.frag
 	Author		: Bora Yalciner
 	Description	:
@@ -44,10 +44,10 @@ void main(void)
 	// Generate pixelIds
 	ivec2 pixIdOut = ivec2(globalId);
 	ivec2 pixIdIn = ivec2(globalId) - start;
-	
+
 	if(any(greaterThanEqual(globalId, resolution))) return;
 
-	// Read from current color buffers	
+	// Read from current color buffers
 	vec4 colorIn = texelFetch(tInColor, pixIdOut, 0);
 
 	vec4 colorOut = colorIn;
@@ -57,7 +57,7 @@ void main(void)
 		// We are at pixel update range
 		// Do update
 		int sampleCount = imageLoad(iSample, pixIdOut).x;
-		// Read the requested from 
+		// Read the requested from
 		vec4 bufferIn = texelFetch(tInBuffer, pixIdIn, 0);
 		// Calculate
 		int totalSamples = sampleCount + inSamples;

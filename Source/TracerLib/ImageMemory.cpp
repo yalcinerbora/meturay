@@ -57,7 +57,7 @@ void ImageMemory::Reportion(Vector2i start,
 	end = Vector2i::Min(resolution, end);
 	segmentOffset = start;
 	segmentSize = end - start;
-	
+
 	size_t linearSize = segmentSize[0] * segmentSize[1] * PixelFormatToSize(format);
 	if(linearSize != 0)
 	{

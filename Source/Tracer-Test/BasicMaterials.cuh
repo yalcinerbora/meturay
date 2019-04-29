@@ -11,7 +11,7 @@ inline void ConstantBoundaryMatShade(// Output
 									 // Input as registers
 									 const RayReg& ray,
 									 const RayAuxBasic& aux,
-									 // 
+									 //
 									 RandomGPU& rng,
 									 // Input as global memory
 									 const ConstantBoundaryMatData& gMatData)
@@ -33,7 +33,7 @@ inline void BasicMatShade(// Output
 						  const RayReg& ray,
 						  const EmptySurface& surface,
 						  const RayAuxBasic& aux,
-						  // 
+						  //
 						  RandomGPU& rng,
 						  // Input as global memory
 						  const ConstantAlbedoMatData& gMatData,
@@ -55,7 +55,7 @@ inline void BaryMatShade(// Output
 						 const RayReg& ray,
 						 const BarySurface& surface,
 						 const RayAuxBasic& aux,
-						 // 
+						 //
 						 RandomGPU& rng,
 						 // Input as global memory
 						 const ConstantAlbedoMatData& gMatData,
@@ -84,7 +84,7 @@ class ConstantBoundaryMat final
 		// Constructors & Destructor
 									ConstantBoundaryMat(int gpuId);
 									~ConstantBoundaryMat() = default;
-	
+
 		// Interface
 		// Type (as string) of the primitive group
 		const char*					Type() const override;
@@ -112,15 +112,15 @@ class BasicMat final
 							  BasicMatShade>
 {
 	public:
-		static constexpr const char*		TypeName = "BasicMat";
+		static constexpr const char*	TypeName = "BasicMat";
 	private:
-		DeviceMemory						memory;
+		DeviceMemory					memory;
 
 	protected:
 	public:
 										BasicMat(int gpuId);
 										~BasicMat() = default;
-		
+
 		// Interface
 		// Type (as string) of the primitive group
 		const char*						Type() const override;
@@ -130,7 +130,7 @@ class BasicMat final
 
 		// Material Queries
 		int								InnerId(uint32_t materialId) const override;
-		bool								IsLoaded(uint32_t materialId) const override;
+		bool							IsLoaded(uint32_t materialId) const override;
 
 		size_t							UsedGPUMemory() const override;
 		size_t							UsedCPUMemory() const override;
@@ -148,13 +148,13 @@ class BarycentricMat final
 							  BaryMatShade>
 {
 	public:
-		static constexpr const char*		TypeName = "BarycentricMat";
+		static constexpr const char*	TypeName = "BarycentricMat";
 	private:
 	protected:
 	public:
 										BarycentricMat(int gpuId);
 										~BarycentricMat() = default;
-		
+
 		// Interface
 		// Type (as string) of the primitive group
 		const char*						Type() const override;
@@ -164,7 +164,7 @@ class BarycentricMat final
 
 		// Material Queries
 		int								InnerId(uint32_t materialId) const override;
-		bool								IsLoaded(uint32_t materialId) const override;
+		bool							IsLoaded(uint32_t materialId) const override;
 
 		size_t							UsedGPUMemory() const override;
 		size_t							UsedCPUMemory() const override;

@@ -57,5 +57,5 @@ struct MatBatchRayDataCPU
 	uint64_t				raysOffset;
 	uint64_t				auxiliaryOffset;
 	uint64_t				primitiveIdsOffset;
-	uint64_t				hitStructOffset;	
+	uint64_t				hitStructOffset;
 };

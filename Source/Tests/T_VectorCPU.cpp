@@ -21,12 +21,12 @@ TEST(VectorCPU, Construction)
 	Vector4 vec2(1.0f, 1u, 2.0f, 3.0f);
 	Vector4 vec3(dataArray);
 	Vector4 vec4(dataArrayLarge);
-	
-	
+
+
 	//
 	Vector2 vec5(vecAssign1);
 	Vector2 vec6(vecAssign2);
-	
+
 	// Copy Constructor (default)
 	Vector4 vec7(vecAssign2);
 
@@ -38,7 +38,7 @@ TEST(VectorCPU, Construction)
 	Vector4 vec9(vecAssign0, 3.0f, 4.0f);
 	Vector4 vec10(vecAssign1, 4.0f);
 
-	//	
+	//
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(vec0),
 								  static_cast<const float*>(vec0) + 4),
 				ElementsAre(FloatEq(0.0f), FloatEq(0.0f), FloatEq(0.0f), FloatEq(0.0f)));
@@ -160,7 +160,7 @@ TEST(VectorCPU, Operators)
 
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v11),
 								   static_cast<const float*>(v11) + 4),
-				ElementsAre(FloatEq(0.5f), FloatEq(0.5f), FloatEq(0.5f), FloatEq(0.5f)));	
+				ElementsAre(FloatEq(0.5f), FloatEq(0.5f), FloatEq(0.5f), FloatEq(0.5f)));
 }
 
 TEST(VectorCPU, Functions1)
@@ -168,7 +168,7 @@ TEST(VectorCPU, Functions1)
 	Vector4 a(2.0f, 2.0f, 2.0f, 2.0f);
 	Vector4 b(1.0f, 1.0f, 1.0f, 1.0f);
 	Vector4 c(2.0f, 4.0f, 6.0f, 8.0f);
-	Vector2 d(3.0f, 4.0f);	
+	Vector2 d(3.0f, 4.0f);
 	Vector3 e(1.0f, 2.0f, 3.0f);
 	Vector3 f(3.0f, 5.0f, 7.0f);
 
@@ -176,7 +176,7 @@ TEST(VectorCPU, Functions1)
 	float v0 = a.Dot(b);
 	float v1 = d.Length();
 	float v2 = d.LengthSqr();
-	Vector4 v3 = c.Normalize();	
+	Vector4 v3 = c.Normalize();
 	Vector4 v4 = c.Clamp(Vector4(3.0f), Vector4(4.0f));
 	Vector4 v5 = c.Clamp(3.0f, 4.0f);
 	//
@@ -243,7 +243,7 @@ TEST(VectorCPU, Functions2)
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(v3),
 								   static_cast<const float*>(v3) + 4),
 				ElementsAre(FloatEq(-2.0f), FloatEq(-2.0f), FloatEq(3.0f), FloatEq(3.0f)));
-	
+
 	// Self Equavilents
 	Vector4 v4 = c;
 	v4.AbsSelf();

@@ -15,11 +15,11 @@ with custom Intersection and Hit acceptance
 //{
 //	static constexpr uint32_t NULL_NODE = std::numeric_limits<uint32_t>::max();
 //
-//	// Pointers	
+//	// Pointers
 //	union
 //	{
 //		struct
-//		{			
+//		{
 //			// 8 Word
 //			Vector3 aabbMin;
 //			uint32_t left;
@@ -30,7 +30,7 @@ with custom Intersection and Hit acceptance
 //		};
 //		LeafStruct leaf;
 //	};
-//	bool isLeaf;	
+//	bool isLeaf;
 //};
 //
 //
@@ -203,7 +203,7 @@ with custom Intersection and Hit acceptance
 //		globalId < rayCount; globalId += blockDim.x * gridDim.x)
 //	{
 //		const RayId id = gRayIds[globalId];
-//		
+//
 //		// Load initial traverse point if available
 //		uint32_t initalLoc = gPrevNode[id];
 //		uint64_t list = gPrevList[id];
@@ -343,7 +343,7 @@ with custom Intersection and Hit acceptance
 //	}
 //}
 //
-//// Here do scan over primitive count for 
+//// Here do scan over primitive count for
 //
 //// Generates Partial AABB and morton numbers for each partial data
 //template <class PrimitiveData, BoxGenFunc<PrimitiveData> BoxFunc>
@@ -381,7 +381,7 @@ with custom Intersection and Hit acceptance
 //template <class LeafStruct, class PrimitiveData>
 //__global__ void KCGenerateBVH(BVHNode<LeafStruct>* gBVHList,
 //							  //
-//							  const uint32_t* gPrimId,							  
+//							  const uint32_t* gPrimId,
 //							  const uint64_t* gMortonCodes,
 //
 //							  const uint32_t subPrimtiveCount)

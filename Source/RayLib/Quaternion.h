@@ -21,7 +21,7 @@ class Quaternion<T>
 			Vector<4, T>						vec;
 
 	protected:
-		
+
 	public:
 		// Constructors & Destructor
 		constexpr								Quaternion() = default;

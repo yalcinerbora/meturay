@@ -19,7 +19,7 @@ void Debug::Detail::OutputHitPairs(std::ostream& s, const RayId* ids, const HitK
 	{
 		s << "{" << std::hex << std::setw(8) << std::setfill('0') << keys[i] << ", "
 				 << std::dec << std::setw(0) << std::setfill(' ') << ids[i] << "}" << " ";
-	}	
+	}
 }
 
 void Debug::DumpImage(const std::string& fName,

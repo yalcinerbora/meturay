@@ -37,10 +37,10 @@ void TracerBase::HitRays()
 	PrimitiveId* dPrimitiveIds = rayMemory.PrimitiveIds();
 	HitStructPtr dHitStructs = rayMemory.HitStructs();
 	// These are sorted etc.
-	HitKey* dCurrentKeys = rayMemory.CurrentKeys();	
-	RayId*	dCurrentRayIds = rayMemory.CurrentIds();	
+	HitKey* dCurrentKeys = rayMemory.CurrentKeys();
+	RayId*	dCurrentRayIds = rayMemory.CurrentIds();
 
-	// Try to hit rays until no ray is left 
+	// Try to hit rays until no ray is left
 	// (these rays will be assigned with a material)
 	// outside rays are also assigned with a material (which is special)
 	uint32_t rayCount = currentRayCount;
@@ -54,7 +54,7 @@ void TracerBase::HitRays()
 
 		// Base accelerator traverses the data partially
 		// Updates current key (which represents innter accelerator batch and id)
-		
+
 		// After that, system sorts rays according to the keys
 		// and partitions the array according to batches
 
@@ -64,16 +64,16 @@ void TracerBase::HitRays()
 		// Sort initial results (in order to partition and launch kernels accordingly)
 		// Sort is radix sort.
 		// We sort inner indices in addition to batches results for better data locality
-		// We only sort up-to a certain bit (radix sort) which is tied to 
+		// We only sort up-to a certain bit (radix sort) which is tied to
 		// accelerator count
 		rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, rayCount, accBitCounts);
-		// Parition to sub accelerators		
+		// Parition to sub accelerators
 		//
 		// There may be invalid rays sprinkled along the array.
 		// Holes occur in the structure since in previous iteration,
 		// a material may required to write N rays for its output (which is defined
 		// by the material) but it wrote < N rays.
-		// 
+		//
 		// One of the main examples for such behaviour can be transparent objects
 		// where ray may be only reflected (instead of refrating and reflecting) because
 		// of the total internal reflection phenomena.
@@ -99,7 +99,7 @@ void TracerBase::HitRays()
 			HitKey* dCurrentKeyStart = dCurrentKeys + p.offset;
 
 			// Run local hit kernels
-			// Local hit kernels returns a material key 
+			// Local hit kernels returns a material key
 			// and primitive inner id.
 			// Since materials are batched for both material and
 			loc->second->Hit(currentGPU,
@@ -116,7 +116,7 @@ void TracerBase::HitRays()
 							 static_cast<uint32_t>(p.count));
 
 			// Split to GPUs
-			currentGPU = (currentGPU + 1) % totalGPU;			
+			currentGPU = (currentGPU + 1) % totalGPU;
 
 			// Hit function updates material key,
 			// primitive id and struct if this hit is accepted
@@ -133,7 +133,7 @@ void TracerBase::HitRays()
 		}
 
 		// Iteration is done
-		// We cant continue loop untill these kernels are finished 
+		// We cant continue loop untill these kernels are finished
 		// on gpu(s)
 		//
 		// Tracer logic mostly utilizies mutiple GPUs so we need to
@@ -150,15 +150,15 @@ void TracerBase::ShadeRays()
 	// Image Memory Pointers
 	Vector4f* dImageMem = outputImage.GMem<Vector4f>();
 
-	// Ray Memory Pointers	
-	const RayGMem* dRays = rayMemory.Rays();	
+	// Ray Memory Pointers
+	const RayGMem* dRays = rayMemory.Rays();
 	const void* dRayAux = rayMemory.RayAux<void>();
 	const HitStructPtr dHitStructs = rayMemory.HitStructs();
-	const PrimitiveId* dPrimitiveIds = rayMemory.PrimitiveIds();	
+	const PrimitiveId* dPrimitiveIds = rayMemory.PrimitiveIds();
 	// These are sorted etc.
 	HitKey* dCurrentKeys = rayMemory.CurrentKeys();
 	RayId* dCurrentRayIds = rayMemory.CurrentIds();
-		
+
 	// Material Interfaces
 	const MaterialBatchMappings& materials = currentLogic->MaterialBatches();
 	uint32_t rayCount = currentRayCount;
@@ -198,7 +198,7 @@ void TracerBase::ShadeRays()
 	// (sort by gpu and order for better async access)
 	// ....
 	// TODO:
-	
+
 	// For each partition
 	size_t outOffset = 0;
 	for(const auto& p : portions)
@@ -211,13 +211,13 @@ void TracerBase::ShadeRays()
 		// Since output is dynamic (each material may write multiple rays)
 		// add offsets to find proper count
 		outOffset += p.count * loc->second->OutRayCount();
-		
+
 		// Relativize input & output pointers
 		const RayId* dRayIdStart = dCurrentRayIds + p.offset;
 		const HitKey* dKeyStart = dCurrentKeys + p.offset;
 		RayGMem* dRayOutStart = dRaysOut + outOffset;
 		void* dAuxOutStart = dAuxOut + (outOffset * currentLogic->PerRayAuxDataSize());
-	
+
 		// Actual Shade Call
 		loc->second->ShadeRays(// Output
 							   dImageMem,
@@ -235,16 +235,14 @@ void TracerBase::ShadeRays()
 
 							   static_cast<uint32_t>(p.count),
 							   rngMemory);
-		
+
 	}
-	assert(totalOutRayCount == outOffset);	
+	assert(totalOutRayCount == outOffset);
 	currentRayCount = static_cast<uint32_t>(totalOutRayCount);
 
 	// Again wait all of the GPU's since
 	// CUDA functions will be on multiple-gpus
 	CudaSystem::SyncAllGPUs();
-
-	Debug::DumpImage("debug.png", outputImage);
 
 	// Shading complete
 	// Now make "RayOut" to "RayIn"
@@ -253,10 +251,10 @@ void TracerBase::ShadeRays()
 }
 
 TracerBase::TracerBase()
-	: callbacks(nullptr)	
+	: callbacks(nullptr)
 	, currentRayCount(0)
 	, currentLogic(nullptr)
-	, healthy(false)	
+	, healthy(false)
 {}
 
 TracerError TracerBase::Initialize(int leaderGPUId)
@@ -266,17 +264,17 @@ TracerError TracerBase::Initialize(int leaderGPUId)
 
 	// Device initalization
 	rayMemory.SetLeaderDevice(leaderGPUId);
-	
+
 	// Construct Accelerators
 	GPUBaseAcceleratorI& baseAccelerator = currentLogic->BaseAcelerator();
 	const AcceleratorGroupList& acceleratorGroups = currentLogic->AcceleratorGroups();
-	
+
 	baseAccelerator.Constrcut();
 	for(const auto& accel : acceleratorGroups)
 	{
 		accel->ConstructAccelerators();
 	}
-	
+
 	CUDA_CHECK(cudaSetDevice(leaderGPUId));
 
 	// All seems fine mark tracer as healthy
@@ -336,16 +334,19 @@ void TracerBase::Render()
 {
 	if(!healthy) return;
 	if(currentRayCount == 0) return;
-	
-	HitRays();
-	ShadeRays();
 
+	HitRays();
+	METU_LOG("-----------------------------");
+	ShadeRays();
 	METU_LOG("-----------------------------");
 	METU_LOG("-----------------------------");
 }
 
 void TracerBase::FinishSamples()
 {
+	Debug::DumpImage("debug.png", outputImage);
+
+	// TODO: Do this
 	if(!healthy) return;
 }
 

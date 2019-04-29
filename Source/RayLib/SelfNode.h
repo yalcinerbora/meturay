@@ -40,7 +40,7 @@ class SelfNode
 
 		void		WindowMinimizeAction(bool minimized) override;
 		void		WindowCloseAction() override;
-			
+
 		// From Tracer Callbacks
 		void		SendError(TracerError) override;
 		void		SendAnalyticData(AnalyticData) override;

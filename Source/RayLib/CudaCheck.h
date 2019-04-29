@@ -30,7 +30,7 @@ Utility header for header only cuda vector and cpu vector implementations
 #ifdef __CUDA_ARCH__
 	#define UNROLL_LOOP #pragma unroll
 	#define UNROLL_LOOP_COUNT(count) _Pragma(unroll(count))
-#else 
+#else
 	#define UNROLL_LOOP
 	#define UNROLL_LOOP_COUNT(count)
 #endif

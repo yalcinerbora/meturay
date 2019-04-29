@@ -9,7 +9,7 @@ const char* GIAlbedoMat::Type() const
 {
 	return TypeName;
 }
-	
+
 SceneError GIAlbedoMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)
 {
 	matData = ConstantAlbedoMatRead(memory, materialNodes, time);

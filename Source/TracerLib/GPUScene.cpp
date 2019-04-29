@@ -56,7 +56,7 @@ GPUScene::GPUScene(GPUScene&& other)
 	, cameraMemory(std::move(other.cameraMemory))
 	, sceneJson(other.sceneJson)
 	, fileName(other.fileName)
-	, currentTime(other.currentTime)	
+	, currentTime(other.currentTime)
 	, dLights(other.dLights)
 	, dTransforms(other.dTransforms)
 {}
@@ -99,7 +99,7 @@ SceneError GPUScene::GenIdLookup(std::map<uint32_t, uint32_t>& result,
 	{
 		auto r = result.emplace(jsn[SceneIO::ID], i);
 		if(!r.second)
-		{			
+		{
 			unsigned int i = static_cast<int>(SceneError::DUPLICATE_MATERIAL_ID) + t;
 			return static_cast<SceneError::Type>(i);
 		}
@@ -108,7 +108,7 @@ SceneError GPUScene::GenIdLookup(std::map<uint32_t, uint32_t>& result,
 	return SceneError::OK;
 }
 
-SceneError GPUScene::GenerateConstructionData(// Striped Listings (Striped from unsued nodes)											  
+SceneError GPUScene::GenerateConstructionData(// Striped Listings (Striped from unsued nodes)
 											  PrimitiveNodeList& primGroupNodes,
 											  //
 											  MaterialNodeList& matGroupNodes,
@@ -146,13 +146,13 @@ SceneError GPUScene::GenerateConstructionData(// Striped Listings (Striped from 
 			const auto& pairs = surf.matPrimPairs;
 			const uint32_t primId = pairs[i].second;
 			const uint32_t matId = pairs[i].first;
-			
+
 			std::string matGroupType;
 			// Check if primitive exists
 			// add it to primitive group list for later construction
 			if(auto loc = primList.find(primId);
 			   loc != primList.end())
-			{				
+			{
 				const auto jsnNode = primitives[loc->second];
 				std::string currentType = jsnNode[SceneIO::TYPE];
 				if((i != 0) && primGroupType != currentType)
@@ -232,7 +232,7 @@ SceneError GPUScene::GenerateMaterialBatches(MaterialKeyListing& allMatKeys,
 	// First do materials
 	uint32_t batchId = BoundaryBatchId;
 	for(const auto& requiredMat : materialBatches)
-	{		
+	{
 		batchId++;
 		if(batchId >= (1 << HitKey::BatchBits))
 			return SceneError::TOO_MANY_MATERIAL_GROUPS;
@@ -249,8 +249,8 @@ SceneError GPUScene::GenerateMaterialBatches(MaterialKeyListing& allMatKeys,
 
 		// Generation
 		GPUMaterialBatchI* matBatch = nullptr;
-		if((e = logicGenerator.GenerateMaterialBatch(matBatch, 
-													 *mGroup, 
+		if((e = logicGenerator.GenerateMaterialBatch(matBatch,
+													 *mGroup,
 													 *pGroup,
 													 batchId)) != SceneError::OK)
 			return e;
@@ -307,7 +307,7 @@ SceneError GPUScene::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABBs,
 		accelBatch++;
 		if(accelBatch >= (1 << HitKey::BatchBits))
 			return SceneError::TOO_MANY_ACCELERATOR_GROUPS;
-	
+
 		const uint32_t accelId = accelBatch;
 		const std::string& accelGroupName = accelGroupBatch.second.accelType;
 		const auto& primTName = accelGroupBatch.second.primType;
@@ -416,10 +416,10 @@ SceneError GPUScene::GenerateBoundaryMaterial(int gpuId, double time)
 	if(!FindNode(node, SceneIO::BASE_OUTSIDE_MATERIAL))
 		return SceneError::OUTSIDE_MAT_NODE_NOT_FOUND;
 	nodeList.emplace(node);
-	  
+
 	GPUMaterialGroupI* boundaryMat = nullptr;
 	const std::string matTypeName = node[SceneIO::TYPE];
-	if((e = logicGenerator.GenerateBoundaryMaterial(boundaryMat, 
+	if((e = logicGenerator.GenerateBoundaryMaterial(boundaryMat,
 													matTypeName,
 													gpuId)) != SceneError::OK)
 		return e;
@@ -429,7 +429,7 @@ SceneError GPUScene::GenerateBoundaryMaterial(int gpuId, double time)
 }
 
 void GPUScene::LoadCommon(double time)
-{	
+{
 	// CPU Temp Data
 	std::vector<LightStruct> lightsCPU;
 	std::vector<TransformStruct> transformsCPU;
@@ -464,10 +464,10 @@ void GPUScene::LoadCommon(double time)
 	size_t transformSize = transformsCPU.size() * sizeof(TransformStruct);
 	transformSize = AlignByteCount * ((transformSize + (AlignByteCount - 1)) / AlignByteCount);
 	size_t lightSize = lightsCPU.size() * sizeof(LightStruct);
-	
+
 	memory = DeviceMemory(transformSize + lightSize);
 	dTransforms = reinterpret_cast<TransformStruct*>(static_cast<Byte*>(memory));
-	CUDA_CHECK(cudaMemcpy(dTransforms, transformsCPU.data(), 
+	CUDA_CHECK(cudaMemcpy(dTransforms, transformsCPU.data(),
 						  transformsCPU.size() * sizeof(TransformStruct),
 						  cudaMemcpyHostToDevice));
 	if(lightsCPU.size() != 0)
@@ -476,7 +476,7 @@ void GPUScene::LoadCommon(double time)
 		CUDA_CHECK(cudaMemcpy(dLights, lightsCPU.data(), lightsCPU.size() * sizeof(LightStruct),
 							  cudaMemcpyHostToDevice));
 	}
-	
+
 	// Now Load Camera
 	nlohmann::json camerasJson;
 	if(FindNode(camerasJson, SceneIO::CAMERA_BASE))
@@ -497,7 +497,7 @@ SceneError GPUScene::LoadLogicRelated(double time)
 	// Group Data
 	PrimitiveNodeList primGroupNodes;
 	//
-	MaterialNodeList matGroupNodes;	
+	MaterialNodeList matGroupNodes;
 	MaterialBatchList matListings;
 	AcceleratorBatchList accelListings;
 	std::map<uint32_t, uint32_t> surfaceTransformIds;
@@ -534,8 +534,8 @@ SceneError GPUScene::LoadLogicRelated(double time)
 
 	// Material Batches
 	MaterialKeyListing allMaterialKeys;
-	if((e = GenerateMaterialBatches(allMaterialKeys, 
-									multiGPUMatBatches, 
+	if((e = GenerateMaterialBatches(allMaterialKeys,
+									multiGPUMatBatches,
 									time)) != SceneError::OK)
 		return e;
 
@@ -547,10 +547,10 @@ SceneError GPUScene::LoadLogicRelated(double time)
 		return e;
 
 	// Base Accelerator
-	if((e = GenerateBaseAccelerator(accAABBs, accHitKeyList, 
+	if((e = GenerateBaseAccelerator(accAABBs, accHitKeyList,
 									surfaceTransformIds, time)) != SceneError::OK)
 		return e;
-	
+
 	// Finally Boundary Material
 	if((e = GenerateBoundaryMaterial(boundaryMaterialGPUId)) != SceneError::OK)
 	   return e;

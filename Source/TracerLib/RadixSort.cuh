@@ -15,7 +15,7 @@ Uses cub backend.
 
 template<class Type, bool isAscending = true>
 __host__ void KCRadixSortArray(Type* dataOut, const Type* dataIn,
-							   size_t elementCount, 
+							   size_t elementCount,
 							   int bitStart = 0, int bitEnd = sizeof(Type) * 8,
 							   cudaStream_t stream = (cudaStream_t)0)
 {
@@ -57,7 +57,7 @@ __host__ void KCRadixSortArray(Type* dataOut, const Type* dataIn,
 template<class Type, class Key, bool isAscending = true>
 __host__ void KCRadixSortArray(Type* dataOut, Key* keyOut,
 							   const Type* dataIn, const Key* keyIn,
-							   size_t elementCount, 
+							   size_t elementCount,
 							   int bitStart = 0, int bitEnd = sizeof(Key) * 8,
 							   cudaStream_t stream = (cudaStream_t)0)
 {
@@ -99,7 +99,7 @@ __host__ void KCRadixSortArray(Type* dataOut, Key* keyOut,
 										bitStart, bitEnd,
 										stream);
 	}
-	
+
 	CUDA_KERNEL_CHECK();
 }
 

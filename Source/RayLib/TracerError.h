@@ -29,7 +29,7 @@ struct TracerError : public ErrorI
 		Type			 type;
 
 	public:
-		// Constructors & Destructor 
+		// Constructors & Destructor
 					TracerError(Type);
 					~TracerError() = default;
 

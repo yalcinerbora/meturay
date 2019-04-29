@@ -55,7 +55,7 @@ class TracerBasic : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
 									MaterialBatchMappings&& mb,
 									//
 									const TracerParameters& parameters,
-									uint32_t hitStructSize,													
+									uint32_t hitStructSize,
 									const Vector2i maxMats,
 									const Vector2i maxAccels);
 						~TracerBasic() = default;

@@ -34,7 +34,7 @@ __global__ void KGlobalLoadStore(const Vector2* v2Input,
 	Vector2 v3 = fInput + gId * 4;
 	Vector3 v4 = fInput + gId * 4;
 	Vector4 v5 = fInput + gId * 4;
-	
+
 	float4 v6Data = f4In[gId];
 	Vector4 v6(v6Data.x, v6Data.y, v6Data.z, v6Data.w);
 
@@ -259,7 +259,7 @@ TEST(VectorGPU, GlobalLoadStore)
 {
 	// Global load store does not check any values
 	// It is here to make compiled SASS output in order
-	// to check vectors are load/stored with correct instructions 
+	// to check vectors are load/stored with correct instructions
 	// (128bit loads/stores for Vector4 etc..)
 
 	static constexpr int ElementCount = 5'000'000;
@@ -280,10 +280,10 @@ TEST(VectorGPU, GlobalLoadStore)
 	DeviceMemory fV2DataOut(ElementCount * 4 * sizeof(float));
 	DeviceMemory fV3DataOut(ElementCount * 4 * sizeof(float));
 	DeviceMemory fV4DataOut(ElementCount * 4 * sizeof(float));
-	
-	// 
+
+	//
 	static constexpr int BlockSize = 256;
-	static constexpr int GridSize = (ElementCount + (BlockSize - 1)) / BlockSize;	
+	static constexpr int GridSize = (ElementCount + (BlockSize - 1)) / BlockSize;
 	KGlobalLoadStore<<<GridSize, BlockSize>>>(static_cast<const Vector2*>(v2DataIn),
 											  static_cast<const Vector3*>(v3DataIn),
 											  static_cast<const Vector4*>(v4DataIn),
@@ -313,7 +313,7 @@ TEST(VectorGPU, Construction)
 	CUDA_KERNEL_CHECK();
 	CUDA_CHECK(cudaDeviceSynchronize());
 
-	//	
+	//
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(h_data[0]),
 								   static_cast<const float*>(h_data[0]) + 4),
 				ElementsAre(FloatEq(0.0f), FloatEq(0.0f), FloatEq(0.0f), FloatEq(0.0f)));
@@ -331,7 +331,7 @@ TEST(VectorGPU, Construction)
 				ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(3.0f), FloatEq(4.0f)));
 
 
-	EXPECT_THAT(std::vector<float>(static_cast<const float*>(h_data[5]), 
+	EXPECT_THAT(std::vector<float>(static_cast<const float*>(h_data[5]),
 								   static_cast<const float*>(h_data[5]) + 2),
 				ElementsAre(FloatEq(1.0f), FloatEq(2.0f)));
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(h_data[6]),
@@ -429,7 +429,7 @@ TEST(VectorGPU, Functions1)
 
 	DeviceMemory mem_f(fSize);
 	DeviceMemory mem_v3(v3Size);
-	DeviceMemory mem_v4(v4Size);		
+	DeviceMemory mem_v4(v4Size);
 	const float* h_data_f = static_cast<float*>(mem_f);
 	const Vector3* h_data_v3 = static_cast<Vector3*>(mem_v3);
 	const Vector4* h_data_v4 = static_cast<Vector4*>(mem_v4);
@@ -440,7 +440,7 @@ TEST(VectorGPU, Functions1)
 						 static_cast<Vector4*>(mem_v4));
 	CUDA_KERNEL_CHECK();
 	CUDA_CHECK(cudaDeviceSynchronize());
-	
+
 	//
 	EXPECT_FLOAT_EQ(8.0f, h_data_f[0]);
 	EXPECT_FLOAT_EQ(5.0f, h_data_f[1]);

@@ -41,10 +41,10 @@ namespace SceneIO
 	template <class T>
 	T					LoadFromAnim(const std::string& fileName, double time = 0.0);
 
-	// Static Loads	
+	// Static Loads
 	std::string			LoadString(const nlohmann::json&, double time = 0.0);
 	template <class T>
-	T					LoadNumber(const nlohmann::json&, double time = 0.0);	
+	T					LoadNumber(const nlohmann::json&, double time = 0.0);
 	template <class T>
 	Quaternion<T>		LoadQuaternion(const nlohmann::json&, double time = 0.0);
 	template <int N, class T>
@@ -100,7 +100,7 @@ inline std::string SceneIO::LoadString(const nlohmann::json& jsn, double time)
 }
 
 template <class T>
-T SceneIO::LoadNumber(const nlohmann::json& jsn, double time) 
+T SceneIO::LoadNumber(const nlohmann::json& jsn, double time)
 {
 	if(IsTimeDependent(jsn))
 		return LoadFromAnim<T>(jsn, time);
@@ -115,7 +115,7 @@ T SceneIO::LoadNumber(const nlohmann::json& jsn, double time)
 template <class T>
 Quaternion<T> SceneIO::LoadQuaternion(const nlohmann::json& jsn, double time)
 {
-	if(IsTimeDependent(jsn)) 
+	if(IsTimeDependent(jsn))
 		return LoadFromAnim<Quaternion<T>>(jsn, time);
 	else if(jsn.is_array() && jsn.size() == 4)
 	{

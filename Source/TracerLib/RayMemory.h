@@ -27,7 +27,7 @@ class RayMemory
 		// Leader GPU device that is responsible for
 		// parititoning and sorting the ray data
 		// (Only usefull in multi-GPU systems)
-		int						leaderDeviceId;
+		int							leaderDeviceId;
 
 		// Ray Related
 		DeviceMemory				memIn;
@@ -40,26 +40,26 @@ class RayMemory
 		RayGMem*					dRayOut;
 		// Each ray has auxiliary data stored in these pointers
 		// Single auxiliary struct can be defined per tracer system
-		// and it is common. 
+		// and it is common.
 		// (i.e. such struct may hold pixelId total accumulation etc)
-		void*					dRayAuxIn;
-		void*					dRayAuxOut;
+		void*						dRayAuxIn;
+		void*						dRayAuxOut;
 		//---------------------------------------------------------
 		// Hit Related
 		// Entire Hit related memory is allocated in bulk.
 		DeviceMemory				memHit;
 		// MatKey holds the material group id and material group local id
 		// This is used to sort rays to match kernels
-		HitKey*					dMaterialKeys;
+		HitKey*						dMaterialKeys;
 		// Transform of the hit
 		// Base accelerator fill this value with a potential hit
 		TransformId*				dTransformIds;
 		// Primitive Id of the hit
-		// Inner accelerators fill this value with a 
+		// Inner accelerators fill this value with a
 		// primitive group local id
 		PrimitiveId*				dPrimitiveIds;
 		// Custom hit Structure allocation pointer
-		// This pointer is capable of holding data for all 
+		// This pointer is capable of holding data for all
 		// hit stuructures currently active
 		// (i.e. it holds Vec2 barcy coords for triangle primitives,
 		// hold position for spheres (maybe spherical coords in order to save space).
@@ -71,24 +71,24 @@ class RayMemory
 		// --
 		// Double buffer and temporary memory for sorting
 		// Key/Index pair (key can either be accelerator or material)
-		void*					dTempMemory;
-		RayId*					dIds0, *dIds1;		
-		HitKey*					dKeys0, *dKeys1;
-		// Current pointers to the double buffer
+		void*						dTempMemory;
+		RayId*						dIds0, *dIds1;
+		HitKey*						dKeys0, *dKeys1;
+		// Current pointers to t	he double buffer
 		// In hit portion of the code it holds accelerator ids etc.
-		HitKey*					dCurrentKeys;
-		RayId*					dCurrentIds;		
-		
+		HitKey*						dCurrentKeys;
+		RayId*						dCurrentIds;
+
 		// Cub Requires acutal tempMemory size
 		// It sometimes crash if you give larger memory size
 		// I dunno why
-		size_t					cubIfMemSize;
-		size_t					cubSortMemSize;
+		size_t						cubIfMemSize;
+		size_t						cubSortMemSize;
 
-		static void				ResizeRayMemory(RayGMem*& dRays, void*& dRayAxData,
-												DeviceMemory&, 
-												size_t rayCount,
-												size_t perRayAuxSize);
+		static void					ResizeRayMemory(RayGMem*& dRays, void*& dRayAxData,
+													DeviceMemory&,
+													size_t rayCount,
+													size_t perRayAuxSize);
 
 	public:
 		// Constructors & Destructor
@@ -102,35 +102,35 @@ class RayMemory
 
 		// Accessors
 		// Ray In
-		RayGMem*					Rays();		
+		RayGMem*					Rays();
 		template<class T>
 		const T*					RayAux() const;
 		// Ray Out
 		RayGMem*					RaysOut();
 		template<class T>
-		T*						RayAuxOut();
+		T*							RayAuxOut();
 
-		// Hit Related		
+		// Hit Related
 		HitStructPtr				HitStructs();
-		const HitStructPtr		HitStructs() const;
-		HitKey*					MaterialKeys();
-		const HitKey*			MaterialKeys() const;
+		const HitStructPtr			HitStructs() const;
+		HitKey*						MaterialKeys();
+		const HitKey*				MaterialKeys() const;
 		TransformId*				TransformIds();
-		const TransformId*		TransformIds() const;
+		const TransformId*			TransformIds() const;
 		PrimitiveId*				PrimitiveIds();
-		const PrimitiveId*		PrimitiveIds() const;
-		//		
-		HitKey*					CurrentKeys();
-		const HitKey*			CurrentKeys() const;
-		RayId*					CurrentIds();
+		const PrimitiveId*			PrimitiveIds() const;
+		//
+		HitKey*						CurrentKeys();
+		const HitKey*				CurrentKeys() const;
+		RayId*						CurrentIds();
 		const RayId*				CurrentIds() const;
-		
-				
+
+
 		// Misc
 		// Sets leader device which is responsible for sort and partition kernel calls
 		void						SetLeaderDevice(int);
-		int						LeaderDevice() const;
-	
+		int							LeaderDevice() const;
+
 		// Memory Allocation
 		void						ResetHitMemory(size_t rayCount, size_t hitStructSize);
 		void						ResizeRayOut(size_t rayCount, size_t perRayAuxSize);
@@ -141,7 +141,7 @@ class RayMemory
 		void						SortKeys(RayId*& ids, HitKey*& keys,
 											 size_t count,
 											 const Vector2i& bitRange);
-		// Partitions the segments for multi-kernel calls		
+		// Partitions the segments for multi-kernel calls
 		RayPartitions<uint32_t>	Partition(uint32_t rayCount);
 		// Initialize HitIds and Indices
 		void						FillRayIdsForSort(uint32_t rayCount);
@@ -218,7 +218,7 @@ inline const PrimitiveId* RayMemory::PrimitiveIds() const
 {
 	return dPrimitiveIds;
 }
-//		
+//
 inline HitKey* RayMemory::CurrentKeys()
 {
 	return dCurrentKeys;

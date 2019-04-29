@@ -24,14 +24,14 @@ class ShaderGL
 		// Global Variables
 		static GLuint		shaderPipelineID;
 
-		// Properties 
+		// Properties
 		GLuint				shaderID;
         ShaderType			shaderType;
 		bool				valid;
 
 		static GLenum		ShaderTypeToGL(ShaderType);
 		static GLenum		ShaderTypeToGLBit(ShaderType);
-				
+
 	protected:
 
 	public:
@@ -43,7 +43,7 @@ class ShaderGL
 		ShaderGL&			operator=(ShaderGL&&);
 		ShaderGL&			operator=(const ShaderGL&) = delete;
 							~ShaderGL();
-		
+
 		// Renderer Usage
 		void				Bind();
 		bool				IsValid() const;

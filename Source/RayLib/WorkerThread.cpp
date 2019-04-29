@@ -1,6 +1,6 @@
 #include "WorkerThread.h"
 
-WorkerThread::WorkerThread() 
+WorkerThread::WorkerThread()
 	: stopSignal(false)
 {}
 
@@ -24,7 +24,7 @@ bool WorkerThread::ProcessJob()
 			return stopSignal || !assignedJobs.empty();
 		});
 
-		// Exit if Stop is Signaled and There is no other 
+		// Exit if Stop is Signaled and There is no other
 		if(stopSignal && assignedJobs.empty())
 			return false;
 

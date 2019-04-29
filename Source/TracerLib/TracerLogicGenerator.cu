@@ -27,17 +27,17 @@ template GPUPrimitiveGroupI* TypeGenWrappers::DefaultConstruct<GPUPrimitiveGroup
 template GPUPrimitiveGroupI* TypeGenWrappers::DefaultConstruct<GPUPrimitiveGroupI,
 															   GPUPrimitiveSphere>();
 
-template GPUAcceleratorGroupI* TypeGenWrappers::AccelGroupConstruct<GPUAcceleratorGroupI, 
+template GPUAcceleratorGroupI* TypeGenWrappers::AccelGroupConstruct<GPUAcceleratorGroupI,
 																	GPUAccTriLinearGroup>(const GPUPrimitiveGroupI&,
 																						  const TransformStruct*);
-template GPUAcceleratorGroupI* TypeGenWrappers::AccelGroupConstruct<GPUAcceleratorGroupI, 
+template GPUAcceleratorGroupI* TypeGenWrappers::AccelGroupConstruct<GPUAcceleratorGroupI,
 																	GPUAccSphrLinearGroup>(const GPUPrimitiveGroupI&,
 																						   const TransformStruct*);
 
-template GPUAcceleratorBatchI* TypeGenWrappers::AccelBatchConstruct<GPUAcceleratorBatchI, 
+template GPUAcceleratorBatchI* TypeGenWrappers::AccelBatchConstruct<GPUAcceleratorBatchI,
 																	GPUAccTriLinearBatch>(const GPUAcceleratorGroupI&,
 																						  const GPUPrimitiveGroupI&);
-template GPUAcceleratorBatchI* TypeGenWrappers::AccelBatchConstruct<GPUAcceleratorBatchI, 
+template GPUAcceleratorBatchI* TypeGenWrappers::AccelBatchConstruct<GPUAcceleratorBatchI,
 																	GPUAccSphrLinearBatch>(const GPUAcceleratorGroupI&,
 																						   const GPUPrimitiveGroupI&);
 // Destructors
@@ -56,7 +56,7 @@ uint32_t TracerLogicGenerator::CalculateHitStruct()
 		uint32_t hitSize = primPtr.second->PrimitiveHitSize();
 		currentSize = std::max(hitSize, currentSize);
 	}
-		
+
 	// Properly Align
 	currentSize = ((currentSize + sizeof(uint32_t) - 1) / sizeof(uint32_t)) * sizeof(uint32_t);
 	return currentSize;
@@ -105,7 +105,7 @@ TracerLogicGenerator::TracerLogicGenerator(GPUTracerGen tracerGenerator,
 												DefaultDestruct<GPUBaseAcceleratorI>));
 
 
-	// Inistantiate empty primitive since it is used by outside material	
+	// Inistantiate empty primitive since it is used by outside material
 	const std::string emptyTypeName = GPUPrimitiveEmpty::TypeName;
 	auto loc = primGroupGenerators.find(emptyTypeName);
 	GPUPrimGPtr ptr = loc->second();
@@ -217,7 +217,7 @@ SceneError TracerLogicGenerator::GenerateMaterialBatch(GPUMaterialBatchI*& mb,
 	mb = nullptr;
 	if(matBatchMap.find(keyBatchId) != matBatchMap.end())
 		return SceneError::INTERNAL_DUPLICATE_MAT_ID;
-	
+
 	const std::string batchType = std::string(mg.Type()) + pg.Type();
 
 	auto loc = matBatches.find(std::make_pair(batchType, mg.GPUId()));
@@ -245,8 +245,8 @@ SceneError TracerLogicGenerator::GenerateBaseAccelerator(GPUBaseAcceleratorI*& b
 		// Cannot Find Already Constructed Type
 		// Generate
 		auto loc = baseAccelGenerators.find(accelType);
-		if(loc == baseAccelGenerators.end()) return SceneError::NO_LOGIC_FOR_ACCELERATOR;		
-		baseAccelerator = loc->second();		
+		if(loc == baseAccelGenerators.end()) return SceneError::NO_LOGIC_FOR_ACCELERATOR;
+		baseAccelerator = loc->second();
 		baseAccel = baseAccelerator.get();
 	}
 	else baseAccel = baseAccelerator.get();
@@ -294,9 +294,9 @@ SceneError TracerLogicGenerator::GenerateBaseLogic(TracerBaseLogicI*& bl,
 	bl = nullptr;
 	if(tracerLogic == nullptr)
 		tracerLogic = tracerGenerator(*baseAccelerator.get(),
-									  std::move(ag), 
-									  std::move(ab), 
-									  std::move(mg), 
+									  std::move(ag),
+									  std::move(ab),
+									  std::move(mg),
 									  std::move(mb),
 									  opts, hitStructSize,
 									  maxMats, maxAccels);
@@ -353,7 +353,7 @@ GPUBaseAcceleratorI* TracerLogicGenerator::GetBaseAccelerator() const
 void TracerLogicGenerator::ClearAll()
 {
 	primGroups.clear();
-	
+
 	accelGroups.clear();
 	accelBatches.clear();
 
@@ -365,7 +365,7 @@ void TracerLogicGenerator::ClearAll()
 	boundaryMaterial.reset(nullptr);
 	boundaryMatBatch.reset(nullptr);
 
-	// Inistantiate empty primitive since it is used by outside material	
+	// Inistantiate empty primitive since it is used by outside material
 	const std::string emptyTypeName = GPUPrimitiveEmpty::TypeName;
 	auto loc = primGroupGenerators.find(emptyTypeName);
 	GPUPrimGPtr ptr = loc->second();

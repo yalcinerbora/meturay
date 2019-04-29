@@ -7,7 +7,7 @@ namespace HybridFuncs
 	template <class T>
 	__device__ __host__ void Swap(T&, T&);
 }
- 
+
 template <class T>
 __device__ __host__
 void HybridFuncs::Swap(T& t0, T& t1)

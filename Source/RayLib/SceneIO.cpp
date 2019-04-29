@@ -13,8 +13,8 @@ namespace SceneIO
 	static constexpr const char*	PRIMITIVE = "primitive";
 	static constexpr const char*	ACCELERATOR = "accelerator";
 	static constexpr const char*	MATERIAL = "material";
-	
-	// Camera Related Names	
+
+	// Camera Related Names
 	static constexpr const char*	CAMERA_APERTURE = "apertureSize";
 	static constexpr const char*	CAMERA_FOCUS = "focusDistance";
 	static constexpr const char*	CAMERA_PLANES = "planes";
@@ -22,7 +22,7 @@ namespace SceneIO
 	static constexpr const char*	CAMERA_GAZE = "gaze";
 	static constexpr const char*	CAMERA_UP = "up";
 
-	// Light Related Names	
+	// Light Related Names
 	// Light Type Values
 	static constexpr const char*	LIGHT_PONT = "point";
 	static constexpr const char*	LIGHT_DIRECTIONAL = "directional";
@@ -40,7 +40,7 @@ namespace SceneIO
 	// Rectangular
 	static constexpr const char*	LIGHT_EDGE0 = "edge0";
 	static constexpr const char*	LIGHT_EDGE1 = "edge1";
-	// Transform Related Names			
+	// Transform Related Names
 	// Common
 	static constexpr const char*	TRANSFORM_FORM = "form";
 	// Transform Form Values
@@ -92,7 +92,7 @@ LightStruct SceneIO::LoadRectangular(const nlohmann::json& jsn, double time)
 {
 	LightStruct s = {};
 	s.t = LightType::SPOT;
-	s.rectangular.position = LoadVector<3, float>(jsn[POSITION], time);		
+	s.rectangular.position = LoadVector<3, float>(jsn[POSITION], time);
 	s.rectangular.edge0 = LoadVector<3, float>(jsn[LIGHT_EDGE0], time);
 	s.rectangular.edge1 = LoadVector<3, float>(jsn[LIGHT_EDGE1], time);
 	s.rectangular.intensity = LoadNumber<float>(jsn[LIGHT_INTENSITY], time);
@@ -128,11 +128,11 @@ TransformStruct SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
 			mat *= TransformGen::Rotate(rotation[2] * MathConstants::DegToRadCoef, ZAxis);
 			mat *= TransformGen::Rotate(rotation[1] * MathConstants::DegToRadCoef, YAxis);
 			mat *= TransformGen::Rotate(rotation[0] * MathConstants::DegToRadCoef, XAxis);
-			
+
 			return mat;
 		}
 		else throw SceneException(SceneError::UNKNOWN_TRANSFORM_TYPE);
-		
+
 	}
 	else throw SceneException(SceneError::TYPE_MISMATCH);
 }
@@ -206,7 +206,7 @@ SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn, double time)
 		s.acceleratorType = jsn[ACCELERATOR];
 		s.matPrimPairs.fill(std::make_pair(std::numeric_limits<uint32_t>::max(),
 										   std::numeric_limits<uint32_t>::max()));
-		
+
 		// Array Like Couples
 		const auto primIdArray = jsn[PRIMITIVE];
 		const auto materialIdArray = jsn[MATERIAL];

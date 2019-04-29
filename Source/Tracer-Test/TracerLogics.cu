@@ -14,10 +14,10 @@ TracerBasic::TracerBasic(GPUBaseAcceleratorI& ba,
 						 uint32_t hitStructSize,
 						 const Vector2i maxMats,
 						 const Vector2i maxAccels)
-	: TracerBaseLogic(ba, 
-					  std::move(ag), std::move(ab), 
+	: TracerBaseLogic(ba,
+					  std::move(ag), std::move(ab),
 					  std::move(mg), std::move(mb),
-					  options, 
+					  options,
 					  initals,
 					  hitStructSize,
 					  maxMats,
@@ -46,16 +46,16 @@ size_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
 	// Allocate enough space for ray
 	rayMem.ResizeRayOut(currentRayCount, PerRayAuxDataSize());
 
-	
+
 	// Basic Tracer does classic camera to light tracing
 	// Thus its initial rays are from camera
 
 	// Call multi-device
-	const uint32_t TPB = StaticThreadPerBlock1D;	
+	const uint32_t TPB = StaticThreadPerBlock1D;
 	const uint32_t shMemSize = rngMem.SharedMemorySize(TPB);
 	const uint32_t totalWorkCount = pixelCount[0] * samplePerLocation *
 									pixelCount[1] * samplePerLocation;
-	// GPUSplits	
+	// GPUSplits
 	const auto splits = CudaSystem::GridStrideMultiGPUSplit(totalWorkCount, TPB, shMemSize,
 															KCGenerateCameraRays<RayAuxData, AuxFunc>);
 
@@ -81,14 +81,14 @@ size_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
 		Vector2i localPixelEnd = Vector2i::Min(localPixelStart + localPixelCount, pixelCount);
 		Vector2i localWorkCount2D = (localPixelEnd - localPixelStart) * samplePerLocation * samplePerLocation;
 		size_t localWorkCount = localWorkCount2D[0] * localWorkCount2D[1];
-						   
+
 		// Kernel Specific Args
 		// Output
 		RayGMem* gRays = rayMem.RaysOut();
 		RayAuxData* gAuxiliary = rayMem.RayAuxOut<RayAuxData>();
 		// Input
 		RNGGMem rngData = rngMem.RNGData(gpuId);
-		
+
 		// Kernel Call
 		CudaSystem::AsyncGridStrideKC_X
 		(

@@ -35,13 +35,13 @@ struct IOError : public ErrorI
 		Type	type;
 
 	public:
-		// Constructors & Destructor 
-							IOError() = default;
-							IOError(Type);
-							~IOError() = default;
+		// Constructors & Destructor
+						IOError() = default;
+						IOError(Type);
+						~IOError() = default;
 
-		operator			Type() const { return type; }
-		operator			std::string() const override;
+		operator		Type() const { return type; }
+		operator		std::string() const override;
 };
 
 inline IOError::IOError(IOError::Type t)
@@ -51,7 +51,7 @@ inline IOError::IOError(IOError::Type t)
 inline IOError::operator std::string() const
 {
 	const char* const ErrorStrings[] =
-	{		
+	{
 		"OK.",
 		// General
 		"File not found.",
@@ -65,7 +65,7 @@ inline IOError::operator std::string() const
 		"nCache \"density\" channel not found.",
 		"nCache \"velocity\" channel not found."
 	};
-	static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(IOError::END), 
+	static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(IOError::END),
 				  "Enum and enum string list size mismatch.");
 
 	return ErrorStrings[static_cast<int>(type)];

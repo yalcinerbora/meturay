@@ -42,7 +42,7 @@ class CudaGPU
 			GPU_PASCAL,
 			GPU_TURING_VOLTA
 		};
-		
+
 		static GPUTier				DetermineGPUTier(cudaDeviceProp);
 
 	private:
@@ -66,12 +66,12 @@ class CudaGPU
 		int							deviceId;
 		cudaDeviceProp				props;
 		// Generated Data
-		GPUTier						tier;	
+		GPUTier						tier;
 		//
 		WorkGroup<8>				smallWorkList;
 		WorkGroup<4>				mediumWorkList;
 		WorkGroup<2>				largeWorkList;
-		
+
 	protected:
 	public:
 		// Constrctors & Destructor
@@ -87,7 +87,7 @@ class CudaGPU
 		double					TotalMemoryMB() const;
 		double					TotalMemoryGB() const;
 		GPUTier					Tier() const;
-		
+
 		size_t					TotalMemory() const;
 		Vector2i				MaxTexture2DSize() const;
 
@@ -131,7 +131,7 @@ class CudaSystem
 
 		static CudaError					SystemStatus();
 
-		
+
 
 		// Classic GPU Calls
 		// Create just enough blocks according to work size
@@ -149,10 +149,10 @@ class CudaSystem
 														  size_t workCount,
 														  //
 														  Function&& f, Args&&...);
-		
+
 		// Grid-Stride Kernels
 		// Convenience Functions For Kernel Call
-		// Simple full GPU utilizing calls over a stream		
+		// Simple full GPU utilizing calls over a stream
 		template<class Function, class... Args>
 		static __host__ void						GridStrideKC_X(int gpuIndex,
 																   uint32_t sharedMemSize,
@@ -233,7 +233,7 @@ CudaGPU::WorkGroup<Count>& CudaGPU::WorkGroup<Count>::operator=(WorkGroup&& othe
 	assert(this != &other);
 	currentIndex = other.currentIndex;
 	for(int i = 0; i < Count; i++)
-	{		
+	{
 		works[i] = other.works[i];
 		other.works[i] = nullptr;
 	}
@@ -258,7 +258,7 @@ cudaStream_t CudaGPU::WorkGroup<Count>::UseGroup() const
 }
 
 template<class Function, class... Args>
-__host__ 
+__host__
 void CudaSystem::KC_X(int gpuIndex,
 					  uint32_t sharedMemSize,
 					  cudaStream_t stream,
@@ -274,7 +274,7 @@ void CudaSystem::KC_X(int gpuIndex,
 }
 
 template<class Function, class... Args>
-__host__ 
+__host__
 void CudaSystem::KC_XY(int gpuIndex,
 					   uint32_t sharedMemSize,
 					   cudaStream_t stream,
@@ -292,9 +292,9 @@ void CudaSystem::KC_XY(int gpuIndex,
 
 template<class Function, class... Args>
 __host__
-inline void CudaSystem::GridStrideKC_X(int gpuIndex,									   
+inline void CudaSystem::GridStrideKC_X(int gpuIndex,
 									   uint32_t sharedMemSize,
-									   cudaStream_t stream,									   
+									   cudaStream_t stream,
 									   size_t workCount,
 									   //
 									   Function&& f, Args&&... args)
@@ -312,8 +312,8 @@ inline void CudaSystem::GridStrideKC_X(int gpuIndex,
 
 template<class Function, class... Args>
 __host__
-inline void CudaSystem::GridStrideKC_XY(int gpuIndex,									
-										uint32_t sharedMemSize,										
+inline void CudaSystem::GridStrideKC_XY(int gpuIndex,
+										uint32_t sharedMemSize,
 										cudaStream_t stream,
 										size_t workCount,
 										//
@@ -322,7 +322,7 @@ inline void CudaSystem::GridStrideKC_XY(int gpuIndex,
 	const size_t threadCount = StaticThreadPerBlock2D[0] * StaticThreadPerBlock2D[1];
 	uint32_t blockCount = DetermineGridStrideBlock(gpuIndex, sharedMemSize,
 												   threadCount, workCount, &f);
-	
+
 	CUDA_CHECK(cudaSetDevice(gpuIndex));
 	dim3 blockSize = dim3(StaticThreadPerBlock2D[0], StaticThreadPerBlock2D[1]);
 	f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);
@@ -341,7 +341,7 @@ __host__ void CudaSystem::AsyncGridStrideKC_X(int gpuIndex,
 	uint32_t requiredSMCount = DetermineGridStrideBlock(gpuIndex, sharedMemSize,
 														threadCount, workCount, &f);
 	cudaStream_t stream = GPUList()[gpuIndex].DetermineStream(requiredSMCount);
-	
+
 	CUDA_CHECK(cudaSetDevice(gpuIndex));
 	uint32_t blockSize = StaticThreadPerBlock1D;
 	f<<<requiredSMCount, blockSize, sharedMemSize, stream>>>(args...);
@@ -359,7 +359,7 @@ __host__ void CudaSystem::AsyncGridStrideKC_XY(int gpuIndex,
 	uint32_t requiredSMCount = DetermineGridStrideBlock(gpuIndex, sharedMemSize,
 														thread, workCount, &f);
 	cudaStream_t stream = GPUList()[gpuIndex].DetermineStream(requiredSMCount);
-	
+
 	CUDA_CHECK(cudaSetDevice(gpuIndex));
 	dim3 blockSize = dim3(StaticThreadPerBlock2D[0], StaticThreadPerBlock2D[1]);
 	f<<<requiredSMCount, blockSize, sharedMemSize, stream>>>(args...);

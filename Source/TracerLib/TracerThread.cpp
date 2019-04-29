@@ -21,7 +21,7 @@ void TracerThread::LoopWork()
 	double newTime;
 	bool timeChanged = time.CheckChanged(newTime);
 	bool camChanged = camera.CheckChanged(newCam);
-	bool resolutionChanged = resolution.CheckChanged(newResolution);		
+	bool resolutionChanged = resolution.CheckChanged(newResolution);
 	bool sampleChanged = sample.CheckChanged(newSample);
 	bool optsChanged = options.CheckChanged(newOptions);
 	bool segmentChanged = segment.CheckChanged(newSegment);
@@ -35,12 +35,12 @@ void TracerThread::LoopWork()
 							  newSegment.pixelCount);
 	else if(camChanged || timeChanged)
 		tracer.ResetImage();
-		
+
 	if(resolutionChanged)
 		tracer.ResizeImage(newResolution);
 	if(optsChanged)
 		tracer.SetOptions(newOptions);
-	
+
 
 	// TODO:
 	// Wait Untill Scene Change
@@ -50,12 +50,12 @@ void TracerThread::LoopWork()
 	// Initialize Rays
 	// Camera ray generation
 	//tracer.GenerateCameraRays(newCam, newSample);
-				
+
 	//=====================//
 	//		RenderLoop	   //
 	//=====================//
 	while(tracer.Continue())
-	{			
+	{
 		tracer.Render();
 	}
 	tracer.FinishSamples();
@@ -63,7 +63,7 @@ void TracerThread::LoopWork()
 	//	  RenderLoop END   //
 	//=====================//
 
-	// Tracer consumed all of the rays 
+	// Tracer consumed all of the rays
 	// now loop over and generate new camera rays
 }
 

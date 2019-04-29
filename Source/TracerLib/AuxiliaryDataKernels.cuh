@@ -10,14 +10,14 @@ using RayFinalizeFunc = void(*)(// Output
 								// Input
 								const RayAuxData&,
 								const RayReg&,
-								// 
+								//
 								RandomGPU& rng);
 
 
 template <class RayAuxData, RayFinalizeFunc<RayAuxData> FinalizeFunc>
 __global__ void KCFinalizeRay(// Output
 						      Vector4* gImage,
-						      // Input								
+						      // Input
 						      const RayGMem* gInRays,
 						      const RayAuxData* gInRayAux,
 						      //

@@ -19,7 +19,7 @@ template <class Type, ReduceFunc<Type> F>
 __device__ inline void WarpReduce(Type& val)
 {
 	static_assert(sizeof(Type) % sizeof(int) == 0, "Type should fit into integers perfectly.");
-	
+
 	// Here using constexpr WarpSize to hint compiler to unroll this loop
 	// "warpSize" implicit constant resides on const memory so compiler does not expand this loop
 	#pragma unroll
@@ -141,7 +141,7 @@ __host__ void KCReduceArray(Type& result,
 
 	unsigned int allocBig = (static_cast<unsigned int>(elementCount) + TPB - 1) / TPB;
 	unsigned int allocSmall = (allocBig + TPB - 1) / TPB;
-	DeviceMemory buffer(allocBig * sizeof(Type) + 
+	DeviceMemory buffer(allocBig * sizeof(Type) +
 						allocSmall * sizeof(Type));
 	Type* dRead = static_cast<Type*>(buffer) + allocBig;
 	Type* dWrite = static_cast<Type*>(buffer);
@@ -164,7 +164,7 @@ __host__ void KCReduceArray(Type& result,
 			identityElement
 		);
 		CUDA_KERNEL_CHECK();
-		
+
 		dataSize = gridSize;
 		std::swap(dRead, dWrite);
 		inData = dRead;
@@ -191,7 +191,7 @@ __host__ void KCReduceTexture(Type& result,
 	gridSize.y = (dim.y + TPB[1] - 1) / TPB[1];
 	DeviceMemory reduceBuffer(gridSize.x * gridSize.y * sizeof(Type));
 	Type* dReduceBuffer = static_cast<Type*>(reduceBuffer);
-	
+
 	// KC Paralel Reduction
 	ParalelReductionTex<Type, F> <<<gridSize, blockSize, SharedSize, stream>>>
 	(
@@ -204,7 +204,7 @@ __host__ void KCReduceTexture(Type& result,
 
 	// Array portion does the rest
 	KCReduceArray<Type, F>(result,
-						   dReduceBuffer, 
+						   dReduceBuffer,
 						   gridSize.x * gridSize.y,
 						   identityElement,
 						   stream);
@@ -233,7 +233,7 @@ __host__ void KCReduceTexture(Type& result,
 #define EXTERN_REDUCE_ARRAY_BOTH(type, func) \
 	EXTERN_REDUCE_ARRAY_SINGLE(type, func, cudaMemcpyDeviceToHost) \
 	EXTERN_REDUCE_ARRAY_SINGLE(type, func, cudaMemcpyDeviceToDevice)
-	
+
 #define EXTERN_REDUCE_ARRAY_ALL(type) \
 	EXTERN_REDUCE_ARRAY_BOTH(type, ReduceAdd) \
 	EXTERN_REDUCE_ARRAY_BOTH(type, ReduceSubtract) \

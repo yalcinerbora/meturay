@@ -15,7 +15,7 @@ __global__ void KRandomNumbers(RNGGMem gMemory,
 	RandomGPU rand(gMemory.state, sStates);
 
 	for(int i = 0; i < numberPerThread; i++)
-	{		
+	{
 		int loc = i * blockDim.x + threadIdx.x;
 
 		uint32_t r = rand.Generate();
@@ -34,7 +34,7 @@ TEST(RandomGPU, All)
 
 	DeviceMemory randomState(StateSize);
 	DeviceMemory numbers(NumberSize);
-	
+
 	// Set State
 	std::mt19937 engine(2109);
 	uint32_t* seeds = static_cast<uint32_t*>(randomState);
@@ -50,7 +50,7 @@ TEST(RandomGPU, All)
 	CUDA_KERNEL_CHECK();
 	CUDA_CHECK(cudaDeviceSynchronize());
 
-	
+
 	for(int i = 0; i < NumberCount; i++)
 	{
 		METU_LOG("%u", h_data[i]);

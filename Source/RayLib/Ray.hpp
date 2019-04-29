@@ -15,7 +15,7 @@ inline constexpr Ray<T>::Ray(const Vector<3, T> vec[2])
 {}
 
 template<class T>
-__device__ __host__ 
+__device__ __host__
 inline Ray<T>& Ray<T>::operator=(const Vector<3, T> vec[2])
 {
 	direction = vec[0];
@@ -24,7 +24,7 @@ inline Ray<T>& Ray<T>::operator=(const Vector<3, T> vec[2])
 }
 
 template<class T>
-__device__ __host__ 
+__device__ __host__
 inline const Vector<3, T>& Ray<T>::getDirection() const
 {
 	return direction;
@@ -67,7 +67,7 @@ inline bool Ray<T>::IntersectsSphere(Vector<3, T>& intersectPos, T& t,
 
 template<class T>
 __device__ __host__
-inline bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, T& t,									   
+inline bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
 									   const Vector<3, T> triCorners[3],
 									   bool cullFace) const
 {
@@ -79,7 +79,7 @@ inline bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
 
 template<class T>
 __device__ __host__
-inline bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, T& t,									   
+inline bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
 									   const Vector<3, T>& t0,
 									   const Vector<3, T>& t1,
 									   const Vector<3, T>& t2,
@@ -118,7 +118,7 @@ inline bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
 	if(beta >= 0.0f && beta <= 1.0f &&
 	   gamma >= 0.0f && gamma <= 1.0f &&
 	   alpha >= 0.0f && alpha <= 1.0f &&
-	   rayT >= 0.0f) 
+	   rayT >= 0.0f)
 	{
 		baryCoords = Vector<3, T>(alpha, beta, gamma);
 		t = rayT;
@@ -188,7 +188,7 @@ inline bool Ray<T>::IntersectsAABB(Vector<3, T>& pos, T& tOut,
 }
 
 template<class T>
-__device__ __host__ 
+__device__ __host__
 inline Ray<T> Ray<T>::Reflect(const Vector<3, T>& normal) const
 {
 	Vector<3, T> nDir = -direction;
@@ -197,7 +197,7 @@ inline Ray<T> Ray<T>::Reflect(const Vector<3, T>& normal) const
 }
 
 template<class T>
-__device__ __host__ 
+__device__ __host__
 inline Ray<T>& Ray<T>::ReflectSelf(const Vector<3, T>& normal)
 {
 	Vector<3, T> nDir = -direction;
@@ -273,14 +273,14 @@ inline Ray<T> Ray<T>::RandomRayUnfirom(T xi0, T xi1,
 }
 
 template<class T>
-__device__ __host__ 
+__device__ __host__
 inline Ray<T> Ray<T>::NormalizeDir() const
 {
 	return Ray(direction.Normalize(), position);
 }
 
 template<class T>
-__device__ __host__ 
+__device__ __host__
 inline Ray<T>& Ray<T>::NormalizeDirSelf()
 {
 	direction.NormalizeSelf();
@@ -288,14 +288,14 @@ inline Ray<T>& Ray<T>::NormalizeDirSelf()
 }
 
 template<class T>
-__device__ __host__ 
+__device__ __host__
 inline Ray<T> Ray<T>::Advance(T t) const
 {
 	return Ray(direction, position + t * direction);
 }
 
 template<class T>
-__device__ __host__ 
+__device__ __host__
 inline Ray<T>& Ray<T>::AdvanceSelf(T t)
 {
 	position += t * direction;
@@ -303,7 +303,7 @@ inline Ray<T>& Ray<T>::AdvanceSelf(T t)
 }
 
 template<class T>
-__device__ __host__ 
+__device__ __host__
 inline Ray<T> Ray<T>::Transform(const Matrix<4, T>& mat) const
 {
 	return Ray<T>((mat * Vector<4, T>(direction, static_cast<T>(0.0))).Normalize(),
@@ -311,7 +311,7 @@ inline Ray<T> Ray<T>::Transform(const Matrix<4, T>& mat) const
 }
 
 template<class T>
-__device__ __host__ 
+__device__ __host__
 inline Ray<T>& Ray<T>::TransformSelf(const Matrix<4, T>& mat)
 {
 	direction = (mat * Vector<4, T>(direction, static_cast<T>(0.0))).Normalize();
@@ -320,7 +320,7 @@ inline Ray<T>& Ray<T>::TransformSelf(const Matrix<4, T>& mat)
 }
 
 template<class T>
-__device__ __host__ 
+__device__ __host__
 inline Vector<3, T> Ray<T>::AdvancedPos(T t) const
 {
 	return position + t * direction;

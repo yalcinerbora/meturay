@@ -18,7 +18,7 @@ using NameIdPair = std::pair<std::string, int>;
 
 class TracerLogicGenerator : public TracerLogicGeneratorI
 {
-	private:		
+	private:
 		static constexpr uint32_t						BoundaryMatId = BoundaryBatchId;
 
 	protected:
@@ -40,24 +40,24 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 		std::map<std::string, GPUAccelGPtr>				accelGroups;
 		std::map<std::string, GPUAccelBPtr>				accelBatches;
 		// Materials (Batch and Group)
-		std::map<NameIdPair, GPUMatGPtr>					matGroups;
-		std::map<NameIdPair, GPUMatBPtr>					matBatches;
+		std::map<NameIdPair, GPUMatGPtr>				matGroups;
+		std::map<NameIdPair, GPUMatBPtr>				matBatches;
 
 		GPUBaseAccelPtr									baseAccelerator;
 		GPUMatGPtr										boundaryMaterial;
 		GPUMatBPtr										boundaryMatBatch;
 		GPUPrimitiveGroupI*								emptyPrimitive;
-		
-		// Tracer Related
-		GPUTracerGen										tracerGenerator;
-		GPUTracerPtr										tracerLogic;
 
-		// Generated Batch Mappings		
-		AcceleratorBatchMappings							accelBatchMap;
+		// Tracer Related
+		GPUTracerGen									tracerGenerator;
+		GPUTracerPtr									tracerLogic;
+
+		// Generated Batch Mappings
+		AcceleratorBatchMappings						accelBatchMap;
 		MaterialBatchMappings							matBatchMap;
 
 		// Helper Func
-		uint32_t											CalculateHitStruct();
+		uint32_t										CalculateHitStruct();
 
 	public:
 		// Constructor & Destructor
@@ -87,7 +87,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 														  const GPUPrimitiveGroupI&,
 														  uint32_t keyBatchId) override;
 
-		// Outside Material is special material and has its own group		
+		// Outside Material is special material and has its own group
 		SceneError					GenerateBoundaryMaterial(GPUMaterialGroupI*&,
 															 const std::string& materialType,
 															 const int gpuId) override;
@@ -104,15 +104,15 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 													  const Vector2i maxAccels) override;
 
 		PrimitiveGroupList			GetPrimitiveGroups() const override;
-		AcceleratorGroupList			GetAcceleratorGroups() const override;
-		AcceleratorBatchMappings		GetAcceleratorBatches() const override;
+		AcceleratorGroupList		GetAcceleratorGroups() const override;
+		AcceleratorBatchMappings	GetAcceleratorBatches() const override;
 		MaterialGroupList			GetMaterialGroups() const override;
 		MaterialBatchMappings		GetMaterialBatches() const override;
 
-		GPUBaseAcceleratorI*			GetBaseAccelerator() const override;
+		GPUBaseAcceleratorI*		GetBaseAccelerator() const override;
 
 		// Resetting all generated Groups and Batches
-		void							ClearAll() override;
+		void						ClearAll() override;
 
 		// Inclusion Functionality
 		// Additionally includes the materials from these libraries

@@ -24,15 +24,15 @@ class Ray<T>
 	public:
 		// Constructors & Destructor
 		constexpr									Ray() = default;
-		constexpr __device__ __host__				Ray(const Vector<3,T>& direction, 
+		constexpr __device__ __host__				Ray(const Vector<3,T>& direction,
 														const Vector<3, T>& position);
 		constexpr __device__ __host__				Ray(const Vector<3, T>[2]);
 													Ray(const Ray&) = default;
 													~Ray() = default;
-		Ray&											operator=(const Ray&) = default;
+		Ray&										operator=(const Ray&) = default;
 
 		// Assignment Operators
-		__device__ __host__ Ray&						operator=(const Vector<3, T>[2]);
+		__device__ __host__ Ray&					operator=(const Vector<3, T>[2]);
 
 		__device__ __host__ const Vector<3,T>&		getDirection() const;
 		__device__ __host__ const Vector<3,T>&		getPosition() const;
@@ -64,7 +64,7 @@ class Ray<T>
 															T fromMedium, T toMedium) const;
 		__device__ __host__ bool					RefractSelf(const Vector<3, T>& normal,
 																T fromMedium, T toMedium);
-		
+
 		// Randomization (Hemi spherical)
 		__device__ __host__ static Ray				RandomRayCosine(T xi0, T xi1,
 																	const Vector<3, T>& normal,

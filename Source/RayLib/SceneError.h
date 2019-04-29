@@ -43,11 +43,11 @@ struct SceneError : public ErrorI
 			JSON_FILE_PARSE_ERROR,
 			// Special Type Values
 			UNKNOWN_TRANSFORM_TYPE,
-			UNKNOWN_LIGHT_TYPE,			
+			UNKNOWN_LIGHT_TYPE,
 			// Loading Surface Data
 			SURFACE_DATA_TYPE_NOT_FOUND,
 			SURFACE_DATA_INVALID_READ,
-			// Some Mat/Accel Logic 
+			// Some Mat/Accel Logic
 			// may not support certain prims
 			PRIM_ACCEL_MISMATCH,
 			PRIM_MAT_MISMATCH,
@@ -74,7 +74,7 @@ struct SceneError : public ErrorI
 		Type			 type;
 
 	public:
-		// Constructors & Destructor 
+		// Constructors & Destructor
 					SceneError(Type);
 					~SceneError() = default;
 
@@ -88,7 +88,7 @@ class SceneException : public std::runtime_error
 		SceneError e;
 	protected:
 	public:
-		SceneException(SceneError::Type t)		
+		SceneException(SceneError::Type t)
 			: std::runtime_error("")
 			, e(t)
 		{}
@@ -111,7 +111,7 @@ inline SceneError::operator std::string() const
 		"OK.",
 		// Common
 		"Scene file not found.",
-		"Animation file not found.",		
+		"Animation file not found.",
 		// Not Found
 		"\"Materials\" array not found.",
 		"\"Primitives\" array not found.",
@@ -127,7 +127,7 @@ inline SceneError::operator std::string() const
 		"Duplicate material id.",
 		"Duplicate primitive id.",
 		"Duplicate transform id.",
-		// 
+		//
 		"Material id not found.",
 		"Primitive id not found.",
 		"Transform id not found.",
@@ -141,7 +141,7 @@ inline SceneError::operator std::string() const
 		// Loading Surface Data
 		"Surface data type not found.",
 		"Surface data unknown type.",
-		// Some Mat/Accel Logic 
+		// Some Mat/Accel Logic
 		// may not support certain prims
 		"Primitive-Material mismatch.",
 		"Primitive-Accelerator mismatch.",
@@ -151,8 +151,8 @@ inline SceneError::operator std::string() const
 		// Too many types than key system can handle
 		"Accelerator groups required for this scene exceeds limit.",
 		"Accelerator groups required for this scene exceeds limit.",
-		"Accelerator groups required for this scene exceeds limit.",	
-		"Accelerator groups required for this scene exceeds limit.",	
+		"Accelerator groups required for this scene exceeds limit.",
+		"Accelerator groups required for this scene exceeds limit.",
 		// Misc
 		"Too many data/material pairs per surface node.",
 		"Prim/Material pairs on surface node does not have same size.",

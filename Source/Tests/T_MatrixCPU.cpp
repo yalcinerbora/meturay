@@ -281,20 +281,20 @@ TEST(TransformGen, Transformations)
 				ElementsAre(FloatEq(0.0), FloatEq(0.0f), FloatEq(0.0f), FloatEq(1.0f)));
 
 	// Rotation
-	Matrix4x4 rotateMatrix = TransformGen::Rotate(90.0f * MathConstants::DegToRadCoef, 
+	Matrix4x4 rotateMatrix = TransformGen::Rotate(90.0f * MathConstants::DegToRadCoef,
 												  Vector3(1.0f, 0.0f, 0.0f));
 	Vector4 rotateResult = rotateMatrix * vectorR;
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(rotateResult),
 								   static_cast<const float*>(rotateResult) + 4),
-				ElementsAre(FloatNear(0.0f, 0.00001f), FloatNear(0.0f, 0.00001f), 
+				ElementsAre(FloatNear(0.0f, 0.00001f), FloatNear(0.0f, 0.00001f),
 							FloatNear(1.0f, 0.00001f), FloatNear(1.0f, 0.00001f)));
 	//
-	rotateMatrix = TransformGen::Rotate(QuatF(90.0f * MathConstants::DegToRadCoef, 
+	rotateMatrix = TransformGen::Rotate(QuatF(90.0f * MathConstants::DegToRadCoef,
 											  Vector3(1.0f, 0.0f, 0.0f)));
 	rotateResult = rotateMatrix * vectorR;
 	EXPECT_THAT(std::vector<float>(static_cast<const float*>(rotateResult),
 								   static_cast<const float*>(rotateResult) + 4),
-				ElementsAre(FloatNear(0.0f, 0.00001f), FloatNear(0.0f, 0.00001f), 
+				ElementsAre(FloatNear(0.0f, 0.00001f), FloatNear(0.0f, 0.00001f),
 							FloatNear(1.0f, 0.00001f), FloatNear(1.0f, 0.00001f)));
 
 	// Scale

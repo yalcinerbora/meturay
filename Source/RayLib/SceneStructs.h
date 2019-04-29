@@ -93,7 +93,7 @@ using TransformStruct = Matrix4x4;
 struct SurfaceStruct
 {
 	std::string		acceleratorType;
-	uint32_t		transformId;	
+	uint32_t		transformId;
 	IdPairings		matPrimPairs;
 	int8_t			pairCount;
 };

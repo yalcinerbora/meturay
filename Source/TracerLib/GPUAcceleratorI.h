@@ -86,14 +86,14 @@ class GPUAcceleratorBatchI
 													HitKey* dMaterialKeys,
 													PrimitiveId* dPrimitiveIds,
 													HitStructPtr dHitStructs,
-													// I-O													
-													RayGMem* dRays,																									
+													// I-O
+													RayGMem* dRays,
 													// Input
 													const TransformId* dTransformIds,
 													const RayId* dRayIds,
 													const HitKey* dAcceleratorKeys,
 													const uint32_t rayCount) const = 0;
-		
+
 		// Every MaterialBatch is available for a specific primitive / accelerator data
 		virtual const GPUPrimitiveGroupI&		PrimitiveGroup() const = 0;
 		virtual const GPUAcceleratorGroupI&		AcceleratorGroup() const = 0;
@@ -116,17 +116,17 @@ class GPUBaseAcceleratorI
 									TransformId* dTransformIds,
 									HitKey* dMaterialKeys,
 									// Inputs
-									const RayGMem* dRays,									
+									const RayGMem* dRays,
 									const RayId* dRayIds,
 									const uint32_t rayCount) const = 0;
 
 		// Initialization
-		virtual SceneError			Initialize(// List of surface to transform id hit key mappings
-											   const std::map<uint32_t, BaseLeaf>&) = 0;
-		virtual SceneError			Change(// List of only changed surface to transform id hit key mappings
+		virtual SceneError		Initialize(// List of surface to transform id hit key mappings
 										   const std::map<uint32_t, BaseLeaf>&) = 0;
+		virtual SceneError		Change(// List of only changed surface to transform id hit key mappings
+									   const std::map<uint32_t, BaseLeaf>&) = 0;
 
 		// Construction & Destruction
-		virtual void				Constrcut() = 0;	
-		virtual void				Destruct() = 0;
+		virtual void			Constrcut() = 0;
+		virtual void			Destruct() = 0;
 };

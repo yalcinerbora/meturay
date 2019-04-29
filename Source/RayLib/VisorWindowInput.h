@@ -45,7 +45,7 @@ class VisorWindowInput : public VisorInputI
 												 double moveRatioModifier);
 								~VisorWindowInput() = default;
 
-		// Implementation		
+		// Implementation
 		void					AttachVisorCallback(VisorCallbacksI&) override;
 
 		void					WindowPosChanged(int posX, int posY) override;

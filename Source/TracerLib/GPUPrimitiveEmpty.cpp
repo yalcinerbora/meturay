@@ -1,6 +1,6 @@
 #include "GPUPrimitiveEmpty.h"
 
-GPUPrimitiveEmpty::GPUPrimitiveEmpty() 
+GPUPrimitiveEmpty::GPUPrimitiveEmpty()
 {}
 
 const char* GPUPrimitiveEmpty::Type() const

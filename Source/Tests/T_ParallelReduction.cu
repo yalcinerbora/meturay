@@ -21,7 +21,7 @@ TEST(ParallelReduction, Generic)
 	DeviceMemory fDataIn(ElementCount * sizeof(float));
 	std::fill_n(static_cast<int*>(iDataIn), ElementCount, 1);
 	std::fill_n(static_cast<float*>(fDataIn), ElementCount, 1.0f);
-	
+
 	// Integer Kernel
 	int resultInt = 0;
 	KCReduceArray<int, ReduceAdd, cudaMemcpyDeviceToHost>
@@ -88,7 +88,7 @@ TEST(ParallelReduction, LargeStruct)
 
 	// Wait Kernel Finish and Check
 	CUDA_CHECK(cudaDeviceSynchronize());
-	
+
 	EXPECT_FLOAT_EQ(static_cast<float>(ElementCount), resultMatrix(0, 0));
 	EXPECT_FLOAT_EQ(static_cast<float>(ElementCount), resultMatrix(0, 1));
 	EXPECT_FLOAT_EQ(static_cast<float>(ElementCount), resultMatrix(0, 2));

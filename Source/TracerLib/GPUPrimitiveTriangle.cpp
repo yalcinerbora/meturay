@@ -12,11 +12,11 @@ GPUPrimitiveTriangle::GPUPrimitiveTriangle()
 {}
 
 const char* GPUPrimitiveTriangle::Type() const
-{	
+{
 	return TypeName;
 }
 
-SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& surfaceDataNodes, 
+SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& surfaceDataNodes,
 												 double time)
 {
 	// Generate Loaders
@@ -122,14 +122,14 @@ SceneError GPUPrimitiveTriangle::ChangeTime(const std::set<SceneFileNode>& surfa
 		if(e != loader->LoadPrimitiveData(normalsCPU.data(),
 										  PrimitiveDataTypeToString(PrimitiveDataType::NORMAL)))
 			return e;
-		if(e != loader->LoadPrimitiveData(uvsCPU.data(), 
+		if(e != loader->LoadPrimitiveData(uvsCPU.data(),
 										  PrimitiveDataTypeToString(PrimitiveDataType::UV)))
 			return e;
-		
+
 		// Copy
 		float* dPositionsU = static_cast<float*>(memory);
 		float* dNormalsV = static_cast<float*>(memory) + totalPrimitiveCount;
-		
+
 		// Pos and Normal
 		CUDA_CHECK(cudaMemcpy2D(dPositionsU + range[0], sizeof(Vector4f),
 								postitionsCPU.data(), sizeof(float) * 3,

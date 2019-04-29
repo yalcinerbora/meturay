@@ -48,7 +48,7 @@ __host__ Texture<D, T>::Texture(InterpolationType interp,
 
 	cudaChannelFormatDesc d = cudaCreateChannelDesc<T>();
 	CUDA_CHECK(cudaMallocMipmappedArray(&data, &d, extent, 1));
-	
+
 	// Allocation Done now generate texture
 	cudaResourceDesc rDesc = {};
 	cudaTextureDesc tDesc = {};
@@ -59,7 +59,7 @@ __host__ Texture<D, T>::Texture(InterpolationType interp,
 	tDesc.addressMode[0] = DetermineAddressMode(eResolve);
 	tDesc.addressMode[1] = DetermineAddressMode(eResolve);
 	tDesc.addressMode[2] = DetermineAddressMode(eResolve);
-	tDesc.filterMode = DetermineFilterMode(interp);	
+	tDesc.filterMode = DetermineFilterMode(interp);
 	tDesc.readMode = (unormType) ? cudaReadModeNormalizedFloat : cudaReadModeElementType;
 	tDesc.sRGB = 0;
 	tDesc.borderColor[0] = 0.0f;
@@ -130,12 +130,12 @@ void Texture<D, T>::Copy(const Byte* sourceData,
 
 	p.dstArray = levelArray;
 	p.dstPos = make_cudaPos(0, 0, 0);
-	
+
 	p.srcPos = make_cudaPos(0, 0, 0);
 	p.srcPtr = make_cudaPitchedPtr(const_cast<Byte*>(sourceData),
 								   size[0] * sizeof(T),
 								   size[0], size[1]);
-	
+
 	CUDA_CHECK(cudaMemcpy3D(&p));
 }
 

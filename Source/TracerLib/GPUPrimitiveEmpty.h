@@ -31,7 +31,7 @@ inline HitResult EmptyClosestHit(// Output
 								 EmptyHit& newHit,
 								 // I-O
 								 RayReg& rayData,
-								 // Input									
+								 // Input
 								 const EmptyLeaf& leaf,
 								 const EmptyData& primData)
 {
@@ -59,7 +59,7 @@ class GPUPrimitiveEmpty final
 	public:
 	static constexpr const char*				TypeName = "Empty";
 
-	private:	
+	private:
 	protected:
 	public:
 		// Constructors & Destructor
@@ -72,11 +72,11 @@ class GPUPrimitiveEmpty final
 		// Allocates and Generates Data
 		SceneError								InitializeGroup(const std::set<SceneFileNode>& surfaceDatalNodes, double time) override;
 		SceneError								ChangeTime(const std::set<SceneFileNode>& surfaceDatalNodes, double time) override;
-	
-		// Access primitive range from Id			
+
+		// Access primitive range from Id
 		Vector2ul								PrimitiveBatchRange(uint32_t surfaceDataId) const override;
 		AABB3									PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
-	
+
 		// Error check
 		// Queries in order to check if this primitive group supports certain primitive data
 		// Material may need that data

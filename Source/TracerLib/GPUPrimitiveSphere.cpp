@@ -94,7 +94,7 @@ SceneError GPUPrimitiveSphere::ChangeTime(const std::set<SceneFileNode>& surface
 
 		postitionsCPU.resize(primitiveCount * 3);
 		radiusCPU.resize(primitiveCount);
-	
+
 		if(e != loader->LoadPrimitiveData(postitionsCPU.data(),
 										  PrimitiveDataTypeToString(PrimitiveDataType::POSITION)))
 			return e;

@@ -36,7 +36,7 @@ inline HitResult SphereClosestHit(// Output
 								  SphereHit& newHit,
 								  // I-O
 								  RayReg& rayData,
-								  // Input								  
+								  // Input
 								  const DefaultLeaf& leaf,
 								  const SphereData& primData)
 {
@@ -45,7 +45,7 @@ inline HitResult SphereClosestHit(// Output
 	Vector3f center = data;
 	float radius = data[3];
 
-	// Do Intersecton test	
+	// Do Intersecton test
 	Vector3 pos; float newT;
 	bool intersects = rayData.ray.IntersectsSphere(pos, newT, center, radius);
 
@@ -72,14 +72,14 @@ inline AABB3f GenerateAABBSphere(PrimitiveId primitiveId, const SphereData& prim
 	Vector4f data = primData.centerRadius[primitiveId];
 	Vector3f center = data;
 	float radius = data[3];
-	
+
 	return Sphere::BoundingBox(center, radius);
 }
 
 __device__ __host__
 inline float GenerateAreaSphere(PrimitiveId primitiveId, const SphereData& primData)
 {
-	Vector4f data = primData.centerRadius[primitiveId];	
+	Vector4f data = primData.centerRadius[primitiveId];
 	float radius = data[3];
 
 	// Surface area is related to radius only (wrt of its square)
@@ -87,22 +87,22 @@ inline float GenerateAreaSphere(PrimitiveId primitiveId, const SphereData& primD
 	return radius * radius;
 }
 
-class GPUPrimitiveSphere final 
+class GPUPrimitiveSphere final
 	: public GPUPrimitiveGroup<SphereHit, SphereData, DefaultLeaf,
 							   SphereClosestHit, GenerateDefaultLeaf,
 							   GenerateAABBSphere, GenerateAreaSphere>
 {
-	public:	
+	public:
 		static constexpr const char*			TypeName = "Sphere";
 
-	private:		
+	private:
 		DeviceMemory							memory;
 
 		// List of ranges for each batch
 		uint64_t								totalPrimitiveCount;
 		std::map<uint32_t, Vector2ul>			batchRanges;
 		std::map<uint32_t, AABB3>				batchAABBs;
-			
+
 	public:
 		// Constructors & Destructor
 												GPUPrimitiveSphere();
@@ -115,7 +115,7 @@ class GPUPrimitiveSphere final
 		SceneError								InitializeGroup(const std::set<SceneFileNode>& surfaceDatalNodes, double time) override;
 		SceneError								ChangeTime(const std::set<SceneFileNode>& surfaceDatalNodes, double time) override;
 
-		// Access primitive range from Id			
+		// Access primitive range from Id
 		Vector2ul								PrimitiveBatchRange(uint32_t surfaceDataId) const override;
 		AABB3									PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
 

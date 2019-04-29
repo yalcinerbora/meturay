@@ -25,15 +25,15 @@
 //			TRACER,
 //			VISOR
 //		};
-//		
+//
 //		struct Node
 //		{
 //			uint32_t id;
 //			asio::ip::address adress;
-//			
-//		
+//
+//
 //		};
-//		
+//
 //
 //	private:
 //		bool					isLeader;
@@ -45,7 +45,7 @@
 //
 //		// ...
 //
-//		
+//
 //	protected:
 //		// Interface
 //		// Distributed Leader
@@ -73,7 +73,7 @@
 //		//	Tracer Related	 //
 //		// ================= //
 //		// Sending (All non-blocking)
-//		void					SendMaterialRays(uint32_t materialId, 
+//		void					SendMaterialRays(uint32_t materialId,
 //												 const std::vector<RayStack>) override;
 //		void					SendMaterialRays(const std::vector<ArrayPortion<uint32_t>> materialIds,
 //												 const std::vector<RayStack>) override;
@@ -81,7 +81,7 @@
 //										  const Vector2ui resolution,
 //										  const Vector2ui offset = Vector2ui(0, 0),
 //										  const Vector2ui size = Vector2ui(0, 0)) override;
-//		
+//
 //		// Requesting (All are blocking)
 //		void					RequestObjectAccelerator() override;
 //		void					RequestObjectAccelerator(uint32_t objId) override;
@@ -90,7 +90,7 @@
 //		void					RequestScene() override;
 //		void					RequestSceneMaterial(uint32_t) override;
 //		void					RequestSceneObject(uint32_t) override;
-//		
+//
 //		// Request rays that are responsible by this node
 //		void					RequestMaterialRays(const std::vector<RayStack>&) override;
 //
@@ -124,7 +124,7 @@
 //		void					ChangeFPS(int fps) override;
 //		void					NextFrame() override;
 //		void					PreviousFrame() override;
-//	
+//
 //		void					AttachDisplayCallback(SetImageSegmentFunc) override;
 //
 //		// Visor CLI

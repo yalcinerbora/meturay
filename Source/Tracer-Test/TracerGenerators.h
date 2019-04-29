@@ -10,5 +10,5 @@ class BasicTracerLogicGenerator final : public TracerLogicGenerator
 	public:
 		// Constructors & Destructor
 							BasicTracerLogicGenerator();
-							~BasicTracerLogicGenerator() = default;		
+							~BasicTracerLogicGenerator() = default;
 };

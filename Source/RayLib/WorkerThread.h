@@ -3,7 +3,7 @@
 
 Worker Implementation
 
-Basic worker implementation. Single thread and 
+Basic worker implementation. Single thread and
 a job queue that assigns any function to the worker.
 
 
@@ -15,22 +15,22 @@ a job queue that assigns any function to the worker.
 #include <functional>
 #include <condition_variable>
 
-// TODO: there is no limit on the queue 
+// TODO: there is no limit on the queue
 // it may be an issue..
 class WorkerThread
 {
-	private:	
-		std::thread								workerThread;
-		bool									stopSignal;
+	private:
+		std::thread							workerThread;
+		bool								stopSignal;
 
 		// Queue and Associated Conc Helpers
-		std::queue<std::function<void()>>		assignedJobs;
-		mutable std::mutex						mutex;
-		mutable std::condition_variable			conditionVar;
+		std::queue<std::function<void()>>	assignedJobs;
+		mutable std::mutex					mutex;
+		mutable std::condition_variable		conditionVar;
 
 		// Entry Point of the thread
-		void									THRDEntryPoint();
-		bool									ProcessJob();
+		void								THRDEntryPoint();
+		bool								ProcessJob();
 
 	protected:
 
@@ -41,7 +41,7 @@ class WorkerThread
 		WorkerThread&						operator=(const WorkerThread&) = delete;
 											~WorkerThread() = default;
 
-		// ThreadLifetime Worker	
+		// ThreadLifetime Worker
 		void								Start();
 		void								Stop();
 

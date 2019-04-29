@@ -23,12 +23,12 @@ class GPUMaterialGroupP
 // Partial Implementations
 template <class TLogic, class MaterialD, class SurfaceD,
 		  ShadeFunc<TLogic, SurfaceD, MaterialD> ShadeF>
-class GPUMaterialGroup 
+class GPUMaterialGroup
 	: public GPUMaterialGroupI
 	, public GPUMaterialGroupP<MaterialD>
 {
 	public:
-		// Types from 
+		// Types from
 		using MaterialData				= typename MaterialD;
 		using Surface					= typename SurfaceD;
 
@@ -60,15 +60,15 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
 
 	private:
 		const MGroup&					materialGroup;
-		const PGroup&					primitiveGroup;		
+		const PGroup&					primitiveGroup;
 
-	protected:		
+	protected:
 	public:
 		// Constrcutors & Destructor
 										GPUMaterialBatch(const GPUMaterialGroupI& m,
 															 const GPUPrimitiveGroupI& p);
 										~GPUMaterialBatch() = default;
-											
+
 		// Type (as string) of the primitive group
 		const char*						Type() const override;
 		// Interface
@@ -89,7 +89,7 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
 													  //
 													  const uint32_t rayCount,
 													  RNGMemory& rngMem) const override;
-	
+
 		const GPUPrimitiveGroupI&		PrimitiveGroup() const override;
 		const GPUMaterialGroupI&			MaterialGroup() const override;
 
@@ -98,12 +98,12 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
 
 template <class TLogic, class MaterialD,
 		  BoundaryShadeFunc<TLogic, MaterialD> ShadeF>
-class GPUBoundaryMatGroup	
+class GPUBoundaryMatGroup
 	: public GPUMaterialGroupI
 	, public GPUMaterialGroupP<MaterialD>
-{	
+{
 	public:
-		// Types from 
+		// Types from
 		using MaterialData				= typename MaterialD;
 
 		static constexpr auto ShadeFunc = ShadeF;
@@ -132,15 +132,15 @@ class GPUBoundaryMatBatch final : public GPUMaterialBatchI
 
 	private:
 		const MGroup&						materialGroup;
-		static const GPUPrimitiveGroupI*		primitiveGroup;		
+		static const GPUPrimitiveGroupI*		primitiveGroup;
 
-	protected:		
+	protected:
 	public:
 		// Constrcutors & Destructor
 										GPUBoundaryMatBatch(const GPUMaterialGroupI& m,
 															const GPUPrimitiveGroupI& p);
 										~GPUBoundaryMatBatch() = default;
-											
+
 		// Type (as string) of the primitive group
 		const char*						Type() const override;
 		// Interface
@@ -161,7 +161,7 @@ class GPUBoundaryMatBatch final : public GPUMaterialBatchI
 													  //
 													  const uint32_t rayCount,
 													  RNGMemory& rngMem) const override;
-	
+
 		const GPUPrimitiveGroupI&		PrimitiveGroup() const override;
 		const GPUMaterialGroupI&			MaterialGroup() const override;
 
@@ -238,11 +238,11 @@ void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
 
 																   const uint32_t rayCount,
 																   RNGMemory& rngMem) const
-{	
+{
 	using PrimitiveData = typename PGroup::PrimitiveData;
 	using MaterialData = typename MGroup::MaterialData;
 	using RayAuxData = typename TLogic::RayAuxData;
-	
+
 	// TODO: Is there a better way to implement this
 	const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
 	const MaterialData matData = MatDataAccessor::Data(materialGroup);
@@ -286,7 +286,7 @@ void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
 template <class TLogic, class MGroup, class PGroup,
 		  SurfaceFunc<MGroup, PGroup> SurfaceF>
 const GPUPrimitiveGroupI& GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::PrimitiveGroup() const
-{ 
+{
 	return primitiveGroup;
 }
 
@@ -355,9 +355,9 @@ void GPUBoundaryMatBatch<TLogic, MGroup>::ShadeRays(// Output
 {
 	using MaterialData = typename MGroup::MaterialData;
 	using RayAuxData = typename TLogic::RayAuxData;
-	
+
 	// TODO: Is there a better way to implement this
-	const MaterialData matData = MatDataAccessor::Data(materialGroup);	
+	const MaterialData matData = MatDataAccessor::Data(materialGroup);
 	const int gpuId = materialGroup.GPUId();
 
 	// Test
@@ -381,7 +381,7 @@ void GPUBoundaryMatBatch<TLogic, MGroup>::ShadeRays(// Output
 		rngMem.RNGData(gpuId),
 		// Material Related
 		matData
-	);		
+	);
 }
 
 template <class TLogic, class MGroup>

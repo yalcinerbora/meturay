@@ -84,7 +84,7 @@ class GeneratorNoArg
 		GeneratorNoArg(ObjGeneratorFunc<Interface> g,
 					   ObjDestroyerFunc<Interface> d)
 			: gFunc(g)
-			, dFunc(d) 
+			, dFunc(d)
 		{}
 
 		SharedLibPtr<Interface> operator()()
@@ -122,8 +122,8 @@ class GPUTracerGen
 								const Vector2i maxMats,
 								const Vector2i maxAccels)
 		{
-			TracerBaseLogicI* logic = gFunc(ba, 
-											std::move(ag), std::move(ab), 
+			TracerBaseLogicI* logic = gFunc(ba,
+											std::move(ag), std::move(ab),
 											std::move(mg), std::move(mb),
 											op, hitStructSize,
 											maxMats, maxAccels);
@@ -142,7 +142,7 @@ class GPUMatGroupGen
 		GPUMatGroupGen(MaterialGroupGeneratorFunc<GPUMaterialGroupI> g,
 					   ObjDestroyerFunc<GPUMaterialGroupI> d)
 			: gFunc(g)
-			, dFunc(d) 
+			, dFunc(d)
 		{}
 
 		GPUMatGPtr operator()(int gpuId)
@@ -163,7 +163,7 @@ class GPUAccelGroupGen
 		GPUAccelGroupGen(AccelGroupGeneratorFunc<GPUAcceleratorGroupI> g,
 						 ObjDestroyerFunc<GPUAcceleratorGroupI> d)
 			: gFunc(g)
-			, dFunc(d) 
+			, dFunc(d)
 		{}
 
 		GPUAccelGPtr operator()(const GPUPrimitiveGroupI& pg,
@@ -185,7 +185,7 @@ class GPUAccelBatchGen
 		GPUAccelBatchGen(AccelBatchGeneratorFunc<GPUAcceleratorBatchI> g,
 						 ObjDestroyerFunc<GPUAcceleratorBatchI> d)
 			: gFunc(g)
-			, dFunc(d) 
+			, dFunc(d)
 		{}
 
 		GPUAccelBPtr operator()(const GPUAcceleratorGroupI& ag,
@@ -237,7 +237,7 @@ namespace TypeGenWrappers
 
 	template <class T>
 	void EmptyDestruct(T* t) {}
-	
+
 	template <class Base, class TracerLogic>
 	Base* TracerLogicConstruct(GPUBaseAcceleratorI& ba,
 							   AcceleratorGroupList&& ag,
@@ -250,13 +250,13 @@ namespace TypeGenWrappers
 							   const Vector2i maxMats,
 							   const Vector2i maxAccels)
 	{
-		return new TracerLogic(ba, 
-							   std::move(ag), std::move(ab), 
-							   std::move(mg), std::move(mb), 
+		return new TracerLogic(ba,
+							   std::move(ag), std::move(ab),
+							   std::move(mg), std::move(mb),
 							   op, hitStrctSize,
 							   maxMats, maxAccels);
 	}
-	
+
 	template <class Base, class AccelGroup>
 	Base* AccelGroupConstruct(const GPUPrimitiveGroupI& p,
 							  const TransformStruct* t)

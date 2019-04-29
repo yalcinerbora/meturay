@@ -10,7 +10,7 @@
 
 class SurfaceDataLoader : public SurfaceDataLoaderI
 {
-	private:		
+	private:
 	protected:
 		const nlohmann::json		node;
 		double						time;
@@ -30,7 +30,7 @@ SurfaceDataLoader::SurfaceDataLoader(const nlohmann::json& node, double time)
 
 const uint32_t SurfaceDataLoader::SurfaceDataId() const
 {
-	return SceneIO::LoadNumber<const uint32_t>(node[SceneIO::ID]); 
+	return SceneIO::LoadNumber<const uint32_t>(node[SceneIO::ID]);
 }
 
 class InNodeTriLoader : public SurfaceDataLoader
@@ -49,7 +49,7 @@ class InNodeTriLoader : public SurfaceDataLoader
 
 		// Load Functionality
 		const char*				SufaceDataFileExt() const override;
-				
+
 		//
 		SceneError				LoadPrimitiveData(float*, const std::string& primitiveDataType)	override;
 		SceneError				LoadPrimitiveData(int*, const std::string& primitiveDataType) override;
@@ -102,7 +102,7 @@ SceneError InNodeTriLoader::LoadPrimitiveData(float* dataOut, const std::string&
 	if(primitiveDataType == PrimitiveDataTypeNames[static_cast<int>(PrimitiveDataType::POSITION)] ||
 	   primitiveDataType == PrimitiveDataTypeNames[static_cast<int>(PrimitiveDataType::NORMAL)])
 	{
-		std::array<Vector3, 3> data = 
+		std::array<Vector3, 3> data =
 		{
 			SceneIO::LoadVector<3, float>(node[primitiveDataType][0], time),
 			SceneIO::LoadVector<3, float>(node[primitiveDataType][1], time),
@@ -111,11 +111,11 @@ SceneError InNodeTriLoader::LoadPrimitiveData(float* dataOut, const std::string&
 		for(int i = 0; i < 9; i++)
 		{
 			dataOut[i] = data[i / 3][i % 3];
-		}		
+		}
 		return SceneError::OK;
 	}
 	else if(primitiveDataType == PrimitiveDataTypeNames[static_cast<int>(PrimitiveDataType::UV)])
-	{	
+	{
 		std::array<Vector2, 3> data =
 		{
 			SceneIO::LoadVector<2, float>(node[primitiveDataType][0], time),
@@ -125,7 +125,7 @@ SceneError InNodeTriLoader::LoadPrimitiveData(float* dataOut, const std::string&
 		for(int i = 0; i < 6; i++)
 		{
 			dataOut[i] = data[i / 2][i % 2];
-		}		
+		}
 		return SceneError::OK;
 	}
 	else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
@@ -225,7 +225,7 @@ SceneError InNodeSphrLoader::LoadPrimitiveData(float* dataOut, const std::string
 		return SceneError::OK;
 	}
 	else if(primitiveDataType == PrimitiveDataTypeNames[static_cast<int>(PrimitiveDataType::RADIUS)])
-	{		
+	{
 		dataOut[0] = SceneIO::LoadNumber<float>(node[primitiveDataType], time);
 		return SceneError::OK;
 	}

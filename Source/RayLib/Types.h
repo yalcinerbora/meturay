@@ -18,7 +18,7 @@ enum class PixelFormat
 	RG16_UNORM,
 	RGB16_UNORM,
 	RGBA16_UNORM,
-	
+
 	R_HALF,
 	RG_HALF,
 	RGB_HALF,

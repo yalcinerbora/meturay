@@ -17,7 +17,7 @@ inline void GIAlbedoMatShade(// Output
 							 const RayReg& ray,
 							 const BasicSurface& surface,
 							 const RayAuxBasic& aux,
-							 // 
+							 //
 							 RandomGPU& rng,
 							 // Input as global memory
 							 const ConstantAlbedoMatData& gMatData,
@@ -34,7 +34,7 @@ inline void GIAlbedoMatShade(// Output
 	// Illumination Calculation
 	Vector3 rad = auxIn.totalRadiance;
 	auxOut.totalRadiance = rad * gMatData.dAlbedo[matId];
-	// Material calculation is done 
+	// Material calculation is done
 	// continue to the determination of
 	// ray direction over path
 
@@ -75,14 +75,14 @@ class GIAlbedoMat final
 		static constexpr const char*	TypeName = "GIAlbedo";
 
 	private:
-		DeviceMemory				memory;
+		DeviceMemory			memory;
 		ConstantAlbedoMatData	matData;
 
 	protected:
 	public:
 								GIAlbedoMat(int gpuId);
 								~GIAlbedoMat() = default;
-		
+
 		// Interface
 		// Type (as string) of the primitive group
 		const char*				Type() const override;
@@ -92,7 +92,7 @@ class GIAlbedoMat final
 
 		// Material Queries
 		int						InnerId(uint32_t materialId) const override;
-		bool						IsLoaded(uint32_t materialId) const override;
+		bool					IsLoaded(uint32_t materialId) const override;
 
 		size_t					UsedGPUMemory() const override;
 		size_t					UsedCPUMemory() const override;

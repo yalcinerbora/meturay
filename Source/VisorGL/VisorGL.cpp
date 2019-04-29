@@ -22,9 +22,9 @@ KeyAction VisorGL::DetermineAction(int action)
 	else
 	{
 		assert(false);
-		return KeyAction::PRESSED;			
+		return KeyAction::PRESSED;
 	}
-		
+
 }
 
 MouseButtonType VisorGL::DetermineMouseButton(int button)
@@ -219,7 +219,7 @@ void VisorGL::WindowMinimizedGLFW(GLFWwindow* w, int b)
 	if(instance->input) instance->input->WindowMinimized(b);
 }
 
-void VisorGL::KeyboardUsedGLFW(GLFWwindow* w, int key, int scanCode, 
+void VisorGL::KeyboardUsedGLFW(GLFWwindow* w, int key, int scanCode,
 							   int action, int modifiers)
 {
 	assert(instance->window == w);
@@ -394,9 +394,9 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
 		{
 			// Just clear the sample count to zero
 			const GLuint clearData = 0;
-			glBindTexture(GL_TEXTURE_2D, sampleCountTexture);			
+			glBindTexture(GL_TEXTURE_2D, sampleCountTexture);
 			glClearTexSubImage(GL_TEXTURE_2D, 0, c.start[0], c.start[1], 0,
-							   size[0], size[1], 1, 
+							   size[0], size[1], 1,
 							   GL_R, GL_UNSIGNED_INT, &clearData);
 			break;
 		}
@@ -424,7 +424,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
 			glBindTexture(GL_TEXTURE_2D, bufferTexture);
 			glActiveTexture(GL_TEXTURE0 + T_IN_COLOR);
 			glBindTexture(GL_TEXTURE_2D, inTexture);
-	
+
 			// Images
 			glBindImageTexture(I_SAMPLE, sampleCountTexture,
 							   0, false, 0, GL_READ_WRITE, GL_R32I);
@@ -469,7 +469,7 @@ void VisorGL::RenderImage()
 	// Bind Texture
 	glActiveTexture(GL_TEXTURE0 + T_IN_COLOR);
 	glBindTexture(GL_TEXTURE_2D, outputTextures[currentIndex]);
-	
+
 	// Draw
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
@@ -531,7 +531,7 @@ VisorGL::VisorGL(const VisorOptions& opts)
 	glfwWindowHint(GLFW_SAMPLES, 16);
 
 	// Pixel of WindowFBO
-	// Full precision output 
+	// Full precision output
 	glfwWindowHint(GLFW_RED_BITS, 32);
 	glfwWindowHint(GLFW_GREEN_BITS, 32);
 	glfwWindowHint(GLFW_BLUE_BITS, 32);
@@ -582,7 +582,7 @@ VisorGL::VisorGL(const VisorOptions& opts)
 							  nullptr,
 							  GL_TRUE);
 	}
-	
+
 	// Set Callbacks
 	glfwSetWindowPosCallback(window, VisorGL::WindowPosGLFW);
 	glfwSetFramebufferSizeCallback(window, VisorGL::WindowFBGLFW);
@@ -654,7 +654,7 @@ VisorGL::VisorGL(const VisorOptions& opts)
 
 	// Sampler
 	glBindSampler(T_IN_COLOR, linearSampler);
-	
+
 	// Bind VAO
 	glBindVertexArray(vao);
 
@@ -716,7 +716,7 @@ void VisorGL::ResetSamples(Vector2i start, Vector2i end)
 	command.format = texPixFormat;
 	command.start = start;
 	command.end = end;
-	
+
 	commandList.Enqueue(std::move(command));
 }
 
@@ -734,7 +734,7 @@ void VisorGL::AccumulatePortion(const std::vector<Byte> data,
 	command.format = f;
 	command.sampleCount = sampleCount;
 	command.data = std::move(data);
-	
+
 	commandList.Enqueue(std::move(command));
 }
 

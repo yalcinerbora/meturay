@@ -10,7 +10,7 @@ CudaGPU::CudaGPU(int deviceId)
 CudaGPU::GPUTier CudaGPU::DetermineGPUTier(cudaDeviceProp p)
 {
 	if(p.major == 3) return GPU_KEPLER;
-	else if(p.major == 5) return GPU_MAXWELL;	
+	else if(p.major == 5) return GPU_MAXWELL;
 	else if(p.major == 6) return GPU_PASCAL;
 	else if(p.major >= 7) return GPU_TURING_VOLTA;
 	else return GPU_UNSUPPORTED;
@@ -83,8 +83,8 @@ std::vector<CudaGPU> CudaSystem::systemGPUs;
 CudaSystem::CudaError CudaSystem::systemStatus = CudaSystem::CUDA_SYSTEM_UNINIALIZED;
 
 CudaSystem::CudaError CudaSystem::Initialize()
-{	
-	int deviceCount;	
+{
+	int deviceCount;
 	cudaError err;
 
 	err = cudaGetDeviceCount(&deviceCount);

@@ -20,7 +20,7 @@ using ShadeFunc = void(*)(// Output
 						  const RayReg& ray,
 						  const Surface& surface,
 						  const TLogic::RayAuxData& aux,
-						  // 
+						  //
 						  RandomGPU& rng,
 						  // Input as global memory
 						  const MaterialData& gMatData,
@@ -33,7 +33,7 @@ using BoundaryShadeFunc = void(*)(// Output
 								  // Input as registers
 								  const RayReg& ray,
 								  const TLogic::RayAuxData& aux,
-								  // 
+								  //
 								  RandomGPU& rng,
 								  // Input as global memory
 								  const MaterialData& gMatData);
@@ -42,10 +42,10 @@ using BoundaryShadeFunc = void(*)(// Output
 template <class TLogic, class MGroup>
 __global__ void KCBoundaryMatShade(// Output
 								   Vector4* gImage,
-								   // Input								
+								   // Input
 								   const RayGMem* gInRays,
 								   const TLogic::RayAuxData* gInRayAux,
-								   //								  
+								   //
 								   const RayId* gRayIds,
 								   //
 								   const uint32_t rayCount,
@@ -70,7 +70,7 @@ __global__ void KCBoundaryMatShade(// Output
 		// Load Input to Registers
 		const RayReg ray(gInRays, rayId);
 		const RayAuxData aux = gInRayAux[rayId];
-		
+
 		// Actual Shading
 		MGroup::ShadeFunc(// Output
 						  gImage,
@@ -92,7 +92,7 @@ __global__ void KCMaterialShade(// Output
 								RayGMem* gOutRays,
 								TLogic::RayAuxData* gOutRayAux,
 								const uint32_t maxOutRay,
-								// Input								
+								// Input
 								const RayGMem* gInRays,
 								const TLogic::RayAuxData* gInRayAux,
 								const PrimitiveId* gPrimitiveIds,
@@ -101,7 +101,7 @@ __global__ void KCMaterialShade(// Output
 								const HitKey* gMatIds,
 								const RayId* gRayIds,
 								//
-								const uint32_t rayCount,								
+								const uint32_t rayCount,
 								RNGGMem gRNGStates,
 								// Material Related
 								const MGroup::MaterialData matData,

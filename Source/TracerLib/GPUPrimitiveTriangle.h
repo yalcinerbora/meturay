@@ -42,7 +42,7 @@ inline HitResult TriangleClosestHit(// Output
 									TriangleHit& newHit,
 									// I-O
 									RayReg& rayData,
-									// Input									
+									// Input
 									const DefaultLeaf& leaf,
 									const TriData& primData)
 {
@@ -51,11 +51,11 @@ inline HitResult TriangleClosestHit(// Output
 	Vector3 position1 = primData.positionsU[leaf.primitiveId * 3 + 1];
 	Vector3 position2 = primData.positionsU[leaf.primitiveId * 3 + 2];
 
-	// Do Intersecton test	
+	// Do Intersecton test
 	Vector3 baryCoords; float newT;
 	bool intersects = rayData.ray.IntersectsTriangle(baryCoords, newT,
-													 position0, 
-													 position1, 
+													 position0,
+													 position1,
 													 position2,
 													 false);
 
@@ -79,7 +79,7 @@ inline AABB3f GenerateAABBTriangle(PrimitiveId primitiveId, const TriData& primD
 	Vector3 position0 = primData.positionsU[primitiveId * 3 + 0];
 	Vector3 position1 = primData.positionsU[primitiveId * 3 + 1];
 	Vector3 position2 = primData.positionsU[primitiveId * 3 + 2];
-	
+
 	return Triangle::BoundingBox(position0, position1, position2);
 }
 
@@ -105,7 +105,7 @@ class GPUPrimitiveTriangle final
 	public:
 		static constexpr const char*			TypeName = "Triangle";
 
-	private:		
+	private:
 		DeviceMemory								memory;
 
 		// List of ranges for each batch
@@ -126,7 +126,7 @@ class GPUPrimitiveTriangle final
 		SceneError								InitializeGroup(const std::set<SceneFileNode>& surfaceDataNodes, double time) override;
 		SceneError								ChangeTime(const std::set<SceneFileNode>& surfaceDataNodes, double time) override;
 
-		// Access primitive range from Id			
+		// Access primitive range from Id
 		Vector2ul								PrimitiveBatchRange(uint32_t surfaceDataId) const override;
 		AABB3									PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
 

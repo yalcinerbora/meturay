@@ -33,7 +33,7 @@ class GPUAcceleratorGroup : public GPUAcceleratorGroupI
 template <class AGroup, class PGroup>
 class GPUAcceleratorBatch : public GPUAcceleratorBatchI
 {
-	private:				
+	private:
 	protected:
 		const AGroup&					acceleratorGroup;
 		const PGroup&					primitiveGroup;

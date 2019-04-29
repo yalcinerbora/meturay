@@ -27,7 +27,7 @@ namespace MayaCache
 	struct MayaNSCacheInfo
 	{
 		Vector3ui						dim;
-		Vector3f						size;	
+		Vector3f						size;
 		// Channels
 		std::vector<MayaChannelType>	channels;
 
@@ -38,7 +38,7 @@ namespace MayaCache
 		std::vector<float>				opacity;
 		std::vector<float>				opacityInterp;
 		// Transparency
-		Vector3f						transparency;		
+		Vector3f						transparency;
 	};
 
 	std::string		GenerateNCacheFrameFile(const std::string& xmlFile, int frame);

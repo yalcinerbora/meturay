@@ -1,8 +1,8 @@
 #version 430
-/*	
+/*
 	**Post Process Generic Shader**
-	
-	File Name	: PProcessGeneric.frag 
+
+	File Name	: PProcessGeneric.frag
 	Author		: Bora Yalciner
 	Description	:
 

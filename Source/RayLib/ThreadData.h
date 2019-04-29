@@ -21,7 +21,7 @@ class ThreadData
 	public:
 		ThreadData&				operator=(const T& t);
 		bool					CheckChanged(T& newData);
-};	
+};
 
 template <class T>
 inline ThreadData<T>& ThreadData<T>::operator=(const T& t)

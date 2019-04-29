@@ -10,16 +10,16 @@
 
 GLuint ShaderGL::shaderPipelineID = 0;
 
-GLenum ShaderGL::ShaderTypeToGL(ShaderType t)	
+GLenum ShaderGL::ShaderTypeToGL(ShaderType t)
 {
-	static GLenum values[] = 
+	static GLenum values[] =
 	{
 		GL_VERTEX_SHADER,
 		GL_TESS_CONTROL_SHADER,
 		GL_TESS_EVALUATION_SHADER,
 		GL_GEOMETRY_SHADER,
 		GL_FRAGMENT_SHADER,
-		GL_COMPUTE_SHADER		
+		GL_COMPUTE_SHADER
 	};
 	return values[static_cast<int>(t)];
 }

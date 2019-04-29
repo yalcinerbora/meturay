@@ -16,7 +16,7 @@ VisorWindowInput::VisorWindowInput(double sensitivity,
 {}
 
  void VisorWindowInput::AttachVisorCallback(VisorCallbacksI& vc)
-{	
+{
 	visorCallbacks = &vc;
 }
 
@@ -82,7 +82,7 @@ void VisorWindowInput::MouseMoved(double x, double y)
 	mouseY = y;
 }
 
-void VisorWindowInput::KeyboardUsed(KeyboardKeyType key, 
+void VisorWindowInput::KeyboardUsed(KeyboardKeyType key,
 									KeyAction action)
 {
 

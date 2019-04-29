@@ -132,7 +132,7 @@ inline __device__ EnableNV2Type<T, T> ReduceDivide(const T& a, const T&b)
 	{
 		a.x / b.x,
 		a.y / b.y
-	}; 
+	};
 }
 
 template<class T>

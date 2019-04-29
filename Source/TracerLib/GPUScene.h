@@ -37,15 +37,15 @@ class GPUScene
 		// Fundamental
 		TracerLogicGeneratorI&					logicGenerator;
 		ScenePartitionerI&						partitioner;
-		
+
 		// Loaded
-		Vector2i									maxAccelIds;
-		Vector2i									maxMatIds;
+		Vector2i								maxAccelIds;
+		Vector2i								maxMatIds;
 
 		// GPU Memory
-		DeviceMemory								memory;
+		DeviceMemory							memory;
 		// CPU Memory
-		std::vector<CameraPerspective>			cameraMemory;		
+		std::vector<CameraPerspective>			cameraMemory;
 
 		// File Related
 		nlohmann::json*							sceneJson;
@@ -53,20 +53,20 @@ class GPUScene
 		double									currentTime;
 
 		// GPU Pointers
-		LightStruct*								dLights;
-		TransformStruct*							dTransforms;
-		
+		LightStruct*							dLights;
+		TransformStruct*						dTransforms;
+
 		// Inners
 		// Helper Logic
 		SceneError								OpenFile(const std::string& fileName);
-		bool										FindNode(nlohmann::json& node, const char* name);
+		bool									FindNode(nlohmann::json& node, const char* name);
 		static SceneError						GenIdLookup(std::map<uint32_t, uint32_t>&,
 															const nlohmann::json& array,
 															IdBasedNodeType);
 
 		// Private Load Functionality
-		SceneError		GenerateConstructionData(// Striped Listings (Striped from unsued nodes)											  
-												 PrimitiveNodeList& primGroupNodes,																	 
+		SceneError		GenerateConstructionData(// Striped Listings (Striped from unsued nodes)
+												 PrimitiveNodeList& primGroupNodes,
 												 //
 												 MaterialNodeList& matGroupNodes,
 												 MaterialBatchList& matBatchListings,
@@ -93,10 +93,10 @@ class GPUScene
 												double time = 0.0);
 		SceneError		GenerateBoundaryMaterial(int gpuId, double time = 0.0);
 
-		void				LoadCommon(double time);
+		void			LoadCommon(double time);
 		SceneError		LoadLogicRelated(double time);
 
-		void				ChangeCommon(double time);
+		void			ChangeCommon(double time);
 		SceneError		ChangeLogicRelated(double time);
 
 	public:
@@ -117,14 +117,11 @@ class GPUScene
 		SceneError					LoadScene(double);
 		SceneError					ChangeTime(double);
 		//
-		Vector2i						MaxMatIds();
-		Vector2i						MaxAccelIds();
+		Vector2i					MaxMatIds();
+		Vector2i					MaxAccelIds();
 		// Access GPU
 		const LightStruct*			LightsGPU() const;
 		const TransformStruct*		TransformsGPU() const;
 		// Access CPU
-		const CameraPerspective*		CamerasCPU() const;
-
-		// Further Required Data for Construction
-		const SurfaceStruct*			SurfaceList;
+		const CameraPerspective*	CamerasCPU() const;
 };

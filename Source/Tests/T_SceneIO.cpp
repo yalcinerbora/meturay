@@ -51,7 +51,7 @@ TEST(SceneIO, Number)
 
 TEST(SceneIO, Quaternion)
 {
-	EXPECT_EQ(SceneIO::LoadQuaternion<float>(LoadJson(jsonQuat)), 
+	EXPECT_EQ(SceneIO::LoadQuaternion<float>(LoadJson(jsonQuat)),
 			  QuatF(1.0f, 0.0f, 0.0f, 0.0f));
 
 	EXPECT_THROW(SceneIO::LoadQuaternion<float>(LoadJson(jsonQuatLess)), SceneException);
@@ -66,7 +66,7 @@ TEST(SceneIO, Vector)
 	const std::string jsonVec4Less = "{\"v\":[1.0, 0.0, 0.0]}";
 	const std::string jsonVec4More = "{\"v\":[1.0, 0.0, 0.0, 0.0, 0.0]}";
 
-	EXPECT_EQ((SceneIO::LoadVector<4, float>(LoadJson(jsonVec4))), 
+	EXPECT_EQ((SceneIO::LoadVector<4, float>(LoadJson(jsonVec4))),
 			  Vector4f(1.0f, 0.0f, 0.0f, 0.0f));
 	EXPECT_THROW((SceneIO::LoadVector<4,float>(LoadJson(jsonVec4Less))), SceneException);
 	EXPECT_THROW((SceneIO::LoadVector<4,float>(LoadJson(jsonVec4More))), SceneException);

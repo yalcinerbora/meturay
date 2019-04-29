@@ -20,7 +20,7 @@ Object oriented design and openGL like access
 enum class InterpolationType
 {
 	NEAREST,
-	LINEAR	
+	LINEAR
 };
 
 enum class EdgeResolveType
@@ -76,7 +76,7 @@ class Texture : public DeviceLocalMemoryI
 	private:
 		cudaMipmappedArray_t			data;
 		cudaTextureObject_t				t;
-		
+
 	protected:
 	public:
 		__host__						Texture(InterpolationType,
@@ -111,7 +111,7 @@ class Texture : public DeviceLocalMemoryI
 //		cudaTextureObject_t				t;
 //
 //	protected:
-//		
+//
 //
 //	public:
 //		__host__				TextureArray(InterpolationType,
@@ -136,7 +136,7 @@ class Texture : public DeviceLocalMemoryI
 //	private:
 //		cudaArray_t						data;
 //		cudaTextureObject_t				t;
-//		
+//
 //	protected:
 //	public:
 //		__host__				TextureCube(InterpolationType,
@@ -163,7 +163,7 @@ class Texture : public DeviceLocalMemoryI
 //	private:
 //		cudaArray_t						data;
 //		cudaTextureObject_t				t;
-//		
+//
 //	protected:
 //	public:
 //		__host__				TextureCubeArray(InterpolationType,

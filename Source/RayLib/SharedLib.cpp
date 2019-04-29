@@ -33,7 +33,7 @@ std::wstring ConvertWinWchar(const std::string& unicodeStr)
 			unicodeStr.data(),			// Source UTF-8 string pointer
 			static_cast<int>(length),   // Length of source UTF-8 string, in chars
 			wString.data(),				// Pointer to destination buffer
-			utf16Length					// Size of destination buffer, in wchar_ts          
+			utf16Length					// Size of destination buffer, in wchar_ts
 		);
 		return wString;
 	#elif defined METURAY_LINUX
@@ -52,10 +52,10 @@ void* SharedLib::GetProcAdressInternal(const std::string& fName)
 }
 
 SharedLib::SharedLib(const std::string& libName)
-{	
-	std::string libWithExt = libName;	
+{
+	std::string libWithExt = libName;
 	#if defined METURAY_WIN
-		libWithExt += WinDLLExt;		
+		libWithExt += WinDLLExt;
 		libHandle = (void*)LoadLibrary(ConvertWinWchar(libWithExt).c_str());
 	#elif defined METURAY_LINUX
 		libWithExt += LinuxDLLExt;
@@ -64,7 +64,7 @@ SharedLib::SharedLib(const std::string& libName)
 }
 
 SharedLib::~SharedLib()
-{	
+{
 	#if defined METURAY_WIN
 		FreeLibrary((HINSTANCE)libHandle);
 	#elif defined METURAY_LINUX

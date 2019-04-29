@@ -52,7 +52,7 @@ size_t ConstantBoundaryMat::UsedCPUMemory(uint32_t materialId) const
 	return UsedCPUMemory();
 }
 
-uint8_t ConstantBoundaryMat::OutRayCount() const 
+uint8_t ConstantBoundaryMat::OutRayCount() const
 {
 	return 0;
 }
@@ -65,7 +65,7 @@ const char* BasicMat::Type() const
 {
 	return TypeName;
 }
-	
+
 SceneError BasicMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)
 {
 	dData = ConstantAlbedoMatRead(memory, materialNodes, time);

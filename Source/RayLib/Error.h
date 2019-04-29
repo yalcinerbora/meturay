@@ -13,5 +13,5 @@ struct ErrorI
 	public:
 		virtual					~ErrorI() = default;
 		// Interface
-		virtual operator		std::string() const = 0;		
+		virtual operator		std::string() const = 0;
 };

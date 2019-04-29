@@ -6,7 +6,7 @@ struct CameraPerspective
 {
 	// World Space Lengths from camera
 	Vector3		gazePoint;
-	float		nearPlane;	
+	float		nearPlane;
 	Vector3		position;
 	float		farPlane;
 	Vector3		up;

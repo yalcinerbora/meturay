@@ -2,7 +2,7 @@
 
 /**
 
-Arbitrary sized square matrix. 
+Arbitrary sized square matrix.
 
 N should be 2, 3, 4 at most.
 
@@ -43,7 +43,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
 		template <int M>
 		__device__ __host__					Matrix(const Matrix<M, T>&);
 											~Matrix() = default;
-		
+
 		// MVC bug? these trigger std::trivially_copyable static assert
 		//									Matrix(const Matrix&) = default;
 		//Matrix&							operator=(const Matrix&) = default;
@@ -80,7 +80,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
 		__device__ __host__ bool						operator==(const Matrix&) const;
 		__device__ __host__ bool						operator!=(const Matrix&) const;
 
-		// Utilty	
+		// Utilty
 		__device__ __host__ T							Determinant() const;
 		template<class Q = T>
 		__device__ __host__ FloatEnable<Q, Matrix>		Inverse() const;
@@ -110,7 +110,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
 		__device__ __host__ FloatEnable<Q, Matrix>		Ceil() const;
 		template<class Q = T>
 		__device__ __host__ FloatEnable<Q, Matrix&>		CeilSelf();
-		
+
 		template<class Q = T>
 		static __device__ __host__ FloatEnable<Q, Matrix>	Lerp(const Matrix&, const Matrix&, T);
 

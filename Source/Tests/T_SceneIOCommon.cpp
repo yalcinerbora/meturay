@@ -22,7 +22,7 @@ static nlohmann::json ReadTestFile(const std::string& fileName = TestSceneName)
 
 TEST(SceneIOCommon, Camera)
 {
-	static constexpr CameraPerspective CamResult = 
+	static constexpr CameraPerspective CamResult =
 	{
 		Vector3(0.0f, 5.0f, 0.0f),
 		0.1f,
@@ -84,7 +84,7 @@ TEST(SceneIOCommon, Lights)
 	nlohmann::json jsn = ReadTestFile()[SceneIO::LIGHT_BASE];
 	// First one is external, it should throw file not found
 	EXPECT_THROW(SceneIO::LoadLight(jsn[0]), SceneException);
-	// Point	
+	// Point
 	light = SceneIO::LoadLight(jsn[1]);
 	EXPECT_EQ(LightPoint.point.position, light.point.position);
 	EXPECT_EQ(LightPoint.point.color, light.point.color);

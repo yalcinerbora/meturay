@@ -42,7 +42,7 @@ TEST(ParallelScan, GenericExclusive)
 	for(int i = 0; i < ElementCount; i++)
 	{
 		EXPECT_EQ(static_cast<int*>(iDataOut)[i], i);
-		EXPECT_FLOAT_EQ(static_cast<float*>(fDataOut)[i], 
+		EXPECT_FLOAT_EQ(static_cast<float*>(fDataOut)[i],
 						static_cast<float>(i));
 	}
 }

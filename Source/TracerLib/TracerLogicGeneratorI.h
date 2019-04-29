@@ -62,7 +62,7 @@ class TracerLogicGeneratorI
 												  const TracerParameters& opts,
 												  const Vector2i maxMats,
 												  const Vector2i maxAccels) = 0;
-		
+
 		// Get all generated stuff on a vector
 		virtual PrimitiveGroupList			GetPrimitiveGroups() const = 0;
 		virtual AcceleratorGroupList			GetAcceleratorGroups() const = 0;

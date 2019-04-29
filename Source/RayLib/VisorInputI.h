@@ -188,13 +188,13 @@ class VisorInputI
 
 		virtual void						KeyboardUsed(KeyboardKeyType key, KeyAction action) = 0;
 		virtual void						MouseButtonUsed(MouseButtonType button, KeyAction action) = 0;
-		
+
 		// Defining Custom Callback
 		template <class Function, class... Args>
-		void								AddKeyCallback(KeyboardKeyType, KeyAction, 
+		void								AddKeyCallback(KeyboardKeyType, KeyAction,
 														   Function&& f, Args&&... args);
 		template <class Function, class... Args>
-		void								AddButtonCallback(MouseButtonType, KeyAction, 
+		void								AddButtonCallback(MouseButtonType, KeyAction,
 															  Function&& f, Args&&... args);
 };
 
@@ -207,7 +207,7 @@ void VisorInputI::AddKeyCallback(KeyboardKeyType key, KeyAction action,
 }
 
 template <class Function, class... Args>
-void VisorInputI::AddButtonCallback(MouseButtonType button, KeyAction action, 
+void VisorInputI::AddButtonCallback(MouseButtonType button, KeyAction action,
 									Function&& f, Args&&... args)
 {
 	std::function<void()> func = std::bind(f, args...);

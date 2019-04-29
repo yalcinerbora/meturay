@@ -39,25 +39,25 @@ class ImageMemory
 		ImageMemory&			operator=(const ImageMemory&) = delete;
 		ImageMemory&			operator=(ImageMemory&&) = default;
 							~ImageMemory() = default;
-					
-		void					SetPixelFormat(PixelFormat);
-		void					Reportion(Vector2i offset,
-									  Vector2i size);
-		void					Resize(Vector2i resolution);
-		void					Reset();
+
+		void				SetPixelFormat(PixelFormat);
+		void				Reportion(Vector2i offset,
+								  Vector2i size);
+		void				Resize(Vector2i resolution);
+		void				Reset();
 
 		template<class T>
 		std::vector<T>		MoveImageToCPU() const;
-	
+
 		// Getters
-		Vector2i				SegmentSize() const;
-		Vector2i				SegmentOffset() const;
-		Vector2i				Resolution() const;
-		
+		Vector2i			SegmentSize() const;
+		Vector2i			SegmentOffset() const;
+		Vector2i			Resolution() const;
+
 		template <class T>
 		T*					GMem();
 		template <class T>
-		const T*				GMem() const;
+		const T*			GMem() const;
 };
 
 template<class T>
