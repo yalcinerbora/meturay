@@ -20,7 +20,7 @@ class SelfNode
 {
     private:
         VisorI&     visor;
-        TracerI&        tracer;
+        TracerI&    tracer;
 
     protected:
     public:

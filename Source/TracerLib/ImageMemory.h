@@ -16,13 +16,13 @@ Used by tracers
 class ImageMemory
 {
     private:
-        DeviceMemory            memory;
+        DeviceMemory        memory;
         PixelFormat         format;
         size_t              pixelSize;
 
-        Vector2i                segmentSize;
-        Vector2i                segmentOffset;
-        Vector2i                resolution;
+        Vector2i            segmentSize;
+        Vector2i            segmentOffset;
+        Vector2i            resolution;
 
         static size_t       PixelFormatToSize(PixelFormat);
 
@@ -36,13 +36,13 @@ class ImageMemory
                                         PixelFormat f);
                             ImageMemory(const ImageMemory&) = delete;
                             ImageMemory(ImageMemory&&) = default;
-        ImageMemory&            operator=(const ImageMemory&) = delete;
-        ImageMemory&            operator=(ImageMemory&&) = default;
+        ImageMemory&        operator=(const ImageMemory&) = delete;
+        ImageMemory&        operator=(ImageMemory&&) = default;
                             ~ImageMemory() = default;
 
         void                SetPixelFormat(PixelFormat);
         void                Reportion(Vector2i offset,
-                                  Vector2i size);
+                                      Vector2i size);
         void                Resize(Vector2i resolution);
         void                Reset();
 
@@ -53,6 +53,8 @@ class ImageMemory
         Vector2i            SegmentSize() const;
         Vector2i            SegmentOffset() const;
         Vector2i            Resolution() const;
+        PixelFormat         Format() const;
+        int                 PixelSize() const;
 
         template <class T>
         T*                  GMem();

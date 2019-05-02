@@ -26,7 +26,6 @@ TEST(HelloTriangle, Test)
     EnableVTMode();
 
     static constexpr Vector2i IMAGE_RESOLUTION = {256, 256};
-    static constexpr float ASPECT_RATIO = 1.0f;//16.0f / 9.0f;
 
     TracerParameters tracerParams =
     {
@@ -68,7 +67,7 @@ TEST(HelloTriangle, Test)
 
     // Camera (Dont use scenes camera)
     //CameraPerspective cam = scene.CamerasCPU()[0];
-    CameraPerspective cam;
+    /*CameraPerspective cam;
     cam.apertureSize = 1.0f;
     cam.farPlane = 100.0f;
     cam.nearPlane = 0.1f;
@@ -76,7 +75,7 @@ TEST(HelloTriangle, Test)
                        MathConstants::DegToRadCoef * 70.0f * (1.0f / ASPECT_RATIO));
     cam.up = YAxis;
     cam.position = Vector3f(0.0f, 5.0f, -31.2f);
-    cam.gazePoint = Vector3f(0.0f, 5.0f, 0.0f);
+    cam.gazePoint = Vector3f(0.0f, 5.0f, 0.0f);*/
 
     // Start Tracer Thread and Set scene
     const PixelFormat pixFormat = PixelFormat::RGBA_FLOAT;
@@ -127,9 +126,6 @@ TEST(HelloTriangle, Test)
     while(visorView->IsOpen())
     {
         // Before try to show do render loop
-
-
-
         visorView->Render();
 
         // Present Back Buffer

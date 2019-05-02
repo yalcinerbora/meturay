@@ -39,6 +39,7 @@ class TracerBase : public TracerI
         ImageMemory             outputImage;
 
         // Properties
+        int                     sampleCountPerRay;
         uint32_t                currentRayCount;
         TracerOptions           options;
 
@@ -88,7 +89,7 @@ class TracerBase : public TracerI
         void                Render() override;          // Render rays  (do hit, then bounce)
         void                FinishSamples() override;   // Finish samples (write to image)
 
-        // Image Reated
+        // Image Related
         void                SetImagePixelFormat(PixelFormat) override;
         void                ReportionImage(Vector2i start = Zero2i,
                                            Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;

@@ -323,6 +323,7 @@ void TracerBase::GenerateInitialRays(const GPUScene& scene,
     // You can only write to out buffer of the ray memory
     // Make that memory in rays for hit/shade system
     rayMemory.SwapRays();
+    sampleCountPerRay = samplePerLocation * samplePerLocation;
 }
 
 bool TracerBase::Continue()
@@ -344,7 +345,28 @@ void TracerBase::Render()
 
 void TracerBase::FinishSamples()
 {
-    Debug::DumpImage("debug.png", outputImage);
+    // Normally if ray reaches to boundary material
+    // its result is written to the ray data
+    // but a ray not always reach to boundary material
+    // if a pre determined
+
+    // Determine Size
+    Vector2i start = outputImage.SegmentOffset();
+    Vector2i end = start + outputImage.SegmentSize();
+    size_t size = (outputImage.SegmentSize()[0] *
+                   outputImage.SegmentSize()[1] *
+                   outputImage.PixelSize());
+
+    // Data
+    std::vector<Byte> data(size);
+    CUDA_CHECK(cudaMemcpy(data.data(), outputImage.GMem<Byte>(),
+                          size, cudaMemcpyDeviceToHost));
+
+    // Launch finished image
+    if(callbacks)callbacks->SendImage(std::move(data),
+                                      outputImage.Format,
+                                      sampleCountPerRay,
+                                      start, end);
 
     // TODO: Do this
     if(!healthy) return;

@@ -541,7 +541,11 @@ VisorGL::VisorGL(const VisorOptions& opts)
     glfwWindowHint(GLFW_DEPTH_BITS, 0);
     glfwWindowHint(GLFW_STENCIL_BITS, 0);
 
-    window = glfwCreateWindow(1280, 720, "METU Visor", nullptr, nullptr);
+    window = glfwCreateWindow(opts.iSize[0],
+                              opts.iSize[1],
+                              "METU Visor",
+                              nullptr,
+                              nullptr);
     if(window == nullptr)
     {
         METU_ERROR_LOG("Error: Could not create window.");

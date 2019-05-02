@@ -94,3 +94,13 @@ Vector2i ImageMemory::Resolution() const
 {
     return resolution;
 }
+
+PixelFormat ImageMemory::Format() const
+{
+    return format;
+}
+
+int ImageMemory::PixelSize() const
+{
+    return pixelSize;
+}
