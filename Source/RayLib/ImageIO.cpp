@@ -48,7 +48,7 @@ bool ImageIO::ReadHDR(std::vector<Vector4>& image,
     FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib1);
     for(int j = 0; j < header->biHeight; j++)
     {
-        FIRGBAF *bits = (FIRGBAF *)FreeImage_GetScanLine(dib1, j);;
+        FIRGBAF *bits = (FIRGBAF *)FreeImage_GetScanLine(dib1, j);
         for(int i = 0; i < header->biWidth; i++)
         {
         /*  RGBQUAD rgb;
@@ -88,10 +88,10 @@ bool ImageIO::WriteAsPNG(const Vector4f* image,
     for(uint32_t j = 0; j < size[1]; j++)
     for(uint32_t i = 0; i < size[0]; i++)
     {
-        uint32_t jImg = size[1] - j - 1;
+        //uint32_t jImg = size[1] - j - 1;
 
         RGBQUAD color;
-        Vector4f rgbImage = image[jImg * size[0] + i];
+        Vector4f rgbImage = image[j * size[0] + i];
 
         rgbImage.ClampSelf(0.0f, 1.0f);
         rgbImage *= 255.0f;

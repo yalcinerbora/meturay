@@ -340,7 +340,7 @@ __pycache__/
 # End of https://www.gitignore.io/api/c++,visualstudio,visualstudiocode
 
 # Keep Provided Libraries
-!Lib/
+!Lib/**/
 !Lib/**/*.out
 !Lib/**/*.exe
 !Lib/**/*.lai

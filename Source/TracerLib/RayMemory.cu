@@ -137,7 +137,7 @@ void RayMemory::SwapRays()
     dRayAuxOut = temp1;
 }
 
-void RayMemory::ResetHitMemory(size_t rayCount, size_t hitStructSize)
+void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
 {
     // Align to proper memory strides
     size_t sizeOfMaterialKeys = sizeof(HitKey) * rayCount;
@@ -234,7 +234,7 @@ void RayMemory::ResetHitMemory(size_t rayCount, size_t hitStructSize)
 }
 
 void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
-                         size_t count,
+                         uint32_t count,
                          const Vector2i& bitMaxValues)
 {
     // Sort Call over buffers

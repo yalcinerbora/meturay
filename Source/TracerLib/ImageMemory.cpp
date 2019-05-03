@@ -1,8 +1,8 @@
 #include "ImageMemory.h"
 
-size_t ImageMemory::PixelFormatToSize(PixelFormat f)
+int ImageMemory::PixelFormatToSize(PixelFormat f)
 {
-    static constexpr size_t SizeList[static_cast<int>(PixelFormat::END)] =
+    static constexpr int SizeList[static_cast<int>(PixelFormat::END)] =
     {
         1,
         2,
@@ -32,6 +32,7 @@ ImageMemory::ImageMemory()
     , resolution(Zero3ui)
     , segmentOffset(Zero3ui)
     , format(PixelFormat::END)
+    , pixelSize(0)
 {}
 
 ImageMemory::ImageMemory(const Vector2i& offset,
@@ -48,6 +49,7 @@ ImageMemory::ImageMemory(const Vector2i& offset,
 void ImageMemory::SetPixelFormat(PixelFormat f)
 {
     format = f;
+    pixelSize = PixelFormatToSize(f);
     Reportion(segmentOffset, segmentSize);
 }
 

@@ -88,11 +88,17 @@ TEST(HelloTriangle, Test)
     visorOpts.iFormat = pixFormat;
     visorOpts.iSize = IMAGE_RESOLUTION;
     visorOpts.stereoOn = false;
+    visorOpts.vSyncOn = false;
     visorOpts.eventBufferSize = 128;
+    visorOpts.fpsLimit = 60.0f;
+
+    visorOpts.wSize = Vector2i{1024, 1024};
+    visorOpts.wFormat = pixFormat;
 
     // Create Visor
     auto visorView = CreateVisorGL(visorOpts);
-    visorView->SetInputScheme(&input);
+    VisorI& v = *visorView;
+    v.SetInputScheme(input);
 
     // Attach the logic & Image format
     tracerBase.AttachLogic(*logic);
@@ -107,7 +113,7 @@ TEST(HelloTriangle, Test)
         ASSERT_TRUE(false);
 
     // Get a Self-Node
-    VisorI& v = *visorView;
+    // Generate your Node (in this case visor and renderer is on same node
     SelfNode selfNode(v, tracerBase);
     input.AttachVisorCallback(selfNode);
     tracerBase.AttachTracerCallbacks(selfNode);

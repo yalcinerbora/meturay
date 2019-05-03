@@ -18,13 +18,13 @@ class ImageMemory
     private:
         DeviceMemory        memory;
         PixelFormat         format;
-        size_t              pixelSize;
+        int                 pixelSize;
 
         Vector2i            segmentSize;
         Vector2i            segmentOffset;
         Vector2i            resolution;
 
-        static size_t       PixelFormatToSize(PixelFormat);
+        static int          PixelFormatToSize(PixelFormat);
 
     protected:
     public:

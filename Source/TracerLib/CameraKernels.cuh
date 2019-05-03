@@ -65,9 +65,9 @@ __global__ void KCGenerateCameraRays(// Output
     gaze = Cross(up, right).Normalize();
 
     // Camera parameters
-    Vector3 topLeft = cam.position
+    Vector3 bottomLeft = cam.position
                         - right *  widthHalf
-                        + up * heightHalf
+                        - up * heightHalf
                         + gaze * cam.nearPlane;
     Vector3 pos = cam.position;
 
@@ -91,7 +91,8 @@ __global__ void KCGenerateCameraRays(// Output
         Vector2 sampleDistance = Vector2(static_cast<float>(globalSampleId[0]),
                                          static_cast<float>(globalSampleId[1])) * delta;
         Vector2 samplePointDistance = sampleDistance + randomOffset * delta;
-        Vector3 samplePoint = topLeft + (samplePointDistance[0] * right) - (samplePointDistance[1] * up);
+        Vector3 samplePoint = bottomLeft + (samplePointDistance[0] * right) 
+                                         + (samplePointDistance[1] * up);
         Vector3 rayDir = (samplePoint - pos).Normalize();
 
         // Generate Required Parameters

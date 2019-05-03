@@ -27,8 +27,15 @@ struct VisorOptions
 
     // Window Related
     bool                stereoOn;
-    PixelFormat         iFormat;
+    bool                vSyncOn;
+    PixelFormat         wFormat;
+    Vector2i            wSize;
+    float               fpsLimit;
+
+    // Image Related
     Vector2i            iSize;
+    PixelFormat         iFormat;
+
 };
 
 class VisorI
@@ -41,10 +48,11 @@ class VisorI
         virtual void                    Render() = 0;
         virtual void                    ProcessInputs() = 0;
         // Input System
-        virtual void                    SetInputScheme(VisorInputI*) = 0;
-        virtual void                    SetCallbacks(VisorCallbacksI*) = 0;
-
+        virtual void                    SetInputScheme(VisorInputI&) = 0;
         // Data Related
+        // Set the resolution of the rendering data
+        virtual void                    SetImageRes(Vector2i resolution) = 0;
+        virtual void                    SetImageFormat(PixelFormat f) = 0;
         // Reset Data (Clears the RGB(A) Buffer of the Image)
         // and resets total accumulated rays
         virtual void                    ResetSamples(Vector2i start = Zero2i,

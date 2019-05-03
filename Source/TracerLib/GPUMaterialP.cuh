@@ -52,7 +52,7 @@ template <class TLogic, class MGroup, class PGroup,
 class GPUMaterialBatch final : public GPUMaterialBatchI
 {
     private:
-        static const std::string            TypeNamePriv;
+        static const std::string        TypeNamePriv;
 
     public:
         static constexpr auto SurfFunc  = SurfaceF;
@@ -73,25 +73,25 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
         const char*                     Type() const override;
         // Interface
         // KC
-        void                                ShadeRays(// Output
-                                                      Vector4* dPixels,
-                                                      //
-                                                      RayGMem* dRayOut,
-                                                      void* dRayAuxOut,
-                                                      //  Input
-                                                      const RayGMem* dRayIn,
-                                                      const void* dRayAuxIn,
-                                                      const PrimitiveId* dPrimitiveIds,
-                                                      const HitStructPtr dHitStructs,
-                                                      //
-                                                      const HitKey* dMatIds,
-                                                      const RayId* dRayIds,
-                                                      //
-                                                      const uint32_t rayCount,
-                                                      RNGMemory& rngMem) const override;
+        void                            ShadeRays(// Output
+                                                  Vector4* dPixels,
+                                                  //
+                                                  RayGMem* dRayOut,
+                                                  void* dRayAuxOut,
+                                                  //  Input
+                                                  const RayGMem* dRayIn,
+                                                  const void* dRayAuxIn,
+                                                  const PrimitiveId* dPrimitiveIds,
+                                                  const HitStructPtr dHitStructs,
+                                                  //
+                                                  const HitKey* dMatIds,
+                                                  const RayId* dRayIds,
+                                                  //
+                                                  const uint32_t rayCount,
+                                                  RNGMemory& rngMem) const override;
 
         const GPUPrimitiveGroupI&       PrimitiveGroup() const override;
-        const GPUMaterialGroupI&            MaterialGroup() const override;
+        const GPUMaterialGroupI&        MaterialGroup() const override;
 
         uint8_t                         OutRayCount() const override;
 };
@@ -125,14 +125,14 @@ template <class TLogic, class MGroup>
 class GPUBoundaryMatBatch final : public GPUMaterialBatchI
 {
     private:
-        static const std::string                TypeNamePriv;
+        static const std::string            TypeNamePriv;
 
     public:
         static const char*                  TypeName;
 
     private:
         const MGroup&                       materialGroup;
-        static const GPUPrimitiveGroupI*        primitiveGroup;
+        static const GPUPrimitiveGroupI*    primitiveGroup;
 
     protected:
     public:
@@ -145,25 +145,25 @@ class GPUBoundaryMatBatch final : public GPUMaterialBatchI
         const char*                     Type() const override;
         // Interface
         // KC
-        void                                ShadeRays(// Output
-                                                      Vector4* dPixels,
-                                                      //
-                                                      RayGMem* dRayOut,
-                                                      void* dRayAuxOut,
-                                                      //  Input
-                                                      const RayGMem* dRayIn,
-                                                      const void* dRayAuxIn,
-                                                      const PrimitiveId* dPrimitiveIds,
-                                                      const HitStructPtr dHitStructs,
-                                                      //
-                                                      const HitKey* dMatIds,
-                                                      const RayId* dRayIds,
-                                                      //
-                                                      const uint32_t rayCount,
-                                                      RNGMemory& rngMem) const override;
+        void                            ShadeRays(// Output
+                                                  Vector4* dPixels,
+                                                  //
+                                                  RayGMem* dRayOut,
+                                                  void* dRayAuxOut,
+                                                  //  Input
+                                                  const RayGMem* dRayIn,
+                                                  const void* dRayAuxIn,
+                                                  const PrimitiveId* dPrimitiveIds,
+                                                  const HitStructPtr dHitStructs,
+                                                  //
+                                                  const HitKey* dMatIds,
+                                                  const RayId* dRayIds,
+                                                  //
+                                                  const uint32_t rayCount,
+                                                  RNGMemory& rngMem) const override;
 
         const GPUPrimitiveGroupI&       PrimitiveGroup() const override;
-        const GPUMaterialGroupI&            MaterialGroup() const override;
+        const GPUMaterialGroupI&        MaterialGroup() const override;
 
         uint8_t                         OutRayCount() const override;
 };
@@ -325,6 +325,9 @@ GPUBoundaryMatBatch<TLogic, MGroup>::GPUBoundaryMatBatch(const GPUMaterialGroupI
 
 template <class TLogic, class MGroup>
 const std::string GPUBoundaryMatBatch<TLogic, MGroup>::TypeNamePriv = std::string(MGroup::TypeName);
+
+template <class TLogic, class MGroup>
+const char* GPUBoundaryMatBatch<TLogic, MGroup>::TypeName = TypeNamePriv.c_str();
 
 template <class TLogic, class MGroup>
 const GPUPrimitiveGroupI* GPUBoundaryMatBatch<TLogic, MGroup>::primitiveGroup = nullptr;

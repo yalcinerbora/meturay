@@ -29,7 +29,8 @@ struct VisorGLCommand
         enum Type
         {
             SET_PORTION,
-            RESET_IMAGE
+            RESET_IMAGE,
+            REALLOC_IMAGES
         };
 
     public:
@@ -83,12 +84,12 @@ class VisorGL : public VisorI
         static constexpr GLenum     U_SAMPLE = 3;
 
     private:
-        VisorCallbacksI*            callbacks;
+        //VisorCallbacksI*            callbacks;
         VisorInputI*                input;
         GLFWwindow*                 window;
         bool                        open;
 
-        const VisorOptions          vOpts;
+        VisorOptions                vOpts;
 
         // Image portion list
         MPMCQueue<VisorGLCommand>   commandList;
@@ -98,12 +99,9 @@ class VisorGL : public VisorI
         GLuint                      outputTextures[2];
         GLuint                      sampleCountTexture;
         GLuint                      bufferTexture;
-        int                         currentIndex;
-
-        Vector2i                    imageRes;
-        PixelFormat                 texPixFormat;
         GLuint                      linearSampler;
-
+        int                         currentIndex;
+ 
         // Shader
         ShaderGL                    vertPP;
         ShaderGL                    fragPP;
@@ -147,6 +145,9 @@ class VisorGL : public VisorI
         static GLenum               PixelFormatToSizedGL(PixelFormat);
         static GLenum               PixelFormatToTypeGL(PixelFormat);
 
+        // Image Allocation
+        void                        ReallocImages();
+
         // Internal Command Handling
         void                        ProcessCommand(const VisorGLCommand&);
         void                        RenderImage();
@@ -164,9 +165,10 @@ class VisorGL : public VisorI
         void                    Render() override;
         void                    ProcessInputs() override;
         // Input System
-        void                    SetInputScheme(VisorInputI*) override;
-        void                    SetCallbacks(VisorCallbacksI*) override;
+        void                    SetInputScheme(VisorInputI&) override;
         // Data Related
+        void                    SetImageRes(Vector2i resolution) override;
+        void                    SetImageFormat(PixelFormat f) override;
         // Reset Data (Clears the RGB(A) Buffer of the Image)
         // and resets total accumulated rays
         void                    ResetSamples(Vector2i start = Zero2i,

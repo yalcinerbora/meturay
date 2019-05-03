@@ -185,13 +185,23 @@ void VisorGL::WindowPosGLFW(GLFWwindow* w, int x, int y)
 void VisorGL::WindowFBGLFW(GLFWwindow* w, int width, int height)
 {
     assert(instance->window == w);
-    if(instance->input) instance->input->WindowFBChanged(width, height);
+    if(instance->input)
+    {
+        Vector2i size(width, height);
+        instance->viewportSize = size;
+        instance->input->WindowFBChanged(width, height);
+    }
 }
 
 void VisorGL::WindowSizeGLFW(GLFWwindow* w, int width, int height)
 {
     assert(instance->window == w);
-    if(instance->input) instance->input->WindowSizeChanged(width, height);
+    if(instance->input)
+    {
+        Vector2i size(width, height);
+        instance->vOpts.wSize = size;
+        instance->input->WindowSizeChanged(width, height);
+    }
 }
 
 void VisorGL::WindowCloseGLFW(GLFWwindow* w)
@@ -384,19 +394,54 @@ GLenum VisorGL::PixelFormatToTypeGL(PixelFormat f)
     return TypeList[static_cast<int>(f)];
 }
 
+void VisorGL::ReallocImages()
+{
+    // Textures
+    // Buffered output textures
+    glDeleteTextures(2, outputTextures);
+    glGenTextures(2, outputTextures);
+    for(int i = 0; i < 2; i++)
+    {
+        glBindTexture(GL_TEXTURE_2D, outputTextures[i]);
+        glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(vOpts.iFormat),
+                       vOpts.iSize[0], vOpts.iSize[1]);
+    }
+    // Sample count texture
+    glDeleteTextures(1, &sampleCountTexture);
+    glGenTextures(1, &sampleCountTexture);
+    glBindTexture(GL_TEXTURE_2D, sampleCountTexture);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32I,
+                   vOpts.iSize[0], vOpts.iSize[1]);
+    // Buffer input texture
+    glDeleteTextures(1, &bufferTexture);
+    glGenTextures(1, &bufferTexture);
+    glBindTexture(GL_TEXTURE_2D, bufferTexture);
+    glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(vOpts.iFormat),
+                   vOpts.iSize[0], vOpts.iSize[1]);
+}
+
 void VisorGL::ProcessCommand(const VisorGLCommand& c)
 {
-    const Vector2i size = c.end - c.start;
+    const Vector2i inSize = c.end - c.start;
 
     switch(c.type)
     {
+        case VisorGLCommand::REALLOC_IMAGES:
+        {
+            // Do realloc images
+            ReallocImages();
+            // Let the case fall to reset image 
+            // since we just allocated and need reset on image
+            // as well.
+        }
         case VisorGLCommand::RESET_IMAGE:
         {
             // Just clear the sample count to zero
             const GLuint clearData = 0;
             glBindTexture(GL_TEXTURE_2D, sampleCountTexture);
-            glClearTexSubImage(GL_TEXTURE_2D, 0, c.start[0], c.start[1], 0,
-                               size[0], size[1], 1,
+            glClearTexSubImage(GL_TEXTURE_2D, 0, 
+                               c.start[0], c.start[1], 0,
+                               inSize[0], inSize[1], 1,
                                GL_R, GL_UNSIGNED_INT, &clearData);
             break;
         }
@@ -404,8 +449,9 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
         {
             // Copy (Let OGL do the conversion)
             glBindTexture(GL_TEXTURE_2D, bufferTexture);
-            glTexSubImage2D(GL_TEXTURE_2D, 1,
-                            0, 0, size[0], size[1],
+            glTexSubImage2D(GL_TEXTURE_2D, 0,
+                            0, 0, 
+                            inSize[0], inSize[1],
                             PixelFormatToGL(c.format),
                             PixelFormatToTypeGL(c.format),
                             c.data.data());
@@ -413,33 +459,31 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             // After Copy
             // Accumulate data
             int nextIndex = (currentIndex + 1) % 2;
-            GLuint outTexture = outputTextures[currentIndex];
-            GLuint inTexture = outputTextures[nextIndex];
-
+            GLuint outTexture = outputTextures[nextIndex];
+            GLuint inTexture = outputTextures[currentIndex];
             // Shader
             compAccum.Bind();
-
             // Textures
             glActiveTexture(GL_TEXTURE0 + T_IN_BUFFER);
             glBindTexture(GL_TEXTURE_2D, bufferTexture);
             glActiveTexture(GL_TEXTURE0 + T_IN_COLOR);
             glBindTexture(GL_TEXTURE_2D, inTexture);
-
             // Images
             glBindImageTexture(I_SAMPLE, sampleCountTexture,
                                0, false, 0, GL_READ_WRITE, GL_R32I);
             glBindImageTexture(I_OUT_COLOR, outTexture,
-                               0, false, 0, GL_WRITE_ONLY, PixelFormatToSizedGL(texPixFormat));
+                               0, false, 0, GL_WRITE_ONLY, PixelFormatToSizedGL(vOpts.iFormat));
 
             // Uniforms
-            glUniform2iv(U_RES, 1, static_cast<const int*>(imageRes));
+            glUniform2iv(U_RES, 1, static_cast<const int*>(vOpts.iSize));
             glUniform2iv(U_START, 1, static_cast<const int*>(c.start));
             glUniform2iv(U_END, 1, static_cast<const int*>(c.end));
             glUniform1i(U_SAMPLE, c.sampleCount);
 
-            // Call
-            GLuint gridX = (imageRes[0] + 16 - 1) / 16;
-            GLuint gridY = (imageRes[1] + 16 - 1) / 16;
+            // Call for entire image (we also copy image)
+            // 
+            GLuint gridX = (vOpts.iSize[0] + 16 - 1) / 16;
+            GLuint gridY = (vOpts.iSize[1] + 16 - 1) / 16;
             glDispatchCompute(gridX, gridY, 1);
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
@@ -475,15 +519,13 @@ void VisorGL::RenderImage()
 }
 
 VisorGL::VisorGL(const VisorOptions& opts)
-    : callbacks(nullptr)
-    , input(nullptr)
+    : input(nullptr)
     , window(nullptr)
     , open(false)
     , commandList(opts.eventBufferSize)
     , outputTextures{0, 0}
     , sampleCountTexture(0)
     , currentIndex(0)
-    , texPixFormat(opts.iFormat)
     , linearSampler(0)
     , vBuffer(0)
     , vao(0)
@@ -518,7 +560,7 @@ VisorGL::VisorGL(const VisorOptions& opts)
 
     glfwWindowHint(GLFW_CONTEXT_RELEASE_BEHAVIOR, GLFW_RELEASE_BEHAVIOR_NONE);
 
-    if(opts.stereoOn)
+    if(vOpts.stereoOn)
         glfwWindowHint(GLFW_STEREO, GL_TRUE);
 
     // Debug Context
@@ -532,6 +574,7 @@ VisorGL::VisorGL(const VisorOptions& opts)
 
     // Pixel of WindowFBO
     // Full precision output
+    // TODO: make it to utilize vOpts.wFormat
     glfwWindowHint(GLFW_RED_BITS, 32);
     glfwWindowHint(GLFW_GREEN_BITS, 32);
     glfwWindowHint(GLFW_BLUE_BITS, 32);
@@ -541,8 +584,8 @@ VisorGL::VisorGL(const VisorOptions& opts)
     glfwWindowHint(GLFW_DEPTH_BITS, 0);
     glfwWindowHint(GLFW_STENCIL_BITS, 0);
 
-    window = glfwCreateWindow(opts.iSize[0],
-                              opts.iSize[1],
+    window = glfwCreateWindow(vOpts.wSize[0],
+                              vOpts.wSize[1],
                               "METU Visor",
                               nullptr,
                               nullptr);
@@ -552,6 +595,9 @@ VisorGL::VisorGL(const VisorOptions& opts)
         assert(false);
     }
     glfwMakeContextCurrent(window);
+
+    // Initial Option set
+    glfwSwapInterval((vOpts.vSyncOn) ? 1 : 0);
 
     // Now Init GLEW
     glewExperimental = GL_TRUE;
@@ -603,28 +649,10 @@ VisorGL::VisorGL(const VisorOptions& opts)
 
     // Shaders
     vertPP = ShaderGL(ShaderType::VERTEX, "Shaders/PProcessGeneric.vert");
-    fragPP = ShaderGL(ShaderType::VERTEX, "Shaders/PProcessGeneric.frag");
+    fragPP = ShaderGL(ShaderType::FRAGMENT, "Shaders/PProcessGeneric.frag");
     compAccum = ShaderGL(ShaderType::COMPUTE, "Shaders/AccumInput.comp");
 
-    // Textures
-    // Buffered output textures
-    glGenTextures(2, outputTextures);
-    for(int i = 0; i < 2; i++)
-    {
-        glBindTexture(GL_TEXTURE_2D, outputTextures[i]);
-        glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(opts.iFormat),
-                       opts.iSize[0], opts.iSize[1]);
-    }
-    // Sample count texture
-    glGenTextures(1, &sampleCountTexture);
-    glBindTexture(GL_TEXTURE_2D, sampleCountTexture);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32I,
-                   opts.iSize[0], opts.iSize[1]);
-    // Buffer input texture
-    glGenTextures(1, &bufferTexture);
-    glBindTexture(GL_TEXTURE_2D, bufferTexture);
-    glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(opts.iFormat),
-                   opts.iSize[0], opts.iSize[1]);
+    ReallocImages();
 
     // Sampler
     glGenSamplers(1, &linearSampler);
@@ -681,7 +709,6 @@ bool VisorGL::IsOpen()
 
 void VisorGL::ProcessInputs()
 {
-    glfwSwapBuffers(window);
     glfwPollEvents();
 }
 
@@ -690,7 +717,6 @@ void VisorGL::Render()
     // Consume commands
     // TODO: optimize this skip multiple reset commands
     // just process the last and other commands afterwards
-
     VisorGLCommand command;
     while(commandList.TryDequeue(command))
     {
@@ -699,25 +725,56 @@ void VisorGL::Render()
 
     // Render Image
     RenderImage();
+
+    // Finally Swap Buffers
+    glfwSwapBuffers(window);
+
+    if(vOpts.fpsLimit > 0.0f)
+    {
+        int sleepMS = static_cast<int>(1.0000f / vOpts.fpsLimit);
+        std::this_thread::sleep_for(std::chrono::seconds(sleepMS));
+    }
 }
 
-void VisorGL::SetInputScheme(VisorInputI* i)
+void VisorGL::SetInputScheme(VisorInputI& i)
 {
-    input = i;
+    input = &i;
 }
 
-void VisorGL::SetCallbacks(VisorCallbacksI* cb)
+//void VisorGL::SetCallbacks(VisorCallbacksI& cb)
+//{
+//    callbacks = &cb;
+//}
+
+void VisorGL::SetImageRes(Vector2i resolution)
 {
-    callbacks = cb;
+    vOpts.iSize = resolution;
+
+    VisorGLCommand command = {};
+    command.type = VisorGLCommand::REALLOC_IMAGES;
+    command.start = Zero2i;
+    command.end = vOpts.iSize;
+    commandList.Enqueue(std::move(command));
+}
+
+void VisorGL::SetImageFormat(PixelFormat format)
+{
+    vOpts.iFormat = format;
+    
+    VisorGLCommand command = {};
+    command.type = VisorGLCommand::REALLOC_IMAGES;
+    command.start = Zero2i;
+    command.end = vOpts.iSize;
+    commandList.Enqueue(std::move(command));
 }
 
 void VisorGL::ResetSamples(Vector2i start, Vector2i end)
 {
-    end = Vector2i::Min(end, imageRes);
+    end = Vector2i::Min(end, vOpts.iSize);
 
     VisorGLCommand command;
     command.type = VisorGLCommand::RESET_IMAGE;
-    command.format = texPixFormat;
+    command.format = vOpts.iFormat;
     command.start = start;
     command.end = end;
 
@@ -729,7 +786,7 @@ void VisorGL::AccumulatePortion(const std::vector<Byte> data,
                                 Vector2i start,
                                 Vector2i end)
 {
-    end = Vector2i::Min(end, imageRes);
+    end = Vector2i::Min(end, vOpts.iSize);
 
     VisorGLCommand command;
     command.type = VisorGLCommand::SET_PORTION;
@@ -750,11 +807,9 @@ const VisorOptions& VisorGL::VisorOpts() const
 void VisorGL::SetWindowSize(const Vector2i& size)
 {
     glfwSetWindowSize(window, size[0], size[1]);
-    viewportSize = size;
 }
 
 void VisorGL::SetFPSLimit(float f)
 {
-    int interval = static_cast<int>(1000.0f / f);
-    glfwSwapInterval(interval);
+    vOpts.fpsLimit = f;
 }

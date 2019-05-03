@@ -132,17 +132,17 @@ class RayMemory
         int                         LeaderDevice() const;
 
         // Memory Allocation
-        void                        ResetHitMemory(size_t rayCount, size_t hitStructSize);
-        void                        ResizeRayOut(size_t rayCount, size_t perRayAuxSize);
+        void                        ResetHitMemory(uint32_t rayCount, size_t hitStructSize);
+        void                        ResizeRayOut(uint32_t rayCount, size_t perRayAuxSize);
         void                        SwapRays();
 
         // Common Functions
         // Sorts the hit list for multi-kernel calls
         void                        SortKeys(RayId*& ids, HitKey*& keys,
-                                             size_t count,
+                                             uint32_t count,
                                              const Vector2i& bitRange);
         // Partitions the segments for multi-kernel calls
-        RayPartitions<uint32_t> Partition(uint32_t rayCount);
+        RayPartitions<uint32_t>     Partition(uint32_t rayCount);
         // Initialize HitIds and Indices
         void                        FillRayIdsForSort(uint32_t rayCount);
 };
@@ -237,7 +237,7 @@ inline const RayId* RayMemory::CurrentIds() const
     return dCurrentIds;
 }
 
-inline void RayMemory::ResizeRayOut(size_t rayCount, size_t perRayAuxSize)
+inline void RayMemory::ResizeRayOut(uint32_t rayCount, size_t perRayAuxSize)
 {
     ResizeRayMemory(dRayOut, dRayAuxOut, memOut, rayCount, perRayAuxSize);
 }

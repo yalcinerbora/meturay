@@ -187,7 +187,7 @@ class MockTracerLogic : public TracerBaseLogicI
         TracerError                             Initialize() override;
 
         // Generate Camera Rays
-        size_t                                  GenerateRays(RayMemory&, RNGMemory&,
+        uint32_t                                GenerateRays(RayMemory&, RNGMemory&,
                                                              const GPUScene& scene,
                                                              int cameraId,
                                                              int samplePerLocation,
@@ -387,13 +387,13 @@ TracerError MockTracerLogic::Initialize()
 }
 
 
-size_t MockTracerLogic::GenerateRays(RayMemory&, RNGMemory&,
-                                     const GPUScene& scene,
-                                     int cameraId,
-                                     int samplePerLocation,
-                                     Vector2i resolution,
-                                     Vector2i pixelStart,
-                                     Vector2i pixelEnd)
+uint32_t MockTracerLogic::GenerateRays(RayMemory&, RNGMemory&,
+                                       const GPUScene& scene,
+                                       int cameraId,
+                                       int samplePerLocation,
+                                       Vector2i resolution,
+                                       Vector2i pixelStart,
+                                       Vector2i pixelEnd)
 {
     pixelEnd = Vector2i::Max(resolution, pixelEnd);
     Vector2i pixelCount = (pixelEnd - pixelStart);

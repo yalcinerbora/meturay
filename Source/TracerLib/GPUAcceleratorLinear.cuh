@@ -55,14 +55,14 @@ class GPUAccLinearGroup final
         std::vector<PrimitiveRangeList>     primitiveRanges;
         std::vector<HitKeyList>             primitiveMaterialKeys;
         std::vector<Vector2ul>              accRanges;
-        std::map<uint32_t, uint32_t>            idLookup;
+        std::map<uint32_t, uint32_t>        idLookup;
 
         // GPU Memory
-        DeviceMemory                            memory;
+        DeviceMemory                        memory;
         Vector2ul*                          dAccRanges;
         LeafData*                           dLeafList;
 
-        friend class                            GPUAccLinearBatch<PGroup>;
+        friend class                        GPUAccLinearBatch<PGroup>;
 
     protected:
 
@@ -104,8 +104,8 @@ class GPUAccLinearGroup final
         void                            DestroyAccelerator(uint32_t surface) override;
         void                            DestroyAccelerators(const std::vector<uint32_t>& surfaces) override;
 
-        size_t                      UsedGPUMemory() const override;
-        size_t                      UsedCPUMemory() const override;
+        size_t                          UsedGPUMemory() const override;
+        size_t                          UsedCPUMemory() const override;
 };
 
 template<class PGroup>

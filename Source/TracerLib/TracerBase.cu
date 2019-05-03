@@ -178,7 +178,7 @@ void TracerBase::ShadeRays()
 
     // Use partition lis to find out
     // total potential output ray count
-    size_t totalOutRayCount = 0;
+    uint32_t totalOutRayCount = 0;
     for(const auto& p : portions)
     {
         // Skip if null batch or unfound material
@@ -186,7 +186,8 @@ void TracerBase::ShadeRays()
         auto loc = materials.find(p.portionId);
         if(loc == materials.end()) continue;
 
-        totalOutRayCount += p.count * loc->second->OutRayCount();
+        totalOutRayCount += static_cast<int>(p.count) * 
+                            loc->second->OutRayCount();
     }
 
     // Allocate output ray memory
@@ -238,7 +239,7 @@ void TracerBase::ShadeRays()
 
     }
     assert(totalOutRayCount == outOffset);
-    currentRayCount = static_cast<uint32_t>(totalOutRayCount);
+    currentRayCount = totalOutRayCount;
 
     // Again wait all of the GPU's since
     // CUDA functions will be on multiple-gpus
@@ -314,11 +315,11 @@ void TracerBase::GenerateInitialRays(const GPUScene& scene,
     if(!healthy) return;
 
     // Delegate camera ray generation to tracer system
-    currentRayCount = static_cast<uint32_t>(currentLogic->GenerateRays(rayMemory, rngMemory,
-                                                                       scene, cameraId, samplePerLocation,
-                                                                       outputImage.Resolution(),
-                                                                       outputImage.SegmentOffset(),
-                                                                       outputImage.SegmentSize()));
+    currentRayCount = currentLogic->GenerateRays(rayMemory, rngMemory,
+                                                 scene, cameraId, samplePerLocation,
+                                                 outputImage.Resolution(),
+                                                 outputImage.SegmentOffset(),
+                                                 outputImage.SegmentSize());
 
     // You can only write to out buffer of the ray memory
     // Make that memory in rays for hit/shade system
@@ -349,12 +350,12 @@ void TracerBase::FinishSamples()
     // its result is written to the ray data
     // but a ray not always reach to boundary material
     // if a pre determined
-
+  
     // Determine Size
+    Vector2i pixelCount = outputImage.SegmentSize();
     Vector2i start = outputImage.SegmentOffset();
     Vector2i end = start + outputImage.SegmentSize();
-    size_t size = (outputImage.SegmentSize()[0] *
-                   outputImage.SegmentSize()[1] *
+    size_t size = (pixelCount[0] * pixelCount[1] *
                    outputImage.PixelSize());
 
     // Data
@@ -363,10 +364,10 @@ void TracerBase::FinishSamples()
                           size, cudaMemcpyDeviceToHost));
 
     // Launch finished image
-    if(callbacks)callbacks->SendImage(std::move(data),
-                                      outputImage.Format,
-                                      sampleCountPerRay,
-                                      start, end);
+    if(callbacks) callbacks->SendImage(std::move(data),
+                                       outputImage.Format(),
+                                       sampleCountPerRay,
+                                       start, end);
 
     // TODO: Do this
     if(!healthy) return;

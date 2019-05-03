@@ -29,22 +29,22 @@ TracerError TracerBasic::Initialize()
     return TracerError::OK;
 }
 
-size_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
-                                 const GPUScene& scene,
-                                 int cameraId,
-                                 int samplePerLocation,
-                                 Vector2i resolution,
-                                 Vector2i pixelStart,
-                                 Vector2i pixelEnd)
+uint32_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
+                                   const GPUScene& scene,
+                                   int cameraId,
+                                   int samplePerLocation,
+                                   Vector2i resolution,
+                                   Vector2i pixelStart,
+                                   Vector2i pixelEnd)
 {
     pixelEnd = Vector2i::Min(resolution, pixelEnd);
     Vector2i pixelCount = (pixelEnd - pixelStart);
-    size_t currentRayCount = pixelCount[0] * samplePerLocation *
+    uint32_t totalRayCount = pixelCount[0] * samplePerLocation *
                              pixelCount[1] * samplePerLocation;
     CameraPerspective currentCam = scene.CamerasCPU()[cameraId];
 
     // Allocate enough space for ray
-    rayMem.ResizeRayOut(currentRayCount, PerRayAuxDataSize());
+    rayMem.ResizeRayOut(totalRayCount, PerRayAuxDataSize());
 
     // Basic Tracer does classic camera to light tracing
     // Thus its initial rays are from camera
@@ -52,10 +52,9 @@ size_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
     // Call multi-device
     const uint32_t TPB = StaticThreadPerBlock1D;
     const uint32_t shMemSize = rngMem.SharedMemorySize(TPB);
-    const uint32_t totalWorkCount = pixelCount[0] * samplePerLocation *
-                                    pixelCount[1] * samplePerLocation;
+
     // GPUSplits
-    const auto splits = CudaSystem::GridStrideMultiGPUSplit(totalWorkCount, TPB, shMemSize,
+    const auto splits = CudaSystem::GridStrideMultiGPUSplit(totalRayCount, TPB, shMemSize,
                                                             KCGenerateCameraRays<RayAuxData, AuxFunc>);
 
 
@@ -111,5 +110,5 @@ size_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
         // Adjust for next call
         localPixelStart = localPixelEnd;
     }
-    return currentRayCount;
+    return totalRayCount;
 }

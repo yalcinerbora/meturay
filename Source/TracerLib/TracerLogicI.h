@@ -41,7 +41,7 @@ class TracerBaseLogicI
         virtual TracerError     Initialize() = 0;
 
         // Generate Rays
-        virtual size_t          GenerateRays(RayMemory&, RNGMemory&,
+        virtual uint32_t        GenerateRays(RayMemory&, RNGMemory&,
                                              const GPUScene& scene,
                                              int cameraId,
                                              int samplePerLocation,
