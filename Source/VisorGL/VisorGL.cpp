@@ -1,5 +1,8 @@
 #include "VisorGL.h"
+
 #include "RayLib/Log.h"
+#include "RayLib/CPUTimer.h"
+
 #include <map>
 #include <cassert>
 
@@ -714,6 +717,9 @@ void VisorGL::ProcessInputs()
 
 void VisorGL::Render()
 {
+    CPUTimer t;
+    if(vOpts.fpsLimit > 0.0f) t.Start();
+
     // Consume commands
     // TODO: optimize this skip multiple reset commands
     // just process the last and other commands afterwards
@@ -731,8 +737,11 @@ void VisorGL::Render()
 
     if(vOpts.fpsLimit > 0.0f)
     {
-        int sleepMS = static_cast<int>(1.0000f / vOpts.fpsLimit);
-        std::this_thread::sleep_for(std::chrono::seconds(sleepMS));
+        t.Stop();
+        double sleepMS = (1000.0 / vOpts.fpsLimit);
+        sleepMS -= t.Elapsed<std::milli>();
+        std::chrono::duration<double, std::milli> chronoMillis(sleepMS);
+        std::this_thread::sleep_for(chronoMillis);
     }
 }
 

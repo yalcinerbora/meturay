@@ -108,9 +108,6 @@
       <Filter>System</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\PrimitiveDataTypes.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\CompileTimeString.h">
-      <Filter>System</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\Sphere.h">
       <Filter>Math</Filter>
     </ClInclude>
@@ -156,6 +153,12 @@
     <ClInclude Include="..\..\..\Source\RayLib\HybridFunctions.h">
       <Filter>Math</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\CPUTimer.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\StaticString.h">
+      <Filter>CPU Containers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">
@@ -187,6 +190,9 @@
     </Filter>
     <Filter Include="Interfaces">
       <UniqueIdentifier>{ffc61ecf-ed27-41a3-841d-51e14123abab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility">
+      <UniqueIdentifier>{b215ba6e-adaa-4b3d-abe2-9e8adba49c9b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

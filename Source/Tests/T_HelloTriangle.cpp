@@ -90,7 +90,7 @@ TEST(HelloTriangle, Test)
     visorOpts.stereoOn = false;
     visorOpts.vSyncOn = false;
     visorOpts.eventBufferSize = 128;
-    visorOpts.fpsLimit = 60.0f;
+    visorOpts.fpsLimit = 24.0f;
 
     visorOpts.wSize = Vector2i{1024, 1024};
     visorOpts.wFormat = pixFormat;
@@ -118,19 +118,17 @@ TEST(HelloTriangle, Test)
     input.AttachVisorCallback(selfNode);
     tracerBase.AttachTracerCallbacks(selfNode);
 
-    // Run tracer
-    tracerBase.GenerateInitialRays(scene, 0, 1);
-    while(tracerBase.Continue())
-    {
-        tracerBase.Render();
-    }
-    tracerBase.FinishSamples();
-
-    // Send rendered image to visor
-
     // Main Poll Loop
     while(visorView->IsOpen())
     {
+        // Run tracer
+        tracerBase.GenerateInitialRays(scene, 0, 1);
+        while(tracerBase.Continue())
+        {
+            tracerBase.Render();
+        }
+        tracerBase.FinishSamples();
+
         // Before try to show do render loop
         visorView->Render();
 

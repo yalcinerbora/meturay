@@ -37,7 +37,6 @@ bool ImageIO::ReadHDR(std::vector<Vector4>& image,
     //FIBITMAP *dib1 = FreeImage_TmoReinhard05Ex(dib2);
     FreeImage_Unload(dib2);
 
-    FREE_IMAGE_TYPE type = FreeImage_GetImageType(dib1);
     BITMAPINFOHEADER* header = FreeImage_GetInfoHeader(dib1);
 
     // Size
@@ -45,7 +44,6 @@ bool ImageIO::ReadHDR(std::vector<Vector4>& image,
     size[1] = header->biHeight;
     image.resize(size[0] * size[1]);
 
-    FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib1);
     for(int j = 0; j < header->biHeight; j++)
     {
         FIRGBAF *bits = (FIRGBAF *)FreeImage_GetScanLine(dib1, j);

@@ -116,9 +116,6 @@ void GPUBaseAcceleratorLinear::Destruct()
 
 }
 
-template<class PGroup>
-const std::string LinearAccelTypeName<PGroup>::TypeName = std::string("Linear") + PGroup::TypeName;
-
 const std::string GPUBaseAcceleratorLinear::TypeName = "Linear";
 
 // Accelerator

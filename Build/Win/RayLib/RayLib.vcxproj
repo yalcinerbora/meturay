@@ -128,8 +128,8 @@
     <ClInclude Include="..\..\..\Source\RayLib\AnalyticNodeI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CommandCallbacksI.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\CompileTimeString.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Constants.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\CPUTimer.h" />
     <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Error.h" />
     <ClInclude Include="..\..\..\Source\RayLib\HitStructs.h" />
@@ -157,6 +157,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\SelfNode.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SharedLib.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Sphere.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\StaticString.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceDataIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\PrimitiveDataTypes.h" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />

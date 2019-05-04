@@ -93,7 +93,7 @@ class GPUPrimitiveSphere final
                                GenerateAABBSphere, GenerateAreaSphere>
 {
     public:
-        static constexpr const char*            TypeName = "Sphere";
+        static constexpr const char*           TypeName = "Sphere";
 
     private:
         DeviceMemory                            memory;

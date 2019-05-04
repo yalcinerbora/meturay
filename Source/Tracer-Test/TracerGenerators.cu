@@ -47,6 +47,15 @@ BasicTracerLogicGenerator::BasicTracerLogicGenerator()
                                               DefaultDestruct<GPUMaterialGroupI>));
     // Material Batches
     // Basic
+    printf("%s\n", BasicMatTriBatch::TypeNamePriv.c_str());
+    printf("%s\n", BasicMatTriBatch::TypeName);
+
+    printf("%s\n", BasicMatSphrBatch::TypeNamePriv.c_str());
+    printf("%s\n", BasicMatSphrBatch::TypeName);
+    
+    printf("%s\n", BarycentricMatTriBatch::TypeNamePriv.c_str());
+    printf("%s\n", BarycentricMatTriBatch::TypeName);
+
     matBatchGenerators.emplace(BasicMatTriBatch::TypeName,
                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, BasicMatTriBatch>,
                                               DefaultDestruct<GPUMaterialBatchI>));

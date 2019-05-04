@@ -7,8 +7,6 @@
 #include "GPUPrimitiveP.cuh"
 #include "RNGMemory.h"
 
-#include "RayLib/CompileTimeString.h"
-
 struct MatDataAccessor;
 
 template <class MaterialD>
@@ -51,11 +49,11 @@ template <class TLogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfaceF>
 class GPUMaterialBatch final : public GPUMaterialBatchI
 {
-    private:
-        static const std::string        TypeNamePriv;
+    public:
+        static  const std::string       TypeNamePriv;
 
     public:
-        static constexpr auto SurfFunc  = SurfaceF;
+        static constexpr auto           SurfFunc = SurfaceF;
         static const char*              TypeName;
 
     private:
@@ -65,8 +63,8 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
     protected:
     public:
         // Constrcutors & Destructor
-                                        GPUMaterialBatch(const GPUMaterialGroupI& m,
-                                                             const GPUPrimitiveGroupI& p);
+                                        GPUMaterialBatch(const GPUMaterialGroupI&,
+                                                         const GPUPrimitiveGroupI&);
                                         ~GPUMaterialBatch() = default;
 
         // Type (as string) of the primitive group
@@ -196,22 +194,21 @@ int GPUMaterialGroup<TLogic, MaterialD, SurfaceD, ShadeF>::GPUId() const
     return gpuId;
 }
 
-
 template <class TLogic, class MGroup, class PGroup,
-    SurfaceFunc<MGroup, PGroup> SurfaceF>
-    GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::GPUMaterialBatch(const GPUMaterialGroupI& m,
-                                                                         const GPUPrimitiveGroupI& p)
+          SurfaceFunc<MGroup, PGroup> SurfaceF>
+GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::GPUMaterialBatch(const GPUMaterialGroupI& m,
+                                                                     const GPUPrimitiveGroupI& p)
     : materialGroup(static_cast<const MGroup&>(m))
     , primitiveGroup(static_cast<const PGroup&>(p))
 {}
 
 template <class TLogic, class MGroup, class PGroup,
-    SurfaceFunc<MGroup, PGroup> SurfaceF>
-    const std::string GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::TypeNamePriv = std::string(MGroup::TypeName) + PGroup::TypeName;
+          SurfaceFunc<MGroup, PGroup> SurfaceF>
+const std::string GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::TypeNamePriv = std::string(MGroup::TypeName) + std::string(PGroup::TypeName);
 
 template <class TLogic, class MGroup, class PGroup,
-    SurfaceFunc<MGroup, PGroup> SurfaceF>
-    const char* GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::TypeName = TypeNamePriv.c_str();
+          SurfaceFunc<MGroup, PGroup> SurfaceF>
+const char* GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::TypeName = TypeNamePriv.c_str();
 
 template <class TLogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfaceF>
@@ -311,7 +308,7 @@ GPUBoundaryMatGroup<TLogic, MaterialD, ShadeF>::GPUBoundaryMatGroup(int gpuId)
 {}
 
 template <class TLogic, class MaterialD,
-    BoundaryShadeFunc<TLogic, MaterialD> ShadeF>
+          BoundaryShadeFunc<TLogic, MaterialD> ShadeF>
 int GPUBoundaryMatGroup<TLogic, MaterialD, ShadeF>::GPUId() const
 {
     return gpuId;

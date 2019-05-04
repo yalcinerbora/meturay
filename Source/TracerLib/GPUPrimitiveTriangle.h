@@ -103,13 +103,13 @@ class GPUPrimitiveTriangle final
                                GenerateAABBTriangle, GenerateAreaTriangle>
 {
     public:
-        static constexpr const char*            TypeName = "Triangle";
+        static constexpr const char*           TypeName = "Triangle";
 
     private:
-        DeviceMemory                                memory;
+        DeviceMemory                            memory;
 
         // List of ranges for each batch
-        uint64_t                                    totalPrimitiveCount;
+        uint64_t                                totalPrimitiveCount;
         std::map<uint32_t, Vector2ul>           batchRanges;
         std::map<uint32_t, AABB3>               batchAABBs;
 

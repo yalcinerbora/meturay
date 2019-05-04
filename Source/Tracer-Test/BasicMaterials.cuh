@@ -152,6 +152,7 @@ class BarycentricMat final
     private:
     protected:
     public:
+        // Constructors & Destructor
                                         BarycentricMat(int gpuId);
                                         ~BarycentricMat() = default;
 
@@ -176,34 +177,36 @@ class BarycentricMat final
 };
 
 // Material Batches
-extern template class GPUBoundaryMatBatch<TracerBasic, ConstantBoundaryMat>;
-
-using ConstantBoundaryMatBatch = GPUBoundaryMatBatch<TracerBasic, ConstantBoundaryMat>;
+extern template class GPUBoundaryMatBatch<TracerBasic, 
+                                          ConstantBoundaryMat>;
 
 extern template class GPUMaterialBatch<TracerBasic,
                                        BarycentricMat,
                                        GPUPrimitiveTriangle,
                                        BarySurfaceFromTri>;
 
-using BarycentricMatTriBatch = GPUMaterialBatch<TracerBasic,
-                                                BarycentricMat,
-                                                GPUPrimitiveTriangle,
-                                                BarySurfaceFromTri>;
-
 extern template class GPUMaterialBatch<TracerBasic,
                                        BasicMat,
                                        GPUPrimitiveTriangle,
                                        EmptySurfaceFromTri>;
 
-using BasicMatTriBatch = GPUMaterialBatch<TracerBasic,
-                                          BasicMat,
-                                          GPUPrimitiveTriangle,
-                                          EmptySurfaceFromTri>;
-
 extern template class GPUMaterialBatch<TracerBasic,
                                        BasicMat,
                                        GPUPrimitiveSphere,
                                        EmptySurfaceFromSphr>;
+
+using ConstantBoundaryMatBatch = GPUBoundaryMatBatch<TracerBasic, 
+                                                     ConstantBoundaryMat>;
+
+using BarycentricMatTriBatch = GPUMaterialBatch<TracerBasic,
+                                                BarycentricMat,
+                                                GPUPrimitiveTriangle,
+                                                BarySurfaceFromTri>;
+
+using BasicMatTriBatch = GPUMaterialBatch<TracerBasic,
+                                          BasicMat,
+                                          GPUPrimitiveTriangle,
+                                          EmptySurfaceFromTri>;
 
 using BasicMatSphrBatch = GPUMaterialBatch<TracerBasic,
                                            BasicMat,

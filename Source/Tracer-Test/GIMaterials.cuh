@@ -75,13 +75,13 @@ class GIAlbedoMat final
         static constexpr const char*    TypeName = "GIAlbedo";
 
     private:
-        DeviceMemory            memory;
-        ConstantAlbedoMatData   matData;
+        DeviceMemory                    memory;
+        ConstantAlbedoMatData           matData;
 
     protected:
     public:
-                                GIAlbedoMat(int gpuId);
-                                ~GIAlbedoMat() = default;
+                                        GIAlbedoMat(int gpuId);
+                                        ~GIAlbedoMat() = default;
 
         // Interface
         // Type (as string) of the primitive group
