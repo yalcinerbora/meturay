@@ -13,7 +13,7 @@ GPUPrimitiveTriangle::GPUPrimitiveTriangle()
 
 const char* GPUPrimitiveTriangle::Type() const
 {
-    return TypeName;
+    return TypeName();
 }
 
 SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& surfaceDataNodes,

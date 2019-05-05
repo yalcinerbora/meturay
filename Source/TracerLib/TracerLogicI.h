@@ -49,7 +49,6 @@ class TracerBaseLogicI
                                              Vector2i pixelStart = Zero2i,
                                              Vector2i pixelEnd = BaseConstants::IMAGE_MAX_SIZE) = 0;
 
-
         // Interface fetching for logic
         virtual GPUBaseAcceleratorI&                BaseAcelerator() = 0;
         virtual const AcceleratorBatchMappings&     AcceleratorBatches() = 0;

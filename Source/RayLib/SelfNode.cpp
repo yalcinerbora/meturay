@@ -63,6 +63,11 @@ void SelfNode::WindowCloseAction()
     // TODO:: Terminate the tracer thread
 }
 
+void SelfNode::SendLog(const std::string s)
+{
+    METU_LOG("%s", s.c_str());
+}
+
 void SelfNode::SendError(TracerError err)
 {
     METU_ERROR_LOG("Tracer Error: %s", static_cast<std::string>(err).c_str());

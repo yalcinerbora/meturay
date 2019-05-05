@@ -33,48 +33,39 @@ BasicTracerLogicGenerator::BasicTracerLogicGenerator()
 {
     // Add Basic Mat and Batch
     // Material Types
-    matGroupGenerators.emplace(BasicMat::TypeName,
+    matGroupGenerators.emplace(BasicMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BasicMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
-    matGroupGenerators.emplace(BarycentricMat::TypeName,
+    matGroupGenerators.emplace(BarycentricMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BarycentricMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
-    matGroupGenerators.emplace(GIAlbedoMat::TypeName,
+    matGroupGenerators.emplace(GIAlbedoMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, GIAlbedoMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
-    matGroupGenerators.emplace(ConstantBoundaryMat::TypeName,
+    matGroupGenerators.emplace(ConstantBoundaryMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, ConstantBoundaryMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
     // Material Batches
     // Basic
-    printf("%s\n", BasicMatTriBatch::TypeNamePriv.c_str());
-    printf("%s\n", BasicMatTriBatch::TypeName);
-
-    printf("%s\n", BasicMatSphrBatch::TypeNamePriv.c_str());
-    printf("%s\n", BasicMatSphrBatch::TypeName);
-    
-    printf("%s\n", BarycentricMatTriBatch::TypeNamePriv.c_str());
-    printf("%s\n", BarycentricMatTriBatch::TypeName);
-
-    matBatchGenerators.emplace(BasicMatTriBatch::TypeName,
+    matBatchGenerators.emplace(BasicMatTriBatch::TypeName(),
                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, BasicMatTriBatch>,
                                               DefaultDestruct<GPUMaterialBatchI>));
-    matBatchGenerators.emplace(BasicMatSphrBatch::TypeName,
+    matBatchGenerators.emplace(BasicMatSphrBatch::TypeName(),
                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, BasicMatSphrBatch>,
                                               DefaultDestruct<GPUMaterialBatchI>));
     // Barycentric
-    matBatchGenerators.emplace(BarycentricMatTriBatch::TypeName,
+    matBatchGenerators.emplace(BarycentricMatTriBatch::TypeName(),
                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, BarycentricMatTriBatch>,
                                               DefaultDestruct<GPUMaterialBatchI>));
     // GI Albedo
-    matBatchGenerators.emplace(GIAlbedoTriBatch::TypeName,
+    matBatchGenerators.emplace(GIAlbedoTriBatch::TypeName(),
                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, GIAlbedoTriBatch>,
                                               DefaultDestruct<GPUMaterialBatchI>));
-    matBatchGenerators.emplace(GIAlbedoSphrBatch::TypeName,
+    matBatchGenerators.emplace(GIAlbedoSphrBatch::TypeName(),
                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, GIAlbedoSphrBatch>,
                                               DefaultDestruct<GPUMaterialBatchI>));
     // Boundary
-    matBatchGenerators.emplace(ConstantBoundaryMat::TypeName,
+    matBatchGenerators.emplace(ConstantBoundaryMat::TypeName(),
                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ConstantBoundaryMatBatch>,
                                               DefaultDestruct<GPUMaterialBatchI>));
 }

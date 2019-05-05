@@ -73,7 +73,8 @@ class ConstantBoundaryMat final
                                  ConstantBoundaryMatShade>
 {
     public:
-        static constexpr const char*    TypeName = "ConstantBoundary";
+        static constexpr const char*    TypeName() { return "ConstantBoundary"; }
+
     private:
         DeviceMemory                        memory;
 
@@ -112,7 +113,8 @@ class BasicMat final
                               BasicMatShade>
 {
     public:
-        static constexpr const char*    TypeName = "BasicMat";
+        static constexpr const char*    TypeName() { return "BasicMat"; }
+
     private:
         DeviceMemory                    memory;
 
@@ -148,7 +150,8 @@ class BarycentricMat final
                               BaryMatShade>
 {
     public:
-        static constexpr const char*    TypeName = "BarycentricMat";
+        static constexpr const char*    TypeName() { return "BarycentricMat"; }
+
     private:
     protected:
     public:

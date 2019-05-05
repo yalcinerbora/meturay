@@ -50,11 +50,8 @@ template <class TLogic, class MGroup, class PGroup,
 class GPUMaterialBatch final : public GPUMaterialBatchI
 {
     public:
-        static  const std::string       TypeNamePriv;
-
-    public:
         static constexpr auto           SurfFunc = SurfaceF;
-        static const char*              TypeName;
+        static const char*              TypeName();
 
     private:
         const MGroup&                   materialGroup;
@@ -122,11 +119,8 @@ class GPUBoundaryMatGroup
 template <class TLogic, class MGroup>
 class GPUBoundaryMatBatch final : public GPUMaterialBatchI
 {
-    private:
-        static const std::string            TypeNamePriv;
-
     public:
-        static const char*                  TypeName;
+        static const char*                  TypeName();
 
     private:
         const MGroup&                       materialGroup;
@@ -204,17 +198,17 @@ GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::GPUMaterialBatch(const GPUMa
 
 template <class TLogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfaceF>
-const std::string GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::TypeNamePriv = std::string(MGroup::TypeName) + std::string(PGroup::TypeName);
-
-template <class TLogic, class MGroup, class PGroup,
-          SurfaceFunc<MGroup, PGroup> SurfaceF>
-const char* GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::TypeName = TypeNamePriv.c_str();
+const char* GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::TypeName()
+{
+   static const std::string typeName = std::string(MGroup::TypeName()) + PGroup::TypeName();
+   return typeName.c_str();
+}
 
 template <class TLogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfaceF>
 const char* GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::Type() const
 {
-    return TypeName;
+    return TypeName();
 }
 
 template <class TLogic, class MGroup, class PGroup,
@@ -321,10 +315,11 @@ GPUBoundaryMatBatch<TLogic, MGroup>::GPUBoundaryMatBatch(const GPUMaterialGroupI
 {}
 
 template <class TLogic, class MGroup>
-const std::string GPUBoundaryMatBatch<TLogic, MGroup>::TypeNamePriv = std::string(MGroup::TypeName);
-
-template <class TLogic, class MGroup>
-const char* GPUBoundaryMatBatch<TLogic, MGroup>::TypeName = TypeNamePriv.c_str();
+const char* GPUBoundaryMatBatch<TLogic, MGroup>::TypeName()
+{
+    static const std::string typeName(MGroup::TypeName());
+    return typeName.c_str();
+}
 
 template <class TLogic, class MGroup>
 const GPUPrimitiveGroupI* GPUBoundaryMatBatch<TLogic, MGroup>::primitiveGroup = nullptr;
@@ -332,7 +327,7 @@ const GPUPrimitiveGroupI* GPUBoundaryMatBatch<TLogic, MGroup>::primitiveGroup = 
 template <class TLogic, class MGroup>
 const char* GPUBoundaryMatBatch<TLogic, MGroup>::Type() const
 {
-    return TypeNamePriv.c_str();
+    return TypeName();
 }
 
 template <class TLogic, class MGroup>

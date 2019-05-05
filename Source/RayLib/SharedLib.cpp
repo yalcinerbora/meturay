@@ -27,7 +27,7 @@ std::wstring ConvertWinWchar(const std::string& unicodeStr)
         std::wstring wString(utf16Length, L'\0');
 
         // Convert from UTF-8 to UTF-16
-        int result = ::MultiByteToWideChar(
+        ::MultiByteToWideChar(
             CP_UTF8,                    // Source string is in UTF-8
             kFlags,                     // Conversion flags
             unicodeStr.data(),          // Source UTF-8 string pointer

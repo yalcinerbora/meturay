@@ -98,22 +98,22 @@ struct SurfaceStruct
     int8_t          pairCount;
 };
 
-struct PrimitiveStruct
-{
-    struct PrimitiveData
-    {
-        std::string logic;      // Logic of the data (used by accelerator / material)
-        uint32_t intake;        // Intake index (if data is stored multiple linear portions)
-        uint32_t stride;        // Byte stride of the data
-        uint32_t offset;        // Byte offset from the start of the index
-        DataType type;          // Data type
-    };
-
-    // Members
-    std::vector<PrimitiveData>  dataDefinitions;
-    std::string                 type;
-    uint32_t                    id;
-};
+//struct PrimitiveStruct
+//{
+//    struct PrimitiveData
+//    {
+//        std::string logic;      // Logic of the data (used by accelerator / material)
+//        uint32_t intake;        // Intake index (if data is stored multiple linear portions)
+//        uint32_t stride;        // Byte stride of the data
+//        uint32_t offset;        // Byte offset from the start of the index
+//        DataType type;          // Data type
+//    };
+//
+//    // Members
+//    std::vector<PrimitiveData>  dataDefinitions;
+//    std::string                 type;
+//    uint32_t                    id;
+//};
 
 //inline bool SurfaceStruct::operator<(const SurfaceStruct& right)
 //{

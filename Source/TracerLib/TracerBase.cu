@@ -17,6 +17,13 @@ void TracerBase::SendError(TracerError e, bool isFatal)
     healthy = isFatal;
 }
 
+void TracerBase::SendLog(const std::string& s)
+{
+    // Parse etc...
+
+    if(callbacks) callbacks->SendLog(std::move(s));
+}
+
 void TracerBase::HitRays()
 {
     // Tracer Logic interface

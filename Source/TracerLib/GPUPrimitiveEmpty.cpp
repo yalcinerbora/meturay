@@ -5,7 +5,7 @@ GPUPrimitiveEmpty::GPUPrimitiveEmpty()
 
 const char* GPUPrimitiveEmpty::Type() const
 {
-    return TypeName;
+    return TypeName();
 }
 
 SceneError GPUPrimitiveEmpty::InitializeGroup(const std::set<SceneFileNode>& surfaceDatalNodes, double time)

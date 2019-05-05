@@ -1,3 +1,4 @@
+
 template <class PGroup>
 GPUAccLinearGroup<PGroup>::GPUAccLinearGroup(const GPUPrimitiveGroupI& pGroup,
                                              const TransformStruct* dInvTransforms)
@@ -7,12 +8,16 @@ GPUAccLinearGroup<PGroup>::GPUAccLinearGroup(const GPUPrimitiveGroupI& pGroup,
 {}
 
 template<class PGroup>
-const std::string LinearAccelTypeName<PGroup>::TypeName = std::string("Linear") + std::string(PGroup::TypeName);
+const char* LinearAccelTypeName<PGroup>::TypeName()
+{
+    static const std::string typeName = std::string("Linear") + PGroup::TypeName();
+    return typeName.c_str();
+}
 
 template <class PGroup>
 const char* GPUAccLinearGroup<PGroup>::Type() const
 {
-    return TypeName.c_str();
+    return TypeName();
 }
 
 template <class PGroup>
@@ -209,7 +214,7 @@ GPUAccLinearBatch<PGroup>::GPUAccLinearBatch(const GPUAcceleratorGroupI& a,
 template <class PGroup>
 const char* GPUAccLinearBatch<PGroup>::Type() const
 {
-    return TypeName.c_str();
+    return TypeName();
 }
 
 template <class PGroup>

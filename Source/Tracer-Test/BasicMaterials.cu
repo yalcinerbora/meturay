@@ -7,7 +7,7 @@ ConstantBoundaryMat::ConstantBoundaryMat(int gpuId)
 
 const char* ConstantBoundaryMat::Type() const
 {
-    return TypeName;
+    return TypeName();
 }
 
 SceneError ConstantBoundaryMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)
@@ -63,7 +63,7 @@ BasicMat::BasicMat(int gpuId)
 
 const char* BasicMat::Type() const
 {
-    return TypeName;
+    return TypeName();
 }
 
 SceneError BasicMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)
@@ -118,7 +118,7 @@ BarycentricMat::BarycentricMat(int gpuId)
 
 const char* BarycentricMat::Type() const
 {
-    return TypeName;
+    return TypeName();
 }
 
 SceneError BarycentricMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)

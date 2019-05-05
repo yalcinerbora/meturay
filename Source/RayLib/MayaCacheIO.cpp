@@ -228,7 +228,7 @@ namespace MayaCache
 
         // Size part
         std::string tagSIZE = ReadTag<WordSize>(file);
-        T blockSize = ReadInt<T>(file);
+        //T blockSize = ReadInt<T>(file);
         T channelDataCount = ReadInt<int32_t>(file);
         // Dummy Read (Entire Data format is super inconsistent...)
         if constexpr(WordSize == 8) ReadInt<uint32_t>(file);
@@ -240,12 +240,12 @@ namespace MayaCache
         // Assert that Data Count and Byte Size is ok
         if(tagFORMAT == NSChannelHeader::DataChannelNames[NSChannelHeader::FVCA])
         {
-            assert(bufferByteSize == channelDataCount * 3 * sizeof(float));
+            assert(bufferByteSize == channelDataCount * 3u * sizeof(float));
             header.type = NSChannelHeader::FVCA;
         }
         else if(tagFORMAT == NSChannelHeader::DataChannelNames[NSChannelHeader::DVCA])
         {
-            assert(bufferByteSize == channelDataCount * 3 * sizeof(double));
+            assert(bufferByteSize == channelDataCount * 3u * sizeof(double));
             header.type = NSChannelHeader::DVCA;
         }
         else if(tagFORMAT == NSChannelHeader::DataChannelNames[NSChannelHeader::FBCA])

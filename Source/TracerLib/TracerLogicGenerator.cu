@@ -74,39 +74,39 @@ TracerLogicGenerator::TracerLogicGenerator(GPUTracerGen tracerGenerator,
     using namespace TypeGenWrappers;
 
     // Primitive Defaults
-    primGroupGenerators.emplace(GPUPrimitiveTriangle::TypeName,
+    primGroupGenerators.emplace(GPUPrimitiveTriangle::TypeName(),
                                 GPUPrimGroupGen(DefaultConstruct<GPUPrimitiveGroupI, GPUPrimitiveTriangle>,
                                                 DefaultDestruct<GPUPrimitiveGroupI>));
-    primGroupGenerators.emplace(GPUPrimitiveSphere::TypeName,
+    primGroupGenerators.emplace(GPUPrimitiveSphere::TypeName(),
                                 GPUPrimGroupGen(DefaultConstruct<GPUPrimitiveGroupI, GPUPrimitiveSphere>,
                                                 DefaultDestruct<GPUPrimitiveGroupI>));
-    primGroupGenerators.emplace(GPUPrimitiveEmpty::TypeName,
+    primGroupGenerators.emplace(GPUPrimitiveEmpty::TypeName(),
                                 GPUPrimGroupGen(DefaultConstruct<GPUPrimitiveGroupI, GPUPrimitiveEmpty>,
                                                 DefaultDestruct<GPUPrimitiveGroupI>));
 
     // Accelerator Types
-    accelGroupGenerators.emplace(GPUAccTriLinearGroup::TypeName,
+    accelGroupGenerators.emplace(GPUAccTriLinearGroup::TypeName(),
                                  GPUAccelGroupGen(AccelGroupConstruct<GPUAcceleratorGroupI, GPUAccTriLinearGroup>,
                                                   DefaultDestruct<GPUAcceleratorGroupI>));
-    accelGroupGenerators.emplace(GPUAccSphrLinearGroup::TypeName,
+    accelGroupGenerators.emplace(GPUAccSphrLinearGroup::TypeName(),
                                  GPUAccelGroupGen(AccelGroupConstruct<GPUAcceleratorGroupI, GPUAccSphrLinearGroup>,
                                                   DefaultDestruct<GPUAcceleratorGroupI>));
 
-    accelBatchGenerators.emplace(GPUAccTriLinearBatch::TypeName,
+    accelBatchGenerators.emplace(GPUAccTriLinearBatch::TypeName(),
                                  GPUAccelBatchGen(AccelBatchConstruct<GPUAcceleratorBatchI, GPUAccTriLinearBatch>,
                                                   DefaultDestruct<GPUAcceleratorBatchI>));
-    accelBatchGenerators.emplace(GPUAccSphrLinearBatch::TypeName,
+    accelBatchGenerators.emplace(GPUAccSphrLinearBatch::TypeName(),
                                  GPUAccelBatchGen(AccelBatchConstruct<GPUAcceleratorBatchI, GPUAccSphrLinearBatch>,
                                                   DefaultDestruct<GPUAcceleratorBatchI>));
 
     // Base Accelerator
-    baseAccelGenerators.emplace(GPUBaseAcceleratorLinear::TypeName,
+    baseAccelGenerators.emplace(GPUBaseAcceleratorLinear::TypeName(),
                                 GPUBaseAccelGen(DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorLinear>,
                                                 DefaultDestruct<GPUBaseAcceleratorI>));
 
 
     // Inistantiate empty primitive since it is used by outside material
-    const std::string emptyTypeName = GPUPrimitiveEmpty::TypeName;
+    const std::string emptyTypeName = GPUPrimitiveEmpty::TypeName();
     auto loc = primGroupGenerators.find(emptyTypeName);
     GPUPrimGPtr ptr = loc->second();
     emptyPrimitive = ptr.get();
@@ -366,7 +366,7 @@ void TracerLogicGenerator::ClearAll()
     boundaryMatBatch.reset(nullptr);
 
     // Inistantiate empty primitive since it is used by outside material
-    const std::string emptyTypeName = GPUPrimitiveEmpty::TypeName;
+    const std::string emptyTypeName = GPUPrimitiveEmpty::TypeName();
     auto loc = primGroupGenerators.find(emptyTypeName);
     GPUPrimGPtr ptr = loc->second();
     emptyPrimitive = ptr.get();

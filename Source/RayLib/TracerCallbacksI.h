@@ -18,6 +18,7 @@ class TracerCallbacksI
     public:
         virtual         ~TracerCallbacksI() = default;
 
+        virtual void    SendLog(const std::string) = 0;
         virtual void    SendError(TracerError) = 0;
         virtual void    SendAnalyticData(AnalyticData) = 0;
         virtual void    SendImage(const std::vector<Byte> data,

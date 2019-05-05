@@ -36,7 +36,7 @@ template<class PGroup>
 class LinearAccelTypeName
 {
     public:
-        static const std::string TypeName;
+        static const char* TypeName();
 };
 
 template<class PGroup>
@@ -140,7 +140,8 @@ class GPUAccLinearBatch final
 class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
 {
     public:
-        static const std::string        TypeName;
+        static const char*              TypeName();
+
     private:
         DeviceMemory                    leafMemory;
         DeviceMemory                    rayLocMemory;
@@ -165,21 +166,20 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
         // It can return invalid key,
         // which is either means data is out of bounds or ray is invalid.
         void                        Hit(// Output
-                                    TransformId* dTransformIds,
-                                    HitKey* dAcceleratorKeys,
-                                    // Inputs
-                                    const RayGMem* dRays,
-                                    const RayId* dRayIds,
-                                    const uint32_t rayCount) const override;
+                                        TransformId* dTransformIds,
+                                        HitKey* dAcceleratorKeys,
+                                        // Inputs
+                                        const RayGMem* dRays,
+                                        const RayId* dRayIds,
+                                        const uint32_t rayCount) const override;
 
 
         SceneError                  Initialize(// List of surface to transform id hit key mappings
-                                                   const std::map<uint32_t, BaseLeaf>&) override;
-        SceneError                  Change(// List of only changed surface to transform id hit key mappings
                                                const std::map<uint32_t, BaseLeaf>&) override;
+        SceneError                  Change(// List of only changed surface to transform id hit key mappings
+                                           const std::map<uint32_t, BaseLeaf>&) override;
 
         void                        Constrcut() override;
         void                        Destruct() override;
 };
-
 #include "GPUAcceleratorLinear.hpp"

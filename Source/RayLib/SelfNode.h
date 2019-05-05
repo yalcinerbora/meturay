@@ -42,6 +42,7 @@ class SelfNode
         void        WindowCloseAction() override;
 
         // From Tracer Callbacks
+        void        SendLog(const std::string) override;
         void        SendError(TracerError) override;
         void        SendAnalyticData(AnalyticData) override;
         void        SendImage(const std::vector<Byte> data,

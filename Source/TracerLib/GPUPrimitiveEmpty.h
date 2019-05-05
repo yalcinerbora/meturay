@@ -57,7 +57,7 @@ class GPUPrimitiveEmpty final
                                GenerateAABBEmpty, GenerateAreaEmpty>
 {
     public:
-        static constexpr const char*            TypeName = "Empty";
+        static constexpr const char*            TypeName() { return "Empty"; }
 
     private:
     protected:

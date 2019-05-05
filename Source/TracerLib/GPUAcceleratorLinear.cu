@@ -4,10 +4,14 @@
 
 #include "RayLib/ObjectFuncDefinitions.h"
 
+const char* GPUBaseAcceleratorLinear::TypeName()
+{
+    return "Linear";
+}
 
 const char* GPUBaseAcceleratorLinear::Type() const
 {
-    return TypeName.c_str();
+    return TypeName();
 }
 
 void GPUBaseAcceleratorLinear::GetReady(uint32_t rayCount)
@@ -115,8 +119,6 @@ void GPUBaseAcceleratorLinear::Destruct()
 {
 
 }
-
-const std::string GPUBaseAcceleratorLinear::TypeName = "Linear";
 
 // Accelerator
 template class GPUAccLinearGroup<GPUPrimitiveTriangle>;

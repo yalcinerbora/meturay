@@ -60,7 +60,9 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
     </ClCompile>
     <CudaCompile>
       <GenerateLineInfo>false</GenerateLineInfo>
@@ -72,6 +74,7 @@
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
+      <AdditionalCompilerOptions>/wd4506</AdditionalCompilerOptions>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
@@ -95,7 +98,9 @@
       <PreprocessorDefinitions>METU_CUDA;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -112,6 +117,7 @@
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
+      <AdditionalCompilerOptions>/wd4506</AdditionalCompilerOptions>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>

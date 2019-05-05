@@ -45,8 +45,8 @@ struct TracerParameters
 // Options that can be changed during runtime
 struct TracerOptions
 {
-    uint32_t        depth;
-    uint32_t        sampleCount;
+    // Misc
+    bool        verbose;
 };
 
 struct MatBatchRayDataCPU

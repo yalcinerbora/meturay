@@ -40,29 +40,26 @@ TEST(HelloTriangle, Test)
 
     // Generate GPU List & A Partitioner
     // Check cuda system error here
-
     const std::vector<CudaGPU>& gpuList = CudaSystem::GPUList();
-    if(CudaSystem::SystemStatus() != CudaSystem::OK)
-        ASSERT_FALSE(true);
+    ASSERT_TRUE(CudaSystem::SystemStatus() == CudaSystem::OK);
     int leaderDevice = gpuList[0].DeviceId();
 
     // GPU Data Partitioner
     SingleGPUScenePartitioner partitioner(gpuList);
 
     // Load Scene
-    GPUScene scene("TestScenes/helloTriangle.json", partitioner,
+    GPUScene scene("TestScenes/helloTriangle.json", 
+                   partitioner,
                    *tracerGenerator.get());
     SceneError scnE = scene.LoadScene(0.0);
-    if(scnE != SceneError::OK)
-        ASSERT_FALSE(true);
+    ASSERT_TRUE(scnE == SceneError::OK);
 
     // Finally generate logic after successfull load
     TracerBaseLogicI* logic;
     scnE = tracerGenerator->GenerateBaseLogic(logic, tracerParams,
                                               scene.MaxMatIds(),
                                               scene.MaxAccelIds());
-    if(scnE != SceneError::OK)
-        ASSERT_FALSE(true);
+    ASSERT_TRUE(scnE == SceneError::OK);
 
 
     // Camera (Dont use scenes camera)

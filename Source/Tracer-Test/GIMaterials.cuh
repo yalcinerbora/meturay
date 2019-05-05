@@ -72,7 +72,7 @@ class GIAlbedoMat final
                               GIAlbedoMatShade>
 {
     public:
-        static constexpr const char*    TypeName = "GIAlbedo";
+        static constexpr const char*    TypeName() { return "GIAlbedo"; }
 
     private:
         DeviceMemory                    memory;

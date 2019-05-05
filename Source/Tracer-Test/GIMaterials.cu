@@ -7,7 +7,7 @@ GIAlbedoMat::GIAlbedoMat(int gpuId)
 
 const char* GIAlbedoMat::Type() const
 {
-    return TypeName;
+    return TypeName();
 }
 
 SceneError GIAlbedoMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)

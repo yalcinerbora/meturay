@@ -51,7 +51,10 @@ class TracerBase : public TracerI
         bool                    healthy;
 
         // Internals
+        void                    SendLog(const std::string&);
         void                    SendError(TracerError e, bool isFatal);
+
+        // Fundamental Hit / Shade Loop
         void                    HitRays();
         void                    ShadeRays();
 

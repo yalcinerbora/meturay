@@ -13,7 +13,7 @@ GPUPrimitiveSphere::GPUPrimitiveSphere()
 
 const char* GPUPrimitiveSphere::Type() const
 {
-    return TypeName;
+    return TypeName();
 }
 
 SceneError GPUPrimitiveSphere::InitializeGroup(const std::set<SceneFileNode>& surfaceDatalNodes,

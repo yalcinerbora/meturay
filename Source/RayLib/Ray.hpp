@@ -74,7 +74,8 @@ inline bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
     return IntersectsTriangle(baryCoords, t,
                               triCorners[0],
                               triCorners[1],
-                              triCorners[2]);
+                              triCorners[2],
+                              cullFace);
 }
 
 template<class T>
