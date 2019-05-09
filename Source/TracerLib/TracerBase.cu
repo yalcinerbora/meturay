@@ -10,18 +10,21 @@
 #include "GPUMaterialI.h"
 #include "TracerLogicI.h"
 
+template <class... Args>
+inline void TracerBase::SendLog(const char* format, Args... args)
+{
+    if(!options.verbose) return;
+
+    size_t size = snprintf(nullptr, 0, format, args...);
+    std::string s(size, '\0');
+    snprintf(&s[0], size, format, args...);
+    if(callbacks) callbacks->SendLog(s);
+}
 
 void TracerBase::SendError(TracerError e, bool isFatal)
 {
     if(callbacks) callbacks->SendError(e);
     healthy = isFatal;
-}
-
-void TracerBase::SendLog(const std::string& s)
-{
-    // Parse etc...
-
-    if(callbacks) callbacks->SendLog(std::move(s));
 }
 
 void TracerBase::HitRays()
@@ -344,20 +347,24 @@ void TracerBase::Render()
     if(!healthy) return;
     if(currentRayCount == 0) return;
 
+    SendLog(" Starting Hits: %d rays...", currentRayCount);
     HitRays();
-    METU_LOG("-----------------------------");
+    SendLog(" Hits Complete, Shading...");
     ShadeRays();
-    METU_LOG("-----------------------------");
-    METU_LOG("-----------------------------");
+    SendLog(" Shading Complete!");
 }
 
 void TracerBase::FinishSamples()
 {
+    if(!healthy) return;
+
     // Normally if ray reaches to boundary material
     // its result is written to the ray data
     // but a ray not always reach to boundary material
     // if a pre determined
-  
+    SendLog("Finishing Samples: %d rays remaining...");
+    // TODO: generate abrupt end kernel call for rays
+
     // Determine Size
     Vector2i pixelCount = outputImage.SegmentSize();
     Vector2i start = outputImage.SegmentOffset();
@@ -376,8 +383,7 @@ void TracerBase::FinishSamples()
                                        sampleCountPerRay,
                                        start, end);
 
-    // TODO: Do this
-    if(!healthy) return;
+    SendLog("Samples Finished!");
 }
 
 void TracerBase::SetImagePixelFormat(PixelFormat f)

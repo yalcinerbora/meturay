@@ -65,7 +65,7 @@ void SelfNode::WindowCloseAction()
 
 void SelfNode::SendLog(const std::string s)
 {
-    METU_LOG("%s", s.c_str());
+    METU_LOG("Tracer: %s", s.c_str());
 }
 
 void SelfNode::SendError(TracerError err)

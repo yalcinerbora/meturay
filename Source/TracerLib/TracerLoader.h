@@ -49,8 +49,8 @@ namespace TracerLoader
     // Sine different test cases may need different tracer implementations
     // This makes many different tracers to reside ona single dll
     // This may be usefull
-    LogicInterface              LoadTracerLogic(SharedLib& s,
-                                                const char* generatorConstructor,
-                                                const char* generatorDestructor);
+    LogicInterface                  LoadTracerLogic(SharedLib& s,
+                                                    const char* generatorConstructor,
+                                                    const char* generatorDestructor);
 
 }

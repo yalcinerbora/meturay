@@ -32,7 +32,7 @@
     <ClCompile Include="..\..\..\Source\Tests\T_GPUScene.cpp">
       <Filter>SceneIO</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\Tests\T_HelloTriangle.cpp">
+    <ClCompile Include="..\..\..\Source\Tests\T_BasicTracers.cpp">
       <Filter>TracerMock</Filter>
     </ClCompile>
   </ItemGroup>
@@ -46,5 +46,10 @@
     <Filter Include="TracerMock">
       <UniqueIdentifier>{7a674633-d085-4983-83e2-20ed80c90cbb}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Source\Tests\SimpleTracerSetup.h">
+      <Filter>TracerMock</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

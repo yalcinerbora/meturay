@@ -36,7 +36,7 @@ static inline constexpr void METU_ERROR_LOG(const char* string, Args... args)
 {
     std::string s;
     //s += "\33[2K\r";
-    s += "Error:";
+    s += "Error: ";
     s += string;
     s += "\n";
     fprintf(stderr, s.c_str(), args...);

@@ -196,11 +196,14 @@ size_t InNodeSphrLoader::PrimitiveDataSize(const std::string& primitiveDataType)
 
 AABB3f InNodeSphrLoader::PrimitiveAABB() const
 {
-    int centerIndex = static_cast<int>(PrimitiveDataType::CENTER);
-    int radIndex = static_cast<int>(PrimitiveDataType::RADIUS);
+    const int centerIndex = static_cast<int>(PrimitiveDataType::CENTER);
+    const int radIndex = static_cast<int>(PrimitiveDataType::RADIUS);
+    const std::string posName = PrimitiveDataTypeNames[centerIndex];
+    const std::string radName = PrimitiveDataTypeNames[radIndex];
 
-    Vector3 center = SceneIO::LoadVector<3, float>(node[centerIndex], time);
-    float radius = SceneIO::LoadNumber<float>(node[radIndex], time);
+    // Actual Fetch
+    Vector3 center = SceneIO::LoadVector<3, float>(node[posName], time);
+    float radius = SceneIO::LoadNumber<float>(node[radName], time);
 
     return Sphere::BoundingBox(center, radius);
 }

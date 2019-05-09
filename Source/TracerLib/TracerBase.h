@@ -18,6 +18,7 @@ Single thread will
 #include <functional>
 #include <set>
 #include <map>
+#include <sstream>
 
 #include "RayLib/TracerStructs.h"
 #include "RayLib/TracerI.h"
@@ -51,7 +52,8 @@ class TracerBase : public TracerI
         bool                    healthy;
 
         // Internals
-        void                    SendLog(const std::string&);
+        template <class... Args>
+        void                    SendLog(const char*, Args...);
         void                    SendError(TracerError e, bool isFatal);
 
         // Fundamental Hit / Shade Loop

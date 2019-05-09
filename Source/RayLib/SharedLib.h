@@ -16,7 +16,7 @@ class SharedLib
 {
     private:
         static constexpr const char* WinDLLExt      = ".dll";
-        static constexpr const char* LinuxDLLExt        = ".so";
+        static constexpr const char* LinuxDLLExt    = ".so";
 
         // Props
         void*               libHandle;
