@@ -23,6 +23,7 @@ tree constructio would provide additional overhead.
 #include "GPUAcceleratorP.cuh"
 #include "GPUPrimitiveI.h"
 #include "CudaConstants.h"
+#include "TypeTraits.h"
 
 #include "GPUAcceleratorLinearKC.cuh"
 
@@ -182,4 +183,8 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
         void                        Constrcut() override;
         void                        Destruct() override;
 };
+
+static_assert(IsTracerClass<GPUBaseAcceleratorLinear>::value,
+              "GPUBaseAcceleratorLinear is not a Tracer Class.");
+
 #include "GPUAcceleratorLinear.hpp"

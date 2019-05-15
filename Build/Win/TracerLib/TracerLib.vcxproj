@@ -60,6 +60,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerThread.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TypeTraits.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />

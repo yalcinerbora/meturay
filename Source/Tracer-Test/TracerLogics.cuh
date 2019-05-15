@@ -1,13 +1,7 @@
 #pragma once
 
 #include "TracerLib/TracerLogicP.cuh"
-
-struct RayAuxBasic
-{
-    Vector3f        totalRadiance;
-    uint32_t        pixelId;
-    uint32_t        pixelSampleId;
-};
+#include "RayAuxStruct.h"
 
 __device__ __host__
 inline void RayInitBasic(RayAuxBasic* gOutBasic,

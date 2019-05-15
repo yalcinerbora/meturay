@@ -224,6 +224,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ScenePartitioner.h">
       <Filter>Scene</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\TypeTraits.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

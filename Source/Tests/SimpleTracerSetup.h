@@ -34,7 +34,7 @@ class SimpleTracerSetup
 {
     private:
         static constexpr Vector2i           IMAGE_RESOLUTION = {256, 256};
-        static constexpr double             WINDOW_DURATION = 3.0;
+        static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
 
         static constexpr const char*        TRACER_DLL = "Tracer-Test";

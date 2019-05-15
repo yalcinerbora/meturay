@@ -11,7 +11,6 @@ All of them should be provided
 */
 
 #include <map>
-#include <type_traits>
 
 #include "RayLib/Vector.h"
 #include "RayLib/Triangle.h"
@@ -19,6 +18,7 @@ All of them should be provided
 #include "DefaultLeaf.h"
 #include "GPUPrimitiveP.cuh"
 #include "DeviceMemory.h"
+#include "TypeTraits.h"
 
 class SurfaceDataLoaderI;
 using SurfaceDataLoaders = std::vector<std::unique_ptr<SurfaceDataLoaderI>>;
@@ -135,3 +135,6 @@ class GPUPrimitiveTriangle final
         // Material may need that data
         bool                                        CanGenerateData(const std::string& s) const override;
 };
+
+static_assert(IsTracerClass<GPUPrimitiveTriangle>::value,
+              "GPUPrimitiveTriangle is not a Tracer Class.");

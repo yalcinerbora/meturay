@@ -120,8 +120,17 @@ void GPUBaseAcceleratorLinear::Destruct()
 
 }
 
+static_assert(IsTracerClass<GPUBaseAcceleratorLinear>::value,
+              "GPUBaseAcceleratorLinear is not a Tracer Class.");
+
 // Accelerator
 template class GPUAccLinearGroup<GPUPrimitiveTriangle>;
 template class GPUAccLinearGroup<GPUPrimitiveSphere>;
+
 template class GPUAccLinearBatch<GPUPrimitiveTriangle>;
 template class GPUAccLinearBatch<GPUPrimitiveSphere>;
+
+static_assert(IsTracerClass<GPUAccLinearGroup<GPUPrimitiveTriangle>>::value,
+              "GPUAccLinearGroup<GPUPrimitiveTriangle> is not a Tracer Class.");
+static_assert(IsTracerClass<GPUAccLinearGroup<GPUPrimitiveSphere>>::value,
+              "GPUAccLinearGroup<GPUPrimitiveSphere> is not a Tracer Class.");

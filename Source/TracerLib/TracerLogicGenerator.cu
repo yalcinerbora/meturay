@@ -7,11 +7,12 @@
 
 #include "GPUMaterialI.h"
 
-// Default Generations
+// Type to utilize the generated ones
 extern template class GPUAccLinearGroup<GPUPrimitiveTriangle>;
 extern template class GPUAccLinearGroup<GPUPrimitiveSphere>;
-extern template class GPUAcceleratorBatch<GPUAccLinearGroup<GPUPrimitiveTriangle>, GPUPrimitiveTriangle>;
-extern template class GPUAcceleratorBatch<GPUAccLinearGroup<GPUPrimitiveSphere>, GPUPrimitiveSphere>;
+
+extern template class GPUAccLinearBatch<GPUPrimitiveTriangle>;
+extern template class GPUAccLinearBatch<GPUPrimitiveSphere>;
 
 // Typedefs for ease of read
 using GPUAccTriLinearGroup = GPUAccLinearGroup<GPUPrimitiveTriangle>;

@@ -12,9 +12,11 @@ All of them should be provided
 */
 
 #include <map>
+
 #include "DefaultLeaf.h"
 #include "GPUPrimitiveP.cuh"
 #include "DeviceMemory.h"
+#include "TypeTraits.h"
 
 #include "RayLib/Vector.h"
 #include "RayLib/Sphere.h"
@@ -50,9 +52,10 @@ inline HitResult SphereClosestHit(// Output
     bool intersects = rayData.ray.IntersectsSphere(pos, newT, center, radius);
 
     // Check if the hit is closer
-    bool closerHit = intersects && (newT < rayData.tMin);
+    bool closerHit = intersects && (newT < rayData.tMax);
     if(closerHit)
     {
+        rayData.tMax = newT;
         newMat = leaf.matId;
         newPrimitive = leaf.primitiveId;
 
@@ -124,3 +127,6 @@ class GPUPrimitiveSphere final
         // Material may need that data
         bool                                    CanGenerateData(const std::string& s) const override;
 };
+
+static_assert(IsTracerClass<GPUPrimitiveSphere>::value,
+              "GPUPrimitiveSphere is not a Tracer Class.");

@@ -9,6 +9,7 @@
 #include <set>
 
 #include "RayLib/HitStructs.h"
+#include "RayLib/Vector.h"
 
 struct RayGMem;
 struct SceneFileNode;
@@ -35,7 +36,7 @@ class GPUMaterialGroupI
 
         // Material Queries
         virtual int                         InnerId(uint32_t materialId) const = 0;
-        virtual bool                        IsLoaded(uint32_t materialId) const = 0;
+        virtual bool                        HasCachedTextures(uint32_t materialId) const = 0;
         virtual int                         GPUId() const = 0;
 
         virtual size_t                      UsedGPUMemory() const = 0;

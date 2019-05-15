@@ -19,6 +19,7 @@ All of them should be provided
 
 #include "DefaultLeaf.h"
 #include "GPUPrimitiveP.cuh"
+#include "TypeTraits.h"
 
 struct EmptyData {};
 struct EmptyHit {};
@@ -82,3 +83,6 @@ class GPUPrimitiveEmpty final
         // Material may need that data
         bool                                    CanGenerateData(const std::string& s) const override;
 };
+
+static_assert(IsTracerClass<GPUPrimitiveEmpty>::value, 
+              "GPUPrimitiveEmpty is not a Tracer Class.");

@@ -1,5 +1,5 @@
 #include "MaterialNodeReaders.h"
-#include "MaterialStructs.h"
+#include "MaterialDataStructs.h"
 
 #include "RayLib/SceneIO.h"
 

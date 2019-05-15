@@ -19,11 +19,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterials.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterialsKC.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\GIMaterials.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialNodeReaders.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialStructs.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\Surfaces.h" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialDataStructs.h" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\RayAuxStruct.h" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\SurfaceStructs.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerGenerators.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerLogics.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h" />

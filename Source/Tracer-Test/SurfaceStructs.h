@@ -1,7 +1,6 @@
 #pragma once
 
 #include "TracerLogics.cuh"
-#include "MaterialStructs.h"
 
 #include "TracerLib/GPUPrimitiveSphere.h"
 #include "TracerLib/GPUPrimitiveTriangle.h"
@@ -10,6 +9,11 @@
 struct BarySurface
 {
     Vector3 baryCoords;
+};
+
+struct SphrSurface
+{
+    Vector2 sphrCoords;
 };
 
 struct BasicSurface
@@ -85,9 +89,17 @@ inline EmptySurface EmptySurfaceFromSphr(const GPUPrimitiveSphere::PrimitiveData
 }
 
 __device__ __host__
-inline EmptySurface SurfaceFromEmpty(const GPUPrimitiveEmpty::PrimitiveData& pData,
-                                     const GPUPrimitiveEmpty::HitData& hData,
-                                     PrimitiveId id)
+inline SphrSurface SphrSurfaceFromSphr(const GPUPrimitiveSphere::PrimitiveData& pData,
+                                       const GPUPrimitiveSphere::HitData& hData,
+                                       PrimitiveId id)
+{
+    return { hData };
+}
+
+__device__ __host__
+inline EmptySurface EmptySurfaceFromEmpty(const GPUPrimitiveEmpty::PrimitiveData& pData,
+                                          const GPUPrimitiveEmpty::HitData& hData,
+                                          PrimitiveId id)
 {
     return {};
 }

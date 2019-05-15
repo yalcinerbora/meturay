@@ -39,6 +39,9 @@ BasicTracerLogicGenerator::BasicTracerLogicGenerator()
     matGroupGenerators.emplace(BarycentricMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BarycentricMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
+    matGroupGenerators.emplace(SphericalMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, SphericalMat>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
     matGroupGenerators.emplace(GIAlbedoMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, GIAlbedoMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
@@ -56,6 +59,10 @@ BasicTracerLogicGenerator::BasicTracerLogicGenerator()
     // Barycentric
     matBatchGenerators.emplace(BarycentricMatTriBatch::TypeName(),
                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, BarycentricMatTriBatch>,
+                                              DefaultDestruct<GPUMaterialBatchI>));
+    // Spherical
+    matBatchGenerators.emplace(SphericalMatSphrBatch::TypeName(),
+                               GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, SphericalMatSphrBatch>,
                                               DefaultDestruct<GPUMaterialBatchI>));
     // GI Albedo
     matBatchGenerators.emplace(GIAlbedoTriBatch::TypeName(),
