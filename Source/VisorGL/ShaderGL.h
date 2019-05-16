@@ -23,6 +23,7 @@ class ShaderGL
     private:
         // Global Variables
         static GLuint       shaderPipelineID;
+        static int          shaderCount;
 
         // Properties
         GLuint              shaderID;

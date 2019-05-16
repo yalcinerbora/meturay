@@ -702,6 +702,7 @@ VisorGL::~VisorGL()
 {
     // TODO: Delete buffers etc..
     if(window != nullptr) glfwDestroyWindow(window);
+    instance = nullptr;
     glfwTerminate();
 }
 

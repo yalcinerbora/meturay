@@ -8,7 +8,7 @@ TEST(SimpleTracerTests, HelloTriangle)
 
     SimpleTracerSetup setup("TestScenes/helloTriangle.json",
                             0.0);
-    setup.Init();
+    ASSERT_TRUE(setup.Init());
     setup.Body();
 }
 

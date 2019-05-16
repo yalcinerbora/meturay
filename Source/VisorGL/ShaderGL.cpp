@@ -9,6 +9,7 @@
 //namespace std { namespace filesystem = std::experimental::filesystem; }
 
 GLuint ShaderGL::shaderPipelineID = 0;
+int ShaderGL::shaderCount = 0;
 
 GLenum ShaderGL::ShaderTypeToGL(ShaderType t)
 {
@@ -85,7 +86,7 @@ ShaderGL::ShaderGL(ShaderType t, const std::string& path)
         METU_LOG("Shader Compiled Successfully. Shader ID: %d, Name: %s", shaderID, onlyFileName.c_str());
         valid = true;
     }
-
+    shaderCount++;
 }
 
 ShaderGL::ShaderGL(ShaderGL&& other)
@@ -113,15 +114,17 @@ ShaderGL::~ShaderGL()
     {
         glDeleteProgram(shaderID);
         METU_LOG("Shader Deleted. Shader ID: %d", shaderID);
+
+        // Deleting shader pipeline if no shader is left
+        shaderCount--;
+        if(shaderCount == 0)
+        {
+            glBindProgramPipeline(0);
+            glDeleteProgramPipelines(1, &shaderPipelineID);
+            shaderPipelineID = 0;
+        }
     }
     shaderID = 0;
-
-    // We Need To Delete Pipeline Somehow Here
-    // Best way is to not delete and leave it be
-    // Or use some RAII but needs to be deleted before context deletion
-    // else it will not get deleted anyway
-
-    // TODO: Dont Leak OGL ShaderProgram pipeline object
 }
 
 void ShaderGL::Bind()
