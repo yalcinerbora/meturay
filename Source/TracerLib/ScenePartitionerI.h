@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <string>
 
 struct SceneError;
 struct SceneFileNode;
