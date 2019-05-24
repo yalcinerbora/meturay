@@ -51,7 +51,8 @@ using TracerLogicGeneratorFunc = TracerLogic* (*)(GPUBaseAcceleratorI& baseAccel
                                                   const TracerParameters& params,
                                                   uint32_t hitStructSize,
                                                   const Vector2i maxMats,
-                                                  const Vector2i maxAccels);
+                                                  const Vector2i maxAccels,
+                                                  const HitKey baseBoundMatKey);
 
 template<class Accel>
 using AccelGroupGeneratorFunc = Accel* (*)(const GPUPrimitiveGroupI&,
@@ -120,13 +121,15 @@ class GPUTracerGen
                                 const TracerParameters& op,
                                 uint32_t hitStructSize,
                                 const Vector2i maxMats,
-                                const Vector2i maxAccels)
+                                const Vector2i maxAccels,
+                                const HitKey baseBoundMatKey)
         {
             TracerBaseLogicI* logic = gFunc(ba,
                                             std::move(ag), std::move(ab),
                                             std::move(mg), std::move(mb),
                                             op, hitStructSize,
-                                            maxMats, maxAccels);
+                                            maxMats, maxAccels,
+                                            baseBoundMatKey);
             return GPUTracerPtr(logic, dFunc);
         }
 };
@@ -248,13 +251,15 @@ namespace TypeGenWrappers
                                const TracerParameters& op,
                                uint32_t hitStrctSize,
                                const Vector2i maxMats,
-                               const Vector2i maxAccels)
+                               const Vector2i maxAccels,
+                               const HitKey baseBoundMatKey)
     {
         return new TracerLogic(ba,
                                std::move(ag), std::move(ab),
                                std::move(mg), std::move(mb),
                                op, hitStrctSize,
-                               maxMats, maxAccels);
+                               maxMats, maxAccels,
+                               baseBoundMatKey);
     }
 
     template <class Base, class AccelGroup>

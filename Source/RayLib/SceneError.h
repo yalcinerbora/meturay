@@ -22,8 +22,11 @@ struct SceneError : public ErrorI
             MATERIALS_ARRAY_NOT_FOUND,
             PRIMITIVES_ARRAY_NOT_FOUND,
             SURFACES_ARRAY_NOT_FOUND,
+            LIGHTS_ARRAY_NOT_FOUND,
+            TRANSFORMS_ARRAY_NOT_FOUND,
+            CAMERAS_ARRAY_NOT_FOUND,
             BASE_ACCELERATOR_NODE_NOT_FOUND,
-            OUTSIDE_MAT_NODE_NOT_FOUND,
+            BASE_BOUND_MAT_NODE_NOT_FOUND,
             // No Logic
             NO_LOGIC_FOR_ACCELERATOR,
             NO_LOGIC_FOR_MATERIAL,
@@ -43,7 +46,6 @@ struct SceneError : public ErrorI
             JSON_FILE_PARSE_ERROR,
             // Special Type Values
             UNKNOWN_TRANSFORM_TYPE,
-            UNKNOWN_LIGHT_TYPE,
             // Loading Surface Data
             SURFACE_DATA_TYPE_NOT_FOUND,
             SURFACE_DATA_INVALID_READ,
@@ -116,8 +118,11 @@ inline SceneError::operator std::string() const
         "\"Materials\" array not found.",
         "\"Primitives\" array not found.",
         "\"Surfaces\" array not found.",
+        "\"Lights\" array not found.",
+        "\"Transforms\" array not found.",
+        "\"Cameras\" array not found.",
         "\"BaseAccelerator\" node not found.",
-        "\"OutsideMaterial\" node not found.",
+        "\"BaseBoundaryMaterial\" node not found.",
         // No Logic
         "No logic found for that accelerator.",
         "No logic found for that material.",
@@ -137,7 +142,6 @@ inline SceneError::operator std::string() const
         "JSON file could not be parsed properly.",
         // Special Type Values
         "Transform type name is unknown.",
-        "Light type name is unknown.",
         // Loading Surface Data
         "Surface data type not found.",
         "Surface data unknown type.",

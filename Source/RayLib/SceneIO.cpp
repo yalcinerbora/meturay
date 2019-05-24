@@ -29,17 +29,7 @@ namespace SceneIO
     static constexpr const char*    LIGHT_SPOT = "spot";
     static constexpr const char*    LIGHT_RECTANGULAR = "rectangular";
     // Common
-    static constexpr const char*    LIGHT_COLOR = "color";
-    static constexpr const char*    LIGHT_INTENSITY = "intensity";
-    // Point
-    // Directional
-    static constexpr const char*    LIGHT_DIRECTION = "direction";
-    // Spot
-    static constexpr const char*    LIGHT_COVERAGE_ANGLE = "coverageAngle";
-    static constexpr const char*    LIGHT_FALLOFF_ANGLE = "falloffAngle";
-    // Rectangular
-    static constexpr const char*    LIGHT_EDGE0 = "edge0";
-    static constexpr const char*    LIGHT_EDGE1 = "edge1";
+    static constexpr const char*    LIGHT_MATERIAL = "matId";
     // Transform Related Names
     // Common
     static constexpr const char*    TRANSFORM_FORM = "form";
@@ -47,60 +37,6 @@ namespace SceneIO
     static constexpr const char*    TRANSFORM_FORM_MATRIX4 = "matrix4x4";
     static constexpr const char*    TRANSFORM_FORM_T_R_S = "transformRotateScale";
 
-    //
-    LightStruct                     LoadPoint(const nlohmann::json&, double time = 0.0);
-    LightStruct                     LoadDirectional(const nlohmann::json&, double time = 0.0);
-    LightStruct                     LoadSpot(const nlohmann::json&, double time = 0.0);
-    LightStruct                     LoadRectangular(const nlohmann::json&, double time = 0.0);
-
-}
-
-LightStruct SceneIO::LoadPoint(const nlohmann::json& jsn, double time)
-{
-    LightStruct s = {};
-    s.t = LightType::POINT;
-    s.point.position = LoadVector<3, float>(jsn[POSITION], time);
-    s.point.color = LoadVector<3, float>(jsn[LIGHT_COLOR], time);
-    s.point.intensity = LoadNumber<float>(jsn[LIGHT_INTENSITY], time);
-    return s;
-}
-
-LightStruct SceneIO::LoadDirectional(const nlohmann::json& jsn, double time)
-{
-    LightStruct s = {};
-    s.t = LightType::DIRECTIONAL;
-    s.directional.direction = LoadVector<3, float>(jsn[LIGHT_DIRECTION], time);
-    s.directional.color = LoadVector<3, float>(jsn[LIGHT_COLOR], time);
-    s.directional.intensity = LoadNumber<float>(jsn[LIGHT_INTENSITY], time);
-    return s;
-}
-
-LightStruct SceneIO::LoadSpot(const nlohmann::json& jsn, double time)
-{
-    LightStruct s = {};
-    s.t = LightType::SPOT;
-    s.spot.position = LoadVector<3, float>(jsn[POSITION], time);
-    s.spot.direction = LoadVector<3, float>(jsn[LIGHT_DIRECTION], time);
-    s.spot.intensity = LoadNumber<float>(jsn[LIGHT_INTENSITY], time);
-    s.spot.falloffAngle = LoadNumber<float>(jsn[LIGHT_FALLOFF_ANGLE], time);
-    s.spot.coverageAngle = LoadNumber<float>(jsn[LIGHT_COVERAGE_ANGLE], time);
-    s.spot.color = LoadVector<3, float>(jsn[LIGHT_COLOR], time);
-    return s;
-}
-
-LightStruct SceneIO::LoadRectangular(const nlohmann::json& jsn, double time)
-{
-    LightStruct s = {};
-    s.t = LightType::SPOT;
-    s.rectangular.position = LoadVector<3, float>(jsn[POSITION], time);
-    s.rectangular.edge0 = LoadVector<3, float>(jsn[LIGHT_EDGE0], time);
-    s.rectangular.edge1 = LoadVector<3, float>(jsn[LIGHT_EDGE1], time);
-    s.rectangular.intensity = LoadNumber<float>(jsn[LIGHT_INTENSITY], time);
-    Vector3f color = LoadVector<3, float>(jsn[LIGHT_COLOR], time);
-    s.rectangular.red = color[0];
-    s.rectangular.green = color[1];
-    s.rectangular.blue = color[2];
-    return s;
 }
 
 TransformStruct SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
@@ -172,23 +108,9 @@ LightStruct SceneIO::LoadLight(const nlohmann::json& jsn, double time)
     else if(jsn.is_object())
     {
         std::string type = jsn[TYPE];
-        if(type == LIGHT_PONT)
-        {
-            return LoadPoint(jsn, time);
-        }
-        else if(type == LIGHT_DIRECTIONAL)
-        {
-            return LoadDirectional(jsn, time);
-        }
-        else if(type == LIGHT_SPOT)
-        {
-            return LoadSpot(jsn, time);
-        }
-        else if(type == LIGHT_RECTANGULAR)
-        {
-            return LoadRectangular(jsn, time);
-        }
-        else throw SceneException(SceneError::UNKNOWN_LIGHT_TYPE);
+        uint32_t matId = jsn[LIGHT_MATERIAL];
+     
+        return LightStruct{type, matId};   
     }
     else throw SceneException(SceneError::TYPE_MISMATCH);
 }

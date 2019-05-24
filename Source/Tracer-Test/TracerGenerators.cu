@@ -18,7 +18,8 @@ template TracerBaseLogicI* TypeGenWrappers::TracerLogicConstruct<TracerBaseLogic
                                                                                                 const TracerParameters&,
                                                                                                 uint32_t,
                                                                                                 const Vector2i,
-                                                                                                const Vector2i);
+                                                                                                const Vector2i,
+                                                                                                const HitKey);
 template GPUBaseAcceleratorI* TypeGenWrappers::DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorLinear>();
 
 template void TypeGenWrappers::DefaultDestruct(TracerBaseLogicI*);
@@ -45,9 +46,7 @@ BasicTracerLogicGenerator::BasicTracerLogicGenerator()
     matGroupGenerators.emplace(GIAlbedoMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, GIAlbedoMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
-    matGroupGenerators.emplace(ConstantBoundaryMat::TypeName(),
-                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, ConstantBoundaryMat>,
-                                              DefaultDestruct<GPUMaterialGroupI>));
+
     // Material Batches
     // Basic
     matBatchGenerators.emplace(BasicMatTriBatch::TypeName(),
@@ -55,6 +54,9 @@ BasicTracerLogicGenerator::BasicTracerLogicGenerator()
                                               DefaultDestruct<GPUMaterialBatchI>));
     matBatchGenerators.emplace(BasicMatSphrBatch::TypeName(),
                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, BasicMatSphrBatch>,
+                                              DefaultDestruct<GPUMaterialBatchI>));
+    matBatchGenerators.emplace(BasicMatEmptyBatch::TypeName(),
+                               GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, BasicMatEmptyBatch>,
                                               DefaultDestruct<GPUMaterialBatchI>));
     // Barycentric
     matBatchGenerators.emplace(BarycentricMatTriBatch::TypeName(),
@@ -70,9 +72,5 @@ BasicTracerLogicGenerator::BasicTracerLogicGenerator()
                                               DefaultDestruct<GPUMaterialBatchI>));
     matBatchGenerators.emplace(GIAlbedoSphrBatch::TypeName(),
                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, GIAlbedoSphrBatch>,
-                                              DefaultDestruct<GPUMaterialBatchI>));
-    // Boundary
-    matBatchGenerators.emplace(ConstantBoundaryMat::TypeName(),
-                               GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ConstantBoundaryMatBatch>,
                                               DefaultDestruct<GPUMaterialBatchI>));
 }

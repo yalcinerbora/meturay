@@ -104,8 +104,8 @@ __global__ void KCGenerateCameraRays(// Output
         // Initialize Ray
         RayReg ray;
         ray.ray = RayF(rayDir, pos);
-        ray.tMin = 0; // cam.nearPlane;
-        ray.tMax = FLT_MAX; // cam.farPlane;
+        ray.tMin = cam.nearPlane;
+        ray.tMax = cam.farPlane;
         ray.Update(gRays, threadId);
 
         // Initialize Auxiliary Data

@@ -65,9 +65,6 @@ void GPUBaseAcceleratorLinear::Hit(// Output
                                         dLeafs,
                                         leafCount);
     }
-
-    // Wait all gpus to finish
-    CudaSystem::SyncAllGPUs();
 }
 
 SceneError GPUBaseAcceleratorLinear::Initialize(// List of surface to transform id hit key mappings

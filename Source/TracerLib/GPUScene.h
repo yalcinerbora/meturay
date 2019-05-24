@@ -41,11 +41,13 @@ class GPUScene
         // Loaded
         Vector2i                                maxAccelIds;
         Vector2i                                maxMatIds;
+        HitKey                                  baseBoundaryMatKey;
 
         // GPU Memory
         DeviceMemory                            memory;
         // CPU Memory
         std::vector<CameraPerspective>          cameraMemory;
+
 
         // File Related
         nlohmann::json*                         sceneJson;
@@ -91,12 +93,13 @@ class GPUScene
                                                 const std::map<uint32_t, HitKey>& accHitKeyList,
                                                 const std::map<uint32_t, uint32_t>& surfaceTransformIds,
                                                 double time = 0.0);
-        SceneError      GenerateBoundaryMaterial(int gpuId, double time = 0.0);
+        SceneError      FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,
+                                             double time = 0.0f);
 
-        void            LoadCommon(double time);
+        SceneError      LoadCommon(double time);
         SceneError      LoadLogicRelated(double time);
 
-        void            ChangeCommon(double time);
+        SceneError      ChangeCommon(double time);
         SceneError      ChangeLogicRelated(double time);
 
     public:
@@ -105,9 +108,8 @@ class GPUScene
                                              ScenePartitionerI& partitioner,
                                              TracerLogicGeneratorI&);
                                     GPUScene(const GPUScene&) = delete;
-                                    GPUScene(GPUScene&&);
+                                    GPUScene(GPUScene&&) noexcept;
         GPUScene&                   operator=(const GPUScene&) = delete;
-        //GPUScene&                 operator=(GPUScene&&);
                                     ~GPUScene();
 
         // Members
@@ -119,6 +121,7 @@ class GPUScene
         //
         Vector2i                    MaxMatIds();
         Vector2i                    MaxAccelIds();
+        HitKey                      BaseBoundaryMaterial();
         // Access GPU
         const LightStruct*          LightsGPU() const;
         const TransformStruct*      TransformsGPU() const;

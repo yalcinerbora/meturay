@@ -18,7 +18,7 @@ namespace Debug
     void                PrintHitPairs(const RayId* ids, const HitKey* keys, size_t count);
     void                WriteHitPairs(const RayId* ids, const HitKey* keys, size_t count, const std::string& file);
     void                DumpImage(const std::string& fName,
-                              const ImageMemory&);
+                                  const ImageMemory&);
 
     // Memory Debugging
     template<class T>
@@ -69,7 +69,7 @@ void Debug::DumpMemToStream(std::ostream& s,
                             const T* mPtr, size_t count,
                             const char* seperator, bool hex)
 {
-    CUDA_CHECK(cudaDeviceSynchronize());
+    CudaSystem::SyncAllGPUs();
     if(hex) s << std::hex;
     for(size_t i = 0; i < count; i++)
     {

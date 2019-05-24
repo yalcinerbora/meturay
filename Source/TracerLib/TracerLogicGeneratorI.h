@@ -51,17 +51,18 @@ class TracerLogicGeneratorI
         virtual SceneError      GenerateBaseAccelerator(GPUBaseAcceleratorI*&,
                                                         const std::string& accelType) = 0;
 
-        // Outside Material is special material and has its own group
-        virtual SceneError      GenerateBoundaryMaterial(GPUMaterialGroupI*&,
-                                                        const std::string& materialType,
-                                                        const int gpuId) = 0;
+        //// Outside Material is special material and has its own group
+        //virtual SceneError      GenerateBoundaryMaterial(GPUMaterialGroupI*&,
+        //                                                const std::string& materialType,
+        //                                                const int gpuId) = 0;
         // Finally get the tracer logic
         // Tracer logic will be constructed with respect to
         // Constructed batches
         virtual SceneError      GenerateBaseLogic(TracerBaseLogicI*&,
                                                   const TracerParameters& opts,
                                                   const Vector2i maxMats,
-                                                  const Vector2i maxAccels) = 0;
+                                                  const Vector2i maxAccels,
+                                                  const HitKey baseBoundMatKey) = 0;
 
         // Get all generated stuff on a vector
         virtual PrimitiveGroupList          GetPrimitiveGroups() const = 0;

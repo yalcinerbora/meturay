@@ -20,12 +20,14 @@ That interface is responsible for fetching
 #include "RayLib/Vector.h"
 #include "RayLib/Camera.h"
 #include "RayLib/TracerStructs.h"
+#include "RayLib/HitStructs.h"
 
 // Common Memory
 class RayMemory;
 class RNGMemory;
 
 struct TracerError;
+struct CameraPerspective;
 
 class GPUScene;
 class GPUBaseAcceleratorI;
@@ -42,8 +44,8 @@ class TracerBaseLogicI
 
         // Generate Rays
         virtual uint32_t        GenerateRays(RayMemory&, RNGMemory&,
-                                             const GPUScene& scene,
-                                             int cameraId,
+                                             const GPUScene&,
+                                             const CameraPerspective&,
                                              int samplePerLocation,
                                              Vector2i resolution,
                                              Vector2i pixelStart = Zero2i,
@@ -59,6 +61,8 @@ class TracerBaseLogicI
         // Returns max bits of keys (for batch and id respectively)
         virtual const Vector2i                      SceneMaterialMaxBits() const = 0;
         virtual const Vector2i                      SceneAcceleratorMaxBits() const = 0;
+
+        virtual const HitKey                        SceneBaseBoundMatKey() const = 0;
 
         // Options of the Hitman & Shademan
         virtual const HitOpts&                      HitOptions() const = 0;

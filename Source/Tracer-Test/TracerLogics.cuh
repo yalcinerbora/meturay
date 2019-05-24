@@ -51,14 +51,15 @@ class TracerBasic : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
                                     const TracerParameters& parameters,
                                     uint32_t hitStructSize,
                                     const Vector2i maxMats,
-                                    const Vector2i maxAccels);
+                                    const Vector2i maxAccels,
+                                    const HitKey baseBoundMatKey);
                         ~TracerBasic() = default;
 
         TracerError     Initialize() override;
 
         uint32_t        GenerateRays(RayMemory&, RNGMemory&,
                                      const GPUScene& scene,
-                                     int cameraId,
+                                     const CameraPerspective&,
                                      int samplePerLocation,
                                      Vector2i resolution,
                                      Vector2i pixelStart = Zero2i,

@@ -5,7 +5,6 @@
 typedef unsigned char Byte;
 
 static constexpr uint16_t NullBatchId = 0;
-static constexpr uint16_t BoundaryBatchId = 1;
 
 enum class PixelFormat
 {

@@ -1,26 +1,26 @@
 #include "BasicMaterials.cuh"
 #include "MaterialNodeReaders.h"
 
-ConstantBoundaryMat::ConstantBoundaryMat(int gpuId)
-    : GPUBoundaryMatGroup(gpuId)
-{}
-
-SceneError ConstantBoundaryMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)
-{
-    dData = ConstantBoundaryMatRead(materialNodes, time);
-    return SceneError::OK;
-}
-
-SceneError ConstantBoundaryMat::ChangeTime(const std::set<SceneFileNode>& materialNodes, double time)
-{
-    // TODO: Implement
-    return SceneError::OK;
-}
-
-int ConstantBoundaryMat::InnerId(uint32_t materialId) const
-{
-    return 0;
-}
+//ConstantBoundaryMat::ConstantBoundaryMat(int gpuId)
+//    : GPUBoundaryMatGroup(gpuId)
+//{}
+//
+//SceneError ConstantBoundaryMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)
+//{
+//    dData = ConstantBoundaryMatRead(materialNodes, time);
+//    return SceneError::OK;
+//}
+//
+//SceneError ConstantBoundaryMat::ChangeTime(const std::set<SceneFileNode>& materialNodes, double time)
+//{
+//    // TODO: Implement
+//    return SceneError::OK;
+//}
+//
+//int ConstantBoundaryMat::InnerId(uint32_t materialId) const
+//{
+//    return 0;
+//}
 
 BasicMat::BasicMat(int gpuId)
     : GPUMaterialGroup(gpuId)
@@ -81,12 +81,10 @@ int SphericalMat::InnerId(uint32_t materialId) const
 }
 
 // Material Batches
-template class GPUBoundaryMatBatch<TracerBasic, ConstantBoundaryMat>;
-
 template class GPUMaterialBatch<TracerBasic,
-                                BarycentricMat,
-                                GPUPrimitiveTriangle,
-                                BarySurfaceFromTri>;
+                                BasicMat,
+                                GPUPrimitiveEmpty,
+                                EmptySurfaceFromEmpty>;
 
 template class GPUMaterialBatch<TracerBasic,
                                 BasicMat,
@@ -97,6 +95,11 @@ template class GPUMaterialBatch<TracerBasic,
                                 BasicMat,
                                 GPUPrimitiveSphere,
                                 EmptySurfaceFromSphr>;
+
+template class GPUMaterialBatch<TracerBasic,
+                                BarycentricMat,
+                                GPUPrimitiveTriangle,
+                                BarySurfaceFromTri>;
 
 template class GPUMaterialBatch<TracerBasic,
                                 SphericalMat,

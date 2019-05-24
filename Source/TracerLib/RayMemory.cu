@@ -20,9 +20,9 @@ struct ValidSplit
     }
 };
 
-__global__ void FillMatIdsForSort(HitKey* gKeys, RayId* gIds,
-                                  const HitKey* gMaterialHits,
-                                  uint32_t rayCount)
+__global__ void FillMatIdsForSortKC(HitKey* gKeys, RayId* gIds,
+                                    const HitKey* gMaterialHits,
+                                    uint32_t rayCount)
 {
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
@@ -34,30 +34,34 @@ __global__ void FillMatIdsForSort(HitKey* gKeys, RayId* gIds,
     }
 }
 
-__global__ void ResetHitIds(HitKey* gAcceleratorKeys, RayId* gIds,
-                            HitKey* gMaterialKeys, const RayGMem* gRays,
-                            uint32_t rayCount)
+__global__ void ResetHitKeysKC(HitKey* gMaterialKeys,
+                               HitKey key, uint32_t rayCount)
 {
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < rayCount;
         globalId += blockDim.x * gridDim.x)
     {
-        HitKey initalKey = HitKey::BoundaryMatKey;
-        if(gRays[globalId].tMin == INFINITY)
-        {
-            initalKey = HitKey::InvalidKey;
-        }
-
-        gIds[globalId] = globalId;
-        gAcceleratorKeys[globalId] = HitKey::InvalidKey;
-        gMaterialKeys[globalId] = initalKey;
+        gMaterialKeys[globalId] = key;
     }
 }
 
-__global__ void FindSplitsSparse(uint32_t* gPartLoc,
-                                 const HitKey* gKeys,
-                                 const uint32_t locCount)
+__global__ void ResetHitIdsKC(HitKey* gAcceleratorKeys, RayId* gIds,
+                              const RayGMem* gRays, uint32_t rayCount)
+{
+    // Grid Stride Loop
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < rayCount;
+        globalId += blockDim.x * gridDim.x)
+    {
+        gIds[globalId] = globalId;
+        gAcceleratorKeys[globalId] = HitKey::InvalidKey;
+    }
+}
+
+__global__ void FindSplitsSparseKC(uint32_t* gPartLoc,
+                                   const HitKey* gKeys,
+                                   const uint32_t locCount)
 {
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < locCount;
@@ -79,10 +83,10 @@ __global__ void FindSplitsSparse(uint32_t* gPartLoc,
         gPartLoc[0] = 0;
 }
 
-__global__ void FindSplitBatches(uint16_t* gBatches,
-                                 const uint32_t* gDenseIds,
-                                 const HitKey* gSparseKeys,
-                                 const uint32_t locCount)
+__global__ void FindSplitBatchesKC(uint16_t* gBatches,
+                                   const uint32_t* gDenseIds,
+                                   const HitKey* gSparseKeys,
+                                   const uint32_t locCount)
 {
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < locCount;
@@ -94,26 +98,36 @@ __global__ void FindSplitBatches(uint16_t* gBatches,
     }
 }
 
-void RayMemory::ResizeRayMemory(RayGMem*& dRays, void*& dRayAxData,
-                                DeviceMemory& mem,
-                                size_t rayCount,
-                                size_t perRayAuxSize)
+void RayMemory::ResizeRayOut(uint32_t rayCount, size_t perRayAuxSize,
+                             HitKey baseBoundMatKey)
 {
+    // Align to proper memory strides
+    size_t sizeOfMaterialKeys = sizeof(HitKey) * rayCount;
+    sizeOfMaterialKeys = AlignByteCount * ((sizeOfMaterialKeys + (AlignByteCount - 1)) / AlignByteCount);
     size_t sizeOfRays = rayCount * sizeof(RayGMem);
     size_t sizeOfAuxiliary = rayCount * perRayAuxSize;
     sizeOfAuxiliary = AlignByteCount * ((sizeOfAuxiliary + (AlignByteCount - 1)) / AlignByteCount);
 
-    size_t requiredSize = sizeOfAuxiliary + sizeOfRays;
-    if(mem.Size() < requiredSize)
-        mem = std::move(DeviceMemory(requiredSize));
+    size_t requiredSize = sizeOfAuxiliary + sizeOfRays + sizeOfMaterialKeys;
+    if(memOut.Size() < requiredSize)
+        memOut = std::move(DeviceMemory(requiredSize));
 
     size_t offset = 0;
-    std::uint8_t* dRay = static_cast<uint8_t*>(mem);
-    dRays = reinterpret_cast<RayGMem*>(dRay + offset);
+    std::uint8_t* dRay = static_cast<uint8_t*>(memOut);
+    dRayOut = reinterpret_cast<RayGMem*>(dRay + offset);
     offset += sizeOfRays;
-    dRayAxData = reinterpret_cast<void*>(dRay + offset);
+    dRayAuxOut = reinterpret_cast<void*>(dRay + offset);
     offset += sizeOfAuxiliary;
+    dMaterialKeys = reinterpret_cast<HitKey*>(dRay + offset);
+    offset += sizeOfMaterialKeys;
     assert(requiredSize == offset);
+
+    // Initialize memory
+    if(rayCount != 0)
+        CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
+                                   ResetHitKeysKC,
+                                   dMaterialKeys, baseBoundMatKey,
+                                   rayCount);
 }
 
 RayMemory::RayMemory()
@@ -139,10 +153,6 @@ void RayMemory::SwapRays()
 
 void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
 {
-    // Align to proper memory strides
-    size_t sizeOfMaterialKeys = sizeof(HitKey) * rayCount;
-    sizeOfMaterialKeys = AlignByteCount * ((sizeOfMaterialKeys + (AlignByteCount - 1)) / AlignByteCount);
-
     size_t sizeOfTransformIds = sizeof(TransformId) * rayCount;
     sizeOfTransformIds = AlignByteCount * ((sizeOfTransformIds + (AlignByteCount - 1)) / AlignByteCount);
 
@@ -166,7 +176,6 @@ void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
                                                dbKeys, dbIds,
                                                static_cast<int>(rayCount)));
 
-
     // Check if while partitioning  double buffer data is
     // enough for using (Unique and Scan) algos
     uint32_t* in = nullptr;
@@ -186,7 +195,6 @@ void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
 
     // Finally allocate
     size_t requiredSize = ((sizeOfIds + sizeOfAcceleratorKeys) * 2 +
-                           sizeOfMaterialKeys +
                            sizeOfTransformIds +
                            sizeOfPrimitiveIds +
                            sizeOfHitStructs +
@@ -199,8 +207,6 @@ void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
     // Populate pointers
     size_t offset = 0;
     std::uint8_t* dBasePtr = static_cast<uint8_t*>(memHit);
-    dMaterialKeys = reinterpret_cast<HitKey*>(dBasePtr + offset);
-    offset += sizeOfMaterialKeys;
     dTransformIds = reinterpret_cast<TransformId*>(dBasePtr + offset);
     offset += sizeOfTransformIds;
     dPrimitiveIds = reinterpret_cast<PrimitiveId*>(dBasePtr + offset);
@@ -228,8 +234,8 @@ void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
 
     // Initialize memory
     CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
-                               ResetHitIds,
-                               dCurrentKeys, dCurrentIds, dMaterialKeys, dRayIn,
+                               ResetHitIdsKC,
+                               dCurrentKeys, dCurrentIds, dRayIn,
                                static_cast<uint32_t>(rayCount));
 }
 
@@ -247,8 +253,6 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
     int bitStart = 0;
     int bitEnd = bitMaxValues[1];
 
-    CUDA_CHECK(cudaDeviceSynchronize());
-
     // First sort internals
     if(bitStart != bitEnd)
     {
@@ -257,7 +261,7 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
                                                    static_cast<int>(count),
                                                    bitStart, bitEnd,
                                                    (cudaStream_t)0,
-                                                   METU_DEBUG_BOOL));
+                                                   false));
     }
 
     // Then sort batches
@@ -270,7 +274,7 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
                                                    static_cast<int>(count),
                                                    bitStart, bitEnd,
                                                    (cudaStream_t)0,
-                                                   METU_DEBUG_BOOL));
+                                                   false));
     }
 
     ids = dbIds.Current();
@@ -301,7 +305,7 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
     // Read from dKeys -> dEmptyKeys
     uint32_t locCount = rayCount - 1;
     CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
-                               FindSplitsSparse,
+                               FindSplitsSparseKC,
                                dSparseSplitIndices, dCurrentKeys, locCount);
 
     // Make Splits Dense
@@ -311,7 +315,7 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
                                      static_cast<int>(rayCount),
                                      ValidSplit(),
                                      (cudaStream_t)0,
-                                     METU_DEBUG_BOOL));
+                                     false));
 
     // Copy Reduced Count
     uint32_t hSelectCount;
@@ -322,7 +326,7 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
     // From dEmptyIds, dKeys -> dEmptyKeys
     uint16_t* dBatches = reinterpret_cast<uint16_t*>(dSparseSplitIndices);
     CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
-                               FindSplitBatches,
+                               FindSplitBatchesKC,
                                dBatches,
                                dDenseSplitIndices,
                                dCurrentKeys,
@@ -354,10 +358,10 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
     return std::move(partitions);
 }
 
-void RayMemory::FillRayIdsForSort(uint32_t rayCount)
+void RayMemory::FillMatIdsForSort(uint32_t rayCount)
 {
     CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
-                               FillMatIdsForSort,
+                               FillMatIdsForSortKC,
                                dCurrentKeys, dCurrentIds, dMaterialKeys,
-                               static_cast<uint32_t>(rayCount));
+                               rayCount);
 }

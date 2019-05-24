@@ -40,6 +40,7 @@ GPUScene::GPUScene(const std::string& fileName,
     , partitioner(partitioner)
     , maxAccelIds(Vector2i(-1))
     , maxMatIds(Vector2i(-1))
+    , baseBoundaryMatKey(HitKey::InvalidKey)
     , fileName(fileName)
     , currentTime(0.0)
     , dLights(nullptr)
@@ -47,11 +48,12 @@ GPUScene::GPUScene(const std::string& fileName,
     , sceneJson(nullptr)
 {}
 
-GPUScene::GPUScene(GPUScene&& other)
+GPUScene::GPUScene(GPUScene&& other) noexcept
     : logicGenerator(other.logicGenerator)
     , partitioner(other.partitioner)
     , maxAccelIds(other.maxAccelIds)
     , maxMatIds(other.maxMatIds)
+    , baseBoundaryMatKey(other.baseBoundaryMatKey)
     , memory(std::move(other.memory))
     , cameraMemory(std::move(other.cameraMemory))
     , sceneJson(other.sceneJson)
@@ -61,23 +63,6 @@ GPUScene::GPUScene(GPUScene&& other)
     , dTransforms(other.dTransforms)
 {}
 
-//GPUScene& GPUScene::operator=(GPUScene&& other)
-//{
-//  assert(this != &other);
-//  logicGenerator = std::move(other.logicGenerator);
-//  partitioner = std::move(other.partitioner);
-//  maxAccelIds = other.maxAccelIds;
-//  maxMatIds = other.maxMatIds;
-//  memory = std::move(other.memory);
-//  cameraMemory = std::move(other.cameraMemory);
-//  sceneJson = other.sceneJson;
-//  fileName = other.fileName;
-//  currentTime = other.currentTime;
-//  dLights = other.dLights;
-//  dTransforms = other.dTransforms;
-//  return *this;
-//}
-
 GPUScene::~GPUScene()
 {
     if(sceneJson) delete sceneJson;
@@ -86,8 +71,9 @@ GPUScene::~GPUScene()
 bool GPUScene::FindNode(nlohmann::json& jsn, const char* c)
 {
     auto i = sceneJson->find(c);
-    jsn = *i;
-    return (i != sceneJson->end());
+    bool found = (i != sceneJson->end());
+    if(found) jsn = *i;
+    return found;
 };
 
 SceneError GPUScene::GenIdLookup(std::map<uint32_t, uint32_t>& result,
@@ -118,19 +104,59 @@ SceneError GPUScene::GenerateConstructionData(// Striped Listings (Striped from 
                                               std::map<uint32_t, uint32_t>& surfaceTransformIds,
                                               double time)
 {
-    SceneError e = SceneError::OK;
-
-    // Load Id Based Arrays
     nlohmann::json surfaces;
     nlohmann::json primitives;
     nlohmann::json materials;
+    nlohmann::json lights;
+    std::map<uint32_t, uint32_t> primList;
+    std::map<uint32_t, uint32_t> materialList;
+
+    // Lambdas for cleaner code
+    auto AttachMatBatch = [&](const std::string& primType,
+                              const std::string& matType,
+                              const uint32_t matId)
+    {
+        // Generate its mat batch also
+        MatBatchData batchData = MatBatchData
+        {
+            primType,
+            matType,
+            std::set<uint32_t>()
+        };
+        const auto& matBatch = matBatchListings.emplace(primType + matType,
+                                                        batchData).first;
+        matBatch->second.matIds.emplace(matId);
+    };
+    auto AttachMatAll = [&] (const std::string& primType,
+                             const uint32_t matId)
+    {
+        if(auto loc = materialList.find(matId);
+           loc != materialList.end())
+        {
+            const auto jsnNode = materials[loc->second];
+            const std::string matGroupType = jsnNode[SceneIO::TYPE];
+            auto& matSet = matGroupNodes.emplace(matGroupType,
+                                                 std::set<SceneFileNode>()).first->second;
+            matSet.emplace(jsnNode, matId);
+
+            AttachMatBatch(primType, matGroupType, matId);
+        }
+        else return SceneError::MATERIAL_ID_NOT_FOUND;
+        return SceneError::OK;
+    };
+
+    // Function Start
+    SceneError e = SceneError::OK;
+
+    // Load Id Based Arrays
     if(!FindNode(surfaces, SceneIO::SURFACE_BASE)) return SceneError::SURFACES_ARRAY_NOT_FOUND;
     if(!FindNode(primitives, SceneIO::PRIMITIVE_BASE)) return SceneError::PRIMITIVES_ARRAY_NOT_FOUND;
     if(!FindNode(materials, SceneIO::MATERIAL_BASE)) return SceneError::MATERIALS_ARRAY_NOT_FOUND;
-    std::map<uint32_t, uint32_t> primList;
-    std::map<uint32_t, uint32_t> materialList;
-    GenIdLookup(primList, primitives, PRIMITIVE);
-    GenIdLookup(materialList, materials, MATERIAL);
+    if(!FindNode(lights, SceneIO::LIGHT_BASE)) return SceneError::LIGHTS_ARRAY_NOT_FOUND;
+    if((e = GenIdLookup(primList, primitives, PRIMITIVE)) != SceneError::OK) 
+        return e;
+    if((e = GenIdLookup(materialList, materials, MATERIAL)) != SceneError::OK)
+        return e;
 
     // Iterate over surfaces
     // and collect data for groups and batches
@@ -147,7 +173,6 @@ SceneError GPUScene::GenerateConstructionData(// Striped Listings (Striped from 
             const uint32_t primId = pairs[i].second;
             const uint32_t matId = pairs[i].first;
 
-            std::string matGroupType;
             // Check if primitive exists
             // add it to primitive group list for later construction
             if(auto loc = primList.find(primId);
@@ -164,43 +189,43 @@ SceneError GPUScene::GenerateConstructionData(// Striped Listings (Striped from 
             }
             else return SceneError::PRIMITIVE_ID_NOT_FOUND;
 
-            if(auto loc = materialList.find(matId);
-               loc != materialList.end())
-            {
-                const auto jsnNode = materials[loc->second];
-                matGroupType = jsnNode[SceneIO::TYPE];
-                auto& matSet = matGroupNodes.emplace(matGroupType,
-                                                     std::set<SceneFileNode>()).first->second;
-                matSet.emplace(jsnNode, matId);
-
-                // Generate its mat batch also
-                MatBatchData batchData = MatBatchData
-                {
-                    primGroupType,
-                    matGroupType,
-                    std::set<uint32_t>()
-                };
-                const auto& matBatch = matBatchListings.emplace(matGroupType + primGroupType,
-                                                                batchData).first;
-                matBatch->second.matIds.emplace(matId);
-            }
-            else return SceneError::MATERIAL_ID_NOT_FOUND;
+            // Do Material attachments
+            if((e = AttachMatAll(primGroupType, matId)) != SceneError::OK)
+                return e;
         }
         // Generate Accelerator Group
-        const std::string acceleratorroupType = surf.acceleratorType + primGroupType;
+        const std::string acceleratorGroupType = surf.acceleratorType + primGroupType;
         AccelGroupData accGData =
         {
-            acceleratorroupType,
+            acceleratorGroupType,
             primGroupType,
             std::map<uint32_t, IdPairings>()
         };
-        const auto& result = requiredAccelListings.emplace(acceleratorroupType, accGData).first;
+        const auto& result = requiredAccelListings.emplace(acceleratorGroupType, accGData).first;
         result->second.matPrimIdPairs.emplace(surfId, surf.matPrimPairs);
 
         // Generate transform pair also
         surfaceTransformIds.emplace(surfId, surf.transformId);
         surfId++;
     }
+    // Additionally For Lights and Base Boundary Material 
+    // Generate a Empty primitive (if not already requrested)
+    primGroupNodes.emplace(BaseConstants::EMPTY_PRIMITIVE_NAME, NodeListing());
+    // Generate Material listing and material group
+    // For Lights
+    for(const auto& jsn : lights)
+    {
+        LightStruct l = SceneIO::LoadLight(jsn, time);
+        if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME, l.matId)) != SceneError::OK)
+           return e;
+    }
+    // Finally Boundary Material
+    nlohmann::json baseMatNode;
+    if(!FindNode(baseMatNode, SceneIO::BASE_OUTSIDE_MATERIAL))
+        return SceneError::BASE_BOUND_MAT_NODE_NOT_FOUND;
+    if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME,
+                         SceneIO::LoadNumber<uint32_t>(baseMatNode, time))) != SceneError::OK)
+        return e;
     return e;
 }
 
@@ -230,7 +255,7 @@ SceneError GPUScene::GenerateMaterialBatches(MaterialKeyListing& allMatKeys,
 {
     SceneError e = SceneError::OK;
     // First do materials
-    uint32_t batchId = BoundaryBatchId;
+    uint32_t batchId = NullBatchId;
     for(const auto& requiredMat : materialBatches)
     {
         batchId++;
@@ -244,8 +269,10 @@ SceneError GPUScene::GenerateMaterialBatches(MaterialKeyListing& allMatKeys,
 
         GPUPrimitiveGroupI* pGroup = nullptr;
         GPUMaterialGroupI* mGroup = nullptr;
-        logicGenerator.GeneratePrimitiveGroup(pGroup, primTName);
-        logicGenerator.GenerateMaterialGroup(mGroup, matTName, gpuId);
+        if((e = logicGenerator.GeneratePrimitiveGroup(pGroup, primTName)) != SceneError::OK)
+            return e;
+        if((e = logicGenerator.GenerateMaterialGroup(mGroup, matTName, gpuId)) != SceneError::OK)
+            return e;
 
         // Generation
         GPUMaterialBatchI* matBatch = nullptr;
@@ -267,7 +294,6 @@ SceneError GPUScene::GenerateMaterialBatches(MaterialKeyListing& allMatKeys,
 
             maxMatIds = Vector2i::Max(maxMatIds, Vector2i(batchId, innerId));
         }
-        batchId++;
     }
     return e;
 }
@@ -299,7 +325,7 @@ SceneError GPUScene::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABBs,
                                           double time)
 {
     SceneError e = SceneError::OK;
-    uint32_t accelBatch = 0;
+    uint32_t accelBatch = NullBatchId;
     // Accelerator Groups & Batches and surface hit keys
     for(const auto& accelGroupBatch : acceleratorBatchList)
     {
@@ -407,58 +433,59 @@ SceneError GPUScene::GenerateBaseAccelerator(const std::map<uint32_t, AABB3>& ac
     return e;
 }
 
-SceneError GPUScene::GenerateBoundaryMaterial(int gpuId, double time)
+SceneError GPUScene::FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList, 
+                                          double time)
 {
     SceneError e = SceneError::OK;
     NodeListing nodeList;
 
     nlohmann::json node;
     if(!FindNode(node, SceneIO::BASE_OUTSIDE_MATERIAL))
-        return SceneError::OUTSIDE_MAT_NODE_NOT_FOUND;
-    nodeList.emplace(node);
+        return SceneError::BASE_BOUND_MAT_NODE_NOT_FOUND;
 
-    GPUMaterialGroupI* boundaryMat = nullptr;
-    const std::string matTypeName = node[SceneIO::TYPE];
-    if((e = logicGenerator.GenerateBoundaryMaterial(boundaryMat,
-                                                    matTypeName,
-                                                    gpuId)) != SceneError::OK)
-        return e;
-    if((e = boundaryMat->InitializeGroup(nodeList, time)) != SceneError::OK)
-        return e;
+    // From that node find equavilent material,
+    auto primIdPair = std::make_pair(std::string(BaseConstants::EMPTY_PRIMITIVE_NAME),
+                                     SceneIO::LoadNumber<uint32_t>(node, time));
+    auto loc = matHitKeyList.find(primIdPair);
+    if(loc == matHitKeyList.end())
+        return SceneError::MATERIAL_ID_NOT_FOUND;
+
+    baseBoundaryMatKey = loc->second;
     return e;
 }
 
-void GPUScene::LoadCommon(double time)
+SceneError GPUScene::LoadCommon(double time)
 {
+    SceneError e = SceneError::OK;
+
     // CPU Temp Data
+    int i;
     std::vector<LightStruct> lightsCPU;
     std::vector<TransformStruct> transformsCPU;
 
     // Lights
     nlohmann::json lightsJson;
-    if(FindNode(lightsJson, SceneIO::LIGHT_BASE))
+    if(!FindNode(lightsJson, SceneIO::LIGHT_BASE))
+        return SceneError::LIGHTS_ARRAY_NOT_FOUND;
+    i = 0;
+    lightsCPU.resize(lightsJson.size());
+    for(const auto& lightJson : lightsJson)
     {
-        lightsCPU.resize(lightsJson.size());
-        int i = 0;
-        for(const auto& lightJson : lightsJson)
-        {
-            lightsCPU[i] = SceneIO::LoadLight(lightJson, time);
-            i++;
-        }
-    };
-
+        lightsCPU[i] = SceneIO::LoadLight(lightJson, time);
+        i++;
+    }
+    
     // Transforms
     nlohmann::json transformsJson;
-    if(FindNode(transformsJson, SceneIO::TRANSFORM_BASE))
+    if(!FindNode(transformsJson, SceneIO::TRANSFORM_BASE))
+        return SceneError::TRANSFORMS_ARRAY_NOT_FOUND;
+    i = 0;
+    transformsCPU.resize(transformsJson.size());
+    for(const auto& transformJson : transformsJson)
     {
-        transformsCPU.resize(transformsJson.size());
-        int i = 0;
-        for(const auto& transformJson : transformsJson)
-        {
-            transformsCPU[i] = SceneIO::LoadTransform(transformJson, time);
-            i++;
-        }
-    };
+        transformsCPU[i] = SceneIO::LoadTransform(transformJson, time);
+        i++;
+    }
 
     // Allocate GPU and Load
     size_t transformSize = transformsCPU.size() * sizeof(TransformStruct);
@@ -466,10 +493,13 @@ void GPUScene::LoadCommon(double time)
     size_t lightSize = lightsCPU.size() * sizeof(LightStruct);
 
     memory = DeviceMemory(transformSize + lightSize);
-    dTransforms = reinterpret_cast<TransformStruct*>(static_cast<Byte*>(memory));
-    CUDA_CHECK(cudaMemcpy(dTransforms, transformsCPU.data(),
-                          transformsCPU.size() * sizeof(TransformStruct),
-                          cudaMemcpyHostToDevice));
+    if(transformsCPU.size() != 0)
+    {
+        dTransforms = reinterpret_cast<TransformStruct*>(static_cast<Byte*>(memory));
+        CUDA_CHECK(cudaMemcpy(dTransforms, transformsCPU.data(),
+                              transformsCPU.size() * sizeof(TransformStruct),
+                              cudaMemcpyHostToDevice));
+    }
     if(lightsCPU.size() != 0)
     {
         dLights = reinterpret_cast<LightStruct*>(static_cast<Byte*>(memory) + transformSize);
@@ -479,16 +509,16 @@ void GPUScene::LoadCommon(double time)
 
     // Now Load Camera
     nlohmann::json camerasJson;
-    if(FindNode(camerasJson, SceneIO::CAMERA_BASE))
+    if(!FindNode(camerasJson, SceneIO::CAMERA_BASE))
+        return SceneError::CAMERAS_ARRAY_NOT_FOUND;
+    i = 0;
+    cameraMemory.resize(camerasJson.size());
+    for(const auto& cameraJson : camerasJson)
     {
-        cameraMemory.resize(camerasJson.size());
-        int i = 0;
-        for(const auto& cameraJson : camerasJson)
-        {
-            cameraMemory[i] = SceneIO::LoadCamera(cameraJson, time);
-            i++;
-        }
-    };
+        cameraMemory[i] = SceneIO::LoadCamera(cameraJson, time);
+        i++;
+    }
+    return e;
 }
 
 SceneError GPUScene::LoadLogicRelated(double time)
@@ -552,7 +582,7 @@ SceneError GPUScene::LoadLogicRelated(double time)
         return e;
 
     // Finally Boundary Material
-    if((e = GenerateBoundaryMaterial(boundaryMaterialGPUId)) != SceneError::OK)
+    if((e = FindBoundaryMaterial(allMaterialKeys, time)) != SceneError::OK)
        return e;
 
     // MaxIds are generated but those are inclusive
@@ -566,9 +596,10 @@ SceneError GPUScene::LoadLogicRelated(double time)
     return SceneError::OK;
 }
 
-void GPUScene::ChangeCommon(double time)
+SceneError GPUScene::ChangeCommon(double time)
 {
     // TODO:
+    return SceneError::OK;
 }
 
 SceneError GPUScene::ChangeLogicRelated(double time)
@@ -596,7 +627,8 @@ SceneError GPUScene::LoadScene(double time)
     {
         if((e = OpenFile(fileName)) != SceneError::OK)
            return e;
-        LoadCommon(time);
+        if((e = LoadCommon(time)) != SceneError::OK)
+           return e;
         e = LoadLogicRelated(time);
     }
     catch (SceneException const& e)
@@ -612,11 +644,14 @@ SceneError GPUScene::LoadScene(double time)
 
 SceneError GPUScene::ChangeTime(double time)
 {
+    SceneError e = SceneError::OK;
     try
     {
-        OpenFile(fileName);
-        ChangeCommon(time);
-        ChangeLogicRelated(time);
+        if((e = OpenFile(fileName)) != SceneError::OK)
+            return e;
+        if((e = ChangeCommon(time)) != SceneError::OK)
+            return e;
+        e = ChangeLogicRelated(time);
     }
     catch(SceneException const& e)
     {
@@ -626,7 +661,7 @@ SceneError GPUScene::ChangeTime(double time)
     {
         return SceneError::JSON_FILE_PARSE_ERROR;
     }
-    return SceneError::OK;
+    return e;
 }
 
 Vector2i GPUScene::MaxMatIds()
@@ -637,6 +672,11 @@ Vector2i GPUScene::MaxMatIds()
 Vector2i GPUScene::MaxAccelIds()
 {
     return maxAccelIds;
+}
+
+HitKey GPUScene::BaseBoundaryMaterial()
+{
+    return baseBoundaryMatKey;
 }
 
 const LightStruct* GPUScene::LightsGPU() const

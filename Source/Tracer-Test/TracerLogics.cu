@@ -13,7 +13,8 @@ TracerBasic::TracerBasic(GPUBaseAcceleratorI& ba,
                          const TracerParameters& options,
                          uint32_t hitStructSize,
                          const Vector2i maxMats,
-                         const Vector2i maxAccels)
+                         const Vector2i maxAccels,
+                         const HitKey baseBoundMatKey)
     : TracerBaseLogic(ba,
                       std::move(ag), std::move(ab),
                       std::move(mg), std::move(mb),
@@ -21,7 +22,8 @@ TracerBasic::TracerBasic(GPUBaseAcceleratorI& ba,
                       initals,
                       hitStructSize,
                       maxMats,
-                      maxAccels)
+                      maxAccels,
+                      baseBoundMatKey)
 {}
 
 TracerError TracerBasic::Initialize()
@@ -31,7 +33,7 @@ TracerError TracerBasic::Initialize()
 
 uint32_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
                                    const GPUScene& scene,
-                                   int cameraId,
+                                   const CameraPerspective& cam,
                                    int samplePerLocation,
                                    Vector2i resolution,
                                    Vector2i pixelStart,
@@ -41,10 +43,10 @@ uint32_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
     Vector2i pixelCount = (pixelEnd - pixelStart);
     uint32_t totalRayCount = pixelCount[0] * samplePerLocation *
                              pixelCount[1] * samplePerLocation;
-    CameraPerspective currentCam = scene.CamerasCPU()[cameraId];
 
     // Allocate enough space for ray
-    rayMem.ResizeRayOut(totalRayCount, PerRayAuxDataSize());
+    rayMem.ResizeRayOut(totalRayCount, PerRayAuxDataSize(),
+                        SceneBaseBoundMatKey());
 
     // Basic Tracer does classic camera to light tracing
     // Thus its initial rays are from camera
@@ -98,7 +100,7 @@ uint32_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
             gAuxiliary,
             // Input
             rngData,
-            currentCam,
+            cam,
             samplePerLocation,
             resolution,
             localPixelStart,

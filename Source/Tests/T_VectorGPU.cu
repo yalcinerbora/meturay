@@ -22,9 +22,12 @@ __global__ void KGlobalLoadStore(const Vector2* v2Input,
                                  float* fV2Output,
                                  float* fV3Output,
                                  float* fV4Output,
-                                 float4* f4Out)
+                                 float4* f4Out,
+                                 //
+                                 int ElementCount)
 {
     unsigned int gId = threadIdx.x + blockIdx.x * blockDim.x;
+    if(gId >= ElementCount) return;
 
     // Testing Direct Load and Store
     Vector2 v0 = v2Input[gId];
@@ -296,7 +299,9 @@ TEST(VectorGPU, GlobalLoadStore)
                                               static_cast<float*>(fV2DataOut),
                                               static_cast<float*>(fV3DataOut),
                                               static_cast<float*>(fV4DataOut),
-                                              static_cast<float4*>(f4DataOut));
+                                              static_cast<float4*>(f4DataOut),
+                                              //
+                                              ElementCount);
     CUDA_KERNEL_CHECK();
 }
 

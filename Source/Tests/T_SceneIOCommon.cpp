@@ -8,7 +8,7 @@
 #include "RayLib/SceneIO.h"
 #include "RayLib/Log.h"
 
-static const std::string TestSceneName = "testScene.json";
+static const std::string TestSceneName = "TestScenes/jsonRead.json";
 
 static nlohmann::json ReadTestFile(const std::string& fileName = TestSceneName)
 {
@@ -30,17 +30,28 @@ TEST(SceneIOCommon, Camera)
         100.0f,
         Vector3(0.0f, 1.0f, 0.0f),
         1.0f,
-        Vector2(1.22173f, 0.58904f)
+        Vector2(MathConstants::Pi * 0.25, MathConstants::Pi * 0.25)
     };
 
     nlohmann::json jsn = ReadTestFile()[SceneIO::CAMERA_BASE];
     CameraPerspective camera = SceneIO::LoadCamera(jsn[0]);
-    EXPECT_EQ(CamResult.position, camera.position);
-    EXPECT_EQ(CamResult.up, camera.up);
-    EXPECT_EQ(CamResult.gazePoint, camera.gazePoint);
-    EXPECT_EQ(CamResult.fov, camera.fov);
-    EXPECT_EQ(CamResult.nearPlane, camera.nearPlane);
-    EXPECT_EQ(CamResult.farPlane, camera.farPlane);
+    EXPECT_FLOAT_EQ(CamResult.position[0], camera.position[0]);
+    EXPECT_FLOAT_EQ(CamResult.position[1], camera.position[1]);
+    EXPECT_FLOAT_EQ(CamResult.position[2], camera.position[2]);
+
+    EXPECT_FLOAT_EQ(CamResult.up[0], camera.up[0]);
+    EXPECT_FLOAT_EQ(CamResult.up[1], camera.up[1]);
+    EXPECT_FLOAT_EQ(CamResult.up[2], camera.up[2]);
+
+    EXPECT_FLOAT_EQ(CamResult.gazePoint[0], camera.gazePoint[0]);
+    EXPECT_FLOAT_EQ(CamResult.gazePoint[1], camera.gazePoint[1]);
+    EXPECT_FLOAT_EQ(CamResult.gazePoint[2], camera.gazePoint[2]);
+
+    EXPECT_FLOAT_EQ(CamResult.fov[0], camera.fov[0]);
+    EXPECT_FLOAT_EQ(CamResult.fov[1], camera.fov[1]);
+
+    EXPECT_FLOAT_EQ(CamResult.nearPlane, camera.nearPlane);
+    EXPECT_FLOAT_EQ(CamResult.farPlane, camera.farPlane);
 
     // Second one is external, it should throw file not found
     EXPECT_THROW(SceneIO::LoadCamera(jsn[1]), SceneException);
@@ -49,35 +60,20 @@ TEST(SceneIOCommon, Camera)
 TEST(SceneIOCommon, Lights)
 {
     LightStruct LightPoint = {};
-    LightPoint.t = LightType::POINT;
-    LightPoint.point.position = Vector3(0.0f);
-    LightPoint.point.color = Vector3(1.0f);
-    LightPoint.point.intensity = 100.0f;
+    LightPoint.typeName = "point";
+    LightPoint.matId = 0;
 
     LightStruct LightDirectional = {};
-    LightDirectional.t = LightType::DIRECTIONAL;
-    LightDirectional.directional.direction = Vector3(0.0f);
-    LightDirectional.directional.color = Vector3(1.0f);
-    LightDirectional.directional.intensity = 1.0f;
-
+    LightDirectional.typeName = "directional";
+    LightDirectional.matId = 1;
+    
     LightStruct LightSpot = {};
-    LightSpot.t = LightType::SPOT;
-    LightSpot.spot.position = Vector3(0.0f);
-    LightSpot.spot.direction = Vector3(1.0f, -1.0f, 1.0f);
-    LightSpot.spot.coverageAngle = 5;
-    LightSpot.spot.falloffAngle = 4;
-    LightSpot.spot.color = Vector3(1.0f);
-    LightSpot.spot.intensity = 1.0f;
-
+    LightSpot.typeName = "spot";
+    LightSpot.matId = 2;
+    
     LightStruct LightRectangular = {};
-    LightRectangular.t = LightType::RECTANGULAR;
-    LightRectangular.rectangular.position = Vector3(1.0f);
-    LightRectangular.rectangular.edge0 = Vector3(2.0f, 1.0f, 1.0f);
-    LightRectangular.rectangular.edge1 = Vector3(3.0f, 1.0f, 1.0f);
-    LightRectangular.rectangular.red = 4.0f;
-    LightRectangular.rectangular.green = 1.0f;
-    LightRectangular.rectangular.blue = 1.0f;
-    LightRectangular.rectangular.intensity = 1.0f;
+    LightRectangular.typeName = "rectangular";
+    LightRectangular.matId = 3;
 
     // Read
     LightStruct light;
@@ -86,32 +82,20 @@ TEST(SceneIOCommon, Lights)
     EXPECT_THROW(SceneIO::LoadLight(jsn[0]), SceneException);
     // Point
     light = SceneIO::LoadLight(jsn[1]);
-    EXPECT_EQ(LightPoint.point.position, light.point.position);
-    EXPECT_EQ(LightPoint.point.color, light.point.color);
-    EXPECT_EQ(LightPoint.point.intensity, light.point.intensity);
+    EXPECT_STREQ(LightPoint.typeName.c_str(), light.typeName.c_str());
+    EXPECT_EQ(LightPoint.matId, light.matId);
     // Directional
     light = SceneIO::LoadLight(jsn[2]);
-    EXPECT_EQ(LightDirectional.directional.direction, light.directional.direction);
-    EXPECT_EQ(LightDirectional.directional.color, light.directional.color);
-    EXPECT_EQ(LightDirectional.directional.intensity, light.directional.intensity);
+    EXPECT_STREQ(LightDirectional.typeName.c_str(), light.typeName.c_str());
+    EXPECT_EQ(LightDirectional.matId, light.matId);
     // Spot
     light = SceneIO::LoadLight(jsn[3]);
-    EXPECT_EQ(LightSpot.spot.position, light.spot.position);
-    EXPECT_EQ(LightSpot.spot.direction, light.spot.direction);
-    EXPECT_EQ(LightSpot.spot.coverageAngle, light.spot.coverageAngle);
-    EXPECT_EQ(LightSpot.spot.falloffAngle, light.spot.falloffAngle);
-    EXPECT_EQ(LightSpot.spot.coverageAngle, light.spot.coverageAngle);
-    EXPECT_EQ(LightSpot.spot.color, light.spot.color);
-    EXPECT_EQ(LightSpot.spot.intensity, light.spot.intensity);
+    EXPECT_STREQ(LightSpot.typeName.c_str(), light.typeName.c_str());
+    EXPECT_EQ(LightSpot.matId, light.matId);
     // Rectangular
     light = SceneIO::LoadLight(jsn[4]);
-    EXPECT_EQ(LightRectangular.rectangular.position, light.rectangular.position);
-    EXPECT_EQ(LightRectangular.rectangular.edge0, light.rectangular.edge0);
-    EXPECT_EQ(LightRectangular.rectangular.edge1, light.rectangular.edge1);
-    EXPECT_EQ(LightRectangular.rectangular.red, light.rectangular.red);
-    EXPECT_EQ(LightRectangular.rectangular.green, light.rectangular.green);
-    EXPECT_EQ(LightRectangular.rectangular.blue, light.rectangular.blue);
-    EXPECT_EQ(LightRectangular.rectangular.intensity, light.rectangular.intensity);
+    EXPECT_STREQ(LightRectangular.typeName.c_str(), light.typeName.c_str());
+    EXPECT_EQ(LightRectangular.matId, light.matId);
 }
 
 TEST(SceneIOCommon, Transform)

@@ -25,7 +25,7 @@ struct alignas(32) RayGMem
 // GPU register layout for rays
 struct RayReg
 {
-    RayF                            ray;
+    RayF                        ray;
     float                       tMin;
     float                       tMax;
 

@@ -11,14 +11,21 @@ class RandomGPU;
 
 __device__
 inline void ConstantBoundaryMatShade(// Output
-                                     Vector4* gImage,
+                                     Vector4f* gImage,
+                                     //
+                                     HitKey* gOutBoundMat,
+                                     RayGMem* gOutRays,
+                                     RayAuxBasic* gOutRayAux,
+                                     const uint32_t maxOutRay,
                                      // Input as registers
                                      const RayReg& ray,
+                                     const EmptySurface& surface,
                                      const RayAuxBasic& aux,
                                      //
                                      RandomGPU& rng,
                                      // Input as global memory
-                                     const ConstantBoundaryMatData& gMatData)
+                                     const ConstantBoundaryMatData& gMatData,
+                                     const HitKey::Type& matId)
 {
     Vector3f output = gMatData.backgroundColor * aux.totalRadiance;
     gImage[aux.pixelId][0] = output[0];
@@ -30,6 +37,7 @@ __device__
 inline void BasicMatShade(// Output
                           Vector4f* gImage,
                           //
+                          HitKey* gOutBoundMat,
                           RayGMem* gOutRays,
                           RayAuxBasic* gOutRayAux,
                           const uint32_t maxOutRay,
@@ -52,6 +60,7 @@ __device__
 inline void BaryMatShade(// Output
                          Vector4f* gImage,
                          //
+                         HitKey* gOutBoundMat,
                          RayGMem* gOutRays,
                          RayAuxBasic* gOutRayAux,
                          const uint32_t maxOutRay,
@@ -74,6 +83,7 @@ __device__
 inline void SphrMatShade(// Output
                          Vector4f* gImage,
                          //
+                         HitKey* gOutBoundMat,
                          RayGMem* gOutRays,
                          RayAuxBasic* gOutRayAux,
                          const uint32_t maxOutRay,

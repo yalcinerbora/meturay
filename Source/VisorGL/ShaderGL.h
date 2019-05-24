@@ -39,9 +39,9 @@ class ShaderGL
         // Constructors & Destructor
                             ShaderGL();
                             ShaderGL(ShaderType, const std::string& path);
-                            ShaderGL(ShaderGL&&);
+                            ShaderGL(ShaderGL&&) noexcept;
                             ShaderGL(const ShaderGL&) = delete;
-        ShaderGL&           operator=(ShaderGL&&);
+        ShaderGL&           operator=(ShaderGL&&) noexcept;
         ShaderGL&           operator=(const ShaderGL&) = delete;
                             ~ShaderGL();
 

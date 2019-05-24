@@ -6,7 +6,6 @@
 #include "RayLib/Log.h"
 
 #include <filesystem>
-//namespace std { namespace filesystem = std::experimental::filesystem; }
 
 GLuint ShaderGL::shaderPipelineID = 0;
 int ShaderGL::shaderCount = 0;
@@ -41,6 +40,8 @@ GLenum ShaderGL::ShaderTypeToGLBit(ShaderType t)
 
 ShaderGL::ShaderGL()
     : shaderID(0)
+    , shaderType(ShaderType::COMPUTE)
+    , valid(false)
 {}
 
 ShaderGL::ShaderGL(ShaderType t, const std::string& path)
@@ -89,7 +90,7 @@ ShaderGL::ShaderGL(ShaderType t, const std::string& path)
     shaderCount++;
 }
 
-ShaderGL::ShaderGL(ShaderGL&& other)
+ShaderGL::ShaderGL(ShaderGL&& other) noexcept
     : shaderID(other.shaderID)
     , shaderType(other.shaderType)
     , valid(other.valid)
@@ -97,7 +98,7 @@ ShaderGL::ShaderGL(ShaderGL&& other)
     other.shaderID = 0;
 }
 
-ShaderGL& ShaderGL::operator=(ShaderGL&& other)
+ShaderGL& ShaderGL::operator=(ShaderGL&& other) noexcept
 {
     assert(this != &other);
     glDeleteProgram(shaderID);
