@@ -45,10 +45,10 @@ struct alignas(sizeof(T)) HitKeyT
 
     // Constructors & Destructor
                                     HitKeyT() = default;
-    __device__ __host__             HitKeyT(T v) : value(v) {}
+    __device__ __host__ constexpr   HitKeyT(T v) : value(v) {}
 
     // Props
-    uint32_t                        value;
+    T                               value;
 
     __device__ __host__             operator const T&() const;
     __device__ __host__             operator T&();
@@ -74,9 +74,7 @@ struct alignas(sizeof(T)) HitKeyT
 
 
     static constexpr uint16_t       NullBatch = NullBatchId;
-    static constexpr uint16_t       BoundaryBatch = BoundaryBatchId;
-    static constexpr T              InvalidKey = CombinedKey(NullBatch, 0);
-    static constexpr T              BoundaryMatKey = CombinedKey(BoundaryBatch, 0);
+    static constexpr T              InvalidKey = CombinedKey(NullBatch, 0);    
 };
 
 template <class T, uint32_t BatchBits, uint32_t IdBits>
@@ -95,7 +93,8 @@ template <class T, uint32_t BatchBits, uint32_t IdBits>
 __device__ __host__
 constexpr T HitKeyT<T, BatchBits, IdBits>::CombinedKey(uint32_t batch, uint64_t id)
 {
-    return (static_cast<T>(batch) << IdBits) | (id & BatchMask);
+    return (static_cast<T>(batch) << IdBits) | 
+           (static_cast<T>(id) & BatchMask);
 }
 
 template <class T, uint32_t BatchBits, uint32_t IdBits>
@@ -116,6 +115,6 @@ constexpr  uint16_t HitKeyT<T, BatchBits, IdBits>::FetchBatchPortion(HitKeyT key
 typedef uint32_t RayId;
 
 using HitKeyType = uint32_t;
-using HitKey = HitKeyT<HitKeyType, 8, 24>;
+using HitKey = HitKeyT<HitKeyType, 8u, 24u>;
 
 static_assert(sizeof(HitKey) == sizeof(HitKeyType), "Type and Key sizes should match.");

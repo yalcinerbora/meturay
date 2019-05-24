@@ -39,8 +39,11 @@ class MockTracerLogic : public TracerBaseLogicI
     public:
         class BaseAcceleratorMock : public GPUBaseAcceleratorI
         {
+            public:
+                static constexpr HitKey     BoundaryMatKey = HitKey::CombinedKey(0, 0);
+
             private:
-                MockTracerLogic&    mockLogic;
+                MockTracerLogic&            mockLogic;
 
             public:
                 // Constructors & Destructor
@@ -124,6 +127,7 @@ class MockTracerLogic : public TracerBaseLogicI
                 void                        ShadeRays(// Output
                                                       Vector4f* dImage,
                                                       //
+                                                      HitKey* dBoundMatOut,
                                                       RayGMem* dRayOut,
                                                       void* dRayAuxOut,
                                                       //  Input
@@ -189,7 +193,7 @@ class MockTracerLogic : public TracerBaseLogicI
         // Generate Camera Rays
         uint32_t                                GenerateRays(RayMemory&, RNGMemory&,
                                                              const GPUScene& scene,
-                                                             int cameraId,
+                                                             const CameraPerspective&,
                                                              int samplePerLocation,
                                                              Vector2i resolution,
                                                              Vector2i pixelStart = Zero2i,
@@ -205,6 +209,8 @@ class MockTracerLogic : public TracerBaseLogicI
         // Returns max bits of keys (for batch and id respectively)
         const Vector2i                          SceneMaterialMaxBits() const override { return MaterialRange; }
         const Vector2i                          SceneAcceleratorMaxBits() const override { return AcceleratorRange; }
+
+        const HitKey                            SceneBaseBoundMatKey() const override { return HitKey::InvalidKey; }
 
         // Options of the Hitman & Shademan
         const HitOpts&                          HitOptions() const override { return optsHit; }
@@ -263,7 +269,7 @@ void MockTracerLogic::BaseAcceleratorMock::Hit(// Output
         // Each Iteration some of the rays are missed (only first ray in this case)
         uint32_t index = i % (AcceleratorCount * MaterialCount + 1);
         if(index == 0)
-            dAcceleratorKeys[i] = HitKey::BoundaryMatKey;
+            dAcceleratorKeys[i] = BoundaryMatKey;
         else
             dAcceleratorKeys[i] = mockLogic.acceleratorKeys[index - 1];
     }
@@ -321,7 +327,8 @@ void MockTracerLogic::AcceleratorMock::Hit(int gpuId,
 
 void MockTracerLogic::MaterialMock::ShadeRays(// Output
                                               Vector4f* dImage,
-
+                                              //
+                                              HitKey* dBoundMatOut,
                                               RayGMem* dRayOut,
                                               void* dRayAuxOut,
                                               //  Input
@@ -379,7 +386,7 @@ TracerError MockTracerLogic::Initialize()
 
     // Create miss material
     mockMaterials.emplace_back(*this, true);
-    materials.emplace(std::make_pair(static_cast<uint32_t>(HitKey::BoundaryMatKey),
+    materials.emplace(std::make_pair(static_cast<uint32_t>(BaseAcceleratorMock::BoundaryMatKey),
                                      &mockMaterials.back()));
 
     // We have total of 8 material seperated by 2 accelerators
@@ -389,7 +396,7 @@ TracerError MockTracerLogic::Initialize()
 
 uint32_t MockTracerLogic::GenerateRays(RayMemory&, RNGMemory&,
                                        const GPUScene& scene,
-                                       int cameraId,
+                                       const CameraPerspective&,
                                        int samplePerLocation,
                                        Vector2i resolution,
                                        Vector2i pixelStart,

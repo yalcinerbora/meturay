@@ -19,8 +19,6 @@ using NameIdPair = std::pair<std::string, int>;
 class TracerLogicGenerator : public TracerLogicGeneratorI
 {
     private:
-        static constexpr uint32_t                       BoundaryMatId = BoundaryBatchId;
-
     protected:
         // Type Generation Functions
         std::map<std::string, GPUPrimGroupGen>          primGroupGenerators;
@@ -44,9 +42,6 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         std::map<NameIdPair, GPUMatBPtr>                matBatches;
 
         GPUBaseAccelPtr                                 baseAccelerator;
-        GPUMatGPtr                                      boundaryMaterial;
-        GPUMatBPtr                                      boundaryMatBatch;
-        GPUPrimitiveGroupI*                             emptyPrimitive;
 
         // Tracer Related
         GPUTracerGen                                    tracerGenerator;
@@ -87,11 +82,6 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
                                                           const GPUPrimitiveGroupI&,
                                                           uint32_t keyBatchId) override;
 
-        // Outside Material is special material and has its own group
-        SceneError                  GenerateBoundaryMaterial(GPUMaterialGroupI*&,
-                                                             const std::string& materialType,
-                                                             const int gpuId) override;
-
         // Base Accelerator should be fetched after all the stuff is generated
         SceneError                  GenerateBaseAccelerator(GPUBaseAcceleratorI*&,
                                                             const std::string& accelType) override;
@@ -101,7 +91,8 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         SceneError                  GenerateBaseLogic(TracerBaseLogicI*&,
                                                       const TracerParameters& opts,
                                                       const Vector2i maxMats,
-                                                      const Vector2i maxAccels) override;
+                                                      const Vector2i maxAccels,
+                                                      const HitKey baseBoundMatKey) override;
 
         PrimitiveGroupList          GetPrimitiveGroups() const override;
         AcceleratorGroupList        GetAcceleratorGroups() const override;

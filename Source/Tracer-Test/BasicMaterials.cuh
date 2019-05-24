@@ -7,41 +7,41 @@
 #include "TracerLib/TypeTraits.h"
 
 // Material Groups
-class ConstantBoundaryMat final
-    : public GPUBoundaryMatGroup<TracerBasic,
-                                 ConstantBoundaryMatData,
-                                 ConstantBoundaryMatShade>
-{
-    public:
-        static constexpr const char*    TypeName() { return "ConstantBoundary"; }
-
-    private:
-        DeviceMemory        memory;
-
-    public:
-        // Constructors & Destructor
-                            ConstantBoundaryMat(int gpuId);
-                            ~ConstantBoundaryMat() = default;
-
-        // Interface
-        // Type (as string) of the primitive group
-        const char*         Type() const override { return TypeName(); }
-        // Allocates and Generates Data
-        SceneError          InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time) override;
-        SceneError          ChangeTime(const std::set<SceneFileNode>& materialNodes, double time) override;
-
-        // Material Queries
-        int                 InnerId(uint32_t materialId) const override;
-        bool                HasCachedTextures(uint32_t materialId) const override { return false; }
-
-        size_t              UsedGPUMemory() const override { return memory.Size(); }
-        size_t              UsedCPUMemory() const override { return sizeof(ConstantBoundaryMatData); }
-
-        size_t              UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
-        size_t              UsedCPUMemory(uint32_t materialId) const override { return 0; }
-
-        uint8_t             OutRayCount() const override { return 0; }
-};
+//class ConstantBoundaryMat final
+//    : public GPUBoundaryMatGroup<TracerBasic,
+//                                 ConstantBoundaryMatData,
+//                                 ConstantBoundaryMatShade>
+//{
+//    public:
+//        static constexpr const char*    TypeName() { return "ConstantBoundary"; }
+//
+//    private:
+//        DeviceMemory        memory;
+//
+//    public:
+//        // Constructors & Destructor
+//                            ConstantBoundaryMat(int gpuId);
+//                            ~ConstantBoundaryMat() = default;
+//
+//        // Interface
+//        // Type (as string) of the primitive group
+//        const char*         Type() const override { return TypeName(); }
+//        // Allocates and Generates Data
+//        SceneError          InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time) override;
+//        SceneError          ChangeTime(const std::set<SceneFileNode>& materialNodes, double time) override;
+//
+//        // Material Queries
+//        int                 InnerId(uint32_t materialId) const override;
+//        bool                HasCachedTextures(uint32_t materialId) const override { return false; }
+//
+//        size_t              UsedGPUMemory() const override { return memory.Size(); }
+//        size_t              UsedCPUMemory() const override { return sizeof(ConstantBoundaryMatData); }
+//
+//        size_t              UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+//        size_t              UsedCPUMemory(uint32_t materialId) const override { return 0; }
+//
+//        uint8_t             OutRayCount() const override { return 0; }
+//};
 
 class BasicMat final
     : public GPUMaterialGroup<TracerBasic,
@@ -153,8 +153,7 @@ class SphericalMat final
         uint8_t         OutRayCount() const override { return 0; }
 };
 
-static_assert(IsTracerClass<ConstantBoundaryMat>::value,
-              "ConstantBoundaryMat is not a Tracer Class.");
+
 static_assert(IsTracerClass<BasicMat>::value,
               "BasicMat is not a Tracer Class.");
 static_assert(IsTracerClass<BarycentricMat>::value,
@@ -163,18 +162,10 @@ static_assert(IsTracerClass<SphericalMat>::value,
               "SphericalMat is not a Tracer Class.");
 
 // Material Batches
-extern template class GPUBoundaryMatBatch<TracerBasic, 
-                                          ConstantBoundaryMat>;
-
-extern template class GPUMaterialBatch<TracerBasic,
-                                       BarycentricMat,
-                                       GPUPrimitiveTriangle,
-                                       BarySurfaceFromTri>;
-
 extern template class GPUMaterialBatch<TracerBasic,
                                        BasicMat,
-                                       GPUPrimitiveTriangle,
-                                       EmptySurfaceFromTri>;
+                                       GPUPrimitiveEmpty,
+                                       EmptySurfaceFromEmpty>;
 
 extern template class GPUMaterialBatch<TracerBasic,
                                        BasicMat,
@@ -182,17 +173,24 @@ extern template class GPUMaterialBatch<TracerBasic,
                                        EmptySurfaceFromSphr>;
 
 extern template class GPUMaterialBatch<TracerBasic,
+                                       BasicMat,
+                                       GPUPrimitiveTriangle,
+                                       EmptySurfaceFromTri>;
+
+extern template class GPUMaterialBatch<TracerBasic,
+                                       BarycentricMat,
+                                       GPUPrimitiveTriangle,
+                                       BarySurfaceFromTri>;
+
+extern template class GPUMaterialBatch<TracerBasic,
                                        SphericalMat,
                                        GPUPrimitiveSphere,
                                        SphrSurfaceFromSphr>;
 
-using ConstantBoundaryMatBatch = GPUBoundaryMatBatch<TracerBasic, 
-                                                     ConstantBoundaryMat>;
-
-using BarycentricMatTriBatch = GPUMaterialBatch<TracerBasic,
-                                                BarycentricMat,
-                                                GPUPrimitiveTriangle,
-                                                BarySurfaceFromTri>;
+using BasicMatEmptyBatch = GPUMaterialBatch<TracerBasic,
+                                            BasicMat,
+                                            GPUPrimitiveEmpty,
+                                            EmptySurfaceFromEmpty>;
 
 using BasicMatTriBatch = GPUMaterialBatch<TracerBasic,
                                           BasicMat,
@@ -203,6 +201,11 @@ using BasicMatSphrBatch = GPUMaterialBatch<TracerBasic,
                                            BasicMat,
                                            GPUPrimitiveSphere,
                                            EmptySurfaceFromSphr>;
+
+using BarycentricMatTriBatch = GPUMaterialBatch<TracerBasic,
+                                                BarycentricMat,
+                                                GPUPrimitiveTriangle,
+                                                BarySurfaceFromTri>;
 
 using SphericalMatSphrBatch = GPUMaterialBatch<TracerBasic,
                                                SphericalMat,

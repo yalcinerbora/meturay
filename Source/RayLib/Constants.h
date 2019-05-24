@@ -11,12 +11,14 @@ Many Constants that are used throught the tracer
 
 namespace TracerConstants
 {
-    static constexpr HitOpts DefaultHitOptions = { 0 };
-    static constexpr ShadeOpts DefaultShadeOptions = { 0 };
+    static constexpr HitOpts DefaultHitOptions = {0};
+    static constexpr ShadeOpts DefaultShadeOptions = {0};
+    static constexpr TracerOptions DefaultTracerOptions = {false};
 }
 
 namespace BaseConstants
 {
+    static constexpr const char* EMPTY_PRIMITIVE_NAME = "Empty";
     static constexpr Vector2i IMAGE_MAX_SIZE = Vector2i(std::numeric_limits<int>::max(),
                                                         std::numeric_limits<int>::max());
 }

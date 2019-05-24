@@ -10,6 +10,7 @@
 __device__
 inline void GIAlbedoMatShade(// Output
                              Vector4f* gImage,
+                             HitKey* gBoundaryMat,
                              //
                              RayGMem* gOutRays,
                              RayAuxBasic* gOutRayAux,
@@ -57,7 +58,7 @@ inline void GIAlbedoMatShade(// Output
 
     // Write Ray
     rayOut.ray = {direction, position};
-    rayOut.tMin = 0.0f;
+    rayOut.tMin = 0.001f;
     rayOut.tMax = INFINITY;
 
     // All done!

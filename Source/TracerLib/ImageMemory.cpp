@@ -76,8 +76,7 @@ void ImageMemory::Resize(Vector2i res)
 
 void ImageMemory::Reset()
 {
-    CUDA_CHECK(cudaDeviceSynchronize());
-    size_t pixelCount = segmentSize[0] * segmentSize[1];
+    size_t pixelCount = static_cast<size_t>(segmentSize[0]) * segmentSize[1];
     if(pixelCount != 0)
         CUDA_CHECK(cudaMemset(memory, 0x0, PixelFormatToSize(format) * pixelCount));
 }

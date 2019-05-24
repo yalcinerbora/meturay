@@ -45,6 +45,10 @@ class SimpleTracerSetup
         {
             0   // Seed
         };
+        static constexpr TracerOptions      TRACER_OPTIONS =
+        {
+            false   // Verbose
+        };
 
         // Scene Tracer and Visor
         std::unique_ptr<VisorI>             visorView;
@@ -116,7 +120,8 @@ bool SimpleTracerSetup::Init()
     TracerBaseLogicI* logic;
     scnE = tracerGenerator->GenerateBaseLogic(logic, TRACER_PARAMETERS,
                                               gpuScene->MaxMatIds(),
-                                              gpuScene->MaxAccelIds());
+                                              gpuScene->MaxAccelIds(),
+                                              gpuScene->BaseBoundaryMaterial());
     ERROR_CHECK(SceneError, scnE);
 
     // Visor Input Generation
@@ -145,6 +150,7 @@ bool SimpleTracerSetup::Init()
     tracerBase->ResizeImage(IMAGE_RESOLUTION);
     tracerBase->ReportionImage();
     tracerBase->ResetImage();
+    tracerBase->SetOptions(TRACER_OPTIONS);
 
     // Tracer Init
     TracerError trcE = tracerBase->Initialize(leaderDevice);

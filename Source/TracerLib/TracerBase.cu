@@ -9,6 +9,7 @@
 #include "GPUAcceleratorI.h"
 #include "GPUMaterialI.h"
 #include "TracerLogicI.h"
+#include "GPUScene.h"
 
 template <class... Args>
 inline void TracerBase::SendLog(const char* format, Args... args)
@@ -29,6 +30,9 @@ void TracerBase::SendError(TracerError e, bool isFatal)
 
 void TracerBase::HitRays()
 {
+    // Sort and Partition happens on the leader device
+    CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice()));
+
     // Tracer Logic interface
     const Vector2i& accBitCounts = currentLogic->SceneAcceleratorMaxBits();
     GPUBaseAcceleratorI& baseAccelerator = currentLogic->BaseAcelerator();
@@ -36,7 +40,6 @@ void TracerBase::HitRays()
 
     // Reset Hit Memory for hit loop
     rayMemory.ResetHitMemory(currentRayCount, currentLogic->HitStructSize());
-
     // Make Base Accelerator to get ready for hitting
     baseAccelerator.GetReady(currentRayCount);
 
@@ -50,6 +53,9 @@ void TracerBase::HitRays()
     HitKey* dCurrentKeys = rayMemory.CurrentKeys();
     RayId*  dCurrentRayIds = rayMemory.CurrentIds();
 
+    /*Debug::DumpMemToFile("accKeys", dCurrentKeys, currentRayCount);
+    Debug::DumpMemToFile("accIds", dCurrentRayIds, currentRayCount);*/
+
     // Try to hit rays until no ray is left
     // (these rays will be assigned with a material)
     // outside rays are also assigned with a material (which is special)
@@ -61,9 +67,12 @@ void TracerBase::HitRays()
         // Cannot provide an absolute hit (its not its job)
         baseAccelerator.Hit(dTransfomIds, dCurrentKeys, dRays, dCurrentRayIds,
                              rayCount);
+        
+        // Wait all GPUs to finish...
+        CudaSystem::SyncAllGPUs();
 
         // Base accelerator traverses the data partially
-        // Updates current key (which represents innter accelerator batch and id)
+        // Updates current key (which represents inner accelerator batch and id)
 
         // After that, system sorts rays according to the keys
         // and partitions the array according to batches
@@ -77,6 +86,7 @@ void TracerBase::HitRays()
         // We only sort up-to a certain bit (radix sort) which is tied to
         // accelerator count
         rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, rayCount, accBitCounts);
+
         // Parition to sub accelerators
         //
         // There may be invalid rays sprinkled along the array.
@@ -156,6 +166,9 @@ void TracerBase::HitRays()
 
 void TracerBase::ShadeRays()
 {
+    // Sort and Partition happens on leader device
+    CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice()));
+
     const Vector2i matMaxBits = currentLogic->SceneMaterialMaxBits();
     // Image Memory Pointers
     Vector4f* dImageMem = outputImage.GMem<Vector4f>();
@@ -173,12 +186,9 @@ void TracerBase::ShadeRays()
     const MaterialBatchMappings& materials = currentLogic->MaterialBatches();
     uint32_t rayCount = currentRayCount;
 
-    // Sort and Partition happens on leader device
-    CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice()));
-
     // Copy materialKeys to currentKeys
     // to make it ready for sorting
-    rayMemory.FillRayIdsForSort(rayCount);
+    rayMemory.FillMatIdsForSort(rayCount);
 
     // Sort with respect to the materials keys
     rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, rayCount, matMaxBits);
@@ -201,9 +211,11 @@ void TracerBase::ShadeRays()
     }
 
     // Allocate output ray memory
-    rayMemory.ResizeRayOut(totalOutRayCount, currentLogic->PerRayAuxDataSize());
+    rayMemory.ResizeRayOut(totalOutRayCount, currentLogic->PerRayAuxDataSize(),
+                           currentLogic->SceneBaseBoundMatKey());
     unsigned char* dAuxOut = rayMemory.RayAuxOut<unsigned char>();
     RayGMem* dRaysOut = rayMemory.RaysOut();
+    HitKey* dBoundKeyOut = rayMemory.MaterialKeys();
 
     // Reorder partitions for efficient calls
     // (sort by gpu and order for better async access)
@@ -228,11 +240,13 @@ void TracerBase::ShadeRays()
         const HitKey* dKeyStart = dCurrentKeys + p.offset;
         RayGMem* dRayOutStart = dRaysOut + outOffset;
         void* dAuxOutStart = dAuxOut + (outOffset * currentLogic->PerRayAuxDataSize());
+        HitKey* dBoundKeyStart = dBoundKeyOut + outOffset;
 
         // Actual Shade Call
         loc->second->ShadeRays(// Output
                                dImageMem,
                                //
+                               dBoundKeyStart,
                                dRayOutStart,
                                dAuxOutStart,
                                //  Input
@@ -266,6 +280,8 @@ TracerBase::TracerBase()
     , currentRayCount(0)
     , currentLogic(nullptr)
     , healthy(false)
+    , sampleCountPerRay(0)
+    , options(TracerConstants::DefaultTracerOptions)
 {}
 
 TracerError TracerBase::Initialize(int leaderGPUId)
@@ -286,6 +302,7 @@ TracerError TracerBase::Initialize(int leaderGPUId)
         accel->ConstructAccelerators();
     }
 
+    CudaSystem::SyncAllGPUs();
     CUDA_CHECK(cudaSetDevice(leaderGPUId));
 
     // All seems fine mark tracer as healthy
@@ -322,11 +339,20 @@ void TracerBase::GenerateInitialRays(const GPUScene& scene,
                                      int cameraId,
                                      int samplePerLocation)
 {
-    if(!healthy) return;
 
+    const CameraPerspective& cam = scene.CamerasCPU()[cameraId];
+    GenerateInitialRays(scene, cam, samplePerLocation);
+
+}
+
+void TracerBase::GenerateInitialRays(const GPUScene& scene,
+                                     const CameraPerspective& cam,
+                                     int samplePerLocation)
+{
+    if(!healthy) return;
     // Delegate camera ray generation to tracer system
     currentRayCount = currentLogic->GenerateRays(rayMemory, rngMemory,
-                                                 scene, cameraId, samplePerLocation,
+                                                 scene, cam, samplePerLocation,
                                                  outputImage.Resolution(),
                                                  outputImage.SegmentOffset(),
                                                  outputImage.SegmentSize());
@@ -369,7 +395,7 @@ void TracerBase::FinishSamples()
     Vector2i pixelCount = outputImage.SegmentSize();
     Vector2i start = outputImage.SegmentOffset();
     Vector2i end = start + outputImage.SegmentSize();
-    size_t size = (pixelCount[0] * pixelCount[1] *
+    size_t size = (static_cast<size_t>(pixelCount[0]) * pixelCount[1] *
                    outputImage.PixelSize());
 
     // Data
@@ -382,7 +408,6 @@ void TracerBase::FinishSamples()
                                        outputImage.Format(),
                                        sampleCountPerRay,
                                        start, end);
-
     SendLog("Samples Finished!");
 }
 

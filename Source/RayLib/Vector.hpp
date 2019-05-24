@@ -389,9 +389,10 @@ __device__ __host__
 inline T Vector<N, T>::Dot(const Vector& right) const
 {
     T data = 0;
+    UNROLL_LOOP
     for(int i = 0; i < N; i++)
     {
-        data += vector[i] * right[i];
+        data += (vector[i] * right[i]);
     }
     return data;
 }

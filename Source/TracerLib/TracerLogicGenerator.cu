@@ -66,9 +66,6 @@ uint32_t TracerLogicGenerator::CalculateHitStruct()
 TracerLogicGenerator::TracerLogicGenerator(GPUTracerGen tracerGenerator,
                                            GPUTracerPtr tracerPtr)
     : baseAccelerator(nullptr, TypeGenWrappers::DefaultDestruct<GPUBaseAcceleratorI>)
-    , boundaryMaterial(nullptr, TypeGenWrappers::DefaultDestruct<GPUMaterialGroupI>)
-    , boundaryMatBatch(nullptr, TypeGenWrappers::DefaultDestruct<GPUMaterialBatchI>)
-    , emptyPrimitive(nullptr)
     , tracerGenerator(tracerGenerator)
     , tracerLogic(std::move(tracerPtr))
 {
@@ -104,14 +101,6 @@ TracerLogicGenerator::TracerLogicGenerator(GPUTracerGen tracerGenerator,
     baseAccelGenerators.emplace(GPUBaseAcceleratorLinear::TypeName(),
                                 GPUBaseAccelGen(DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorLinear>,
                                                 DefaultDestruct<GPUBaseAcceleratorI>));
-
-
-    // Inistantiate empty primitive since it is used by outside material
-    const std::string emptyTypeName = GPUPrimitiveEmpty::TypeName();
-    auto loc = primGroupGenerators.find(emptyTypeName);
-    GPUPrimGPtr ptr = loc->second();
-    emptyPrimitive = ptr.get();
-    primGroups.emplace(emptyTypeName, std::move(ptr));
 
     // Default Types are loaded
     // Other Types are strongly tied to base tracer logic
@@ -254,36 +243,37 @@ SceneError TracerLogicGenerator::GenerateBaseAccelerator(GPUBaseAcceleratorI*& b
     return SceneError::OK;
 }
 
-SceneError TracerLogicGenerator::GenerateBoundaryMaterial(GPUMaterialGroupI*& outMat,
-                                                          const std::string& materialType,
-                                                          const int gpuId)
-{
-    if(boundaryMaterial.get() == nullptr)
-    {
-        // Cannot Find Already Constructed Type
-        // Generate
-        auto loc = matGroupGenerators.find(materialType);
-        if(loc == matGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
-        boundaryMaterial = loc->second(gpuId);
-        outMat = boundaryMaterial.get();
-
-        // Additionally Generate a batch for it
-        auto batchLoc = matBatchGenerators.find(materialType);
-        if(batchLoc == matBatchGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
-
-        boundaryMatBatch = batchLoc->second(*outMat, *emptyPrimitive);
-        GPUMaterialBatchI* mb = boundaryMatBatch.get();
-
-        matBatchMap.emplace(BoundaryMatId, mb);
-    }
-    else outMat = boundaryMaterial.get();
-    return SceneError::OK;
-}
+//SceneError TracerLogicGenerator::GenerateBoundaryMaterial(GPUMaterialGroupI*& outMat,
+//                                                          const std::string& materialType,
+//                                                          const int gpuId)
+//{
+//    if(boundaryMaterial.get() == nullptr)
+//    {
+//        // Cannot Find Already Constructed Type
+//        // Generate
+//        auto loc = matGroupGenerators.find(materialType);
+//        if(loc == matGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
+//        boundaryMaterial = loc->second(gpuId);
+//        outMat = boundaryMaterial.get();
+//
+//        // Additionally Generate a batch for it
+//        auto batchLoc = matBatchGenerators.find(materialType);
+//        if(batchLoc == matBatchGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
+//
+//        boundaryMatBatch = batchLoc->second(*outMat, *emptyPrimitive);
+//        GPUMaterialBatchI* mb = boundaryMatBatch.get();
+//
+//        matBatchMap.emplace(BoundaryMatId, mb);
+//    }
+//    else outMat = boundaryMaterial.get();
+//    return SceneError::OK;
+//}
 
 SceneError TracerLogicGenerator::GenerateBaseLogic(TracerBaseLogicI*& bl,
                                                    const TracerParameters& opts,
                                                    const Vector2i maxMats,
-                                                   const Vector2i maxAccels)
+                                                   const Vector2i maxAccels,
+                                                   const HitKey baseBoundMatKey)
 {
     uint32_t hitStructSize = CalculateHitStruct();
 
@@ -300,7 +290,8 @@ SceneError TracerLogicGenerator::GenerateBaseLogic(TracerBaseLogicI*& bl,
                                       std::move(mg),
                                       std::move(mb),
                                       opts, hitStructSize,
-                                      maxMats, maxAccels);
+                                      maxMats, maxAccels,
+                                      baseBoundMatKey);
     bl = tracerLogic.get();
 
     return SceneError::OK;
@@ -362,16 +353,6 @@ void TracerLogicGenerator::ClearAll()
     matBatches.clear();
 
     baseAccelerator.reset(nullptr);
-
-    boundaryMaterial.reset(nullptr);
-    boundaryMatBatch.reset(nullptr);
-
-    // Inistantiate empty primitive since it is used by outside material
-    const std::string emptyTypeName = GPUPrimitiveEmpty::TypeName();
-    auto loc = primGroupGenerators.find(emptyTypeName);
-    GPUPrimGPtr ptr = loc->second();
-    emptyPrimitive = ptr.get();
-    primGroups.emplace(emptyTypeName, std::move(ptr));
 }
 
 SceneError TracerLogicGenerator::IncludeAcceleratorsFromDLL(const SharedLib&,

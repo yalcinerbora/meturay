@@ -63,6 +63,7 @@ class GPUMaterialBatchI
         virtual void                        ShadeRays(// Output
                                                       Vector4* dPixels,
                                                       //
+                                                      HitKey* dBoundMatOut,
                                                       RayGMem* dRayOut,
                                                       void* dRayAuxOut,
                                                       //  Input

@@ -22,6 +22,7 @@ which does send commands to GPU to do ray tracing
 
 struct TracerError;
 struct TracerOptions;
+struct CameraPerspective;
 
 class GPUScene;
 
@@ -44,7 +45,7 @@ class TracerI
         // COMMANDS TO TRACER //
         // ===================//
         // Main Calls
-        virtual TracerError         Initialize(int leaderGPUId = 0)  = 0;
+        virtual TracerError             Initialize(int leaderGPUId = 0)  = 0;
         virtual void                    SetOptions(const TracerOptions&) = 0;
         // Requests
         virtual void                    RequestBaseAccelerator() = 0;
@@ -56,6 +57,9 @@ class TracerI
         virtual void                    AttachLogic(TracerBaseLogicI&) = 0;
         virtual void                    GenerateInitialRays(const GPUScene& scene,
                                                             int cameraId,
+                                                            int samplePerLocation) = 0;
+        virtual void                    GenerateInitialRays(const GPUScene& scene,
+                                                            const CameraPerspective&,
                                                             int samplePerLocation) = 0;
         virtual bool                    Continue() = 0;         // Continue hit/bounce looping (consume ray pool)
         virtual void                    Render() = 0;           // Render rays  (do hit, then bounce)

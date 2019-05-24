@@ -136,6 +136,9 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
                 sizeof(Vector2ul) * SceneConstants::MaxPrimitivePerSurface);
 
     size_t workCount = accRanges[index][1] - accRanges[index][0];
+
+
+    // TODO: Select a GPU
     int gpuIndex = 0;
 
     // KC

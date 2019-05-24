@@ -13,6 +13,7 @@ template <class TLogic, class Surface, class MaterialData>
 using ShadeFunc = void(*)(// Output
                           Vector4* gImage,
                           //
+                          HitKey* gOutBoundKeys,
                           RayGMem* gOutRays,
                           TLogic::RayAuxData* gOutRayAux,
                           const uint32_t maxOutRay,
@@ -27,68 +28,69 @@ using ShadeFunc = void(*)(// Output
                           const HitKey::Type& matId);
 
 
-template <class TLogic, class MaterialData>
-using BoundaryShadeFunc = void(*)(// Output
-                                  Vector4* gImage,
-                                  // Input as registers
-                                  const RayReg& ray,
-                                  const TLogic::RayAuxData& aux,
-                                  //
-                                  RandomGPU& rng,
-                                  // Input as global memory
-                                  const MaterialData& gMatData);
+//template <class TLogic, class MaterialData>
+//using BoundaryShadeFunc = void(*)(// Output
+//                                  Vector4* gImage,
+//                                  // Input as registers
+//                                  const RayReg& ray,
+//                                  const TLogic::RayAuxData& aux,
+//                                  //
+//                                  RandomGPU& rng,
+//                                  // Input as global memory
+//                                  const MaterialData& gMatData);
 
 
-template <class TLogic, class MGroup>
-__global__ void KCBoundaryMatShade(// Output
-                                   Vector4* gImage,
-                                   // Input
-                                   const RayGMem* gInRays,
-                                   const TLogic::RayAuxData* gInRayAux,
-                                   //
-                                   const RayId* gRayIds,
-                                   //
-                                   const uint32_t rayCount,
-                                   RNGGMem gRNGStates,
-                                   // Material Related
-                                   const MGroup::MaterialData matData)
-{
-    // Fetch Types from Template Classes
-    using RayAuxData = typename TLogic::RayAuxData;         // Hit register defined by primitive
-
-    // Pre-grid stride loop
-    // RNG is allocated for each SM (not for each thread)
-    extern __shared__ uint32_t sRNGStates[];
-    RandomGPU rng(gRNGStates.state, sRNGStates);
-
-    // Grid Stride Loop
-    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-        globalId < rayCount; globalId += blockDim.x * gridDim.x)
-    {
-        const RayId rayId = gRayIds[globalId];
-
-        // Load Input to Registers
-        const RayReg ray(gInRays, rayId);
-        const RayAuxData aux = gInRayAux[rayId];
-
-        // Actual Shading
-        MGroup::ShadeFunc(// Output
-                          gImage,
-                          // Input as registers
-                          ray,
-                          aux,
-                          //
-                          rng,
-                          // Input as global memory
-                          matData);
-    }
-}
+//template <class TLogic, class MGroup>
+//__global__ void KCBoundaryMatShade(// Output
+//                                   Vector4* gImage,
+//                                   // Input
+//                                   const RayGMem* gInRays,
+//                                   const TLogic::RayAuxData* gInRayAux,
+//                                   //
+//                                   const RayId* gRayIds,
+//                                   //
+//                                   const uint32_t rayCount,
+//                                   RNGGMem gRNGStates,
+//                                   // Material Related
+//                                   const MGroup::MaterialData matData)
+//{
+//    // Fetch Types from Template Classes
+//    using RayAuxData = typename TLogic::RayAuxData;         // Hit register defined by primitive
+//
+//    // Pre-grid stride loop
+//    // RNG is allocated for each SM (not for each thread)
+//    extern __shared__ uint32_t sRNGStates[];
+//    RandomGPU rng(gRNGStates.state, sRNGStates);
+//
+//    // Grid Stride Loop
+//    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+//        globalId < rayCount; globalId += blockDim.x * gridDim.x)
+//    {
+//        const RayId rayId = gRayIds[globalId];
+//
+//        // Load Input to Registers
+//        const RayReg ray(gInRays, rayId);
+//        const RayAuxData aux = gInRayAux[rayId];
+//
+//        // Actual Shading
+//        MGroup::ShadeFunc(// Output
+//                          gImage,
+//                          // Input as registers
+//                          ray,
+//                          aux,
+//                          //
+//                          rng,
+//                          // Input as global memory
+//                          matData);
+//    }
+//}
 
 template <class TLogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfFunc>
 __global__ void KCMaterialShade(// Output
                                 Vector4f* gImage,
                                 //
+                                HitKey* gOutBoundKeys,
                                 RayGMem* gOutRays,
                                 TLogic::RayAuxData* gOutRayAux,
                                 const uint32_t maxOutRay,
@@ -138,10 +140,12 @@ __global__ void KCMaterialShade(// Output
         // Determine Output Location
         RayGMem* gLocalRayOut = gOutRays + globalId * maxOutRay;
         RayAuxData* gLocalAuxOut = gOutRayAux + globalId * maxOutRay;
+        HitKey* gLocalBoundKeyOut = gOutBoundKeys + globalId * maxOutRay;
         // Actual Shading
         MGroup::ShadeFunc(// Output
                           gImage,
                           //
+                          gLocalBoundKeyOut,
                           gLocalRayOut,
                           gLocalAuxOut,
                           maxOutRay,

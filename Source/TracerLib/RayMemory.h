@@ -74,7 +74,7 @@ class RayMemory
         void*                       dTempMemory;
         RayId*                      dIds0, *dIds1;
         HitKey*                     dKeys0, *dKeys1;
-        // Current pointers to t    he double buffer
+        // Current pointers to the double buffer
         // In hit portion of the code it holds accelerator ids etc.
         HitKey*                     dCurrentKeys;
         RayId*                      dCurrentIds;
@@ -84,11 +84,6 @@ class RayMemory
         // I dunno why
         size_t                      cubIfMemSize;
         size_t                      cubSortMemSize;
-
-        static void                 ResizeRayMemory(RayGMem*& dRays, void*& dRayAxData,
-                                                    DeviceMemory&,
-                                                    size_t rayCount,
-                                                    size_t perRayAuxSize);
 
     public:
         // Constructors & Destructor
@@ -133,7 +128,8 @@ class RayMemory
 
         // Memory Allocation
         void                        ResetHitMemory(uint32_t rayCount, size_t hitStructSize);
-        void                        ResizeRayOut(uint32_t rayCount, size_t perRayAuxSize);
+        void                        ResizeRayOut(uint32_t rayCount, size_t perRayAuxSize,
+                                                 HitKey baseBoundMatKey);
         void                        SwapRays();
 
         // Common Functions
@@ -144,7 +140,7 @@ class RayMemory
         // Partitions the segments for multi-kernel calls
         RayPartitions<uint32_t>     Partition(uint32_t rayCount);
         // Initialize HitIds and Indices
-        void                        FillRayIdsForSort(uint32_t rayCount);
+        void                        FillMatIdsForSort(uint32_t rayCount);
 };
 
 inline void RayMemory::SetLeaderDevice(int deviceId)
@@ -235,9 +231,4 @@ inline RayId* RayMemory::CurrentIds()
 inline const RayId* RayMemory::CurrentIds() const
 {
     return dCurrentIds;
-}
-
-inline void RayMemory::ResizeRayOut(uint32_t rayCount, size_t perRayAuxSize)
-{
-    ResizeRayMemory(dRayOut, dRayAuxOut, memOut, rayCount, perRayAuxSize);
 }

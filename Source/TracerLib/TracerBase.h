@@ -90,6 +90,9 @@ class TracerBase : public TracerI
         void                GenerateInitialRays(const GPUScene& scene,
                                                 int cameraId,
                                                 int samplePerLocation) override;
+        void                GenerateInitialRays(const GPUScene& scene,
+                                                const CameraPerspective&,
+                                                int samplePerLocation) override;
         bool                Continue() override;        // Continue hit/bounce looping (consume ray pool)
         void                Render() override;          // Render rays  (do hit, then bounce)
         void                FinishSamples() override;   // Finish samples (write to image)
