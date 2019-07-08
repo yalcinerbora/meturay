@@ -2,13 +2,14 @@
 
 #include "RayLib/SceneIO.h"
 #include "RayLib/Types.h"
+#include "RayLib/Log.h"
+#include "RayLib/SceneNodeI.h"
 
 #include "TracerLogicI.h"
 #include "GPUAcceleratorI.h"
 #include "GPUPrimitiveI.h"
 #include "GPUMaterialI.h"
 #include "TracerLogicGeneratorI.h"
-#include "SceneFileNode.h"
 #include "ScenePartitionerI.h"
 
 #include <nlohmann/json.hpp>
@@ -76,18 +77,38 @@ bool GPUScene::FindNode(nlohmann::json& jsn, const char* c)
     return found;
 };
 
-SceneError GPUScene::GenIdLookup(std::map<uint32_t, uint32_t>& result,
+SceneError GPUScene::GenIdLookup(IndexLookup& result,
                                  const nlohmann::json& array, IdBasedNodeType t)
 {
+    static constexpr uint32_t MAX_UINT32 = std::numeric_limits<uint32_t>::max();
+
     result.clear();
     uint32_t i = 0;
     for(const auto& jsn : array)
     {
-        auto r = result.emplace(jsn[SceneIO::ID], i);
-        if(!r.second)
+        const nlohmann::json& ids = jsn[SceneIO::ID];
+        if(!ids.is_array())
         {
-            unsigned int i = static_cast<int>(SceneError::DUPLICATE_MATERIAL_ID) + t;
-            return static_cast<SceneError::Type>(i);
+            auto r = result.emplace(jsn[SceneIO::ID], std::make_pair(i, MAX_UINT32));
+            if(!r.second)
+            {
+                unsigned int i = static_cast<int>(SceneError::DUPLICATE_MATERIAL_ID) + t;
+                return static_cast<SceneError::Type>(i);
+            }
+        }
+        else
+        {
+            uint32_t j = 0;
+            for(const auto& id : ids)
+            {
+                auto r = result.emplace(id, std::make_pair(i, j));
+                if(!r.second)
+                {
+                    unsigned int i = static_cast<int>(SceneError::DUPLICATE_MATERIAL_ID) + t;
+                    return static_cast<SceneError::Type>(i);
+                }
+            }
+            j++;
         }
         i++;
     }
@@ -108,37 +129,38 @@ SceneError GPUScene::GenerateConstructionData(// Striped Listings (Striped from 
     nlohmann::json primitives;
     nlohmann::json materials;
     nlohmann::json lights;
-    std::map<uint32_t, uint32_t> primList;
-    std::map<uint32_t, uint32_t> materialList;
+    IndexLookup primList;
+    IndexLookup materialList;
 
     // Lambdas for cleaner code
     auto AttachMatBatch = [&](const std::string& primType,
                               const std::string& matType,
-                              const uint32_t matId)
+                              const NodeId matId)
     {
         // Generate its mat batch also
         MatBatchData batchData = MatBatchData
         {
             primType,
             matType,
-            std::set<uint32_t>()
+            std::set<NodeId>()
         };
         const auto& matBatch = matBatchListings.emplace(primType + matType,
                                                         batchData).first;
         matBatch->second.matIds.emplace(matId);
     };
     auto AttachMatAll = [&] (const std::string& primType,
-                             const uint32_t matId)
+                             const NodeId matId)
     {
-        if(auto loc = materialList.find(matId);
-           loc != materialList.end())
+        if(auto loc = materialList.find(matId); loc != materialList.end())
         {
-            const auto jsnNode = materials[loc->second];
+            const NodeIndex nIndex = loc->second.first;
+            const InnerIndex iIndex = loc->second.second;
+
+            const auto jsnNode = materials[nIndex];
             const std::string matGroupType = jsnNode[SceneIO::TYPE];
             auto& matSet = matGroupNodes.emplace(matGroupType,
-                                                 std::set<SceneFileNode>()).first->second;
-            matSet.emplace(jsnNode, matId);
-
+                                                 std::set<SceneNodeI>()).first->second;
+            ....matSet.emplace(jsnNode, matId)->AddIndex(iIndex);           
             AttachMatBatch(primType, matGroupType, matId);
         }
         else return SceneError::MATERIAL_ID_NOT_FOUND;
@@ -175,17 +197,19 @@ SceneError GPUScene::GenerateConstructionData(// Striped Listings (Striped from 
 
             // Check if primitive exists
             // add it to primitive group list for later construction
-            if(auto loc = primList.find(primId);
-               loc != primList.end())
+            if(auto loc = primList.find(primId); loc != primList.end())
             {
-                const auto jsnNode = primitives[loc->second];
+                const NodeIndex nIndex = loc->second.first;
+                const InnerIndex iIndex = loc->second.second;
+
+                const auto jsnNode = primitives[nIndex];
                 std::string currentType = jsnNode[SceneIO::TYPE];
                 if((i != 0) && primGroupType != currentType)
                     return SceneError::PRIM_TYPE_NOT_CONSISTENT_ON_SURFACE;
                 else primGroupType = currentType;
-                auto& primSet = primGroupNodes.emplace(primGroupType,
-                                                       std::set<SceneFileNode>()).first->second;
-                primSet.emplace(jsnNode, primId);
+                ....auto& primSet = primGroupNodes.emplace(primGroupType,
+                                                       std::set<SceneNodeI>()).first->second;
+                primSet.emplace(jsnNode, primId, iIndex);
             }
             else return SceneError::PRIMITIVE_ID_NOT_FOUND;
 
@@ -199,7 +223,7 @@ SceneError GPUScene::GenerateConstructionData(// Striped Listings (Striped from 
         {
             acceleratorGroupType,
             primGroupType,
-            std::map<uint32_t, IdPairings>()
+            std::map<uint32_t, IdPairs>()
         };
         const auto& result = requiredAccelListings.emplace(acceleratorGroupType, accGData).first;
         result->second.matPrimIdPairs.emplace(surfId, surf.matPrimPairs);
@@ -337,7 +361,7 @@ SceneError GPUScene::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABBs,
         const uint32_t accelId = accelBatch;
         const std::string& accelGroupName = accelGroupBatch.second.accelType;
         const auto& primTName = accelGroupBatch.second.primType;
-        const auto& pairings = accelGroupBatch.second.matPrimIdPairs;
+        const auto& pairsList = accelGroupBatch.second.matPrimIdPairs;
 
         // Fetch Primitive
         GPUPrimitiveGroupI* pGroup = nullptr;
@@ -348,7 +372,7 @@ SceneError GPUScene::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABBs,
         GPUAcceleratorGroupI* aGroup = nullptr;
         if((e = logicGenerator.GenerateAcceleratorGroup(aGroup, *pGroup, dTransforms, accelGroupName)) != SceneError::OK)
             return e;
-        if((e = aGroup->InitializeGroup(matHitKeyList, pairings, time)) != SceneError::OK)
+        if((e = aGroup->InitializeGroup(matHitKeyList, pairsList, time)) != SceneError::OK)
             return e;
 
         // Batch Generation
@@ -376,10 +400,10 @@ SceneError GPUScene::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABBs,
         // Find AABBs of these surfaces
         // For base Accelerator generation
         std::map<uint32_t, AABB3> aabbs;
-        for(const auto& pairs : pairings)
+        for(const auto& pairs : pairsList)
         {
             AABB3 combinedAABB = ZeroAABB3;
-            const IdPairings& pList = pairs.second;
+            const IdPairs& pList = pairs.second;
             // Merge aabbs of the surfaces
             for(const auto& p : pList)
             {
@@ -635,8 +659,9 @@ SceneError GPUScene::LoadScene(double time)
     {
         return e;
     }
-    catch(std::exception const&)
+    catch(nlohmann::json::parse_error const& e)
     {
+        METU_ERROR_LOG("Error: %s", e.what());
         return SceneError::JSON_FILE_PARSE_ERROR;
     }
     return e;

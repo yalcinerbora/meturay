@@ -68,6 +68,9 @@ struct SceneError : public ErrorI
             // Internal Errors
             INTERNAL_DUPLICATE_MAT_ID,
             INTERNAL_DUPLICATE_ACCEL_ID,
+            //
+            PRIMITIVE_TYPE_INTERNAL_ERROR,
+            MATERIAL_TYPE_INTERNAL_ERROR,
             // End
             END
         };
@@ -87,11 +90,17 @@ struct SceneError : public ErrorI
 class SceneException : public std::runtime_error
 {
     private:
-        SceneError e;
+        SceneError          e;
+        const char const*   err;
+
     protected:
     public:
         SceneException(SceneError::Type t)
             : std::runtime_error("")
+            , e(t)
+        {}
+        SceneException(SceneError::Type t, const char const* err)
+            : std::runtime_error(err)
             , e(t)
         {}
         operator SceneError() const { return e; };

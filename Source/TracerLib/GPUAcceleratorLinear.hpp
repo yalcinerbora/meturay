@@ -27,7 +27,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Map of hit keys for all
                                                       // List of surface/material
                                                       // pairings that uses this accelerator type
                                                       // and primitive type
-                                                      const std::map<uint32_t, IdPairings>& pairingList,
+                                                      const std::map<uint32_t, IdPairs>& pairingList,
                                                       double time)
 {
     accRanges.clear();
@@ -50,7 +50,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Map of hit keys for all
         Vector2ul range = Vector2ul(totalSize, 0);
 
         size_t localSize = 0;
-        const IdPairings& pList = pairings.second;
+        const IdPairs& pList = pairings.second;
         for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
         {
             const auto& p = pList[i];
@@ -94,7 +94,7 @@ SceneError GPUAccLinearGroup<PGroup>::ChangeTime(// Map of hit keys for all mate
                                                  // List of surface/material
                                                  // pairings that uses this accelerator type
                                                  // and primitive type
-                                                 const std::map<uint32_t, IdPairings>& pairingList,
+                                                 const std::map<uint32_t, IdPairs>& pairingList,
                                                  double time)
 {
     // TODO:

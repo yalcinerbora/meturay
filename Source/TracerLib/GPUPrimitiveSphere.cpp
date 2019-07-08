@@ -3,8 +3,7 @@
 #include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/SurfaceDataIO.h"
 #include "RayLib/SceneError.h"
-
-#include "TracerLib/SceneFileNode.h"
+#include "RayLib/SceneNodeI.h"
 
 // Generics
 GPUPrimitiveSphere::GPUPrimitiveSphere()
@@ -16,12 +15,12 @@ const char* GPUPrimitiveSphere::Type() const
     return TypeName();
 }
 
-SceneError GPUPrimitiveSphere::InitializeGroup(const std::set<SceneFileNode>& surfaceDatalNodes,
+SceneError GPUPrimitiveSphere::InitializeGroup(const std::set<SceneNodeI>& surfaceDatalNodes,
                                                double time)
 {
     // Generate Loaders
     std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
-    for(const SceneFileNode& s : surfaceDatalNodes)
+    for(const SceneNodeI& s : surfaceDatalNodes)
     {
         loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s, time)));
     }
@@ -44,11 +43,11 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const std::set<SceneFileNode>& su
     size_t offset = 0;
     for(const auto& loader : loaders)
     {
-        if(e != loader->LoadPrimitiveData(postitionsCPU.data() + offset,
-                                          PrimitiveDataTypeToString(PrimitiveDataType::POSITION)))
+        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data() + offset), 
+                                         PrimitiveDataType::POSITION))
             return e;
-        if(e != loader->LoadPrimitiveData(radiusCPU.data() + offset,
-                                          PrimitiveDataTypeToString(PrimitiveDataType::RADIUS)))
+        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(radiusCPU.data() + offset), 
+                                         PrimitiveDataType::RADIUS))
             return e;
         offset += loader->PrimitiveCount();
     }
@@ -75,11 +74,11 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const std::set<SceneFileNode>& su
     return e;
 }
 
-SceneError GPUPrimitiveSphere::ChangeTime(const std::set<SceneFileNode>& surfaceDatalNodes, double time)
+SceneError GPUPrimitiveSphere::ChangeTime(const std::set<SceneNodeI>& surfaceDatalNodes, double time)
 {
     // Generate Loaders
     std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
-    for(const SceneFileNode& s : surfaceDatalNodes)
+    for(const SceneNodeI& s : surfaceDatalNodes)
     {
         loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s, time)));
     }
@@ -95,11 +94,11 @@ SceneError GPUPrimitiveSphere::ChangeTime(const std::set<SceneFileNode>& surface
         postitionsCPU.resize(primitiveCount * 3);
         radiusCPU.resize(primitiveCount);
 
-        if(e != loader->LoadPrimitiveData(postitionsCPU.data(),
-                                          PrimitiveDataTypeToString(PrimitiveDataType::POSITION)))
+        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data()),
+                                         PrimitiveDataType::POSITION))
             return e;
-        if(e != loader->LoadPrimitiveData(radiusCPU.data(),
-                                          PrimitiveDataTypeToString(PrimitiveDataType::RADIUS)))
+        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(radiusCPU.data()),
+                                         PrimitiveDataType::RADIUS))
             return e;
 
         // Copy

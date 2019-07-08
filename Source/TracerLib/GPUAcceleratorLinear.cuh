@@ -83,7 +83,7 @@ class GPUAccLinearGroup final
                                                         // List of surface/material
                                                         // pairings that uses this accelerator type
                                                         // and primitive type
-                                                        const std::map<uint32_t, IdPairings>& pairingList,
+                                                        const std::map<uint32_t, IdPairs>& parList,
                                                         double time) override;
         SceneError                      ChangeTime(// Map of hit keys for all materials
                                                    // w.r.t matId and primitive type
@@ -91,7 +91,7 @@ class GPUAccLinearGroup final
                                                    // List of surface/material
                                                    // pairings that uses this accelerator type
                                                    // and primitive type
-                                                   const std::map<uint32_t, IdPairings>& pairingList,
+                                                   const std::map<uint32_t, IdPairs>& parList,
                                                    double time) override;
 
         // Surface Queries

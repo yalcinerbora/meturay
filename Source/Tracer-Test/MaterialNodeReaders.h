@@ -4,13 +4,12 @@
 
 struct ConstantAlbedoMatData;
 struct ConstantBoundaryMatData;
-struct SceneFileNode;
-
+class SceneNodeI;
 class DeviceMemory;
 
 extern ConstantAlbedoMatData ConstantAlbedoMatRead(DeviceMemory&,
-                                                   const std::set<SceneFileNode>& materialNodes,
+                                                   const std::set<SceneNodeI>& materialNodes,
                                                    double);
 
-extern ConstantBoundaryMatData ConstantBoundaryMatRead(const std::set<SceneFileNode>& materialNodes,
+extern ConstantBoundaryMatData ConstantBoundaryMatRead(const std::set<SceneNodeI>& materialNodes,
                                                        double);

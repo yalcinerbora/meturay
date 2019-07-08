@@ -115,8 +115,8 @@ class GPUPrimitiveSphere final
         // Pirmitive type is used for delegating scene info to this class
         const char*                             Type() const override;
         // Allocates and Generates Data
-        SceneError                              InitializeGroup(const std::set<SceneFileNode>& surfaceDatalNodes, double time) override;
-        SceneError                              ChangeTime(const std::set<SceneFileNode>& surfaceDatalNodes, double time) override;
+        SceneError                              InitializeGroup(const std::set<SceneNodeI>& surfaceDatalNodes, double time) override;
+        SceneError                              ChangeTime(const std::set<SceneNodeI>& surfaceDatalNodes, double time) override;
 
         // Access primitive range from Id
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;

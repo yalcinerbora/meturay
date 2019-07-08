@@ -26,7 +26,7 @@ since this API is being developed for customization this is mandatory.
 #include "RayLib/AABB.h"
 
 struct SceneError;
-struct SceneFileNode;
+class SceneNodeI;
 
 class GPUPrimitiveGroupI
 {
@@ -37,8 +37,8 @@ class GPUPrimitiveGroupI
         // Type (as string) of the primitive group
         virtual const char*         Type() const = 0;
         // Allocates and Generates Data
-        virtual SceneError          InitializeGroup(const std::set<SceneFileNode>& surfaceDatalNodes, double time) = 0;
-        virtual SceneError          ChangeTime(const std::set<SceneFileNode>& surfaceDatalNodes, double time) = 0;
+        virtual SceneError          InitializeGroup(const std::set<SceneNodeI>& surfaceDatalNodes, double time) = 0;
+        virtual SceneError          ChangeTime(const std::set<SceneNodeI>& surfaceDatalNodes, double time) = 0;
 
         // Access primitive range from Id     
         virtual Vector2ul           PrimitiveBatchRange(uint32_t surfaceDataId) const = 0;

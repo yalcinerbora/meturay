@@ -1,5 +1,4 @@
 #include "GPUPrimitiveTriangle.h"
-#include "SceneFileNode.h"
 
 #include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/SurfaceDataIO.h"
@@ -16,14 +15,13 @@ const char* GPUPrimitiveTriangle::Type() const
     return TypeName();
 }
 
-SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& surfaceDataNodes,
+SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneNodeI>& surfaceDataNodes,
                                                  double time)
 {
     // Generate Loaders
     std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
-    for(const SceneFileNode& s : surfaceDataNodes)
+    for(const SceneNodeI& s : surfaceDataNodes)
     {
-        //const nlohmann::json& node = static_cast<const nlohmann::json&>(s);
         loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s, time)));
     }
 
@@ -47,14 +45,11 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& 
     size_t offset = 0;
     for(const auto& loader : loaders)
     {
-        if(e != loader->LoadPrimitiveData(postitionsCPU.data() + offset,
-                                            PrimitiveDataTypeToString(PrimitiveDataType::POSITION)))
+        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data() + offset), PrimitiveDataType::POSITION))
             return e;
-        if(e != loader->LoadPrimitiveData(normalsCPU.data() + offset,
-                                            PrimitiveDataTypeToString(PrimitiveDataType::NORMAL)))
+        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(normalsCPU.data() + offset), PrimitiveDataType::NORMAL))
             return e;
-        if(e != loader->LoadPrimitiveData(uvsCPU.data() + offset,
-                                            PrimitiveDataTypeToString(PrimitiveDataType::UV)))
+        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(uvsCPU.data() + offset), PrimitiveDataType::UV))
             return e;
 
         offset += loader->PrimitiveCount();
@@ -92,11 +87,11 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneFileNode>& 
     return e;
 }
 
-SceneError GPUPrimitiveTriangle::ChangeTime(const std::set<SceneFileNode>& surfaceDatalNodes, double time)
+SceneError GPUPrimitiveTriangle::ChangeTime(const std::set<SceneNodeI>& surfaceDatalNodes, double time)
 {
     // Generate Loaders
     std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
-    for(const SceneFileNode& s : surfaceDatalNodes)
+    for(const SceneNodeI& s : surfaceDatalNodes)
     {
         loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s, time)));
     }
@@ -116,14 +111,12 @@ SceneError GPUPrimitiveTriangle::ChangeTime(const std::set<SceneFileNode>& surfa
         normalsCPU.resize(primitiveCount * 2);
         uvsCPU.resize(primitiveCount * 2);
 
-        if(e != loader->LoadPrimitiveData(postitionsCPU.data(),
-                                          PrimitiveDataTypeToString(PrimitiveDataType::POSITION)))
+        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data()), 
+                                         PrimitiveDataType::POSITION))
             return e;
-        if(e != loader->LoadPrimitiveData(normalsCPU.data(),
-                                          PrimitiveDataTypeToString(PrimitiveDataType::NORMAL)))
+        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(normalsCPU.data()), PrimitiveDataType::NORMAL))
             return e;
-        if(e != loader->LoadPrimitiveData(uvsCPU.data(),
-                                          PrimitiveDataTypeToString(PrimitiveDataType::UV)))
+        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(uvsCPU.data()), PrimitiveDataType::UV))
             return e;
 
         // Copy

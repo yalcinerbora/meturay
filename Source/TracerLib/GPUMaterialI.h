@@ -12,9 +12,9 @@
 #include "RayLib/Vector.h"
 
 struct RayGMem;
-struct SceneFileNode;
 struct SceneError;
 
+class SceneNodeI;
 class RNGMemory;
 class GPUPrimitiveGroupI;
 
@@ -31,8 +31,8 @@ class GPUMaterialGroupI
         // Type (as string) of the primitive group
         virtual const char*                 Type() const = 0;
         // Allocates and Generates Data
-        virtual SceneError                  InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time) = 0;
-        virtual SceneError                  ChangeTime(const std::set<SceneFileNode>& materialNodes, double time) = 0;
+        virtual SceneError                  InitializeGroup(const std::set<SceneNodeI>& materialNodes, double time) = 0;
+        virtual SceneError                  ChangeTime(const std::set<SceneNodeI>& materialNodes, double time) = 0;
 
         // Material Queries
         virtual int                         InnerId(uint32_t materialId) const = 0;

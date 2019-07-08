@@ -12,9 +12,13 @@
 #include "ScenePartitionerI.h"
 
 struct SceneError;
-struct SceneFileNode;
+class SceneNodeI;
 class ScenePartitionerI;
 class TracerLogicGeneratorI;
+
+using NodeIndex = uint32_t;
+
+using IndexLookup = std::map<NodeId, std::pair<NodeIndex, InnerIndex>>;
 
 using PrimitiveNodeList = std::map<std::string, NodeListing>;
 using AcceleratorBatchList = std::map<std::string, AccelGroupData>;
@@ -62,7 +66,7 @@ class GPUScene
         // Helper Logic
         SceneError                              OpenFile(const std::string& fileName);
         bool                                    FindNode(nlohmann::json& node, const char* name);
-        static SceneError                       GenIdLookup(std::map<uint32_t, uint32_t>&,
+        static SceneError                       GenIdLookup(IndexLookup&,
                                                             const nlohmann::json& array,
                                                             IdBasedNodeType);
 

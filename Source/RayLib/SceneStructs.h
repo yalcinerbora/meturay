@@ -11,27 +11,32 @@
 #include "Types.h"
 #include "HitStructs.h"
 
-using MaterialId = uint32_t;
-using SurfaceId = uint32_t;
-using SurfaceDataId = uint32_t;
+using NodeId = uint32_t;        // Node Id is generic name of the id logic
+using MaterialId = uint32_t;    // Material Id represent material of some kind 
+using SurfaceDataId = uint32_t; // Surface Id represent up to "MaxPrimitivePerSurface"
+                                // material-primitive pairings of some kind
+
+using InnerIndex = uint32_t;    // Inner Index is sub index of the node
+                                // Each node can define multiple ids
+
+//using IdTriplet = std::tuple<uint32_t, uint32_t, uint32_t>;
 
 using TypeIdPair = std::pair<std::string, uint32_t>;
-using IdPairing = std::pair<uint32_t, uint32_t>;
-using IdTriplet = std::tuple<uint32_t, uint32_t, uint32_t>;
-using IdPairings = std::array<IdPairing, SceneConstants::MaxPrimitivePerSurface>;
+using IdPair = std::pair<uint32_t, uint32_t>;
+using IdPairs = std::array<IdPair, SceneConstants::MaxPrimitivePerSurface>;
 
 struct AccelGroupData
 {
     std::string                     accelType;
     std::string                     primType;
-    std::map<uint32_t, IdPairings>  matPrimIdPairs;
+    std::map<uint32_t, IdPairs>     matPrimIdPairs;
 };
 
 struct MatBatchData
 {
-    std::string         primType;
-    std::string         matType;
-    std::set<uint32_t>  matIds;
+    std::string             primType;
+    std::string             matType;
+    std::set<MaterialId>    matIds;
 };
 
 // Overall all material key listings of the scene
@@ -61,6 +66,6 @@ struct SurfaceStruct
 {
     std::string     acceleratorType;
     uint32_t        transformId;
-    IdPairings      matPrimPairs;
+    IdPairs         matPrimPairs;
     int8_t          pairCount;
 };

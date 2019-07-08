@@ -47,7 +47,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ReduceFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\RNGMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\RNGStructs.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\SceneFileNode.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\ScenePartitioner.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\ScenePartitionerI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\Texture.cuh" />
@@ -71,7 +70,6 @@
     <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\ImageMemory.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\RNGMemory.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\SceneFileNode.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\ScenePartitioner.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerLoader.cpp" />

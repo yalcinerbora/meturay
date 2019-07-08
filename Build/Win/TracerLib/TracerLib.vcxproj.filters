@@ -73,9 +73,6 @@
     <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\SceneFileNode.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\ScenePartitioner.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
@@ -213,9 +210,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\SceneFileNode.h">
       <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\ScenePartitionerI.h">

@@ -5,12 +5,11 @@
 #include <set>
 #include <string>
 
-struct SceneError;
-struct SceneFileNode;
-struct MatBatchData;
 class CudaGPU;
+struct SceneError;
+struct MatBatchData;
 
-using NodeListing = std::set<SceneFileNode>;
+using NodeListing = std::set<SceneNodeI..>;
 
 using MaterialNodeList = std::map<std::string, NodeListing>;
 using MaterialBatchList = std::map<std::string, MatBatchData>;

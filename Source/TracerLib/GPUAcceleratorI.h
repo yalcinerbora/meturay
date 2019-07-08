@@ -18,7 +18,6 @@ Base Interface for GPU accelerators
 
 struct RayGMem;
 struct SceneError;
-struct SceneFileNode;
 
 class GPUPrimitiveGroupI;
 class GPUMaterialGroupI;
@@ -43,7 +42,7 @@ class GPUAcceleratorGroupI
                                                 // List of surface/material
                                                 // pairings that uses this accelerator type
                                                 // and primitive type
-                                                const std::map<uint32_t, IdPairings>& pairingList,
+                                                const std::map<uint32_t, IdPairs>& pairingList,
                                                 double time) = 0;
         virtual SceneError      ChangeTime(// Map of hit keys for all materials
                                            // w.r.t matId and primitive type
@@ -51,7 +50,7 @@ class GPUAcceleratorGroupI
                                            // List of surface/material
                                            // pairings that uses this accelerator type
                                            // and primitive type
-                                           const std::map<uint32_t, IdPairings>& pairingList,
+                                           const std::map<uint32_t, IdPairs>& pairingList,
                                            double time) = 0;
 
         // Surface Queries

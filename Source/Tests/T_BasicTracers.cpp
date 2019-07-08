@@ -22,6 +22,16 @@ TEST(SimpleTracerTests, HelloSphere)
     setup.Body();
 }
 
+TEST(SimpleTracerTests, HelloBox)
+{
+    EnableVTMode();
+
+    SimpleTracerSetup setup("TestScenes/helloBox.json",
+                            0.0);
+    ASSERT_TRUE(setup.Init());
+    setup.Body();
+}
+
 //TEST(SimpleTracerTests, CornellBox)
 //{
 //    EnableVTMode();

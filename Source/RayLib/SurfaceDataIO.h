@@ -6,9 +6,13 @@
 
 #include "RayLib/Vector.h"
 #include "RayLib/AABB.h"
+#include "RayLib/Types.h"
 
 struct SceneError;
-struct SceneFileNode;
+class SceneNodeI;
+
+enum class PrimitiveDataLayout : uint32_t;
+enum class PrimitiveDataType;
 
 constexpr const char* NodeSphereName = "nodeSphere";
 constexpr const char* NodeTriangleName = "nodeTriangle";
@@ -16,29 +20,21 @@ constexpr const char* NodeTriangleName = "nodeTriangle";
 class SurfaceDataLoaderI
 {
     public:
-        virtual                             ~SurfaceDataLoaderI() = default;
+        virtual                         ~SurfaceDataLoaderI() = default;
 
-        // Size Determination
-        virtual size_t                      PrimitiveCount() const = 0;
-        virtual size_t                      PrimitiveDataSize(const std::string& primitiveDataType) const = 0;
-        virtual AABB3                       PrimitiveAABB() const = 0;
-
-        // Load Functionality
-        virtual const char*                 SufaceDataFileExt() const = 0;
-        virtual const uint32_t              SurfaceDataId() const = 0;
-
-        //
-        virtual SceneError                  LoadPrimitiveData(float*,
-                                                              const std::string& primitiveDataType) = 0;
-        virtual SceneError                  LoadPrimitiveData(int*,
-                                                              const std::string& primitiveDataType) = 0;
-        virtual SceneError                  LoadPrimitiveData(unsigned int*,
-                                                              const std::string& primitiveDataType) = 0;
+        // Type Determination
+        virtual const char*             SufaceDataFileExt() const = 0;
+        virtual SceneError              PrimDataLayout(PrimitiveDataLayout*,
+                                                       PrimitiveDataType primitiveDataType) const = 0;
+        virtual SceneError              DataOffsets(size_t*, PrimitiveDataType primitiveDataType) const = 0;
+        virtual SceneError              PrimitiveCount(size_t*) const = 0;
+        virtual SceneError              AABB(AABB3*) const = 0;        
+        virtual SceneError              GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const = 0;
 };
 
 namespace SurfaceDataIO
 {
-    std::unique_ptr<SurfaceDataLoaderI>     GenSurfaceDataLoader(const nlohmann::json& properties,
+    std::unique_ptr<SurfaceDataLoaderI>     GenSurfaceDataLoader(const SceneNodeI& properties,
                                                                  double time);
 }
 
