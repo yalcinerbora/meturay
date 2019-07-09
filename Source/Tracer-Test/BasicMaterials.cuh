@@ -65,8 +65,8 @@ class BasicMat final
         // Type (as string) of the primitive group
         const char*     Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError      InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time) override;
-        SceneError      ChangeTime(const std::set<SceneFileNode>& materialNodes, double time) override;
+        SceneError      InitializeGroup(const NodeListing& materialNodes, double time) override;
+        SceneError      ChangeTime(const NodeListing& materialNodes, double time) override;
 
         // Material Queries
         int            InnerId(uint32_t materialId) const override;
@@ -101,8 +101,8 @@ class BarycentricMat final
         // Type (as string) of the primitive group
         const char*     Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError      InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time) override;
-        SceneError      ChangeTime(const std::set<SceneFileNode>& materialNodes, double time) override;
+        SceneError      InitializeGroup(const NodeListing& materialNodes, double time) override;
+        SceneError      ChangeTime(const NodeListing& materialNodes, double time) override;
 
         // Material Queries
         int             InnerId(uint32_t materialId) const override;
@@ -137,8 +137,8 @@ class SphericalMat final
         // Type (as string) of the primitive group
         const char*     Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError      InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time) override;
-        SceneError      ChangeTime(const std::set<SceneFileNode>& materialNodes, double time) override;
+        SceneError      InitializeGroup(const NodeListing& materialNodes, double time) override;
+        SceneError      ChangeTime(const NodeListing& materialNodes, double time) override;
 
         // Material Queries
         int             InnerId(uint32_t materialId) const override;

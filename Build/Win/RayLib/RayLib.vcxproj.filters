@@ -162,6 +162,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\SceneNodeI.h">
       <Filter>FileI-O</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\GPUSceneI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

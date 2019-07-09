@@ -5,6 +5,7 @@
 
 #include "RayLib/Camera.h"
 #include "RayLib/SceneStructs.h"
+#include "RayLib/GPUSceneI.h"
 
 #include "DeviceMemory.h"
 #include "AcceleratorDeviceFunctions.h"
@@ -16,14 +17,13 @@ class SceneNodeI;
 class ScenePartitionerI;
 class TracerLogicGeneratorI;
 
-using NodeIndex = uint32_t;
 
 using IndexLookup = std::map<NodeId, std::pair<NodeIndex, InnerIndex>>;
 
 using PrimitiveNodeList = std::map<std::string, NodeListing>;
 using AcceleratorBatchList = std::map<std::string, AccelGroupData>;
 
-class GPUScene
+class GPUSceneJson : public GPUSceneI
 {
     public:
         enum IdBasedNodeType
@@ -52,9 +52,8 @@ class GPUScene
         // CPU Memory
         std::vector<CameraPerspective>          cameraMemory;
 
-
         // File Related
-        nlohmann::json*                         sceneJson;
+        std::unique_ptr<nlohmann::json>         sceneJson;
         std::string                             fileName;
         double                                  currentTime;
 
@@ -108,27 +107,27 @@ class GPUScene
 
     public:
         // Constructors & Destructor
-                                    GPUScene(const std::string&,
-                                             ScenePartitionerI& partitioner,
-                                             TracerLogicGeneratorI&);
-                                    GPUScene(const GPUScene&) = delete;
-                                    GPUScene(GPUScene&&) noexcept;
-        GPUScene&                   operator=(const GPUScene&) = delete;
-                                    ~GPUScene();
+                                    GPUSceneJson(const std::string&,
+                                                 ScenePartitionerI&,
+                                                 TracerLogicGeneratorI&);
+                                    GPUSceneJson(const GPUSceneJson&) = delete;
+                                    GPUSceneJson(GPUSceneJson&&) = default;
+        GPUSceneJson&               operator=(const GPUSceneJson&) = delete;
+                                    ~GPUSceneJson() = default;
 
         // Members
-        size_t                      UsedGPUMemory();
-        size_t                      UsedCPUMemory();
+        size_t                      UsedGPUMemory() override;
+        size_t                      UsedCPUMemory() override;
         //
-        SceneError                  LoadScene(double);
-        SceneError                  ChangeTime(double);
+        SceneError                  LoadScene(double) override;
+        SceneError                  ChangeTime(double) override;
         //
-        Vector2i                    MaxMatIds();
-        Vector2i                    MaxAccelIds();
-        HitKey                      BaseBoundaryMaterial();
+        Vector2i                    MaxMatIds() override;
+        Vector2i                    MaxAccelIds() override;
+        HitKey                      BaseBoundaryMaterial() override;
         // Access GPU
-        const LightStruct*          LightsGPU() const;
-        const TransformStruct*      TransformsGPU() const;
+        const LightStruct*          LightsGPU() const override;
+        const TransformStruct*      TransformsGPU() const  override;
         // Access CPU
-        const CameraPerspective*    CamerasCPU() const;
+        const CameraPerspective*    CamerasCPU() const override;
 };

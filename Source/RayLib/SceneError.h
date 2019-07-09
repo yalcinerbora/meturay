@@ -91,7 +91,6 @@ class SceneException : public std::runtime_error
 {
     private:
         SceneError          e;
-        const char const*   err;
 
     protected:
     public:
@@ -99,7 +98,7 @@ class SceneException : public std::runtime_error
             : std::runtime_error("")
             , e(t)
         {}
-        SceneException(SceneError::Type t, const char const* err)
+        SceneException(SceneError::Type t, const char* const err)
             : std::runtime_error(err)
             , e(t)
         {}
@@ -163,16 +162,19 @@ inline SceneError::operator std::string() const
         "Updating primitive has more nodes than older itself.",
         // Too many types than key system can handle
         "Accelerator groups required for this scene exceeds limit.",
-        "Accelerator groups required for this scene exceeds limit.",
-        "Accelerator groups required for this scene exceeds limit.",
-        "Accelerator groups required for this scene exceeds limit.",
+        "Accelerators in a group required for this scene exceeds limit.",
+        "Material groups required for this scene exceeds limit.",
+        "Materials in a batch required for this scene exceeds limit.",
         // Misc
         "Too many data/material pairs per surface node.",
         "Prim/Material pairs on surface node does not have same size.",
         "Primitive types are not consistent in a surface.",
         // Internal Errors
         "Internal Error, Duplicate material id",
-        "Internal Error, Duplicate accelerator id"
+        "Internal Error, Duplicate accelerator id",
+        //
+        "Internal Error on the Primitive Type",
+        "Internal Error on the Material Type"
     };
     static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(SceneError::END),
                   "Enum and enum string list size mismatch.");

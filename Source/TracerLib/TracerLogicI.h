@@ -29,7 +29,7 @@ class RNGMemory;
 struct TracerError;
 struct CameraPerspective;
 
-class GPUScene;
+class GPUSceneI;
 class GPUBaseAcceleratorI;
 class GPUAcceleratorBatchI;
 class GPUMaterialBatchI;
@@ -44,7 +44,7 @@ class TracerBaseLogicI
 
         // Generate Rays
         virtual uint32_t        GenerateRays(RayMemory&, RNGMemory&,
-                                             const GPUScene&,
+                                             const GPUSceneI&,
                                              const CameraPerspective&,
                                              int samplePerLocation,
                                              Vector2i resolution,

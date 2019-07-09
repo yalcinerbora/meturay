@@ -76,6 +76,9 @@
     <ClCompile Include="..\..\..\Source\TracerLib\ScenePartitioner.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\SceneNodeJson.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -219,6 +222,12 @@
       <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\TypeTraits.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\SceneNodeJson.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\NodeListing.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

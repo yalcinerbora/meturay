@@ -16,6 +16,8 @@ using MaterialId = uint32_t;    // Material Id represent material of some kind
 using SurfaceDataId = uint32_t; // Surface Id represent up to "MaxPrimitivePerSurface"
                                 // material-primitive pairings of some kind
 
+using NodeIndex = uint32_t;     // Node index is the index of the node that is on the list
+                                // This is unique only for each type. (Materials, Primitives etc.)
 using InnerIndex = uint32_t;    // Inner Index is sub index of the node
                                 // Each node can define multiple ids
 

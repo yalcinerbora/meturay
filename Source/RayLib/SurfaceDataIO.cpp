@@ -7,26 +7,6 @@
 
 #include <numeric>
 
-class SurfaceDataLoader : public SurfaceDataLoaderI
-{
-    private:
-    protected:
-        const SceneNodeI&           node;
-        double                      time;
-
-        // Constructor & Destructor
-                                    SurfaceDataLoader(const SceneNodeI& node,
-                                                      double time = 0.0);
-
-    public:
-                                    ~SurfaceDataLoader() = default;
-};
-
-SurfaceDataLoader::SurfaceDataLoader(const SceneNodeI& node, double time)
-    : node(node)
-    , time(time)
-{}
-
 class InNodeTriLoader : public SurfaceDataLoader
 {
     private:
@@ -46,9 +26,12 @@ class InNodeTriLoader : public SurfaceDataLoader
      SceneError             GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const override;
 };
 
-InNodeTriLoader::InNodeTriLoader(const SceneNodeI&, double time)
+InNodeTriLoader::InNodeTriLoader(const SceneNodeI& node, double time)
     : SurfaceDataLoader(node, time)
-{}
+{
+    if(node.IdCount() != 0) throw SceneException(SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR,
+                                                 "InNodeTriangle cannot have multi id node.");
+}
 
 const char* InNodeTriLoader::SufaceDataFileExt() const
 {
@@ -57,26 +40,28 @@ const char* InNodeTriLoader::SufaceDataFileExt() const
 
 SceneError InNodeTriLoader::PrimDataLayout(PrimitiveDataLayout* result, PrimitiveDataType primitiveDataType) const
 {
-    for(size_t i = 0; i < node.InnerIndexCount(); i++)
-    {
-        if(primitiveDataType == PrimitiveDataType::POSITION ||
-           primitiveDataType == PrimitiveDataType::NORMAL)
-            result[i] = PrimitiveDataLayout::FLOAT_3;
-        else if(primitiveDataType == PrimitiveDataType::UV)
-            result[i] = PrimitiveDataLayout::FLOAT_1;
-        else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
-    }
+    if(primitiveDataType == PrimitiveDataType::POSITION ||
+        primitiveDataType == PrimitiveDataType::NORMAL)
+        result[0] = PrimitiveDataLayout::FLOAT_3;
+    else if(primitiveDataType == PrimitiveDataType::UV)
+        result[0] = PrimitiveDataLayout::FLOAT_1;
+    else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
 }
 
 SceneError InNodeTriLoader::DataOffsets(size_t* result, PrimitiveDataType primitiveDataType) const
 {
-    std::iota(result, result + node.InnerIndexCount(), 0);
+    result[0] = 0;
     return SceneError::OK;
 }
 
 SceneError InNodeTriLoader::PrimitiveCount(size_t* result) const
 {
-    std::fill_n(result, node.InnerIndexCount(), 1);
+    int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
+    const std::string positionName = PrimitiveDataTypeNames[posIndex];
+
+    size_t count = node.AccessCount(positionName);
+    if(count % 3 != 0) return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
+    result[0] = count;
     return SceneError::OK;
 }
 
@@ -86,14 +71,16 @@ SceneError InNodeTriLoader::AABB(AABB3* result) const
     const std::string positionName = PrimitiveDataTypeNames[posIndex];
     std::vector<Vector3> positions = node.AccessVector3List(positionName, time);
 
-    if((positions.size() % 3) != 0 ||
-       (positions.size() / 3) != node.InnerIndexCount())
+    if((positions.size() % 3) != 0)
         return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
 
+    result[0] = AABB3(Zero3, Zero3);
     for(size_t i = 0; positions.size() / 3; i++)
-        result[i] = Triangle::BoundingBox(positions[i + 0],
-                                          positions[i + 1],
-                                          positions[i + 2]);
+    {
+        result[0].Union(Triangle::BoundingBox(positions[i * 3 + 0],
+                                              positions[i * 3 + 1],
+                                              positions[i * 3 + 2]));
+    }
     return SceneError::OK;
 }
 
@@ -149,7 +136,7 @@ const char* InNodeSphrLoader::SufaceDataFileExt() const
 
 SceneError InNodeSphrLoader::PrimDataLayout(PrimitiveDataLayout* result, PrimitiveDataType primitiveDataType) const
 {
-    for(size_t i = 0; i < node.InnerIndexCount(); i++)
+    for(size_t i = 0; i < node.IdCount(); i++)
     {
         if(primitiveDataType == PrimitiveDataType::POSITION)
             result[i] = PrimitiveDataLayout::FLOAT_3;
@@ -161,7 +148,7 @@ SceneError InNodeSphrLoader::PrimDataLayout(PrimitiveDataLayout* result, Primiti
 
 SceneError InNodeSphrLoader::DataOffsets(size_t* result, PrimitiveDataType primitiveDataType) const
 {
-    std::iota(result, result + node.InnerIndexCount(), 0);
+    std::iota(result, result + node.IdCount(), 0);
     return SceneError::OK;
 }
 
@@ -185,10 +172,10 @@ SceneError InNodeSphrLoader::AABB(AABB3* result) const
     std::vector<Vector3> positions = node.AccessVector3List(positionName, time);
     std::vector<float> radiuses = node.AccessFloatList(radiusName, time);
 
-    if(positions.size() != node.InnerIndexCount() || radiuses.size() != node.InnerIndexCount)
+    if(positions.size() != node.IdCount() || radiuses.size() != node.IdCount())
         return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
 
-    for(size_t i = 0; i < node.InnerIndexCount(); i++)
+    for(size_t i = 0; i < node.IdCount(); i++)
     {
         result[i] = Sphere::BoundingBox(positions[i], radiuses[i]);
     }
@@ -212,11 +199,6 @@ SceneError InNodeSphrLoader::GetPrimitiveData(Byte* memory, PrimitiveDataType pr
         return SceneError::OK;
     }
     else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
-}
-
-const char* InNodeSphrLoader::SufaceDataFileExt() const
-{
-    return NodeSphereName;
 }
 
 std::unique_ptr<SurfaceDataLoaderI> SurfaceDataIO::GenSurfaceDataLoader(const SceneNodeI& properties,

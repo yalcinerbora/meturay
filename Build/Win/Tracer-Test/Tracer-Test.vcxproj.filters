@@ -31,9 +31,6 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerLogics.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerGenerators.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialNodeReaders.h">
-      <Filter>Materials</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterials.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
@@ -52,11 +49,11 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialDataStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\GIMaterialsKC.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cpp" />
-    <ClCompile Include="..\..\..\Source\Tracer-Test\MaterialNodeReaders.cpp">
-      <Filter>Materials</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

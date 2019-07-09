@@ -2,7 +2,6 @@
 
 #include "RayLib/SceneStructs.h"
 #include "RayLib/SceneError.h"
-#include "SceneFileNode.h"
 
 SingleGPUScenePartitioner::SingleGPUScenePartitioner(const std::vector<CudaGPU>& gList)
     : systemGPUs(gList)

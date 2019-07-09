@@ -1,38 +1,33 @@
 #include "BasicMaterials.cuh"
 #include "MaterialNodeReaders.h"
 
-//ConstantBoundaryMat::ConstantBoundaryMat(int gpuId)
-//    : GPUBoundaryMatGroup(gpuId)
-//{}
-//
-//SceneError ConstantBoundaryMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)
-//{
-//    dData = ConstantBoundaryMatRead(materialNodes, time);
-//    return SceneError::OK;
-//}
-//
-//SceneError ConstantBoundaryMat::ChangeTime(const std::set<SceneFileNode>& materialNodes, double time)
-//{
-//    // TODO: Implement
-//    return SceneError::OK;
-//}
-//
-//int ConstantBoundaryMat::InnerId(uint32_t materialId) const
-//{
-//    return 0;
-//}
-
 BasicMat::BasicMat(int gpuId)
     : GPUMaterialGroup(gpuId)
 {}
 
-SceneError BasicMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)
+SceneError BasicMat::InitializeGroup(const NodeListing& materialNodes, double time)
 {
-    dData = ConstantAlbedoMatRead(memory, materialNodes, time);
+    constexpr const char* ALBEDO = "albedo";
+
+    std::vector<Vector3> albedoCPU;
+    for(const auto& sceneNode : materialNodes)
+    {
+        std::vector<Vector3> albedos = sceneNode->AccessVector3List(ALBEDO);
+        albedoCPU.insert(albedoCPU.end(), albedos.begin(), albedos.end());
+    }
+
+    // Alloc etc
+    size_t dAlbedoSize = albedoCPU.size() * sizeof(Vector3);
+    memory = std::move(DeviceMemory(dAlbedoSize));
+    Vector3f* dAlbedo = static_cast<Vector3f*>(memory);
+    CUDA_CHECK(cudaMemcpy(dAlbedo, albedoCPU.data(), dAlbedoSize,
+                          cudaMemcpyHostToDevice));
+
+    dData = ConstantAlbedoMatData{dAlbedo};
     return SceneError::OK;
 }
 
-SceneError BasicMat::ChangeTime(const std::set<SceneFileNode>& materialNodes, double time)
+SceneError BasicMat::ChangeTime(const NodeListing& materialNodes, double time)
 {
     return SceneError::OK;
 }
@@ -46,12 +41,12 @@ BarycentricMat::BarycentricMat(int gpuId)
     : GPUMaterialGroup(gpuId)
 {}
 
-SceneError BarycentricMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)
+SceneError BarycentricMat::InitializeGroup(const NodeListing& materialNodes, double time)
 {
     return SceneError::OK;
 }
 
-SceneError BarycentricMat::ChangeTime(const std::set<SceneFileNode>& materialNodes, double time)
+SceneError BarycentricMat::ChangeTime(const NodeListing& materialNodes, double time)
 {
     return SceneError::OK;
 }
@@ -65,12 +60,12 @@ SphericalMat::SphericalMat(int gpuId)
     : GPUMaterialGroup(gpuId)
 {}
 
-SceneError SphericalMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)
+SceneError SphericalMat::InitializeGroup(const NodeListing& materialNodes, double time)
 {
     return SceneError::OK;
 }
 
-SceneError SphericalMat::ChangeTime(const std::set<SceneFileNode>& materialNodes, double time)
+SceneError SphericalMat::ChangeTime(const NodeListing& materialNodes, double time)
 {
     return SceneError::OK;
 }

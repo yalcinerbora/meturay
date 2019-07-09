@@ -8,12 +8,12 @@ const char* GPUPrimitiveEmpty::Type() const
     return TypeName();
 }
 
-SceneError GPUPrimitiveEmpty::InitializeGroup(const std::set<SceneFileNode>& surfaceDatalNodes, double time)
+SceneError GPUPrimitiveEmpty::InitializeGroup(const NodeListing& surfaceDatalNodes, double time)
 {
     return SceneError::OK;
 }
 
-SceneError GPUPrimitiveEmpty::ChangeTime(const std::set<SceneFileNode>& surfaceDatalNodes, double time)
+SceneError GPUPrimitiveEmpty::ChangeTime(const NodeListing& surfaceDatalNodes, double time)
 {
     return SceneError::OK;
 }

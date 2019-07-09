@@ -11,12 +11,13 @@
 #include "GPUMaterialI.h"
 #include "TracerLogicGeneratorI.h"
 #include "ScenePartitionerI.h"
+#include "SceneNodeJson.h"
 
 #include <nlohmann/json.hpp>
 #include <filesystem>
 #include <set>
 
-SceneError GPUScene::OpenFile(const std::string& fileName)
+SceneError GPUSceneJson::OpenFile(const std::string& fileName)
 {
     // TODO: get a lightweight lexer and strip comments
     // from json since json does not support comments
@@ -29,14 +30,14 @@ SceneError GPUScene::OpenFile(const std::string& fileName)
 
     if(!file.is_open()) return SceneError::FILE_NOT_FOUND;
     // Parse Json
-    sceneJson = new nlohmann::json();
+    sceneJson = std::make_unique<nlohmann::json>();
     file >> (*sceneJson);
     return SceneError::OK;
 }
 
-GPUScene::GPUScene(const std::string& fileName,
-                   ScenePartitionerI& partitioner,
-                   TracerLogicGeneratorI& lg)
+GPUSceneJson::GPUSceneJson(const std::string& fileName,
+                           ScenePartitionerI& partitioner,
+                           TracerLogicGeneratorI& lg)
     : logicGenerator(lg)
     , partitioner(partitioner)
     , maxAccelIds(Vector2i(-1))
@@ -49,27 +50,7 @@ GPUScene::GPUScene(const std::string& fileName,
     , sceneJson(nullptr)
 {}
 
-GPUScene::GPUScene(GPUScene&& other) noexcept
-    : logicGenerator(other.logicGenerator)
-    , partitioner(other.partitioner)
-    , maxAccelIds(other.maxAccelIds)
-    , maxMatIds(other.maxMatIds)
-    , baseBoundaryMatKey(other.baseBoundaryMatKey)
-    , memory(std::move(other.memory))
-    , cameraMemory(std::move(other.cameraMemory))
-    , sceneJson(other.sceneJson)
-    , fileName(other.fileName)
-    , currentTime(other.currentTime)
-    , dLights(other.dLights)
-    , dTransforms(other.dTransforms)
-{}
-
-GPUScene::~GPUScene()
-{
-    if(sceneJson) delete sceneJson;
-}
-
-bool GPUScene::FindNode(nlohmann::json& jsn, const char* c)
+bool GPUSceneJson::FindNode(nlohmann::json& jsn, const char* c)
 {
     auto i = sceneJson->find(c);
     bool found = (i != sceneJson->end());
@@ -77,8 +58,9 @@ bool GPUScene::FindNode(nlohmann::json& jsn, const char* c)
     return found;
 };
 
-SceneError GPUScene::GenIdLookup(IndexLookup& result,
-                                 const nlohmann::json& array, IdBasedNodeType t)
+SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
+                                     const nlohmann::json& array, 
+                                     IdBasedNodeType t)
 {
     static constexpr uint32_t MAX_UINT32 = std::numeric_limits<uint32_t>::max();
 
@@ -115,15 +97,15 @@ SceneError GPUScene::GenIdLookup(IndexLookup& result,
     return SceneError::OK;
 }
 
-SceneError GPUScene::GenerateConstructionData(// Striped Listings (Striped from unsued nodes)
-                                              PrimitiveNodeList& primGroupNodes,
-                                              //
-                                              MaterialNodeList& matGroupNodes,
-                                              MaterialBatchList& matBatchListings,
-                                              AcceleratorBatchList& requiredAccelListings,
-                                              // Base Accelerator required data
-                                              std::map<uint32_t, uint32_t>& surfaceTransformIds,
-                                              double time)
+SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped from unsued nodes)
+                                                  PrimitiveNodeList& primGroupNodes,
+                                                  //
+                                                  MaterialNodeList& matGroupNodes,
+                                                  MaterialBatchList& matBatchListings,
+                                                  AcceleratorBatchList& requiredAccelListings,
+                                                  // Base Accelerator required data
+                                                  std::map<uint32_t, uint32_t>& surfaceTransformIds,
+                                                  double time)
 {
     nlohmann::json surfaces;
     nlohmann::json primitives;
@@ -155,12 +137,12 @@ SceneError GPUScene::GenerateConstructionData(// Striped Listings (Striped from 
         {
             const NodeIndex nIndex = loc->second.first;
             const InnerIndex iIndex = loc->second.second;
-
             const auto jsnNode = materials[nIndex];
+
             const std::string matGroupType = jsnNode[SceneIO::TYPE];
-            auto& matSet = matGroupNodes.emplace(matGroupType,
-                                                 std::set<SceneNodeI>()).first->second;
-            ....matSet.emplace(jsnNode, matId)->AddIndex(iIndex);           
+            auto& matSet = matGroupNodes.emplace(matGroupType, NodeListing()).first->second;
+            auto& node = *matSet.emplace(std::make_unique<SceneNodeJson>(jsnNode, nIndex)).first;
+            node->AddIndexIdPair(iIndex, matId);
             AttachMatBatch(primType, matGroupType, matId);
         }
         else return SceneError::MATERIAL_ID_NOT_FOUND;
@@ -201,15 +183,15 @@ SceneError GPUScene::GenerateConstructionData(// Striped Listings (Striped from 
             {
                 const NodeIndex nIndex = loc->second.first;
                 const InnerIndex iIndex = loc->second.second;
-
                 const auto jsnNode = primitives[nIndex];
+
                 std::string currentType = jsnNode[SceneIO::TYPE];
                 if((i != 0) && primGroupType != currentType)
                     return SceneError::PRIM_TYPE_NOT_CONSISTENT_ON_SURFACE;
                 else primGroupType = currentType;
-                ....auto& primSet = primGroupNodes.emplace(primGroupType,
-                                                       std::set<SceneNodeI>()).first->second;
-                primSet.emplace(jsnNode, primId, iIndex);
+                auto& primSet = primGroupNodes.emplace(primGroupType, NodeListing()).first->second;
+                auto& node = *primSet.emplace(std::make_unique<SceneNodeJson>(jsnNode, nIndex)).first;
+                node->AddIndexIdPair(iIndex, primId);
             }
             else return SceneError::PRIMITIVE_ID_NOT_FOUND;
 
@@ -253,8 +235,8 @@ SceneError GPUScene::GenerateConstructionData(// Striped Listings (Striped from 
     return e;
 }
 
-SceneError GPUScene::GenerateMaterialGroups(const MultiGPUMatNodes& matGroupNodes,
-                                            double time)
+SceneError GPUSceneJson::GenerateMaterialGroups(const MultiGPUMatNodes& matGroupNodes,
+                                                double time)
 {
     // Generate Partitioned Material Groups
     SceneError e = SceneError::OK;
@@ -273,9 +255,9 @@ SceneError GPUScene::GenerateMaterialGroups(const MultiGPUMatNodes& matGroupNode
     return e;
 }
 
-SceneError GPUScene::GenerateMaterialBatches(MaterialKeyListing& allMatKeys,
-                                             const MultiGPUMatBatches& materialBatches,
-                                             double time)
+SceneError GPUSceneJson::GenerateMaterialBatches(MaterialKeyListing& allMatKeys,
+                                                 const MultiGPUMatBatches& materialBatches,
+                                                 double time)
 {
     SceneError e = SceneError::OK;
     // First do materials
@@ -322,8 +304,8 @@ SceneError GPUScene::GenerateMaterialBatches(MaterialKeyListing& allMatKeys,
     return e;
 }
 
-SceneError GPUScene::GeneratePrimitiveGroups(const PrimitiveNodeList& primGroupNodes,
-                                             double time)
+SceneError GPUSceneJson::GeneratePrimitiveGroups(const PrimitiveNodeList& primGroupNodes,
+                                                 double time)
 {
     // Generate Primitive Groups
     SceneError e = SceneError::OK;
@@ -341,12 +323,12 @@ SceneError GPUScene::GeneratePrimitiveGroups(const PrimitiveNodeList& primGroupN
     return e;
 }
 
-SceneError GPUScene::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABBs,
-                                          std::map<uint32_t, HitKey>& accHitKeyList,
-                                          //
-                                          const AcceleratorBatchList& acceleratorBatchList,
-                                          const MaterialKeyListing& matHitKeyList,
-                                          double time)
+SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABBs,
+                                              std::map<uint32_t, HitKey>& accHitKeyList,
+                                              //
+                                              const AcceleratorBatchList& acceleratorBatchList,
+                                              const MaterialKeyListing& matHitKeyList,
+                                              double time)
 {
     SceneError e = SceneError::OK;
     uint32_t accelBatch = NullBatchId;
@@ -418,10 +400,10 @@ SceneError GPUScene::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABBs,
     return e;
 }
 
-SceneError GPUScene::GenerateBaseAccelerator(const std::map<uint32_t, AABB3>& accAABBs,
-                                             const std::map<uint32_t, HitKey>& accHitKeyList,
-                                             const std::map<uint32_t, uint32_t>& surfaceTransformIds,
-                                             double time)
+SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, AABB3>& accAABBs,
+                                                 const std::map<uint32_t, HitKey>& accHitKeyList,
+                                                 const std::map<uint32_t, uint32_t>& surfaceTransformIds,
+                                                 double time)
 {
     SceneError e = SceneError::OK;
     // Generate Surface Listings
@@ -457,8 +439,8 @@ SceneError GPUScene::GenerateBaseAccelerator(const std::map<uint32_t, AABB3>& ac
     return e;
 }
 
-SceneError GPUScene::FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList, 
-                                          double time)
+SceneError GPUSceneJson::FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,
+                                              double time)
 {
     SceneError e = SceneError::OK;
     NodeListing nodeList;
@@ -478,7 +460,7 @@ SceneError GPUScene::FindBoundaryMaterial(const MaterialKeyListing& matHitKeyLis
     return e;
 }
 
-SceneError GPUScene::LoadCommon(double time)
+SceneError GPUSceneJson::LoadCommon(double time)
 {
     SceneError e = SceneError::OK;
 
@@ -545,7 +527,7 @@ SceneError GPUScene::LoadCommon(double time)
     return e;
 }
 
-SceneError GPUScene::LoadLogicRelated(double time)
+SceneError GPUSceneJson::LoadLogicRelated(double time)
 {
     SceneError e = SceneError::OK;
     // Group Data
@@ -620,31 +602,31 @@ SceneError GPUScene::LoadLogicRelated(double time)
     return SceneError::OK;
 }
 
-SceneError GPUScene::ChangeCommon(double time)
+SceneError GPUSceneJson::ChangeCommon(double time)
 {
     // TODO:
     return SceneError::OK;
 }
 
-SceneError GPUScene::ChangeLogicRelated(double time)
+SceneError GPUSceneJson::ChangeLogicRelated(double time)
 {
     // TODO:
     return SceneError::BASE_ACCELERATOR_NODE_NOT_FOUND;
 }
 
-size_t GPUScene::UsedGPUMemory()
+size_t GPUSceneJson::UsedGPUMemory()
 {
     //return transformMemory.Size() + lightMemory.Size();
     return 0;
 }
 
-size_t GPUScene::UsedCPUMemory()
+size_t GPUSceneJson::UsedCPUMemory()
 {
     //return cameraMemory.size() * sizeof(CameraPerspective);
     return 0;
 }
 
-SceneError GPUScene::LoadScene(double time)
+SceneError GPUSceneJson::LoadScene(double time)
 {
     SceneError e = SceneError::OK;
     try
@@ -667,7 +649,7 @@ SceneError GPUScene::LoadScene(double time)
     return e;
 }
 
-SceneError GPUScene::ChangeTime(double time)
+SceneError GPUSceneJson::ChangeTime(double time)
 {
     SceneError e = SceneError::OK;
     try
@@ -689,32 +671,32 @@ SceneError GPUScene::ChangeTime(double time)
     return e;
 }
 
-Vector2i GPUScene::MaxMatIds()
+Vector2i GPUSceneJson::MaxMatIds()
 {
     return maxMatIds;
 }
 
-Vector2i GPUScene::MaxAccelIds()
+Vector2i GPUSceneJson::MaxAccelIds()
 {
     return maxAccelIds;
 }
 
-HitKey GPUScene::BaseBoundaryMaterial()
+HitKey GPUSceneJson::BaseBoundaryMaterial()
 {
     return baseBoundaryMatKey;
 }
 
-const LightStruct* GPUScene::LightsGPU() const
+const LightStruct* GPUSceneJson::LightsGPU() const
 {
     return dLights;
 }
 
-const TransformStruct* GPUScene::TransformsGPU() const
+const TransformStruct* GPUSceneJson::TransformsGPU() const
 {
     return dTransforms;
 }
 
-const CameraPerspective* GPUScene::CamerasCPU() const
+const CameraPerspective* GPUSceneJson::CamerasCPU() const
 {
     return cameraMemory.data();
 }

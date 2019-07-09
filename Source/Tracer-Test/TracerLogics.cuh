@@ -58,7 +58,7 @@ class TracerBasic : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
         TracerError     Initialize() override;
 
         uint32_t        GenerateRays(RayMemory&, RNGMemory&,
-                                     const GPUScene& scene,
+                                     const GPUSceneI& scene,
                                      const CameraPerspective&,
                                      int samplePerLocation,
                                      Vector2i resolution,

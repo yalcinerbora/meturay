@@ -22,7 +22,7 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterialsKC.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\GIMaterials.cuh" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialNodeReaders.h" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\GIMaterialsKC.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialDataStructs.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\RayAuxStruct.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\SurfaceStructs.h" />
@@ -32,7 +32,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cpp" />
-    <ClCompile Include="..\..\..\Source\Tracer-Test\MaterialNodeReaders.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">

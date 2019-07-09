@@ -87,10 +87,10 @@ class TracerBase : public TracerI
 
         // Rendering Related
         void                AttachLogic(TracerBaseLogicI&) override;
-        void                GenerateInitialRays(const GPUScene& scene,
+        void                GenerateInitialRays(const GPUSceneI& scene,
                                                 int cameraId,
                                                 int samplePerLocation) override;
-        void                GenerateInitialRays(const GPUScene& scene,
+        void                GenerateInitialRays(const GPUSceneI& scene,
                                                 const CameraPerspective&,
                                                 int samplePerLocation) override;
         bool                Continue() override;        // Continue hit/bounce looping (consume ray pool)

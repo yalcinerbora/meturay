@@ -24,7 +24,7 @@ struct TracerError;
 struct TracerOptions;
 struct CameraPerspective;
 
-class GPUScene;
+class GPUSceneI;
 
 // Main Tracer Logicc
 class TracerCallbacksI;
@@ -55,10 +55,10 @@ class TracerI
 
         // Rendering Related
         virtual void                    AttachLogic(TracerBaseLogicI&) = 0;
-        virtual void                    GenerateInitialRays(const GPUScene& scene,
+        virtual void                    GenerateInitialRays(const GPUSceneI& scene,
                                                             int cameraId,
                                                             int samplePerLocation) = 0;
-        virtual void                    GenerateInitialRays(const GPUScene& scene,
+        virtual void                    GenerateInitialRays(const GPUSceneI& scene,
                                                             const CameraPerspective&,
                                                             int samplePerLocation) = 0;
         virtual bool                    Continue() = 0;         // Continue hit/bounce looping (consume ray pool)

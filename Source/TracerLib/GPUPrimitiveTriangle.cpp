@@ -15,13 +15,14 @@ const char* GPUPrimitiveTriangle::Type() const
     return TypeName();
 }
 
-SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneNodeI>& surfaceDataNodes,
+SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataNodes,
                                                  double time)
 {
     // Generate Loaders
     std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
-    for(const SceneNodeI& s : surfaceDataNodes)
+    for(const auto& sPtr : surfaceDataNodes)
     {
+        const SceneNodeI& s = *sPtr;
         loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s, time)));
     }
 
@@ -87,7 +88,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const std::set<SceneNodeI>& sur
     return e;
 }
 
-SceneError GPUPrimitiveTriangle::ChangeTime(const std::set<SceneNodeI>& surfaceDatalNodes, double time)
+SceneError GPUPrimitiveTriangle::ChangeTime(const NodeListing& surfaceDatalNodes, double time)
 {
     // Generate Loaders
     std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;

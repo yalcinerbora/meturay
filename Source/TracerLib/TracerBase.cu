@@ -335,7 +335,7 @@ void TracerBase::AttachLogic(TracerBaseLogicI& logic)
     rngMemory = RNGMemory(logic.Seed());
 }
 
-void TracerBase::GenerateInitialRays(const GPUScene& scene,
+void TracerBase::GenerateInitialRays(const GPUSceneI& scene,
                                      int cameraId,
                                      int samplePerLocation)
 {
@@ -345,7 +345,7 @@ void TracerBase::GenerateInitialRays(const GPUScene& scene,
 
 }
 
-void TracerBase::GenerateInitialRays(const GPUScene& scene,
+void TracerBase::GenerateInitialRays(const GPUSceneI& scene,
                                      const CameraPerspective& cam,
                                      int samplePerLocation)
 {

@@ -192,7 +192,7 @@ class MockTracerLogic : public TracerBaseLogicI
 
         // Generate Camera Rays
         uint32_t                                GenerateRays(RayMemory&, RNGMemory&,
-                                                             const GPUScene& scene,
+                                                             const GPUSceneI& scene,
                                                              const CameraPerspective&,
                                                              int samplePerLocation,
                                                              Vector2i resolution,
@@ -395,7 +395,7 @@ TracerError MockTracerLogic::Initialize()
 
 
 uint32_t MockTracerLogic::GenerateRays(RayMemory&, RNGMemory&,
-                                       const GPUScene& scene,
+                                       const GPUSceneI& scene,
                                        const CameraPerspective&,
                                        int samplePerLocation,
                                        Vector2i resolution,

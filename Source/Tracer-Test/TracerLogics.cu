@@ -32,7 +32,7 @@ TracerError TracerBasic::Initialize()
 }
 
 uint32_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
-                                   const GPUScene& scene,
+                                   const GPUSceneI& scene,
                                    const CameraPerspective& cam,
                                    int samplePerLocation,
                                    Vector2i resolution,

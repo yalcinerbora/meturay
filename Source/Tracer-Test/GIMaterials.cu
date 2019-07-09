@@ -5,13 +5,29 @@ GIAlbedoMat::GIAlbedoMat(int gpuId)
     : GPUMaterialGroup(gpuId)
 {}
 
-SceneError GIAlbedoMat::InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time)
+SceneError GIAlbedoMat::InitializeGroup(const NodeListing& materialNodes, double time)
 {
-    dData = ConstantAlbedoMatRead(memory, materialNodes, time);
+    constexpr const char* ALBEDO = "albedo";
+
+    std::vector<Vector3> albedoCPU;
+    for(const auto& sceneNode : materialNodes)
+    {
+        std::vector<Vector3> albedos = sceneNode->AccessVector3List(ALBEDO);
+        albedoCPU.insert(albedoCPU.end(), albedos.begin(), albedos.end());
+    }
+
+    // Alloc etc
+    size_t dAlbedoSize = albedoCPU.size() * sizeof(Vector3);
+    memory = std::move(DeviceMemory(dAlbedoSize));
+    Vector3f* dAlbedo = static_cast<Vector3f*>(memory);
+    CUDA_CHECK(cudaMemcpy(dAlbedo, albedoCPU.data(), dAlbedoSize,
+                          cudaMemcpyHostToDevice));
+
+    dData = ConstantAlbedoMatData{dAlbedo};
     return SceneError::OK;
 }
 
-SceneError GIAlbedoMat::ChangeTime(const std::set<SceneFileNode>& materialNodes, double time)
+SceneError GIAlbedoMat::ChangeTime(const NodeListing& materialNodes, double time)
 {
     return SceneError::OK;
 }
