@@ -25,7 +25,7 @@ class SurfaceDataLoaderI
         // Type Determination
         virtual const SceneNodeI&       SceneNode() const = 0;
         virtual const char*             SufaceDataFileExt() const = 0;
-        virtual SceneError              PrimitiveOffsets(size_t*, PrimitiveDataType primitiveDataType) const = 0;
+        virtual SceneError              BatchOffsets(size_t*) const = 0;
         virtual SceneError              PrimitiveCount(size_t*) const = 0;
         virtual SceneError              PrimDataLayout(PrimitiveDataLayout*,
                                                        PrimitiveDataType primitiveDataType) const = 0;

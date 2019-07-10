@@ -72,12 +72,12 @@ inline const std::set<IdPair>& SceneNodeI::Ids() const
     return indexIdPairs;
 }
 
-size_t SceneNodeI::IdCount() const
+inline size_t SceneNodeI::IdCount() const
 {
     return indexIdPairs.size();
 }
 
-void SceneNodeI::AddIndexIdPair(InnerIndex index, NodeId id)
+inline void SceneNodeI::AddIndexIdPair(InnerIndex index, NodeId id)
 {
     indexIdPairs.emplace(std::make_pair(index, id));
 }

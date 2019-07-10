@@ -20,6 +20,6 @@ class SingleGPUScenePartitioner : public ScenePartitionerI
                                            MultiGPUMatBatches&,
                                            int&,
                                            // Single Input
-                                           const MaterialNodeList& materialGroups,
-                                           const MaterialBatchList& materialBatches) const override;
+                                           MaterialNodeList& materialGroups,
+                                           MaterialBatchList& materialBatches) const override;
 };

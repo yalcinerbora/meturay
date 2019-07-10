@@ -12,8 +12,8 @@ SceneError SingleGPUScenePartitioner::PartitionMaterials(MultiGPUMatNodes& multi
                                                          MultiGPUMatBatches& multiBatches,
                                                          int& boundaryMaterialGPU,
                                                          // Single Input
-                                                         const MaterialNodeList& materialGroups,
-                                                         const MaterialBatchList& materialBatches) const
+                                                         MaterialNodeList& materialGroups,
+                                                         MaterialBatchList& materialBatches) const
 {
     // Just use the first gpu avail
     assert(!systemGPUs.empty());
@@ -21,13 +21,17 @@ SceneError SingleGPUScenePartitioner::PartitionMaterials(MultiGPUMatNodes& multi
 
     boundaryMaterialGPU = 0;
 
-    for(const auto& mg : materialGroups)
+    for(auto& mg : materialGroups)
     {
-        multiGroups.emplace(std::make_pair(mg.first, GPUId), mg.second);
+        multiGroups.emplace(std::make_pair(mg.first, GPUId), 
+                            std::move(mg.second));
     }
-    for(const auto& mb : materialBatches)
+    for(auto& mb : materialBatches)
     {
-        multiBatches.emplace(std::make_pair(mb.first, GPUId), mb.second);
+        multiBatches.emplace(std::make_pair(mb.first, GPUId), 
+                             std::move(mb.second));
     }
+    materialGroups.clear();
+    materialBatches.clear();
     return SceneError::OK;
 }

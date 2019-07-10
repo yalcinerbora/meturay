@@ -64,7 +64,7 @@ class GPUSceneJson : public GPUSceneI
         // Inners
         // Helper Logic
         SceneError                              OpenFile(const std::string& fileName);
-        bool                                    FindNode(nlohmann::json& node, const char* name);
+        bool                                    FindNode(const nlohmann::json*& node, const char* name);
         static SceneError                       GenIdLookup(IndexLookup&,
                                                             const nlohmann::json& array,
                                                             IdBasedNodeType);

@@ -4,15 +4,23 @@
 
 #include "RayLib/SceneNodeI.h"
 
+template <class T>
+using LoadFunc = T(*)(const nlohmann::json&, double);
+
 class SceneNodeJson final : public SceneNodeI
 {
     private:
-        nlohmann::json&              node;
+        const nlohmann::json&       node;
+
+        template <class T, LoadFunc<T>>
+        std::vector<T>              AccessList(const nlohmann::json& node,
+                                               const std::string& name,
+                                               double time) const;
 
     protected:
     public:
         // Constructors & Destructor
-                                    SceneNodeJson(nlohmann::json&, NodeId id);
+                                    SceneNodeJson(const nlohmann::json&, NodeId id);
                                     ~SceneNodeJson() = default;
 
         // Interface

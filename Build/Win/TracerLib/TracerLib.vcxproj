@@ -34,7 +34,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUSceneJson.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\HitFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialKernels.cuh" />
@@ -69,7 +69,7 @@
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveEmpty.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\ImageMemory.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\RNGMemory.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\SceneNodeJson.cpp" />

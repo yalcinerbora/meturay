@@ -27,6 +27,6 @@ class ScenePartitionerI
                                                    MultiGPUMatBatches&,
                                                    int& boundaryMaterialGPU,
                                                    // Single Input
-                                                   const MaterialNodeList& materialGroups,
-                                                   const MaterialBatchList& materialBatches) const = 0;
+                                                   MaterialNodeList& materialGroups,
+                                                   MaterialBatchList& materialBatches) const = 0;
 };

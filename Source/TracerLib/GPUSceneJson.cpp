@@ -50,11 +50,11 @@ GPUSceneJson::GPUSceneJson(const std::string& fileName,
     , sceneJson(nullptr)
 {}
 
-bool GPUSceneJson::FindNode(nlohmann::json& jsn, const char* c)
+bool GPUSceneJson::FindNode(const nlohmann::json*& jsn, const char* c)
 {
-    auto i = sceneJson->find(c);
+    const auto i = sceneJson->find(c);
     bool found = (i != sceneJson->end());
-    if(found) jsn = *i;
+    if(found) jsn = &(*i);
     return found;
 };
 
@@ -107,10 +107,10 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                                   std::map<uint32_t, uint32_t>& surfaceTransformIds,
                                                   double time)
 {
-    nlohmann::json surfaces;
-    nlohmann::json primitives;
-    nlohmann::json materials;
-    nlohmann::json lights;
+    const nlohmann::json* surfaces = nullptr;
+    const nlohmann::json* primitives = nullptr;
+    const nlohmann::json* materials = nullptr;
+    const nlohmann::json* lights = nullptr;
     IndexLookup primList;
     IndexLookup materialList;
 
@@ -137,7 +137,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         {
             const NodeIndex nIndex = loc->second.first;
             const InnerIndex iIndex = loc->second.second;
-            const auto jsnNode = materials[nIndex];
+            const auto& jsnNode = (*materials)[nIndex];
 
             const std::string matGroupType = jsnNode[SceneIO::TYPE];
             auto& matSet = matGroupNodes.emplace(matGroupType, NodeListing()).first->second;
@@ -157,15 +157,15 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     if(!FindNode(primitives, SceneIO::PRIMITIVE_BASE)) return SceneError::PRIMITIVES_ARRAY_NOT_FOUND;
     if(!FindNode(materials, SceneIO::MATERIAL_BASE)) return SceneError::MATERIALS_ARRAY_NOT_FOUND;
     if(!FindNode(lights, SceneIO::LIGHT_BASE)) return SceneError::LIGHTS_ARRAY_NOT_FOUND;
-    if((e = GenIdLookup(primList, primitives, PRIMITIVE)) != SceneError::OK) 
+    if((e = GenIdLookup(primList, *primitives, PRIMITIVE)) != SceneError::OK) 
         return e;
-    if((e = GenIdLookup(materialList, materials, MATERIAL)) != SceneError::OK)
+    if((e = GenIdLookup(materialList, *materials, MATERIAL)) != SceneError::OK)
         return e;
 
     // Iterate over surfaces
     // and collect data for groups and batches
     uint32_t surfId = 0;
-    for(const auto& jsn : surfaces)
+    for(const auto& jsn : (*surfaces))
     {
         SurfaceStruct surf = SceneIO::LoadSurface(jsn, time);
         // Start loading mats and surface datas
@@ -183,7 +183,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             {
                 const NodeIndex nIndex = loc->second.first;
                 const InnerIndex iIndex = loc->second.second;
-                const auto jsnNode = primitives[nIndex];
+                const auto& jsnNode = (*primitives)[nIndex];
 
                 std::string currentType = jsnNode[SceneIO::TYPE];
                 if((i != 0) && primGroupType != currentType)
@@ -219,18 +219,18 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     primGroupNodes.emplace(BaseConstants::EMPTY_PRIMITIVE_NAME, NodeListing());
     // Generate Material listing and material group
     // For Lights
-    for(const auto& jsn : lights)
+    for(const auto& jsn : (*lights))
     {
         LightStruct l = SceneIO::LoadLight(jsn, time);
         if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME, l.matId)) != SceneError::OK)
            return e;
     }
     // Finally Boundary Material
-    nlohmann::json baseMatNode;
+    const nlohmann::json* baseMatNode = nullptr;
     if(!FindNode(baseMatNode, SceneIO::BASE_OUTSIDE_MATERIAL))
         return SceneError::BASE_BOUND_MAT_NODE_NOT_FOUND;
     if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME,
-                         SceneIO::LoadNumber<uint32_t>(baseMatNode, time))) != SceneError::OK)
+                         SceneIO::LoadNumber<uint32_t>(*baseMatNode, time))) != SceneError::OK)
         return e;
     return e;
 }
@@ -425,10 +425,10 @@ SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, AABB3>
     }
 
     // Find Base Accelerator Type and generate
-    nlohmann::json baseAccel;
+    const nlohmann::json* baseAccel = nullptr;
     if(!FindNode(baseAccel, SceneIO::BASE_ACCELERATOR_BASE))
         return SceneError::BASE_ACCELERATOR_NODE_NOT_FOUND;
-    const std::string baseAccelType = baseAccel;
+    const std::string baseAccelType = (*baseAccel);
 
     // Generate Base Accelerator..
     GPUBaseAcceleratorI* baseAccelerator = nullptr;
@@ -445,13 +445,13 @@ SceneError GPUSceneJson::FindBoundaryMaterial(const MaterialKeyListing& matHitKe
     SceneError e = SceneError::OK;
     NodeListing nodeList;
 
-    nlohmann::json node;
+    const nlohmann::json* node = nullptr;
     if(!FindNode(node, SceneIO::BASE_OUTSIDE_MATERIAL))
         return SceneError::BASE_BOUND_MAT_NODE_NOT_FOUND;
 
     // From that node find equavilent material,
     auto primIdPair = std::make_pair(std::string(BaseConstants::EMPTY_PRIMITIVE_NAME),
-                                     SceneIO::LoadNumber<uint32_t>(node, time));
+                                     SceneIO::LoadNumber<uint32_t>(*node, time));
     auto loc = matHitKeyList.find(primIdPair);
     if(loc == matHitKeyList.end())
         return SceneError::MATERIAL_ID_NOT_FOUND;
@@ -470,24 +470,24 @@ SceneError GPUSceneJson::LoadCommon(double time)
     std::vector<TransformStruct> transformsCPU;
 
     // Lights
-    nlohmann::json lightsJson;
+    const nlohmann::json* lightsJson = nullptr;
     if(!FindNode(lightsJson, SceneIO::LIGHT_BASE))
         return SceneError::LIGHTS_ARRAY_NOT_FOUND;
     i = 0;
-    lightsCPU.resize(lightsJson.size());
-    for(const auto& lightJson : lightsJson)
+    lightsCPU.resize(lightsJson->size());
+    for(const auto& lightJson : (*lightsJson))
     {
         lightsCPU[i] = SceneIO::LoadLight(lightJson, time);
         i++;
     }
     
     // Transforms
-    nlohmann::json transformsJson;
+    const nlohmann::json* transformsJson = nullptr;
     if(!FindNode(transformsJson, SceneIO::TRANSFORM_BASE))
         return SceneError::TRANSFORMS_ARRAY_NOT_FOUND;
     i = 0;
-    transformsCPU.resize(transformsJson.size());
-    for(const auto& transformJson : transformsJson)
+    transformsCPU.resize(transformsJson->size());
+    for(const auto& transformJson : (*transformsJson))
     {
         transformsCPU[i] = SceneIO::LoadTransform(transformJson, time);
         i++;
@@ -514,12 +514,12 @@ SceneError GPUSceneJson::LoadCommon(double time)
     }
 
     // Now Load Camera
-    nlohmann::json camerasJson;
+    const nlohmann::json* camerasJson = nullptr;
     if(!FindNode(camerasJson, SceneIO::CAMERA_BASE))
         return SceneError::CAMERAS_ARRAY_NOT_FOUND;
     i = 0;
-    cameraMemory.resize(camerasJson.size());
-    for(const auto& cameraJson : camerasJson)
+    cameraMemory.resize(camerasJson->size());
+    for(const auto& cameraJson : (*camerasJson))
     {
         cameraMemory[i] = SceneIO::LoadCamera(cameraJson, time);
         i++;

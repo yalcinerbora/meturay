@@ -70,13 +70,13 @@
       <Filter>Default Primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUScene.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\ScenePartitioner.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\SceneNodeJson.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
   </ItemGroup>
@@ -212,9 +212,6 @@
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUScene.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\ScenePartitionerI.h">
       <Filter>Scene</Filter>
     </ClInclude>
@@ -226,6 +223,9 @@
       <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\NodeListing.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUSceneJson.h">
       <Filter>Scene</Filter>
     </ClInclude>
   </ItemGroup>

@@ -26,8 +26,8 @@
 #define ERROR_CHECK(ErrType, e) \
 if(e != ErrType::OK) \
 {\
-METU_ERROR_LOG("%s", static_cast<std::string>(scnE).c_str()); \
-return false;\
+    METU_ERROR_LOG("%s", static_cast<std::string>(scnE).c_str()); \
+    return false;\
 }
 
 class SimpleTracerSetup
@@ -53,7 +53,7 @@ class SimpleTracerSetup
         // Scene Tracer and Visor
         std::unique_ptr<VisorI>             visorView;
         std::unique_ptr<TracerBase>         tracerBase;
-        std::unique_ptr<GPUScene>           gpuScene;
+        std::unique_ptr<GPUSceneJson>       gpuScene;
 
         // Loaded DLL
         std::unique_ptr<SharedLib>          sharedLib;
@@ -109,9 +109,9 @@ bool SimpleTracerSetup::Init()
     SingleGPUScenePartitioner partitioner(gpuList);
 
     // Load Scene
-    gpuScene = std::make_unique<GPUScene>(sceneName,
-                                          partitioner,
-                                          *tracerGenerator.get());
+    gpuScene = std::make_unique<GPUSceneJson>(sceneName,
+                                              partitioner,
+                                              *tracerGenerator.get());
     SceneError scnE = gpuScene->LoadScene(sceneTime);
     ERROR_CHECK(SceneError, scnE);
 
@@ -167,7 +167,7 @@ bool SimpleTracerSetup::Init()
 
 void SimpleTracerSetup::Body()
 {
-    GPUScene& scene = *gpuScene;
+    GPUSceneJson& scene = *gpuScene;
 
     CPUTimer t;
     t.Start();

@@ -1,27 +1,26 @@
 #include "SceneNodeJson.h"
 #include "RayLib/SceneIO.h"
 
-template <class T>
-using LoadFunc = T(*)(const nlohmann::json&, double);
-
-template <class T, LoadFunc<T>>
-static std::vector<T> AccessList(nlohmann::json& node, const std::string& name, double time)
+template <class T, LoadFunc<T> LoadF>
+std::vector<T> SceneNodeJson::AccessList(const nlohmann::json& node,
+                                         const std::string& name,
+                                         double time) const
 {
-    nlohmann::json& nodeInner = node[name];
+    const nlohmann::json& nodeInner = node[name];
     std::vector<T> result;
     result.reserve(indexIdPairs.size());
 
     for(const auto& list : indexIdPairs)
     {
         const InnerIndex i = list.first;
-        nlohmann::json& node = (nodeInner.is_array()) ? nodeInner[i] : nodeInner;
+        const nlohmann::json& node = (nodeInner.is_array()) ? nodeInner[i] : nodeInner;
 
-        result.push_back(LoadFunc(node, time));
+        result.push_back(LoadF(node, time));
     }
     return std::move(result);
 }
 
-SceneNodeJson::SceneNodeJson(nlohmann::json& jsn, NodeId id)
+SceneNodeJson::SceneNodeJson(const nlohmann::json& jsn, NodeId id)
     : SceneNodeI(id)
     , node(jsn)
 {}

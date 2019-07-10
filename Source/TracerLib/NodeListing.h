@@ -7,10 +7,13 @@
 
 using SceneNodePtr = std::unique_ptr<SceneNodeI>;
 
-static const auto SceneNodePtrLess = [](const SceneNodePtr& a,
-                                        const SceneNodePtr& b) -> bool
+struct SceneNodePtrLess
 {
-    return ((*a) < (*b));
+    bool operator()(const SceneNodePtr& a,
+                    const SceneNodePtr& b)
+    {
+        return ((*a) < (*b));
+    }
 };
 
-using NodeListing = std::set<std::unique_ptr<SceneNodeI>, decltype(SceneNodePtrLess)>;
+using NodeListing = std::set<std::unique_ptr<SceneNodeI>, SceneNodePtrLess>;

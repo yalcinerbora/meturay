@@ -38,7 +38,7 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
         std::vector<AABB3>  aabbList(batchCount);
         primCountList.emplace_back(batchCount);
 
-        // Load Data
+        // Load Aux Data
         if((e = loader->PrimitiveCount(primCountList.back().data())) != SceneError::OK)
            return e;
         if((e = loader->AABB(aabbList.data())) != SceneError::OK)
@@ -69,28 +69,29 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
         const SceneNodeI& node = loader->SceneNode();
         const size_t batchCount = node.IdCount();
 
+        // Load Data in Batch
+        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data() + offset),
+                                         PrimitiveDataType::POSITION))
+            return e;
+        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(radiusCPU.data() + offset),
+                                         PrimitiveDataType::RADIUS))
+            return e;
+
+        // Generate offset
         size_t j = 0;
         for(const auto& pair : node.Ids())
         {
-            if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data() + offset),
-                                             PrimitiveDataType::POSITION))
-                return e;
-            if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(radiusCPU.data() + offset),
-                                             PrimitiveDataType::RADIUS))
-                return e;
-
             offset += primCountList[i][j];
             j++;
         }
     }
     assert(offset == totalPrimitiveCount);
 
-    // All loaded to CPU
-    // Now copy to GPU
+    // All loaded to CPU, copy to GPU
     // Alloc
     memory = std::move(DeviceMemory(sizeof(Vector4f) * totalPrimitiveCount));
     float* dCentersRadius = static_cast<float*>(memory);
-
+    // Copy
     CUDA_CHECK(cudaMemcpy2D(dCentersRadius, sizeof(Vector4f),
                             postitionsCPU.data(), sizeof(float) * 3,
                             sizeof(float) * 3, totalPrimitiveCount,
@@ -109,6 +110,7 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
 SceneError GPUPrimitiveSphere::ChangeTime(const NodeListing& surfaceDataNodes, double time)
 {
     std::vector<std::vector<size_t>> primCountList;
+    std::vector<std::vector<size_t>> offsetList;
 
     // Generate Loaders
     std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
@@ -128,11 +130,14 @@ SceneError GPUPrimitiveSphere::ChangeTime(const NodeListing& surfaceDataNodes, d
 
         std::vector<AABB3>  aabbList(batchCount);
         primCountList.emplace_back(batchCount);
+        offsetList.emplace_back(batchCount + 1);
 
-        // Load Data
+        // Load Aux Data
         if((e = loader->PrimitiveCount(primCountList.back().data())) != SceneError::OK)
             return e;
         if((e = loader->AABB(aabbList.data())) != SceneError::OK)
+            return e;
+        if((e = loader->BatchOffsets(offsetList.back().data())) != SceneError::OK)
             return e;
 
         size_t i = 0;
@@ -148,48 +153,51 @@ SceneError GPUPrimitiveSphere::ChangeTime(const NodeListing& surfaceDataNodes, d
     }
 
     // Now Copy
+    size_t j = 0;
+    std::vector<float> postitionsCPU, radiusCPU;
+    for(const auto& loader : loaders)
+    {
+        const SceneNodeI& node = loader->SceneNode();
+        const size_t batchCount = node.IdCount();
 
-////
-//    SceneError e = SceneError::OK;
-//    std::vector<float> postitionsCPU, radiusCPU;
-//    for(const auto& loader : loaders)
-//    {
-//        const SceneNodeI& node = loader->SceneNode();
-//        const size_t batchCount = node.IdCount();
-//
-//        size_t i = 0;
-//        for(const auto& pair : node.Ids())
-//        {
-//            NodeId id = pair.first;
-//            Vector2ul range = batchRanges[id];
-//
-//
-//            size_t primitiveCount = loader->PrimitiveCount();
-//            assert((range[1] - range[0]) == primitiveCount);
-//
-//            postitionsCPU.resize(primitiveCount * 3);
-//            radiusCPU.resize(primitiveCount);
-//
-//            if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data()),
-//                                             PrimitiveDataType::POSITION))
-//                return e;
-//            if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(radiusCPU.data()),
-//                                             PrimitiveDataType::RADIUS))
-//                return e;
-//
-//            // Copy
-//            float* dCentersRadius = static_cast<float*>(memory);
-//            CUDA_CHECK(cudaMemcpy2D(dCentersRadius, sizeof(Vector4f),
-//                                    postitionsCPU.data(), sizeof(float) * 3,
-//                                    sizeof(float) * 3, primitiveCount,
-//                                    cudaMemcpyHostToDevice));
-//
-//            CUDA_CHECK(cudaMemcpy2D(dCentersRadius + 3, sizeof(Vector4f),
-//                                    radiusCPU.data(), sizeof(float),
-//                                    sizeof(float), primitiveCount,
-//                                    cudaMemcpyHostToDevice));
-//        }
-//    }
+        const std::vector<size_t>& offsets = offsetList[j];
+        const std::vector<size_t>& counts = primCountList[j];
+        size_t loaderTotalCount = offsets.back();
+
+        postitionsCPU.resize(loaderTotalCount * 3);
+        radiusCPU.resize(loaderTotalCount);
+
+        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data()),
+                                         PrimitiveDataType::POSITION))
+            return e;
+        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(radiusCPU.data()),
+                                         PrimitiveDataType::RADIUS))
+            return e;
+
+        // Now copy one by one
+        size_t i = 0;
+        for(const auto& pair : node.Ids())
+        {
+            NodeId id = pair.first;
+            Vector2ul range = batchRanges[id];
+
+            size_t primitiveCount = counts[i];
+            assert((range[1] - range[0]) == primitiveCount);
+
+            // Copy
+            float* dCentersRadius = static_cast<float*>(memory);
+            CUDA_CHECK(cudaMemcpy2D(dCentersRadius + range[0], sizeof(Vector4f),
+                                    postitionsCPU.data() + offsets[i], sizeof(float) * 3,
+                                    sizeof(float) * 3, primitiveCount,
+                                    cudaMemcpyHostToDevice));
+
+            CUDA_CHECK(cudaMemcpy2D(dCentersRadius + range[0] + 3,  sizeof(Vector4f),
+                                    radiusCPU.data() + offsets[i], sizeof(float),
+                                    sizeof(float), primitiveCount,
+                                    cudaMemcpyHostToDevice));
+        }
+        j++;
+    }
     return e;
 }
 
