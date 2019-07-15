@@ -1,4 +1,4 @@
-#include "GPUScene.h"
+#include "GPUSceneJson.h"
 
 #include "RayLib/SceneIO.h"
 #include "RayLib/Types.h"
@@ -142,7 +142,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             const std::string matGroupType = jsnNode[SceneIO::TYPE];
             auto& matSet = matGroupNodes.emplace(matGroupType, NodeListing()).first->second;
             auto& node = *matSet.emplace(std::make_unique<SceneNodeJson>(jsnNode, nIndex)).first;
-            node->AddIndexIdPair(iIndex, matId);
+            node->AddIdIndexPair(matId, iIndex);
             AttachMatBatch(primType, matGroupType, matId);
         }
         else return SceneError::MATERIAL_ID_NOT_FOUND;
@@ -191,7 +191,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                 else primGroupType = currentType;
                 auto& primSet = primGroupNodes.emplace(primGroupType, NodeListing()).first->second;
                 auto& node = *primSet.emplace(std::make_unique<SceneNodeJson>(jsnNode, nIndex)).first;
-                node->AddIndexIdPair(iIndex, primId);
+                node->AddIdIndexPair(primId, iIndex);
             }
             else return SceneError::PRIMITIVE_ID_NOT_FOUND;
 

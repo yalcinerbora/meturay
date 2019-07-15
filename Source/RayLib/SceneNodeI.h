@@ -32,21 +32,23 @@ class SceneNodeI
         NodeIndex                           Index() const;
         const std::set<IdPair>&             Ids() const;
         size_t                              IdCount() const;
-        void                                AddIndexIdPair(InnerIndex index, NodeId id);
+        void                                AddIdIndexPair(InnerIndex index, NodeId id);
         bool                                operator<(const SceneNodeI& node) const;
 
         // Interface
-        virtual size_t                      AccessCount() const = 0;
-        virtual size_t                      AccessCount(const std::string& name) const = 0;
+        virtual size_t                      AccessListTotalCount(const std::string& name) const = 0;
+        virtual std::vector<size_t>         AccessListCount(const std::string& name) const = 0;
+
+        virtual std::string                 Name() const = 0;
 
         // Direct Singular data loading (id inspecific)
-        virtual std::string                 AccessString(const std::string& name, double time = 0.0) const = 0;
-        virtual float                       AccessFloat(const std::string& name, double time = 0.0) const = 0;
-        virtual Vector2                     AccessVector2(const std::string& name, double time = 0.0) const = 0;
-        virtual Vector3                     AccessVector3(const std::string& name, double time = 0.0) const = 0;
-        virtual Vector4                     AccessVector4(const std::string& name, double time = 0.0) const = 0;
-        virtual Matrix4x4                   AccessMatrix4x4(const std::string& name, double time = 0.0) const = 0;
-        virtual uint32_t                    AccessUInt(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<std::string>    AccessString(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<float>          AccessFloat(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<Vector2>        AccessVector2(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<Vector3>        AccessVector3(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<Vector4>        AccessVector4(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<Matrix4x4>      AccessMatrix4x4(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<uint32_t>       AccessUInt(const std::string& name, double time = 0.0) const = 0;
 
         // Id pair specific data loading
         virtual std::vector<std::string>    AccessStringList(const std::string& name, double time = 0.0) const = 0;
@@ -77,9 +79,9 @@ inline size_t SceneNodeI::IdCount() const
     return indexIdPairs.size();
 }
 
-inline void SceneNodeI::AddIndexIdPair(InnerIndex index, NodeId id)
+inline void SceneNodeI::AddIdIndexPair(NodeId id, InnerIndex index)
 {
-    indexIdPairs.emplace(std::make_pair(index, id));
+    indexIdPairs.emplace(std::make_pair(id, index));
 }
 
 inline bool SceneNodeI::operator<(const SceneNodeI& node) const

@@ -1,7 +1,13 @@
 #pragma once
 
-#pragma once
+#include "Matrix.h"
+#include "HitStructs.h"
 
+struct SceneError;
+struct LightStruct;
+struct CameraPerspective;
+
+using TransformStruct = Matrix4x4;
 
 class GPUSceneI
 {

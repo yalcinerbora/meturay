@@ -1,7 +1,7 @@
 #include "TracerLogics.cuh"
 
 #include "RayLib/TracerError.h"
-#include "TracerLib/GPUScene.h"
+#include "RayLib/GPUSceneI.h"
 #include "TracerLib/RayMemory.h"
 
 TracerBasic::TracerBasic(GPUBaseAcceleratorI& ba,

@@ -54,7 +54,7 @@ SceneError InNodeTriLoader::BatchOffsets(size_t* result) const
     int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
     const std::string positionName = PrimitiveDataTypeNames[posIndex];
 
-    size_t count = node.AccessCount(positionName);
+    size_t count = node.AccessListTotalCount(positionName);
     if(count % 3 != 0) 
         return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
 
@@ -68,10 +68,10 @@ SceneError InNodeTriLoader::PrimitiveCount(size_t* result) const
     int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
     const std::string positionName = PrimitiveDataTypeNames[posIndex];
 
-    size_t count = node.AccessCount(positionName);
+    size_t count = node.AccessListTotalCount(positionName);
     if(count % 3 != 0) 
         return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
-    result[0] = count;
+    result[0] = (count / 3);
     return SceneError::OK;
 }
 
@@ -85,11 +85,11 @@ SceneError InNodeTriLoader::AABB(AABB3* result) const
         return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
 
     result[0] = AABB3(Zero3, Zero3);
-    for(size_t i = 0; positions.size() / 3; i++)
+    for(size_t i = 0; i < (positions.size() / 3); i++)
     {
-        result[0].Union(Triangle::BoundingBox(positions[i * 3 + 0],
-                                              positions[i * 3 + 1],
-                                              positions[i * 3 + 2]));
+        result[0].UnionSelf(Triangle::BoundingBox(positions[i * 3 + 0],
+                                                  positions[i * 3 + 1],
+                                                  positions[i * 3 + 2]));
     }
     return SceneError::OK;
 }
@@ -134,7 +134,7 @@ class InNodeSphrLoader : public SurfaceDataLoader
         SceneError              GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const override;
 };
 
-InNodeSphrLoader::InNodeSphrLoader(const SceneNodeI&, double time)
+InNodeSphrLoader::InNodeSphrLoader(const SceneNodeI& node, double time)
     : SurfaceDataLoader(node, time)
 {}
 
@@ -167,7 +167,7 @@ SceneError InNodeSphrLoader::PrimitiveCount(size_t* result) const
 {
     int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
     const std::string positionName = PrimitiveDataTypeNames[posIndex];
-    size_t primDataCount = node.AccessCount(positionName);
+    size_t primDataCount = node.IdCount();
 
     std::fill_n(result, primDataCount, 1);
     return SceneError::OK;
@@ -180,8 +180,8 @@ SceneError InNodeSphrLoader::AABB(AABB3* result) const
     const std::string positionName = PrimitiveDataTypeNames[posIndex];
     const std::string radiusName = PrimitiveDataTypeNames[radIndex];
 
-    std::vector<Vector3> positions = node.AccessVector3List(positionName, time);
-    std::vector<float> radiuses = node.AccessFloatList(radiusName, time);
+    std::vector<Vector3> positions = node.AccessVector3(positionName, time);
+    std::vector<float> radiuses = node.AccessFloat(radiusName, time);
 
     if(positions.size() != node.IdCount() || radiuses.size() != node.IdCount())
         return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
@@ -200,13 +200,13 @@ SceneError InNodeSphrLoader::GetPrimitiveData(Byte* memory, PrimitiveDataType pr
 
     if(primitiveDataType == PrimitiveDataType::POSITION)
     {
-        std::vector<Vector3> result = node.AccessVector3List(name, time);
+        std::vector<Vector3> result = node.AccessVector3(name, time);
         std::copy(result.begin(), result.end(), reinterpret_cast<Vector3*>(memory));
         return SceneError::OK;
     }
     else if(primitiveDataType == PrimitiveDataType::RADIUS)
     {
-        std::vector<float> result = node.AccessFloatList(name, time);
+        std::vector<float> result = node.AccessFloat(name, time);
         std::copy(result.begin(), result.end(), reinterpret_cast<float*>(memory));
         return SceneError::OK;
     }
@@ -216,7 +216,7 @@ SceneError InNodeSphrLoader::GetPrimitiveData(Byte* memory, PrimitiveDataType pr
 std::unique_ptr<SurfaceDataLoaderI> SurfaceDataIO::GenSurfaceDataLoader(const SceneNodeI& properties,
                                                                         double time)
 {
-    const std::string name = properties.AccessString(SceneIO::NAME);
+    const std::string name = properties.Name();
     const std::string ext = SceneIO::StripFileExt(name);
 
     // There shoudl

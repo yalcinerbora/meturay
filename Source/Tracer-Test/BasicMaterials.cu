@@ -12,7 +12,7 @@ SceneError BasicMat::InitializeGroup(const NodeListing& materialNodes, double ti
     std::vector<Vector3> albedoCPU;
     for(const auto& sceneNode : materialNodes)
     {
-        std::vector<Vector3> albedos = sceneNode->AccessVector3List(ALBEDO);
+        std::vector<Vector3> albedos = sceneNode->AccessVector3(ALBEDO);
         albedoCPU.insert(albedoCPU.end(), albedos.begin(), albedos.end());
     }
 

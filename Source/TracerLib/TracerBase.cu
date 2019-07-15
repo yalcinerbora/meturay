@@ -4,12 +4,12 @@
 #include "RayLib/Log.h"
 #include "RayLib/TracerError.h"
 #include "RayLib/TracerCallbacksI.h"
+#include "RayLib/GPUSceneI.h"
 
 #include "TracerDebug.h"
 #include "GPUAcceleratorI.h"
 #include "GPUMaterialI.h"
 #include "TracerLogicI.h"
-#include "GPUScene.h"
 
 template <class... Args>
 inline void TracerBase::SendLog(const char* format, Args... args)

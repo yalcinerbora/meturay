@@ -35,7 +35,7 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
         const SceneNodeI& node = loader->SceneNode();
         const size_t batchCount = node.IdCount();
 
-        std::vector<AABB3>  aabbList(batchCount);
+        std::vector<AABB3> aabbList(batchCount);
         primCountList.emplace_back(batchCount);
 
         // Load Aux Data
@@ -89,6 +89,7 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
 
     // All loaded to CPU, copy to GPU
     // Alloc
+    totalPrimitiveCount = 1;
     memory = std::move(DeviceMemory(sizeof(Vector4f) * totalPrimitiveCount));
     float* dCentersRadius = static_cast<float*>(memory);
     // Copy

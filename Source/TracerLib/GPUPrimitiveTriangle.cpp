@@ -35,7 +35,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         const SceneNodeI& node = loader->SceneNode();
         const size_t batchCount = node.IdCount();
 
-        std::vector<AABB3>  aabbList(batchCount);
+        std::vector<AABB3> aabbList(batchCount);
         primCountList.emplace_back(batchCount);
 
         // Load Aux Data
@@ -93,7 +93,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     assert(offset == totalPrimitiveCount);
 
     // All loaded to CPU, copy to GPU
-        // Alloc
+    // Alloc
     memory = std::move(DeviceMemory(sizeof(Vector4f) * 2 * totalVertexCount));
     float* dPositionsU = static_cast<float*>(memory);
     float* dNormalsV = static_cast<float*>(memory) + totalVertexCount * 4;

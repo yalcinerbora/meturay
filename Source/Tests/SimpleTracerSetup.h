@@ -14,8 +14,8 @@
 #include "VisorGL/VisorGLEntry.h"
 
 // Tracer
+#include "TracerLib/GPUSceneJson.h"
 #include "TracerLib/TracerLoader.h"
-#include "TracerLib/GPUScene.h"
 #include "TracerLib/TracerBase.h"
 #include "TracerLib/ScenePartitioner.h"
 
