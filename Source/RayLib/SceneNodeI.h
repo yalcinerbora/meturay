@@ -40,6 +40,7 @@ class SceneNodeI
         virtual std::vector<size_t>         AccessListCount(const std::string& name) const = 0;
 
         virtual std::string                 Name() const = 0;
+        virtual std::string                 Tag() const = 0;
 
         // Direct Singular data loading (id inspecific)
         virtual std::vector<std::string>    AccessString(const std::string& name, double time = 0.0) const = 0;

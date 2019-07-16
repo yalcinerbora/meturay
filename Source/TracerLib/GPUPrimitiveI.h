@@ -27,6 +27,7 @@ since this API is being developed for customization this is mandatory.
 
 struct SceneError;
 class SceneNodeI;
+class SurfaceLoaderGeneratorI;
 
 class GPUPrimitiveGroupI
 {
@@ -37,8 +38,10 @@ class GPUPrimitiveGroupI
         // Type (as string) of the primitive group
         virtual const char*         Type() const = 0;
         // Allocates and Generates Data
-        virtual SceneError          InitializeGroup(const NodeListing& surfaceDatalNodes, double time) = 0;
-        virtual SceneError          ChangeTime(const NodeListing& surfaceDatalNodes, double time) = 0;
+        virtual SceneError          InitializeGroup(const NodeListing& surfaceDatalNodes, double time,
+                                                    const SurfaceLoaderGeneratorI&) = 0;
+        virtual SceneError          ChangeTime(const NodeListing& surfaceDatalNodes, double time,
+                                               const SurfaceLoaderGeneratorI&) = 0;
 
         // Access primitive range from Id     
         virtual Vector2ul           PrimitiveBatchRange(uint32_t surfaceDataId) const = 0;

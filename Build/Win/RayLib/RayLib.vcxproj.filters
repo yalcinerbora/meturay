@@ -98,9 +98,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\Types.h">
       <Filter>System</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\SurfaceDataIO.h">
-      <Filter>FileI-O</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\ObjectFuncDefinitions.h">
       <Filter>System</Filter>
     </ClInclude>
@@ -165,6 +162,18 @@
     <ClInclude Include="..\..\..\Source\RayLib\GPUSceneI.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderGeneratorI.h">
+      <Filter>FileI-O</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderGenerator.h">
+      <Filter>FileI-O</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderI.h">
+      <Filter>FileI-O</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.h">
+      <Filter>FileI-O</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">
@@ -218,14 +227,17 @@
     <ClCompile Include="..\..\..\Source\RayLib\SharedLib.cpp">
       <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\RayLib\SurfaceDataIO.cpp">
-      <Filter>FileI-O</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\MDistributor.cpp">
       <Filter>Distributor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\SelfNode.cpp">
       <Filter>Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\SurfaceLoaderGenerator.cpp">
+      <Filter>FileI-O</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.cpp">
+      <Filter>FileI-O</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

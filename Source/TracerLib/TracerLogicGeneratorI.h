@@ -66,15 +66,15 @@ class TracerLogicGeneratorI
 
         // Get all generated stuff on a vector
         virtual PrimitiveGroupList          GetPrimitiveGroups() const = 0;
-        virtual AcceleratorGroupList            GetAcceleratorGroups() const = 0;
-        virtual AcceleratorBatchMappings        GetAcceleratorBatches() const = 0;
+        virtual AcceleratorGroupList        GetAcceleratorGroups() const = 0;
+        virtual AcceleratorBatchMappings    GetAcceleratorBatches() const = 0;
         virtual MaterialGroupList           GetMaterialGroups() const = 0;
         virtual MaterialBatchMappings       GetMaterialBatches() const = 0;
 
-        virtual GPUBaseAcceleratorI*            GetBaseAccelerator() const = 0;
+        virtual GPUBaseAcceleratorI*        GetBaseAccelerator() const = 0;
 
         // Resetting all generated Groups and Batches
-        virtual void                            ClearAll() = 0;
+        virtual void                        ClearAll() = 0;
 
         // Inclusion Functionality
         // Additionally includes the materials from these libraries

@@ -1,9 +1,11 @@
 #include "GPUPrimitiveTriangle.h"
 
 #include "RayLib/PrimitiveDataTypes.h"
-#include "RayLib/SurfaceDataIO.h"
 #include "RayLib/SceneError.h"
 #include "RayLib/Log.h"
+
+#include "RayLib/SurfaceLoaderGenerator.h"
+#include "RayLib/SurfaceLoaderI.h"
 
 // Generics
 GPUPrimitiveTriangle::GPUPrimitiveTriangle()
@@ -15,20 +17,23 @@ const char* GPUPrimitiveTriangle::Type() const
     return TypeName();
 }
 
-SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataNodes,
-                                                 double time)
+SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataNodes, double time,
+                                                 const SurfaceLoaderGeneratorI& loaderGen)
 {
+    SceneError e = SceneError::OK;
     std::vector<std::vector<size_t>> primCountList;
 
     // Generate Loaders
-    std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
+    std::vector<SharedLibPtr<SurfaceLoaderI>> loaders;
     for(const auto& sPtr : surfaceDataNodes)
     {
         const SceneNodeI& s = *sPtr;
-        loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s, time)));
+        SharedLibPtr<SurfaceLoaderI> sl(nullptr, [] (SurfaceLoaderI*)->void {});        
+        if((e = loaderGen.GenerateSurfaceLoader(sl, s, time)) != SceneError::OK)
+           return e;
+        loaders.emplace_back(std::move(sl));
     }
 
-    SceneError e = SceneError::OK;
     totalPrimitiveCount = 0;
     for(const auto& loader : loaders)
     {
@@ -39,7 +44,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         primCountList.emplace_back(batchCount);
 
         // Load Aux Data
-        if((e = loader->PrimitiveCount(primCountList.back().data())) != SceneError::OK)
+        if((e = loader->PrimitiveCounts(primCountList.back().data())) != SceneError::OK)
             return e;
         if((e = loader->AABB(aabbList.data())) != SceneError::OK)
             return e;
@@ -122,21 +127,25 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     return e;
 }
 
-SceneError GPUPrimitiveTriangle::ChangeTime(const NodeListing& surfaceDataNodes, double time)
+SceneError GPUPrimitiveTriangle::ChangeTime(const NodeListing& surfaceDataNodes, double time,
+                                            const SurfaceLoaderGeneratorI& loaderGen)
 {
+    SceneError e = SceneError::OK;
     std::vector<std::vector<size_t>> primCountList;
     std::vector<std::vector<size_t>> offsetList;
 
     // Generate Loaders
-    std::vector<std::unique_ptr<SurfaceDataLoaderI>> loaders;
+    std::vector<SharedLibPtr<SurfaceLoaderI>> loaders;
     for(const auto& sPtr : surfaceDataNodes)
     {
         const SceneNodeI& s = *sPtr;
-        loaders.push_back(std::move(SurfaceDataIO::GenSurfaceDataLoader(s, time)));
+        SharedLibPtr<SurfaceLoaderI> sl(nullptr, [](SurfaceLoaderI*)->void{});
+        if((e = loaderGen.GenerateSurfaceLoader(sl, s, time)) != SceneError::OK)
+            return e;
+        loaders.emplace_back(std::move(sl));
     }
 
     // First update aabbs (these should have changed)
-    SceneError e = SceneError::OK;
     totalPrimitiveCount = 0;
     for(const auto& loader : loaders)
     {
@@ -148,7 +157,7 @@ SceneError GPUPrimitiveTriangle::ChangeTime(const NodeListing& surfaceDataNodes,
         offsetList.emplace_back(batchCount + 1);
 
         // Load Aux Data
-        if((e = loader->PrimitiveCount(primCountList.back().data())) != SceneError::OK)
+        if((e = loader->PrimitiveCounts(primCountList.back().data())) != SceneError::OK)
             return e;
         if((e = loader->AABB(aabbList.data())) != SceneError::OK)
             return e;

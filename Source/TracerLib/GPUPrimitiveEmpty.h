@@ -71,8 +71,10 @@ class GPUPrimitiveEmpty final
         // Pirmitive type is used for delegating scene info to this class
         const char*                             Type() const override;
         // Allocates and Generates Data
-        SceneError                              InitializeGroup(const NodeListing& surfaceDatalNodes, double time) override;
-        SceneError                              ChangeTime(const NodeListing& surfaceDatalNodes, double time) override;
+        SceneError                              InitializeGroup(const NodeListing& surfaceDatalNodes, double time,
+                                                                const SurfaceLoaderGeneratorI&) override;
+        SceneError                              ChangeTime(const NodeListing& surfaceDatalNodes, double time,
+                                                           const SurfaceLoaderGeneratorI&) override;
 
         // Access primitive range from Id
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;

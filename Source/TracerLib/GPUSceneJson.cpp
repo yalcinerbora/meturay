@@ -37,9 +37,11 @@ SceneError GPUSceneJson::OpenFile(const std::string& fileName)
 
 GPUSceneJson::GPUSceneJson(const std::string& fileName,
                            ScenePartitionerI& partitioner,
-                           TracerLogicGeneratorI& lg)
+                           TracerLogicGeneratorI& lg,
+                           const SurfaceLoaderGeneratorI& sl)
     : logicGenerator(lg)
     , partitioner(partitioner)
+    , surfaceLoaderGenerator(sl)
     , maxAccelIds(Vector2i(-1))
     , maxMatIds(Vector2i(-1))
     , baseBoundaryMatKey(HitKey::InvalidKey)
@@ -317,7 +319,7 @@ SceneError GPUSceneJson::GeneratePrimitiveGroups(const PrimitiveNodeList& primGr
         GPUPrimitiveGroupI* primGroup = nullptr;
         if(e = logicGenerator.GeneratePrimitiveGroup(primGroup, primTypeName))
             return e;
-        if(e = primGroup->InitializeGroup(primNodes, time))
+        if(e = primGroup->InitializeGroup(primNodes, time, surfaceLoaderGenerator))
             return e;
     }
     return e;

@@ -16,7 +16,7 @@ struct SceneError;
 class SceneNodeI;
 class ScenePartitionerI;
 class TracerLogicGeneratorI;
-
+class SurfaceLoaderGeneratorI;
 
 using IndexLookup = std::map<NodeId, std::pair<NodeIndex, InnerIndex>>;
 
@@ -41,6 +41,7 @@ class GPUSceneJson : public GPUSceneI
         // Fundamental
         TracerLogicGeneratorI&                  logicGenerator;
         ScenePartitionerI&                      partitioner;
+        const SurfaceLoaderGeneratorI&          surfaceLoaderGenerator;
 
         // Loaded
         Vector2i                                maxAccelIds;
@@ -109,7 +110,8 @@ class GPUSceneJson : public GPUSceneI
         // Constructors & Destructor
                                     GPUSceneJson(const std::string&,
                                                  ScenePartitionerI&,
-                                                 TracerLogicGeneratorI&);
+                                                 TracerLogicGeneratorI&,
+                                                 const SurfaceLoaderGeneratorI&);
                                     GPUSceneJson(const GPUSceneJson&) = delete;
                                     GPUSceneJson(GPUSceneJson&&) = default;
         GPUSceneJson&               operator=(const GPUSceneJson&) = delete;

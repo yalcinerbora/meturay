@@ -33,6 +33,7 @@ class SceneNodeJson final : public SceneNodeI
 
         // Direct Singular data loading (id inspecific)
         std::string                 Name() const override;
+        std::string                 Tag() const override;
 
         // Id pair specific data loading
         std::vector<std::string>    AccessString(const std::string& name, double time = 0.0) const override;

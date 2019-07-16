@@ -1,4 +1,5 @@
-#include "SurfaceDataIO.h"
+#include "BasicSurfaceLoaders.h"
+
 #include "SceneIO.h"
 #include "Sphere.h"
 #include "Triangle.h"
@@ -7,27 +8,8 @@
 
 #include <numeric>
 
-class InNodeTriLoader : public SurfaceDataLoader
-{
-    private:
-    protected:
-    public:
-        // Constructors & Destructor
-                            InNodeTriLoader(const SceneNodeI&, double time = 0.0);
-                            ~InNodeTriLoader() = default;
-
-     // Type Determination
-     const char*            SufaceDataFileExt() const override;
-     SceneError             PrimDataLayout(PrimitiveDataLayout*,
-                                           PrimitiveDataType primitiveDataType) const override;
-     SceneError             BatchOffsets(size_t*) const override;
-     SceneError             PrimitiveCount(size_t*) const override;
-     SceneError             AABB(AABB3*) const override;
-     SceneError             GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const override;
-};
-
 InNodeTriLoader::InNodeTriLoader(const SceneNodeI& node, double time)
-    : SurfaceDataLoader(node, time)
+    : SurfaceLoader(node, time)
 {
     if(node.IdCount() != 1) throw SceneException(SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR,
                                                  "InNodeTriangle cannot have multi id node.");
@@ -35,7 +17,7 @@ InNodeTriLoader::InNodeTriLoader(const SceneNodeI& node, double time)
 
 const char* InNodeTriLoader::SufaceDataFileExt() const
 {
-    return NodeTriangleName;
+    return TypeName();
 }
 
 SceneError InNodeTriLoader::PrimDataLayout(PrimitiveDataLayout* result, PrimitiveDataType primitiveDataType) const
@@ -63,7 +45,7 @@ SceneError InNodeTriLoader::BatchOffsets(size_t* result) const
     return SceneError::OK;
 }
 
-SceneError InNodeTriLoader::PrimitiveCount(size_t* result) const
+SceneError InNodeTriLoader::PrimitiveCounts(size_t* result) const
 {
     int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
     const std::string positionName = PrimitiveDataTypeNames[posIndex];
@@ -115,33 +97,14 @@ SceneError InNodeTriLoader::GetPrimitiveData(Byte* memory, PrimitiveDataType pri
     else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
 }
 
-class InNodeSphrLoader : public SurfaceDataLoader
-{
-    private:
-    protected:
-    public:
-        // Constructors & Destructor
-                                InNodeSphrLoader(const SceneNodeI& node, double time = 0.0);
-                                ~InNodeSphrLoader() = default;
-
-        // Type Determination
-        const char*             SufaceDataFileExt() const override;
-        SceneError              PrimDataLayout(PrimitiveDataLayout*,
-                                               PrimitiveDataType primitiveDataType) const override;
-        SceneError              BatchOffsets(size_t*) const override;
-        SceneError              PrimitiveCount(size_t*) const override;
-        SceneError              AABB(AABB3*) const override;
-        SceneError              GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const override;
-};
-
 InNodeSphrLoader::InNodeSphrLoader(const SceneNodeI& node, double time)
-    : SurfaceDataLoader(node, time)
+    : SurfaceLoader(node, time)
 {}
 
 // Type Determination
 const char* InNodeSphrLoader::SufaceDataFileExt() const
 {
-    return NodeSphereName;
+    return TypeName();
 }
 
 SceneError InNodeSphrLoader::PrimDataLayout(PrimitiveDataLayout* result, PrimitiveDataType primitiveDataType) const
@@ -163,7 +126,7 @@ SceneError InNodeSphrLoader::BatchOffsets(size_t* result) const
     return SceneError::OK;
 }
 
-SceneError InNodeSphrLoader::PrimitiveCount(size_t* result) const
+SceneError InNodeSphrLoader::PrimitiveCounts(size_t* result) const
 {
     int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
     const std::string positionName = PrimitiveDataTypeNames[posIndex];
@@ -211,24 +174,4 @@ SceneError InNodeSphrLoader::GetPrimitiveData(Byte* memory, PrimitiveDataType pr
         return SceneError::OK;
     }
     else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
-}
-
-std::unique_ptr<SurfaceDataLoaderI> SurfaceDataIO::GenSurfaceDataLoader(const SceneNodeI& properties,
-                                                                        double time)
-{
-    const std::string name = properties.Name();
-    const std::string ext = SceneIO::StripFileExt(name);
-
-    // There shoudl
-    if(ext == NodeSphereName)
-    {
-        SurfaceDataLoaderI* loader = new InNodeSphrLoader(properties, time);
-        return std::unique_ptr<SurfaceDataLoaderI>(loader);
-    }
-    else if(ext == NodeTriangleName)
-    {
-        SurfaceDataLoaderI* loader = new InNodeTriLoader(properties, time);
-        return std::unique_ptr<SurfaceDataLoaderI>(loader);
-    }
-    else throw SceneException(SceneError::NO_LOGIC_FOR_SURFACE_DATA);
 }

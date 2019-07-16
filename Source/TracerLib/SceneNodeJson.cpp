@@ -72,6 +72,14 @@ std::string SceneNodeJson::Name() const
     return SceneIO::LoadString(node[SceneIO::NAME]);
 }
 
+std::string SceneNodeJson::Tag() const
+{
+    nlohmann::json::const_iterator i;
+    if((i = node.find(SceneIO::TAG)) != node.end())
+        return SceneIO::LoadString(node[SceneIO::TAG]);
+    return "";
+}
+
 std::vector<std::string> SceneNodeJson::AccessString(const std::string& name, double time) const
 {
     return AccessSingle<std::string, SceneIO::LoadString>(node, name, time);

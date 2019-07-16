@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 // Load Base Instace
 template <class T>
 using ObjGeneratorFunc = T* (*)();

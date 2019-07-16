@@ -33,6 +33,7 @@ namespace SceneIO
     static constexpr const char* ID = "id";
     static constexpr const char* TYPE = "type";
     static constexpr const char* NAME = "name";
+    static constexpr const char* TAG = "tag";
 
     // Generic Time Dependency Check
     bool                IsTimeDependent(const nlohmann::json&);

@@ -166,8 +166,11 @@
     <ClInclude Include="..\..\..\Source\RayLib\SharedLib.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Sphere.h" />
     <ClInclude Include="..\..\..\Source\RayLib\StaticString.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\SurfaceDataIO.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.h" />
     <ClInclude Include="..\..\..\Source\RayLib\PrimitiveDataTypes.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderGenerator.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderGeneratorI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ThreadData.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerCallbacksI.h" />
@@ -194,7 +197,8 @@
     <ClCompile Include="..\..\..\Source\RayLib\SceneIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SelfNode.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SharedLib.cpp" />
-    <ClCompile Include="..\..\..\Source\RayLib\SurfaceDataIO.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\SurfaceLoaderGenerator.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\VisorWindowInput.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
   </ItemGroup>

@@ -7,6 +7,7 @@
 #include "RayLib/Log.h"
 #include "RayLib/Constants.h"
 #include "RayLib/CPUTimer.h"
+#include "RayLib/SurfaceLoaderGenerator.h"
 
 // Visor
 #include "RayLib/VisorI.h"
@@ -49,6 +50,8 @@ class SimpleTracerSetup
         {
             false   // Verbose
         };
+
+        SurfaceLoaderGenerator              surfaceLoaders;
 
         // Scene Tracer and Visor
         std::unique_ptr<VisorI>             visorView;
@@ -111,7 +114,8 @@ bool SimpleTracerSetup::Init()
     // Load Scene
     gpuScene = std::make_unique<GPUSceneJson>(sceneName,
                                               partitioner,
-                                              *tracerGenerator.get());
+                                              *tracerGenerator.get(),
+                                              surfaceLoaders);
     SceneError scnE = gpuScene->LoadScene(sceneTime);
     ERROR_CHECK(SceneError, scnE);
 

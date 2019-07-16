@@ -8,12 +8,14 @@ const char* GPUPrimitiveEmpty::Type() const
     return TypeName();
 }
 
-SceneError GPUPrimitiveEmpty::InitializeGroup(const NodeListing& surfaceDatalNodes, double time)
+SceneError GPUPrimitiveEmpty::InitializeGroup(const NodeListing& surfaceDatalNodes, double time,
+                                              const SurfaceLoaderGeneratorI&)
 {
     return SceneError::OK;
 }
 
-SceneError GPUPrimitiveEmpty::ChangeTime(const NodeListing& surfaceDatalNodes, double time)
+SceneError GPUPrimitiveEmpty::ChangeTime(const NodeListing& surfaceDatalNodes, double time,
+                                         const SurfaceLoaderGeneratorI&)
 {
     return SceneError::OK;
 }
