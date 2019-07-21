@@ -8,6 +8,7 @@ and vice versa.
 
 */
 
+#include "NodeI.h"
 #include "VisorCallbacksI.h"
 #include "TracerCallBacksI.h"
 
@@ -17,6 +18,7 @@ class TracerI;
 class SelfNode
     : public VisorCallbacksI
     , public TracerCallbacksI
+    , public NodeI
 {
     private:
         VisorI&     visor;
@@ -51,4 +53,8 @@ class SelfNode
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void        SendAccelerator(HitKey key, const std::vector<Byte> data) override;
         void        SendBaseAccelerator(const std::vector<Byte> data) override;
+
+        // From Node Interface
+        NodeError   Initialize() override;
+        bool        Loop() override;
 };

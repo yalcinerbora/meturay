@@ -194,7 +194,6 @@ void SimpleTracerSetup::Body()
         // Present Back Buffer
         visorView->ProcessInputs();
 
-
         // Timing and Window Termination
         t.Lap();
         elapsed += t.Elapsed<CPUTimeSeconds>();

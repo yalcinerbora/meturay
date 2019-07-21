@@ -152,6 +152,8 @@
     <ClInclude Include="..\..\..\Source\RayLib\Matrix.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Matrix.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\MayaCacheIO.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\NodeError.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\NodeI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ObjectFuncDefinitions.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Quaternion.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Quaternion.hpp" />

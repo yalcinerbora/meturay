@@ -116,7 +116,7 @@ inline SceneError::operator Type() const
 
 inline SceneError::operator std::string() const
 {
-    const char* const ErrorStrings[] =
+    static constexpr char* const ErrorStrings[] =
     {
         "OK.",
         // Common

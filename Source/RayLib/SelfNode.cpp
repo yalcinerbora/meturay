@@ -45,17 +45,17 @@ void SelfNode::SendOptions(const TracerOptions opts)
 
 void SelfNode::StartStopTrace(const bool)
 {
-    // TODO:: Adjust tracer thread
+    // TOD:: Adjust tracer thread
 }
 
 void SelfNode::PauseContTrace(const bool)
 {
-    //TODO:: Adjust tracer thread
+    //TODO: Adjust tracer thread
 }
 
 void SelfNode::WindowMinimizeAction(bool minimized)
 {
-    // T
+    // TODO:
 }
 
 void SelfNode::WindowCloseAction()
@@ -88,9 +88,22 @@ void SelfNode::SendImage(const std::vector<Byte> data,
 void SelfNode::SendAccelerator(HitKey key, const std::vector<Byte> data)
 {
     // Do nothing since there is single tracer
+    // No other tracer should be available to ask an acceleretor
 }
 
 void SelfNode::SendBaseAccelerator(const std::vector<Byte> data)
 {
     // Do nothing since there is single tracer
+    // No other tracer should be available to ask an acceleretor
+}
+
+// From Node Interface
+NodeError SelfNode::Initialize()
+{
+
+}
+
+bool SelfNode::Loop()
+{ 
+    return false; 
 }
