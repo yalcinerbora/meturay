@@ -180,6 +180,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\NodeError.h">
       <Filter>Errors</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerStatus.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

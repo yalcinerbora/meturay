@@ -14,6 +14,7 @@ Self node does everything (for workstation use- or debug use etc.)
 */
 
 #include "NodeError.h"
+//#include "TracerStatus.h"
 
 class NodeI
 {
@@ -22,7 +23,8 @@ class NodeI
 
         // Interface
         virtual NodeError           Initialize() = 0;
+//        virtual TracerStatus        Status() const = 0;
 
         // Main Thead
-        virtual bool                Loop() = 0;     
+        virtual void                Work() = 0;     
 };

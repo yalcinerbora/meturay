@@ -6,16 +6,26 @@
 
 VisorWindowInput::VisorWindowInput(double sensitivity,
                                    double moveRatio,
-                                   double moveRatioModifier)
+                                   double moveRatioModifier,
+                                   //
+                                   const CameraPerspective& initialCamera)
     : Sensitivity(sensitivity)
     , MoveRatio(moveRatio)
     , MoveRatioModifier(moveRatioModifier)
     , fpsMode(false)
-    , camera(camera)
+    , camera(initialCamera)
     , visorCallbacks(nullptr)
+    , mouseX(0.0f)
+    , mouseY(0.0f)
+    , animationFPS(1.0)
 {}
 
- void VisorWindowInput::AttachVisorCallback(VisorCallbacksI& vc)
+void VisorWindowInput::ChangeAnimationFPS(double fps)
+{
+    animationFPS = fps;
+}
+
+void VisorWindowInput::AttachVisorCallback(VisorCallbacksI& vc)
 {
     visorCallbacks = &vc;
 }
@@ -46,7 +56,9 @@ void VisorWindowInput::WindowMinimized(bool minimized)
 }
 
 void VisorWindowInput::MouseScrolled(double xOffset, double yOffset)
-{}
+{
+    // TODO: Do zoom
+}
 
 void VisorWindowInput::MouseMoved(double x, double y)
 {
@@ -76,7 +88,7 @@ void VisorWindowInput::MouseMoved(double x, double y)
         camera.up[1] = (camera.up[1] < 0.0f) ? -1.0f : 1.0f;
         camera.up[2] = 0.0f;
 
-        visorCallbacks->SendCamera(camera);
+        visorCallbacks->ChangeCamera(camera);
     }
     mouseX = x;
     mouseY = y;
@@ -85,8 +97,8 @@ void VisorWindowInput::MouseMoved(double x, double y)
 void VisorWindowInput::KeyboardUsed(KeyboardKeyType key,
                                     KeyAction action)
 {
-
     // Shift modifier
+    double currentRatio = 0.0;
     if(action == KeyAction::PRESSED && key == KeyboardKeyType::LEFT_SHIFT)
     {
         currentRatio = MoveRatio * MoveRatioModifier;
@@ -132,7 +144,6 @@ void VisorWindowInput::KeyboardUsed(KeyboardKeyType key,
                 camChanged = true;
                 break;
             }
-
             // Save functionality
             case KeyboardKeyType::ENTER:
             {
@@ -143,14 +154,22 @@ void VisorWindowInput::KeyboardUsed(KeyboardKeyType key,
             // Next-Previous frame
             case KeyboardKeyType::RIGHT:
             {
-                visorCallbacks->IncreaseTime(1.0f/ static_cast<float>(currentFPS));
+                visorCallbacks->IncreaseTime(1.0f / static_cast<float>(animationFPS));
                 break;
             }
             case KeyboardKeyType::LEFT:
             {
-                visorCallbacks->DecreaseTime(1.0f / static_cast<float>(currentFPS));
+                visorCallbacks->DecreaseTime(1.0f / static_cast<float>(animationFPS));
                 break;
             }
+            // Pause cont. Tracer
+            case  KeyboardKeyType::P:
+            {
+                //visorCallbacks->PauseContTrace(pause);
+                //pause = !pause;
+                break;
+            }
+
             default:
                 // Do nothing on other keys
                 break;
@@ -158,7 +177,7 @@ void VisorWindowInput::KeyboardUsed(KeyboardKeyType key,
     }
 
     // Check if Camera Changed
-    if(camChanged) visorCallbacks->SendCamera(camera);
+    if(camChanged) visorCallbacks->ChangeCamera(camera);
 }
 
 void VisorWindowInput::MouseButtonUsed(MouseButtonType button, KeyAction action)

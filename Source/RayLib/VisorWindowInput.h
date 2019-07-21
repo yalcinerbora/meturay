@@ -2,12 +2,7 @@
 /**
 
 
-
-
-
-
 */
-
 
 #include "RayLib/VisorInputI.h"
 #include "RayLib/Camera.h"
@@ -27,12 +22,9 @@ class VisorWindowInput : public VisorInputI
         bool                            fpsMode;
         double                          mouseX;
         double                          mouseY;
-        double                          currentRatio;
-
 
         // Scene Times
-        unsigned int                    currentFPS;
-
+        double                          animationFPS;
 
         CameraPerspective               camera;
         VisorCallbacksI*                visorCallbacks;
@@ -42,9 +34,13 @@ class VisorWindowInput : public VisorInputI
         // Constructor & Destructor
                                 VisorWindowInput(double sensitivity,
                                                  double moveRatio,
-                                                 double moveRatioModifier);
+                                                 double moveRatioModifier,
+                                                 //
+                                                 const CameraPerspective& initialCamera);
                                 ~VisorWindowInput() = default;
 
+        void                    ChangeAnimationFPS(double);
+                       
         // Implementation
         void                    AttachVisorCallback(VisorCallbacksI&) override;
 

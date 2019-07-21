@@ -4,6 +4,7 @@
 #include "TracerError.h"
 #include "AnalyticData.h"
 #include "Log.h"
+#include "CPUTimer.h"
 
 #include "VisorI.h"
 #include "TracerI.h"
@@ -13,12 +14,12 @@ SelfNode::SelfNode(VisorI& v, TracerI& t)
     , tracer(t)
 {}
 
-void SelfNode::SendScene(const std::string s)
+void SelfNode::ChangeScene(const std::string s)
 {
 
 }
 
-void SelfNode::SendTime(const double)
+void SelfNode::ChangeTime(const double)
 {
 
 }
@@ -33,12 +34,17 @@ void SelfNode::DecreaseTime(const double)
 
 }
 
-void SelfNode::SendCamera(const CameraPerspective c)
+void SelfNode::ChangeCamera(const CameraPerspective c)
 {
 
 }
 
-void SelfNode::SendOptions(const TracerOptions opts)
+void SelfNode::ChangeCamera(const unsigned int)
+{
+
+}
+
+void SelfNode::ChangeOptions(const TracerOptions opts)
 {
     tracer.SetOptions(opts);
 }
@@ -76,6 +82,7 @@ void SelfNode::SendError(TracerError err)
 void SelfNode::SendAnalyticData(AnalyticData data)
 {
     //TODO:
+
 }
 
 void SelfNode::SendImage(const std::vector<Byte> data,
@@ -100,10 +107,34 @@ void SelfNode::SendBaseAccelerator(const std::vector<Byte> data)
 // From Node Interface
 NodeError SelfNode::Initialize()
 {
+    // OGL always wants to be in main thread
 
+    // Create a tracer thread and make run along
+    // Create an interface
+
+    return NodeError::OK;
 }
 
-bool SelfNode::Loop()
+void SelfNode::Work()
 { 
-    return false; 
+    //GPUSceneI& scene = *gpuScene;
+
+    // Specifically do not use self nodes loop functionality here
+    // Main Poll Loop
+    while(visor.IsOpen())
+    {
+        // Run tracer
+        //tracer.GenerateInitialRays(scene, 0, 1);
+        while(tracer.Continue())
+        {
+            tracer.Render();
+        }
+        tracer.FinishSamples();
+
+        // Before try to show do render loop
+        tracer.Render();
+
+        // Present Back Buffer
+        visor.ProcessInputs();
+    }
 }

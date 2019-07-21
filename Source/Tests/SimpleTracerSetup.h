@@ -8,6 +8,7 @@
 #include "RayLib/Constants.h"
 #include "RayLib/CPUTimer.h"
 #include "RayLib/SurfaceLoaderGenerator.h"
+#include "RayLib/TracerStatus.h"
 
 // Visor
 #include "RayLib/VisorI.h"
@@ -81,6 +82,16 @@ class SimpleTracerSetup
         void                Body();
 };
 
+class MockVisorCallback
+{
+
+};
+
+class MockTracerCallback
+{
+
+};
+
 SimpleTracerSetup::SimpleTracerSetup(std::string sceneName, double sceneTime)
     : sceneName(sceneName)
     , sceneTime(sceneTime)
@@ -95,12 +106,31 @@ SimpleTracerSetup::SimpleTracerSetup(std::string sceneName, double sceneTime)
 
 bool SimpleTracerSetup::Init()
 {
+    TracerStatus status =
+    {
+        sceneName,
+        0,
+
+        0,
+
+        CameraPerspective{},
+
+        IMAGE_RESOLUTION,
+        IMAGE_PIXEL_FORMAT,
+
+        0.0,
+
+        false,
+        false,
+
+        TRACER_OPTIONS
+    };
+
     // Load Tracer Genrator from DLL
     sharedLib = std::make_unique<SharedLib>(TRACER_DLL);
     tracerGenerator = TracerLoader::LoadTracerLogic(*sharedLib,
                                                     TRACER_DLL_GENERATOR,
                                                     TRACER_DLL_DELETER);
-
 
     // Generate GPU List & A Partitioner
     // Check cuda system error here
@@ -129,12 +159,11 @@ bool SimpleTracerSetup::Init()
     ERROR_CHECK(SceneError, scnE);
 
     // Visor Input Generation
-    visorInput = std::make_unique<VisorWindowInput>(1.0, 1.0, 2.0);
+    visorInput = std::make_unique<VisorWindowInput>(1.0, 1.0, 2.0,
+                                                    gpuScene->CamerasCPU()[0]);
 
     // Window Params
     VisorOptions visorOpts;
-    visorOpts.iFormat = IMAGE_PIXEL_FORMAT;
-    visorOpts.iSize = IMAGE_RESOLUTION;
     visorOpts.stereoOn = false;
     visorOpts.vSyncOn = false;
     visorOpts.eventBufferSize = 128;
@@ -142,6 +171,10 @@ bool SimpleTracerSetup::Init()
 
     visorOpts.wSize = Vector2i{1024, 1024};
     visorOpts.wFormat = IMAGE_PIXEL_FORMAT;
+
+
+    visorOpts.iFormat = IMAGE_PIXEL_FORMAT;
+    visorOpts.iSize = IMAGE_RESOLUTION;
 
     // Create Visor
     visorView = CreateVisorGL(visorOpts);
@@ -171,12 +204,13 @@ bool SimpleTracerSetup::Init()
 
 void SimpleTracerSetup::Body()
 {
-    GPUSceneJson& scene = *gpuScene;
+    GPUSceneI& scene = *gpuScene;
 
     CPUTimer t;
     t.Start();
     double elapsed = 0.0;
-
+    
+    // Specifically do not use self nodes loop functionality here
     // Main Poll Loop
     while(visorView->IsOpen())
     {

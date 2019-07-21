@@ -31,12 +31,13 @@ class SelfNode
                     ~SelfNode() = default;
 
         // From Command Callbacks
-        void        SendScene(const std::string) override;
-        void        SendTime(const double) override;
+        void        ChangeScene(const std::string) override;
+        void        ChangeTime(const double) override;
         void        IncreaseTime(const double) override;
         void        DecreaseTime(const double) override;
-        void        SendCamera(const CameraPerspective) override;
-        void        SendOptions(const TracerOptions) override;
+        void        ChangeCamera(const CameraPerspective) override;
+        void        ChangeCamera(const unsigned int) override;
+        void        ChangeOptions(const TracerOptions) override;
         void        StartStopTrace(const bool) override;
         void        PauseContTrace(const bool) override;
 
@@ -56,5 +57,5 @@ class SelfNode
 
         // From Node Interface
         NodeError   Initialize() override;
-        bool        Loop() override;
+        void        Work() override;
 };

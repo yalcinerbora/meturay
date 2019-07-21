@@ -179,6 +179,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\TracerI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerNode.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerError.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\TracerStatus.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Triangle.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Types.h" />
