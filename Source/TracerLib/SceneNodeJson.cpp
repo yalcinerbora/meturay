@@ -21,21 +21,23 @@ std::vector<T> SceneNodeJson::AccessSingle(const nlohmann::json& node,
 }
 
 template <class T, LoadFunc<T> LoadF>
-std::vector<T> SceneNodeJson::AccessList(const nlohmann::json& node,
-                                         const std::string& name,
-                                         double time) const
+std::vector<std::vector<T>> SceneNodeJson::AccessList(const nlohmann::json& node,
+                                                      const std::string& name,
+                                                      double time) const
 {
     const nlohmann::json& nodeInner = node[name];
-    std::vector<T> result;
+    std::vector<std::vector<T>> result;
     result.reserve(indexIdPairs.size());
 
     for(const auto& list : indexIdPairs)
     {  
+        result.emplace_back();
+
         const InnerIndex i = list.second;
         const nlohmann::json& node = (indexIdPairs.size() > 1) ? nodeInner[i] : nodeInner;
 
         for(const nlohmann::json& n : node)
-            result.push_back(LoadF(n, time));
+            result.back().push_back(LoadF(n, time));
     }
     return std::move(result);
 }
@@ -115,37 +117,37 @@ std::vector<uint32_t> SceneNodeJson::AccessUInt(const std::string& name, double 
     return AccessSingle<uint32_t, SceneIO::LoadNumber<uint32_t>>(node, name, time);
 }
 
-std::vector<std::string> SceneNodeJson::AccessStringList(const std::string& name, double time) const
+std::vector<StringList> SceneNodeJson::AccessStringList(const std::string& name, double time) const
 {
     return AccessList<std::string, SceneIO::LoadString>(node, name, time);
 }
 
-std::vector<float> SceneNodeJson::AccessFloatList(const std::string& name, double time) const
+std::vector<FloatList> SceneNodeJson::AccessFloatList(const std::string& name, double time) const
 {
     return AccessList<float, SceneIO::LoadNumber<float>>(node, name, time);
 }
 
-std::vector<Vector2> SceneNodeJson::AccessVector2List(const std::string& name, double time) const
+std::vector<Vector2List> SceneNodeJson::AccessVector2List(const std::string& name, double time) const
 {
     return AccessList<Vector2, SceneIO::LoadVector<2, float>>(node, name, time);
 }
 
-std::vector<Vector3> SceneNodeJson::AccessVector3List(const std::string& name, double time) const
+std::vector<Vector3List> SceneNodeJson::AccessVector3List(const std::string& name, double time) const
 {
     return AccessList<Vector3, SceneIO::LoadVector<3, float>>(node, name, time);
 }
 
-std::vector<Vector4> SceneNodeJson::AccessVector4List(const std::string& name, double time) const
+std::vector<Vector4List> SceneNodeJson::AccessVector4List(const std::string& name, double time) const
 {
     return AccessList<Vector4, SceneIO::LoadVector<4, float>>(node, name, time);
 }
 
-std::vector<Matrix4x4> SceneNodeJson::AccessMatrix4x4List(const std::string& name, double time) const
+std::vector<Matrix4x4List> SceneNodeJson::AccessMatrix4x4List(const std::string& name, double time) const
 {
     return AccessList<Matrix4x4, SceneIO::LoadMatrix<4, float>>(node, name, time);
 }
 
-std::vector<uint32_t> SceneNodeJson::AccessUIntList(const std::string& name, double time) const
+std::vector<UIntList> SceneNodeJson::AccessUIntList(const std::string& name, double time) const
 {
     return AccessList<uint32_t, SceneIO::LoadNumber<uint32_t>>(node, name, time);
 }

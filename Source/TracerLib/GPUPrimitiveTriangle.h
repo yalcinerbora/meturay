@@ -6,6 +6,8 @@ Default Triangle Implementation
 Has three types of data
 Position, Normal and UV.
 
+These data are indirected by a single index (like DirectX and OpenGL)
+
 All of them should be provided
 
 */
@@ -28,6 +30,7 @@ struct TriData
 {
     const Vector4f* positionsU;
     const Vector4f* normalsV;
+    const uint32_t* indexList;
 };
 
 // Triangle Hit is barycentric coordinates
@@ -47,9 +50,13 @@ inline HitResult TriangleClosestHit(// Output
                                     const TriData& primData)
 {
     // Get Position
-    Vector3 position0 = primData.positionsU[leaf.primitiveId * 3 + 0];
-    Vector3 position1 = primData.positionsU[leaf.primitiveId * 3 + 1];
-    Vector3 position2 = primData.positionsU[leaf.primitiveId * 3 + 2];
+    uint32_t index0 = primData.indexList[leaf.primitiveId * 3 + 0];
+    uint32_t index1 = primData.indexList[leaf.primitiveId * 3 + 1];
+    uint32_t index2 = primData.indexList[leaf.primitiveId * 3 + 2];
+
+    Vector3 position0 = primData.positionsU[index0];
+    Vector3 position1 = primData.positionsU[index1];
+    Vector3 position2 = primData.positionsU[index2];
 
     // Do Intersecton test
     Vector3 baryCoords; float newT;
@@ -76,9 +83,13 @@ __device__ __host__
 inline AABB3f GenerateAABBTriangle(PrimitiveId primitiveId, const TriData& primData)
 {
     // Get Position
-    Vector3 position0 = primData.positionsU[primitiveId * 3 + 0];
-    Vector3 position1 = primData.positionsU[primitiveId * 3 + 1];
-    Vector3 position2 = primData.positionsU[primitiveId * 3 + 2];
+    uint32_t index0 = primData.indexList[primitiveId * 3 + 0];
+    uint32_t index1 = primData.indexList[primitiveId * 3 + 1];
+    uint32_t index2 = primData.indexList[primitiveId * 3 + 2];
+
+    Vector3 position0 = primData.positionsU[index0];
+    Vector3 position1 = primData.positionsU[index1];
+    Vector3 position2 = primData.positionsU[index2];
 
     return Triangle::BoundingBox(position0, position1, position2);
 }
@@ -87,9 +98,14 @@ __device__ __host__
 inline float GenerateAreaTriangle(PrimitiveId primitiveId, const TriData& primData)
 {
     // Get Position
-    Vector3 position0 = primData.positionsU[primitiveId * 3 + 0];
-    Vector3 position1 = primData.positionsU[primitiveId * 3 + 1];
-    Vector3 position2 = primData.positionsU[primitiveId * 3 + 2];
+    uint32_t index0 = primData.indexList[primitiveId * 3 + 0];
+    uint32_t index1 = primData.indexList[primitiveId * 3 + 1];
+    uint32_t index2 = primData.indexList[primitiveId * 3 + 2];
+
+    Vector3 position0 = primData.positionsU[index0];
+    Vector3 position1 = primData.positionsU[index1];
+    Vector3 position2 = primData.positionsU[index2];
+
     // CCW
     Vector3 vec0 = position1 - position0;
     Vector3 vec1 = position2 - position0;
@@ -110,7 +126,10 @@ class GPUPrimitiveTriangle final
 
         // List of ranges for each batch
         uint64_t                                totalPrimitiveCount;
+        uint64_t                                totalDataCount;
+
         std::map<uint32_t, Vector2ul>           batchRanges;
+        std::map<uint32_t, Vector2ul>           batchDataRanges;
         std::map<uint32_t, AABB3>               batchAABBs;
 
     protected:

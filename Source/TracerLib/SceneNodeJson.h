@@ -13,13 +13,13 @@ class SceneNodeJson final : public SceneNodeI
         const nlohmann::json&       node;
 
         template <class T, LoadFunc<T>>
-        std::vector<T>              AccessList(const nlohmann::json& node,
-                                               const std::string& name,
-                                               double time) const;
+        std::vector<std::vector<T>>     AccessList(const nlohmann::json& node,
+                                                   const std::string& name,
+                                                   double time) const;
         template <class T, LoadFunc<T>>
-        std::vector<T>              AccessSingle(const nlohmann::json& node,
-                                                 const std::string& name,
-                                                 double time) const;
+        std::vector<T>                  AccessSingle(const nlohmann::json& node,
+                                                     const std::string& name,
+                                                     double time) const;
 
     protected:
     public:
@@ -44,12 +44,12 @@ class SceneNodeJson final : public SceneNodeI
         std::vector<Matrix4x4>      AccessMatrix4x4(const std::string& name, double time = 0.0) const override;
         std::vector<uint32_t>       AccessUInt(const std::string& name, double time = 0.0) const override;
 
-        std::vector<std::string>    AccessStringList(const std::string& name, double time = 0.0) const override;
-        std::vector<float>          AccessFloatList(const std::string& name, double time) const override;
-        std::vector<Vector2>        AccessVector2List(const std::string& name, double time = 0.0) const override;
-        std::vector<Vector3>        AccessVector3List(const std::string& name, double time = 0.0) const override;
-        std::vector<Vector4>        AccessVector4List(const std::string& name, double time = 0.0) const override;
-        std::vector<Matrix4x4>      AccessMatrix4x4List(const std::string& name, double time = 0.0) const override;
-        std::vector<uint32_t>       AccessUIntList(const std::string& name, double time = 0.0) const override;
+        std::vector<StringList>     AccessStringList(const std::string& name, double time = 0.0) const override;
+        std::vector<FloatList>      AccessFloatList(const std::string& name, double time) const override;
+        std::vector<Vector2List>    AccessVector2List(const std::string& name, double time = 0.0) const override;
+        std::vector<Vector3List>    AccessVector3List(const std::string& name, double time = 0.0) const override;
+        std::vector<Vector4List>    AccessVector4List(const std::string& name, double time = 0.0) const override;
+        std::vector<Matrix4x4List>  AccessMatrix4x4List(const std::string& name, double time = 0.0) const override;
+        std::vector<UIntList>       AccessUIntList(const std::string& name, double time = 0.0) const override;
         
 };

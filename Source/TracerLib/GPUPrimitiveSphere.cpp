@@ -75,11 +75,11 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
         const size_t batchCount = node.IdCount();
 
         // Load Data in Batch
-        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data() + offset),
-                                         PrimitiveDataType::POSITION))
+        if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data() + (offset * 3)),
+                                         PrimitiveDataType::POSITION)) != SceneError::OK)
             return e;
-        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(radiusCPU.data() + offset),
-                                         PrimitiveDataType::RADIUS))
+        if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(radiusCPU.data() + offset),
+                                         PrimitiveDataType::RADIUS)) != SceneError::OK)
             return e;
 
         // Generate offset
@@ -177,11 +177,11 @@ SceneError GPUPrimitiveSphere::ChangeTime(const NodeListing& surfaceDataNodes, d
         postitionsCPU.resize(loaderTotalCount * 3);
         radiusCPU.resize(loaderTotalCount);
 
-        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data()),
-                                         PrimitiveDataType::POSITION))
+        if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data()),
+                                         PrimitiveDataType::POSITION)) != SceneError::OK)
             return e;
-        if(e != loader->GetPrimitiveData(reinterpret_cast<Byte*>(radiusCPU.data()),
-                                         PrimitiveDataType::RADIUS))
+        if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(radiusCPU.data()),
+                                         PrimitiveDataType::RADIUS)) != SceneError::OK)
             return e;
 
         // Now copy one by one

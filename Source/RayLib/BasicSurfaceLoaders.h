@@ -27,6 +27,7 @@ class InNodeTriLoader : public SurfaceLoader
 
      SceneError                     AABB(AABB3*) const override;
      SceneError                     GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const override;
+     SceneError                     PrimitiveDataCount(size_t*, PrimitiveDataType primitiveDataType) const override;
 };
 
 class InNodeSphrLoader : public SurfaceLoader
@@ -50,4 +51,5 @@ class InNodeSphrLoader : public SurfaceLoader
 
          SceneError                     AABB(AABB3*) const override;
          SceneError                     GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const override;
+         SceneError                     PrimitiveDataCount(size_t*, PrimitiveDataType primitiveDataType) const override;
 };

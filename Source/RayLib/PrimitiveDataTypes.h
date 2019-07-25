@@ -14,7 +14,8 @@ enum class PrimitiveDataType
     WEIGHT,
     WEIGHT_INDEX,
     COLOR,
-    INDEX,
+
+    VERTEX_INDEX,
 
     END
 };

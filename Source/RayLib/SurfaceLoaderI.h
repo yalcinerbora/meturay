@@ -26,6 +26,7 @@ class SurfaceLoaderI
         // Actual Data
         virtual SceneError              AABB(AABB3*) const = 0;
         virtual SceneError              GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const = 0;
+        virtual SceneError              PrimitiveDataCount(size_t*, PrimitiveDataType primitiveDataType) const = 0;
 };
 
 class SurfaceLoader : public SurfaceLoaderI

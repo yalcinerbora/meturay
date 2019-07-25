@@ -12,6 +12,14 @@ with nvcc
 
 #include "RayLib/SceneStructs.h"
 
+using StringList = std::vector<std::string>;
+using FloatList = std::vector<float>;
+using Vector2List = std::vector<Vector2>;
+using Vector3List = std::vector<Vector3>;
+using Vector4List = std::vector<Vector4>;
+using Matrix4x4List = std::vector<Matrix4x4>;
+using UIntList = std::vector<uint32_t>;
+
 class SceneNodeI
 {
     private:
@@ -52,13 +60,13 @@ class SceneNodeI
         virtual std::vector<uint32_t>       AccessUInt(const std::string& name, double time = 0.0) const = 0;
 
         // Id pair specific data loading
-        virtual std::vector<std::string>    AccessStringList(const std::string& name, double time = 0.0) const = 0;
-        virtual std::vector<float>          AccessFloatList(const std::string& name, double time) const = 0;
-        virtual std::vector<Vector2>        AccessVector2List(const std::string& name, double time = 0.0) const = 0;
-        virtual std::vector<Vector3>        AccessVector3List(const std::string& name, double time = 0.0) const = 0;
-        virtual std::vector<Vector4>        AccessVector4List(const std::string& name, double time = 0.0) const = 0;
-        virtual std::vector<Matrix4x4>      AccessMatrix4x4List(const std::string& name, double time = 0.0) const = 0;
-        virtual std::vector<uint32_t>       AccessUIntList(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<StringList>     AccessStringList(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<FloatList>      AccessFloatList(const std::string& name, double time) const = 0;
+        virtual std::vector<Vector2List>    AccessVector2List(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<Vector3List>    AccessVector3List(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<Vector4List>    AccessVector4List(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<Matrix4x4List>  AccessMatrix4x4List(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<UIntList>       AccessUIntList(const std::string& name, double time = 0.0) const = 0;
 };
 
 inline SceneNodeI::SceneNodeI(NodeIndex index)
