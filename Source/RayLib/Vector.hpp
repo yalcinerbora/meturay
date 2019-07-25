@@ -319,7 +319,7 @@ inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::operator%(T right) const
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
     {
-        v[i] = std::fmod(vector[i], right);
+        v[i] = fmod(vector[i], right);
     }
     return v;
 }
@@ -402,7 +402,8 @@ template <class Q>
 __device__ __host__
 inline FloatEnable<Q, T> Vector<N, T>::Length() const
 {
-    return std::sqrt(LengthSqr());
+    ....
+    return sqrt(LengthSqr());
 }
 
 template <int N, class T>

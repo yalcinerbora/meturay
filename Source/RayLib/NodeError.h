@@ -48,7 +48,7 @@ inline NodeError::operator Type() const
 
 inline NodeError::operator std::string() const
 {
-    static constexpr char* const ErrorStrings[] =
+    static constexpr char const* const ErrorStrings[] =
     {
         "OK",
         "Connection cannot be established"

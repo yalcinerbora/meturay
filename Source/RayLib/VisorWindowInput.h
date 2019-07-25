@@ -4,42 +4,52 @@
 
 */
 
-#include "RayLib/VisorInputI.h"
-#include "RayLib/Camera.h"
-#include "ThreadData.h"
+#include "VisorInputI.h"
+#include "Camera.h"
+
+class MovementSchemeI;
+
+using MovementScemeList = std::vector<std::reference_wrapper<MovementSchemeI>>;
 
 class VisorWindowInput : public VisorInputI
 {
     private:
-        static constexpr int            PredefinedFPS[] = {24, 30, 60, 90, 120, 240};
-        static constexpr unsigned int   FPSCount = (sizeof(PredefinedFPS) / sizeof(int));
+        // Key Bindings
+        const MouseKeyBindings          mouseBindings;
+        const KeyboardKeyBindings       keyboardBindings;
 
-        // Camera Movement portion
-        const double                    Sensitivity;
-        const double                    MoveRatio;
-        const double                    MoveRatioModifier;
+        // Movement Related
+        const MovementScemeList         movementSchemes;    // List of available movers
+        unsigned int                    currentMovementScheme;
 
-        bool                            fpsMode;
-        double                          mouseX;
-        double                          mouseY;
+        // Camera Related States
+        unsigned int                    currentSceneCam;    // Currently selected scene camera
+        CameraMode                      cameraMode;
+        CameraPerspective               customCamera;
+        bool                            lockedCamera;
 
-        // Scene Times
-        double                          animationFPS;
+        // Other States
+        bool                            pauseCont;
+        bool                            startStop;
+        double                          deltaT;
 
-        CameraPerspective               camera;
+        // Visor Callback
         VisorCallbacksI*                visorCallbacks;
+        
+
+        // Internals
+        void                            ProcessInput(VisorActionType, KeyAction);
 
     protected:
     public:
         // Constructor & Destructor
-                                VisorWindowInput(double sensitivity,
-                                                 double moveRatio,
-                                                 double moveRatioModifier,
-                                                 //
-                                                 const CameraPerspective& initialCamera);
+                                VisorWindowInput(KeyboardKeyBindings&&,
+                                                 MouseKeyBindings&&,
+                                                 MovementScemeList&&,
+                                                 const CameraPerspective& customCamera);
                                 ~VisorWindowInput() = default;
 
-        void                    ChangeAnimationFPS(double);
+        void                    ChangeDeltaT(double);
                        
         // Implementation
         void                    AttachVisorCallback(VisorCallbacksI&) override;

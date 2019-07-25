@@ -5,6 +5,8 @@
 struct CameraPerspective;
 struct TracerOptions;
 
+enum class ImageType;
+
 class CommandCallbacksI
 {
     public:
@@ -24,4 +26,14 @@ class CommandCallbacksI
         // Control Flow of the Simulation
         virtual void        StartStopTrace(const bool) = 0;
         virtual void        PauseContTrace(const bool) = 0;
+
+        // New Commands
+        virtual void        SetTimeIncrement(const double) = 0;
+        //
+        virtual void        SaveImage() = 0;                        // Default Image Save
+        virtual void        SaveImage(const std::string& path,      // Location folder
+                                      const std::string& fileName,  // without extension
+                                      ImageType,                    // Determines extension etc.
+                                      bool overwriteFile) = 0;      // Do overwrite 
+                                                                    // (if false new file will be created with suffix integer)
 };

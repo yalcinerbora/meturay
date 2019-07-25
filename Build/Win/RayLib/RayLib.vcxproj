@@ -141,8 +141,10 @@
     <ClInclude Include="..\..\..\Source\RayLib\HitStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\HybridFunctions.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\ImageStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\LoopingThreadI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\MovementSchemes.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\CudaCheck.h" />
@@ -184,6 +186,8 @@
     <ClInclude Include="..\..\..\Source\RayLib\Triangle.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Types.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorCallbacksI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\VisorInputStructs.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\MovementSchemeI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorNode.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Vector.hpp" />
@@ -197,6 +201,7 @@
     <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MDistributor.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\MovementSchemes.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SceneIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SelfNode.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SharedLib.cpp" />

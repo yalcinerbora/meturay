@@ -48,7 +48,7 @@ inline TracerError::operator Type() const
 
 inline TracerError::operator std::string() const
 {
-    static constexpr char* const ErrorStrings[] =
+    static constexpr char const* const ErrorStrings[] =
     {
         "OK",
         "No Tracer Logic is set",

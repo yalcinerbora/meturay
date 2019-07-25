@@ -160,6 +160,9 @@ bool SimpleTracerSetup::Init()
 
     // Visor Input Generation
     visorInput = std::make_unique<VisorWindowInput>(1.0, 1.0, 2.0,
+                                                    ...
+                                                    ...
+                                                    ...
                                                     gpuScene->CamerasCPU()[0]);
 
     // Window Params

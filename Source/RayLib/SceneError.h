@@ -116,59 +116,59 @@ inline SceneError::operator Type() const
 
 inline SceneError::operator std::string() const
 {
-    static constexpr char* const ErrorStrings[] =
+    static constexpr char const* const ErrorStrings[] =
     {
-        "OK.",
+        "OK",
         // Common
-        "Scene file not found.",
-        "Animation file not found.",
+        "Scene file not found",
+        "Animation file not found",
         // Not Found
-        "\"Materials\" array not found.",
-        "\"Primitives\" array not found.",
-        "\"Surfaces\" array not found.",
-        "\"Lights\" array not found.",
-        "\"Transforms\" array not found.",
-        "\"Cameras\" array not found.",
-        "\"BaseAccelerator\" node not found.",
-        "\"BaseBoundaryMaterial\" node not found.",
+        "\"Materials\" array not found",
+        "\"Primitives\" array not found",
+        "\"Surfaces\" array not found",
+        "\"Lights\" array not found",
+        "\"Transforms\" array not found",
+        "\"Cameras\" array not found",
+        "\"BaseAccelerator\" node not found",
+        "\"BaseBoundaryMaterial\" node not found",
         // No Logic
-        "No logic found for that accelerator.",
-        "No logic found for that material.",
-        "No logic found for that primitive.",
-        "No logic found for loading that surface data.",
+        "No logic found for that accelerator",
+        "No logic found for that material",
+        "No logic found for that primitive",
+        "No logic found for loading that surface data",
         // Id Errors
-        "Duplicate material id.",
-        "Duplicate primitive id.",
-        "Duplicate transform id.",
+        "Duplicate material id",
+        "Duplicate primitive id",
+        "Duplicate transform id",
         //
-        "Material id not found.",
-        "Primitive id not found.",
-        "Transform id not found.",
+        "Material id not found",
+        "Primitive id not found",
+        "Transform id not found",
         // Json Parse Errors
-        "Logics does not match.",
-        "JSON type does not match with required type.",
-        "JSON file could not be parsed properly.",
+        "Logics does not match",
+        "JSON type does not match with required type",
+        "JSON file could not be parsed properly",
         // Special Type Values
-        "Transform type name is unknown.",
+        "Transform type name is unknown",
         // Loading Surface Data
-        "Surface data type not found.",
-        "Surface data unknown type.",
+        "Surface data type not found",
+        "Surface data unknown type",
         // Some Mat/Accel Logic
         // may not support certain prims
-        "Primitive-Material mismatch.",
-        "Primitive-Accelerator mismatch.",
+        "Primitive-Material mismatch",
+        "Primitive-Accelerator mismatch",
         // Updating the scene
         // Primitive Update Size Mismmatch
-        "Updating primitive has more nodes than older itself.",
+        "Updating primitive has more nodes than older itself",
         // Too many types than key system can handle
-        "Accelerator groups required for this scene exceeds limit.",
-        "Accelerators in a group required for this scene exceeds limit.",
-        "Material groups required for this scene exceeds limit.",
-        "Materials in a batch required for this scene exceeds limit.",
+        "Accelerator groups required for this scene exceeds limit",
+        "Accelerators in a group required for this scene exceeds limit",
+        "Material groups required for this scene exceeds limit",
+        "Materials in a batch required for this scene exceeds limit",
         // Misc
-        "Too many data/material pairs per surface node.",
-        "Prim/Material pairs on surface node does not have same size.",
-        "Primitive types are not consistent in a surface.",
+        "Too many data/material pairs per surface node",
+        "Prim/Material pairs on surface node does not have same size",
+        "Primitive types are not consistent in a surface",
         // Internal Errors
         "Internal Error, Duplicate material id",
         "Internal Error, Duplicate accelerator id",

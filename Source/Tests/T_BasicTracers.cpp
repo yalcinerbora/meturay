@@ -1,5 +1,3 @@
-//#include <gmock/gmock.h>
-
 #include "SimpleTracerSetup.h"
 
 TEST(SimpleTracerTests, HelloTriangle)

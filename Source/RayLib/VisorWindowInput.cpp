@@ -1,28 +1,109 @@
 #include "VisorWindowInput.h"
-#include "RayLib/Vector.h"
-#include "RayLib/Camera.h"
-#include "RayLib/VisorCallbacksI.h"
-#include "RayLib/Quaternion.h"
+#include "MovementSchemeI.h"
 
-VisorWindowInput::VisorWindowInput(double sensitivity,
-                                   double moveRatio,
-                                   double moveRatioModifier,
-                                   //
-                                   const CameraPerspective& initialCamera)
-    : Sensitivity(sensitivity)
-    , MoveRatio(moveRatio)
-    , MoveRatioModifier(moveRatioModifier)
-    , fpsMode(false)
-    , camera(initialCamera)
+#include "Vector.h"
+#include "Camera.h"
+#include "VisorCallbacksI.h"
+#include "Quaternion.h"
+
+void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
+{
+    switch(vAction)
+    {
+        case VisorActionType::MOVE_TYPE_NEXT:
+        {
+            if(lockedCamera) break;
+            currentMovementScheme = (currentMovementScheme + 1) % movementSchemes.size();
+            break;
+        }
+        case VisorActionType::MOVE_TYPE_PREV:
+        {
+            if(lockedCamera) break;
+            currentMovementScheme = (currentMovementScheme - 1) % movementSchemes.size();
+            break;
+        }
+        case VisorActionType::TOGGLE_CUSTOM_SCENE_CAMERA:
+        {
+            if(lockedCamera) break;
+            cameraMode = (cameraMode == CameraMode::CUSTOM_CAM) ? CameraMode::SCENE_CAM : CameraMode::CUSTOM_CAM;
+            break;
+        }
+        case VisorActionType::LOCK_UNLOCK_CAMERA:
+        {
+            lockedCamera = !lockedCamera;
+            break;
+        }
+        case VisorActionType::SCENE_CAM_NEXT:
+        {
+            if(lockedCamera) break;
+
+            visorCallbacks->ChangeCamera(currentSceneCam);
+            break;
+        }
+        case VisorActionType::SCENE_CAM_PREV:
+        {
+            if(lockedCamera) break;
+            visorCallbacks->ChangeCamera(currentSceneCam);
+            break;
+        }
+        case VisorActionType::START_STOP_TRACE:
+        {
+            visorCallbacks->StartStopTrace(startStop);
+            startStop = !startStop;
+            break;
+        }
+        case VisorActionType::PAUSE_CONT_TRACE:
+        {
+            visorCallbacks->PauseContTrace(pauseCont);
+            pauseCont = !pauseCont;
+            break;
+        }
+        case VisorActionType::FRAME_NEXT:
+        {
+            visorCallbacks->IncreaseTime(deltaT);
+            break;
+        }
+        case VisorActionType::FRAME_PREV:
+        {
+            visorCallbacks->DecreaseTime(deltaT);
+            break;
+        }
+        case VisorActionType::SAVE_IMAGE:
+        {
+            visorCallbacks->SaveImage();
+            break;
+        }
+        case VisorActionType::CLOSE:
+        {
+            visorCallbacks->WindowCloseAction();
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+VisorWindowInput::VisorWindowInput(KeyboardKeyBindings&& keyBinds,
+                                   MouseKeyBindings&& mouseBinds,                                   
+                                   MovementScemeList&& movementSchemes,
+                                   const CameraPerspective& customCamera)
+    : mouseBindings(mouseBinds)
+    , keyboardBindings(keyBinds)
+    , movementSchemes(movementSchemes)
+    , currentMovementScheme(0)
+    , currentSceneCam(0)
+    , cameraMode(CameraMode::SCENE_CAM)
+    , customCamera(customCamera)
+    , lockedCamera(false)
+    , pauseCont(false)
+    , startStop(false)
+    , deltaT(1.0)
     , visorCallbacks(nullptr)
-    , mouseX(0.0f)
-    , mouseY(0.0f)
-    , animationFPS(1.0)
 {}
 
-void VisorWindowInput::ChangeAnimationFPS(double fps)
+void VisorWindowInput::ChangeDeltaT(double dT)
 {
-    animationFPS = fps;
+    deltaT = dT;
 }
 
 void VisorWindowInput::AttachVisorCallback(VisorCallbacksI& vc)
@@ -57,136 +138,61 @@ void VisorWindowInput::WindowMinimized(bool minimized)
 
 void VisorWindowInput::MouseScrolled(double xOffset, double yOffset)
 {
-    // TODO: Do zoom
+    if(cameraMode == CameraMode::CUSTOM_CAM)
+    {
+        MovementSchemeI& currentScheme = movementSchemes[currentMovementScheme];
+
+        if(currentScheme.MouseScrollAction(customCamera, xOffset, yOffset))
+            visorCallbacks->ChangeCamera(customCamera);
+    }
 }
 
 void VisorWindowInput::MouseMoved(double x, double y)
 {
-    // Check with latest recorded input
-    double diffX = x - mouseX;
-    double diffY = y - mouseY;
-
-    if(fpsMode)
+    if(cameraMode == CameraMode::CUSTOM_CAM)
     {
-        // X Rotation
-        Vector3 lookDir = camera.gazePoint - camera.position;
-        QuatF rotateX(static_cast<float>(-diffX * Sensitivity), YAxis);
-        Vector3 rotated = rotateX.ApplyRotation(lookDir);
-        camera.gazePoint = camera.position + rotated;
+        MovementSchemeI& currentScheme = movementSchemes[currentMovementScheme];
 
-        // Y Rotation
-        lookDir = camera.gazePoint - camera.position;
-        Vector3 side = Cross(camera.up, lookDir).NormalizeSelf();
-        QuatF rotateY(static_cast<float>(diffY * Sensitivity), side);
-        rotated = rotateY.ApplyRotation((lookDir));
-        camera.gazePoint = camera.position + rotated;
-
-        // Redefine up
-        // Enforce an up vector which is ortogonal to the xz plane
-        camera.up = Cross(rotated, side);
-        camera.up[0] = 0.0f;
-        camera.up[1] = (camera.up[1] < 0.0f) ? -1.0f : 1.0f;
-        camera.up[2] = 0.0f;
-
-        visorCallbacks->ChangeCamera(camera);
+        if(currentScheme.MouseMovementAction(customCamera, x, y))
+            visorCallbacks->ChangeCamera(customCamera);
     }
-    mouseX = x;
-    mouseY = y;
 }
 
 void VisorWindowInput::KeyboardUsed(KeyboardKeyType key,
                                     KeyAction action)
 {
-    // Shift modifier
-    double currentRatio = 0.0;
-    if(action == KeyAction::PRESSED && key == KeyboardKeyType::LEFT_SHIFT)
-    {
-        currentRatio = MoveRatio * MoveRatioModifier;
-    }
-    else if(action == KeyAction::RELEASED  && key == KeyboardKeyType::LEFT_SHIFT)
-    {
-        currentRatio = MoveRatio;
-    }
+    // Find an action if avail
+    KeyboardKeyBindings::const_iterator i;
+    if((i = keyboardBindings.find(key)) != keyboardBindings.cend()) return;
+    VisorActionType visorAction = i->second;
 
-    bool camChanged = false;
-    if(!(action == KeyAction::RELEASED))
+    // Do custom cam
+    if(cameraMode == CameraMode::CUSTOM_CAM)
     {
-        Vector3 lookDir = (camera.gazePoint - camera.position).NormalizeSelf();
-        Vector3 side = Cross(camera.up, lookDir).NormalizeSelf();
-        switch(key)
-        {
-            // Movement
-            case KeyboardKeyType::W:
-            {
-                camera.position += lookDir * static_cast<float>(currentRatio);
-                camera.gazePoint += lookDir * static_cast<float>(currentRatio);
-                camChanged = true;
-                break;
-            }
-            case KeyboardKeyType::A:
-            {
-                camera.position += side * static_cast<float>(currentRatio);
-                camera.gazePoint += side * static_cast<float>(currentRatio);
-                camChanged = true;
-                break;
-            }
-            case KeyboardKeyType::S:
-            {
-                camera.position += lookDir * static_cast<float>(-currentRatio);
-                camera.gazePoint += lookDir * static_cast<float>(-currentRatio);
-                camChanged = true;
-                break;
-            }
-            case KeyboardKeyType::D:
-            {
-                camera.position += side * static_cast<float>(-currentRatio);
-                camera.gazePoint += side * static_cast<float>(-currentRatio);
-                camChanged = true;
-                break;
-            }
-            // Save functionality
-            case KeyboardKeyType::ENTER:
-            {
-                //
-                break;
-            }
-
-            // Next-Previous frame
-            case KeyboardKeyType::RIGHT:
-            {
-                visorCallbacks->IncreaseTime(1.0f / static_cast<float>(animationFPS));
-                break;
-            }
-            case KeyboardKeyType::LEFT:
-            {
-                visorCallbacks->DecreaseTime(1.0f / static_cast<float>(animationFPS));
-                break;
-            }
-            // Pause cont. Tracer
-            case  KeyboardKeyType::P:
-            {
-                //visorCallbacks->PauseContTrace(pause);
-                //pause = !pause;
-                break;
-            }
-
-            default:
-                // Do nothing on other keys
-                break;
-        }
+        MovementSchemeI& currentScheme = movementSchemes[currentMovementScheme];
+        if(currentScheme.InputAction(customCamera, visorAction, action))
+            visorCallbacks->ChangeCamera(customCamera);
     }
 
-    // Check if Camera Changed
-    if(camChanged) visorCallbacks->ChangeCamera(camera);
+    // Do other
+    ProcessInput(visorAction, action);
 }
 
 void VisorWindowInput::MouseButtonUsed(MouseButtonType button, KeyAction action)
 {
-    switch(button)
+    // Find an action if avail
+    MouseKeyBindings::const_iterator i;
+    if((i = mouseBindings.find(button)) != mouseBindings.cend()) return;
+    VisorActionType visorAction = i->second;
+
+    // Do Custom Camera
+    if(cameraMode == CameraMode::CUSTOM_CAM)
     {
-        case MouseButtonType::LEFT:
-        case MouseButtonType::RIGHT:
-            fpsMode = (action == KeyAction::RELEASED) ? false : true;
-            break;
+        MovementSchemeI& currentScheme = movementSchemes[currentMovementScheme];
+        if(currentScheme.InputAction(customCamera, visorAction, action))
+            visorCallbacks->ChangeCamera(customCamera);
     }
+
+    // Do Other
+    ProcessInput(visorAction, action);
 }

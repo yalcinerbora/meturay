@@ -84,7 +84,6 @@ class VisorGL : public VisorI
         static constexpr GLenum     U_SAMPLE = 3;
 
     private:
-        //VisorCallbacksI*            callbacks;
         VisorInputI*                input;
         GLFWwindow*                 window;
         bool                        open;
@@ -110,7 +109,6 @@ class VisorGL : public VisorI
         // Vertex
         GLuint                      vao;
         GLuint                      vBuffer;
-
 
         static KeyAction            DetermineAction(int);
         static MouseButtonType      DetermineMouseButton(int);
@@ -178,6 +176,7 @@ class VisorGL : public VisorI
                                                   PixelFormat, int sampleCount,
                                                   Vector2i start = Zero2i,
                                                   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+
         // Options
         const VisorOptions&     VisorOpts() const override;
         // Misc

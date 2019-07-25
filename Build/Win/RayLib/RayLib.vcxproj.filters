@@ -183,6 +183,16 @@
     <ClInclude Include="..\..\..\Source\RayLib\TracerStatus.h">
       <Filter>Structs</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\VisorInputStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\MovementSchemeI.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\MovementSchemes.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\ImageStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">
@@ -248,6 +258,7 @@
     <ClCompile Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.cpp">
       <Filter>FileI-O</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\MovementSchemes.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\RayLib\Matrix.cu">
