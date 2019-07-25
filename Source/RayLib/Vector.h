@@ -12,6 +12,7 @@ N should be 2, 3 or 4 at most.
 #include <algorithm>
 #include <type_traits>
 #include <tuple>
+#include <cmath>
 #include "CudaCheck.h"
 
 template<class T>

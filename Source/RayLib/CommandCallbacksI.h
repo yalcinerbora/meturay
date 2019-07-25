@@ -27,9 +27,8 @@ class CommandCallbacksI
         virtual void        StartStopTrace(const bool) = 0;
         virtual void        PauseContTrace(const bool) = 0;
 
-        // New Commands
         virtual void        SetTimeIncrement(const double) = 0;
-        //
+        
         virtual void        SaveImage() = 0;                        // Default Image Save
         virtual void        SaveImage(const std::string& path,      // Location folder
                                       const std::string& fileName,  // without extension

@@ -402,7 +402,6 @@ template <class Q>
 __device__ __host__
 inline FloatEnable<Q, T> Vector<N, T>::Length() const
 {
-    ....
     return sqrt(LengthSqr());
 }
 

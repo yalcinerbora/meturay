@@ -87,9 +87,9 @@ VisorWindowInput::VisorWindowInput(KeyboardKeyBindings&& keyBinds,
                                    MouseKeyBindings&& mouseBinds,                                   
                                    MovementScemeList&& movementSchemes,
                                    const CameraPerspective& customCamera)
-    : mouseBindings(mouseBinds)
-    , keyboardBindings(keyBinds)
-    , movementSchemes(movementSchemes)
+    : mouseBindings(std::move(mouseBinds))
+    , keyboardBindings(std::move(keyBinds))
+    , movementSchemes(std::move(movementSchemes))
     , currentMovementScheme(0)
     , currentSceneCam(0)
     , cameraMode(CameraMode::SCENE_CAM)
@@ -140,7 +140,7 @@ void VisorWindowInput::MouseScrolled(double xOffset, double yOffset)
 {
     if(cameraMode == CameraMode::CUSTOM_CAM)
     {
-        MovementSchemeI& currentScheme = movementSchemes[currentMovementScheme];
+        MovementSchemeI& currentScheme = *(movementSchemes[currentMovementScheme]);
 
         if(currentScheme.MouseScrollAction(customCamera, xOffset, yOffset))
             visorCallbacks->ChangeCamera(customCamera);
@@ -151,7 +151,7 @@ void VisorWindowInput::MouseMoved(double x, double y)
 {
     if(cameraMode == CameraMode::CUSTOM_CAM)
     {
-        MovementSchemeI& currentScheme = movementSchemes[currentMovementScheme];
+        MovementSchemeI& currentScheme = *(movementSchemes[currentMovementScheme]);
 
         if(currentScheme.MouseMovementAction(customCamera, x, y))
             visorCallbacks->ChangeCamera(customCamera);
@@ -169,7 +169,7 @@ void VisorWindowInput::KeyboardUsed(KeyboardKeyType key,
     // Do custom cam
     if(cameraMode == CameraMode::CUSTOM_CAM)
     {
-        MovementSchemeI& currentScheme = movementSchemes[currentMovementScheme];
+        MovementSchemeI& currentScheme = *(movementSchemes[currentMovementScheme]);
         if(currentScheme.InputAction(customCamera, visorAction, action))
             visorCallbacks->ChangeCamera(customCamera);
     }
@@ -188,7 +188,7 @@ void VisorWindowInput::MouseButtonUsed(MouseButtonType button, KeyAction action)
     // Do Custom Camera
     if(cameraMode == CameraMode::CUSTOM_CAM)
     {
-        MovementSchemeI& currentScheme = movementSchemes[currentMovementScheme];
+        MovementSchemeI& currentScheme = *(movementSchemes[currentMovementScheme]);
         if(currentScheme.InputAction(customCamera, visorAction, action))
             visorCallbacks->ChangeCamera(customCamera);
     }

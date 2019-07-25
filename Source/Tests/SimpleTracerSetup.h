@@ -13,6 +13,7 @@
 // Visor
 #include "RayLib/VisorI.h"
 #include "RayLib/VisorWindowInput.h"
+#include "RayLib/MovementSchemes.h"
 #include "VisorGL/VisorGLEntry.h"
 
 // Tracer
@@ -22,7 +23,10 @@
 #include "TracerLib/ScenePartitioner.h"
 
 // Node
-#include "RayLib/SelfNode.h"
+#include "RayLib/VisorCallbacksI.h"
+#include "RayLib/TracerCallbacksI.h"
+#include "RayLib/NodeI.h"
+#include "RayLib/AnalyticData.h"
 #include "RayLib/TracerError.h"
 
 #define ERROR_CHECK(ErrType, e) \
@@ -31,9 +35,120 @@ if(e != ErrType::OK) \
     METU_ERROR_LOG("%s", static_cast<std::string>(scnE).c_str()); \
     return false;\
 }
+class MockNode
+    : public VisorCallbacksI
+    , public TracerCallbacksI
+    , public NodeI
+{
+    private:
+        const double        Duration;
+
+        VisorI&             visor;
+        TracerI&            tracer;
+        GPUSceneI&          scene;
+
+    protected:
+    public:
+        // Constructor & Destructor
+                    MockNode(VisorI&, TracerI&, GPUSceneI&,
+                             double duration);
+                    ~MockNode() = default;
+
+        // From Command Callbacks
+        void        ChangeScene(const std::string) override {}
+        void        ChangeTime(const double) override {}
+        void        IncreaseTime(const double) override {}
+        void        DecreaseTime(const double) override {}
+        void        ChangeCamera(const CameraPerspective) override {}
+        void        ChangeCamera(const unsigned int) override {}
+        void        ChangeOptions(const TracerOptions) override {}
+        void        StartStopTrace(const bool) override {}
+        void        PauseContTrace(const bool) override {}
+        void        SetTimeIncrement(const double) override {}
+        void        SaveImage() override {}
+        void        SaveImage(const std::string& path,
+                              const std::string& fileName,
+                              ImageType,
+                              bool overwriteFile) override {}
+
+        void        WindowMinimizeAction(bool minimized) override {}
+        void        WindowCloseAction() override {}
+
+        // From Tracer Callbacks
+        void        SendLog(const std::string) override;
+        void        SendError(TracerError) override;
+        void        SendAnalyticData(AnalyticData) override {}
+        void        SendImage(const std::vector<Byte> data,
+                              PixelFormat, int sampleCount,
+                              Vector2i start = Zero2i,
+                              Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+        void        SendAccelerator(HitKey key, const std::vector<Byte> data) override {}
+        void        SendBaseAccelerator(const std::vector<Byte> data) override {}
+
+        // From Node Interface
+        NodeError   Initialize() override { return NodeError::OK; }
+        void        Work() override;
+};
+
+MockNode::MockNode(VisorI& v, TracerI& t, GPUSceneI& s,
+                   double duration)
+    : visor(v)
+    , tracer(t)
+    , scene(s)
+    , Duration(duration)
+{}
+
+void MockNode::SendLog(const std::string s)
+{
+    METU_LOG("Tracer: %s", s.c_str());
+}
+
+void MockNode::SendError(TracerError err)
+{
+    METU_ERROR_LOG("Tracer Error: %s", static_cast<std::string>(err).c_str());
+}
+
+void MockNode::SendImage(const std::vector<Byte> data,
+                         PixelFormat f, int sampleCount,
+                         Vector2i start, Vector2i end)
+{
+    visor.AccumulatePortion(std::move(data), f, sampleCount, start, end);
+}
+
+void MockNode::Work()
+{
+    CPUTimer t;
+    t.Start();
+    double elapsed = 0.0;
+
+    // Specifically do not use self nodes loop functionality here
+    // Main Poll Loop
+    while(visor.IsOpen())
+    {
+        // Run tracer
+        tracer.GenerateInitialRays(scene, 0, 1);
+        while(tracer.Continue())
+        {
+            tracer.Render();
+        }
+        tracer.FinishSamples();
+
+        // Before try to show do render loop
+        visor.Render();
+
+        // Present Back Buffer
+        visor.ProcessInputs();
+
+        // Timing and Window Termination
+        t.Lap();
+        elapsed += t.Elapsed<CPUTimeSeconds>();
+        if(elapsed >= Duration) break;
+    }
+}
 
 class SimpleTracerSetup
 {
+
     private:
         static constexpr Vector2i           IMAGE_RESOLUTION = {256, 256};
         static constexpr double             WINDOW_DURATION = 3.5;
@@ -67,7 +182,7 @@ class SimpleTracerSetup
         std::unique_ptr<VisorWindowInput>   visorInput;
 
         // Self Node
-        std::unique_ptr<SelfNode>           selfNode;
+        std::unique_ptr<MockNode>           node;
 
         const std::string                   sceneName;
         const double                        sceneTime;
@@ -82,16 +197,6 @@ class SimpleTracerSetup
         void                Body();
 };
 
-class MockVisorCallback
-{
-
-};
-
-class MockTracerCallback
-{
-
-};
-
 SimpleTracerSetup::SimpleTracerSetup(std::string sceneName, double sceneTime)
     : sceneName(sceneName)
     , sceneTime(sceneTime)
@@ -101,7 +206,7 @@ SimpleTracerSetup::SimpleTracerSetup(std::string sceneName, double sceneTime)
     , sharedLib(nullptr)
     , tracerGenerator(nullptr, nullptr)
     , visorInput(nullptr)
-    , selfNode(nullptr)
+    , node(nullptr)
 {}
 
 bool SimpleTracerSetup::Init()
@@ -158,13 +263,16 @@ bool SimpleTracerSetup::Init()
                                               gpuScene->BaseBoundaryMaterial());
     ERROR_CHECK(SceneError, scnE);
 
-    // Visor Input Generation
-    visorInput = std::make_unique<VisorWindowInput>(1.0, 1.0, 2.0,
-                                                    ...
-                                                    ...
-                                                    ...
-                                                    gpuScene->CamerasCPU()[0]);
+    MovementScemeList MovementSchemeList = {};    
+    KeyboardKeyBindings KeyBinds = VisorConstants::DefaultKeyBinds;
+    MouseKeyBindings MouseBinds = VisorConstants::DefaultButtonBinds;
 
+    // Visor Input Generation
+    visorInput = std::make_unique<VisorWindowInput>(std::move(KeyBinds),
+                                                    std::move(MouseBinds),
+                                                    std::move(MovementSchemeList),
+                                                    gpuScene->CamerasCPU()[0]);
+                                                    
     // Window Params
     VisorOptions visorOpts;
     visorOpts.stereoOn = false;
@@ -198,42 +306,17 @@ bool SimpleTracerSetup::Init()
 
     // Get a Self-Node
     // Generate your Node (in this case visor and renderer is on same node
-    selfNode = std::make_unique<SelfNode>(*visorView, *tracerBase);
-    visorInput->AttachVisorCallback(*selfNode);
-    tracerBase->AttachTracerCallbacks(*selfNode);
+    node = std::make_unique<MockNode>(*visorView, *tracerBase, *gpuScene,
+                                      WINDOW_DURATION);
+    NodeError nodeE = node->Initialize();
+    ERROR_CHECK(NodeError, nodeE);
+    visorInput->AttachVisorCallback(*node);
+    tracerBase->AttachTracerCallbacks(*node);
 
     return true;
 }
 
 void SimpleTracerSetup::Body()
 {
-    GPUSceneI& scene = *gpuScene;
-
-    CPUTimer t;
-    t.Start();
-    double elapsed = 0.0;
-    
-    // Specifically do not use self nodes loop functionality here
-    // Main Poll Loop
-    while(visorView->IsOpen())
-    {
-        // Run tracer
-        tracerBase->GenerateInitialRays(scene, 0, 1);
-        while(tracerBase->Continue())
-        {
-            tracerBase->Render();
-        }
-        tracerBase->FinishSamples();
-
-        // Before try to show do render loop
-        visorView->Render();
-
-        // Present Back Buffer
-        visorView->ProcessInputs();
-
-        // Timing and Window Termination
-        t.Lap();
-        elapsed += t.Elapsed<CPUTimeSeconds>();
-        if(elapsed >= WINDOW_DURATION) break;
-    }
+    node->Work();
 }

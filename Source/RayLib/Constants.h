@@ -8,6 +8,47 @@ Many Constants that are used throught the tracer
 #include <limits>
 #include "Vector.h"
 #include "TracerStructs.h"
+#include "VisorInputStructs.h"
+
+namespace VisorConstants
+{
+    static const KeyboardKeyBindings DefaultKeyBinds =
+    {
+        {KeyboardKeyType::W, VisorActionType::MOVE_FORWARD},
+        {KeyboardKeyType::S, VisorActionType::MOVE_BACKWARD},
+        {KeyboardKeyType::D, VisorActionType::MOVE_RIGHT},
+        {KeyboardKeyType::A, VisorActionType::MOVE_LEFT},
+
+        {KeyboardKeyType::LEFT_SHIFT, VisorActionType::FAST_MOVE_TOGGLE},
+
+        {KeyboardKeyType::KP_9, VisorActionType::MOVE_TYPE_NEXT},
+        {KeyboardKeyType::KP_7, VisorActionType::MOVE_TYPE_PREV},
+
+        {KeyboardKeyType::KP_5, VisorActionType::TOGGLE_CUSTOM_SCENE_CAMERA},
+        {KeyboardKeyType::L, VisorActionType::LOCK_UNLOCK_CAMERA},
+        //
+        {KeyboardKeyType::KP_6, VisorActionType::SCENE_CAM_NEXT},
+        {KeyboardKeyType::KP_4, VisorActionType::SCENE_CAM_PREV},
+        // Start Stop Actions
+        {KeyboardKeyType::O, VisorActionType::START_STOP_TRACE},
+        {KeyboardKeyType::P, VisorActionType::PAUSE_CONT_TRACE},
+        // Animation Related
+        {KeyboardKeyType::RIGHT, VisorActionType::FRAME_NEXT},
+        {KeyboardKeyType::LEFT, VisorActionType::FRAME_PREV},
+        // Image Related
+        {KeyboardKeyType::SPACE, VisorActionType::SAVE_IMAGE},
+        // Lifetime Realted
+        {KeyboardKeyType::ESCAPE, VisorActionType::CLOSE}
+    };
+
+    static const MouseKeyBindings DefaultButtonBinds =
+    {
+        {MouseButtonType::LEFT, VisorActionType::MOUSE_MOVE_TOGGLE},
+        {MouseButtonType::RIGHT, VisorActionType::MOUSE_MOVE_TOGGLE},
+
+        {MouseButtonType::MIDDLE, VisorActionType::LOCK_UNLOCK_CAMERA},
+    };
+}
 
 namespace TracerConstants
 {

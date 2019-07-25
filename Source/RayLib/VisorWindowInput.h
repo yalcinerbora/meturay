@@ -9,7 +9,7 @@
 
 class MovementSchemeI;
 
-using MovementScemeList = std::vector<std::reference_wrapper<MovementSchemeI>>;
+using MovementScemeList = std::vector<std::unique_ptr<MovementSchemeI>>;
 
 class VisorWindowInput : public VisorInputI
 {

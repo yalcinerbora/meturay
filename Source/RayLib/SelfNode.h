@@ -40,6 +40,12 @@ class SelfNode
         void        ChangeOptions(const TracerOptions) override;
         void        StartStopTrace(const bool) override;
         void        PauseContTrace(const bool) override;
+        void        SetTimeIncrement(const double) override;
+        void        SaveImage() override;
+        void        SaveImage(const std::string& path,
+                              const std::string& fileName,
+                              ImageType,
+                              bool overwriteFile) override;
 
         void        WindowMinimizeAction(bool minimized) override;
         void        WindowCloseAction() override;
