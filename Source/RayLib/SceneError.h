@@ -47,6 +47,7 @@ struct SceneError : public ErrorI
             // Special Type Values
             UNKNOWN_TRANSFORM_TYPE,
             // Loading Surface Data
+            SURFACE_DATA_PRIMITIVE_MISMATCH,
             SURFACE_DATA_TYPE_NOT_FOUND,
             SURFACE_DATA_INVALID_READ,
             // Some Mat/Accel Logic
@@ -151,6 +152,7 @@ inline SceneError::operator std::string() const
         // Special Type Values
         "Transform type name is unknown",
         // Loading Surface Data
+        "Surface data type is mismatched with primitive type",
         "Surface data type not found",
         "Surface data unknown type",
         // Some Mat/Accel Logic

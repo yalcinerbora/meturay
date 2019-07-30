@@ -14,6 +14,7 @@ All of them should be provided
 
 #include <map>
 
+#include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/Vector.h"
 #include "RayLib/Triangle.h"
 
@@ -30,7 +31,7 @@ struct TriData
 {
     const Vector4f* positionsU;
     const Vector4f* normalsV;
-    const uint32_t* indexList;
+    const uint64_t* indexList;
 };
 
 // Triangle Hit is barycentric coordinates
@@ -50,9 +51,9 @@ inline HitResult TriangleClosestHit(// Output
                                     const TriData& primData)
 {
     // Get Position
-    uint32_t index0 = primData.indexList[leaf.primitiveId * 3 + 0];
-    uint32_t index1 = primData.indexList[leaf.primitiveId * 3 + 1];
-    uint32_t index2 = primData.indexList[leaf.primitiveId * 3 + 2];
+    uint64_t index0 = primData.indexList[leaf.primitiveId * 3 + 0];
+    uint64_t index1 = primData.indexList[leaf.primitiveId * 3 + 1];
+    uint64_t index2 = primData.indexList[leaf.primitiveId * 3 + 2];
 
     Vector3 position0 = primData.positionsU[index0];
     Vector3 position1 = primData.positionsU[index1];
@@ -83,9 +84,9 @@ __device__ __host__
 inline AABB3f GenerateAABBTriangle(PrimitiveId primitiveId, const TriData& primData)
 {
     // Get Position
-    uint32_t index0 = primData.indexList[primitiveId * 3 + 0];
-    uint32_t index1 = primData.indexList[primitiveId * 3 + 1];
-    uint32_t index2 = primData.indexList[primitiveId * 3 + 2];
+    uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
+    uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
+    uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
 
     Vector3 position0 = primData.positionsU[index0];
     Vector3 position1 = primData.positionsU[index1];
@@ -98,9 +99,9 @@ __device__ __host__
 inline float GenerateAreaTriangle(PrimitiveId primitiveId, const TriData& primData)
 {
     // Get Position
-    uint32_t index0 = primData.indexList[primitiveId * 3 + 0];
-    uint32_t index1 = primData.indexList[primitiveId * 3 + 1];
-    uint32_t index2 = primData.indexList[primitiveId * 3 + 2];
+    uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
+    uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
+    uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
 
     Vector3 position0 = primData.positionsU[index0];
     Vector3 position1 = primData.positionsU[index1];
@@ -120,6 +121,11 @@ class GPUPrimitiveTriangle final
 {
     public:
         static constexpr const char*            TypeName() { return "Triangle"; }
+
+        static constexpr PrimitiveDataLayout    POS_LAYOUT = PrimitiveDataLayout::FLOAT_3;
+        static constexpr PrimitiveDataLayout    UV_LAYOUT = PrimitiveDataLayout::FLOAT_2;
+        static constexpr PrimitiveDataLayout    NORMAL_LAYOUT = PrimitiveDataLayout::FLOAT_3;
+        static constexpr PrimitiveDataLayout    INDEX_LAYOUT = PrimitiveDataLayout::UINT64_1;
 
     private:
         DeviceMemory                            memory;

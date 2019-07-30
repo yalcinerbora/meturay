@@ -19,6 +19,7 @@ using Vector3List = std::vector<Vector3>;
 using Vector4List = std::vector<Vector4>;
 using Matrix4x4List = std::vector<Matrix4x4>;
 using UIntList = std::vector<uint32_t>;
+using UInt64List = std::vector<uint64_t>;
 
 class SceneNodeI
 {
@@ -44,13 +45,34 @@ class SceneNodeI
         bool                                operator<(const SceneNodeI& node) const;
 
         // Interface
-        virtual size_t                      AccessListTotalCount(const std::string& name) const = 0;
-        virtual std::vector<size_t>         AccessListCount(const std::string& name) const = 0;
-
         virtual std::string                 Name() const = 0;
         virtual std::string                 Tag() const = 0;
 
-        // Direct Singular data loading (id inspecific)
+        // Id pair inspecific data loading
+        virtual size_t                      CommonListSize(const std::string& name) const = 0;
+
+        virtual std::string                 CommonString(const std::string& name, double time = 0.0) const = 0;
+        virtual float                       CommonFloat(const std::string& name, double time = 0.0) const = 0;
+        virtual Vector2                     CommonVector2(const std::string& name, double time = 0.0) const = 0;
+        virtual Vector3                     CommonVector3(const std::string& name, double time = 0.0) const = 0;
+        virtual Vector4                     CommonVector4(const std::string& name, double time = 0.0) const = 0;
+        virtual Matrix4x4                   CommonMatrix4x4(const std::string& name, double time = 0.0) const = 0;
+        virtual uint32_t                    CommonUInt(const std::string& name, double time = 0.0) const = 0;
+        virtual uint64_t                    CommonUInt64(const std::string& name, double time = 0.0) const = 0;
+
+        virtual std::vector<std::string>    CommonStringList(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<float>          CommonFloatList(const std::string& name, double time) const = 0;
+        virtual std::vector<Vector2>        CommonVector2List(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<Vector3>        CommonVector3List(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<Vector4>        CommonVector4List(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<Matrix4x4>      CommonMatrix4x4List(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<uint32_t>       CommonUIntList(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<uint64_t>       CommonUInt64List(const std::string& name, double time = 0.0) const = 0;
+
+        // Id pair specific data loading
+        virtual size_t                      AccessListTotalCount(const std::string& name) const = 0;
+        virtual std::vector<size_t>         AccessListCount(const std::string& name) const = 0;
+
         virtual std::vector<std::string>    AccessString(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<float>          AccessFloat(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<Vector2>        AccessVector2(const std::string& name, double time = 0.0) const = 0;
@@ -58,8 +80,8 @@ class SceneNodeI
         virtual std::vector<Vector4>        AccessVector4(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<Matrix4x4>      AccessMatrix4x4(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<uint32_t>       AccessUInt(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<uint64_t>       AccessUInt64(const std::string& name, double time = 0.0) const = 0;
 
-        // Id pair specific data loading
         virtual std::vector<StringList>     AccessStringList(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<FloatList>      AccessFloatList(const std::string& name, double time) const = 0;
         virtual std::vector<Vector2List>    AccessVector2List(const std::string& name, double time = 0.0) const = 0;
@@ -67,6 +89,7 @@ class SceneNodeI
         virtual std::vector<Vector4List>    AccessVector4List(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<Matrix4x4List>  AccessMatrix4x4List(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<UIntList>       AccessUIntList(const std::string& name, double time = 0.0) const = 0;
+        virtual std::vector<UInt64List>     AccessUInt64List(const std::string& name, double time = 0.0) const = 0;
 };
 
 inline SceneNodeI::SceneNodeI(NodeIndex index)

@@ -18,6 +18,7 @@ All of them should be provided
 #include "DeviceMemory.h"
 #include "TypeTraits.h"
 
+#include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/Vector.h"
 #include "RayLib/Sphere.h"
 
@@ -97,6 +98,9 @@ class GPUPrimitiveSphere final
 {
     public:
         static constexpr const char*            TypeName() { return "Sphere"; }
+
+        static constexpr PrimitiveDataLayout    POS_LAYOUT = PrimitiveDataLayout::FLOAT_3;
+        static constexpr PrimitiveDataLayout    RADUIS_LAYOUT = PrimitiveDataLayout::FLOAT_1;
 
     private:
         DeviceMemory                            memory;

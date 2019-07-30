@@ -25,6 +25,9 @@ SurfaceLoaderGenerator::SurfaceLoaderGenerator()
     loaderGenerators.emplace(InNodeTriLoader::TypeName(),
                              SurfaceLoaderGen(SurfaceLoaderConstruct<SurfaceLoaderI, InNodeTriLoader>,
                                               SurfaceLoaderDestruct<SurfaceLoaderI>));
+    loaderGenerators.emplace(InNodeTriLoaderIndexed::TypeName(),
+                             SurfaceLoaderGen(SurfaceLoaderConstruct<SurfaceLoaderI, InNodeTriLoaderIndexed>,
+                                              SurfaceLoaderDestruct<SurfaceLoaderI>));
     loaderGenerators.emplace(InNodeSphrLoader::TypeName(),
                              SurfaceLoaderGen(SurfaceLoaderConstruct<SurfaceLoaderI, InNodeSphrLoader>,
                                               SurfaceLoaderDestruct<SurfaceLoaderI>));

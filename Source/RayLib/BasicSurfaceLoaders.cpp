@@ -8,6 +8,9 @@
 
 #include <numeric>
 
+//==================//
+//  TRIANGLE LOADER //
+//==================//
 InNodeTriLoader::InNodeTriLoader(const SceneNodeI& node, double time)
     : SurfaceLoader(node, time)
 {}
@@ -17,76 +20,23 @@ const char* InNodeTriLoader::SufaceDataFileExt() const
     return TypeName();
 }
 
-SceneError InNodeTriLoader::PrimDataLayout(PrimitiveDataLayout* result, PrimitiveDataType primitiveDataType) const
+SceneError InNodeTriLoader::AABB(std::vector<AABB3>& result) const
 {
-    for(size_t i = 0; i < node.IdCount(); i++)
-    {
-        if(primitiveDataType == PrimitiveDataType::POSITION ||
-           primitiveDataType == PrimitiveDataType::NORMAL)
-            result[i] = PrimitiveDataLayout::FLOAT_3;
-        else if(primitiveDataType == PrimitiveDataType::UV)
-            result[i] = PrimitiveDataLayout::FLOAT_1;
-        else if(primitiveDataType == PrimitiveDataType::VERTEX_INDEX)
-            result[i] = PrimitiveDataLayout::FLOAT_1;
-        else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
-    }
-    return SceneError::OK;
-}
-
-SceneError InNodeTriLoader::BatchOffsets(size_t* result) const
-{
-    size_t offset = 0;
-
-    int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
-    const std::string positionName = PrimitiveDataTypeNames[posIndex];
-    auto counts = node.AccessListCount(positionName);
-
-    size_t i;
-    for(i = 0; i < node.IdCount(); i++)
-    {
-        size_t primCount = counts[i];
-        if(primCount % 3 != 0)
-            return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
-
-        result[i] = offset;
-        offset += (primCount / 3);        
-    }
-    result[i] = offset;
-    return SceneError::OK;
-}
-
-SceneError InNodeTriLoader::PrimitiveCounts(size_t* result) const
-{
-    int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
-    const std::string positionName = PrimitiveDataTypeNames[posIndex];
-    auto counts = node.AccessListCount(positionName);
-
-    for(size_t i = 0; i < node.IdCount(); i++)
-    {
-        size_t primCount = counts[i];
-        if(primCount % 3 != 0)
-            return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
-        result[i] = (primCount / 3);
-    }
-    return SceneError::OK;
-}
-
-SceneError InNodeTriLoader::AABB(AABB3* result) const
-{
+    result.resize(node.IdCount());
     int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
     const std::string positionName = PrimitiveDataTypeNames[posIndex];
     std::vector<Vector3List> positions = node.AccessVector3List(positionName, time);
 
-    for(size_t i = 0; i < node.IdCount(); i++)
+    for(size_t j = 0; j < node.IdCount(); j++)
     {
-        const Vector3List posList = positions[i];
+        const Vector3List posList = positions[j];
         if((posList.size() % 3) != 0)
             return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
 
-        result[i] = AABB3(Zero3, Zero3);
+        result[j] = AABB3(Zero3, Zero3);
         for(size_t i = 0; i < (posList.size() / 3); i++)
         {
-            result[0].UnionSelf(Triangle::BoundingBox(posList[i * 3 + 0],
+            result[j].UnionSelf(Triangle::BoundingBox(posList[i * 3 + 0],
                                                       posList[i * 3 + 1],
                                                       posList[i * 3 + 2]));
         }
@@ -94,21 +44,83 @@ SceneError InNodeTriLoader::AABB(AABB3* result) const
     return SceneError::OK;
 }
 
-SceneError InNodeTriLoader::GetPrimitiveData(Byte* memory, PrimitiveDataType primitiveDataType) const
+SceneError InNodeTriLoader::PrimitiveRanges(std::vector<Vector2ul>& result) const
 {
-    const int index = static_cast<int>(primitiveDataType);
+    result.resize(node.IdCount());
+    int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
+    const std::string positionName = PrimitiveDataTypeNames[posIndex];
+    auto counts = node.AccessListCount(positionName);
+
+    size_t offset = 0;
+    for(size_t i = 0; i < node.IdCount(); i++)
+    {
+        size_t primCount = counts[i];
+        if(primCount % 3 != 0)
+            return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
+
+        uint64_t begin = offset;
+        offset += (primCount / 3);
+        uint64_t end = offset;
+
+        result[i] = Vector2ul(begin, end);
+    }
+    return SceneError::OK;
+}
+
+SceneError InNodeTriLoader::PrimitiveCounts(std::vector<size_t>& result) const
+{
+    result.resize(node.IdCount());
+    int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
+    const std::string positionName = PrimitiveDataTypeNames[posIndex];
+    auto counts = node.AccessListCount(positionName);
+
+    for(size_t i = 0; i < node.IdCount(); i++)
+    {
+        size_t primCount = counts[i];
+        if(primCount % 3 != 0) return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
+        result[i] = (primCount / 3);
+    }
+    return SceneError::OK;
+}
+
+SceneError InNodeTriLoader::PrimitiveDataRanges(std::vector<Vector2ul>& result) const
+{
+    result.resize(node.IdCount());
+    int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
+    const std::string positionName = PrimitiveDataTypeNames[posIndex];
+    auto counts = node.AccessListCount(positionName);
+
+    size_t offset = 0;
+    for(size_t i = 0; i < node.IdCount(); i++)
+    {
+        size_t primCount = counts[i];
+        uint64_t begin = offset;
+        offset += primCount;
+        uint64_t end = offset;
+
+        result[i] = Vector2ul(begin, end);
+    }
+    return SceneError::OK;
+}
+
+SceneError InNodeTriLoader::GetPrimitiveData(Byte* result, PrimitiveDataType primitiveDataType) const
+{
+    size_t offset = 0;
+    PrimitiveDataType readPT = (primitiveDataType == PrimitiveDataType::VERTEX_INDEX) ?
+                                    PrimitiveDataType::POSITION : primitiveDataType;
+    const int index = static_cast<int>(readPT);
     const std::string name = PrimitiveDataTypeNames[index];
 
     if(primitiveDataType == PrimitiveDataType::POSITION ||
-        primitiveDataType == PrimitiveDataType::NORMAL)
+       primitiveDataType == PrimitiveDataType::NORMAL)
     {
         std::vector<Vector3List> data = node.AccessVector3List(name, time);
-
-        size_t offset = 0;
         for(size_t i = 0; i < node.IdCount(); i++)
         {
             const Vector3List& currentList = data[i];
-            std::copy(currentList.begin(), currentList.end(), reinterpret_cast<Vector3*>(memory + offset));
+            Vector3* writeLoc = reinterpret_cast<Vector3*>(result) + offset;
+
+            std::copy(currentList.begin(), currentList.end(), writeLoc);
             offset += currentList.size();
         }
         return SceneError::OK;
@@ -116,27 +128,23 @@ SceneError InNodeTriLoader::GetPrimitiveData(Byte* memory, PrimitiveDataType pri
     else if(primitiveDataType == PrimitiveDataType::UV)
     {
         std::vector<Vector2List> data = node.AccessVector2List(name, time);
-        size_t offset = 0;
         for(size_t i = 0; i < node.IdCount(); i++)
         {
             const Vector2List& currentList = data[i];
-            std::copy(currentList.begin(), currentList.end(), reinterpret_cast<Vector2*>(memory + offset));
+            Vector2* writeLoc = reinterpret_cast<Vector2*>(result) + offset;
+            std::copy(currentList.begin(), currentList.end(), writeLoc);
             offset += currentList.size();
-            
         }
         return SceneError::OK;
     }
     else if(primitiveDataType == PrimitiveDataType::VERTEX_INDEX)
     {
-        // If requested generate a dummy index list
-        const int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
-        const std::string name = PrimitiveDataTypeNames[posIndex];
         std::vector<size_t> counts = node.AccessListCount(name);
-        size_t offset = 0;
+
         for(size_t i = 0; i < node.IdCount(); i++)
         {
-            uint32_t* currentList = reinterpret_cast<uint32_t*>(memory + offset);
-            std::iota(currentList, currentList + counts[i], 0);
+            uint64_t* writeLoc = reinterpret_cast<uint64_t*>(result) + offset;
+            std::iota(writeLoc, writeLoc + counts[i], 0ull);
             offset += counts[i];
         }
         return SceneError::OK;
@@ -144,57 +152,191 @@ SceneError InNodeTriLoader::GetPrimitiveData(Byte* memory, PrimitiveDataType pri
     else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
 }
 
-SceneError InNodeTriLoader::PrimitiveDataCount(size_t* result, PrimitiveDataType primitiveDataType) const
+SceneError InNodeTriLoader::PrimitiveDataCount(size_t& result, PrimitiveDataType primitiveDataType) const
 {
-    int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
+    if(primitiveDataType == PrimitiveDataType::VERTEX_INDEX)
+        primitiveDataType = PrimitiveDataType::POSITION;
+    int posIndex = static_cast<int>(primitiveDataType);
     const std::string positionName = PrimitiveDataTypeNames[posIndex];
-    auto counts = node.AccessListCount(positionName);
-
-    std::copy(counts.begin(), counts.end(), result);    
+    result = node.AccessListTotalCount(positionName);
     return SceneError::OK;
 }
 
-InNodeSphrLoader::InNodeSphrLoader(const SceneNodeI& node, double time)
+SceneError InNodeTriLoader::PrimDataLayout(PrimitiveDataLayout& result, PrimitiveDataType primitiveDataType) const
+{
+    if(primitiveDataType == PrimitiveDataType::POSITION ||
+        primitiveDataType == PrimitiveDataType::NORMAL)
+        result = PrimitiveDataLayout::FLOAT_3;
+    else if(primitiveDataType == PrimitiveDataType::UV)
+        result = PrimitiveDataLayout::FLOAT_2;
+    else if(primitiveDataType == PrimitiveDataType::VERTEX_INDEX)
+        result = PrimitiveDataLayout::UINT64_1;
+    else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
+    return SceneError::OK;
+}
+
+//=========================//
+// TRIANGLE INDEXED LOADER //
+//=========================//
+InNodeTriLoaderIndexed::InNodeTriLoaderIndexed(const SceneNodeI& node, double time)
     : SurfaceLoader(node, time)
 {}
 
 // Type Determination
+const char* InNodeTriLoaderIndexed::SufaceDataFileExt() const
+{
+    return TypeName();
+}
+
+// Per Batch Fetch
+SceneError InNodeTriLoaderIndexed::AABB(std::vector<AABB3>& result) const
+{
+    result.resize(node.IdCount());
+    int vertIndex = static_cast<int>(PrimitiveDataType::VERTEX_INDEX);
+    const std::string indexName = PrimitiveDataTypeNames[vertIndex];
+    auto indices = node.AccessUInt64List(indexName);
+
+    int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
+    const std::string positionName = PrimitiveDataTypeNames[posIndex];
+    auto positions = node.CommonVector3List(positionName);
+
+    for(size_t j = 0; j < node.IdCount(); j++)
+    {
+        const UInt64List& indexList = indices[j];
+        if((indexList.size() % 3) != 0)
+            return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
+
+        result[j] = AABB3(Zero3, Zero3);
+        for(size_t i = 0; i < (indexList.size() / 3); i++)
+        {
+            result[j].UnionSelf(Triangle::BoundingBox(positions[indexList[i * 3 + 0]],
+                                                      positions[indexList[i * 3 + 1]],
+                                                      positions[indexList[i * 3 + 2]]));
+        }
+    }
+    return SceneError::OK;
+}
+
+SceneError InNodeTriLoaderIndexed::PrimitiveRanges(std::vector<Vector2ul>& result) const
+{
+    result.resize(node.IdCount());
+    int posIndex = static_cast<int>(PrimitiveDataType::VERTEX_INDEX);
+    const std::string positionName = PrimitiveDataTypeNames[posIndex];
+    auto counts = node.AccessListCount(positionName);
+
+    size_t offset = 0;
+    for(size_t i = 0; i < node.IdCount(); i++)
+    {
+        size_t primCount = counts[i];
+        if(primCount % 3 != 0)
+            return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
+
+        uint64_t begin = offset;
+        offset += (primCount / 3);
+        uint64_t end = offset;
+
+        result[i] = Vector2ul(begin, end);
+    }
+    return SceneError::OK;
+}
+
+SceneError InNodeTriLoaderIndexed::PrimitiveCounts(std::vector<size_t>& result) const
+{
+    result.resize(node.IdCount());
+    int posIndex = static_cast<int>(PrimitiveDataType::VERTEX_INDEX);
+    const std::string positionName = PrimitiveDataTypeNames[posIndex];
+    auto counts = node.AccessListCount(positionName);
+
+    std::transform(counts.begin(), counts.end(), result.begin(),
+                            [] (uint64_t data) -> size_t { return data / 3; });
+    return SceneError::OK;
+}
+
+SceneError InNodeTriLoaderIndexed::PrimitiveDataRanges(std::vector<Vector2ul>& result) const
+{
+    const int index = static_cast<int>(PrimitiveDataType::POSITION);
+    const std::string name = PrimitiveDataTypeNames[index];
+    size_t size = node.CommonListSize(name);
+
+    result.resize(node.IdCount());
+    std::fill(result.begin(), result.end(), Vector2ul(0, size));
+    return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
+}
+
+SceneError InNodeTriLoaderIndexed::GetPrimitiveData(Byte* result, PrimitiveDataType primitiveDataType) const
+{
+    const int index = static_cast<int>(primitiveDataType);
+    const std::string name = PrimitiveDataTypeNames[index];
+
+    if(primitiveDataType == PrimitiveDataType::POSITION ||
+       primitiveDataType == PrimitiveDataType::NORMAL)
+    {
+        Vector3List data = node.CommonVector3List(name, time);
+        Vector3* writeLoc = reinterpret_cast<Vector3*>(result);
+        std::copy(data.begin(), data.end(), writeLoc); 
+        return SceneError::OK;
+    }
+    else if(primitiveDataType == PrimitiveDataType::UV)
+    {
+        Vector2List data = node.CommonVector2List(name, time);
+        Vector2* writeLoc = reinterpret_cast<Vector2*>(result);
+        std::copy(data.begin(), data.end(), writeLoc);
+        return SceneError::OK;
+    }
+    else if(primitiveDataType == PrimitiveDataType::VERTEX_INDEX)
+    {
+        size_t offset = 0;
+        std::vector<UInt64List> data = node.AccessUInt64List(name, time);
+        for(size_t i = 0; i < node.IdCount(); i++)
+        {
+            const UInt64List& currentList = data[i];
+            uint64_t* writeLoc = reinterpret_cast<uint64_t*>(result) + offset;
+            std::copy(currentList.begin(), currentList.end(), writeLoc);
+            offset += currentList.size();
+        }
+        return SceneError::OK;
+    }
+    else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
+}
+
+SceneError InNodeTriLoaderIndexed::PrimitiveDataCount(size_t& result, PrimitiveDataType primitiveDataType) const
+{
+    int posIndex = static_cast<int>(primitiveDataType);
+    const std::string positionName = PrimitiveDataTypeNames[posIndex];
+    result = node.AccessListTotalCount(positionName);
+    return SceneError::OK;
+}
+
+SceneError InNodeTriLoaderIndexed::PrimDataLayout(PrimitiveDataLayout& result,
+                                                  PrimitiveDataType primitiveDataType) const
+{
+    if(primitiveDataType == PrimitiveDataType::POSITION ||
+       primitiveDataType == PrimitiveDataType::NORMAL)
+        result = PrimitiveDataLayout::FLOAT_3;
+    else if(primitiveDataType == PrimitiveDataType::UV)
+        result = PrimitiveDataLayout::FLOAT_2;
+    else if(primitiveDataType == PrimitiveDataType::VERTEX_INDEX)
+        result = PrimitiveDataLayout::UINT64_1;
+    else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
+    return SceneError::OK;
+}
+
+
+//===============//
+// SPHERE LOADER //
+//===============//
+InNodeSphrLoader::InNodeSphrLoader(const SceneNodeI& node, double time)
+    : SurfaceLoader(node, time)
+{}
+
 const char* InNodeSphrLoader::SufaceDataFileExt() const
 {
     return TypeName();
 }
 
-SceneError InNodeSphrLoader::PrimDataLayout(PrimitiveDataLayout* result, PrimitiveDataType primitiveDataType) const
+SceneError InNodeSphrLoader::AABB(std::vector<AABB3>& result) const
 {
-    for(size_t i = 0; i < node.IdCount(); i++)
-    {
-        if(primitiveDataType == PrimitiveDataType::POSITION)
-            result[i] = PrimitiveDataLayout::FLOAT_3;
-        else if(primitiveDataType == PrimitiveDataType::RADIUS)
-            result[i] = PrimitiveDataLayout::FLOAT_1;
-        else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
-    }
-    return SceneError::OK;
-}
-
-SceneError InNodeSphrLoader::BatchOffsets(size_t* result) const
-{
-    std::iota(result, result + (node.IdCount() + 1), 0);
-    return SceneError::OK;
-}
-
-SceneError InNodeSphrLoader::PrimitiveCounts(size_t* result) const
-{
-    int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
-    const std::string positionName = PrimitiveDataTypeNames[posIndex];
-    size_t primDataCount = node.IdCount();
-
-    std::fill_n(result, primDataCount, 1);
-    return SceneError::OK;
-}
-
-SceneError InNodeSphrLoader::AABB(AABB3* result) const
-{
+    result.resize(node.IdCount());
     int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
     const int radIndex = static_cast<int>(PrimitiveDataType::RADIUS);
     const std::string positionName = PrimitiveDataTypeNames[posIndex];
@@ -211,6 +353,32 @@ SceneError InNodeSphrLoader::AABB(AABB3* result) const
         result[i] = Sphere::BoundingBox(positions[i], radiuses[i]);
     }
     return SceneError::OK;
+}
+
+SceneError InNodeSphrLoader::PrimitiveRanges(std::vector<Vector2ul>& result) const
+{
+    result.resize(node.IdCount());
+    for(size_t i = 0; i < node.IdCount(); i++)
+    {
+        result[i] = Vector2ul(i, i + 1);
+    }
+    return SceneError::OK;
+}
+
+SceneError InNodeSphrLoader::PrimitiveCounts(std::vector<size_t>& result) const
+{
+    int posIndex = static_cast<int>(PrimitiveDataType::POSITION);
+    const std::string positionName = PrimitiveDataTypeNames[posIndex];
+    size_t primDataCount = node.IdCount();
+
+    result.resize(primDataCount);
+    std::fill_n(result.begin(), primDataCount, 1);
+    return SceneError::OK;
+}
+
+SceneError InNodeSphrLoader::PrimitiveDataRanges(std::vector<Vector2ul>& result) const
+{
+    return PrimitiveRanges(result);
 }
 
 SceneError InNodeSphrLoader::GetPrimitiveData(Byte* memory, PrimitiveDataType primitiveDataType) const
@@ -233,7 +401,26 @@ SceneError InNodeSphrLoader::GetPrimitiveData(Byte* memory, PrimitiveDataType pr
     else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
 }
 
-SceneError InNodeSphrLoader::PrimitiveDataCount(size_t* result, PrimitiveDataType primitiveDataType) const
+SceneError InNodeSphrLoader::PrimitiveDataCount(size_t& result, PrimitiveDataType primitiveDataType) const
 {
-    return PrimitiveCounts(result);
+    SceneError e = SceneError::OK;
+    std::vector<size_t> primCounts;
+    if((e = PrimitiveCounts(primCounts)) != SceneError::OK)
+        return e;
+
+    result = std::accumulate(primCounts.cbegin(), primCounts.cend(), 0ull);
+    return e;
+}
+
+SceneError InNodeSphrLoader::PrimDataLayout(PrimitiveDataLayout& result, PrimitiveDataType primitiveDataType) const
+{
+    for(size_t i = 0; i < node.IdCount(); i++)
+    {
+        if(primitiveDataType == PrimitiveDataType::POSITION)
+            result = PrimitiveDataLayout::FLOAT_3;
+        else if(primitiveDataType == PrimitiveDataType::RADIUS)
+            result = PrimitiveDataLayout::FLOAT_1;
+        else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
+    }
+    return SceneError::OK;
 }

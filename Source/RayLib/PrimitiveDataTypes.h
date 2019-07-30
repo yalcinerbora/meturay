@@ -444,7 +444,7 @@ static constexpr const char* PrimitiveDataLayoutToString(PrimitiveDataType t)
     return PrimitiveDataTypeNames[static_cast<int>(t)];
 }
 
-static constexpr size_t PrimitiveDataLayoutToSize(PrimitiveDataType t)
+static constexpr size_t PrimitiveDataLayoutToSize(PrimitiveDataLayout t)
 {
     return PrimitiveLayoutSizes[static_cast<int>(t)];
 }

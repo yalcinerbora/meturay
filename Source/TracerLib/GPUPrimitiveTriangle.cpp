@@ -1,11 +1,12 @@
 #include "GPUPrimitiveTriangle.h"
 
-#include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/SceneError.h"
 #include "RayLib/Log.h"
 
 #include "RayLib/SurfaceLoaderGenerator.h"
 #include "RayLib/SurfaceLoaderI.h"
+
+#include <execution>
 
 // Generics
 GPUPrimitiveTriangle::GPUPrimitiveTriangle()
@@ -22,8 +23,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                                                  const SurfaceLoaderGeneratorI& loaderGen)
 {
     SceneError e = SceneError::OK;
-    std::vector<std::vector<size_t>> primCountList;
-    std::vector<std::vector<size_t>> primDataCountList;    
+    std::vector<size_t> loaderVOffsets, loaderIOffsets;
 
     // Generate Loaders
     std::vector<SharedLibPtr<SurfaceLoaderI>> loaders;
@@ -36,234 +36,287 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         loaders.emplace_back(std::move(sl));
     }
 
+    // Do sanity check for data type matching
+    for(const auto& loader : loaders)
+    {
+        PrimitiveDataLayout positionLayout, uvLayout, normalLayout, indexLayout;
+        if((e = loader->PrimDataLayout(positionLayout, PrimitiveDataType::POSITION)) != SceneError::OK)
+            return e;
+        if((e = loader->PrimDataLayout(uvLayout, PrimitiveDataType::UV)) != SceneError::OK)
+            return e;
+        if((e = loader->PrimDataLayout(normalLayout, PrimitiveDataType::NORMAL)) != SceneError::OK)
+            return e;
+        if((e = loader->PrimDataLayout(indexLayout, PrimitiveDataType::VERTEX_INDEX)) != SceneError::OK)
+            return e;
+
+        // TODO: Add 32 bit index support here (to the entire function as well
+        if(positionLayout != POS_LAYOUT || uvLayout != UV_LAYOUT ||
+           normalLayout != NORMAL_LAYOUT || indexLayout != INDEX_LAYOUT)
+            return SceneError::SURFACE_DATA_PRIMITIVE_MISMATCH;
+    }
+
+    totalDataCount = 0;    
     totalPrimitiveCount = 0;
-    totalDataCount = 0;
+    size_t totalIndexCount = 0;
     for(const auto& loader : loaders)
     {
         const SceneNodeI& node = loader->SceneNode();
-        const size_t batchCount = node.IdCount();
 
-        std::vector<AABB3> aabbList(batchCount);
-        primCountList.emplace_back(batchCount);
-        primDataCountList.emplace_back(batchCount);
+        std::vector<AABB3> aabbList;
+        std::vector<Vector2ul> primRange;
+        std::vector<Vector2ul> dataRange;
+        //std::vector<size_t> primCounts;
+        size_t loaderPCount, loaderUVCount, loaderNCount, loaderICount;
 
         // Load Aux Data
-        if((e = loader->PrimitiveCounts(primCountList.back().data())) != SceneError::OK)
+        if((e = loader->AABB(aabbList)) != SceneError::OK)
             return e;
-        if((e = loader->PrimitiveDataCount(primDataCountList.back().data(), PrimitiveDataType::POSITION)) != SceneError::OK)
+        if((e = loader->PrimitiveRanges(primRange)) != SceneError::OK)
             return e;
-        if((e = loader->AABB(aabbList.data())) != SceneError::OK)
+        //if((e = loader->PrimitiveCounts(primCounts)) != SceneError::OK)
+        //    return e;
+        if((e = loader->PrimitiveDataRanges(dataRange)) != SceneError::OK)
+            return e;
+        if((e = loader->PrimitiveDataCount(loaderPCount, PrimitiveDataType::POSITION)) != SceneError::OK)
+            return e;
+        if((e = loader->PrimitiveDataCount(loaderUVCount, PrimitiveDataType::UV)) != SceneError::OK)
+            return e;
+        if((e = loader->PrimitiveDataCount(loaderNCount, PrimitiveDataType::NORMAL)) != SceneError::OK)
+            return e;
+        if((e = loader->PrimitiveDataCount(loaderICount, PrimitiveDataType::VERTEX_INDEX)) != SceneError::OK)
             return e;
 
-        size_t i = 0;
+        // Single indexed vertex data sanity check
+        assert(loaderPCount == loaderUVCount &&
+               loaderUVCount == loaderNCount);
+
+        // Populate
+        size_t i = 0, totalPrimCountOnLoader = 0;
         for(const auto& pair : node.Ids())
         {
             NodeId id = pair.first;
 
-            uint64_t start = totalPrimitiveCount;
-            uint64_t end = start + primCountList.back()[i];
-            totalPrimitiveCount = end;
+            Vector2ul currentPRange = primRange[i];
+            currentPRange += Vector2ul(totalPrimitiveCount);
 
-            uint64_t dataStart = totalDataCount;
-            uint64_t dataEnd = dataStart + primDataCountList.back()[i];
-            totalDataCount = dataEnd;
+            Vector2ul currentDRange = dataRange[i];
+            currentDRange += Vector2ul(totalDataCount);
 
-            batchRanges.emplace(id, Vector2ul(start, end));
-            batchDataRanges.emplace(id, Vector2ul(dataStart, dataEnd));
+            batchRanges.emplace(id, currentPRange);
+            batchDataRanges.emplace(id, currentDRange);
             batchAABBs.emplace(id, aabbList[i]);
 
+            totalPrimCountOnLoader += primRange[i][1] - primRange[i][0];
             i++;
         }
+
+        // Save start offsets for each loader (for data copy)
+        loaderVOffsets.emplace_back(totalDataCount);
+        loaderIOffsets.emplace_back(totalIndexCount);
+
+        totalPrimitiveCount += totalPrimCountOnLoader;
+        totalDataCount += loaderPCount;
+        totalIndexCount += loaderICount;
     }
+    assert(totalPrimitiveCount * 3 == totalIndexCount);
+    loaderVOffsets.emplace_back(totalDataCount);
+    loaderIOffsets.emplace_back(totalIndexCount);
 
     // Now allocate to CPU then GPU
-    const size_t totalVertexCount = totalPrimitiveCount * 3;
-    const size_t totalVertexDataCount = totalDataCount;
-    std::vector<float> postitionsCPU(totalVertexDataCount * 3);
-    std::vector<float> normalsCPU(totalVertexDataCount * 3);
-    std::vector<float> uvsCPU(totalVertexDataCount * 2);
-    std::vector<uint32_t> indexCPU(totalVertexCount);
-    size_t offsetData = 0;
-    size_t offsetIndex = 0;
+    constexpr size_t VertPosSize = PrimitiveDataLayoutToSize(POS_LAYOUT);
+    constexpr size_t VertUVSize = PrimitiveDataLayoutToSize(UV_LAYOUT);
+    constexpr size_t VertNormSize = PrimitiveDataLayoutToSize(NORMAL_LAYOUT);
+    constexpr size_t IndexSize = PrimitiveDataLayoutToSize(INDEX_LAYOUT);
+    std::vector<Byte> postitionsCPU(totalDataCount * VertPosSize);
+    std::vector<Byte> uvsCPU(totalDataCount* VertUVSize);
+    std::vector<Byte> normalsCPU(totalDataCount * VertNormSize);
+    std::vector<Byte> indexCPU(totalIndexCount * IndexSize);
+
     size_t i = 0;
     for(const auto& loader : loaders)
     {
         const SceneNodeI& node = loader->SceneNode();
-        const size_t batchCount = node.IdCount();
 
-        if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data() + (offsetData * 3)),
+        const size_t offsetVertex = loaderVOffsets[i];
+        const size_t offsetIndex = loaderIOffsets[i];
+        const size_t offsetIndexNext = loaderIOffsets[i + 1];
+
+        if((e = loader->GetPrimitiveData(postitionsCPU.data() + offsetVertex * VertPosSize,
                                          PrimitiveDataType::POSITION)) != SceneError::OK)
             return e;
-        if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(normalsCPU.data() + (offsetData * 3)),
-                                         PrimitiveDataType::NORMAL)) != SceneError::OK)
-            return e;
-        if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(uvsCPU.data() + (offsetData * 2)),
+        if((e = loader->GetPrimitiveData(uvsCPU.data() + offsetVertex * VertUVSize,
                                          PrimitiveDataType::UV)) != SceneError::OK)
             return e;
-        if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(indexCPU.data() + (offsetIndex * 3)),
+        if((e = loader->GetPrimitiveData(normalsCPU.data() + offsetVertex * VertNormSize,
+                                         PrimitiveDataType::NORMAL)) != SceneError::OK)
+            return e;
+        if((e = loader->GetPrimitiveData(indexCPU.data() + offsetIndex * IndexSize,
                                          PrimitiveDataType::VERTEX_INDEX)) != SceneError::OK)
             return e;
 
-        // Generate offset
-        size_t j = 0;
-        for(const auto& pair : node.Ids())
+        // Accumulate the offset to the indices
+        // TODO: utilize GPU here maybe
+        if(i != 0)
         {
-            offsetData += primDataCountList[i][j];
-            offsetIndex += primCountList[i][j];
-            j++;
+            std::for_each(std::execution::par_unseq,
+                          reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndex * IndexSize),
+                          reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndexNext * IndexSize),
+                          [&](uint64_t& t) { t += offsetIndex; });
         }
+            
     }
-    assert(offsetIndex == totalPrimitiveCount);
-    assert(offsetData == totalDataCount);
 
     // All loaded to CPU, copy to GPU
     // Alloc
-    memory = std::move(DeviceMemory(sizeof(Vector4f) * 2 * totalVertexDataCount +
-                                    sizeof(uint32_t) * totalVertexCount));
-    float* dPositionsU = static_cast<float*>(memory);
-    float* dNormalsV = static_cast<float*>(memory) + totalVertexDataCount * 4;
-    uint32_t* dIndices = static_cast<uint32_t*>(memory) + totalVertexDataCount * 8;
+    memory = std::move(DeviceMemory(sizeof(Vector4f) * 2 * totalDataCount +
+                                    sizeof(uint64_t) * totalIndexCount));
+    Byte* dPositionsU = static_cast<Byte*>(memory);
+    Byte* dNormalsV = static_cast<Byte*>(memory) + totalDataCount * sizeof(Vector4f);
+    Byte* dIndices = static_cast<Byte*>(memory) + totalDataCount * sizeof(Vector4f) * 2;
 
     CUDA_CHECK(cudaMemcpy2D(dPositionsU, sizeof(Vector4f),
                             postitionsCPU.data(), sizeof(float) * 3,
-                            sizeof(float) * 3, totalVertexDataCount,
+                            sizeof(float) * 3, totalDataCount,
                             cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemcpy2D(dNormalsV, sizeof(Vector4f),
                             normalsCPU.data(), sizeof(float) * 3,
-                            sizeof(float) * 3, totalVertexDataCount,
+                            sizeof(float) * 3, totalDataCount,
                             cudaMemcpyHostToDevice));
     // Strided Copy of UVs
-    CUDA_CHECK(cudaMemcpy2D(dPositionsU + 3, sizeof(Vector4f),
+    CUDA_CHECK(cudaMemcpy2D(dPositionsU + VertPosSize, sizeof(Vector4f),
                             uvsCPU.data(), sizeof(float) * 2,
-                            sizeof(float), totalVertexDataCount,
+                            sizeof(float), totalDataCount,
                             cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy2D(dNormalsV + 3, sizeof(Vector4f),
+    CUDA_CHECK(cudaMemcpy2D(dNormalsV + VertNormSize, sizeof(Vector4f),
                             uvsCPU.data() + 1, sizeof(float) * 2,
-                            sizeof(float), totalVertexDataCount,
+                            sizeof(float), totalDataCount,
                             cudaMemcpyHostToDevice));
     // Copy Indices
     CUDA_CHECK(cudaMemcpy(dIndices, indexCPU.data(),
-                          totalVertexCount * sizeof(uint32_t),
+                          totalIndexCount * sizeof(uint64_t),
                           cudaMemcpyHostToDevice));
 
     // Set Main Pointers of batch
     dData.positionsU = reinterpret_cast<Vector4f*>(dPositionsU);
     dData.normalsV = reinterpret_cast<Vector4f*>(dNormalsV);
-    dData.indexList = dIndices;
+    dData.indexList = reinterpret_cast<uint64_t*>(dIndices);
     return e;
 }
 
 SceneError GPUPrimitiveTriangle::ChangeTime(const NodeListing& surfaceDataNodes, double time,
                                             const SurfaceLoaderGeneratorI& loaderGen)
 {
-    SceneError e = SceneError::OK;
-    std::vector<std::vector<size_t>> primCountList;
-    std::vector<std::vector<size_t>> offsetList;
+    return SceneError::OK;
+    //SceneError e = SceneError::OK;
+    //std::vector<std::vector<size_t>> primCountList;
+    //std::vector<std::vector<size_t>> offsetList;
 
-    // Generate Loaders
-    std::vector<SharedLibPtr<SurfaceLoaderI>> loaders;
-    for(const auto& sPtr : surfaceDataNodes)
-    {
-        const SceneNodeI& s = *sPtr;
-        SharedLibPtr<SurfaceLoaderI> sl(nullptr, [](SurfaceLoaderI*)->void{});
-        if((e = loaderGen.GenerateSurfaceLoader(sl, s, time)) != SceneError::OK)
-            return e;
-        loaders.emplace_back(std::move(sl));
-    }
+    //// Generate Loaders
+    //std::vector<SharedLibPtr<SurfaceLoaderI>> loaders;
+    //for(const auto& sPtr : surfaceDataNodes)
+    //{
+    //    const SceneNodeI& s = *sPtr;
+    //    SharedLibPtr<SurfaceLoaderI> sl(nullptr, [](SurfaceLoaderI*)->void{});
+    //    if((e = loaderGen.GenerateSurfaceLoader(sl, s, time)) != SceneError::OK)
+    //        return e;
+    //    loaders.emplace_back(std::move(sl));
+    //}
 
-    // First update aabbs (these should have changed)
-    totalPrimitiveCount = 0;
-    for(const auto& loader : loaders)
-    {
-        const SceneNodeI& node = loader->SceneNode();
-        const size_t batchCount = node.IdCount();
+    //// First update aabbs (these should have changed)
+    //totalPrimitiveCount = 0;
+    //for(const auto& loader : loaders)
+    //{
+    //    const SceneNodeI& node = loader->SceneNode();
+    //    const size_t batchCount = node.IdCount();
 
-        std::vector<AABB3>  aabbList(batchCount);
-        primCountList.emplace_back(batchCount);
-        offsetList.emplace_back(batchCount + 1);
+    //    std::vector<AABB3>  aabbList(batchCount);
+    //    primCountList.emplace_back(batchCount);
+    //    offsetList.emplace_back(batchCount + 1);
 
-        // Load Aux Data
-        if((e = loader->PrimitiveCounts(primCountList.back().data())) != SceneError::OK)
-            return e;
-        if((e = loader->AABB(aabbList.data())) != SceneError::OK)
-            return e;
-        if((e = loader->BatchOffsets(offsetList.back().data())) != SceneError::OK)
-            return e;
+    //    // Load Aux Data
+    //    if((e = loader->PrimitiveCounts(primCountList.back().data())) != SceneError::OK)
+    //        return e;
+    //    if((e = loader->AABB(aabbList.data())) != SceneError::OK)
+    //        return e;
+    //    if((e = loader->BatchOffsets(offsetList.back().data())) != SceneError::OK)
+    //        return e;
 
-        size_t i = 0;
-        for(const auto& pair : node.Ids())
-        {
-            NodeId id = pair.first;
-            const Vector2ul range = batchRanges.at(id);
-            assert((range[1] - range[0]) == primCountList.back()[i]);
-            batchAABBs.at(id) = aabbList[i];
+    //    size_t i = 0;
+    //    for(const auto& pair : node.Ids())
+    //    {
+    //        NodeId id = pair.first;
+    //        const Vector2ul range = batchRanges.at(id);
+    //        assert((range[1] - range[0]) == primCountList.back()[i]);
+    //        batchAABBs.at(id) = aabbList[i];
 
-            i++;
-        }
-    }
+    //        i++;
+    //    }
+    //}
 
-    // Now Copy
-    size_t j = 0;
-    std::vector<float> postitionsCPU, normalsCPU, uvsCPU;
-    for(const auto& loader : loaders)
-    {
-        const SceneNodeI& node = loader->SceneNode();
-        const size_t batchCount = node.IdCount();
+    //// Now Copy
+    //size_t j = 0;
+    //std::vector<float> postitionsCPU, normalsCPU, uvsCPU;
+    //for(const auto& loader : loaders)
+    //{
+    //    const SceneNodeI& node = loader->SceneNode();
+    //    const size_t batchCount = node.IdCount();
 
-        const std::vector<size_t>& offsets = offsetList[j];
-        const std::vector<size_t>& counts = primCountList[j];
-        size_t loaderTotalCount = offsets.back();
-        size_t loaderTotalVertexCount = loaderTotalCount * 3;
+    //    const std::vector<size_t>& offsets = offsetList[j];
+    //    const std::vector<size_t>& counts = primCountList[j];
+    //    size_t loaderTotalCount = offsets.back();
+    //    size_t loaderTotalVertexCount = loaderTotalCount * 3;
 
-        postitionsCPU.resize(loaderTotalVertexCount * 3);
-        normalsCPU.resize(loaderTotalVertexCount * 2);
-        uvsCPU.resize(loaderTotalVertexCount * 2);
-        
-        if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data()),
-                                         PrimitiveDataType::POSITION)) != SceneError::OK)
-            return e;
-        if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(normalsCPU.data()),
-                                         PrimitiveDataType::NORMAL)) != SceneError::OK)
-            return e;
-        if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(uvsCPU.data()),
-                                         PrimitiveDataType::UV)) != SceneError::OK)
-            return e;
+    //    postitionsCPU.resize(loaderTotalVertexCount * 3);
+    //    normalsCPU.resize(loaderTotalVertexCount * 2);
+    //    uvsCPU.resize(loaderTotalVertexCount * 2);
+    //    
+    //    if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(postitionsCPU.data()),
+    //                                     PrimitiveDataType::POSITION)) != SceneError::OK)
+    //        return e;
+    //    if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(normalsCPU.data()),
+    //                                     PrimitiveDataType::NORMAL)) != SceneError::OK)
+    //        return e;
+    //    if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(uvsCPU.data()),
+    //                                     PrimitiveDataType::UV)) != SceneError::OK)
+    //        return e;
 
-        // Now copy one by one
-        size_t i = 0;
-        for(const auto& pair : node.Ids())
-        {
-            NodeId id = pair.first;
-            Vector2ul range = batchDataRanges[id];
+    //    // Now copy one by one
+    //    size_t i = 0;
+    //    for(const auto& pair : node.Ids())
+    //    {
+    //        NodeId id = pair.first;
+    //        Vector2ul range = batchDataRanges[id];
 
-            size_t primitiveCount = counts[i];
-            assert((range[1] - range[0]) == primitiveCount);
+    //        size_t primitiveCount = counts[i];
+    //        assert((range[1] - range[0]) == primitiveCount);
 
-            float* dPositionsU = static_cast<float*>(memory);
-            float* dNormalsV = static_cast<float*>(memory) + totalPrimitiveCount;
+    //        Byte* dPositionsU = static_cast<Byte*>(memory);
+    //        Byte* dNormalsV = static_cast<Byte*>(memory) + totalPrimitiveCount;
 
-            // Pos and Normal
-            CUDA_CHECK(cudaMemcpy2D(dPositionsU + range[0], sizeof(Vector4f),
-                                    postitionsCPU.data(), sizeof(float) * 3,
-                                    sizeof(float) * 3, primitiveCount,
-                                    cudaMemcpyHostToDevice));
-            CUDA_CHECK(cudaMemcpy2D(dNormalsV + range[0], sizeof(Vector4f),
-                                    normalsCPU.data(), sizeof(float) * 3,
-                                    sizeof(float) * 3, primitiveCount,
-                                    cudaMemcpyHostToDevice));
-            // Strided Copy of UVs
-            CUDA_CHECK(cudaMemcpy2D(dPositionsU + range[0] + 3, sizeof(Vector4f),
-                                    uvsCPU.data() + offsets[i], sizeof(float) * 2,
-                                    sizeof(float), primitiveCount,
-                                    cudaMemcpyHostToDevice));
-            CUDA_CHECK(cudaMemcpy2D(dNormalsV + range[0] + 3, sizeof(Vector4f),
-                                    uvsCPU.data() + offsets[i] + 1, sizeof(float) * 2,
-                                    sizeof(float), primitiveCount,
-                                    cudaMemcpyHostToDevice));
-        }
-        j++;
-    }
-    return e;
+    //        size_t rangeOffset = range[0] * sizeof(Vector4f);
+
+    //        // Pos and Normal
+    //        CUDA_CHECK(cudaMemcpy2D(dPositionsU + rangeOffset, sizeof(Vector4f),
+    //                                postitionsCPU.data(), sizeof(float) * 3,
+    //                                sizeof(float) * 3, primitiveCount,
+    //                                cudaMemcpyHostToDevice));
+    //        CUDA_CHECK(cudaMemcpy2D(dNormalsV + rangeOffset, sizeof(Vector4f),
+    //                                normalsCPU.data(), sizeof(float) * 3,
+    //                                sizeof(float) * 3, primitiveCount,
+    //                                cudaMemcpyHostToDevice));
+    //        // Strided Copy of UVs
+    //        CUDA_CHECK(cudaMemcpy2D(dPositionsU + range[0] + 3, sizeof(Vector4f),
+    //                                uvsCPU.data() + offsets[i], sizeof(float) * 2,
+    //                                sizeof(float), primitiveCount,
+    //                                cudaMemcpyHostToDevice));
+    //        CUDA_CHECK(cudaMemcpy2D(dNormalsV + range[0] + 3, sizeof(Vector4f),
+    //                                uvsCPU.data() + offsets[i] + 1, sizeof(float) * 2,
+    //                                sizeof(float), primitiveCount,
+    //                                cudaMemcpyHostToDevice));
+    //    }
+    //    j++;
+    //}
+    //return e;
 }
 
 Vector2ul GPUPrimitiveTriangle::PrimitiveBatchRange(uint32_t surfaceDataId) const
