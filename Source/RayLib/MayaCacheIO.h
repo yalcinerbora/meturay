@@ -41,11 +41,11 @@ namespace MayaCache
         Vector3f                        transparency;
     };
 
-    std::string     GenerateNCacheFrameFile(const std::string& xmlFile, int frame);
+    std::u8string   GenerateNCacheFrameFile(const std::u8string& xmlFile, int frame);
 
     IOError         LoadNCacheNavierStokesXML(MayaNSCacheInfo&,
-                                              const std::string& fileName);
+                                              const std::u8string& fileName);
     IOError         LoadNCacheNavierStokes(std::vector<float>& velocityDensityData,
                                            const MayaNSCacheInfo&,
-                                           const std::string& fileName);
+                                           const std::u8string& fileName);
 };

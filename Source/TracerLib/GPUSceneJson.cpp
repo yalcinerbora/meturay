@@ -17,7 +17,7 @@
 #include <filesystem>
 #include <set>
 
-SceneError GPUSceneJson::OpenFile(const std::string& fileName)
+SceneError GPUSceneJson::OpenFile(const std::u8string& fileName)
 {
     // TODO: get a lightweight lexer and strip comments
     // from json since json does not support comments
@@ -25,7 +25,7 @@ SceneError GPUSceneJson::OpenFile(const std::string& fileName)
     // not convenient without comments.
 
     // Always assume filenames are UTF-8
-    const auto path = std::filesystem::u8path(fileName);
+    const auto path = std::filesystem::path(fileName);
     std::ifstream file(path);
 
     if(!file.is_open()) return SceneError::FILE_NOT_FOUND;
@@ -35,7 +35,7 @@ SceneError GPUSceneJson::OpenFile(const std::string& fileName)
     return SceneError::OK;
 }
 
-GPUSceneJson::GPUSceneJson(const std::string& fileName,
+GPUSceneJson::GPUSceneJson(const std::u8string& fileName,
                            ScenePartitionerI& partitioner,
                            TracerLogicGeneratorI& lg,
                            const SurfaceLoaderGeneratorI& sl)
@@ -91,8 +91,8 @@ SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
                     unsigned int i = static_cast<int>(SceneError::DUPLICATE_MATERIAL_ID) + t;
                     return static_cast<SceneError::Type>(i);
                 }
+                j++;
             }
-            j++;
         }
         i++;
     }
@@ -393,7 +393,7 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABB
             {
                 if(p.first == std::numeric_limits<uint32_t>::max()) break;
 
-                AABB3 aabb = accGroup.PrimitiveGroup().PrimitiveBatchAABB(p.first);
+                AABB3 aabb = accGroup.PrimitiveGroup().PrimitiveBatchAABB(p.second);
                 combinedAABB = combinedAABB.Union(aabb);
             }
             accAABBs.emplace(pairs.first, std::move(combinedAABB));

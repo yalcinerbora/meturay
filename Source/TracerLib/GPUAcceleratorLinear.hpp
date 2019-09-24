@@ -56,8 +56,8 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Map of hit keys for all
             const auto& p = pList[i];
             if(p.first == std::numeric_limits<uint32_t>::max()) break;
 
-            primRangeList[i] = primitiveGroup.PrimitiveBatchRange(p.first);
-            hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.second));
+            primRangeList[i] = primitiveGroup.PrimitiveBatchRange(p.second);
+            hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.first));
             localSize += primRangeList[i][1] - primRangeList[i][0];
         }
         range[1] = localSize;

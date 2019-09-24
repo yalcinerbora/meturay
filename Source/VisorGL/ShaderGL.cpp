@@ -44,16 +44,16 @@ ShaderGL::ShaderGL()
     , valid(false)
 {}
 
-ShaderGL::ShaderGL(ShaderType t, const std::string& path)
+ShaderGL::ShaderGL(ShaderType t, const std::u8string& path)
     : valid(false)
     , shaderID(0)
     , shaderType(t)
 {
-    const std::string onlyFileName = std::filesystem::u8path(path).filename().u8string();
+    const std::u8string onlyFileName = std::filesystem::path(path).filename().u8string();
 
-    std::streamoff size = std::ifstream(std::filesystem::u8path(path), std::ifstream::ate | std::ifstream::binary).tellg();
+    std::streamoff size = std::ifstream(std::filesystem::path(path), std::ifstream::ate | std::ifstream::binary).tellg();
     std::vector<char> source(size + 1, 0);
-    std::ifstream shaderFile(std::filesystem::u8path(path));
+    std::ifstream shaderFile = std::ifstream(std::filesystem::path(path));
     assert(shaderFile.is_open());
     shaderFile.read(source.data(), source.size());
 

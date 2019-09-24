@@ -38,7 +38,7 @@ class ShaderGL
     public:
         // Constructors & Destructor
                             ShaderGL();
-                            ShaderGL(ShaderType, const std::string& path);
+                            ShaderGL(ShaderType, const std::u8string& path);
                             ShaderGL(ShaderGL&&) noexcept;
                             ShaderGL(const ShaderGL&) = delete;
         ShaderGL&           operator=(ShaderGL&&) noexcept;

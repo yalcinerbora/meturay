@@ -10,7 +10,7 @@
 
 struct TracerStatus
 {
-    std::string                 currentScene;           // Current scene that is being render
+    std::u8string               currentScene;           // Current scene that is being render
     unsigned int                cameraCount;            // Total camera count on that scene
 
     unsigned int                latestSceneCamId;       // Latest camera that has been used

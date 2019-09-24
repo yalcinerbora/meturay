@@ -254,13 +254,15 @@ SceneError InNodeTriLoaderIndexed::PrimitiveCounts(std::vector<size_t>& result) 
 
 SceneError InNodeTriLoaderIndexed::PrimitiveDataRanges(std::vector<Vector2ul>& result) const
 {
+    // We assume data is shared between all primtives
+    // So data range is [0-positionCount]
     const int index = static_cast<int>(PrimitiveDataType::POSITION);
     const std::string name = PrimitiveDataTypeNames[index];
     size_t size = node.CommonListSize(name);
 
     result.resize(node.IdCount());
     std::fill(result.begin(), result.end(), Vector2ul(0, size));
-    return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
+    return SceneError::OK;
 }
 
 SceneError InNodeTriLoaderIndexed::GetPrimitiveData(Byte* result, PrimitiveDataType primitiveDataType) const
@@ -303,7 +305,17 @@ SceneError InNodeTriLoaderIndexed::PrimitiveDataCount(size_t& result, PrimitiveD
 {
     int posIndex = static_cast<int>(primitiveDataType);
     const std::string positionName = PrimitiveDataTypeNames[posIndex];
-    result = node.AccessListTotalCount(positionName);
+    switch(primitiveDataType)
+    {
+        case PrimitiveDataType::POSITION:
+        case PrimitiveDataType::NORMAL:
+        case PrimitiveDataType::UV:
+            result = node.CommonListSize(positionName);
+            break;
+        case PrimitiveDataType::VERTEX_INDEX:
+            result = node.AccessListTotalCount(positionName);
+            break;
+    }
     return SceneError::OK;
 }
 

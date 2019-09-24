@@ -150,7 +150,7 @@ class SimpleTracerSetup
 {
 
     private:
-        static constexpr Vector2i           IMAGE_RESOLUTION = {256, 256};
+        static constexpr Vector2i           IMAGE_RESOLUTION = {8, 8};
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
 
@@ -184,12 +184,12 @@ class SimpleTracerSetup
         // Self Node
         std::unique_ptr<MockNode>           node;
 
-        const std::string                   sceneName;
+        const std::u8string                 sceneName;
         const double                        sceneTime;
 
     public:
         // Constructors & Destructor
-                            SimpleTracerSetup(std::string sceneName, 
+                            SimpleTracerSetup(std::u8string sceneName,
                                               double sceneTime);
                             SimpleTracerSetup() = default;
 
@@ -197,7 +197,7 @@ class SimpleTracerSetup
         void                Body();
 };
 
-SimpleTracerSetup::SimpleTracerSetup(std::string sceneName, double sceneTime)
+SimpleTracerSetup::SimpleTracerSetup(std::u8string sceneName, double sceneTime)
     : sceneName(sceneName)
     , sceneTime(sceneTime)
     , visorView(nullptr)

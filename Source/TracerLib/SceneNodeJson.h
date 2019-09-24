@@ -10,7 +10,7 @@ using LoadFunc = T(*)(const nlohmann::json&, double);
 class SceneNodeJson final : public SceneNodeI
 {
     private:
-        const nlohmann::json&       node;
+        const nlohmann::json&           node;
 
         template <class T, LoadFunc<T>>
         std::vector<std::vector<T>>     AccessList(const std::string& name,

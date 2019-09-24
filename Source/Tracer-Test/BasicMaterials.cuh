@@ -6,43 +6,6 @@
 #include "BasicMaterialsKC.cuh"
 #include "TracerLib/TypeTraits.h"
 
-// Material Groups
-//class ConstantBoundaryMat final
-//    : public GPUBoundaryMatGroup<TracerBasic,
-//                                 ConstantBoundaryMatData,
-//                                 ConstantBoundaryMatShade>
-//{
-//    public:
-//        static constexpr const char*    TypeName() { return "ConstantBoundary"; }
-//
-//    private:
-//        DeviceMemory        memory;
-//
-//    public:
-//        // Constructors & Destructor
-//                            ConstantBoundaryMat(int gpuId);
-//                            ~ConstantBoundaryMat() = default;
-//
-//        // Interface
-//        // Type (as string) of the primitive group
-//        const char*         Type() const override { return TypeName(); }
-//        // Allocates and Generates Data
-//        SceneError          InitializeGroup(const std::set<SceneFileNode>& materialNodes, double time) override;
-//        SceneError          ChangeTime(const std::set<SceneFileNode>& materialNodes, double time) override;
-//
-//        // Material Queries
-//        int                 InnerId(uint32_t materialId) const override;
-//        bool                HasCachedTextures(uint32_t materialId) const override { return false; }
-//
-//        size_t              UsedGPUMemory() const override { return memory.Size(); }
-//        size_t              UsedCPUMemory() const override { return sizeof(ConstantBoundaryMatData); }
-//
-//        size_t              UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
-//        size_t              UsedCPUMemory(uint32_t materialId) const override { return 0; }
-//
-//        uint8_t             OutRayCount() const override { return 0; }
-//};
-
 class BasicMat final
     : public GPUMaterialGroup<TracerBasic,
                               ConstantAlbedoMatData,
@@ -53,7 +16,8 @@ class BasicMat final
         static constexpr const char*    TypeName() { return "BasicMat"; }
 
     private:
-        DeviceMemory    memory;
+        DeviceMemory                    memory;
+        std::map<uint32_t, uint32_t>    innerIds;
 
     protected:
     public:
@@ -152,7 +116,6 @@ class SphericalMat final
 
         uint8_t         OutRayCount() const override { return 0; }
 };
-
 
 static_assert(IsTracerClass<BasicMat>::value,
               "BasicMat is not a Tracer Class.");

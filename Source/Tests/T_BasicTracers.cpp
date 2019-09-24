@@ -4,7 +4,7 @@ TEST(SimpleTracerTests, HelloTriangle)
 {
     EnableVTMode();
 
-    SimpleTracerSetup setup("TestScenes/helloTriangle.json", 0.0);
+    SimpleTracerSetup setup(u8"TestScenes/helloTriangle.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
@@ -13,7 +13,7 @@ TEST(SimpleTracerTests, HelloSphere)
 {
     EnableVTMode();
 
-    SimpleTracerSetup setup("TestScenes/helloSphere.json", 0.0);
+    SimpleTracerSetup setup(u8"TestScenes/helloSphere.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
@@ -21,7 +21,7 @@ TEST(SimpleTracerTests, HelloSphere)
 TEST(SimpleTracerTests, HelloBox)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("TestScenes/helloBox.json", 0.0);
+    SimpleTracerSetup setup(u8"TestScenes/helloBox.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
@@ -30,7 +30,7 @@ TEST(SimpleTracerTests, HelloBox)
 //{
 //    EnableVTMode();
 //
-//    SimpleTracerSetup setup("TestScenes/cornellBox.json",
+//    SimpleTracerSetup setup(u8"TestScenes/cornellBox.json",
 //                            0.0);
 //    setup.Init();
 //    setup.Body();

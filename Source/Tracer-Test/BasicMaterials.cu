@@ -10,10 +10,18 @@ SceneError BasicMat::InitializeGroup(const NodeListing& materialNodes, double ti
     constexpr const char* ALBEDO = "albedo";
 
     std::vector<Vector3> albedoCPU;
+    uint32_t i = 0;
     for(const auto& sceneNode : materialNodes)
     {
         std::vector<Vector3> albedos = sceneNode->AccessVector3(ALBEDO);
         albedoCPU.insert(albedoCPU.end(), albedos.begin(), albedos.end());
+        
+        const auto& ids = sceneNode->Ids();
+        for(IdPair id : ids)
+        {
+            innerIds.emplace(std::make_pair(id.first, i));
+            i++;
+        }    
     }
 
     // Alloc etc
@@ -29,12 +37,13 @@ SceneError BasicMat::InitializeGroup(const NodeListing& materialNodes, double ti
 
 SceneError BasicMat::ChangeTime(const NodeListing& materialNodes, double time)
 {
-    return SceneError::OK;
+    // TODO: Implement
+    return SceneError::NO_LOGIC_FOR_MATERIAL;
 }
 
 int BasicMat::InnerId(uint32_t materialId) const
 {
-    return 0;
+    return innerIds.at(materialId);
 }
 
 BarycentricMat::BarycentricMat(int gpuId)
@@ -43,16 +52,19 @@ BarycentricMat::BarycentricMat(int gpuId)
 
 SceneError BarycentricMat::InitializeGroup(const NodeListing& materialNodes, double time)
 {
+    // Nothing to initialize
     return SceneError::OK;
 }
 
 SceneError BarycentricMat::ChangeTime(const NodeListing& materialNodes, double time)
 {
+    // Nothing to change
     return SceneError::OK;
 }
 
 int BarycentricMat::InnerId(uint32_t materialId) const
 {
+    // Inner id is irrelevant since there is not data for this material
     return 0;
 }
 
@@ -62,16 +74,19 @@ SphericalMat::SphericalMat(int gpuId)
 
 SceneError SphericalMat::InitializeGroup(const NodeListing& materialNodes, double time)
 {
+    // Nothing to initialize
     return SceneError::OK;
 }
 
 SceneError SphericalMat::ChangeTime(const NodeListing& materialNodes, double time)
 {
+    // Nothing to change
     return SceneError::OK;
 }
 
 int SphericalMat::InnerId(uint32_t materialId) const
 {
+    // Inner id is irrelevant since there is not data for this material
     return 0;
 }
 

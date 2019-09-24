@@ -171,6 +171,7 @@ static void KCIntersectLinear(// O
         // Write Updated Stuff
         if(hitModified)
         {
+            printf("MatFound %x\n", materialKey.value);
             ray.UpdateTMax(gRays, id);
             gHitStructs.Ref<HitData>(id) = hit;
             gMaterialKeys[id] = materialKey;

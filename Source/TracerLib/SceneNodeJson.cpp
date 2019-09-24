@@ -14,7 +14,7 @@ std::vector<T> SceneNodeJson::AccessSingle(const std::string& name,
     {
         const InnerIndex i = list.second;
         const nlohmann::json& node = (indexIdPairs.size() > 1) ? nodeInner[i] : nodeInner;
-        result.push_back(LoadF(nodeInner, time));
+        result.push_back(LoadF(node, time));
     }
     return std::move(result);
 }

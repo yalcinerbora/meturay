@@ -10,7 +10,7 @@ using SceneNodePtr = std::unique_ptr<SceneNodeI>;
 struct SceneNodePtrLess
 {
     bool operator()(const SceneNodePtr& a,
-                    const SceneNodePtr& b)
+                    const SceneNodePtr& b) const
     {
         return ((*a) < (*b));
     }

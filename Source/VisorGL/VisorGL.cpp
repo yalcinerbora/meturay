@@ -651,9 +651,9 @@ VisorGL::VisorGL(const VisorOptions& opts)
     glfwSetScrollCallback(window, VisorGL::MouseScrolledGLFW);
 
     // Shaders
-    vertPP = ShaderGL(ShaderType::VERTEX, "Shaders/PProcessGeneric.vert");
-    fragPP = ShaderGL(ShaderType::FRAGMENT, "Shaders/PProcessGeneric.frag");
-    compAccum = ShaderGL(ShaderType::COMPUTE, "Shaders/AccumInput.comp");
+    vertPP = ShaderGL(ShaderType::VERTEX, u8"Shaders/PProcessGeneric.vert");
+    fragPP = ShaderGL(ShaderType::FRAGMENT, u8"Shaders/PProcessGeneric.frag");
+    compAccum = ShaderGL(ShaderType::COMPUTE, u8"Shaders/AccumInput.comp");
 
     ReallocImages();
 

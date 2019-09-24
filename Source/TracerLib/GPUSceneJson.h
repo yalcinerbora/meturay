@@ -55,7 +55,7 @@ class GPUSceneJson : public GPUSceneI
 
         // File Related
         std::unique_ptr<nlohmann::json>         sceneJson;
-        std::string                             fileName;
+        std::u8string                           fileName;
         double                                  currentTime;
 
         // GPU Pointers
@@ -64,7 +64,7 @@ class GPUSceneJson : public GPUSceneI
 
         // Inners
         // Helper Logic
-        SceneError                              OpenFile(const std::string& fileName);
+        SceneError                              OpenFile(const std::u8string& fileName);
         bool                                    FindNode(const nlohmann::json*& node, const char* name);
         static SceneError                       GenIdLookup(IndexLookup&,
                                                             const nlohmann::json& array,
@@ -108,7 +108,7 @@ class GPUSceneJson : public GPUSceneI
 
     public:
         // Constructors & Destructor
-                                    GPUSceneJson(const std::string&,
+                                    GPUSceneJson(const std::u8string&,
                                                  ScenePartitionerI&,
                                                  TracerLogicGeneratorI&,
                                                  const SurfaceLoaderGeneratorI&);

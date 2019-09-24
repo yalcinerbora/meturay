@@ -50,6 +50,8 @@ inline HitResult TriangleClosestHit(// Output
                                     const DefaultLeaf& leaf,
                                     const TriData& primData)
 {
+    printf("PrimId %llu, MatId %x\n", leaf.primitiveId, leaf.matId.value);
+
     // Get Position
     uint64_t index0 = primData.indexList[leaf.primitiveId * 3 + 0];
     uint64_t index1 = primData.indexList[leaf.primitiveId * 3 + 1];
@@ -160,7 +162,7 @@ class GPUPrimitiveTriangle final
         // Error check
         // Queries in order to check if this primitive group supports certain primitive data
         // Material may need that data
-        bool                                        CanGenerateData(const std::string& s) const override;
+        bool                                    CanGenerateData(const std::string& s) const override;
 };
 
 static_assert(IsTracerClass<GPUPrimitiveTriangle>::value,
