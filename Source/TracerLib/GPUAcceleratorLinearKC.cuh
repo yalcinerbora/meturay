@@ -84,7 +84,7 @@ static void KCConstructLinear(// O
         const uint32_t pairIndex = FindIndex(globalId);
         const uint32_t localIndex = globalId - RangeLocation[pairIndex];
 
-        // Determine 
+        // Determine  Prim Id and Hit Key
         uint64_t primitiveId = prList.primRanges[pairIndex][0] + localIndex;
         HitKey matKey = mkList.materialKeys[pairIndex];
         // Gen Leaf and write
@@ -165,13 +165,13 @@ static void KCIntersectLinear(// O
                                                // Input
                                                leaf,
                                                primData);
-            hitModified = result[1];
+            hitModified |= result[1];
             if(result[0]) break;
         }
         // Write Updated Stuff
         if(hitModified)
         {
-            printf("MatFound %x\n", materialKey.value);
+            //printf("MatFound %x\n", materialKey.value);
             ray.UpdateTMax(gRays, id);
             gHitStructs.Ref<HitData>(id) = hit;
             gMaterialKeys[id] = materialKey;

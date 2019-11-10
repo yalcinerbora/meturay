@@ -128,6 +128,7 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
     const PrimitiveRangeList& rangeList = primitiveRanges[index];
     const HitKeyList& hitList = primitiveMaterialKeys[index];
 
+    // Copy Locally to stack to send it to const memory of the GPU
     HKList hkList = {{}};
     PRList prList = {{}};
     std::memcpy(const_cast<HitKey*>(hkList.materialKeys), hitList.data(),
@@ -136,7 +137,6 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
                 sizeof(Vector2ul) * SceneConstants::MaxPrimitivePerSurface);
 
     size_t workCount = accRanges[index][1] - accRanges[index][0];
-
 
     // TODO: Select a GPU
     int gpuIndex = 0;

@@ -67,7 +67,7 @@ void TracerBase::HitRays()
         // Cannot provide an absolute hit (its not its job)
         baseAccelerator.Hit(dTransfomIds, dCurrentKeys, dRays, dCurrentRayIds,
                              rayCount);
-        
+
         // Wait all GPUs to finish...
         CudaSystem::SyncAllGPUs();
 
