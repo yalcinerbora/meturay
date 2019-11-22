@@ -228,6 +228,9 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUSceneJson.h">
       <Filter>Scene</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicPools.h">
+      <Filter>SharedLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

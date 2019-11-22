@@ -20,6 +20,7 @@ template TracerBaseLogicI* TypeGenWrappers::TracerLogicConstruct<TracerBaseLogic
                                                                                                 const Vector2i,
                                                                                                 const Vector2i,
                                                                                                 const HitKey);
+
 template GPUBaseAcceleratorI* TypeGenWrappers::DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorLinear>();
 
 template void TypeGenWrappers::DefaultDestruct(TracerBaseLogicI*);
@@ -27,10 +28,7 @@ template void TypeGenWrappers::DefaultDestruct(GPUBaseAcceleratorI*);
 
 using namespace TypeGenWrappers;
 
-BasicTracerLogicGenerator::BasicTracerLogicGenerator()
-    : TracerLogicGenerator(GPUTracerGen(TracerLogicConstruct<TracerBaseLogicI, TracerBasic>,
-                                        DefaultDestruct<TracerBaseLogicI>),
-                           GPUTracerPtr(nullptr, DefaultDestruct<TracerBaseLogicI>))
+TestMaterialPool::TestMaterialPool()
 {
     // Add Basic Mat and Batch
     // Material Types
@@ -46,7 +44,6 @@ BasicTracerLogicGenerator::BasicTracerLogicGenerator()
     matGroupGenerators.emplace(GIAlbedoMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, GIAlbedoMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
-
     // Material Batches
     // Basic
     matBatchGenerators.emplace(BasicMatTriBatch::TypeName(),
@@ -73,4 +70,23 @@ BasicTracerLogicGenerator::BasicTracerLogicGenerator()
     matBatchGenerators.emplace(GIAlbedoSphrBatch::TypeName(),
                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, GIAlbedoSphrBatch>,
                                               DefaultDestruct<GPUMaterialBatchI>));
+}
+
+std::map<std::string, GPUMatGroupGen> TestMaterialPool::MaterialGroupGenerators(const std::string& regex) const
+{
+}
+
+std::map<std::string, GPUMatBatchGen> TestMaterialPool::MaterialBatchGenerators(const std::string& regex) const
+{
+
+}
+
+
+
+BasicTracerLogicGenerator::BasicTracerLogicGenerator()
+    : TracerLogicGenerator(GPUTracerGen(TracerLogicConstruct<TracerBaseLogicI, TracerBasic>,
+                                        DefaultDestruct<TracerBaseLogicI>),
+                           GPUTracerPtr(nullptr, DefaultDestruct<TracerBaseLogicI>))
+{
+  
 }

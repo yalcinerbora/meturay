@@ -33,7 +33,17 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         SharedLibPtr<SurfaceLoaderI> sl(nullptr, [] (SurfaceLoaderI*)->void {});        
         if((e = loaderGen.GenerateSurfaceLoader(sl, s, time)) != SceneError::OK)
            return e;
-        loaders.emplace_back(std::move(sl));
+
+        try
+        {
+            loaders.emplace_back(std::move(sl));
+        }
+        catch(SceneException const& e)
+        {
+            if(e.what()[0] != '\0') METU_ERROR_LOG("Error: %s", e.what());
+            return e;
+        }
+        
     }
 
     // Do sanity check for data type matching

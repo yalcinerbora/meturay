@@ -4,6 +4,7 @@
 #include "RayLib/SceneNodeI.h"
 #include "RayLib/SurfaceLoaderGenerator.h"
 #include "RayLib/SurfaceLoaderI.h"
+#include "RayLib/Log.h"
 
 // Generics
 GPUPrimitiveSphere::GPUPrimitiveSphere()
@@ -30,7 +31,15 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
         SharedLibPtr<SurfaceLoaderI> sl(nullptr, [] (SurfaceLoaderI*)->void {});
         if((e = loaderGen.GenerateSurfaceLoader(sl, s, time)) != SceneError::OK)
             return e;
-        loaders.emplace_back(std::move(sl));
+        try
+        {
+            loaders.emplace_back(std::move(sl));
+        }
+        catch(SceneException const& e)
+        {
+            if(e.what()[0] != '\0') METU_ERROR_LOG("Error: %s", e.what());
+            return e;
+        }
     }
 
     // Do sanity check for data type matching

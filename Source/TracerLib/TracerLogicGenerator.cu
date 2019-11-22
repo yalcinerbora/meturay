@@ -63,11 +63,17 @@ uint32_t TracerLogicGenerator::CalculateHitStruct()
     return currentSize;
 }
 
-TracerLogicGenerator::TracerLogicGenerator(GPUTracerGen tracerGenerator,
-                                           GPUTracerPtr tracerPtr)
+// Helper Funcs
+bool TracerLogicGenerator::FindSharedLib(SharedLib* libOut,
+                                         const std::string& libName) const
+{
+    //....
+    return false;
+}
+
+TracerLogicGenerator::TracerLogicGenerator()
     : baseAccelerator(nullptr, TypeGenWrappers::DefaultDestruct<GPUBaseAcceleratorI>)
-    , tracerGenerator(tracerGenerator)
-    , tracerLogic(std::move(tracerPtr))
+    , tracerPtr(nullptr, nullptr)
 {
     using namespace TypeGenWrappers;
 
@@ -243,38 +249,20 @@ SceneError TracerLogicGenerator::GenerateBaseAccelerator(GPUBaseAcceleratorI*& b
     return SceneError::OK;
 }
 
-//SceneError TracerLogicGenerator::GenerateBoundaryMaterial(GPUMaterialGroupI*& outMat,
-//                                                          const std::string& materialType,
-//                                                          const int gpuId)
-//{
-//    if(boundaryMaterial.get() == nullptr)
-//    {
-//        // Cannot Find Already Constructed Type
-//        // Generate
-//        auto loc = matGroupGenerators.find(materialType);
-//        if(loc == matGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
-//        boundaryMaterial = loc->second(gpuId);
-//        outMat = boundaryMaterial.get();
-//
-//        // Additionally Generate a batch for it
-//        auto batchLoc = matBatchGenerators.find(materialType);
-//        if(batchLoc == matBatchGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
-//
-//        boundaryMatBatch = batchLoc->second(*outMat, *emptyPrimitive);
-//        GPUMaterialBatchI* mb = boundaryMatBatch.get();
-//
-//        matBatchMap.emplace(BoundaryMatId, mb);
-//    }
-//    else outMat = boundaryMaterial.get();
-//    return SceneError::OK;
-//}
-
 SceneError TracerLogicGenerator::GenerateBaseLogic(TracerBaseLogicI*& bl,
+                                                   // Args
                                                    const TracerParameters& opts,
                                                    const Vector2i maxMats,
                                                    const Vector2i maxAccels,
-                                                   const HitKey baseBoundMatKey)
+                                                   const HitKey baseBoundMatKey,
+                                                   // DLL Location
+                                                   const std::string& libName,
+                                                   const SharedLibArgs& mangledName)
 {
+
+    // Do stuff (
+    //.....
+
     uint32_t hitStructSize = CalculateHitStruct();
 
     auto ag = GetAcceleratorGroups();
@@ -282,17 +270,17 @@ SceneError TracerLogicGenerator::GenerateBaseLogic(TracerBaseLogicI*& bl,
     auto mg = GetMaterialGroups();
     auto mb = GetMaterialBatches();
 
-    bl = nullptr;
-    if(tracerLogic == nullptr)
-        tracerLogic = tracerGenerator(*baseAccelerator.get(),
-                                      std::move(ag),
-                                      std::move(ab),
-                                      std::move(mg),
-                                      std::move(mb),
-                                      opts, hitStructSize,
-                                      maxMats, maxAccels,
-                                      baseBoundMatKey);
-    bl = tracerLogic.get();
+    //bl = nullptr;
+    //if(tracerPtr == nullptr)
+    //    tracerPtr = tracerGenerator(*baseAccelerator.get(),
+    //                                  std::move(ag),
+    //                                  std::move(ab),
+    //                                  std::move(mg),
+    //                                  std::move(mb),
+    //                                  opts, hitStructSize,
+    //                                  maxMats, maxAccels,
+    //                                  baseBoundMatKey);
+    bl = tracerPtr.get();
 
     return SceneError::OK;
 }
@@ -355,22 +343,31 @@ void TracerLogicGenerator::ClearAll()
     baseAccelerator.reset(nullptr);
 }
 
-SceneError TracerLogicGenerator::IncludeAcceleratorsFromDLL(const SharedLib&,
-                                                            const std::string& mangledName) const
+SceneError TracerLogicGenerator::IncludeBaseAcceleratorsFromDLL(const std::string& libName,
+                                                                const SharedLibArgs& mangledName) const
+{
+    // TODO: Implement
+
+    // Load Shared lib if not loaded (same dll may cover other stuff too)
+    return SceneError::OK;
+    // Then 
+}
+SceneError TracerLogicGenerator::IncludeAcceleratorsFromDLL(const std::string& libName,
+                                                            const SharedLibArgs& mangledName) const
 {
     // TODO: Implement
     return SceneError::OK;
 }
 
-SceneError TracerLogicGenerator::IncludeMaterialsFromDLL(const SharedLib&,
-                                                         const std::string& mangledName) const
+SceneError TracerLogicGenerator::IncludeMaterialsFromDLL(const std::string& libName,
+                                                         const SharedLibArgs& mangledName) const
 {
     // TODO: Implement
     return SceneError::OK;
 }
 
-SceneError TracerLogicGenerator::IncludePrimitivesFromDLL(const SharedLib&,
-                                                          const std::string& mangledName) const
+SceneError TracerLogicGenerator::IncludePrimitivesFromDLL(const std::string& libName,
+                                                          const SharedLibArgs& mangledName) const
 {
     // TODO: Implement
     return SceneError::OK;

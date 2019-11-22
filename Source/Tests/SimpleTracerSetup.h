@@ -21,6 +21,7 @@
 #include "TracerLib/TracerLoader.h"
 #include "TracerLib/TracerBase.h"
 #include "TracerLib/ScenePartitioner.h"
+#include "TracerLib/TracerLogicGenerator.h"
 
 // Node
 #include "RayLib/VisorCallbacksI.h"
@@ -156,7 +157,7 @@ class SimpleTracerSetup
 
         static constexpr const char*        TRACER_DLL = "Tracer-Test";
         static constexpr const char*        TRACER_DLL_GENERATOR = "GenerateBasicTracer";
-        static constexpr const char*        TRACER_DLL_DELETER = "DeleteBasicTracer";
+        static constexpr const char*        TRACER_DLL_DELETER = "DeleteBasicTracer";            
 
         static constexpr TracerParameters   TRACER_PARAMETERS = 
         {
@@ -237,6 +238,11 @@ bool SimpleTracerSetup::Init()
                                                     TRACER_DLL_GENERATOR,
                                                     TRACER_DLL_DELETER);
 
+    //
+    TracerLogicGenerator generator;
+
+
+
     // Generate GPU List & A Partitioner
     // Check cuda system error here
     const std::vector<CudaGPU>& gpuList = CudaSystem::GPUList();
@@ -260,7 +266,9 @@ bool SimpleTracerSetup::Init()
     scnE = tracerGenerator->GenerateBaseLogic(logic, TRACER_PARAMETERS,
                                               gpuScene->MaxMatIds(),
                                               gpuScene->MaxAccelIds(),
-                                              gpuScene->BaseBoundaryMaterial());
+                                              gpuScene->BaseBoundaryMaterial(),                                              
+                                              TRACER_DLL, 
+                                              SharedLibArgs{TRACER_DLL_GENERATOR, TRACER_DLL_DELETER});
     ERROR_CHECK(SceneError, scnE);
 
     MovementScemeList MovementSchemeList = {};    

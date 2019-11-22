@@ -1,8 +1,11 @@
 #pragma once
 
 #include "RayLib/SceneStructs.h"
+#include <string>
 
 struct SceneError;
+struct SharedLibArgs;
+
 class SharedLib;
 
 // Execution Related Abstraction
@@ -51,18 +54,18 @@ class TracerLogicGeneratorI
         virtual SceneError      GenerateBaseAccelerator(GPUBaseAcceleratorI*&,
                                                         const std::string& accelType) = 0;
 
-        //// Outside Material is special material and has its own group
-        //virtual SceneError      GenerateBoundaryMaterial(GPUMaterialGroupI*&,
-        //                                                const std::string& materialType,
-        //                                                const int gpuId) = 0;
         // Finally get the tracer logic
         // Tracer logic will be constructed with respect to
         // Constructed batches
         virtual SceneError      GenerateBaseLogic(TracerBaseLogicI*&,
+                                                  // Args
                                                   const TracerParameters& opts,
                                                   const Vector2i maxMats,
                                                   const Vector2i maxAccels,
-                                                  const HitKey baseBoundMatKey) = 0;
+                                                  const HitKey baseBoundMatKey,
+                                                  // DLL Location
+                                                  const std::string& libName,
+                                                  const SharedLibArgs& mangledName) = 0;
 
         // Get all generated stuff on a vector
         virtual PrimitiveGroupList          GetPrimitiveGroups() const = 0;
@@ -79,10 +82,16 @@ class TracerLogicGeneratorI
         // Inclusion Functionality
         // Additionally includes the materials from these libraries
         // No exclusion functionality provided just add what you need
-        virtual SceneError      IncludeAcceleratorsFromDLL(const SharedLib&,
-                                                           const std::string& mangledName = "\0") const = 0;
-        virtual SceneError      IncludeMaterialsFromDLL(const SharedLib&,
-                                                        const std::string& mangledName = "\0") const = 0;
-        virtual SceneError      IncludePrimitivesFromDLL(const SharedLib&,
-                                                         const std::string& mangledName = "\0") const = 0;
+        virtual SceneError      IncludeBaseAcceleratorsFromDLL(const std::string& libName,
+                                                               const SharedLibArgs& mangledame) const = 0;
+        virtual SceneError      IncludeAcceleratorsFromDLL(const std::string& libName,
+                                                           const SharedLibArgs& mangledName) const = 0;
+        virtual SceneError      IncludeMaterialsFromDLL(const std::string& libName,
+                                                        const SharedLibArgs& mangledName) const = 0;
+        virtual SceneError      IncludePrimitivesFromDLL(const std::string& libName,
+                                                         const SharedLibArgs& mangledName) const = 0;
+
+        // Logic Generator Inclusion
+        virtual SceneError      AttachBaseLogicGenerator(const std::string& libName,
+                                                         const SharedLibArgs& mangledName) const = 0;
 };

@@ -3,4 +3,4 @@
 #include "TracerLib/TracerLogicGeneratorI.h"
 
 //
-extern "C" _declspec(dllexport) TracerLogicGeneratorI* __stdcall GenBasicTracer();
+extern "C" _declspec(dllexport) TracerLogicGeneratorI* __stdcall GenerateBasicTracer();

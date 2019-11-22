@@ -21,42 +21,46 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
     private:
     protected:
         // Type Generation Functions
-        std::map<std::string, GPUPrimGroupGen>          primGroupGenerators;
-        std::map<std::string, GPUAccelGroupGen>         accelGroupGenerators;
-        std::map<std::string, GPUMatGroupGen>           matGroupGenerators;
+        std::map<std::string, GPUPrimGroupGen>      primGroupGenerators;
+        std::map<std::string, GPUAccelGroupGen>     accelGroupGenerators;
+        std::map<std::string, GPUMatGroupGen>       matGroupGenerators;
 
-        std::map<std::string, GPUAccelBatchGen>         accelBatchGenerators;
-        std::map<std::string, GPUMatBatchGen>           matBatchGenerators;
+        std::map<std::string, GPUAccelBatchGen>     accelBatchGenerators;
+        std::map<std::string, GPUMatBatchGen>       matBatchGenerators;
 
-        std::map<std::string, GPUBaseAccelGen>          baseAccelGenerators;
+        std::map<std::string, GPUBaseAccelGen>      baseAccelGenerators;
 
         // Generated Types
         // These hold ownership of classes (thus these will force destruction)
         // Primitives
-        std::map<std::string, GPUPrimGPtr>              primGroups;
+        std::map<std::string, GPUPrimGPtr>          primGroups;
         // Accelerators (Batch and Group)
-        std::map<std::string, GPUAccelGPtr>             accelGroups;
-        std::map<std::string, GPUAccelBPtr>             accelBatches;
+        std::map<std::string, GPUAccelGPtr>         accelGroups;
+        std::map<std::string, GPUAccelBPtr>         accelBatches;
         // Materials (Batch and Group)
-        std::map<NameIdPair, GPUMatGPtr>                matGroups;
-        std::map<NameIdPair, GPUMatBPtr>                matBatches;
+        std::map<NameIdPair, GPUMatGPtr>            matGroups;
+        std::map<NameIdPair, GPUMatBPtr>            matBatches;
 
-        GPUBaseAccelPtr                                 baseAccelerator;
-
-        // Tracer Related
-        GPUTracerGen                                    tracerGenerator;
-        GPUTracerPtr                                    tracerLogic;
+        // Base Accelerator (Unique Ptr)
+        GPUBaseAccelPtr                             baseAccelerator;
+        // Tracer (Unique Ptr)
+        GPUTracerPtr                                tracerPtr;
 
         // Generated Batch Mappings
-        AcceleratorBatchMappings                        accelBatchMap;
-        MaterialBatchMappings                           matBatchMap;
+        AcceleratorBatchMappings                    accelBatchMap;
+        MaterialBatchMappings                       matBatchMap;
 
-        // Helper Func
-        uint32_t                                        CalculateHitStruct();
+        // Shared Libraries That are Loaded
+        std::map<std::string, SharedLib>            openedLibs;
+
+        // Helper Funcs
+        uint32_t                                    CalculateHitStruct();
+        bool                                        FindSharedLib(SharedLib* libOut, 
+                                                                  const std::string& libName) const;
 
     public:
         // Constructor & Destructor
-                                    TracerLogicGenerator(GPUTracerGen, GPUTracerPtr);
+                                    TracerLogicGenerator();
                                     TracerLogicGenerator(const TracerLogicGenerator&) = delete;
         TracerLogicGenerator&       operator=(const TracerLogicGenerator&) = delete;
                                     ~TracerLogicGenerator() = default;
@@ -89,10 +93,14 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         // Tracer logic will be constructed with respect to
         // Constructed batches
         SceneError                  GenerateBaseLogic(TracerBaseLogicI*&,
+                                                      // Args
                                                       const TracerParameters& opts,
                                                       const Vector2i maxMats,
                                                       const Vector2i maxAccels,
-                                                      const HitKey baseBoundMatKey) override;
+                                                      const HitKey baseBoundMatKey,
+                                                      // DLL Location
+                                                      const std::string& libName,
+                                                      const SharedLibArgs& mangledName) override;
 
         PrimitiveGroupList          GetPrimitiveGroups() const override;
         AcceleratorGroupList        GetAcceleratorGroups() const override;
@@ -108,10 +116,12 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         // Inclusion Functionality
         // Additionally includes the materials from these libraries
         // No exclusion functionality provided just add what you need
-        SceneError                  IncludeAcceleratorsFromDLL(const SharedLib&,
-                                                               const std::string& mangledName = "\0") const override;
-        SceneError                  IncludeMaterialsFromDLL(const SharedLib&,
-                                                            const std::string& mangledName = "\0") const override;
-        SceneError                  IncludePrimitivesFromDLL(const SharedLib&,
-                                                             const std::string& mangledName = "\0") const override;
+        SceneError                  IncludeBaseAcceleratorsFromDLL(const std::string& libName,
+                                                                   const SharedLibArgs& mangledName) const override;
+        SceneError                  IncludeAcceleratorsFromDLL(const std::string & libName,
+                                                               const SharedLibArgs& mangledName) const override;
+        SceneError                  IncludeMaterialsFromDLL(const std::string & libName,
+                                                            const SharedLibArgs& mangledName) const override;
+        SceneError                  IncludePrimitivesFromDLL(const std::string & libName,
+                                                             const SharedLibArgs& mangledName) const override;
 };

@@ -12,6 +12,12 @@ Functionalty to Load DLLs or SOs
 
 #include "ObjectFuncDefinitions.h"
 
+struct SharedLibArgs
+{
+    std::string mangledConstructorName = "\0";
+    std::string mangledDestructorName = "\0";
+};
+
 class SharedLib
 {
     private:
@@ -33,16 +39,14 @@ class SharedLib
                             ~SharedLib();
 
     template <class T>
-    SharedLibPtr<T>         GenerateObject(const std::string& mangledConstructorName,
-                                           const std::string& mangledDestructorName);
+    SharedLibPtr<T>         GenerateObject(const SharedLibArgs& mangledNames);
 };
 
 template <class T>
-SharedLibPtr<T> SharedLib::GenerateObject(const std::string& mangledConstructorName,
-                                          const std::string& mangledDestructorName)
+SharedLibPtr<T> SharedLib::GenerateObject(const SharedLibArgs& args)
 {
-    ObjGeneratorFunc<T> genFunc = static_cast<ObjGeneratorFunc<T>>(GetProcAdressInternal(mangledConstructorName));
-    ObjDestroyerFunc<T> destFunc = static_cast<ObjDestroyerFunc<T>>(GetProcAdressInternal(mangledDestructorName));
+    ObjGeneratorFunc<T> genFunc = static_cast<ObjGeneratorFunc<T>>(GetProcAdressInternal(args.mangledConstructorName));
+    ObjDestroyerFunc<T> destFunc = static_cast<ObjDestroyerFunc<T>>(GetProcAdressInternal(args.mangledDestructorName));
 
     return SharedLibPtr<T>(genFunc(), destFunc);
 }
