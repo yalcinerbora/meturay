@@ -11,6 +11,7 @@ Functionalty to Load DLLs or SOs
 #include <memory>
 
 #include "ObjectFuncDefinitions.h"
+#include "DLLError.h"
 
 struct SharedLibArgs
 {
@@ -38,8 +39,8 @@ class SharedLib
         SharedLib&          operator=(const SharedLib&) = delete;
                             ~SharedLib();
 
-    template <class T>
-    SharedLibPtr<T>         GenerateObject(const SharedLibArgs& mangledNames);
+        template <class T>
+        SharedLibPtr<T>     GenerateObject(const SharedLibArgs& mangledNames);
 };
 
 template <class T>
@@ -47,6 +48,7 @@ SharedLibPtr<T> SharedLib::GenerateObject(const SharedLibArgs& args)
 {
     ObjGeneratorFunc<T> genFunc = static_cast<ObjGeneratorFunc<T>>(GetProcAdressInternal(args.mangledConstructorName));
     ObjDestroyerFunc<T> destFunc = static_cast<ObjDestroyerFunc<T>>(GetProcAdressInternal(args.mangledDestructorName));
-
+    if(genFunc) throw DLLException(DLLError::MANGLED_NAME_NOT_FOUND);
+    if(destFunc) throw DLLException(DLLError::MANGLED_NAME_NOT_FOUND);
     return SharedLibPtr<T>(genFunc(), destFunc);
 }

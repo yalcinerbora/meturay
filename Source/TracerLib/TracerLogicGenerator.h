@@ -11,6 +11,8 @@ and it adds default accelerators and primitives as default types.
 #include <map>
 
 #include "RayLib/Types.h"
+#include "RayLib/SharedLib.h"
+
 #include "TracerLogicGeneratorI.h"
 #include "DefaultTypeGenerators.h"
 
@@ -92,7 +94,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         // Finally get the tracer logic
         // Tracer logic will be constructed with respect to
         // Constructed batches
-        SceneError                  GenerateBaseLogic(TracerBaseLogicI*&,
+        DLLError                    GenerateBaseLogic(TracerBaseLogicI*&,
                                                       // Args
                                                       const TracerParameters& opts,
                                                       const Vector2i maxMats,
@@ -114,14 +116,21 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         void                        ClearAll() override;
 
         // Inclusion Functionality
-        // Additionally includes the materials from these libraries
-        // No exclusion functionality provided just add what you need
-        SceneError                  IncludeBaseAcceleratorsFromDLL(const std::string& libName,
-                                                                   const SharedLibArgs& mangledName) const override;
-        SceneError                  IncludeAcceleratorsFromDLL(const std::string & libName,
-                                                               const SharedLibArgs& mangledName) const override;
-        SceneError                  IncludeMaterialsFromDLL(const std::string & libName,
-                                                            const SharedLibArgs& mangledName) const override;
-        SceneError                  IncludePrimitivesFromDLL(const std::string & libName,
-                                                             const SharedLibArgs& mangledName) const override;
+        // Additionally includes the materials, primitives etc. from other libraries
+        DLLError                    IncludeBaseAcceleratorsFromDLL(const std::string& regex,
+                                                                   const std::string& libName,
+                                                                   const SharedLibArgs& mangledName) override;
+         DLLError                   IncludeAcceleratorsFromDLL(const std::string& regex,
+                                                               const std::string& libName,
+                                                               const SharedLibArgs& mangledName) override;
+         DLLError                   IncludeMaterialsFromDLL(const std::string& regex,
+                                                            const std::string& libName,
+                                                            const SharedLibArgs& mangledName) override;
+         DLLError                   IncludePrimitivesFromDLL(const std::string& regex,
+                                                             const std::string& libName,
+                                                             const SharedLibArgs& mangledName) override;
+
+        // Exclusion functionality
+        DLLError                    UnloadLibrary(std::string & libName) override;
+        DLLError                    StripGenerators(std::string & regex) override;
 };

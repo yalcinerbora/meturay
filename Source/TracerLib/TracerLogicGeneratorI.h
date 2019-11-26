@@ -4,6 +4,7 @@
 #include <string>
 
 struct SceneError;
+struct DLLError;
 struct SharedLibArgs;
 
 class SharedLib;
@@ -57,7 +58,7 @@ class TracerLogicGeneratorI
         // Finally get the tracer logic
         // Tracer logic will be constructed with respect to
         // Constructed batches
-        virtual SceneError      GenerateBaseLogic(TracerBaseLogicI*&,
+        virtual DLLError        GenerateBaseLogic(TracerBaseLogicI*&,
                                                   // Args
                                                   const TracerParameters& opts,
                                                   const Vector2i maxMats,
@@ -82,16 +83,19 @@ class TracerLogicGeneratorI
         // Inclusion Functionality
         // Additionally includes the materials from these libraries
         // No exclusion functionality provided just add what you need
-        virtual SceneError      IncludeBaseAcceleratorsFromDLL(const std::string& libName,
-                                                               const SharedLibArgs& mangledame) const = 0;
-        virtual SceneError      IncludeAcceleratorsFromDLL(const std::string& libName,
-                                                           const SharedLibArgs& mangledName) const = 0;
-        virtual SceneError      IncludeMaterialsFromDLL(const std::string& libName,
-                                                        const SharedLibArgs& mangledName) const = 0;
-        virtual SceneError      IncludePrimitivesFromDLL(const std::string& libName,
-                                                         const SharedLibArgs& mangledName) const = 0;
-
-        // Logic Generator Inclusion
-        virtual SceneError      AttachBaseLogicGenerator(const std::string& libName,
-                                                         const SharedLibArgs& mangledName) const = 0;
+        virtual DLLError    IncludeBaseAcceleratorsFromDLL(const std::string& regex, 
+                                                           const std::string& libName,
+                                                           const SharedLibArgs& mangledName) = 0;
+        virtual DLLError    IncludeAcceleratorsFromDLL(const std::string& regex, 
+                                                       const std::string& libName,
+                                                       const SharedLibArgs& mangledName) = 0;
+        virtual DLLError    IncludeMaterialsFromDLL(const std::string& regex, 
+                                                    const std::string& libName,
+                                                    const SharedLibArgs& mangledName) = 0;
+        virtual DLLError    IncludePrimitivesFromDLL(const std::string& regex,
+                                                     const std::string& libName,
+                                                     const SharedLibArgs& mangledName) = 0;
+        // Exclusion functionality
+        virtual DLLError    UnloadLibrary(std::string& libName) = 0;
+        virtual DLLError    StripGenerators(std::string& regex) = 0;
 };

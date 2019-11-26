@@ -193,6 +193,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\ImageStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\DLLError.h">
+      <Filter>Errors</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

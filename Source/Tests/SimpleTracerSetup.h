@@ -9,6 +9,7 @@
 #include "RayLib/CPUTimer.h"
 #include "RayLib/SurfaceLoaderGenerator.h"
 #include "RayLib/TracerStatus.h"
+#include "RayLib/DLLError.h"
 
 // Visor
 #include "RayLib/VisorI.h"
@@ -33,7 +34,7 @@
 #define ERROR_CHECK(ErrType, e) \
 if(e != ErrType::OK) \
 {\
-    METU_ERROR_LOG("%s", static_cast<std::string>(scnE).c_str()); \
+    METU_ERROR_LOG("%s", static_cast<std::string>(e).c_str()); \
     return false;\
 }
 class MockNode
@@ -156,8 +157,11 @@ class SimpleTracerSetup
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
 
         static constexpr const char*        TRACER_DLL = "Tracer-Test";
-        static constexpr const char*        TRACER_DLL_GENERATOR = "GenerateBasicTracer";
-        static constexpr const char*        TRACER_DLL_DELETER = "DeleteBasicTracer";            
+        static constexpr const char*        TRACER_LOGIC_GEN = "GenerateBasicTracer";
+        static constexpr const char*        TRACER_LOGIC_DEL = "DeleteBasicTracer";
+        static constexpr const char*        TRACER_MAT_POOL_GEN = "GenerateBasicMaterialPool";
+        static constexpr const char*        TRACER_MAT_POOL_DEL = "DeleteBasicMaterialPool";
+
 
         static constexpr TracerParameters   TRACER_PARAMETERS = 
         {
@@ -174,10 +178,6 @@ class SimpleTracerSetup
         std::unique_ptr<VisorI>             visorView;
         std::unique_ptr<TracerBase>         tracerBase;
         std::unique_ptr<GPUSceneJson>       gpuScene;
-
-        // Loaded DLL
-        std::unique_ptr<SharedLib>          sharedLib;
-        LogicInterface                      tracerGenerator;
 
         // Visor Input
         std::unique_ptr<VisorWindowInput>   visorInput;
@@ -204,8 +204,6 @@ SimpleTracerSetup::SimpleTracerSetup(std::u8string sceneName, double sceneTime)
     , visorView(nullptr)
     , tracerBase(nullptr)
     , gpuScene(nullptr)
-    , sharedLib(nullptr)
-    , tracerGenerator(nullptr, nullptr)
     , visorInput(nullptr)
     , node(nullptr)
 {}
@@ -233,15 +231,17 @@ bool SimpleTracerSetup::Init()
     };
 
     // Load Tracer Genrator from DLL
-    sharedLib = std::make_unique<SharedLib>(TRACER_DLL);
-    tracerGenerator = TracerLoader::LoadTracerLogic(*sharedLib,
-                                                    TRACER_DLL_GENERATOR,
-                                                    TRACER_DLL_DELETER);
+    //sharedLib = std::make_unique<SharedLib>(TRACER_DLL);
+    //tracerGenerator = TracerLoader::LoadTracerLogic(*sharedLib,
+    //                                                TRACER_DLL_GENERATOR,
+    //                                                TRACER_DLL_DELETER);
 
-    //
+    // Generate Tracer Generator
     TracerLogicGenerator generator;
-
-
+    // Load Materials from Test-Material Pool Shared Library
+    DLLError dllE = generator.IncludeMaterialsFromDLL("*", TRACER_DLL,
+                                                      SharedLibArgs{TRACER_MAT_POOL_GEN, TRACER_MAT_POOL_DEL});
+    ERROR_CHECK(DLLError, dllE);
 
     // Generate GPU List & A Partitioner
     // Check cuda system error here
@@ -255,7 +255,7 @@ bool SimpleTracerSetup::Init()
     // Load Scene
     gpuScene = std::make_unique<GPUSceneJson>(sceneName,
                                               partitioner,
-                                              *tracerGenerator.get(),
+                                              generator,
                                               surfaceLoaders);
     SceneError scnE = gpuScene->LoadScene(sceneTime);
     ERROR_CHECK(SceneError, scnE);
@@ -263,13 +263,13 @@ bool SimpleTracerSetup::Init()
 
     // Finally generate logic after successfull load
     TracerBaseLogicI* logic;
-    scnE = tracerGenerator->GenerateBaseLogic(logic, TRACER_PARAMETERS,
-                                              gpuScene->MaxMatIds(),
-                                              gpuScene->MaxAccelIds(),
-                                              gpuScene->BaseBoundaryMaterial(),                                              
-                                              TRACER_DLL, 
-                                              SharedLibArgs{TRACER_DLL_GENERATOR, TRACER_DLL_DELETER});
-    ERROR_CHECK(SceneError, scnE);
+    dllE = generator.GenerateBaseLogic(logic, TRACER_PARAMETERS,
+                                       gpuScene->MaxMatIds(),
+                                       gpuScene->MaxAccelIds(),
+                                       gpuScene->BaseBoundaryMaterial(),
+                                       TRACER_DLL,
+                                       SharedLibArgs{TRACER_LOGIC_GEN, TRACER_LOGIC_DEL});
+    ERROR_CHECK(DLLError, dllE);
 
     MovementScemeList MovementSchemeList = {};    
     KeyboardKeyBindings KeyBinds = VisorConstants::DefaultKeyBinds;

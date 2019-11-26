@@ -74,19 +74,12 @@ TestMaterialPool::TestMaterialPool()
 
 std::map<std::string, GPUMatGroupGen> TestMaterialPool::MaterialGroupGenerators(const std::string& regex) const
 {
+    std::map<std::string, GPUMatGroupGen> result;
+    return result;
 }
 
 std::map<std::string, GPUMatBatchGen> TestMaterialPool::MaterialBatchGenerators(const std::string& regex) const
 {
-
-}
-
-
-
-BasicTracerLogicGenerator::BasicTracerLogicGenerator()
-    : TracerLogicGenerator(GPUTracerGen(TracerLogicConstruct<TracerBaseLogicI, TracerBasic>,
-                                        DefaultDestruct<TracerBaseLogicI>),
-                           GPUTracerPtr(nullptr, DefaultDestruct<TracerBaseLogicI>))
-{
-  
+    std::map<std::string, GPUMatBatchGen> result;
+    return result;
 }

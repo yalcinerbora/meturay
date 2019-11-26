@@ -137,6 +137,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\Constants.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CPUTimer.h" />
     <ClInclude Include="..\..\..\Source\RayLib\DistributorI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\DLLError.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Error.h" />
     <ClInclude Include="..\..\..\Source\RayLib\HitStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\HybridFunctions.h" />

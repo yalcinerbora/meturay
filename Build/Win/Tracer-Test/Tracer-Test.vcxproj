@@ -31,7 +31,9 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cpp" />
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">

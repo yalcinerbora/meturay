@@ -1,5 +1,7 @@
 #include "TracerLogicGenerator.h"
 
+#include "RayLib/DLLError.h"
+
 #include "GPUPrimitiveSphere.h"
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveEmpty.h"
@@ -249,7 +251,7 @@ SceneError TracerLogicGenerator::GenerateBaseAccelerator(GPUBaseAcceleratorI*& b
     return SceneError::OK;
 }
 
-SceneError TracerLogicGenerator::GenerateBaseLogic(TracerBaseLogicI*& bl,
+DLLError TracerLogicGenerator::GenerateBaseLogic(TracerBaseLogicI*& bl,
                                                    // Args
                                                    const TracerParameters& opts,
                                                    const Vector2i maxMats,
@@ -282,7 +284,7 @@ SceneError TracerLogicGenerator::GenerateBaseLogic(TracerBaseLogicI*& bl,
     //                                  baseBoundMatKey);
     bl = tracerPtr.get();
 
-    return SceneError::OK;
+    return DLLError::OK;
 }
 
 PrimitiveGroupList TracerLogicGenerator::GetPrimitiveGroups() const
@@ -343,32 +345,46 @@ void TracerLogicGenerator::ClearAll()
     baseAccelerator.reset(nullptr);
 }
 
-SceneError TracerLogicGenerator::IncludeBaseAcceleratorsFromDLL(const std::string& libName,
-                                                                const SharedLibArgs& mangledName) const
+DLLError TracerLogicGenerator::IncludeBaseAcceleratorsFromDLL(const std::string& libName,
+                                                              const std::string& regex,
+                                                              const SharedLibArgs& mangledName)
 {
     // TODO: Implement
 
     // Load Shared lib if not loaded (same dll may cover other stuff too)
-    return SceneError::OK;
+    return DLLError::OK;
     // Then 
 }
-SceneError TracerLogicGenerator::IncludeAcceleratorsFromDLL(const std::string& libName,
-                                                            const SharedLibArgs& mangledName) const
+DLLError TracerLogicGenerator::IncludeAcceleratorsFromDLL(const std::string& libName,
+                                                          const std::string& regex,
+                                                          const SharedLibArgs& mangledName)
 {
     // TODO: Implement
-    return SceneError::OK;
+    return DLLError::OK;
 }
 
-SceneError TracerLogicGenerator::IncludeMaterialsFromDLL(const std::string& libName,
-                                                         const SharedLibArgs& mangledName) const
+DLLError TracerLogicGenerator::IncludeMaterialsFromDLL(const std::string& libName,
+                                                       const std::string& regex,
+                                                       const SharedLibArgs& mangledName)
 {
     // TODO: Implement
-    return SceneError::OK;
+    return DLLError::OK;
 }
 
-SceneError TracerLogicGenerator::IncludePrimitivesFromDLL(const std::string& libName,
-                                                          const SharedLibArgs& mangledName) const
+DLLError TracerLogicGenerator::IncludePrimitivesFromDLL(const std::string& libName,
+                                                        const std::string& regex,
+                                                        const SharedLibArgs& mangledName)
 {
     // TODO: Implement
-    return SceneError::OK;
+    return DLLError::OK;
+}
+
+DLLError TracerLogicGenerator::UnloadLibrary(std::string& libName)
+{
+    return DLLError::OK;
+}
+
+DLLError TracerLogicGenerator::StripGenerators(std::string& regex)
+{
+    return DLLError::OK;
 }

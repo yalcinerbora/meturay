@@ -23,6 +23,7 @@
     <CudaCompile Include="..\..\..\Source\Tracer-Test\BasicMaterials.cu">
       <Filter>Materials</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h">
@@ -52,8 +53,5 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\GIMaterialsKC.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cpp" />
   </ItemGroup>
 </Project>

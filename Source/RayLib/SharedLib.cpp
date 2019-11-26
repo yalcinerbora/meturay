@@ -56,18 +56,22 @@ SharedLib::SharedLib(const std::string& libName)
     std::string libWithExt = libName;
     #if defined METURAY_WIN
         libWithExt += WinDLLExt;
-        libHandle = (void*)LoadLibrary(ConvertWinWchar(libWithExt).c_str());
+        libHandle = (void*)LoadLibrary(ConvertWinWchar(libWithExt).c_str());        
     #elif defined METURAY_LINUX
         libWithExt += LinuxDLLExt;
-        libHandle = dlopen(libWithExt.c_str(), iMode, RTLD_NOW);
+        libHandle = dlopen(libWithExt.c_str(), iMode, RTLD_NOW);        
     #endif
+
+    // Check if we found the DLL
+    if(libHandle == nullptr) 
+        throw DLLException(DLLError::DLL_NOT_FOUND);
 }
 
 SharedLib::~SharedLib()
 {
     #if defined METURAY_WIN
-        FreeLibrary((HINSTANCE)libHandle);
+        if(libHandle != nullptr) FreeLibrary((HINSTANCE)libHandle);
     #elif defined METURAY_LINUX
-        dlclose(libHandle);
+        if(libHandle != nullptr) dlclose(libHandle);
     #endif
 }
