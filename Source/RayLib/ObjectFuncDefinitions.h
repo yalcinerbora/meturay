@@ -6,6 +6,9 @@
 template <class T>
 using ObjGeneratorFunc = T* (*)();
 
+template <class T, class... Args>
+using ObjGeneratorFuncArgs = T * (*)(Args...);
+
 template <class T>
 using ObjDestroyerFunc = void(*)(T*);
 

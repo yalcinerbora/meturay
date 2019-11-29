@@ -9,30 +9,48 @@ and it adds default accelerators and primitives as default types.
 */
 
 #include <map>
+#include <list>
 
 #include "RayLib/Types.h"
 #include "RayLib/SharedLib.h"
 
 #include "TracerLogicGeneratorI.h"
 #include "DefaultTypeGenerators.h"
+#include "TracerLogicPools.h"
 
 using NameIdPair = std::pair<std::string, int>;
+
+using AcceleratorPoolPtr = SharedLibPtr<AcceleratorLogicPoolI>;
+using MaterialPoolPtr = SharedLibPtr<MaterialLogicPoolI>;
+using PrimitivePoolPtr = SharedLibPtr<PrimitiveLogicPoolI>;
+using BaseAcceleratorPoolPtr = SharedLibPtr<BaseAcceleratorLogicPoolI>;
+
+using PoolKey = std::pair<SharedLib*, SharedLibArgs>;
 
 class TracerLogicGenerator : public TracerLogicGeneratorI
 {
     private:
     protected:
+        // Shared Libraries That are Loaded
+        std::map<std::string, SharedLib>                openedLibs;
+        // Included Pools
+        std::map<PoolKey, AcceleratorPoolPtr>           loadedAccPools;
+        std::map<PoolKey, MaterialPoolPtr>              loadedMatPools;
+        std::map<PoolKey, PrimitivePoolPtr>             loadedPrimPools;
+        std::map<PoolKey, BaseAcceleratorPoolPtr>       loadedBaseAccPools;
+
+        // All Combined Type Generation Functions
         // Type Generation Functions
-        std::map<std::string, GPUPrimGroupGen>      primGroupGenerators;
-        std::map<std::string, GPUAccelGroupGen>     accelGroupGenerators;
-        std::map<std::string, GPUMatGroupGen>       matGroupGenerators;
+        std::map<std::string, GPUPrimGroupGen>          primGroupGenerators;
+        std::map<std::string, GPUAccelGroupGen>         accelGroupGenerators;
+        std::map<std::string, GPUMatGroupGen>           matGroupGenerators;
 
-        std::map<std::string, GPUAccelBatchGen>     accelBatchGenerators;
-        std::map<std::string, GPUMatBatchGen>       matBatchGenerators;
+        std::map<std::string, GPUAccelBatchGen>         accelBatchGenerators;
+        std::map<std::string, GPUMatBatchGen>           matBatchGenerators;
 
-        std::map<std::string, GPUBaseAccelGen>      baseAccelGenerators;
+        std::map<std::string, GPUBaseAccelGen>          baseAccelGenerators;
 
-        // Generated Types
+        // Generated Types (Called by GPU Scene)
         // These hold ownership of classes (thus these will force destruction)
         // Primitives
         std::map<std::string, GPUPrimGPtr>          primGroups;
@@ -42,7 +60,6 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         // Materials (Batch and Group)
         std::map<NameIdPair, GPUMatGPtr>            matGroups;
         std::map<NameIdPair, GPUMatBPtr>            matBatches;
-
         // Base Accelerator (Unique Ptr)
         GPUBaseAccelPtr                             baseAccelerator;
         // Tracer (Unique Ptr)
@@ -52,13 +69,15 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         AcceleratorBatchMappings                    accelBatchMap;
         MaterialBatchMappings                       matBatchMap;
 
-        // Shared Libraries That are Loaded
-        std::map<std::string, SharedLib>            openedLibs;
-
         // Helper Funcs
-        uint32_t                                    CalculateHitStruct();
-        bool                                        FindSharedLib(SharedLib* libOut, 
-                                                                  const std::string& libName) const;
+        uint32_t                                    CalculateHitStructSize();
+        DLLError                                    FindOrGenerateSharedLib(SharedLib*& libOut,
+                                                                            const std::string& libName);
+
+        template <class T>
+        DLLError                                    FindOrGeneratePool(SharedLibPtr<T>*&,
+                                                                       std::map<PoolKey, SharedLibPtr<T>>&,
+                                                                       const PoolKey& libName);
 
     public:
         // Constructor & Destructor
@@ -129,8 +148,27 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
          DLLError                   IncludePrimitivesFromDLL(const std::string& regex,
                                                              const std::string& libName,
                                                              const SharedLibArgs& mangledName) override;
-
-        // Exclusion functionality
-        DLLError                    UnloadLibrary(std::string & libName) override;
-        DLLError                    StripGenerators(std::string & regex) override;
 };
+
+template <class T>
+DLLError TracerLogicGenerator::FindOrGeneratePool(SharedLibPtr<T>*& pool,
+                                                  std::map<PoolKey, SharedLibPtr<T>>& generatedPools,
+                                                  const PoolKey& libKey)
+{
+    DLLError e = DLLError::OK;
+    auto loc = generatedPools.end();
+    if((loc = generatedPools.find(libKey)) != generatedPools.end())
+    {
+        pool = &loc->second;
+        return e;
+    }
+    else
+    {
+        SharedLibPtr<T> ptr = {nullptr, nullptr};
+        e = libKey.first->GenerateObject<T>(ptr,libKey.second);
+        if(e != DLLError::OK) return e;
+        auto it = generatedPools.emplace(libKey, std::move(ptr));
+        pool = &(it.first->second);
+        return e;
+    }
+}

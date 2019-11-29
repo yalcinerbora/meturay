@@ -95,7 +95,10 @@ class TracerLogicGeneratorI
         virtual DLLError    IncludePrimitivesFromDLL(const std::string& regex,
                                                      const std::string& libName,
                                                      const SharedLibArgs& mangledName) = 0;
-        // Exclusion functionality
-        virtual DLLError    UnloadLibrary(std::string& libName) = 0;
-        virtual DLLError    StripGenerators(std::string& regex) = 0;
+        //// Exclusion functionality
+        //// Unload A Library
+        //virtual DLLError    UnloadLibrary(std::string& libName) = 0;
+
+        //// Functionality Stripping
+        //virtual DLLError    StripGenerators(std::string& regex) = 0;
 };

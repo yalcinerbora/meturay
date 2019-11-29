@@ -16,7 +16,6 @@
       <Filter>Implementations</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerLogics.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerGenerators.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\GIMaterials.cu">
       <Filter>Materials</Filter>
     </CudaCompile>
@@ -24,6 +23,7 @@
       <Filter>Materials</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\MaterialPools.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h">
@@ -31,7 +31,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerLogics.cuh" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerGenerators.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterials.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
@@ -53,5 +52,6 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\GIMaterialsKC.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialPools.h" />
   </ItemGroup>
 </Project>

@@ -13,7 +13,7 @@
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\Tracer-Test\BasicMaterials.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\GIMaterials.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerGenerators.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\MaterialPools.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerLogics.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu" />
   </ItemGroup>
@@ -26,7 +26,7 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialDataStructs.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\RayAuxStruct.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\SurfaceStructs.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerGenerators.h" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialPools.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerLogics.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h" />
   </ItemGroup>

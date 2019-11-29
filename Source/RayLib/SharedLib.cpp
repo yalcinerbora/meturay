@@ -75,3 +75,16 @@ SharedLib::~SharedLib()
         if(libHandle != nullptr) dlclose(libHandle);
     #endif
 }
+
+SharedLib::SharedLib(SharedLib&& other) noexcept
+    : libHandle(other.libHandle)
+{
+    other.libHandle = nullptr;
+}
+
+SharedLib& SharedLib::operator=(SharedLib&& other) noexcept
+{
+    libHandle = other.libHandle;
+    other.libHandle = nullptr;
+    return *this;
+}

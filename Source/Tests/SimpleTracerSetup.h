@@ -159,8 +159,8 @@ class SimpleTracerSetup
         static constexpr const char*        TRACER_DLL = "Tracer-Test";
         static constexpr const char*        TRACER_LOGIC_GEN = "GenerateBasicTracer";
         static constexpr const char*        TRACER_LOGIC_DEL = "DeleteBasicTracer";
-        static constexpr const char*        TRACER_MAT_POOL_GEN = "GenerateBasicMaterialPool";
-        static constexpr const char*        TRACER_MAT_POOL_DEL = "DeleteBasicMaterialPool";
+        static constexpr const char*        TRACER_MAT_POOL_GEN = "GenerateTestMaterialPool";
+        static constexpr const char*        TRACER_MAT_POOL_DEL = "DeleteTestMaterialPool";
 
 
         static constexpr TracerParameters   TRACER_PARAMETERS = 
@@ -172,7 +172,10 @@ class SimpleTracerSetup
             false   // Verbose
         };
 
+        // Surface Loader Generators (Classes of primitive file loaders)
         SurfaceLoaderGenerator              surfaceLoaders;
+        // Tracer Logic Generators (Classes of CUDA Coda Segments)
+        TracerLogicGenerator                generator;
 
         // Scene Tracer and Visor
         std::unique_ptr<VisorI>             visorView;
@@ -235,11 +238,9 @@ bool SimpleTracerSetup::Init()
     //tracerGenerator = TracerLoader::LoadTracerLogic(*sharedLib,
     //                                                TRACER_DLL_GENERATOR,
     //                                                TRACER_DLL_DELETER);
-
-    // Generate Tracer Generator
-    TracerLogicGenerator generator;
+    
     // Load Materials from Test-Material Pool Shared Library
-    DLLError dllE = generator.IncludeMaterialsFromDLL("*", TRACER_DLL,
+    DLLError dllE = generator.IncludeMaterialsFromDLL(TRACER_DLL, ".*",
                                                       SharedLibArgs{TRACER_MAT_POOL_GEN, TRACER_MAT_POOL_DEL});
     ERROR_CHECK(DLLError, dllE);
 

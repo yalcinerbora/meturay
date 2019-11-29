@@ -1,5 +1,6 @@
 #include "EntryPoints.h"
 #include "TracerLogics.cuh"
+#include "MaterialPools.h"
 
 extern "C" _declspec(dllexport) TracerBaseLogicI* __stdcall GenerateBasicTracer(GPUBaseAcceleratorI& ba,
                                                                                 AcceleratorGroupList&& ag,
@@ -22,7 +23,18 @@ extern "C" _declspec(dllexport) TracerBaseLogicI* __stdcall GenerateBasicTracer(
                            baseBoundMatKey);
 }
 
+extern "C" _declspec(dllexport) MaterialLogicPoolI * __stdcall GenerateTestMaterialPool()
+{
+    return new TestMaterialPool();
+}
+
 extern "C" _declspec(dllexport) void __stdcall DeleteBasicTracer(TracerBaseLogicI * tGen)
 {
     return delete tGen;
 }
+
+extern "C" _declspec(dllexport) void __stdcall DeleteTestMaterialPool(MaterialLogicPoolI * pool)
+{
+    return delete pool;
+}
+

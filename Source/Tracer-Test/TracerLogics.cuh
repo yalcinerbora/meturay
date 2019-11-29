@@ -20,20 +20,6 @@ inline void RayInitBasic(RayAuxBasic* gOutBasic,
     gOutBasic[writeLoc] = init;
 }
 
-//__device__ __host__
-//inline void RayFinalizeBasic(// Output
-//                           Vector4* gImage,
-//                           // Input
-//                           const RayAuxBasic& auxData,
-//                           const RayReg& ray,
-//                           //
-//                           RandomGPU& rng)
-//{
-//  gImage[auxData.pixelId][0] = auxData.totalRadiance[0];
-//  gImage[auxData.pixelId][1] = auxData.totalRadiance[1];
-//  gImage[auxData.pixelId][2] = auxData.totalRadiance[2];
-//}
-
 class TracerBasic : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
 {
     private:
