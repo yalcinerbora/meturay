@@ -4,7 +4,9 @@
 
 #include "ObjectFuncDefinitions.h"
 
+struct DLLError;
 struct SceneError;
+struct SharedLibArgs;
 
 class SharedLib;
 class SurfaceLoaderI;
@@ -19,6 +21,7 @@ class SurfaceLoaderGeneratorI
                                                       const SceneNodeI& properties,
                                                       double time = 0.0) const = 0;
 
-        virtual SceneError      IncludeLoadersFromDLL(const SharedLib&,
-                                                      const std::string& mangledName = "\0") const = 0;
+        virtual DLLError        IncludeLoadersFromDLL(const std::string& libName,
+                                                      const std::string& regex,
+                                                      const SharedLibArgs& mangledName) = 0;
 };

@@ -58,6 +58,8 @@ class SharedLib
                                                    Args...);
 };
 
+using PoolKey = std::pair<SharedLib*, SharedLibArgs>;
+
 template <class T>
 DLLError SharedLib::GenerateObject(SharedLibPtr<T>& ptr,
                                    const SharedLibArgs& args)

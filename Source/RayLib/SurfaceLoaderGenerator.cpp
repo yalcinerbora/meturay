@@ -55,9 +55,50 @@ SceneError SurfaceLoaderGenerator::GenerateSurfaceLoader(SharedLibPtr<SurfaceLoa
     return SceneError::OK;
 }
 
-SceneError SurfaceLoaderGenerator::IncludeLoadersFromDLL(const SharedLib&,
-                                                         const std::string& mangledName) const
+DLLError SurfaceLoaderGenerator::IncludeLoadersFromDLL(const std::string& libName,
+                                                       const std::string& regex,
+                                                       const SharedLibArgs& mangledName)
 {
-    // TODO: do this
-    return SceneError::OK;
+    // Find Shared Lib
+    SharedLib* libOut;
+    auto it = openedLibs.end();
+    if((it = openedLibs.find(libName)) != openedLibs.end())
+    {
+        libOut = &it->second;
+    }
+    else
+    {
+        try
+        {
+            auto it = openedLibs.emplace(libName, SharedLib(libName));
+            libOut = &it.first->second;
+        }
+        catch(const DLLException & e)
+        {
+            return e;
+        }
+    }
+
+    PoolKey libKey = {libOut, mangledName};
+    SurfaceLoaderPoolPtr* pool;
+
+    // Then Find Pool
+    DLLError e = DLLError::OK;
+    auto loc = generatedPools.end();
+    if((loc = generatedPools.find(libKey)) != generatedPools.end())
+    {
+        pool = &loc->second;
+    }
+    else
+    {
+        SurfaceLoaderPoolPtr ptr = {nullptr, nullptr};
+        e = libKey.first->GenerateObject<SurfaceLoaderPoolI>(ptr, libKey.second);
+        if(e != DLLError::OK) return e;
+        auto it = generatedPools.emplace(libKey, std::move(ptr));
+        pool = &(it.first->second);
+    }
+
+    const auto newLoaders = (*pool)->SurfaceLoaders(regex);
+    loaderGenerators.insert(newLoaders.cbegin(), newLoaders.cend());
+    return DLLError::OK;
 }

@@ -25,8 +25,6 @@ using MaterialPoolPtr = SharedLibPtr<MaterialLogicPoolI>;
 using PrimitivePoolPtr = SharedLibPtr<PrimitiveLogicPoolI>;
 using BaseAcceleratorPoolPtr = SharedLibPtr<BaseAcceleratorLogicPoolI>;
 
-using PoolKey = std::pair<SharedLib*, SharedLibArgs>;
-
 class TracerLogicGenerator : public TracerLogicGeneratorI
 {
     private:
@@ -136,18 +134,18 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
 
         // Inclusion Functionality
         // Additionally includes the materials, primitives etc. from other libraries
-        DLLError                    IncludeBaseAcceleratorsFromDLL(const std::string& regex,
-                                                                   const std::string& libName,
+        DLLError                    IncludeBaseAcceleratorsFromDLL(const std::string& libName,
+                                                                   const std::string& regex,
                                                                    const SharedLibArgs& mangledName) override;
-         DLLError                   IncludeAcceleratorsFromDLL(const std::string& regex,
-                                                               const std::string& libName,
+        DLLError                    IncludeAcceleratorsFromDLL(const std::string& libName,
+                                                               const std::string& regex,
                                                                const SharedLibArgs& mangledName) override;
-         DLLError                   IncludeMaterialsFromDLL(const std::string& regex,
-                                                            const std::string& libName,
+        DLLError                    IncludeMaterialsFromDLL(const std::string& libName,
+                                                            const std::string& regex,
                                                             const SharedLibArgs& mangledName) override;
-         DLLError                   IncludePrimitivesFromDLL(const std::string& regex,
-                                                             const std::string& libName,
-                                                             const SharedLibArgs& mangledName) override;
+        DLLError                    IncludePrimitivesFromDLL(const std::string& libName,
+                                                            const std::string& regex,
+                                                            const SharedLibArgs& mangledName) override;
 };
 
 template <class T>

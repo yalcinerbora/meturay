@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "AABB.h"
 #include "Types.h"
 
@@ -9,6 +11,7 @@ class SceneNodeI;
 enum class PrimitiveDataLayout : uint32_t;
 enum class PrimitiveDataType;
 
+// Node Specific Loader
 class SurfaceLoaderI
 {
     public:

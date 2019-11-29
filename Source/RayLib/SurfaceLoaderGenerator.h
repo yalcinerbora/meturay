@@ -3,50 +3,37 @@
 #include <map>
 
 #include "SurfaceLoaderGeneratorI.h"
+#include "SurfaceLoaderPoolI.h"
+#include "SharedLib.h"
 
-template<class Loader>
-using SurfaceLoaderGeneratorFunc = Loader* (*)(const SceneNodeI&,
-                                               double time);
+using SurfaceLoaderPoolPtr = SharedLibPtr<SurfaceLoaderPoolI>;
 
-using SurfaceLoaderPtr = SharedLibPtr<SurfaceLoaderI>;
-
-class SurfaceLoaderGen
-{
-    private:
-        SurfaceLoaderGeneratorFunc<SurfaceLoaderI>        gFunc;
-        ObjDestroyerFunc<SurfaceLoaderI>                  dFunc;
-
-    public:
-        // Constructor & Destructor
-        SurfaceLoaderGen(SurfaceLoaderGeneratorFunc<SurfaceLoaderI> g,
-                         ObjDestroyerFunc<SurfaceLoaderI> d)
-            : gFunc(g)
-            , dFunc(d)
-        {}
-
-        SurfaceLoaderPtr operator()(const SceneNodeI& n,
-                                    double time) const
-        {
-            SurfaceLoaderI* loader = gFunc(n, time);
-            return SurfaceLoaderPtr(loader, dFunc);
-        }
-};
 
 class SurfaceLoaderGenerator : public SurfaceLoaderGeneratorI
 {
     private:
+        // Shared Libraries That are Loaded
+        std::map<std::string, SharedLib>                openedLibs;
+        // Loaded Surface Loader Pools
+        std::map<PoolKey, SurfaceLoaderPoolPtr>         generatedPools;
+
+        // Surface Loader Generators (Combined from all dlls)
+        std::map<std::string, SurfaceLoaderGen>         loaderGenerators;
+
     protected:
-        std::map<std::string, SurfaceLoaderGen>     loaderGenerators;
+
 
     public:
         // Constructors & Destructor
-                                                    SurfaceLoaderGenerator();
-                                                    ~SurfaceLoaderGenerator() = default;
+                                    SurfaceLoaderGenerator();
+                                    ~SurfaceLoaderGenerator() = default;
 
         // Interface
-        SceneError                                  GenerateSurfaceLoader(SharedLibPtr<SurfaceLoaderI>&,
-                                                                          const SceneNodeI& properties,
-                                                                          double time = 0.0) const override;
-        SceneError                                  IncludeLoadersFromDLL(const SharedLib&,
-                                                                          const std::string& mangledName = "\0") const override;
+        SceneError                  GenerateSurfaceLoader(SharedLibPtr<SurfaceLoaderI>&,
+                                                          const SceneNodeI& properties,
+                                                          double time = 0.0) const override;
+        //
+        DLLError                    IncludeLoadersFromDLL(const std::string& libName,
+                                                          const std::string& regex,
+                                                          const SharedLibArgs& mangledName) override;
 };

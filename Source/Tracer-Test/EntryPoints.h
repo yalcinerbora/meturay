@@ -21,6 +21,6 @@ extern "C" _declspec(dllexport) TracerBaseLogicI* __stdcall GenerateBasicTracer(
 
 extern "C" _declspec(dllexport) MaterialLogicPoolI* __stdcall GenerateTestMaterialPool();
 
-extern "C" _declspec(dllexport) void __stdcall DeleteBasicTracer(TracerBaseLogicI * tGen);
+extern "C" _declspec(dllexport) void __stdcall DeleteBasicTracer(TracerBaseLogicI* tGen);
 
-extern "C" _declspec(dllexport) void __stdcall DeleteTestMaterialPool(MaterialLogicPoolI * pool);
+extern "C" _declspec(dllexport) void __stdcall DeleteTestMaterialPool(MaterialLogicPoolI* pool);

@@ -176,6 +176,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderGenerator.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderGeneratorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderPoolI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ThreadData.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerCallbacksI.h" />

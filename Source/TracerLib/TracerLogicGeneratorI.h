@@ -83,17 +83,17 @@ class TracerLogicGeneratorI
         // Inclusion Functionality
         // Additionally includes the materials from these libraries
         // No exclusion functionality provided just add what you need
-        virtual DLLError    IncludeBaseAcceleratorsFromDLL(const std::string& regex, 
-                                                           const std::string& libName,
+        virtual DLLError    IncludeBaseAcceleratorsFromDLL(const std::string& libName,
+                                                           const std::string& regex,
                                                            const SharedLibArgs& mangledName) = 0;
-        virtual DLLError    IncludeAcceleratorsFromDLL(const std::string& regex, 
-                                                       const std::string& libName,
+        virtual DLLError    IncludeAcceleratorsFromDLL(const std::string& libName,
+                                                       const std::string& regex,
                                                        const SharedLibArgs& mangledName) = 0;
-        virtual DLLError    IncludeMaterialsFromDLL(const std::string& regex, 
-                                                    const std::string& libName,
+        virtual DLLError    IncludeMaterialsFromDLL(const std::string& libName,
+                                                    const std::string& regex,
                                                     const SharedLibArgs& mangledName) = 0;
-        virtual DLLError    IncludePrimitivesFromDLL(const std::string& regex,
-                                                     const std::string& libName,
+        virtual DLLError    IncludePrimitivesFromDLL(const std::string& libName,
+                                                     const std::string& regex,
                                                      const SharedLibArgs& mangledName) = 0;
         //// Exclusion functionality
         //// Unload A Library

@@ -196,6 +196,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\DLLError.h">
       <Filter>Errors</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderPoolI.h">
+      <Filter>FileI-O</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">
