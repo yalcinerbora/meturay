@@ -72,6 +72,7 @@ struct SceneError : public ErrorI
             //
             PRIMITIVE_TYPE_INTERNAL_ERROR,
             MATERIAL_TYPE_INTERNAL_ERROR,
+            SURFACE_LOADER_INTERNAL_ERROR,
             // End
             END
         };
@@ -176,7 +177,8 @@ inline SceneError::operator std::string() const
         "Internal Error, Duplicate accelerator id",
         //
         "Internal Error on the Primitive Type",
-        "Internal Error on the Material Type"
+        "Internal Error on the Material Type",
+        "Internal Error on the Surface Loader"
     };
     static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(SceneError::END),
                   "Enum and enum string list size mismatch.");

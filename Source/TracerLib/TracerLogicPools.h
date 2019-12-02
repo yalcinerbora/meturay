@@ -15,6 +15,8 @@ class AcceleratorLogicPoolI
         static constexpr const char* DefaultConstructorName = "GenAcceleratorPool";
         static constexpr const char* DefaultDestructorName = "DelAcceleratorPool";
 
+        virtual                     ~AcceleratorLogicPoolI() = default;
+
         virtual std::map<std::string, GPUAccelGroupGen> AcceleratorGroupGenerators(const std::string regex = ".*") const;
         virtual std::map<std::string, GPUAccelBatchGen> AcceleratorBatchGenerators(const std::string regex = ".*") const;
 };
@@ -28,6 +30,8 @@ class BaseAcceleratorLogicPoolI
         static constexpr const char* DefaultConstructorName = "GenBaseAcceleratorPool";
         static constexpr const char* DefaultDestructorName = "DelBaseAcceleratorPool";
 
+        virtual                     ~BaseAcceleratorLogicPoolI() = default;
+
         virtual std::map<std::string, GPUBaseAccelGen> BaseAcceleratorGenerators(const std::string regex = ".*") const;
 };
 
@@ -39,6 +43,8 @@ class PrimitiveLogicPoolI
     public:
         static constexpr const char* DefaultConstructorName = "GenPrimitivePool";
         static constexpr const char* DefaultDestructorName = "DelPrimitivePool";
+
+        virtual                     ~PrimitiveLogicPoolI() = default;
 
         virtual std::map<std::string, GPUPrimGroupGen> PrimitiveGenerators(const std::string regex = ".*") const;
 };
@@ -52,6 +58,8 @@ class MaterialLogicPoolI
     public:
         static constexpr const char* DefaultConstructorName = "GenMaterialPool";
         static constexpr const char* DefaultDestructorName = "DelMaterialPool";
+
+        virtual                     ~MaterialLogicPoolI() = default;
 
         virtual std::map<std::string, GPUMatGroupGen> MaterialGroupGenerators(const std::string regex = ".*") const;
         virtual std::map<std::string, GPUMatBatchGen> MaterialBatchGenerators(const std::string regex = ".*") const;

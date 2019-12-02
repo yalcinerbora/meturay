@@ -46,6 +46,7 @@ GPUSceneJson::GPUSceneJson(const std::u8string& fileName,
     , maxMatIds(Vector2i(-1))
     , baseBoundaryMatKey(HitKey::InvalidKey)
     , fileName(fileName)
+    , parentPath(std::filesystem::path(fileName).parent_path().string())
     , currentTime(0.0)
     , dLights(nullptr)
     , dTransforms(nullptr)
@@ -251,7 +252,7 @@ SceneError GPUSceneJson::GenerateMaterialGroups(const MultiGPUMatNodes& matGroup
         GPUMaterialGroupI* matGroup = nullptr;
         if(e = logicGenerator.GenerateMaterialGroup(matGroup, matTypeName, gpuId))
             return e;
-        if(e = matGroup->InitializeGroup(matNodes, time))
+        if(e = matGroup->InitializeGroup(matNodes, time, parentPath))
             return e;
     }
     return e;
@@ -319,7 +320,7 @@ SceneError GPUSceneJson::GeneratePrimitiveGroups(const PrimitiveNodeList& primGr
         GPUPrimitiveGroupI* primGroup = nullptr;
         if(e = logicGenerator.GeneratePrimitiveGroup(primGroup, primTypeName))
             return e;
-        if(e = primGroup->InitializeGroup(primNodes, time, surfaceLoaderGenerator))
+        if(e = primGroup->InitializeGroup(primNodes, time, surfaceLoaderGenerator, parentPath))
             return e;
     }
     return e;

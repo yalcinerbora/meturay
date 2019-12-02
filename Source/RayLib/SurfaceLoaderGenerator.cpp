@@ -8,8 +8,9 @@
 
 // SurfaceLoader Constructor/Destructor for pre-loadede DLL config
 template <class Base, class Loader>
-Base* SurfaceLoaderConstruct(const SceneNodeI& properties,
-                             double time)
+Base* InNodeSurfaceLoaderConstruct(const std::string& scenePath,
+                                   const SceneNodeI& properties,
+                                   double time)
 {
     return new Loader(properties, time);
 }
@@ -23,18 +24,19 @@ void SurfaceLoaderDestruct(T* t)
 SurfaceLoaderGenerator::SurfaceLoaderGenerator()
 {
     loaderGenerators.emplace(InNodeTriLoader::TypeName(),
-                             SurfaceLoaderGen(SurfaceLoaderConstruct<SurfaceLoaderI, InNodeTriLoader>,
+                             SurfaceLoaderGen(InNodeSurfaceLoaderConstruct<SurfaceLoaderI, InNodeTriLoader>,
                                               SurfaceLoaderDestruct<SurfaceLoaderI>));
     loaderGenerators.emplace(InNodeTriLoaderIndexed::TypeName(),
-                             SurfaceLoaderGen(SurfaceLoaderConstruct<SurfaceLoaderI, InNodeTriLoaderIndexed>,
+                             SurfaceLoaderGen(InNodeSurfaceLoaderConstruct<SurfaceLoaderI, InNodeTriLoaderIndexed>,
                                               SurfaceLoaderDestruct<SurfaceLoaderI>));
     loaderGenerators.emplace(InNodeSphrLoader::TypeName(),
-                             SurfaceLoaderGen(SurfaceLoaderConstruct<SurfaceLoaderI, InNodeSphrLoader>,
+                             SurfaceLoaderGen(InNodeSurfaceLoaderConstruct<SurfaceLoaderI, InNodeSphrLoader>,
                                               SurfaceLoaderDestruct<SurfaceLoaderI>));
 }
 
 // Interface
 SceneError SurfaceLoaderGenerator::GenerateSurfaceLoader(SharedLibPtr<SurfaceLoaderI>& ptr,
+                                                         const std::string& scenePath,
                                                          const SceneNodeI& properties,
                                                          double time) const
 {
@@ -51,7 +53,7 @@ SceneError SurfaceLoaderGenerator::GenerateSurfaceLoader(SharedLibPtr<SurfaceLoa
     if(loc == loaderGenerators.end())
         return SceneError::NO_LOGIC_FOR_SURFACE_DATA;
 
-    ptr = loc->second(properties, time);
+    ptr = loc->second(scenePath, properties, time);
     return SceneError::OK;
 }
 

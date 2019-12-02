@@ -5,7 +5,8 @@ GIAlbedoMat::GIAlbedoMat(int gpuId)
     : GPUMaterialGroup(gpuId)
 {}
 
-SceneError GIAlbedoMat::InitializeGroup(const NodeListing& materialNodes, double time)
+SceneError GIAlbedoMat::InitializeGroup(const NodeListing& materialNodes, double time,
+                                        const std::string& scenePath)
 {
     constexpr const char* ALBEDO = "albedo";
 
@@ -27,7 +28,8 @@ SceneError GIAlbedoMat::InitializeGroup(const NodeListing& materialNodes, double
     return SceneError::OK;
 }
 
-SceneError GIAlbedoMat::ChangeTime(const NodeListing& materialNodes, double time)
+SceneError GIAlbedoMat::ChangeTime(const NodeListing& materialNodes, double time,
+                                   const std::string& scenePath)
 {
     return SceneError::OK;
 }

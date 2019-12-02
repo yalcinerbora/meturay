@@ -30,6 +30,7 @@ class SurfaceLoaderGenerator : public SurfaceLoaderGeneratorI
 
         // Interface
         SceneError                  GenerateSurfaceLoader(SharedLibPtr<SurfaceLoaderI>&,
+                                                          const std::string& scenePath,
                                                           const SceneNodeI& properties,
                                                           double time = 0.0) const override;
         //

@@ -5,7 +5,8 @@ BasicMat::BasicMat(int gpuId)
     : GPUMaterialGroup(gpuId)
 {}
 
-SceneError BasicMat::InitializeGroup(const NodeListing& materialNodes, double time)
+SceneError BasicMat::InitializeGroup(const NodeListing& materialNodes, double time,
+                                     const std::string& scenePath)
 {
     constexpr const char* ALBEDO = "albedo";
 
@@ -35,7 +36,8 @@ SceneError BasicMat::InitializeGroup(const NodeListing& materialNodes, double ti
     return SceneError::OK;
 }
 
-SceneError BasicMat::ChangeTime(const NodeListing& materialNodes, double time)
+SceneError BasicMat::ChangeTime(const NodeListing& materialNodes, double time,
+                                const std::string& scenePath)
 {
     // TODO: Implement
     return SceneError::NO_LOGIC_FOR_MATERIAL;
@@ -50,13 +52,15 @@ BarycentricMat::BarycentricMat(int gpuId)
     : GPUMaterialGroup(gpuId)
 {}
 
-SceneError BarycentricMat::InitializeGroup(const NodeListing& materialNodes, double time)
+SceneError BarycentricMat::InitializeGroup(const NodeListing& materialNodes, double time,
+                                           const std::string& scenePath)
 {
     // Nothing to initialize
     return SceneError::OK;
 }
 
-SceneError BarycentricMat::ChangeTime(const NodeListing& materialNodes, double time)
+SceneError BarycentricMat::ChangeTime(const NodeListing& materialNodes, double time,
+                                      const std::string& scenePath)
 {
     // Nothing to change
     return SceneError::OK;
@@ -72,13 +76,15 @@ SphericalMat::SphericalMat(int gpuId)
     : GPUMaterialGroup(gpuId)
 {}
 
-SceneError SphericalMat::InitializeGroup(const NodeListing& materialNodes, double time)
+SceneError SphericalMat::InitializeGroup(const NodeListing& materialNodes, double time,
+                                         const std::string& scenePath)
 {
     // Nothing to initialize
     return SceneError::OK;
 }
 
-SceneError SphericalMat::ChangeTime(const NodeListing& materialNodes, double time)
+SceneError SphericalMat::ChangeTime(const NodeListing& materialNodes, double time,
+                                    const std::string& scenePath)
 {
     // Nothing to change
     return SceneError::OK;

@@ -1055,7 +1055,7 @@ inline Matrix<4, T> TransformGen::LookAt(const Vector<3, T>& eyePos,
                                          const Vector<3, T>& up)
 {
     // Calculate Ortogonal Vectors for this rotation
-    Vector<3, T> zAxis = (eyePos - center).NormalizeSelf();
+    Vector<3, T> zAxis = (eyePos - at).NormalizeSelf();
     Vector<3, T> xAxis = up.CrossProduct(zAxis).NormalizeSelf();
     Vector<3, T> yAxis = zAxis.CrossProduct(xAxis).NormalizeSelf();
 

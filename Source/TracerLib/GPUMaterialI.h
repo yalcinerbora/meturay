@@ -31,8 +31,10 @@ class GPUMaterialGroupI
         // Type (as string) of the primitive group
         virtual const char*                 Type() const = 0;
         // Allocates and Generates Data
-        virtual SceneError                  InitializeGroup(const NodeListing& materialNodes, double time) = 0;
-        virtual SceneError                  ChangeTime(const NodeListing& materialNodes, double time) = 0;
+        virtual SceneError                  InitializeGroup(const NodeListing& materialNodes, double time,
+                                                            const std::string& scenePath) = 0;
+        virtual SceneError                  ChangeTime(const NodeListing& materialNodes, double time,
+                                                       const std::string& scenePath) = 0;
 
         // Material Queries
         virtual int                         InnerId(uint32_t materialId) const = 0;

@@ -151,9 +151,11 @@ class GPUPrimitiveTriangle final
         const char*                             Type() const override;
         // Allocates and Generates Data
         SceneError                              InitializeGroup(const NodeListing& surfaceDataNodes, double time,
-                                                                const SurfaceLoaderGeneratorI&) override;
+                                                                const SurfaceLoaderGeneratorI&,
+                                                                const std::string& scenePath) override;
         SceneError                              ChangeTime(const NodeListing& surfaceDataNodes, double time,
-                                                           const SurfaceLoaderGeneratorI&) override;
+                                                           const SurfaceLoaderGeneratorI&,
+                                                           const std::string& scenePath) override;
 
         // Access primitive range from Id
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;

@@ -39,9 +39,11 @@ class GPUPrimitiveGroupI
         virtual const char*         Type() const = 0;
         // Allocates and Generates Data
         virtual SceneError          InitializeGroup(const NodeListing& surfaceDatalNodes, double time,
-                                                    const SurfaceLoaderGeneratorI&) = 0;
+                                                    const SurfaceLoaderGeneratorI&,
+                                                    const std::string& scenePath) = 0;
         virtual SceneError          ChangeTime(const NodeListing& surfaceDatalNodes, double time,
-                                               const SurfaceLoaderGeneratorI&) = 0;
+                                               const SurfaceLoaderGeneratorI&,
+                                               const std::string& scenePath) = 0;
 
         // Access primitive range from Id     
         virtual Vector2ul           PrimitiveBatchRange(uint32_t surfaceDataId) const = 0;

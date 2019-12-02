@@ -1,10 +1,14 @@
 #pragma once
 
 #include "SurfaceLoaderI.h"
+#include "ObjectFuncDefinitions.h"
 #include <regex>
+#include <map>
+#include <string>
 
 template<class Loader>
-using SurfaceLoaderGeneratorFunc = Loader* (*)(const SceneNodeI&,
+using SurfaceLoaderGeneratorFunc = Loader* (*)(const std::string& scenePath, 
+                                               const SceneNodeI&,
                                                double time);
 
 using SurfaceLoaderPtr = SharedLibPtr<SurfaceLoaderI>;
@@ -23,10 +27,11 @@ class SurfaceLoaderGen
             , dFunc(d)
         {}
 
-        SurfaceLoaderPtr operator()(const SceneNodeI& n,
+        SurfaceLoaderPtr operator()(const std::string& scenePath,
+                                    const SceneNodeI& n,
                                     double time) const
         {
-            SurfaceLoaderI* loader = gFunc(n, time);
+            SurfaceLoaderI* loader = gFunc(scenePath, n, time);
             return SurfaceLoaderPtr(loader, dFunc);
         }
 };
@@ -39,6 +44,8 @@ class SurfaceLoaderPoolI
     public:
         static constexpr const char* DefaultConstructorName = "GenSurfaceLoaderPool";
         static constexpr const char* DefaultDestructorName = "DelSurfaceLoaderPool";
+
+        virtual                     ~SurfaceLoaderPoolI() = default;
 
         virtual std::map<std::string, SurfaceLoaderGen> SurfaceLoaders(const std::string regex = ".*") const;
 };

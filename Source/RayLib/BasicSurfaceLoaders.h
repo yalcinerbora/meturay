@@ -15,8 +15,8 @@ class InNodeTriLoader : public SurfaceLoader
     protected:
     public:
         // Constructors & Destructor
-                                    InNodeTriLoader(const SceneNodeI&, double time = 0.0);
-                                    ~InNodeTriLoader() = default;
+                                InNodeTriLoader(const SceneNodeI&, double time = 0.0);
+                                ~InNodeTriLoader() = default;
 
         // Type Determination
          const char*             SufaceDataFileExt() const override;
@@ -43,8 +43,8 @@ class InNodeTriLoaderIndexed : public SurfaceLoader
     protected:
     public:
         // Constructors & Destructor
-                                    InNodeTriLoaderIndexed(const SceneNodeI&, double time = 0.0);
-                                    ~InNodeTriLoaderIndexed() = default;
+                                InNodeTriLoaderIndexed(const SceneNodeI&, double time = 0.0);
+                                ~InNodeTriLoaderIndexed() = default;
 
         // Type Determination
          const char*             SufaceDataFileExt() const override;

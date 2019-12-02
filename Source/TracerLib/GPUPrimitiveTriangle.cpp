@@ -20,7 +20,8 @@ const char* GPUPrimitiveTriangle::Type() const
 }
 
 SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataNodes, double time,
-                                                 const SurfaceLoaderGeneratorI& loaderGen)
+                                                 const SurfaceLoaderGeneratorI& loaderGen,
+                                                 const std::string& scenePath)
 {
     SceneError e = SceneError::OK;
     std::vector<size_t> loaderVOffsets, loaderIOffsets;
@@ -31,7 +32,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     {
         const SceneNodeI& s = *sPtr;
         SharedLibPtr<SurfaceLoaderI> sl(nullptr, [] (SurfaceLoaderI*)->void {});        
-        if((e = loaderGen.GenerateSurfaceLoader(sl, s, time)) != SceneError::OK)
+        if((e = loaderGen.GenerateSurfaceLoader(sl, scenePath, s, time)) != SceneError::OK)
            return e;
 
         try
@@ -214,7 +215,8 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
 }
 
 SceneError GPUPrimitiveTriangle::ChangeTime(const NodeListing& surfaceDataNodes, double time,
-                                            const SurfaceLoaderGeneratorI& loaderGen)
+                                            const SurfaceLoaderGeneratorI& loaderGen,
+                                            const std::string& scenePath)
 {
     return SceneError::OK;
     //SceneError e = SceneError::OK;

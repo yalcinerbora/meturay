@@ -18,7 +18,8 @@ const char* GPUPrimitiveSphere::Type() const
 
 SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNodes,
                                                double time,
-                                               const SurfaceLoaderGeneratorI& loaderGen)
+                                               const SurfaceLoaderGeneratorI& loaderGen,
+                                               const std::string& scenePath)
 {
     SceneError e = SceneError::OK;
     std::vector<size_t> loaderOffsets;
@@ -29,7 +30,7 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
     {
         const SceneNodeI& s = *sPtr;
         SharedLibPtr<SurfaceLoaderI> sl(nullptr, [] (SurfaceLoaderI*)->void {});
-        if((e = loaderGen.GenerateSurfaceLoader(sl, s, time)) != SceneError::OK)
+        if((e = loaderGen.GenerateSurfaceLoader(sl, scenePath, s, time)) != SceneError::OK)
             return e;
         try
         {
@@ -146,7 +147,8 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
 }
 
 SceneError GPUPrimitiveSphere::ChangeTime(const NodeListing& surfaceDataNodes, double time,
-                                          const SurfaceLoaderGeneratorI& loaderGen)
+                                          const SurfaceLoaderGeneratorI& loaderGen,
+                                          const std::string& scenePath)
 {
     return SceneError::OK;
     //SceneError e = SceneError::OK;

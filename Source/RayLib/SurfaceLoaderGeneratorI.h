@@ -18,6 +18,7 @@ class SurfaceLoaderGeneratorI
         virtual                 ~SurfaceLoaderGeneratorI() = default;
 
         virtual SceneError      GenerateSurfaceLoader(SharedLibPtr<SurfaceLoaderI>&,
+                                                      const std::string& scenePath,
                                                       const SceneNodeI& properties,
                                                       double time = 0.0) const = 0;
 

@@ -56,6 +56,7 @@ class GPUSceneJson : public GPUSceneI
         // File Related
         std::unique_ptr<nlohmann::json>         sceneJson;
         std::u8string                           fileName;
+        std::string                             parentPath;
         double                                  currentTime;
 
         // GPU Pointers
