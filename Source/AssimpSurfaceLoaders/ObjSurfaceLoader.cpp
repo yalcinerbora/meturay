@@ -7,18 +7,19 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include "RayLib/FileSystemUtility.h"
+
 ObjSurfaceLoader::ObjSurfaceLoader(Assimp::Importer& i,
                                    const std::string& scenePath,
-                                   const SceneNodeI&, double time)
+                                   const SceneNodeI& node, double time)
 : SurfaceLoader(node, time)
 , importer(i)
 , scene(nullptr)
-{
+{    
     // Get File Name
-    const std::string name = node.Name();
-    // Prepend
+    const std::string filePath = Utilitiy::MergeFileFolder(scenePath, node.Name());
 
-    scene = importer.ReadFile(name,
+    scene = importer.ReadFile(filePath,
                               aiProcess_CalcTangentSpace |
                               aiProcess_GenNormals |
                               aiProcess_Triangulate |

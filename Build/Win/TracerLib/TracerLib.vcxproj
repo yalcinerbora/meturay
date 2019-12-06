@@ -19,7 +19,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ComparisonFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\DefaultTypeGenerators.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerTypeGenerators.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DeviceMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\FunctionEnablers.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorI.h" />

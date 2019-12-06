@@ -18,7 +18,12 @@ class SurfaceLoaderGenerator : public SurfaceLoaderGeneratorI
         std::map<PoolKey, SurfaceLoaderPoolPtr>         generatedPools;
 
         // Surface Loader Generators (Combined from all dlls)
-        std::map<std::string, SurfaceLoaderGen>         loaderGenerators;
+        std::map<std::string, SurfaceLoaderGenI*>       loaderGenerators;
+        
+        // Basic Surface Loaders
+        SurfaceLoaderGen                                inNodeTriangleSurfaceLoader;
+        SurfaceLoaderGen                                inNodeIndexedTriangleSurfaceLoader;
+        SurfaceLoaderGen                                inNodeSphereSurfaceLoader;
 
     protected:
 

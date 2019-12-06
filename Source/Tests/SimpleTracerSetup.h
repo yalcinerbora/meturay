@@ -119,7 +119,7 @@ void MockNode::SendImage(const std::vector<Byte> data,
 
 void MockNode::Work()
 {
-    CPUTimer t;
+    Utility::CPUTimer t;
     t.Start();
     double elapsed = 0.0;
 
@@ -161,6 +161,10 @@ class SimpleTracerSetup
         static constexpr const char*        TRACER_LOGIC_DEL = "DeleteBasicTracer";
         static constexpr const char*        TRACER_MAT_POOL_GEN = "GenerateTestMaterialPool";
         static constexpr const char*        TRACER_MAT_POOL_DEL = "DeleteTestMaterialPool";
+
+        static constexpr const char*        SURF_LOAD_DLL = "AssimpSurfaceLoaders";
+        static constexpr const char*        SURF_LOAD_GEN = "GenerateAssimpPool";
+        static constexpr const char*        SURF_LOAD_DEL = "DeleteAssimpPool";
 
 
         static constexpr TracerParameters   TRACER_PARAMETERS = 
@@ -238,10 +242,15 @@ bool SimpleTracerSetup::Init()
     //tracerGenerator = TracerLoader::LoadTracerLogic(*sharedLib,
     //                                                TRACER_DLL_GENERATOR,
     //                                                TRACER_DLL_DELETER);
-    
+   
     // Load Materials from Test-Material Pool Shared Library
     DLLError dllE = generator.IncludeMaterialsFromDLL(TRACER_DLL, ".*",
                                                       SharedLibArgs{TRACER_MAT_POOL_GEN, TRACER_MAT_POOL_DEL});
+    ERROR_CHECK(DLLError, dllE);
+
+    // Load Obj Surface Loader (Required Only for Cornell Example)
+    dllE = surfaceLoaders.IncludeLoadersFromDLL(SURF_LOAD_DLL, ".*",
+                                                SharedLibArgs{SURF_LOAD_GEN, SURF_LOAD_DEL});
     ERROR_CHECK(DLLError, dllE);
 
     // Generate GPU List & A Partitioner

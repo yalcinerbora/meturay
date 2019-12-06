@@ -718,7 +718,7 @@ void VisorGL::ProcessInputs()
 
 void VisorGL::Render()
 {
-    CPUTimer t;
+    Utility::CPUTimer t;
     if(vOpts.fpsLimit > 0.0f) t.Start();
 
     // Consume commands

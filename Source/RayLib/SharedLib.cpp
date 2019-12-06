@@ -4,6 +4,7 @@
 // Env Headers
 #if defined METURAY_WIN
     #include <windows.h>
+    #include <strsafe.h>
 #elif defined METURAY_LINUX
     #include <dlfcn.h>
 #endif
@@ -56,15 +57,40 @@ SharedLib::SharedLib(const std::string& libName)
     std::string libWithExt = libName;
     #if defined METURAY_WIN
         libWithExt += WinDLLExt;
-        libHandle = (void*)LoadLibrary(ConvertWinWchar(libWithExt).c_str());        
+        libHandle = (void*)LoadLibrary(ConvertWinWchar(libWithExt).c_str());
     #elif defined METURAY_LINUX
         libWithExt += LinuxDLLExt;
         libHandle = dlopen(libWithExt.c_str(), iMode, RTLD_NOW);        
     #endif
 
     // Check if we found the DLL
-    if(libHandle == nullptr) 
+    if(libHandle == nullptr)
+    {
+        LPVOID lpMsgBuf;
+        LPVOID lpDisplayBuf;
+        DWORD dw = GetLastError();
+
+        FormatMessage(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER |
+            FORMAT_MESSAGE_FROM_SYSTEM |
+            FORMAT_MESSAGE_IGNORE_INSERTS,
+            NULL,
+            dw,
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            (LPTSTR)&lpMsgBuf,
+            0, NULL);
+
+        // Display the error message and exit the process
+
+        lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT,
+            (lstrlen((LPCTSTR)lpMsgBuf) + 100) * sizeof(TCHAR));
+        StringCchPrintf((LPTSTR)lpDisplayBuf,
+                        LocalSize(lpDisplayBuf) / sizeof(TCHAR),
+                        TEXT("Failed with error %d: %s"),
+                        dw, lpMsgBuf);
+        MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK);
         throw DLLException(DLLError::DLL_NOT_FOUND);
+    }
 }
 
 SharedLib::~SharedLib()

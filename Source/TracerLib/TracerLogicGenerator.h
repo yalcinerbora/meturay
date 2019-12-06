@@ -15,7 +15,7 @@ and it adds default accelerators and primitives as default types.
 #include "RayLib/SharedLib.h"
 
 #include "TracerLogicGeneratorI.h"
-#include "DefaultTypeGenerators.h"
+#include "TracerTypeGenerators.h"
 #include "TracerLogicPools.h"
 
 using NameIdPair = std::pair<std::string, int>;

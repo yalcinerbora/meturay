@@ -162,15 +162,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\GPUSceneI.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderGeneratorI.h">
-      <Filter>FileI-O</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderGenerator.h">
-      <Filter>FileI-O</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderI.h">
-      <Filter>FileI-O</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.h">
       <Filter>FileI-O</Filter>
     </ClInclude>
@@ -196,8 +187,23 @@
     <ClInclude Include="..\..\..\Source\RayLib\DLLError.h">
       <Filter>Errors</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\UTF8StringConversion.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\FileSystemUtility.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderPoolI.h">
-      <Filter>FileI-O</Filter>
+      <Filter>SurfaceLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderGenerator.h">
+      <Filter>SurfaceLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderGeneratorI.h">
+      <Filter>SurfaceLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderI.h">
+      <Filter>SurfaceLoader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -234,6 +240,9 @@
     <Filter Include="Utility">
       <UniqueIdentifier>{b215ba6e-adaa-4b3d-abe2-9e8adba49c9b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SurfaceLoader">
+      <UniqueIdentifier>{551baf5f-25ab-4a2b-b26f-04eee5779b71}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp">
@@ -258,13 +267,13 @@
     <ClCompile Include="..\..\..\Source\RayLib\SelfNode.cpp">
       <Filter>Nodes</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\RayLib\SurfaceLoaderGenerator.cpp">
-      <Filter>FileI-O</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.cpp">
       <Filter>FileI-O</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\MovementSchemes.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\SurfaceLoaderGenerator.cpp">
+      <Filter>SurfaceLoader</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\RayLib\Matrix.cu">

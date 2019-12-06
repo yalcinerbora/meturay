@@ -3,7 +3,6 @@
 TEST(SimpleTracerTests, HelloTriangle)
 {
     EnableVTMode();
-
     SimpleTracerSetup setup(u8"TestScenes/helloTriangle.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
@@ -12,7 +11,6 @@ TEST(SimpleTracerTests, HelloTriangle)
 TEST(SimpleTracerTests, HelloSphere)
 {
     EnableVTMode();
-
     SimpleTracerSetup setup(u8"TestScenes/helloSphere.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
@@ -26,12 +24,11 @@ TEST(SimpleTracerTests, HelloBox)
     setup.Body();
 }
 
-//TEST(SimpleTracerTests, CornellBox)
-//{
-//    EnableVTMode();
-//
-//    SimpleTracerSetup setup(u8"TestScenes/cornellBox.json",
-//                            0.0);
-//    setup.Init();
-//    setup.Body();
-//}
+TEST(SimpleTracerTests, CornellBox)
+{
+    EnableVTMode();
+    SimpleTracerSetup setup(u8"TestScenes/helloCornell.json",
+                            0.0);
+    ASSERT_TRUE(setup.Init());
+    setup.Body();
+}

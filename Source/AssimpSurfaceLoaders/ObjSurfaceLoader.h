@@ -27,7 +27,7 @@ class ObjSurfaceLoader : public SurfaceLoader
                             ~ObjSurfaceLoader();
 
         // Interface
-        const char*         SufaceDataFileExt() const = 0;        
+        const char*         SufaceDataFileExt() const override;
         // Per Batch Fetch
         SceneError          AABB(std::vector<AABB3>&) const override;
         SceneError          PrimitiveRanges(std::vector<Vector2ul>&) const override;

@@ -4,7 +4,7 @@
 #include <string>
 #include <regex>
 
-#include "DefaultTypeGenerators.h"
+#include "TracerTypeGenerators.h"
 
 class AcceleratorLogicPoolI
 {

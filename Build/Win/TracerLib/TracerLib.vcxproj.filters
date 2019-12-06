@@ -166,9 +166,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLoader.h">
       <Filter>SharedLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\DefaultTypeGenerators.h">
-      <Filter>SharedLib</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGeneratorI.h">
       <Filter>SharedLib</Filter>
     </ClInclude>
@@ -229,6 +226,9 @@
       <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicPools.h">
+      <Filter>SharedLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerTypeGenerators.h">
       <Filter>SharedLib</Filter>
     </ClInclude>
   </ItemGroup>

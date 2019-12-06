@@ -7,31 +7,30 @@
 #include "BasicSurfaceLoaders.h"
 
 // SurfaceLoader Constructor/Destructor for pre-loadede DLL config
-template <class Base, class Loader>
-Base* InNodeSurfaceLoaderConstruct(const std::string& scenePath,
-                                   const SceneNodeI& properties,
-                                   double time)
+namespace TypeGenWrappers
 {
-    return new Loader(properties, time);
-}
-
-template <class T>
-void SurfaceLoaderDestruct(T* t)
-{
-    if(t) delete t;
+    template <class Base, class Loader>
+    Base* InNodeSurfaceLoaderConstruct(const std::string& scenePath,
+                                       const SceneNodeI& properties,
+                                       double time)
+    {
+        return new Loader(properties, time);
+    }
 }
 
 SurfaceLoaderGenerator::SurfaceLoaderGenerator()
+    : inNodeTriangleSurfaceLoader(TypeGenWrappers::InNodeSurfaceLoaderConstruct<SurfaceLoaderI, InNodeTriLoader>,
+                                  TypeGenWrappers::DefaultDestruct<SurfaceLoaderI>)
+    , inNodeIndexedTriangleSurfaceLoader(TypeGenWrappers::InNodeSurfaceLoaderConstruct<SurfaceLoaderI, InNodeTriLoaderIndexed>,
+                                         TypeGenWrappers::DefaultDestruct<SurfaceLoaderI>)
+    , inNodeSphereSurfaceLoader(TypeGenWrappers::InNodeSurfaceLoaderConstruct<SurfaceLoaderI, InNodeSphrLoader>,
+                                TypeGenWrappers::DefaultDestruct<SurfaceLoaderI>)
 {
-    loaderGenerators.emplace(InNodeTriLoader::TypeName(),
-                             SurfaceLoaderGen(InNodeSurfaceLoaderConstruct<SurfaceLoaderI, InNodeTriLoader>,
-                                              SurfaceLoaderDestruct<SurfaceLoaderI>));
-    loaderGenerators.emplace(InNodeTriLoaderIndexed::TypeName(),
-                             SurfaceLoaderGen(InNodeSurfaceLoaderConstruct<SurfaceLoaderI, InNodeTriLoaderIndexed>,
-                                              SurfaceLoaderDestruct<SurfaceLoaderI>));
-    loaderGenerators.emplace(InNodeSphrLoader::TypeName(),
-                             SurfaceLoaderGen(InNodeSurfaceLoaderConstruct<SurfaceLoaderI, InNodeSphrLoader>,
-                                              SurfaceLoaderDestruct<SurfaceLoaderI>));
+    using namespace TypeGenWrappers;
+
+    loaderGenerators.emplace(InNodeTriLoader::TypeName(), &inNodeTriangleSurfaceLoader);
+    loaderGenerators.emplace(InNodeTriLoaderIndexed::TypeName(), &inNodeIndexedTriangleSurfaceLoader);
+    loaderGenerators.emplace(InNodeSphrLoader::TypeName(), &inNodeSphereSurfaceLoader);
 }
 
 // Interface
@@ -45,7 +44,7 @@ SceneError SurfaceLoaderGenerator::GenerateSurfaceLoader(SharedLibPtr<SurfaceLoa
     const std::string ext = SceneIO::StripFileExt(name);
 
     // TODO: Add custom suffix from node
-    const std::string mangledName = ext + tag;
+    const std::string mangledName = tag + ext;
 
     // Cannot Find Already Constructed Type
     // Generate
@@ -53,7 +52,7 @@ SceneError SurfaceLoaderGenerator::GenerateSurfaceLoader(SharedLibPtr<SurfaceLoa
     if(loc == loaderGenerators.end())
         return SceneError::NO_LOGIC_FOR_SURFACE_DATA;
 
-    ptr = loc->second(scenePath, properties, time);
+    ptr = (*loc->second)(scenePath, properties, time);
     return SceneError::OK;
 }
 
