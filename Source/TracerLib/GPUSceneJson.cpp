@@ -4,6 +4,7 @@
 #include "RayLib/Types.h"
 #include "RayLib/Log.h"
 #include "RayLib/SceneNodeI.h"
+#include "RayLib/StripComments.h"
 
 #include "TracerLogicI.h"
 #include "GPUAcceleratorI.h"
@@ -16,6 +17,7 @@
 #include <nlohmann/json.hpp>
 #include <filesystem>
 #include <set>
+#include <regex>
 
 SceneError GPUSceneJson::OpenFile(const std::u8string& fileName)
 {
@@ -29,9 +31,11 @@ SceneError GPUSceneJson::OpenFile(const std::u8string& fileName)
     std::ifstream file(path);
 
     if(!file.is_open()) return SceneError::FILE_NOT_FOUND;
+    auto stream = Utility::StripComments(file);
+
     // Parse Json
     sceneJson = std::make_unique<nlohmann::json>();
-    file >> (*sceneJson);
+    stream >> (*sceneJson);
     return SceneError::OK;
 }
 

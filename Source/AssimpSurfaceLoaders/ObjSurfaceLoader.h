@@ -13,6 +13,8 @@ class ObjSurfaceLoader : public SurfaceLoader
         static constexpr const char* Extension() { return "obj"; }
         static constexpr const char* TypeName() { return "assimp_obj"; }
 
+        static constexpr const char* InnerIdJSON = "innerIndex";
+
     private:
         Assimp::Importer&   importer;
         const aiScene*      scene;

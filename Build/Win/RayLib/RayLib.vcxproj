@@ -14,7 +14,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{DFCD1274-CD37-4E84-A1DC-96F619B04EEA}</ProjectGuid>
     <RootNamespace>RayLib</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -95,7 +95,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>METU_CUDA;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;METU_CUDA;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -174,6 +174,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\StaticString.h" />
     <ClInclude Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.h" />
     <ClInclude Include="..\..\..\Source\RayLib\PrimitiveDataTypes.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\StripComments.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderGenerator.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderGeneratorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderI.h" />

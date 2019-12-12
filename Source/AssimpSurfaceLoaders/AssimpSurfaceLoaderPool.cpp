@@ -24,6 +24,8 @@ AssimpSurfaceLoaderPool::AssimpSurfaceLoaderPool()
                        TypeGenWrappers::AssimpSurfaceLoaderConstruct<ObjSurfaceLoader>,
                        TypeGenWrappers::DefaultDestruct<SurfaceLoaderI>)
 {
+    static_assert(sizeof(aiVector3D) == sizeof(Vector3), "assimp Vector3 Vector3 mismatch");
+    static_assert(sizeof(aiVector2D) == sizeof(Vector2), "assimp Vector2 Vector2 mismatch");
 
     // Start Logging
     Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE,

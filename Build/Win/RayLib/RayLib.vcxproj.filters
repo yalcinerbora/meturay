@@ -205,6 +205,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderI.h">
       <Filter>SurfaceLoader</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\StripComments.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

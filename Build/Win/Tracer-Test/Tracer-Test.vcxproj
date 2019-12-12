@@ -46,7 +46,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{96F7395D-FA00-4E97-9FB2-98881123033A}</ProjectGuid>
     <RootNamespace>Tracer_Test</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
