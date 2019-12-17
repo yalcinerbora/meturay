@@ -10,24 +10,46 @@ class RandomGPU;
 #include "RayLib/Constants.h"
 
 __device__
-inline void GIAlbedoMatShade(// Output
-                             Vector4f* gImage,
-                             HitKey* gBoundaryMat,
-                             //
-                             RayGMem* gOutRays,
-                             RayAuxBasic* gOutRayAux,
-                             const uint32_t maxOutRay,
-                             // Input as registers
-                             const RayReg& ray,
-                             const BasicSurface& surface,
-                             const RayAuxBasic& aux,
-                             //
-                             RandomGPU& rng,
-                             // Input as global memory
-                             const ConstantAlbedoMatData& gMatData,
-                             const HitKey::Type& matId)
+inline void LightBoundaryShade(// Output
+                               Vector4f* gImage,
+                               HitKey* gBoundaryMat,
+                               //
+                               RayGMem* gOutRays,
+                               RayAuxBasic* gOutRayAux,
+                               const uint32_t maxOutRay,
+                               // Input as registers
+                               const RayReg& ray,
+                               const EmptySurface& surface,
+                               const RayAuxBasic& aux,
+                               //
+                               RandomGPU& rng,
+                               // Input as global memory
+                               const ConstantIrradianceMatData& gMatData,
+                               const HitKey::Type& matId)
 {
     assert(maxOutRay == 0);
+    // TODO
+}
+
+__device__
+inline void BasicPathTraceShade(// Output
+                                Vector4f* gImage,
+                                HitKey* gBoundaryMat,
+                                //
+                                RayGMem* gOutRays,
+                                RayAuxBasic* gOutRayAux,
+                                const uint32_t maxOutRay,
+                                // Input as registers
+                                const RayReg& ray,
+                                const BasicSurface& surface,
+                                const RayAuxBasic& aux,
+                                //
+                                RandomGPU& rng,
+                                // Input as global memory
+                                const ConstantAlbedoMatData& gMatData,
+                                const HitKey::Type& matId)
+{
+    assert(maxOutRay == 1);
     // Inputs
     RayAuxBasic auxIn = aux;
     RayReg rayIn = ray;

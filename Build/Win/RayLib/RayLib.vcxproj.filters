@@ -162,9 +162,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\GPUSceneI.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.h">
-      <Filter>FileI-O</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\NodeI.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
@@ -207,6 +204,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\StripComments.h">
       <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.h">
+      <Filter>SurfaceLoader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -270,11 +270,11 @@
     <ClCompile Include="..\..\..\Source\RayLib\SelfNode.cpp">
       <Filter>Nodes</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.cpp">
-      <Filter>FileI-O</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\MovementSchemes.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SurfaceLoaderGenerator.cpp">
+      <Filter>SurfaceLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.cpp">
       <Filter>SurfaceLoader</Filter>
     </ClCompile>
   </ItemGroup>

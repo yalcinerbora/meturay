@@ -8,7 +8,7 @@
 using HitResult = Vector<2, bool>;
 
 // This is Leaf of Base Accelerator
-// It points to another accelerator/material pair
+// It points to another accelerator pair
 struct alignas(16) BaseLeaf
 {
     Vector3f aabbMin;

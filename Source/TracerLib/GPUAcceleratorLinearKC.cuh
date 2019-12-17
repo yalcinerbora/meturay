@@ -190,7 +190,6 @@ static void KCIntersectBaseLinear(// I-O
                                   const RayGMem* gRays,
                                   const RayId* gRayIds,
                                   const uint32_t rayCount,
-
                                   // Constants
                                   const BaseLeaf* gLeafs,
                                   const uint32_t leafCount)

@@ -9,30 +9,6 @@ class RandomGPU;
 
 #include "RayLib/Constants.h"
 
-//__device__
-//inline void ConstantBoundaryMatShade(// Output
-//                                     Vector4f* gImage,
-//                                     //
-//                                     HitKey* gOutBoundMat,
-//                                     RayGMem* gOutRays,
-//                                     RayAuxBasic* gOutRayAux,
-//                                     const uint32_t maxOutRay,
-//                                     // Input as registers
-//                                     const RayReg& ray,
-//                                     const EmptySurface& surface,
-//                                     const RayAuxBasic& aux,
-//                                     //
-//                                     RandomGPU& rng,
-//                                     // Input as global memory
-//                                     const ConstantBoundaryMatData& gMatData,
-//                                     const HitKey::Type& matId)
-//{
-//    Vector3f output = gMatData.backgroundColor * aux.totalRadiance;
-//    gImage[aux.pixelId][0] = output[0];
-//    gImage[aux.pixelId][1] = output[1];
-//    gImage[aux.pixelId][2] = output[2];
-//}
-
 __device__
 inline void BasicMatShade(// Output
                           Vector4f* gImage,

@@ -22,10 +22,12 @@ ObjSurfaceLoader::ObjSurfaceLoader(Assimp::Importer& i,
 
     scene = importer.ReadFile(filePath,
                               aiProcess_CalcTangentSpace |
+                              aiProcess_GenBoundingBoxes |
                               aiProcess_GenNormals |
                               aiProcess_Triangulate |
                               aiProcess_JoinIdenticalVertices |
-                              aiProcess_SortByPType);
+                              aiProcess_SortByPType |
+                              aiProcess_RemoveRedundantMaterials);
 
     // Report Failed Import
     if(!scene) throw SceneException(SceneError::SURFACE_DATA_INVALID_READ,
@@ -36,21 +38,22 @@ ObjSurfaceLoader::ObjSurfaceLoader(Assimp::Importer& i,
     for(unsigned int innerId : innerIds)
     {
         const auto& mesh = scene->mMeshes[innerId];
+
         if(innerId >= scene->mNumMeshes)
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
-                                 "Inner index out of range");
+                                 "Assimp_obj: Inner index out of range");
         if(!mesh->HasNormals())
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
-                                 "Obj file does not have normals");
+                                 "Assimp_obj: Obj file does not have normals");
         if(!mesh->HasPositions())
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
-                                 "Obj file does not have positions");
+                                 "Assimp_obj: Obj file does not have positions");
         if(!mesh->GetNumUVChannels())
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
-                                 "Obj file does not have uvs");
+                                 "Assimp_obj: Obj file does not have uvs");
         if(!(mesh->mPrimitiveTypes == aiPrimitiveType_TRIANGLE))
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
-                                 "Only triangle is supported");
+                                 "Assimp_obj: Only triangle is supported");
     }
     // Take owneship of the scene
     scene = importer.GetOrphanedScene();
@@ -98,7 +101,10 @@ SceneError ObjSurfaceLoader::PrimitiveRanges(std::vector<Vector2ul>& result) con
             const auto& face = mesh->mFaces[i];
             meshIndexCount += face.mNumIndices;
         }
-        result.back()[1] = result.back()[0] + meshIndexCount;
+        if(meshIndexCount % 3 != 0) return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
+        meshIndexCount /= 3;
+
+        result.back()[1] = result.back()[0] + meshIndexCount;        
         prevOffset += meshIndexCount;
     }
     return SceneError::OK;
@@ -147,10 +153,6 @@ SceneError ObjSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveDataType pr
         const auto& mesh = scene->mMeshes[innerId];
         switch(primitiveDataType)
         {
-            Vector3 a;
-
-            a += 2;
-
             case PrimitiveDataType::POSITION:
             {
                 std::memcpy(meshStart, mesh->mVertices,
@@ -188,6 +190,7 @@ SceneError ObjSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveDataType pr
                     indexStart[i * 3 + 2] = face.mIndices[2];
                 }
                 meshStart += sizeof(uint64_t) * 3 * mesh->mNumFaces;
+                break;
             }
             default:
                 return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
@@ -203,7 +206,25 @@ SceneError ObjSurfaceLoader::PrimitiveDataCount(size_t& total, PrimitiveDataType
     for(unsigned int innerId : innerIds)
     {
         const auto& mesh = scene->mMeshes[innerId];
-        total += mesh->mNumVertices;
+        switch(primitiveDataType)
+        {
+            case PrimitiveDataType::POSITION:
+            case PrimitiveDataType::NORMAL:
+            case PrimitiveDataType::UV:
+            {
+                total += mesh->mNumVertices;
+                break;
+            }
+            case PrimitiveDataType::VERTEX_INDEX:
+            {
+                for(unsigned int i = 0; i < mesh->mNumFaces; i++)
+                {
+                    const auto& face = mesh->mFaces[i];
+                    total += face.mNumIndices;
+                }
+                break;
+            }
+        }
     }
     return SceneError::OK;
 }
