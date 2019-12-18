@@ -163,7 +163,7 @@ void VisorWindowInput::KeyboardUsed(KeyboardKeyType key,
 {
     // Find an action if avail
     KeyboardKeyBindings::const_iterator i;
-    if((i = keyboardBindings.find(key)) != keyboardBindings.cend()) return;
+    if((i = keyboardBindings.find(key)) == keyboardBindings.cend()) return;
     VisorActionType visorAction = i->second;
 
     // Do custom cam

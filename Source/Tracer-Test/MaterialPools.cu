@@ -42,9 +42,13 @@ TestMaterialPool::TestMaterialPool()
     materialGroupGenerators.emplace(SphericalMat::TypeName(),
                                     GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, SphericalMat>,
                                                    DefaultDestruct<GPUMaterialGroupI>));
-    materialGroupGenerators.emplace(GIAlbedoMat::TypeName(),
-                                    GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, GIAlbedoMat>,
+    materialGroupGenerators.emplace(BasicPathTraceMat::TypeName(),
+                                    GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BasicPathTraceMat>,
                                                    DefaultDestruct<GPUMaterialGroupI>));
+    materialGroupGenerators.emplace(LightBoundaryMat::TypeName(),
+                                    GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LightBoundaryMat>,
+                                    DefaultDestruct<GPUMaterialGroupI>));
+
     // Material Batches
     // Basic
     materialBatchGenerators.emplace(BasicMatTriBatch::TypeName(),
@@ -65,10 +69,20 @@ TestMaterialPool::TestMaterialPool()
                                     GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, SphericalMatSphrBatch>,
                                                    DefaultDestruct<GPUMaterialBatchI>));
     // GI Albedo
-    materialBatchGenerators.emplace(GIAlbedoTriBatch::TypeName(),
-                                    GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, GIAlbedoTriBatch>,
+    materialBatchGenerators.emplace(BasicPTSphereBatch::TypeName(),
+                                    GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, BasicPTSphereBatch>,
                                                    DefaultDestruct<GPUMaterialBatchI>));
-    materialBatchGenerators.emplace(GIAlbedoSphrBatch::TypeName(),
-                                    GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, GIAlbedoSphrBatch>,
+    materialBatchGenerators.emplace(BasicPTTriangleBatch::TypeName(),
+                                    GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, BasicPTTriangleBatch>,
                                                    DefaultDestruct<GPUMaterialBatchI>));
+    // Light Boundary
+    materialBatchGenerators.emplace(LightBoundaryBatch::TypeName(),
+                                    GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, LightBoundaryBatch>,
+                                    DefaultDestruct<GPUMaterialBatchI>));
+    materialBatchGenerators.emplace(LightBoundaryTriBatch::TypeName(),
+                                    GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, LightBoundaryTriBatch>,
+                                    DefaultDestruct<GPUMaterialBatchI>));
+    materialBatchGenerators.emplace(LightBoundarySphrBatch::TypeName(),
+                                    GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, LightBoundarySphrBatch>,
+                                    DefaultDestruct<GPUMaterialBatchI>));
 }

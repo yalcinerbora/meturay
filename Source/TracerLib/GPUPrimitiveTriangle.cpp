@@ -44,7 +44,6 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             if(e.what()[0] != '\0') METU_ERROR_LOG("Error: %s", e.what());
             return e;
         }
-        
     }
 
     // Do sanity check for data type matching

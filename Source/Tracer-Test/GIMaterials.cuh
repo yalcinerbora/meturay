@@ -8,8 +8,6 @@
 #include "MaterialDataStructs.h"
 #include "GIMaterialsKC.cuh"
 
-using ConstantIrradianceMatData = ConstantAlbedoMatData;
-
 class BasicPathTraceMat final
     : public GPUMaterialGroup<TracerBasic,
                               ConstantAlbedoMatData,
@@ -47,7 +45,7 @@ class BasicPathTraceMat final
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
-        uint8_t                 OutRayCount() const override { return 1; }
+        uint8_t                 OutRayCount() const override { return 0; }
 };
 
 class LightBoundaryMat final
@@ -87,7 +85,7 @@ class LightBoundaryMat final
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
-        uint8_t                 OutRayCount() const override { return 1; }
+        uint8_t                 OutRayCount() const override { return 0; }
 };
 
 // Mat Batch Extern
@@ -106,6 +104,16 @@ extern template class GPUMaterialBatch<TracerBasic,
                                        GPUPrimitiveEmpty,
                                        EmptySurfaceFromEmpty>;
 
+extern template class GPUMaterialBatch<TracerBasic,
+                                       LightBoundaryMat,
+                                       GPUPrimitiveTriangle,
+                                       EmptySurfaceFromTri>;
+
+extern template class GPUMaterialBatch<TracerBasic,
+                                       LightBoundaryMat,
+                                       GPUPrimitiveSphere,
+                                       EmptySurfaceFromSphr>;
+
 using BasicPTSphereBatch = GPUMaterialBatch<TracerBasic,
                                             BasicPathTraceMat,
                                             GPUPrimitiveSphere,
@@ -120,3 +128,13 @@ using LightBoundaryBatch = GPUMaterialBatch<TracerBasic,
                                             LightBoundaryMat,
                                             GPUPrimitiveEmpty,
                                             EmptySurfaceFromEmpty>;
+
+using LightBoundaryTriBatch = GPUMaterialBatch<TracerBasic,
+                                                LightBoundaryMat,
+                                                GPUPrimitiveTriangle,
+                                                EmptySurfaceFromTri>;
+
+using LightBoundarySphrBatch = GPUMaterialBatch<TracerBasic,
+                                                LightBoundaryMat,
+                                                GPUPrimitiveSphere,
+                                                EmptySurfaceFromSphr>;

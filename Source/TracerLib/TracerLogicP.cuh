@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RayLib/Constants.h"
+#include "RayLib/BitManipulation.h"
 
 #include "TracerLogicI.h"
 #include "GPUPrimitiveI.h"
@@ -11,6 +12,7 @@
 #include "RayMemory.h"
 
 #include <bitset>
+#include <numeric>
 
 struct TracerError;
 
@@ -114,12 +116,14 @@ TracerBaseLogic<RayAuxD, AuxF>::TracerBaseLogic(GPUBaseAcceleratorI& baseAcceler
     , maxMatBits(Zero2i)
     , baseBoundMatKey(baseBoundMatKey)
 {
-    // Change count to bit
-    maxMatBits[0] = static_cast<int>(std::bitset<sizeof(int) * 8>(maxMats[0]).count());
-    maxMatBits[1] = static_cast<int>(std::bitset<sizeof(int) * 8>(maxMats[1]).count());
+   
 
-    maxAccelBits[0] = static_cast<int>(std::bitset<sizeof(int) * 8>(maxAccels[0]).count());
-    maxAccelBits[1] = static_cast<int>(std::bitset<sizeof(int) * 8>(maxAccels[1]).count());
+    // Change count to bit
+    maxMatBits[0] = Utility::FindFirstSet(maxMats[0]) + 1;
+    maxMatBits[1] = Utility::FindFirstSet(maxMats[1]) + 1;
+
+    maxAccelBits[0] = Utility::FindFirstSet(maxAccels[0]) + 1;
+    maxAccelBits[1] = Utility::FindFirstSet(maxAccels[1]) + 1;
 }
 
 template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>

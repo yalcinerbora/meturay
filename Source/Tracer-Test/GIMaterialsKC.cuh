@@ -9,6 +9,8 @@ class RandomGPU;
 
 #include "RayLib/Constants.h"
 
+using ConstantIrradianceMatData = ConstantAlbedoMatData;
+
 __device__
 inline void LightBoundaryShade(// Output
                                Vector4f* gImage,
@@ -28,14 +30,20 @@ inline void LightBoundaryShade(// Output
                                const HitKey::Type& matId)
 {
     assert(maxOutRay == 0);
-    // TODO
+    // Final point on a ray path
+    // TODO:
+    gImage[aux.pixelId][0] = gMatData.dAlbedo[matId][0];
+    gImage[aux.pixelId][1] = gMatData.dAlbedo[matId][1];
+    gImage[aux.pixelId][2] = gMatData.dAlbedo[matId][2];
+    return;
+
 }
 
 __device__
 inline void BasicPathTraceShade(// Output
                                 Vector4f* gImage,
-                                HitKey* gBoundaryMat,
                                 //
+                                HitKey* gBoundaryMat,
                                 RayGMem* gOutRays,
                                 RayAuxBasic* gOutRayAux,
                                 const uint32_t maxOutRay,
@@ -49,6 +57,22 @@ inline void BasicPathTraceShade(// Output
                                 const ConstantAlbedoMatData& gMatData,
                                 const HitKey::Type& matId)
 {
+    //// Dummy ray to global memory
+    //RayReg rDummy = {};
+    //rDummy.ray = {Zero3, Zero3};
+    //rDummy.tMin = INFINITY;
+    //rDummy.tMax = INFINITY;
+    //rDummy.Update(gOutRays, 0);
+    //gBoundaryMat[0] = HitKey::InvalidKey;
+
+    //printf("matId %d\n", matId);
+
+    // Write color to pixel
+    gImage[aux.pixelId][0] = gMatData.dAlbedo[matId][0];
+    gImage[aux.pixelId][1] = gMatData.dAlbedo[matId][1];
+    gImage[aux.pixelId][2] = gMatData.dAlbedo[matId][2];
+    return;
+
     assert(maxOutRay == 1);
     // Inputs
     RayAuxBasic auxIn = aux;

@@ -208,6 +208,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.h">
       <Filter>SurfaceLoader</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\BitManipulation.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">
@@ -276,6 +279,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.cpp">
       <Filter>SurfaceLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\BitManipulation.cpp">
+      <Filter>Utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -68,6 +68,8 @@ inline HitResult TriangleClosestHit(// Output
                                                      position1,
                                                      position2,
                                                      false);
+    
+    float oldT = rayData.tMax;
 
     // Check if the hit is closer
     bool closerHit = intersects && (newT < rayData.tMax);
@@ -78,6 +80,12 @@ inline HitResult TriangleClosestHit(// Output
         newPrimitive = leaf.primitiveId;
         newHit = Vector2(baryCoords[0], baryCoords[1]);
     }
+    //printf("old %f new %f --- Testing Mat: %x -> {%s, %s}\n", 
+    //       oldT, newT,
+    //       leaf.matId.value, 
+    //       closerHit ? "Close!" : "      ",
+    //       intersects ? "Intersects!" : "           ");
+
     return HitResult{false, closerHit};
 }
 

@@ -12,6 +12,7 @@
 #include "CudaConstants.h"
 
 class ImageMemory;
+struct DefaultLeaf;
 
 namespace Debug
 {
@@ -46,7 +47,10 @@ namespace Debug
 // Some Print Func Definitions
 extern std::ostream& operator<<(std::ostream& stream, const RayGMem&);
 extern std::ostream& operator<<(std::ostream& stream, const HitKey&);
+extern std::ostream& operator<<(std::ostream& stream, const Vector2ul&);
 extern std::ostream& operator<<(std::ostream& stream, const Vector2f&);
+extern std::ostream& operator<<(std::ostream& stream, const Vector4f&);
+extern std::ostream& operator<<(std::ostream& stream, const DefaultLeaf&);
 
 template<class T>
 void Debug::DumpMemToFile(const std::string& fName,

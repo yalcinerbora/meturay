@@ -247,11 +247,11 @@ SceneError GPUSceneJson::GenerateMaterialGroups(const MultiGPUMatNodes& matGroup
 {
     // Generate Partitioned Material Groups
     SceneError e = SceneError::OK;
-    for(const auto& matGroup : matGroupNodes)
+    for(const auto& matGroupN : matGroupNodes)
     {
-        const std::string& matTypeName = matGroup.first.first;
-        const int gpuId = matGroup.first.second;
-        const auto& matNodes = matGroup.second;
+        const std::string& matTypeName = matGroupN.first.first;
+        const int gpuId = matGroupN.first.second;
+        const auto& matNodes = matGroupN.second;
         //
         GPUMaterialGroupI* matGroup = nullptr;
         if(e = logicGenerator.GenerateMaterialGroup(matGroup, matTypeName, gpuId))

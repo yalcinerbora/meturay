@@ -132,6 +132,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\AABB.hpp" />
     <ClInclude Include="..\..\..\Source\RayLib\AnalyticData.h" />
     <ClInclude Include="..\..\..\Source\RayLib\AnalyticNodeI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\BitManipulation.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CommandCallbacksI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Constants.h" />
@@ -203,6 +204,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\WorkerThread.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\Source\RayLib\BitManipulation.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MDistributor.cpp" />

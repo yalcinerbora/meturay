@@ -60,7 +60,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Map of hit keys for all
             hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.first));
             localSize += primRangeList[i][1] - primRangeList[i][0];
         }
-        range[1] = localSize;
+        range[1] = range[0] + localSize;
         totalSize += localSize;
         
         // Put generated AABB
@@ -84,6 +84,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Map of hit keys for all
     // Copy Leaf counts to cpu memory
     CUDA_CHECK(cudaMemcpy(dAccRanges, accRanges.data(), accRangeSize,
                           cudaMemcpyHostToDevice));
+
     return SceneError::OK;
 }
 
@@ -140,7 +141,6 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
 
     // TODO: Select a GPU
     int gpuIndex = 0;
-
     // KC
     CudaSystem::AsyncGridStrideKC_X
     (

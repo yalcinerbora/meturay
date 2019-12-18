@@ -1,5 +1,6 @@
 #include "TracerDebug.h"
 #include "ImageMemory.h"
+#include "DefaultLeaf.h"
 
 #include "RayLib/ImageIO.h"
 
@@ -46,11 +47,29 @@ void Debug::WriteHitPairs(const RayId* ids, const HitKey* keys, size_t count, co
     Detail::OutputHitPairs(f, ids, keys, count);
 }
 
+std::ostream& operator<<(std::ostream& stream, const Vector2ul& v)
+{
+    stream << std::setw(0)
+        << v[0] << ", "
+        << v[1];
+    return stream;
+}
+
 std::ostream& operator<<(std::ostream& stream, const Vector2f& v)
 {
     stream << std::setw(0)
            << v[0] << ", "
            << v[1];
+    return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const Vector4f& v)
+{
+    stream << std::setw(0)
+        << v[0] << ", "
+        << v[1] << ", "
+        << v[2] << ", "
+        << v[3];
     return stream;
 }
 
@@ -70,5 +89,12 @@ std::ostream& operator<<(std::ostream& stream, const HitKey& key)
            << ":"
            << std::setw(HitKey::IdBits / 4) << HitKey::FetchIdPortion(key);
     stream << std::dec;
+    return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const DefaultLeaf& l)
+{
+    stream << std::setw(0)
+           << "{ mat: " << l.matId << ", primId: " << l.primitiveId << "} ";
     return stream;
 }

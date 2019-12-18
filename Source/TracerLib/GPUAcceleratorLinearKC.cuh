@@ -38,14 +38,14 @@ static void KCConstructLinear(// O
                               const PRList prList,
                               //const PrimitiveRangeList primRanges,
                               const PGroup::PrimitiveData primData,
-                              const uint32_t leafIndex)
+                              const uint32_t accIndex)
 {
     // Fetch Types from Template Classes
     using LeafData = typename PGroup::LeafData; // LeafStruct is defined by primitive
 
     // Your Data
-    const Vector2ul accRange = gAccRanges[leafIndex];
-    const uint32_t leafCount = static_cast<const uint32_t>(accRange[1]);
+    const Vector2ul accRange = gAccRanges[accIndex];
+    const uint32_t leafCount = static_cast<const uint32_t>(accRange[1]-accRange[0]);
     LeafData* gAccLeafs = gLeafOut + accRange[0];
 
     // SceneConstants
@@ -87,6 +87,7 @@ static void KCConstructLinear(// O
         // Determine  Prim Id and Hit Key
         uint64_t primitiveId = prList.primRanges[pairIndex][0] + localIndex;
         HitKey matKey = mkList.materialKeys[pairIndex];
+
         // Gen Leaf and write
         gAccLeafs[globalId] = PGroup::LeafFunc(matKey,
                                                primitiveId,
@@ -149,13 +150,16 @@ static void KCIntersectLinear(// O
         HitKey materialKey;
         PrimitiveId primitiveId;
         HitData hit;
-
         // Linear check over array
         for(uint32_t i = 0; i < endCount; i++)
         {
             // Get Leaf Data and
             // Do acceptance check
             const LeafData leaf = gLeaf[i];
+            //printf("my accId %llu, matId %x, range{%llu, %llu}, \n", 
+            //       accId,
+            //       leaf.matId.value,
+            //       accRange[0], accRange[1]);
             HitResult result = PGroup::HitFunc(// Ooutput                                            
                                                materialKey,
                                                primitiveId,

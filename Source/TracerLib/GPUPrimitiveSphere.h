@@ -51,7 +51,7 @@ inline HitResult SphereClosestHit(// Output
     // Do Intersecton test
     Vector3 pos; float newT;
     bool intersects = rayData.ray.IntersectsSphere(pos, newT, center, radius);
-
+    
     // Check if the hit is closer
     bool closerHit = intersects && (newT < rayData.tMax);
     if(closerHit)

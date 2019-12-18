@@ -72,9 +72,9 @@ const char* ObjSurfaceLoader::SufaceDataFileExt() const
 SceneError ObjSurfaceLoader::AABB(std::vector<AABB3>& list) const
 {
     const auto& innerIds = node.CommonUIntList(InnerIdJSON);
-    for(unsigned int innerId : innerIds)
+    for(const auto& pair : node.Ids())
     {
-        const auto& aabb = scene->mMeshes[innerId]->mAABB;
+        const auto& aabb = scene->mMeshes[innerIds[pair.second]]->mAABB;
         list.push_back(AABB3(Vector3(aabb.mMin.x,
                                      aabb.mMin.y,
                                      aabb.mMin.z),
@@ -90,9 +90,9 @@ SceneError ObjSurfaceLoader::PrimitiveRanges(std::vector<Vector2ul>& result) con
     // Self contain indices
     size_t prevOffset = 0;
     const auto& innerIds = node.CommonUIntList(InnerIdJSON);
-    for(unsigned int innerId : innerIds)
+    for(const auto& pair : node.Ids())
     {
-        const auto& mesh = scene->mMeshes[innerId];
+        const auto& mesh = scene->mMeshes[innerIds[pair.second]];
         result.emplace_back(prevOffset, 0);
         size_t meshIndexCount = 0;
 
@@ -114,9 +114,9 @@ SceneError ObjSurfaceLoader::PrimitiveCounts(std::vector<size_t>& result) const
 {
     // Self contain indices
     const auto& innerIds = node.CommonUIntList(InnerIdJSON);
-    for(unsigned int innerId : innerIds)
+    for(const auto& pair : node.Ids())
     {
-        const auto& mesh = scene->mMeshes[innerId];
+        const auto& mesh = scene->mMeshes[innerIds[pair.second]];
         result.emplace_back(0);
         for(unsigned int i = 0; i < mesh->mNumFaces; i++)
         {
@@ -132,9 +132,9 @@ SceneError ObjSurfaceLoader::PrimitiveDataRanges(std::vector<Vector2ul>& result)
     // Self contain indices
     size_t prevOffset = 0;
     const auto& innerIds = node.CommonUIntList(InnerIdJSON);
-    for(unsigned int innerId : innerIds)
+    for(const auto& pair : node.Ids())
     {
-        const auto& mesh = scene->mMeshes[innerId];
+        const auto& mesh = scene->mMeshes[innerIds[pair.second]];
         result.emplace_back(prevOffset, 0);
         size_t vertexCount = mesh->mNumVertices;
         result.back()[1] = result.back()[0] + vertexCount;
@@ -146,11 +146,12 @@ SceneError ObjSurfaceLoader::PrimitiveDataRanges(std::vector<Vector2ul>& result)
 SceneError ObjSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveDataType primitiveDataType) const
 {
     // Self contain indices
+    uint64_t offset = 0;
     Byte* meshStart = result;
     const auto& innerIds = node.CommonUIntList(InnerIdJSON);
-    for(unsigned int innerId : innerIds)
+    for(const auto& pair : node.Ids())
     {
-        const auto& mesh = scene->mMeshes[innerId];
+        const auto& mesh = scene->mMeshes[innerIds[pair.second]];
         switch(primitiveDataType)
         {
             case PrimitiveDataType::POSITION:
@@ -181,14 +182,16 @@ SceneError ObjSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveDataType pr
             }
             case PrimitiveDataType::VERTEX_INDEX:
             {
+               
                 uint64_t* indexStart = reinterpret_cast<uint64_t*>(meshStart);                                
                 for(unsigned int i = 0; i < mesh->mNumFaces; i++)
                 {
                     const auto& face = mesh->mFaces[i];
-                    indexStart[i * 3 + 0] = face.mIndices[0];
-                    indexStart[i * 3 + 1] = face.mIndices[1];
-                    indexStart[i * 3 + 2] = face.mIndices[2];
+                    indexStart[i * 3 + 0] = offset + face.mIndices[0];
+                    indexStart[i * 3 + 1] = offset + face.mIndices[1];
+                    indexStart[i * 3 + 2] = offset + face.mIndices[2];
                 }
+                offset += mesh->mNumVertices;
                 meshStart += sizeof(uint64_t) * 3 * mesh->mNumFaces;
                 break;
             }
@@ -203,9 +206,9 @@ SceneError ObjSurfaceLoader::PrimitiveDataCount(size_t& total, PrimitiveDataType
 {
     total = 0;
     const auto& innerIds = node.CommonUIntList(InnerIdJSON);
-    for(unsigned int innerId : innerIds)
+    for(const auto& pair : node.Ids())
     {
-        const auto& mesh = scene->mMeshes[innerId];
+        const auto& mesh = scene->mMeshes[innerIds[pair.second]];
         switch(primitiveDataType)
         {
             case PrimitiveDataType::POSITION:

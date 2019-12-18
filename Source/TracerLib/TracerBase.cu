@@ -53,8 +53,8 @@ void TracerBase::HitRays()
     HitKey* dCurrentKeys = rayMemory.CurrentKeys();
     RayId*  dCurrentRayIds = rayMemory.CurrentIds();
 
-    /*Debug::DumpMemToFile("accKeys", dCurrentKeys, currentRayCount);
-    Debug::DumpMemToFile("accIds", dCurrentRayIds, currentRayCount);*/
+    //Debug::DumpMemToFile("accKeys", dCurrentKeys, currentRayCount);
+    //Debug::DumpMemToFile("accIds", dCurrentRayIds, currentRayCount);
 
     // Try to hit rays until no ray is left
     // (these rays will be assigned with a material)

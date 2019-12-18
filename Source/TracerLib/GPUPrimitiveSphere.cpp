@@ -124,6 +124,7 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
         if((e = loader->GetPrimitiveData(radiusCPU.data() + offset * SphrRadSize,
                                          PrimitiveDataType::RADIUS)) != SceneError::OK)
             return e;
+        i++;
     }
 
     // All loaded to CPU, copy to GPU
