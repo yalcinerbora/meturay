@@ -34,7 +34,7 @@ ObjSurfaceLoader::ObjSurfaceLoader(Assimp::Importer& i,
                                     importer.GetErrorString());
 
     // Do some checking
-    const auto& innerIds = node.CommonUIntList(InnerIdJSON);
+    const auto& innerIds = node.AccessUInt(InnerIdJSON);
     for(unsigned int innerId : innerIds)
     {
         const auto& mesh = scene->mMeshes[innerId];
@@ -71,10 +71,10 @@ const char* ObjSurfaceLoader::SufaceDataFileExt() const
 
 SceneError ObjSurfaceLoader::AABB(std::vector<AABB3>& list) const
 {
-    const auto& innerIds = node.CommonUIntList(InnerIdJSON);
-    for(const auto& pair : node.Ids())
+    const auto& innerIds = node.AccessUInt(InnerIdJSON);
+    for(unsigned int innerId : innerIds)
     {
-        const auto& aabb = scene->mMeshes[innerIds[pair.second]]->mAABB;
+        const auto& aabb = scene->mMeshes[innerId]->mAABB;
         list.push_back(AABB3(Vector3(aabb.mMin.x,
                                      aabb.mMin.y,
                                      aabb.mMin.z),
@@ -89,10 +89,10 @@ SceneError ObjSurfaceLoader::PrimitiveRanges(std::vector<Vector2ul>& result) con
 {
     // Self contain indices
     size_t prevOffset = 0;
-    const auto& innerIds = node.CommonUIntList(InnerIdJSON);
-    for(const auto& pair : node.Ids())
+    const auto& innerIds = node.AccessUInt(InnerIdJSON);
+    for(unsigned int innerId : innerIds)
     {
-        const auto& mesh = scene->mMeshes[innerIds[pair.second]];
+        const auto& mesh = scene->mMeshes[innerId];
         result.emplace_back(prevOffset, 0);
         size_t meshIndexCount = 0;
 
@@ -113,10 +113,10 @@ SceneError ObjSurfaceLoader::PrimitiveRanges(std::vector<Vector2ul>& result) con
 SceneError ObjSurfaceLoader::PrimitiveCounts(std::vector<size_t>& result) const
 {
     // Self contain indices
-    const auto& innerIds = node.CommonUIntList(InnerIdJSON);
-    for(const auto& pair : node.Ids())
+    const auto& innerIds = node.AccessUInt(InnerIdJSON);
+    for(unsigned int innerId : innerIds)
     {
-        const auto& mesh = scene->mMeshes[innerIds[pair.second]];
+        const auto& mesh = scene->mMeshes[innerId];
         result.emplace_back(0);
         for(unsigned int i = 0; i < mesh->mNumFaces; i++)
         {
@@ -131,10 +131,10 @@ SceneError ObjSurfaceLoader::PrimitiveDataRanges(std::vector<Vector2ul>& result)
 {
     // Self contain indices
     size_t prevOffset = 0;
-    const auto& innerIds = node.CommonUIntList(InnerIdJSON);
-    for(const auto& pair : node.Ids())
+    const auto& innerIds = node.AccessUInt(InnerIdJSON);
+    for(unsigned int innerId : innerIds)
     {
-        const auto& mesh = scene->mMeshes[innerIds[pair.second]];
+        const auto& mesh = scene->mMeshes[innerId];
         result.emplace_back(prevOffset, 0);
         size_t vertexCount = mesh->mNumVertices;
         result.back()[1] = result.back()[0] + vertexCount;
@@ -148,10 +148,10 @@ SceneError ObjSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveDataType pr
     // Self contain indices
     uint64_t offset = 0;
     Byte* meshStart = result;
-    const auto& innerIds = node.CommonUIntList(InnerIdJSON);
-    for(const auto& pair : node.Ids())
+    const auto& innerIds = node.AccessUInt(InnerIdJSON);
+    for(unsigned int innerId : innerIds)
     {
-        const auto& mesh = scene->mMeshes[innerIds[pair.second]];
+        const auto& mesh = scene->mMeshes[innerId];
         switch(primitiveDataType)
         {
             case PrimitiveDataType::POSITION:
@@ -205,10 +205,10 @@ SceneError ObjSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveDataType pr
 SceneError ObjSurfaceLoader::PrimitiveDataCount(size_t& total, PrimitiveDataType primitiveDataType) const
 {
     total = 0;
-    const auto& innerIds = node.CommonUIntList(InnerIdJSON);
-    for(const auto& pair : node.Ids())
+    const auto& innerIds = node.AccessUInt(InnerIdJSON);
+    for(unsigned int innerId : innerIds)
     {
-        const auto& mesh = scene->mMeshes[innerIds[pair.second]];
+        const auto& mesh = scene->mMeshes[innerId];
         switch(primitiveDataType)
         {
             case PrimitiveDataType::POSITION:

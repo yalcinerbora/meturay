@@ -53,20 +53,22 @@ void TracerBase::HitRays()
     HitKey* dCurrentKeys = rayMemory.CurrentKeys();
     RayId*  dCurrentRayIds = rayMemory.CurrentIds();
 
-    //Debug::DumpMemToFile("accKeys", dCurrentKeys, currentRayCount);
-    //Debug::DumpMemToFile("accIds", dCurrentRayIds, currentRayCount);
-
     // Try to hit rays until no ray is left
     // (these rays will be assigned with a material)
     // outside rays are also assigned with a material (which is special)
     uint32_t rayCount = currentRayCount;
+    // At start all rays are valid
+    uint32_t validRayOffset = 0;
     while(rayCount > 0)
     {
         // Traverse accelerator
         // Base accelerator provides potential hits
         // Cannot provide an absolute hit (its not its job)
-        baseAccelerator.Hit(dTransfomIds, dCurrentKeys, dRays, dCurrentRayIds,
-                             rayCount);
+        baseAccelerator.Hit(dTransfomIds, 
+                            dCurrentKeys + validRayOffset,
+                            dRays,
+                            dCurrentRayIds + validRayOffset,
+                            rayCount);
 
         // Wait all GPUs to finish...
         CudaSystem::SyncAllGPUs();
@@ -85,6 +87,7 @@ void TracerBase::HitRays()
         // We sort inner indices in addition to batches results for better data locality
         // We only sort up-to a certain bit (radix sort) which is tied to
         // accelerator count
+        // Move offset to skip null bathces
         rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, rayCount, accBitCounts);
 
         // Parition to sub accelerators
@@ -115,8 +118,8 @@ void TracerBase::HitRays()
             auto loc = subAccelerators.find(p.portionId);
             if(loc == subAccelerators.end()) continue;
 
-            RayId* dRayIdStart = dCurrentRayIds + p.offset;
-            HitKey* dCurrentKeyStart = dCurrentKeys + p.offset;
+            RayId* dRayIdStart = dCurrentRayIds + validRayOffset + p.offset;
+            HitKey* dCurrentKeyStart = dCurrentKeys + validRayOffset + p.offset;
 
             // Run local hit kernels
             // Local hit kernels returns a material key
@@ -143,14 +146,14 @@ void TracerBase::HitRays()
         }
 
         // Update new ray count
-        // On partition array check last partition
+        // On partition array check first partition
         // it may contain invalid key meaning
         // those rays are totally processed
-        auto iterator = portions.begin();
-        if(iterator->portionId == HitKey::NullBatch)
-        {
-            rayCount = static_cast<uint32_t>(iterator->offset);
-        }
+        // change the offset so that
+        // we skip those rays
+        auto nullPortion = portions.begin();
+        if(nullPortion->portionId == HitKey::NullBatch)
+            rayCount = static_cast<uint32_t>(nullPortion->offset);
 
         // Iteration is done
         // We cant continue loop untill these kernels are finished

@@ -144,7 +144,7 @@ void MockNode::Work()
         // Timing and Window Termination
         t.Lap();
         elapsed += t.Elapsed<CPUTimeSeconds>();
-        if(elapsed >= Duration) break;
+        //if(elapsed >= Duration) break;
     }
 }
 
@@ -152,7 +152,7 @@ class SimpleTracerSetup
 {
 
     private:
-        static constexpr Vector2i           IMAGE_RESOLUTION = {128, 128};
+        static constexpr Vector2i           IMAGE_RESOLUTION = {512, 512};
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
 

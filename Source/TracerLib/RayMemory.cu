@@ -172,9 +172,9 @@ void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
     // Find out sort auxiliary storage
     cub::DoubleBuffer<HitKey::Type> dbKeys(nullptr, nullptr);
     cub::DoubleBuffer<RayId> dbIds(nullptr, nullptr);
-    CUDA_CHECK(cub::DeviceRadixSort::SortPairs(nullptr, cubSortMemSize,
-                                               dbKeys, dbIds,
-                                               static_cast<int>(rayCount)));
+    CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(nullptr, cubSortMemSize,
+                                                         dbKeys, dbIds,
+                                                         static_cast<int>(rayCount)));
 
     // Check if while partitioning  double buffer data is
     // enough for using (Unique and Scan) algos
@@ -256,12 +256,12 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
     // First sort internals
     if(bitStart != bitEnd)
     {
-        CUDA_CHECK(cub::DeviceRadixSort::SortPairs(dTempMemory, cubSortMemSize,
-                                                   dbKeys, dbIds,
-                                                   static_cast<int>(count),
-                                                   bitStart, bitEnd,
-                                                   (cudaStream_t)0,
-                                                   false));
+        CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(dTempMemory, cubSortMemSize,
+                                                             dbKeys, dbIds,
+                                                             static_cast<int>(count),
+                                                             bitStart, bitEnd,
+                                                             (cudaStream_t)0,
+                                                             false));
     }
 
     // Then sort batches
@@ -269,12 +269,12 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
     bitEnd = HitKey::IdBits + bitMaxValues[0];
     if(bitStart != bitEnd)
     {
-        CUDA_CHECK(cub::DeviceRadixSort::SortPairs(dTempMemory, cubSortMemSize,
-                                                   dbKeys, dbIds,
-                                                   static_cast<int>(count),
-                                                   bitStart, bitEnd,
-                                                   (cudaStream_t)0,
-                                                   false));
+        CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(dTempMemory, cubSortMemSize,
+                                                             dbKeys, dbIds,
+                                                             static_cast<int>(count),
+                                                             bitStart, bitEnd,
+                                                             (cudaStream_t)0,
+                                                             false));
     }
 
     ids = dbIds.Current();

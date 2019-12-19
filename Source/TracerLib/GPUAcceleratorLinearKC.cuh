@@ -221,6 +221,8 @@ static void KCIntersectBaseLinear(// I-O
             BaseLeaf l = gLeafs[primStart];
             if(ray.IntersectsAABB(l.aabbMin, l.aabbMax, tMinMax))
             {
+                //printf("Found Intersection %u, prev %u, Key %X\n", primStart,
+                //       gPrevLoc[id], l.accKey.value);
                 key = l.accKey;
                 transformId = l.transformId;
                 break;

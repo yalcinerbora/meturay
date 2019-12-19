@@ -119,11 +119,11 @@ TracerBaseLogic<RayAuxD, AuxF>::TracerBaseLogic(GPUBaseAcceleratorI& baseAcceler
    
 
     // Change count to bit
-    maxMatBits[0] = Utility::FindFirstSet(maxMats[0]) + 1;
-    maxMatBits[1] = Utility::FindFirstSet(maxMats[1]) + 1;
+    maxMatBits[0] = Utility::FindFirstSet32(maxMats[0]) + 1;
+    maxMatBits[1] = Utility::FindFirstSet32(maxMats[1]) + 1;
 
-    maxAccelBits[0] = Utility::FindFirstSet(maxAccels[0]) + 1;
-    maxAccelBits[1] = Utility::FindFirstSet(maxAccels[1]) + 1;
+    maxAccelBits[0] = Utility::FindFirstSet32(maxAccels[0]) + 1;
+    maxAccelBits[1] = Utility::FindFirstSet32(maxAccels[1]) + 1;
 }
 
 template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>

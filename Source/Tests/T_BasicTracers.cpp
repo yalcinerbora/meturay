@@ -24,11 +24,18 @@ TEST(SimpleTracerTests, HelloBox)
     setup.Body();
 }
 
+TEST(SimpleTracerTests, OcclusionTest)
+{
+    EnableVTMode();
+    SimpleTracerSetup setup(u8"TestScenes/occlusionTest.json", 0.0);
+    ASSERT_TRUE(setup.Init());
+    setup.Body();
+}
+
 TEST(SimpleTracerTests, CornellBox)
 {
     EnableVTMode();
-    SimpleTracerSetup setup(u8"TestScenes/helloCornell.json",
-                            0.0);
+    SimpleTracerSetup setup(u8"TestScenes/helloCornell.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
