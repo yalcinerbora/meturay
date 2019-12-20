@@ -129,11 +129,15 @@ void MockNode::Work()
     {
         // Run tracer
         tracer.GenerateInitialRays(scene, 0, 1);
-        while(tracer.Continue())
+        
+        uint32_t i = 0;
+        while(tracer.Continue() && i < 4)
         {
             tracer.Render();
+            i++;
         }
         tracer.FinishSamples();
+        //printf("\n----------------------------------\n");
 
         // Before try to show do render loop
         visor.Render();
@@ -144,15 +148,17 @@ void MockNode::Work()
         // Timing and Window Termination
         t.Lap();
         elapsed += t.Elapsed<CPUTimeSeconds>();
+        fprintf(stdout, "Time: %fs\r", t.Elapsed<CPUTimeSeconds>());        
         //if(elapsed >= Duration) break;
     }
+    METU_LOG("\n");
 }
 
 class SimpleTracerSetup
 {
 
     private:
-        static constexpr Vector2i           IMAGE_RESOLUTION = {512, 512};
+        static constexpr Vector2i           IMAGE_RESOLUTION = {256, 256};
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
 

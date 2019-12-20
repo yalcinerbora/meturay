@@ -1,6 +1,13 @@
 #include "RNGMemory.h"
 #include "CudaConstants.h"
 #include <random>
+#include <curand_kernel.h>
+
+__global__ void KCInitRNGStates(uint32_t seed, curandStateMRG32k3a_t* state)
+{
+    int globalId = threadIdx.x + blockIdx.x * blockDim.x;
+    curand_init(seed, globalId, 0, &state[globalId]);
+}
 
 RNGMemory::RNGMemory(uint32_t seed)
 {
@@ -18,9 +25,9 @@ RNGMemory::RNGMemory(uint32_t seed)
     }
 
     // Actual Allocation
-    size_t totalSize = totalCount * sizeof(uint32_t);
+    size_t totalSize = totalCount * sizeof(curandStateMRG32k3a_t);
     memRandom = std::move(DeviceMemory(totalSize));
-    uint32_t* d_ptr = static_cast<uint32_t*>(memRandom);
+    curandStateMRG32k3a_t* d_ptr = static_cast<curandStateMRG32k3a_t*>(memRandom);
 
     size_t totalOffset = 0;
     for(const auto& gpu : CudaSystem::GPUList())
@@ -30,27 +37,14 @@ RNGMemory::RNGMemory(uint32_t seed)
     }
     assert(totalCount == totalOffset);
 
-    // Init all seeds
-    std::vector<uint32_t> seeds(totalCount);
-    for(size_t i = 0; i < totalCount; i++)
-    {
-        d_ptr[i] = rng();
-    }
+    CudaSystem::GridStrideKC_X(0, 0, 0, totalCount,
+                               //
+                               KCInitRNGStates,
+                               seed,
+                               d_ptr);
 }
 
 RNGGMem RNGMemory::RNGData(uint32_t gpuId)
 {
     return randomStacks[gpuId];
-}
-
-ConstRNGGMem RNGMemory::RNGData(uint32_t gpuId) const
-{
-    return randomStacks[gpuId];
-}
-
-uint32_t RNGMemory::SharedMemorySize(uint32_t threadPerBlock)
-{
-    uint32_t warpCount = (threadPerBlock + WarpSize - 1) / WarpSize;
-
-    return  warpCount * WarpSize * sizeof(uint32_t);
 }

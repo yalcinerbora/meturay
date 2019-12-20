@@ -11,6 +11,24 @@
 #include "GPUMaterialI.h"
 #include "TracerLogicI.h"
 
+struct RayAuxBasic
+{
+    Vector3f        totalRadiance;
+    uint32_t        pixelId;
+    uint32_t        pixelSampleId;
+};
+
+std::ostream& operator<<(std::ostream& stream, const RayAuxBasic& v)
+{
+    stream << std::setw(0)
+            << v.pixelId << ", "
+            << v.pixelSampleId << ""
+            << "{" << v.totalRadiance[0]
+            << "," << v.totalRadiance[0]
+            << "," << v.totalRadiance[0] << "}";
+    return stream;
+}
+
 template <class... Args>
 inline void TracerBase::SendLog(const char* format, Args... args)
 {
@@ -165,6 +183,7 @@ void TracerBase::HitRays()
     }
     // At the end of iteration all rays found a material, primitive
     // and interpolation weights (which should be on hitStruct)
+    //printf("=\n");
 }
 
 void TracerBase::ShadeRays()
@@ -213,12 +232,22 @@ void TracerBase::ShadeRays()
                             loc->second->OutRayCount();
     }
 
+
+
+    //Debug::DumpMemToFile<RayAuxBasic>("ray_aux", 
+    //                                  reinterpret_cast<const RayAuxBasic*>(dRayAux),
+    //                                  rayCount);
+
     // Allocate output ray memory
     rayMemory.ResizeRayOut(totalOutRayCount, currentLogic->PerRayAuxDataSize(),
                            currentLogic->SceneBaseBoundMatKey());
     unsigned char* dAuxOut = rayMemory.RayAuxOut<unsigned char>();
     RayGMem* dRaysOut = rayMemory.RaysOut();
     HitKey* dBoundKeyOut = rayMemory.MaterialKeys();
+
+    //Debug::DumpMemToFile<RayAuxBasic>("ray_aux",
+    //                                  reinterpret_cast<const RayAuxBasic*>(dRayAux),
+    //                                  rayCount);
 
     // Reorder partitions for efficient calls
     // (sort by gpu and order for better async access)
@@ -227,20 +256,20 @@ void TracerBase::ShadeRays()
 
     // For each partition
     size_t outOffset = 0;
-    for(const auto& p : portions)
+    for(auto pIt = portions.crbegin();
+        pIt != portions.crend(); pIt++)
     {
+        const auto& p = (*pIt);
+
         // Skip if null batch or unfound material
         if(p.portionId == HitKey::NullBatch) continue;
         auto loc = materials.find(p.portionId);
         if(loc == materials.end()) continue;
 
-        // Since output is dynamic (each material may write multiple rays)
-        // add offsets to find proper count
-        outOffset += p.count * loc->second->OutRayCount();
-
         // Relativize input & output pointers
         const RayId* dRayIdStart = dCurrentRayIds + p.offset;
         const HitKey* dKeyStart = dCurrentKeys + p.offset;
+        // Output
         RayGMem* dRayOutStart = dRaysOut + outOffset;
         void* dAuxOutStart = dAuxOut + (outOffset * currentLogic->PerRayAuxDataSize());
         HitKey* dBoundKeyStart = dBoundKeyOut + outOffset;
@@ -264,6 +293,9 @@ void TracerBase::ShadeRays()
                                static_cast<uint32_t>(p.count),
                                rngMemory);
 
+        // Since output is dynamic (each material may write multiple rays)
+        // add offsets to find proper count
+        outOffset += p.count * loc->second->OutRayCount();
     }
     assert(totalOutRayCount == outOffset);
     currentRayCount = totalOutRayCount;
@@ -381,6 +413,7 @@ void TracerBase::Render()
     SendLog(" Hits Complete, Shading...");
     ShadeRays();
     SendLog(" Shading Complete!");
+    //printf("\n-------\n");
 }
 
 void TracerBase::FinishSamples()

@@ -8,6 +8,9 @@ class RandomGPU;
 #include "SurfaceStructs.h"
 
 #include "RayLib/Constants.h"
+#include "RayLib/CosineDistribution.h"
+
+#include <cuda_runtime.h>
 
 using ConstantIrradianceMatData = ConstantAlbedoMatData;
 
@@ -30,11 +33,16 @@ inline void LightBoundaryShade(// Output
                                const HitKey::Type& matId)
 {
     assert(maxOutRay == 0);
+
+    // Finalize
+    Vector3f radiance = aux.accumFactor * gMatData.dAlbedo[matId];
+
     // Final point on a ray path
-    // TODO:
-    gImage[aux.pixelId][0] = gMatData.dAlbedo[matId][0];
-    gImage[aux.pixelId][1] = gMatData.dAlbedo[matId][1];
-    gImage[aux.pixelId][2] = gMatData.dAlbedo[matId][2];
+    // TODO: Single ray per pixel make these atomic
+    //printf("Touched Light!\n");
+    gImage[aux.pixelId][0] = radiance[0];
+    gImage[aux.pixelId][1] = radiance[1];
+    gImage[aux.pixelId][2] = radiance[2];
     return;
 
 }
@@ -64,26 +72,21 @@ inline void BasicPathTraceShade(// Output
     //rDummy.tMax = INFINITY;
     //rDummy.Update(gOutRays, 0);
     //gBoundaryMat[0] = HitKey::InvalidKey;
-
-    //printf("matId %d\n", matId);
-
-    // Write color to pixel
-    gImage[aux.pixelId][0] = gMatData.dAlbedo[matId][0];
-    gImage[aux.pixelId][1] = gMatData.dAlbedo[matId][1];
-    gImage[aux.pixelId][2] = gMatData.dAlbedo[matId][2];
-    return;
+    ////// Write color to pixel
+    //Vector3f normalColor = (surface.normal + Vector3f(1.0f)) * 0.5f;
+    //gImage[aux.pixelId][0] = normalColor[0];
+    //gImage[aux.pixelId][1] = normalColor[1];
+    //gImage[aux.pixelId][2] = normalColor[2];
+    //return;
 
     assert(maxOutRay == 1);
     // Inputs
-    RayAuxBasic auxIn = aux;
-    RayReg rayIn = ray;
+    const RayAuxBasic& auxIn = aux;
+    const RayReg& rayIn = ray;
     // Outputs
     RayReg rayOut = {};
-    RayAuxBasic auxOut = {};
+    RayAuxBasic auxOut = auxIn;    
 
-    // Illumination Calculation
-    Vector3 rad = auxIn.totalRadiance;
-    auxOut.totalRadiance = rad * gMatData.dAlbedo[matId];
     // Material calculation is done
     // continue to the determination of
     // ray direction over path
@@ -94,18 +97,51 @@ inline void BasicPathTraceShade(// Output
     // Generate New Ray Directiion
     Vector2 xi(GPURand::ZeroOne<float>(rng),
                GPURand::ZeroOne<float>(rng));
-    Vector3 direction = CosineDist::HemiICDF(xi);
-
+    //Vector3 direction = CosineDist::HemiCosineCDF(xi);
+    Vector3 direction = CosineDist::HemiUniformCDF(xi);
+    direction.NormalizeSelf();
     // Direction vector is on surface space (hemisperical)
     // Convert it to normal oriented hemisphere
     QuatF q = QuatF::RotationBetweenZAxis(normal);
     direction = q.ApplyRotation(direction);
 
+    //printf("%f, %f\n", xi[0], xi[1]);
+    //printf("pos %f, %f, %f\n"
+    //       "dir %f, %f, %f\n",
+    //       position[0], position[1], position[2],
+    //       direction[0], direction[1], direction[2]);
+
+    // Cos Tetha
+    float nDotL = max(normal.Dot(direction), 0.0f);
+
+     // Illumination Calculation
+    auxOut.accumFactor = auxIn.accumFactor * nDotL * gMatData.dAlbedo[matId];
+
+    // TODO:
+    //if material is emissive directly write current contribution
+    
+    //// Dummy ray to global memory
+    //RayReg rDummy = {};
+    //rDummy.ray = {Zero3, Zero3};
+    //rDummy.tMin = INFINITY;
+    //rDummy.tMax = INFINITY;
+    //rDummy.Update(gOutRays, 0);
+    //gBoundaryMat[0] = HitKey::InvalidKey;
+    //// Write color to pixel
+    ////Vector3f color = (surface.normal + Vector3f(1.0f)) * 0.5f;
+    //Vector3f color = (direction + Vector3f(1.0f)) * 0.5f;
+    //gImage[aux.pixelId][0] = color[0];
+    //gImage[aux.pixelId][1] = color[1];
+    //gImage[aux.pixelId][2] = color[2];
+    //return;
+    
+
+
     // Advance slightly to prevent self intersection
-    position += direction * MathConstants::Epsilon;
+    position += normal * MathConstants::Epsilon;
 
     // Write Ray
-    rayOut.ray = {direction, position};
+    rayOut.ray = RayF(direction, position);
     rayOut.tMin = 0.001f;
     rayOut.tMax = INFINITY;
 
@@ -113,4 +149,6 @@ inline void BasicPathTraceShade(// Output
     // Write to global memory
     rayOut.Update(gOutRays, 0);
     gOutRayAux[0] = auxOut;
+    // We dont have any specific boundary mat for this
+    // dont set material key
 }

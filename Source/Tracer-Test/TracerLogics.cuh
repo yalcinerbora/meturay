@@ -23,7 +23,7 @@ inline void RayInitBasic(RayAuxBasic* gOutBasic,
 class TracerBasic : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
 {
     private:
-        static constexpr RayAuxBasic    initals = {Zero3f};
+        static constexpr RayAuxBasic    initals = {Vector3f(1.0f, 1.0f, 1.0f), 0, 0};
 
     protected:
     public:

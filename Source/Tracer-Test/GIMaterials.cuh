@@ -45,7 +45,7 @@ class BasicPathTraceMat final
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
-        uint8_t                 OutRayCount() const override { return 0; }
+        uint8_t                 OutRayCount() const override { return 1; }
 };
 
 class LightBoundaryMat final

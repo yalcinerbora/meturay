@@ -25,12 +25,12 @@ __device__ __host__
 inline Quaternion<T>::Quaternion(T angle, const Vector<3, T>& axis)
 {
     angle *= 0.5;
-    T sinAngle = std::sin(angle);
+    T sinAngle = sin(angle);
 
     vec[1] = axis[0] * sinAngle;
     vec[2] = axis[1] * sinAngle;
     vec[3] = axis[2] * sinAngle;
-    vec[0] = std::cos(angle);
+    vec[0] = cos(angle);
 }
 
 template<class T>
@@ -238,7 +238,7 @@ inline Vector<3, T> Quaternion<T>::ApplyRotation(const Vector<3, T>& vector) con
     Quaternion vectorQ(0.0f, vector[0], vector[1], vector[2]);
 
     Quaternion result((*this) * (vectorQ * qInv));
-    return Vector<3,T>(result[0], result[1], result[2]);
+    return Vector<3,T>(result[1], result[2], result[3]);
 }
 
 template<class T>
@@ -254,8 +254,8 @@ inline Quaternion<T> Quaternion<T>::SLerp(const Quaternion& start, const Quatern
 {
     T cosTetha = start.Dot(end);
     // SLerp
-    T angle = std::acos(cosTetha);
-    return (start * std::sin(angle * (1.0f - t)) + end * std::sin(angle * t)) / std::sin(angle);
+    T angle = acos(cosTetha);
+    return (start * sin(angle * (1.0f - t)) + end * sin(angle * t)) / sin(angle);
 }
 
 template<class T>
@@ -266,7 +266,7 @@ inline Quaternion<T> Quaternion<T>::RotationBetween(const Vector<3,T>& a, const 
     T aDotB = a.Dot(b);
     if(aCrossB != Vector<3, T>(static_cast<T>(0)))
         aCrossB.NormalizeSelf();
-    return Quaternion<T>(std::acos(aDotB), aCrossB);
+    return Quaternion<T>(acos(aDotB), aCrossB);
 }
 
 template<class T>
@@ -277,20 +277,26 @@ inline Quaternion<T> Quaternion<T>::RotationBetweenZAxis(const Vector<3, T>& b)
     T zDotD = b[2];
 
     // Half angle teorem
-    T sin = std::sqrt((1.0f - zDotD) * 0.5f);
-    T cos = std::sqrt((zDotD + 1.0f) * 0.5f);
+    T sin = sqrt((1.0f - zDotD) * 0.5f);
+    T cos = sqrt((zDotD + 1.0f) * 0.5f);
 
     zCrossD.NormalizeSelf();
     T x = zCrossD[0] * sin;
     T y = zCrossD[1] * sin;
     T z = zCrossD[2] * sin;
     T w = cos;
-    if(std::abs(zDotD + 1.0f) < MathConstants::Epsilon)
+    if(abs(zDotD + 1.0f) < MathConstants::Epsilon)
     {
+        // Define pi turn
         return Quaternion(static_cast<T>(MathConstants::Pi_d),
                           Vector<3,T>(0, 1, 0));
     }
-    return Quaternion(w, x, y, z);
+    else if(abs(zDotD - 1.0f) < MathConstants::Epsilon)
+    {
+        // Just turn identity
+        return Quaternion<T>(1, 0, 0, 0);
+    }
+    else return Quaternion(w, x, y, z);
 }
 
 template<class T>

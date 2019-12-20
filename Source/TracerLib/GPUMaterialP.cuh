@@ -177,7 +177,7 @@ void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
     CudaSystem::AsyncGridStrideKC_X
     (
         gpuId,
-        rngMem.SharedMemorySize(StaticThreadPerBlock1D),
+        0,
         rayCount,
         //
         KCMaterialShade<TLogic, MGroup, PGroup, SurfFunc>,

@@ -63,6 +63,15 @@ std::ostream& operator<<(std::ostream& stream, const Vector2f& v)
     return stream;
 }
 
+std::ostream& operator<<(std::ostream& stream, const Vector3f& v)
+{
+    stream << std::setw(0)
+        << v[0] << ", "
+        << v[1] << ", "
+        << v[2];
+    return stream;
+}
+
 std::ostream& operator<<(std::ostream& stream, const Vector4f& v)
 {
     stream << std::setw(0)

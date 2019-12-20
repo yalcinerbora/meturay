@@ -1,20 +1,9 @@
 #pragma once
 
 #include <cstdint>
-
-struct ConstRNGGMem
-{
-    const uint32_t* state;  
-};
+#include <curand_kernel.h>
 
 struct RNGGMem
 {
-    uint32_t* state;
-
-    constexpr operator ConstRNGGMem() const;
+    curandStateMRG32k3a_t* state;
 };
-
-constexpr RNGGMem::operator ConstRNGGMem() const
-{
-    return {state};
-}

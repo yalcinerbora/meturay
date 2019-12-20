@@ -45,9 +45,6 @@
     <ClCompile Include="..\..\..\Source\TracerLib\ImageMemory.cpp">
       <Filter>Memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\RNGMemory.cpp">
-      <Filter>Memory</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
@@ -266,6 +263,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cu">
       <Filter>Default Accelerators</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\RNGMemory.cu">
+      <Filter>Memory</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

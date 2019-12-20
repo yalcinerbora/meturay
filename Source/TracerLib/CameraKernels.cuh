@@ -43,8 +43,7 @@ __global__ void KCGenerateCameraRays(// Output
                                      // Data to initialize auxiliary base data
                                      const RayAuxData auxBaseData)
 {
-    extern __shared__ uint32_t sRandState[];
-    RandomGPU rng(gRNGStates.state, sRandState);
+    RandomGPU rng(gRNGStates.state);
 
     // Total work
     const uint32_t totalWorkCount = pixelCount[0] * samplePerLocation *
@@ -84,8 +83,8 @@ __global__ void KCGenerateCameraRays(// Output
         // Create random location over sample rectangle
         float dX = GPURand::ZeroOne<float>(rng);
         float dY = GPURand::ZeroOne<float>(rng);
-        //Vector2 randomOffset = Vector2(dX, dY);
-        Vector2 randomOffset = Vector2(0.5f);
+        Vector2 randomOffset = Vector2(dX, dY);
+        //Vector2 randomOffset = Vector2(0.5f);
 
         // Ray's world position over canvas
         Vector2 sampleDistance = Vector2(static_cast<float>(globalSampleId[0]),

@@ -41,9 +41,14 @@ inline BasicSurface BasicSurfaceFromTri(const GPUPrimitiveTriangle::PrimitiveDat
                                         const GPUPrimitiveTriangle::HitData& hData,
                                         PrimitiveId id)
 {
-    Vector3 n0 = pData.normalsV[id + 0];
-    Vector3 n1 = pData.normalsV[id + 1];
-    Vector3 n2 = pData.normalsV[id + 2];
+
+    uint64_t index0 = pData.indexList[id * 3 + 0];
+    uint64_t index1 = pData.indexList[id * 3 + 1];
+    uint64_t index2 = pData.indexList[id * 3 + 2];
+
+    Vector3 n0 = pData.normalsV[index0];
+    Vector3 n1 = pData.normalsV[index1];
+    Vector3 n2 = pData.normalsV[index2];
 
     Vector3 baryCoord = Vector3(hData[0],
                                 hData[1],
@@ -73,11 +78,11 @@ inline BasicSurface BasicSurfaceFromSphr(const GPUPrimitiveSphere::PrimitiveData
     float r = data[3];
 
     // Convert spherical hit to cartesian
-    Vector3 position = Vector3f(r * sin(hData[0]) * cos(hData[1]),
-                                r * sin(hData[0]) * sin(hData[1]),
-                                r * cos(hData[0]));
-
-    return {(position - center).Normalize()};
+    Vector3 normal = Vector3f(sin(hData[0]) * cos(hData[1]),
+                              sin(hData[0]) * sin(hData[1]),
+                              cos(hData[0]));
+   
+    return {normal};
 }
 
 __device__ __host__

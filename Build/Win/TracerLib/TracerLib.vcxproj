@@ -72,7 +72,7 @@
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\ImageMemory.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\RNGMemory.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\RNGMemory.cu" />
     <ClCompile Include="..\..\..\Source\TracerLib\SceneNodeJson.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\ScenePartitioner.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp" />

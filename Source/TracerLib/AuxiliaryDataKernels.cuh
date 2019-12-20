@@ -28,8 +28,7 @@ __global__ void KCFinalizeRay(// Output
 {
     // Pre-grid stride loop
     // RNG is allocated for each SM (not for each thread)
-    extern __shared__ uint32_t sRNGStates[];
-    RandomGPU rng(gRNGStates.state, sRNGStates);
+    RandomGPU rng(gRNGStates.state);
 
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;

@@ -53,10 +53,8 @@ uint32_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
 
     // Call multi-device
     const uint32_t TPB = StaticThreadPerBlock1D;
-    const uint32_t shMemSize = rngMem.SharedMemorySize(TPB);
-
     // GPUSplits
-    const auto splits = CudaSystem::GridStrideMultiGPUSplit(totalRayCount, TPB, shMemSize,
+    const auto splits = CudaSystem::GridStrideMultiGPUSplit(totalRayCount, TPB, 0,
                                                             KCGenerateCameraRays<RayAuxData, AuxFunc>);
 
 
@@ -92,7 +90,7 @@ uint32_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
         // Kernel Call
         CudaSystem::AsyncGridStrideKC_X
         (
-            gpuId, shMemSize, localWorkCount,
+            gpuId, 0, localWorkCount,
             KCGenerateCameraRays<RayAuxData, AuxFunc>,
             // Args
             // Inputs
