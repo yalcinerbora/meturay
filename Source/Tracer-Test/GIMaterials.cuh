@@ -1,7 +1,5 @@
 #pragma once
 
-#include "RayLib/CosineDistribution.h"
-
 #include "TracerLib/GPUMaterialP.cuh"
 
 #include "SurfaceStructs.h"

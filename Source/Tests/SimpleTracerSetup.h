@@ -158,6 +158,7 @@ class SimpleTracerSetup
 {
 
     private:
+        static constexpr Vector2i           SCREEN_RESOLUTION = {1024, 1024};
         static constexpr Vector2i           IMAGE_RESOLUTION = {256, 256};
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
@@ -304,7 +305,7 @@ bool SimpleTracerSetup::Init()
     visorOpts.eventBufferSize = 128;
     visorOpts.fpsLimit = 24.0f;
 
-    visorOpts.wSize = Vector2i{1024, 1024};
+    visorOpts.wSize = SCREEN_RESOLUTION;
     visorOpts.wFormat = IMAGE_PIXEL_FORMAT;
 
 

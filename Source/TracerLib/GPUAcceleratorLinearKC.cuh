@@ -160,7 +160,7 @@ static void KCIntersectLinear(// O
             //       accId,
             //       leaf.matId.value,
             //       accRange[0], accRange[1]);
-            HitResult result = PGroup::HitFunc(// Ooutput                                            
+            HitResult result = PGroup::HitFunc(// Output                                            
                                                materialKey,
                                                primitiveId,
                                                hit,

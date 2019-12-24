@@ -7,7 +7,7 @@
 #include "Constants.h"
 #include "Vector.h"
 
-namespace CosineDist
+namespace HemiDistribution
 {
     // Hemi
     template <class T, class = FloatEnable<T>>

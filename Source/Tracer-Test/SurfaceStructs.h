@@ -78,10 +78,9 @@ inline BasicSurface BasicSurfaceFromSphr(const GPUPrimitiveSphere::PrimitiveData
     float r = data[3];
 
     // Convert spherical hit to cartesian
-    Vector3 normal = Vector3f(sin(hData[0]) * cos(hData[1]),
+    Vector3 normal = Vector3(sin(hData[0]) * cos(hData[1]),
                               sin(hData[0]) * sin(hData[1]),
-                              cos(hData[0]));
-   
+                              cos(hData[0]));   
     return {normal};
 }
 

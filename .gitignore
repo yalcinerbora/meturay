@@ -361,4 +361,8 @@ WorkingDir/*
 !WorkingDir/Shaders/*.geom
 !WorkingDir/Shaders/*.vert
 
+# Except Test Scenes
+!WorkingDir/TestScenes/
+!WorkingDir/TestScenes/*.json
+
 

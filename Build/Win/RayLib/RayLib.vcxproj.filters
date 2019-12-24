@@ -211,6 +211,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\BitManipulation.h">
       <Filter>Utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\HemiDistribution.h">
+      <Filter>Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

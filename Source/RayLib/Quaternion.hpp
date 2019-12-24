@@ -273,25 +273,25 @@ template<class T>
 __device__ __host__
 inline Quaternion<T> Quaternion<T>::RotationBetweenZAxis(const Vector<3, T>& b)
 {
-    Vector<3, T> zCrossD(-b[1], b[0], 0.0f);
+    Vector<3, T> zCrossD(-b[1], b[0], 0);
     T zDotD = b[2];
 
     // Half angle teorem
-    T sin = sqrt((1.0f - zDotD) * 0.5f);
-    T cos = sqrt((zDotD + 1.0f) * 0.5f);
+    T sin = sqrt((1 - zDotD) * static_cast<T>(0.5));
+    T cos = sqrt((zDotD + 1) * static_cast<T>(0.5));
 
     zCrossD.NormalizeSelf();
     T x = zCrossD[0] * sin;
     T y = zCrossD[1] * sin;
     T z = zCrossD[2] * sin;
     T w = cos;
-    if(abs(zDotD + 1.0f) < MathConstants::Epsilon)
+    if(abs(zDotD + 1) < MathConstants::Epsilon)
     {
         // Define pi turn
         return Quaternion(static_cast<T>(MathConstants::Pi_d),
                           Vector<3,T>(0, 1, 0));
     }
-    else if(abs(zDotD - 1.0f) < MathConstants::Epsilon)
+    else if(abs(zDotD - 1) < MathConstants::Epsilon)
     {
         // Just turn identity
         return Quaternion<T>(1, 0, 0, 0);

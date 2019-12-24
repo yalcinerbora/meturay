@@ -68,13 +68,51 @@ inline __device__ RandomGPU::operator curandStateMRG32k3a_t*()
 }
 
 // Pseduo Uniform Generation
-namespace GPURand
+namespace GPUDistribution
 {
     template <class T, typename = FloatEnable<T>>
-    __device__
-    inline T ZeroOne(RandomGPU& r)
+    __device__ T Uniform(RandomGPU& r)
     {
-        return static_cast<T>(curand_uniform_double(r));
+        return static_cast<T>(curand_uniform(r));
     }
+
+    template <class T, typename = FloatEnable<T>>
+    __device__ T Uniform(RandomGPU& r, T min, T max)
+    {
+        return static_cast<T>(curand_uniform(r)) * (min - max) + min;
+    }
+
+    template <class T, typename = FloatEnable<T>>
+    __device__ T Normal(RandomGPU& r);
+
+    template <class T, typename = FloatEnable<T>>
+    __device__ T Normal(RandomGPU& r, T mean, T stdDev);
 }
 
+template<>
+__device__
+inline float GPUDistribution::Normal(RandomGPU& r)
+{
+    return curand_normal(r);
+}
+
+template<>
+__device__
+inline double GPUDistribution::Normal(RandomGPU& r)
+{
+    return curand_normal_double(r);
+}
+
+template<>
+__device__
+inline float GPUDistribution::Normal(RandomGPU& r, float mean, float stdDev)
+{
+    return curand_normal(r) * stdDev + mean;
+}
+
+template<>
+__device__
+inline double GPUDistribution::Normal(RandomGPU& r, double mean, double stdDev)
+{
+    return curand_normal_double(r) * stdDev + mean;
+}

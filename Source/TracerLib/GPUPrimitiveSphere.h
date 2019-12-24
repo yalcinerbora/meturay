@@ -61,8 +61,10 @@ inline HitResult SphereClosestHit(// Output
         newPrimitive = leaf.primitiveId;
 
         // Gen Spherical Coords (R can be fetched using primitiveId)
+        // Clamp acos input for singularity
         Vector3 relativeCoord = pos - center;
-        float tetha = acos(relativeCoord[2] / radius);
+        float tethaCos = HybridFuncs::Clamp(relativeCoord[2] / radius, -1.0f, 1.0f);
+        float tetha = acos(tethaCos);
         float phi = atan2(relativeCoord[1], relativeCoord[0]);
         newHit = Vector2(tetha, phi);
     }

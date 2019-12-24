@@ -81,8 +81,8 @@ __global__ void KCGenerateCameraRays(// Output
         Vector2i globalPixelId = pixelStart + (threadId2d / samplePerLocation);
 
         // Create random location over sample rectangle
-        float dX = GPURand::ZeroOne<float>(rng);
-        float dY = GPURand::ZeroOne<float>(rng);
+        float dX = GPUDistribution::Uniform<float>(rng);
+        float dY = GPUDistribution::Uniform<float>(rng);
         Vector2 randomOffset = Vector2(dX, dY);
         //Vector2 randomOffset = Vector2(0.5f);
 

@@ -84,7 +84,7 @@ namespace MathConstants
     static constexpr double DegToRadCoef_d = Pi_d / 180.0;
     static constexpr double RadToDegCoef_d = 180.0 / Pi_d;
 
-    static constexpr double Epsilon_d = 0.0001;
+    static constexpr double Epsilon_d = 1.0e-6;
 
     static constexpr float Pi = static_cast<float>(Pi_d);
     static constexpr float PiSqr = static_cast<float>(PiSqr_d);

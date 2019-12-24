@@ -1,12 +1,19 @@
 #include "RNGMemory.h"
 #include "CudaConstants.h"
+
 #include <random>
 #include <curand_kernel.h>
+#include <execution>
 
-__global__ void KCInitRNGStates(uint32_t seed, curandStateMRG32k3a_t* state)
+__global__ void KCInitRNGStates(const uint32_t* gSeeds, curandStateMRG32k3a_t* gStates,
+                                size_t totalCount)
 {
-    int globalId = threadIdx.x + blockIdx.x * blockDim.x;
-    curand_init(seed, globalId, 0, &state[globalId]);
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < totalCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        curand_init(gSeeds[threadId], threadId, 0, &gStates[threadId]);
+    }
 }
 
 RNGMemory::RNGMemory(uint32_t seed)
@@ -24,6 +31,15 @@ RNGMemory::RNGMemory(uint32_t seed)
         totalCount += BlocksPerSM * gpu.SMCount() * StaticThreadPerBlock1D;
     }
 
+    // Do Temp Alloc for a MT19937 seeds
+    // ang generate
+    DeviceMemory seeds(totalCount * sizeof(uint32_t));
+    std::for_each(static_cast<uint32_t*>(seeds), 
+                  static_cast<uint32_t*>(seeds) + totalCount,
+                  [&](uint32_t& t) { t = rng(); });
+
+    const uint32_t* d_seeds = static_cast<const uint32_t*>(seeds);
+
     // Actual Allocation
     size_t totalSize = totalCount * sizeof(curandStateMRG32k3a_t);
     memRandom = std::move(DeviceMemory(totalSize));
@@ -40,8 +56,9 @@ RNGMemory::RNGMemory(uint32_t seed)
     CudaSystem::GridStrideKC_X(0, 0, 0, totalCount,
                                //
                                KCInitRNGStates,
-                               seed,
-                               d_ptr);
+                               d_seeds,
+                               d_ptr,
+                               totalCount);
 }
 
 RNGGMem RNGMemory::RNGData(uint32_t gpuId)

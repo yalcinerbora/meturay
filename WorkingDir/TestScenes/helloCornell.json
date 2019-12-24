@@ -1,0 +1,124 @@
+{
+	"Cameras": [
+    {
+		"apertureSize": 1.0,
+	  	"focusDistance": 21,
+		"fov": [53.13, 53.13],
+		"gaze": [0.0, 0.55, 0.0],
+		"planes": [0.1, 10.0],
+		"position": [0.0, 0.55, 1.8],
+		"up": [0.0, 1.0, 0.0]
+    }],
+
+	"BaseAccelerator": "Linear",
+	"BaseBoundaryMaterial": 0,
+
+	"Lights": [],
+
+	"Transforms":[
+	{
+		"id": 0,
+		"type": "matrix4x4",
+		"data": [ 1, 0, 0, 0,
+			      0, 1, 0, 0,
+			      0, 0, 1, 0,
+			      0, 0, 0, 1]
+	}],
+
+	"Materials":[
+	{
+		// General Boundary Material
+		"id": 0,
+        "type": "LightBoundary",
+		"albedo" : [0, 0, 0],
+		"irradiance" : [0.95, 0.95, 0.95]
+    },
+    {
+		// Light Boundary Material
+		"id": 1,
+		"type": "LightBoundary",
+		"albedo" : [1, 1, 1],
+		"irradiance" : [40, 40, 40]
+    },
+	{
+		// Red Simple Material
+		"id": 2,
+		"type": "BasicPathTrace",
+		"albedo" : [0.6300, 0.0650, 0.0500]
+    },
+    {
+		// Green Simple Material
+		"id": 3,
+		"type": "BasicPathTrace",
+		"albedo" : [0.161, 0.133, 0.427]
+    },
+    {
+		// Gray Simple Material
+		"id": 4,
+		"type": "BasicPathTrace",
+		"albedo" : [0.5, 0.5, 0.5]
+	}],
+
+	"Primitives":[
+	{
+		// Sphere Back
+		"id": 0,
+		"type": "Sphere",
+		"name": ".nodeSphere",
+		"position": [-0.186, 0.228, -0.093],
+		"radius": 0.175
+    },
+    {
+		// Sphere Front
+		"id": 1,
+		"type": "Sphere",
+		"name": ".nodeSphere",
+		"position": [0.212, 0.228, 0.301],
+		"radius": 0.175
+    },
+    {
+		// Object Reading (inner index i top down order of meshes)
+		"id": [2, 3, 4, 5],
+		"type": "Triangle",
+        "name": "../Surfaces/cornell_box_shell.obj",
+		"tag": "assimp_",
+		"innerIndex": [0, 1, 2, 3]
+	},
+	{
+		"id": 6,
+		"type": "Triangle",
+        "name": "../Surfaces/cornell_box_backface.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	}],
+	"Surfaces": [
+	{
+		// Sphere Back
+		"transform": 0,
+		"accelerator": "Linear",
+		"material": 4,//3,
+        "primitive": 0
+	},
+	{
+		// Sphere Front
+		"transform": 0,
+		"accelerator": "Linear",
+		"material": 4,//2,
+        "primitive": 1
+	},
+	// Cornell Box
+    {
+		"transform": 0,
+		"accelerator": "Linear",
+		"primitive": [2, 3, 4, 5],
+		"material": [4, 3, 1, 2]
+	}
+	// Cornell Box Back Face
+	// {
+	// 	"transform": 0,
+	// 	"accelerator": "Linear",
+	// 	"primitive": 6,
+	// 	"material": 4
+	// }
+]
+}

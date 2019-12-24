@@ -1,0 +1,95 @@
+{
+  "Cameras": [
+    {
+      "apertureSize": 1.0,
+	  "focusDistance": 21,
+      "fov": [45, 45],
+      "gaze": [0.0, 5.0, 0.0],
+      "planes": [0.1, 100.0],
+      "position": [0.0, 5.0, 10.0],
+      "up": [0.0, 1.0, 0.0]
+    },
+	"_movingCamera.json"],
+
+  "Lights": [
+	"_lightMoving.json",
+	{
+		"type": "point",
+		"matId": 0
+	},
+	{
+		"type": "directional",
+		"matId": 1
+	},
+	{
+		"type": "spot",
+		"matId": 2
+	},
+	{
+		"type": "rectangular",
+		"matId": 3
+	}],
+
+  "Transforms":[
+	"_transformAnimate.json",
+	{
+		"id": "0",
+		"type": "matrix4x4",
+		"count": 1,
+		"data": [ 1, 0, 0, 0,
+			      0, 1, 0, 0,
+			      0, 0, 1, 0,
+			      0, 0, 0, 1]
+	},
+	{
+		"id": "1",
+		"type": "transformRotateScale",
+		"count": 1,
+		"data":  [[ 0, 0, 0],
+			     [ 0, 0, 0],
+				 [ 1, 1, 1]]
+	}],
+
+  "Materials":[
+	{
+		"id": 0,
+		"type": "ConstantAlbedo",
+		"albedo": [1, 1, 1]
+	},
+	{
+		"id": 1,
+		"type": "ConstantAlbedo",
+		"albedo": [1, 0, 0]
+	}],
+
+  "BaseAccelerator": "Linear",
+
+  "Primitives":[
+	{
+		"id": 0,
+		"type": "triangle",
+		"name": "example.gfg",
+		"internalId": 1,
+		"materialSegmentIndex": 1
+	},
+	{
+		"id": 1,
+		"type": "sphere",
+		"name": "example.obj",
+		"meshId": 1
+	}],
+
+  "Surfaces": [
+	{
+		"transform": 0,
+		"accelerator": "Linear",
+		"material": 0,
+		"primitive": 0
+	},
+	{
+		"transform": 0,
+		"accelerator": "BVH",
+		"material": [0, 1],
+		"primitive": [0, 1]
+	}]
+}

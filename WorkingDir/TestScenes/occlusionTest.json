@@ -1,0 +1,109 @@
+{
+	"Cameras": [
+    {
+		"apertureSize": 1.0,
+	  	"focusDistance": 21,
+		"fov": [53.13, 53.13],
+		"gaze": [0.0, 0.55, 0.0],
+		"planes": [0.1, 10.0],
+		"position": [0.0, 0.55, 2.2],
+		"up": [0.0, 1.0, 0.0]
+    }],
+
+	"BaseAccelerator": "Linear",
+	"BaseBoundaryMaterial": 0,
+
+	"Lights": [],
+
+	"Transforms":[
+	{
+		"id": 0,
+		"type": "matrix4x4",
+		"data": [ 1, 0, 0, 0,
+			      0, 1, 0, 0,
+			      0, 0, 1, 0,
+			      0, 0, 0, 1]
+	}],
+
+	"Materials":[
+	{
+		// General Boundary Material
+		"id": 0,
+        "type": "BasicMat",
+        "albedo" : [0, 0, 0]
+    },
+    {
+		// Light Boundary Material
+		"id": 1,
+		"type": "LightBoundary",
+		"albedo" : [1, 1, 1],
+		"irradiance" : [1, 1, 1]
+    },
+	{
+		// Red Simple Material
+		"id": 2,
+		"type": "BasicMat",
+		"albedo" : [1, 0, 0]
+    },
+    {
+		// Green Simple Material
+		"id": 3,
+		"type": "BasicMat",
+		"albedo" : [0, 1, 0]
+    },
+    {
+		// Gray Simple Material
+		"id": 4,
+		"type": "BasicPathTrace",
+		"albedo" : [0.5, 0.5, 0.5]
+	}],
+
+	"Primitives":[
+	{
+		// Sphere Back
+		"id": 0,
+		"type": "Sphere",
+		"name": ".nodeSphere",
+		"position": [-0.186, 0.55, -0.093],
+		"radius": 0.175
+    },
+    {
+		// Sphere Front
+		"id": 1,
+		"type": "Sphere",
+		"name": ".nodeSphere",
+		"position": [0.212, 0.55, 0.301],
+		"radius": 0.175
+    },
+    {
+		// Object Reading (inner index i top down order of meshes)
+		"id": 2,
+		"type": "Triangle",
+        "name": "../Surfaces/simple_plane.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	}],
+	"Surfaces": [
+	{
+		// Sphere Back
+		"transform": 0,
+		"accelerator": "Linear",
+		"material": 3,
+        "primitive": 0
+	},
+	{
+		// Sphere Front
+		"transform": 0,
+		"accelerator": "Linear",
+		"material": 2,
+        "primitive": 1
+	},
+	// Plane
+    {
+		"transform": 0,
+		"accelerator": "Linear",
+		"primitive": 2,
+		"material": 4
+	}
+]
+}

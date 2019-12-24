@@ -8,7 +8,7 @@ class RandomGPU;
 #include "SurfaceStructs.h"
 
 #include "RayLib/Constants.h"
-#include "RayLib/CosineDistribution.h"
+#include "RayLib/HemiDistribution.h"
 
 #include <cuda_runtime.h>
 
@@ -95,10 +95,10 @@ inline void BasicPathTraceShade(// Output
     Vector3 position = rayIn.ray.AdvancedPos(rayIn.tMax);
     Vector3 normal = surface.normal;
     // Generate New Ray Directiion
-    Vector2 xi(GPURand::ZeroOne<float>(rng),
-               GPURand::ZeroOne<float>(rng));
+    Vector2 xi(GPUDistribution::Uniform<float>(rng),
+               GPUDistribution::Uniform<float>(rng));
     //Vector3 direction = CosineDist::HemiCosineCDF(xi);
-    Vector3 direction = CosineDist::HemiUniformCDF(xi);
+    Vector3 direction = HemiDistribution::HemiUniformCDF(xi);
     direction.NormalizeSelf();
     // Direction vector is on surface space (hemisperical)
     // Convert it to normal oriented hemisphere
@@ -128,15 +128,13 @@ inline void BasicPathTraceShade(// Output
     //rDummy.Update(gOutRays, 0);
     //gBoundaryMat[0] = HitKey::InvalidKey;
     //// Write color to pixel
-    ////Vector3f color = (surface.normal + Vector3f(1.0f)) * 0.5f;
-    //Vector3f color = (direction + Vector3f(1.0f)) * 0.5f;
+    //Vector3f color = (surface.normal + Vector3f(1.0f)) * 0.5f;
+    ////Vector3f color = (direction + Vector3f(1.0f)) * 0.5f;
     //gImage[aux.pixelId][0] = color[0];
     //gImage[aux.pixelId][1] = color[1];
     //gImage[aux.pixelId][2] = color[2];
     //return;
     
-
-
     // Advance slightly to prevent self intersection
     position += normal * MathConstants::Epsilon;
 
