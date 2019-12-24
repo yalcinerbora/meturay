@@ -16,15 +16,20 @@ Used by tracers
 class ImageMemory
 {
     private:
-        DeviceMemory        memory;
-        PixelFormat         format;
-        int                 pixelSize;
+        static constexpr size_t     AlignByteCount = 16;
 
-        Vector2i            segmentSize;
-        Vector2i            segmentOffset;
-        Vector2i            resolution;
+        DeviceMemory                memory;
+        PixelFormat                 format;
+        int                         pixelSize;
 
-        static int          PixelFormatToSize(PixelFormat);
+        Vector2i                    segmentSize;
+        Vector2i                    segmentOffset;
+        Vector2i                    resolution;
+
+        static int                  PixelFormatToSize(PixelFormat);
+
+        void*                       dPixels;
+        uint32_t*                   dSampleCounts;
 
     protected:
     public:
@@ -56,6 +61,7 @@ class ImageMemory
         PixelFormat         Format() const;
         int                 PixelSize() const;
 
+        //.......
         template <class T>
         T*                  GMem();
         template <class T>

@@ -60,10 +60,22 @@ void ImageMemory::Reportion(Vector2i start,
     segmentOffset = start;
     segmentSize = end - start;
 
-    size_t linearSize = segmentSize[0] * segmentSize[1] * PixelFormatToSize(format);
-    if(linearSize != 0)
+    size_t pixelCount = static_cast<size_t>(segmentSize[0]) * segmentSize[1];
+    size_t sizeOfPixels = PixelFormatToSize(format) * pixelCount;
+    sizeOfPixels = AlignByteCount * ((sizeOfPixels + (AlignByteCount - 1)) / AlignByteCount);
+    size_t sizeOfPixelCounts = sizeof(uint32_t) * pixelCount;
+
+    if(pixelCount != 0)
     {
-        memory = std::move(DeviceMemory(linearSize));
+        memory = std::move(DeviceMemory(sizeOfPixels + sizeOfPixelCounts));
+        
+        size_t offset = 0;
+        std::uint8_t* dMem = static_cast<uint8_t*>(memory);
+        dPixels = dMem + offset;
+        offset += sizeOfPixels;
+        dSampleCounts = reinterpret_cast<uint32_t*>(dMem + offset);
+        assert(offset == (sizeOfPixels + sizeOfPixelCounts));
+
         Reset();
     }
 }

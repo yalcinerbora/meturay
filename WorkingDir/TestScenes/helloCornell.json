@@ -92,33 +92,33 @@
 		"innerIndex": 0
 	}],
 	"Surfaces": [
-	{
-		// Sphere Back
-		"transform": 0,
-		"accelerator": "Linear",
-		"material": 4,//3,
-        "primitive": 0
-	},
-	{
-		// Sphere Front
-		"transform": 0,
-		"accelerator": "Linear",
-		"material": 4,//2,
-        "primitive": 1
-	},
+	// {
+	// 	// Sphere Back
+	// 	"transform": 0,
+	// 	"accelerator": "Linear",
+	// 	"material": 4,//3,
+    //     "primitive": 0
+	// },
+	// {
+	// 	// Sphere Front
+	// 	"transform": 0,
+	// 	"accelerator": "Linear",
+	// 	"material": 4,//2,
+    //     "primitive": 1
+	// },
 	// Cornell Box
     {
 		"transform": 0,
 		"accelerator": "Linear",
 		"primitive": [2, 3, 4, 5],
 		"material": [4, 3, 1, 2]
-	}
+	},
 	// Cornell Box Back Face
-	// {
-	// 	"transform": 0,
-	// 	"accelerator": "Linear",
-	// 	"primitive": 6,
-	// 	"material": 4
-	// }
-]
+	{
+		"transform": 0,
+		"accelerator": "Linear",
+		"primitive": 6,
+		"material": 4
+	}
+	]
 }
