@@ -171,10 +171,15 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             std::for_each(std::execution::par_unseq,
                           reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndex * IndexSize),
                           reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndexNext * IndexSize),
-                          [&](uint64_t& t) { t += offsetIndex; });
+                          [&](uint64_t& t) { t += offsetVertex; });
         }
-            
+        i++;
     }
+
+    std::vector<uint64_t>asd(totalIndexCount);
+    std::copy(reinterpret_cast<uint64_t*>(indexCPU.data()),
+              reinterpret_cast<uint64_t*>(indexCPU.data()) + totalIndexCount,
+              asd.data());
 
     // All loaded to CPU, copy to GPU
     // Alloc

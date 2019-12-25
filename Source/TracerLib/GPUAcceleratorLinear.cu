@@ -48,22 +48,22 @@ void GPUBaseAcceleratorLinear::Hit(// Output
         int gpuIndex = g.DeviceId();
         const uint32_t workCount = static_cast<uint32_t>(splits[i]);
 
-        CudaSystem::AsyncGridStrideKC_X(gpuIndex, 0,
-                                        workCount,
-                                        //
-                                        KCIntersectBaseLinear,
-                                        // Output
-                                        dTransformIds,
-                                        dAcceleratorKeys + offset,
-                                        // I-O
-                                        dPrevLocList,
-                                        // Input
-                                        dRays,
-                                        dRayIds + offset,
-                                        workCount,
-                                        // Constants
-                                        dLeafs,
-                                        leafCount);
+        CudaSystem::GridStrideKC_X(gpuIndex, 0, (cudaStream_t)0,
+                                   workCount,
+                                   //
+                                   KCIntersectBaseLinear,
+                                   // Output
+                                   dTransformIds,
+                                   dAcceleratorKeys + offset,
+                                   // I-O
+                                   dPrevLocList,
+                                   // Input
+                                   dRays,
+                                   dRayIds + offset,
+                                   workCount,
+                                   // Constants
+                                   dLeafs,
+                                   leafCount);
     }
 }
 

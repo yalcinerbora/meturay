@@ -144,7 +144,7 @@ static void KCIntersectLinear(// O
             TransformStruct s = gInverseTransforms[transformId];
             ray.ray.TransformSelf(s);
         }   
-                    
+            
         // Hit determination
         bool hitModified = false;
         HitKey materialKey;
@@ -153,6 +153,7 @@ static void KCIntersectLinear(// O
         // Linear check over array
         for(uint32_t i = 0; i < endCount; i++)
         {
+            
             // Get Leaf Data and
             // Do acceptance check
             const LeafData leaf = gLeaf[i];
@@ -160,6 +161,7 @@ static void KCIntersectLinear(// O
             //       accId,
             //       leaf.matId.value,
             //       accRange[0], accRange[1]);
+
             HitResult result = PGroup::HitFunc(// Output                                            
                                                materialKey,
                                                primitiveId,

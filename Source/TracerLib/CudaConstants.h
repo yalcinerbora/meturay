@@ -53,7 +53,7 @@ class CudaGPU
             mutable int                     currentIndex = 0;
 
             // Constructors
-                                            WorkGroup();
+                                            WorkGroup(int deviceId);
                                             WorkGroup(const WorkGroup&) = delete;
                                             WorkGroup(WorkGroup&&);
             WorkGroup&                      operator=(const WorkGroup&) = delete;
@@ -68,9 +68,9 @@ class CudaGPU
         // Generated Data
         GPUTier                     tier;
         //
-        WorkGroup<8>                smallWorkList;
-        WorkGroup<4>                mediumWorkList;
-        WorkGroup<2>                largeWorkList;
+        WorkGroup<4>                smallWorkList;
+        //WorkGroup<4>                mediumWorkList;
+        //WorkGroup<2>                largeWorkList;
 
     protected:
     public:
@@ -130,8 +130,6 @@ class CudaSystem
         static CudaError                    Initialize();
 
         static CudaError                    SystemStatus();
-
-
 
         // Classic GPU Calls
         // Create just enough blocks according to work size
@@ -207,9 +205,10 @@ class CudaSystem
 using SystemGPUs = std::vector<CudaGPU>;
 
 template<int Count>
-CudaGPU::WorkGroup<Count>::WorkGroup()
+CudaGPU::WorkGroup<Count>::WorkGroup(int deviceId)
     : currentIndex(0)
 {
+    CUDA_CHECK(cudaSetDevice(deviceId))
     for(int i = 0; i < Count; i++)
     {
         CUDA_CHECK(cudaStreamCreate(&works[i]));
@@ -304,7 +303,7 @@ inline void CudaSystem::GridStrideKC_X(int gpuIndex,
                                                    threadCount, workCount, &f);
 
     // Full potential GPU Call
-    CUDA_CHECK(cudaSetDevice(gpuIndex));
+   // CUDA_CHECK(cudaSetDevice(gpuIndex));
     uint32_t blockSize = StaticThreadPerBlock1D;
     f<<<blockCount, blockSize, sharedMemSize, stream>>> (args...);
     CUDA_KERNEL_CHECK();
@@ -342,7 +341,7 @@ __host__ void CudaSystem::AsyncGridStrideKC_X(int gpuIndex,
                                                         threadCount, workCount, &f);
     cudaStream_t stream = GPUList()[gpuIndex].DetermineStream(requiredSMCount);
 
-    CUDA_CHECK(cudaSetDevice(gpuIndex));
+   // CUDA_CHECK(cudaSetDevice(gpuIndex));
     uint32_t blockSize = StaticThreadPerBlock1D;
     f<<<requiredSMCount, blockSize, sharedMemSize, stream>>>(args...);
     CUDA_KERNEL_CHECK();

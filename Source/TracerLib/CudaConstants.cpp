@@ -2,6 +2,7 @@
 
 CudaGPU::CudaGPU(int deviceId)
     : deviceId(deviceId)
+    , smallWorkList(deviceId)
 {
     CUDA_CHECK(cudaGetDeviceProperties(&props, deviceId));
     tier = DetermineGPUTier(props);
@@ -71,11 +72,11 @@ uint32_t CudaGPU::RecommendedBlockCountPerSM(void* kernelFunc,
 
 cudaStream_t CudaGPU::DetermineStream(uint32_t requiredSMCount) const
 {
-    if(requiredSMCount >= (SMCount() / 2))
-        return largeWorkList.UseGroup();
-    else if(requiredSMCount >= (SMCount() / 4))
-        return mediumWorkList.UseGroup();
-    else// if(requiredSMCount >= (SMCount() / 8))
+    //if(requiredSMCount >= (SMCount() / 2))
+    //    return largeWorkList.UseGroup();
+    //else if(requiredSMCount >= (SMCount() / 4))
+    //    return mediumWorkList.UseGroup();
+    //else// if(requiredSMCount >= (SMCount() / 8))
         return smallWorkList.UseGroup();
 }
 
@@ -110,6 +111,11 @@ CudaSystem::CudaError CudaSystem::Initialize()
             i = systemGPUs.erase(i);
     }
     return OK;
+}
+
+CudaSystem::CudaError CudaSystem::Initialize(std::vector<CudaGPU>& gpus)
+{
+    systemGPUs = gpus;
 }
 
 CudaSystem::CudaError CudaSystem::SystemStatus()

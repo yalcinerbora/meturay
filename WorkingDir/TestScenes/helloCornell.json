@@ -29,16 +29,16 @@
 	{
 		// General Boundary Material
 		"id": 0,
-        "type": "LightBoundary",
-		"albedo" : [0, 0, 0],
-		"irradiance" : [0.95, 0.95, 0.95]
+        "type": "BasicMat",
+		"albedo" : [0, 0, 0]
+		//"irradiance" : [0.95, 0.95, 0.95]
     },
     {
 		// Light Boundary Material
 		"id": 1,
 		"type": "LightBoundary",
-		"albedo" : [1, 1, 1],
-		"irradiance" : [40, 40, 40]
+		//"albedo" : [1, 1, 1],
+		"irradiance" : [1, 1, 1]
     },
 	{
 		// Red Simple Material
@@ -92,20 +92,20 @@
 		"innerIndex": 0
 	}],
 	"Surfaces": [
-	// {
-	// 	// Sphere Back
-	// 	"transform": 0,
-	// 	"accelerator": "Linear",
-	// 	"material": 4,//3,
-    //     "primitive": 0
-	// },
-	// {
-	// 	// Sphere Front
-	// 	"transform": 0,
-	// 	"accelerator": "Linear",
-	// 	"material": 4,//2,
-    //     "primitive": 1
-	// },
+	{
+		// Sphere Back
+		"transform": 0,
+		"accelerator": "Linear",
+		"material": 4,//3,
+        "primitive": 0
+	},
+	{
+		// Sphere Front
+		"transform": 0,
+		"accelerator": "Linear",
+		"material": 4,//2,
+        "primitive": 1
+	},
 	// Cornell Box
     {
 		"transform": 0,

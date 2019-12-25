@@ -60,7 +60,19 @@
     {
 		"transform": 0,
 		"accelerator": "Linear",
-		"primitive": [0, 1, 2],
-		"material": [2, 2, 1]
+		"primitive": 0,
+		"material": 2
+	},
+    {
+		"transform": 0,
+		"accelerator": "Linear",
+		"primitive": 1,
+		"material": 2
+	},
+    {
+		"transform": 0,
+		"accelerator": "Linear",
+		"primitive": 2,
+		"material": 1
 	}]
 }

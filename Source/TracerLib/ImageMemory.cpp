@@ -74,6 +74,7 @@ void ImageMemory::Reportion(Vector2i start,
         dPixels = dMem + offset;
         offset += sizeOfPixels;
         dSampleCounts = reinterpret_cast<uint32_t*>(dMem + offset);
+        offset += sizeOfPixelCounts;
         assert(offset == (sizeOfPixels + sizeOfPixelCounts));
 
         Reset();

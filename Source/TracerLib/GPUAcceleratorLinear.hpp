@@ -114,7 +114,7 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerators()
     // TODO: make this a single KC
     for(const auto& id : idLookup)
     {
-        ConstructAccelerator(id.second);
+        ConstructAccelerator(id.first);
     }
 }
 
@@ -124,7 +124,7 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
     using PrimitiveData = typename PGroup::PrimitiveData;
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
 
-    const uint32_t index = idLookup[surface];
+    const uint32_t index = idLookup.at(surface);
     //const Vector2ul& accelRange = acceleratorRanges[index];
     const PrimitiveRangeList& rangeList = primitiveRanges[index];
     const HitKeyList& hitList = primitiveMaterialKeys[index];

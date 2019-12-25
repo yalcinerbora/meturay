@@ -158,8 +158,8 @@ class SimpleTracerSetup
 {
 
     private:
-        static constexpr Vector2i           SCREEN_RESOLUTION = {1024, 1024};
-        static constexpr Vector2i           IMAGE_RESOLUTION = {256, 256};
+        static constexpr Vector2i           SCREEN_RESOLUTION = {800, 800};
+        static constexpr Vector2i           IMAGE_RESOLUTION = {1024, 1024};
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
 
