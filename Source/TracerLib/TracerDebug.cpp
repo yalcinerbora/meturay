@@ -15,7 +15,7 @@ namespace Detail
 void Debug::Detail::OutputHitPairs(std::ostream& s, const RayId* ids, const HitKey* keys, size_t count)
 {
     // Do Sync this makes memory to be accessible from Host
-    CudaSystem::SyncAllGPUs();
+    CudaSystem::SyncGPUAll();
     for(size_t i = 0; i < count; i++)
     {
         s << "{" << std::hex << std::setw(8) << std::setfill('0') << keys[i] << ", "

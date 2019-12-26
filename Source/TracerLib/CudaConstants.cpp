@@ -1,10 +1,112 @@
 #include "CudaConstants.h"
 
+CudaGPU::WorkGroup::WorkGroup()
+    : currentIndex(0)
+    , totalStreams(0)
+    , events{}
+    , works{}
+    , mainEvent(nullptr)
+{}
+
+CudaGPU::WorkGroup::WorkGroup(int deviceId, int streamCount)
+    : currentIndex(0)
+    , totalStreams(streamCount)
+    , events{}
+    , works{}
+    , mainEvent(nullptr)
+{
+    assert(totalStreams <= 64);
+    CUDA_CHECK(cudaSetDevice(deviceId))
+    for(int i = 0; i < totalStreams; i++)
+    {
+        //CUDA_CHECK(cudaStreamCreate(&works[i]));
+        CUDA_CHECK(cudaStreamCreateWithFlags(&works[i], cudaStreamNonBlocking));
+        CUDA_CHECK(cudaEventCreateWithFlags(&events[i], cudaEventDisableTiming));
+    }
+    CUDA_CHECK(cudaEventCreateWithFlags(&mainEvent, cudaEventDisableTiming));
+}
+
+CudaGPU::WorkGroup::WorkGroup(WorkGroup&& other)
+    : currentIndex(other.currentIndex)
+    , totalStreams(other.totalStreams)
+    , events{}
+    , works{}
+    , mainEvent(other.mainEvent)
+{    
+    other.mainEvent = nullptr;
+    for(int i = 0; i < totalStreams; i++)
+    {
+        works[i] = other.works[i];
+        other.works[i] = nullptr;
+    }
+}
+
+CudaGPU::WorkGroup& CudaGPU::WorkGroup::operator=(WorkGroup&& other)
+{
+    assert(this != &other);
+    currentIndex = other.currentIndex;
+    if(mainEvent) CUDA_CHECK(cudaEventDestroy(mainEvent));
+    mainEvent = other.mainEvent;
+    other.mainEvent = nullptr;
+    for(int i = 0; (i < totalStreams || i < other.totalStreams); i++)
+    {
+        if(i < totalStreams)
+        {
+            if(works[i]) CUDA_CHECK(cudaStreamDestroy(works[i]));
+            if(events[i]) CUDA_CHECK(cudaEventDestroy(events[i]));
+        }            
+        if(i < other.totalStreams)
+        {
+            works[i] = other.works[i];
+            events[i] = other.events[i];
+        }
+        other.works[i] = nullptr;
+        other.events[i] = nullptr;
+    }
+    totalStreams = other.totalStreams;
+    return *this;
+}
+
+CudaGPU::WorkGroup::~WorkGroup()
+{
+    for(int i = 0; i < totalStreams; i++)
+    {
+        if(works[i]) CUDA_CHECK(cudaStreamDestroy(works[i]));
+        if(events[i]) CUDA_CHECK(cudaEventDestroy(events[i]));
+    }
+    if(mainEvent) CUDA_CHECK(cudaEventDestroy(mainEvent));
+}
+
+cudaStream_t CudaGPU::WorkGroup::UseGroup() const
+{
+    int i = currentIndex;
+    currentIndex = (currentIndex + 1) % totalStreams;
+    return works[i];
+}
+
+void CudaGPU::WorkGroup::WaitAllStreams() const
+{
+    for(int i = 0; i < totalStreams; i++)
+    {
+        CUDA_CHECK(cudaEventRecord(events[i], works[i]));
+    }
+    for(int i = 0; i < totalStreams; i++)
+    {
+        CUDA_CHECK(cudaEventSynchronize(events[i]));
+    }
+}
+
+void CudaGPU::WorkGroup::WaitMainStream() const
+{
+    CUDA_CHECK(cudaEventRecord(mainEvent));
+    CUDA_CHECK(cudaEventSynchronize(mainEvent));
+}
+
 CudaGPU::CudaGPU(int deviceId)
     : deviceId(deviceId)
-    , smallWorkList(deviceId)
 {
     CUDA_CHECK(cudaGetDeviceProperties(&props, deviceId));
+    workList = std::move(WorkGroup(deviceId, props.multiProcessorCount));
     tier = DetermineGPUTier(props);
 }
 
@@ -77,7 +179,19 @@ cudaStream_t CudaGPU::DetermineStream(uint32_t requiredSMCount) const
     //else if(requiredSMCount >= (SMCount() / 4))
     //    return mediumWorkList.UseGroup();
     //else// if(requiredSMCount >= (SMCount() / 8))
-        return smallWorkList.UseGroup();
+    return workList.UseGroup();
+}
+
+void CudaGPU::WaitAllStreams() const
+{
+    CUDA_CHECK(cudaSetDevice(deviceId));
+    workList.WaitAllStreams();
+}
+
+void CudaGPU::WaitMainStream() const
+{
+    CUDA_CHECK(cudaSetDevice(deviceId));
+    workList.WaitMainStream();
 }
 
 std::vector<CudaGPU> CudaSystem::systemGPUs;
@@ -115,7 +229,8 @@ CudaSystem::CudaError CudaSystem::Initialize()
 
 CudaSystem::CudaError CudaSystem::Initialize(std::vector<CudaGPU>& gpus)
 {
-    systemGPUs = gpus;
+    //systemGPUs = gpus;
+    return CudaError::OK;
 }
 
 CudaSystem::CudaError CudaSystem::SystemStatus()

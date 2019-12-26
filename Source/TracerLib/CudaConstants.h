@@ -46,14 +46,18 @@ class CudaGPU
         static GPUTier              DetermineGPUTier(cudaDeviceProp);
 
     private:
-        template<int Count>
         struct WorkGroup
         {
-            std::array<cudaStream_t, Count> works = {};
-            mutable int                     currentIndex = 0;
+            static constexpr size_t                 MAX_STREAMS = 64;
+            std::array<cudaEvent_t, MAX_STREAMS>    events;
+            std::array<cudaStream_t, MAX_STREAMS>   works;
+            cudaEvent_t                             mainEvent;
+            mutable int                             currentIndex;
+            int                                     totalStreams;
 
             // Constructors
-                                            WorkGroup(int deviceId);
+                                            WorkGroup();
+                                            WorkGroup(int deviceId, int streamCount);
                                             WorkGroup(const WorkGroup&) = delete;
                                             WorkGroup(WorkGroup&&);
             WorkGroup&                      operator=(const WorkGroup&) = delete;
@@ -61,16 +65,18 @@ class CudaGPU
                                             ~WorkGroup();
 
             cudaStream_t                    UseGroup() const;
+            void                            WaitAllStreams() const;
+            void                            WaitMainStream() const;
         };
 
-        int                         deviceId;
-        cudaDeviceProp              props;
+        int                                 deviceId;
+        cudaDeviceProp                      props;
         // Generated Data
-        GPUTier                     tier;
+        GPUTier                             tier;
         //
-        WorkGroup<4>                smallWorkList;
-        //WorkGroup<4>                mediumWorkList;
-        //WorkGroup<2>                largeWorkList;
+        WorkGroup                           workList;
+        //WorkGroup<4>                      mediumWorkList;
+        //WorkGroup<2>                      largeWorkList;
 
     protected:
     public:
@@ -96,6 +102,8 @@ class CudaGPU
                                                            uint32_t threadsPerBlock = StaticThreadPerBlock1D,
                                                            uint32_t sharedMemSize = 0) const;
         cudaStream_t            DetermineStream(uint32_t requiredSMCount) const;
+        void                    WaitAllStreams() const;
+        void                    WaitMainStream() const;
 };
 
 class CudaSystem
@@ -196,65 +204,19 @@ class CudaSystem
         // Misc
         static const std::vector<CudaGPU>&          GPUList();
         static bool                                 SingleGPUSystem();
-        static void                                 SyncAllGPUs();
+        
+        // Device Synchronization
+        static void                                 SyncGPUMainStreamAll();
+        static void                                 SyncGPUMainStream(int deviceId);
+
+        static void                                 SyncGPUAll();
+        static void                                 SyncGPU(int deviceId);
 
         static constexpr int                        CURRENT_DEVICE = -1;
 };
 
 // Verbosity
 using SystemGPUs = std::vector<CudaGPU>;
-
-template<int Count>
-CudaGPU::WorkGroup<Count>::WorkGroup(int deviceId)
-    : currentIndex(0)
-{
-    CUDA_CHECK(cudaSetDevice(deviceId))
-    for(int i = 0; i < Count; i++)
-    {
-        CUDA_CHECK(cudaStreamCreate(&works[i]));
-    }
-}
-
-template<int Count>
-CudaGPU::WorkGroup<Count>::WorkGroup(WorkGroup&& other)
-    : currentIndex(0)
-{
-    for(int i = 0; i < Count; i++)
-    {
-        works[i] = other.works[i];
-        other.works[i] = nullptr;
-    }
-}
-
-template<int Count>
-CudaGPU::WorkGroup<Count>& CudaGPU::WorkGroup<Count>::operator=(WorkGroup&& other)
-{
-    assert(this != &other);
-    currentIndex = other.currentIndex;
-    for(int i = 0; i < Count; i++)
-    {
-        works[i] = other.works[i];
-        other.works[i] = nullptr;
-    }
-    return *this;
-}
-
-template<int Count>
-CudaGPU::WorkGroup<Count>::~WorkGroup()
-{
-    for(int i = 0; i < Count; i++)
-    {
-        if(works[i]) CUDA_CHECK(cudaStreamDestroy(works[i]));
-    }
-}
-
-template<int Count>
-cudaStream_t CudaGPU::WorkGroup<Count>::UseGroup() const
-{
-    int i = currentIndex;
-    currentIndex = (currentIndex + 1) % Count;
-    return works[i];
-}
 
 template<class Function, class... Args>
 __host__
@@ -303,7 +265,7 @@ inline void CudaSystem::GridStrideKC_X(int gpuIndex,
                                                    threadCount, workCount, &f);
 
     // Full potential GPU Call
-   // CUDA_CHECK(cudaSetDevice(gpuIndex));
+    CUDA_CHECK(cudaSetDevice(gpuIndex));
     uint32_t blockSize = StaticThreadPerBlock1D;
     f<<<blockCount, blockSize, sharedMemSize, stream>>> (args...);
     CUDA_KERNEL_CHECK();
@@ -341,7 +303,7 @@ __host__ void CudaSystem::AsyncGridStrideKC_X(int gpuIndex,
                                                         threadCount, workCount, &f);
     cudaStream_t stream = GPUList()[gpuIndex].DetermineStream(requiredSMCount);
 
-   // CUDA_CHECK(cudaSetDevice(gpuIndex));
+    CUDA_CHECK(cudaSetDevice(gpuIndex));
     uint32_t blockSize = StaticThreadPerBlock1D;
     f<<<requiredSMCount, blockSize, sharedMemSize, stream>>>(args...);
     CUDA_KERNEL_CHECK();
@@ -377,15 +339,56 @@ inline bool CudaSystem::SingleGPUSystem()
     return GPUList().size() == 1;
 }
 
-inline void CudaSystem::SyncAllGPUs()
+inline void CudaSystem::SyncGPUMainStreamAll()
 {
     int currentDevice;
     CUDA_CHECK(cudaGetDevice(&currentDevice));
-
-    for(int i = 0; i < static_cast<int>(GPUList().size()); i++)
+    for(auto& gpu : GPUList())
     {
-        CUDA_CHECK(cudaSetDevice(i));
-        CUDA_CHECK(cudaDeviceSynchronize());
+        gpu.WaitMainStream();
+    }
+    CUDA_CHECK(cudaSetDevice(currentDevice));
+}
+
+inline void CudaSystem::SyncGPUMainStream(int deviceId)
+{
+    int currentDevice;
+    CUDA_CHECK(cudaGetDevice(&currentDevice));
+    for(const auto& gpu : GPUList())
+    {
+        if(gpu.DeviceId() == deviceId)
+        {
+            gpu.WaitMainStream();
+            break;
+        }
+    }
+}
+
+inline void CudaSystem::SyncGPUAll()
+{
+    int currentDevice;
+    CUDA_CHECK(cudaGetDevice(&currentDevice));
+    for(const auto& gpu : GPUList())
+    {
+        gpu.WaitAllStreams();
+        gpu.WaitMainStream();
+        break;
+    }
+    CUDA_CHECK(cudaSetDevice(currentDevice));
+}
+
+inline void CudaSystem::SyncGPU(int deviceId)
+{
+    int currentDevice;
+    CUDA_CHECK(cudaGetDevice(&currentDevice));
+    for(const auto& gpu : GPUList())
+    {
+        if(gpu.DeviceId() == deviceId)
+        {
+            gpu.WaitAllStreams();
+            gpu.WaitMainStream();
+            break;
+        }
     }
     CUDA_CHECK(cudaSetDevice(currentDevice));
 }

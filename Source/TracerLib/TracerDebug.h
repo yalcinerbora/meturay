@@ -74,7 +74,7 @@ void Debug::DumpMemToStream(std::ostream& s,
                             const T* mPtr, size_t count,
                             const char* seperator, bool hex)
 {
-    CudaSystem::SyncAllGPUs();
+    CudaSystem::SyncGPUAll();
     if(hex) s << std::hex;
     for(size_t i = 0; i < count; i++)
     {

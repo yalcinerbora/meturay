@@ -89,7 +89,7 @@ void TracerBase::HitRays()
                             rayCount);
 
         // Wait all GPUs to finish...
-        CudaSystem::SyncAllGPUs();
+        CudaSystem::SyncGPUMainStreamAll();
 
         // Base accelerator traverses the data partially
         // Updates current key (which represents inner accelerator batch and id)
@@ -179,7 +179,7 @@ void TracerBase::HitRays()
         //
         // Tracer logic mostly utilizies mutiple GPUs so we need to
         // wait all GPUs to finish
-        CudaSystem::SyncAllGPUs();
+        CudaSystem::SyncGPUAll();
     }
     // At the end of iteration all rays found a material, primitive
     // and interpolation weights (which should be on hitStruct)
@@ -302,7 +302,7 @@ void TracerBase::ShadeRays()
 
     // Again wait all of the GPU's since
     // CUDA functions will be on multiple-gpus
-    CudaSystem::SyncAllGPUs();
+    CudaSystem::SyncGPUAll();
 
     // Shading complete
     // Now make "RayOut" to "RayIn"
@@ -337,7 +337,7 @@ TracerError TracerBase::Initialize(int leaderGPUId)
         accel->ConstructAccelerators();
     }
 
-    CudaSystem::SyncAllGPUs();
+    CudaSystem::SyncGPUAll();
     CUDA_CHECK(cudaSetDevice(leaderGPUId));
 
     // All seems fine mark tracer as healthy
@@ -413,6 +413,10 @@ void TracerBase::Render()
     SendLog(" Hits Complete, Shading...");
     ShadeRays();
     SendLog(" Shading Complete!");
+
+    // Force Nsight Flush
+    CUDA_CHECK(cudaDeviceSynchronize());
+
     //printf("\n-------\n");
 }
 
