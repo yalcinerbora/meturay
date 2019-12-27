@@ -22,7 +22,7 @@ class TracerCallbacksI
         virtual void    SendError(TracerError) = 0;
         virtual void    SendAnalyticData(AnalyticData) = 0;
         virtual void    SendImage(const std::vector<Byte> data,
-                                  PixelFormat, int sampleCount,
+                                  PixelFormat, size_t sampleCount,
                                   Vector2i start = Zero2i,
                                   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
         virtual void    SendAccelerator(HitKey key, const std::vector<Byte> data) = 0;

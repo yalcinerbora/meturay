@@ -17,6 +17,7 @@ struct SceneError;
 class CudaGPU;
 class SceneNodeI;
 class RNGMemory;
+class ImageMemory;
 class GPUPrimitiveGroupI;
 
 // Defines the same type materials
@@ -64,7 +65,7 @@ class GPUMaterialBatchI
         virtual const char*                 Type() const = 0;
         // Kernel Call
         virtual void                        ShadeRays(// Output
-                                                      Vector4* dPixels,
+                                                      ImageMemory& dImage,
                                                       //
                                                       HitKey* dBoundMatOut,
                                                       RayGMem* dRayOut,

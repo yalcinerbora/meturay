@@ -55,7 +55,7 @@ class SelfNode
         void        SendError(TracerError) override;
         void        SendAnalyticData(AnalyticData) override;
         void        SendImage(const std::vector<Byte> data,
-                              PixelFormat, int sampleCount,
+                              PixelFormat, size_t offset,
                               Vector2i start = Zero2i,
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void        SendAccelerator(HitKey key, const std::vector<Byte> data) override;

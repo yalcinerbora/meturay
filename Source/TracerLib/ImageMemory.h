@@ -12,6 +12,9 @@ Used by tracers
 #include "RayLib/Vector.h"
 
 #include "DeviceMemory.h"
+#include "ImageStructs.h"
+
+class CudaSystem;
 
 class ImageMemory
 {
@@ -45,14 +48,12 @@ class ImageMemory
         ImageMemory&        operator=(ImageMemory&&) = default;
                             ~ImageMemory() = default;
 
-        void                SetPixelFormat(PixelFormat);
+        void                SetPixelFormat(PixelFormat, const CudaSystem& s);
         void                Reportion(Vector2i offset,
-                                      Vector2i size);
+                                      Vector2i size,
+                                      const CudaSystem& system);
         void                Resize(Vector2i resolution);
-        void                Reset();
-
-        template<class T>
-        std::vector<T>      MoveImageToCPU() const;
+        void                Reset(const CudaSystem& system);
 
         // Getters
         Vector2i            SegmentSize() const;
@@ -61,31 +62,50 @@ class ImageMemory
         PixelFormat         Format() const;
         int                 PixelSize() const;
 
-        //.......
+        // Image Global Memory
         template <class T>
-        T*                  GMem();
+        ImageGMem<T>        GMem();
         template <class T>
-        const T*            GMem() const;
+        ImageGMemConst<T>   GMem() const;
+
+        // Direct CPU
+        std::vector<Byte>   GetImageToCPU(const CudaSystem&);
 };
 
-template<class T>
-inline std::vector<T> ImageMemory::MoveImageToCPU() const
+inline Vector2i ImageMemory::SegmentSize() const
 {
-    size_t pixelCount = segmentSize[0] * segmentSize[1];
-    std::vector<T> out(pixelCount);
-    std::memcpy(out.data(), GMem<T>(), sizeof(T) * pixelCount);
-    return std::move(out);
+    return segmentSize;
+}
+
+inline Vector2i ImageMemory::SegmentOffset() const
+{
+    return segmentOffset;
+}
+
+inline Vector2i ImageMemory::Resolution() const
+{
+    return resolution;
+}
+
+inline PixelFormat ImageMemory::Format() const
+{
+    return format;
+}
+
+inline int ImageMemory::PixelSize() const
+{
+    return pixelSize;
 }
 
 template<class T>
-inline T* ImageMemory::GMem()
+inline ImageGMem<T> ImageMemory::GMem()
 {
-    return static_cast<T*>(memory);
+    return ImageGMem<T>{static_cast<T*>(dPixels), dSampleCounts};
 }
 
 template<class T>
-inline const T* ImageMemory::GMem() const
+inline ImageGMemConst<T> ImageMemory::GMem() const
 {
-    return static_cast<const T*>(memory);
+    return ImageGMemConst<T>{static_cast<T*>(dPixels), dSampleCounts};
 }
 

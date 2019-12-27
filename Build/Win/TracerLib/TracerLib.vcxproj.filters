@@ -42,9 +42,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\TracerLib\ImageMemory.cpp">
-      <Filter>Memory</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
@@ -75,6 +72,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp">
       <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\ImageMemory.cu">
+      <Filter>Memory</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -144,9 +144,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TracerBase.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveI.h">
       <Filter>GPU Logic Interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\HitFunctions.cuh">
-      <Filter>Structs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.h">
       <Filter>Default Primitives</Filter>
@@ -227,6 +224,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\TracerTypeGenerators.h">
       <Filter>SharedLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\ImageStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh">
+      <Filter>GPU Algorithms\Functions</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

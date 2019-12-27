@@ -6,6 +6,7 @@
 #include "MaterialKernels.cuh"
 #include "GPUPrimitiveP.cuh"
 #include "RNGMemory.h"
+#include "ImageMemory.h"
 
 struct MatDataAccessor;
 
@@ -69,7 +70,7 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
         // Interface
         // KC
         void                            ShadeRays(// Output
-                                                  Vector4* dPixels,
+                                                  ImageMemory& dImage,
                                                   //
                                                   HitKey* dBoundMatOut,
                                                   RayGMem* dRayOut,
@@ -146,7 +147,7 @@ const char* GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::Type() const
 template <class TLogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfaceF>
 void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
-                                                                   Vector4* dPixels,
+                                                                   ImageMemory& dImage,
                                                                    //
                                                                    HitKey* dBoundMatOut,
                                                                    RayGMem* dRayOut,
@@ -182,7 +183,7 @@ void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
         KCMaterialShade<TLogic, MGroup, PGroup, SurfFunc>,
         // Args
         // Output
-        dPixels,
+        dImage.GMem<Vector4f>(),
         //
         dBoundMatOut,
         dRayOut,

@@ -19,6 +19,8 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ComparisonFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\ImageStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerTypeGenerators.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DeviceMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\FunctionEnablers.cuh" />
@@ -35,7 +37,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUSceneJson.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\HitFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\NodeListing.h" />
@@ -71,7 +72,9 @@
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\ImageMemory.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\ImageMemory.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\RNGMemory.cu" />
     <ClCompile Include="..\..\..\Source\TracerLib\SceneNodeJson.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\ScenePartitioner.cpp" />

@@ -41,7 +41,7 @@ struct VisorGLCommand
         PixelFormat             format;
         Vector2i                start;
         Vector2i                end;
-        int                     sampleCount;
+        size_t                  offset;
 
         // Commands should not be copied
         VisorGLCommand() = default;
@@ -71,6 +71,7 @@ class VisorGL : public VisorI
         // U: Uniforms
         static constexpr GLenum     T_IN_COLOR = 0;
         static constexpr GLenum     T_IN_BUFFER = 1;
+        static constexpr GLenum     T_IN_SAMPLE = 2;
 
         static constexpr GLenum     I_OUT_COLOR = 0;
         static constexpr GLenum     I_SAMPLE = 1;
@@ -81,7 +82,6 @@ class VisorGL : public VisorI
         static constexpr GLenum     U_RES = 0;
         static constexpr GLenum     U_START = 1;
         static constexpr GLenum     U_END = 2;
-        static constexpr GLenum     U_SAMPLE = 3;
 
     private:
         VisorInputI*                input;
@@ -98,6 +98,7 @@ class VisorGL : public VisorI
         GLuint                      outputTextures[2];
         GLuint                      sampleCountTexture;
         GLuint                      bufferTexture;
+        GLuint                      sampleTexture;
         GLuint                      linearSampler;
         int                         currentIndex;
  
@@ -173,7 +174,7 @@ class VisorGL : public VisorI
                                              Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         // Append incoming data from
         void                    AccumulatePortion(const std::vector<Byte> data,
-                                                  PixelFormat, int sampleCount,
+                                                  PixelFormat, size_t offset,
                                                   Vector2i start = Zero2i,
                                                   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
 

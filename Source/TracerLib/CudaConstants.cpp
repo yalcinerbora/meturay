@@ -94,10 +94,13 @@ void CudaGPU::WorkGroup::WaitAllStreams() const
     {
         CUDA_CHECK(cudaEventSynchronize(events[i]));
     }
+    //CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 void CudaGPU::WorkGroup::WaitMainStream() const
 {
+    //CUDA_CHECK(cudaDeviceSynchronize());
+
     CUDA_CHECK(cudaEventRecord(mainEvent));
     CUDA_CHECK(cudaEventSynchronize(mainEvent));
 }

@@ -126,7 +126,7 @@ class MockTracerLogic : public TracerBaseLogicI
                 const char*                 Type() const override { return "MockMatBatch"; }
                 // KC
                 void                        ShadeRays(// Output
-                                                      Vector4f* dImage,
+                                                      ImageMemory& dImage,
                                                       //
                                                       HitKey* dBoundMatOut,
                                                       RayGMem* dRayOut,
@@ -330,7 +330,7 @@ void MockTracerLogic::AcceleratorMock::Hit(const CudaGPU& gpu,
 }
 
 void MockTracerLogic::MaterialMock::ShadeRays(// Output
-                                              Vector4f* dImage,
+                                              ImageMemory& dImage,
                                               //
                                               HitKey* dBoundMatOut,
                                               RayGMem* dRayOut,

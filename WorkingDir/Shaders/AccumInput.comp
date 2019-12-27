@@ -20,6 +20,7 @@
 
 #define T_IN_COLOR layout(binding = 0)
 #define T_IN_BUFFER layout(binding = 1)
+#define T_IN_SAMPLE layout(binding = 2)
 
 // Images
 uniform I_OUT_COLOR image2D iColor;
@@ -27,13 +28,13 @@ uniform I_SAMPLE iimage2D iSample;
 
 // Textures
 uniform T_IN_COLOR sampler2D tInColor;
+uniform T_IN_SAMPLE isampler2D tInSample;
 uniform T_IN_BUFFER sampler2D tInBuffer;
 
 // Uniforms
 U_RES uniform ivec2 resolution;
 U_START uniform ivec2 start;
 U_END uniform ivec2 end;
-U_SAMPLE uniform int inSamples;
 
 // 16x16 block is always nice
 layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
@@ -59,9 +60,13 @@ void main(void)
 		int sampleCount = imageLoad(iSample, pixIdOut).x;
 		// Read the requested from
 		vec4 bufferIn = texelFetch(tInBuffer, pixIdIn, 0);
+		int sampleIn = texelFetch(tInSample, pixIdIn, 0).x;
 		// Calculate
-		int totalSamples = sampleCount + inSamples;
-		colorOut = (sampleCount * colorIn + bufferIn * inSamples) / totalSamples;
+		int totalSamples = sampleCount + sampleIn;
+		if(sampleIn == 0)
+			colorOut = colorIn;
+		else
+			colorOut = (sampleCount * colorIn + bufferIn * 1) / totalSamples;
 
 		// Write
 		imageStore(iSample, pixIdOut, ivec4(totalSamples));

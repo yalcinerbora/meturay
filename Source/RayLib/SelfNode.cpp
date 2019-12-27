@@ -86,10 +86,10 @@ void SelfNode::SendAnalyticData(AnalyticData data)
 }
 
 void SelfNode::SendImage(const std::vector<Byte> data,
-                         PixelFormat f, int sampleCount,
+                         PixelFormat f, size_t offset,
                          Vector2i start, Vector2i end)
 {
-    visor.AccumulatePortion(std::move(data), f, sampleCount, start, end);
+    visor.AccumulatePortion(std::move(data), f, offset, start, end);
 }
 
 void SelfNode::SendAccelerator(HitKey key, const std::vector<Byte> data)

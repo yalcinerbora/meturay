@@ -81,7 +81,7 @@ class MockNode
         void        SendError(TracerError) override;
         void        SendAnalyticData(AnalyticData) override {}
         void        SendImage(const std::vector<Byte> data,
-                              PixelFormat, int sampleCount,
+                              PixelFormat, size_t offset,
                               Vector2i start = Zero2i,
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void        SendAccelerator(HitKey key, const std::vector<Byte> data) override {}
@@ -111,10 +111,10 @@ void MockNode::SendError(TracerError err)
 }
 
 void MockNode::SendImage(const std::vector<Byte> data,
-                         PixelFormat f, int sampleCount,
+                         PixelFormat f, size_t offset,
                          Vector2i start, Vector2i end)
 {
-    visor.AccumulatePortion(std::move(data), f, sampleCount, start, end);
+    visor.AccumulatePortion(std::move(data), f, offset, start, end);
 }
 
 void MockNode::Work()
@@ -159,7 +159,7 @@ class SimpleTracerSetup
 
     private:
         static constexpr Vector2i           SCREEN_RESOLUTION = {1024, 1024};
-        static constexpr Vector2i           IMAGE_RESOLUTION = {256, 256};
+        static constexpr Vector2i           IMAGE_RESOLUTION = {512, 512};
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
 

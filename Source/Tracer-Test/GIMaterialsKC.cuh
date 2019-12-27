@@ -10,13 +10,15 @@ class RandomGPU;
 #include "RayLib/Constants.h"
 #include "RayLib/HemiDistribution.h"
 
+#include "TracerLib/ImageFunctions.cuh"
+
 #include <cuda_runtime.h>
 
 using ConstantIrradianceMatData = ConstantAlbedoMatData;
 
 __device__
 inline void LightBoundaryShade(// Output
-                               Vector4f* gImage,
+                               ImageGMem<Vector4f> gImage,
                                HitKey* gBoundaryMat,
                                //
                                RayGMem* gOutRays,
@@ -38,18 +40,17 @@ inline void LightBoundaryShade(// Output
     Vector3f radiance = aux.accumFactor * gMatData.dAlbedo[matId];
 
     // Final point on a ray path
-    // TODO: Single ray per pixel make these atomic
     //printf("Touched Light!\n");
-    gImage[aux.pixelId][0] = radiance[0];
-    gImage[aux.pixelId][1] = radiance[1];
-    gImage[aux.pixelId][2] = radiance[2];
-    return;
-
+    Vector4f output(radiance[0],
+                    radiance[1],
+                    radiance[2],
+                    1.0f);
+    ImageAccumulatePixel(gImage, aux.pixelId, output);
 }
 
 __device__
 inline void BasicPathTraceShade(// Output
-                                Vector4f* gImage,
+                                ImageGMem<Vector4f> gImage,
                                 //
                                 HitKey* gBoundaryMat,
                                 RayGMem* gOutRays,

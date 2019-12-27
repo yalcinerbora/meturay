@@ -421,6 +421,12 @@ void VisorGL::ReallocImages()
     glBindTexture(GL_TEXTURE_2D, bufferTexture);
     glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(vOpts.iFormat),
                    vOpts.iSize[0], vOpts.iSize[1]);
+    // Sample input texture
+    glDeleteTextures(1, &sampleTexture);
+    glGenTextures(1, &sampleTexture);
+    glBindTexture(GL_TEXTURE_2D, sampleTexture);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32I,
+                   vOpts.iSize[0], vOpts.iSize[1]);
 }
 
 void VisorGL::ProcessCommand(const VisorGLCommand& c)
@@ -451,9 +457,16 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
         case VisorGLCommand::SET_PORTION:
         {
             // Copy (Let OGL do the conversion)
-            glBindTexture(GL_TEXTURE_2D, bufferTexture);
+            glBindTexture(GL_TEXTURE_2D, sampleTexture);
             glTexSubImage2D(GL_TEXTURE_2D, 0,
                             0, 0, 
+                            inSize[0], inSize[1],
+                            GL_RED_INTEGER,
+                            GL_UNSIGNED_INT,
+                            c.data.data() + c.offset);
+            glBindTexture(GL_TEXTURE_2D, bufferTexture);
+            glTexSubImage2D(GL_TEXTURE_2D, 0,
+                            0, 0,
                             inSize[0], inSize[1],
                             PixelFormatToGL(c.format),
                             PixelFormatToTypeGL(c.format),
@@ -469,8 +482,11 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             // Textures
             glActiveTexture(GL_TEXTURE0 + T_IN_BUFFER);
             glBindTexture(GL_TEXTURE_2D, bufferTexture);
+            glActiveTexture(GL_TEXTURE0 + T_IN_SAMPLE);
+            glBindTexture(GL_TEXTURE_2D, sampleTexture);
             glActiveTexture(GL_TEXTURE0 + T_IN_COLOR);
             glBindTexture(GL_TEXTURE_2D, inTexture);
+
             // Images
             glBindImageTexture(I_SAMPLE, sampleCountTexture,
                                0, false, 0, GL_READ_WRITE, GL_R32I);
@@ -481,7 +497,6 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             glUniform2iv(U_RES, 1, static_cast<const int*>(vOpts.iSize));
             glUniform2iv(U_START, 1, static_cast<const int*>(c.start));
             glUniform2iv(U_END, 1, static_cast<const int*>(c.end));
-            glUniform1i(U_SAMPLE, c.sampleCount);
 
             // Call for entire image (we also copy image)
             // 
@@ -528,6 +543,8 @@ VisorGL::VisorGL(const VisorOptions& opts)
     , commandList(opts.eventBufferSize)
     , outputTextures{0, 0}
     , sampleCountTexture(0)
+    , bufferTexture(0)
+    , sampleTexture(0)
     , currentIndex(0)
     , linearSampler(0)
     , vBuffer(0)
@@ -792,7 +809,7 @@ void VisorGL::ResetSamples(Vector2i start, Vector2i end)
 }
 
 void VisorGL::AccumulatePortion(const std::vector<Byte> data,
-                                PixelFormat f, int sampleCount,
+                                PixelFormat f, size_t offset,
                                 Vector2i start,
                                 Vector2i end)
 {
@@ -803,7 +820,7 @@ void VisorGL::AccumulatePortion(const std::vector<Byte> data,
     command.start = start;
     command.end = end;
     command.format = f;
-    command.sampleCount = sampleCount;
+    command.offset = offset;
     command.data = std::move(data);
 
     commandList.Enqueue(std::move(command));

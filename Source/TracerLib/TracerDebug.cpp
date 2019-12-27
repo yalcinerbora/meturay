@@ -28,9 +28,8 @@ void Debug::DumpImage(const std::string& fName,
     ImageIO io;
     Vector2ui size(iMem.SegmentSize()[0],
                    iMem.SegmentSize()[1]);
-
-    std::vector<Vector4f> image = iMem.MoveImageToCPU<Vector4f>();
-    io.WriteAsPNG(image.data(), size, fName);
+    auto image = iMem.GMem<Vector4f>();
+    io.WriteAsPNG(image.gPixels, size, fName);
 }
 
 void Debug::PrintHitPairs(const RayId* ids, const HitKey* keys, size_t count)

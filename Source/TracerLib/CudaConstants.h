@@ -372,6 +372,7 @@ inline void CudaSystem::SyncGPUMainStream(const CudaGPU& gpu) const
     {
         i->WaitMainStream();
     }
+    CUDA_CHECK(cudaSetDevice(currentDevice));
 }
 
 inline void CudaSystem::SyncGPUAll() const

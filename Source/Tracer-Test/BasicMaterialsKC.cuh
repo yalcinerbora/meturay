@@ -9,9 +9,11 @@ class RandomGPU;
 
 #include "RayLib/Constants.h"
 
+#include "TracerLib/ImageFunctions.cuh"
+
 __device__
 inline void BasicMatShade(// Output
-                          Vector4f* gImage,
+                          ImageGMem<Vector4f> gImage,
                           //
                           HitKey* gOutBoundMat,
                           RayGMem* gOutRays,
@@ -27,14 +29,16 @@ inline void BasicMatShade(// Output
                           const ConstantAlbedoMatData& gMatData,
                           const HitKey::Type& matId)
 {
-    gImage[aux.pixelId][0] = gMatData.dAlbedo[matId][0];
-    gImage[aux.pixelId][1] = gMatData.dAlbedo[matId][1];
-    gImage[aux.pixelId][2] = gMatData.dAlbedo[matId][2];
+    Vector4f output(gMatData.dAlbedo[matId][0],
+                    gMatData.dAlbedo[matId][1],
+                    gMatData.dAlbedo[matId][2],
+                    1.0f);
+    ImageAccumulatePixel(gImage, aux.pixelId, output);
 }
 
 __device__
 inline void BaryMatShade(// Output
-                         Vector4f* gImage,
+                         ImageGMem<Vector4f> gImage,
                          //
                          HitKey* gOutBoundMat,
                          RayGMem* gOutRays,
@@ -50,14 +54,16 @@ inline void BaryMatShade(// Output
                          const NullData& gMatData,
                          const HitKey::Type& matId)
 {
-    gImage[aux.pixelId][0] = surface.baryCoords[0];
-    gImage[aux.pixelId][1] = surface.baryCoords[1];
-    gImage[aux.pixelId][2] = surface.baryCoords[2];
+    Vector4f output(surface.baryCoords[0],
+                    surface.baryCoords[1],
+                    surface.baryCoords[2],
+                    1.0f);
+    ImageAccumulatePixel(gImage, aux.pixelId, output);
 }
 
 __device__
 inline void SphrMatShade(// Output
-                         Vector4f* gImage,
+                         ImageGMem<Vector4f> gImage,
                          //
                          HitKey* gOutBoundMat,
                          RayGMem* gOutRays,
@@ -73,9 +79,9 @@ inline void SphrMatShade(// Output
                          const NullData& gMatData,
                          const HitKey::Type& matId)
 {
-    using namespace MathConstants;
-
-    gImage[aux.pixelId][0] = cos(surface.sphrCoords[0]);
-    gImage[aux.pixelId][1] = sin(surface.sphrCoords[1]);
-    gImage[aux.pixelId][2] = 0.0f;
+    Vector4f output(cos(surface.sphrCoords[0]),
+                    sin(surface.sphrCoords[1]),
+                    0.0f,
+                    1.0f);
+    ImageAccumulatePixel(gImage, aux.pixelId, output);
 }

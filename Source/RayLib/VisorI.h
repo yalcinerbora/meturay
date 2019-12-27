@@ -59,7 +59,7 @@ class VisorI
                                                      Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
         // Append incoming data from
         virtual void                    AccumulatePortion(const std::vector<Byte> data,
-                                                          PixelFormat, int sampleCount,
+                                                          PixelFormat, size_t offset,
                                                           Vector2i start = Zero2i,
                                                           Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
         // Options

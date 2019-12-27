@@ -55,12 +55,10 @@ void TracerBase::HitRays()
     const Vector2i& accBitCounts = currentLogic->SceneAcceleratorMaxBits();
     GPUBaseAcceleratorI& baseAccelerator = currentLogic->BaseAcelerator();
     const AcceleratorBatchMappings& subAccelerators = currentLogic->AcceleratorBatches();
-
     // Reset Hit Memory for hit loop
     rayMemory.ResetHitMemory(currentRayCount, currentLogic->HitStructSize());
     // Make Base Accelerator to get ready for hitting
     baseAccelerator.GetReady(currentRayCount);
-
     // Ray Memory Pointers
     RayGMem* dRays = rayMemory.Rays();
     HitKey* dMaterialKeys = rayMemory.MaterialKeys();
@@ -108,7 +106,6 @@ void TracerBase::HitRays()
         // accelerator count
         // Move offset to skip null bathces
         rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, rayCount, accBitCounts);
-
         // Parition to sub accelerators
         //
         // There may be invalid rays sprinkled along the array.
@@ -195,8 +192,6 @@ void TracerBase::ShadeRays()
     CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
 
     const Vector2i matMaxBits = currentLogic->SceneMaterialMaxBits();
-    // Image Memory Pointers
-    Vector4f* dImageMem = outputImage.GMem<Vector4f>();
 
     // Ray Memory Pointers
     const RayGMem* dRays = rayMemory.Rays();
@@ -279,7 +274,7 @@ void TracerBase::ShadeRays()
 
         // Actual Shade Call
         loc->second->ShadeRays(// Output
-                               dImageMem,
+                               outputImage,
                                //
                                dBoundKeyStart,
                                dRayOutStart,
@@ -322,10 +317,7 @@ TracerBase::TracerBase(CudaSystem& s)
     , sampleCountPerRay(0)
     , options(TracerConstants::DefaultTracerOptions)
     , rayMemory(*(s.GPUList().begin()))
-{
-    const auto& test = *cudaSystem.GPUList().begin();
-
-}
+{}
 
 TracerError TracerBase::Initialize()
 {
@@ -430,41 +422,39 @@ void TracerBase::FinishSamples()
     if(!healthy) return;
 
     // Normally if ray reaches to boundary material
-    // its result is written to the ray data
-    // but a ray not always reach to boundary material
-    // if a pre determined
-    SendLog("Finishing Samples: %d rays remaining...");
-    // TODO: generate abrupt end kernel call for rays
-
+    // its result should be on image but now always
+    SendLog("Finishing Samples: %d rays are left...");
+   
     // Determine Size
     Vector2i pixelCount = outputImage.SegmentSize();
     Vector2i start = outputImage.SegmentOffset();
     Vector2i end = start + outputImage.SegmentSize();
-    size_t size = (static_cast<size_t>(pixelCount[0]) * pixelCount[1] *
-                   outputImage.PixelSize());
+    size_t offset = (static_cast<size_t>(pixelCount[0])* pixelCount[1] *
+                     outputImage.PixelSize());
 
-    // Data
-    std::vector<Byte> data(size);
-    CUDA_CHECK(cudaMemcpy(data.data(), outputImage.GMem<Byte>(),
-                          size, cudaMemcpyDeviceToHost));
+    // Flush Devices and Get the Image
+    cudaSystem.SyncGPUAll();
+    std::vector<Byte> imageData = outputImage.GetImageToCPU(cudaSystem);
+
+    size_t pixelCount1D = static_cast<size_t>(pixelCount[0]) * pixelCount[1];
 
     // Launch finished image
-    if(callbacks) callbacks->SendImage(std::move(data),
+    if(callbacks) callbacks->SendImage(std::move(imageData),
                                        outputImage.Format(),
-                                       sampleCountPerRay,
+                                       offset,
                                        start, end);
     SendLog("Samples Finished!");
 }
 
 void TracerBase::SetImagePixelFormat(PixelFormat f)
 {
-    outputImage.SetPixelFormat(f);
+    outputImage.SetPixelFormat(f, cudaSystem);
 }
 
 void TracerBase::ReportionImage(Vector2i start,
                                 Vector2i end)
 {
-    outputImage.Reportion(start, end);
+    outputImage.Reportion(start, end, cudaSystem);
 }
 
 void TracerBase::ResizeImage(Vector2i resolution)
@@ -474,5 +464,5 @@ void TracerBase::ResizeImage(Vector2i resolution)
 
 void TracerBase::ResetImage()
 {
-    outputImage.Reset();
+    outputImage.Reset(cudaSystem);
 }

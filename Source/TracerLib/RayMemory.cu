@@ -7,7 +7,6 @@
 
 #include "CudaConstants.h"
 #include "TracerDebug.h"
-#include "HitFunctions.cuh"
 
 static constexpr uint32_t INVALID_LOCATION = std::numeric_limits<uint32_t>::max();
 
