@@ -29,6 +29,8 @@ class RNGMemory;
 struct TracerError;
 struct CameraPerspective;
 
+class CudaSystem;
+
 class GPUSceneI;
 class GPUBaseAcceleratorI;
 class GPUAcceleratorBatchI;
@@ -43,7 +45,9 @@ class TracerBaseLogicI
         virtual TracerError     Initialize() = 0;
 
         // Generate Rays
-        virtual uint32_t        GenerateRays(RayMemory&, RNGMemory&,
+        virtual uint32_t        GenerateRays(const CudaSystem& cudaSystem, 
+                                             //
+                                             RayMemory&, RNGMemory&,
                                              const GPUSceneI&,
                                              const CameraPerspective&,
                                              int samplePerLocation,

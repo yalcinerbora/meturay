@@ -19,6 +19,8 @@ Base Interface for GPU accelerators
 struct RayGMem;
 struct SceneError;
 
+class CudaGPU;
+class CudaSystem;
 class GPUPrimitiveGroupI;
 class GPUMaterialGroupI;
 
@@ -57,12 +59,17 @@ class GPUAcceleratorGroupI
         virtual uint32_t                    InnerId(uint32_t surfaceId) const = 0;
 
         // Batched and singular construction
-        virtual void                        ConstructAccelerators() = 0;
-        virtual void                        ConstructAccelerator(uint32_t surface) = 0;
-        virtual void                        ConstructAccelerators(const std::vector<uint32_t>& surfaces) = 0;
-        virtual void                        DestroyAccelerators() = 0;
-        virtual void                        DestroyAccelerator(uint32_t surface) = 0;
-        virtual void                        DestroyAccelerators(const std::vector<uint32_t>& surfaces) = 0;
+        virtual void                        ConstructAccelerators(const CudaSystem&) = 0;
+        virtual void                        ConstructAccelerator(uint32_t surface,
+                                                                 const CudaSystem&) = 0;
+        virtual void                        ConstructAccelerators(const std::vector<uint32_t>& surfaces,
+                                                                  const CudaSystem&) = 0;
+
+        virtual void                        DestroyAccelerators(const CudaSystem&) = 0;
+        virtual void                        DestroyAccelerator(uint32_t surface,
+                                                               const CudaSystem&) = 0;
+        virtual void                        DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+                                                                const CudaSystem&) = 0;
 
         virtual size_t                      UsedGPUMemory() const = 0;
         virtual size_t                      UsedCPUMemory() const = 0;
@@ -80,7 +87,7 @@ class GPUAcceleratorBatchI
         // Type(as string) of the accelerator group
         virtual const char*                     Type() const = 0;
         // Kernel Logic
-        virtual void                            Hit(int gpuId,
+        virtual void                            Hit(const CudaGPU&,
                                                     // O
                                                     HitKey* dMaterialKeys,
                                                     PrimitiveId* dPrimitiveIds,
@@ -111,7 +118,8 @@ class GPUBaseAcceleratorI
         // Base accelerator only points to the next accelerator key.
         // It can return invalid key,
         // which is either means data is out of bounds or ray is invalid.
-        virtual void            Hit(// Output
+        virtual void            Hit(const CudaSystem&,
+                                    // Output
                                     TransformId* dTransformIds,
                                     HitKey* dMaterialKeys,
                                     // Inputs

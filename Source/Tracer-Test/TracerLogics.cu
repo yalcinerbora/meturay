@@ -31,7 +31,8 @@ TracerError TracerBasic::Initialize()
     return TracerError::OK;
 }
 
-uint32_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
+uint32_t TracerBasic::GenerateRays(const CudaSystem& cudaSystem,
+                                   RayMemory& rayMem, RNGMemory& rngMem,
                                    const GPUSceneI& scene,
                                    const CameraPerspective& cam,
                                    int samplePerLocation,
@@ -54,22 +55,20 @@ uint32_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
     // Call multi-device
     const uint32_t TPB = StaticThreadPerBlock1D;
     // GPUSplits
-    const auto splits = CudaSystem::GridStrideMultiGPUSplit(totalRayCount, TPB, 0,
-                                                            KCGenerateCameraRays<RayAuxData, AuxFunc>);
+    const auto splits = cudaSystem.GridStrideMultiGPUSplit(totalRayCount, TPB, 0,
+                                                           KCGenerateCameraRays<RayAuxData, AuxFunc>);
 
 
     // Only use splits as guidance
     // and Split work into columns (much easier to maintain..
     // however not perfectly balanced... (as all things should be))
+    int i = 0;
     Vector2i localPixelStart = Zero2i;
-    for(int i = 0; i < static_cast<int>(CudaSystem::GPUList().size()); i++)
+    for(const CudaGPU& gpu : cudaSystem.GPUList())
     {
         // If no work is splitted to this GPU skip
         if(splits[i] == 0) break;
 
-        // Arguments
-        const CudaGPU& gpu = CudaSystem::GPUList()[i];
-        const int gpuId = gpu.DeviceId();
         // Generic Args
         // Offsets
         const size_t localPixelCount1D = splits[i] / samplePerLocation / samplePerLocation;
@@ -85,12 +84,12 @@ uint32_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
         RayGMem* gRays = rayMem.RaysOut();
         RayAuxData* gAuxiliary = rayMem.RayAuxOut<RayAuxData>();
         // Input
-        RNGGMem rngData = rngMem.RNGData(gpuId);
+        RNGGMem rngData = rngMem.RNGData(gpu);
 
         // Kernel Call
-        CudaSystem::AsyncGridStrideKC_X
+        gpu.AsyncGridStrideKC_X
         (
-            gpuId, 0, localWorkCount,
+            0, localWorkCount,
             KCGenerateCameraRays<RayAuxData, AuxFunc>,
             // Args
             // Inputs
@@ -109,6 +108,7 @@ uint32_t TracerBasic::GenerateRays(RayMemory& rayMem, RNGMemory& rngMem,
 
         // Adjust for next call
         localPixelStart = localPixelEnd;
+        i++;
     }
     return totalRayCount;
 }

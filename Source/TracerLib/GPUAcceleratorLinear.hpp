@@ -109,17 +109,18 @@ uint32_t GPUAccLinearGroup<PGroup>::InnerId(uint32_t surfaceId) const
 }
 
 template <class PGroup>
-void GPUAccLinearGroup<PGroup>::ConstructAccelerators()
+void GPUAccLinearGroup<PGroup>::ConstructAccelerators(const CudaSystem& system)
 {
     // TODO: make this a single KC
     for(const auto& id : idLookup)
     {
-        ConstructAccelerator(id.first);
+        ConstructAccelerator(id.first, system);
     }
 }
 
 template <class PGroup>
-void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
+void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
+                                                     const CudaSystem& system)
 {
     using PrimitiveData = typename PGroup::PrimitiveData;
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
@@ -140,11 +141,10 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
     size_t workCount = accRanges[index][1] - accRanges[index][0];
 
     // TODO: Select a GPU
-    int gpuIndex = 0;
+    const CudaGPU& gpu = *system.GPUList().begin();
     // KC
-    CudaSystem::AsyncGridStrideKC_X
+    gpu.AsyncGridStrideKC_X
     (
-        gpuIndex,
         0,
         workCount,
         //
@@ -162,17 +162,18 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface)
 }
 
 template <class PGroup>
-void GPUAccLinearGroup<PGroup>::ConstructAccelerators(const std::vector<uint32_t>& surfaces)
+void GPUAccLinearGroup<PGroup>::ConstructAccelerators(const std::vector<uint32_t>& surfaces,
+                                                      const CudaSystem& system)
 {
     // TODO: make this a single KC
     for(const uint32_t& id : surfaces)
     {
-        ConstructAccelerator(id);
+        ConstructAccelerator(id, system);
     }
 }
 
 template <class PGroup>
-void GPUAccLinearGroup<PGroup>::DestroyAccelerators()
+void GPUAccLinearGroup<PGroup>::DestroyAccelerators(const CudaSystem&)
 {
     //...
     // Define destory??
@@ -180,7 +181,8 @@ void GPUAccLinearGroup<PGroup>::DestroyAccelerators()
 }
 
 template <class PGroup>
-void GPUAccLinearGroup<PGroup>::DestroyAccelerator(uint32_t surface)
+void GPUAccLinearGroup<PGroup>::DestroyAccelerator(uint32_t surface,
+                                                   const CudaSystem&)
 {
     //...
     // Define destory??
@@ -188,7 +190,8 @@ void GPUAccLinearGroup<PGroup>::DestroyAccelerator(uint32_t surface)
 }
 
 template <class PGroup>
-void GPUAccLinearGroup<PGroup>::DestroyAccelerators(const std::vector<uint32_t>& surfaces)
+void GPUAccLinearGroup<PGroup>::DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+                                                    const CudaSystem&)
 {
     //...
 }
@@ -221,7 +224,7 @@ const char* GPUAccLinearBatch<PGroup>::Type() const
 }
 
 template <class PGroup>
-void GPUAccLinearBatch<PGroup>::Hit(int gpuId,
+void GPUAccLinearBatch<PGroup>::Hit(const CudaGPU& gpu,
                                     // O
                                     HitKey* dMaterialKeys,
                                     PrimitiveId* dPrimitiveIds,
@@ -238,9 +241,8 @@ void GPUAccLinearBatch<PGroup>::Hit(int gpuId,
     using PrimitiveData = typename PGroup::PrimitiveData;
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
 
-    CudaSystem::AsyncGridStrideKC_X
+    gpu.AsyncGridStrideKC_X
     (
-        gpuId,
         0,
         rayCount,
         //

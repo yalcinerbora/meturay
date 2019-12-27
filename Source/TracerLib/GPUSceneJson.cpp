@@ -250,11 +250,11 @@ SceneError GPUSceneJson::GenerateMaterialGroups(const MultiGPUMatNodes& matGroup
     for(const auto& matGroupN : matGroupNodes)
     {
         const std::string& matTypeName = matGroupN.first.first;
-        const int gpuId = matGroupN.first.second;
+        const CudaGPU* gpu = matGroupN.first.second;
         const auto& matNodes = matGroupN.second;
         //
         GPUMaterialGroupI* matGroup = nullptr;
-        if(e = logicGenerator.GenerateMaterialGroup(matGroup, matTypeName, gpuId))
+        if(e = logicGenerator.GenerateMaterialGroup(matGroup, matTypeName, *gpu))
             return e;
         if(e = matGroup->InitializeGroup(matNodes, time, parentPath))
             return e;
@@ -275,7 +275,7 @@ SceneError GPUSceneJson::GenerateMaterialBatches(MaterialKeyListing& allMatKeys,
         if(batchId >= (1 << HitKey::BatchBits))
             return SceneError::TOO_MANY_MATERIAL_GROUPS;
 
-        const int gpuId = requiredMat.first.second;
+        const CudaGPU* gpu = requiredMat.first.second;
         const std::string& batchName = requiredMat.first.first;
         const std::string& matTName = requiredMat.second.matType;
         const std::string& primTName = requiredMat.second.primType;
@@ -284,7 +284,7 @@ SceneError GPUSceneJson::GenerateMaterialBatches(MaterialKeyListing& allMatKeys,
         GPUMaterialGroupI* mGroup = nullptr;
         if((e = logicGenerator.GeneratePrimitiveGroup(pGroup, primTName)) != SceneError::OK)
             return e;
-        if((e = logicGenerator.GenerateMaterialGroup(mGroup, matTName, gpuId)) != SceneError::OK)
+        if((e = logicGenerator.GenerateMaterialGroup(mGroup, matTName, *gpu)) != SceneError::OK)
             return e;
 
         // Generation

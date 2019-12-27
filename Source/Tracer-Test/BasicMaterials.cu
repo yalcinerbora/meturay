@@ -1,8 +1,8 @@
 #include "BasicMaterials.cuh"
 #include "MaterialNodeReaders.h"
 
-BasicMat::BasicMat(int gpuId)
-    : GPUMaterialGroup(gpuId)
+BasicMat::BasicMat(const CudaGPU& gpu)
+    : GPUMaterialGroup(gpu)
 {}
 
 SceneError BasicMat::InitializeGroup(const NodeListing& materialNodes, double time,
@@ -48,8 +48,8 @@ int BasicMat::InnerId(uint32_t materialId) const
     return innerIds.at(materialId);
 }
 
-BarycentricMat::BarycentricMat(int gpuId)
-    : GPUMaterialGroup(gpuId)
+BarycentricMat::BarycentricMat(const CudaGPU& gpu)
+    : GPUMaterialGroup(gpu)
 {}
 
 SceneError BarycentricMat::InitializeGroup(const NodeListing& materialNodes, double time,
@@ -72,8 +72,8 @@ int BarycentricMat::InnerId(uint32_t materialId) const
     return 0;
 }
 
-SphericalMat::SphericalMat(int gpuId)
-    : GPUMaterialGroup(gpuId)
+SphericalMat::SphericalMat(const CudaGPU& gpu)
+    : GPUMaterialGroup(gpu)
 {}
 
 SceneError SphericalMat::InitializeGroup(const NodeListing& materialNodes, double time,

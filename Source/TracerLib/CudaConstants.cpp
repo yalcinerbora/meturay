@@ -102,6 +102,21 @@ void CudaGPU::WorkGroup::WaitMainStream() const
     CUDA_CHECK(cudaEventSynchronize(mainEvent));
 }
 
+uint32_t CudaGPU::DetermineGridStrideBlock(uint32_t sharedMemSize,
+                                           uint32_t threadCount,
+                                           size_t workCount,
+                                           void* func) const
+{
+    // TODO: Make better SM determination
+    uint32_t blockPerSM = RecommendedBlockCountPerSM(func, threadCount, sharedMemSize);
+    // Only call enough SM
+    uint32_t totalRequiredBlocks = static_cast<uint32_t>((workCount + threadCount - 1) / threadCount);
+    uint32_t requiredSMCount = (totalRequiredBlocks + blockPerSM - 1) / blockPerSM;
+    uint32_t smCount = std::min(SMCount(), requiredSMCount);
+    uint32_t blockCount = std::min(requiredSMCount, smCount * blockPerSM);
+    return blockCount;
+}
+
 CudaGPU::CudaGPU(int deviceId)
     : deviceId(deviceId)
 {
@@ -194,10 +209,12 @@ void CudaGPU::WaitMainStream() const
     workList.WaitMainStream();
 }
 
-std::vector<CudaGPU> CudaSystem::systemGPUs;
-CudaSystem::CudaError CudaSystem::systemStatus = CudaSystem::CUDA_SYSTEM_UNINIALIZED;
+bool CudaGPU::operator<(const CudaGPU& other) const
+{
+    return deviceId < other.deviceId;
+}
 
-CudaSystem::CudaError CudaSystem::Initialize()
+CudaError CudaSystem::Initialize()
 {
     int deviceCount;
     cudaError err;
@@ -205,17 +222,17 @@ CudaSystem::CudaError CudaSystem::Initialize()
     err = cudaGetDeviceCount(&deviceCount);
     if(err == cudaErrorInsufficientDriver)
     {
-        return OLD_DRIVER;
+        return CudaError::OLD_DRIVER;
     }
     else if(err == cudaErrorNoDevice)
     {
-        return NO_DEVICE;
+        return CudaError::NO_DEVICE;
     }
 
     // All Fine Start Query Devices
     for(int i = 0; i < deviceCount; i++)
     {
-        systemGPUs.emplace_back(i);
+        systemGPUs.emplace(i);
     }
 
     // Strip unsupported processors
@@ -224,48 +241,19 @@ CudaSystem::CudaError CudaSystem::Initialize()
         if(i->Tier() == CudaGPU::GPU_UNSUPPORTED)
             i = systemGPUs.erase(i);
     }
-    return OK;
-}
-
-CudaSystem::CudaError CudaSystem::Initialize(std::vector<CudaGPU>& gpus)
-{
-    //systemGPUs = gpus;
     return CudaError::OK;
-}
-
-CudaSystem::CudaError CudaSystem::SystemStatus()
-{
-    return systemStatus;
-}
-
-uint32_t CudaSystem::DetermineGridStrideBlock(int gpuIndex,
-                                              uint32_t sharedMemSize,
-                                              uint32_t threadCount,
-                                              size_t workCount,
-                                              void* func)
-{
-    // TODO: Make better SM determination
-    const CudaGPU& gpu = GPUList()[gpuIndex];
-    uint32_t blockPerSM = gpu.RecommendedBlockCountPerSM(func, threadCount,
-                                                         sharedMemSize);
-    // Only call enough SM
-    uint32_t totalRequiredBlocks = static_cast<uint32_t>((workCount + threadCount - 1) / threadCount);
-    uint32_t requiredSMCount = (totalRequiredBlocks + blockPerSM - 1) / blockPerSM;
-    uint32_t smCount = std::min(gpu.SMCount(), requiredSMCount);
-    uint32_t blockCount = std::min(requiredSMCount, smCount * blockPerSM);
-    return blockCount;
 }
 
 const std::vector<size_t> CudaSystem::GridStrideMultiGPUSplit(size_t workCount,
                                                               uint32_t threadCount,
                                                               uint32_t sharedMemSize,
-                                                              void* f)
+                                                              void* f) const
 {
 
     std::vector<size_t> workPerGPU;
     // Split work into all GPUs
     uint32_t totalAvailBlocks = 0;
-    for(const CudaGPU& g : GPUList())
+    for(const CudaGPU& g : systemGPUs)
     {
         uint32_t blockPerSM = g.RecommendedBlockCountPerSM(f, threadCount, sharedMemSize);
         uint32_t blockGPU = blockPerSM * g.SMCount();

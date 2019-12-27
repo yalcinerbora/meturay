@@ -45,7 +45,7 @@ class TracerI
         // COMMANDS TO TRACER //
         // ===================//
         // Main Calls
-        virtual TracerError             Initialize(int leaderGPUId = 0)  = 0;
+        virtual TracerError             Initialize()  = 0;
         virtual void                    SetOptions(const TracerOptions&) = 0;
         // Requests
         virtual void                    RequestBaseAccelerator() = 0;

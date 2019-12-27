@@ -55,13 +55,14 @@ class MockTracerLogic : public TracerBaseLogicI
                 // Get ready for hit loop
                 void                    GetReady(uint32_t rayCount) override {};
                 // KC
-                void                    Hit(// Output
-                                        TransformId* dTransformIds,
-                                        HitKey* dAcceleratorKeys,
-                                        // Inputs
-                                        const RayGMem* dRays,
-                                        const RayId* dRayIds,
-                                        const uint32_t rayCount) const override;
+                void                    Hit(const CudaSystem&,
+                                            // Output
+                                            TransformId* dTransformIds,
+                                            HitKey* dAcceleratorKeys,
+                                            // Inputs
+                                            const RayGMem* dRays,
+                                            const RayId* dRayIds,
+                                            const uint32_t rayCount) const override;
 
                 // Initialization
                 SceneError          Initialize(// List of surface to transform id hit key mappings
@@ -90,7 +91,7 @@ class MockTracerLogic : public TracerBaseLogicI
                 // Type(as string) of the accelerator group
                 const char*                     Type() const override { return "MockAccelBatch"; }
                 // KC
-                void                            Hit(int gpuId,
+                void                            Hit(const CudaGPU& gpuId,
                                                     // O
                                                     HitKey* dMaterialKeys,
                                                     PrimitiveId* dPrimitiveIds,
@@ -191,7 +192,9 @@ class MockTracerLogic : public TracerBaseLogicI
         TracerError                             Initialize() override;
 
         // Generate Camera Rays
-        uint32_t                                GenerateRays(RayMemory&, RNGMemory&,
+        uint32_t                                GenerateRays(const CudaSystem&,
+                                                             //
+                                                             RayMemory&, RNGMemory&,
                                                              const GPUSceneI& scene,
                                                              const CameraPerspective&,
                                                              int samplePerLocation,
@@ -247,7 +250,8 @@ const GPUMaterialGroupI& MockTracerLogic::MaterialMock::MaterialGroup() const
 const std::string MockTracerLogic::HitName = "";
 const std::string MockTracerLogic::ShadeName = "";
 
-void MockTracerLogic::BaseAcceleratorMock::Hit(// Output
+void MockTracerLogic::BaseAcceleratorMock::Hit(const CudaSystem&,
+                                               // Output
                                                TransformId* dTransformIds,
                                                HitKey* dAcceleratorKeys,
                                                // Inputs
@@ -275,7 +279,7 @@ void MockTracerLogic::BaseAcceleratorMock::Hit(// Output
     }
 }
 
-void MockTracerLogic::AcceleratorMock::Hit(int gpuId,
+void MockTracerLogic::AcceleratorMock::Hit(const CudaGPU& gpu,
                                            // O
                                            HitKey* dMaterialKeys,
                                            PrimitiveId* dPrimitiveIds,
@@ -394,7 +398,9 @@ TracerError MockTracerLogic::Initialize()
 }
 
 
-uint32_t MockTracerLogic::GenerateRays(RayMemory&, RNGMemory&,
+uint32_t MockTracerLogic::GenerateRays(const CudaSystem&, 
+                                       //
+                                       RayMemory&, RNGMemory&,
                                        const GPUSceneI& scene,
                                        const CameraPerspective&,
                                        int samplePerLocation,
@@ -423,10 +429,16 @@ TEST(MockTracerTest, Test)
     // Create our mock
     MockTracerLogic mockLogic(seed);
 
+    // Gen CudaSystem
+    CudaSystem cudaSystem;
+    CudaError cudaE = cudaSystem.Initialize();
+    if(cudaE != CudaError::OK)
+        ASSERT_FALSE(true);
+
     // Load Tracer DLL
-    TracerBase tracer;
+    TracerBase tracer(cudaSystem);
     TracerI* tracerI = &tracer;
-    tracerI->Initialize(0);
+    tracerI->Initialize();
     tracerI->ResizeImage(resolution);
     tracerI->ReportionImage();
 

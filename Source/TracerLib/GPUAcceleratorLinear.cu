@@ -25,7 +25,8 @@ void GPUBaseAcceleratorLinear::GetReady(uint32_t rayCount)
     CUDA_CHECK(cudaMemset(dPrevLocList, 0x00, requiredSize));
 }
 
-void GPUBaseAcceleratorLinear::Hit(// Output
+void GPUBaseAcceleratorLinear::Hit(const CudaSystem& system,
+                                   // Output
                                    TransformId* dTransformIds,
                                    HitKey* dAcceleratorKeys,
                                    // Inputs
@@ -34,36 +35,35 @@ void GPUBaseAcceleratorLinear::Hit(// Output
                                    const uint32_t rayCount) const
 {
     // Split work
-    const auto splits = CudaSystem::GridStrideMultiGPUSplit(rayCount,
-                                                            StaticThreadPerBlock1D,
-                                                            0,
-                                                            KCIntersectBaseLinear);
+    const auto splits = system.GridStrideMultiGPUSplit(rayCount,
+                                                       StaticThreadPerBlock1D,
+                                                       0,
+                                                       KCIntersectBaseLinear);
     // Split work into multiple GPU's
     size_t offset = 0;
-    for(int i = 0; i < static_cast<int>(CudaSystem::GPUList().size()); i++)
+    int i = 0;
+    for(const CudaGPU& gpu : system.GPUList())
     {
         if(splits[i] == 0) break;
         // Generic
-        const CudaGPU& g = CudaSystem::GPUList()[i];
-        int gpuIndex = g.DeviceId();
         const uint32_t workCount = static_cast<uint32_t>(splits[i]);
-
-        CudaSystem::GridStrideKC_X(gpuIndex, 0, (cudaStream_t)0,
-                                   workCount,
-                                   //
-                                   KCIntersectBaseLinear,
-                                   // Output
-                                   dTransformIds,
-                                   dAcceleratorKeys + offset,
-                                   // I-O
-                                   dPrevLocList,
-                                   // Input
-                                   dRays,
-                                   dRayIds + offset,
-                                   workCount,
-                                   // Constants
-                                   dLeafs,
-                                   leafCount);
+        gpu.GridStrideKC_X(0, (cudaStream_t)0,
+                           workCount,
+                           //
+                           KCIntersectBaseLinear,
+                           // Output
+                           dTransformIds,
+                           dAcceleratorKeys + offset,
+                           // I-O
+                           dPrevLocList,
+                           // Input
+                           dRays,
+                           dRayIds + offset,
+                           workCount,
+                           // Constants
+                           dLeafs,
+                           leafCount);
+        i++;
     }
 }
 

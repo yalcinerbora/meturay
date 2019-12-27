@@ -7,19 +7,19 @@
 class SingleGPUScenePartitioner : public ScenePartitionerI
 {
     private:
-        const std::vector<CudaGPU>&     systemGPUs;
+        const CudaSystem&   system;
 
     protected:
     public:
         // Constructors & Destructor
-                                        SingleGPUScenePartitioner(const std::vector<CudaGPU>&);
-                                        ~SingleGPUScenePartitioner() = default;
+                            SingleGPUScenePartitioner(const CudaSystem&);
+                            ~SingleGPUScenePartitioner() = default;
 
-        // Interface
-        SceneError      PartitionMaterials(MultiGPUMatNodes&,
-                                           MultiGPUMatBatches&,
-                                           int&,
-                                           // Single Input
-                                           MaterialNodeList& materialGroups,
-                                           MaterialBatchList& materialBatches) const override;
+        // Interface        
+        SceneError          PartitionMaterials(MultiGPUMatNodes&,
+                                               MultiGPUMatBatches&,
+                                               int&,
+                                               // Single Input
+                                               MaterialNodeList& materialGroups,
+                                               MaterialBatchList& materialBatches) const override;
 };

@@ -18,7 +18,7 @@ and it adds default accelerators and primitives as default types.
 #include "TracerTypeGenerators.h"
 #include "TracerLogicPools.h"
 
-using NameIdPair = std::pair<std::string, int>;
+using NameGPUPair = std::pair<std::string, const CudaGPU*>;
 
 using AcceleratorPoolPtr = SharedLibPtr<AcceleratorLogicPoolI>;
 using MaterialPoolPtr = SharedLibPtr<MaterialLogicPoolI>;
@@ -56,8 +56,8 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         std::map<std::string, GPUAccelGPtr>         accelGroups;
         std::map<std::string, GPUAccelBPtr>         accelBatches;
         // Materials (Batch and Group)
-        std::map<NameIdPair, GPUMatGPtr>            matGroups;
-        std::map<NameIdPair, GPUMatBPtr>            matBatches;
+        std::map<NameGPUPair, GPUMatGPtr>            matGroups;
+        std::map<NameGPUPair, GPUMatBPtr>            matBatches;
         // Base Accelerator (Unique Ptr)
         GPUBaseAccelPtr                             baseAccelerator;
         // Tracer (Unique Ptr)
@@ -99,7 +99,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         // Material
         SceneError                  GenerateMaterialGroup(GPUMaterialGroupI*&,
                                                           const std::string& materialType,
-                                                          const int gpuId) override;
+                                                          const CudaGPU&) override;
         SceneError                  GenerateMaterialBatch(GPUMaterialBatchI*&,
                                                           const GPUMaterialGroupI&,
                                                           const GPUPrimitiveGroupI&,

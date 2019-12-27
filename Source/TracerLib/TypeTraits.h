@@ -51,7 +51,7 @@ struct IsTracerClass
     static_assert(has_type_name_v, "A Tracer class should have"
                   "\"static const char* TypeName()\" function");
     static_assert(is_class_v, "A Tracer class must be a class. (duh)");
-    static_assert(not_abstract_v, "A Tracer class must be a class. (duh)");
+    static_assert(not_abstract_v, "A Tracer class must not be a abstract class. (duh)");
 
     static constexpr bool value = has_type_name_v && 
                                   is_class_v &&

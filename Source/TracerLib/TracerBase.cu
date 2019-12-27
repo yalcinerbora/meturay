@@ -49,7 +49,7 @@ void TracerBase::SendError(TracerError e, bool isFatal)
 void TracerBase::HitRays()
 {
     // Sort and Partition happens on the leader device
-    CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice()));
+    CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
 
     // Tracer Logic interface
     const Vector2i& accBitCounts = currentLogic->SceneAcceleratorMaxBits();
@@ -82,14 +82,15 @@ void TracerBase::HitRays()
         // Traverse accelerator
         // Base accelerator provides potential hits
         // Cannot provide an absolute hit (its not its job)
-        baseAccelerator.Hit(dTransfomIds, 
+        baseAccelerator.Hit(cudaSystem,
+                            dTransfomIds, 
                             dCurrentKeys + validRayOffset,
                             dRays,
                             dCurrentRayIds + validRayOffset,
                             rayCount);
 
         // Wait all GPUs to finish...
-        CudaSystem::SyncGPUMainStreamAll();
+        cudaSystem.SyncGPUMainStreamAll();
 
         // Base accelerator traverses the data partially
         // Updates current key (which represents inner accelerator batch and id)
@@ -98,7 +99,7 @@ void TracerBase::HitRays()
         // and partitions the array according to batches
 
         // Sort and Partition happens on the leader device
-        CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice()));
+        CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
 
         // Sort initial results (in order to partition and launch kernels accordingly)
         // Sort is radix sort.
@@ -124,8 +125,9 @@ void TracerBase::HitRays()
         // (group partitions into gpus and order for better async access)
         // ....
         // TODO:
-        const int totalGPU = static_cast<int>(CudaSystem::GPUList().size());
-        int currentGPU = 0;
+        const int totalGPU = static_cast<int>(cudaSystem.GPUList().size());
+        const auto& gpus = cudaSystem.GPUList();
+        auto currentGPU = gpus.begin();
 
         // For each partition
         for(const auto& p : portions)
@@ -143,7 +145,7 @@ void TracerBase::HitRays()
             // Local hit kernels returns a material key
             // and primitive inner id.
             // Since materials are batched for both material and
-            loc->second->Hit(currentGPU,
+            loc->second->Hit(*currentGPU,
                              // O
                              dMaterialKeys,
                              dPrimitiveIds,
@@ -157,7 +159,8 @@ void TracerBase::HitRays()
                              static_cast<uint32_t>(p.count));
 
             // Split to GPUs
-            currentGPU = (currentGPU + 1) % totalGPU;
+            currentGPU++;
+            if(currentGPU == gpus.end()) currentGPU = gpus.begin();
 
             // Hit function updates material key,
             // primitive id and struct if this hit is accepted
@@ -179,7 +182,7 @@ void TracerBase::HitRays()
         //
         // Tracer logic mostly utilizies mutiple GPUs so we need to
         // wait all GPUs to finish
-        CudaSystem::SyncGPUAll();
+        cudaSystem.SyncGPUAll();
     }
     // At the end of iteration all rays found a material, primitive
     // and interpolation weights (which should be on hitStruct)
@@ -189,7 +192,7 @@ void TracerBase::HitRays()
 void TracerBase::ShadeRays()
 {
     // Sort and Partition happens on leader device
-    CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice()));
+    CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
 
     const Vector2i matMaxBits = currentLogic->SceneMaterialMaxBits();
     // Image Memory Pointers
@@ -302,7 +305,7 @@ void TracerBase::ShadeRays()
 
     // Again wait all of the GPU's since
     // CUDA functions will be on multiple-gpus
-    CudaSystem::SyncGPUAll();
+    cudaSystem.SyncGPUAll();
 
     // Shading complete
     // Now make "RayOut" to "RayIn"
@@ -310,22 +313,24 @@ void TracerBase::ShadeRays()
     rayMemory.SwapRays();
 }
 
-TracerBase::TracerBase()
-    : callbacks(nullptr)
+TracerBase::TracerBase(CudaSystem& s)
+    : cudaSystem(s)
+    , callbacks(nullptr)
     , currentRayCount(0)
     , currentLogic(nullptr)
     , healthy(false)
     , sampleCountPerRay(0)
     , options(TracerConstants::DefaultTracerOptions)
-{}
+    , rayMemory(*(s.GPUList().begin()))
+{
+    const auto& test = *cudaSystem.GPUList().begin();
 
-TracerError TracerBase::Initialize(int leaderGPUId)
+}
+
+TracerError TracerBase::Initialize()
 {
     // No logic set for initalization
     if(currentLogic == nullptr) return TracerError::NO_LOGIC_SET;
-
-    // Device initalization
-    rayMemory.SetLeaderDevice(leaderGPUId);
 
     // Construct Accelerators
     GPUBaseAcceleratorI& baseAccelerator = currentLogic->BaseAcelerator();
@@ -334,11 +339,9 @@ TracerError TracerBase::Initialize(int leaderGPUId)
     baseAccelerator.Constrcut();
     for(const auto& accel : acceleratorGroups)
     {
-        accel->ConstructAccelerators();
+        accel->ConstructAccelerators(cudaSystem);
     }
-
-    CudaSystem::SyncGPUAll();
-    CUDA_CHECK(cudaSetDevice(leaderGPUId));
+    cudaSystem.SyncGPUAll();
 
     // All seems fine mark tracer as healthy
     healthy = true;
@@ -367,7 +370,7 @@ void TracerBase::AttachLogic(TracerBaseLogicI& logic)
     currentLogic = &logic;
 
     // Initialize RNG Memory
-    rngMemory = RNGMemory(logic.Seed());
+    rngMemory = RNGMemory(logic.Seed(), cudaSystem);
 }
 
 void TracerBase::GenerateInitialRays(const GPUSceneI& scene,
@@ -386,7 +389,9 @@ void TracerBase::GenerateInitialRays(const GPUSceneI& scene,
 {
     if(!healthy) return;
     // Delegate camera ray generation to tracer system
-    currentRayCount = currentLogic->GenerateRays(rayMemory, rngMemory,
+    currentRayCount = currentLogic->GenerateRays(cudaSystem,
+                                                 //
+                                                 rayMemory, rngMemory,
                                                  scene, cam, samplePerLocation,
                                                  outputImage.Resolution(),
                                                  outputImage.SegmentOffset(),
@@ -415,7 +420,7 @@ void TracerBase::Render()
     SendLog(" Shading Complete!");
 
     // Force Nsight Flush
-    CUDA_CHECK(cudaDeviceSynchronize());
+    //CUDA_CHECK(cudaDeviceSynchronize());
 
     //printf("\n-------\n");
 }

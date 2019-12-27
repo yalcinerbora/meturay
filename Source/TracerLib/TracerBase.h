@@ -27,6 +27,7 @@ Single thread will
 #include "RayMemory.h"
 #include "ImageMemory.h"
 
+class CudaSystem;
 class TracerBaseLogicI;
 class TracerLogicGeneratorI;
 struct TracerError;
@@ -34,6 +35,9 @@ struct TracerError;
 class TracerBase : public TracerI
 {
     private:
+        // Cuda System For Kernel Calls
+        const CudaSystem&       cudaSystem;
+
         // Common Memory
         RNGMemory               rngMemory;
         RayMemory               rayMemory;
@@ -62,7 +66,7 @@ class TracerBase : public TracerI
 
     public:
         // Constructors & Destructor
-                            TracerBase();
+                            TracerBase(CudaSystem& system);
                             TracerBase(const TracerBase&) = delete;
         TracerBase&         operator=(const TracerBase&) = delete;
                             ~TracerBase() = default;
@@ -77,7 +81,7 @@ class TracerBase : public TracerI
         // COMMANDS TO TRACER //
         // ===================//
         // Main Calls
-        TracerError         Initialize(int leaderGPUId = 0) override;
+        TracerError         Initialize() override;
         void                SetOptions(const TracerOptions&) override;
         // Requests
         void                RequestBaseAccelerator() override;

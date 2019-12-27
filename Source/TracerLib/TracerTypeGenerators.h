@@ -28,6 +28,8 @@ class GPUMaterialGroupI;
 class GPUAcceleratorBatchI;
 class GPUMaterialBatchI;
 
+class CudaGPU;
+
 // Fundamental Pointers whichalso support creation-deletion
 // across dll boundaries
 using GPUTracerPtr = SharedLibPtr<TracerBaseLogicI>;
@@ -63,7 +65,7 @@ using AccelBatchGeneratorFunc = AccelBatch* (*)(const GPUAcceleratorGroupI&,
                                                 const GPUPrimitiveGroupI&);
 
 template<class MaterialGroup>
-using MaterialGroupGeneratorFunc = MaterialGroup* (*)(int gpuId);
+using MaterialGroupGeneratorFunc = MaterialGroup* (*)(const CudaGPU& gpuId);
 
 template<class MaterialBatch>
 using MaterialBatchGeneratorFunc = MaterialBatch* (*)(const GPUMaterialGroupI&,
@@ -122,9 +124,9 @@ class GPUMatGroupGen
             , dFunc(d)
         {}
 
-        GPUMatGPtr operator()(int gpuId)
+        GPUMatGPtr operator()(const CudaGPU& gpu)
         {
-            GPUMaterialGroupI* mat = gFunc(gpuId);
+            GPUMaterialGroupI* mat = gFunc(gpu);
             return GPUMatGPtr(mat, dFunc);
         }
 };
@@ -233,9 +235,9 @@ namespace TypeGenWrappers
     }
 
     template <class Base, class MatBatch>
-    Base* MaterialGroupConstruct(int gpuId)
+    Base* MaterialGroupConstruct(const CudaGPU& gpu)
     {
-        return new MatBatch(gpuId);
+        return new MatBatch(gpu);
     }
 
     template <class Base, class MatBatch>

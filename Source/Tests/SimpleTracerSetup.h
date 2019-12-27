@@ -192,6 +192,7 @@ class SimpleTracerSetup
         std::unique_ptr<VisorI>             visorView;
         std::unique_ptr<TracerBase>         tracerBase;
         std::unique_ptr<GPUSceneJson>       gpuScene;
+        std::unique_ptr<CudaSystem>         cudaSystem;
 
         // Visor Input
         std::unique_ptr<VisorWindowInput>   visorInput;
@@ -262,12 +263,13 @@ bool SimpleTracerSetup::Init()
 
     // Generate GPU List & A Partitioner
     // Check cuda system error here
-    const std::vector<CudaGPU>& gpuList = CudaSystem::GPUList();
-    if(CudaSystem::SystemStatus() != CudaSystem::OK) return false;
-    const int leaderDevice = gpuList[0].DeviceId();
+    cudaSystem = std::make_unique<CudaSystem>();
+    CudaError cudaE = cudaSystem->Initialize();
+    ERROR_CHECK(CudaError, cudaE);
+    //const CudaGPU& leaderDevice = *cudaSystem->GPUList().begin();
 
     // GPU Data Partitioner
-    SingleGPUScenePartitioner partitioner(gpuList);
+    SingleGPUScenePartitioner partitioner(*cudaSystem);
 
     // Load Scene
     gpuScene = std::make_unique<GPUSceneJson>(sceneName,
@@ -317,7 +319,7 @@ bool SimpleTracerSetup::Init()
     visorView->SetInputScheme(*visorInput);
 
     // Attach the logic & Image format
-    tracerBase = std::make_unique<TracerBase>();
+    tracerBase = std::make_unique<TracerBase>(*cudaSystem);
     tracerBase->AttachLogic(*logic);
     tracerBase->SetImagePixelFormat(IMAGE_PIXEL_FORMAT);
     tracerBase->ResizeImage(IMAGE_RESOLUTION);
@@ -326,7 +328,7 @@ bool SimpleTracerSetup::Init()
     tracerBase->SetOptions(TRACER_OPTIONS);
 
     // Tracer Init
-    TracerError trcE = tracerBase->Initialize(leaderDevice);
+    TracerError trcE = tracerBase->Initialize();
     ERROR_CHECK(TracerError, trcE);
 
     // Get a Self-Node

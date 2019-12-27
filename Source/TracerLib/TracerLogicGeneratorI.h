@@ -8,6 +8,7 @@ struct DLLError;
 struct SharedLibArgs;
 
 class SharedLib;
+class CudaGPU;
 
 // Execution Related Abstraction
 class GPUBaseAcceleratorI;
@@ -46,7 +47,7 @@ class TracerLogicGeneratorI
         // Material
         virtual SceneError      GenerateMaterialGroup(GPUMaterialGroupI*&,
                                                       const std::string& materialType,
-                                                      const int gpuId) = 0;
+                                                      const CudaGPU&) = 0;
         virtual SceneError      GenerateMaterialBatch(GPUMaterialBatchI*&,
                                                       const GPUMaterialGroupI&,
                                                       const GPUPrimitiveGroupI&,

@@ -14,6 +14,7 @@
 struct RayGMem;
 struct SceneError;
 
+class CudaGPU;
 class SceneNodeI;
 class RNGMemory;
 class GPUPrimitiveGroupI;
@@ -39,7 +40,7 @@ class GPUMaterialGroupI
         // Material Queries
         virtual int                         InnerId(uint32_t materialId) const = 0;
         virtual bool                        HasCachedTextures(uint32_t materialId) const = 0;
-        virtual int                         GPUId() const = 0;
+        virtual const CudaGPU&              GPU() const = 0;
 
         virtual size_t                      UsedGPUMemory() const = 0;
         virtual size_t                      UsedCPUMemory() const = 0;

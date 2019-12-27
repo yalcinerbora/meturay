@@ -14,6 +14,8 @@ General Device memory manager for ray and it's auxiliary data
 #include "DeviceMemory.h"
 #include "RayStructs.h"
 
+class CudaGPU;
+
 template<class T>
 using RayPartitions = std::set<ArrayPortion<T>>;
 
@@ -27,7 +29,7 @@ class RayMemory
         // Leader GPU device that is responsible for
         // parititoning and sorting the ray data
         // (Only usefull in multi-GPU systems)
-        int                         leaderDeviceId;
+        const CudaGPU&              leaderDevice;
 
         // Ray Related
         DeviceMemory                memIn;
@@ -87,7 +89,7 @@ class RayMemory
 
     public:
         // Constructors & Destructor
-                                RayMemory();
+                                RayMemory(const CudaGPU&);
                                 RayMemory(const RayMemory&) = delete;
                                 RayMemory(RayMemory&&) = default;
         RayMemory&              operator=(const RayMemory&) = delete;
@@ -123,8 +125,8 @@ class RayMemory
 
         // Misc
         // Sets leader device which is responsible for sort and partition kernel calls
-        void                        SetLeaderDevice(int);
-        int                         LeaderDevice() const;
+        //void                        SetLeaderDevice(const CudaGPU&);
+        const CudaGPU&              LeaderDevice() const;
 
         // Memory Allocation
         void                        ResetHitMemory(uint32_t rayCount, size_t hitStructSize);
@@ -143,14 +145,14 @@ class RayMemory
         void                        FillMatIdsForSort(uint32_t rayCount);
 };
 
-inline void RayMemory::SetLeaderDevice(int deviceId)
-{
-    leaderDeviceId = deviceId;
-}
+//inline void RayMemory::SetLeaderDevice(const CudaGPU& d)
+//{
+//    leaderDevice = &d;
+//}
 
-inline int RayMemory::LeaderDevice() const
+inline const CudaGPU& RayMemory::LeaderDevice() const
 {
-    return leaderDeviceId;
+    return leaderDevice;
 }
 
 inline RayGMem* RayMemory::Rays()

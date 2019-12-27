@@ -3,8 +3,8 @@
 #include "RayLib/SceneStructs.h"
 #include "RayLib/SceneError.h"
 
-SingleGPUScenePartitioner::SingleGPUScenePartitioner(const std::vector<CudaGPU>& gList)
-    : systemGPUs(gList)
+SingleGPUScenePartitioner::SingleGPUScenePartitioner(const CudaSystem& cudaSystem)
+    : system(cudaSystem)
 {}
 
 // Algo assumes a single healthy GPU
@@ -16,19 +16,19 @@ SceneError SingleGPUScenePartitioner::PartitionMaterials(MultiGPUMatNodes& multi
                                                          MaterialBatchList& materialBatches) const
 {
     // Just use the first gpu avail
-    assert(!systemGPUs.empty());
-    const int GPUId = systemGPUs[0].DeviceId();
+    assert(!system.GPUList().empty());
+    const CudaGPU& gpu = *(system.GPUList().begin());
 
     boundaryMaterialGPU = 0;
 
     for(auto& mg : materialGroups)
     {
-        multiGroups.emplace(std::make_pair(mg.first, GPUId), 
+        multiGroups.emplace(std::make_pair(mg.first, &gpu),
                             std::move(mg.second));
     }
     for(auto& mb : materialBatches)
     {
-        multiBatches.emplace(std::make_pair(mb.first, GPUId), 
+        multiBatches.emplace(std::make_pair(mb.first, &gpu),
                              std::move(mb.second));
     }
     materialGroups.clear();

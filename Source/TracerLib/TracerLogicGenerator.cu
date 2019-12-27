@@ -204,10 +204,10 @@ SceneError TracerLogicGenerator::GenerateAcceleratorBatch(GPUAcceleratorBatchI*&
 
 SceneError TracerLogicGenerator::GenerateMaterialGroup(GPUMaterialGroupI*& mg,
                                                        const std::string& materialType,
-                                                       const int gpuId)
+                                                       const CudaGPU& gpu)
 {
     mg = nullptr;
-    auto loc = matGroups.find(std::make_pair(materialType, gpuId));
+    auto loc = matGroups.find(std::make_pair(materialType, &gpu));
     if(loc == matGroups.end())
     {
         // Cannot Find Already Constructed Type
@@ -215,9 +215,9 @@ SceneError TracerLogicGenerator::GenerateMaterialGroup(GPUMaterialGroupI*& mg,
         auto loc = matGroupGenerators.find(materialType);
         if(loc == matGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
 
-        GPUMatGPtr ptr = loc->second(gpuId);
+        GPUMatGPtr ptr = loc->second(gpu);
         mg = ptr.get();
-        matGroups.emplace(std::make_pair(materialType, gpuId), std::move(ptr));
+        matGroups.emplace(std::make_pair(materialType, &gpu), std::move(ptr));
     }
     else mg = loc->second.get();
     return SceneError::OK;
@@ -234,7 +234,7 @@ SceneError TracerLogicGenerator::GenerateMaterialBatch(GPUMaterialBatchI*& mb,
 
     const std::string batchType = std::string(mg.Type()) + pg.Type();
 
-    auto loc = matBatches.find(std::make_pair(batchType, mg.GPUId()));
+    auto loc = matBatches.find(std::make_pair(batchType, &mg.GPU()));
     if(loc == matBatches.end())
     {
         // Cannot Find Already Constructed Type
@@ -244,7 +244,7 @@ SceneError TracerLogicGenerator::GenerateMaterialBatch(GPUMaterialBatchI*& mb,
 
         GPUMatBPtr ptr = loc->second(mg, pg);
         mb = ptr.get();
-        matBatches.emplace(std::make_pair(batchType, mg.GPUId()), std::move(ptr));
+        matBatches.emplace(std::make_pair(batchType, &mg.GPU()), std::move(ptr));
         matBatchMap.emplace(keyBatchId, mb);
     }
     else mb = loc->second.get();

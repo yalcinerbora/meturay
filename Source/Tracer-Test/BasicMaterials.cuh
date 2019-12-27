@@ -22,7 +22,7 @@ class BasicMat final
     protected:
     public:
         // Constructors & Destructor
-                        BasicMat(int gpuId);
+                        BasicMat(const CudaGPU&);
                         ~BasicMat() = default;
 
         // Interface
@@ -60,7 +60,7 @@ class BarycentricMat final
     protected:
     public:
         // Constructors & Destructor
-                        BarycentricMat(int gpuId);
+                        BarycentricMat(const CudaGPU&);
                         ~BarycentricMat() = default;
 
         // Interface
@@ -98,7 +98,7 @@ class SphericalMat final
     protected:
     public:
         // Constructors & Destructor
-                        SphericalMat(int gpuId);
+                        SphericalMat(const CudaGPU&);
                         ~SphericalMat() = default;
 
         // Interface

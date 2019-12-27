@@ -98,12 +98,16 @@ class GPUAccLinearGroup final
         uint32_t                        InnerId(uint32_t surfaceId) const override;
 
         // Batched and singular construction
-        void                            ConstructAccelerators() override;
-        void                            ConstructAccelerator(uint32_t surface) override;
-        void                            ConstructAccelerators(const std::vector<uint32_t>& surfaces) override;
-        void                            DestroyAccelerators() override;
-        void                            DestroyAccelerator(uint32_t surface) override;
-        void                            DestroyAccelerators(const std::vector<uint32_t>& surfaces) override;
+        void                            ConstructAccelerators(const CudaSystem&) override;
+        void                            ConstructAccelerator(uint32_t surface,
+                                                             const CudaSystem&) override;
+        void                            ConstructAccelerators(const std::vector<uint32_t>& surfaces,
+                                                              const CudaSystem&) override;
+        void                            DestroyAccelerators(const CudaSystem&) override;
+        void                            DestroyAccelerator(uint32_t surface,
+                                                           const CudaSystem&) override;
+        void                            DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+                                                            const CudaSystem&) override;
 
         size_t                          UsedGPUMemory() const override;
         size_t                          UsedCPUMemory() const override;
@@ -124,7 +128,7 @@ class GPUAccLinearBatch final
         // Type(as string) of the accelerator group
         const char*         Type() const override;
         // Kernel Logic
-        void                Hit(int gpuId,
+        void                Hit(const CudaGPU&,
                                 // O
                                 HitKey* dMaterialKeys,
                                 PrimitiveId* dPrimitiveIds,
@@ -166,7 +170,8 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
         // Base accelerator only points to the next accelerator key.
         // It can return invalid key,
         // which is either means data is out of bounds or ray is invalid.
-        void                        Hit(// Output
+        void                        Hit(const CudaSystem&,
+                                        // Output
                                         TransformId* dTransformIds,
                                         HitKey* dAcceleratorKeys,
                                         // Inputs

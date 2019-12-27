@@ -124,13 +124,14 @@ void RayMemory::ResizeRayOut(uint32_t rayCount, size_t perRayAuxSize,
 
     // Initialize memory
     if(rayCount != 0)
-        CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
-                                   ResetHitKeysKC,
-                                   dMaterialKeys, baseBoundMatKey,
-                                   rayCount);
+        leaderDevice.GridStrideKC_X(0, 0, rayCount,
+                                    ResetHitKeysKC,
+                                    dMaterialKeys, baseBoundMatKey,
+                                    rayCount);
 }
 
-RayMemory::RayMemory()
+RayMemory::RayMemory(const CudaGPU& g)
+    : leaderDevice(g)
 {}
 
 void RayMemory::SwapRays()
@@ -233,10 +234,10 @@ void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
         dHitStructs = HitStructPtr(nullptr, static_cast<int>(hitStructSize));
 
     // Initialize memory
-    CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
-                               ResetHitIdsKC,
-                               dCurrentKeys, dCurrentIds, dRayIn,
-                               static_cast<uint32_t>(rayCount));
+    leaderDevice.GridStrideKC_X(0, 0, rayCount,
+                                ResetHitIdsKC,
+                                dCurrentKeys, dCurrentIds, dRayIn,
+                                static_cast<uint32_t>(rayCount));
 }
 
 void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
@@ -304,9 +305,9 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
     // Find Split Locations
     // Read from dKeys -> dEmptyKeys
     uint32_t locCount = rayCount - 1;
-    CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
-                               FindSplitsSparseKC,
-                               dSparseSplitIndices, dCurrentKeys, locCount);
+    leaderDevice.GridStrideKC_X(0, 0, rayCount,
+                                FindSplitsSparseKC,
+                                dSparseSplitIndices, dCurrentKeys, locCount);
 
     // Make Splits Dense
     // From dEmptyKeys -> dEmptyIds
@@ -325,12 +326,12 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
     // Find The Hit Keys for each split
     // From dEmptyIds, dKeys -> dEmptyKeys
     uint16_t* dBatches = reinterpret_cast<uint16_t*>(dSparseSplitIndices);
-    CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
-                               FindSplitBatchesKC,
-                               dBatches,
-                               dDenseSplitIndices,
-                               dCurrentKeys,
-                               hSelectCount);
+    leaderDevice.GridStrideKC_X(0, 0, rayCount,
+                                FindSplitBatchesKC,
+                                dBatches,
+                                dDenseSplitIndices,
+                                dCurrentKeys,
+                                hSelectCount);
 
     // We need to get dDenseIndices & dDenseKeys
     // Memcopy to vectors
@@ -360,8 +361,8 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
 
 void RayMemory::FillMatIdsForSort(uint32_t rayCount)
 {
-    CudaSystem::GridStrideKC_X(leaderDeviceId, 0, 0, rayCount,
-                               FillMatIdsForSortKC,
-                               dCurrentKeys, dCurrentIds, dMaterialKeys,
-                               rayCount);
+    leaderDevice.GridStrideKC_X(0, 0, rayCount,
+                                FillMatIdsForSortKC,
+                                dCurrentKeys, dCurrentIds, dMaterialKeys,
+                                rayCount);
 }

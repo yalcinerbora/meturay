@@ -1,8 +1,8 @@
 #include "GIMaterials.cuh"
 #include "MaterialNodeReaders.h"
 
-BasicPathTraceMat::BasicPathTraceMat(int gpuId)
-    : GPUMaterialGroup(gpuId)
+BasicPathTraceMat::BasicPathTraceMat(const CudaGPU& gpu)
+    : GPUMaterialGroup(gpu)
 {}
 
 SceneError BasicPathTraceMat::InitializeGroup(const NodeListing& materialNodes, double time,
@@ -48,8 +48,8 @@ int BasicPathTraceMat::InnerId(uint32_t materialId) const
     return innerIds.at(materialId);
 }
 
-LightBoundaryMat::LightBoundaryMat(int gpuId)
-    : GPUMaterialGroup(gpuId)
+LightBoundaryMat::LightBoundaryMat(const CudaGPU& gpu)
+    : GPUMaterialGroup(gpu)
 {}
 
 SceneError LightBoundaryMat::InitializeGroup(const NodeListing& materialNodes, double time,

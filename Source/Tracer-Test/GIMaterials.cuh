@@ -21,7 +21,7 @@ class BasicPathTraceMat final
 
     protected:
     public:
-                                BasicPathTraceMat(int gpuId);
+                                BasicPathTraceMat(const CudaGPU&);
                                 ~BasicPathTraceMat() = default;
 
         // Interface
@@ -61,7 +61,7 @@ class LightBoundaryMat final
 
     protected:
     public:
-                                LightBoundaryMat(int gpuId);
+                                LightBoundaryMat(const CudaGPU&);
                                 ~LightBoundaryMat() = default;
 
         // Interface
