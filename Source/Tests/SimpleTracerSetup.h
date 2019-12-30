@@ -43,11 +43,13 @@ class MockNode
     , public NodeI
 {
     private:
-        const double        Duration;
+        static constexpr uint32_t       MAX_BOUNCES = 10;
 
-        VisorI&             visor;
-        TracerI&            tracer;
-        GPUSceneI&          scene;
+        const double                    Duration;
+
+        VisorI&                         visor;
+        TracerI&                        tracer;
+        GPUSceneI&                      scene;
 
     protected:
     public:
@@ -131,7 +133,7 @@ void MockNode::Work()
         tracer.GenerateInitialRays(scene, 0, 1);
         
         uint32_t i = 0;
-        while(tracer.Continue() && i < 4)
+        while(tracer.Continue() && i < MAX_BOUNCES)
         {
             tracer.Render();
             i++;
@@ -158,8 +160,11 @@ class SimpleTracerSetup
 {
 
     private:
-        static constexpr Vector2i           SCREEN_RESOLUTION = {1024, 1024};
-        static constexpr Vector2i           IMAGE_RESOLUTION = {512, 512};
+        
+        static constexpr Vector2i           SCREEN_RESOLUTION = {1600, 900};
+        //static constexpr Vector2i           IMAGE_RESOLUTION = {320, 180};
+        //static constexpr Vector2i           IMAGE_RESOLUTION = {640, 360};
+        static constexpr Vector2i           IMAGE_RESOLUTION = {1280, 720};
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
 
