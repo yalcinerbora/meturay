@@ -73,9 +73,6 @@
     <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\ImageMemory.cu">
-      <Filter>Memory</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -231,6 +228,9 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh">
       <Filter>GPU Algorithms\Functions</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh">
+      <Filter>GPU Template Kernels</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">
@@ -270,5 +270,6 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\RNGMemory.cu">
       <Filter>Memory</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\ImageMemory.cu" />
   </ItemGroup>
 </Project>

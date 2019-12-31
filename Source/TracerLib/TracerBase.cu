@@ -412,7 +412,7 @@ void TracerBase::Render()
     SendLog(" Shading Complete!");
 
     // Force Nsight Flush
-    //CUDA_CHECK(cudaDeviceSynchronize());
+    CUDA_CHECK(cudaDeviceSynchronize());
 
     //printf("\n-------\n");
 }
