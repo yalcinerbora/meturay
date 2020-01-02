@@ -16,7 +16,14 @@
 	"BaseAccelerator": "Linear",
 	"BaseBoundaryMaterial": 0,
 
-	"Lights": [],
+	"Lights": [
+		// Light Information for event estimation
+		{
+			"type": "primitive",
+			"material" : 0,
+			"primitive": 4
+		}
+	],
 
 	"Transforms":[
 	{

@@ -20,6 +20,8 @@
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorI.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorP.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerTypeGenerators.h" />

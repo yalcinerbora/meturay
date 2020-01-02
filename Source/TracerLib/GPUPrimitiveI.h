@@ -26,6 +26,8 @@ since this API is being developed for customization this is mandatory.
 #include "NodeListing.h"
 
 struct SceneError;
+struct EstimatorInfo;
+
 class SceneNodeI;
 class SurfaceLoaderGeneratorI;
 
@@ -38,12 +40,14 @@ class GPUPrimitiveGroupI
         // Type (as string) of the primitive group
         virtual const char*         Type() const = 0;
         // Allocates and Generates Data
-        virtual SceneError          InitializeGroup(const NodeListing& surfaceDatalNodes, double time,
+        virtual SceneError          InitializeGroup(const NodeListing& surfaceDataNodes, double time,
                                                     const SurfaceLoaderGeneratorI&,
                                                     const std::string& scenePath) = 0;
         virtual SceneError          ChangeTime(const NodeListing& surfaceDatalNodes, double time,
                                                const SurfaceLoaderGeneratorI&,
                                                const std::string& scenePath) = 0;
+        // Provides data to Event Estimator
+        //virtual SceneError          GenerateEstimatorInfo() = 0;
 
         // Access primitive range from Id     
         virtual Vector2ul           PrimitiveBatchRange(uint32_t surfaceDataId) const = 0;

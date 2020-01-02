@@ -231,6 +231,12 @@
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorP.h">
+      <Filter>Partial Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorI.h">
+      <Filter>GPU Logic Interfaces</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

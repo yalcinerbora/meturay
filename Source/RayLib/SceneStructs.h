@@ -48,14 +48,6 @@ struct MatBatchData
 // of materials with this HitKey - Type Pair
 using MaterialKeyListing = std::map<TypeIdPair, HitKey>;
 
-enum class LightType
-{
-    POINT,
-    DIRECTIONAL,
-    SPOT,
-    RECTANGULAR
-};
-
 struct LightStruct
 {
     std::string     typeName;
