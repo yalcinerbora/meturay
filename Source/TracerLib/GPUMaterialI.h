@@ -19,6 +19,7 @@ class SceneNodeI;
 class RNGMemory;
 class ImageMemory;
 class GPUPrimitiveGroupI;
+class GPUEventEstimatorI;
 
 // Defines the same type materials
 // Logics consists of loading unloading certain material
@@ -42,6 +43,8 @@ class GPUMaterialGroupI
         virtual int                         InnerId(uint32_t materialId) const = 0;
         virtual bool                        HasCachedTextures(uint32_t materialId) const = 0;
         virtual const CudaGPU&              GPU() const = 0;
+
+        virtual const GPUEventEstimatorI&   EventEstimator() const = 0;
 
         virtual size_t                      UsedGPUMemory() const = 0;
         virtual size_t                      UsedCPUMemory() const = 0;
@@ -75,10 +78,10 @@ class GPUMaterialBatchI
                                                       const void* dRayAuxIn,
                                                       const PrimitiveId* dPrimitiveIds,
                                                       const HitStructPtr dHitStructs,
-                                                      //
+                                                      // Ids
                                                       const HitKey* dMatIds,
                                                       const RayId* dRayIds,
-
+                                                      // 
                                                       const uint32_t rayCount,
                                                       RNGMemory& rngMem) const = 0;
 

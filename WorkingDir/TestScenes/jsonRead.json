@@ -15,19 +15,19 @@
 	"_lightMoving.json",
 	{
 		"type": "point",
-		"matId": 0
+		"material": 0
 	},
 	{
 		"type": "directional",
-		"matId": 1
+		"material": 1
 	},
 	{
 		"type": "spot",
-		"matId": 2
+		"material": 2
 	},
 	{
 		"type": "rectangular",
-		"matId": 3
+		"material": 3
 	}],
 
   "Transforms":[

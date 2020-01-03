@@ -34,20 +34,14 @@ tree constructio would provide additional overhead.
 using SurfaceMaterialPairs = std::array<Vector2ul, SceneConstants::MaxPrimitivePerSurface>;
 
 template<class PGroup>
-class LinearAccelTypeName
-{
-    public:
-        static const char* TypeName();
-};
-
-template<class PGroup>
 class GPUAccLinearBatch;
 
 template <class PGroup>
 class GPUAccLinearGroup final
     : public GPUAcceleratorGroup<PGroup>
-    , public LinearAccelTypeName<PGroup>
 {
+    ACCELERATOR_TYPE_NAME("Linear", PGroup);
+
     public:
         using LeafData                      = PGroup::LeafData;
 
@@ -116,7 +110,6 @@ class GPUAccLinearGroup final
 template<class PGroup>
 class GPUAccLinearBatch final
     : public GPUAcceleratorBatch<GPUAccLinearGroup<PGroup>, PGroup>
-    , public LinearAccelTypeName<PGroup>
 {
     public:
         // Constructors & Destructor
@@ -188,8 +181,5 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
         void                        Constrcut() override;
         void                        Destruct() override;
 };
-
-static_assert(IsTracerClass<GPUBaseAcceleratorLinear>::value,
-              "GPUBaseAcceleratorLinear is not a Tracer Class.");
 
 #include "GPUAcceleratorLinear.hpp"

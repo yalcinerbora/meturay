@@ -7,13 +7,6 @@ GPUAccLinearGroup<PGroup>::GPUAccLinearGroup(const GPUPrimitiveGroupI& pGroup,
     , dLeafList(nullptr)
 {}
 
-template<class PGroup>
-const char* LinearAccelTypeName<PGroup>::TypeName()
-{
-    static const std::string typeName = std::string("Linear") + PGroup::TypeName();
-    return typeName.c_str();
-}
-
 template <class PGroup>
 const char* GPUAccLinearGroup<PGroup>::Type() const
 {

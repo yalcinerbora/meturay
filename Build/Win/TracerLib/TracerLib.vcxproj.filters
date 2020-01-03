@@ -40,6 +40,9 @@
     <Filter Include="Scene">
       <UniqueIdentifier>{2f7fe44b-c256-47b5-863e-2cca623b5075}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DefaultEventEstimators">
+      <UniqueIdentifier>{8565aff2-52c4-42bb-a1c3-01400b0a3f5e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp">
@@ -73,6 +76,10 @@
     <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\BasicEventEstimator.cpp">
+      <Filter>DefaultEventEstimators</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\MangledNames.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -237,6 +244,16 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorI.h">
       <Filter>GPU Logic Interfaces</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\EmptyEventEstimator.h">
+      <Filter>DefaultEventEstimators</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\BasicEventEstimator.h">
+      <Filter>DefaultEventEstimators</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\DefaultEstimatorsKC.cuh">
+      <Filter>DefaultEventEstimators</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\MangledNames.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">
@@ -276,6 +293,8 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\RNGMemory.cu">
       <Filter>Memory</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\ImageMemory.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\ImageMemory.cu">
+      <Filter>Memory</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

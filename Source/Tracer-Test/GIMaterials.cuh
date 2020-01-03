@@ -6,14 +6,17 @@
 #include "MaterialDataStructs.h"
 #include "GIMaterialsKC.cuh"
 
+#include "TracerLib/EmptyEventEstimator.h"
+#include "TracerLib/BasicEventEstimator.h"
+
 class BasicPathTraceMat final
     : public GPUMaterialGroup<TracerBasic,
+                              BasicEventEstimator,
                               ConstantAlbedoMatData,
                               BasicSurface,
                               BasicPathTraceShade>
 {
-    public:
-        static constexpr const char*    TypeName() { return "BasicPathTrace"; }
+    MATERIAL_TYPE_NAME("BasicPathTrace", TracerBasic, BasicEventEstimator)
 
     private:
         DeviceMemory                    memory;
@@ -21,7 +24,8 @@ class BasicPathTraceMat final
 
     protected:
     public:
-                                BasicPathTraceMat(const CudaGPU&);
+                                BasicPathTraceMat(const CudaGPU&,
+                                                  const GPUEventEstimatorI&);
                                 ~BasicPathTraceMat() = default;
 
         // Interface
@@ -48,12 +52,12 @@ class BasicPathTraceMat final
 
 class LightBoundaryMat final
     : public GPUMaterialGroup<TracerBasic,
+                              EmptyEventEstimator,
                               ConstantIrradianceMatData,
                               EmptySurface,
                               LightBoundaryShade>
 {
-    public:
-        static constexpr const char*    TypeName() { return "LightBoundary"; }
+    MATERIAL_TYPE_NAME("LightBoundary", TracerBasic, EmptyEventEstimator)
 
     private:
         DeviceMemory                    memory;
@@ -61,7 +65,8 @@ class LightBoundaryMat final
 
     protected:
     public:
-                                LightBoundaryMat(const CudaGPU&);
+                                LightBoundaryMat(const CudaGPU&,
+                                                 const GPUEventEstimatorI&);
                                 ~LightBoundaryMat() = default;
 
         // Interface
@@ -86,53 +91,79 @@ class LightBoundaryMat final
         uint8_t                 OutRayCount() const override { return 0; }
 };
 
+static_assert(IsTracerClass<BasicPathTraceMat>::value,
+              "BasicPathTraceMat is not a Tracer Class.");
+static_assert(IsTracerClass<LightBoundaryMat>::value,
+              "LightBoundaryMat is not a Tracer Class.");
+
 // Mat Batch Extern
 extern template class GPUMaterialBatch<TracerBasic,
+                                       BasicEventEstimator,
                                        BasicPathTraceMat,
                                        GPUPrimitiveTriangle,
                                        BasicSurfaceFromTri>;
 
 extern template class GPUMaterialBatch<TracerBasic,
+                                       BasicEventEstimator,
                                        BasicPathTraceMat,
                                        GPUPrimitiveSphere,
                                        BasicSurfaceFromSphr>;
 
 extern template class GPUMaterialBatch<TracerBasic,
+                                       EmptyEventEstimator,
                                        LightBoundaryMat,
                                        GPUPrimitiveEmpty,
                                        EmptySurfaceFromEmpty>;
 
 extern template class GPUMaterialBatch<TracerBasic,
+                                       EmptyEventEstimator,
                                        LightBoundaryMat,
                                        GPUPrimitiveTriangle,
                                        EmptySurfaceFromTri>;
 
 extern template class GPUMaterialBatch<TracerBasic,
+                                       EmptyEventEstimator,
                                        LightBoundaryMat,
                                        GPUPrimitiveSphere,
                                        EmptySurfaceFromSphr>;
 
 using BasicPTSphereBatch = GPUMaterialBatch<TracerBasic,
+                                            BasicEventEstimator,
                                             BasicPathTraceMat,
                                             GPUPrimitiveSphere,
                                             BasicSurfaceFromSphr>;
 
 using BasicPTTriangleBatch = GPUMaterialBatch<TracerBasic,
+                                              BasicEventEstimator,
                                               BasicPathTraceMat,
                                               GPUPrimitiveTriangle,
                                               BasicSurfaceFromTri>;
 
 using LightBoundaryBatch = GPUMaterialBatch<TracerBasic,
+                                            EmptyEventEstimator,
                                             LightBoundaryMat,
                                             GPUPrimitiveEmpty,
                                             EmptySurfaceFromEmpty>;
 
 using LightBoundaryTriBatch = GPUMaterialBatch<TracerBasic,
-                                                LightBoundaryMat,
-                                                GPUPrimitiveTriangle,
-                                                EmptySurfaceFromTri>;
+                                               EmptyEventEstimator,
+                                               LightBoundaryMat,
+                                               GPUPrimitiveTriangle,
+                                               EmptySurfaceFromTri>;
 
 using LightBoundarySphrBatch = GPUMaterialBatch<TracerBasic,
+                                                EmptyEventEstimator,
                                                 LightBoundaryMat,
                                                 GPUPrimitiveSphere,
                                                 EmptySurfaceFromSphr>;
+
+static_assert(IsTracerClass<BasicPTSphereBatch>::value,
+              "BasicPTSphereBatch is not a Tracer Class.");
+static_assert(IsTracerClass<BasicPTTriangleBatch>::value,
+              "BasicPTTriangleBatch is not a Tracer Class.");
+static_assert(IsTracerClass<LightBoundaryBatch>::value,
+              "LightBoundaryBatch is not a Tracer Class.");
+static_assert(IsTracerClass<LightBoundaryTriBatch>::value,
+              "LightBoundaryTriBatch is not a Tracer Class.");
+static_assert(IsTracerClass<LightBoundarySphrBatch>::value,
+              "LightBoundarySphrBatch is not a Tracer Class.");

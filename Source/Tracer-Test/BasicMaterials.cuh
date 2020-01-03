@@ -8,12 +8,12 @@
 
 class BasicMat final
     : public GPUMaterialGroup<TracerBasic,
+                              EmptyEventEstimator,
                               ConstantAlbedoMatData,
                               EmptySurface,
                               BasicMatShade>
 {
-    public:
-        static constexpr const char*    TypeName() { return "BasicMat"; }
+    MATERIAL_TYPE_NAME("BasicMat", TracerBasic, EmptyEventEstimator)
 
     private:
         DeviceMemory                    memory;
@@ -22,7 +22,8 @@ class BasicMat final
     protected:
     public:
         // Constructors & Destructor
-                        BasicMat(const CudaGPU&);
+                        BasicMat(const CudaGPU&,
+                                 const GPUEventEstimatorI&);
                         ~BasicMat() = default;
 
         // Interface
@@ -49,18 +50,19 @@ class BasicMat final
 
 class BarycentricMat final
     : public GPUMaterialGroup<TracerBasic,
+                              EmptyEventEstimator,
                               NullData,
                               BarySurface,
                               BaryMatShade>
 {
-    public:
-        static constexpr const char*    TypeName() { return "BarycentricMat"; }
+    MATERIAL_TYPE_NAME("BarycentricMat", TracerBasic, EmptyEventEstimator)
 
     private:
     protected:
     public:
         // Constructors & Destructor
-                        BarycentricMat(const CudaGPU&);
+                        BarycentricMat(const CudaGPU&,
+                                       const GPUEventEstimatorI&);
                         ~BarycentricMat() = default;
 
         // Interface
@@ -87,18 +89,19 @@ class BarycentricMat final
 
 class SphericalMat final
     : public GPUMaterialGroup<TracerBasic,
+                              EmptyEventEstimator,
                               NullData,
                               SphrSurface,
                               SphrMatShade>
 {
-    public:
-        static constexpr const char*    TypeName() { return "SphericalMat"; }
+    MATERIAL_TYPE_NAME("SphericalMat", TracerBasic, EmptyEventEstimator)
 
     private:
     protected:
     public:
         // Constructors & Destructor
-                        SphericalMat(const CudaGPU&);
+                        SphericalMat(const CudaGPU&,
+                                     const GPUEventEstimatorI&);
                         ~SphericalMat() = default;
 
         // Interface
@@ -132,51 +135,72 @@ static_assert(IsTracerClass<SphericalMat>::value,
 
 // Material Batches
 extern template class GPUMaterialBatch<TracerBasic,
+                                       EmptyEventEstimator,
                                        BasicMat,
                                        GPUPrimitiveEmpty,
                                        EmptySurfaceFromEmpty>;
 
 extern template class GPUMaterialBatch<TracerBasic,
+                                       EmptyEventEstimator,
                                        BasicMat,
                                        GPUPrimitiveSphere,
                                        EmptySurfaceFromSphr>;
 
 extern template class GPUMaterialBatch<TracerBasic,
+                                       EmptyEventEstimator,
                                        BasicMat,
                                        GPUPrimitiveTriangle,
                                        EmptySurfaceFromTri>;
 
 extern template class GPUMaterialBatch<TracerBasic,
+                                       EmptyEventEstimator,
                                        BarycentricMat,
                                        GPUPrimitiveTriangle,
                                        BarySurfaceFromTri>;
 
 extern template class GPUMaterialBatch<TracerBasic,
+                                       EmptyEventEstimator,
                                        SphericalMat,
                                        GPUPrimitiveSphere,
                                        SphrSurfaceFromSphr>;
 
-using BasicMatEmptyBatch = GPUMaterialBatch<TracerBasic,
-                                            BasicMat,
-                                            GPUPrimitiveEmpty,
-                                            EmptySurfaceFromEmpty>;
+using BasicMatBatch = GPUMaterialBatch<TracerBasic,
+                                       EmptyEventEstimator,
+                                       BasicMat,
+                                       GPUPrimitiveEmpty,
+                                       EmptySurfaceFromEmpty>;
 
 using BasicMatTriBatch = GPUMaterialBatch<TracerBasic,
+                                          EmptyEventEstimator,
                                           BasicMat,
                                           GPUPrimitiveTriangle,
                                           EmptySurfaceFromTri>;
 
 using BasicMatSphrBatch = GPUMaterialBatch<TracerBasic,
+                                           EmptyEventEstimator,
                                            BasicMat,
                                            GPUPrimitiveSphere,
                                            EmptySurfaceFromSphr>;
 
 using BarycentricMatTriBatch = GPUMaterialBatch<TracerBasic,
+                                                EmptyEventEstimator,
                                                 BarycentricMat,
                                                 GPUPrimitiveTriangle,
                                                 BarySurfaceFromTri>;
 
 using SphericalMatSphrBatch = GPUMaterialBatch<TracerBasic,
+                                               EmptyEventEstimator,
                                                SphericalMat,
                                                GPUPrimitiveSphere,
                                                SphrSurfaceFromSphr>;
+
+static_assert(IsTracerClass<BasicMatBatch>::value,
+              "BasicMatEmptyBatch is not a Tracer Class.");
+static_assert(IsTracerClass<BasicMatTriBatch>::value,
+              "BasicMatTriBatch is not a Tracer Class.");
+static_assert(IsTracerClass<BasicMatSphrBatch>::value,
+              "BasicMatSphrBatch is not a Tracer Class.");
+static_assert(IsTracerClass<BarycentricMatTriBatch>::value,
+              "BarycentricMatTriBatch is not a Tracer Class.");
+static_assert(IsTracerClass<SphericalMatSphrBatch>::value,
+              "SphericalMatSphrBatch is not a Tracer Class.");

@@ -10,9 +10,11 @@
 
 #include "GPUAcceleratorI.h"
 #include "GPUPrimitiveI.h"
+#include "MangledNames.h"
 
 template <class PGroup>
-class GPUAcceleratorGroup : public GPUAcceleratorGroupI
+class GPUAcceleratorGroup 
+    :  public GPUAcceleratorGroupI
 {
     private:
     protected:
@@ -33,6 +35,9 @@ class GPUAcceleratorGroup : public GPUAcceleratorGroupI
 template <class AGroup, class PGroup>
 class GPUAcceleratorBatch : public GPUAcceleratorBatchI
 {
+    public:
+        static const char*              TypeName() { return AGroup::TypeName(); }
+
     private:
     protected:
         const AGroup&                   acceleratorGroup;

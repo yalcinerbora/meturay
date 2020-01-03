@@ -29,7 +29,7 @@ namespace SceneIO
     static constexpr const char*    LIGHT_SPOT = "spot";
     static constexpr const char*    LIGHT_RECTANGULAR = "rectangular";
     // Common
-    static constexpr const char*    LIGHT_MATERIAL = "matId";
+    static constexpr const char*    LIGHT_MATERIAL = "material";
     // Transform Related Names
     // Common
     static constexpr const char*    TRANSFORM_FORM = "form";

@@ -10,7 +10,7 @@ using SurfaceFunc = MGroup::Surface(*)(const PGroup::PrimitiveData&,
                                        const PGroup::HitData&,
                                        PrimitiveId);
 //
-template <class TLogic, class Surface, class MaterialData>
+template <class TLogic, class ELogic, class Surface, class MaterialData>
 using ShadeFunc = void(*)(// Output
                           ImageGMem<Vector4f> gImage,
                           //
@@ -22,13 +22,15 @@ using ShadeFunc = void(*)(// Output
                           const RayReg& ray,
                           const Surface& surface,
                           const TLogic::RayAuxData& aux,
-                          //
+                          // RNG
                           RandomGPU& rng,
+                          // Estimator
+                          const ELogic::EstimatorData& estData,
                           // Input as global memory
                           const MaterialData& gMatData,
                           const HitKey::Type& matId);
 
-template <class TLogic, class MGroup, class PGroup,
+template <class TLogic, class ELogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfFunc>
 __global__ void KCMaterialShade(// Output
                                 ImageGMem<Vector4f> gImage,
@@ -48,6 +50,8 @@ __global__ void KCMaterialShade(// Output
                                 //
                                 const uint32_t rayCount,
                                 RNGGMem gRNGStates,
+                                // Estimator
+                                const ELogic::EstimatorData est,
                                 // Material Related
                                 const MGroup::MaterialData matData,
                                 // Primitive Related
@@ -95,8 +99,10 @@ __global__ void KCMaterialShade(// Output
                           ray,
                           surface,
                           aux,
-                          //
+                          // RNG
                           rng,
+                          // Estimator
+                          est,
                           // Input as global memory
                           matData,
                           HitKey::FetchIdPortion(hitKey));

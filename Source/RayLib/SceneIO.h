@@ -29,6 +29,7 @@ namespace SceneIO
     static constexpr const char* SURFACE_DATA_BASE = "SurfaceData";
     static constexpr const char* BASE_ACCELERATOR_BASE = "BaseAccelerator";
     static constexpr const char* BASE_OUTSIDE_MATERIAL = "BaseBoundaryMaterial";
+
     // Common Names
     static constexpr const char* ID = "id";
     static constexpr const char* TYPE = "type";

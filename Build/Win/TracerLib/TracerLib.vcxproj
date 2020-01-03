@@ -13,17 +13,21 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorDeviceFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\AuxiliaryDataKernels.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\BasicEventEstimator.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\BitonicSort.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\BVHAcceleratorKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\CameraKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ComparisonFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\DefaultEstimatorsKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\EmptyEventEstimator.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorP.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\MangledNames.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerTypeGenerators.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DeviceMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\FunctionEnablers.cuh" />
@@ -69,6 +73,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TypeTraits.h" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="..\..\..\Source\TracerLib\BasicEventEstimator.cu" />
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveEmpty.cpp" />
@@ -79,6 +84,7 @@
       <FileType>Document</FileType>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\RNGMemory.cu" />
+    <ClCompile Include="..\..\..\Source\TracerLib\MangledNames.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\SceneNodeJson.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\ScenePartitioner.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp" />

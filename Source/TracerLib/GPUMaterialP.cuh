@@ -7,6 +7,8 @@
 #include "GPUPrimitiveP.cuh"
 #include "RNGMemory.h"
 #include "ImageMemory.h"
+#include "GPUEventEstimatorP.h"
+#include "MangledNames.h"
 
 struct MatDataAccessor;
 
@@ -20,14 +22,13 @@ class GPUMaterialGroupP
 };
 
 // Partial Implementations
-template <class TLogic, class MaterialD, class SurfaceD,
-          ShadeFunc<TLogic, SurfaceD, MaterialD> ShadeF>
+template <class TLogic, class ELogic, class MaterialD, class SurfaceD,
+          ShadeFunc<TLogic, ELogic, SurfaceD, MaterialD> ShadeF>
 class GPUMaterialGroup
     : public GPUMaterialGroupI
     , public GPUMaterialGroupP<MaterialD>
 {
     public:
-        // Types from
         using MaterialData              = typename MaterialD;
         using Surface                   = typename SurfaceD;
 
@@ -35,18 +36,21 @@ class GPUMaterialGroup
 
     private:
         const CudaGPU&                  gpu;
+        const ELogic&                   estimator;
 
     protected:
 
     public:
         // Constructors & Destructor
-                                        GPUMaterialGroup(const CudaGPU& gpu);
+                                        GPUMaterialGroup(const CudaGPU&,
+                                                         const GPUEventEstimatorI&);
         virtual                         ~GPUMaterialGroup() = default;
 
         const CudaGPU&                  GPU() const override;
+        const GPUEventEstimatorI&       EventEstimator() const override;
 };
 
-template <class TLogic, class MGroup, class PGroup,
+template <class TLogic, class ELogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfaceF>
 class GPUMaterialBatch final : public GPUMaterialBatchI
 {
@@ -82,7 +86,7 @@ class GPUMaterialBatch final : public GPUMaterialBatchI
                                                   const HitStructPtr dHitStructs,
                                                   //
                                                   const HitKey* dMatIds,
-                                                  const RayId* dRayIds,
+                                                  const RayId* dRayIds,                                                  
                                                   //
                                                   const uint32_t rayCount,
                                                   RNGMemory& rngMem) const override;
@@ -108,69 +112,84 @@ struct MatDataAccessor
     }
 };
 
-template <class TLogic, class MaterialD, class SurfaceD,
-          ShadeFunc<TLogic, SurfaceD, MaterialD> ShadeF>
-GPUMaterialGroup<TLogic, MaterialD, SurfaceD, ShadeF>::GPUMaterialGroup(const CudaGPU& gpu)
+template <class TLogic, class ELogic, class MaterialD, class SurfaceD,
+    ShadeFunc<TLogic, ELogic, SurfaceD, MaterialD> ShadeF>
+    GPUMaterialGroup<TLogic, ELogic, MaterialD, SurfaceD, ShadeF>::GPUMaterialGroup(const CudaGPU& gpu,
+                                                                                    const GPUEventEstimatorI& e)
     : gpu(gpu)
+    , estimator(static_cast<const ELogic&>(e))
 {}
 
-template <class TLogic, class MaterialD, class SurfaceD,
-          ShadeFunc<TLogic, SurfaceD, MaterialD> ShadeF>
-const CudaGPU& GPUMaterialGroup<TLogic, MaterialD, SurfaceD, ShadeF>::GPU() const
+template <class TLogic, class ELogic, class MaterialD, class SurfaceD,
+          ShadeFunc<TLogic, ELogic, SurfaceD, MaterialD> ShadeF>
+const CudaGPU& GPUMaterialGroup<TLogic, ELogic, MaterialD, SurfaceD, ShadeF>::GPU() const
 {
     return gpu;
 }
 
-template <class TLogic, class MGroup, class PGroup,
-          SurfaceFunc<MGroup, PGroup> SurfaceF>
-GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::GPUMaterialBatch(const GPUMaterialGroupI& m,
-                                                                     const GPUPrimitiveGroupI& p)
+template <class TLogic, class ELogic, class MaterialD, class SurfaceD,
+          ShadeFunc<TLogic, ELogic, SurfaceD, MaterialD> ShadeF>
+const GPUEventEstimatorI& GPUMaterialGroup<TLogic, ELogic, MaterialD, SurfaceD, ShadeF>::EventEstimator() const
+{
+    return estimator;
+}
+
+template <class TLogic, class ELogic, class MGroup, class PGroup,
+    SurfaceFunc<MGroup, PGroup> SurfaceF>
+    GPUMaterialBatch<TLogic, ELogic, MGroup, PGroup, SurfaceF>::GPUMaterialBatch(const GPUMaterialGroupI& m,
+                                                                                 const GPUPrimitiveGroupI& p)
     : materialGroup(static_cast<const MGroup&>(m))
     , primitiveGroup(static_cast<const PGroup&>(p))
 {}
 
-template <class TLogic, class MGroup, class PGroup,
+template <class TLogic, class ELogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfaceF>
-const char* GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::TypeName()
+const char* GPUMaterialBatch<TLogic, ELogic, MGroup, PGroup, SurfaceF>::TypeName()
 {
-   static const std::string typeName = std::string(MGroup::TypeName()) + PGroup::TypeName();
-   return typeName.c_str();
+    static const std::string typeName = MangledNames::MaterialBatch(TLogic::TypeName(),
+                                                                    ELogic::TypeName(),
+                                                                    PGroup::TypeName(),
+                                                                    MGroup::Name());
+    return typeName.c_str();
 }
 
-template <class TLogic, class MGroup, class PGroup,
+template <class TLogic, class ELogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfaceF>
-const char* GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::Type() const
+const char* GPUMaterialBatch<TLogic, ELogic, MGroup, PGroup, SurfaceF>::Type() const
 {
     return TypeName();
 }
 
-template <class TLogic, class MGroup, class PGroup,
+template <class TLogic, class ELogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfaceF>
-void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
-                                                                   ImageMemory& dImage,
-                                                                   //
-                                                                   HitKey* dBoundMatOut,
-                                                                   RayGMem* dRayOut,
-                                                                   void* dRayAuxOut,
-                                                                   //  Input
-                                                                   const RayGMem* dRayIn,
-                                                                   const void* dRayAuxIn,
-                                                                   const PrimitiveId* dPrimitiveIds,
-                                                                   const HitStructPtr dHitStructs,
-                                                                   //
-                                                                   const HitKey* dMatIds,
-                                                                   const RayId* dRayIds,
-
-                                                                   const uint32_t rayCount,
-                                                                   RNGMemory& rngMem) const
+void GPUMaterialBatch<TLogic, ELogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
+                                                                           ImageMemory& dImage,
+                                                                           //
+                                                                           HitKey* dBoundMatOut,
+                                                                           RayGMem* dRayOut,
+                                                                           void* dRayAuxOut,
+                                                                           //  Input
+                                                                           const RayGMem* dRayIn,
+                                                                           const void* dRayAuxIn,
+                                                                           const PrimitiveId* dPrimitiveIds,
+                                                                           const HitStructPtr dHitStructs,
+                                                                           //
+                                                                           const HitKey* dMatIds,
+                                                                           const RayId* dRayIds,
+                                                                           //
+                                                                           const uint32_t rayCount,
+                                                                           RNGMemory& rngMem) const
 {
     using PrimitiveData = typename PGroup::PrimitiveData;
     using MaterialData = typename MGroup::MaterialData;
     using RayAuxData = typename TLogic::RayAuxData;
-
+    using EstimatorData = typename ELogic::EstimatorData;
     // TODO: Is there a better way to implement this
+    const ELogic& estimator = static_cast<const ELogic&>(materialGroup.EventEstimator());
+
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
-    const MaterialData matData = MatDataAccessor::Data(materialGroup);
+    const MaterialData matData = MatDataAccessor::Data(materialGroup);    
+    const EstimatorData estData = EstimatorDataAccessor::Data(estimator);
 
     const uint32_t outRayCount = materialGroup.OutRayCount();
     const CudaGPU& gpu = materialGroup.GPU();
@@ -180,7 +199,7 @@ void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
         0,
         rayCount,
         //
-        KCMaterialShade<TLogic, MGroup, PGroup, SurfFunc>,
+        KCMaterialShade<TLogic, ELogic, MGroup, PGroup, SurfFunc>,
         // Args
         // Output
         dImage.GMem<Vector4f>(),
@@ -200,6 +219,8 @@ void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
         //
         rayCount,
         rngMem.RNGData(gpu),
+        // Estimator
+        estData,
         // Material Related
         matData,
         // Primitive Related
@@ -207,23 +228,23 @@ void GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::ShadeRays(// Output
     );
 }
 
-template <class TLogic, class MGroup, class PGroup,
+template <class TLogic, class ELogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfaceF>
-const GPUPrimitiveGroupI& GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::PrimitiveGroup() const
+const GPUPrimitiveGroupI& GPUMaterialBatch<TLogic, ELogic, MGroup, PGroup, SurfaceF>::PrimitiveGroup() const
 {
     return primitiveGroup;
 }
 
-template <class TLogic, class MGroup, class PGroup,
+template <class TLogic, class ELogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfaceF>
-const GPUMaterialGroupI& GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::MaterialGroup() const
+const GPUMaterialGroupI& GPUMaterialBatch<TLogic, ELogic, MGroup, PGroup, SurfaceF>::MaterialGroup() const
 {
     return materialGroup;
 }
 
-template <class TLogic, class MGroup, class PGroup,
+template <class TLogic, class ELogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfaceF>
-uint8_t GPUMaterialBatch<TLogic, MGroup, PGroup, SurfaceF>::OutRayCount() const
+uint8_t GPUMaterialBatch<TLogic, ELogic, MGroup, PGroup, SurfaceF>::OutRayCount() const
 {
     return materialGroup.OutRayCount();
 }

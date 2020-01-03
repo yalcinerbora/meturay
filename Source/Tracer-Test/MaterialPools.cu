@@ -57,8 +57,8 @@ TestMaterialPool::TestMaterialPool()
     materialBatchGenerators.emplace(BasicMatSphrBatch::TypeName(),
                                     GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, BasicMatSphrBatch>,
                                                    DefaultDestruct<GPUMaterialBatchI>));
-    materialBatchGenerators.emplace(BasicMatEmptyBatch::TypeName(),
-                                    GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, BasicMatEmptyBatch>,
+    materialBatchGenerators.emplace(BasicMatBatch::TypeName(),
+                                    GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, BasicMatBatch>,
                                                    DefaultDestruct<GPUMaterialBatchI>));
     // Barycentric
     materialBatchGenerators.emplace(BarycentricMatTriBatch::TypeName(),

@@ -11,6 +11,7 @@ class RandomGPU;
 #include "RayLib/HemiDistribution.h"
 
 #include "TracerLib/ImageFunctions.cuh"
+#include "TracerLib/EmptyEventEstimator.h"
 
 #include <cuda_runtime.h>
 
@@ -28,8 +29,10 @@ inline void LightBoundaryShade(// Output
                                const RayReg& ray,
                                const EmptySurface& surface,
                                const RayAuxBasic& aux,
-                               //
+                               // RNG
                                RandomGPU& rng,
+                               // Event Estimator
+                               const EmptyEstimatorData&,
                                // Input as global memory
                                const ConstantIrradianceMatData& gMatData,
                                const HitKey::Type& matId)
@@ -60,8 +63,10 @@ inline void BasicPathTraceShade(// Output
                                 const RayReg& ray,
                                 const BasicSurface& surface,
                                 const RayAuxBasic& aux,
-                                //
+                                // RNG
                                 RandomGPU& rng,
+                                // 
+                                const BasicEstimatorData&,
                                 // Input as global memory
                                 const ConstantAlbedoMatData& gMatData,
                                 const HitKey::Type& matId)
@@ -120,6 +125,29 @@ inline void BasicPathTraceShade(// Output
 
     // TODO:
     //if material is emissive directly write current contribution
+
+    // Russian Roulette
+    //float maxFactor = fmax(auxOut.accumFactor[0],
+    //                       fmax(auxOut.accumFactor[1],
+    //                            auxOut.accumFactor[2]));
+    float maxFactor = fmax(gMatData.dAlbedo[matId][0],
+                           fmax(gMatData.dAlbedo[matId][1],
+                                gMatData.dAlbedo[matId][2]));
+    if(GPUDistribution::Uniform<float>(rng) >= maxFactor)
+    {
+        // Generate Dummy Ray and Terminate
+        RayReg rDummy = {};
+        rDummy.ray = {Zero3, Zero3};
+        rDummy.tMin = INFINITY;
+        rDummy.tMax = INFINITY;
+
+        // Gmem Write
+        rDummy.Update(gOutRays, 0);
+        gBoundaryMat[0] = HitKey::InvalidKey;
+        return;
+    }   
+    auxOut.accumFactor *= 1.0f / maxFactor;
+
     
     //// Dummy ray to global memory
     //RayReg rDummy = {};

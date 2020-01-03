@@ -1,6 +1,8 @@
 #pragma once
 
 #include "TracerLib/TracerLogicP.cuh"
+#include "TracerLib/TypeTraits.h"
+
 #include "RayAuxStruct.h"
 
 __device__ __host__
@@ -20,8 +22,11 @@ inline void RayInitBasic(RayAuxBasic* gOutBasic,
     gOutBasic[writeLoc] = init;
 }
 
-class TracerBasic : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
+class TracerBasic final : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
 {
+    public:
+        static constexpr const char* TypeName() { return "BasicTracer"; }
+
     private:
         static constexpr RayAuxBasic    initals = {Vector3f(1.0f, 1.0f, 1.0f), 0, 0};
 
@@ -53,3 +58,6 @@ class TracerBasic : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
                                      Vector2i pixelStart = Zero2i,
                                      Vector2i pixelEnd = BaseConstants::IMAGE_MAX_SIZE) override;
 };
+
+static_assert(IsTracerClass<TracerBasic>::value,
+              "TracerBasic is not a Tracer Class.");

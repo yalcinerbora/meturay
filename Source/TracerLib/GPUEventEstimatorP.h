@@ -35,29 +35,25 @@ class GPUEventEstimatorP
 template<class EstimatorD, EstimateEventFunc<EstimatorD> EstF>
 class GPUEventEstimator
     : public GPUEventEstimatorI
-    , public GPUEventEstimatorP
+    , public GPUEventEstimatorP<EstimatorD>
 {
     public:
         // Type Definitions
-        using EstimatorData = EstimatorD;
+        using EstimatorData                 = typename EstimatorD;
         // Function Definitions
         static constexpr auto EstimatorFunc = EstF;
 
     private:
     protected:
-        // Array of Light Data That is not converted to utilized data
-        std::vector<LightInfo>    lightData;
-        std::vector<HitKey>       lightMaterialKey;
-
     public:
         // Constructors & Destructor
-                            GPUEventEstimator() = default;
-        virtual             ~GPUEventEstimator() = default;
+                                GPUEventEstimator() = default;
+        virtual                 ~GPUEventEstimator() = default;
 
-        SceneError          Initialize(const NodeListing& lightList,
-                                       // Material Keys
-                                       const MaterialKeyListing& hitKeys,
-                                       const std::map<uint32_t, GPUPrimitiveGroupI>&) override;
+        virtual SceneError      Initialize(const NodeListing& lightList,
+                                           // Material Keys
+                                           const MaterialKeyListing& hitKeys,
+                                           const std::map<uint32_t, GPUPrimitiveGroupI>&) override;
 };
 
 struct EstimatorDataAccessor
@@ -71,7 +67,7 @@ struct EstimatorDataAccessor
     static typename EventEstimatorS::EstimatorData Data(const EventEstimatorS& est)
     {
         using E = typename EventEstimatorS::EstimatorData;
-        return static_cast<const EventEstimatorS<E>&>(est).dData;
+        return static_cast<const GPUEventEstimatorP<E>&>(est).dData;
     }
 };
 
@@ -81,7 +77,5 @@ SceneError GPUEventEstimator<EstimatorD, EstF>::Initialize(const NodeListing& li
                                                            const MaterialKeyListing& hitKeys,
                                                            const std::map<uint32_t, GPUPrimitiveGroupI>&)
 {
-
-
     return SceneError::OK;
 }

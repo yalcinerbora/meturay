@@ -7,7 +7,7 @@
 #include "Random.cuh"
 
 template <class EstimatorData>
-using EstimateEventFunc = void(*)(// Output
+using EstimateEventFunc = bool(*)(// Output
                                   HitKey& boundaryMatKey,
                                   Vector3& direction,
                                   float& probability,
@@ -18,12 +18,6 @@ using EstimateEventFunc = void(*)(// Output
                                   //
                                   const EstimatorData&);
 
-
-template <class EstimatorData>
-using GenerateEstimator = void(*)(// Output
-                                  EstimatorData&,
-                                  // Input
-                                  const HitKey* dBoundaryMatList);
 
 // Sampling Functions
 __device__

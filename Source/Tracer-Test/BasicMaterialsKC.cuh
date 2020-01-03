@@ -10,6 +10,7 @@ class RandomGPU;
 #include "RayLib/Constants.h"
 
 #include "TracerLib/ImageFunctions.cuh"
+#include "TracerLib/EmptyEventEstimator.h"
 
 __device__
 inline void BasicMatShade(// Output
@@ -25,6 +26,8 @@ inline void BasicMatShade(// Output
                           const RayAuxBasic& aux,
                           //
                           RandomGPU& rng,
+                          // Event Estimator
+                          const EmptyEstimatorData&,
                           // Input as global memory
                           const ConstantAlbedoMatData& gMatData,
                           const HitKey::Type& matId)
@@ -48,8 +51,10 @@ inline void BaryMatShade(// Output
                          const RayReg& ray,
                          const BarySurface& surface,
                          const RayAuxBasic& aux,
-                         //
+                         // RNG
                          RandomGPU& rng,
+                         // Event Estimator
+                         const EmptyEstimatorData&,
                          // Input as global memory
                          const NullData& gMatData,
                          const HitKey::Type& matId)
@@ -73,8 +78,10 @@ inline void SphrMatShade(// Output
                          const RayReg& ray,
                          const SphrSurface& surface,
                          const RayAuxBasic& aux,
-                         //
+                         // RNG
                          RandomGPU& rng,
+                         // Event Estimator
+                         const EmptyEstimatorData&,
                          // Input as global memory
                          const NullData& gMatData,
                          const HitKey::Type& matId)
