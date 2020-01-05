@@ -21,6 +21,8 @@ class GPUMaterialGroupI;
 // Base Logic
 class TracerBaseLogicI;
 struct TracerParameters;
+// Event Estimator
+class GPUEventEstimatorI;
 
 class TracerLogicGeneratorI
 {
@@ -47,7 +49,8 @@ class TracerLogicGeneratorI
         // Material
         virtual SceneError      GenerateMaterialGroup(GPUMaterialGroupI*&,
                                                       const std::string& materialType,
-                                                      const CudaGPU&) = 0;
+                                                      const CudaGPU&,
+                                                      const GPUEventEstimatorI&) = 0;
         virtual SceneError      GenerateMaterialBatch(GPUMaterialBatchI*&,
                                                       const GPUMaterialGroupI&,
                                                       const GPUPrimitiveGroupI&,
@@ -55,19 +58,18 @@ class TracerLogicGeneratorI
         // Base Accelerator should be fetched after all the stuff is generated
         virtual SceneError      GenerateBaseAccelerator(GPUBaseAcceleratorI*&,
                                                         const std::string& accelType) = 0;
-
-        // Finally get the tracer logic
-        // Tracer logic will be constructed with respect to
-        // Constructed batches
-        virtual DLLError        GenerateBaseLogic(TracerBaseLogicI*&,
-                                                  // Args
-                                                  const TracerParameters& opts,
-                                                  const Vector2i maxMats,
-                                                  const Vector2i maxAccels,
-                                                  const HitKey baseBoundMatKey,
-                                                  // DLL Location
-                                                  const std::string& libName,
-                                                  const SharedLibArgs& mangledName) = 0;
+        // EventEstimator
+        virtual SceneError      GenerateEventEstimaor(GPUEventEstimatorI*&, 
+                                                      const std::string& estType) = 0;
+        // Tracer Logic
+        virtual SceneError      GenerateTracerLogic(TracerBaseLogicI*&,
+                                                    // Args
+                                                    const TracerParameters& opts,
+                                                    const Vector2i maxMats,
+                                                    const Vector2i maxAccels,
+                                                    const HitKey baseBoundMatKey,
+                                                    // Type
+                                                    const std::string& tracerType) = 0;
 
         // Get all generated stuff on a vector
         virtual PrimitiveGroupList          GetPrimitiveGroups() const = 0;
@@ -77,6 +79,8 @@ class TracerLogicGeneratorI
         virtual MaterialBatchMappings       GetMaterialBatches() const = 0;
 
         virtual GPUBaseAcceleratorI*        GetBaseAccelerator() const = 0;
+        virtual GPUEventEstimatorI*         GetEventEstimator() const = 0;
+        virtual TracerBaseLogicI*           GetTracerLogic() const = 0;
 
         // Resetting all generated Groups and Batches
         virtual void                        ClearAll() = 0;
@@ -96,6 +100,12 @@ class TracerLogicGeneratorI
         virtual DLLError    IncludePrimitivesFromDLL(const std::string& libName,
                                                      const std::string& regex,
                                                      const SharedLibArgs& mangledName) = 0;
+        virtual DLLError    IncludeEstimatorsFromDLL(const std::string& libName,
+                                                     const std::string& regex,
+                                                     const SharedLibArgs& mangledName) = 0;
+        virtual DLLError    IncludeTracersFromDLL(const std::string& libName,
+                                                  const std::string& regex,
+                                                  const SharedLibArgs& mangledName) = 0;
         //// Exclusion functionality
         //// Unload A Library
         //virtual DLLError    UnloadLibrary(std::string& libName) = 0;

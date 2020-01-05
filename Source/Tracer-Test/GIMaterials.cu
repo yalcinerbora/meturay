@@ -99,31 +99,31 @@ int LightBoundaryMat::InnerId(uint32_t materialId) const
 
 // Material Batch Implementations
 template class GPUMaterialBatch<TracerBasic,
-                                BasicEventEstimator,
+                                GPUEventEstimatorBasic,
                                 BasicPathTraceMat,
                                 GPUPrimitiveTriangle,
                                 BasicSurfaceFromTri>;
 
 template class GPUMaterialBatch<TracerBasic,
-                                BasicEventEstimator,
+                                GPUEventEstimatorBasic,
                                 BasicPathTraceMat,
                                 GPUPrimitiveSphere,
                                 BasicSurfaceFromSphr>;
 
 template class GPUMaterialBatch<TracerBasic,
-                                EmptyEventEstimator,
+                                GPUEventEstimatorBasic,
                                 LightBoundaryMat,
                                 GPUPrimitiveEmpty,
                                 EmptySurfaceFromEmpty>;
 
 template class GPUMaterialBatch<TracerBasic,
-                                EmptyEventEstimator,
+                                GPUEventEstimatorBasic,
                                 LightBoundaryMat,
                                 GPUPrimitiveTriangle,
                                 EmptySurfaceFromTri>;
 
 template class GPUMaterialBatch<TracerBasic,
-                                EmptyEventEstimator,
+                                GPUEventEstimatorBasic,
                                 LightBoundaryMat,
                                 GPUPrimitiveSphere,
                                 EmptySurfaceFromSphr>;

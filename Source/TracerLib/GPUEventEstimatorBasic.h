@@ -5,19 +5,19 @@
 #include "TypeTraits.h"
 
 
-class BasicEventEstimator final
+class GPUEventEstimatorBasic final
     : public GPUEventEstimator<BasicEstimatorData,
                                EstimateEventBasic>
 {
     public:
-        static constexpr const char*    TypeName() { return "BasicEvent"; }
+        static constexpr const char*    TypeName() { return "BasicEstimator"; }
 
     private:
     protected:
     public:
         // Constructors & Destructor
-                                        BasicEventEstimator() = default;
-                                        ~BasicEventEstimator() = default;
+                                        GPUEventEstimatorBasic() = default;
+                                        ~GPUEventEstimatorBasic() = default;
 
         // Interface
         const char*                     Type() const override;
@@ -31,5 +31,5 @@ class BasicEventEstimator final
         SceneError                      ConstructEventEstimator(const CudaSystem&) override;
 };
 
-static_assert(IsTracerClass<BasicEventEstimator>::value,
-              "BasicEventEstimator is not a Tracer Class.");
+static_assert(IsTracerClass<GPUEventEstimatorBasic>::value,
+              "GPUEventEstimatorBasic is not a Tracer Class.");

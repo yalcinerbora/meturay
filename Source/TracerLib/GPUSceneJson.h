@@ -80,6 +80,10 @@ class GPUSceneJson : public GPUSceneI
                                                  AcceleratorBatchList& accelBatchListings,
                                                  // Base Accelerator required data
                                                  std::map<uint32_t, uint32_t>& surfaceTransformIds,
+                                                 // Types
+                                                 const std::string& estimatorType,
+                                                 const std::string& tracerType,
+                                                 //
                                                  double time = 0.0);
         SceneError      GeneratePrimitiveGroups(const PrimitiveNodeList&,
                                                 double time = 0.0);
@@ -102,7 +106,7 @@ class GPUSceneJson : public GPUSceneI
                                              double time = 0.0f);
 
         SceneError      LoadCommon(double time);
-        SceneError      LoadLogicRelated(double time);
+        SceneError      LoadLogicRelated(const TracerParameters&, double);
 
         SceneError      ChangeCommon(double time);
         SceneError      ChangeLogicRelated(double time);
@@ -122,7 +126,7 @@ class GPUSceneJson : public GPUSceneI
         size_t                      UsedGPUMemory() override;
         size_t                      UsedCPUMemory() override;
         //
-        SceneError                  LoadScene(double) override;
+        SceneError                  LoadScene(const TracerParameters&, double) override;
         SceneError                  ChangeTime(double) override;
         //
         Vector2i                    MaxMatIds() override;

@@ -101,31 +101,31 @@ int SphericalMat::InnerId(uint32_t materialId) const
 
 // Material Batches
 template class GPUMaterialBatch<TracerBasic,
-                                EmptyEventEstimator,
+                                GPUEventEstimatorEmpty,
                                 BasicMat,
                                 GPUPrimitiveEmpty,
                                 EmptySurfaceFromEmpty>;
 
 template class GPUMaterialBatch<TracerBasic,
-                                EmptyEventEstimator,
+                                GPUEventEstimatorEmpty,
                                 BasicMat,
                                 GPUPrimitiveTriangle,
                                 EmptySurfaceFromTri>;
 
 template class GPUMaterialBatch<TracerBasic,
-                                EmptyEventEstimator,
+                                GPUEventEstimatorEmpty,
                                 BasicMat,
                                 GPUPrimitiveSphere,
                                 EmptySurfaceFromSphr>;
 
 template class GPUMaterialBatch<TracerBasic,
-                                EmptyEventEstimator,
+                                GPUEventEstimatorEmpty,
                                 BarycentricMat,
                                 GPUPrimitiveTriangle,
                                 BarySurfaceFromTri>;
 
 template class GPUMaterialBatch<TracerBasic,
-                                EmptyEventEstimator,
+                                GPUEventEstimatorEmpty,
                                 SphericalMat,
                                 GPUPrimitiveSphere,
                                 SphrSurfaceFromSphr>;

@@ -13,7 +13,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorDeviceFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\AuxiliaryDataKernels.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\BasicEventEstimator.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorBasic.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\BitonicSort.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\BVHAcceleratorKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\CameraKernels.cuh" />
@@ -21,7 +21,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultEstimatorsKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\EmptyEventEstimator.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorEmpty.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorP.h" />
@@ -73,7 +73,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TypeTraits.h" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\TracerLib\BasicEventEstimator.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUEventEstimatorBasic.cu" />
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveEmpty.cpp" />

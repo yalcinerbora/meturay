@@ -170,9 +170,12 @@ class SimpleTracerSetup
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
 
+        static constexpr const char*        ESTIMATOR_TYPE = "BasicEstimator";
+        static constexpr const char*        TRACER_TYPE = "BasicTracer";
+
         static constexpr const char*        TRACER_DLL = "Tracer-Test";
-        static constexpr const char*        TRACER_LOGIC_GEN = "GenerateBasicTracer";
-        static constexpr const char*        TRACER_LOGIC_DEL = "DeleteBasicTracer";
+        static constexpr const char*        TRACER_LOGIC_POOL_GEN = "GenerateTestTracerPool";
+        static constexpr const char*        TRACER_LOGIC_POOL_DEL = "DeleteTestTracerPool";
         static constexpr const char*        TRACER_MAT_POOL_GEN = "GenerateTestMaterialPool";
         static constexpr const char*        TRACER_MAT_POOL_DEL = "DeleteTestMaterialPool";
 
@@ -250,19 +253,15 @@ bool SimpleTracerSetup::Init()
         false,
 
         TRACER_OPTIONS
-    };
-
-    // Load Tracer Genrator from DLL
-    //sharedLib = std::make_unique<SharedLib>(TRACER_DLL);
-    //tracerGenerator = TracerLoader::LoadTracerLogic(*sharedLib,
-    //                                                TRACER_DLL_GENERATOR,
-    //                                                TRACER_DLL_DELETER);
-   
-    // Load Materials from Test-Material Pool Shared Library
+    };   
+    // Load Materials from Test-Material Shared Library
     DLLError dllE = generator.IncludeMaterialsFromDLL(TRACER_DLL, ".*",
                                                       SharedLibArgs{TRACER_MAT_POOL_GEN, TRACER_MAT_POOL_DEL});
     ERROR_CHECK(DLLError, dllE);
-
+    // Load Tracer Logics from Test-Material Shared Library
+    dllE = generator.IncludeTracersFromDLL(TRACER_DLL, ".*",
+                                           SharedLibArgs{TRACER_LOGIC_POOL_GEN, TRACER_LOGIC_POOL_DEL});
+    ERROR_CHECK(DLLError, dllE);
     // Load Obj Surface Loader (Required Only for Cornell Example)
     dllE = surfaceLoaders.IncludeLoadersFromDLL(SURF_LOAD_DLL, ".*",
                                                 SharedLibArgs{SURF_LOAD_GEN, SURF_LOAD_DEL});
@@ -273,7 +272,6 @@ bool SimpleTracerSetup::Init()
     cudaSystem = std::make_unique<CudaSystem>();
     CudaError cudaE = cudaSystem->Initialize();
     ERROR_CHECK(CudaError, cudaE);
-    //const CudaGPU& leaderDevice = *cudaSystem->GPUList().begin();
 
     // GPU Data Partitioner
     SingleGPUScenePartitioner partitioner(*cudaSystem);
@@ -283,19 +281,8 @@ bool SimpleTracerSetup::Init()
                                               partitioner,
                                               generator,
                                               surfaceLoaders);
-    SceneError scnE = gpuScene->LoadScene(sceneTime);
+    SceneError scnE = gpuScene->LoadScene(TRACER_PARAMETERS, sceneTime);
     ERROR_CHECK(SceneError, scnE);
-
-
-    // Finally generate logic after successfull load
-    TracerBaseLogicI* logic;
-    dllE = generator.GenerateBaseLogic(logic, TRACER_PARAMETERS,
-                                       gpuScene->MaxMatIds(),
-                                       gpuScene->MaxAccelIds(),
-                                       gpuScene->BaseBoundaryMaterial(),
-                                       TRACER_DLL,
-                                       SharedLibArgs{TRACER_LOGIC_GEN, TRACER_LOGIC_DEL});
-    ERROR_CHECK(DLLError, dllE);
 
     MovementScemeList MovementSchemeList = {};    
     KeyboardKeyBindings KeyBinds = VisorConstants::DefaultKeyBinds;
@@ -327,7 +314,7 @@ bool SimpleTracerSetup::Init()
 
     // Attach the logic & Image format
     tracerBase = std::make_unique<TracerBase>(*cudaSystem);
-    tracerBase->AttachLogic(*logic);
+    tracerBase->AttachLogic(*generator.GetTracerLogic());
     tracerBase->SetImagePixelFormat(IMAGE_PIXEL_FORMAT);
     tracerBase->ResizeImage(IMAGE_RESOLUTION);
     tracerBase->ReportionImage();

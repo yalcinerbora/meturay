@@ -49,13 +49,13 @@ struct TracerOptions
     bool        verbose;
 };
 
-struct MatBatchRayDataCPU
-{
-    uint32_t                batchId;
-    std::vector<uint8_t>    record;
-    //
-    uint64_t                raysOffset;
-    uint64_t                auxiliaryOffset;
-    uint64_t                primitiveIdsOffset;
-    uint64_t                hitStructOffset;
-};
+//struct MatBatchRayDataCPU
+//{
+//    uint32_t                batchId;
+//    std::vector<uint8_t>    record;
+//    //
+//    uint64_t                raysOffset;
+//    uint64_t                auxiliaryOffset;
+//    uint64_t                primitiveIdsOffset;
+//    uint64_t                hitStructOffset;
+//};
