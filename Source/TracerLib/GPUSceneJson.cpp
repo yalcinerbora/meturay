@@ -13,6 +13,7 @@
 #include "TracerLogicGeneratorI.h"
 #include "ScenePartitionerI.h"
 #include "SceneNodeJson.h"
+#include "MangledNames.h"
 
 #include <nlohmann/json.hpp>
 #include <filesystem>
@@ -112,6 +113,10 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                                   AcceleratorBatchList& requiredAccelListings,
                                                   // Base Accelerator required data
                                                   std::map<uint32_t, uint32_t>& surfaceTransformIds,
+                                                  // Types
+                                                  const std::string& estimatorType,
+                                                  const std::string& tracerType,
+                                                  //
                                                   double time)
 {
     const nlohmann::json* surfaces = nullptr;
@@ -133,7 +138,12 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             matType,
             std::set<NodeId>()
         };
-        const auto& matBatch = matBatchListings.emplace(primType + matType,
+
+        const std::string batchTypeName = MangledNames::MaterialBatch(tracerType.c_str(),
+                                                                      estimatorType.c_str(),
+                                                                      primType.c_str(),
+                                                                      matType.c_str());
+        const auto& matBatch = matBatchListings.emplace(batchTypeName,
                                                         batchData).first;
         matBatch->second.matIds.emplace(matId);
     };
@@ -146,11 +156,15 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             const InnerIndex iIndex = loc->second.second;
             const auto& jsnNode = (*materials)[nIndex];
 
-            const std::string matGroupType = jsnNode[SceneIO::TYPE];
+            std::string matName = jsnNode[SceneIO::TYPE];
+            const std::string matGroupType = MangledNames::MaterialGroup(tracerType.c_str(),
+                                                                         estimatorType.c_str(),
+                                                                         matName.c_str());
+
             auto& matSet = matGroupNodes.emplace(matGroupType, NodeListing()).first->second;
             auto& node = *matSet.emplace(std::make_unique<SceneNodeJson>(jsnNode, nIndex)).first;
             node->AddIdIndexPair(matId, iIndex);
-            AttachMatBatch(primType, matGroupType, matId);
+            AttachMatBatch(primType, matName, matId);
         }
         else return SceneError::MATERIAL_ID_NOT_FOUND;
         return SceneError::OK;
@@ -207,7 +221,8 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                 return e;
         }
         // Generate Accelerator Group
-        const std::string acceleratorGroupType = surf.acceleratorType + primGroupType;
+        const std::string acceleratorGroupType = MangledNames::AcceleratorGroup(primGroupType.c_str(),
+                                                                                surf.acceleratorType.c_str());
         AccelGroupData accGData =
         {
             acceleratorGroupType,
@@ -252,9 +267,10 @@ SceneError GPUSceneJson::GenerateMaterialGroups(const MultiGPUMatNodes& matGroup
         const std::string& matTypeName = matGroupN.first.first;
         const CudaGPU* gpu = matGroupN.first.second;
         const auto& matNodes = matGroupN.second;
+        const GPUEventEstimatorI* estimator = logicGenerator.GetEventEstimator();
         //
         GPUMaterialGroupI* matGroup = nullptr;
-        if(e = logicGenerator.GenerateMaterialGroup(matGroup, matTypeName, *gpu))
+        if(e = logicGenerator.GenerateMaterialGroup(matGroup, matTypeName, *gpu, *estimator))
             return e;
         if(e = matGroup->InitializeGroup(matNodes, time, parentPath))
             return e;
@@ -279,12 +295,13 @@ SceneError GPUSceneJson::GenerateMaterialBatches(MaterialKeyListing& allMatKeys,
         const std::string& batchName = requiredMat.first.first;
         const std::string& matTName = requiredMat.second.matType;
         const std::string& primTName = requiredMat.second.primType;
+        const GPUEventEstimatorI* estimator = logicGenerator.GetEventEstimator();
 
         GPUPrimitiveGroupI* pGroup = nullptr;
         GPUMaterialGroupI* mGroup = nullptr;
         if((e = logicGenerator.GeneratePrimitiveGroup(pGroup, primTName)) != SceneError::OK)
             return e;
-        if((e = logicGenerator.GenerateMaterialGroup(mGroup, matTName, *gpu)) != SceneError::OK)
+        if((e = logicGenerator.GenerateMaterialGroup(mGroup, matTName, *gpu, *estimator)) != SceneError::OK)
             return e;
 
         // Generation
@@ -433,7 +450,7 @@ SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, AABB3>
 
     // Find Base Accelerator Type and generate
     const nlohmann::json* baseAccel = nullptr;
-    if(!FindNode(baseAccel, SceneIO::BASE_ACCELERATOR_BASE))
+    if(!FindNode(baseAccel, SceneIO::BASE_ACCELERATOR))
         return SceneError::BASE_ACCELERATOR_NODE_NOT_FOUND;
     const std::string baseAccelType = (*baseAccel);
 
@@ -534,7 +551,7 @@ SceneError GPUSceneJson::LoadCommon(double time)
     return e;
 }
 
-SceneError GPUSceneJson::LoadLogicRelated(double time)
+SceneError GPUSceneJson::LoadLogicRelated(const TracerParameters& p, double time)
 {
     SceneError e = SceneError::OK;
     // Group Data
@@ -545,12 +562,25 @@ SceneError GPUSceneJson::LoadLogicRelated(double time)
     AcceleratorBatchList accelListings;
     std::map<uint32_t, uint32_t> surfaceTransformIds;
 
+    // Fetch Estimator Type
+    const nlohmann::json* estimator = nullptr;
+    if(!FindNode(estimator, SceneIO::ESTIMATOR))
+        return SceneError::ESTIMATOR_NODE_NOT_FOUND;
+    const std::string estimatorType = (*estimator);
+    // Fetch Tracer Type
+    const nlohmann::json* tracerLogic = nullptr;
+    if(!FindNode(tracerLogic, SceneIO::TRACER_LOGIC))
+        return SceneError::TRACER_NODE_NOT_FOUND;
+    const std::string tracerType = (*tracerLogic);
+
     // Parse Json and find necessary nodes
     if((e = GenerateConstructionData(primGroupNodes,
                                      matGroupNodes,
                                      matListings,
                                      accelListings,
                                      surfaceTransformIds,
+                                     estimatorType,
+                                     tracerType,
                                      time)) != SceneError::OK)
         return e;
 
@@ -569,6 +599,11 @@ SceneError GPUSceneJson::LoadLogicRelated(double time)
     // Using those constructs generate
     // Primitive Groups
     if((e = GeneratePrimitiveGroups(primGroupNodes, time)) != SceneError::OK)
+        return e;
+
+    // Before Materials Generate Estimator
+    GPUEventEstimatorI* est = nullptr;
+    if((e = logicGenerator.GenerateEventEstimaor(est, estimatorType)) != SceneError::OK)
         return e;
 
     // Material Groups
@@ -603,9 +638,17 @@ SceneError GPUSceneJson::LoadLogicRelated(double time)
     maxAccelIds += Vector2i(1);
     maxMatIds += Vector2i(1);
 
-    // Everything is generated!
+    // Finally Generate Base Logic
+    TracerBaseLogicI* logic = nullptr;
+    if((e = logicGenerator.GenerateTracerLogic(logic, p,
+                                               maxMatIds,
+                                               maxAccelIds,
+                                               baseBoundaryMatKey,
+                                               tracerType)) != SceneError::OK)
+        return e;
+                                              
 
-    // All of the data is generated
+    // Everything is generated!
     return SceneError::OK;
 }
 
@@ -633,7 +676,7 @@ size_t GPUSceneJson::UsedCPUMemory()
     return 0;
 }
 
-SceneError GPUSceneJson::LoadScene(double time)
+SceneError GPUSceneJson::LoadScene(const TracerParameters& p, double time)
 {
     SceneError e = SceneError::OK;
     try
@@ -642,7 +685,7 @@ SceneError GPUSceneJson::LoadScene(double time)
            return e;
         if((e = LoadCommon(time)) != SceneError::OK)
            return e;
-        e = LoadLogicRelated(time);
+        e = LoadLogicRelated(p, time);
     }
     catch (SceneException const& e)
     {

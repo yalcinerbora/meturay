@@ -6,17 +6,16 @@
 #include "MaterialDataStructs.h"
 #include "GIMaterialsKC.cuh"
 
-#include "TracerLib/EmptyEventEstimator.h"
-#include "TracerLib/BasicEventEstimator.h"
+#include "TracerLib/GPUEventEstimatorBasic.h"
 
 class BasicPathTraceMat final
     : public GPUMaterialGroup<TracerBasic,
-                              BasicEventEstimator,
+                              GPUEventEstimatorBasic,
                               ConstantAlbedoMatData,
                               BasicSurface,
                               BasicPathTraceShade>
 {
-    MATERIAL_TYPE_NAME("BasicPathTrace", TracerBasic, BasicEventEstimator)
+    MATERIAL_TYPE_NAME("BasicPathTrace", TracerBasic, GPUEventEstimatorBasic)
 
     private:
         DeviceMemory                    memory;
@@ -52,12 +51,12 @@ class BasicPathTraceMat final
 
 class LightBoundaryMat final
     : public GPUMaterialGroup<TracerBasic,
-                              EmptyEventEstimator,
+                              GPUEventEstimatorBasic,
                               ConstantIrradianceMatData,
                               EmptySurface,
                               LightBoundaryShade>
 {
-    MATERIAL_TYPE_NAME("LightBoundary", TracerBasic, EmptyEventEstimator)
+    MATERIAL_TYPE_NAME("LightBoundary", TracerBasic, GPUEventEstimatorBasic)
 
     private:
         DeviceMemory                    memory;
@@ -98,61 +97,61 @@ static_assert(IsTracerClass<LightBoundaryMat>::value,
 
 // Mat Batch Extern
 extern template class GPUMaterialBatch<TracerBasic,
-                                       BasicEventEstimator,
+                                       GPUEventEstimatorBasic,
                                        BasicPathTraceMat,
                                        GPUPrimitiveTriangle,
                                        BasicSurfaceFromTri>;
 
 extern template class GPUMaterialBatch<TracerBasic,
-                                       BasicEventEstimator,
+                                       GPUEventEstimatorBasic,
                                        BasicPathTraceMat,
                                        GPUPrimitiveSphere,
                                        BasicSurfaceFromSphr>;
 
 extern template class GPUMaterialBatch<TracerBasic,
-                                       EmptyEventEstimator,
+                                       GPUEventEstimatorBasic,
                                        LightBoundaryMat,
                                        GPUPrimitiveEmpty,
                                        EmptySurfaceFromEmpty>;
 
 extern template class GPUMaterialBatch<TracerBasic,
-                                       EmptyEventEstimator,
+                                       GPUEventEstimatorBasic,
                                        LightBoundaryMat,
                                        GPUPrimitiveTriangle,
                                        EmptySurfaceFromTri>;
 
 extern template class GPUMaterialBatch<TracerBasic,
-                                       EmptyEventEstimator,
+                                       GPUEventEstimatorBasic,
                                        LightBoundaryMat,
                                        GPUPrimitiveSphere,
                                        EmptySurfaceFromSphr>;
 
 using BasicPTSphereBatch = GPUMaterialBatch<TracerBasic,
-                                            BasicEventEstimator,
+                                            GPUEventEstimatorBasic,
                                             BasicPathTraceMat,
                                             GPUPrimitiveSphere,
                                             BasicSurfaceFromSphr>;
 
 using BasicPTTriangleBatch = GPUMaterialBatch<TracerBasic,
-                                              BasicEventEstimator,
+                                              GPUEventEstimatorBasic,
                                               BasicPathTraceMat,
                                               GPUPrimitiveTriangle,
                                               BasicSurfaceFromTri>;
 
 using LightBoundaryBatch = GPUMaterialBatch<TracerBasic,
-                                            EmptyEventEstimator,
+                                            GPUEventEstimatorBasic,
                                             LightBoundaryMat,
                                             GPUPrimitiveEmpty,
                                             EmptySurfaceFromEmpty>;
 
 using LightBoundaryTriBatch = GPUMaterialBatch<TracerBasic,
-                                               EmptyEventEstimator,
+                                               GPUEventEstimatorBasic,
                                                LightBoundaryMat,
                                                GPUPrimitiveTriangle,
                                                EmptySurfaceFromTri>;
 
 using LightBoundarySphrBatch = GPUMaterialBatch<TracerBasic,
-                                                EmptyEventEstimator,
+                                                GPUEventEstimatorBasic,
                                                 LightBoundaryMat,
                                                 GPUPrimitiveSphere,
                                                 EmptySurfaceFromSphr>;

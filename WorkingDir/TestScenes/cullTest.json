@@ -18,6 +18,9 @@
 
 	"Lights": [],
 
+	"Tracer": "BasicTracer",
+	"Estimator": "EmptyEstimator",
+
 	"Transforms":[
 	{
 		"id": 0,

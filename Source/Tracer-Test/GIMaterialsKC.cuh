@@ -11,7 +11,6 @@ class RandomGPU;
 #include "RayLib/HemiDistribution.h"
 
 #include "TracerLib/ImageFunctions.cuh"
-#include "TracerLib/EmptyEventEstimator.h"
 
 #include <cuda_runtime.h>
 
@@ -32,7 +31,7 @@ inline void LightBoundaryShade(// Output
                                // RNG
                                RandomGPU& rng,
                                // Event Estimator
-                               const EmptyEstimatorData&,
+                               const BasicEstimatorData&,
                                // Input as global memory
                                const ConstantIrradianceMatData& gMatData,
                                const HitKey::Type& matId)

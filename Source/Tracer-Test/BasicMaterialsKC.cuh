@@ -10,7 +10,7 @@ class RandomGPU;
 #include "RayLib/Constants.h"
 
 #include "TracerLib/ImageFunctions.cuh"
-#include "TracerLib/EmptyEventEstimator.h"
+#include "TracerLib/GPUEventEstimatorEmpty.h"
 
 __device__
 inline void BasicMatShade(// Output

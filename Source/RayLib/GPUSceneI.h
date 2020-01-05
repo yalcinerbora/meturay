@@ -6,6 +6,7 @@
 struct SceneError;
 struct LightStruct;
 struct CameraPerspective;
+struct TracerParameters;
 
 using TransformStruct = Matrix4x4;
 
@@ -18,7 +19,7 @@ class GPUSceneI
         virtual size_t                      UsedGPUMemory() = 0;
         virtual size_t                      UsedCPUMemory() = 0;
         //
-        virtual SceneError                  LoadScene(double) = 0;
+        virtual SceneError                  LoadScene(const TracerParameters&, double) = 0;
         virtual SceneError                  ChangeTime(double) = 0;
         //
         virtual Vector2i                    MaxMatIds() = 0;

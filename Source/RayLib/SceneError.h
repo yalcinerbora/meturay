@@ -27,11 +27,15 @@ struct SceneError : public ErrorI
             CAMERAS_ARRAY_NOT_FOUND,
             BASE_ACCELERATOR_NODE_NOT_FOUND,
             BASE_BOUND_MAT_NODE_NOT_FOUND,
+            TRACER_NODE_NOT_FOUND,
+            ESTIMATOR_NODE_NOT_FOUND,
             // No Logic
             NO_LOGIC_FOR_ACCELERATOR,
             NO_LOGIC_FOR_MATERIAL,
             NO_LOGIC_FOR_PRIMITIVE,
             NO_LOGIC_FOR_SURFACE_DATA,
+            NO_LOGIC_FOR_TRACER,
+            NO_LOGIC_FOR_ESTIMATOR,
             // Id Errors
             DUPLICATE_MATERIAL_ID,
             DUPLICATE_PRIMITIVE_ID,
@@ -133,11 +137,15 @@ inline SceneError::operator std::string() const
         "\"Cameras\" array not found",
         "\"BaseAccelerator\" node not found",
         "\"BaseBoundaryMaterial\" node not found",
+        "\"Tracer\" node not found",
+        "\"Estimator\" node not found",
         // No Logic
         "No logic found for that accelerator",
         "No logic found for that material",
         "No logic found for that primitive",
         "No logic found for loading that surface data",
+        "No logic found for that tracer",
+        "No logic found for that estimator",
         // Id Errors
         "Duplicate material id",
         "Duplicate primitive id",

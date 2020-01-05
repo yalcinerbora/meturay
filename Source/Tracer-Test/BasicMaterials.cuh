@@ -8,12 +8,12 @@
 
 class BasicMat final
     : public GPUMaterialGroup<TracerBasic,
-                              EmptyEventEstimator,
+                              GPUEventEstimatorEmpty,
                               ConstantAlbedoMatData,
                               EmptySurface,
                               BasicMatShade>
 {
-    MATERIAL_TYPE_NAME("BasicMat", TracerBasic, EmptyEventEstimator)
+    MATERIAL_TYPE_NAME("BasicMat", TracerBasic, GPUEventEstimatorEmpty)
 
     private:
         DeviceMemory                    memory;
@@ -50,12 +50,12 @@ class BasicMat final
 
 class BarycentricMat final
     : public GPUMaterialGroup<TracerBasic,
-                              EmptyEventEstimator,
+                              GPUEventEstimatorEmpty,
                               NullData,
                               BarySurface,
                               BaryMatShade>
 {
-    MATERIAL_TYPE_NAME("BarycentricMat", TracerBasic, EmptyEventEstimator)
+    MATERIAL_TYPE_NAME("BarycentricMat", TracerBasic, GPUEventEstimatorEmpty)
 
     private:
     protected:
@@ -89,12 +89,12 @@ class BarycentricMat final
 
 class SphericalMat final
     : public GPUMaterialGroup<TracerBasic,
-                              EmptyEventEstimator,
+                              GPUEventEstimatorEmpty,
                               NullData,
                               SphrSurface,
                               SphrMatShade>
 {
-    MATERIAL_TYPE_NAME("SphericalMat", TracerBasic, EmptyEventEstimator)
+    MATERIAL_TYPE_NAME("SphericalMat", TracerBasic, GPUEventEstimatorEmpty)
 
     private:
     protected:
@@ -135,61 +135,61 @@ static_assert(IsTracerClass<SphericalMat>::value,
 
 // Material Batches
 extern template class GPUMaterialBatch<TracerBasic,
-                                       EmptyEventEstimator,
+                                       GPUEventEstimatorEmpty,
                                        BasicMat,
                                        GPUPrimitiveEmpty,
                                        EmptySurfaceFromEmpty>;
 
 extern template class GPUMaterialBatch<TracerBasic,
-                                       EmptyEventEstimator,
+                                       GPUEventEstimatorEmpty,
                                        BasicMat,
                                        GPUPrimitiveSphere,
                                        EmptySurfaceFromSphr>;
 
 extern template class GPUMaterialBatch<TracerBasic,
-                                       EmptyEventEstimator,
+                                       GPUEventEstimatorEmpty,
                                        BasicMat,
                                        GPUPrimitiveTriangle,
                                        EmptySurfaceFromTri>;
 
 extern template class GPUMaterialBatch<TracerBasic,
-                                       EmptyEventEstimator,
+                                       GPUEventEstimatorEmpty,
                                        BarycentricMat,
                                        GPUPrimitiveTriangle,
                                        BarySurfaceFromTri>;
 
 extern template class GPUMaterialBatch<TracerBasic,
-                                       EmptyEventEstimator,
+                                       GPUEventEstimatorEmpty,
                                        SphericalMat,
                                        GPUPrimitiveSphere,
                                        SphrSurfaceFromSphr>;
 
 using BasicMatBatch = GPUMaterialBatch<TracerBasic,
-                                       EmptyEventEstimator,
+                                       GPUEventEstimatorEmpty,
                                        BasicMat,
                                        GPUPrimitiveEmpty,
                                        EmptySurfaceFromEmpty>;
 
 using BasicMatTriBatch = GPUMaterialBatch<TracerBasic,
-                                          EmptyEventEstimator,
+                                          GPUEventEstimatorEmpty,
                                           BasicMat,
                                           GPUPrimitiveTriangle,
                                           EmptySurfaceFromTri>;
 
 using BasicMatSphrBatch = GPUMaterialBatch<TracerBasic,
-                                           EmptyEventEstimator,
+                                           GPUEventEstimatorEmpty,
                                            BasicMat,
                                            GPUPrimitiveSphere,
                                            EmptySurfaceFromSphr>;
 
 using BarycentricMatTriBatch = GPUMaterialBatch<TracerBasic,
-                                                EmptyEventEstimator,
+                                                GPUEventEstimatorEmpty,
                                                 BarycentricMat,
                                                 GPUPrimitiveTriangle,
                                                 BarySurfaceFromTri>;
 
 using SphericalMatSphrBatch = GPUMaterialBatch<TracerBasic,
-                                               EmptyEventEstimator,
+                                               GPUEventEstimatorEmpty,
                                                SphericalMat,
                                                GPUPrimitiveSphere,
                                                SphrSurfaceFromSphr>;

@@ -65,6 +65,35 @@ class MaterialLogicPoolI
         virtual std::map<std::string, GPUMatBatchGen> MaterialBatchGenerators(const std::string regex = ".*") const;
 };
 
+class TracerLogicPoolI
+{
+    protected:
+        std::map<std::string, GPUTracerGen>   tracerLogicGenerators;
+
+    public:
+        static constexpr const char* DefaultConstructorName = "GenTracerPoolPool";
+        static constexpr const char* DefaultDestructorName = "DelTracerPool";
+
+        virtual                         ~TracerLogicPoolI() = default;
+
+        virtual std::map<std::string, GPUTracerGen> TracerGenerators(const std::string regex = ".*") const;
+};
+
+class EstimatorLogicPoolI
+{
+    protected:
+        std::map<std::string, GPUEstimatorGen>  estimatorGenerators;
+
+    public:
+        static constexpr const char*    DefaultConstructorName = "GenEstimatorPool";
+        static constexpr const char*    DefaultDestructorName = "DelEstimatorPool";
+
+        virtual                         ~EstimatorLogicPoolI() = default;
+
+        virtual std::map<std::string, GPUEstimatorGen> EstimatorGenerators(const std::string regex = ".*") const;
+
+};
+
 inline std::map<std::string, GPUAccelGroupGen> AcceleratorLogicPoolI::AcceleratorGroupGenerators(const std::string regex) const
 {
     std::map<std::string, GPUAccelGroupGen> result;
@@ -133,6 +162,30 @@ inline std::map<std::string, GPUMatBatchGen> MaterialLogicPoolI::MaterialBatchGe
     {
         if(std::regex_match(batchGenerator.first, regExpression))
             result.emplace(batchGenerator);
+    }
+    return result;
+}
+
+inline std::map<std::string, GPUTracerGen> TracerLogicPoolI::TracerGenerators(const std::string regex) const
+{
+    std::map<std::string, GPUTracerGen> result;
+    std::regex regExpression(regex);
+    for(const auto& tracerGenerator : tracerLogicGenerators)
+    {
+        if(std::regex_match(tracerGenerator.first, regExpression))
+            result.emplace(tracerGenerator);
+    }
+    return result;
+}
+
+inline std::map<std::string, GPUEstimatorGen> EstimatorLogicPoolI::EstimatorGenerators(const std::string regex) const
+{
+    std::map<std::string, GPUEstimatorGen> result;
+    std::regex regExpression(regex);
+    for(const auto& estimatorGenerator : estimatorGenerators)
+    {
+        if(std::regex_match(estimatorGenerator.first, regExpression))
+            result.emplace(estimatorGenerator);
     }
     return result;
 }

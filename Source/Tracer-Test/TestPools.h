@@ -11,3 +11,11 @@ class TestMaterialPool final : public MaterialLogicPoolI
         TestMaterialPool();
         ~TestMaterialPool() = default;
 };
+
+class TestTracerLogicPool final : public TracerLogicPoolI
+{
+    public:
+        // Constructors & Destructor
+        TestTracerLogicPool();
+        ~TestTracerLogicPool() = default;
+};

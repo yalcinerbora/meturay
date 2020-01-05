@@ -6,6 +6,9 @@
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveEmpty.h"
 #include "GPUAcceleratorLinear.cuh"
+#include "GPUEventEstimatorBasic.h"
+#include "GPUEventEstimatorEmpty.h"
+#include "TracerLogicI.h"
 
 #include "GPUMaterialI.h"
 
@@ -91,7 +94,8 @@ DLLError TracerLogicGenerator::FindOrGenerateSharedLib(SharedLib*& libOut,
 
 TracerLogicGenerator::TracerLogicGenerator()
     : baseAccelerator(nullptr, TypeGenWrappers::DefaultDestruct<GPUBaseAcceleratorI>)
-    , tracerPtr(nullptr, nullptr)
+    , tracerPtr(nullptr, TypeGenWrappers::DefaultDestruct<TracerBaseLogicI>)
+    , estimatorPtr(nullptr, TypeGenWrappers::DefaultDestruct<GPUEventEstimatorI>)
 {
     using namespace TypeGenWrappers;
 
@@ -125,6 +129,14 @@ TracerLogicGenerator::TracerLogicGenerator()
     baseAccelGenerators.emplace(GPUBaseAcceleratorLinear::TypeName(),
                                 GPUBaseAccelGen(DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorLinear>,
                                                 DefaultDestruct<GPUBaseAcceleratorI>));
+
+    // Estimators
+    estimatorGenerators.emplace(GPUEventEstimatorEmpty::TypeName(),
+                                GPUEstimatorGen(DefaultConstruct<GPUEventEstimatorI, GPUEventEstimatorEmpty>,
+                                                DefaultDestruct<GPUEventEstimatorI>));
+    estimatorGenerators.emplace(GPUEventEstimatorBasic::TypeName(),
+                                GPUEstimatorGen(DefaultConstruct<GPUEventEstimatorI, GPUEventEstimatorBasic>,
+                                                DefaultDestruct<GPUEventEstimatorI>));
 
     // Default Types are loaded
     // Other Types are strongly tied to base tracer logic
@@ -204,7 +216,8 @@ SceneError TracerLogicGenerator::GenerateAcceleratorBatch(GPUAcceleratorBatchI*&
 
 SceneError TracerLogicGenerator::GenerateMaterialGroup(GPUMaterialGroupI*& mg,
                                                        const std::string& materialType,
-                                                       const CudaGPU& gpu)
+                                                       const CudaGPU& gpu,
+                                                       const GPUEventEstimatorI& ee)
 {
     mg = nullptr;
     auto loc = matGroups.find(std::make_pair(materialType, &gpu));
@@ -215,7 +228,7 @@ SceneError TracerLogicGenerator::GenerateMaterialGroup(GPUMaterialGroupI*& mg,
         auto loc = matGroupGenerators.find(materialType);
         if(loc == matGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_MATERIAL;
 
-        GPUMatGPtr ptr = loc->second(gpu);
+        GPUMatGPtr ptr = loc->second(gpu, ee);
         mg = ptr.get();
         matGroups.emplace(std::make_pair(materialType, &gpu), std::move(ptr));
     }
@@ -267,60 +280,59 @@ SceneError TracerLogicGenerator::GenerateBaseAccelerator(GPUBaseAcceleratorI*& b
     return SceneError::OK;
 }
 
-DLLError TracerLogicGenerator::GenerateBaseLogic(TracerBaseLogicI*& tl,
-                                                   // Args
-                                                   const TracerParameters& opts,
-                                                   const Vector2i maxMats,
-                                                   const Vector2i maxAccels,
-                                                   const HitKey baseBoundMatKey,
-                                                   // DLL Location
-                                                   const std::string& libName,
-                                                   const SharedLibArgs& mangledName)
+// EventEstimator
+SceneError TracerLogicGenerator::GenerateEventEstimaor(GPUEventEstimatorI*& est,
+                                                     const std::string& estType)
 {
-    tl = nullptr;
+    if(estimatorPtr.get() == nullptr)
+    {
+        // Cannot Find Already Constructed Type
+        // Generate
+        auto loc = estimatorGenerators.find(estType);
+        if(loc == estimatorGenerators.end()) return SceneError::NO_LOGIC_FOR_ESTIMATOR;
+        estimatorPtr = loc->second();
+        est = estimatorPtr.get();
+    }
+    else est = estimatorPtr.get();
+    return SceneError::OK;
+}
 
-    // Find and Generate Shared Lib
-    SharedLib* lib;
-    DLLError e = FindOrGenerateSharedLib(lib, libName);
-    if(e != DLLError::OK) return e;
+// EventEstimator
+SceneError TracerLogicGenerator::GenerateTracerLogic(TracerBaseLogicI*& tl,
+                                                     // Args
+                                                     const TracerParameters& opts,
+                                                     const Vector2i maxMats,
+                                                     const Vector2i maxAccels,
+                                                     const HitKey baseBoundMatKey,
+                                                     // Name
+                                                     const std::string& tracerType)
+{
+    if(tracerPtr.get() == nullptr)
+    {
+        // Cannot Find Already Constructed Type
+        // Generate
+        auto loc = tracerGenerators.find(tracerType);
+        if(loc == tracerGenerators.end()) return SceneError::NO_LOGIC_FOR_TRACER;
 
+        // Get Args
+        uint32_t hitStructSize = CalculateHitStructSize();
+        auto ag = GetAcceleratorGroups();
+        auto ab = GetAcceleratorBatches();
+        auto mg = GetMaterialGroups();
+        auto mb = GetMaterialBatches();
 
-    uint32_t hitStructSize = CalculateHitStructSize();
-    auto ag = GetAcceleratorGroups();
-    auto ab = GetAcceleratorBatches();
-    auto mg = GetMaterialGroups();
-    auto mb = GetMaterialBatches();
-
-    // Instatiate from DLL
-    e = lib->GenerateObjectWithArgs
-        <TracerBaseLogicI,
-        GPUBaseAcceleratorI&,
-        AcceleratorGroupList&&,
-        AcceleratorBatchMappings&&,
-        MaterialGroupList&&,
-        MaterialBatchMappings&&,
-        const TracerParameters&, 
-        uint32_t,
-        const Vector2i,
-        const Vector2i,
-        const HitKey>
-    (
-        tracerPtr,
-        mangledName,
-        // Args of Tracer
-        *baseAccelerator.get(),
-        std::move(ag),
-        std::move(ab),
-        std::move(mg),
-        std::move(mb),
-        opts, hitStructSize,
-        maxMats, maxAccels,
-        baseBoundMatKey
-    );
-    if(e != DLLError::OK) return e;
-    tl = tracerPtr.get();
-    
-    return DLLError::OK;
+        tracerPtr = loc->second(*baseAccelerator.get(),
+                                std::move(ag),
+                                std::move(ab),
+                                std::move(mg),
+                                std::move(mb),
+                                opts, hitStructSize,
+                                maxMats, maxAccels,
+                                baseBoundMatKey);
+        tl = tracerPtr.get();
+    }
+    else tl = tracerPtr.get();
+    return SceneError::OK;
 }
 
 PrimitiveGroupList TracerLogicGenerator::GetPrimitiveGroups() const
@@ -368,6 +380,16 @@ GPUBaseAcceleratorI* TracerLogicGenerator::GetBaseAccelerator() const
     return baseAccelerator.get();
 }
 
+GPUEventEstimatorI* TracerLogicGenerator::GetEventEstimator() const
+{
+    return estimatorPtr.get();
+}
+
+TracerBaseLogicI* TracerLogicGenerator::GetTracerLogic() const
+{
+    return tracerPtr.get();
+}
+
 void TracerLogicGenerator::ClearAll()
 {
     primGroups.clear();
@@ -379,6 +401,9 @@ void TracerLogicGenerator::ClearAll()
     matBatches.clear();
 
     baseAccelerator.reset(nullptr);
+
+    tracerPtr.reset(nullptr);
+    estimatorPtr.reset(nullptr);
 }
 
 DLLError TracerLogicGenerator::IncludeBaseAcceleratorsFromDLL(const std::string& libName,
@@ -461,6 +486,44 @@ DLLError TracerLogicGenerator::IncludePrimitivesFromDLL(const std::string& libNa
 
     auto map = (*pool)->PrimitiveGenerators(regex);
     primGroupGenerators.insert(map.cbegin(), map.cend());
+    return e;
+}
+
+DLLError TracerLogicGenerator::IncludeEstimatorsFromDLL(const std::string& libName,
+                                                        const std::string& regex,
+                                                        const SharedLibArgs& mangledName)
+{
+    DLLError e = DLLError::OK;
+    SharedLib* lib = nullptr;
+    e = FindOrGenerateSharedLib(lib, libName);
+    if(e != DLLError::OK) return e;
+
+    EstimatorPoolPtr* pool = nullptr;
+    e = FindOrGeneratePool<EstimatorLogicPoolI>(pool, loadedEstimatorPools,
+                                                {lib, mangledName});
+    if(e != DLLError::OK) return e;
+
+    auto map = (*pool)->EstimatorGenerators(regex);
+    estimatorGenerators.insert(map.cbegin(), map.cend());
+    return e;
+}
+
+DLLError TracerLogicGenerator::IncludeTracersFromDLL(const std::string& libName,
+                                                     const std::string& regex,
+                                                     const SharedLibArgs& mangledName)
+{
+    DLLError e = DLLError::OK;
+    SharedLib* lib = nullptr;
+    e = FindOrGenerateSharedLib(lib, libName);
+    if(e != DLLError::OK) return e;
+
+    TracerLogicPoolPtr* pool = nullptr;
+    e = FindOrGeneratePool<TracerLogicPoolI>(pool, loadedTracerPools,
+                                                {lib, mangledName});
+    if(e != DLLError::OK) return e;
+
+    auto map = (*pool)->TracerGenerators(regex);
+    tracerGenerators.insert(map.cbegin(), map.cend());
     return e;
 }
 

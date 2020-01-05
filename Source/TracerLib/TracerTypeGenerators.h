@@ -19,6 +19,8 @@ as an input. (since those types are storngly tied)
 #include "RayLib/TracerStructs.h"
 
 class TracerBaseLogicI;
+class GPUEventEstimatorI;
+
 class GPUBaseAcceleratorI;
 
 class GPUAcceleratorGroupI;
@@ -29,6 +31,7 @@ class GPUAcceleratorBatchI;
 class GPUMaterialBatchI;
 
 class CudaGPU;
+
 
 // Fundamental Pointers whichalso support creation-deletion
 // across dll boundaries
@@ -41,6 +44,8 @@ using GPUMatGPtr = SharedLibPtr<GPUMaterialGroupI>;
 
 using GPUAccelBPtr = SharedLibPtr<GPUAcceleratorBatchI>;
 using GPUMatBPtr = SharedLibPtr<GPUMaterialBatchI>;
+
+using GPUEstimatorPtr = SharedLibPtr<GPUEventEstimatorI>;
 
 // Statically Inerfaced Generators
 template<class TracerLogic>
@@ -65,7 +70,8 @@ using AccelBatchGeneratorFunc = AccelBatch* (*)(const GPUAcceleratorGroupI&,
                                                 const GPUPrimitiveGroupI&);
 
 template<class MaterialGroup>
-using MaterialGroupGeneratorFunc = MaterialGroup* (*)(const CudaGPU& gpuId);
+using MaterialGroupGeneratorFunc = MaterialGroup* (*)(const CudaGPU& gpuId,
+                                                      const GPUEventEstimatorI& e);
 
 template<class MaterialBatch>
 using MaterialBatchGeneratorFunc = MaterialBatch* (*)(const GPUMaterialGroupI&,
@@ -73,6 +79,8 @@ using MaterialBatchGeneratorFunc = MaterialBatch* (*)(const GPUMaterialGroupI&,
 
 using GPUBaseAccelGen = GeneratorNoArg<GPUBaseAcceleratorI>;
 using GPUPrimGroupGen = GeneratorNoArg<GPUPrimitiveGroupI>;
+using GPUEstimatorGen = GeneratorNoArg<GPUEventEstimatorI>;
+
 
 class GPUTracerGen
 {
@@ -124,9 +132,10 @@ class GPUMatGroupGen
             , dFunc(d)
         {}
 
-        GPUMatGPtr operator()(const CudaGPU& gpu)
+        GPUMatGPtr operator()(const CudaGPU& gpu,
+                              const GPUEventEstimatorI& e)
         {
-            GPUMaterialGroupI* mat = gFunc(gpu);
+            GPUMaterialGroupI* mat = gFunc(gpu, e);
             return GPUMatGPtr(mat, dFunc);
         }
 };
@@ -235,9 +244,10 @@ namespace TypeGenWrappers
     }
 
     template <class Base, class MatBatch>
-    Base* MaterialGroupConstruct(const CudaGPU& gpu)
+    Base* MaterialGroupConstruct(const CudaGPU& gpu,
+                                 const GPUEventEstimatorI& e)
     {
-        return new MatBatch(gpu);
+        return new MatBatch(gpu, e);
     }
 
     template <class Base, class MatBatch>

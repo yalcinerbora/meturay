@@ -1,4 +1,4 @@
-#include "MaterialPools.h"
+#include "TestPools.h"
 #include "TracerLogics.cuh"
 
 #include "BasicMaterials.cuh"
@@ -85,4 +85,11 @@ TestMaterialPool::TestMaterialPool()
     materialBatchGenerators.emplace(LightBoundarySphrBatch::TypeName(),
                                     GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, LightBoundarySphrBatch>,
                                     DefaultDestruct<GPUMaterialBatchI>));
+}
+
+TestTracerLogicPool::TestTracerLogicPool()
+{
+    tracerLogicGenerators.emplace(TracerBasic::TypeName(),
+                                  GPUTracerGen(TracerLogicConstruct<TracerBaseLogicI, TracerBasic>,
+                                               DefaultDestruct<TracerBaseLogicI>));
 }

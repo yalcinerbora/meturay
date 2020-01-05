@@ -24,29 +24,36 @@ using AcceleratorPoolPtr = SharedLibPtr<AcceleratorLogicPoolI>;
 using MaterialPoolPtr = SharedLibPtr<MaterialLogicPoolI>;
 using PrimitivePoolPtr = SharedLibPtr<PrimitiveLogicPoolI>;
 using BaseAcceleratorPoolPtr = SharedLibPtr<BaseAcceleratorLogicPoolI>;
+using TracerLogicPoolPtr = SharedLibPtr<TracerLogicPoolI>;
+using EstimatorPoolPtr = SharedLibPtr<EstimatorLogicPoolI>;
 
 class TracerLogicGenerator : public TracerLogicGeneratorI
 {
     private:
     protected:
         // Shared Libraries That are Loaded
-        std::map<std::string, SharedLib>                openedLibs;
+        std::map<std::string, SharedLib>            openedLibs;
         // Included Pools
-        std::map<PoolKey, AcceleratorPoolPtr>           loadedAccPools;
-        std::map<PoolKey, MaterialPoolPtr>              loadedMatPools;
-        std::map<PoolKey, PrimitivePoolPtr>             loadedPrimPools;
-        std::map<PoolKey, BaseAcceleratorPoolPtr>       loadedBaseAccPools;
+        std::map<PoolKey, AcceleratorPoolPtr>       loadedAccPools;
+        std::map<PoolKey, MaterialPoolPtr>          loadedMatPools;
+        std::map<PoolKey, PrimitivePoolPtr>         loadedPrimPools;
+        std::map<PoolKey, BaseAcceleratorPoolPtr>   loadedBaseAccPools;
+        std::map<PoolKey, TracerLogicPoolPtr>       loadedTracerPools;
+        std::map<PoolKey, EstimatorPoolPtr>         loadedEstimatorPools;
 
         // All Combined Type Generation Functions
         // Type Generation Functions
-        std::map<std::string, GPUPrimGroupGen>          primGroupGenerators;
-        std::map<std::string, GPUAccelGroupGen>         accelGroupGenerators;
-        std::map<std::string, GPUMatGroupGen>           matGroupGenerators;
+        std::map<std::string, GPUPrimGroupGen>      primGroupGenerators;
+        std::map<std::string, GPUAccelGroupGen>     accelGroupGenerators;
+        std::map<std::string, GPUMatGroupGen>       matGroupGenerators;
 
-        std::map<std::string, GPUAccelBatchGen>         accelBatchGenerators;
-        std::map<std::string, GPUMatBatchGen>           matBatchGenerators;
+        std::map<std::string, GPUAccelBatchGen>     accelBatchGenerators;
+        std::map<std::string, GPUMatBatchGen>       matBatchGenerators;
 
-        std::map<std::string, GPUBaseAccelGen>          baseAccelGenerators;
+        std::map<std::string, GPUBaseAccelGen>      baseAccelGenerators;
+
+        std::map<std::string, GPUEstimatorGen>      estimatorGenerators;
+        std::map<std::string, GPUTracerGen>         tracerGenerators;
 
         // Generated Types (Called by GPU Scene)
         // These hold ownership of classes (thus these will force destruction)
@@ -56,12 +63,14 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         std::map<std::string, GPUAccelGPtr>         accelGroups;
         std::map<std::string, GPUAccelBPtr>         accelBatches;
         // Materials (Batch and Group)
-        std::map<NameGPUPair, GPUMatGPtr>            matGroups;
-        std::map<NameGPUPair, GPUMatBPtr>            matBatches;
+        std::map<NameGPUPair, GPUMatGPtr>           matGroups;
+        std::map<NameGPUPair, GPUMatBPtr>           matBatches;
         // Base Accelerator (Unique Ptr)
         GPUBaseAccelPtr                             baseAccelerator;
         // Tracer (Unique Ptr)
         GPUTracerPtr                                tracerPtr;
+        // Estimator (Unique Ptr)
+        GPUEstimatorPtr                             estimatorPtr;
 
         // Generated Batch Mappings
         AcceleratorBatchMappings                    accelBatchMap;
@@ -99,27 +108,27 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         // Material
         SceneError                  GenerateMaterialGroup(GPUMaterialGroupI*&,
                                                           const std::string& materialType,
-                                                          const CudaGPU&) override;
+                                                          const CudaGPU&,
+                                                          const GPUEventEstimatorI&) override;
         SceneError                  GenerateMaterialBatch(GPUMaterialBatchI*&,
                                                           const GPUMaterialGroupI&,
                                                           const GPUPrimitiveGroupI&,
                                                           uint32_t keyBatchId) override;
-
         // Base Accelerator should be fetched after all the stuff is generated
         SceneError                  GenerateBaseAccelerator(GPUBaseAcceleratorI*&,
                                                             const std::string& accelType) override;
-        // Finally get the tracer logic
-        // Tracer logic will be constructed with respect to
-        // Constructed batches
-        DLLError                    GenerateBaseLogic(TracerBaseLogicI*&,
-                                                      // Args
-                                                      const TracerParameters& opts,
-                                                      const Vector2i maxMats,
-                                                      const Vector2i maxAccels,
-                                                      const HitKey baseBoundMatKey,
-                                                      // DLL Location
-                                                      const std::string& libName,
-                                                      const SharedLibArgs& mangledName) override;
+        // EventEstimator
+        SceneError                  GenerateEventEstimaor(GPUEventEstimatorI*&,
+                                                          const std::string& estType) override;
+        // Tracer Logic
+        SceneError                  GenerateTracerLogic(TracerBaseLogicI*&,
+                                                        // Args
+                                                        const TracerParameters& opts,
+                                                        const Vector2i maxMats,
+                                                        const Vector2i maxAccels,
+                                                        const HitKey baseBoundMatKey,
+                                                        // Type
+                                                        const std::string& tracerType) override;
 
         PrimitiveGroupList          GetPrimitiveGroups() const override;
         AcceleratorGroupList        GetAcceleratorGroups() const override;
@@ -128,6 +137,8 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         MaterialBatchMappings       GetMaterialBatches() const override;
 
         GPUBaseAcceleratorI*        GetBaseAccelerator() const override;
+        GPUEventEstimatorI*         GetEventEstimator() const  override;
+        TracerBaseLogicI*           GetTracerLogic() const override;
 
         // Resetting all generated Groups and Batches
         void                        ClearAll() override;
@@ -146,6 +157,12 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         DLLError                    IncludePrimitivesFromDLL(const std::string& libName,
                                                             const std::string& regex,
                                                             const SharedLibArgs& mangledName) override;
+        DLLError                    IncludeEstimatorsFromDLL(const std::string& libName,
+                                                             const std::string& regex,
+                                                             const SharedLibArgs& mangledName) override;
+        DLLError                    IncludeTracersFromDLL(const std::string& libName,
+                                                             const std::string& regex,
+                                                             const SharedLibArgs& mangledName) override;
 };
 
 template <class T>
