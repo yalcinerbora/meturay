@@ -35,6 +35,7 @@ class GPUSceneI;
 class GPUBaseAcceleratorI;
 class GPUAcceleratorBatchI;
 class GPUMaterialBatchI;
+class GPUEventEstimatorI;
 
 class TracerBaseLogicI
 {
@@ -61,6 +62,7 @@ class TracerBaseLogicI
         virtual const MaterialBatchMappings&        MaterialBatches() = 0;
         virtual const AcceleratorGroupList&         AcceleratorGroups() = 0;
         virtual const MaterialGroupList&            MaterialGroups() = 0;
+        virtual GPUEventEstimatorI&                 EventEstimator() = 0;
 
         // Returns max bits of keys (for batch and id respectively)
         virtual const Vector2i                      SceneMaterialMaxBits() const = 0;

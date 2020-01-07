@@ -34,6 +34,8 @@ __device__ void AuxInitEmpty(RayAuxGMem*,
                              const uint32_t samplePerLocation)
 {}
 
+static GPUEventEstimatorI* eventEstimator = nullptr;
+
 class MockTracerLogic : public TracerBaseLogicI
 {
     public:
@@ -208,6 +210,7 @@ class MockTracerLogic : public TracerBaseLogicI
         const MaterialBatchMappings&            MaterialBatches() override { return materials; }
         const AcceleratorGroupList&             AcceleratorGroups() override { return accelGroups; }
         const MaterialGroupList&                MaterialGroups() override { return matGroups; }
+        GPUEventEstimatorI&                     EventEstimator() override { return *eventEstimator; }
 
         // Returns max bits of keys (for batch and id respectively)
         const Vector2i                          SceneMaterialMaxBits() const override { return MaterialRange; }

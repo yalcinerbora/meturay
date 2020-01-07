@@ -170,8 +170,10 @@ class GPUPrimitiveTriangle final
                                                            const SurfaceLoaderGeneratorI&,
                                                            const std::string& scenePath) override;
         // Provides data to Event Estimator
-        SceneError                              GenerateEstimatorInfo(std::vector<EstimatorInfo>&,
-                                                                      uint32_t id) const override;
+        bool                                    HasPrimitive(uint32_t surfaceDataId) const override;
+        SceneError                              GenerateEstimatorInfo(std::vector<EstimatorInfo>&, 
+                                                                      HitKey key,
+                                                                      uint32_t surfaceDataId) const override;
         // Access primitive range from Id
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;

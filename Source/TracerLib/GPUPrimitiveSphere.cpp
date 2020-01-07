@@ -6,6 +6,8 @@
 #include "RayLib/SurfaceLoaderI.h"
 #include "RayLib/Log.h"
 
+#include "EstimatorStructs.h"
+
 // Generics
 GPUPrimitiveSphere::GPUPrimitiveSphere()
     : totalPrimitiveCount(0)
@@ -247,9 +249,29 @@ SceneError GPUPrimitiveSphere::ChangeTime(const NodeListing& surfaceDataNodes, d
     //return e;
 }
 
-SceneError GPUPrimitiveSphere::GenerateEstimatorInfo(std::vector<EstimatorInfo>& result,
-                                                    uint32_t id) const
+bool GPUPrimitiveSphere::HasPrimitive(uint32_t surfaceDataId) const
 {
+    auto it = batchRanges.end();
+    if((it = batchRanges.find(surfaceDataId)) == batchRanges.end())
+        return false;
+    return true;
+}
+
+SceneError GPUPrimitiveSphere::GenerateEstimatorInfo(std::vector<EstimatorInfo>& result,
+                                                     HitKey key,
+                                                     uint32_t id) const
+{
+    const auto& range = batchRanges.at(id);
+    for(uint64_t i = range[0]; i < range[1]; i++)
+    {
+        Vector4 centerRad = dData.centerRadius[i];
+        Vector3 center = centerRad;
+        float radius = centerRad[3];        
+        result.push_back(EstimatorInfo::GenAsSpherical(key, 
+                                                       Vector3(1.0f), 
+                                                       center, 
+                                                       radius));
+    }
     return SceneError::OK;
 }
 

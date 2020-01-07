@@ -22,8 +22,9 @@
 	"Lights": [
 		// Light Information for event estimation
 		{
+			"id": 0,
 			"type": "primitive",
-			"material" : 0,
+			"material" : 1,
 			"primitive": 4
 		}
 	],
@@ -51,7 +52,7 @@
 		"id": 1,
 		"type": "LightBoundary",
 		//"albedo" : [1, 1, 1],
-		"irradiance" : [1, 1, 1]
+		"irradiance" : [40, 40, 40]
     },
 	{
 		// Red Simple Material

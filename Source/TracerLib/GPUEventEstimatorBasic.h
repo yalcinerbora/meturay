@@ -3,7 +3,7 @@
 #include "GPUEventEstimatorP.h"
 #include "DefaultEstimatorsKC.cuh"
 #include "TypeTraits.h"
-
+#include "TracerLib/DeviceMemory.h"
 
 class GPUEventEstimatorBasic final
     : public GPUEventEstimator<BasicEstimatorData,
@@ -14,6 +14,8 @@ class GPUEventEstimatorBasic final
         static constexpr const char*    TypeName() { return "Basic"; }
 
     private:
+        DeviceMemory                    memory;
+
     protected:
     public:
         // Constructors & Destructor
@@ -24,7 +26,7 @@ class GPUEventEstimatorBasic final
         const char*                     Type() const override;
 
         // Constructs Event Estimator
-        SceneError                      ConstructEventEstimator(const CudaSystem&) override;
+        void                            Construct(const CudaSystem&) override;
 };
 
 static_assert(IsTracerClass<GPUEventEstimatorBasic>::value,

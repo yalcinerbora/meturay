@@ -28,7 +28,7 @@ class TracerBasic final : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
         static constexpr const char* TypeName() { return "Test"; }
 
     private:
-        static constexpr RayAuxBasic    initals = {Vector3f(1.0f, 1.0f, 1.0f), 0, 0};
+        static constexpr RayAuxBasic    initals = {false, Vector3f(1.0f, 1.0f, 1.0f), 0, 0};
 
     protected:
     public:
@@ -38,6 +38,7 @@ class TracerBasic final : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
                                     AcceleratorBatchMappings&& ab,
                                     MaterialGroupList&& mg,
                                     MaterialBatchMappings&& mb,
+                                    GPUEventEstimatorI& ee,
                                     //
                                     const TracerParameters& parameters,
                                     uint32_t hitStructSize,

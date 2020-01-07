@@ -127,11 +127,11 @@ class GPUPrimitiveSphere final
         SceneError                              ChangeTime(const NodeListing& surfaceDatalNodes, double time,
                                                            const SurfaceLoaderGeneratorI& loaderGen,
                                                            const std::string& scenePath) override;
-
         // Provides data to Event Estimator
+        bool                                    HasPrimitive(uint32_t surfaceDataId) const override;
         SceneError                              GenerateEstimatorInfo(std::vector<EstimatorInfo>&,
+                                                                      HitKey key,
                                                                       uint32_t id) const override;
-
         // Access primitive range from Id
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;

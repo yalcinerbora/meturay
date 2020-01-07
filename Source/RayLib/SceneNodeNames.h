@@ -38,10 +38,16 @@ namespace NodeNames
     static constexpr const char* CAMERA_UP = "up";
     // Light Related Names
     // Light Type Values
-    static constexpr const char* LIGHT_PONT = "point";
-    static constexpr const char* LIGHT_DIRECTIONAL = "directional";
-    static constexpr const char* LIGHT_SPOT = "spot";
-    static constexpr const char* LIGHT_RECTANGULAR = "rectangular";
+    static constexpr const char* LIGHT_FLUX = "flux";
+    static constexpr const char* LIGHT_POSITION = POSITION;
+    static constexpr const char* LIGHT_DIRECTION = "direction";
+    static constexpr const char* LIGHT_SPHR_CENTER = "center";
+    static constexpr const char* LIGHT_DISK_CENTER = LIGHT_SPHR_CENTER;
+    static constexpr const char* LIGHT_SPHR_RADIUS = "radius";
+    static constexpr const char* LIGHT_DISK_RADIUS = LIGHT_SPHR_RADIUS;
+    static constexpr const char* LIGHT_RECT_V0 = "v0";
+    static constexpr const char* LIGHT_RECT_V1 = "v1";
+    static constexpr const char* LIGHT_CONE_APERTURE = "aperture";
     // Common
     static constexpr const char* LIGHT_MATERIAL = "material";
     static constexpr const char* LIGHT_PRIMITIVE = "primitive";

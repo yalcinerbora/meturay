@@ -52,10 +52,22 @@ std::vector<T> SceneNodeJson::CommonList(const std::string& name,
     return std::move(result);
 }
 
-SceneNodeJson::SceneNodeJson(const nlohmann::json& jsn, NodeId id)
+SceneNodeJson::SceneNodeJson(const nlohmann::json& jsn, NodeId id, bool forceFetchAll)
     : SceneNodeI(id)
     , node(jsn)
-{}
+{
+    if(forceFetchAll)
+    {
+        const auto idList = jsn[NodeNames::ID];
+        if(idList.is_array())
+        {
+            uint32_t i = 0;
+            for(uint32_t id : idList)
+                AddIdIndexPair(id, i);
+        }
+        else AddIdIndexPair(idList, 0);
+    }
+}
 
 std::string SceneNodeJson::Name() const
 {
@@ -78,41 +90,41 @@ size_t SceneNodeJson::CommonListSize(const std::string& name) const
 
 std::string SceneNodeJson::CommonString(const std::string& name, double time) const
 {
-    return SceneIO::LoadString(name, time);
+    return SceneIO::LoadString(node[name], time);
 }
 
 float SceneNodeJson::CommonFloat(const std::string& name, double time) const
 {
-    return SceneIO::LoadNumber<float>(name, time);
+    return SceneIO::LoadNumber<float>(node[name], time);
 }
 
 Vector2 SceneNodeJson::CommonVector2(const std::string& name, double time) const
 {
-    return SceneIO::LoadVector<2, float>(name, time);
+    return SceneIO::LoadVector<2, float>(node[name], time);
 }
 
 Vector3 SceneNodeJson::CommonVector3(const std::string& name, double time) const
 {
-    return SceneIO::LoadVector<3, float>(name, time);
+    return SceneIO::LoadVector<3, float>(node[name], time);
 }
 
 Vector4 SceneNodeJson::CommonVector4(const std::string& name, double time) const
 {
-    return SceneIO::LoadVector<4, float>(name, time);
+    return SceneIO::LoadVector<4, float>(node[name], time);
 }
 Matrix4x4 SceneNodeJson::CommonMatrix4x4(const std::string& name, double time) const
 {
-    return SceneIO::LoadMatrix<4, float>(name, time);
+    return SceneIO::LoadMatrix<4, float>(node[name], time);
 }
 
 uint32_t SceneNodeJson::CommonUInt(const std::string& name, double time) const
 {
-    return SceneIO::LoadNumber<uint32_t>(name, time);
+    return SceneIO::LoadNumber<uint32_t>(node[name], time);
 }
 
 uint64_t SceneNodeJson::CommonUInt64(const std::string& name, double time) const
 {
-    return SceneIO::LoadNumber<uint64_t>(name, time);
+    return SceneIO::LoadNumber<uint64_t>(node[name], time);
 }
 
 std::vector<std::string> SceneNodeJson::CommonStringList(const std::string& name, double time) const

@@ -1,4 +1,5 @@
 #include "GPUPrimitiveTriangle.h"
+#include "EstimatorStructs.h"
 
 #include "RayLib/SceneError.h"
 #include "RayLib/Log.h"
@@ -335,9 +336,32 @@ SceneError GPUPrimitiveTriangle::ChangeTime(const NodeListing& surfaceDataNodes,
     //return e;
 }
 
+bool GPUPrimitiveTriangle::HasPrimitive(uint32_t surfaceDataId) const
+{
+    auto it = batchRanges.end();
+    if((it = batchRanges.find(surfaceDataId)) == batchRanges.end())
+       return false;
+    return true;
+}
+
 SceneError GPUPrimitiveTriangle::GenerateEstimatorInfo(std::vector<EstimatorInfo>& result,
+                                                       HitKey key,
                                                        uint32_t id) const
 {
+    const auto& range = batchRanges.at(id);
+    for(uint64_t i = range[0]; i < range[1]; i++)
+    {
+        Vector3 pos0 = dData.positionsU[dData.indexList[i * 3 + 0]];
+        Vector3 pos1 = dData.positionsU[dData.indexList[i * 3 + 1]];
+        Vector3 pos2 = dData.positionsU[dData.indexList[i * 3 + 2]];
+
+        result.push_back(EstimatorInfo::GenAsTriangular(key,
+                                                        Vector3(1.0f),
+                                                        pos0,
+                                                        pos1,
+                                                        pos2));
+
+    }
     return SceneError::OK;
 }
 

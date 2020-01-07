@@ -15,10 +15,10 @@ class GPUAcceleratorBatchI;
 class GPUMaterialGroupI;
 class GPUMaterialBatchI;
 
-using PrimitiveGroupList = std::vector<GPUPrimitiveGroupI*>;
+using PrimitiveGroupList = std::vector<const GPUPrimitiveGroupI*>;
 using AcceleratorGroupList = std::vector<GPUAcceleratorGroupI*>;
 using AcceleratorBatchMappings = std::map<uint32_t, GPUAcceleratorBatchI*>;
-using MaterialGroupList = std::vector<GPUMaterialGroupI*>;
+using MaterialGroupList = std::vector<const GPUMaterialGroupI*>;
 using MaterialBatchMappings = std::map<uint32_t, GPUMaterialBatchI*>;
 
 struct MaterialOptions

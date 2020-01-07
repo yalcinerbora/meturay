@@ -78,8 +78,10 @@ class GPUPrimitiveEmpty final
                                                            const SurfaceLoaderGeneratorI&,
                                                            const std::string&) override;
         // Provides data to Event Estimator
+        bool                                    HasPrimitive(uint32_t surfaceDataId) const override;
         SceneError                              GenerateEstimatorInfo(std::vector<EstimatorInfo>&,
-                                                                      uint32_t id) const override;
+                                                                      HitKey key,
+                                                                      uint32_t surfaceDataId) const override;
         // Access primitive range from Id
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;

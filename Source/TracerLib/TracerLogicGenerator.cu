@@ -318,12 +318,14 @@ SceneError TracerLogicGenerator::GenerateTracerLogic(TracerBaseLogicI*& tl,
         auto ab = GetAcceleratorBatches();
         auto mg = GetMaterialGroups();
         auto mb = GetMaterialBatches();
+        
 
         tracerPtr = loc->second(*baseAccelerator.get(),
                                 std::move(ag),
                                 std::move(ab),
                                 std::move(mg),
                                 std::move(mb),
+                                *estimatorPtr.get(),
                                 opts, hitStructSize,
                                 maxMats, maxAccels,
                                 baseBoundMatKey);
@@ -335,7 +337,7 @@ SceneError TracerLogicGenerator::GenerateTracerLogic(TracerBaseLogicI*& tl,
 
 PrimitiveGroupList TracerLogicGenerator::GetPrimitiveGroups() const
 {
-    std::vector<GPUPrimitiveGroupI*> result;
+    PrimitiveGroupList result;
     for(const auto& p : primGroups)
     {
         result.push_back(p.second.get());
@@ -345,7 +347,7 @@ PrimitiveGroupList TracerLogicGenerator::GetPrimitiveGroups() const
 
 AcceleratorGroupList TracerLogicGenerator::GetAcceleratorGroups() const
 {
-    std::vector<GPUAcceleratorGroupI*> result;
+    AcceleratorGroupList result;
     for(const auto& p : accelGroups)
     {
         result.push_back(p.second.get());

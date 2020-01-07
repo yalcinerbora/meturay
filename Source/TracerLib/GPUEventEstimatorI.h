@@ -20,9 +20,9 @@ class GPUEventEstimatorI
         // Fetches Data for Nodes
         virtual SceneError      Initialize(const NodeListing& lightList,
                                            // Material Keys
-                                           const MaterialKeyListing& hitKeys,
-                                           const std::map<uint32_t, const GPUPrimitiveGroupI*>&,
+                                           const MaterialKeyListing& materialKeys,
+                                           const std::vector<const GPUPrimitiveGroupI*>&,
                                            double time) = 0;
         // Constructs Event Estimator
-        virtual SceneError      ConstructEventEstimator(const CudaSystem&) = 0;
+        virtual void            Construct(const CudaSystem&) = 0;
 };

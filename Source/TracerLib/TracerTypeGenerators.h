@@ -54,6 +54,7 @@ using TracerLogicGeneratorFunc = TracerLogic* (*)(GPUBaseAcceleratorI& baseAccel
                                                   AcceleratorBatchMappings&& ab,
                                                   MaterialGroupList&& mg,
                                                   MaterialBatchMappings&& mb,
+                                                  GPUEventEstimatorI& ee,
                                                   //
                                                   const TracerParameters& params,
                                                   uint32_t hitStructSize,
@@ -101,6 +102,7 @@ class GPUTracerGen
                                 AcceleratorBatchMappings&& ab,
                                 MaterialGroupList&& mg,
                                 MaterialBatchMappings&& mb,
+                                GPUEventEstimatorI& ee,
                                 //
                                 const TracerParameters& op,
                                 uint32_t hitStructSize,
@@ -111,6 +113,7 @@ class GPUTracerGen
             TracerBaseLogicI* logic = gFunc(ba,
                                             std::move(ag), std::move(ab),
                                             std::move(mg), std::move(mb),
+                                            ee,
                                             op, hitStructSize,
                                             maxMats, maxAccels,
                                             baseBoundMatKey);
@@ -214,6 +217,7 @@ namespace TypeGenWrappers
                                AcceleratorBatchMappings&& ab,
                                MaterialGroupList&& mg,
                                MaterialBatchMappings&& mb,
+                               GPUEventEstimatorI& ee,
 
                                const TracerParameters& op,
                                uint32_t hitStrctSize,
@@ -224,6 +228,7 @@ namespace TypeGenWrappers
         return new TracerLogic(ba,
                                std::move(ag), std::move(ab),
                                std::move(mg), std::move(mb),
+                               ee,
                                op, hitStrctSize,
                                maxMats, maxAccels,
                                baseBoundMatKey);

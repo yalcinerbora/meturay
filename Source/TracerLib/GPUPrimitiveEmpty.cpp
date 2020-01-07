@@ -22,8 +22,14 @@ SceneError GPUPrimitiveEmpty::ChangeTime(const NodeListing& surfaceDatalNodes, d
     return SceneError::OK;
 }
 
+bool GPUPrimitiveEmpty::HasPrimitive(uint32_t surfaceDataId) const
+{
+    return false;
+}
+
 SceneError GPUPrimitiveEmpty::GenerateEstimatorInfo(std::vector<EstimatorInfo>&,
-                                                      uint32_t id) const
+                                                    HitKey key,
+                                                    uint32_t surfaceDataId) const
 {
     return SceneError::OK;
 }

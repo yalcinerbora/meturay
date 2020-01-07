@@ -23,6 +23,8 @@ using IndexLookup = std::map<NodeId, std::pair<NodeIndex, InnerIndex>>;
 using PrimitiveNodeList = std::map<std::string, NodeListing>;
 using AcceleratorBatchList = std::map<std::string, AccelGroupData>;
 
+using LightPrimitives = std::vector<const GPUPrimitiveGroupI*>;
+
 class GPUSceneJson : public GPUSceneI
 {
     public:
@@ -78,6 +80,8 @@ class GPUSceneJson : public GPUSceneI
                                                  MaterialNodeList& matGroupNodes,
                                                  MaterialBatchList& matBatchListings,
                                                  AcceleratorBatchList& accelBatchListings,
+                                                 // Estimator Related
+                                                 NodeListing& lightList,
                                                  // Base Accelerator required data
                                                  std::map<uint32_t, uint32_t>& surfaceTransformIds,
                                                  // Types

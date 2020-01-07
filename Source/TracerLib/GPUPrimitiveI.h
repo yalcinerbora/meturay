@@ -47,8 +47,10 @@ class GPUPrimitiveGroupI
                                                const SurfaceLoaderGeneratorI&,
                                                const std::string& scenePath) = 0;
         // Provides data to Event Estimator
+        virtual bool                HasPrimitive(uint32_t surfaceDataId) const = 0;
         virtual SceneError          GenerateEstimatorInfo(std::vector<EstimatorInfo>&,
-                                                          uint32_t id) const = 0;
+                                                          HitKey key,
+                                                          uint32_t surfaceDataId) const = 0;
 
         // Access primitive range from Id     
         virtual Vector2ul           PrimitiveBatchRange(uint32_t surfaceDataId) const = 0;

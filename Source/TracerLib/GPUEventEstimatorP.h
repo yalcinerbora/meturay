@@ -35,6 +35,7 @@ class GPUEventEstimator
     private:
     protected:
         std::vector<EstimatorInfo>              lightInfo;
+        std::vector<HitKey>                     lightMaterialInfo;
 
     public:
         // Constructors & Destructor
@@ -44,7 +45,7 @@ class GPUEventEstimator
         virtual SceneError      Initialize(const NodeListing& lightList,
                                            // Material Keys
                                            const MaterialKeyListing& hitKeys,
-                                           const std::map<uint32_t, const GPUPrimitiveGroupI*>&,
+                                           const std::vector<const GPUPrimitiveGroupI*>&,
                                            double time) override;
 };
 
@@ -66,10 +67,11 @@ struct EstimatorDataAccessor
 template<class EstimatorD, EstimateEventFunc<EstimatorD> EstF, TerminateEventFunc TermF>
 SceneError GPUEventEstimator<EstimatorD, EstF, TermF>::Initialize(const NodeListing& lightList,
                                                                   // Material Keys
-                                                                  const MaterialKeyListing& hitKeys,
-                                                                  const std::map<uint32_t, const GPUPrimitiveGroupI*>& prims,
+                                                                  const MaterialKeyListing& materialKeys,
+                                                                  const std::vector<const GPUPrimitiveGroupI*>& prims,
                                                                   double time)
 {
+
     SceneError err = SceneError::OK;
     for(const auto& nodePtr : lightList)
     {
@@ -91,27 +93,37 @@ SceneError GPUEventEstimator<EstimatorD, EstF, TermF>::Initialize(const NodeList
             case LightType::DISK:
             case LightType::SPHERICAL:
             {
-                lightInfo.push_back({});
-                if((err = FetchLightInfoFromNode(lightInfo.back(), node, type)) != SceneError::OK)
+                if((err = FetchLightInfoFromNode(lightInfo, node, materialKeys, type, time)) != SceneError::OK)
                    return err;
                 break;
             }
             case LightType::PRIMITIVE:
             { 
                 const UIntList primIds = node.AccessUInt(NodeNames::LIGHT_PRIMITIVE);
+                const UIntList matIds = node.AccessUInt(NodeNames::LIGHT_MATERIAL);
+                assert(primIds.size() == matIds.size());
 
                 // Fetch all
-                for(uint32_t prim : primIds)
+                for(size_t i = 0; i < primIds.size(); i++)
                 {
-                    auto i = prims.end();
-                    if((i = prims.find(prim)) == prims.end())
-                        continue;
+                    uint32_t primId = primIds[i];
+                    uint32_t matId = matIds[i];
+
+                    const auto FindPrimFunc = [primId](const GPUPrimitiveGroupI* pGroup) -> bool
+                    {
+                        return pGroup->HasPrimitive(primId);
+                    };
+
+                    auto it = prims.end();
+                    if((it = std::find_if(prims.begin(), prims.end(), FindPrimFunc)) == prims.end())
+                        return SceneError::LIGHT_PRIMITIVE_NOT_FOUND;
                     // Generate Estimators From Primitive
-                    std::vector<EstimatorInfo> info;
-                    if((err = i->second->GenerateEstimatorInfo(info, prim)) != SceneError::OK)
+
+                    const auto matLookup = std::make_pair((*it)->Type(), matId);
+                    HitKey key = materialKeys.at(matLookup);
+
+                    if((err = (*it)->GenerateEstimatorInfo(lightInfo, key, primId)) != SceneError::OK)
                         return err;
-                    // Insert
-                    lightInfo.insert(lightInfo.end(), info.begin(), info.end());
                 }
                 break;
             }

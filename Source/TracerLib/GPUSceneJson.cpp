@@ -10,11 +10,13 @@
 #include "TracerLogicI.h"
 #include "GPUAcceleratorI.h"
 #include "GPUPrimitiveI.h"
+#include "GPUEventEstimatorI.h"
 #include "GPUMaterialI.h"
 #include "TracerLogicGeneratorI.h"
 #include "ScenePartitionerI.h"
 #include "SceneNodeJson.h"
 #include "MangledNames.h"
+#include "EstimatorStructs.h"
 
 #include <nlohmann/json.hpp>
 #include <filesystem>
@@ -112,6 +114,8 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                                   MaterialNodeList& matGroupNodes,
                                                   MaterialBatchList& matBatchListings,
                                                   AcceleratorBatchList& requiredAccelListings,
+                                                  // Estimator Related
+                                                  NodeListing& lightNodes,
                                                   // Base Accelerator required data
                                                   std::map<uint32_t, uint32_t>& surfaceTransformIds,
                                                   // Types
@@ -244,11 +248,23 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     primGroupNodes.emplace(BaseConstants::EMPTY_PRIMITIVE_NAME, NodeListing());
     // Generate Material listing and material group
     // For Lights
+    NodeId i = 0;
     for(const auto& jsn : (*lights))
     {
         LightStruct l = SceneIO::LoadLight(jsn, time);
+        auto& node = *lightNodes.emplace(std::make_unique<SceneNodeJson>(jsn, i, true)).first;
+
+        // For primitive lights skip this process
+        // since their mat is already included above
+        // (while iterating surfaces
+        LightType lType;
+        if(((e = LightTypeStringToEnum(lType, l.typeName)) != SceneError::OK) &&
+           lType == LightType::PRIMITIVE)
+            continue;
+
         if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME, l.matId)) != SceneError::OK)
            return e;
+        i++;
     }
     // Finally Boundary Material
     const nlohmann::json* baseMatNode = nullptr;
@@ -565,6 +581,8 @@ SceneError GPUSceneJson::LoadLogicRelated(const TracerParameters& p, double time
     MaterialBatchList matListings;
     AcceleratorBatchList accelListings;
     std::map<uint32_t, uint32_t> surfaceTransformIds;
+    //
+    NodeListing lightNodes;
 
     // Fetch Estimator Type
     const nlohmann::json* estimator = nullptr;
@@ -582,6 +600,7 @@ SceneError GPUSceneJson::LoadLogicRelated(const TracerParameters& p, double time
                                      matGroupNodes,
                                      matListings,
                                      accelListings,
+                                     lightNodes,
                                      surfaceTransformIds,
                                      estimatorType,
                                      tracerType,
@@ -599,48 +618,47 @@ SceneError GPUSceneJson::LoadLogicRelated(const TracerParameters& p, double time
                                            matGroupNodes,
                                            matListings)))
         return e;
-
     // Using those constructs generate
     // Primitive Groups
     if((e = GeneratePrimitiveGroups(primGroupNodes, time)) != SceneError::OK)
         return e;
-
     // Before Materials Generate Estimator
     GPUEventEstimatorI* est = nullptr;
     if((e = logicGenerator.GenerateEventEstimaor(est, estimatorType)) != SceneError::OK)
         return e;
-
     // Material Groups
     if((e = GenerateMaterialGroups(multiGPUMatNodes, time)) != SceneError::OK)
         return e;
-
     // Material Batches
     MaterialKeyListing allMaterialKeys;
     if((e = GenerateMaterialBatches(allMaterialKeys,
                                     multiGPUMatBatches,
                                     time)) != SceneError::OK)
         return e;
-
     // Accelerators
     std::map<uint32_t, AABB3> accAABBs;
     std::map<uint32_t, HitKey> accHitKeyList;
     if((e = GenerateAccelerators(accAABBs, accHitKeyList, accelListings,
                                  allMaterialKeys, time)) != SceneError::OK)
         return e;
-
     // Base Accelerator
     if((e = GenerateBaseAccelerator(accAABBs, accHitKeyList,
                                     surfaceTransformIds, time)) != SceneError::OK)
         return e;
-
     // Finally Boundary Material
     if((e = FindBoundaryMaterial(allMaterialKeys, time)) != SceneError::OK)
        return e;
-
     // MaxIds are generated but those are inclusive
     // Make them exclusve
     maxAccelIds += Vector2i(1);
     maxMatIds += Vector2i(1);
+
+    // Everything required for Estimator is generated
+    // Intialize Estimator
+    if((e = est->Initialize(lightNodes, 
+                            allMaterialKeys, 
+                            logicGenerator.GetPrimitiveGroups(), time)) != SceneError::OK)
+        return e;
 
     // Finally Generate Base Logic
     TracerBaseLogicI* logic = nullptr;
@@ -650,8 +668,6 @@ SceneError GPUSceneJson::LoadLogicRelated(const TracerParameters& p, double time
                                                baseBoundaryMatKey,
                                                tracerType)) != SceneError::OK)
         return e;
-                                              
-
     // Everything is generated!
     return SceneError::OK;
 }

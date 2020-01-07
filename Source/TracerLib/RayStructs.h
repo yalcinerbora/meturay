@@ -52,8 +52,8 @@ constexpr RayReg::RayReg(RayF ray, float tMin, float tMax)
 static constexpr RayReg EMPTY_RAY_REGISTER = RayReg
 {
     RayF(Zero3, Zero3),
-    INFINITY,
-    INFINITY
+    0.0f,
+    0.0f
 };
 
 __device__ __host__

@@ -41,6 +41,9 @@ class TracerBaseLogic : public TracerBaseLogicI
         MaterialGroupList           materialGroups;
         MaterialBatchMappings       materialBatches;
 
+        // Estimator
+        GPUEventEstimatorI&         eventEstimator;
+
         Vector2i                    maxAccelBits;
         Vector2i                    maxMatBits;
 
@@ -48,11 +51,12 @@ class TracerBaseLogic : public TracerBaseLogicI
 
     public:
         // Constructors & Destructor
-                                            TracerBaseLogic(GPUBaseAcceleratorI& baseAccelerator,
+                                            TracerBaseLogic(GPUBaseAcceleratorI&,
                                                             AcceleratorGroupList&&,
                                                             AcceleratorBatchMappings&&,
                                                             MaterialGroupList&&,
                                                             MaterialBatchMappings&&,
+                                                            GPUEventEstimatorI&,
                                                             //
                                                             const TracerParameters& options,
                                                             const RayAuxData& initalRayAux,
@@ -69,6 +73,7 @@ class TracerBaseLogic : public TracerBaseLogicI
         const MaterialBatchMappings&        MaterialBatches() override { return materialBatches; }
         const AcceleratorGroupList&         AcceleratorGroups() override { return acceleratorGroups; }
         const MaterialGroupList&            MaterialGroups() override { return materialGroups; }
+        GPUEventEstimatorI&                 EventEstimator() override { return eventEstimator; }
 
         // Returns bitrange of keys (should complement each other to 32-bit)
         const Vector2i                      SceneMaterialMaxBits() const override;
@@ -95,6 +100,7 @@ TracerBaseLogic<RayAuxD, AuxF>::TracerBaseLogic(GPUBaseAcceleratorI& baseAcceler
                                                 AcceleratorBatchMappings&& ab,
                                                 MaterialGroupList&& mg,
                                                 MaterialBatchMappings&& mb,
+                                                GPUEventEstimatorI& e,
                                                 //
                                                 const TracerParameters& params,
                                                 const RayAuxData& initialValues,
@@ -109,6 +115,7 @@ TracerBaseLogic<RayAuxD, AuxF>::TracerBaseLogic(GPUBaseAcceleratorI& baseAcceler
     , acceleratorBatches(ab)
     , materialGroups(mg)
     , materialBatches(mb)
+    , eventEstimator(e)
     , params(params)
     , hitStructMaxSize(hitStructSize)
     , initialValues(initialValues)

@@ -10,6 +10,7 @@
 #include "GPUAcceleratorI.h"
 #include "GPUMaterialI.h"
 #include "TracerLogicI.h"
+#include "GPUEventEstimatorI.h"
 
 //struct RayAuxBasic
 //{
@@ -316,14 +317,16 @@ TracerError TracerBase::Initialize()
     // Construct Accelerators
     GPUBaseAcceleratorI& baseAccelerator = currentLogic->BaseAcelerator();
     const AcceleratorGroupList& acceleratorGroups = currentLogic->AcceleratorGroups();
+    GPUEventEstimatorI& estimator = currentLogic->EventEstimator();
 
     baseAccelerator.Constrcut();
     for(const auto& accel : acceleratorGroups)
     {
         accel->ConstructAccelerators(cudaSystem);
     }
+    // Construct Estimator
+    estimator.Construct(cudaSystem);
     cudaSystem.SyncGPUAll();
-
     // All seems fine mark tracer as healthy
     healthy = true;
     return TracerError::OK;

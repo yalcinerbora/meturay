@@ -21,12 +21,12 @@ class GPUEventEstimatorEmpty final
 
         SceneError                      Initialize(const NodeListing& lightList,
                                                    // Material Keys
-                                                   const MaterialKeyListing& hitKeys,
-                                                   const std::map<uint32_t, const GPUPrimitiveGroupI*>&,
+                                                   const MaterialKeyListing& materialKeys,
+                                                   const std::vector<const GPUPrimitiveGroupI*>&,
                                                    double time) override;
 
         const char*                     Type() const override;
-        SceneError                      ConstructEventEstimator(const CudaSystem&) override;
+        void                            Construct(const CudaSystem&) override;
 };
 
 static_assert(IsTracerClass<GPUEventEstimatorEmpty>::value,
@@ -37,15 +37,13 @@ inline const char* GPUEventEstimatorEmpty::Type() const
     return TypeName(); 
 }
 
-inline SceneError GPUEventEstimatorEmpty::ConstructEventEstimator(const CudaSystem&)
-{
-    return  SceneError::OK; 
-}
+inline void GPUEventEstimatorEmpty::Construct(const CudaSystem&)
+{}
 
-inline SceneError GPUEventEstimatorEmpty::Initialize(const NodeListing& lightList,
+inline SceneError GPUEventEstimatorEmpty::Initialize(const NodeListing&,
                                                      // Material Keys
-                                                     const MaterialKeyListing& hitKeys,
-                                                     const std::map<uint32_t, const GPUPrimitiveGroupI*>&,
+                                                     const MaterialKeyListing&,
+                                                     const std::vector<const GPUPrimitiveGroupI*>&,
                                                      double time)
 {
     // TODO:

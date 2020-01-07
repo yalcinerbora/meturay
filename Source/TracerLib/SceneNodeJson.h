@@ -26,7 +26,7 @@ class SceneNodeJson final : public SceneNodeI
     protected:
     public:
         // Constructors & Destructor
-                                    SceneNodeJson(const nlohmann::json&, NodeId id);
+                                    SceneNodeJson(const nlohmann::json&, NodeId id, bool forceFetchAll = false);
                                     ~SceneNodeJson() = default;
 
         // Direct Singular data loading (id inspecific)

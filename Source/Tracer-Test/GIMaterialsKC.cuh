@@ -117,7 +117,6 @@ inline void BasicPathTraceShade(// Output
         RayReg rDummy = EMPTY_RAY_REGISTER;
         rDummy.Update(gOutRays, 0);
         gBoundaryMat[0] = HitKey::InvalidKey;
-        gOutRayAux[0] = {{99.0f, 99.0f, 99.0f}, 999, 999};
     }
     else
     {
@@ -149,8 +148,19 @@ inline void BasicPathTraceShade(// Output
                                              //
                                              estData))
     {
-        // We estimated a direction
-        printf("NOONE HERE\n");
+        // Advance slightly to prevent self intersection
+        position += normal * MathConstants::Epsilon;
+        // Write Ray
+        rayOut.ray = RayF(lDirection, position);
+        rayOut.tMin = 0.001f;
+        rayOut.tMax = INFINITY;
+
+        // All done!
+        // Write to global memory
+        rayOut.Update(gOutRays, 1);
+        gOutRayAux[1] = auxOut;
+        // We dont have any specific boundary mat for this
+        // dont set material key
     }
     else
     {
@@ -158,7 +168,6 @@ inline void BasicPathTraceShade(// Output
         RayReg rDummy = EMPTY_RAY_REGISTER;
         rDummy.Update(gOutRays, 1);
         gBoundaryMat[1] = HitKey::InvalidKey;
-        gOutRayAux[1] = {{99.0f, 99.0f, 99.0f}, 999, 999};
     }
 
     
