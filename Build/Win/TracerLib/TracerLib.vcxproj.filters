@@ -251,6 +251,9 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorEmpty.h">
       <Filter>DefaultEventEstimators</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\EstimatorStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

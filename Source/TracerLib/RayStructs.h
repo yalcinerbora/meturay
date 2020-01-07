@@ -25,19 +25,35 @@ struct alignas(32) RayGMem
 // GPU register layout for rays
 struct RayReg
 {
-    RayF                        ray;
-    float                       tMin;
-    float                       tMax;
+    RayF                            ray;
+    float                           tMin;
+    float                           tMax;
 
-                                RayReg() = default;
-    __device__ __host__         RayReg(const RayGMem* mem,
-                                       unsigned int loc);
+                                    RayReg() = default;
+    __device__ __host__ constexpr   RayReg(RayF, float, float);
+    __device__ __host__             RayReg(const RayGMem* mem,
+                                           unsigned int loc);
 
     // Save
     __device__ __host__ void        Update(RayGMem* mem,
-                                       unsigned int loc);
-    __device__ __host__ void        UpdateTMax(RayGMem* mem,
                                            unsigned int loc);
+    __device__ __host__ void        UpdateTMax(RayGMem* mem,
+                                               unsigned int loc);
+
+    __device__ __host__ bool                 IsInvalidRay() const;
+};
+
+constexpr RayReg::RayReg(RayF ray, float tMin, float tMax)
+    : ray(ray)
+    , tMin(tMin)
+    , tMax(tMax)
+{}
+
+static constexpr RayReg EMPTY_RAY_REGISTER = RayReg
+{
+    RayF(Zero3, Zero3),
+    INFINITY,
+    INFINITY
 };
 
 __device__ __host__
@@ -69,4 +85,14 @@ inline void RayReg::UpdateTMax(RayGMem* mem,
                                unsigned int loc)
 {
     mem[loc].tMax = tMax;
+}
+
+__device__ __host__ 
+inline bool RayReg::IsInvalidRay() const
+{
+    static const RayReg eRay = EMPTY_RAY_REGISTER;
+    return(ray.getDirection() == eRay.ray.getDirection() &&
+           ray.getPosition() == eRay.ray.getPosition() &&
+           tMin == eRay.tMin &&
+           tMax == eRay.tMax);
 }

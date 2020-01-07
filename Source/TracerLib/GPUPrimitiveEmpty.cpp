@@ -22,6 +22,12 @@ SceneError GPUPrimitiveEmpty::ChangeTime(const NodeListing& surfaceDatalNodes, d
     return SceneError::OK;
 }
 
+SceneError GPUPrimitiveEmpty::GenerateEstimatorInfo(std::vector<EstimatorInfo>&,
+                                                      uint32_t id) const
+{
+    return SceneError::OK;
+}
+
 Vector2ul GPUPrimitiveEmpty::PrimitiveBatchRange(uint32_t surfaceDataId) const
 {
     return Zero2ul;

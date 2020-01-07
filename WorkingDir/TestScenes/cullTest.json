@@ -18,8 +18,8 @@
 
 	"Lights": [],
 
-	"Tracer": "BasicTracer",
-	"Estimator": "EmptyEstimator",
+	"Tracer": "Test",
+	"Estimator": "Empty",
 
 	"Transforms":[
 	{
@@ -35,10 +35,8 @@
 	{
 		// General Boundary Material
 		"id": 0,
-        "type": "LightBoundary",
-		"albedo" : [0, 0, 0],
-		//"irradiance" : [0, 0, 0]
-		"irradiance" : [1, 1, 1]
+        "type": "BasicMat",
+		"albedo" : [1, 1, 1]
     },
 	{
 		// Red Simple Material

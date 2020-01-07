@@ -21,7 +21,8 @@ class GPUEventEstimatorI
         virtual SceneError      Initialize(const NodeListing& lightList,
                                            // Material Keys
                                            const MaterialKeyListing& hitKeys,
-                                           const std::map<uint32_t, GPUPrimitiveGroupI>&) = 0;
+                                           const std::map<uint32_t, const GPUPrimitiveGroupI*>&,
+                                           double time) = 0;
         // Constructs Event Estimator
         virtual SceneError      ConstructEventEstimator(const CudaSystem&) = 0;
 };

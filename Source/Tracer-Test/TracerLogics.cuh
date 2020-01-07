@@ -25,7 +25,7 @@ inline void RayInitBasic(RayAuxBasic* gOutBasic,
 class TracerBasic final : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
 {
     public:
-        static constexpr const char* TypeName() { return "BasicTracer"; }
+        static constexpr const char* TypeName() { return "Test"; }
 
     private:
         static constexpr RayAuxBasic    initals = {Vector3f(1.0f, 1.0f, 1.0f), 0, 0};

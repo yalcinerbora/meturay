@@ -335,6 +335,12 @@ SceneError GPUPrimitiveTriangle::ChangeTime(const NodeListing& surfaceDataNodes,
     //return e;
 }
 
+SceneError GPUPrimitiveTriangle::GenerateEstimatorInfo(std::vector<EstimatorInfo>& result,
+                                                       uint32_t id) const
+{
+    return SceneError::OK;
+}
+
 Vector2ul GPUPrimitiveTriangle::PrimitiveBatchRange(uint32_t surfaceDataId) const
 {
     return batchRanges.at(surfaceDataId);

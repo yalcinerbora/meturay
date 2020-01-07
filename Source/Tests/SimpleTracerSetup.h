@@ -37,13 +37,14 @@ if(e != ErrType::OK) \
     METU_ERROR_LOG("%s", static_cast<std::string>(e).c_str()); \
     return false;\
 }
+
 class MockNode
     : public VisorCallbacksI
     , public TracerCallbacksI
     , public NodeI
 {
     private:
-        static constexpr uint32_t       MAX_BOUNCES = 4;
+        static constexpr uint32_t       MAX_BOUNCES = 40;
 
         const double                    Duration;
 
@@ -162,6 +163,7 @@ class SimpleTracerSetup
     private:
         
         static constexpr Vector2i           SCREEN_RESOLUTION = {1600, 900};
+        //static constexpr Vector2i           IMAGE_RESOLUTION = {32, 18};
         //static constexpr Vector2i           IMAGE_RESOLUTION = {320, 180};
         //static constexpr Vector2i           IMAGE_RESOLUTION = {640, 360};
         static constexpr Vector2i           IMAGE_RESOLUTION = {1280, 720};

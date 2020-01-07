@@ -188,14 +188,13 @@ SceneError TracerLogicGenerator::GenerateAcceleratorGroup(GPUAcceleratorGroupI*&
 SceneError TracerLogicGenerator::GenerateAcceleratorBatch(GPUAcceleratorBatchI*& ab,
                                                           const GPUAcceleratorGroupI& ag,
                                                           const GPUPrimitiveGroupI& pg,
-                                                          uint32_t keyBatchId)
+                                                          uint32_t keyBatchId,
+                                                          const std::string& batchType)
 {
     ab = nullptr;
     // Check duplicate batchId
     if(accelBatchMap.find(keyBatchId) != accelBatchMap.end())
         return SceneError::INTERNAL_DUPLICATE_ACCEL_ID;
-
-    const std::string batchType = std::string(ag.Type());
 
     auto loc = accelBatches.find(batchType);
     if(loc == accelBatches.end())
@@ -215,9 +214,9 @@ SceneError TracerLogicGenerator::GenerateAcceleratorBatch(GPUAcceleratorBatchI*&
 }
 
 SceneError TracerLogicGenerator::GenerateMaterialGroup(GPUMaterialGroupI*& mg,
-                                                       const std::string& materialType,
                                                        const CudaGPU& gpu,
-                                                       const GPUEventEstimatorI& ee)
+                                                       const GPUEventEstimatorI& ee,
+                                                       const std::string& materialType)
 {
     mg = nullptr;
     auto loc = matGroups.find(std::make_pair(materialType, &gpu));
@@ -239,13 +238,12 @@ SceneError TracerLogicGenerator::GenerateMaterialGroup(GPUMaterialGroupI*& mg,
 SceneError TracerLogicGenerator::GenerateMaterialBatch(GPUMaterialBatchI*& mb,
                                                        const GPUMaterialGroupI& mg,
                                                        const GPUPrimitiveGroupI& pg,
-                                                       uint32_t keyBatchId)
+                                                       uint32_t keyBatchId,
+                                                       const std::string& batchType)
 {
     mb = nullptr;
     if(matBatchMap.find(keyBatchId) != matBatchMap.end())
         return SceneError::INTERNAL_DUPLICATE_MAT_ID;
-
-    const std::string batchType = std::string(mg.Type()) + pg.Type();
 
     auto loc = matBatches.find(std::make_pair(batchType, &mg.GPU()));
     if(loc == matBatches.end())

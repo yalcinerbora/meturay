@@ -11,23 +11,23 @@
 #include "GPUMaterialI.h"
 #include "TracerLogicI.h"
 
-struct RayAuxBasic
-{
-    Vector3f        totalRadiance;
-    uint32_t        pixelId;
-    uint32_t        pixelSampleId;
-};
-
-std::ostream& operator<<(std::ostream& stream, const RayAuxBasic& v)
-{
-    stream << std::setw(0)
-            << v.pixelId << ", "
-            << v.pixelSampleId << ""
-            << "{" << v.totalRadiance[0]
-            << "," << v.totalRadiance[0]
-            << "," << v.totalRadiance[0] << "}";
-    return stream;
-}
+//struct RayAuxBasic
+//{
+//    Vector3f        totalRadiance;
+//    uint32_t        pixelId;
+//    uint32_t        pixelSampleId;
+//};
+//
+//std::ostream& operator<<(std::ostream& stream, const RayAuxBasic& v)
+//{
+//    stream << std::setw(0)
+//            << v.pixelId << ", "
+//            << v.pixelSampleId << ", "
+//            << "{" << v.totalRadiance[0]
+//            << "," << v.totalRadiance[0]
+//            << "," << v.totalRadiance[0] << "}";
+//    return stream;
+//}
 
 template <class... Args>
 inline void TracerBase::SendLog(const char* format, Args... args)
@@ -215,7 +215,6 @@ void TracerBase::ShadeRays()
 
     // Parition w.r.t. material batch
     auto portions = rayMemory.Partition(rayCount);
-
     // Use partition lis to find out
     // total potential output ray count
     uint32_t totalOutRayCount = 0;
@@ -226,15 +225,9 @@ void TracerBase::ShadeRays()
         auto loc = materials.find(p.portionId);
         if(loc == materials.end()) continue;
 
-        totalOutRayCount += static_cast<int>(p.count) * 
+        totalOutRayCount += static_cast<uint32_t>(p.count) *
                             loc->second->OutRayCount();
     }
-
-
-
-    //Debug::DumpMemToFile<RayAuxBasic>("ray_aux", 
-    //                                  reinterpret_cast<const RayAuxBasic*>(dRayAux),
-    //                                  rayCount);
 
     // Allocate output ray memory
     rayMemory.ResizeRayOut(totalOutRayCount, currentLogic->PerRayAuxDataSize(),
@@ -242,10 +235,6 @@ void TracerBase::ShadeRays()
     unsigned char* dAuxOut = rayMemory.RayAuxOut<unsigned char>();
     RayGMem* dRaysOut = rayMemory.RaysOut();
     HitKey* dBoundKeyOut = rayMemory.MaterialKeys();
-
-    //Debug::DumpMemToFile<RayAuxBasic>("ray_aux",
-    //                                  reinterpret_cast<const RayAuxBasic*>(dRayAux),
-    //                                  rayCount);
 
     // Reorder partitions for efficient calls
     // (sort by gpu and order for better async access)

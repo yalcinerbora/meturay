@@ -169,6 +169,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\GPUSceneI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneNodeI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\SceneNodeNames.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SceneStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SelfNode.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SharedLib.h" />

@@ -1,6 +1,7 @@
 #include "SceneNodeJson.h"
 #include "RayLib/SceneIO.h"
 #include "RayLib/Log.h"
+#include "RayLib/SceneNodeNames.h"
 
 template <class T, LoadFunc<T> LoadF>
 std::vector<T> SceneNodeJson::AccessSingle(const std::string& name,
@@ -58,14 +59,14 @@ SceneNodeJson::SceneNodeJson(const nlohmann::json& jsn, NodeId id)
 
 std::string SceneNodeJson::Name() const
 {
-    return SceneIO::LoadString(node[SceneIO::NAME]);
+    return SceneIO::LoadString(node[NodeNames::NAME]);
 }
 
 std::string SceneNodeJson::Tag() const
 {
     nlohmann::json::const_iterator i;
-    if((i = node.find(SceneIO::TAG)) != node.end())
-        return SceneIO::LoadString(node[SceneIO::TAG]);
+    if((i = node.find(NodeNames::TAG)) != node.end())
+        return SceneIO::LoadString(node[NodeNames::TAG]);
     return "";
 }
 

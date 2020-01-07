@@ -16,8 +16,8 @@
 	"BaseAccelerator": "Linear",
 	"BaseBoundaryMaterial": 0,
 
-	"Tracer": "BasicTracer",
-	"Estimator": "BasicEstimator",
+	"Tracer": "Test",
+	"Estimator": "Basic",
 
 	"Lights": [
 		// Light Information for event estimation

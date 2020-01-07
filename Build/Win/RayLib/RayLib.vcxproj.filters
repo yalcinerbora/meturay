@@ -214,6 +214,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\HemiDistribution.h">
       <Filter>Math</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\SceneNodeNames.h">
+      <Filter>FileI-O</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

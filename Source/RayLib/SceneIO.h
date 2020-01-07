@@ -17,27 +17,6 @@ struct CameraPerspective;
 
 namespace SceneIO
 {
-    static constexpr const char* SCENE_EXT = "mscene";
-    static constexpr const char* ANIM_EXT = "manim";
-    // Common Base Arrays
-    static constexpr const char* CAMERA_BASE = "Cameras";
-    static constexpr const char* LIGHT_BASE = "Lights";
-    static constexpr const char* TRANSFORM_BASE = "Transforms";
-    static constexpr const char* PRIMITIVE_BASE = "Primitives";
-    static constexpr const char* MATERIAL_BASE = "Materials";
-    static constexpr const char* SURFACE_BASE = "Surfaces";
-    static constexpr const char* SURFACE_DATA_BASE = "SurfaceData";
-    static constexpr const char* BASE_ACCELERATOR = "BaseAccelerator";
-    static constexpr const char* BASE_OUTSIDE_MATERIAL = "BaseBoundaryMaterial";
-    static constexpr const char* TRACER_LOGIC = "Tracer";
-    static constexpr const char* ESTIMATOR = "Estimator";
-
-    // Common Names
-    static constexpr const char* ID = "id";
-    static constexpr const char* TYPE = "type";
-    static constexpr const char* NAME = "name";
-    static constexpr const char* TAG = "tag";
-
     // Generic Time Dependency Check
     bool                IsTimeDependent(const nlohmann::json&);
 

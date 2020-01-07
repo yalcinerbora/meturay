@@ -7,6 +7,7 @@
 #include <fstream>
 #include "RayLib/SceneIO.h"
 #include "RayLib/Log.h"
+#include "RayLib/SceneNodeNames.h"
 
 static const std::string TestSceneName = "TestScenes/jsonRead.json";
 
@@ -33,7 +34,7 @@ TEST(SceneIOCommon, Camera)
         Vector2(MathConstants::Pi * 0.25, MathConstants::Pi * 0.25)
     };
 
-    nlohmann::json jsn = ReadTestFile()[SceneIO::CAMERA_BASE];
+    nlohmann::json jsn = ReadTestFile()[NodeNames::CAMERA_BASE];
     CameraPerspective camera = SceneIO::LoadCamera(jsn[0]);
     EXPECT_FLOAT_EQ(CamResult.position[0], camera.position[0]);
     EXPECT_FLOAT_EQ(CamResult.position[1], camera.position[1]);
@@ -77,7 +78,7 @@ TEST(SceneIOCommon, Lights)
 
     // Read
     LightStruct light;
-    nlohmann::json jsn = ReadTestFile()[SceneIO::LIGHT_BASE];
+    nlohmann::json jsn = ReadTestFile()[NodeNames::LIGHT_BASE];
     // First one is external, it should throw file not found
     EXPECT_THROW(SceneIO::LoadLight(jsn[0]), SceneException);
     // Point
@@ -101,7 +102,7 @@ TEST(SceneIOCommon, Lights)
 TEST(SceneIOCommon, Transform)
 {
     TransformStruct t;
-    nlohmann::json jsn = ReadTestFile()[SceneIO::TRANSFORM_BASE];
+    nlohmann::json jsn = ReadTestFile()[NodeNames::TRANSFORM_BASE];
     // First one is external, it should throw file not found
     EXPECT_THROW(SceneIO::LoadTransform(jsn[0]), SceneException);
     // Matrix

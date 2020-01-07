@@ -177,7 +177,7 @@ static void KCIntersectLinear(// O
         // Write Updated Stuff
         if(hitModified)
         {
-            //printf("MatFound %x\n", materialKey.value);
+            //if(id == 95) printf("MatFound %x\n", materialKey.value);
             ray.UpdateTMax(gRays, id);
             gHitStructs.Ref<HitData>(id) = hit;
             gMaterialKeys[id] = materialKey;
@@ -214,7 +214,7 @@ static void KCIntersectBaseLinear(// I-O
 
         // Load initial traverse location
         uint32_t primStart = gPrevLoc[id];
-
+        primStart = rayData.IsInvalidRay() ? leafCount : primStart;
         // Check next potential hit     
         HitKey key = HitKey::InvalidKey;
         TransformId transformId = 0;

@@ -7,10 +7,11 @@
 
 class GPUEventEstimatorBasic final
     : public GPUEventEstimator<BasicEstimatorData,
-                               EstimateEventBasic>
+                               EstimateEventBasic,
+                               TerminateEventBasic>
 {
     public:
-        static constexpr const char*    TypeName() { return "BasicEstimator"; }
+        static constexpr const char*    TypeName() { return "Basic"; }
 
     private:
     protected:
@@ -21,11 +22,6 @@ class GPUEventEstimatorBasic final
 
         // Interface
         const char*                     Type() const override;
-
-        SceneError                      Initialize(const NodeListing& lightList,
-                                                   // Material Keys
-                                                   const MaterialKeyListing& hitKeys,
-                                                   const std::map<uint32_t, GPUPrimitiveGroupI>&) override;
 
         // Constructs Event Estimator
         SceneError                      ConstructEventEstimator(const CudaSystem&) override;

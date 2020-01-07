@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorDeviceFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\AuxiliaryDataKernels.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\EstimatorStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorBasic.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\BitonicSort.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\BVHAcceleratorKernels.cuh" />

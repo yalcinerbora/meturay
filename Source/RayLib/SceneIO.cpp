@@ -1,43 +1,9 @@
 #include "SceneIO.h"
 #include "Camera.h"
 #include "Constants.h"
+#include "SceneNodeNames.h"
 
-namespace SceneIO
-{
-    // Common Names
-    static constexpr const char*    POSITION = "position";
-    static constexpr const char*    DATA = "data";
-
-    // Surface Related Names
-    static constexpr const char*    TRANSFORM = "transform";
-    static constexpr const char*    PRIMITIVE = "primitive";
-    static constexpr const char*    ACCELERATOR = "accelerator";
-    static constexpr const char*    MATERIAL = "material";
-
-    // Camera Related Names
-    static constexpr const char*    CAMERA_APERTURE = "apertureSize";
-    static constexpr const char*    CAMERA_FOCUS = "focusDistance";
-    static constexpr const char*    CAMERA_PLANES = "planes";
-    static constexpr const char*    CAMERA_FOV = "fov";
-    static constexpr const char*    CAMERA_GAZE = "gaze";
-    static constexpr const char*    CAMERA_UP = "up";
-
-    // Light Related Names
-    // Light Type Values
-    static constexpr const char*    LIGHT_PONT = "point";
-    static constexpr const char*    LIGHT_DIRECTIONAL = "directional";
-    static constexpr const char*    LIGHT_SPOT = "spot";
-    static constexpr const char*    LIGHT_RECTANGULAR = "rectangular";
-    // Common
-    static constexpr const char*    LIGHT_MATERIAL = "material";
-    // Transform Related Names
-    // Common
-    static constexpr const char*    TRANSFORM_FORM = "form";
-    // Transform Form Values
-    static constexpr const char*    TRANSFORM_FORM_MATRIX4 = "matrix4x4";
-    static constexpr const char*    TRANSFORM_FORM_T_R_S = "transformRotateScale";
-
-}
+using namespace NodeNames;
 
 TransformStruct SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
 {

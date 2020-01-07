@@ -50,6 +50,7 @@ struct SceneError : public ErrorI
             JSON_FILE_PARSE_ERROR,
             // Special Type Values
             UNKNOWN_TRANSFORM_TYPE,
+            UNKNOWN_LIGHT_TYPE,
             // Loading Surface Data
             SURFACE_DATA_PRIMITIVE_MISMATCH,
             SURFACE_DATA_TYPE_NOT_FOUND,
@@ -160,6 +161,7 @@ inline SceneError::operator std::string() const
         "JSON file could not be parsed properly",
         // Special Type Values
         "Transform type name is unknown",
+        "Light type name is unknown",
         // Loading Surface Data
         "Surface data type is mismatched with primitive type",
         "Surface data type not found",

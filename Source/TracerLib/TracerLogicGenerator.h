@@ -104,16 +104,18 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         SceneError                  GenerateAcceleratorBatch(GPUAcceleratorBatchI*&,
                                                              const GPUAcceleratorGroupI&,
                                                              const GPUPrimitiveGroupI&,
-                                                             uint32_t keyBatchId) override;
+                                                             uint32_t keyBatchId,
+                                                             const std::string& batchType) override;
         // Material
         SceneError                  GenerateMaterialGroup(GPUMaterialGroupI*&,
-                                                          const std::string& materialType,
                                                           const CudaGPU&,
-                                                          const GPUEventEstimatorI&) override;
+                                                          const GPUEventEstimatorI&,
+                                                          const std::string& materialType) override;
         SceneError                  GenerateMaterialBatch(GPUMaterialBatchI*&,
                                                           const GPUMaterialGroupI&,
                                                           const GPUPrimitiveGroupI&,
-                                                          uint32_t keyBatchId) override;
+                                                          uint32_t keyBatchId,
+                                                          const std::string& batchType) override;
         // Base Accelerator should be fetched after all the stuff is generated
         SceneError                  GenerateBaseAccelerator(GPUBaseAcceleratorI*&,
                                                             const std::string& accelType) override;

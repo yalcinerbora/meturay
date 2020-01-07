@@ -45,16 +45,18 @@ class TracerLogicGeneratorI
         virtual SceneError      GenerateAcceleratorBatch(GPUAcceleratorBatchI*&,
                                                          const GPUAcceleratorGroupI&,
                                                          const GPUPrimitiveGroupI&,
-                                                         uint32_t keyBatchId) = 0;
+                                                         uint32_t keyBatchId,
+                                                         const std::string& batchType) = 0;
         // Material
         virtual SceneError      GenerateMaterialGroup(GPUMaterialGroupI*&,
-                                                      const std::string& materialType,
                                                       const CudaGPU&,
-                                                      const GPUEventEstimatorI&) = 0;
+                                                      const GPUEventEstimatorI&,
+                                                      const std::string& materialType) = 0;
         virtual SceneError      GenerateMaterialBatch(GPUMaterialBatchI*&,
                                                       const GPUMaterialGroupI&,
                                                       const GPUPrimitiveGroupI&,
-                                                      uint32_t keyBatchId) = 0;
+                                                      uint32_t keyBatchId,
+                                                      const std::string& batchType) = 0;
         // Base Accelerator should be fetched after all the stuff is generated
         virtual SceneError      GenerateBaseAccelerator(GPUBaseAcceleratorI*&,
                                                         const std::string& accelType) = 0;

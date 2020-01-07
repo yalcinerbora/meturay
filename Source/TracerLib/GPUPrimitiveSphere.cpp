@@ -247,6 +247,12 @@ SceneError GPUPrimitiveSphere::ChangeTime(const NodeListing& surfaceDataNodes, d
     //return e;
 }
 
+SceneError GPUPrimitiveSphere::GenerateEstimatorInfo(std::vector<EstimatorInfo>& result,
+                                                    uint32_t id) const
+{
+    return SceneError::OK;
+}
+
 Vector2ul GPUPrimitiveSphere::PrimitiveBatchRange(uint32_t surfaceDataId) const
 {
     return batchRanges.at(surfaceDataId);

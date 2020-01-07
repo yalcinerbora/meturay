@@ -6,11 +6,14 @@
 
 #include "Random.cuh"
 
+using TerminateEventFunc = bool(*)(Vector3f& irradianceFactor,
+                                   float probability, RandomGPU& rng);
+
 template <class EstimatorData>
 using EstimateEventFunc = bool(*)(// Output
                                   HitKey& boundaryMatKey,
                                   Vector3& direction,
-                                  float& probability,
+                                  float& pdf,
                                   // Input
                                   const Vector3& irradianceFactor,
                                   const Vector3& position,
