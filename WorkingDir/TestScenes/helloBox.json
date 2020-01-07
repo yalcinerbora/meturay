@@ -16,8 +16,8 @@
 	"BaseAccelerator": "Linear",
 	"BaseBoundaryMaterial": 0,
 
-	"Tracer": "BasicTracer",
-	"Estimator": "EmptyEstimator",
+	"Tracer": "Test",
+	"Estimator": "Empty",
 
 	"Lights": [],
 

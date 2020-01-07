@@ -16,8 +16,8 @@
 	"BaseAccelerator": "Linear",
 	"BaseBoundaryMaterial": 0,
 
-	"Tracer": "BasicTracer",
-	"Estimator": "EmptyEstimator",
+	"Tracer": "Test",
+	"Estimator": "Basic",
 
 	"Lights": [],
 
@@ -35,8 +35,8 @@
 	{
 		// General Boundary Material
 		"id": 0,
-        "type": "BasicMat",
-        "albedo" : [0, 0, 0]
+        "type": "LightBoundary",
+        "irradiance" : [0, 0, 0]
     },
     {
 		// Light Boundary Material
@@ -48,14 +48,14 @@
 	{
 		// Red Simple Material
 		"id": 2,
-		"type": "BasicMat",
-		"albedo" : [1, 0, 0]
+		"type": "LightBoundary",
+		"irradiance" : [1, 0, 0]
     },
     {
 		// Green Simple Material
 		"id": 3,
-		"type": "BasicMat",
-		"albedo" : [0, 1, 0]
+		"type": "LightBoundary",
+		"irradiance" : [0, 1, 0]
     },
     {
 		// Gray Simple Material
