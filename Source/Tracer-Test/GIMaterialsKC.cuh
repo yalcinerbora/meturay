@@ -39,15 +39,19 @@ inline void LightBoundaryShade(// Output
 {
     assert(maxOutRay == 0);
 
-    // Finalize
-    Vector3f radiance = aux.irradianceFactor * gMatData.dAlbedo[matId];
+    // Skip if light ray
+    if(aux.lightRay || aux.depth == 1)
+    {
+        // Finalize
+        Vector3f radiance = aux.irradianceFactor * gMatData.dAlbedo[matId];
 
-    // Final point on a ray path
-    Vector4f output(radiance[0],
-                    radiance[1],
-                    radiance[2],
-                    1.0f);
-    ImageAccumulatePixel(gImage, aux.pixelId, output);
+        // Final point on a ray path
+        Vector4f output(radiance[0],
+                        radiance[1],
+                        radiance[2],
+                        1.0f);
+        ImageAccumulatePixel(gImage, aux.pixelId, output);
+    }
 }
 
 __device__
@@ -72,19 +76,33 @@ inline void BasicPathTraceShade(// Output
 {
     assert(maxOutRay == 2);
     // Inputs
-    const RayAuxBasic auxIn = aux;
+    const RayAuxBasic& auxIn = aux;
     const RayReg rayIn = ray;
     // Outputs
     RayReg rayOut = {};
-    RayAuxBasic auxOut = auxIn;    
+    RayAuxBasic auxOut0 = auxIn;
+    RayAuxBasic auxOut1 = auxIn;
 
-    // Material calculation is done
-    // continue to the determination of
-    // ray direction over path
+    auxOut0.depth++;
+    auxOut1.depth++;
+
+    // Skip if light ray
+    if(auxIn.lightRay)
+    {
+        // Generate Dummy Ray and Terminate
+        RayReg rDummy = EMPTY_RAY_REGISTER;
+        rDummy.Update(gOutRays, 0);
+        rDummy.Update(gOutRays, 1);
+        gBoundaryMat[0] = HitKey::InvalidKey;
+        gBoundaryMat[1] = HitKey::InvalidKey;
+        return;
+    }
+
+
 
     // Ray Selection
-    Vector3 position = rayIn.ray.AdvancedPos(rayIn.tMax);
-    Vector3 normal = surface.normal;
+    const Vector3 position = rayIn.ray.AdvancedPos(rayIn.tMax);
+    const Vector3 normal = surface.normal;
     // Generate New Ray Directiion
     Vector2 xi(GPUDistribution::Uniform<float>(rng),
                GPUDistribution::Uniform<float>(rng));
@@ -106,12 +124,12 @@ inline void BasicPathTraceShade(// Output
     float nDotL = max(normal.Dot(direction), 0.0f);
 
      // Illumination Calculation
-    auxOut.irradianceFactor = auxIn.irradianceFactor * nDotL * gMatData.dAlbedo[matId];
+    auxOut0.irradianceFactor = auxIn.irradianceFactor * nDotL * gMatData.dAlbedo[matId];
 
     // Russian Roulette
-    float avgThroughput = auxOut.irradianceFactor.Dot(Vector3f(0.333f)) * 100.0f;
+    float avgThroughput = auxOut0.irradianceFactor.Dot(Vector3f(0.333f)) * 100.0f;
     //float avgThroughput = gMatData.dAlbedo[matId].Dot(Vector3f(0.333f)) * 100.0f;
-    if(GPUEventEstimatorBasic::TerminatorFunc(auxOut.irradianceFactor, avgThroughput, rng))
+    if(GPUEventEstimatorBasic::TerminatorFunc(auxOut0.irradianceFactor, avgThroughput, rng))
     {
         // Generate Dummy Ray and Terminate
         RayReg rDummy = EMPTY_RAY_REGISTER;
@@ -121,17 +139,16 @@ inline void BasicPathTraceShade(// Output
     else
     {
         // Advance slightly to prevent self intersection
-        position += normal * MathConstants::Epsilon;
+        Vector3 pos = position + normal * MathConstants::Epsilon;
 
         // Write Ray
-        rayOut.ray = RayF(direction, position);
-        rayOut.tMin = 0.001f;
+        rayOut.ray = RayF(direction, pos);
+        rayOut.tMin = MathConstants::Epsilon;
         rayOut.tMax = INFINITY;
-
         // All done!
         // Write to global memory
         rayOut.Update(gOutRays, 0);
-        gOutRayAux[0] = auxOut;
+        gOutRayAux[0] = auxOut0;
         // We dont have any specific boundary mat for this
         // dont set material key
     }
@@ -142,23 +159,28 @@ inline void BasicPathTraceShade(// Output
     Vector3 lDirection;
     if(GPUEventEstimatorBasic::EstimatorFunc(key, lDirection, pdf,
                                              // Input
-                                             auxOut.irradianceFactor,
+                                             auxOut0.irradianceFactor,
                                              position,
                                              rng,
                                              //
                                              estData))
     {
         // Advance slightly to prevent self intersection
-        position += normal * MathConstants::Epsilon;
+        Vector3 pos = position + normal * MathConstants::Epsilon;        
         // Write Ray
-        rayOut.ray = RayF(lDirection, position);
-        rayOut.tMin = 0.001f;
+        rayOut.ray = RayF(lDirection, pos);
+        rayOut.tMin = MathConstants::Epsilon;
         rayOut.tMax = INFINITY;
+
+        // Cos Tetha
+        float nDotL = max(normal.Dot(lDirection), 0.0f);
+        auxOut1.irradianceFactor = auxIn.irradianceFactor * nDotL * gMatData.dAlbedo[matId];
 
         // All done!
         // Write to global memory
         rayOut.Update(gOutRays, 1);
-        gOutRayAux[1] = auxOut;
+        gOutRayAux[1] = auxOut1;
+        gOutRayAux[1].lightRay = true;
         // We dont have any specific boundary mat for this
         // dont set material key
     }

@@ -52,7 +52,7 @@
 		"id": 1,
 		"type": "LightBoundary",
 		//"albedo" : [1, 1, 1],
-		"irradiance" : [40, 40, 40]
+		"irradiance" : [1, 1, 1]
     },
 	{
 		// Red Simple Material

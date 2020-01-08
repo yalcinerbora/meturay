@@ -50,7 +50,7 @@ inline bool EstimateEventBasic(HitKey& key,
         // Sample a point on tri
         Vector3 triPoint = SampleTriangle(rng, p0, p1, p2);
         
-        direction = triPoint - position;
+        direction = (triPoint - position).Normalize();
         key = info.matKey;
         pdf = 1.0f / static_cast<float>(estData.lightCount);
         return true;
