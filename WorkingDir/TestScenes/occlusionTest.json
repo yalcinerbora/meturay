@@ -36,26 +36,26 @@
 		// General Boundary Material
 		"id": 0,
         "type": "LightBoundary",
-        "irradiance" : [0, 0, 0]
+        "radiance" : [0, 0, 0]
     },
     {
 		// Light Boundary Material
 		"id": 1,
 		"type": "LightBoundary",
 		"albedo" : [1, 1, 1],
-		"irradiance" : [1, 1, 1]
+		"radiance" : [1, 1, 1]
     },
 	{
 		// Red Simple Material
 		"id": 2,
 		"type": "LightBoundary",
-		"irradiance" : [1, 0, 0]
+		"radiance" : [1, 0, 0]
     },
     {
 		// Green Simple Material
 		"id": 3,
 		"type": "LightBoundary",
-		"irradiance" : [0, 1, 0]
+		"radiance" : [0, 1, 0]
     },
     {
 		// Gray Simple Material

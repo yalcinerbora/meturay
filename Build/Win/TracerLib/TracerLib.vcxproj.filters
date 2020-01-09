@@ -229,9 +229,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ImageStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh">
-      <Filter>GPU Algorithms\Functions</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
@@ -253,6 +250,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatorStructs.h">
       <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh">
+      <Filter>GPU Template Kernels</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -17,6 +17,8 @@ class RandomGPU;
 
 using ConstantIrradianceMatData = ConstantAlbedoMatData;
 
+static constexpr uint32_t BASICPT_MAX_OUT_RAY = 2;
+
 __device__
 inline void LightBoundaryShade(// Output
                                ImageGMem<Vector4f> gImage,
@@ -74,7 +76,7 @@ inline void BasicPathTraceShade(// Output
                                 const ConstantAlbedoMatData& gMatData,
                                 const HitKey::Type& matId)
 {
-    assert(maxOutRay == 2);
+    assert(maxOutRay == BASICPT_MAX_OUT_RAY);
     // Inputs
     const RayAuxBasic& auxIn = aux;
     const RayReg rayIn = ray;
@@ -98,52 +100,47 @@ inline void BasicPathTraceShade(// Output
         return;
     }
 
-
-
     // Ray Selection
     const Vector3 position = rayIn.ray.AdvancedPos(rayIn.tMax);
     const Vector3 normal = surface.normal;
     // Generate New Ray Directiion
     Vector2 xi(GPUDistribution::Uniform<float>(rng),
                GPUDistribution::Uniform<float>(rng));
-    //Vector3 direction = CosineDist::HemiCosineCDF(xi);
+    //Vector3 direction = HemiDistribution::HemiCosineCDF(xi);
     Vector3 direction = HemiDistribution::HemiUniformCDF(xi);
     direction.NormalizeSelf();
+
     // Direction vector is on surface space (hemisperical)
     // Convert it to normal oriented hemisphere
     QuatF q = QuatF::RotationBetweenZAxis(normal);
     direction = q.ApplyRotation(direction);
 
-    //printf("%f, %f\n", xi[0], xi[1]);
-    //printf("pos %f, %f, %f\n"
-    //       "dir %f, %f, %f\n",
-    //       position[0], position[1], position[2],
-    //       direction[0], direction[1], direction[2]);
-
     // Cos Tetha
     float nDotL = max(normal.Dot(direction), 0.0f);
+    //float nDotL = abs(normal.Dot(direction));
 
-     // Illumination Calculation
-    auxOut0.irradianceFactor = auxIn.irradianceFactor * nDotL * gMatData.dAlbedo[matId];
+    //float pdfMat = nDotL * MathConstants::InvPi;
+    float pdfMat = MathConstants::InvPi * 0.5f;
+
+    // Illumination Calculation
+    Vector3 reflectance = gMatData.dAlbedo[matId] * MathConstants::InvPi;
+    auxOut0.irradianceFactor = auxIn.irradianceFactor * nDotL * reflectance / pdfMat;
 
     // Russian Roulette
     float avgThroughput = auxOut0.irradianceFactor.Dot(Vector3f(0.333f)) * 100.0f;
-    //float avgThroughput = gMatData.dAlbedo[matId].Dot(Vector3f(0.333f)) * 100.0f;
-    if(GPUEventEstimatorBasic::TerminatorFunc(auxOut0.irradianceFactor, avgThroughput, rng))
-    {
-        // Generate Dummy Ray and Terminate
-        RayReg rDummy = EMPTY_RAY_REGISTER;
-        rDummy.Update(gOutRays, 0);
-        gBoundaryMat[0] = HitKey::InvalidKey;
-    }
-    else
+    // float avgThroughput = gMatData.dAlbedo[matId].Dot(Vector3f(0.333f)) * 100.0f;
+
+    if(auxIn.depth <= 3 &&
+       !GPUEventEstimatorBasic::TerminatorFunc(auxOut0.irradianceFactor,
+                                               avgThroughput,
+                                               rng))
     {
         // Advance slightly to prevent self intersection
         Vector3 pos = position + normal * MathConstants::Epsilon;
 
         // Write Ray
         rayOut.ray = RayF(direction, pos);
-        rayOut.tMin = MathConstants::Epsilon;
+        rayOut.tMin = 0.0f;
         rayOut.tMax = INFINITY;
         // All done!
         // Write to global memory
@@ -152,29 +149,37 @@ inline void BasicPathTraceShade(// Output
         // We dont have any specific boundary mat for this
         // dont set material key
     }
-
+    else
+    {
+        // Generate Dummy Ray and Terminate
+        RayReg rDummy = EMPTY_RAY_REGISTER;
+        rDummy.Update(gOutRays, 0);
+        gBoundaryMat[0] = HitKey::InvalidKey;
+    }
+    
     // Generate Light Ray
     float pdf;
     HitKey key;
     Vector3 lDirection;
     if(GPUEventEstimatorBasic::EstimatorFunc(key, lDirection, pdf,
-                                             // Input
-                                             auxOut0.irradianceFactor,
-                                             position,
-                                             rng,
-                                             //
-                                             estData))
+                                                // Input
+                                                auxOut0.irradianceFactor,
+                                                position,
+                                                rng,
+                                                //
+                                                estData))
     {
         // Advance slightly to prevent self intersection
-        Vector3 pos = position + normal * MathConstants::Epsilon;        
+        Vector3 pos = position + normal * MathConstants::Epsilon;
         // Write Ray
         rayOut.ray = RayF(lDirection, pos);
-        rayOut.tMin = MathConstants::Epsilon;
+        rayOut.tMin = 0.0f;// MathConstants::Epsilon;
         rayOut.tMax = INFINITY;
 
         // Cos Tetha
         float nDotL = max(normal.Dot(lDirection), 0.0f);
-        auxOut1.irradianceFactor = auxIn.irradianceFactor * nDotL * gMatData.dAlbedo[matId];
+        Vector3 lReflectance = gMatData.dAlbedo[matId] * MathConstants::InvPi;
+        auxOut1.irradianceFactor = auxIn.irradianceFactor * nDotL * lReflectance / pdf;
 
         // All done!
         // Write to global memory
@@ -191,8 +196,6 @@ inline void BasicPathTraceShade(// Output
         rDummy.Update(gOutRays, 1);
         gBoundaryMat[1] = HitKey::InvalidKey;
     }
-
-    
     //// Dummy ray to global memory
     //RayReg rDummy = {};
     //rDummy.ray = {Zero3, Zero3};

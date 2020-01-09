@@ -120,8 +120,8 @@ void ImageMemory::Reset(const CudaSystem& system)
     size_t pixelCount = static_cast<size_t>(segmentSize[0]) * segmentSize[1];
     if(pixelCount != 0)
     {
-        //// Pixel Count is relatively small single GPU should handle it
-        //const CudaGPU& gpu = *(system.GPUList().begin());
+        // Pixel Count is relatively small single GPU should handle it
+        const CudaGPU& gpu = *(system.GPUList().begin());
         //// TODO: Do generic image handling
         //gpu.GridStrideKC_X(0, (cudaStream_t)0,
         //                   pixelCount,
@@ -145,18 +145,18 @@ std::vector<Byte> ImageMemory::GetImageToCPU(const CudaSystem& system)
                         sizeof(uint32_t) * pixelCount;
     size_t sampleStart = PixelFormatToSize(format) * pixelCount;
 
-    if(pixelCount != 0)
-    {
-    // Pixel Count is relatively small single GPU should handle it
-        const CudaGPU& gpu = *(system.GPUList().begin());
+    //if(pixelCount != 0)
+    //{
+    //// Pixel Count is relatively small single GPU should handle it
+    //    const CudaGPU& gpu = *(system.GPUList().begin());
 
-        gpu.GridStrideKC_X(0, (cudaStream_t)0,
-                           pixelCount,
-                           KCAverageSamples,
-                           //
-                           GMem<Vector4f>(),
-                           pixelCount);
-    }
+    //    gpu.GridStrideKC_X(0, (cudaStream_t)0,
+    //                       pixelCount,
+    //                       KCAverageSamples,
+    //                       //
+    //                       GMem<Vector4f>(),
+    //                       pixelCount);
+    //}
 
     std::vector<Byte> result(totalBytes);
     // Copy Pixels

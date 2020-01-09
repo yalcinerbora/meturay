@@ -44,7 +44,8 @@ class MockNode
     , public NodeI
 {
     private:
-        static constexpr uint32_t       MAX_BOUNCES = 100;
+        static constexpr uint32_t       MAX_BOUNCES = 8;
+        static constexpr int            SAMPLE_COUNT = 1;
 
         const double                    Duration;
 
@@ -131,7 +132,7 @@ void MockNode::Work()
     while(visor.IsOpen())
     {
         // Run tracer
-        tracer.GenerateInitialRays(scene, 0, 1);
+        tracer.GenerateInitialRays(scene, 0, SAMPLE_COUNT);
         
         uint32_t i = 0;
         while(tracer.Continue() && i < MAX_BOUNCES)
@@ -166,7 +167,8 @@ class SimpleTracerSetup
         //static constexpr Vector2i           IMAGE_RESOLUTION = {32, 18};
         //static constexpr Vector2i           IMAGE_RESOLUTION = {320, 180};
         //static constexpr Vector2i           IMAGE_RESOLUTION = {640, 360};
-        static constexpr Vector2i           IMAGE_RESOLUTION = {1280, 720};
+        //static constexpr Vector2i           IMAGE_RESOLUTION = {1280, 720};
+        static constexpr Vector2i           IMAGE_RESOLUTION = {1600, 900};
         //static constexpr Vector2i           IMAGE_RESOLUTION = {1920, 1080};
         //static constexpr Vector2i           IMAGE_RESOLUTION = {3840, 2160};
         static constexpr double             WINDOW_DURATION = 3.5;

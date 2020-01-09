@@ -57,7 +57,7 @@ LightBoundaryMat::LightBoundaryMat(const CudaGPU& gpu,
 SceneError LightBoundaryMat::InitializeGroup(const NodeListing& materialNodes, double time,
                                              const std::string& scenePath)
 {
-    constexpr const char* IRRADIANCE = "irradiance";
+    constexpr const char* IRRADIANCE = "radiance";
 
     std::vector<Vector3> irradianceCPU;
     uint32_t i = 0;

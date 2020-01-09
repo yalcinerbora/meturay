@@ -17,17 +17,14 @@ template<>
 __device__
 inline void ImageAccumulatePixel(ImageGMem<Vector4f>& img, uint32_t location, const Vector4f& data)
 {
-	img.gPixels[location] = data;
-	img.gSampleCount[location] = 1;
+	// Inc Sample
+	atomicAdd(&img.gSampleCount[location], 1);// MAX_UINT32);
 
-	//// Inc Sample
-	//atomicInc(&img.gSampleCount[location], MAX_UINT32);
-
-	//// Add value
-	//atomicAdd(&img.gPixels[location][0], data[0]);
-	//atomicAdd(&img.gPixels[location][1], data[1]);
-	//atomicAdd(&img.gPixels[location][2], data[2]);
-	//atomicAdd(&img.gPixels[location][3], data[3]);
+	// Add value
+	atomicAdd(&img.gPixels[location][0], data[0]);
+	atomicAdd(&img.gPixels[location][1], data[1]);
+	atomicAdd(&img.gPixels[location][2], data[2]);
+	atomicAdd(&img.gPixels[location][3], data[3]);
 }
 
 template<>

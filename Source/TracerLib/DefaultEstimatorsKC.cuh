@@ -34,6 +34,9 @@ inline bool EstimateEventBasic(HitKey& key,
                                //
                                const BasicEstimatorData& estData)
 {
+    if(estData.lightCount == 0) return 0;
+
+
     // Randomly Select Light
     float r1 = GPUDistribution::Uniform<float>(rng);
     r1 *= static_cast<float>(estData.lightCount);
@@ -49,10 +52,31 @@ inline bool EstimateEventBasic(HitKey& key,
         Vector3 p2 = info.position2B;
         // Sample a point on tri
         Vector3 triPoint = SampleTriangle(rng, p0, p1, p2);
-        
+        //Vector3 triPoint = p0 * 0.333f + p1 * 0.333f + p2 * 0.3333f;
+        //printf("%f %f %f\n", 
+        //       triPoint[0],
+        //       triPoint[1],
+        //       triPoint[2]);
+
+
+        // Calc Direction
         direction = (triPoint - position).Normalize();
+        // Push Ray
         key = info.matKey;
-        pdf = 1.0f / static_cast<float>(estData.lightCount);
+
+        Vector3 cross = Cross((p1 - p0), (p2 - p0));
+        float triArea = 0.5f * cross.Length();
+        Vector3 normal = cross.Normalize();
+        
+        //float nDotL = abs(normal.Dot(-direction));
+        float nDotL = max(normal.Dot(-direction), 0.0f);
+
+        // From Pbrt Book
+        // PDF of the light on the triangle
+        pdf = (position - triPoint).LengthSqr() /
+              ((nDotL) * triArea);
+        // PDF of selecting that light
+        pdf *= 1.0f / static_cast<float>(estData.lightCount);
         return true;
     }
     return false;
