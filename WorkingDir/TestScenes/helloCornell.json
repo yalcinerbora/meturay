@@ -50,10 +50,9 @@
     {
 		// Light Boundary Material
 		"id": 1,
-		"type": "LightBoundary",
-		//"albedo" : [1, 1, 1],
+		"type": "LightBoundary",		
 		"radiance" : [330, 330, 330]
-		//"radiance" : [0.1, 0.1, 0.1]
+		//"radiance" : [1.1, 1.1, 1.1]
     },
 	{
 		// Red Simple Material

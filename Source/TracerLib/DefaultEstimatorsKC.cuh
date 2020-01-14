@@ -34,8 +34,7 @@ inline bool EstimateEventBasic(HitKey& key,
                                //
                                const BasicEstimatorData& estData)
 {
-    if(estData.lightCount == 0) return 0;
-
+    if(estData.lightCount == 0) return false;
 
     // Randomly Select Light
     float r1 = GPUDistribution::Uniform<float>(rng);
@@ -51,14 +50,8 @@ inline bool EstimateEventBasic(HitKey& key,
         Vector3 p1 = info.position1G;
         Vector3 p2 = info.position2B;
         // Sample a point on tri
-        Vector3 triPoint = SampleTriangle(rng, p0, p1, p2);
-        //Vector3 triPoint = p0 * 0.333f + p1 * 0.333f + p2 * 0.3333f;
-        //printf("%f %f %f\n", 
-        //       triPoint[0],
-        //       triPoint[1],
-        //       triPoint[2]);
-
-
+        Vector3 triPoint = SampleTriangle(rng, p0, p1, p2);        
+   
         // Calc Direction
         direction = (triPoint - position).Normalize();
         // Push Ray

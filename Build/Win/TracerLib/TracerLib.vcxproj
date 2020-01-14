@@ -199,7 +199,7 @@
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
       <AdditionalCompilerOptions>/wd4506</AdditionalCompilerOptions>
-      <MaxRegCount>32</MaxRegCount>
+      <MaxRegCount>0</MaxRegCount>
       <GenerateLineInfo>true</GenerateLineInfo>
       <PtxAsOptionV>true</PtxAsOptionV>
     </CudaCompile>

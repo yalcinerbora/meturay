@@ -112,7 +112,7 @@
       <GenerateLineInfo>true</GenerateLineInfo>
     </CudaCompile>
     <CudaCompile>
-      <MaxRegCount>32</MaxRegCount>
+      <MaxRegCount>0</MaxRegCount>
     </CudaCompile>
     <CudaCompile>
       <PtxAsOptionV>true</PtxAsOptionV>

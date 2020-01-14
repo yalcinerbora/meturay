@@ -106,8 +106,8 @@ inline void BasicPathTraceShade(// Output
     // Generate New Ray Directiion
     Vector2 xi(GPUDistribution::Uniform<float>(rng),
                GPUDistribution::Uniform<float>(rng));
-    //Vector3 direction = HemiDistribution::HemiCosineCDF(xi);
-    Vector3 direction = HemiDistribution::HemiUniformCDF(xi);
+    Vector3 direction = HemiDistribution::HemiCosineCDF(xi);
+    //Vector3 direction = HemiDistribution::HemiUniformCDF(xi);
     direction.NormalizeSelf();
 
     // Direction vector is on surface space (hemisperical)
@@ -119,8 +119,8 @@ inline void BasicPathTraceShade(// Output
     float nDotL = max(normal.Dot(direction), 0.0f);
     //float nDotL = abs(normal.Dot(direction));
 
-    //float pdfMat = nDotL * MathConstants::InvPi;
-    float pdfMat = MathConstants::InvPi * 0.5f;
+    float pdfMat = nDotL * MathConstants::InvPi;
+    //float pdfMat = MathConstants::InvPi * 0.5f;
 
     // Illumination Calculation
     Vector3 reflectance = gMatData.dAlbedo[matId] * MathConstants::InvPi;
@@ -158,16 +158,16 @@ inline void BasicPathTraceShade(// Output
     }
     
     // Generate Light Ray
-    float pdf;
-    HitKey key;
+    float pdfLight;
+    HitKey matLight;
     Vector3 lDirection;
-    if(GPUEventEstimatorBasic::EstimatorFunc(key, lDirection, pdf,
-                                                // Input
-                                                auxOut0.irradianceFactor,
-                                                position,
-                                                rng,
-                                                //
-                                                estData))
+    if(GPUEventEstimatorBasic::EstimatorFunc(matLight, lDirection, pdfLight,
+                                             // Input
+                                             auxOut0.irradianceFactor,
+                                             position,
+                                             rng,
+                                             //
+                                             estData))
     {
         // Advance slightly to prevent self intersection
         Vector3 pos = position + normal * MathConstants::Epsilon;
@@ -179,15 +179,14 @@ inline void BasicPathTraceShade(// Output
         // Cos Tetha
         float nDotL = max(normal.Dot(lDirection), 0.0f);
         Vector3 lReflectance = gMatData.dAlbedo[matId] * MathConstants::InvPi;
-        auxOut1.irradianceFactor = auxIn.irradianceFactor * nDotL * lReflectance / pdf;
+        auxOut1.irradianceFactor = auxIn.irradianceFactor * nDotL * lReflectance / pdfLight;
 
         // All done!
         // Write to global memory
         rayOut.Update(gOutRays, 1);
         gOutRayAux[1] = auxOut1;
-        gOutRayAux[1].lightRay = true;
-        // We dont have any specific boundary mat for this
-        // dont set material key
+        gOutRayAux[1].lightRay = true;        
+        gBoundaryMat[1] = matLight;
     }
     else
     {
