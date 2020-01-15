@@ -1,11 +1,11 @@
 #include "TestPools.h"
-#include "TracerLogics.cuh"
+
+#include "BasicTracer.cuh"
 
 #include "BasicMaterials.cuh"
 #include "GIMaterials.cuh"
 
 #include "TracerLib/GPUAcceleratorLinear.cuh"
-
 #include "TracerLib/GPUAcceleratorI.h"
 #include "TracerLib/TracerLogicI.h"
 

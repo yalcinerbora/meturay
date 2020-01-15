@@ -13,8 +13,9 @@
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\Tracer-Test\BasicMaterials.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\GIMaterials.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\VolumeTracer.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\TestPools.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerLogics.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\BasicTracer.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu" />
   </ItemGroup>
   <ItemGroup>
@@ -25,9 +26,10 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\GIMaterialsKC.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialDataStructs.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\RayAuxStruct.h" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\VolumeTracer.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\SurfaceStructs.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TestPools.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerLogics.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\BasicTracer.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h" />
   </ItemGroup>
   <ItemGroup>

@@ -5,30 +5,13 @@
 
 #include "RayAuxStruct.h"
 
-__device__ __host__
-inline void RayInitBasic(RayAuxBasic* gOutBasic,
-                         const uint32_t writeLoc,
-                         // Input
-                         const RayAuxBasic& defaults,
-                         const RayReg& ray,
-                         // Index
-                         const uint32_t localPixelId,
-                         const uint32_t pixelSampleId)
-{
-    RayAuxBasic init = defaults;
-    init.pixelId = localPixelId;
-    init.pixelSampleId = pixelSampleId;
-
-    gOutBasic[writeLoc] = init;
-}
-
-class TracerBasic final : public TracerBaseLogic<RayAuxBasic, RayInitBasic>
+class TracerBasic final : public TracerBaseLogic<RayAuxBasic>
 {
     public:
-        static constexpr const char* TypeName() { return "Test"; }
+        static constexpr const char*    TypeName() { return "Test"; }
 
     private:
-        static constexpr RayAuxBasic    initals = {Vector3f(1.0f, 1.0f, 1.0f), 0, 0, 1, false};
+        static constexpr RayAuxBasic    initialVal = {Vector3f(1.0f, 1.0f, 1.0f), 0, 0, 1, false};
 
     protected:
     public:
