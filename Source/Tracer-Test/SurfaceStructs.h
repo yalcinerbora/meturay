@@ -1,7 +1,5 @@
 #pragma once
 
-#include "TracerLogics.cuh"
-
 #include "TracerLib/GPUPrimitiveSphere.h"
 #include "TracerLib/GPUPrimitiveTriangle.h"
 #include "TracerLib/GPUPrimitiveEmpty.h"

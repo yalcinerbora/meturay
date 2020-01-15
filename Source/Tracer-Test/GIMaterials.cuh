@@ -2,6 +2,7 @@
 
 #include "TracerLib/GPUMaterialP.cuh"
 
+#include "BasicTracer.cuh"
 #include "SurfaceStructs.h"
 #include "MaterialDataStructs.h"
 #include "GIMaterialsKC.cuh"

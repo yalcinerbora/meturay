@@ -5,6 +5,9 @@
 #include "RayLib/HitStructs.h"
 #include "RayLib/AABB.h"
 
+using HitKeyList = std::array<HitKey, SceneConstants::MaxPrimitivePerSurface>;
+using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxPrimitivePerSurface>;
+
 using HitResult = Vector<2, bool>;
 
 // This is Leaf of Base Accelerator

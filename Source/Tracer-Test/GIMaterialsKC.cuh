@@ -45,7 +45,7 @@ inline void LightBoundaryShade(// Output
     if(aux.lightRay || aux.depth == 1)
     {
         // Finalize
-        Vector3f radiance = aux.irradianceFactor * gMatData.dAlbedo[matId];
+        Vector3f radiance = aux.radianceFactor * gMatData.dAlbedo[matId];
 
         // Final point on a ray path
         Vector4f output(radiance[0],
@@ -124,14 +124,14 @@ inline void BasicPathTraceShade(// Output
 
     // Illumination Calculation
     Vector3 reflectance = gMatData.dAlbedo[matId] * MathConstants::InvPi;
-    auxOut0.irradianceFactor = auxIn.irradianceFactor * nDotL * reflectance / pdfMat;
+    auxOut0.radianceFactor = auxIn.radianceFactor * nDotL * reflectance / pdfMat;
 
     // Russian Roulette
-    float avgThroughput = auxOut0.irradianceFactor.Dot(Vector3f(0.333f)) * 100.0f;
+    float avgThroughput = auxOut0.radianceFactor.Dot(Vector3f(0.333f)) * 100.0f;
     // float avgThroughput = gMatData.dAlbedo[matId].Dot(Vector3f(0.333f)) * 100.0f;
 
     if(auxIn.depth <= 3 &&
-       !GPUEventEstimatorBasic::TerminatorFunc(auxOut0.irradianceFactor,
+       !GPUEventEstimatorBasic::TerminatorFunc(auxOut0.radianceFactor,
                                                avgThroughput,
                                                rng))
     {
@@ -163,7 +163,7 @@ inline void BasicPathTraceShade(// Output
     Vector3 lDirection;
     if(GPUEventEstimatorBasic::EstimatorFunc(matLight, lDirection, pdfLight,
                                              // Input
-                                             auxOut0.irradianceFactor,
+                                             auxOut0.radianceFactor,
                                              position,
                                              rng,
                                              //
@@ -179,7 +179,7 @@ inline void BasicPathTraceShade(// Output
         // Cos Tetha
         float nDotL = max(normal.Dot(lDirection), 0.0f);
         Vector3 lReflectance = gMatData.dAlbedo[matId] * MathConstants::InvPi;
-        auxOut1.irradianceFactor = auxIn.irradianceFactor * nDotL * lReflectance / pdfLight;
+        auxOut1.radianceFactor = auxIn.radianceFactor * nDotL * lReflectance / pdfLight;
 
         // All done!
         // Write to global memory

@@ -5,7 +5,17 @@
 
 struct RayAuxBasic
 {
-    Vector3f        irradianceFactor;
+    Vector3f        radianceFactor;
+    uint32_t        pixelId;
+    uint32_t        pixelSampleId;
+    uint8_t         depth;
+    bool            lightRay;
+};
+
+
+struct RayAuxVolume
+{
+    Vector3f        radianceFactor;
     uint32_t        pixelId;
     uint32_t        pixelSampleId;
     uint8_t         depth;

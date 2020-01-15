@@ -1,5 +1,4 @@
 #include "EntryPoints.h"
-#include "TracerLogics.cuh"
 #include "TestPools.h"
 
 extern "C" _declspec(dllexport) MaterialLogicPoolI * __stdcall GenerateTestMaterialPool()

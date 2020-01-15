@@ -10,12 +10,14 @@
     <Filter Include="Structs">
       <UniqueIdentifier>{088fecb1-e7ee-4557-8487-173064731f30}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Tracers">
+      <UniqueIdentifier>{5785e8b1-16dd-41cb-9ebf-43d69719f735}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu">
       <Filter>Implementations</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerLogics.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\GIMaterials.cu">
       <Filter>Materials</Filter>
     </CudaCompile>
@@ -24,13 +26,15 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\TestPools.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\VolumeTracer.cu">
+      <Filter>Tracers</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h">
       <Filter>Implementations</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerLogics.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterials.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
@@ -53,5 +57,14 @@
       <Filter>Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\TestPools.h" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\BasicTracer.cuh">
+      <Filter>Tracers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\VolumeTracer.cuh">
+      <Filter>Tracers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Source\Tracer-Test\BasicTracer.cu" />
   </ItemGroup>
 </Project>

@@ -1,8 +1,25 @@
-#include "TracerLogics.cuh"
+#include "BasicTracer.cuh"
 
 #include "RayLib/TracerError.h"
 #include "RayLib/GPUSceneI.h"
 #include "TracerLib/RayMemory.h"
+
+__device__ __host__
+inline void RayInitBasic(RayAuxBasic* gOutBasic,
+                         const uint32_t writeLoc,
+                         // Input
+                         const RayAuxBasic& defaults,
+                         const RayReg& ray,
+                         // Index
+                         const uint32_t localPixelId,
+                         const uint32_t pixelSampleId)
+{
+    RayAuxBasic init = defaults;
+    init.pixelId = localPixelId;
+    init.pixelSampleId = pixelSampleId;
+
+    gOutBasic[writeLoc] = init;
+}
 
 TracerBasic::TracerBasic(GPUBaseAcceleratorI& ba,
                          AcceleratorGroupList&& ag,
@@ -11,7 +28,7 @@ TracerBasic::TracerBasic(GPUBaseAcceleratorI& ba,
                          MaterialBatchMappings&& mb,
                          GPUEventEstimatorI& ee,
                          //
-                         const TracerParameters& options,
+                         const TracerParameters& parameters,
                          uint32_t hitStructSize,
                          const Vector2i maxMats,
                          const Vector2i maxAccels,
@@ -20,8 +37,7 @@ TracerBasic::TracerBasic(GPUBaseAcceleratorI& ba,
                       std::move(ag), std::move(ab),
                       std::move(mg), std::move(mb),
                       ee,
-                      options,
-                      initals,
+                      parameters,
                       hitStructSize,
                       maxMats,
                       maxAccels,
@@ -58,7 +74,7 @@ uint32_t TracerBasic::GenerateRays(const CudaSystem& cudaSystem,
     const uint32_t TPB = StaticThreadPerBlock1D;
     // GPUSplits
     const auto splits = cudaSystem.GridStrideMultiGPUSplit(totalRayCount, TPB, 0,
-                                                           KCGenerateCameraRays<RayAuxData, AuxFunc>);
+                                                           KCGenerateCameraRays<RayAuxData, RayInitBasic>);
 
 
     // Only use splits as guidance
@@ -92,7 +108,7 @@ uint32_t TracerBasic::GenerateRays(const CudaSystem& cudaSystem,
         gpu.AsyncGridStrideKC_X
         (
             0, localWorkCount,
-            KCGenerateCameraRays<RayAuxData, AuxFunc>,
+            KCGenerateCameraRays<RayAuxData, RayInitBasic>,
             // Args
             // Inputs
             gRays,
@@ -105,7 +121,7 @@ uint32_t TracerBasic::GenerateRays(const CudaSystem& cudaSystem,
             localPixelStart,
             localPixelEnd,
             // Data to initialize auxiliary base data
-            initialValues
+            initialVal
         );
 
         // Adjust for next call

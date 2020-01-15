@@ -9,12 +9,9 @@ with ustom Intersection and Hit
 #include <array>
 
 #include "RayLib/HitStructs.h"
-#include "AcceleratorDeviceFunctions.h"
-
 #include "RayLib/SceneStructs.h"
 
-using HitKeyList = std::array<HitKey, SceneConstants::MaxPrimitivePerSurface>;
-using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxPrimitivePerSurface>;
+#include "AcceleratorDeviceFunctions.h"
 
 struct HKList
 {
@@ -33,10 +30,8 @@ static void KCConstructLinear(// O
                               PGroup::LeafData* gLeafOut,
                               // Input
                               const Vector2ul* gAccRanges,
-                              //const HitKeyList materialKeys,
                               const HKList mkList,
                               const PRList prList,
-                              //const PrimitiveRangeList primRanges,
                               const PGroup::PrimitiveData primData,
                               const uint32_t accIndex)
 {
@@ -128,11 +123,9 @@ static void KCIntersectLinear(// O
         const uint64_t accId = HitKey::FetchIdPortion(gAccelKeys[globalId]);
         const TransformId transformId = gTransformIds[id];
 
-        // Load Ray/Hit to Register
+        // Load Ray to Register
         RayReg ray(gRays, id);
-        //HitReg hit(gHitStructs, id);
-        //HitId hitId = gHitKeys[id];
-
+        
         // Key is the index of the inner Linear Array
         const Vector2ul accRange = gAccRanges[accId];
         const LeafData* gLeaf = gLeafList + accRange[0];

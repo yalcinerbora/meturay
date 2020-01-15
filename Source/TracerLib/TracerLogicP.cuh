@@ -16,12 +16,11 @@
 
 struct TracerError;
 
-template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>
+template<class RayAuxD>
 class TracerBaseLogic : public TracerBaseLogicI
 {
     public:
         using RayAuxData                    = RayAuxD;
-        static constexpr auto AuxFunc       = AuxF;
 
     private:
     protected:
@@ -31,7 +30,6 @@ class TracerBaseLogic : public TracerBaseLogicI
         const TracerParameters      params;
         uint32_t                    hitStructMaxSize;
         //
-        const RayAuxData            initialValues;
         // Mappings for Kernel Calls (A.K.A. Batches)
         GPUBaseAcceleratorI&        baseAccelerator;
 
@@ -59,7 +57,6 @@ class TracerBaseLogic : public TracerBaseLogicI
                                                             GPUEventEstimatorI&,
                                                             //
                                                             const TracerParameters& options,
-                                                            const RayAuxData& initalRayAux,
                                                             uint32_t hitStructMaxSize,
                                                             const Vector2i maxMats,
                                                             const Vector2i maxAccels,
@@ -94,20 +91,19 @@ class TracerBaseLogic : public TracerBaseLogicI
         uint32_t                            Seed() const override { return params.seed; }
 };
 
-template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>
-TracerBaseLogic<RayAuxD, AuxF>::TracerBaseLogic(GPUBaseAcceleratorI& baseAccelerator,
-                                                AcceleratorGroupList&& ag,
-                                                AcceleratorBatchMappings&& ab,
-                                                MaterialGroupList&& mg,
-                                                MaterialBatchMappings&& mb,
-                                                GPUEventEstimatorI& e,
-                                                //
-                                                const TracerParameters& params,
-                                                const RayAuxData& initialValues,
-                                                uint32_t hitStructSize,
-                                                const Vector2i maxMats,
-                                                const Vector2i maxAccels,
-                                                const HitKey baseBoundMatKey)
+template<class RayAuxD>
+TracerBaseLogic<RayAuxD>::TracerBaseLogic(GPUBaseAcceleratorI& baseAccelerator,
+                                          AcceleratorGroupList&& ag,
+                                          AcceleratorBatchMappings&& ab,
+                                          MaterialGroupList&& mg,
+                                          MaterialBatchMappings&& mb,
+                                          GPUEventEstimatorI& e,
+                                          //
+                                          const TracerParameters& params,
+                                          uint32_t hitStructSize,
+                                          const Vector2i maxMats,
+                                          const Vector2i maxAccels,
+                                          const HitKey baseBoundMatKey)
     : optsShade(TracerConstants::DefaultShadeOptions)
     , optsHit(TracerConstants::DefaultHitOptions)
     , baseAccelerator(baseAccelerator)
@@ -118,7 +114,6 @@ TracerBaseLogic<RayAuxD, AuxF>::TracerBaseLogic(GPUBaseAcceleratorI& baseAcceler
     , eventEstimator(e)
     , params(params)
     , hitStructMaxSize(hitStructSize)
-    , initialValues(initialValues)
     , maxAccelBits(Zero2i)
     , maxMatBits(Zero2i)
     , baseBoundMatKey(baseBoundMatKey)
@@ -133,20 +128,20 @@ TracerBaseLogic<RayAuxD, AuxF>::TracerBaseLogic(GPUBaseAcceleratorI& baseAcceler
     maxAccelBits[1] = Utility::FindFirstSet32(maxAccels[1]) + 1;
 }
 
-template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>
-const Vector2i TracerBaseLogic<RayAuxD, AuxF>::SceneMaterialMaxBits() const
+template<class RayAuxD>
+const Vector2i TracerBaseLogic<RayAuxD>::SceneMaterialMaxBits() const
 {
     return maxMatBits;
 }
 
-template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>
-const Vector2i TracerBaseLogic<RayAuxD, AuxF>::SceneAcceleratorMaxBits() const
+template<class RayAuxD>
+const Vector2i TracerBaseLogic<RayAuxD>::SceneAcceleratorMaxBits() const
 {
     return maxAccelBits;
 }
 
-template<class RayAuxD, AuxInitFunc<RayAuxD> AuxF>
-const HitKey TracerBaseLogic<RayAuxD, AuxF>::SceneBaseBoundMatKey() const
+template<class RayAuxD>
+const HitKey TracerBaseLogic<RayAuxD>::SceneBaseBoundMatKey() const
 {
     return baseBoundMatKey;
 }
