@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cub/cub.cuh>
 
 #include "GPUAcceleratorP.cuh"
 #include "DeviceMemory.h"
@@ -17,7 +18,7 @@ class GPUAccBVHGroup final
     ACCELERATOR_TYPE_NAME("BasicBVH", PGroup);
 
     public:
-        using LeafData                      = PGroup::LeafData;
+        using LeafData                      = PGroup::LeafData;               
 
     private:
         // CPU Memory
@@ -31,6 +32,12 @@ class GPUAccBVHGroup final
         const BVHNode<LeafData>**           dBVHLists;
 
         friend class                        GPUAccBVHBatch<PGroup>;
+
+
+        //// Recursive Construction
+        //void                                ConstBVHRecursive(BVHNode<LeafData>*& parentPtr,
+        //                                                      SplitAxis axis,
+        //                                                      size_t start, size_t end);
 
     public:
         // Constructors & Destructor

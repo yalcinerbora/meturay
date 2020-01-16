@@ -129,10 +129,28 @@ inline float GenerateAreaTriangle(PrimitiveId primitiveId, const TriData& primDa
     return Cross(vec0, vec1).Length() * 0.5f;
 }
 
+__device__ __host__
+inline Vector3 GenerateCenterTriangle(PrimitiveId primitiveId, const TriData& primData)
+{
+    // Get Position
+    uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
+    uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
+    uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
+
+    Vector3 position0 = primData.positionsU[index0];
+    Vector3 position1 = primData.positionsU[index1];
+    Vector3 position2 = primData.positionsU[index2];
+
+    return position0 * 0.33333f +
+           position1 * 0.33333f +
+           position2 * 0.33333f;
+}
+
 class GPUPrimitiveTriangle final
     : public GPUPrimitiveGroup<TriangleHit, TriData, DefaultLeaf,
                                TriangleClosestHit, GenerateDefaultLeaf,
-                               GenerateAABBTriangle, GenerateAreaTriangle>
+                               GenerateAABBTriangle, GenerateAreaTriangle,
+                               GenerateCenterTriangle>
 {
     public:
         static constexpr const char*            TypeName() { return "Triangle"; }

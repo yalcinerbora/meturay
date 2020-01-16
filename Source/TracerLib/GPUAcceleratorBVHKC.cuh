@@ -5,6 +5,54 @@
 
 #include "AcceleratorDeviceFunctions.h"
 
+enum class SplitAxis { X, Y, Z };
+
+template<class PGroup>
+struct SpacePartition
+{
+    private:
+        float                   splitPlane;
+        SplitAxis               axis;
+        PGroup::PrimitiveData   pData;
+       
+    protected:
+    public:
+        // Constructors & Destructor
+                                SpacePartition() {}
+                                SpacePartition(float splitPlane, SplitAxis axis, 
+                                               PGroup::PrimitiveData pData)
+            : splitPlane(splitPlane)
+            , axis(axis)
+            , pData(pData)
+        {}
+
+        __device__ __host__
+        __forceinline__ bool operator()(const uint64_t& id) const
+        {
+            // Get center location of tri
+            Vector3 center = PGroup::CenterFunc(id, pData);
+            if(axis == SplitAxis::X)
+                return center[0] < splitPlane;
+            else if(axis == SplitAxis::Y)
+                return center[1] < splitPlane;
+            else if(axis == SplitAxis::Z)
+                return center[2] < splitPlane;
+            else return false;
+        }
+};
+
+template<class PGroup>
+struct SpaceReduce
+{
+
+};
+
+template<class PGroup>
+struct AABBReduce
+{
+
+};
+
 // Fundamental BVH Tree Node
 template<class LeafStruct>
 struct alignas(8) BVHNode
@@ -74,14 +122,14 @@ __global__ void KCIntersectBVH(// O
         globalId < rayCount; globalId += blockDim.x * gridDim.x)
     {
         const RayId id = gRayIds[globalId];
-        const HitKey key = HitKey::FetchIdPortion(gAccelKeys[id]);
+        const uint64_t accId = HitKey::FetchIdPortion(gAccelKeys[id]);
         const TransformId transformId = gTransformIds[id];
         
         // Load Ray/Hit to Register
         RayReg ray(gRays, id);
 
         // Key is the index of the inner BVH
-        const BVHNode<LeafData>* gBVH = gBVHList[key];
+        const BVHNode<LeafData>* gBVH = gBVHList[accId];
 
         // Zero means identity so skip
         if(transformId != 0)
@@ -99,7 +147,7 @@ __global__ void KCIntersectBVH(// O
         // Depth First Search over BVH
         uint32_t depth = sizeof(uint64_t) * 8;
         BVHNode<LeafData> currentNode = gBVH[0];
-        for(uint64_t list = 0; list < 0xFFFFFFFF;)
+        for(uint64_t list = 0; list < UINT64_MAX;)
         {
             // Fast pop if both of the children is carries current node is zero
             // (This means that bit is carried)
@@ -144,11 +192,11 @@ __global__ void KCIntersectBVH(// O
                 if(currentNode.left != BVHNode<LeafData>::NULL_NODE)
                 {
                     currentNode = gBVH[currentNode.left];
-                        depth--;
+                    depth--;
                 }
                 // If not avail and since we are first time on this node
                 // Try to go right
-                else if(currentNode.left != BVHNode<LeafData>::NULL_NODE)
+                else if(currentNode.right != BVHNode<LeafData>::NULL_NODE)
                 {
                     // In this case dont forget to mark left child as traversed
                     MarkAsTraversed(list, depth - 1);

@@ -52,10 +52,17 @@ inline float GenerateAreaEmpty(PrimitiveId primitiveId, const EmptyData& primDat
     return 0.0f;
 }
 
+__device__ __host__
+inline Vector3f GenerateCenterEmpty(PrimitiveId primitiveId, const EmptyData& primData)
+{
+    return Zero3;
+}
+
 class GPUPrimitiveEmpty final
     : public GPUPrimitiveGroup<EmptyHit, EmptyData, EmptyLeaf,
                                EmptyClosestHit, GenerateEmptyLeaf,
-                               GenerateAABBEmpty, GenerateAreaEmpty>
+                               GenerateAABBEmpty, GenerateAreaEmpty,
+                               GenerateCenterEmpty>
 {
     public:
         static constexpr const char*            TypeName() { return BaseConstants::EMPTY_PRIMITIVE_NAME; }

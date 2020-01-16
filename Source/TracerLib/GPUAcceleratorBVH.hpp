@@ -22,6 +22,37 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Map of hit keys for all ma
                                                    const std::map<uint32_t, IdPairs>& pairingList,
                                                    double time)
 {
+
+    const char* primGroupTypeName = primitiveGroup.Type();
+
+    // Iterate over pairings
+    int j = 0;
+    for(const auto& pairings : pairingList)
+    {
+        PrimitiveRangeList primRangeList;
+        HitKeyList hitKeyList;
+        primRangeList.fill(Zero2ul);
+        hitKeyList.fill(HitKey::InvalidKey);
+
+        const IdPairs& pList = pairings.second;
+        for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
+        {
+            const auto& p = pList[i];
+            if(p.first == std::numeric_limits<uint32_t>::max()) break;
+
+            primRangeList[i] = primitiveGroup.PrimitiveBatchRange(p.second);
+            hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.first));
+        }
+        // Put generated AABB
+        primitiveRanges.push_back(primRangeList);
+        primitiveMaterialKeys.push_back(hitKeyList);
+        idLookup.emplace(pairings.first, j);
+        j++;
+    }
+    assert(primitiveRanges.size() == primitiveMaterialKeys.size());
+    assert(primitiveMaterialKeys.size() == idLookup.size());
+    assert(idLookup.size() == accRanges.size());
+
     return SceneError::OK;
 }
 
@@ -58,7 +89,54 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerators(const CudaSystem& system)
 template <class PGroup>
 void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                                   const CudaSystem& system)
-{
+{    
+    using PrimitiveIndexStart = std::array<uint64_t, SceneConstants::MaxPrimitivePerSurface>;
+
+    uint32_t index = idLookup.at(surface);
+    const PrimitiveRangeList& primRangeList = primitiveRanges[index];
+    
+    size_t currentOffset = 0;
+    PrimitiveRangeList indexOffsets;
+    for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
+    {
+        const auto& p = primRangeList[i];
+        //if(p.first == std::numeric_limits<uint32_t>::max()) break;
+
+        indexOffsets[i][0] = currentOffset;
+        currentOffset = p[1] - p[0];
+        indexOffsets[i][1] = currentOffset;
+    }
+    size_t totalPrimCount = currentOffset;
+
+    // Determine Partition/Reduce Memories
+    size_t cubIfMemSize = 0;
+    uint64_t* in = nullptr;
+    uint64_t* out = nullptr;
+    uint64_t* count = nullptr;
+    CUDA_CHECK(cub::DevicePartition::If(nullptr, cubIfMemSize, 
+                                        in, out, count,
+                                        static_cast<int>(totalPrimCount),
+                                        SpacePartition<PGroup>()));
+
+    // CPU Memory
+    std::vector<BVHNode<LeafData>> leafNodes;
+    // GPU Memory
+    DeviceMemory memory = DeviceMemory(totalPrimCount * sizeof(uint64_t));
+
+
+    //uint64_t* dPrimIds = primIdList
+
+    // Primitive Data is on GPU
+    // we use pointers to partition an tempoary array;
+
+        
+
+
+
+
+    //void ConstBVHRecursive(BVHNode<LeafData> * &parentPtr,
+    //                       SplitAxis axis,
+    //                       size_t start, size_t end);
 
 }
 
