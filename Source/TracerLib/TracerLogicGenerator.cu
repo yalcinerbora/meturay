@@ -5,7 +5,10 @@
 #include "GPUPrimitiveSphere.h"
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveEmpty.h"
+
 #include "GPUAcceleratorLinear.cuh"
+#include "GPUAcceleratorBVH.cuh"
+
 #include "GPUEventEstimatorBasic.h"
 #include "GPUEventEstimatorEmpty.h"
 #include "TracerLogicI.h"
@@ -16,15 +19,27 @@
 extern template class GPUAccLinearGroup<GPUPrimitiveTriangle>;
 extern template class GPUAccLinearGroup<GPUPrimitiveSphere>;
 
+extern template class GPUAccBVHGroup<GPUPrimitiveTriangle>;
+extern template class GPUAccBVHGroup<GPUPrimitiveSphere>;
+
 extern template class GPUAccLinearBatch<GPUPrimitiveTriangle>;
 extern template class GPUAccLinearBatch<GPUPrimitiveSphere>;
+
+extern template class GPUAccBVHBatch<GPUPrimitiveTriangle>;
+extern template class GPUAccBVHBatch<GPUPrimitiveSphere>;
 
 // Typedefs for ease of read
 using GPUAccTriLinearGroup = GPUAccLinearGroup<GPUPrimitiveTriangle>;
 using GPUAccSphrLinearGroup = GPUAccLinearGroup<GPUPrimitiveSphere>;
 
+using GPUAccTriBVHGroup = GPUAccBVHGroup<GPUPrimitiveTriangle>;
+using GPUAccSphrBVHGroup = GPUAccBVHGroup<GPUPrimitiveSphere>;
+
 using GPUAccTriLinearBatch = GPUAccLinearBatch<GPUPrimitiveTriangle>;
 using GPUAccSphrLinearBatch = GPUAccLinearBatch<GPUPrimitiveSphere>;
+
+using GPUAccTriBVHBatch = GPUAccBVHBatch<GPUPrimitiveTriangle>;
+using GPUAccSphrBVHBatch = GPUAccBVHBatch<GPUPrimitiveSphere>;
 
 // Some Instantiations
 // Constructors
@@ -117,12 +132,24 @@ TracerLogicGenerator::TracerLogicGenerator()
     accelGroupGenerators.emplace(GPUAccSphrLinearGroup::TypeName(),
                                  GPUAccelGroupGen(AccelGroupConstruct<GPUAcceleratorGroupI, GPUAccSphrLinearGroup>,
                                                   DefaultDestruct<GPUAcceleratorGroupI>));
+    accelGroupGenerators.emplace(GPUAccTriBVHGroup::TypeName(),
+                                 GPUAccelGroupGen(AccelGroupConstruct<GPUAcceleratorGroupI, GPUAccTriBVHGroup>,
+                                                  DefaultDestruct<GPUAcceleratorGroupI>));
+    accelGroupGenerators.emplace(GPUAccSphrBVHGroup::TypeName(),
+                                 GPUAccelGroupGen(AccelGroupConstruct<GPUAcceleratorGroupI, GPUAccSphrBVHGroup>,
+                                                  DefaultDestruct<GPUAcceleratorGroupI>));
 
     accelBatchGenerators.emplace(GPUAccTriLinearBatch::TypeName(),
                                  GPUAccelBatchGen(AccelBatchConstruct<GPUAcceleratorBatchI, GPUAccTriLinearBatch>,
                                                   DefaultDestruct<GPUAcceleratorBatchI>));
     accelBatchGenerators.emplace(GPUAccSphrLinearBatch::TypeName(),
                                  GPUAccelBatchGen(AccelBatchConstruct<GPUAcceleratorBatchI, GPUAccSphrLinearBatch>,
+                                                  DefaultDestruct<GPUAcceleratorBatchI>));
+    accelBatchGenerators.emplace(GPUAccTriBVHBatch::TypeName(),
+                                 GPUAccelBatchGen(AccelBatchConstruct<GPUAcceleratorBatchI, GPUAccTriBVHBatch>,
+                                                  DefaultDestruct<GPUAcceleratorBatchI>));
+    accelBatchGenerators.emplace(GPUAccSphrBVHBatch::TypeName(),
+                                 GPUAccelBatchGen(AccelBatchConstruct<GPUAcceleratorBatchI, GPUAccSphrBVHBatch>,
                                                   DefaultDestruct<GPUAcceleratorBatchI>));
 
     // Base Accelerator

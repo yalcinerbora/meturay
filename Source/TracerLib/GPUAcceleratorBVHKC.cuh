@@ -5,7 +5,7 @@
 
 #include "AcceleratorDeviceFunctions.h"
 
-enum class SplitAxis { X, Y, Z };
+enum class SplitAxis { X, Y, Z, END };
 
 template<class PGroup>
 struct SpacePartition
@@ -18,7 +18,6 @@ struct SpacePartition
     protected:
     public:
         // Constructors & Destructor
-                                SpacePartition() {}
                                 SpacePartition(float splitPlane, SplitAxis axis, 
                                                PGroup::PrimitiveData pData)
             : splitPlane(splitPlane)
@@ -42,15 +41,53 @@ struct SpacePartition
 };
 
 template<class PGroup>
-struct SpaceReduce
+struct CentroidGen
 {
+     private:
+        PGroup::PrimitiveData   pData;
+       
+    protected:
+    public:
+        // Constructors & Destructor                                
+                                CentroidGen(PGroup::PrimitiveData pData)
+            : pData(pData)
+        {}
 
+        __device__ __host__
+        __forceinline__ Vector3 operator()(const PrimitiveId& id) const
+        {
+            return PGroup::CenterFunc(id, pData);
+        }
 };
 
 template<class PGroup>
-struct AABBReduce
+struct AABBGen
 {
+    private:
+        PGroup::PrimitiveData   pData;
+       
+    protected:
+    public:
+        // Constructors & Destructor                                
+                                AABBGen(PGroup::PrimitiveData pData)
+            : pData(pData)
+        {}
 
+        __device__ __host__
+        __forceinline__ AABB3f operator()(const PrimitiveId& id) const
+        {
+            return PGroup::BoxFunc(id, pData);            
+        }
+};
+
+struct AABBUnion
+{
+    __device__ __host__
+    __forceinline__ AABB3f operator()(const AABB3f& a,
+                                      const AABB3f& b) const
+    {
+        return a.Union(b);
+    }
 };
 
 // Fundamental BVH Tree Node
@@ -78,6 +115,68 @@ struct alignas(8) BVHNode
     };
     bool isLeaf;
 };
+
+__global__
+static void KCInitIndices(// O
+                          uint32_t* gIndices,
+                          PrimitiveId* gPrimIds,
+                          // Input
+                          uint32_t indexStart,
+                          uint64_t rangeStart,
+                          uint32_t primCount)
+{
+    // Grid Stride Loop
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < primCount; globalId += blockDim.x * gridDim.x)
+    {
+        uint32_t i = indexStart + globalId;
+        gIndices[globalId] = i;
+        gPrimIds[globalId] = rangeStart + i;
+    }
+}
+
+template <class PGroup>
+__global__ void KCGenCenters(// O
+                             Vector3f* gCenters,
+                             // Input
+                             const uint32_t* gIndicies,
+                             const PrimitiveId* gPrimitiveIds,
+                             //
+                             CentroidGen<PGroup> centFunc,
+                             uint32_t primCount)
+{
+    // Grid Stride Loop
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < primCount; globalId += blockDim.x * gridDim.x)
+    {
+        uint32_t id = gIndicies[globalId];
+        PrimitiveId primId = gPrimitiveIds[id];
+
+        gCenters[globalId] = centFunc(primId);
+    }
+}
+
+template <class PGroup>
+__global__ void KCGenAABBs(// O
+                           AABB3f* gAABBs,
+                           // Input
+                           const uint32_t* gIndicies,
+                           const PrimitiveId* gPrimitiveIds,
+                           //
+                           AABBGen<PGroup> aabbFunc,
+                           uint32_t primCount)
+{
+    // Grid Stride Loop
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < primCount; globalId += blockDim.x * gridDim.x)
+    {
+        uint32_t id = gIndicies[globalId];
+        PrimitiveId primId = gPrimitiveIds[id];
+
+        gAABBs[globalId] = aabbFunc(primId);
+    }
+}
+
 
 // This is fundemental BVH traversal kernel
 // It supparts partial traversal and continuation traversal(for scene tree)

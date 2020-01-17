@@ -40,6 +40,9 @@ struct EstimatorInfo
     Vector4     position1G;
     Vector4     position2B;
 
+    static EstimatorInfo CombinePrimEstimators(const EstimatorInfo& prim,
+                                               const EstimatorInfo& power);
+
     static EstimatorInfo GenAsPoint(const HitKey key, 
                                     const Vector3& flux,
                                     const Vector3& position);
@@ -71,6 +74,16 @@ struct EstimatorInfo
                                         const Vector3& center,
                                         float radius);
 };
+
+inline EstimatorInfo EstimatorInfo::CombinePrimEstimators(const EstimatorInfo& prim,
+                                                          const EstimatorInfo& power)
+{
+    EstimatorInfo result = prim;
+    result.position0R[3] = power.position0R[3];
+    result.position1G[3] = power.position1G[3];
+    result.position2B[3] = power.position2B[3];
+    return result;
+}
 
 inline EstimatorInfo EstimatorInfo::GenAsPoint(const HitKey key, 
                                                const Vector3& flux,
@@ -204,7 +217,7 @@ inline SceneError FetchLightInfoFromNode(std::vector<EstimatorInfo>& result,
     using namespace NodeNames;
     using namespace BaseConstants;
 
-    const auto fluxList = node.AccessVector3(LIGHT_FLUX, time);
+    const auto fluxList = node.AccessVector3(LIGHT_POWER, time);
     const auto matIds = node.AccessUInt(LIGHT_MATERIAL);
 
     switch(type)
@@ -318,6 +331,11 @@ inline SceneError FetchLightInfoFromNode(std::vector<EstimatorInfo>& result,
                 const HitKey key = materialKeys.at(matLookup);
                 result.push_back(EstimatorInfo::GenAsSpherical(key, flux, center, radius));
             }
+            break;
+        }
+        case LightType::PRIMITIVE:
+        {
+
             break;
         }
         default: return SceneError::UNKNOWN_LIGHT_TYPE;

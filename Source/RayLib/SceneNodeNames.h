@@ -38,7 +38,7 @@ namespace NodeNames
     static constexpr const char* CAMERA_UP = "up";
     // Light Related Names
     // Light Type Values
-    static constexpr const char* LIGHT_FLUX = "flux";
+    static constexpr const char* LIGHT_POWER = "power";
     static constexpr const char* LIGHT_POSITION = POSITION;
     static constexpr const char* LIGHT_DIRECTION = "direction";
     static constexpr const char* LIGHT_SPHR_CENTER = "center";

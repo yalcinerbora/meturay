@@ -1,12 +1,16 @@
 #pragma once
 
 #include <cub/cub.cuh>
+#include <vector>
 
 #include "GPUAcceleratorP.cuh"
 #include "DeviceMemory.h"
 #include "CudaConstants.h"
 
 #include "GPUAcceleratorBVHKC.cuh"
+
+template<class LeafData>
+using AllLeafDataCPU = std::vector<std::vector<BVHNode<LeafData>>>;
 
 template<class PGroup>
 class GPUAccBVHBatch;
@@ -18,7 +22,9 @@ class GPUAccBVHGroup final
     ACCELERATOR_TYPE_NAME("BasicBVH", PGroup);
 
     public:
-        using LeafData                      = PGroup::LeafData;               
+        using LeafData                      = PGroup::LeafData;
+
+        static constexpr const uint32_t     Threshold_CPU_GPU = 4096;
 
     private:
         // CPU Memory
@@ -26,18 +32,35 @@ class GPUAccBVHGroup final
         std::vector<HitKeyList>             primitiveMaterialKeys;
 
         std::map<uint32_t, uint32_t>        idLookup;
-
         // GPU Memory
         DeviceMemory                        memory;
         const BVHNode<LeafData>**           dBVHLists;
 
         friend class                        GPUAccBVHBatch<PGroup>;
 
+        // Recursive Construction
+        HitKey                              FindHitKey(uint32_t accIndex,
+                                                       PrimitiveId id);
 
-        //// Recursive Construction
-        //void                                ConstBVHRecursive(BVHNode<LeafData>*& parentPtr,
-        //                                                      SplitAxis axis,
-        //                                                      size_t start, size_t end);
+        void                                ConstBVHRecursive(// Output
+                                                              uint32_t& genNodeIndex,
+                                                              //
+                                                              uint32_t parentIndex,
+                                                              //Temp Memory
+                                                              void* dTemp,
+                                                              void* dReduceOut,
+                                                              // Index Data
+                                                              uint32_t* dIndicesOut,
+                                                              uint32_t* dIndicesIn,
+                                                              // Constants
+                                                              const uint64_t* dPrimIds,
+                                                              const Vector3f* dPrimCenters,
+                                                              const AABB3f* dAABBs,
+                                                              uint32_t accIndex,
+                                                              // Call Related Args
+                                                              std::vector<BVHNode<LeafData>>& nodeList,
+                                                              SplitAxis axis,
+                                                              size_t start, size_t end);
 
     public:
         // Constructors & Destructor

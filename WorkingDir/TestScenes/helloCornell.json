@@ -25,7 +25,8 @@
 			"id": 0,
 			"type": "primitive",
 			"material" : 1,
-			"primitive": 4
+			"primitive": 4,
+			"power": [1.0, 1.0, 1.0]
 		}
 	],
 
