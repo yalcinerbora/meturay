@@ -31,38 +31,34 @@ HitKey GPUAccBVHGroup<PGroup>::FindHitKey(uint32_t accIndex,
 }
 
 template <class PGroup>
-void GPUAccBVHGroup<PGroup>::ConstBVHRecursive(// Output
-                                               uint32_t& genNodeIndex,
-                                               uint32_t parentIndex,
-                                               //Temp Memory
-                                               void* dTemp,
-                                               void* dReduceOut,
-                                               // Index Data
-                                               uint32_t* dIndicesOut,
-                                               uint32_t* dIndicesIn,
-                                               // Constants
-                                               const uint64_t* dPrimIds,
-                                               const Vector3f* dPrimCenters,
-                                               const AABB3f* dAABBs,
-                                               uint32_t accIndex,
-                                               // Call Related Args
-                                               std::vector<BVHNode<LeafData>>& nodeList,
-                                               SplitAxis axis,
-                                               size_t start, size_t end)
+void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
+                                             size_t& splitLoc,
+                                             BVHNode<LeafData>& node, 
+                                             bool& swapIndexArrays,
+                                             //Temp Memory
+                                             void* dTemp,
+                                             uint32_t* dPartitionSplitOut,
+                                             // Index Data
+                                             uint32_t* dIndicesOut,
+                                             uint32_t* dIndicesIn,
+                                             // Constants
+                                             const uint64_t* dPrimIds,
+                                             const Vector3f* dPrimCenters,
+                                             const AABB3f* dAABBs,
+                                             uint32_t accIndex,
+                                             const CudaGPU& gpu,
+                                             // Call Related Args
+                                             uint32_t parentIndex,
+                                             SplitAxis axis,
+                                             size_t start, size_t end)
 {
     using PrimitiveData = typename PGroup::PrimitiveData;    
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
 
-    SplitAxis nextSplitAxis = static_cast<SplitAxis>((static_cast<int>(axis) + 1) %
-                                                     static_cast<int>(SplitAxis::END));
-    // Generate Your own Node
-    // Get your node index
-    nodeList.emplace_back();
-    BVHNode<LeafData>& myNode = nodeList.back();
-    uint32_t myIndex = static_cast<uint32_t>(nodeList.size() - 1);
-    myNode.parent = parentIndex;
+    int axisIndex = static_cast<int>(axis);
 
-    size_t splitPoint;
+    // Populate Node
+    node.parent = parentIndex;
 
     // Base Case (CPU Mode)
     if(end - start == 1)
@@ -70,62 +66,152 @@ void GPUAccBVHGroup<PGroup>::ConstBVHRecursive(// Output
         PrimitiveId id = dPrimIds[start];        
         HitKey matKey = FindHitKey(accIndex, id);
         
-        myNode.isLeaf = true;
-        myNode.leaf = PGroup::LeafFunc(matKey, id, primData);
+        node.isLeaf = true;
+        node.leaf = PGroup::LeafFunc(matKey, id, primData);
+        splitLoc = std::numeric_limits<size_t>::max();
     }
     else if(end - start <= Threshold_CPU_GPU)
     {
+        AABB3f aabbUnion = AABB3f(Zero3, Zero3);
+        float avgCenter = 0.0f;
+        // Find AABB
+        for(size_t i = start; i < end; i++)
+        {
+            uint32_t index = dIndicesIn[i];
+            AABB3f aabb = dAABBs[index];
+            float center = dPrimCenters[index][axisIndex];
+            aabbUnion.UnionSelf(aabb);
+            avgCenter = (avgCenter * (i - start) + center) / (i - start + 1);
+        }
+
+        // Partition wrt. avg center
+        int64_t splitStart = static_cast<int64_t>(start - 1);
+        int64_t splitEnd = static_cast<int64_t>(end);
+        while(splitStart < splitEnd)
+        {
+            // Hoare Like Partition
+            float leftTriAxisCenter;
+            do
+            {
+                if(splitStart >= static_cast<int64_t>(end - 1)) break;
+                splitStart++;
+
+                uint32_t index = dIndicesIn[splitStart];
+                leftTriAxisCenter = dPrimCenters[index][axisIndex];
+            }
+            while(leftTriAxisCenter >= avgCenter);
+            float rightTriAxisCenter;
+            do
+            {
+                if(splitEnd <= static_cast<int64_t>(start + 1)) break;
+                splitEnd--;
+                uint32_t index = dIndicesIn[splitEnd];
+                rightTriAxisCenter = dPrimCenters[index][axisIndex];
+            }
+            while(rightTriAxisCenter <= avgCenter);
+
+            if(splitStart < splitEnd)
+                std::swap(dIndicesIn[splitEnd], dIndicesIn[splitStart]);
+        }
+        node.aabbMin = aabbUnion.Min();
+        node.aabbMax = aabbUnion.Max();
+        splitLoc = splitStart;
+
         // CPU Mode
+        swapIndexArrays = false;
     }
     else
     {
-        // GPU Mode
+        AABB3f aabb;
+        float center;
+
+        assert(false);
+        // Find Reduced Center and AABB Union
+        size_t reductionCount = (end - start);
+        const size_t offset0 = (reductionCount + StaticThreadPerBlock1D - 1) / StaticThreadPerBlock1D;
+
+        // Calculate Temp Memory
+        AABB3f* aabbTemp0 = static_cast<AABB3f*>(dTemp);
+        AABB3f* aabbTemp1 = static_cast<AABB3f*>(dTemp) + offset0;
+        do
+        {
+            if(reductionCount == (end - start))
+                gpu.KC_X(0, (cudaStream_t)0, reductionCount,
+                         KCReduceAABBsFirst,
+                         //
+                         aabbTemp0,
+                         dAABBs,
+                         dIndicesIn + start,
+                         static_cast<uint32_t>(reductionCount));
+            else
+                gpu.KC_X(0, (cudaStream_t)0, reductionCount,
+                         KCReduceAABBs,
+                         //
+                         aabbTemp1,
+                         aabbTemp0,
+                         static_cast<uint32_t>(reductionCount));
+
+            std::swap(aabbTemp0, aabbTemp1);
+            
+            reductionCount = (reductionCount + StaticThreadPerBlock1D - 1) / StaticThreadPerBlock1D;
+        } while(reductionCount != 1);
+
+        // Copy
+        CUDA_CHECK(cudaMemcpy(&aabb, aabbTemp1, sizeof(AABB3f), cudaMemcpyDeviceToHost));
+
+        // Now do for centroid
+        reductionCount = (end - start);
+        // Calculate Temp Memory
+        float* centerTemp0 = static_cast<float*>(dTemp);
+        float* centerTemp1 = static_cast<float*>(dTemp) + offset0;
+        do
+        {
+            if(reductionCount == (end - start))
+                gpu.KC_X(0, (cudaStream_t)0, reductionCount,
+                         KCReduceCentroidsFirst,
+                         //
+                         centerTemp0,
+                         dPrimCenters,
+                         dIndicesIn + start,
+                         axis,
+                         static_cast<uint32_t>(reductionCount));
+            else
+                gpu.KC_X(0, (cudaStream_t)0, reductionCount,
+                         KCReduceCentroids,
+                         //
+                         centerTemp1,
+                         centerTemp0,
+                         static_cast<uint32_t>(reductionCount));
+
+            std::swap(centerTemp0, centerTemp1);
+
+            reductionCount = (reductionCount + StaticThreadPerBlock1D - 1) / StaticThreadPerBlock1D;
+        } while(reductionCount != 1);
+
+        // Copy
+        CUDA_CHECK(cudaMemcpy(&center, centerTemp0, sizeof(float), cudaMemcpyDeviceToHost));
+
+        // Now Do Partition
+        size_t tempMem = 0;
+        CUDA_CHECK(cub::DevicePartition::If(dTemp, tempMem,
+                                            dIndicesIn,
+                                            dIndicesOut,
+                                            dPartitionSplitOut,
+                                            static_cast<int>(end - start),
+                                            SpacePartition(center, axis, dPrimCenters)));
+
+        uint32_t partitionSplit;
+        CUDA_CHECK(cudaMemcpy(&partitionSplit, dPartitionSplitOut, sizeof(uint32_t), cudaMemcpyDeviceToHost));
+        splitLoc = partitionSplit;
+
+        // Init Nodes
+        node.aabbMin = aabb.Min();
+        node.aabbMax = aabb.Max();
+
+
+        swapIndexArrays = true;
+        gpu.WaitMainStream();
     }
-
-    // Generate Child Nodex
-    uint32_t indexLeft;
-    uint32_t indexRight;
-    // While Calling dont forget to exchange in/out
-    ConstBVHRecursive(indexLeft,
-                      //
-                      myIndex,
-                      //Temp Memory
-                      dTemp,
-                      dReduceOut,
-                      // Index Data
-                      dIndicesIn,
-                      dIndicesOut,
-                      // Constants
-                      dPrimIds,
-                      dPrimCenters,
-                      dAABBs,
-                      accIndex,
-                      // Call Related Args
-                      nodeList,
-                      nextSplitAxis,
-                      start, splitPoint);
-    ConstBVHRecursive(indexRight,
-                      //
-                      myIndex,
-                      //Temp Memory
-                      dTemp,
-                      dReduceOut,
-                       // Index Data
-                      dIndicesIn,
-                      dIndicesOut,
-                      // Constants
-                      dPrimIds,
-                      dPrimCenters,
-                      dAABBs,
-                      accIndex,
-                      // Call Related Args
-                      nodeList,
-                      nextSplitAxis,
-                      splitPoint, end);
-
-    // Attach newly found nodes
-    myNode.left = indexLeft;
-    myNode.right = indexRight;
 }
 
 template <class PGroup>
@@ -166,6 +252,12 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Map of hit keys for all ma
         idLookup.emplace(pairings.first, j);
         j++;
     }
+    // Allocate Empty Device memory Objects
+    bvhMemories.resize(j);
+    bvhListMemory = std::move(DeviceMemory(j * sizeof(BVHNode<LeafData>*)));
+    dBVHLists = static_cast<const BVHNode<LeafData>**>(bvhListMemory);
+
+
     assert(primitiveRanges.size() == primitiveMaterialKeys.size());
     assert(primitiveMaterialKeys.size() == idLookup.size());
     return SceneError::OK;
@@ -204,10 +296,14 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerators(const CudaSystem& system)
 template <class PGroup>
 void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                                   const CudaSystem& system)
-{   
+{        
     using PrimitiveData = typename PGroup::PrimitiveData;
     using PrimitiveIndexStart = std::array<uint64_t, SceneConstants::MaxPrimitivePerSurface>;
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
+
+    // Set Device
+    const CudaGPU& gpu = (*system.GPUList().begin());
+    CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
 
     uint32_t index = idLookup.at(surface);
     const PrimitiveRangeList& primRangeList = primitiveRanges[index];
@@ -234,36 +330,23 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     CUDA_CHECK(cub::DevicePartition::If(nullptr, cubIfMemSize,
                                         in, out, count,
                                         static_cast<int>(totalPrimCount),
-                                        SpacePartition<PGroup>(0, SplitAxis::X, primData)));
-    size_t cubAABBReduceMemSize = 0;
-    AABB3f* inAABB = nullptr;
-    AABB3f* outAABB = nullptr;
-    CUDA_CHECK(cub::DeviceReduce::Reduce(nullptr,
-                                         cubAABBReduceMemSize,
-                                         inAABB, outAABB,
-                                         static_cast<int>(totalPrimCount),
-                                         AABBUnion(),
-                                         AABB3f(Zero3, Zero3)));
-    size_t cubCenterSumMemSize = 0;
-    float* inCent = nullptr;
-    float* outCent = nullptr;
-    CUDA_CHECK(cub::DeviceReduce::Sum(nullptr,
-                                      cubCenterSumMemSize,
-                                      inCent, outCent,
-                                      static_cast<int>(totalPrimCount)));
+                                        SpacePartition(0, SplitAxis::X, nullptr)));
+    size_t firstSplit = (totalPrimCount + StaticThreadPerBlock1D - 1) / StaticThreadPerBlock1D;
+    size_t secondSplit = (firstSplit + StaticThreadPerBlock1D - 1) / StaticThreadPerBlock1D;
+    size_t aabbReduceMemSize = sizeof(AABB3f) * (firstSplit + secondSplit);
+    size_t centerReduceMemSize = sizeof(float) * (firstSplit + secondSplit);
 
-    // Combine Temp Memory
-    size_t tempMemSize = std::max(cubAABBReduceMemSize,
-                                  std::max(cubCenterSumMemSize,
-                                           cubIfMemSize));
-
+    // Combine Required Temp Memory
+    size_t tempMemSize = std::max(cubIfMemSize,
+                                  std::max(centerReduceMemSize,
+                                           aabbReduceMemSize));
     // GPU Memory
     size_t totalSize = totalPrimCount * (sizeof(uint64_t) +
                                          2 * sizeof(uint32_t) +
                                          sizeof(AABB3f) +
                                          sizeof(Vector3f)) +
                        tempMemSize + 
-                       sizeof(AABB3f);
+                       sizeof(uint32_t);
     DeviceMemory memory = DeviceMemory(totalSize);
     Byte* memPtr = static_cast<Byte*>(memory);
     size_t offset = 0;
@@ -279,12 +362,10 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     offset += totalPrimCount * sizeof(uint32_t);
     void* dTemp = reinterpret_cast<void*>(memPtr + offset);
     offset += tempMemSize;
-    void* dReduceOut = reinterpret_cast<void*>(memPtr + offset);
-    offset += sizeof(AABB3f);
+    uint32_t* dPartitionSplitOut = reinterpret_cast<uint32_t*>(memPtr + offset);
+    offset += sizeof(uint32_t);
     assert(offset == totalSize);
-
     // Populate Memory
-    const CudaGPU& gpu = (*system.GPUList().begin());    
     // Populate Indices
     size_t indexOffset = 0;
     for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
@@ -338,33 +419,89 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                        static_cast<uint32_t>(totalPrimCount));
 
     // CPU Memory
-    std::vector<BVHNode<LeafData>>& bvhNodes;
+    std::vector<BVHNode<LeafData>> bvhNodes;
     
-    // Now ready for recursion
-    uint32_t rootIndex;
-    ConstBVHRecursive(// Output
-                      rootIndex,
-                      //
-                      std::numeric_limits<uint32_t>::max(),
-                      //Temp Memory                      
-                      dTemp,
-                      dReduceOut,
-                      // Index Data
-                      dIds1,
-                      dIds0,
-                      // Constants
-                      dPrimIds,
-                      dPrimCenters,
-                      dPrimAABBs,
-                      index,
-                      // Call Related Args
-                      bvhNodes,
-                      SplitAxis::X,
-                      0, totalPrimCount);
+    // 
+    struct SplitWork
+    {
+        bool left;
+        bool oddOutput;
+        size_t start;
+        size_t end;        
+        SplitAxis axis;
+        uint32_t parentId;
+    };
+    std::queue<SplitWork> partitionQueue;
+    partitionQueue.emplace(SplitWork
+    {
+        false, true,
+        0, totalPrimCount, 
+        SplitAxis::X, 
+        std::numeric_limits<uint32_t>::max()
+    });
 
+    // Breath first tree generation (top-down)
+    while(!partitionQueue.empty())
+    {
+        SplitWork current = partitionQueue.front();
+        partitionQueue.pop();
+
+        bool swapIndexArrays;
+        size_t splitLoc;
+        BVHNode<LeafData> node;
+        // Do Generation
+        GenerateBVHNode(splitLoc,
+                        node,
+                        swapIndexArrays,
+                        //Temp Memory                      
+                        dTemp,
+                        dPartitionSplitOut,
+                        // Index Data
+                        (current.oddOutput) ? dIds1 : dIds0,
+                        (current.oddOutput) ? dIds0 : dIds1,
+                        // Constants
+                        dPrimIds,
+                        dPrimCenters,
+                        dPrimAABBs,
+                        index,
+                        gpu,
+                        // Call Related Args
+                        current.parentId,
+                        current.axis,
+                        current.start, current.end);
+
+        bool indexSwap = swapIndexArrays ? (!current.oddOutput) : (current.oddOutput);
+
+        bvhNodes.emplace_back(node);
+        uint32_t nextParentId = static_cast<uint32_t>(bvhNodes.size());
+        SplitAxis nextSplit = static_cast<SplitAxis>(static_cast<int>(current.axis) + 1 %
+                                                     static_cast<int>(SplitAxis::END));
+        // Update parent
+        if(current.parentId != std::numeric_limits<uint32_t>::max())
+        {
+            if(current.left) bvhNodes[current.parentId].left = nextParentId;
+            else bvhNodes[current.parentId].right = nextParentId;
+        }
+        // Check if not base case and add more generation
+        if(splitLoc != std::numeric_limits<uint32_t>::max())
+        {
+            partitionQueue.emplace(SplitWork{true, indexSwap, current.start, splitLoc, nextSplit, nextParentId});
+            partitionQueue.emplace(SplitWork{false, indexSwap, splitLoc, current.end, nextSplit, nextParentId});
+        }
+    }
+   
     // Finally Nodes are Generated now copy it to GPU Memory
-    ...
+    bvhMemories[index] = std::move(DeviceMemory(sizeof(BVHNode<LeafData>) * bvhNodes.size()));
+    CUDA_CHECK(cudaMemcpy(bvhMemories[index],
+                          bvhNodes.data(),
+                          sizeof(BVHNode<LeafData>) * bvhNodes.size(),
+                          cudaMemcpyHostToDevice));
 
+    BVHNode<LeafData>* dBVHStart = static_cast<BVHNode<LeafData>*>(bvhMemories[index]);
+    CUDA_CHECK(cudaMemcpy(dBVHLists + index,
+                          &dBVHStart,
+                          sizeof(BVHNode<LeafData>),
+                          cudaMemcpyHostToDevice));
 }
 
 template <class PGroup>
@@ -405,7 +542,12 @@ void GPUAccBVHGroup<PGroup>::DestroyAccelerators(const std::vector<uint32_t>& su
 template <class PGroup>
 size_t GPUAccBVHGroup<PGroup>::UsedGPUMemory() const
 {
-    return memory.Size();
+    size_t total = bvhListMemory.Size();
+    for(const DeviceMemory& m : bvhMemories)
+    {
+        total += m.Size();
+    }
+    return total;
 }
 
 template <class PGroup>

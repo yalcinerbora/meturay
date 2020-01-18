@@ -2,6 +2,7 @@
 
 #include <cub/cub.cuh>
 #include <vector>
+#include <queue>
 
 #include "GPUAcceleratorP.cuh"
 #include "DeviceMemory.h"
@@ -33,7 +34,8 @@ class GPUAccBVHGroup final
 
         std::map<uint32_t, uint32_t>        idLookup;
         // GPU Memory
-        DeviceMemory                        memory;
+        DeviceMemory                        bvhListMemory;
+        std::vector<DeviceMemory>           bvhMemories;
         const BVHNode<LeafData>**           dBVHLists;
 
         friend class                        GPUAccBVHBatch<PGroup>;
@@ -42,25 +44,26 @@ class GPUAccBVHGroup final
         HitKey                              FindHitKey(uint32_t accIndex,
                                                        PrimitiveId id);
 
-        void                                ConstBVHRecursive(// Output
-                                                              uint32_t& genNodeIndex,
-                                                              //
-                                                              uint32_t parentIndex,
-                                                              //Temp Memory
-                                                              void* dTemp,
-                                                              void* dReduceOut,
-                                                              // Index Data
-                                                              uint32_t* dIndicesOut,
-                                                              uint32_t* dIndicesIn,
-                                                              // Constants
-                                                              const uint64_t* dPrimIds,
-                                                              const Vector3f* dPrimCenters,
-                                                              const AABB3f* dAABBs,
-                                                              uint32_t accIndex,
-                                                              // Call Related Args
-                                                              std::vector<BVHNode<LeafData>>& nodeList,
-                                                              SplitAxis axis,
-                                                              size_t start, size_t end);
+        void                                GenerateBVHNode(// Output
+                                                            size_t& splitLoc,
+                                                            BVHNode<LeafData>& node,
+                                                            bool& swapIndexArrays,
+                                                            //Temp Memory
+                                                            void* dTemp,
+                                                            uint32_t* dPartitionSplitOut,
+                                                            // Index Data
+                                                            uint32_t* dIndicesOut,
+                                                            uint32_t* dIndicesIn,
+                                                            // Constants
+                                                            const uint64_t* dPrimIds,
+                                                            const Vector3f* dPrimCenters,
+                                                            const AABB3f* dAABBs,
+                                                            uint32_t accIndex,
+                                                            const CudaGPU& gpu,
+                                                            // Call Related Args
+                                                            uint32_t parentIndex,
+                                                            SplitAxis axis,
+                                                            size_t start, size_t end);
 
     public:
         // Constructors & Destructor

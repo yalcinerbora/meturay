@@ -7,36 +7,30 @@
 
 enum class SplitAxis { X, Y, Z, END };
 
-template<class PGroup>
 struct SpacePartition
 {
     private:
         float                   splitPlane;
         SplitAxis               axis;
-        PGroup::PrimitiveData   pData;
+        const Vector3f*         dPrimCenters;
        
     protected:
     public:
         // Constructors & Destructor
                                 SpacePartition(float splitPlane, SplitAxis axis, 
-                                               PGroup::PrimitiveData pData)
+                                               const Vector3f* dPCenters)
             : splitPlane(splitPlane)
             , axis(axis)
-            , pData(pData)
+            , dPrimCenters(dPCenters)
         {}
 
         __device__ __host__
-        __forceinline__ bool operator()(const uint64_t& id) const
+        __forceinline__ bool operator()(const uint32_t& id) const
         {
+            int axisIndex = static_cast<int>(axis);
             // Get center location of tri
-            Vector3 center = PGroup::CenterFunc(id, pData);
-            if(axis == SplitAxis::X)
-                return center[0] < splitPlane;
-            else if(axis == SplitAxis::Y)
-                return center[1] < splitPlane;
-            else if(axis == SplitAxis::Z)
-                return center[2] < splitPlane;
-            else return false;
+            float center = dPrimCenters[id][axisIndex];
+            return center < splitPlane;
         }
 };
 
@@ -115,6 +109,94 @@ struct alignas(8) BVHNode
     };
     bool isLeaf;
 };
+
+// Reductions
+__global__
+static void KCReduceAABBs(AABB3f* gAABBsReduced,
+                          //
+                          const AABB3f* gAABBs,
+                          uint32_t count)
+{
+    // Specialize BlockReduce for  256 Threads and flot
+    typedef cub::BlockReduce<AABB3f, StaticThreadPerBlock1D> BlockReduce;
+    // Shared Mem
+    __shared__ typename BlockReduce::TempStorage tempStorage;
+
+    uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+    AABB3f val = (globalId < count) ? gAABBs[globalId]  : AABB3f(Zero3, Zero3);
+
+    AABB3f valReduced = BlockReduce(tempStorage).Reduce(val, AABBUnion());
+
+    // Write
+    if(threadIdx.x == 0) gAABBsReduced[blockIdx.x] = valReduced;
+}
+
+__global__
+static void KCReduceAABBsFirst(AABB3f* gAABBsReduced,
+                          //
+                          const AABB3f* gAABBs,
+                          const uint32_t* gIndices,
+                          uint32_t count)
+{
+    // Specialize BlockReduce for  256 Threads and flot
+    typedef cub::BlockReduce<AABB3f, StaticThreadPerBlock1D> BlockReduce;
+    // Shared Mem
+    __shared__ typename BlockReduce::TempStorage tempStorage;
+    
+    uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+    AABB3f val = (globalId < count) ? gAABBs[gIndices[globalId]] : AABB3f(Zero3, Zero3);
+
+    AABB3f valReduced = BlockReduce(tempStorage).Reduce(val, AABBUnion());
+
+    // Write
+    if(threadIdx.x == 0) gAABBsReduced[blockIdx.x] = valReduced;
+}
+
+__global__
+static void KCReduceCentroids(float* gCentersReduced,
+                              //
+                              const float* gCenters,
+                              uint32_t count)
+{
+    // Specialize BlockReduce for  256 Threads and flot
+    typedef cub::BlockReduce<float, StaticThreadPerBlock1D> BlockReduce;
+     // Shared Mem
+    __shared__ typename BlockReduce::TempStorage tempStorage;
+
+    uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+    float val = (globalId < count) ? gCenters[globalId] : 0.0f;
+
+    float valReduced = BlockReduce(tempStorage).Sum(val);
+
+    // Write
+    if(threadIdx.x == 0) gCentersReduced[blockIdx.x] = valReduced;
+}
+
+__global__
+static void KCReduceCentroidsFirst(float* gCentersReduced,
+                              //
+                              const Vector3f* gCenters,
+                              const uint32_t* gIndices,
+                              SplitAxis axis,
+                              uint32_t count)
+{
+    // Specialize BlockReduce for  256 Threads and flot
+    typedef cub::BlockReduce<float, StaticThreadPerBlock1D> BlockReduce;
+    // Shared Mem
+    __shared__ typename BlockReduce::TempStorage tempStorage;
+
+    int axisIndex = static_cast<int>(axis);
+
+    uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    float val = (globalId < count) ? gCenters[gIndices[globalId]][axisIndex] : 0.0f;
+
+    float valReduced = BlockReduce(tempStorage).Sum(val);
+
+    // Write
+    if(threadIdx.x == 0) gCentersReduced[blockIdx.x] = valReduced;
+
+}
 
 __global__
 static void KCInitIndices(// O
