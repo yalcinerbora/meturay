@@ -25,12 +25,13 @@ class GPUAccBVHGroup final
     public:
         using LeafData                      = PGroup::LeafData;
 
-        static constexpr const uint32_t     Threshold_CPU_GPU = 4096;
+        static constexpr const uint32_t     Threshold_CPU_GPU = 512;
 
     private:
         // CPU Memory
         std::vector<PrimitiveRangeList>     primitiveRanges;
         std::vector<HitKeyList>             primitiveMaterialKeys;
+        std::vector<uint8_t>                bvhDepths;
 
         std::map<uint32_t, uint32_t>        idLookup;
         // GPU Memory
@@ -41,18 +42,20 @@ class GPUAccBVHGroup final
         friend class                        GPUAccBVHBatch<PGroup>;
 
         // Recursive Construction
+        static SplitAxis                    DetermineNextSplit(SplitAxis split,
+                                                               const AABB3f& aabb);
         HitKey                              FindHitKey(uint32_t accIndex,
                                                        PrimitiveId id);
 
         void                                GenerateBVHNode(// Output
                                                             size_t& splitLoc,
                                                             BVHNode<LeafData>& node,
-                                                            bool& swapIndexArrays,
                                                             //Temp Memory
                                                             void* dTemp,
+                                                            size_t tempMemSize,
                                                             uint32_t* dPartitionSplitOut,
-                                                            // Index Data
-                                                            uint32_t* dIndicesOut,
+                                                            uint32_t* dIndicesTemp,
+                                                            // Index Data                                             
                                                             uint32_t* dIndicesIn,
                                                             // Constants
                                                             const uint64_t* dPrimIds,

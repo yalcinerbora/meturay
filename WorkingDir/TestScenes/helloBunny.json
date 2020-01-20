@@ -1,0 +1,106 @@
+{
+	"Cameras": [
+    {
+		"apertureSize": 1.0,
+		"focusDistance": 21,
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"gaze": [0.0, 0.48, 0.0],
+		"planes": [0.1, 10.0],
+		"position": [0.0, 0.48, 1.4],
+		"up": [0.0, 1.0, 0.0]
+    }],
+
+	"BaseAccelerator": "Linear",
+	"BaseBoundaryMaterial": 0,
+
+	"Tracer": "Test",
+	"Estimator": "Basic",
+
+	"Lights": [
+		// Light Information for event estimation
+		{
+			"id": 0,
+			"type": "rectangular",
+			"material" : 1,			
+			"power": [1.0, 1.0, 1.0],
+			// Value
+			"position": [0, 0, 0],
+			"v0" : [0, 0, 0],
+			"v1" : [0, 0, 0]
+		}
+	],
+
+	"Transforms":[
+	{
+		"id": 0,
+		"type": "matrix4x4",
+		"data": [ 1, 0, 0, 0,
+			      0, 1, 0, 0,
+			      0, 0, 1, 0,
+			      0, 0, 0, 1]
+	}],
+
+	"Materials":[
+	{
+		// General Boundary Material
+		"id": 0,
+        "type": "LightBoundary",
+		"radiance" : [0, 0, 0]
+    },
+    {
+		// Light Boundary Material
+		"id": 1,
+		"type": "LightBoundary",		
+		"radiance" : [330, 330, 330]
+		//"radiance" : [1.1, 1.1, 1.1]
+    },
+	{
+		// Green Diffuse Mat
+		"id": 2,
+		"type": "BasicPathTrace",
+		"albedo" : [0.0745, 0.9137, 0.4117]
+    },
+    {
+		// Gray Diffuse Mat
+		"id": 3,
+		"type": "BasicPathTrace",
+		"albedo" : [0.5, 0.5, 0.5]
+    }],
+
+	"Primitives":[
+	{
+		// Plane Floor
+		"id": 0,
+		"type": "Triangle",
+        "name": "../Surfaces/floor_plane.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+		// Object Reading (inner index i top down order of meshes)
+		"id": 1,
+		"type": "Triangle",
+        "name": "../Surfaces/stan_bunny.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	}],
+
+	"Surfaces": [
+	{
+		// Sphere Back
+		"transform": 0,
+		"accelerator": "Linear",
+		"material": 3,
+        "primitive": 0
+	},
+	{
+		// Sphere Front
+		"transform": 0,
+		"accelerator": "BasicBVH",
+		"material": 2,
+        "primitive": 1
+	}]
+}

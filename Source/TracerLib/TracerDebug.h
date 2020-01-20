@@ -7,6 +7,7 @@
 
 #include "RayLib/Log.h"
 #include "RayLib/HitStructs.h"
+#include "RayLib/AABB.h"
 
 #include "RayStructs.h"
 #include "CudaConstants.h"
@@ -51,6 +52,7 @@ extern std::ostream& operator<<(std::ostream& stream, const Vector2ul&);
 extern std::ostream& operator<<(std::ostream& stream, const Vector2f&);
 extern std::ostream& operator<<(std::ostream& stream, const Vector3f&);
 extern std::ostream& operator<<(std::ostream& stream, const Vector4f&);
+extern std::ostream& operator<<(std::ostream& stream, const AABB3f&);
 extern std::ostream& operator<<(std::ostream& stream, const DefaultLeaf&);
 
 template<class T>
@@ -74,6 +76,8 @@ void Debug::DumpMemToStream(std::ostream& s,
                             const T* mPtr, size_t count,
                             const char* seperator, bool hex)
 {
+    CUDA_CHECK(cudaDeviceSynchronize());
+
     if(hex) s << std::hex;
     for(size_t i = 0; i < count; i++)
     {

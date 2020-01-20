@@ -80,6 +80,16 @@ std::ostream& operator<<(std::ostream& stream, const Vector4f& v)
     return stream;
 }
 
+extern std::ostream& operator<<(std::ostream& stream, const AABB3f& aabb)
+{
+    stream << std::setw(0)
+        << "{("
+        << aabb.Min() << "), ("
+        << aabb.Max()
+        << ")}";        
+    return stream;
+}
+
 std::ostream& operator<<(std::ostream& stream, const RayGMem& r)
 {
     stream << std::setw(0)

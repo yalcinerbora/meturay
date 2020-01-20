@@ -101,12 +101,11 @@ struct alignas(8) BVHNode
             uint32_t left;
             Vector3 aabbMax;
             uint32_t right;
-            // 1 Word
-            uint32_t parent;
         };
         // leaf part
         LeafStruct leaf;
     };
+    uint32_t parent;
     bool isLeaf;
 };
 
@@ -117,16 +116,17 @@ static void KCReduceAABBs(AABB3f* gAABBsReduced,
                           const AABB3f* gAABBs,
                           uint32_t count)
 {
+    static const AABB3 InitialAABB = NegativeAABB3;
+
     // Specialize BlockReduce for  256 Threads and flot
     typedef cub::BlockReduce<AABB3f, StaticThreadPerBlock1D> BlockReduce;
     // Shared Mem
     __shared__ typename BlockReduce::TempStorage tempStorage;
 
     uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-    AABB3f val = (globalId < count) ? gAABBs[globalId]  : AABB3f(Zero3, Zero3);
+    AABB3f val = (globalId < count) ? gAABBs[globalId] : InitialAABB;
 
     AABB3f valReduced = BlockReduce(tempStorage).Reduce(val, AABBUnion());
-
     // Write
     if(threadIdx.x == 0) gAABBsReduced[blockIdx.x] = valReduced;
 }
@@ -138,16 +138,17 @@ static void KCReduceAABBsFirst(AABB3f* gAABBsReduced,
                           const uint32_t* gIndices,
                           uint32_t count)
 {
+    static const AABB3 InitialAABB = NegativeAABB3;
+
     // Specialize BlockReduce for  256 Threads and flot
     typedef cub::BlockReduce<AABB3f, StaticThreadPerBlock1D> BlockReduce;
     // Shared Mem
     __shared__ typename BlockReduce::TempStorage tempStorage;
     
     uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-    AABB3f val = (globalId < count) ? gAABBs[gIndices[globalId]] : AABB3f(Zero3, Zero3);
+    AABB3f val = (globalId < count) ? gAABBs[gIndices[globalId]] : InitialAABB;
 
     AABB3f valReduced = BlockReduce(tempStorage).Reduce(val, AABBUnion());
-
     // Write
     if(threadIdx.x == 0) gAABBsReduced[blockIdx.x] = valReduced;
 }
@@ -329,27 +330,9 @@ __global__ void KCIntersectBVH(// O
         uint32_t depth = sizeof(uint64_t) * 8;
         BVHNode<LeafData> currentNode = gBVH[0];
         for(uint64_t list = 0; list < UINT64_MAX;)
-        {
-            // Fast pop if both of the children is carries current node is zero
-            // (This means that bit is carried)
-            if(IsAlreadyTraversed(list, depth))
-            {
-                currentNode = gBVH[currentNode.parent];
-                Pop(list, depth);
-            }
-            // Check if we already traversed left child
-            // If child bit is on this means lower left child is traversed
-            else if(IsAlreadyTraversed(list, depth - 1) &&
-                    currentNode.right != BVHNode<LeafData>::NULL_NODE)
-            {
-                // Go to right child
-                currentNode = gBVH[currentNode.right];
-                depth--;
-            }
-            // Now this means that we entered to this node first time
-            // Check if this node is leaf or internal
+        {            
             // Check if it is leaf node
-            else if(currentNode.isLeaf)
+            if(currentNode.isLeaf)
             {
                 HitResult result = PGroup::HitFunc(// Output                                            
                                                    materialKey,
@@ -364,9 +347,31 @@ __global__ void KCIntersectBVH(// O
                 if(result[0]) break;
 
                 // Continue
-                Pop(list, depth);
+                currentNode = gBVH[currentNode.parent];
+                Pop(list, depth);                
             }
-            // Not leaf so check AABB
+            // Fast pop if both of the children is carries current node is zero
+            // (This means that bit is carried)
+            else if(IsAlreadyTraversed(list, depth))
+            {
+                currentNode = gBVH[currentNode.parent];
+                //Pop(list, depth);
+            }
+            // Check if we already traversed left child
+            // If child bit is on this means lower left child is traversed
+            else if(IsAlreadyTraversed(list, depth - 1))
+            {
+                // Go to right child þf avail
+                if(currentNode.right != BVHNode<LeafData>::NULL_NODE)
+                    currentNode = gBVH[currentNode.right];
+                else
+                    currentNode = gBVH[currentNode.parent];
+
+                depth--;
+                MarkAsTraversed(list, depth);                
+            }
+            // Now this means that we entered to this node first time            
+            // So check AABB
             else if(ray.ray.IntersectsAABB(currentNode.aabbMin, currentNode.aabbMax))
             {
                 // Go left if avail
@@ -388,7 +393,7 @@ __global__ void KCIntersectBVH(// O
                 else
                 {
                     // This should not happen
-                    // since we have "isNode" boolean
+                    // since we have "isLeaf" boolean
                     assert(false);
 
                     // Well in order to be correctly mark this node traversed also
