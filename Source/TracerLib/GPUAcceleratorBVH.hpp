@@ -486,6 +486,8 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         std::numeric_limits<uint32_t>::max(),
         0
     });
+    
+    gpu.WaitMainStream();
 
     // Breath first tree generation (top-down)
     uint8_t maxDepth = 0;
@@ -539,6 +541,7 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     // Finally Nodes are Generated now copy it to GPU Memory
     bvhMemories[index] = std::move(DeviceMemory(sizeof(BVHNode<LeafData>) * bvhNodes.size()));
     bvhDepths[index] = maxDepth;
+    assert(maxDepth <= MAX_DEPTH);
 
     Debug::DumpMemToFile("BVHNodes", bvhNodes.data(), bvhNodes.size());
     

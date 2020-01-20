@@ -7,6 +7,9 @@
 
 enum class SplitAxis { X, Y, Z, END };
 
+// Depth First Search over BVH
+static constexpr const uint8_t MAX_DEPTH = 64;
+
 struct SpacePartition
 {
     private:
@@ -285,15 +288,15 @@ __global__ void KCIntersectBVH(// O
     using LeafData = typename PGroup::LeafData;     // LeafStruct is defined by primitive
 
     // Convenience Functions
-    auto IsAlreadyTraversed = [](uint64_t list, uint32_t depth) -> bool
+    auto IsAlreadyTraversed = [](uint64_t list, uint8_t depth) -> bool
     {
         return ((list >> depth) & 0x1) == 1;
     };
-    auto MarkAsTraversed = [](uint64_t & list, uint32_t depth) -> void
+    auto MarkAsTraversed = [](uint64_t & list, uint8_t depth) -> void
     {
         list += (1 << depth);
     };
-    auto Pop = [&MarkAsTraversed](uint64_t& list, uint32_t& depth) -> void
+    auto Pop = [&MarkAsTraversed](uint64_t& list, uint8_t& depth) -> void
     {
         MarkAsTraversed(list, depth);
         depth++;
@@ -309,7 +312,7 @@ __global__ void KCIntersectBVH(// O
         
         // Load Ray/Hit to Register
         RayReg ray(gRays, id);
-
+        
         // Key is the index of the inner BVH
         const BVHNode<LeafData>* gBVH = gBVHList[accId];
 
@@ -326,13 +329,16 @@ __global__ void KCIntersectBVH(// O
         PrimitiveId primitiveId;
         HitData hit;
 
-        // Depth First Search over BVH
-        uint32_t depth = sizeof(uint64_t) * 8;
-        BVHNode<LeafData> currentNode = gBVH[0];
-        for(uint64_t list = 0; list < UINT64_MAX;)
-        {            
+        uint64_t list = 0;
+        uint8_t depth = MAX_DEPTH;
+        const BVHNode<LeafData>* currentNode = gBVH;
+        while(depth <= MAX_DEPTH)
+        {    
+            if(globalId == 144) 
+                printf("%u     depth %u list %llu\n", globalId, depth, list);
+
             // Check if it is leaf node
-            if(currentNode.isLeaf)
+            if(currentNode->isLeaf)
             {
                 HitResult result = PGroup::HitFunc(// Output                                            
                                                    materialKey,
@@ -341,20 +347,20 @@ __global__ void KCIntersectBVH(// O
                                                    // I-O
                                                    ray,
                                                    // Input
-                                                   currentNode.leaf,
+                                                   currentNode->leaf,
                                                    primData);
                 hitModified |= result[1];
                 if(result[0]) break;
 
                 // Continue
-                currentNode = gBVH[currentNode.parent];
-                Pop(list, depth);                
+                currentNode = gBVH + currentNode->parent;
+                Pop(list, depth);
             }
             // Fast pop if both of the children is carries current node is zero
             // (This means that bit is carried)
             else if(IsAlreadyTraversed(list, depth))
             {
-                currentNode = gBVH[currentNode.parent];
+                currentNode = gBVH + currentNode->parent;
                 //Pop(list, depth);
             }
             // Check if we already traversed left child
@@ -362,32 +368,36 @@ __global__ void KCIntersectBVH(// O
             else if(IsAlreadyTraversed(list, depth - 1))
             {
                 // Go to right child þf avail
-                if(currentNode.right != BVHNode<LeafData>::NULL_NODE)
-                    currentNode = gBVH[currentNode.right];
+                if(currentNode->right != BVHNode<LeafData>::NULL_NODE)
+                    currentNode = gBVH + currentNode->right;
                 else
-                    currentNode = gBVH[currentNode.parent];
+                    currentNode = gBVH + currentNode->parent;
 
                 depth--;
-                MarkAsTraversed(list, depth);                
+                MarkAsTraversed(list, depth);
             }
             // Now this means that we entered to this node first time            
             // So check AABB
-            else if(ray.ray.IntersectsAABB(currentNode.aabbMin, currentNode.aabbMax))
+            else if(ray.ray.IntersectsAABB(currentNode->aabbMin, currentNode->aabbMax,
+                                           Vector2f(ray.tMin, ray.tMax)))
             {
+                if(globalId == 144)
+                    printf("INTERSECTED %u     depth %u list %llu\n", globalId, depth, list);
+
                 // Go left if avail
-                if(currentNode.left != BVHNode<LeafData>::NULL_NODE)
+                if(currentNode->left != BVHNode<LeafData>::NULL_NODE)
                 {
-                    currentNode = gBVH[currentNode.left];
+                    currentNode = gBVH + currentNode->left;
                     depth--;
                 }
                 // If not avail and since we are first time on this node
                 // Try to go right
-                else if(currentNode.right != BVHNode<LeafData>::NULL_NODE)
+                else if(currentNode->right != BVHNode<LeafData>::NULL_NODE)
                 {
                     // In this case dont forget to mark left child as traversed
                     MarkAsTraversed(list, depth - 1);
 
-                    currentNode = gBVH[currentNode.right];
+                    currentNode = gBVH + currentNode->right;
                     depth--;
                 }
                 else
@@ -406,8 +416,11 @@ __global__ void KCIntersectBVH(// O
             else
             {
                 // Skip Leafs
-                currentNode = gBVH[currentNode.parent];
+                currentNode = gBVH + currentNode->parent;
                 Pop(list, depth);
+
+                if(globalId == 144)
+                    printf("NOT INTERSECTED %u     depth %u list %llu\n", globalId, depth, list);
             }
         }
         // Write Updated Stuff
