@@ -1,5 +1,22 @@
 
 #include "TracerDebug.h"
+#include "DefaultLeaf.h"
+
+//template<class T>
+inline std::ostream& operator<<(std::ostream& stream, const BVHNode<DefaultLeaf>& v)
+{
+    stream << std::setw(0);
+    if(v.isLeaf)
+    {        
+        stream << "leaf - " << v.leaf.primitiveId << "  " << v.leaf.matId;
+    }
+    else
+    {
+        stream << "[ " << v.left << ", " << v.right << ", " << v.parent << " ]";
+        stream << AABB3(v.aabbMin, v.aabbMax);
+    }
+    return stream;
+}
 
 template <class PGroup>
 GPUAccBVHGroup<PGroup>::GPUAccBVHGroup(const GPUPrimitiveGroupI& pGroup,
@@ -321,22 +338,6 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerators(const CudaSystem& system)
     {
         ConstructAccelerator(id.first, system);
     }
-}
-
-template<class T>
-std::ostream& operator<<(std::ostream& stream, const BVHNode<T>& v)
-{
-    stream << std::setw(0);
-    if(v.isLeaf)
-    {
-        stream << "leaf";
-    }
-    else
-    {
-        stream << "[ " << v.left << ", " << v.right << ", " << v.parent << " ]";
-        stream << AABB3(v.aabbMin, v.aabbMax);
-    }
-    return stream;
 }
 
 template <class PGroup>
