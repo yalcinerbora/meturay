@@ -71,7 +71,6 @@ SceneError GPUEventEstimator<EstimatorD, EstF, TermF>::Initialize(const NodeList
                                                                   const std::vector<const GPUPrimitiveGroupI*>& prims,
                                                                   double time)
 {
-
     SceneError err = SceneError::OK;
     for(const auto& nodePtr : lightList)
     {
@@ -90,14 +89,15 @@ SceneError GPUEventEstimator<EstimatorD, EstF, TermF>::Initialize(const NodeList
         { 
             const UIntList primIds = node.AccessUInt(NodeNames::LIGHT_PRIMITIVE);
             const UIntList matIds = node.AccessUInt(NodeNames::LIGHT_MATERIAL);
+            const Vector3List powers = node.AccessVector3(NodeNames::LIGHT_POWER, time);
             assert(primIds.size() == matIds.size());
 
             // Fetch all
-            std::vector<EstimatorInfo> primInfo;
             for(size_t i = 0; i < primIds.size(); i++)
             {
                 uint32_t primId = primIds[i];
                 uint32_t matId = matIds[i];
+                Vector3 power = powers[i];
 
                 const auto FindPrimFunc = [primId](const GPUPrimitiveGroupI* pGroup) -> bool
                 {
@@ -112,15 +112,12 @@ SceneError GPUEventEstimator<EstimatorD, EstF, TermF>::Initialize(const NodeList
                 const auto matLookup = std::make_pair((*it)->Type(), matId);
                 HitKey key = materialKeys.at(matLookup);
 
-                if((err = (*it)->GenerateEstimatorInfo(primInfo, key, primId)) != SceneError::OK)
+                if((err = (*it)->GenerateEstimatorInfo(newInfo, power, key, primId)) != SceneError::OK)
                     return err;
 
-                // Combine
-                for(size_t i = 0; i < newInfo.size(); i++)
-                    newInfo[i] = EstimatorInfo::CombinePrimEstimators(primInfo[i], newInfo[i]);
             }
         }
-        else lightInfo.insert(lightInfo.end(), newInfo.begin(), newInfo.end());
+        lightInfo.insert(lightInfo.end(), newInfo.begin(), newInfo.end());
     }
     return SceneError::OK;
 }

@@ -28,6 +28,7 @@ bool GPUPrimitiveEmpty::HasPrimitive(uint32_t surfaceDataId) const
 }
 
 SceneError GPUPrimitiveEmpty::GenerateEstimatorInfo(std::vector<EstimatorInfo>&,
+                                                    const Vector3& power,
                                                     HitKey key,
                                                     uint32_t surfaceDataId) const
 {

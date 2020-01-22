@@ -345,6 +345,7 @@ bool GPUPrimitiveTriangle::HasPrimitive(uint32_t surfaceDataId) const
 }
 
 SceneError GPUPrimitiveTriangle::GenerateEstimatorInfo(std::vector<EstimatorInfo>& result,
+                                                       const Vector3& power,
                                                        HitKey key,
                                                        uint32_t id) const
 {
@@ -356,7 +357,7 @@ SceneError GPUPrimitiveTriangle::GenerateEstimatorInfo(std::vector<EstimatorInfo
         Vector3 pos2 = dData.positionsU[dData.indexList[i * 3 + 2]];
 
         result.push_back(EstimatorInfo::GenAsTriangular(key,
-                                                        Vector3(1.0f),
+                                                        power,
                                                         pos0,
                                                         pos1,
                                                         pos2));

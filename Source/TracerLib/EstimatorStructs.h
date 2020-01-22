@@ -40,9 +40,7 @@ struct EstimatorInfo
     Vector4     position1G;
     Vector4     position2B;
 
-    static EstimatorInfo CombinePrimEstimators(const EstimatorInfo& prim,
-                                               const EstimatorInfo& power);
-
+    static EstimatorInfo GenOnlyPower(const Vector3& flux);
     static EstimatorInfo GenAsPoint(const HitKey key, 
                                     const Vector3& flux,
                                     const Vector3& position);
@@ -75,14 +73,13 @@ struct EstimatorInfo
                                         float radius);
 };
 
-inline EstimatorInfo EstimatorInfo::CombinePrimEstimators(const EstimatorInfo& prim,
-                                                          const EstimatorInfo& power)
+inline EstimatorInfo EstimatorInfo::GenOnlyPower(const Vector3& flux)
 {
-    EstimatorInfo result = prim;
-    result.position0R[3] = power.position0R[3];
-    result.position1G[3] = power.position1G[3];
-    result.position2B[3] = power.position2B[3];
-    return result;
+    EstimatorInfo r;
+    r.position0R[3] = flux[0];
+    r.position1G[3] = flux[1];
+    r.position2B[3] = flux[2];
+    return r;
 }
 
 inline EstimatorInfo EstimatorInfo::GenAsPoint(const HitKey key, 
@@ -226,7 +223,7 @@ inline SceneError FetchLightInfoFromNode(std::vector<EstimatorInfo>& result,
         case LightType::POINT:
         {
             const auto posList = node.AccessVector3(LIGHT_POSITION, time);
-            for(size_t i = 0; i < posList.size(); i++)
+            for(size_t i = 0; i < fluxList.size(); i++)
             {
                 const Vector3& pos = posList[i];
                 const Vector3& flux = fluxList[i];
@@ -239,7 +236,7 @@ inline SceneError FetchLightInfoFromNode(std::vector<EstimatorInfo>& result,
         case LightType::DIRECTIONAL:
         {
             const auto dirList = node.AccessVector3(LIGHT_DIRECTION, time);
-            for(size_t i = 0; i < dirList.size(); i++)
+            for(size_t i = 0; i < fluxList.size(); i++)
             {
                 const Vector3& dir = dirList[i];
                 const Vector3& flux = fluxList[i];
@@ -254,7 +251,7 @@ inline SceneError FetchLightInfoFromNode(std::vector<EstimatorInfo>& result,
             const auto posList = node.AccessVector3(LIGHT_POSITION, time);
             const auto dirList = node.AccessVector3(LIGHT_DIRECTION, time);
             const auto angleList = node.AccessVector2(LIGHT_CONE_APERTURE, time);
-            for(size_t i = 0; i < posList.size(); i++)
+            for(size_t i = 0; i < fluxList.size(); i++)
             {
                 const Vector3& pos = posList[i];
                 const Vector3& dir = dirList[i];
@@ -272,7 +269,7 @@ inline SceneError FetchLightInfoFromNode(std::vector<EstimatorInfo>& result,
             const auto posList = node.AccessVector3(LIGHT_POSITION, time);
             const auto v0List = node.AccessVector3(LIGHT_RECT_V0, time);
             const auto v1List = node.AccessVector3(LIGHT_RECT_V1, time);
-            for(size_t i = 0; i < posList.size(); i++)
+            for(size_t i = 0; i < fluxList.size(); i++)
             {
                 const Vector3& pos = posList[i];
                 const Vector3& v0 = v0List[i];
@@ -288,7 +285,7 @@ inline SceneError FetchLightInfoFromNode(std::vector<EstimatorInfo>& result,
         {
             const auto matIds = node.AccessUInt(LIGHT_MATERIAL);
             const auto posList = node.AccessVector3(LIGHT_POSITION, time);
-            for(size_t i = 0; i < posList.size(); i++)
+            for(size_t i = 0; i < fluxList.size(); i++)
             {
                 const Vector3& pos0 = posList[i * 3 + 0];
                 const Vector3& pos1 = posList[i * 3 + 1];
@@ -306,7 +303,7 @@ inline SceneError FetchLightInfoFromNode(std::vector<EstimatorInfo>& result,
             const auto dirList = node.AccessVector3(LIGHT_DIRECTION, time);
             const auto centerList = node.AccessVector3(LIGHT_DISK_CENTER, time);
             const auto radiusList = node.AccessFloat(LIGHT_DISK_RADIUS, time);
-            for(size_t i = 0; i < centerList.size(); i++)
+            for(size_t i = 0; i < fluxList.size(); i++)
             {
                 const Vector3& center = centerList[i];
                 const Vector3& dir = dirList[i];
@@ -322,7 +319,7 @@ inline SceneError FetchLightInfoFromNode(std::vector<EstimatorInfo>& result,
         {
             const auto centerList = node.AccessVector3(LIGHT_SPHR_CENTER, time);
             const auto radiusList = node.AccessFloat(LIGHT_SPHR_RADIUS, time);
-            for(size_t i = 0; i < centerList.size(); i++)
+            for(size_t i = 0; i < fluxList.size(); i++)
             {
                 const Vector3& center = centerList[i];
                 const float& radius = radiusList[i];
@@ -333,11 +330,7 @@ inline SceneError FetchLightInfoFromNode(std::vector<EstimatorInfo>& result,
             }
             break;
         }
-        case LightType::PRIMITIVE:
-        {
-
-            break;
-        }
+        case LightType::PRIMITIVE: { break; }
         default: return SceneError::UNKNOWN_LIGHT_TYPE;
     }
     return SceneError::OK;

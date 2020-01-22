@@ -49,6 +49,7 @@ class GPUPrimitiveGroupI
         // Provides data to Event Estimator
         virtual bool                HasPrimitive(uint32_t surfaceDataId) const = 0;
         virtual SceneError          GenerateEstimatorInfo(std::vector<EstimatorInfo>&,
+                                                          const Vector3& power,
                                                           HitKey key,
                                                           uint32_t surfaceDataId) const = 0;
 

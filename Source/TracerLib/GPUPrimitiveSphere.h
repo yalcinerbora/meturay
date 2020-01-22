@@ -140,6 +140,7 @@ class GPUPrimitiveSphere final
         // Provides data to Event Estimator
         bool                                    HasPrimitive(uint32_t surfaceDataId) const override;
         SceneError                              GenerateEstimatorInfo(std::vector<EstimatorInfo>&,
+                                                                      const Vector3& power,
                                                                       HitKey key,
                                                                       uint32_t id) const override;
         // Access primitive range from Id

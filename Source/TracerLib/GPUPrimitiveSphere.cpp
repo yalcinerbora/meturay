@@ -258,6 +258,7 @@ bool GPUPrimitiveSphere::HasPrimitive(uint32_t surfaceDataId) const
 }
 
 SceneError GPUPrimitiveSphere::GenerateEstimatorInfo(std::vector<EstimatorInfo>& result,
+                                                     const Vector3& power,
                                                      HitKey key,
                                                      uint32_t id) const
 {
@@ -267,9 +268,9 @@ SceneError GPUPrimitiveSphere::GenerateEstimatorInfo(std::vector<EstimatorInfo>&
         Vector4 centerRad = dData.centerRadius[i];
         Vector3 center = centerRad;
         float radius = centerRad[3];        
-        result.push_back(EstimatorInfo::GenAsSpherical(key, 
-                                                       Vector3(1.0f), 
-                                                       center, 
+        result.push_back(EstimatorInfo::GenAsSpherical(key,
+                                                       power,
+                                                       center,
                                                        radius));
     }
     return SceneError::OK;
