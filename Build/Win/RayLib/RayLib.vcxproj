@@ -149,6 +149,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\ImageStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\LoopingThreadI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\MemoryAlignment.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MovementSchemes.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MPMCQueue.hpp" />

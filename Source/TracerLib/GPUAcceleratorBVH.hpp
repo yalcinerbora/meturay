@@ -102,8 +102,11 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
     // Base Case (CPU Mode)
     if(end - start == 1)
     {
-        PrimitiveId id = dPrimIds[start];
+        uint32_t index = dIndicesIn[start];
+        PrimitiveId id = dPrimIds[index];
         HitKey matKey = FindHitKey(accIndex, id);
+
+        //METU_LOG("LEAF primId %llu", id);
 
         node.isLeaf = true;
         node.leaf = PGroup::LeafFunc(matKey, id, primData);
@@ -153,9 +156,8 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
         node.aabbMin = aabbUnion.Min();
         node.aabbMax = aabbUnion.Max();
 
-        //METU_LOG("start split end - %zu %zu %zu", start, splitStart, end);
-        //if(splitStart == 81171)
-        //    METU_LOG("!!!!!!!!start split end - %zu %zu %zu", start, splitStart, end);
+        //Debug::DumpMemToStdout(dIndicesIn + start, end - start);
+        //METU_LOG("-------");
         splitLoc = splitStart;
 
     }
@@ -193,9 +195,6 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
             }
 
             reductionCount = (reductionCount + StaticThreadPerBlock1D - 1) / StaticThreadPerBlock1D;
-            //Debug::DumpMemToFile("aabbs", aabbTemp0, reductionCount);
-
-
         } while(reductionCount != 1);
 
         // Copy Host
@@ -387,29 +386,46 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                   std::max(centerReduceMemSize,
                                            aabbReduceMemSize));
     // GPU Memory
-    size_t totalSize = totalPrimCount * (sizeof(uint64_t) +
-                                         2 * sizeof(uint32_t) +
-                                         sizeof(AABB3f) +
-                                         sizeof(Vector3f)) +
-        tempMemSize +
-        sizeof(uint32_t);
+    size_t primIdsSize = totalPrimCount * sizeof(uint64_t);
+    primIdsSize = Memory::AlignSize(primIdsSize);
+    size_t idsSize = totalPrimCount * sizeof(uint32_t);
+    idsSize = Memory::AlignSize(idsSize);
+    size_t aabbsSize = totalPrimCount * sizeof(AABB3f);
+    aabbsSize = Memory::AlignSize(aabbsSize);
+    size_t primCentersSize = totalPrimCount * sizeof(Vector3f);
+    primCentersSize = Memory::AlignSize(primCentersSize);
+    size_t partitionOutSize = sizeof(uint32_t);
+    partitionOutSize = Memory::AlignSize(partitionOutSize);
+    //
+    tempMemSize = Memory::AlignSize(tempMemSize);
+
+    size_t totalSize = (primIdsSize +
+                        idsSize * 2 +
+                        aabbsSize +
+                        primCentersSize +
+                        partitionOutSize +
+                        tempMemSize);
+
+
     DeviceMemory memory = DeviceMemory(totalSize);
     Byte* memPtr = static_cast<Byte*>(memory);
+  
+    // Memory Set
     size_t offset = 0;
-    Vector3f* dPrimCenters = reinterpret_cast<Vector3f*>(memPtr + offset);
-    offset += totalPrimCount * sizeof(Vector3f);
-    AABB3f* dPrimAABBs = reinterpret_cast<AABB3f*>(memPtr + offset);
-    offset += totalPrimCount * sizeof(AABB3f);
     uint64_t* dPrimIds = reinterpret_cast<uint64_t*>(memPtr + offset);
-    offset += totalPrimCount * sizeof(uint64_t);
+    offset += primIdsSize;
     uint32_t* dIdsIn = reinterpret_cast<uint32_t*>(memPtr + offset);
-    offset += totalPrimCount * sizeof(uint32_t);
+    offset += idsSize;
     uint32_t* dIdsTemp = reinterpret_cast<uint32_t*>(memPtr + offset);
-    offset += totalPrimCount * sizeof(uint32_t);
+    offset += idsSize;
+    AABB3f* dPrimAABBs = reinterpret_cast<AABB3f*>(memPtr + offset);
+    offset += aabbsSize;
+    Vector3f* dPrimCenters = reinterpret_cast<Vector3f*>(memPtr + offset);
+    offset += primCentersSize;
+    uint32_t* dPartitionSplitOut = reinterpret_cast<uint32_t*>(memPtr + offset);
+    offset += partitionOutSize;
     void* dTemp = reinterpret_cast<void*>(memPtr + offset);
     offset += tempMemSize;
-    uint32_t* dPartitionSplitOut = reinterpret_cast<uint32_t*>(memPtr + offset);
-    offset += sizeof(uint32_t);
     assert(offset == totalSize);
     // Populate Memory
     // Populate Indices
@@ -464,6 +480,11 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                        AABBGen<PGroup>(primData),
                        static_cast<uint32_t>(totalPrimCount));
 
+    //Debug::DumpMemToFile("AABB", dPrimAABBs, totalPrimCount);
+    //Debug::DumpMemToFile("dPrimIds", dPrimIds, totalPrimCount);
+    //Debug::DumpMemToFile("dIds", dIdsIn, totalPrimCount);
+    //METU_LOG("-------");
+
     // CPU Memory
     std::vector<BVHNode<LeafData>> bvhNodes;
     // 
@@ -494,6 +515,9 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     {
         SplitWork current = partitionQueue.front();
         partitionQueue.pop();
+
+        //METU_LOG("splitting %s\n", (current.axis == SplitAxis::X) ? "X" :
+        //                           ((current.axis == SplitAxis::Y) ? "Y" : "Z"));
 
         size_t splitLoc;
         BVHNode<LeafData> node;
@@ -542,7 +566,7 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     bvhDepths[index] = maxDepth;
     assert(maxDepth <= MAX_DEPTH);
 
-    Debug::DumpMemToFile("BVHNodes", bvhNodes.data(), bvhNodes.size());
+    //Debug::DumpMemToFile("BVHNodes", bvhNodes.data(), bvhNodes.size());
 
     CUDA_CHECK(cudaMemcpy(bvhMemories[index],
                           bvhNodes.data(),

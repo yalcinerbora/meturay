@@ -21,10 +21,6 @@ using RayPartitions = std::set<ArrayPortion<T>>;
 
 class RayMemory
 {
-    public:
-        static constexpr size_t     AlignByteCount = 16;
-        static constexpr int        ByteSize = 8;
-
     private:
         // Leader GPU device that is responsible for
         // parititoning and sorting the ray data

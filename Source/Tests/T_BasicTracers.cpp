@@ -24,6 +24,14 @@ TEST(SimpleTracerTests, HelloBox)
     setup.Body();
 }
 
+TEST(SimpleTracerTests, BVHTest)
+{
+    EnableVTMode();
+    SimpleTracerSetup setup(u8"TestScenes/bvhTest.json", 0.0);
+    ASSERT_TRUE(setup.Init());
+    setup.Body();
+}
+
 //TEST(SimpleTracerTests, OcclusionTest)
 //{
 //    EnableVTMode();

@@ -166,8 +166,8 @@ class SimpleTracerSetup
         static constexpr Vector2i           SCREEN_RESOLUTION = {1600, 900};
         //static constexpr Vector2i           IMAGE_RESOLUTION = {32, 18};
         //static constexpr Vector2i           IMAGE_RESOLUTION = {320, 180};
-        static constexpr Vector2i           IMAGE_RESOLUTION = {640, 360};
-        //static constexpr Vector2i           IMAGE_RESOLUTION = {1280, 720};
+        //static constexpr Vector2i           IMAGE_RESOLUTION = {640, 360};
+        static constexpr Vector2i           IMAGE_RESOLUTION = {1280, 720};
         //static constexpr Vector2i           IMAGE_RESOLUTION = {1600, 900};
         //static constexpr Vector2i           IMAGE_RESOLUTION = {1920, 1080};
         //static constexpr Vector2i           IMAGE_RESOLUTION = {3840, 2160};

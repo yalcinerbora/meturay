@@ -82,7 +82,7 @@
 	"Surfaces": [
 	{
 		"transform": 0,
-		"accelerator": "BasicBVH",
+		"accelerator": "Linear",
 		"material": [1, 2, 3, 4],
 		"primitive": [0, 1, 2, 3]
 	}]

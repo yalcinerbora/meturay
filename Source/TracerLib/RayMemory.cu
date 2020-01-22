@@ -4,6 +4,7 @@
 #include <type_traits>
 
 #include "RayLib/Log.h"
+#include "RayLib/MemoryAlignment.h"
 
 #include "CudaConstants.h"
 #include "TracerDebug.h"
@@ -102,10 +103,11 @@ void RayMemory::ResizeRayOut(uint32_t rayCount, size_t perRayAuxSize,
 {
     // Align to proper memory strides
     size_t sizeOfMaterialKeys = sizeof(HitKey) * rayCount;
-    sizeOfMaterialKeys = AlignByteCount * ((sizeOfMaterialKeys + (AlignByteCount - 1)) / AlignByteCount);
+    sizeOfMaterialKeys = Memory::AlignSize(sizeOfMaterialKeys);
     size_t sizeOfRays = rayCount * sizeof(RayGMem);
+    sizeOfRays =  Memory::AlignSize(sizeOfRays);
     size_t sizeOfAuxiliary = rayCount * perRayAuxSize;
-    sizeOfAuxiliary = AlignByteCount * ((sizeOfAuxiliary + (AlignByteCount - 1)) / AlignByteCount);
+    sizeOfAuxiliary = Memory::AlignSize(sizeOfAuxiliary);
 
     size_t requiredSize = sizeOfAuxiliary + sizeOfRays + sizeOfMaterialKeys;
     if(memOut.Size() < requiredSize)
@@ -154,20 +156,19 @@ void RayMemory::SwapRays()
 void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
 {
     size_t sizeOfTransformIds = sizeof(TransformId) * rayCount;
-    sizeOfTransformIds = AlignByteCount * ((sizeOfTransformIds + (AlignByteCount - 1)) / AlignByteCount);
+    sizeOfTransformIds = Memory::AlignSize(sizeOfTransformIds);
 
     size_t sizeOfPrimitiveIds = sizeof(PrimitiveId) * rayCount;
-    sizeOfPrimitiveIds = AlignByteCount * ((sizeOfPrimitiveIds + (AlignByteCount - 1)) / AlignByteCount);
-
+    sizeOfPrimitiveIds = Memory::AlignSize(sizeOfPrimitiveIds);
+    
     size_t sizeOfHitStructs = hitStructSize * rayCount;
-    sizeOfHitStructs = AlignByteCount * ((sizeOfHitStructs + (AlignByteCount - 1)) / AlignByteCount);
-    //
-    //
+    sizeOfHitStructs = Memory::AlignSize(sizeOfHitStructs);
+    
     size_t sizeOfIds = sizeof(RayId) * rayCount;
-    sizeOfIds = AlignByteCount * ((sizeOfIds + (AlignByteCount - 1)) / AlignByteCount);
+    sizeOfIds = Memory::AlignSize(sizeOfIds);
 
     size_t sizeOfAcceleratorKeys = sizeof(HitKey) * rayCount;
-    sizeOfAcceleratorKeys = AlignByteCount * ((sizeOfAcceleratorKeys + (AlignByteCount - 1)) / AlignByteCount);
+    sizeOfAcceleratorKeys = Memory::AlignSize(sizeOfAcceleratorKeys);
 
     // Find out sort auxiliary storage
     cub::DoubleBuffer<HitKey::Type> dbKeys(nullptr, nullptr);
@@ -191,7 +192,7 @@ void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
     // This code tries to increase it accordingly
     // Output Count of If also should be considered (add sizeof uint32_t)
     size_t sizeOfTempMemory = std::max(cubSortMemSize, cubIfMemSize + sizeof(uint32_t));
-    sizeOfTempMemory = (AlignByteCount * ((sizeOfTempMemory + (AlignByteCount - 1)) / AlignByteCount));
+    sizeOfTempMemory = Memory::AlignSize(sizeOfTempMemory);
 
     // Finally allocate
     size_t requiredSize = ((sizeOfIds + sizeOfAcceleratorKeys) * 2 +

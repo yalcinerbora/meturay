@@ -322,12 +322,21 @@ __global__ void KCIntersectBVH(// O
             ray.ray.TransformSelf(s);
         }
 
+        //Vector2i trackPixelId = Vector2i(18, 11);
+        //int32_t pixelLinear = trackPixelId[1] * 32 + trackPixelId[0];
+        //float ratio = -(ray.ray.getPosition()[2] / ray.ray.getDirection()[2]);
+        //Vector3 zPLanePoint = ray.ray.getPosition() + ratio * ray.ray.getDirection();
+        //if(id == pixelLinear)
+        //    printf("dir %f, %f, %f\n",
+        //           zPLanePoint[0],
+        //           zPLanePoint[1],
+        //           zPLanePoint[2]);
+
         // Hit Data that is going to be fetched
         bool hitModified = false;
         HitKey materialKey;
         PrimitiveId primitiveId;
         HitData hit;
-
         uint8_t depth = 0;
         Push(depth, 0);
         const BVHNode<LeafData>* currentNode = nullptr;
@@ -336,7 +345,7 @@ __global__ void KCIntersectBVH(// O
             uint32_t loc = Pop(depth);
             currentNode = gBVH + loc;
 
-            char debugChar = 'N';
+            //char debugChar = 'N';
 
             if(currentNode->isLeaf)
             {
@@ -349,31 +358,33 @@ __global__ void KCIntersectBVH(// O
                                                    // Input
                                                    currentNode->leaf,
                                                    primData);
+
+                //if(id == pixelLinear && result[1])
+                //    printf("HIT\n");
+
                 hitModified |= result[1];
                 if(result[0]) break;
 
-                if(globalId == 144) debugChar = 'L';
+                //debugChar = 'L';
             }
-            //else if(ray.ray.IntersectsAABB(currentNode->aabbMin, currentNode->aabbMax,
-            //                               Vector2f(ray.tMin, ray.tMax)))
-            else if(true)
+            else if(ray.ray.IntersectsAABB(currentNode->aabbMin, currentNode->aabbMax,
+                                           Vector2f(ray.tMin, ray.tMax)))
+            //else if(true)
             {
                 // Push to stack
                 Push(depth, currentNode->right);
                 Push(depth, currentNode->left);
 
-                if(globalId == 144) debugChar = 'I';
+                //debugChar = 'I';
             }
 
-            //if(globalId == 144)
-            //    printf("[%c] [%03u %03u %03u] depth %u\n",
-            //           debugChar,
-            //           (currentNode->isLeaf) ? 0 : currentNode->left,
-            //           (currentNode->isLeaf) ? 0 : currentNode->right,
-            //           currentNode->parent, depth);
-
-
-            //if(globalId == 144) printf("----------\n");
+           //if(id == pixelLinear)
+           //     printf("[%c] [%03u %03u %03u] depth %u\n",
+           //            debugChar,
+           //            (currentNode->isLeaf) ? 0 : currentNode->left,
+           //            (currentNode->isLeaf) ? 0 : currentNode->right,
+           //            currentNode->parent, depth);
+           // if(id == pixelLinear) printf("----------\n");
 
         }
         // Write Updated Stuff
@@ -440,7 +451,7 @@ __global__ void KCIntersectBVH(// O
 //        globalId < rayCount; globalId += blockDim.x * gridDim.x)
 //    {
 //        const RayId id = gRayIds[globalId];
-//        const uint64_t accId = HitKey::FetchIdPortion(gAccelKeys[id]);
+//        const uint64_t accId = HitKey::FetchIdPortion(gAccelKeys[globalId]);
 //        const TransformId transformId = gTransformIds[id];
 //        
 //        // Load Ray/Hit to Register

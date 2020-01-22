@@ -217,6 +217,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\SceneNodeNames.h">
       <Filter>FileI-O</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\MemoryAlignment.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

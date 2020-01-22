@@ -4,6 +4,8 @@
 #include <vector>
 #include <queue>
 
+#include "RayLib/MemoryAlignment.h"
+
 #include "GPUAcceleratorP.cuh"
 #include "DeviceMemory.h"
 #include "CudaConstants.h"
@@ -25,9 +27,10 @@ class GPUAccBVHGroup final
     public:
         using LeafData                      = PGroup::LeafData;
 
-        static constexpr const uint32_t     Threshold_CPU_GPU = 512;
-
     private:
+        static constexpr const uint32_t     Threshold_CPU_GPU = 5120000;
+        static constexpr size_t             AlignByteCount = 16;
+
         // CPU Memory
         std::vector<PrimitiveRangeList>     primitiveRanges;
         std::vector<HitKeyList>             primitiveMaterialKeys;
