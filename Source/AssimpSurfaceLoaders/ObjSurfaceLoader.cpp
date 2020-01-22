@@ -21,7 +21,7 @@ ObjSurfaceLoader::ObjSurfaceLoader(Assimp::Importer& i,
     const std::string filePath = Utilitiy::MergeFileFolder(scenePath, node.Name());
 
     scene = importer.ReadFile(filePath,
-                              aiProcess_CalcTangentSpace |
+                              //aiProcess_CalcTangentSpace |
                               aiProcess_GenBoundingBoxes |
                               aiProcess_GenNormals |
                               aiProcess_Triangulate |
@@ -48,7 +48,7 @@ ObjSurfaceLoader::ObjSurfaceLoader(Assimp::Importer& i,
         if(!mesh->HasPositions())
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
                                  "Assimp_obj: Obj file does not have positions");
-        if(!mesh->GetNumUVChannels())
+        if(mesh->GetNumUVChannels() == 0)
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
                                  "Assimp_obj: Obj file does not have uvs");
         if(!(mesh->mPrimitiveTypes == aiPrimitiveType_TRIANGLE))

@@ -48,6 +48,14 @@ TEST(SimpleTracerTests, CornellBox)
     setup.Body();
 }
 
+TEST(SimpleTracerTests, Bunny)
+{
+    EnableVTMode();
+    SimpleTracerSetup setup(u8"TestScenes/helloBunny.json", 0.0);
+    ASSERT_TRUE(setup.Init());
+    setup.Body();
+}
+
 TEST(SimpleTracerTests, Dragon)
 {
     EnableVTMode();

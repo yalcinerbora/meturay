@@ -24,8 +24,12 @@
 		{
 			"id": 0,
 			"type": "rectangular",
-			"material" : 1,
-			"primitive": 4
+			"material" : 1,			
+			"power": [1.0, 1.0, 1.0],
+			// Value
+			"position": [0, 0, 0],
+			"v0" : [0, 0, 0],
+			"v1" : [0, 0, 0]
 		}
 	],
 

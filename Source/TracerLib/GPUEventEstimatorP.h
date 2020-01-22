@@ -81,54 +81,46 @@ SceneError GPUEventEstimator<EstimatorD, EstF, TermF>::Initialize(const NodeList
         LightType type = LightType::END;
         if((err = LightTypeStringToEnum(type, typeName)) != SceneError::OK)
             return err;
-        
-        switch(type)
-        {
-            // Fetch from Node if analytic light
-            case LightType::POINT:
-            case LightType::DIRECTIONAL:
-            case LightType::SPOT:
-            case LightType::RECTANGULAR:
-            case LightType::TRIANGULAR:
-            case LightType::DISK:
-            case LightType::SPHERICAL:
+                
+        std::vector<EstimatorInfo> newInfo;
+        if((err = FetchLightInfoFromNode(newInfo, node, materialKeys, type, time)) != SceneError::OK)
+            return err;
+
+        if(type == LightType::PRIMITIVE)
+        { 
+            const UIntList primIds = node.AccessUInt(NodeNames::LIGHT_PRIMITIVE);
+            const UIntList matIds = node.AccessUInt(NodeNames::LIGHT_MATERIAL);
+            assert(primIds.size() == matIds.size());
+
+            // Fetch all
+            std::vector<EstimatorInfo> primInfo;
+            for(size_t i = 0; i < primIds.size(); i++)
             {
-                if((err = FetchLightInfoFromNode(lightInfo, node, materialKeys, type, time)) != SceneError::OK)
-                   return err;
-                break;
-            }
-            case LightType::PRIMITIVE:
-            { 
-                const UIntList primIds = node.AccessUInt(NodeNames::LIGHT_PRIMITIVE);
-                const UIntList matIds = node.AccessUInt(NodeNames::LIGHT_MATERIAL);
-                assert(primIds.size() == matIds.size());
+                uint32_t primId = primIds[i];
+                uint32_t matId = matIds[i];
 
-                // Fetch all
-                for(size_t i = 0; i < primIds.size(); i++)
+                const auto FindPrimFunc = [primId](const GPUPrimitiveGroupI* pGroup) -> bool
                 {
-                    uint32_t primId = primIds[i];
-                    uint32_t matId = matIds[i];
+                    return pGroup->HasPrimitive(primId);
+                };
 
-                    const auto FindPrimFunc = [primId](const GPUPrimitiveGroupI* pGroup) -> bool
-                    {
-                        return pGroup->HasPrimitive(primId);
-                    };
+                auto it = prims.end();
+                if((it = std::find_if(prims.begin(), prims.end(), FindPrimFunc)) == prims.end())
+                    return SceneError::LIGHT_PRIMITIVE_NOT_FOUND;
+                // Generate Estimators From Primitive
 
-                    auto it = prims.end();
-                    if((it = std::find_if(prims.begin(), prims.end(), FindPrimFunc)) == prims.end())
-                        return SceneError::LIGHT_PRIMITIVE_NOT_FOUND;
-                    // Generate Estimators From Primitive
+                const auto matLookup = std::make_pair((*it)->Type(), matId);
+                HitKey key = materialKeys.at(matLookup);
 
-                    const auto matLookup = std::make_pair((*it)->Type(), matId);
-                    HitKey key = materialKeys.at(matLookup);
+                if((err = (*it)->GenerateEstimatorInfo(primInfo, key, primId)) != SceneError::OK)
+                    return err;
 
-                    if((err = (*it)->GenerateEstimatorInfo(lightInfo, key, primId)) != SceneError::OK)
-                        return err;
-                }
-                break;
+                // Combine
+                for(size_t i = 0; i < newInfo.size(); i++)
+                    newInfo[i] = EstimatorInfo::CombinePrimEstimators(primInfo[i], newInfo[i]);
             }
-            default: return SceneError::UNKNOWN_LIGHT_TYPE;
         }
+        else lightInfo.insert(lightInfo.end(), newInfo.begin(), newInfo.end());
     }
     return SceneError::OK;
 }
