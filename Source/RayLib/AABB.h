@@ -102,9 +102,27 @@ static constexpr AABB3d CoveringAABB3d = AABB3d(Vector3d(-DBL_MAX, -DBL_MAX, -DB
 static constexpr AABB4d CoveringAABB4d = AABB4d(Vector4d(-DBL_MAX, -DBL_MAX, -DBL_MAX, -DBL_MAX),
                                                 Vector4d(DBL_MAX, DBL_MAX, DBL_MAX, DBL_MAX));
 
+static constexpr AABB2f NegativeAABB2f = AABB2f(Vector2f(FLT_MAX, FLT_MAX),
+                                                Vector2f(-FLT_MAX, -FLT_MAX));
+static constexpr AABB3f NegativeAABB3f = AABB3f(Vector3f(FLT_MAX, FLT_MAX, FLT_MAX),
+                                                Vector3f(-FLT_MAX, -FLT_MAX, -FLT_MAX));
+static constexpr AABB4f NegativeAABB4f = AABB4f(Vector4f(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX),
+                                                Vector4f(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX));
+
+static constexpr AABB2d NegativeAABB2d = AABB2d(Vector2d(DBL_MAX, DBL_MAX),
+                                                Vector2d(-DBL_MAX, -DBL_MAX));
+static constexpr AABB3d NegativeAABB3d = AABB3d(Vector3d(DBL_MAX, DBL_MAX, DBL_MAX),
+                                                Vector3d(-DBL_MAX, -DBL_MAX, -DBL_MAX));
+static constexpr AABB4d NegativeAABB4d = AABB4d(Vector4d(DBL_MAX, DBL_MAX, DBL_MAX, DBL_MAX),
+                                                Vector4d(-DBL_MAX, -DBL_MAX, -DBL_MAX, -DBL_MAX));
+
 static constexpr AABB2 CoveringAABB2 = CoveringAABB2f;
 static constexpr AABB3 CoveringAABB3 = CoveringAABB3f;
 static constexpr AABB4 CoveringAABB4 = CoveringAABB4f;
+
+static constexpr AABB2 NegativeAABB2 = NegativeAABB2f;
+static constexpr AABB3 NegativeAABB3 = NegativeAABB3f;
+static constexpr AABB4 NegativeAABB4 = NegativeAABB4f;
 
 static constexpr AABB2 ZeroAABB2 = ZeroAABB2f;
 static constexpr AABB3 ZeroAABB3 = ZeroAABB3f;

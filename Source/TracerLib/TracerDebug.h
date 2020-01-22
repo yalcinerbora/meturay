@@ -7,6 +7,7 @@
 
 #include "RayLib/Log.h"
 #include "RayLib/HitStructs.h"
+#include "RayLib/AABB.h"
 
 #include "RayStructs.h"
 #include "CudaConstants.h"
@@ -51,6 +52,7 @@ extern std::ostream& operator<<(std::ostream& stream, const Vector2ul&);
 extern std::ostream& operator<<(std::ostream& stream, const Vector2f&);
 extern std::ostream& operator<<(std::ostream& stream, const Vector3f&);
 extern std::ostream& operator<<(std::ostream& stream, const Vector4f&);
+extern std::ostream& operator<<(std::ostream& stream, const AABB3f&);
 extern std::ostream& operator<<(std::ostream& stream, const DefaultLeaf&);
 
 template<class T>

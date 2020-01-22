@@ -124,7 +124,7 @@
 	// Cornell Box
     {
 		"transform": 0,
-		"accelerator": "Linear",
+		"accelerator": "BasicBVH",
 		"primitive": [2, 3, 4, 5],
 		"material": [4, 3, 1, 2]
 	},

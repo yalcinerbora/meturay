@@ -4,25 +4,6 @@
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveSphere.h"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Accelerator Instancing for basic primitives
 template class GPUAccBVHGroup<GPUPrimitiveTriangle>;
 template class GPUAccBVHGroup<GPUPrimitiveSphere>;

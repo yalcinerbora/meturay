@@ -58,3 +58,7 @@ using BoxGenFunction = AABB3f(*)(PrimitiveId primitiveId, const PrimitiveData&);
 // Surface area generation function for bound hierarcy generation
 template <class PrimitiveData>
 using AreaGenFunction = float(*)(PrimitiveId primitiveId, const PrimitiveData&);
+
+// Center generation function for bound hierarcy generation
+template <class PrimitiveData>
+using CenterGenFunction = Vector3(*)(PrimitiveId primitiveId, const PrimitiveData&);

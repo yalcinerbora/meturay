@@ -29,6 +29,9 @@
     <CudaCompile Include="..\..\..\Source\Tracer-Test\VolumeTracer.cu">
       <Filter>Tracers</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\BasicTracer.cu">
+      <Filter>Tracers</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h">
@@ -63,8 +66,5 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\VolumeTracer.cuh">
       <Filter>Tracers</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\Source\Tracer-Test\BasicTracer.cu" />
   </ItemGroup>
 </Project>

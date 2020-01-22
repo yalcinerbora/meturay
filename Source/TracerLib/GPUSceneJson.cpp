@@ -428,7 +428,8 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABB
         std::map<uint32_t, AABB3> aabbs;
         for(const auto& pairs : pairsList)
         {
-            AABB3 combinedAABB = ZeroAABB3;
+            //AABB3 combinedAABB = ZeroAABB3;
+            AABB3 combinedAABB = NegativeAABB3;
             const IdPairs& pList = pairs.second;
             // Merge aabbs of the surfaces
             for(const auto& p : pList)

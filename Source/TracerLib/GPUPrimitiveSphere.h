@@ -93,10 +93,20 @@ inline float GenerateAreaSphere(PrimitiveId primitiveId, const SphereData& primD
     return radius * radius;
 }
 
+__device__ __host__
+inline Vector3 GenerateCenterSphere(PrimitiveId primitiveId, const SphereData& primData)
+{
+    Vector4f data = primData.centerRadius[primitiveId];
+    Vector3f center = data;
+
+    return center;
+}
+
 class GPUPrimitiveSphere final
     : public GPUPrimitiveGroup<SphereHit, SphereData, DefaultLeaf,
                                SphereClosestHit, GenerateDefaultLeaf,
-                               GenerateAABBSphere, GenerateAreaSphere>
+                               GenerateAABBSphere, GenerateAreaSphere,
+                               GenerateCenterSphere>
 {
     public:
         static constexpr const char*            TypeName() { return "Sphere"; }

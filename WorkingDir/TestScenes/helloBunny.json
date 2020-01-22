@@ -24,8 +24,12 @@
 		{
 			"id": 0,
 			"type": "rectangular",
-			"material" : 1,
-			"primitive": 4
+			"material" : 1,			
+			"power": [1.0, 1.0, 1.0],
+			// Value
+			"position": [0, 0, 0],
+			"v0" : [0, 0, 0],
+			"v1" : [0, 0, 0]
 		}
 	],
 
@@ -79,7 +83,7 @@
 		// Object Reading (inner index i top down order of meshes)
 		"id": 1,
 		"type": "Triangle",
-        "name": "../Surfaces/stan_dragon.obj",
+        "name": "../Surfaces/stan_bunny.obj",
 		"tag": "assimp_",
 		"innerIndex": 0
 	}],
@@ -93,7 +97,7 @@
         "primitive": 0
 	},
 	{
-		// Dragon
+		// Bunny
 		"transform": 0,
 		"accelerator": "BasicBVH",
 		"material": 2,

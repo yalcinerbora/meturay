@@ -33,7 +33,8 @@ SceneError InNodeTriLoader::AABB(std::vector<AABB3>& result) const
         if((posList.size() % 3) != 0)
             return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
 
-        result[j] = AABB3(Zero3, Zero3);
+        //result[j] = ZeroAABB3;
+        result[j] = NegativeAABB3;
         for(size_t i = 0; i < (posList.size() / 3); i++)
         {
             result[j].UnionSelf(Triangle::BoundingBox(posList[i * 3 + 0],
@@ -206,7 +207,8 @@ SceneError InNodeTriLoaderIndexed::AABB(std::vector<AABB3>& result) const
         if((indexList.size() % 3) != 0)
             return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
 
-        result[j] = AABB3(Zero3, Zero3);
+        //result[j] = ZeroAABB3;
+        result[j] = NegativeAABB3;
         for(size_t i = 0; i < (indexList.size() / 3); i++)
         {
             result[j].UnionSelf(Triangle::BoundingBox(positions[indexList[i * 3 + 0]],
