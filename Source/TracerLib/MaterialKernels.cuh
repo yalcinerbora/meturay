@@ -32,30 +32,31 @@ using ShadeFunc = void(*)(// Output
 
 template <class TLogic, class ELogic, class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SurfFunc>
-__global__ void KCMaterialShade(// Output
-                                ImageGMem<Vector4f> gImage,
-                                //
-                                HitKey* gOutBoundKeys,
-                                RayGMem* gOutRays,
-                                TLogic::RayAuxData* gOutRayAux,
-                                const uint32_t maxOutRay,
-                                // Input
-                                const RayGMem* gInRays,
-                                const TLogic::RayAuxData* gInRayAux,
-                                const PrimitiveId* gPrimitiveIds,
-                                const HitStructPtr gHitStructs,
-                                //
-                                const HitKey* gMatIds,
-                                const RayId* gRayIds,
-                                //
-                                const uint32_t rayCount,
-                                RNGGMem gRNGStates,
-                                // Estimator
-                                const ELogic::EstimatorData est,
-                                // Material Related
-                                const MGroup::MaterialData matData,
-                                // Primitive Related
-                                const PGroup::PrimitiveData primData)
+__global__ __launch_bounds__(StaticThreadPerBlock1D)
+void KCMaterialShade(// Output
+                     ImageGMem<Vector4f> gImage,
+                     //
+                     HitKey* gOutBoundKeys,
+                     RayGMem* gOutRays,
+                     TLogic::RayAuxData* gOutRayAux,
+                     const uint32_t maxOutRay,
+                     // Input
+                     const RayGMem* gInRays,
+                     const TLogic::RayAuxData* gInRayAux,
+                     const PrimitiveId* gPrimitiveIds,
+                     const HitStructPtr gHitStructs,
+                     //
+                     const HitKey* gMatIds,
+                     const RayId* gRayIds,
+                     //
+                     const uint32_t rayCount,
+                     RNGGMem gRNGStates,
+                     // Estimator
+                     const ELogic::EstimatorData est,
+                     // Material Related
+                     const MGroup::MaterialData matData,
+                     // Primitive Related
+                     const PGroup::PrimitiveData primData)
 {
     // Fetch Types from Template Classes
     using HitData = typename PGroup::HitData;               // HitData is defined by primitive

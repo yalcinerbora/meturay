@@ -217,14 +217,15 @@ static void KCInitIndices(// O
 }
 
 template <class PGroup>
-__global__ void KCGenCenters(// O
-                             Vector3f* gCenters,
-                             // Input
-                             const uint32_t* gIndicies,
-                             const PrimitiveId* gPrimitiveIds,
-                             //
-                             CentroidGen<PGroup> centFunc,
-                             uint32_t primCount)
+__global__
+void KCGenCenters(// O
+                  Vector3f* gCenters,
+                  // Input
+                  const uint32_t* gIndicies,
+                  const PrimitiveId* gPrimitiveIds,
+                  //
+                  CentroidGen<PGroup> centFunc,
+                  uint32_t primCount)
 {
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
@@ -238,14 +239,15 @@ __global__ void KCGenCenters(// O
 }
 
 template <class PGroup>
-__global__ void KCGenAABBs(// O
-                           AABB3f* gAABBs,
-                           // Input
-                           const uint32_t* gIndicies,
-                           const PrimitiveId* gPrimitiveIds,
-                           //
-                           AABBGen<PGroup> aabbFunc,
-                           uint32_t primCount)
+__global__
+void KCGenAABBs(// O
+                AABB3f* gAABBs,
+                // Input
+                const uint32_t* gIndicies,
+                const PrimitiveId* gPrimitiveIds,
+                //
+                AABBGen<PGroup> aabbFunc,
+                uint32_t primCount)
 {
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
@@ -259,22 +261,23 @@ __global__ void KCGenAABBs(// O
 }
 
 template <class PGroup>
-__global__ void KCIntersectBVH(// O
-                               HitKey* gMaterialKeys,
-                               PrimitiveId* gPrimitiveIds,
-                               HitStructPtr gHitStructs,
-                               // I-O
-                               RayGMem* gRays,
-                               // Input
-                               const TransformId* gTransformIds,
-                               const RayId* gRayIds,
-                               const HitKey* gAccelKeys,
-                               const uint32_t rayCount,
-                               // Constants
-                               const BVHNode<PGroup::LeafData>** gBVHList,
-                               const TransformStruct* gInverseTransforms,
-                               //
-                               const PGroup::PrimitiveData primData)
+__global__ __launch_bounds__(StaticThreadPerBlock1D)
+void KCIntersectBVH(// O
+                    HitKey* gMaterialKeys,
+                    PrimitiveId* gPrimitiveIds,
+                    HitStructPtr gHitStructs,
+                    // I-O
+                    RayGMem* gRays,
+                    // Input
+                    const TransformId* gTransformIds,
+                    const RayId* gRayIds,
+                    const HitKey* gAccelKeys,
+                    const uint32_t rayCount,
+                    // Constants
+                    const BVHNode<PGroup::LeafData>** gBVHList,
+                    const TransformStruct* gInverseTransforms,
+                    //
+                    const PGroup::PrimitiveData primData)
 {
     using HitData = typename PGroup::HitData;       // HitRegister is defined by primitive
     using LeafData = typename PGroup::LeafData;     // LeafStruct is defined by primitive
@@ -401,22 +404,23 @@ __global__ void KCIntersectBVH(// O
 //// This is fundemental BVH traversal kernel
 //// It supparts partial traversal and continuation traversal(for scene tree)
 //template <class PGroup>
-//__global__ void KCIntersectBVH(// O
-//                               HitKey* gMaterialKeys,
-//                               PrimitiveId* gPrimitiveIds,
-//                               HitStructPtr gHitStructs,
-//                               // I-O
-//                               RayGMem* gRays,
-//                               // Input
-//                               const TransformId* gTransformIds,
-//                               const RayId* gRayIds,
-//                               const HitKey* gAccelKeys,
-//                               const uint32_t rayCount,
-//                               // Constants
-//                               const BVHNode<PGroup::LeafData>** gBVHList,
-//                               const TransformStruct* gInverseTransforms,
-//                               //
-//                               const PGroup::PrimitiveData primData)
+//__global__ __launch_bounds__(StaticThreadPerBlock1D)
+//void KCIntersectBVH(// O
+//                    HitKey* gMaterialKeys,
+//                    PrimitiveId* gPrimitiveIds,
+//                    HitStructPtr gHitStructs,
+//                    // I-O
+//                    RayGMem* gRays,
+//                    // Input
+//                    const TransformId* gTransformIds,
+//                    const RayId* gRayIds,
+//                    const HitKey* gAccelKeys,
+//                    const uint32_t rayCount,
+//                    // Constants
+//                    const BVHNode<PGroup::LeafData>** gBVHList,
+//                    const TransformStruct* gInverseTransforms,
+//                    //
+//                    const PGroup::PrimitiveData primData)
 //{
 //    using HitData = typename PGroup::HitData;       // HitRegister is defined by primitive
 //    using LeafData = typename PGroup::LeafData;     // LeafStruct is defined by primitive
@@ -513,11 +517,7 @@ __global__ void KCIntersectBVH(// O
 //                    //    printf("[L]               depth %u list 0x%016llX\n", depth, list);
 //                }
 //                else if(ray.ray.IntersectsAABB(currentNode->aabbMin, currentNode->aabbMax,
-//                                               Vector2f(0.0f, FLT_MAX)
-//                                               //tMinMax
-//                                               //Vector2f(ray.tMin, ray.tMax)
-//                                               ))
-//                //else if(true)
+//                                               Vector2f(ray.tMin, ray.tMax)))
 //                {
 //
 //                    // Go left if avail

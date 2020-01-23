@@ -25,6 +25,7 @@ That interface is responsible for fetching
 // Common Memory
 class RayMemory;
 class RNGMemory;
+class ImageMemory;
 
 struct TracerError;
 struct CameraPerspective;
@@ -48,6 +49,7 @@ class TracerBaseLogicI
         // Generate Rays
         virtual uint32_t        GenerateRays(const CudaSystem& cudaSystem, 
                                              //
+                                             ImageMemory&,
                                              RayMemory&, RNGMemory&,
                                              const GPUSceneI&,
                                              const CameraPerspective&,

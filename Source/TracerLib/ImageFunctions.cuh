@@ -11,15 +11,16 @@ void ImageAccumulatePixel(ImageGMem<T>&, uint32_t location, const T& data);
 
 template<class T>
 __device__
-void ImageAverageSample(ImageGMem<T>&, uint32_t location);
+void ImageSetSample(ImageGMem<T>&, uint32_t location, uint32_t sampleCount);
+
+template<class T>
+__device__
+void ImageAddSample(ImageGMem<T>&, uint32_t location, uint32_t sampleCount);
 
 template<>
 __device__
 inline void ImageAccumulatePixel(ImageGMem<Vector4f>& img, uint32_t location, const Vector4f& data)
 {
-	// Inc Sample
-	atomicAdd(&img.gSampleCount[location], 1);// MAX_UINT32);
-
 	// Add value
 	atomicAdd(&img.gPixels[location][0], data[0]);
 	atomicAdd(&img.gPixels[location][1], data[1]);
@@ -31,38 +32,22 @@ template<>
 __device__
 inline void ImageAccumulatePixel(ImageGMem<Vector3f>& img, uint32_t location, const Vector3f& data)
 {
-	// Inc Sample
-	atomicInc(&img.gSampleCount[location], MAX_UINT32);
-
 	// Add value
 	atomicAdd(&img.gPixels[location][0], data[0]);
 	atomicAdd(&img.gPixels[location][1], data[1]);
 	atomicAdd(&img.gPixels[location][2], data[2]);
 }
 
-template<>
+template<class T>
 __device__
-inline void ImageAverageSample<Vector4f>(ImageGMem<Vector4f>& img, uint32_t location)
+inline void ImageSetSample<Vector4f>(ImageGMem<T>& img, uint32_t location, uint32_t sampleCount)
 {
-	const float sampleCount = static_cast<float>(img.gSampleCount[location]);
-	if(sampleCount != 0)
-	{
-		img.gPixels[location][0] /= sampleCount;
-		img.gPixels[location][1] /= sampleCount;
-		img.gPixels[location][2] /= sampleCount;
-		img.gPixels[location][3] /= sampleCount;
-	}
+	img.gSampleCounts[location] = sampleCount;
 }
 
-template<>
+template<class T>
 __device__
-inline void ImageAverageSample<Vector3f>(ImageGMem<Vector3f>& img, uint32_t location)
+inline void ImageAddSample<Vector4f>(ImageGMem<T>& img, uint32_t location, uint32_t sampleCount)
 {
-	const float sampleCount = static_cast<float>(img.gSampleCount[location]);
-	if(sampleCount != 0)
-	{
-		img.gPixels[location][0] /= sampleCount;
-		img.gPixels[location][1] /= sampleCount;
-		img.gPixels[location][2] /= sampleCount;
-	}
+	atomicAdd(&img.gSampleCounts[location], sampleCount);
 }

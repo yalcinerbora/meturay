@@ -25,7 +25,7 @@ struct PRList
 
 // Fundamental Construction Kernel
 template <class PGroup>
-__global__
+__global__ __launch_bounds__(StaticThreadPerBlock1D)
 static void KCConstructLinear(// O
                               PGroup::LeafData* gLeafOut,
                               // Input
@@ -92,7 +92,7 @@ static void KCConstructLinear(// O
 
 // This is fundemental Linear traversal kernel
 template <class PGroup>
-__global__
+__global__ __launch_bounds__(StaticThreadPerBlock1D)
 static void KCIntersectLinear(// O
                               HitKey* gMaterialKeys,
                               PrimitiveId* gPrimitiveIds,
@@ -180,7 +180,7 @@ static void KCIntersectLinear(// O
 }
 
 
-__global__
+__global__ __launch_bounds__(StaticThreadPerBlock1D)
 static void KCIntersectBaseLinear(// I-O
                                   TransformId* gTransformIds,
                                   HitKey* gHitKeys,

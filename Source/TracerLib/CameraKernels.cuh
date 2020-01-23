@@ -15,7 +15,10 @@ Uses statified sampling
 #include "RayLib/Camera.h"
 
 #include "RayStructs.h"
+#include "ImageStructs.h"
 #include "Random.cuh"
+
+#include "ImageFunctions.cuh"
 
 // Commands that initialize ray auxiliary data
 template<class RayAuxData>
@@ -33,6 +36,7 @@ template<class RayAuxData, AuxInitFunc<RayAuxData> AuxFunc>
 __global__ void KCGenerateCameraRays(// Output
                                      RayGMem* gRays,
                                      RayAuxData* gAuxiliary,
+                                     ImageGMem<Vector4f> imgMem,
                                      // Input
                                      RNGGMem gRNGStates,
                                      const CameraPerspective cam,
@@ -116,5 +120,9 @@ __global__ void KCGenerateCameraRays(// Output
                 // Index
                 pixelIdLinear,
                 sampleIdLinear);
+
+        // Initialize Samples
+        ImageAddSample(imgMem, pixelIdLinear, 1);
+
     }
 }

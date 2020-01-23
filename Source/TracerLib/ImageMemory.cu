@@ -2,15 +2,15 @@
 #include "ImageFunctions.cuh"
 #include "CudaConstants.h"
 
-__global__ void KCAverageSamples(ImageGMem<Vector4f> mem, size_t totalPixelCount)
-{
-    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
-        threadId < totalPixelCount;
-        threadId += (blockDim.x * gridDim.x))
-    {
-        ImageAverageSample(mem, threadId);
-    }
-}
+//__global__ void KCAverageSamples(ImageGMem<Vector4f> mem, size_t totalPixelCount)
+//{
+//    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+//        threadId < totalPixelCount;
+//        threadId += (blockDim.x * gridDim.x))
+//    {
+//        ImageAverageSample(mem, threadId);
+//    }
+//}
 
 __global__ void KCResetSamples(ImageGMem<Vector4f> mem, size_t totalPixelCount)
 {
@@ -18,7 +18,7 @@ __global__ void KCResetSamples(ImageGMem<Vector4f> mem, size_t totalPixelCount)
         threadId < totalPixelCount;
         threadId += (blockDim.x * gridDim.x))
     {
-        mem.gSampleCount[threadId] = 0;
+        mem.gSampleCounts[threadId] = 0;
         mem.gPixels[threadId][0] = 0.0f;
         mem.gPixels[threadId][1] = 0.0f;
         mem.gPixels[threadId][2] = 0.0f;

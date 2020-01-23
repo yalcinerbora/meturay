@@ -5,11 +5,12 @@
 #include <queue>
 
 #include "RayLib/MemoryAlignment.h"
+#include "RayLib/CPUTimer.h"
 
-#include "GPUAcceleratorP.cuh"
 #include "DeviceMemory.h"
 #include "CudaConstants.h"
 
+#include "GPUAcceleratorP.cuh"
 #include "GPUAcceleratorBVHKC.cuh"
 
 template<class LeafData>
@@ -28,7 +29,7 @@ class GPUAccBVHGroup final
         using LeafData                      = PGroup::LeafData;
 
     private:
-        static constexpr const uint32_t     Threshold_CPU_GPU = 5120000;
+        static constexpr const uint32_t     Threshold_CPU_GPU = 32'768;
         static constexpr size_t             AlignByteCount = 16;
 
         // CPU Memory

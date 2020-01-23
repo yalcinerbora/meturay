@@ -375,6 +375,7 @@ void TracerBase::GenerateInitialRays(const GPUSceneI& scene,
     // Delegate camera ray generation to tracer system
     currentRayCount = currentLogic->GenerateRays(cudaSystem,
                                                  //
+                                                 outputImage,
                                                  rayMemory, rngMemory,
                                                  scene, cam, samplePerLocation,
                                                  outputImage.Resolution(),

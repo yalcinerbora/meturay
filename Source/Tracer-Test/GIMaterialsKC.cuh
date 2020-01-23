@@ -178,6 +178,8 @@ inline void BasicPathTraceShade(// Output
 
         // Cos Tetha
         float nDotL = max(normal.Dot(lDirection), 0.0f);
+        //float nDotL = abs(normal.Dot(direction));
+
         Vector3 lReflectance = gMatData.dAlbedo[matId] * MathConstants::InvPi;
         auxOut1.radianceFactor = auxIn.radianceFactor * nDotL * lReflectance / pdfLight;
 

@@ -34,6 +34,7 @@ class TracerBasic final : public TracerBaseLogic<RayAuxBasic>
 
         uint32_t        GenerateRays(const CudaSystem& cudaSystem, 
                                      //
+                                     ImageMemory&,
                                      RayMemory&, RNGMemory&,
                                      const GPUSceneI& scene,
                                      const CameraPerspective&,

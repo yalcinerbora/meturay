@@ -34,13 +34,15 @@ TracerError TracerVolume::Initialize()
 }
 
 uint32_t TracerVolume::GenerateRays(const CudaSystem& cudaSystem,
-                                   RayMemory& rayMem, RNGMemory& rngMem,
-                                   const GPUSceneI& scene,
-                                   const CameraPerspective& cam,
-                                   int samplePerLocation,
-                                   Vector2i resolution,
-                                   Vector2i pixelStart,
-                                   Vector2i pixelEnd)
+                                    //
+                                    ImageMemory& imgMem,
+                                    RayMemory& rayMem, RNGMemory& rngMem,
+                                    const GPUSceneI& scene,
+                                    const CameraPerspective& cam,
+                                    int samplePerLocation,
+                                    Vector2i resolution,
+                                    Vector2i pixelStart,
+                                    Vector2i pixelEnd)
 {
     return 0;
 }

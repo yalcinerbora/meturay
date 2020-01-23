@@ -2,7 +2,10 @@
 
 #include "RayLib/TracerError.h"
 #include "RayLib/GPUSceneI.h"
+
 #include "TracerLib/RayMemory.h"
+#include "TracerLib/ImageMemory.h"
+
 
 __device__ __host__
 inline void RayInitBasic(RayAuxBasic* gOutBasic,
@@ -50,6 +53,8 @@ TracerError TracerBasic::Initialize()
 }
 
 uint32_t TracerBasic::GenerateRays(const CudaSystem& cudaSystem,
+                                   //
+                                   ImageMemory& imgMem,
                                    RayMemory& rayMem, RNGMemory& rngMem,
                                    const GPUSceneI& scene,
                                    const CameraPerspective& cam,
@@ -103,6 +108,8 @@ uint32_t TracerBasic::GenerateRays(const CudaSystem& cudaSystem,
         RayAuxData* gAuxiliary = rayMem.RayAuxOut<RayAuxData>();
         // Input
         RNGGMem rngData = rngMem.RNGData(gpu);
+        ImageGMem<Vector4f> gImgData = imgMem.GMem<Vector4f>();
+
 
         // Kernel Call
         gpu.AsyncGridStrideKC_X
@@ -113,6 +120,7 @@ uint32_t TracerBasic::GenerateRays(const CudaSystem& cudaSystem,
             // Inputs
             gRays,
             gAuxiliary,
+            gImgData,
             // Input
             rngData,
             cam,

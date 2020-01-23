@@ -92,11 +92,10 @@ inline Vector3 SampleParallelogram(RandomGPU& rng,
                                    // Primitive Specific Data
                                    const Vector3& topLeft,
                                    const Vector3& v0,
-                                   const Vector3& v1,
-                                   const Vector2& length)
+                                   const Vector3& v1)
 {
-    float x = GPUDistribution::Uniform<float>(rng) * length[0];
-    float y = GPUDistribution::Uniform<float>(rng) * length[1];
+    float x = GPUDistribution::Uniform<float>(rng);
+    float y = GPUDistribution::Uniform<float>(rng);
     Vector3 location = v0 * x + v1 * y;
     return topLeft + location;
 }

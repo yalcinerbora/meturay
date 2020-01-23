@@ -8,7 +8,7 @@ template<class T>
 struct ImageGMem
 {
     T* gPixels;
-    uint32_t* gSampleCount;
+    uint32_t* gSampleCounts;
 };
 
 template<class T>

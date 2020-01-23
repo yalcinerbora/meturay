@@ -23,8 +23,8 @@ using CPUTimeMins = std::ratio<60>;
 namespace Utility
 {
 
-    class CPUTimer
-    {
+class CPUTimer
+{
     private:
         CPUDuration             elapsed;
         CPUTimePoint            start;

@@ -95,10 +95,6 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
     node.parent = parentIndex;
     node.isLeaf = false;
 
-    ////METU_LOG("start end %zu %zu", start, end);
-    //if(start == 81171)
-    //    METU_LOG("!!!!!!!!start split end - %zu %zu", start, end);
-
     // Base Case (CPU Mode)
     if(end - start == 1)
     {
@@ -155,9 +151,8 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
         }
         node.aabbMin = aabbUnion.Min();
         node.aabbMax = aabbUnion.Max();
-
-        //Debug::DumpMemToStdout(dIndicesIn + start, end - start);
-        //METU_LOG("-------");
+        assert(splitLoc != start);
+        assert(splitLoc != end);
         splitLoc = splitStart;
 
     }
@@ -198,7 +193,7 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
         } while(reductionCount != 1);
 
         // Copy Host
-        CUDA_CHECK(cudaMemcpy(&aabb, aabbTemp1, sizeof(AABB3f), cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaMemcpy(&aabb, aabbTemp0, sizeof(AABB3f), cudaMemcpyDeviceToHost));
 
         // Now do for centroid
         reductionCount = (end - start);
@@ -247,8 +242,13 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
                               static_cast<int>(end - start) * sizeof(uint32_t),
                               cudaMemcpyDeviceToDevice));
         CUDA_CHECK(cudaMemcpy(&partitionSplit, dPartitionSplitOut, sizeof(uint32_t), cudaMemcpyDeviceToHost));
-        splitLoc = partitionSplit + start;
 
+        // If there is bad partition (location is start or end) then atleast put single node to a split
+        if(partitionSplit == 0) partitionSplit += 1;
+        else if(partitionSplit == static_cast<uint32_t>(end - start)) partitionSplit -= 1;        
+        // Split Loc
+        splitLoc = partitionSplit + start;
+        
         // Init Nodes
         node.aabbMin = aabb.Min();
         node.aabbMax = aabb.Max();
@@ -341,6 +341,9 @@ template <class PGroup>
 void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                                   const CudaSystem& system)
 {
+    Utility::CPUTimer t;
+    t.Start();
+
     using PrimitiveData = typename PGroup::PrimitiveData;
     using PrimitiveIndexStart = std::array<uint64_t, SceneConstants::MaxPrimitivePerSurface>;
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
@@ -367,7 +370,7 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     }
     size_t totalPrimCount = currentOffset;
 
-    // Determine Partition/Reduce Memories
+    // Determine Partition / Reduce Memories
     size_t cubIfMemSize = 0;
     uint64_t* in = nullptr;
     uint64_t* out = nullptr;
@@ -480,11 +483,6 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                        AABBGen<PGroup>(primData),
                        static_cast<uint32_t>(totalPrimCount));
 
-    //Debug::DumpMemToFile("AABB", dPrimAABBs, totalPrimCount);
-    //Debug::DumpMemToFile("dPrimIds", dPrimIds, totalPrimCount);
-    //Debug::DumpMemToFile("dIds", dIdsIn, totalPrimCount);
-    //METU_LOG("-------");
-
     // CPU Memory
     std::vector<BVHNode<LeafData>> bvhNodes;
     // 
@@ -515,9 +513,6 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     {
         SplitWork current = partitionQueue.front();
         partitionQueue.pop();
-
-        //METU_LOG("splitting %s\n", (current.axis == SplitAxis::X) ? "X" :
-        //                           ((current.axis == SplitAxis::Y) ? "Y" : "Z"));
 
         size_t splitLoc;
         BVHNode<LeafData> node;
@@ -567,6 +562,10 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     assert(maxDepth <= MAX_DEPTH);
 
     //Debug::DumpMemToFile("BVHNodes", bvhNodes.data(), bvhNodes.size());
+    //Debug::DumpMemToFile("AABB", dPrimAABBs, totalPrimCount);
+    //Debug::DumpMemToFile("dPrimIds", dPrimIds, totalPrimCount);
+    //Debug::DumpMemToFile("dIds", dIdsIn, totalPrimCount);
+    //METU_LOG("-------");
 
     CUDA_CHECK(cudaMemcpy(bvhMemories[index],
                           bvhNodes.data(),
@@ -578,6 +577,9 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                           &dBVHStart,
                           sizeof(BVHNode<LeafData>*),
                           cudaMemcpyHostToDevice));
+
+    t.Stop();
+    METU_LOG("Surface%u BVH Generated %f seconds.", surface, t.Elapsed<CPUTimeSeconds>());
 }
 
 template <class PGroup>

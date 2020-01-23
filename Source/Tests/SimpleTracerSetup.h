@@ -45,7 +45,7 @@ class MockNode
 {
     private:
         static constexpr uint32_t       MAX_BOUNCES = 16;
-        static constexpr int            SAMPLE_COUNT = 1;
+        static constexpr int            SAMPLE_COUNT = 4;
 
         const double                    Duration;
 

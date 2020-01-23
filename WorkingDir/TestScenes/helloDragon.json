@@ -9,7 +9,7 @@
 		//"fov": [53.13, 53.13],
 		"gaze": [0.0, 2.0, 0.0],
 		"planes": [0.1, 20.0],
-		"position": [0.0, 2.0, 7.0],
+		"position": [0.0, 3.0, 7.0],
 		"up": [0.0, 1.0, 0.0]
     }],
 
@@ -27,10 +27,17 @@
 			"material" : 1,			
 			"power": [1.0, 1.0, 1.0],
 			// Value
-			"position": [0, 0, 0],
-			"v0" : [0, 0, 0],
-			"v1" : [0, 0, 0]
+			"position": [-5.371554, 7.565777, -0.362448],
+			"v0" : [-1.5, -2.12132, 1.5],
+			"v1" : [4.24264, 0, 4.24264]
 		}
+		// {
+		// 	"id": 0,
+		// 	"type": "primitive",
+		// 	"material" : 1,
+		// 	"primitive": 2,
+		// 	"power": [1.0, 1.0, 1.0]
+		// }	
 	],
 
 	"Transforms":[
@@ -54,7 +61,8 @@
 		// Light Boundary Material
 		"id": 1,
 		"type": "LightBoundary",		
-		"radiance" : [330, 330, 330]
+		"radiance" : [15, 15, 15]
+		//"radiance" : [330, 330, 330]
 		//"radiance" : [1.1, 1.1, 1.1]
     },
 	{
@@ -78,6 +86,14 @@
         "name": "../Surfaces/floor_plane.obj",
         "tag": "assimp_",
         "innerIndex": 0
+	},
+	{
+		// Area Light
+		"id": 2,
+		"type": "Triangle",
+        "name": "../Surfaces/light_plane.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
     },
     {
 		// Object Reading (inner index i top down order of meshes)
@@ -96,11 +112,18 @@
 		"material": 3,
         "primitive": 0
 	},
+	// {
+	// 	// Light
+	// 	"transform": 0,
+	// 	"accelerator": "Linear",
+	// 	"material": 1,
+    //     "primitive": 2
+	// },
 	{
 		// Dragon
 		"transform": 0,
 		"accelerator": "BasicBVH",
-		"material": 1, //2,
+		"material": 2,
         "primitive": 1
 	}]
 }
