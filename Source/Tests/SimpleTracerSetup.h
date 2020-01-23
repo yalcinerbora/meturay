@@ -43,10 +43,19 @@ class MockNode
     , public TracerCallbacksI
     , public NodeI
 {
-    private:
+    public:
         static constexpr uint32_t       MAX_BOUNCES = 16;
-        static constexpr int            SAMPLE_COUNT = 4;
+        static constexpr int            SAMPLE_COUNT = 2;
 
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 18};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {640, 360};
+        static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {1600, 900};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {1920, 1080};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {3840, 2160};
+
+    private:
         const double                    Duration;
 
         VisorI&                         visor;
@@ -152,7 +161,15 @@ void MockNode::Work()
         // Timing and Window Termination
         t.Lap();
         elapsed += t.Elapsed<CPUTimeSeconds>();
-        fprintf(stdout, "Time: %fs\r", t.Elapsed<CPUTimeSeconds>());        
+        
+        double elapsedS = t.Elapsed<CPUTimeSeconds>();
+        double rps = SAMPLE_COUNT * SAMPLE_COUNT * IMAGE_RESOLUTION[0] * IMAGE_RESOLUTION[1];
+        rps *= (1.0 / elapsedS);
+        rps /= 1'000'000.0;
+
+        fprintf(stdout, "%c[2K", 27);
+        fprintf(stdout, "Time: %fs Rps: %fM ray/s\r", 
+                elapsedS, rps);
         //if(elapsed >= Duration) break;
     }
     METU_LOG("\n");
@@ -164,13 +181,7 @@ class SimpleTracerSetup
     private:
         
         static constexpr Vector2i           SCREEN_RESOLUTION = {1600, 900};
-        //static constexpr Vector2i           IMAGE_RESOLUTION = {32, 18};
-        //static constexpr Vector2i           IMAGE_RESOLUTION = {320, 180};
-        //static constexpr Vector2i           IMAGE_RESOLUTION = {640, 360};
-        static constexpr Vector2i           IMAGE_RESOLUTION = {1280, 720};
-        //static constexpr Vector2i           IMAGE_RESOLUTION = {1600, 900};
-        //static constexpr Vector2i           IMAGE_RESOLUTION = {1920, 1080};
-        //static constexpr Vector2i           IMAGE_RESOLUTION = {3840, 2160};
+       
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
 
@@ -248,7 +259,7 @@ bool SimpleTracerSetup::Init()
 
         CameraPerspective{},
 
-        IMAGE_RESOLUTION,
+        MockNode::IMAGE_RESOLUTION,
         IMAGE_PIXEL_FORMAT,
 
         0.0,
@@ -310,7 +321,7 @@ bool SimpleTracerSetup::Init()
 
 
     visorOpts.iFormat = IMAGE_PIXEL_FORMAT;
-    visorOpts.iSize = IMAGE_RESOLUTION;
+    visorOpts.iSize = MockNode::IMAGE_RESOLUTION;
 
     // Create Visor
     visorView = CreateVisorGL(visorOpts);
@@ -320,7 +331,7 @@ bool SimpleTracerSetup::Init()
     tracerBase = std::make_unique<TracerBase>(*cudaSystem);
     tracerBase->AttachLogic(*generator.GetTracerLogic());
     tracerBase->SetImagePixelFormat(IMAGE_PIXEL_FORMAT);
-    tracerBase->ResizeImage(IMAGE_RESOLUTION);
+    tracerBase->ResizeImage(MockNode::IMAGE_RESOLUTION);
     tracerBase->ReportionImage();
     tracerBase->ResetImage();
     tracerBase->SetOptions(TRACER_OPTIONS);
