@@ -68,4 +68,6 @@ class VisorI
         virtual void                    SetWindowSize(const Vector2i& size) = 0;
         virtual void                    SetFPSLimit(float) = 0;
 
+        virtual Vector2i                MonitorResolution() const = 0;
+
 };

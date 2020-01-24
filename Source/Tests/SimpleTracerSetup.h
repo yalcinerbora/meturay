@@ -178,9 +178,8 @@ void MockNode::Work()
 class SimpleTracerSetup
 {
 
-    private:
-        
-        static constexpr Vector2i           SCREEN_RESOLUTION = {1600, 900};
+    private:        
+        static constexpr Vector2i           SCREEN_RESOLUTION = {1280, 720};
        
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
@@ -326,6 +325,9 @@ bool SimpleTracerSetup::Init()
     // Create Visor
     visorView = CreateVisorGL(visorOpts);
     visorView->SetInputScheme(*visorInput);
+
+    // Set Window Res to Half of Mon
+    visorView->SetWindowSize(2 * visorView->MonitorResolution() / 5);
 
     // Attach the logic & Image format
     tracerBase = std::make_unique<TracerBase>(*cudaSystem);

@@ -840,3 +840,11 @@ void VisorGL::SetFPSLimit(float f)
 {
     vOpts.fpsLimit = f;
 }
+
+Vector2i VisorGL::MonitorResolution() const
+{
+    GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+
+    return Vector2i(mode->width, mode->height);
+}

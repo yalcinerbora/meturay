@@ -184,4 +184,6 @@ class VisorGL : public VisorI
 
         void                    SetWindowSize(const Vector2i& size) override;
         void                    SetFPSLimit(float) override;
+
+        Vector2i                MonitorResolution() const override;
 };
