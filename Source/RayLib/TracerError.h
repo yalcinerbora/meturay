@@ -6,6 +6,7 @@ Tracer error "Enumeration"
 */
 
 #include "Error.h"
+#include <stdexcept>
 
 struct TracerError : public ErrorI
 {
@@ -16,7 +17,8 @@ struct TracerError : public ErrorI
             // Logical
             NO_LOGIC_SET,
             // General
-            OUT_OF_MEMORY,
+            CPU_OUT_OF_MEMORY,
+            GPU_OUT_OF_MEMORY,
             // ...
 
 
@@ -37,6 +39,24 @@ struct TracerError : public ErrorI
         operator    std::string() const override;
 };
 
+class TracerException : public std::runtime_error
+{
+    private:
+        TracerError          e;
+
+    protected:
+    public:
+        TracerException(TracerError::Type t)
+            : std::runtime_error("")
+            , e(t)
+        {}
+        TracerException(TracerError::Type t, const char* const err)
+            : std::runtime_error(err)
+            , e(t)
+        {}
+        operator TracerError() const { return e; };
+};
+
 inline TracerError::TracerError(TracerError::Type t)
     : type(t)
 {}
@@ -53,7 +73,8 @@ inline TracerError::operator std::string() const
         "OK",
         "No Tracer Logic is set",
         // General
-        "Out of Memory"
+        "CPU is out of memory",
+        "GPU is out of memory"
     };
     static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(TracerError::END),
                   "Enum and enum string list size mismatch.");

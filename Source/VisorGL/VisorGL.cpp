@@ -176,7 +176,7 @@ KeyboardKeyType VisorGL::DetermineKey(int key)
 
 void VisorGL::ErrorCallbackGLFW(int error, const char* description)
 {
-    METU_ERROR_LOG("GLFW Error %d: %s", error, description);
+    METU_ERROR_LOG("GLFW %d: %s", error, description);
 }
 
 void VisorGL::WindowPosGLFW(GLFWwindow* w, int x, int y)
@@ -611,7 +611,7 @@ VisorGL::VisorGL(const VisorOptions& opts)
                               nullptr);
     if(window == nullptr)
     {
-        METU_ERROR_LOG("Error: Could not create window.");
+        METU_ERROR_LOG("Could not create window.");
         assert(false);
     }
     glfwMakeContextCurrent(window);
@@ -624,7 +624,7 @@ VisorGL::VisorGL(const VisorOptions& opts)
     GLenum err = glewInit();
     if(err != GLEW_OK)
     {
-        METU_ERROR_LOG("Error: %s\n", glewGetErrorString(err));
+        METU_ERROR_LOG("%s", glewGetErrorString(err));
         assert(false);
     }
 

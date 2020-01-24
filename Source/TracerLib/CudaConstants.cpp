@@ -16,7 +16,7 @@ CudaGPU::WorkGroup::WorkGroup(int deviceId, int streamCount)
     , mainEvent(nullptr)
 {
     assert(totalStreams <= 64);
-    CUDA_CHECK(cudaSetDevice(deviceId))
+    CUDA_CHECK(cudaSetDevice(deviceId));
     for(int i = 0; i < totalStreams; i++)
     {
         //CUDA_CHECK(cudaStreamCreate(&works[i]));

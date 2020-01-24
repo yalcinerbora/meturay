@@ -19,8 +19,6 @@ struct NodeError : public ErrorI
             CONNECTION_FAILED,
             // ...
 
-
-
             // End
             END
         };

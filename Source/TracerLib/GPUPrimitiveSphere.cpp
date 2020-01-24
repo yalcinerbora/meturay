@@ -40,7 +40,7 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
         }
         catch(SceneException const& e)
         {
-            if(e.what()[0] != '\0') METU_ERROR_LOG("Error: %s", e.what());
+            if(e.what()[0] != '\0') METU_ERROR_LOG("%s", e.what());
             return e;
         }
     }

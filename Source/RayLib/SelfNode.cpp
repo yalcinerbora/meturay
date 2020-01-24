@@ -76,7 +76,7 @@ void SelfNode::SendLog(const std::string s)
 
 void SelfNode::SendError(TracerError err)
 {
-    METU_ERROR_LOG("Tracer Error: %s", static_cast<std::string>(err).c_str());
+    METU_ERROR_LOG("Tracer: %s", static_cast<std::string>(err).c_str());
 }
 
 void SelfNode::SendAnalyticData(AnalyticData data)

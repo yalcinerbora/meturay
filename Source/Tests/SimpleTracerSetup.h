@@ -48,9 +48,9 @@ class MockNode
         static constexpr int            SAMPLE_COUNT = 2;
 
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 18};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};
+        static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {640, 360};
-        static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1600, 900};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1920, 1080};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {3840, 2160};
@@ -120,7 +120,7 @@ void MockNode::SendLog(const std::string s)
 
 void MockNode::SendError(TracerError err)
 {
-    METU_ERROR_LOG("Tracer Error: %s", static_cast<std::string>(err).c_str());
+    METU_ERROR_LOG("Tracer: %s", static_cast<std::string>(err).c_str());
 }
 
 void MockNode::SendImage(const std::vector<Byte> data,
@@ -354,5 +354,14 @@ bool SimpleTracerSetup::Init()
 
 void SimpleTracerSetup::Body()
 {
-    node->Work();
+    try
+    {
+        node->Work();
+    }
+    catch(TracerException const& e)
+    {
+        std::string err = static_cast<TracerError>(e);
+        METU_ERROR_LOG("%s (%s)", err.c_str(), e.what());
+        GTEST_FAIL();
+    }
 }

@@ -579,7 +579,10 @@ void GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                           cudaMemcpyHostToDevice));
 
     t.Stop();
-    METU_LOG("Surface%u BVH Generated %f seconds.", surface, t.Elapsed<CPUTimeSeconds>());
+    METU_LOG("Surface%u BVH(d=%u) generated in %f seconds.", 
+             surface,
+             maxDepth,
+             t.Elapsed<CPUTimeSeconds>());
 }
 
 template <class PGroup>
@@ -664,15 +667,32 @@ void GPUAccBVHBatch<PGroup>::Hit(const CudaGPU& gpu,
                                  const uint32_t rayCount) const
 {
     // TODO: Is there a better way to implement this
+    using LeafData = typename PGroup::LeafData;
     using PrimitiveData = typename PGroup::PrimitiveData;
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
 
+    // Select Intersection algorithm with or without stack    
+    using BVHIntersectKernel = void(*)(HitKey*,
+                                       PrimitiveId*,
+                                       HitStructPtr,
+                                       RayGMem*,
+                                       const TransformId*,
+                                       const RayId*,
+                                       const HitKey*,
+                                       uint32_t,
+                                       const BVHNode<LeafData>**,
+                                       const TransformStruct*, PrimitiveData);
+
+    BVHIntersectKernel kernel = (USE_STACK) ? KCIntersectBVH<PGroup> : 
+                                              KCIntersectBVHStackless<PGroup>;
+
+    // Kernel Call
     gpu.AsyncGridStrideKC_X
     (
         0,
         rayCount,
         //
-        KCIntersectBVH<PGroup>,
+        *kernel,
         // Args
         // O
         dMaterialKeys,

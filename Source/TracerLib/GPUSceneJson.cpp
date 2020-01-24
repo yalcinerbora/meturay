@@ -714,7 +714,7 @@ SceneError GPUSceneJson::LoadScene(const TracerParameters& p, double time)
     }
     catch(nlohmann::json::parse_error const& e)
     {
-        METU_ERROR_LOG("Error: %s", e.what());
+        METU_ERROR_LOG("%s", e.what());
         return SceneError::JSON_FILE_PARSE_ERROR;
     }
     return e;

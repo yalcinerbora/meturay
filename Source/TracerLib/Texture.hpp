@@ -47,7 +47,7 @@ __host__ Texture<D, T>::Texture(InterpolationType interp,
     }
 
     cudaChannelFormatDesc d = cudaCreateChannelDesc<T>();
-    CUDA_CHECK(cudaMallocMipmappedArray(&data, &d, extent, 1));
+    CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, 1));
 
     // Allocation Done now generate texture
     cudaResourceDesc rDesc = {};

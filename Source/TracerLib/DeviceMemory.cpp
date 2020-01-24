@@ -17,7 +17,7 @@ DeviceMemoryCPUBacked::DeviceMemoryCPUBacked(size_t sizeInBytes, int deviceId)
     , size(sizeInBytes)
 {
     CUDA_CHECK(cudaSetDevice(currentDevice));
-    CUDA_CHECK(cudaMalloc(&d_ptr, size));
+    CUDA_MEMORY_CHECK(cudaMalloc(&d_ptr, size));
     h_ptr = malloc(size);
 }
 
@@ -56,7 +56,7 @@ DeviceMemoryCPUBacked& DeviceMemoryCPUBacked::operator=(const DeviceMemoryCPUBac
     if(size != other.size)
     {
         CUDA_CHECK(cudaFree(d_ptr));
-        CUDA_CHECK(cudaMalloc(&d_ptr, other.size));
+        CUDA_MEMORY_CHECK(cudaMalloc(&d_ptr, other.size));
 
         free(h_ptr);
         h_ptr = malloc(size);
@@ -104,7 +104,7 @@ DeviceMemoryCPUBacked& DeviceMemoryCPUBacked::operator=(DeviceMemoryCPUBacked&& 
     else
     {
         // Between devices fallback to copy and free
-        CUDA_CHECK(cudaMalloc(&d_ptr, size));
+        CUDA_MEMORY_CHECK(cudaMalloc(&d_ptr, size));
         CUDA_CHECK(cudaMemcpyPeer(d_ptr, currentDevice, other.d_ptr, other.currentDevice, other.size));
 
         // Remove memory from other device
@@ -147,7 +147,7 @@ void DeviceMemoryCPUBacked::MigrateToOtherDevice(int deviceTo, cudaStream_t stre
 {
     void* d_new = nullptr;
     CUDA_CHECK(cudaSetDevice(deviceTo));
-    CUDA_CHECK(cudaMalloc(&d_new, size));
+    CUDA_MEMORY_CHECK(cudaMalloc(&d_new, size));
     CUDA_CHECK(cudaMemcpyPeerAsync(d_new, deviceTo, d_ptr, currentDevice, size, stream));
     CUDA_CHECK(cudaSetDevice(currentDevice));
     CUDA_CHECK(cudaFree(d_ptr));
@@ -163,7 +163,7 @@ DeviceMemory::DeviceMemory()
 DeviceMemory::DeviceMemory(size_t sizeInBytes)
     : size(sizeInBytes)
 {
-    CUDA_CHECK(cudaMallocManaged(&m_ptr, size));
+    CUDA_MEMORY_CHECK(cudaMallocManaged(&m_ptr, size));
 }
 
 DeviceMemory::DeviceMemory(const DeviceMemory& other)
@@ -189,7 +189,7 @@ DeviceMemory& DeviceMemory::operator=(const DeviceMemory& other)
     if(size != other.size)
     {
         CUDA_CHECK(cudaFree(m_ptr));
-        cudaMallocManaged(&m_ptr, other.size);
+        CUDA_MEMORY_CHECK(cudaMallocManaged(&m_ptr, other.size));
     }
     CUDA_CHECK(cudaMemcpy(m_ptr, other.m_ptr, other.size, cudaMemcpyDeviceToDevice));
     size = other.size;

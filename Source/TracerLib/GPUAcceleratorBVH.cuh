@@ -123,27 +123,29 @@ class GPUAccBVHBatch final
     : public GPUAcceleratorBatch<GPUAccBVHGroup<PGroup>, PGroup>
 {
     public:
+        static constexpr bool   USE_STACK = true;
+
         // Constructors & Destructor
-                            GPUAccBVHBatch(const GPUAcceleratorGroupI&,
-                                              const GPUPrimitiveGroupI&);
-                            ~GPUAccBVHBatch() = default;
+                                GPUAccBVHBatch(const GPUAcceleratorGroupI&,
+                                                  const GPUPrimitiveGroupI&);
+                                ~GPUAccBVHBatch() = default;
 
         // Interface
         // Type(as string) of the accelerator group
-        const char*         Type() const override;
+        const char*             Type() const override;
         // Kernel Logic
-        void                Hit(const CudaGPU&,
-                                // O
-                                HitKey* dMaterialKeys,
-                                PrimitiveId* dPrimitiveIds,
-                                HitStructPtr dHitStructs,
-                                // I-O
-                                RayGMem* dRays,
-                                // Input
-                                const TransformId* dTransformIds,
-                                const RayId* dRayIds,
-                                const HitKey* dAcceleratorKeys,
-                                const uint32_t rayCount) const override;
+        void                    Hit(const CudaGPU&,
+                                    // O
+                                    HitKey* dMaterialKeys,
+                                    PrimitiveId* dPrimitiveIds,
+                                    HitStructPtr dHitStructs,
+                                    // I-O
+                                    RayGMem* dRays,
+                                    // Input
+                                    const TransformId* dTransformIds,
+                                    const RayId* dRayIds,
+                                    const HitKey* dAcceleratorKeys,
+                                    const uint32_t rayCount) const override;
 };
 
 #include "GPUAcceleratorBVH.hpp"

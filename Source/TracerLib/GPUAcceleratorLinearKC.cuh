@@ -209,7 +209,7 @@ static void KCIntersectBaseLinear(// I-O
         uint32_t primStart = gPrevLoc[id];
         primStart = rayData.IsInvalidRay() ? leafCount : primStart;
         // Check next potential hit     
-        HitKey key = HitKey::InvalidKey;
+        HitKey nextAccKey = HitKey::InvalidKey;
         TransformId transformId = 0;
         for(; primStart < leafCount; primStart++)
         {
@@ -218,7 +218,7 @@ static void KCIntersectBaseLinear(// I-O
             {
                 //printf("Found Intersection %u, prev %u, Key %X\n", primStart,
                 //       gPrevLoc[id], l.accKey.value);
-                key = l.accKey;
+                nextAccKey = l.accKey;
                 transformId = l.transformId;
                 break;
             }
@@ -226,11 +226,13 @@ static void KCIntersectBaseLinear(// I-O
 
         // Write next potential hit
         if(primStart < leafCount)
-        {
-            // Write Updated Stuff
-            gHitKeys[globalId] = key;
-            gPrevLoc[id] = primStart + 1;
+        {            
+            // Set AcceleratorId and TransformId for lower accelerator
+            gHitKeys[globalId] = nextAccKey;
             gTransformIds[id] = transformId;
+            // Save State for next iteration
+            gPrevLoc[id] = primStart + 1;
+            
         }
         // If we are out of bounds write invalid key
         else gHitKeys[globalId] = HitKey::InvalidKey;
