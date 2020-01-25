@@ -26,7 +26,7 @@ class GPUEventEstimatorEmpty final
                                                    double time) override;
 
         const char*                     Type() const override;
-        void                            Construct(const CudaSystem&) override;
+        TracerError                     Construct(const CudaSystem&) override;
 };
 
 static_assert(IsTracerClass<GPUEventEstimatorEmpty>::value,
@@ -37,8 +37,10 @@ inline const char* GPUEventEstimatorEmpty::Type() const
     return TypeName(); 
 }
 
-inline void GPUEventEstimatorEmpty::Construct(const CudaSystem&)
-{}
+inline TracerError GPUEventEstimatorEmpty::Construct(const CudaSystem&)
+{
+    return TracerError::OK;
+}
 
 inline SceneError GPUEventEstimatorEmpty::Initialize(const NodeListing&,
                                                      // Material Keys

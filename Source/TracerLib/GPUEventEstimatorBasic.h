@@ -26,7 +26,7 @@ class GPUEventEstimatorBasic final
         const char*                     Type() const override;
 
         // Constructs Event Estimator
-        void                            Construct(const CudaSystem&) override;
+        TracerError                     Construct(const CudaSystem&) override;
 };
 
 static_assert(IsTracerClass<GPUEventEstimatorBasic>::value,

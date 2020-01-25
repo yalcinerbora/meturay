@@ -73,8 +73,8 @@ class MockTracerLogic : public TracerBaseLogicI
                                            const std::map<uint32_t, BaseLeaf>&) override { return SceneError::OK; }
 
                 // Construction & Destruction
-                void                Constrcut() override {};
-                void                Destruct() override {};
+                TracerError         Constrcut(const CudaSystem&) override { return TracerError::OK; }
+                TracerError         Destruct(const CudaSystem&) override { return TracerError::OK; }
         };
 
         class AcceleratorMock : public GPUAcceleratorBatchI

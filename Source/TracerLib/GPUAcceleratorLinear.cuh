@@ -92,15 +92,15 @@ class GPUAccLinearGroup final
         uint32_t                        InnerId(uint32_t surfaceId) const override;
 
         // Batched and singular construction
-        void                            ConstructAccelerators(const CudaSystem&) override;
-        void                            ConstructAccelerator(uint32_t surface,
+        TracerError                     ConstructAccelerators(const CudaSystem&) override;
+        TracerError                     ConstructAccelerator(uint32_t surface,
                                                              const CudaSystem&) override;
-        void                            ConstructAccelerators(const std::vector<uint32_t>& surfaces,
+        TracerError                     ConstructAccelerators(const std::vector<uint32_t>& surfaces,
                                                               const CudaSystem&) override;
-        void                            DestroyAccelerators(const CudaSystem&) override;
-        void                            DestroyAccelerator(uint32_t surface,
+        TracerError                     DestroyAccelerators(const CudaSystem&) override;
+        TracerError                     DestroyAccelerator(uint32_t surface,
                                                            const CudaSystem&) override;
-        void                            DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+        TracerError                     DestroyAccelerators(const std::vector<uint32_t>& surfaces,
                                                             const CudaSystem&) override;
 
         size_t                          UsedGPUMemory() const override;
@@ -154,6 +154,12 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
 
     protected:
     public:
+        // Constructors & Destructor
+                                        GPUBaseAcceleratorLinear();
+                                        GPUBaseAcceleratorLinear(const GPUBaseAcceleratorLinear&) = delete;
+        GPUBaseAcceleratorLinear&       operator=(const GPUBaseAcceleratorLinear&) = delete;
+                                        ~GPUBaseAcceleratorLinear() = default;
+
         // Interface
         // Type(as string) of the accelerator group
         const char*                 Type() const override;
@@ -178,8 +184,8 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
         SceneError                  Change(// List of only changed surface to transform id hit key mappings
                                            const std::map<uint32_t, BaseLeaf>&) override;
 
-        void                        Constrcut() override;
-        void                        Destruct() override;
+        TracerError                 Constrcut(const CudaSystem&) override;
+        TracerError                 Destruct(const CudaSystem&) override;
 };
 
 #include "GPUAcceleratorLinear.hpp"

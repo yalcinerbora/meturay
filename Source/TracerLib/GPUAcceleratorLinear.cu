@@ -9,6 +9,11 @@ const char* GPUBaseAcceleratorLinear::TypeName()
     return "Linear";
 }
 
+GPUBaseAcceleratorLinear::GPUBaseAcceleratorLinear()
+    : dLeafs(nullptr)
+    , dPrevLocList(nullptr)
+{}
+
 const char* GPUBaseAcceleratorLinear::Type() const
 {
     return TypeName();
@@ -107,14 +112,16 @@ SceneError GPUBaseAcceleratorLinear::Change(// List of only changed surface to t
     return SceneError::OK;
 }
 
-void GPUBaseAcceleratorLinear::Constrcut()
+TracerError GPUBaseAcceleratorLinear::Constrcut(const CudaSystem&)
 {
-
+    // Nothing to do here
+    return TracerError::OK;
 }
 
-void GPUBaseAcceleratorLinear::Destruct()
+TracerError GPUBaseAcceleratorLinear::Destruct(const CudaSystem&)
 {
-
+    // Nothing to do here
+    return TracerError::OK;
 }
 
 static_assert(IsTracerClass<GPUBaseAcceleratorLinear>::value,

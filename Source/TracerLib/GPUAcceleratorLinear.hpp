@@ -102,18 +102,21 @@ uint32_t GPUAccLinearGroup<PGroup>::InnerId(uint32_t surfaceId) const
 }
 
 template <class PGroup>
-void GPUAccLinearGroup<PGroup>::ConstructAccelerators(const CudaSystem& system)
+TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerators(const CudaSystem& system)
 {
     // TODO: make this a single KC
+    TracerError e = TracerError::OK;
     for(const auto& id : idLookup)
     {
-        ConstructAccelerator(id.first, system);
+        if((e = ConstructAccelerator(id.first, system)) != TracerError::OK)
+            return e;
     }
+    return TracerError::OK;
 }
 
 template <class PGroup>
-void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
-                                                     const CudaSystem& system)
+TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
+                                                            const CudaSystem& system)
 {
     using PrimitiveData = typename PGroup::PrimitiveData;
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
@@ -152,41 +155,54 @@ void GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         primData,
         index
     );
+
+    return TracerError::OK;
 }
 
 template <class PGroup>
-void GPUAccLinearGroup<PGroup>::ConstructAccelerators(const std::vector<uint32_t>& surfaces,
-                                                      const CudaSystem& system)
+TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerators(const std::vector<uint32_t>& surfaces,
+                                                             const CudaSystem& system)
 {
     // TODO: make this a single KC
+    TracerError e = TracerError::OK;
     for(const uint32_t& id : surfaces)
     {
-        ConstructAccelerator(id, system);
+        auto it = idLookup.cend();
+        if((it = idLookup.find(id)) == idLookup.cend()) continue;
+
+        if((e = ConstructAccelerator(it->second, system)) != TracerError::OK)
+            return e;
     }
+    return TracerError::OK;
 }
 
 template <class PGroup>
-void GPUAccLinearGroup<PGroup>::DestroyAccelerators(const CudaSystem&)
+TracerError GPUAccLinearGroup<PGroup>::DestroyAccelerators(const CudaSystem&)
 {
     //...
     // Define destory??
     // There is no destruction or deallocation
+    return TracerError::OK;
 }
 
 template <class PGroup>
-void GPUAccLinearGroup<PGroup>::DestroyAccelerator(uint32_t surface,
-                                                   const CudaSystem&)
+TracerError GPUAccLinearGroup<PGroup>::DestroyAccelerator(uint32_t surface,
+                                                          const CudaSystem&)
 {
     //...
     // Define destory??
     // There is no destruction or deallocation
+    return TracerError::OK;
 }
 
 template <class PGroup>
-void GPUAccLinearGroup<PGroup>::DestroyAccelerators(const std::vector<uint32_t>& surfaces,
-                                                    const CudaSystem&)
+TracerError GPUAccLinearGroup<PGroup>::DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+                                                           const CudaSystem&)
 {
     //...
+    // Define destory??
+    // There is no destruction or deallocation
+    return TracerError::OK;
 }
 
 template <class PGroup>

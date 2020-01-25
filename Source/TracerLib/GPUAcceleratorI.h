@@ -59,17 +59,17 @@ class GPUAcceleratorGroupI
         virtual uint32_t                    InnerId(uint32_t surfaceId) const = 0;
 
         // Batched and singular construction
-        virtual void                        ConstructAccelerators(const CudaSystem&) = 0;
-        virtual void                        ConstructAccelerator(uint32_t surface,
-                                                                 const CudaSystem&) = 0;
-        virtual void                        ConstructAccelerators(const std::vector<uint32_t>& surfaces,
-                                                                  const CudaSystem&) = 0;
-
-        virtual void                        DestroyAccelerators(const CudaSystem&) = 0;
-        virtual void                        DestroyAccelerator(uint32_t surface,
-                                                               const CudaSystem&) = 0;
-        virtual void                        DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+        virtual TracerError                ConstructAccelerators(const CudaSystem&) = 0;
+        virtual TracerError                ConstructAccelerator(uint32_t surface,
                                                                 const CudaSystem&) = 0;
+        virtual TracerError                ConstructAccelerators(const std::vector<uint32_t>& surfaces,
+                                                                 const CudaSystem&) = 0;
+
+        virtual TracerError                DestroyAccelerators(const CudaSystem&) = 0;
+        virtual TracerError                DestroyAccelerator(uint32_t surface,
+                                                              const CudaSystem&) = 0;
+        virtual TracerError                DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+                                                               const CudaSystem&) = 0;
 
         virtual size_t                      UsedGPUMemory() const = 0;
         virtual size_t                      UsedCPUMemory() const = 0;
@@ -134,6 +134,6 @@ class GPUBaseAcceleratorI
                                        const std::map<uint32_t, BaseLeaf>&) = 0;
 
         // Construction & Destruction
-        virtual void            Constrcut() = 0;
-        virtual void            Destruct() = 0;
+        virtual TracerError     Constrcut(const CudaSystem&) = 0;
+        virtual TracerError     Destruct(const CudaSystem&) = 0;
 };

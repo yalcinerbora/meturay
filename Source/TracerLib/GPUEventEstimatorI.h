@@ -24,5 +24,5 @@ class GPUEventEstimatorI
                                            const std::vector<const GPUPrimitiveGroupI*>&,
                                            double time) = 0;
         // Constructs Event Estimator
-        virtual void            Construct(const CudaSystem&) = 0;
+        virtual TracerError     Construct(const CudaSystem&) = 0;
 };

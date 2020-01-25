@@ -5,7 +5,7 @@ const char* GPUEventEstimatorBasic::Type() const
     return TypeName();
 }
 
-void GPUEventEstimatorBasic::Construct(const CudaSystem&)
+TracerError GPUEventEstimatorBasic::Construct(const CudaSystem&)
 {
     size_t size = lightInfo.size() * sizeof(EstimatorInfo);
    
@@ -24,4 +24,5 @@ void GPUEventEstimatorBasic::Construct(const CudaSystem&)
         dData.dLights = nullptr;
         dData.lightCount = 0;
     }
+    return TracerError::OK;
 }

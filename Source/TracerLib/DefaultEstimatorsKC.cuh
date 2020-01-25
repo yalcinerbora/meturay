@@ -59,7 +59,7 @@ inline bool EstimateEventBasic(HitKey& key,
         }
         case LightType::DIRECTIONAL:
         {
-            direction = info.position0R;
+            direction = -info.position0R;
             tMax = INFINITY;
             break;
         }
@@ -145,7 +145,6 @@ inline bool EstimateEventBasic(HitKey& key,
     // PDF of selecting that light
     pdf *= 1.0f / static_cast<float>(estData.lightCount);
     return true;
-    return false;
 }
 
 __device__

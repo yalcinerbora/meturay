@@ -311,6 +311,8 @@ TracerBase::TracerBase(CudaSystem& s)
 
 TracerError TracerBase::Initialize()
 {
+    TracerError e = TracerError::OK;
+
     // No logic set for initalization
     if(currentLogic == nullptr) return TracerError::NO_LOGIC_SET;
 
@@ -319,13 +321,17 @@ TracerError TracerBase::Initialize()
     const AcceleratorGroupList& acceleratorGroups = currentLogic->AcceleratorGroups();
     GPUEventEstimatorI& estimator = currentLogic->EventEstimator();
 
-    baseAccelerator.Constrcut();
+    if((e = baseAccelerator.Constrcut(cudaSystem)) != TracerError::OK)
+       return e;
+
     for(const auto& accel : acceleratorGroups)
     {
-        accel->ConstructAccelerators(cudaSystem);
+        if((e = accel->ConstructAccelerators(cudaSystem)) != TracerError::OK)
+            return e;        
     }
     // Construct Estimator
-    estimator.Construct(cudaSystem);
+    if((e = estimator.Construct(cudaSystem)) != TracerError::OK)
+        return e;
     cudaSystem.SyncGPUAll();
     // All seems fine mark tracer as healthy
     healthy = true;

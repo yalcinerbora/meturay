@@ -103,15 +103,15 @@ class GPUAccBVHGroup final
         uint32_t                        InnerId(uint32_t surfaceId) const override;
 
         // Batched and singular construction
-        void                            ConstructAccelerators(const CudaSystem&) override;
-        void                            ConstructAccelerator(uint32_t surface,
+        TracerError                     ConstructAccelerators(const CudaSystem&) override;
+        TracerError                     ConstructAccelerator(uint32_t surface,
                                                              const CudaSystem&) override;
-        void                            ConstructAccelerators(const std::vector<uint32_t>& surfaces,
+        TracerError                     ConstructAccelerators(const std::vector<uint32_t>& surfaces,
                                                               const CudaSystem&) override;
-        void                            DestroyAccelerators(const CudaSystem&) override;
-        void                            DestroyAccelerator(uint32_t surface,
+        TracerError                     DestroyAccelerators(const CudaSystem&) override;
+        TracerError                     DestroyAccelerator(uint32_t surface,
                                                            const CudaSystem&) override;
-        void                            DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+        TracerError                     DestroyAccelerators(const std::vector<uint32_t>& surfaces,
                                                             const CudaSystem&) override;
 
         size_t                          UsedGPUMemory() const override;
@@ -146,6 +146,59 @@ class GPUAccBVHBatch final
                                     const RayId* dRayIds,
                                     const HitKey* dAcceleratorKeys,
                                     const uint32_t rayCount) const override;
+};
+
+
+class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
+{
+    public:
+        static const char*              TypeName();
+
+    private:
+        static constexpr size_t         AlignByteCount = 16;
+        // GPU Memory
+        DeviceMemory                    bvhMemory;
+        DeviceMemory                    rayStateMemory;
+        // GPU Ptrs
+        const BVHNode<BaseLeaf>*        dBVH;
+        uint32_t*                       dRayStates;
+
+        // CPU Memory
+        std::map<uint32_t, uint32_t>    innerIds;
+
+    public:
+        // Constructors & Destructor
+                                        GPUBaseAcceleratorBVH();
+                                        GPUBaseAcceleratorBVH(const GPUBaseAcceleratorBVH&) = delete;
+        GPUBaseAcceleratorBVH&          operator=(const GPUBaseAcceleratorBVH&) = delete;
+                                        ~GPUBaseAcceleratorBVH() = default;
+
+        // Interface
+        // Type(as string) of the accelerator group
+        const char*                 Type() const override;
+
+        // Get ready for hit loop
+        void                        GetReady(uint32_t rayCount) override;
+        // Base accelerator only points to the next accelerator key.
+        // It can return invalid key,
+        // which is either means data is out of bounds or ray is invalid.
+        void                        Hit(const CudaSystem&,
+                                        // Output
+                                        TransformId* dTransformIds,
+                                        HitKey* dAcceleratorKeys,
+                                        // Inputs
+                                        const RayGMem* dRays,
+                                        const RayId* dRayIds,
+                                        const uint32_t rayCount) const override;
+
+
+        SceneError                  Initialize(// List of surface to transform id hit key mappings
+                                               const std::map<uint32_t, BaseLeaf>&) override;
+        SceneError                  Change(// List of only changed surface to transform id hit key mappings
+                                           const std::map<uint32_t, BaseLeaf>&) override;
+
+        TracerError                 Constrcut(const CudaSystem&) override;
+        TracerError                 Destruct(const CudaSystem&) override;
 };
 
 #include "GPUAcceleratorBVH.hpp"

@@ -2,6 +2,7 @@
 
 #include "RayLib/HitStructs.h"
 #include "RayLib/SceneStructs.h"
+#include "RayLib/Types.h"
 
 #include "AcceleratorDeviceFunctions.h"
 
@@ -9,6 +10,14 @@ enum class SplitAxis { X, Y, Z, END };
 
 // Depth First Search over BVH
 static constexpr const uint8_t MAX_DEPTH = 64;
+
+static constexpr const uint8_t MAX_BASE_DEPTH = 27;
+static constexpr const uint8_t MAX_BASE_DEPTH_BITS = 5;
+
+static_assert((MAX_BASE_DEPTH + MAX_BASE_DEPTH_BITS) <= sizeof(uint32_t) * BYTE_BITS,
+              "Base Accelerator State Bits should fit in 32-bit data.");
+static_assert((1llu << MAX_BASE_DEPTH_BITS) >= MAX_BASE_DEPTH, 
+              "Base Accelerator bits should hold depth.");
 
 struct SpacePartition
 {
@@ -325,21 +334,12 @@ void KCIntersectBVH(// O
             ray.ray.TransformSelf(s);
         }
 
-        //Vector2i trackPixelId = Vector2i(18, 11);
-        //int32_t pixelLinear = trackPixelId[1] * 32 + trackPixelId[0];
-        //float ratio = -(ray.ray.getPosition()[2] / ray.ray.getDirection()[2]);
-        //Vector3 zPLanePoint = ray.ray.getPosition() + ratio * ray.ray.getDirection();
-        //if(id == pixelLinear)
-        //    printf("dir %f, %f, %f\n",
-        //           zPLanePoint[0],
-        //           zPLanePoint[1],
-        //           zPLanePoint[2]);
-
         // Hit Data that is going to be fetched
         bool hitModified = false;
         HitKey materialKey;
         PrimitiveId primitiveId;
         HitData hit;
+
         uint8_t depth = 0;
         Push(depth, 0);
         const BVHNode<LeafData>* currentNode = nullptr;
@@ -362,33 +362,17 @@ void KCIntersectBVH(// O
                                                    currentNode->leaf,
                                                    primData);
 
-                //if(id == pixelLinear && result[1])
-                //    printf("HIT\n");
-
                 hitModified |= result[1];
                 if(result[0]) break;
 
-                //debugChar = 'L';
             }
             else if(ray.ray.IntersectsAABB(currentNode->aabbMin, currentNode->aabbMax,
                                            Vector2f(ray.tMin, ray.tMax)))
-            //else if(true)
             {
                 // Push to stack
                 Push(depth, currentNode->right);
                 Push(depth, currentNode->left);
-
-                //debugChar = 'I';
             }
-
-           //if(id == pixelLinear)
-           //     printf("[%c] [%03u %03u %03u] depth %u\n",
-           //            debugChar,
-           //            (currentNode->isLeaf) ? 0 : currentNode->left,
-           //            (currentNode->isLeaf) ? 0 : currentNode->right,
-           //            currentNode->parent, depth);
-           // if(id == pixelLinear) printf("----------\n");
-
         }
         // Write Updated Stuff
         if(hitModified)
@@ -618,7 +602,7 @@ static void KCIntersectBaseBVH(// I-O
         const BVHNode<BaseLeaf>* currentNode = gBVH;
         while(depth <= MAX_DEPTH)
         {
-            //if(globalId == 144)
+            //if(id == 144)
             //    printf("[ ] [%03u %03u %03u] depth %u list 0x%016llX\n",
             //    (currentNode->isLeaf) ? 0 : currentNode->left,
             //           (currentNode->isLeaf) ? 0 : currentNode->right,

@@ -19,8 +19,10 @@ struct TracerError : public ErrorI
             // General
             CPU_OUT_OF_MEMORY,
             GPU_OUT_OF_MEMORY,
+            // Accelerator Related
+            UNABLE_TO_CONSTRUCT_ACCELERATOR,
+            UNABLE_TO_CONSTRUCT_BASE_ACCELERATOR,
             // ...
-
 
 
             // End
@@ -74,7 +76,10 @@ inline TracerError::operator std::string() const
         "No Tracer Logic is set",
         // General
         "CPU is out of memory",
-        "GPU is out of memory"
+        "GPU is out of memory",
+        // Accelerator Related
+        "Unable to construct Accelerator",
+        "Unable to construct BaseAccelerator"
     };
     static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(TracerError::END),
                   "Enum and enum string list size mismatch.");
