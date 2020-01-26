@@ -50,21 +50,6 @@ HitKey GPUAccBVHGroup<PGroup>::FindHitKey(uint32_t accIndex,
 }
 
 template <class PGroup>
-SplitAxis GPUAccBVHGroup<PGroup>::DetermineNextSplit(SplitAxis split, const AABB3f& aabb)
-{
-    SplitAxis nextSplit = static_cast<SplitAxis>((static_cast<int>(split) + 1) %
-                                                 static_cast<int>(SplitAxis::END));
-    int splitIndex = static_cast<int>(nextSplit);
-    // Skip this split if it is very tight (compared to other axis)
-    Vector3 diff = aabb.Max() - aabb.Min();
-    // AABB is like a 2D AABB skip this axis
-    if(std::abs(diff[splitIndex]) < 0.001f)
-        nextSplit = static_cast<SplitAxis>((static_cast<int>(nextSplit) + 1) %
-                                           static_cast<int>(SplitAxis::END));
-    return nextSplit;
-}
-
-template <class PGroup>
 void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
                                              size_t& splitLoc,
                                              BVHNode<LeafData>& node,
@@ -101,8 +86,6 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
         uint32_t index = dIndicesIn[start];
         PrimitiveId id = dPrimIds[index];
         HitKey matKey = FindHitKey(accIndex, id);
-
-        //METU_LOG("LEAF primId %llu", id);
 
         node.isLeaf = true;
         node.leaf = PGroup::LeafFunc(matKey, id, primData);
@@ -351,7 +334,6 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     using PrimitiveIndexStart = std::array<uint64_t, SceneConstants::MaxPrimitivePerSurface>;
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
 
-
     // Set Device
     const CudaGPU& gpu = (*system.GPUList().begin());
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
@@ -559,14 +541,14 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
             maxDepth = current.depth + 1;
         }
     }
+     // BVH cannot hold this surface return error
+    if(maxDepth <= MAX_DEPTH)
+        return TracerError::UNABLE_TO_CONSTRUCT_ACCELERATOR;
+
     // Finally Nodes are Generated now copy it to GPU Memory
     bvhMemories[index] = std::move(DeviceMemory(sizeof(BVHNode<LeafData>) * bvhNodes.size()));
     bvhDepths[index] = maxDepth;
-
-    // BVH cannot hold this surface return error
-    if(maxDepth <= MAX_DEPTH)
-        return TracerError::UNABLE_TO_CONSTRUCT_BASE_ACCELERATOR;
-    
+       
     //Debug::DumpMemToFile("BVHNodes", bvhNodes.data(), bvhNodes.size());
     //Debug::DumpMemToFile("AABB", dPrimAABBs, totalPrimCount);
     //Debug::DumpMemToFile("dPrimIds", dPrimIds, totalPrimCount);

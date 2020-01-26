@@ -19,6 +19,20 @@ using AllLeafDataCPU = std::vector<std::vector<BVHNode<LeafData>>>;
 template<class PGroup>
 class GPUAccBVHBatch;
 
+static inline SplitAxis DetermineNextSplit(SplitAxis split, const AABB3f& aabb)
+{
+    SplitAxis nextSplit = static_cast<SplitAxis>((static_cast<int>(split) + 1) %
+                                                 static_cast<int>(SplitAxis::END));
+    int splitIndex = static_cast<int>(nextSplit);
+    // Skip this split if it is very tight (compared to other axis)
+    Vector3 diff = aabb.Max() - aabb.Min();
+    // AABB is like a 2D AABB skip this axis
+    if(std::abs(diff[splitIndex]) < 0.001f)
+        nextSplit = static_cast<SplitAxis>((static_cast<int>(nextSplit) + 1) %
+                                           static_cast<int>(SplitAxis::END));
+    return nextSplit;
+}
+
 template <class PGroup>
 class GPUAccBVHGroup final
     : public GPUAcceleratorGroup<PGroup>
@@ -46,11 +60,7 @@ class GPUAccBVHGroup final
         friend class                        GPUAccBVHBatch<PGroup>;
 
         // Recursive Construction
-        static SplitAxis                    DetermineNextSplit(SplitAxis split,
-                                                               const AABB3f& aabb);
-        HitKey                              FindHitKey(uint32_t accIndex,
-                                                       PrimitiveId id);
-
+        HitKey                              FindHitKey(uint32_t accIndex, PrimitiveId id);
         void                                GenerateBVHNode(// Output
                                                             size_t& splitLoc,
                                                             BVHNode<LeafData>& node,
@@ -164,7 +174,21 @@ class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
         uint32_t*                       dRayStates;
 
         // CPU Memory
-        std::map<uint32_t, uint32_t>    innerIds;
+        std::map<uint32_t, uint32_t>    idLookup;
+        std::vector<BaseLeaf>           leafs;
+
+        static void                     GenerateBaseBVHNode(// Output
+                                                            size_t& splitLoc,
+                                                            BVHNode<BaseLeaf>& node,
+                                                            // Index Data                                             
+                                                            uint32_t* surfaceIndices,
+                                                            // Constants
+                                                            const BaseLeaf* leafs,
+                                                            const Vector3f* centers,
+                                                            // Call Related Args
+                                                            uint32_t parentIndex,
+                                                            SplitAxis axis,
+                                                            size_t start, size_t end);
 
     public:
         // Constructors & Destructor
