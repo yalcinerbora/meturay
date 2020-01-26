@@ -165,7 +165,8 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
         const char*                 Type() const override;
 
         // Get ready for hit loop
-        void                        GetReady(uint32_t rayCount) override;
+        void                        GetReady(const CudaSystem& system, 
+                                             uint32_t rayCount) override;
         // Base accelerator only points to the next accelerator key.
         // It can return invalid key,
         // which is either means data is out of bounds or ray is invalid.

@@ -4,6 +4,12 @@
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveSphere.h"
 
+__global__ void KCSetRayState(uint32_t* gRayStates,
+                              uint32_t rayCount)
+{
+    ...
+}
+
 const char* GPUBaseAcceleratorBVH::TypeName()
 {
     return "BasicBVH";
@@ -94,12 +100,43 @@ void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
     }
 }
 
-void GPUBaseAcceleratorBVH::GetReady(uint32_t rayCount)
+void GPUBaseAcceleratorBVH::GetReady(const CudaSystem& system, 
+                                     uint32_t rayCount)
 {
+    size_t stateSize = rayCount * sizeof(uint32_t);
+    stateSize = Memory::AlignSize(stateSize, AlignByteCount);
+    size_t prevIndexSize = rayCount * sizeof(uint32_t);
+    prevIndexSize = Memory::AlignSize(prevIndexSize, AlignByteCount);
+
+    size_t requiredSize = stateSize + prevIndexSize;
+
+    // Alloc if not enough memory
+    if(rayStateMemory.Size() < requiredSize)
+        rayStateMemory = std::move(DeviceMemory(requiredSize));
+
+    // Set Ptrs
+    Byte* memPtr = static_cast<Byte*>(rayStateMemory);
+    dRayStates = reinterpret_cast<uint32_t*>(memPtr);
+    dPrevBVHIndex = reinterpret_cast<uint32_t*>(memPtr + stateSize);    
+    CUDA_CHECK(cudaMemset(dPrevBVHIndex, 0x00, prevIndexSize));
+
+
+    // Set Device
+    const CudaGPU& gpu = (*system.GPUList().begin());
+    CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+
+    // Init Ray State
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
+                       //
+                       KCSetRayState,
+                       dRayStates,
+                       rayCount);
+
+    CUDA_CHECK(cudaMemset(dPrevBVHIndex, 0x00, stateSize));
 
 }
 
-void GPUBaseAcceleratorBVH::Hit(const CudaSystem&,
+void GPUBaseAcceleratorBVH::Hit(const CudaSystem& system,
                                 // Output
                                 TransformId* dTransformIds,
                                 HitKey* dAcceleratorKeys,
@@ -108,7 +145,38 @@ void GPUBaseAcceleratorBVH::Hit(const CudaSystem&,
                                 const RayId* dRayIds,
                                 const uint32_t rayCount) const
 {
-
+    // Split work
+    const auto splits = system.GridStrideMultiGPUSplit(rayCount,
+                                                       StaticThreadPerBlock1D,
+                                                       0,
+                                                       KCIntersectBaseBVH);
+    // Split work into multiple GPU's
+    size_t offset = 0;
+    int i = 0;
+    for(const CudaGPU& gpu : system.GPUList())
+    {
+        if(splits[i] == 0) break;
+        // Generic
+        const uint32_t workCount = static_cast<uint32_t>(splits[i]);
+        gpu.GridStrideKC_X(0, (cudaStream_t)0,
+                           workCount,
+                           //
+                           KCIntersectBaseBVH,
+                           // Output
+                           dTransformIds,
+                           dAcceleratorKeys + offset,
+                           // I-O
+                           dRayStates,
+                           dPrevBVHIndex,
+                           // Input
+                           dRays,
+                           dRayIds + offset,
+                           workCount,
+                           // Constants
+                           dBVH);
+        offset += workCount;
+        i++;
+    }
 }
 
 SceneError GPUBaseAcceleratorBVH::Initialize(// List of surface to transform id hit key mappings

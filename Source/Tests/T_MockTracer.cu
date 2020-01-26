@@ -55,7 +55,7 @@ class MockTracerLogic : public TracerBaseLogicI
                 // Type(as string) of the accelerator group
                 const char*         Type() const override { return "MockBaseAccel"; }
                 // Get ready for hit loop
-                void                    GetReady(uint32_t rayCount) override {};
+                void                    GetReady(const CudaSystem&, uint32_t rayCount) override {};
                 // KC
                 void                    Hit(const CudaSystem&,
                                             // Output

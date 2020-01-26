@@ -59,7 +59,7 @@ void TracerBase::HitRays()
     // Reset Hit Memory for hit loop
     rayMemory.ResetHitMemory(currentRayCount, currentLogic->HitStructSize());
     // Make Base Accelerator to get ready for hitting
-    baseAccelerator.GetReady(currentRayCount);
+    baseAccelerator.GetReady(cudaSystem, currentRayCount);
     // Ray Memory Pointers
     RayGMem* dRays = rayMemory.Rays();
     HitKey* dMaterialKeys = rayMemory.MaterialKeys();

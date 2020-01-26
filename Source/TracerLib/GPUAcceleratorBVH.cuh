@@ -172,6 +172,7 @@ class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
         // GPU Ptrs
         const BVHNode<BaseLeaf>*        dBVH;
         uint32_t*                       dRayStates;
+        uint32_t*                       dPrevBVHIndex;
 
         // CPU Memory
         std::map<uint32_t, uint32_t>    idLookup;
@@ -202,7 +203,8 @@ class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
         const char*                 Type() const override;
 
         // Get ready for hit loop
-        void                        GetReady(uint32_t rayCount) override;
+        void                        GetReady(const CudaSystem& system, 
+                                             uint32_t rayCount) override;
         // Base accelerator only points to the next accelerator key.
         // It can return invalid key,
         // which is either means data is out of bounds or ray is invalid.

@@ -181,9 +181,10 @@ static void KCIntersectLinear(// O
 
 
 __global__ __launch_bounds__(StaticThreadPerBlock1D)
-static void KCIntersectBaseLinear(// I-O
+static void KCIntersectBaseLinear(// Output
                                   TransformId* gTransformIds,
                                   HitKey* gHitKeys,
+                                  // I-O
                                   uint32_t* gPrevLoc,
                                   // Input
                                   const RayGMem* gRays,

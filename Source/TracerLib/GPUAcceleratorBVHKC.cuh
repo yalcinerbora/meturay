@@ -420,7 +420,7 @@ void KCIntersectBVHStackless(// O
     };
     auto TraverseInfo = [](uint64_t list, uint8_t depth) -> uint8_t
     {
-        depth-=2;
+        depth -= 2;
         return static_cast<uint8_t>((list >> depth) & 0x3ull);
     };
     auto MarkAsTraversed = [](uint64_t& list, uint8_t depth) -> void
@@ -546,10 +546,12 @@ void KCIntersectBVHStackless(// O
 }
 
 __global__ __launch_bounds__(StaticThreadPerBlock1D)
-static void KCIntersectBaseBVH(// I-O
+static void KCIntersectBaseBVH(// Output
                                TransformId* gTransformIds,
                                HitKey* gHitKeys,
-                               uint32_t* gPrevLoc,
+                               // I-O 
+                               uint32_t* gRayStates,
+                               uint32_t* gPrevBVHIndex,
                                // Input
                                const RayGMem* gRays,
                                const RayId* gRayIds,
@@ -561,25 +563,38 @@ static void KCIntersectBaseBVH(// I-O
     static constexpr uint8_t U_TURN = 0b01;
 
     // Convenience Functions
-    auto WipeLowerBits = [](uint64_t& list, uint8_t depth)-> void
+    auto WipeLowerBits = [](uint32_t& list, uint8_t depth)-> void
     {
         depth--;
         list &= (UINT64_MAX << depth);
     };
-    auto TraverseInfo = [](uint64_t list, uint8_t depth) -> uint8_t
+    auto TraverseInfo = [](uint32_t list, uint8_t depth) -> uint8_t
     {
-        depth-=2;
+        depth -= 2;
         return static_cast<uint8_t>((list >> depth) & 0x3ull);
     };
-    auto MarkAsTraversed = [](uint64_t& list, uint8_t depth) -> void
+    auto MarkAsTraversed = [](uint32_t& list, uint8_t depth) -> void
     {
         depth--;
-        list += (1ull << depth);
+        list += (1u << depth);
     };
-    auto Pop = [&MarkAsTraversed](uint64_t& list, uint8_t& depth) -> void
+    auto Pop = [&MarkAsTraversed](uint32_t& list, uint8_t& depth) -> void
     {
         MarkAsTraversed(list, depth);
         depth++;
+    };
+    auto LoadRayState = [](uint32_t& list, uint8_t& depth, uint32_t state)
+    {        
+        // MS side is list, LS side is depth
+        list = (state >> MAX_BASE_DEPTH_BITS);
+        depth = static_cast<uint8_t>(state & ((1u << MAX_BASE_DEPTH_BITS) - 1));
+    };
+    auto SaveRayState = [](uint32_t list, uint8_t depth) -> uint32_t
+    {
+        uint32_t state;
+        state = (list << MAX_BASE_DEPTH_BITS);
+        state &= (static_cast<uint32_t>(depth));
+        return state;
     };
 
     // Grid Stride Loop
@@ -597,10 +612,13 @@ static void KCIntersectBaseBVH(// I-O
         HitKey nextAccKey = HitKey::InvalidKey;
         TransformId transformId = 0;
      
-        uint64_t list = 0;
-        uint8_t depth = MAX_DEPTH;
-        const BVHNode<BaseLeaf>* currentNode = gBVH;
-        while(depth <= MAX_DEPTH)
+        // Initialize Previous States
+        uint32_t list;
+        uint8_t depth;
+        LoadRayState(list, depth, gRayStates[id]);
+                
+        const BVHNode<BaseLeaf>* currentNode = gBVH + gPrevBVHIndex[id];
+        while(depth <= MAX_BASE_DEPTH)
         {
             //if(id == 144)
             //    printf("[ ] [%03u %03u %03u] depth %u list 0x%016llX\n",
@@ -627,11 +645,12 @@ static void KCIntersectBaseBVH(// I-O
                     // If we are at the leaf and found intersection
                     if(isLeaf)
                     {
-                        // Save state 
-                        // for continuing iteration after lower accelerator is done
-
-
-
+                        // Pop to parent go get ready for next iteration
+                        // However iteration will continue after Leaf Accelerators
+                        Pop(list, depth);
+                        // So save state                        
+                        gRayStates[id] = SaveRayState(list, depth);
+                        gPrevBVHIndex[id] = currentNode->parent;
                         // Set AcceleratorId and TransformId for lower accelerator
                         gHitKeys[globalId] = nextAccKey;
                         gTransformIds[id] = transformId;                                               
