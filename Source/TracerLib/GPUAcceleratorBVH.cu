@@ -328,8 +328,6 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&)
     bvhMemory = DeviceMemory(bvhNodes.size() * sizeof(BVHNode<BaseLeaf>));
     dBVH = static_cast<const BVHNode<BaseLeaf>*>(bvhMemory);
 
-    Debug::DumpMemToFile("BaseBVHNodes", bvhNodes.data(), bvhNodes.size());
-
     // Copy and All Done!
     CUDA_CHECK(cudaMemcpy(bvhMemory, bvhNodes.data(),
                           sizeof(BVHNode<BaseLeaf>) * bvhNodes.size(),

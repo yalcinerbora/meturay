@@ -645,8 +645,7 @@ static void KCIntersectBaseBVH(// Output
                 Vector3 aabbMax = (isLeaf) ? currentNode->leaf.aabbMax : currentNode->aabbMax;
 
                 // Check AABB
-                //if(ray.IntersectsAABB(aabbMin, aabbMax, tMinMax))
-                if(true)
+                if(ray.IntersectsAABB(aabbMin, aabbMax, tMinMax))
                 {
                     // If we are at the leaf and found intersection
                     if(isLeaf)

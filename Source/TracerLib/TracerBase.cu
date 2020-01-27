@@ -192,6 +192,7 @@ void TracerBase::HitRays()
         // wait all GPUs to finish
         cudaSystem.SyncGPUAll();
     }
+
     // At the end of iteration all rays found a material, primitive
     // and interpolation weights (which should be on hitStruct)
     //printf("FRAME END\n");

@@ -169,6 +169,9 @@ inline void BasicPathTraceShade(// Output
                                              //
                                              estData))
     {
+
+        //printf("%X  ", matLight.value);
+
         // Advance slightly to prevent self intersection
         Vector3 pos = position + normal * MathConstants::Epsilon;
         // Write Ray
