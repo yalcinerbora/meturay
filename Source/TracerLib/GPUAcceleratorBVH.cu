@@ -7,7 +7,12 @@
 __global__ void KCSetRayState(uint32_t* gRayStates,
                               uint32_t rayCount)
 {
-    ...
+    // Grid Stride Loop
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < rayCount; globalId += blockDim.x * gridDim.x)
+    {
+        gRayStates[globalId] = SaveRayState(0, MAX_BASE_DEPTH);
+    }
 }
 
 const char* GPUBaseAcceleratorBVH::TypeName()
@@ -39,7 +44,7 @@ void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
                                                 size_t start, size_t end)
 {
     int axisIndex = static_cast<int>(axis);
-
+   
     // Base Case (CPU Mode)
     if(end - start == 1)
     {
@@ -53,6 +58,7 @@ void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
     // Non-leaf Construct
     else
     {
+        node.isLeaf = false;
         AABB3f aabbUnion = NegativeAABB3;
         float avgCenter = 0.0f;
         // Find AABB
@@ -131,9 +137,6 @@ void GPUBaseAcceleratorBVH::GetReady(const CudaSystem& system,
                        KCSetRayState,
                        dRayStates,
                        rayCount);
-
-    CUDA_CHECK(cudaMemset(dPrevBVHIndex, 0x00, stateSize));
-
 }
 
 void GPUBaseAcceleratorBVH::Hit(const CudaSystem& system,
@@ -208,13 +211,17 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&)
     size_t totalSurfaceCount = idLookup.size();
     std::vector<uint32_t> surfaceIndices(totalSurfaceCount);    
     std::vector<BVHNode<BaseLeaf>> bvhNodes;
-
+    
     // Generate Centers for Convenience
+    // Also init indices
+    uint32_t i = 0;
     std::vector<Vector3> surfaceCenters;
     for(const BaseLeaf& l : leafs)
     {
         Vector3 center = (l.aabbMin + l.aabbMax) * 0.5f;
         surfaceCenters.push_back(center);
+        surfaceIndices[i] = i;
+        i++;
     }
 
     // Gen recursive queue and do work
@@ -283,6 +290,8 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&)
 
     bvhMemory = DeviceMemory(bvhNodes.size() * sizeof(BVHNode<BaseLeaf>));
     dBVH = static_cast<const BVHNode<BaseLeaf>*>(bvhMemory);
+
+    Debug::DumpMemToFile("BaseBVHNodes", bvhNodes.data(), bvhNodes.size());
 
     // Copy and All Done!
     CUDA_CHECK(cudaMemcpy(bvhMemory, bvhNodes.data(),

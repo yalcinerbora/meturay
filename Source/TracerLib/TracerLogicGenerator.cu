@@ -156,6 +156,9 @@ TracerLogicGenerator::TracerLogicGenerator()
     baseAccelGenerators.emplace(GPUBaseAcceleratorLinear::TypeName(),
                                 GPUBaseAccelGen(DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorLinear>,
                                                 DefaultDestruct<GPUBaseAcceleratorI>));
+    baseAccelGenerators.emplace(GPUBaseAcceleratorBVH::TypeName(),
+                                GPUBaseAccelGen(DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorBVH>,
+                                                DefaultDestruct<GPUBaseAcceleratorI>));
 
     // Estimators
     estimatorGenerators.emplace(GPUEventEstimatorEmpty::TypeName(),

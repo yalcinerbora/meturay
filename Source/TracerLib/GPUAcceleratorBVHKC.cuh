@@ -19,6 +19,24 @@ static_assert((MAX_BASE_DEPTH + MAX_BASE_DEPTH_BITS) <= sizeof(uint32_t) * BYTE_
 static_assert((1llu << MAX_BASE_DEPTH_BITS) >= MAX_BASE_DEPTH, 
               "Base Accelerator bits should hold depth.");
 
+// Base BVH Kernel Save/Load State
+__device__
+inline static void LoadRayState(uint32_t& list, uint8_t& depth, uint32_t state)
+{
+    // MS side is list, LS side is depth
+    list = (state >> MAX_BASE_DEPTH_BITS);
+    depth = static_cast<uint8_t>(state & ((1u << MAX_BASE_DEPTH_BITS) - 1));
+}
+
+__device__
+inline static uint32_t SaveRayState(uint32_t list, uint8_t depth)
+{
+    uint32_t state;
+    state = (list << MAX_BASE_DEPTH_BITS);
+    state &= (static_cast<uint32_t>(depth));
+    return state;
+}
+
 struct SpacePartition
 {
     private:
@@ -582,19 +600,6 @@ static void KCIntersectBaseBVH(// Output
     {
         MarkAsTraversed(list, depth);
         depth++;
-    };
-    auto LoadRayState = [](uint32_t& list, uint8_t& depth, uint32_t state)
-    {        
-        // MS side is list, LS side is depth
-        list = (state >> MAX_BASE_DEPTH_BITS);
-        depth = static_cast<uint8_t>(state & ((1u << MAX_BASE_DEPTH_BITS) - 1));
-    };
-    auto SaveRayState = [](uint32_t list, uint8_t depth) -> uint32_t
-    {
-        uint32_t state;
-        state = (list << MAX_BASE_DEPTH_BITS);
-        state &= (static_cast<uint32_t>(depth));
-        return state;
     };
 
     // Grid Stride Loop

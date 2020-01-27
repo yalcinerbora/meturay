@@ -13,7 +13,7 @@
 		"up": [0.0, 1.0, 0.0]
     }],
 
-	"BaseAccelerator": "Linear",
+	"BaseAccelerator": "BasicBVH",
 	"BaseBoundaryMaterial": 0,
 
 	"Tracer": "Test",
