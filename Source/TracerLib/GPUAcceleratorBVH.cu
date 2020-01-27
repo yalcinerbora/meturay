@@ -44,6 +44,11 @@ void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
                                                 size_t start, size_t end)
 {
     int axisIndex = static_cast<int>(axis);
+    splitLoc = 0;
+
+    // Populate Node
+    node.parent = parentIndex;
+    node.isLeaf = false;
    
     // Base Case (CPU Mode)
     if(end - start == 1)
@@ -57,52 +62,84 @@ void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
     }
     // Non-leaf Construct
     else
-    {
-        node.isLeaf = false;
+    {    
         AABB3f aabbUnion = NegativeAABB3;
-        float avgCenter = 0.0f;
-        // Find AABB
-        for(size_t i = start; i < end; i++)
+        Vector3 avgCenter = Zero3;
+        // Try each split if split is not good
+        constexpr int TOTAL_AXES = 3;
+        for(int i = 0; i < TOTAL_AXES; i++)
         {
-            uint32_t index = surfaceIndices[i];
-            AABB3f aabb = AABB3f(leafs[index].aabbMin, leafs[index].aabbMax);
-            float center = centers[index][axisIndex];
-            aabbUnion.UnionSelf(aabb);
-            avgCenter = (avgCenter * (i - start) + center) / (i - start + 1);
-        }
-
-        // Partition wrt. avg center
-        int64_t splitStart = static_cast<int64_t>(start - 1);
-        int64_t splitEnd = static_cast<int64_t>(end);
-        while(splitStart < splitEnd)
-        {
-            // Hoare Like Partition
-            float leftTriAxisCenter;
-            do
+            int testAxis = axisIndex + i % TOTAL_AXES;
+            
+            // Find AABB and avg Center
+            // Do it only once since it is same on all splits
+            if(i == 0)
             {
-                if(splitStart >= static_cast<int64_t>(end - 1)) break;
-                splitStart++;
+                for(size_t j = start; j < end; j++)
+                {
+                    uint32_t index = surfaceIndices[j];
+                    Vector3 center = centers[index];
+                    float size = static_cast<float>(j - start);
+                    avgCenter = (avgCenter * size + center) / (size + 1.0f);
 
-                uint32_t index = surfaceIndices[splitStart];
-                leftTriAxisCenter = centers[index][axisIndex];
-            } while(leftTriAxisCenter >= avgCenter);
-            float rightTriAxisCenter;
-            do
+                    AABB3f aabb = AABB3f(leafs[index].aabbMin, leafs[index].aabbMax);
+                    aabbUnion.UnionSelf(aabb);
+
+                }
+            }
+
+            // Current axis of split
+            float centerOfAxis = avgCenter[testAxis];
+            
+            // Partition wrt. avg center
+            int64_t splitStart = static_cast<int64_t>(start - 1);
+            int64_t splitEnd = static_cast<int64_t>(end);
+            while(splitStart < splitEnd)
             {
-                if(splitEnd <= static_cast<int64_t>(start + 1)) break;
-                splitEnd--;
-                uint32_t index = surfaceIndices[splitEnd];
-                rightTriAxisCenter = centers[index][axisIndex];
-            } while(rightTriAxisCenter <= avgCenter);
+                // Hoare Like Partition
+                float leftTriAxisCenter;
+                do
+                {
+                    if(splitStart >= static_cast<int64_t>(end - 1)) break;
+                    splitStart++;
 
-            if(splitStart < splitEnd)
-                std::swap(surfaceIndices[splitEnd], surfaceIndices[splitStart]);
+                    uint32_t index = surfaceIndices[splitStart];
+                    leftTriAxisCenter = centers[index][testAxis];
+                } while(leftTriAxisCenter >= centerOfAxis);
+                float rightTriAxisCenter;
+                do
+                {
+                    if(splitEnd <= static_cast<int64_t>(start + 1)) break;
+                    splitEnd--;
+                    uint32_t index = surfaceIndices[splitEnd];
+                    rightTriAxisCenter = centers[index][testAxis];
+                } while(rightTriAxisCenter <= centerOfAxis);
+
+                if(splitStart < splitEnd)
+                    std::swap(surfaceIndices[splitEnd], surfaceIndices[splitStart]);
+            }
+
+            // Test this split
+            if(splitStart != start ||
+               splitStart != end)
+            {
+                // This is a good split save and break
+                splitLoc = splitStart;
+                break;
+            }
         }
-        node.aabbMin = aabbUnion.Min();
-        node.aabbMax = aabbUnion.Max();
+        // If we still not found a good split
+        // then just split in half
+        if(splitLoc == 0) 
+            splitLoc = (end - start) / 2;
+        // Sanity Check
         assert(splitLoc != start);
         assert(splitLoc != end);
-        splitLoc = splitStart;
+
+        // Save AABB
+        node.aabbMin = aabbUnion.Min();
+        node.aabbMax = aabbUnion.Max();
+      
     }
 }
 
@@ -285,7 +322,7 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&)
         }
     }
      // BVH cannot hold this surface return error
-    if(maxDepth <= MAX_BASE_DEPTH)
+    if(maxDepth > MAX_BASE_DEPTH)
         return TracerError::UNABLE_TO_CONSTRUCT_BASE_ACCELERATOR;
 
     bvhMemory = DeviceMemory(bvhNodes.size() * sizeof(BVHNode<BaseLeaf>));
@@ -295,7 +332,7 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&)
 
     // Copy and All Done!
     CUDA_CHECK(cudaMemcpy(bvhMemory, bvhNodes.data(),
-                          sizeof(BVHNode<BaseLeaf>)* bvhNodes.size(),
+                          sizeof(BVHNode<BaseLeaf>) * bvhNodes.size(),
                           cudaMemcpyHostToDevice));
 
     return TracerError::OK;

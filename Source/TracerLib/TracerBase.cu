@@ -78,6 +78,9 @@ void TracerBase::HitRays()
     uint32_t validRayOffset = 0;
     while(rayCount > 0)
     {
+        //Debug::DumpMemToFile("dAccKeys", dCurrentKeys, currentRayCount);
+        //Debug::DumpMemToFile("dRayIds", dCurrentRayIds, currentRayCount);
+
         // Traverse accelerator
         // Base accelerator provides potential hits
         // Cannot provide an absolute hit (its not its job)
@@ -90,6 +93,9 @@ void TracerBase::HitRays()
 
         // Wait all GPUs to finish...
         cudaSystem.SyncGPUMainStreamAll();
+
+        //Debug::DumpMemToFile("dAccKeys", dCurrentKeys, currentRayCount);
+        //Debug::DumpMemToFile("dRayIds", dCurrentRayIds, currentRayCount);
 
         // Base accelerator traverses the data partially
         // Updates current key (which represents inner accelerator batch and id)
@@ -118,6 +124,9 @@ void TracerBase::HitRays()
         // where ray may be only reflected (instead of refrating and reflecting) because
         // of the total internal reflection phenomena.
         auto portions = rayMemory.Partition(rayCount);
+
+        //Debug::DumpMemToFile("dAccKeys", dCurrentKeys, currentRayCount);
+        //Debug::DumpMemToFile("dRayIds", dCurrentRayIds, currentRayCount);
 
         // Reorder partitions for efficient calls
         // (group partitions into gpus and order for better async access)
@@ -163,6 +172,7 @@ void TracerBase::HitRays()
             // Hit function updates material key,
             // primitive id and struct if this hit is accepted
         }
+        //printf("=====================================================\n");
 
         // Update new ray count
         // On partition array check first partition
@@ -184,7 +194,7 @@ void TracerBase::HitRays()
     }
     // At the end of iteration all rays found a material, primitive
     // and interpolation weights (which should be on hitStruct)
-    //printf("=\n");
+    //printf("FRAME END\n");
 }
 
 void TracerBase::ShadeRays()

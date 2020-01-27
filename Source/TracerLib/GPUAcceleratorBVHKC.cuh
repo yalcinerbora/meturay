@@ -33,7 +33,7 @@ inline static uint32_t SaveRayState(uint32_t list, uint8_t depth)
 {
     uint32_t state;
     state = (list << MAX_BASE_DEPTH_BITS);
-    state &= (static_cast<uint32_t>(depth));
+    state |= (static_cast<uint32_t>(depth));
     return state;
 }
 
@@ -612,21 +612,21 @@ static void KCIntersectBaseBVH(// Output
         RayReg rayData(gRays, id);
         Vector2f tMinMax(rayData.tMin, rayData.tMax);
         RayF& ray = rayData.ray;
-
-        // Init Potential Hit Data
-        HitKey nextAccKey = HitKey::InvalidKey;
-        TransformId transformId = 0;
      
         // Initialize Previous States
         uint32_t list;
         uint8_t depth;
         LoadRayState(list, depth, gRayStates[id]);
-                
+                      
         const BVHNode<BaseLeaf>* currentNode = gBVH + gPrevBVHIndex[id];
+
+        //if(id == 144)
+        //printf("RCOUNT %u id %u, globalId %u\n", rayCount, id, globalId);
+
         while(depth <= MAX_BASE_DEPTH)
         {
             //if(id == 144)
-            //    printf("[ ] [%03u %03u %03u] depth %u list 0x%016llX\n",
+            //    printf("[ ] [%03u %03u %03u] depth %u list 0x%08X\n",
             //    (currentNode->isLeaf) ? 0 : currentNode->left,
             //           (currentNode->isLeaf) ? 0 : currentNode->right,
             //           currentNode->parent, depth, list);
@@ -645,7 +645,8 @@ static void KCIntersectBaseBVH(// Output
                 Vector3 aabbMax = (isLeaf) ? currentNode->leaf.aabbMax : currentNode->aabbMax;
 
                 // Check AABB
-                if(ray.IntersectsAABB(aabbMin, aabbMax, tMinMax))
+                //if(ray.IntersectsAABB(aabbMin, aabbMax, tMinMax))
+                if(true)
                 {
                     // If we are at the leaf and found intersection
                     if(isLeaf)
@@ -657,9 +658,16 @@ static void KCIntersectBaseBVH(// Output
                         gRayStates[id] = SaveRayState(list, depth);
                         gPrevBVHIndex[id] = currentNode->parent;
                         // Set AcceleratorId and TransformId for lower accelerator
-                        gHitKeys[globalId] = nextAccKey;
-                        gTransformIds[id] = transformId;                                               
-                        return;
+                        gHitKeys[globalId] = currentNode->leaf.accKey;
+                        gTransformIds[id] = currentNode->leaf.transformId;                                               
+
+                        //if(id == 144)
+                        //    printf("[L]               depth %u list 0x%08X\n", depth, list);
+
+                        //printf("[L] (%u, %u) depth %u list 0x%08X\n", 
+                        //       id, globalId, depth, list);
+
+                        break;
                     }
                     // We are at non-leaf
                     else
@@ -669,8 +677,8 @@ static void KCIntersectBaseBVH(// Output
                         depth--;
                     }
                
-                    //if(globalId == 144)
-                    //    printf("[I]               depth %u list 0x%016llX\n", depth, list);
+                    //if(id == 144)
+                    //    printf("[I]               depth %u list 0x%08X\n", depth, list);
 
                 }
                 // No intersection
@@ -680,8 +688,8 @@ static void KCIntersectBaseBVH(// Output
                     currentNode = gBVH + currentNode->parent;
                     Pop(list, depth);
 
-                    //if(globalId == 144)
-                    //    printf("[N]               depth %u list 0x%016llX\n", depth, list);
+                    //if(id == 144)
+                    //    printf("[N]               depth %u list 0x%08X\n", depth, list);
                 }
             }
             // Doing U turn (left child to right child)
@@ -694,8 +702,8 @@ static void KCIntersectBaseBVH(// Output
                 currentNode = gBVH + currentNode->right;
                 depth--;                
                 
-                //if(globalId == 144)
-                //    printf("[U]               depth %u list 0x%016llX\n", depth, list);
+                //if(id == 144)
+                //    printf("[U]               depth %u list 0x%08X\n", depth, list);
             }
             // This means both left and right are processed
             // Go up
@@ -706,15 +714,20 @@ static void KCIntersectBaseBVH(// Output
                 currentNode = gBVH + currentNode->parent;
                 depth++;
 
-                //if(globalId == 144)
-                //    printf("[S]               depth %u list 0x%016llX\n", depth, list);
+                //if(id == 144)
+                //    printf("[S]               depth %u list 0x%08X\n", depth, list);
             }
-            //if(globalId == 144) printf("----------\n");
+            //if(id == 144) printf("----------\n");
         }
 
         // If all traverse is done 
         // write invalid key in order to terminate
         // rays accelerator traversal
-        gHitKeys[globalId] = HitKey::InvalidKey;
+        if(depth > MAX_BASE_DEPTH)
+        {
+            //if(id == 144) printf("RAY ENDING\n");
+            gHitKeys[globalId] = HitKey::InvalidKey;
+        }
+        
     }
 }

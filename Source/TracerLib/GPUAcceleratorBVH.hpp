@@ -549,7 +549,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         }
     }
      // BVH cannot hold this surface return error
-    if(maxDepth <= MAX_DEPTH)
+    if(maxDepth > MAX_DEPTH)
         return TracerError::UNABLE_TO_CONSTRUCT_ACCELERATOR;
 
     // Finally Nodes are Generated now copy it to GPU Memory

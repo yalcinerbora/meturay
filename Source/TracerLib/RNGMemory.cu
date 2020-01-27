@@ -62,11 +62,11 @@ RNGMemory::RNGMemory(uint32_t seed,
     int i = 0;
     for(const auto& gpu : system.GPUList())
     {
-        gpu.GridStrideKC_X(0, 0, totalCount,
-                           KCInitRNGStates,
-                           d_seeds + ranges[i][0],
-                           d_ptr + ranges[i][0],
-                           ranges[i][1]);
+        //gpu.GridStrideKC_X(0, 0, totalCount,
+        //                   KCInitRNGStates,
+        //                   d_seeds + ranges[i][0],
+        //                   d_ptr + ranges[i][0],
+        //                   ranges[i][1]);
         i++;
     }
 }

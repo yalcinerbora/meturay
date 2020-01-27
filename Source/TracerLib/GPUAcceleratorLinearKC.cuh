@@ -150,8 +150,8 @@ static void KCIntersectLinear(// O
             // Get Leaf Data and
             // Do acceptance check
             const LeafData leaf = gLeaf[i];
-            //printf("my accId %llu, matId %x, range{%llu, %llu}, \n", 
-            //       accId,
+            //printf("my accId 0x%X, matId %x, range{%llu, %llu}, \n", 
+            //       gAccelKeys[globalId],
             //       leaf.matId.value,
             //       accRange[0], accRange[1]);
 
