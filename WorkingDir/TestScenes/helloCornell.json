@@ -13,7 +13,7 @@
 		"up": [0.0, 1.0, 0.0]
     }],
 
-	"BaseAccelerator": "Linear",
+	"BaseAccelerator": {"type": "Linear"},
 	"BaseBoundaryMaterial": 0,
 
 	"Tracer": "Test",
@@ -62,7 +62,7 @@
 		"albedo" : [0.6300, 0.0650, 0.0500]
     },
     {
-		// Green Simple Material
+		// Blue Simple Material
 		"id": 3,
 		"type": "BasicPathTrace",
 		"albedo" : [0.161, 0.133, 0.427]
@@ -107,32 +107,34 @@
 		"innerIndex": 0
 	}],
 
+	"Accelerators": [{"id" : 0, "type" : "Linear"}],
+
 	"Surfaces": [
 	{
 		// Sphere Back
 		"transform": 0,
-		"accelerator": "Linear",
-		"material": 4,//3,
+		"accelerator": 0,
+		"material": 4,
         "primitive": 0
 	},
 	{
 		// Sphere Front
 		"transform": 0,
-		"accelerator": "Linear",
-		"material": 4,//2,
+		"accelerator": 0,
+		"material": 4,
         "primitive": 1
 	},
 	// Cornell Box
     {
 		"transform": 0,
-		"accelerator": "Linear",
+		"accelerator": 0,
 		"primitive": [2, 3, 4, 5],
 		"material": [4, 3, 1, 2]
 	},
 	// Cornell Box Back Face
 	{
 		"transform": 0,
-		"accelerator": "Linear",
+		"accelerator": 0,
 		"primitive": 6,
 		"material": 4
 	}

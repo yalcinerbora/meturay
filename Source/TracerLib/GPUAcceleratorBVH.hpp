@@ -100,50 +100,79 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
     }
     else if(end - start <= Threshold_CPU_GPU)
     {
+        splitLoc = 0;
         AABB3f aabbUnion = NegativeAABB3;
-        float avgCenter = 0.0f;
-        // Find AABB
-        for(size_t i = start; i < end; i++)
+        Vector3 avgCenter = Zero3;
+
+        constexpr int TOTAL_AXES = 3;
+        for(int i = 0; i < TOTAL_AXES; i++)
         {
-            uint32_t index = dIndicesIn[i];
-            AABB3f aabb = dAABBs[index];
-            float center = dPrimCenters[index][axisIndex];
-            aabbUnion.UnionSelf(aabb);
-            avgCenter = (avgCenter * (i - start) + center) / (i - start + 1);
-        }
-
-        // Partition wrt. avg center
-        int64_t splitStart = static_cast<int64_t>(start - 1);
-        int64_t splitEnd = static_cast<int64_t>(end);
-        while(splitStart < splitEnd)
-        {
-            // Hoare Like Partition
-            float leftTriAxisCenter;
-            do
+            int testAxis = axisIndex + i % TOTAL_AXES;            
+            // Find AABB and Center
+            // Do it only once
+            if(i == 0)
             {
-                if(splitStart >= static_cast<int64_t>(end - 1)) break;
-                splitStart++;
+                for(size_t j = start; j < end; j++)
+                {
+                    uint32_t index = dIndicesIn[j];
 
-                uint32_t index = dIndicesIn[splitStart];
-                leftTriAxisCenter = dPrimCenters[index][axisIndex];
-            } while(leftTriAxisCenter >= avgCenter);
-            float rightTriAxisCenter;
-            do
+                    AABB3f aabb = dAABBs[index];                    
+                    aabbUnion.UnionSelf(aabb);
+
+                    Vector3 center = dPrimCenters[index];
+                    float size = static_cast<float>(j - start);
+                    avgCenter = (avgCenter * size + center) / (size + 1.0f);
+                }
+            }
+
+            // Partition wrt. avg center
+            int64_t splitStart = static_cast<int64_t>(start - 1);
+            int64_t splitEnd = static_cast<int64_t>(end);
+            while(splitStart < splitEnd)
             {
-                if(splitEnd <= static_cast<int64_t>(start + 1)) break;
-                splitEnd--;
-                uint32_t index = dIndicesIn[splitEnd];
-                rightTriAxisCenter = dPrimCenters[index][axisIndex];
-            } while(rightTriAxisCenter <= avgCenter);
+                // Hoare Like Partition
+                float leftTriAxisCenter;
+                do
+                {
+                    if(splitStart >= static_cast<int64_t>(end - 1)) break;
+                    splitStart++;
 
-            if(splitStart < splitEnd)
-                std::swap(dIndicesIn[splitEnd], dIndicesIn[splitStart]);
+                    uint32_t index = dIndicesIn[splitStart];
+                    leftTriAxisCenter = dPrimCenters[index][testAxis];
+                } while(leftTriAxisCenter >= avgCenter[testAxis]);
+                float rightTriAxisCenter;
+                do
+                {
+                    if(splitEnd <= static_cast<int64_t>(start + 1)) break;
+                    splitEnd--;
+                    uint32_t index = dIndicesIn[splitEnd];
+                    rightTriAxisCenter = dPrimCenters[index][testAxis];
+                } while(rightTriAxisCenter <= avgCenter[testAxis]);
+
+                if(splitStart < splitEnd)
+                    std::swap(dIndicesIn[splitEnd], dIndicesIn[splitStart]);
+            }
+
+            // Test this split
+            if(splitStart != start ||
+               splitStart != end)
+            {
+                // This is a good split save and break
+                splitLoc = splitStart;
+                break;
+            }
         }
-        node.aabbMin = aabbUnion.Min();
-        node.aabbMax = aabbUnion.Max();
+        // If cant find any proper split
+        // Just cut in half
+        if(splitLoc == 0) splitLoc = (end - start) / 2;
+
+        // Sanity Check
         assert(splitLoc != start);
         assert(splitLoc != end);
-        splitLoc = splitStart;
+        
+        // Save AABB
+        node.aabbMin = aabbUnion.Min();
+        node.aabbMax = aabbUnion.Max();
 
     }
     else
@@ -248,7 +277,9 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
 }
 
 template <class PGroup>
-SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Map of hit keys for all materials
+SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
+                                                   const SceneNodePtr& node,
+                                                   // Map of hit keys for all materials
                                                    // w.r.t matId and primitive type
                                                    const std::map<TypeIdPair, HitKey>& allHitKeys,
                                                    // List of surface/material
@@ -259,6 +290,10 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Map of hit keys for all ma
 {
 
     const char* primGroupTypeName = primitiveGroup.Type();
+
+    // Get params
+    bool useStack = node->CommonBool(USE_STACK_NAME);
+    params.useStack = useStack;
 
     // Iterate over pairings
     int j = 0;
@@ -290,7 +325,6 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Map of hit keys for all ma
     bvhMemories.resize(j);
     bvhListMemory = std::move(DeviceMemory(j * sizeof(BVHNode<LeafData>*)));
     dBVHLists = static_cast<const BVHNode<LeafData>**>(bvhListMemory);
-
 
     assert(primitiveRanges.size() == primitiveMaterialKeys.size());
     assert(primitiveMaterialKeys.size() == idLookup.size());
@@ -672,7 +706,7 @@ void GPUAccBVHBatch<PGroup>::Hit(const CudaGPU& gpu,
     using LeafData = typename PGroup::LeafData;
     using PrimitiveData = typename PGroup::PrimitiveData;
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
-
+    
     // Select Intersection algorithm with or without stack    
     using BVHIntersectKernel = void(*)(HitKey*,
                                        PrimitiveId*,
@@ -685,8 +719,9 @@ void GPUAccBVHBatch<PGroup>::Hit(const CudaGPU& gpu,
                                        const BVHNode<LeafData>**,
                                        const TransformStruct*, PrimitiveData);
 
-    BVHIntersectKernel kernel = (USE_STACK) ? KCIntersectBVH<PGroup> : 
-                                              KCIntersectBVHStackless<PGroup>;
+    const BVHParameters& params = acceleratorGroup.params;
+    BVHIntersectKernel kernel = (params.useStack) ? KCIntersectBVH<PGroup> : 
+                                                    KCIntersectBVHStackless<PGroup>;
 
     // Kernel Call
     gpu.AsyncGridStrideKC_X

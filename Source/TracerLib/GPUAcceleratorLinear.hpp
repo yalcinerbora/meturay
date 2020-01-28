@@ -14,7 +14,9 @@ const char* GPUAccLinearGroup<PGroup>::Type() const
 }
 
 template <class PGroup>
-SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Map of hit keys for all materials
+SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
+                                                      const SceneNodePtr& node,
+                                                      // Map of hit keys for all materials
                                                       // w.r.t matId and primitive type
                                                       const std::map<TypeIdPair, HitKey>& allHitKeys,
                                                       // List of surface/material

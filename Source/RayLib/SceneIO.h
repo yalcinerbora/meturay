@@ -25,6 +25,7 @@ namespace SceneIO
     T                   LoadFromAnim(const std::string& fileName, double time = 0.0);
 
     // Static Loads
+    bool                LoadBool(const nlohmann::json&, double time = 0.0);
     std::string         LoadString(const nlohmann::json&, double time = 0.0);
     template <class T>
     T                   LoadNumber(const nlohmann::json&, double time = 0.0);
@@ -68,6 +69,18 @@ T SceneIO::LoadFromAnim(const std::string& fileName, double time)
     // TODO:
     // Read etc....
     return T();
+}
+
+inline bool SceneIO::LoadBool(const nlohmann::json& jsn, double time)
+{
+    if(IsTimeDependent(jsn))
+        return LoadFromAnim<bool>(jsn, time);
+    else if(jsn.is_boolean())
+    {
+        bool val = jsn;
+        return val;
+    }
+    else throw SceneException(SceneError::TYPE_MISMATCH);
 }
 
 inline std::string SceneIO::LoadString(const nlohmann::json& jsn, double time)

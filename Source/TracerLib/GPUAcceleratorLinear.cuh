@@ -71,7 +71,9 @@ class GPUAccLinearGroup final
         // Type(as string) of the accelerator group
         const char*                     Type() const override;
         // Loads required data to CPU cache for
-        SceneError                      InitializeGroup(// Map of hit keys for all materials
+        SceneError                      InitializeGroup(// Accelerator Option Node
+                                                        const SceneNodePtr& node,
+                                                        // Map of hit keys for all materials
                                                         // w.r.t matId and primitive type
                                                         const std::map<TypeIdPair, HitKey>&,
                                                         // List of surface/material
@@ -180,7 +182,9 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
                                         const uint32_t rayCount) const override;
 
 
-        SceneError                  Initialize(// List of surface to transform id hit key mappings
+        SceneError                  Initialize(// Accelerator Option Node
+                                               const SceneNodePtr& node,
+                                               // List of surface to transform id hit key mappings
                                                const std::map<uint32_t, BaseLeaf>&) override;
         SceneError                  Change(// List of only changed surface to transform id hit key mappings
                                            const std::map<uint32_t, BaseLeaf>&) override;

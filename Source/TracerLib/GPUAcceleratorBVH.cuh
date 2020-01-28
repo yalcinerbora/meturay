@@ -13,6 +13,11 @@
 #include "GPUAcceleratorP.cuh"
 #include "GPUAcceleratorBVHKC.cuh"
 
+struct BVHParameters
+{
+    bool useStack = false;
+};
+
 template<class LeafData>
 using AllLeafDataCPU = std::vector<std::vector<BVHNode<LeafData>>>;
 
@@ -40,11 +45,15 @@ class GPUAccBVHGroup final
     ACCELERATOR_TYPE_NAME("BasicBVH", PGroup);
 
     public:
-        using LeafData                      = PGroup::LeafData;
+        using LeafData                                  = PGroup::LeafData;
+        static constexpr const char* USE_STACK_NAME     = "useStack";
 
     private:
         static constexpr const uint32_t     Threshold_CPU_GPU = 32'768;
         static constexpr size_t             AlignByteCount = 16;
+
+        // BVH Params
+        BVHParameters                       params;
 
         // CPU Memory
         std::vector<PrimitiveRangeList>     primitiveRanges;
@@ -58,7 +67,7 @@ class GPUAccBVHGroup final
         const BVHNode<LeafData>**           dBVHLists;
 
         friend class                        GPUAccBVHBatch<PGroup>;
-
+       
         // Recursive Construction
         HitKey                              FindHitKey(uint32_t accIndex, PrimitiveId id);
         void                                GenerateBVHNode(// Output
@@ -92,7 +101,9 @@ class GPUAccBVHGroup final
         // Type(as string) of the accelerator group
         const char*                     Type() const override;
         // Loads required data to CPU cache for
-        SceneError                      InitializeGroup(// Map of hit keys for all materials
+        SceneError                      InitializeGroup(// Accelerator Option Node
+                                                        const SceneNodePtr& node,
+                                                        // Map of hit keys for all materials
                                                         // w.r.t matId and primitive type
                                                         const std::map<TypeIdPair, HitKey>&,
                                                         // List of surface/material
@@ -133,7 +144,6 @@ class GPUAccBVHBatch final
     : public GPUAcceleratorBatch<GPUAccBVHGroup<PGroup>, PGroup>
 {
     public:
-        static constexpr bool   USE_STACK = true;
 
         // Constructors & Destructor
                                 GPUAccBVHBatch(const GPUAcceleratorGroupI&,
@@ -218,7 +228,9 @@ class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
                                         const uint32_t rayCount) const override;
 
 
-        SceneError                  Initialize(// List of surface to transform id hit key mappings
+        SceneError                  Initialize(// Accelerator Option Node
+                                               const SceneNodePtr& node,
+                                               // List of surface to transform id hit key mappings
                                                const std::map<uint32_t, BaseLeaf>&) override;
         SceneError                  Change(// List of only changed surface to transform id hit key mappings
                                            const std::map<uint32_t, BaseLeaf>&) override;

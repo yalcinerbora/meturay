@@ -23,6 +23,9 @@ class CudaGPU;
 class CudaSystem;
 class GPUPrimitiveGroupI;
 class GPUMaterialGroupI;
+class SceneNodeI;
+
+using SceneNodePtr = std::unique_ptr<SceneNodeI>;
 
 // Accelerator Group defines same type of accelerators
 // This struct holds accelerator data
@@ -38,7 +41,9 @@ class GPUAcceleratorGroupI
         // Type(as string) of the accelerator group
         virtual const char*     Type() const = 0;
         // Loads required data to CPU cache for
-        virtual SceneError      InitializeGroup(// Map of hit keys for all materials
+        virtual SceneError      InitializeGroup(// Accelerator Option Node
+                                                const SceneNodePtr& node,
+                                                // Map of hit keys for all materials
                                                 // w.r.t matId and primitive type
                                                 const std::map<TypeIdPair, HitKey>&,
                                                 // List of surface/material
@@ -129,7 +134,9 @@ class GPUBaseAcceleratorI
                                     const uint32_t rayCount) const = 0;
 
         // Initialization
-        virtual SceneError      Initialize(// List of surface to transform id hit key mappings
+        virtual SceneError      Initialize(// Accelerator Option Node
+                                           const SceneNodePtr& node,
+                                           // List of surface to transform id hit key mappings
                                            const std::map<uint32_t, BaseLeaf>&) = 0;
         virtual SceneError      Change(// List of only changed surface to transform id hit key mappings
                                        const std::map<uint32_t, BaseLeaf>&) = 0;

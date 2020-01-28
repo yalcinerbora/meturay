@@ -73,7 +73,9 @@ void GPUBaseAcceleratorLinear::Hit(const CudaSystem& system,
     }
 }
 
-SceneError GPUBaseAcceleratorLinear::Initialize(// List of surface to transform id hit key mappings
+SceneError GPUBaseAcceleratorLinear::Initialize(// Accelerator Option Node
+                                                const SceneNodePtr& node,
+                                                // List of surface to transform id hit key mappings
                                                 const std::map<uint32_t, BaseLeaf>& map)
 {
     innerIds.clear();

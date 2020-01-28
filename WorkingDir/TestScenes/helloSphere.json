@@ -13,7 +13,7 @@
 		"up": [0.0, 1.0, 0.0]
     }],
 
-	"BaseAccelerator": "Linear",
+	"BaseAccelerator": {"type": "Linear"},
 	"BaseBoundaryMaterial": 1,
 
 	"Tracer": "Test",
@@ -51,10 +51,12 @@
 		"radius": 0.5
 	}],
 
+	"Accelerators": [{"id" : 0, "type" : "Linear"}],
+
 	"Surfaces": [
 	{
 		"transform": 0,
-		"accelerator": "Linear",
+		"accelerator": 0,
 		"material": 0,
 		"primitive": 0
 	}]

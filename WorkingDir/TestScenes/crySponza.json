@@ -1,0 +1,96 @@
+{
+	"Cameras": [
+    {
+		"apertureSize": 1.0,
+		"focusDistance": 21,
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"gaze": [0.0, 2, 0.0],
+		"planes": [0.1, 20.0],
+		"position": [0.0, 3.0, 7.0],
+		"up": [0.0, 1.0, 0.0]
+    }],
+
+	"BaseAccelerator": {"type": "BasicBVH"},
+	"BaseBoundaryMaterial": 0,
+
+	"Tracer": "Test",
+	"Estimator": "Basic",
+
+	"Lights": [
+        // Single Directional Light Information
+        {
+			"id": 0,
+			"type": "directional",
+			"material" : 1,
+            //"direction": [0, -1, 0],
+            "direction": [0.40825, -0.8165, 0.40825],
+			"power": [1.0, 1.0, 1.0]
+		}		
+	],
+
+	"Transforms":[
+	{
+		"id": 0,
+		"type": "matrix4x4",
+		"data": [ 1, 0, 0, 0,
+			      0, 1, 0, 0,
+			      0, 0, 1, 0,
+			      0, 0, 0, 1]
+	}],
+
+	"Materials":[
+	{
+        // General Boundary Material
+        // Black Background
+		"id": 0,
+        "type": "LightBoundary",
+		"radiance" : [0, 0, 0]
+    },
+    {
+		// Light Boundary Material
+		"id": 1,
+		"type": "LightBoundary",		
+		"radiance" : [15, 15, 15]
+		//"radiance" : [9.5, 9.5, 9.5]
+		//"radiance" : [1.1, 1.1, 1.1]
+    },
+	{
+        // GFG Materials
+        // GFG File format is custom binary format
+        // for fast loading scenes
+        // It support basic materials (list of data and textures which is not standardized)
+        "id": ["2 - 27"],
+        "innerIndex": ["0-25"],
+        "type": "GFGBasicPT",
+        "name": "../Surfaces/crytek_sponza.gfg"
+    }],
+
+	"Primitives":[
+	{
+		// GFG Primitives
+        "id": ["28 - 600"],
+        "innerIndex": ["0 - 600"],
+		"type": "Triangle",
+        "name": "../Surfaces/crytek_sponza.gfg",
+	}],
+
+    // Accelerators and their options
+    "Accelerators":[{"id": 0, "type":"BasicBVH", "useStack": true}],
+
+    // ...
+	"Surfaces": [ "crySponzaSurfaces.bin",
+        
+        { "transform": 0, "accelerator": "BasicBVH", "material": 3, "primitive": 0 },
+        { "transform": 0, "accelerator": "BasicBVH", "material": 3, "primitive": 0 },
+        { "transform": 0, "accelerator": "BasicBVH", "material": 3, "primitive": 0 },
+        { "transform": 0, "accelerator": "BasicBVH", "material": 3, "primitive": 0 },
+        { "transform": 0, "accelerator": "BasicBVH", "material": 3, "primitive": 0 },
+        { "transform": 0, "accelerator": "BasicBVH", "material": 3, "primitive": 0 },
+        { "transform": 0, "accelerator": "BasicBVH", "material": 3, "primitive": 0 },
+        { "transform": 0, "accelerator": "BasicBVH", "material": 3, "primitive": 0 },
+        { "transform": 0, "accelerator": "BasicBVH", "material": 3, "primitive": 0 }
+    ]
+}

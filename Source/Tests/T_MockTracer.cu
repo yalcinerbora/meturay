@@ -67,7 +67,9 @@ class MockTracerLogic : public TracerBaseLogicI
                                             const uint32_t rayCount) const override;
 
                 // Initialization
-                SceneError          Initialize(// List of surface to transform id hit key mappings
+                SceneError          Initialize(// Accelerator Option Node
+                                               const SceneNodePtr& node,
+                                               // List of surface to transform id hit key mappings
                                                const std::map<uint32_t, BaseLeaf>&)  override { return SceneError::OK; }
                 SceneError          Change(// List of only changed surface to transform id hit key mappings
                                            const std::map<uint32_t, BaseLeaf>&) override { return SceneError::OK; }

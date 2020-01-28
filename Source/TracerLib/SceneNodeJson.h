@@ -36,6 +36,7 @@ class SceneNodeJson final : public SceneNodeI
         // Id pair inspecific data loading
         size_t                      CommonListSize(const std::string& name) const override;
 
+        bool                        CommonBool(const std::string& name, double time = 0.0) const override;
         std::string                 CommonString(const std::string& name, double time = 0.0) const override;
         float                       CommonFloat(const std::string& name, double time = 0.0) const override;
         Vector2                     CommonVector2(const std::string& name, double time = 0.0) const override;
@@ -45,6 +46,7 @@ class SceneNodeJson final : public SceneNodeI
         uint32_t                    CommonUInt(const std::string& name, double time = 0.0) const override;
         uint64_t                    CommonUInt64(const std::string& name, double time = 0.0) const override;
 
+        std::vector<bool>           CommonBoolList(const std::string& name, double time = 0.0) const override;
         std::vector<std::string>    CommonStringList(const std::string& name, double time = 0.0) const override;
         std::vector<float>          CommonFloatList(const std::string& name, double time) const override;
         std::vector<Vector2>        CommonVector2List(const std::string& name, double time = 0.0) const override;
@@ -58,6 +60,7 @@ class SceneNodeJson final : public SceneNodeI
         size_t                      AccessListTotalCount(const std::string& name) const override;
         std::vector<size_t>         AccessListCount(const std::string& name) const override;
 
+        std::vector<bool>           AccessBool(const std::string& name, double time = 0.0) const override;
         std::vector<std::string>    AccessString(const std::string& name, double time = 0.0) const override;
         std::vector<float>          AccessFloat(const std::string& name, double time = 0.0) const override;
         std::vector<Vector2>        AccessVector2(const std::string& name, double time = 0.0) const override;
@@ -67,6 +70,7 @@ class SceneNodeJson final : public SceneNodeI
         std::vector<uint32_t>       AccessUInt(const std::string& name, double time = 0.0) const override;
         std::vector<uint64_t>       AccessUInt64(const std::string& name, double time = 0.0) const override;
 
+        std::vector<BoolList>       AccessBoolList(const std::string& name, double time = 0.0) const override;
         std::vector<StringList>     AccessStringList(const std::string& name, double time = 0.0) const override;
         std::vector<FloatList>      AccessFloatList(const std::string& name, double time) const override;
         std::vector<Vector2List>    AccessVector2List(const std::string& name, double time = 0.0) const override;

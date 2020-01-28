@@ -6,12 +6,13 @@ with nvcc
 
 */
 
+#include <memory>
 #include <cstdint>
 #include <cassert>
-#include <nlohmann/json_fwd.hpp>
 
 #include "RayLib/SceneStructs.h"
 
+using BoolList = std::vector<bool>;
 using StringList = std::vector<std::string>;
 using FloatList = std::vector<float>;
 using Vector2List = std::vector<Vector2>;
@@ -51,6 +52,7 @@ class SceneNodeI
         // Id pair inspecific data loading
         virtual size_t                      CommonListSize(const std::string& name) const = 0;
 
+        virtual bool                        CommonBool(const std::string& name, double time = 0.0) const = 0;
         virtual std::string                 CommonString(const std::string& name, double time = 0.0) const = 0;
         virtual float                       CommonFloat(const std::string& name, double time = 0.0) const = 0;
         virtual Vector2                     CommonVector2(const std::string& name, double time = 0.0) const = 0;
@@ -60,6 +62,7 @@ class SceneNodeI
         virtual uint32_t                    CommonUInt(const std::string& name, double time = 0.0) const = 0;
         virtual uint64_t                    CommonUInt64(const std::string& name, double time = 0.0) const = 0;
 
+        virtual std::vector<bool>           CommonBoolList(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<std::string>    CommonStringList(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<float>          CommonFloatList(const std::string& name, double time) const = 0;
         virtual std::vector<Vector2>        CommonVector2List(const std::string& name, double time = 0.0) const = 0;
@@ -73,6 +76,7 @@ class SceneNodeI
         virtual size_t                      AccessListTotalCount(const std::string& name) const = 0;
         virtual std::vector<size_t>         AccessListCount(const std::string& name) const = 0;
 
+        virtual std::vector<bool>           AccessBool(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<std::string>    AccessString(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<float>          AccessFloat(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<Vector2>        AccessVector2(const std::string& name, double time = 0.0) const = 0;
@@ -82,6 +86,7 @@ class SceneNodeI
         virtual std::vector<uint32_t>       AccessUInt(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<uint64_t>       AccessUInt64(const std::string& name, double time = 0.0) const = 0;
 
+        virtual std::vector<BoolList>       AccessBoolList(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<StringList>     AccessStringList(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<FloatList>      AccessFloatList(const std::string& name, double time) const = 0;
         virtual std::vector<Vector2List>    AccessVector2List(const std::string& name, double time = 0.0) const = 0;
@@ -91,6 +96,8 @@ class SceneNodeI
         virtual std::vector<UIntList>       AccessUIntList(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<UInt64List>     AccessUInt64List(const std::string& name, double time = 0.0) const = 0;
 };
+
+using SceneNodePtr = std::unique_ptr<SceneNodeI>;
 
 inline SceneNodeI::SceneNodeI(NodeIndex index)
     : nodeIndex(index)

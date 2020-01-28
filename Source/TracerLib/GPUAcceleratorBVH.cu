@@ -219,7 +219,9 @@ void GPUBaseAcceleratorBVH::Hit(const CudaSystem& system,
     }
 }
 
-SceneError GPUBaseAcceleratorBVH::Initialize(// List of surface to transform id hit key mappings
+SceneError GPUBaseAcceleratorBVH::Initialize(// Accelerator Option Node
+                                             const SceneNodePtr& node,
+                                             // List of surface to transform id hit key mappings
                                              const std::map<uint32_t, BaseLeaf>& map)
 {
     idLookup.clear();

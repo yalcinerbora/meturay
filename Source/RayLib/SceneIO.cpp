@@ -91,7 +91,7 @@ SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn, double time)
     {
         SurfaceStruct s = {};
         s.transformId = jsn[TRANSFORM];
-        s.acceleratorType = jsn[ACCELERATOR];
+        s.acceleratorId = jsn[ACCELERATOR];
         s.matPrimPairs.fill(std::make_pair(std::numeric_limits<uint32_t>::max(),
                                            std::numeric_limits<uint32_t>::max()));
 

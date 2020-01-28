@@ -88,6 +88,11 @@ size_t SceneNodeJson::CommonListSize(const std::string& name) const
     return nodeInner.size();
 }
 
+bool SceneNodeJson::CommonBool(const std::string& name, double time) const
+{
+    return SceneIO::LoadBool(node[name], time);
+}
+
 std::string SceneNodeJson::CommonString(const std::string& name, double time) const
 {
     return SceneIO::LoadString(node[name], time);
@@ -125,6 +130,11 @@ uint32_t SceneNodeJson::CommonUInt(const std::string& name, double time) const
 uint64_t SceneNodeJson::CommonUInt64(const std::string& name, double time) const
 {
     return SceneIO::LoadNumber<uint64_t>(node[name], time);
+}
+
+std::vector<bool> SceneNodeJson::CommonBoolList(const std::string& name, double time) const
+{
+    return CommonList<bool, SceneIO::LoadBool>(name, time);
 }
 
 std::vector<std::string> SceneNodeJson::CommonStringList(const std::string& name, double time) const
@@ -188,6 +198,10 @@ std::vector<size_t> SceneNodeJson::AccessListCount(const std::string& name) cons
     return std::move(result);
 }
 
+std::vector<bool> SceneNodeJson::AccessBool(const std::string& name, double time) const
+{
+    return AccessSingle<bool, SceneIO::LoadBool>(name, time);
+}
 
 std::vector<std::string> SceneNodeJson::AccessString(const std::string& name, double time) const
 {
@@ -227,6 +241,11 @@ std::vector<uint32_t> SceneNodeJson::AccessUInt(const std::string& name, double 
 std::vector<uint64_t> SceneNodeJson::AccessUInt64(const std::string& name, double time) const
 {
     return AccessSingle<uint64_t, SceneIO::LoadNumber<uint64_t>>(name, time);
+}
+
+std::vector<BoolList> SceneNodeJson::AccessBoolList(const std::string& name, double time) const
+{
+    return AccessList<bool, SceneIO::LoadBool>(name, time);
 }
 
 std::vector<StringList> SceneNodeJson::AccessStringList(const std::string& name, double time) const

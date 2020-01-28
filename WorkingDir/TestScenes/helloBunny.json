@@ -13,7 +13,7 @@
 		"up": [0.0, 1.0, 0.0]
     }],
 
-	"BaseAccelerator": "Linear",
+	"BaseAccelerator": {"type": "Linear"},
 	"BaseBoundaryMaterial": 0,
 
 	"Tracer": "Test",
@@ -104,25 +104,28 @@
 		"innerIndex": 0
 	}],
 
+	"Accelerators": [{"id" : 0, "type" : "BasicBVH", "useStack": true},
+					 {"id" : 1, "type" : "Linear"}],
+
 	"Surfaces": [
 	{
 		// Floor
 		"transform": 0,
-		"accelerator": "Linear",
+		"accelerator": 1,
 		"material": 3,
         "primitive": 0
 	},
 	// {
 	// 	// Light
 	// 	"transform": 0,
-	// 	"accelerator": "Linear",
+	// 	"accelerator": 1,
 	// 	"material": 1,
     //     "primitive": 2
 	// },
 	{
 		// Bunny
 		"transform": 0,
-		"accelerator": "BasicBVH",
+		"accelerator": 0,
 		"material": 2,
         "primitive": 1
 	}]

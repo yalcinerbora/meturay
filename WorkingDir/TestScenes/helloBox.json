@@ -13,7 +13,7 @@
 		"up": [0.0, 1.0, 0.0]
     }],
 
-	"BaseAccelerator": "Linear",
+	"BaseAccelerator": {"type": "Linear"},
 	"BaseBoundaryMaterial": 0,
 
 	"Tracer": "Test",
@@ -79,10 +79,12 @@
 				 [1, 7, 3, 3, 7, 5]]
 	}],
 
+	"Accelerators": [{"id" : 0, "type" : "Linear"}],
+
 	"Surfaces": [
 	{
 		"transform": 0,
-		"accelerator": "Linear",
+		"accelerator": 0,
 		"material": [1, 2, 3, 4],
 		"primitive": [0, 1, 2, 3]
 	}]

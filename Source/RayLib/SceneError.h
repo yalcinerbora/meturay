@@ -22,6 +22,7 @@ struct SceneError : public ErrorI
             MATERIALS_ARRAY_NOT_FOUND,
             PRIMITIVES_ARRAY_NOT_FOUND,
             SURFACES_ARRAY_NOT_FOUND,
+            ACCELERATORS_ARRAY_NOT_FOUND,
             LIGHTS_ARRAY_NOT_FOUND,
             TRANSFORMS_ARRAY_NOT_FOUND,
             CAMERAS_ARRAY_NOT_FOUND,
@@ -37,10 +38,12 @@ struct SceneError : public ErrorI
             NO_LOGIC_FOR_TRACER,
             NO_LOGIC_FOR_ESTIMATOR,
             // Id Errors
+            DUPLICATE_ACCELERATOR_ID,
             DUPLICATE_MATERIAL_ID,
             DUPLICATE_PRIMITIVE_ID,
             DUPLICATE_TRANSFORM_ID,
             // Id not found
+            ACCELERATOR_ID_NOT_FOUND,
             MATERIAL_ID_NOT_FOUND,
             PRIMITIVE_ID_NOT_FOUND,
             TRANSFORM_ID_NOT_FOUND,
@@ -134,6 +137,7 @@ inline SceneError::operator std::string() const
         "\"Materials\" array not found",
         "\"Primitives\" array not found",
         "\"Surfaces\" array not found",
+        "\"Accelerators\" array not found",
         "\"Lights\" array not found",
         "\"Transforms\" array not found",
         "\"Cameras\" array not found",
@@ -149,10 +153,12 @@ inline SceneError::operator std::string() const
         "No logic found for that tracer",
         "No logic found for that estimator",
         // Id Errors
+        "Duplicate accelerator id",
         "Duplicate material id",
         "Duplicate primitive id",
         "Duplicate transform id",
         //
+        "Accelerator id not found",
         "Material id not found",
         "Primitive id not found",
         "Transform id not found",

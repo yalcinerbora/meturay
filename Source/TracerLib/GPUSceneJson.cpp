@@ -85,7 +85,7 @@ SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
             auto r = result.emplace(jsn[NodeNames::ID], std::make_pair(i, MAX_UINT32));
             if(!r.second)
             {
-                unsigned int i = static_cast<int>(SceneError::DUPLICATE_MATERIAL_ID) + t;
+                unsigned int i = static_cast<int>(SceneError::DUPLICATE_ACCELERATOR_ID) + t;
                 return static_cast<SceneError::Type>(i);
             }
         }
@@ -97,7 +97,7 @@ SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
                 auto r = result.emplace(id, std::make_pair(i, j));
                 if(!r.second)
                 {
-                    unsigned int i = static_cast<int>(SceneError::DUPLICATE_MATERIAL_ID) + t;
+                    unsigned int i = static_cast<int>(SceneError::DUPLICATE_ACCELERATOR_ID) + t;
                     return static_cast<SceneError::Type>(i);
                 }
                 j++;
@@ -113,6 +113,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                                   //
                                                   MaterialNodeList& matGroupNodes,
                                                   MaterialBatchList& matBatchListings,
+                                                  //
                                                   AcceleratorBatchList& requiredAccelListings,
                                                   // Estimator Related
                                                   NodeListing& lightNodes,
@@ -128,8 +129,10 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     const nlohmann::json* primitives = nullptr;
     const nlohmann::json* materials = nullptr;
     const nlohmann::json* lights = nullptr;
+    const nlohmann::json* accelerators = nullptr;
     IndexLookup primList;
     IndexLookup materialList;
+    IndexLookup acceleratorList;
 
     // Lambdas for cleaner code
     auto AttachMatBatch = [&](const std::string& primType,
@@ -185,9 +188,12 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     if(!FindNode(primitives, NodeNames::PRIMITIVE_BASE)) return SceneError::PRIMITIVES_ARRAY_NOT_FOUND;
     if(!FindNode(materials, NodeNames::MATERIAL_BASE)) return SceneError::MATERIALS_ARRAY_NOT_FOUND;
     if(!FindNode(lights, NodeNames::LIGHT_BASE)) return SceneError::LIGHTS_ARRAY_NOT_FOUND;
+    if(!FindNode(accelerators, NodeNames::ACCELERATOR_BASE)) return SceneError::ACCELERATORS_ARRAY_NOT_FOUND;
     if((e = GenIdLookup(primList, *primitives, PRIMITIVE)) != SceneError::OK) 
         return e;
     if((e = GenIdLookup(materialList, *materials, MATERIAL)) != SceneError::OK)
+        return e;
+    if((e = GenIdLookup(acceleratorList, *accelerators, ACCELERATOR)) != SceneError::OK)
         return e;
 
     // Iterate over surfaces
@@ -196,6 +202,21 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     for(const auto& jsn : (*surfaces))
     {
         SurfaceStruct surf = SceneIO::LoadSurface(jsn, time);
+
+        // Find Accelerator
+        NodeIndex accIndex;
+        std::string accType = "";
+        const nlohmann::json* accNode = nullptr;
+        
+        const uint32_t accId = surf.acceleratorId;
+        if(auto loc = acceleratorList.find(accId); loc != acceleratorList.end())
+        {
+            accIndex = loc->second.first;
+            accNode = &(*accelerators)[accIndex];
+            accType = (*accNode)[NodeNames::TYPE];            
+        }
+        else return SceneError::ACCELERATOR_ID_NOT_FOUND;
+        
         // Start loading mats and surface datas
         // Iterate mat surface pairs
         std::string primGroupType;
@@ -223,20 +244,24 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             }
             else return SceneError::PRIMITIVE_ID_NOT_FOUND;
 
+            
+
             // Do Material attachments
             if((e = AttachMatAll(primGroupType, matId)) != SceneError::OK)
                 return e;
         }
         // Generate Accelerator Group
         const std::string acceleratorGroupType = MangledNames::AcceleratorGroup(primGroupType.c_str(),
-                                                                                surf.acceleratorType.c_str());
+                                                                                accType.c_str());
         AccelGroupData accGData =
         {
             acceleratorGroupType,
             primGroupType,
-            std::map<uint32_t, IdPairs>()
+            std::map<uint32_t, IdPairs>(),
+            std::make_unique<SceneNodeJson>(*accNode, accIndex)
         };
-        const auto& result = requiredAccelListings.emplace(acceleratorGroupType, accGData).first;
+        const auto& result = requiredAccelListings.emplace(acceleratorGroupType, 
+                                                           std::move(accGData)).first;
         result->second.matPrimIdPairs.emplace(surfId, surf.matPrimPairs);
 
         // Generate transform pair also
@@ -388,6 +413,7 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABB
         const std::string& accelGroupName = accelGroupBatch.second.accelType;
         const auto& primTName = accelGroupBatch.second.primType;
         const auto& pairsList = accelGroupBatch.second.matPrimIdPairs;
+        const auto& accelNode = accelGroupBatch.second.accelNode;
 
         // Fetch Primitive
         GPUPrimitiveGroupI* pGroup = nullptr;
@@ -398,7 +424,7 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABB
         GPUAcceleratorGroupI* aGroup = nullptr;
         if((e = logicGenerator.GenerateAcceleratorGroup(aGroup, *pGroup, dTransforms, accelGroupName)) != SceneError::OK)
             return e;
-        if((e = aGroup->InitializeGroup(matHitKeyList, pairsList, time)) != SceneError::OK)
+        if((e = aGroup->InitializeGroup(accelNode, matHitKeyList, pairsList, time)) != SceneError::OK)
             return e;
 
         // Batch Generation
@@ -473,13 +499,14 @@ SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, AABB3>
     const nlohmann::json* baseAccel = nullptr;
     if(!FindNode(baseAccel, NodeNames::BASE_ACCELERATOR))
         return SceneError::BASE_ACCELERATOR_NODE_NOT_FOUND;
-    const std::string baseAccelType = (*baseAccel);
+    const std::string baseAccelType = (*baseAccel)[NodeNames::TYPE];
 
     // Generate Base Accelerator..
     GPUBaseAcceleratorI* baseAccelerator = nullptr;
     if((e = logicGenerator.GenerateBaseAccelerator(baseAccelerator, baseAccelType)) != SceneError::OK)
         return e;
-    if((e = baseAccelerator->Initialize(surfaceListings)) != SceneError::OK)
+    if((e = baseAccelerator->Initialize(std::make_unique<SceneNodeJson>(*baseAccel, 0),
+                                        surfaceListings)) != SceneError::OK)
         return e;
     return e;
 }
