@@ -10,10 +10,22 @@ Scene file json interpeter and writer
 #include "Quaternion.h"
 #include "SceneStructs.h"
 
+#include <sstream>
 #include <fstream>
 #include <nlohmann/json.hpp>
 
 struct CameraPerspective;
+
+template<class T>
+using IntegerEnable = typename std::enable_if<std::is_integral<T>::value>::type;
+
+template <class T>
+struct Range
+{
+    // [start, end)
+    T start;
+    T end;
+};
 
 namespace SceneIO
 {
@@ -25,26 +37,30 @@ namespace SceneIO
     T                   LoadFromAnim(const std::string& fileName, double time = 0.0);
 
     // Static Loads
-    bool                LoadBool(const nlohmann::json&, double time = 0.0);
-    std::string         LoadString(const nlohmann::json&, double time = 0.0);
+    bool                    LoadBool(const nlohmann::json&, double time = 0.0);
+    std::string             LoadString(const nlohmann::json&, double time = 0.0);
     template <class T>
-    T                   LoadNumber(const nlohmann::json&, double time = 0.0);
+    T                       LoadNumber(const nlohmann::json&, double time = 0.0);
     template <class T>
-    Quaternion<T>       LoadQuaternion(const nlohmann::json&, double time = 0.0);
+    Quaternion<T>           LoadQuaternion(const nlohmann::json&, double time = 0.0);
     template <int N, class T>
-    Vector<N, T>        LoadVector(const nlohmann::json&, double time = 0.0);
+    Vector<N, T>            LoadVector(const nlohmann::json&, double time = 0.0);
     template <int N, class T>
-    Matrix<N, T>        LoadMatrix(const nlohmann::json&, double time = 0.0);
+    Matrix<N, T>            LoadMatrix(const nlohmann::json&, double time = 0.0);
+
+    // Ranged Arrays
+    template <class T, typename = IntegerEnable<T>>
+    std::vector<Range<T>>   LoadRangedNumbers(const nlohmann::json&);
 
     // Utility
-    std::string         StripFileExt(const std::string& string);
+    std::string             StripFileExt(const std::string& string);
 
     // Common Types
-    LightStruct         LoadLight(const nlohmann::json&, double time = 0.0);
-    TransformStruct     LoadTransform(const nlohmann::json&, double time = 0.0);
-    CameraPerspective   LoadCamera(const nlohmann::json&, double time = 0.0);
+    LightStruct             LoadLight(const nlohmann::json&, double time = 0.0);
+    TransformStruct         LoadTransform(const nlohmann::json&, double time = 0.0);
+    CameraPerspective       LoadCamera(const nlohmann::json&, double time = 0.0);
 
-    SurfaceStruct       LoadSurface(const nlohmann::json&, double time = 0.0);
+    SurfaceStruct           LoadSurface(const nlohmann::json&, double time = 0.0);
 };
 
 inline bool SceneIO::IsTimeDependent(const nlohmann::json& jsn)
@@ -145,6 +161,44 @@ Matrix<N, T> SceneIO::LoadMatrix(const nlohmann::json& jsn, double time)
         return Matrix<N, T>(array.data());
     }
     else throw SceneException(SceneError::TYPE_MISMATCH);
+}
+
+template <class T, typename>
+std::vector<Range<T>> SceneIO::LoadRangedNumbers(const nlohmann::json& jsn)
+{
+    // It is mandatory for node to be an array    
+    if(jsn.is_array())
+    {
+        std::vector<Range<T>> result;
+        // Iterate
+        for(const nlohmann::json& n : jsn)
+        {
+            // Each node can be either single integer or string
+            // which can be decomposed of a range
+            if(n.is_number())
+            {
+                T num = n;
+                result.push_back(Range<T>{num, num + 1});
+                
+            }
+            else if(n.is_string())
+            {
+                // Decompose range
+                std::string range = n;
+                std::stringstream s(range);
+                T start, end;
+
+                s >> start;
+                s >> range;
+                s >> end;
+                result.push_back(Range<T>{start, end + 1});
+            }
+            else goto ERROR;
+        }
+        return result;
+    }
+    ERROR:
+    throw SceneException(SceneError::TYPE_MISMATCH);
 }
 
 inline std::string SceneIO::StripFileExt(const std::string& string)

@@ -66,10 +66,10 @@ constexpr static_string<N1 + N2> operator+(const static_string<N1>& s1,
     return static_string<N1 + N2>(s1, s2);
 }
 
-//// Deduction guides for literal
-//template <int N>
-//static_string(const char(&)[N]) -> static_string<N - 1>;
-//
-//template <int N, int M>
-//static_string(const char(&)[M],
-//              const char(&)[N - M]) -> static_string<N>;
+// Deduction guides for literal
+template <int N>
+static_string(const char(&)[N]) -> static_string<N - 1>;
+
+template <int N, int M>
+static_string(const char(&)[M],
+              const char(&)[N - M]) -> static_string<N>;

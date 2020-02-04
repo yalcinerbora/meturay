@@ -20,6 +20,47 @@ std::vector<T> SceneNodeJson::AccessSingle(const std::string& name,
     return std::move(result);
 }
 
+template <class T>
+std::vector<T> SceneNodeJson::AccessRanged(const std::string& name) const
+{
+    const nlohmann::json& nodeInner = node[name];
+    std::vector<T> result;
+    result.reserve(indexIdPairs.size());
+
+    if(indexIdPairs.size() == 1)
+    {
+        result.push_back(SceneIO::LoadNumber<T>(nodeInner));
+    }
+    else
+    {
+        std::vector<Range<T>> ranges = SceneIO::LoadRangedNumbers<T>(nodeInner);
+
+        T total = 0;
+        size_t j = 0;
+        // Do single loop over pairings and ranges
+        for(const auto& list : indexIdPairs)
+        {
+            // Find Data from the ranges
+            const InnerIndex i = list.second;
+            
+            //for(const Range<T>& r : ranges)
+            for(; j < ranges.size() ; j++)
+            {
+                Range<T> r = ranges[j];
+                T count = r.end - r.start;
+                if(i >= total && i < total + count)
+                {
+                    // Find the range now add the value
+                    result.push_back(r.start + total - i);
+                    break;
+                }
+                total += count;
+            }
+        }
+    }
+    return std::move(result);
+}
+
 template <class T, LoadFunc<T> LoadF>
 std::vector<std::vector<T>> SceneNodeJson::AccessList(const std::string& name,
                                                       double time) const
@@ -196,6 +237,16 @@ std::vector<size_t> SceneNodeJson::AccessListCount(const std::string& name) cons
         result.push_back(node.size());
     }
     return std::move(result);
+}
+
+std::vector<uint32_t> SceneNodeJson::AccessUIntRanged(const std::string& name) const
+{
+    return AccessRanged<uint32_t>(name);
+}
+
+std::vector<uint64_t> SceneNodeJson::AccessUInt64Ranged(const std::string& name) const
+{
+    return AccessRanged<uint64_t>(name);
 }
 
 std::vector<bool> SceneNodeJson::AccessBool(const std::string& name, double time) const

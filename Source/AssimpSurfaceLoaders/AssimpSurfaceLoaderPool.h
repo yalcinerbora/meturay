@@ -4,7 +4,7 @@
 #include <assimp/Importer.hpp>
 
 using AssimpSurfaceLoaderGeneratorFunc = SurfaceLoaderI* (*)(Assimp::Importer&,
-                                                             const std::string & scenePath,
+                                                             const std::string& scenePath,
                                                              const SceneNodeI&,
                                                              double time);
 
@@ -37,11 +37,13 @@ class AssimpSurfaceLoaderGen : public SurfaceLoaderGenI
 class AssimpSurfaceLoaderPool : public SurfaceLoaderPoolI
 {
     private:
-        // TODO: Do a multi thread system(for this)
-        Assimp::Importer            importer;
+        static constexpr std::string_view    AssimpPrefix = "assimp_";
 
-        //
-        AssimpSurfaceLoaderGen      objSurfaceLoader;
+        // TODO: Do a multi thread system(for this)
+        Assimp::Importer                importer;
+
+        // Single Meta Surface loader for known file types
+        AssimpSurfaceLoaderGen          assimpSurfaceLoader;
 
     protected:
     public:

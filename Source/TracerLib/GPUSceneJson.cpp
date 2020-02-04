@@ -91,17 +91,51 @@ SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
         }
         else
         {
+            // Partially decompose id list since it can be ranged list
+            std::vector<Range<uint32_t>> ranges = SceneIO::LoadRangedNumbers<uint32_t>(ids);
+
+            SceneError e = SceneError::OK;
+
+            // Loop over Ranged Lists
             uint32_t j = 0;
-            for(const auto& id : ids)
+            for(const auto& range : ranges)
             {
-                auto r = result.emplace(id, std::make_pair(i, j));
-                if(!r.second)
+                // Lamda to elimtinate repetition
+                auto EmplaceToResult = [&](uint32_t id, uint32_t outer, uint32_t inner)
                 {
-                    unsigned int i = static_cast<int>(SceneError::DUPLICATE_ACCELERATOR_ID) + t;
-                    return static_cast<SceneError::Type>(i);
+                    auto r = result.emplace(id, std::make_pair(outer, inner));
+                    if(!r.second)
+                    {
+                        unsigned int i = static_cast<int>(SceneError::DUPLICATE_ACCELERATOR_ID) + t;
+                        return static_cast<SceneError::Type>(i);
+                    }
+                    return SceneError::OK;
+                };
+
+                if((range.end - range.start) == 1)
+                {
+                    if((e = EmplaceToResult(range.start, i, j)) != SceneError::OK) return e;
+                    j++;
                 }
-                j++;
+                else for(uint32_t k = range.start; k < range.end; k++)
+                {
+                    if((e = EmplaceToResult(k, i, j)) != SceneError::OK) return e;
+                    j++;
+                }
             }
+
+
+            //uint32_t j = 0;
+            //for(const auto& id : ids)
+            //{
+            //    auto r = result.emplace(id, std::make_pair(i, j));
+            //    if(!r.second)
+            //    {
+            //        unsigned int i = static_cast<int>(SceneError::DUPLICATE_ACCELERATOR_ID) + t;
+            //        return static_cast<SceneError::Type>(i);
+            //    }
+            //    j++;
+            //}
         }
         i++;
     }

@@ -63,3 +63,11 @@ TEST(SimpleTracerTests, Dragon)
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
+
+TEST(SimpleTracerTests, Sponza)
+{
+    EnableVTMode();
+    SimpleTracerSetup setup(u8"TestScenes/crySponza.json", 0.0);
+    ASSERT_TRUE(setup.Init());
+    setup.Body();
+}

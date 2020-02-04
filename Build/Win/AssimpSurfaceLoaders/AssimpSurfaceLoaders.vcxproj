@@ -149,13 +149,15 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\AssimpSurfaceLoaders\AssimpSurfaceLoaderPool.cpp" />
     <ClCompile Include="..\..\..\Source\AssimpSurfaceLoaders\EntryPoint.cpp" />
-    <ClCompile Include="..\..\..\Source\AssimpSurfaceLoaders\ObjSurfaceLoader.cpp" />
+    <ClCompile Include="..\..\..\Source\AssimpSurfaceLoaders\MetaSurfaceLoader.cpp">
+      <FileType>CppCode</FileType>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\AssimpSurfaceLoaders\AssimpForward.h" />
     <ClInclude Include="..\..\..\Source\AssimpSurfaceLoaders\AssimpSurfaceLoaderPool.h" />
     <ClInclude Include="..\..\..\Source\AssimpSurfaceLoaders\EntryPoint.h" />
-    <ClInclude Include="..\..\..\Source\AssimpSurfaceLoaders\ObjSurfaceLoader.h" />
+    <ClInclude Include="..\..\..\Source\AssimpSurfaceLoaders\MetaSurfaceLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">

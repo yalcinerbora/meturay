@@ -76,6 +76,9 @@ class SceneNodeI
         virtual size_t                      AccessListTotalCount(const std::string& name) const = 0;
         virtual std::vector<size_t>         AccessListCount(const std::string& name) const = 0;
 
+        virtual std::vector<uint32_t>       AccessUIntRanged(const std::string& name) const = 0;
+        virtual std::vector<uint64_t>       AccessUInt64Ranged(const std::string& name) const = 0;
+
         virtual std::vector<bool>           AccessBool(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<std::string>    AccessString(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<float>          AccessFloat(const std::string& name, double time = 0.0) const = 0;

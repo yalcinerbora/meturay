@@ -82,16 +82,20 @@
 	"Accelerators": [{"id" : 0, "type" : "Linear"}],
 
 	"Surfaces": [
-	{
-		"transform": 0,
-		"accelerator": 0,
-		"material": 0,
-		"primitive": 0
-	},
-	{
-		"transform": 0,
-		"accelerator": 0,
-		"material": [0, 1],
-		"primitive": [0, 1]
-	}]
+		// Normal Version
+		// Name and id pairs
+        { "transform": 0, "accelerator": 0, "material": 3, "primitive": 0 },
+        { "transform": 0, "accelerator": 0, "material": [3, 4], "primitive": [6, 8]},        
+
+        // Faster Version 
+        // [T A [M] [P]] Array [Transform, Accelerator, [Material], [Primitive]]
+		[0, 0, 3, 0],
+		[0, 0, [3, 4], [6, 8]],
+
+        // Fastest Version
+        // Binary File with 18 32-bit unsigned integers per surface
+        // 8 Mat-Prim pairs is constant 
+        // T A C M M M M M M M P P P P P P P P        
+		"testSurface.bin"
+	]
 }

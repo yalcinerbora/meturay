@@ -4,7 +4,7 @@
 #include <assimp/DefaultLogger.hpp>
 
 // Surface Loaders
-#include "ObjSurfaceLoader.h"
+#include "MetaSurfaceLoader.h"
 
 namespace TypeGenWrappers
 {
@@ -20,9 +20,9 @@ namespace TypeGenWrappers
 }
 
 AssimpSurfaceLoaderPool::AssimpSurfaceLoaderPool()
-    : objSurfaceLoader(importer,
-                       TypeGenWrappers::AssimpSurfaceLoaderConstruct<ObjSurfaceLoader>,
-                       TypeGenWrappers::DefaultDestruct<SurfaceLoaderI>)
+    : assimpSurfaceLoader(importer,
+                          TypeGenWrappers::AssimpSurfaceLoaderConstruct<AssimpMetaSurfaceLoader>,
+                          TypeGenWrappers::DefaultDestruct<SurfaceLoaderI>)
 {
     static_assert(sizeof(aiVector3D) == sizeof(Vector3), "assimp Vector3 Vector3 mismatch");
     static_assert(sizeof(aiVector2D) == sizeof(Vector2), "assimp Vector2 Vector2 mismatch");
@@ -31,9 +31,9 @@ AssimpSurfaceLoaderPool::AssimpSurfaceLoaderPool()
     Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE,
                                   aiDefaultLogStream_STDOUT);
 
-    // Add Surface Loader Generators to the Pool
-    surfaceLoaderGenerators.emplace(ObjSurfaceLoader::TypeName(),
-                                    &objSurfaceLoader);
+
+    // Add Surface Loaders    
+    surfaceLoaderGenerators.emplace(std::string(AssimpPrefix) + std::string("obj"), &assimpSurfaceLoader);
 }
 
 AssimpSurfaceLoaderPool::~AssimpSurfaceLoaderPool()

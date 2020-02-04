@@ -1,21 +1,21 @@
-#include "ObjSurfaceLoader.h"
+#include "MetaSurfaceLoader.h"
 
 #include "RayLib/SceneError.h"
-#include "RayLib/SceneNodeI.h"
 #include "RayLib/PrimitiveDataTypes.h"
+#include "RayLib/FileSystemUtility.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include "RayLib/FileSystemUtility.h"
-
-ObjSurfaceLoader::ObjSurfaceLoader(Assimp::Importer& i,
-                                   const std::string& scenePath,
-                                   const SceneNodeI& node, double time)
+AssimpMetaSurfaceLoader::AssimpMetaSurfaceLoader(Assimp::Importer& i,
+                                                 const std::string& scenePath,
+                                                 const SceneNodeI& node,
+                                                 double time)
 : SurfaceLoader(node, time)
 , importer(i)
 , scene(nullptr)
+, innerIds(node.AccessUIntRanged(InnerIdJSON))
 {    
     // Get File Name
     const std::string filePath = Utilitiy::MergeFileFolder(scenePath, node.Name());
@@ -33,8 +33,7 @@ ObjSurfaceLoader::ObjSurfaceLoader(Assimp::Importer& i,
     if(!scene) throw SceneException(SceneError::SURFACE_DATA_INVALID_READ,
                                     importer.GetErrorString());
 
-    // Do some checking
-    const auto& innerIds = node.AccessUInt(InnerIdJSON);
+    // Do some checking    
     for(unsigned int innerId : innerIds)
     {
         const auto& mesh = scene->mMeshes[innerId];
@@ -59,19 +58,19 @@ ObjSurfaceLoader::ObjSurfaceLoader(Assimp::Importer& i,
     scene = importer.GetOrphanedScene();
 }
 
-ObjSurfaceLoader::~ObjSurfaceLoader()
+AssimpMetaSurfaceLoader::~AssimpMetaSurfaceLoader()
 {
     if(scene) delete scene;
 }
 
-const char* ObjSurfaceLoader::SufaceDataFileExt() const
+const char* AssimpMetaSurfaceLoader::SufaceDataFileExt() const
 {
-    return Extension();
+    return "*";
 }
 
-SceneError ObjSurfaceLoader::AABB(std::vector<AABB3>& list) const
+SceneError AssimpMetaSurfaceLoader::AABB(std::vector<AABB3>& list) const
 {
-    const auto& innerIds = node.AccessUInt(InnerIdJSON);
+    //const auto& innerIds = node.AccessUIntRanged(InnerIdJSON);
     for(unsigned int innerId : innerIds)
     {
         const auto& aabb = scene->mMeshes[innerId]->mAABB;
@@ -85,11 +84,11 @@ SceneError ObjSurfaceLoader::AABB(std::vector<AABB3>& list) const
     return SceneError::OK;
 }
 
-SceneError ObjSurfaceLoader::PrimitiveRanges(std::vector<Vector2ul>& result) const
+SceneError AssimpMetaSurfaceLoader::PrimitiveRanges(std::vector<Vector2ul>& result) const
 {
     // Self contain indices
     size_t prevOffset = 0;
-    const auto& innerIds = node.AccessUInt(InnerIdJSON);
+    //const auto& innerIds = node.AccessUIntRanged(InnerIdJSON);
     for(unsigned int innerId : innerIds)
     {
         const auto& mesh = scene->mMeshes[innerId];
@@ -110,10 +109,10 @@ SceneError ObjSurfaceLoader::PrimitiveRanges(std::vector<Vector2ul>& result) con
     return SceneError::OK;
 }
 
-SceneError ObjSurfaceLoader::PrimitiveCounts(std::vector<size_t>& result) const
+SceneError AssimpMetaSurfaceLoader::PrimitiveCounts(std::vector<size_t>& result) const
 {
     // Self contain indices
-    const auto& innerIds = node.AccessUInt(InnerIdJSON);
+    //const auto& innerIds = node.AccessUIntRanged(InnerIdJSON);
     for(unsigned int innerId : innerIds)
     {
         const auto& mesh = scene->mMeshes[innerId];
@@ -127,11 +126,11 @@ SceneError ObjSurfaceLoader::PrimitiveCounts(std::vector<size_t>& result) const
     return SceneError::OK;
 }
 
-SceneError ObjSurfaceLoader::PrimitiveDataRanges(std::vector<Vector2ul>& result) const
+SceneError AssimpMetaSurfaceLoader::PrimitiveDataRanges(std::vector<Vector2ul>& result) const
 {
     // Self contain indices
     size_t prevOffset = 0;
-    const auto& innerIds = node.AccessUInt(InnerIdJSON);
+    //const auto& innerIds = node.AccessUIntRanged(InnerIdJSON);
     for(unsigned int innerId : innerIds)
     {
         const auto& mesh = scene->mMeshes[innerId];
@@ -143,12 +142,12 @@ SceneError ObjSurfaceLoader::PrimitiveDataRanges(std::vector<Vector2ul>& result)
     return SceneError::OK;
 }
 
-SceneError ObjSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveDataType primitiveDataType) const
+SceneError AssimpMetaSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveDataType primitiveDataType) const
 {
     // Self contain indices
     uint64_t offset = 0;
     Byte* meshStart = result;
-    const auto& innerIds = node.AccessUInt(InnerIdJSON);
+    //const auto& innerIds = node.AccessUIntRanged(InnerIdJSON);
     for(unsigned int innerId : innerIds)
     {
         const auto& mesh = scene->mMeshes[innerId];
@@ -202,10 +201,10 @@ SceneError ObjSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveDataType pr
     return SceneError::OK;
 }
 
-SceneError ObjSurfaceLoader::PrimitiveDataCount(size_t& total, PrimitiveDataType primitiveDataType) const
+SceneError AssimpMetaSurfaceLoader::PrimitiveDataCount(size_t& total, PrimitiveDataType primitiveDataType) const
 {
     total = 0;
-    const auto& innerIds = node.AccessUInt(InnerIdJSON);
+    //const auto& innerIds = node.AccessUIntRanged(InnerIdJSON);
     for(unsigned int innerId : innerIds)
     {
         const auto& mesh = scene->mMeshes[innerId];
@@ -232,10 +231,9 @@ SceneError ObjSurfaceLoader::PrimitiveDataCount(size_t& total, PrimitiveDataType
     return SceneError::OK;
 }
 
-SceneError ObjSurfaceLoader::PrimDataLayout(PrimitiveDataLayout& result,
-                                            PrimitiveDataType primitiveDataType) const
+SceneError AssimpMetaSurfaceLoader::PrimDataLayout(PrimitiveDataLayout& result,
+                                                         PrimitiveDataType primitiveDataType) const
 {
-
     if(primitiveDataType == PrimitiveDataType::POSITION ||
        primitiveDataType == PrimitiveDataType::NORMAL)
         result = PrimitiveDataLayout::FLOAT_3;
