@@ -81,25 +81,5 @@
     "Accelerators":[{"id": 0, "type":"BasicBVH", "useStack": true}],
 
     // Surfaces
-	"Surfaces": [ 
-        { "transform": 0, "accelerator": 0, "material": 3, "primitive": 0 },
-        { "transform": 0, "accelerator": 0, "material": 3, "primitive": 0 },
-        { "transform": 0, "accelerator": 0, "material": 3, "primitive": 0 },
-        { "transform": 0, "accelerator": 0, "material": 3, "primitive": 0 },
-        { "transform": 0, "accelerator": 0, "material": 3, "primitive": 0 },
-        { "transform": 0, "accelerator": 0, "material": 3, "primitive": 0 },
-        { "transform": 0, "accelerator": 0, "material": 3, "primitive": 0 },
-        { "transform": 0, "accelerator": 0, "material": 3, "primitive": 0 },
-        { "transform": 0, "accelerator": 0, "material": 3, "primitive": 0 },
-
-        // Faster Version 
-        // [T A [M] [P]] Array [Transform, Accelerator, [Material], [Primitive]]
-        [0, 0, 3, 0],
-
-        // Fastest Version
-        // Binary File with 18 32-bit unsigned integers per surface
-        // 8 Mat-Prim pairs is constant 
-        // T A C M M M M M M M P P P P P P P P        
-        //"crySponzaSurfaces.bin"        
-    ]
+	"Surfaces": ["crySponzaSurfaces.bin"]
 }

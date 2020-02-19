@@ -2,15 +2,18 @@
 
 #include "RayLib/SurfaceLoaderPoolI.h"
 #include <assimp/Importer.hpp>
+#include <list>
 
 using AssimpSurfaceLoaderGeneratorFunc = SurfaceLoaderI* (*)(Assimp::Importer&,
                                                              const std::string& scenePath,
+                                                             const std::string& fileExt,
                                                              const SceneNodeI&,
                                                              double time);
 
 class AssimpSurfaceLoaderGen : public SurfaceLoaderGenI
 {
     private:
+        const std::string                                   fileExt;
         Assimp::Importer&                                   importer;
         AssimpSurfaceLoaderGeneratorFunc                    gFunc;
         ObjDestroyerFunc<SurfaceLoaderI>                    dFunc;
@@ -18,9 +21,11 @@ class AssimpSurfaceLoaderGen : public SurfaceLoaderGenI
     public:
         // Constructor & Destructor
         AssimpSurfaceLoaderGen(Assimp::Importer& i,
+                               const std::string& fileExt,
                                AssimpSurfaceLoaderGeneratorFunc g,
                                ObjDestroyerFunc<SurfaceLoaderI> d)
-            : importer(i)
+            : fileExt(fileExt)
+            , importer(i)
             , gFunc(g)
             , dFunc(d)
         {}
@@ -29,7 +34,7 @@ class AssimpSurfaceLoaderGen : public SurfaceLoaderGenI
                                     const SceneNodeI& n,
                                     double time) const override
         {
-            SurfaceLoaderI* loader = gFunc(importer, scenePath, n, time);
+            SurfaceLoaderI* loader = gFunc(importer, scenePath, fileExt, n, time);
             return SurfaceLoaderPtr(loader, dFunc);
         }
 };
@@ -40,10 +45,10 @@ class AssimpSurfaceLoaderPool : public SurfaceLoaderPoolI
         static constexpr std::string_view    AssimpPrefix = "assimp_";
 
         // TODO: Do a multi thread system(for this)
-        Assimp::Importer                importer;
+        Assimp::Importer                            importer;
 
         // Single Meta Surface loader for known file types
-        AssimpSurfaceLoaderGen          assimpSurfaceLoader;
+        std::list<AssimpSurfaceLoaderGen>          assimpSLGenerators;
 
     protected:
     public:

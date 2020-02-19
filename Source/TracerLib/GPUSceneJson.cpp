@@ -124,7 +124,6 @@ SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
                 }
             }
 
-
             //uint32_t j = 0;
             //for(const auto& id : ids)
             //{
@@ -277,8 +276,6 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                 node->AddIdIndexPair(primId, iIndex);
             }
             else return SceneError::PRIMITIVE_ID_NOT_FOUND;
-
-            
 
             // Do Material attachments
             if((e = AttachMatAll(primGroupType, matId)) != SceneError::OK)

@@ -10,14 +10,12 @@
 class AssimpMetaSurfaceLoader : public SurfaceLoader
 {
     public:
-        //static constexpr const char* Extension() { return EXT_NAME; }
-        //static constexpr const char* TypeName() { return (PREFIX + EXT).Str(); }
-
         static constexpr const char* InnerIdJSON    = "innerIndex";
 
     private:
         Assimp::Importer&                           importer;
         const aiScene*                              scene;
+        const std::string&                          extension;
 
         // Inner Ids
         const UIntList                              innerIds;
@@ -25,8 +23,9 @@ class AssimpMetaSurfaceLoader : public SurfaceLoader
     protected:
     public:
         // Constructors & Destructor    
-                                    AssimpMetaSurfaceLoader(Assimp::Importer&,                                                             
+                                    AssimpMetaSurfaceLoader(Assimp::Importer&,                                                         
                                                             const std::string& scenePath,
+                                                            const std::string& fileExt,
                                                             const SceneNodeI& node, double time = 0.0);
                                     AssimpMetaSurfaceLoader(const AssimpMetaSurfaceLoader&) = delete;
         AssimpMetaSurfaceLoader&    operator=(const AssimpMetaSurfaceLoader&) = delete;

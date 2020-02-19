@@ -10,12 +10,14 @@
 
 AssimpMetaSurfaceLoader::AssimpMetaSurfaceLoader(Assimp::Importer& i,
                                                  const std::string& scenePath,
+                                                 const std::string& fileExt,
                                                  const SceneNodeI& node,
                                                  double time)
-: SurfaceLoader(node, time)
-, importer(i)
-, scene(nullptr)
-, innerIds(node.AccessUIntRanged(InnerIdJSON))
+    :SurfaceLoader(node, time)
+    , importer(i)
+    , extension(fileExt)
+    , scene(nullptr)
+    , innerIds(node.AccessUIntRanged(InnerIdJSON))
 {    
     // Get File Name
     const std::string filePath = Utilitiy::MergeFileFolder(scenePath, node.Name());
@@ -65,7 +67,7 @@ AssimpMetaSurfaceLoader::~AssimpMetaSurfaceLoader()
 
 const char* AssimpMetaSurfaceLoader::SufaceDataFileExt() const
 {
-    return "*";
+    return extension.c_str();
 }
 
 SceneError AssimpMetaSurfaceLoader::AABB(std::vector<AABB3>& list) const
