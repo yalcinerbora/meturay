@@ -11,8 +11,6 @@ class TracerBasic final : public TracerBaseLogic<RayAuxBasic>
         static constexpr const char*    TypeName() { return "Test"; }
 
     private:
-        static constexpr RayAuxBasic    initialVal = {Vector3f(1.0f, 1.0f, 1.0f), 0, 0, 1, false};
-
     protected:
     public:
         // Constructors & Destructor

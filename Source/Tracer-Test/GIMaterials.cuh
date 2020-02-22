@@ -14,7 +14,7 @@ class BasicPathTraceMat final
                               GPUEventEstimatorBasic,
                               ConstantAlbedoMatData,
                               BasicSurface,
-                              BasicPathTraceShade>
+                              BasicDiffusePTShade>
 {
     MATERIAL_TYPE_NAME("BasicPathTrace", TracerBasic, GPUEventEstimatorBasic)
 
@@ -91,10 +91,96 @@ class LightBoundaryMat final
         uint8_t                 OutRayCount() const override { return 0; }
 };
 
+class BasicReflectPTMat final 
+    : public GPUMaterialGroup<TracerBasic,
+                              GPUEventEstimatorBasic,
+                              ConstantAlbedoMatData,
+                              BasicSurface,
+                              BasicReflectPTShade>
+{
+   MATERIAL_TYPE_NAME("BasicReflectPT", TracerBasic, GPUEventEstimatorBasic)
+
+    private:
+        DeviceMemory                    memory;
+        std::map<uint32_t, uint32_t>    innerIds;
+
+    protected:
+    public:
+                                BasicReflectPTMat(const CudaGPU&,
+                                                 const GPUEventEstimatorI&);
+                                ~BasicReflectPTMat() = default;
+
+        // Interface
+        // Type (as string) of the primitive group
+        const char*             Type() const override {return TypeName(); }
+        // Allocates and Generates Data
+        SceneError              InitializeGroup(const NodeListing& materialNodes, double time,
+                                                const std::string& scenePath) override;
+        SceneError              ChangeTime(const NodeListing& materialNodes, double time,
+                                           const std::string& scenePath) override;
+
+        // Material Queries
+        int                     InnerId(uint32_t materialId) const override;
+        bool                    HasCachedTextures(uint32_t materialId) const override { return false; };
+
+        size_t                  UsedGPUMemory() const override { return memory.Size(); }
+        size_t                  UsedCPUMemory() const override { return sizeof(ConstantAlbedoMatData); }
+
+        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+
+        uint8_t                 OutRayCount() const override { return 1; }
+};
+
+class BasicRefractPTMat final
+    : public GPUMaterialGroup<TracerBasic,
+                              GPUEventEstimatorBasic,
+                              ConstantMediumMatData,
+                              BasicSurface,
+                              BasicRefractPTShade>
+{
+       MATERIAL_TYPE_NAME("BasicRefractPT", TracerBasic, GPUEventEstimatorBasic)
+
+    private:
+        DeviceMemory                    memory;
+        std::map<uint32_t, uint32_t>    innerIds;
+
+    protected:
+    public:
+                                BasicRefractPTMat(const CudaGPU&,
+                                                 const GPUEventEstimatorI&);
+                                ~BasicRefractPTMat() = default;
+
+        // Interface
+        // Type (as string) of the primitive group
+        const char*             Type() const override {return TypeName(); }
+        // Allocates and Generates Data
+        SceneError              InitializeGroup(const NodeListing& materialNodes, double time,
+                                                const std::string& scenePath) override;
+        SceneError              ChangeTime(const NodeListing& materialNodes, double time,
+                                           const std::string& scenePath) override;
+
+        // Material Queries
+        int                     InnerId(uint32_t materialId) const override;
+        bool                    HasCachedTextures(uint32_t materialId) const override { return false; };
+
+        size_t                  UsedGPUMemory() const override { return memory.Size(); }
+        size_t                  UsedCPUMemory() const override { return sizeof(ConstantAlbedoMatData); }
+
+        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+
+        uint8_t                 OutRayCount() const override { return 1; }
+};
+
 static_assert(IsTracerClass<BasicPathTraceMat>::value,
               "BasicPathTraceMat is not a Tracer Class.");
 static_assert(IsTracerClass<LightBoundaryMat>::value,
               "LightBoundaryMat is not a Tracer Class.");
+static_assert(IsTracerClass<BasicReflectPTMat>::value,
+              "BasicReflectPTMat is not a Tracer Class.");
+static_assert(IsTracerClass<BasicRefractPTMat>::value,
+              "BasicRefractPTMat is not a Tracer Class.");
 
 // Mat Batch Extern
 extern template class GPUMaterialBatch<TracerBasic,

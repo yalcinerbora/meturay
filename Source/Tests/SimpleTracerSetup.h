@@ -45,7 +45,7 @@ class MockNode
 {
     public:
         static constexpr uint32_t       MAX_BOUNCES = 16;
-        static constexpr int            SAMPLE_COUNT = 8;
+        static constexpr int            SAMPLE_COUNT = 1;
 
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 18};
         static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};

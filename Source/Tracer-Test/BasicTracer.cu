@@ -19,7 +19,7 @@ inline void RayInitBasic(RayAuxBasic* gOutBasic,
 {
     RayAuxBasic init = defaults;
     init.pixelId = localPixelId;
-    init.pixelSampleId = pixelSampleId;
+    init.mediumIndex = __half2float(1.0f);
 
     gOutBasic[writeLoc] = init;
 }
@@ -129,7 +129,7 @@ uint32_t TracerBasic::GenerateRays(const CudaSystem& cudaSystem,
             localPixelStart,
             localPixelEnd,
             // Data to initialize auxiliary base data
-            initialVal
+            InitialBasicAux
         );
 
         // Adjust for next call

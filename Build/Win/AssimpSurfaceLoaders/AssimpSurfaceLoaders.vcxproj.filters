@@ -3,7 +3,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\AssimpSurfaceLoaders\EntryPoint.cpp" />
     <ClCompile Include="..\..\..\Source\AssimpSurfaceLoaders\AssimpSurfaceLoaderPool.cpp" />
-    <ClCompile Include="..\..\..\Source\AssimpSurfaceLoaders\MetaSurfaceLoader.hpp" />
+    <ClCompile Include="..\..\..\Source\AssimpSurfaceLoaders\MetaSurfaceLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\AssimpSurfaceLoaders\EntryPoint.h" />

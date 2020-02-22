@@ -64,6 +64,14 @@ TEST(SimpleTracerTests, Dragon)
     setup.Body();
 }
 
+TEST(SimpleTracerTests, ReflectRefract)
+{
+    EnableVTMode();
+    SimpleTracerSetup setup(u8"TestScenes/cornellGlass.json", 0.0);
+    ASSERT_TRUE(setup.Init());
+    setup.Body();
+}
+
 TEST(SimpleTracerTests, Sponza)
 {
     EnableVTMode();

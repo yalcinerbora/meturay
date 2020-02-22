@@ -3,21 +3,34 @@
 #include <cstdint>
 #include "RayLib/Vector.h"
 
-struct RayAuxBasic
+#include <cuda_fp16.h>
+
+enum class RayType : uint8_t
 {
-    Vector3f        radianceFactor;
-    uint32_t        pixelId;
-    uint32_t        pixelSampleId;
-    uint8_t         depth;
-    bool            lightRay;
+    NEE_RAY,
+    TRANS_RAY,
+    PATH_RAY
 };
 
-
-struct RayAuxVolume
+struct RayAuxBasic
 {
+    // Path throughput
     Vector3f        radianceFactor;
+    // Pixel index
     uint32_t        pixelId;
-    uint32_t        pixelSampleId;
+    // Current medium index
+    half            mediumIndex;
+    // Current path depth
     uint8_t         depth;
-    bool            lightRay;
+    // Ray Type
+    RayType         type;
+};
+
+static const RayAuxBasic InitialBasicAux = RayAuxBasic
+{ 
+    Vector3f(1.0f, 1.0f, 1.0f),
+    0, 
+    half{}, 
+    1, 
+    RayType::PATH_RAY
 };

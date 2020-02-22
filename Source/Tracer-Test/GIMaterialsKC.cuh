@@ -42,7 +42,7 @@ inline void LightBoundaryShade(// Output
     assert(maxOutRay == 0);
 
     // Skip if light ray
-    if(aux.lightRay || aux.depth == 1)
+    if(aux.type == RayType::NEE_RAY || aux.depth == 1)
     {
         // Finalize
         Vector3f radiance = aux.radianceFactor * gMatData.dAlbedo[matId];
@@ -57,7 +57,7 @@ inline void LightBoundaryShade(// Output
 }
 
 __device__
-inline void BasicPathTraceShade(// Output
+inline void BasicDiffusePTShade(// Output
                                 ImageGMem<Vector4f> gImage,
                                 //
                                 HitKey* gBoundaryMat,
@@ -89,7 +89,7 @@ inline void BasicPathTraceShade(// Output
     auxOut1.depth++;
 
     // Skip if light ray
-    if(auxIn.lightRay)
+    if(auxIn.type == RayType::NEE_RAY)
     {
         // Generate Dummy Ray and Terminate
         RayReg rDummy = EMPTY_RAY_REGISTER;
@@ -190,7 +190,7 @@ inline void BasicPathTraceShade(// Output
         // Write to global memory
         rayOut.Update(gOutRays, 1);
         gOutRayAux[1] = auxOut1;
-        gOutRayAux[1].lightRay = true;        
+        gOutRayAux[1].type = RayType::NEE_RAY;
         gBoundaryMat[1] = matLight;
     }
     else
@@ -215,3 +215,45 @@ inline void BasicPathTraceShade(// Output
     //gImage[aux.pixelId][2] = color[2];
     //return;
 }
+
+__device__
+inline void BasicReflectPTShade(// Output
+                                ImageGMem<Vector4f> gImage,
+                                //
+                                HitKey* gBoundaryMat,
+                                RayGMem* gOutRays,
+                                RayAuxBasic* gOutRayAux,
+                                const uint32_t maxOutRay,
+                                // Input as registers
+                                const RayReg& ray,
+                                const BasicSurface& surface,
+                                const RayAuxBasic& aux,
+                                // RNG
+                                RandomGPU& rng,
+                                // 
+                                const BasicEstimatorData& estData,
+                                // Input as global memory
+                                const ConstantAlbedoMatData& gMatData,
+                                const HitKey::Type& matId)
+{}
+
+__device__
+inline void BasicRefractPTShade(// Output
+                                ImageGMem<Vector4f> gImage,
+                                //
+                                HitKey* gBoundaryMat,
+                                RayGMem* gOutRays,
+                                RayAuxBasic* gOutRayAux,
+                                const uint32_t maxOutRay,
+                                // Input as registers
+                                const RayReg& ray,
+                                const BasicSurface& surface,
+                                const RayAuxBasic& aux,
+                                // RNG
+                                RandomGPU& rng,
+                                // 
+                                const BasicEstimatorData& estData,
+                                // Input as global memory
+                                const ConstantMediumMatData& gMatData,
+                                const HitKey::Type& matId)
+{}

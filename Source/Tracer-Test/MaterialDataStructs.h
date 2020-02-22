@@ -9,7 +9,13 @@ struct ConstantAlbedoMatData
     const Vector3* dAlbedo;
 };
 
-struct ConstantBoundaryMatData
+struct ConstantMediumMatData
 {
-    Vector3 backgroundColor;
+    const Vector4* dAlbedoAndIndex;
+    
 };
+
+//struct ConstantBoundaryMatData
+//{
+//    Vector3 backgroundColor;
+//};

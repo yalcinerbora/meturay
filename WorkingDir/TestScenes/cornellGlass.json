@@ -72,6 +72,19 @@
 		"id": 4,
 		"type": "BasicPathTrace",
 		"albedo" : [0.5, 0.5, 0.5]
+    },
+    {
+		// Perfect Mirror
+		"id": 5,
+		"type": "BasicPathTrace",
+		"albedo" : [1.0, 1.0, 1.0]
+    },
+    {
+		// Perfect Glass
+		"id": 6,
+		"type": "BasicPathTrace",
+        "albedo" : [1.0, 1.0, 1.0],
+        "index" : 1.69
 	}],
 
 	"Primitives":[
@@ -114,14 +127,14 @@
 		// Sphere Back
 		"transform": 0,
 		"accelerator": 0,
-		"material": 4,
+		"material": 5,
         "primitive": 0
 	},
 	{
 		// Sphere Front
 		"transform": 0,
 		"accelerator": 0,
-		"material": 4,
+		"material": 6,
         "primitive": 1
 	},
 	// Cornell Box
