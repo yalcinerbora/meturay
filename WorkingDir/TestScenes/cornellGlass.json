@@ -52,7 +52,6 @@
 		"id": 1,
 		"type": "LightBoundary",
 		"radiance" : [140, 140, 140]
-		//"radiance" : [1.1, 1.1, 1.1]
     },
 	{
 		// Red Simple Material
@@ -75,8 +74,9 @@
     {
 		// Perfect Mirror
 		"id": 5,
-		"type": "BasicPathTrace",
-		"albedo" : [1.0, 1.0, 1.0]
+		"type": "BasicReflectPT",
+		"albedo" : [1.0, 1.0, 1.0],
+		"roughness" : 1.0
     },
     {
 		// Perfect Glass

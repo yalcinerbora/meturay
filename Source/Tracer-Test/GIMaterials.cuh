@@ -129,7 +129,7 @@ class BasicReflectPTMat final
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
-        uint8_t                 OutRayCount() const override { return 1; }
+        uint8_t                 OutRayCount() const override { return REFLECTPT_MAX_OUT_RAY; }
 };
 
 class BasicRefractPTMat final
@@ -170,7 +170,7 @@ class BasicRefractPTMat final
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
-        uint8_t                 OutRayCount() const override { return 1; }
+        uint8_t                 OutRayCount() const override { return REFRACTPT_MAX_OUT_RAY; }
 };
 
 static_assert(IsTracerClass<BasicPathTraceMat>::value,
