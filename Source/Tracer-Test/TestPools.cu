@@ -49,6 +49,13 @@ TestMaterialPool::TestMaterialPool()
                                     GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LightBoundaryMat>,
                                     DefaultDestruct<GPUMaterialGroupI>));
 
+    materialGroupGenerators.emplace(BasicReflectPTMat::TypeName(),
+                                    GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BasicReflectPTMat>,
+                                                   DefaultDestruct<GPUMaterialGroupI>));
+    materialGroupGenerators.emplace(BasicRefractPTMat::TypeName(),
+                                    GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BasicRefractPTMat>,
+                                                   DefaultDestruct<GPUMaterialGroupI>));
+
     // Material Batches
     // Basic
     materialBatchGenerators.emplace(BasicMatTriBatch::TypeName(),
@@ -85,6 +92,22 @@ TestMaterialPool::TestMaterialPool()
     materialBatchGenerators.emplace(LightBoundarySphrBatch::TypeName(),
                                     GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, LightBoundarySphrBatch>,
                                     DefaultDestruct<GPUMaterialBatchI>));
+
+    // GI Reflect
+    materialBatchGenerators.emplace(ReflectPTTriangleBatch::TypeName(),
+                                    GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ReflectPTTriangleBatch>,
+                                                   DefaultDestruct<GPUMaterialBatchI>));
+    materialBatchGenerators.emplace(ReflectPTSphereBatch::TypeName(),
+                                    GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ReflectPTSphereBatch>,
+                                                   DefaultDestruct<GPUMaterialBatchI>));
+
+    // GI Refract
+    materialBatchGenerators.emplace(RefractPTTriangleBatch::TypeName(),
+                                    GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, RefractPTTriangleBatch>,
+                                                   DefaultDestruct<GPUMaterialBatchI>));
+    materialBatchGenerators.emplace(ReflectPTSphereBatch::TypeName(),
+                                    GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ReflectPTSphereBatch>,
+                                                   DefaultDestruct<GPUMaterialBatchI>));
 }
 
 TestTracerLogicPool::TestTracerLogicPool()

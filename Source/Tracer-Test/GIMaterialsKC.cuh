@@ -18,8 +18,8 @@ class RandomGPU;
 using IrradianceMatData = AlbedoMatData;
 
 static constexpr uint32_t BASICPT_MAX_OUT_RAY = 2;
-static constexpr uint32_t REFLECTPT_MAX_OUT_RAY = 2;
-static constexpr uint32_t REFRACTPT_MAX_OUT_RAY = 3;
+static constexpr uint32_t REFLECTPT_MAX_OUT_RAY = 1;
+static constexpr uint32_t REFRACTPT_MAX_OUT_RAY = 1;
 
 __device__
 inline void LightBoundaryShade(// Output
@@ -44,9 +44,8 @@ inline void LightBoundaryShade(// Output
     assert(maxOutRay == 0);
 
     // Skip if light ray
-    if(aux.type == RayType::NEE_RAY || aux.depth == 1)
+    if(aux.type == RayType::NEE_RAY || aux.type == RayType::CAMERA_RAY)
     {
-        // Finalize
         Vector3f radiance = aux.radianceFactor * gMatData.dAlbedo[matId];
 
         // Final point on a ray path
@@ -89,6 +88,8 @@ inline void BasicDiffusePTShade(// Output
 
     auxOut0.depth++;
     auxOut1.depth++;
+    auxOut0.type = RayType::PATH_RAY;
+    auxOut1.type = RayType::NEE_RAY;
 
     // Skip if light ray
     if(auxIn.type == RayType::NEE_RAY)
@@ -126,8 +127,8 @@ inline void BasicDiffusePTShade(// Output
     auxOut0.radianceFactor = auxIn.radianceFactor * nDotL * reflectance / pdfMat;
 
     // Russian Roulette
-    float avgThroughput = auxOut0.radianceFactor.Dot(Vector3f(0.333f)) * 100.0f;
-    // float avgThroughput = gMatData.dAlbedo[matId].Dot(Vector3f(0.333f)) * 100.0f;
+    float avgThroughput = auxOut0.radianceFactor.Dot(Vector3f(0.333f));
+    // float avgThroughput = gMatData.dAlbedo[matId].Dot(Vector3f(0.333f));
 
     if(auxIn.depth <= 3 &&
        !GPUEventEstimatorBasic::TerminatorFunc(auxOut0.radianceFactor,
@@ -186,7 +187,6 @@ inline void BasicDiffusePTShade(// Output
         // Write to global memory
         rayOut.Update(gOutRays, 1);
         gOutRayAux[1] = auxOut1;
-        gOutRayAux[1].type = RayType::NEE_RAY;
         gBoundaryMat[1] = matLight;
     }
     else
@@ -218,29 +218,65 @@ inline void BasicReflectPTShade(// Output
                                 const ReflectMatData& gMatData,
                                 const HitKey::Type& matId)
 {
-    assert(maxOutRay == BASICPT_MAX_OUT_RAY);
+    assert(maxOutRay == REFLECTPT_MAX_OUT_RAY);
     // Inputs
     const RayAuxBasic& auxIn = aux;
     const RayReg rayIn = ray;
     // Outputs
-    RayReg rayOut = {};
-    RayAuxBasic auxOut0 = auxIn;
-    RayAuxBasic auxOut1 = auxIn;
+    RayReg rayOut = EMPTY_RAY_REGISTER;
+    RayAuxBasic auxOut = auxIn;
+    auxOut.depth++;
+    // Do not change the ray type
 
     // Skip if light ray
     if(auxIn.type == RayType::NEE_RAY)
     {
         // Generate Dummy Ray and Terminate
-        RayReg rDummy = EMPTY_RAY_REGISTER;
-        rDummy.Update(gOutRays, 0);
-        rDummy.Update(gOutRays, 1);
+        rayOut.Update(gOutRays, 0);
         gBoundaryMat[0] = HitKey::InvalidKey;
-        gBoundaryMat[1] = HitKey::InvalidKey;
         return;
     }
 
-    // Calculate
+    // Fetch Mat
+    Vector4 matData = gMatData.dAlbedoAndRoughness[matId];
+    Vector3 albedo = matData;
+    float roughness = matData[3];
 
+    // Fetch Data
+    const Vector3 position = rayIn.ray.AdvancedPos(rayIn.tMax);
+    const Vector3 direction = rayIn.ray.getDirection();
+    const Vector3 normal = surface.normal;
+
+    // Russian Roulette
+    float avgThroughput = auxOut.radianceFactor.Dot(Vector3f(0.333f));
+    // float avgThroughput = gMatData.dAlbedo[matId].Dot(Vector3f(0.333f));
+
+    if(auxIn.depth <= 3 &&
+       !GPUEventEstimatorBasic::TerminatorFunc(auxOut.radianceFactor,
+                                               avgThroughput,
+                                               rng))
+    {
+         // Calculate Reflection   
+        if(roughness == 1.0f)
+        {
+            // Singularity Just Reflect
+            rayOut.ray = RayF(direction, position).Reflect(normal);
+            rayOut.ray.AdvanceSelf(MathConstants::Epsilon);
+            rayOut.tMin = 0.0f;
+            rayOut.tMax = INFINITY;
+
+            auxOut.radianceFactor *= albedo;
+            gOutRayAux[0] = auxOut;
+        }
+        else
+        {
+            // TODO:
+            // Use a normal distribution for sampling wrt. roughness
+        }
+    }
+
+    gBoundaryMat[0] = HitKey::InvalidKey;
+    rayOut.Update(gOutRays, 0);
 }
 
 __device__
@@ -262,4 +298,65 @@ inline void BasicRefractPTShade(// Output
                                 // Input as global memory
                                 const RefractMatData& gMatData,
                                 const HitKey::Type& matId)
-{}
+{
+    assert(maxOutRay == REFRACTPT_MAX_OUT_RAY);
+
+    // Inputs
+    const RayAuxBasic& auxIn = aux;
+    const RayReg rayIn = ray;
+    // Outputs
+    RayReg rayOut = EMPTY_RAY_REGISTER;
+    RayAuxBasic auxOut = auxIn;
+    auxOut.depth++;
+    // Do not change the ray type
+
+    // Skip if light ray
+    if(auxIn.type == RayType::NEE_RAY)
+    {
+        // Generate Dummy Ray and Terminate
+        rayOut.Update(gOutRays, 0);
+        gBoundaryMat[0] = HitKey::InvalidKey;
+        return;
+    }
+
+    // Fetch Mat
+    Vector4 matData = gMatData.dAlbedoAndIndex[matId];
+    Vector3 albedo = matData;
+    float index = matData[3];
+
+    // Fetch Data
+    const Vector3 position = rayIn.ray.AdvancedPos(rayIn.tMax);
+    const Vector3 direction = rayIn.ray.getDirection();
+    const Vector3 normal = surface.normal;
+
+    // Russian Roulette
+    float avgThroughput = auxOut.radianceFactor.Dot(Vector3f(0.333f));
+    // float avgThroughput = gMatData.dAlbedo[matId].Dot(Vector3f(0.333f));
+
+    if(auxIn.depth <= 3 &&
+       !GPUEventEstimatorBasic::TerminatorFunc(auxOut.radianceFactor,
+                                               avgThroughput,
+                                               rng))
+    {
+        // Check if we are exiting or entering
+        bool entering = (__half2float(auxIn.mediumIndex) == 1.0f);
+        float fromMedium = auxIn.mediumIndex;
+        float toMedium = (entering) ? index : 1.0f;
+        
+        // Utilize frenel term to select reflection or refraction
+        RayF r;
+        bool refracted = ray.ray.Refract(r, normal, fromMedium, toMedium);
+
+        if(entering)
+        {
+
+        }
+        else
+        {
+            // No frenel
+        }
+    }
+
+    gBoundaryMat[0] = HitKey::InvalidKey;
+    rayOut.Update(gOutRays, 0);
+}
