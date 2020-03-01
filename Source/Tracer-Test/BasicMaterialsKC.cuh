@@ -29,7 +29,7 @@ inline void BasicMatShade(// Output
                           // Event Estimator
                           const EmptyEstimatorData&,
                           // Input as global memory
-                          const ConstantAlbedoMatData& gMatData,
+                          const AlbedoMatData& gMatData,
                           const HitKey::Type& matId)
 {
     Vector4f output(gMatData.dAlbedo[matId][0],

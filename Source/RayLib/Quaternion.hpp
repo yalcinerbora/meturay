@@ -285,14 +285,17 @@ inline Quaternion<T> Quaternion<T>::RotationBetweenZAxis(const Vector<3, T>& b)
     T y = zCrossD[1] * sin;
     T z = zCrossD[2] * sin;
     T w = cos;
+    // Handle singularities
     if(abs(zDotD + 1) < MathConstants::Epsilon)
     {
+        // Spaces are 180 degree apart
         // Define pi turn
         return Quaternion(static_cast<T>(MathConstants::Pi_d),
                           Vector<3,T>(0, 1, 0));
     }
     else if(abs(zDotD - 1) < MathConstants::Epsilon)
     {
+        // Spaces are nearly equavilent
         // Just turn identity
         return Quaternion<T>(1, 0, 0, 0);
     }

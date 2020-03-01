@@ -33,7 +33,7 @@ SceneError BasicMat::InitializeGroup(const NodeListing& materialNodes, double ti
     CUDA_CHECK(cudaMemcpy(dAlbedo, albedoCPU.data(), dAlbedoSize,
                           cudaMemcpyHostToDevice));
 
-    dData = ConstantAlbedoMatData{dAlbedo};
+    dData = AlbedoMatData{dAlbedo};
     return SceneError::OK;
 }
 

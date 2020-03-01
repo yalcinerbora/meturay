@@ -15,9 +15,11 @@ class RandomGPU;
 
 #include <cuda_runtime.h>
 
-using ConstantIrradianceMatData = ConstantAlbedoMatData;
+using IrradianceMatData = AlbedoMatData;
 
 static constexpr uint32_t BASICPT_MAX_OUT_RAY = 2;
+static constexpr uint32_t REFLECTPT_MAX_OUT_RAY = 2;
+static constexpr uint32_t REFRACTPT_MAX_OUT_RAY = 3;
 
 __device__
 inline void LightBoundaryShade(// Output
@@ -36,7 +38,7 @@ inline void LightBoundaryShade(// Output
                                // Event Estimator
                                const BasicEstimatorData&,
                                // Input as global memory
-                               const ConstantIrradianceMatData& gMatData,
+                               const IrradianceMatData& gMatData,
                                const HitKey::Type& matId)
 {
     assert(maxOutRay == 0);
@@ -73,7 +75,7 @@ inline void BasicDiffusePTShade(// Output
                                 // 
                                 const BasicEstimatorData& estData,
                                 // Input as global memory
-                                const ConstantAlbedoMatData& gMatData,
+                                const AlbedoMatData& gMatData,
                                 const HitKey::Type& matId)
 {
     assert(maxOutRay == BASICPT_MAX_OUT_RAY);
@@ -107,20 +109,17 @@ inline void BasicDiffusePTShade(// Output
     Vector2 xi(GPUDistribution::Uniform<float>(rng),
                GPUDistribution::Uniform<float>(rng));
     Vector3 direction = HemiDistribution::HemiCosineCDF(xi);
-    //Vector3 direction = HemiDistribution::HemiUniformCDF(xi);
     direction.NormalizeSelf();
 
     // Direction vector is on surface space (hemisperical)
-    // Convert it to normal oriented hemisphere
+    // Convert it to normal oriented hemisphere (world space)
     QuatF q = QuatF::RotationBetweenZAxis(normal);
     direction = q.ApplyRotation(direction);
 
     // Cos Tetha
     float nDotL = max(normal.Dot(direction), 0.0f);
-    //float nDotL = abs(normal.Dot(direction));
-
+    // Pdf
     float pdfMat = nDotL * MathConstants::InvPi;
-    //float pdfMat = MathConstants::InvPi * 0.5f;
 
     // Illumination Calculation
     Vector3 reflectance = gMatData.dAlbedo[matId] * MathConstants::InvPi;
@@ -169,9 +168,6 @@ inline void BasicDiffusePTShade(// Output
                                              //
                                              estData))
     {
-
-        //printf("%X  ", matLight.value);
-
         // Advance slightly to prevent self intersection
         Vector3 pos = position + normal * MathConstants::Epsilon;
         // Write Ray
@@ -200,20 +196,6 @@ inline void BasicDiffusePTShade(// Output
         rDummy.Update(gOutRays, 1);
         gBoundaryMat[1] = HitKey::InvalidKey;
     }
-    //// Dummy ray to global memory
-    //RayReg rDummy = {};
-    //rDummy.ray = {Zero3, Zero3};
-    //rDummy.tMin = INFINITY;
-    //rDummy.tMax = INFINITY;
-    //rDummy.Update(gOutRays, 0);
-    //gBoundaryMat[0] = HitKey::InvalidKey;
-    //// Write color to pixel
-    //Vector3f color = (surface.normal + Vector3f(1.0f)) * 0.5f;
-    ////Vector3f color = (direction + Vector3f(1.0f)) * 0.5f;
-    //gImage[aux.pixelId][0] = color[0];
-    //gImage[aux.pixelId][1] = color[1];
-    //gImage[aux.pixelId][2] = color[2];
-    //return;
 }
 
 __device__
@@ -233,9 +215,33 @@ inline void BasicReflectPTShade(// Output
                                 // 
                                 const BasicEstimatorData& estData,
                                 // Input as global memory
-                                const ConstantAlbedoMatData& gMatData,
+                                const ReflectMatData& gMatData,
                                 const HitKey::Type& matId)
-{}
+{
+    assert(maxOutRay == BASICPT_MAX_OUT_RAY);
+    // Inputs
+    const RayAuxBasic& auxIn = aux;
+    const RayReg rayIn = ray;
+    // Outputs
+    RayReg rayOut = {};
+    RayAuxBasic auxOut0 = auxIn;
+    RayAuxBasic auxOut1 = auxIn;
+
+    // Skip if light ray
+    if(auxIn.type == RayType::NEE_RAY)
+    {
+        // Generate Dummy Ray and Terminate
+        RayReg rDummy = EMPTY_RAY_REGISTER;
+        rDummy.Update(gOutRays, 0);
+        rDummy.Update(gOutRays, 1);
+        gBoundaryMat[0] = HitKey::InvalidKey;
+        gBoundaryMat[1] = HitKey::InvalidKey;
+        return;
+    }
+
+    // Calculate
+
+}
 
 __device__
 inline void BasicRefractPTShade(// Output
@@ -254,6 +260,6 @@ inline void BasicRefractPTShade(// Output
                                 // 
                                 const BasicEstimatorData& estData,
                                 // Input as global memory
-                                const ConstantMediumMatData& gMatData,
+                                const RefractMatData& gMatData,
                                 const HitKey::Type& matId)
 {}

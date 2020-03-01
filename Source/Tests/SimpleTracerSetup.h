@@ -48,11 +48,11 @@ class MockNode
         static constexpr int            SAMPLE_COUNT = 1;
 
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 18};
-        static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {640, 360};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1600, 900};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {1920, 1080};
+        static constexpr Vector2i       IMAGE_RESOLUTION = {1920, 1080};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {3840, 2160};
 
     private:
@@ -276,10 +276,13 @@ bool SimpleTracerSetup::Init()
     dllE = generator.IncludeTracersFromDLL(TRACER_DLL, ".*",
                                            SharedLibArgs{TRACER_LOGIC_POOL_GEN, TRACER_LOGIC_POOL_DEL});
     ERROR_CHECK(DLLError, dllE);
-    // Load Obj Surface Loader (Required Only for Cornell Example)
+    // Load Assimp Surface Loader for loading files
     dllE = surfaceLoaders.IncludeLoadersFromDLL(SURF_LOAD_DLL, ".*",
                                                 SharedLibArgs{SURF_LOAD_GEN, SURF_LOAD_DEL});
     ERROR_CHECK(DLLError, dllE);
+
+    // Load GFG Surface Loader for gfg data
+
 
     // Generate GPU List & A Partitioner
     // Check cuda system error here
@@ -326,8 +329,9 @@ bool SimpleTracerSetup::Init()
     visorView = CreateVisorGL(visorOpts);
     visorView->SetInputScheme(*visorInput);
 
-    // Set Window Res to Half of Mon
-    //visorView->SetWindowSize(2 * visorView->MonitorResolution() / 5);
+    // Set Window Res wrt to monitor resolution
+    Vector2i newImgSize = 3 * visorView->MonitorResolution() / 5;
+    visorView->SetWindowSize(newImgSize);
 
     // Attach the logic & Image format
     tracerBase = std::make_unique<TracerBase>(*cudaSystem);

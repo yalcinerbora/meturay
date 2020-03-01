@@ -46,13 +46,12 @@
 		"id": 0,
         "type": "LightBoundary",
 		"radiance" : [0, 0, 0]
-		//"radiance" : [0.95, 0.95, 0.95]
     },
     {
 		// Light Boundary Material
 		"id": 1,
 		"type": "LightBoundary",
-		"radiance" : [200, 200, 200]
+		"radiance" : [140, 140, 140]
 		//"radiance" : [1.1, 1.1, 1.1]
     },
 	{

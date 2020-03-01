@@ -4,18 +4,17 @@
 
 struct NullData {};
 
-struct ConstantAlbedoMatData
+struct AlbedoMatData
 {
     const Vector3* dAlbedo;
 };
 
-struct ConstantMediumMatData
+struct ReflectMatData
 {
-    const Vector4* dAlbedoAndIndex;
-    
+    const Vector4* dAlbedoAndRoughness;
 };
 
-//struct ConstantBoundaryMatData
-//{
-//    Vector3 backgroundColor;
-//};
+struct RefractMatData
+{
+    const Vector4* dAlbedoAndIndex;
+};

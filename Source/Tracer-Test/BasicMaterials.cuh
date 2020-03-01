@@ -10,7 +10,7 @@
 class BasicMat final
     : public GPUMaterialGroup<TracerBasic,
                               GPUEventEstimatorEmpty,
-                              ConstantAlbedoMatData,
+                              AlbedoMatData,
                               EmptySurface,
                               BasicMatShade>
 {
@@ -41,7 +41,7 @@ class BasicMat final
         bool           HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t         UsedGPUMemory() const override { return memory.Size(); }
-        size_t         UsedCPUMemory() const override { return sizeof(ConstantAlbedoMatData); }
+        size_t         UsedCPUMemory() const override { return sizeof(AlbedoMatData); }
 
         size_t         UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
         size_t         UsedCPUMemory(uint32_t materialId) const override { return 0; }
