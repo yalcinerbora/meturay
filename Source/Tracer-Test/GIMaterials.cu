@@ -192,34 +192,3 @@ DEFINE_MATH_BATCH(RefractPTTriangleBatch, TracerBasic, GPUEventEstimatorBasic,
 
 DEFINE_MATH_BATCH(RefractPTSphereBatch, TracerBasic, GPUEventEstimatorBasic,
                   BasicRefractPTMat, GPUPrimitiveSphere, BasicSurfaceFromSphr);
-
-//// Material Batch Implementations
-//template class GPUMaterialBatch<TracerBasic,
-//                                GPUEventEstimatorBasic,
-//                                BasicPathTraceMat,
-//                                GPUPrimitiveTriangle,
-//                                BasicSurfaceFromTri>;
-//
-//template class GPUMaterialBatch<TracerBasic,
-//                                GPUEventEstimatorBasic,
-//                                BasicPathTraceMat,
-//                                GPUPrimitiveSphere,
-//                                BasicSurfaceFromSphr>;
-//
-//template class GPUMaterialBatch<TracerBasic,
-//                                GPUEventEstimatorBasic,
-//                                LightBoundaryMat,
-//                                GPUPrimitiveEmpty,
-//                                EmptySurfaceFromEmpty>;
-//
-//template class GPUMaterialBatch<TracerBasic,
-//                                GPUEventEstimatorBasic,
-//                                LightBoundaryMat,
-//                                GPUPrimitiveTriangle,
-//                                EmptySurfaceFromTri>;
-//
-//template class GPUMaterialBatch<TracerBasic,
-//                                GPUEventEstimatorBasic,
-//                                LightBoundaryMat,
-//                                GPUPrimitiveSphere,
-//                                EmptySurfaceFromSphr>;
