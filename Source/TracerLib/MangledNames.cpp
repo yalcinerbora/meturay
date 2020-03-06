@@ -2,24 +2,10 @@
 
 using namespace std::string_literals;
 
-const std::string MangledNames::MaterialGroup(const char* tracerLogicName,
-                                              const char* estimatorLogicName,
-                                              const char* materialGroupName)
+const std::string MangledNames::WorkBatch(const char* primitiveGroupName,
+                                          const char* materialGroupName)
 {
-    std::string result = "(T)"s + tracerLogicName +
-                         "(E)"s + estimatorLogicName +
-                         "(M)"s + materialGroupName;
-    return result;
-}
-
-const std::string MangledNames::MaterialBatch(const char* tracerLogicName,
-                                              const char* estimatorLogicName,
-                                              const char* primitiveGroupName,
-                                              const char* materialGroupName)
-{
-    std::string result = "(T)"s + tracerLogicName +
-                         "(E)"s + estimatorLogicName +
-                         "(P)"s + primitiveGroupName +
+    std::string result = "(P)"s + primitiveGroupName +
                          "(M)"s + materialGroupName;
     return result;
 }

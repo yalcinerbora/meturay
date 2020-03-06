@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RayLib/SceneStructs.h"
+#include "RayLib/TracerTypes.h"
 #include <string>
 
 struct SceneError;
@@ -35,54 +36,53 @@ class TracerLogicGeneratorI
         // It generates or returns (if already constructed) types
         // w.r.t. a type name and parent type if applicable
         // Pritimive
-        virtual SceneError      GeneratePrimitiveGroup(GPUPrimitiveGroupI*&,
+        virtual SceneError      GeneratePrimitiveGroup(GPUPrimGPtr&,
                                                        const std::string& primitiveType) = 0;
         // Accelerator
-        virtual SceneError      GenerateAcceleratorGroup(GPUAcceleratorGroupI*&,
+        virtual SceneError      GenerateAcceleratorGroup(GPUAccelGPtr&,
                                                          const GPUPrimitiveGroupI&,
-                                                         const TransformStruct* t,
+                                                         const TransformStruct* dTransforms,
                                                          const std::string& accelType) = 0;
-        virtual SceneError      GenerateAcceleratorBatch(GPUAcceleratorBatchI*&,
-                                                         const GPUAcceleratorGroupI&,
-                                                         const GPUPrimitiveGroupI&,
-                                                         uint32_t keyBatchId,
-                                                         const std::string& batchType) = 0;
+        //virtual SceneError      GenerateAcceleratorBatch(GPUAcceleratorBatchI*&,
+        //                                                 const GPUAcceleratorGroupI&,
+        //                                                 const GPUPrimitiveGroupI&,
+        //                                                 uint32_t keyBatchId,
+        //                                                 const std::string& batchType) = 0;
         // Material
-        virtual SceneError      GenerateMaterialGroup(GPUMaterialGroupI*&,
+        virtual SceneError      GenerateMaterialGroup(GPUMatGPtr&,
                                                       const CudaGPU&,
-                                                      const GPUEventEstimatorI&,
                                                       const std::string& materialType) = 0;
-        virtual SceneError      GenerateMaterialBatch(GPUMaterialBatchI*&,
-                                                      const GPUMaterialGroupI&,
-                                                      const GPUPrimitiveGroupI&,
-                                                      uint32_t keyBatchId,
-                                                      const std::string& batchType) = 0;
+        //virtual SceneError      GenerateMaterialBatch(GPUMaterialBatchI*&,
+        //                                              const GPUMaterialGroupI&,
+        //                                              const GPUPrimitiveGroupI&,
+        //                                              uint32_t keyBatchId,
+        //                                              const std::string& batchType) = 0;
         // Base Accelerator should be fetched after all the stuff is generated
-        virtual SceneError      GenerateBaseAccelerator(GPUBaseAcceleratorI*&,
+        virtual SceneError      GenerateBaseAccelerator(GPUBaseAccelPtr&,
                                                         const std::string& accelType) = 0;
-        // EventEstimator
-        virtual SceneError      GenerateEventEstimaor(GPUEventEstimatorI*&, 
-                                                      const std::string& estType) = 0;
-        // Tracer Logic
-        virtual SceneError      GenerateTracerLogic(TracerBaseLogicI*&,
-                                                    // Args
-                                                    const TracerParameters& opts,
-                                                    const Vector2i maxMats,
-                                                    const Vector2i maxAccels,
-                                                    const HitKey baseBoundMatKey,
-                                                    // Type
-                                                    const std::string& tracerType) = 0;
+        //// EventEstimator
+        //virtual SceneError      GenerateEventEstimaor(GPUEventEstimatorI*&, 
+        //                                              const std::string& estType) = 0;
+        //// Tracer Logic
+        //virtual SceneError      GenerateTracerLogic(TracerBaseLogicI*&,
+        //                                            // Args
+        //                                            const TracerParameters& opts,
+        //                                            const Vector2i maxMats,
+        //                                            const Vector2i maxAccels,
+        //                                            const HitKey baseBoundMatKey,
+        //                                            // Type
+        //                                            const std::string& tracerType) = 0;
 
-        // Get all generated stuff on a vector
-        virtual PrimitiveGroupList          GetPrimitiveGroups() const = 0;
-        virtual AcceleratorGroupList        GetAcceleratorGroups() const = 0;
-        virtual AcceleratorBatchMappings    GetAcceleratorBatches() const = 0;
-        virtual MaterialGroupList           GetMaterialGroups() const = 0;
-        virtual MaterialBatchMappings       GetMaterialBatches() const = 0;
+        //// Get all generated stuff on a vector
+        //virtual PrimitiveGroupList          GetPrimitiveGroups() const = 0;
+        //virtual AcceleratorGroupList        GetAcceleratorGroups() const = 0;
+        //virtual AcceleratorBatchMappings    GetAcceleratorBatches() const = 0;
+        //virtual MaterialGroupList           GetMaterialGroups() const = 0;
+        //virtual MaterialBatchMappings       GetMaterialBatches() const = 0;
 
-        virtual GPUBaseAcceleratorI*        GetBaseAccelerator() const = 0;
-        virtual GPUEventEstimatorI*         GetEventEstimator() const = 0;
-        virtual TracerBaseLogicI*           GetTracerLogic() const = 0;
+        //virtual GPUBaseAcceleratorI*        GetBaseAccelerator() const = 0;
+        //virtual GPUEventEstimatorI*         GetEventEstimator() const = 0;
+        //virtual TracerBaseLogicI*           GetTracerLogic() const = 0;
 
         // Resetting all generated Groups and Batches
         virtual void                        ClearAll() = 0;

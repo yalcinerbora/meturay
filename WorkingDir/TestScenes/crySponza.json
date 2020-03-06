@@ -16,9 +16,6 @@
 	"BaseAccelerator": {"type": "BasicBVH"},
 	"BaseBoundaryMaterial": 0,
 
-	"Tracer": "Test",
-	"Estimator": "Basic",
-
 	"Lights": [
         // Single Directional Light Information
         {
@@ -28,7 +25,7 @@
             //"direction": [0, -1, 0],
             "direction": [0.40825, -0.8165, 0.40825],
 			"power": [1.0, 1.0, 1.0]
-		}		
+		}
 	],
 
 	"Transforms":[
@@ -46,13 +43,13 @@
         // General Boundary Material
         // Black Background
 		"id": 0,
-        "type": "LightBoundary",
+        "type": "Emissive",
 		"radiance" : [0, 0, 0]
     },
     {
 		// Light Boundary Material
 		"id": 1,
-		"type": "LightBoundary",		
+		"type": "Emissive",
 		"radiance" : [15, 15, 15]
 		//"radiance" : [9.5, 9.5, 9.5]
 		//"radiance" : [1.1, 1.1, 1.1]

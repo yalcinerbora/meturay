@@ -9,34 +9,27 @@ Structures that is related to TracerI
 #include <vector>
 #include <map>
 
-class GPUPrimitiveGroupI;
+#include "ObjectFuncDefinitions.h"
+
+class CudaGPU;
+
+class GPUBaseAcceleratorI;
 class GPUAcceleratorGroupI;
-class GPUAcceleratorBatchI;
+class GPUPrimitiveGroupI;
 class GPUMaterialGroupI;
-class GPUMaterialBatchI;
+class GPUWorkBatchI;
 
-using PrimitiveGroupList = std::vector<const GPUPrimitiveGroupI*>;
-using AcceleratorGroupList = std::vector<GPUAcceleratorGroupI*>;
-using AcceleratorBatchMappings = std::map<uint32_t, GPUAcceleratorBatchI*>;
-using MaterialGroupList = std::vector<const GPUMaterialGroupI*>;
-using MaterialBatchMappings = std::map<uint32_t, GPUMaterialBatchI*>;
+using NameGPUPair = std::pair<std::string, const CudaGPU*>;
 
-struct MaterialOptions
-{
-    bool fullLoadTextures;
-};
+using GPUBaseAccelPtr = SharedLibPtr<GPUBaseAcceleratorI>;
+using GPUAccelGPtr = SharedLibPtr<GPUAcceleratorGroupI>;
+using GPUPrimGPtr = SharedLibPtr<GPUPrimitiveGroupI>;
+using GPUMatGPtr = SharedLibPtr<GPUMaterialGroupI>;
 
-struct ShadeOpts
-{
-    int i;
-};
+// Kernel Mappings
+using AcceleratorBatchMappings = std::map<uint32_t, GPUAcceleratorGroupI*>;
 
-struct HitOpts
-{
-    int j;
-};
-
-// Constant Paramters that cannot be changed after initialization time
+// Constant Paramters that cannot be changed after initialization
 struct TracerParameters
 {
     uint32_t seed;
@@ -48,14 +41,3 @@ struct TracerOptions
     // Misc
     bool        verbose;
 };
-
-//struct MatBatchRayDataCPU
-//{
-//    uint32_t                batchId;
-//    std::vector<uint8_t>    record;
-//    //
-//    uint64_t                raysOffset;
-//    uint64_t                auxiliaryOffset;
-//    uint64_t                primitiveIdsOffset;
-//    uint64_t                hitStructOffset;
-//};

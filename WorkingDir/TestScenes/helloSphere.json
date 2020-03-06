@@ -16,9 +16,6 @@
 	"BaseAccelerator": {"type": "Linear"},
 	"BaseBoundaryMaterial": 1,
 
-	"Tracer": "Test",
-	"Estimator": "Empty",
-
 	"Lights": [],
 
 	"Transforms":[
@@ -34,11 +31,11 @@
 	"Materials":[
 	{
 		"id": 0,
-		"type": "SphericalMat"
+		"type": "Spherical"
 	},
 	{
 		"id": 1,
-		"type": "BasicMat",
+		"type": "Emissive",
 		"albedo" : [0, 0, 0]
 	}],
 

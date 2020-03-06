@@ -10,14 +10,14 @@
 
 // Auxiliary Ids for transforms and primitives
 typedef uint32_t TransformId;
-typedef uint64_t PrimitiveId;
+typedef uint32_t PrimitiveId;
 
 // TODO: Implement
 struct HitStructPtr
 {
     private:
         Byte*       dPtr;
-        int         combinedSize;
+        uint32_t    combinedSize;
 
     public:
                     HitStructPtr() : dPtr(nullptr), combinedSize(0) {}
@@ -32,6 +32,8 @@ struct HitStructPtr
         template<class T>
         __device__ __host__
         const T& Ref(int i) const { return *reinterpret_cast<T*>(dPtr + combinedSize * i); }
+
+        uint32_t CombinedSize() const { return combinedSize; }
 
         //template<class T>
         //__device__ __host__

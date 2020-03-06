@@ -21,16 +21,72 @@ Single thread will
 #include <sstream>
 
 #include "RayLib/TracerStructs.h"
-#include "RayLib/TracerI.h"
+
+#include "GPURayTracerI.h"
 
 #include "RNGMemory.h"
 #include "RayMemory.h"
 #include "ImageMemory.h"
 
 class CudaSystem;
-class TracerBaseLogicI;
 class TracerLogicGeneratorI;
 struct TracerError;
+
+class TracerBase
+{
+    private:
+
+    protected:
+        // Cuda System For Kernel Calls
+        const CudaSystem&                           cudaSystem;
+        // Max Bit Sizes for Efficient Sorting
+        const Vector2i                              maxAccelBits;
+        const Vector2i                              maxWorkBits;
+        //        
+        const uint32_t                              maxHitSize;
+        // GPU Memory
+        RNGMemory                                   rngMemory;
+        RayMemory                                   rayMemory;
+        // Batches for Accelerator
+        GPUBaseAcceleratorI&                        baseAccelerator;
+        AcceleratorBatchMappings&                   accelBatches;
+        //
+        const TracerParameters                      params;
+        //
+        uint32_t                                    currentRayCount;
+
+        // Interface
+        // Initialize and allocate for rays
+        virtual TracerError                         Initialize() = 0;
+        virtual void                                ResetHitMemory(uint32_t rayCount,
+                                                                   HitKey baseBoundMatKey);
+
+        virtual void                                HitRays() = 0;
+        virtual void                                WorkRays(const WorkBatchMappings&,
+                                                             HitKey baseBoundMatKey);
+
+    public:
+        // Constructors & Destructor
+                                                    TracerBase(CudaSystem&,
+                                                               // Accelerators that are required
+                                                               // for hit loop
+                                                               GPUBaseAcceleratorI&,
+                                                               AcceleratorBatchMappings&,
+                                                               // Bits for sorting
+                                                               const Vector2i maxAccelBits,
+                                                               const Vector2i maxWorkBits,
+                                                               // Hit size for union allocation
+                                                               const uint32_t maxHitSize,
+                                                               // Initialization Param of tracer
+                                                               const TracerParameters&);
+                                                    TracerBase(const TracerBase&) = delete;
+                                                    TracerBase(TracerBase&&) = delete;
+        TracerBase&                                 operator=(const TracerBase&) = delete;
+        TracerBase&                                 operator=(TracerBase&&) = delete;
+                                                    ~TracerBase() = default;
+
+
+};
 
 class TracerBase : public TracerI
 {
@@ -49,7 +105,6 @@ class TracerBase : public TracerI
         TracerOptions           options;
 
         // Base tracer logic
-        TracerBaseLogicI*       currentLogic;
         TracerCallbacksI*       callbacks;
 
         // Error related

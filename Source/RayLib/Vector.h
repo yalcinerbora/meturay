@@ -191,6 +191,9 @@ using Vector4ui = Vector<4, unsigned int>;
 // Long Types
 using Vector2l = Vector<2, int64_t>;
 using Vector2ul = Vector<2, uint64_t>;
+// Short
+using Vector2s = Vector<2, uint16_t>;
+using Vector2us = Vector<2, uint16_t>;
 
 // Requirements of Vectors
 //static_assert(std::is_literal_type<Vector3>::value == true, "Vectors has to be literal types");
@@ -274,3 +277,6 @@ extern template class Vector<4, unsigned int>;
 
 extern template class Vector<2, int64_t>;
 extern template class Vector<2, uint64_t>;
+
+extern template class Vector<2, int16_t>;
+extern template class Vector<2, uint16_t>;

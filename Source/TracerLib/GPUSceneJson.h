@@ -40,7 +40,7 @@ class GPUSceneJson : public GPUSceneI
     private:
         static constexpr const size_t           AlignByteCount = 128;
 
-        // Fundamental
+        // Fundamental Allocators
         TracerLogicGeneratorI&                  logicGenerator;
         ScenePartitionerI&                      partitioner;
         const SurfaceLoaderGeneratorI&          surfaceLoaderGenerator;
@@ -49,11 +49,17 @@ class GPUSceneJson : public GPUSceneI
         Vector2i                                maxAccelIds;
         Vector2i                                maxMatIds;
         HitKey                                  baseBoundaryMatKey;
+        uint32_t                                hitStructSize;
 
         // GPU Memory
         DeviceMemory                            memory;
+        std::map<NameGPUPair, GPUMatGPtr>       materials;
+        std::map<std::string, GPUAccelGPtr>     accelerators;
+        std::map<std::string, GPUPrimGPtr>      primitives;
         // CPU Memory
         std::vector<CameraPerspective>          cameraMemory;
+        WorkBatchMappings                       workMap;
+        AcceleratorBatchMappings                accelMap;
 
         // File Related
         std::unique_ptr<nlohmann::json>         sceneJson;
@@ -72,13 +78,14 @@ class GPUSceneJson : public GPUSceneI
         static SceneError                       GenIdLookup(IndexLookup&,
                                                             const nlohmann::json& array,
                                                             IdBasedNodeType);
+        void                                    ExpandHitStructSize(const GPUPrimitiveGroupI& pg);
 
         // Private Load Functionality
         SceneError      GenerateConstructionData(// Striped Listings (Striped from unsued nodes)
                                                  PrimitiveNodeList& primGroupNodes,
                                                  //
                                                  MaterialNodeList& matGroupNodes,
-                                                 MaterialBatchList& matBatchListings,
+                                                 WorkBatchList& matBatchListings,
                                                  AcceleratorBatchList& accelBatchListings,
                                                  // Estimator Related
                                                  NodeListing& lightList,
@@ -93,9 +100,9 @@ class GPUSceneJson : public GPUSceneI
                                                 double time = 0.0);
         SceneError      GenerateMaterialGroups(const MultiGPUMatNodes&,
                                                double time = 0.0);
-        SceneError      GenerateMaterialBatches(MaterialKeyListing&,
-                                                const MultiGPUMatBatches&,
-                                                double time = 0.0);
+        SceneError      GenerateWorkBatches(MaterialKeyListing&,
+                                            const MultiGPUMatBatches&,
+                                            double time = 0.0);
         SceneError      GenerateAccelerators(std::map<uint32_t, AABB3>& accAABBs,
                                              std::map<uint32_t, HitKey>& accHitKeyList,
                                              //
@@ -110,7 +117,7 @@ class GPUSceneJson : public GPUSceneI
                                              double time = 0.0f);
 
         SceneError      LoadCommon(double time);
-        SceneError      LoadLogicRelated(const TracerParameters&, double);
+        SceneError      LoadLogicRelated(double);
 
         SceneError      ChangeCommon(double time);
         SceneError      ChangeLogicRelated(double time);
@@ -130,7 +137,7 @@ class GPUSceneJson : public GPUSceneI
         size_t                      UsedGPUMemory() override;
         size_t                      UsedCPUMemory() override;
         //
-        SceneError                  LoadScene(const TracerParameters&, double) override;
+        SceneError                  LoadScene(double) override;
         SceneError                  ChangeTime(double) override;
         //
         Vector2i                    MaxMatIds() override;
@@ -141,4 +148,16 @@ class GPUSceneJson : public GPUSceneI
         const TransformStruct*      TransformsGPU() const  override;
         // Access CPU
         const CameraPerspective*    CamerasCPU() const override;
+
+        // Generated Classes of Materials / Accelerators
+        // Work Maps
+        const WorkBatchMappings&            WorkBatchMap() const override;
+        const AcceleratorBatchMappings&     AcceleratorBatchMappings() const override;
+
+        // Allocated Types
+        // All of which are allocated on the GPU
+        const GPUBaseAccelPtr&                          BaseAccelerator() const override;
+        const std::map<NameGPUPair, GPUMatGPtr>&        MaterialGroups() const override;
+        const std::map<std::string, GPUAccelGPtr>&      AcceleratorGroups() const override;
+        const std::map<std::string, GPUPrimGPtr>&       PrimitiveGroups() const override;
 };

@@ -49,6 +49,9 @@
     <Filter Include="Default Accelerators\BVH">
       <UniqueIdentifier>{337f3550-7719-40f2-b481-922801c75f26}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GPUTemplateFunctions">
+      <UniqueIdentifier>{99fee3bc-8a24-4e82-aafa-bdddfed78264}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp">
@@ -94,25 +97,16 @@
     <ClInclude Include="..\..\..\Source\TracerLib\RNGMemory.h">
       <Filter>Memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorDeviceFunctions.h">
-      <Filter>GPU Template Kernels</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\BVHAcceleratorKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\CameraKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\MaterialKernels.cuh">
-      <Filter>GPU Template Kernels</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorI.h">
       <Filter>GPU Logic Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialI.h">
-      <Filter>GPU Logic Interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicI.h">
       <Filter>GPU Logic Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\RayStructs.h">
@@ -229,9 +223,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh">
       <Filter>GPU Algorithms\Functions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh">
-      <Filter>GPU Template Kernels</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorP.h">
       <Filter>Partial Implementations</Filter>
     </ClInclude>
@@ -268,6 +259,27 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorBVHKC.cuh">
       <Filter>Default Accelerators\BVH</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\TexCacheKernels.cuh">
+      <Filter>GPU Template Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkP.h">
+      <Filter>Partial Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkI.h">
+      <Filter>GPU Logic Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\WorkKernels.cuh">
+      <Filter>GPU Template Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\MaterialFunctions.cuh">
+      <Filter>GPUTemplateFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorDeviceFunctions.h">
+      <Filter>GPUTemplateFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh">
+      <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

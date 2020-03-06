@@ -4,13 +4,8 @@
 
 namespace MangledNames
 {
-    const std::string MaterialGroup(const char* tracerLogicName,
-                                    const char* estimatorLogicName,
-                                    const char* materialGroupName);
-    const std::string MaterialBatch(const char* tracerLogicName,
-                                    const char* estimatorLogicName,
-                                    const char* primitiveGroupName,
-                                    const char* materialGroupName);
+    const std::string WorkBatch(const char* primitiveGroupName,
+                                const char* materialGroupName);
     const std::string AcceleratorGroup(const char* primitiveGroupName,
                                        const char* acceleratorGroupName);
 }

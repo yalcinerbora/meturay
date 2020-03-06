@@ -16,9 +16,6 @@
 	"BaseAccelerator": {"type": "Linear"},
 	"BaseBoundaryMaterial": 0,
 
-	"Tracer": "Test",
-	"Estimator": "Basic",
-
 	"Lights": [
 		// Light Information for event estimation
 		{
@@ -44,44 +41,44 @@
 	{
 		// General Boundary Material
 		"id": 0,
-        "type": "LightBoundary",
+        "type": "Emissive",
 		"radiance" : [0, 0, 0]
     },
     {
 		// Light Boundary Material
 		"id": 1,
-		"type": "LightBoundary",
+		"type": "Emissive",
 		"radiance" : [140, 140, 140]
     },
 	{
 		// Red Simple Material
 		"id": 2,
-		"type": "BasicPathTrace",
+		"type": "Diffuse",
 		"albedo" : [0.6300, 0.0650, 0.0500]
     },
     {
 		// Blue Simple Material
 		"id": 3,
-		"type": "BasicPathTrace",
+		"type": "Diffuse",
 		"albedo" : [0.161, 0.133, 0.427]
     },
     {
 		// Gray Simple Material
 		"id": 4,
-		"type": "BasicPathTrace",
+		"type": "Diffuse",
 		"albedo" : [0.5, 0.5, 0.5]
     },
     {
 		// Perfect Mirror
 		"id": 5,
-		"type": "BasicReflectPT",
+		"type": "Specular",
 		"albedo" : [1.0, 1.0, 1.0],
 		"roughness" : 1.0
     },
     {
 		// Perfect Glass
 		"id": 6,
-		"type": "BasicPathTrace",
+		"type": "Transmissive",
         "albedo" : [1.0, 1.0, 1.0],
         "index" : 1.69
 	}],

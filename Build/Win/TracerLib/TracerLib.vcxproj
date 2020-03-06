@@ -29,9 +29,13 @@
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorP.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkI.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkP.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\MangledNames.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\MaterialFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TexCacheKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerTypeGenerators.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DeviceMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\FunctionEnablers.cuh" />
@@ -49,7 +53,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUSceneJson.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\MaterialKernels.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\WorkKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\NodeListing.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\ParallelReduction.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ParallelScan.cuh" />
@@ -70,7 +74,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLoader.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGenerator.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGeneratorI.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicPools.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerThread.h" />

@@ -282,7 +282,7 @@ bool SimpleTracerSetup::Init()
     ERROR_CHECK(DLLError, dllE);
 
     // Load GFG Surface Loader for gfg data
-
+    // TODO:
 
     // Generate GPU List & A Partitioner
     // Check cuda system error here
@@ -291,14 +291,16 @@ bool SimpleTracerSetup::Init()
     ERROR_CHECK(CudaError, cudaE);
 
     // GPU Data Partitioner
+    // Basically delegates all work to single GPU
     SingleGPUScenePartitioner partitioner(*cudaSystem);
 
-    // Load Scene
+    // Load Scene & get material/primitive mappings
+    WorkMappings workMap;
     gpuScene = std::make_unique<GPUSceneJson>(sceneName,
                                               partitioner,
                                               generator,
                                               surfaceLoaders);
-    SceneError scnE = gpuScene->LoadScene(TRACER_PARAMETERS, sceneTime);
+    SceneError scnE = gpuScene->LoadScene(workMap, sceneTime);
     ERROR_CHECK(SceneError, scnE);
 
     MovementScemeList MovementSchemeList = {};    
@@ -333,15 +335,17 @@ bool SimpleTracerSetup::Init()
     Vector2i newImgSize = 3 * visorView->MonitorResolution() / 5;
     visorView->SetWindowSize(newImgSize);
 
-    // Attach the logic & Image format
+    // Generate Tracer Object
     tracerBase = std::make_unique<TracerBase>(*cudaSystem);
+
+
+
     tracerBase->AttachLogic(*generator.GetTracerLogic());
     tracerBase->SetImagePixelFormat(IMAGE_PIXEL_FORMAT);
     tracerBase->ResizeImage(MockNode::IMAGE_RESOLUTION);
     tracerBase->ReportionImage();
     tracerBase->ResetImage();
     tracerBase->SetOptions(TRACER_OPTIONS);
-
     // Tracer Init
     TracerError trcE = tracerBase->Initialize();
     ERROR_CHECK(TracerError, trcE);

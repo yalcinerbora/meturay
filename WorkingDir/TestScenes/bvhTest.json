@@ -16,9 +16,6 @@
 	"BaseAccelerator": {"type": "Linear"},
 	"BaseBoundaryMaterial": 0,
 
-	"Tracer": "Test",
-	"Estimator": "Empty",
-
 	"Lights": [],
 
 	"Transforms":[
@@ -34,7 +31,7 @@
 	"Materials":[
 	{
 		"id": [0, 1],
-		"type": "BasicMat",
+		"type": "Basic",
         "albedo" : [[0, 0, 0],
                     [0.5, 0.5, 0.5]]
 	}],
@@ -48,7 +45,7 @@
         "tag": "assimp_",
         "innerIndex": 0
 	}],
-	
+
 	"Accelerators": [{"id" : 0, "type" : "BasicBVH", "useStack" : true}],
 
 	"Surfaces": [

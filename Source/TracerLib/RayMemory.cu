@@ -21,7 +21,7 @@ struct ValidSplit
 };
 
 __global__ void FillMatIdsForSortKC(HitKey* gKeys, RayId* gIds,
-                                    const HitKey* gMaterialHits,
+                                    const HitKey* gWorkKeys,
                                     uint32_t rayCount)
 {
     // Grid Stride Loop
@@ -29,12 +29,12 @@ __global__ void FillMatIdsForSortKC(HitKey* gKeys, RayId* gIds,
         globalId < rayCount;
         globalId += blockDim.x * gridDim.x)
     {
-        gKeys[globalId] = gMaterialHits[globalId];
+        gKeys[globalId] = gWorkKeys[globalId];
         gIds[globalId] = globalId;
     }
 }
 
-__global__ void ResetHitKeysKC(HitKey* gMaterialKeys,
+__global__ void ResetHitKeysKC(HitKey* gKeys,
                                HitKey key, uint32_t rayCount)
 {
     // Grid Stride Loop
@@ -42,7 +42,7 @@ __global__ void ResetHitKeysKC(HitKey* gMaterialKeys,
         globalId < rayCount;
         globalId += blockDim.x * gridDim.x)
     {
-        gMaterialKeys[globalId] = key;
+        gKeys[globalId] = key;
     }
 }
 
@@ -98,18 +98,17 @@ __global__ void FindSplitBatchesKC(uint16_t* gBatches,
     }
 }
 
-void RayMemory::ResizeRayOut(uint32_t rayCount, size_t perRayAuxSize,
-                             HitKey baseBoundMatKey)
+void RayMemory::ResizeRayOut(uint32_t rayCount, HitKey baseBoundMatKey)
 {
     // Align to proper memory strides
-    size_t sizeOfMaterialKeys = sizeof(HitKey) * rayCount;
-    sizeOfMaterialKeys = Memory::AlignSize(sizeOfMaterialKeys);
+    size_t sizeOfWorkKeys = sizeof(HitKey) * rayCount;
+    sizeOfWorkKeys = Memory::AlignSize(sizeOfWorkKeys);
     size_t sizeOfRays = rayCount * sizeof(RayGMem);
     sizeOfRays =  Memory::AlignSize(sizeOfRays);
-    size_t sizeOfAuxiliary = rayCount * perRayAuxSize;
-    sizeOfAuxiliary = Memory::AlignSize(sizeOfAuxiliary);
+    //size_t sizeOfAuxiliary = rayCount * perRayAuxSize;
+    //sizeOfAuxiliary = Memory::AlignSize(sizeOfAuxiliary);
 
-    size_t requiredSize = sizeOfAuxiliary + sizeOfRays + sizeOfMaterialKeys;
+    size_t requiredSize = sizeOfRays + sizeOfWorkKeys;
     if(memOut.Size() < requiredSize)
     {
         memOut = DeviceMemory();
@@ -120,17 +119,17 @@ void RayMemory::ResizeRayOut(uint32_t rayCount, size_t perRayAuxSize,
     std::uint8_t* dRay = static_cast<uint8_t*>(memOut);
     dRayOut = reinterpret_cast<RayGMem*>(dRay + offset);
     offset += sizeOfRays;
-    dRayAuxOut = reinterpret_cast<void*>(dRay + offset);
-    offset += sizeOfAuxiliary;
-    dMaterialKeys = reinterpret_cast<HitKey*>(dRay + offset);
-    offset += sizeOfMaterialKeys;
+    //dRayAuxOut = reinterpret_cast<void*>(dRay + offset);
+    //offset += sizeOfAuxiliary;
+    dWorkKeys = reinterpret_cast<HitKey*>(dRay + offset);
+    offset += sizeOfWorkKeys;
     assert(requiredSize == offset);
 
     // Initialize memory
     if(rayCount != 0)
         leaderDevice.GridStrideKC_X(0, 0, rayCount,
                                     ResetHitKeysKC,
-                                    dMaterialKeys, baseBoundMatKey,
+                                    dWorkKeys, baseBoundMatKey,
                                     rayCount);
 }
 
@@ -140,20 +139,8 @@ RayMemory::RayMemory(const CudaGPU& g)
 
 void RayMemory::SwapRays()
 {
-    DeviceMemory temp = std::move(memIn);
-    memIn = std::move(memOut);
-    memOut = std::move(temp);
-
-    RayGMem* temp0;
-    void* temp1;
-
-    temp0 = dRayIn;
-    dRayIn = dRayOut;
-    dRayOut = temp0;
-
-    temp1 = dRayAuxIn;
-    dRayAuxIn = dRayAuxOut;
-    dRayAuxOut = temp1;
+    std::swap(memIn, memOut);
+    std::swap(dRayIn, dRayOut);
 }
 
 void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
@@ -210,8 +197,7 @@ void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
         memHit = DeviceMemory();
         memHit = std::move(DeviceMemory(requiredSize));
     }
-        
-
+ 
     // Populate pointers
     size_t offset = 0;
     std::uint8_t* dBasePtr = static_cast<uint8_t*>(memHit);
@@ -370,6 +356,11 @@ void RayMemory::FillMatIdsForSort(uint32_t rayCount)
 {
     leaderDevice.GridStrideKC_X(0, 0, rayCount,
                                 FillMatIdsForSortKC,
-                                dCurrentKeys, dCurrentIds, dMaterialKeys,
+                                dCurrentKeys, dCurrentIds, dWorkKeys,
                                 rayCount);
+}
+
+size_t RayMemory::TotalMemorySize()
+{
+    return memIn.Size() + memOut.Size() + memHit.Size();
 }

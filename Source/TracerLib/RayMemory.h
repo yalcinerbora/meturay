@@ -24,7 +24,7 @@ class RayMemory
     private:
         // Leader GPU device that is responsible for
         // parititoning and sorting the ray data
-        // (Only usefull in multi-GPU systems)
+        // (Only useful in multi-GPU systems)
         const CudaGPU&              leaderDevice;
 
         // Ray Related
@@ -36,36 +36,27 @@ class RayMemory
         // Each material has a predefined max ray output
         // Out is allocated accordingly then materials fill it
         RayGMem*                    dRayOut;
-        // Each ray has auxiliary data stored in these pointers
-        // Single auxiliary struct can be defined per tracer system
-        // and it is common.
-        // (i.e. such struct may hold pixelId total accumulation etc)
-        void*                       dRayAuxIn;
-        void*                       dRayAuxOut;
         //---------------------------------------------------------
         // Hit Related
         // Entire Hit related memory is allocated in bulk.
         DeviceMemory                memHit;
-        // MatKey holds the material group id and material group local id
+        // MatKey holds the work batch id and material group local id
         // This is used to sort rays to match kernels
-        HitKey*                     dMaterialKeys;
+        HitKey*                     dWorkKeys;
         // Transform of the hit
-        // Base accelerator fill this value with a potential hit
+        // Base accelerator fill this value with a potential hit id
         TransformId*                dTransformIds;
         // Primitive Id of the hit
-        // Inner accelerators fill this value with a
-        // primitive group local id
+        // Inner accelerators fill this value with a primitive group local id
+        // Primitive group id can be determined by workgroup
         PrimitiveId*                dPrimitiveIds;
         // Custom hit Structure allocation pointer
         // This pointer is capable of holding data for all
         // hit stuructures currently active
-        // (i.e. it holds Vec2 barcy coords for triangle primitives,
+        // (i.e. it holds Vec2 bary coords for triangle primitives,
         // hold position for spheres (maybe spherical coords in order to save space).
-        // or other custom value for a custom primitive (spline maybe i dunno)
+        // or other custom value for a custom primitive (spline params maybe i dunno)
         HitStructPtr                dHitStructs;
-        // Above code will be referenced by rayId for access
-        // Since on each iteration some rays are finalzed (like out of bounds etc.)
-        // We should skip them partition code will omit those rays accordingly.
         // --
         // Double buffer and temporary memory for sorting
         // Key/Index pair (key can either be accelerator or material)
@@ -85,7 +76,7 @@ class RayMemory
 
     public:
         // Constructors & Destructor
-                                RayMemory(const CudaGPU&);
+                                RayMemory(const CudaGPU& leaderDevice);
                                 RayMemory(const RayMemory&) = delete;
                                 RayMemory(RayMemory&&) = default;
         RayMemory&              operator=(const RayMemory&) = delete;
@@ -106,29 +97,28 @@ class RayMemory
         // Hit Related
         HitStructPtr                HitStructs();
         const HitStructPtr          HitStructs() const;
-        HitKey*                     MaterialKeys();
-        const HitKey*               MaterialKeys() const;
+        HitKey*                     WorkKeys();
+        const HitKey*               WorkKeys() const;
         TransformId*                TransformIds();
         const TransformId*          TransformIds() const;
         PrimitiveId*                PrimitiveIds();
         const PrimitiveId*          PrimitiveIds() const;
-        //
+        // For sorting
         HitKey*                     CurrentKeys();
         const HitKey*               CurrentKeys() const;
         RayId*                      CurrentIds();
         const RayId*                CurrentIds() const;
 
-
         // Misc
-        // Sets leader device which is responsible for sort and partition kernel calls
-        //void                        SetLeaderDevice(const CudaGPU&);
         const CudaGPU&              LeaderDevice() const;
 
         // Memory Allocation
         void                        ResetHitMemory(uint32_t rayCount, size_t hitStructSize);
-        void                        ResizeRayOut(uint32_t rayCount, size_t perRayAuxSize,
-                                                 HitKey baseBoundMatKey);
+        void                        ResizeRayOut(uint32_t rayCount, HitKey baseBoundMatKey);
         void                        SwapRays();
+
+        // Utilities
+        size_t                      TotalMemorySize();
 
         // Common Functions
         // Sorts the hit list for multi-kernel calls
@@ -183,14 +173,14 @@ inline const HitStructPtr RayMemory::HitStructs() const
     return dHitStructs;
 }
 
-inline HitKey* RayMemory::MaterialKeys()
+inline HitKey* RayMemory::WorkKeys()
 {
-    return dMaterialKeys;
+    return dWorkKeys;
 }
 
-inline const HitKey* RayMemory::MaterialKeys() const
+inline const HitKey* RayMemory::WorkKeys() const
 {
-    return dMaterialKeys;
+    return dWorkKeys;
 }
 
 inline TransformId* RayMemory::TransformIds()

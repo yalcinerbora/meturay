@@ -14,53 +14,33 @@ as an input. (since those types are storngly tied)
 
 
 */
-#include "RayLib/ObjectFuncDefinitions.h"
 #include "RayLib/SceneStructs.h"
 #include "RayLib/TracerStructs.h"
 
+#include "TracerStructs.h"
+
 class TracerBaseLogicI;
 class GPUEventEstimatorI;
-
-class GPUBaseAcceleratorI;
-
-class GPUAcceleratorGroupI;
-class GPUPrimitiveGroupI;
-class GPUMaterialGroupI;
 
 class GPUAcceleratorBatchI;
 class GPUMaterialBatchI;
 
 class CudaGPU;
 
-
-// Fundamental Pointers whichalso support creation-deletion
-// across dll boundaries
-using GPUTracerPtr = SharedLibPtr<TracerBaseLogicI>;
-using GPUBaseAccelPtr = SharedLibPtr<GPUBaseAcceleratorI>;
-
-using GPUAccelGPtr = SharedLibPtr<GPUAcceleratorGroupI>;
-using GPUPrimGPtr = SharedLibPtr<GPUPrimitiveGroupI>;
-using GPUMatGPtr = SharedLibPtr<GPUMaterialGroupI>;
-
-using GPUAccelBPtr = SharedLibPtr<GPUAcceleratorBatchI>;
-using GPUMatBPtr = SharedLibPtr<GPUMaterialBatchI>;
-
-using GPUEstimatorPtr = SharedLibPtr<GPUEventEstimatorI>;
-
-// Statically Inerfaced Generators
-template<class TracerLogic>
-using TracerLogicGeneratorFunc = TracerLogic* (*)(GPUBaseAcceleratorI& baseAccelerator,
-                                                  AcceleratorGroupList&& ag,
-                                                  AcceleratorBatchMappings&& ab,
-                                                  MaterialGroupList&& mg,
-                                                  MaterialBatchMappings&& mb,
-                                                  GPUEventEstimatorI& ee,
-                                                  //
-                                                  const TracerParameters& params,
-                                                  uint32_t hitStructSize,
-                                                  const Vector2i maxMats,
-                                                  const Vector2i maxAccels,
-                                                  const HitKey baseBoundMatKey);
+//// Statically Inerfaced Generators
+//template<class TracerLogic>
+//using TracerLogicGeneratorFunc = TracerLogic* (*)(GPUBaseAcceleratorI& baseAccelerator,
+//                                                  AcceleratorGroupList&& ag,
+//                                                  AcceleratorBatchMappings&& ab,
+//                                                  MaterialGroupList&& mg,
+//                                                  MaterialBatchMappings&& mb,
+//                                                  GPUEventEstimatorI& ee,
+//                                                  //
+//                                                  const TracerParameters& params,
+//                                                  uint32_t hitStructSize,
+//                                                  const Vector2i maxMats,
+//                                                  const Vector2i maxAccels,
+//                                                  const HitKey baseBoundMatKey);
 
 template<class Accel>
 using AccelGroupGeneratorFunc = Accel* (*)(const GPUPrimitiveGroupI&,
@@ -71,55 +51,54 @@ using AccelBatchGeneratorFunc = AccelBatch* (*)(const GPUAcceleratorGroupI&,
                                                 const GPUPrimitiveGroupI&);
 
 template<class MaterialGroup>
-using MaterialGroupGeneratorFunc = MaterialGroup* (*)(const CudaGPU& gpuId,
-                                                      const GPUEventEstimatorI& e);
+using MaterialGroupGeneratorFunc = MaterialGroup* (*)(const CudaGPU& gpuId);
 
-template<class MaterialBatch>
-using MaterialBatchGeneratorFunc = MaterialBatch* (*)(const GPUMaterialGroupI&,
-                                                      const GPUPrimitiveGroupI&);
+//template<class MaterialBatch>
+//using MaterialBatchGeneratorFunc = MaterialBatch* (*)(const GPUMaterialGroupI&,
+//                                                      const GPUPrimitiveGroupI&);
 
 using GPUBaseAccelGen = GeneratorNoArg<GPUBaseAcceleratorI>;
 using GPUPrimGroupGen = GeneratorNoArg<GPUPrimitiveGroupI>;
-using GPUEstimatorGen = GeneratorNoArg<GPUEventEstimatorI>;
+//using GPUEstimatorGen = GeneratorNoArg<GPUEventEstimatorI>;
 
 
-class GPUTracerGen
-{
-    private:
-        TracerLogicGeneratorFunc<TracerBaseLogicI>  gFunc;
-        ObjDestroyerFunc<TracerBaseLogicI>          dFunc;
-
-    public:
-        // Constructor & Destructor
-        GPUTracerGen(TracerLogicGeneratorFunc<TracerBaseLogicI> g,
-                     ObjDestroyerFunc<TracerBaseLogicI> d)
-            : gFunc(g)
-            , dFunc(d)
-        {}
-
-        GPUTracerPtr operator()(GPUBaseAcceleratorI& ba,
-                                AcceleratorGroupList&& ag,
-                                AcceleratorBatchMappings&& ab,
-                                MaterialGroupList&& mg,
-                                MaterialBatchMappings&& mb,
-                                GPUEventEstimatorI& ee,
-                                //
-                                const TracerParameters& op,
-                                uint32_t hitStructSize,
-                                const Vector2i maxMats,
-                                const Vector2i maxAccels,
-                                const HitKey baseBoundMatKey)
-        {
-            TracerBaseLogicI* logic = gFunc(ba,
-                                            std::move(ag), std::move(ab),
-                                            std::move(mg), std::move(mb),
-                                            ee,
-                                            op, hitStructSize,
-                                            maxMats, maxAccels,
-                                            baseBoundMatKey);
-            return GPUTracerPtr(logic, dFunc);
-        }
-};
+//class GPUTracerGen
+//{
+//    private:
+//        TracerLogicGeneratorFunc<TracerBaseLogicI>  gFunc;
+//        ObjDestroyerFunc<TracerBaseLogicI>          dFunc;
+//
+//    public:
+//        // Constructor & Destructor
+//        GPUTracerGen(TracerLogicGeneratorFunc<TracerBaseLogicI> g,
+//                     ObjDestroyerFunc<TracerBaseLogicI> d)
+//            : gFunc(g)
+//            , dFunc(d)
+//        {}
+//
+//        GPUTracerPtr operator()(GPUBaseAcceleratorI& ba,
+//                                AcceleratorGroupList&& ag,
+//                                AcceleratorBatchMappings&& ab,
+//                                MaterialGroupList&& mg,
+//                                MaterialBatchMappings&& mb,
+//                                GPUEventEstimatorI& ee,
+//                                //
+//                                const TracerParameters& op,
+//                                uint32_t hitStructSize,
+//                                const Vector2i maxMats,
+//                                const Vector2i maxAccels,
+//                                const HitKey baseBoundMatKey)
+//        {
+//            TracerBaseLogicI* logic = gFunc(ba,
+//                                            std::move(ag), std::move(ab),
+//                                            std::move(mg), std::move(mb),
+//                                            ee,
+//                                            op, hitStructSize,
+//                                            maxMats, maxAccels,
+//                                            baseBoundMatKey);
+//            return GPUTracerPtr(logic, dFunc);
+//        }
+//};
 
 class GPUMatGroupGen
 {
@@ -135,10 +114,9 @@ class GPUMatGroupGen
             , dFunc(d)
         {}
 
-        GPUMatGPtr operator()(const CudaGPU& gpu,
-                              const GPUEventEstimatorI& e)
+        GPUMatGPtr operator()(const CudaGPU& gpu)
         {
-            GPUMaterialGroupI* mat = gFunc(gpu, e);
+            GPUMaterialGroupI* mat = gFunc(gpu);
             return GPUMatGPtr(mat, dFunc);
         }
 };
@@ -164,75 +142,75 @@ class GPUAccelGroupGen
             return GPUAccelGPtr(accel, dFunc);
         }
 };
-// Batch
-class GPUAccelBatchGen
-{
-    private:
-        AccelBatchGeneratorFunc<GPUAcceleratorBatchI>   gFunc;
-        ObjDestroyerFunc<GPUAcceleratorBatchI>          dFunc;
+//// Batch
+//class GPUAccelBatchGen
+//{
+//    private:
+//        AccelBatchGeneratorFunc<GPUAcceleratorBatchI>   gFunc;
+//        ObjDestroyerFunc<GPUAcceleratorBatchI>          dFunc;
+//
+//    public:
+//        // Constructor & Destructor
+//        GPUAccelBatchGen(AccelBatchGeneratorFunc<GPUAcceleratorBatchI> g,
+//                         ObjDestroyerFunc<GPUAcceleratorBatchI> d)
+//            : gFunc(g)
+//            , dFunc(d)
+//        {}
+//
+//        GPUAccelBPtr operator()(const GPUAcceleratorGroupI& ag,
+//                                const GPUPrimitiveGroupI& pg)
+//        {
+//            GPUAcceleratorBatchI* accel = gFunc(ag, pg);
+//            return GPUAccelBPtr(accel, dFunc);
+//        }
+//};
 
-    public:
-        // Constructor & Destructor
-        GPUAccelBatchGen(AccelBatchGeneratorFunc<GPUAcceleratorBatchI> g,
-                         ObjDestroyerFunc<GPUAcceleratorBatchI> d)
-            : gFunc(g)
-            , dFunc(d)
-        {}
-
-        GPUAccelBPtr operator()(const GPUAcceleratorGroupI& ag,
-                                const GPUPrimitiveGroupI& pg)
-        {
-            GPUAcceleratorBatchI* accel = gFunc(ag, pg);
-            return GPUAccelBPtr(accel, dFunc);
-        }
-};
-
-class GPUMatBatchGen
-{
-    private:
-        MaterialBatchGeneratorFunc<GPUMaterialBatchI>   gFunc;
-        ObjDestroyerFunc<GPUMaterialBatchI>             dFunc;
-
-    public:
-        // Constructor & Destructor
-        GPUMatBatchGen(MaterialBatchGeneratorFunc<GPUMaterialBatchI> g,
-                       ObjDestroyerFunc<GPUMaterialBatchI> d)
-            : gFunc(g)
-            , dFunc(d)
-        {}
-
-        GPUMatBPtr operator()(const GPUMaterialGroupI& mg,
-                              const GPUPrimitiveGroupI& pg)
-        {
-            GPUMaterialBatchI* mat = gFunc(mg, pg);
-            return GPUMatBPtr(mat, dFunc);
-        }
-};
+//class GPUMatBatchGen
+//{
+//    private:
+//        MaterialBatchGeneratorFunc<GPUMaterialBatchI>   gFunc;
+//        ObjDestroyerFunc<GPUMaterialBatchI>             dFunc;
+//
+//    public:
+//        // Constructor & Destructor
+//        GPUMatBatchGen(MaterialBatchGeneratorFunc<GPUMaterialBatchI> g,
+//                       ObjDestroyerFunc<GPUMaterialBatchI> d)
+//            : gFunc(g)
+//            , dFunc(d)
+//        {}
+//
+//        GPUMatBPtr operator()(const GPUMaterialGroupI& mg,
+//                              const GPUPrimitiveGroupI& pg)
+//        {
+//            GPUMaterialBatchI* mat = gFunc(mg, pg);
+//            return GPUMatBPtr(mat, dFunc);
+//        }
+//};
 
 namespace TypeGenWrappers
 {
-    template <class Base, class TracerLogic>
-    Base* TracerLogicConstruct(GPUBaseAcceleratorI& ba,
-                               AcceleratorGroupList&& ag,
-                               AcceleratorBatchMappings&& ab,
-                               MaterialGroupList&& mg,
-                               MaterialBatchMappings&& mb,
-                               GPUEventEstimatorI& ee,
+    //template <class Base, class TracerLogic>
+    //Base* TracerLogicConstruct(GPUBaseAcceleratorI& ba,
+    //                           AcceleratorGroupList&& ag,
+    //                           AcceleratorBatchMappings&& ab,
+    //                           MaterialGroupList&& mg,
+    //                           MaterialBatchMappings&& mb,
+    //                           GPUEventEstimatorI& ee,
 
-                               const TracerParameters& op,
-                               uint32_t hitStrctSize,
-                               const Vector2i maxMats,
-                               const Vector2i maxAccels,
-                               const HitKey baseBoundMatKey)
-    {
-        return new TracerLogic(ba,
-                               std::move(ag), std::move(ab),
-                               std::move(mg), std::move(mb),
-                               ee,
-                               op, hitStrctSize,
-                               maxMats, maxAccels,
-                               baseBoundMatKey);
-    }
+    //                           const TracerParameters& op,
+    //                           uint32_t hitStrctSize,
+    //                           const Vector2i maxMats,
+    //                           const Vector2i maxAccels,
+    //                           const HitKey baseBoundMatKey)
+    //{
+    //    return new TracerLogic(ba,
+    //                           std::move(ag), std::move(ab),
+    //                           std::move(mg), std::move(mb),
+    //                           ee,
+    //                           op, hitStrctSize,
+    //                           maxMats, maxAccels,
+    //                           baseBoundMatKey);
+    //}
 
     template <class Base, class AccelGroup>
     Base* AccelGroupConstruct(const GPUPrimitiveGroupI& p,
@@ -241,24 +219,23 @@ namespace TypeGenWrappers
         return new AccelGroup(p, t);
     }
 
-    template <class Base, class AccelBatch>
-    Base* AccelBatchConstruct(const GPUAcceleratorGroupI& a,
-                              const GPUPrimitiveGroupI& p)
-    {
-        return new AccelBatch(a, p);
-    }
+    //template <class Base, class AccelBatch>
+    //Base* AccelBatchConstruct(const GPUAcceleratorGroupI& a,
+    //                          const GPUPrimitiveGroupI& p)
+    //{
+    //    return new AccelBatch(a, p);
+    //}
 
     template <class Base, class MatBatch>
-    Base* MaterialGroupConstruct(const CudaGPU& gpu,
-                                 const GPUEventEstimatorI& e)
+    Base* MaterialGroupConstruct(const CudaGPU& gpu)
     {
-        return new MatBatch(gpu, e);
+        return new MatBatch(gpu);
     }
 
-    template <class Base, class MatBatch>
-    Base* MaterialBatchConstruct(const GPUMaterialGroupI& m,
-                                 const GPUPrimitiveGroupI& p)
-    {
-        return new MatBatch(m, p);
-    }
+    //template <class Base, class MatBatch>
+    //Base* MaterialBatchConstruct(const GPUMaterialGroupI& m,
+    //                             const GPUPrimitiveGroupI& p)
+    //{
+    //    return new MatBatch(m, p);
+    //}
 }

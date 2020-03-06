@@ -5,16 +5,22 @@
 
 #include "RayAuxStruct.h"
 
-class TracerBasic final : public TracerBaseLogic<RayAuxBasic>
+class TracerBasic final : 
+    public TracerBaseLogic<RayAuxBasic>,
+    public 
 {
     public:
         static constexpr const char*    TypeName() { return "Test"; }
 
     private:
+        ImageMemory     img;
+        GPURayTracer    rayTracer;
+
     protected:
     public:
         // Constructors & Destructor
-                        TracerBasic(GPUBaseAcceleratorI& ba,
+                        TracerBasic(.............,
+                                    GPUBaseAcceleratorI& ba,
                                     AcceleratorGroupList&& ag,
                                     AcceleratorBatchMappings&& ab,
                                     MaterialGroupList&& mg,
@@ -30,10 +36,10 @@ class TracerBasic final : public TracerBaseLogic<RayAuxBasic>
 
         TracerError     Initialize() override;
 
-        uint32_t        GenerateRays(const CudaSystem& cudaSystem, 
+        uint32_t        GenerateWork(const CudaSystem& cudaSystem, 
                                      //
-                                     ImageMemory&,
-                                     RayMemory&, RNGMemory&,
+                                     
+                                      RNGMemory&,
                                      const GPUSceneI& scene,
                                      const CameraPerspective&,
                                      int samplePerLocation,

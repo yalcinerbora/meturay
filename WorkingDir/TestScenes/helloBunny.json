@@ -16,15 +16,12 @@
 	"BaseAccelerator": {"type": "Linear"},
 	"BaseBoundaryMaterial": 0,
 
-	"Tracer": "Test",
-	"Estimator": "Basic",
-
 	"Lights": [
 		// Light Information for event estimation
 		{
 			"id": 0,
 			"type": "rectangular",
-			"material" : 1,			
+			"material" : 1,
 			"power": [1.0, 1.0, 1.0],
 			// Value
 			"position": [-5.371554, 7.565777, -0.362448],
@@ -37,7 +34,7 @@
 		// 	"material" : 1,
 		// 	"primitive": 2,
 		// 	"power": [1.0, 1.0, 1.0]
-		// }		
+		// }
 	],
 
 	"Transforms":[
@@ -54,13 +51,13 @@
 	{
 		// General Boundary Material
 		"id": 0,
-        "type": "LightBoundary",
+        "type": "Emissive",
 		"radiance" : [0, 0, 0]
     },
     {
 		// Light Boundary Material
 		"id": 1,
-		"type": "LightBoundary",		
+		"type": "Emissive",
 		"radiance" : [15, 15, 15]
 		//"radiance" : [9.5, 9.5, 9.5]
 		//"radiance" : [1.1, 1.1, 1.1]
@@ -68,13 +65,13 @@
 	{
 		// Green Diffuse Mat
 		"id": 2,
-		"type": "BasicPathTrace",
+		"type": "Lambert",
 		"albedo" : [0.0745, 0.9137, 0.4117]
     },
     {
 		// Gray Diffuse Mat
 		"id": 3,
-		"type": "BasicPathTrace",
+		"type": "Lambert",
 		"albedo" : [0.5, 0.5, 0.5]
     }],
 

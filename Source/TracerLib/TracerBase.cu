@@ -9,8 +9,7 @@
 #include "TracerDebug.h"
 #include "GPUAcceleratorI.h"
 #include "GPUMaterialI.h"
-#include "TracerLogicI.h"
-#include "GPUEventEstimatorI.h"
+
 
 //struct RayAuxBasic
 //{
@@ -30,39 +29,56 @@
 //    return stream;
 //}
 
-template <class... Args>
-inline void TracerBase::SendLog(const char* format, Args... args)
+GPURayTracer::GPURayTracer(CudaSystem& s,
+                           // Accelerators that are required
+                           // for hit loop
+                           GPUBaseAcceleratorI& ba,
+                           AcceleratorBatchMappings& am,
+                           // Bits for sorting
+                           const Vector2i maxAccelBits,
+                           const Vector2i maxWorkBits,
+                           // Hit size for union allocation
+                           const uint32_t hitStructSize,
+                           // Initialization Param of tracer
+                           const TracerParameters& p)
 {
-    if(!options.verbose) return;
+    : cudaSystem(s)
+    , maxAccelBits(maxAccelBits)
+    , maxWorkBits(maxWorkBits)
+    , baseAccelerator(ba)
+    , accelBatches(am)
+    , params(p),
+    , maxHitSize(maxHitSize)
+    , rayMemory(*(s.GPUList().begin()))
+{}
 
-    size_t size = snprintf(nullptr, 0, format, args...);
-    std::string s(size, '\0');
-    snprintf(&s[0], size, format, args...);
-    if(callbacks) callbacks->SendLog(s);
+TracerError GPURayTracer::Initialize()
+{
+    rngMemory = RNGMemory(params.seed, cudaSystem);
+    TracerError::OK;
 }
 
-void TracerBase::SendError(TracerError e, bool isFatal)
+void GPURayTracer::ResetHitMemory(uint32_t rayCount, HitKey baseBoundMatKey)
 {
-    if(callbacks) callbacks->SendError(e);
-    healthy = isFatal;
+    currentRayCount = rayCount;
+    rayMemory.ResizeRayOut(rayCount, baseBoundMatKey);
 }
 
-void TracerBase::HitRays()
+void GPURayTracer::HitRays()
 {
     // Sort and Partition happens on the leader device
     CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
 
     // Tracer Logic interface
-    const Vector2i& accBitCounts = currentLogic->SceneAcceleratorMaxBits();
-    GPUBaseAcceleratorI& baseAccelerator = currentLogic->BaseAcelerator();
-    const AcceleratorBatchMappings& subAccelerators = currentLogic->AcceleratorBatches();
+    const Vector2i& accBitCounts = maxAccelBits;
+    const AcceleratorBatchMappings& subAccelerators = accelBatches;
     // Reset Hit Memory for hit loop
-    rayMemory.ResetHitMemory(currentRayCount, currentLogic->HitStructSize());
+    rayMemory.ResetHitMemory(currentRayCount, hitStructSize);
     // Make Base Accelerator to get ready for hitting
     baseAccelerator.GetReady(cudaSystem, currentRayCount);
     // Ray Memory Pointers
     RayGMem* dRays = rayMemory.Rays();
-    HitKey* dMaterialKeys = rayMemory.MaterialKeys();
+    HitKey* dWorkKeys = rayMemory.WorkKeys();
     TransformId* dTransfomIds = rayMemory.TransformIds();
     PrimitiveId* dPrimitiveIds = rayMemory.PrimitiveIds();
     HitStructPtr dHitStructs = rayMemory.HitStructs();
@@ -198,7 +214,7 @@ void TracerBase::HitRays()
     //printf("FRAME END\n");
 }
 
-void TracerBase::ShadeRays()
+void GPURayTracer::ShadeRays(const WorkBatchMappings& workMap, HitKey baseBoundMatKey)
 {
     // Sort and Partition happens on leader device
     CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
@@ -242,8 +258,7 @@ void TracerBase::ShadeRays()
     }
 
     // Allocate output ray memory
-    rayMemory.ResizeRayOut(totalOutRayCount, currentLogic->PerRayAuxDataSize(),
-                           currentLogic->SceneBaseBoundMatKey());
+    rayMemory.ResizeRayOut(totalOutRayCount, baseBoundMatKey);
     unsigned char* dAuxOut = rayMemory.RayAuxOut<unsigned char>();
     RayGMem* dRaysOut = rayMemory.RaysOut();
     HitKey* dBoundKeyOut = rayMemory.MaterialKeys();
@@ -309,44 +324,21 @@ void TracerBase::ShadeRays()
     rayMemory.SwapRays();
 }
 
-TracerBase::TracerBase(CudaSystem& s)
-    : cudaSystem(s)
-    , callbacks(nullptr)
-    , currentRayCount(0)
-    , currentLogic(nullptr)
-    , healthy(false)
-    , sampleCountPerRay(0)
-    , options(TracerConstants::DefaultTracerOptions)
-    , rayMemory(*(s.GPUList().begin()))
-{}
-
-TracerError TracerBase::Initialize()
+template <class... Args>
+inline void TracerBase::SendLog(const char* format, Args... args)
 {
-    TracerError e = TracerError::OK;
+    if(!options.verbose) return;
 
-    // No logic set for initalization
-    if(currentLogic == nullptr) return TracerError::NO_LOGIC_SET;
+    size_t size = snprintf(nullptr, 0, format, args...);
+    std::string s(size, '\0');
+    snprintf(&s[0], size, format, args...);
+    if(callbacks) callbacks->SendLog(s);
+}
 
-    // Construct Accelerators
-    GPUBaseAcceleratorI& baseAccelerator = currentLogic->BaseAcelerator();
-    const AcceleratorGroupList& acceleratorGroups = currentLogic->AcceleratorGroups();
-    GPUEventEstimatorI& estimator = currentLogic->EventEstimator();
-
-    if((e = baseAccelerator.Constrcut(cudaSystem)) != TracerError::OK)
-       return e;
-
-    for(const auto& accel : acceleratorGroups)
-    {
-        if((e = accel->ConstructAccelerators(cudaSystem)) != TracerError::OK)
-            return e;        
-    }
-    // Construct Estimator
-    if((e = estimator.Construct(cudaSystem)) != TracerError::OK)
-        return e;
-    cudaSystem.SyncGPUAll();
-    // All seems fine mark tracer as healthy
-    healthy = true;
-    return TracerError::OK;
+void TracerBase::SendError(TracerError e, bool isFatal)
+{
+    if(callbacks) callbacks->SendError(e);
+    healthy = isFatal;
 }
 
 void TracerBase::SetOptions(const TracerOptions& opts)

@@ -13,7 +13,7 @@ struct SceneError;
 struct MatBatchData;
 
 using MaterialNodeList = std::map<std::string, NodeListing>;
-using MaterialBatchList = std::map<std::string, MatBatchData>;
+using WorkBatchList = std::map<std::string, MatBatchData>;
 
 using MultiGPUMatNodes = std::map<std::pair<std::string, const CudaGPU*>, NodeListing>;
 using MultiGPUMatBatches = std::map<std::pair<std::string, const CudaGPU*>, MatBatchData>;
