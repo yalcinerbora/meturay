@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RayLib/SceneStructs.h"
-#include "RayLib/TracerTypes.h"
+#include "RayLib/TracerStructs.h"
 #include <string>
 
 struct SceneError;

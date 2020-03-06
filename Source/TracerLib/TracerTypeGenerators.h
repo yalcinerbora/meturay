@@ -17,8 +17,6 @@ as an input. (since those types are storngly tied)
 #include "RayLib/SceneStructs.h"
 #include "RayLib/TracerStructs.h"
 
-#include "TracerStructs.h"
-
 class TracerBaseLogicI;
 class GPUEventEstimatorI;
 

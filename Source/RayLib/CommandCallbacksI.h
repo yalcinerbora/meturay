@@ -3,7 +3,7 @@
 #include <string>
 
 struct CameraPerspective;
-struct TracerOptions;
+struct TracerCommonOptions;
 
 enum class ImageType;
 

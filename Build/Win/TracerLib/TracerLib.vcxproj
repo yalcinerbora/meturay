@@ -69,7 +69,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ScenePartitionerI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\Texture.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\Texture.hpp" />
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerBase.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUTracerP.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerDebug.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLoader.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGenerator.h" />
@@ -110,7 +110,7 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanVector.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\RadixSort.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerLib\TracerBase.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracerP.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\TracerLogicGenerator.cu" />
   </ItemGroup>
   <ItemGroup>

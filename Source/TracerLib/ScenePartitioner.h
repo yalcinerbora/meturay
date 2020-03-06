@@ -17,9 +17,9 @@ class SingleGPUScenePartitioner : public ScenePartitionerI
 
         // Interface        
         SceneError          PartitionMaterials(MultiGPUMatNodes&,
-                                               MultiGPUMatBatches&,
-                                               int&,
+                                               MultiGPUWorkBatches&,
+                                               int& boundaryMaterialGPU,
                                                // Single Input
-                                               MaterialNodeList& materialGroups,
-                                               MaterialBatchList& materialBatches) const override;
+                                               MaterialNodeList&,
+                                               WorkBatchList&) const override;
 };

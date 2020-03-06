@@ -10,13 +10,13 @@
 class CudaGPU;
 
 struct SceneError;
-struct MatBatchData;
+struct WorkBatchData;
 
 using MaterialNodeList = std::map<std::string, NodeListing>;
-using WorkBatchList = std::map<std::string, MatBatchData>;
+using WorkBatchList = std::map<std::string, WorkBatchData>;
 
 using MultiGPUMatNodes = std::map<std::pair<std::string, const CudaGPU*>, NodeListing>;
-using MultiGPUMatBatches = std::map<std::pair<std::string, const CudaGPU*>, MatBatchData>;
+using MultiGPUWorkBatches = std::map<std::pair<std::string, const CudaGPU*>, WorkBatchData>;
 
 class ScenePartitionerI
 {
@@ -25,9 +25,9 @@ class ScenePartitionerI
 
         // Interface
         virtual SceneError      PartitionMaterials(MultiGPUMatNodes&,
-                                                   MultiGPUMatBatches&,
+                                                   MultiGPUWorkBatches&,
                                                    int& boundaryMaterialGPU,
                                                    // Single Input
-                                                   MaterialNodeList& materialGroups,
-                                                   MaterialBatchList& materialBatches) const = 0;
+                                                   MaterialNodeList&,
+                                                   WorkBatchList&) const = 0;
 };

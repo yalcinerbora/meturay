@@ -51,9 +51,7 @@ class BasicPathTraceMat final
 };
 
 class LightBoundaryMat final
-    : public GPUMaterialGroup<TracerBasic,
-                              GPUEventEstimatorBasic,
-                              IrradianceMatData,
+    : public GPUMaterialGroup<IrradianceMatData,
                               EmptySurface,
                               LightBoundaryShade>
 {

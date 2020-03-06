@@ -9,11 +9,11 @@ SingleGPUScenePartitioner::SingleGPUScenePartitioner(const CudaSystem& cudaSyste
 
 // Algo assumes a single healthy GPU
 SceneError SingleGPUScenePartitioner::PartitionMaterials(MultiGPUMatNodes& multiGroups,
-                                                         MultiGPUMatBatches& multiBatches,
+                                                         MultiGPUWorkBatches& multiBatches,
                                                          int& boundaryMaterialGPU,
                                                          // Single Input
                                                          MaterialNodeList& materialGroups,
-                                                         MaterialBatchList& materialBatches) const
+                                                         WorkBatchList& workBatches) const
 {
     // Just use the first gpu avail
     assert(!system.GPUList().empty());
@@ -26,12 +26,12 @@ SceneError SingleGPUScenePartitioner::PartitionMaterials(MultiGPUMatNodes& multi
         multiGroups.emplace(std::make_pair(mg.first, &gpu),
                             std::move(mg.second));
     }
-    for(auto& mb : materialBatches)
+    for(auto& mb : workBatches)
     {
         multiBatches.emplace(std::make_pair(mb.first, &gpu),
                              std::move(mb.second));
     }
     materialGroups.clear();
-    materialBatches.clear();
+    workBatches.clear();
     return SceneError::OK;
 }

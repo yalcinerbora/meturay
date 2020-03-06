@@ -79,35 +79,21 @@ class GPUAcceleratorGroupI
         virtual size_t                      UsedGPUMemory() const = 0;
         virtual size_t                      UsedCPUMemory() const = 0;
 
-        virtual const GPUPrimitiveGroupI&   PrimitiveGroup() const = 0;
-};
-
-//
-class GPUAcceleratorBatchI
-{
-    public:
-        virtual                                 ~GPUAcceleratorBatchI() = default;
-
-        // Interface
-        // Type(as string) of the accelerator group
-        virtual const char*                     Type() const = 0;
         // Kernel Logic
-        virtual void                            Hit(const CudaGPU&,
-                                                    // O
-                                                    HitKey* dMaterialKeys,
-                                                    PrimitiveId* dPrimitiveIds,
-                                                    HitStructPtr dHitStructs,
-                                                    // I-O
-                                                    RayGMem* dRays,
-                                                    // Input
-                                                    const TransformId* dTransformIds,
-                                                    const RayId* dRayIds,
-                                                    const HitKey* dAcceleratorKeys,
-                                                    const uint32_t rayCount) const = 0;
+        virtual void                        Hit(const CudaGPU&,
+                                                // O
+                                                HitKey* dMaterialKeys,
+                                                PrimitiveId* dPrimitiveIds,
+                                                HitStructPtr dHitStructs,
+                                                // I-O
+                                                RayGMem* dRays,
+                                                // Input
+                                                const TransformId* dTransformIds,
+                                                const RayId* dRayIds,
+                                                const HitKey* dAcceleratorKeys,
+                                                const uint32_t rayCount) const = 0;
 
-        // Every MaterialBatch is available for a specific primitive / accelerator data
-        virtual const GPUPrimitiveGroupI&       PrimitiveGroup() const = 0;
-        virtual const GPUAcceleratorGroupI&     AcceleratorGroup() const = 0;
+        virtual const GPUPrimitiveGroupI&   PrimitiveGroup() const = 0;
 };
 
 class GPUBaseAcceleratorI

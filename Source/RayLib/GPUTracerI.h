@@ -22,7 +22,7 @@ It is also responsible for utilizing all GPUs on the computer.
 #include "HitStructs.h"
 
 struct TracerError;
-struct TracerOptions;
+struct TracerCommonOpts;
 struct CameraPerspective;
 
 class GPUSceneI;
@@ -31,10 +31,10 @@ class GPUSceneI;
 class TracerCallbacksI;
 class TracerBaseLogicI;
 
-class TracerGPUI
+class GPUTracerI
 {
     public:
-        virtual                         ~TracerNodeI() = default;
+        virtual                         ~GPUTracerI() = default;
 
         // =====================//
         // RESPONSE FROM TRACER //
@@ -47,6 +47,7 @@ class TracerGPUI
         // ===================//
         // Main Calls
         virtual TracerError             Initialize()  = 0;
+        virtual void                    SetCommonOptions(const TracerCommonOpts&) = 0;
 
         // Rendering Related
         virtual void                    GenerateWork(const GPUSceneI& scene,

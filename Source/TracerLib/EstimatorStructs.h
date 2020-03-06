@@ -4,6 +4,7 @@
 
 #include "RayLib/SceneNodeNames.h"
 #include "RayLib/HitStructs.h"
+#include "RayLib/SceneError.h"
 
 enum class LightType
 {

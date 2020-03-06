@@ -12,7 +12,7 @@
 #include "GPUEventEstimatorBasic.h"
 #include "GPUEventEstimatorEmpty.h"
 
-#include "TracerLogicI.h"
+//#include "TracerLogicI.h"
 #include "GPUMaterialI.h"
 
 // Type to utilize the generated ones
@@ -22,12 +22,6 @@ extern template class GPUAccLinearGroup<GPUPrimitiveSphere>;
 extern template class GPUAccBVHGroup<GPUPrimitiveTriangle>;
 extern template class GPUAccBVHGroup<GPUPrimitiveSphere>;
 
-extern template class GPUAccLinearBatch<GPUPrimitiveTriangle>;
-extern template class GPUAccLinearBatch<GPUPrimitiveSphere>;
-
-extern template class GPUAccBVHBatch<GPUPrimitiveTriangle>;
-extern template class GPUAccBVHBatch<GPUPrimitiveSphere>;
-
 // Typedefs for ease of read
 using GPUAccTriLinearGroup = GPUAccLinearGroup<GPUPrimitiveTriangle>;
 using GPUAccSphrLinearGroup = GPUAccLinearGroup<GPUPrimitiveSphere>;
@@ -35,32 +29,15 @@ using GPUAccSphrLinearGroup = GPUAccLinearGroup<GPUPrimitiveSphere>;
 using GPUAccTriBVHGroup = GPUAccBVHGroup<GPUPrimitiveTriangle>;
 using GPUAccSphrBVHGroup = GPUAccBVHGroup<GPUPrimitiveSphere>;
 
-using GPUAccTriLinearBatch = GPUAccLinearBatch<GPUPrimitiveTriangle>;
-using GPUAccSphrLinearBatch = GPUAccLinearBatch<GPUPrimitiveSphere>;
-
-using GPUAccTriBVHBatch = GPUAccBVHBatch<GPUPrimitiveTriangle>;
-using GPUAccSphrBVHBatch = GPUAccBVHBatch<GPUPrimitiveSphere>;
-
 // Some Instantiations
 // Constructors
 template GPUPrimitiveGroupI* TypeGenWrappers::DefaultConstruct<GPUPrimitiveGroupI,
                                                                GPUPrimitiveTriangle>();
-template GPUPrimitiveGroupI* TypeGenWrappers::DefaultConstruct<GPUPrimitiveGroupI,
-                                                               GPUPrimitiveSphere>();
 
 template GPUAcceleratorGroupI* TypeGenWrappers::AccelGroupConstruct<GPUAcceleratorGroupI,
                                                                     GPUAccTriLinearGroup>(const GPUPrimitiveGroupI&,
                                                                                           const TransformStruct*);
-template GPUAcceleratorGroupI* TypeGenWrappers::AccelGroupConstruct<GPUAcceleratorGroupI,
-                                                                    GPUAccSphrLinearGroup>(const GPUPrimitiveGroupI&,
-                                                                                           const TransformStruct*);
 
-template GPUAcceleratorBatchI* TypeGenWrappers::AccelBatchConstruct<GPUAcceleratorBatchI,
-                                                                    GPUAccTriLinearBatch>(const GPUAcceleratorGroupI&,
-                                                                                          const GPUPrimitiveGroupI&);
-template GPUAcceleratorBatchI* TypeGenWrappers::AccelBatchConstruct<GPUAcceleratorBatchI,
-                                                                    GPUAccSphrLinearBatch>(const GPUAcceleratorGroupI&,
-                                                                                           const GPUPrimitiveGroupI&);
 // Destructors
 template void TypeGenWrappers::DefaultDestruct(GPUPrimitiveGroupI*);
 template void TypeGenWrappers::DefaultDestruct(GPUMaterialGroupI*);
@@ -121,20 +98,6 @@ TracerLogicGenerator::TracerLogicGenerator()
     accelGroupGenerators.emplace(GPUAccSphrBVHGroup::TypeName(),
                                  GPUAccelGroupGen(AccelGroupConstruct<GPUAcceleratorGroupI, GPUAccSphrBVHGroup>,
                                                   DefaultDestruct<GPUAcceleratorGroupI>));
-
-    //accelBatchGenerators.emplace(GPUAccTriLinearBatch::TypeName(),
-    //                             GPUAccelBatchGen(AccelBatchConstruct<GPUAcceleratorBatchI, GPUAccTriLinearBatch>,
-    //                                              DefaultDestruct<GPUAcceleratorBatchI>));
-    //accelBatchGenerators.emplace(GPUAccSphrLinearBatch::TypeName(),
-    //                             GPUAccelBatchGen(AccelBatchConstruct<GPUAcceleratorBatchI, GPUAccSphrLinearBatch>,
-    //                                              DefaultDestruct<GPUAcceleratorBatchI>));
-    //accelBatchGenerators.emplace(GPUAccTriBVHBatch::TypeName(),
-    //                             GPUAccelBatchGen(AccelBatchConstruct<GPUAcceleratorBatchI, GPUAccTriBVHBatch>,
-    //                                              DefaultDestruct<GPUAcceleratorBatchI>));
-    //accelBatchGenerators.emplace(GPUAccSphrBVHBatch::TypeName(),
-    //                             GPUAccelBatchGen(AccelBatchConstruct<GPUAcceleratorBatchI, GPUAccSphrBVHBatch>,
-    //                                              DefaultDestruct<GPUAcceleratorBatchI>));
-
     // Base Accelerator
     baseAccelGenerators.emplace(GPUBaseAcceleratorLinear::TypeName(),
                                 GPUBaseAccelGen(DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorLinear>,
@@ -142,14 +105,6 @@ TracerLogicGenerator::TracerLogicGenerator()
     baseAccelGenerators.emplace(GPUBaseAcceleratorBVH::TypeName(),
                                 GPUBaseAccelGen(DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorBVH>,
                                                 DefaultDestruct<GPUBaseAcceleratorI>));
-
-    //// Estimators
-    //estimatorGenerators.emplace(GPUEventEstimatorEmpty::TypeName(),
-    //                            GPUEstimatorGen(DefaultConstruct<GPUEventEstimatorI, GPUEventEstimatorEmpty>,
-    //                                            DefaultDestruct<GPUEventEstimatorI>));
-    //estimatorGenerators.emplace(GPUEventEstimatorBasic::TypeName(),
-    //                            GPUEstimatorGen(DefaultConstruct<GPUEventEstimatorI, GPUEventEstimatorBasic>,
-                                                DefaultDestruct<GPUEventEstimatorI>));
 
     // Default Types are loaded
     // Other Types are strongly tied to base tracer logic

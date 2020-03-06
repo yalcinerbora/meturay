@@ -17,17 +17,3 @@ public: static const char* TypeName()\
                                                                  ##name##);\
     return typeName.c_str();\
 }
-
-#define MATERIAL_TYPE_NAME(name, T, E) \
-    public:\
-    static const char* Name()\
-    {\
-    return ##name##; \
-    }\
-    static const char* TypeName()\
-    {\
-        static const std::string typeName = MangledNames::MaterialGroup(##T##::TypeName(),\
-                                                                        ##E##::TypeName(),\
-                                                                        ##name##);\
-        return typeName.c_str();\
-    }

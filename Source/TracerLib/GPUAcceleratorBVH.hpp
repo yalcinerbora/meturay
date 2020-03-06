@@ -677,19 +677,7 @@ size_t GPUAccBVHGroup<PGroup>::UsedCPUMemory() const
 }
 
 template <class PGroup>
-GPUAccBVHBatch<PGroup>::GPUAccBVHBatch(const GPUAcceleratorGroupI& a,
-                                       const GPUPrimitiveGroupI& p)
-    : GPUAcceleratorBatch(a, p)
-{}
-
-template <class PGroup>
-const char* GPUAccBVHBatch<PGroup>::Type() const
-{
-    return TypeName();
-}
-
-template <class PGroup>
-void GPUAccBVHBatch<PGroup>::Hit(const CudaGPU& gpu,
+void GPUAccBVHGroup<PGroup>::Hit(const CudaGPU& gpu,
                                  // O
                                  HitKey* dMaterialKeys,
                                  PrimitiveId* dPrimitiveIds,
@@ -719,7 +707,6 @@ void GPUAccBVHBatch<PGroup>::Hit(const CudaGPU& gpu,
                                        const BVHNode<LeafData>**,
                                        const TransformStruct*, PrimitiveData);
 
-    const BVHParameters& params = acceleratorGroup.params;
     BVHIntersectKernel kernel = (params.useStack) ? KCIntersectBVH<PGroup> : 
                                                     KCIntersectBVHStackless<PGroup>;
 
@@ -743,8 +730,8 @@ void GPUAccBVHBatch<PGroup>::Hit(const CudaGPU& gpu,
         dAcceleratorKeys,
         rayCount,
         // Constants
-        acceleratorGroup.dBVHLists,
-        acceleratorGroup.dInverseTransforms,
+        dBVHLists,
+        dInverseTransforms,
         //
         primData
     );

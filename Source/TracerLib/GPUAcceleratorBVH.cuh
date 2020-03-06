@@ -21,9 +21,6 @@ struct BVHParameters
 template<class LeafData>
 using AllLeafDataCPU = std::vector<std::vector<BVHNode<LeafData>>>;
 
-template<class PGroup>
-class GPUAccBVHBatch;
-
 static inline SplitAxis DetermineNextSplit(SplitAxis split, const AABB3f& aabb)
 {
     SplitAxis nextSplit = static_cast<SplitAxis>((static_cast<int>(split) + 1) %
@@ -66,93 +63,76 @@ class GPUAccBVHGroup final
         std::vector<DeviceMemory>           bvhMemories;
         const BVHNode<LeafData>**           dBVHLists;
 
-        friend class                        GPUAccBVHBatch<PGroup>;
-       
         // Recursive Construction
-        HitKey                              FindHitKey(uint32_t accIndex, PrimitiveId id);
-        void                                GenerateBVHNode(// Output
-                                                            size_t& splitLoc,
-                                                            BVHNode<LeafData>& node,
-                                                            //Temp Memory
-                                                            void* dTemp,
-                                                            size_t tempMemSize,
-                                                            uint32_t* dPartitionSplitOut,
-                                                            uint32_t* dIndicesTemp,
-                                                            // Index Data                                             
-                                                            uint32_t* dIndicesIn,
-                                                            // Constants
-                                                            const uint64_t* dPrimIds,
-                                                            const Vector3f* dPrimCenters,
-                                                            const AABB3f* dAABBs,
-                                                            uint32_t accIndex,
-                                                            const CudaGPU& gpu,
-                                                            // Call Related Args
-                                                            uint32_t parentIndex,
-                                                            SplitAxis axis,
-                                                            size_t start, size_t end);
+        HitKey                  FindHitKey(uint32_t accIndex, PrimitiveId id);
+        void                    GenerateBVHNode(// Output
+                                                size_t& splitLoc,
+                                                BVHNode<LeafData>& node,
+                                                //Temp Memory
+                                                void* dTemp,
+                                                size_t tempMemSize,
+                                                uint32_t* dPartitionSplitOut,
+                                                uint32_t* dIndicesTemp,
+                                                // Index Data                                             
+                                                uint32_t* dIndicesIn,
+                                                // Constants
+                                                const uint64_t* dPrimIds,
+                                                const Vector3f* dPrimCenters,
+                                                const AABB3f* dAABBs,
+                                                uint32_t accIndex,
+                                                const CudaGPU& gpu,
+                                                // Call Related Args
+                                                uint32_t parentIndex,
+                                                SplitAxis axis,
+                                                size_t start, size_t end);
 
     public:
         // Constructors & Destructor
-                                        GPUAccBVHGroup(const GPUPrimitiveGroupI&,
-                                                       const TransformStruct*);
-                                        ~GPUAccBVHGroup() = default;
+                                GPUAccBVHGroup(const GPUPrimitiveGroupI&,
+                                               const TransformStruct*);
+                                ~GPUAccBVHGroup() = default;
 
         // Interface
         // Type(as string) of the accelerator group
         const char*                     Type() const override;
         // Loads required data to CPU cache for
-        SceneError                      InitializeGroup(// Accelerator Option Node
-                                                        const SceneNodePtr& node,
-                                                        // Map of hit keys for all materials
-                                                        // w.r.t matId and primitive type
-                                                        const std::map<TypeIdPair, HitKey>&,
-                                                        // List of surface/material
-                                                        // pairings that uses this accelerator type
-                                                        // and primitive type
-                                                        const std::map<uint32_t, IdPairs>& parList,
-                                                        double time) override;
-        SceneError                      ChangeTime(// Map of hit keys for all materials
-                                                   // w.r.t matId and primitive type
-                                                   const std::map<TypeIdPair, HitKey>&,
-                                                   // List of surface/material
-                                                   // pairings that uses this accelerator type
-                                                   // and primitive type
-                                                   const std::map<uint32_t, IdPairs>& parList,
-                                                   double time) override;
+        SceneError              InitializeGroup(// Accelerator Option Node
+                                                const SceneNodePtr& node,
+                                                // Map of hit keys for all materials
+                                                // w.r.t matId and primitive type
+                                                const std::map<TypeIdPair, HitKey>&,
+                                                // List of surface/material
+                                                // pairings that uses this accelerator type
+                                                // and primitive type
+                                                const std::map<uint32_t, IdPairs>& parList,
+                                                double time) override;
+        SceneError              ChangeTime(// Map of hit keys for all materials
+                                           // w.r.t matId and primitive type
+                                           const std::map<TypeIdPair, HitKey>&,
+                                           // List of surface/material
+                                           // pairings that uses this accelerator type
+                                           // and primitive type
+                                           const std::map<uint32_t, IdPairs>& parList,
+                                           double time) override;
 
         // Surface Queries
-        uint32_t                        InnerId(uint32_t surfaceId) const override;
+        uint32_t                InnerId(uint32_t surfaceId) const override;
 
         // Batched and singular construction
-        TracerError                     ConstructAccelerators(const CudaSystem&) override;
-        TracerError                     ConstructAccelerator(uint32_t surface,
-                                                             const CudaSystem&) override;
-        TracerError                     ConstructAccelerators(const std::vector<uint32_t>& surfaces,
-                                                              const CudaSystem&) override;
-        TracerError                     DestroyAccelerators(const CudaSystem&) override;
-        TracerError                     DestroyAccelerator(uint32_t surface,
-                                                           const CudaSystem&) override;
-        TracerError                     DestroyAccelerators(const std::vector<uint32_t>& surfaces,
-                                                            const CudaSystem&) override;
+        TracerError             ConstructAccelerators(const CudaSystem&) override;
+        TracerError             ConstructAccelerator(uint32_t surface,
+                                                     const CudaSystem&) override;
+        TracerError             ConstructAccelerators(const std::vector<uint32_t>& surfaces,
+                                                      const CudaSystem&) override;
+        TracerError             DestroyAccelerators(const CudaSystem&) override;
+        TracerError             DestroyAccelerator(uint32_t surface,
+                                                   const CudaSystem&) override;
+        TracerError             DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+                                                    const CudaSystem&) override;
 
-        size_t                          UsedGPUMemory() const override;
-        size_t                          UsedCPUMemory() const override;
-};
+        size_t                  UsedGPUMemory() const override;
+        size_t                  UsedCPUMemory() const override;
 
-template<class PGroup>
-class GPUAccBVHBatch final
-    : public GPUAcceleratorBatch<GPUAccBVHGroup<PGroup>, PGroup>
-{
-    public:
-
-        // Constructors & Destructor
-                                GPUAccBVHBatch(const GPUAcceleratorGroupI&,
-                                                  const GPUPrimitiveGroupI&);
-                                ~GPUAccBVHBatch() = default;
-
-        // Interface
-        // Type(as string) of the accelerator group
-        const char*             Type() const override;
         // Kernel Logic
         void                    Hit(const CudaGPU&,
                                     // O
@@ -167,7 +147,6 @@ class GPUAccBVHBatch final
                                     const HitKey* dAcceleratorKeys,
                                     const uint32_t rayCount) const override;
 };
-
 
 class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
 {

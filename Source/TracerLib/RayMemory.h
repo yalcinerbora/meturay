@@ -146,21 +146,9 @@ inline RayGMem* RayMemory::Rays()
     return dRayIn;
 }
 
-template<class T>
-inline const T* RayMemory::RayAux() const
-{
-    return static_cast<const T*>(dRayAuxIn);
-}
-
 inline RayGMem* RayMemory::RaysOut()
 {
     return dRayOut;
-}
-
-template<class T>
-inline T* RayMemory::RayAuxOut()
-{
-    return static_cast<T*>(dRayAuxOut);
 }
 
 inline HitStructPtr RayMemory::HitStructs()

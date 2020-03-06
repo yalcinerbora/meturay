@@ -8,7 +8,7 @@ using namespace std::chrono_literals;
 #include "RayLib/TracerError.h"
 
 #include "TracerLib/TracerBase.h"
-#include "TracerLib/TracerLogicI.h"
+//#include "TracerLib/TracerLogicI.h"
 #include "TracerLib/GPUAcceleratorI.h"
 #include "TracerLib/GPUMaterialI.h"
 

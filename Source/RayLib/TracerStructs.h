@@ -26,8 +26,12 @@ using GPUAccelGPtr = SharedLibPtr<GPUAcceleratorGroupI>;
 using GPUPrimGPtr = SharedLibPtr<GPUPrimitiveGroupI>;
 using GPUMatGPtr = SharedLibPtr<GPUMaterialGroupI>;
 
+using MatPrimPair = std::pair<const GPUPrimitiveGroupI, const GPUMaterialGroupI>;
+
 // Kernel Mappings
-using AcceleratorBatchMappings = std::map<uint32_t, GPUAcceleratorGroupI*>;
+using AcceleratorBatchMap = std::map<uint32_t, GPUAcceleratorGroupI*>;
+using WorkBatchMap = std::map<uint32_t, GPUWorkBatchI*>;
+using WorkBatchCreationInfo = std::map<uint32_t, MatPrimPair>;
 
 // Constant Paramters that cannot be changed after initialization
 struct TracerParameters
@@ -35,9 +39,9 @@ struct TracerParameters
     uint32_t seed;
 };
 
-// Options that can be changed during runtime
-struct TracerOptions
+// Commmon options that can be changed during runtime
+struct TracerCommonOpts
 {
     // Misc
-    bool        verbose;
+    bool verbose;
 };

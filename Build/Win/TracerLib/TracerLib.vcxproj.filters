@@ -142,7 +142,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TracerDebug.h">
       <Filter>Debug</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerBase.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveI.h">
       <Filter>GPU Logic Interfaces</Filter>
     </ClInclude>
@@ -281,6 +280,9 @@
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUTracerP.h">
+      <Filter>Partial Implementations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">
@@ -310,7 +312,6 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\RadixSort.cu">
       <Filter>GPU Algorithms\Implementations</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\TracerBase.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\TracerLogicGenerator.cu">
       <Filter>SharedLib</Filter>
     </CudaCompile>
@@ -328,6 +329,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.cu">
       <Filter>Default Accelerators\BVH</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracerP.cu">
+      <Filter>Partial Implementations</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

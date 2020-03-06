@@ -80,7 +80,7 @@ static void KCConstructLinear(// O
         const uint32_t localIndex = globalId - RangeLocation[pairIndex];
 
         // Determine  Prim Id and Hit Key
-        uint64_t primitiveId = prList.primRanges[pairIndex][0] + localIndex;
+        PrimitiveId primitiveId = prList.primRanges[pairIndex][0] + localIndex;
         HitKey matKey = mkList.materialKeys[pairIndex];
 
         // Gen Leaf and write

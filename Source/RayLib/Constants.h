@@ -52,9 +52,7 @@ namespace VisorConstants
 
 namespace TracerConstants
 {
-    static constexpr HitOpts DefaultHitOptions = {0};
-    static constexpr ShadeOpts DefaultShadeOptions = {0};
-    static constexpr TracerOptions DefaultTracerOptions = {false};
+    static constexpr TracerCommonOpts DefaultTracerCommonOptions = {false};
 }
 
 namespace BaseConstants

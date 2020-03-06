@@ -7,9 +7,9 @@
 #include "CPUTimer.h"
 
 #include "VisorI.h"
-#include "TracerI.h"
+#include "GPUTracerI.h"
 
-SelfNode::SelfNode(VisorI& v, TracerI& t)
+SelfNode::SelfNode(VisorI& v, GPUTracerI& t)
     : visor(v)
     , tracer(t)
 {}
@@ -44,7 +44,7 @@ void SelfNode::ChangeCamera(const unsigned int)
 
 }
 
-void SelfNode::ChangeOptions(const TracerOptions opts)
+void SelfNode::ChangeOptions(const TracerC opts)
 {
     tracer.SetOptions(opts);
 }
@@ -125,11 +125,11 @@ void SelfNode::Work()
     {
         // Run tracer
         //tracer.GenerateInitialRays(scene, 0, 1);
-        while(tracer.Continue())
+        while(tracer.Render())
         {
-            tracer.Render();
+            // Node should check if it is requested to do stuff
         }
-        tracer.FinishSamples();
+        tracer.Finalize();
 
         // Before try to show do render loop
         tracer.Render();

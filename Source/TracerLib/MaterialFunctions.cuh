@@ -1,5 +1,9 @@
 #pragma once
 
+#include "RayLib/Ray.h"
+
+class RandomGPU;
+
 // Shade function is responsible for BRDF evalulation
 // and required data access for BRDFs
 //
@@ -35,3 +39,5 @@ using EvaluateFunc = Vector3(*)(// Input
                                 // Constants
                                 const Data&,
                                 const HitKey::Type& matId);
+
+// Add more if necessary

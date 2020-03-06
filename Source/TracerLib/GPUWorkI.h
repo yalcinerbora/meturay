@@ -30,16 +30,15 @@ class GPUWorkBatchI
         virtual void                        Work(// Output
                                                  HitKey* dBoundMatOut,
                                                  RayGMem* dRayOut,
-                                                 void* dRayAuxOut,
                                                  //  Input
                                                  const RayGMem* dRayIn,
-                                                 const void* dRayAuxIn,
                                                  const PrimitiveId* dPrimitiveIds,
                                                  const HitStructPtr dHitStructs,
                                                  // Ids
                                                  const HitKey* dMatIds,
                                                  const RayId* dRayIds,
                                                  // 
+                                                 const uint32_t outputOffset,
                                                  const uint32_t rayCount,
                                                  RNGMemory& rngMem) const = 0;
 

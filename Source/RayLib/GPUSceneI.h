@@ -12,9 +12,6 @@ struct TracerParameters;
 
 using TransformStruct = Matrix4x4;
 
-using MatPrimPair = std::pair<const GPUPrimitiveGroupI, const GPUMaterialGroupI>;
-using WorkBatchMappings = std::map<HitKey, MatPrimPair>;
-
 class GPUSceneI
 {
     public:
@@ -38,8 +35,8 @@ class GPUSceneI
 
         // Generated Classes of Materials / Accelerators
         // Work Maps
-        virtual const WorkBatchMappings&            WorkBatchMap() const = 0;
-        virtual const AcceleratorBatchMappings&     AcceleratorBatchMappings() const = 0;
+        virtual const WorkBatchCreationInfo&    WorkBatchInfo() const = 0;
+        virtual const AcceleratorBatchMap&      AcceleratorBatchMappings() const = 0;
 
         // Allocated Types
         // All of which are allocated on the GPU

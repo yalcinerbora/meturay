@@ -4,7 +4,7 @@
 #include <nlohmann/json_fwd.hpp>
 
 #include "RayLib/Camera.h"
-#include "RayLib/SceneStructs.h"
+//#include "RayLib/SceneStructs.h"
 #include "RayLib/GPUSceneI.h"
 
 #include "DeviceMemory.h"
@@ -14,7 +14,7 @@
 
 struct SceneError;
 class SceneNodeI;
-class ScenePartitionerI;
+//class ScenePartitionerI;
 class TracerLogicGeneratorI;
 class SurfaceLoaderGeneratorI;
 
@@ -53,13 +53,14 @@ class GPUSceneJson : public GPUSceneI
 
         // GPU Memory
         DeviceMemory                            memory;
+        GPUBaseAccelPtr                         baseAccelerator;
         std::map<NameGPUPair, GPUMatGPtr>       materials;
         std::map<std::string, GPUAccelGPtr>     accelerators;
         std::map<std::string, GPUPrimGPtr>      primitives;
         // CPU Memory
         std::vector<CameraPerspective>          cameraMemory;
-        WorkBatchMappings                       workMap;
-        AcceleratorBatchMappings                accelMap;
+        WorkBatchCreationInfo                   workInfo;
+        AcceleratorBatchMap                     accelMap;
 
         // File Related
         std::unique_ptr<nlohmann::json>         sceneJson;
@@ -101,7 +102,7 @@ class GPUSceneJson : public GPUSceneI
         SceneError      GenerateMaterialGroups(const MultiGPUMatNodes&,
                                                double time = 0.0);
         SceneError      GenerateWorkBatches(MaterialKeyListing&,
-                                            const MultiGPUMatBatches&,
+                                            const MultiGPUWorkBatches&,
                                             double time = 0.0);
         SceneError      GenerateAccelerators(std::map<uint32_t, AABB3>& accAABBs,
                                              std::map<uint32_t, HitKey>& accHitKeyList,
@@ -151,8 +152,8 @@ class GPUSceneJson : public GPUSceneI
 
         // Generated Classes of Materials / Accelerators
         // Work Maps
-        const WorkBatchMappings&            WorkBatchMap() const override;
-        const AcceleratorBatchMappings&     AcceleratorBatchMappings() const override;
+        const WorkBatchCreationInfo&        WorkBatchInfo() const override;
+        const AcceleratorBatchMap&          AcceleratorBatchMappings() const override;
 
         // Allocated Types
         // All of which are allocated on the GPU

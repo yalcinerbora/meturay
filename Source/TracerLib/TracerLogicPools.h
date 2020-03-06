@@ -10,7 +10,6 @@ class AcceleratorLogicPoolI
 {
     protected:
         std::map<std::string, GPUAccelGroupGen>   acceleratorGroupGenerators;
-        std::map<std::string, GPUAccelBatchGen>   acceleratorBatchGenerators;
     public:
         static constexpr const char* DefaultConstructorName = "GenAcceleratorPool";
         static constexpr const char* DefaultDestructorName = "DelAcceleratorPool";
@@ -18,7 +17,6 @@ class AcceleratorLogicPoolI
         virtual                     ~AcceleratorLogicPoolI() = default;
 
         virtual std::map<std::string, GPUAccelGroupGen> AcceleratorGroupGenerators(const std::string regex = ".*") const;
-        virtual std::map<std::string, GPUAccelBatchGen> AcceleratorBatchGenerators(const std::string regex = ".*") const;
 };
 
 class BaseAcceleratorLogicPoolI
@@ -53,7 +51,6 @@ class MaterialLogicPoolI
 {
     protected:
         std::map<std::string, GPUMatGroupGen>   materialGroupGenerators;
-        std::map<std::string, GPUMatBatchGen>   materialBatchGenerators;
 
     public:
         static constexpr const char* DefaultConstructorName = "GenMaterialPool";
@@ -62,7 +59,6 @@ class MaterialLogicPoolI
         virtual                     ~MaterialLogicPoolI() = default;
 
         virtual std::map<std::string, GPUMatGroupGen> MaterialGroupGenerators(const std::string regex = ".*") const;
-        virtual std::map<std::string, GPUMatBatchGen> MaterialBatchGenerators(const std::string regex = ".*") const;
 };
 
 class TracerLogicPoolI
@@ -79,38 +75,11 @@ class TracerLogicPoolI
         virtual std::map<std::string, GPUTracerGen> TracerGenerators(const std::string regex = ".*") const;
 };
 
-class EstimatorLogicPoolI
-{
-    protected:
-        std::map<std::string, GPUEstimatorGen>  estimatorGenerators;
-
-    public:
-        static constexpr const char*    DefaultConstructorName = "GenEstimatorPool";
-        static constexpr const char*    DefaultDestructorName = "DelEstimatorPool";
-
-        virtual                         ~EstimatorLogicPoolI() = default;
-
-        virtual std::map<std::string, GPUEstimatorGen> EstimatorGenerators(const std::string regex = ".*") const;
-
-};
-
 inline std::map<std::string, GPUAccelGroupGen> AcceleratorLogicPoolI::AcceleratorGroupGenerators(const std::string regex) const
 {
     std::map<std::string, GPUAccelGroupGen> result;
     std::regex regExpression(regex);
     for(const auto& batchGenerator : acceleratorGroupGenerators)
-    {
-        if(std::regex_match(batchGenerator.first, regExpression))
-            result.emplace(batchGenerator);
-    }
-    return result;
-}
-
-inline std::map<std::string, GPUAccelBatchGen> AcceleratorLogicPoolI::AcceleratorBatchGenerators(const std::string regex) const
-{
-    std::map<std::string, GPUAccelBatchGen> result;
-    std::regex regExpression(regex);
-    for(const auto& batchGenerator : acceleratorBatchGenerators)
     {
         if(std::regex_match(batchGenerator.first, regExpression))
             result.emplace(batchGenerator);
@@ -154,18 +123,6 @@ inline std::map<std::string, GPUMatGroupGen> MaterialLogicPoolI::MaterialGroupGe
     return result;
 }
 
-inline std::map<std::string, GPUMatBatchGen> MaterialLogicPoolI::MaterialBatchGenerators(const std::string regex) const
-{
-    std::map<std::string, GPUMatBatchGen> result;
-    std::regex regExpression(regex);
-    for(const auto& batchGenerator : materialBatchGenerators)
-    {
-        if(std::regex_match(batchGenerator.first, regExpression))
-            result.emplace(batchGenerator);
-    }
-    return result;
-}
-
 inline std::map<std::string, GPUTracerGen> TracerLogicPoolI::TracerGenerators(const std::string regex) const
 {
     std::map<std::string, GPUTracerGen> result;
@@ -174,18 +131,6 @@ inline std::map<std::string, GPUTracerGen> TracerLogicPoolI::TracerGenerators(co
     {
         if(std::regex_match(tracerGenerator.first, regExpression))
             result.emplace(tracerGenerator);
-    }
-    return result;
-}
-
-inline std::map<std::string, GPUEstimatorGen> EstimatorLogicPoolI::EstimatorGenerators(const std::string regex) const
-{
-    std::map<std::string, GPUEstimatorGen> result;
-    std::regex regExpression(regex);
-    for(const auto& estimatorGenerator : estimatorGenerators)
-    {
-        if(std::regex_match(estimatorGenerator.first, regExpression))
-            result.emplace(estimatorGenerator);
     }
     return result;
 }

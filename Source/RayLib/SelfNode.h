@@ -13,7 +13,7 @@ and vice versa.
 #include "TracerCallBacksI.h"
 
 class VisorI;
-class TracerI;
+class GPUTracerI;
 
 class SelfNode
     : public VisorCallbacksI
@@ -21,13 +21,13 @@ class SelfNode
     , public NodeI
 {
     private:
-        VisorI&     visor;
-        TracerI&    tracer;
+        VisorI&         visor;
+        GPUTracerI&     tracer;
 
     protected:
     public:
         // Constructor & Destructor
-                    SelfNode(VisorI&, TracerI&);
+                    SelfNode(VisorI&, GPUTracerI&);
                     ~SelfNode() = default;
 
         // From Command Callbacks

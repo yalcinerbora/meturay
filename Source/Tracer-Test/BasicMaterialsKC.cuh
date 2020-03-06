@@ -12,83 +12,91 @@ class RandomGPU;
 #include "TracerLib/ImageFunctions.cuh"
 #include "TracerLib/GPUEventEstimatorEmpty.h"
 
-__device__
-inline void BasicMatShade(// Output
-                          ImageGMem<Vector4f> gImage,
-                          //
-                          HitKey* gOutBoundMat,
-                          RayGMem* gOutRays,
-                          RayAuxBasic* gOutRayAux,
-                          const uint32_t maxOutRay,
-                          // Input as registers
-                          const RayReg& ray,
-                          const EmptySurface& surface,
-                          const RayAuxBasic& aux,
-                          //
-                          RandomGPU& rng,
-                          // Event Estimator
-                          const EmptyEstimatorData&,
-                          // Input as global memory
-                          const AlbedoMatData& gMatData,
+
+Vector3 ConstantShade(// Sampled Output
+                     RayF& wo,
+                     float& pdf,
+                     // Input
+                     const Vector3& wi,
+                     const Vector3& pos,
+                     const EmptySurface& surface,
+                     // I-O
+                     RandomGPU& rng,
+                     // Constants
+                     const AlbedoMatData& matData,
+                     const HitKey::Type& matId)
+{
+    return matData.dAlbedo[matId];
+}
+
+Vector3 ConstantEvaluate(// Input
+                        const Vector3& wo,
+                        const Vector3& wi,
+                        const Vector3& pos,
+                        const EmptySurface& surface,
+                        // Constants
+                        const AlbedoMatData& matData,
+                        const HitKey::Type& matId)
+{
+    return matData.dAlbedo[matId];
+}
+
+Vector3 BarycentricShade(// Sampled Output
+                         RayF& wo,
+                         float& pdf,
+                         // Input
+                         const Vector3& wi,
+                         const Vector3& pos,
+                         const BarySurface& surface,
+                         // I-O
+                         RandomGPU& rng,
+                         // Constants
+                         const NullData& matData,
+                         const HitKey::Type& matId)
+{
+    return surface.baryCoords;
+}
+
+Vector3 BarycentricEvaluate(// Input
+                            const Vector3& wo,
+                            const Vector3& wi,
+                            const Vector3& pos,
+                            const BarySurface& surface,
+                            // Constants
+                            const NullData& matData,
+                            const HitKey::Type& matId)
+{
+    return matData.dAlbedo[matId];
+}
+
+Vector3 SphericalShade(// Sampled Output
+                       RayF& wo,
+                       float& pdf,
+                       // Input
+                       const Vector3& wi,
+                       const Vector3& pos,
+                       const SphrSurface& surface,
+                       // I-O
+                       RandomGPU& rng,
+                       // Constants
+                       const NullData& matData,
+                       const HitKey::Type& matId)
+{
+    return Vector3f(cos(surface.sphrCoords[0]),
+                    sin(surface.sphrCoords[1]),
+                    0.0f);
+}
+
+Vector3 SphericalEvaluate(// Input
+                          const Vector3& wo,
+                          const Vector3& wi,
+                          const Vector3& pos,
+                          const SphrSurface& surface,
+                          // Constants
+                          const NullData& matData,
                           const HitKey::Type& matId)
 {
-    Vector4f output(gMatData.dAlbedo[matId][0],
-                    gMatData.dAlbedo[matId][1],
-                    gMatData.dAlbedo[matId][2],
-                    1.0f);
-    ImageAccumulatePixel(gImage, aux.pixelId, output);
-}
-
-__device__
-inline void BaryMatShade(// Output
-                         ImageGMem<Vector4f> gImage,
-                         //
-                         HitKey* gOutBoundMat,
-                         RayGMem* gOutRays,
-                         RayAuxBasic* gOutRayAux,
-                         const uint32_t maxOutRay,
-                         // Input as registers
-                         const RayReg& ray,
-                         const BarySurface& surface,
-                         const RayAuxBasic& aux,
-                         // RNG
-                         RandomGPU& rng,
-                         // Event Estimator
-                         const EmptyEstimatorData&,
-                         // Input as global memory
-                         const NullData& gMatData,
-                         const HitKey::Type& matId)
-{
-    Vector4f output(surface.baryCoords[0],
-                    surface.baryCoords[1],
-                    surface.baryCoords[2],
-                    1.0f);
-    ImageAccumulatePixel(gImage, aux.pixelId, output);
-}
-
-__device__
-inline void SphrMatShade(// Output
-                         ImageGMem<Vector4f> gImage,
-                         //
-                         HitKey* gOutBoundMat,
-                         RayGMem* gOutRays,
-                         RayAuxBasic* gOutRayAux,
-                         const uint32_t maxOutRay,
-                         // Input as registers
-                         const RayReg& ray,
-                         const SphrSurface& surface,
-                         const RayAuxBasic& aux,
-                         // RNG
-                         RandomGPU& rng,
-                         // Event Estimator
-                         const EmptyEstimatorData&,
-                         // Input as global memory
-                         const NullData& gMatData,
-                         const HitKey::Type& matId)
-{
-    Vector4f output(cos(surface.sphrCoords[0]),
+    return Vector3f(cos(surface.sphrCoords[0]),
                     sin(surface.sphrCoords[1]),
-                    0.0f,
-                    1.0f);
-    ImageAccumulatePixel(gImage, aux.pixelId, output);
+                    0.0f);
 }

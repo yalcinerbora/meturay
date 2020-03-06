@@ -1,4 +1,4 @@
-#include "TracerBase.h"
+#include "GPUTracerP.h"
 
 #include "RayLib/Camera.h"
 #include "RayLib/Log.h"
@@ -8,7 +8,7 @@
 
 #include "TracerDebug.h"
 #include "GPUAcceleratorI.h"
-#include "GPUMaterialI.h"
+#include "GPUWorkI.h"
 
 
 //struct RayAuxBasic
@@ -29,51 +29,55 @@
 //    return stream;
 //}
 
-GPURayTracer::GPURayTracer(CudaSystem& s,
-                           // Accelerators that are required
-                           // for hit loop
-                           GPUBaseAcceleratorI& ba,
-                           AcceleratorBatchMappings& am,
-                           // Bits for sorting
-                           const Vector2i maxAccelBits,
-                           const Vector2i maxWorkBits,
-                           // Hit size for union allocation
-                           const uint32_t hitStructSize,
-                           // Initialization Param of tracer
-                           const TracerParameters& p)
-{
-    : cudaSystem(s)
-    , maxAccelBits(maxAccelBits)
-    , maxWorkBits(maxWorkBits)
-    , baseAccelerator(ba)
-    , accelBatches(am)
-    , params(p),
-    , maxHitSize(maxHitSize)
-    , rayMemory(*(s.GPUList().begin()))
-{}
+//GPUTracerP::GPUTracerP(CudaSystem& s,
+//                       // Accelerators that are required
+//                       // for hit loop
+//                       GPUBaseAcceleratorI& ba,
+//                       AcceleratorBatchMap& am,
+//                       // Bits for sorting
+//                       const Vector2i maxAccelBits,
+//                       const Vector2i maxWorkBits,
+//                       // Hit size for union allocation
+//                       const uint32_t maxHitSize,
+//                       // Initialization Param of tracer
+//                       const TracerParameters& p)
+//{
+//    : cudaSystem(s)
+//    , maxAccelBits(maxAccelBits)
+//    , maxWorkBits(maxWorkBits)
+//    , baseAccelerator(ba)
+//    , accelBatches(am)
+//    , params(p),
+//    , maxHitSize(maxHitSize)
+//    , rayMemory(*(s.GPUList().begin()))
+//    , callbacks(nullptr)
+//    , crashed(false)
+//{}
 
-TracerError GPURayTracer::Initialize()
+TracerError GPUTracerP::Initialize()
 {
     rngMemory = RNGMemory(params.seed, cudaSystem);
-    TracerError::OK;
+    return TracerError::OK;
 }
 
-void GPURayTracer::ResetHitMemory(uint32_t rayCount, HitKey baseBoundMatKey)
+void GPUTracerP::ResetHitMemory(uint32_t rayCount, HitKey baseBoundMatKey)
 {
     currentRayCount = rayCount;
     rayMemory.ResizeRayOut(rayCount, baseBoundMatKey);
 }
 
-void GPURayTracer::HitRays()
-{
+void GPUTracerP::HitRays()
+{   
+    if(crashed) return;
+
     // Sort and Partition happens on the leader device
     CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
 
     // Tracer Logic interface
     const Vector2i& accBitCounts = maxAccelBits;
-    const AcceleratorBatchMappings& subAccelerators = accelBatches;
+    const AcceleratorBatchMap& subAccelerators = accelBatches;
     // Reset Hit Memory for hit loop
-    rayMemory.ResetHitMemory(currentRayCount, hitStructSize);
+    rayMemory.ResetHitMemory(currentRayCount, maxHitSize);
     // Make Base Accelerator to get ready for hitting
     baseAccelerator.GetReady(cudaSystem, currentRayCount);
     // Ray Memory Pointers
@@ -170,7 +174,7 @@ void GPURayTracer::HitRays()
             // Since materials are batched for both material and
             loc->second->Hit(*currentGPU,
                              // O
-                             dMaterialKeys,
+                             dWorkKeys,
                              dPrimitiveIds,
                              dHitStructs,
                              // I-O
@@ -214,12 +218,10 @@ void GPURayTracer::HitRays()
     //printf("FRAME END\n");
 }
 
-void GPURayTracer::ShadeRays(const WorkBatchMappings& workMap, HitKey baseBoundMatKey)
+void GPUTracerP::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
 {
     // Sort and Partition happens on leader device
     CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
-
-    const Vector2i matMaxBits = currentLogic->SceneMaterialMaxBits();
 
     // Ray Memory Pointers
     const RayGMem* dRays = rayMemory.Rays();
@@ -230,8 +232,7 @@ void GPURayTracer::ShadeRays(const WorkBatchMappings& workMap, HitKey baseBoundM
     HitKey* dCurrentKeys = rayMemory.CurrentKeys();
     RayId* dCurrentRayIds = rayMemory.CurrentIds();
 
-    // Material Interfaces
-    const MaterialBatchMappings& materials = currentLogic->MaterialBatches();
+    // Material Interfaces    
     uint32_t rayCount = currentRayCount;
 
     // Copy materialKeys to currentKeys
@@ -239,7 +240,7 @@ void GPURayTracer::ShadeRays(const WorkBatchMappings& workMap, HitKey baseBoundM
     rayMemory.FillMatIdsForSort(rayCount);
 
     // Sort with respect to the materials keys
-    rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, rayCount, matMaxBits);
+    rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, rayCount, maxWorkBits);
 
     // Parition w.r.t. material batch
     auto portions = rayMemory.Partition(rayCount);
@@ -250,8 +251,8 @@ void GPURayTracer::ShadeRays(const WorkBatchMappings& workMap, HitKey baseBoundM
     {
         // Skip if null batch or unfound material
         if(p.portionId == HitKey::NullBatch) continue;
-        auto loc = materials.find(p.portionId);
-        if(loc == materials.end()) continue;
+        auto loc = workMap.find(p.portionId);
+        if(loc == workMap.end()) continue;
 
         totalOutRayCount += static_cast<uint32_t>(p.count) *
                             loc->second->OutRayCount();
@@ -261,7 +262,7 @@ void GPURayTracer::ShadeRays(const WorkBatchMappings& workMap, HitKey baseBoundM
     rayMemory.ResizeRayOut(totalOutRayCount, baseBoundMatKey);
     unsigned char* dAuxOut = rayMemory.RayAuxOut<unsigned char>();
     RayGMem* dRaysOut = rayMemory.RaysOut();
-    HitKey* dBoundKeyOut = rayMemory.MaterialKeys();
+    HitKey* dBoundKeyOut = rayMemory.WorkKeys();
 
     // Reorder partitions for efficient calls
     // (sort by gpu and order for better async access)
@@ -269,7 +270,7 @@ void GPURayTracer::ShadeRays(const WorkBatchMappings& workMap, HitKey baseBoundM
     // TODO:
 
     // For each partition
-    size_t outOffset = 0;
+    uint32_t outOffset = 0;
     for(auto pIt = portions.crbegin();
         pIt != portions.crend(); pIt++)
     {
@@ -277,39 +278,34 @@ void GPURayTracer::ShadeRays(const WorkBatchMappings& workMap, HitKey baseBoundM
 
         // Skip if null batch or unfound material
         if(p.portionId == HitKey::NullBatch) continue;
-        auto loc = materials.find(p.portionId);
-        if(loc == materials.end()) continue;
+        auto loc = workMap.find(p.portionId);
+        if(loc == workMap.end()) continue;
 
         // Relativize input & output pointers
         const RayId* dRayIdStart = dCurrentRayIds + p.offset;
         const HitKey* dKeyStart = dCurrentKeys + p.offset;
         // Output
-        RayGMem* dRayOutStart = dRaysOut + outOffset;
-        void* dAuxOutStart = dAuxOut + (outOffset * currentLogic->PerRayAuxDataSize());
+        RayGMem* dRayOutStart = dRaysOut + outOffset;        
         HitKey* dBoundKeyStart = dBoundKeyOut + outOffset;
 
         // Actual Shade Call
-        loc->second->ShadeRays(// Output
-                               outputImage,
-                               //
-                               dBoundKeyStart,
-                               dRayOutStart,
-                               dAuxOutStart,
-                               //  Input
-                               dRays,
-                               dRayAux,
-                               dPrimitiveIds,
-                               dHitStructs,
-                               //
-                               dKeyStart,
-                               dRayIdStart,
-
-                               static_cast<uint32_t>(p.count),
-                               rngMemory);
+        loc->second->Work(dBoundKeyStart,
+                          dRayOutStart,
+                          //  Input
+                          dRays,
+                          dPrimitiveIds,
+                          dHitStructs,
+                          // Ids
+                          dKeyStart,
+                          dRayIdStart,
+                          //
+                          outOffset,
+                          static_cast<uint32_t>(p.count),
+                          rngMemory);
 
         // Since output is dynamic (each material may write multiple rays)
         // add offsets to find proper count
-        outOffset += p.count * loc->second->OutRayCount();
+        outOffset += static_cast<uint32_t>(p.count * loc->second->OutRayCount());
     }
     assert(totalOutRayCount == outOffset);
     currentRayCount = totalOutRayCount;
@@ -324,8 +320,29 @@ void GPURayTracer::ShadeRays(const WorkBatchMappings& workMap, HitKey baseBoundM
     rayMemory.SwapRays();
 }
 
+void GPUTracerP::SetImagePixelFormat(PixelFormat f)
+{
+    imgMemory.SetPixelFormat(f, cudaSystem);
+}
+
+void GPUTracerP::ReportionImage(Vector2i start,
+                                Vector2i end)
+{
+    imgMemory.Reportion(start, end, cudaSystem);
+}
+
+void GPUTracerP::ResizeImage(Vector2i resolution)
+{
+    imgMemory.Resize(resolution);
+}
+
+void GPUTracerP::ResetImage()
+{
+    imgMemory.Reset(cudaSystem);
+}
+
 template <class... Args>
-inline void TracerBase::SendLog(const char* format, Args... args)
+inline void GPUTracerP::SendLog(const char* format, Args... args)
 {
     if(!options.verbose) return;
 
@@ -335,136 +352,41 @@ inline void TracerBase::SendLog(const char* format, Args... args)
     if(callbacks) callbacks->SendLog(s);
 }
 
-void TracerBase::SendError(TracerError e, bool isFatal)
+void GPUTracerP::SendError(TracerError e, bool isFatal)
 {
     if(callbacks) callbacks->SendError(e);
-    healthy = isFatal;
+    crashed = isFatal;
 }
 
-void TracerBase::SetOptions(const TracerOptions& opts)
+void GPUTracerP::SetCommonOptions(const TracerCommonOpts& opts)
 {
     options = opts;
 }
 
-void TracerBase::RequestBaseAccelerator()
-{}
-
-void TracerBase::RequestAccelerator(HitKey key)
-{}
-
-void TracerBase::AttachLogic(TracerBaseLogicI& logic)
+void GPUTracerP::Finalize()
 {
-    // Init and set Tracer System
-    TracerError e = TracerError::OK;
-    if((e = logic.Initialize()) != TracerError::OK)
-    {
-        if(callbacks) callbacks->SendError(e);
-    }
-    currentLogic = &logic;
-
-    // Initialize RNG Memory
-    rngMemory = RNGMemory(logic.Seed(), cudaSystem);
-}
-
-void TracerBase::GenerateInitialRays(const GPUSceneI& scene,
-                                     int cameraId,
-                                     int samplePerLocation)
-{
-
-    const CameraPerspective& cam = scene.CamerasCPU()[cameraId];
-    GenerateInitialRays(scene, cam, samplePerLocation);
-
-}
-
-void TracerBase::GenerateInitialRays(const GPUSceneI& scene,
-                                     const CameraPerspective& cam,
-                                     int samplePerLocation)
-{
-    if(!healthy) return;
-    // Delegate camera ray generation to tracer system
-    currentRayCount = currentLogic->GenerateRays(cudaSystem,
-                                                 //
-                                                 outputImage,
-                                                 rayMemory, rngMemory,
-                                                 scene, cam, samplePerLocation,
-                                                 outputImage.Resolution(),
-                                                 outputImage.SegmentOffset(),
-                                                 outputImage.SegmentSize());
-
-    // You can only write to out buffer of the ray memory
-    // Make that memory in rays for hit/shade system
-    rayMemory.SwapRays();
-    sampleCountPerRay = samplePerLocation * samplePerLocation;
-}
-
-bool TracerBase::Continue()
-{
-    return (currentRayCount > 0) && healthy;
-}
-
-void TracerBase::Render()
-{
-    if(!healthy) return;
-    if(currentRayCount == 0) return;
-
-    SendLog(" Starting Hits: %d rays...", currentRayCount);
-    HitRays();
-    SendLog(" Hits Complete, Shading...");
-    ShadeRays();
-    SendLog(" Shading Complete!");
-
-    // Force Nsight Flush
-    CUDA_CHECK(cudaDeviceSynchronize());
-
-    //printf("\n-------\n");
-}
-
-void TracerBase::FinishSamples()
-{
-    if(!healthy) return;
-
-    // Normally if ray reaches to boundary material
-    // its result should be on image but now always
-    SendLog("Finishing Samples: %d rays are left...");
+    if(crashed) return;
+    SendLog("Finalizing...");
    
     // Determine Size
-    Vector2i pixelCount = outputImage.SegmentSize();
-    Vector2i start = outputImage.SegmentOffset();
-    Vector2i end = start + outputImage.SegmentSize();
+    Vector2i pixelCount = imgMemory.SegmentSize();
+    Vector2i start = imgMemory.SegmentOffset();
+    Vector2i end = start + imgMemory.SegmentSize();
     size_t offset = (static_cast<size_t>(pixelCount[0])* pixelCount[1] *
-                     outputImage.PixelSize());
+                     imgMemory.PixelSize());
 
     // Flush Devices and Get the Image
     cudaSystem.SyncGPUAll();
-    std::vector<Byte> imageData = outputImage.GetImageToCPU(cudaSystem);
+    std::vector<Byte> imageData = imgMemory.GetImageToCPU(cudaSystem);
 
     size_t pixelCount1D = static_cast<size_t>(pixelCount[0]) * pixelCount[1];
 
     // Launch finished image
     if(callbacks) callbacks->SendImage(std::move(imageData),
-                                       outputImage.Format(),
+                                       imgMemory.Format(),
                                        offset,
                                        start, end);
-    SendLog("Samples Finished!");
+    SendLog("Image sent!");
 }
 
-void TracerBase::SetImagePixelFormat(PixelFormat f)
-{
-    outputImage.SetPixelFormat(f, cudaSystem);
-}
 
-void TracerBase::ReportionImage(Vector2i start,
-                                Vector2i end)
-{
-    outputImage.Reportion(start, end, cudaSystem);
-}
-
-void TracerBase::ResizeImage(Vector2i resolution)
-{
-    outputImage.Resize(resolution);
-}
-
-void TracerBase::ResetImage()
-{
-    outputImage.Reset(cudaSystem);
-}

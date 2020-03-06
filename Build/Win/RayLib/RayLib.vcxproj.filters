@@ -45,9 +45,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\VisorInputI.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\TracerStructs.h">
-      <Filter>Structs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\WorkerThread.h">
       <Filter>Threads</Filter>
     </ClInclude>
@@ -125,9 +122,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\SelfNode.h">
       <Filter>Nodes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\TracerI.h">
-      <Filter>Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\VisorNode.h">
       <Filter>Nodes</Filter>
@@ -219,6 +213,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\MemoryAlignment.h">
       <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\GPUTracerI.h">
+      <Filter>Interfaces</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

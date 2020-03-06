@@ -7,7 +7,7 @@
 
 #include "TracerLib/GPUAcceleratorLinear.cuh"
 #include "TracerLib/GPUAcceleratorI.h"
-#include "TracerLib/TracerLogicI.h"
+//#include "TracerLib/TracerLogicI.h"
 
 //
 //template TracerBaseLogicI* TypeGenWrappers::TracerLogicConstruct<TracerBaseLogicI, TracerBasic>(GPUBaseAcceleratorI& ba,

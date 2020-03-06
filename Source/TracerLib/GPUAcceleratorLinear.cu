@@ -134,9 +134,6 @@ static_assert(IsTracerClass<GPUBaseAcceleratorLinear>::value,
 template class GPUAccLinearGroup<GPUPrimitiveTriangle>;
 template class GPUAccLinearGroup<GPUPrimitiveSphere>;
 
-template class GPUAccLinearBatch<GPUPrimitiveTriangle>;
-template class GPUAccLinearBatch<GPUPrimitiveSphere>;
-
 static_assert(IsTracerClass<GPUAccLinearGroup<GPUPrimitiveTriangle>>::value,
               "GPUAccLinearGroup<GPUPrimitiveTriangle> is not a Tracer Class.");
 static_assert(IsTracerClass<GPUAccLinearGroup<GPUPrimitiveSphere>>::value,

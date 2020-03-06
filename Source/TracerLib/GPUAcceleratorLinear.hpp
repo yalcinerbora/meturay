@@ -223,19 +223,7 @@ size_t GPUAccLinearGroup<PGroup>::UsedCPUMemory() const
 }
 
 template <class PGroup>
-GPUAccLinearBatch<PGroup>::GPUAccLinearBatch(const GPUAcceleratorGroupI& a,
-                                             const GPUPrimitiveGroupI& p)
-    : GPUAcceleratorBatch(a, p)
-{}
-
-template <class PGroup>
-const char* GPUAccLinearBatch<PGroup>::Type() const
-{
-    return TypeName();
-}
-
-template <class PGroup>
-void GPUAccLinearBatch<PGroup>::Hit(const CudaGPU& gpu,
+void GPUAccLinearGroup<PGroup>::Hit(const CudaGPU& gpu,
                                     // O
                                     HitKey* dMaterialKeys,
                                     PrimitiveId* dPrimitiveIds,
@@ -271,9 +259,9 @@ void GPUAccLinearBatch<PGroup>::Hit(const CudaGPU& gpu,
         dAcceleratorKeys,
         rayCount,
         // Constants
-        acceleratorGroup.dLeafList,
-        acceleratorGroup.dAccRanges,
-        acceleratorGroup.dInverseTransforms,
+        dLeafList,
+        dAccRanges,
+        dInverseTransforms,
         //
         primData
     );

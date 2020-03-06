@@ -33,9 +33,6 @@ tree constructio would provide additional overhead.
 //using SurfaceDataList = std::vector<uint32_t>;
 using SurfaceMaterialPairs = std::array<Vector2ul, SceneConstants::MaxPrimitivePerSurface>;
 
-template<class PGroup>
-class GPUAccLinearBatch;
-
 template <class PGroup>
 class GPUAccLinearGroup final
     : public GPUAcceleratorGroup<PGroup>
@@ -57,72 +54,56 @@ class GPUAccLinearGroup final
         Vector2ul*                          dAccRanges;
         LeafData*                           dLeafList;
 
-        friend class                        GPUAccLinearBatch<PGroup>;
-
     protected:
 
     public:
         // Constructors & Destructor
-                                        GPUAccLinearGroup(const GPUPrimitiveGroupI&,
-                                                          const TransformStruct*);
-                                        ~GPUAccLinearGroup() = default;
-
-        // Interface
-        // Type(as string) of the accelerator group
-        const char*                     Type() const override;
-        // Loads required data to CPU cache for
-        SceneError                      InitializeGroup(// Accelerator Option Node
-                                                        const SceneNodePtr& node,
-                                                        // Map of hit keys for all materials
-                                                        // w.r.t matId and primitive type
-                                                        const std::map<TypeIdPair, HitKey>&,
-                                                        // List of surface/material
-                                                        // pairings that uses this accelerator type
-                                                        // and primitive type
-                                                        const std::map<uint32_t, IdPairs>& parList,
-                                                        double time) override;
-        SceneError                      ChangeTime(// Map of hit keys for all materials
-                                                   // w.r.t matId and primitive type
-                                                   const std::map<TypeIdPair, HitKey>&,
-                                                   // List of surface/material
-                                                   // pairings that uses this accelerator type
-                                                   // and primitive type
-                                                   const std::map<uint32_t, IdPairs>& parList,
-                                                   double time) override;
-
-        // Surface Queries
-        uint32_t                        InnerId(uint32_t surfaceId) const override;
-
-        // Batched and singular construction
-        TracerError                     ConstructAccelerators(const CudaSystem&) override;
-        TracerError                     ConstructAccelerator(uint32_t surface,
-                                                             const CudaSystem&) override;
-        TracerError                     ConstructAccelerators(const std::vector<uint32_t>& surfaces,
-                                                              const CudaSystem&) override;
-        TracerError                     DestroyAccelerators(const CudaSystem&) override;
-        TracerError                     DestroyAccelerator(uint32_t surface,
-                                                           const CudaSystem&) override;
-        TracerError                     DestroyAccelerators(const std::vector<uint32_t>& surfaces,
-                                                            const CudaSystem&) override;
-
-        size_t                          UsedGPUMemory() const override;
-        size_t                          UsedCPUMemory() const override;
-};
-
-template<class PGroup>
-class GPUAccLinearBatch final
-    : public GPUAcceleratorBatch<GPUAccLinearGroup<PGroup>, PGroup>
-{
-    public:
-        // Constructors & Destructor
-                            GPUAccLinearBatch(const GPUAcceleratorGroupI&,
-                                              const GPUPrimitiveGroupI&);
-                            ~GPUAccLinearBatch() = default;
+                            GPUAccLinearGroup(const GPUPrimitiveGroupI&,
+                                              const TransformStruct*);
+                            ~GPUAccLinearGroup() = default;
 
         // Interface
         // Type(as string) of the accelerator group
         const char*         Type() const override;
-        // Kernel Logic
+        // Loads required data to CPU cache for
+        SceneError          InitializeGroup(// Accelerator Option Node
+                                            const SceneNodePtr& node,
+                                            // Map of hit keys for all materials
+                                            // w.r.t matId and primitive type
+                                            const std::map<TypeIdPair, HitKey>&,
+                                            // List of surface/material
+                                            // pairings that uses this accelerator type
+                                            // and primitive type
+                                            const std::map<uint32_t, IdPairs>& parList,
+                                            double time) override;
+        SceneError          ChangeTime(// Map of hit keys for all materials
+                                       // w.r.t matId and primitive type
+                                       const std::map<TypeIdPair, HitKey>&,
+                                       // List of surface/material
+                                       // pairings that uses this accelerator type
+                                       // and primitive type
+                                       const std::map<uint32_t, IdPairs>& parList,
+                                       double time) override;
+
+        // Surface Queries
+        uint32_t            InnerId(uint32_t surfaceId) const override;
+
+        // Batched and singular construction
+        TracerError         ConstructAccelerators(const CudaSystem&) override;
+        TracerError         ConstructAccelerator(uint32_t surface,
+                                                 const CudaSystem&) override;
+        TracerError         ConstructAccelerators(const std::vector<uint32_t>& surfaces,
+                                                  const CudaSystem&) override;
+        TracerError         DestroyAccelerators(const CudaSystem&) override;
+        TracerError         DestroyAccelerator(uint32_t surface,
+                                               const CudaSystem&) override;
+        TracerError         DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+                                                const CudaSystem&) override;
+
+        size_t              UsedGPUMemory() const override;
+        size_t              UsedCPUMemory() const override;
+
+        // Logic
         void                Hit(const CudaGPU&,
                                 // O
                                 HitKey* dMaterialKeys,
@@ -136,6 +117,7 @@ class GPUAccLinearBatch final
                                 const HitKey* dAcceleratorKeys,
                                 const uint32_t rayCount) const override;
 };
+
 
 class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
 {
