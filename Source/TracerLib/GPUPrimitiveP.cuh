@@ -11,7 +11,7 @@ proper for combined templates
 #include "RayLib/SceneStructs.h"
 
 #include "GPUPrimitiveI.h"
-#include "AcceleratorDeviceFunctions.h"
+#include "AcceleratorFunctions.h"
 
 struct PrimDataAccessor;
 

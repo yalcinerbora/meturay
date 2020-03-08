@@ -1,11 +1,12 @@
-#include "GPUTracerP.h"
+#include "GPUTracer.h"
 
-#include "RayLib/Camera.h"
+//#include "RayLib/Camera.h"
 #include "RayLib/Log.h"
 #include "RayLib/TracerError.h"
 #include "RayLib/TracerCallbacksI.h"
-#include "RayLib/GPUSceneI.h"
+//#include "RayLib/GPUSceneI.h"
 
+#include "CudaConstants.h"
 #include "TracerDebug.h"
 #include "GPUAcceleratorI.h"
 #include "GPUWorkI.h"
@@ -29,44 +30,43 @@
 //    return stream;
 //}
 
-//GPUTracerP::GPUTracerP(CudaSystem& s,
-//                       // Accelerators that are required
-//                       // for hit loop
-//                       GPUBaseAcceleratorI& ba,
-//                       AcceleratorBatchMap& am,
-//                       // Bits for sorting
-//                       const Vector2i maxAccelBits,
-//                       const Vector2i maxWorkBits,
-//                       // Hit size for union allocation
-//                       const uint32_t maxHitSize,
-//                       // Initialization Param of tracer
-//                       const TracerParameters& p)
-//{
-//    : cudaSystem(s)
-//    , maxAccelBits(maxAccelBits)
-//    , maxWorkBits(maxWorkBits)
-//    , baseAccelerator(ba)
-//    , accelBatches(am)
-//    , params(p),
-//    , maxHitSize(maxHitSize)
-//    , rayMemory(*(s.GPUList().begin()))
-//    , callbacks(nullptr)
-//    , crashed(false)
-//{}
+GPUTracer::GPUTracer(CudaSystem& s,
+                     // Accelerators that are required
+                     // for hit loop
+                     GPUBaseAcceleratorI& ba,
+                     AcceleratorBatchMap& am,
+                     // Bits for sorting
+                     const Vector2i maxAccelBits,
+                     const Vector2i maxWorkBits,
+                     // Hit size for union allocation
+                     const uint32_t maxHitSize,
+                     // Initialization Param of tracer
+                     const TracerParameters& p)
+    : cudaSystem(s)
+    , maxAccelBits(maxAccelBits)
+    , maxWorkBits(maxWorkBits)
+    , baseAccelerator(ba)
+    , accelBatches(am)
+    , params(p)
+    , maxHitSize(maxHitSize)
+    , rayMemory(*(s.GPUList().begin()))
+    , callbacks(nullptr)
+    , crashed(false)
+{}
 
-TracerError GPUTracerP::Initialize()
+TracerError GPUTracer::Initialize()
 {
     rngMemory = RNGMemory(params.seed, cudaSystem);
     return TracerError::OK;
 }
 
-void GPUTracerP::ResetHitMemory(uint32_t rayCount, HitKey baseBoundMatKey)
+void GPUTracer::ResetHitMemory(uint32_t rayCount, HitKey baseBoundMatKey)
 {
     currentRayCount = rayCount;
     rayMemory.ResizeRayOut(rayCount, baseBoundMatKey);
 }
 
-void GPUTracerP::HitRays()
+void GPUTracer::HitRays()
 {   
     if(crashed) return;
 
@@ -218,7 +218,7 @@ void GPUTracerP::HitRays()
     //printf("FRAME END\n");
 }
 
-void GPUTracerP::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
+void GPUTracer::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
 {
     // Sort and Partition happens on leader device
     CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
@@ -320,31 +320,38 @@ void GPUTracerP::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
     rayMemory.SwapRays();
 }
 
-void GPUTracerP::SetImagePixelFormat(PixelFormat f)
+void GPUTracer::SetParameters(const TracerParameters& p)
+{
+    if(params.seed != p.seed)
+        rngMemory = std::move(RNGMemory(p.seed, cudaSystem));
+    params = p;
+}
+
+void GPUTracer::SetImagePixelFormat(PixelFormat f)
 {
     imgMemory.SetPixelFormat(f, cudaSystem);
 }
 
-void GPUTracerP::ReportionImage(Vector2i start,
+void GPUTracer::ReportionImage(Vector2i start,
                                 Vector2i end)
 {
     imgMemory.Reportion(start, end, cudaSystem);
 }
 
-void GPUTracerP::ResizeImage(Vector2i resolution)
+void GPUTracer::ResizeImage(Vector2i resolution)
 {
     imgMemory.Resize(resolution);
 }
 
-void GPUTracerP::ResetImage()
+void GPUTracer::ResetImage()
 {
     imgMemory.Reset(cudaSystem);
 }
 
 template <class... Args>
-inline void GPUTracerP::SendLog(const char* format, Args... args)
+inline void GPUTracer::SendLog(const char* format, Args... args)
 {
-    if(!options.verbose) return;
+    if(!params.verbose) return;
 
     size_t size = snprintf(nullptr, 0, format, args...);
     std::string s(size, '\0');
@@ -352,18 +359,13 @@ inline void GPUTracerP::SendLog(const char* format, Args... args)
     if(callbacks) callbacks->SendLog(s);
 }
 
-void GPUTracerP::SendError(TracerError e, bool isFatal)
+void GPUTracer::SendError(TracerError e, bool isFatal)
 {
     if(callbacks) callbacks->SendError(e);
     crashed = isFatal;
 }
 
-void GPUTracerP::SetCommonOptions(const TracerCommonOpts& opts)
-{
-    options = opts;
-}
-
-void GPUTracerP::Finalize()
+void GPUTracer::Finalize()
 {
     if(crashed) return;
     SendLog("Finalizing...");

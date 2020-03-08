@@ -48,8 +48,6 @@ class GPUMaterialGroupI
         virtual bool                        HasCachedTextures(uint32_t materialId) const = 0;
         virtual const CudaGPU&              GPU() const = 0;
 
-        virtual const GPUTextureCacheI&     TextureCache() const = 0;
-
         // Total used GPU memory, this includes static textures
         virtual size_t                      UsedGPUMemory() const = 0;
         virtual size_t                      UsedCPUMemory() const = 0;
@@ -61,6 +59,6 @@ class GPUMaterialGroupI
         // Returns the cached textures
         virtual uint8_t                     UsedTextureCount() const = 0;
         virtual std::vector<uint32_t>       UsedTextureIds() const = 0;
-        virtual TextureMask                 CachedTextures() const = 0;        
+        virtual TextureMask                 CachedTextures() const = 0;
 };
 

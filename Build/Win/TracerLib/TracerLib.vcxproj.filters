@@ -37,9 +37,6 @@
     <Filter Include="Scene">
       <UniqueIdentifier>{2f7fe44b-c256-47b5-863e-2cca623b5075}</UniqueIdentifier>
     </Filter>
-    <Filter Include="DefaultEventEstimators">
-      <UniqueIdentifier>{8565aff2-52c4-42bb-a1c3-01400b0a3f5e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Default Accelerators\Linear">
       <UniqueIdentifier>{e9fccd96-8c6f-432d-abc8-447fb9593793}</UniqueIdentifier>
     </Filter>
@@ -65,12 +62,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp">
       <Filter>Default Primitives</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\TracerLoader.cpp">
-      <Filter>SharedLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\TracerThread.cpp">
-      <Filter>SharedLib</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp">
       <Filter>Memory</Filter>
@@ -99,12 +90,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\RNGMemory.h">
       <Filter>Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\BVHAcceleratorKernels.cuh">
-      <Filter>GPU Template Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\CameraKernels.cuh">
-      <Filter>GPU Template Kernels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorI.h">
       <Filter>GPU Interfaces</Filter>
@@ -157,12 +142,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h">
       <Filter>Default Primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerThread.h">
-      <Filter>SharedLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerLoader.h">
-      <Filter>SharedLib</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGeneratorI.h">
       <Filter>SharedLib</Filter>
     </ClInclude>
@@ -170,9 +149,6 @@
       <Filter>SharedLib</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialP.cuh">
-      <Filter>Partial Implementations</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicP.cuh">
       <Filter>Partial Implementations</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorP.cuh">
@@ -225,25 +201,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh">
       <Filter>GPU Algorithms\Functions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorP.h">
-      <Filter>Partial Implementations</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorI.h">
-      <Filter>GPU Interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\DefaultEstimatorsKC.cuh">
-      <Filter>DefaultEventEstimators</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\MangledNames.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorBasic.h">
-      <Filter>DefaultEventEstimators</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorEmpty.h">
-      <Filter>DefaultEventEstimators</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\EstimatorStructs.h">
-      <Filter>Structs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cuh">
       <Filter>Default Accelerators\Linear</Filter>
     </ClInclude>
@@ -262,9 +220,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorBVHKC.cuh">
       <Filter>Default Accelerators\BVH</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TexCacheKernels.cuh">
-      <Filter>GPU Template Kernels</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkI.h">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
@@ -273,9 +228,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUTracerP.h">
-      <Filter>Partial Implementations</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.cuh">
       <Filter>Light &amp; Camera</Filter>
@@ -291,6 +243,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorFunctions.h">
       <Filter>GPUTemplateFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUTracer.h">
+      <Filter>Partial Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GenerationKernels.cuh">
+      <Filter>GPU Template Kernels</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -330,23 +288,20 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\ImageMemory.cu">
       <Filter>Memory</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUEventEstimatorBasic.cu">
-      <Filter>DefaultEventEstimators</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cu">
       <Filter>Default Accelerators\Linear</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.cu">
       <Filter>Default Accelerators\BVH</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracerP.cu">
-      <Filter>Partial Implementations</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPULight.cu">
       <Filter>Light &amp; Camera</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUCamera.cu">
       <Filter>Light &amp; Camera</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracer.cu">
+      <Filter>Partial Implementations</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

@@ -56,6 +56,8 @@ namespace SceneIO
     std::string             StripFileExt(const std::string& string);
 
     // Common Types
+    uint32_t                LoadLightMatId(const nlohmann::json&);
+    LightType               LoadLightType(const nlohmann::json&);    
     LightStruct             LoadLight(const nlohmann::json&, double time = 0.0);
     TransformStruct         LoadTransform(const nlohmann::json&, double time = 0.0);
     CameraPerspective       LoadCamera(const nlohmann::json&, double time = 0.0);

@@ -10,7 +10,7 @@
 
 // Auxiliary Ids for transforms and primitives
 typedef uint32_t TransformId;
-typedef uint32_t PrimitiveId;
+typedef uint64_t PrimitiveId;
 
 // TODO: Implement
 struct HitStructPtr

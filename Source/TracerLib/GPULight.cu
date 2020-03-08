@@ -67,7 +67,8 @@ void DirectionalLight::GenerateRay(// Output
 __device__ 
 Vector3 DirectionalLight::Flux(const Vector3& dir) const
 {
-    return (dir.Dot(direction) < 0.0f) ? Zero3 : flux;
+    static constexpr Vector3 ZERO = Zero3;
+    return (dir.Dot(direction) < 0.0f) ? ZERO : flux;
 }
 
 // ========================================= 
@@ -144,7 +145,8 @@ void RectangularLight::GenerateRay(// Output
 __device__ 
 Vector3 RectangularLight::Flux(const Vector3& dir) const
 {
-    return (dir.Dot(normal) < 0.0f) ? Zero3 : flux;
+    static constexpr Vector3 ZERO = Zero3;
+    return (dir.Dot(normal) < 0.0f) ? ZERO : flux;
 }
 
 // ========================================= 
@@ -191,7 +193,8 @@ void TriangularLight::GenerateRay(// Output
 __device__ 
 Vector3 TriangularLight::Flux(const Vector3& dir) const
 {
-    return (dir.Dot(normal) < 0.0f) ? Zero3 : flux;
+    static constexpr Vector3 ZERO = Zero3;
+    return (dir.Dot(normal) < 0.0f) ? ZERO : flux;
 }
 
 // ========================================= 
@@ -239,7 +242,8 @@ void DiskLight::GenerateRay(// Output
 __device__ 
 Vector3 DiskLight::Flux(const Vector3& dir) const
 {
-    return (dir.Dot(normal) < 0.0f) ? Zero3 : flux;
+    static constexpr Vector3 ZERO = Zero3;
+    return (dir.Dot(normal) < 0.0f) ? ZERO : flux;
 }
 
 // ========================================= 

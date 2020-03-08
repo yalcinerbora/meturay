@@ -1,5 +1,4 @@
 #include "GPUPrimitiveTriangle.h"
-#include "EstimatorStructs.h"
 
 #include "RayLib/SceneError.h"
 #include "RayLib/Log.h"
@@ -344,24 +343,23 @@ bool GPUPrimitiveTriangle::HasPrimitive(uint32_t surfaceDataId) const
     return true;
 }
 
-SceneError GPUPrimitiveTriangle::GenerateEstimatorInfo(std::vector<EstimatorInfo>& result,
-                                                       const Vector3& power,
-                                                       HitKey key,
-                                                       uint32_t id) const
+SceneError GPUPrimitiveTriangle::GenerateLights(std::vector<LightStruct>& result,
+                                                const Vector3& flux, HitKey key,
+                                                uint32_t id) const
 {
     const auto& range = batchRanges.at(id);
+    result.reserve(range[1] - range[0]);
     for(uint64_t i = range[0]; i < range[1]; i++)
     {
-        Vector3 pos0 = dData.positionsU[dData.indexList[i * 3 + 0]];
-        Vector3 pos1 = dData.positionsU[dData.indexList[i * 3 + 1]];
-        Vector3 pos2 = dData.positionsU[dData.indexList[i * 3 + 2]];
+        LightStruct ls;
+        ls.matKey = key;
+        ls.flux = flux;
+        ls.type = LightType::TRIANGULAR;
+        ls.position0 = dData.positionsU[dData.indexList[i * 3 + 0]];
+        ls.position1 = dData.positionsU[dData.indexList[i * 3 + 1]];
+        ls.position2 = dData.positionsU[dData.indexList[i * 3 + 2]];
 
-        result.push_back(EstimatorInfo::GenAsTriangular(key,
-                                                        power,
-                                                        pos0,
-                                                        pos1,
-                                                        pos2));
-
+        result.push_back(ls);
     }
     return SceneError::OK;
 }

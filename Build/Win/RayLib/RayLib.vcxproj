@@ -147,6 +147,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\HybridFunctions.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageStructs.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\Light.h" />
     <ClInclude Include="..\..\..\Source\RayLib\LoopingThreadI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MemoryAlignment.h" />

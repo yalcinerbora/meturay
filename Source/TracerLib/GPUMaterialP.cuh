@@ -7,7 +7,7 @@ struct MatDataAccessor;
 
 //
 template <class Data>
-class GPUMaterialGroupData
+class GPUMaterialGroupD
 {
     friend struct MatDataAccessor;
 
@@ -25,7 +25,7 @@ template <class D, class S,
           AcquireUVList<D, S> AcqF>
 class GPUMaterialGroupP
     : public GPUMaterialGroupI
-    , public GPUMaterialGroupData<D>
+    , public GPUMaterialGroupD<D>
 {
     public:
         //
@@ -78,7 +78,7 @@ struct MatDataAccessor
     static typename MaterialGroupS::MaterialData Data(const MaterialGroupS& mg)
     {
         using M = typename MaterialGroupS::MaterialData;
-        return static_cast<const GPUMaterialGroupP<M>&>(mg).dData;
+        return static_cast<const GPUMaterialGroupD<M>&>(mg).dData;
     }
 };
 

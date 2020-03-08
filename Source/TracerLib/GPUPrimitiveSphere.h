@@ -139,10 +139,9 @@ class GPUPrimitiveSphere final
                                                            const std::string& scenePath) override;
         // Provides data to Event Estimator
         bool                                    HasPrimitive(uint32_t surfaceDataId) const override;
-        SceneError                              GenerateEstimatorInfo(std::vector<EstimatorInfo>&,
-                                                                      const Vector3& power,
-                                                                      HitKey key,
-                                                                      uint32_t id) const override;
+        SceneError                              GenerateLights(std::vector<LightStruct>&,
+                                                               const Vector3& flux, HitKey key,
+                                                               uint32_t id) const override;
         // Access primitive range from Id
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;

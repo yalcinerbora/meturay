@@ -13,23 +13,16 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\AuxiliaryDataKernels.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\EstimatorStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.hpp" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorBVHKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUCamera.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorBasic.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\BitonicSort.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\BVHAcceleratorKernels.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\CameraKernels.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GenerationKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ComparisonFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\DefaultEstimatorsKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorEmpty.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatiorFunctions.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorI.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorP.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULight.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkI.h" />
@@ -37,7 +30,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ImageStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\MangledNames.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialFunctions.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\TexCacheKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerTypeGenerators.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DeviceMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\FunctionEnablers.cuh" />
@@ -71,20 +63,16 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ScenePartitionerI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\Texture.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\Texture.hpp" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUTracerP.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUTracer.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerDebug.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerLoader.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGenerator.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGeneratorI.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicPools.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerThread.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TypeTraits.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUCamera.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUEventEstimatorBasic.cu" />
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveEmpty.cpp" />
@@ -100,8 +88,6 @@
     <ClCompile Include="..\..\..\Source\TracerLib\SceneNodeJson.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\ScenePartitioner.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\TracerLoader.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\TracerThread.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cu" />
@@ -114,7 +100,7 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanVector.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\RadixSort.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracerP.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\TracerLogicGenerator.cu" />
   </ItemGroup>
   <ItemGroup>

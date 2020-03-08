@@ -61,7 +61,7 @@ class MaterialLogicPoolI
         virtual std::map<std::string, GPUMatGroupGen> MaterialGroupGenerators(const std::string regex = ".*") const;
 };
 
-class TracerLogicPoolI
+class TracerPoolI
 {
     protected:
         std::map<std::string, GPUTracerGen>   tracerLogicGenerators;
@@ -70,7 +70,7 @@ class TracerLogicPoolI
         static constexpr const char* DefaultConstructorName = "GenTracerPoolPool";
         static constexpr const char* DefaultDestructorName = "DelTracerPool";
 
-        virtual                         ~TracerLogicPoolI() = default;
+        virtual                         ~TracerPoolI() = default;
 
         virtual std::map<std::string, GPUTracerGen> TracerGenerators(const std::string regex = ".*") const;
 };
@@ -123,7 +123,7 @@ inline std::map<std::string, GPUMatGroupGen> MaterialLogicPoolI::MaterialGroupGe
     return result;
 }
 
-inline std::map<std::string, GPUTracerGen> TracerLogicPoolI::TracerGenerators(const std::string regex) const
+inline std::map<std::string, GPUTracerGen> TracerPoolI::TracerGenerators(const std::string regex) const
 {
     std::map<std::string, GPUTracerGen> result;
     std::regex regExpression(regex);

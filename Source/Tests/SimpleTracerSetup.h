@@ -10,6 +10,7 @@
 #include "RayLib/SurfaceLoaderGenerator.h"
 #include "RayLib/TracerStatus.h"
 #include "RayLib/DLLError.h"
+#include "RayLib/GPUTracerI.h"
 
 // Visor
 #include "RayLib/VisorI.h"
@@ -19,8 +20,6 @@
 
 // Tracer
 #include "TracerLib/GPUSceneJson.h"
-#include "TracerLib/TracerLoader.h"
-#include "TracerLib/TracerBase.h"
 #include "TracerLib/ScenePartitioner.h"
 #include "TracerLib/TracerLogicGenerator.h"
 
@@ -59,13 +58,13 @@ class MockNode
         const double                    Duration;
 
         VisorI&                         visor;
-        TracerI&                        tracer;
+        GPUTracerI&                     tracer;
         GPUSceneI&                      scene;
 
     protected:
     public:
         // Constructor & Destructor
-                    MockNode(VisorI&, TracerI&, GPUSceneI&,
+                    MockNode(VisorI&, GPUTracerI&, GPUSceneI&,
                              double duration);
                     ~MockNode() = default;
 
@@ -76,7 +75,6 @@ class MockNode
         void        DecreaseTime(const double) override {}
         void        ChangeCamera(const CameraPerspective) override {}
         void        ChangeCamera(const unsigned int) override {}
-        void        ChangeOptions(const TracerOptions) override {}
         void        StartStopTrace(const bool) override {}
         void        PauseContTrace(const bool) override {}
         void        SetTimeIncrement(const double) override {}
@@ -105,7 +103,7 @@ class MockNode
         void        Work() override;
 };
 
-MockNode::MockNode(VisorI& v, TracerI& t, GPUSceneI& s,
+MockNode::MockNode(VisorI& v, GPUTracerI& t, GPUSceneI& s,
                    double duration)
     : visor(v)
     , tracer(t)
@@ -141,18 +139,19 @@ void MockNode::Work()
     while(visor.IsOpen())
     {
         // Run tracer
-        tracer.GenerateInitialRays(scene, 0, SAMPLE_COUNT);
+        tracer.GenerateWork(0);
         
-        uint32_t i = 0;
-        while(tracer.Continue() && i < MAX_BOUNCES)
+        // Render
+        uint16_t i;
+        while(tracer.Render() && (i < MAX_BOUNCES))
         {
-            tracer.Render();
             i++;
         }
-        tracer.FinishSamples();
+        // Finalize (send image to visor)
+        tracer.Finalize();
         //printf("\n----------------------------------\n");
 
-        // Before try to show do render loop
+        // Render scene window
         visor.Render();
 
         // Present Back Buffer
@@ -202,10 +201,10 @@ class SimpleTracerSetup
         {
             0   // Seed
         };
-        static constexpr TracerOptions      TRACER_OPTIONS =
-        {
-            false   // Verbose
-        };
+        //static constexpr TracerOptions      TRACER_OPTIONS =
+        //{
+        //    false   // Verbose
+        //};
 
         // Surface Loader Generators (Classes of primitive file loaders)
         SurfaceLoaderGenerator              surfaceLoaders;
@@ -213,8 +212,8 @@ class SimpleTracerSetup
         TracerLogicGenerator                generator;
 
         // Scene Tracer and Visor
+        GPUTracerPtr                        tracer;
         std::unique_ptr<VisorI>             visorView;
-        std::unique_ptr<TracerBase>         tracerBase;
         std::unique_ptr<GPUSceneJson>       gpuScene;
         std::unique_ptr<CudaSystem>         cudaSystem;
 
@@ -224,12 +223,14 @@ class SimpleTracerSetup
         // Self Node
         std::unique_ptr<MockNode>           node;
 
+        std::string                         tracerType;
         const std::u8string                 sceneName;
         const double                        sceneTime;
 
     public:
         // Constructors & Destructor
-                            SimpleTracerSetup(std::u8string sceneName,
+                            SimpleTracerSetup(std::string tracerType,
+                                              std::u8string sceneName,
                                               double sceneTime);
                             SimpleTracerSetup() = default;
 
@@ -237,14 +238,17 @@ class SimpleTracerSetup
         void                Body();
 };
 
-SimpleTracerSetup::SimpleTracerSetup(std::u8string sceneName, double sceneTime)
+SimpleTracerSetup::SimpleTracerSetup(std::string tracerType, 
+                                     std::u8string sceneName, 
+                                     double sceneTime)
     : sceneName(sceneName)
     , sceneTime(sceneTime)
+    , tracerType(tracerType)
     , visorView(nullptr)
-    , tracerBase(nullptr)
     , gpuScene(nullptr)
     , visorInput(nullptr)
     , node(nullptr)
+    , tracer(nullptr, nullptr)
 {}
 
 bool SimpleTracerSetup::Init()
@@ -266,7 +270,7 @@ bool SimpleTracerSetup::Init()
         false,
         false,
 
-        TRACER_OPTIONS
+        TRACER_PARAMETERS
     };   
     // Load Materials from Test-Material Shared Library
     DLLError dllE = generator.IncludeMaterialsFromDLL(TRACER_DLL, ".*",
@@ -295,12 +299,11 @@ bool SimpleTracerSetup::Init()
     SingleGPUScenePartitioner partitioner(*cudaSystem);
 
     // Load Scene & get material/primitive mappings
-    WorkMappings workMap;
     gpuScene = std::make_unique<GPUSceneJson>(sceneName,
                                               partitioner,
                                               generator,
                                               surfaceLoaders);
-    SceneError scnE = gpuScene->LoadScene(workMap, sceneTime);
+    SceneError scnE = gpuScene->LoadScene(sceneTime);
     ERROR_CHECK(SceneError, scnE);
 
     MovementScemeList MovementSchemeList = {};    
@@ -311,7 +314,8 @@ bool SimpleTracerSetup::Init()
     visorInput = std::make_unique<VisorWindowInput>(std::move(KeyBinds),
                                                     std::move(MouseBinds),
                                                     std::move(MovementSchemeList),
-                                                    gpuScene->CamerasCPU()[0]);
+                                                    CameraPerspective{}
+                                                    /*gpuScene->CamerasCPU()[0]*/);
                                                     
     // Window Params
     VisorOptions visorOpts;
@@ -336,28 +340,28 @@ bool SimpleTracerSetup::Init()
     visorView->SetWindowSize(newImgSize);
 
     // Generate Tracer Object
-    tracerBase = std::make_unique<TracerBase>(*cudaSystem);
+    scnE = generator.GenerateTracer(tracer,
+                                    TRACER_PARAMETERS,
+                                    *gpuScene,
+                                    tracerType);
+    ERROR_CHECK(SceneError, scnE);
+    tracer->SetImagePixelFormat(IMAGE_PIXEL_FORMAT);
+    tracer->ResizeImage(MockNode::IMAGE_RESOLUTION);
+    tracer->ReportionImage();
+    tracer->ResetImage();
 
-
-
-    tracerBase->AttachLogic(*generator.GetTracerLogic());
-    tracerBase->SetImagePixelFormat(IMAGE_PIXEL_FORMAT);
-    tracerBase->ResizeImage(MockNode::IMAGE_RESOLUTION);
-    tracerBase->ReportionImage();
-    tracerBase->ResetImage();
-    tracerBase->SetOptions(TRACER_OPTIONS);
     // Tracer Init
-    TracerError trcE = tracerBase->Initialize();
+    TracerError trcE = tracer->Initialize();
     ERROR_CHECK(TracerError, trcE);
 
     // Get a Self-Node
     // Generate your Node (in this case visor and renderer is on same node
-    node = std::make_unique<MockNode>(*visorView, *tracerBase, *gpuScene,
+    node = std::make_unique<MockNode>(*visorView, *tracer, *gpuScene,
                                       WINDOW_DURATION);
     NodeError nodeE = node->Initialize();
     ERROR_CHECK(NodeError, nodeE);
     visorInput->AttachVisorCallback(*node);
-    tracerBase->AttachTracerCallbacks(*node);
+    tracer->AttachTracerCallbacks(*node);
 
     return true;
 }

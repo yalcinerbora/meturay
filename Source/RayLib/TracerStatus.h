@@ -10,7 +10,7 @@
 
 struct TracerStatus
 {
-    std::u8string               currentScene;           // Current scene that is being render
+    std::u8string               currentScene;           // Current scene that is being rendered
     unsigned int                cameraCount;            // Total camera count on that scene
 
     unsigned int                latestSceneCamId;       // Latest camera that has been used
@@ -25,6 +25,5 @@ struct TracerStatus
     bool                        pausedCont;             // Pause-Cont.
     bool                        startedStop;            // Start-Stop
 
-    TracerOptions               currentTOpts;           // Current Tracer Options
     TracerParameters            tracerParameters;
 };

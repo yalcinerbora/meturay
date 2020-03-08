@@ -30,7 +30,7 @@ class CudaSystem;
 class TracerLogicGeneratorI;
 struct TracerError;
 
-class GPUTracerP : public GPUTracerI
+class GPUTracer : public GPUTracerI
 {
     private:
 
@@ -50,8 +50,7 @@ class GPUTracerP : public GPUTracerI
         GPUBaseAcceleratorI&                baseAccelerator;
         AcceleratorBatchMap&                accelBatches;
         //
-        const TracerParameters              params;
-        TracerCommonOpts                    options;
+        TracerParameters                    params;
         //
         uint32_t                            currentRayCount;
         // Callbacks
@@ -59,8 +58,6 @@ class GPUTracerP : public GPUTracerI
         bool                                crashed;
 
         // Interface
-        // Initialize and allocate for rays
-        virtual TracerError                 Initialize() override;
         virtual void                        ResetHitMemory(uint32_t rayCount,
                                                            HitKey baseBoundMatKey);
 
@@ -75,7 +72,7 @@ class GPUTracerP : public GPUTracerI
 
     public:
         // Constructors & Destructor
-                                            GPUTracerP(CudaSystem&,
+                                            GPUTracer(CudaSystem&,
                                                        // Accelerators that are required
                                                        // for hit loop
                                                        GPUBaseAcceleratorI&,
@@ -87,11 +84,11 @@ class GPUTracerP : public GPUTracerI
                                                        const uint32_t maxHitSize,
                                                        // Initialization Param of tracer
                                                        const TracerParameters&);
-                                            GPUTracerP(const GPUTracerP&) = delete;
-                                            GPUTracerP(GPUTracerP&&) = delete;
-        GPUTracerP&                         operator=(const GPUTracerP&) = delete;
-        GPUTracerP&                         operator=(GPUTracerP&&) = delete;
-                                            ~GPUTracerP() = default;
+                                            GPUTracer(const GPUTracer&) = delete;
+                                            GPUTracer(GPUTracer&&) = delete;
+        GPUTracer&                          operator=(const GPUTracer&) = delete;
+        GPUTracer&                          operator=(GPUTracer&&) = delete;
+                                            ~GPUTracer() = default;
 
         // =====================//
         // RESPONSE FROM TRACER //
@@ -102,9 +99,9 @@ class GPUTracerP : public GPUTracerI
         // ===================//
         // COMMANDS TO TRACER //
         // ===================//
-        virtual TracerError     Initialize() override;
-        virtual void            Finalize() override;
-        void                    SetCommonOptions(const TracerCommonOpts&) override;        
+        void                    SetParameters(const TracerParameters&) override;
+        TracerError             Initialize() override;
+        void                    Finalize() override;
 
          // Image Related
         void                    SetImagePixelFormat(PixelFormat) override;
@@ -116,7 +113,7 @@ class GPUTracerP : public GPUTracerI
 
 };
 
-inline void GPUTracerP::AttachTracerCallbacks(TracerCallbacksI& tc)
+inline void GPUTracer::AttachTracerCallbacks(TracerCallbacksI& tc)
 {
     callbacks = &tc;
 }

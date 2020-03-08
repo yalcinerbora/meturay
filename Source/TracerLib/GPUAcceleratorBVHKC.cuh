@@ -4,7 +4,7 @@
 #include "RayLib/SceneStructs.h"
 #include "RayLib/Types.h"
 
-#include "AcceleratorDeviceFunctions.h"
+#include "AcceleratorFunctions.h"
 
 enum class SplitAxis { X, Y, Z, END };
 

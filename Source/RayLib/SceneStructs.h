@@ -11,6 +11,21 @@
 #include "Types.h"
 #include "HitStructs.h"
 
+enum class LightType
+{
+    POINT,
+    DIRECTIONAL,
+    SPOT,
+    RECTANGULAR,
+    TRIANGULAR,
+    DISK,
+    SPHERICAL,
+    PRIMITIVE,
+    //
+    END
+
+};
+
 using NodeId = uint32_t;        // Node Id is generic name of the id logic
 using MaterialId = uint32_t;    // Material Id represent material of some kind 
 using SurfaceDataId = uint32_t; // Surface Id represent up to "MaxPrimitivePerSurface"
@@ -47,8 +62,12 @@ using MaterialKeyListing = std::map<TypeIdPair, HitKey>;
 
 struct LightStruct
 {
-    std::string     typeName;
-    uint32_t        matId;
+    LightType   type;
+    HitKey      matKey;    
+    Vector3     flux;
+    Vector3     position0;
+    Vector3     position1;
+    Vector3     position2;
 };
 
 using TransformStruct = Matrix4x4;

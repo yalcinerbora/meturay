@@ -189,8 +189,8 @@ class GPUPrimitiveTriangle final
                                                            const std::string& scenePath) override;
         // Provides data to Event Estimator
         bool                                    HasPrimitive(uint32_t surfaceDataId) const override;
-        SceneError                              GenerateEstimatorInfo(std::vector<EstimatorInfo>&, 
-                                                                      const Vector3& power,
+        SceneError                              GenerateLights(std::vector<LightStruct>&,
+                                                                      const Vector3& flux,
                                                                       HitKey key,
                                                                       uint32_t surfaceDataId) const override;
         // Access primitive range from Id

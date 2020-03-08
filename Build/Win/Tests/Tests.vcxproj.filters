@@ -38,6 +38,9 @@
     <ClCompile Include="..\..\..\Source\Tests\T_SelfNode.cpp">
       <Filter>TracerMock</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\Tests\T_PathTracers.cpp">
+      <Filter>TracerMock</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="SceneIO">

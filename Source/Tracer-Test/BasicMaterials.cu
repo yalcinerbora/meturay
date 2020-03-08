@@ -1,13 +1,7 @@
 #include "BasicMaterials.cuh"
-#include "MaterialNodeReaders.h"
 
-BasicMat::BasicMat(const CudaGPU& gpu,
-                   const GPUEventEstimatorI& e)
-    : GPUMaterialGroup(gpu, e)
-{}
-
-SceneError BasicMat::InitializeGroup(const NodeListing& materialNodes, double time,
-                                     const std::string& scenePath)
+SceneError ConstantMat::InitializeGroup(const NodeListing& materialNodes, double time,
+                                        const std::string& scenePath)
 {
     constexpr const char* ALBEDO = "albedo";
 
@@ -37,95 +31,45 @@ SceneError BasicMat::InitializeGroup(const NodeListing& materialNodes, double ti
     return SceneError::OK;
 }
 
-SceneError BasicMat::ChangeTime(const NodeListing& materialNodes, double time,
-                                const std::string& scenePath)
+SceneError ConstantMat::ChangeTime(const NodeListing& materialNodes, double time,
+                                   const std::string& scenePath)
 {
     // TODO: Implement
     return SceneError::NO_LOGIC_FOR_MATERIAL;
 }
 
-int BasicMat::InnerId(uint32_t materialId) const
+int ConstantMat::InnerId(uint32_t materialId) const
 {
     return innerIds.at(materialId);
 }
 
-BarycentricMat::BarycentricMat(const CudaGPU& gpu,
-                               const GPUEventEstimatorI& e)
-    : GPUMaterialGroup(gpu, e)
-{}
-
-SceneError BarycentricMat::InitializeGroup(const NodeListing& materialNodes, double time,
-                                           const std::string& scenePath)
-{
-    // Nothing to initialize
-    return SceneError::OK;
-}
-
-SceneError BarycentricMat::ChangeTime(const NodeListing& materialNodes, double time,
-                                      const std::string& scenePath)
-{
-    // Nothing to change
-    return SceneError::OK;
-}
-
-int BarycentricMat::InnerId(uint32_t materialId) const
-{
-    // Inner id is irrelevant since there is not data for this material
-    return 0;
-}
-
-SphericalMat::SphericalMat(const CudaGPU& gpu,
-                           const GPUEventEstimatorI& e)
-    : GPUMaterialGroup(gpu, e)
-{}
-
-SceneError SphericalMat::InitializeGroup(const NodeListing& materialNodes, double time,
-                                         const std::string& scenePath)
-{
-    // Nothing to initialize
-    return SceneError::OK;
-}
-
-SceneError SphericalMat::ChangeTime(const NodeListing& materialNodes, double time,
-                                    const std::string& scenePath)
-{
-    // Nothing to change
-    return SceneError::OK;
-}
-
-int SphericalMat::InnerId(uint32_t materialId) const
-{
-    // Inner id is irrelevant since there is not data for this material
-    return 0;
-}
-
-// Material Batches
-template class GPUMaterialBatch<TracerBasic,
-                                GPUEventEstimatorEmpty,
-                                BasicMat,
-                                GPUPrimitiveEmpty,
-                                EmptySurfaceFromEmpty>;
-
-template class GPUMaterialBatch<TracerBasic,
-                                GPUEventEstimatorEmpty,
-                                BasicMat,
-                                GPUPrimitiveTriangle,
-                                EmptySurfaceFromTri>;
-
-template class GPUMaterialBatch<TracerBasic,
-                                GPUEventEstimatorEmpty,
-                                BasicMat,
-                                GPUPrimitiveSphere,
-                                EmptySurfaceFromSphr>;
-
-template class GPUMaterialBatch<TracerBasic,
-                                GPUEventEstimatorEmpty,
-                                BarycentricMat,
-                                GPUPrimitiveTriangle,
-                                BarySurfaceFromTri>;
-
-template class GPUMaterialBatch<TracerBasic,
-                                GPUEventEstimatorEmpty,
-                                SphericalMat,
-                                GPUPrimitiveSphere,
-                                SphrSurfaceFromSphr>;
+//// Material Batches
+//template class GPUMaterialBatch<TracerBasic,
+//                                GPUEventEstimatorEmpty,
+//                                BasicMat,
+//                                GPUPrimitiveEmpty,
+//                                EmptySurfaceFromEmpty>;
+//
+//template class GPUMaterialBatch<TracerBasic,
+//                                GPUEventEstimatorEmpty,
+//                                BasicMat,
+//                                GPUPrimitiveTriangle,
+//                                EmptySurfaceFromTri>;
+//
+//template class GPUMaterialBatch<TracerBasic,
+//                                GPUEventEstimatorEmpty,
+//                                BasicMat,
+//                                GPUPrimitiveSphere,
+//                                EmptySurfaceFromSphr>;
+//
+//template class GPUMaterialBatch<TracerBasic,
+//                                GPUEventEstimatorEmpty,
+//                                BarycentricMat,
+//                                GPUPrimitiveTriangle,
+//                                BarySurfaceFromTri>;
+//
+//template class GPUMaterialBatch<TracerBasic,
+//                                GPUEventEstimatorEmpty,
+//                                SphericalMat,
+//                                GPUPrimitiveSphere,
+//                                SphrSurfaceFromSphr>;

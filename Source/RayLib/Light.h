@@ -21,22 +21,10 @@ enum class LightType
 
 };
 
-static constexpr const char* LightTypeNames[static_cast<int>(LightType::END)] =
-{
-    "point",
-    "directional",
-    "spot",
-    "rectangular",
-    "triangular",
-    "disk",
-    "spherical",
-    "primitive"
-};
-
 struct LightInfo
 {
     LightType   type;
-    HitKey      matKey;    
+    HitKey      matKey;
     Vector4     position0R;
     Vector4     position1G;
     Vector4     position2B;
@@ -83,7 +71,7 @@ inline LightInfo LightInfo::GenOnlyPower(const Vector3& flux)
     return r;
 }
 
-inline EstimatorInfo EstimatorInfo::GenAsPoint(const HitKey key, 
+inline EstimatorInfo EstimatorInfo::GenAsPoint(const HitKey key,
                                                const Vector3& flux,
                                                const Vector3& position)
 {
@@ -96,7 +84,7 @@ inline EstimatorInfo EstimatorInfo::GenAsPoint(const HitKey key,
     return r;
 }
 
-inline EstimatorInfo EstimatorInfo::GenAsDirectional(const HitKey key, 
+inline EstimatorInfo EstimatorInfo::GenAsDirectional(const HitKey key,
                                                      const Vector3& flux,
                                                      const Vector3& direction)
 {
@@ -109,7 +97,7 @@ inline EstimatorInfo EstimatorInfo::GenAsDirectional(const HitKey key,
     return r;
 }
 
-inline EstimatorInfo EstimatorInfo::GenAsSpot(const HitKey key, 
+inline EstimatorInfo EstimatorInfo::GenAsSpot(const HitKey key,
                                               const Vector3& flux,
                                               const Vector3& position,
                                               const Vector3& direction,
@@ -124,12 +112,12 @@ inline EstimatorInfo EstimatorInfo::GenAsSpot(const HitKey key,
     return r;
 }
 
-inline EstimatorInfo EstimatorInfo::GenAsRectangular(const HitKey key, 
+inline EstimatorInfo EstimatorInfo::GenAsRectangular(const HitKey key,
                                                      const Vector3& flux,
                                                      const Vector3& topLeft,
                                                      const Vector3& v0,
                                                      const Vector3& v1)
-{    
+{
     EstimatorInfo r;
     r.matKey = key;
     r.type = LightType::RECTANGULAR;
@@ -139,7 +127,7 @@ inline EstimatorInfo EstimatorInfo::GenAsRectangular(const HitKey key,
     return r;
 }
 
-inline EstimatorInfo EstimatorInfo::GenAsTriangular(const HitKey key, 
+inline EstimatorInfo EstimatorInfo::GenAsTriangular(const HitKey key,
                                                     const Vector3& flux,
                                                     const Vector3& position0,
                                                     const Vector3& position1,
@@ -154,7 +142,7 @@ inline EstimatorInfo EstimatorInfo::GenAsTriangular(const HitKey key,
     return r;
 }
 
-inline EstimatorInfo EstimatorInfo::GenAsDisk(const HitKey key, 
+inline EstimatorInfo EstimatorInfo::GenAsDisk(const HitKey key,
                                               const Vector3& flux,
                                               const Vector3& center,
                                               const Vector3& direction,
@@ -169,7 +157,7 @@ inline EstimatorInfo EstimatorInfo::GenAsDisk(const HitKey key,
     return r;
 }
 
-inline EstimatorInfo EstimatorInfo::GenAsSpherical(const HitKey key, 
+inline EstimatorInfo EstimatorInfo::GenAsSpherical(const HitKey key,
                                                    const Vector3& flux,
                                                    const Vector3& center,
                                                    float radius)
@@ -200,14 +188,14 @@ inline SceneError LightTypeStringToEnum(LightType& type,
     {
         if(str == std::string(LightTypeNames[i]))
         {
-           type = static_cast<LightType>(i);
-           return SceneError::OK;
+            type = static_cast<LightType>(i);
+            return SceneError::OK;
         }
     }
     return SceneError::UNKNOWN_LIGHT_TYPE;
 }
 
-inline SceneError FetchLightInfoFromNode(std::vector<EstimatorInfo>& result, 
+inline SceneError FetchLightInfoFromNode(std::vector<EstimatorInfo>& result,
                                          const SceneNodeI& node,
                                          const MaterialKeyListing& materialKeys,
                                          LightType type, double time)
@@ -260,7 +248,7 @@ inline SceneError FetchLightInfoFromNode(std::vector<EstimatorInfo>& result,
                 const Vector3& flux = fluxList[i];
                 const auto matLookup = std::make_pair(EMPTY_PRIMITIVE_NAME, matIds[i]);
                 const HitKey key = materialKeys.at(matLookup);
-                result.push_back(EstimatorInfo::GenAsSpot(key, flux, pos, dir, 
+                result.push_back(EstimatorInfo::GenAsSpot(key, flux, pos, dir,
                                                           angle[0], angle[1]));
             }
             break;
@@ -336,3 +324,4 @@ inline SceneError FetchLightInfoFromNode(std::vector<EstimatorInfo>& result,
     }
     return SceneError::OK;
 }
+

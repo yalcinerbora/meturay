@@ -21,7 +21,6 @@ class CommandCallbacksI
 
         virtual void        ChangeCamera(const CameraPerspective) = 0;
         virtual void        ChangeCamera(const unsigned int) = 0;
-        virtual void        ChangeOptions(const TracerOptions) = 0;
 
         // Control Flow of the Simulation
         virtual void        StartStopTrace(const bool) = 0;

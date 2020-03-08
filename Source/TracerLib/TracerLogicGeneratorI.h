@@ -11,19 +11,8 @@ struct SharedLibArgs;
 class SharedLib;
 class CudaGPU;
 
-// Execution Related Abstraction
-class GPUBaseAcceleratorI;
-class GPUAcceleratorBatchI;
-class GPUMaterialBatchI;
-// Data Related Abstraction
-class GPUPrimitiveGroupI;
-class GPUAcceleratorGroupI;
-class GPUMaterialGroupI;
-// Base Logic
-class TracerBaseLogicI;
 struct TracerParameters;
-// Event Estimator
-class GPUEventEstimatorI;
+class GPUSceneI;
 
 class TracerLogicGeneratorI
 {
@@ -43,49 +32,18 @@ class TracerLogicGeneratorI
                                                          const GPUPrimitiveGroupI&,
                                                          const TransformStruct* dTransforms,
                                                          const std::string& accelType) = 0;
-        //virtual SceneError      GenerateAcceleratorBatch(GPUAcceleratorBatchI*&,
-        //                                                 const GPUAcceleratorGroupI&,
-        //                                                 const GPUPrimitiveGroupI&,
-        //                                                 uint32_t keyBatchId,
-        //                                                 const std::string& batchType) = 0;
         // Material
         virtual SceneError      GenerateMaterialGroup(GPUMatGPtr&,
                                                       const CudaGPU&,
                                                       const std::string& materialType) = 0;
-        //virtual SceneError      GenerateMaterialBatch(GPUMaterialBatchI*&,
-        //                                              const GPUMaterialGroupI&,
-        //                                              const GPUPrimitiveGroupI&,
-        //                                              uint32_t keyBatchId,
-        //                                              const std::string& batchType) = 0;
         // Base Accelerator should be fetched after all the stuff is generated
         virtual SceneError      GenerateBaseAccelerator(GPUBaseAccelPtr&,
                                                         const std::string& accelType) = 0;
-        //// EventEstimator
-        //virtual SceneError      GenerateEventEstimaor(GPUEventEstimatorI*&, 
-        //                                              const std::string& estType) = 0;
-        //// Tracer Logic
-        //virtual SceneError      GenerateTracerLogic(TracerBaseLogicI*&,
-        //                                            // Args
-        //                                            const TracerParameters& opts,
-        //                                            const Vector2i maxMats,
-        //                                            const Vector2i maxAccels,
-        //                                            const HitKey baseBoundMatKey,
-        //                                            // Type
-        //                                            const std::string& tracerType) = 0;
-
-        //// Get all generated stuff on a vector
-        //virtual PrimitiveGroupList          GetPrimitiveGroups() const = 0;
-        //virtual AcceleratorGroupList        GetAcceleratorGroups() const = 0;
-        //virtual AcceleratorBatchMappings    GetAcceleratorBatches() const = 0;
-        //virtual MaterialGroupList           GetMaterialGroups() const = 0;
-        //virtual MaterialBatchMappings       GetMaterialBatches() const = 0;
-
-        //virtual GPUBaseAcceleratorI*        GetBaseAccelerator() const = 0;
-        //virtual GPUEventEstimatorI*         GetEventEstimator() const = 0;
-        //virtual TracerBaseLogicI*           GetTracerLogic() const = 0;
-
-        // Resetting all generated Groups and Batches
-        virtual void                        ClearAll() = 0;
+        // Tracer Logic
+        virtual SceneError      GenerateTracer(GPUTracerPtr&,
+                                               const TracerParameters&,
+                                               const GPUSceneI&,
+                                               const std::string& tracerType) = 0;
 
         // Inclusion Functionality
         // Additionally includes the materials from these libraries
@@ -111,7 +69,8 @@ class TracerLogicGeneratorI
         //// Exclusion functionality
         //// Unload A Library
         //virtual DLLError    UnloadLibrary(std::string& libName) = 0;
-
+        //// Resetting all generated Groups and Batches
+        //virtual void            UnloadAll() = 0;
         //// Functionality Stripping
         //virtual DLLError    StripGenerators(std::string& regex) = 0;
 };

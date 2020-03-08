@@ -1,11 +1,11 @@
 #pragma once
 
-#include "TracerLib/GPUTracerP.h"
+#include "TracerLib/GPUTracer.h"
 #include "TracerLib/TypeTraits.h"
 
 #include "RayAuxStruct.h"
  
-class TestPathTracer final : public GPUTracerP
+class TestPathTracer final : public GPUTracer
 
 {
     public:

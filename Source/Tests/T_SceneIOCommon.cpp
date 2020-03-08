@@ -60,43 +60,44 @@ TEST(SceneIOCommon, Camera)
 
 TEST(SceneIOCommon, Lights)
 {
-    LightStruct LightPoint = {};
-    LightPoint.typeName = "point";
-    LightPoint.matId = 0;
+    EXPECT_TRUE(false);
+    //LightStruct LightPoint = {};
+    //LightPoint.typeName = "point";
+    //LightPoint.matId = 0;
 
-    LightStruct LightDirectional = {};
-    LightDirectional.typeName = "directional";
-    LightDirectional.matId = 1;
-    
-    LightStruct LightSpot = {};
-    LightSpot.typeName = "spot";
-    LightSpot.matId = 2;
-    
-    LightStruct LightRectangular = {};
-    LightRectangular.typeName = "rectangular";
-    LightRectangular.matId = 3;
+    //LightStruct LightDirectional = {};
+    //LightDirectional.typeName = "directional";
+    //LightDirectional.matId = 1;
+    //
+    //LightStruct LightSpot = {};
+    //LightSpot.typeName = "spot";
+    //LightSpot.matId = 2;
+    //
+    //LightStruct LightRectangular = {};
+    //LightRectangular.typeName = "rectangular";
+    //LightRectangular.matId = 3;
 
-    // Read
-    LightStruct light;
-    nlohmann::json jsn = ReadTestFile()[NodeNames::LIGHT_BASE];
-    // First one is external, it should throw file not found
-    EXPECT_THROW(SceneIO::LoadLight(jsn[0]), SceneException);
-    // Point
-    light = SceneIO::LoadLight(jsn[1]);
-    EXPECT_STREQ(LightPoint.typeName.c_str(), light.typeName.c_str());
-    EXPECT_EQ(LightPoint.matId, light.matId);
-    // Directional
-    light = SceneIO::LoadLight(jsn[2]);
-    EXPECT_STREQ(LightDirectional.typeName.c_str(), light.typeName.c_str());
-    EXPECT_EQ(LightDirectional.matId, light.matId);
-    // Spot
-    light = SceneIO::LoadLight(jsn[3]);
-    EXPECT_STREQ(LightSpot.typeName.c_str(), light.typeName.c_str());
-    EXPECT_EQ(LightSpot.matId, light.matId);
-    // Rectangular
-    light = SceneIO::LoadLight(jsn[4]);
-    EXPECT_STREQ(LightRectangular.typeName.c_str(), light.typeName.c_str());
-    EXPECT_EQ(LightRectangular.matId, light.matId);
+    //// Read
+    //LightStruct light;
+    //nlohmann::json jsn = ReadTestFile()[NodeNames::LIGHT_BASE];
+    //// First one is external, it should throw file not found
+    //EXPECT_THROW(SceneIO::LoadLight(jsn[0]), SceneException);
+    //// Point
+    //light = SceneIO::LoadLight(jsn[1]);
+    //EXPECT_STREQ(LightPoint.typeName.c_str(), light.typeName.c_str());
+    //EXPECT_EQ(LightPoint.matId, light.matId);
+    //// Directional
+    //light = SceneIO::LoadLight(jsn[2]);
+    //EXPECT_STREQ(LightDirectional.typeName.c_str(), light.typeName.c_str());
+    //EXPECT_EQ(LightDirectional.matId, light.matId);
+    //// Spot
+    //light = SceneIO::LoadLight(jsn[3]);
+    //EXPECT_STREQ(LightSpot.typeName.c_str(), light.typeName.c_str());
+    //EXPECT_EQ(LightSpot.matId, light.matId);
+    //// Rectangular
+    //light = SceneIO::LoadLight(jsn[4]);
+    //EXPECT_STREQ(LightRectangular.typeName.c_str(), light.typeName.c_str());
+    //EXPECT_EQ(LightRectangular.matId, light.matId);
 }
 
 TEST(SceneIOCommon, Transform)

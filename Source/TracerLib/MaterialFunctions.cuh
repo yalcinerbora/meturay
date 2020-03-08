@@ -32,7 +32,7 @@ struct UVList
 // This function provided by MaterialGroup.
 template <class Data, class Surface>
 using SampleFunc = Vector3(*)(// Sampled Output
-                              RayF & wo,
+                              RayF& wo,
                               float& pdf,
                               // Input
                               const Vector3& wi,                // Incoming Radiance

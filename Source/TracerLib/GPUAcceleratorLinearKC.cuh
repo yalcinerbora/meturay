@@ -11,7 +11,7 @@ with ustom Intersection and Hit
 #include "RayLib/HitStructs.h"
 #include "RayLib/SceneStructs.h"
 
-#include "AcceleratorDeviceFunctions.h"
+#include "AcceleratorFunctions.h"
 
 struct HKList
 {

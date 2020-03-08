@@ -6,8 +6,6 @@
 #include "RayLib/SurfaceLoaderI.h"
 #include "RayLib/Log.h"
 
-#include "EstimatorStructs.h"
-
 // Generics
 GPUPrimitiveSphere::GPUPrimitiveSphere()
     : totalPrimitiveCount(0)
@@ -257,21 +255,23 @@ bool GPUPrimitiveSphere::HasPrimitive(uint32_t surfaceDataId) const
     return true;
 }
 
-SceneError GPUPrimitiveSphere::GenerateEstimatorInfo(std::vector<EstimatorInfo>& result,
-                                                     const Vector3& power,
-                                                     HitKey key,
-                                                     uint32_t id) const
+SceneError GPUPrimitiveSphere::GenerateLights(std::vector<LightStruct>& result,
+                                              const Vector3& flux, HitKey key,
+                                              uint32_t id) const
 {
     const auto& range = batchRanges.at(id);
+    result.reserve(range[1] - range[0]);
     for(uint64_t i = range[0]; i < range[1]; i++)
     {
         Vector4 centerRad = dData.centerRadius[i];
-        Vector3 center = centerRad;
-        float radius = centerRad[3];        
-        result.push_back(EstimatorInfo::GenAsSpherical(key,
-                                                       power,
-                                                       center,
-                                                       radius));
+
+        LightStruct ls;
+        ls.matKey = key;
+        ls.flux = flux;
+        ls.type = LightType::SPHERICAL;
+        ls.position0 = centerRad;
+        ls.position1[0] = centerRad[3];
+        result.push_back(ls);
     }
     return SceneError::OK;
 }

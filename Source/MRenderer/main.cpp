@@ -5,7 +5,6 @@
 #include "RayLib/VisorWindowInput.h"
 
 // DLLs
-#include "TracerLib/TracerLoader.h"
 #include "VisorGL/VisorGLEntry.h"
 
 int main(int argc, const char* argv[])

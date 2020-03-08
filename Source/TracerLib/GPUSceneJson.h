@@ -4,11 +4,10 @@
 #include <nlohmann/json_fwd.hpp>
 
 #include "RayLib/Camera.h"
-//#include "RayLib/SceneStructs.h"
+#include "RayLib/AABB.h"
 #include "RayLib/GPUSceneI.h"
 
 #include "DeviceMemory.h"
-#include "AcceleratorDeviceFunctions.h"
 #include "CudaConstants.h"
 #include "ScenePartitionerI.h"
 
@@ -69,7 +68,11 @@ class GPUSceneJson : public GPUSceneI
         double                                  currentTime;
 
         // GPU Pointers
-        LightStruct*                            dLights;
+        size_t                                  lightCount;
+        size_t                                  cameraCount;
+        size_t                                  transformCount;
+        GPULightI*                              dLights;
+        GPUCameraI*                             dCameras;
         TransformStruct*                        dTransforms;
 
         // Inners
@@ -88,8 +91,6 @@ class GPUSceneJson : public GPUSceneI
                                                  MaterialNodeList& matGroupNodes,
                                                  WorkBatchList& matBatchListings,
                                                  AcceleratorBatchList& accelBatchListings,
-                                                 // Estimator Related
-                                                 NodeListing& lightList,
                                                  // Base Accelerator required data
                                                  std::map<uint32_t, uint32_t>& surfaceTransformIds,
                                                  // Types
@@ -114,49 +115,47 @@ class GPUSceneJson : public GPUSceneI
                                                 const std::map<uint32_t, HitKey>& accHitKeyList,
                                                 const std::map<uint32_t, uint32_t>& surfaceTransformIds,
                                                 double time = 0.0);
-        SceneError      GenerateLightInfo(std::vector<LightInfo>&,
+        SceneError      GenerateLightInfo(std::vector<LightStruct>&,
                                           const MaterialKeyListing& materialKeys, double time);
         SceneError      FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,
                                              double time = 0.0f);
 
-
-
-        SceneError      LoadCommon(const std::vector<LightInfo>&, double time);
-        SceneError      LoadLogicRelated(double);
+        SceneError      LoadCommon(const std::vector<LightStruct>&, double time);
+        SceneError      LoadLogicRelated(std::vector<LightStruct>&, double time);
 
         SceneError      ChangeCommon(double time);
         SceneError      ChangeLogicRelated(double time);
 
     public:
         // Constructors & Destructor
-                                    GPUSceneJson(const std::u8string&,
-                                                 ScenePartitionerI&,
-                                                 TracerLogicGeneratorI&,
-                                                 const SurfaceLoaderGeneratorI&);
-                                    GPUSceneJson(const GPUSceneJson&) = delete;
-                                    GPUSceneJson(GPUSceneJson&&) = default;
-        GPUSceneJson&               operator=(const GPUSceneJson&) = delete;
-                                    ~GPUSceneJson() = default;
+                                            GPUSceneJson(const std::u8string&,
+                                                         ScenePartitionerI&,
+                                                         TracerLogicGeneratorI&,
+                                                         const SurfaceLoaderGeneratorI&);
+                                            GPUSceneJson(const GPUSceneJson&) = delete;
+                                            GPUSceneJson(GPUSceneJson&&) = default;
+        GPUSceneJson&                       operator=(const GPUSceneJson&) = delete;
+                                            ~GPUSceneJson() = default;
 
         // Members
-        size_t                      UsedGPUMemory() override;
-        size_t                      UsedCPUMemory() override;
+        size_t                              UsedGPUMemory() override;
+        size_t                              UsedCPUMemory() override;
         //
-        SceneError                  LoadScene(double) override;
-        SceneError                  ChangeTime(double) override;
+        SceneError                          LoadScene(double) override;
+        SceneError                          ChangeTime(double) override;
         //
-        Vector2i                    MaxMatIds() override;
-        Vector2i                    MaxAccelIds() override;
-        HitKey                      BaseBoundaryMaterial() override;
+        Vector2i                            MaxMatIds() override;
+        Vector2i                            MaxAccelIds() override;
+        HitKey                              BaseBoundaryMaterial() override;
         // Access GPU
-        const LightInfo*            LightsGPU() const override;
-        const TransformStruct*      TransformsGPU() const  override;
-        // Access CPU
-        const CameraPerspective*    CamerasCPU() const override;
+        const GPULightI*                    LightsGPU() const override;
+        const GPUCameraI*                   CamerasGPU() const override;
+        const TransformStruct*              TransformsGPU() const  override;
+        
         // Counts
-        const size_t                LightCount() const override;
-        const size_t                TransformCount() const override;
-        const size_t                CameraCount() const override;
+        size_t                              LightCount() const override;
+        size_t                              TransformCount() const override;
+        size_t                              CameraCount() const override;
 
         // Generated Classes of Materials / Accelerators
         // Work Maps

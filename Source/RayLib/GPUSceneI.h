@@ -6,9 +6,8 @@
 #include "TracerStructs.h"
 
 struct SceneError;
-struct LightInfo;
-struct CameraPerspective;
-struct TracerParameters;
+class GPULightI;
+class GPUCameraI;
 
 using TransformStruct = Matrix4x4;
 
@@ -27,15 +26,16 @@ class GPUSceneI
         virtual Vector2i                    MaxMatIds() = 0;
         virtual Vector2i                    MaxAccelIds() = 0;
         virtual HitKey                      BaseBoundaryMaterial() = 0;
-        // Access GPU        
-        virtual const LightInfo*            LightsGPU() const = 0;
+        // Access GPU                
+        virtual const GPULightI*            LightsGPU() const = 0;
+        virtual const GPUCameraI*           CamerasGPU() const = 0;
         virtual const TransformStruct*      TransformsGPU() const = 0;
         // Access CPU
-        virtual const CameraPerspective*    CamerasCPU() const = 0;
+        
         // Counts
-        virtual const size_t                LightCount() const = 0;
-        virtual const size_t                TransformCount() const = 0;
-        virtual const size_t                CameraCount() const = 0;
+        virtual size_t                      LightCount() const = 0;
+        virtual size_t                      TransformCount() const = 0;
+        virtual size_t                      CameraCount() const = 0;
         
         // Generated Classes of Materials / Accelerators
         // Work Maps

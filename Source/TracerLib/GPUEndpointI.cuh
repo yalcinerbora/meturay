@@ -18,8 +18,8 @@ class GPUEndpointI
         HitKey                  boundaryMaterialKey;
         
     public:
-                __device__      GPUEndpointI(HitKey k);
-        virtual __device__      ~GPUEndpointI() = default;
+        __device__              GPUEndpointI(HitKey k);
+        virtual                 ~GPUEndpointI() = default;
 
         // Interface
         // Sample the endpoint from a point
@@ -54,8 +54,8 @@ class GPULightI : public GPUEndpointI
         Vector3                         flux;
 
     public: 
-                __device__              GPULightI(const Vector3& flux, HitKey k);
-        virtual __device__              ~GPULightI() = default;
+        __device__                      GPULightI(const Vector3& flux, HitKey k);
+        virtual                         ~GPULightI() = default;
         // Interface
         virtual __device__ Vector3      Flux(const Vector3& direction) const = 0;
 };
@@ -70,3 +70,5 @@ inline GPULightI::GPULightI(const Vector3& flux, HitKey k)
     : GPUEndpointI(k)
     , flux(flux)
 {}
+
+using GPUCameraI = GPUEndpointI;

@@ -44,11 +44,6 @@ void SelfNode::ChangeCamera(const unsigned int)
 
 }
 
-void SelfNode::ChangeOptions(const TracerC opts)
-{
-    tracer.SetOptions(opts);
-}
-
 void SelfNode::StartStopTrace(const bool)
 {
     // TOD:: Adjust tracer thread

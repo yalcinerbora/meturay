@@ -47,13 +47,13 @@ class GPUTracerI
         // ===================//
         // Main Calls
         virtual TracerError             Initialize()  = 0;
-        virtual void                    SetCommonOptions(const TracerCommonOpts&) = 0;
+        virtual void                    SetParameters(const TracerParameters&) = 0;
 
         // Rendering Related
-        virtual void                    GenerateWork(const GPUSceneI& scene,
-                                                     int cameraId) = 0;
-        virtual void                    GenerateWork(const GPUSceneI& scene,
-                                                     const CameraPerspective&) = 0;
+        // Generate Work for Scene Camera
+        virtual void                    GenerateWork(int cameraId) = 0;
+        // Generate Work for Arbitrary Camera
+        virtual void                    GenerateWork(const CameraPerspective&) = 0;
         virtual bool                    Render() = 0;   // Continue Working (untill no work is left)
         virtual void                    Finalize() = 0; // Finalize work (write to image)
 

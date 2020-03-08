@@ -5,6 +5,32 @@
 
 using namespace NodeNames;
 
+static constexpr const char* LightTypeNames[static_cast<int>(LightType::END)] =
+{
+    "point",
+    "directional",
+    "spot",
+    "rectangular",
+    "triangular",
+    "disk",
+    "spherical",
+    "primitive"
+};
+
+inline SceneError LightTypeStringToEnum(LightType& type,
+                                        const std::string& str)
+{
+    for(int i = 0; i < static_cast<int>(LightType::END); i++)
+    {
+        if(str == std::string(LightTypeNames[i]))
+        {
+            type = static_cast<LightType>(i);
+            return SceneError::OK;
+        }
+    }
+    return SceneError::UNKNOWN_LIGHT_TYPE;
+}
+
 TransformStruct SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
 {
     if(jsn.is_string())
@@ -65,6 +91,20 @@ CameraPerspective SceneIO::LoadCamera(const nlohmann::json& jsn, double time)
     else throw SceneException(SceneError::TYPE_MISMATCH);
 }
 
+uint32_t SceneIO::LoadLightMatId(const nlohmann::json& jsn)
+{
+    return jsn[LIGHT_MATERIAL];
+}
+
+LightType SceneIO::LoadLightType(const nlohmann::json& jsn)
+{
+    LightType t;
+    std::string type = jsn[TYPE];
+    SceneError e = LightTypeStringToEnum(t, type);
+    if(e != SceneError::OK) throw SceneException(SceneError::UNKNOWN_LIGHT_TYPE);
+    return t;
+}
+
 LightStruct SceneIO::LoadLight(const nlohmann::json& jsn, double time)
 {
     if(jsn.is_string())
@@ -73,10 +113,72 @@ LightStruct SceneIO::LoadLight(const nlohmann::json& jsn, double time)
     }
     else if(jsn.is_object())
     {
+        LightStruct light = LightStruct{};
+        light.position0 = Zero3;
+        light.position1 = Zero3;
+        light.position2 = Zero3;
+
         std::string type = jsn[TYPE];
-        uint32_t matId = jsn[LIGHT_MATERIAL];
-     
-        return LightStruct{type, matId};   
+        SceneError e = LightTypeStringToEnum(light.type, type);
+        if(e != SceneError::OK) throw SceneException(SceneError::UNKNOWN_LIGHT_TYPE);
+
+        light.flux = LoadVector<3, float>(jsn[LIGHT_POWER], time);
+        switch(light.type)
+        {
+            // Fetch from Node if analytic light
+            case LightType::POINT:
+            {
+                light.position0 = LoadVector<3, float>(jsn[LIGHT_POSITION], time);
+                break;
+            }
+            case LightType::DIRECTIONAL:
+            {
+                light.position0 = LoadVector<3, float>(jsn[LIGHT_DIRECTION], time);
+                break;
+            }
+            case LightType::SPOT:
+            {
+                light.position0 = LoadVector<3, float>(jsn[LIGHT_POSITION], time);
+                light.position1 = LoadVector<3, float>(jsn[LIGHT_DIRECTION], time);
+                Vector2 angles = LoadVector<2, float>(jsn[LIGHT_CONE_APERTURE], time);
+                angles *= MathConstants::DegToRadCoef;
+                angles[0] = std::cos(angles[0]);
+                angles[1] = std::cos(angles[1]);
+                light.position2 = Vector3(angles, 0.0f);
+                break;
+            }
+            case LightType::RECTANGULAR:
+            {
+                light.position0 = LoadVector<3, float>(jsn[LIGHT_POSITION], time);
+                light.position1 = LoadVector<3, float>(jsn[LIGHT_RECT_V0], time);
+                light.position2 = LoadVector<3, float>(jsn[LIGHT_RECT_V1], time);
+                break;
+            }
+            case LightType::TRIANGULAR:
+            {
+                light.position0 = LoadVector<3, float>(jsn[LIGHT_POSITION][0], time);
+                light.position1 = LoadVector<3, float>(jsn[LIGHT_POSITION][1], time);
+                light.position2 = LoadVector<3, float>(jsn[LIGHT_POSITION][2], time);
+                break;
+            }
+            case LightType::DISK:
+            {
+                light.position0 = LoadVector<3, float>(jsn[LIGHT_DIRECTION], time);
+                light.position1 = LoadVector<3, float>(jsn[LIGHT_POSITION], time);
+                light.position2[0] = LoadNumber<float>(jsn[LIGHT_DISK_RADIUS], time);
+                break;
+            }
+            case LightType::SPHERICAL:
+            {
+                light.position0 = LoadVector<3, float>(jsn[LIGHT_SPHR_CENTER], time);
+                light.position1[0] = LoadNumber<float>(jsn[LIGHT_SPHR_RADIUS], time);
+                break;
+            }
+            // Skip primitive ones
+            case LightType::PRIMITIVE: { break; }
+            default: throw SceneException(SceneError::UNKNOWN_LIGHT_TYPE);
+        }
+        return light;
     }
     else throw SceneException(SceneError::TYPE_MISMATCH);
 }
