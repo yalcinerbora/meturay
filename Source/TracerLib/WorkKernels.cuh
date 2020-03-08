@@ -34,53 +34,32 @@ using SurfaceFunc = MGroup::Surface(*)(const PGroup::PrimitiveData&,
 //
 // Work function may evaluate the MGroup or it may do some global work.
 // It can also do both.
-template <class GlobalState, class RayAuxiliary, class MGroup>
+template <class GlobalState, class LocalState,
+          class RayAuxiliary, class MGroup>
 using WorkFunc = void(*)(// Output
                          HitKey* gOutBoundKeys,
                          RayGMem* gOutRays,
                          RayAuxiliary* gOutRayAux,
                          const uint32_t maxOutRay,
-                         // Input as registers
+                         // Input as registers                         
                          const RayReg& ray,
+                         const RayAuxiliary & aux,
                          const MGroup::Surface& surface,
-                         const RayAuxiliary& aux,
+                         const UVList * uvs,
                          // I-O
+                         LocalState& gLocalState,
                          GlobalState& gRenderState,
                          RandomGPU& rng,
                          // Constants
-                         const MGroup::StaticData& gMatData,
+                         const MGroup::Data& gMatData,
                          const HitKey::Type& matId);
 
-// Material Preprocess function
-// This function is used to call if material evaluation requires preprocessing work
-// In particular case (It
-//using KCPreprocess = void(*)(// I-O
-
-//
-//template<class UVData, class MGroup>
-//__global__ KCRequestUVs(// Output
-//                        UVData,
-//                        // Input
-//                        const PrimitiveId* gPrimitiveIds,
-//                        const HitStructPtr gHitStructs,
-//                        //
-//                        const RayId* gRayIds,
-//                        // Constants
-//                        const uint32_t rayCount,
-//                        const PGroup::Data primData)
-//{
-//    // Fetch surface, then fire UVList
-//}
-
-
-
-
 // Meta Kernel for divding work.
-template<class GlobalState, class RayAuxiliary, 
-         class PGroup, class MGroup,
-         WorkFunc<GlobalState, RayAuxiliary, MGroup> WFunc, 
+template<class GlobalState, class LocalState,
+         class RayAuxiliary, class PGroup, class MGroup,
+         WorkFunc<GlobalState, LocalState, RayAuxiliary, MGroup> WFunc, 
          SurfaceFunc<MGroup, PGroup> SurfFunc>
- __global__ __launch_bounds__(StaticThreadPerBlock1D)
+ __global__ //__launch_bounds__(StaticThreadPerBlock1D)
 void KCWork(// Output
             HitKey* gOutBoundKeys,
             RayGMem* gOutRays,
@@ -95,6 +74,7 @@ void KCWork(// Output
             const HitKey* gMatIds,
             const RayId* gRayIds,
             // I-O 
+            LocalState gLocalState,
             GlobalState gRenderState,
             RNGGMem gRNGStates,
             // Constants
@@ -143,6 +123,7 @@ void KCWork(// Output
               surface,
               aux,
               // I-O
+              gLocalState,
               gRenderState,
               rng,
               // Constants

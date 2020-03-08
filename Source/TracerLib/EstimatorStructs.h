@@ -33,7 +33,7 @@ static constexpr const char* LightTypeNames[static_cast<int>(LightType::END)] =
     "primitive"
 };
 
-struct EstimatorInfo
+struct LightInfo
 {
     LightType   type;
     HitKey      matKey;    
@@ -41,42 +41,42 @@ struct EstimatorInfo
     Vector4     position1G;
     Vector4     position2B;
 
-    static EstimatorInfo GenOnlyPower(const Vector3& flux);
-    static EstimatorInfo GenAsPoint(const HitKey key, 
-                                    const Vector3& flux,
-                                    const Vector3& position);
-    static EstimatorInfo GenAsDirectional(const HitKey key,
-                                          const Vector3& flux,
-                                          const Vector3& direction);
-    static EstimatorInfo GenAsSpot(const HitKey key, 
-                                   const Vector3& flux,
-                                   const Vector3& position,
-                                   const Vector3& direction,
-                                   float coneMin, float coneMax);
-    static EstimatorInfo GenAsRectangular(const HitKey key, 
-                                          const Vector3& flux,
-                                          const Vector3& topLeft,
-                                          const Vector3& v0,
-                                          const Vector3& v1);
-    static EstimatorInfo GenAsTriangular(const HitKey key, 
-                                         const Vector3& flux,
-                                         const Vector3& position0,
-                                         const Vector3& position1,
-                                         const Vector3& position2);
-    static EstimatorInfo GenAsDisk(const HitKey key, 
-                                   const Vector3& flux,
-                                   const Vector3& center,
-                                   const Vector3& normal,
-                                   float radius);
-    static EstimatorInfo GenAsSpherical(const HitKey key, 
+    static LightInfo GenOnlyPower(const Vector3& flux);
+    static LightInfo GenAsPoint(const HitKey key,
+                                const Vector3& flux,
+                                const Vector3& position);
+    static LightInfo GenAsDirectional(const HitKey key,
+                                      const Vector3& flux,
+                                      const Vector3& direction);
+    static LightInfo GenAsSpot(const HitKey key,
+                               const Vector3& flux,
+                               const Vector3& position,
+                               const Vector3& direction,
+                               float coneMin, float coneMax);
+    static LightInfo GenAsRectangular(const HitKey key,
+                                      const Vector3& flux,
+                                      const Vector3& topLeft,
+                                      const Vector3& v0,
+                                      const Vector3& v1);
+    static LightInfo GenAsTriangular(const HitKey key,
+                                     const Vector3& flux,
+                                     const Vector3& position0,
+                                     const Vector3& position1,
+                                     const Vector3& position2);
+    static LightInfo GenAsDisk(const HitKey key,
+                               const Vector3& flux,
+                               const Vector3& center,
+                               const Vector3& normal,
+                               float radius);
+    static EstimatorInfo GenAsSpherical(const HitKey key,
                                         const Vector3& flux,
                                         const Vector3& center,
                                         float radius);
 };
 
-inline EstimatorInfo EstimatorInfo::GenOnlyPower(const Vector3& flux)
+inline LightInfo LightInfo::GenOnlyPower(const Vector3& flux)
 {
-    EstimatorInfo r;
+    LightInfo r;
     r.position0R[3] = flux[0];
     r.position1G[3] = flux[1];
     r.position2B[3] = flux[2];

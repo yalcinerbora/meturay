@@ -66,5 +66,8 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\VolumeTracer.cuh">
       <Filter>Tracers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\TestTracerWork.cuh">
+      <Filter>Tracers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

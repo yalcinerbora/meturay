@@ -28,6 +28,7 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\GIMaterialsKC.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialDataStructs.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\RayAuxStruct.h" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\TestTracerWork.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\VolumeTracer.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\SurfaceStructs.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TestPools.h" />

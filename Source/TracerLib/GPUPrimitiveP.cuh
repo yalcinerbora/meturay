@@ -45,7 +45,7 @@ class GPUPrimitiveGroup
         static constexpr auto LeafFunc      = LeafF;
         static constexpr auto BoxFunc       = BoxF;
         static constexpr auto AreaFunc      = AreaF;
-        static constexpr auto CenterFunc = CenterF;
+        static constexpr auto CenterFunc    = CenterF;
 
     private:
     protected:

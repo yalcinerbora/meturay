@@ -4,9 +4,6 @@
     <Filter Include="Memory">
       <UniqueIdentifier>{8b40ba77-f462-418b-a6a7-5d094eb36425}</UniqueIdentifier>
     </Filter>
-    <Filter Include="GPU Logic Interfaces">
-      <UniqueIdentifier>{53f72f87-4f4d-49be-b1cb-a23718154cc7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="GPU Template Kernels">
       <UniqueIdentifier>{aed30110-0797-47c6-95ff-b86a349e1dec}</UniqueIdentifier>
     </Filter>
@@ -51,6 +48,12 @@
     </Filter>
     <Filter Include="GPUTemplateFunctions">
       <UniqueIdentifier>{99fee3bc-8a24-4e82-aafa-bdddfed78264}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GPU Interfaces">
+      <UniqueIdentifier>{53f72f87-4f4d-49be-b1cb-a23718154cc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Light &amp; Camera">
+      <UniqueIdentifier>{e71549dc-2b27-4e37-8185-0dbb359cc277}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -104,10 +107,10 @@
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorI.h">
-      <Filter>GPU Logic Interfaces</Filter>
+      <Filter>GPU Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialI.h">
-      <Filter>GPU Logic Interfaces</Filter>
+      <Filter>GPU Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\RayStructs.h">
       <Filter>Structs</Filter>
@@ -143,7 +146,7 @@
       <Filter>Debug</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveI.h">
-      <Filter>GPU Logic Interfaces</Filter>
+      <Filter>GPU Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.h">
       <Filter>Default Primitives</Filter>
@@ -226,7 +229,7 @@
       <Filter>Partial Implementations</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEventEstimatorI.h">
-      <Filter>GPU Logic Interfaces</Filter>
+      <Filter>GPU Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultEstimatorsKC.cuh">
       <Filter>DefaultEventEstimators</Filter>
@@ -262,11 +265,8 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TexCacheKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkP.h">
-      <Filter>Partial Implementations</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkI.h">
-      <Filter>GPU Logic Interfaces</Filter>
+      <Filter>GPU Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\WorkKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
@@ -274,14 +274,23 @@
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorDeviceFunctions.h">
-      <Filter>GPUTemplateFunctions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh">
-      <Filter>GPUTemplateFunctions</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUTracerP.h">
       <Filter>Partial Implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.cuh">
+      <Filter>Light &amp; Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULight.cuh">
+      <Filter>Light &amp; Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUCamera.cuh">
+      <Filter>Light &amp; Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\EstimatiorFunctions.cuh">
+      <Filter>GPUTemplateFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorFunctions.h">
+      <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -332,6 +341,12 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracerP.cu">
       <Filter>Partial Implementations</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPULight.cu">
+      <Filter>Light &amp; Camera</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUCamera.cu">
+      <Filter>Light &amp; Camera</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

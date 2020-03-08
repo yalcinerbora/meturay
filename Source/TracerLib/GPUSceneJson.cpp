@@ -536,6 +536,65 @@ SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, AABB3>
     return e;
 }
 
+SceneError GenerateLightInfo(std::vector<LightInfo>&, 
+                             const MaterialKeyListing& materialKeys,
+                             double time)
+{ 
+    // Lights
+    const nlohmann::json* lightsJson = nullptr;
+    if(!FindNode(lightsJson, NodeNames::LIGHT_BASE))
+        return SceneError::LIGHTS_ARRAY_NOT_FOUND;
+  
+    SceneError err = SceneError::OK;
+    for(const auto& lightJson : (*lightsJson))
+    {
+        LightStruct lightStruct = SceneIO::LoadLight(lightJson, time);
+
+        LightType type = LightType::END;
+        if((err = LightTypeStringToEnum(type, lightStruct.typeName)) != SceneError::OK)
+            return err;
+
+        std::vector<EstimatorInfo> newInfo;
+        if((err = FetchLightInfoFromNode(newInfo, node, materialKeys, type, time)) != SceneError::OK)
+            return err;
+
+        if(type == LightType::PRIMITIVE)
+        {
+            const UIntList primIds = node.AccessUInt(NodeNames::LIGHT_PRIMITIVE);
+            const UIntList matIds = node.AccessUInt(NodeNames::LIGHT_MATERIAL);
+            const Vector3List powers = node.AccessVector3(NodeNames::LIGHT_POWER, time);
+            assert(primIds.size() == matIds.size());
+
+            // Fetch all
+            for(size_t i = 0; i < primIds.size(); i++)
+            {
+                uint32_t primId = primIds[i];
+                uint32_t matId = matIds[i];
+                Vector3 power = powers[i];
+
+                const auto FindPrimFunc = [primId](const GPUPrimitiveGroupI* pGroup) -> bool
+                {
+                    return pGroup->HasPrimitive(primId);
+                };
+
+                auto it = prims.end();
+                if((it = std::find_if(prims.begin(), prims.end(), FindPrimFunc)) == prims.end())
+                    return SceneError::LIGHT_PRIMITIVE_NOT_FOUND;
+                // Generate Estimators From Primitive
+
+                const auto matLookup = std::make_pair((*it)->Type(), matId);
+                HitKey key = materialKeys.at(matLookup);
+
+                if((err = (*it)->GenerateEstimatorInfo(newInfo, power, key, primId)) != SceneError::OK)
+                    return err;
+
+            }
+        }
+        lightInfo.insert(lightInfo.end(), newInfo.begin(), newInfo.end());
+    }
+    return SceneError::OK;
+}
+
 SceneError GPUSceneJson::FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,
                                               double time)
 {
@@ -557,26 +616,14 @@ SceneError GPUSceneJson::FindBoundaryMaterial(const MaterialKeyListing& matHitKe
     return e;
 }
 
-SceneError GPUSceneJson::LoadCommon(double time)
+SceneError GPUSceneJson::LoadCommon(const std::vector<LightInfo>& lightsCPU, double time)
 {
     SceneError e = SceneError::OK;
 
     // CPU Temp Data
     int i;
-    std::vector<LightStruct> lightsCPU;
     std::vector<TransformStruct> transformsCPU;
 
-    // Lights
-    const nlohmann::json* lightsJson = nullptr;
-    if(!FindNode(lightsJson, NodeNames::LIGHT_BASE))
-        return SceneError::LIGHTS_ARRAY_NOT_FOUND;
-    i = 0;
-    lightsCPU.resize(lightsJson->size());
-    for(const auto& lightJson : (*lightsJson))
-    {
-        lightsCPU[i] = SceneIO::LoadLight(lightJson, time);
-        i++;
-    }
     
     // Transforms
     const nlohmann::json* transformsJson = nullptr;
@@ -846,6 +893,21 @@ const std::map<std::string, GPUAccelGPtr>& GPUSceneJson::AcceleratorGroups() con
 }
 
 const std::map<std::string, GPUPrimGPtr>& GPUSceneJson::PrimitiveGroups() const
+{
+
+}
+
+const size_t GPUSceneJson::LightCount() const
+{
+
+}
+
+const size_t GPUSceneJson::TransformCount() const
+{
+
+}
+
+const size_t GPUSceneJson::CameraCount() const
 {
 
 }

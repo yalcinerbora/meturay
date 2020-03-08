@@ -114,10 +114,14 @@ class GPUSceneJson : public GPUSceneI
                                                 const std::map<uint32_t, HitKey>& accHitKeyList,
                                                 const std::map<uint32_t, uint32_t>& surfaceTransformIds,
                                                 double time = 0.0);
+        SceneError      GenerateLightInfo(std::vector<LightInfo>&,
+                                          const MaterialKeyListing& materialKeys, double time);
         SceneError      FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,
                                              double time = 0.0f);
 
-        SceneError      LoadCommon(double time);
+
+
+        SceneError      LoadCommon(const std::vector<LightInfo>&, double time);
         SceneError      LoadLogicRelated(double);
 
         SceneError      ChangeCommon(double time);
@@ -145,10 +149,14 @@ class GPUSceneJson : public GPUSceneI
         Vector2i                    MaxAccelIds() override;
         HitKey                      BaseBoundaryMaterial() override;
         // Access GPU
-        const LightStruct*          LightsGPU() const override;
+        const LightInfo*            LightsGPU() const override;
         const TransformStruct*      TransformsGPU() const  override;
         // Access CPU
         const CameraPerspective*    CamerasCPU() const override;
+        // Counts
+        const size_t                LightCount() const override;
+        const size_t                TransformCount() const override;
+        const size_t                CameraCount() const override;
 
         // Generated Classes of Materials / Accelerators
         // Work Maps

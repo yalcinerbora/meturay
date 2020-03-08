@@ -1,61 +1,68 @@
 #pragma once
 
-#include <array>
-
 #include "GPUMaterialI.h"
 #include "MaterialFunctions.cuh"
-#include "ImageMemory.h"
 
 struct MatDataAccessor;
 
+//
 template <class Data>
-class GPUMaterialGroupP
+class GPUMaterialGroupData
 {
     friend struct MatDataAccessor;
 
     protected:
-        Data dData = Data{};
+        Data    dData = Data{};
 };
 
-// Partial Implementations
-template <class MatD, class SurfD, 
-          ShadeFunc<MatD, SurfD> ShadeF, 
-          EvaluateFunc<MatD, SurfD> EvalFunc>
-class GPUMaterialGroup
+// Striping GPU Functionality from the Material Group
+// for kernel usage.
+// Each material group responsible for providing these functions
+
+template <class D, class S,
+          SampleFunc<D, S> SampleF,
+          EvaluateFunc<D, S> EvalF,
+          AcquireUVList<D, S> AcqF>
+class GPUMaterialGroupP
     : public GPUMaterialGroupI
-    , public GPUMaterialGroupP<MatD>
+    , public GPUMaterialGroupData<D>
 {
     public:
-        using Data              = typename MatD;
-        using Surface           = typename SurfD;
+        //
+        using Data              = typename D;
+        using Surface           = typename S;
 
-        static constexpr auto ShadeFunc     = ShadeF;
-        static constexpr auto EvalFunc      = EvalF;
+        // Static Function Inheritance
+        static constexpr SampleFunc<Data, Surface>      Sample = SampleF;
+        static constexpr EvaluateFunc<Data, Surface>    Evaluate = EvalF;
+        static constexpr AcquireUVList<Data, Surface>   AcquireUVList = AcqF;
 
     private:
-        const CudaGPU&                      gpu;
-
+        // Designated GPU
+        const CudaGPU&                  gpu;
+        
     protected:
-
     public:
         // Constructors & Destructor
-                                        GPUMaterialGroup(const CudaGPU&);
-        virtual                         ~GPUMaterialGroup() = default;
+                                        GPUMaterialGroupP(const CudaGPU&);
+        virtual                         ~GPUMaterialGroupP() = default;
 
         const CudaGPU&                  GPU() const override;
 };
 
-template <class MatD, class SurfD, 
-          ShadeFunc<MatD, SurfD> ShadeF, 
-          EvaluateFunc<MatD, SurfD> EvalFunc>
-GPUMaterialGroup<MatD, SurfD, ShadeF, EvalFunc>::GPUMaterialGroup(const CudaGPU& gpu)
+template <class D, class S, 
+          SampleFunc<D, S> SF, 
+          EvaluateFunc<D, S> EF,
+          AcquireUVList<D, S> AF>
+GPUMaterialGroupP<D, S, SF, EF, AF>::GPUMaterialGroupP(const CudaGPU& gpu)
     : gpu(gpu)
 {}
 
-template <class MatD, class SurfD, 
-          ShadeFunc<MatD, SurfD> ShadeF, 
-          EvaluateFunc<MatD, SurfD> EvalFunc>
-const CudaGPU& GPUMaterialGroup<MatD, SurfD, ShadeF, EvalFunc>::GPU() const
+template <class D, class S, 
+          SampleFunc<D, S> SF, 
+          EvaluateFunc<D, S> EF,
+          AcquireUVList<D, S> AF>
+const CudaGPU& GPUMaterialGroupP<D, S, SF, EF, AF>::GPU() const
 {
     return gpu;
 }

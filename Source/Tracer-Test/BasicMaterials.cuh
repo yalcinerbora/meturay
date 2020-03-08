@@ -7,13 +7,16 @@
 #include "BasicMaterialsKC.cuh"
 #include "TracerLib/TypeTraits.h"
 
-class ConstantMat final
-    : public GPUMaterialGroup<AlbedoMatData, EmptySurface,
-                              ConstantShade, ConstantEvaluate>
+// Unrealistic mat that directly returns an albedo regardless of wi.
+
+
+class ConstantMat final : public GPUMaterialGroupP<ConstantMat>
 {
     public:
         static const char*              TypeName() { return "Constant"; }
        
+        
+
     private:
         DeviceMemory                    memory;
         std::map<uint32_t, uint32_t>    innerIds;
