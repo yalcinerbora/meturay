@@ -50,6 +50,9 @@
       <Project>{dff6854d-aad8-489d-bb4a-03048bfcb6e2}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Source\Tracer-Test\Tracers.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{96F7395D-FA00-4E97-9FB2-98881123033A}</ProjectGuid>
     <RootNamespace>Tracer_Test</RootNamespace>

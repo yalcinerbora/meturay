@@ -13,12 +13,13 @@ class BasicTracer final : public GPUTracer
         static constexpr const char*    TypeName() { return "TestBasic"; }
 
         // Option Names
-        static constexpr const char*    SAMPLE_OPTION_NAME = "Samples";
+        static constexpr const char*    SAMPLE_NAME = "Samples";
+        static constexpr const char*    MAX_DEPTH_NAME = "MaxDepth";
 
         struct Options                 
         {
-            int sampleCount;    // Per-axis sample per pixel
-            int maximumDepth;
+            int32_t     sampleCount;    // Per-axis sample per pixel
+            uint32_t    maximumDepth;
         };
 
     private:
@@ -32,7 +33,7 @@ class BasicTracer final : public GPUTracer
 
         Options                 options;
 
-        void                    GenerateRays(GPUCameraI& dCamera);
+        void                    GenerateRays(const GPUCameraI& dCamera);
         void                    SwapAuxBuffers();
 
     protected:

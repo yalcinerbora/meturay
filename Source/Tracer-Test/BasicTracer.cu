@@ -66,21 +66,14 @@ TracerError BasicTracer::Initialize()
 TracerError BasicTracer::SetOptions(const TracerOptionsI& opts)
 {
     TracerError err = TracerError::OK;
-    if((err = opts.GetInt(options.sampleCount, SAMPLE_OPTION_NAME)) != TracerError::OK)
+    if((err = opts.GetInt(options.sampleCount, SAMPLE_NAME)) != TracerError::OK)
        return err;
+    if((err = opts.GetUInt(options.maximumDepth, MAX_DEPTH_NAME)) != TracerError::OK)
+        return err;
    return TracerError::OK;
 }
 
-void BasicTracer::AskOptions()
-{
-    //// Generate Tracer Object
-    //VariableList list;
-    //list.emplace(SAMPLE_OPTION_NAME, OptionVariable(options.sampleCount));
-
-    //if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
-}
-
-void BasicTracer::GenerateRays(GPUCameraI& dCamera)
+void BasicTracer::GenerateRays(const GPUCameraI& dCamera)
 {
     const Vector2i resolution = imgMemory.Resolution();
     const Vector2i pixelStart = imgMemory.SegmentOffset();
@@ -162,20 +155,24 @@ void BasicTracer::GenerateRays(GPUCameraI& dCamera)
     currentRayCount = totalRayCount;
 }
 
-
-
 void BasicTracer::GenerateWork(int cameraId)
 {
     // Generate Rays
+    GenerateRays(scene.CamerasGPU()[cameraId]);
 }
 
 void BasicTracer::GenerateWork(const CPUCamera&)
 {
-
+    // Load it to the Camera Sytem
+    
 }
 
 bool BasicTracer::Render()
 {
+    HitRays();
+
+    //WorkRays(..., scene.BaseBoundaryMaterial());
+
     return false;
 }
 

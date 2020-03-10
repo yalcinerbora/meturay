@@ -76,4 +76,9 @@
       <Filter>Tracers</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Source\Tracer-Test\Tracers.cpp">
+      <Filter>Tracers</Filter>
+    </ClCompile>
+  </ItemGroup>
 </Project>
