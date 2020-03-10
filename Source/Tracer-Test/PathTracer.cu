@@ -1,4 +1,4 @@
-#include "PathTracer.cuh"
+#include "PathTracer.h"
 
 #include "RayLib/TracerError.h"
 //

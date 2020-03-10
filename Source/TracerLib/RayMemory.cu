@@ -109,11 +109,7 @@ void RayMemory::ResizeRayOut(uint32_t rayCount, HitKey baseBoundMatKey)
     //sizeOfAuxiliary = Memory::AlignSize(sizeOfAuxiliary);
 
     size_t requiredSize = sizeOfRays + sizeOfWorkKeys;
-    if(memOut.Size() < requiredSize)
-    {
-        memOut = DeviceMemory();
-        memOut = std::move(DeviceMemory(requiredSize));
-    }
+    DeviceMemory::EnlargeBuffer(memOut, requiredSize);    
 
     size_t offset = 0;
     std::uint8_t* dRay = static_cast<uint8_t*>(memOut);
@@ -192,11 +188,7 @@ void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
                            sizeOfTempMemory);
 
     // Reallocate if memory is not enough
-    if(memHit.Size() < requiredSize)
-    {
-        memHit = DeviceMemory();
-        memHit = std::move(DeviceMemory(requiredSize));
-    }
+    DeviceMemory::EnlargeBuffer(memHit, requiredSize);
  
     // Populate pointers
     size_t offset = 0;

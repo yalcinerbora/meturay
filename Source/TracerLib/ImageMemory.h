@@ -18,9 +18,7 @@ class CudaSystem;
 
 class ImageMemory
 {
-    private:
-        static constexpr size_t     AlignByteCount = 16;
-
+    private:        
         DeviceMemory                memory;
         PixelFormat                 format;
         int                         pixelSize;

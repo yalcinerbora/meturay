@@ -2,7 +2,6 @@
 
 #include "TracerLib/GPUMaterialP.cuh"
 
-#include "BasicTracer.cuh"
 #include "SurfaceStructs.h"
 #include "BasicMaterialsKC.cuh"
 
@@ -11,9 +10,9 @@
 // Unrealistic mat that directly returns an albedo regardless of wi.
 // also generates invalid ray
 class ConstantMat final 
-    : public GPUMaterialGroupP<AlbedoMatData, EmptySurface,
-                               ConstantSample, ConstantEvaluate,
-                               AcquireUVEmpty<AlbedoMatData, EmptySurface>>
+    : public GPUMaterialGroup<AlbedoMatData, EmptySurface,
+                              ConstantSample, ConstantEvaluate,
+                              AcquireUVEmpty<AlbedoMatData, EmptySurface>>
 {
     public:
         static const char*              TypeName() { return "Constant"; }
@@ -25,7 +24,7 @@ class ConstantMat final
     protected:
     public:
         // Constructors & Destructor
-                                ConstantMat(const CudaGPU& gpu) : GPUMaterialGroupP(gpu) {}
+                                ConstantMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
                                 ~ConstantMat() = default;
 
         // Interface
@@ -55,7 +54,7 @@ class ConstantMat final
 };
 
 class BarycentricMat final
-    : public GPUMaterialGroupP<NullData, BarySurface,
+    : public GPUMaterialGroup<NullData, BarySurface,
                               BarycentricSample,
                               BarycentricEvaluate,
                               AcquireUVEmpty<NullData, BarySurface>
@@ -68,7 +67,7 @@ class BarycentricMat final
     protected:
     public:
         // Constructors & Destructor
-                                BarycentricMat(const CudaGPU& gpu) : GPUMaterialGroupP(gpu) {}
+                                BarycentricMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
                                 ~BarycentricMat() = default;
 
         // Interface
@@ -98,10 +97,10 @@ class BarycentricMat final
 };
 
 class SphericalMat final
-    : public GPUMaterialGroupP<NullData, SphrSurface,
-                               SphericalSample,
-                               SphericalEvaluate,
-                               AcquireUVEmpty<NullData, SphrSurface>>
+    : public GPUMaterialGroup<NullData, SphrSurface,
+                              SphericalSample,
+                              SphericalEvaluate,
+                              AcquireUVEmpty<NullData, SphrSurface>>
 {
     public:
         static const char*      TypeName() { return "Spherical"; }
@@ -110,7 +109,7 @@ class SphericalMat final
     protected:
     public:
         // Constructors & Destructor
-                                SphericalMat(const CudaGPU& gpu) : GPUMaterialGroupP(gpu) {}
+                                SphericalMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
                                 ~SphericalMat() = default;
 
         // Interface

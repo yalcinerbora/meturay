@@ -26,6 +26,7 @@ TEST(SceneIOCommon, Camera)
     static constexpr CPUCamera CamResult =
     {
         CameraType::APERTURE,
+        HitKey::InvalidKey,
         Vector3(0.0f, 5.0f, 0.0f),
         0.1f,
         Vector3(0.0f, 5.0f, 10.0f),

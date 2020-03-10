@@ -3,8 +3,8 @@
 #include "RayStructs.h"
 
 __device__ 
-PinholeCamera::PinholeCamera(const CPUCamera& cam, HitKey k)
-    : GPUEndpointI(k)
+PinholeCamera::PinholeCamera(const CPUCamera& cam)
+    : GPUEndpointI(cam.matKey)
 {
     // Find world space window sizes
     float widthHalf = tanf(cam.fov[0] * 0.5f) * cam.nearPlane;

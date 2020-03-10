@@ -23,7 +23,7 @@ template <class D, class S,
           SampleFunc<D, S> SampleF,
           EvaluateFunc<D, S> EvalF,
           AcquireUVList<D, S> AcqF>
-class GPUMaterialGroupP
+class GPUMaterialGroup
     : public GPUMaterialGroupI
     , public GPUMaterialGroupD<D>
 {
@@ -44,8 +44,8 @@ class GPUMaterialGroupP
     protected:
     public:
         // Constructors & Destructor
-                                        GPUMaterialGroupP(const CudaGPU&);
-        virtual                         ~GPUMaterialGroupP() = default;
+                                        GPUMaterialGroup(const CudaGPU&);
+        virtual                         ~GPUMaterialGroup() = default;
 
         const CudaGPU&                  GPU() const override;
 };
@@ -54,7 +54,7 @@ template <class D, class S,
           SampleFunc<D, S> SF, 
           EvaluateFunc<D, S> EF,
           AcquireUVList<D, S> AF>
-GPUMaterialGroupP<D, S, SF, EF, AF>::GPUMaterialGroupP(const CudaGPU& gpu)
+GPUMaterialGroup<D, S, SF, EF, AF>::GPUMaterialGroup(const CudaGPU& gpu)
     : gpu(gpu)
 {}
 
@@ -62,7 +62,7 @@ template <class D, class S,
           SampleFunc<D, S> SF, 
           EvaluateFunc<D, S> EF,
           AcquireUVList<D, S> AF>
-const CudaGPU& GPUMaterialGroupP<D, S, SF, EF, AF>::GPU() const
+const CudaGPU& GPUMaterialGroup<D, S, SF, EF, AF>::GPU() const
 {
     return gpu;
 }

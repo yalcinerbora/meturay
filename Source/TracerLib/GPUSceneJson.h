@@ -13,7 +13,6 @@
 
 struct SceneError;
 class SceneNodeI;
-//class ScenePartitionerI;
 class TracerLogicGeneratorI;
 class SurfaceLoaderGeneratorI;
 
@@ -37,7 +36,7 @@ class GPUSceneJson : public GPUSceneI
         };
 
     private:
-        static constexpr const size_t           AlignByteCount = 128;
+        static constexpr const size_t           AlignByteCount = 64;
 
         // Fundamental Allocators
         TracerLogicGeneratorI&                  logicGenerator;

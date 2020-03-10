@@ -6,6 +6,7 @@
 #include "RayLib/SceneNodeI.h"
 #include "RayLib/SceneNodeNames.h"
 #include "RayLib/StripComments.h"
+#include "RayLib/MemoryAlignment.h"
 
 #include "GPUAcceleratorI.h"
 #include "GPUPrimitiveI.h"
@@ -395,13 +396,13 @@ SceneError GPUSceneJson::GeneratePrimitiveGroups(const PrimitiveNodeList& primGr
         std::string primTypeName = primGroup.first;
         const auto& primNodes = primGroup.second;
         //
-        GPUPrimGPtr primGroup = GPUPrimGPtr(nullptr, nullptr);
-        if(e = logicGenerator.GeneratePrimitiveGroup(primGroup, primTypeName))            
+        GPUPrimGPtr pg = GPUPrimGPtr(nullptr, nullptr);
+        if(e = logicGenerator.GeneratePrimitiveGroup(pg, primTypeName))
             return e;
-        if(e = primGroup->InitializeGroup(primNodes, time, surfaceLoaderGenerator, parentPath))
+        if(e = pg->InitializeGroup(primNodes, time, surfaceLoaderGenerator, parentPath))
             return e;
 
-        primitives.emplace(primTypeName, std::move(primGroup));
+        primitives.emplace(primTypeName, std::move(pg));
     }
     return e;
 }
@@ -595,28 +596,39 @@ SceneError GPUSceneJson::LoadCommon(const std::vector<CPULight>& lightsCPU, doub
     SceneError e = SceneError::OK;
 
     // CPU Temp Data
-    int i;
     std::vector<TransformStruct> transformsCPU;
+    std::vector<CPUCamera> camerasCPU;
 
-    
     // Transforms
     const nlohmann::json* transformsJson = nullptr;
     if(!FindNode(transformsJson, NodeNames::TRANSFORM_BASE))
         return SceneError::TRANSFORMS_ARRAY_NOT_FOUND;
-    i = 0;
-    transformsCPU.resize(transformsJson->size());
+    transformsCPU.reserve(transformsJson->size());
     for(const auto& transformJson : (*transformsJson))
-    {
-        transformsCPU[i] = SceneIO::LoadTransform(transformJson, time);
-        i++;
-    }
+        transformsCPU.push_back(SceneIO::LoadTransform(transformJson, time));
+    // Cameras
+    const nlohmann::json* camerasJson = nullptr;
+    if(!FindNode(camerasJson, NodeNames::CAMERA_BASE))
+        return SceneError::CAMERAS_ARRAY_NOT_FOUND;
+    camerasCPU.reserve(camerasJson->size());
+    for(const auto& cameraJson : (*camerasJson))
+        camerasCPU.push_back(SceneIO::LoadCamera(cameraJson, time));
+    // Lights are already pre-loaded and extended
+
+    // Determine Size
+    size_t camPointers = sizeof(GPUCameraI*) * camerasCPU.size();
+    size_t lightPointers = sizeof(GPULightI*) * lightsCPU.size();
+    size_t transformSize = transformsCPU.size() * sizeof(TransformStruct);
+    transformSize = Memory::AlignSize(transformSize, AlignByteCount);
+    //size_t lightSize = GPULi
+
+
 
     // Allocate GPU and Load
-    size_t transformSize = transformsCPU.size() * sizeof(TransformStruct);
-    transformSize = AlignByteCount * ((transformSize + (AlignByteCount - 1)) / AlignByteCount);
-    size_t lightSize = lightsCPU.size() * sizeof(CPULight);
+    
+    //size_t lightSize = lightsCPU.size() * sizeof(CPULight);
 
-    memory = DeviceMemory(transformSize + lightSize);
+    //memory = DeviceMemory(transformSize + lightSize);
     if(transformsCPU.size() != 0)
     {
         dTransforms = reinterpret_cast<TransformStruct*>(static_cast<Byte*>(memory));

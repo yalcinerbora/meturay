@@ -1,8 +1,7 @@
-#include "BasicTracer.cuh"
+#include "BasicTracer.h"
 
 #include "RayLib/TracerError.h"
 #include "RayLib/GPUSceneI.h"
-//#include "RayLib/TracerOptions.h"
 #include "RayLib/TracerCallbacksI.h"
 
 #include "TracerLib/RayMemory.h"
@@ -12,13 +11,6 @@
 
 #include "RayAuxStruct.h"
 
-//struct RayAuxBasic
-//{
-//    Vector3f        totalRadiance;
-//    uint32_t        pixelId;
-//    uint32_t        pixelSampleId;
-//};
-//
 //std::ostream& operator<<(std::ostream& stream, const RayAuxBasic& v)
 //{
 //    stream << std::setw(0)

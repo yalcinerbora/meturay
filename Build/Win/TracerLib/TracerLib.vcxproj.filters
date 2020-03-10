@@ -76,10 +76,10 @@
     <ClCompile Include="..\..\..\Source\TracerLib\SceneNodeJson.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\MangledNames.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\MangledNames.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -253,6 +253,9 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TextureStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\LightCameraKernels.h">
+      <Filter>Light &amp; Camera</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">
@@ -305,6 +308,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracer.cu">
       <Filter>Partial Implementations</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\LightCameraKernels.cu">
+      <Filter>Light &amp; Camera</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

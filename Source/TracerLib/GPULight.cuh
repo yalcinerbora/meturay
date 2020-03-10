@@ -3,6 +3,8 @@
 #include "GPUEndpointI.cuh"
 #include "RayLib/Constants.h"
 
+#include <type_traits>
+
 class PointLight final : public GPULightI
 {
     private:
@@ -112,7 +114,6 @@ class SpotLight final : public GPULightI
 
         __device__ Vector3  Flux(const Vector3& direction) const override;
 };
-
 
 class RectangularLight final : public GPULightI
 {
@@ -273,6 +274,12 @@ class SphericalLight final : public GPULightI
 
         __device__ Vector3  Flux(const Vector3& direction) const override;
 };
+
+static constexpr size_t GPULightUnionSize = std::aligned_union<7,
+                                                               PointLight, DirectionalLight,
+                                                               SpotLight, RectangularLight,
+                                                               TriangularLight, DiskLight,
+                                                               SphericalLight>::alignment_value;
 
 __device__
 inline PointLight::PointLight(const Vector3& position,

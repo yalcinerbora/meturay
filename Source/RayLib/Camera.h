@@ -9,6 +9,7 @@ so it is somehow maintainable without using Interitance
 */
 
 #include "Vector.h"
+#include "HitStructs.h"
 
 enum class CameraType
 {
@@ -17,10 +18,10 @@ enum class CameraType
     APERTURE        // Camera with a thin lens (aperure size is > 0)
 };
 
-
 struct CPUCamera
 {
     CameraType  type;
+    HitKey      matKey;
     // World Space Lengths from camera
     Vector3     gazePoint;
     float       nearPlane;      // Distance from gaze

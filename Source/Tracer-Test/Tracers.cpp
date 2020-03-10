@@ -1,8 +1,8 @@
 #include "RayLib/TracerOptions.h"
 #include "RayLib/TracerCallbacksI.h"
 
-#include "BasicTracer.cuh"
-#include "PathTracer.cuh"
+#include "BasicTracer.h"
+#include "PathTracer.h"
 
 // Variant Does not compile on cuda code
 // special cpp for functions that uses "TracerOptions"

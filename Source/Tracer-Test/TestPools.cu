@@ -1,6 +1,7 @@
 #include "TestPools.h"
 
-#include "BasicTracer.cuh"
+#include "BasicTracer.h"
+#include "PathTracer.h"
 
 #include "BasicMaterials.cuh"
 #include "GIMaterials.cuh"

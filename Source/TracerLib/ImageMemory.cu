@@ -1,6 +1,7 @@
 #include "ImageMemory.h"
 #include "ImageFunctions.cuh"
 #include "CudaConstants.h"
+#include "RayLib/MemoryAlignment.h"
 
 //__global__ void KCAverageSamples(ImageGMem<Vector4f> mem, size_t totalPixelCount)
 //{
@@ -88,7 +89,7 @@ void ImageMemory::Reportion(Vector2i start,
 
     size_t pixelCount = static_cast<size_t>(segmentSize[0]) * segmentSize[1];
     size_t sizeOfPixels = PixelFormatToSize(format) * pixelCount;
-    sizeOfPixels = AlignByteCount * ((sizeOfPixels + (AlignByteCount - 1)) / AlignByteCount);
+    sizeOfPixels = Memory::AlignSize(sizeOfPixels);
     size_t sizeOfPixelCounts = sizeof(uint32_t) * pixelCount;
 
     if(pixelCount != 0)

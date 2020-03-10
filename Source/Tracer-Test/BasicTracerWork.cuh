@@ -4,6 +4,7 @@
 #include "TracerLib/Random.cuh"
 #include "TracerLib/GPUPrimitiveP.cuh"
 #include "TracerLib/GPUMaterialP.cuh"
+#include "TracerLib/RNGMemory.h"
 
 #include "TracerLib/WorkKernels.cuh"
 #include "BasicTracerKC.cuh"

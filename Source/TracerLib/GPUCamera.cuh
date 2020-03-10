@@ -18,7 +18,7 @@ class PinholeCamera final : public GPUEndpointI
     protected:
     public:
         // Constructors & Destructor
-        __device__          PinholeCamera(const CPUCamera&, HitKey key);
+        __device__          PinholeCamera(const CPUCamera&);
 
         // Interface 
         __device__ void     Sample(// Output
@@ -38,3 +38,6 @@ class PinholeCamera final : public GPUEndpointI
                                         // I-O
                                         RandomGPU&) const override;
 };
+
+static constexpr size_t GPUCameraUnionSize = std::aligned_union<1, 
+                                                                PinholeCamera>::alignment_value;

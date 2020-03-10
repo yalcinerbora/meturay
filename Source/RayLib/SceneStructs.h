@@ -65,7 +65,7 @@ using MaterialKeyListing = std::map<TypeIdPair, HitKey>;
 struct CPULight
 {
     LightType   type;
-    HitKey      matKey;    
+    HitKey      matKey;
     Vector3     flux;
     Vector3     position0;
     Vector3     position1;
