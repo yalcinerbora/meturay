@@ -2,7 +2,7 @@
 
 #include <string>
 
-struct CameraPerspective;
+struct CPUCamera;
 struct TracerCommonOptions;
 
 enum class ImageType;
@@ -19,7 +19,7 @@ class CommandCallbacksI
         virtual void        IncreaseTime(const double) = 0;
         virtual void        DecreaseTime(const double) = 0;
 
-        virtual void        ChangeCamera(const CameraPerspective) = 0;
+        virtual void        ChangeCamera(const CPUCamera) = 0;
         virtual void        ChangeCamera(const unsigned int) = 0;
 
         // Control Flow of the Simulation

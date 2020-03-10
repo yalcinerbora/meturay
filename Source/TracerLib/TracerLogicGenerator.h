@@ -18,8 +18,6 @@ and it adds default accelerators and primitives as default types.
 #include "TracerTypeGenerators.h"
 #include "TracerLogicPools.h"
 
-using NameGPUPair = std::pair<std::string, const CudaGPU*>;
-
 using AcceleratorPoolPtr = SharedLibPtr<AcceleratorLogicPoolI>;
 using MaterialPoolPtr = SharedLibPtr<MaterialLogicPoolI>;
 using PrimitivePoolPtr = SharedLibPtr<PrimitiveLogicPoolI>;
@@ -97,9 +95,6 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         DLLError                    IncludePrimitivesFromDLL(const std::string& libName,
                                                             const std::string& regex,
                                                             const SharedLibArgs& mangledName) override;
-        DLLError                    IncludeEstimatorsFromDLL(const std::string& libName,
-                                                             const std::string& regex,
-                                                             const SharedLibArgs& mangledName) override;
         DLLError                    IncludeTracersFromDLL(const std::string& libName,
                                                              const std::string& regex,
                                                              const SharedLibArgs& mangledName) override;

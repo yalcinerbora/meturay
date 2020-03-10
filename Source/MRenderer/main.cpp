@@ -21,7 +21,7 @@ int main(int argc, const char* argv[])
 
     // Camera
     float aspectRatio = 16.0f / 9.0f;
-    CameraPerspective cam;
+    CPUCamera cam;
     cam.apertureSize = 1.0f;
     cam.farPlane = 100.0f;
     cam.nearPlane = 0.1f;

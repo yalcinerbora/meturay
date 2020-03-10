@@ -20,16 +20,11 @@ It is also responsible for utilizing all GPUs on the computer.
 #include "Types.h"
 #include "Constants.h"
 #include "HitStructs.h"
+#include "TracerOptionsI.h"
 
 struct TracerError;
-struct TracerCommonOpts;
-struct CameraPerspective;
-
-class GPUSceneI;
-
-// Main Tracer Logicc
+struct CPUCamera;
 class TracerCallbacksI;
-class TracerBaseLogicI;
 
 class GPUTracerI
 {
@@ -45,15 +40,18 @@ class GPUTracerI
         // ===================//
         // COMMANDS TO TRACER //
         // ===================//
-        // Main Calls
         virtual TracerError             Initialize()  = 0;
+        // Option Related
+        virtual TracerError             SetOptions(const TracerOptionsI&) = 0;
         virtual void                    SetParameters(const TracerParameters&) = 0;
-
+        virtual void                    AskOptions() = 0;
+        virtual void                    AskParameters() = 0;
+        
         // Rendering Related
         // Generate Work for Scene Camera
         virtual void                    GenerateWork(int cameraId) = 0;
         // Generate Work for Arbitrary Camera
-        virtual void                    GenerateWork(const CameraPerspective&) = 0;
+        virtual void                    GenerateWork(const CPUCamera&) = 0;
         virtual bool                    Render() = 0;   // Continue Working (untill no work is left)
         virtual void                    Finalize() = 0; // Finalize work (write to image)
 

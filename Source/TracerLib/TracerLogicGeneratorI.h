@@ -60,9 +60,6 @@ class TracerLogicGeneratorI
         virtual DLLError    IncludePrimitivesFromDLL(const std::string& libName,
                                                      const std::string& regex,
                                                      const SharedLibArgs& mangledName) = 0;
-        virtual DLLError    IncludeEstimatorsFromDLL(const std::string& libName,
-                                                     const std::string& regex,
-                                                     const SharedLibArgs& mangledName) = 0;
         virtual DLLError    IncludeTracersFromDLL(const std::string& libName,
                                                   const std::string& regex,
                                                   const SharedLibArgs& mangledName) = 0;

@@ -235,6 +235,7 @@ class CudaSystem
 
         // Misc
         const GPUList&              GPUList() const;
+        const CudaGPU&              BestGPU() const;
 
         // Device Synchronization
         void                        SyncGPUMainStreamAll() const;
@@ -350,6 +351,17 @@ __host__ void CudaGPU::AsyncGridStrideKC_XY(uint32_t sharedMemSize,
 inline const GPUList& CudaSystem::GPUList() const
 {
     return systemGPUs;
+}
+
+inline const CudaGPU& CudaSystem::BestGPU() const
+{
+    // Return the largest memory GPU
+    auto MemoryCompare = [](const CudaGPU& a, const CudaGPU& b)
+    {
+        return (a.TotalMemory() < b.TotalMemory());
+    };    
+    auto element = std::max_element(systemGPUs.begin(), systemGPUs.end(), MemoryCompare);
+    return *element;
 }
 
 inline void CudaSystem::SyncGPUMainStreamAll() const

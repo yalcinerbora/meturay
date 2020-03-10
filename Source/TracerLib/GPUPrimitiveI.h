@@ -26,7 +26,7 @@ since this API is being developed for customization this is mandatory.
 #include "NodeListing.h"
 
 struct SceneError;
-struct LightStruct;
+struct CPULight;
 
 class SceneNodeI;
 class SurfaceLoaderGeneratorI;
@@ -48,7 +48,7 @@ class GPUPrimitiveGroupI
                                                const std::string& scenePath) = 0;
         // Provides data to Event Estimator
         virtual bool                HasPrimitive(uint32_t surfaceDataId) const = 0;
-        virtual SceneError          GenerateLights(std::vector<LightStruct>&,
+        virtual SceneError          GenerateLights(std::vector<CPULight>&,
                                                           const Vector3& flux, HitKey key,
                                                           uint32_t surfaceDataId) const = 0;
 

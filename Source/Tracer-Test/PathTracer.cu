@@ -1,4 +1,4 @@
-#include "VolumeTracer.cuh"
+#include "PathTracer.cuh"
 
 #include "RayLib/TracerError.h"
 //
@@ -35,7 +35,7 @@
 //                                    ImageMemory& imgMem,
 //                                    RayMemory& rayMem, RNGMemory& rngMem,
 //                                    const GPUSceneI& scene,
-//                                    const CameraPerspective& cam,
+//                                    const CPUCamera& cam,
 //                                    int samplePerLocation,
 //                                    Vector2i resolution,
 //                                    Vector2i pixelStart,

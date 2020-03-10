@@ -139,7 +139,7 @@ class GPUPrimitiveSphere final
                                                            const std::string& scenePath) override;
         // Provides data to Event Estimator
         bool                                    HasPrimitive(uint32_t surfaceDataId) const override;
-        SceneError                              GenerateLights(std::vector<LightStruct>&,
+        SceneError                              GenerateLights(std::vector<CPULight>&,
                                                                const Vector3& flux, HitKey key,
                                                                uint32_t id) const override;
         // Access primitive range from Id

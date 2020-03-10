@@ -5,6 +5,7 @@
 #include "BasicTracer.cuh"
 #include "SurfaceStructs.h"
 #include "BasicMaterialsKC.cuh"
+
 #include "TracerLib/TypeTraits.h"
 
 // Unrealistic mat that directly returns an albedo regardless of wi.

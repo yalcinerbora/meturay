@@ -250,6 +250,9 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GenerationKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\TextureStructs.h">
+      <Filter>Structs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

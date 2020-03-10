@@ -36,7 +36,7 @@
 //                                     ImageMemory&,
 //                                     RayMemory&, RNGMemory&,
 //                                     const GPUSceneI& scene,
-//                                     const CameraPerspective&,
+//                                     const CPUCamera&,
 //                                     int samplePerLocation,
 //                                     Vector2i resolution,
 //                                     Vector2i pixelStart = Zero2i,

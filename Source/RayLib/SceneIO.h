@@ -14,7 +14,7 @@ Scene file json interpeter and writer
 #include <fstream>
 #include <nlohmann/json.hpp>
 
-struct CameraPerspective;
+struct CPUCamera;
 
 template<class T>
 using IntegerEnable = typename std::enable_if<std::is_integral<T>::value>::type;
@@ -30,11 +30,11 @@ struct Range
 namespace SceneIO
 {
     // Generic Time Dependency Check
-    bool                IsTimeDependent(const nlohmann::json&);
+    bool                    IsTimeDependent(const nlohmann::json&);
 
     // Load from anim
     template <class T>
-    T                   LoadFromAnim(const std::string& fileName, double time = 0.0);
+    T                       LoadFromAnim(const std::string& fileName, double time = 0.0);
 
     // Static Loads
     bool                    LoadBool(const nlohmann::json&, double time = 0.0);
@@ -58,9 +58,9 @@ namespace SceneIO
     // Common Types
     uint32_t                LoadLightMatId(const nlohmann::json&);
     LightType               LoadLightType(const nlohmann::json&);    
-    LightStruct             LoadLight(const nlohmann::json&, double time = 0.0);
+    CPULight                LoadLight(const nlohmann::json&, double time = 0.0);
     TransformStruct         LoadTransform(const nlohmann::json&, double time = 0.0);
-    CameraPerspective       LoadCamera(const nlohmann::json&, double time = 0.0);
+    CPUCamera               LoadCamera(const nlohmann::json&, double time = 0.0);
 
     SurfaceStruct           LoadSurface(const nlohmann::json&, double time = 0.0);
 };

@@ -1,3 +1,4 @@
+#pragma once
 
 #include "RayLib/Vector.h"
 #include "RayLib/HitStructs.h"

@@ -87,12 +87,8 @@ class RayMemory
         // Accessors
         // Ray In
         RayGMem*                    Rays();
-        template<class T>
-        const T*                    RayAux() const;
         // Ray Out
         RayGMem*                    RaysOut();
-        template<class T>
-        T*                          RayAuxOut();
 
         // Hit Related
         HitStructPtr                HitStructs();

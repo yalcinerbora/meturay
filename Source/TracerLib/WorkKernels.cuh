@@ -4,7 +4,7 @@
 #include "RayStructs.h"
 #include "Random.cuh"
 #include "ImageStructs.h"
-
+#include "TextureStructs.h"
 
 // Surface Functions are responsible for
 // generating surface structures from the hit structures
@@ -43,9 +43,9 @@ using WorkFunc = void(*)(// Output
                          const uint32_t maxOutRay,
                          // Input as registers                         
                          const RayReg& ray,
-                         const RayAuxiliary & aux,
+                         const RayAuxiliary& aux,
                          const MGroup::Surface& surface,
-                         const UVList * uvs,
+                         const UVList* uvs,
                          // I-O
                          LocalState& gLocalState,
                          GlobalState& gRenderState,
@@ -80,7 +80,7 @@ void KCWork(// Output
             // Constants
             const uint32_t rayCount,
             const MGroup::Data matData,
-            const PGroup::Data primData)
+            const PGroup::PrimitiveData primData)
 {
     // Fetch Types from Template Classes
     using HitData = typename PGroup::HitData;               // HitData is defined by primitive
@@ -119,9 +119,10 @@ void KCWork(// Output
               gLocalAuxOut,
               maxOutRay,
               // Input as registers
-              ray,
-              surface,
+              ray,              
               aux,
+              surface,
+              nullptr,
               // I-O
               gLocalState,
               gRenderState,

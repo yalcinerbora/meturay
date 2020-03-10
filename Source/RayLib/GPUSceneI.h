@@ -7,7 +7,8 @@
 
 struct SceneError;
 class GPULightI;
-class GPUCameraI;
+class GPUEndpointI;
+using GPUCameraI = GPUEndpointI;
 
 using TransformStruct = Matrix4x4;
 
@@ -17,15 +18,16 @@ class GPUSceneI
         virtual                             ~GPUSceneI() = default;
 
         // Interface
-        virtual size_t                      UsedGPUMemory() = 0;
-        virtual size_t                      UsedCPUMemory() = 0;
+        virtual size_t                      UsedGPUMemory() const = 0;
+        virtual size_t                      UsedCPUMemory() const = 0;
         //
         virtual SceneError                  LoadScene(double) = 0;
         virtual SceneError                  ChangeTime(double) = 0;
         //
-        virtual Vector2i                    MaxMatIds() = 0;
-        virtual Vector2i                    MaxAccelIds() = 0;
-        virtual HitKey                      BaseBoundaryMaterial() = 0;
+        virtual Vector2i                    MaxMatIds() const  = 0;
+        virtual Vector2i                    MaxAccelIds() const  = 0;
+        virtual HitKey                      BaseBoundaryMaterial() const = 0;
+        virtual uint32_t                    HitStructUnionSize() const = 0;
         // Access GPU                
         virtual const GPULightI*            LightsGPU() const = 0;
         virtual const GPUCameraI*           CamerasGPU() const = 0;
@@ -41,7 +43,6 @@ class GPUSceneI
         // Work Maps
         virtual const WorkBatchCreationInfo&    WorkBatchInfo() const = 0;
         virtual const AcceleratorBatchMap&      AcceleratorBatchMappings() const = 0;
-
         // Allocated Types
         // All of which are allocated on the GPU
         virtual const GPUBaseAccelPtr&                          BaseAccelerator() const = 0;

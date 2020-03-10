@@ -27,7 +27,7 @@ bool GPUPrimitiveEmpty::HasPrimitive(uint32_t surfaceDataId) const
     return false;
 }
 
-SceneError GPUPrimitiveEmpty::GenerateLights(std::vector<LightStruct>&,
+SceneError GPUPrimitiveEmpty::GenerateLights(std::vector<CPULight>&,
                                              const Vector3& power,
                                              HitKey key,
                                              uint32_t surfaceDataId) const

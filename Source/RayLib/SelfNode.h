@@ -35,7 +35,7 @@ class SelfNode
         void        ChangeTime(const double) override;
         void        IncreaseTime(const double) override;
         void        DecreaseTime(const double) override;
-        void        ChangeCamera(const CameraPerspective) override;
+        void        ChangeCamera(const CPUCamera) override;
         void        ChangeCamera(const unsigned int) override;
         void        StartStopTrace(const bool) override;
         void        PauseContTrace(const bool) override;
@@ -57,8 +57,6 @@ class SelfNode
                               PixelFormat, size_t offset,
                               Vector2i start = Zero2i,
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-        void        SendAccelerator(HitKey key, const std::vector<Byte> data) override;
-        void        SendBaseAccelerator(const std::vector<Byte> data) override;
 
         // From Node Interface
         NodeError   Initialize() override;

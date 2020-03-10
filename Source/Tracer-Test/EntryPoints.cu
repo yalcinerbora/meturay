@@ -6,12 +6,12 @@ extern "C" _declspec(dllexport) MaterialLogicPoolI * __stdcall GenerateTestMater
     return new TestMaterialPool();
 }
 
-extern "C" _declspec(dllexport) TracerLogicPoolI * __stdcall GenerateTestTracerPool()
+extern "C" _declspec(dllexport) TracerPoolI* __stdcall GenerateTestTracerPool()
 {
-    return new TestTracerLogicPool();
+    return new TestTracerPool();
 }
 
-extern "C" _declspec(dllexport) void __stdcall DeleteTestTracerPool(TracerLogicPoolI* pool)
+extern "C" _declspec(dllexport) void __stdcall DeleteTestTracerPool(TracerPoolI* pool)
 {
     delete pool;
 }
@@ -20,4 +20,3 @@ extern "C" _declspec(dllexport) void __stdcall DeleteTestMaterialPool(MaterialLo
 {
     delete pool;
 }
-

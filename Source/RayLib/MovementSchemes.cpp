@@ -15,7 +15,7 @@ MovementSchemeFPS::MovementSchemeFPS(double sensitivity,
 {}
 
 // Interface
-bool MovementSchemeFPS::InputAction(CameraPerspective& camera,
+bool MovementSchemeFPS::InputAction(CPUCamera& camera,
                                     VisorActionType visorAction,
                                     KeyAction action)
 {
@@ -80,7 +80,7 @@ bool MovementSchemeFPS::InputAction(CameraPerspective& camera,
     return false;
 }
 
-bool MovementSchemeFPS::MouseMovementAction(CameraPerspective& camera,
+bool MovementSchemeFPS::MouseMovementAction(CPUCamera& camera,
                                             double x, double y)
 {
     // Check with latest recorded input
@@ -114,7 +114,7 @@ bool MovementSchemeFPS::MouseMovementAction(CameraPerspective& camera,
     return mouseToggle;
 }
 
-bool MovementSchemeFPS::MouseScrollAction(CameraPerspective&,
+bool MovementSchemeFPS::MouseScrollAction(CPUCamera&,
                                           double x, double y)
 {
     return false;

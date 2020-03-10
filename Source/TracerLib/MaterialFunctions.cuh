@@ -1,19 +1,9 @@
 #pragma once
 
 #include "RayLib/Ray.h"
-#include "RayLib/HitStructs.h"
+#include "TextureStructs.h"
 
 class RandomGPU;
-
-// METURay only supports
-// 2D Textures 2^24 different textures layers (per texture) and 255 different mips per texture.
-// For research purposes this should be enough.
-using TextureId = HitKeyT<uint32_t, 8u, 24u>;
-struct UVList
-{
-    TextureId id;   // 24-bit layer id, 8-bit mip id
-    Vector2us uv;   // UNorm 2x16 data
-};
 
 // Texture System should return another UVList in which
 // 24-bit portion returns actual texture Id

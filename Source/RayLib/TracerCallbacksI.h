@@ -8,10 +8,10 @@
 #include "Constants.h"
 
 struct TracerError;
-struct TracerOptions;
 struct AnalyticData;
+struct TracerParameters;
 
-struct CameraPerspective;
+class TracerOptions;
 
 class TracerCallbacksI
 {
@@ -26,12 +26,6 @@ class TracerCallbacksI
                                   PixelFormat, size_t sampleCount,
                                   Vector2i start = Zero2i,
                                   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
-        virtual void    SendAccelerator(HitKey key, const std::vector<Byte> data) = 0;
-        virtual void    SendBaseAccelerator(const std::vector<Byte> data) = 0;
-};
-
-class TracerCommandsI
-{
-    public:
-        virtual         ~TracerCommandsI() = default;
+        virtual void    SendCurrentOptions(TracerOptions) = 0;
+        virtual void    SendCurrentParameters(TracerParameters) = 0;
 };

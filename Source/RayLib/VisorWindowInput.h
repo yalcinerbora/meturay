@@ -25,7 +25,7 @@ class VisorWindowInput : public VisorInputI
         // Camera Related States
         unsigned int                    currentSceneCam;    // Currently selected scene camera
         CameraMode                      cameraMode;
-        CameraPerspective               customCamera;
+        CPUCamera                       customCamera;
         bool                            lockedCamera;
 
         // Other States
@@ -46,7 +46,7 @@ class VisorWindowInput : public VisorInputI
                                 VisorWindowInput(KeyboardKeyBindings&&,
                                                  MouseKeyBindings&&,
                                                  MovementScemeList&&,
-                                                 const CameraPerspective& customCamera);
+                                                 const CPUCamera& customCamera);
                                 ~VisorWindowInput() = default;
 
         void                    ChangeDeltaT(double);

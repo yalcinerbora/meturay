@@ -3,7 +3,7 @@
 #include "RayStructs.h"
 
 __device__ 
-PinholeCamera::PinholeCamera(const CameraPerspective& cam, HitKey k)
+PinholeCamera::PinholeCamera(const CPUCamera& cam, HitKey k)
     : GPUEndpointI(k)
 {
     // Find world space window sizes

@@ -34,7 +34,7 @@ void SelfNode::DecreaseTime(const double)
 
 }
 
-void SelfNode::ChangeCamera(const CameraPerspective c)
+void SelfNode::ChangeCamera(const CPUCamera c)
 {
 
 }
@@ -85,18 +85,6 @@ void SelfNode::SendImage(const std::vector<Byte> data,
                          Vector2i start, Vector2i end)
 {
     visor.AccumulatePortion(std::move(data), f, offset, start, end);
-}
-
-void SelfNode::SendAccelerator(HitKey key, const std::vector<Byte> data)
-{
-    // Do nothing since there is single tracer
-    // No other tracer should be available to ask an acceleretor
-}
-
-void SelfNode::SendBaseAccelerator(const std::vector<Byte> data)
-{
-    // Do nothing since there is single tracer
-    // No other tracer should be available to ask an acceleretor
 }
 
 // From Node Interface

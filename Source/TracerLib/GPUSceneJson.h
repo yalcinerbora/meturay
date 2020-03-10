@@ -56,8 +56,7 @@ class GPUSceneJson : public GPUSceneI
         std::map<NameGPUPair, GPUMatGPtr>       materials;
         std::map<std::string, GPUAccelGPtr>     accelerators;
         std::map<std::string, GPUPrimGPtr>      primitives;
-        // CPU Memory
-        std::vector<CameraPerspective>          cameraMemory;
+        // Information of the partitioning
         WorkBatchCreationInfo                   workInfo;
         AcceleratorBatchMap                     accelMap;
 
@@ -115,13 +114,13 @@ class GPUSceneJson : public GPUSceneI
                                                 const std::map<uint32_t, HitKey>& accHitKeyList,
                                                 const std::map<uint32_t, uint32_t>& surfaceTransformIds,
                                                 double time = 0.0);
-        SceneError      GenerateLightInfo(std::vector<LightStruct>&,
+        SceneError      GenerateLightInfo(std::vector<CPULight>&,
                                           const MaterialKeyListing& materialKeys, double time);
         SceneError      FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,
                                              double time = 0.0f);
 
-        SceneError      LoadCommon(const std::vector<LightStruct>&, double time);
-        SceneError      LoadLogicRelated(std::vector<LightStruct>&, double time);
+        SceneError      LoadCommon(const std::vector<CPULight>&, double time);
+        SceneError      LoadLogicRelated(std::vector<CPULight>&, double time);
 
         SceneError      ChangeCommon(double time);
         SceneError      ChangeLogicRelated(double time);
@@ -138,15 +137,16 @@ class GPUSceneJson : public GPUSceneI
                                             ~GPUSceneJson() = default;
 
         // Members
-        size_t                              UsedGPUMemory() override;
-        size_t                              UsedCPUMemory() override;
+        size_t                              UsedGPUMemory() const override;
+        size_t                              UsedCPUMemory() const override;
         //
         SceneError                          LoadScene(double) override;
         SceneError                          ChangeTime(double) override;
         //
-        Vector2i                            MaxMatIds() override;
-        Vector2i                            MaxAccelIds() override;
-        HitKey                              BaseBoundaryMaterial() override;
+        Vector2i                            MaxMatIds() const override;
+        Vector2i                            MaxAccelIds() const override;
+        HitKey                              BaseBoundaryMaterial() const override;
+        uint32_t                            HitStructUnionSize() const override;
         // Access GPU
         const GPULightI*                    LightsGPU() const override;
         const GPUCameraI*                   CamerasGPU() const override;

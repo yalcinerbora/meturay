@@ -17,6 +17,7 @@ Uses statified sampling
 #include "RayStructs.h"
 #include "ImageStructs.h"
 #include "Random.cuh"
+#include "GPUEndpointI.cuh"
 
 #include "ImageFunctions.cuh"
 
@@ -33,19 +34,19 @@ using AuxInitFunc = void(*)(RayAuxData*,
 
 // Templated Camera Ray Generation Kernel
 template<class RayAuxData, AuxInitFunc<RayAuxData> AuxFunc>
-__global__ void KCGenerateCameraRays(// Output
-                                     RayGMem* gRays,
-                                     RayAuxData* gAuxiliary,
-                                     ImageGMem<Vector4f> imgMem,
-                                     // Input
-                                     RNGGMem gRNGStates,
-                                     const CameraPerspective cam,
-                                     const uint32_t samplePerLocation,
-                                     const Vector2i resolution,
-                                     const Vector2i pixelStart,
-                                     const Vector2i pixelCount,
-                                     // Data to initialize auxiliary base data
-                                     const RayAuxData auxBaseData)
+__global__ void KCGenerateCameraRaysCPU(// Output
+                                        RayGMem* gRays,
+                                        RayAuxData* gAuxiliary,
+                                        ImageGMem<Vector4f> imgMem,
+                                        // Input
+                                        RNGGMem gRNGStates,
+                                        const CPUCamera cam,
+                                        const uint32_t samplePerLocation,
+                                        const Vector2i resolution,
+                                        const Vector2i pixelStart,
+                                        const Vector2i pixelCount,
+                                        // Data to initialize auxiliary base data
+                                        const RayAuxData auxBaseData)
 {
     RandomGPU rng(gRNGStates.state);
 
@@ -124,5 +125,91 @@ __global__ void KCGenerateCameraRays(// Output
         // Initialize Samples
         ImageAddSample(imgMem, pixelIdLinear, 1);
 
+    }
+}
+
+// Templated Camera Ray Generation Kernel
+template<class RayAuxData, AuxInitFunc<RayAuxData> AuxFunc>
+__global__ void KCGenerateCameraRaysGPU(// Output
+                                        RayGMem* gRays,
+                                        RayAuxData* gAuxiliary,
+                                        ImageGMem<Vector4f> imgMem,
+                                        // Input
+                                        RNGGMem gRNGStates,
+                                        const GPUCameraI& gCam,
+                                        const uint32_t samplePerLocation,
+                                        const Vector2i resolution,
+                                        const Vector2i pixelStart,
+                                        const Vector2i pixelCount,
+                                        // Data to initialize auxiliary base data
+                                        const RayAuxData auxBaseData)
+{
+    RandomGPU rng(gRNGStates.state);
+
+    // Total work
+    const Vector2i totalSamples = Vector2i(pixelCount[0] * samplePerLocation,
+                                           pixelCount[1] * samplePerLocation);
+    const uint32_t totalWorkCount = pixelCount[0] * samplePerLocation *
+                                    pixelCount[1] * samplePerLocation;
+
+    //// Find world space window sizes
+    //float widthHalf = tanf(cam.fov[0] * 0.5f) * cam.nearPlane;
+    //float heightHalf = tanf(cam.fov[1] * 0.5f) * cam.nearPlane;
+
+    //// Camera Space pixel sizes
+    //Vector2 delta = Vector2((widthHalf * 2.0f) / static_cast<float>(resolution[0] * samplePerLocation),
+    //                        (heightHalf * 2.0f) / static_cast<float>(resolution[1] * samplePerLocation));
+
+    //// Camera Vector Correction
+    //Vector3 gaze = cam.gazePoint - cam.position;
+    //Vector3 right = Cross(gaze, cam.up).Normalize();
+    //Vector3 up = Cross(right, gaze).Normalize();
+    //gaze = Cross(up, right).Normalize();
+
+    //// Camera parameters
+    //Vector3 bottomLeft = cam.position
+    //                    - right *  widthHalf
+    //                    - up * heightHalf
+    //                    + gaze * cam.nearPlane;
+    //Vector3 pos = cam.position;
+
+    // Kernel Grid-Stride Loop
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < totalWorkCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        Vector2i threadId2d = Vector2i(threadId % (pixelCount[0] * samplePerLocation),
+                                       threadId / (pixelCount[0] * samplePerLocation));
+        Vector2i globalSampleId = (pixelStart * samplePerLocation) + threadId2d;
+        Vector2i globalPixelId = pixelStart + (threadId2d / samplePerLocation);
+
+        RayReg ray;
+        gCam.GenerateRay(ray,
+                         //
+                         globalSampleId,
+                         totalSamples,
+                         rng);
+
+        // Generate Required Parameters
+        Vector2i pixelSampleId = threadId2d % samplePerLocation;
+        Vector2i localPixelId = globalPixelId - pixelStart;
+        uint32_t pixelIdLinear = localPixelId[1] * pixelCount[0] + localPixelId[0];
+        uint32_t sampleIdLinear = pixelSampleId[1] * samplePerLocation + pixelSampleId[0];
+
+        // Write Ray
+        ray.Update(gRays, threadId);
+
+        // Write Auxiliary Data
+        AuxFunc(gAuxiliary,
+                threadId,
+                // Input
+                auxBaseData,
+                ray,
+                // Index
+                pixelIdLinear,
+                sampleIdLinear);
+
+        // Initialize Samples
+        ImageAddSample(imgMem, pixelIdLinear, 1);
     }
 }

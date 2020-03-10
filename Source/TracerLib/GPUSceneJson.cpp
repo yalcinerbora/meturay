@@ -520,11 +520,11 @@ SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, AABB3>
     return e;
 }
 
-SceneError GPUSceneJson::GenerateLightInfo(std::vector<LightStruct>& lightsCPU,
+SceneError GPUSceneJson::GenerateLightInfo(std::vector<CPULight>& lightsCPU,
                                            const MaterialKeyListing& materialKeys,
                                            double time)
 { 
-    std::vector<LightStruct> primLights;
+    std::vector<CPULight> primLights;
     // Lights
     const nlohmann::json* lightsJson = nullptr;
     if(!FindNode(lightsJson, NodeNames::LIGHT_BASE))
@@ -536,7 +536,7 @@ SceneError GPUSceneJson::GenerateLightInfo(std::vector<LightStruct>& lightsCPU,
     SceneError err = SceneError::OK;
     for(const auto& lightJson : (*lightsJson))
     {
-        LightStruct light = SceneIO::LoadLight(lightJson, time);
+        CPULight light = SceneIO::LoadLight(lightJson, time);
         uint32_t matId = SceneIO::LoadLightMatId(lightJson);
 
         // Additionally Ask Primitive Group to populate primitives as lights
@@ -590,7 +590,7 @@ SceneError GPUSceneJson::FindBoundaryMaterial(const MaterialKeyListing& matHitKe
     return e;
 }
 
-SceneError GPUSceneJson::LoadCommon(const std::vector<LightStruct>& lightsCPU, double time)
+SceneError GPUSceneJson::LoadCommon(const std::vector<CPULight>& lightsCPU, double time)
 {
     SceneError e = SceneError::OK;
 
@@ -614,7 +614,7 @@ SceneError GPUSceneJson::LoadCommon(const std::vector<LightStruct>& lightsCPU, d
     // Allocate GPU and Load
     size_t transformSize = transformsCPU.size() * sizeof(TransformStruct);
     transformSize = AlignByteCount * ((transformSize + (AlignByteCount - 1)) / AlignByteCount);
-    size_t lightSize = lightsCPU.size() * sizeof(LightStruct);
+    size_t lightSize = lightsCPU.size() * sizeof(CPULight);
 
     memory = DeviceMemory(transformSize + lightSize);
     if(transformsCPU.size() != 0)
@@ -631,21 +631,21 @@ SceneError GPUSceneJson::LoadCommon(const std::vector<LightStruct>& lightsCPU, d
         //                      cudaMemcpyHostToDevice));
     }
 
-    // Now Load Camera
-    const nlohmann::json* camerasJson = nullptr;
-    if(!FindNode(camerasJson, NodeNames::CAMERA_BASE))
-        return SceneError::CAMERAS_ARRAY_NOT_FOUND;
-    i = 0;
-    cameraMemory.resize(camerasJson->size());
-    for(const auto& cameraJson : (*camerasJson))
-    {
-        cameraMemory[i] = SceneIO::LoadCamera(cameraJson, time);
-        i++;
-    }
+    //// Now Load Camera
+    //const nlohmann::json* camerasJson = nullptr;
+    //if(!FindNode(camerasJson, NodeNames::CAMERA_BASE))
+    //    return SceneError::CAMERAS_ARRAY_NOT_FOUND;
+    //i = 0;
+    //cameraMemory.resize(camerasJson->size());
+    //for(const auto& cameraJson : (*camerasJson))
+    //{
+    //    cameraMemory[i] = SceneIO::LoadCamera(cameraJson, time);
+    //    i++;
+    //}
     return e;
 }
 
-SceneError GPUSceneJson::LoadLogicRelated(std::vector<LightStruct>& lightsCPU, double time)
+SceneError GPUSceneJson::LoadLogicRelated(std::vector<CPULight>& lightsCPU, double time)
 {
     SceneError e = SceneError::OK;
     // Group Data
@@ -722,21 +722,6 @@ SceneError GPUSceneJson::LoadLogicRelated(std::vector<LightStruct>& lightsCPU, d
     maxAccelIds += Vector2i(1);
     maxMatIds += Vector2i(1);
 
-    //// Everything required for Estimator is generated
-    //// Intialize Estimator
-    //if((e = est->Initialize(lightNodes, 
-    //                        allMaterialKeys, 
-    //                        logicGenerator.GetPrimitiveGroups(), time)) != SceneError::OK)
-    //    return e;
-
-    ////// Finally Generate Base Logic
-    ////TracerBaseLogicI* logic = nullptr;
-    ////if((e = logicGenerator.GenerateTracerLogic(logic, p,
-    ////                                           maxMatIds,
-    ////                                           maxAccelIds,
-    ////                                           baseBoundaryMatKey,
-    ////                                           tracerType)) != SceneError::OK)
-        return e;
     // Everything is generated!
     return SceneError::OK;
 }
@@ -753,22 +738,20 @@ SceneError GPUSceneJson::ChangeLogicRelated(double time)
     return SceneError::BASE_ACCELERATOR_NODE_NOT_FOUND;
 }
 
-size_t GPUSceneJson::UsedGPUMemory()
+size_t GPUSceneJson::UsedGPUMemory() const
 {
-    //return transformMemory.Size() + lightMemory.Size();
-    return 0;
+    return memory.Size();
 }
 
-size_t GPUSceneJson::UsedCPUMemory()
+size_t GPUSceneJson::UsedCPUMemory() const
 {
-    //return cameraMemory.size() * sizeof(CameraPerspective);
     return 0;
 }
 
 SceneError GPUSceneJson::LoadScene(double time)
 {
     SceneError e = SceneError::OK;
-    std::vector<LightStruct> lightsCPU;
+    std::vector<CPULight> lightsCPU;
     try
     {
         if((e = OpenFile(fileName)) != SceneError::OK)
@@ -812,19 +795,24 @@ SceneError GPUSceneJson::ChangeTime(double time)
     return e;
 }
 
-Vector2i GPUSceneJson::MaxMatIds()
+Vector2i GPUSceneJson::MaxMatIds() const
 {
     return maxMatIds;
 }
 
-Vector2i GPUSceneJson::MaxAccelIds()
+Vector2i GPUSceneJson::MaxAccelIds() const
 {
     return maxAccelIds;
 }
 
-HitKey GPUSceneJson::BaseBoundaryMaterial()
+HitKey GPUSceneJson::BaseBoundaryMaterial() const
 {
     return baseBoundaryMatKey;
+}
+
+uint32_t GPUSceneJson::HitStructUnionSize() const
+{
+    return hitStructSize;
 }
 
 const GPULightI* GPUSceneJson::LightsGPU() const
@@ -854,22 +842,22 @@ const AcceleratorBatchMap& GPUSceneJson::AcceleratorBatchMappings() const
 
 const GPUBaseAccelPtr& GPUSceneJson::BaseAccelerator() const
 {
-
+    return baseAccelerator;
 }
 
 const std::map<NameGPUPair, GPUMatGPtr>& GPUSceneJson::MaterialGroups() const
 {
-
+    return materials;
 }
 
 const std::map<std::string, GPUAccelGPtr>& GPUSceneJson::AcceleratorGroups() const
 {
-
+    return accelerators;
 }
 
 const std::map<std::string, GPUPrimGPtr>& GPUSceneJson::PrimitiveGroups() const
 {
-
+    return primitives;
 }
 
 size_t GPUSceneJson::LightCount() const

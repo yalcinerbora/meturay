@@ -29,6 +29,7 @@
 #include "RayLib/NodeI.h"
 #include "RayLib/AnalyticData.h"
 #include "RayLib/TracerError.h"
+#include "RayLib/TracerOptions.h"
 
 #define ERROR_CHECK(ErrType, e) \
 if(e != ErrType::OK) \
@@ -57,23 +58,23 @@ class MockNode
     private:
         const double                    Duration;
 
-        VisorI&                         visor;
-        GPUTracerI&                     tracer;
-        GPUSceneI&                      scene;
+        VisorI& visor;
+        GPUTracerI& tracer;
+        GPUSceneI& scene;
 
     protected:
     public:
         // Constructor & Destructor
-                    MockNode(VisorI&, GPUTracerI&, GPUSceneI&,
-                             double duration);
-                    ~MockNode() = default;
+        MockNode(VisorI&, GPUTracerI&, GPUSceneI&,
+                 double duration);
+        ~MockNode() = default;
 
-        // From Command Callbacks
+    // From Command Callbacks
         void        ChangeScene(const std::string) override {}
         void        ChangeTime(const double) override {}
         void        IncreaseTime(const double) override {}
         void        DecreaseTime(const double) override {}
-        void        ChangeCamera(const CameraPerspective) override {}
+        void        ChangeCamera(const CPUCamera) override {}
         void        ChangeCamera(const unsigned int) override {}
         void        StartStopTrace(const bool) override {}
         void        PauseContTrace(const bool) override {}
@@ -88,6 +89,7 @@ class MockNode
         void        WindowCloseAction() override {}
 
         // From Tracer Callbacks
+        void        SendCrashSignal() override {}
         void        SendLog(const std::string) override;
         void        SendError(TracerError) override;
         void        SendAnalyticData(AnalyticData) override {}
@@ -95,40 +97,40 @@ class MockNode
                               PixelFormat, size_t offset,
                               Vector2i start = Zero2i,
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-        void        SendAccelerator(HitKey key, const std::vector<Byte> data) override {}
-        void        SendBaseAccelerator(const std::vector<Byte> data) override {}
+        void        SendCurrentOptions(TracerOptions) {};
+        void        SendCurrentParameters(TracerParameters) {};
 
         // From Node Interface
         NodeError   Initialize() override { return NodeError::OK; }
         void        Work() override;
 };
 
-MockNode::MockNode(VisorI& v, GPUTracerI& t, GPUSceneI& s,
-                   double duration)
+inline MockNode::MockNode(VisorI& v, GPUTracerI& t, 
+                          GPUSceneI& s, double duration)
     : visor(v)
     , tracer(t)
     , scene(s)
     , Duration(duration)
 {}
 
-void MockNode::SendLog(const std::string s)
+inline void MockNode::SendLog(const std::string s)
 {
     METU_LOG("Tracer: %s", s.c_str());
 }
 
-void MockNode::SendError(TracerError err)
+inline void MockNode::SendError(TracerError err)
 {
     METU_ERROR_LOG("Tracer: %s", static_cast<std::string>(err).c_str());
 }
 
-void MockNode::SendImage(const std::vector<Byte> data,
-                         PixelFormat f, size_t offset,
-                         Vector2i start, Vector2i end)
+inline void MockNode::SendImage(const std::vector<Byte> data,
+                                PixelFormat f, size_t offset,
+                                Vector2i start, Vector2i end)
 {
     visor.AccumulatePortion(std::move(data), f, offset, start, end);
 }
 
-void MockNode::Work()
+inline void MockNode::Work()
 {
     Utility::CPUTimer t;
     t.Start();
@@ -142,11 +144,7 @@ void MockNode::Work()
         tracer.GenerateWork(0);
         
         // Render
-        uint16_t i;
-        while(tracer.Render() && (i < MAX_BOUNCES))
-        {
-            i++;
-        }
+        while(tracer.Render());
         // Finalize (send image to visor)
         tracer.Finalize();
         //printf("\n----------------------------------\n");
@@ -238,9 +236,9 @@ class SimpleTracerSetup
         void                Body();
 };
 
-SimpleTracerSetup::SimpleTracerSetup(std::string tracerType, 
-                                     std::u8string sceneName, 
-                                     double sceneTime)
+inline SimpleTracerSetup::SimpleTracerSetup(std::string tracerType,
+                                            std::u8string sceneName,
+                                            double sceneTime)
     : sceneName(sceneName)
     , sceneTime(sceneTime)
     , tracerType(tracerType)
@@ -251,7 +249,7 @@ SimpleTracerSetup::SimpleTracerSetup(std::string tracerType,
     , tracer(nullptr, nullptr)
 {}
 
-bool SimpleTracerSetup::Init()
+inline bool SimpleTracerSetup::Init()
 {
     TracerStatus status =
     {
@@ -260,7 +258,7 @@ bool SimpleTracerSetup::Init()
 
         0,
 
-        CameraPerspective{},
+        CPUCamera{},
 
         MockNode::IMAGE_RESOLUTION,
         IMAGE_PIXEL_FORMAT,
@@ -314,8 +312,8 @@ bool SimpleTracerSetup::Init()
     visorInput = std::make_unique<VisorWindowInput>(std::move(KeyBinds),
                                                     std::move(MouseBinds),
                                                     std::move(MovementSchemeList),
-                                                    CameraPerspective{}
-                                                    /*gpuScene->CamerasCPU()[0]*/);
+                                                    CPUCamera{}
+);
                                                     
     // Window Params
     VisorOptions visorOpts;
@@ -366,7 +364,7 @@ bool SimpleTracerSetup::Init()
     return true;
 }
 
-void SimpleTracerSetup::Body()
+inline void SimpleTracerSetup::Body()
 {
     try
     {

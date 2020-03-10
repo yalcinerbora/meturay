@@ -4,54 +4,29 @@
 #include "RayLib/Log.h"
 #include "RayLib/TracerError.h"
 #include "RayLib/TracerCallbacksI.h"
-//#include "RayLib/GPUSceneI.h"
+#include "RayLib/BitManipulation.h"
+#include "RayLib/GPUSceneI.h"
 
 #include "CudaConstants.h"
 #include "TracerDebug.h"
 #include "GPUAcceleratorI.h"
 #include "GPUWorkI.h"
 
-
-//struct RayAuxBasic
-//{
-//    Vector3f        totalRadiance;
-//    uint32_t        pixelId;
-//    uint32_t        pixelSampleId;
-//};
-//
-//std::ostream& operator<<(std::ostream& stream, const RayAuxBasic& v)
-//{
-//    stream << std::setw(0)
-//            << v.pixelId << ", "
-//            << v.pixelSampleId << ", "
-//            << "{" << v.totalRadiance[0]
-//            << "," << v.totalRadiance[0]
-//            << "," << v.totalRadiance[0] << "}";
-//    return stream;
-//}
-
-GPUTracer::GPUTracer(CudaSystem& s,
-                     // Accelerators that are required
-                     // for hit loop
-                     GPUBaseAcceleratorI& ba,
-                     AcceleratorBatchMap& am,
-                     // Bits for sorting
-                     const Vector2i maxAccelBits,
-                     const Vector2i maxWorkBits,
-                     // Hit size for union allocation
-                     const uint32_t maxHitSize,
-                     // Initialization Param of tracer
+GPUTracer::GPUTracer(CudaSystem& system, GPUSceneI& scene,
                      const TracerParameters& p)
-    : cudaSystem(s)
-    , maxAccelBits(maxAccelBits)
-    , maxWorkBits(maxWorkBits)
-    , baseAccelerator(ba)
-    , accelBatches(am)
+    : cudaSystem(system)
+    , baseAccelerator(*scene.BaseAccelerator())
+    , accelBatches(scene.AcceleratorBatchMappings())
+    , maxAccelBits(Vector2i(Utility::FindFirstSet32(scene.MaxAccelIds()[0]) + 1,
+                            Utility::FindFirstSet32(scene.MaxAccelIds()[1]) + 1))
+    , maxWorkBits(Vector2i(Utility::FindFirstSet32(scene.MaxMatIds()[0]) + 1,
+                           Utility::FindFirstSet32(scene.MaxMatIds()[1]) + 1))
     , params(p)
-    , maxHitSize(maxHitSize)
-    , rayMemory(*(s.GPUList().begin()))
+    , maxHitSize(scene.HitStructUnionSize())
+    , rayMemory(system.BestGPU())
     , callbacks(nullptr)
     , crashed(false)
+    , currentRayCount(0)
 {}
 
 TracerError GPUTracer::Initialize()
@@ -225,7 +200,6 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
 
     // Ray Memory Pointers
     const RayGMem* dRays = rayMemory.Rays();
-    const void* dRayAux = rayMemory.RayAux<void>();
     const HitStructPtr dHitStructs = rayMemory.HitStructs();
     const PrimitiveId* dPrimitiveIds = rayMemory.PrimitiveIds();
     // These are sorted etc.
@@ -260,7 +234,6 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
 
     // Allocate output ray memory
     rayMemory.ResizeRayOut(totalOutRayCount, baseBoundMatKey);
-    unsigned char* dAuxOut = rayMemory.RayAuxOut<unsigned char>();
     RayGMem* dRaysOut = rayMemory.RaysOut();
     HitKey* dBoundKeyOut = rayMemory.WorkKeys();
 
@@ -391,4 +364,7 @@ void GPUTracer::Finalize()
     SendLog("Image sent!");
 }
 
-
+void GPUTracer::AskParameters()
+{
+    if(callbacks) callbacks->SendCurrentParameters(params);
+}

@@ -2,42 +2,55 @@
 
 #include "TracerLib/GPUTracer.h"
 #include "TracerLib/TypeTraits.h"
+#include "TracerLib/GPUEndpointI.cuh"
 
 #include "RayAuxStruct.h"
- 
-class TestPathTracer final : public GPUTracer
+
+class BasicTracer final : public GPUTracer
 
 {
     public:
-        static constexpr const char*    TypeName() { return "Test"; }
+        static constexpr const char*    TypeName() { return "TestBasic"; }
+
+        // Option Names
+        static constexpr const char*    SAMPLE_OPTION_NAME = "Samples";
+
+        struct Options                 
+        {
+            int sampleCount;    // Per-axis sample per pixel
+            int maximumDepth;
+        };
 
     private:
-        DeviceMemory    auxBuffer0;
-        DeviceMemory    auxBuffer1;
+        DeviceMemory            auxBuffer0;
+        DeviceMemory            auxBuffer1;
 
-        RayAuxBasic*    auxIn;
-        RayAuxBasic*    auxOut;        
+        DeviceMemory*           auxIn;
+        DeviceMemory*           auxOut;        
 
+        GPUSceneI&              scene;
+
+        Options                 options;
+
+        void                    GenerateRays(GPUCameraI& dCamera);
+        void                    SwapAuxBuffers();
 
     protected:
     public:
         // Constructors & Destructor
-                        TestPathTracer();
-                        ~TestPathTracer() = default;
+                                BasicTracer(CudaSystem&, GPUSceneI&, 
+                                            const TracerParameters&);
+                                ~BasicTracer() = default;
 
-        //TracerError     Initialize(GPUScene&) override;
+        TracerError             Initialize() override;
+        TracerError             SetOptions(const TracerOptionsI&) override;
+        void                    AskOptions() override;
 
-        //uint32_t        GenerateWork(const CudaSystem& cudaSystem, 
-        //                             //
-        //                             
-        //                              RNGMemory&,
-        //                             const GPUSceneI& scene,
-        //                             const CameraPerspective&,
-        //                             int samplePerLocation,
-        //                             Vector2i resolution,
-        //                             Vector2i pixelStart = Zero2i,
-        //                             Vector2i pixelEnd = BaseConstants::IMAGE_MAX_SIZE) override;
+        //
+        void                    GenerateWork(int cameraId) override;
+        void                    GenerateWork(const CPUCamera&) override;
+        bool                    Render() override;
 };
 
-//static_assert(IsTracerClass<TestPathTracer>::value,
-//              "TracerBasic is not a Tracer Class.");
+static_assert(IsTracerClass<BasicTracer>::value,
+              "TracerBasic is not a Tracer Class.");

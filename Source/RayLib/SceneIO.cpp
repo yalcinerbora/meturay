@@ -65,15 +65,15 @@ TransformStruct SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
     else throw SceneException(SceneError::TYPE_MISMATCH);
 }
 
-CameraPerspective SceneIO::LoadCamera(const nlohmann::json& jsn, double time)
+CPUCamera SceneIO::LoadCamera(const nlohmann::json& jsn, double time)
 {
     if(jsn.is_string())
     {
-        return LoadFromAnim<CameraPerspective>(jsn, time);
+        return LoadFromAnim<CPUCamera>(jsn, time);
     }
     else if(jsn.is_object())
     {
-        CameraPerspective cam = {};
+        CPUCamera cam = {};
         cam.position = LoadVector<3, float>(jsn[POSITION], time);
         cam.up = LoadVector<3, float>(jsn[CAMERA_UP], time);
         cam.gazePoint = LoadVector<3, float>(jsn[CAMERA_GAZE], time);
@@ -105,15 +105,15 @@ LightType SceneIO::LoadLightType(const nlohmann::json& jsn)
     return t;
 }
 
-LightStruct SceneIO::LoadLight(const nlohmann::json& jsn, double time)
+CPULight SceneIO::LoadLight(const nlohmann::json& jsn, double time)
 {
     if(jsn.is_string())
     {
-        return LoadFromAnim<LightStruct>(jsn, time);
+        return LoadFromAnim<CPULight>(jsn, time);
     }
     else if(jsn.is_object())
     {
-        LightStruct light = LightStruct{};
+        CPULight light = CPULight{};
         light.position0 = Zero3;
         light.position1 = Zero3;
         light.position2 = Zero3;

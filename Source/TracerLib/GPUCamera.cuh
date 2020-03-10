@@ -18,8 +18,7 @@ class PinholeCamera final : public GPUEndpointI
     protected:
     public:
         // Constructors & Destructor
-        __device__          PinholeCamera(const CameraPerspective&,
-                                          HitKey key);
+        __device__          PinholeCamera(const CPUCamera&, HitKey key);
 
         // Interface 
         __device__ void     Sample(// Output

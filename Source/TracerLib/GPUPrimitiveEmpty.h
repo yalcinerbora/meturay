@@ -86,7 +86,7 @@ class GPUPrimitiveEmpty final
                                                            const std::string&) override;
         // Provides data to Event Estimator
         bool                                    HasPrimitive(uint32_t surfaceDataId) const override;
-        SceneError                              GenerateLights(std::vector<LightStruct>&,
+        SceneError                              GenerateLights(std::vector<CPULight>&,
                                                                const Vector3& power,
                                                                HitKey key,
                                                                uint32_t surfaceDataId) const override;

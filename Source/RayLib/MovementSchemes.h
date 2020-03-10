@@ -25,11 +25,11 @@ class MovementSchemeFPS final : public MovementSchemeI
                                               double moveRatioModifier);
 
         // Interface
-        bool                InputAction(CameraPerspective&,
+        bool                InputAction(CPUCamera&,
                                            VisorActionType,
                                            KeyAction) override;
-        bool                MouseMovementAction(CameraPerspective&,
+        bool                MouseMovementAction(CPUCamera&,
                                                 double x, double y) override;
-        bool                MouseScrollAction(CameraPerspective&,
+        bool                MouseScrollAction(CPUCamera&,
                                               double x, double y) override;
 };

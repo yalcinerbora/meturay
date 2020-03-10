@@ -8,6 +8,7 @@ Structures that is related to TracerI
 #include <cstdint>
 #include <vector>
 #include <map>
+#include <string>
 
 #include "ObjectFuncDefinitions.h"
 
@@ -35,9 +36,10 @@ using AcceleratorBatchMap = std::map<uint32_t, GPUAcceleratorGroupI*>;
 using WorkBatchMap = std::map<uint32_t, GPUWorkBatchI*>;
 using WorkBatchCreationInfo = std::map<uint32_t, MatPrimPair>;
 
-// Constant Paramters that cannot be changed after initialization
+// Logic Independent parameters for tracer
+// Logic Dependent ones will be provided by TracerOptionsI
 struct TracerParameters
 {
-    bool verbose;
-    uint32_t seed;
+    bool        verbose;
+    uint32_t    seed;
 };

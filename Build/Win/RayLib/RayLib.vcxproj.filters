@@ -220,9 +220,10 @@
     <ClInclude Include="..\..\..\Source\RayLib\GPUTracerI.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\Light.h">
-      <Filter>Structs</Filter>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerOptionsI.h">
+      <Filter>Interfaces</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerOptions.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

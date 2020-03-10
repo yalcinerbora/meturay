@@ -343,7 +343,7 @@ bool GPUPrimitiveTriangle::HasPrimitive(uint32_t surfaceDataId) const
     return true;
 }
 
-SceneError GPUPrimitiveTriangle::GenerateLights(std::vector<LightStruct>& result,
+SceneError GPUPrimitiveTriangle::GenerateLights(std::vector<CPULight>& result,
                                                 const Vector3& flux, HitKey key,
                                                 uint32_t id) const
 {
@@ -351,7 +351,7 @@ SceneError GPUPrimitiveTriangle::GenerateLights(std::vector<LightStruct>& result
     result.reserve(range[1] - range[0]);
     for(uint64_t i = range[0]; i < range[1]; i++)
     {
-        LightStruct ls;
+        CPULight ls;
         ls.matKey = key;
         ls.flux = flux;
         ls.type = LightType::TRIANGULAR;

@@ -106,6 +106,8 @@ class DeviceMemory
         constexpr                   operator const void*() const;
         // Misc
         size_t                      Size() const;
+
+        static void                 EnlargeBuffer(DeviceMemory&, size_t);
 };
 
 template<class T>
@@ -152,4 +154,13 @@ inline constexpr DeviceMemory::operator void*()
 inline constexpr DeviceMemory::operator const void*() const
 {
     return m_ptr;
+}
+
+inline void DeviceMemory::EnlargeBuffer(DeviceMemory& mem, size_t s)
+{
+    if(s > mem.Size())
+    {
+        mem = std::move(DeviceMemory());
+        mem = std::move(DeviceMemory(s));
+    }
 }

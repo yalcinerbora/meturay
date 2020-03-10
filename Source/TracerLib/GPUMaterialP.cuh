@@ -75,9 +75,9 @@ struct MatDataAccessor
     // I dont know any design pattern for converting from static polymorphism
     // to dynamic one. This is my solution (it is quite werid)
     template <class MaterialGroupS>
-    static typename MaterialGroupS::MaterialData Data(const MaterialGroupS& mg)
+    static typename MaterialGroupS::Data Data(const MaterialGroupS& mg)
     {
-        using M = typename MaterialGroupS::MaterialData;
+        using M = typename MaterialGroupS::Data;
         return static_cast<const GPUMaterialGroupD<M>&>(mg).dData;
     }
 };

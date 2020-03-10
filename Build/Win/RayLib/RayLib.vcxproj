@@ -147,7 +147,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\HybridFunctions.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageStructs.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\Light.h" />
     <ClInclude Include="..\..\..\Source\RayLib\LoopingThreadI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MDistributor.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MemoryAlignment.h" />
@@ -191,6 +190,8 @@
     <ClInclude Include="..\..\..\Source\RayLib\GPUTracerI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerNode.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerError.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\TracerOptions.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\TracerOptionsI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerStatus.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Triangle.h" />

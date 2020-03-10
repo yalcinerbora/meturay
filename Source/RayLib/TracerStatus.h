@@ -15,7 +15,7 @@ struct TracerStatus
 
     unsigned int                latestSceneCamId;       // Latest camera that has been used
                                                         // from the scene (for switching from that)
-    CameraPerspective           currentCamera;          // Current Camera (as data)
+    CPUCamera                   currentCamera;          // Current Camera (as data)
 
     Vector2i                    currentRes;             // Current Resolution of the scene;
     PixelFormat                 currentPixelFormat;     // Pixel format of the image that is being generated

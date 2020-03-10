@@ -23,8 +23,9 @@ static nlohmann::json ReadTestFile(const std::string& fileName = TestSceneName)
 
 TEST(SceneIOCommon, Camera)
 {
-    static constexpr CameraPerspective CamResult =
+    static constexpr CPUCamera CamResult =
     {
+        CameraType::APERTURE,
         Vector3(0.0f, 5.0f, 0.0f),
         0.1f,
         Vector3(0.0f, 5.0f, 10.0f),
@@ -35,7 +36,9 @@ TEST(SceneIOCommon, Camera)
     };
 
     nlohmann::json jsn = ReadTestFile()[NodeNames::CAMERA_BASE];
-    CameraPerspective camera = SceneIO::LoadCamera(jsn[0]);
+    CPUCamera camera = SceneIO::LoadCamera(jsn[0]);
+    EXPECT_EQ(CamResult.type, camera.type);
+
     EXPECT_FLOAT_EQ(CamResult.position[0], camera.position[0]);
     EXPECT_FLOAT_EQ(CamResult.position[1], camera.position[1]);
     EXPECT_FLOAT_EQ(CamResult.position[2], camera.position[2]);

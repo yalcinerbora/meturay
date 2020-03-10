@@ -6,13 +6,14 @@ class RandomGPU;
 #include "RayAuxStruct.h"
 #include "MaterialDataStructs.h"
 #include "SurfaceStructs.h"
+#include "TracerLib/TextureStructs.h"
 
 #include "RayLib/Constants.h"
 
 #include "TracerLib/ImageFunctions.cuh"
 
 template <class Data, class Surface>
-__device__
+__device__ inline
 void AcquireUVEmpty(//Output
                     UVList*,
                     const Surface&,
@@ -21,7 +22,7 @@ void AcquireUVEmpty(//Output
                     const HitKey::Type& matId)
 {}
 
-__device__
+__device__ inline
 Vector3 ConstantSample(// Sampled Output
                        RayF& wo,
                        float& pdf,
@@ -43,7 +44,7 @@ Vector3 ConstantSample(// Sampled Output
     return matData.dAlbedo[matId];
 }
 
-__device__
+__device__ inline
 Vector3 ConstantEvaluate(// Input
                          const Vector3& wo,
                          const Vector3& wi,
@@ -57,7 +58,7 @@ Vector3 ConstantEvaluate(// Input
     return matData.dAlbedo[matId];
 }
 
-__device__
+__device__ inline
 Vector3 BarycentricSample(// Sampled Output
                           RayF& wo,
                           float& pdf,
@@ -79,7 +80,7 @@ Vector3 BarycentricSample(// Sampled Output
     return surface.baryCoords;
 }
 
-__device__
+__device__ inline
 Vector3 BarycentricEvaluate(// Input
                             const Vector3& wo,
                             const Vector3& wi,
@@ -93,7 +94,7 @@ Vector3 BarycentricEvaluate(// Input
     return surface.baryCoords;
 }
 
-__device__
+__device__ inline
 Vector3 SphericalSample(// Sampled Output
                         RayF& wo,
                         float& pdf,
@@ -117,7 +118,7 @@ Vector3 SphericalSample(// Sampled Output
                     0.0f);
 }
 
-__device__
+__device__ inline
 Vector3 SphericalEvaluate(// Input
                           const Vector3& wo,
                           const Vector3& wi,

@@ -60,7 +60,9 @@ struct WorkBatchData
 
 using MaterialKeyListing = std::map<TypeIdPair, HitKey>;
 
-struct LightStruct
+// CPU Representation of Light
+// No inheritance here
+struct CPULight
 {
     LightType   type;
     HitKey      matKey;    

@@ -118,7 +118,7 @@
 //      void                    SetImagePeriod(double seconds) override;
 //
 //      // Visor Window I-O
-//      void                    ChangeCamera(const CameraPerspective&) override;
+//      void                    ChangeCamera(const CPUCamera&) override;
 //      void                    ChangeTime(double seconds) override;
 //      void                    ChangeParameters() override;
 //      void                    ChangeFPS(int fps) override;

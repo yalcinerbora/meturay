@@ -155,7 +155,7 @@
 //
 //}
 //
-//void  MDistributor::ChangeCamera(const CameraPerspective&)
+//void  MDistributor::ChangeCamera(const CPUCamera&)
 //{
 //
 //}

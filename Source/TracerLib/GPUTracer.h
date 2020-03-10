@@ -26,29 +26,31 @@ All Tracers should inherit this class
 #include "RayMemory.h"
 #include "ImageMemory.h"
 
+class GPUSceneI;
 class CudaSystem;
-class TracerLogicGeneratorI;
+
 struct TracerError;
+
 
 class GPUTracer : public GPUTracerI
 {
     private:
-
-    protected:
-        // Cuda System For Kernel Calls
-        const CudaSystem&                   cudaSystem;
         // Max Bit Sizes for Efficient Sorting
         const Vector2i                      maxAccelBits;
         const Vector2i                      maxWorkBits;
         //
         const uint32_t                      maxHitSize;
+        // Batches for Accelerator
+        GPUBaseAcceleratorI&                baseAccelerator;
+        const AcceleratorBatchMap&          accelBatches;
+
+    protected:
+        // Cuda System For Kernel Calls
+        const CudaSystem&                   cudaSystem;
         // GPU Memory
         RNGMemory                           rngMemory;
         RayMemory                           rayMemory;
-        ImageMemory                         imgMemory;
-        // Batches for Accelerator
-        GPUBaseAcceleratorI&                baseAccelerator;
-        AcceleratorBatchMap&                accelBatches;
+        ImageMemory                         imgMemory;        
         //
         TracerParameters                    params;
         //
@@ -72,18 +74,8 @@ class GPUTracer : public GPUTracerI
 
     public:
         // Constructors & Destructor
-                                            GPUTracer(CudaSystem&,
-                                                       // Accelerators that are required
-                                                       // for hit loop
-                                                       GPUBaseAcceleratorI&,
-                                                       AcceleratorBatchMap&,
-                                                       // Bits for sorting
-                                                       const Vector2i maxAccelBits,
-                                                       const Vector2i maxWorkBits,
-                                                       // Hit size for union allocation
-                                                       const uint32_t maxHitSize,
-                                                       // Initialization Param of tracer
-                                                       const TracerParameters&);
+                                            GPUTracer(CudaSystem&, GPUSceneI&,
+                                                      const TracerParameters&);
                                             GPUTracer(const GPUTracer&) = delete;
                                             GPUTracer(GPUTracer&&) = delete;
         GPUTracer&                          operator=(const GPUTracer&) = delete;
@@ -99,8 +91,9 @@ class GPUTracer : public GPUTracerI
         // ===================//
         // COMMANDS TO TRACER //
         // ===================//
-        void                    SetParameters(const TracerParameters&) override;
         TracerError             Initialize() override;
+        void                    SetParameters(const TracerParameters&) override;
+        void                    AskParameters() override;
         void                    Finalize() override;
 
          // Image Related
@@ -176,7 +169,7 @@ inline void GPUTracer::AttachTracerCallbacks(TracerCallbacksI& tc)
 //                                                int cameraId,
 //                                                int samplePerLocation) override;
 //        void                GenerateInitialRays(const GPUSceneI& scene,
-//                                                const CameraPerspective&,
+//                                                const CPUCamera&,
 //                                                int samplePerLocation) override;
 //        bool                Continue() override;        // Continue hit/bounce looping (consume ray pool)
 //        void                Render() override;          // Render rays  (do hit, then bounce)
