@@ -107,7 +107,7 @@ static void KCIntersectLinear(// O
                               // Constants
                               const PGroup::LeafData* gLeafList,
                               const Vector2ul* gAccRanges,
-                              const TransformStruct* gInverseTransforms,
+                              const GPUTransform* gInverseTransforms,
                               //
                               const PGroup::PrimitiveData primData)
 {
@@ -134,7 +134,7 @@ static void KCIntersectLinear(// O
         // Zero means identity so skip
         if(transformId != 0)
         {
-            TransformStruct s = gInverseTransforms[transformId];
+            GPUTransform s = gInverseTransforms[transformId];
             ray.ray.TransformSelf(s);
         }   
             

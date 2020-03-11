@@ -30,13 +30,13 @@ namespace LightCameraKernels
                                  const CudaSystem&);
 
     void        ConstructSingleLight(// Output
-                                     GPULightI* gPtr,
+                                     GPULightI*& gPtr,
                                      Byte* gMemory,
                                      // Input
                                      const CPULight& lightData,
                                      const CudaSystem&);
     void        ConstructSingleCamera(// Output
-                                      GPUCameraI* gPtr,
+                                      GPUCameraI*& gPtr,
                                       Byte* gMemory,
                                       // Input
                                       const CPUCamera& cameraData,

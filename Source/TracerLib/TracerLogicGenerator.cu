@@ -32,7 +32,7 @@ template GPUPrimitiveGroupI* TypeGenWrappers::DefaultConstruct<GPUPrimitiveGroup
 
 template GPUAcceleratorGroupI* TypeGenWrappers::AccelGroupConstruct<GPUAcceleratorGroupI,
                                                                     GPUAccTriLinearGroup>(const GPUPrimitiveGroupI&,
-                                                                                          const TransformStruct*);
+                                                                                          const GPUTransform*);
 
 // Destructors
 template void TypeGenWrappers::DefaultDestruct(GPUPrimitiveGroupI*);
@@ -118,7 +118,7 @@ SceneError TracerLogicGenerator::GeneratePrimitiveGroup(GPUPrimGPtr& pg,
 
 SceneError TracerLogicGenerator::GenerateAcceleratorGroup(GPUAccelGPtr& ag,
                                                           const GPUPrimitiveGroupI& pg,
-                                                          const TransformStruct* t,
+                                                          const GPUTransform* t,
                                                           const std::string& accelType)
 {
     ag = nullptr;

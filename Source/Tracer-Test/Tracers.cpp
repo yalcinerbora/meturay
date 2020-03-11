@@ -15,3 +15,14 @@ void BasicTracer::AskOptions()
 
     if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
 }
+
+void PathTracer::AskOptions()
+{
+    // Generate Tracer Object
+    VariableList list;
+    list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
+    list.emplace(MAX_DEPTH_NAME, OptionVariable(options.maximumDepth));
+    list.emplace(NEE_NAME, OptionVariable(options.nextEventEstimation));
+
+    if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
+}

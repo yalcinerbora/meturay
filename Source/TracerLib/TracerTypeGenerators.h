@@ -28,7 +28,7 @@ using TracerGeneratorFunc = GPUTracerI* (*)(const TracerParameters&,
 
 template<class Accel>
 using AccelGroupGeneratorFunc = Accel* (*)(const GPUPrimitiveGroupI&,
-                                           const TransformStruct*);
+                                           const GPUTransform*);
 
 template<class AccelBatch>
 using AccelBatchGeneratorFunc = AccelBatch* (*)(const GPUAcceleratorGroupI&,
@@ -98,7 +98,7 @@ class GPUAccelGroupGen
         {}
 
         GPUAccelGPtr operator()(const GPUPrimitiveGroupI& pg,
-                                const TransformStruct* ts)
+                                const GPUTransform* ts)
         {
             GPUAcceleratorGroupI* accel = gFunc(pg, ts);
             return GPUAccelGPtr(accel, dFunc);
@@ -116,7 +116,7 @@ namespace TypeGenWrappers
 
     template <class Base, class AccelGroup>
     Base* AccelGroupConstruct(const GPUPrimitiveGroupI& p,
-                              const TransformStruct* t)
+                              const GPUTransform* t)
     {
         return new AccelGroup(p, t);
     }

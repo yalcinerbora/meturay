@@ -106,7 +106,7 @@ TEST(SceneIOCommon, Lights)
 
 TEST(SceneIOCommon, Transform)
 {
-    TransformStruct t;
+    GPUTransform t;
     nlohmann::json jsn = ReadTestFile()[NodeNames::TRANSFORM_BASE];
     // First one is external, it should throw file not found
     EXPECT_THROW(SceneIO::LoadTransform(jsn[0]), SceneException);

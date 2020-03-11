@@ -66,7 +66,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         // Accelerator
         SceneError                  GenerateAcceleratorGroup(GPUAccelGPtr&,
                                                              const GPUPrimitiveGroupI&,
-                                                             const TransformStruct* t,
+                                                             const GPUTransform* t,
                                                              const std::string& accelType) override;
         // Material
         SceneError                  GenerateMaterialGroup(GPUMatGPtr&,

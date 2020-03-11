@@ -8,6 +8,7 @@
 #include "RayLib/StripComments.h"
 #include "RayLib/MemoryAlignment.h"
 
+#include "LightCameraKernels.h"
 #include "GPUAcceleratorI.h"
 #include "GPUPrimitiveI.h"
 #include "GPUMaterialI.h"
@@ -52,8 +53,10 @@ SceneError GPUSceneJson::OpenFile(const std::u8string& fileName)
 GPUSceneJson::GPUSceneJson(const std::u8string& fileName,
                            ScenePartitionerI& partitioner,
                            TracerLogicGeneratorI& lg,
-                           const SurfaceLoaderGeneratorI& sl)
+                           const SurfaceLoaderGeneratorI& sl,
+                           const CudaSystem& system)
     : logicGenerator(lg)
+    , cudaSystem(system)
     , partitioner(partitioner)
     , surfaceLoaderGenerator(sl)
     , maxAccelIds(Vector2i(-1))
@@ -65,6 +68,9 @@ GPUSceneJson::GPUSceneJson(const std::u8string& fileName,
     , currentTime(0.0)
     , dLights(nullptr)
     , dTransforms(nullptr)
+    , dCameras(nullptr)
+    , dCameraAllocations(nullptr)
+    , dLightAllocations(nullptr)
     , sceneJson(nullptr)
     , baseAccelerator(nullptr, nullptr)
 {}
@@ -596,7 +602,7 @@ SceneError GPUSceneJson::LoadCommon(const std::vector<CPULight>& lightsCPU, doub
     SceneError e = SceneError::OK;
 
     // CPU Temp Data
-    std::vector<TransformStruct> transformsCPU;
+    std::vector<GPUTransform> transformsCPU;
     std::vector<CPUCamera> camerasCPU;
 
     // Transforms
@@ -615,33 +621,60 @@ SceneError GPUSceneJson::LoadCommon(const std::vector<CPULight>& lightsCPU, doub
         camerasCPU.push_back(SceneIO::LoadCamera(cameraJson, time));
     // Lights are already pre-loaded and extended
 
+    // Put sizes
+    lightCount = lightsCPU.size();
+    cameraCount = camerasCPU.size();
+    transformCount = transformsCPU.size();
+
     // Determine Size
-    size_t camPointers = sizeof(GPUCameraI*) * camerasCPU.size();
-    size_t lightPointers = sizeof(GPULightI*) * lightsCPU.size();
-    size_t transformSize = transformsCPU.size() * sizeof(TransformStruct);
+    size_t camPtrSize = sizeof(GPUCameraI*) * camerasCPU.size();
+    size_t lightPtrSize = sizeof(GPULightI*) * lightsCPU.size();
+    size_t transformSize = transformsCPU.size() * sizeof(GPUTransform);
     transformSize = Memory::AlignSize(transformSize, AlignByteCount);
-    //size_t lightSize = GPULi
+    size_t lightSize = LightCameraKernels::LightClassesUnionSize() * lightsCPU.size();
+    lightSize = Memory::AlignSize(lightSize, AlignByteCount);
+    size_t cameraSize = LightCameraKernels::CameraClassesUnionSize() * camerasCPU.size();
+    cameraSize = Memory::AlignSize(cameraSize, AlignByteCount);
+    size_t totalSize = (camPtrSize + lightPtrSize +
+                        transformSize + lightSize +
+                        cameraSize);
 
+    // Allocate For All
+    DeviceMemory::EnlargeBuffer(memory, totalSize);
 
-
-    // Allocate GPU and Load
+    // Determine Ptrs
+    size_t offset = 0;
+    Byte* dMem = static_cast<Byte*>(memory);
+    dCameras = reinterpret_cast<GPUCameraI**>(dMem + offset);
+    offset += camPtrSize;
+    dLights = reinterpret_cast<GPULightI**>(dMem + offset);
+    offset += lightPtrSize;
+    dTransforms = reinterpret_cast<GPUTransform*>(dMem + offset);
+    offset += transformSize;
+    dLightAllocations = dMem + offset;
+    offset += lightSize;
+    dCameraAllocations = dMem + offset;
+    offset += lightSize;
     
-    //size_t lightSize = lightsCPU.size() * sizeof(CPULight);
-
-    //memory = DeviceMemory(transformSize + lightSize);
     if(transformsCPU.size() != 0)
     {
-        dTransforms = reinterpret_cast<TransformStruct*>(static_cast<Byte*>(memory));
+        // Just Memcpy
         CUDA_CHECK(cudaMemcpy(dTransforms, transformsCPU.data(),
-                              transformsCPU.size() * sizeof(TransformStruct),
+                              transformsCPU.size() * sizeof(GPUTransform),
                               cudaMemcpyHostToDevice));
-    }
+    } else dTransforms = nullptr;
     if(lightsCPU.size() != 0)
     {
+        LightCameraKernels::ConstructLights(dLights, dLightAllocations, lightsCPU,
+                                            cudaSystem);
         //dLights = reinterpret_cast<LightStruct*>(static_cast<Byte*>(memory) + transformSize);
         //CUDA_CHECK(cudaMemcpy(dLights, lightsCPU.data(), lightsCPU.size() * sizeof(LightStruct),
         //                      cudaMemcpyHostToDevice));
-    }
+    } else dLights = nullptr;
+    if(lightsCPU.size() != 0)
+    {
+
+    } else dCameras = nullptr;
 
     //// Now Load Camera
     //const nlohmann::json* camerasJson = nullptr;
@@ -827,17 +860,17 @@ uint32_t GPUSceneJson::HitStructUnionSize() const
     return hitStructSize;
 }
 
-const GPULightI* GPUSceneJson::LightsGPU() const
+const GPULightI** GPUSceneJson::LightsGPU() const
 {
-    return dLights;
+    return const_cast<const GPULightI**>(dLights);
 }
 
-const GPUCameraI* GPUSceneJson::CamerasGPU() const
+const GPUCameraI** GPUSceneJson::CamerasGPU() const
 {
-    return dCameras;
+    return const_cast<const GPUCameraI**>(dCameras);
 }
 
-const TransformStruct* GPUSceneJson::TransformsGPU() const
+const GPUTransform* GPUSceneJson::TransformsGPU() const
 {
     return dTransforms;
 }

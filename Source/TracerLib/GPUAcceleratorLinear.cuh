@@ -59,7 +59,7 @@ class GPUAccLinearGroup final
     public:
         // Constructors & Destructor
                             GPUAccLinearGroup(const GPUPrimitiveGroupI&,
-                                              const TransformStruct*);
+                                              const GPUTransform*);
                             ~GPUAccLinearGroup() = default;
 
         // Interface

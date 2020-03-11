@@ -31,11 +31,11 @@ inline SceneError LightTypeStringToEnum(LightType& type,
     return SceneError::UNKNOWN_LIGHT_TYPE;
 }
 
-TransformStruct SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
+GPUTransform SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
 {
     if(jsn.is_string())
     {
-        return LoadFromAnim<TransformStruct>(jsn, time);
+        return LoadFromAnim<GPUTransform>(jsn, time);
     }
     else if(jsn.is_object())
     {

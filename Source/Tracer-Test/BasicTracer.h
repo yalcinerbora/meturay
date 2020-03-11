@@ -6,7 +6,7 @@
 
 #include "RayAuxStruct.h"
 
-class BasicTracer final : public GPUTracer
+class BasicTracer : public GPUTracer
 
 {
     public:
@@ -14,29 +14,31 @@ class BasicTracer final : public GPUTracer
 
         // Option Names
         static constexpr const char*    SAMPLE_NAME = "Samples";
-        static constexpr const char*    MAX_DEPTH_NAME = "MaxDepth";
-
+        
         struct Options                 
         {
-            int32_t     sampleCount;    // Per-axis sample per pixel
-            uint32_t    maximumDepth;
+            int32_t     sampleCount = 1;    // Per-axis sample per pixel
         };
 
     private:
+        Options                 options;
+
+    protected:
+        DeviceMemory            tempCameraBuffer;
         DeviceMemory            auxBuffer0;
         DeviceMemory            auxBuffer1;
 
-        DeviceMemory*           auxIn;
-        DeviceMemory*           auxOut;        
+        GPUCameraI**            dCameraPtr;
+        DeviceMemory*           dAuxIn;
+        DeviceMemory*           dAuxOut;        
 
         GPUSceneI&              scene;
 
-        Options                 options;
+        WorkBatchMap            workMap;
 
         void                    GenerateRays(const GPUCameraI& dCamera);
         void                    SwapAuxBuffers();
 
-    protected:
     public:
         // Constructors & Destructor
                                 BasicTracer(CudaSystem&, GPUSceneI&, 

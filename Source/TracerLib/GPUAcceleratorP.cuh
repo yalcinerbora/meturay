@@ -20,12 +20,12 @@ class GPUAcceleratorGroup
     protected:
         // From Tracer
         const PGroup&                   primitiveGroup;
-        const TransformStruct*          dInverseTransforms;
+        const GPUTransform*             dInverseTransforms;
 
     public:
         // Constructors & Destructor
                                         GPUAcceleratorGroup(const GPUPrimitiveGroupI&,
-                                                            const TransformStruct*);
+                                                            const GPUTransform*);
                                         ~GPUAcceleratorGroup() = default;
 
 
@@ -34,7 +34,7 @@ class GPUAcceleratorGroup
 
 template <class P>
 GPUAcceleratorGroup<P>::GPUAcceleratorGroup(const GPUPrimitiveGroupI& pg,
-                                            const TransformStruct* t)
+                                            const GPUTransform* t)
     : primitiveGroup(static_cast<const P&>(pg))
     , dInverseTransforms(t)
 {}

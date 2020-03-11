@@ -74,14 +74,12 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUCamera.cu" />
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveEmpty.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp" />
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPULight.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\ImageMemory.cu">
       <FileType>Document</FileType>
     </CudaCompile>

@@ -42,6 +42,7 @@ class GPUSceneJson : public GPUSceneI
         TracerLogicGeneratorI&                  logicGenerator;
         ScenePartitionerI&                      partitioner;
         const SurfaceLoaderGeneratorI&          surfaceLoaderGenerator;
+        const CudaSystem&                       cudaSystem;
 
         // Loaded
         Vector2i                                maxAccelIds;
@@ -69,9 +70,12 @@ class GPUSceneJson : public GPUSceneI
         size_t                                  lightCount;
         size_t                                  cameraCount;
         size_t                                  transformCount;
-        GPULightI*                              dLights;
-        GPUCameraI*                             dCameras;
-        TransformStruct*                        dTransforms;
+
+        GPULightI**                             dLights;
+        GPUCameraI**                            dCameras;
+        GPUTransform*                           dTransforms;
+        Byte*                                   dCameraAllocations;
+        Byte*                                   dLightAllocations;
 
         // Inners
         // Helper Logic
@@ -129,7 +133,8 @@ class GPUSceneJson : public GPUSceneI
                                             GPUSceneJson(const std::u8string&,
                                                          ScenePartitionerI&,
                                                          TracerLogicGeneratorI&,
-                                                         const SurfaceLoaderGeneratorI&);
+                                                         const SurfaceLoaderGeneratorI&,
+                                                         const CudaSystem&);
                                             GPUSceneJson(const GPUSceneJson&) = delete;
                                             GPUSceneJson(GPUSceneJson&&) = default;
         GPUSceneJson&                       operator=(const GPUSceneJson&) = delete;
@@ -147,9 +152,9 @@ class GPUSceneJson : public GPUSceneI
         HitKey                              BaseBoundaryMaterial() const override;
         uint32_t                            HitStructUnionSize() const override;
         // Access GPU
-        const GPULightI*                    LightsGPU() const override;
-        const GPUCameraI*                   CamerasGPU() const override;
-        const TransformStruct*              TransformsGPU() const  override;
+        const GPULightI**                   LightsGPU() const override;
+        const GPUCameraI**                  CamerasGPU() const override;
+        const GPUTransform*                 TransformsGPU() const  override;
         
         // Counts
         size_t                              LightCount() const override;

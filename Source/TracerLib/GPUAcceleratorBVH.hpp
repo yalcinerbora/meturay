@@ -27,7 +27,7 @@ inline std::ostream& operator<<(std::ostream& stream, const BaseLeaf& l)
 
 template <class PGroup>
 GPUAccBVHGroup<PGroup>::GPUAccBVHGroup(const GPUPrimitiveGroupI& pGroup,
-                                       const TransformStruct* dInvTransforms)
+                                       const GPUTransform* dInvTransforms)
     : GPUAcceleratorGroup<PGroup>(pGroup, dInvTransforms)
     , dBVHLists(nullptr)
 {}
@@ -705,7 +705,7 @@ void GPUAccBVHGroup<PGroup>::Hit(const CudaGPU& gpu,
                                        const HitKey*,
                                        uint32_t,
                                        const BVHNode<LeafData>**,
-                                       const TransformStruct*, PrimitiveData);
+                                       const GPUTransform*, PrimitiveData);
 
     BVHIntersectKernel kernel = (params.useStack) ? KCIntersectBVH<PGroup> : 
                                                     KCIntersectBVHStackless<PGroup>;

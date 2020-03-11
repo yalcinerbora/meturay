@@ -89,7 +89,7 @@ class GPUAccBVHGroup final
     public:
         // Constructors & Destructor
                                 GPUAccBVHGroup(const GPUPrimitiveGroupI&,
-                                               const TransformStruct*);
+                                               const GPUTransform*);
                                 ~GPUAccBVHGroup() = default;
 
         // Interface

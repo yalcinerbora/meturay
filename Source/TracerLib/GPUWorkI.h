@@ -40,7 +40,7 @@ class GPUWorkBatchI
                                                  // 
                                                  const uint32_t outputOffset,
                                                  const uint32_t rayCount,
-                                                 RNGMemory& rngMem) const = 0;
+                                                 RNGMemory& rngMem) = 0;
 
         // Every MaterialBatch is available for a specific primitive / material data
         virtual const GPUPrimitiveGroupI&   PrimitiveGroup() const = 0;

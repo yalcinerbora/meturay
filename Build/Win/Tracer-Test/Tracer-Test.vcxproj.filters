@@ -29,10 +29,10 @@
     <CudaCompile Include="..\..\..\Source\Tracer-Test\BasicTracer.cu">
       <Filter>Tracers</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\BasicTracerWork.cu">
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\PathTracer.cu">
       <Filter>Tracers</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\PathTracer.cu">
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerWorks.cu">
       <Filter>Tracers</Filter>
     </CudaCompile>
   </ItemGroup>
@@ -63,16 +63,19 @@
       <Filter>Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\TestPools.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\BasicTracerWork.cuh">
-      <Filter>Tracers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\BasicTracerKC.cuh">
-      <Filter>Tracers</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\BasicTracer.h">
       <Filter>Tracers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\PathTracer.h">
+      <Filter>Tracers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\MetaTracerWork.cuh">
+      <Filter>Tracers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerWorks.cuh">
+      <Filter>Tracers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerKC.cuh">
       <Filter>Tracers</Filter>
     </ClInclude>
   </ItemGroup>

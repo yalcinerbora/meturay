@@ -302,7 +302,7 @@ void KCIntersectBVH(// O
                     const uint32_t rayCount,
                     // Constants
                     const BVHNode<PGroup::LeafData>** gBVHList,
-                    const TransformStruct* gInverseTransforms,
+                    const GPUTransform* gInverseTransforms,
                     //
                     const PGroup::PrimitiveData primData)
 {
@@ -348,7 +348,7 @@ void KCIntersectBVH(// O
         // Zero means identity so skip
         if(transformId != 0)
         {
-            TransformStruct s = gInverseTransforms[transformId];
+            GPUTransform s = gInverseTransforms[transformId];
             ray.ray.TransformSelf(s);
         }
 
@@ -420,7 +420,7 @@ void KCIntersectBVHStackless(// O
                              const uint32_t rayCount,
                              // Constants
                              const BVHNode<PGroup::LeafData>** gBVHList,
-                             const TransformStruct* gInverseTransforms,
+                             const GPUTransform* gInverseTransforms,
                              //
                              const PGroup::PrimitiveData primData)
 {
@@ -470,7 +470,7 @@ void KCIntersectBVHStackless(// O
         // Zero means identity so skip
         if(transformId != 0)
         {
-            TransformStruct s = gInverseTransforms[transformId];
+            GPUTransform s = gInverseTransforms[transformId];
             ray.ray.TransformSelf(s);
         }
 

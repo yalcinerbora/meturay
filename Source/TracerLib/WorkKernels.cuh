@@ -59,7 +59,7 @@ template<class GlobalState, class LocalState,
          class RayAuxiliary, class PGroup, class MGroup,
          WorkFunc<GlobalState, LocalState, RayAuxiliary, MGroup> WFunc, 
          SurfaceFunc<MGroup, PGroup> SurfFunc>
- __global__ //__launch_bounds__(StaticThreadPerBlock1D)
+ __global__ __launch_bounds__(StaticThreadPerBlock1D)
 void KCWork(// Output
             HitKey* gOutBoundKeys,
             RayGMem* gOutRays,

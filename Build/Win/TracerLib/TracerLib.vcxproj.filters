@@ -300,12 +300,6 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.cu">
       <Filter>Default Accelerators\BVH</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPULight.cu">
-      <Filter>Light &amp; Camera</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUCamera.cu">
-      <Filter>Light &amp; Camera</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracer.cu">
       <Filter>Partial Implementations</Filter>
     </CudaCompile>

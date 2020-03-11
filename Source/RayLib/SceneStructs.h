@@ -72,7 +72,7 @@ struct CPULight
     Vector3     position2;
 };
 
-using TransformStruct = Matrix4x4;
+using GPUTransform = Matrix4x4;
 
 struct SurfaceStruct
 {

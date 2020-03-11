@@ -10,7 +10,7 @@ class GPULightI;
 class GPUEndpointI;
 using GPUCameraI = GPUEndpointI;
 
-using TransformStruct = Matrix4x4;
+using GPUTransform = Matrix4x4;
 
 class GPUSceneI
 {
@@ -29,9 +29,9 @@ class GPUSceneI
         virtual HitKey                      BaseBoundaryMaterial() const = 0;
         virtual uint32_t                    HitStructUnionSize() const = 0;
         // Access GPU                
-        virtual const GPULightI*            LightsGPU() const = 0;
-        virtual const GPUCameraI*           CamerasGPU() const = 0;
-        virtual const TransformStruct*      TransformsGPU() const = 0;
+        virtual const GPULightI**           LightsGPU() const = 0;
+        virtual const GPUCameraI**          CamerasGPU() const = 0;
+        virtual const GPUTransform*         TransformsGPU() const = 0;
         // Access CPU
         
         // Counts

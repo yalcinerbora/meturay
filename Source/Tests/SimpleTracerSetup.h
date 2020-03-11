@@ -300,7 +300,8 @@ inline bool SimpleTracerSetup::Init()
     gpuScene = std::make_unique<GPUSceneJson>(sceneName,
                                               partitioner,
                                               generator,
-                                              surfaceLoaders);
+                                              surfaceLoaders,
+                                              *cudaSystem);
     SceneError scnE = gpuScene->LoadScene(sceneTime);
     ERROR_CHECK(SceneError, scnE);
 

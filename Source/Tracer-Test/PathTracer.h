@@ -1,47 +1,40 @@
 #pragma once
-#pragma once
 
-#include "TracerLib/TracerLogicP.cuh"
-#include "TracerLib/TypeTraits.h"
+#include "BasicTracer.h"
 
-#include "RayAuxStruct.h"
-//
-//class TracerVolume final : public TracerBaseLogic<RayAuxBasic>
-//{
-//    public:
-//        static constexpr const char*    TypeName() { return "Test"; }
-//
-//    private:
-//    protected:
-//    public:
-//        // Constructors & Destructor
-//                        TracerVolume(GPUBaseAcceleratorI& ba,
-//                                    AcceleratorGroupList&& ag,
-//                                    AcceleratorBatchMappings&& ab,
-//                                    MaterialGroupList&& mg,
-//                                    MaterialBatchMappings&& mb,
-//                                    GPUEventEstimatorI& ee,
-//                                    //
-//                                    const TracerParameters& parameters,
-//                                    uint32_t hitStructSize,
-//                                    const Vector2i maxMats,
-//                                    const Vector2i maxAccels,
-//                                    const HitKey baseBoundMatKey);
-//                        ~TracerVolume() = default;
-//
-//        TracerError     Initialize() override;
-//
-//        uint32_t        GenerateRays(const CudaSystem& cudaSystem, 
-//                                     //
-//                                     ImageMemory&,
-//                                     RayMemory&, RNGMemory&,
-//                                     const GPUSceneI& scene,
-//                                     const CPUCamera&,
-//                                     int samplePerLocation,
-//                                     Vector2i resolution,
-//                                     Vector2i pixelStart = Zero2i,
-//                                     Vector2i pixelEnd = BaseConstants::IMAGE_MAX_SIZE) override;
-//};
-//
-//static_assert(IsTracerClass<TracerVolume>::value,
-//              "TracerBasic is not a Tracer Class.");
+class PathTracer final : public BasicTracer
+{
+    public:
+        static constexpr const char*    TypeName() { return "Test"; }
+
+        static constexpr const char*    MAX_DEPTH_NAME = "MaxDepth";
+        static constexpr const char*    NEE_NAME = "NextEventEstimation";
+
+        struct PTOptions : public Options
+        {
+            uint32_t                    maximumDepth = 10;
+            bool                        nextEventEstimation = true;
+        };
+
+    private:
+        PTOptions               options;
+        uint32_t                currentDepth;
+
+    protected:
+    public:
+        // Constructors & Destructor
+                                PathTracer(CudaSystem&, GPUSceneI&, 
+                                            const TracerParameters&);
+                                ~PathTracer() = default;
+
+        TracerError             Initialize() override;
+        TracerError             SetOptions(const TracerOptionsI&) override;
+        void                    AskOptions() override;
+
+        void                    GenerateWork(int cameraId) override;
+        void                    GenerateWork(const CPUCamera&) override;
+        bool                    Render() override;
+};
+
+static_assert(IsTracerClass<PathTracer>::value,
+              "TracerBasic is not a Tracer Class.");

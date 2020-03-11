@@ -90,7 +90,7 @@ __global__ void KCAllocateSingleLight(GPULightI* gPtr,
     }
 }
 
-__global__ void KCAllocateSingleCamera(GPUCameraI* gPtr,
+__global__ void KCAllocateSingleCamera(GPUCameraI*& gPtr,
                                        void* const gMemory,
                                        const CPUCamera cpuCamera)
 {
@@ -197,7 +197,7 @@ void LightCameraKernels::ConstructCameras(// Output
 }
 
 void LightCameraKernels::ConstructSingleLight(// Output
-                                              GPULightI* gPtr,
+                                              GPULightI*& gPtr,
                                               Byte* objectMemory,
                                               // Input
                                               const CPULight& lightData,
@@ -213,7 +213,7 @@ void LightCameraKernels::ConstructSingleLight(// Output
 }
 
 void LightCameraKernels::ConstructSingleCamera(// Output
-                                               GPUCameraI* gPtr,
+                                               GPUCameraI*& gPtr,
                                                Byte* objectMemory,
                                                // Input
                                                const CPUCamera& cameraData,

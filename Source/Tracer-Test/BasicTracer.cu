@@ -8,6 +8,7 @@
 #include "TracerLib/ImageMemory.h"
 #include "TracerLib/CudaConstants.h"
 #include "TracerLib/GenerationKernels.cuh"
+#include "TracerLib/LightCameraKernels.h"
 
 #include "RayAuxStruct.h"
 
@@ -41,13 +42,14 @@ BasicTracer::BasicTracer(CudaSystem& s, GPUSceneI& scene,
                          const TracerParameters& param)
     : GPUTracer(s, scene, param)
     , scene(scene)
-    , auxIn(nullptr)
-    , auxOut(nullptr)
+    , dCameraPtr(nullptr)
+    , dAuxIn(nullptr)
+    , dAuxOut(nullptr)
 {}
 
 void BasicTracer::SwapAuxBuffers()
 {
-    std::swap(auxIn, auxOut);
+    std::swap(dAuxIn, dAuxOut);
 }
 
 TracerError BasicTracer::Initialize()
@@ -60,8 +62,6 @@ TracerError BasicTracer::SetOptions(const TracerOptionsI& opts)
     TracerError err = TracerError::OK;
     if((err = opts.GetInt(options.sampleCount, SAMPLE_NAME)) != TracerError::OK)
        return err;
-    if((err = opts.GetUInt(options.maximumDepth, MAX_DEPTH_NAME)) != TracerError::OK)
-        return err;
    return TracerError::OK;
 }
 
@@ -78,7 +78,7 @@ void BasicTracer::GenerateRays(const GPUCameraI& dCamera)
 
     // Allocate enough space for ray
     rayMemory.ResizeRayOut(totalRayCount, scene.BaseBoundaryMaterial());
-    DeviceMemory::EnlargeBuffer(*auxOut, auxBufferSize);   
+    DeviceMemory::EnlargeBuffer(*dAuxOut, auxBufferSize);   
 
     // Basic Tracer does classic camera to light tracing
     // Thus its initial rays are from camera
@@ -111,7 +111,7 @@ void BasicTracer::GenerateRays(const GPUCameraI& dCamera)
         // Kernel Specific Args
         // Output
         RayGMem* gRays = rayMemory.RaysOut();
-        RayAuxBasic* gAuxiliary = static_cast<RayAuxBasic*>(*auxOut);
+        RayAuxBasic* gAuxiliary = static_cast<RayAuxBasic*>(*dAuxOut);
         // Input
         RNGGMem rngData = rngMemory.RNGData(gpu);
         ImageGMem<Vector4f> gImgData = imgMemory.GMem<Vector4f>();
@@ -150,137 +150,29 @@ void BasicTracer::GenerateRays(const GPUCameraI& dCamera)
 void BasicTracer::GenerateWork(int cameraId)
 {
     // Generate Rays
-    GenerateRays(scene.CamerasGPU()[cameraId]);
+    GenerateRays(*scene.CamerasGPU()[cameraId]);
 }
 
-void BasicTracer::GenerateWork(const CPUCamera&)
+void BasicTracer::GenerateWork(const CPUCamera& c)
 {
-    // Load it to the Camera Sytem
-    
+    // Load it to the tmep buffer
+    DeviceMemory::EnlargeBuffer(tempCameraBuffer,
+                                LightCameraKernels::CameraClassesUnionSize() + 
+                                sizeof(GPUCameraI*));
+    Byte* memPtr = static_cast<Byte*>(tempCameraBuffer);
+    dCameraPtr = reinterpret_cast<GPUCameraI**>(memPtr + LightCameraKernels::CameraClassesUnionSize());
+
+    LightCameraKernels::ConstructSingleCamera(*dCameraPtr,
+                                              memPtr, c,
+                                              cudaSystem);
+    // Generate Rays over this camera
+    GenerateRays(**dCameraPtr);
 }
 
 bool BasicTracer::Render()
 {
     HitRays();
-
-    //WorkRays(..., scene.BaseBoundaryMaterial());
-
-    return false;
+    WorkRays(workMap, scene.BaseBoundaryMaterial());
+    SwapAuxBuffers();
+    return true;
 }
-
-
-//
-//TracerBasic::TracerBasic(GPUBaseAcceleratorI& ba,
-//                         AcceleratorGroupList&& ag,
-//                         AcceleratorBatchMappings&& ab,
-//                         MaterialGroupList&& mg,
-//                         MaterialBatchMappings&& mb,
-//                         GPUEventEstimatorI& ee,
-//                         //
-//                         const TracerParameters& parameters,
-//                         uint32_t hitStructSize,
-//                         const Vector2i maxMats,
-//                         const Vector2i maxAccels,
-//                         const HitKey baseBoundMatKey)
-//    : TracerBaseLogic(ba,
-//                      std::move(ag), std::move(ab),
-//                      std::move(mg), std::move(mb),
-//                      ee,
-//                      parameters,
-//                      hitStructSize,
-//                      maxMats,
-//                      maxAccels,
-//                      baseBoundMatKey)
-//{}
-//
-//TracerError TracerBasic::Initialize()
-//{
-//    return TracerError::OK;
-//}
-//
-//uint32_t TracerBasic::GenerateRays(const CudaSystem& cudaSystem,
-//                                   //
-//                                   ImageMemory& imgMem,
-//                                   RayMemory& rayMem, RNGMemory& rngMem,
-//                                   const GPUSceneI& scene,
-//                                   const CPUCamera& cam,
-//                                   int samplePerLocation,
-//                                   Vector2i resolution,
-//                                   Vector2i pixelStart,
-//                                   Vector2i pixelEnd)
-//{
-//    pixelEnd = Vector2i::Min(resolution, pixelEnd);
-//    Vector2i pixelCount = (pixelEnd - pixelStart);
-//    uint32_t totalRayCount = pixelCount[0] * samplePerLocation *
-//                             pixelCount[1] * samplePerLocation;
-//
-//    // Allocate enough space for ray
-//    rayMem.ResizeRayOut(totalRayCount, PerRayAuxDataSize(),
-//                        SceneBaseBoundMatKey());
-//
-//    // Basic Tracer does classic camera to light tracing
-//    // Thus its initial rays are from camera
-//
-//    // Call multi-device
-//    const uint32_t TPB = StaticThreadPerBlock1D;
-//    // GPUSplits
-//    const auto splits = cudaSystem.GridStrideMultiGPUSplit(totalRayCount, TPB, 0,
-//                                                           KCGenerateCameraRays<RayAuxData, RayInitBasic>);
-//
-//
-//    // Only use splits as guidance
-//    // and Split work into columns (much easier to maintain..
-//    // however not perfectly balanced... (as all things should be))
-//    int i = 0;
-//    Vector2i localPixelStart = Zero2i;
-//    for(const CudaGPU& gpu : cudaSystem.GPUList())
-//    {
-//        // If no work is splitted to this GPU skip
-//        if(splits[i] == 0) break;
-//
-//        // Generic Args
-//        // Offsets
-//        const size_t localPixelCount1D = splits[i] / samplePerLocation / samplePerLocation;
-//        const int columnCount = static_cast<int>((localPixelCount1D + pixelCount[1] - 1) / pixelCount[1]);
-//        const int rowCount = pixelCount[1];
-//        Vector2i localPixelCount = Vector2i(columnCount, rowCount);
-//        Vector2i localPixelEnd = Vector2i::Min(localPixelStart + localPixelCount, pixelCount);
-//        Vector2i localWorkCount2D = (localPixelEnd - localPixelStart) * samplePerLocation * samplePerLocation;
-//        size_t localWorkCount = localWorkCount2D[0] * localWorkCount2D[1];
-//
-//        // Kernel Specific Args
-//        // Output
-//        RayGMem* gRays = rayMem.RaysOut();
-//        RayAuxData* gAuxiliary = rayMem.RayAuxOut<RayAuxData>();
-//        // Input
-//        RNGGMem rngData = rngMem.RNGData(gpu);
-//        ImageGMem<Vector4f> gImgData = imgMem.GMem<Vector4f>();
-//
-//
-//        // Kernel Call
-//        gpu.AsyncGridStrideKC_X
-//        (
-//            0, localWorkCount,
-//            KCGenerateCameraRays<RayAuxData, RayInitBasic>,
-//            // Args
-//            // Inputs
-//            gRays,
-//            gAuxiliary,
-//            gImgData,
-//            // Input
-//            rngData,
-//            cam,
-//            samplePerLocation,
-//            resolution,
-//            localPixelStart,
-//            localPixelEnd,
-//            // Data to initialize auxiliary base data
-//            InitialBasicAux
-//        );
-//
-//        // Adjust for next call
-//        localPixelStart = localPixelEnd;
-//        i++;
-//    }
-//    return totalRayCount;
-//}
