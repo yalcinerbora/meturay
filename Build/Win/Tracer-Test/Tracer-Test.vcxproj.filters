@@ -13,6 +13,9 @@
     <Filter Include="Tracers">
       <UniqueIdentifier>{5785e8b1-16dd-41cb-9ebf-43d69719f735}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Works">
+      <UniqueIdentifier>{d5e4b375-9089-4a90-a569-49e0d94d8e4c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu">
@@ -33,7 +36,7 @@
       <Filter>Tracers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerWorks.cu">
-      <Filter>Tracers</Filter>
+      <Filter>Works</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
@@ -69,14 +72,17 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\PathTracer.h">
       <Filter>Tracers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\MetaTracerWork.cuh">
-      <Filter>Tracers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerWorks.cuh">
-      <Filter>Tracers</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerKC.cuh">
       <Filter>Tracers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\MetaTracerWork.cuh">
+      <Filter>Works</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerWorks.cuh">
+      <Filter>Works</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\MetaWorkPool.h">
+      <Filter>Works</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -24,6 +24,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterials.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterialsKC.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracer-Test\MetaWorkPool.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\GIMaterials.cuh" />

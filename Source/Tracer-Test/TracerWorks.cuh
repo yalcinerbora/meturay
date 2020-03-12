@@ -9,7 +9,13 @@ class BasicTracerWork
     : public MetaTracerBatch<BasicTracerGlobal, EmptyState, RayAuxBasic,
                             MGroup, PGroup, SFunc, BasicWork<MGroup>>
 {
-       public:
+    public:
+        static constexpr const char*    TypeName() { return ""; }
+        const char*                     Type() const override { return TypeName(); }
+
+    private:
+    protected:
+    public:
         // Constrcutors & Destructor
                                         BasicTracerWork(const GPUMaterialGroupI&,
                                                         const GPUPrimitiveGroupI&);
@@ -17,7 +23,8 @@ class BasicTracerWork
 
         void                            PreWork() override {}
         // We will not bounce more than once
-        uint8_t                 OutRayCount() const override { return 0; }
+        uint8_t                         OutRayCount() const override { return 0; }
+        
 };
 
 template<class MG, class PG,

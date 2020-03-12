@@ -30,10 +30,6 @@ template<class Accel>
 using AccelGroupGeneratorFunc = Accel* (*)(const GPUPrimitiveGroupI&,
                                            const GPUTransform*);
 
-template<class AccelBatch>
-using AccelBatchGeneratorFunc = AccelBatch* (*)(const GPUAcceleratorGroupI&,
-                                                const GPUPrimitiveGroupI&);
-
 template<class MaterialGroup>
 using MaterialGroupGeneratorFunc = MaterialGroup* (*)(const CudaGPU& gpuId);
 
