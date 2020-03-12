@@ -1,13 +1,13 @@
 #include "RayLib/TracerOptions.h"
 #include "RayLib/TracerCallbacksI.h"
 
-#include "BasicTracer.h"
+#include "DirectTracer.h"
 #include "PathTracer.h"
 
 // Variant Does not compile on cuda code
 // special cpp for functions that uses "TracerOptions"
 
-void BasicTracer::AskOptions()
+void DirectTracer::AskOptions()
 {
     // Generate Tracer Object
     VariableList list;

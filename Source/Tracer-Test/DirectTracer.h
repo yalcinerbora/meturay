@@ -1,0 +1,39 @@
+#pragma once
+
+#include "DirectTracer.h"
+#include "RayTracer.h"
+#include "MetaWorkPool.h"
+
+class DirectTracer : public RayTracer
+{
+        public:
+        static constexpr const char*    TypeName() { return "DirectTracer"; }
+        
+        struct Options                 
+        {
+            int32_t     sampleCount = 1;    // Per-axis sample per pixel
+        };
+
+    private:
+        Options                 options;
+        WorkBatchMap            workMap;
+        MetaWorkPool            workPool;
+
+    protected:
+    public:
+        // Constructors & Destructor
+                                DirectTracer(CudaSystem&, GPUSceneI&, 
+                                            const TracerParameters&);
+                                ~DirectTracer() = default;
+
+        TracerError             Initialize() override;
+        TracerError             SetOptions(const TracerOptionsI&) override;
+        void                    AskOptions() override;
+        //
+        void                    GenerateWork(int cameraId) override;
+        void                    GenerateWork(const CPUCamera&) override;
+        bool                    Render() override;
+};
+
+static_assert(IsTracerClass<DirectTracer>::value,
+              "DirectTracer is not a Tracer Class.");

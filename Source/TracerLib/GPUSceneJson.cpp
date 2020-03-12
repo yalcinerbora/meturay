@@ -374,7 +374,7 @@ SceneError GPUSceneJson::GenerateWorkBatches(MaterialKeyListing& allMatKeys,
         // and generate work info
         GPUPrimitiveGroupI* pGroup = primitives.at(primTName).get();
         GPUMaterialGroupI* mGroup = materials.at(std::make_pair(matTName, gpu)).get();
-        workInfo.emplace(batchId, std::make_pair(pGroup, mGroup));
+        workInfo.emplace_back(batchId, pGroup, mGroup);
 
         // Generate Keys
         // Find inner ids of those materials

@@ -8,7 +8,6 @@
 
 #include "TracerLib/WorkKernels.cuh"
 
-
 // Meta Tracer Code
 // With custom global Data
 

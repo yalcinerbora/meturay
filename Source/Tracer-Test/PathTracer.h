@@ -1,8 +1,9 @@
 #pragma once
 
-#include "BasicTracer.h"
+#include "RayTracer.h"
+#include "MetaWorkPool.h"
 
-class PathTracer final : public BasicTracer
+class PathTracer final : public RayTracer
 {
     public:
         static constexpr const char*    TypeName() { return "Test"; }
@@ -10,21 +11,24 @@ class PathTracer final : public BasicTracer
         static constexpr const char*    MAX_DEPTH_NAME = "MaxDepth";
         static constexpr const char*    NEE_NAME = "NextEventEstimation";
 
-        struct PTOptions : public Options
+        struct Options
         {
+            int32_t                     sampleCount = 1;
             uint32_t                    maximumDepth = 10;
             bool                        nextEventEstimation = true;
         };
 
     private:
-        PTOptions               options;
+        Options                 options;
         uint32_t                currentDepth;
+        WorkBatchMap            workMap;
+        MetaWorkPool            workPool;
 
     protected:
     public:
         // Constructors & Destructor
                                 PathTracer(CudaSystem&, GPUSceneI&, 
-                                            const TracerParameters&);
+                                           const TracerParameters&);
                                 ~PathTracer() = default;
 
         TracerError             Initialize() override;

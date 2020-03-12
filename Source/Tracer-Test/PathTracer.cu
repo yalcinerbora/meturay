@@ -5,7 +5,7 @@
 
 PathTracer::PathTracer(CudaSystem& s, GPUSceneI& scene,
                        const TracerParameters& params)
-    : BasicTracer(s, scene, params)
+    : RayTracer(s, scene, params)
     , currentDepth(0)
 {}
 
@@ -44,12 +44,13 @@ bool PathTracer::Render()
 
 void PathTracer::GenerateWork(int cameraId)
 {
-    BasicTracer::GenerateWork(cameraId);
+    GenerateRays(*scene.CamerasGPU()[cameraId], options.sampleCount);
     currentDepth = 0;
 }
 
 void PathTracer::GenerateWork(const CPUCamera& cam)
 {
-    BasicTracer::GenerateWork(cam);
+    LoadCameraToGPU(cam);
+    GenerateRays(**dCameraPtr, options.sampleCount);
     currentDepth = 0;
 }

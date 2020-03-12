@@ -25,6 +25,8 @@ struct TracerError : public ErrorI
             // Accelerator Related
             UNABLE_TO_CONSTRUCT_BASE_ACCELERATOR,
             UNABLE_TO_CONSTRUCT_ACCELERATOR,
+            // Work Related
+            UNABLE_TO_GENERATE_WORK,
             // ...
 
 
@@ -85,9 +87,11 @@ inline TracerError::operator std::string() const
         "Option type mismatch",
         // Accelerator Related
         "Unable to construct base accelerator",
-        "Unable to construct accelerator"
-    };
-    static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(TracerError::END),
+        "Unable to construct accelerator",
+        //
+        "Unable to generate work for material/primitive pair"
+    }; 
+    static_assert(std::extent<decltype(ErrorStrings)>::value == static_cast<size_t>(TracerError::END),
                   "Enum and enum string list size mismatch.");
 
     return ErrorStrings[static_cast<int>(type)];

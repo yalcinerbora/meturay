@@ -1,4 +1,4 @@
-#include "BasicTracer.h"
+#include "RayTracer.h"
 
 #include "RayLib/TracerError.h"
 #include "RayLib/GPUSceneI.h"
@@ -38,8 +38,8 @@ inline void RayInitBasic(RayAuxBasic* gOutBasic,
     gOutBasic[writeLoc] = init;
 }
 
-BasicTracer::BasicTracer(CudaSystem& s, GPUSceneI& scene,
-                         const TracerParameters& param)
+RayTracer::RayTracer(CudaSystem& s, GPUSceneI& scene,
+                     const TracerParameters& param)
     : GPUTracer(s, scene, param)
     , scene(scene)
     , dCameraPtr(nullptr)
@@ -47,33 +47,26 @@ BasicTracer::BasicTracer(CudaSystem& s, GPUSceneI& scene,
     , dAuxOut(nullptr)
 {}
 
-void BasicTracer::SwapAuxBuffers()
+void RayTracer::SwapAuxBuffers()
 {
     std::swap(dAuxIn, dAuxOut);
 }
 
-TracerError BasicTracer::Initialize()
+TracerError RayTracer::Initialize()
 {
     return GPUTracer::Initialize();
 }
 
-TracerError BasicTracer::SetOptions(const TracerOptionsI& opts)
+void RayTracer::GenerateRays(const GPUCameraI& dCamera, int32_t sampleCount)
 {
-    TracerError err = TracerError::OK;
-    if((err = opts.GetInt(options.sampleCount, SAMPLE_NAME)) != TracerError::OK)
-       return err;
-   return TracerError::OK;
-}
+    int32_t sampleCountSqr = sampleCount * sampleCount;
 
-void BasicTracer::GenerateRays(const GPUCameraI& dCamera)
-{
     const Vector2i resolution = imgMemory.Resolution();
     const Vector2i pixelStart = imgMemory.SegmentOffset();
     const Vector2i pixelEnd = pixelStart + imgMemory.SegmentSize();
 
     Vector2i pixelCount = (pixelEnd - pixelStart);
-    uint32_t totalRayCount = pixelCount[0] * options.sampleCount *
-                             pixelCount[1] * options.sampleCount;
+    uint32_t totalRayCount = pixelCount[0] * pixelCount[1] * sampleCountSqr;
     size_t auxBufferSize = totalRayCount + sizeof(RayAuxBasic);
 
     // Allocate enough space for ray
@@ -100,12 +93,12 @@ void BasicTracer::GenerateRays(const GPUCameraI& dCamera)
 
         // Generic Args
         // Offsets
-        const size_t localPixelCount1D = splits[i] / options.sampleCount / options.sampleCount;
+        const size_t localPixelCount1D = splits[i] / sampleCountSqr;
         const int columnCount = static_cast<int>((localPixelCount1D + pixelCount[1] - 1) / pixelCount[1]);
         const int rowCount = pixelCount[1];
         Vector2i localPixelCount = Vector2i(columnCount, rowCount);
         Vector2i localPixelEnd = Vector2i::Min(localPixelStart + localPixelCount, pixelCount);
-        Vector2i localWorkCount2D = (localPixelEnd - localPixelStart) * options.sampleCount * options.sampleCount;
+        Vector2i localWorkCount2D = (localPixelEnd - localPixelStart) * sampleCountSqr;
         size_t localWorkCount = localWorkCount2D[0] * localWorkCount2D[1];
 
         // Kernel Specific Args
@@ -129,7 +122,7 @@ void BasicTracer::GenerateRays(const GPUCameraI& dCamera)
             // Input
             rngData,
             dCamera,
-            options.sampleCount,
+            sampleCount,
             resolution,
             localPixelStart,
             localPixelEnd,
@@ -147,13 +140,7 @@ void BasicTracer::GenerateRays(const GPUCameraI& dCamera)
     currentRayCount = totalRayCount;
 }
 
-void BasicTracer::GenerateWork(int cameraId)
-{
-    // Generate Rays
-    GenerateRays(*scene.CamerasGPU()[cameraId]);
-}
-
-void BasicTracer::GenerateWork(const CPUCamera& c)
+void RayTracer::LoadCameraToGPU(const CPUCamera& c)
 {
     // Load it to the tmep buffer
     DeviceMemory::EnlargeBuffer(tempCameraBuffer,
@@ -166,13 +153,4 @@ void BasicTracer::GenerateWork(const CPUCamera& c)
                                               memPtr, c,
                                               cudaSystem);
     // Generate Rays over this camera
-    GenerateRays(**dCameraPtr);
-}
-
-bool BasicTracer::Render()
-{
-    HitRays();
-    WorkRays(workMap, scene.BaseBoundaryMaterial());
-    SwapAuxBuffers();
-    return true;
 }

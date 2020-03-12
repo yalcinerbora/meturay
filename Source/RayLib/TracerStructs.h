@@ -29,12 +29,12 @@ using GPUAccelGPtr = SharedLibPtr<GPUAcceleratorGroupI>;
 using GPUPrimGPtr = SharedLibPtr<GPUPrimitiveGroupI>;
 using GPUMatGPtr = SharedLibPtr<GPUMaterialGroupI>;
 
-using MatPrimPair = std::pair<const GPUPrimitiveGroupI*, const GPUMaterialGroupI*>;
-
 // Kernel Mappings
 using AcceleratorBatchMap = std::map<uint32_t, GPUAcceleratorGroupI*>;
 using WorkBatchMap = std::map<uint32_t, GPUWorkBatchI*>;
-using WorkBatchCreationInfo = std::map<uint32_t, MatPrimPair>;
+using WorkBatchCreationInfo = std::vector<std::tuple<uint32_t,
+                                                     const GPUPrimitiveGroupI*, 
+                                                     const GPUMaterialGroupI*>>;
 
 // Logic Independent parameters for tracer
 // Logic Dependent ones will be provided by TracerOptionsI
