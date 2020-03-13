@@ -5,7 +5,7 @@
 #include "TracerLib/GPUPrimitiveP.cuh"
 #include "TracerLib/GPUMaterialP.cuh"
 #include "TracerLib/RNGMemory.h"
-
+#include "TracerLib/MangledNames.h"
 #include "TracerLib/WorkKernels.cuh"
 
 // Meta Tracer Code
@@ -17,6 +17,9 @@ template<class GlobalData, class LocalData, class RayData,
          WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc>
 class MetaTracerBatch : public GPUWorkBatchI
 {
+    public:
+        static const char*              TypeName();
+
     private:
         const MGroup&                   materialGroup;
         const PGroup&                   primitiveGroup;
@@ -55,13 +58,25 @@ class MetaTracerBatch : public GPUWorkBatchI
         const GPUPrimitiveGroupI&       PrimitiveGroup() const { return primitiveGroup; }
         const GPUMaterialGroupI&        MaterialGroup() const { return materialGroup; }
 
-        void                            SetGlobalData(const GlobalData&);
+        void                            SetGlobalData(RayData* rayDataOut,
+                                                      const RayData* rayDataIn,
+                                                      const GlobalData&);
         
         virtual void                    PreWork() = 0;
         ////// We will not bounce more than once
         //uint8_t                 OutRayCount() const { return 0; }
 
 };
+
+
+template <class GD, class LD, class RD, class MG, class PG,
+          SurfaceFunc<MG, PG> SF, WorkFunc<GD, LD, RD, MG> WF>
+inline const char* MetaTracerBatch<GD, LD, RD, MG, PG, SF, WF>::TypeName()
+{
+    static std::string typeName = MangledNames::AcceleratorGroup(MG::TypeName(), 
+                                                                 PG::TypeName());
+    return typeName.c_str();
+}
 
 template <class GD, class LD, class RD, class MG, class PG, 
           SurfaceFunc<MG, PG> SF, WorkFunc<GD, LD, RD, MG> WF>
@@ -137,7 +152,11 @@ void MetaTracerBatch<GD, LD, RD, MG, PG, SF, WF>::Work(// Output
 
 template <class GD, class LD, class RD, class MG, class PG, 
           SurfaceFunc<MG, PG> SF, WorkFunc<GD, LD, RD, MG> WF>
-void MetaTracerBatch<GD, LD, RD, MG, PG, SF, WF>::SetGlobalData(const GD& d)
+void MetaTracerBatch<GD, LD, RD, MG, PG, SF, WF>::SetGlobalData(RD* dRayDataOut,
+                                                                const RD* dRayDataIn,
+                                                                const GD&)
 {
+    dRayAuxIn = dRayDataOut;
+    dRayAuxOut = dRayDataIn;
     globalData = d;
 }
