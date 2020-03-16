@@ -11,11 +11,37 @@
 // Meta Tracer Code
 // With custom global Data
 
+// Material/Primitive invaritant part of the code
+template<class GlobalData, class RayData>
+class MetaWorkBatchData : public GPUWorkBatchI
+{
+    protected:
+        // Ray Auxiliary Input and output pointers
+        // which are global (not local)
+        const RayData*      dRayDataIn = nullptr;
+        RayData*            dRayDataOut = nullptr;
+
+        // GPU Friendly Struct which will be directly passed to the kernel call
+        GlobalData          globalData;
+        
+
+    public:
+            // Constructors & Destructor
+                            MetaWorkBatchData() = default;
+                            ~MetaWorkBatchData() = default;
+
+            void            SetGlobalData(const GlobalData&);
+            void            SetRayDataPtrs(RayData* rayDataOut,
+                                          const RayData* rayDataIn);
+
+};
+
 template<class GlobalData, class LocalData, class RayData,
          class MGroup, class PGroup,
          SurfaceFunc<MGroup, PGroup> SFunc,
          WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc>
-class MetaTracerBatch : public GPUWorkBatchI
+class MetaTracerBatch 
+    : public MetaWorkBatchData<GlobalData, RayData>
 {
     public:
         static const char*              TypeName();
@@ -26,13 +52,8 @@ class MetaTracerBatch : public GPUWorkBatchI
 
         static constexpr auto           GenerateSurface = SFunc;
 
-        // Global Data
-        GlobalData                      globalData;
         // Per-Bathch Data
         LocalData                       localData;
-        // Per-Ray Data
-        const RayData*                  dRayAuxIn;
-        RayData*                        dRayAuxOut;
 
     public:
         // Constrcutors & Destructor
@@ -57,17 +78,22 @@ class MetaTracerBatch : public GPUWorkBatchI
 
         const GPUPrimitiveGroupI&       PrimitiveGroup() const { return primitiveGroup; }
         const GPUMaterialGroupI&        MaterialGroup() const { return materialGroup; }
-
-        void                            SetGlobalData(RayData* rayDataOut,
-                                                      const RayData* rayDataIn,
-                                                      const GlobalData&);
-        
-        virtual void                    PreWork() = 0;
-        ////// We will not bounce more than once
-        //uint8_t                 OutRayCount() const { return 0; }
-
+      
 };
 
+template<class GD, class RD>
+inline void MetaWorkBatchData<GD, RD>::SetGlobalData(const GD& d)
+{
+    globalData = d;
+}
+
+template<class GD, class RD>
+void MetaWorkBatchData<GD, RD>::SetRayDataPtrs(RD* dRDOut,
+                                               const RD* dRDIn)
+{
+    dRayDataIn = dRDIn;
+    dRayDataOut = dRDOut;
+}
 
 template <class GD, class LD, class RD, class MG, class PG,
           SurfaceFunc<MG, PG> SF, WorkFunc<GD, LD, RD, MG> WF>
@@ -104,7 +130,7 @@ void MetaTracerBatch<GD, LD, RD, MG, PG, SF, WF>::Work(// Output
                                                        RNGMemory& rngMem)
 {
     // Do Pre-work (initialize local data etc.)
-    PreWork();
+    GetReady();
 
     using PrimitiveData = typename PG::PrimitiveData;
     using MaterialData = typename MG::Data;
@@ -114,7 +140,7 @@ void MetaTracerBatch<GD, LD, RD, MG, PG, SF, WF>::Work(// Output
     const MaterialData matData = MatDataAccessor::Data(materialGroup);    
 
     const uint32_t outRayCount = OutRayCount();
-    RD* dAuxOutLocal = dRayAuxOut + outputOffset;
+    RD* dAuxOutLocal = dRayDataOut + outputOffset;
 
     const CudaGPU& gpu = materialGroup.GPU();
 
@@ -133,7 +159,7 @@ void MetaTracerBatch<GD, LD, RD, MG, PG, SF, WF>::Work(// Output
         outRayCount,
         // Input
         dRayIn,
-        dRayAuxIn,
+        dRayDataIn,
         dPrimitiveIds,
         dHitStructs,
         //
@@ -148,15 +174,4 @@ void MetaTracerBatch<GD, LD, RD, MG, PG, SF, WF>::Work(// Output
         matData,
         primData
     );
-}
-
-template <class GD, class LD, class RD, class MG, class PG, 
-          SurfaceFunc<MG, PG> SF, WorkFunc<GD, LD, RD, MG> WF>
-void MetaTracerBatch<GD, LD, RD, MG, PG, SF, WF>::SetGlobalData(RD* dRayDataOut,
-                                                                const RD* dRayDataIn,
-                                                                const GD&)
-{
-    dRayAuxIn = dRayDataOut;
-    dRayAuxOut = dRayDataIn;
-    globalData = d;
 }

@@ -8,12 +8,12 @@
 #include "TracerLib/TextureStructs.h"
 #include "TracerLib/GPULight.cuh"
 
-struct BasicTracerGlobal
+struct DirectTracerGlobal
 {
-    ImageGMem<Vector4> gImage;
+    ImageGMem<Vector3> gImage;
 };
 
-struct PathTracerGlobal : public BasicTracerGlobal
+struct PathTracerGlobal : public DirectTracerGlobal
 {
     const GPULightI*    lightList;
     uint32_t            totalLightCount;
@@ -36,7 +36,7 @@ inline void BasicWork(// Output
                       const UVList* uvs,
                       // I-O
                       EmptyState& gLocalState,
-                      BasicTracerGlobal& gRenderState,
+                      DirectTracerGlobal& gRenderState,
                       RandomGPU& rng,
                       // Constants
                       const MGroup::Data& gMatData,

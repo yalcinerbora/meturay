@@ -1,6 +1,7 @@
 #include "PathTracer.h"
+#include "TracerWorks.cuh"
+#include "MetaTracerWork.cuh"
 
-#include "RayLib/TracerError.h"
 #include "RayLib/GPUSceneI.h"
 
 PathTracer::PathTracer(CudaSystem& s, GPUSceneI& scene,
@@ -33,7 +34,39 @@ TracerError PathTracer::SetOptions(const TracerOptionsI& opts)
 
 bool PathTracer::Render()
 {
-    HitRays();
+    HitAndPartitionRays();
+
+    // After Hit Determine Ray Aux Output size    
+    uint32_t totalOutRayCount = 0;
+    for(const auto& p : workPartition)
+    {
+        // Skip if null batch or unfound material
+        if(p.portionId == HitKey::NullBatch) continue;
+        auto loc = workMap.find(p.portionId);
+        if(loc == workMap.end()) continue;
+
+        totalOutRayCount += (static_cast<uint32_t>(p.count)*
+                             loc->second->OutRayCount());
+    }
+    size_t auxOutSize = totalOutRayCount * sizeof(RayAuxBasic);
+    DeviceMemory::EnlargeBuffer(*dAuxOut, auxOutSize);
+
+    // Generate Global Data Struct
+    PathTracerGlobal globalData;
+    globalData.gImage = imgMemory.GMem<Vector3>();
+    globalData.lightList = *scene.LightsGPU();
+    globalData.totalLightCount = static_cast<uint32_t>(scene.LightCount());
+
+    for(auto& work : workMap)
+    {
+        using WorkData = typename MetaWorkBatchData<PathTracerGlobal, RayAuxBasic>;
+
+        auto& wData = static_cast<WorkData&>(*work.second);
+        wData.SetGlobalData(globalData);
+        wData.SetRayDataPtrs(static_cast<RayAuxBasic*>(*dAuxOut),
+                             static_cast<const RayAuxBasic*>(*dAuxIn));
+    }
+
     WorkRays(workMap, scene.BaseBoundaryMaterial());
     SwapAuxBuffers();
     currentDepth++;

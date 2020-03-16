@@ -13,8 +13,8 @@
 template<class MGroup, class PGroup,
           SurfaceFunc<MGroup, PGroup> SFunc>
 class DirectTracerWork 
-    : public MetaTracerBatch<BasicTracerGlobal, EmptyState, RayAuxBasic,
-                            MGroup, PGroup, SFunc, BasicWork<MGroup>>
+    : public MetaTracerBatch<DirectTracerGlobal, EmptyState, RayAuxBasic,
+                             MGroup, PGroup, SFunc, BasicWork<MGroup>>
 {
     public:
         static constexpr const char*    TypeName() { return ""; }
@@ -28,7 +28,7 @@ class DirectTracerWork
                                                         const GPUPrimitiveGroupI&);
                                         ~DirectTracerWork() = default;
 
-        void                            PreWork() override {}
+        void                            GetReady() override {}
         // We will not bounce more than once
         uint8_t                         OutRayCount() const override { return 0; }
         

@@ -58,12 +58,16 @@ class GPUTracer : public GPUTracerI
         // Callbacks
         TracerCallbacksI*                   callbacks;
         bool                                crashed;
+        // Current Work Partition
+        RayPartitions<uint32_t>             workPartition;
 
         // Interface
         virtual void                        ResetHitMemory(uint32_t rayCount,
                                                            HitKey baseBoundMatKey);
 
-        void                                HitRays();
+        // Do a hit determination over current rays
+        void                                HitAndPartitionRays();
+        // Determine auxiliary size
         void                                WorkRays(const WorkBatchMap&,
                                                      HitKey baseBoundMatKey);
 

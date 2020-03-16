@@ -1,5 +1,6 @@
 #include "DirectTracer.h"
 #include "TracerWorks.cuh"
+#include "MetaTracerWork.cuh"
 
 #include "RayLib/GPUSceneI.h"
 
@@ -9,7 +10,6 @@ DirectTracer::DirectTracer(CudaSystem& s, GPUSceneI& scene,
 {
     workPool.AppendGenerators(DirectTracerWorkerList{});
 }
-
 
 TracerError DirectTracer::SetOptions(const TracerOptionsI& opts)
 {
@@ -42,7 +42,36 @@ TracerError DirectTracer::Initialize()
 bool DirectTracer::Render()
 {
     // Do Hit Loop
-    HitRays();
+    HitAndPartitionRays();
+
+    // After Hit Determine Ray Aux Output size    
+    uint32_t totalOutRayCount = 0;
+    for(const auto& p : workPartition)
+    {
+        // Skip if null batch or unfound material
+        if(p.portionId == HitKey::NullBatch) continue;
+        auto loc = workMap.find(p.portionId);
+        if(loc == workMap.end()) continue;
+
+        totalOutRayCount += (static_cast<uint32_t>(p.count)*
+                             loc->second->OutRayCount());
+    }
+    size_t auxOutSize = totalOutRayCount * sizeof(RayAuxBasic);
+    DeviceMemory::EnlargeBuffer(*dAuxOut, auxOutSize);
+
+    // Generate Global Data Struct
+    DirectTracerGlobal globalData;
+    globalData.gImage = imgMemory.GMem<Vector3>();
+
+    for(auto& work : workMap)
+    {
+        using WorkData = typename MetaWorkBatchData<DirectTracerGlobal, RayAuxBasic>;
+
+        auto& wData = static_cast<WorkData&>(*work.second);
+        wData.SetGlobalData(globalData);
+        wData.SetRayDataPtrs(static_cast<RayAuxBasic*>(*dAuxOut),
+                             static_cast<const RayAuxBasic*>(*dAuxIn));
+    }
 
     // Hit System Generated bunch of hit pairs
     WorkRays(workMap, scene.BaseBoundaryMaterial());

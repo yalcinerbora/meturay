@@ -26,6 +26,8 @@ class GPUWorkBatchI
         // Interface
         // Type (as string) of the primitive group
         virtual const char*                 Type() const = 0;
+        // Get ready for kernel call
+        virtual void                        GetReady() = 0;
         // Kernel Call
         virtual void                        Work(// Output
                                                  HitKey* dBoundMatOut,

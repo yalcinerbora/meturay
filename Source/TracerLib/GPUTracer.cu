@@ -41,7 +41,7 @@ void GPUTracer::ResetHitMemory(uint32_t rayCount, HitKey baseBoundMatKey)
     rayMemory.ResizeRayOut(rayCount, baseBoundMatKey);
 }
 
-void GPUTracer::HitRays()
+void GPUTracer::HitAndPartitionRays()
 {   
     if(crashed) return;
 
@@ -190,6 +190,17 @@ void GPUTracer::HitRays()
 
     // At the end of iteration all rays found a material, primitive
     // and interpolation weights (which should be on hitStruct)
+
+    // Partition rays for work kernel calls
+    // Copy materialKeys to currentKeys
+    // to make it ready for sorting
+    rayMemory.FillMatIdsForSort(currentRayCount);
+    // Sort with respect to the materials keys
+    rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, currentRayCount, maxWorkBits);
+    // Parition w.r.t. material batch
+    workPartition.clear();
+    workPartition = rayMemory.Partition(currentRayCount);
+
     //printf("FRAME END\n");
 }
 
@@ -206,30 +217,18 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
     HitKey* dCurrentKeys = rayMemory.CurrentKeys();
     RayId* dCurrentRayIds = rayMemory.CurrentIds();
 
-    // Material Interfaces    
-    uint32_t rayCount = currentRayCount;
-
-    // Copy materialKeys to currentKeys
-    // to make it ready for sorting
-    rayMemory.FillMatIdsForSort(rayCount);
-
-    // Sort with respect to the materials keys
-    rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, rayCount, maxWorkBits);
-
-    // Parition w.r.t. material batch
-    auto portions = rayMemory.Partition(rayCount);
     // Use partition lis to find out
     // total potential output ray count
     uint32_t totalOutRayCount = 0;
-    for(const auto& p : portions)
+    for(const auto& p : workPartition)
     {
         // Skip if null batch or unfound material
         if(p.portionId == HitKey::NullBatch) continue;
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;
 
-        totalOutRayCount += static_cast<uint32_t>(p.count) *
-                            loc->second->OutRayCount();
+        totalOutRayCount += (static_cast<uint32_t>(p.count)*
+                             loc->second->OutRayCount());
     }
 
     // Allocate output ray memory
@@ -244,8 +243,8 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
 
     // For each partition
     uint32_t outOffset = 0;
-    for(auto pIt = portions.crbegin();
-        pIt != portions.crend(); pIt++)
+    for(auto pIt = workPartition.crbegin();
+        pIt != workPartition.crend(); pIt++)
     {
         const auto& p = (*pIt);
 
