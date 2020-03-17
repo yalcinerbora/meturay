@@ -54,18 +54,6 @@ inline __device__ void AllocateSingleCamera(GPUCameraI*& gPtr,
         case CameraType::PINHOLE:
         {
             gPtr = new (gMemory) PinholeCamera(cpuCamera);
-            printf("gPtr %p, gMemory %p\n", gPtr, gMemory);
-
-            //curandStateMRG32k3a_t randomMemoryFake;
-
-            //RandomGPU rng(&randomMemoryFake);
-            //RayReg r;
-            //gPtr->GenerateRay(r, {10, 10}, {20, 20}, rng);
-
-            //printf("0x%llx\n", *reinterpret_cast<const uint64_t*>(gPtr));
-            //printf("0x%llx\n", *(reinterpret_cast<const uint64_t*>(gPtr) + 1));
-            //printf("0X%llx\n", *(reinterpret_cast<const uint64_t*>(gPtr) + 2));
-
             break;
         }
         case CameraType::ORTHOGRAPHIC:

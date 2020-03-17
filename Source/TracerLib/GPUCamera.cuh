@@ -109,10 +109,6 @@ inline void PinholeCamera::GenerateRay(// Output
     Vector2 randomOffset = Vector2(dX, dY);
     //Vector2 randomOffset = Vector2(0.5f);
 
-    printf("plane (%f, %f) - pshi(%f, %f)\n", 
-           planeSize[0], planeSize[1],
-           dX, dY);
-
     Vector2 sampleDistance = Vector2(static_cast<float>(sampleId[0]),
                                      static_cast<float>(sampleId[1])) * delta;
     sampleDistance += (randomOffset * delta);

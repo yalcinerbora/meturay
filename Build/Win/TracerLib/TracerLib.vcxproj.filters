@@ -254,7 +254,7 @@
       <Filter>Structs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\LightCameraKernels.cuh">
-      <Filter>Light &amp; Camera</Filter>
+      <Filter>GPU Template Kernels</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

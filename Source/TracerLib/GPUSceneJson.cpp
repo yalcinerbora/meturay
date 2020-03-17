@@ -622,6 +622,7 @@ SceneError GPUSceneJson::LoadCommon(double time)
     {
         size_t transformSize = transformsCPU.size() * sizeof(GPUTransform);
         DeviceMemory::EnlargeBuffer(transformMemory, transformSize);
+        dTransforms = static_cast<GPUTransform*>(transformMemory);
 
         // Just Memcpy
         CUDA_CHECK(cudaMemcpy(dTransforms, transformsCPU.data(),

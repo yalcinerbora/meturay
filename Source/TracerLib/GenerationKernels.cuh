@@ -154,27 +154,6 @@ __global__ void KCGenerateCameraRaysGPU(// Output
     const uint32_t totalWorkCount = pixelCount[0] * samplePerLocation *
                                     pixelCount[1] * samplePerLocation;
 
-    //// Find world space window sizes
-    //float widthHalf = tanf(cam.fov[0] * 0.5f) * cam.nearPlane;
-    //float heightHalf = tanf(cam.fov[1] * 0.5f) * cam.nearPlane;
-
-    //// Camera Space pixel sizes
-    //Vector2 delta = Vector2((widthHalf * 2.0f) / static_cast<float>(resolution[0] * samplePerLocation),
-    //                        (heightHalf * 2.0f) / static_cast<float>(resolution[1] * samplePerLocation));
-
-    //// Camera Vector Correction
-    //Vector3 gaze = cam.gazePoint - cam.position;
-    //Vector3 right = Cross(gaze, cam.up).Normalize();
-    //Vector3 up = Cross(right, gaze).Normalize();
-    //gaze = Cross(up, right).Normalize();
-
-    //// Camera parameters
-    //Vector3 bottomLeft = cam.position
-    //                    - right *  widthHalf
-    //                    - up * heightHalf
-    //                    + gaze * cam.nearPlane;
-    //Vector3 pos = cam.position;
-
     // Kernel Grid-Stride Loop
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
         threadId < totalWorkCount;
@@ -192,9 +171,9 @@ __global__ void KCGenerateCameraRaysGPU(// Output
                          totalSamples,
                          rng);
         /*if(threadId == 0) printf("%p\n", *gCam);*/
-        printf("p %f, %f, %f --- d %f, %f, %f\n",
-               ray.ray.getPosition()[0], ray.ray.getPosition()[1], ray.ray.getPosition()[2],
-               ray.ray.getDirection()[0], ray.ray.getDirection()[1], ray.ray.getDirection()[2]);
+        //printf("p %f, %f, %f --- d %f, %f, %f\n",
+        //       ray.ray.getPosition()[0], ray.ray.getPosition()[1], ray.ray.getPosition()[2],
+        //       ray.ray.getDirection()[0], ray.ray.getDirection()[1], ray.ray.getDirection()[2]);
         //if(threadId == 0)
         //{
         //    printf("0x%llx\n", *reinterpret_cast<const uint64_t*>(gCam));
