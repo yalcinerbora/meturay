@@ -152,15 +152,16 @@ SceneError TracerLogicGenerator::GenerateBaseAccelerator(GPUBaseAccelPtr& baseAc
 
 SceneError TracerLogicGenerator::GenerateTracer(GPUTracerPtr& tracerPtr,
                                                 // Args
-                                                const TracerParameters& p,
+                                                const CudaSystem& s,                                                
                                                 const GPUSceneI& scene,
+                                                const TracerParameters& p,
                                                 // Type
                                                 const std::string& tracerType)
 {
     auto loc = tracerGenerators.find(tracerType);
     if(loc == tracerGenerators.end()) return SceneError::NO_LOGIC_FOR_TRACER;
 
-    tracerPtr = std::move(loc->second(p, scene));
+    tracerPtr = std::move(loc->second(s, scene, p));
     return SceneError::OK;
 }
 

@@ -6,7 +6,7 @@
 class PathTracer final : public RayTracer
 {
     public:
-        static constexpr const char*    TypeName() { return "Test"; }
+        static constexpr const char*    TypeName() { return "TestPath"; }
 
         static constexpr const char*    MAX_DEPTH_NAME = "MaxDepth";
         static constexpr const char*    NEE_NAME = "NextEventEstimation";
@@ -27,7 +27,8 @@ class PathTracer final : public RayTracer
     protected:
     public:
         // Constructors & Destructor
-                                PathTracer(CudaSystem&, GPUSceneI&, 
+                                PathTracer(const CudaSystem&,
+                                           const GPUSceneI&,
                                            const TracerParameters&);
                                 ~PathTracer() = default;
 

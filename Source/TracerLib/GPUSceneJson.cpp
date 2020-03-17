@@ -17,6 +17,8 @@
 #include "SceneNodeJson.h"
 #include "MangledNames.h"
 
+#include "TracerDebug.h"
+
 #include <nlohmann/json.hpp>
 #include <filesystem>
 #include <set>
@@ -164,9 +166,6 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                                   AcceleratorBatchList& requiredAccelListings,
                                                   // Base Accelerator required data
                                                   std::map<uint32_t, uint32_t>& surfaceTransformIds,
-                                                  // Types
-                                                  const std::string& estimatorType,
-                                                  const std::string& tracerType,
                                                   //
                                                   double time)
 {
@@ -408,6 +407,7 @@ SceneError GPUSceneJson::GeneratePrimitiveGroups(const PrimitiveNodeList& primGr
         if(e = pg->InitializeGroup(primNodes, time, surfaceLoaderGenerator, parentPath))
             return e;
 
+        ExpandHitStructSize(*pg.get());
         primitives.emplace(primTypeName, std::move(pg));
     }
     return e;
@@ -483,6 +483,9 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABB
             }
             accAABBs.emplace(pairs.first, std::move(combinedAABB));
         }
+
+        // Finally emplace it to the list
+        accelerators.emplace(accelGroupName, std::move(aGroup));
     }
     return e;
 }
@@ -654,7 +657,8 @@ SceneError GPUSceneJson::LoadCommon(const std::vector<CPULight>& lightsCPU, doub
     dLightAllocations = dMem + offset;
     offset += lightSize;
     dCameraAllocations = dMem + offset;
-    offset += lightSize;
+    offset += cameraSize;
+    assert(totalSize == offset);
     
     if(transformsCPU.size() != 0)
     {
@@ -671,22 +675,13 @@ SceneError GPUSceneJson::LoadCommon(const std::vector<CPULight>& lightsCPU, doub
         //CUDA_CHECK(cudaMemcpy(dLights, lightsCPU.data(), lightsCPU.size() * sizeof(LightStruct),
         //                      cudaMemcpyHostToDevice));
     } else dLights = nullptr;
-    if(lightsCPU.size() != 0)
+    if(camerasCPU.size() != 0)
     {
+        LightCameraKernels::ConstructCameras(dCameras, dCameraAllocations, camerasCPU,
+                                             cudaSystem);
 
     } else dCameras = nullptr;
-
-    //// Now Load Camera
-    //const nlohmann::json* camerasJson = nullptr;
-    //if(!FindNode(camerasJson, NodeNames::CAMERA_BASE))
-    //    return SceneError::CAMERAS_ARRAY_NOT_FOUND;
-    //i = 0;
-    //cameraMemory.resize(camerasJson->size());
-    //for(const auto& cameraJson : (*camerasJson))
-    //{
-    //    cameraMemory[i] = SceneIO::LoadCamera(cameraJson, time);
-    //    i++;
-    //}
+    cudaSystem.SyncGPUAll();
     return e;
 }
 
@@ -700,25 +695,12 @@ SceneError GPUSceneJson::LoadLogicRelated(std::vector<CPULight>& lightsCPU, doub
     WorkBatchList workListings;
     AcceleratorBatchList accelListings;
     std::map<uint32_t, uint32_t> surfaceTransformIds;
-    // Fetch Estimator Type
-    const nlohmann::json* estimator = nullptr;
-    if(!FindNode(estimator, NodeNames::ESTIMATOR))
-        return SceneError::ESTIMATOR_NODE_NOT_FOUND;
-    const std::string estimatorType = (*estimator);
-    // Fetch Tracer Type
-    const nlohmann::json* tracerLogic = nullptr;
-    if(!FindNode(tracerLogic, NodeNames::TRACER_LOGIC))
-        return SceneError::TRACER_NODE_NOT_FOUND;
-    const std::string tracerType = (*tracerLogic);
-
     // Parse Json and find necessary nodes
     if((e = GenerateConstructionData(primGroupNodes,
                                      matGroupNodes,
                                      workListings,
                                      accelListings,
                                      surfaceTransformIds,
-                                     estimatorType,
-                                     tracerType,
                                      time)) != SceneError::OK)
         return e;
 

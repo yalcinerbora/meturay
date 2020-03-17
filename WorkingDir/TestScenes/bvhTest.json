@@ -31,7 +31,7 @@
 	"Materials":[
 	{
 		"id": [0, 1],
-		"type": "Basic",
+		"type": "Constant",
         "albedo" : [[0, 0, 0],
                     [0.5, 0.5, 0.5]]
 	}],

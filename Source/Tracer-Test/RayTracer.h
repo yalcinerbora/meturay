@@ -20,20 +20,21 @@ class RayTracer : public GPUTracer
         DeviceMemory            auxBuffer0;
         DeviceMemory            auxBuffer1;
 
-        GPUCameraI**            dCameraPtr;
+        GPUCameraI*             dCameraPtr;
         DeviceMemory*           dAuxIn;
         DeviceMemory*           dAuxOut;        
 
-        GPUSceneI&              scene;
+        const GPUSceneI&        scene;
 
-        void                    GenerateRays(const GPUCameraI& dCamera, int32_t sampleCount);
+        void                    GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount);
         void                    LoadCameraToGPU(const CPUCamera&);
         void                    SwapAuxBuffers();
 
     public:
         // Constructors & Destructor
-                                RayTracer(CudaSystem&, GPUSceneI&, 
-                                            const TracerParameters&);
+                                RayTracer(const CudaSystem&, 
+                                          const GPUSceneI&, 
+                                          const TracerParameters&);
                                 ~RayTracer() = default;
 
         TracerError             Initialize() override;

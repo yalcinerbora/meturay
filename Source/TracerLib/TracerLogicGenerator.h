@@ -77,8 +77,9 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
                                                             const std::string& accelType) override;
                 // Tracer Logic
         SceneError                  GenerateTracer(GPUTracerPtr&,
-                                                   const TracerParameters&,
+                                                   const CudaSystem&,
                                                    const GPUSceneI&,
+                                                   const TracerParameters&,
                                                    const std::string& tracerType) override;
    
         // Inclusion Functionality

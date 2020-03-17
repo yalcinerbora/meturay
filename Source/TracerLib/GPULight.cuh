@@ -280,11 +280,13 @@ class SphericalLight final : public GPULightI
         __device__ Vector3  Flux(const Vector3& direction) const override;
 };
 
-static constexpr size_t GPULightUnionSize = std::aligned_union<7,
-                                                               PointLight, DirectionalLight,
-                                                               SpotLight, RectangularLight,
-                                                               TriangularLight, DiskLight,
-                                                               SphericalLight>::alignment_value;
+// Expand this when necessary
+static constexpr size_t LightSizeArray[] = {sizeof(PointLight), sizeof(DirectionalLight),
+                                            sizeof(SpotLight),sizeof(RectangularLight),
+                                            sizeof(TriangularLight),sizeof(DiskLight),
+                                            sizeof(SphericalLight)};
+static constexpr size_t GPULightUnionSize = *std::min_element(std::begin(LightSizeArray),
+                                                               std::end(LightSizeArray));
 
 __device__
 inline PointLight::PointLight(const Vector3& position,

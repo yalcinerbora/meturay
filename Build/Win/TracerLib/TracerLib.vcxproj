@@ -83,7 +83,6 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\ImageMemory.cu">
       <FileType>Document</FileType>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\LightCameraKernels.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\RNGMemory.cu" />
     <ClCompile Include="..\..\..\Source\TracerLib\MangledNames.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\SceneNodeJson.cpp" />
@@ -168,7 +167,8 @@
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
-      <AdditionalCompilerOptions>/wd4506</AdditionalCompilerOptions>
+      <AdditionalCompilerOptions>
+      </AdditionalCompilerOptions>
       <PtxAsOptionV>true</PtxAsOptionV>
       <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
       <MaxRegCount />
@@ -198,7 +198,8 @@
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
-      <AdditionalCompilerOptions>/wd4506</AdditionalCompilerOptions>
+      <AdditionalCompilerOptions>
+      </AdditionalCompilerOptions>
       <MaxRegCount>
       </MaxRegCount>
       <GenerateLineInfo>true</GenerateLineInfo>

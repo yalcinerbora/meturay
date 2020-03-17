@@ -64,7 +64,7 @@ class MaterialLogicPoolI
 class TracerPoolI
 {
     protected:
-        std::map<std::string, GPUTracerGen>   tracerLogicGenerators;
+        std::map<std::string, GPUTracerGen>   tracerGenerators;
 
     public:
         static constexpr const char* DefaultConstructorName = "GenTracerPoolPool";
@@ -127,7 +127,7 @@ inline std::map<std::string, GPUTracerGen> TracerPoolI::TracerGenerators(const s
 {
     std::map<std::string, GPUTracerGen> result;
     std::regex regExpression(regex);
-    for(const auto& tracerGenerator : tracerLogicGenerators)
+    for(const auto& tracerGenerator : tracerGenerators)
     {
         if(std::regex_match(tracerGenerator.first, regExpression))
             result.emplace(tracerGenerator);

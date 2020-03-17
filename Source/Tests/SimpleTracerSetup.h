@@ -45,12 +45,13 @@ class MockNode
 {
     public:
         static constexpr uint32_t       MAX_BOUNCES = 16;
-        static constexpr int            SAMPLE_COUNT = 3;
+        static constexpr int            SAMPLE_COUNT = 1;
 
+        static constexpr Vector2i       IMAGE_RESOLUTION = {16, 9};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 18};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {640, 360};
-        static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1600, 900};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1920, 1080};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {3840, 2160};
@@ -174,7 +175,6 @@ inline void MockNode::Work()
 
 class SimpleTracerSetup
 {
-
     private:        
         static constexpr Vector2i           SCREEN_RESOLUTION = {1280, 720};
        
@@ -212,7 +212,8 @@ class SimpleTracerSetup
         // Scene Tracer and Visor
         GPUTracerPtr                        tracer;
         std::unique_ptr<VisorI>             visorView;
-        std::unique_ptr<GPUSceneJson>       gpuScene;
+        //std::unique_ptr<GPUSceneJson>       gpuScene;
+        SharedLibPtr<GPUSceneI> gpuScene;
         std::unique_ptr<CudaSystem>         cudaSystem;
 
         // Visor Input
@@ -243,7 +244,7 @@ inline SimpleTracerSetup::SimpleTracerSetup(std::string tracerType,
     , sceneTime(sceneTime)
     , tracerType(tracerType)
     , visorView(nullptr)
-    , gpuScene(nullptr)
+    , gpuScene(nullptr, nullptr)
     , visorInput(nullptr)
     , node(nullptr)
     , tracer(nullptr, nullptr)
@@ -296,12 +297,24 @@ inline bool SimpleTracerSetup::Init()
     // Basically delegates all work to single GPU
     SingleGPUScenePartitioner partitioner(*cudaSystem);
 
+    // YOLO TEST
+    SharedLib lib("Tracer-Test");
+    //SharedLibPtr<GPUSceneI> gpuScene = {nullptr, nullptr};
+    lib.GenerateObjectWithArgs(gpuScene,
+                               {"GenerateSceneJson",
+                               "DeleteSceneJson"},
+                               sceneName,
+                               partitioner,
+                               generator,
+                               surfaceLoaders,
+                               *cudaSystem);
+
     // Load Scene & get material/primitive mappings
-    gpuScene = std::make_unique<GPUSceneJson>(sceneName,
+ /*   gpuScene = std::make_unique<GPUSceneJson>(sceneName,
                                               partitioner,
                                               generator,
                                               surfaceLoaders,
-                                              *cudaSystem);
+                                              *cudaSystem);*/
     SceneError scnE = gpuScene->LoadScene(sceneTime);
     ERROR_CHECK(SceneError, scnE);
 
@@ -313,8 +326,7 @@ inline bool SimpleTracerSetup::Init()
     visorInput = std::make_unique<VisorWindowInput>(std::move(KeyBinds),
                                                     std::move(MouseBinds),
                                                     std::move(MovementSchemeList),
-                                                    CPUCamera{}
-);
+                                                    CPUCamera{});
                                                     
     // Window Params
     VisorOptions visorOpts;
@@ -340,17 +352,28 @@ inline bool SimpleTracerSetup::Init()
 
     // Generate Tracer Object
     scnE = generator.GenerateTracer(tracer,
-                                    TRACER_PARAMETERS,
+                                    *cudaSystem,
                                     *gpuScene,
+                                    TRACER_PARAMETERS,
                                     tracerType);
     ERROR_CHECK(SceneError, scnE);
     tracer->SetImagePixelFormat(IMAGE_PIXEL_FORMAT);
     tracer->ResizeImage(MockNode::IMAGE_RESOLUTION);
     tracer->ReportionImage();
     tracer->ResetImage();
+    
+    // Set Options
+    const TracerOptions opts = TracerOptions(
+    {
+        {"Samples", OptionVariable(MockNode::SAMPLE_COUNT)},
+        {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
+        {"NextEventEstimation", OptionVariable(true)}
+    });
+    TracerError trcE = tracer->SetOptions(opts);
+    ERROR_CHECK(TracerError, trcE);
 
     // Tracer Init
-    TracerError trcE = tracer->Initialize();
+    trcE = tracer->Initialize();
     ERROR_CHECK(TracerError, trcE);
 
     // Get a Self-Node

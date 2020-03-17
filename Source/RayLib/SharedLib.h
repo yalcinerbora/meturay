@@ -55,7 +55,7 @@ class SharedLib
         template <class T, class... Args>
         DLLError            GenerateObjectWithArgs(SharedLibPtr<T>&,
                                                    const SharedLibArgs& mangledNames,
-                                                   Args...);
+                                                   Args&&...);
 };
 
 using PoolKey = std::pair<SharedLib*, SharedLibArgs>;
@@ -75,12 +75,12 @@ DLLError SharedLib::GenerateObject(SharedLibPtr<T>& ptr,
 template <class T, class... Args>
 DLLError SharedLib::GenerateObjectWithArgs(SharedLibPtr<T>& ptr,
                                            const SharedLibArgs& mangledNames,
-                                           Args... args)
+                                           Args&&... args)
 {
-    ObjGeneratorFuncArgs<T, Args...> genFunc = static_cast<ObjGeneratorFuncArgs<T, Args...>>(GetProcAdressInternal(mangledNames.mangledConstructorName));
+    ObjGeneratorFuncArgs<T, Args&&...> genFunc = static_cast<ObjGeneratorFuncArgs<T, Args&&...>>(GetProcAdressInternal(mangledNames.mangledConstructorName));
     ObjDestroyerFunc<T> destFunc = static_cast<ObjDestroyerFunc<T>>(GetProcAdressInternal(mangledNames.mangledDestructorName));
     if(!genFunc) return DLLError::MANGLED_NAME_NOT_FOUND;
     if(!destFunc) return DLLError::MANGLED_NAME_NOT_FOUND;
-        ptr = SharedLibPtr<T>(genFunc(std::forward<Args>(args)...), destFunc);
+        ptr = SharedLibPtr<T>(genFunc(std::forward<Args&&>(args)...), destFunc);
     return DLLError::OK;
 }

@@ -20,11 +20,13 @@ as an input. (since those types are storngly tied)
 class GPUTracerI;
 class GPUSceneI;
 class CudaGPU;
+class CudaSystem;
 
 // Statically Inerfaced Generators
 template<class TracerLogic>
-using TracerGeneratorFunc = GPUTracerI* (*)(const TracerParameters&,
-                                            const GPUSceneI&);
+using TracerGeneratorFunc = GPUTracerI* (*)(const CudaSystem&,
+                                            const GPUSceneI&,
+                                            const TracerParameters&);
 
 template<class Accel>
 using AccelGroupGeneratorFunc = Accel* (*)(const GPUPrimitiveGroupI&,
@@ -50,10 +52,11 @@ class GPUTracerGen
             , dFunc(d)
         {}
 
-        GPUTracerPtr operator()(const TracerParameters& params,
-                                const GPUSceneI& scene)
+        GPUTracerPtr operator()(const CudaSystem& s,
+                                const GPUSceneI& scene,
+                                const TracerParameters& params)
         {
-            GPUTracerI* logic = gFunc(params, scene);
+            GPUTracerI* logic = gFunc(s, scene, params);
             return GPUTracerPtr(logic, dFunc);
         }
 };
@@ -104,10 +107,11 @@ class GPUAccelGroupGen
 namespace TypeGenWrappers
 {
     template <class Base, class TracerLogic>
-    Base* TracerLogicConstruct(TracerParameters& params,
-                               GPUSceneI& scene)
+    Base* TracerLogicConstruct(const CudaSystem& s,
+                               const GPUSceneI& scene,
+                               const TracerParameters& params)
     {
-        return new TracerLogic(params, scene);
+        return new TracerLogic(s, scene, params);
     }
 
     template <class Base, class AccelGroup>

@@ -128,6 +128,8 @@ __global__ void KCGenerateCameraRaysCPU(// Output
     }
 }
 
+#include "GPUCamera.cuh"
+
 // Templated Camera Ray Generation Kernel
 template<class RayAuxData, AuxInitFunc<RayAuxData> AuxFunc>
 __global__ void KCGenerateCameraRaysGPU(// Output
@@ -136,7 +138,7 @@ __global__ void KCGenerateCameraRaysGPU(// Output
                                         ImageGMem<Vector4f> imgMem,
                                         // Input
                                         RNGGMem gRNGStates,
-                                        const GPUCameraI& gCam,
+                                        const GPUCameraI* gCam,
                                         const uint32_t samplePerLocation,
                                         const Vector2i resolution,
                                         const Vector2i pixelStart,
@@ -184,11 +186,32 @@ __global__ void KCGenerateCameraRaysGPU(// Output
         Vector2i globalPixelId = pixelStart + (threadId2d / samplePerLocation);
 
         RayReg ray;
-        gCam.GenerateRay(ray,
+        gCam->GenerateRay(ray,
                          //
                          globalSampleId,
                          totalSamples,
                          rng);
+        /*if(threadId == 0) printf("%p\n", *gCam);*/
+        printf("p %f, %f, %f --- d %f, %f, %f\n",
+               ray.ray.getPosition()[0], ray.ray.getPosition()[1], ray.ray.getPosition()[2],
+               ray.ray.getDirection()[0], ray.ray.getDirection()[1], ray.ray.getDirection()[2]);
+        //if(threadId == 0)
+        //{
+        //    printf("0x%llx\n", *reinterpret_cast<const uint64_t*>(gCam));
+        //    printf("0x%llx\n", *(reinterpret_cast<const uint64_t*>(gCam) + 1));
+        //    printf("0X%llx\n", *(reinterpret_cast<const uint64_t*>(gCam) + 2));
+        //}
+        //auto cammo = static_cast<const PinholeCamera*>(gCam);
+        //cammo->GenerateRay(ray,
+        //                   //
+        //                   globalSampleId,
+        //                   totalSamples,
+        //                   rng);
+        //if(threadId == 0)
+        //    printf("pos %f %f %f\n", 
+        //           cammo->position[0],
+        //           cammo->position[1],
+        //           cammo->position[2]);
 
         // Generate Required Parameters
         Vector2i pixelSampleId = threadId2d % samplePerLocation;

@@ -4,7 +4,8 @@
 
 #include "RayLib/GPUSceneI.h"
 
-DirectTracer::DirectTracer(CudaSystem& s, GPUSceneI& scene,
+DirectTracer::DirectTracer(const CudaSystem& s,
+                           const GPUSceneI& scene,
                            const TracerParameters& p)
     : RayTracer(s, scene, p)
 {
@@ -76,17 +77,19 @@ bool DirectTracer::Render()
     // Hit System Generated bunch of hit pairs
     WorkRays(workMap, scene.BaseBoundaryMaterial());
     SwapAuxBuffers();
+
+    if(totalOutRayCount == 0) return false;
     return true;
 }
 
 void DirectTracer::GenerateWork(int cameraId)
 {
     // Generate Rays
-    GenerateRays(*scene.CamerasGPU()[cameraId], options.sampleCount);
+    GenerateRays(scene.CamerasGPU()[cameraId], options.sampleCount);
 }
 
 void DirectTracer::GenerateWork(const CPUCamera& c)
 {
     LoadCameraToGPU(c);
-    GenerateRays(**dCameraPtr, options.sampleCount);
+    GenerateRays(dCameraPtr, options.sampleCount);
 }

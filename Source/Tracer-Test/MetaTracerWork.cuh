@@ -99,8 +99,8 @@ template <class GD, class LD, class RD, class MG, class PG,
           SurfaceFunc<MG, PG> SF, WorkFunc<GD, LD, RD, MG> WF>
 inline const char* MetaTracerBatch<GD, LD, RD, MG, PG, SF, WF>::TypeName()
 {
-    static std::string typeName = MangledNames::AcceleratorGroup(MG::TypeName(), 
-                                                                 PG::TypeName());
+    static std::string typeName = MangledNames::WorkBatch(PG::TypeName(),
+                                                          MG::TypeName());
     return typeName.c_str();
 }
 

@@ -6,9 +6,9 @@
 #include "Random.cuh"
 #include "RayStructs.h"
 
-class PinholeCamera final : public GPUEndpointI
+class PinholeCamera : public GPUEndpointI
 {
-    private:
+    public:
         // Sample Ready Parameters
         // All of which is world space
         Vector3     position;
@@ -42,11 +42,16 @@ class PinholeCamera final : public GPUEndpointI
                                         RandomGPU&) const override;
 };
 
-static constexpr size_t GPUCameraUnionSize = std::aligned_union<1, 
-                                                                PinholeCamera>::alignment_value;
+#include <algorithm>
 
-__device__ 
-PinholeCamera::PinholeCamera(const CPUCamera& cam)
+// Expand this when necessary
+static constexpr size_t CameraSizeArray[] = {sizeof(PinholeCamera)};
+static constexpr size_t GPUCameraUnionSize = *std::min_element(std::begin(CameraSizeArray), 
+                                                               std::end(CameraSizeArray));
+
+
+__device__
+inline PinholeCamera::PinholeCamera(const CPUCamera& cam)
     : GPUEndpointI(cam.matKey)
 {
     // Find world space window sizes
@@ -65,6 +70,8 @@ PinholeCamera::PinholeCamera(const CPUCamera& cam)
                   - up * heightHalf
                   + gaze * cam.nearPlane);
     position = cam.position;
+    planeSize = Vector2(widthHalf, heightHalf) * 2.0f;
+    nearFar = Vector2(cam.nearPlane, cam.farPlane);
 }
 
 __device__
@@ -101,6 +108,10 @@ inline void PinholeCamera::GenerateRay(// Output
     float dY = GPUDistribution::Uniform<float>(rng);
     Vector2 randomOffset = Vector2(dX, dY);
     //Vector2 randomOffset = Vector2(0.5f);
+
+    printf("plane (%f, %f) - pshi(%f, %f)\n", 
+           planeSize[0], planeSize[1],
+           dX, dY);
 
     Vector2 sampleDistance = Vector2(static_cast<float>(sampleId[0]),
                                      static_cast<float>(sampleId[1])) * delta;

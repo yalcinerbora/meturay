@@ -20,6 +20,7 @@
       <FileType>Document</FileType>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\LightCameraKernels.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterials.cuh" />
@@ -41,9 +42,9 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerWorks.cuh" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cu">
+    <ClCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cpp">
       <FileType>Document</FileType>
-    </CudaCompile>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">
@@ -118,9 +119,11 @@
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
-      <AdditionalCompilerOptions>/wd4506</AdditionalCompilerOptions>
+      <AdditionalCompilerOptions>
+      </AdditionalCompilerOptions>
       <PtxAsOptionV>true</PtxAsOptionV>
       <FastMath>false</FastMath>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -147,12 +150,14 @@
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
-      <AdditionalCompilerOptions>/wd4506</AdditionalCompilerOptions>
+      <AdditionalCompilerOptions>
+      </AdditionalCompilerOptions>
       <MaxRegCount>0</MaxRegCount>
       <GenerateLineInfo>true</GenerateLineInfo>
       <PtxAsOptionV>true</PtxAsOptionV>
       <FastMath>false</FastMath>
       <HostDebugInfo>true</HostDebugInfo>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
     </CudaCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

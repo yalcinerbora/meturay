@@ -100,7 +100,7 @@ MetaWorkPool::LoopAndAppend(std::tuple<Tp...>& t)
 {
     using namespace TypeGenWrappers;
     using CurrentType = typename std::tuple_element_t<I, TypeList<Tp...>>::type::type;
-   // Accelerator Types
+    // Accelerator Types
     generators.emplace(CurrentType::TypeName(),
                        GPUWorkBatchGen(WorkBatchConstruct<GPUWorkBatchI, CurrentType>,
                                        DefaultDestruct<GPUWorkBatchI>));
@@ -122,15 +122,15 @@ inline TracerError MetaWorkPool::GenerateWorkBatch(GPUWorkBatchI*& work,
                                                    const GPUMaterialGroupI& mg,
                                                    const GPUPrimitiveGroupI& pg)
 {
-    std::string mangledName = MangledNames::WorkBatch(mg.Type(),
-                                                      pg.Type());
+    std::string mangledName = MangledNames::WorkBatch(pg.Type(),
+                                                      mg.Type());
 
     auto loc = generators.end();
     if((loc = generators.find(mangledName)) != generators.end())
     {
-        auto ptr = loc->second(mg, pg);
-        allocatedResources.emplace_back(std::move(ptr));
+        auto ptr = loc->second(mg, pg);        
         work = ptr.get();
+        allocatedResources.emplace_back(std::move(ptr));
     }
     else return TracerError::UNABLE_TO_GENERATE_WORK;
     return TracerError::OK;

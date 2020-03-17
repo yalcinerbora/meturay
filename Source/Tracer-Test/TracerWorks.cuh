@@ -17,7 +17,6 @@ class DirectTracerWork
                              MGroup, PGroup, SFunc, BasicWork<MGroup>>
 {
     public:
-        static constexpr const char*    TypeName() { return ""; }
         const char*                     Type() const override { return TypeName(); }
 
     private:
@@ -62,6 +61,9 @@ extern template class DirectTracerWork<SphericalMat,
 using DirectTracerWorkerList = TypeList<DirectTracerWork<ConstantMat,
                                                          GPUPrimitiveTriangle,
                                                          EmptySurfaceFromTri>,
+                                        DirectTracerWork<ConstantMat,
+                                                         GPUPrimitiveEmpty,
+                                                         EmptySurfaceFromEmpty>,
                                         DirectTracerWork<BarycentricMat,
                                                          GPUPrimitiveTriangle,
                                                          BarySurfaceFromTri>,

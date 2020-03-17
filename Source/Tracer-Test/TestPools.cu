@@ -94,7 +94,10 @@ TestMaterialPool::TestMaterialPool()
 
 TestTracerPool::TestTracerPool()
 {
-    //tracerGenerators.emplace(TracerBasic::TypeName(),
-    //                         GPUTracerGen(TracerLogicConstruct<TracerBaseLogicI, TracerBasic>,
-    //                                      DefaultDestruct<TracerBaseLogicI>));
+    tracerGenerators.emplace(DirectTracer::TypeName(),
+                             GPUTracerGen(TracerLogicConstruct<GPUTracerI, DirectTracer>,
+                                          DefaultDestruct<GPUTracerI>));
+    tracerGenerators.emplace(PathTracer::TypeName(),
+                             GPUTracerGen(TracerLogicConstruct<GPUTracerI, PathTracer>,
+                                          DefaultDestruct<GPUTracerI>));
 }

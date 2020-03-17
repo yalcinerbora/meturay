@@ -38,13 +38,14 @@ inline void RayInitBasic(RayAuxBasic* gOutBasic,
     gOutBasic[writeLoc] = init;
 }
 
-RayTracer::RayTracer(CudaSystem& s, GPUSceneI& scene,
+RayTracer::RayTracer(const CudaSystem& s, 
+                     const GPUSceneI& scene,
                      const TracerParameters& param)
     : GPUTracer(s, scene, param)
     , scene(scene)
     , dCameraPtr(nullptr)
-    , dAuxIn(nullptr)
-    , dAuxOut(nullptr)
+    , dAuxIn(&auxBuffer0)
+    , dAuxOut(&auxBuffer1)
 {}
 
 void RayTracer::SwapAuxBuffers()
@@ -57,7 +58,7 @@ TracerError RayTracer::Initialize()
     return GPUTracer::Initialize();
 }
 
-void RayTracer::GenerateRays(const GPUCameraI& dCamera, int32_t sampleCount)
+void RayTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount)
 {
     int32_t sampleCountSqr = sampleCount * sampleCount;
 
@@ -147,9 +148,9 @@ void RayTracer::LoadCameraToGPU(const CPUCamera& c)
                                 LightCameraKernels::CameraClassesUnionSize() + 
                                 sizeof(GPUCameraI*));
     Byte* memPtr = static_cast<Byte*>(tempCameraBuffer);
-    dCameraPtr = reinterpret_cast<GPUCameraI**>(memPtr + LightCameraKernels::CameraClassesUnionSize());
+    dCameraPtr = reinterpret_cast<GPUCameraI*>(memPtr + LightCameraKernels::CameraClassesUnionSize());
 
-    LightCameraKernels::ConstructSingleCamera(*dCameraPtr,
+    LightCameraKernels::ConstructSingleCamera(dCameraPtr,
                                               memPtr, c,
                                               cudaSystem);
     // Generate Rays over this camera

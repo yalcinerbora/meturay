@@ -78,7 +78,8 @@ class GPUTracer : public GPUTracerI
 
     public:
         // Constructors & Destructor
-                                            GPUTracer(CudaSystem&, GPUSceneI&,
+                                            GPUTracer(const CudaSystem&, 
+                                                      const GPUSceneI&,
                                                       const TracerParameters&);
                                             GPUTracer(const GPUTracer&) = delete;
                                             GPUTracer(GPUTracer&&) = delete;

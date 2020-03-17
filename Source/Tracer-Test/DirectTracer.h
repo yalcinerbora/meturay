@@ -7,7 +7,7 @@
 class DirectTracer : public RayTracer
 {
         public:
-        static constexpr const char*    TypeName() { return "DirectTracer"; }
+        static constexpr const char*    TypeName() { return "TestDirect"; }
         
         struct Options                 
         {
@@ -22,8 +22,9 @@ class DirectTracer : public RayTracer
     protected:
     public:
         // Constructors & Destructor
-                                DirectTracer(CudaSystem&, GPUSceneI&, 
-                                            const TracerParameters&);
+                                DirectTracer(const CudaSystem&,
+                                             const GPUSceneI&,
+                                             const TracerParameters&);
                                 ~DirectTracer() = default;
 
         TracerError             Initialize() override;

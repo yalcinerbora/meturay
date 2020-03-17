@@ -4,8 +4,9 @@
 
 #include "RayLib/GPUSceneI.h"
 
-PathTracer::PathTracer(CudaSystem& s, GPUSceneI& scene,
-                       const TracerParameters& params)
+PathTracer::PathTracer(const CudaSystem& s,
+                       const GPUSceneI& scene,
+                       const TracerParameters& p)
     : RayTracer(s, scene, params)
     , currentDepth(0)
 {}
@@ -70,20 +71,20 @@ bool PathTracer::Render()
     WorkRays(workMap, scene.BaseBoundaryMaterial());
     SwapAuxBuffers();
     currentDepth++;
-    if(currentDepth > options.maximumDepth)
+    if(totalOutRayCount == 0 || currentDepth > options.maximumDepth)
         return false;
     return true;
 }
 
 void PathTracer::GenerateWork(int cameraId)
 {
-    GenerateRays(*scene.CamerasGPU()[cameraId], options.sampleCount);
+    GenerateRays(scene.CamerasGPU()[cameraId], options.sampleCount);
     currentDepth = 0;
 }
 
 void PathTracer::GenerateWork(const CPUCamera& cam)
 {
     LoadCameraToGPU(cam);
-    GenerateRays(**dCameraPtr, options.sampleCount);
+    GenerateRays(dCameraPtr, options.sampleCount);
     currentDepth = 0;
 }

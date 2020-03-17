@@ -12,7 +12,8 @@
 #include "GPUAcceleratorI.h"
 #include "GPUWorkI.h"
 
-GPUTracer::GPUTracer(CudaSystem& system, GPUSceneI& scene,
+GPUTracer::GPUTracer(const CudaSystem& system, 
+                     const GPUSceneI& scene,
                      const TracerParameters& p)
     : cudaSystem(system)
     , baseAccelerator(*scene.BaseAccelerator())

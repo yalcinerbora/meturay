@@ -303,8 +303,5 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracer.cu">
       <Filter>Partial Implementations</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\LightCameraKernels.cu">
-      <Filter>Light &amp; Camera</Filter>
-    </CudaCompile>
   </ItemGroup>
 </Project>

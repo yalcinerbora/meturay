@@ -13,6 +13,7 @@ class CudaGPU;
 
 struct TracerParameters;
 class GPUSceneI;
+class CudaSystem;
 
 class TracerLogicGeneratorI
 {
@@ -41,8 +42,9 @@ class TracerLogicGeneratorI
                                                         const std::string& accelType) = 0;
         // Tracer Logic
         virtual SceneError      GenerateTracer(GPUTracerPtr&,
-                                               const TracerParameters&,
+                                               const CudaSystem&,
                                                const GPUSceneI&,
+                                               const TracerParameters&,
                                                const std::string& tracerType) = 0;
 
         // Inclusion Functionality

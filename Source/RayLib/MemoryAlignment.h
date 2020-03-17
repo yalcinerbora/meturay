@@ -15,6 +15,6 @@ inline size_t Memory::AlignSize(size_t size)
 
 inline size_t Memory::AlignSize(size_t size, size_t alignCount)
 {
-    size = AlignByteCount * ((size + alignCount - 1) / alignCount);
+    size = alignCount * ((size + alignCount - 1) / alignCount);
     return size;
 }

@@ -5,9 +5,11 @@
 #include "CudaConstants.h"
 #include "RayLib/SceneStructs.h"
 
-__device__ void AllocateSingleCamera(GPUCameraI*& gPtr,
-                                     void* const gMemory,
-                                     const CPUCamera& cpuCamera)
+#include "Random.cuh"
+
+inline __device__ void AllocateSingleCamera(GPUCameraI*& gPtr,
+                                            void* const gMemory,
+                                            const CPUCamera& cpuCamera)
 {
     gPtr = nullptr;
     switch(cpuCamera.type)
@@ -15,6 +17,18 @@ __device__ void AllocateSingleCamera(GPUCameraI*& gPtr,
         case CameraType::PINHOLE:
         {
             gPtr = new (gMemory) PinholeCamera(cpuCamera);
+            printf("gPtr %p, gMemory %p\n", gPtr, gMemory);
+
+            //curandStateMRG32k3a_t randomMemoryFake;
+
+            //RandomGPU rng(&randomMemoryFake);
+            //RayReg r;
+            //gPtr->GenerateRay(r, {10, 10}, {20, 20}, rng);
+
+            //printf("0x%llx\n", *reinterpret_cast<const uint64_t*>(gPtr));
+            //printf("0x%llx\n", *(reinterpret_cast<const uint64_t*>(gPtr) + 1));
+            //printf("0X%llx\n", *(reinterpret_cast<const uint64_t*>(gPtr) + 2));
+
             break;
         }
         case CameraType::ORTHOGRAPHIC:
@@ -33,9 +47,9 @@ __device__ void AllocateSingleCamera(GPUCameraI*& gPtr,
     }
 }
 
-__device__ void AllocateSingleLight(GPULightI*& gPtr,
-                                    void* const gMemory,
-                                    const CPULight& cpuLight)
+inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
+                                           void* const gMemory,
+                                           const CPULight& cpuLight)
 {
     gPtr = nullptr;
     switch(cpuLight.type)
@@ -103,7 +117,7 @@ __global__ void KCAllocateSingleCamera(GPUCameraI*& gPtr,
 
 
 __global__ void KCAllocateLights(GPULightI** gPtrs,
-                                 Byte* gMemory,
+                                 Byte* const gMemory,
                                  //
                                  const CPULight* gCPULights,
                                  const uint32_t lightCount,
@@ -138,12 +152,12 @@ __global__ void KCAllocateCameras(GPUCameraI** gPtrs,
 
 size_t LightCameraKernels::LightClassesUnionSize()
 {
-    return GPUCameraUnionSize;
+    return GPULightUnionSize;
 }
 
 size_t LightCameraKernels::CameraClassesUnionSize()
 {
-    return GPULightUnionSize;
+    return GPUCameraUnionSize;
 }
 
 void LightCameraKernels::ConstructLights(// Output
@@ -193,7 +207,7 @@ void LightCameraKernels::ConstructCameras(// Output
                             //
                             static_cast<const CPUCamera*>(temp),
                             static_cast<uint32_t>(cameraData.size()),
-                            static_cast<uint32_t>(LightClassesUnionSize()));
+                            static_cast<uint32_t>(CameraClassesUnionSize()));
 }
 
 void LightCameraKernels::ConstructSingleLight(// Output

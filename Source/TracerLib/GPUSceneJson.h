@@ -95,9 +95,6 @@ class GPUSceneJson : public GPUSceneI
                                                  AcceleratorBatchList& accelBatchListings,
                                                  // Base Accelerator required data
                                                  std::map<uint32_t, uint32_t>& surfaceTransformIds,
-                                                 // Types
-                                                 const std::string& estimatorType,
-                                                 const std::string& tracerType,
                                                  //
                                                  double time = 0.0);
         SceneError      GeneratePrimitiveGroups(const PrimitiveNodeList&,
