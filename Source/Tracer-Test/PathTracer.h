@@ -23,6 +23,12 @@ class PathTracer final : public RayTracer
         uint32_t                currentDepth;
         WorkBatchMap            workMap;
         MetaWorkPool            workPool;
+        
+        // Light Next Event Estimation
+        uint32_t                lightCount;
+        DeviceMemory            lightMemory;
+        const GPULightI**       dLights;
+        Byte*                   dLightAlloc;
 
     protected:
     public:

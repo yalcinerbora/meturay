@@ -39,6 +39,10 @@ RNGMemory::RNGMemory(uint32_t seed,
     // Do Temp Alloc for a MT19937 seeds
     // ang generate
     DeviceMemory seeds(totalCount * sizeof(uint32_t));
+
+    // Before touching gpu mem from cpu do a sync
+    // since other initialization probably launched a kernel
+    system.SyncGPUAll();
     std::for_each(static_cast<uint32_t*>(seeds), 
                   static_cast<uint32_t*>(seeds) + totalCount,
                   [&](uint32_t& t) { t = rng(); });

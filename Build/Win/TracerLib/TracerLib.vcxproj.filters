@@ -253,7 +253,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TextureStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\LightCameraKernels.h">
+    <ClInclude Include="..\..\..\Source\TracerLib\LightCameraKernels.cuh">
       <Filter>Light &amp; Camera</Filter>
     </ClInclude>
   </ItemGroup>

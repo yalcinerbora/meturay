@@ -85,11 +85,11 @@ bool DirectTracer::Render()
 void DirectTracer::GenerateWork(int cameraId)
 {
     // Generate Rays
-    GenerateRays(scene.CamerasGPU()[cameraId], options.sampleCount);
+    GenerateRays(dSceneCameras[cameraId], options.sampleCount);
 }
 
 void DirectTracer::GenerateWork(const CPUCamera& c)
 {
     LoadCameraToGPU(c);
-    GenerateRays(dCameraPtr, options.sampleCount);
+    GenerateRays(*dCustomCamera, options.sampleCount);
 }

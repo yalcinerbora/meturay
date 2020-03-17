@@ -1,11 +1,48 @@
-#include "LightCameraKernels.h"
+#pragma once
+
+#include <vector>
+#include "RayLib/Types.h"
+
 #include "GPUCamera.cuh"
 #include "GPULight.cuh"
+
 #include "DeviceMemory.h"
 #include "CudaConstants.h"
 #include "RayLib/SceneStructs.h"
 
 #include "Random.cuh"
+
+namespace LightCameraKernels
+{
+    size_t      LightClassesUnionSize();
+    size_t      CameraClassesUnionSize();
+
+    void        ConstructLights(// Output
+                                GPULightI** gPtrs,
+                                Byte* gMemory,
+                                // Input
+                                const std::vector<CPULight>& lightData,
+                                const CudaSystem&);
+    void        ConstructCameras(// Output
+                                 GPUCameraI** gPtrs,
+                                 Byte* gMemory,
+                                 // Input
+                                 const std::vector<CPUCamera>& cameraData,
+                                 const CudaSystem&);
+
+    void        ConstructSingleLight(// Output
+                                     GPULightI*& gPtr,
+                                     Byte* gMemory,
+                                     // Input
+                                     const CPULight& lightData,
+                                     const CudaSystem&);
+    void        ConstructSingleCamera(// Output
+                                      GPUCameraI*& gPtr,
+                                      Byte* gMemory,
+                                      // Input
+                                      const CPUCamera& cameraData,
+                                      const CudaSystem&);
+};
 
 inline __device__ void AllocateSingleCamera(GPUCameraI*& gPtr,
                                             void* const gMemory,
@@ -38,7 +75,7 @@ inline __device__ void AllocateSingleCamera(GPUCameraI*& gPtr,
         case CameraType::APERTURE:
         {
             break;
-        }       
+        }
         default:
         {
             asm("trap;");
@@ -65,7 +102,7 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
         {
             break;
         }
-        case LightType::SPOT:      
+        case LightType::SPOT:
         {
             break;
         }
@@ -93,9 +130,9 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
     }
 }
 
-__global__ void KCAllocateSingleLight(GPULightI* gPtr,
-                                      void* const gMemory,
-                                      const CPULight cpuLight)
+static __global__ void KCAllocateSingleLight(GPULightI* gPtr,
+                                             void* const gMemory,
+                                             const CPULight cpuLight)
 {
     uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
     if(globalId == 0)
@@ -104,9 +141,9 @@ __global__ void KCAllocateSingleLight(GPULightI* gPtr,
     }
 }
 
-__global__ void KCAllocateSingleCamera(GPUCameraI*& gPtr,
-                                       void* const gMemory,
-                                       const CPUCamera cpuCamera)
+static __global__ void KCAllocateSingleCamera(GPUCameraI*& gPtr,
+                                              void* const gMemory,
+                                              const CPUCamera cpuCamera)
 {
     uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
     if(globalId == 0)
@@ -116,12 +153,12 @@ __global__ void KCAllocateSingleCamera(GPUCameraI*& gPtr,
 }
 
 
-__global__ void KCAllocateLights(GPULightI** gPtrs,
-                                 Byte* const gMemory,
-                                 //
-                                 const CPULight* gCPULights,
-                                 const uint32_t lightCount,
-                                 const uint32_t stride)
+static __global__ void KCAllocateLights(GPULightI** gPtrs,
+                                        Byte* const gMemory,
+                                        //
+                                        const CPULight* gCPULights,
+                                        const uint32_t lightCount,
+                                        const uint32_t stride)
 {
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < lightCount;
@@ -133,12 +170,12 @@ __global__ void KCAllocateLights(GPULightI** gPtrs,
     }
 }
 
-__global__ void KCAllocateCameras(GPUCameraI** gPtrs,
-                                  Byte* const gMemory,
-                                  //
-                                  const CPUCamera* gCPUCameras,
-                                  const uint32_t cameraCount,
-                                  const uint32_t stride)
+static __global__ void KCAllocateCameras(GPUCameraI** gPtrs,
+                                         Byte* const gMemory,
+                                         //
+                                         const CPUCamera* gCPUCameras,
+                                         const uint32_t cameraCount,
+                                         const uint32_t stride)
 {
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < cameraCount;
@@ -150,22 +187,22 @@ __global__ void KCAllocateCameras(GPUCameraI** gPtrs,
     }
 }
 
-size_t LightCameraKernels::LightClassesUnionSize()
+inline size_t LightCameraKernels::LightClassesUnionSize()
 {
     return GPULightUnionSize;
 }
 
-size_t LightCameraKernels::CameraClassesUnionSize()
+inline size_t LightCameraKernels::CameraClassesUnionSize()
 {
     return GPUCameraUnionSize;
 }
 
-void LightCameraKernels::ConstructLights(// Output
-                                         GPULightI** gPtrs,
-                                         Byte* gMemory,
-                                         // Input
-                                         const std::vector<CPULight>& lightData,
-                                         const CudaSystem& system)
+inline void LightCameraKernels::ConstructLights(// Output
+                                                GPULightI** gPtrs,
+                                                Byte* gMemory,
+                                                // Input
+                                                const std::vector<CPULight>& lightData,
+                                                const CudaSystem& system)
 {
     // Allocate to GPU Memory
     size_t lightsCPUSize = lightData.size() * sizeof(CPULight);
@@ -184,12 +221,12 @@ void LightCameraKernels::ConstructLights(// Output
                             static_cast<uint32_t>(LightClassesUnionSize()));
 }
 
-void LightCameraKernels::ConstructCameras(// Output
-                                          GPUCameraI** gPtrs,
-                                          Byte* gMemory,
-                                          // Input
-                                          const std::vector<CPUCamera>& cameraData,
-                                          const CudaSystem& system)
+inline void LightCameraKernels::ConstructCameras(// Output
+                                                 GPUCameraI** gPtrs,
+                                                 Byte* gMemory,
+                                                 // Input
+                                                 const std::vector<CPUCamera>& cameraData,
+                                                 const CudaSystem& system)
 {
     // Befo
      // Allocate to GPU Memory
@@ -210,12 +247,12 @@ void LightCameraKernels::ConstructCameras(// Output
                             static_cast<uint32_t>(CameraClassesUnionSize()));
 }
 
-void LightCameraKernels::ConstructSingleLight(// Output
-                                              GPULightI*& gPtr,
-                                              Byte* objectMemory,
-                                              // Input
-                                              const CPULight& lightData,
-                                              const CudaSystem& system)
+inline void LightCameraKernels::ConstructSingleLight(// Output
+                                                     GPULightI*& gPtr,
+                                                     Byte* objectMemory,
+                                                     // Input
+                                                     const CPULight& lightData,
+                                                     const CudaSystem& system)
 {
     const CudaGPU& gpu = system.BestGPU();
     gpu.KC_X(0, (cudaStream_t)0, 1,
@@ -226,12 +263,12 @@ void LightCameraKernels::ConstructSingleLight(// Output
              lightData);
 }
 
-void LightCameraKernels::ConstructSingleCamera(// Output
-                                               GPUCameraI*& gPtr,
-                                               Byte* objectMemory,
-                                               // Input
-                                               const CPUCamera& cameraData,
-                                               const CudaSystem& system)
+inline void LightCameraKernels::ConstructSingleCamera(// Output
+                                                      GPUCameraI*& gPtr,
+                                                      Byte* objectMemory,
+                                                      // Input
+                                                      const CPUCamera& cameraData,
+                                                      const CudaSystem& system)
 {
     const CudaGPU& gpu = system.BestGPU();
     gpu.KC_X(0, (cudaStream_t)0, 1,

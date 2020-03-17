@@ -51,7 +51,7 @@ class GPUSceneJson : public GPUSceneI
         uint32_t                                hitStructSize;
 
         // GPU Memory
-        DeviceMemory                            memory;
+        DeviceMemory                            transformMemory;
         GPUBaseAccelPtr                         baseAccelerator;
         std::map<NameGPUPair, GPUMatGPtr>       materials;
         std::map<std::string, GPUAccelGPtr>     accelerators;
@@ -66,16 +66,18 @@ class GPUSceneJson : public GPUSceneI
         std::string                             parentPath;
         double                                  currentTime;
 
+        // CPU Data
+        std::vector<CPUCamera>                  cameras;
+        std::vector<CPULight>                   lights;
         // GPU Pointers
-        size_t                                  lightCount;
-        size_t                                  cameraCount;
+        GPUTransform* dTransforms;
         size_t                                  transformCount;
 
-        GPULightI**                             dLights;
-        GPUCameraI**                            dCameras;
-        GPUTransform*                           dTransforms;
-        Byte*                                   dCameraAllocations;
-        Byte*                                   dLightAllocations;
+        //GPULightI**                             dLights;
+        //GPUCameraI**                            dCameras;
+        
+        //Byte*                                   dCameraAllocations;
+        //Byte*                                   dLightAllocations;
 
         // Inners
         // Helper Logic
@@ -114,13 +116,12 @@ class GPUSceneJson : public GPUSceneI
                                                 const std::map<uint32_t, HitKey>& accHitKeyList,
                                                 const std::map<uint32_t, uint32_t>& surfaceTransformIds,
                                                 double time = 0.0);
-        SceneError      GenerateLightInfo(std::vector<CPULight>&,
-                                          const MaterialKeyListing& materialKeys, double time);
+        SceneError      GenerateLightInfo(const MaterialKeyListing& materialKeys, double time);
         SceneError      FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,
                                              double time = 0.0f);
 
-        SceneError      LoadCommon(const std::vector<CPULight>&, double time);
-        SceneError      LoadLogicRelated(std::vector<CPULight>&, double time);
+        SceneError      LoadCommon(double time);
+        SceneError      LoadLogicRelated(double time);
 
         SceneError      ChangeCommon(double time);
         SceneError      ChangeLogicRelated(double time);
@@ -148,15 +149,13 @@ class GPUSceneJson : public GPUSceneI
         Vector2i                            MaxAccelIds() const override;
         HitKey                              BaseBoundaryMaterial() const override;
         uint32_t                            HitStructUnionSize() const override;
+        // Access CPU
+        const std::vector<CPULight>&        LightsCPU() const override;
+        const std::vector<CPUCamera>&       CamerasCPU() const override;
         // Access GPU
-        const GPULightI**                   LightsGPU() const override;
-        const GPUCameraI**                  CamerasGPU() const override;
-        const GPUTransform*                 TransformsGPU() const  override;
-        
+        const GPUTransform*                 TransformsGPU() const override;        
         // Counts
-        size_t                              LightCount() const override;
         size_t                              TransformCount() const override;
-        size_t                              CameraCount() const override;
 
         // Generated Classes of Materials / Accelerators
         // Work Maps

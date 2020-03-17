@@ -15,14 +15,20 @@ class RayTracer : public GPUTracer
         static constexpr const char* SAMPLE_NAME = "Samples";
 
     private:
+        // GPU Image of the camera
+        DeviceMemory            cameraMemory;
     protected:
-        DeviceMemory            tempCameraBuffer;
+        // Auxiliary Data for Each Ray
         DeviceMemory            auxBuffer0;
         DeviceMemory            auxBuffer1;
-
-        GPUCameraI*             dCameraPtr;
+        //
         DeviceMemory*           dAuxIn;
-        DeviceMemory*           dAuxOut;        
+        DeviceMemory*           dAuxOut;
+        // Camera Realted Ptrs
+        GPUCameraI**            dCustomCamera;
+        const GPUCameraI**      dSceneCameras;
+        Byte*                   dCustomCameraAlloc;
+        Byte*                   dSceneCameraAllocs;
 
         const GPUSceneI&        scene;
 

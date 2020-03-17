@@ -6,10 +6,8 @@
 #include "TracerStructs.h"
 
 struct SceneError;
-class GPULightI;
-class GPUEndpointI;
-using GPUCameraI = GPUEndpointI;
-
+struct CPULight;
+struct CPUCamera;
 using GPUTransform = Matrix4x4;
 
 class GPUSceneI
@@ -18,26 +16,23 @@ class GPUSceneI
         virtual                             ~GPUSceneI() = default;
 
         // Interface
-        virtual size_t                      UsedGPUMemory() const = 0;
-        virtual size_t                      UsedCPUMemory() const = 0;
+        virtual size_t                          UsedGPUMemory() const = 0;
+        virtual size_t                          UsedCPUMemory() const = 0;
         //
-        virtual SceneError                  LoadScene(double) = 0;
-        virtual SceneError                  ChangeTime(double) = 0;
+        virtual SceneError                      LoadScene(double) = 0;
+        virtual SceneError                      ChangeTime(double) = 0;
         //
-        virtual Vector2i                    MaxMatIds() const  = 0;
-        virtual Vector2i                    MaxAccelIds() const  = 0;
-        virtual HitKey                      BaseBoundaryMaterial() const = 0;
-        virtual uint32_t                    HitStructUnionSize() const = 0;
+        virtual Vector2i                        MaxMatIds() const  = 0;
+        virtual Vector2i                        MaxAccelIds() const  = 0;
+        virtual HitKey                          BaseBoundaryMaterial() const = 0;
+        virtual uint32_t                        HitStructUnionSize() const = 0;
+        // Access CPU                
+        virtual const std::vector<CPULight>&    LightsCPU() const = 0;
+        virtual const std::vector<CPUCamera>&   CamerasCPU() const = 0;
         // Access GPU                
-        virtual const GPULightI**           LightsGPU() const = 0;
-        virtual const GPUCameraI**          CamerasGPU() const = 0;
-        virtual const GPUTransform*         TransformsGPU() const = 0;
-        // Access CPU
-        
+        virtual const GPUTransform*             TransformsGPU() const = 0;                
         // Counts
-        virtual size_t                      LightCount() const = 0;
-        virtual size_t                      TransformCount() const = 0;
-        virtual size_t                      CameraCount() const = 0;
+        virtual size_t                          TransformCount() const = 0;
         
         // Generated Classes of Materials / Accelerators
         // Work Maps

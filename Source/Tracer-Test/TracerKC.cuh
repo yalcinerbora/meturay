@@ -15,7 +15,7 @@ struct DirectTracerGlobal
 
 struct PathTracerGlobal : public DirectTracerGlobal
 {
-    const GPULightI*    lightList;
+    const GPULightI**   lightList;
     uint32_t            totalLightCount;
 };
 

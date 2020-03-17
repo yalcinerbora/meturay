@@ -8,7 +8,6 @@
 #include "RayLib/StripComments.h"
 #include "RayLib/MemoryAlignment.h"
 
-#include "LightCameraKernels.h"
 #include "GPUAcceleratorI.h"
 #include "GPUPrimitiveI.h"
 #include "GPUMaterialI.h"
@@ -68,11 +67,7 @@ GPUSceneJson::GPUSceneJson(const std::u8string& fileName,
     , fileName(fileName)
     , parentPath(std::filesystem::path(fileName).parent_path().string())
     , currentTime(0.0)
-    , dLights(nullptr)
     , dTransforms(nullptr)
-    , dCameras(nullptr)
-    , dCameraAllocations(nullptr)
-    , dLightAllocations(nullptr)
     , sceneJson(nullptr)
     , baseAccelerator(nullptr, nullptr)
 {}
@@ -530,8 +525,7 @@ SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, AABB3>
     return e;
 }
 
-SceneError GPUSceneJson::GenerateLightInfo(std::vector<CPULight>& lightsCPU,
-                                           const MaterialKeyListing& materialKeys,
+SceneError GPUSceneJson::GenerateLightInfo(const MaterialKeyListing& materialKeys,
                                            double time)
 { 
     std::vector<CPULight> primLights;
@@ -566,14 +560,14 @@ SceneError GPUSceneJson::GenerateLightInfo(std::vector<CPULight>& lightsCPU,
             primLights.clear();
             if((err = (*it).second->GenerateLights(primLights, light.flux, key, primId)) != SceneError::OK)
                 return err;
-            lightsCPU.insert(lightsCPU.end(), primLights.begin(), primLights.end());
+            lights.insert(lights.end(), primLights.begin(), primLights.end());
         }
         else
         {
             // Just find empty prim one
             const auto matLookup = std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME, matId);
             HitKey key = materialKeys.at(matLookup);
-            lightsCPU.push_back(light);
+            lights.push_back(light);
         }        
     }
     return SceneError::OK;
@@ -600,13 +594,12 @@ SceneError GPUSceneJson::FindBoundaryMaterial(const MaterialKeyListing& matHitKe
     return e;
 }
 
-SceneError GPUSceneJson::LoadCommon(const std::vector<CPULight>& lightsCPU, double time)
+SceneError GPUSceneJson::LoadCommon(double time)
 {
     SceneError e = SceneError::OK;
 
     // CPU Temp Data
-    std::vector<GPUTransform> transformsCPU;
-    std::vector<CPUCamera> camerasCPU;
+    std::vector<GPUTransform> transformsCPU;    
 
     // Transforms
     const nlohmann::json* transformsJson = nullptr;
@@ -619,73 +612,27 @@ SceneError GPUSceneJson::LoadCommon(const std::vector<CPULight>& lightsCPU, doub
     const nlohmann::json* camerasJson = nullptr;
     if(!FindNode(camerasJson, NodeNames::CAMERA_BASE))
         return SceneError::CAMERAS_ARRAY_NOT_FOUND;
-    camerasCPU.reserve(camerasJson->size());
+    cameras.reserve(camerasJson->size());
     for(const auto& cameraJson : (*camerasJson))
-        camerasCPU.push_back(SceneIO::LoadCamera(cameraJson, time));
-    // Lights are already pre-loaded and extended
-
-    // Put sizes
-    lightCount = lightsCPU.size();
-    cameraCount = camerasCPU.size();
-    transformCount = transformsCPU.size();
-
-    // Determine Size
-    size_t camPtrSize = sizeof(GPUCameraI*) * camerasCPU.size();
-    size_t lightPtrSize = sizeof(GPULightI*) * lightsCPU.size();
-    size_t transformSize = transformsCPU.size() * sizeof(GPUTransform);
-    transformSize = Memory::AlignSize(transformSize, AlignByteCount);
-    size_t lightSize = LightCameraKernels::LightClassesUnionSize() * lightsCPU.size();
-    lightSize = Memory::AlignSize(lightSize, AlignByteCount);
-    size_t cameraSize = LightCameraKernels::CameraClassesUnionSize() * camerasCPU.size();
-    cameraSize = Memory::AlignSize(cameraSize, AlignByteCount);
-    size_t totalSize = (camPtrSize + lightPtrSize +
-                        transformSize + lightSize +
-                        cameraSize);
-
-    // Allocate For All
-    DeviceMemory::EnlargeBuffer(memory, totalSize);
-
-    // Determine Ptrs
-    size_t offset = 0;
-    Byte* dMem = static_cast<Byte*>(memory);
-    dCameras = reinterpret_cast<GPUCameraI**>(dMem + offset);
-    offset += camPtrSize;
-    dLights = reinterpret_cast<GPULightI**>(dMem + offset);
-    offset += lightPtrSize;
-    dTransforms = reinterpret_cast<GPUTransform*>(dMem + offset);
-    offset += transformSize;
-    dLightAllocations = dMem + offset;
-    offset += lightSize;
-    dCameraAllocations = dMem + offset;
-    offset += cameraSize;
-    assert(totalSize == offset);
+        cameras.push_back(SceneIO::LoadCamera(cameraJson, time));
     
+    // Allocate Transform GPU
+    transformCount = transformsCPU.size();
     if(transformsCPU.size() != 0)
     {
+        size_t transformSize = transformsCPU.size() * sizeof(GPUTransform);
+        DeviceMemory::EnlargeBuffer(transformMemory, transformSize);
+
         // Just Memcpy
         CUDA_CHECK(cudaMemcpy(dTransforms, transformsCPU.data(),
                               transformsCPU.size() * sizeof(GPUTransform),
                               cudaMemcpyHostToDevice));
-    } else dTransforms = nullptr;
-    if(lightsCPU.size() != 0)
-    {
-        LightCameraKernels::ConstructLights(dLights, dLightAllocations, lightsCPU,
-                                            cudaSystem);
-        //dLights = reinterpret_cast<LightStruct*>(static_cast<Byte*>(memory) + transformSize);
-        //CUDA_CHECK(cudaMemcpy(dLights, lightsCPU.data(), lightsCPU.size() * sizeof(LightStruct),
-        //                      cudaMemcpyHostToDevice));
-    } else dLights = nullptr;
-    if(camerasCPU.size() != 0)
-    {
-        LightCameraKernels::ConstructCameras(dCameras, dCameraAllocations, camerasCPU,
-                                             cudaSystem);
-
-    } else dCameras = nullptr;
-    cudaSystem.SyncGPUAll();
+    }
+    else dTransforms = nullptr;
     return e;
 }
 
-SceneError GPUSceneJson::LoadLogicRelated(std::vector<CPULight>& lightsCPU, double time)
+SceneError GPUSceneJson::LoadLogicRelated(double time)
 {
     SceneError e = SceneError::OK;
     // Group Data
@@ -729,7 +676,7 @@ SceneError GPUSceneJson::LoadLogicRelated(std::vector<CPULight>& lightsCPU, doub
                                 time)) != SceneError::OK)
         return e;
     // Lights
-    if((e = GenerateLightInfo(lightsCPU, allMaterialKeys, time)) != SceneError::OK)
+    if((e = GenerateLightInfo(allMaterialKeys, time)) != SceneError::OK)
         return e;
     // Accelerators
     std::map<uint32_t, AABB3> accAABBs;
@@ -767,25 +714,25 @@ SceneError GPUSceneJson::ChangeLogicRelated(double time)
 
 size_t GPUSceneJson::UsedGPUMemory() const
 {
-    return memory.Size();
+    return transformMemory.Size();
 }
 
 size_t GPUSceneJson::UsedCPUMemory() const
 {
-    return 0;
+    return (cameras.size() * sizeof(CPUCamera) +
+            lights.size() * sizeof(CPULight));
 }
 
 SceneError GPUSceneJson::LoadScene(double time)
 {
     SceneError e = SceneError::OK;
-    std::vector<CPULight> lightsCPU;
     try
     {
         if((e = OpenFile(fileName)) != SceneError::OK)
            return e;
-        if((e = LoadLogicRelated(lightsCPU, time)) != SceneError::OK)
+        if((e = LoadLogicRelated(time)) != SceneError::OK)
             return e;
-        if((e = LoadCommon(lightsCPU, time)) != SceneError::OK)
+        if((e = LoadCommon(time)) != SceneError::OK)
             return e;
     }
     catch (SceneException const& e)
@@ -842,14 +789,14 @@ uint32_t GPUSceneJson::HitStructUnionSize() const
     return hitStructSize;
 }
 
-const GPULightI** GPUSceneJson::LightsGPU() const
+const std::vector<CPULight>& GPUSceneJson::LightsCPU() const
 {
-    return const_cast<const GPULightI**>(dLights);
+    return lights;
 }
 
-const GPUCameraI** GPUSceneJson::CamerasGPU() const
+const std::vector<CPUCamera>& GPUSceneJson::CamerasCPU() const
 {
-    return const_cast<const GPUCameraI**>(dCameras);
+    return cameras;
 }
 
 const GPUTransform* GPUSceneJson::TransformsGPU() const
@@ -887,17 +834,7 @@ const std::map<std::string, GPUPrimGPtr>& GPUSceneJson::PrimitiveGroups() const
     return primitives;
 }
 
-size_t GPUSceneJson::LightCount() const
-{
-    return lightCount;
-}
-
 size_t GPUSceneJson::TransformCount() const
 {
     return transformCount;
-}
-
-size_t GPUSceneJson::CameraCount() const
-{
-    return cameraCount;
 }
