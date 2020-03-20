@@ -20,8 +20,6 @@ All Tracers should inherit this class
 #include "RayLib/TracerStructs.h"
 #include "RayLib/GPUTracerI.h"
 
-#include "GPURayTracerI.h"
-
 #include "RNGMemory.h"
 #include "RayMemory.h"
 #include "ImageMemory.h"
