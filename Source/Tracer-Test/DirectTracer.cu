@@ -4,6 +4,17 @@
 
 #include "RayLib/GPUSceneI.h"
 
+//#include "TracerLib/TracerDebug.h"
+//std::ostream& operator<<(std::ostream& stream, const RayAuxBasic& v)
+//{
+//    stream << std::setw(0)
+//        << v.pixelId << ", "
+//        << "{" << v.radianceFactor[0]
+//        << "," << v.radianceFactor[1]
+//        << "," << v.radianceFactor[2] << "}";
+//    return stream;
+//}
+
 DirectTracer::DirectTracer(const CudaSystem& s,
                            const GPUSceneI& scene,
                            const TracerParameters& p)
@@ -62,7 +73,7 @@ bool DirectTracer::Render()
 
     // Generate Global Data Struct
     DirectTracerGlobal globalData;
-    globalData.gImage = imgMemory.GMem<Vector3>();
+    globalData.gImage = imgMemory.GMem<Vector4>();
 
     for(auto& work : workMap)
     {

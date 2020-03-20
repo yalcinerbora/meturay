@@ -95,7 +95,7 @@ bool PathTracer::Render()
 
     // Generate Global Data Struct
     PathTracerGlobal globalData;
-    globalData.gImage = imgMemory.GMem<Vector3>();
+    globalData.gImage = imgMemory.GMem<Vector4>();
     globalData.lightList = dLights;
     globalData.totalLightCount = lightCount;
 

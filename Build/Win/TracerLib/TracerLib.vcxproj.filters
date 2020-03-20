@@ -198,9 +198,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ImageStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh">
-      <Filter>GPU Algorithms\Functions</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\MangledNames.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cuh">
       <Filter>Default Accelerators\Linear</Filter>
@@ -255,6 +252,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\LightCameraKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh">
+      <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

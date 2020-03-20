@@ -1,29 +1,29 @@
 
-#include "TracerDebug.h"
-#include "DefaultLeaf.h"
-
-template<class T>
-inline std::ostream& operator<<(std::ostream& stream, const BVHNode<T>& v)
-{
-    stream << std::setw(0);
-    if(v.isLeaf)
-    {
-        stream << "leaf - " << v.leaf;
-    }
-    else
-    {
-        stream << "[ " << v.left << ", " << v.right << ", " << v.parent << " ]";
-        stream << AABB3(v.aabbMin, v.aabbMax);
-    }
-    return stream;
-}
-
-inline std::ostream& operator<<(std::ostream& stream, const BaseLeaf& l)
-{
-    stream << "[ " << l.accKey << ", " << l.transformId << " ]";
-    stream << AABB3(l.aabbMin, l.aabbMax);
-    return stream;
-}
+//#include "TracerDebug.h"
+//#include "DefaultLeaf.h"
+//
+//template<class T>
+//inline std::ostream& operator<<(std::ostream& stream, const BVHNode<T>& v)
+//{
+//    stream << std::setw(0);
+//    if(v.isLeaf)
+//    {
+//        stream << "leaf - " << v.leaf;
+//    }
+//    else
+//    {
+//        stream << "[ " << v.left << ", " << v.right << ", " << v.parent << " ]";
+//        stream << AABB3(v.aabbMin, v.aabbMax);
+//    }
+//    return stream;
+//}
+//
+//inline std::ostream& operator<<(std::ostream& stream, const BaseLeaf& l)
+//{
+//    stream << "[ " << l.accKey << ", " << l.transformId << " ]";
+//    stream << AABB3(l.aabbMin, l.aabbMax);
+//    return stream;
+//}
 
 template <class PGroup>
 GPUAccBVHGroup<PGroup>::GPUAccBVHGroup(const GPUPrimitiveGroupI& pGroup,

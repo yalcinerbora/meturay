@@ -114,8 +114,6 @@ void ImageMemory::Resize(Vector2i res)
     resolution = res;
 }
 
-#include "TracerDebug.h"
-
 void ImageMemory::Reset(const CudaSystem& system)
 {
     size_t pixelCount = static_cast<size_t>(segmentSize[0]) * segmentSize[1];

@@ -16,8 +16,6 @@
 #include "SceneNodeJson.h"
 #include "MangledNames.h"
 
-#include "TracerDebug.h"
-
 #include <nlohmann/json.hpp>
 #include <filesystem>
 #include <set>

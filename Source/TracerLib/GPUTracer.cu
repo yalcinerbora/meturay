@@ -8,9 +8,10 @@
 #include "RayLib/GPUSceneI.h"
 
 #include "CudaConstants.h"
-#include "TracerDebug.h"
 #include "GPUAcceleratorI.h"
 #include "GPUWorkI.h"
+
+//#include "TracerDebug.h"
 
 GPUTracer::GPUTracer(const CudaSystem& system, 
                      const GPUSceneI& scene,
@@ -32,7 +33,21 @@ GPUTracer::GPUTracer(const CudaSystem& system,
 
 TracerError GPUTracer::Initialize()
 {
+    // Init RNG
     rngMemory = RNGMemory(params.seed, cudaSystem);
+
+    // Construct Tracers
+    TracerError e = TracerError::OK;
+    if((e = baseAccelerator.Constrcut(cudaSystem)) != TracerError::OK)
+        return e;
+
+    for(const auto& accBatch : accelBatches)
+    {
+        GPUAcceleratorGroupI* acc = accBatch.second;
+        if((e = acc->ConstructAccelerators(cudaSystem)) != TracerError::OK)
+            return e;
+    }    
+    cudaSystem.SyncGPUAll();
     return TracerError::OK;
 }
 

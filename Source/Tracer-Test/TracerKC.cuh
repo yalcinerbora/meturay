@@ -10,7 +10,7 @@
 
 struct DirectTracerGlobal
 {
-    ImageGMem<Vector3> gImage;
+    ImageGMem<Vector4> gImage;
 };
 
 struct PathTracerGlobal : public DirectTracerGlobal
@@ -45,7 +45,27 @@ inline void BasicWork(// Output
     // Just evaluate kernel
     //Vector3 value = MGroup::Sample();
     // Write to image
+    auto& img = gRenderState.gImage;
+    const RayF& r = ray.ray;
+    float distance = ray.tMax - ray.tMin;
 
+    RayF outRay; float pdf;
+    Vector3 radiance = MGroup::Sample(// Outputs
+                                      outRay, pdf,
+                                      // Inputs
+                                      -r.getDirection(),
+                                      r.AdvancedPos(distance),
+                                      surface,
+                                      nullptr,
+                                      // I-O
+                                      rng,
+                                      // Constants
+                                      gMatData,
+                                      matId,
+                                      0);
+
+    // And accumulate pixel
+    ImageAccumulatePixel(img, aux.pixelId, Vector4(radiance, 1.0f));
 }
 
 template <class MGroup>

@@ -6,6 +6,7 @@
 
 #include "RayLib/MemoryAlignment.h"
 #include "RayLib/CPUTimer.h"
+#include "RayLib/Log.h"
 
 #include "DeviceMemory.h"
 #include "CudaConstants.h"

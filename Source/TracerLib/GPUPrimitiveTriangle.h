@@ -50,7 +50,6 @@ inline HitResult TriangleClosestHit(// Output
                                     const DefaultLeaf& leaf,
                                     const TriData& primData)
 {
-
     //if(leaf.matId.value == 0x2000002)
         //printf("PrimId %llu, MatId %x\n", leaf.primitiveId, leaf.matId.value);
 
@@ -70,7 +69,6 @@ inline HitResult TriangleClosestHit(// Output
                                                      position1,
                                                      position2,
                                                      true);
-
     // Check if the hit is closer
     bool closerHit = intersects && (newT < rayData.tMax);
     if(closerHit)

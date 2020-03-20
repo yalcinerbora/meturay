@@ -7,7 +7,7 @@
 #include "RayLib/MemoryAlignment.h"
 
 #include "CudaConstants.h"
-#include "TracerDebug.h"
+//#include "TracerDebug.h"
 
 static constexpr uint32_t INVALID_LOCATION = std::numeric_limits<uint32_t>::max();
 

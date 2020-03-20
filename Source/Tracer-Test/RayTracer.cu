@@ -12,20 +12,8 @@
 
 #include "RayAuxStruct.h"
 
-//std::ostream& operator<<(std::ostream& stream, const RayAuxBasic& v)
-//{
-//    stream << std::setw(0)
-//            << v.pixelId << ", "
-//            << v.pixelSampleId << ", "
-//            << "{" << v.totalRadiance[0]
-//            << "," << v.totalRadiance[0]
-//            << "," << v.totalRadiance[0] << "}";
-//    return stream;
-//}
-
 __device__ __host__
-inline void RayInitBasic(RayAuxBasic* gOutBasic,
-                         const uint32_t writeLoc,
+inline void RayInitBasic(RayAuxBasic& gOutBasic,                         
                          // Input
                          const RayAuxBasic& defaults,
                          const RayReg& ray,
@@ -34,8 +22,9 @@ inline void RayInitBasic(RayAuxBasic* gOutBasic,
                          const uint32_t pixelSampleId)
 {
     RayAuxBasic init = defaults;
+    init.mediumIndex = __float2half(1.0f);
     init.pixelId = localPixelId;
-    gOutBasic[writeLoc] = init;
+    gOutBasic = init;
 }
 
 RayTracer::RayTracer(const CudaSystem& s, 
@@ -103,7 +92,7 @@ void RayTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount)
 
     Vector2i pixelCount = (pixelEnd - pixelStart);
     uint32_t totalRayCount = pixelCount[0] * pixelCount[1] * sampleCountSqr;
-    size_t auxBufferSize = totalRayCount + sizeof(RayAuxBasic);
+    size_t auxBufferSize = totalRayCount * sizeof(RayAuxBasic);
 
     // Allocate enough space for ray
     rayMemory.ResizeRayOut(totalRayCount, scene.BaseBoundaryMaterial());

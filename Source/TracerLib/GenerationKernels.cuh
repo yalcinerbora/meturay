@@ -23,8 +23,7 @@ Uses statified sampling
 
 // Commands that initialize ray auxiliary data
 template<class RayAuxData>
-using AuxInitFunc = void(*)(RayAuxData*,
-                            const uint32_t writeLoc,
+using AuxInitFunc = void(*)(RayAuxData&,
                             // Input
                             const RayAuxData&,
                             const RayReg&,
@@ -202,8 +201,7 @@ __global__ void KCGenerateCameraRaysGPU(// Output
         ray.Update(gRays, threadId);
 
         // Write Auxiliary Data
-        AuxFunc(gAuxiliary,
-                threadId,
+        AuxFunc(gAuxiliary[threadId],
                 // Input
                 auxBaseData,
                 ray,
