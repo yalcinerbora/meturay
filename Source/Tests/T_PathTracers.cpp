@@ -1,7 +1,7 @@
 #include "SimpleTracerSetup.h"
 
 
-TEST(PathTracerTests, CornellBox)
+TEST(PathTracers, CornellBox)
 {
     EnableVTMode();
     SimpleTracerSetup setup("TestPath", u8"TestScenes/helloCornell.json", 0.0);
@@ -9,7 +9,7 @@ TEST(PathTracerTests, CornellBox)
     setup.Body();
 }
 
-TEST(PathTracerTests, Bunny)
+TEST(PathTracers, Bunny)
 {
     EnableVTMode();
     SimpleTracerSetup setup("TestPath", u8"TestScenes/helloBunny.json", 0.0);
@@ -17,7 +17,7 @@ TEST(PathTracerTests, Bunny)
     setup.Body();
 }
 
-TEST(PathTracerTests, Dragon)
+TEST(PathTracers, Dragon)
 {
     EnableVTMode();
     SimpleTracerSetup setup("TestPath", u8"TestScenes/helloDragon.json", 0.0);
@@ -25,7 +25,7 @@ TEST(PathTracerTests, Dragon)
     setup.Body();
 }
 
-TEST(PathTracerTests, ReflectRefract)
+TEST(PathTracers, ReflectRefract)
 {
     EnableVTMode();
     SimpleTracerSetup setup("TestPath", u8"TestScenes/cornellGlass.json", 0.0);
@@ -33,7 +33,7 @@ TEST(PathTracerTests, ReflectRefract)
     setup.Body();
 }
 
-TEST(PathTracerTests, Sponza)
+TEST(PathTracers, Sponza)
 {
     EnableVTMode();
     SimpleTracerSetup setup("TestPath", u8"TestScenes/crySponza.json", 0.0);
