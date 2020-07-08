@@ -21,9 +21,6 @@
     <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu">
       <Filter>Implementations</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\GIMaterials.cu">
-      <Filter>Materials</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\Tracer-Test\BasicMaterials.cu">
       <Filter>Materials</Filter>
     </CudaCompile>
@@ -40,6 +37,9 @@
     <CudaCompile Include="..\..\..\Source\Tracer-Test\DirectTracer.cu">
       <Filter>Tracers</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\Tracer-Test\SampleMaterials.cu">
+      <Filter>Materials</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h">
@@ -47,9 +47,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterials.cuh">
-      <Filter>Materials</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\GIMaterials.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterialsKC.cuh">
@@ -63,9 +60,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialDataStructs.h">
       <Filter>Structs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\GIMaterialsKC.cuh">
-      <Filter>Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\TestPools.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\PathTracer.h">
@@ -88,6 +82,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\DirectTracer.h">
       <Filter>Tracers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\SampleMaterials.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\SampleMaterialsKC.cuh">
+      <Filter>Materials</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

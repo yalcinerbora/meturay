@@ -86,7 +86,7 @@ using RayF = Ray<float>;
 using RayD = Ray<double>;
 
 // Requirements of IERay
-static_assert(std::is_literal_type<RayF>::value == true, "Ray has to be literal type");
+//static_assert(std::is_literal_type<RayF>::value == true, "Ray has to be literal type");
 static_assert(std::is_trivially_copyable<RayF>::value == true, "Ray has to be trivially copyable");
 static_assert(std::is_polymorphic<RayF>::value == false, "Ray should not be polymorphic");
 static_assert(sizeof(RayF) == sizeof(float) * 6, "Ray<float> size is not 24 bytes");

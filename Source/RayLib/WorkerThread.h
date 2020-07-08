@@ -50,13 +50,13 @@ class WorkerThread
 
         // Function Def Copied From std::async
         template <class Function, class... Args>
-        std::future<typename std::result_of<Function(Args...)>::type>
+        std::future<typename std::invoke_result<Function(Args...)>::type>
                                             AddWork(Function&&, Args&&...);
 };
 
 // Template Functions
 template <class Function, class... Args>
-std::future<typename std::result_of<Function(Args...)>::type>
+std::future<typename std::invoke_result<Function(Args...)>::type>
 WorkerThread::AddWork(Function&& f, Args&&... args)
 {
     typedef typename std::result_of<Function(Args...)>::type returnType;

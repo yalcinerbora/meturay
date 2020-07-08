@@ -68,6 +68,10 @@ struct SceneError : public ErrorI
             TOO_MANY_ACCELERATOR_IN_GROUP,
             TOO_MANY_MATERIAL_GROUPS,
             TOO_MANY_MATERIAL_IN_GROUP,
+            // Texture Related
+            UNKNOWN_TEXTURE_TYPE,
+            UNKNOWN_FILTER_TYPE,
+            NON_2D_CACHED_TEXTURE,
             // Misc
             TOO_MANY_SURFACE_ON_NODE,
             PRIM_MATERIAL_NOT_SAME_SIZE,
@@ -181,6 +185,10 @@ inline SceneError::operator std::string() const
         "Accelerators in a group required for this scene exceeds limit",
         "Material groups required for this scene exceeds limit",
         "Materials in a batch required for this scene exceeds limit",
+        // Texture Related
+        "Texture type name is unknown",
+        "Filter type name is unknown",
+        "Non-2D Texture is marked as \"cached\", only 2D textures can be cached",
         // Misc
         "Too many data/material pairs per surface node",
         "Prim/Material pairs on surface node does not have same size",

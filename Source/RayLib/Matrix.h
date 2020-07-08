@@ -166,7 +166,7 @@ using Matrix3x3ui = Matrix<3, unsigned int>;
 using Matrix4x4ui = Matrix<4, unsigned int>;
 
 // Requirements of Vectors
-static_assert(std::is_literal_type<Matrix3x3>::value == true, "Matrices has to be literal types");
+//static_assert(std::is_literal_type<Matrix3x3>::value == true, "Matrices has to be literal types");
 static_assert(std::is_trivially_copyable<Matrix3x3>::value == true, "Matrices has to be trivially copyable");
 static_assert(std::is_polymorphic<Matrix3x3>::value == false, "Matrices should not be polymorphic");
 

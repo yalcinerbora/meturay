@@ -61,7 +61,7 @@
         // It support basic materials (list of data and textures which is not standardized)
         "id": ["2 - 27"],
         "innerIndex": ["0-25"],
-        "type": "GFGBasicPT",
+        "type": "Phong",
         "name": "../Surfaces/crytek_sponza.gfg"
     }],
 

@@ -4,5 +4,5 @@
 
 TEST(GPUScene, LoadScene)
 {
-
+    EXPECT_TRUE(false);
 }

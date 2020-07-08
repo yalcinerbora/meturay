@@ -4,7 +4,7 @@
 #include "PathTracer.h"
 
 #include "BasicMaterials.cuh"
-#include "GIMaterials.cuh"
+#include "SampleMaterials.cuh"
 
 #include "TracerLib/GPUAcceleratorLinear.cuh"
 #include "TracerLib/GPUAcceleratorI.h"
@@ -24,6 +24,29 @@ TestMaterialPool::TestMaterialPool()
     materialGroupGenerators.emplace(SphericalMat::TypeName(),
                                     GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, SphericalMat>,
                                                    DefaultDestruct<GPUMaterialGroupI>));
+    //// GI Reflect
+    //materialBatchGenerators.emplace(ReflectPTTriangleBatch::TypeName(),
+    //                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ReflectPTTriangleBatch>,
+    //                                               DefaultDestruct<GPUMaterialBatchI>));
+    //materialBatchGenerators.emplace(ReflectPTSphereBatch::TypeName(),
+    //                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ReflectPTSphereBatch>,
+    //                                               DefaultDestruct<GPUMaterialBatchI>));
+
+    //// GI Refract
+    //materialBatchGenerators.emplace(RefractPTTriangleBatch::TypeName(),
+    //                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, RefractPTTriangleBatch>,
+    //                                               DefaultDestruct<GPUMaterialBatchI>));
+    //materialBatchGenerators.emplace(ReflectPTSphereBatch::TypeName(),
+    //                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ReflectPTSphereBatch>,
+    //                                               DefaultDestruct<GPUMaterialBatchI>));
+
+
+
+
+
+
+
+
     /*materialGroupGenerators.emplace(BasicPathTraceMat::TypeName(),
                                     GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BasicPathTraceMat>,
                                                    DefaultDestruct<GPUMaterialGroupI>));
@@ -75,21 +98,7 @@ TestMaterialPool::TestMaterialPool()
     //                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, LightBoundarySphrBatch>,
     //                                DefaultDestruct<GPUMaterialBatchI>));
 
-    //// GI Reflect
-    //materialBatchGenerators.emplace(ReflectPTTriangleBatch::TypeName(),
-    //                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ReflectPTTriangleBatch>,
-    //                                               DefaultDestruct<GPUMaterialBatchI>));
-    //materialBatchGenerators.emplace(ReflectPTSphereBatch::TypeName(),
-    //                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ReflectPTSphereBatch>,
-    //                                               DefaultDestruct<GPUMaterialBatchI>));
 
-    //// GI Refract
-    //materialBatchGenerators.emplace(RefractPTTriangleBatch::TypeName(),
-    //                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, RefractPTTriangleBatch>,
-    //                                               DefaultDestruct<GPUMaterialBatchI>));
-    //materialBatchGenerators.emplace(ReflectPTSphereBatch::TypeName(),
-    //                                GPUMatBatchGen(MaterialBatchConstruct<GPUMaterialBatchI, ReflectPTSphereBatch>,
-    //                                               DefaultDestruct<GPUMaterialBatchI>));
 }
 
 TestTracerPool::TestTracerPool()

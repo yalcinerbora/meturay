@@ -32,7 +32,7 @@ class RayTracer : public GPUTracer
 
         const GPUSceneI&        scene;
 
-        void                    GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount);
+        virtual void            GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount);
         void                    LoadCameraToGPU(const CPUCamera&);
         void                    SwapAuxBuffers();
 

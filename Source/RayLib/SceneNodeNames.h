@@ -49,6 +49,9 @@ namespace NodeNames
     static constexpr const char* LIGHT_RECT_V0 = "v0";
     static constexpr const char* LIGHT_RECT_V1 = "v1";
     static constexpr const char* LIGHT_CONE_APERTURE = "aperture";
+    // Texture Related Names
+    static constexpr const char* TEXTURE_IS_CACHED = "isCached";
+    static constexpr const char* TEXTURE_FILTER = "filter";
     // Common
     static constexpr const char* LIGHT_MATERIAL = "material";
     static constexpr const char* LIGHT_PRIMITIVE = "primitive";

@@ -17,6 +17,48 @@ static constexpr const char* LightTypeNames[static_cast<int>(LightType::END)] =
     "primitive"
 };
 
+static constexpr const char* TextureTypeNames[static_cast<int>(TextureType::END)] =
+{
+    "1D",
+    "2D",
+    "3D",
+    "cube"
+};
+
+static constexpr const char* FilterTypeNames[static_cast<int>(FilterType::END)] =
+{
+    "linear",
+    "nearest"
+};
+
+inline SceneError TextureTypeStringToEnum(TextureType& type,
+                                          const std::string& str)
+{
+    for(int i = 0; i < static_cast<int>(TextureType::END); i++)
+    {
+        if(str == std::string(TextureTypeNames[i]))
+        {
+            type = static_cast<TextureType>(i);
+            return SceneError::OK;
+        }
+    }
+    return SceneError::UNKNOWN_TEXTURE_TYPE;
+}
+
+inline SceneError FilterTypeStringToEnum(FilterType& type,
+                                          const std::string& str)
+{
+    for(int i = 0; i < static_cast<int>(FilterType::END); i++)
+    {
+        if(str == std::string(FilterTypeNames[i]))
+        {
+            type = static_cast<FilterType>(i);
+            return SceneError::OK;
+        }
+    }
+    return SceneError::UNKNOWN_FILTER_TYPE;
+}
+
 inline SceneError LightTypeStringToEnum(LightType& type,
                                         const std::string& str)
 {
@@ -214,6 +256,30 @@ SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn, double time)
 
         std::sort(s.matPrimPairs.begin(), s.matPrimPairs.end());
         s.pairCount = static_cast<int8_t>(primIdArray.size());
+        return s;
+    }
+}
+
+TextureStruct SceneIO::LoadTexture(const nlohmann::json& jsn, double time)
+{
+    if(jsn.is_string())
+    {
+        return LoadFromAnim<TextureStruct>(jsn, time);
+    }
+    else
+    {
+        TextureStruct s = {};
+        s.id = jsn[ID];
+        s.name = jsn[NAME];
+        s.cached = jsn[TEXTURE_IS_CACHED];
+
+        std::string typeName = jsn[TYPE];
+        SceneError e = TextureTypeStringToEnum(s.type, typeName);
+        if(e != SceneError::OK) throw SceneException(e);
+
+        std::string filterName = jsn[TEXTURE_FILTER];
+        e = FilterTypeStringToEnum(s.filter, filterName);
+        if(e != SceneError::OK) throw SceneException(e);
         return s;
     }
 }

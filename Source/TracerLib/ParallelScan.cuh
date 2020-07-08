@@ -13,8 +13,10 @@ Nevermind. Currently found cub backend which what i was planning to do
 Wrapping functions to it from now on.
 
 */
-
+#pragma warning( push )
+#pragma warning( disable : 4834)
 #include <cub/cub.cuh>
+#pragma warning( pop ) 
 
 #include "RayLib/CudaCheck.h"
 #include "DeviceMemory.h"

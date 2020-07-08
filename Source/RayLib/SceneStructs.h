@@ -26,6 +26,24 @@ enum class LightType
 
 };
 
+enum class FilterType
+{
+    LINEAR,
+    NEAREST,
+
+    END
+};
+
+enum class TextureType
+{
+    TEX_1D,
+    TEX_2D,
+    TEX_3D,
+    CUBE,
+
+    END
+};
+
 using NodeId = uint32_t;        // Node Id is generic name of the id logic
 using MaterialId = uint32_t;    // Material Id represent material of some kind 
 using SurfaceDataId = uint32_t; // Surface Id represent up to "MaxPrimitivePerSurface"
@@ -70,6 +88,18 @@ struct CPULight
     Vector3     position0;
     Vector3     position1;
     Vector3     position2;
+};
+
+// Texture Information from the Scene Json Struct
+struct TextureStruct
+{
+    std::string     name;
+    uint32_t        id;
+    FilterType      filter;
+    TextureType     type;
+    bool            cached;
+    // Textures are always mipped
+    // Those are generated if not available
 };
 
 using GPUTransform = Matrix4x4;

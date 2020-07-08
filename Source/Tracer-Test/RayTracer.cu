@@ -21,11 +21,11 @@ inline void RayInitBasic(RayAuxBasic& gOutBasic,
                          const uint32_t localPixelId,
                          const uint32_t pixelSampleId)
 {
-    RayAuxBasic init = defaults;
-    init.mediumIndex = __float2half(1.0f);
+    RayAuxBasic init = defaults;    
     init.pixelId = localPixelId;
     gOutBasic = init;
 }
+
 
 RayTracer::RayTracer(const CudaSystem& s, 
                      const GPUSceneI& scene,

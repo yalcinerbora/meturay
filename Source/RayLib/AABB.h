@@ -68,7 +68,7 @@ using AABB3d = AABB<3, double>;
 using AABB4d = AABB<4, double>;
 
 // Requirements of Vectors
-static_assert(std::is_literal_type<AABB3>::value == true, "AABBs has to be literal types");
+//static_assert(std::is_literal_type<AABB3>::value == true, "AABBs has to be literal types");
 static_assert(std::is_trivially_copyable<AABB3>::value == true, "AABBs has to be trivially copyable");
 static_assert(std::is_polymorphic<AABB3>::value == false, "AABBs should not be polymorphic");
 

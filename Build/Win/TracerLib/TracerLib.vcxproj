@@ -22,7 +22,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\ComparisonFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\EstimatiorFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULight.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkI.h" />
@@ -129,7 +129,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.2.props" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 11.0.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -167,8 +167,7 @@
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
-      <AdditionalCompilerOptions>
-      </AdditionalCompilerOptions>
+      <AdditionalCompilerOptions>/wd4834</AdditionalCompilerOptions>
       <PtxAsOptionV>true</PtxAsOptionV>
       <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
       <MaxRegCount />
@@ -199,8 +198,7 @@
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
-      <AdditionalCompilerOptions>
-      </AdditionalCompilerOptions>
+      <AdditionalCompilerOptions>/wd4834</AdditionalCompilerOptions>
       <MaxRegCount>
       </MaxRegCount>
       <GenerateLineInfo>true</GenerateLineInfo>
@@ -212,6 +210,6 @@
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.2.targets" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 11.0.targets" />
   </ImportGroup>
 </Project>

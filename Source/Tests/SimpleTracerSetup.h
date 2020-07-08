@@ -70,7 +70,7 @@ class MockNode
                  double duration);
         ~MockNode() = default;
 
-    // From Command Callbacks
+        // From Command Callbacks
         void        ChangeScene(const std::string) override {}
         void        ChangeTime(const double) override {}
         void        IncreaseTime(const double) override {}
@@ -212,8 +212,7 @@ class SimpleTracerSetup
         // Scene Tracer and Visor
         GPUTracerPtr                        tracer;
         std::unique_ptr<VisorI>             visorView;
-        //std::unique_ptr<GPUSceneJson>       gpuScene;
-        SharedLibPtr<GPUSceneI> gpuScene;
+        std::unique_ptr<GPUSceneJson>       gpuScene;
         std::unique_ptr<CudaSystem>         cudaSystem;
 
         // Visor Input
@@ -244,7 +243,7 @@ inline SimpleTracerSetup::SimpleTracerSetup(std::string tracerType,
     , sceneTime(sceneTime)
     , tracerType(tracerType)
     , visorView(nullptr)
-    , gpuScene(nullptr, nullptr)
+    , gpuScene(nullptr)
     , visorInput(nullptr)
     , node(nullptr)
     , tracer(nullptr, nullptr)
@@ -297,24 +296,12 @@ inline bool SimpleTracerSetup::Init()
     // Basically delegates all work to single GPU
     SingleGPUScenePartitioner partitioner(*cudaSystem);
 
-    // YOLO TEST
-    SharedLib lib("Tracer-Test");
-    //SharedLibPtr<GPUSceneI> gpuScene = {nullptr, nullptr};
-    lib.GenerateObjectWithArgs(gpuScene,
-                               {"GenerateSceneJson",
-                               "DeleteSceneJson"},
-                               sceneName,
-                               partitioner,
-                               generator,
-                               surfaceLoaders,
-                               *cudaSystem);
-
     // Load Scene & get material/primitive mappings
- /*   gpuScene = std::make_unique<GPUSceneJson>(sceneName,
+    gpuScene = std::make_unique<GPUSceneJson>(sceneName,
                                               partitioner,
                                               generator,
                                               surfaceLoaders,
-                                              *cudaSystem);*/
+                                              *cudaSystem);
     SceneError scnE = gpuScene->LoadScene(sceneTime);
     ERROR_CHECK(SceneError, scnE);
 

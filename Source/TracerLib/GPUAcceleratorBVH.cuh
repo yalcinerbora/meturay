@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cub/cub.cuh>
 #include <vector>
 #include <queue>
 

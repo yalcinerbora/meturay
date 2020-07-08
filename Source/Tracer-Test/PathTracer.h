@@ -31,6 +31,9 @@ class PathTracer final : public RayTracer
         Byte*                   dLightAlloc;
 
     protected:
+
+        void                    GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount) override;
+
     public:
         // Constructors & Destructor
                                 PathTracer(const CudaSystem&,

@@ -11,6 +11,23 @@
 	},
 	"_movingCamera.json"],
 
+	"Textures": [
+		{
+			"id": 0,
+			"type": "2d",
+			"name": "texture.png",
+			"isCached": false,
+			"filter": "nearest",
+		},
+		{
+			"id": 0,
+			"type": "cube",
+			"name": "texture.png",
+			"isCached": false,
+			"filter": "linear"
+		}
+	],
+
 	"Lights": [
 	"_lightMoving.json",
 	{

@@ -235,9 +235,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUCamera.cuh">
       <Filter>Light &amp; Camera</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\EstimatiorFunctions.cuh">
-      <Filter>GPUTemplateFunctions</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorFunctions.h">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
@@ -254,6 +251,9 @@
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh">
+      <Filter>GPUTemplateFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
   </ItemGroup>

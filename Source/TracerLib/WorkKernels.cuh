@@ -52,7 +52,8 @@ using WorkFunc = void(*)(// Output
                          RandomGPU& rng,
                          // Constants
                          const MGroup::Data& gMatData,
-                         const HitKey::Type& matId);
+                         const HitKey matId,
+                         const PrimitiveId primId);
 
 // Meta Kernel for divding work.
 template<class GlobalState, class LocalState,
@@ -100,11 +101,11 @@ void KCWork(// Output
         // Load Input to Registers
         const RayReg ray(gInRays, rayId);
         const RayAuxiliary aux = gInRayAux[rayId];
-        const PrimitiveId gPrimitiveId = gPrimitiveIds[rayId];
+        const PrimitiveId primitiveId = gPrimitiveIds[rayId];
 
         // Generate surface data from hit
         const HitData hit = gHitStructs.Ref<HitData>(rayId);
-        const Surface surface = SurfFunc(primData, hit, gPrimitiveId);
+        const Surface surface = SurfFunc(primData, hit, primitiveId);
 
         // Determine Output Location
         // Make it locally indexable
@@ -129,7 +130,8 @@ void KCWork(// Output
               rng,
               // Constants
               matData,
-              HitKey::FetchIdPortion(hitKey));
+              hitKey,
+              primitiveId);
     }
 }
 

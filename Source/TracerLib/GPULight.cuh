@@ -385,7 +385,7 @@ inline void PointLight::Sample(// Output
                                RandomGPU&) const
 {
     materialKey = boundaryMaterialKey;
-    direction = position;
+    direction = (position - worldLoc);
     pdf = 1.0f;
 }
 

@@ -803,6 +803,11 @@ const GPUTransform* GPUSceneJson::TransformsGPU() const
     return dTransforms;
 }
 
+const std::vector<TextureStruct>& GPUSceneJson::TextureInfo() const
+{
+    return texInfo;
+}
+
 const WorkBatchCreationInfo& GPUSceneJson::WorkBatchInfo() const
 {
     return workInfo;

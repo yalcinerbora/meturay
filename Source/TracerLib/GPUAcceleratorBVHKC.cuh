@@ -6,6 +6,12 @@
 
 #include "AcceleratorFunctions.h"
 
+#pragma warning( push )
+#pragma warning( disable : 4834)
+#include <cub/cub.cuh>
+#pragma warning( pop ) 
+
+
 enum class SplitAxis { X, Y, Z, END };
 
 // Depth First Search over BVH

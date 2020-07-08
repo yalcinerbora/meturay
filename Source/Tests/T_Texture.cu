@@ -5,6 +5,7 @@
 
 TEST(Texture, Construction)
 {
+    EXPECT_TRUE(false);
 //  InterpolationType t = InterpolationType::LINEAR;
 //  EdgeResolveType e = EdgeResolveType::WRAP;
 

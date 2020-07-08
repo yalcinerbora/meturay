@@ -63,6 +63,7 @@ namespace SceneIO
     CPUCamera               LoadCamera(const nlohmann::json&, double time = 0.0);
 
     SurfaceStruct           LoadSurface(const nlohmann::json&, double time = 0.0);
+    TextureStruct           LoadTexture(const nlohmann::json&, double time = 0.0);
 };
 
 inline bool SceneIO::IsTimeDependent(const nlohmann::json& jsn)

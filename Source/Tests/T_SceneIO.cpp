@@ -30,7 +30,6 @@ TEST(SceneIO, String)
     EXPECT_STREQ(SceneIO::LoadString(LoadJson(jsonString)).c_str(), "This is string.");
     EXPECT_THROW(SceneIO::LoadString(LoadJson(jsonQuat)), SceneException);
     EXPECT_THROW(SceneIO::LoadString(LoadJson(jsonDouble)), SceneException);
-
 }
 
 TEST(SceneIO, Number)

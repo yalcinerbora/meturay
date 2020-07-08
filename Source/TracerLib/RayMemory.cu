@@ -1,13 +1,16 @@
 #include "RayMemory.h"
-
-#include <cub/cub.cuh>
-#include <type_traits>
-
 #include "RayLib/Log.h"
 #include "RayLib/MemoryAlignment.h"
 
 #include "CudaConstants.h"
 //#include "TracerDebug.h"
+
+#include <type_traits>
+
+#pragma warning( push )
+#pragma warning( disable : 4834)
+#include <cub/cub.cuh>
+#pragma warning( pop ) 
 
 static constexpr uint32_t INVALID_LOCATION = std::numeric_limits<uint32_t>::max();
 
