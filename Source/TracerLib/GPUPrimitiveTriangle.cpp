@@ -358,6 +358,7 @@ SceneError GPUPrimitiveTriangle::GenerateLights(std::vector<CPULight>& result,
         ls.position0 = dData.positionsU[dData.indexList[i * 3 + 0]];
         ls.position1 = dData.positionsU[dData.indexList[i * 3 + 1]];
         ls.position2 = dData.positionsU[dData.indexList[i * 3 + 2]];
+        ls.primId = i;
 
         result.push_back(ls);
     }

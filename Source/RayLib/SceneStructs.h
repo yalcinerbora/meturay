@@ -82,12 +82,13 @@ using MaterialKeyListing = std::map<TypeIdPair, HitKey>;
 // No inheritance here
 struct CPULight
 {
-    LightType   type;
-    HitKey      matKey;
-    Vector3     flux;
-    Vector3     position0;
-    Vector3     position1;
-    Vector3     position2;
+    LightType       type;
+    HitKey          matKey;
+    PrimitiveId     primId;
+    Vector3         flux;
+    Vector3         position0;
+    Vector3         position1;
+    Vector3         position2;
 };
 
 // Texture Information from the Scene Json Struct

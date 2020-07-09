@@ -22,11 +22,15 @@ class PointLight final : public GPULightI
         // Constructors & Destructor
         __device__          PointLight(const Vector3& position,
                                        const Vector3& flux,
-                                       HitKey k);
+                                       HitKey k,
+                                       PrimitiveId pId);
 
         // Interface 
         __device__ void     Sample(// Output
                                    HitKey& materialKey,
+                                   PrimitiveId& primId,
+                                   //
+                                   float& distance,
                                    Vector3& direction,
                                    float& pdf,
                                    // Input
@@ -57,11 +61,15 @@ class DirectionalLight final : public GPULightI
         // Constructors & Destructor
         __device__          DirectionalLight(const Vector3& direction,
                                              const Vector3& flux,
-                                             HitKey k);
+                                             HitKey k,
+                                             PrimitiveId pId);
 
         // Interface 
         __device__ void     Sample(// Output
                                    HitKey& materialKey,
+                                   PrimitiveId& primId,
+                                   //
+                                   float& distance,
                                    Vector3& direction,
                                    float& pdf,
                                    // Input
@@ -97,11 +105,15 @@ class SpotLight final : public GPULightI
                                       const Vector3& direction,
                                       const Vector2& coneMinMax, // Degrees
                                       const Vector3& flux,
-                                      HitKey k);
+                                      HitKey k,
+                                      PrimitiveId pId);
 
         // Interface 
         __device__ void     Sample(// Output
                                    HitKey& materialKey,
+                                   PrimitiveId& primId,
+                                   //
+                                   float& distance,
                                    Vector3& direction,
                                    float& pdf,
                                    // Input
@@ -138,11 +150,15 @@ class RectangularLight final : public GPULightI
                                              const Vector3& right,
                                              const Vector3& down,
                                              const Vector3& flux,
-                                             HitKey k);
+                                             HitKey k,
+                                             PrimitiveId pId);
 
         // Interface 
         __device__ void     Sample(// Output
                                    HitKey& materialKey,
+                                   PrimitiveId& primId,
+                                   //
+                                   float& distance,
                                    Vector3& direction,
                                    float& pdf,
                                    // Input
@@ -179,11 +195,15 @@ class TriangularLight final : public GPULightI
                                             const Vector3& v1,
                                             const Vector3& v2,
                                             const Vector3& flux,
-                                            HitKey k);
+                                            HitKey k,
+                                            PrimitiveId pId);
 
         // Interface 
         __device__ void     Sample(// Output
                                    HitKey& materialKey,
+                                   PrimitiveId& primId,
+                                   //
+                                   float& distance,
                                    Vector3& direction,
                                    float& pdf,
                                    // Input
@@ -219,11 +239,15 @@ class DiskLight final : public GPULightI
                                       const Vector3& normal,
                                       float radius,
                                       const Vector3& flux,
-                                      HitKey k);
+                                      HitKey k,
+                                      PrimitiveId pId);
 
         // Interface 
         __device__ void     Sample(// Output
                                    HitKey& materialKey,
+                                   PrimitiveId& primId,
+                                   //
+                                   float& distance,
                                    Vector3& direction,
                                    float& pdf,
                                    // Input
@@ -257,11 +281,15 @@ class SphericalLight final : public GPULightI
         __device__          SphericalLight(const Vector3& center,
                                            float radius,
                                            const Vector3& flux,
-                                           HitKey k);
+                                           HitKey k,
+                                           PrimitiveId pId);
 
         // Interface 
         __device__ void     Sample(// Output
                                    HitKey& materialKey,
+                                   PrimitiveId& primId,
+                                   //
+                                   float& distance,
                                    Vector3& direction,
                                    float& pdf,
                                    // Input
@@ -291,16 +319,18 @@ static constexpr size_t GPULightUnionSize = *std::min_element(std::begin(LightSi
 __device__
 inline PointLight::PointLight(const Vector3& position,
                               const Vector3& flux,
-                              HitKey k)
-    : GPULightI(flux, k)
+                              HitKey k,
+                              PrimitiveId pId)
+    : GPULightI(flux, k, pId)
     , position(position)
 {}
 
 __device__
 inline DirectionalLight::DirectionalLight(const Vector3& direction,
                                           const Vector3& flux,
-                                          HitKey k)
-    : GPULightI(flux, k)
+                                          HitKey k,
+                                          PrimitiveId pId)
+    : GPULightI(flux, k, pId)
     , direction(direction)
 {}
 
@@ -309,8 +339,9 @@ inline SpotLight::SpotLight(const Vector3& position,
                             const Vector3& direction,
                             const Vector2& coneMinMax, // Degrees
                             const Vector3& flux,
-                            HitKey k)
-    : GPULightI(flux, k)
+                            HitKey k,
+                            PrimitiveId pId)
+    : GPULightI(flux, k, pId)
     , position(position)
     , direction(direction)
     , cosMin(coneMinMax[0])
@@ -322,8 +353,9 @@ inline RectangularLight::RectangularLight(const Vector3& topLeft,
                                           const Vector3& right,
                                           const Vector3& down,
                                           const Vector3& flux,
-                                          HitKey k)
-    : GPULightI(flux, k)
+                                          HitKey k,
+                                          PrimitiveId pId)
+    : GPULightI(flux, k, pId)
     , topLeft(topLeft)
     , right(right)
     , down(down)
@@ -338,8 +370,9 @@ inline TriangularLight::TriangularLight(const Vector3& v0,
                                         const Vector3& v1,
                                         const Vector3& v2,
                                         const Vector3& flux,
-                                        HitKey k)
-    : GPULightI(flux, k)
+                                        HitKey k,
+                                        PrimitiveId pId)
+    : GPULightI(flux, k, pId)
     , v0(v0)
     , v1(v1)
     , v2(v2)
@@ -355,8 +388,9 @@ inline DiskLight::DiskLight(const Vector3& center,
                             const Vector3& normal,
                             float radius,
                             const Vector3& flux,
-                            HitKey k)
-    : GPULightI(flux, k)
+                            HitKey k,
+                            PrimitiveId pId)
+    : GPULightI(flux, k, pId)
     , center(center)
     , normal(normal)
     , radius(radius)
@@ -367,8 +401,9 @@ __device__
 inline SphericalLight::SphericalLight(const Vector3& center,
                                       float radius,
                                       const Vector3& flux,
-                                      HitKey k)
-    : GPULightI(flux, k)
+                                      HitKey k,
+                                      PrimitiveId pId)
+    : GPULightI(flux, k, pId)
     , center(center)
     , radius(radius)
     , area (MathConstants::Pi * radius * radius * 4.0f)
@@ -377,6 +412,9 @@ inline SphericalLight::SphericalLight(const Vector3& center,
 __device__
 inline void PointLight::Sample(// Output
                                HitKey& materialKey,
+                               PrimitiveId& primId,
+                               //
+                               float& distance,
                                Vector3& direction,
                                float& pdf,
                                // Input
@@ -385,7 +423,11 @@ inline void PointLight::Sample(// Output
                                RandomGPU&) const
 {
     materialKey = boundaryMaterialKey;
+    primId = primitiveId;
+
     direction = (position - worldLoc);
+    distance = direction.Length();
+    direction.NormalizeSelf();
     pdf = 1.0f;
 }
 
@@ -411,6 +453,9 @@ inline Vector3 PointLight::Flux(const Vector3& direction) const
 __device__
 inline void DirectionalLight::Sample(// Output
                                      HitKey& materialKey,
+                                     PrimitiveId& primId,
+                                     //
+                                     float& distance,
                                      Vector3& dir,
                                      float& pdf,
                                      // Input
@@ -419,7 +464,10 @@ inline void DirectionalLight::Sample(// Output
                                      RandomGPU&) const
 {
     materialKey = boundaryMaterialKey;
+    primId = primitiveId;
+
     dir = -direction;
+    distance = FLT_MAX;
     pdf = 1.0f;
 }
 
@@ -446,6 +494,9 @@ inline Vector3 DirectionalLight::Flux(const Vector3& dir) const
 __device__
 inline void SpotLight::Sample(// Output
                               HitKey& materialKey,
+                              PrimitiveId& primId,
+                              //
+                              float& distance,
                               Vector3& dir,
                               float& pdf,
                               // Input
@@ -454,7 +505,10 @@ inline void SpotLight::Sample(// Output
                               RandomGPU&) const
 {
     materialKey = boundaryMaterialKey;
+    primId = primitiveId;
+
     dir = -direction;
+    distance = (position - worldLoc).Length();
     pdf = 1.0f;
 }
 
@@ -484,6 +538,9 @@ inline Vector3 SpotLight::Flux(const Vector3& dir) const
 __device__
 inline void RectangularLight::Sample(// Output
                                      HitKey& materialKey,
+                                     PrimitiveId& primId,
+                                     //
+                                     float& distance,
                                      Vector3& direction,
                                      float& pdf,
                                      // Input
@@ -492,13 +549,18 @@ inline void RectangularLight::Sample(// Output
                                      RandomGPU& rng) const
 {
     materialKey = boundaryMaterialKey;
+    primId = primitiveId;
+
     float x = GPUDistribution::Uniform<float>(rng);
     float y = GPUDistribution::Uniform<float>(rng);
     Vector3 position = topLeft + right * x + down * y;
 
     float nDotL = max(normal.Dot(-direction), 0.0f);
     direction = position - worldLoc;
-    pdf = direction.LengthSqr() / (nDotL * area);
+    distance = direction.LengthSqr();
+    pdf = distance / (nDotL * area);
+    distance = sqrt(distance);
+    direction.NormalizeSelf();
 }
 
 __device__
@@ -524,6 +586,9 @@ inline Vector3 RectangularLight::Flux(const Vector3& dir) const
 __device__
 inline void TriangularLight::Sample(// Output
                                     HitKey& materialKey,
+                                    PrimitiveId& primId,
+                                    //
+                                    float& distance,
                                     Vector3& direction,
                                     float& pdf,
                                     // Input
@@ -532,6 +597,7 @@ inline void TriangularLight::Sample(// Output
                                     RandomGPU& rng) const
 {
     materialKey = boundaryMaterialKey;
+    primId = primitiveId;
 
     float r1 = sqrt(GPUDistribution::Uniform<float>(rng));
     float r2 = GPUDistribution::Uniform<float>(rng);
@@ -546,7 +612,10 @@ inline void TriangularLight::Sample(// Output
 
     float nDotL = max(normal.Dot(-direction), 0.0f);
     direction = position - worldLoc;
-    pdf = direction.LengthSqr() / (nDotL * area);
+    distance = direction.LengthSqr();
+    pdf = distance / (nDotL * area);
+    distance = sqrt(distance);
+    direction.NormalizeSelf();
 }
 
 __device__
@@ -572,6 +641,9 @@ inline Vector3 TriangularLight::Flux(const Vector3& dir) const
 __device__
 inline void DiskLight::Sample(// Output
                               HitKey& materialKey,
+                              PrimitiveId& primId,
+                              //
+                              float& distance,
                               Vector3& direction,
                               float& pdf,
                               // Input
@@ -580,6 +652,7 @@ inline void DiskLight::Sample(// Output
                               RandomGPU& rng) const
 {
     materialKey = boundaryMaterialKey;
+    primId = primitiveId;
 
     float r = GPUDistribution::Uniform<float>(rng) * radius;
     float tetha = GPUDistribution::Uniform<float>(rng) * 2.0f * MathConstants::Pi;
@@ -595,7 +668,10 @@ inline void DiskLight::Sample(// Output
 
     float nDotL = max(normal.Dot(-direction), 0.0f);
     direction = position - worldLoc;
-    pdf = direction.LengthSqr() / (nDotL * area);
+    distance = direction.LengthSqr();
+    pdf = distance / (nDotL * area);
+    distance = sqrt(distance);
+    direction.NormalizeSelf();
 }
 
 __device__
@@ -621,6 +697,9 @@ inline Vector3 DiskLight::Flux(const Vector3& dir) const
 __device__
 inline void SphericalLight::Sample(// Output
                                    HitKey& materialKey,
+                                   PrimitiveId& primId,
+                                   //
+                                   float& distance,
                                    Vector3& direction,
                                    float& pdf,
                                    // Input
@@ -629,6 +708,7 @@ inline void SphericalLight::Sample(// Output
                                    RandomGPU& rng) const
 {
     materialKey = boundaryMaterialKey;
+    primId = primitiveId;
 
     // Marsaglia 1972
     // http://mathworld.wolfram.com/SpherePointPicking.html
@@ -646,7 +726,10 @@ inline void SphericalLight::Sample(// Output
 
     Vector3 position = center + radius * unitSphr;
     direction = position - worldLoc;
-    pdf = direction.LengthSqr() / area;
+    distance = direction.LengthSqr();
+    pdf = distance / area;
+    distance = sqrt(distance);
+    direction.NormalizeSelf();
 }
 
 __device__
@@ -658,7 +741,7 @@ inline void SphericalLight::GenerateRay(// Output
                                         // I-O
                                         RandomGPU&) const
 {
-    // TODO
+    // TODO:
 }
 
 __device__ 

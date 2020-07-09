@@ -66,7 +66,8 @@ inline __device__ void AllocateSingleCamera(GPUCameraI*& gPtr,
         }
         default:
         {
-            asm("trap;");
+            __threadfence();
+            __trap();
             break;
         }
     }
@@ -83,36 +84,73 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
         {
             gPtr = new (gMemory) PointLight(cpuLight.position0,
                                             cpuLight.flux,
-                                            cpuLight.matKey);
+                                            cpuLight.matKey,
+                                            cpuLight.primId);
             break;
         }
         case LightType::DIRECTIONAL:
         {
+            gPtr = new (gMemory) DirectionalLight(cpuLight.position0,
+                                                  cpuLight.flux,
+                                                  cpuLight.matKey,
+                                                  cpuLight.primId);
             break;
         }
         case LightType::SPOT:
         {
+            Vector2 angles = Vector2(cpuLight.position2[0],
+                                     cpuLight.position2[0]);
+            gPtr = new (gMemory) SpotLight(cpuLight.position0,
+                                           cpuLight.position1,
+                                           angles,
+                                           cpuLight.flux,
+                                           cpuLight.matKey,
+                                           cpuLight.primId);
             break;
         }
         case LightType::RECTANGULAR:
         {
+            gPtr = new (gMemory) RectangularLight(cpuLight.position0,
+                                                  cpuLight.position1,
+                                                  cpuLight.position2,
+                                                  cpuLight.flux,
+                                                  cpuLight.matKey,
+                                                  cpuLight.primId);
             break;
         }
         case LightType::TRIANGULAR:
         {
+            gPtr = new (gMemory) TriangularLight(cpuLight.position0,
+                                                 cpuLight.position1,
+                                                 cpuLight.position2,
+                                                 cpuLight.flux,
+                                                 cpuLight.matKey,
+                                                 cpuLight.primId);
             break;
         }
         case LightType::DISK:
         {
+            gPtr = new (gMemory) DiskLight(cpuLight.position0,
+                                                  cpuLight.position1,
+                                                  cpuLight.position2[0],
+                                                  cpuLight.flux,
+                                                  cpuLight.matKey,
+                                                  cpuLight.primId);
             break;
         }
         case LightType::SPHERICAL:
         {
+            gPtr = new (gMemory) SphericalLight(cpuLight.position0,
+                                                cpuLight.position1[0],
+                                                cpuLight.flux,
+                                                cpuLight.matKey,
+                                                cpuLight.primId);
             break;
         }
         default:
         {
-            asm("trap;");
+            __threadfence();
+            __trap();
             break;
         }
     }

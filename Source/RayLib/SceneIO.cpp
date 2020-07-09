@@ -159,6 +159,7 @@ CPULight SceneIO::LoadLight(const nlohmann::json& jsn, double time)
         light.position0 = Zero3;
         light.position1 = Zero3;
         light.position2 = Zero3;
+        light.primId = 0;
 
         std::string type = jsn[TYPE];
         SceneError e = LightTypeStringToEnum(light.type, type);

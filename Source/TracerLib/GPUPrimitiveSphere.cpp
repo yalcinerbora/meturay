@@ -271,6 +271,7 @@ SceneError GPUPrimitiveSphere::GenerateLights(std::vector<CPULight>& result,
         ls.type = LightType::SPHERICAL;
         ls.position0 = centerRad;
         ls.position1[0] = centerRad[3];
+        ls.primId = i;
         result.push_back(ls);
     }
     return SceneError::OK;

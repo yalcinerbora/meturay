@@ -26,6 +26,9 @@ class PinholeCamera : public GPUEndpointI
         // Interface 
         __device__ void     Sample(// Output
                                    HitKey& materialKey,
+                                   PrimitiveId& primId,
+                                   //
+                                   float& distance,
                                    Vector3& direction,
                                    float& pdf,
                                    // Input
@@ -52,7 +55,7 @@ static constexpr size_t GPUCameraUnionSize = *std::min_element(std::begin(Camera
 
 __device__
 inline PinholeCamera::PinholeCamera(const CPUCamera& cam)
-    : GPUEndpointI(cam.matKey)
+    : GPUEndpointI(cam.matKey, 0)
 {
     // Find world space window sizes
     float widthHalf = tanf(cam.fov[0] * 0.5f) * cam.nearPlane;
@@ -77,6 +80,9 @@ inline PinholeCamera::PinholeCamera(const CPUCamera& cam)
 __device__
 inline void PinholeCamera::Sample(// Output
                                   HitKey& materialKey,
+                                  PrimitiveId& primId,
+                                  //
+                                  float& distance,
                                   Vector3& direction,
                                   float& pdf,
                                   // Input
@@ -87,6 +93,9 @@ inline void PinholeCamera::Sample(// Output
     // One
     materialKey = boundaryMaterialKey;
     direction = sampleLoc - position;
+    primId = 0;
+    distance = direction.Length();
+    direction.NormalizeSelf();        
     pdf = 1.0f;
 }
 

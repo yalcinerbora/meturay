@@ -17,9 +17,11 @@ class GPUEndpointI
         // Launch a ray using this key
         // if nothing hits Tracer batches the ray with this key
         HitKey                  boundaryMaterialKey;
+        // Primitive Id is required for primitive lights for NEE estimation
+        PrimitiveId             primitiveId;
         
     public:
-        __device__              GPUEndpointI(HitKey k);
+        __device__              GPUEndpointI(HitKey k, PrimitiveId id);
         virtual                 ~GPUEndpointI() = default;
 
         // Interface
@@ -30,6 +32,9 @@ class GPUEndpointI
         // tMax can be generated from it
         virtual __device__ void Sample(// Output
                                        HitKey& materialKey,
+                                       PrimitiveId& primId,
+                                       //
+                                       float& distance,
                                        Vector3& direction,
                                        float& pdf,
                                        // Input
@@ -55,20 +60,21 @@ class GPULightI : public GPUEndpointI
         Vector3                         flux;
 
     public: 
-        __device__                      GPULightI(const Vector3& flux, HitKey k);
+        __device__                      GPULightI(const Vector3& flux, HitKey k, PrimitiveId id);
         virtual                         ~GPULightI() = default;
         // Interface
         virtual __device__ Vector3      Flux(const Vector3& direction) const = 0;
 };
 
 __device__      
-inline  GPUEndpointI::GPUEndpointI(HitKey k) 
+inline  GPUEndpointI::GPUEndpointI(HitKey k, PrimitiveId id) 
     : boundaryMaterialKey(k) 
+    , primitiveId(id)
 {}
 
 __device__
-inline GPULightI::GPULightI(const Vector3& flux, HitKey k)
-    : GPUEndpointI(k)
+inline GPULightI::GPULightI(const Vector3& flux, HitKey k, PrimitiveId id)
+    : GPUEndpointI(k, id)
     , flux(flux)
 {}
 

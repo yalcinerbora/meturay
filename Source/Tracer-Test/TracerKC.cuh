@@ -204,8 +204,10 @@ inline void PathWork(// Output
     float pdfLight, lDistance;
     HitKey matLight;
     Vector3 lDirection;
+    PrimitiveId lightPrimId;
     if(gRenderState.nee &&
-       NextEventEstimation(matLight, 
+       NextEventEstimation(matLight,
+                           lightPrimId,
                            lDirection,
                            lDistance,
                            pdfLight,
@@ -236,6 +238,8 @@ inline void PathWork(// Output
 
         // Incorporate for Radiance Factor
         auxOutNEE.radianceFactor *= reflectance / pdfLight;
+        auxOutNEE.neeKey = matLight;
+        auxOutNEE.neeId = lightPrimId;
 
         // Write to global memory
         rayOut.Update(gOutRays, NEE_RAY_INDEX);
