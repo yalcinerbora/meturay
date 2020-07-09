@@ -16,34 +16,7 @@
     "BaseAccelerator": {"type": "BasicBVH"},
 	"BaseBoundaryMaterial": 0,
 
-	"Lights": [
-		// Light Information for event estimation
-		// {
-		// 	"id": 0,
-		// 	"type": "rectangular",
-		// 	"material" : 1,
-		// 	"power": [1.0, 1.0, 1.0],
-		// 	// Value
-		// 	"position": [-5.371554, 7.565777, -0.362448],
-		// 	"v0" : [-1.5, -2.12132, 1.5],
-		// 	"v1" : [4.24264, 0, 4.24264]
-        // }
-        {
-			"id": 0,
-			"type": "directional",
-			"material" : 1,
-            //"direction": [0, -1, 0],
-            "direction": [0.40825, -0.8165, -0.40825],
-			"power": [1.0, 1.0, 1.0]
-		}
-		// {
-		// 	"id": 0,
-		// 	"type": "primitive",
-		// 	"material" : 1,
-		// 	"primitive": 1,
-		// 	"power": [1.0, 1.0, 1.0]
-		// }
-	],
+	"Lights": [],
 
 	"Transforms":[
 	{
@@ -59,30 +32,19 @@
 	{
 		// General Boundary Material
 		"id": 0,
-        "type": "Emissive",
-		"radiance" : [0, 0, 0]
-    },
-    {
-		// Light Boundary Material
-		"id": 1,
-		"type": "Emissive",
-		//"radiance" : [15, 15, 15]
-		//"radiance" : [9.5, 9.5, 9.5]
-		"radiance" : [6.1, 6.1, 6.1]
+        "type": "Constant",
+		"albedo" : [0, 0, 0]
     },
 	{
 		// Green Diffuse Mat
 		"id": 2,
-        "type": "Diffuse",
+        "type": "Constant",
         "albedo" : [0.0745, 0.9137, 0.4117]
-        //"type": "LightBoundary",
-        //"radiance" : [3.1, 3.1, 3.1]
-
     },
     {
 		// Gray Diffuse Mat
 		"id": 3,
-		"type": "Diffuse",
+		"type": "Constant",
 		"albedo" : [0.5, 0.5, 0.5]
     }],
 
@@ -95,14 +57,6 @@
         "tag": "assimp_",
         "innerIndex": 0
 	},
-	{
-		// Area Light
-		"id": 1,
-		"type": "Triangle",
-        "name": "../Surfaces/light_plane.obj",
-        "tag": "assimp_",
-        "innerIndex": 0
-    },
     {
 		// Spheres
         "id": [     2,  3,  4,  5,  6,  7,  8,  9,
@@ -139,13 +93,6 @@
 		"material": 3,
         "primitive": 0
 	},
-	// {
-	// 	// Light
-	// 	"transform": 0,
-	// 	"accelerator": 0,
-	// 	"material": 1,
-    //  "primitive": 1
-    // },
     // Spheres
     {"transform": 0, "accelerator" : 0, "material" : 2, "primitive" : 2},
     {"transform": 0, "accelerator" : 0, "material" : 2, "primitive" : 3},
@@ -196,5 +143,5 @@
     {"transform": 0, "accelerator" : 0, "material" : 2, "primitive" : 48},
     {"transform": 0, "accelerator" : 0, "material" : 2, "primitive" : 49},
     {"transform": 0, "accelerator" : 0, "material" : 2, "primitive" : 50}
-]
+    ]
 }

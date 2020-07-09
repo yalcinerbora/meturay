@@ -32,13 +32,13 @@
     <ClCompile Include="..\..\..\Source\Tests\T_GPUScene.cpp">
       <Filter>SceneIO</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\Tests\T_BasicTracers.cpp">
-      <Filter>TracerMock</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\Tests\T_SelfNode.cpp">
       <Filter>TracerMock</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\Tests\T_PathTracers.cpp">
+      <Filter>TracerMock</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\Tests\T_SimpleTracers.cpp">
       <Filter>TracerMock</Filter>
     </ClCompile>
   </ItemGroup>
