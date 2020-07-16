@@ -16,7 +16,7 @@ inline void RayInitPath(RayAuxPath& gOutPath,
                          const uint32_t pixelSampleId)
 {
     RayAuxPath init = defaults;
-    init.pixelId = localPixelId;
+    init.pixelIndex = localPixelId;
     init.type = RayType::CAMERA_RAY;
     init.mediumIndex = __float2half(1.0f);
     init.depth = 1;

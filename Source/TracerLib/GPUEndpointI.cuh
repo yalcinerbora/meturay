@@ -50,6 +50,9 @@ class GPUEndpointI
                                             const Vector2i& sampleMax,
                                             // I-O
                                             RandomGPU&) const = 0;
+
+        __device__ HitKey       BoundaryMaterial() const;
+        __device__ PrimitiveId  Primitive() const;
 };
 
 // Additional to sampling stuff, Light returns flux
@@ -71,6 +74,18 @@ inline  GPUEndpointI::GPUEndpointI(HitKey k, PrimitiveId id)
     : boundaryMaterialKey(k) 
     , primitiveId(id)
 {}
+
+__device__
+inline HitKey GPUEndpointI::BoundaryMaterial() const
+{
+    return boundaryMaterialKey;
+}
+
+__device__
+inline PrimitiveId GPUEndpointI::Primitive() const
+{
+    return primitiveId;
+}
 
 __device__
 inline GPULightI::GPULightI(const Vector3& flux, HitKey k, PrimitiveId id)

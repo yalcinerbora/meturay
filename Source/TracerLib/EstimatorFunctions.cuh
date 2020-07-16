@@ -8,7 +8,7 @@
 // Randomly choose a light and sample it
 __device__
 inline bool NextEventEstimation(HitKey& key,
-                                PrimitiveId& primId,
+                                uint32_t& lightIndex,
                                 Vector3& direction,
                                 float& lDistance,
                                 float& pdf,
@@ -27,11 +27,11 @@ inline bool NextEventEstimation(HitKey& key,
     uint32_t index = static_cast<uint32_t>(round(r1));
 
     const GPUEndpointI* point = gEndPoints[index];
-    point->Sample(key, primId,
-                  lDistance, direction,
+    point->Sample(key, lDistance, direction,
                   pdf, position, rng);
     // Incorporate the PDF of selecting that point
     pdf *= 1.0f / static_cast<float>(pointCount);
+    lightIndex = index;
     return true;
 }
 

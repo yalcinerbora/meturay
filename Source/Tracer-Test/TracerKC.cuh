@@ -73,7 +73,7 @@ inline void BasicWork(// Output
                                       0);
 
     // And accumulate pixel
-    ImageAccumulatePixel(img, aux.pixelId, Vector4(radiance, 1.0f));
+    ImageAccumulatePixel(img, aux.pixelIndex, Vector4(radiance, 1.0f));
 }
 
 template <class MGroup>
@@ -119,15 +119,20 @@ inline void PathWork(// Output
     auxOutNEE.type = RayType::NEE_RAY;
     auxOutNEE.type = RayType::NEE_RAY;
 
+    PrimitiveId neePrimId = gRenderState.lightList[aux.endPointIndex]->BoundaryMaterial();
+    HitKey neeKey = gRenderState.lightList[aux.endPointIndex]->Primitive();
+
     // End Case Check (We finally hit a light)
     bool neeLight = (aux.type == RayType::NEE_RAY &&
-                     primId == aux.neeId &&
-                     matId == aux.neeKey);
+                     primId == neePrimId &&
+                     matId == neeKey);
     bool wrongNEELight = (aux.type == RayType::NEE_RAY &&
-                          primId != aux.neeId ||
-                          matId != aux.neeKey);
+                          primId != neePrimId ||
+                          matId != neeKey);
     bool nonNEELight = (!gRenderState.nee &&
                         MGroup::IsBoundaryMat());
+
+    // TODO: Check medium interaction
 
     if(neeLight || nonNEELight)
     {
@@ -204,10 +209,10 @@ inline void PathWork(// Output
     float pdfLight, lDistance;
     HitKey matLight;
     Vector3 lDirection;
-    PrimitiveId lightPrimId;
+    uint32_t lightIndex;
     if(gRenderState.nee &&
        NextEventEstimation(matLight,
-                           lightPrimId,
+                           lightIndex,
                            lDirection,
                            lDistance,
                            pdfLight,
@@ -238,8 +243,8 @@ inline void PathWork(// Output
 
         // Incorporate for Radiance Factor
         auxOutNEE.radianceFactor *= reflectance / pdfLight;
-        auxOutNEE.neeKey = matLight;
-        auxOutNEE.neeId = lightPrimId;
+        // Set Endpoint Index
+        auxOutNEE.endPointIndex = lightIndex;
 
         // Write to global memory
         rayOut.Update(gOutRays, NEE_RAY_INDEX);

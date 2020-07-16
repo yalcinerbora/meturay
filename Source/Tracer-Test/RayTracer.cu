@@ -22,7 +22,7 @@ inline void RayInitBasic(RayAuxBasic& gOutBasic,
                          const uint32_t pixelSampleId)
 {
     RayAuxBasic init = defaults;    
-    init.pixelId = localPixelId;
+    init.pixelIndex = localPixelId;
     gOutBasic = init;
 }
 
