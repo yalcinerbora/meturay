@@ -16,25 +16,25 @@ enum class RayType : uint8_t
 struct RayAuxBasic
 {
     // Pixel index
-    uint32_t        pixelId;
+    uint32_t        pixelIndex;
 };
 
 struct RayAuxPath
 {
-    // Path throughput
+    // Path throughput 
+    // (a.k.a. total radiance coefficient along the path)
     Vector3f        radianceFactor;
-    // Pixel index
-    uint32_t        pixelId;
-    // NEE Related
-    HitKey          neeKey;
-    PrimitiveId     neeId;
-    // Current medium index
-    half            mediumIndex;
-    // Current path depth
-    uint8_t         depth;
-    // Ray Type
-    RayType         type;
+    
+    uint32_t        pixelIndex;     // Starting pixel index of the ray
+    uint32_t        endPointIndex;  // Destination of the ray if applicable (i.e. NEE Ray)
+    uint16_t        mediumIndex;    // Current Medium of the Ray
+    uint8_t         depth;          // Current path depth    
+    RayType         type;           // Ray Type
 };
+
+static constexpr int asd = sizeof(RayAuxPath);
+
+//static_cast(sizeof(RayAuxPath) == 10 * sizeof(float), "");
 
 static const RayAuxBasic InitialBasicAux = RayAuxBasic
 { 
@@ -44,10 +44,7 @@ static const RayAuxBasic InitialBasicAux = RayAuxBasic
 static const RayAuxPath InitialPathAux = RayAuxPath
 {
     Vector3f(1.0f, 1.0f, 1.0f),
-    0,    
-    HitKey::InvalidKey,
-    0,
-    half{},
+    0, 0, 0,
     1,
     RayType::CAMERA_RAY
 };

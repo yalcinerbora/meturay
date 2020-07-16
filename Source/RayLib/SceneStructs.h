@@ -91,6 +91,12 @@ struct CPULight
     Vector3         position2;
 };
 
+struct CPUMedium
+{    
+    float sigmaA, sigmaS;   // Scattering and Absorbtion Coeffs
+    float index;            // IoR
+};
+
 // Texture Information from the Scene Json Struct
 struct TextureStruct
 {

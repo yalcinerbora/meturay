@@ -1,220 +1,221 @@
-//#pragma once
-//
-//struct RayReg;
-//class RandomGPU;
-//
-//#include "RayAuxStruct.h"
-//#include "MaterialDataStructs.h"
-//#include "SurfaceStructs.h"
-//
-//#include "RayLib/Constants.h"
-//#include "RayLib/HemiDistribution.h"
-//
-//#include "TracerLib/ImageFunctions.cuh"
-//
-//#include <cuda_runtime.h>
-//
-//using IrradianceMatData = AlbedoMatData;
-//
-//static constexpr uint32_t BASICPT_MAX_OUT_RAY = 2;
-//static constexpr uint32_t REFLECTPT_MAX_OUT_RAY = 1;
-//static constexpr uint32_t REFRACTPT_MAX_OUT_RAY = 1;
-//
-//
-//Vector3 DiffuseSample(// Sampled Output
-//                      RayF& wo,
-//                      float& pdf,
-//                      // Input
-//                      const Vector3& wi,
-//                      const Vector3& pos,
-//                      const EmptySurface& surface,
-//                      // I-O
-//                      RandomGPU& rng,
-//                      // Constants
-//                      const AlbedoMatData& matData,
-//                      const HitKey::Type& matId)
-//{
-//    return matData.dAlbedo[matId];
-//}
-//
-//__device__
-//inline void LightBoundaryShade(// Output
-//                               ImageGMem<Vector4f> gImage,
-//                               HitKey* gBoundaryMat,
-//                               //
-//                               RayGMem* gOutRays,
-//                               RayAuxBasic* gOutRayAux,
-//                               const uint32_t maxOutRay,
-//                               // Input as registers
-//                               const RayReg& ray,
-//                               const EmptySurface& surface,
-//                               const RayAuxBasic& aux,
-//                               // RNG
-//                               RandomGPU& rng,
-//                               // Event Estimator
-//                               const BasicEstimatorData&,
-//                               // Input as global memory
-//                               const IrradianceMatData& gMatData,
-//                               const HitKey::Type& matId)
-//{
-//    assert(maxOutRay == 0);
-//
-//    // Skip if light ray
-//    if(aux.type == RayType::NEE_RAY || aux.type == RayType::CAMERA_RAY)
-//    {
-//        Vector3f radiance = aux.radianceFactor * gMatData.dAlbedo[matId];
-//
-//        // Final point on a ray path
-//        Vector4f output(radiance[0],
-//                        radiance[1],
-//                        radiance[2],
-//                        1.0f);
-//        ImageAccumulatePixel(gImage, aux.pixelId, output);
-//    }
-//}
-//
-//__device__
-//inline void BasicDiffusePTShade(// Output
-//                                ImageGMem<Vector4f> gImage,
-//                                //
-//                                HitKey* gBoundaryMat,
-//                                RayGMem* gOutRays,
-//                                RayAuxBasic* gOutRayAux,
-//                                const uint32_t maxOutRay,
-//                                // Input as registers
-//                                const RayReg& ray,
-//                                const BasicSurface& surface,
-//                                const RayAuxBasic& aux,
-//                                // RNG
-//                                RandomGPU& rng,
-//                                // 
-//                                const BasicEstimatorData& estData,
-//                                // Input as global memory
-//                                const AlbedoMatData& gMatData,
-//                                const HitKey::Type& matId)
-//{
-//    assert(maxOutRay == BASICPT_MAX_OUT_RAY);
-//    // Inputs
-//    const RayAuxBasic& auxIn = aux;
-//    const RayReg rayIn = ray;
-//    // Outputs
-//    RayReg rayOut = {};
-//    RayAuxBasic auxOut0 = auxIn;
-//    RayAuxBasic auxOut1 = auxIn;
-//
-//    auxOut0.depth++;
-//    auxOut1.depth++;
-//    auxOut0.type = RayType::PATH_RAY;
-//    auxOut1.type = RayType::NEE_RAY;
-//
-//    // Skip if light ray
-//    if(auxIn.type == RayType::NEE_RAY)
-//    {
-//        // Generate Dummy Ray and Terminate
-//        RayReg rDummy = EMPTY_RAY_REGISTER;
-//        rDummy.Update(gOutRays, 0);
-//        rDummy.Update(gOutRays, 1);
-//        gBoundaryMat[0] = HitKey::InvalidKey;
-//        gBoundaryMat[1] = HitKey::InvalidKey;
-//        return;
-//    }
-//
-//    // Ray Selection
-//    const Vector3 position = rayIn.ray.AdvancedPos(rayIn.tMax);
-//    const Vector3 normal = surface.normal;
-//    // Generate New Ray Directiion
-//    Vector2 xi(GPUDistribution::Uniform<float>(rng),
-//               GPUDistribution::Uniform<float>(rng));
-//    Vector3 direction = HemiDistribution::HemiCosineCDF(xi);
-//    direction.NormalizeSelf();
-//
-//    // Direction vector is on surface space (hemisperical)
-//    // Convert it to normal oriented hemisphere (world space)
-//    QuatF q = QuatF::RotationBetweenZAxis(normal);
-//    direction = q.ApplyRotation(direction);
-//
-//    // Cos Tetha
-//    float nDotL = max(normal.Dot(direction), 0.0f);
-//    // Pdf
-//    float pdfMat = nDotL * MathConstants::InvPi;
-//
-//    // Illumination Calculation
-//    Vector3 reflectance = gMatData.dAlbedo[matId] * MathConstants::InvPi;
-//    auxOut0.radianceFactor = auxIn.radianceFactor * nDotL * reflectance / pdfMat;
-//
-//    // Russian Roulette
-//    float avgThroughput = auxOut0.radianceFactor.Dot(Vector3f(0.333f));
-//    // float avgThroughput = gMatData.dAlbedo[matId].Dot(Vector3f(0.333f));
-//
-//    if(auxIn.depth <= 3 &&
-//       !GPUEventEstimatorBasic::TerminatorFunc(auxOut0.radianceFactor,
-//                                               avgThroughput,
-//                                               rng))
-//    {
-//        // Advance slightly to prevent self intersection
-//        Vector3 pos = position + normal * MathConstants::Epsilon;
-//
-//        // Write Ray
-//        rayOut.ray = RayF(direction, pos);
-//        rayOut.tMin = 0.0f;
-//        rayOut.tMax = INFINITY;
-//        // All done!
-//        // Write to global memory
-//        rayOut.Update(gOutRays, 0);
-//        gOutRayAux[0] = auxOut0;
-//        // We dont have any specific boundary mat for this
-//        // dont set material key
-//    }
-//    else
-//    {
-//        // Generate Dummy Ray and Terminate
-//        RayReg rDummy = EMPTY_RAY_REGISTER;
-//        rDummy.Update(gOutRays, 0);
-//        gBoundaryMat[0] = HitKey::InvalidKey;
-//    }
-//    
-//    // Generate Light Ray
-//    float pdfLight;
-//    HitKey matLight;
-//    Vector3 lDirection;
-//    if(GPUEventEstimatorBasic::EstimatorFunc(matLight, lDirection, pdfLight,
-//                                             // Input
-//                                             auxOut0.radianceFactor,
-//                                             position,
-//                                             rng,
-//                                             //
-//                                             estData))
-//    {
-//        // Advance slightly to prevent self intersection
-//        Vector3 pos = position + normal * MathConstants::Epsilon;
-//        // Write Ray
-//        rayOut.ray = RayF(lDirection, pos);
-//        rayOut.tMin = 0.0f;// MathConstants::Epsilon;
-//        rayOut.tMax = INFINITY;
-//
-//        // Cos Tetha
-//        float nDotL = max(normal.Dot(lDirection), 0.0f);
-//        //float nDotL = abs(normal.Dot(direction));
-//
-//        Vector3 lReflectance = gMatData.dAlbedo[matId] * MathConstants::InvPi;
-//        auxOut1.radianceFactor = auxIn.radianceFactor * nDotL * lReflectance / pdfLight;
-//
-//        // All done!
-//        // Write to global memory
-//        rayOut.Update(gOutRays, 1);
-//        gOutRayAux[1] = auxOut1;
-//        gBoundaryMat[1] = matLight;
-//    }
-//    else
-//    {
-//        // Generate Dummy Ray and Terminate
-//        RayReg rDummy = EMPTY_RAY_REGISTER;
-//        rDummy.Update(gOutRays, 1);
-//        gBoundaryMat[1] = HitKey::InvalidKey;
-//    }
-//}
-//
-//__device__
+#pragma once
+
+#include "RayAuxStruct.h"
+#include "MaterialDataStructs.h"
+#include "SurfaceStructs.h"
+
+#include "RayLib/Constants.h"
+#include "RayLib/HemiDistribution.h"
+
+#include "TracerLib/Random.cuh"
+#include "TracerLib/TextureStructs.h"
+#include "TracerLib/ImageFunctions.cuh"
+
+__device__ inline
+Vector3 LambertSample(// Sampled Output
+                      RayF& wo,
+                      float& pdf,
+                      // Input
+                      const Vector3& wi,
+                      const Vector3& pos,
+                      const BasicSurface& surface,
+                      const UVList* uvs,
+                      // I-O
+                      RandomGPU& rng,
+                      // Constants
+                      const AlbedoMatData& matData,
+                      const HitKey::Type& matId,
+                      uint32_t sampleIndex)
+{
+    // Ray Selection
+    const Vector3& position = pos;
+    const Vector3& normal = surface.normal;
+    // Generate New Ray Directiion
+    Vector2 xi(GPUDistribution::Uniform<float>(rng),
+               GPUDistribution::Uniform<float>(rng));
+    Vector3 direction = HemiDistribution::HemiCosineCDF(xi);
+    direction.NormalizeSelf();
+
+    // Direction vector is on surface space (hemisperical)
+    // Convert it to normal oriented hemisphere (world space)
+    QuatF q = QuatF::RotationBetweenZAxis(normal);
+    direction = q.ApplyRotation(direction);
+
+    // Cos Tetha
+    float nDotL = max(normal.Dot(direction), 0.0f);
+    // Pdf
+    pdf = nDotL * MathConstants::InvPi;
+    // Ray out
+    wo = RayF(direction, position);
+
+    // Illumination Calculation
+    return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
+}
+
+__device__ inline
+Vector3 LambertEvaluate(// Input
+                         const Vector3& wo,
+                         const Vector3& wi,
+                         const Vector3& pos,
+                         const BasicSurface& surface,
+                         const UVList* uvs,
+                         // Constants
+                         const AlbedoMatData& matData,
+                         const HitKey::Type& matId)
+{
+    // Lambert mat is constant throught
+    return matData.dAlbedo[matId] * MathConstants::InvPi;
+}
+
+__device__ inline
+Vector3 ReflectSample(// Sampled Output
+                      RayF& wo,
+                      float& pdf,
+                      // Input
+                      const Vector3& wi,
+                      const Vector3& pos,
+                      const BasicSurface& surface,
+                      const UVList* uvs,
+                      // I-O
+                      RandomGPU& rng,
+                      // Constants
+                      const ReflectMatData& matData,
+                      const HitKey::Type& matId,
+                      uint32_t sampleIndex)
+{
+    // Fetch Mat
+    Vector4 data = matData.dAlbedoAndRoughness[matId];
+    Vector3 albedo = data;
+    float roughness = data[3];
+
+    const Vector3& normal = surface.normal;
+    const Vector3& position = pos;
+
+    // Calculate Reflection   
+    if(roughness == 1.0f)
+    {
+        // Singularity Just Reflect
+        wo = RayF(wi, position).Reflect(normal);
+        pdf = 1.0f;
+
+        return albedo;
+    }
+    else
+    {
+        // TODO: Do a delta distribution towards reflection
+    }
+}
+
+__device__ inline
+Vector3 ReflectEvaluate(// Input
+                        const Vector3& wo,
+                        const Vector3& wi,
+                        const Vector3& pos,
+                        const BasicSurface& surface,
+                        const UVList* uvs,
+                        // Constants
+                        const ReflectMatData& matData,
+                        const HitKey::Type& matId)
+{
+    // You cant sample perfect material from an arbitrary location
+    return Zero3;
+}
+
+__device__ inline
+Vector3 RefractSample(// Sampled Output
+                      RayF& wo,
+                      float& pdf,
+                      // Input
+                      const Vector3& wi,
+                      const Vector3& pos,
+                      const BasicSurface& surface,
+                      const UVList* uvs,
+                      float fromIndex,
+                      // I-O
+                      RandomGPU& rng,
+                      // Constants
+                      const RefractMatData& matData,
+                      const HitKey::Type& matId,
+                      uint32_t sampleIndex)
+{
+    // Fetch Mat
+    Vector4 data = matData.dAlbedoAndIndex[matId];
+    Vector3 albedo = data;
+    float index = data[3];
+
+    const Vector3& normal = surface.normal;
+    const Vector3& position = pos;
+
+    // Check if we are exiting or entering
+    float orientationFactor = wi.Dot(normal);
+    bool entering = (orientationFactor <= 0.0f);
+        
+    float fromMedium = fromIndex;
+    float toMedium = (entering) ? index : 1.0f;
+
+    // Calculate Frenel Term
+    float f;
+
+    // Sample ray according to the frenel term
+    float xi = GPUDistribution::Uniform<float>(rng);
+    if(xi < f)
+    {
+        // RNG choose to sample Reflection case
+        wo = RayF(wi, position).Reflect(normal);
+        pdf = 1.0f;
+
+        // Frenel term is used to sample thus pdf is f
+        pdf = f;
+    }
+    else
+    {
+        // Refraction is choosen to sample
+        // Convert wi, refract func needs 
+        // the direction to be towards surface    
+        RayF rayIn(-wi, position);
+        // Normal also needs to be on the same side of the surface for the func
+        Vector3 refNormal = (entering) ? normal : (-normal);
+        // Get refracted ray
+        bool refracted = rayIn.Refract(wo, refNormal, fromMedium, toMedium);
+        // Since Frenel term is used to sample
+        // code should not arrive here (raise exception)
+        if(!refracted) __trap();
+
+        // Frenel term is used to sample thus pdf is (1-f)
+        pdf = 1.0f - f;
+    }
+
+    // return radiance factor
+    return albedo;
+
+
+    // Check if frenel effect is in place
+    if(fromMedium < toMedium)
+    {
+        // There
+    }
+    else
+    {
+        // No frenel
+    }
+}
+
+__device__ inline
+Vector3 RefractEvaluate(// Input
+                        const Vector3& wo,
+                        const Vector3& wi,
+                        const Vector3& pos,
+                        const BasicSurface& surface,
+                        const UVList* uvs,
+                        // Constants
+                        const RefractMatData& matData,
+                        const HitKey::Type& matId)
+{
+    return Zero3;
+}
+
+
+evice__
 //inline void BasicReflectPTShade(// Output
 //                                ImageGMem<Vector4f> gImage,
 //                                //

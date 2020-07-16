@@ -59,7 +59,7 @@ template <class Function, class... Args>
 std::future<typename std::invoke_result<Function(Args...)>::type>
 WorkerThread::AddWork(Function&& f, Args&&... args)
 {
-    typedef typename std::result_of<Function(Args...)>::type returnType;
+    typedef typename std::invoke_result<Function(Args...)>::type returnType;
 
     // I had to make this by using make_shared
     // I tried to make this without make_shared since it is extra operation but w/e
