@@ -27,11 +27,12 @@ inline bool NextEventEstimation(HitKey& key,
     uint32_t index = static_cast<uint32_t>(round(r1));
 
     const GPUEndpointI* point = gEndPoints[index];
-    point->Sample(key, lDistance, direction,
+    point->Sample(lDistance, direction,
                   pdf, position, rng);
     // Incorporate the PDF of selecting that point
     pdf *= 1.0f / static_cast<float>(pointCount);
     lightIndex = index;
+    key = point->BoundaryMaterial();
     return true;
 }
 

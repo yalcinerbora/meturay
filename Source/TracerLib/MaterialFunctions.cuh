@@ -5,9 +5,11 @@
 
 class RandomGPU;
 
-// Texture System should return another UVList in which
-// 24-bit portion returns actual texture Id
-
+struct MediumBoundary
+{
+    __half fromIOR; // Index of Refraction of Ray
+    __half toIOR;   // Index of Refraction of the ray if it refracts to the surface
+};
 
 // Sample function is responsible for random BRDF evalulation
 // and required data access for BRDFs
@@ -28,7 +30,7 @@ using SampleFunc = Vector3(*)(// Sampled Output
                               const Vector3& wi,                // Incoming Radiance
                               const Vector3& pos,               // Position
                               const Surface& surface,
-                              const UVList* uvs,
+                              const TexCoords* uvs,
                               // I-O
                               RandomGPU& rng,
                               // Constants
@@ -46,7 +48,7 @@ using EvaluateFunc = Vector3(*)(// Input
                                 const Vector3& wi,                // Incoming Radiance
                                 const Vector3& pos,               // Position
                                 const Surface& surface, 
-                                const UVList* uvs,
+                                const TexCoords* uvs,
                                 // Constants
                                 const Data&,
                                 const HitKey::Type& matId);
@@ -62,7 +64,7 @@ using EvaluateFunc = Vector3(*)(// Input
 // 
 template <class Data, class Surface>
 using AcquireUVList = void(*)(//Output
-                              UVList*, 
+                              TexCoords*, 
                               const Surface& surface,
                               // Constants
                               const Data&,

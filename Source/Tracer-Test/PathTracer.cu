@@ -18,7 +18,7 @@ inline void RayInitPath(RayAuxPath& gOutPath,
     RayAuxPath init = defaults;
     init.pixelIndex = localPixelId;
     init.type = RayType::CAMERA_RAY;
-    init.mediumIndex = __float2half(1.0f);
+    init.mediumIndex = 0;
     init.depth = 1;
     gOutPath = init;
 }

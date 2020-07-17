@@ -1,5 +1,6 @@
-//#include "GIMaterials.cuh"
-//#include "MaterialNodeReaders.h"
+#include "SampleMaterials.cuh"
+#include "SampleMaterialsKC.cuh"
+
 //
 //SceneError BasicPathTraceMat::InitializeGroup(const NodeListing& materialNodes, double time,
 //                                              const std::string& scenePath)

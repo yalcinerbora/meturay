@@ -10,6 +10,7 @@
 #include "TracerLib/Random.cuh"
 #include "TracerLib/TextureStructs.h"
 #include "TracerLib/ImageFunctions.cuh"
+#include "TracerLib/MaterialFunctions.cuh"
 
 __device__ inline
 Vector3 LambertSample(// Sampled Output
@@ -19,7 +20,7 @@ Vector3 LambertSample(// Sampled Output
                       const Vector3& wi,
                       const Vector3& pos,
                       const BasicSurface& surface,
-                      const UVList* uvs,
+                      const TexCoords* uvs,
                       // I-O
                       RandomGPU& rng,
                       // Constants
@@ -58,7 +59,7 @@ Vector3 LambertEvaluate(// Input
                          const Vector3& wi,
                          const Vector3& pos,
                          const BasicSurface& surface,
-                         const UVList* uvs,
+                         const TexCoords* uvs,
                          // Constants
                          const AlbedoMatData& matData,
                          const HitKey::Type& matId)
@@ -75,7 +76,7 @@ Vector3 ReflectSample(// Sampled Output
                       const Vector3& wi,
                       const Vector3& pos,
                       const BasicSurface& surface,
-                      const UVList* uvs,
+                      const TexCoords* uvs,
                       // I-O
                       RandomGPU& rng,
                       // Constants
@@ -112,7 +113,7 @@ Vector3 ReflectEvaluate(// Input
                         const Vector3& wi,
                         const Vector3& pos,
                         const BasicSurface& surface,
-                        const UVList* uvs,
+                        const TexCoords* uvs,
                         // Constants
                         const ReflectMatData& matData,
                         const HitKey::Type& matId)
@@ -129,8 +130,8 @@ Vector3 RefractSample(// Sampled Output
                       const Vector3& wi,
                       const Vector3& pos,
                       const BasicSurface& surface,
-                      const UVList* uvs,
-                      float fromIndex,
+                      const TexCoords* uvs,
+                      MediumBoundary boundary,
                       // I-O
                       RandomGPU& rng,
                       // Constants
@@ -149,9 +150,11 @@ Vector3 RefractSample(// Sampled Output
     // Check if we are exiting or entering
     float orientationFactor = wi.Dot(normal);
     bool entering = (orientationFactor <= 0.0f);
-        
-    float fromMedium = fromIndex;
-    float toMedium = (entering) ? index : 1.0f;
+
+    // Determine medium index of refractions
+    float fromMedium = boundary.fromIOR;
+    float toMedium = (entering) ? index : boundary.toIOR;
+    assert(entering && (__half2float(boundary.toIOR) == index));
 
     // Calculate Frenel Term
     float f;
@@ -206,7 +209,7 @@ Vector3 RefractEvaluate(// Input
                         const Vector3& wi,
                         const Vector3& pos,
                         const BasicSurface& surface,
-                        const UVList* uvs,
+                        const TexCoords* uvs,
                         // Constants
                         const RefractMatData& matData,
                         const HitKey::Type& matId)
@@ -214,8 +217,6 @@ Vector3 RefractEvaluate(// Input
     return Zero3;
 }
 
-
-evice__
 //inline void BasicReflectPTShade(// Output
 //                                ImageGMem<Vector4f> gImage,
 //                                //

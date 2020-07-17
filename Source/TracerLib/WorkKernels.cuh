@@ -45,7 +45,7 @@ using WorkFunc = void(*)(// Output
                          const RayReg& ray,
                          const RayAuxiliary& aux,
                          const MGroup::Surface& surface,
-                         const UVList* uvs,
+                         const TexCoords* uvs,
                          // I-O
                          LocalState& gLocalState,
                          GlobalState& gRenderState,

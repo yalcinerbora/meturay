@@ -15,7 +15,7 @@ class RandomGPU;
 template <class Data, class Surface>
 __device__ inline
 void AcquireUVEmpty(//Output
-                    UVList*,
+                    TexCoords*,
                     const Surface&,
                     // Constants
                     const Data&,
@@ -30,7 +30,7 @@ Vector3 ConstantSample(// Sampled Output
                        const Vector3& wi,
                        const Vector3& pos,
                        const EmptySurface& surface,
-                       const UVList* uvs,
+                       const TexCoords* uvs,
                        // I-O
                        RandomGPU& rng,
                        // Constants
@@ -50,7 +50,7 @@ Vector3 ConstantEvaluate(// Input
                          const Vector3& wi,
                          const Vector3& pos,
                          const EmptySurface& surface,
-                         const UVList* uvs,
+                         const TexCoords* uvs,
                          // Constants
                          const AlbedoMatData& matData,
                          const HitKey::Type& matId)
@@ -66,7 +66,7 @@ Vector3 BarycentricSample(// Sampled Output
                           const Vector3& wi,
                           const Vector3& pos,
                           const BarySurface& surface,
-                          const UVList* uvs,
+                          const TexCoords* uvs,
                           // I-O
                           RandomGPU& rng,
                           // Constants
@@ -86,7 +86,7 @@ Vector3 BarycentricEvaluate(// Input
                             const Vector3& wi,
                             const Vector3& pos,
                             const BarySurface& surface,
-                            const UVList* uvs,
+                            const TexCoords* uvs,
                             // Constants
                             const NullData& matData,
                             const HitKey::Type& matId)
@@ -102,7 +102,7 @@ Vector3 SphericalSample(// Sampled Output
                         const Vector3& wi,
                         const Vector3& pos,
                         const SphrSurface& surface,
-                        const UVList* uvs,
+                        const TexCoords* uvs,
                         // I-O
                         RandomGPU& rng,
                         // Constants
@@ -124,7 +124,7 @@ Vector3 SphericalEvaluate(// Input
                           const Vector3& wi,
                           const Vector3& pos,
                           const SphrSurface& surface,
-                          const UVList* uvs,
+                          const TexCoords* uvs,
                           // Constants
                           const NullData& matData,
                           const HitKey::Type& matId)

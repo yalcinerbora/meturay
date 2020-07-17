@@ -39,7 +39,7 @@ inline void BasicWork(// Output
                       const RayReg& ray,
                       const RayAuxBasic& aux,
                       const MGroup::Surface& surface,
-                      const UVList* uvs,
+                      const TexCoords* uvs,
                       // I-O
                       EmptyState& gLocalState,
                       DirectTracerGlobal& gRenderState,
@@ -87,7 +87,7 @@ inline void PathWork(// Output
                      const RayReg& ray,
                      const RayAuxPath& aux,
                      const typename MGroup::Surface& surface,
-                     const UVList* uvs,
+                     const TexCoords* uvs,
                      // I-O
                      EmptyState& gLocalState,
                      PathTracerGlobal& gRenderState,
@@ -149,7 +149,7 @@ inline void PathWork(// Output
                                             matIndex);
         // And accumulate pixel
         Vector3f total = emission * aux.radianceFactor;
-        ImageAccumulatePixel(img, aux.pixelId, Vector4f(total, 1.0f));
+        ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
     }
     if(wrongNEELight || neeLight || nonNEELight)
     {        

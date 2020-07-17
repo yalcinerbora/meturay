@@ -4,16 +4,21 @@
 #include "RayLib/Vector.h"
 
 #include <cuda.h>
+#include <cuda_fp16.h>
+
 
 // METURay only supports
-// 2D Textures 2^24 different textures layers (per texture) and 255 different mips per texture.
+// up to 3D Textures and differential infor for mip fetching
 // For research purposes this should be enough.
-using TextureId = HitKeyT<uint32_t, 8u, 24u>;
-struct UVList
-{
-    Vector2us id;   // 16-bit layer id, 16-bit unorm w
-    Vector2us uv;   // UNorm 2x16 data
-    Vector2us dxy;  // Gradient
+//
+// Cache system statically assigns a texture array for each cached texture
+// which is not stored
+struct TexCoords
+{    
+    uint16_t    layerId;
+    // Floating point values are stored as half precision formats in order to save space
+    __half     u, v, w;
+    __half     dx, dy, dw;
 };
 
 struct Texture
