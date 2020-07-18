@@ -17,7 +17,7 @@ class DirectTracer : public RayTracer
     private:
         Options                 options;
         WorkBatchMap            workMap;
-        MetaWorkPool            workPool;
+        MetaWorkPool<>          workPool;
 
     protected:
     public:

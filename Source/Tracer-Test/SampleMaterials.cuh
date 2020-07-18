@@ -17,15 +17,15 @@
 
 template <class Surface>
 Vector3 EmitConstant(// Input
-                  const Vector3& wo,
-                  const Vector3& pos,
-                  const GPUMedium& m,
-                  //
-                  const Surface& surface,
-                  const TexCoords* uvs,
-                  // Constants
-                  const EmissiveMatData& matData,
-                  const HitKey::Type& matId)
+                     const Vector3& wo,
+                     const Vector3& pos,
+                     const GPUMedium& m,
+                     //
+                     const Surface& surface,
+                     const TexCoords* uvs,
+                     // Constants
+                     const EmissiveMatData& matData,
+                     const HitKey::Type& matId)
 {
     return matData.dAlbedo[matId];
 }
@@ -78,10 +78,10 @@ class EmissiveMat final
 
 // Constant Lambert Material
 class LambertMat final 
-    : public GPUMaterialGroup<AlbedoMatData, EmptySurface,
-                              ConstantSample, ConstantEvaluate,
-                              EmitEmpty<AlbedoMatData, EmptySurface>,
-                              AcquireUVEmpty<AlbedoMatData, EmptySurface>>
+    : public GPUMaterialGroup<AlbedoMatData, BasicSurface,
+                              LambertSample, LambertEvaluate,
+                              EmitEmpty<AlbedoMatData, BasicSurface>,
+                              AcquireUVEmpty<AlbedoMatData, BasicSurface>>
 {
     public:
         static const char*              TypeName() { return "Lambert"; }

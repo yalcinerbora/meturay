@@ -136,36 +136,36 @@ int ReflectMat::InnerId(uint32_t materialId) const
 SceneError RefractMat::InitializeGroup(const NodeListing& materialNodes, double time,
                                        const std::string& scenePath)
 {
-    constexpr const char* ALBEDO = "albedo";
-    constexpr const char* ROUGHNESS = "roughness";
+    //constexpr const char* ALBEDO = "albedo";
+    //constexpr const char* ROUGHNESS = "roughness";
 
-    std::vector<Vector4> matDataCPU;
-    uint32_t i = 0;
-    for(const auto& sceneNode : materialNodes)
-    {
-        std::vector<Vector3> albedos = sceneNode->AccessVector3(ALBEDO);
-        std::vector<float> rougnessList = sceneNode->AccessFloat(ROUGHNESS);
+    //std::vector<Vector4> matDataCPU;
+    //uint32_t i = 0;
+    //for(const auto& sceneNode : materialNodes)
+    //{
+    //    std::vector<Vector3> albedos = sceneNode->AccessVector3(ALBEDO);
+    //    std::vector<float> rougnessList = sceneNode->AccessFloat(ROUGHNESS);
 
-        const auto& ids = sceneNode->Ids();
-        for(IdPair id : ids)
-        {
-            Vector4 data = Vector4(albedos[i], rougnessList[i]);
-            matDataCPU.push_back(data);
+    //    const auto& ids = sceneNode->Ids();
+    //    for(IdPair id : ids)
+    //    {
+    //        Vector4 data = Vector4(albedos[i], rougnessList[i]);
+    //        matDataCPU.push_back(data);
 
-            innerIds.emplace(std::make_pair(id.first, i));
-            i++;
-        }
-    }
+    //        innerIds.emplace(std::make_pair(id.first, i));
+    //        i++;
+    //    }
+    //}
 
-    // Alloc etc
-    size_t dMatDataSize = matDataCPU.size() * sizeof(Vector4);
-    memory = std::move(DeviceMemory(dMatDataSize));
-    Vector4f* dMemory = static_cast<Vector4f*>(memory);
-    CUDA_CHECK(cudaMemcpy(dMemory, matDataCPU.data(), dMatDataSize,
-                          cudaMemcpyHostToDevice));
+    //// Alloc etc
+    //size_t dMatDataSize = matDataCPU.size() * sizeof(Vector4);
+    //memory = std::move(DeviceMemory(dMatDataSize));
+    //Vector4f* dMemory = static_cast<Vector4f*>(memory);
+    //CUDA_CHECK(cudaMemcpy(dMemory, matDataCPU.data(), dMatDataSize,
+    //                      cudaMemcpyHostToDevice));
 
-    dData = ReflectMatData{dMemory};
-    return SceneError::OK;
+    //dData = ReflectMatData{dMemory};
+    //return SceneError::OK;
 }
 
 SceneError RefractMat::ChangeTime(const NodeListing& materialNodes, double time,

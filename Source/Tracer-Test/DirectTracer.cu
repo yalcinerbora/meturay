@@ -45,7 +45,6 @@ TracerError DirectTracer::Initialize()
         GPUWorkBatchI* batch = nullptr;
         if((err = workPool.GenerateWorkBatch(batch, mg, pg)) != TracerError::OK)
             return err;        
-        // No need for custom initialization so push
         workMap.emplace(batchId, batch);
     }
     return RayTracer::Initialize();

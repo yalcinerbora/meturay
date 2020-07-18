@@ -59,14 +59,16 @@ Vector3 LambertSample(// Sampled Output
 
 __device__ inline
 Vector3 LambertEvaluate(// Input
-                         const Vector3& wo,
-                         const Vector3& wi,
-                         const Vector3& pos,
-                         const BasicSurface& surface,
-                         const TexCoords* uvs,
-                         // Constants
-                         const AlbedoMatData& matData,
-                         const HitKey::Type& matId)
+                        const Vector3& wo,
+                        const Vector3& wi,
+                        const Vector3& pos,
+                        const GPUMedium& m,
+                        //
+                        const BasicSurface& surface,
+                        const TexCoords* uvs,
+                        // Constants
+                        const AlbedoMatData& matData,
+                        const HitKey::Type& matId)
 {
     // Lambert mat is constant throught
     return matData.dAlbedo[matId] * MathConstants::InvPi;

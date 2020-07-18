@@ -30,7 +30,9 @@ PathTracer::PathTracer(const CudaSystem& s,
     , currentDepth(0)
     , dLights(nullptr)
     , dLightAlloc(nullptr)
-{}
+{
+    workPool.AppendGenerators(PathTracerWorkList{});
+}
 
 TracerError PathTracer::Initialize()
 {
@@ -71,9 +73,9 @@ TracerError PathTracer::Initialize()
         uint32_t batchId = std::get<0>(workInfo);
 
         GPUWorkBatchI* batch = nullptr;
-        if((err = workPool.GenerateWorkBatch(batch, mg, pg)) != TracerError::OK)
+        if((err = workPool.GenerateWorkBatch(batch, mg, pg,
+                                             options.nextEventEstimation)) != TracerError::OK)
             return err;
-        // No need for custom initialization so push
         workMap.emplace(batchId, batch);
     }
     return RayTracer::Initialize();

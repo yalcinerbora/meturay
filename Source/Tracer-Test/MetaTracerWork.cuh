@@ -46,14 +46,15 @@ class MetaTracerBatch
     public:
         static const char*              TypeName();
 
-    private:
-        const MGroup&                   materialGroup;
-        const PGroup&                   primitiveGroup;
-
+    private:        
         static constexpr auto           GenerateSurface = SFunc;
 
         // Per-Bathch Data
         LocalData                       localData;
+
+    protected:
+        const MGroup&                   materialGroup;
+        const PGroup&                   primitiveGroup;
 
     public:
         // Constrcutors & Destructor

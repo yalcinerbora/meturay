@@ -118,8 +118,8 @@ inline void PathWork(// Output
     GPUMedium m = gRenderState.mediumList[aux.mediumIndex];
     // Outputs
     RayReg rayOut = {};
-    RayAuxPath auxOutPath = auxIn;
-    RayAuxPath auxOutNEE = auxIn;
+    RayAuxPath auxOutPath = aux;
+    RayAuxPath auxOutNEE = aux;
 
     auxOutPath.depth++;
     auxOutNEE.depth++;

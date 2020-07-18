@@ -42,24 +42,28 @@ class GPUWorkBatchGen
             , dFunc(d)
         {}
 
+        template <class... Args>
         WorkGPtr operator()(const GPUMaterialGroupI& mg,
-                            const GPUPrimitiveGroupI& pg)
+                            const GPUPrimitiveGroupI& pg,
+                            Args&&... args)
         {
-            GPUWorkBatchI* accel = gFunc(mg, pg);
+            GPUWorkBatchI* accel = gFunc(mg, pg, args);
             return WorkGPtr(accel, dFunc);
         }
 };
 
 namespace TypeGenWrappers
 {
-    template <class Base, class WorkBatch>
+    template <class Base, class WorkBatch, class... Args>
     Base* WorkBatchConstruct(const GPUMaterialGroupI& mg,
-                             const GPUPrimitiveGroupI& pg)
+                             const GPUPrimitiveGroupI& pg,
+                             Args&&... args)
     {
-        return new WorkBatch(mg, pg);
+        return new WorkBatch(mg, pg, args...);
     }
 }
 
+template <class... Args>
 class MetaWorkPool
 {
     private:
@@ -84,43 +88,51 @@ class MetaWorkPool
         void                    AppendGenerators(TypeList<Batches...> batches);
 
         void                    DeleteAllWorkInstances();
+
         TracerError             GenerateWorkBatch(GPUWorkBatchI*&,
                                                   const GPUMaterialGroupI&,
-                                                  const GPUPrimitiveGroupI&);
+                                                  const GPUPrimitiveGroupI&,
+                                                  Args&&...);
 };
 
+template <class... Args>
 template<size_t I, class... Tp>
 inline typename std::enable_if<I == sizeof...(Tp), void>::type
-MetaWorkPool::LoopAndAppend(std::tuple<Tp...>& t)
+MetaWorkPool<Args...>::LoopAndAppend(std::tuple<Tp...>& t)
 {}
 
+template <class... Args>
 template<size_t I, class... Tp>
 inline typename std::enable_if<(I < sizeof...(Tp)), void>::type
-MetaWorkPool::LoopAndAppend(std::tuple<Tp...>& t)
+MetaWorkPool<Args...>::LoopAndAppend(std::tuple<Tp...>& t)
 {
     using namespace TypeGenWrappers;
     using CurrentType = typename std::tuple_element_t<I, TypeList<Tp...>>::type::type;
     // Accelerator Types
     generators.emplace(CurrentType::TypeName(),
-                       GPUWorkBatchGen(WorkBatchConstruct<GPUWorkBatchI, CurrentType>,
+                       GPUWorkBatchGen(WorkBatchConstruct<GPUWorkBatchI, CurrentType, Args...>,
                                        DefaultDestruct<GPUWorkBatchI>));
    LoopAndAppend<I + 1, Tp...>(t);
 }
 
+template <class... Args>
 template <class... Batches>
-void MetaWorkPool::AppendGenerators(TypeList<Batches...> batches)
+void MetaWorkPool<Args...>::AppendGenerators(TypeList<Batches...> batches)
 {
     LoopAndAppend(batches);
 }
 
-inline void MetaWorkPool::DeleteAllWorkInstances()
+template <class... Args>
+inline void MetaWorkPool<Args...>::DeleteAllWorkInstances()
 {
     allocatedResources.clear();
 }
 
-inline TracerError MetaWorkPool::GenerateWorkBatch(GPUWorkBatchI*& work,
-                                                   const GPUMaterialGroupI& mg,
-                                                   const GPUPrimitiveGroupI& pg)
+template <class... Args>
+TracerError MetaWorkPool<Args...>::GenerateWorkBatch(GPUWorkBatchI*& work,
+                                                     const GPUMaterialGroupI& mg,
+                                                     const GPUPrimitiveGroupI& pg,
+                                                     Args&&... args)
 {
     std::string mangledName = MangledNames::WorkBatch(pg.Type(),
                                                       mg.Type());
@@ -128,7 +140,7 @@ inline TracerError MetaWorkPool::GenerateWorkBatch(GPUWorkBatchI*& work,
     auto loc = generators.end();
     if((loc = generators.find(mangledName)) != generators.end())
     {
-        auto ptr = loc->second(mg, pg);        
+        auto ptr = loc->second(mg, pg, args...);        
         work = ptr.get();
         allocatedResources.emplace_back(std::move(ptr));
     }
