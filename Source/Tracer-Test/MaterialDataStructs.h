@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RayLib/Vector.h"
+#include "TracerLib/GPUMedium.cuh"
 
 struct NullData {};
 
@@ -16,5 +17,9 @@ struct ReflectMatData
 
 struct RefractMatData
 {
-    const Vector4* dAlbedoAndIndex;
+    const Vector3* dAlbedo;
+    const GPUMedium* dMedium;
+    const GPUMedium* dDefaultMedium;
 };
+
+using EmissiveMatData = AlbedoMatData;

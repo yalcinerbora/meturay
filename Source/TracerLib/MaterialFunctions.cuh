@@ -2,14 +2,9 @@
 
 #include "RayLib/Ray.h"
 #include "TextureStructs.h"
+#include "GPUMedium.cuh"
 
 class RandomGPU;
-
-struct MediumBoundary
-{
-    __half fromIOR; // Index of Refraction of Ray
-    __half toIOR;   // Index of Refraction of the ray if it refracts to the surface
-};
 
 // Sample function is responsible for random BRDF evalulation
 // and required data access for BRDFs
@@ -24,13 +19,16 @@ struct MediumBoundary
 // This function provided by MaterialGroup.
 template <class Data, class Surface>
 using SampleFunc = Vector3(*)(// Sampled Output
-                              RayF& wo,
-                              float& pdf,
+                              RayF& wo,                         // Out direction
+                              float& pdf,                       // PDF for Monte Carlo
+                              GPUMedium& outMedium,
                               // Input
                               const Vector3& wi,                // Incoming Radiance
                               const Vector3& pos,               // Position
-                              const Surface& surface,
-                              const TexCoords* uvs,
+                              const GPUMedium& m,
+                              //
+                              const Surface& surface,           // Surface info (normals uvs etc.)
+                              const TexCoords* uvs,             // Translated texture coords from the cache system
                               // I-O
                               RandomGPU& rng,
                               // Constants
@@ -41,14 +39,29 @@ using SampleFunc = Vector3(*)(// Sampled Output
                               // for different segments of the BxDF
                               uint32_t sampleIndex);
 
-// Material provides this in order to for renderer to sample its own strategy
+// Direct fetching emission data
+template <class Data, class Surface>
+using EmissionFunc = Vector3(*)(// Input
+                                const Vector3& wo,              // Outgoing Radiance
+                                const Vector3& pos,             // Position
+                                const GPUMedium& m,
+                                //
+                                const Surface& surface,         // Surface info (normals uvs etc.)
+                                const TexCoords* uvs,           // Translated texture coords from the cache system
+                                // Constants
+                                const Data&,
+                                const HitKey::Type& matId);
+
+// For sampling radiance of direct wo - wi relation
 template <class Data, class Surface>
 using EvaluateFunc = Vector3(*)(// Input
-                                const Vector3& wo,                // Outgoing Radiance
-                                const Vector3& wi,                // Incoming Radiance
-                                const Vector3& pos,               // Position
-                                const Surface& surface, 
-                                const TexCoords* uvs,
+                                const Vector3& wo,              // Outgoing Radiance
+                                const Vector3& wi,              // Incoming Radiance
+                                const Vector3& pos,             // Position
+                                const GPUMedium& m,
+                                //
+                                const Surface& surface,         // Surface info (normals uvs etc.)
+                                const TexCoords* uvs,           // Translated texture coords from the cache system
                                 // Constants
                                 const Data&,
                                 const HitKey::Type& matId);

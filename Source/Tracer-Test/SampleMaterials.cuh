@@ -6,7 +6,215 @@
 //#include "SurfaceStructs.h"
 //#include "MaterialDataStructs.h"
 //#include "GIMaterialsKC.cuh"
-//
+
+#include "TracerLib/GPUMaterialP.cuh"
+
+#include "SurfaceStructs.h"
+#include "SampleMaterialsKC.cuh"
+#include "BasicMaterialsKC.cuh"
+
+#include "TracerLib/TypeTraits.h"
+
+template <class Surface>
+Vector3 EmitConstant(// Input
+                  const Vector3& wo,
+                  const Vector3& pos,
+                  const GPUMedium& m,
+                  //
+                  const Surface& surface,
+                  const TexCoords* uvs,
+                  // Constants
+                  const EmissiveMatData& matData,
+                  const HitKey::Type& matId)
+{
+    return matData.dAlbedo[matId];
+}
+
+// Light Material that constantly emits all directions
+class EmissiveMat final 
+    : public GPUMaterialGroup<EmissiveMatData, EmptySurface,
+                              ConstantSample, ConstantEvaluate,
+                              EmitConstant<EmptySurface>,
+                              AcquireUVEmpty<EmissiveMatData, EmptySurface>>
+{
+    public:
+        static const char*              TypeName() { return "Emissive"; }
+
+    private:
+        DeviceMemory                    memory;
+        std::map<uint32_t, uint32_t>    innerIds;
+
+    protected:
+    public:
+        // Constructors & Destructor
+                                EmissiveMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                ~EmissiveMat() = default;
+
+        // Interface
+        // Type (as string) of the primitive group
+        const char*             Type() const override { return TypeName(); }
+        // Allocates and Generates Data
+        SceneError              InitializeGroup(const NodeListing& materialNodes, double time,
+                                                const std::string& scenePath) override;
+        SceneError              ChangeTime(const NodeListing& materialNodes, double time,
+                                           const std::string& scenePath) override;
+
+        // Material Queries
+        int                     InnerId(uint32_t materialId) const override;
+        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
+
+        size_t                  UsedGPUMemory() const override { return memory.Size(); }
+        size_t                  UsedCPUMemory() const override { return sizeof(AlbedoMatData); }
+
+        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+
+        uint8_t                 SampleStrategyCount() const { return 0; };
+        // No Texture
+        uint8_t                 UsedTextureCount() const { return 0; }
+        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
+        TextureMask             CachedTextures() const { return 0; }
+};
+
+// Constant Lambert Material
+class LambertMat final 
+    : public GPUMaterialGroup<AlbedoMatData, EmptySurface,
+                              ConstantSample, ConstantEvaluate,
+                              EmitEmpty<AlbedoMatData, EmptySurface>,
+                              AcquireUVEmpty<AlbedoMatData, EmptySurface>>
+{
+    public:
+        static const char*              TypeName() { return "Lambert"; }
+
+    private:
+        DeviceMemory                    memory;
+        std::map<uint32_t, uint32_t>    innerIds;
+
+    protected:
+    public:
+        // Constructors & Destructor
+                                LambertMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                ~LambertMat() = default;
+
+        // Interface
+        // Type (as string) of the primitive group
+        const char*             Type() const override { return TypeName(); }
+        // Allocates and Generates Data
+        SceneError              InitializeGroup(const NodeListing& materialNodes, double time,
+                                                const std::string& scenePath) override;
+        SceneError              ChangeTime(const NodeListing& materialNodes, double time,
+                                           const std::string& scenePath) override;
+
+        // Material Queries
+        int                     InnerId(uint32_t materialId) const override;
+        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
+
+        size_t                  UsedGPUMemory() const override { return memory.Size(); }
+        size_t                  UsedCPUMemory() const override { return sizeof(AlbedoMatData); }
+
+        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+
+        uint8_t                 SampleStrategyCount() const { return 0; };
+        // No Texture
+        uint8_t                 UsedTextureCount() const { return 0; }
+        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
+        TextureMask             CachedTextures() const { return 0; }
+};
+
+// Delta distribution reflect material
+class ReflectMat final 
+    : public GPUMaterialGroup<ReflectMatData, BasicSurface,
+                              ReflectSample, ReflectEvaluate,
+                              EmitEmpty<ReflectMatData, BasicSurface>,
+                              AcquireUVEmpty<ReflectMatData, BasicSurface>>
+{
+    public:
+        static const char*              TypeName() { return "Reflect"; }
+
+    private:
+        DeviceMemory                    memory;
+        std::map<uint32_t, uint32_t>    innerIds;
+
+    protected:
+    public:
+        // Constructors & Destructor
+                                ReflectMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                ~ReflectMat() = default;
+
+        // Interface
+        // Type (as string) of the primitive group
+        const char*             Type() const override { return TypeName(); }
+        // Allocates and Generates Data
+        SceneError              InitializeGroup(const NodeListing& materialNodes, double time,
+                                                const std::string& scenePath) override;
+        SceneError              ChangeTime(const NodeListing& materialNodes, double time,
+                                           const std::string& scenePath) override;
+
+        // Material Queries
+        int                     InnerId(uint32_t materialId) const override;
+        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
+
+        size_t                  UsedGPUMemory() const override { return memory.Size(); }
+        size_t                  UsedCPUMemory() const override { return sizeof(AlbedoMatData); }
+
+        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+
+        uint8_t                 SampleStrategyCount() const { return 0; };
+        // No Texture
+        uint8_t                 UsedTextureCount() const { return 0; }
+        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
+        TextureMask             CachedTextures() const { return 0; }
+};
+
+// Delta distribution refract material
+class RefractMat final 
+    : public GPUMaterialGroup<RefractMatData, BasicSurface,
+                              RefractSample, RefractEvaluate,
+                              EmitEmpty<RefractMatData, BasicSurface>,
+                              AcquireUVEmpty<RefractMatData, BasicSurface>>
+{
+    public:
+        static const char*              TypeName() { return "Refract"; }
+
+    private:
+        DeviceMemory                    memory;
+        std::map<uint32_t, uint32_t>    innerIds;
+
+    protected:
+    public:
+        // Constructors & Destructor
+                                RefractMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                ~RefractMat() = default;
+
+        // Interface
+        // Type (as string) of the primitive group
+        const char*             Type() const override { return TypeName(); }
+        // Allocates and Generates Data
+        SceneError              InitializeGroup(const NodeListing& materialNodes, double time,
+                                                const std::string& scenePath) override;
+        SceneError              ChangeTime(const NodeListing& materialNodes, double time,
+                                           const std::string& scenePath) override;
+
+        // Material Queries
+        int                     InnerId(uint32_t materialId) const override;
+        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
+
+        size_t                  UsedGPUMemory() const override { return memory.Size(); }
+        size_t                  UsedCPUMemory() const override { return sizeof(AlbedoMatData); }
+
+        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+
+        uint8_t                 SampleStrategyCount() const { return 0; };
+        // No Texture
+        uint8_t                 UsedTextureCount() const { return 0; }
+        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
+        TextureMask             CachedTextures() const { return 0; }
+};
+
+
 //class BasicPathTraceMat final
 //    : public GPUMaterialGroup<TracerBasic,
 //                              GPUEventEstimatorBasic,

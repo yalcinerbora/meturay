@@ -8,10 +8,11 @@
 #include "TracerLib/TypeTraits.h"
 
 // Unrealistic mat that directly returns an albedo regardless of wi.
-// also generates invalid ray
+// also generates invalid ray when sampled
 class ConstantMat final 
     : public GPUMaterialGroup<AlbedoMatData, EmptySurface,
                               ConstantSample, ConstantEvaluate,
+                              EmitEmpty<AlbedoMatData, EmptySurface>,
                               AcquireUVEmpty<AlbedoMatData, EmptySurface>>
 {
     public:
@@ -57,8 +58,8 @@ class BarycentricMat final
     : public GPUMaterialGroup<NullData, BarySurface,
                               BarycentricSample,
                               BarycentricEvaluate,
-                              AcquireUVEmpty<NullData, BarySurface>
-    >
+                              EmitEmpty<NullData, BarySurface>,
+                              AcquireUVEmpty<NullData, BarySurface>>
 {
    public:
         static const char*      TypeName() { return "Barycentric"; }
@@ -100,6 +101,7 @@ class SphericalMat final
     : public GPUMaterialGroup<NullData, SphrSurface,
                               SphericalSample,
                               SphericalEvaluate,
+                              EmitEmpty<NullData, SphrSurface>,
                               AcquireUVEmpty<NullData, SphrSurface>>
 {
     public:

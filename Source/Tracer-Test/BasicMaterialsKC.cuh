@@ -22,13 +22,31 @@ void AcquireUVEmpty(//Output
                     const HitKey::Type& matId)
 {}
 
+template <class Data, class Surface>
+Vector3 EmitEmpty(// Input
+                  const Vector3& wo,
+                  const Vector3& pos,
+                  const GPUMedium& m,
+                  //
+                  const Surface& surface,
+                  const TexCoords* uvs,
+                  // Constants
+                  const Data&,
+                  const HitKey::Type& matId)
+{
+    return Zero3;
+}
+
 __device__ inline
 Vector3 ConstantSample(// Sampled Output
                        RayF& wo,
                        float& pdf,
+                       GPUMedium& outMedium,
                        // Input
                        const Vector3& wi,
                        const Vector3& pos,
+                       const GPUMedium& m,
+                       //
                        const EmptySurface& surface,
                        const TexCoords* uvs,
                        // I-O
@@ -38,6 +56,7 @@ Vector3 ConstantSample(// Sampled Output
                        const HitKey::Type& matId,
                        uint32_t sampleIndex)
 {
+    outMedium = m;
     static constexpr Vector3 ZERO = Zero3;
     pdf = 1.0f;
     wo = RayF(ZERO, ZERO);
@@ -49,6 +68,8 @@ Vector3 ConstantEvaluate(// Input
                          const Vector3& wo,
                          const Vector3& wi,
                          const Vector3& pos,
+                         const GPUMedium& m,
+                         //
                          const EmptySurface& surface,
                          const TexCoords* uvs,
                          // Constants
@@ -62,9 +83,12 @@ __device__ inline
 Vector3 BarycentricSample(// Sampled Output
                           RayF& wo,
                           float& pdf,
+                          GPUMedium& outMedium,
                           // Input
                           const Vector3& wi,
                           const Vector3& pos,
+                          const GPUMedium& m,
+                          //
                           const BarySurface& surface,
                           const TexCoords* uvs,
                           // I-O
@@ -74,6 +98,7 @@ Vector3 BarycentricSample(// Sampled Output
                           const HitKey::Type& matId,
                           uint32_t sampleIndex)
 {
+    outMedium = m;
     static constexpr Vector3 ZERO = Zero3;
     pdf = 1.0f;
     wo = RayF(ZERO, ZERO);
@@ -85,6 +110,8 @@ Vector3 BarycentricEvaluate(// Input
                             const Vector3& wo,
                             const Vector3& wi,
                             const Vector3& pos,
+                            const GPUMedium& m,
+                            //
                             const BarySurface& surface,
                             const TexCoords* uvs,
                             // Constants
@@ -98,9 +125,12 @@ __device__ inline
 Vector3 SphericalSample(// Sampled Output
                         RayF& wo,
                         float& pdf,
+                        GPUMedium& outMedium,
                         // Input
                         const Vector3& wi,
                         const Vector3& pos,
+                        const GPUMedium& m,
+                        //
                         const SphrSurface& surface,
                         const TexCoords* uvs,
                         // I-O
@@ -110,6 +140,7 @@ Vector3 SphericalSample(// Sampled Output
                         const HitKey::Type& matId,
                         uint32_t sampleIndex)
 {
+    outMedium = m;
     static constexpr Vector3 ZERO = Zero3;
     pdf = 1.0f;
     wo = RayF(ZERO, ZERO);
@@ -123,6 +154,8 @@ Vector3 SphericalEvaluate(// Input
                           const Vector3& wo,
                           const Vector3& wi,
                           const Vector3& pos,
+                          const GPUMedium& m,
+                          //
                           const SphrSurface& surface,
                           const TexCoords* uvs,
                           // Constants

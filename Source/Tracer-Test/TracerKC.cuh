@@ -19,6 +19,10 @@ struct PathTracerGlobal : public DirectTracerGlobal
     const GPULightI**   lightList;
     uint32_t            totalLightCount;
 
+    const GPUMedium*    mediumList;
+    uint32_t            totalMediumCount;
+
+    // Options
     // Options for NEE
     bool                nee;
     int                 rrStart;
@@ -57,12 +61,15 @@ inline void BasicWork(// Output
     float distance = ray.tMax - ray.tMin;
     HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
 
+    GPUMedium m, outM;
     RayF outRay; float pdf;
     Vector3 radiance = MGroup::Sample(// Outputs
-                                      outRay, pdf,
+                                      outRay, pdf, outM,
                                       // Inputs
                                       -r.getDirection(),
                                       r.AdvancedPos(distance),
+                                      m,
+                                      //
                                       surface,
                                       nullptr,
                                       // I-O
@@ -108,6 +115,7 @@ inline void PathWork(// Output
     float distance = ray.tMax - ray.tMin;
     HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
     Vector3 position = r.AdvancedPos(distance);
+    GPUMedium m = gRenderState.mediumList[aux.mediumIndex];
     // Outputs
     RayReg rayOut = {};
     RayAuxPath auxOutPath = auxIn;
@@ -122,6 +130,11 @@ inline void PathWork(// Output
     PrimitiveId neePrimId = gRenderState.lightList[aux.endPointIndex]->BoundaryMaterial();
     HitKey neeKey = gRenderState.lightList[aux.endPointIndex]->Primitive();
 
+    // Apply Decay of the medium
+    Vector3 decay = m.Transmittance(distance);
+    auxOutPath.radianceFactor *= decay;
+    auxOutNEE.radianceFactor *= decay;
+
     // End Case Check (We finally hit a light)
     bool neeLight = (aux.type == RayType::NEE_RAY &&
                      primId == neePrimId &&
@@ -132,16 +145,15 @@ inline void PathWork(// Output
     bool nonNEELight = (!gRenderState.nee &&
                         MGroup::IsBoundaryMat());
 
-    // TODO: Check medium interaction
-
     if(neeLight || nonNEELight)
     {
         // We found the light that we required to sample
         // Evaluate
-        Vector3 emission = MGroup::Evaluate(// Input
-                                            -r.getDirection(),
+        Vector3 emission = MGroup::EmitFunc(// Input
                                             -r.getDirection(),
                                             position,
+                                            m,
+                                            //
                                             surface,
                                             nullptr,
                                             // Constants
@@ -164,12 +176,14 @@ inline void PathWork(// Output
 
     // Path Ray
     // Sample a path
-    RayF rayPath; float pdfPath;
+    RayF rayPath; float pdfPath; GPUMedium outM;
     Vector3 reflectance = MGroup::Sample(// Outputs
-                                         rayPath, pdfPath,
+                                         rayPath, pdfPath, outM,
                                          // Inputs
                                          -r.getDirection(),
                                          position,
+                                         m,
+                                         //
                                          surface,
                                          nullptr,
                                          // I-O
@@ -181,6 +195,8 @@ inline void PathWork(// Output
 
     // Factor the radiance of the surface
     auxOutPath.radianceFactor *= (reflectance / pdfPath);
+    // Change current medium of the ray
+    auxOutPath.mediumIndex = static_cast<uint16_t>(outM.ID());
 
     // Check Russian Roulette
     float avgThroughput = auxOutPath.radianceFactor.Dot(Vector3f(gRenderState.rrFactor));
@@ -234,6 +250,8 @@ inline void PathWork(// Output
         Vector3 reflectance = MGroup::Evaluate(// Input
                                                lDirection,
                                                -r.getDirection(),
+                                               m,
+                                               //
                                                position,
                                                surface,
                                                nullptr,

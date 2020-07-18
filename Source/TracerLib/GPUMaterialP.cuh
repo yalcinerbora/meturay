@@ -22,6 +22,7 @@ class GPUMaterialGroupD
 template <class D, class S,
           SampleFunc<D, S> SampleF,
           EvaluateFunc<D, S> EvalF,
+          EmissionFunc<D, S> EmitF,
           AcquireUVList<D, S> AcqF>
 class GPUMaterialGroup
     : public GPUMaterialGroupI
@@ -35,6 +36,7 @@ class GPUMaterialGroup
         // Static Function Inheritance
         static constexpr SampleFunc<Data, Surface>      Sample = SampleF;
         static constexpr EvaluateFunc<Data, Surface>    Evaluate = EvalF;
+        static constexpr EmissionFunc<Data, Surface>    Emit = EmitF;
         static constexpr AcquireUVList<Data, Surface>   AcquireUVList = AcqF;
 
     private:
@@ -51,18 +53,20 @@ class GPUMaterialGroup
 };
 
 template <class D, class S, 
-          SampleFunc<D, S> SF, 
+          SampleFunc<D, S> SF,           
           EvaluateFunc<D, S> EF,
+          EmissionFunc<D, S> EmF,
           AcquireUVList<D, S> AF>
-GPUMaterialGroup<D, S, SF, EF, AF>::GPUMaterialGroup(const CudaGPU& gpu)
+GPUMaterialGroup<D, S, SF, EF, EmF, AF>::GPUMaterialGroup(const CudaGPU& gpu)
     : gpu(gpu)
 {}
 
-template <class D, class S, 
-          SampleFunc<D, S> SF, 
-          EvaluateFunc<D, S> EF,
-          AcquireUVList<D, S> AF>
-const CudaGPU& GPUMaterialGroup<D, S, SF, EF, AF>::GPU() const
+template <class D, class S,
+    SampleFunc<D, S> SF,
+    EvaluateFunc<D, S> EF,
+    EmissionFunc<D, S> EmF,
+    AcquireUVList<D, S> AF>
+const CudaGPU& GPUMaterialGroup<D, S, SF, EF, EmF, AF>::GPU() const
 {
     return gpu;
 }

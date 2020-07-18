@@ -11,14 +11,18 @@
 #include "TracerLib/TextureStructs.h"
 #include "TracerLib/ImageFunctions.cuh"
 #include "TracerLib/MaterialFunctions.cuh"
+#include "TracerLib/TracerFunctions.cuh"
 
 __device__ inline
 Vector3 LambertSample(// Sampled Output
                       RayF& wo,
                       float& pdf,
+                      GPUMedium& outMedium,
                       // Input
                       const Vector3& wi,
                       const Vector3& pos,
+                      const GPUMedium& m,
+                      //
                       const BasicSurface& surface,
                       const TexCoords* uvs,
                       // I-O
@@ -72,9 +76,12 @@ __device__ inline
 Vector3 ReflectSample(// Sampled Output
                       RayF& wo,
                       float& pdf,
+                      GPUMedium& outMedium,
                       // Input
                       const Vector3& wi,
                       const Vector3& pos,
+                      const GPUMedium& m,
+                      //
                       const BasicSurface& surface,
                       const TexCoords* uvs,
                       // I-O
@@ -92,18 +99,21 @@ Vector3 ReflectSample(// Sampled Output
     const Vector3& normal = surface.normal;
     const Vector3& position = pos;
 
+    // No medium change
+    outMedium = m;
+
     // Calculate Reflection   
     if(roughness == 1.0f)
     {
         // Singularity Just Reflect
         wo = RayF(wi, position).Reflect(normal);
         pdf = 1.0f;
-
         return albedo;
     }
     else
     {
         // TODO: Do a delta distribution towards reflection
+        return Zero3;
     }
 }
 
@@ -112,6 +122,8 @@ Vector3 ReflectEvaluate(// Input
                         const Vector3& wo,
                         const Vector3& wi,
                         const Vector3& pos,
+                        const GPUMedium& m,
+                        //
                         const BasicSurface& surface,
                         const TexCoords* uvs,
                         // Constants
@@ -126,12 +138,14 @@ __device__ inline
 Vector3 RefractSample(// Sampled Output
                       RayF& wo,
                       float& pdf,
+                      GPUMedium& outMedium,
                       // Input
                       const Vector3& wi,
                       const Vector3& pos,
+                      const GPUMedium& m,
+                      //
                       const BasicSurface& surface,
                       const TexCoords* uvs,
-                      MediumBoundary boundary,
                       // I-O
                       RandomGPU& rng,
                       // Constants
@@ -140,24 +154,22 @@ Vector3 RefractSample(// Sampled Output
                       uint32_t sampleIndex)
 {
     // Fetch Mat
-    Vector4 data = matData.dAlbedoAndIndex[matId];
-    Vector3 albedo = data;
-    float index = data[3];
+    Vector3 albedo = matData.dAlbedo[matId];
+    float iOIR = matData.dMedium[matId].IOR();
 
     const Vector3& normal = surface.normal;
     const Vector3& position = pos;
 
     // Check if we are exiting or entering
-    float orientationFactor = wi.Dot(normal);
-    bool entering = (orientationFactor <= 0.0f);
+    float nDotL = wi.Dot(normal);
+    bool entering = (nDotL <= 0.0f);
 
     // Determine medium index of refractions
-    float fromMedium = boundary.fromIOR;
-    float toMedium = (entering) ? index : boundary.toIOR;
-    assert(entering && (__half2float(boundary.toIOR) == index));
-
+    float fromMedium = m.IOR();
+    float toMedium = (entering) ? iOIR : 1.0f;
+    
     // Calculate Frenel Term
-    float f;
+    float f = TracerFunctions::FrenelDielectric(abs(nDotL), fromMedium, toMedium);
 
     // Sample ray according to the frenel term
     float xi = GPUDistribution::Uniform<float>(rng);
@@ -165,10 +177,10 @@ Vector3 RefractSample(// Sampled Output
     {
         // RNG choose to sample Reflection case
         wo = RayF(wi, position).Reflect(normal);
-        pdf = 1.0f;
-
         // Frenel term is used to sample thus pdf is f
         pdf = f;
+        // We reflected off of surface no medium change
+        outMedium = m;
     }
     else
     {
@@ -184,23 +196,15 @@ Vector3 RefractSample(// Sampled Output
         // code should not arrive here (raise exception)
         if(!refracted) __trap();
 
+        // Return medium
+        outMedium = (entering) ? (matData.dMedium[matId]) 
+                               : (*matData.dDefaultMedium);
+
         // Frenel term is used to sample thus pdf is (1-f)
         pdf = 1.0f - f;
     }
-
     // return radiance factor
     return albedo;
-
-
-    // Check if frenel effect is in place
-    if(fromMedium < toMedium)
-    {
-        // There
-    }
-    else
-    {
-        // No frenel
-    }
 }
 
 __device__ inline
@@ -208,6 +212,8 @@ Vector3 RefractEvaluate(// Input
                         const Vector3& wo,
                         const Vector3& wi,
                         const Vector3& pos,
+                        const GPUMedium& m,
+                        //
                         const BasicSurface& surface,
                         const TexCoords* uvs,
                         // Constants

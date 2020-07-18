@@ -25,6 +25,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULight.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMedium.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageStructs.h" />
@@ -32,6 +33,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\MangledNames.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\TextureStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerTypeGenerators.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DeviceMemory.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\FunctionEnablers.cuh" />

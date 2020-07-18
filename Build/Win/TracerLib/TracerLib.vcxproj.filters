@@ -256,6 +256,12 @@
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMedium.cuh">
+      <Filter>Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\TracerFunctions.cuh">
+      <Filter>GPUTemplateFunctions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">
