@@ -2,7 +2,7 @@
 
 #include "DirectTracer.h"
 #include "RayTracer.h"
-#include "MetaWorkPool.h"
+#include "TracerLib/WorkPool.h"
 
 class DirectTracer : public RayTracer
 {
@@ -17,7 +17,7 @@ class DirectTracer : public RayTracer
     private:
         Options                 options;
         WorkBatchMap            workMap;
-        MetaWorkPool<>          workPool;
+        WorkPool<>              workPool;
 
     protected:
     public:

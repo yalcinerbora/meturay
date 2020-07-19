@@ -1,20 +1,22 @@
 #pragma once
 
-#include "MetaTracerWork.cuh"
+
 #include "BasicMaterials.cuh"
+#include "SampleMaterials.cuh"
 #include "TracerKC.cuh"
 #include "SurfaceStructs.h"
-#include "MetaWorkPool.h"
 
+#include "TracerLib/WorkPool.h"
+#include "TracerLib/GPUWork.cuh"
 #include "TracerLib/GPUPrimitiveTriangle.h"
 #include "TracerLib/GPUPrimitiveSphere.h"
 
 
 template<class MGroup, class PGroup,
-          SurfaceFunc<MGroup, PGroup> SFunc>
+         SurfaceFunc<MGroup, PGroup> SFunc>
 class DirectTracerWork 
-    : public MetaTracerBatch<DirectTracerGlobal, EmptyState, RayAuxBasic,
-                             MGroup, PGroup, SFunc, BasicWork<MGroup>>
+    : public GPUWorkBatch<DirectTracerGlobal, EmptyState, RayAuxBasic,
+                          MGroup, PGroup, SFunc, BasicWork<MGroup>>
 {
     public:
         const char*                     Type() const override { return TypeName(); }
@@ -23,8 +25,9 @@ class DirectTracerWork
     protected:
     public:
         // Constrcutors & Destructor
-                                        DirectTracerWork(const GPUMaterialGroupI&,
-                                                        const GPUPrimitiveGroupI&);
+                                        DirectTracerWork(const GPUMaterialGroupI& mg,
+                                                        const GPUPrimitiveGroupI& pg)
+                                            : GPUWorkBatch(mg, pg) {}
                                         ~DirectTracerWork() = default;
 
         void                            GetReady() override {}
@@ -33,12 +36,38 @@ class DirectTracerWork
         
 };
 
-template<class MG, class PG,
-    SurfaceFunc<MG, PG> SF>
-DirectTracerWork<MG, PG, SF>::DirectTracerWork(const GPUMaterialGroupI& mg,
-                                              const GPUPrimitiveGroupI& pg)
-    : MetaTracerBatch(mg, pg)
-{}
+template<class MGroup, class PGroup,
+         SurfaceFunc<MGroup, PGroup> SFunc>
+class PathTracerWork 
+    : public GPUWorkBatch<PathTracerGlobal, EmptyState, RayAuxPath,
+                          MGroup, PGroup, SFunc, PathWork<MGroup>>
+{
+    public:
+        const char*                     Type() const override { return TypeName(); }
+
+    private:
+        bool                            neeOn;
+
+    protected:
+    public:
+        // Constrcutors & Destructor
+                                        PathTracerWork(const GPUMaterialGroupI& mg,
+                                                       const GPUPrimitiveGroupI& pg,
+                                                       bool neeOn)
+                                            : GPUWorkBatch(mg, pg)
+                                            , neeOn(neeOn) {}
+                                        ~PathTracerWork() = default;
+
+        void                            GetReady() override {}
+        uint8_t                         OutRayCount() const override;
+        
+};
+
+template<class M, class P, SurfaceFunc<M, P> S>
+uint8_t PathTracerWork<M,P,S>::OutRayCount() const
+{ 
+    return materialGroup.SampleStrategyCount() + ((neeOn) ? 1 : 0);
+}
 
 // Basic Tracer Work Batches
 extern template class DirectTracerWork<ConstantMat,
@@ -57,6 +86,39 @@ extern template class DirectTracerWork<SphericalMat,
                                        GPUPrimitiveSphere,
                                        SphrSurfaceFromSphr>;
 // ===================================================
+// Path Tracer Work Batches
+extern template class PathTracerWork<EmissiveMat,
+                                     GPUPrimitiveTriangle,
+                                     EmptySurfaceFromTri>;
+
+extern template class PathTracerWork<LambertMat,
+                                     GPUPrimitiveTriangle,
+                                     BasicSurfaceFromTri>;
+
+extern template class PathTracerWork<ReflectMat,
+                                     GPUPrimitiveTriangle,
+                                     BasicSurfaceFromTri>;
+
+extern template class PathTracerWork<RefractMat,
+                                     GPUPrimitiveTriangle,
+                                     BasicSurfaceFromTri>;
+//
+extern template class PathTracerWork<EmissiveMat,
+                                     GPUPrimitiveSphere,
+                                     EmptySurfaceFromSphr>;
+
+extern template class PathTracerWork<LambertMat,
+                                     GPUPrimitiveSphere,
+                                     BasicSurfaceFromSphr>;
+
+extern template class PathTracerWork<ReflectMat,
+                                     GPUPrimitiveSphere,
+                                     BasicSurfaceFromSphr>;
+
+extern template class PathTracerWork<RefractMat,
+                                     GPUPrimitiveSphere,
+                                     BasicSurfaceFromSphr>;
+// ===================================================
 
 using DirectTracerWorkerList = TypeList<DirectTracerWork<ConstantMat,
                                                          GPUPrimitiveTriangle,
@@ -73,3 +135,28 @@ using DirectTracerWorkerList = TypeList<DirectTracerWork<ConstantMat,
                                         DirectTracerWork<SphericalMat,
                                                          GPUPrimitiveSphere,
                                                          SphrSurfaceFromSphr>>;
+
+using PathTracerWorkerList = TypeList<PathTracerWork<EmissiveMat,
+                                                     GPUPrimitiveTriangle,
+                                                     EmptySurfaceFromTri>,
+                                      PathTracerWork<LambertMat,
+                                                     GPUPrimitiveTriangle,
+                                                     BasicSurfaceFromTri>,
+                                      PathTracerWork<ReflectMat,
+                                                     GPUPrimitiveTriangle,
+                                                     BasicSurfaceFromTri>,
+                                      PathTracerWork<RefractMat,
+                                                     GPUPrimitiveTriangle,
+                                                     BasicSurfaceFromTri>,
+                                      PathTracerWork<EmissiveMat,
+                                                     GPUPrimitiveSphere,
+                                                     EmptySurfaceFromSphr>,                                
+                                      PathTracerWork<LambertMat,
+                                                     GPUPrimitiveSphere,
+                                                     BasicSurfaceFromSphr>,
+                                      PathTracerWork<ReflectMat,
+                                                     GPUPrimitiveSphere,
+                                                     BasicSurfaceFromSphr>,
+                                      PathTracerWork<RefractMat,
+                                                     GPUPrimitiveSphere,
+                                                     BasicSurfaceFromSphr>>;

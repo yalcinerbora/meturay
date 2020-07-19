@@ -1,6 +1,7 @@
 #include "DirectTracer.h"
 #include "TracerWorks.cuh"
-#include "MetaTracerWork.cuh"
+
+#include "TracerLib/GPUWork.cuh"
 
 #include "RayLib/GPUSceneI.h"
 
@@ -76,7 +77,7 @@ bool DirectTracer::Render()
 
     for(auto& work : workMap)
     {
-        using WorkData = typename MetaWorkBatchData<DirectTracerGlobal, RayAuxBasic>;
+        using WorkData = typename GPUWorkBatchD<DirectTracerGlobal, RayAuxBasic>;
 
         auto& wData = static_cast<WorkData&>(*work.second);
         wData.SetGlobalData(globalData);

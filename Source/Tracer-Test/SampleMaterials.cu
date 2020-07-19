@@ -166,6 +166,7 @@ SceneError RefractMat::InitializeGroup(const NodeListing& materialNodes, double 
 
     //dData = ReflectMatData{dMemory};
     //return SceneError::OK;
+    return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }
 
 SceneError RefractMat::ChangeTime(const NodeListing& materialNodes, double time,

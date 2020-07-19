@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RayTracer.h"
-#include "MetaWorkPool.h"
+#include "TracerLib/WorkPool.h"
 
 class PathTracer final : public RayTracer
 {
@@ -22,7 +22,7 @@ class PathTracer final : public RayTracer
         Options                 options;
         uint32_t                currentDepth;
         WorkBatchMap            workMap;
-        MetaWorkPool<bool>      workPool;
+        WorkPool<bool>          workPool;
         
         // Light Next Event Estimation
         uint32_t                lightCount;

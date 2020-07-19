@@ -32,6 +32,8 @@
     <ClInclude Include="..\..\..\Source\TracerLib\LightCameraKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\MangledNames.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUWork.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\WorkPool.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TextureStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerTypeGenerators.h" />

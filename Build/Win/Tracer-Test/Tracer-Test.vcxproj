@@ -25,14 +25,12 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterials.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterialsKC.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\DirectTracer.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\MetaWorkPool.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\SampleMaterials.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\SampleMaterialsKC.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialDataStructs.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\RayAuxStruct.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\MetaTracerWork.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\PathTracer.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\SurfaceStructs.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TestPools.h" />

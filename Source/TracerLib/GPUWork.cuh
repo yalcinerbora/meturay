@@ -1,38 +1,38 @@
 #pragma once
 
-#include "TracerLib/GPUWorkI.h"
-#include "TracerLib/Random.cuh"
-#include "TracerLib/GPUPrimitiveP.cuh"
-#include "TracerLib/GPUMaterialP.cuh"
-#include "TracerLib/RNGMemory.h"
-#include "TracerLib/MangledNames.h"
-#include "TracerLib/WorkKernels.cuh"
+#include "GPUWorkI.h"
+#include "Random.cuh"
+#include "GPUPrimitiveP.cuh"
+#include "GPUMaterialP.cuh"
+#include "RNGMemory.h"
+#include "MangledNames.h"
+#include "WorkKernels.cuh"
 
 // Meta Tracer Code
 // With custom global Data
 
 // Material/Primitive invaritant part of the code
 template<class GlobalData, class RayData>
-class MetaWorkBatchData : public GPUWorkBatchI
+class GPUWorkBatchD : public GPUWorkBatchI
 {
     protected:
         // Ray Auxiliary Input and output pointers
         // which are global (not local)
-        const RayData*      dRayDataIn = nullptr;
-        RayData*            dRayDataOut = nullptr;
+        const RayData*  dRayDataIn = nullptr;
+        RayData*        dRayDataOut = nullptr;
 
         // GPU Friendly Struct which will be directly passed to the kernel call
-        GlobalData          globalData;
+        GlobalData      globalData;
         
 
     public:
-            // Constructors & Destructor
-                            MetaWorkBatchData() = default;
-                            ~MetaWorkBatchData() = default;
+        // Constructors & Destructor
+                        GPUWorkBatchD() = default;
+                        ~GPUWorkBatchD() = default;
 
-            void            SetGlobalData(const GlobalData&);
-            void            SetRayDataPtrs(RayData* rayDataOut,
-                                          const RayData* rayDataIn);
+        void            SetGlobalData(const GlobalData&);
+        void            SetRayDataPtrs(RayData* rayDataOut,
+                                      const RayData* rayDataIn);
 
 };
 
@@ -40,8 +40,8 @@ template<class GlobalData, class LocalData, class RayData,
          class MGroup, class PGroup,
          SurfaceFunc<MGroup, PGroup> SFunc,
          WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc>
-class MetaTracerBatch 
-    : public MetaWorkBatchData<GlobalData, RayData>
+class GPUWorkBatch 
+    : public GPUWorkBatchD<GlobalData, RayData>
 {
     public:
         static const char*              TypeName();
@@ -58,9 +58,9 @@ class MetaTracerBatch
 
     public:
         // Constrcutors & Destructor
-                                        MetaTracerBatch(const GPUMaterialGroupI&,
-                                                        const GPUPrimitiveGroupI&);
-                                        ~MetaTracerBatch() = default;
+                                        GPUWorkBatch(const GPUMaterialGroupI&,
+                                                     const GPUPrimitiveGroupI&);
+                                        ~GPUWorkBatch() = default;
 
         void                            Work(// Output
                                              HitKey* dBoundMatOut,
@@ -83,14 +83,14 @@ class MetaTracerBatch
 };
 
 template<class GD, class RD>
-inline void MetaWorkBatchData<GD, RD>::SetGlobalData(const GD& d)
+inline void GPUWorkBatchD<GD, RD>::SetGlobalData(const GD& d)
 {
     globalData = d;
 }
 
 template<class GD, class RD>
-void MetaWorkBatchData<GD, RD>::SetRayDataPtrs(RD* dRDOut,
-                                               const RD* dRDIn)
+void GPUWorkBatchD<GD, RD>::SetRayDataPtrs(RD* dRDOut,
+                                           const RD* dRDIn)
 {
     dRayDataIn = dRDIn;
     dRayDataOut = dRDOut;
@@ -98,7 +98,7 @@ void MetaWorkBatchData<GD, RD>::SetRayDataPtrs(RD* dRDOut,
 
 template <class GD, class LD, class RD, class MG, class PG,
           SurfaceFunc<MG, PG> SF, WorkFunc<GD, LD, RD, MG> WF>
-inline const char* MetaTracerBatch<GD, LD, RD, MG, PG, SF, WF>::TypeName()
+inline const char* GPUWorkBatch<GD, LD, RD, MG, PG, SF, WF>::TypeName()
 {
     static std::string typeName = MangledNames::WorkBatch(PG::TypeName(),
                                                           MG::TypeName());
@@ -107,28 +107,28 @@ inline const char* MetaTracerBatch<GD, LD, RD, MG, PG, SF, WF>::TypeName()
 
 template <class GD, class LD, class RD, class MG, class PG, 
           SurfaceFunc<MG, PG> SF, WorkFunc<GD, LD, RD, MG> WF>
-MetaTracerBatch<GD, LD, RD, MG, PG, SF, WF>::MetaTracerBatch(const GPUMaterialGroupI& mg,
-                                                         const GPUPrimitiveGroupI& pg)
+GPUWorkBatch<GD, LD, RD, MG, PG, SF, WF>::GPUWorkBatch(const GPUMaterialGroupI& mg,
+                                                       const GPUPrimitiveGroupI& pg)
     : materialGroup(static_cast<const MG&>(mg))
     , primitiveGroup(static_cast<const PG&>(pg))
 {}
 
 template <class GD, class LD, class RD, class MG, class PG, 
           SurfaceFunc<MG, PG> SF, WorkFunc<GD, LD, RD, MG> WF>
-void MetaTracerBatch<GD, LD, RD, MG, PG, SF, WF>::Work(// Output
-                                                       HitKey* dBoundMatOut,
-                                                       RayGMem* dRayOut,
-                                                       //  Input
-                                                       const RayGMem* dRayIn,
-                                                       const PrimitiveId* dPrimitiveIds,
-                                                       const HitStructPtr dHitStructs,
-                                                       // Ids
-                                                       const HitKey* dMatIds,
-                                                       const RayId* dRayIds,
-                                                       // 
-                                                       const uint32_t outputOffset,
-                                                       const uint32_t rayCount,
-                                                       RNGMemory& rngMem)
+void GPUWorkBatch<GD, LD, RD, MG, PG, SF, WF>::Work(// Output
+                                                    HitKey* dBoundMatOut,
+                                                    RayGMem* dRayOut,
+                                                    //  Input
+                                                    const RayGMem* dRayIn,
+                                                    const PrimitiveId* dPrimitiveIds,
+                                                    const HitStructPtr dHitStructs,
+                                                    // Ids
+                                                    const HitKey* dMatIds,
+                                                    const RayId* dRayIds,
+                                                    // 
+                                                    const uint32_t outputOffset,
+                                                    const uint32_t rayCount,
+                                                    RNGMemory& rngMem)
 {
     // Do Pre-work (initialize local data etc.)
     GetReady();

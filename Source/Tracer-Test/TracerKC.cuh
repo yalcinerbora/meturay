@@ -143,22 +143,22 @@ inline void PathWork(// Output
                           primId != neePrimId ||
                           matId != neeKey);
     bool nonNEELight = (!gRenderState.nee &&
-                        MGroup::IsBoundaryMat());
+                        MGroup::IsEmissive());
 
     if(neeLight || nonNEELight)
     {
         // We found the light that we required to sample
         // Evaluate
-        Vector3 emission = MGroup::EmitFunc(// Input
-                                            -r.getDirection(),
-                                            position,
-                                            m,
-                                            //
-                                            surface,
-                                            nullptr,
-                                            // Constants
-                                            gMatData,
-                                            matIndex);
+        Vector3 emission = MGroup::Emit(// Input
+                                        -r.getDirection(),
+                                        position,
+                                        m,
+                                        //
+                                        surface,
+                                        nullptr,
+                                        // Constants
+                                        gMatData,
+                                        matIndex);
         // And accumulate pixel
         Vector3f total = emission * aux.radianceFactor;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
@@ -200,7 +200,7 @@ inline void PathWork(// Output
 
     // Check Russian Roulette
     float avgThroughput = auxOutPath.radianceFactor.Dot(Vector3f(gRenderState.rrFactor));
-    if(auxIn.depth <= gRenderState.rrStart &&
+    if(auxOutPath.depth <= gRenderState.rrStart &&
        !RussianRoulette(auxOutPath.radianceFactor, avgThroughput, rng))
     {
         // Write Ray        
@@ -250,9 +250,9 @@ inline void PathWork(// Output
         Vector3 reflectance = MGroup::Evaluate(// Input
                                                lDirection,
                                                -r.getDirection(),
+                                               position,
                                                m,
                                                //
-                                               position,
                                                surface,
                                                nullptr,
                                                // Constants

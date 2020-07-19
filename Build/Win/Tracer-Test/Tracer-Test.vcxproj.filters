@@ -65,16 +65,7 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\PathTracer.h">
       <Filter>Tracers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerKC.cuh">
-      <Filter>Tracers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\MetaTracerWork.cuh">
-      <Filter>Works</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerWorks.cuh">
-      <Filter>Works</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\MetaWorkPool.h">
       <Filter>Works</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\RayTracer.h">
@@ -88,6 +79,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\SampleMaterialsKC.cuh">
       <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerKC.cuh">
+      <Filter>Works</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

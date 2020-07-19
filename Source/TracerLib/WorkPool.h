@@ -8,13 +8,13 @@ Slightly overengineered meta pool generation class
 #include <tuple>
 #include <list>
 
-#include "TracerLib/TracerLogicPools.h"
-#include "TracerLib/TracerTypeGenerators.h"
-#include "TracerLib/MangledNames.h"
-#include "TracerLib/GPUMaterialI.h"
-#include "TracerLib/GPUPrimitiveI.h"
+#include "TracerLogicPools.h"
+#include "TracerTypeGenerators.h"
+#include "MangledNames.h"
+#include "GPUMaterialI.h"
+#include "GPUPrimitiveI.h"
 
-// Simple wrapper for tuple usage (we need the type of the tuple
+// Simple wrapper for tuple usage (we need the type of the tuple)
 template <class T>
 struct TypeListElement
 {
@@ -25,29 +25,31 @@ template <class... Args>
 using TypeList = std::tuple<TypeListElement<Args>...>;
 
 // Work Object Generator List
+template <class... Args>
 using WorkBatchGeneratorFunc = GPUWorkBatchI* (*)(const GPUMaterialGroupI&,
-                                                  const GPUPrimitiveGroupI&);
+                                                  const GPUPrimitiveGroupI&,
+                                                  Args...);
 using WorkGPtr = SharedLibPtr<GPUWorkBatchI>;
 
+template <class... Args>
 class GPUWorkBatchGen
 {
     private:
-        WorkBatchGeneratorFunc              gFunc;
+        WorkBatchGeneratorFunc<Args...>     gFunc;
         ObjDestroyerFunc<GPUWorkBatchI>     dFunc;
     protected:
     public:
-        GPUWorkBatchGen(WorkBatchGeneratorFunc g,
+        GPUWorkBatchGen(WorkBatchGeneratorFunc<Args...> g,
                         ObjDestroyerFunc<GPUWorkBatchI> d)
             : gFunc(g)
             , dFunc(d)
         {}
 
-        template <class... Args>
         WorkGPtr operator()(const GPUMaterialGroupI& mg,
                             const GPUPrimitiveGroupI& pg,
-                            Args&&... args)
+                            Args... args)
         {
-            GPUWorkBatchI* accel = gFunc(mg, pg, args);
+            GPUWorkBatchI* accel = gFunc(mg, pg, args...);
             return WorkGPtr(accel, dFunc);
         }
 };
@@ -57,18 +59,18 @@ namespace TypeGenWrappers
     template <class Base, class WorkBatch, class... Args>
     Base* WorkBatchConstruct(const GPUMaterialGroupI& mg,
                              const GPUPrimitiveGroupI& pg,
-                             Args&&... args)
+                             Args... args)
     {
         return new WorkBatch(mg, pg, args...);
     }
 }
 
 template <class... Args>
-class MetaWorkPool
+class WorkPool
 {
     private:
-        std::map<std::string, GPUWorkBatchGen>  generators;
-        std::list<WorkGPtr>                     allocatedResources;
+        std::map<std::string, GPUWorkBatchGen<Args...>>     generators;
+        std::list<WorkGPtr>                                 allocatedResources;
 
         // Recursive Loop Functions to Append new Generators
         template<std::size_t I = 0, class... Tp>
@@ -81,9 +83,9 @@ class MetaWorkPool
 
     public:
         // Constructors & Destructor
-                                MetaWorkPool() = default;
-                                ~MetaWorkPool() = default;
-        // Meta Add
+                                WorkPool() = default;
+                                ~WorkPool() = default;
+        // Meta Work Add
         template <class... Batches>
         void                    AppendGenerators(TypeList<Batches...> batches);
 
@@ -92,47 +94,47 @@ class MetaWorkPool
         TracerError             GenerateWorkBatch(GPUWorkBatchI*&,
                                                   const GPUMaterialGroupI&,
                                                   const GPUPrimitiveGroupI&,
-                                                  Args&&...);
+                                                  Args...);
 };
 
 template <class... Args>
 template<size_t I, class... Tp>
 inline typename std::enable_if<I == sizeof...(Tp), void>::type
-MetaWorkPool<Args...>::LoopAndAppend(std::tuple<Tp...>& t)
+WorkPool<Args...>::LoopAndAppend(std::tuple<Tp...>& t)
 {}
 
 template <class... Args>
 template<size_t I, class... Tp>
 inline typename std::enable_if<(I < sizeof...(Tp)), void>::type
-MetaWorkPool<Args...>::LoopAndAppend(std::tuple<Tp...>& t)
+WorkPool<Args...>::LoopAndAppend(std::tuple<Tp...>& t)
 {
     using namespace TypeGenWrappers;
     using CurrentType = typename std::tuple_element_t<I, TypeList<Tp...>>::type::type;
     // Accelerator Types
     generators.emplace(CurrentType::TypeName(),
-                       GPUWorkBatchGen(WorkBatchConstruct<GPUWorkBatchI, CurrentType, Args...>,
-                                       DefaultDestruct<GPUWorkBatchI>));
+                       GPUWorkBatchGen<Args...>(WorkBatchConstruct<GPUWorkBatchI, CurrentType, Args...>,
+                                                DefaultDestruct<GPUWorkBatchI>));
    LoopAndAppend<I + 1, Tp...>(t);
 }
 
 template <class... Args>
 template <class... Batches>
-void MetaWorkPool<Args...>::AppendGenerators(TypeList<Batches...> batches)
+void WorkPool<Args...>::AppendGenerators(TypeList<Batches...> batches)
 {
     LoopAndAppend(batches);
 }
 
 template <class... Args>
-inline void MetaWorkPool<Args...>::DeleteAllWorkInstances()
+inline void WorkPool<Args...>::DeleteAllWorkInstances()
 {
     allocatedResources.clear();
 }
 
 template <class... Args>
-TracerError MetaWorkPool<Args...>::GenerateWorkBatch(GPUWorkBatchI*& work,
-                                                     const GPUMaterialGroupI& mg,
-                                                     const GPUPrimitiveGroupI& pg,
-                                                     Args&&... args)
+TracerError WorkPool<Args...>::GenerateWorkBatch(GPUWorkBatchI*& work,
+                                                 const GPUMaterialGroupI& mg,
+                                                 const GPUPrimitiveGroupI& pg,
+                                                 Args... args)
 {
     std::string mangledName = MangledNames::WorkBatch(pg.Type(),
                                                       mg.Type());

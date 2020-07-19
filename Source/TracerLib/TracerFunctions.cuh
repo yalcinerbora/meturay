@@ -2,7 +2,8 @@
 
 namespace TracerFunctions
 {
-    float FrenelDielectric(float cosIn, float iorIn, float iorOut)
+    __device__
+    inline float FrenelDielectric(float cosIn, float iorIn, float iorOut)
     {
         // Calculate Sin from Snell's Law
         float sinIn = sqrt(1.0f - cosIn * cosIn);

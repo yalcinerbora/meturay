@@ -1,10 +1,11 @@
 #include "PathTracer.h"
 #include "TracerWorks.cuh"
-#include "MetaTracerWork.cuh"
 
 #include "RayLib/GPUSceneI.h"
+
 #include "TracerLib/LightCameraKernels.cuh"
 #include "TracerLib/GenerationKernels.cuh"
+#include "TracerLib/GPUWork.cuh"
 
 __device__ __host__
 inline void RayInitPath(RayAuxPath& gOutPath,
@@ -31,7 +32,7 @@ PathTracer::PathTracer(const CudaSystem& s,
     , dLights(nullptr)
     , dLightAlloc(nullptr)
 {
-    workPool.AppendGenerators(PathTracerWorkList{});
+    workPool.AppendGenerators(PathTracerWorkerList{});
 }
 
 TracerError PathTracer::Initialize()
@@ -121,7 +122,7 @@ bool PathTracer::Render()
 
     for(auto& work : workMap)
     {
-        using WorkData = typename MetaWorkBatchData<PathTracerGlobal, RayAuxPath>;
+        using WorkData = typename GPUWorkBatchD<PathTracerGlobal, RayAuxPath>;
 
         auto& wData = static_cast<WorkData&>(*work.second);
         wData.SetGlobalData(globalData);

@@ -262,6 +262,10 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TracerFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\WorkPool.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUWork.cuh">
+      <Filter>Partial Implementations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">
