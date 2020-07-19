@@ -197,12 +197,9 @@ class SimpleTracerSetup
 
         static constexpr TracerParameters   TRACER_PARAMETERS = 
         {
-            0   // Seed
+            false,  // Verbose
+            0       // Seed
         };
-        //static constexpr TracerOptions      TRACER_OPTIONS =
-        //{
-        //    false   // Verbose
-        //};
 
         // Surface Loader Generators (Classes of primitive file loaders)
         SurfaceLoaderGenerator              surfaceLoaders;

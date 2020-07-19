@@ -626,7 +626,6 @@ SceneError GPUSceneJson::LoadCommon(double time)
     size_t mediumSize = mediumCount * sizeof(GPUMedium);
     mediumSize = Memory::AlignSize(mediumSize, AlignByteCount);
 
-
     // Allocate
     size_t requiredSize = transformSize + mediumSize;
     DeviceMemory::EnlargeBuffer(gpuMemory, requiredSize);
@@ -649,14 +648,18 @@ SceneError GPUSceneJson::LoadCommon(double time)
     }
     else dTransforms = nullptr;
 
-    if(mediumCount == 0)
+    if(mediumCount != 0)
     {
         // Just Memcpy
         CUDA_CHECK(cudaMemcpy(dMediums, mediumsCPU.data(),
                               mediumsCPU.size() * sizeof(GPUMedium),
                               cudaMemcpyHostToDevice));
-    } 
-    else dMediums = nullptr;
+    }
+    else
+    {
+        dMediums = nullptr;
+        return SceneError::AT_LEAST_ONE_MEDUIM_REQUIRED;
+    }
   
     return e;
 }

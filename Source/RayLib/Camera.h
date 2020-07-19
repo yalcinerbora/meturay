@@ -11,7 +11,7 @@ so it is somehow maintainable without using Interitance
 #include "Vector.h"
 #include "HitStructs.h"
 
-enum class CameraType
+enum class CameraType : uint16_t
 {
     PINHOLE,        // Pinhole Camera (no DOF) (Aperture size is  1)
     ORTHOGRAPHIC,   // Orthographic Camera
@@ -20,6 +20,7 @@ enum class CameraType
 
 struct CPUCamera
 {
+    uint16_t    mediumIndex;
     CameraType  type;
     HitKey      matKey;
     // World Space Lengths from camera

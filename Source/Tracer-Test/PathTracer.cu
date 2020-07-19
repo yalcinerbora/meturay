@@ -27,7 +27,7 @@ inline void RayInitPath(RayAuxPath& gOutPath,
 PathTracer::PathTracer(const CudaSystem& s,
                        const GPUSceneI& scene,
                        const TracerParameters& p)
-    : RayTracer(s, scene, params)
+    : RayTracer(s, scene, p)
     , currentDepth(0)
     , dLights(nullptr)
     , dLightAlloc(nullptr)
@@ -119,6 +119,8 @@ bool PathTracer::Render()
     globalData.gImage = imgMemory.GMem<Vector4>();
     globalData.lightList = dLights;
     globalData.totalLightCount = lightCount;
+    globalData.mediumList = scene.MediumsGPU();
+    globalData.totalMediumCount = static_cast<uint32_t>(scene.MediumCount());
 
     for(auto& work : workMap)
     {

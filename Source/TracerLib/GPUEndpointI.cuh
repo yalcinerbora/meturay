@@ -12,16 +12,20 @@ struct RayReg;
 class GPUEndpointI
 {
     protected: 
-        // Material of the Light
+        // Material of the Endpoint
         // In order to acquire light visibility
         // Launch a ray using this key
         // if nothing hits Tracer batches the ray with this key
         HitKey                  boundaryMaterialKey;
         // Primitive Id is required for primitive lights for NEE estimation
         PrimitiveId             primitiveId;
+        // Medium of the endpoint
+        // used to initialize rays when generated
+        uint16_t                mediumIndex;
         
     public:
-        __device__              GPUEndpointI(HitKey k, PrimitiveId id);
+        __device__              GPUEndpointI(HitKey k, PrimitiveId id,
+                                             uint16_t mediumIndex);
         virtual                 ~GPUEndpointI() = default;
 
         // Interface
@@ -50,6 +54,7 @@ class GPUEndpointI
 
         __device__ HitKey       BoundaryMaterial() const;
         __device__ PrimitiveId  Primitive() const;
+        __device__ uint16_t     MediumIndex() const;
 };
 
 // Additional to sampling stuff, Light returns flux
@@ -60,16 +65,19 @@ class GPULightI : public GPUEndpointI
         Vector3                         flux;
 
     public: 
-        __device__                      GPULightI(const Vector3& flux, HitKey k, PrimitiveId id);
+        __device__                      GPULightI(const Vector3& flux, HitKey k,
+                                                  PrimitiveId id, uint16_t mediumIndex);
         virtual                         ~GPULightI() = default;
         // Interface
         virtual __device__ Vector3      Flux(const Vector3& direction) const = 0;
 };
 
 __device__      
-inline  GPUEndpointI::GPUEndpointI(HitKey k, PrimitiveId id) 
+inline  GPUEndpointI::GPUEndpointI(HitKey k, PrimitiveId id,
+                                   uint16_t mediumIndex) 
     : boundaryMaterialKey(k) 
     , primitiveId(id)
+    , mediumIndex(mediumIndex)
 {}
 
 __device__
@@ -85,8 +93,15 @@ inline PrimitiveId GPUEndpointI::Primitive() const
 }
 
 __device__
-inline GPULightI::GPULightI(const Vector3& flux, HitKey k, PrimitiveId id)
-    : GPUEndpointI(k, id)
+inline uint16_t GPUEndpointI::MediumIndex() const
+{
+    return mediumIndex;
+}
+
+__device__
+inline GPULightI::GPULightI(const Vector3& flux, HitKey k, PrimitiveId id,
+                            uint16_t mediumIndex)
+    : GPUEndpointI(k, id, mediumIndex)
     , flux(flux)
 {}
 

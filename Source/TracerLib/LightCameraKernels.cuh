@@ -85,7 +85,8 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
             gPtr = new (gMemory) PointLight(cpuLight.position0,
                                             cpuLight.flux,
                                             cpuLight.matKey,
-                                            cpuLight.primId);
+                                            cpuLight.primId,
+                                            cpuLight.mediumIndex);
             break;
         }
         case LightType::DIRECTIONAL:
@@ -93,7 +94,8 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
             gPtr = new (gMemory) DirectionalLight(cpuLight.position0,
                                                   cpuLight.flux,
                                                   cpuLight.matKey,
-                                                  cpuLight.primId);
+                                                  cpuLight.primId,
+                                                  cpuLight.mediumIndex);
             break;
         }
         case LightType::SPOT:
@@ -105,7 +107,8 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
                                            angles,
                                            cpuLight.flux,
                                            cpuLight.matKey,
-                                           cpuLight.primId);
+                                           cpuLight.primId,
+                                           cpuLight.mediumIndex);
             break;
         }
         case LightType::RECTANGULAR:
@@ -115,7 +118,8 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
                                                   cpuLight.position2,
                                                   cpuLight.flux,
                                                   cpuLight.matKey,
-                                                  cpuLight.primId);
+                                                  cpuLight.primId,
+                                                  cpuLight.mediumIndex);
             break;
         }
         case LightType::TRIANGULAR:
@@ -125,17 +129,19 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
                                                  cpuLight.position2,
                                                  cpuLight.flux,
                                                  cpuLight.matKey,
-                                                 cpuLight.primId);
+                                                 cpuLight.primId,
+                                                 cpuLight.mediumIndex);
             break;
         }
         case LightType::DISK:
         {
             gPtr = new (gMemory) DiskLight(cpuLight.position0,
-                                                  cpuLight.position1,
-                                                  cpuLight.position2[0],
-                                                  cpuLight.flux,
-                                                  cpuLight.matKey,
-                                                  cpuLight.primId);
+                                           cpuLight.position1,
+                                           cpuLight.position2[0],
+                                           cpuLight.flux,
+                                           cpuLight.matKey,
+                                           cpuLight.primId,
+                                           cpuLight.mediumIndex);
             break;
         }
         case LightType::SPHERICAL:
@@ -144,7 +150,8 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
                                                 cpuLight.position1[0],
                                                 cpuLight.flux,
                                                 cpuLight.matKey,
-                                                cpuLight.primId);
+                                                cpuLight.primId,
+                                                cpuLight.mediumIndex);
             break;
         }
         default:
@@ -254,8 +261,7 @@ inline void LightCameraKernels::ConstructCameras(// Output
                                                  const std::vector<CPUCamera>& cameraData,
                                                  const CudaSystem& system)
 {
-    // Befo
-     // Allocate to GPU Memory
+    // Allocate to GPU Memory
     size_t camerasCPUSize = cameraData.size() * sizeof(CPUCamera);
     DeviceMemory temp(camerasCPUSize);
     CUDA_CHECK(cudaMemcpy(temp, cameraData.data(), camerasCPUSize,

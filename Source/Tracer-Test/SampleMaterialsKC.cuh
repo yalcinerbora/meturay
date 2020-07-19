@@ -212,7 +212,11 @@ Vector3 RefractSample(// Sampled Output
         bool refracted = rayIn.Refract(wo, refNormal, fromMedium, toMedium);
         // Since Frenel term is used to sample
         // code should not arrive here (raise exception)
-        if(!refracted) __trap();
+        if(!refracted)
+        {
+            __threadfence();
+            __trap(); 
+        }
 
         // Return medium
         outMedium = (entering) ? (matData.dMedium[matId]) 

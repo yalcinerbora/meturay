@@ -11,7 +11,7 @@
 #include "Types.h"
 #include "HitStructs.h"
 
-enum class LightType
+enum class LightType : uint16_t
 {
     POINT,
     DIRECTIONAL,
@@ -82,13 +82,14 @@ using MaterialKeyListing = std::map<TypeIdPair, HitKey>;
 // No inheritance here
 struct CPULight
 {
+    uint16_t        mediumIndex;
     LightType       type;
     HitKey          matKey;
     PrimitiveId     primId;
     Vector3         flux;
     Vector3         position0;
     Vector3         position1;
-    Vector3         position2;
+    Vector3         position2;    
 };
 
 struct CPUMedium

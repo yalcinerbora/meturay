@@ -25,6 +25,7 @@ TEST(SceneIOCommon, Camera)
 {
     static constexpr CPUCamera CamResult =
     {
+        0,
         CameraType::APERTURE,
         HitKey::InvalidKey,
         Vector3(0.0f, 5.0f, 0.0f),
@@ -38,6 +39,8 @@ TEST(SceneIOCommon, Camera)
 
     nlohmann::json jsn = ReadTestFile()[NodeNames::CAMERA_BASE];
     CPUCamera camera = SceneIO::LoadCamera(jsn[0]);
+
+    EXPECT_EQ(CamResult.mediumIndex, camera.mediumIndex);
     EXPECT_EQ(CamResult.type, camera.type);
 
     EXPECT_FLOAT_EQ(CamResult.position[0], camera.position[0]);

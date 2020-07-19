@@ -40,12 +40,10 @@ struct SceneError : public ErrorI
             DUPLICATE_ACCELERATOR_ID,
             DUPLICATE_MATERIAL_ID,
             DUPLICATE_PRIMITIVE_ID,
-            DUPLICATE_TRANSFORM_ID,
             // Id not found
             ACCELERATOR_ID_NOT_FOUND,
             MATERIAL_ID_NOT_FOUND,
             PRIMITIVE_ID_NOT_FOUND,
-            TRANSFORM_ID_NOT_FOUND,
             // Json parse errors
             LOGIC_MISMATCH,
             TYPE_MISMATCH,
@@ -69,6 +67,8 @@ struct SceneError : public ErrorI
             TOO_MANY_ACCELERATOR_IN_GROUP,
             TOO_MANY_MATERIAL_GROUPS,
             TOO_MANY_MATERIAL_IN_GROUP,
+            // Medium Related
+            AT_LEAST_ONE_MEDUIM_REQUIRED,
             // Texture Related
             UNKNOWN_TEXTURE_TYPE,
             UNKNOWN_FILTER_TYPE,
@@ -158,12 +158,10 @@ inline SceneError::operator std::string() const
         "Duplicate accelerator id",
         "Duplicate material id",
         "Duplicate primitive id",
-        "Duplicate transform id",
         //
         "Accelerator id not found",
         "Material id not found",
         "Primitive id not found",
-        "Transform id not found",
         // Json Parse Errors
         "Logics does not match",
         "JSON type does not match with required type",
@@ -187,6 +185,8 @@ inline SceneError::operator std::string() const
         "Accelerators in a group required for this scene exceeds limit",
         "Material groups required for this scene exceeds limit",
         "Materials in a batch required for this scene exceeds limit",
+        // Medium Related
+        "At least one medium should be definded as a default medium",
         // Texture Related
         "Texture type name is unknown",
         "Filter type name is unknown",

@@ -26,6 +26,7 @@ namespace NodeNames
     // Common Names
     static constexpr const char* POSITION = "position";
     static constexpr const char* DATA = "data";
+    static constexpr const char* MEDIUM = "mediumIndex";
     // Surface Related Names
     static constexpr const char* TRANSFORM = "transform";
     static constexpr const char* PRIMITIVE = "primitive";

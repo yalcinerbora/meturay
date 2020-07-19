@@ -52,6 +52,11 @@ namespace SceneIO
     template <class T, typename = IntegerEnable<T>>
     std::vector<Range<T>>   LoadRangedNumbers(const nlohmann::json&);
 
+    // Optional Fetch
+    template <class T>
+    T                       OptionalFetch(const nlohmann::json&, const char* name,
+                                          T defaultValue);
+
     // Utility
     std::string             StripFileExt(const std::string& string);
 
@@ -203,6 +208,17 @@ std::vector<Range<T>> SceneIO::LoadRangedNumbers(const nlohmann::json& jsn)
     }
     ERROR:
     throw SceneException(SceneError::TYPE_MISMATCH);
+}
+
+template <class T>
+T SceneIO::OptionalFetch(const nlohmann::json& jsn, const char* name,
+                         T defaultValue)
+{
+    auto iter = jsn.find(name);
+    if(iter == jsn.end())
+        return defaultValue;
+    else
+        return (*iter);
 }
 
 inline std::string SceneIO::StripFileExt(const std::string& string)

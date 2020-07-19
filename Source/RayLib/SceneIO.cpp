@@ -124,7 +124,7 @@ CPUCamera SceneIO::LoadCamera(const nlohmann::json& jsn, double time)
         cam.farPlane = planes[1];
         cam.fov = LoadVector<2, float>(jsn[CAMERA_FOV], time);
         cam.apertureSize = LoadNumber<float>(jsn[CAMERA_APERTURE], time);
-
+        cam.mediumIndex = OptionalFetch<uint16_t>(jsn, MEDIUM, 0);
         // Convert FOV to Radians
         cam.fov *= MathConstants::DegToRadCoef;
 
@@ -178,6 +178,7 @@ CPULight SceneIO::LoadLight(const nlohmann::json& jsn, double time)
         light.position1 = Zero3;
         light.position2 = Zero3;
         light.primId = 0;
+        light.mediumIndex = OptionalFetch<uint16_t>(jsn, MEDIUM, 0);
 
         std::string type = jsn[TYPE];
         SceneError e = LightTypeStringToEnum(light.type, type);
