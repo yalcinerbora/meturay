@@ -296,10 +296,25 @@ inline Ray<T> Ray<T>::Advance(T t) const
 }
 
 template<class T>
+__device__ __host__ 
+inline Ray<T> Ray<T>::Advance(T t, const Vector<3, T>& dir) const
+{
+    return Ray(direction, position + t * dir);
+}
+
+template<class T>
 __device__ __host__
 inline Ray<T>& Ray<T>::AdvanceSelf(T t)
 {
     position += t * direction;
+    return *this;
+}
+
+template<class T>
+__device__ __host__
+inline Ray<T>& Ray<T>::AdvanceSelf(T t, const Vector<3, T>& dir)
+{
+    position += t * dir;
     return *this;
 }
 

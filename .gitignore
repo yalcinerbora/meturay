@@ -366,3 +366,4 @@ WorkingDir/*
 !WorkingDir/TestScenes/*.json
 
 
+/Build/Win/*.nvsettings

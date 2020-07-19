@@ -73,13 +73,13 @@ namespace GPUDistribution
     template <class T, typename = FloatEnable<T>>
     __device__ T Uniform(RandomGPU& r)
     {
-        return static_cast<T>(curand_uniform(r));
+        return static_cast<T>(1.0f - curand_uniform(r));
     }
 
     template <class T, typename = FloatEnable<T>>
     __device__ T Uniform(RandomGPU& r, T min, T max)
     {
-        return static_cast<T>(curand_uniform(r)) * (min - max) + min;
+        return static_cast<T>(1.0f - curand_uniform(r)) * (min - max) + min;
     }
 
     template <class T, typename = FloatEnable<T>>

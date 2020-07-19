@@ -102,7 +102,7 @@ class LambertMat final
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
-        uint8_t                 SampleStrategyCount() const { return 0; };
+        uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture
         uint8_t                 UsedTextureCount() const { return 0; }
         std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
@@ -149,7 +149,7 @@ class ReflectMat final
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
-        uint8_t                 SampleStrategyCount() const { return 0; };
+        uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture
         uint8_t                 UsedTextureCount() const { return 0; }
         std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
@@ -196,7 +196,7 @@ class RefractMat final
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
-        uint8_t                 SampleStrategyCount() const { return 0; };
+        uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture
         uint8_t                 UsedTextureCount() const { return 0; }
         std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }

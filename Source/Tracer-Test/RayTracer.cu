@@ -18,6 +18,7 @@ inline void RayInitBasic(RayAuxBasic& gOutBasic,
                          const RayAuxBasic& defaults,
                          const RayReg& ray,
                          // Index
+                         uint16_t mediumIndex,
                          const uint32_t localPixelId,
                          const uint32_t pixelSampleId)
 {

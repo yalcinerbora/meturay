@@ -554,6 +554,7 @@ SceneError GPUSceneJson::GenerateLightInfo(const MaterialKeyListing& materialKey
             // Just find empty prim one
             const auto matLookup = std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME, matId);
             HitKey key = materialKeys.at(matLookup);
+            light.matKey = key;
             lights.push_back(light);
         }        
     }

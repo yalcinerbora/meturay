@@ -1,6 +1,5 @@
 #include "GPUTracer.h"
 
-//#include "RayLib/Camera.h"
 #include "RayLib/Log.h"
 #include "RayLib/TracerError.h"
 #include "RayLib/TracerCallbacksI.h"
@@ -11,7 +10,7 @@
 #include "GPUAcceleratorI.h"
 #include "GPUWorkI.h"
 
-//#include "TracerDebug.h"
+#include "TracerDebug.h"
 
 GPUTracer::GPUTracer(const CudaSystem& system, 
                      const GPUSceneI& scene,
@@ -213,6 +212,7 @@ void GPUTracer::HitAndPartitionRays()
     rayMemory.FillMatIdsForSort(currentRayCount);
     // Sort with respect to the materials keys
     rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, currentRayCount, maxWorkBits);
+
     // Parition w.r.t. material batch
     workPartition.clear();
     workPartition = rayMemory.Partition(currentRayCount);
@@ -290,6 +290,9 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
                           outOffset,
                           static_cast<uint32_t>(p.count),
                           rngMemory);
+
+        //cudaSystem.SyncGPUAll();
+        //METU_LOG("--------------------------");
 
         // Since output is dynamic (each material may write multiple rays)
         // add offsets to find proper count

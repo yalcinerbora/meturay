@@ -10,16 +10,17 @@
 __device__ __host__
 inline void RayInitPath(RayAuxPath& gOutPath,
                          // Input
-                         const RayAuxPath& defaults,
-                         const RayReg& ray,
-                         // Index
-                         const uint32_t localPixelId,
-                         const uint32_t pixelSampleId)
+                        const RayAuxPath& defaults,
+                        const RayReg& ray,
+                        // Index
+                        uint16_t medumIndex,
+                        const uint32_t localPixelId,
+                        const uint32_t pixelSampleId)
 {
     RayAuxPath init = defaults;
     init.pixelIndex = localPixelId;
     init.type = RayType::CAMERA_RAY;
-    init.mediumIndex = 0;
+    init.mediumIndex = medumIndex;
     init.depth = 1;
     gOutPath = init;
 }
@@ -92,6 +93,10 @@ TracerError PathTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = opts.GetBool(options.nextEventEstimation, NEE_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetUInt(options.rrStart, RR_START_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetFloat(options.rrFactor, RR_FACTOR_NAME)) != TracerError::OK)
+        return err;
     return TracerError::OK;
 }
 
@@ -121,6 +126,10 @@ bool PathTracer::Render()
     globalData.totalLightCount = lightCount;
     globalData.mediumList = scene.MediumsGPU();
     globalData.totalMediumCount = static_cast<uint32_t>(scene.MediumCount());
+
+    globalData.nee = options.nextEventEstimation;
+    globalData.rrStart = options.rrStart;
+    globalData.rrFactor = options.rrFactor;
 
     for(auto& work : workMap)
     {

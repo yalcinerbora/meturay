@@ -299,7 +299,7 @@ static constexpr size_t LightSizeArray[] = {sizeof(PointLight), sizeof(Direction
                                             sizeof(SpotLight),sizeof(RectangularLight),
                                             sizeof(TriangularLight),sizeof(DiskLight),
                                             sizeof(SphericalLight)};
-static constexpr size_t GPULightUnionSize = *std::min_element(std::begin(LightSizeArray),
+static constexpr size_t GPULightUnionSize = *std::max_element(std::begin(LightSizeArray),
                                                                std::end(LightSizeArray));
 
 __device__
@@ -319,7 +319,7 @@ inline DirectionalLight::DirectionalLight(const Vector3& direction,
                                           PrimitiveId pId,
                                           uint16_t mediumIndex)
     : GPULightI(flux, k, pId, mediumIndex)
-    , direction(direction)
+    , direction(direction.Normalize())
 {}
 
 __device__
@@ -332,7 +332,7 @@ inline SpotLight::SpotLight(const Vector3& position,
                             uint16_t mediumIndex)
     : GPULightI(flux, k, pId, mediumIndex)
     , position(position)
-    , direction(direction)
+    , direction(direction.Normalize())
     , cosMin(coneMinMax[0])
     , cosMax(coneMinMax[1])
 {}
@@ -414,7 +414,7 @@ inline void PointLight::Sample(// Output
 {
     direction = (position - worldLoc);
     distance = direction.Length();
-    direction.NormalizeSelf();
+    direction /= distance;
     pdf = 1.0f;
 }
 
@@ -523,13 +523,14 @@ inline void RectangularLight::Sample(// Output
     float x = GPUDistribution::Uniform<float>(rng);
     float y = GPUDistribution::Uniform<float>(rng);
     Vector3 position = topLeft + right * x + down * y;
+    
+    direction = position - worldLoc;
+    float distanceSqr = direction.LengthSqr();
+    distance = sqrt(distanceSqr);
+    direction /= distance;
 
     float nDotL = max(normal.Dot(-direction), 0.0f);
-    direction = position - worldLoc;
-    distance = direction.LengthSqr();
-    pdf = distance / (nDotL * area);
-    distance = sqrt(distance);
-    direction.NormalizeSelf();
+    pdf = distanceSqr / (nDotL * area);
 }
 
 __device__
@@ -573,12 +574,13 @@ inline void TriangularLight::Sample(// Output
 
     Vector3 position = (v0 * a + v1 * b + v2 * c);
 
-    float nDotL = max(normal.Dot(-direction), 0.0f);
     direction = position - worldLoc;
-    distance = direction.LengthSqr();
-    pdf = distance / (nDotL * area);
-    distance = sqrt(distance);
-    direction.NormalizeSelf();
+    float distanceSqr = direction.LengthSqr();
+    distance = sqrt(distanceSqr);
+    direction /= distance;
+
+    float nDotL = max(normal.Dot(-direction), 0.0f);
+    pdf = distanceSqr / (nDotL * area);
 }
 
 __device__
@@ -623,12 +625,13 @@ inline void DiskLight::Sample(// Output
     Vector3 worldDisk = rotation.ApplyRotation(disk);
     Vector3 position = center + worldDisk;
 
-    float nDotL = max(normal.Dot(-direction), 0.0f);
     direction = position - worldLoc;
-    distance = direction.LengthSqr();
-    pdf = distance / (nDotL * area);
-    distance = sqrt(distance);
-    direction.NormalizeSelf();
+    float distanceSqr = direction.LengthSqr();
+    distance = sqrt(distanceSqr);
+    direction /= distance;
+
+    float nDotL = max(normal.Dot(-direction), 0.0f);
+    pdf = distanceSqr / (nDotL * area);
 }
 
 __device__
@@ -680,7 +683,7 @@ inline void SphericalLight::Sample(// Output
     distance = direction.LengthSqr();
     pdf = distance / area;
     distance = sqrt(distance);
-    direction.NormalizeSelf();
+    direction /= distance;
 }
 
 __device__

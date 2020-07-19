@@ -58,7 +58,6 @@ inline void BasicWork(// Output
     // Write to image
     auto& img = gRenderState.gImage;
     const RayF& r = ray.ray;
-    float distance = ray.tMax - ray.tMin;
     HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
 
     GPUMedium m, outM;
@@ -67,7 +66,7 @@ inline void BasicWork(// Output
                                       outRay, pdf, outM,
                                       // Inputs
                                       -r.getDirection(),
-                                      r.AdvancedPos(distance),
+                                      r.AdvancedPos(ray.tMax),
                                       m,
                                       //
                                       surface,
@@ -112,9 +111,8 @@ inline void PathWork(// Output
     // Inputs
     auto& img = gRenderState.gImage;
     const RayF& r = ray.ray;
-    float distance = ray.tMax - ray.tMin;
     HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
-    Vector3 position = r.AdvancedPos(distance);
+    Vector3 position = r.AdvancedPos(ray.tMax);
     GPUMedium m = gRenderState.mediumList[aux.mediumIndex];
     // Outputs
     RayReg rayOut = {};
@@ -125,25 +123,39 @@ inline void PathWork(// Output
     auxOutNEE.depth++;
     auxOutPath.type = RayType::PATH_RAY;
     auxOutNEE.type = RayType::NEE_RAY;
-    auxOutNEE.type = RayType::NEE_RAY;
 
-    PrimitiveId neePrimId = gRenderState.lightList[aux.endPointIndex]->BoundaryMaterial();
-    HitKey neeKey = gRenderState.lightList[aux.endPointIndex]->Primitive();
+    PrimitiveId neePrimId = gRenderState.lightList[aux.endPointIndex]->Primitive();
+    HitKey neeKey = gRenderState.lightList[aux.endPointIndex]->BoundaryMaterial(); 
 
     // Apply Decay of the medium
-    Vector3 decay = m.Transmittance(distance);
-    auxOutPath.radianceFactor *= decay;
-    auxOutNEE.radianceFactor *= decay;
+    //Vector3 decay = m.Transmittance((ray.tMax - ray.tMin));
+    //auxOutPath.radianceFactor *= decay;
+    //auxOutNEE.radianceFactor *= decay;
 
     // End Case Check (We finally hit a light)
-    bool neeLight = (aux.type == RayType::NEE_RAY &&
-                     primId == neePrimId &&
-                     matId == neeKey);
-    bool wrongNEELight = (aux.type == RayType::NEE_RAY &&
-                          primId != neePrimId ||
-                          matId != neeKey);
+    bool neeMatch = (primId == neePrimId && matId.value == neeKey.value);
+    bool neeLight = (aux.type == RayType::NEE_RAY && neeMatch);
+    bool wrongNEELight = (aux.type == RayType::NEE_RAY && !neeMatch);
     bool nonNEELight = (!gRenderState.nee &&
                         MGroup::IsEmissive(gMatData, matIndex));
+
+    //if(aux.type == RayType::NEE_RAY)
+    //    printf("(%d), %d, %d, %d\n",
+    //           static_cast<uint32_t>(aux.type),
+    //           neeLight, wrongNEELight, nonNEELight);
+
+    //if(aux.type == RayType::NEE_RAY)
+    //    printf("(%x, %x), (%llu, %llu)\n",
+    //           neeKey.value, matId.value,
+    //           neePrimId, primId);
+
+    //printf("%p\n", gRenderState.lightList);
+    //printf("%p\n", gRenderState.lightList[0]);
+    //if(aux.type == RayType::NEE_RAY &&
+    //   HitKey::FetchBatchPortion(matId) == 1)
+    //{
+    //    __brkpt();
+    //}
 
     if(neeLight || nonNEELight)
     {
@@ -160,10 +172,10 @@ inline void PathWork(// Output
                                         gMatData,
                                         matIndex);
         // And accumulate pixel
-        Vector3f total = emission * aux.radianceFactor;
+        Vector3f total = emission* aux.radianceFactor;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
     }
-    if(wrongNEELight || neeLight || nonNEELight)
+    if(ray.tMax == 20.0f||wrongNEELight || neeLight || nonNEELight)
     {        
         // Generate Dummy Ray and Terminate
         RayReg rDummy = EMPTY_RAY_REGISTER;
@@ -198,22 +210,22 @@ inline void PathWork(// Output
     // Change current medium of the ray
     auxOutPath.mediumIndex = static_cast<uint16_t>(outM.ID());
 
-    // Check Russian Roulette
-    float avgThroughput = auxOutPath.radianceFactor.Dot(Vector3f(gRenderState.rrFactor));
-    if(auxOutPath.depth <= gRenderState.rrStart &&
-       !RussianRoulette(auxOutPath.radianceFactor, avgThroughput, rng))
-    {
-        // Write Ray        
-        rayPath.Advance(MathConstants::Epsilon);
-        rayOut.ray = rayPath;
-        rayOut.tMin = 0.0f;
-        rayOut.tMax = INFINITY;
+    //// Check Russian Roulette
+    //float avgThroughput = auxOutPath.radianceFactor.Dot(Vector3f(gRenderState.rrFactor));
+    //if(auxOutPath.depth <= gRenderState.rrStart &&
+    //   !RussianRoulette(auxOutPath.radianceFactor, avgThroughput, rng))
+    //{
+    //    // Write Ray        
+    //    rayPath.AdvanceSelf(MathConstants::Epsilon);
+    //    rayOut.ray = rayPath;
+    //    rayOut.tMin = 0.0f;
+    //    rayOut.tMax = INFINITY;
 
-        // Write to GMem
-        rayOut.Update(gOutRays, PATH_RAY_INDEX);
-        gOutRayAux[PATH_RAY_INDEX] = auxOutPath;
-    }
-    else
+    //    // Write to GMem
+    //    rayOut.Update(gOutRays, PATH_RAY_INDEX);
+    //    gOutRayAux[PATH_RAY_INDEX] = auxOutPath;
+    //}
+    //else
     {
         // Generate Dummy Ray and Terminate
         RayReg rDummy = EMPTY_RAY_REGISTER;
@@ -240,11 +252,19 @@ inline void PathWork(// Output
                            gRenderState.totalLightCount))
     {   
         // Advance slightly to prevent self intersection
-        RayF rayNEE = RayF(lDirection, position);
-        rayNEE.Advance(MathConstants::Epsilon); 
+        Vector3 p = position + 0.001f * lDirection;
+
+        //printf("(%f, %f, %f), (%f, %f, %f)\n",
+        //       position[0], position[1], position[2],
+        //       //lDirection[0], lDirection[1], lDirection[2],
+        //       p[0], p[1], p[2]);
+        //       //r.getPosition()[0], r.getPosition()[1], r.getPosition()[2]);
+
+        RayF rayNEE = RayF(lDirection, p);
+        //rayNEE.AdvanceSelf(MathConstants::Epsilon);
         rayOut.ray = rayNEE;
         rayOut.tMin = 0.0f;
-        rayOut.tMax = lDistance - MathConstants::Epsilon;
+        rayOut.tMax =  lDistance - MathConstants::Epsilon;
 
         // Evaluate mat for this direction
         Vector3 reflectance = MGroup::Evaluate(// Input

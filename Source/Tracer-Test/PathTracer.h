@@ -10,12 +10,16 @@ class PathTracer final : public RayTracer
 
         static constexpr const char*    MAX_DEPTH_NAME = "MaxDepth";
         static constexpr const char*    NEE_NAME = "NextEventEstimation";
+        static constexpr const char*    RR_START_NAME = "RussianRouletteStart";
+        static constexpr const char*    RR_FACTOR_NAME = "RussianRouletteFactor";
 
         struct Options
         {
-            int32_t                     sampleCount = 1;
-            uint32_t                    maximumDepth = 10;
-            bool                        nextEventEstimation = true;
+            int32_t             sampleCount = 1;
+            uint32_t            maximumDepth = 10;
+            bool                nextEventEstimation = true;
+            uint32_t            rrStart = 3;
+            float               rrFactor = 0.333f;
         };
 
     private:

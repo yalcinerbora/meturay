@@ -26,8 +26,9 @@ template<class RayAuxData>
 using AuxInitFunc = void(*)(RayAuxData&,
                             // Input
                             const RayAuxData&,
-                            const RayReg&,
+                            const RayReg&,                            
                             // Index
+                            const uint16_t mediumIndex,
                             const uint32_t localPixelId,
                             const uint32_t pixelSampleId);
 
@@ -118,6 +119,7 @@ __global__ void KCGenerateCameraRaysCPU(// Output
                 auxBaseData,
                 ray,
                 // Index
+                cam.mediumIndex,
                 pixelIdLinear,
                 sampleIdLinear);
 
@@ -206,6 +208,7 @@ __global__ void KCGenerateCameraRaysGPU(// Output
                 auxBaseData,
                 ray,
                 // Index
+                gCam->MediumIndex(),
                 pixelIdLinear,
                 sampleIdLinear);
 

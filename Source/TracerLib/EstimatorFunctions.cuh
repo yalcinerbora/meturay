@@ -24,9 +24,15 @@ inline bool NextEventEstimation(HitKey& key,
     // Randomly Select Light
     float r1 = GPUDistribution::Uniform<float>(rng);
     r1 *= static_cast<float>(pointCount);
-    uint32_t index = static_cast<uint32_t>(round(r1));
+    uint32_t index = static_cast<uint32_t>(floor(r1));
+    
+    // Extremely rarely index become the point count
+    // although GPUDistribution::Uniform returns [0, 1)
+    // it still happens due to fp error i guess?
+    // if it happens just return the last light on the list
+    if(index == pointCount) index--;
 
-    const GPUEndpointI* point = gEndPoints[index];
+    const GPULightI* point = gEndPoints[index];
     point->Sample(lDistance, direction,
                   pdf, position, rng);
     // Incorporate the PDF of selecting that point

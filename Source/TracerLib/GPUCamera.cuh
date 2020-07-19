@@ -46,7 +46,7 @@ class PinholeCamera : public GPUEndpointI
 
 // Expand this when necessary
 static constexpr size_t CameraSizeArray[] = {sizeof(PinholeCamera)};
-static constexpr size_t GPUCameraUnionSize = *std::min_element(std::begin(CameraSizeArray), 
+static constexpr size_t GPUCameraUnionSize = *std::max_element(std::begin(CameraSizeArray), 
                                                                std::end(CameraSizeArray));
 
 
