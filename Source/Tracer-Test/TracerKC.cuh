@@ -143,7 +143,7 @@ inline void PathWork(// Output
                           primId != neePrimId ||
                           matId != neeKey);
     bool nonNEELight = (!gRenderState.nee &&
-                        MGroup::IsEmissive());
+                        MGroup::IsEmissive(gMatData, matIndex));
 
     if(neeLight || nonNEELight)
     {

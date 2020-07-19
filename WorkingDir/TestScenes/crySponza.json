@@ -16,21 +16,28 @@
 	"BaseAccelerator": {"type": "BasicBVH"},
 	"BaseBoundaryMaterial": 0,
 
+	"Mediums": [
+	{
+		"absorption": [0, 0, 0],
+		"scattering": [0, 0, 0],
+		"ior": 1,
+		"phase": 0
+	}],
+
 	"Lights": [
-        // Single Directional Light Information
-        {
-			"id": 0,
-			"type": "directional",
-			"material" : 1,
-            //"direction": [0, -1, 0],
-            "direction": [0.40825, -0.8165, 0.40825],
-			"power": [1.0, 1.0, 1.0]
-		}
+	// Single Directional Light Information
+	{
+		"id": 0,
+		"type": "directional",
+		"material" : 1,
+		//"direction": [0, -1, 0],
+		"direction": [0.40825, -0.8165, 0.40825],
+		"power": [1.0, 1.0, 1.0]
+	}
 	],
 
 	"Transforms":[
 	{
-		"id": 0,
 		"type": "matrix4x4",
 		"data": [ 1, 0, 0, 0,
 			      0, 1, 0, 0,

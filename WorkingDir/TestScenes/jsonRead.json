@@ -11,22 +11,13 @@
 	},
 	"_movingCamera.json"],
 
-	"Textures": [
-		{
-			"id": 0,
-			"type": "2d",
-			"name": "texture.png",
-			"isCached": false,
-			"filter": "nearest",
-		},
-		{
-			"id": 0,
-			"type": "cube",
-			"name": "texture.png",
-			"isCached": false,
-			"filter": "linear"
-		}
-	],
+	"Mediums": [
+	{
+		"absorption": [0, 0, 0],
+		"scattering": [0, 0, 0],
+		"ior": 1,
+		"phase": 0
+	}],
 
 	"Lights": [
 	"_lightMoving.json",
@@ -50,7 +41,6 @@
 	"Transforms":[
 	"_transformAnimate.json",
 	{
-		"id": "0",
 		"type": "matrix4x4",
 		"count": 1,
 		"data": [ 1, 0, 0, 0,

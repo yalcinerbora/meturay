@@ -26,6 +26,7 @@ struct SceneError : public ErrorI
             LIGHTS_ARRAY_NOT_FOUND,
             TRANSFORMS_ARRAY_NOT_FOUND,
             CAMERAS_ARRAY_NOT_FOUND,
+            MEDIUM_ARRAY_NOT_FOUND,
             BASE_ACCELERATOR_NODE_NOT_FOUND,
             BASE_BOUND_MAT_NODE_NOT_FOUND,
             // No Logic
@@ -143,6 +144,7 @@ inline SceneError::operator std::string() const
         "\"Lights\" array not found",
         "\"Transforms\" array not found",
         "\"Cameras\" array not found",
+        "\"Mediums\" array not found",
         "\"BaseAccelerator\" node not found",
         "\"BaseBoundaryMaterial\" node not found",
         // No Logic

@@ -9,6 +9,9 @@ struct SceneError;
 struct CPULight;
 struct CPUCamera;
 struct TextureStruct;
+
+class GPUMedium;
+
 using GPUTransform = Matrix4x4;
 
 class GPUSceneI
@@ -30,11 +33,12 @@ class GPUSceneI
         // Access CPU                
         virtual const std::vector<CPULight>&        LightsCPU() const = 0;
         virtual const std::vector<CPUCamera>&       CamerasCPU() const = 0;
-        virtual const std::vector<TextureStruct>&   TextureInfo() const = 0;
         // Access GPU                
-        virtual const GPUTransform*                 TransformsGPU() const = 0;                
+        virtual const GPUTransform*                 TransformsGPU() const = 0;
+        virtual const GPUMedium*                    MediumsGPU() const = 0;
         // Counts
         virtual size_t                              TransformCount() const = 0;
+        virtual size_t                              MediumCount() const = 0;
         
         // Generated Classes of Materials / Accelerators
         // Work Maps

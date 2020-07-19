@@ -16,20 +16,33 @@
 	"BaseAccelerator": {"type": "Linear"},
 	"BaseBoundaryMaterial": 0,
 
+	"Mediums": [
+	{
+		"absorption": [0, 0, 0],
+		"scattering": [0, 0, 0],
+		"ior": 1,
+		"phase": 0
+	},
+	{
+		"absorption": [0.15, 0.15, 0.1],
+		"scattering": [0, 0, 0],
+		"ior": 1,
+		"phase": 0
+	}],
+
 	"Lights": [
-		// Light Information for event estimation
-		{
-			"id": 0,
-			"type": "primitive",
-			"material" : 1,
-			"primitive": 4,
-			"power": [1.0, 1.0, 1.0]
-		}
+	// Light Information for event estimation
+	{
+		"id": 0,
+		"type": "primitive",
+		"material" : 1,
+		"primitive": 4,
+		"power": [1.0, 1.0, 1.0]
+	}
 	],
 
 	"Transforms":[
 	{
-		"id": 0,
 		"type": "matrix4x4",
 		"data": [ 1, 0, 0, 0,
 			      0, 1, 0, 0,
@@ -53,34 +66,34 @@
 	{
 		// Red Simple Material
 		"id": 2,
-		"type": "Diffuse",
+		"type": "Lambert",
 		"albedo" : [0.6300, 0.0650, 0.0500]
     },
     {
 		// Blue Simple Material
 		"id": 3,
-		"type": "Diffuse",
+		"type": "Lambert",
 		"albedo" : [0.161, 0.133, 0.427]
     },
     {
 		// Gray Simple Material
 		"id": 4,
-		"type": "Diffuse",
+		"type": "Lambert",
 		"albedo" : [0.5, 0.5, 0.5]
     },
     {
 		// Perfect Mirror
 		"id": 5,
-		"type": "Specular",
+		"type": "Reflect",
 		"albedo" : [1.0, 1.0, 1.0],
 		"roughness" : 1.0
     },
     {
 		// Perfect Glass
 		"id": 6,
-		"type": "Transmissive",
+		"type": "Refract",
         "albedo" : [1.0, 1.0, 1.0],
-        "index" : 1.69
+        "medium" : 1
 	}],
 
 	"Primitives":[

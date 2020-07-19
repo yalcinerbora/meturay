@@ -3,6 +3,7 @@
 #include <cuda.h>
 
 #include "RayLib/Vector.h"
+#include "RayLib/SceneStructs.h"
 
 // Default medium is a vacuum with IoR=0
 static constexpr uint32_t DEFAULT_MEDIUM_INDEX = 0;
@@ -22,10 +23,7 @@ class GPUMedium
     public:
         // Constructors & Destructor
         __host__ __device__         GPUMedium();
-        __host__ __device__         GPUMedium(float sA,
-                                              float sS,
-                                              float ior,
-                                              float p,
+        __host__ __device__         GPUMedium(const CPUMedium&,
                                               uint32_t id);
                                     ~GPUMedium() = default;
 
@@ -51,16 +49,13 @@ inline GPUMedium::GPUMedium()
 {}
 
 __host__ __device__
-inline GPUMedium::GPUMedium(float sA,
-                            float sS,
-                            float ior,
-                            float p,
+inline GPUMedium::GPUMedium(const CPUMedium& med,
                             uint32_t id)
-    : sigmaA(sA)
-    , sigmaS(sS)
-    , sigmaT(sA + sS)
-    , ior(ior)
-    , phase(p)
+    : sigmaA(med.sigmaA)
+    , sigmaS(med.sigmaS)
+    , sigmaT(med.sigmaA + med.sigmaS)
+    , ior(med.index)
+    , phase(med.phase)
     , id(id)
 {}
 

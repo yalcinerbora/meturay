@@ -3,6 +3,10 @@
 
 // Basic Tracer Work Batches
 template class DirectTracerWork<ConstantMat,
+                                GPUPrimitiveEmpty,
+                                EmptySurfaceFromEmpty>;
+
+template class DirectTracerWork<ConstantMat,
                                 GPUPrimitiveTriangle,
                                 EmptySurfaceFromTri>;
 
@@ -19,6 +23,10 @@ template class DirectTracerWork<SphericalMat,
                                 SphrSurfaceFromSphr>;
 // ===================================================
 // Path Tracer Work Batches
+template class PathTracerWork<EmissiveMat,
+                              GPUPrimitiveEmpty,
+                              EmptySurfaceFromEmpty>;
+
 template class PathTracerWork<EmissiveMat,
                               GPUPrimitiveTriangle,
                               EmptySurfaceFromTri>;

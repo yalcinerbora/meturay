@@ -15,6 +15,7 @@
 #include "ScenePartitionerI.h"
 #include "SceneNodeJson.h"
 #include "MangledNames.h"
+#include "GPUMedium.cuh"
 
 #include <nlohmann/json.hpp>
 #include <filesystem>
@@ -132,18 +133,6 @@ SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
                     j++;
                 }
             }
-
-            //uint32_t j = 0;
-            //for(const auto& id : ids)
-            //{
-            //    auto r = result.emplace(id, std::make_pair(i, j));
-            //    if(!r.second)
-            //    {
-            //        unsigned int i = static_cast<int>(SceneError::DUPLICATE_ACCELERATOR_ID) + t;
-            //        return static_cast<SceneError::Type>(i);
-            //    }
-            //    j++;
-            //}
         }
         i++;
     }
@@ -598,6 +587,7 @@ SceneError GPUSceneJson::LoadCommon(double time)
 
     // CPU Temp Data
     std::vector<GPUTransform> transformsCPU;    
+    std::vector<GPUMedium> mediumsCPU;
 
     // Transforms
     const nlohmann::json* transformsJson = nullptr;
@@ -613,21 +603,61 @@ SceneError GPUSceneJson::LoadCommon(double time)
     cameras.reserve(camerasJson->size());
     for(const auto& cameraJson : (*camerasJson))
         cameras.push_back(SceneIO::LoadCamera(cameraJson, time));
+    // Mediums
+    const nlohmann::json* mediumsJson = nullptr;
+    if(!FindNode(mediumsJson, NodeNames::MEDIUM_BASE))
+        return SceneError::MEDIUM_ARRAY_NOT_FOUND;    
+    mediumsCPU.reserve(mediumsJson->size());
+
+    // Medium holds its actual index on the array
+    uint32_t i = 0;
+    for(const auto& medJson : (*mediumsJson))
+    {
+        mediumsCPU.emplace_back(SceneIO::LoadMedium(medJson, time), i);
+        i++;
+    }
     
     // Allocate Transform GPU
     transformCount = transformsCPU.size();
-    if(transformsCPU.size() != 0)
-    {
-        size_t transformSize = transformsCPU.size() * sizeof(GPUTransform);
-        DeviceMemory::EnlargeBuffer(transformMemory, transformSize);
-        dTransforms = static_cast<GPUTransform*>(transformMemory);
+    size_t transformSize = transformCount * sizeof(GPUTransform);
+    transformSize = Memory::AlignSize(transformSize, AlignByteCount);
 
+    mediumCount = mediumsCPU.size();
+    size_t mediumSize = mediumCount * sizeof(GPUMedium);
+    mediumSize = Memory::AlignSize(mediumSize, AlignByteCount);
+
+
+    // Allocate
+    size_t requiredSize = transformSize + mediumSize;
+    DeviceMemory::EnlargeBuffer(gpuMemory, requiredSize);
+
+    // Set pointers
+    size_t offset = 0;
+    std::uint8_t* dBasePtr = static_cast<uint8_t*>(gpuMemory);
+    dTransforms = reinterpret_cast<GPUTransform*>(dBasePtr + offset);
+    offset += transformSize;
+    dMediums = reinterpret_cast<GPUMedium*>(dBasePtr + offset);
+    offset += mediumSize;
+    assert(requiredSize == offset);
+
+    if(transformCount != 0)
+    {
         // Just Memcpy
         CUDA_CHECK(cudaMemcpy(dTransforms, transformsCPU.data(),
                               transformsCPU.size() * sizeof(GPUTransform),
                               cudaMemcpyHostToDevice));
     }
     else dTransforms = nullptr;
+
+    if(mediumCount == 0)
+    {
+        // Just Memcpy
+        CUDA_CHECK(cudaMemcpy(dMediums, mediumsCPU.data(),
+                              mediumsCPU.size() * sizeof(GPUMedium),
+                              cudaMemcpyHostToDevice));
+    } 
+    else dMediums = nullptr;
+  
     return e;
 }
 
@@ -702,18 +732,18 @@ SceneError GPUSceneJson::LoadLogicRelated(double time)
 SceneError GPUSceneJson::ChangeCommon(double time)
 {
     // TODO:
-    return SceneError::OK;
+    return SceneError::SURFACE_LOADER_INTERNAL_ERROR;
 }
 
 SceneError GPUSceneJson::ChangeLogicRelated(double time)
 {
     // TODO:
-    return SceneError::BASE_ACCELERATOR_NODE_NOT_FOUND;
+    return SceneError::SURFACE_LOADER_INTERNAL_ERROR;
 }
 
 size_t GPUSceneJson::UsedGPUMemory() const
 {
-    return transformMemory.Size();
+    return gpuMemory.Size();
 }
 
 size_t GPUSceneJson::UsedCPUMemory() const
@@ -803,9 +833,9 @@ const GPUTransform* GPUSceneJson::TransformsGPU() const
     return dTransforms;
 }
 
-const std::vector<TextureStruct>& GPUSceneJson::TextureInfo() const
+const GPUMedium* GPUSceneJson::MediumsGPU() const
 {
-    return texInfo;
+    return dMediums;
 }
 
 const WorkBatchCreationInfo& GPUSceneJson::WorkBatchInfo() const
@@ -841,4 +871,9 @@ const std::map<std::string, GPUPrimGPtr>& GPUSceneJson::PrimitiveGroups() const
 size_t GPUSceneJson::TransformCount() const
 {
     return transformCount;
+}
+
+size_t GPUSceneJson::MediumCount() const
+{
+    return mediumCount;
 }

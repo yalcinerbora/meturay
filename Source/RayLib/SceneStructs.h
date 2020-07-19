@@ -93,20 +93,9 @@ struct CPULight
 
 struct CPUMedium
 {    
-    float sigmaA, sigmaS;   // Scattering and Absorbtion Coeffs
-    float index;            // IoR
-};
-
-// Texture Information from the Scene Json Struct
-struct TextureStruct
-{
-    std::string     name;
-    uint32_t        id;
-    FilterType      filter;
-    TextureType     type;
-    bool            cached;
-    // Textures are always mipped
-    // Those are generated if not available
+    Vector3 sigmaA, sigmaS;     // Scattering and Absorbtion Coeffs
+    float phase;
+    float index;                // IoR
 };
 
 using GPUTransform = Matrix4x4;

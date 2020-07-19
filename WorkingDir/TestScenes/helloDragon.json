@@ -16,30 +16,37 @@
 	"BaseAccelerator": {"type": "Linear"},
 	"BaseBoundaryMaterial": 0,
 
+	"Mediums": [
+	{
+		"absorption": [0, 0, 0],
+		"scattering": [0, 0, 0],
+		"ior": 1,
+		"phase": 0
+	}],
+
 	"Lights": [
-		// Light Information for event estimation
-		{
-			"id": 0,
-			"type": "rectangular",
-			"material" : 1,
-			"power": [1.0, 1.0, 1.0],
-			// Value
-			"position": [-5.371554, 7.565777, -0.362448],
-			"v0" : [-1.5, -2.12132, 1.5],
-			"v1" : [4.24264, 0, 4.24264]
-		}
-		// {
-		// 	"id": 0,
-		// 	"type": "primitive",
-		// 	"material" : 1,
-		// 	"primitive": 2,
-		// 	"power": [1.0, 1.0, 1.0]
-		// }
+	// Light Information for event estimation
+	{
+		"id": 0,
+		"type": "rectangular",
+		"material" : 1,
+		"power": [1.0, 1.0, 1.0],
+		// Value
+		"position": [-5.371554, 7.565777, -0.362448],
+		"v0" : [-1.5, -2.12132, 1.5],
+		"v1" : [4.24264, 0, 4.24264]
+	}
+	// {
+	// 	"id": 0,
+	// 	"type": "primitive",
+	// 	"material" : 1,
+	// 	"primitive": 2,
+	// 	"power": [1.0, 1.0, 1.0]
+	// }
 	],
 
 	"Transforms":[
 	{
-		"id": 0,
 		"type": "matrix4x4",
 		"data": [ 1, 0, 0, 0,
 			      0, 1, 0, 0,

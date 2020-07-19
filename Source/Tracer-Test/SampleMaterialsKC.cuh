@@ -13,6 +13,22 @@
 #include "TracerLib/MaterialFunctions.cuh"
 #include "TracerLib/TracerFunctions.cuh"
 
+template <class Surface>
+__device__ inline
+Vector3 EmitConstant(// Input
+                     const Vector3& wo,
+                     const Vector3& pos,
+                     const GPUMedium& m,
+                     //
+                     const Surface& surface,
+                     const TexCoords* uvs,
+                     // Constants
+                     const EmissiveMatData& matData,
+                     const HitKey::Type& matId)
+{
+    return matData.dAlbedo[matId];
+}
+
 __device__ inline
 Vector3 LambertSample(// Sampled Output
                       RayF& wo,

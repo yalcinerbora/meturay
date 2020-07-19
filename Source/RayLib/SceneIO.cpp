@@ -133,6 +133,24 @@ CPUCamera SceneIO::LoadCamera(const nlohmann::json& jsn, double time)
     else throw SceneException(SceneError::TYPE_MISMATCH);
 }
 
+CPUMedium SceneIO::LoadMedium(const nlohmann::json& jsn, double time)
+{
+    if(jsn.is_string())
+    {
+        return LoadFromAnim<CPUMedium>(jsn, time);
+    }
+    else if(jsn.is_object())
+    {
+        CPUMedium med = {};
+        med.sigmaA = LoadVector<3, float>(jsn[MEDIUM_ABSORBTION], time);
+        med.sigmaS = LoadVector<3, float>(jsn[MEDIUM_SCATTERING], time);
+        med.index = LoadNumber<float>(jsn[MEDIUM_IOR], time);
+        
+        return med;
+    }
+    else throw SceneException(SceneError::TYPE_MISMATCH);
+}
+
 uint32_t SceneIO::LoadLightMatId(const nlohmann::json& jsn)
 {
     return jsn[LIGHT_MATERIAL];
@@ -261,26 +279,26 @@ SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn, double time)
     }
 }
 
-TextureStruct SceneIO::LoadTexture(const nlohmann::json& jsn, double time)
-{
-    if(jsn.is_string())
-    {
-        return LoadFromAnim<TextureStruct>(jsn, time);
-    }
-    else
-    {
-        TextureStruct s = {};
-        s.id = jsn[ID];
-        s.name = jsn[NAME];
-        s.cached = jsn[TEXTURE_IS_CACHED];
-
-        std::string typeName = jsn[TYPE];
-        SceneError e = TextureTypeStringToEnum(s.type, typeName);
-        if(e != SceneError::OK) throw SceneException(e);
-
-        std::string filterName = jsn[TEXTURE_FILTER];
-        e = FilterTypeStringToEnum(s.filter, filterName);
-        if(e != SceneError::OK) throw SceneException(e);
-        return s;
-    }
-}
+//TextureStruct SceneIO::LoadTexture(const nlohmann::json& jsn, double time)
+//{
+//    if(jsn.is_string())
+//    {
+//        return LoadFromAnim<TextureStruct>(jsn, time);
+//    }
+//    else
+//    {
+//        TextureStruct s = {};
+//        s.id = jsn[ID];
+//        s.name = jsn[NAME];
+//        s.cached = jsn[TEXTURE_IS_CACHED];
+//
+//        std::string typeName = jsn[TYPE];
+//        SceneError e = TextureTypeStringToEnum(s.type, typeName);
+//        if(e != SceneError::OK) throw SceneException(e);
+//
+//        std::string filterName = jsn[TEXTURE_FILTER];
+//        e = FilterTypeStringToEnum(s.filter, filterName);
+//        if(e != SceneError::OK) throw SceneException(e);
+//        return s;
+//    }
+//}

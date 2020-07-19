@@ -12,6 +12,22 @@ class RandomGPU;
 
 #include "TracerLib/ImageFunctions.cuh"
 
+template <class Data>
+__device__ inline
+bool IsEmissiveFalse(const Data&,
+                     const HitKey::Type&)
+{
+    return false;
+}
+
+template <class Data>
+__device__ inline
+bool IsEmissiveTrue(const Data&,
+                    const HitKey::Type&)
+{
+    return true;
+}
+
 template <class Data, class Surface>
 __device__ inline
 void AcquireUVEmpty(//Output
@@ -23,6 +39,7 @@ void AcquireUVEmpty(//Output
 {}
 
 template <class Data, class Surface>
+__device__ inline
 Vector3 EmitEmpty(// Input
                   const Vector3& wo,
                   const Vector3& pos,

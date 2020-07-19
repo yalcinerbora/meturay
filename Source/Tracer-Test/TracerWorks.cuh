@@ -71,6 +71,10 @@ uint8_t PathTracerWork<M,P,S>::OutRayCount() const
 
 // Basic Tracer Work Batches
 extern template class DirectTracerWork<ConstantMat,
+                                       GPUPrimitiveEmpty,
+                                       EmptySurfaceFromEmpty>;
+
+extern template class DirectTracerWork<ConstantMat,
                                        GPUPrimitiveTriangle,
                                        EmptySurfaceFromTri>;
 
@@ -87,6 +91,10 @@ extern template class DirectTracerWork<SphericalMat,
                                        SphrSurfaceFromSphr>;
 // ===================================================
 // Path Tracer Work Batches
+extern template class PathTracerWork<EmissiveMat,
+                                     GPUPrimitiveEmpty,
+                                     EmptySurfaceFromEmpty>;
+
 extern template class PathTracerWork<EmissiveMat,
                                      GPUPrimitiveTriangle,
                                      EmptySurfaceFromTri>;
@@ -137,6 +145,9 @@ using DirectTracerWorkerList = TypeList<DirectTracerWork<ConstantMat,
                                                          SphrSurfaceFromSphr>>;
 
 using PathTracerWorkerList = TypeList<PathTracerWork<EmissiveMat,
+                                                     GPUPrimitiveEmpty,
+                                                     EmptySurfaceFromEmpty>,
+                                      PathTracerWork<EmissiveMat,
                                                      GPUPrimitiveTriangle,
                                                      EmptySurfaceFromTri>,
                                       PathTracerWork<LambertMat,

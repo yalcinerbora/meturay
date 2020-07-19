@@ -7,6 +7,7 @@ namespace NodeNames
     // Common Base Arrays
     static constexpr const char* CAMERA_BASE = "Cameras";
     static constexpr const char* LIGHT_BASE = "Lights";
+    static constexpr const char* MEDIUM_BASE = "Mediums";
     static constexpr const char* ACCELERATOR_BASE = "Accelerators";
     static constexpr const char* TRANSFORM_BASE = "Transforms";
     static constexpr const char* PRIMITIVE_BASE = "Primitives";
@@ -37,6 +38,11 @@ namespace NodeNames
     static constexpr const char* CAMERA_FOV = "fov";
     static constexpr const char* CAMERA_GAZE = "gaze";
     static constexpr const char* CAMERA_UP = "up";
+    // Medium Related Names
+    static constexpr const char* MEDIUM_ABSORBTION = "absorption";
+    static constexpr const char* MEDIUM_SCATTERING = "scattering";
+    static constexpr const char* MEDIUM_IOR = "ior";
+    static constexpr const char* MEDIUM_Phase = "phase";
     // Light Related Names
     // Light Type Values
     static constexpr const char* LIGHT_POWER = "power";

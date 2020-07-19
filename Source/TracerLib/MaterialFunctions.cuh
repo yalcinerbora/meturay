@@ -6,6 +6,11 @@
 
 class RandomGPU;
 
+// IsEmissive function is used to check if this mat has a non zero Le(wo,p) part
+template <class Data>
+using IsEmissiveFunc = bool(*)(const Data&,
+                               const HitKey::Type& matId);
+
 // Sample function is responsible for random BRDF evalulation
 // and required data access for BRDFs
 //

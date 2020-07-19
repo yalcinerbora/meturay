@@ -13,6 +13,7 @@ class ConstantMat final
     : public GPUMaterialGroup<AlbedoMatData, EmptySurface,
                               ConstantSample, ConstantEvaluate,
                               EmitEmpty<AlbedoMatData, EmptySurface>,
+                              IsEmissiveFalse<AlbedoMatData>,
                               AcquireUVEmpty<AlbedoMatData, EmptySurface>>
 {
     public:
@@ -59,6 +60,7 @@ class BarycentricMat final
                               BarycentricSample,
                               BarycentricEvaluate,
                               EmitEmpty<NullData, BarySurface>,
+                              IsEmissiveFalse<NullData>,
                               AcquireUVEmpty<NullData, BarySurface>>
 {
    public:
@@ -102,6 +104,7 @@ class SphericalMat final
                               SphericalSample,
                               SphericalEvaluate,
                               EmitEmpty<NullData, SphrSurface>,
+                              IsEmissiveFalse<NullData>,
                               AcquireUVEmpty<NullData, SphrSurface>>
 {
     public:

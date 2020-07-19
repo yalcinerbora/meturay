@@ -51,7 +51,7 @@ class GPUSceneJson : public GPUSceneI
         uint32_t                                hitStructSize;
 
         // GPU Memory
-        DeviceMemory                            transformMemory;
+        DeviceMemory                            gpuMemory;
         GPUBaseAccelPtr                         baseAccelerator;
         std::map<NameGPUPair, GPUMatGPtr>       materials;
         std::map<std::string, GPUAccelGPtr>     accelerators;
@@ -69,16 +69,11 @@ class GPUSceneJson : public GPUSceneI
         // CPU Data
         std::vector<CPUCamera>                  cameras;
         std::vector<CPULight>                   lights;
-        std::vector<TextureStruct>              texInfo;
         // GPU Pointers
-        GPUTransform* dTransforms;
+        GPUTransform*                           dTransforms;
+        GPUMedium*                              dMediums;
         size_t                                  transformCount;
-
-        //GPULightI**                             dLights;
-        //GPUCameraI**                            dCameras;
-        
-        //Byte*                                   dCameraAllocations;
-        //Byte*                                   dLightAllocations;
+        size_t                                  mediumCount;
 
         // Inners
         // Helper Logic
@@ -153,13 +148,13 @@ class GPUSceneJson : public GPUSceneI
         // Access CPU
         const std::vector<CPULight>&        LightsCPU() const override;
         const std::vector<CPUCamera>&       CamerasCPU() const override;
-        const std::vector<TextureStruct>&   TextureInfo() const override;
         // Access GPU
         const GPUTransform*                 TransformsGPU() const override;        
+        const GPUMedium*                    MediumsGPU() const override;
         // Counts
         size_t                              TransformCount() const override;
+        size_t                              MediumCount() const override;
         
-
         // Generated Classes of Materials / Accelerators
         // Work Maps
         const WorkBatchCreationInfo&        WorkBatchInfo() const override;
