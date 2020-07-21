@@ -8,16 +8,17 @@
 #include "RayLib/SceneIO.h"
 #include "RayLib/Log.h"
 #include "RayLib/SceneNodeNames.h"
+#include "RayLib/StripComments.h"
 
 static const std::string TestSceneName = "TestScenes/jsonRead.json";
 
 static nlohmann::json ReadTestFile(const std::string& fileName = TestSceneName)
 {
-    std::ifstream file(fileName);
-    nlohmann::json jsonFile;
+    std::ifstream file(fileName);  
+    auto stream = Utility::StripComments(file);
 
-    std::string s;
-    file >> jsonFile;
+    nlohmann::json jsonFile;
+    stream >> jsonFile;
     return jsonFile;
 }
 
@@ -37,7 +38,8 @@ TEST(SceneIOCommon, Camera)
         Vector2(MathConstants::Pi * 0.25, MathConstants::Pi * 0.25)
     };
 
-    nlohmann::json jsn = ReadTestFile()[NodeNames::CAMERA_BASE];
+    nlohmann::json jsn;
+    EXPECT_NO_THROW(jsn = ReadTestFile()[NodeNames::CAMERA_BASE]);
     CPUCamera camera = SceneIO::LoadCamera(jsn[0]);
 
     EXPECT_EQ(CamResult.mediumIndex, camera.mediumIndex);
@@ -63,6 +65,101 @@ TEST(SceneIOCommon, Camera)
 
     // Second one is external, it should throw file not found
     EXPECT_THROW(SceneIO::LoadCamera(jsn[1]), SceneException);
+}
+
+TEST(SceneIOCommon, Surface)
+{
+    nlohmann::json jsn;
+    jsn = ReadTestFile()[NodeNames::SURFACE_BASE];
+    SurfaceStruct normal0 = SceneIO::LoadSurface(jsn[0]);
+    EXPECT_EQ(normal0.acceleratorId, 79);
+    EXPECT_EQ(normal0.transformId, 99);
+    EXPECT_EQ(normal0.matPrimPairs[0].first, 100);
+    EXPECT_EQ(normal0.matPrimPairs[1].first, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(normal0.matPrimPairs[0].second, 3);
+    EXPECT_EQ(normal0.matPrimPairs[1].second, std::numeric_limits<uint32_t>::max());
+
+    SurfaceStruct normal1 = SceneIO::LoadSurface(jsn[1]);
+    EXPECT_EQ(normal1.acceleratorId, 78);
+    EXPECT_EQ(normal1.transformId, 98);
+    EXPECT_EQ(normal1.matPrimPairs[0].first, 101);
+    EXPECT_EQ(normal1.matPrimPairs[1].first, 102);
+    EXPECT_EQ(normal1.matPrimPairs[2].first, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(normal1.matPrimPairs[0].second, 4);
+    EXPECT_EQ(normal1.matPrimPairs[1].second, 5);
+    EXPECT_EQ(normal1.matPrimPairs[2].second, std::numeric_limits<uint32_t>::max());
+
+    // Light Versions
+    SurfaceStruct light0 = SceneIO::LoadSurface(jsn[2]);
+    EXPECT_EQ(light0.acceleratorId, 77);
+    EXPECT_EQ(light0.transformId, 97);
+    EXPECT_EQ(light0.matPrimPairs[0].first, 103);
+    EXPECT_EQ(light0.matPrimPairs[1].first, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(light0.matPrimPairs[0].second, 0x80000006);
+    EXPECT_EQ(light0.matPrimPairs[1].second, std::numeric_limits<uint32_t>::max());
+
+    SurfaceStruct light1 = SceneIO::LoadSurface(jsn[3]);
+    EXPECT_EQ(light1.acceleratorId, 76);
+    EXPECT_EQ(light1.transformId, 96);
+    EXPECT_EQ(light1.matPrimPairs[0].first, 104);
+    EXPECT_EQ(light1.matPrimPairs[1].first, 105);
+    EXPECT_EQ(light1.matPrimPairs[2].first, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(light1.matPrimPairs[0].second, 0x80000007);
+    EXPECT_EQ(light1.matPrimPairs[1].second, 0x80000008);
+    EXPECT_EQ(light1.matPrimPairs[2].second, std::numeric_limits<uint32_t>::max());
+
+    SurfaceStruct light2 = SceneIO::LoadSurface(jsn[4]);
+    EXPECT_EQ(light2.acceleratorId, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(light2.transformId, 95);
+    EXPECT_EQ(light2.matPrimPairs[0].first, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(light2.matPrimPairs[1].first, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(light2.matPrimPairs[0].second, 0x80000009);
+    EXPECT_EQ(light2.matPrimPairs[1].second, std::numeric_limits<uint32_t>::max());
+
+    SurfaceStruct light3 = SceneIO::LoadSurface(jsn[5]);
+    EXPECT_EQ(light3.acceleratorId, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(light3.transformId, 94);
+    EXPECT_EQ(light3.matPrimPairs[0].first, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(light3.matPrimPairs[1].first, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(light3.matPrimPairs[2].first, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(light3.matPrimPairs[0].second, 0x8000000A);
+    EXPECT_EQ(light3.matPrimPairs[1].second, 0x8000000B);
+    EXPECT_EQ(light3.matPrimPairs[2].second, std::numeric_limits<uint32_t>::max());
+
+    // Hybrid
+    SurfaceStruct hybrid = SceneIO::LoadSurface(jsn[6]);
+    EXPECT_EQ(hybrid.acceleratorId, 73);
+    EXPECT_EQ(hybrid.transformId, 93);
+    EXPECT_EQ(hybrid.matPrimPairs[0].first, 2);
+    EXPECT_EQ(hybrid.matPrimPairs[1].first, 6);
+    EXPECT_EQ(hybrid.matPrimPairs[2].first, 7);
+    EXPECT_EQ(hybrid.matPrimPairs[3].first, 8);
+    EXPECT_EQ(hybrid.matPrimPairs[4].first, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(hybrid.matPrimPairs[0].second, 2);
+    EXPECT_EQ(hybrid.matPrimPairs[1].second, 0x8000000C);
+    EXPECT_EQ(hybrid.matPrimPairs[2].second, 1);
+    EXPECT_EQ(hybrid.matPrimPairs[3].second, 0x8000000D);
+    EXPECT_EQ(hybrid.matPrimPairs[4].second, std::numeric_limits<uint32_t>::max());
+
+    SurfaceStruct array0 = SceneIO::LoadSurface(jsn[7]);
+    EXPECT_EQ(array0.acceleratorId, 0);
+    EXPECT_EQ(array0.transformId, 0);
+    EXPECT_EQ(array0.matPrimPairs[0].first, 0);
+    EXPECT_EQ(array0.matPrimPairs[1].first, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(array0.matPrimPairs[0].second, 3);
+    EXPECT_EQ(array0.matPrimPairs[1].second, std::numeric_limits<uint32_t>::max());
+
+    SurfaceStruct array1 = SceneIO::LoadSurface(jsn[8]);
+    EXPECT_EQ(array1.acceleratorId, 34);
+    EXPECT_EQ(array1.transformId, 33);
+    EXPECT_EQ(array1.matPrimPairs[0].first, 6);
+    EXPECT_EQ(array1.matPrimPairs[1].first, 8);
+    EXPECT_EQ(array1.matPrimPairs[2].first, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(array1.matPrimPairs[0].second, 3);
+    EXPECT_EQ(array1.matPrimPairs[1].second, 4);
+    EXPECT_EQ(array1.matPrimPairs[2].first, std::numeric_limits<uint32_t>::max());
+
+    EXPECT_THROW(SceneIO::LoadSurface(jsn[9]), SceneException);
 }
 
 TEST(SceneIOCommon, Lights)
@@ -110,7 +207,8 @@ TEST(SceneIOCommon, Lights)
 TEST(SceneIOCommon, Transform)
 {
     GPUTransform t;
-    nlohmann::json jsn = ReadTestFile()[NodeNames::TRANSFORM_BASE];
+    nlohmann::json jsn;
+    EXPECT_NO_THROW(jsn = ReadTestFile()[NodeNames::TRANSFORM_BASE]);
     // First one is external, it should throw file not found
     EXPECT_THROW(SceneIO::LoadTransform(jsn[0]), SceneException);
     // Matrix

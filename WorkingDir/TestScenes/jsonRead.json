@@ -12,97 +12,115 @@
 	"_movingCamera.json"],
 
 	"Mediums": [
-	{
-		"absorption": [0, 0, 0],
-		"scattering": [0, 0, 0],
-		"ior": 1,
-		"phase": 0
-	}],
+		{
+			"absorption": [0, 0, 0],
+			"scattering": [0, 0, 0],
+			"ior": 1,
+			"phase": 0
+		}],
+	
+		"Lights": [
+		"_lightMoving.json",
+		{
+			"type": "point",
+			"material": 0
+		},
+		{
+			"type": "directional",
+			"material": 1
+		},
+		{
+			"type": "spot",
+			"material": 2
+		},
+		{
+			"type": "rectangular",
+			"material": 3
+		}],
+	
+		"Transforms":[
+		"_transformAnimate.json",
+		{
+			"type": "matrix4x4",
+			"count": 1,
+			"data": [ 1, 0, 0, 0,
+						0, 1, 0, 0,
+						0, 0, 1, 0,
+						0, 0, 0, 1]
+		},
+		{
+			"id": "1",
+			"type": "transformRotateScale",
+			"count": 1,
+			"data":  [[ 0, 0, 0],
+						[ 0, 0, 0],
+						[ 1, 1, 1]]
+		}],
+	
+		"Materials":[
+		{
+			"id": 0,
+			"type": "ConstantAlbedo",
+			"albedo": [1, 1, 1]
+		},
+		{
+			"id": 1,
+			"type": "ConstantAlbedo",
+			"albedo": [1, 0, 0]
+		}],
+	
+		"BaseAccelerator": {"type" : "Linear"},
+	
+		"Primitives":[
+		{
+			"id": 0,
+			"type": "triangle",
+			"name": "example.gfg",
+			"internalId": 1,
+			"materialSegmentIndex": 1
+		},
+		{
+			"id": 1,
+			"type": "sphere",
+			"name": "example.obj",
+			"meshId": 1
+		}],
+	
+		"Accelerators": [{"id" : 0, "type" : "Linear"}],
+	
+		"Surfaces": [
+			
+			// Normal Version
+			// Name and id pairs
+			{ "transform": 99, "accelerator": 79, "material": 3, "primitive": 100},
+			{ "transform": 98, "accelerator": 78, "material": [4, 5], "primitive": [101, 102]},
+	
+			// Light Version
+			{ "transform": 97, "accelerator": 77, "light": 6, "primitive": 103 },
+			{ "transform": 96, "accelerator": 76, "light": [7, 8], "primitive": [104, 105]},
+			{ "transform": 95, "light": 9},
+			{ "transform": 94, "light": [10, 11]},
+	
+			// Hybrid
+			{ 
+				"transform": 93, 
+				"accelerator": 73,
+				"light": [12, 13, "-", "-"],
+				"material": ["-", "-", 1, 2],
+				"primitive": [6, 8, 7, 2]
+			},
+			// Faster Version
+			// [T A [M] [P]] Array [Transform, Accelerator, [Material] [Primitive]]
+			[0, 0, 3, 0],
+			[33, 34, [3, 4], [6, 8]],
+	
+			// Throw Test
+			[0, 0, [3, 4, 5], [6, 8]],	// Prim-Mat Mismatch
 
-	"Lights": [
-	"_lightMoving.json",
-	{
-		"type": "point",
-		"material": 0
-	},
-	{
-		"type": "directional",
-		"material": 1
-	},
-	{
-		"type": "spot",
-		"material": 2
-	},
-	{
-		"type": "rectangular",
-		"material": 3
-	}],
-
-	"Transforms":[
-	"_transformAnimate.json",
-	{
-		"type": "matrix4x4",
-		"count": 1,
-		"data": [ 1, 0, 0, 0,
-					0, 1, 0, 0,
-					0, 0, 1, 0,
-					0, 0, 0, 1]
-	},
-	{
-		"id": "1",
-		"type": "transformRotateScale",
-		"count": 1,
-		"data":  [[ 0, 0, 0],
-					[ 0, 0, 0],
-					[ 1, 1, 1]]
-	}],
-
-	"Materials":[
-	{
-		"id": 0,
-		"type": "ConstantAlbedo",
-		"albedo": [1, 1, 1]
-	},
-	{
-		"id": 1,
-		"type": "ConstantAlbedo",
-		"albedo": [1, 0, 0]
-	}],
-
-  	"BaseAccelerator": {"type" : "Linear"},
-
-	"Primitives":[
-	{
-		"id": 0,
-		"type": "triangle",
-		"name": "example.gfg",
-		"internalId": 1,
-		"materialSegmentIndex": 1
-	},
-	{
-		"id": 1,
-		"type": "sphere",
-		"name": "example.obj",
-		"meshId": 1
-	}],
-
-	"Accelerators": [{"id" : 0, "type" : "Linear"}],
-
-	"Surfaces": [
-		// Normal Version
-		// Name and id pairs
-        { "transform": 0, "accelerator": 0, "material": 3, "primitive": 0 },
-        { "transform": 0, "accelerator": 0, "material": [3, 4], "primitive": [6, 8]},
-
-        // Faster Version
-        // [T A [M] [P]] Array [Transform, Accelerator, [Material], [Primitive]]
-		[0, 0, 3, 0],
-		[0, 0, [3, 4], [6, 8]],
-
-        // Fastest Version
-        // Binary File with 18 32-bit unsigned integers per surface
-        // 8 Mat-Prim pairs is constant
-        // T A C M M M M M M M P P P P P P P P
-		"testSurface.bin"
-	]
+			// Fastest Version
+			// Binary File with 18 32-bit unsigned integers per surface
+			// 8 Mat-Prim pairs is constant
+			// T A C [M....8] [P....8]
+			"testSurface.bin"
+		]
 }

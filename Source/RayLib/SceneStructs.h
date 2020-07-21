@@ -11,6 +11,12 @@
 #include "Types.h"
 #include "HitStructs.h"
 
+enum class SurfaceType : uint16_t
+{
+    MATERIAL,
+    LIGHT
+};
+
 enum class LightType : uint16_t
 {
     POINT,
@@ -55,8 +61,14 @@ using InnerIndex = uint32_t;    // Inner Index is sub index of the node
                                 // Each node can define multiple ids
 
 using TypeIdPair = std::pair<std::string, uint32_t>;
+
 using IdPair = std::pair<uint32_t, uint32_t>;
 using IdPairs = std::array<IdPair, SceneConstants::MaxPrimitivePerSurface>;
+
+//using IdTuple = std::tuple<uint32_t, uint32_t, uint32_t>;
+//using IdTuples = std::array<IdTuple, SceneConstants::MaxPrimitivePerSurface>;
+//
+//constexpr int TUPLE_LIGHT_INDEX = 2;
 
 class SceneNodeI;
 
@@ -103,6 +115,10 @@ using GPUTransform = Matrix4x4;
 
 struct SurfaceStruct
 {
+    static constexpr int PRIM_INDEX = 0;
+    static constexpr int MATERIAL_OR_LIGHT_INDEX = 1;
+
+    SurfaceType     type;
     uint32_t        acceleratorId;
     uint32_t        transformId;
     IdPairs         matPrimPairs;

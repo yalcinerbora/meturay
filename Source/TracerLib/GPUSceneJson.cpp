@@ -219,7 +219,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     uint32_t surfId = 0;
     for(const auto& jsn : (*surfaces))
     {
-        SurfaceStruct surf = SceneIO::LoadSurface(jsn, time);
+        SurfaceStruct surf = SceneIO::LoadSurface(jsn);
 
         // Find Accelerator
         NodeIndex accIndex;

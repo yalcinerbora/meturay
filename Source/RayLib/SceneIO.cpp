@@ -245,37 +245,111 @@ CPULight SceneIO::LoadLight(const nlohmann::json& jsn, double time)
     else throw SceneException(SceneError::TYPE_MISMATCH);
 }
 
-SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn, double time)
+SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn)
 {
-    if(jsn.is_string())
+    auto FetchValue = [](const nlohmann::json& jsn) -> uint32_t
     {
-        return LoadFromAnim<SurfaceStruct>(jsn, time);
+        if(jsn.is_string()) return std::numeric_limits<uint32_t>::max();
+        else return jsn;
+    };
+
+    // Load as array
+    if(jsn.is_array())
+    {
+        // Array type does not have any light info
+        // just try to fetch it
+        
+        SurfaceStruct s = {};
+        s.transformId = jsn[0];
+        s.acceleratorId= jsn[1];
+        s.matPrimPairs.fill(std::make_pair(std::numeric_limits<uint32_t>::max(),
+                                           std::numeric_limits<uint32_t>::max()));
+        
+        const auto& material = jsn[2];
+        const auto& primitive = jsn[3];
+        if(primitive.size() != material.size())
+            throw SceneException(SceneError::PRIM_MATERIAL_NOT_SAME_SIZE);
+
+        s.pairCount = static_cast<uint8_t>(material.size());
+        if(s.pairCount >= SceneConstants::MaxPrimitivePerSurface)
+            throw SceneException(SceneError::TOO_MANY_SURFACE_ON_NODE);
+
+        if(material.size() == 1)
+        {
+            std::get<SurfaceStruct::MATERIAL_OR_LIGHT_INDEX>(s.matPrimPairs[0]) = material;
+            std::get<SurfaceStruct::PRIM_INDEX>(s.matPrimPairs[0]) = primitive;
+        }
+        else for(int i = 0; i < static_cast<int>(material.size()); i++)
+        {            
+            std::get<SurfaceStruct::MATERIAL_OR_LIGHT_INDEX>(s.matPrimPairs[i]) = material[i];
+            std::get<SurfaceStruct::PRIM_INDEX>(s.matPrimPairs[i]) = primitive[i];
+        }
+        return s;
     }
     else
     {
         SurfaceStruct s = {};
         s.transformId = jsn[TRANSFORM];
-        s.acceleratorId = jsn[ACCELERATOR];
         s.matPrimPairs.fill(std::make_pair(std::numeric_limits<uint32_t>::max(),
                                            std::numeric_limits<uint32_t>::max()));
 
-        // Array Like Couples
-        const auto primIdArray = jsn[PRIMITIVE];
-        const auto materialIdArray = jsn[MATERIAL];
-        if(primIdArray.size() != materialIdArray.size())
-            throw SceneException(SceneError::PRIM_MATERIAL_NOT_SAME_SIZE);
-        if(primIdArray.size() >= SceneConstants::MaxPrimitivePerSurface)
+        // Normal may or may not contain light, material or accelerator
+        auto prim = OptionalFetch<nlohmann::json>(jsn, PRIMITIVE, nlohmann::json());        
+        auto material = OptionalFetch<nlohmann::json>(jsn, MATERIAL, nlohmann::json());
+        auto light = OptionalFetch<nlohmann::json>(jsn, LIGHT, nlohmann::json());
+        auto accel = OptionalFetch<uint32_t>(jsn, ACCELERATOR,
+                                             std::numeric_limits<uint32_t>::max());
+
+        // Do checks
+        if(!prim.is_null() && !material.is_null() && material.size() != prim.size())
+            throw SceneException(SceneError::PRIM_MATERIAL_LIGHT_NOT_SAME_SIZE);
+        if(!prim.is_null() && !light.is_null() && light.size() != prim.size())
+            throw SceneException(SceneError::PRIM_MATERIAL_LIGHT_NOT_SAME_SIZE);
+
+        // Determine Size
+        if(!prim.is_null())
+            s.pairCount = static_cast<int8_t>(prim.size());
+        else
+            s.pairCount = static_cast<int8_t>(light.size());
+
+        if(s.pairCount >= SceneConstants::MaxPrimitivePerSurface)
             throw SceneException(SceneError::TOO_MANY_SURFACE_ON_NODE);
 
-        if(primIdArray.size() == 1)
+        // Load Prim
+        if(prim.size() == 1) 
+            std::get<SurfaceStruct::PRIM_INDEX>(s.matPrimPairs[0]) = prim;
+        else for(int i = 0; i < static_cast<int>(prim.size()); i++)
+            std::get<SurfaceStruct::PRIM_INDEX>(s.matPrimPairs[i]) = prim[i];
+        // Load Material
+        if(material.size() == 1) 
+            std::get<SurfaceStruct::MATERIAL_OR_LIGHT_INDEX>(s.matPrimPairs[0]) = FetchValue(material);
+        else for(int i = 0; i < static_cast<int>(material.size()); i++)
         {
-            s.matPrimPairs[0] = std::make_pair(materialIdArray, primIdArray);
+            uint32_t val = FetchValue(material[i]);
+            if(val != std::numeric_limits<uint32_t>::max())
+                std::get<SurfaceStruct::MATERIAL_OR_LIGHT_INDEX>(s.matPrimPairs[i]) = val;            
+        }            
+        // Load Light
+        if(light.size() == 1)
+        {
+            uint32_t val = FetchValue(light);
+            // Mask light value
+            val |= (1 << (sizeof(uint32_t) * BYTE_BITS - 1));
+            std::get<SurfaceStruct::MATERIAL_OR_LIGHT_INDEX>(s.matPrimPairs[0]) = val;
+        }            
+        else for(int i = 0; i < static_cast<int>(light.size()); i++)
+        {
+            uint32_t val = FetchValue(light[i]);
+            if(val != std::numeric_limits<uint32_t>::max())
+            {
+                // Mask light value
+                val |= (1 << (sizeof(uint32_t) * BYTE_BITS - 1));
+                std::get<SurfaceStruct::MATERIAL_OR_LIGHT_INDEX>(s.matPrimPairs[i]) = val;
+            }
         }
-        else for(int i = 0; i < static_cast<int>(primIdArray.size()); i++)
-            s.matPrimPairs[i] = std::make_pair(materialIdArray[i], primIdArray[i]);
 
+        s.acceleratorId = accel;
         std::sort(s.matPrimPairs.begin(), s.matPrimPairs.end());
-        s.pairCount = static_cast<int8_t>(primIdArray.size());
         return s;
     }
 }

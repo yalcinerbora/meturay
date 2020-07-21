@@ -175,7 +175,7 @@ inline void PathWork(// Output
         Vector3f total = emission* aux.radianceFactor;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
     }
-    if(ray.tMax == 20.0f||wrongNEELight || neeLight || nonNEELight)
+    if(wrongNEELight || neeLight || nonNEELight)
     {        
         // Generate Dummy Ray and Terminate
         RayReg rDummy = EMPTY_RAY_REGISTER;

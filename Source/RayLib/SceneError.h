@@ -76,6 +76,7 @@ struct SceneError : public ErrorI
             // Misc
             TOO_MANY_SURFACE_ON_NODE,
             PRIM_MATERIAL_NOT_SAME_SIZE,
+            PRIM_MATERIAL_LIGHT_NOT_SAME_SIZE,
             PRIM_TYPE_NOT_CONSISTENT_ON_SURFACE,
             LIGHT_PRIMITIVE_NOT_FOUND,
             // Internal Errors
@@ -193,7 +194,8 @@ inline SceneError::operator std::string() const
         "Non-2D Texture is marked as \"cached\", only 2D textures can be cached",
         // Misc
         "Too many data/material pairs per surface node",
-        "Prim/Material pairs on surface node does not have same size",
+        "Prim/Material pair on surface node does not have same size",
+        "Prim/Material/Light tuples on surface node does not have same size",
         "Primitive types are not consistent in a surface",
         "Primitive for light not found",
         // Internal Errors
