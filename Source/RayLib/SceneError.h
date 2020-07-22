@@ -147,7 +147,7 @@ inline SceneError::operator std::string() const
         "\"Cameras\" array not found",
         "\"Mediums\" array not found",
         "\"BaseAccelerator\" node not found",
-        "\"BaseBoundaryMaterial\" node not found",
+        "\"DefaultBoundaryLight\" node not found",
         // No Logic
         "No logic found for that accelerator",
         "No logic found for that material",

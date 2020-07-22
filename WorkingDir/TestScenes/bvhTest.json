@@ -14,7 +14,7 @@
     }],
 
 	"BaseAccelerator": {"type": "Linear"},
-	"BaseBoundaryMaterial": 0,
+	"DefaultBoundaryLight": 0,
 
 	"Mediums": [
 	{
@@ -24,7 +24,14 @@
 		"phase": 0
 	}],
 
-	"Lights": [],
+	"Lights": [    {
+        // General Boundary Light
+        "id": 0,
+        "type": "spherical",
+        "center" : [0, 0, 0],
+        "radiance" : [0, 0, 0],
+        "radius": 100
+    }],
 
 	"Transforms":[
 	{
@@ -37,10 +44,9 @@
 
 	"Materials":[
 	{
-		"id": [0, 1],
+		"id": 1,
 		"type": "Constant",
-        "albedo" : [[0, 0, 0],
-                    [0.5, 0.5, 0.5]]
+        "albedo" : [0.5, 0.5, 0.5]
 	}],
 
 	"Primitives":[

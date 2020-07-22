@@ -14,7 +14,7 @@
     }],
 
 	"BaseAccelerator": {"type": "Linear"},
-	"BaseBoundaryMaterial": 0,
+	"DefaultBoundaryLight": 1,
 
 	"Mediums": [
 	{
@@ -25,15 +25,20 @@
 	}],
 
 	"Lights": [
-	// Light Information for event estimation
 	{
 		"id": 0,
 		"type": "primitive",
-		"material" : 1,
 		"primitive": 4,
-		"power": [1.0, 1.0, 1.0]
-	}
-	],
+	 	"radiance" : [140, 140, 140]
+	},
+	{
+        // General Boundary Light
+        "id": 1,
+        "type": "spherical",
+        "center" : [0, 0, 0],
+        "radiance" : [0, 0, 0],
+        "radius": 100
+    }],
 
 	"Transforms":[
 	{
@@ -45,18 +50,18 @@
 	}],
 
 	"Materials":[
-	{
-		// General Boundary Material
-		"id": 0,
-        "type": "Emissive",
-		"radiance" : [0, 0, 0]
-    },
-    {
-		// Light Boundary Material
-		"id": 1,
-		"type": "Emissive",
-		"radiance" : [140, 140, 140]
-    },
+	// {
+	// 	// General Boundary Material
+	// 	"id": 0,
+    //     "type": "Emissive",
+	// 	"radiance" : [0, 0, 0]
+    // },
+    // {
+	// 	// Light Boundary Material
+	// 	"id": 1,
+	// 	"type": "Emissive",
+	// 	"radiance" : [140, 140, 140]
+    // },
 	{
 		// Red Simple Material
 		"id": 2,
@@ -131,7 +136,8 @@
 		"transform": 0,
 		"accelerator": 0,
 		"primitive": [2, 3, 4, 5],
-		"material": [4, 3, 1, 2]
+		"material": [4, 3, "", 2],
+		"light": ["", "", 0, ""]
 	},
 	// Cornell Box Back Face
 	{

@@ -14,7 +14,7 @@
     }],
 
 	"BaseAccelerator": {"type": "Linear"},
-	"BaseBoundaryMaterial": 0,
+	"DefaultBoundaryLight": 1,
 
 	"Mediums": [
 	{
@@ -31,15 +31,21 @@
 	}],
 
 	"Lights": [
-	// Light Information for event estimation
 	{
 		"id": 0,
 		"type": "primitive",
 		"material" : 1,
 		"primitive": 4,
 		"power": [1.0, 1.0, 1.0]
-	}
-	],
+	},
+	{
+        // General Boundary Light
+        "id": 1,
+        "type": "spherical",
+        "center" : [0, 0, 0],
+        "radiance" : [0, 0, 0],
+        "radius": 100
+    }],
 
 	"Transforms":[
 	{

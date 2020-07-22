@@ -14,7 +14,7 @@
     }],
 
 	"BaseAccelerator": {"type": "BasicBVH"},
-	"BaseBoundaryMaterial": 0,
+	"DefaultBoundaryLight": 1,
 
 	"Mediums": [
 	{
@@ -33,8 +33,15 @@
 		//"direction": [0, -1, 0],
 		"direction": [0.40825, -0.8165, 0.40825],
 		"power": [1.0, 1.0, 1.0]
-	}
-	],
+	},
+	{
+        // General Boundary Light
+        "id": 1,
+        "type": "spherical",
+        "center" : [0, 0, 0],
+        "radiance" : [0, 0, 0],
+        "radius": 100
+    }],
 
 	"Transforms":[
 	{

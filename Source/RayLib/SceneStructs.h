@@ -11,12 +11,6 @@
 #include "Types.h"
 #include "HitStructs.h"
 
-enum class SurfaceType : uint16_t
-{
-    MATERIAL,
-    LIGHT
-};
-
 enum class LightType : uint16_t
 {
     POINT,
@@ -118,7 +112,6 @@ struct SurfaceStruct
     static constexpr int PRIM_INDEX = 0;
     static constexpr int MATERIAL_OR_LIGHT_INDEX = 1;
 
-    SurfaceType     type;
     uint32_t        acceleratorId;
     uint32_t        transformId;
     IdPairs         matPrimPairs;

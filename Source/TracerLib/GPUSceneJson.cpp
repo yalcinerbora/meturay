@@ -215,102 +215,116 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         return e;
 
     // Iterate over surfaces
-    // and collect data for groups and batches
+    // and collect data for groups and batches and lights
     uint32_t surfId = 0;
     for(const auto& jsn : (*surfaces))
     {
         SurfaceStruct surf = SceneIO::LoadSurface(jsn);
 
-        // Find Accelerator
+        // Surface node may not have accelerator when it has light info
         NodeIndex accIndex;
-        std::string accType = "";
+        std::string accType;
         const nlohmann::json* accNode = nullptr;
-        
-        const uint32_t accId = surf.acceleratorId;
-        if(auto loc = acceleratorList.find(accId); loc != acceleratorList.end())
+        if(surf.acceleratorId != std::numeric_limits<uint32_t>::max())
         {
-            accIndex = loc->second.first;
-            accNode = &(*accelerators)[accIndex];
-            accType = (*accNode)[NodeNames::TYPE];            
+            // Find Accelerator            
+            const uint32_t accId = surf.acceleratorId;
+            if(auto loc = acceleratorList.find(accId); loc != acceleratorList.end())
+            {
+                accIndex = loc->second.first;
+                accNode = &(*accelerators)[accIndex];
+                accType = (*accNode)[NodeNames::TYPE];            
+            }
+            else return SceneError::ACCELERATOR_ID_NOT_FOUND;
+
         }
-        else return SceneError::ACCELERATOR_ID_NOT_FOUND;
-        
+
         // Start loading mats and surface data
         // Iterate mat surface pairs
         std::string primGroupType;
         for(int i = 0; i < surf.pairCount; i++)
         {
             const auto& pairs = surf.matPrimPairs;
-            const uint32_t primId = pairs[i].second;
-            const uint32_t matId = pairs[i].first;
+            const uint32_t primId = pairs[i].first;
+            const uint32_t matId = pairs[i].second;
 
             // Check if primitive exists
             // add it to primitive group list for later construction
-            if(auto loc = primList.find(primId); loc != primList.end())
+            std::string currentType = BaseConstants::EMPTY_PRIMITIVE_NAME;
+            if(primId != std::numeric_limits<uint32_t>::max())
             {
-                const NodeIndex nIndex = loc->second.first;
-                const InnerIndex iIndex = loc->second.second;
-                const auto& jsnNode = (*primitives)[nIndex];
+                if(auto loc = primList.find(primId); loc != primList.end())
+                {
+                    const NodeIndex nIndex = loc->second.first;
+                    const InnerIndex iIndex = loc->second.second;
+                    const auto& jsnNode = (*primitives)[nIndex];
 
-                std::string currentType = jsnNode[NodeNames::TYPE];
+                    currentType = jsnNode[NodeNames::TYPE];
 
-                // All surface primitives must be same
-                if((i != 0) && primGroupType != currentType)
-                    return SceneError::PRIM_TYPE_NOT_CONSISTENT_ON_SURFACE;
-                else primGroupType = currentType;
-                auto& primSet = primGroupNodes.emplace(primGroupType, NodeListing()).first->second;
-                auto& node = *primSet.emplace(std::make_unique<SceneNodeJson>(jsnNode, nIndex)).first;
-                node->AddIdIndexPair(primId, iIndex);
+                    // All surface primitives must be same
+                    if((i != 0) && primGroupType != currentType)
+                        return SceneError::PRIM_TYPE_NOT_CONSISTENT_ON_SURFACE;
+                    else primGroupType = currentType;
+                    auto& primSet = primGroupNodes.emplace(primGroupType, NodeListing()).first->second;
+                    auto& node = *primSet.emplace(std::make_unique<SceneNodeJson>(jsnNode, nIndex)).first;
+                    node->AddIdIndexPair(primId, iIndex);
+                }
+                else return SceneError::PRIMITIVE_ID_NOT_FOUND;
             }
-            else return SceneError::PRIMITIVE_ID_NOT_FOUND;
 
             // Do Material attachments
             if((e = AttachMatAll(primGroupType, matId)) != SceneError::OK)
                 return e;
         }
         // Generate Accelerator Group
-        const std::string acceleratorGroupType = MangledNames::AcceleratorGroup(primGroupType.c_str(),
-                                                                                accType.c_str());
-        AccelGroupData accGData =
+        if(surf.acceleratorId != std::numeric_limits<uint32_t>::max())
         {
-            acceleratorGroupType,
-            primGroupType,
-            std::map<uint32_t, IdPairs>(),
-            std::make_unique<SceneNodeJson>(*accNode, accIndex)
-        };
-        const auto& result = requiredAccelListings.emplace(acceleratorGroupType, 
-                                                           std::move(accGData)).first;
-        result->second.matPrimIdPairs.emplace(surfId, surf.matPrimPairs);
-
+            const std::string acceleratorGroupType = MangledNames::AcceleratorGroup(primGroupType.c_str(),
+                                                                                    accType.c_str());
+            AccelGroupData accGData =
+            {
+                acceleratorGroupType,
+                primGroupType,
+                std::map<uint32_t, IdPairs>(),
+                std::make_unique<SceneNodeJson>(*accNode, accIndex)
+            };
+            const auto& result = requiredAccelListings.emplace(acceleratorGroupType,
+                                                               std::move(accGData)).first;
+            result->second.matPrimIdPairs.emplace(surfId, surf.matPrimPairs);
+        }
+ 
         // Generate transform pair also
         surfaceTransformIds.emplace(surfId, surf.transformId);
         surfId++;
     }
-    // Additionally For Lights and Base Boundary Material 
-    // Generate a Empty primitive (if not already requrested)
-    primGroupNodes.emplace(BaseConstants::EMPTY_PRIMITIVE_NAME, NodeListing());
-    // Generate Material listing and material group
-    // For Lights
-    for(const auto& jsn : (*lights))
-    {
-        uint32_t matId = SceneIO::LoadLightMatId(jsn);
-        LightType type = SceneIO::LoadLightType(jsn);
-        
-        // For primitive lights skip this process
-        // since their mat is already included above        
-        if(type == LightType::PRIMITIVE) continue;
+    //// Additionally For Lights and Base Boundary Material 
+    //// Generate a Empty primitive (if not already requrested)
+    //primGroupNodes.emplace(BaseConstants::EMPTY_PRIMITIVE_NAME, NodeListing());
+    //// Generate Material listing and material group
+    //// For Lights
+    //for(const auto& jsn : (*lights))
+    //{
+    //    uint32_t matId = SceneIO::LoadLightMatId(jsn);
+    //    LightType type = SceneIO::LoadLightType(jsn);
+    //    
+    //    // For primitive lights skip this process
+    //    // since their mat is already included above        
+    //    if(type == LightType::PRIMITIVE) continue;
 
-        if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME, matId)) != SceneError::OK)
-           return e;
-    }
-    // Finally Boundary Material
-    const nlohmann::json* baseMatNode = nullptr;
-    if(!FindNode(baseMatNode, NodeNames::BASE_OUTSIDE_MATERIAL))
-        return SceneError::BASE_BOUND_MAT_NODE_NOT_FOUND;
-    if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME,
-                         SceneIO::LoadNumber<uint32_t>(*baseMatNode, time))) != SceneError::OK)
-        return e;
-    return e;
+    //    if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME, matId)) != SceneError::OK)
+    //       return e;
+    //}
+    // Finally Boundary Light
+    //const nlohmann::json* baseMatNode = nullptr;
+    //if(!FindNode(baseMatNode, NodeNames::DEFAULT_BOUNDARY_LIGHT))
+    //    return SceneError::BASE_BOUND_MAT_NODE_NOT_FOUND;
+
+    //// Boundary Light has to be non
+    //uint32_t lightId = SceneIO::LoadNumber<uint32_t>(*baseMatNode, time);
+    //lightId |= (1 << (sizeof(uint32_t) * BYTE_BITS));
+    //if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME, lightId)) != SceneError::OK)
+    //    return e;
+    //return e;
 }
 
 SceneError GPUSceneJson::GenerateMaterialGroups(const MultiGPUMatNodes& matGroupNodes,
@@ -568,7 +582,7 @@ SceneError GPUSceneJson::FindBoundaryMaterial(const MaterialKeyListing& matHitKe
     NodeListing nodeList;
 
     const nlohmann::json* node = nullptr;
-    if(!FindNode(node, NodeNames::BASE_OUTSIDE_MATERIAL))
+    if(!FindNode(node, NodeNames::DEFAULT_BOUNDARY_LIGHT))
         return SceneError::BASE_BOUND_MAT_NODE_NOT_FOUND;
 
     // From that node find equavilent material,
