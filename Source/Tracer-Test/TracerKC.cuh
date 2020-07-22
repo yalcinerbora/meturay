@@ -104,8 +104,8 @@ inline void PathWork(// Output
                      const PrimitiveId primId)
 {
     // Check Material Sample Strategy
-    int sampleStrategyCount = gLocalState.strategyCount;
-    bool isEndpoint = MGroup::IsEndpoint(gMatData, matIndex);
+//    int sampleStrategyCount = gLocalState.strategyCount;
+//    bool isEndpoint = MGroup::IsEndpoint(gMatData, matIndex);
     
     // if endpoint
     // check if ray is properly hit the corrent endpoint
@@ -280,7 +280,7 @@ inline void PathWork(// Output
         //       p[0], p[1], p[2]);
         //       //r.getPosition()[0], r.getPosition()[1], r.getPosition()[2]);
 
-        RayF rayNEE = RayF(lDirection, p);
+        RayF rayNEE = RayF(lDirection, position);
         rayNEE.AdvanceSelf(MathConstants::Epsilon);
         rayOut.ray = rayNEE;
         rayOut.tMin = 0.0f;
