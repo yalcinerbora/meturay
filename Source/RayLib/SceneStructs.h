@@ -86,10 +86,12 @@ struct CPULight
     LightType       type;
     HitKey          matKey;
     PrimitiveId     primId;
-    Vector3         flux;
     Vector3         position0;
     Vector3         position1;
-    Vector3         position2;    
+    Vector3         position2;
+
+    //
+    Vector3         radiance;
 };
 
 struct CPUMedium
@@ -103,6 +105,9 @@ using GPUTransform = Matrix4x4;
 
 struct SurfaceStruct
 {
+    static constexpr int MATERIAL_INDEX = 0;
+    static constexpr int PRIM_INDEX = 1;
+    
     uint32_t        acceleratorId;
     uint32_t        transformId;
     IdPairs         matPrimPairs;

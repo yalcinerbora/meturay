@@ -46,7 +46,7 @@ namespace NodeNames
     static constexpr const char* MEDIUM_Phase = "phase";
     // Light Related Names
     // Light Type Values
-    static constexpr const char* LIGHT_POWER = "power";
+    //static constexpr const char* LIGHT_POWER = "radiance";
     static constexpr const char* LIGHT_POSITION = POSITION;
     static constexpr const char* LIGHT_DIRECTION = "direction";
     static constexpr const char* LIGHT_SPHR_CENTER = "center";

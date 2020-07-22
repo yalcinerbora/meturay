@@ -851,6 +851,23 @@ Matrix<N, T> operator*(float t, const Matrix<N, T>& mat)
 }
 
 template<class T, typename>
+__device__ __host__ 
+inline Vector<3, T> TransformGen::ExtractScale(const Matrix<4, T>& m)
+{
+    T sX = Vector<3, T>(m[0], m[1], m[2]).Length();
+    T sY = Vector<3, T>(m[4], m[5], m[6]).Length();
+    T sZ = Vector<3, T>(m[8], m[9], m[10]).Length();
+    return Vector<3, T>(sX, sY, sZ);
+}
+
+template<class T, typename>
+__device__ __host__ 
+inline Vector<3, T> TransformGen::ExtractTranslation(const Matrix<4, T>& m)
+{
+    return Vector<3, T>(m[12], m[13], m[14]);
+}
+
+template<class T, typename>
 __device__ __host__
 inline Matrix<4, T> TransformGen::Translate(const Vector<3, T>& v)
 {

@@ -256,21 +256,25 @@ bool GPUPrimitiveSphere::HasPrimitive(uint32_t surfaceDataId) const
 }
 
 SceneError GPUPrimitiveSphere::GenerateLights(std::vector<CPULight>& result,
-                                              const Vector3& flux, HitKey key,
-                                              uint32_t id) const
+                                              const Vector3& radiance, HitKey key,
+                                              uint32_t surfaceDataId,
+                                              const Matrix4x4& transform) const
 {
-    const auto& range = batchRanges.at(id);
+    const auto& range = batchRanges.at(surfaceDataId);
     result.reserve(range[1] - range[0]);
     for(uint64_t i = range[0]; i < range[1]; i++)
     {
         Vector4 centerRad = dData.centerRadius[i];
 
+        Vector3 scale = TransformGen::ExtractScale(transform);
+        assert((scale[0] != scale[1]) || (scale[1] != scale[2]));
+
         CPULight ls;
         ls.matKey = key;
-        ls.flux = flux;
+        ls.radiance = radiance;
         ls.type = LightType::SPHERICAL;
-        ls.position0 = centerRad;
-        ls.position1[0] = centerRad[3];
+        ls.position0 = transform * centerRad;
+        ls.position1[0] = centerRad[3] * scale[0];
         ls.primId = i;
         result.push_back(ls);
     }

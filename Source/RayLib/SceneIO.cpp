@@ -184,7 +184,7 @@ CPULight SceneIO::LoadLight(const nlohmann::json& jsn, double time)
         SceneError e = LightTypeStringToEnum(light.type, type);
         if(e != SceneError::OK) throw SceneException(SceneError::UNKNOWN_LIGHT_TYPE);
 
-        light.flux = LoadVector<3, float>(jsn[LIGHT_POWER], time);
+        //light.flux = LoadVector<3, float>(jsn[LIGHT_POWER], time);
         switch(light.type)
         {
             // Fetch from Node if analytic light
@@ -245,11 +245,40 @@ CPULight SceneIO::LoadLight(const nlohmann::json& jsn, double time)
     else throw SceneException(SceneError::TYPE_MISMATCH);
 }
 
-SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn, double time)
+SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn)
 {
-    if(jsn.is_string())
+    // Load as array
+    if(jsn.is_array())
     {
-        return LoadFromAnim<SurfaceStruct>(jsn, time);
+        // Array type does not have any light info
+        // just try to fetch it
+
+        SurfaceStruct s = {};
+        s.transformId = jsn[0];
+        s.acceleratorId = jsn[1];
+        s.matPrimPairs.fill(std::make_pair(std::numeric_limits<uint32_t>::max(),
+                                           std::numeric_limits<uint32_t>::max()));
+
+        const auto& material = jsn[2];
+        const auto& primitive = jsn[3];
+        if(primitive.size() != material.size())
+            throw SceneException(SceneError::PRIM_MATERIAL_NOT_SAME_SIZE);
+
+        s.pairCount = static_cast<uint8_t>(material.size());
+        if(s.pairCount >= SceneConstants::MaxPrimitivePerSurface)
+            throw SceneException(SceneError::TOO_MANY_SURFACE_ON_NODE);
+
+        if(material.size() == 1)
+        {
+            std::get<SurfaceStruct::MATERIAL_INDEX>(s.matPrimPairs[0]) = material;
+            std::get<SurfaceStruct::PRIM_INDEX>(s.matPrimPairs[0]) = primitive;
+        }
+        else for(int i = 0; i < static_cast<int>(material.size()); i++)
+        {
+            std::get<SurfaceStruct::MATERIAL_INDEX>(s.matPrimPairs[i]) = material[i];
+            std::get<SurfaceStruct::PRIM_INDEX>(s.matPrimPairs[i]) = primitive[i];
+        }
+        return s;
     }
     else
     {

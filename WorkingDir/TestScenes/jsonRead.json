@@ -89,20 +89,29 @@
 	"Accelerators": [{"id" : 0, "type" : "Linear"}],
 
 	"Surfaces": [
-		// Normal Version
-		// Name and id pairs
-        { "transform": 0, "accelerator": 0, "material": 3, "primitive": 0 },
-        { "transform": 0, "accelerator": 0, "material": [3, 4], "primitive": [6, 8]},
+			// Normal Version
+			// Name and id pairs
+			{ "transform": 99, "accelerator": 79, "material": 3, "primitive": 100},
+			{ "transform": 98, "accelerator": 78, "material": [4, 5], "primitive": [101, 102]},
 
-        // Faster Version
-        // [T A [M] [P]] Array [Transform, Accelerator, [Material], [Primitive]]
-		[0, 0, 3, 0],
-		[0, 0, [3, 4], [6, 8]],
+			// Faster Version
+			// [T A [M] [P]] Array [Transform, Accelerator, [Material] [Primitive]]
+			[0, 0, 3, 0],
+			[33, 34, [3, 4], [6, 8]],
 
-        // Fastest Version
-        // Binary File with 18 32-bit unsigned integers per surface
-        // 8 Mat-Prim pairs is constant
-        // T A C M M M M M M M P P P P P P P P
-		"testSurface.bin"
+			// Throw Tests
+			// Prim-Mat Mismatch
+			[0, 0, [3, 4, 5], [6, 8]],	
+			// Too many material/prim pair
+			{ 
+				"transform": 98, "accelerator": 78, 
+				"material": [4, 5, 5, 5, 5, 5, 5, 5, 5], 
+				"primitive": [101, 102, 1, 2, 3, 4, 5, 6, 7]}, 
+
+			// Fastest Version
+			// Binary File with 18 32-bit unsigned integers per surface
+			// 8 Mat-Prim pairs is constant
+			// T A C [M....8] [P....8]
+			"testSurface.bin"
 	]
 }

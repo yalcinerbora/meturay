@@ -114,10 +114,10 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
         template<class Q = T>
         static __device__ __host__ FloatEnable<Q, Matrix>   Lerp(const Matrix&, const Matrix&, T);
 
-        static __device__ __host__ Matrix                   Min(const Matrix&, const Matrix&);
-        static __device__ __host__ Matrix                   Min(const Matrix&, T);
-        static __device__ __host__ Matrix                   Max(const Matrix&, const Matrix&);
-        static __device__ __host__ Matrix                   Max(const Matrix&, T);
+        static __device__ __host__ Matrix               Min(const Matrix&, const Matrix&);
+        static __device__ __host__ Matrix               Min(const Matrix&, T);
+        static __device__ __host__ Matrix               Max(const Matrix&, const Matrix&);
+        static __device__ __host__ Matrix               Max(const Matrix&, T);
 };
 
 // Determinants
@@ -177,6 +177,12 @@ static __device__ __host__ Vector<3,T> ExtractScaleInfo(const Matrix<4, T>&);
 // Transformation Matrix Generation
 namespace TransformGen
 {
+    // Extraction Functions
+    template<class T, typename = FloatEnable<T>>
+    static __device__ __host__ Vector<3, T>     ExtractScale(const Matrix<4, T>&);
+    template<class T, typename = FloatEnable<T>>
+    static __device__ __host__ Vector<3, T>     ExtractTranslation(const Matrix<4, T>&);
+
     template<class T, typename = FloatEnable<T>>
     static __device__ __host__ Matrix<4, T>     Translate(const Vector<3, T>&);
     template<class T, typename = FloatEnable<T>>

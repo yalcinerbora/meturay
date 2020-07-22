@@ -54,6 +54,12 @@ class GPUMaterialGroupI
         virtual size_t                      UsedGPUMemory(uint32_t materialId) const = 0;
         virtual size_t                      UsedCPUMemory(uint32_t materialId) const = 0;
         
+        // NEE Related
+        // Marked materials does not return emissive to non NEE lights
+        //virtual void                        MarkAsLight(uint32_t matId) const = 0;
+        //virtual ?                           EmittedRadiance(uint32_t matId) const = 0;
+        //virtual ......
+
         // Returns how many different sampling strategy this material has
         virtual uint8_t                     SampleStrategyCount() const = 0;
         // Returns the cached textures

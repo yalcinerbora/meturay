@@ -1,23 +1,22 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <fstream>
 
 #include "RayLib/SceneIO.h"
 #include "RayLib/Camera.h"
-
-#include <fstream>
-#include "RayLib/SceneIO.h"
 #include "RayLib/Log.h"
 #include "RayLib/SceneNodeNames.h"
+#include "RayLib/StripComments.h"
 
 static const std::string TestSceneName = "TestScenes/jsonRead.json";
 
 static nlohmann::json ReadTestFile(const std::string& fileName = TestSceneName)
 {
     std::ifstream file(fileName);
-    nlohmann::json jsonFile;
+    auto stream = Utility::StripComments(file);
 
-    std::string s;
-    file >> jsonFile;
+    nlohmann::json jsonFile;
+    stream >> jsonFile;
     return jsonFile;
 }
 
@@ -63,6 +62,67 @@ TEST(SceneIOCommon, Camera)
 
     // Second one is external, it should throw file not found
     EXPECT_THROW(SceneIO::LoadCamera(jsn[1]), SceneException);
+}
+
+TEST(SceneIOCommon, Surface)
+{
+    nlohmann::json jsn;
+    jsn = ReadTestFile()[NodeNames::SURFACE_BASE];
+    SurfaceStruct normal0 = SceneIO::LoadSurface(jsn[0]);
+    EXPECT_EQ(normal0.acceleratorId, 79);
+    EXPECT_EQ(normal0.transformId, 99);
+    EXPECT_EQ(normal0.matPrimPairs[0].second, 100);
+    EXPECT_EQ(normal0.matPrimPairs[1].second, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(normal0.matPrimPairs[0].first, 3);
+    EXPECT_EQ(normal0.matPrimPairs[1].first, std::numeric_limits<uint32_t>::max());
+
+    SurfaceStruct normal1 = SceneIO::LoadSurface(jsn[1]);
+    EXPECT_EQ(normal1.acceleratorId, 78);
+    EXPECT_EQ(normal1.transformId, 98);
+    EXPECT_EQ(normal1.matPrimPairs[0].second, 101);
+    EXPECT_EQ(normal1.matPrimPairs[1].second, 102);
+    EXPECT_EQ(normal1.matPrimPairs[2].second, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(normal1.matPrimPairs[0].first, 4);
+    EXPECT_EQ(normal1.matPrimPairs[1].first, 5);
+    EXPECT_EQ(normal1.matPrimPairs[2].first, std::numeric_limits<uint32_t>::max());
+
+    SurfaceStruct array0 = SceneIO::LoadSurface(jsn[2]);
+    EXPECT_EQ(array0.acceleratorId, 0);
+    EXPECT_EQ(array0.transformId, 0);
+    EXPECT_EQ(array0.matPrimPairs[0].second, 0);
+    EXPECT_EQ(array0.matPrimPairs[1].second, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(array0.matPrimPairs[0].first, 3);
+    EXPECT_EQ(array0.matPrimPairs[1].first, std::numeric_limits<uint32_t>::max());
+
+    SurfaceStruct array1 = SceneIO::LoadSurface(jsn[3]);
+    EXPECT_EQ(array1.acceleratorId, 34);
+    EXPECT_EQ(array1.transformId, 33);
+    EXPECT_EQ(array1.matPrimPairs[0].second, 6);
+    EXPECT_EQ(array1.matPrimPairs[1].second, 8);
+    EXPECT_EQ(array1.matPrimPairs[2].second, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(array1.matPrimPairs[0].first, 3);
+    EXPECT_EQ(array1.matPrimPairs[1].first, 4);
+    EXPECT_EQ(array1.matPrimPairs[2].first, std::numeric_limits<uint32_t>::max());
+
+    // Throw Tests
+    EXPECT_THROW({
+        try {SceneIO::LoadSurface(jsn[4]);}
+        catch(const SceneException& e)
+        {
+            EXPECT_EQ(static_cast<SceneError>(e), SceneError::PRIM_MATERIAL_NOT_SAME_SIZE);
+            throw;
+        }
+                
+    }, SceneException);
+
+    EXPECT_THROW({
+        try { SceneIO::LoadSurface(jsn[5]); }
+        catch(const SceneException& e)
+        {
+            EXPECT_EQ(static_cast<SceneError>(e), SceneError::TOO_MANY_SURFACE_ON_NODE);
+            throw;
+        }
+    }, SceneException);
 }
 
 TEST(SceneIOCommon, Lights)

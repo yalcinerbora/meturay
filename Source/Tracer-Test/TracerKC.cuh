@@ -103,7 +103,26 @@ inline void PathWork(// Output
                      const HitKey matId,
                      const PrimitiveId primId)
 {
-    assert(maxOutRay == (gRenderState.nee) ? 2 : 1);
+    // Check Material Sample Strategy
+    int sampleStrategyCount = gLocalState.strategyCount;
+    bool isEndpoint = MGroup::IsEndpoint(gMatData, matIndex);
+    
+    // if endpoint
+    // check if ray is properly hit the corrent endpoint
+    // and ray is NEE ray
+
+    // else if sample count is zero
+    // This is non NEE boundary material
+    // calculate emittance and exit
+    
+    // else
+    // This means it is ordinary mat
+    // Calculate BxDF
+    // launch NEE ray
+
+
+
+  /*  assert(maxOutRay == (gRenderState.nee) ? 2 : 1);*/
 
     static constexpr int NEE_RAY_INDEX = 1;
     static constexpr int PATH_RAY_INDEX = 0;
@@ -175,8 +194,9 @@ inline void PathWork(// Output
         Vector3f total = emission* aux.radianceFactor;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
     }
-    if(ray.tMax == 20.0f||wrongNEELight || neeLight || nonNEELight)
-    {        
+    if(wrongNEELight || neeLight || nonNEELight)
+    {  
+
         // Generate Dummy Ray and Terminate
         RayReg rDummy = EMPTY_RAY_REGISTER;
         rDummy.Update(gOutRays, PATH_RAY_INDEX);
@@ -252,7 +272,7 @@ inline void PathWork(// Output
                            gRenderState.totalLightCount))
     {   
         // Advance slightly to prevent self intersection
-        Vector3 p = position + 0.001f * lDirection;
+        //Vector3 p = position + 0.001f * lDirection;
 
         //printf("(%f, %f, %f), (%f, %f, %f)\n",
         //       position[0], position[1], position[2],
@@ -261,7 +281,7 @@ inline void PathWork(// Output
         //       //r.getPosition()[0], r.getPosition()[1], r.getPosition()[2]);
 
         RayF rayNEE = RayF(lDirection, p);
-        //rayNEE.AdvanceSelf(MathConstants::Epsilon);
+        rayNEE.AdvanceSelf(MathConstants::Epsilon);
         rayOut.ray = rayNEE;
         rayOut.tMin = 0.0f;
         rayOut.tMax =  lDistance - MathConstants::Epsilon;

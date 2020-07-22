@@ -344,8 +344,8 @@ bool GPUPrimitiveTriangle::HasPrimitive(uint32_t surfaceDataId) const
 }
 
 SceneError GPUPrimitiveTriangle::GenerateLights(std::vector<CPULight>& result,
-                                                const Vector3& flux, HitKey key,
-                                                uint32_t id) const
+                                                const Vector3& radiance, HitKey key,
+                                                uint32_t id, const Matrix4x4& transform) const
 {
     const auto& range = batchRanges.at(id);
     result.reserve(range[1] - range[0]);
@@ -353,11 +353,11 @@ SceneError GPUPrimitiveTriangle::GenerateLights(std::vector<CPULight>& result,
     {
         CPULight ls;
         ls.matKey = key;
-        ls.flux = flux;
+        ls.radiance = radiance;
         ls.type = LightType::TRIANGULAR;
-        ls.position0 = dData.positionsU[dData.indexList[i * 3 + 0]];
-        ls.position1 = dData.positionsU[dData.indexList[i * 3 + 1]];
-        ls.position2 = dData.positionsU[dData.indexList[i * 3 + 2]];
+        ls.position0 = transform * dData.positionsU[dData.indexList[i * 3 + 0]];
+        ls.position1 = transform * dData.positionsU[dData.indexList[i * 3 + 1]];
+        ls.position2 = transform * dData.positionsU[dData.indexList[i * 3 + 2]];
         ls.primId = i;
 
         result.push_back(ls);

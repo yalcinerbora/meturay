@@ -219,7 +219,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     uint32_t surfId = 0;
     for(const auto& jsn : (*surfaces))
     {
-        SurfaceStruct surf = SceneIO::LoadSurface(jsn, time);
+        SurfaceStruct surf = SceneIO::LoadSurface(jsn);
 
         // Find Accelerator
         NodeIndex accIndex;
@@ -545,7 +545,8 @@ SceneError GPUSceneJson::GenerateLightInfo(const MaterialKeyListing& materialKey
             const auto matLookup = std::make_pair((*it).second->Type(), matId);
             HitKey key = materialKeys.at(matLookup);
             primLights.clear();
-            if((err = (*it).second->GenerateLights(primLights, light.flux, key, primId)) != SceneError::OK)
+            if((err = (*it).second->GenerateLights(primLights, light.radiance, key, primId,
+                                                   Indentity4x4)) != SceneError::OK)
                 return err;
             lights.insert(lights.end(), primLights.begin(), primLights.end());
         }
