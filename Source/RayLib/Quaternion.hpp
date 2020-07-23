@@ -243,14 +243,14 @@ inline Vector<3, T> Quaternion<T>::ApplyRotation(const Vector<3, T>& vector) con
 
 template<class T>
 __device__ __host__
-inline Quaternion<T> Quaternion<T>::NLerp(const Quaternion& start, const Quaternion& end, T t)
+inline Quaternion<T> Quat::NLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t)
 {
     return (start + t * (end - start));// .Normalize();
 }
 
 template<class T>
 __device__ __host__
-inline Quaternion<T> Quaternion<T>::SLerp(const Quaternion& start, const Quaternion& end, T t)
+inline Quaternion<T> Quat::SLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t)
 {
     T cosTetha = start.Dot(end);
     // SLerp
@@ -260,7 +260,7 @@ inline Quaternion<T> Quaternion<T>::SLerp(const Quaternion& start, const Quatern
 
 template<class T>
 __device__ __host__
-inline Quaternion<T> Quaternion<T>::RotationBetween(const Vector<3,T>& a, const Vector<3,T>& b)
+inline Quaternion<T> Quat::RotationBetween(const Vector<3,T>& a, const Vector<3,T>& b)
 {
     Vector<3, T> aCrossB = Cross(a, b);
     T aDotB = a.Dot(b);
@@ -271,7 +271,7 @@ inline Quaternion<T> Quaternion<T>::RotationBetween(const Vector<3,T>& a, const 
 
 template<class T>
 __device__ __host__
-inline Quaternion<T> Quaternion<T>::RotationBetweenZAxis(const Vector<3, T>& b)
+inline Quaternion<T> Quat::RotationBetweenZAxis(const Vector<3, T>& b)
 {
     Vector<3, T> zCrossD(-b[1], b[0], 0);
     T zDotD = b[2];
@@ -290,8 +290,8 @@ inline Quaternion<T> Quaternion<T>::RotationBetweenZAxis(const Vector<3, T>& b)
     {
         // Spaces are 180 degree apart
         // Define pi turn
-        return Quaternion(static_cast<T>(MathConstants::Pi_d),
-                          Vector<3,T>(0, 1, 0));
+        return Quaternion<T>(static_cast<T>(MathConstants::Pi_d),
+                             Vector<3, T>(0, 1, 0));
     }
     else if(abs(zDotD - 1) < MathConstants::Epsilon)
     {
@@ -299,7 +299,7 @@ inline Quaternion<T> Quaternion<T>::RotationBetweenZAxis(const Vector<3, T>& b)
         // Just turn identity
         return Quaternion<T>(1, 0, 0, 0);
     }
-    else return Quaternion(w, x, y, z);
+    else return Quaternion<T>(w, x, y, z);
 }
 
 template<class T>

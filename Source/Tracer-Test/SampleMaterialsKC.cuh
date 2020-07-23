@@ -59,7 +59,7 @@ Vector3 LambertSample(// Sampled Output
 
     // Direction vector is on surface space (hemisperical)
     // Convert it to normal oriented hemisphere (world space)
-    QuatF q = QuatF::RotationBetweenZAxis(normal);
+    QuatF q = Quat::RotationBetweenZAxis(normal);
     direction = q.ApplyRotation(direction);
 
     // Cos Tetha

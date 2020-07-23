@@ -20,9 +20,3 @@ struct TexCoords
     __half     u, v, w;
     __half     dx, dy, dw;
 };
-
-struct Texture
-{
-    cudaTextureObject_t tex;
-    
-};

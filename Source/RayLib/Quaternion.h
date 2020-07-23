@@ -69,12 +69,6 @@ class Quaternion<T>
         __device__ __host__ T                   Dot(const Quaternion&) const;
         __device__ __host__ Vector<3,T>         ApplyRotation(const Vector<3, T>&) const;
 
-        // Static Utility
-        static __device__ __host__ Quaternion   NLerp(const Quaternion& start, const Quaternion& end, T t);
-        static __device__ __host__ Quaternion   SLerp(const Quaternion& start, const Quaternion& end, T t);
-
-        static __device__ __host__ Quaternion   RotationBetween(const Vector<3,T>& a, const Vector<3,T>& b);
-        static __device__ __host__ Quaternion   RotationBetweenZAxis(const Vector<3,T>& b);
 };
 
 // Quaternion Alias
@@ -90,6 +84,19 @@ static_assert(sizeof(QuatF) == sizeof(float) * 4, "IEQuaternion size is not 16 b
 template<class T>
 static __device__ __host__ Quaternion<T> operator*(T, const Quaternion<T>&);
 
+
+// Static Utility
+namespace Quat
+{
+    template <class T>
+    static __device__ __host__ Quaternion<T> NLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t);
+    template <class T>
+    static __device__ __host__ Quaternion<T> SLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t);
+    template <class T>
+    static __device__ __host__ Quaternion<T> RotationBetween(const Vector<3, T>& a, const Vector<3, T>& b);
+    template <class T>
+    static __device__ __host__ Quaternion<T> RotationBetweenZAxis(const Vector<3, T>& b);
+}
 // Implementation
 #include "Quaternion.hpp"
 

@@ -252,7 +252,7 @@ inline Ray<T> Ray<T>::RandomRayCosine(T xi0, T xi1,
     randomDir[1] = sqrt(xi0) * sin(static_cast<T>(2.0) * MathConstants::Pi * xi1);
     randomDir[2] = sqrt(static_cast<T>(1.0) - xi0);
 
-    Quaternion<T> q = Quaternion<T>::RotationBetweenZAxis(normal);
+    Quaternion<T> q = Quat::RotationBetweenZAxis(normal);
     Vector<3, T> rotatedDir = q.ApplyRotation(randomDir);
     return Ray(rotatedDir, position);
 }
@@ -268,7 +268,7 @@ inline Ray<T> Ray<T>::RandomRayUnfirom(T xi0, T xi1,
     randomDir[1] = sqrt(static_cast<T>(1.0) - xi0 * xi0) * sin(static_cast<T>(2.0) * MathConstants::Pi * xi1);
     randomDir[2] = xi0;
 
-    Quaternion<T> q = Quaternion<T>::RotationBetweenZAxis(normal);
+    Quaternion<T> q = Quat::RotationBetweenZAxis(normal);
     randomDir = q.ApplyRotation(randomDir);
     return Ray(randomDir, position);
 }

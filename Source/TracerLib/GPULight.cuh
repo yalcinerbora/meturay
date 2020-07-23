@@ -621,7 +621,7 @@ inline void DiskLight::Sample(// Output
                                sqrt(r) * sin(tetha),
                                0.0f);               
     // Rotate to disk normal
-    QuatF rotation = QuatF::RotationBetweenZAxis(normal);
+    QuatF rotation = Quat::RotationBetweenZAxis(normal);
     Vector3 worldDisk = rotation.ApplyRotation(disk);
     Vector3 position = center + worldDisk;
 

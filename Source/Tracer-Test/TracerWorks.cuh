@@ -39,7 +39,7 @@ class DirectTracerWork
 template<class MGroup, class PGroup,
          SurfaceFunc<MGroup, PGroup> SFunc>
 class PathTracerWork 
-    : public GPUWorkBatch<PathTracerGlobal, EmptyState, RayAuxPath,
+    : public GPUWorkBatch<PathTracerGlobal, PathTracerLocal, RayAuxPath,
                           MGroup, PGroup, SFunc, PathWork<MGroup>>
 {
     public:
