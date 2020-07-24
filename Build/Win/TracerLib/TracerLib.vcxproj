@@ -24,6 +24,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUEvent.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULight.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMedium.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkI.h" />
@@ -33,6 +34,8 @@
     <ClInclude Include="..\..\..\Source\TracerLib\MangledNames.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUWork.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TextureReference.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TextureReference.hpp" />
     <ClInclude Include="..\..\..\Source\TracerLib\WorkPool.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TextureStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TracerFunctions.cuh" />
@@ -91,6 +94,7 @@
     <ClCompile Include="..\..\..\Source\TracerLib\MangledNames.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\SceneNodeJson.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\ScenePartitioner.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\Texture.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -105,6 +109,7 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\RadixSort.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\TextureReference.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\TracerLogicGenerator.cu" />
   </ItemGroup>
   <ItemGroup>

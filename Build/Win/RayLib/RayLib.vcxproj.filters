@@ -224,6 +224,9 @@
       <Filter>Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\TracerOptions.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\TypeTraits.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

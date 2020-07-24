@@ -11,7 +11,9 @@ Object oriented design and openGL like access
 #include "RayLib/CudaCheck.h"
 #include "RayLib/Vector.h"
 #include "RayLib/Types.h"
+#include "RayLib/TypeTraits.h"
 
+#include "GPUEvent.h"
 #include "DeviceMemory.h"
 
 #include <cuda_runtime.h>
@@ -31,166 +33,310 @@ enum class EdgeResolveType
     // Border does not work properly
 };
 
+enum class CubeTexSide
+{
+    X_POS,
+    Y_POS,
+    Z_POS,
+    X_NEG,
+    Y_NEG,
+    Z_NEG
+};
+
+template <class T>
+struct is_TextureNormalizedType
+{
+    static constexpr bool value = is_any <T,
+                                          char, char2, char4,
+                                          short, short2, short4,
+                                          int, int2, int4,
+                                          unsigned char, uchar2, uchar4,
+                                          unsigned short, ushort2, ushort4,
+                                          unsigned int, uint2, uint4>::value;
+
+};
+
+template <class T>
+struct is_TextureType
+{
+    static constexpr bool value = is_any <T,
+                                          float, Vector2f, Vector4f,
+                                          char, char2, char4,
+                                          short, short2, short4,
+                                          int, int2, int4,
+                                          unsigned char, uchar2, uchar4,
+                                          unsigned short, ushort2, ushort4,
+                                          unsigned int, uint2, uint4>::value;
+};
+
+template <class T>
+inline constexpr bool is_TextureNormalizedType_v = is_TextureNormalizedType<T>::value;
+
+template <class T>
+inline constexpr bool is_TextureType_v = is_TextureType<T>::value;
+
 static constexpr cudaTextureAddressMode DetermineAddressMode(EdgeResolveType);
 static constexpr cudaTextureFilterMode DetermineFilterMode(InterpolationType);
 
 template<int D, class T>
-class Texture : public DeviceLocalMemoryI
+class Texture 
+    : public DeviceLocalMemoryI
 {
     static_assert(D >= 1 && D <= 3, "At most 3D textures are supported");
-    static_assert(std::is_same<T, float>::value ||
-                  std::is_same<T, float1>::value ||
-                  std::is_same<T, float2>::value ||
-                  std::is_same<T, float4>::value ||
-
-                  std::is_same<T, char>::value ||
-                  std::is_same<T, char1>::value ||
-                  std::is_same<T, char2>::value ||
-                  std::is_same<T, char4>::value ||
-
-                  std::is_same<T, short>::value ||
-                  std::is_same<T, short1>::value ||
-                  std::is_same<T, short2>::value ||
-                  std::is_same<T, short3>::value ||
-
-                  std::is_same<T, int>::value ||
-                  std::is_same<T, int1>::value ||
-                  std::is_same<T, int2>::value ||
-                  std::is_same<T, int3>::value ||
-
-                  std::is_same<T, unsigned char>::value ||
-                  std::is_same<T, uchar1>::value ||
-                  std::is_same<T, uchar2>::value ||
-                  std::is_same<T, uchar4>::value ||
-
-                  std::is_same<T, unsigned short>::value ||
-                  std::is_same<T, ushort1>::value ||
-                  std::is_same<T, ushort2>::value ||
-                  std::is_same<T, ushort3>::value ||
-
-                  std::is_same<T, unsigned int>::value ||
-                  std::is_same<T, uint1>::value ||
-                  std::is_same<T, uint2>::value ||
-                  std::is_same<T, uint3>::value, "Types should be those specified.");
+    static_assert(is_TextureType_v<T>, "Invalid texture type");
 
     private:
-        cudaMipmappedArray_t            data;
-        cudaTextureObject_t             t;
+        cudaMipmappedArray_t        data;
+        cudaTextureObject_t         t;
+        
+        Vector<D, unsigned int>     dim;
+        
+        InterpolationType           interpType;
+        EdgeResolveType             edgeReolveType;
 
     protected:
     public:
-        __host__                        Texture(InterpolationType,
-                                                EdgeResolveType,
-                                                bool unormType,
-                                                const Vector<D, unsigned int>& dim);
-        //__device__ __host__               Texture(InterpolationType,
-        //                                      EdgeResolveType,
-        //                                      bool unormType,
-        //                                      const Vector<D + 1, unsigned int>& dim);
-
-        // Accessors (D + 1 variants are uses mip map)
-        __device__ const T              operator()(const Vector<D, float>&) const;
-        __device__ const T              operator()(const Vector<D + 1, float>&) const;
+        // Constructors & Destructor
+                            Texture(int deviceId,
+                                    InterpolationType,
+                                    EdgeResolveType,
+                                    const Vector<D, unsigned int>& dim);
+                            ~Texture();
 
         // Copy Data
-        void                            Copy(const Byte* sourceData,
-                                             const Vector<D, unsigned int>& size,
-                                             int mipLevel = 0);
+        void                Copy(const Byte* sourceData,
+                                 const Vector<D, unsigned int>& size,
+                                 const Vector<D, unsigned int>& offset = Zero3ui,
+                                 int mipLevel = 0);
+        GPUFence            CopyAsync(const Byte* sourceData,
+                                      const Vector<D, unsigned int>& size,
+                                      const Vector<D, unsigned int>& offset = Zero3ui,
+                                      int mipLevel = 0,
+                                      cudaStream_t stream = nullptr);
 
         // Memory Migration
-        void                            MigrateToOtherDevice(int deviceTo, cudaStream_t stream = nullptr) override;
+        void                MigrateToOtherDevice(int deviceTo, 
+                                                 cudaStream_t stream = nullptr) override;
 };
 
-//template<int D, class T>
-//class TextureArray : public DeviceLocalMemoryI
-//{
-//  static_assert(D >= 1 && D <= 2, "At most 2D texture arrays are supported");
-//
-//  private:
-//      cudaArray_t                     data;
-//      cudaTextureObject_t             t;
-//
-//  protected:
-//
-//
-//  public:
-//      __host__                TextureArray(InterpolationType,
-//                                                   EdgeResolveType,
-//                                                   const Vector<D + 1, unsigned int>& dim);
-//
-//      __device__                      operator cudaTextureObject_t();
-//
-//      // Accessors (D + 2 variants are uses mipmap)
-//      __device__ const T              operator()(const Vector<D + 1, float>&) const;
-//      __device__ const T              operator()(const Vector<D + 2, float>&) const;
-//
-//      // Special Access
-//
-//      // Memory Migration
-//      void                            MigrateToOtherDevice(int deviceTo, cudaStream_t stream = nullptr) override;
-//};
-//
-//template<class T>
-//class TextureCube : public DeviceLocalMemoryI
-//{
-//  private:
-//      cudaArray_t                     data;
-//      cudaTextureObject_t             t;
-//
-//  protected:
-//  public:
-//      __host__                TextureCube(InterpolationType,
-//                                                  EdgeResolveType,
-//                                                  const Vector2ui& dim,
-//                                                  const T* data = nullptr);
-//      __host__                TextureCube(InterpolationType,
-//                                                  EdgeResolveType,
-//                                                  const Vector3ui& dim,
-//                                                  const T* data = nullptr);
-//      // Accessors (3D vector variant uses mipmap)
-//      __device__ const T              operator()(const Vector2&) const;
-//      __device__ const T              operator()(const Vector3&) const;
-//
-//      // Special Access
-//
-//      // Memory Migration
-//      void                            MigrateToOtherDevice(int deviceTo, cudaStream_t stream = nullptr) override;
-//};
-//
-//template< class T>
-//class TextureCubeArray : public DeviceLocalMemoryI
-//{
-//  private:
-//      cudaArray_t                     data;
-//      cudaTextureObject_t             t;
-//
-//  protected:
-//  public:
-//      __host__                TextureCubeArray(InterpolationType,
-//                                                       EdgeResolveType,
-//                                                       const Vector3ui& dim,
-//                                                       const T* data = nullptr);
-//      __host__                TextureCubeArray(InterpolationType,
-//                                                       EdgeResolveType,
-//                                                       const Vector4ui& dim,
-//                                                       const T* data = nullptr);
-//      // Accessors (4D variant uses mipmap)
-//      __device__ const T              operator()(const Vector3&) const;
-//      __device__ const T              operator()(const Vector4&) const;
-//
-//      // Special Access
-//
-//
-//      // Memory Migration
-//      void                            MigrateToOtherDevice(int deviceTo, cudaStream_t stream = nullptr) override;
-//};
+template<int D, class T>
+class TextureArray : public DeviceLocalMemoryI
+{    
+    static_assert(D >= 1 && D <= 2, "At most 2D texture arrays are supported");
+    static_assert(is_TextureType_v<T>, "Invalid texture array type");
+
+    private:
+        cudaMipmappedArray_t        data;
+        cudaTextureObject_t         t;
+
+        Vector<D, unsigned int>     dim;
+        unsigned int                count;
+
+        InterpolationType           interpType;
+        EdgeResolveType             edgeReolveType;
+
+    protected:
+    public:
+        // Constructors & Destructor
+                            TextureArray(int deviceId, 
+                                         InterpolationType,
+                                         EdgeResolveType,
+                                         const Vector<D, unsigned int>& dim,
+                                         unsigned int count);
+                            ~TextureArray();
+
+        // Copy Data
+        void                Copy(const Byte* sourceData,
+                                 const Vector<D, unsigned int>& size,
+                                 int layer,
+                                 const Vector<D, unsigned int>& offset = Zero3ui,
+                                 int mipLevel = 0);
+        GPUFence            CopyAsync(const Byte* sourceData,
+                                      const Vector<D, unsigned int>& size,
+                                      int layer,
+                                      const Vector<D, unsigned int>& offset = Zero3ui,
+                                      int mipLevel = 0,
+                                      cudaStream_t stream = nullptr);
+
+        void                MigrateToOtherDevice(int deviceTo,
+                                                 cudaStream_t stream = nullptr) override;
+};
+
+template<class T>
+class TextureCube : public DeviceLocalMemoryI
+{
+    static_assert(is_TextureType_v<T>, "Invalid texture cube type");
+
+    private:
+        cudaArray_t           data;
+        cudaTextureObject_t   t;
+
+        Vector2ui             dim;
+        InterpolationType     interpType;
+        EdgeResolveType       edgeResolve;
+
+    protected:
+    public:
+                            TextureCube(int deviceId,
+                                        InterpolationType,
+                                        EdgeResolveType,
+                                        const Vector2ui& dim);
+                            ~TextureCube();
+
+        // Copy Data
+        void                Copy(const Byte* sourceData,
+                                 const Vector<2, unsigned int>& size,
+                                 CubeTexSide,
+                                 const Vector<2, unsigned int>& offset = Zero2ui,
+                                 int mipLevel = 0);
+        GPUFence            CopyAsync(const Byte* sourceData,
+                                      const Vector<2, unsigned int>& size,
+                                      CubeTexSide,
+                                      const Vector<2, unsigned int>& offset = Zero2ui,
+                                      int mipLevel = 0,
+                                      cudaStream_t stream = nullptr);
+
+        void                MigrateToOtherDevice(int deviceTo, cudaStream_t stream = nullptr) override;
+};
 
 // Ease of use Template Types
-template<class T> using Texture1 = Texture<1, T>;
-template<class T> using Texture2 = Texture<2, T>;
-template<class T> using Texture3 = Texture<3, T>;
+template<class T> using Texture1D = Texture<1, T>;
+template<class T> using Texture2D = Texture<2, T>;
+template<class T> using Texture3D = Texture<3, T>;
 
-//template<class T> using Texture1Array = TextureArray<1, T>;
-//template<class T> using Texture2Array = TextureArray<2, T>;
+template<class T> using Texture1DArray = TextureArray<1, T>;
+template<class T> using Texture2DArray = TextureArray<2, T>;
 
 #include "Texture.hpp"
+
+//extern template class Texture<1, float>;
+//extern template class Texture<1, Vector2>;
+//extern template class Texture<1, Vector4>;
+//extern template class Texture<1, int>;
+//extern template class Texture<1, int2>;
+//extern template class Texture<1, int4>;
+//extern template class Texture<1, short>;
+//extern template class Texture<1, short2>;
+//extern template class Texture<1, short4>;
+//extern template class Texture<1, char>;
+//extern template class Texture<1, char2>;
+//extern template class Texture<1, char4>;
+//extern template class Texture<1, unsigned int>;
+//extern template class Texture<1, uint2>;
+//extern template class Texture<1, uint4>;
+//extern template class Texture<1, unsigned short>;
+//extern template class Texture<1, ushort2>;
+//extern template class Texture<1, ushort4>;
+//extern template class Texture<1, unsigned char>;
+//extern template class Texture<1, uchar2>;
+//extern template class Texture<1, uchar4>;
+
+extern template class Texture<2, float>;
+extern template class Texture<2, Vector2>;
+extern template class Texture<2, Vector4>;
+extern template class Texture<2, int>;
+extern template class Texture<2, int2>;
+extern template class Texture<2, int4>;
+extern template class Texture<2, short>;
+extern template class Texture<2, short2>;
+extern template class Texture<2, short4>;
+extern template class Texture<2, char>;
+extern template class Texture<2, char2>;
+extern template class Texture<2, char4>;
+extern template class Texture<2, unsigned int>;
+extern template class Texture<2, uint2>;
+extern template class Texture<2, uint4>;
+extern template class Texture<2, unsigned short>;
+extern template class Texture<2, ushort2>;
+extern template class Texture<2, ushort4>;
+extern template class Texture<2, unsigned char>;
+extern template class Texture<2, uchar2>;
+extern template class Texture<2, uchar4>;
+
+extern template class Texture<3, float>;
+extern template class Texture<3, Vector2>;
+extern template class Texture<3, Vector4>;
+extern template class Texture<3, int>;
+extern template class Texture<3, int2>;
+extern template class Texture<3, int4>;
+extern template class Texture<3, short>;
+extern template class Texture<3, short2>;
+extern template class Texture<3, short4>;
+extern template class Texture<3, char>;
+extern template class Texture<3, char2>;
+extern template class Texture<3, char4>;
+extern template class Texture<3, unsigned int>;
+extern template class Texture<3, uint2>;
+extern template class Texture<3, uint4>;
+extern template class Texture<3, unsigned short>;
+extern template class Texture<3, ushort2>;
+extern template class Texture<3, ushort4>;
+extern template class Texture<3, unsigned char>;
+extern template class Texture<3, uchar2>;
+extern template class Texture<3, uchar4>;
+
+//extern template class TextureArray<1, float>;
+//extern template class TextureArray<1, Vector2>;
+//extern template class TextureArray<1, Vector4>;
+//extern template class TextureArray<1, int>;
+//extern template class TextureArray<1, int2>;
+//extern template class TextureArray<1, int4>;
+//extern template class TextureArray<1, short>;
+//extern template class TextureArray<1, short2>;
+//extern template class TextureArray<1, short4>;
+//extern template class TextureArray<1, char>;
+//extern template class TextureArray<1, char2>;
+//extern template class TextureArray<1, char4>;
+//extern template class TextureArray<1, unsigned int>;
+//extern template class TextureArray<1, uint2>;
+//extern template class TextureArray<1, uint4>;
+//extern template class TextureArray<1, unsigned short>;
+//extern template class TextureArray<1, ushort2>;
+//extern template class TextureArray<1, ushort4>;
+//extern template class TextureArray<1, unsigned char>;
+//extern template class TextureArray<1, uchar2>;
+//extern template class TextureArray<1, uchar4>;
+
+extern template class TextureArray<2, float>;
+extern template class TextureArray<2, Vector2>;
+extern template class TextureArray<2, Vector4>;
+extern template class TextureArray<2, int>;
+extern template class TextureArray<2, int2>;
+extern template class TextureArray<2, int4>;
+extern template class TextureArray<2, short>;
+extern template class TextureArray<2, short2>;
+extern template class TextureArray<2, short4>;
+extern template class TextureArray<2, char>;
+extern template class TextureArray<2, char2>;
+extern template class TextureArray<2, char4>;
+extern template class TextureArray<2, unsigned int>;
+extern template class TextureArray<2, uint2>;
+extern template class TextureArray<2, uint4>;
+extern template class TextureArray<2, unsigned short>;
+extern template class TextureArray<2, ushort2>;
+extern template class TextureArray<2, ushort4>;
+extern template class TextureArray<2, unsigned char>;
+extern template class TextureArray<2, uchar2>;
+extern template class TextureArray<2, uchar4>;
+
+extern template class TextureCube<float>;
+extern template class TextureCube<Vector2>;
+extern template class TextureCube<Vector4>;
+extern template class TextureCube<int>;
+extern template class TextureCube<int2>;
+extern template class TextureCube<int4>;
+extern template class TextureCube<short>;
+extern template class TextureCube<short2>;
+extern template class TextureCube<short4>;
+extern template class TextureCube<char>;
+extern template class TextureCube<char2>;
+extern template class TextureCube<char4>;
+extern template class TextureCube<unsigned int>;
+extern template class TextureCube<uint2>;
+extern template class TextureCube<uint4>;
+extern template class TextureCube<unsigned short>;
+extern template class TextureCube<ushort2>;
+extern template class TextureCube<ushort4>;
+extern template class TextureCube<unsigned char>;
+extern template class TextureCube<uchar2>;
+extern template class TextureCube<uchar4>;

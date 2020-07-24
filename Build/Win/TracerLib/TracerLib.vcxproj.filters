@@ -52,6 +52,15 @@
     <Filter Include="Light &amp; Camera">
       <UniqueIdentifier>{e71549dc-2b27-4e37-8185-0dbb359cc277}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Default Materials">
+      <UniqueIdentifier>{a2687996-760b-45ce-95dd-bdb00b67850a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Work">
+      <UniqueIdentifier>{20146f36-c90f-4b0a-83fb-9916b4514b2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Cuda System">
+      <UniqueIdentifier>{e75d18a5-0e64-494c-97de-38d07f77c656}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp">
@@ -69,7 +78,6 @@
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveEmpty.cpp">
       <Filter>Default Primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\ScenePartitioner.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
@@ -79,6 +87,12 @@
     <ClCompile Include="..\..\..\Source\TracerLib\MangledNames.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp">
       <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\Texture.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp">
+      <Filter>Cuda System</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -172,7 +186,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\AuxiliaryDataKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\ScenePartitionerI.h">
       <Filter>Scene</Filter>
     </ClInclude>
@@ -238,9 +251,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorFunctions.h">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUTracer.h">
-      <Filter>Partial Implementations</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GenerationKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
@@ -262,9 +272,20 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TracerFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\WorkPool.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TextureReference.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\TextureReference.hpp" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUWork.cuh">
-      <Filter>Partial Implementations</Filter>
+      <Filter>Work</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\WorkPool.h">
+      <Filter>Work</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUTracer.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h">
+      <Filter>Cuda System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUEvent.h">
+      <Filter>Cuda System</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -310,8 +331,7 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.cu">
       <Filter>Default Accelerators\BVH</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracer.cu">
-      <Filter>Partial Implementations</Filter>
-    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\TextureReference.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracer.cu" />
   </ItemGroup>
 </Project>
