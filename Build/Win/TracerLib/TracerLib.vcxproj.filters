@@ -94,6 +94,7 @@
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp">
       <Filter>Cuda System</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\Distribution.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -297,6 +298,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\MetaMaterialFunctions.cuh">
       <Filter>Default Materials</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUDistribution.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

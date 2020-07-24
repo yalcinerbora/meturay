@@ -23,6 +23,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUDistribution.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEvent.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULight.cuh" />
@@ -87,6 +88,7 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.cu" />
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\Distribution.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveEmpty.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp" />

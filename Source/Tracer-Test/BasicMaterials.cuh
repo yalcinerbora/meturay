@@ -45,9 +45,11 @@ class ConstantMat final
 
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
         size_t                  UsedCPUMemory() const override { return sizeof(AlbedoMatData); }
-
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+
+        // NEE Related
+        bool                    IsLightGroup() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 0; };
         // No Texture
@@ -89,9 +91,11 @@ class BarycentricMat final
 
         size_t                  UsedGPUMemory() const override { return 0; }
         size_t                  UsedCPUMemory() const override { return 0; }
-
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return 0; }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+
+        // NEE Related
+        bool                    IsLightGroup() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 0; };
         // No Texture
@@ -133,9 +137,11 @@ class SphericalMat final
 
         size_t                  UsedGPUMemory() const override { return 0; }
         size_t                  UsedCPUMemory() const override { return 0; }
-
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return 0; }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+
+        // NEE Related
+        bool                    IsLightGroup() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 0; };
         // No Texture
