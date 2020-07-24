@@ -1,11 +1,12 @@
 #pragma once
 
 #include "TracerLib/GPUMaterialP.cuh"
+#include "TracerLib/SurfaceStructs.h"
+#include "TracerLib/TypeTraits.h"
+#include "TracerLib/MetaMaterialFunctions.cuh"
 
-#include "SurfaceStructs.h"
 #include "BasicMaterialsKC.cuh"
 
-#include "TracerLib/TypeTraits.h"
 
 // Unrealistic mat that directly returns an albedo regardless of wi.
 // also generates invalid ray when sampled

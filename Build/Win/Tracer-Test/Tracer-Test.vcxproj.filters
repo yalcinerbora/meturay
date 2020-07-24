@@ -55,9 +55,6 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\RayAuxStruct.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\SurfaceStructs.h">
-      <Filter>Structs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialDataStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>

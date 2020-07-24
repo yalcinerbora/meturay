@@ -287,6 +287,16 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEvent.h">
       <Filter>Cuda System</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialLight.cuh">
+      <Filter>Default Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialLightKC.cuh">
+      <Filter>Default Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\SurfaceStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\MetaMaterialFunctions.cuh">
+      <Filter>Default Materials</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">
@@ -333,5 +343,8 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\TextureReference.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUMaterialLight.cu">
+      <Filter>Default Materials</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

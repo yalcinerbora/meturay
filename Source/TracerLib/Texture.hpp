@@ -1,4 +1,65 @@
 
+template <int D>
+cudaExtent MakeCudaExtent(const TexDimType_t<D>& dim)
+{
+    if constexpr(D == 1)
+    {
+        return make_cudaExtent(dim, 0, 0);
+    }
+    else if constexpr(D == 2)
+    {
+        return make_cudaExtent(dim[0], dim[1], 0);
+    }
+    else if constexpr(D == 3)
+    {
+        return make_cudaExtent(dim[0], dim[1], dim[2]);
+    }
+}
+
+template <int D>
+cudaExtent MakeCudaExtent(const TexDimType_t<D>& dim,
+                          unsigned int layer)
+{
+    if constexpr(D == 1)
+    {
+        return make_cudaExtent(dim, layer, 0);
+    }
+    else if constexpr(D == 2)
+    {
+        return make_cudaExtent(dim[0], dim[1], layer);
+    }
+}
+
+template <int D>
+cudaPos MakeCudaOffset(const TexDimType_t<D>& offset)
+{
+    if constexpr(D == 1)
+    {
+        return make_cudaPos(offset, 0, 0);
+    }
+    else if constexpr(D == 2)
+    {
+        return make_cudaPos(offset[0], offset[1], 0);
+    }
+    else if constexpr(D == 3)
+    {
+        return make_cudaPos(offset[0], offset[1], offset[2]);
+    }
+}
+template <int D>
+cudaPos MakeCudaOffset(const TexDimType_t<D>& offset,
+                       unsigned int layer)
+{
+    if constexpr(D == 1)
+    {
+        return make_cudaPos(offset, layer, 0);
+    }
+    else if constexpr(D == 2)
+    {
+        return make_cudaPos(offset[0], offset[1], layer);
+    }
+}
+
 static constexpr cudaTextureAddressMode DetermineAddressMode(EdgeResolveType e)
 {
     switch(e)
@@ -30,36 +91,24 @@ template<int D, class T>
 Texture<D, T>::Texture(int deviceId,
                        InterpolationType interp,
                        EdgeResolveType eResolve,
-                       const Vector<D, unsigned int>& dim)
+                       bool convertSRGB,
+                       const TexDimType_t<D>& dim,
+                       int mipCount)
     : DeviceLocalMemoryI(deviceId)
+    , dim(dim)
+    , interpType(interp)
+    , edgeResolveType(eResolve)
 {
-    cudaExtent extent = {};
-    if constexpr(D == 1)
-    {
-        extent = make_cudaExtent(dim[0], 0 , 0);
-    }
-    else if constexpr(D == 2)
-    {
-        extent = make_cudaExtent(dim[0], dim[1], 0);
-    }
-    else if constexpr(D == 3)
-    {
-        extent = make_cudaExtent(dim[0], dim[1], dim[2]);
-    }
-
+    cudaExtent extent = MakeCudaExtent<D>(dim);
     cudaChannelFormatDesc d = cudaCreateChannelDesc<T>();
-    CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, 1));
+    CUDA_CHECK(cudaSetDevice(deviceId));
+    CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, mipCount));
 
     // Allocation Done now generate texture
     cudaResourceDesc rDesc = {};
     cudaTextureDesc tDesc = {};
 
-    bool unormType = (std::is_same_v<T, char> ||
-                      std::is_same_v<T, short> ||
-                      std::is_same_v<T, int> ||
-                      std::is_same_v<T, unsigned char> ||
-                      std::is_same_v<T, unsigned short> ||
-                      std::is_same_v<T, unsigned int>);
+    bool unormType = is_TextureNormalizedType_v<T>;
 
     rDesc.resType = cudaResourceType::cudaResourceTypeMipmappedArray;
     rDesc.res.mipmap.mipmap = data;
@@ -69,7 +118,8 @@ Texture<D, T>::Texture(int deviceId,
     tDesc.addressMode[2] = DetermineAddressMode(eResolve);
     tDesc.filterMode = DetermineFilterMode(interp);
     tDesc.readMode = (unormType) ? cudaReadModeNormalizedFloat : cudaReadModeElementType;
-    tDesc.sRGB = 0;
+
+    tDesc.sRGB = convertSRGB;
     tDesc.borderColor[0] = 0.0f;
     tDesc.borderColor[1] = 0.0f;
     tDesc.borderColor[2] = 0.0f;
@@ -78,21 +128,23 @@ Texture<D, T>::Texture(int deviceId,
     tDesc.mipmapFilterMode = DetermineFilterMode(interp);
 
     //
-    tDesc.maxAnisotropy = 0;
+    tDesc.maxAnisotropy = 4;
     tDesc.mipmapLevelBias = 0.0f;
-    tDesc.minMipmapLevelClamp = 0.0f;
+    tDesc.minMipmapLevelClamp = -100.0f;
     tDesc.maxMipmapLevelClamp = 100.0f;
 
     CUDA_CHECK(cudaCreateTextureObject(&t, &rDesc, &tDesc, nullptr));
 }
 template<int D, class T>
 Texture<D, T>::~Texture()
-{}
+{
+    cudaFreeMipmappedArray(data);
+}
 
 template<int D, class T>
 void Texture<D, T>::Copy(const Byte* sourceData,
-                         const Vector<D, unsigned int>& size,
-                         const Vector<D, unsigned int>& offset,
+                         const TexDimType_t<D>& size,
+                         const TexDimType_t<D>& offset,
                          int mipLevel)
 {
     cudaArray_t levelArray;
@@ -100,23 +152,24 @@ void Texture<D, T>::Copy(const Byte* sourceData,
 
     cudaMemcpy3DParms p = {};
     p.kind = cudaMemcpyHostToDevice;
-    p.extent = make_cudaExtent(size[0], size[1], size[2]);
+    p.extent = MakeCudaExtent<D>(size);
+    
 
     p.dstArray = levelArray;
-    p.dstPos = make_cudaPos(0, 0, 0);
+    p.dstPos = MakeCudaOffset<D>(offset);
 
     p.srcPos = make_cudaPos(0, 0, 0);
     p.srcPtr = make_cudaPitchedPtr(const_cast<Byte*>(sourceData),
-                                   size[0] * sizeof(T),
-                                   size[0], size[1]);
+                                   p.extent.width * sizeof(T),
+                                   p.extent.width, p.extent.height);
 
     CUDA_CHECK(cudaMemcpy3D(&p));
 }
 
 template<int D, class T>
 GPUFence Texture<D, T>::CopyAsync(const Byte* sourceData,
-                                  const Vector<D, unsigned int>& size,
-                                  const Vector<D, unsigned int>& offset,
+                                  const TexDimType_t<D>& size,
+                                  const TexDimType_t<D>& offset,
                                   int mipLevel,
                                   cudaStream_t stream)
 {
@@ -125,61 +178,70 @@ GPUFence Texture<D, T>::CopyAsync(const Byte* sourceData,
 
     cudaMemcpy3DParms p = {};
     p.kind = cudaMemcpyHostToDevice;
-    p.extent = make_cudaExtent(size[0], size[1], size[2]);
+    p.extent = MakeCudaExtent<D>(size);
 
     p.dstArray = levelArray;
-    p.dstPos = make_cudaPos(0, 0, 0);
+    p.dstPos = MakeCudaOffset<D>(offset);
 
     p.srcPos = make_cudaPos(0, 0, 0);
     p.srcPtr = make_cudaPitchedPtr(const_cast<Byte*>(sourceData),
-                                   size[0] * sizeof(T),
-                                   size[0], size[1]);
+                                   p.extent.width * sizeof(T),
+                                   p.extent.width, p.extent.height);
 
     CUDA_CHECK(cudaMemcpy3DAsync(&p, stream));
     return GPUFence(stream);
 }
 
 template<int D, class T>
+const TexDimType_t<D>& Texture<D, T>::Dim() const
+{
+    return dim;
+}
+
+template<int D, class T>
+InterpolationType Texture<D, T>::InterpType() const
+{
+    return interpType;
+}
+
+template<int D, class T>
+EdgeResolveType Texture<D, T>::EdgeType() const
+{
+    return edgeResolveType;
+}
+
+template<int D, class T>
 void Texture<D, T>::MigrateToOtherDevice(int deviceTo, cudaStream_t stream)
 {
-
+     // TODO: Implement texture migration
+    assert(false);
 }
 
 template<int D, class T>
 TextureArray<D, T>::TextureArray(int deviceId,
                                  InterpolationType interp,
                                  EdgeResolveType eResolve,
-                                 const Vector<D, unsigned int>& dim,
-                                 unsigned int count)
+                                 bool convertSRGB,
+                                 const TexDimType_t<D>& dim,
+                                 unsigned int length,
+                                 int mipCount)
     : DeviceLocalMemoryI(deviceId)
+    , dim(dim)
+    , length(length)
+    , interpType(interp)
+    , edgeResolveType(eResolve)
 {
-    cudaExtent extent = {};
-    if constexpr(D == 1)
-    {
-        extent = make_cudaExtent(dim[0], 0 , 0);
-    }
-    else if constexpr(D == 2)
-    {
-        extent = make_cudaExtent(dim[0], dim[1], 0);
-    }
-    else if constexpr(D == 3)
-    {
-        extent = make_cudaExtent(dim[0], dim[1], dim[2]);
-    }
-
+    cudaExtent extent = MakeCudaExtent<D>(dim, length);   
     cudaChannelFormatDesc d = cudaCreateChannelDesc<T>();
-    CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, 1));
+    CUDA_CHECK(cudaSetDevice(deviceId));
+    CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, mipCount,
+                                               cudaArrayLayered));
 
     // Allocation Done now generate texture
     cudaResourceDesc rDesc = {};
     cudaTextureDesc tDesc = {};
 
-    bool unormType = (std::is_same_v<T, char> ||
-                      std::is_same_v<T, short> ||
-                      std::is_same_v<T, int> ||
-                      std::is_same_v<T, unsigned char> ||
-                      std::is_same_v<T, unsigned short> ||
-                      std::is_same_v<T, unsigned int>);
+    bool unormType = is_TextureNormalizedType_v<T>;
 
     rDesc.resType = cudaResourceType::cudaResourceTypeMipmappedArray;
     rDesc.res.mipmap.mipmap = data;
@@ -189,7 +251,8 @@ TextureArray<D, T>::TextureArray(int deviceId,
     tDesc.addressMode[2] = DetermineAddressMode(eResolve);
     tDesc.filterMode = DetermineFilterMode(interp);
     tDesc.readMode = (unormType) ? cudaReadModeNormalizedFloat : cudaReadModeElementType;
-    tDesc.sRGB = 0;
+
+    tDesc.sRGB = convertSRGB;
     tDesc.borderColor[0] = 0.0f;
     tDesc.borderColor[1] = 0.0f;
     tDesc.borderColor[2] = 0.0f;
@@ -198,9 +261,9 @@ TextureArray<D, T>::TextureArray(int deviceId,
     tDesc.mipmapFilterMode = DetermineFilterMode(interp);
 
     //
-    tDesc.maxAnisotropy = 0;
+    tDesc.maxAnisotropy = 4;
     tDesc.mipmapLevelBias = 0.0f;
-    tDesc.minMipmapLevelClamp = 0.0f;
+    tDesc.minMipmapLevelClamp = -100.0f;
     tDesc.maxMipmapLevelClamp = 100.0f;
 
     CUDA_CHECK(cudaCreateTextureObject(&t, &rDesc, &tDesc, nullptr));
@@ -208,13 +271,15 @@ TextureArray<D, T>::TextureArray(int deviceId,
 
 template<int D, class T>
 TextureArray<D, T>::~TextureArray()
-{}
+{
+    cudaFreeMipmappedArray(data);
+}
 
 template<int D, class T>
 void TextureArray<D, T>::Copy(const Byte* sourceData,
-                              const Vector<D, unsigned int>& size,
+                              const TexDimType_t<D>& size,
                               int layer,
-                              const Vector<D, unsigned int>& offset,
+                              const TexDimType_t<D>& offset,
                               int mipLevel)
 {
     cudaArray_t levelArray;
@@ -222,24 +287,24 @@ void TextureArray<D, T>::Copy(const Byte* sourceData,
 
     cudaMemcpy3DParms p = {};
     p.kind = cudaMemcpyHostToDevice;
-    p.extent = make_cudaExtent(size[0], size[1], size[2]);
+    cudaExtent extent = MakeCudaExtent<D>(size);
 
     p.dstArray = levelArray;
-    p.dstPos = make_cudaPos(0, 0, 0);
+    p.dstPos = MakeCudaOffset<D>(offset, layer);
 
     p.srcPos = make_cudaPos(0, 0, 0);
     p.srcPtr = make_cudaPitchedPtr(const_cast<Byte*>(sourceData),
-                                   size[0] * sizeof(T),
-                                   size[0], size[1]);
+                                   p.extent.width * sizeof(T),
+                                   p.extent.width, p.extent.height);
 
     CUDA_CHECK(cudaMemcpy3D(&p));
 }
 
 template<int D, class T>
 GPUFence TextureArray<D, T>::CopyAsync(const Byte* sourceData,
-                                       const Vector<D, unsigned int>& size,
+                                       const TexDimType_t<D>& size,
                                        int layer,
-                                       const Vector<D, unsigned int>& offset,
+                                       const TexDimType_t<D>& offset,
                                        int mipLevel,
                                        cudaStream_t stream)
 {
@@ -248,65 +313,185 @@ GPUFence TextureArray<D, T>::CopyAsync(const Byte* sourceData,
 
     cudaMemcpy3DParms p = {};
     p.kind = cudaMemcpyHostToDevice;
-    p.extent = make_cudaExtent(size[0], size[1], size[2]);
+    cudaExtent extent = MakeCudaExtent<D>(size);
 
     p.dstArray = levelArray;
-    p.dstPos = make_cudaPos(0, 0, 0);
+    p.dstPos = MakeCudaOffset<D>(offset, layer);
 
     p.srcPos = make_cudaPos(0, 0, 0);
     p.srcPtr = make_cudaPitchedPtr(const_cast<Byte*>(sourceData),
-                                   size[0] * sizeof(T),
-                                   size[0], size[1]);
+                                   p.extent.width * sizeof(T),
+                                   p.extent.width, p.extent.height);
 
     CUDA_CHECK(cudaMemcpy3DAsync(&p, stream));
     return GPUFence(stream);
 }
 
 template<int D, class T>
+const TexDimType_t<D>& TextureArray<D, T>::Dim() const
+{
+    return dim;
+}
+
+template<int D, class T>
+unsigned int TextureArray<D, T>::Length() const
+{
+    return length;
+}
+
+template<int D, class T>
+InterpolationType TextureArray<D, T>::InterpType() const
+{
+    return interpType;
+}
+
+template<int D, class T>
+EdgeResolveType TextureArray<D, T>::EdgeType() const
+{
+    return edgeResolveType;
+}
+
+template<int D, class T>
 void TextureArray<D, T>::MigrateToOtherDevice(int deviceTo, cudaStream_t stream)
 {
-
+     // TODO: Implement texture migration
+    assert(false);
 }
 
 template <class T>
 TextureCube<T>::TextureCube(int deviceId,
-                            InterpolationType,
-                            EdgeResolveType,
-                            const Vector2ui& dim)
+                            InterpolationType interp,
+                            EdgeResolveType eResolve,
+                            bool convertSRGB,
+                            const Vector2ui& dim,
+                            int mipCount)
+    : DeviceLocalMemoryI(deviceId)
+    , dim(dim)
+    , interpType(interp)
+    , edgeResolveType(eResolve)
 {
+    assert(dim[0] == dim[1]);
+    cudaExtent extent = make_cudaExtent(dim[0], dim[1], CUBE_FACE_COUNT);
+    cudaChannelFormatDesc d = cudaCreateChannelDesc<T>();
+    CUDA_CHECK(cudaSetDevice(deviceId));
+    CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, mipCount,
+                                               cudaArrayCubemap));
 
+    // Allocation Done now generate texture
+    cudaResourceDesc rDesc = {};
+    cudaTextureDesc tDesc = {};
+
+    bool unormType = is_TextureNormalizedType_v<T>;
+
+    rDesc.resType = cudaResourceType::cudaResourceTypeMipmappedArray;
+    rDesc.res.mipmap.mipmap = data;
+
+    tDesc.addressMode[0] = DetermineAddressMode(eResolve);
+    tDesc.addressMode[1] = DetermineAddressMode(eResolve);
+    tDesc.addressMode[2] = DetermineAddressMode(eResolve);
+    tDesc.filterMode = DetermineFilterMode(interp);
+    tDesc.readMode = (unormType) ? cudaReadModeNormalizedFloat : cudaReadModeElementType;
+
+    tDesc.sRGB = convertSRGB;
+    tDesc.borderColor[0] = 0.0f;
+    tDesc.borderColor[1] = 0.0f;
+    tDesc.borderColor[2] = 0.0f;
+    tDesc.borderColor[3] = 0.0f;
+    tDesc.normalizedCoords = 1;
+    tDesc.mipmapFilterMode = DetermineFilterMode(interp);
+
+    //
+    tDesc.maxAnisotropy = 4;
+    tDesc.mipmapLevelBias = 0.0f;
+    tDesc.minMipmapLevelClamp = -100.0f;
+    tDesc.maxMipmapLevelClamp = 100.0f;
+
+    CUDA_CHECK(cudaCreateTextureObject(&t, &rDesc, &tDesc, nullptr));
 }
 
 template <class T>
 TextureCube<T>::~TextureCube()
 {
-
+    CUDA_CHECK(cudaFreeMipmappedArray(data));
 }
 
 template <class T>
 void TextureCube<T>::Copy(const Byte* sourceData,
-                          const Vector<2, unsigned int>& size,
-                          CubeTexSide,
-                          const Vector<2, unsigned int>& offset,
+                          const Vector2ui& size,
+                          CubeTexSide side,
+                          const Vector2ui& offset,
                           int mipLevel)
 {
+    cudaArray_t levelArray;
+    CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
+    size_t sideIndex = static_cast<size_t>(side);
+
+    cudaMemcpy3DParms p = {};
+    p.kind = cudaMemcpyHostToDevice;
+    cudaExtent extent = make_cudaExtent(size[0], size[1], 0);
+
+    p.dstArray = levelArray;
+    p.dstPos = make_cudaPos(size[0], size[1], sideIndex);
+
+    p.srcPos = make_cudaPos(0, 0, 0);
+    p.srcPtr = make_cudaPitchedPtr(const_cast<Byte*>(sourceData),
+                                   p.extent.width * sizeof(T),
+                                   p.extent.width, p.extent.height);
+
+    CUDA_CHECK(cudaMemcpy3D(&p));
 }
 
 template <class T>
 GPUFence TextureCube<T>::CopyAsync(const Byte* sourceData,
-                                   const Vector<2, unsigned int>& size,
-                                   CubeTexSide,
-                                   const Vector<2, unsigned int>& offset,
+                                   const Vector2ui& size,
+                                   CubeTexSide side,
+                                   const Vector2ui& offset,                                   
                                    int mipLevel,
                                    cudaStream_t stream)
 {
+    cudaArray_t levelArray;
+    CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
+    size_t sideIndex = static_cast<size_t>(side);
+
+    cudaMemcpy3DParms p = {};
+    p.kind = cudaMemcpyHostToDevice;
+    cudaExtent extent = make_cudaExtent(size[0], size[1], 0);
+
+    p.dstArray = levelArray;
+    p.dstPos = make_cudaPos(size[0], size[1], sideIndex);
+
+    p.srcPos = make_cudaPos(0, 0, 0);
+    p.srcPtr = make_cudaPitchedPtr(const_cast<Byte*>(sourceData),
+                                   p.extent.width * sizeof(T),
+                                   p.extent.width, p.extent.height);
+
+    CUDA_CHECK(cudaMemcpy3DAsync(&p, stream));
     return GPUFence(stream);
+}
+
+template <class T>
+const Vector2ui& TextureCube<T>::Dim() const
+{
+    return dim;
+}
+
+template <class T>
+InterpolationType TextureCube<T>::InterpType() const
+{
+    return interpType;
+}
+
+template <class T>
+EdgeResolveType TextureCube<T>::EdgeType() const
+{
+    return edgeResolveType;
 }
 
 template <class T>
 void TextureCube<T>::MigrateToOtherDevice(int deviceTo, cudaStream_t stream)
 {
-
+    // TODO: Implement texture migration
+    assert(false);
 }

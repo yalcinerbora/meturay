@@ -5,54 +5,12 @@ class RandomGPU;
 
 #include "RayAuxStruct.h"
 #include "MaterialDataStructs.h"
-#include "SurfaceStructs.h"
-#include "TracerLib/TextureStructs.h"
 
 #include "RayLib/Constants.h"
 
 #include "TracerLib/ImageFunctions.cuh"
-
-template <class Data>
-__device__ inline
-bool IsEmissiveFalse(const Data&,
-                     const HitKey::Type&)
-{
-    return false;
-}
-
-template <class Data>
-__device__ inline
-bool IsEmissiveTrue(const Data&,
-                    const HitKey::Type&)
-{
-    return true;
-}
-
-template <class Data, class Surface>
-__device__ inline
-void AcquireUVEmpty(//Output
-                    TexCoords*,
-                    const Surface&,
-                    // Constants
-                    const Data&,
-                    const HitKey::Type& matId)
-{}
-
-template <class Data, class Surface>
-__device__ inline
-Vector3 EmitEmpty(// Input
-                  const Vector3& wo,
-                  const Vector3& pos,
-                  const GPUMedium& m,
-                  //
-                  const Surface& surface,
-                  const TexCoords* uvs,
-                  // Constants
-                  const Data&,
-                  const HitKey::Type& matId)
-{
-    return Zero3;
-}
+#include "TracerLib/SurfaceStructs.h"
+#include "TracerLib/TextureStructs.h"
 
 __device__ inline
 Vector3 ConstantSample(// Sampled Output

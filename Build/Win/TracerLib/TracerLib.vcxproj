@@ -26,6 +26,8 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEvent.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULight.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialLight.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialLightKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMedium.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh" />
@@ -34,6 +36,8 @@
     <ClInclude Include="..\..\..\Source\TracerLib\MangledNames.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUWork.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\MetaMaterialFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\SurfaceStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TextureReference.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\TextureReference.hpp" />
     <ClInclude Include="..\..\..\Source\TracerLib\WorkPool.h" />
@@ -87,6 +91,7 @@
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUMaterialLight.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\ImageMemory.cu">
       <FileType>Document</FileType>
     </CudaCompile>

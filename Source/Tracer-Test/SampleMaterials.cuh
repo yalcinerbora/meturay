@@ -1,24 +1,17 @@
-//#pragma once
-//
-//#include "TracerLib/GPUMaterialP.cuh"
-//
-//#include "BasicTracer.cuh"
-//#include "SurfaceStructs.h"
-//#include "MaterialDataStructs.h"
-//#include "GIMaterialsKC.cuh"
+#pragma once
 
-#include "TracerLib/GPUMaterialP.cuh"
-
-#include "SurfaceStructs.h"
 #include "SampleMaterialsKC.cuh"
-#include "BasicMaterialsKC.cuh"
 
+#include "TracerLib/MetaMaterialFunctions.cuh"
+#include "TracerLib/SurfaceStructs.h"
+#include "TracerLib/GPUMaterialP.cuh"
 #include "TracerLib/TypeTraits.h"
 
 // Light Material that constantly emits all directions
 class EmissiveMat final 
     : public GPUMaterialGroup<EmissiveMatData, EmptySurface,
-                              ConstantSample, ConstantEvaluate,
+                              SampleEmpty<EmissiveMatData, EmptySurface>, 
+                              EvaluateEmpty<EmissiveMatData, EmptySurface>,
                               EmitConstant<EmptySurface>,
                               IsEmissiveTrue<EmissiveMatData>,
                               AcquireUVEmpty<EmissiveMatData, EmptySurface>>

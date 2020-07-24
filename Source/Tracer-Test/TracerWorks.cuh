@@ -4,13 +4,11 @@
 #include "BasicMaterials.cuh"
 #include "SampleMaterials.cuh"
 #include "TracerKC.cuh"
-#include "SurfaceStructs.h"
 
 #include "TracerLib/WorkPool.h"
 #include "TracerLib/GPUWork.cuh"
 #include "TracerLib/GPUPrimitiveTriangle.h"
 #include "TracerLib/GPUPrimitiveSphere.h"
-
 
 template<class MGroup, class PGroup,
          SurfaceFunc<MGroup, PGroup> SFunc>

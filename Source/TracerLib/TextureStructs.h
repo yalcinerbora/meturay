@@ -30,39 +30,3 @@ class TexturedData
 
     virtual T  Fetch(float u, float v, int w) override;
 };
-
-//// Multidimensional Texture
-//template <class T>
-//class Texture : public TexturedData<T>
-//{
-//    private:
-//    cudaTextureObject_t& texture;
-//
-//    public:
-//        // Constructos & Destructor
-//    Texture();
-//
-//    // Interface
-//    T  Fetch(float u, float v, int w) override;
-//};
-
-//class Constant
-
-
-////// SFINAE the shit out of this class
-////template <>
-////Vector3 Texture<Vector3>::operator(float u, float v, int w)
-////{}
-
-//template <class T>
-//class TextureReference
-//{
-//    Texture<T>& t;
-//};
-//
-//// 
-//class Radiance
-//{
-//    Texture<Vector3f> data;
-//
-//};

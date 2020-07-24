@@ -32,7 +32,6 @@
     <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialDataStructs.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\RayAuxStruct.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\PathTracer.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\SurfaceStructs.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TestPools.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\RayTracer.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h" />

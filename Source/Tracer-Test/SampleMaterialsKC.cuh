@@ -2,7 +2,6 @@
 
 #include "RayAuxStruct.h"
 #include "MaterialDataStructs.h"
-#include "SurfaceStructs.h"
 
 #include "RayLib/Constants.h"
 #include "RayLib/HemiDistribution.h"
@@ -12,6 +11,7 @@
 #include "TracerLib/ImageFunctions.cuh"
 #include "TracerLib/MaterialFunctions.cuh"
 #include "TracerLib/TracerFunctions.cuh"
+#include "TracerLib/SurfaceStructs.h"
 
 template <class Surface>
 __device__ inline

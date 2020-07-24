@@ -35,13 +35,25 @@ enum class EdgeResolveType
 
 enum class CubeTexSide
 {
-    X_POS,
-    Y_POS,
-    Z_POS,
-    X_NEG,
-    Y_NEG,
-    Z_NEG
+    X_POS = 0,
+    X_NEG = 1,
+    Y_POS = 2,
+    Y_NEG = 3,
+    Z_POS = 4,    
+    Z_NEG = 5
 };
+
+template <int D>
+struct TexDimType {};
+template <>
+struct TexDimType<1> { using type = unsigned int; };
+template <>
+struct TexDimType<2> { using type = Vector2ui; };
+template <>
+struct TexDimType<3> { using type = Vector3ui; };
+template <int D>
+using TexDimType_t = typename TexDimType<D>::type;
+
 
 template <class T>
 struct is_TextureNormalizedType
@@ -89,10 +101,10 @@ class Texture
         cudaMipmappedArray_t        data;
         cudaTextureObject_t         t;
         
-        Vector<D, unsigned int>     dim;
+        TexDimType_t<D>             dim;
         
         InterpolationType           interpType;
-        EdgeResolveType             edgeReolveType;
+        EdgeResolveType             edgeResolveType;
 
     protected:
     public:
@@ -100,23 +112,29 @@ class Texture
                             Texture(int deviceId,
                                     InterpolationType,
                                     EdgeResolveType,
-                                    const Vector<D, unsigned int>& dim);
+                                    bool convertSRGB,
+                                    const TexDimType_t<D>& dim,
+                                    int mipCount);
                             ~Texture();
 
         // Copy Data
         void                Copy(const Byte* sourceData,
-                                 const Vector<D, unsigned int>& size,
-                                 const Vector<D, unsigned int>& offset = Zero3ui,
+                                 const TexDimType_t<D>& size,
+                                 const TexDimType_t<D>& offset = Zero3ui,
                                  int mipLevel = 0);
         GPUFence            CopyAsync(const Byte* sourceData,
-                                      const Vector<D, unsigned int>& size,
-                                      const Vector<D, unsigned int>& offset = Zero3ui,
+                                      const TexDimType_t<D>& size,
+                                      const TexDimType_t<D>& offset = Zero3ui,
                                       int mipLevel = 0,
                                       cudaStream_t stream = nullptr);
 
+        const TexDimType_t<D>&  Dim() const;
+        InterpolationType       InterpType() const;
+        EdgeResolveType         EdgeType() const;
+
         // Memory Migration
-        void                MigrateToOtherDevice(int deviceTo, 
-                                                 cudaStream_t stream = nullptr) override;
+        void                    MigrateToOtherDevice(int deviceTo,
+                                                     cudaStream_t stream = nullptr) override;
 };
 
 template<int D, class T>
@@ -129,37 +147,45 @@ class TextureArray : public DeviceLocalMemoryI
         cudaMipmappedArray_t        data;
         cudaTextureObject_t         t;
 
-        Vector<D, unsigned int>     dim;
-        unsigned int                count;
+        TexDimType_t<D>             dim;
+        unsigned int                length;
 
         InterpolationType           interpType;
-        EdgeResolveType             edgeReolveType;
+        EdgeResolveType             edgeResolveType;
 
     protected:
     public:
         // Constructors & Destructor
-                            TextureArray(int deviceId, 
+                            TextureArray(int deviceId,
                                          InterpolationType,
                                          EdgeResolveType,
-                                         const Vector<D, unsigned int>& dim,
-                                         unsigned int count);
+                                         bool convertSRGB,
+                                         const TexDimType_t<D>& dim,
+                                         unsigned int length,
+                                         int mipCount);
                             ~TextureArray();
 
         // Copy Data
         void                Copy(const Byte* sourceData,
-                                 const Vector<D, unsigned int>& size,
+                                 const TexDimType_t<D>& size,
                                  int layer,
-                                 const Vector<D, unsigned int>& offset = Zero3ui,
+                                 const TexDimType_t<D>& offset = Zero3ui,
                                  int mipLevel = 0);
         GPUFence            CopyAsync(const Byte* sourceData,
-                                      const Vector<D, unsigned int>& size,
+                                      const TexDimType_t<D>& size,
                                       int layer,
-                                      const Vector<D, unsigned int>& offset = Zero3ui,
+                                      const TexDimType_t<D>& offset = Zero3ui,
                                       int mipLevel = 0,
                                       cudaStream_t stream = nullptr);
 
-        void                MigrateToOtherDevice(int deviceTo,
-                                                 cudaStream_t stream = nullptr) override;
+        // Accessors
+        const TexDimType_t<D>&  Dim() const;
+        unsigned int            Length() const;
+        InterpolationType       InterpType() const;
+        EdgeResolveType         EdgeType() const;
+
+        void                    MigrateToOtherDevice(int deviceTo,
+                                                     cudaStream_t stream = nullptr) override;
 };
 
 template<class T>
@@ -167,34 +193,43 @@ class TextureCube : public DeviceLocalMemoryI
 {
     static_assert(is_TextureType_v<T>, "Invalid texture cube type");
 
-    private:
-        cudaArray_t           data;
-        cudaTextureObject_t   t;
+    public:
+        static constexpr uint32_t   CUBE_FACE_COUNT = 6;
 
-        Vector2ui             dim;
-        InterpolationType     interpType;
-        EdgeResolveType       edgeResolve;
+    private:
+        cudaMipmappedArray_t        data;
+        cudaTextureObject_t         t;
+
+        Vector2ui                   dim;
+        InterpolationType           interpType;
+        EdgeResolveType             edgeResolveType;
 
     protected:
     public:
                             TextureCube(int deviceId,
                                         InterpolationType,
                                         EdgeResolveType,
-                                        const Vector2ui& dim);
+                                        bool convertSRGB,
+                                        const Vector2ui& dim,
+                                        int mipCount);
                             ~TextureCube();
 
         // Copy Data
         void                Copy(const Byte* sourceData,
-                                 const Vector<2, unsigned int>& size,
+                                 const Vector2ui& size,
                                  CubeTexSide,
-                                 const Vector<2, unsigned int>& offset = Zero2ui,
+                                 const Vector2ui& offset = Zero2ui,
                                  int mipLevel = 0);
         GPUFence            CopyAsync(const Byte* sourceData,
-                                      const Vector<2, unsigned int>& size,
+                                      const Vector2ui& size,
                                       CubeTexSide,
-                                      const Vector<2, unsigned int>& offset = Zero2ui,
+                                      const Vector2ui& offset = Zero2ui,
                                       int mipLevel = 0,
                                       cudaStream_t stream = nullptr);
+
+        const Vector2ui&    Dim() const;
+        InterpolationType   InterpType() const;
+        EdgeResolveType     EdgeType() const;
 
         void                MigrateToOtherDevice(int deviceTo, cudaStream_t stream = nullptr) override;
 };
@@ -209,27 +244,27 @@ template<class T> using Texture2DArray = TextureArray<2, T>;
 
 #include "Texture.hpp"
 
-//extern template class Texture<1, float>;
-//extern template class Texture<1, Vector2>;
-//extern template class Texture<1, Vector4>;
-//extern template class Texture<1, int>;
-//extern template class Texture<1, int2>;
-//extern template class Texture<1, int4>;
-//extern template class Texture<1, short>;
-//extern template class Texture<1, short2>;
-//extern template class Texture<1, short4>;
-//extern template class Texture<1, char>;
-//extern template class Texture<1, char2>;
-//extern template class Texture<1, char4>;
-//extern template class Texture<1, unsigned int>;
-//extern template class Texture<1, uint2>;
-//extern template class Texture<1, uint4>;
-//extern template class Texture<1, unsigned short>;
-//extern template class Texture<1, ushort2>;
-//extern template class Texture<1, ushort4>;
-//extern template class Texture<1, unsigned char>;
-//extern template class Texture<1, uchar2>;
-//extern template class Texture<1, uchar4>;
+extern template class Texture<1, float>;
+extern template class Texture<1, Vector2>;
+extern template class Texture<1, Vector4>;
+extern template class Texture<1, int>;
+extern template class Texture<1, int2>;
+extern template class Texture<1, int4>;
+extern template class Texture<1, short>;
+extern template class Texture<1, short2>;
+extern template class Texture<1, short4>;
+extern template class Texture<1, char>;
+extern template class Texture<1, char2>;
+extern template class Texture<1, char4>;
+extern template class Texture<1, unsigned int>;
+extern template class Texture<1, uint2>;
+extern template class Texture<1, uint4>;
+extern template class Texture<1, unsigned short>;
+extern template class Texture<1, ushort2>;
+extern template class Texture<1, ushort4>;
+extern template class Texture<1, unsigned char>;
+extern template class Texture<1, uchar2>;
+extern template class Texture<1, uchar4>;
 
 extern template class Texture<2, float>;
 extern template class Texture<2, Vector2>;
@@ -275,27 +310,27 @@ extern template class Texture<3, unsigned char>;
 extern template class Texture<3, uchar2>;
 extern template class Texture<3, uchar4>;
 
-//extern template class TextureArray<1, float>;
-//extern template class TextureArray<1, Vector2>;
-//extern template class TextureArray<1, Vector4>;
-//extern template class TextureArray<1, int>;
-//extern template class TextureArray<1, int2>;
-//extern template class TextureArray<1, int4>;
-//extern template class TextureArray<1, short>;
-//extern template class TextureArray<1, short2>;
-//extern template class TextureArray<1, short4>;
-//extern template class TextureArray<1, char>;
-//extern template class TextureArray<1, char2>;
-//extern template class TextureArray<1, char4>;
-//extern template class TextureArray<1, unsigned int>;
-//extern template class TextureArray<1, uint2>;
-//extern template class TextureArray<1, uint4>;
-//extern template class TextureArray<1, unsigned short>;
-//extern template class TextureArray<1, ushort2>;
-//extern template class TextureArray<1, ushort4>;
-//extern template class TextureArray<1, unsigned char>;
-//extern template class TextureArray<1, uchar2>;
-//extern template class TextureArray<1, uchar4>;
+extern template class TextureArray<1, float>;
+extern template class TextureArray<1, Vector2>;
+extern template class TextureArray<1, Vector4>;
+extern template class TextureArray<1, int>;
+extern template class TextureArray<1, int2>;
+extern template class TextureArray<1, int4>;
+extern template class TextureArray<1, short>;
+extern template class TextureArray<1, short2>;
+extern template class TextureArray<1, short4>;
+extern template class TextureArray<1, char>;
+extern template class TextureArray<1, char2>;
+extern template class TextureArray<1, char4>;
+extern template class TextureArray<1, unsigned int>;
+extern template class TextureArray<1, uint2>;
+extern template class TextureArray<1, uint4>;
+extern template class TextureArray<1, unsigned short>;
+extern template class TextureArray<1, ushort2>;
+extern template class TextureArray<1, ushort4>;
+extern template class TextureArray<1, unsigned char>;
+extern template class TextureArray<1, uchar2>;
+extern template class TextureArray<1, uchar4>;
 
 extern template class TextureArray<2, float>;
 extern template class TextureArray<2, Vector2>;

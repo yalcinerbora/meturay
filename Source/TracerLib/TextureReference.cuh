@@ -65,7 +65,7 @@ class ConstantRef : public TextureRef<D, T>
     public:
         // Constructors & Destructor
         __device__      ConstantRef(T);
-                        ConstantRef() = default;
+                        ~ConstantRef() = default;
 
         __device__
         T               operator()(const TexFloatType_t<D>&) const  override;
@@ -83,14 +83,13 @@ class TexRef : public TextureRef<D, T>
 {
     using CudaType = typename CudaReturn_t<T>;
 
-
     private:
         cudaTextureObject_t t;
 
     public:
         // Constructors & Destructor
         __device__      TexRef(cudaTextureObject_t);
-                        TexRef() = default;
+                        ~TexRef() = default;
 
         __device__
         T               operator()(const TexFloatType_t<D>&) const  override;
@@ -105,19 +104,52 @@ class TexRef : public TextureRef<D, T>
 
 };
 
-//template <int D, class T>
-//class TexArrayRef : public TextureRef<D>
-//{
-//    private:
-//    cudaTextureObject_t     t;
-//    int                     arrayIndex;
-//
-//};
-//
-//class TexCubeRef : public TextureRef<3>
-//{
-//
-//};
+template <int D, class T>
+class TexArrayRef : public TextureRef<D, T>
+{
+    private:
+        cudaTextureObject_t     t;
+        int                     arrayIndex;
+
+    public:
+        __device__      TexArrayRef(cudaTextureObject_t, int);
+                        ~TexArrayRef() = default;
+
+        __device__
+        T               operator()(const TexFloatType_t<D>&) const  override;
+        // Mip Level
+        __device__
+        T               operator()(const TexFloatType_t<D>&, float mip) const  override;
+        // Gradient
+        __device__
+        T               operator()(const TexFloatType_t<D>&,
+                                   const TexFloatType_t<D>& dx,
+                                   const TexFloatType_t<D>& dy) const override;
+
+};
+
+template <class T>
+class TexCubeRef : public TextureRef<3, T>
+{
+    private:
+        cudaTextureObject_t     t;
+        int                     arrayIndex;
+
+    public:
+        __device__      TexCubeRef(cudaTextureObject_t);
+                        ~TexCubeRef() = default;
+
+        __device__
+        T               operator()(const TexFloatType_t<3>&) const  override;
+        // Mip Level
+        __device__
+        T               operator()(const TexFloatType_t<3>&, float mip) const  override;
+        // Gradient
+        __device__
+        T               operator()(const TexFloatType_t<3>&,
+                                   const TexFloatType_t<3>& dx,
+                                   const TexFloatType_t<3>& dy) const override;
+};
 
 #include "TextureReference.hpp"
 
