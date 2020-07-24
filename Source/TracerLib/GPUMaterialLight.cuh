@@ -36,7 +36,7 @@ class LightMatConstant final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        int                     InnerId(uint32_t materialId) const override;
+        uint32_t                InnerId(uint32_t materialId) const override { return innerIds.at(materialId); }
         bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
@@ -83,7 +83,7 @@ class LightMatTextured final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        int                     InnerId(uint32_t materialId) const override;
+        uint32_t                InnerId(uint32_t materialId) const override { return innerIds.at(materialId); }
         bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t                  UsedGPUMemory() const override { return memory.Size() + textureList.Size(); }
@@ -111,5 +111,37 @@ class LightMatCube final
         static const char*      TypeName() { return "LightCube"; }
 
     private:
+        DeviceMemory                    memory;
+        TextureCube<Vector3>            textureList;
+        std::map<uint32_t, uint32_t>    innerIds;
+
     public:
+        // Constructors & Destructor
+                                LightMatCube(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                ~LightMatCube() = default;
+
+        // Interface
+        // Type (as string) of the primitive group
+        const char*             Type() const override { return TypeName(); }
+        // Allocates and Generates Data
+        SceneError              InitializeGroup(const NodeListing& materialNodes, double time,
+                                                const std::string& scenePath) override;
+        SceneError              ChangeTime(const NodeListing& materialNodes, double time,
+                                           const std::string& scenePath) override;
+
+        // Material Queries
+        uint32_t                InnerId(uint32_t materialId) const override { return innerIds.at(materialId); }
+        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
+
+        size_t                  UsedGPUMemory() const override { return memory.Size() + textureList.Size(); }
+        size_t                  UsedCPUMemory() const override { return sizeof(LightMatTexData); }
+
+        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+
+        uint8_t                 SampleStrategyCount() const { return 0; };
+        // No Texture
+        uint8_t                 UsedTextureCount() const { return 0; }
+        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
+        TextureMask             CachedTextures() const { return 0; }
 };

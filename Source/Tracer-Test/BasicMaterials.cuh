@@ -40,7 +40,7 @@ class ConstantMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        int                     InnerId(uint32_t materialId) const override;
+        uint32_t                InnerId(uint32_t materialId) const override;
         bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
@@ -84,7 +84,7 @@ class BarycentricMat final
                                            const std::string& scenePath) override {return SceneError::OK;}
 
         // Material Queries
-        int                     InnerId(uint32_t materialId) const override { return  0; }
+        uint32_t                InnerId(uint32_t materialId) const override { return  0; }
         bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t                  UsedGPUMemory() const override { return 0; }
@@ -128,7 +128,7 @@ class SphericalMat final
                                            const std::string& scenePath) override {return SceneError::OK;}
 
         // Material Queries
-        int                     InnerId(uint32_t materialId) const override { return  0; }
+        uint32_t                InnerId(uint32_t materialId) const override { return  0; }
         bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t                  UsedGPUMemory() const override { return 0; }

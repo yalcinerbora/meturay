@@ -80,7 +80,7 @@ SceneError LambertMat::ChangeTime(const NodeListing& materialNodes, double time,
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }
 
-int LambertMat::InnerId(uint32_t materialId) const
+uint32_t LambertMat::InnerId(uint32_t materialId) const
 {
     return innerIds.at(materialId);
 }
@@ -127,7 +127,7 @@ SceneError ReflectMat::ChangeTime(const NodeListing& materialNodes, double time,
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }
 
-int ReflectMat::InnerId(uint32_t materialId) const
+uint32_t ReflectMat::InnerId(uint32_t materialId) const
 {
     return innerIds.at(materialId);
 }
@@ -175,7 +175,7 @@ SceneError RefractMat::ChangeTime(const NodeListing& materialNodes, double time,
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }
 
-int RefractMat::InnerId(uint32_t materialId) const
+uint32_t RefractMat::InnerId(uint32_t materialId) const
 {
     return innerIds.at(materialId);
 }

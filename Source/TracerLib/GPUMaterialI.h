@@ -44,7 +44,7 @@ class GPUMaterialGroupI
                                                        const std::string& scenePath) = 0;
 
         // Material Queries
-        virtual int                         InnerId(uint32_t materialId) const = 0;
+        virtual uint32_t                    InnerId(uint32_t materialId) const = 0;
         virtual bool                        HasCachedTextures(uint32_t materialId) const = 0;
         virtual const CudaGPU&              GPU() const = 0;
 
@@ -55,10 +55,7 @@ class GPUMaterialGroupI
         virtual size_t                      UsedCPUMemory(uint32_t materialId) const = 0;
         
         // NEE Related
-        // Marked materials does not return emissive to non NEE lights
-        //virtual void                        MarkAsLight(uint32_t matId) const = 0;
-        //virtual ?                           EmittedRadiance(uint32_t matId) const = 0;
-        //virtual ......
+        virtual bool                        IsLightGroup() const = 0;
 
         // Returns how many different sampling strategy this material has
         virtual uint8_t                     SampleStrategyCount() const = 0;

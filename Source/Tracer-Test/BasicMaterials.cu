@@ -38,7 +38,7 @@ SceneError ConstantMat::ChangeTime(const NodeListing& materialNodes, double time
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }
 
-int ConstantMat::InnerId(uint32_t materialId) const
+uint32_t ConstantMat::InnerId(uint32_t materialId) const
 {
     return innerIds.at(materialId);
 }

@@ -115,6 +115,8 @@ class Texture
                                     bool convertSRGB,
                                     const TexDimType_t<D>& dim,
                                     int mipCount);
+                            Texture(const Texture&) = delete;
+        Texture&            operator=(const Texture&) = delete;
                             ~Texture();
 
         // Copy Data
@@ -163,6 +165,8 @@ class TextureArray : public DeviceLocalMemoryI
                                          const TexDimType_t<D>& dim,
                                          unsigned int length,
                                          int mipCount);
+                            TextureArray(const TextureArray&) = delete;
+        TextureArray&       operator=(const TextureArray&) = delete;
                             ~TextureArray();
 
         // Copy Data
@@ -212,6 +216,8 @@ class TextureCube : public DeviceLocalMemoryI
                                         bool convertSRGB,
                                         const Vector2ui& dim,
                                         int mipCount);
+                            TextureCube(const TextureCube&) = delete;
+        TextureCube&        operator=(const TextureCube&) = delete;
                             ~TextureCube();
 
         // Copy Data

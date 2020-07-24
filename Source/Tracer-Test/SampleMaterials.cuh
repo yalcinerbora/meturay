@@ -39,7 +39,7 @@ class EmissiveMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        int                     InnerId(uint32_t materialId) const override;
+        uint32_t                InnerId(uint32_t materialId) const override;
         bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
@@ -86,7 +86,7 @@ class LambertMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        int                     InnerId(uint32_t materialId) const override;
+        uint32_t                InnerId(uint32_t materialId) const override;
         bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
@@ -133,7 +133,7 @@ class ReflectMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        int                     InnerId(uint32_t materialId) const override;
+        uint32_t                InnerId(uint32_t materialId) const override;
         bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
@@ -180,7 +180,7 @@ class RefractMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        int                     InnerId(uint32_t materialId) const override;
+        uint32_t                InnerId(uint32_t materialId) const override;
         bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
