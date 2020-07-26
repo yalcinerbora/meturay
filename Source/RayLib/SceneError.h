@@ -78,6 +78,8 @@ struct SceneError : public ErrorI
             PRIM_MATERIAL_NOT_SAME_SIZE,
             PRIM_TYPE_NOT_CONSISTENT_ON_SURFACE,
             LIGHT_PRIMITIVE_NOT_FOUND,
+            LIGHT_MATERIAL_NOT_FOUND,
+            NON_LIGHT_MAT_ATTACHED_TO_LIGHT,
             // Internal Errors
             INTERNAL_DUPLICATE_MAT_ID,
             INTERNAL_DUPLICATE_ACCEL_ID,
@@ -196,6 +198,8 @@ inline SceneError::operator std::string() const
         "Prim/Material pairs on surface node does not have same size",
         "Primitive types are not consistent in a surface",
         "Primitive for light not found",
+        "Material for light not found",
+        "A non-light material is attach to a light",
         // Internal Errors
         "Internal Error, Duplicate material id",
         "Internal Error, Duplicate accelerator id",

@@ -523,13 +523,29 @@ SceneError GPUSceneJson::GenerateLightInfo(const MaterialKeyListing& materialKey
         return SceneError::LIGHTS_ARRAY_NOT_FOUND;
   
     // Prim List
-    const auto& primList = PrimitiveGroups();
+    const auto& primList = primitives;
+    const auto& matList = materials;
 
     SceneError err = SceneError::OK;
     for(const auto& lightJson : (*lightsJson))
     {
         CPULight light = SceneIO::LoadLight(lightJson, time);
         uint32_t matId = SceneIO::LoadLightMatId(lightJson);
+
+        // Find Material Group
+        const GPUMaterialGroupI* matGroup = nullptr;
+        const auto FindMatFunc = [matId](const auto& pair) -> bool
+        {
+            return pair.second->HasMaterial(matId);
+        };
+        auto itMat = matList.end();
+        if((itMat = std::find_if(matList.begin(), matList.end(), FindMatFunc)) == matList.end())
+            return SceneError::LIGHT_MATERIAL_NOT_FOUND;
+        matGroup = (*itMat).second.get();
+        // Find 2D Distribution of the radiance of this light
+        const LightMaterialI* lightMatGroup = dynamic_cast<const LightMaterialI*>(matGroup);
+        if(lightMatGroup == nullptr) return SceneError::NON_LIGHT_MAT_ATTACHED_TO_LIGHT;
+        const GPUDistribution2D& luminanceDistribution = lightMatGroup->LuminanceDistribution(matId);
 
         // Additionally Ask Primitive Group to populate primitives as lights
         if(light.type == LightType::PRIMITIVE)
@@ -546,7 +562,7 @@ SceneError GPUSceneJson::GenerateLightInfo(const MaterialKeyListing& materialKey
             const auto matLookup = std::make_pair((*it).second->Type(), matId);
             HitKey key = materialKeys.at(matLookup);
             primLights.clear();
-            if((err = (*it).second->GenerateLights(primLights, light.radiance, key, primId,
+            if((err = (*it).second->GenerateLights(primLights, luminanceDistribution, key, primId,
                                                    Indentity4x4)) != SceneError::OK)
                 return err;
             lights.insert(lights.end(), primLights.begin(), primLights.end());
@@ -557,6 +573,7 @@ SceneError GPUSceneJson::GenerateLightInfo(const MaterialKeyListing& materialKey
             const auto matLookup = std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME, matId);
             HitKey key = materialKeys.at(matLookup);
             light.matKey = key;
+            light.dLuminanceDistribution = &luminanceDistribution;
             lights.push_back(light);
         }        
     }

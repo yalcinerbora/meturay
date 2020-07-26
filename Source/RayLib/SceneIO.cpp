@@ -178,13 +178,14 @@ CPULight SceneIO::LoadLight(const nlohmann::json& jsn, double time)
         light.position1 = Zero3;
         light.position2 = Zero3;
         light.primId = 0;
+        light.matKey = HitKey::InvalidKey;
+        light.dLuminanceDistribution = nullptr;
         light.mediumIndex = OptionalFetch<uint16_t>(jsn, MEDIUM, 0);
 
         std::string type = jsn[TYPE];
         SceneError e = LightTypeStringToEnum(light.type, type);
         if(e != SceneError::OK) throw SceneException(SceneError::UNKNOWN_LIGHT_TYPE);
 
-        //light.flux = LoadVector<3, float>(jsn[LIGHT_POWER], time);
         switch(light.type)
         {
             // Fetch from Node if analytic light

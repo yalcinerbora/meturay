@@ -72,7 +72,8 @@ class Distribution1D
 {
     private:
         DeviceMemory                memory;
-        GPUDistribution1D           gpuDistribution;
+        GPUDistribution1D           gpuDistribution1D;
+        GPUDistribution2D           gpuDistribution2D;
 
     protected:
     public:
@@ -86,6 +87,10 @@ class Distribution1D
                                     ~Distribution1D() = default;
 
         const GPUDistribution1D&    DistributionGPU() const;
+
+        // One dimensional distribution wrapper on 2D
+        // in order to skip polymorphism on GPU
+        const GPUDistribution2D&    DistributionGPU2D() const;
 };
 
 class Distribution2D

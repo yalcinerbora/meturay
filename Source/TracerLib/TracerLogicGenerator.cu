@@ -9,6 +9,8 @@
 #include "GPUAcceleratorLinear.cuh"
 #include "GPUAcceleratorBVH.cuh"
 
+#include "GPUMaterialLight.cuh"
+
 #include "GPUMaterialI.h"
 
 // Type to utilize the generated ones
@@ -98,6 +100,17 @@ TracerLogicGenerator::TracerLogicGenerator()
     baseAccelGenerators.emplace(GPUBaseAcceleratorBVH::TypeName(),
                                 GPUBaseAccelGen(DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorBVH>,
                                                 DefaultDestruct<GPUBaseAcceleratorI>));
+
+    // Material Types
+    matGroupGenerators.emplace(LightMatConstant::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LightMatConstant>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
+    matGroupGenerators.emplace(LightMatConstant::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LightMatTextured>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
+    matGroupGenerators.emplace(LightMatConstant::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LightMatCube>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
 
     // Default Types are loaded
     // Other Types are strongly tied to base tracer logic

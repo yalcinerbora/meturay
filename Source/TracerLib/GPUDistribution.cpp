@@ -7,11 +7,16 @@ Distribution1D::Distribution1D(const std::vector<float>& values)
 }
 
 __host__
-const GPUDistribution2D& Distribution2D::DistributionGPU() const
+const GPUDistribution1D& Distribution1D::DistributionGPU() const
 {
-    return gpuDistribution;
+    return gpuDistribution1D;
 }
 
+__host__
+const GPUDistribution2D& Distribution1D::DistributionGPU2D() const
+{
+    return gpuDistribution2D;
+}
 
 __host__ 
 Distribution2D::Distribution2D(const std::vector<float>& values,
@@ -21,7 +26,7 @@ Distribution2D::Distribution2D(const std::vector<float>& values,
 }
 
 __host__
-const GPUDistribution1D& Distribution1D::DistributionGPU() const
+const GPUDistribution2D& Distribution2D::DistributionGPU() const
 {
     return gpuDistribution;
 }

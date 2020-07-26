@@ -44,6 +44,7 @@ class GPUMaterialGroupI
                                                        const std::string& scenePath) = 0;
 
         // Material Queries
+        virtual bool                        HasMaterial(uint32_t materialId) const = 0;
         virtual uint32_t                    InnerId(uint32_t materialId) const = 0;
         virtual bool                        HasCachedTextures(uint32_t materialId) const = 0;
         virtual const CudaGPU&              GPU() const = 0;
@@ -63,5 +64,14 @@ class GPUMaterialGroupI
         virtual uint8_t                     UsedTextureCount() const = 0;
         virtual std::vector<uint32_t>       UsedTextureIds() const = 0;
         virtual TextureMask                 CachedTextures() const = 0;
+};
+
+// Additional Interface for light materials
+class LightMaterialI
+{
+    public:
+        virtual                             ~LightMaterialI() = default;
+        // Interface
+        virtual const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const = 0;
 };
 

@@ -11,14 +11,12 @@ SceneError ConstantMat::InitializeGroup(const NodeListing& materialNodes, double
     {
         std::vector<Vector3> albedos = sceneNode->AccessVector3(ALBEDO);
         albedoCPU.insert(albedoCPU.end(), albedos.begin(), albedos.end());
-        
-        const auto& ids = sceneNode->Ids();
-        for(IdPair id : ids)
-        {
-            innerIds.emplace(std::make_pair(id.first, i));
-            i++;
-        }    
     }
+
+    // Generate Id List
+    SceneError e = SceneError::OK;
+    if((e = GenerateInnerIds(materialNodes)) != SceneError::OK)
+        return e;
 
     // Alloc etc
     size_t dAlbedoSize = albedoCPU.size() * sizeof(Vector3);
@@ -36,9 +34,4 @@ SceneError ConstantMat::ChangeTime(const NodeListing& materialNodes, double time
 {
     // TODO: Implement
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
-}
-
-uint32_t ConstantMat::InnerId(uint32_t materialId) const
-{
-    return innerIds.at(materialId);
 }

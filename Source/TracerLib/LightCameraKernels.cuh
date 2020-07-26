@@ -83,7 +83,7 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
         case LightType::POINT:
         {
             gPtr = new (gMemory) PointLight(cpuLight.position0,
-                                            cpuLight.radiance,
+                                            cpuLight.dLuminanceDistribution,
                                             cpuLight.matKey,
                                             cpuLight.primId,
                                             cpuLight.mediumIndex);
@@ -92,7 +92,7 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
         case LightType::DIRECTIONAL:
         {
             gPtr = new (gMemory) DirectionalLight(cpuLight.position0,
-                                                  cpuLight.radiance,
+                                                  cpuLight.dLuminanceDistribution,
                                                   cpuLight.matKey,
                                                   cpuLight.primId,
                                                   cpuLight.mediumIndex);
@@ -105,7 +105,7 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
             gPtr = new (gMemory) SpotLight(cpuLight.position0,
                                            cpuLight.position1,
                                            angles,
-                                           cpuLight.radiance,
+                                           cpuLight.dLuminanceDistribution,
                                            cpuLight.matKey,
                                            cpuLight.primId,
                                            cpuLight.mediumIndex);
@@ -116,7 +116,7 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
             gPtr = new (gMemory) RectangularLight(cpuLight.position0,
                                                   cpuLight.position1,
                                                   cpuLight.position2,
-                                                  cpuLight.radiance,
+                                                  cpuLight.dLuminanceDistribution,
                                                   cpuLight.matKey,
                                                   cpuLight.primId,
                                                   cpuLight.mediumIndex);
@@ -127,7 +127,7 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
             gPtr = new (gMemory) TriangularLight(cpuLight.position0,
                                                  cpuLight.position1,
                                                  cpuLight.position2,
-                                                 cpuLight.radiance,
+                                                 cpuLight.dLuminanceDistribution,
                                                  cpuLight.matKey,
                                                  cpuLight.primId,
                                                  cpuLight.mediumIndex);
@@ -138,7 +138,7 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
             gPtr = new (gMemory) DiskLight(cpuLight.position0,
                                            cpuLight.position1,
                                            cpuLight.position2[0],
-                                           cpuLight.radiance,
+                                           cpuLight.dLuminanceDistribution,
                                            cpuLight.matKey,
                                            cpuLight.primId,
                                            cpuLight.mediumIndex);
@@ -148,7 +148,7 @@ inline __device__ void AllocateSingleLight(GPULightI*& gPtr,
         {
             gPtr = new (gMemory) SphericalLight(cpuLight.position0,
                                                 cpuLight.position1[0],
-                                                cpuLight.radiance,
+                                                cpuLight.dLuminanceDistribution,
                                                 cpuLight.matKey,
                                                 cpuLight.primId,
                                                 cpuLight.mediumIndex);

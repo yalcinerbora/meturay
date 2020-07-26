@@ -21,7 +21,7 @@ class PointLight final : public GPULightI
     public:
         // Constructors & Destructor
         __device__          PointLight(const Vector3& position,
-                                       const Vector3& flux,
+                                       const GPUDistribution2D* lumDist,
                                        HitKey k,
                                        PrimitiveId pId,
                                        uint16_t mediumIndex);
@@ -43,8 +43,6 @@ class PointLight final : public GPULightI
                                         const Vector2i& sampleMax,
                                         // I-O
                                         RandomGPU&) const override;
-
-        __device__ Vector3  Flux(const Vector3& direction) const override;
 };
 
 class DirectionalLight final : public GPULightI
@@ -58,7 +56,7 @@ class DirectionalLight final : public GPULightI
     public:
         // Constructors & Destructor
         __device__          DirectionalLight(const Vector3& direction,
-                                             const Vector3& flux,
+                                             const GPUDistribution2D* lumDist,
                                              HitKey k,
                                              PrimitiveId pId,
                                              uint16_t mediumIndex);
@@ -80,8 +78,6 @@ class DirectionalLight final : public GPULightI
                                         const Vector2i& sampleMax,
                                         // I-O
                                         RandomGPU&) const override;
-
-        __device__ Vector3  Flux(const Vector3& direction) const override;
 };
 
 class SpotLight final : public GPULightI
@@ -100,7 +96,7 @@ class SpotLight final : public GPULightI
         __device__          SpotLight(const Vector3& position,
                                       const Vector3& direction,
                                       const Vector2& coneMinMax, // Degrees
-                                      const Vector3& flux,
+                                      const GPUDistribution2D* lumDist,
                                       HitKey k,
                                       PrimitiveId pId,
                                       uint16_t mediumIndex);
@@ -122,8 +118,6 @@ class SpotLight final : public GPULightI
                                         const Vector2i& sampleMax,
                                         // I-O
                                         RandomGPU&) const override;
-
-        __device__ Vector3  Flux(const Vector3& direction) const override;
 };
 
 class RectangularLight final : public GPULightI
@@ -143,7 +137,7 @@ class RectangularLight final : public GPULightI
         __device__          RectangularLight(const Vector3& topLeft,
                                              const Vector3& right,
                                              const Vector3& down,
-                                             const Vector3& flux,
+                                             const GPUDistribution2D* lumDist,
                                              HitKey k,
                                              PrimitiveId pId,
                                              uint16_t mediumIndex);
@@ -165,8 +159,6 @@ class RectangularLight final : public GPULightI
                                         const Vector2i& sampleMax,
                                         // I-O
                                         RandomGPU&) const override;
-
-        __device__ Vector3  Flux(const Vector3& direction) const override;
 };
 
 class TriangularLight final : public GPULightI
@@ -186,7 +178,7 @@ class TriangularLight final : public GPULightI
         __device__          TriangularLight(const Vector3& v0,
                                             const Vector3& v1,
                                             const Vector3& v2,
-                                            const Vector3& flux,
+                                            const GPUDistribution2D* lumDist,
                                             HitKey k,
                                             PrimitiveId pId,
                                             uint16_t mediumIndex);
@@ -208,8 +200,6 @@ class TriangularLight final : public GPULightI
                                         const Vector2i& sampleMax,
                                         // I-O
                                         RandomGPU&) const override;
-
-        __device__ Vector3  Flux(const Vector3& direction) const override;
 };
 
 class DiskLight final : public GPULightI
@@ -228,7 +218,7 @@ class DiskLight final : public GPULightI
         __device__          DiskLight(const Vector3& center,
                                       const Vector3& normal,
                                       float radius,
-                                      const Vector3& flux,
+                                      const GPUDistribution2D* lumDist,
                                       HitKey k,
                                       PrimitiveId pId,
                                       uint16_t mediumIndex);
@@ -250,8 +240,6 @@ class DiskLight final : public GPULightI
                                         const Vector2i& sampleMax,
                                         // I-O
                                         RandomGPU&) const override;
-
-        __device__ Vector3  Flux(const Vector3& direction) const override;
 };
 
 class SphericalLight final : public GPULightI
@@ -268,7 +256,7 @@ class SphericalLight final : public GPULightI
         // Constructors & Destructor
         __device__          SphericalLight(const Vector3& center,
                                            float radius,
-                                           const Vector3& flux,
+                                           const GPUDistribution2D* lumDist,
                                            HitKey k,
                                            PrimitiveId pId,
                                            uint16_t mediumIndex);
@@ -290,8 +278,6 @@ class SphericalLight final : public GPULightI
                                         const Vector2i& sampleMax,
                                         // I-O
                                         RandomGPU&) const override;
-
-        __device__ Vector3  Flux(const Vector3& direction) const override;
 };
 
 // Expand this when necessary
@@ -304,21 +290,21 @@ static constexpr size_t GPULightUnionSize = *std::max_element(std::begin(LightSi
 
 __device__
 inline PointLight::PointLight(const Vector3& position,
-                              const Vector3& flux,
+                              const GPUDistribution2D* lumDist,
                               HitKey k,
                               PrimitiveId pId,
                               uint16_t mediumIndex)
-    : GPULightI(flux, k, pId, mediumIndex)
+    : GPULightI(lumDist, k, pId, mediumIndex)
     , position(position)
 {}
 
 __device__
 inline DirectionalLight::DirectionalLight(const Vector3& direction,
-                                          const Vector3& flux,
+                                          const GPUDistribution2D* lumDist,
                                           HitKey k,
                                           PrimitiveId pId,
                                           uint16_t mediumIndex)
-    : GPULightI(flux, k, pId, mediumIndex)
+    : GPULightI(lumDist, k, pId, mediumIndex)
     , direction(direction.Normalize())
 {}
 
@@ -326,11 +312,11 @@ __device__
 inline SpotLight::SpotLight(const Vector3& position,
                             const Vector3& direction,
                             const Vector2& coneMinMax, // Degrees
-                            const Vector3& flux,
+                            const GPUDistribution2D* lumDist,
                             HitKey k,
                             PrimitiveId pId,
                             uint16_t mediumIndex)
-    : GPULightI(flux, k, pId, mediumIndex)
+    : GPULightI(lumDist, k, pId, mediumIndex)
     , position(position)
     , direction(direction.Normalize())
     , cosMin(coneMinMax[0])
@@ -341,11 +327,11 @@ __device__
 inline RectangularLight::RectangularLight(const Vector3& topLeft,
                                           const Vector3& right,
                                           const Vector3& down,
-                                          const Vector3& flux,
+                                          const GPUDistribution2D* lumDist,
                                           HitKey k,
                                           PrimitiveId pId,
                                           uint16_t mediumIndex)
-    : GPULightI(flux, k, pId, mediumIndex)
+    : GPULightI(lumDist, k, pId, mediumIndex)
     , topLeft(topLeft)
     , right(right)
     , down(down)
@@ -359,11 +345,11 @@ __device__
 inline TriangularLight::TriangularLight(const Vector3& v0,
                                         const Vector3& v1,
                                         const Vector3& v2,
-                                        const Vector3& flux,
+                                        const GPUDistribution2D* lumDist,
                                         HitKey k,
                                         PrimitiveId pId,
                                         uint16_t mediumIndex)
-    : GPULightI(flux, k, pId, mediumIndex)
+    : GPULightI(lumDist, k, pId, mediumIndex)
     , v0(v0)
     , v1(v1)
     , v2(v2)
@@ -378,11 +364,11 @@ __device__
 inline DiskLight::DiskLight(const Vector3& center,
                             const Vector3& normal,
                             float radius,
-                            const Vector3& flux,
+                            const GPUDistribution2D* lumDist,
                             HitKey k,
                             PrimitiveId pId,
                             uint16_t mediumIndex)
-    : GPULightI(flux, k, pId, mediumIndex)
+    : GPULightI(lumDist, k, pId, mediumIndex)
     , center(center)
     , normal(normal)
     , radius(radius)
@@ -392,11 +378,11 @@ inline DiskLight::DiskLight(const Vector3& center,
 __device__
 inline SphericalLight::SphericalLight(const Vector3& center,
                                       float radius,
-                                      const Vector3& flux,
+                                      const GPUDistribution2D* lumDist,
                                       HitKey k,
                                       PrimitiveId pId,
                                       uint16_t materialIndex)
-    : GPULightI(flux, k, pId, materialIndex)
+    : GPULightI(lumDist, k, pId, materialIndex)
     , center(center)
     , radius(radius)
     , area (MathConstants::Pi * radius * radius * 4.0f)
@@ -430,12 +416,6 @@ inline void PointLight::GenerateRay(// Output
     // TODO:
 }
 
-__device__
-inline Vector3 PointLight::Flux(const Vector3& direction) const
-{
-    return flux;
-}
-
 // ========================================= 
 __device__
 inline void DirectionalLight::Sample(// Output
@@ -462,13 +442,6 @@ inline void DirectionalLight::GenerateRay(// Output
                                           RandomGPU&) const
 {
     // TODO:
-}
-
-__device__
-inline Vector3 DirectionalLight::Flux(const Vector3& dir) const
-{
-    static constexpr Vector3 ZERO = Zero3;
-    return (dir.Dot(direction) < 0.0f) ? ZERO : flux;
 }
 
 // ========================================= 
@@ -498,15 +471,6 @@ inline SpotLight::GenerateRay(// Output
 {
     // TODO:
 
-}
-
-__device__
-inline Vector3 SpotLight::Flux(const Vector3& dir) const
-{
-    float cos = HybridFuncs::Clamp(dir.Dot(direction), cosMin, cosMax);
-    float factor = (cos - cosMin) / (cosMax - cosMin);
-    factor *= factor;
-    return flux * factor * factor;
 }
 
 // ========================================= 
@@ -543,13 +507,6 @@ inline void RectangularLight::GenerateRay(// Output
                                           RandomGPU&) const
 {
     // TODO:
-}
-
-__device__
-inline Vector3 RectangularLight::Flux(const Vector3& dir) const
-{
-    static constexpr Vector3 ZERO = Zero3;
-    return (dir.Dot(normal) < 0.0f) ? ZERO : flux;
 }
 
 // ========================================= 
@@ -593,13 +550,6 @@ inline void TriangularLight::GenerateRay(// Output
                                          RandomGPU&) const
 {
     // TODO:
-}
-
-__device__
-inline Vector3 TriangularLight::Flux(const Vector3& dir) const
-{
-    static constexpr Vector3 ZERO = Zero3;
-    return (dir.Dot(normal) < 0.0f) ? ZERO : flux;
 }
 
 // ========================================= 
@@ -646,13 +596,6 @@ inline void DiskLight::GenerateRay(// Output
     // TODO:
 }
 
-__device__ 
-inline Vector3 DiskLight::Flux(const Vector3& dir) const
-{
-    static constexpr Vector3 ZERO = Zero3;
-    return (dir.Dot(normal) < 0.0f) ? ZERO : flux;
-}
-
 // ========================================= 
 __device__
 inline void SphericalLight::Sample(// Output
@@ -697,11 +640,4 @@ inline void SphericalLight::GenerateRay(// Output
 {
     // TODO:
 }
-
-__device__ 
-inline Vector3 SphericalLight::Flux(const Vector3& direction) const
-{
-    return flux;
-}
-
 

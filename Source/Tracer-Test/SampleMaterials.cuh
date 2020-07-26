@@ -21,7 +21,6 @@ class EmissiveMat final
 
     private:
         DeviceMemory                    memory;
-        std::map<uint32_t, uint32_t>    innerIds;
 
     protected:
     public:
@@ -39,7 +38,6 @@ class EmissiveMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        uint32_t                InnerId(uint32_t materialId) const override;
         bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
@@ -70,7 +68,6 @@ class LambertMat final
 
     private:
         DeviceMemory                    memory;
-        std::map<uint32_t, uint32_t>    innerIds;
 
     protected:
     public:
@@ -88,7 +85,6 @@ class LambertMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        uint32_t                InnerId(uint32_t materialId) const override;
         bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
@@ -119,7 +115,6 @@ class ReflectMat final
 
     private:
         DeviceMemory                    memory;
-        std::map<uint32_t, uint32_t>    innerIds;
 
     protected:
     public:
@@ -137,7 +132,6 @@ class ReflectMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        uint32_t                InnerId(uint32_t materialId) const override;
         bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
@@ -168,7 +162,6 @@ class RefractMat final
 
     private:
         DeviceMemory                    memory;
-        std::map<uint32_t, uint32_t>    innerIds;
 
     protected:
     public:
@@ -186,7 +179,6 @@ class RefractMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        uint32_t                InnerId(uint32_t materialId) const override;
         bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t                  UsedGPUMemory() const override { return memory.Size(); }

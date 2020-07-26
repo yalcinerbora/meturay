@@ -49,7 +49,8 @@ class GPUPrimitiveGroupI
         // Provides data to Event Estimator
         virtual bool                HasPrimitive(uint32_t surfaceDataId) const = 0;
         virtual SceneError          GenerateLights(std::vector<CPULight>&,
-                                                   const Vector3& flux, HitKey key,
+                                                   const GPUDistribution2D& luminanceDist, 
+                                                   HitKey key,
                                                    uint32_t surfaceDataId,
                                                    const Matrix4x4& transform) const = 0;
 

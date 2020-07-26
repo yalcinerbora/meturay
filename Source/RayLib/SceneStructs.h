@@ -11,6 +11,8 @@
 #include "Types.h"
 #include "HitStructs.h"
 
+class GPUDistribution2D;
+
 enum class LightType : uint16_t
 {
     POINT,
@@ -84,14 +86,14 @@ struct CPULight
 {
     uint16_t        mediumIndex;
     LightType       type;
-    HitKey          matKey;
-    PrimitiveId     primId;
     Vector3         position0;
     Vector3         position1;
     Vector3         position2;
+    PrimitiveId     primId;
 
-    //
-    Vector3         radiance;
+    // Populated by scene system
+    HitKey                      matKey;    
+    const GPUDistribution2D*    dLuminanceDistribution;
 };
 
 struct CPUMedium

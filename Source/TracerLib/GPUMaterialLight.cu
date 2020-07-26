@@ -17,7 +17,7 @@ SceneError LightMatConstant::InitializeGroup(const NodeListing& materialNodes, d
         for(const Vector3& r : radiances)
         {
             float lum = Utility::RGBToLuminance(r);
-            lightRadianceDistributions.emplace_back(std::vector<float>(1, lum));
+            luminanceDistributions.emplace_back(std::vector<float>(1, lum));
         }
         // Generate Id pairs
         const auto& ids = sceneNode->Ids();
@@ -46,9 +46,9 @@ SceneError LightMatConstant::ChangeTime(const NodeListing& materialNodes, double
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }
 
-const GPUDistribution1D& LightMatConstant::LightDistribution(uint32_t materialId) const
+const GPUDistribution2D& LightMatConstant::LuminanceDistribution(uint32_t materialId) const
 {
-    return lightRadianceDistributions[innerIds.at(materialId)].DistributionGPU();
+    return luminanceDistributions[innerIds.at(materialId)].DistributionGPU2D();
 }
 
 SceneError LightMatTextured::InitializeGroup(const NodeListing& materialNodes, double time,
@@ -65,9 +65,9 @@ SceneError LightMatTextured::ChangeTime(const NodeListing& materialNodes, double
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }
 
-const GPUDistribution2D& LightMatTextured::LightDistribution(uint32_t materialId) const
+const GPUDistribution2D& LightMatTextured::LuminanceDistribution(uint32_t materialId) const
 {
-    return lightRadianceDistributions[innerIds.at(materialId)].DistributionGPU();
+    return luminanceDistributions[innerIds.at(materialId)].DistributionGPU();
 }
 
 SceneError LightMatCube::InitializeGroup(const NodeListing& materialNodes, double time,
@@ -84,7 +84,7 @@ SceneError LightMatCube::ChangeTime(const NodeListing& materialNodes, double tim
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }
 
-const GPUDistribution2D& LightMatCube::LightDistribution(uint32_t materialId) const
+const GPUDistribution2D& LightMatCube::LuminanceDistribution(uint32_t materialId) const
 {
-    return lightRadianceDistributions[innerIds.at(materialId)].DistributionGPU();
+    return luminanceDistributions[innerIds.at(materialId)].DistributionGPU();
 }

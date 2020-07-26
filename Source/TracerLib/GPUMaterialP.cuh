@@ -47,11 +47,17 @@ class GPUMaterialGroup
         const CudaGPU&                  gpu;
         
     protected:
+        std::map<uint32_t, uint32_t>    innerIds;
+
+        SceneError                      GenerateInnerIds(const NodeListing&);
+
     public:
         // Constructors & Destructor
                                         GPUMaterialGroup(const CudaGPU&);
         virtual                         ~GPUMaterialGroup() = default;
 
+        bool                            HasMaterial(uint32_t materialId) const override;
+        uint32_t                        InnerId(uint32_t materialId) const override;
         const CudaGPU&                  GPU() const override;
 };
 
@@ -64,6 +70,51 @@ template <class D, class S,
 GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::GPUMaterialGroup(const CudaGPU& gpu)
     : gpu(gpu)
 {}
+
+template <class D, class S, 
+          SampleFunc<D, S> SF,           
+          EvaluateFunc<D, S> EF,
+          EmissionFunc<D, S> EmF,
+          IsEmissiveFunc<D> IEF,
+          AcquireUVList<D, S> AF>
+SceneError GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::GenerateInnerIds(const NodeListing& nodes)
+{
+    uint32_t i = 0;
+    for(const auto& sceneNode : nodes)
+    {
+        const auto& ids = sceneNode->Ids();
+        for(IdPair id : ids)
+        {
+            innerIds.emplace(std::make_pair(id.first, i));
+            i++;
+        }
+    }
+    return SceneError::OK;
+}
+
+template <class D, class S, 
+          SampleFunc<D, S> SF,           
+          EvaluateFunc<D, S> EF,
+          EmissionFunc<D, S> EmF,
+          IsEmissiveFunc<D> IEF,
+          AcquireUVList<D, S> AF>
+bool GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::HasMaterial(uint32_t materialId) const
+{
+    if(innerIds.find(materialId) != innerIds.cend())
+        return true;
+    return false;
+}
+
+template <class D, class S, 
+          SampleFunc<D, S> SF,           
+          EvaluateFunc<D, S> EF,
+          EmissionFunc<D, S> EmF,
+          IsEmissiveFunc<D> IEF,
+          AcquireUVList<D, S> AF>
+uint32_t GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::InnerId(uint32_t materialId) const
+{
+    return innerIds.at(materialId);
+}
 
 template <class D, class S,
     SampleFunc<D, S> SF,

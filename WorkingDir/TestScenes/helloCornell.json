@@ -54,7 +54,7 @@
     {
 		// Light Boundary Material
 		"id": 1,
-		"type": "Emissive",
+		"type": "LightConstant",
 		"radiance" : [140, 140, 140]
     },
 	{

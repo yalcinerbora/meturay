@@ -188,7 +188,7 @@ class GPUPrimitiveTriangle final
         // Provides data to Event Estimator
         bool                                    HasPrimitive(uint32_t surfaceDataId) const override;
         SceneError                              GenerateLights(std::vector<CPULight>&,
-                                                               const Vector3& radiance,
+                                                               const GPUDistribution2D&,
                                                                HitKey key,
                                                                uint32_t surfaceDataId,
                                                                const Matrix4x4& transform) const override;

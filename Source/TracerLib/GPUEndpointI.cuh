@@ -3,6 +3,7 @@
 #include "RayLib/Vector.h"
 #include "RayLib/HitStructs.h"
 
+class GPUDistribution2D;
 class RandomGPU;
 struct RayReg;
 
@@ -62,14 +63,12 @@ class GPUEndpointI
 class GPULightI : public GPUEndpointI
 {
     protected:
-        Vector3                         flux;
+        const GPUDistribution2D*            dLumDistribution;
 
     public: 
-        __device__                      GPULightI(const Vector3& flux, HitKey k,
-                                                  PrimitiveId id, uint16_t mediumIndex);
-        virtual                         ~GPULightI() = default;
-        // Interface
-        virtual __device__ Vector3      Flux(const Vector3& direction) const = 0;
+        __device__                          GPULightI(const GPUDistribution2D* lumDist, HitKey k,
+                                                      PrimitiveId id, uint16_t mediumIndex);
+        virtual                             ~GPULightI() = default;
 };
 
 __device__      
@@ -99,10 +98,10 @@ inline uint16_t GPUEndpointI::MediumIndex() const
 }
 
 __device__
-inline GPULightI::GPULightI(const Vector3& flux, HitKey k, PrimitiveId id,
+inline GPULightI::GPULightI(const GPUDistribution2D* lumDist, HitKey k, PrimitiveId id,
                             uint16_t mediumIndex)
     : GPUEndpointI(k, id, mediumIndex)
-    , flux(flux)
+    , dLumDistribution(lumDist)
 {}
 
 using GPUCameraI = GPUEndpointI;

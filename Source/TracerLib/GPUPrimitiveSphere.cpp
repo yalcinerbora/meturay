@@ -256,7 +256,8 @@ bool GPUPrimitiveSphere::HasPrimitive(uint32_t surfaceDataId) const
 }
 
 SceneError GPUPrimitiveSphere::GenerateLights(std::vector<CPULight>& result,
-                                              const Vector3& radiance, HitKey key,
+                                              const GPUDistribution2D& luminanceDistribution, 
+                                              HitKey key,
                                               uint32_t surfaceDataId,
                                               const Matrix4x4& transform) const
 {
@@ -271,7 +272,7 @@ SceneError GPUPrimitiveSphere::GenerateLights(std::vector<CPULight>& result,
 
         CPULight ls;
         ls.matKey = key;
-        ls.radiance = radiance;
+        ls.dLuminanceDistribution = &luminanceDistribution;
         ls.type = LightType::SPHERICAL;
         ls.position0 = transform * centerRad;
         ls.position1[0] = centerRad[3] * scale[0];

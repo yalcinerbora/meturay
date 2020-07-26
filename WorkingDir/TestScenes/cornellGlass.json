@@ -31,7 +31,6 @@
 	}],
 
 	"Lights": [
-	// Light Information for event estimation
 	{
 		"id": 0,
 		"type": "primitive",
@@ -60,7 +59,7 @@
     {
 		// Light Boundary Material
 		"id": 1,
-		"type": "Emissive",
+		"type": "LightConstant",
 		"radiance" : [140, 140, 140]
     },
 	{

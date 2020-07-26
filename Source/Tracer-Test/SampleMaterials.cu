@@ -20,6 +20,11 @@ SceneError EmissiveMat::InitializeGroup(const NodeListing& materialNodes, double
         }
     }
 
+    // Generate Id List
+    SceneError e = SceneError::OK;
+    if((e = GenerateInnerIds(materialNodes)) != SceneError::OK)
+        return e;
+
     // Alloc etc
     size_t dIrradianceSize = irradianceCPU.size() * sizeof(Vector3);
     memory = std::move(DeviceMemory(dIrradianceSize));
@@ -37,11 +42,6 @@ SceneError EmissiveMat::ChangeTime(const NodeListing& materialNodes, double time
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }
 
-uint32_t EmissiveMat::InnerId(uint32_t materialId) const
-{
-    return innerIds.at(materialId);
-}
-
 // -------------
 SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes, double time,
                                        const std::string& scenePath)
@@ -54,14 +54,12 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes, double 
     {
         std::vector<Vector3> albedos = sceneNode->AccessVector3(ALBEDO);
         albedoCPU.insert(albedoCPU.end(), albedos.begin(), albedos.end());
-
-        const auto& ids = sceneNode->Ids();
-        for(IdPair id : ids)
-        {
-            innerIds.emplace(std::make_pair(id.first, i));
-            i++;
-        }
     }
+
+    // Generate Id List
+    SceneError e = SceneError::OK;
+    if((e = GenerateInnerIds(materialNodes)) != SceneError::OK)
+        return e;
 
     // Alloc etc
     size_t dAlbedoSize = albedoCPU.size() * sizeof(Vector3);
@@ -78,11 +76,6 @@ SceneError LambertMat::ChangeTime(const NodeListing& materialNodes, double time,
                                   const std::string& scenePath)
 {
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
-}
-
-uint32_t LambertMat::InnerId(uint32_t materialId) const
-{
-    return innerIds.at(materialId);
 }
 
 // -------------
@@ -104,7 +97,7 @@ SceneError ReflectMat::InitializeGroup(const NodeListing& materialNodes, double 
         {
             Vector4 data = Vector4(albedos[i], rougnessList[i]);
             matDataCPU.push_back(data);
-
+            
             innerIds.emplace(std::make_pair(id.first, i));
             i++;
         }
@@ -125,11 +118,6 @@ SceneError ReflectMat::ChangeTime(const NodeListing& materialNodes, double time,
                                   const std::string& scenePath)
 {
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
-}
-
-uint32_t ReflectMat::InnerId(uint32_t materialId) const
-{
-    return innerIds.at(materialId);
 }
 
 // -------------
@@ -173,9 +161,4 @@ SceneError RefractMat::ChangeTime(const NodeListing& materialNodes, double time,
                                   const std::string& scenePath)
 {
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
-}
-
-uint32_t RefractMat::InnerId(uint32_t materialId) const
-{
-    return innerIds.at(materialId);
 }

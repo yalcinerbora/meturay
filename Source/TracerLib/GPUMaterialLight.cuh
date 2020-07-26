@@ -14,14 +14,14 @@ class LightMatConstant final
                               EmitLight,
                               IsEmissiveTrue<LightMatData>,
                               AcquireUVEmpty<LightMatData, EmptySurface>>
+    , public LightMaterialI
 {
     public:
-        static const char*    TypeName() { return "Light"; }
+        static const char*    TypeName() { return "LightConstant"; }
 
     private:
         DeviceMemory                    memory;
-        std::map<uint32_t, uint32_t>    innerIds;
-        std::vector<Distribution1D>     lightRadianceDistributions;
+        std::vector<Distribution1D>     luminanceDistributions;
 
     public:
         // Constructors & Destructor
@@ -38,17 +38,16 @@ class LightMatConstant final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        uint32_t                    InnerId(uint32_t materialId) const override { return innerIds.at(materialId); }
-        bool                        HasCachedTextures(uint32_t materialId) const override { return false; }
+        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
-        size_t                      UsedGPUMemory() const override { return memory.Size(); }
-        size_t                      UsedCPUMemory() const override { return sizeof(LightMatData); }
-        size_t                      UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
-        size_t                      UsedCPUMemory(uint32_t materialId) const override { return 0; }
+        size_t                  UsedGPUMemory() const override { return memory.Size(); }
+        size_t                  UsedCPUMemory() const override { return sizeof(LightMatData); }
+        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
         // NEE Related
         bool                        IsLightGroup() const override { return true; }
-        const GPUDistribution1D&    LightDistribution(uint32_t materialId) const;
+        const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const override;
 
         uint8_t                     SampleStrategyCount() const { return 0; };
         // No Texture
@@ -64,6 +63,7 @@ class LightMatTextured final
                               EmitLightTex,
                               IsEmissiveTrue<LightMatTexData>,
                               AcquireUVEmpty<LightMatTexData, BasicUVSurface>>
+    , public LightMaterialI
 {
     public:
         static const char*      TypeName() { return "LightTextured"; }
@@ -71,8 +71,7 @@ class LightMatTextured final
     private:
         DeviceMemory                    memory;
         Texture2DArray<Vector4>         textureList;
-        std::map<uint32_t, uint32_t>    innerIds;
-        std::vector<Distribution2D>     lightRadianceDistributions;
+        std::vector<Distribution2D>     luminanceDistributions;
 
     public:
         // Constructors & Destructor
@@ -89,17 +88,16 @@ class LightMatTextured final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        uint32_t                    InnerId(uint32_t materialId) const override { return innerIds.at(materialId); }
-        bool                        HasCachedTextures(uint32_t materialId) const override { return false; }
+        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
-        size_t                      UsedGPUMemory() const override { return memory.Size() + textureList.Size(); }
-        size_t                      UsedCPUMemory() const override { return sizeof(LightMatTexData); }
-        size_t                      UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
-        size_t                      UsedCPUMemory(uint32_t materialId) const override { return 0; }
+        size_t                  UsedGPUMemory() const override { return memory.Size() + textureList.Size(); }
+        size_t                  UsedCPUMemory() const override { return sizeof(LightMatTexData); }
+        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
         // NEE Related
         bool                        IsLightGroup() const override { return true; }
-        const GPUDistribution2D&    LightDistribution(uint32_t materialId) const;
+        const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const override;
 
         uint8_t                     SampleStrategyCount() const { return 0; };
         // No Texture
@@ -115,6 +113,7 @@ class LightMatCube final
                               EmitLightCube,
                               IsEmissiveTrue<LightMatCubeData>,
                               AcquireUVEmpty<LightMatCubeData, EmptySurface>>
+    , public LightMaterialI
 {
     public:
         static const char*      TypeName() { return "LightCube"; }
@@ -122,8 +121,7 @@ class LightMatCube final
     private:
         DeviceMemory                    memory;
         TextureCube<Vector4>            textureList;
-        std::map<uint32_t, uint32_t>    innerIds;
-        std::vector<Distribution2D>     lightRadianceDistributions;
+        std::vector<Distribution2D>     luminanceDistributions;
 
     public:
         // Constructors & Destructor
@@ -139,18 +137,17 @@ class LightMatCube final
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override;
 
-        // Material Queries
-        uint32_t                    InnerId(uint32_t materialId) const override { return innerIds.at(materialId); }
-        bool                        HasCachedTextures(uint32_t materialId) const override { return false; }
+        // Material Queries        
+        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
-        size_t                      UsedGPUMemory() const override { return memory.Size() + textureList.Size(); }
-        size_t                      UsedCPUMemory() const override { return sizeof(LightMatTexData); }
-        size_t                      UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
-        size_t                      UsedCPUMemory(uint32_t materialId) const override { return 0; }
+        size_t                  UsedGPUMemory() const override { return memory.Size() + textureList.Size(); }
+        size_t                  UsedCPUMemory() const override { return sizeof(LightMatTexData); }
+        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
         // NEE Related
         bool                        IsLightGroup() const override { return true; }
-        const GPUDistribution2D&    LightDistribution(uint32_t materialId) const;
+        const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const override;
 
         uint8_t                     SampleStrategyCount() const { return 0; };
         // No Texture

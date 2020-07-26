@@ -112,7 +112,8 @@ class GPUSceneJson : public GPUSceneI
                                                 const std::map<uint32_t, HitKey>& accHitKeyList,
                                                 const std::map<uint32_t, uint32_t>& surfaceTransformIds,
                                                 double time = 0.0);
-        SceneError      GenerateLightInfo(const MaterialKeyListing& materialKeys, double time);
+        SceneError      GenerateLightInfo(const MaterialKeyListing& materialKeys,
+                                          double time);
         SceneError      FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,
                                              double time = 0.0f);
 
