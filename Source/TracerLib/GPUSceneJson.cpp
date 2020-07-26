@@ -16,6 +16,7 @@
 #include "SceneNodeJson.h"
 #include "MangledNames.h"
 #include "GPUMedium.cuh"
+#include "GPUMaterialLight.cuh"
 
 #include <nlohmann/json.hpp>
 #include <filesystem>

@@ -15,8 +15,7 @@ const GPUDistribution2D& Distribution2D::DistributionGPU() const
 
 __host__ 
 Distribution2D::Distribution2D(const std::vector<float>& values,
-                               uint32_t width,
-                               uint32_t height)
+                               uint32_t width, uint32_t height)
 {
 
 }

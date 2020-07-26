@@ -46,11 +46,11 @@ enum class CubeTexSide
 template <int D>
 struct TexDimType {};
 template <>
-struct TexDimType<1> { using type = unsigned int; };
+struct TexDimType<1> { using type = uint32_t; static constexpr typename type ZERO = 0; };
 template <>
-struct TexDimType<2> { using type = Vector2ui; };
+struct TexDimType<2> { using type = Vector2ui; static constexpr typename type ZERO = Zero2ui; };
 template <>
-struct TexDimType<3> { using type = Vector3ui; };
+struct TexDimType<3> { using type = Vector3ui; static constexpr typename type ZERO = Zero3ui; };
 template <int D>
 using TexDimType_t = typename TexDimType<D>::type;
 
@@ -98,10 +98,9 @@ class Texture
     static_assert(is_TextureType_v<T>, "Invalid texture type");
 
     private:
-        cudaMipmappedArray_t        data;
-        cudaTextureObject_t         t;
-        
-        TexDimType_t<D>             dim;
+        cudaMipmappedArray_t        data    = nullptr;
+        cudaTextureObject_t         t       = 0;        
+        TexDimType_t<D>             dim     = TexDimType<D>::ZERO;
         
         InterpolationType           interpType;
         EdgeResolveType             edgeResolveType;
@@ -109,6 +108,7 @@ class Texture
     protected:
     public:
         // Constructors & Destructor
+                            Texture() = default;
                             Texture(int deviceId,
                                     InterpolationType,
                                     EdgeResolveType,
@@ -116,23 +116,28 @@ class Texture
                                     const TexDimType_t<D>& dim,
                                     int mipCount);
                             Texture(const Texture&) = delete;
+                            Texture(Texture&&);
         Texture&            operator=(const Texture&) = delete;
+        Texture&            operator=(Texture&&);
                             ~Texture();
 
         // Copy Data
         void                Copy(const Byte* sourceData,
                                  const TexDimType_t<D>& size,
-                                 const TexDimType_t<D>& offset = Zero3ui,
+                                 const TexDimType_t<D>& offset = TexDimType_t<D>::Zero,
                                  int mipLevel = 0);
         GPUFence            CopyAsync(const Byte* sourceData,
                                       const TexDimType_t<D>& size,
-                                      const TexDimType_t<D>& offset = Zero3ui,
+                                      const TexDimType_t<D>& offset = TexDimType_t<D>::Zero,
                                       int mipLevel = 0,
                                       cudaStream_t stream = nullptr);
 
         const TexDimType_t<D>&  Dim() const;
         InterpolationType       InterpType() const;
         EdgeResolveType         EdgeType() const;
+
+        // Misc
+        size_t                  Size() const;
 
         // Memory Migration
         void                    MigrateToOtherDevice(int deviceTo,
@@ -146,11 +151,11 @@ class TextureArray : public DeviceLocalMemoryI
     static_assert(is_TextureType_v<T>, "Invalid texture array type");
 
     private:
-        cudaMipmappedArray_t        data;
-        cudaTextureObject_t         t;
+        cudaMipmappedArray_t        data    = nullptr;
+        cudaTextureObject_t         t       = 0;
 
-        TexDimType_t<D>             dim;
-        unsigned int                length;
+        TexDimType_t<D>             dim     = TexDimType<D>::ZERO;
+        unsigned int                length  = 0;
 
         InterpolationType           interpType;
         EdgeResolveType             edgeResolveType;
@@ -158,6 +163,7 @@ class TextureArray : public DeviceLocalMemoryI
     protected:
     public:
         // Constructors & Destructor
+                            TextureArray() = default;
                             TextureArray(int deviceId,
                                          InterpolationType,
                                          EdgeResolveType,
@@ -165,20 +171,22 @@ class TextureArray : public DeviceLocalMemoryI
                                          const TexDimType_t<D>& dim,
                                          unsigned int length,
                                          int mipCount);
-                            TextureArray(const TextureArray&) = delete;
+                            TextureArray(const TextureArray&) = delete;            
+                            TextureArray(TextureArray&&);
         TextureArray&       operator=(const TextureArray&) = delete;
+        TextureArray&       operator=(TextureArray&&);
                             ~TextureArray();
 
         // Copy Data
         void                Copy(const Byte* sourceData,
                                  const TexDimType_t<D>& size,
                                  int layer,
-                                 const TexDimType_t<D>& offset = Zero3ui,
+                                 const TexDimType_t<D>& offset = TexDimType_t<D>::Zero,
                                  int mipLevel = 0);
         GPUFence            CopyAsync(const Byte* sourceData,
                                       const TexDimType_t<D>& size,
                                       int layer,
-                                      const TexDimType_t<D>& offset = Zero3ui,
+                                      const TexDimType_t<D>& offset = TexDimType_t<D>::Zero,
                                       int mipLevel = 0,
                                       cudaStream_t stream = nullptr);
 
@@ -187,6 +195,9 @@ class TextureArray : public DeviceLocalMemoryI
         unsigned int            Length() const;
         InterpolationType       InterpType() const;
         EdgeResolveType         EdgeType() const;
+
+        // Misc
+        size_t                  Size() const;
 
         void                    MigrateToOtherDevice(int deviceTo,
                                                      cudaStream_t stream = nullptr) override;
@@ -201,15 +212,17 @@ class TextureCube : public DeviceLocalMemoryI
         static constexpr uint32_t   CUBE_FACE_COUNT = 6;
 
     private:
-        cudaMipmappedArray_t        data;
-        cudaTextureObject_t         t;
+        cudaMipmappedArray_t        data    = nullptr;
+        cudaTextureObject_t         t       = 0;
+        Vector2ui                   dim     = Zero3ui;
 
-        Vector2ui                   dim;
         InterpolationType           interpType;
         EdgeResolveType             edgeResolveType;
 
     protected:
     public:
+        // Constructors & Destructor
+                            TextureCube() = default;
                             TextureCube(int deviceId,
                                         InterpolationType,
                                         EdgeResolveType,
@@ -217,7 +230,9 @@ class TextureCube : public DeviceLocalMemoryI
                                         const Vector2ui& dim,
                                         int mipCount);
                             TextureCube(const TextureCube&) = delete;
+                            TextureCube(TextureCube&&);
         TextureCube&        operator=(const TextureCube&) = delete;
+        TextureCube&        operator=(TextureCube&&);
                             ~TextureCube();
 
         // Copy Data
@@ -232,6 +247,9 @@ class TextureCube : public DeviceLocalMemoryI
                                       const Vector2ui& offset = Zero2ui,
                                       int mipLevel = 0,
                                       cudaStream_t stream = nullptr);
+
+        // Misc
+        size_t              Size() const;
 
         const Vector2ui&    Dim() const;
         InterpolationType   InterpType() const;

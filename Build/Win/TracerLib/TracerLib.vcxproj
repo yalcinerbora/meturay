@@ -88,7 +88,7 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.cu" />
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\Distribution.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUDistribution.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveEmpty.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp" />

@@ -1,5 +1,17 @@
 
 template <int D>
+size_t TotalPixelCount(const TexDimType_t<D>& dim)
+{
+    if constexpr(D == 1)
+        return dim;
+    else if constexpr(D == 2)
+        return static_cast<size_t>(dim[0]) * dim[1];
+    else if constexpr(D == 3)
+        return static_cast<size_t>(dim[0]) * dim[1] * dim[2];
+    else return 0;
+}
+
+template <int D>
 cudaExtent MakeCudaExtent(const TexDimType_t<D>& dim)
 {
     if constexpr(D == 1)
@@ -46,6 +58,7 @@ cudaPos MakeCudaOffset(const TexDimType_t<D>& offset)
         return make_cudaPos(offset[0], offset[1], offset[2]);
     }
 }
+
 template <int D>
 cudaPos MakeCudaOffset(const TexDimType_t<D>& offset,
                        unsigned int layer)
@@ -135,10 +148,51 @@ Texture<D, T>::Texture(int deviceId,
 
     CUDA_CHECK(cudaCreateTextureObject(&t, &rDesc, &tDesc, nullptr));
 }
+
+template<int D, class T>
+Texture<D, T>::Texture(Texture&& other)
+    : data(other.data)
+    , dim(other.dim)
+    , t(other.t)
+    , interpType(other.interpType)
+    , edgeResolveType(other.edgeResolveType)
+{
+    other.t = 0;
+    other.dim = TexDimType<D>::ZERO;
+    other.data = nullptr;
+}
+
+template<int D, class T>
+Texture<D, T>& Texture<D, T>::operator=(Texture&& other)
+{
+    assert(this != &other);
+    if(data)
+    {
+        CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaFreeMipmappedArray(data));
+    }
+
+    data = other.data;
+    t = other.t;
+    dim = other.dim;
+    interpType = other.interpType;
+    edgeResolveType = other.edgeResolveType;
+
+    other.data = nullptr;
+    other.dim = TexDimType<D>::ZERO;
+    other.t = 0;
+
+    return *this;
+}
+
 template<int D, class T>
 Texture<D, T>::~Texture()
 {
-    cudaFreeMipmappedArray(data);
+    if(data)
+    {
+        CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaFreeMipmappedArray(data));
+    }
 }
 
 template<int D, class T>
@@ -148,6 +202,7 @@ void Texture<D, T>::Copy(const Byte* sourceData,
                          int mipLevel)
 {
     cudaArray_t levelArray;
+    CUDA_CHECK(cudaSetDevice(currentDevice));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     cudaMemcpy3DParms p = {};
@@ -174,6 +229,7 @@ GPUFence Texture<D, T>::CopyAsync(const Byte* sourceData,
                                   cudaStream_t stream)
 {
     cudaArray_t levelArray;
+    CUDA_CHECK(cudaSetDevice(currentDevice));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     cudaMemcpy3DParms p = {};
@@ -208,6 +264,12 @@ template<int D, class T>
 EdgeResolveType Texture<D, T>::EdgeType() const
 {
     return edgeResolveType;
+}
+
+template<int D, class T>
+size_t Texture<D, T>::Size() const
+{
+    return TotalPixelCount<D>(dim) * sizeof(T);
 }
 
 template<int D, class T>
@@ -270,9 +332,53 @@ TextureArray<D, T>::TextureArray(int deviceId,
 }
 
 template<int D, class T>
+TextureArray<D, T>::TextureArray(TextureArray&& other)
+    : data(other.data)
+    , dim(other.dim)
+    , length(other.length)
+    , t(other.t)
+    , interpType(other.interpType)
+    , edgeResolveType(other.edgeResolveType)
+{
+    other.t = 0;
+    other.dim = TexDimType<D>::ZERO;
+    other.length = 0;
+    other.data = nullptr;
+}
+
+template<int D, class T>
+TextureArray<D, T>& TextureArray<D, T>::operator=(TextureArray&& other)
+{
+    assert(this != &other);
+    if(data)
+    {
+        CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaFreeMipmappedArray(data));
+    }
+
+    data = other.data;
+    t = other.t;
+    dim = other.dim;
+    length = other.length;
+    interpType = other.interpType;
+    edgeResolveType = other.edgeResolveType;
+
+    other.data = nullptr;
+    other.dim = TexDimType<D>::ZERO;
+    other.length = 0;
+    other.t = 0;
+
+    return *this;
+}
+
+template<int D, class T>
 TextureArray<D, T>::~TextureArray()
 {
-    cudaFreeMipmappedArray(data);
+    if(data)
+    {
+        CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaFreeMipmappedArray(data));
+    }
 }
 
 template<int D, class T>
@@ -283,6 +389,7 @@ void TextureArray<D, T>::Copy(const Byte* sourceData,
                               int mipLevel)
 {
     cudaArray_t levelArray;
+    CUDA_CHECK(cudaSetDevice(currentDevice));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     cudaMemcpy3DParms p = {};
@@ -309,6 +416,7 @@ GPUFence TextureArray<D, T>::CopyAsync(const Byte* sourceData,
                                        cudaStream_t stream)
 {
     cudaArray_t levelArray;
+    CUDA_CHECK(cudaSetDevice(currentDevice));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     cudaMemcpy3DParms p = {};
@@ -349,6 +457,12 @@ template<int D, class T>
 EdgeResolveType TextureArray<D, T>::EdgeType() const
 {
     return edgeResolveType;
+}
+
+template<int D, class T>
+size_t TextureArray<D, T>::Size() const
+{
+    return TotalPixelCount<D>(dim) * length * sizeof(T);
 }
 
 template<int D, class T>
@@ -409,10 +523,50 @@ TextureCube<T>::TextureCube(int deviceId,
     CUDA_CHECK(cudaCreateTextureObject(&t, &rDesc, &tDesc, nullptr));
 }
 
+template<class T>
+TextureCube<T>::TextureCube(TextureCube&& other)
+    : data(other.data)
+    , dim(other.dim)
+    , t(other.t)
+    , interpType(other.interpType)
+    , edgeResolveType(other.edgeResolveType)
+{
+    other.t = 0;
+    other.dim = Zero2ui;
+    other.data = nullptr;
+}
+
+template<class T>
+TextureCube<T>& TextureCube<T>::operator=(TextureCube&& other)
+{
+    assert(this != &other);
+    if(data)
+    {
+        CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaFreeMipmappedArray(data));
+    }
+
+    data = other.data;
+    t = other.t;
+    dim = other.dim;
+    interpType = other.interpType;
+    edgeResolveType = other.edgeResolveType;
+
+    other.data = nullptr;
+    other.dim = Zero2ui;
+    other.t = 0;
+
+    return *this;
+}
+
 template <class T>
 TextureCube<T>::~TextureCube()
 {
-    CUDA_CHECK(cudaFreeMipmappedArray(data));
+    if(data)
+    {
+        CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaFreeMipmappedArray(data));
+    }
 }
 
 template <class T>
@@ -423,6 +577,7 @@ void TextureCube<T>::Copy(const Byte* sourceData,
                           int mipLevel)
 {
     cudaArray_t levelArray;
+    CUDA_CHECK(cudaSetDevice(currentDevice));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     size_t sideIndex = static_cast<size_t>(side);
@@ -451,6 +606,7 @@ GPUFence TextureCube<T>::CopyAsync(const Byte* sourceData,
                                    cudaStream_t stream)
 {
     cudaArray_t levelArray;
+    CUDA_CHECK(cudaSetDevice(currentDevice));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     size_t sideIndex = static_cast<size_t>(side);
@@ -487,6 +643,12 @@ template <class T>
 EdgeResolveType TextureCube<T>::EdgeType() const
 {
     return edgeResolveType;
+}
+
+template<class T>
+size_t TextureCube<T>::Size() const
+{
+    return static_cast<size_t>(dim[0]) * dim[1] * CUBE_FACE_COUNT * sizeof(T);
 }
 
 template <class T>

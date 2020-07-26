@@ -5,6 +5,7 @@
 #include "SurfaceStructs.h"
 #include "MetaMaterialFunctions.cuh"
 #include "Texture.cuh"
+#include "GPUDistribution.h"
 
 class LightMatConstant final 
     : public GPUMaterialGroup<LightMatData, EmptySurface,
@@ -20,6 +21,7 @@ class LightMatConstant final
     private:
         DeviceMemory                    memory;
         std::map<uint32_t, uint32_t>    innerIds;
+        std::vector<Distribution1D>     lightRadianceDistributions;
 
     public:
         // Constructors & Destructor
@@ -36,22 +38,23 @@ class LightMatConstant final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        uint32_t                InnerId(uint32_t materialId) const override { return innerIds.at(materialId); }
-        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
+        uint32_t                    InnerId(uint32_t materialId) const override { return innerIds.at(materialId); }
+        bool                        HasCachedTextures(uint32_t materialId) const override { return false; }
 
-        size_t                  UsedGPUMemory() const override { return memory.Size(); }
-        size_t                  UsedCPUMemory() const override { return sizeof(LightMatData); }
-        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
-        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+        size_t                      UsedGPUMemory() const override { return memory.Size(); }
+        size_t                      UsedCPUMemory() const override { return sizeof(LightMatData); }
+        size_t                      UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+        size_t                      UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
         // NEE Related
-        bool                    IsLightGroup() const override { return true; }
+        bool                        IsLightGroup() const override { return true; }
+        const GPUDistribution1D&    LightDistribution(uint32_t materialId) const;
 
-        uint8_t                 SampleStrategyCount() const { return 0; };
+        uint8_t                     SampleStrategyCount() const { return 0; };
         // No Texture
-        uint8_t                 UsedTextureCount() const { return 0; }
-        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask             CachedTextures() const { return 0; }
+        uint8_t                     UsedTextureCount() const { return 0; }
+        std::vector<uint32_t>       UsedTextureIds() const { return std::vector<uint32_t>(); }
+        TextureMask                 CachedTextures() const { return 0; }
 };
 
 class LightMatTextured final 
@@ -67,8 +70,9 @@ class LightMatTextured final
 
     private:
         DeviceMemory                    memory;
-        Texture2DArray<Vector3>         textureList;
+        Texture2DArray<Vector4>         textureList;
         std::map<uint32_t, uint32_t>    innerIds;
+        std::vector<Distribution2D>     lightRadianceDistributions;
 
     public:
         // Constructors & Destructor
@@ -85,22 +89,23 @@ class LightMatTextured final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        uint32_t                InnerId(uint32_t materialId) const override { return innerIds.at(materialId); }
-        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
+        uint32_t                    InnerId(uint32_t materialId) const override { return innerIds.at(materialId); }
+        bool                        HasCachedTextures(uint32_t materialId) const override { return false; }
 
-        size_t                  UsedGPUMemory() const override { return memory.Size() + textureList.Size(); }
-        size_t                  UsedCPUMemory() const override { return sizeof(LightMatTexData); }
-        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
-        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+        size_t                      UsedGPUMemory() const override { return memory.Size() + textureList.Size(); }
+        size_t                      UsedCPUMemory() const override { return sizeof(LightMatTexData); }
+        size_t                      UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+        size_t                      UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
         // NEE Related
-        bool                    IsLightGroup() const override { return true; }
+        bool                        IsLightGroup() const override { return true; }
+        const GPUDistribution2D&    LightDistribution(uint32_t materialId) const;
 
-        uint8_t                 SampleStrategyCount() const { return 0; };
+        uint8_t                     SampleStrategyCount() const { return 0; };
         // No Texture
-        uint8_t                 UsedTextureCount() const { return 0; }
-        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask             CachedTextures() const { return 0; }
+        uint8_t                     UsedTextureCount() const { return 0; }
+        std::vector<uint32_t>       UsedTextureIds() const { return std::vector<uint32_t>(); }
+        TextureMask                 CachedTextures() const { return 0; }
 };
 
 class LightMatCube final 
@@ -116,8 +121,9 @@ class LightMatCube final
 
     private:
         DeviceMemory                    memory;
-        TextureCube<Vector3>            textureList;
+        TextureCube<Vector4>            textureList;
         std::map<uint32_t, uint32_t>    innerIds;
+        std::vector<Distribution2D>     lightRadianceDistributions;
 
     public:
         // Constructors & Destructor
@@ -134,20 +140,21 @@ class LightMatCube final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        uint32_t                InnerId(uint32_t materialId) const override { return innerIds.at(materialId); }
-        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
+        uint32_t                    InnerId(uint32_t materialId) const override { return innerIds.at(materialId); }
+        bool                        HasCachedTextures(uint32_t materialId) const override { return false; }
 
-        size_t                  UsedGPUMemory() const override { return memory.Size() + textureList.Size(); }
-        size_t                  UsedCPUMemory() const override { return sizeof(LightMatTexData); }
-        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
-        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+        size_t                      UsedGPUMemory() const override { return memory.Size() + textureList.Size(); }
+        size_t                      UsedCPUMemory() const override { return sizeof(LightMatTexData); }
+        size_t                      UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+        size_t                      UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
         // NEE Related
-        bool                    IsLightGroup() const override { return true; }
+        bool                        IsLightGroup() const override { return true; }
+        const GPUDistribution2D&    LightDistribution(uint32_t materialId) const;
 
-        uint8_t                 SampleStrategyCount() const { return 0; };
+        uint8_t                     SampleStrategyCount() const { return 0; };
         // No Texture
-        uint8_t                 UsedTextureCount() const { return 0; }
-        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask             CachedTextures() const { return 0; }
+        uint8_t                     UsedTextureCount() const { return 0; }
+        std::vector<uint32_t>       UsedTextureIds() const { return std::vector<uint32_t>(); }
+        TextureMask                 CachedTextures() const { return 0; }
 };

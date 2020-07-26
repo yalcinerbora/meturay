@@ -227,6 +227,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\TypeTraits.h">
       <Filter>Utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\ColorConversion.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

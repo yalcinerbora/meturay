@@ -94,7 +94,7 @@
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp">
       <Filter>Cuda System</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\Distribution.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUDistribution.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">

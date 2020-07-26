@@ -4,6 +4,7 @@
 
 #include "RayLib/Vector.h"
 #include "RayLib/HitStructs.h"
+#include "SurfaceStructs.h"
 #include "TextureReference.cuh"
 
 class GPUMedium;
