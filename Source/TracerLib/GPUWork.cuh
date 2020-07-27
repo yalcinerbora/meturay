@@ -18,8 +18,8 @@ class GPUWorkBatchD : public GPUWorkBatchI
     protected:
         // Ray Auxiliary Input and output pointers
         // which are global (not local)
-        const RayData*  dRayDataIn = nullptr;
-        RayData*        dRayDataOut = nullptr;
+        const RayData*  dAuxInLocal = nullptr;
+        RayData*        dAuxOutLocal = nullptr;
 
         // GPU Friendly Struct which will be directly passed to the kernel call
         GlobalData      globalData;
@@ -49,12 +49,12 @@ class GPUWorkBatch
     private:        
         static constexpr auto           GenerateSurface = SFunc;
 
-        // Per-Bathch Data
-        LocalData                       localData;
-
     protected:
         const MGroup&                   materialGroup;
         const PGroup&                   primitiveGroup;
+
+        // Per-Bathch Data
+        LocalData                       localData;
 
     public:
         // Constrcutors & Destructor
@@ -72,8 +72,7 @@ class GPUWorkBatch
                                              // Ids
                                              const HitKey* dMatIds,
                                              const RayId* dRayIds,
-                                             // 
-                                             const uint32_t outputOffset,
+                                             //
                                              const uint32_t rayCount,
                                              RNGMemory& rngMem) override;
 
@@ -92,8 +91,8 @@ template<class GD, class RD>
 void GPUWorkBatchD<GD, RD>::SetRayDataPtrs(RD* dRDOut,
                                            const RD* dRDIn)
 {
-    dRayDataIn = dRDIn;
-    dRayDataOut = dRDOut;
+    dAuxInLocal = dRDIn;
+    dAuxOutLocal = dRDOut;
 }
 
 template <class GD, class LD, class RD, class MG, class PG,
@@ -126,7 +125,6 @@ void GPUWorkBatch<GD, LD, RD, MG, PG, SF, WF>::Work(// Output
                                                     const HitKey* dMatIds,
                                                     const RayId* dRayIds,
                                                     // 
-                                                    const uint32_t outputOffset,
                                                     const uint32_t rayCount,
                                                     RNGMemory& rngMem)
 {
@@ -141,17 +139,14 @@ void GPUWorkBatch<GD, LD, RD, MG, PG, SF, WF>::Work(// Output
     const MaterialData matData = MatDataAccessor::Data(materialGroup);    
 
     const uint32_t outRayCount = OutRayCount();
-    RD* dAuxOutLocal = dRayDataOut + outputOffset;
 
     const CudaGPU& gpu = materialGroup.GPU();
-
     gpu.AsyncGridStrideKC_X
     (
         0,
         rayCount,
         //
-        KCWork<GD, LD, RD, PG, MG, 
-               WF, SF>,
+        KCWork<GD, LD, RD, PG, MG, WF, SF>,
         // Args
         // Output
         dBoundMatOut,
@@ -160,7 +155,7 @@ void GPUWorkBatch<GD, LD, RD, MG, PG, SF, WF>::Work(// Output
         outRayCount,
         // Input
         dRayIn,
-        dRayDataIn,
+        dAuxInLocal,
         dPrimitiveIds,
         dHitStructs,
         //

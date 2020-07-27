@@ -47,6 +47,7 @@ class EmissiveMat final
 
         // NEE Related
         bool                    IsLightGroup() const override { return false; }
+        bool                    IsEmissiveGroup() const override { return true; }
 
         uint8_t                 SampleStrategyCount() const { return 0; };
         // No Texture
@@ -94,6 +95,7 @@ class LambertMat final
 
         // NEE Related
         bool                    IsLightGroup() const override { return false; }
+        bool                    IsEmissiveGroup() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture
@@ -141,6 +143,7 @@ class ReflectMat final
 
         // NEE Related
         bool                    IsLightGroup() const override { return false; }
+        bool                    IsEmissiveGroup() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture
@@ -188,6 +191,7 @@ class RefractMat final
 
         // NEE Related
         bool                    IsLightGroup() const override { return false; }
+        bool                    IsEmissiveGroup() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture

@@ -47,6 +47,7 @@ class LightMatConstant final
 
         // NEE Related
         bool                        IsLightGroup() const override { return true; }
+        bool                        IsEmissiveGroup() const override { return true; }
         const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const override;
 
         uint8_t                     SampleStrategyCount() const { return 0; };
@@ -97,6 +98,7 @@ class LightMatTextured final
 
         // NEE Related
         bool                        IsLightGroup() const override { return true; }
+        bool                        IsEmissiveGroup() const override { return true; }
         const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const override;
 
         uint8_t                     SampleStrategyCount() const { return 0; };
@@ -147,6 +149,7 @@ class LightMatCube final
 
         // NEE Related
         bool                        IsLightGroup() const override { return true; }
+        bool                        IsEmissiveGroup() const override { return true; }
         const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const override;
 
         uint8_t                     SampleStrategyCount() const { return 0; };

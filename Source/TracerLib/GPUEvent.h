@@ -57,7 +57,7 @@ inline bool GPUFence::CheckFence()
     else if(err == cudaErrorNotReady) return false;
     else
     {
-        CUDA_CHECK(err);
+        CUDA_CHECK_ERROR(err);
         return false;
     }
 }

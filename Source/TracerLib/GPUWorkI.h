@@ -39,8 +39,7 @@ class GPUWorkBatchI
                                                  // Ids
                                                  const HitKey* dMatIds,
                                                  const RayId* dRayIds,
-                                                 // 
-                                                 const uint32_t outputOffset,
+                                                 //
                                                  const uint32_t rayCount,
                                                  RNGMemory& rngMem) = 0;
 

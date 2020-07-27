@@ -58,3 +58,29 @@ template class PathTracerWork<RefractMat,
 template class PathTracerWork<RefractMat,
                               GPUPrimitiveSphere,
                               BasicSurfaceFromSphr>;
+// ===================================================
+// Path Tracer Light Work Batches
+template class PathTracerLightWork<LightMatConstant,
+                                   GPUPrimitiveEmpty,
+                                   EmptySurfaceFromEmpty>;
+template class PathTracerLightWork<LightMatConstant,
+                                   GPUPrimitiveTriangle,
+                                   EmptySurfaceFromTri>;
+template class PathTracerLightWork<LightMatConstant,
+                                   GPUPrimitiveSphere,
+                                   EmptySurfaceFromSphr>;
+template class PathTracerLightWork<LightMatTextured,
+                                   GPUPrimitiveTriangle,
+                                   BasicUVSurfaceFromTri>;
+template class PathTracerLightWork<LightMatTextured,
+                                   GPUPrimitiveSphere,
+                                   BasicUVSurfaceFromSphr>;
+template class PathTracerLightWork<LightMatCube,
+                                   GPUPrimitiveEmpty,
+                                   EmptySurfaceFromEmpty>;
+template class PathTracerLightWork<LightMatCube,
+                                   GPUPrimitiveTriangle,
+                                   EmptySurfaceFromTri>;
+template class PathTracerLightWork<LightMatCube,
+                                   GPUPrimitiveSphere,
+                                   EmptySurfaceFromSphr>;

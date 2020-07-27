@@ -48,6 +48,7 @@ class ConstantMat final
 
         // NEE Related
         bool                    IsLightGroup() const override { return false; }
+        bool                    IsEmissiveGroup() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 0; };
         // No Texture
@@ -93,6 +94,7 @@ class BarycentricMat final
 
         // NEE Related
         bool                    IsLightGroup() const override { return false; }
+        bool                    IsEmissiveGroup() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 0; };
         // No Texture
@@ -138,6 +140,7 @@ class SphericalMat final
 
         // NEE Related
         bool                    IsLightGroup() const override { return false; }
+        bool                    IsEmissiveGroup() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 0; };
         // No Texture

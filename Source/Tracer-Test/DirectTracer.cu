@@ -56,6 +56,10 @@ bool DirectTracer::Render()
     // Do Hit Loop
     HitAndPartitionRays();
 
+    // Generate Global Data Struct
+    DirectTracerGlobal globalData;
+    globalData.gImage = imgMemory.GMem<Vector4>();
+
     // After Hit Determine Ray Aux Output size    
     uint32_t totalOutRayCount = 0;
     for(const auto& p : workPartition)
@@ -71,19 +75,33 @@ bool DirectTracer::Render()
     size_t auxOutSize = totalOutRayCount * sizeof(RayAuxBasic);
     DeviceMemory::EnlargeBuffer(*dAuxOut, auxOutSize);
 
-    // Generate Global Data Struct
-    DirectTracerGlobal globalData;
-    globalData.gImage = imgMemory.GMem<Vector4>();
-
-    for(auto& work : workMap)
+    // Set Auxiliary Pointers
+    size_t auxOutOffset = 0;
+    for(auto pIt = workPartition.crbegin();
+        pIt != workPartition.crend(); pIt++)
     {
-        using WorkData = typename GPUWorkBatchD<DirectTracerGlobal, RayAuxBasic>;
+        const auto& p = (*pIt);
 
-        auto& wData = static_cast<WorkData&>(*work.second);
+        // Skip if null batch or unfound material
+        if(p.portionId == HitKey::NullBatch) continue;
+        auto loc = workMap.find(p.portionId);
+        if(loc == workMap.end()) continue;
+
+        // Set pointers
+        RayAuxBasic* dAuxOutLocal = static_cast<RayAuxBasic*>(*dAuxOut) + auxOutOffset;
+        const RayAuxBasic* dAuxInLocal = static_cast<const RayAuxBasic*>(*dAuxIn) + p.offset;
+        //auto& wBatch = static_cast<GPUWorkBatchI&>(*(loc->second));
+
+        using WorkData = typename GPUWorkBatchD<DirectTracerGlobal, RayAuxBasic>;
+        auto& wData = static_cast<WorkData&>(*loc->second);
         wData.SetGlobalData(globalData);
-        wData.SetRayDataPtrs(static_cast<RayAuxBasic*>(*dAuxOut),
-                             static_cast<const RayAuxBasic*>(*dAuxIn));
+        wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
+
+        auxOutOffset += (static_cast<uint32_t>(p.count) *
+                         loc->second->OutRayCount());
     }
+    assert(auxOutOffset == totalOutRayCount);
+
 
     // Hit System Generated bunch of hit pairs
     WorkRays(workMap, scene.BaseBoundaryMaterial());

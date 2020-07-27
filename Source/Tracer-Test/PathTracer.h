@@ -26,7 +26,11 @@ class PathTracer final : public RayTracer
         Options                 options;
         uint32_t                currentDepth;
         WorkBatchMap            workMap;
+
+        // Generic work pool
         WorkPool<bool>          workPool;
+        // Light material work pool
+        WorkPool<bool>          lightWorkPool;
         
         // Light Next Event Estimation
         uint32_t                lightCount;

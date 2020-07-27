@@ -287,7 +287,6 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
                           dKeyStart,
                           dRayIdStart,
                           //
-                          outOffset,
                           static_cast<uint32_t>(p.count),
                           rngMemory);
 

@@ -35,7 +35,7 @@ struct EmptyState {};
 struct PathTracerLocal
 {
     uint32_t materialSampleCount;
-    bool emissiveMaterial;
+    bool     emissiveMaterial;
 };
 
 template <class MGroup>
@@ -86,6 +86,7 @@ inline void BasicWork(// Output
 
     // And accumulate pixel
     ImageAccumulatePixel(img, aux.pixelIndex, Vector4(radiance, 1.0f));
+    ImageAddSample(gRenderState.gImage, aux.pixelIndex, 1);
 }
 
 template <class MGroup>
@@ -129,6 +130,9 @@ inline void PathLightWork(// Output
     }
     if(neeMatch)
     {
+        if(aux.type != RayType::NEE_RAY)
+            printf("WTF non nee ray %d \n", aux.type);
+
         const RayF& r = ray.ray;
         HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
         Vector3 position = r.AdvancedPos(ray.tMax);
@@ -175,7 +179,7 @@ inline void PathWork(// Output
                      const PrimitiveId primId)
 {
     // Check Material Sample Strategy
-    uint32_t sampleCount = gLocalState.materialSampleCount;
+    uint32_t sampleCount = maxOutRay;
     bool emissiveMaterial = gLocalState.emissiveMaterial;
     static int PATH_RAY_INDEX = 0;
     static int NEE_RAY_INDEX = 1;
@@ -218,29 +222,32 @@ inline void PathWork(// Output
     RayAuxPath auxOut = aux;
     auxOut.depth++;
     
-    // Sample the Emission if avail
-    if(emissiveMaterial)
-    {
-        Vector3 emission = MGroup::Emit(// Input
-                                        -r.getDirection(),
-                                        position,
-                                        m,
-                                        //
-                                        surface,
-                                        nullptr,
-                                        // Constants
-                                        gMatData,
-                                        matIndex);
-        // And accumulate pixel
-        // and add as a sample
-        Vector3f total = emission * aux.radianceFactor;
-        ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
-        ImageAddSample(img, aux.pixelIndex, 1);
-    }
+    //// Sample the Emission if avail
+    //if(emissiveMaterial)
+    //{
+    //    Vector3 emission = MGroup::Emit(// Input
+    //                                    -r.getDirection(),
+    //                                    position,
+    //                                    m,
+    //                                    //
+    //                                    surface,
+    //                                    nullptr,
+    //                                    // Constants
+    //                                    gMatData,
+    //                                    matIndex);
+    //    // And accumulate pixel
+    //    // and add as a sample
+    //    Vector3f total = emission * aux.radianceFactor;
+    //    ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
+    //    ImageAddSample(img, aux.pixelIndex, 1);
+    //}
 
     // If this material does not require to have any samples just quit
-    if(sampleCount == 0) return;
-
+    if(sampleCount == 0)
+    {
+        //ImageAddSample(img, aux.pixelIndex, 1);
+        return;
+    }
 
     // TODO: Loop sample all of the sample strategies of material
     // on the porper implementation
@@ -343,6 +350,7 @@ inline void PathWork(// Output
                                                matIndex);
 
         // Gen aux out
+        //printf("pdf light %f\n", pdfLight);
         auxOut.radianceFactor = aux.radianceFactor * reflectance / pdfLight;
         auxOut.endPointIndex = lightIndex;
         auxOut.type = RayType::NEE_RAY;

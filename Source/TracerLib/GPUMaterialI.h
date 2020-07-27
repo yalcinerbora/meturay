@@ -57,6 +57,7 @@ class GPUMaterialGroupI
         
         // NEE Related
         virtual bool                        IsLightGroup() const = 0;
+        virtual bool                        IsEmissiveGroup() const = 0;
 
         // Returns how many different sampling strategy this material has
         virtual uint8_t                     SampleStrategyCount() const = 0;
