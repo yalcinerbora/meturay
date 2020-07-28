@@ -228,25 +228,25 @@ inline void PathWork(// Output
     RayAuxPath auxOut = aux;
     auxOut.depth++;
    
-    //// Sample the Emission if avail
-    //if(emissiveMaterial)
-    //{
-    //    Vector3 emission = MGroup::Emit(// Input
-    //                                    -r.getDirection(),
-    //                                    position,
-    //                                    m,
-    //                                    //
-    //                                    surface,
-    //                                    nullptr,
-    //                                    // Constants
-    //                                    gMatData,
-    //                                    matIndex);
-    //    // And accumulate pixel
-    //    // and add as a sample
-    //    Vector3f total = emission * aux.radianceFactor;
-    //    ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
-    //    ImageAddSample(img, aux.pixelIndex, 1);
-    //}
+    // Sample the Emission if avail
+    if(emissiveMaterial)
+    {
+        Vector3 emission = MGroup::Emit(// Input
+                                        -r.getDirection(),
+                                        position,
+                                        m,
+                                        //
+                                        surface,
+                                        nullptr,
+                                        // Constants
+                                        gMatData,
+                                        matIndex);
+        // And accumulate pixel
+        // and add as a sample
+        Vector3f total = emission * aux.radianceFactor;
+        ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
+        ImageAddSample(img, aux.pixelIndex, 1);
+    }
 
     // If this material does not require to have any samples just quit
     if(sampleCount == 0)
@@ -283,12 +283,11 @@ inline void PathWork(// Output
 
     // Check Russian Roulette
     float avgThroughput = auxOut.radianceFactor.Dot(Vector3f(gRenderState.rrFactor));
-    //if(auxOut.depth <= gRenderState.rrStart &&
-    //   !RussianRoulette(auxOut.radianceFactor, avgThroughput, rng))
+    if(auxOut.depth <= gRenderState.rrStart ||
+       !RussianRoulette(auxOut.radianceFactor, avgThroughput, rng))
     {
         // Write Ray
         RayReg rayOut;
-        rayPath.AdvanceSelf(MathConstants::Epsilon);
         rayOut.ray = rayPath;
         rayOut.tMin = 0.0f;
         rayOut.tMax = INFINITY;
@@ -298,12 +297,12 @@ inline void PathWork(// Output
         auxOut.type = RayType::PATH_RAY;
         gOutRayAux[PATH_RAY_INDEX] = auxOut;
     }
-    //else
-    //{
-    //    // Terminate
-    //    InvalidRayWrite(PATH_RAY_INDEX);
-    //    ImageAddSample(img, aux.pixelIndex, 1);
-    //}
+    else
+    {
+        // Terminate
+        InvalidRayWrite(PATH_RAY_INDEX);
+        ImageAddSample(img, aux.pixelIndex, 1);
+    }
 
     // Dont launch NEE if not requested
     if(!gRenderState.nee) return;

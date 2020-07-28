@@ -49,7 +49,6 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes, double 
     constexpr const char* ALBEDO = "albedo";
 
     std::vector<Vector3> albedoCPU;
-    uint32_t i = 0;
     for(const auto& sceneNode : materialNodes)
     {
         std::vector<Vector3> albedos = sceneNode->AccessVector3(ALBEDO);

@@ -54,7 +54,8 @@ Vector3 LambertSample(// Sampled Output
     // Generate New Ray Directiion
     Vector2 xi(GPUDistribution::Uniform<float>(rng),
                GPUDistribution::Uniform<float>(rng));
-    Vector3 direction = HemiDistribution::HemiCosineCDF(xi);
+    Vector3 direction = HemiDistribution::HemiCosineCDF(xi, pdf);
+    //Vector3 direction = HemiDistribution::HemiUniformCDF(xi, pdf);
     direction.NormalizeSelf();
 
     // Direction vector is on surface space (hemisperical)
@@ -64,21 +65,10 @@ Vector3 LambertSample(// Sampled Output
 
     // Cos Tetha
     float nDotL = max(normal.Dot(direction), 0.0f);
-    // Pdf
-    pdf = nDotL * MathConstants::InvPi;
-    // Ray out
-    wo = RayF(direction, position);
 
-    //auto LOL = nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
-    //if(matId == 1)
-    //    printf("RF {%f, %f %f} pdf %f, woDir {%f, %f %f}\n",
-    //           LOL[0],
-    //           LOL[1],
-    //           LOL[2],
-    //           pdf,
-    //           direction[0],
-    //           direction[1], 
-    //           direction[2]);
+    // Ray out
+    Vector3 outPos = position + normal * MathConstants::Epsilon;
+    wo = RayF(direction, outPos);
     // Illumination Calculation
     return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
 }

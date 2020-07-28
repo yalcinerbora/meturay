@@ -26,21 +26,21 @@
 
 
 	"Lights": [
-	{
-		"id": 0,
-		"type": "rectangular",
-		"material": 1,
-		// Value
-		"position": [-5.371554, 7.565777, -0.362448],
-		"v0" : [-1.5, -2.12132, 1.5],
-		"v1" : [4.24264, 0, 4.24264]
-	}
 	// {
 	// 	"id": 0,
-	//  "material": 1,
-	// 	"type": "primitive",
-	// 	"primitive": 2,
+	// 	"type": "rectangular",
+	// 	"material": 1,
+	// 	// Value
+	// 	"position": [-5.371554, 7.565777, -0.362448],
+	// 	"v0" : [-1.5, -2.12132, 1.5],
+	// 	"v1" : [4.24264, 0, 4.24264]
 	// }
+	{
+		"id": 0,
+	 	"material": 1,
+		"type": "primitive",
+		"primitive": 2
+	}
 	],
 
 	"Transforms":[
@@ -63,7 +63,7 @@
 		// Light Boundary Material
 		"id": 1,
 		"type": "LightConstant",
-		"radiance" : [15, 15, 15]
+		"radiance" : [10, 10, 10]
 		//"radiance" : [330, 330, 330]
 		//"radiance" : [1.1, 1.1, 1.1]
     },
@@ -116,13 +116,20 @@
 		"accelerator": 1,
 		"material": 3,
 		"primitive": 0
+	},
+	{
+		// Floor
+		"transform": 0,
+		"accelerator": 1,
+		"material": 1,
+		"primitive": 2
 	}
-	// ,{
-	// 	// Bunny
-	// 	"transform": 0,
-	// 	"accelerator": 0,
-	// 	"material": 2,
-    //     "primitive": 1
-	// }
+	,{
+		// Bunny
+		"transform": 0,
+		"accelerator": 0,
+		"material": 2,
+        "primitive": 1
+	}
 	]
 }
