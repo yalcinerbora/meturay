@@ -247,19 +247,20 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
     // TODO:
 
     // For each partition
-    for(auto pIt = workPartition.crbegin();
-        pIt != workPartition.crend(); pIt++)
+    //for(auto pIt = workPartition.crbegin();
+    //    pIt != workPartition.crend(); pIt++)
+    for(const auto& p : workPartition)
     {
-        const auto& p = (*pIt);
-
-        // TODO: change this loop to combine iterator instead of find
-        //const auto& pIn = *(workPartition.find<uint32_t>(p.portionId));
-        const auto& pOut = *(outPortions.find(ArrayPortion<uint32_t>{p.portionId}));
+        //const auto& p = (*pIt);
 
         // Skip if null batch or unfound material
         if(p.portionId == HitKey::NullBatch) continue;
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;
+
+        // TODO: change this loop to combine iterator instead of find
+        //const auto& pIn = *(workPartition.find<uint32_t>(p.portionId));
+        const auto& pOut = *(outPortions.find(ArrayPortion<uint32_t>{p.portionId}));
 
         // Relativize input & output pointers
         const RayId* dRayIdStart = dCurrentRayIds + p.offset;
@@ -282,7 +283,7 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
                           static_cast<uint32_t>(p.count),
                           rngMemory);
 
-        cudaSystem.SyncGPUAll();
+        //cudaSystem.SyncGPUAll();
         //METU_LOG("--------------------------");
     }
     currentRayCount = totalRayOut;
@@ -348,7 +349,7 @@ RayPartitions<uint32_t> GPUTracer::PartitionOutputRays(uint32_t& totalOutRay,
     RayPartitions<uint32_t> outPartitions;
 
     // Find total ray out
-    uint32_t totalOutRayCount = 0;
+    totalOutRay = 0;
     for(auto pIt = workPartition.crbegin();
         pIt != workPartition.crend(); pIt++)
     {
@@ -365,26 +366,12 @@ RayPartitions<uint32_t> GPUTracer::PartitionOutputRays(uint32_t& totalOutRay,
         outPartitions.emplace(ArrayPortion<uint32_t>
         {
             p.portionId,
-            totalOutRayCount,
+                totalOutRay,
             count
         });
-        totalOutRayCount += count;
+        totalOutRay += count;
     }
     return outPartitions;
-
-    //// Set Auxiliary Pointers
-    //size_t auxOutOffset = 0;
-    //for(auto pIt = workPartition.crbegin();
-    //    pIt != workPartition.crend(); pIt++)
-    //{
-    //    ArrayPortion<uint32_t> portion;
-    //    portion.portionId = pIt->portionId;
-    //    portion.offset = auxOutOffset;
-    //    portion.count = 
-
-    //    //
-    //}
-    //assert(auxOutOffset == totalOutRayCount);
 }
 
 void GPUTracer::Finalize()
