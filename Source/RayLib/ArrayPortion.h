@@ -13,10 +13,17 @@ struct ArrayPortion
     size_t      count;
 
     bool        operator<(const ArrayPortion&) const;
+    bool        operator<(uint32_t portionId) const;
 };
 
 template<class T>
 inline bool ArrayPortion<T>::operator<(const ArrayPortion& o) const
 {
     return portionId < o.portionId;
+}
+
+template<class T>
+inline bool ArrayPortion<T>::operator<(uint32_t pId) const
+{
+    return portionId < pId;
 }

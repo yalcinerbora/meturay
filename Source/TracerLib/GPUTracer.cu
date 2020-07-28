@@ -220,7 +220,10 @@ void GPUTracer::HitAndPartitionRays()
     //printf("FRAME END\n");
 }
 
-void GPUTracer::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
+void GPUTracer::WorkRays(const WorkBatchMap& workMap, 
+                         const RayPartitions<uint32_t>& outPortions,
+                         uint32_t totalRayOut,
+                         HitKey baseBoundMatKey)
 {
     // Sort and Partition happens on leader device
     CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
@@ -233,22 +236,8 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
     HitKey* dCurrentKeys = rayMemory.CurrentKeys();
     RayId* dCurrentRayIds = rayMemory.CurrentIds();
 
-    // Use partition lis to find out
-    // total potential output ray count
-    uint32_t totalOutRayCount = 0;
-    for(const auto& p : workPartition)
-    {
-        // Skip if null batch or unfound material
-        if(p.portionId == HitKey::NullBatch) continue;
-        auto loc = workMap.find(p.portionId);
-        if(loc == workMap.end()) continue;
-
-        totalOutRayCount += (static_cast<uint32_t>(p.count)*
-                             loc->second->OutRayCount());
-    }
-
     // Allocate output ray memory
-    rayMemory.ResizeRayOut(totalOutRayCount, baseBoundMatKey);
+    rayMemory.ResizeRayOut(totalRayOut, baseBoundMatKey);
     RayGMem* dRaysOut = rayMemory.RaysOut();
     HitKey* dBoundKeyOut = rayMemory.WorkKeys();
 
@@ -258,11 +247,14 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
     // TODO:
 
     // For each partition
-    uint32_t outOffset = 0;
     for(auto pIt = workPartition.crbegin();
         pIt != workPartition.crend(); pIt++)
     {
         const auto& p = (*pIt);
+
+        // TODO: change this loop to combine iterator instead of find
+        //const auto& pIn = *(workPartition.find<uint32_t>(p.portionId));
+        const auto& pOut = *(outPortions.find(ArrayPortion<uint32_t>{p.portionId}));
 
         // Skip if null batch or unfound material
         if(p.portionId == HitKey::NullBatch) continue;
@@ -273,8 +265,8 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
         const RayId* dRayIdStart = dCurrentRayIds + p.offset;
         const HitKey* dKeyStart = dCurrentKeys + p.offset;
         // Output
-        RayGMem* dRayOutStart = dRaysOut + outOffset;        
-        HitKey* dBoundKeyStart = dBoundKeyOut + outOffset;
+        RayGMem* dRayOutStart = dRaysOut + pOut.offset;
+        HitKey* dBoundKeyStart = dBoundKeyOut + pOut.offset;
 
         // Actual Shade Call
         loc->second->Work(dBoundKeyStart,
@@ -290,15 +282,10 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap, HitKey baseBoundMatKey)
                           static_cast<uint32_t>(p.count),
                           rngMemory);
 
-        //cudaSystem.SyncGPUAll();
+        cudaSystem.SyncGPUAll();
         //METU_LOG("--------------------------");
-
-        // Since output is dynamic (each material may write multiple rays)
-        // add offsets to find proper count
-        outOffset += static_cast<uint32_t>(p.count * loc->second->OutRayCount());
     }
-    assert(totalOutRayCount == outOffset);
-    currentRayCount = totalOutRayCount;
+    currentRayCount = totalRayOut;
 
     // Again wait all of the GPU's since
     // CUDA functions will be on multiple-gpus
@@ -353,6 +340,51 @@ void GPUTracer::SendError(TracerError e, bool isFatal)
 {
     if(callbacks) callbacks->SendError(e);
     crashed = isFatal;
+}
+
+RayPartitions<uint32_t> GPUTracer::PartitionOutputRays(uint32_t& totalOutRay,
+                                                       const WorkBatchMap& workMap) const
+{
+    RayPartitions<uint32_t> outPartitions;
+
+    // Find total ray out
+    uint32_t totalOutRayCount = 0;
+    for(auto pIt = workPartition.crbegin();
+        pIt != workPartition.crend(); pIt++)
+    {
+        const auto& p = (*pIt);
+
+        // Skip if null batch or unfound material
+        if(p.portionId == HitKey::NullBatch) continue;
+        auto loc = workMap.find(p.portionId);
+        if(loc == workMap.end()) continue;
+
+        uint32_t count = (static_cast<uint32_t>(p.count) * 
+                          loc->second->OutRayCount());
+
+        outPartitions.emplace(ArrayPortion<uint32_t>
+        {
+            p.portionId,
+            totalOutRayCount,
+            count
+        });
+        totalOutRayCount += count;
+    }
+    return outPartitions;
+
+    //// Set Auxiliary Pointers
+    //size_t auxOutOffset = 0;
+    //for(auto pIt = workPartition.crbegin();
+    //    pIt != workPartition.crend(); pIt++)
+    //{
+    //    ArrayPortion<uint32_t> portion;
+    //    portion.portionId = pIt->portionId;
+    //    portion.offset = auxOutOffset;
+    //    portion.count = 
+
+    //    //
+    //}
+    //assert(auxOutOffset == totalOutRayCount);
 }
 
 void GPUTracer::Finalize()

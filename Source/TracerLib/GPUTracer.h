@@ -67,12 +67,17 @@ class GPUTracer : public GPUTracerI
         void                                HitAndPartitionRays();
         // Determine auxiliary size
         void                                WorkRays(const WorkBatchMap&,
+                                                     const RayPartitions<uint32_t>& outPortions,
+                                                     uint32_t totalRayOut,
                                                      HitKey baseBoundMatKey);
 
         // Internals
         template <class... Args>
         void                                SendLog(const char*, Args...);
         void                                SendError(TracerError e, bool isFatal);
+
+        RayPartitions<uint32_t>             PartitionOutputRays(uint32_t& totalOutRay,
+                                                                const WorkBatchMap&) const;
 
     public:
         // Constructors & Destructor

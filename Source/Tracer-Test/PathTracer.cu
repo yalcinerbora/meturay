@@ -120,28 +120,23 @@ bool PathTracer::Render()
     globalData.rrStart = options.rrStart;
     globalData.rrFactor = options.rrFactor;
 
+    // Generate output partitions
+    uint32_t totalOutRayCount = 0;    
+    auto outPartitions = PartitionOutputRays(totalOutRayCount, workMap);
+
     // Allocate new auxiliary buffer 
     // to fit all potential ray outputs
-    uint32_t totalOutRayCount = 0;
-    for(const auto& p : workPartition)
-    {
-        // Skip if null batch or unfound material
-        if(p.portionId == HitKey::NullBatch) continue;
-        auto loc = workMap.find(p.portionId);
-        if(loc == workMap.end()) continue;
-
-        totalOutRayCount += (static_cast<uint32_t>(p.count)*
-                             loc->second->OutRayCount());
-    }
     size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPath);
     DeviceMemory::EnlargeBuffer(*dAuxOut, auxOutSize);
 
     // Set Auxiliary Pointers
-    size_t auxOutOffset = 0;
-    for(auto pIt = workPartition.crbegin();
-        pIt != workPartition.crend(); pIt++)
+    //for(auto pIt = workPartition.crbegin();
+    //    pIt != workPartition.crend(); pIt++)
+    for(auto p : outPartitions)
     {
-        const auto& p = (*pIt);
+        // TODO: change this loop to combine iterator instead of find
+        //const auto& pIn = *(workPartition.find<uint32_t>(p.portionId));
+        const auto& pIn = *(workPartition.find(ArrayPortion<uint32_t>{p.portionId}));
 
         // Skip if null batch or unfound material
         if(p.portionId == HitKey::NullBatch) continue;
@@ -149,32 +144,24 @@ bool PathTracer::Render()
         if(loc == workMap.end()) continue;
 
         // Set pointers
-        RayAuxPath* dAuxOutLocal = static_cast<RayAuxPath*>(*dAuxOut) + auxOutOffset;
-        const RayAuxPath* dAuxInLocal = static_cast<const RayAuxPath*>(*dAuxIn) + p.offset;
+        RayAuxPath* dAuxOutLocal = static_cast<RayAuxPath*>(*dAuxOut) + p.offset;
+        const RayAuxPath* dAuxInLocal = static_cast<const RayAuxPath*>(*dAuxIn) + pIn.offset;
                                                     
         using WorkData = typename GPUWorkBatchD<PathTracerGlobal, RayAuxPath>;
         auto& wData = static_cast<WorkData&>(*loc->second);
         wData.SetGlobalData(globalData);
         wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
-
-        auxOutOffset += (static_cast<uint32_t>(p.count) *
-                         loc->second->OutRayCount());
     }
-    assert(auxOutOffset == totalOutRayCount);
 
+    // Launch Kernels
+    WorkRays(workMap, outPartitions,
+             totalOutRayCount, 
+             scene.BaseBoundaryMaterial());
 
-    //for(auto& work : workMap)
-    //{
-    //    using WorkData = typename GPUWorkBatchD<PathTracerGlobal, RayAuxPath>;
-
-    //    auto& wData = static_cast<WorkData&>(*work.second);
-    //    wData.SetGlobalData(globalData);
-    //    wData.SetRayDataPtrs(static_cast<RayAuxPath*>(*dAuxOut),
-    //                         static_cast<const RayAuxPath*>(*dAuxIn));
-    //}
-
-    WorkRays(workMap, scene.BaseBoundaryMaterial());
+    // Swap auxiliary buffers since output rays are now input rays
+    // for the next iteration
     SwapAuxBuffers();
+    // Check tracer termination conditions
     currentDepth++;
     if(totalOutRayCount == 0 || currentDepth > options.maximumDepth)
         return false;

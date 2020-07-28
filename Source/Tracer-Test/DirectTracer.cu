@@ -60,27 +60,24 @@ bool DirectTracer::Render()
     DirectTracerGlobal globalData;
     globalData.gImage = imgMemory.GMem<Vector4>();
 
-    // After Hit Determine Ray Aux Output size    
+    // Generate output partitions
     uint32_t totalOutRayCount = 0;
-    for(const auto& p : workPartition)
-    {
-        // Skip if null batch or unfound material
-        if(p.portionId == HitKey::NullBatch) continue;
-        auto loc = workMap.find(p.portionId);
-        if(loc == workMap.end()) continue;
+    auto outPartitions = PartitionOutputRays(totalOutRayCount, workMap);
 
-        totalOutRayCount += (static_cast<uint32_t>(p.count)*
-                             loc->second->OutRayCount());
-    }
-    size_t auxOutSize = totalOutRayCount * sizeof(RayAuxBasic);
+    // Allocate new auxiliary buffer 
+    // to fit all potential ray outputs
+    size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPath);
     DeviceMemory::EnlargeBuffer(*dAuxOut, auxOutSize);
 
     // Set Auxiliary Pointers
-    size_t auxOutOffset = 0;
-    for(auto pIt = workPartition.crbegin();
-        pIt != workPartition.crend(); pIt++)
+    //for(auto pIt = workPartition.crbegin();
+    //    pIt != workPartition.crend(); pIt++)
+    for(auto p : outPartitions)
+    
     {
-        const auto& p = (*pIt);
+        // TODO: change this loop to combine iterator instead of find
+        //const auto& pIn = *(workPartition.find<uint32_t>(p.portionId));
+        const auto& pIn = *(workPartition.find(ArrayPortion<uint32_t>{p.portionId}));
 
         // Skip if null batch or unfound material
         if(p.portionId == HitKey::NullBatch) continue;
@@ -88,8 +85,8 @@ bool DirectTracer::Render()
         if(loc == workMap.end()) continue;
 
         // Set pointers
-        RayAuxBasic* dAuxOutLocal = static_cast<RayAuxBasic*>(*dAuxOut) + auxOutOffset;
-        const RayAuxBasic* dAuxInLocal = static_cast<const RayAuxBasic*>(*dAuxIn) + p.offset;
+        RayAuxBasic* dAuxOutLocal = static_cast<RayAuxBasic*>(*dAuxOut) + p.offset;
+        const RayAuxBasic* dAuxInLocal = static_cast<const RayAuxBasic*>(*dAuxIn) + pIn.offset;
         //auto& wBatch = static_cast<GPUWorkBatchI&>(*(loc->second));
 
         using WorkData = typename GPUWorkBatchD<DirectTracerGlobal, RayAuxBasic>;
@@ -97,16 +94,17 @@ bool DirectTracer::Render()
         wData.SetGlobalData(globalData);
         wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
 
-        auxOutOffset += (static_cast<uint32_t>(p.count) *
-                         loc->second->OutRayCount());
     }
-    assert(auxOutOffset == totalOutRayCount);
 
-
-    // Hit System Generated bunch of hit pairs
-    WorkRays(workMap, scene.BaseBoundaryMaterial());
+    // Launch Kernels
+    WorkRays(workMap, 
+             outPartitions,
+             totalOutRayCount,             
+             scene.BaseBoundaryMaterial());
+    // Swap auxiliary buffers since output rays are now input rays
+    // for the next iteration
     SwapAuxBuffers();
-
+    // Check tracer termination conditions
     if(totalOutRayCount == 0) return false;
     return true;
 }
