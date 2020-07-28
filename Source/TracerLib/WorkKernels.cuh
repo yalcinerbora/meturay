@@ -113,6 +113,11 @@ void KCWork(// Output
         RayAuxiliary* gLocalAuxOut = gOutRayAux + globalId * maxOutRay;
         HitKey* gLocalBoundKeyOut = gOutBoundKeys + globalId * maxOutRay;
 
+        // Prevent overwrite and better error catching
+        gLocalRayOut = (maxOutRay == 0) ? nullptr : gLocalRayOut;
+        gLocalAuxOut = (maxOutRay == 0) ? nullptr : gLocalAuxOut;
+        gLocalBoundKeyOut = (maxOutRay == 0) ? nullptr : gLocalBoundKeyOut;
+
         // Actual Per-Ray Work
         WFunc(// Output
               gLocalBoundKeyOut,

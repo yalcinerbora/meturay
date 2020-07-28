@@ -75,10 +75,6 @@ bool DirectTracer::Render()
     for(auto p : outPartitions)
     
     {
-        // TODO: change this loop to combine iterator instead of find
-        //const auto& pIn = *(workPartition.find<uint32_t>(p.portionId));
-        const auto& pIn = *(workPartition.find(ArrayPortion<uint32_t>{p.portionId}));
-
         // Skip if null batch or unfound material
         if(p.portionId == HitKey::NullBatch) continue;
         auto loc = workMap.find(p.portionId);
@@ -86,13 +82,13 @@ bool DirectTracer::Render()
 
         // Set pointers
         RayAuxBasic* dAuxOutLocal = static_cast<RayAuxBasic*>(*dAuxOut) + p.offset;
-        const RayAuxBasic* dAuxInLocal = static_cast<const RayAuxBasic*>(*dAuxIn) + pIn.offset;
+        const RayAuxBasic* dAuxInGlobal = static_cast<const RayAuxBasic*>(*dAuxIn);
         //auto& wBatch = static_cast<GPUWorkBatchI&>(*(loc->second));
 
         using WorkData = typename GPUWorkBatchD<DirectTracerGlobal, RayAuxBasic>;
         auto& wData = static_cast<WorkData&>(*loc->second);
         wData.SetGlobalData(globalData);
-        wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
+        wData.SetRayDataPtrs(dAuxOutLocal, dAuxInGlobal);
 
     }
 

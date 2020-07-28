@@ -18,7 +18,7 @@ class GPUWorkBatchD : public GPUWorkBatchI
     protected:
         // Ray Auxiliary Input and output pointers
         // which are global (not local)
-        const RayData*  dAuxInLocal = nullptr;
+        const RayData*  dAuxInGlobal = nullptr;
         RayData*        dAuxOutLocal = nullptr;
 
         // GPU Friendly Struct which will be directly passed to the kernel call
@@ -31,8 +31,8 @@ class GPUWorkBatchD : public GPUWorkBatchI
                         ~GPUWorkBatchD() = default;
 
         void            SetGlobalData(const GlobalData&);
-        void            SetRayDataPtrs(RayData* rayDataOut,
-                                      const RayData* rayDataIn);
+        void            SetRayDataPtrs(RayData* rayDataOutLocal,
+                                      const RayData* rayDataInGlobal);
 
 };
 
@@ -89,9 +89,9 @@ inline void GPUWorkBatchD<GD, RD>::SetGlobalData(const GD& d)
 
 template<class GD, class RD>
 void GPUWorkBatchD<GD, RD>::SetRayDataPtrs(RD* dRDOut,
-                                           const RD* dRDIn)
+                                           const RD* dRDInGlobal)
 {
-    dAuxInLocal = dRDIn;
+    dAuxInGlobal = dRDInGlobal;
     dAuxOutLocal = dRDOut;
 }
 
@@ -155,7 +155,7 @@ void GPUWorkBatch<GD, LD, RD, MG, PG, SF, WF>::Work(// Output
         outRayCount,
         // Input
         dRayIn,
-        dAuxInLocal,
+        dAuxInGlobal,
         dPrimitiveIds,
         dHitStructs,
         //

@@ -134,10 +134,6 @@ bool PathTracer::Render()
     //    pIt != workPartition.crend(); pIt++)
     for(auto p : outPartitions)
     {
-        // TODO: change this loop to combine iterator instead of find
-        //const auto& pIn = *(workPartition.find<uint32_t>(p.portionId));
-        const auto& pIn = *(workPartition.find(ArrayPortion<uint32_t>{p.portionId}));
-
         // Skip if null batch or unfound material
         if(p.portionId == HitKey::NullBatch) continue;
         auto loc = workMap.find(p.portionId);
@@ -145,7 +141,7 @@ bool PathTracer::Render()
 
         // Set pointers
         RayAuxPath* dAuxOutLocal = static_cast<RayAuxPath*>(*dAuxOut) + p.offset;
-        const RayAuxPath* dAuxInLocal = static_cast<const RayAuxPath*>(*dAuxIn) + pIn.offset;
+        const RayAuxPath* dAuxInLocal = static_cast<const RayAuxPath*>(*dAuxIn);
                                                     
         using WorkData = typename GPUWorkBatchD<PathTracerGlobal, RayAuxPath>;
         auto& wData = static_cast<WorkData&>(*loc->second);
