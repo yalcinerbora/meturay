@@ -213,11 +213,14 @@ void GPUTracer::HitAndPartitionRays()
     // Sort with respect to the materials keys
     rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, currentRayCount, maxWorkBits);
 
+    //Debug::DumpMemToFile("MatKeysIn", dCurrentKeys, currentRayCount);
+    //Debug::DumpMemToFile("workKeyIn", rayMemory.WorkKeys(), currentRayCount);
+
     // Parition w.r.t. material batch
     workPartition.clear();
     workPartition = rayMemory.Partition(currentRayCount);
 
-    //printf("FRAME END\n");
+    //printf("HIT PORTION END\n");
 }
 
 void GPUTracer::WorkRays(const WorkBatchMap& workMap, 
@@ -291,6 +294,8 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
     // Again wait all of the GPU's since
     // CUDA functions will be on multiple-gpus
     cudaSystem.SyncGPUAll();
+
+    //Debug::DumpMemToFile("workKeyOut", rayMemory.WorkKeys(), totalRayOut);
 
     // Shading complete
     // Now make "RayOut" to "RayIn"

@@ -69,6 +69,16 @@ Vector3 LambertSample(// Sampled Output
     // Ray out
     wo = RayF(direction, position);
 
+    //auto LOL = nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
+    //if(matId == 1)
+    //    printf("RF {%f, %f %f} pdf %f, woDir {%f, %f %f}\n",
+    //           LOL[0],
+    //           LOL[1],
+    //           LOL[2],
+    //           pdf,
+    //           direction[0],
+    //           direction[1], 
+    //           direction[2]);
     // Illumination Calculation
     return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
 }
@@ -89,7 +99,6 @@ Vector3 LambertEvaluate(// Input
     const Vector3& normal = surface.normal;
     // Cos Tetha
     float nDotL = max(normal.Dot(wo), 0.0f);
-   
     return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
 }
 

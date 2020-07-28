@@ -107,8 +107,8 @@ inline void PinholeCamera::GenerateRay(// Output
     // Create random location over sample rectangle
     float dX = GPUDistribution::Uniform<float>(rng);
     float dY = GPUDistribution::Uniform<float>(rng);
-    Vector2 randomOffset = Vector2(dX, dY);
-    //Vector2 randomOffset = Vector2(0.5f);
+    //Vector2 randomOffset = Vector2(dX, dY);
+    Vector2 randomOffset = Vector2(0.5f);
 
     Vector2 sampleDistance = Vector2(static_cast<float>(sampleId[0]),
                                      static_cast<float>(sampleId[1])) * delta;

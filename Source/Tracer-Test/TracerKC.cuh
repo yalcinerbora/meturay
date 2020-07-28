@@ -130,9 +130,6 @@ inline void PathLightWork(// Output
     }
     if(neeMatch)
     {
-        if(aux.type != RayType::NEE_RAY)
-            printf("WTF non nee ray %d \n", aux.type);
-
         const RayF& r = ray.ray;
         HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
         Vector3 position = r.AdvancedPos(ray.tMax);
@@ -152,6 +149,14 @@ inline void PathLightWork(// Output
         // And accumulate pixel
         // and add as a sample
         Vector3f total = emission * aux.radianceFactor;
+
+        //if(aux.type != RayType::NEE_RAY)
+        //    printf("WTF non nee ray %d \n", aux.type);
+
+        //printf("Radiance {%f, %f, %f}\n",
+        //       total[0], total[1], total[2]);
+
+
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
         ImageAddSample(gRenderState.gImage, aux.pixelIndex, 1);
     }
@@ -187,13 +192,14 @@ inline void PathWork(// Output
     // Output image
     auto& img = gRenderState.gImage;
 
-    auto InvalidRayWrite = [&gOutRays, &gOutBoundKeys](int index)
+    auto InvalidRayWrite = [&gOutRays, &gOutBoundKeys, &gOutRayAux](int index)
     {
         // Generate Dummy Ray and Terminate
         RayReg rDummy = EMPTY_RAY_REGISTER;
         rDummy.Update(gOutRays, index);
         gOutBoundKeys[index] = HitKey::InvalidKey;
-    };
+        gOutRayAux[index].pixelIndex = UINT32_MAX;
+     };
 
     // If NEE ray hit to these material
     // which can not be sampled with NEE ray just skip
@@ -221,7 +227,7 @@ inline void PathWork(// Output
     RayReg rayOut = {};
     RayAuxPath auxOut = aux;
     auxOut.depth++;
-    
+   
     //// Sample the Emission if avail
     //if(emissiveMaterial)
     //{
@@ -277,8 +283,8 @@ inline void PathWork(// Output
 
     // Check Russian Roulette
     float avgThroughput = auxOut.radianceFactor.Dot(Vector3f(gRenderState.rrFactor));
-    if(auxOut.depth <= gRenderState.rrStart &&
-       !RussianRoulette(auxOut.radianceFactor, avgThroughput, rng))
+    //if(auxOut.depth <= gRenderState.rrStart &&
+    //   !RussianRoulette(auxOut.radianceFactor, avgThroughput, rng))
     {
         // Write Ray
         RayReg rayOut;
@@ -292,12 +298,12 @@ inline void PathWork(// Output
         auxOut.type = RayType::PATH_RAY;
         gOutRayAux[PATH_RAY_INDEX] = auxOut;
     }
-    else
-    {
-        // Terminate
-        InvalidRayWrite(PATH_RAY_INDEX);
-        ImageAddSample(img, aux.pixelIndex, 1);
-    }
+    //else
+    //{
+    //    // Terminate
+    //    InvalidRayWrite(PATH_RAY_INDEX);
+    //    ImageAddSample(img, aux.pixelIndex, 1);
+    //}
 
     // Dont launch NEE if not requested
     if(!gRenderState.nee) return;

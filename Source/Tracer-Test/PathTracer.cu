@@ -7,6 +7,32 @@
 #include "TracerLib/GenerationKernels.cuh"
 #include "TracerLib/GPUWork.cuh"
 
+#include "TracerLib/TracerDebug.h"
+std::ostream& operator<<(std::ostream& stream, const RayAuxPath& v)
+{
+    stream << std::setw(0)
+        << v.pixelIndex << ", "
+        << "{" << v.radianceFactor[0]
+        << "," << v.radianceFactor[1]
+        << "," << v.radianceFactor[2] << "} "
+        << v.endPointIndex << " ";
+    switch(v.type)
+    {
+        case RayType::CAMERA_RAY:
+            stream << "CAMERA_RAY";
+            break;
+        case RayType::NEE_RAY:
+            stream << "NEE_RAY";
+            break;
+        case RayType::TRANS_RAY:
+            stream << "TRANS_RAY";
+            break;
+        case RayType::PATH_RAY:
+            stream << "PATH_RAY";
+    }
+    return stream;
+}
+
 __device__ __host__
 inline void RayInitPath(RayAuxPath& gOutPath,
                          // Input
@@ -108,6 +134,15 @@ bool PathTracer::Render()
 {
     HitAndPartitionRays();
 
+    //Debug::DumpMemToFile("auxIn",
+    //                     static_cast<const RayAuxPath*>(*dAuxIn),
+    //                     currentRayCount);
+    //Debug::DumpMemToFile("rayIn",
+    //                     rayMemory.Rays(),
+    //                     currentRayCount);
+    //Debug::DumpMemToFile("rayIdIn", rayMemory.CurrentIds(),
+    //                     currentRayCount);
+
     // Generate Global Data Struct
     PathTracerGlobal globalData;
     globalData.gImage = imgMemory.GMem<Vector4>();
@@ -156,10 +191,19 @@ bool PathTracer::Render()
 
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration
+    //Debug::DumpMemToFile("auxOut",
+    //                     static_cast<const RayAuxPath*>(*dAuxOut),
+    //                     totalOutRayCount);
+    //// Work rays swapped the ray buffer so read input rays
+    //Debug::DumpMemToFile("rayOut", rayMemory.Rays(),
+    //                     totalOutRayCount);
+    //Debug::DumpMemToFile("rayIdOut", rayMemory.CurrentIds(),
+    //                     totalOutRayCount);
+
     SwapAuxBuffers();
     // Check tracer termination conditions
     currentDepth++;
-    if(totalOutRayCount == 0 || currentDepth > options.maximumDepth)
+    if(totalOutRayCount == 0 || currentDepth >= options.maximumDepth)
         return false;
     return true;
 }
@@ -254,7 +298,6 @@ void PathTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount)
         localPixelStart = localPixelEnd;
         i++;
     }
-
     SwapAuxBuffers();
     rayMemory.SwapRays();
     currentRayCount = totalRayCount;
