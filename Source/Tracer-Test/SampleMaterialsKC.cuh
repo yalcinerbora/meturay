@@ -66,8 +66,6 @@ Vector3 LambertSample(// Sampled Output
     // Cos Tetha
     float nDotL = max(normal.Dot(direction), 0.0f);
 
-    //pdf = nDotL * MathConstants::InvPi;
-
     // Ray out
     Vector3 outPos = position + normal * MathConstants::Epsilon;
     wo = RayF(direction, outPos);

@@ -32,10 +32,6 @@ struct RayAuxPath
     RayType         type;           // Ray Type
 };
 
-static constexpr int asd = sizeof(RayAuxPath);
-
-//static_cast(sizeof(RayAuxPath) == 10 * sizeof(float), "");
-
 static const RayAuxBasic InitialBasicAux = RayAuxBasic
 { 
     0

@@ -351,7 +351,7 @@ inline bool SimpleTracerSetup::Init()
     {
         {"Samples", OptionVariable(MockNode::SAMPLE_COUNT)},
         {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
-        {"NextEventEstimation", OptionVariable(false)},
+        {"NextEventEstimation", OptionVariable(true)},
         {"RussianRouletteStart", OptionVariable(3u)}
     });
     TracerError trcE = tracer->SetOptions(opts);
