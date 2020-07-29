@@ -125,8 +125,6 @@ TracerError PathTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = opts.GetUInt(options.rrStart, RR_START_NAME)) != TracerError::OK)
         return err;
-    if((err = opts.GetFloat(options.rrFactor, RR_FACTOR_NAME)) != TracerError::OK)
-        return err;
     return TracerError::OK;
 }
 
@@ -153,7 +151,6 @@ bool PathTracer::Render()
 
     globalData.nee = options.nextEventEstimation;
     globalData.rrStart = options.rrStart;
-    globalData.rrFactor = options.rrFactor;
 
     // Generate output partitions
     uint32_t totalOutRayCount = 0;    
