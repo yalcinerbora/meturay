@@ -51,9 +51,9 @@ class MockNode
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 18};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {640, 360};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
+        static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1600, 900};
-        static constexpr Vector2i       IMAGE_RESOLUTION = {1920, 1080};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {1920, 1080};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {3840, 2160};
 
     private:
@@ -352,8 +352,7 @@ inline bool SimpleTracerSetup::Init()
         {"Samples", OptionVariable(MockNode::SAMPLE_COUNT)},
         {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
         {"NextEventEstimation", OptionVariable(false)},
-        {"RussianRouletteStart", OptionVariable(3u)},
-        {"RussianRouletteFactor", OptionVariable(0.001f)},
+        {"RussianRouletteStart", OptionVariable(3u)}
     });
     TracerError trcE = tracer->SetOptions(opts);
     ERROR_CHECK(TracerError, trcE);

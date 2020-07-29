@@ -26,7 +26,6 @@ struct PathTracerGlobal : public DirectTracerGlobal
     // Options for NEE
     bool                nee;
     int                 rrStart;
-    float               rrFactor;
 };
 
 // No Local State
@@ -153,10 +152,6 @@ inline void PathLightWork(// Output
         //if(aux.type != RayType::NEE_RAY)
         //    printf("WTF non nee ray %d \n", aux.type);
 
-        //printf("Radiance {%f, %f, %f}\n",
-        //       total[0], total[1], total[2]);
-
-
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
         ImageAddSample(gRenderState.gImage, aux.pixelIndex, 1);
     }
@@ -276,13 +271,31 @@ inline void PathWork(// Output
                                          matIndex,
                                          0);
 
-    // Factor the radiance of the surface
-    auxOut.radianceFactor = aux.radianceFactor * (reflectance / pdfPath);
+    // Factor the radiance of the surface        
+    auxOut.radianceFactor = aux.radianceFactor * reflectance;
+    // Check singularities
+    auxOut.radianceFactor = (pdfPath == 0.0f) ? Zero3 : (auxOut.radianceFactor / pdfPath);
+
     // Change current medium of the ray
     auxOut.mediumIndex = static_cast<uint16_t>(outM.ID());
 
+    if(isnan(auxOut.radianceFactor[0]) ||
+       isnan(auxOut.radianceFactor[1]) ||
+       isnan(auxOut.radianceFactor[2]))
+        printf("{%f, %f, %f} = {%f, %f, %f} * {%f, %f, %f} / %f\n",
+               auxOut.radianceFactor[0],
+               auxOut.radianceFactor[1],
+               auxOut.radianceFactor[2],
+               aux.radianceFactor[0],
+               aux.radianceFactor[1],
+               aux.radianceFactor[2],
+               reflectance[0],
+               reflectance[1],
+               reflectance[2],
+               pdfPath);
+
     // Check Russian Roulette
-    float avgThroughput = auxOut.radianceFactor.Dot(Vector3f(gRenderState.rrFactor));
+    float avgThroughput = auxOut.radianceFactor.Dot(Vector3f(0.333f));
     if(auxOut.depth <= gRenderState.rrStart ||
        !RussianRoulette(auxOut.radianceFactor, avgThroughput, rng))
     {
@@ -354,9 +367,12 @@ inline void PathWork(// Output
                                                gMatData,
                                                matIndex);
 
-        // Gen aux out
-        //printf("pdf light %f\n", pdfLight);
+        // Calculate Radiance Factor
         auxOut.radianceFactor = aux.radianceFactor * reflectance / pdfLight;
+        // Check singularities
+        auxOut.radianceFactor = (pdfLight == 0.0f) ? Zero3 : (auxOut.radianceFactor / pdfLight);
+
+        // Gen aux out and write
         auxOut.endPointIndex = lightIndex;
         auxOut.type = RayType::NEE_RAY;
         gOutRayAux[NEE_RAY_INDEX] = auxOut;

@@ -48,7 +48,7 @@ inline bool RussianRoulette(Vector3& irradianceFactor,
                             float probFactor, RandomGPU& rng)
 {
     // Basic Russian Roulette
-    probFactor = HybridFuncs::Clamp(probFactor, 0.0f, 1.0f);
+    probFactor = HybridFuncs::Clamp(probFactor, 0.05f, 1.0f);
     if(GPUDistribution::Uniform<float>(rng) >= probFactor)
         return true;
     else irradianceFactor *= (1.0f / probFactor);
