@@ -58,7 +58,7 @@ Vector3 LambertSample(// Sampled Output
     //Vector3 direction = HemiDistribution::HemiUniformCDF(xi, pdf);
     direction.NormalizeSelf();
 
-    // Direction vector is on surface space (hemisperical)
+    // Generated direction vector is on surface space (hemisperical)
     // Convert it to normal oriented hemisphere (world space)
     QuatF q = Quat::RotationBetweenZAxis(normal);
     direction = q.ApplyRotation(direction);
@@ -69,7 +69,7 @@ Vector3 LambertSample(// Sampled Output
     // Ray out
     Vector3 outPos = position + normal * MathConstants::Epsilon;
     wo = RayF(direction, outPos);
-    // Illumination Calculation
+    // BSDF Calculation
     return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
 }
 
@@ -87,7 +87,6 @@ Vector3 LambertEvaluate(// Input
                         const HitKey::Type& matId)
 {
     const Vector3& normal = surface.normal;
-    // Cos Tetha
     float nDotL = max(normal.Dot(wo), 0.0f);
     return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
 }

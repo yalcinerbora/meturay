@@ -69,7 +69,12 @@ __device__ inline uint32_t GPUMedium::ID() const { return id; }
 __device__
 inline Vector3 GPUMedium::Transmittance(float distance) const
 {
+    constexpr Vector3 Zero = Zero3;
+    if(sigmaT == Zero) return Vector3(1.0f);
+    if(distance == INFINITY) return Zero;
+
     Vector3 result = -sigmaT * distance;
+
     result[0] = exp(result[0]);
     result[1] = exp(result[1]);
     result[2] = exp(result[2]);

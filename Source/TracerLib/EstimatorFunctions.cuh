@@ -16,27 +16,27 @@ inline bool NextEventEstimation(HitKey& key,
                                 const Vector3& position,
                                 RandomGPU& rng,
                                 //
-                                const GPULightI** gEndPoints,
-                                const uint32_t pointCount)
+                                const GPULightI** gLights,
+                                const uint32_t lightCount)
 {
-    if(pointCount == 0) return false;
+    if(lightCount == 0) return false;
 
     // Randomly Select Light
     float r1 = GPUDistribution::Uniform<float>(rng);
-    r1 *= static_cast<float>(pointCount);
-    uint32_t index = static_cast<uint32_t>(floor(r1));
+    r1 *= static_cast<float>(lightCount);
+    uint32_t index = static_cast<uint32_t>(r1);
     
-    // Extremely rarely index become the point count
-    // although GPUDistribution::Uniform returns [0, 1)
+    // Extremely rarely index becomes the ligjt count
+    // although GPUDistribution::Uniform should return [0, 1)
     // it still happens due to fp error i guess?
     // if it happens just return the last light on the list
-    if(index == pointCount) index--;
+    if(index == lightCount) index--;
 
-    const GPULightI* point = gEndPoints[index];
+    const GPULightI* point = gLights[index];
     point->Sample(lDistance, direction,
                   pdf, position, rng);
-    // Incorporate the PDF of selecting that point
-    pdf *= 1.0f / static_cast<float>(pointCount);
+    // Incorporate the PDF of selecting that ligjt
+    pdf *= (1.0f / static_cast<float>(lightCount));
     lightIndex = index;
     key = point->BoundaryMaterial();
     return true;
@@ -48,7 +48,7 @@ inline bool RussianRoulette(Vector3& irradianceFactor,
                             float probFactor, RandomGPU& rng)
 {
     // Basic Russian Roulette
-    probFactor = HybridFuncs::Clamp(probFactor, 0.05f, 1.0f);
+    probFactor = HybridFuncs::Clamp(probFactor, 0.005f, 1.0f);
     if(GPUDistribution::Uniform<float>(rng) >= probFactor)
         return true;
     else irradianceFactor *= (1.0f / probFactor);

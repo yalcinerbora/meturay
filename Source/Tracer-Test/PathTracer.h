@@ -28,7 +28,7 @@ class PathTracer final : public RayTracer
         // Generic work pool
         WorkPool<bool>          workPool;
         // Light material work pool
-        WorkPool<bool>          lightWorkPool;
+        WorkPool<bool, bool>    lightWorkPool;
         
         // Light Next Event Estimation
         uint32_t                lightCount;

@@ -35,8 +35,8 @@ TEST(PathTracers, ReflectRefract)
 
 TEST(PathTracers, Sponza)
 {
-    EnableVTMode();
-    SimpleTracerSetup setup("TestPath", u8"TestScenes/crySponza.json", 0.0);
-    ASSERT_TRUE(setup.Init());
-    setup.Body();
+    ////EnableVTMode();
+    ////SimpleTracerSetup setup("TestPath", u8"TestScenes/crySponza.json", 0.0);
+    ////ASSERT_TRUE(setup.Init());
+    ////setup.Body();
 }

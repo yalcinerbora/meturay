@@ -698,8 +698,9 @@ VisorGL::VisorGL(const VisorOptions& opts)
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
+    // Intel OGL complaints about this as redundant call?
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0); 
     // FBO
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glColorMask(true, true, true, true);
     glDepthMask(false);
     glStencilMask(false);

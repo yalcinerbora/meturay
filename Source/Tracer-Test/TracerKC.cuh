@@ -33,7 +33,7 @@ struct EmptyState {};
 
 struct PathTracerLocal
 {
-    uint32_t materialSampleCount;
+    bool     emptyPrimitive;
     bool     emissiveMaterial;
 };
 
@@ -109,12 +109,11 @@ inline void PathLightWork(// Output
                           const PrimitiveId primId)
 {
     // Check Material Sample Strategy
-    assert(gLocalState.materialSampleCount == 0);
+    assert(maxOutRay == 0);
     auto& img = gRenderState.gImage;
 
-    // If NEE ray hit to these material
-    // sample it
-    // or just sample it if NEE is not activated
+    // If NEE ray hits to this material
+    // sample it or just sample it anyway if NEE is not activated
     bool neeMatch = (!gRenderState.nee);
     if(gRenderState.nee && aux.type == RayType::NEE_RAY)
     {
@@ -123,8 +122,10 @@ inline void PathLightWork(// Output
         PrimitiveId neePrimId = endPoint->Primitive();
         HitKey neeKey = endPoint->BoundaryMaterial();
 
-        // Check if NEE ray actual hit the sampled light
-        neeMatch = (primId == neePrimId && matId.value == neeKey.value);
+        // Check if NEE ray actual hit the requested light
+        neeMatch = (matId.value == neeKey.value);
+        if(!gLocalState.emptyPrimitive)
+            neeMatch &= (primId == neePrimId);
     }
     if(neeMatch || aux.type == RayType::CAMERA_RAY)
     {
@@ -190,18 +191,16 @@ inline void PathWork(// Output
         gOutRayAux[index].pixelIndex = UINT32_MAX;
      };
 
-    // If NEE ray hit to these material
-    // which can not be sampled with NEE ray just skip
+    // If NEE ray hits to this material
+    // just skip since this is not a light material
     if(aux.type == RayType::NEE_RAY)
     {
         // Write invalids for out rays
         for(uint32_t i = 0; i < sampleCount; i++)
             InvalidRayWrite(i);
-        // All done
         return;
     }
 
-    // Now do work normally    
     // Inputs    
     const RayF& r = ray.ray;
     HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
@@ -212,7 +211,11 @@ inline void PathWork(// Output
     RayAuxPath auxOut = aux;
     auxOut.depth++;
    
-    // Sample the Emission if avail
+    // Calculate Transmittance factor of the medium
+    Vector3 transFactor = m.Transmittance(ray.tMax);
+    Vector3 radianceFactor = aux.radianceFactor * transFactor;
+
+    // Sample the emission if avail
     if(emissiveMaterial)
     {
         Vector3 emission = MGroup::Emit(// Input
@@ -227,17 +230,13 @@ inline void PathWork(// Output
                                         matIndex);
         // And accumulate pixel
         // and add as a sample
-        Vector3f total = emission * aux.radianceFactor;
+        Vector3f total = emission * radianceFactor;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
     }
 
     // If this material does not require to have any samples just quit
     if(sampleCount == 0) return;
 
-
-    // TODO: Loop sample all of the sample strategies of material
-    // on the porper implementation
-    // Now material needs to be sampled
     // Sample a path from material
     RayF rayPath; float pdfPath; GPUMedium outM;
     Vector3 reflectance = MGroup::Sample(// Outputs
@@ -257,27 +256,12 @@ inline void PathWork(// Output
                                          0);
 
     // Factor the radiance of the surface        
-    auxOut.radianceFactor = aux.radianceFactor * reflectance;
+    auxOut.radianceFactor = radianceFactor * reflectance;
     // Check singularities
     auxOut.radianceFactor = (pdfPath == 0.0f) ? Zero3 : (auxOut.radianceFactor / pdfPath);
 
     // Change current medium of the ray
     auxOut.mediumIndex = static_cast<uint16_t>(outM.ID());
-
-    //if(isnan(auxOut.radianceFactor[0]) ||
-    //   isnan(auxOut.radianceFactor[1]) ||
-    //   isnan(auxOut.radianceFactor[2]))
-    //    printf("{%f, %f, %f} = {%f, %f, %f} * {%f, %f, %f} / %f\n",
-    //           auxOut.radianceFactor[0],
-    //           auxOut.radianceFactor[1],
-    //           auxOut.radianceFactor[2],
-    //           aux.radianceFactor[0],
-    //           aux.radianceFactor[1],
-    //           aux.radianceFactor[2],
-    //           reflectance[0],
-    //           reflectance[1],
-    //           reflectance[2],
-    //           pdfPath);
 
     // Check Russian Roulette
     float avgThroughput = auxOut.radianceFactor.Dot(Vector3f(0.333f));
@@ -295,11 +279,7 @@ inline void PathWork(// Output
         auxOut.type = RayType::PATH_RAY;
         gOutRayAux[PATH_RAY_INDEX] = auxOut;
     }
-    else
-    {
-        // Terminate
-        InvalidRayWrite(PATH_RAY_INDEX);
-    }
+    else InvalidRayWrite(PATH_RAY_INDEX);
 
     // Dont launch NEE if not requested
     if(!gRenderState.nee) return;
@@ -310,8 +290,7 @@ inline void PathWork(// Output
     Vector3 lDirection;
     uint32_t lightIndex;
     reflectance = Zero3;
-    if(gRenderState.nee &&
-       NextEventEstimation(matLight,
+    if(NextEventEstimation(matLight,
                            lightIndex,
                            lDirection,
                            lDistance,
@@ -337,21 +316,20 @@ inline void PathWork(// Output
                                        matIndex);
     }
 
-    // Do not waste sample if material does not reflect light
-    // towards sampled position
+    // Do not waste a ray if material does not reflect light
+    // towards light's sampled position
     if(reflectance != Vector3(0.0f))
     {
-        // Generate Ray
+        // Generate & Write Ray
         RayF rayNEE = RayF(lDirection, position);
         rayNEE.AdvanceSelf(MathConstants::Epsilon);
         rayOut.ray = rayNEE;
         rayOut.tMin = 0.0f;
         rayOut.tMax = lDistance + MathConstants::Epsilon;
-        // Write ray
         rayOut.Update(gOutRays, NEE_RAY_INDEX);
 
         // Calculate Radiance Factor
-        auxOut.radianceFactor = aux.radianceFactor * reflectance / pdfLight;
+        auxOut.radianceFactor = radianceFactor * reflectance / pdfLight;
         // Check singularities
         auxOut.radianceFactor = (pdfLight == 0.0f) ? Zero3 : (auxOut.radianceFactor / pdfLight);
         // Write auxilary data

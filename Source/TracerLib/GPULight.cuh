@@ -491,7 +491,7 @@ inline void RectangularLight::Sample(// Output
     direction = position - worldLoc;
     float distanceSqr = direction.LengthSqr();
     distance = sqrt(distanceSqr);
-    direction /= distance;
+    direction *= (1.0f / distance);
 
     float nDotL = max(normal.Dot(-direction), 0.0f);
     pdf = distanceSqr / (nDotL * area);
@@ -534,9 +534,10 @@ inline void TriangularLight::Sample(// Output
     direction = position - worldLoc;
     float distanceSqr = direction.LengthSqr();
     distance = sqrt(distanceSqr);
-    direction /= distance;
+    direction *= (1.0f / distance);
 
-    float nDotL = max(normal.Dot(-direction), 0.0f);
+    //float nDotL = max(normal.Dot(-direction), 0.0f);
+    float nDotL = abs(normal.Dot(-direction));
     pdf = distanceSqr / (nDotL * area);
 }
 
@@ -578,7 +579,7 @@ inline void DiskLight::Sample(// Output
     direction = position - worldLoc;
     float distanceSqr = direction.LengthSqr();
     distance = sqrt(distanceSqr);
-    direction /= distance;
+    direction *= (1.0f / distance);
 
     float nDotL = max(normal.Dot(-direction), 0.0f);
     pdf = distanceSqr / (nDotL * area);
@@ -626,7 +627,7 @@ inline void SphericalLight::Sample(// Output
     distance = direction.LengthSqr();
     pdf = distance / area;
     distance = sqrt(distance);
-    direction /= distance;
+    direction *= (1.0f / distance);
 }
 
 __device__
