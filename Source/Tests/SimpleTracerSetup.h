@@ -45,13 +45,13 @@ class MockNode
 {
     public:
         static constexpr uint32_t       MAX_BOUNCES = 16;
-        static constexpr int            SAMPLE_COUNT = 1;
+        static constexpr int            SAMPLE_COUNT = 7;
 
         //static constexpr Vector2i       IMAGE_RESOLUTION = {16, 9};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 18};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};
+        static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {640, 360};
-        static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1600, 900};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1920, 1080};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {3840, 2160};
@@ -166,8 +166,8 @@ inline void MockNode::Work()
         rps /= 1'000'000.0;
 
         fprintf(stdout, "%c[2K", 27);
-        fprintf(stdout, "Time: %fs Rps: %fM ray/s\r", 
-                elapsedS, rps);
+        fprintf(stdout, "Time: %fs Rps: %fM ray/s  Total: %fm\r", 
+                elapsedS, rps, (elapsed / 60.0));
         //if(elapsed >= Duration) break;
     }
     METU_LOG("\n");

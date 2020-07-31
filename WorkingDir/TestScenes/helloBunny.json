@@ -119,13 +119,13 @@
 		"primitive": 0
 	},
 	{
-		// Floor
+		// Light
 		"transform": 0,
 		"accelerator": 1,
 		"material": 1,
 		"primitive": 2
-	}
-	,{
+	},
+	{
 		// Bunny
 		"transform": 0,
 		"accelerator": 0,

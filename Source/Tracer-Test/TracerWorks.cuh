@@ -77,7 +77,8 @@ class PathTracerLightWork
         // Constrcutors & Destructor
                                         PathTracerLightWork(const GPUMaterialGroupI& mg,
                                                             const GPUPrimitiveGroupI& pg,
-                                                            bool neeOn);
+                                                            bool neeOn,
+                                                            bool emptyPrimitive);
                                         ~PathTracerLightWork() = default;
 
         void                            GetReady() override {}
@@ -87,13 +88,13 @@ class PathTracerLightWork
 
 template<class M, class P, SurfaceFunc<M, P> S>
 PathTracerWork<M, P, S>::PathTracerWork(const GPUMaterialGroupI& mg,
-                                             const GPUPrimitiveGroupI& pg,
-                                             bool neeOn)
+                                        const GPUPrimitiveGroupI& pg,
+                                        bool neeOn)
     : GPUWorkBatch(mg, pg)
     , neeOn(neeOn) 
 {
     // Populate localData
-    localData.materialSampleCount = OutRayCount();
+    localData.emptyPrimitive = false;
     localData.emissiveMaterial = materialGroup.IsEmissiveGroup();
 }
 
@@ -108,12 +109,13 @@ uint8_t PathTracerWork<M,P,S>::OutRayCount() const
 template<class M, class P, SurfaceFunc<M, P> S>
 PathTracerLightWork<M, P, S>::PathTracerLightWork(const GPUMaterialGroupI& mg,
                                                   const GPUPrimitiveGroupI& pg,
-                                                  bool neeOn)
+                                                  bool neeOn,
+                                                  bool emptyPrimitive)
     : GPUWorkBatch(mg, pg)
     , neeOn(neeOn) 
 {
     // Populate localData
-    localData.materialSampleCount = OutRayCount();
+    localData.emptyPrimitive = emptyPrimitive;
     localData.emissiveMaterial = materialGroup.IsEmissiveGroup();
 }
 

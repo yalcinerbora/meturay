@@ -7,31 +7,31 @@
 #include "TracerLib/GenerationKernels.cuh"
 #include "TracerLib/GPUWork.cuh"
 
-#include "TracerLib/TracerDebug.h"
-std::ostream& operator<<(std::ostream& stream, const RayAuxPath& v)
-{
-    stream << std::setw(0)
-        << v.pixelIndex << ", "
-        << "{" << v.radianceFactor[0]
-        << "," << v.radianceFactor[1]
-        << "," << v.radianceFactor[2] << "} "
-        << v.endPointIndex << " ";
-    switch(v.type)
-    {
-        case RayType::CAMERA_RAY:
-            stream << "CAMERA_RAY";
-            break;
-        case RayType::NEE_RAY:
-            stream << "NEE_RAY";
-            break;
-        case RayType::TRANS_RAY:
-            stream << "TRANS_RAY";
-            break;
-        case RayType::PATH_RAY:
-            stream << "PATH_RAY";
-    }
-    return stream;
-}
+//#include "TracerLib/TracerDebug.h"
+//std::ostream& operator<<(std::ostream& stream, const RayAuxPath& v)
+//{
+//    stream << std::setw(0)
+//        << v.pixelIndex << ", "
+//        << "{" << v.radianceFactor[0]
+//        << "," << v.radianceFactor[1]
+//        << "," << v.radianceFactor[2] << "} "
+//        << v.endPointIndex << " ";
+//    switch(v.type)
+//    {
+//        case RayType::CAMERA_RAY:
+//            stream << "CAMERA_RAY";
+//            break;
+//        case RayType::NEE_RAY:
+//            stream << "NEE_RAY";
+//            break;
+//        case RayType::TRANS_RAY:
+//            stream << "TRANS_RAY";
+//            break;
+//        case RayType::PATH_RAY:
+//            stream << "PATH_RAY";
+//    }
+//    return stream;
+//}
 
 __device__ __host__
 inline void RayInitPath(RayAuxPath& gOutPath,
@@ -103,11 +103,24 @@ TracerError PathTracer::Initialize()
         
         // Generate work batch from appropirate work pool
         GPUWorkBatchI* batch = nullptr;
-        WorkPool<bool>& wp = (mg.IsLightGroup()) ? lightWorkPool : workPool;
-        if((err = wp.GenerateWorkBatch(batch, mg, pg,
-                                       options.nextEventEstimation)) != TracerError::OK)
-            return err;
+        if(mg.IsLightGroup())
+        {
+            bool emptyPrim = (std::string(pg.Type()) == 
+                              std::string(BaseConstants::EMPTY_PRIMITIVE_NAME));
 
+            WorkPool<bool, bool>& wp = lightWorkPool;
+            if((err = wp.GenerateWorkBatch(batch, mg, pg,
+                                           options.nextEventEstimation,
+                                           emptyPrim)) != TracerError::OK)
+                return err;
+        }
+        else
+        {
+            WorkPool<bool>& wp = workPool;
+            if((err = wp.GenerateWorkBatch(batch, mg, pg,
+                                           options.nextEventEstimation)) != TracerError::OK)
+                return err;
+        }
         workMap.emplace(batchId, batch);
     }
     return RayTracer::Initialize();
