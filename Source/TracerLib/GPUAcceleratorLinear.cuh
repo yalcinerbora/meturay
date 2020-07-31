@@ -82,7 +82,7 @@ class GPUAccLinearGroup final
                                        // List of surface/material
                                        // pairings that uses this accelerator type
                                        // and primitive type
-                                       const std::map<uint32_t, IdPairs>& parList,
+                                       const std::map<uint32_t, IdPairs>& pairList,
                                        double time) override;
 
         // Surface Queries

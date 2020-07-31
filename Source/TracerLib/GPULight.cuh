@@ -401,7 +401,8 @@ inline void PointLight::Sample(// Output
     direction = (position - worldLoc);
     distance = direction.Length();
     direction /= distance;
-    pdf = 1.0f;
+    pdf = (distance * distance); 
+    //pdf = 1.0f;
 }
 
 __device__
@@ -528,7 +529,6 @@ inline void TriangularLight::Sample(// Output
     float a = 1 - r1;
     float b = (1 - r2) * r1;
     float c = r1 * r2;
-
     Vector3 position = (v0 * a + v1 * b + v2 * c);
 
     direction = position - worldLoc;

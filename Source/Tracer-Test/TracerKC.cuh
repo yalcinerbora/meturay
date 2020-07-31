@@ -134,6 +134,10 @@ inline void PathLightWork(// Output
         Vector3 position = r.AdvancedPos(ray.tMax);
         GPUMedium m = gRenderState.mediumList[aux.mediumIndex];
 
+        // Calculate Transmittance factor of the medium
+        Vector3 transFactor = m.Transmittance(ray.tMax);
+        Vector3 radianceFactor = aux.radianceFactor * transFactor;
+
         Vector3 emission = MGroup::Emit(// Input
                                         -r.getDirection(),
                                         position,
@@ -147,7 +151,7 @@ inline void PathLightWork(// Output
 
         // And accumulate pixel
         // and add as a sample
-        Vector3f total = emission * aux.radianceFactor;
+        Vector3f total = emission * radianceFactor;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));        
     }
 }
