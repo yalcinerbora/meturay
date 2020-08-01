@@ -30,6 +30,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialLight.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialLightKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMedium.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUTransform.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageStructs.h" />

@@ -36,7 +36,6 @@ class GPUSceneJson : public GPUSceneI
         };
 
     private:
-        static constexpr const size_t           AlignByteCount = 64;
 
         // Fundamental Allocators
         TracerLogicGeneratorI&                  logicGenerator;
@@ -51,7 +50,6 @@ class GPUSceneJson : public GPUSceneI
         uint32_t                                hitStructSize;
 
         // GPU Memory
-        DeviceMemory                            gpuMemory;
         GPUBaseAccelPtr                         baseAccelerator;
         std::map<NameGPUPair, GPUMatGPtr>       materials;
         std::map<std::string, GPUAccelGPtr>     accelerators;
@@ -111,6 +109,8 @@ class GPUSceneJson : public GPUSceneI
                                                 double time = 0.0);
         SceneError      GenerateLightInfo(const MaterialKeyListing& materialKeys,
                                           double time);
+        SceneError      GenerateTransforms(// I-O
+                                           std::map<uint32_t, uint32_t>& surfaceTransformIds);
         SceneError      FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,
                                              double time = 0.0f);
 

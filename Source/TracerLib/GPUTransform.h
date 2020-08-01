@@ -15,6 +15,11 @@ using GPUTransform = Matrix4x4;
 __host__ __device__ 
 inline GPUTransform ConvnertToGPUTransform(const CPUTransform& t)
 {
+	// Device code cannot refer a global constexpr 
+	// (most functions takes value by reference so)
+	constexpr Vector3 _XAxis = XAxis;
+	constexpr Vector3 _YAxis = YAxis;
+	constexpr Vector3 _ZAxis = ZAxis;
 
 	switch(t.type)
 	{
@@ -28,9 +33,9 @@ inline GPUTransform ConvnertToGPUTransform(const CPUTransform& t)
 												  t.trs.scale[1],
 												  t.trs.scale[2]);
 
-			result = TransformGen::Rotate(t.trs.rotation[0], XAxis) * result;
-			result = TransformGen::Rotate(t.trs.rotation[1], YAxis) * result;
-			result = TransformGen::Rotate(t.trs.rotation[2], ZAxis) * result;
+			result = TransformGen::Rotate(t.trs.rotation[0], _XAxis) * result;
+			result = TransformGen::Rotate(t.trs.rotation[1], _YAxis) * result;
+			result = TransformGen::Rotate(t.trs.rotation[2], _ZAxis) * result;
 			result = TransformGen::Translate(t.trs.translation);
 			return result.Inverse();
 		}
@@ -40,9 +45,9 @@ inline GPUTransform ConvnertToGPUTransform(const CPUTransform& t)
 		}
 		case TransformType::ROTATION:
 		{
-			Matrix4x4 result = TransformGen::Rotate(t.trs.rotation[0], XAxis);
-			result = TransformGen::Rotate(t.trs.rotation[1], YAxis) * result;
-			result = TransformGen::Rotate(t.trs.rotation[2], ZAxis) * result;
+			Matrix4x4 result = TransformGen::Rotate(t.trs.rotation[0], _XAxis);
+			result = TransformGen::Rotate(t.trs.rotation[1], _YAxis) * result;
+			result = TransformGen::Rotate(t.trs.rotation[2], _ZAxis) * result;
 			return result.Inverse();
 		}
 		default: return Indentity4x4;

@@ -6,7 +6,7 @@
 #include "RayLib/SceneNodeI.h"
 #include "RayLib/SceneNodeNames.h"
 #include "RayLib/StripComments.h"
-#include "RayLib/MemoryAlignment.h"
+//#include "RayLib/MemoryAlignment.h"
 
 #include "GPUAcceleratorI.h"
 #include "GPUPrimitiveI.h"
@@ -512,6 +512,34 @@ SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, AABB3>
     return e;
 }
 
+SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& surfaceTransformIds)
+{
+
+    const nlohmann::json* transformJson = nullptr;
+    if(!FindNode(transformJson, NodeNames::TRANSFORM_BASE))
+        return SceneError::TRANSFORMS_ARRAY_NOT_FOUND;
+
+    // Find out used transforms
+    std::map<uint32_t, uint32_t> transformIdList;
+    uint32_t i = 0;
+    for(const auto& pair : surfaceTransformIds)
+    {
+        auto r = transformIdList.emplace(pair.second, i);
+        // If emplace successfull
+        if(r.second)
+        {
+            SceneIO::LoadTransform(transformJson[pair.)
+            i++;
+        }
+    }
+
+    // Load and update transform id's of the surface
+    for(auto& pair : surfaceTransformIds)
+        pair.second = transformIdList.at(pair.first);
+
+    return SceneError::OK;
+}
+
 SceneError GPUSceneJson::GenerateLightInfo(const MaterialKeyListing& materialKeys,
                                            double time)
 { 
@@ -602,19 +630,7 @@ SceneError GPUSceneJson::FindBoundaryMaterial(const MaterialKeyListing& matHitKe
 
 SceneError GPUSceneJson::LoadCommon(double time)
 {
-    SceneError e = SceneError::OK;
-
-    // CPU Temp Data
-    std::vector<GPUTransform> transformsCPU;    
-    std::vector<GPUMedium> mediumsCPU;
-
-    // Transforms
-    const nlohmann::json* transformsJson = nullptr;
-    if(!FindNode(transformsJson, NodeNames::TRANSFORM_BASE))
-        return SceneError::TRANSFORMS_ARRAY_NOT_FOUND;
-    transformsCPU.reserve(transformsJson->size());
-    for(const auto& transformJson : (*transformsJson))
-        transformsCPU.push_back(SceneIO::LoadTransform(transformJson, time));
+    SceneError e = SceneError::OK;    
     // Cameras
     const nlohmann::json* camerasJson = nullptr;
     if(!FindNode(camerasJson, NodeNames::CAMERA_BASE))
@@ -622,64 +638,7 @@ SceneError GPUSceneJson::LoadCommon(double time)
     cameras.reserve(camerasJson->size());
     for(const auto& cameraJson : (*camerasJson))
         cameras.push_back(SceneIO::LoadCamera(cameraJson, time));
-    // Mediums
-    const nlohmann::json* mediumsJson = nullptr;
-    if(!FindNode(mediumsJson, NodeNames::MEDIUM_BASE))
-        return SceneError::MEDIUM_ARRAY_NOT_FOUND;    
-    mediumsCPU.reserve(mediumsJson->size());
 
-    // Medium holds its actual index on the array
-    uint32_t i = 0;
-    for(const auto& medJson : (*mediumsJson))
-    {
-        mediumsCPU.emplace_back(SceneIO::LoadMedium(medJson, time), i);
-        i++;
-    }
-    
-    // Allocate Transform GPU
-    transformCount = transformsCPU.size();
-    size_t transformSize = transformCount * sizeof(GPUTransform);
-    transformSize = Memory::AlignSize(transformSize, AlignByteCount);
-
-    mediumCount = mediumsCPU.size();
-    size_t mediumSize = mediumCount * sizeof(GPUMedium);
-    mediumSize = Memory::AlignSize(mediumSize, AlignByteCount);
-
-    // Allocate
-    size_t requiredSize = transformSize + mediumSize;
-    DeviceMemory::EnlargeBuffer(gpuMemory, requiredSize);
-
-    // Set pointers
-    size_t offset = 0;
-    std::uint8_t* dBasePtr = static_cast<uint8_t*>(gpuMemory);
-    dTransforms = reinterpret_cast<GPUTransform*>(dBasePtr + offset);
-    offset += transformSize;
-    dMediums = reinterpret_cast<GPUMedium*>(dBasePtr + offset);
-    offset += mediumSize;
-    assert(requiredSize == offset);
-
-    if(transformCount != 0)
-    {
-        // Just Memcpy
-        CUDA_CHECK(cudaMemcpy(dTransforms, transformsCPU.data(),
-                              transformsCPU.size() * sizeof(GPUTransform),
-                              cudaMemcpyHostToDevice));
-    }
-    else dTransforms = nullptr;
-
-    if(mediumCount != 0)
-    {
-        // Just Memcpy
-        CUDA_CHECK(cudaMemcpy(dMediums, mediumsCPU.data(),
-                              mediumsCPU.size() * sizeof(GPUMedium),
-                              cudaMemcpyHostToDevice));
-    }
-    else
-    {
-        dMediums = nullptr;
-        return SceneError::AT_LEAST_ONE_MEDUIM_REQUIRED;
-    }
-  
     return e;
 }
 
@@ -693,6 +652,7 @@ SceneError GPUSceneJson::LoadLogicRelated(double time)
     WorkBatchList workListings;
     AcceleratorBatchList accelListings;
     std::map<uint32_t, uint32_t> surfaceTransformIds;
+    //std::map<........, uint32_t> materialMediumIds;
     // Parse Json and find necessary nodes
     if((e = GenerateConstructionData(primGroupNodes,
                                      matGroupNodes,
@@ -700,6 +660,10 @@ SceneError GPUSceneJson::LoadLogicRelated(double time)
                                      accelListings,
                                      surfaceTransformIds,
                                      time)) != SceneError::OK)
+        return e;
+
+    // Transforms
+    if((e = GenerateTransforms(surfaceTransformIds)) != SceneError::OK)
         return e;
 
     // Partition Material Data to Multi GPU Material Data
@@ -765,7 +729,7 @@ SceneError GPUSceneJson::ChangeLogicRelated(double time)
 
 size_t GPUSceneJson::UsedGPUMemory() const
 {
-    return gpuMemory.Size();
+    return 0;
 }
 
 size_t GPUSceneJson::UsedCPUMemory() const

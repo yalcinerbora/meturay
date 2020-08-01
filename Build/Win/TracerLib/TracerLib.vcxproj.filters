@@ -267,9 +267,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUMedium.cuh">
-      <Filter>Structs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\TracerFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
@@ -299,6 +296,8 @@
       <Filter>Default Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUDistribution.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMedium.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUTransform.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

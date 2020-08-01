@@ -16,6 +16,7 @@ Base Interface for GPU accelerators
 #include "RayLib/AABB.h"
 
 #include "AcceleratorFunctions.h"
+#include "GPUTransform.h"
 
 struct RayGMem;
 struct SceneError;

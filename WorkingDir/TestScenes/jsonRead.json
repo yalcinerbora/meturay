@@ -42,17 +42,16 @@
 	"Transforms":[
 	"_transformAnimate.json",
 	{
+		"id": 0,
 		"type": "matrix4x4",
-		"count": 1,
 		"data": [ 1, 0, 0, 0,
 					0, 1, 0, 0,
 					0, 0, 1, 0,
 					0, 0, 0, 1]
 	},
 	{
-		"id": "1",
+		"id": 1,
 		"type": "translateRotateScale",
-		"count": 1,
 		"data":  [[ 0, 0, 0],
 					[ 0, 0, 0],
 					[ 1, 1, 1]]

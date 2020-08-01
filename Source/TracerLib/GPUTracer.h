@@ -24,15 +24,21 @@ All Tracers should inherit this class
 #include "RayMemory.h"
 #include "ImageMemory.h"
 
+using GPUTransform = Matrix4x4;
+
+class GPUMedium;
 class GPUSceneI;
 class CudaSystem;
 
+struct CPUTransform;
+struct CPUMedium;
 struct TracerError;
-
 
 class GPUTracer : public GPUTracerI
 {
     private:
+        static constexpr const size_t       AlignByteCount = 128;
+
         // Max Bit Sizes for Efficient Sorting
         const Vector2i                      maxAccelBits;
         const Vector2i                      maxWorkBits;
@@ -42,8 +48,11 @@ class GPUTracer : public GPUTracerI
         GPUBaseAcceleratorI&                baseAccelerator;
         const AcceleratorBatchMap&          accelBatches;
 
-        const MediumList&                   transforms;
-        const TransformList&                mediums;
+        const std::vector<CPUTransform>&    transforms;
+        const std::vector<CPUMedium>&       mediums;
+
+        // GPU Memory
+        DeviceMemory                        mediumAndTransformMemory;
 
     protected:
         // Cuda System For Kernel Calls
@@ -52,6 +61,8 @@ class GPUTracer : public GPUTracerI
         RNGMemory                           rngMemory;
         RayMemory                           rayMemory;
         ImageMemory                         imgMemory;        
+        const GPUTransform*                 dTransforms;
+        const GPUMedium*                    dMediums;
         //
         TracerParameters                    params;
         //

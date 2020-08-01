@@ -159,8 +159,8 @@ bool PathTracer::Render()
     globalData.gImage = imgMemory.GMem<Vector4>();
     globalData.lightList = dLights;
     globalData.totalLightCount = lightCount;
-    globalData.mediumList = scene.MediumsGPU();
-    globalData.totalMediumCount = static_cast<uint32_t>(scene.MediumCount());
+    globalData.mediumList = dMediums;
+    globalData.totalMediumCount = scene.MediumsCPU().size();
 
     globalData.nee = options.nextEventEstimation;
     globalData.rrStart = options.rrStart;
