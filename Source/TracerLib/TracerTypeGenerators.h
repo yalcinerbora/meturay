@@ -29,8 +29,7 @@ using TracerGeneratorFunc = GPUTracerI* (*)(const CudaSystem&,
                                             const TracerParameters&);
 
 template<class Accel>
-using AccelGroupGeneratorFunc = Accel* (*)(const GPUPrimitiveGroupI&,
-                                           const GPUTransform*);
+using AccelGroupGeneratorFunc = Accel* (*)(const GPUPrimitiveGroupI&);
 
 template<class MaterialGroup>
 using MaterialGroupGeneratorFunc = MaterialGroup* (*)(const CudaGPU& gpuId);
@@ -96,10 +95,9 @@ class GPUAccelGroupGen
             , dFunc(d)
         {}
 
-        GPUAccelGPtr operator()(const GPUPrimitiveGroupI& pg,
-                                const GPUTransform* ts)
+        GPUAccelGPtr operator()(const GPUPrimitiveGroupI& pg)
         {
-            GPUAcceleratorGroupI* accel = gFunc(pg, ts);
+            GPUAcceleratorGroupI* accel = gFunc(pg);
             return GPUAccelGPtr(accel, dFunc);
         }
 };
@@ -115,10 +113,9 @@ namespace TypeGenWrappers
     }
 
     template <class Base, class AccelGroup>
-    Base* AccelGroupConstruct(const GPUPrimitiveGroupI& p,
-                              const GPUTransform* t)
+    Base* AccelGroupConstruct(const GPUPrimitiveGroupI& p)
     {
-        return new AccelGroup(p, t);
+        return new AccelGroup(p);
     }
 
     template <class Base, class MatBatch>

@@ -24,23 +24,28 @@ class GPUAcceleratorGroup
 
     public:
         // Constructors & Destructor
-                                        GPUAcceleratorGroup(const GPUPrimitiveGroupI&,
-                                                            const GPUTransform*);
+                                        GPUAcceleratorGroup(const GPUPrimitiveGroupI&);
                                         ~GPUAcceleratorGroup() = default;
 
 
         const GPUPrimitiveGroupI&       PrimitiveGroup() const override;
+        void                            AttachInverseTransformList(const GPUTransform*) override;
 };
 
 template <class P>
-GPUAcceleratorGroup<P>::GPUAcceleratorGroup(const GPUPrimitiveGroupI& pg,
-                                            const GPUTransform* t)
+GPUAcceleratorGroup<P>::GPUAcceleratorGroup(const GPUPrimitiveGroupI& pg)
     : primitiveGroup(static_cast<const P&>(pg))
-    , dInverseTransforms(t)
+    , dInverseTransforms(nullptr)
 {}
 
 template <class P>
 const GPUPrimitiveGroupI& GPUAcceleratorGroup<P>::PrimitiveGroup() const
 {
     return primitiveGroup;
+}
+
+template <class P>
+void GPUAcceleratorGroup<P>::AttachInverseTransformList(const GPUTransform* t)
+{
+    dInverseTransforms = t;
 }

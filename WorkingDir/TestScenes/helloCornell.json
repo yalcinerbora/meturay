@@ -18,6 +18,7 @@
 
 	"Mediums": [
 	{
+		"id": 0,
 		"absorption": [0, 0, 0],
 		"scattering": [0, 0, 0],
 		"ior": 1,
@@ -27,7 +28,6 @@
 	"Lights": [
 	// Light Information for event estimation
 	{
-		"id": 0,
 		"type": "primitive",
 		"material" : 1,
 		"primitive": 4,
@@ -37,6 +37,7 @@
 
 	"Transforms":[
 	{
+		"id": 0,
 		"type": "matrix4x4",
 		"data": [ 1, 0, 0, 0,
 			      0, 1, 0, 0,

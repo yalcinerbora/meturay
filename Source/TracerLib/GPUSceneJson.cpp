@@ -67,7 +67,6 @@ GPUSceneJson::GPUSceneJson(const std::u8string& fileName,
     , fileName(fileName)
     , parentPath(std::filesystem::path(fileName).parent_path().string())
     , currentTime(0.0)
-    , dTransforms(nullptr)
     , sceneJson(nullptr)
     , baseAccelerator(nullptr, nullptr)
 {}
@@ -424,7 +423,7 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, AABB3>& accAABB
 
         // Group Generation
         GPUAccelGPtr aGroup = GPUAccelGPtr(nullptr, nullptr);
-        if((e = logicGenerator.GenerateAcceleratorGroup(aGroup, *pGroup, dTransforms, accelGroupName)) != SceneError::OK)
+        if((e = logicGenerator.GenerateAcceleratorGroup(aGroup, *pGroup, accelGroupName)) != SceneError::OK)
             return e;
         if((e = aGroup->InitializeGroup(accelNode, matHitKeyList, pairsList, time)) != SceneError::OK)
             return e;
@@ -851,14 +850,14 @@ const std::vector<CPUCamera>& GPUSceneJson::CamerasCPU() const
     return cameras;
 }
 
-const GPUTransform* GPUSceneJson::TransformsGPU() const
+const std::vector<CPUTransform>& GPUSceneJson::TransformsCPU() const
 {
-    return dTransforms;
+    return transforms;
 }
 
-const GPUMedium* GPUSceneJson::MediumsGPU() const
+const std::vector<CPUMedium>& GPUSceneJson::MediumsCPU() const
 {
-    return dMediums;
+    return mediums;
 }
 
 const WorkBatchCreationInfo& GPUSceneJson::WorkBatchInfo() const
@@ -889,14 +888,4 @@ const std::map<std::string, GPUAccelGPtr>& GPUSceneJson::AcceleratorGroups() con
 const std::map<std::string, GPUPrimGPtr>& GPUSceneJson::PrimitiveGroups() const
 {
     return primitives;
-}
-
-size_t GPUSceneJson::TransformCount() const
-{
-    return transformCount;
-}
-
-size_t GPUSceneJson::MediumCount() const
-{
-    return mediumCount;
 }

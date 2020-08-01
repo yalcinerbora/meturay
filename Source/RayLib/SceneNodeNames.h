@@ -67,5 +67,5 @@ namespace NodeNames
     static constexpr const char* TRANSFORM_FORM = "form";
     // Transform Form Values
     static constexpr const char* TRANSFORM_FORM_MATRIX4 = "matrix4x4";
-    static constexpr const char* TRANSFORM_FORM_T_R_S = "transformRotateScale";
+    static constexpr const char* TRANSFORM_FORM_T_R_S = "translateRotateScale";
 }

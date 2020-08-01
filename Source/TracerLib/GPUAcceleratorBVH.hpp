@@ -26,9 +26,8 @@
 //}
 
 template <class PGroup>
-GPUAccBVHGroup<PGroup>::GPUAccBVHGroup(const GPUPrimitiveGroupI& pGroup,
-                                       const GPUTransform* dInvTransforms)
-    : GPUAcceleratorGroup<PGroup>(pGroup, dInvTransforms)
+GPUAccBVHGroup<PGroup>::GPUAccBVHGroup(const GPUPrimitiveGroupI& pGroup)
+    : GPUAcceleratorGroup<PGroup>(pGroup)
     , dBVHLists(nullptr)
 {}
 

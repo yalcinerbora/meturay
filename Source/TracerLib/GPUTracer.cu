@@ -18,6 +18,8 @@ GPUTracer::GPUTracer(const CudaSystem& system,
     : cudaSystem(system)
     , baseAccelerator(*scene.BaseAccelerator())
     , accelBatches(scene.AcceleratorBatchMappings())
+    , transforms(scene.TransformsCPU())
+    , mediums(scene.MediumsCPU())
     , maxAccelBits(Vector2i(Utility::FindFirstSet32(scene.MaxAccelIds()[0]) + 1,
                             Utility::FindFirstSet32(scene.MaxAccelIds()[1]) + 1))
     , maxWorkBits(Vector2i(Utility::FindFirstSet32(scene.MaxMatIds()[0]) + 1,
@@ -32,8 +34,15 @@ GPUTracer::GPUTracer(const CudaSystem& system,
 
 TracerError GPUTracer::Initialize()
 {
-    // Init RNG
+    // Init RNGs for each block
     rngMemory = RNGMemory(params.seed, cudaSystem);
+
+    // Load Transforms to GPU and invert them
+    std::vector<>
+    ---
+        sce
+
+    // Attach Transforms
 
     // Construct Tracers
     TracerError e = TracerError::OK;

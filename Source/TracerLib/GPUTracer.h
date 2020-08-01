@@ -42,6 +42,9 @@ class GPUTracer : public GPUTracerI
         GPUBaseAcceleratorI&                baseAccelerator;
         const AcceleratorBatchMap&          accelBatches;
 
+        const MediumList&                   transforms;
+        const TransformList&                mediums;
+
     protected:
         // Cuda System For Kernel Calls
         const CudaSystem&                   cudaSystem;

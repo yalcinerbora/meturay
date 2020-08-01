@@ -69,11 +69,8 @@ class GPUSceneJson : public GPUSceneI
         // CPU Data
         std::vector<CPUCamera>                  cameras;
         std::vector<CPULight>                   lights;
-        // GPU Pointers
-        GPUTransform*                           dTransforms;
-        GPUMedium*                              dMediums;
-        size_t                                  transformCount;
-        size_t                                  mediumCount;
+        std::vector<CPUTransform>               transforms;
+        std::vector<CPUMedium>                  mediums;
 
         // Inners
         // Helper Logic
@@ -149,13 +146,9 @@ class GPUSceneJson : public GPUSceneI
         // Access CPU
         const std::vector<CPULight>&        LightsCPU() const override;
         const std::vector<CPUCamera>&       CamerasCPU() const override;
-        // Access GPU
-        const GPUTransform*                 TransformsGPU() const override;        
-        const GPUMedium*                    MediumsGPU() const override;
-        // Counts
-        size_t                              TransformCount() const override;
-        size_t                              MediumCount() const override;
-        
+        const std::vector<CPUTransform>&    TransformsCPU() const override;
+        const std::vector<CPUMedium>&       MediumsCPU() const override;
+                
         // Generated Classes of Materials / Accelerators
         // Work Maps
         const WorkBatchCreationInfo&        WorkBatchInfo() const override;

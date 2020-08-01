@@ -31,7 +31,6 @@ class TracerLogicGeneratorI
         // Accelerator
         virtual SceneError      GenerateAcceleratorGroup(GPUAccelGPtr&,
                                                          const GPUPrimitiveGroupI&,
-                                                         const GPUTransform* dTransforms,
                                                          const std::string& accelType) = 0;
         // Material
         virtual SceneError      GenerateMaterialGroup(GPUMatGPtr&,

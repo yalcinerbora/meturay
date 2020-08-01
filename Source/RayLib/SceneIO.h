@@ -64,7 +64,7 @@ namespace SceneIO
     uint32_t                LoadLightMatId(const nlohmann::json&);
     LightType               LoadLightType(const nlohmann::json&);    
     CPULight                LoadLight(const nlohmann::json&, double time = 0.0);
-    GPUTransform            LoadTransform(const nlohmann::json&, double time = 0.0);
+    CPUTransform            LoadTransform(const nlohmann::json&, double time = 0.0);
     CPUCamera               LoadCamera(const nlohmann::json&, double time = 0.0);
     CPUMedium               LoadMedium(const nlohmann::json& jsn, double time = 0.0);
 

@@ -1,8 +1,7 @@
 
 template <class PGroup>
-GPUAccLinearGroup<PGroup>::GPUAccLinearGroup(const GPUPrimitiveGroupI& pGroup,
-                                             const GPUTransform* dInvTransforms)
-    : GPUAcceleratorGroup<PGroup>(pGroup, dInvTransforms)
+GPUAccLinearGroup<PGroup>::GPUAccLinearGroup(const GPUPrimitiveGroupI& pGroup)
+    : GPUAcceleratorGroup<PGroup>(pGroup)
     , dAccRanges(nullptr)
     , dLeafList(nullptr)
 {}

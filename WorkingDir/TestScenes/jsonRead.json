@@ -13,6 +13,7 @@
 
 	"Mediums": [
 	{
+		"id": 0,
 		"absorption": [0, 0, 0],
 		"scattering": [0, 0, 0],
 		"ior": 1,
@@ -50,7 +51,7 @@
 	},
 	{
 		"id": "1",
-		"type": "transformRotateScale",
+		"type": "translateRotateScale",
 		"count": 1,
 		"data":  [[ 0, 0, 0],
 					[ 0, 0, 0],

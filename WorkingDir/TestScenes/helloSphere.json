@@ -28,6 +28,7 @@
 
 	"Transforms":[
 	{
+		"id": 0,
 		"type": "matrix4x4",
 		"data": [ 1, 0, 0, 0,
 			      0, 1, 0, 0,

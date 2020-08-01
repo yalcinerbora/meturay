@@ -18,12 +18,14 @@
 
 	"Mediums": [
 	{
+		"id": 0,
 		"absorption": [0, 0, 0],
 		"scattering": [0, 0, 0],
 		"ior": 1,
 		"phase": 0
 	},
 	{
+		"id": 1,
 		"absorption": [0.15, 0.15, 0.1],
 		"scattering": [0, 0, 0],
 		"ior": 1,
@@ -32,7 +34,6 @@
 
 	"Lights": [
 	{
-		"id": 0,
 		"type": "primitive",
 		"material" : 1,
 		"primitive": 4,
@@ -42,6 +43,7 @@
 
 	"Transforms":[
 	{
+		"id": 0,
 		"type": "matrix4x4",
 		"data": [ 1, 0, 0, 0,
 			      0, 1, 0, 0,
@@ -92,7 +94,7 @@
 		"id": 6,
 		"type": "Refract",
         "albedo" : [1.0, 1.0, 1.0],
-        "medium" : 1.5
+        "medium" : 1
 	}],
 
 	"Primitives":[

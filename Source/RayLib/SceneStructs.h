@@ -28,6 +28,14 @@ enum class LightType : uint16_t
 
 };
 
+enum class TransformType : uint8_t
+{
+    MATRIX,         // 4x4 Transformation matrix
+    TRS,            // Transform Rotate Scale
+    ROTATION,       // Rotation only
+    TRANSLATION,    // Translation only
+};
+
 enum class FilterType
 {
     LINEAR,
@@ -98,12 +106,29 @@ struct CPULight
 
 struct CPUMedium
 {    
-    Vector3 sigmaA, sigmaS;     // Scattering and Absorbtion Coeffs
+    // Scattering and Absorbtion Coeffs
+    Vector3 sigmaA;
+    Vector3 sigmaS;     
+    // Phase Function g parameter
     float phase;
-    float index;                // IoR
+    // IoR
+    float index;
 };
 
-using GPUTransform = Matrix4x4;
+struct CPUTransform
+{
+    TransformType type;
+    union
+    {
+        Matrix4x4 matrix;
+        struct
+        {
+            Vector3 translation;
+            Vector3 rotation;
+            Vector3 scale;
+        } trs;
+    };
+};
 
 struct SurfaceStruct
 {

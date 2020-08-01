@@ -35,7 +35,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         std::map<PoolKey, MaterialPoolPtr>          loadedMatPools;
         std::map<PoolKey, PrimitivePoolPtr>         loadedPrimPools;
         std::map<PoolKey, BaseAcceleratorPoolPtr>   loadedBaseAccPools;
-        std::map<PoolKey, TracerPoolPtr>       loadedTracerPools;        
+        std::map<PoolKey, TracerPoolPtr>            loadedTracerPools;        
         // All Combined Type Generation Functions
         // Type Generation Functions
         std::map<std::string, GPUPrimGroupGen>      primGroupGenerators;
@@ -44,7 +44,6 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         std::map<std::string, GPUBaseAccelGen>      baseAccelGenerators;
         std::map<std::string, GPUTracerGen>         tracerGenerators;
         // Helper Funcs
-        uint32_t                                    CalculateHitStructSize();
         DLLError                                    FindOrGenerateSharedLib(SharedLib*& libOut,
                                                                             const std::string& libName);
 
@@ -66,7 +65,6 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         // Accelerator
         SceneError                  GenerateAcceleratorGroup(GPUAccelGPtr&,
                                                              const GPUPrimitiveGroupI&,
-                                                             const GPUTransform* t,
                                                              const std::string& accelType) override;
         // Material
         SceneError                  GenerateMaterialGroup(GPUMatGPtr&,

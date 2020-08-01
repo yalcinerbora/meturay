@@ -73,33 +73,34 @@ inline SceneError LightTypeStringToEnum(LightType& type,
     return SceneError::UNKNOWN_LIGHT_TYPE;
 }
 
-GPUTransform SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
+CPUTransform SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
 {
+    CPUTransform t;
     if(jsn.is_string())
     {
-        return LoadFromAnim<GPUTransform>(jsn, time);
+        return LoadFromAnim<CPUTransform>(jsn, time);
     }
     else if(jsn.is_object())
     {
         std::string type = LoadString(jsn[TYPE], time);
         if(type == TRANSFORM_FORM_MATRIX4)
         {
-            Matrix4x4 mat = LoadMatrix<4, float>(jsn[DATA], time);
-            return mat;
+            t.type = TransformType::MATRIX;
+            t.matrix = LoadMatrix<4, float>(jsn[DATA], time);
+            return t;
         }
         else if(type == TRANSFORM_FORM_T_R_S)
         {
             Vector3 translation = LoadVector<3, float>(jsn[DATA][0], time);
             Vector3 rotation = LoadVector<3, float>(jsn[DATA][1], time);
             Vector3 scale = LoadVector<3, float>(jsn[DATA][2], time);
+            rotation *= MathConstants::DegToRadCoef;
 
-            Matrix4x4 mat = TransformGen::Translate(translation);
-            mat *= TransformGen::Scale(scale[0], scale[1], scale[2]);
-            mat *= TransformGen::Rotate(rotation[2] * MathConstants::DegToRadCoef, ZAxis);
-            mat *= TransformGen::Rotate(rotation[1] * MathConstants::DegToRadCoef, YAxis);
-            mat *= TransformGen::Rotate(rotation[0] * MathConstants::DegToRadCoef, XAxis);
-
-            return mat;
+            t.type = TransformType::TRS;
+            t.trs.rotation = rotation;
+            t.trs.scale = scale;
+            t.trs.translation = translation;
+            return t;
         }
         else throw SceneException(SceneError::UNKNOWN_TRANSFORM_TYPE);
 

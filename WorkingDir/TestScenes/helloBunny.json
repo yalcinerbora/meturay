@@ -18,6 +18,7 @@
 
 	"Mediums": [
 	{
+		"id": 0,
 		"absorption": [0, 0, 0],
 		"scattering": [0, 0, 0],
 		"ior": 1,
@@ -27,7 +28,6 @@
 
 	"Lights": [
 	// {
-	// 	"id": 0,
 	// 	"type": "rectangular",
 	// 	"material": 1,
 	// 	// Value
@@ -36,14 +36,12 @@
 	// 	"v1" : [4.24264, 0, 4.24264]
 	// }
 	// {
-	// 	"id": 0,
 	// 	"type": "point",
 	// 	"material": 1,
 	// 	// Value
 	// 	"position": [-5.371554, 7.565777, -0.362448]
 	// }
 	{
-		"id": 0,
 	 	"material": 1,
 		"type": "primitive",
 		"primitive": 2
@@ -52,6 +50,7 @@
 
 	"Transforms":[
 	{
+		"id": 0,
 		"type": "matrix4x4",
 		"data": [ 1, 0, 0, 0,
 			      0, 1, 0, 0,
