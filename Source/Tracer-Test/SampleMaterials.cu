@@ -1,7 +1,9 @@
 #include "SampleMaterials.cuh"
+#include "RayLib/MemoryAlignment.h"
 
-SceneError EmissiveMat::InitializeGroup(const NodeListing& materialNodes, double time,
-                                        const std::string& scenePath)
+SceneError EmissiveMat::InitializeGroup(const NodeListing& materialNodes, 
+                                        std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                        double time, const std::string& scenePath)
 {
     constexpr const char* IRRADIANCE = "radiance";
 
@@ -43,8 +45,9 @@ SceneError EmissiveMat::ChangeTime(const NodeListing& materialNodes, double time
 }
 
 // -------------
-SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes, double time,
-                                       const std::string& scenePath)
+SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes, 
+                                       std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                       double time, const std::string& scenePath)
 {
     constexpr const char* ALBEDO = "albedo";
 
@@ -78,8 +81,9 @@ SceneError LambertMat::ChangeTime(const NodeListing& materialNodes, double time,
 }
 
 // -------------
-SceneError ReflectMat::InitializeGroup(const NodeListing& materialNodes, double time,
-                                       const std::string& scenePath)
+SceneError ReflectMat::InitializeGroup(const NodeListing& materialNodes, 
+                                       std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                       double time, const std::string& scenePath)
 {
     constexpr const char* ALBEDO = "albedo";
     constexpr const char* ROUGHNESS = "roughness";
@@ -120,38 +124,55 @@ SceneError ReflectMat::ChangeTime(const NodeListing& materialNodes, double time,
 }
 
 // -------------
-SceneError RefractMat::InitializeGroup(const NodeListing& materialNodes, double time,
-                                       const std::string& scenePath)
+SceneError RefractMat::InitializeGroup(const NodeListing& materialNodes, 
+                                       std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                       double time, const std::string& scenePath)
 {
     constexpr const char* ALBEDO = "albedo";
-    constexpr const char* INDEX = "index";
+    constexpr const char* MEDIUM = "medium";
 
-    std::vector<Vector4> matDataCPU;
-    uint32_t i = 0;
+    std::vector<Vector3> albedosCPU;
+    std::vector<uint32_t> mediumIndicesCPU;
     for(const auto& sceneNode : materialNodes)
     {
         std::vector<Vector3> albedos = sceneNode->AccessVector3(ALBEDO);
-        std::vector<float> indices = sceneNode->AccessFloat(INDEX);
+        std::vector<uint32_t> mediumIds = sceneNode->AccessUInt(MEDIUM);
 
-        const auto& ids = sceneNode->Ids();
-        for(IdPair id : ids)
+        for(uint32_t& i : mediumIds)
         {
-            Vector4 data = Vector4(albedos[i], indices[i]);
-            matDataCPU.push_back(data);
-
-            innerIds.emplace(std::make_pair(id.first, i));
-            i++;
-        }
+            mediumIndicesCPU.push_back(mediumIdIndexPairs.at(i));
+        }        
+        albedosCPU.insert(albedosCPU.end(), albedos.begin(), albedos.end());
     }
 
+    // Generate Id List
+    SceneError e = SceneError::OK;
+    if((e = GenerateInnerIds(materialNodes)) != SceneError::OK)
+        return e;
+
     // Alloc etc
-    size_t dMatDataSize = matDataCPU.size() * sizeof(Vector4);
-    memory = std::move(DeviceMemory(dMatDataSize));
-    Vector4f* dMemory = static_cast<Vector4f*>(memory);
-    CUDA_CHECK(cudaMemcpy(dMemory, matDataCPU.data(), dMatDataSize,
+    size_t albedoSize = albedosCPU.size() * sizeof(Vector3);
+    albedoSize = Memory::AlignSize(albedoSize);
+    size_t mediumIndicesSize = mediumIndicesCPU.size() * sizeof(uint32_t);
+    mediumIndicesSize = Memory::AlignSize(mediumIndicesSize);
+    memory = std::move(DeviceMemory(albedoSize + mediumIndicesSize));
+
+    size_t offset = 0;
+    Byte* dMemory = static_cast<Byte*>(memory);
+    Vector3* dAlbedos = reinterpret_cast<Vector3*>(dMemory + offset);
+    offset += albedoSize;
+    uint32_t* dMedIndices = reinterpret_cast<uint32_t*>(dMemory + offset);
+    offset += mediumIndicesSize;
+    assert(offset == (albedoSize + mediumIndicesSize));
+
+    CUDA_CHECK(cudaMemcpy(dAlbedos, albedosCPU.data(), 
+                          albedosCPU.size() * sizeof(Vector3),
+                          cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(dMedIndices, mediumIndicesCPU.data(), 
+                          mediumIndicesCPU.size() * sizeof(uint32_t),
                           cudaMemcpyHostToDevice));
 
-    //dData = RefractMatData{dMemory, ..., ...};
+    dData = RefractMatData{dAlbedos, dMedIndices, nullptr};
     return SceneError::OK;
 }
 

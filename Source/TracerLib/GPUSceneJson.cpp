@@ -314,6 +314,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
 }
 
 SceneError GPUSceneJson::GenerateMaterialGroups(const MultiGPUMatNodes& matGroupNodes,
+                                                const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time)
 {
     // Generate Partitioned Material Groups
@@ -327,7 +328,7 @@ SceneError GPUSceneJson::GenerateMaterialGroups(const MultiGPUMatNodes& matGroup
         GPUMatGPtr matGroup = GPUMatGPtr(nullptr, nullptr);
         if(e = logicGenerator.GenerateMaterialGroup(matGroup, *gpu, matTypeName))
             return e;
-        if(e = matGroup->InitializeGroup(matNodes, time, parentPath))
+        if(e = matGroup->InitializeGroup(matNodes, mediumIdIndexPairs, time, parentPath))
             return e;
         materials.emplace(std::make_pair(matTypeName, gpu), std::move(matGroup));
     }
@@ -518,25 +519,103 @@ SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& surfac
     const nlohmann::json* transformJson = nullptr;
     if(!FindNode(transformJson, NodeNames::TRANSFORM_BASE))
         return SceneError::TRANSFORMS_ARRAY_NOT_FOUND;
+    if(transformJson->size() == 0)
+        return SceneError::AT_LEAST_ONE_TRANSFORM_REQUIRED;
+
+    std::map<uint32_t, uint32_t> allTransformIdIndexPairs;
+    uint32_t i = 0;
+    for(const auto& tJsn : (*transformJson))
+    {
+        uint32_t id = SceneIO::LoadNumber<uint32_t>(tJsn[NodeNames::ID]);
+        allTransformIdIndexPairs.emplace(id, i);
+        i++;
+    }
+    if(allTransformIdIndexPairs.cbegin()->first != 0 ||
+       allTransformIdIndexPairs.cbegin()->second != 0)
+        return SceneError::FIRST_TRANSFORM_ID_MUST_BE_ZERO;
 
     // Find out used transforms
     std::map<uint32_t, uint32_t> transformIdList;
-    uint32_t i = 0;
+    i = 0;
     for(const auto& pair : surfaceTransformIds)
     {
         auto r = transformIdList.emplace(pair.second, i);
         // If emplace successfull
         if(r.second)
         {
-            SceneIO::LoadTransform(transformJson[pair.)
+            auto loc = allTransformIdIndexPairs.cend();
+            if((loc = allTransformIdIndexPairs.find(pair.second)) == allTransformIdIndexPairs.cend())
+                return SceneError::TRANSFORM_ID_NOT_FOUND;
+
+            CPUTransform t = SceneIO::LoadTransform((*transformJson)[loc->second]);
+            transforms.emplace_back(t);
             i++;
         }
     }
-
     // Load and update transform id's of the surface
     for(auto& pair : surfaceTransformIds)
-        pair.second = transformIdList.at(pair.first);
+        pair.second = transformIdList.at(pair.second);
 
+    // Check if first transform is identitiy matrix
+    const CPUTransform& t = transforms.at(0);
+    if((t.type != TransformType::MATRIX) ||
+       (t.type == TransformType::MATRIX && t.matrix != Indentity4x4))
+        return SceneError::FIST_TRANSFORM_IS_NOT_IDENTITIY;
+
+    return SceneError::OK;
+}
+
+SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
+                                         const MultiGPUMatNodes& matNodes)
+{
+    const nlohmann::json* mediumJson = nullptr;
+    if(!FindNode(mediumJson, NodeNames::MEDIUM_BASE))
+        return SceneError::MEDIUM_ARRAY_NOT_FOUND;
+    if(mediumJson->size() == 0) 
+        return SceneError::AT_LEAST_ONE_MEDUIM_REQUIRED;
+
+    std::map<uint32_t, uint32_t> allMediumIdIndexPairs;
+    uint32_t i = 0;
+    for(const auto& mJsn : (*mediumJson))
+    {
+        uint32_t id = SceneIO::LoadNumber<uint32_t>(mJsn[NodeNames::ID]);
+        allMediumIdIndexPairs.emplace(id, i);
+        i++;
+    }
+    if(allMediumIdIndexPairs.cbegin()->first != 0 ||
+       allMediumIdIndexPairs.cbegin()->second != 0)
+        return SceneError::FIRST_MEDIUM_ID_MUST_BE_ZERO;
+
+    // Check mediums and remove unsued mediums
+    // Add default medium
+    const auto& node = (*mediumJson)[0];
+    mediums.emplace_back(SceneIO::LoadMedium(node));
+    mediumIdIndexPairs.emplace(0, 0);
+
+    i = 1;
+    for(const auto& matGroup : matNodes)
+    for(const auto& mat : matGroup.second)
+    {
+        if(!mat->CheckNode(NodeNames::MEDIUM)) continue;
+
+        // Check medium of the node group
+        std::vector<uint32_t> mediumIds = mat->AccessUInt(NodeNames::MEDIUM);
+        for(uint32_t id : mediumIds)
+        {
+            auto r = mediumIdIndexPairs.emplace(id, i);
+            // If emplace successfull
+            if(r.second)
+            {
+                auto loc = allMediumIdIndexPairs.cend();
+                if((loc = allMediumIdIndexPairs.find(id)) == allMediumIdIndexPairs.cend())
+                    return SceneError::MEDIUM_ID_NOT_FOUND;
+
+                CPUMedium m = SceneIO::LoadMedium((*mediumJson)[loc->second]);
+                mediums.emplace_back(m);
+                i++;
+            }
+        }
+    }
     return SceneError::OK;
 }
 
@@ -652,7 +731,6 @@ SceneError GPUSceneJson::LoadLogicRelated(double time)
     WorkBatchList workListings;
     AcceleratorBatchList accelListings;
     std::map<uint32_t, uint32_t> surfaceTransformIds;
-    //std::map<........, uint32_t> materialMediumIds;
     // Parse Json and find necessary nodes
     if((e = GenerateConstructionData(primGroupNodes,
                                      matGroupNodes,
@@ -677,12 +755,18 @@ SceneError GPUSceneJson::LoadLogicRelated(double time)
                                            matGroupNodes,
                                            workListings)))
         return e;
+
+    // Mediums
+    std::map<uint32_t, uint32_t> mediumIdIndexPairs;
+    if((e = GenerateMediums(mediumIdIndexPairs, multiGPUMatNodes)) != SceneError::OK)
+        return e;
+
     // Using those constructs generate
     // Primitive Groups
     if((e = GeneratePrimitiveGroups(primGroupNodes, time)) != SceneError::OK)
         return e;
     // Material Groups
-    if((e = GenerateMaterialGroups(multiGPUMatNodes, time)) != SceneError::OK)
+    if((e = GenerateMaterialGroups(multiGPUMatNodes, mediumIdIndexPairs, time)) != SceneError::OK)
         return e;
     // Work Batches
     MaterialKeyListing allMaterialKeys;

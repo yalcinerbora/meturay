@@ -87,12 +87,12 @@ class GPUSceneJson : public GPUSceneI
                                                  WorkBatchList& matBatchListings,
                                                  AcceleratorBatchList& accelBatchListings,
                                                  // Base Accelerator required data
-                                                 std::map<uint32_t, uint32_t>& surfaceTransformIds,
-                                                 //
+                                                 std::map<uint32_t, uint32_t>& surfaceTransformIds,                                        
                                                  double time = 0.0);
         SceneError      GeneratePrimitiveGroups(const PrimitiveNodeList&,
                                                 double time = 0.0);
         SceneError      GenerateMaterialGroups(const MultiGPUMatNodes&,
+                                               const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                double time = 0.0);
         SceneError      GenerateWorkBatches(MaterialKeyListing&,
                                             const MultiGPUWorkBatches&,
@@ -109,8 +109,11 @@ class GPUSceneJson : public GPUSceneI
                                                 double time = 0.0);
         SceneError      GenerateLightInfo(const MaterialKeyListing& materialKeys,
                                           double time);
-        SceneError      GenerateTransforms(// I-O
-                                           std::map<uint32_t, uint32_t>& surfaceTransformIds);
+        SceneError      GenerateTransforms(std::map<uint32_t, uint32_t>& surfaceTransformIds);
+
+        SceneError      GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
+                                        const MultiGPUMatNodes& matNodes);
+
         SceneError      FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,
                                              double time = 0.0f);
 

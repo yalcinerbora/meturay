@@ -33,8 +33,9 @@ class ConstantMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, double time,
-                                                const std::string& scenePath) override;
+        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+                                                std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                                double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override;
 
@@ -79,8 +80,9 @@ class BarycentricMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, double time,
-                                                const std::string& scenePath) override {return GenerateInnerIds(materialNodes);}
+        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+                                                std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                                double time, const std::string& scenePath) override {return GenerateInnerIds(materialNodes);}
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override {return SceneError::OK;}
 
@@ -125,8 +127,9 @@ class SphericalMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, double time,
-                                                const std::string& scenePath) override {return GenerateInnerIds(materialNodes);}
+        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+                                                std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                                double time, const std::string& scenePath) override {return GenerateInnerIds(materialNodes);}
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override {return SceneError::OK;}
 

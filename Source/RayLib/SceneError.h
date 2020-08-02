@@ -44,6 +44,8 @@ struct SceneError : public ErrorI
             ACCELERATOR_ID_NOT_FOUND,
             MATERIAL_ID_NOT_FOUND,
             PRIMITIVE_ID_NOT_FOUND,
+            TRANSFORM_ID_NOT_FOUND,
+            MEDIUM_ID_NOT_FOUND,
             // Json parse errors
             LOGIC_MISMATCH,
             TYPE_MISMATCH,
@@ -67,8 +69,12 @@ struct SceneError : public ErrorI
             TOO_MANY_ACCELERATOR_IN_GROUP,
             TOO_MANY_MATERIAL_GROUPS,
             TOO_MANY_MATERIAL_IN_GROUP,
-            // Medium Related
+            // Transform & Medium Related
             AT_LEAST_ONE_MEDUIM_REQUIRED,
+            FIRST_MEDIUM_ID_MUST_BE_ZERO,
+            AT_LEAST_ONE_TRANSFORM_REQUIRED,
+            FIRST_TRANSFORM_ID_MUST_BE_ZERO,
+            FIST_TRANSFORM_IS_NOT_IDENTITIY,            
             // Texture Related
             UNKNOWN_TEXTURE_TYPE,
             UNKNOWN_FILTER_TYPE,
@@ -164,6 +170,8 @@ inline SceneError::operator std::string() const
         "Accelerator id not found",
         "Material id not found",
         "Primitive id not found",
+        "Transform id not found",
+        "Medium id not found",
         // Json Parse Errors
         "Logics does not match",
         "JSON type does not match with required type",
@@ -187,8 +195,12 @@ inline SceneError::operator std::string() const
         "Accelerators in a group required for this scene exceeds limit",
         "Material groups required for this scene exceeds limit",
         "Materials in a batch required for this scene exceeds limit",
-        // Medium Related
-        "At least one medium should be definded as a default medium",
+        // Transform & Medium Related      
+        "At least one medium should be available as id 0 for default medium",
+        "First medium id must be zero (since it is considered as default medium)",
+        "At least one transform should be avaialable as id 0 for default transform",
+        "First transform id must be zero (since it is considered as identity transform)",
+        "First transform has to be identity matrix with an Id of Zero",
         // Texture Related
         "Texture type name is unknown",
         "Filter type name is unknown",

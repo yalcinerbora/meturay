@@ -37,8 +37,9 @@ class GPUMaterialGroupI
         // Type (as string) of the primitive group
         virtual const char*                 Type() const = 0;
         // Allocates and Generates data
-        virtual SceneError                  InitializeGroup(const NodeListing& materialNodes, double time,
-                                                            const std::string& scenePath) = 0;
+        virtual SceneError                  InitializeGroup(const NodeListing& materialNodes,
+                                                            std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                                            double time, const std::string& scenePath) = 0;
         // Changes the Generated data
         virtual SceneError                  ChangeTime(const NodeListing& materialNodes, double time,
                                                        const std::string& scenePath) = 0;
@@ -53,11 +54,13 @@ class GPUMaterialGroupI
         virtual size_t                      UsedGPUMemory() const = 0;
         virtual size_t                      UsedCPUMemory() const = 0;
         virtual size_t                      UsedGPUMemory(uint32_t materialId) const = 0;
-        virtual size_t                      UsedCPUMemory(uint32_t materialId) const = 0;
-        
+        virtual size_t                      UsedCPUMemory(uint32_t materialId) const = 0;        
         // NEE Related
         virtual bool                        IsLightGroup() const = 0;
         virtual bool                        IsEmissiveGroup() const = 0;
+
+        // Post initialization
+        virtual bool                        AttachGlobalMediumArray(const GPUMedium*) = 0;
 
         // Returns how many different sampling strategy this material has
         virtual uint8_t                     SampleStrategyCount() const = 0;

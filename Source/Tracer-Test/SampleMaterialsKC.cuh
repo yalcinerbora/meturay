@@ -174,7 +174,8 @@ Vector3 RefractSample(// Sampled Output
 {
     // Fetch Mat
     Vector3 albedo = matData.dAlbedo[matId];
-    float iOIR = matData.dMedium[matId].IOR();
+    uint32_t mediumIndex = matData.mediumIndices[matId];
+    float iOIR = matData.dMediums[mediumIndex].IOR();
 
     const Vector3& normal = surface.normal;
     const Vector3& position = pos;
@@ -220,8 +221,8 @@ Vector3 RefractSample(// Sampled Output
         }
 
         // Return medium
-        outMedium = (entering) ? (matData.dMedium[matId]) 
-                               : (*matData.dDefaultMedium);
+        uint32_t outMediumIndex = (entering) ? mediumIndex : 0;
+        outMedium = matData.dMediums[outMediumIndex];
 
         // Frenel term is used to sample thus pdf is (1-f)
         pdf = 1.0f - f;

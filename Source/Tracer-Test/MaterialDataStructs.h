@@ -18,8 +18,10 @@ struct ReflectMatData
 struct RefractMatData
 {
     const Vector3* dAlbedo;
-    const GPUMedium* dMedium;
-    const GPUMedium* dDefaultMedium;
+    const uint32_t* mediumIndices;
+    
+    // Global Medium Array pointer
+    const GPUMedium* dMediums;
 };
 
 using EmissiveMatData = AlbedoMatData;

@@ -49,6 +49,9 @@ class SceneNodeI
         virtual std::string                 Name() const = 0;
         virtual std::string                 Tag() const = 0;
 
+        // Check availability of certain common / access node
+        virtual bool                        CheckNode(const std::string& name) const = 0;
+
         // Id pair inspecific data loading
         virtual size_t                      CommonListSize(const std::string& name) const = 0;
 

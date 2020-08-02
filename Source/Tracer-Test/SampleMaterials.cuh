@@ -32,8 +32,9 @@ class EmissiveMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, double time,
-                                                const std::string& scenePath) override;
+        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+                                                std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                                double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override;
 
@@ -80,8 +81,9 @@ class LambertMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, double time,
-                                                const std::string& scenePath) override;
+        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+                                                std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                                double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override;
 
@@ -128,8 +130,9 @@ class ReflectMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, double time,
-                                                const std::string& scenePath) override;
+        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+                                                std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                                double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override;
 
@@ -176,8 +179,9 @@ class RefractMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, double time,
-                                                const std::string& scenePath) override;
+        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+                                                std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                                double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override;
 

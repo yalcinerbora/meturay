@@ -1,8 +1,9 @@
 #include "GPUMaterialLight.cuh"
 #include "RayLib/ColorConversion.h"
 
-SceneError LightMatConstant::InitializeGroup(const NodeListing& materialNodes, double time,
-                                             const std::string& scenePath)
+SceneError LightMatConstant::InitializeGroup(const NodeListing& materialNodes, 
+                                             std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                             double time, const std::string& scenePath)
 {
     constexpr const char* RADIANCE = "radiance";
 
@@ -51,8 +52,9 @@ const GPUDistribution2D& LightMatConstant::LuminanceDistribution(uint32_t materi
     return luminanceDistributions[innerIds.at(materialId)].DistributionGPU2D();
 }
 
-SceneError LightMatTextured::InitializeGroup(const NodeListing& materialNodes, double time,
-                                             const std::string& scenePath)
+SceneError LightMatTextured::InitializeGroup(const NodeListing& materialNodes, 
+                                             std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                             double time, const std::string& scenePath)
 {
     // TODO: Implement
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
@@ -70,8 +72,9 @@ const GPUDistribution2D& LightMatTextured::LuminanceDistribution(uint32_t materi
     return luminanceDistributions[innerIds.at(materialId)].DistributionGPU();
 }
 
-SceneError LightMatCube::InitializeGroup(const NodeListing& materialNodes, double time,
-                                         const std::string& scenePath)
+SceneError LightMatCube::InitializeGroup(const NodeListing& materialNodes, 
+                                         std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                         double time, const std::string& scenePath)
 {
     // TODO: Implement
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;

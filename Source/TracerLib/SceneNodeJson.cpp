@@ -123,6 +123,14 @@ std::string SceneNodeJson::Tag() const
     return "";
 }
 
+bool SceneNodeJson::CheckNode(const std::string& name) const
+{
+    nlohmann::json::const_iterator i;
+    if((i = node.find(name)) != node.end())
+        return true;
+    return false;
+}
+
 size_t SceneNodeJson::CommonListSize(const std::string& name) const
 {
     const nlohmann::json& nodeInner = node[name];

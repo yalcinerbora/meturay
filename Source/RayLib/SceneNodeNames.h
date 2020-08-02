@@ -26,7 +26,7 @@ namespace NodeNames
     // Common Names
     static constexpr const char* POSITION = "position";
     static constexpr const char* DATA = "data";
-    static constexpr const char* MEDIUM = "mediumIndex";
+    static constexpr const char* MEDIUM = "medium";
     // Surface Related Names
     static constexpr const char* TRANSFORM = "transform";
     static constexpr const char* PRIMITIVE = "primitive";
@@ -63,9 +63,6 @@ namespace NodeNames
     static constexpr const char* LIGHT_MATERIAL = "material";
     static constexpr const char* LIGHT_PRIMITIVE = "primitive";
     // Transform Related Names
-    // Common
-    static constexpr const char* TRANSFORM_FORM = "form";
-    // Transform Form Values
     static constexpr const char* TRANSFORM_FORM_MATRIX4 = "matrix4x4";
     static constexpr const char* TRANSFORM_FORM_T_R_S = "translateRotateScale";
 }
