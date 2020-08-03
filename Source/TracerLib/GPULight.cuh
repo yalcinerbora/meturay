@@ -539,6 +539,7 @@ inline void TriangularLight::Sample(// Output
     //float nDotL = max(normal.Dot(-direction), 0.0f);
     float nDotL = abs(normal.Dot(-direction));
     pdf = distanceSqr / (nDotL * area);
+    //pdf = 1.0f / (nDotL * area);
 }
 
 __device__

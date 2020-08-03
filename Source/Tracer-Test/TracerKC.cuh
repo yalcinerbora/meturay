@@ -213,7 +213,7 @@ inline void PathWork(// Output
     const RayF& r = ray.ray;
     HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
     Vector3 position = r.AdvancedPos(ray.tMax);
-    Vector3 wi = -r.getDirection().Normalize();
+    Vector3 wi = -(r.getDirection().Normalize());
     GPUMedium m = gRenderState.mediumList[aux.mediumIndex];
     // Outputs
     RayReg rayOut = {};
@@ -339,7 +339,7 @@ inline void PathWork(// Output
         rayOut.Update(gOutRays, NEE_RAY_INDEX);
 
         // Calculate Radiance Factor
-        auxOut.radianceFactor = radianceFactor * reflectance / pdfLight;
+        auxOut.radianceFactor = radianceFactor * reflectance;
         // Check singularities
         auxOut.radianceFactor = (pdfLight == 0.0f) ? Zero3 : (auxOut.radianceFactor / pdfLight);
         // Write auxilary data

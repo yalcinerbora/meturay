@@ -26,7 +26,8 @@
 	},
 	{
 		"id": 1,
-		"absorption": [0.15, 0.15, 0.1],
+		//"absorption": [1.2, 1.2, 1.2],
+		"absorption": [1.25, 0.35, 0.97],
 		"scattering": [0, 0, 0],
 		"ior": 1.53,
 		"phase": 0
@@ -93,7 +94,7 @@
 		// Perfect Glass
 		"id": 6,
 		"type": "Refract",
-        "albedo" : [1.0, 1.0, 1.0],
+        "albedo" : [1, 1, 1],
         "medium" : 1
 	}],
 

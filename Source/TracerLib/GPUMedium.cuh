@@ -73,10 +73,16 @@ inline Vector3 GPUMedium::Transmittance(float distance) const
     if(sigmaT == Zero) return Vector3(1.0f);
     if(distance == INFINITY) return Zero;
 
-    Vector3 result = -sigmaT * distance;
+    Vector3 result = (-sigmaT) * distance;
+    result[0] = expf(result[0]);
+    result[1] = expf(result[1]);
+    result[2] = expf(result[2]);
 
-    result[0] = exp(result[0]);
-    result[1] = exp(result[1]);
-    result[2] = exp(result[2]);
+    //printf("%f, %f, %f --- %f, %f, %f --- %f, %f, %f -- %f\n", 
+    //       result[0], result[1], result[2],
+    //       result2[0], result2[1], result2[2],
+    //       sigmaT[0], sigmaT[1], sigmaT[2],
+    //       distance);
+
     return result;
 }

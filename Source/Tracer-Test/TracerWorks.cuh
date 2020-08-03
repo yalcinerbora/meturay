@@ -102,7 +102,9 @@ PathTracerWork<M, P, S>::PathTracerWork(const GPUMaterialGroupI& mg,
 template<class M, class P, SurfaceFunc<M, P> S>
 uint8_t PathTracerWork<M,P,S>::OutRayCount() const
 { 
-    if(materialGroup.SampleStrategyCount() != 0)
+    if(materialGroup.IsSpecularGroup())
+        return materialGroup.SampleStrategyCount();
+    else if(materialGroup.SampleStrategyCount() != 0)
         return materialGroup.SampleStrategyCount() + ((neeOn) ? 1 : 0);
     return 0;
 }

@@ -201,7 +201,7 @@ template<class T>
 __device__ __host__
 inline Ray<T>& Ray<T>::ReflectSelf(const Vector<3, T>& normal)
 {
-    Vector<3, T> nDir = -direction;
+    Vector<3, T> nDir = direction;
     direction = (static_cast<T>(2.0) * nDir.Dot(normal) * normal - nDir);
     return *this;
 }
@@ -211,17 +211,34 @@ __device__ __host__
 inline bool Ray<T>::Refract(Ray& out, const Vector<3, T>& normal,
                             T fromMedium, T toMedium) const
 {
-    T cosTetha = -normal.Dot(direction);
-    T indexRatio = fromMedium / toMedium;
+    // Convention of wi (ray.direction) and normal is as follows
+    //          wo (out.direction)
+    //          ^
+    //         /
+    //        /    toMedium (IOR)
+    //--------------- Boundary
+    //     /  |    fromMedium (IOR)
+    //    /   |
+    //   /    |
+    //  v     v
+    //  wi  normal
 
-    T delta = static_cast<T>(1.0) - indexRatio * indexRatio * (static_cast<T>(1.0) - cosTetha * cosTetha);
-    if(delta > static_cast<T>(0.0))
-    {
-        out.direction = indexRatio * direction + normal * (cosTetha * indexRatio - sqrt(delta));
-        out.position = position;
-        return true;
-    }
-    return false;
+    constexpr T Zero = static_cast<T>(0.0);
+    constexpr T One = static_cast<T>(1.0);
+
+    T indexRatio = fromMedium / toMedium;
+    T cosIn = normal.Dot(direction);
+    T sinInSqr = max(Zero, One - cosIn * cosIn);
+    T sinOutSqr = indexRatio * indexRatio * sinInSqr;
+    T cosOut = sqrt(max(Zero, One - sinOutSqr));
+
+    // Check total internal reflection
+    if(sinOutSqr >= One) return false;
+
+    out.direction = (indexRatio * (-direction) +
+                     (indexRatio * cosIn - cosOut) * normal);
+    out.position = position;
+    return true;
 }
 
 template<class T>
@@ -229,16 +246,10 @@ __device__ __host__
 inline bool Ray<T>::RefractSelf(const Vector<3, T>& normal,
                                 T fromMedium, T toMedium)
 {
-    T cosTetha = -normal.Dot(direction);
-    T indexRatio = fromMedium / toMedium;
-
-    T delta = static_cast<T>(1.0) - indexRatio * indexRatio * (static_cast<T>(1.0) - cosTetha * cosTetha);
-    if(delta > static_cast<T>(0.0))
-    {
-        direction = indexRatio * direction + normal * (cosTetha * indexRatio - sqrt(delta));
-        return true;
-    }
-    return false;
+    Ray<T> outRay;
+    bool result = Refract(outRay, normal, fromMedium, toMedium);
+    direction = outRay.direction;
+    return result;
 }
 
 template<class T>

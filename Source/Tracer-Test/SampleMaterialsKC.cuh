@@ -174,60 +174,79 @@ Vector3 RefractSample(// Sampled Output
     // Fetch Mat
     Vector3 albedo = matData.dAlbedo[matId];
     uint32_t mediumIndex = matData.mediumIndices[matId];
-    float iOIR = matData.dMediums[mediumIndex].IOR();
+    float iIOR = matData.dMediums[mediumIndex].IOR();
+    float dIOR = matData.dMediums[0].IOR();
 
     const Vector3& normal = surface.normal;
     const Vector3& position = pos;
 
     // Check if we are exiting or entering
-    float nDotL = wi.Dot(normal);
-    bool entering = (nDotL <= 0.0f);
+    float nDotI = wi.Dot(normal);
+    bool entering = (nDotI >= 0.0f);
 
     // Determine medium index of refractions
     float fromMedium = m.IOR();
-    float toMedium = (entering) ? iOIR : 1.0f;
+    float toMedium = (entering) ? iIOR : dIOR;    
+
+    // Normal also needs to be on the same side of the surface for the funcs
+    // to work
+    Vector3 refNormal = (entering) ? normal : (-normal);
     
     // Calculate Frenel Term
-    float f = TracerFunctions::FrenelDielectric(abs(nDotL), fromMedium, toMedium);
+    float f = TracerFunctions::FrenelDielectric(abs(nDotI), fromMedium, toMedium);
+
+    if(!(f <= 1.0f && f >= 0.0f))
+    {
+        printf("frenel %f\n", f);
+    }
 
     // Sample ray according to the frenel term
     float xi = GPUDistribution::Uniform<float>(rng);
-    //if(xi < f)
-    //{
-    //    // RNG choose to sample Reflection case
-    //    wo = RayF(wi, position).Reflect(normal);
-    //    // Frenel term is used to sample thus pdf is f
-    //    pdf = f;
-    //    // We reflected off of surface no medium change
-    //    outMedium = m;
-    //}
-    //else
+    if(xi < f)
     {
-        // Refraction is choosen to sample
+        // RNG choose to sample Reflection case
+        wo = RayF(wi, position).Reflect(refNormal);
+        wo.AdvanceSelf(MathConstants::Epsilon, refNormal);
+        // Frenel term is used to sample thus pdf is f
+        pdf = f;
+        // We reflected off of surface no medium change
+        outMedium = m;
+
+        float nDotL = wo.getDirection().Dot(refNormal);
+        return f * albedo;
+    }
+    else
+    {
+        //pdf = (1.0f - f);
+        //return Zero3;
+
+        // Refraction is choosen
         // Convert wi, refract func needs 
         // the direction to be towards surface    
-        RayF rayIn(-wi, position);
-        // Normal also needs to be on the same side of the surface for the func
-        Vector3 refNormal = (entering) ? normal : (-normal);
+        RayF rayIn(wi, position);
         // Get refracted ray
         bool refracted = rayIn.Refract(wo, refNormal, fromMedium, toMedium);
-        // Since Frenel term is used to sample
+        // Since Frenel term is used to sample,
         // code should not arrive here (raise exception)
-        //if(!refracted)
-        //{
-        //    __threadfence();
-        //    __trap(); 
-        //}
+        if(!refracted)
+        {
+            printf("CUDA Fatal Error: RefractMat reflected!\n");
+            __threadfence();
+            __trap(); 
+        }
 
-        // Return medium
+        // We passed the boundary 
+        // advance towards opposite direction
+        wo.AdvanceSelf(MathConstants::Epsilon, -refNormal);
+        
+        pdf = 1.0f - f;
+
+        // Change medium
         uint32_t outMediumIndex = (entering) ? mediumIndex : 0;
         outMedium = matData.dMediums[outMediumIndex];
 
-        // Frenel term is used to sample thus pdf is (1-f)
-        pdf = 1.0f;// -f;
+        return albedo * (1.0f - f);
     }
-    // return radiance factor
-    return albedo;
 }
 
 __device__ inline
