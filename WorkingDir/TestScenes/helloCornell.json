@@ -56,7 +56,6 @@
 		// Light Boundary Material
 		"id": 1,
 		"type": "LightConstant",
-		//"radiance" : [4400, 4400, 4400]
 		"radiance" : [150, 150, 150]
     },
 	{

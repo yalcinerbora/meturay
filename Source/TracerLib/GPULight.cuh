@@ -400,7 +400,7 @@ inline void PointLight::Sample(// Output
 {
     direction = (position - worldLoc);
     distance = direction.Length();
-    direction /= distance;
+    direction *= (1.0f / distance);
     pdf = (distance * distance); 
     //pdf = 1.0f;
 }

@@ -23,23 +23,29 @@
 		"scattering": [0, 0, 0],
 		"ior": 1,
 		"phase": 0
+	},
+	{
+		"id": 1,		
+		"absorption": [0.2075, 0.0825, 0.1615],
+		"scattering": [0, 0, 0],
+		"ior": 1.0,
+		"phase": 0
 	}],
 
 	"Lights": [
-	{
-		"type": "rectangular",
-		"material": 1,
-		// Value
-		"position": [-5.371554, 7.565777, -0.362448],
-		"v0" : [-1.5, -2.12132, 1.5],
-		"v1" : [4.24264, 0, 4.24264]
-	}
 	// {
-	// 	"id": 0,
-	//  "material": 1,
-	// 	"type": "primitive",
-	// 	"primitive": 2,
+	// 	"type": "rectangular",
+	// 	"material": 1,
+	// 	// Value
+	// 	"position": [-5.371554, 7.565777, -0.362448],
+	// 	"v0" : [-1.5, -2.12132, 1.5],
+	// 	"v1" : [4.24264, 0, 4.24264]
 	// }
+	{
+		"type": "primitive",
+	 	"material": 1,
+		"primitive": 2
+	}
 	],
 
 	"Transforms":[
@@ -58,14 +64,14 @@
 		"id": 0,
         "type": "Emissive",
 		"radiance" : [0, 0, 0]
+		//"radiance" : [1, 1, 1]
+		
     },
     {
 		// Light Boundary Material
 		"id": 1,
 		"type": "LightConstant",
 		"radiance" : [15, 15, 15]
-		//"radiance" : [330, 330, 330]
-		//"radiance" : [1.1, 1.1, 1.1]
     },
 	{
 		// Green Diffuse Mat
@@ -78,7 +84,14 @@
 		"id": 3,
 		"type": "Lambert",
 		"albedo" : [0.5, 0.5, 0.5]
-    }],
+	},
+	{
+		// Perfect Glass
+		"id": 6,
+		"type": "Refract",
+        "albedo" : [1, 1, 1],
+        "medium" : 1
+	}],
 
 	"Primitives":[
 	{
@@ -117,13 +130,13 @@
 		"material": 3,
         "primitive": 0
 	},
-	// {
-	// 	// Light
-	// 	"transform": 0,
-	// 	"accelerator": 1,
-	// 	"material": 1,
-    //     "primitive": 2
-	// },
+	{
+		// Light
+		"transform": 0,
+		"accelerator": 1,
+		"material": 1,
+        "primitive": 2
+	},
 	{
 		// Dragon
 		"transform": 0,

@@ -23,6 +23,13 @@
 		"scattering": [0, 0, 0],
 		"ior": 1,
 		"phase": 0
+	},
+	{
+		"id": 1,
+		"absorption": [0.2075, 0.0825, 0.1615],
+		"scattering": [0, 0, 0],
+		"ior": 1.53,
+		"phase": 0
 	}],
 
 
@@ -70,9 +77,6 @@
 		"id": 1,
 		"type": "LightConstant",
 		"radiance" : [15, 15, 15]
-		//"radiance" : [30000, 30000, 30000]
-		//"radiance" : [30, 30, 30]
-		//"radiance" : [1.1, 1.1, 1.1]
     },
 	{
 		// Green Diffuse Mat
@@ -85,7 +89,14 @@
 		"id": 3,
 		"type": "Lambert",
 		"albedo" : [0.5, 0.5, 0.5]
-    }],
+	},
+	{
+		// Perfect Glass
+		"id": 6,
+		"type": "Refract",
+        "albedo" : [1, 1, 1],
+        "medium" : 1
+	}],
 
 	"Primitives":[
 	{

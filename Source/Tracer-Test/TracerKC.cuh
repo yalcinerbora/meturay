@@ -279,8 +279,8 @@ inline void PathWork(// Output
 
     // Check Russian Roulette
     float avgThroughput = auxOut.radianceFactor.Dot(Vector3f(0.333f));
-    if(auxOut.depth <= gRenderState.rrStart ||
-       !RussianRoulette(auxOut.radianceFactor, avgThroughput, rng))
+    //if(auxOut.depth <= gRenderState.rrStart ||
+    //   !RussianRoulette(auxOut.radianceFactor, avgThroughput, rng))
     {
         // Write Ray
         RayReg rayOut;
@@ -293,7 +293,7 @@ inline void PathWork(// Output
         auxOut.type =(specularMat) ? RayType::SPECULAR_PATH_RAY : RayType::PATH_RAY;
         gOutRayAux[PATH_RAY_INDEX] = auxOut;
     }
-    else InvalidRayWrite(PATH_RAY_INDEX);
+    //else InvalidRayWrite(PATH_RAY_INDEX);
 
     // Dont launch NEE if not requested
     if((!gRenderState.nee) ||
