@@ -59,6 +59,10 @@ class GPUMaterialGroup
         bool                            HasMaterial(uint32_t materialId) const override;
         uint32_t                        InnerId(uint32_t materialId) const override;
         const CudaGPU&                  GPU() const override;
+
+
+        virtual bool                    IsSpecularGroup() const override;
+        virtual void                    AttachGlobalMediumArray(const GPUMedium*) override;
 };
 
 template <class D, class S, 
@@ -126,6 +130,26 @@ const CudaGPU& GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::GPU() const
 {
     return gpu;
 }
+
+template <class D, class S,
+    SampleFunc<D, S> SF,
+    EvaluateFunc<D, S> EF,
+    EmissionFunc<D, S> EmF,
+    IsEmissiveFunc<D> IEF,
+    AcquireUVList<D, S> AF>
+bool GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::IsSpecularGroup() const
+{
+    return false;
+}
+
+template <class D, class S,
+    SampleFunc<D, S> SF,
+    EvaluateFunc<D, S> EF,
+    EmissionFunc<D, S> EmF,
+    IsEmissiveFunc<D> IEF,
+    AcquireUVList<D, S> AF>
+void GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::AttachGlobalMediumArray(const GPUMedium*)
+{}
 
 struct MatDataAccessor
 {

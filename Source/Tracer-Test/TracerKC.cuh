@@ -33,8 +33,9 @@ struct EmptyState {};
 
 struct PathTracerLocal
 {
-    bool     emptyPrimitive;
-    bool     emissiveMaterial;
+    bool    emptyPrimitive;
+    bool    emissiveMaterial;
+    bool    specularMaterial;
 };
 
 template <class MGroup>
@@ -127,7 +128,9 @@ inline void PathLightWork(// Output
         if(!gLocalState.emptyPrimitive)
             neeMatch &= (primId == neePrimId);
     }
-    if(neeMatch || aux.type == RayType::CAMERA_RAY)
+    if(neeMatch || 
+       aux.type == RayType::CAMERA_RAY ||
+       aux.type == RayType::SPECULAR_PATH_RAY)
     {
         const RayF& r = ray.ray;
         HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
@@ -209,6 +212,7 @@ inline void PathWork(// Output
     const RayF& r = ray.ray;
     HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
     Vector3 position = r.AdvancedPos(ray.tMax);
+    Vector3 wi = -r.getDirection().Normalize();
     GPUMedium m = gRenderState.mediumList[aux.mediumIndex];
     // Outputs
     RayReg rayOut = {};
@@ -223,7 +227,7 @@ inline void PathWork(// Output
     if(emissiveMaterial)
     {
         Vector3 emission = MGroup::Emit(// Input
-                                        -r.getDirection(),
+                                        wi,
                                         position,
                                         m,
                                         //
@@ -246,7 +250,7 @@ inline void PathWork(// Output
     Vector3 reflectance = MGroup::Sample(// Outputs
                                          rayPath, pdfPath, outM,
                                          // Inputs
-                                         -r.getDirection(),
+                                         wi,
                                          position,
                                          m,
                                          //
@@ -286,7 +290,8 @@ inline void PathWork(// Output
     else InvalidRayWrite(PATH_RAY_INDEX);
 
     // Dont launch NEE if not requested
-    if(!gRenderState.nee) return;
+    if((!gRenderState.nee) ||
+       gLocalState.specularMaterial) return;
 
     // NEE Ray Generation
     float pdfLight, lDistance;
@@ -309,7 +314,7 @@ inline void PathWork(// Output
         // Evaluate mat for this direction
         reflectance = MGroup::Evaluate(// Input
                                        lDirection,
-                                       -r.getDirection(),
+                                       wi,
                                        position,
                                        m,
                                        //

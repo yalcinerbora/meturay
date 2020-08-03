@@ -96,6 +96,7 @@ PathTracerWork<M, P, S>::PathTracerWork(const GPUMaterialGroupI& mg,
     // Populate localData
     localData.emptyPrimitive = false;
     localData.emissiveMaterial = materialGroup.IsEmissiveGroup();
+    localData.specularMaterial = materialGroup.IsSpecularGroup();
 }
 
 template<class M, class P, SurfaceFunc<M, P> S>

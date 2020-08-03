@@ -36,8 +36,7 @@
 	{
 		"type": "primitive",
 		"material" : 1,
-		"primitive": 4,
-		"power": [1.0, 1.0, 1.0]
+		"primitive": 4
 	}
 	],
 
@@ -62,7 +61,8 @@
 		// Light Boundary Material
 		"id": 1,
 		"type": "LightConstant",
-		"radiance" : [140, 140, 140]
+		//"radiance" : [15, 15, 15]
+		"radiance" : [250, 250, 250]
     },
 	{
 		// Red Simple Material
@@ -87,7 +87,7 @@
 		"id": 5,
 		"type": "Reflect",
 		"albedo" : [1.0, 1.0, 1.0],
-		"roughness" : 1.0
+		"roughness" : 0.0
     },
     {
 		// Perfect Glass
@@ -140,13 +140,13 @@
 		"material": 5,
         "primitive": 0
 	},
-	{
-		// Sphere Front
-		"transform": 0,
-		"accelerator": 0,
-		"material": 6,
-        "primitive": 1
-	},
+	// {
+	// 	// Sphere Front
+	// 	"transform": 0,
+	// 	"accelerator": 0,
+	// 	"material": 2,
+    //     "primitive": 1
+	// },
 	// Cornell Box
     {
 		"transform": 0,

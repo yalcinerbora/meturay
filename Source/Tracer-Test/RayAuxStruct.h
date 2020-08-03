@@ -8,8 +8,8 @@
 enum class RayType : uint8_t
 {
     NEE_RAY,
-    TRANS_RAY,
-    PATH_RAY,
+    SPECULAR_PATH_RAY,
+    PATH_RAY,    
     CAMERA_RAY
 };
 

@@ -147,6 +147,7 @@ class ReflectMat final
         // NEE Related
         bool                    IsLightGroup() const override { return false; }
         bool                    IsEmissiveGroup() const override { return false; }
+        bool                    IsSpecularGroup() const override { return true; }
 
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture
@@ -196,6 +197,10 @@ class RefractMat final
         // NEE Related
         bool                    IsLightGroup() const override { return false; }
         bool                    IsEmissiveGroup() const override { return false; }
+        bool                    IsSpecularGroup() const override { return true; }
+
+        // Post initialization
+        void                    AttachGlobalMediumArray(const GPUMedium*) override;
 
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture

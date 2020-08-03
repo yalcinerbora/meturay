@@ -40,19 +40,21 @@ class GPUTracer : public GPUTracerI
         static constexpr const size_t       AlignByteCount = 128;
 
         // Max Bit Sizes for Efficient Sorting
-        const Vector2i                      maxAccelBits;
-        const Vector2i                      maxWorkBits;
+        const Vector2i                              maxAccelBits;
+        const Vector2i                              maxWorkBits;
         //
-        const uint32_t                      maxHitSize;
-        // Batches for Accelerator
-        GPUBaseAcceleratorI&                baseAccelerator;
-        const AcceleratorBatchMap&          accelBatches;
+        const uint32_t                              maxHitSize;
+        // Batches of Accelerator
+        GPUBaseAcceleratorI&                        baseAccelerator;
+        const AcceleratorBatchMap&                  accelBatches;
+        // Batches of Material
+        const std::map<NameGPUPair, GPUMatGPtr>&    materialGroups;
 
-        const std::vector<CPUTransform>&    transforms;
-        const std::vector<CPUMedium>&       mediums;
+        const std::vector<CPUTransform>&            transforms;
+        const std::vector<CPUMedium>&               mediums;
 
         // GPU Memory
-        DeviceMemory                        mediumAndTransformMemory;
+        DeviceMemory                                mediumAndTransformMemory;
 
     protected:
         // Cuda System For Kernel Calls

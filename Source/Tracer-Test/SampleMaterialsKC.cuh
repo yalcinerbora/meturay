@@ -116,16 +116,15 @@ Vector3 ReflectSample(// Sampled Output
     float roughness = data[3];
 
     const Vector3& normal = surface.normal;
-    const Vector3& position = pos;
-
     // No medium change
     outMedium = m;
-
     // Calculate Reflection   
-    if(roughness == 1.0f)
+    if(roughness == 0.0f)
     {
         // Singularity Just Reflect
-        wo = RayF(wi, position).Reflect(normal);
+        wo = RayF(wi, pos).Reflect(normal);
+        wo.AdvanceSelf(MathConstants::Epsilon, normal);
+
         pdf = 1.0f;
         return albedo;
     }

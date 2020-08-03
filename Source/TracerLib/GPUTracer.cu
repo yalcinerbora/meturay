@@ -13,6 +13,7 @@
 #include "GPUWorkI.h"
 #include "GPUTransform.h"
 #include "GPUMedium.cuh"
+#include "GPUMaterialI.h"
 
 #include "TracerDebug.h"
 
@@ -22,6 +23,7 @@ GPUTracer::GPUTracer(const CudaSystem& system,
     : cudaSystem(system)
     , baseAccelerator(*scene.BaseAccelerator())
     , accelBatches(scene.AcceleratorBatchMappings())
+    , materialGroups(scene.MaterialGroups())
     , transforms(scene.TransformsCPU())
     , mediums(scene.MediumsCPU())
     , maxAccelBits(Vector2i(Utility::FindFirstSet32(scene.MaxAccelIds()[0]) + 1,
@@ -77,6 +79,10 @@ TracerError GPUTracer::Initialize()
     CUDA_CHECK(cudaMemcpy(const_cast<GPUMedium*>(dMediums),
                           gpuMedium.data(), mediumSize,
                           cudaMemcpyHostToDevice));
+
+    // Attach Medium gpu pointer to Material Groups
+    for(const auto& mg : materialGroups)
+        mg.second->AttachGlobalMediumArray(dMediums);
 
     // Attach Transform gpu pointer to the Accelerator Batches
     for(const auto& acc : accelBatches)
