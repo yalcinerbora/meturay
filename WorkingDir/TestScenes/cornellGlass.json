@@ -28,7 +28,7 @@
 		"id": 1,
 		"absorption": [0.15, 0.15, 0.1],
 		"scattering": [0, 0, 0],
-		"ior": 1,
+		"ior": 1.53,
 		"phase": 0
 	}],
 
@@ -140,13 +140,13 @@
 		"material": 5,
         "primitive": 0
 	},
-	// {
-	// 	// Sphere Front
-	// 	"transform": 0,
-	// 	"accelerator": 0,
-	// 	"material": 2,
-    //     "primitive": 1
-	// },
+	{
+		// Sphere Front
+		"transform": 0,
+		"accelerator": 0,
+		"material": 6,
+        "primitive": 1
+	},
 	// Cornell Box
     {
 		"transform": 0,

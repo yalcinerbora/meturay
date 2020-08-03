@@ -192,7 +192,7 @@ template<class T>
 __device__ __host__
 inline Ray<T> Ray<T>::Reflect(const Vector<3, T>& normal) const
 {
-    Vector<3, T> nDir = -direction;
+    Vector<3, T> nDir = direction;
     nDir = static_cast<T>(2.0) * nDir.Dot(normal) * normal - nDir;
     return Ray(nDir, position);
 }

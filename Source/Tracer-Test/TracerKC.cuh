@@ -182,7 +182,8 @@ inline void PathWork(// Output
 {
     // Check Material Sample Strategy
     uint32_t sampleCount = maxOutRay;
-    bool emissiveMaterial = gLocalState.emissiveMaterial;
+    bool emissiveMat = gLocalState.emissiveMaterial;
+    bool specularMat = gLocalState.specularMaterial;
     static int PATH_RAY_INDEX = 0;
     static int NEE_RAY_INDEX = 1;
     
@@ -224,7 +225,7 @@ inline void PathWork(// Output
     Vector3 radianceFactor = aux.radianceFactor * transFactor;
 
     // Sample the emission if avail
-    if(emissiveMaterial)
+    if(emissiveMat)
     {
         Vector3 emission = MGroup::Emit(// Input
                                         wi,
@@ -284,7 +285,7 @@ inline void PathWork(// Output
         rayOut.Update(gOutRays, PATH_RAY_INDEX);
         
         // Write Aux
-        auxOut.type = RayType::PATH_RAY;
+        auxOut.type =(specularMat) ? RayType::SPECULAR_PATH_RAY : RayType::PATH_RAY;
         gOutRayAux[PATH_RAY_INDEX] = auxOut;
     }
     else InvalidRayWrite(PATH_RAY_INDEX);

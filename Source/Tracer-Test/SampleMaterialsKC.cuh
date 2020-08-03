@@ -192,16 +192,16 @@ Vector3 RefractSample(// Sampled Output
 
     // Sample ray according to the frenel term
     float xi = GPUDistribution::Uniform<float>(rng);
-    if(xi < f)
-    {
-        // RNG choose to sample Reflection case
-        wo = RayF(wi, position).Reflect(normal);
-        // Frenel term is used to sample thus pdf is f
-        pdf = f;
-        // We reflected off of surface no medium change
-        outMedium = m;
-    }
-    else
+    //if(xi < f)
+    //{
+    //    // RNG choose to sample Reflection case
+    //    wo = RayF(wi, position).Reflect(normal);
+    //    // Frenel term is used to sample thus pdf is f
+    //    pdf = f;
+    //    // We reflected off of surface no medium change
+    //    outMedium = m;
+    //}
+    //else
     {
         // Refraction is choosen to sample
         // Convert wi, refract func needs 
@@ -213,18 +213,18 @@ Vector3 RefractSample(// Sampled Output
         bool refracted = rayIn.Refract(wo, refNormal, fromMedium, toMedium);
         // Since Frenel term is used to sample
         // code should not arrive here (raise exception)
-        if(!refracted)
-        {
-            __threadfence();
-            __trap(); 
-        }
+        //if(!refracted)
+        //{
+        //    __threadfence();
+        //    __trap(); 
+        //}
 
         // Return medium
         uint32_t outMediumIndex = (entering) ? mediumIndex : 0;
         outMedium = matData.dMediums[outMediumIndex];
 
         // Frenel term is used to sample thus pdf is (1-f)
-        pdf = 1.0f - f;
+        pdf = 1.0f;// -f;
     }
     // return radiance factor
     return albedo;
