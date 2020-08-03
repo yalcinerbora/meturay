@@ -31,6 +31,11 @@ struct PathTracerGlobal : public DirectTracerGlobal
 // No Local State
 struct EmptyState {};
 
+struct AmbientOcclusionGlobal : public DirectTracerGlobal
+{
+    float               maxDistance;
+};
+
 struct PathTracerLocal
 {
     bool    emptyPrimitive;
@@ -155,7 +160,7 @@ inline void PathLightWork(// Output
         // And accumulate pixel
         // and add as a sample
         Vector3f total = emission * radianceFactor;
-        ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));        
+        ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
     }
 }
 
@@ -349,4 +354,56 @@ inline void PathWork(// Output
         gOutBoundKeys[NEE_RAY_INDEX] = matLight;
     }
     else InvalidRayWrite(NEE_RAY_INDEX);
+}
+
+
+template <class MGroup>
+__device__
+inline void AOMissWork(// Output
+                       HitKey* gOutBoundKeys,
+                       RayGMem* gOutRays,
+                       RayAuxAO* gOutRayAux,
+                       const uint32_t maxOutRay,
+                       // Input as registers                         
+                       const RayReg& ray,
+                       const RayAuxAO& aux,
+                       const typename MGroup::Surface& surface,
+                       const TexCoords* uvs,
+                       // I-O
+                       EmptyState& gLocalState,
+                       AmbientOcclusionGlobal& gRenderState,
+                       RandomGPU& rng,
+                       // Constants
+                       const typename MGroup::Data& gMatData,
+                       const HitKey matId,
+                       const PrimitiveId primId)
+{
+    // We did not hit anything just accumulate accumulate
+    auto& img = gRenderState.gImage;
+    ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(aux.aoFactor, 1.0f));
+}
+
+template <class MGroup>
+__device__
+inline void AOWork(// Output
+                   HitKey* gOutBoundKeys,
+                   RayGMem* gOutRays,
+                   RayAuxAO* gOutRayAux,
+                   const uint32_t maxOutRay,
+                   // Input as registers                         
+                   const RayReg& ray,
+                   const RayAuxAO& aux,
+                   const typename MGroup::Surface& surface,
+                   const TexCoords* uvs,
+                   // I-O
+                   EmptyState& gLocalState,
+                   AmbientOcclusionGlobal& gRenderState,
+                   RandomGPU& rng,
+                   // Constants
+                   const typename MGroup::Data& gMatData,
+                   const HitKey matId,
+                   const PrimitiveId primId)
+{
+
+    // Pre-calculate ndotL
 }

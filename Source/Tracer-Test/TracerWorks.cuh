@@ -86,6 +86,51 @@ class PathTracerLightWork
         
 };
 
+template<class MGroup, class PGroup, 
+         SurfaceFunc<MGroup, PGroup> SFunc>
+class AmbientOcclusionWork 
+    : public GPUWorkBatch<AmbientOcclusionGlobal, EmptyState, RayAuxAO,
+                          MGroup, PGroup, SFunc, AOWork<MGroup>>
+{
+    public:
+        const char*                     Type() const override { return TypeName(); }
+
+    private:
+    protected:
+    public:
+        // Constrcutors & Destructor
+                                        AmbientOcclusionWork(const GPUMaterialGroupI& mg,
+                                                            const GPUPrimitiveGroupI& pg);
+                                        ~AmbientOcclusionWork() = default;
+
+        void                            GetReady() override {}
+        uint8_t                         OutRayCount() const override { return 1; }
+        
+};
+
+template<class MGroup, class PGroup, 
+         SurfaceFunc<MGroup, PGroup> SFunc>
+class AmbientOcclusionMissWork 
+    : public GPUWorkBatch<AmbientOcclusionGlobal, EmptyState, RayAuxAO,
+                          MGroup, PGroup, SFunc, AOMissWork<MGroup>>
+{
+    public:
+        const char*                     Type() const override { return TypeName(); }
+
+    private:
+    protected:
+    public:
+        // Constrcutors & Destructor
+                                        AmbientOcclusionMissWork(const GPUMaterialGroupI& mg,
+                                                                 const GPUPrimitiveGroupI& pg);
+                                        ~AmbientOcclusionMissWork() = default;
+
+        void                            GetReady() override {}
+        uint8_t                         OutRayCount() const override { return 1; }
+        
+};
+
+
 template<class M, class P, SurfaceFunc<M, P> S>
 PathTracerWork<M, P, S>::PathTracerWork(const GPUMaterialGroupI& mg,
                                         const GPUPrimitiveGroupI& pg,
@@ -121,6 +166,18 @@ PathTracerLightWork<M, P, S>::PathTracerLightWork(const GPUMaterialGroupI& mg,
     localData.emptyPrimitive = emptyPrimitive;
     localData.emissiveMaterial = materialGroup.IsEmissiveGroup();
 }
+
+template<class M, class P, SurfaceFunc<M, P> S>
+AmbientOcclusionWork<M, P, S>::AmbientOcclusionWork(const GPUMaterialGroupI& mg,
+                                                    const GPUPrimitiveGroupI& pg)
+    : GPUWorkBatch(mg, pg)
+{}
+
+template<class M, class P, SurfaceFunc<M, P> S>
+AmbientOcclusionMissWork<M, P, S>::AmbientOcclusionMissWork(const GPUMaterialGroupI& mg,
+                                                            const GPUPrimitiveGroupI& pg)
+    : GPUWorkBatch(mg, pg)
+{}
 
 // Basic Tracer Work Batches
 extern template class DirectTracerWork<ConstantMat,

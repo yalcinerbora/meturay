@@ -15,7 +15,12 @@ enum class RayType : uint8_t
 
 struct RayAuxBasic
 {
-    // Pixel index
+    uint32_t        pixelIndex;
+};
+
+struct RayAuxAO
+{
+    Vector3f        aoFactor;
     uint32_t        pixelIndex;
 };
 
