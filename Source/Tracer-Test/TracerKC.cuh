@@ -230,7 +230,7 @@ inline void PathWork(// Output
     Vector3 radianceFactor = aux.radianceFactor * transFactor;
 
     // Sample the emission if avail
-    if(emissiveMat)
+    if(emissiveMat)    
     {
         Vector3 emission = MGroup::Emit(// Input
                                         wi,

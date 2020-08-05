@@ -63,8 +63,8 @@
 		// General Boundary Material
 		"id": 0,
         "type": "Emissive",
-		//"radiance" : [0, 0, 0]
-		"radiance" : [1, 1, 1]
+		"radiance" : [0, 0, 0]
+		//"radiance" : [1, 1, 1]
 		
     },
     {
@@ -141,7 +141,7 @@
 		// Dragon
 		"transform": 0,
 		"accelerator": 0,
-		"material": 6,
+		"material": 2,
         "primitive": 1
 	}]
 }

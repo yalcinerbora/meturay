@@ -231,8 +231,9 @@ Vector3 RefractSample(// Sampled Output
         if(!refracted)
         {
             printf("CUDA Fatal Error: RefractMat reflected!\n");
-            __threadfence();
-            __trap(); 
+            return Zero3;
+            //__threadfence();
+            //__trap(); 
         }
 
         // We passed the boundary 
