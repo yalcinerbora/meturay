@@ -68,7 +68,7 @@ inline HitResult TriangleClosestHit(// Output
                                                      position0,
                                                      position1,
                                                      position2,
-                                                     true);
+                                                     false);
     // Check if the hit is closer
     bool closerHit = intersects && (newT < rayData.tMax);
     if(closerHit)

@@ -45,13 +45,15 @@ class MockNode
 {
     public:
         static constexpr uint32_t       MAX_BOUNCES = 15;
-        static constexpr int            SAMPLE_COUNT = 5;
+        static constexpr int            SAMPLE_COUNT = 2;
 
         //static constexpr Vector2i       IMAGE_RESOLUTION = {16, 9};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 18};
+        static constexpr Vector2i       IMAGE_RESOLUTION = {32, 32};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {640, 360};
-        static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {900, 900};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1600, 900};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1920, 1080};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {3840, 2160};
@@ -176,10 +178,12 @@ inline void MockNode::Work()
 class SimpleTracerSetup
 {
     private:        
-        static constexpr Vector2i           SCREEN_RESOLUTION = {1280, 720};
+        //static constexpr Vector2i           SCREEN_RESOLUTION = {1280, 720};
+        static constexpr Vector2i           SCREEN_RESOLUTION = {900, 900};
        
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
+        static constexpr PixelFormat        WINDOW_PIXEL_FORMAT = PixelFormat::RGB8_UNORM;
 
         static constexpr const char*        ESTIMATOR_TYPE = "BasicEstimator";
         static constexpr const char*        TRACER_TYPE = "BasicTracer";
@@ -320,7 +324,7 @@ inline bool SimpleTracerSetup::Init()
     visorOpts.fpsLimit = 24.0f;
 
     visorOpts.wSize = SCREEN_RESOLUTION;
-    visorOpts.wFormat = IMAGE_PIXEL_FORMAT;
+    visorOpts.wFormat = WINDOW_PIXEL_FORMAT;
 
 
     visorOpts.iFormat = IMAGE_PIXEL_FORMAT;
@@ -332,6 +336,9 @@ inline bool SimpleTracerSetup::Init()
 
     // Set Window Res wrt to monitor resolution
     Vector2i newImgSize = 3 * visorView->MonitorResolution() / 5;
+    float ratio = static_cast<float>(newImgSize[1]) / SCREEN_RESOLUTION[1];
+    newImgSize[0] = static_cast<int>(SCREEN_RESOLUTION[0] * ratio);
+    newImgSize[1] = static_cast<int>(SCREEN_RESOLUTION[1] * ratio);
     visorView->SetWindowSize(newImgSize);
 
     // Generate Tracer Object

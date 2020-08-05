@@ -595,12 +595,61 @@ VisorGL::VisorGL(const VisorOptions& opts)
     // Pixel of WindowFBO
     // Full precision output
     // TODO: make it to utilize vOpts.wFormat
-    glfwWindowHint(GLFW_RED_BITS, 32);
-    glfwWindowHint(GLFW_GREEN_BITS, 32);
-    glfwWindowHint(GLFW_BLUE_BITS, 32);
+    int rBits = 0, 
+        gBits = 0, 
+        bBits = 0, 
+        aBits = 0;
+    switch(vOpts.wFormat)
+    {
+        case PixelFormat::RGBA8_UNORM:
+            aBits = 8;
+        case PixelFormat::RGB8_UNORM:
+            bBits = 8;
+        case PixelFormat::RG8_UNORM:
+            gBits = 8;
+        case PixelFormat::R8_UNORM:
+            rBits = 8;
+            break;              
+        case PixelFormat::RGBA16_UNORM:
+            aBits = 16;
+        case PixelFormat::RGB16_UNORM:
+            bBits = 16;
+        case PixelFormat::RG16_UNORM:
+            gBits = 16;
+        case PixelFormat::R16_UNORM:
+            rBits = 16;
+            break;                
+        case PixelFormat::RGBA_HALF:
+            aBits = 16;
+        case PixelFormat::RGB_HALF:
+            bBits = 16;
+        case PixelFormat::RG_HALF:
+            gBits = 16;
+        case PixelFormat::R_HALF:
+            rBits = 16;
+            break;
+        case PixelFormat::RGBA_FLOAT:
+            aBits = 32;
+        case PixelFormat::RGB_FLOAT:
+            bBits = 32;
+        case PixelFormat::RG_FLOAT:
+            gBits = 32;
+        case PixelFormat::R_FLOAT:
+            rBits = 32;
+            break;
+        default:
+            aBits = 8;
+            bBits = 8;
+            gBits = 8;
+            rBits = 8;
+            break;
+    }
+    glfwWindowHint(GLFW_RED_BITS, rBits);
+    glfwWindowHint(GLFW_GREEN_BITS, gBits);
+    glfwWindowHint(GLFW_BLUE_BITS, bBits);
+    glfwWindowHint(GLFW_ALPHA_BITS, aBits);
 
-    // No depth buffer or stencil buffer etc
-    glfwWindowHint(GLFW_ALPHA_BITS, 0);
+    // No depth buffer or stencil buffer etc    
     glfwWindowHint(GLFW_DEPTH_BITS, 0);
     glfwWindowHint(GLFW_STENCIL_BITS, 0);
 
