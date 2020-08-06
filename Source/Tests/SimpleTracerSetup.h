@@ -45,15 +45,15 @@ class MockNode
 {
     public:
         static constexpr uint32_t       MAX_BOUNCES = 15;
-        static constexpr int            SAMPLE_COUNT = 4;
+        static constexpr int            SAMPLE_COUNT = 5;
 
         //static constexpr Vector2i       IMAGE_RESOLUTION = {16, 9};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 18};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 32};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {640, 360};
-        static constexpr Vector2i       IMAGE_RESOLUTION = {900, 900};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {900, 900};
+        static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1600, 900};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1920, 1080};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {3840, 2160};
@@ -178,8 +178,8 @@ inline void MockNode::Work()
 class SimpleTracerSetup
 {
     private:        
-        //static constexpr Vector2i           SCREEN_RESOLUTION = {1280, 720};
-        static constexpr Vector2i           SCREEN_RESOLUTION = {900, 900};
+        static constexpr Vector2i           SCREEN_RESOLUTION = {1280, 720};
+        //static constexpr Vector2i           SCREEN_RESOLUTION = {900, 900};
        
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
