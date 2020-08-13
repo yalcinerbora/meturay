@@ -29,6 +29,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AssimpSurfaceLoaders", "Ass
 		{DFCD1274-CD37-4E84-A1DC-96F619B04EEA} = {DFCD1274-CD37-4E84-A1DC-96F619B04EEA}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Materials", "Materials\Materials.vcxproj", "{439AAD9E-E3DE-49EE-ABB0-263B5079C845}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -93,6 +95,12 @@ Global
 		{12AD8912-B00E-4C8C-B4F1-5F6190919129}.Release|x64.Build.0 = Release|x64
 		{12AD8912-B00E-4C8C-B4F1-5F6190919129}.Release|x86.ActiveCfg = Release|Win32
 		{12AD8912-B00E-4C8C-B4F1-5F6190919129}.Release|x86.Build.0 = Release|Win32
+		{439AAD9E-E3DE-49EE-ABB0-263B5079C845}.Debug|x64.ActiveCfg = Debug|x64
+		{439AAD9E-E3DE-49EE-ABB0-263B5079C845}.Debug|x64.Build.0 = Debug|x64
+		{439AAD9E-E3DE-49EE-ABB0-263B5079C845}.Debug|x86.ActiveCfg = Debug|x64
+		{439AAD9E-E3DE-49EE-ABB0-263B5079C845}.Release|x64.ActiveCfg = Release|x64
+		{439AAD9E-E3DE-49EE-ABB0-263B5079C845}.Release|x64.Build.0 = Release|x64
+		{439AAD9E-E3DE-49EE-ABB0-263B5079C845}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

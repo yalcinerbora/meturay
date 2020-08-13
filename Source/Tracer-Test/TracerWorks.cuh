@@ -1,8 +1,8 @@
 #pragma once
 
 
-#include "BasicMaterials.cuh"
-#include "SampleMaterials.cuh"
+#include "Materials/BasicMaterials.cuh"
+#include "Materials/SampleMaterials.cuh"
 #include "TracerKC.cuh"
 
 #include "TracerLib/WorkPool.h"

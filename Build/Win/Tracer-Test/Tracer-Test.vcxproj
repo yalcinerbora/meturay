@@ -11,9 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\BasicMaterials.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerWorks.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\SampleMaterials.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\PathTracer.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\TestPools.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\RayTracer.cu">
@@ -22,14 +20,9 @@
     <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterials.cuh" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterialsKC.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\DirectTracer.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\SampleMaterials.cuh" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\SampleMaterialsKC.cuh" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialDataStructs.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\RayAuxStruct.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\PathTracer.h" />
     <ClInclude Include="..\..\..\Source\Tracer-Test\TestPools.h" />
@@ -43,6 +36,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Materials\Materials.vcxproj">
+      <Project>{439aad9e-e3de-49ee-abb0-263b5079c845}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">
       <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
     </ProjectReference>

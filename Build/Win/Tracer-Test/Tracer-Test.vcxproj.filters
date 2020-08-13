@@ -4,9 +4,6 @@
     <Filter Include="Implementations">
       <UniqueIdentifier>{982ec2ab-3283-4dc1-83de-9076a6d53e38}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Materials">
-      <UniqueIdentifier>{0ec570b7-f444-4297-a87b-57a990522f63}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Structs">
       <UniqueIdentifier>{088fecb1-e7ee-4557-8487-173064731f30}</UniqueIdentifier>
     </Filter>
@@ -21,9 +18,6 @@
     <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu">
       <Filter>Implementations</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\BasicMaterials.cu">
-      <Filter>Materials</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\Tracer-Test\TestPools.cu" />
     <CudaCompile Include="..\..\..\Source\Tracer-Test\PathTracer.cu">
       <Filter>Tracers</Filter>
@@ -37,25 +31,13 @@
     <CudaCompile Include="..\..\..\Source\Tracer-Test\DirectTracer.cu">
       <Filter>Tracers</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\SampleMaterials.cu">
-      <Filter>Materials</Filter>
-    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h">
       <Filter>Implementations</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterials.cuh">
-      <Filter>Materials</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\BasicMaterialsKC.cuh">
-      <Filter>Materials</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\RayAuxStruct.h">
-      <Filter>Structs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\MaterialDataStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\TestPools.h" />
@@ -70,12 +52,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\DirectTracer.h">
       <Filter>Tracers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\SampleMaterials.cuh">
-      <Filter>Materials</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\SampleMaterialsKC.cuh">
-      <Filter>Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Tracer-Test\TracerKC.cuh">
       <Filter>Works</Filter>

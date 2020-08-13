@@ -1,6 +1,5 @@
 #pragma once
 
-#include "RayAuxStruct.h"
 #include "MaterialDataStructs.h"
 
 #include "RayLib/Constants.h"

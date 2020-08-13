@@ -3,7 +3,6 @@
 struct RayReg;
 class RandomGPU;
 
-#include "RayAuxStruct.h"
 #include "MaterialDataStructs.h"
 
 #include "RayLib/Constants.h"

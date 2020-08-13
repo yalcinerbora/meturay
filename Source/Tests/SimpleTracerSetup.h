@@ -45,7 +45,7 @@ class MockNode
 {
     public:
         static constexpr uint32_t       MAX_BOUNCES = 15;
-        static constexpr int            SAMPLE_COUNT = 5;
+        static constexpr int            SAMPLE_COUNT = 2;
 
         //static constexpr Vector2i       IMAGE_RESOLUTION = {16, 9};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 18};
@@ -187,12 +187,14 @@ class SimpleTracerSetup
 
         static constexpr const char*        ESTIMATOR_TYPE = "BasicEstimator";
         static constexpr const char*        TRACER_TYPE = "BasicTracer";
+        
+        static constexpr const char*        MATERIAL_DLL = "SampleMaterials";
+        static constexpr const char*        SAMPLE_MAT_POOL_GEN = "GenerateSampleMaterialPool";
+        static constexpr const char*        SAMPLE_MAT_POOL_DEL = "DeleteSampleMaterialPool";
 
         static constexpr const char*        TRACER_DLL = "Tracer-Test";
         static constexpr const char*        TRACER_LOGIC_POOL_GEN = "GenerateTestTracerPool";
         static constexpr const char*        TRACER_LOGIC_POOL_DEL = "DeleteTestTracerPool";
-        static constexpr const char*        TRACER_MAT_POOL_GEN = "GenerateTestMaterialPool";
-        static constexpr const char*        TRACER_MAT_POOL_DEL = "DeleteTestMaterialPool";
 
         static constexpr const char*        SURF_LOAD_DLL = "AssimpSurfaceLoaders";
         static constexpr const char*        SURF_LOAD_GEN = "GenerateAssimpPool";
@@ -272,8 +274,8 @@ inline bool SimpleTracerSetup::Init()
         TRACER_PARAMETERS
     };   
     // Load Materials from Test-Material Shared Library
-    DLLError dllE = generator.IncludeMaterialsFromDLL(TRACER_DLL, ".*",
-                                                      SharedLibArgs{TRACER_MAT_POOL_GEN, TRACER_MAT_POOL_DEL});
+    DLLError dllE = generator.IncludeMaterialsFromDLL(MATERIAL_DLL, ".*",
+                                                      SharedLibArgs{SAMPLE_MAT_POOL_GEN, SAMPLE_MAT_POOL_DEL});
     ERROR_CHECK(DLLError, dllE);
     // Load Tracer Logics from Test-Material Shared Library
     dllE = generator.IncludeTracersFromDLL(TRACER_DLL, ".*",
