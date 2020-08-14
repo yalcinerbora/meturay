@@ -4,11 +4,11 @@
 // Basic Tracer Work Batches
 template class DirectTracerWork<ConstantMat,
                                 GPUPrimitiveEmpty,
-                                EmptySurfaceFromEmpty>;
+                                EmptySurfaceFromAny<GPUPrimitiveEmpty>>;
 
 template class DirectTracerWork<ConstantMat,
                                 GPUPrimitiveTriangle,
-                                EmptySurfaceFromTri>;
+                                EmptySurfaceFromAny<GPUPrimitiveTriangle>>;
 
 template class DirectTracerWork<BarycentricMat,
                                 GPUPrimitiveTriangle,
@@ -16,7 +16,7 @@ template class DirectTracerWork<BarycentricMat,
 //
 template class DirectTracerWork<ConstantMat,
                                 GPUPrimitiveSphere,
-                                EmptySurfaceFromSphr>;
+                                EmptySurfaceFromAny<GPUPrimitiveSphere>>;
 
 template class DirectTracerWork<SphericalMat,
                                 GPUPrimitiveSphere,
@@ -25,15 +25,15 @@ template class DirectTracerWork<SphericalMat,
 // Path Tracer Work Batches
 template class PathTracerWork<EmissiveMat,
                               GPUPrimitiveEmpty,
-                              EmptySurfaceFromEmpty>;
+                              EmptySurfaceFromAny<GPUPrimitiveEmpty>>;
 
 template class PathTracerWork<EmissiveMat,
                               GPUPrimitiveTriangle,
-                              EmptySurfaceFromTri>;
+                              EmptySurfaceFromAny<GPUPrimitiveTriangle>>;
 
 template class PathTracerWork<EmissiveMat,
                               GPUPrimitiveSphere,
-                              EmptySurfaceFromSphr>;
+                              EmptySurfaceFromAny<GPUPrimitiveSphere>>;
 //
 template class PathTracerWork<LambertMat,
                               GPUPrimitiveTriangle,
@@ -62,25 +62,25 @@ template class PathTracerWork<RefractMat,
 // Path Tracer Light Work Batches
 template class PathTracerLightWork<LightMatConstant,
                                    GPUPrimitiveEmpty,
-                                   EmptySurfaceFromEmpty>;
+                                   EmptySurfaceFromAny<GPUPrimitiveEmpty>>;
 template class PathTracerLightWork<LightMatConstant,
                                    GPUPrimitiveTriangle,
-                                   EmptySurfaceFromTri>;
+                                   EmptySurfaceFromAny<GPUPrimitiveTriangle>>;
 template class PathTracerLightWork<LightMatConstant,
                                    GPUPrimitiveSphere,
-                                   EmptySurfaceFromSphr>;
+                                   EmptySurfaceFromAny<GPUPrimitiveSphere>>;
 template class PathTracerLightWork<LightMatTextured,
                                    GPUPrimitiveTriangle,
-                                   BasicUVSurfaceFromTri>;
+                                   UVSurfaceFromTri>;
 template class PathTracerLightWork<LightMatTextured,
                                    GPUPrimitiveSphere,
-                                   BasicUVSurfaceFromSphr>;
+                                   UVSurfaceFromSphr>;
 template class PathTracerLightWork<LightMatCube,
                                    GPUPrimitiveEmpty,
-                                   EmptySurfaceFromEmpty>;
+                                   EmptySurfaceFromAny<GPUPrimitiveEmpty>>;
 template class PathTracerLightWork<LightMatCube,
                                    GPUPrimitiveTriangle,
-                                   EmptySurfaceFromTri>;
+                                   EmptySurfaceFromAny<GPUPrimitiveTriangle>>;
 template class PathTracerLightWork<LightMatCube,
                                    GPUPrimitiveSphere,
-                                   EmptySurfaceFromSphr>;
+                                   EmptySurfaceFromAny<GPUPrimitiveSphere>>;

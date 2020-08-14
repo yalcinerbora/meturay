@@ -24,6 +24,23 @@ class GPUPrimitiveGroupP
         PrimitiveD dData = PrimitiveD{};
 };
 
+template <class Surface, class PGroup>
+using SurfaceGenFunc = Surface(*)(const typename PGroup::PrimitiveData&,
+                                  const typename PGroup::HitData&,
+                                  PrimitiveId);
+
+template <class Surface>
+struct SurfaceType
+{
+    using type = Surface;
+};
+
+template<class S, class P>
+using SurfaceGenerator = std::pair<S, SurfaceGenFunc<S, P>>;
+
+//template <class P, class... Args>
+//using SurfaceList = std::tuple<SurfaceGenerator<Args, P>...>;
+
 template <class HitD, class PrimitiveD, class LeafD,
           AcceptHitFunction<HitD, PrimitiveD, LeafD> HitF,
           LeafGenFunction<PrimitiveD, LeafD> LeafF,
@@ -49,15 +66,33 @@ class GPUPrimitiveGroup
 
     private:
     protected:
-
+        
+       
     public:
         // Constructors & Destructor
                             GPUPrimitiveGroup() = default;
         virtual             ~GPUPrimitiveGroup() = default;
 
         uint32_t            PrimitiveHitSize() const override { return sizeof(HitData); };
+
+        template<class Surface>
+        SurfaceGenFunc<Surface, GPUPrimitiveGroup>    SurfaceFunction(SurfaceType<Surface>);
+
 };
 
+template <class HD, class PD, class LD, AcceptHitFunction<HD, PD, LD> HF, 
+          LeafGenFunction<PD, LD> LF, BoxGenFunction<PD> BF, 
+          AreaGenFunction<PD> AF, CenterGenFunction<PD> CF>
+template<class Surface>
+SurfaceGenFunc<Surface, GPUPrimitiveGroup<HD, PD, LD, HF, LF, BF, AF, CF>> 
+GPUPrimitiveGroup<HD, PD, LD, HF, LF, BF, AF, CF>::SurfaceFunction(SurfaceType<Surface> s)
+{
+    // Traverse the tuple
+
+
+    // WHAT THE FUCK
+    return nullptr;
+}
 
 struct PrimDataAccessor
 {

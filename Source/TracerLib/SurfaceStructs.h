@@ -1,8 +1,17 @@
 #pragma once
+/**
+
+List of Sample Surface Definitions
+and surface generation functions for sample primitives
+
+*/
 
 #include "GPUPrimitiveSphere.h"
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveEmpty.h"
+
+struct EmptySurface
+{};
 
 struct BarySurface
 {
@@ -19,16 +28,28 @@ struct BasicSurface
     Vector3 normal;
 };
 
-struct BasicUVSurface
+struct UVSurface
 {
     Vector3 normal;
     Vector2 uv;
 };
 
-struct EmptySurface
-{};
+struct TangentUVSurface
+{
+    Vector4 normalU;
+    Vector4 tangentV;
+};
 
 // Surface Functions
+template <class Primitive>
+__device__ __host__
+inline EmptySurface EmptySurfaceFromAny(const typename Primitive::PrimitiveData& pData,
+                                        const typename Primitive::HitData& hData,
+                                        PrimitiveId id)
+{
+    return EmptySurface{};
+}
+
 __device__ __host__
 inline BarySurface BarySurfaceFromTri(const GPUPrimitiveTriangle::PrimitiveData& pData,
                                       const GPUPrimitiveTriangle::HitData& hData,
@@ -37,7 +58,7 @@ inline BarySurface BarySurfaceFromTri(const GPUPrimitiveTriangle::PrimitiveData&
     Vector3 baryCoord = Vector3(hData[0],
                                 hData[1],
                                 1 - hData[0] - hData[1]);
-    return {baryCoord};
+    return BarySurface{baryCoord};
 }
 
 __device__ __host__
@@ -61,13 +82,13 @@ inline BasicSurface BasicSurfaceFromTri(const GPUPrimitiveTriangle::PrimitiveDat
     Vector3 nAvg = (baryCoord[0] * n0 +
                     baryCoord[1] * n1 +
                     baryCoord[2] * n2);
-    return {nAvg};
+    return BasicSurface{nAvg};
 }
 
 __device__ __host__
-inline BasicUVSurface BasicUVSurfaceFromTri(const GPUPrimitiveTriangle::PrimitiveData& pData,
-                                            const GPUPrimitiveTriangle::HitData& hData,
-                                            PrimitiveId id)
+inline UVSurface UVSurfaceFromTri(const GPUPrimitiveTriangle::PrimitiveData& pData,
+                                  const GPUPrimitiveTriangle::HitData& hData,
+                                  PrimitiveId id)
 {
 
     uint64_t index0 = pData.indexList[id * 3 + 0];
@@ -92,15 +113,7 @@ inline BasicUVSurface BasicUVSurfaceFromTri(const GPUPrimitiveTriangle::Primitiv
     Vector2 uvAvg = (baryCoord[0] * uv0 +
                      baryCoord[1] * uv1 +
                      baryCoord[2] * uv2);
-    return {nAvg, uvAvg};
-}
-
-__device__ __host__
-inline EmptySurface EmptySurfaceFromTri(const GPUPrimitiveTriangle::PrimitiveData& pData,
-                                        const GPUPrimitiveTriangle::HitData& hData,
-                                        PrimitiveId id)
-{
-    return {};
+    return UVSurface{nAvg, uvAvg};
 }
 
 __device__ __host__
@@ -116,13 +129,13 @@ inline BasicSurface BasicSurfaceFromSphr(const GPUPrimitiveSphere::PrimitiveData
     Vector3 normal = Vector3(sin(hData[0]) * cos(hData[1]),
                               sin(hData[0]) * sin(hData[1]),
                               cos(hData[0]));   
-    return {normal};
+    return BasicSurface{normal};
 }
 
 __device__ __host__
-inline BasicUVSurface BasicUVSurfaceFromSphr(const GPUPrimitiveSphere::PrimitiveData& pData,
-                                             const GPUPrimitiveSphere::HitData& hData,
-                                             PrimitiveId id)
+inline UVSurface UVSurfaceFromSphr(const GPUPrimitiveSphere::PrimitiveData& pData,
+                                   const GPUPrimitiveSphere::HitData& hData,
+                                   PrimitiveId id)
 {
     Vector4f data = pData.centerRadius[id + 0];
     Vector3f center = data;
@@ -139,15 +152,7 @@ inline BasicUVSurface BasicUVSurfaceFromSphr(const GPUPrimitiveSphere::Primitive
     // phi is [0, pi], normalize 
     uv[1] /= MathConstants::Pi; 
 
-    return {normal, uv};
-}
-
-__device__ __host__
-inline EmptySurface EmptySurfaceFromSphr(const GPUPrimitiveSphere::PrimitiveData& pData,
-                                         const GPUPrimitiveSphere::HitData& hData,
-                                         PrimitiveId id)
-{
-    return {};
+    return UVSurface{normal, uv};
 }
 
 __device__ __host__
@@ -155,13 +160,5 @@ inline SphrSurface SphrSurfaceFromSphr(const GPUPrimitiveSphere::PrimitiveData& 
                                        const GPUPrimitiveSphere::HitData& hData,
                                        PrimitiveId id)
 {
-    return { hData };
-}
-
-__device__ __host__
-inline EmptySurface EmptySurfaceFromEmpty(const GPUPrimitiveEmpty::PrimitiveData& pData,
-                                          const GPUPrimitiveEmpty::HitData& hData,
-                                          PrimitiveId id)
-{
-    return {};
+    return SphrSurface{hData};
 }

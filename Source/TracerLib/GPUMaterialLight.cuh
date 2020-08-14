@@ -59,12 +59,12 @@ class LightMatConstant final
 };
 
 class LightMatTextured final 
-    : public GPUMaterialGroup<LightMatTexData, BasicUVSurface,
-                              SampleEmpty<LightMatTexData, BasicUVSurface>,
-                              EvaluateEmpty<LightMatTexData, BasicUVSurface>,
+    : public GPUMaterialGroup<LightMatTexData, UVSurface,
+                              SampleEmpty<LightMatTexData, UVSurface>,
+                              EvaluateEmpty<LightMatTexData, UVSurface>,
                               EmitLightTex,
                               IsEmissiveTrue<LightMatTexData>,
-                              AcquireUVEmpty<LightMatTexData, BasicUVSurface>>
+                              AcquireUVEmpty<LightMatTexData, UVSurface>>
     , public LightMaterialI
 {
     public:

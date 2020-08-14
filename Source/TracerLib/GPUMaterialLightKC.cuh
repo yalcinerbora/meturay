@@ -47,7 +47,7 @@ Vector3 EmitLightTex(// Input
                      const Vector3& pos,
                      const GPUMedium& m,
                      //
-                     const BasicUVSurface& surface,
+                     const UVSurface& surface,
                      const TexCoords* uvs,
                      // Constants
                      const LightMatTexData& matData,
