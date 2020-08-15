@@ -16,8 +16,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MVisor", "MVisor\MVisor.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MTracer", "MTracer\MTracer.vcxproj", "{554D0B15-5FE8-448F-82DC-95237E034154}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MRenderer", "MRenderer\MRenderer.vcxproj", "{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tracers", "Tracers", "{2EAF14DD-D88F-42DE-A731-EA7901227CE1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TracerLib", "TracerLib\TracerLib.vcxproj", "{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}"
@@ -30,6 +28,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AssimpSurfaceLoaders", "Ass
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Materials", "Materials\Materials.vcxproj", "{439AAD9E-E3DE-49EE-ABB0-263B5079C845}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MRay", "MRay\MRay.vcxproj", "{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,12 +69,6 @@ Global
 		{554D0B15-5FE8-448F-82DC-95237E034154}.Release|x64.ActiveCfg = Release|x64
 		{554D0B15-5FE8-448F-82DC-95237E034154}.Release|x64.Build.0 = Release|x64
 		{554D0B15-5FE8-448F-82DC-95237E034154}.Release|x86.ActiveCfg = Release|x64
-		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Debug|x64.ActiveCfg = Debug|x64
-		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Debug|x64.Build.0 = Debug|x64
-		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Debug|x86.ActiveCfg = Debug|x64
-		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Release|x64.ActiveCfg = Release|x64
-		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Release|x64.Build.0 = Release|x64
-		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Release|x86.ActiveCfg = Release|x64
 		{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}.Debug|x64.ActiveCfg = Debug|x64
 		{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}.Debug|x64.Build.0 = Debug|x64
 		{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}.Debug|x86.ActiveCfg = Debug|x64
@@ -101,6 +95,12 @@ Global
 		{439AAD9E-E3DE-49EE-ABB0-263B5079C845}.Release|x64.ActiveCfg = Release|x64
 		{439AAD9E-E3DE-49EE-ABB0-263B5079C845}.Release|x64.Build.0 = Release|x64
 		{439AAD9E-E3DE-49EE-ABB0-263B5079C845}.Release|x86.ActiveCfg = Release|x64
+		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Debug|x64.ActiveCfg = Debug|x64
+		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Debug|x64.Build.0 = Debug|x64
+		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Debug|x86.ActiveCfg = Debug|x64
+		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Release|x64.ActiveCfg = Release|x64
+		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Release|x64.Build.0 = Release|x64
+		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
