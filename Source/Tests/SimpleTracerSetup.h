@@ -185,7 +185,7 @@ class SimpleTracerSetup
         static constexpr const char*        SAMPLE_MAT_POOL_GEN = "GenerateSampleMaterialPool";
         static constexpr const char*        SAMPLE_MAT_POOL_DEL = "DeleteSampleMaterialPool";
 
-        static constexpr const char*        TRACER_DLL = "Tracer-Test";
+        static constexpr const char*        TRACER_DLL = "SampleTracers";
         static constexpr const char*        TRACER_LOGIC_POOL_GEN = "GenerateTestTracerPool";
         static constexpr const char*        TRACER_LOGIC_POOL_DEL = "DeleteTestTracerPool";
 

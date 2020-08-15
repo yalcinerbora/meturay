@@ -6,6 +6,8 @@ Many Constants that are used throught the tracer
 */
 
 #include <limits>
+#include <array>
+
 #include "Vector.h"
 #include "TracerStructs.h"
 #include "VisorInputStructs.h"
@@ -13,6 +15,29 @@ Many Constants that are used throught the tracer
 
 namespace ProgramConstants
 {
+    static constexpr std::array<std::array<const char*, 3>, 5> ContributorList =
+    {
+        std::array<const char*, 3>{"Bora Yalciner", "METU, Turkey", "yalciner.bora@metu.edu.tr"},
+    };
+
+    static const std::string ContributorCompaq = "Yalciner B.";
+
+    static const std::string ProgramName = "METURay";
+    static const std::string VersionMajor = "0";
+    static const std::string VersionMinor = "1";
+
+    static const std::string Version = ("v" + VersionMajor + "."
+                                        + ((VersionMinor.size() == 1) ? "0" : "")
+                                        + VersionMinor);
+
+    static const std::string LicenseName = "MIT";
+    static const std::string Footer = ("This executable is provided as a part of " + ProgramName
+                                       + " " + Version + " which is developed by "
+                                       + ContributorCompaq + " and offered with " + LicenseName
+                                       + " License. Please check *_LICENSE files for used third-party "
+                                       + "licenses");
+
+
 
 }
 

@@ -27,7 +27,8 @@
 #include "RayLib/TracerError.h"
 #include "RayLib/TracerOptions.h"
 
-#include <cxxopts.hpp>
+#include <CLI11.hpp>
+#include <array>
 
 class SelfNode
     : public VisorCallbacksI
@@ -48,23 +49,50 @@ int main(int argc, const char* argv[])
 {
     // Fancy CMD
     EnableVTMode();
-    
-    // Parse Logic Pools
-    
-    cxxopts::Options options("MRay", "MTracer & MVisor combined executable");
 
-    options.add_options()
-        ("c,config", "Configuration json file");
+    std::array<int, 2> resolution;
+    std::string tracerConfig;
+    std::string visorConfig;
 
-    try
+    // Header
+    const std::string BundleName = ProgramConstants::ProgramName;
+    const std::string AppName = "MRay";
+    const std::string Description = "Single Platform CPU Renderer and Visualizer";
+    const std::string header = (BundleName + " - " + AppName + " " + Description);
+
+    // Command Line Arguments
+    CLI::App app{header};
+    app.footer(ProgramConstants::Footer);
+    app.add_option("-t,--tracerConfig", tracerConfig, "Tracer Configuration json File")
+        ->required()
+        ->expected(1)
+        ->check(CLI::ExistingFile);
+    app.add_option("-v,--visorConfig", visorConfig, "Visor Configuration json File")
+        ->required()
+        ->expected(1)
+        ->check(CLI::ExistingFile);   
+    app.add_option("-r, --resolution", resolution, "Initial Image Resolution")
+        ->required()
+        ->expected(1)
+        ->check(CLI::Number)
+        ->delimiter('x');
+
+    if(argc == 1)
+        METU_LOG(app.help().c_str());
+    else try 
     {
-        auto result = options.parse(argc, argv);
+        app.parse((argc), (argv));
     }
-    catch(cxxopts::OptionParseException const& e)
+    catch(const CLI::ParseError& e) 
     {
-        METU_ERROR_LOG(e.what());
+        return (app).exit(e);
     }
 
+    std::cout << "Res  " << resolution[0] << "x" << resolution[1] << std::endl;
+    std::cout << "TC   " << tracerConfig << std::endl;
+    std::cout << "VC   " << visorConfig << std::endl;
+
+    return 0;
     //
 
 

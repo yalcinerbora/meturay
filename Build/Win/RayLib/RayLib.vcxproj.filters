@@ -230,6 +230,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\ColorConversion.h">
       <Filter>Utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\ConfigParsers.h">
+      <Filter>FileI-O</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

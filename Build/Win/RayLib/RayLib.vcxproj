@@ -144,6 +144,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\Camera.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ColorConversion.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CommandCallbacksI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\ConfigParsers.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Constants.h" />
     <ClInclude Include="..\..\..\Source\RayLib\HemiDistribution.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CPUTimer.h" />
