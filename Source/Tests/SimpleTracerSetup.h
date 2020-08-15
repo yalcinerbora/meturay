@@ -31,13 +31,6 @@
 #include "RayLib/TracerError.h"
 #include "RayLib/TracerOptions.h"
 
-#define ERROR_CHECK(ErrType, e) \
-if(e != ErrType::OK) \
-{\
-    METU_ERROR_LOG("%s", static_cast<std::string>(e).c_str()); \
-    return false;\
-}
-
 class MockNode
     : public VisorCallbacksI
     , public TracerCallbacksI

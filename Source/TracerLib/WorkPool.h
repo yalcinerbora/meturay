@@ -14,7 +14,7 @@ Slightly overengineered meta pool generation class
 #include "GPUMaterialI.h"
 #include "GPUPrimitiveI.h"
 
-// Simple wrapper for tuple usage (we need the type of the tuple)
+// Simple wrapper for tuple usage (we need the type of the element)
 template <class T>
 struct TypeListElement
 {

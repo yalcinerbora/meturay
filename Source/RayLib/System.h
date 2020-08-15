@@ -1,5 +1,12 @@
 #pragma once
 
+#define ERROR_CHECK(ErrType, e) \
+if(e != ErrType::OK) \
+{\
+    METU_ERROR_LOG("%s", static_cast<std::string>(e).c_str()); \
+    return false;\
+}
+
 #ifdef _WIN32
     #define METURAY_WIN
     #ifndef NOMINMAX

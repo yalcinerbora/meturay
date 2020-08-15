@@ -10,6 +10,12 @@ Many Constants that are used throught the tracer
 #include "TracerStructs.h"
 #include "VisorInputStructs.h"
 
+
+namespace ProgramConstants
+{
+
+}
+
 namespace VisorConstants
 {
     static const KeyboardKeyBindings DefaultKeyBinds =

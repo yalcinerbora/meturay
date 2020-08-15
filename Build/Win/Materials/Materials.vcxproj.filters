@@ -7,6 +7,7 @@
     <CudaCompile Include="..\..\..\Source\Materials\SampleMaterials.cu">
       <Filter>Sample</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\Materials\SampleMaterialPool.cu" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Basic">
@@ -31,8 +32,5 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\Materials\MaterialDataStructs.h" />
     <ClInclude Include="..\..\..\Source\Materials\SampleMaterialPool.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\Source\Materials\MaterialPool.cpp" />
   </ItemGroup>
 </Project>
