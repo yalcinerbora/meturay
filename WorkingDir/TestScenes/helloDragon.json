@@ -25,7 +25,7 @@
 		"phase": 0
 	},
 	{
-		"id": 1,		
+		"id": 1,
 		"absorption": [2.075, 0.825, 1.615],
 		"scattering": [0, 0, 0],
 		"ior": 1.53,
@@ -65,7 +65,7 @@
         "type": "Emissive",
 		"radiance" : [0, 0, 0]
 		//"radiance" : [1, 1, 1]
-		
+
     },
     {
 		// Light Boundary Material
@@ -114,7 +114,8 @@
 		// Object Reading (inner index i top down order of meshes)
 		"id": 1,
 		"type": "Triangle",
-        "name": "../Surfaces/stan_dragon.obj",
+		"name": "../Surfaces/stan_dragon.obj",
+		//"cullFace" : true,
 		"tag": "assimp_",
 		"innerIndex": 0
 	}],

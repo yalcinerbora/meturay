@@ -16,11 +16,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MVisor", "MVisor\MVisor.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MTracer", "MTracer\MTracer.vcxproj", "{554D0B15-5FE8-448F-82DC-95237E034154}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tracers", "Tracers", "{2EAF14DD-D88F-42DE-A731-EA7901227CE1}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TracerLib", "TracerLib\TracerLib.vcxproj", "{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tracer-Test", "Tracer-Test\Tracer-Test.vcxproj", "{96F7395D-FA00-4E97-9FB2-98881123033A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AssimpSurfaceLoaders", "AssimpSurfaceLoaders\AssimpSurfaceLoaders.vcxproj", "{12AD8912-B00E-4C8C-B4F1-5F6190919129}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -30,6 +26,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Materials", "Materials\Materials.vcxproj", "{439AAD9E-E3DE-49EE-ABB0-263B5079C845}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MRay", "MRay\MRay.vcxproj", "{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tracers", "Tracers\Tracers.vcxproj", "{96F7395D-FA00-4E97-9FB2-98881123033A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,12 +73,6 @@ Global
 		{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}.Release|x64.ActiveCfg = Release|x64
 		{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}.Release|x64.Build.0 = Release|x64
 		{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}.Release|x86.ActiveCfg = Release|x64
-		{96F7395D-FA00-4E97-9FB2-98881123033A}.Debug|x64.ActiveCfg = Debug|x64
-		{96F7395D-FA00-4E97-9FB2-98881123033A}.Debug|x64.Build.0 = Debug|x64
-		{96F7395D-FA00-4E97-9FB2-98881123033A}.Debug|x86.ActiveCfg = Debug|x64
-		{96F7395D-FA00-4E97-9FB2-98881123033A}.Release|x64.ActiveCfg = Release|x64
-		{96F7395D-FA00-4E97-9FB2-98881123033A}.Release|x64.Build.0 = Release|x64
-		{96F7395D-FA00-4E97-9FB2-98881123033A}.Release|x86.ActiveCfg = Release|x64
 		{12AD8912-B00E-4C8C-B4F1-5F6190919129}.Debug|x64.ActiveCfg = Debug|x64
 		{12AD8912-B00E-4C8C-B4F1-5F6190919129}.Debug|x64.Build.0 = Debug|x64
 		{12AD8912-B00E-4C8C-B4F1-5F6190919129}.Debug|x86.ActiveCfg = Debug|Win32
@@ -101,12 +93,15 @@ Global
 		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Release|x64.ActiveCfg = Release|x64
 		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Release|x64.Build.0 = Release|x64
 		{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}.Release|x86.ActiveCfg = Release|x64
+		{96F7395D-FA00-4E97-9FB2-98881123033A}.Debug|x64.ActiveCfg = Debug|x64
+		{96F7395D-FA00-4E97-9FB2-98881123033A}.Debug|x64.Build.0 = Debug|x64
+		{96F7395D-FA00-4E97-9FB2-98881123033A}.Debug|x86.ActiveCfg = Debug|x64
+		{96F7395D-FA00-4E97-9FB2-98881123033A}.Release|x64.ActiveCfg = Release|x64
+		{96F7395D-FA00-4E97-9FB2-98881123033A}.Release|x64.Build.0 = Release|x64
+		{96F7395D-FA00-4E97-9FB2-98881123033A}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{96F7395D-FA00-4E97-9FB2-98881123033A} = {2EAF14DD-D88F-42DE-A731-EA7901227CE1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B8FE119A-E48D-43CE-A3AF-C172D561FE1E}

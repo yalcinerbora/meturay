@@ -177,22 +177,18 @@ class SimpleTracerSetup
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
         static constexpr PixelFormat        WINDOW_PIXEL_FORMAT = PixelFormat::RGB8_UNORM;
-
-        static constexpr const char*        ESTIMATOR_TYPE = "BasicEstimator";
-        static constexpr const char*        TRACER_TYPE = "BasicTracer";
         
-        static constexpr const char*        MATERIAL_DLL = "SampleMaterials";
+        static constexpr const char*        MATERIAL_DLL = "Materials";
         static constexpr const char*        SAMPLE_MAT_POOL_GEN = "GenerateSampleMaterialPool";
         static constexpr const char*        SAMPLE_MAT_POOL_DEL = "DeleteSampleMaterialPool";
 
-        static constexpr const char*        TRACER_DLL = "SampleTracers";
+        static constexpr const char*        TRACER_DLL = "Tracers";
         static constexpr const char*        TRACER_LOGIC_POOL_GEN = "GenerateTestTracerPool";
         static constexpr const char*        TRACER_LOGIC_POOL_DEL = "DeleteTestTracerPool";
 
         static constexpr const char*        SURF_LOAD_DLL = "AssimpSurfaceLoaders";
         static constexpr const char*        SURF_LOAD_GEN = "GenerateAssimpPool";
         static constexpr const char*        SURF_LOAD_DEL = "DeleteAssimpPool";
-
 
         static constexpr TracerParameters   TRACER_PARAMETERS = 
         {

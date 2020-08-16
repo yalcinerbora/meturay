@@ -29,6 +29,12 @@ using SurfaceDataLoaders = std::vector<std::unique_ptr<SurfaceDataLoaderI>>;
 // Triangle Memory Layout
 struct TriData
 {
+    // Kinda Perf Hog but most memory efficient
+    // Binary search cull face for each prim
+    const bool* cullFace;
+    const uint64_t* primOffsets;
+    uint32_t primBatchCount;
+
     const Vector4f* positionsU;
     const Vector4f* normalsV;
     const uint64_t* indexList;
@@ -50,6 +56,28 @@ inline HitResult TriangleClosestHit(// Output
                                     const DefaultLeaf& leaf,
                                     const TriData& primData)
 {
+    // Simple Binary Search to determine
+    // cull flag from primitiveId
+    auto BinSearchCull = [&primData](PrimitiveId id)
+    {
+        int32_t start = 0;
+        int32_t end = primData.primBatchCount;
+        while(start <= end)
+        {
+            int32_t mid = (start + end) / 2;            
+            uint64_t current = primData.primOffsets[mid];
+            uint64_t next = primData.primOffsets[mid + 1];
+            if(id >= current && id < next)
+                return primData.cullFace[mid];
+            else if(id < current)
+                end = mid - 1;
+            else if(id >= next)
+                start = mid + 1;            
+        }
+        // Default to true
+        return true;
+    };
+
     //if(leaf.matId.value == 0x2000002)
         //printf("PrimId %llu, MatId %x\n", leaf.primitiveId, leaf.matId.value);
 
@@ -62,13 +90,15 @@ inline HitResult TriangleClosestHit(// Output
     Vector3 position1 = primData.positionsU[index1];
     Vector3 position2 = primData.positionsU[index2];
 
+    bool cull = BinSearchCull(leaf.primitiveId);
+
     // Do Intersecton test
     Vector3 baryCoords; float newT;
     bool intersects = rayData.ray.IntersectsTriangle(baryCoords, newT,
                                                      position0,
                                                      position1,
                                                      position2,
-                                                     true);
+                                                     cull);
     // Check if the hit is closer
     bool closerHit = intersects && (newT < rayData.tMax);
     if(closerHit)
@@ -91,7 +121,6 @@ inline HitResult TriangleClosestHit(// Output
 
     return HitResult{false, closerHit};
 }
-
 
 __device__ __host__
 inline AABB3f GenerateAABBTriangle(PrimitiveId primitiveId, const TriData& primData)
@@ -157,6 +186,8 @@ class GPUPrimitiveTriangle final
         static constexpr PrimitiveDataLayout    UV_LAYOUT = PrimitiveDataLayout::FLOAT_2;
         static constexpr PrimitiveDataLayout    NORMAL_LAYOUT = PrimitiveDataLayout::FLOAT_3;
         static constexpr PrimitiveDataLayout    INDEX_LAYOUT = PrimitiveDataLayout::UINT64_1;
+
+        static constexpr const char*            CULL_FLAG_NAME = "cullFace";
 
     private:
         DeviceMemory                            memory;

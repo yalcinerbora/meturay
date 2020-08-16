@@ -280,6 +280,7 @@ inline void PathWork(// Output
     // Check Russian Roulette
     float avgThroughput = auxOut.radianceFactor.Dot(Vector3f(0.333f));
     if(auxOut.depth <= gRenderState.rrStart ||
+       gLocalState.specularMaterial ||
        !RussianRoulette(auxOut.radianceFactor, avgThroughput, rng))
     {
         // Write Ray

@@ -6,6 +6,8 @@
 #include "RayLib/SurfaceLoaderGenerator.h"
 #include "RayLib/SurfaceLoaderI.h"
 
+#include "RayLib/MemoryAlignment.h"
+
 #include <execution>
 
 // Generics
@@ -26,6 +28,9 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     SceneError e = SceneError::OK;
     std::vector<size_t> loaderVOffsets, loaderIOffsets;
 
+    std::vector<uint64_t> batchOffsets;
+    std::vector<Byte> cullFaceFlags;
+
     // Generate Loaders
     std::vector<SharedLibPtr<SurfaceLoaderI>> loaders;
     for(const auto& sPtr : surfaceDataNodes)
@@ -34,7 +39,6 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         SharedLibPtr<SurfaceLoaderI> sl(nullptr, [] (SurfaceLoaderI*)->void {});        
         if((e = loaderGen.GenerateSurfaceLoader(sl, scenePath, s, time)) != SceneError::OK)
            return e;
-
         try
         {
             loaders.emplace_back(std::move(sl));
@@ -44,6 +48,15 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             if(e.what()[0] != '\0') METU_ERROR_LOG("%s", e.what());
             return e;
         }
+
+        // Check optional cull flag
+        std::vector<bool> cullData;
+        if(s.CheckNode(CULL_FLAG_NAME))
+        {
+            cullData = s.AccessBool(CULL_FLAG_NAME);
+        }
+        else cullData.resize(s.IdCount(), true);
+        cullFaceFlags.insert(cullFaceFlags.end(), cullData.cbegin(), cullData.cend());
     }
 
     // Do sanity check for data type matching
@@ -115,6 +128,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             batchRanges.emplace(id, currentPRange);
             batchDataRanges.emplace(id, currentDRange);
             batchAABBs.emplace(id, aabbList[i]);
+            batchOffsets.push_back(currentPRange[0]);
 
             totalPrimCountOnLoader += primRange[i][1] - primRange[i][0];
             i++;
@@ -131,6 +145,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     assert(totalPrimitiveCount * 3 == totalIndexCount);
     loaderVOffsets.emplace_back(totalDataCount);
     loaderIOffsets.emplace_back(totalIndexCount);
+    batchOffsets.push_back(totalPrimitiveCount);
 
     // Now allocate to CPU then GPU
     constexpr size_t VertPosSize = PrimitiveDataLayoutToSize(POS_LAYOUT);
@@ -182,12 +197,30 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
               asd.data());
 
     // All loaded to CPU, copy to GPU
-    // Alloc
-    memory = std::move(DeviceMemory(sizeof(Vector4f) * 2 * totalDataCount +
-                                    sizeof(uint64_t) * totalIndexCount));
-    Byte* dPositionsU = static_cast<Byte*>(memory);
-    Byte* dNormalsV = static_cast<Byte*>(memory) + totalDataCount * sizeof(Vector4f);
-    Byte* dIndices = static_cast<Byte*>(memory) + totalDataCount * sizeof(Vector4f) * 2;
+    size_t posSize = sizeof(Vector4f) * totalDataCount;
+    posSize = Memory::AlignSize(posSize);
+    size_t normSize = sizeof(Vector4f) * totalDataCount;
+    normSize = Memory::AlignSize(normSize);
+    size_t indexSize = sizeof(uint64_t) * totalIndexCount;
+    indexSize = Memory::AlignSize(indexSize);
+    size_t cullSize = sizeof(bool) * batchRanges.size();
+    cullSize = Memory::AlignSize(cullSize);
+    size_t offsetSize = sizeof(uint64_t) * batchOffsets.size();
+    size_t totalSize = (posSize + normSize + indexSize + cullSize + offsetSize);
+
+    memory = std::move(DeviceMemory(totalSize));
+    size_t offset = 0;
+    Byte* dPositionsU = static_cast<Byte*>(memory) + offset;
+    offset += posSize;
+    Byte* dNormalsV = static_cast<Byte*>(memory) + offset;
+    offset += normSize;
+    Byte* dIndices = static_cast<Byte*>(memory) + offset;
+    offset += indexSize;
+    Byte* dCulls = static_cast<Byte*>(memory) + offset;
+    offset += cullSize;
+    Byte* dOffsets = static_cast<Byte*>(memory) + offset;
+    offset += offsetSize;
+    assert(offset == totalSize);
 
     CUDA_CHECK(cudaMemcpy2D(dPositionsU, sizeof(Vector4f),
                             postitionsCPU.data(), sizeof(float) * 3,
@@ -211,10 +244,23 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                           totalIndexCount * sizeof(uint64_t),
                           cudaMemcpyHostToDevice));
 
+    // Cull Face Flags & Prim Offsets
+    static_assert(sizeof(bool) == sizeof(Byte));
+    CUDA_CHECK(cudaMemcpy(dCulls, cullFaceFlags.data(),
+                          sizeof(bool) * cullFaceFlags.size(),
+                          cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(dOffsets, batchOffsets.data(),
+                          sizeof(uint64_t) * batchOffsets.size(),
+                          cudaMemcpyHostToDevice));
+
     // Set Main Pointers of batch
     dData.positionsU = reinterpret_cast<Vector4f*>(dPositionsU);
     dData.normalsV = reinterpret_cast<Vector4f*>(dNormalsV);
     dData.indexList = reinterpret_cast<uint64_t*>(dIndices);
+    dData.cullFace = reinterpret_cast<bool*>(dCulls);
+    dData.primOffsets = reinterpret_cast<uint64_t*>(dOffsets);
+    dData.primBatchCount = static_cast<uint32_t>(batchOffsets.size());
+    
     return e;
 }
 
