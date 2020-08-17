@@ -9,6 +9,26 @@ static constexpr uint32_t DEFAULT_TRANSFORM_INDEX = 0;
 
 using GPUTransform = Matrix4x4;
 
+class GPUTransfomI
+{
+	public:
+		virtual ~GPUTransfomI() = default;
+
+
+		Matrix4x4 Transform(uint32_t index) = 0;
+
+		//
+		virtual RayF WorldToLocal(const RayF& r) = 0;
+
+		template<class Prim>
+		virtual RayF WorldToTangent(const RayF&,
+									const typename Prim::Data& d,
+									PrimitiveId&) = 0;
+
+
+};
+
+
 // Converts to GPUTransform (Matrix4x4) also inverts the converted matrix
 // since we do not transform the primitive while calculating intersection
 // we transform the ray to the local space of the primitive
