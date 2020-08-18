@@ -10,6 +10,8 @@ using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxPrimitivePer
 
 using HitResult = Vector<2, bool>;
 
+class GPUTransformI;
+
 // This is Leaf of Base Accelerator
 // It points to another accelerator pair
 struct /*alignas(16)*/ BaseLeaf
@@ -49,6 +51,47 @@ template <class PrimitiveData, class LeafData>
 using LeafGenFunction = LeafData(*)(const HitKey matId,
                                     const PrimitiveId primitiveId,
                                     const PrimitiveData& primData);
+
+// Transformations
+//
+// Spaces
+//      World Space
+//
+//      Local(Accelerator) Space 
+//          Space that is used by the accelerator.
+//          Accelerator is defined 
+//
+//      Tangent(Primitive) Space
+//          Primitive specific state. Primitive laid down 
+//          (i.e. triangle lays down on xy plane with normal of Z)
+//          greatly reduces BxDF calculations (i.e. dot product becomes Z)
+//          hemispherical random directions are not required to b..
+//
+
+template <class PrimitiveData>
+using WorldToLocal = RayF(*)(const RayF&,
+                             const GPUTransformI&,
+                             PrimitiveId,
+                             const PrimitiveData&);
+
+template <class PrimitiveData>
+using LocalWorldToWorld = RayF(*)(const RayF&,
+                                  const GPUTransformI&,
+                                  PrimitiveId,
+                                  const PrimitiveData&);
+
+template <class PrimitiveData>
+using LocalToTangent = RayF(*)(const RayF&,
+                               const GPUTransformI&,
+                               PrimitiveId,
+                               const PrimitiveData&);
+
+template <class PrimitiveData>
+using TangentToLocal = RayF(*)(const RayF&,
+                               const GPUTransformI&,
+                               PrimitiveId,
+                               const PrimitiveData&);
+
 
 // Custom bounding box generation function
 // For primitive

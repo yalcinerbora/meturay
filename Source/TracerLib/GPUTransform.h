@@ -9,22 +9,27 @@ static constexpr uint32_t DEFAULT_TRANSFORM_INDEX = 0;
 
 using GPUTransform = Matrix4x4;
 
+// GPU Transform Holds transformation data
+// required to transform
 class GPUTransfomI
 {
+	private:
+		Matrix4x4*		dTransforms;
+
 	public:
 		virtual ~GPUTransfomI() = default;
 
 
-		Matrix4x4 Transform(uint32_t index) = 0;
+		// Sub Transformation Access
+		// Such access is needed for non-rigid transformations
+		// only accompanying primitive knows which one to use
+		// (by its transform indices and wieghts)
+		// If object is rigid
+		__device__ const Matrix4x4& operator[](int index);
 
-		//
-		virtual RayF WorldToLocal(const RayF& r) = 0;
-
-		template<class Prim>
-		virtual RayF WorldToTangent(const RayF&,
-									const typename Prim::Data& d,
-									PrimitiveId&) = 0;
-
+		// Classic Transformations
+		__device__ RayF WorldToLocal(const RayF& r) const;
+		__device__ RayF LocalToWorld(const RayF& r) const;
 
 };
 

@@ -46,23 +46,23 @@ using TriangleHit = Vector2f;
 
 class GPUTransformI;
 
-__device__ __host__
-inline RayF TriangleToTangent(const RayF&,
-                              const TriData& primData,
-                              PrimitiveId id,
-                              const GPUTransformI&)
-{
-    // Gen Tangents
-
-}
-
-inline RayF TriangleToLocal(const RayF&,
-                            const TriData& primData,
-                            PrimitiveId id,
-                            const GPUTransformI&)
-{
-
-}
+//__device__ __host__
+//inline RayF TriangleToTangent(const RayF&,
+//                              const TriData& primData,
+//                              PrimitiveId id,
+//                              const GPUTransformI&)
+//{
+//    // Gen Tangents
+//
+//}
+//
+//inline RayF TriangleToLocal(const RayF&,
+//                            const TriData& primData,
+//                            PrimitiveId id,
+//                            const GPUTransformI&)
+//{
+//
+//}
 
 // Triangle Hit Acceptance
 __device__ __host__
