@@ -69,7 +69,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
         template <class... Args, typename = std::enable_if_t<((N - sizeof...(Args)) > 1)>>
         __device__ __host__                 Vector(const Vector<N - sizeof...(Args), T>&,
                                                    const Args... dataList);
-        template <int M, typename = std::enable_if_t<(M > N)>>
+        template <int M, typename = std::enable_if_t<(M >= N)>>
         __device__ __host__                 Vector(const Vector<M, T>&);
                                             ~Vector() = default;
 

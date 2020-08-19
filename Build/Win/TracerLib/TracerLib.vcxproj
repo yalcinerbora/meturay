@@ -188,7 +188,7 @@
       <PtxAsOptionV>true</PtxAsOptionV>
       <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
       <MaxRegCount />
-      <AdditionalOptions>-Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -222,7 +222,7 @@
       <PtxAsOptionV>true</PtxAsOptionV>
       <HostDebugInfo>true</HostDebugInfo>
       <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
-      <AdditionalOptions>-Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

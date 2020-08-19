@@ -94,7 +94,7 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
         HitKey matKey = FindHitKey(accIndex, id);
 
         node.isLeaf = true;
-        node.leaf = PGroup::LeafFunc(matKey, id, primData);
+        node.leaf = PGroup::Leaf(matKey, id, primData);
         splitLoc = std::numeric_limits<size_t>::max();
     }
     else if(end - start <= Threshold_CPU_GPU)

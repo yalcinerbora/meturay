@@ -223,7 +223,7 @@ size_t GPUAccLinearGroup<PGroup>::UsedCPUMemory() const
 
 template <class PGroup>
 void GPUAccLinearGroup<PGroup>::Hit(const CudaGPU& gpu,
-                                    // O
+                                    // O                                    
                                     HitKey* dMaterialKeys,
                                     PrimitiveId* dPrimitiveIds,
                                     HitStructPtr dHitStructs,

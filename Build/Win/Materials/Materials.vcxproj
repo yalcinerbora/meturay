@@ -67,7 +67,7 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <AdditionalOptions>-Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
     <Lib>
       <AdditionalLibraryDirectories>$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration)</AdditionalLibraryDirectories>
@@ -95,7 +95,7 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <AdditionalOptions>-Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
     <Lib>
       <AdditionalLibraryDirectories>$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration)</AdditionalLibraryDirectories>

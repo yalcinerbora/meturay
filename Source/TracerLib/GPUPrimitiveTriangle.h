@@ -22,6 +22,7 @@ All of them should be provided
 #include "GPUPrimitiveP.cuh"
 #include "DeviceMemory.h"
 #include "TypeTraits.h"
+#include "GPUTransform.h"
 
 class SurfaceDataLoaderI;
 using SurfaceDataLoaders = std::vector<std::unique_ptr<SurfaceDataLoaderI>>;
@@ -34,6 +35,8 @@ struct TriData
     const bool* cullFace;
     const uint64_t* primOffsets;
     uint32_t primBatchCount;
+    // TODO: add alpha map
+
 
     const Vector4f* positionsU;
     const Vector4f* normalsV;
@@ -44,160 +47,227 @@ struct TriData
 // c is (1-a-b) thus it is not stored.
 using TriangleHit = Vector2f;
 
-class GPUTransformI;
-
-//__device__ __host__
-//inline RayF TriangleToTangent(const RayF&,
-//                              const TriData& primData,
-//                              PrimitiveId id,
-//                              const GPUTransformI&)
-//{
-//    // Gen Tangents
-//
-//}
-//
-//inline RayF TriangleToLocal(const RayF&,
-//                            const TriData& primData,
-//                            PrimitiveId id,
-//                            const GPUTransformI&)
-//{
-//
-//}
-
-// Triangle Hit Acceptance
 __device__ __host__
-inline HitResult TriangleClosestHit(// Output
-                                    HitKey& newMat,
-                                    PrimitiveId& newPrimitive,
-                                    TriangleHit& newHit,
-                                    // I-O
-                                    RayReg& rayData,
-                                    // Input
-                                    const DefaultLeaf& leaf,
-                                    const TriData& primData)
+inline static Vector3 CalculateTangent(const Vector3& p0,
+                                       const Vector3& p1,
+                                       const Vector3& p2,
+
+                                       const Vector2& uv0,
+                                       const Vector2& uv1,
+                                       const Vector2& uv2)
 {
-    // Simple Binary Search to determine
-    // cull flag from primitiveId
-    auto BinSearchCull = [&primData](PrimitiveId id)
+    // Edges (Tri is CCW)
+    Vector3 vec0 = p1 - p0;
+    Vector3 vec1 = p2 - p0;
+
+    Vector2 dUV0 = uv1 - uv0;
+    Vector2 dUV1 = uv2 - uv0;
+    
+    float t = 1.0f / (dUV0[0] * dUV1[1] -
+                      dUV1[0] * dUV0[1]);
+
+    Vector3 tangent;
+    tangent = t * (dUV1[1] * vec0 - dUV0[1] * vec1);
+    return tangent;
+}
+
+
+struct TriFunctions
+{
+    __device__ __host__
+    static inline Matrix3x3 TSMatrix(const TriangleHit& hit,
+                                     PrimitiveId id,
+                                     const TriData& primData)
     {
-        int32_t start = 0;
-        int32_t end = primData.primBatchCount;
-        while(start <= end)
-        {
-            int32_t mid = (start + end) / 2;            
-            uint64_t current = primData.primOffsets[mid];
-            uint64_t next = primData.primOffsets[mid + 1];
-            if(id >= current && id < next)
-                return primData.cullFace[mid];
-            else if(id < current)
-                end = mid - 1;
-            else if(id >= next)
-                start = mid + 1;            
-        }
-        // Default to true
-        return true;
-    };
+        // Get Position
+        uint64_t i0 = primData.indexList[id * 3 + 0];
+        uint64_t i1 = primData.indexList[id * 3 + 1];
+        uint64_t i2 = primData.indexList[id * 3 + 2];
 
-    //if(leaf.matId.value == 0x2000002)
-        //printf("PrimId %llu, MatId %x\n", leaf.primitiveId, leaf.matId.value);
+        Vector3 p0 = primData.positionsU[i0];
+        Vector3 p1 = primData.positionsU[i1];
+        Vector3 p2 = primData.positionsU[i2];
 
-    // Get Position
-    uint64_t index0 = primData.indexList[leaf.primitiveId * 3 + 0];
-    uint64_t index1 = primData.indexList[leaf.primitiveId * 3 + 1];
-    uint64_t index2 = primData.indexList[leaf.primitiveId * 3 + 2];
+        Vector3 n0 = primData.normalsV[i0];
+        Vector3 n1 = primData.normalsV[i1];
+        Vector3 n2 = primData.normalsV[i2];
 
-    Vector3 position0 = primData.positionsU[index0];
-    Vector3 position1 = primData.positionsU[index1];
-    Vector3 position2 = primData.positionsU[index2];
+        Vector2 uv0 = Vector2(primData.positionsU[i0][3],
+                              primData.normalsV[i0][3]);
+        Vector2 uv1 = Vector2(primData.positionsU[i1][3],
+                              primData.normalsV[i1][3]);
+        Vector2 uv2 = Vector2(primData.positionsU[i2][3],
+                              primData.normalsV[i2][3]);
 
-    bool cull = BinSearchCull(leaf.primitiveId);
+        // We calculate tangent once
+        // is this consistent? (should i calculate for all vertices of tri?
+        Vector3 t0 = CalculateTangent(p0, p1, p2, uv0, uv1, uv2);
+        //Vector3 t1 = CalculateTangent(p1, p2, p0, uv0, uv1, uv2);
+        //Vector3 t2 = CalculateTangent(p2, p0, p1, uv0, uv1, uv2);
+        Vector3 t1 = t0;
+        Vector3 t2 = t0;
 
-    // Do Intersecton test
-    Vector3 baryCoords; float newT;
-    bool intersects = rayData.ray.IntersectsTriangle(baryCoords, newT,
-                                                     position0,
-                                                     position1,
-                                                     position2,
-                                                     cull);
-    // Check if the hit is closer
-    bool closerHit = intersects && (newT < rayData.tMax);
-    if(closerHit)
-    {
-        rayData.tMax = newT;
-        newMat = leaf.matId;
-        newPrimitive = leaf.primitiveId;
-        newHit = Vector2(baryCoords[0], baryCoords[1]);
+        // Gram–Schmidt othonormalization
+        // This is required since normal may be skewed to hide
+        // edges (to create smooth lighting)
+        t0 = (t0 - n0 * n0.Dot(t0)).Normalize();
+        t1 = (t1 - n1 * n1.Dot(t1)).Normalize();
+        t2 = (t2 - n2 * n2.Dot(t2)).Normalize();
+
+        Vector3 b0 = Cross(n0, t0);
+        Vector3 b1 = Cross(n1, t1);
+        Vector3 b2 = Cross(n2, t2);
+
+        // Interpolate to location
+        float c = 1.0f - hit[0] - hit[1];
+        Vector3 t = t0 * hit[0] + t1 * hit[1] + t2 * c;
+        Vector3 b = b0 * hit[0] + b1 * hit[1] + b2 * c;
+        Vector3 n = n0 * hit[0] + n1 * hit[1] + n2 * c;
+
+        // Construct Matrix
+        return TransformGen::Space(t, b, n);
     }
-    //printf("ray dir{%f, %f, %f} "
-    //       "old %f new %f --- Testing Mat: %x -> {%s, %s}\n",
-    //       rayData.ray.getDirection()[0],
-    //       rayData.ray.getDirection()[1],
-    //       rayData.ray.getDirection()[2],
 
-    //       oldT, newT,
-    //       leaf.matId.value, 
-    //       closerHit ? "Close!" : "      ",
-    //       intersects ? "Intersects!" : "           ");
+    // Triangle Hit Acceptance
+    __device__ __host__
+    static inline HitResult Hit(// Output
+                                HitKey& newMat,
+                                PrimitiveId& newPrimitive,
+                                TriangleHit& newHit,
+                                // I-O
+                                RayReg& rayData,
+                                // Input
+                                const DefaultLeaf& leaf,
+                                const TriData& primData)
+    {
+        // Simple Binary Search to determine
+        // cull flag from primitiveId
+        auto BinSearchCull = [&primData](PrimitiveId id)
+        {
+            int32_t start = 0;
+            int32_t end = primData.primBatchCount;
+            while(start <= end)
+            {
+                int32_t mid = (start + end) / 2;            
+                uint64_t current = primData.primOffsets[mid];
+                uint64_t next = primData.primOffsets[mid + 1];
+                if(id >= current && id < next)
+                    return primData.cullFace[mid];
+                else if(id < current)
+                    end = mid - 1;
+                else if(id >= next)
+                    start = mid + 1;            
+            }
+            // Default to true
+            return true;
+        };
 
-    return HitResult{false, closerHit};
-}
+        //if(leaf.matId.value == 0x2000002)
+            //printf("PrimId %llu, MatId %x\n", leaf.primitiveId, leaf.matId.value);
 
-__device__ __host__
-inline AABB3f GenerateAABBTriangle(PrimitiveId primitiveId, const TriData& primData)
-{
-    // Get Position
-    uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
-    uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
-    uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
+        // Get Position
+        uint64_t index0 = primData.indexList[leaf.primitiveId * 3 + 0];
+        uint64_t index1 = primData.indexList[leaf.primitiveId * 3 + 1];
+        uint64_t index2 = primData.indexList[leaf.primitiveId * 3 + 2];
 
-    Vector3 position0 = primData.positionsU[index0];
-    Vector3 position1 = primData.positionsU[index1];
-    Vector3 position2 = primData.positionsU[index2];
+        Vector3 position0 = primData.positionsU[index0];
+        Vector3 position1 = primData.positionsU[index1];
+        Vector3 position2 = primData.positionsU[index2];
 
-    return Triangle::BoundingBox(position0, position1, position2);
-}
+        bool cull = BinSearchCull(leaf.primitiveId);
 
-__device__ __host__
-inline float GenerateAreaTriangle(PrimitiveId primitiveId, const TriData& primData)
-{
-    // Get Position
-    uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
-    uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
-    uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
+        // Do Intersecton test
+        Vector3 baryCoords; float newT;
+        bool intersects = rayData.ray.IntersectsTriangle(baryCoords, newT,
+                                                         position0,
+                                                         position1,
+                                                         position2,
+                                                         cull);
+        // Check if the hit is closer
+        bool closerHit = intersects && (newT < rayData.tMax);
+        if(closerHit)
+        {
+            rayData.tMax = newT;
+            newMat = leaf.matId;
+            newPrimitive = leaf.primitiveId;
+            newHit = Vector2(baryCoords[0], baryCoords[1]);
+        }
+        //printf("ray dir{%f, %f, %f} "
+        //       "old %f new %f --- Testing Mat: %x -> {%s, %s}\n",
+        //       rayData.ray.getDirection()[0],
+        //       rayData.ray.getDirection()[1],
+        //       rayData.ray.getDirection()[2],
 
-    Vector3 position0 = primData.positionsU[index0];
-    Vector3 position1 = primData.positionsU[index1];
-    Vector3 position2 = primData.positionsU[index2];
+        //       oldT, newT,
+        //       leaf.matId.value, 
+        //       closerHit ? "Close!" : "      ",
+        //       intersects ? "Intersects!" : "           ");
 
-    // CCW
-    Vector3 vec0 = position1 - position0;
-    Vector3 vec1 = position2 - position0;
+        return HitResult{false, closerHit};
+    }
 
-    return Cross(vec0, vec1).Length() * 0.5f;
-}
+    __device__ __host__
+    static inline AABB3f AABB(PrimitiveId primitiveId, const TriData& primData)
+    {
+        // Get Position
+        uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
+        uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
+        uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
 
-__device__ __host__
-inline Vector3 GenerateCenterTriangle(PrimitiveId primitiveId, const TriData& primData)
-{
-    // Get Position
-    uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
-    uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
-    uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
+        Vector3 position0 = primData.positionsU[index0];
+        Vector3 position1 = primData.positionsU[index1];
+        Vector3 position2 = primData.positionsU[index2];
 
-    Vector3 position0 = primData.positionsU[index0];
-    Vector3 position1 = primData.positionsU[index1];
-    Vector3 position2 = primData.positionsU[index2];
+        return Triangle::BoundingBox(position0, position1, position2);
+    }
 
-    return position0 * 0.33333f +
-        position1 * 0.33333f +
-        position2 * 0.33333f;
-}
+    __device__ __host__
+    static inline float Area(PrimitiveId primitiveId, const TriData& primData)
+    {
+        // Get Position
+        uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
+        uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
+        uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
+
+        Vector3 position0 = primData.positionsU[index0];
+        Vector3 position1 = primData.positionsU[index1];
+        Vector3 position2 = primData.positionsU[index2];
+
+        // CCW
+        Vector3 vec0 = position1 - position0;
+        Vector3 vec1 = position2 - position0;
+
+        return Cross(vec0, vec1).Length() * 0.5f;
+    }
+
+    __device__ __host__
+    static inline Vector3 Center(PrimitiveId primitiveId, const TriData& primData)
+    {
+        // Get Position
+        uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
+        uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
+        uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
+
+        Vector3 position0 = primData.positionsU[index0];
+        Vector3 position1 = primData.positionsU[index1];
+        Vector3 position2 = primData.positionsU[index2];
+
+        return (position0 * 0.33333f +
+                position1 * 0.33333f +
+                position2 * 0.33333f);
+    }
+
+    static constexpr auto Leaf = GenerateDefaultLeaf<TriData>;
+    static constexpr auto LocalToWorld = ToLocalSpace<TriData>;
+    static constexpr auto WorldToLocal = FromLocalSpace<TriData>;
+};
 
 class GPUPrimitiveTriangle final
     : public GPUPrimitiveGroup<TriangleHit, TriData, DefaultLeaf,
-                               TriangleClosestHit, GenerateDefaultLeaf,
-                               GenerateAABBTriangle, GenerateAreaTriangle,
-                               GenerateCenterTriangle>
+                               TriFunctions::Hit, TriFunctions::Leaf,
+                               TriFunctions::AABB, TriFunctions::Area,
+                               TriFunctions::Center, TriFunctions::LocalToWorld,
+                               TriFunctions::WorldToLocal, TriFunctions::TSMatrix>
 {
     public:
         static constexpr const char*            TypeName() { return "Triangle"; }

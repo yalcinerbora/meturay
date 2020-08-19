@@ -24,45 +24,62 @@ All of them should be provided
 struct EmptyData {};
 struct EmptyHit {};
 
+struct EPrimFunctions
+{
+
 // Triangle Hit Acceptance
-__device__ __host__
-inline HitResult EmptyClosestHit(// Output
-                                 HitKey& newMat,
-                                 PrimitiveId& newPrimitive,
-                                 EmptyHit& newHit,
-                                 // I-O
-                                 RayReg& rayData,
-                                 // Input
-                                 const EmptyLeaf& leaf,
-                                 const EmptyData& primData)
-{
-    return HitResult{false, -FLT_MAX};
-}
+    __device__ __host__
+    static inline HitResult Hit(// Output
+                                HitKey& newMat,
+                                PrimitiveId& newPrimitive,
+                                EmptyHit& newHit,
+                                // I-O
+                                RayReg& rayData,
+                                // Input
+                                const EmptyLeaf& leaf,
+                                const EmptyData& primData)
+    {
+        return HitResult{false, -FLT_MAX};
+    }
 
-__device__ __host__
-inline AABB3f GenerateAABBEmpty(PrimitiveId primitiveId, const EmptyData& primData)
-{
-    Vector3f minInf(-INFINITY);
-    return AABB3f(minInf, minInf);
-}
+    __device__ __host__
+    static inline AABB3f AABB(PrimitiveId primitiveId, const EmptyData& primData)
+    {
+        Vector3f minInf(-INFINITY);
+        return AABB3f(minInf, minInf);
+    }
 
-__device__ __host__
-inline float GenerateAreaEmpty(PrimitiveId primitiveId, const EmptyData& primData)
-{
-    return 0.0f;
-}
+    __device__ __host__
+    static inline float Area(PrimitiveId primitiveId, const EmptyData& primData)
+    {
+        return 0.0f;
+    }
 
-__device__ __host__
-inline Vector3f GenerateCenterEmpty(PrimitiveId primitiveId, const EmptyData& primData)
-{
-    return Zero3;
-}
+    __device__ __host__
+    static inline Vector3f Center(PrimitiveId primitiveId, const EmptyData& primData)
+    {
+        return Zero3;
+    }
+
+    __device__ __host__
+    static inline Matrix3x3 TSMatrix(const EmptyHit& hit,
+                                     PrimitiveId,
+                                     const EmptyData&)
+    {
+        return Indentity3x3;
+    }
+
+    static constexpr auto Leaf = GenerateEmptyLeaf<EmptyData>;
+    static constexpr auto LocalToWorld = ToLocalSpace<EmptyData>;
+    static constexpr auto WorldToLocal = FromLocalSpace<EmptyData>;
+};
 
 class GPUPrimitiveEmpty final
     : public GPUPrimitiveGroup<EmptyHit, EmptyData, EmptyLeaf,
-                               EmptyClosestHit, GenerateEmptyLeaf,
-                               GenerateAABBEmpty, GenerateAreaEmpty,
-                               GenerateCenterEmpty>
+                               EPrimFunctions::Hit, EPrimFunctions::Leaf,
+                               EPrimFunctions::AABB, EPrimFunctions::Area,
+                               EPrimFunctions::Center, EPrimFunctions::LocalToWorld,
+                               EPrimFunctions::WorldToLocal, EPrimFunctions::TSMatrix>
 {
     public:
         static constexpr const char*            TypeName() { return BaseConstants::EMPTY_PRIMITIVE_NAME; }

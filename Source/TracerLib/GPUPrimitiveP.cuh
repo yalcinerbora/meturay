@@ -29,24 +29,16 @@ using SurfaceGenFunc = Surface(*)(const typename PGroup::PrimitiveData&,
                                   const typename PGroup::HitData&,
                                   PrimitiveId);
 
-template <class Surface>
-struct SurfaceType
-{
-    using type = Surface;
-};
-
-template<class S, class P>
-using SurfaceGenerator = std::pair<S, SurfaceGenFunc<S, P>>;
-
-//template <class P, class... Args>
-//using SurfaceList = std::tuple<SurfaceGenerator<Args, P>...>;
 
 template <class HitD, class PrimitiveD, class LeafD,
           AcceptHitFunction<HitD, PrimitiveD, LeafD> HitF,
           LeafGenFunction<PrimitiveD, LeafD> LeafF,
           BoxGenFunction<PrimitiveD> BoxF,
           AreaGenFunction<PrimitiveD> AreaF,
-          CenterGenFunction<PrimitiveD> CenterF>
+          CenterGenFunction<PrimitiveD> CenterF,
+          LocalToWorlFunc<PrimitiveD> ToWorldF,
+          WorldToLocalFunc<PrimitiveD> ToLocalF,
+          TSMatrixGenFunc<PrimitiveD, HitD> TSMatrixF>
 class GPUPrimitiveGroup
     : public GPUPrimitiveGroupI
     , public GPUPrimitiveGroupP<PrimitiveD>
@@ -58,11 +50,14 @@ class GPUPrimitiveGroup
         using LeafData                      = LeafD;
         // Function Definitions
         // Used by accelerator definitions etc.
-        static constexpr auto HitFunc       = HitF;
-        static constexpr auto LeafFunc      = LeafF;
-        static constexpr auto BoxFunc       = BoxF;
-        static constexpr auto AreaFunc      = AreaF;
-        static constexpr auto CenterFunc    = CenterF;
+        static constexpr auto Hit       = HitF;
+        static constexpr auto Leaf      = LeafF;
+        static constexpr auto AABB      = BoxF;
+        static constexpr auto Area      = AreaF;
+        static constexpr auto Center    = CenterF;
+        static constexpr auto ToWorld   = ToWorldF;
+        static constexpr auto ToLocal   = ToLocalF;
+        static constexpr auto TSMatrix = TSMatrixF;
 
     private:
     protected:
@@ -74,25 +69,7 @@ class GPUPrimitiveGroup
         virtual             ~GPUPrimitiveGroup() = default;
 
         uint32_t            PrimitiveHitSize() const override { return sizeof(HitData); };
-
-        template<class Surface>
-        SurfaceGenFunc<Surface, GPUPrimitiveGroup>    SurfaceFunction(SurfaceType<Surface>);
-
 };
-
-template <class HD, class PD, class LD, AcceptHitFunction<HD, PD, LD> HF, 
-          LeafGenFunction<PD, LD> LF, BoxGenFunction<PD> BF, 
-          AreaGenFunction<PD> AF, CenterGenFunction<PD> CF>
-template<class Surface>
-SurfaceGenFunc<Surface, GPUPrimitiveGroup<HD, PD, LD, HF, LF, BF, AF, CF>> 
-GPUPrimitiveGroup<HD, PD, LD, HF, LF, BF, AF, CF>::SurfaceFunction(SurfaceType<Surface> s)
-{
-    // Traverse the tuple
-
-
-    // WHAT THE FUCK
-    return nullptr;
-}
 
 struct PrimDataAccessor
 {

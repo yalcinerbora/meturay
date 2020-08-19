@@ -72,7 +72,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <AdditionalOptions>--expt-extended-lambda -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>--expt-extended-lambda -Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
       <GenerateLineInfo>false</GenerateLineInfo>
       <MaxRegCount>
       </MaxRegCount>
@@ -110,7 +110,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <AdditionalOptions>--expt-extended-lambda -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>--expt-extended-lambda -Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
       <GenerateLineInfo>true</GenerateLineInfo>
       <MaxRegCount>
       </MaxRegCount>

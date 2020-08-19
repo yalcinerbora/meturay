@@ -40,7 +40,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
         template <class... Args, typename = AllArithmeticEnable<Args...>>
         constexpr __device__ __host__       Matrix(const Args... dataList);
         __device__ __host__                 Matrix(const Vector<N,T> columns[]);
-        template <int M>
+        template <int M, typename = std::enable_if_t<(M >= N)>>
         __device__ __host__                 Matrix(const Matrix<M, T>&);
                                             ~Matrix() = default;
 
@@ -207,6 +207,14 @@ namespace TransformGen
     static __device__ __host__ Matrix<4, T>     LookAt(const Vector<3, T>& eyePos,
                                                        const Vector<3, T>& at,
                                                        const Vector<3, T>& up);
+    template<class T, typename = FloatEnable<T>>
+    static __device__ __host__ Matrix<3, T>     Space(const Vector<3, T>& x,
+                                                      const Vector<3, T>& y,
+                                                      const Vector<3, T>& z);
+    template<class T, typename = FloatEnable<T>>
+    static __device__ __host__ Matrix<3, T>     InvSpace(const Vector<3, T>& x,
+                                                         const Vector<3, T>& y,
+                                                         const Vector<3, T>& z);
 }
 
 // Implementation

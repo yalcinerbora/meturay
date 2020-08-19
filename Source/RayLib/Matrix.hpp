@@ -52,11 +52,11 @@ inline Matrix<N, T>::Matrix(const Vector<N, T> columns[])
 }
 
 template <int N, class T>
-template <int M>
+template <int M, typename>
 __device__ __host__
 inline Matrix<N, T>::Matrix(const Matrix<M, T>& other)
 {
-    static_assert(M < N, "Cannot copy large matrix into small matrix");
+    static_assert(M >= N, "enable_if sanity check.");
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
     {
@@ -328,13 +328,15 @@ template <int N, class T>
 __device__ __host__
 inline T Matrix<N, T>::Determinant() const
 {
+    #pragma warning(suppress:4984)
     // TODO: use constexpr if when CUDA supports it
-    if (N == 2)
+    if constexpr(N == 2)
         return Determinant2<T>(static_cast<const T*>(*this));
-    else if (N == 3)
+    else if constexpr(N == 3)
         return Determinant3<T>(static_cast<const T*>(*this));
     else
         return Determinant4<T>(static_cast<const T*>(*this));
+    return 1;
 }
 
 template <int N, class T>
@@ -342,13 +344,15 @@ template <class Q>
 __device__ __host__
 inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Inverse() const
 {
+    #pragma warning(suppress:4984)
     // TODO: use constexpr if when CUDA supports it
-    if (N == 2)
+    if constexpr (N == 2)
         return Inverse2<T>(static_cast<const T*>(*this));
-    else if (N == 3)
+    else if constexpr (N == 3)
         return Inverse3<T>(static_cast<const T*>(*this));
     else
         return Inverse4<T>(static_cast<const T*>(*this));
+    return *this;
 }
 
 template <int N, class T>
@@ -356,10 +360,11 @@ template <class Q>
 __device__ __host__
 inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::InverseSelf()
 {
+    #pragma warning(suppress:4984)
     // TODO: use constexpr if when CUDA supports it
-    if (N == 2)
+    if constexpr (N == 2)
         (*this) = Inverse2<T>(static_cast<const T*>(*this));
-    else if (N == 3)
+    else if constexpr (N == 3)
         (*this) = Inverse3<T>(static_cast<const T*>(*this));
     else
         (*this) = Inverse4<T>(static_cast<const T*>(*this));
@@ -1081,4 +1086,26 @@ inline Matrix<4, T> TransformGen::LookAt(const Vector<3, T>& eyePos,
                         xAxis[1],           yAxis[1],           zAxis[1],           0,
                         xAxis[2],           yAxis[2],           zAxis[2],           0,
                         -xAxis.Dot(eyePos), -yAxis.Dot(eyePos), -zAxis.Dot(eyePos), 1);
+}
+
+template<class T, typename>
+__device__ __host__
+inline Matrix<3, T> TransformGen::Space(const Vector<3, T>& x,
+                                        const Vector<3, T>& y,
+                                        const Vector<3, T>& z)
+{
+    return Matrix<4, T>(x[0], y[0], z[0], 0,
+                        x[1], y[1], z[1], 0,
+                        x[2], y[2], z[2], 0,
+                        0, 0, 0, 1);
+}
+
+template<class T, typename>
+__device__ __host__
+inline Matrix<3, T> TransformGen::InvSpace(const Vector<3, T>& x,
+                                           const Vector<3, T>& y,
+                                           const Vector<3, T>& z)
+{
+    return Matrix<3, T>(x, y, z,
+                        Vector<3, T>(0, 0, 1));
 }

@@ -331,6 +331,14 @@ inline Ray<T>& Ray<T>::AdvanceSelf(T t, const Vector<3, T>& dir)
 
 template<class T>
 __device__ __host__
+inline Ray<T> Ray<T>::Transform(const Matrix<3, T>& mat) const
+{
+    return Ray<T>((mat * direction).Normalize(),
+                  (mat * position));
+}
+
+template<class T>
+__device__ __host__
 inline Ray<T> Ray<T>::Transform(const Matrix<4, T>& mat) const
 {
     return Ray<T>((mat * Vector<4, T>(direction, static_cast<T>(0.0))).Normalize(),
@@ -339,10 +347,19 @@ inline Ray<T> Ray<T>::Transform(const Matrix<4, T>& mat) const
 
 template<class T>
 __device__ __host__
+inline Ray<T>& Ray<T>::TransformSelf(const Matrix<3, T>& mat)
+{
+    Ray<T> r = Transform(mat);
+    (*this) = r;
+    return *this;
+}
+
+template<class T>
+__device__ __host__
 inline Ray<T>& Ray<T>::TransformSelf(const Matrix<4, T>& mat)
 {
-    direction = (mat * Vector<4, T>(direction, static_cast<T>(0.0))).Normalize();
-    position = mat * Vector<4, T>(position, static_cast<T>(1.0));
+    Ray<T> r = Transform(mat);
+    (*this) = r;
     return *this;
 }
 

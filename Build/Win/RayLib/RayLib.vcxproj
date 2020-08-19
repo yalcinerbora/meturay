@@ -77,7 +77,7 @@
       <AdditionalCompilerOptions>
       </AdditionalCompilerOptions>
       <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
-      <AdditionalOptions>-Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
@@ -125,7 +125,7 @@
       </AdditionalCompilerOptions>
       <HostDebugInfo>true</HostDebugInfo>
       <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
-      <AdditionalOptions>-Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>

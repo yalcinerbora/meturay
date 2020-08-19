@@ -84,9 +84,9 @@ static void KCConstructLinear(// O
         HitKey matKey = mkList.materialKeys[pairIndex];
 
         // Gen Leaf and write
-        gAccLeafs[globalId] = PGroup::LeafFunc(matKey,
-                                               primitiveId,
-                                               primData);
+        gAccLeafs[globalId] = PGroup::Leaf(matKey,
+                                           primitiveId,
+                                           primData);
     }
 }
 
@@ -95,6 +95,7 @@ template <class PGroup>
 __global__ __launch_bounds__(StaticThreadPerBlock1D)
 static void KCIntersectLinear(// O
                               HitKey* gMaterialKeys,
+                              TransformId* dCurrentTransform,
                               PrimitiveId* gPrimitiveIds,
                               HitStructPtr gHitStructs,
                               // I-O
@@ -155,15 +156,15 @@ static void KCIntersectLinear(// O
             //       leaf.matId.value,
             //       accRange[0], accRange[1]);
 
-            HitResult result = PGroup::HitFunc(// Output                                            
-                                               materialKey,
-                                               primitiveId,
-                                               hit,
-                                               // I-O
-                                               ray,
-                                               // Input
-                                               leaf,
-                                               primData);
+            HitResult result = PGroup::Hit(// Output                                            
+                                           materialKey,
+                                           primitiveId,
+                                           hit,
+                                           // I-O
+                                           ray,
+                                           // Input
+                                           leaf,
+                                           primData);
             hitModified |= result[1];
             if(result[0]) break;
         }
@@ -173,6 +174,7 @@ static void KCIntersectLinear(// O
             //if(id == 95) printf("MatFound %x\n", materialKey.value);
             ray.UpdateTMax(gRays, id);
             gHitStructs.Ref<HitData>(id) = hit;
+            dCurrentTransform[id] = transformId;
             gMaterialKeys[id] = materialKey;
             gPrimitiveIds[id] = primitiveId;
         }

@@ -11,28 +11,33 @@ using GPUTransform = Matrix4x4;
 
 // GPU Transform Holds transformation data
 // required to transform
-class GPUTransfomI
+class GPUTransformI
 {
 	private:
 		Matrix4x4*		dTransforms;
+		Matrix4x4*		dInvTransforms;
+		uint32_t		count;
 
 	public:
-		virtual ~GPUTransfomI() = default;
-
-
-		// Sub Transformation Access
-		// Such access is needed for non-rigid transformations
-		// only accompanying primitive knows which one to use
-		// (by its transform indices and wieghts)
-		// If object is rigid
-		__device__ const Matrix4x4& operator[](int index);
+		virtual ~GPUTransformI() = default;
 
 		// Classic Transformations
-		__device__ RayF WorldToLocal(const RayF& r) const;
-		__device__ RayF LocalToWorld(const RayF& r) const;
+		// One overload is for non-rigid skeletal based transformations
+		// or maybe morph targets
+		__device__ __host__
+		virtual RayF WorldToLocal(const RayF& r) const = 0;		
+		__device__  __host__
+		virtual RayF WorldToLocal(const RayF& r,
+								  uint32_t indices, float* weights,
+								  uint32_t count) const = 0;
 
+		__device__ __host__
+		virtual RayF LocalToWorld(const RayF& r) const = 0;
+		__device__ __host__ 
+		virtual RayF LocalToWorld(const RayF& r,
+								  uint32_t indices, float* weights,
+								  uint32_t count) const = 0;
 };
-
 
 // Converts to GPUTransform (Matrix4x4) also inverts the converted matrix
 // since we do not transform the primitive while calculating intersection
@@ -55,8 +60,8 @@ inline GPUTransform ConvnertToGPUTransform(const CPUTransform& t)
 			// TRS combo is in this order;
 			// Scale, rotX, rotY, rotZ, then translate
 			Matrix4x4 result = TransformGen::Scale(t.trs.scale[0],
-												  t.trs.scale[1],
-												  t.trs.scale[2]);
+												   t.trs.scale[1],
+												   t.trs.scale[2]);
 
 			result = TransformGen::Rotate(t.trs.rotation[0], _XAxis) * result;
 			result = TransformGen::Rotate(t.trs.rotation[1], _YAxis) * result;

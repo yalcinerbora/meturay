@@ -31,82 +31,104 @@ struct SphereData
 // Hit of sphere is spherical coordinates
 using SphereHit = Vector2f;
 
-// Sphere Hit Acceptance
-__device__ __host__
-inline HitResult SphereClosestHit(// Output
-                                  HitKey& newMat,
-                                  PrimitiveId& newPrimitive,
-                                  SphereHit& newHit,
-                                  // I-O
-                                  RayReg& rayData,
-                                  // Input
-                                  const DefaultLeaf& leaf,
-                                  const SphereData& primData)
-{
-    // Get Packed data and unpack
-    Vector4f data = primData.centerRadius[leaf.primitiveId];
-    Vector3f center = data;
-    float radius = data[3];
 
-    // Do Intersecton test
-    Vector3 pos; float newT;
-    bool intersects = rayData.ray.IntersectsSphere(pos, newT, center, radius);
-    
-    // Check if the hit is closer
-    bool closerHit = intersects && (newT < rayData.tMax);
-    if(closerHit)
+struct SphrFunctions
+{
+    // Sphere Hit Acceptance
+    __device__ __host__
+    static inline HitResult Hit(// Output
+                                HitKey& newMat,
+                                PrimitiveId& newPrimitive,
+                                SphereHit& newHit,
+                                // I-O
+                                RayReg& rayData,
+                                // Input
+                                const DefaultLeaf& leaf,
+                                const SphereData& primData)
     {
-        rayData.tMax = newT;
-        newMat = leaf.matId;
-        newPrimitive = leaf.primitiveId;
+        // Get Packed data and unpack
+        Vector4f data = primData.centerRadius[leaf.primitiveId];
+        Vector3f center = data;
+        float radius = data[3];
 
-        // Gen Spherical Coords (R can be fetched using primitiveId)
-        // Clamp acos input for singularity
-        Vector3 relativeCoord = pos - center;
-        float tethaCos = HybridFuncs::Clamp(relativeCoord[2] / radius, -1.0f, 1.0f);
-        float tetha = acos(tethaCos);
-        float phi = atan2(relativeCoord[1], relativeCoord[0]);
-        newHit = Vector2(tetha, phi);
+        // Do Intersecton test
+        Vector3 pos; float newT;
+        bool intersects = rayData.ray.IntersectsSphere(pos, newT, center, radius);
+
+        // Check if the hit is closer
+        bool closerHit = intersects && (newT < rayData.tMax);
+        if(closerHit)
+        {
+            rayData.tMax = newT;
+            newMat = leaf.matId;
+            newPrimitive = leaf.primitiveId;
+
+            // Gen Spherical Coords (R can be fetched using primitiveId)
+            // Clamp acos input for singularity
+            Vector3 relativeCoord = pos - center;
+            float tethaCos = HybridFuncs::Clamp(relativeCoord[2] / radius, -1.0f, 1.0f);
+            float tetha = acos(tethaCos);
+            float phi = atan2(relativeCoord[1], relativeCoord[0]);
+            newHit = Vector2(tetha, phi);
+        }
+        return HitResult{false, closerHit};
     }
-    return HitResult{false, closerHit};
-}
 
-__device__ __host__
-inline AABB3f GenerateAABBSphere(PrimitiveId primitiveId, const SphereData& primData)
-{
-    // Get Packed data and unpack
-    Vector4f data = primData.centerRadius[primitiveId];
-    Vector3f center = data;
-    float radius = data[3];
+    __device__ __host__
+    static inline AABB3f AABB(PrimitiveId primitiveId,
+                              const SphereData& primData)
+    {
+        // Get Packed data and unpack
+        Vector4f data = primData.centerRadius[primitiveId];
+        Vector3f center = data;
+        float radius = data[3];
 
-    return Sphere::BoundingBox(center, radius);
-}
+        return Sphere::BoundingBox(center, radius);
+    }
 
-__device__ __host__
-inline float GenerateAreaSphere(PrimitiveId primitiveId, const SphereData& primData)
-{
-    Vector4f data = primData.centerRadius[primitiveId];
-    float radius = data[3];
+    __device__ __host__
+    static inline float Area(PrimitiveId primitiveId,
+                             const SphereData& primData)
+    {
+        Vector4f data = primData.centerRadius[primitiveId];
+        float radius = data[3];
 
-    // Surface area is related to radius only (wrt of its square)
-    // TODO: check if this is a good estimation
-    return radius * radius;
-}
+        // Surface area is related to radius only (wrt of its square)
+        // TODO: check if this is a good estimation
+        return radius * radius;
+    }
 
-__device__ __host__
-inline Vector3 GenerateCenterSphere(PrimitiveId primitiveId, const SphereData& primData)
-{
-    Vector4f data = primData.centerRadius[primitiveId];
-    Vector3f center = data;
+    __device__ __host__
+    static inline Vector3 Center(PrimitiveId primitiveId,
+                                 const SphereData& primData)
+    {
+        Vector4f data = primData.centerRadius[primitiveId];
+        Vector3f center = data;
 
-    return center;
-}
+        return center;
+    }
+    
+    __device__ __host__
+    static inline Matrix3x3 TSMatrix(const SphereHit&,
+                                     PrimitiveId,
+                                     const SphereData&)
+    {
+        return Indentity3x3;
+    }
+
+    static constexpr auto Leaf          = GenerateDefaultLeaf<SphereData>;
+    static constexpr auto LocalToWorld  = ToLocalSpace<SphereData>;
+    static constexpr auto WorldToLocal  = FromLocalSpace<SphereData>;
+    
+};
+
 
 class GPUPrimitiveSphere final
     : public GPUPrimitiveGroup<SphereHit, SphereData, DefaultLeaf,
-                               SphereClosestHit, GenerateDefaultLeaf,
-                               GenerateAABBSphere, GenerateAreaSphere,
-                               GenerateCenterSphere>
+                               SphrFunctions::Hit, SphrFunctions::Leaf,
+                               SphrFunctions::AABB, SphrFunctions::Area,
+                               SphrFunctions::Center, SphrFunctions::LocalToWorld,
+                               SphrFunctions::WorldToLocal, SphrFunctions::TSMatrix>
 {
     public:
         static constexpr const char*            TypeName() { return "Sphere"; }

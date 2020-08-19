@@ -84,7 +84,7 @@ struct CentroidGen
         __device__ __host__
         __forceinline__ Vector3 operator()(const PrimitiveId& id) const
         {
-            return PGroup::CenterFunc(id, pData);
+            return PGroup::Center(id, pData);
         }
 };
 
@@ -102,7 +102,7 @@ struct AABBGen
         __device__ __host__
         __forceinline__ AABB3f operator()(const PrimitiveId& id) const
         {
-            return PGroup::BoxFunc(id, pData);
+            return PGroup::AABB(id, pData);
         }
 };
 
@@ -376,15 +376,15 @@ void KCIntersectBVH(// O
 
             if(currentNode->isLeaf)
             {
-                HitResult result = PGroup::HitFunc(// Output                                            
-                                                   materialKey,
-                                                   primitiveId,
-                                                   hit,
-                                                   // I-O
-                                                   ray,
-                                                   // Input
-                                                   currentNode->leaf,
-                                                   primData);
+                HitResult result = PGroup::Hit(// Output                                            
+                                               materialKey,
+                                               primitiveId,
+                                               hit,
+                                               // I-O
+                                               ray,
+                                               // Input
+                                               currentNode->leaf,
+                                               primData);
 
                 hitModified |= result[1];
                 if(result[0]) break;
@@ -500,15 +500,15 @@ void KCIntersectBVHStackless(// O
                 if(currentNode->isLeaf)
                 {
 
-                    HitResult result = PGroup::HitFunc(// Output                                            
-                                                       materialKey,
-                                                       primitiveId,
-                                                       hit,
-                                                       // I-O
-                                                       ray,
-                                                       // Input
-                                                       currentNode->leaf,
-                                                       primData);
+                    HitResult result = PGroup::Hit(// Output                                            
+                                                   materialKey,
+                                                   primitiveId,
+                                                   hit,
+                                                   // I-O
+                                                   ray,
+                                                   // Input
+                                                   currentNode->leaf,
+                                                   primData);
                     hitModified |= result[1];
                     if(result[0]) break;
 
