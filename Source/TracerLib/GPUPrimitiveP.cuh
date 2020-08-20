@@ -24,21 +24,13 @@ class GPUPrimitiveGroupP
         PrimitiveD dData = PrimitiveD{};
 };
 
-template <class Surface, class PGroup>
-using SurfaceGenFunc = Surface(*)(const typename PGroup::PrimitiveData&,
-                                  const typename PGroup::HitData&,
-                                  PrimitiveId);
-
-
 template <class HitD, class PrimitiveD, class LeafD,
           AcceptHitFunction<HitD, PrimitiveD, LeafD> HitF,
+          SurfaceGenFunction<HitD, PrimitiveD> SurfF,
           LeafGenFunction<PrimitiveD, LeafD> LeafF,
           BoxGenFunction<PrimitiveD> BoxF,
           AreaGenFunction<PrimitiveD> AreaF,
-          CenterGenFunction<PrimitiveD> CenterF,
-          LocalToWorlFunc<PrimitiveD> ToWorldF,
-          WorldToLocalFunc<PrimitiveD> ToLocalF,
-          TSMatrixGenFunc<PrimitiveD, HitD> TSMatrixF>
+          CenterGenFunction<PrimitiveD> CenterF>
 class GPUPrimitiveGroup
     : public GPUPrimitiveGroupI
     , public GPUPrimitiveGroupP<PrimitiveD>
@@ -51,13 +43,11 @@ class GPUPrimitiveGroup
         // Function Definitions
         // Used by accelerator definitions etc.
         static constexpr auto Hit       = HitF;
+        static constexpr auto Surface   = SurfF;
         static constexpr auto Leaf      = LeafF;
         static constexpr auto AABB      = BoxF;
         static constexpr auto Area      = AreaF;
         static constexpr auto Center    = CenterF;
-        static constexpr auto ToWorld   = ToWorldF;
-        static constexpr auto ToLocal   = ToLocalF;
-        static constexpr auto TSMatrix = TSMatrixF;
 
     private:
     protected:

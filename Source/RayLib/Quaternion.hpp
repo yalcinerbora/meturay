@@ -260,6 +260,35 @@ inline Quaternion<T> Quat::SLerp(const Quaternion<T>& start, const Quaternion<T>
 
 template<class T>
 __device__ __host__
+inline Quaternion<T> Quat::BarySLerp(const Quaternion<T>& q0,
+                                     const Quaternion<T>& q1,
+                                     const Quaternion<T>& q2,
+                                     T a, T b)
+{
+    // Proper way to do this is
+    // http://www.acsu.buffalo.edu/~johnc/ave_quat07.pdf
+    //
+    // But it is computationally complex.
+    //
+    // However vertex quaternions of the triangle will be closer or same.
+    // instead we can directly average them.
+    // (for smooth edges neighbouring tri's face normal will be averaged)
+    //
+    // One thing to note is to check quaternions are close
+    // and use conjugate in order to have proper average
+    
+    // Align tovards q0
+    const Quaternion<T>& qA = q0;
+    Quaternion<T> qB = (q1.Dot(q0) < 0) : q1.Conguate() : q1;
+    Quaternion<T> qC = (q2.Dot(q0) < 0) : q2.Conguate() : q2;
+
+    T c = (1 - a - b);
+    Quaternion<T> result = qA * a + qB * b + qC * c;
+    return result;
+}
+
+template<class T>
+__device__ __host__
 inline Quaternion<T> Quat::RotationBetween(const Vector<3,T>& a, const Vector<3,T>& b)
 {
     Vector<3, T> aCrossB = Cross(a, b);

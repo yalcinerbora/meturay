@@ -39,7 +39,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUWork.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\MetaMaterialFunctions.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\SurfaceStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUSurface.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\TextureReference.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\TextureReference.hpp" />
     <ClInclude Include="..\..\..\Source\TracerLib\WorkPool.h" />

@@ -12,11 +12,13 @@ All of them should be provided
 */
 
 #include <map>
+#include <cuda_fp16.h>
 
 #include "DefaultLeaf.h"
 #include "GPUPrimitiveP.cuh"
 #include "DeviceMemory.h"
 #include "TypeTraits.h"
+#include "GPUSurface.h"
 
 #include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/Vector.h"
@@ -43,6 +45,7 @@ struct SphrFunctions
                                 // I-O
                                 RayReg& rayData,
                                 // Input
+                                const GPUTransformI& transform,
                                 const DefaultLeaf& leaf,
                                 const SphereData& primData)
     {
@@ -51,9 +54,10 @@ struct SphrFunctions
         Vector3f center = data;
         float radius = data[3];
 
-        // Do Intersecton test
+        // Do Intersecton test on local space
+        RayF r = transform.WorldToLocal(rayData.ray);
         Vector3 pos; float newT;
-        bool intersects = rayData.ray.IntersectsSphere(pos, newT, center, radius);
+        bool intersects = r.IntersectsSphere(pos, newT, center, radius);
 
         // Check if the hit is closer
         bool closerHit = intersects && (newT < rayData.tMax);
@@ -74,8 +78,39 @@ struct SphrFunctions
         return HitResult{false, closerHit};
     }
 
+    __device__
+    static inline GPUSurface Surface(const SphereHit& sphrCoords,
+                                     const GPUTransformI& transform,
+                                     //
+                                     PrimitiveId primitiveId,
+                                     const SphereData& primData)
+    {
+            Vector4f data = primData.centerRadius[primitiveId];
+            Vector3f center = data;
+            float radius = data[3];
+
+            // Gen UV    
+            Vector2 uv = sphrCoords;
+            // tetha is [-pi, pi], normalize
+            uv[0] = (uv[0] + MathConstants::Pi) * 0.5f * MathConstants::InvPi; 
+            // phi is [0, pi], normalize 
+            uv[1] /= MathConstants::Pi; 
+
+            // Convert spherical hit to cartesian
+            Vector3 normal = Vector3(sin(sphrCoords[0]) * cos(sphrCoords[1]),
+                                     sin(sphrCoords[0]) * sin(sphrCoords[1]),
+                                     cos(sphrCoords[0]));
+
+            // Align this normal to Z axis to define tangent space rotation
+            QuatF tbn = Quat::RotationBetweenZAxis(normal);
+            tbn = tbn * transform.ToLocalRotation();
+           
+            return GPUSurface(tbn, uv);
+    }
+
     __device__ __host__
-    static inline AABB3f AABB(PrimitiveId primitiveId,
+    static inline AABB3f AABB(const GPUTransformI& transform, 
+                              PrimitiveId primitiveId,
                               const SphereData& primData)
     {
         // Get Packed data and unpack
@@ -116,19 +151,15 @@ struct SphrFunctions
         return Indentity3x3;
     }
 
-    static constexpr auto Leaf          = GenerateDefaultLeaf<SphereData>;
-    static constexpr auto LocalToWorld  = ToLocalSpace<SphereData>;
-    static constexpr auto WorldToLocal  = FromLocalSpace<SphereData>;
-    
+    static constexpr auto Leaf          = GenerateDefaultLeaf<SphereData>;    
 };
 
 
 class GPUPrimitiveSphere final
     : public GPUPrimitiveGroup<SphereHit, SphereData, DefaultLeaf,
-                               SphrFunctions::Hit, SphrFunctions::Leaf,
-                               SphrFunctions::AABB, SphrFunctions::Area,
-                               SphrFunctions::Center, SphrFunctions::LocalToWorld,
-                               SphrFunctions::WorldToLocal, SphrFunctions::TSMatrix>
+                               SphrFunctions::Hit, SphrFunctions::Surface,
+                               SphrFunctions::Leaf, SphrFunctions::AABB, 
+                               SphrFunctions::Area, SphrFunctions::Center>
 {
     public:
         static constexpr const char*            TypeName() { return "Sphere"; }

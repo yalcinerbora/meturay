@@ -291,13 +291,13 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialLightKC.cuh">
       <Filter>Default Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\SurfaceStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\MetaMaterialFunctions.cuh">
       <Filter>Default Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUDistribution.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMedium.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUTransform.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUSurface.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

@@ -11,6 +11,9 @@ using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxPrimitivePer
 
 using HitResult = Vector<2, bool>;
 
+class GPUSurface;
+class GPUTransformI;
+
 // This is Leaf of Base Accelerator
 // It points to another accelerator pair
 struct /*alignas(16)*/ BaseLeaf
@@ -43,6 +46,7 @@ using AcceptHitFunction = HitResult(*)(// Output
                                        // I-O
                                        RayReg& r,
                                        // Input
+                                       const GPUTransformI&,
                                        const LeafData& data,
                                        const PrimitiveData& gPrimData);
 
@@ -51,39 +55,19 @@ using LeafGenFunction = LeafData(*)(const HitKey matId,
                                     const PrimitiveId primitiveId,
                                     const PrimitiveData& primData);
 
-// Transformations
-//
-// Spaces
-//      World Space
-//          Obvious
-//      Local Space 
-//          Space that primitiveGroup is defined.
-//
-//      Tangent(Primitive) Space
-//          Primitive specific state. Primitive laid down to
-//          xy plane (tri-normal is aligned to z axis).
-//          may reduce BxDF calculations (i.e. dot product returns vec.z)
-//          hemispherical random directions are not required to be
-//          rotated and normal map calculations are simple.
-//
-template <class PrimitiveData>
-using WorldToLocalFunc = RayF(*)(const RayF&,
-                                 const GPUTransformI&,
-                                 PrimitiveId,
-                                 const PrimitiveData&);
-
-template <class PrimitiveData>
-using LocalToWorlFunc = WorldToLocalFunc<PrimitiveData>;
-
-template <class PrimitiveData, class HitData>
-using TSMatrixGenFunc = Matrix3x3(*)(const HitData& hit,
-                                     PrimitiveId,
-                                     const PrimitiveData&);
+template <class HitData, class PrimitiveData>
+using SurfaceGenFunction = GPUSurface(*)(const HitData&,
+                                         const GPUTransformI& transform,
+                                         //
+                                         const PrimitiveId primitiveId,
+                                         const PrimitiveData& primData);
 
 // Custom bounding box generation function
 // For primitive
 template <class PrimitiveData>
-using BoxGenFunction = AABB3f(*)(PrimitiveId primitiveId, const PrimitiveData&);
+using BoxGenFunction = AABB3f(*)(const GPUTransformI&,
+                                 PrimitiveId primitiveId,
+                                 const PrimitiveData&);
 
 // Surface area generation function for bound hierarcy generation
 template <class PrimitiveData>
@@ -92,23 +76,3 @@ using AreaGenFunction = float(*)(PrimitiveId primitiveId, const PrimitiveData&);
 // Center generation function for bound hierarcy generation
 template <class PrimitiveData>
 using CenterGenFunction = Vector3(*)(PrimitiveId primitiveId, const PrimitiveData&);
-
-template<class PrimitiveData>
-__device__ __host__
-static inline RayF ToLocalSpace(const RayF& r,
-                                const GPUTransformI& t,
-                                PrimitiveId id,
-                                const PrimitiveData& primData)
-{
-    return t.WorldToLocal(r);
-}
-
-template<class PrimitiveData>
-__device__ __host__
-static inline RayF FromLocalSpace(const RayF& r,
-                                  const GPUTransformI& t,
-                                  PrimitiveId id,
-                                  const PrimitiveData& primData)
-{
-    return t.LocalToWorld(r);
-}

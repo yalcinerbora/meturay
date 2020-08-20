@@ -13,11 +13,6 @@ using GPUTransform = Matrix4x4;
 // required to transform
 class GPUTransformI
 {
-	private:
-		Matrix4x4*		dTransforms;
-		Matrix4x4*		dInvTransforms;
-		uint32_t		count;
-
 	public:
 		virtual ~GPUTransformI() = default;
 
@@ -25,18 +20,24 @@ class GPUTransformI
 		// One overload is for non-rigid skeletal based transformations
 		// or maybe morph targets
 		__device__ __host__
-		virtual RayF WorldToLocal(const RayF& r) const = 0;		
+		virtual RayF WorldToLocal(const RayF&) const = 0;		
 		__device__  __host__
-		virtual RayF WorldToLocal(const RayF& r,
-								  uint32_t indices, float* weights,
+		virtual RayF WorldToLocal(const RayF&,
+								  const uint32_t* indices, const float* weights,
 								  uint32_t count) const = 0;
-
 		__device__ __host__
-		virtual RayF LocalToWorld(const RayF& r) const = 0;
-		__device__ __host__ 
-		virtual RayF LocalToWorld(const RayF& r,
-								  uint32_t indices, float* weights,
-								  uint32_t count) const = 0;
+		virtual Vector3 LocalToWorld(const Vector3&) const = 0;
+		__device__  __host__
+		virtual Vector3 LocalToWorld(const Vector3&,
+									 const uint32_t* indices, const float* weights,
+									 uint32_t count) const = 0;
+
+
+		__device__  __host__
+		virtual QuatF ToLocalRotation() const = 0;
+		__device__  __host__
+		virtual QuatF ToLocalRotation(const uint32_t* indices, const float* weights,
+									  uint32_t count) const = 0;
 };
 
 // Converts to GPUTransform (Matrix4x4) also inverts the converted matrix

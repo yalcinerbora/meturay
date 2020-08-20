@@ -13,16 +13,18 @@ All of them should be provided
 */
 
 #include <map>
+#include <cuda_fp16.h>
 
 #include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/Vector.h"
 #include "RayLib/Triangle.h"
 
-#include "DefaultLeaf.h"
 #include "GPUPrimitiveP.cuh"
+#include "GPUTransform.h"
+#include "GPUSurface.h"
+#include "DefaultLeaf.h"
 #include "DeviceMemory.h"
 #include "TypeTraits.h"
-#include "GPUTransform.h"
 
 class SurfaceDataLoaderI;
 using SurfaceDataLoaders = std::vector<std::unique_ptr<SurfaceDataLoaderI>>;
@@ -37,9 +39,9 @@ struct TriData
     uint32_t primBatchCount;
     // TODO: add alpha map
 
-
-    const Vector4f* positionsU;
-    const Vector4f* normalsV;
+    const Vector3f* positions;
+    const QuatF*    tbnRotations;
+    const half2*    uvs;
     const uint64_t* indexList;
 };
 
@@ -47,96 +49,97 @@ struct TriData
 // c is (1-a-b) thus it is not stored.
 using TriangleHit = Vector2f;
 
-__device__ __host__
-inline static Vector3 CalculateTangent(const Vector3& p0,
-                                       const Vector3& p1,
-                                       const Vector3& p2,
+//__device__ __host__
+//inline static Vector3 CalculateTangent(const Vector3& p0,
+//                                       const Vector3& p1,
+//                                       const Vector3& p2,
+//
+//                                       const Vector2& uv0,
+//                                       const Vector2& uv1,
+//                                       const Vector2& uv2)
+//{
+//    // Edges (Tri is CCW)
+//    Vector3 vec0 = p1 - p0;
+//    Vector3 vec1 = p2 - p0;
+//
+//    Vector2 dUV0 = uv1 - uv0;
+//    Vector2 dUV1 = uv2 - uv0;
+//    
+//    float t = 1.0f / (dUV0[0] * dUV1[1] -
+//                      dUV1[0] * dUV0[1]);
+//
+//    Vector3 tangent;
+//    tangent = t * (dUV1[1] * vec0 - dUV0[1] * vec1);
+//    return tangent;
+//}
+//__device__ __host__
+//static inline Matrix3x3 TSMatrix(const TriangleHit& hit,
+//                                 PrimitiveId id,
+//                                 const TriData& primData)
+//{
+//    // Get Position
+//    uint64_t i0 = primData.indexList[id * 3 + 0];
+//    uint64_t i1 = primData.indexList[id * 3 + 1];
+//    uint64_t i2 = primData.indexList[id * 3 + 2];
 
-                                       const Vector2& uv0,
-                                       const Vector2& uv1,
-                                       const Vector2& uv2)
-{
-    // Edges (Tri is CCW)
-    Vector3 vec0 = p1 - p0;
-    Vector3 vec1 = p2 - p0;
+//    Vector3 p0 = primData.positionsU[i0];
+//    Vector3 p1 = primData.positionsU[i1];
+//    Vector3 p2 = primData.positionsU[i2];
 
-    Vector2 dUV0 = uv1 - uv0;
-    Vector2 dUV1 = uv2 - uv0;
-    
-    float t = 1.0f / (dUV0[0] * dUV1[1] -
-                      dUV1[0] * dUV0[1]);
+//    Vector3 n0 = primData.normalsV[i0];
+//    Vector3 n1 = primData.normalsV[i1];
+//    Vector3 n2 = primData.normalsV[i2];
 
-    Vector3 tangent;
-    tangent = t * (dUV1[1] * vec0 - dUV0[1] * vec1);
-    return tangent;
-}
+//    Vector2 uv0 = Vector2(primData.positionsU[i0][3],
+//                          primData.normalsV[i0][3]);
+//    Vector2 uv1 = Vector2(primData.positionsU[i1][3],
+//                          primData.normalsV[i1][3]);
+//    Vector2 uv2 = Vector2(primData.positionsU[i2][3],
+//                          primData.normalsV[i2][3]);
+
+//    // We calculate tangent once
+//    // is this consistent? (should i calculate for all vertices of tri?
+//    Vector3 t0 = CalculateTangent(p0, p1, p2, uv0, uv1, uv2);
+//    //Vector3 t1 = CalculateTangent(p1, p2, p0, uv0, uv1, uv2);
+//    //Vector3 t2 = CalculateTangent(p2, p0, p1, uv0, uv1, uv2);
+//    Vector3 t1 = t0;
+//    Vector3 t2 = t0;
+
+//    // Gram–Schmidt othonormalization
+//    // This is required since normal may be skewed to hide
+//    // edges (to create smooth lighting)
+//    t0 = (t0 - n0 * n0.Dot(t0)).Normalize();
+//    t1 = (t1 - n1 * n1.Dot(t1)).Normalize();
+//    t2 = (t2 - n2 * n2.Dot(t2)).Normalize();
+
+//    Vector3 b0 = Cross(n0, t0);
+//    Vector3 b1 = Cross(n1, t1);
+//    Vector3 b2 = Cross(n2, t2);
+
+//    // Interpolate to location
+//    float c = 1.0f - hit[0] - hit[1];
+//    Vector3 t = t0 * hit[0] + t1 * hit[1] + t2 * c;
+//    Vector3 b = b0 * hit[0] + b1 * hit[1] + b2 * c;
+//    Vector3 n = n0 * hit[0] + n1 * hit[1] + n2 * c;
+
+//    // Construct Matrix
+//    return TransformGen::Space(t, b, n);
+//}
 
 
 struct TriFunctions
 {
-    __device__ __host__
-    static inline Matrix3x3 TSMatrix(const TriangleHit& hit,
-                                     PrimitiveId id,
-                                     const TriData& primData)
-    {
-        // Get Position
-        uint64_t i0 = primData.indexList[id * 3 + 0];
-        uint64_t i1 = primData.indexList[id * 3 + 1];
-        uint64_t i2 = primData.indexList[id * 3 + 2];
-
-        Vector3 p0 = primData.positionsU[i0];
-        Vector3 p1 = primData.positionsU[i1];
-        Vector3 p2 = primData.positionsU[i2];
-
-        Vector3 n0 = primData.normalsV[i0];
-        Vector3 n1 = primData.normalsV[i1];
-        Vector3 n2 = primData.normalsV[i2];
-
-        Vector2 uv0 = Vector2(primData.positionsU[i0][3],
-                              primData.normalsV[i0][3]);
-        Vector2 uv1 = Vector2(primData.positionsU[i1][3],
-                              primData.normalsV[i1][3]);
-        Vector2 uv2 = Vector2(primData.positionsU[i2][3],
-                              primData.normalsV[i2][3]);
-
-        // We calculate tangent once
-        // is this consistent? (should i calculate for all vertices of tri?
-        Vector3 t0 = CalculateTangent(p0, p1, p2, uv0, uv1, uv2);
-        //Vector3 t1 = CalculateTangent(p1, p2, p0, uv0, uv1, uv2);
-        //Vector3 t2 = CalculateTangent(p2, p0, p1, uv0, uv1, uv2);
-        Vector3 t1 = t0;
-        Vector3 t2 = t0;
-
-        // Gram–Schmidt othonormalization
-        // This is required since normal may be skewed to hide
-        // edges (to create smooth lighting)
-        t0 = (t0 - n0 * n0.Dot(t0)).Normalize();
-        t1 = (t1 - n1 * n1.Dot(t1)).Normalize();
-        t2 = (t2 - n2 * n2.Dot(t2)).Normalize();
-
-        Vector3 b0 = Cross(n0, t0);
-        Vector3 b1 = Cross(n1, t1);
-        Vector3 b2 = Cross(n2, t2);
-
-        // Interpolate to location
-        float c = 1.0f - hit[0] - hit[1];
-        Vector3 t = t0 * hit[0] + t1 * hit[1] + t2 * c;
-        Vector3 b = b0 * hit[0] + b1 * hit[1] + b2 * c;
-        Vector3 n = n0 * hit[0] + n1 * hit[1] + n2 * c;
-
-        // Construct Matrix
-        return TransformGen::Space(t, b, n);
-    }
 
     // Triangle Hit Acceptance
     __device__ __host__
     static inline HitResult Hit(// Output
                                 HitKey& newMat,
-                                PrimitiveId& newPrimitive,
+                                PrimitiveId& newPrim,
                                 TriangleHit& newHit,
                                 // I-O
                                 RayReg& rayData,
                                 // Input
+                                const GPUTransformI& transform,
                                 const DefaultLeaf& leaf,
                                 const TriData& primData)
     {
@@ -170,27 +173,28 @@ struct TriFunctions
         uint64_t index1 = primData.indexList[leaf.primitiveId * 3 + 1];
         uint64_t index2 = primData.indexList[leaf.primitiveId * 3 + 2];
 
-        Vector3 position0 = primData.positionsU[index0];
-        Vector3 position1 = primData.positionsU[index1];
-        Vector3 position2 = primData.positionsU[index2];
+        Vector3 position0 = primData.positions[index0];
+        Vector3 position1 = primData.positions[index1];
+        Vector3 position2 = primData.positions[index2];
 
         bool cull = BinSearchCull(leaf.primitiveId);
 
-        // Do Intersecton test
+        // Do Intersecton test on local space
+        RayF r = transform.WorldToLocal(rayData.ray);
         Vector3 baryCoords; float newT;
-        bool intersects = rayData.ray.IntersectsTriangle(baryCoords, newT,
-                                                         position0,
-                                                         position1,
-                                                         position2,
-                                                         cull);
+        bool intersects = r.IntersectsTriangle(baryCoords, newT,
+                                               position0,
+                                               position1,
+                                               position2,
+                                               cull);
         // Check if the hit is closer
         bool closerHit = intersects && (newT < rayData.tMax);
         if(closerHit)
         {
             rayData.tMax = newT;
             newMat = leaf.matId;
-            newPrimitive = leaf.primitiveId;
-            newHit = Vector2(baryCoords[0], baryCoords[1]);
+            newPrim = leaf.primitiveId;
+            newHit = {baryCoords[0], baryCoords[1]};
         }
         //printf("ray dir{%f, %f, %f} "
         //       "old %f new %f --- Testing Mat: %x -> {%s, %s}\n",
@@ -206,17 +210,58 @@ struct TriFunctions
         return HitResult{false, closerHit};
     }
 
+    __device__
+    static inline GPUSurface Surface(const TriangleHit& baryCoords,
+                                     const GPUTransformI& transform,
+                                     //
+                                     PrimitiveId primitiveId,
+                                     const TriData& primData)
+    {
+        float c = 1 - baryCoords[0] - baryCoords[1];
+
+        uint64_t i0 = primData.indexList[primitiveId * 3 + 0];
+        uint64_t i1 = primData.indexList[primitiveId * 3 + 1];
+        uint64_t i2 = primData.indexList[primitiveId * 3 + 2];
+
+        half2 uv0 = primData.uvs[i0];
+        half2 uv1 = primData.uvs[i0];
+        half2 uv2 = primData.uvs[i0];
+         
+        QuatF q0 = primData.tbnRotations[i0];
+        QuatF q1 = primData.tbnRotations[i1];
+        QuatF q2 = primData.tbnRotations[i2];
+        QuatF tbn = Quat::BarySLerp(q0, q1, q2,
+                                    baryCoords[0],
+                                    baryCoords[1]);
+        tbn = tbn * transform.ToLocalRotation();
+
+        half2 uv = half2
+        {
+            uv0.x * baryCoords[0] + uv1.x * baryCoords[1] + uv2.x * c,
+            uv0.y * baryCoords[0] + uv1.y * baryCoords[1] + uv2.y * c
+        };
+        return GPUSurface(tbn, uv);
+
+    }
+
     __device__ __host__
-    static inline AABB3f AABB(PrimitiveId primitiveId, const TriData& primData)
+    static inline AABB3f AABB(const GPUTransformI& transform,
+                              //
+                              PrimitiveId primitiveId, 
+                              const TriData& primData)
     {
         // Get Position
         uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
         uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
         uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
 
-        Vector3 position0 = primData.positionsU[index0];
-        Vector3 position1 = primData.positionsU[index1];
-        Vector3 position2 = primData.positionsU[index2];
+        Vector3 position0 = primData.positions[index0];
+        Vector3 position1 = primData.positions[index1];
+        Vector3 position2 = primData.positions[index2];
+
+        position0 = transform.LocalToWorld(position0);
+        position1 = transform.LocalToWorld(position1);
+        position2 = transform.LocalToWorld(position2);
 
         return Triangle::BoundingBox(position0, position1, position2);
     }
@@ -229,9 +274,9 @@ struct TriFunctions
         uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
         uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
 
-        Vector3 position0 = primData.positionsU[index0];
-        Vector3 position1 = primData.positionsU[index1];
-        Vector3 position2 = primData.positionsU[index2];
+        Vector3 position0 = primData.positions[index0];
+        Vector3 position1 = primData.positions[index1];
+        Vector3 position2 = primData.positions[index2];
 
         // CCW
         Vector3 vec0 = position1 - position0;
@@ -248,9 +293,9 @@ struct TriFunctions
         uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
         uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
 
-        Vector3 position0 = primData.positionsU[index0];
-        Vector3 position1 = primData.positionsU[index1];
-        Vector3 position2 = primData.positionsU[index2];
+        Vector3 position0 = primData.positions[index0];
+        Vector3 position1 = primData.positions[index1];
+        Vector3 position2 = primData.positions[index2];
 
         return (position0 * 0.33333f +
                 position1 * 0.33333f +
@@ -258,16 +303,13 @@ struct TriFunctions
     }
 
     static constexpr auto Leaf = GenerateDefaultLeaf<TriData>;
-    static constexpr auto LocalToWorld = ToLocalSpace<TriData>;
-    static constexpr auto WorldToLocal = FromLocalSpace<TriData>;
 };
 
 class GPUPrimitiveTriangle final
     : public GPUPrimitiveGroup<TriangleHit, TriData, DefaultLeaf,
-                               TriFunctions::Hit, TriFunctions::Leaf,
-                               TriFunctions::AABB, TriFunctions::Area,
-                               TriFunctions::Center, TriFunctions::LocalToWorld,
-                               TriFunctions::WorldToLocal, TriFunctions::TSMatrix>
+                               TriFunctions::Hit, TriFunctions::Surface, 
+                               TriFunctions::Leaf, TriFunctions::AABB, 
+                               TriFunctions::Area, TriFunctions::Center>
 {
     public:
         static constexpr const char*            TypeName() { return "Triangle"; }

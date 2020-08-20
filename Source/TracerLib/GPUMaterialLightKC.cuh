@@ -4,7 +4,7 @@
 
 #include "RayLib/Vector.h"
 #include "RayLib/HitStructs.h"
-#include "SurfaceStructs.h"
+#include "GPUSurface.h"
 #include "TextureReference.cuh"
 
 class GPUMedium;
@@ -25,14 +25,13 @@ struct LightMatCubeData
     TexCubeRef<Vector3>* dCubeTextures;
 };
 
-template <class Surface>
 __device__ inline
 Vector3 EmitLight(// Input
                   const Vector3& wo,
                   const Vector3& pos,
                   const GPUMedium& m,
                   //
-                  const Surface& surface,
+                  const GPUSurface& surface,
                   const TexCoords* uvs,
                   // Constants
                   const LightMatData& matData,
@@ -47,14 +46,14 @@ Vector3 EmitLightTex(// Input
                      const Vector3& pos,
                      const GPUMedium& m,
                      //
-                     const UVSurface& surface,
+                     const GPUSurface& surface,
                      const TexCoords* uvs,
                      // Constants
                      const LightMatTexData& matData,
                      const HitKey::Type& matId)
 {
     // If cubemap
-    return matData.dRadianceTextures[matId](surface.uv);
+    return matData.dRadianceTextures[matId](surface.UV());
 }
 
 __device__ inline
@@ -63,7 +62,7 @@ Vector3 EmitLightCube(// Input
                       const Vector3& pos,
                       const GPUMedium& m,
                       //
-                      const EmptySurface& surface,
+                      const GPUSurface& surface,
                       const TexCoords* uvs,
                       // Constants
                       const LightMatCubeData& matData,

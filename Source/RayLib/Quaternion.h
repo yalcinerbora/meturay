@@ -93,6 +93,11 @@ namespace Quat
     template <class T>
     static __device__ __host__ Quaternion<T> SLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t);
     template <class T>
+    static __device__ __host__ Quaternion<T> BarySLerp(const Quaternion<T>& q0, 
+                                                       const Quaternion<T>& q1, 
+                                                       const Quaternion<T>& q2,
+                                                       T a, T b);
+    template <class T>
     static __device__ __host__ Quaternion<T> RotationBetween(const Vector<3, T>& a, const Vector<3, T>& b);
     template <class T>
     static __device__ __host__ Quaternion<T> RotationBetweenZAxis(const Vector<3, T>& b);
