@@ -36,6 +36,7 @@ struct EPrimFunctions
                                 // I-O
                                 RayReg& rayData,
                                 // Input
+                                const GPUTransformI& transform,
                                 const EmptyLeaf& leaf,
                                 const EmptyData& primData)
     {
@@ -43,7 +44,8 @@ struct EPrimFunctions
     }
 
     __device__ __host__
-    static inline AABB3f AABB(PrimitiveId primitiveId, const EmptyData& primData)
+    static inline AABB3f AABB(const GPUTransformI& transform, 
+                              PrimitiveId primitiveId, const EmptyData& primData)
     {
         Vector3f minInf(-INFINITY);
         return AABB3f(minInf, minInf);
@@ -61,25 +63,24 @@ struct EPrimFunctions
         return Zero3;
     }
 
-    __device__ __host__
-    static inline Matrix3x3 TSMatrix(const EmptyHit& hit,
-                                     PrimitiveId,
-                                     const EmptyData&)
-    {
-        return Indentity3x3;
-    }
-
     static constexpr auto Leaf = GenerateEmptyLeaf<EmptyData>;
-    static constexpr auto LocalToWorld = ToLocalSpace<EmptyData>;
-    static constexpr auto WorldToLocal = FromLocalSpace<EmptyData>;
+};
+
+struct EmptySurfaceGenerator
+{
+    template<class Surface>
+    static constexpr SurfaceFunc<Surface, EmptyHit, EmptyData> GetSurfaceFunction()
+    {
+        return nullptr;
+    }
 };
 
 class GPUPrimitiveEmpty final
     : public GPUPrimitiveGroup<EmptyHit, EmptyData, EmptyLeaf,
-                               EPrimFunctions::Hit, EPrimFunctions::Leaf,
-                               EPrimFunctions::AABB, EPrimFunctions::Area,
-                               EPrimFunctions::Center, EPrimFunctions::LocalToWorld,
-                               EPrimFunctions::WorldToLocal, EPrimFunctions::TSMatrix>
+                               EmptySurfaceGenerator, 
+                               EPrimFunctions::Hit,
+                               EPrimFunctions::Leaf, EPrimFunctions::AABB, 
+                               EPrimFunctions::Area, EPrimFunctions::Center>
 {
     public:
         static constexpr const char*            TypeName() { return BaseConstants::EMPTY_PRIMITIVE_NAME; }

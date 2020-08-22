@@ -38,7 +38,6 @@ class GPUWorkBatchD : public GPUWorkBatchI
 
 template<class GlobalData, class LocalData, class RayData,
          class MGroup, class PGroup,
-         SurfaceFunc<MGroup, PGroup> SFunc,
          WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc>
 class GPUWorkBatch 
     : public GPUWorkBatchD<GlobalData, RayData>
@@ -96,8 +95,8 @@ void GPUWorkBatchD<GD, RD>::SetRayDataPtrs(RD* dRDOut,
 }
 
 template <class GD, class LD, class RD, class MG, class PG,
-          SurfaceFunc<MG, PG> SF, WorkFunc<GD, LD, RD, MG> WF>
-inline const char* GPUWorkBatch<GD, LD, RD, MG, PG, SF, WF>::TypeName()
+          WorkFunc<GD, LD, RD, MG> WF>
+inline const char* GPUWorkBatch<GD, LD, RD, MG, PG, WF>::TypeName()
 {
     static std::string typeName = MangledNames::WorkBatch(PG::TypeName(),
                                                           MG::TypeName());
@@ -105,16 +104,16 @@ inline const char* GPUWorkBatch<GD, LD, RD, MG, PG, SF, WF>::TypeName()
 }
 
 template <class GD, class LD, class RD, class MG, class PG, 
-          SurfaceFunc<MG, PG> SF, WorkFunc<GD, LD, RD, MG> WF>
-GPUWorkBatch<GD, LD, RD, MG, PG, SF, WF>::GPUWorkBatch(const GPUMaterialGroupI& mg,
-                                                       const GPUPrimitiveGroupI& pg)
+          WorkFunc<GD, LD, RD, MG> WF>
+GPUWorkBatch<GD, LD, RD, MG, PG, WF>::GPUWorkBatch(const GPUMaterialGroupI& mg,
+                                                   const GPUPrimitiveGroupI& pg)
     : materialGroup(static_cast<const MG&>(mg))
     , primitiveGroup(static_cast<const PG&>(pg))
 {}
 
 template <class GD, class LD, class RD, class MG, class PG, 
-          SurfaceFunc<MG, PG> SF, WorkFunc<GD, LD, RD, MG> WF>
-void GPUWorkBatch<GD, LD, RD, MG, PG, SF, WF>::Work(// Output
+          WorkFunc<GD, LD, RD, MG> WF>
+void GPUWorkBatch<GD, LD, RD, MG, PG, WF>::Work(// Output
                                                     HitKey* dBoundMatOut,
                                                     RayGMem* dRayOut,
                                                     //  Input
@@ -132,8 +131,14 @@ void GPUWorkBatch<GD, LD, RD, MG, PG, SF, WF>::Work(// Output
     GetReady();
 
     using PrimitiveData = typename PG::PrimitiveData;
+    using HitData = typename PG::HitData;
     using MaterialData = typename MG::Data;
-    
+    using MaterialSurface = typename MG::Surface;
+    // Fetch surface function from primitive list
+    constexpr SurfaceFunc<MaterialSurface, 
+                          HitData, 
+                          PrimitiveData> SFunc = PGroup::GetSurfaceFunction();
+
     // Get Data
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
     const MaterialData matData = MatDataAccessor::Data(materialGroup);    

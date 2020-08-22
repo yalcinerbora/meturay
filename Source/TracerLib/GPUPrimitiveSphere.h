@@ -78,36 +78,6 @@ struct SphrFunctions
         return HitResult{false, closerHit};
     }
 
-    __device__
-    static inline GPUSurface Surface(const SphereHit& sphrCoords,
-                                     const GPUTransformI& transform,
-                                     //
-                                     PrimitiveId primitiveId,
-                                     const SphereData& primData)
-    {
-            Vector4f data = primData.centerRadius[primitiveId];
-            Vector3f center = data;
-            float radius = data[3];
-
-            // Gen UV    
-            Vector2 uv = sphrCoords;
-            // tetha is [-pi, pi], normalize
-            uv[0] = (uv[0] + MathConstants::Pi) * 0.5f * MathConstants::InvPi; 
-            // phi is [0, pi], normalize 
-            uv[1] /= MathConstants::Pi; 
-
-            // Convert spherical hit to cartesian
-            Vector3 normal = Vector3(sin(sphrCoords[0]) * cos(sphrCoords[1]),
-                                     sin(sphrCoords[0]) * sin(sphrCoords[1]),
-                                     cos(sphrCoords[0]));
-
-            // Align this normal to Z axis to define tangent space rotation
-            QuatF tbn = Quat::RotationBetweenZAxis(normal);
-            tbn = tbn * transform.ToLocalRotation();
-           
-            return GPUSurface(tbn, uv);
-    }
-
     __device__ __host__
     static inline AABB3f AABB(const GPUTransformI& transform, 
                               PrimitiveId primitiveId,
@@ -142,22 +112,87 @@ struct SphrFunctions
 
         return center;
     }
-    
-    __device__ __host__
-    static inline Matrix3x3 TSMatrix(const SphereHit&,
-                                     PrimitiveId,
-                                     const SphereData&)
-    {
-        return Indentity3x3;
-    }
 
     static constexpr auto Leaf          = GenerateDefaultLeaf<SphereData>;    
 };
 
+struct SphereSurfaceGenerator
+{
+    __device__ __host__
+    static inline BasicSurface GenBasicSurface(const SphereHit& sphrCoords,
+                                               const GPUTransformI& transform,
+                                               //
+                                               PrimitiveId primitiveId,
+                                               const SphereData& primData)
+    {
+        Vector4f data = primData.centerRadius[primitiveId];
+        Vector3f center = data;
+        float radius = data[3];
+
+        // Convert spherical hit to cartesian
+        Vector3 normal = Vector3(sin(sphrCoords[0]) * cos(sphrCoords[1]),
+                                 sin(sphrCoords[0]) * sin(sphrCoords[1]),
+                                 cos(sphrCoords[0]));
+
+        // Align this normal to Z axis to define tangent space rotation
+        QuatF tbn = Quat::RotationBetweenZAxis(normal);
+        tbn = tbn * transform.ToLocalRotation();
+
+        return BasicSurface{tbn};
+    }
+
+    __device__ __host__
+    static inline SphrSurface GenSphrSurface(const SphereHit& sphrCoords,
+                                             const GPUTransformI& transform,
+                                             //
+                                             PrimitiveId primitiveId,
+                                             const SphereData& primData)
+    {        
+        return SphrSurface{sphrCoords};
+    }
+
+    __device__ __host__
+    static inline UVSurface GenUVSurface(const SphereHit& sphrCoords,
+                                         const GPUTransformI& transform,
+                                         //
+                                         PrimitiveId primitiveId,
+                                         const SphereData& primData)
+    {
+        BasicSurface bs = GenBasicSurface(sphrCoords, transform,
+                                          primitiveId, primData);
+
+        // Gen UV    
+        Vector2 uv = sphrCoords;
+        // tetha is [-pi, pi], normalize
+        uv[0] = (uv[0] + MathConstants::Pi) * 0.5f * MathConstants::InvPi;
+        // phi is [0, pi], normalize 
+        uv[1] /= MathConstants::Pi;
+
+        return UVSurface{bs.worldToTangent, uv};
+    }
+
+
+    template <class Surface, SurfaceFunc<Surface, SphereHit, SphereData> SF>
+    struct SurfaceFunctionType
+    {
+        using Type = Surface;
+        static constexpr auto SurfaceGen = SF;
+    };
+
+    static constexpr auto GeneratorFunctionList = std::make_tuple(SurfaceFunctionType<BasicSurface, GenBasicSurface>{},
+                                                                  SurfaceFunctionType<SphrSurface, GenSphrSurface>{},
+                                                                  SurfaceFunctionType<UVSurface, GenUVSurface>{});
+
+    template<class Surface>
+    static constexpr SurfaceFunc<Surface, TriangleHit, TriData> GetSurfaceFunction()
+    {
+        return PrimitiveSurfaceFind::LoopAndFindType<Surface, SurfaceFunc<Surface, SphereHit, SphereData>>(GeneratorFunctionList);
+    }
+};
 
 class GPUPrimitiveSphere final
     : public GPUPrimitiveGroup<SphereHit, SphereData, DefaultLeaf,
-                               SphrFunctions::Hit, SphrFunctions::Surface,
+                               SphereSurfaceGenerator, SphrFunctions::Hit,
                                SphrFunctions::Leaf, SphrFunctions::AABB, 
                                SphrFunctions::Area, SphrFunctions::Center>
 {

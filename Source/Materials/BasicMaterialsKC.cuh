@@ -8,7 +8,7 @@ class RandomGPU;
 #include "RayLib/Constants.h"
 
 #include "TracerLib/ImageFunctions.cuh"
-#include "TracerLib/SurfaceStructs.h"
+#include "TracerLib/GPUSurface.h"
 #include "TracerLib/TextureStructs.h"
 
 __device__ inline

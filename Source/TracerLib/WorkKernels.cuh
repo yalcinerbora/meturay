@@ -5,22 +5,7 @@
 #include "Random.cuh"
 #include "ImageStructs.h"
 #include "TextureStructs.h"
-
-// Surface Functions are responsible for
-// generating surface structures from the hit structures
-// Surface structures hold various surface data (uv, normal most of the time;
-// maybe tangent if a normal map is present over a surface)
-//
-// Surfaces are deemed by the materials
-// (i.e. a material may not require uv if a texture is present)
-//
-// This function is provided by the "WorkBatch" class 
-// meaning different WorkBatch Class is generated for different
-// primitive/material pairs
-template <class MGroup, class PGroup>
-using SurfaceFunc = MGroup::Surface(*)(const PGroup::PrimitiveData&,
-                                       const PGroup::HitData&,
-                                       PrimitiveId);
+#include "GPUPrimitiveP.cuh"
 
 // Device Work Function Template
 //
@@ -59,7 +44,9 @@ using WorkFunc = void(*)(// Output
 template<class GlobalState, class LocalState,
          class RayAuxiliary, class PGroup, class MGroup,
          WorkFunc<GlobalState, LocalState, RayAuxiliary, MGroup> WFunc, 
-         SurfaceFunc<MGroup, PGroup> SurfFunc>
+         SurfaceFunc<MGroup::Surface, 
+                     PGroup::HitData, 
+                     PGroup::PrimitiveData> SurfFunc>
 __global__ __launch_bounds__(StaticThreadPerBlock1D)
 void KCWork(// Output
             HitKey* gOutBoundKeys,
@@ -84,8 +71,8 @@ void KCWork(// Output
             const PGroup::PrimitiveData primData)
 {
     // Fetch Types from Template Classes
-    using HitData = typename PGroup::HitData;               // HitData is defined by primitive
-    using Surface = typename MGroup::Surface;               // Surface is defined by material group    
+    using HitData = typename PGroup::HitData;   // HitData is defined by primitive
+    using Surface = typename MGroup::Surface;   // Surface is defined by material group    
 
     // Pre-grid stride loop
     // RNG is allocated for each SM (not for each thread)

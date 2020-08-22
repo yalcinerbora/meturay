@@ -8,161 +8,148 @@ and surface generation functions for sample primitives
 
 #include "RayLib/Ray.h"
 #include "RayLib/Quaternion.h"
-#include <cuda_fp16.h>
 
-class GPUSurface
-{
-    private:        
-        QuatF   worldToTangent;     // World to tangent space transformation        
-        half2   uv;                 // UV coordinates
-
-    protected:
-    public:
-        // Constructors & Destructor
-        __device__              GPUSurface(const QuatF& tbn, const half2& uv);
-        __device__              GPUSurface(const QuatF& tbn, const Vector2& uv);
-                                GPUSurface(const GPUSurface&) = default;
-                                GPUSurface(GPUSurface&&) = default;
-        GPUSurface&             operator=(const GPUSurface&) = default;
-        GPUSurface&             operator=(GPUSurface&&) = default;
-                                ~GPUSurface() = default;
-
-        // Functionality
-        __device__ Vector3      NormalWorld() const;
-        __device__ Vector3      TangentWorld() const;
-        __device__ Vector3      BitangentWorld() const;
-        
-        __device__ Vector3      Normal() const;
-        __device__ Vector3      Tangent() const;
-        __device__ Vector3      Bitangent() const;
-
-        __device__ RayF         ToTangent(const RayF&) const;
-        __device__ RayF         FromTangent(const RayF&) const;
-
-        __device__ float        DotN(const Vector3&) const;
-        __device__ float        DotT(const Vector3&) const;
-        __device__ float        DotB(const Vector3&) const;
-
-        __device__ Vector2      UV() const;
-};
-
-__device__
-inline GPUSurface::GPUSurface(const QuatF& tbn, const half2& uv)
-    : worldToTangent(tbn)
-    , uv(uv)
-{}
-
-__device__     
-inline GPUSurface::GPUSurface(const QuatF& tbn, const Vector2& uv)
-    : worldToTangent(tbn)
-    , uv{__half2float(uv[0]), __half2float(uv[1])}
-{}
-
-__device__ 
-inline Vector3 GPUSurface::NormalWorld() const
-{
-    Vector3 v = ZAxis;
-    return worldToTangent.Conjugate().ApplyRotation(v);
-}
-
-__device__
-inline Vector3 GPUSurface::TangentWorld() const
-{
-    Vector3 v = XAxis;
-    return worldToTangent.Conjugate().ApplyRotation(v);
-}
-
-__device__
-inline Vector3 GPUSurface::BitangentWorld() const
-{
-    Vector3 v = YAxis;
-    return worldToTangent.Conjugate().ApplyRotation(v);
-}
-
-__device__
-inline Vector3 GPUSurface::Normal() const
-{
-    return ZAxis;
-}
-
-__device__
-inline Vector3 GPUSurface::Tangent() const
-{
-    return XAxis;
-}
-
-__device__
-inline Vector3 GPUSurface::Bitangent() const
-{
-    return YAxis;
-}
-
-__device__
-inline RayF GPUSurface::ToTangent(const RayF& r) const
-{
-    return r.Transform(worldToTangent);
-}
-
-__device__
-inline RayF GPUSurface::FromTangent(const RayF& r) const
-{
-    return r.Transform(worldToTangent.Conjugate());
-}
-
-__device__ 
-inline float GPUSurface::DotN(const Vector3& v) const
-{
-    return v[2];
-}
-
-__device__
-inline float GPUSurface::DotT(const Vector3& v) const
-{
-    return v[0];
-}
-
-__device__
-inline float GPUSurface::DotB(const Vector3& v) const
-{
-    return v[1];
-}
-
-__device__
-inline Vector2 GPUSurface::UV() const
-{
-    return Vector2(__half2float(uv.x),
-                   __half2float(uv.y));
-}
-
-//struct EmptySurface
-//{};
-//
-//struct BarySurface
-//{
-//    Vector3 baryCoords;
-//};
-//
-//struct SphrSurface
-//{
-//    Vector2 sphrCoords;
-//};
-//
 //struct BasicSurface
 //{
-//    Vector3 normal;
-//};
+//    private:        
+//        QuatF   worldToTangent;     // World to tangent space transformation
 //
-//struct UVSurface
-//{
-//    Vector3 normal;
-//    Vector2 uv;
-//};
+//    protected:
+//    public:
+//        //// Constructors & Destructor
+//        //__device__              GPUSurface(const QuatF& tbn);
+//        //__device__              GPUSurface(const QuatF& tbn);
+//        //                        GPUSurface(const GPUSurface&) = default;
+//        //                        GPUSurface(GPUSurface&&) = default;
+//        //GPUSurface&             operator=(const GPUSurface&) = default;
+//        //GPUSurface&             operator=(GPUSurface&&) = default;
+//        //                        ~GPUSurface() = default;
 //
-//struct TangentUVSurface
-//{
-//    Vector4 normalU;
-//    Vector4 tangentV;
+//        //__device__          
+//        //// Functionality
+//        //__device__ Vector3      NormalWorld() const;
+//        //__device__ Vector3      TangentWorld() const;
+//        //__device__ Vector3      BitangentWorld() const;
+//        //
+//        //__device__ Vector3      Normal() const;
+//        //__device__ Vector3      Tangent() const;
+//        //__device__ Vector3      Bitangent() const;
+//
+//        //__device__ RayF         ToTangent(const RayF&) const;
+//        //__device__ RayF         FromTangent(const RayF&) const;
+//
+//        //__device__ float        DotN(const Vector3&) const;
+//        //__device__ float        DotT(const Vector3&) const;
+//        //__device__ float        DotB(const Vector3&) const;
 //};
+
+//
+//
+//__device__
+//inline GPUSurface::GPUSurface(const QuatF& tbn)
+//    : worldToTangent(tbn)
+//{}
+//
+//__device__     
+//inline GPUSurface::GPUSurface(const QuatF& tbn)
+//    : worldToTangent(tbn)
+//{}
+//
+//__device__ 
+//inline Vector3 GPUSurface::NormalWorld() const
+//{
+//    Vector3 v = ZAxis;
+//    return worldToTangent.Conjugate().ApplyRotation(v);
+//}
+//
+//__device__
+//inline Vector3 GPUSurface::TangentWorld() const
+//{
+//    Vector3 v = XAxis;
+//    return worldToTangent.Conjugate().ApplyRotation(v);
+//}
+//
+//__device__
+//inline Vector3 GPUSurface::BitangentWorld() const
+//{
+//    Vector3 v = YAxis;
+//    return worldToTangent.Conjugate().ApplyRotation(v);
+//}
+//
+//__device__
+//inline Vector3 GPUSurface::Normal() const
+//{
+//    return ZAxis;
+//}
+//
+//__device__
+//inline Vector3 GPUSurface::Tangent() const
+//{
+//    return XAxis;
+//}
+//
+//__device__
+//inline Vector3 GPUSurface::Bitangent() const
+//{
+//    return YAxis;
+//}
+//
+//__device__
+//inline RayF GPUSurface::ToTangent(const RayF& r) const
+//{
+//    return r.Transform(worldToTangent);
+//}
+//
+//__device__
+//inline RayF GPUSurface::FromTangent(const RayF& r) const
+//{
+//    return r.Transform(worldToTangent.Conjugate());
+//}
+//
+//__device__ 
+//inline float GPUSurface::DotN(const Vector3& v) const
+//{
+//    return v[2];
+//}
+//
+//__device__
+//inline float GPUSurface::DotT(const Vector3& v) const
+//{
+//    return v[0];
+//}
+//
+//__device__
+//inline float GPUSurface::DotB(const Vector3& v) const
+//{
+//    return v[1];
+//}
+
+
+struct EmptySurface
+{};
+
+struct BarySurface
+{
+    Vector3 baryCoords;
+};
+
+struct SphrSurface
+{
+    Vector2 sphrCoords;
+};
+
+struct BasicSurface
+{
+    // World to tangent space transformation
+    QuatF   worldToTangent;
+};
+
+struct UVSurface
+{
+    // World to tangent space transformation
+    QuatF   worldToTangent;
+    Vector2 uv;
+};
 
 //// Surface Functions
 //template <class Primitive>

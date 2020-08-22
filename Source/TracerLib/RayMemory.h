@@ -30,7 +30,7 @@ class RayMemory
         // Ray Related
         DeviceMemory                memIn;
         DeviceMemory                memOut;
-        // In rays are enter material kernels
+        // In rays are goint to enter material kernels
         RayGMem*                    dRayIn;
         // Those kernels will output one or multiple rays
         // Each material has a predefined max ray output
@@ -41,10 +41,11 @@ class RayMemory
         // Entire Hit related memory is allocated in bulk.
         DeviceMemory                memHit;
         // MatKey holds the work batch id and material group local id
-        // This is used to sort rays to match kernels
+        // This is used to sort rays to match material kernels
         HitKey*                     dWorkKeys;
         // Transform of the hit
         // Base accelerator fill this value with a potential hit id
+        // Leaf accelerators will transform rays to find hit
         TransformId*                dTransformIds;
         // Primitive Id of the hit
         // Inner accelerators fill this value with a primitive group local id

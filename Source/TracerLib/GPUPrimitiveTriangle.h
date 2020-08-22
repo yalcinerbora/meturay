@@ -13,7 +13,7 @@ All of them should be provided
 */
 
 #include <map>
-#include <cuda_fp16.h>
+#include <tuple>
 
 #include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/Vector.h"
@@ -41,7 +41,7 @@ struct TriData
 
     const Vector3f* positions;
     const QuatF*    tbnRotations;
-    const half2*    uvs;
+    const Vector2*  uvs;
     const uint64_t* indexList;
 };
 
@@ -210,40 +210,6 @@ struct TriFunctions
         return HitResult{false, closerHit};
     }
 
-    __device__
-    static inline GPUSurface Surface(const TriangleHit& baryCoords,
-                                     const GPUTransformI& transform,
-                                     //
-                                     PrimitiveId primitiveId,
-                                     const TriData& primData)
-    {
-        float c = 1 - baryCoords[0] - baryCoords[1];
-
-        uint64_t i0 = primData.indexList[primitiveId * 3 + 0];
-        uint64_t i1 = primData.indexList[primitiveId * 3 + 1];
-        uint64_t i2 = primData.indexList[primitiveId * 3 + 2];
-
-        half2 uv0 = primData.uvs[i0];
-        half2 uv1 = primData.uvs[i0];
-        half2 uv2 = primData.uvs[i0];
-         
-        QuatF q0 = primData.tbnRotations[i0];
-        QuatF q1 = primData.tbnRotations[i1];
-        QuatF q2 = primData.tbnRotations[i2];
-        QuatF tbn = Quat::BarySLerp(q0, q1, q2,
-                                    baryCoords[0],
-                                    baryCoords[1]);
-        tbn = tbn * transform.ToLocalRotation();
-
-        half2 uv = half2
-        {
-            uv0.x * baryCoords[0] + uv1.x * baryCoords[1] + uv2.x * c,
-            uv0.y * baryCoords[0] + uv1.y * baryCoords[1] + uv2.y * c
-        };
-        return GPUSurface(tbn, uv);
-
-    }
-
     __device__ __host__
     static inline AABB3f AABB(const GPUTransformI& transform,
                               //
@@ -305,9 +271,94 @@ struct TriFunctions
     static constexpr auto Leaf = GenerateDefaultLeaf<TriData>;
 };
 
+class GPUPrimitiveTriangle;
+
+struct TriangleSurfaceGenerator
+{
+    __device__ __host__
+    static inline BasicSurface GenBasicSurface(const TriangleHit& baryCoords,
+                                               const GPUTransformI& transform,
+                                               //
+                                               PrimitiveId primitiveId,
+                                               const TriData& primData)
+    {
+        float c = 1 - baryCoords[0] - baryCoords[1];
+
+        uint64_t i0 = primData.indexList[primitiveId * 3 + 0];
+        uint64_t i1 = primData.indexList[primitiveId * 3 + 1];
+        uint64_t i2 = primData.indexList[primitiveId * 3 + 2];
+
+        QuatF q0 = primData.tbnRotations[i0];
+        QuatF q1 = primData.tbnRotations[i1];
+        QuatF q2 = primData.tbnRotations[i2];
+        QuatF tbn = Quat::BarySLerp(q0, q1, q2,
+                                    baryCoords[0],
+                                    baryCoords[1]);
+        tbn = tbn * transform.ToLocalRotation();        
+        return BasicSurface{tbn};
+    }
+
+    __device__ __host__
+    static inline BarySurface GenBarySurface(const TriangleHit& baryCoords,
+                                             const GPUTransformI& transform,
+                                             //
+                                             PrimitiveId primitiveId,
+                                             const TriData& primData)
+    {
+        float c = 1.0f - baryCoords[0] - baryCoords[1];
+        return BarySurface{Vector3(baryCoords[0], baryCoords[1], c)};
+    }
+
+    __device__ __host__
+    static inline UVSurface GenUVSurface(const TriangleHit& baryCoords,
+                                         const GPUTransformI& transform,
+                                         //
+                                         PrimitiveId primitiveId,
+                                         const TriData& primData)
+    {
+        BasicSurface bs = GenBasicSurface(baryCoords, transform,
+                                          primitiveId, primData);
+
+        float c = 1 - baryCoords[0] - baryCoords[1];
+
+        uint64_t i0 = primData.indexList[primitiveId * 3 + 0];
+        uint64_t i1 = primData.indexList[primitiveId * 3 + 1];
+        uint64_t i2 = primData.indexList[primitiveId * 3 + 2];
+
+        Vector2 uv0 = primData.uvs[i0];
+        Vector2 uv1 = primData.uvs[i0];
+        Vector2 uv2 = primData.uvs[i0];
+
+        Vector2 uv = (uv0 * baryCoords[0] +
+                      uv1 * baryCoords[1] + 
+                      uv2 * c);
+
+        return UVSurface{bs.worldToTangent, uv};
+    }
+   
+
+    template <class Surface, SurfaceFunc<Surface, TriangleHit, TriData> SF>
+    struct SurfaceFunctionType
+    {
+        using Type = Surface;
+        static constexpr auto SurfaceGen = SF;
+    };
+
+    static constexpr auto GeneratorFunctionList = std::make_tuple(SurfaceFunctionType<BasicSurface, GenBasicSurface>{},
+                                                                  SurfaceFunctionType<BarySurface, GenBarySurface>{},
+                                                                  SurfaceFunctionType<UVSurface, GenUVSurface>{});
+
+    template<class Surface>
+    static constexpr SurfaceFunc<Surface, TriangleHit, TriData> GetSurfaceFunction()
+    {
+        return PrimitiveSurfaceFind::LoopAndFindType<Surface, SurfaceFunc<Surface, TriangleHit, TriData>>(GeneratorFunctionList);
+    }
+};
+
 class GPUPrimitiveTriangle final
     : public GPUPrimitiveGroup<TriangleHit, TriData, DefaultLeaf,
-                               TriFunctions::Hit, TriFunctions::Surface, 
+                               TriangleSurfaceGenerator,
+                               TriFunctions::Hit, 
                                TriFunctions::Leaf, TriFunctions::AABB, 
                                TriFunctions::Area, TriFunctions::Center>
 {
