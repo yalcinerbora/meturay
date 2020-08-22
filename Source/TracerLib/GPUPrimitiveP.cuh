@@ -51,12 +51,12 @@ namespace PrimitiveSurfaceFind
         LoopAndFind(std::tuple<Tp...>& t)
         {
             
-            using ElementType = typename std::tuple_element_t<I, TypeList<Tp...>>::type;
+            using ElementType = typename std::tuple_element_t<I, std::tuple<Tp...>>::type;
             using CurrentType = typename ElementType::type;
             constexpr auto SurfaceFunc = ElementType::SurfaceGeneratorFunction;
             // Accelerator Types
             if constexpr(std::is_same_v<CurrentType, CheckType>)
-                return std::get<I>(t)::SurfaceGen;
+                return decltype(std::get<I>(t))::SurfaceGen;
             else LoopAndFind<I + 1, Tp...>(t);
         }
     }
@@ -68,6 +68,14 @@ namespace PrimitiveSurfaceFind
     }
 };
 
+template <class PrimitiveD>
+class GPUPrimitiveGroupP
+{
+    friend struct PrimDataAccessor;
+
+    protected:
+    PrimitiveD dData = PrimitiveD{};
+};
 
 template <class HitD, class PrimitiveD, class LeafD,
           class SurfaceFuncGenerator,
@@ -79,7 +87,7 @@ template <class HitD, class PrimitiveD, class LeafD,
 class GPUPrimitiveGroup
     : public GPUPrimitiveGroupI
     , public GPUPrimitiveGroupP<PrimitiveD>
-    , public SurfaceList
+    , public SurfaceFuncGenerator
 {
     public:
         // Type Definitions for kernel generations
@@ -89,16 +97,13 @@ class GPUPrimitiveGroup
         // Function Definitions
         // Used by accelerator definitions etc.
         static constexpr auto Hit       = HitF;
-        static constexpr auto Surface   = SurfF;
         static constexpr auto Leaf      = LeafF;
         static constexpr auto AABB      = BoxF;
         static constexpr auto Area      = AreaF;
         static constexpr auto Center    = CenterF;
 
     private:
-    protected:
-        
-       
+    protected:   
     public:
         // Constructors & Destructor
                             GPUPrimitiveGroup() = default;

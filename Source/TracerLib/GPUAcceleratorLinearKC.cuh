@@ -95,22 +95,22 @@ template <class PGroup>
 __global__ __launch_bounds__(StaticThreadPerBlock1D)
 static void KCIntersectLinear(// O
                               HitKey* gMaterialKeys,
-                              TransformId* dCurrentTransform,
+                              TransformId* gTransformIds,
                               PrimitiveId* gPrimitiveIds,
                               HitStructPtr gHitStructs,
                               // I-O
                               RayGMem* gRays,
                               // Input
-                              const TransformId* gTransformIds,
                               const RayId* gRayIds,
                               const HitKey* gAccelKeys,
                               const uint32_t rayCount,
                               // Constants
                               const PGroup::LeafData* gLeafList,
                               const Vector2ul* gAccRanges,
-                              const GPUTransform* gInverseTransforms,
+                              const GPUTransformI* const* gTransforms,
                               //
-                              const PGroup::PrimitiveData primData)
+                              const PGroup::PrimitiveData primData,
+                              AcceleratorData accData)
 {
     // Fetch Types from Template Classes
     using HitData = typename PGroup::HitData;       // HitRegister is defined by primitive
@@ -122,7 +122,8 @@ static void KCIntersectLinear(// O
     {
         const uint32_t id = gRayIds[globalId];
         const uint64_t accId = HitKey::FetchIdPortion(gAccelKeys[globalId]);
-        const TransformId transformId = gTransformIds[id];
+        const TransformId transformId = accData.gTransformIds[accId];
+        const AccTransformType type = accData.gTransformTypes[accId];
 
         // Load Ray to Register
         RayReg ray(gRays, id);
@@ -132,13 +133,15 @@ static void KCIntersectLinear(// O
         const LeafData* gLeaf = gLeafList + accRange[0];
         const uint32_t endCount = static_cast<uint32_t>(accRange[1] - accRange[0]);
 
-        // Zero means identity so skip
-        if(transformId != 0)
+        // Check transforms
+        const GPUTransformI* localTransform = gTransforms[0];
+        if(type == AccTransformType::CONSTANT_LOCAL_TRANSFORM)
         {
-            GPUTransform s = gInverseTransforms[transformId];
-            ray.ray.TransformSelf(s);
-        }   
-            
+            const GPUTransformI& t = (*gTransforms[transformId]);
+            ray.ray = t.WorldToLocal(ray.ray);
+        }
+        else localTransform = gTransforms[transformId];
+
         // Hit determination
         bool hitModified = false;
         HitKey materialKey;
@@ -163,6 +166,7 @@ static void KCIntersectLinear(// O
                                            // I-O
                                            ray,
                                            // Input
+                                           *localTransform,
                                            leaf,
                                            primData);
             hitModified |= result[1];
@@ -174,7 +178,7 @@ static void KCIntersectLinear(// O
             //if(id == 95) printf("MatFound %x\n", materialKey.value);
             ray.UpdateTMax(gRays, id);
             gHitStructs.Ref<HitData>(id) = hit;
-            dCurrentTransform[id] = transformId;
+            gTransformIds[id] = transformId;
             gMaterialKeys[id] = materialKey;
             gPrimitiveIds[id] = primitiveId;
         }

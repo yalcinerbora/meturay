@@ -18,7 +18,7 @@ Vector3 EmitConstant(// Input
                      const Vector3& pos,
                      const GPUMedium& m,
                      //
-                     const GPUSurface& surface,
+                     const EmptySurface& surface,
                      const TexCoords* uvs,
                      // Constants
                      const EmissiveMatData& matData,
@@ -37,7 +37,7 @@ Vector3 LambertSample(// Sampled Output
                       const Vector3& pos,
                       const GPUMedium& m,
                       //
-                      const GPUSurface& surface,
+                      const BasicSurface& surface,
                       const TexCoords* uvs,
                       // I-O
                       RandomGPU& rng,
@@ -48,7 +48,7 @@ Vector3 LambertSample(// Sampled Output
 {
     // Ray Selection
     const Vector3& position = pos;
-    const Vector3& normal = surface.NormalWorld();
+    const Vector3& normal = GPUSurface::NormalWorld(surface.worldToTangent);;
     // Generate New Ray Directiion
     Vector2 xi(GPUDistribution::Uniform<float>(rng),
                GPUDistribution::Uniform<float>(rng));
@@ -78,13 +78,13 @@ Vector3 LambertEvaluate(// Input
                         const Vector3& pos,
                         const GPUMedium& m,
                         //
-                        const GPUSurface& surface,
+                        const BasicSurface& surface,
                         const TexCoords* uvs,
                         // Constants
                         const AlbedoMatData& matData,
                         const HitKey::Type& matId)
 {
-    const Vector3& normal = surface.NormalWorld();
+    const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
     float nDotL = max(normal.Dot(wo), 0.0f);
     return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
 }
@@ -99,7 +99,7 @@ Vector3 ReflectSample(// Sampled Output
                       const Vector3& pos,
                       const GPUMedium& m,
                       //
-                      const GPUSurface& surface,
+                      const BasicSurface& surface,
                       const TexCoords* uvs,
                       // I-O
                       RandomGPU& rng,
@@ -113,7 +113,7 @@ Vector3 ReflectSample(// Sampled Output
     Vector3 albedo = data;
     float roughness = data[3];
 
-    const Vector3& normal = surface.NormalWorld();
+    const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
     // No medium change
     outMedium = m;
     // Calculate Reflection   
@@ -140,7 +140,7 @@ Vector3 ReflectEvaluate(// Input
                         const Vector3& pos,
                         const GPUMedium& m,
                         //
-                        const GPUSurface& surface,
+                        const BasicSurface& surface,
                         const TexCoords* uvs,
                         // Constants
                         const ReflectMatData& matData,
@@ -160,7 +160,7 @@ Vector3 RefractSample(// Sampled Output
                       const Vector3& pos,
                       const GPUMedium& m,
                       //
-                      const GPUSurface& surface,
+                      const BasicSurface& surface,
                       const TexCoords* uvs,
                       // I-O
                       RandomGPU& rng,
@@ -175,7 +175,7 @@ Vector3 RefractSample(// Sampled Output
     float iIOR = matData.dMediums[mediumIndex].IOR();
     float dIOR = matData.dMediums[0].IOR();
 
-    const Vector3& normal = surface.NormalWorld();
+    const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
     const Vector3& position = pos;
 
     // Check if we are exiting or entering
@@ -255,7 +255,7 @@ Vector3 RefractEvaluate(// Input
                         const Vector3& pos,
                         const GPUMedium& m,
                         //
-                        const GPUSurface& surface,
+                        const BasicSurface& surface,
                         const TexCoords* uvs,
                         // Constants
                         const RefractMatData& matData,

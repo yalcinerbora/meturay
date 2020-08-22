@@ -19,7 +19,7 @@ class SceneNodeI;
 class RNGMemory;
 class ImageMemory;
 class GPUPrimitiveGroupI;
-class GPUTextureCacheI;
+class GPUTransformI;
 class GPUMedium;
 
 // METURay only supports 64 texture per material
@@ -62,6 +62,7 @@ class GPUMaterialGroupI
         virtual bool                        IsSpecularGroup() const = 0;
         // Post initialization
         virtual void                        AttachGlobalMediumArray(const GPUMedium*) = 0;
+        virtual void                        AttachGlobalTransformArray(const GPUTransformI* const*) = 0;
 
         // Returns how many different sampling strategy this material has
         virtual uint8_t                     SampleStrategyCount() const = 0;

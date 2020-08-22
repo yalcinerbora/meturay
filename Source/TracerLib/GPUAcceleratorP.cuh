@@ -12,6 +12,18 @@
 #include "GPUPrimitiveI.h"
 #include "MangledNames.h"
 
+enum class AccTransformType
+{
+    CONSTANT_LOCAL_TRANSFORM,
+    PER_PRIMITIVE_TRANSFORM
+};
+
+struct AcceleratorData
+{
+    const AccTransformType*     gTransformTypes;
+    const TransformId*          gTransformIds;
+};
+
 template <class PGroup>
 class GPUAcceleratorGroup 
     :  public GPUAcceleratorGroupI
@@ -20,7 +32,9 @@ class GPUAcceleratorGroup
     protected:
         // From Tracer
         const PGroup&                   primitiveGroup;
-        const GPUTransform*             dInverseTransforms;
+        const GPUTransformI* const*     dTransforms;
+        // Per accelerator data
+        AcceleratorData                 accData;
 
     public:
         // Constructors & Destructor
@@ -29,13 +43,13 @@ class GPUAcceleratorGroup
 
 
         const GPUPrimitiveGroupI&       PrimitiveGroup() const override;
-        void                            AttachInverseTransformList(const GPUTransform*) override;
+        void                            AttachGlobalTransformArray(const GPUTransformI* const*) override;
 };
 
 template <class P>
 GPUAcceleratorGroup<P>::GPUAcceleratorGroup(const GPUPrimitiveGroupI& pg)
     : primitiveGroup(static_cast<const P&>(pg))
-    , dInverseTransforms(nullptr)
+    , dTransforms(nullptr)
 {}
 
 template <class P>
@@ -45,7 +59,7 @@ const GPUPrimitiveGroupI& GPUAcceleratorGroup<P>::PrimitiveGroup() const
 }
 
 template <class P>
-void GPUAcceleratorGroup<P>::AttachInverseTransformList(const GPUTransform* t)
+void GPUAcceleratorGroup<P>::AttachGlobalTransformArray(const GPUTransformI* const* t)
 {
-    dInverseTransforms = t;
+    dTransforms = t;
 }

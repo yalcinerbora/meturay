@@ -43,50 +43,55 @@ TracerError GPUTracer::Initialize()
     // Init RNGs for each block
     rngMemory = RNGMemory(params.seed, cudaSystem);
 
-    // Convert Transforms (Invert them)
-    std::vector<GPUTransform> gpuTransform;
-    for(const CPUTransform& t : transforms)
-        gpuTransform.emplace_back(ConvnertToGPUTransform(t));
+    //// Convert Transforms (Invert them)
+    //std::vector<GPUTransform> gpuTransform;
+    //for(const CPUTransform& t : transforms)
+    //    gpuTransform.emplace_back(ConvnertToGPUTransform(t));
 
-    std::vector<GPUMedium> gpuMedium;
-    uint32_t i = 0;
-    for(const CPUMedium& m : mediums)
-    {
-        gpuMedium.emplace_back(m, i);
-        i++;
-    }
+    //std::vector<GPUMedium> gpuMedium;
+    //uint32_t i = 0;
+    //for(const CPUMedium& m : mediums)
+    //{
+    //    gpuMedium.emplace_back(m, i);
+    //    i++;
+    //}
 
     // Allocate
-    size_t transformSize = transforms.size() * sizeof(GPUTransform);
+    size_t transformSize = transforms.size() * sizeof(GPUTransformI*);
     transformSize = Memory::AlignSize(transformSize, AlignByteCount);
-    size_t mediumSize = transforms.size() * sizeof(GPUTransform);
+    size_t mediumSize = transforms.size() * sizeof(GPUMedium);
     mediumSize = Memory::AlignSize(mediumSize, AlignByteCount);
     DeviceMemory::EnlargeBuffer(mediumAndTransformMemory,
                                  transformSize + mediumSize);
     // Determine pointers from allocation
     size_t offset = 0;
     const Byte* memory = static_cast<const Byte*>(mediumAndTransformMemory);
-    dTransforms = reinterpret_cast<const GPUTransform*>(memory + offset);
+    dTransforms = reinterpret_cast<const GPUTransformI* const*>(memory + offset);
     offset += transformSize;
     dMediums = reinterpret_cast<const GPUMedium*>(memory + offset);
     offset += mediumSize;
     assert(offset == (mediumSize + transformSize));
 
     // Copy Data
-    CUDA_CHECK(cudaMemcpy(const_cast<GPUTransform*>(dTransforms), 
-                          gpuTransform.data(), transformSize,
-                          cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy(const_cast<GPUMedium*>(dMediums),
-                          gpuMedium.data(), mediumSize,
-                          cudaMemcpyHostToDevice));
+    //CUDA_CHECK(cudaMemcpy(const_cast<GPUTransformI**>(dTransforms), 
+    //                      gpuTransform.data(), transformSize,
+    //                      cudaMemcpyHostToDevice));
+    //CUDA_CHECK(cudaMemcpy(const_cast<GPUMedium*>(dMediums),
+    //                      gpuMedium.data(), mediumSize,
+    //                      cudaMemcpyHostToDevice));
 
     // Attach Medium gpu pointer to Material Groups
     for(const auto& mg : materialGroups)
+    {
         mg.second->AttachGlobalMediumArray(dMediums);
+        mg.second->AttachGlobalTransformArray(dTransforms);
+    }
+        
 
     // Attach Transform gpu pointer to the Accelerator Batches
     for(const auto& acc : accelBatches)
-        acc.second->AttachInverseTransformList(dTransforms);
+        acc.second->AttachGlobalTransformArray(dTransforms);
+        
 
     // Construct Tracers
     TracerError e = TracerError::OK;
@@ -218,12 +223,12 @@ void GPUTracer::HitAndPartitionRays()
             loc->second->Hit(*currentGPU,
                              // O
                              dWorkKeys,
+                             dTransfomIds,
                              dPrimitiveIds,
                              dHitStructs,
                              // I-O
                              dRays,
                              // Input
-                             dTransfomIds,
                              dRayIdStart,
                              dCurrentKeyStart,
                              static_cast<uint32_t>(p.count));

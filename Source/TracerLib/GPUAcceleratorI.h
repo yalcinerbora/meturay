@@ -16,7 +16,6 @@ Base Interface for GPU accelerators
 #include "RayLib/AABB.h"
 
 #include "AcceleratorFunctions.h"
-#include "GPUTransform.h"
 
 struct RayGMem;
 struct SceneError;
@@ -26,6 +25,7 @@ class CudaSystem;
 class GPUPrimitiveGroupI;
 class GPUMaterialGroupI;
 class SceneNodeI;
+class GPUTransformI;
 
 using SceneNodePtr = std::unique_ptr<SceneNodeI>;
 
@@ -85,18 +85,18 @@ class GPUAcceleratorGroupI
         virtual void                        Hit(const CudaGPU&,
                                                 // O
                                                 HitKey* dMaterialKeys,
+                                                TransformId* dTransformIds,
                                                 PrimitiveId* dPrimitiveIds,
                                                 HitStructPtr dHitStructs,
                                                 // I-O
                                                 RayGMem* dRays,
                                                 // Input
-                                                const TransformId* dTransformIds,
                                                 const RayId* dRayIds,
                                                 const HitKey* dAcceleratorKeys,
                                                 const uint32_t rayCount) const = 0;
 
         virtual const GPUPrimitiveGroupI&   PrimitiveGroup() const = 0;
-        virtual void                        AttachInverseTransformList(const GPUTransform*) = 0;
+        virtual void                        AttachGlobalTransformArray(const GPUTransformI* const*) = 0;
 };
 
 class GPUBaseAcceleratorI

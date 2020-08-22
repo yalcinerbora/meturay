@@ -184,7 +184,7 @@ struct SphereSurfaceGenerator
                                                                   SurfaceFunctionType<UVSurface, GenUVSurface>{});
 
     template<class Surface>
-    static constexpr SurfaceFunc<Surface, TriangleHit, TriData> GetSurfaceFunction()
+    static constexpr SurfaceFunc<Surface, SphereHit, SphereData> GetSurfaceFunction()
     {
         return PrimitiveSurfaceFind::LoopAndFindType<Surface, SurfaceFunc<Surface, SphereHit, SphereData>>(GeneratorFunctionList);
     }

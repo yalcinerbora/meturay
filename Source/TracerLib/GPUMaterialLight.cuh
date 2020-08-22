@@ -2,10 +2,11 @@
 
 #include "GPUMaterialLightKC.cuh"
 #include "GPUMaterialP.cuh"
-#include "SurfaceStructs.h"
+#include "GPUSurface.h"
 #include "MetaMaterialFunctions.cuh"
 #include "Texture.cuh"
 #include "GPUDistribution.h"
+#include "TypeTraits.h"
 
 class LightMatConstant final 
     : public GPUMaterialGroup<LightMatData, EmptySurface,
@@ -161,3 +162,10 @@ class LightMatCube final
         std::vector<uint32_t>       UsedTextureIds() const { return std::vector<uint32_t>(); }
         TextureMask                 CachedTextures() const { return 0; }
 };
+
+static_assert(IsTracerClass<LightMatConstant>::value,
+              "LightMatConstant is not a Tracer Class.");
+static_assert(IsTracerClass<LightMatTextured>::value,
+              "LightMatTextured is not a Tracer Class.");
+static_assert(IsTracerClass<LightMatCube>::value,
+              "LightMatCube is not a Tracer Class.");

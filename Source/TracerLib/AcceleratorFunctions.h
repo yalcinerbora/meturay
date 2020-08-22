@@ -11,7 +11,6 @@ using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxPrimitivePer
 
 using HitResult = Vector<2, bool>;
 
-class GPUSurface;
 class GPUTransformI;
 
 // This is Leaf of Base Accelerator
@@ -54,13 +53,6 @@ template <class PrimitiveData, class LeafData>
 using LeafGenFunction = LeafData(*)(const HitKey matId,
                                     const PrimitiveId primitiveId,
                                     const PrimitiveData& primData);
-
-template <class HitData, class PrimitiveData>
-using SurfaceGenFunction = GPUSurface(*)(const HitData&,
-                                         const GPUTransformI& transform,
-                                         //
-                                         const PrimitiveId primitiveId,
-                                         const PrimitiveData& primData);
 
 // Custom bounding box generation function
 // For primitive

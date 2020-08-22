@@ -92,7 +92,7 @@ void KCWork(// Output
 
         // Generate surface data from hit
         const HitData hit = gHitStructs.Ref<HitData>(rayId);
-        const Surface surface = SurfFunc(primData, hit, primitiveId);
+        const Surface surface = SurfFunc(hit, primitiveId, primData);
 
         // Determine Output Location
         // Make it locally indexable

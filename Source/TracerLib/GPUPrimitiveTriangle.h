@@ -326,8 +326,8 @@ struct TriangleSurfaceGenerator
         uint64_t i2 = primData.indexList[primitiveId * 3 + 2];
 
         Vector2 uv0 = primData.uvs[i0];
-        Vector2 uv1 = primData.uvs[i0];
-        Vector2 uv2 = primData.uvs[i0];
+        Vector2 uv1 = primData.uvs[i1];
+        Vector2 uv2 = primData.uvs[i2];
 
         Vector2 uv = (uv0 * baryCoords[0] +
                       uv1 * baryCoords[1] + 
@@ -351,7 +351,8 @@ struct TriangleSurfaceGenerator
     template<class Surface>
     static constexpr SurfaceFunc<Surface, TriangleHit, TriData> GetSurfaceFunction()
     {
-        return PrimitiveSurfaceFind::LoopAndFindType<Surface, SurfaceFunc<Surface, TriangleHit, TriData>>(GeneratorFunctionList);
+        return PrimitiveSurfaceFind::LoopAndFindType<Surface, SurfaceFunc<Surface, TriangleHit, TriData>,
+                                                    decltype(GeneratorFunctionList)>(GeneratorFunctionList);
     }
 };
 

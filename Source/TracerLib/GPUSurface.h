@@ -43,87 +43,94 @@ and surface generation functions for sample primitives
 //        //__device__ float        DotB(const Vector3&) const;
 //};
 
-//
-//
-//__device__
-//inline GPUSurface::GPUSurface(const QuatF& tbn)
-//    : worldToTangent(tbn)
-//{}
-//
-//__device__     
-//inline GPUSurface::GPUSurface(const QuatF& tbn)
-//    : worldToTangent(tbn)
-//{}
-//
-//__device__ 
-//inline Vector3 GPUSurface::NormalWorld() const
-//{
-//    Vector3 v = ZAxis;
-//    return worldToTangent.Conjugate().ApplyRotation(v);
-//}
-//
-//__device__
-//inline Vector3 GPUSurface::TangentWorld() const
-//{
-//    Vector3 v = XAxis;
-//    return worldToTangent.Conjugate().ApplyRotation(v);
-//}
-//
-//__device__
-//inline Vector3 GPUSurface::BitangentWorld() const
-//{
-//    Vector3 v = YAxis;
-//    return worldToTangent.Conjugate().ApplyRotation(v);
-//}
-//
-//__device__
-//inline Vector3 GPUSurface::Normal() const
-//{
-//    return ZAxis;
-//}
-//
-//__device__
-//inline Vector3 GPUSurface::Tangent() const
-//{
-//    return XAxis;
-//}
-//
-//__device__
-//inline Vector3 GPUSurface::Bitangent() const
-//{
-//    return YAxis;
-//}
-//
-//__device__
-//inline RayF GPUSurface::ToTangent(const RayF& r) const
-//{
-//    return r.Transform(worldToTangent);
-//}
-//
-//__device__
-//inline RayF GPUSurface::FromTangent(const RayF& r) const
-//{
-//    return r.Transform(worldToTangent.Conjugate());
-//}
-//
-//__device__ 
-//inline float GPUSurface::DotN(const Vector3& v) const
-//{
-//    return v[2];
-//}
-//
-//__device__
-//inline float GPUSurface::DotT(const Vector3& v) const
-//{
-//    return v[0];
-//}
-//
-//__device__
-//inline float GPUSurface::DotB(const Vector3& v) const
-//{
-//    return v[1];
-//}
 
+namespace GPUSurface
+{
+    __device__
+    inline Vector3 NormalWorld(const QuatF& toTangentTransform)
+    {
+        Vector3 v = ZAxis;
+        return toTangentTransform.Conjugate().ApplyRotation(v);
+    }
+
+    __device__
+    inline Vector3 TangentWorld(const QuatF& toTangentTransform)
+    {
+        Vector3 v = XAxis;
+        return toTangentTransform.Conjugate().ApplyRotation(v);
+    }
+
+    __device__
+    inline Vector3 BitangentWorld(const QuatF& toTangentTransform)
+    {
+        Vector3 v = YAxis;
+        return toTangentTransform.Conjugate().ApplyRotation(v);
+    }
+
+    __device__
+    inline Vector3 ToTangent(const Vector3f& v,
+                             const QuatF& toTangentTransform)
+    {
+        return toTangentTransform.Conjugate().ApplyRotation(v);
+    }
+
+    __device__
+    inline Vector3 ToWorld(const Vector3f& v,
+                           const QuatF& toTangentTransform)
+    {
+        return toTangentTransform.Conjugate().ApplyRotation(v);
+    }
+
+    __device__
+    inline RayF ToTangent(const RayF& r,
+                          const QuatF& toTangentTransform)
+    {
+        return r.Transform(toTangentTransform);
+    }
+
+    __device__
+    inline RayF FromTangent(const RayF& r,
+                            const QuatF& toTangentTransform)
+    {
+        return r.Transform(toTangentTransform.Conjugate());
+    }
+
+    __device__
+    inline Vector3 Normal()
+    {
+        return ZAxis;
+    }
+
+    __device__
+    inline Vector3 Tangent()
+    {
+        return XAxis;
+    }
+
+    __device__
+    inline Vector3 Bitangent()
+    {
+        return YAxis;
+    }
+
+    __device__
+    inline float DotN(const Vector3& v)
+    {
+        return v[2];
+    }
+
+    __device__
+    inline float DotT(const Vector3& v)
+    {
+        return v[0];
+    }
+
+    __device__
+    inline float DotB(const Vector3& v)
+    {
+        return v[1];
+    }
+}
 
 struct EmptySurface
 {};

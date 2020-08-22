@@ -136,12 +136,12 @@ class GPUAccBVHGroup final
         void                    Hit(const CudaGPU&,
                                     // O
                                     HitKey* dMaterialKeys,
+                                    TransformId* dTransformIds,
                                     PrimitiveId* dPrimitiveIds,
                                     HitStructPtr dHitStructs,
                                     // I-O
                                     RayGMem* dRays,
-                                    // Input
-                                    const TransformId* dTransformIds,
+                                    // Input                                    
                                     const RayId* dRayIds,
                                     const HitKey* dAcceleratorKeys,
                                     const uint32_t rayCount) const override;

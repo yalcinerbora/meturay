@@ -11,7 +11,6 @@
 #include <cub/cub.cuh>
 #pragma warning( pop ) 
 
-
 enum class SplitAxis { X, Y, Z, END };
 
 // Depth First Search over BVH
@@ -93,16 +92,18 @@ struct AABBGen
 {
     private:
         PGroup::PrimitiveData   pData;
+        const GPUTransformI&    transform;
 
     protected:
     public:
         // Constructors & Destructor                                
-        AABBGen(PGroup::PrimitiveData pData) : pData(pData) {}
+        AABBGen(PGroup::PrimitiveData pData,
+                const GPUTransformI& t) : pData(pData), transform(t) {}
 
         __device__ __host__
         __forceinline__ AABB3f operator()(const PrimitiveId& id) const
         {
-            return PGroup::AABB(id, pData);
+            return PGroup::AABB(transform, id, pData);
         }
 };
 
@@ -165,7 +166,7 @@ static void KCReduceAABBs(AABB3f* gAABBsReduced,
 
 __global__
 static void KCReduceAABBsFirst(AABB3f* gAABBsReduced,
-                          //
+                               //
                                const AABB3f* gAABBs,
                                const uint32_t* gIndices,
                                uint32_t count)
@@ -207,7 +208,7 @@ static void KCReduceCentroids(float* gCentersReduced,
 
 __global__
 static void KCReduceCentroidsFirst(float* gCentersReduced,
-                              //
+                                   //
                                    const Vector3f* gCenters,
                                    const uint32_t* gIndices,
                                    SplitAxis axis,
@@ -297,24 +298,27 @@ template <class PGroup>
 __global__ __launch_bounds__(StaticThreadPerBlock1D)
 void KCIntersectBVH(// O
                     HitKey* gMaterialKeys,
+                    TransformId* gTransformIds,
                     PrimitiveId* gPrimitiveIds,
                     HitStructPtr gHitStructs,
                     // I-O
                     RayGMem* gRays,
                     // Input
-                    const TransformId* gTransformIds,
                     const RayId* gRayIds,
                     const HitKey* gAccelKeys,
                     const uint32_t rayCount,
                     // Constants
                     const BVHNode<PGroup::LeafData>** gBVHList,
-                    const GPUTransform* gInverseTransforms,
+                    const GPUTransformI* const* gTransforms,
                     //
-                    const PGroup::PrimitiveData primData)
+                    const PGroup::PrimitiveData primData,
+                    AcceleratorData accData)
 {
     using HitData = typename PGroup::HitData;       // HitRegister is defined by primitive
     using LeafData = typename PGroup::LeafData;     // LeafStruct is defined by primitive
 
+    // Minimal stack to traverse
+    // Kinda heavy on GPU but still it is faster
     uint32_t sLocationStack[MAX_DEPTH];
 
     // Convenience Functions
@@ -343,7 +347,8 @@ void KCIntersectBVH(// O
     {
         const RayId id = gRayIds[globalId];
         const uint64_t accId = HitKey::FetchIdPortion(gAccelKeys[globalId]);
-        const TransformId transformId = gTransformIds[id];
+        const TransformId transformId = accData.gTransformIds[accId];
+        const AccTransformType type = accData.gTransformTypes[accId];
 
         // Load Ray/Hit to Register
         RayReg ray(gRays, id);
@@ -351,12 +356,14 @@ void KCIntersectBVH(// O
         // Key is the index of the inner BVH
         const BVHNode<LeafData>* gBVH = gBVHList[accId];
 
-        // Zero means identity so skip
-        if(transformId != 0)
+        // Check transforms
+        const GPUTransformI* localTransform = gTransforms[0];
+        if(type == AccTransformType::CONSTANT_LOCAL_TRANSFORM)
         {
-            GPUTransform s = gInverseTransforms[transformId];
-            ray.ray.TransformSelf(s);
+            const GPUTransformI& t = (*gTransforms[transformId]);
+            ray.ray = t.WorldToLocal(ray.ray);
         }
+        else localTransform = gTransforms[transformId];
 
         // Hit Data that is going to be fetched
         bool hitModified = false;
@@ -383,6 +390,7 @@ void KCIntersectBVH(// O
                                                // I-O
                                                ray,
                                                // Input
+                                               *localTransform,
                                                currentNode->leaf,
                                                primData);
 
@@ -403,6 +411,7 @@ void KCIntersectBVH(// O
         {
             ray.UpdateTMax(gRays, id);
             gHitStructs.Ref<HitData>(id) = hit;
+            gTransformIds[id] = transformId;
             gMaterialKeys[id] = materialKey;
             gPrimitiveIds[id] = primitiveId;
         }
@@ -415,20 +424,21 @@ template <class PGroup>
 __global__ __launch_bounds__(StaticThreadPerBlock1D)
 void KCIntersectBVHStackless(// O
                              HitKey* gMaterialKeys,
+                             TransformId* gTransformIds,
                              PrimitiveId* gPrimitiveIds,
                              HitStructPtr gHitStructs,
                              // I-O
                              RayGMem* gRays,
                              // Input
-                             const TransformId* gTransformIds,
                              const RayId* gRayIds,
                              const HitKey* gAccelKeys,
                              const uint32_t rayCount,
                              // Constants
                              const BVHNode<PGroup::LeafData>** gBVHList,
-                             const GPUTransform* gInverseTransforms,
+                             const GPUTransformI* const* gTransforms,
                              //
-                             const PGroup::PrimitiveData primData)
+                             const PGroup::PrimitiveData primData,
+                             AcceleratorData accData)
 {
     using HitData = typename PGroup::HitData;       // HitRegister is defined by primitive
     using LeafData = typename PGroup::LeafData;     // LeafStruct is defined by primitive
@@ -464,7 +474,8 @@ void KCIntersectBVHStackless(// O
     {
         const RayId id = gRayIds[globalId];
         const uint64_t accId = HitKey::FetchIdPortion(gAccelKeys[globalId]);
-        const TransformId transformId = gTransformIds[id];
+        const TransformId transformId = accData.gTransformIds[accId];
+        const AccTransformType type = accData.gTransformTypes[accId];
         
         // Load Ray/Hit to Register
         RayReg ray(gRays, id);
@@ -473,12 +484,14 @@ void KCIntersectBVHStackless(// O
         // Key is the index of the inner BVH
         const BVHNode<LeafData>* gBVH = gBVHList[accId];
 
-        // Zero means identity so skip
-        if(transformId != 0)
+        // Check transforms
+        const GPUTransformI* localTransform = gTransforms[0];
+        if(type == AccTransformType::CONSTANT_LOCAL_TRANSFORM)
         {
-            GPUTransform s = gInverseTransforms[transformId];
-            ray.ray.TransformSelf(s);
+            const GPUTransformI& t = (*gTransforms[transformId]);
+            ray.ray = t.WorldToLocal(ray.ray);
         }
+        else localTransform = gTransforms[transformId];
 
         // Hit Data that is going to be fetched
         bool hitModified = false;
@@ -507,6 +520,7 @@ void KCIntersectBVHStackless(// O
                                                    // I-O
                                                    ray,
                                                    // Input
+                                                   *localTransform,
                                                    currentNode->leaf,
                                                    primData);
                     hitModified |= result[1];
@@ -563,6 +577,7 @@ void KCIntersectBVHStackless(// O
         {
             ray.UpdateTMax(gRays, id);
             gHitStructs.Ref<HitData>(id) = hit;
+            gTransformIds[id] = transformId;
             gMaterialKeys[id] = materialKey;
             gPrimitiveIds[id] = primitiveId;
         }

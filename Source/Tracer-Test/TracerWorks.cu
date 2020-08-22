@@ -2,85 +2,35 @@
 #include "TracerWorks.cuh"
 
 // Basic Tracer Work Batches
-template class DirectTracerWork<ConstantMat,
-                                GPUPrimitiveEmpty,
-                                EmptySurfaceFromAny<GPUPrimitiveEmpty>>;
+template class DirectTracerWork<ConstantMat, GPUPrimitiveEmpty>;
+template class DirectTracerWork<ConstantMat, GPUPrimitiveTriangle>;
+template class DirectTracerWork<ConstantMat, GPUPrimitiveSphere>;
 
-template class DirectTracerWork<ConstantMat,
-                                GPUPrimitiveTriangle,
-                                EmptySurfaceFromAny<GPUPrimitiveTriangle>>;
+template class DirectTracerWork<BarycentricMat, GPUPrimitiveTriangle>;
 
-template class DirectTracerWork<BarycentricMat,
-                                GPUPrimitiveTriangle,
-                                BarySurfaceFromTri>;
-//
-template class DirectTracerWork<ConstantMat,
-                                GPUPrimitiveSphere,
-                                EmptySurfaceFromAny<GPUPrimitiveSphere>>;
-
-template class DirectTracerWork<SphericalMat,
-                                GPUPrimitiveSphere,
-                                SphrSurfaceFromSphr>;
+template class DirectTracerWork<SphericalMat, GPUPrimitiveSphere>;
 // ===================================================
 // Path Tracer Work Batches
-template class PathTracerWork<EmissiveMat,
-                              GPUPrimitiveEmpty,
-                              EmptySurfaceFromAny<GPUPrimitiveEmpty>>;
+template class PathTracerWork<EmissiveMat, GPUPrimitiveEmpty>;
+template class PathTracerWork<EmissiveMat, GPUPrimitiveTriangle>;
+template class PathTracerWork<EmissiveMat, GPUPrimitiveSphere>;
 
-template class PathTracerWork<EmissiveMat,
-                              GPUPrimitiveTriangle,
-                              EmptySurfaceFromAny<GPUPrimitiveTriangle>>;
+template class PathTracerWork<LambertMat, GPUPrimitiveTriangle>;
+template class PathTracerWork<LambertMat, GPUPrimitiveSphere>;
 
-template class PathTracerWork<EmissiveMat,
-                              GPUPrimitiveSphere,
-                              EmptySurfaceFromAny<GPUPrimitiveSphere>>;
-//
-template class PathTracerWork<LambertMat,
-                              GPUPrimitiveTriangle,
-                              BasicSurfaceFromTri>;
+template class PathTracerWork<ReflectMat, GPUPrimitiveTriangle>;
+template class PathTracerWork<ReflectMat, GPUPrimitiveSphere>;
 
-template class PathTracerWork<LambertMat,
-                              GPUPrimitiveSphere,
-                              BasicSurfaceFromSphr>;
-//
-template class PathTracerWork<ReflectMat,
-                              GPUPrimitiveTriangle,
-                              BasicSurfaceFromTri>;
+template class PathTracerWork<RefractMat, GPUPrimitiveTriangle>;
+template class PathTracerWork<RefractMat, GPUPrimitiveSphere>;
 
-template class PathTracerWork<ReflectMat,
-                              GPUPrimitiveSphere,
-                              BasicSurfaceFromSphr>;
-//
-template class PathTracerWork<RefractMat,
-                              GPUPrimitiveTriangle,
-                              BasicSurfaceFromTri>;
+template class PathTracerLightWork<LightMatConstant, GPUPrimitiveEmpty>;
+template class PathTracerLightWork<LightMatConstant, GPUPrimitiveTriangle>;
+template class PathTracerLightWork<LightMatConstant, GPUPrimitiveSphere>;
 
-template class PathTracerWork<RefractMat,
-                              GPUPrimitiveSphere,
-                              BasicSurfaceFromSphr>;
-// ===================================================
-// Path Tracer Light Work Batches
-template class PathTracerLightWork<LightMatConstant,
-                                   GPUPrimitiveEmpty,
-                                   EmptySurfaceFromAny<GPUPrimitiveEmpty>>;
-template class PathTracerLightWork<LightMatConstant,
-                                   GPUPrimitiveTriangle,
-                                   EmptySurfaceFromAny<GPUPrimitiveTriangle>>;
-template class PathTracerLightWork<LightMatConstant,
-                                   GPUPrimitiveSphere,
-                                   EmptySurfaceFromAny<GPUPrimitiveSphere>>;
-template class PathTracerLightWork<LightMatTextured,
-                                   GPUPrimitiveTriangle,
-                                   UVSurfaceFromTri>;
-template class PathTracerLightWork<LightMatTextured,
-                                   GPUPrimitiveSphere,
-                                   UVSurfaceFromSphr>;
-template class PathTracerLightWork<LightMatCube,
-                                   GPUPrimitiveEmpty,
-                                   EmptySurfaceFromAny<GPUPrimitiveEmpty>>;
-template class PathTracerLightWork<LightMatCube,
-                                   GPUPrimitiveTriangle,
-                                   EmptySurfaceFromAny<GPUPrimitiveTriangle>>;
-template class PathTracerLightWork<LightMatCube,
-                                   GPUPrimitiveSphere,
-                                   EmptySurfaceFromAny<GPUPrimitiveSphere>>;
+template class PathTracerLightWork<LightMatTextured, GPUPrimitiveTriangle>;
+template class PathTracerLightWork<LightMatTextured, GPUPrimitiveSphere>;
+
+template class PathTracerLightWork<LightMatCube, GPUPrimitiveEmpty>;
+template class PathTracerLightWork<LightMatCube, GPUPrimitiveTriangle>;
+template class PathTracerLightWork<LightMatCube, GPUPrimitiveSphere>;

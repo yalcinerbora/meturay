@@ -24,9 +24,8 @@ All Tracers should inherit this class
 #include "RayMemory.h"
 #include "ImageMemory.h"
 
-using GPUTransform = Matrix4x4;
-
 class GPUMedium;
+class GPUTransformI;
 class GPUSceneI;
 class CudaSystem;
 
@@ -63,7 +62,7 @@ class GPUTracer : public GPUTracerI
         RNGMemory                           rngMemory;
         RayMemory                           rayMemory;
         ImageMemory                         imgMemory;        
-        const GPUTransform*                 dTransforms;
+        const GPUTransformI* const*         dTransforms;
         const GPUMedium*                    dMediums;
         //
         TracerParameters                    params;

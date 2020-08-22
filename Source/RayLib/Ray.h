@@ -82,7 +82,7 @@ class Ray<T>
         __device__ __host__ Ray                     Transform(const Quaternion<T>&) const;
         __device__ __host__ Ray                     Transform(const Matrix<3, T>&) const;
         __device__ __host__ Ray                     Transform(const Matrix<4, T>&) const;
-        __device__ __host__ Ray                     TransformSelf(const Quaternion<T>&) const;
+        __device__ __host__ Ray                     TransformSelf(const Quaternion<T>&);
         __device__ __host__ Ray&                    TransformSelf(const Matrix<3, T>&);
         __device__ __host__ Ray&                    TransformSelf(const Matrix<4, T>&);
         __device__ __host__ Vector<3,T>             AdvancedPos(T t) const;

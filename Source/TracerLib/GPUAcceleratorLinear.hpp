@@ -225,12 +225,12 @@ template <class PGroup>
 void GPUAccLinearGroup<PGroup>::Hit(const CudaGPU& gpu,
                                     // O                                    
                                     HitKey* dMaterialKeys,
+                                    TransformId* dTransformIds,
                                     PrimitiveId* dPrimitiveIds,
                                     HitStructPtr dHitStructs,
                                     // I-O                                                  
                                     RayGMem* dRays,
                                     // Input
-                                    const TransformId* dTransformIds,
                                     const RayId* dRayIds,
                                     const HitKey* dAcceleratorKeys,
                                     const uint32_t rayCount) const
@@ -248,20 +248,21 @@ void GPUAccLinearGroup<PGroup>::Hit(const CudaGPU& gpu,
         // Args
         // O
         dMaterialKeys,
+        dTransformIds,
         dPrimitiveIds,
         dHitStructs,
         // I-O
         dRays,
         // Input
-        dTransformIds,
         dRayIds,
         dAcceleratorKeys,
         rayCount,
         // Constants
         dLeafList,
         dAccRanges,
-        dInverseTransforms,
+        dTransforms,
         //
-        primData
+        primData,
+        accData
     );
 }

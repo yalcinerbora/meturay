@@ -3,7 +3,7 @@
 #include "GPUMaterialI.h"
 #include "MaterialFunctions.cuh"
 
-struct MatDataAccessor;
+class GPUTransformI;
 
 //
 template <class Data>
@@ -48,6 +48,7 @@ class GPUMaterialGroup
         
     protected:
         std::map<uint32_t, uint32_t>    innerIds;
+        const GPUTransformI* const*     dTransforms;
 
         SceneError                      GenerateInnerIds(const NodeListing&);
 
@@ -63,6 +64,7 @@ class GPUMaterialGroup
 
         virtual bool                    IsSpecularGroup() const override;
         virtual void                    AttachGlobalMediumArray(const GPUMedium*) override;
+        virtual void                    AttachGlobalTransformArray(const GPUTransformI* const*) override;
 };
 
 template <class D, class S, 
@@ -150,6 +152,17 @@ template <class D, class S,
     AcquireUVList<D, S> AF>
 void GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::AttachGlobalMediumArray(const GPUMedium*)
 {}
+
+template <class D, class S,
+    SampleFunc<D, S> SF,
+    EvaluateFunc<D, S> EF,
+    EmissionFunc<D, S> EmF,
+    IsEmissiveFunc<D> IEF,
+    AcquireUVList<D, S> AF>
+void GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::AttachGlobalTransformArray(const GPUTransformI* const* t)
+{
+    dTransforms = t;
+}
 
 struct MatDataAccessor
 {

@@ -355,7 +355,7 @@ inline Ray<T> Ray<T>::Transform(const Matrix<4, T>& mat) const
 
 template<class T>
 __device__ __host__
-inline Ray<T> Ray<T>::TransformSelf(const Quaternion<T>& q) const
+inline Ray<T> Ray<T>::TransformSelf(const Quaternion<T>& q)
 {
     Ray<T> r = Transform(q);
     (*this) = r;

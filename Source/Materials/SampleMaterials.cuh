@@ -3,16 +3,17 @@
 #include "SampleMaterialsKC.cuh"
 
 #include "TracerLib/MetaMaterialFunctions.cuh"
-#include "TracerLib/SurfaceStructs.h"
+#include "TracerLib/GPUSurface.h"
 #include "TracerLib/GPUMaterialP.cuh"
 #include "TracerLib/TypeTraits.h"
+#include "TracerLib/DeviceMemory.h"
 
 // Light Material that constantly emits all directions
 class EmissiveMat final 
     : public GPUMaterialGroup<EmissiveMatData, EmptySurface,
                               SampleEmpty<EmissiveMatData, EmptySurface>, 
                               EvaluateEmpty<EmissiveMatData, EmptySurface>,
-                              EmitConstant<EmptySurface>,
+                              EmitConstant,
                               IsEmissiveTrue<EmissiveMatData>,
                               AcquireUVEmpty<EmissiveMatData, EmptySurface>>
 {
@@ -208,3 +209,12 @@ class RefractMat final
         std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
         TextureMask             CachedTextures() const { return 0; }
 };
+
+static_assert(IsTracerClass<EmissiveMat>::value,
+              "EmissiveMat is not a Tracer Class.");
+static_assert(IsTracerClass<LambertMat>::value,
+              "LambertMat is not a Tracer Class.");
+static_assert(IsTracerClass<ReflectMat>::value,
+              "ReflectMat is not a Tracer Class.");
+static_assert(IsTracerClass<RefractMat>::value,
+              "RefractMat is not a Tracer Class.");

@@ -279,8 +279,8 @@ inline Quaternion<T> Quat::BarySLerp(const Quaternion<T>& q0,
     
     // Align tovards q0
     const Quaternion<T>& qA = q0;
-    Quaternion<T> qB = (q1.Dot(q0) < 0) ? q1.Conjuate() : q1;
-    Quaternion<T> qC = (q2.Dot(q0) < 0) ? q2.Conjuate() : q2;
+    Quaternion<T> qB = (q1.Dot(q0) < 0) ? q1.Conjugate() : q1;
+    Quaternion<T> qC = (q2.Dot(q0) < 0) ? q2.Conjugate() : q2;
 
     T c = (1 - a - b);
     Quaternion<T> result = qA * a + qB * b + qC * c;

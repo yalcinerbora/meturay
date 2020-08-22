@@ -378,8 +378,10 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     const CudaGPU& gpu = (*system.GPUList().begin());
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
 
-    uint32_t index = idLookup.at(surface);
-    const PrimitiveRangeList& primRangeList = primitiveRanges[index];
+    uint32_t innerIndex = idLookup.at(surface);
+    const PrimitiveRangeList& primRangeList = primitiveRanges[innerIndex];
+    const AccTransformType tType = accData.gTransformTypes[innerIndex];
+    const GPUTransformI* transform = dTransforms[accData.gTransformIds[innerIndex]];
 
     size_t currentOffset = 0;
     PrimitiveRangeList indexOffsets;
@@ -394,6 +396,9 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         indexOffsets[i][1] = currentOffset;
     }
     size_t totalPrimCount = currentOffset;
+
+    if(tType == AccTransformType::CONSTANT_LOCAL_TRANSFORM)
+        transform = dTransforms[0];
 
     // Determine Partition / Reduce Memories
     size_t cubIfMemSize = 0;
@@ -505,7 +510,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                        dIdsIn,
                        dPrimIds,
                        //
-                       AABBGen<PGroup>(primData),
+                       AABBGen<PGroup>(primData, *transform),
                        static_cast<uint32_t>(totalPrimCount));
 
     // CPU Memory
@@ -555,7 +560,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                         dPrimIds,
                         dPrimCenters,
                         dPrimAABBs,
-                        index,
+                        innerIndex,
                         gpu,
                         // Call Related Args
                         current.parentId,
@@ -586,8 +591,8 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         return TracerError::UNABLE_TO_CONSTRUCT_ACCELERATOR;
 
     // Finally Nodes are Generated now copy it to GPU Memory
-    bvhMemories[index] = std::move(DeviceMemory(sizeof(BVHNode<LeafData>) * bvhNodes.size()));
-    bvhDepths[index] = maxDepth;
+    bvhMemories[innerIndex] = std::move(DeviceMemory(sizeof(BVHNode<LeafData>) * bvhNodes.size()));
+    bvhDepths[innerIndex] = maxDepth;
        
     //Debug::DumpMemToFile("BVHNodes", bvhNodes.data(), bvhNodes.size());
     //Debug::DumpMemToFile("AABB", dPrimAABBs, totalPrimCount);
@@ -595,13 +600,13 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     //Debug::DumpMemToFile("dIds", dIdsIn, totalPrimCount);
     //METU_LOG("-------");
 
-    CUDA_CHECK(cudaMemcpy(bvhMemories[index],
+    CUDA_CHECK(cudaMemcpy(bvhMemories[innerIndex],
                           bvhNodes.data(),
                           sizeof(BVHNode<LeafData>) * bvhNodes.size(),
                           cudaMemcpyHostToDevice));
 
-    BVHNode<LeafData>* dBVHStart = static_cast<BVHNode<LeafData>*>(bvhMemories[index]);
-    CUDA_CHECK(cudaMemcpy(dBVHLists + index,
+    BVHNode<LeafData>* dBVHStart = static_cast<BVHNode<LeafData>*>(bvhMemories[innerIndex]);
+    CUDA_CHECK(cudaMemcpy(dBVHLists + innerIndex,
                           &dBVHStart,
                           sizeof(BVHNode<LeafData>*),
                           cudaMemcpyHostToDevice));
@@ -679,12 +684,12 @@ template <class PGroup>
 void GPUAccBVHGroup<PGroup>::Hit(const CudaGPU& gpu,
                                  // O
                                  HitKey* dMaterialKeys,
+                                 TransformId* dTransformIds,
                                  PrimitiveId* dPrimitiveIds,
                                  HitStructPtr dHitStructs,
                                  // I-O                                                  
                                  RayGMem* dRays,
                                  // Input
-                                 const TransformId* dTransformIds,
                                  const RayId* dRayIds,
                                  const HitKey* dAcceleratorKeys,
                                  const uint32_t rayCount) const
@@ -696,15 +701,16 @@ void GPUAccBVHGroup<PGroup>::Hit(const CudaGPU& gpu,
     
     // Select Intersection algorithm with or without stack    
     using BVHIntersectKernel = void(*)(HitKey*,
+                                       TransformId*,
                                        PrimitiveId*,
                                        HitStructPtr,
                                        RayGMem*,
-                                       const TransformId*,
                                        const RayId*,
                                        const HitKey*,
                                        uint32_t,
                                        const BVHNode<LeafData>**,
-                                       const GPUTransform*, PrimitiveData);
+                                       const GPUTransformI* const*, PrimitiveData, 
+                                       AcceleratorData);
 
     BVHIntersectKernel kernel = (params.useStack) ? KCIntersectBVH<PGroup> : 
                                                     KCIntersectBVHStackless<PGroup>;
@@ -719,19 +725,20 @@ void GPUAccBVHGroup<PGroup>::Hit(const CudaGPU& gpu,
         // Args
         // O
         dMaterialKeys,
+        dTransformIds,
         dPrimitiveIds,
         dHitStructs,
         // I-O
         dRays,
         // Input
-        dTransformIds,
         dRayIds,
         dAcceleratorKeys,
         rayCount,
         // Constants
         dBVHLists,
-        dInverseTransforms,
+        dTransforms,
         //
-        primData
+        primData,
+        accData
     );
 }

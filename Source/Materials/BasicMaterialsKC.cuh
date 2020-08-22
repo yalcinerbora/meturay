@@ -21,7 +21,7 @@ Vector3 ConstantSample(// Sampled Output
                        const Vector3& pos,
                        const GPUMedium& m,
                        //
-                       const GPUSurface& surface,
+                       const EmptySurface& surface,
                        const TexCoords* uvs,
                        // I-O
                        RandomGPU& rng,
@@ -44,7 +44,7 @@ Vector3 ConstantEvaluate(// Input
                          const Vector3& pos,
                          const GPUMedium& m,
                          //
-                         const GPUSurface& surface,
+                         const EmptySurface& surface,
                          const TexCoords* uvs,
                          // Constants
                          const AlbedoMatData& matData,
@@ -63,7 +63,7 @@ Vector3 BarycentricSample(// Sampled Output
                           const Vector3& pos,
                           const GPUMedium& m,
                           //
-                          const GPUSurface& surface,
+                          const BarySurface& surface,
                           const TexCoords* uvs,
                           // I-O
                           RandomGPU& rng,
@@ -76,7 +76,7 @@ Vector3 BarycentricSample(// Sampled Output
     static constexpr Vector3 ZERO = Zero3;
     pdf = 1.0f;
     wo = RayF(ZERO, ZERO);
-    return Vector3(1.0f, 1.0f, 1.0f);// surface.baryCoords;
+    return surface.baryCoords;
 }
 
 __device__ inline
@@ -86,13 +86,13 @@ Vector3 BarycentricEvaluate(// Input
                             const Vector3& pos,
                             const GPUMedium& m,
                             //
-                            const GPUSurface& surface,
+                            const BarySurface& surface,
                             const TexCoords* uvs,
                             // Constants
                             const NullData& matData,
                             const HitKey::Type& matId)
 {
-    return  Vector3(1.0f, 1.0f, 1.0f);// surface.baryCoords;
+    return surface.baryCoords;
 }
 
 __device__ inline
@@ -105,7 +105,7 @@ Vector3 SphericalSample(// Sampled Output
                         const Vector3& pos,
                         const GPUMedium& m,
                         //
-                        const GPUSurface& surface,
+                        const SphrSurface& surface,
                         const TexCoords* uvs,
                         // I-O
                         RandomGPU& rng,
@@ -118,8 +118,8 @@ Vector3 SphericalSample(// Sampled Output
     static constexpr Vector3 ZERO = Zero3;
     pdf = 1.0f;
     wo = RayF(ZERO, ZERO);
-    return Vector3f(surface.UV()[0],
-                    surface.UV()[1],
+    return Vector3f(surface.sphrCoords[0],
+                    surface.sphrCoords[1],
                     0.0f);
 }
 
@@ -130,13 +130,13 @@ Vector3 SphericalEvaluate(// Input
                           const Vector3& pos,
                           const GPUMedium& m,
                           //
-                          const GPUSurface& surface,
+                          const SphrSurface& surface,
                           const TexCoords* uvs,
                           // Constants
                           const NullData& matData,
                           const HitKey::Type& matId)
 {
-    return Vector3f(surface.UV()[0],
-                    surface.UV()[1],
+    return Vector3f(surface.sphrCoords[0],
+                    surface.sphrCoords[1],
                     0.0f);
 }

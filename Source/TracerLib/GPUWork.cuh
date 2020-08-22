@@ -44,10 +44,6 @@ class GPUWorkBatch
 {
     public:
         static const char*              TypeName();
-
-    private:        
-        static constexpr auto           GenerateSurface = SFunc;
-
     protected:
         const MGroup&                   materialGroup;
         const PGroup&                   primitiveGroup;
@@ -135,9 +131,8 @@ void GPUWorkBatch<GD, LD, RD, MG, PG, WF>::Work(// Output
     using MaterialData = typename MG::Data;
     using MaterialSurface = typename MG::Surface;
     // Fetch surface function from primitive list
-    constexpr SurfaceFunc<MaterialSurface, 
-                          HitData, 
-                          PrimitiveData> SFunc = PGroup::GetSurfaceFunction();
+    using SFuncType = SurfaceFunc<MaterialSurface, HitData, PrimitiveData>;
+    constexpr SFuncType SFunc = PG::GetSurfaceFunction<MaterialSurface>();
 
     // Get Data
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
@@ -151,7 +146,7 @@ void GPUWorkBatch<GD, LD, RD, MG, PG, WF>::Work(// Output
         0,
         rayCount,
         //
-        KCWork<GD, LD, RD, PG, MG, WF, SF>,
+        KCWork<GD, LD, RD, PG, MG, WF, SFunc>,
         // Args
         // Output
         dBoundMatOut,
