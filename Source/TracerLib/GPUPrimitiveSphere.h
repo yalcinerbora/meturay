@@ -175,18 +175,22 @@ struct SphereSurfaceGenerator
     template <class Surface, SurfaceFunc<Surface, SphereHit, SphereData> SF>
     struct SurfaceFunctionType
     {
-        using Type = Surface;
-        static constexpr auto SurfaceGen = SF;
+        using type = Surface;
+        static constexpr auto SurfaceGeneratorFunction = SF;
     };
 
-    static constexpr auto GeneratorFunctionList = std::make_tuple(SurfaceFunctionType<BasicSurface, GenBasicSurface>{},
-                                                                  SurfaceFunctionType<SphrSurface, GenSphrSurface>{},
-                                                                  SurfaceFunctionType<UVSurface, GenUVSurface>{});
+    static constexpr auto GeneratorFunctionList = 
+        std::make_tuple(SurfaceFunctionType<EmptySurface, GenEmptySurface<SphereHit, SphereData>>{},
+                        SurfaceFunctionType<BasicSurface, GenBasicSurface>{},
+                        SurfaceFunctionType<SphrSurface, GenSphrSurface>{},
+                        SurfaceFunctionType<UVSurface, GenUVSurface>{});
 
     template<class Surface>
     static constexpr SurfaceFunc<Surface, SphereHit, SphereData> GetSurfaceFunction()
     {
-        return PrimitiveSurfaceFind::LoopAndFindType<Surface, SurfaceFunc<Surface, SphereHit, SphereData>>(GeneratorFunctionList);
+        using namespace PrimitiveSurfaceFind;
+        return LoopAndFindType<Surface, SurfaceFunc<Surface, SphereHit, SphereData>,
+                               decltype(GeneratorFunctionList)>(std::move(GeneratorFunctionList));
     }
 };
 

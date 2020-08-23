@@ -82,10 +82,7 @@ TracerError GPUTracer::Initialize()
 
     // Attach Medium gpu pointer to Material Groups
     for(const auto& mg : materialGroups)
-    {
         mg.second->AttachGlobalMediumArray(dMediums);
-        mg.second->AttachGlobalTransformArray(dTransforms);
-    }
         
 
     // Attach Transform gpu pointer to the Accelerator Batches
@@ -293,6 +290,7 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
     const RayGMem* dRays = rayMemory.Rays();
     const HitStructPtr dHitStructs = rayMemory.HitStructs();
     const PrimitiveId* dPrimitiveIds = rayMemory.PrimitiveIds();
+    const TransformId* dTransformIds = rayMemory.TransformIds();
     // These are sorted etc.
     HitKey* dCurrentKeys = rayMemory.CurrentKeys();
     RayId* dCurrentRayIds = rayMemory.CurrentIds();
@@ -336,6 +334,7 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
                           //  Input
                           dRays,
                           dPrimitiveIds,
+                          dTransformIds,
                           dHitStructs,
                           // Ids
                           dKeyStart,

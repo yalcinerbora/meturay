@@ -9,40 +9,7 @@ and surface generation functions for sample primitives
 #include "RayLib/Ray.h"
 #include "RayLib/Quaternion.h"
 
-//struct BasicSurface
-//{
-//    private:        
-//        QuatF   worldToTangent;     // World to tangent space transformation
-//
-//    protected:
-//    public:
-//        //// Constructors & Destructor
-//        //__device__              GPUSurface(const QuatF& tbn);
-//        //__device__              GPUSurface(const QuatF& tbn);
-//        //                        GPUSurface(const GPUSurface&) = default;
-//        //                        GPUSurface(GPUSurface&&) = default;
-//        //GPUSurface&             operator=(const GPUSurface&) = default;
-//        //GPUSurface&             operator=(GPUSurface&&) = default;
-//        //                        ~GPUSurface() = default;
-//
-//        //__device__          
-//        //// Functionality
-//        //__device__ Vector3      NormalWorld() const;
-//        //__device__ Vector3      TangentWorld() const;
-//        //__device__ Vector3      BitangentWorld() const;
-//        //
-//        //__device__ Vector3      Normal() const;
-//        //__device__ Vector3      Tangent() const;
-//        //__device__ Vector3      Bitangent() const;
-//
-//        //__device__ RayF         ToTangent(const RayF&) const;
-//        //__device__ RayF         FromTangent(const RayF&) const;
-//
-//        //__device__ float        DotN(const Vector3&) const;
-//        //__device__ float        DotT(const Vector3&) const;
-//        //__device__ float        DotB(const Vector3&) const;
-//};
-
+class GPUTransformI;
 
 namespace GPUSurface
 {
@@ -157,6 +124,17 @@ struct UVSurface
     QuatF   worldToTangent;
     Vector2 uv;
 };
+
+
+template <class HitData, class PrimData>
+__device__ __host__
+EmptySurface GenEmptySurface(const HitData&,
+                             const GPUTransformI&,
+                             PrimitiveId,
+                             const PrimData&)
+{
+    return EmptySurface{};
+}
 
 //// Surface Functions
 //template <class Primitive>

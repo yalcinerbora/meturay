@@ -65,6 +65,10 @@ PathTracer::PathTracer(const CudaSystem& s,
 
 TracerError PathTracer::Initialize()
 {
+    TracerError err = TracerError::OK;
+    if((err = RayTracer::Initialize()) != TracerError::OK)
+        return err;
+
     const auto& lights = scene.LightsCPU();
     lightCount = static_cast<uint32_t>(lights.size());
     // Determine Size
@@ -92,7 +96,6 @@ TracerError PathTracer::Initialize()
                                             cudaSystem);
     }
 
-    TracerError err = TracerError::OK;
     // Generate your worklist
     const auto& infoList = scene.WorkBatchInfo();
     for(const auto& workInfo : infoList)
@@ -109,7 +112,7 @@ TracerError PathTracer::Initialize()
                               std::string(BaseConstants::EMPTY_PRIMITIVE_NAME));
 
             WorkPool<bool, bool>& wp = lightWorkPool;
-            if((err = wp.GenerateWorkBatch(batch, mg, pg,
+            if((err = wp.GenerateWorkBatch(batch, mg, pg, dTransforms,
                                            options.nextEventEstimation,
                                            emptyPrim)) != TracerError::OK)
                 return err;
@@ -117,13 +120,12 @@ TracerError PathTracer::Initialize()
         else
         {
             WorkPool<bool>& wp = workPool;
-            if((err = wp.GenerateWorkBatch(batch, mg, pg,
+            if((err = wp.GenerateWorkBatch(batch, mg, pg, dTransforms,
                                            options.nextEventEstimation)) != TracerError::OK)
                 return err;
         }
         workMap.emplace(batchId, batch);
     }
-    return RayTracer::Initialize();
     return TracerError::OK;
 }
 

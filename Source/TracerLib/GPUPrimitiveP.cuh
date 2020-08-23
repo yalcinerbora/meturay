@@ -37,34 +37,52 @@ namespace PrimitiveSurfaceFind
 {
     namespace Detail
     {
+        //template <class _Callable, class _Tuple, size_t... _Indices>
+        //constexpr decltype(auto) _Apply_impl(
+        //    _Callable&& _Obj, _Tuple&& _Tpl, std::index_sequence<_Indices...>) { // invoke _Obj with the elements of _Tpl
+        //    return _C_invoke(std::forward<_Callable>(_Obj), 
+        //                     std::get<_Indices>(std::forward<_Tuple>(_Tpl))...);
+        //}
+
+        //template <class _Callable, class _Tuple>
+        //constexpr decltype(auto) apply(_Callable&& _Obj, _Tuple&& _Tpl) { // invoke _Obj with the elements of _Tpl
+        //    return _Apply_impl(std::forward<_Callable>(_Obj), std::forward<_Tuple>(_Tpl),
+        //                       make_index_sequence<tuple_size_v<remove_reference_t<_Tuple>>>{});
+        //}
+
+
         template<class CheckType, class ReturnType,
-                 size_t I, class... Tp>
-        inline constexpr typename std::enable_if<I == sizeof...(Tp), ReturnType>::type
-        LoopAndFind(std::tuple<Tp...>& t)
+                 size_t I, class Tuple>
+        inline typename std::enable_if<I == std::tuple_size<Tuple>::value, ReturnType>::type
+        constexpr LoopAndFind(Tuple&&)
         {
             static_assert(false, "Unable to find type in tuple");
         }
 
-        template<class CheckType, class ReturnType,
-                    size_t I, class... Tp>
-        inline constexpr typename std::enable_if<(I < sizeof...(Tp)), ReturnType>::type
-        LoopAndFind(std::tuple<Tp...>& t)
+        template<class CheckType, class ReturnType, size_t I, class Tuple>
+        inline typename std::enable_if<(I < std::tuple_size<Tuple>::value), ReturnType>::type
+        constexpr LoopAndFind(Tuple&& t)
         {
             
-            using ElementType = typename std::tuple_element_t<I, std::tuple<Tp...>>::type;
+            using ElementType = typename std::tuple_element_t<I, Tuple>;
             using CurrentType = typename ElementType::type;
-            constexpr auto SurfaceFunc = ElementType::SurfaceGeneratorFunction;
             // Accelerator Types
             if constexpr(std::is_same_v<CurrentType, CheckType>)
-                return decltype(std::get<I>(t))::SurfaceGen;
-            else LoopAndFind<I + 1, Tp...>(t);
+            {
+                constexpr auto SurfaceFunc = ElementType::SurfaceGeneratorFunction;
+                return SurfaceFunc;
+            }
+            else return LoopAndFind<CheckType, ReturnType, I + 1, Tuple>(std::forward<Tuple>(t));
+
+            // MSVC gives warning (missing return statement)
+            return nullptr;
         }
     }
 
-    template<class CheckType, class ReturnType, class... Tp>
-    ReturnType LoopAndFindType(std::tuple<Tp...>& tuple)
+    template<class CheckType, class ReturnType, class Tuple>
+    ReturnType constexpr LoopAndFindType(Tuple&& tuple)
     {
-        return Detail::LoopAndFind<ReturnType, CheckType, sizeof...(Tp), Tp...>(tuple);
+        return Detail::LoopAndFind<CheckType, ReturnType, 0, Tuple>(std::forward<Tuple>(tuple));
     }
 };
 

@@ -28,6 +28,7 @@ using TypeList = std::tuple<TypeListElement<Args>...>;
 template <class... Args>
 using WorkBatchGeneratorFunc = GPUWorkBatchI* (*)(const GPUMaterialGroupI&,
                                                   const GPUPrimitiveGroupI&,
+                                                  const GPUTransformI* const*,
                                                   Args...);
 using WorkGPtr = SharedLibPtr<GPUWorkBatchI>;
 
@@ -37,6 +38,7 @@ class GPUWorkBatchGen
     private:
         WorkBatchGeneratorFunc<Args...>     gFunc;
         ObjDestroyerFunc<GPUWorkBatchI>     dFunc;
+
     protected:
     public:
         GPUWorkBatchGen(WorkBatchGeneratorFunc<Args...> g,
@@ -47,9 +49,10 @@ class GPUWorkBatchGen
 
         WorkGPtr operator()(const GPUMaterialGroupI& mg,
                             const GPUPrimitiveGroupI& pg,
+                            const GPUTransformI* const* t,
                             Args... args)
         {
-            GPUWorkBatchI* accel = gFunc(mg, pg, args...);
+            GPUWorkBatchI* accel = gFunc(mg, pg, t, args...);
             return WorkGPtr(accel, dFunc);
         }
 };
@@ -59,9 +62,10 @@ namespace TypeGenWrappers
     template <class Base, class WorkBatch, class... Args>
     Base* WorkBatchConstruct(const GPUMaterialGroupI& mg,
                              const GPUPrimitiveGroupI& pg,
+                             const GPUTransformI* const* t,
                              Args... args)
     {
-        return new WorkBatch(mg, pg, args...);
+        return new WorkBatch(mg, pg, t, args...);
     }
 }
 
@@ -94,6 +98,7 @@ class WorkPool
         TracerError             GenerateWorkBatch(GPUWorkBatchI*&,
                                                   const GPUMaterialGroupI&,
                                                   const GPUPrimitiveGroupI&,
+                                                  const GPUTransformI* const* t,
                                                   Args...);
 };
 
@@ -134,6 +139,7 @@ template <class... Args>
 TracerError WorkPool<Args...>::GenerateWorkBatch(GPUWorkBatchI*& work,
                                                  const GPUMaterialGroupI& mg,
                                                  const GPUPrimitiveGroupI& pg,
+                                                 const GPUTransformI* const* t,
                                                  Args... args)
 {
     std::string mangledName = MangledNames::WorkBatch(pg.Type(),
@@ -142,7 +148,7 @@ TracerError WorkPool<Args...>::GenerateWorkBatch(GPUWorkBatchI*& work,
     auto loc = generators.end();
     if((loc = generators.find(mangledName)) != generators.end())
     {
-        auto ptr = loc->second(mg, pg, args...);        
+        auto ptr = loc->second(mg, pg, t, args...);        
         work = ptr.get();
         allocatedResources.emplace_back(std::move(ptr));
     }

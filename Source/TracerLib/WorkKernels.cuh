@@ -57,7 +57,8 @@ void KCWork(// Output
             const RayGMem* gInRays,
             const RayAuxiliary* gInRayAux,
             const PrimitiveId* gPrimitiveIds,
-            const HitStructPtr gHitStructs,
+            const TransformId* gTransformIds,
+            const HitStructPtr gHitStructs,            
             //
             const HitKey* gMatIds,
             const RayId* gRayIds,
@@ -68,7 +69,8 @@ void KCWork(// Output
             // Constants
             const uint32_t rayCount,
             const MGroup::Data matData,
-            const PGroup::PrimitiveData primData)
+            const PGroup::PrimitiveData primData,
+            const GPUTransformI* const* gTransforms)
 {
     // Fetch Types from Template Classes
     using HitData = typename PGroup::HitData;   // HitData is defined by primitive
@@ -77,7 +79,7 @@ void KCWork(// Output
     // Pre-grid stride loop
     // RNG is allocated for each SM (not for each thread)
     RandomGPU rng(gRNGStates.state);
-
+   
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < rayCount; globalId += blockDim.x * gridDim.x)
@@ -89,10 +91,14 @@ void KCWork(// Output
         const RayReg ray(gInRays, rayId);
         const RayAuxiliary aux = gInRayAux[rayId];
         const PrimitiveId primitiveId = gPrimitiveIds[rayId];
+        const TransformId transformId = gTransformIds[rayId];
+
+        // Acquire transform for surface generation
+        const GPUTransformI& transform = *gTransforms[transformId];
 
         // Generate surface data from hit
         const HitData hit = gHitStructs.Ref<HitData>(rayId);
-        const Surface surface = SurfFunc(hit, primitiveId, primData);
+        const Surface surface = SurfFunc(hit, transform, primitiveId, primData);
 
         // Determine Output Location
         // Make it locally indexable

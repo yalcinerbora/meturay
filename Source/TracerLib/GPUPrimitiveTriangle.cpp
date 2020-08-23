@@ -254,8 +254,9 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                           cudaMemcpyHostToDevice));
 
     // Set Main Pointers of batch
-    dData.positionsU = reinterpret_cast<Vector4f*>(dPositionsU);
-    dData.normalsV = reinterpret_cast<Vector4f*>(dNormalsV);
+    //dData.positionsU = reinterpret_cast<Vector4f*>(dPositionsU);
+    //dData.normalsV = reinterpret_cast<Vector4f*>(dNormalsV);
+    dData.tbnRotations = nullptr;
     dData.indexList = reinterpret_cast<uint64_t*>(dIndices);
     dData.cullFace = reinterpret_cast<bool*>(dCulls);
     dData.primOffsets = reinterpret_cast<uint64_t*>(dOffsets);
@@ -402,9 +403,9 @@ SceneError GPUPrimitiveTriangle::GenerateLights(std::vector<CPULight>& result,
         ls.matKey = key;
         ls.dLuminanceDistribution = &luminanceDistribution;
         ls.type = LightType::TRIANGULAR;
-        ls.position0 = transform * dData.positionsU[dData.indexList[i * 3 + 0]];
-        ls.position1 = transform * dData.positionsU[dData.indexList[i * 3 + 1]];
-        ls.position2 = transform * dData.positionsU[dData.indexList[i * 3 + 2]];
+        ls.position0 = transform * dData.positions[dData.indexList[i * 3 + 0]];
+        ls.position1 = transform * dData.positions[dData.indexList[i * 3 + 1]];
+        ls.position2 = transform * dData.positions[dData.indexList[i * 3 + 2]];
         ls.primId = i;
 
         result.push_back(ls);

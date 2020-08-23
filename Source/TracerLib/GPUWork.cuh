@@ -48,13 +48,16 @@ class GPUWorkBatch
         const MGroup&                   materialGroup;
         const PGroup&                   primitiveGroup;
 
+        const GPUTransformI* const*     dTransforms;
+
         // Per-Bathch Data
         LocalData                       localData;
 
     public:
         // Constrcutors & Destructor
                                         GPUWorkBatch(const GPUMaterialGroupI&,
-                                                     const GPUPrimitiveGroupI&);
+                                                     const GPUPrimitiveGroupI&,
+                                                     const GPUTransformI* const*);
                                         ~GPUWorkBatch() = default;
 
         void                            Work(// Output
@@ -63,6 +66,7 @@ class GPUWorkBatch
                                              //  Input
                                              const RayGMem* dRayIn,
                                              const PrimitiveId* dPrimitiveIds,
+                                             const TransformId* dTransformIds,
                                              const HitStructPtr dHitStructs,
                                              // Ids
                                              const HitKey* dMatIds,
@@ -102,9 +106,11 @@ inline const char* GPUWorkBatch<GD, LD, RD, MG, PG, WF>::TypeName()
 template <class GD, class LD, class RD, class MG, class PG, 
           WorkFunc<GD, LD, RD, MG> WF>
 GPUWorkBatch<GD, LD, RD, MG, PG, WF>::GPUWorkBatch(const GPUMaterialGroupI& mg,
-                                                   const GPUPrimitiveGroupI& pg)
+                                                   const GPUPrimitiveGroupI& pg,
+                                                   const GPUTransformI* const* t)
     : materialGroup(static_cast<const MG&>(mg))
     , primitiveGroup(static_cast<const PG&>(pg))
+    , dTransforms(t)
 {}
 
 template <class GD, class LD, class RD, class MG, class PG, 
@@ -115,6 +121,7 @@ void GPUWorkBatch<GD, LD, RD, MG, PG, WF>::Work(// Output
                                                     //  Input
                                                     const RayGMem* dRayIn,
                                                     const PrimitiveId* dPrimitiveIds,
+                                                    const TransformId* dTransformIds,
                                                     const HitStructPtr dHitStructs,
                                                     // Ids
                                                     const HitKey* dMatIds,
@@ -126,13 +133,14 @@ void GPUWorkBatch<GD, LD, RD, MG, PG, WF>::Work(// Output
     // Do Pre-work (initialize local data etc.)
     GetReady();
 
+    using PrimitiveGroup = typename PG;
     using PrimitiveData = typename PG::PrimitiveData;
     using HitData = typename PG::HitData;
     using MaterialData = typename MG::Data;
     using MaterialSurface = typename MG::Surface;
     // Fetch surface function from primitive list
-    using SFuncType = SurfaceFunc<MaterialSurface, HitData, PrimitiveData>;
-    constexpr SFuncType SFunc = PG::GetSurfaceFunction<MaterialSurface>();
+    //using SFuncType = SurfaceFunc<MaterialSurface, HitData, PrimitiveData>;
+    constexpr auto SFunc = PG::GetSurfaceFunction<typename MG::Surface>();
 
     // Get Data
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
@@ -157,6 +165,7 @@ void GPUWorkBatch<GD, LD, RD, MG, PG, WF>::Work(// Output
         dRayIn,
         dAuxInGlobal,
         dPrimitiveIds,
+        dTransformIds,
         dHitStructs,
         //
         dMatIds,
@@ -168,6 +177,7 @@ void GPUWorkBatch<GD, LD, RD, MG, PG, WF>::Work(// Output
         // Constants
         rayCount,
         matData,
-        primData
+        primData,
+        dTransforms
     );
 }

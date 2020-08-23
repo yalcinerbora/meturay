@@ -340,19 +340,22 @@ struct TriangleSurfaceGenerator
     template <class Surface, SurfaceFunc<Surface, TriangleHit, TriData> SF>
     struct SurfaceFunctionType
     {
-        using Type = Surface;
-        static constexpr auto SurfaceGen = SF;
+        using type = Surface;
+        static constexpr auto SurfaceGeneratorFunction = SF;
     };
 
-    static constexpr auto GeneratorFunctionList = std::make_tuple(SurfaceFunctionType<BasicSurface, GenBasicSurface>{},
-                                                                  SurfaceFunctionType<BarySurface, GenBarySurface>{},
-                                                                  SurfaceFunctionType<UVSurface, GenUVSurface>{});
+    static constexpr auto GeneratorFunctionList = 
+        std::make_tuple(SurfaceFunctionType<EmptySurface, GenEmptySurface<TriangleHit, TriData>>{},
+                                            SurfaceFunctionType<BasicSurface, GenBasicSurface>{},
+                                            SurfaceFunctionType<BarySurface, GenBarySurface>{},
+                                            SurfaceFunctionType<UVSurface, GenUVSurface>{});
 
     template<class Surface>
     static constexpr SurfaceFunc<Surface, TriangleHit, TriData> GetSurfaceFunction()
     {
-        return PrimitiveSurfaceFind::LoopAndFindType<Surface, SurfaceFunc<Surface, TriangleHit, TriData>,
-                                                    decltype(GeneratorFunctionList)>(GeneratorFunctionList);
+        using namespace PrimitiveSurfaceFind;
+        return LoopAndFindType<Surface, SurfaceFunc<Surface, TriangleHit, TriData>,
+                               decltype(GeneratorFunctionList)>(std::move(GeneratorFunctionList));
     }
 };
 

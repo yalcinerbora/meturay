@@ -35,6 +35,9 @@ TracerError DirectTracer::SetOptions(const TracerOptionsI& opts)
 TracerError DirectTracer::Initialize()
 {
     TracerError err = TracerError::OK;
+    if((err = RayTracer::Initialize()) != TracerError::OK) 
+        return err;
+
     // Generate your worklist
     const auto& infoList = scene.WorkBatchInfo();
     for(const auto& workInfo : infoList)
@@ -44,11 +47,12 @@ TracerError DirectTracer::Initialize()
         uint32_t batchId = std::get<0>(workInfo);
         
         GPUWorkBatchI* batch = nullptr;
-        if((err = workPool.GenerateWorkBatch(batch, mg, pg)) != TracerError::OK)
+        if((err = workPool.GenerateWorkBatch(batch, mg, pg,
+                                             dTransforms)) != TracerError::OK)
             return err;        
         workMap.emplace(batchId, batch);
     }
-    return RayTracer::Initialize();
+    return err;
 }
 
 bool DirectTracer::Render()

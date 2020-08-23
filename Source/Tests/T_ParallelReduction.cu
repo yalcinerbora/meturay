@@ -6,6 +6,8 @@
 #include "TracerLib/DeviceMemory.h"
 #include "TracerLib/ParallelReduction.cuh"
 
+#include "TracerLib/GPUPrimitiveTriangle.h"
+
 using ::testing::FloatEq;
 
 inline __device__ float CustomReduce(const float& a, const float& b)

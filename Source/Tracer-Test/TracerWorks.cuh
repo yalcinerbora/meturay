@@ -25,8 +25,9 @@ class DirectTracerWork
     public:
         // Constrcutors & Destructor
                                         DirectTracerWork(const GPUMaterialGroupI& mg,
-                                                         const GPUPrimitiveGroupI& pg)
-                                            : GPUWorkBatch(mg, pg) {}
+                                                         const GPUPrimitiveGroupI& pg,
+                                                         const GPUTransformI* const* t)
+                                            : GPUWorkBatch(mg, pg, t) {}
                                         ~DirectTracerWork() = default;
 
         void                            GetReady() override {}
@@ -51,6 +52,7 @@ class PathTracerWork
         // Constrcutors & Destructor
                                         PathTracerWork(const GPUMaterialGroupI& mg,
                                                        const GPUPrimitiveGroupI& pg,
+                                                       const GPUTransformI* const* t,
                                                        bool neeOn);
                                         ~PathTracerWork() = default;
 
@@ -75,6 +77,7 @@ class PathTracerLightWork
         // Constrcutors & Destructor
                                         PathTracerLightWork(const GPUMaterialGroupI& mg,
                                                             const GPUPrimitiveGroupI& pg,
+                                                            const GPUTransformI* const* t,
                                                             bool neeOn,
                                                             bool emptyPrimitive);
                                         ~PathTracerLightWork() = default;
@@ -97,7 +100,8 @@ class AmbientOcclusionWork
     public:
         // Constrcutors & Destructor
                                         AmbientOcclusionWork(const GPUMaterialGroupI& mg,
-                                                            const GPUPrimitiveGroupI& pg);
+                                                             const GPUPrimitiveGroupI& pg,
+                                                             const GPUTransformI* const* t);
                                         ~AmbientOcclusionWork() = default;
 
         void                            GetReady() override {}
@@ -130,8 +134,9 @@ class AmbientOcclusionMissWork
 template<class M, class P>
 PathTracerWork<M, P>::PathTracerWork(const GPUMaterialGroupI& mg,
                                      const GPUPrimitiveGroupI& pg,
+                                     const GPUTransformI* const* t,
                                      bool neeOn)
-    : GPUWorkBatch(mg, pg)
+    : GPUWorkBatch(mg, pg, t)
     , neeOn(neeOn) 
 {
     // Populate localData
@@ -153,9 +158,10 @@ uint8_t PathTracerWork<M, P>::OutRayCount() const
 template<class M, class P>
 PathTracerLightWork<M, P>::PathTracerLightWork(const GPUMaterialGroupI& mg,
                                                const GPUPrimitiveGroupI& pg,
+                                               const GPUTransformI* const* t,
                                                bool neeOn,
                                                bool emptyPrimitive)
-    : GPUWorkBatch(mg, pg)
+    : GPUWorkBatch(mg, pg, t)
     , neeOn(neeOn) 
 {
     // Populate localData
@@ -165,8 +171,9 @@ PathTracerLightWork<M, P>::PathTracerLightWork(const GPUMaterialGroupI& mg,
 
 template<class M, class P>
 AmbientOcclusionWork<M, P>::AmbientOcclusionWork(const GPUMaterialGroupI& mg,
-                                                 const GPUPrimitiveGroupI& pg)
-    : GPUWorkBatch(mg, pg)
+                                                 const GPUPrimitiveGroupI& pg,
+                                                 const GPUTransformI* const* t)
+    : GPUWorkBatch(mg, pg, t)
 {}
 
 template<class M, class P>

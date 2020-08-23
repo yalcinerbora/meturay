@@ -35,6 +35,7 @@ class GPUWorkBatchI
                                                  //  Input
                                                  const RayGMem* dRayIn,
                                                  const PrimitiveId* dPrimitiveIds,
+                                                 const TransformId* dTransformIds,
                                                  const HitStructPtr dHitStructs,
                                                  // Ids
                                                  const HitKey* dMatIds,
