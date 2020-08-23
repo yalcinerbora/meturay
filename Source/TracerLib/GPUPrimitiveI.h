@@ -30,6 +30,7 @@ struct CPULight;
 
 class SceneNodeI;
 class SurfaceLoaderGeneratorI;
+class CudaSystem;
 
 class GPUPrimitiveGroupI
 {
@@ -42,10 +43,12 @@ class GPUPrimitiveGroupI
         // Allocates and Generates Data
         virtual SceneError          InitializeGroup(const NodeListing& surfaceDataNodes, double time,
                                                     const SurfaceLoaderGeneratorI&,
-                                                    const std::string& scenePath) = 0;
+                                                    const std::string& scenePath,
+                                                    const CudaSystem&) = 0;
         virtual SceneError          ChangeTime(const NodeListing& surfaceDatalNodes, double time,
                                                const SurfaceLoaderGeneratorI&,
-                                               const std::string& scenePath) = 0;
+                                               const std::string& scenePath,
+                                               const CudaSystem&) = 0;
         // Provides data to Event Estimator
         virtual bool                HasPrimitive(uint32_t surfaceDataId) const = 0;
         virtual SceneError          GenerateLights(std::vector<CPULight>&,

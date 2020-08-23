@@ -10,6 +10,35 @@ namespace Triangle
     AABB<3, T> BoundingBox(const Vector<3, T>& p0,
                            const Vector<3, T>& p1,
                            const Vector<3, T>& p2);
+
+    template <class T>
+    __device__ __host__
+    Vector<3, T> Tangent(const Vector<3, T>& p0,
+                         const Vector<3, T>& p1,
+                         const Vector<3, T>& p2,
+
+                         const Vector<2, T>& uv0,
+                         const Vector<2, T>& uv1,
+                         const Vector<2, T>& uv2);
+
+    template <class T>
+    __device__ __host__
+    void LocalRotation(Quaternion<T>& q0,
+                       Quaternion<T>& q1,
+                       Quaternion<T>& q2,
+                       
+                       const Vector<3, T> p[],
+                       const Vector<3, T> n[],
+                       const Vector<2, T> uv[]);
+
+    template <class T>
+    __device__ __host__
+    void LocalRotation(Quaternion<T>& q0,
+                       Quaternion<T>& q1,
+                       Quaternion<T>& q2,
+                       
+                       const Vector<3, T> n[],
+                       const Vector<3, T> t[]);
 }
 
 template <class T>
@@ -25,4 +54,82 @@ AABB<3, T> Triangle::BoundingBox(const Vector<3, T>& p0,
     aabb.SetMax(Vector3f::Max(aabb.Max(), p1));
     aabb.SetMax(Vector3f::Max(aabb.Max(), p2));
     return aabb;
+}
+
+template <class T>
+__device__ __host__
+inline static Vector<3, T> Triangle::Tangent(const Vector<3, T>& p0,
+                                             const Vector<3, T>& p1,
+                                             const Vector<3, T>& p2,
+
+                                             const Vector<2, T>& uv0,
+                                             const Vector<2, T>& uv1,
+                                             const Vector<2, T>& uv2)
+{
+    // Edges (Tri is CCW)
+    Vector3 vec0 = p1 - p0;
+    Vector3 vec1 = p2 - p0;
+
+    Vector2 dUV0 = uv1 - uv0;
+    Vector2 dUV1 = uv2 - uv0;
+    
+    float t = 1.0f / (dUV0[0] * dUV1[1] -
+                      dUV1[0] * dUV0[1]);
+
+    Vector3 tangent;
+    tangent = t * (dUV1[1] * vec0 - dUV0[1] * vec1);
+    return tangent;
+}
+
+template <class T>
+__device__ __host__
+void Triangle::LocalRotation(Quaternion<T>& q0,
+                             Quaternion<T>& q1,
+                             Quaternion<T>& q2,
+
+                             const Vector<3, T> n[],
+                             const Vector<3, T> t[])
+{
+    Vector<3, T> b0 = Cross(n[0], t[0]);
+    Vector<3, T> b1 = Cross(n[1], t[1]);
+    Vector<3, T> b2 = Cross(n[2], t[2]);
+
+    q0 = TransformGen::Space<T>(t[0], b0, n[0]);
+    q1 = TransformGen::Space<T>(t[1], b1, n[1]);
+    q2 = TransformGen::Space<T>(t[2], b2, n[2]);
+}
+   
+
+template <class T>
+__device__ __host__
+void Triangle::LocalRotation(Quaternion<T>& q0,
+                             Quaternion<T>& q1,
+                             Quaternion<T>& q2,
+
+                             const Vector<3, T> p[],
+                             const Vector<3, T> n[],
+                             const Vector<2, T> uv[])
+{
+    // We calculate tangent once
+    // is this consistent? (should i calculate for all vertices of tri?
+    Vector<3, T> t0 = CalculateTangent(p[0], p[1], p[2], uv[0], uv[1], uv[2]);
+    //Vector<3, T> t1 = CalculateTangent(p[1], p[2, p[0], uv[1], uv[2], uv[0]);
+    //Vector<3, T> t2 = CalculateTangent(p[2], p[0, p[1], uv[2], uv[0], uv[1]);
+    Vector<3, T> t1 = t0;
+    Vector<3, T> t2 = t0;
+
+    // Gram–Schmidt othonormalization
+    // This is required since normal may be skewed to hide
+    // edges (to create smooth lighting)
+    t0 = (t0 - n[0] * n[0].Dot(t0)).Normalize();
+    t1 = (t1 - n[1] * n[1].Dot(t1)).Normalize();
+    t2 = (t2 - n[2] * n[2].Dot(t2)).Normalize();
+
+    Vector<3, T> b0 = Cross(n[0], t0);
+    Vector<3, T> b1 = Cross(n[1], t1);
+    Vector<3, T> b2 = Cross(n[2], t2);
+
+    q0 = TransformGen::Space<T>(t0, b0, n[0]);
+    q1 = TransformGen::Space<T>(t1, b1, n[1]);
+    q2 = TransformGen::Space<T>(t2, b2, n[2]);
 }

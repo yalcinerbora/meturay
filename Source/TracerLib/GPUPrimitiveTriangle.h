@@ -49,84 +49,6 @@ struct TriData
 // c is (1-a-b) thus it is not stored.
 using TriangleHit = Vector2f;
 
-//__device__ __host__
-//inline static Vector3 CalculateTangent(const Vector3& p0,
-//                                       const Vector3& p1,
-//                                       const Vector3& p2,
-//
-//                                       const Vector2& uv0,
-//                                       const Vector2& uv1,
-//                                       const Vector2& uv2)
-//{
-//    // Edges (Tri is CCW)
-//    Vector3 vec0 = p1 - p0;
-//    Vector3 vec1 = p2 - p0;
-//
-//    Vector2 dUV0 = uv1 - uv0;
-//    Vector2 dUV1 = uv2 - uv0;
-//    
-//    float t = 1.0f / (dUV0[0] * dUV1[1] -
-//                      dUV1[0] * dUV0[1]);
-//
-//    Vector3 tangent;
-//    tangent = t * (dUV1[1] * vec0 - dUV0[1] * vec1);
-//    return tangent;
-//}
-//__device__ __host__
-//static inline Matrix3x3 TSMatrix(const TriangleHit& hit,
-//                                 PrimitiveId id,
-//                                 const TriData& primData)
-//{
-//    // Get Position
-//    uint64_t i0 = primData.indexList[id * 3 + 0];
-//    uint64_t i1 = primData.indexList[id * 3 + 1];
-//    uint64_t i2 = primData.indexList[id * 3 + 2];
-
-//    Vector3 p0 = primData.positionsU[i0];
-//    Vector3 p1 = primData.positionsU[i1];
-//    Vector3 p2 = primData.positionsU[i2];
-
-//    Vector3 n0 = primData.normalsV[i0];
-//    Vector3 n1 = primData.normalsV[i1];
-//    Vector3 n2 = primData.normalsV[i2];
-
-//    Vector2 uv0 = Vector2(primData.positionsU[i0][3],
-//                          primData.normalsV[i0][3]);
-//    Vector2 uv1 = Vector2(primData.positionsU[i1][3],
-//                          primData.normalsV[i1][3]);
-//    Vector2 uv2 = Vector2(primData.positionsU[i2][3],
-//                          primData.normalsV[i2][3]);
-
-//    // We calculate tangent once
-//    // is this consistent? (should i calculate for all vertices of tri?
-//    Vector3 t0 = CalculateTangent(p0, p1, p2, uv0, uv1, uv2);
-//    //Vector3 t1 = CalculateTangent(p1, p2, p0, uv0, uv1, uv2);
-//    //Vector3 t2 = CalculateTangent(p2, p0, p1, uv0, uv1, uv2);
-//    Vector3 t1 = t0;
-//    Vector3 t2 = t0;
-
-//    // Gram–Schmidt othonormalization
-//    // This is required since normal may be skewed to hide
-//    // edges (to create smooth lighting)
-//    t0 = (t0 - n0 * n0.Dot(t0)).Normalize();
-//    t1 = (t1 - n1 * n1.Dot(t1)).Normalize();
-//    t2 = (t2 - n2 * n2.Dot(t2)).Normalize();
-
-//    Vector3 b0 = Cross(n0, t0);
-//    Vector3 b1 = Cross(n1, t1);
-//    Vector3 b2 = Cross(n2, t2);
-
-//    // Interpolate to location
-//    float c = 1.0f - hit[0] - hit[1];
-//    Vector3 t = t0 * hit[0] + t1 * hit[1] + t2 * c;
-//    Vector3 b = b0 * hit[0] + b1 * hit[1] + b2 * c;
-//    Vector3 n = n0 * hit[0] + n1 * hit[1] + n2 * c;
-
-//    // Construct Matrix
-//    return TransformGen::Space(t, b, n);
-//}
-
-
 struct TriFunctions
 {
 
@@ -398,10 +320,12 @@ class GPUPrimitiveTriangle final
         // Allocates and Generates Data
         SceneError                              InitializeGroup(const NodeListing& surfaceDataNodes, double time,
                                                                 const SurfaceLoaderGeneratorI&,
-                                                                const std::string& scenePath) override;
+                                                                const std::string& scenePath,
+                                                                const CudaSystem&) override;
         SceneError                              ChangeTime(const NodeListing& surfaceDataNodes, double time,
                                                            const SurfaceLoaderGeneratorI&,
-                                                           const std::string& scenePath) override;
+                                                           const std::string& scenePath,
+                                                           const CudaSystem&) override;
         // Provides data to Event Estimator
         bool                                    HasPrimitive(uint32_t surfaceDataId) const override;
         SceneError                              GenerateLights(std::vector<CPULight>&,

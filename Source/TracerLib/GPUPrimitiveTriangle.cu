@@ -23,7 +23,8 @@ const char* GPUPrimitiveTriangle::Type() const
 
 SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataNodes, double time,
                                                  const SurfaceLoaderGeneratorI& loaderGen,
-                                                 const std::string& scenePath)
+                                                 const std::string& scenePath,
+                                                 const CudaSystem&)
 {
     SceneError e = SceneError::OK;
     std::vector<size_t> loaderVOffsets, loaderIOffsets;
@@ -267,7 +268,8 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
 
 SceneError GPUPrimitiveTriangle::ChangeTime(const NodeListing& surfaceDataNodes, double time,
                                             const SurfaceLoaderGeneratorI& loaderGen,
-                                            const std::string& scenePath)
+                                            const std::string& scenePath,
+                                            const CudaSystem&)
 {
     return SceneError::OK;
     //SceneError e = SceneError::OK;

@@ -859,6 +859,9 @@ template<class T, typename>
 __device__ __host__ 
 inline Vector<3, T> TransformGen::ExtractScale(const Matrix<4, T>& m)
 {
+    // This is kinda hacky
+    // First it cannot determine negative scalings,
+    // Second it should fail if transform matrix has shear (didnt tested tho)
     T sX = Vector<3, T>(m[0], m[1], m[2]).Length();
     T sY = Vector<3, T>(m[4], m[5], m[6]).Length();
     T sZ = Vector<3, T>(m[8], m[9], m[10]).Length();
@@ -989,28 +992,6 @@ inline Matrix<4, T> TransformGen::Rotate(const Quaternion<T>& q)
     result[15] = 1;
 
     return result;
-}
-
-// Special 4x4 Matrix Operation
-template<class T>
-__device__ __host__
-static Vector<3, T> ExtractScaleInfo(const Matrix<4, T>& m)
-{
-    // This is kinda hacky
-    // First it cannot determine negative scalings,
-    // Second it should fail if transform matrix has shear (didnt tested tho)
-    return Vector<3,T>
-    (
-        sqrt(m(1, 1) * m(1, 1) +
-             m(1, 2) * m(1, 2) +
-             m(1, 3) * m(1, 3)),
-        sqrt(m(2, 1) * m(2, 1) +
-             m(2, 2) * m(2, 2) +
-             m(2, 3) * m(2, 3)),
-        sqrt(m(3, 1) * m(3, 1) +
-             m(3, 2) * m(3, 2) +
-             m(3, 3) * m(3, 3))
-    );
 }
 
 template<class T, typename>

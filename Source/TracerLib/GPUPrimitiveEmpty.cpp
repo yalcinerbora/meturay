@@ -10,14 +10,16 @@ const char* GPUPrimitiveEmpty::Type() const
 
 SceneError GPUPrimitiveEmpty::InitializeGroup(const NodeListing& surfaceDatalNodes, double time,
                                               const SurfaceLoaderGeneratorI&,
-                                              const std::string&)
+                                              const std::string&,
+                                              const CudaSystem&)
 {
     return SceneError::OK;
 }
 
 SceneError GPUPrimitiveEmpty::ChangeTime(const NodeListing& surfaceDatalNodes, double time,
                                          const SurfaceLoaderGeneratorI&,
-                                         const std::string&)
+                                         const std::string&,
+                                         const CudaSystem&)
 {
     return SceneError::OK;
 }

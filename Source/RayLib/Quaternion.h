@@ -102,6 +102,15 @@ namespace Quat
     template <class T>
     static __device__ __host__ Quaternion<T> RotationBetweenZAxis(const Vector<3, T>& b);
 }
+
+namespace TransformGen
+{
+    template <class T>
+    static __device__ __host__ Quaternion<T> Space(const Vector<3, T>& x,
+                                                   const Vector<3, T>& y,
+                                                   const Vector<3, T>& z);
+}
+
 // Implementation
 #include "Quaternion.hpp"
 

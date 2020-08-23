@@ -43,18 +43,47 @@
 	"_transformAnimate.json",
 	{
 		"id": 0,
-		"type": "matrix4x4",
-		"data": [ 1, 0, 0, 0,
-					0, 1, 0, 0,
-					0, 0, 1, 0,
-					0, 0, 0, 1]
+		"type": "Identity"
 	},
 	{
 		"id": 1,
-		"type": "translateRotateScale",
-		"data":  [[ 0, 0, 0],
-					[ 0, 0, 0],
-					[ 1, 1, 1]]
+		"type": "SingleTransform",
+		"layout": "matrix4x4",
+		"data": [ 1, 0, 0, 0,
+				  0, 1, 0, 0,
+				  0, 0, 1, 0,
+				  0, 0, 0, 1]
+	},
+	{
+		"id": 2,
+		"type": "SingleTransform",
+		"layout": "TRS",
+		"translation": [0, 0, 0],
+		"rotation": [0, 0, 0],
+		"scale": [0, 0, 0]
+	},
+	{
+		"id": 1,
+		"type": "SkeletalJointTransform",
+		"layout": "qtPairMatrixBase",
+		"jointCount": "3",
+
+		"bindPose" :
+		[
+			{ "r": [1, 0, 0, 0], "t": [0, 0, 0]},
+			{ "r": [1, 0, 0, 0], "t": [0, 0, 0]},
+			{ "r": [1, 0, 0, 0], "t": [0, 0, 0]}
+		],
+		"pose" :
+		[
+			{ "r": [1, 0, 0, 0], "t": [0, 0, 0]},
+			{ "r": [1, 0, 0, 0], "t": [0, 0, 0]},
+			{ "r": [1, 0, 0, 0], "t": [0, 0, 0]}
+		],
+		"baseTransform" : [ 1, 0, 0, 0,
+				  			0, 1, 0, 0,
+				  			0, 0, 1, 0,
+				  			0, 0, 0, 1]
 	}],
 
 	"Materials":[
@@ -101,12 +130,12 @@
 
 			// Throw Tests
 			// Prim-Mat Mismatch
-			[0, 0, [3, 4, 5], [6, 8]],	
+			[0, 0, [3, 4, 5], [6, 8]],
 			// Too many material/prim pair
-			{ 
-				"transform": 98, "accelerator": 78, 
-				"material": [4, 5, 5, 5, 5, 5, 5, 5, 5], 
-				"primitive": [101, 102, 1, 2, 3, 4, 5, 6, 7]}, 
+			{
+				"transform": 98, "accelerator": 78,
+				"material": [4, 5, 5, 5, 5, 5, 5, 5, 5],
+				"primitive": [101, 102, 1, 2, 3, 4, 5, 6, 7]},
 
 			// Fastest Version
 			// Binary File with 18 32-bit unsigned integers per surface

@@ -66,9 +66,6 @@
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp">
-      <Filter>Default Primitives</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp">
       <Filter>Default Primitives</Filter>
     </ClCompile>
@@ -346,6 +343,9 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUMaterialLight.cu">
       <Filter>Default Materials</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cu">
+      <Filter>Default Primitives</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

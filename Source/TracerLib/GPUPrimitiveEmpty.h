@@ -98,10 +98,12 @@ class GPUPrimitiveEmpty final
         // Allocates and Generates Data
         SceneError                              InitializeGroup(const NodeListing& surfaceDatalNodes, double time,
                                                                 const SurfaceLoaderGeneratorI&,
-                                                                const std::string&) override;
+                                                                const std::string&,
+                                                                const CudaSystem&) override;
         SceneError                              ChangeTime(const NodeListing& surfaceDatalNodes, double time,
                                                            const SurfaceLoaderGeneratorI&,
-                                                           const std::string&) override;
+                                                           const std::string&,
+                                                           const CudaSystem&) override;
         // Provides data to Event Estimator
         bool                                    HasPrimitive(uint32_t surfaceDataId) const override;
         SceneError                              GenerateLights(std::vector<CPULight>&,
