@@ -11,6 +11,12 @@
 // Meta Tracer Code
 // With custom global Data
 
+// CUDA complains when generator function
+// is called as a static member function
+// instead we supply it as a template parameter
+template <class S, class H, class D>
+using SurfaceFuncGenerator = SurfaceFunc<S, H, D>(*)();
+
 // Material/Primitive invaritant part of the code
 template<class GlobalData, class RayData>
 class GPUWorkBatchD : public GPUWorkBatchI
@@ -38,12 +44,20 @@ class GPUWorkBatchD : public GPUWorkBatchI
 
 template<class GlobalData, class LocalData, class RayData,
          class MGroup, class PGroup,
-         WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc>
+         WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
+         SurfaceFuncGenerator<MGroup::Surface, PGroup::HitData, PGroup::PrimitiveData> SGen>
 class GPUWorkBatch 
     : public GPUWorkBatchD<GlobalData, RayData>
 {
     public:
         static const char*              TypeName();
+
+    private:
+        using SF = SurfaceFunc<MGroup::Surface, 
+                               PGroup::HitData, 
+                               PGroup::PrimitiveData>;
+        static constexpr SF             SFunc = SGen();
+
     protected:
         const MGroup&                   materialGroup;
         const PGroup&                   primitiveGroup;
@@ -95,8 +109,9 @@ void GPUWorkBatchD<GD, RD>::SetRayDataPtrs(RD* dRDOut,
 }
 
 template <class GD, class LD, class RD, class MG, class PG,
-          WorkFunc<GD, LD, RD, MG> WF>
-inline const char* GPUWorkBatch<GD, LD, RD, MG, PG, WF>::TypeName()
+          WorkFunc<GD, LD, RD, MG> WF,
+          SurfaceFuncGenerator<MG::Surface, PG::HitData, PG::PrimitiveData> SF>
+inline const char* GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::TypeName()
 {
     static std::string typeName = MangledNames::WorkBatch(PG::TypeName(),
                                                           MG::TypeName());
@@ -104,18 +119,20 @@ inline const char* GPUWorkBatch<GD, LD, RD, MG, PG, WF>::TypeName()
 }
 
 template <class GD, class LD, class RD, class MG, class PG, 
-          WorkFunc<GD, LD, RD, MG> WF>
-GPUWorkBatch<GD, LD, RD, MG, PG, WF>::GPUWorkBatch(const GPUMaterialGroupI& mg,
-                                                   const GPUPrimitiveGroupI& pg,
-                                                   const GPUTransformI* const* t)
+          WorkFunc<GD, LD, RD, MG> WF,
+          SurfaceFuncGenerator<MG::Surface, PG::HitData, PG::PrimitiveData> SF>
+GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::GPUWorkBatch(const GPUMaterialGroupI& mg,
+                                                       const GPUPrimitiveGroupI& pg,
+                                                       const GPUTransformI* const* t)
     : materialGroup(static_cast<const MG&>(mg))
     , primitiveGroup(static_cast<const PG&>(pg))
     , dTransforms(t)
 {}
 
 template <class GD, class LD, class RD, class MG, class PG, 
-          WorkFunc<GD, LD, RD, MG> WF>
-void GPUWorkBatch<GD, LD, RD, MG, PG, WF>::Work(// Output
+          WorkFunc<GD, LD, RD, MG> WF,
+          SurfaceFuncGenerator<MG::Surface, PG::HitData, PG::PrimitiveData> SF>
+void GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::Work(// Output
                                                     HitKey* dBoundMatOut,
                                                     RayGMem* dRayOut,
                                                     //  Input
@@ -140,7 +157,7 @@ void GPUWorkBatch<GD, LD, RD, MG, PG, WF>::Work(// Output
     using MaterialSurface = typename MG::Surface;
     // Fetch surface function from primitive list
     //using SFuncType = SurfaceFunc<MaterialSurface, HitData, PrimitiveData>;
-    constexpr auto SFunc = PG::GetSurfaceFunction<typename MG::Surface>();
+    //constexpr SFuncType SFunc = PG::GetSurfaceFunction<MaterialSurface>();
 
     // Get Data
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);

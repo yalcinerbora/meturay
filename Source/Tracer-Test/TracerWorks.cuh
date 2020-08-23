@@ -15,7 +15,8 @@
 template<class MGroup, class PGroup>
 class DirectTracerWork 
     : public GPUWorkBatch<DirectTracerGlobal, EmptyState, RayAuxBasic,
-                          MGroup, PGroup, BasicWork<MGroup>>
+                          MGroup, PGroup, BasicWork<MGroup>, 
+                          PGroup::GetSurfaceFunction>
 {
     public:
         const char*                     Type() const override { return TypeName(); }
@@ -39,7 +40,8 @@ class DirectTracerWork
 template<class MGroup, class PGroup>
 class PathTracerWork 
     : public GPUWorkBatch<PathTracerGlobal, PathTracerLocal, RayAuxPath,
-                          MGroup, PGroup, PathWork<MGroup>>
+                          MGroup, PGroup, PathWork<MGroup>, 
+                          PGroup::GetSurfaceFunction>
 {
     public:
         const char*                     Type() const override { return TypeName(); }
@@ -64,7 +66,8 @@ class PathTracerWork
 template<class MGroup, class PGroup>
 class PathTracerLightWork 
     : public GPUWorkBatch<PathTracerGlobal, PathTracerLocal, RayAuxPath,
-                          MGroup, PGroup, PathLightWork<MGroup>>
+                          MGroup, PGroup, PathLightWork<MGroup>, 
+                          PGroup::GetSurfaceFunction>
 {
     public:
         const char*                     Type() const override { return TypeName(); }
@@ -90,7 +93,8 @@ class PathTracerLightWork
 template<class MGroup, class PGroup>
 class AmbientOcclusionWork 
     : public GPUWorkBatch<AmbientOcclusionGlobal, EmptyState, RayAuxAO,
-                          MGroup, PGroup, AOWork<MGroup>>
+                          MGroup, PGroup, AOWork<MGroup>, 
+                          PGroup::GetSurfaceFunction>
 {
     public:
         const char*                     Type() const override { return TypeName(); }
@@ -112,7 +116,8 @@ class AmbientOcclusionWork
 template<class MGroup, class PGroup>
 class AmbientOcclusionMissWork 
     : public GPUWorkBatch<AmbientOcclusionGlobal, EmptyState, RayAuxAO,
-                          MGroup, PGroup, AOMissWork<MGroup>>
+                          MGroup, PGroup, AOMissWork<MGroup>, 
+                          PGroup::GetSurfaceFunction>
 {
     public:
         const char*                     Type() const override { return TypeName(); }

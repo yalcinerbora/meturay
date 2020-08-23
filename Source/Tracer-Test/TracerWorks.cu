@@ -23,7 +23,8 @@ template class PathTracerWork<ReflectMat, GPUPrimitiveSphere>;
 
 template class PathTracerWork<RefractMat, GPUPrimitiveTriangle>;
 template class PathTracerWork<RefractMat, GPUPrimitiveSphere>;
-
+// ===================================================
+// Path Tracer Light Work Batches
 template class PathTracerLightWork<LightMatConstant, GPUPrimitiveEmpty>;
 template class PathTracerLightWork<LightMatConstant, GPUPrimitiveTriangle>;
 template class PathTracerLightWork<LightMatConstant, GPUPrimitiveSphere>;

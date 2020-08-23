@@ -336,7 +336,6 @@ struct TriangleSurfaceGenerator
         return UVSurface{bs.worldToTangent, uv};
     }
    
-
     template <class Surface, SurfaceFunc<Surface, TriangleHit, TriData> SF>
     struct SurfaceFunctionType
     {
@@ -346,9 +345,9 @@ struct TriangleSurfaceGenerator
 
     static constexpr auto GeneratorFunctionList = 
         std::make_tuple(SurfaceFunctionType<EmptySurface, GenEmptySurface<TriangleHit, TriData>>{},
-                                            SurfaceFunctionType<BasicSurface, GenBasicSurface>{},
-                                            SurfaceFunctionType<BarySurface, GenBarySurface>{},
-                                            SurfaceFunctionType<UVSurface, GenUVSurface>{});
+                        SurfaceFunctionType<BasicSurface, GenBasicSurface>{},
+                        SurfaceFunctionType<BarySurface, GenBarySurface>{},
+                        SurfaceFunctionType<UVSurface, GenUVSurface>{});
 
     template<class Surface>
     static constexpr SurfaceFunc<Surface, TriangleHit, TriData> GetSurfaceFunction()

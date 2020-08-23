@@ -37,20 +37,6 @@ namespace PrimitiveSurfaceFind
 {
     namespace Detail
     {
-        //template <class _Callable, class _Tuple, size_t... _Indices>
-        //constexpr decltype(auto) _Apply_impl(
-        //    _Callable&& _Obj, _Tuple&& _Tpl, std::index_sequence<_Indices...>) { // invoke _Obj with the elements of _Tpl
-        //    return _C_invoke(std::forward<_Callable>(_Obj), 
-        //                     std::get<_Indices>(std::forward<_Tuple>(_Tpl))...);
-        //}
-
-        //template <class _Callable, class _Tuple>
-        //constexpr decltype(auto) apply(_Callable&& _Obj, _Tuple&& _Tpl) { // invoke _Obj with the elements of _Tpl
-        //    return _Apply_impl(std::forward<_Callable>(_Obj), std::forward<_Tuple>(_Tpl),
-        //                       make_index_sequence<tuple_size_v<remove_reference_t<_Tuple>>>{});
-        //}
-
-
         template<class CheckType, class ReturnType,
                  size_t I, class Tuple>
         inline typename std::enable_if<I == std::tuple_size<Tuple>::value, ReturnType>::type
