@@ -15,9 +15,9 @@ Many Constants that are used throught the tracer
 
 namespace ProgramConstants
 {
-    static constexpr std::array<std::array<const char*, 3>, 5> ContributorList =
+    static constexpr std::array<std::array<const char* const, 3>, 1> ContributorList =
     {
-        std::array<const char*, 3>{"Bora Yalciner", "METU, Turkey", "yalciner.bora@metu.edu.tr"},
+        std::array<const char* const, 3>{"Bora Yalciner", "METU, Turkey", "yalciner.bora@metu.edu.tr"},
     };
 
     static const std::string ContributorCompaq = "Yalciner B.";

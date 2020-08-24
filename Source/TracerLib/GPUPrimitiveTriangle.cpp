@@ -2,15 +2,74 @@
 
 #include "RayLib/SceneError.h"
 #include "RayLib/Log.h"
-
 #include "RayLib/SurfaceLoaderGenerator.h"
 #include "RayLib/SurfaceLoaderI.h"
-
 #include "RayLib/MemoryAlignment.h"
 
 #include <execution>
 
-// Generics
+//template <class T>
+//void LocalRotation(Quaternion<T>& q0,
+//                   Quaternion<T>& q1,
+//                   Quaternion<T>& q2,
+//                   const Vector<3, T>* positions,
+//                   const Vector<3, T>* normals,
+//                   const Vector<2, T>* uvs)
+//{
+//
+//}
+
+void CalculateLocalRotation(QuatF* gQuaternions,
+                            //
+                            const Vector3* gPositions,
+                            const Vector3* gNormals,
+                            const Vector2* gUVs,
+                            const uint64_t* gIndices,
+                            uint32_t triangleCount)
+{
+    //uint64_t i0 = gIndices[3 * globalId + 0];
+    //uint64_t i1 = gIndices[3 * globalId + 1];
+    //uint64_t i2 = gIndices[3 * globalId + 2];
+
+
+    //Vector2 positions[3] = {gPositions[i0], gPositions[i1], gPositions[i2]};
+    //Vector3 normals[3] = {gNormals[i0], gNormals[i1], gNormals[i2]};
+    //Vector2 uvs[3] = {gUVs[i0], gUVs[i1], gUVs[i2]};
+
+    //QuatF q0, q1, q2;
+    ////Triangle::LocalRotation(q0, q1, q2,
+    ////                        positions,
+    ////                        normals,
+    ////                        uvs);
+
+    //gQuaternions[i0] = q0;
+    //gQuaternions[i1] = q1;
+    //gQuaternions[i2] = q2;
+}
+
+void CalculateLocalRotation(QuatF* gQuaternions,
+                            const Vector3* gNormals,
+                            const Vector3* gTangents,
+                            const uint64_t* gIndices,
+                            uint32_t triangleCount)
+{
+    //uint64_t i0 = gIndices[3 * globalId + 0];
+    //uint64_t i1 = gIndices[3 * globalId + 1];
+    //uint64_t i2 = gIndices[3 * globalId + 2];
+
+    //Vector3 normals[3] = {gNormals[i0], gNormals[i1], gNormals[i2]};
+    //Vector3 tangents[3] = {gTangents[i0], gTangents[i1], gTangents[i2]};
+
+    //QuatF q0, q1, q2;
+    ////Triangle::LocalRotation(q0, q1, q2,
+    ////                        normals,
+    ////                        tangents);
+
+    //gQuaternions[i0] = q0;
+    //gQuaternions[i1] = q1;
+    //gQuaternions[i2] = q2;
+}
+
 GPUPrimitiveTriangle::GPUPrimitiveTriangle()
     : totalPrimitiveCount(0)
     , totalDataCount(0)
@@ -23,8 +82,7 @@ const char* GPUPrimitiveTriangle::Type() const
 
 SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataNodes, double time,
                                                  const SurfaceLoaderGeneratorI& loaderGen,
-                                                 const std::string& scenePath,
-                                                 const CudaSystem&)
+                                                 const std::string& scenePath)
 {
     SceneError e = SceneError::OK;
     std::vector<size_t> loaderVOffsets, loaderIOffsets;
@@ -153,11 +211,13 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     constexpr size_t VertUVSize = PrimitiveDataLayoutToSize(UV_LAYOUT);
     constexpr size_t VertNormSize = PrimitiveDataLayoutToSize(NORMAL_LAYOUT);
     constexpr size_t IndexSize = PrimitiveDataLayoutToSize(INDEX_LAYOUT);
+    constexpr size_t RotationSize = sizeof(QuatF);
     std::vector<Byte> postitionsCPU(totalDataCount * VertPosSize);
     std::vector<Byte> uvsCPU(totalDataCount* VertUVSize);
     std::vector<Byte> normalsCPU(totalDataCount * VertNormSize);
+    std::vector<Byte> rotationsCPU(totalDataCount* RotationSize);
     std::vector<Byte> indexCPU(totalIndexCount * IndexSize);
-
+  
     size_t i = 0;
     for(const auto& loader : loaders)
     {
@@ -189,6 +249,26 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                           reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndexNext * IndexSize),
                           [&](uint64_t& t) { t += offsetVertex; });
         }
+
+        // Before offseting indices calculate rotations
+        //uint32_t* 
+
+        // TODO: After c++ ranges become the norm
+        // change this to std::views::iota_view(offsetIndex, offsetIndexNext);
+        //std::vector<uint64_t> rangeList;
+        //size_t indexCount = offsetIndexNext - offsetIndex;
+        //rangeList.resize(indexCount);
+        //std::iota(rangeList.begin(), rangeList.begin() + 4, offsetIndexNext);
+
+
+
+        //auto Lookup []()
+
+        //reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndex * IndexSize),
+        reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndexNext * IndexSize),
+
+
+
         i++;
     }
 
@@ -268,8 +348,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
 
 SceneError GPUPrimitiveTriangle::ChangeTime(const NodeListing& surfaceDataNodes, double time,
                                             const SurfaceLoaderGeneratorI& loaderGen,
-                                            const std::string& scenePath,
-                                            const CudaSystem&)
+                                            const std::string& scenePath)
 {
     return SceneError::OK;
     //SceneError e = SceneError::OK;

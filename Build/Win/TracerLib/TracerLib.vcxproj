@@ -92,9 +92,9 @@
     <ClCompile Include="..\..\..\Source\TracerLib\GPUDistribution.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveEmpty.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp" />
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cu">
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp">
       <FileType>Document</FileType>
-    </CudaCompile>
+    </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp" />
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUMaterialLight.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\ImageMemory.cu">

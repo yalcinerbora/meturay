@@ -14,6 +14,7 @@ All of them should be provided
 
 #include <map>
 #include <tuple>
+#include <vector>
 
 #include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/Vector.h"
@@ -320,12 +321,10 @@ class GPUPrimitiveTriangle final
         // Allocates and Generates Data
         SceneError                              InitializeGroup(const NodeListing& surfaceDataNodes, double time,
                                                                 const SurfaceLoaderGeneratorI&,
-                                                                const std::string& scenePath,
-                                                                const CudaSystem&) override;
+                                                                const std::string& scenePath) override;
         SceneError                              ChangeTime(const NodeListing& surfaceDataNodes, double time,
                                                            const SurfaceLoaderGeneratorI&,
-                                                           const std::string& scenePath,
-                                                           const CudaSystem&) override;
+                                                           const std::string& scenePath) override;
         // Provides data to Event Estimator
         bool                                    HasPrimitive(uint32_t surfaceDataId) const override;
         SceneError                              GenerateLights(std::vector<CPULight>&,

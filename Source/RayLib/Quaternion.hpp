@@ -342,8 +342,8 @@ static __device__ __host__ Quaternion<T> TransformGen::Space(const Vector<3, T>&
                                                              const Vector<3, T>& y,
                                                              const Vector<3, T>& z)
 {
-    T sqrtIn = max(static_cast<T>(0), (1 + x[0] - y[1] - z[2]);
-    qW = static_cast<T>(0.5) * sqrt(sqrtIn);
+    T sqrtIn = max(static_cast<T>(0), 1 + x[0] - y[1] - z[2]);
+    T qW = static_cast<T>(0.5) * sqrt(sqrtIn);
     T denom = static_cast<T>(0.25) / qW;
     T qX = (z[1] - y[2]) * denom;
     T qY = (x[2] - z[0]) * denom;

@@ -19,8 +19,7 @@ const char* GPUPrimitiveSphere::Type() const
 SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNodes,
                                                double time,
                                                const SurfaceLoaderGeneratorI& loaderGen,
-                                               const std::string& scenePath,
-                                               const CudaSystem&)
+                                               const std::string& scenePath)
 {
     SceneError e = SceneError::OK;
     std::vector<size_t> loaderOffsets;
