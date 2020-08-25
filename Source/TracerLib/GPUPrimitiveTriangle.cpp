@@ -148,29 +148,30 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         std::vector<Vector2ul> primRange;
         std::vector<Vector2ul> dataRange;
         //std::vector<size_t> primCounts;
-        size_t loaderPCount, loaderUVCount, loaderNCount, loaderICount;
+        size_t loaderPCount, loaderUVCount, loaderICount;
+        size_t loaderNCount, loaderTCount;
 
         // Load Aux Data
         if((e = loader->AABB(aabbList)) != SceneError::OK)
             return e;
         if((e = loader->PrimitiveRanges(primRange)) != SceneError::OK)
             return e;
-        //if((e = loader->PrimitiveCounts(primCounts)) != SceneError::OK)
-        //    return e;
-        if((e = loader->PrimitiveDataRanges(dataRange)) != SceneError::OK)
-            return e;
         if((e = loader->PrimitiveDataCount(loaderPCount, PrimitiveDataType::POSITION)) != SceneError::OK)
             return e;
         if((e = loader->PrimitiveDataCount(loaderUVCount, PrimitiveDataType::UV)) != SceneError::OK)
             return e;
-        if((e = loader->PrimitiveDataCount(loaderNCount, PrimitiveDataType::NORMAL)) != SceneError::OK)
-            return e;
         if((e = loader->PrimitiveDataCount(loaderICount, PrimitiveDataType::VERTEX_INDEX)) != SceneError::OK)
             return e;
 
+        //if((e = loader->PrimitiveDataCount(loaderTCount, PrimitiveDataType::TANGENT)) != SceneError::OK)
+        //    return e;
+        //if((e = loader->PrimitiveDataRanges(dataRange)) != SceneError::OK)
+        //    return e;
+        //if((e = loader->PrimitiveDataCount(loaderNCount, PrimitiveDataType::NORMAL)) != SceneError::OK)
+        //    return e;
+
         // Single indexed vertex data sanity check
-        assert(loaderPCount == loaderUVCount &&
-               loaderUVCount == loaderNCount);
+        assert(loaderPCount == loaderUVCount);
 
         // Populate
         size_t i = 0, totalPrimCountOnLoader = 0;
@@ -209,12 +210,13 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     // Now allocate to CPU then GPU
     constexpr size_t VertPosSize = PrimitiveDataLayoutToSize(POS_LAYOUT);
     constexpr size_t VertUVSize = PrimitiveDataLayoutToSize(UV_LAYOUT);
+    constexpr size_t VertTangentSize = PrimitiveDataLayoutToSize(TANGENT_LAYOUT);
     constexpr size_t VertNormSize = PrimitiveDataLayoutToSize(NORMAL_LAYOUT);
     constexpr size_t IndexSize = PrimitiveDataLayoutToSize(INDEX_LAYOUT);
     constexpr size_t RotationSize = sizeof(QuatF);
+
     std::vector<Byte> postitionsCPU(totalDataCount * VertPosSize);
-    std::vector<Byte> uvsCPU(totalDataCount* VertUVSize);
-    std::vector<Byte> normalsCPU(totalDataCount * VertNormSize);
+    std::vector<Byte> uvsCPU(totalDataCount* VertUVSize);    
     std::vector<Byte> rotationsCPU(totalDataCount* RotationSize);
     std::vector<Byte> indexCPU(totalIndexCount * IndexSize);
   
@@ -233,12 +235,41 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         if((e = loader->GetPrimitiveData(uvsCPU.data() + offsetVertex * VertUVSize,
                                          PrimitiveDataType::UV)) != SceneError::OK)
             return e;
-        if((e = loader->GetPrimitiveData(normalsCPU.data() + offsetVertex * VertNormSize,
-                                         PrimitiveDataType::NORMAL)) != SceneError::OK)
-            return e;
         if((e = loader->GetPrimitiveData(indexCPU.data() + offsetIndex * IndexSize,
                                          PrimitiveDataType::VERTEX_INDEX)) != SceneError::OK)
             return e;
+
+        
+        // Get temporary data to generate tangent space transformation
+        std::vector<Byte> normalsCPU(totalDataCount * VertNormSize);
+        if((e = loader->GetPrimitiveData(normalsCPU.data() + offsetVertex * VertNormSize,
+                                         PrimitiveDataType::NORMAL)) != SceneError::OK)
+            return e;
+        
+        // Check if tangents are available
+        bool hasTangent;
+        size_t tangentCount;
+        if((e = loader->HasPrimitiveData(hasTangent, PrimitiveDataType::TANGENT)) != SceneError::OK)
+            return e;
+        if((e = loader->PrimitiveDataCount(tangentCount, PrimitiveDataType::TANGENT)) != SceneError::OK)
+            return e;
+
+        std::vector<Byte> tangents;
+        if(hasTangent)            
+        {
+            tangents.resize(tangentCount* VertTangentSize);
+            if((e = loader->GetPrimitiveData(tangents.data(), PrimitiveDataType::TANGENT)) != SceneError::OK)
+                return e;
+        }
+        else
+        {
+            // Utilize position and uv for transform generation
+            std::for_each(reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndex * IndexSize),
+                          reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndexNext * IndexSize),
+                          [offsetVertex](uint64_t& t)
+                          {
+                          });
+        }
 
         // Accumulate the offset to the indices
         // TODO: utilize GPU here maybe
@@ -249,6 +280,8 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                           reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndexNext * IndexSize),
                           [&](uint64_t& t) { t += offsetVertex; });
         }
+
+        //if()
 
         // Before offseting indices calculate rotations
         //uint32_t* 
@@ -278,23 +311,29 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
               asd.data());
 
     // All loaded to CPU, copy to GPU
-    size_t posSize = sizeof(Vector4f) * totalDataCount;
+    size_t posSize = sizeof(Vector3f) * totalDataCount;
     posSize = Memory::AlignSize(posSize);
-    size_t normSize = sizeof(Vector4f) * totalDataCount;
-    normSize = Memory::AlignSize(normSize);
+    size_t uvSize = sizeof(Vector2f) * totalDataCount;
+    uvSize = Memory::AlignSize(uvSize);
+    size_t quatSize = sizeof(QuatF) * totalDataCount;
+    quatSize = Memory::AlignSize(quatSize);
     size_t indexSize = sizeof(uint64_t) * totalIndexCount;
     indexSize = Memory::AlignSize(indexSize);
     size_t cullSize = sizeof(bool) * batchRanges.size();
     cullSize = Memory::AlignSize(cullSize);
     size_t offsetSize = sizeof(uint64_t) * batchOffsets.size();
-    size_t totalSize = (posSize + normSize + indexSize + cullSize + offsetSize);
+    size_t totalSize = (posSize + uvSize + 
+                        quatSize + indexSize + 
+                        cullSize + offsetSize);
 
     memory = std::move(DeviceMemory(totalSize));
     size_t offset = 0;
-    Byte* dPositionsU = static_cast<Byte*>(memory) + offset;
+    Byte* dPositions = static_cast<Byte*>(memory) + offset;
     offset += posSize;
-    Byte* dNormalsV = static_cast<Byte*>(memory) + offset;
-    offset += normSize;
+    Byte* dUVs = static_cast<Byte*>(memory) + offset;
+    offset += uvSize;
+    Byte* dQuats = static_cast<Byte*>(memory) + offset;
+    offset += quatSize;
     Byte* dIndices = static_cast<Byte*>(memory) + offset;
     offset += indexSize;
     Byte* dCulls = static_cast<Byte*>(memory) + offset;
@@ -303,23 +342,16 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     offset += offsetSize;
     assert(offset == totalSize);
 
-    CUDA_CHECK(cudaMemcpy2D(dPositionsU, sizeof(Vector4f),
-                            postitionsCPU.data(), sizeof(float) * 3,
-                            sizeof(float) * 3, totalDataCount,
-                            cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy2D(dNormalsV, sizeof(Vector4f),
-                            normalsCPU.data(), sizeof(float) * 3,
-                            sizeof(float) * 3, totalDataCount,
-                            cudaMemcpyHostToDevice));
-    // Strided Copy of UVs
-    CUDA_CHECK(cudaMemcpy2D(dPositionsU + VertPosSize, sizeof(Vector4f),
-                            uvsCPU.data(), sizeof(float) * 2,
-                            sizeof(float), totalDataCount,
-                            cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy2D(dNormalsV + VertNormSize, sizeof(Vector4f),
-                            uvsCPU.data() + 1, sizeof(float) * 2,
-                            sizeof(float), totalDataCount,
-                            cudaMemcpyHostToDevice));
+    // Copy Vertex Data
+    CUDA_CHECK(cudaMemcpy(dPositions,  postitionsCPU.data(), 
+                          sizeof(Vector3f)  * totalDataCount,
+                          cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(dUVs, uvsCPU.data(),
+                          sizeof(Vector2f)* totalDataCount,
+                          cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(dQuats, rotationsCPU.data(),
+                          sizeof(QuatF)* totalDataCount,
+                          cudaMemcpyHostToDevice));
     // Copy Indices
     CUDA_CHECK(cudaMemcpy(dIndices, indexCPU.data(),
                           totalIndexCount * sizeof(uint64_t),
@@ -335,9 +367,9 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                           cudaMemcpyHostToDevice));
 
     // Set Main Pointers of batch
-    //dData.positionsU = reinterpret_cast<Vector4f*>(dPositionsU);
-    //dData.normalsV = reinterpret_cast<Vector4f*>(dNormalsV);
-    dData.tbnRotations = nullptr;
+    dData.positions = reinterpret_cast<Vector3f*>(dPositions);
+    dData.uvs = reinterpret_cast<Vector2f*>(dUVs);
+    dData.tbnRotations = reinterpret_cast<QuatF*>(dQuats);
     dData.indexList = reinterpret_cast<uint64_t*>(dIndices);
     dData.cullFace = reinterpret_cast<bool*>(dCulls);
     dData.primOffsets = reinterpret_cast<uint64_t*>(dOffsets);

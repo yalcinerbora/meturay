@@ -42,19 +42,19 @@ AssimpMetaSurfaceLoader::AssimpMetaSurfaceLoader(Assimp::Importer& i,
 
         if(innerId >= scene->mNumMeshes)
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
-                                 "Assimp_obj: Inner index out of range");
+                                 "Assimp_loader: Inner index out of range");
         if(!mesh->HasNormals())
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
-                                 "Assimp_obj: Obj file does not have normals");
+                                 "Assimp_loader: File does not have normals");
         if(!mesh->HasPositions())
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
-                                 "Assimp_obj: Obj file does not have positions");
+                                 "Assimp_loader: File does not have positions");
         if(mesh->GetNumUVChannels() == 0)
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
-                                 "Assimp_obj: Obj file does not have uvs");
+                                 "Assimp_loader: Obj file does not have uvs");
         if(!(mesh->mPrimitiveTypes == aiPrimitiveType_TRIANGLE))
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
-                                 "Assimp_obj: Only triangle is supported");
+                                 "Assimp_loader: Only triangle as a primitive is supported");
     }
     // Take owneship of the scene
     scene = importer.GetOrphanedScene();
@@ -169,6 +169,20 @@ SceneError AssimpMetaSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveData
                 meshStart += sizeof(Vector3) * mesh->mNumVertices;
                 break;
             }
+            case PrimitiveDataType::TANGENT:
+            {
+                std::memcpy(meshStart, mesh->mTangents,
+                            sizeof(Vector3) * mesh->mNumVertices);
+                meshStart += sizeof(Vector3) * mesh->mNumVertices;
+                break;
+            }
+            case PrimitiveDataType::BITANGENT:
+            {
+                std::memcpy(meshStart, mesh->mBitangents,
+                            sizeof(Vector3) * mesh->mNumVertices);
+                meshStart += sizeof(Vector3) * mesh->mNumVertices;
+                break;
+            }
             case PrimitiveDataType::UV:
             {
                 // Do manual copy since data is strided
@@ -183,7 +197,6 @@ SceneError AssimpMetaSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveData
             }
             case PrimitiveDataType::VERTEX_INDEX:
             {
-               
                 uint64_t* indexStart = reinterpret_cast<uint64_t*>(meshStart);                                
                 for(unsigned int i = 0; i < mesh->mNumFaces; i++)
                 {
@@ -203,6 +216,32 @@ SceneError AssimpMetaSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveData
     return SceneError::OK;
 }
 
+SceneError AssimpMetaSurfaceLoader::HasPrimitiveData(bool& r, PrimitiveDataType primitiveDataType) const
+{
+    r = true;
+    for(unsigned int innerId : innerIds)
+    {
+        const auto& mesh = scene->mMeshes[innerId];
+        switch(primitiveDataType)
+        {
+            case PrimitiveDataType::POSITION:
+                r = r && mesh->HasPositions(); break;
+            case PrimitiveDataType::NORMAL:
+                r = r && mesh->HasNormals(); break;
+            case PrimitiveDataType::TANGENT:
+            case PrimitiveDataType::BITANGENT:
+                r = r && mesh->HasTangentsAndBitangents(); break;
+            case PrimitiveDataType::UV:
+                r = r && mesh->HasTextureCoords(0); break;
+            case PrimitiveDataType::VERTEX_INDEX:
+                r = r && (mesh->mNumFaces != 0); break;
+            default:
+                return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
+        }
+    }
+    return SceneError::OK;
+}
+
 SceneError AssimpMetaSurfaceLoader::PrimitiveDataCount(size_t& total, PrimitiveDataType primitiveDataType) const
 {
     total = 0;
@@ -213,19 +252,25 @@ SceneError AssimpMetaSurfaceLoader::PrimitiveDataCount(size_t& total, PrimitiveD
         switch(primitiveDataType)
         {
             case PrimitiveDataType::POSITION:
-            case PrimitiveDataType::NORMAL:
-            case PrimitiveDataType::UV:
-            {
+                if(!mesh->HasPositions()) break;
                 total += mesh->mNumVertices;
                 break;
-            }
+            case PrimitiveDataType::NORMAL:
+                if(!mesh->HasNormals()) break;
+                total += mesh->mNumVertices;
+                break;
+            case PrimitiveDataType::UV:
+                if(!mesh->HasTextureCoords(0)) break;
+                total += mesh->mNumVertices;
+                break;
+            case PrimitiveDataType::TANGENT:
+            case PrimitiveDataType::BITANGENT:
+                if(!mesh->HasTangentsAndBitangents()) break;
+                total += mesh->mNumVertices;
+                break;            
             case PrimitiveDataType::VERTEX_INDEX:
             {
-                for(unsigned int i = 0; i < mesh->mNumFaces; i++)
-                {
-                    const auto& face = mesh->mFaces[i];
-                    total += face.mNumIndices;
-                }
+                total += mesh->mNumFaces * 3ull;             
                 break;
             }
         }
@@ -234,10 +279,12 @@ SceneError AssimpMetaSurfaceLoader::PrimitiveDataCount(size_t& total, PrimitiveD
 }
 
 SceneError AssimpMetaSurfaceLoader::PrimDataLayout(PrimitiveDataLayout& result,
-                                                         PrimitiveDataType primitiveDataType) const
+                                                   PrimitiveDataType primitiveDataType) const
 {
     if(primitiveDataType == PrimitiveDataType::POSITION ||
-       primitiveDataType == PrimitiveDataType::NORMAL)
+       primitiveDataType == PrimitiveDataType::NORMAL ||
+       primitiveDataType == PrimitiveDataType::TANGENT ||
+       primitiveDataType == PrimitiveDataType::BITANGENT)
         result = PrimitiveDataLayout::FLOAT_3;
     else if(primitiveDataType == PrimitiveDataType::UV)
         result = PrimitiveDataLayout::FLOAT_2;

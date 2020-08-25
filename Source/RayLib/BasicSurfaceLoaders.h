@@ -29,6 +29,7 @@ class InNodeTriLoader : public SurfaceLoader
         
         // Entire Data Fetch
          SceneError              GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const override;
+         SceneError              HasPrimitiveData(bool&, PrimitiveDataType) const override;
          SceneError              PrimitiveDataCount(size_t&, PrimitiveDataType primitiveDataType) const override;
          SceneError              PrimDataLayout(PrimitiveDataLayout&,
                                                 PrimitiveDataType primitiveDataType) const override;
@@ -57,6 +58,7 @@ class InNodeTriLoaderIndexed : public SurfaceLoader
         
         // Entire Data Fetch
          SceneError              GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const override;
+         SceneError              HasPrimitiveData(bool&, PrimitiveDataType) const override;
          SceneError              PrimitiveDataCount(size_t&, PrimitiveDataType primitiveDataType) const override;
          SceneError              PrimDataLayout(PrimitiveDataLayout&,
                                                 PrimitiveDataType primitiveDataType) const override;
@@ -85,6 +87,7 @@ class InNodeSphrLoader : public SurfaceLoader
         
         // Entire Data Fetch
          SceneError              GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const override;
+         SceneError              HasPrimitiveData(bool&, PrimitiveDataType) const override;
          SceneError              PrimitiveDataCount(size_t&, PrimitiveDataType primitiveDataType) const override;
          SceneError              PrimDataLayout(PrimitiveDataLayout&,
                                                 PrimitiveDataType primitiveDataType) const override;

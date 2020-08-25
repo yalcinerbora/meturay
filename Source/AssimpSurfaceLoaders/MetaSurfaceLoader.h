@@ -40,6 +40,7 @@ class AssimpMetaSurfaceLoader : public SurfaceLoader
         SceneError                  PrimitiveDataRanges(std::vector<Vector2ul>&) const override;        
         // Entire Data Fetch
         SceneError                  GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const override;
+        SceneError                  HasPrimitiveData(bool&, PrimitiveDataType) const override;
         SceneError                  PrimitiveDataCount(size_t&, PrimitiveDataType primitiveDataType) const override;
         SceneError                  PrimDataLayout(PrimitiveDataLayout&,
                                                    PrimitiveDataType primitiveDataType) const override;

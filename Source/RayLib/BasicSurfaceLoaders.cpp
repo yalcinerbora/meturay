@@ -153,6 +153,14 @@ SceneError InNodeTriLoader::GetPrimitiveData(Byte* result, PrimitiveDataType pri
     else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
 }
 
+SceneError InNodeTriLoader::HasPrimitiveData(bool& r, PrimitiveDataType primitiveDataType) const
+{
+    r = (primitiveDataType == PrimitiveDataType::POSITION ||
+         primitiveDataType == PrimitiveDataType::NORMAL ||
+         primitiveDataType == PrimitiveDataType::UV);
+    return SceneError::OK;
+}
+
 SceneError InNodeTriLoader::PrimitiveDataCount(size_t& result, PrimitiveDataType primitiveDataType) const
 {
     if(primitiveDataType == PrimitiveDataType::VERTEX_INDEX)
@@ -250,7 +258,7 @@ SceneError InNodeTriLoaderIndexed::PrimitiveCounts(std::vector<size_t>& result) 
     auto counts = node.AccessListCount(positionName);
 
     std::transform(counts.begin(), counts.end(), result.begin(),
-                            [] (uint64_t data) -> size_t { return data / 3; });
+                   [](uint64_t data) -> size_t { return data / 3; });
     return SceneError::OK;
 }
 
@@ -301,6 +309,15 @@ SceneError InNodeTriLoaderIndexed::GetPrimitiveData(Byte* result, PrimitiveDataT
         return SceneError::OK;
     }
     else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
+}
+
+SceneError InNodeTriLoaderIndexed::HasPrimitiveData(bool& r, PrimitiveDataType primitiveDataType) const
+{
+    r = (primitiveDataType == PrimitiveDataType::POSITION ||
+         primitiveDataType == PrimitiveDataType::NORMAL ||
+         primitiveDataType == PrimitiveDataType::UV ||
+         primitiveDataType == PrimitiveDataType::VERTEX_INDEX);
+    return SceneError::OK;
 }
 
 SceneError InNodeTriLoaderIndexed::PrimitiveDataCount(size_t& result, PrimitiveDataType primitiveDataType) const
@@ -413,6 +430,13 @@ SceneError InNodeSphrLoader::GetPrimitiveData(Byte* memory, PrimitiveDataType pr
         return SceneError::OK;
     }
     else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
+}
+
+SceneError InNodeSphrLoader::HasPrimitiveData(bool& r, PrimitiveDataType primitiveDataType) const
+{    
+    r = (primitiveDataType == PrimitiveDataType::POSITION ||
+         primitiveDataType == PrimitiveDataType::RADIUS);
+    return SceneError::OK;
 }
 
 SceneError InNodeSphrLoader::PrimitiveDataCount(size_t& result, PrimitiveDataType primitiveDataType) const

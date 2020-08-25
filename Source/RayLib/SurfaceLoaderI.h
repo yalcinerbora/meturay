@@ -29,6 +29,7 @@ class SurfaceLoaderI
         
         // Entire Data Fetch
         virtual SceneError              GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const = 0;
+        virtual SceneError              HasPrimitiveData(bool&, PrimitiveDataType) const = 0;
         virtual SceneError              PrimitiveDataCount(size_t&, PrimitiveDataType primitiveDataType) const = 0;
         virtual SceneError              PrimDataLayout(PrimitiveDataLayout&,
                                                        PrimitiveDataType primitiveDataType) const = 0;
