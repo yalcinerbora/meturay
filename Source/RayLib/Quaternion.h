@@ -7,6 +7,7 @@ where; v[0] = w, v[1] = x, v[2] = y, v[3] = z
 */
 
 #include "Vector.h"
+#include "Constants.h"
 
 template<class T>
 using QuatFloatEnable = typename std::enable_if<std::is_floating_point<T>::value>::type;
@@ -106,9 +107,16 @@ namespace Quat
 namespace TransformGen
 {
     template <class T>
-    static __device__ __host__ Quaternion<T> Space(const Vector<3, T>& x,
-                                                   const Vector<3, T>& y,
-                                                   const Vector<3, T>& z);
+    static __device__ __host__ void Space(Quaternion<T>&,
+                                          const Vector<3, T>& x,
+                                          const Vector<3, T>& y,
+                                          const Vector<3, T>& z);
+
+    template <class T>
+    static __device__ __host__ void InvSpace(Quaternion<T>&,
+                                             const Vector<3, T>& x,
+                                             const Vector<3, T>& y,
+                                             const Vector<3, T>& z);
 }
 
 // Implementation

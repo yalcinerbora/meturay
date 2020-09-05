@@ -208,11 +208,13 @@ namespace TransformGen
                                                        const Vector<3, T>& at,
                                                        const Vector<3, T>& up);
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ Matrix<3, T>     Space(const Vector<3, T>& x,
+    static __device__ __host__ void             Space(Matrix<3, T>&,
+                                                      const Vector<3, T>& x,
                                                       const Vector<3, T>& y,
                                                       const Vector<3, T>& z);
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ Matrix<3, T>     InvSpace(const Vector<3, T>& x,
+    static __device__ __host__ void             InvSpace(Matrix<3, T>&,
+                                                         const Vector<3, T>& x,
                                                          const Vector<3, T>& y,
                                                          const Vector<3, T>& z);
 }

@@ -8,67 +8,14 @@
 
 #include <execution>
 
-//template <class T>
-//void LocalRotation(Quaternion<T>& q0,
-//                   Quaternion<T>& q1,
-//                   Quaternion<T>& q2,
-//                   const Vector<3, T>* positions,
-//                   const Vector<3, T>* normals,
-//                   const Vector<2, T>* uvs)
-//{
-//
-//}
-
-void CalculateLocalRotation(QuatF* gQuaternions,
-                            //
-                            const Vector3* gPositions,
-                            const Vector3* gNormals,
-                            const Vector2* gUVs,
-                            const uint64_t* gIndices,
-                            uint32_t triangleCount)
+struct IndexTriplet
 {
-    //uint64_t i0 = gIndices[3 * globalId + 0];
-    //uint64_t i1 = gIndices[3 * globalId + 1];
-    //uint64_t i2 = gIndices[3 * globalId + 2];
+    uint64_t i[3]; 
 
-
-    //Vector2 positions[3] = {gPositions[i0], gPositions[i1], gPositions[i2]};
-    //Vector3 normals[3] = {gNormals[i0], gNormals[i1], gNormals[i2]};
-    //Vector2 uvs[3] = {gUVs[i0], gUVs[i1], gUVs[i2]};
-
-    //QuatF q0, q1, q2;
-    ////Triangle::LocalRotation(q0, q1, q2,
-    ////                        positions,
-    ////                        normals,
-    ////                        uvs);
-
-    //gQuaternions[i0] = q0;
-    //gQuaternions[i1] = q1;
-    //gQuaternions[i2] = q2;
-}
-
-void CalculateLocalRotation(QuatF* gQuaternions,
-                            const Vector3* gNormals,
-                            const Vector3* gTangents,
-                            const uint64_t* gIndices,
-                            uint32_t triangleCount)
-{
-    //uint64_t i0 = gIndices[3 * globalId + 0];
-    //uint64_t i1 = gIndices[3 * globalId + 1];
-    //uint64_t i2 = gIndices[3 * globalId + 2];
-
-    //Vector3 normals[3] = {gNormals[i0], gNormals[i1], gNormals[i2]};
-    //Vector3 tangents[3] = {gTangents[i0], gTangents[i1], gTangents[i2]};
-
-    //QuatF q0, q1, q2;
-    ////Triangle::LocalRotation(q0, q1, q2,
-    ////                        normals,
-    ////                        tangents);
-
-    //gQuaternions[i0] = q0;
-    //gQuaternions[i1] = q1;
-    //gQuaternions[i2] = q2;
-}
+    uint64_t& operator[](int j) { return i[j]; }
+    const uint64_t& operator[](int j) const { return i[j]; }
+};
+static_assert(sizeof(IndexTriplet) == sizeof(uint64_t) * 3);
 
 GPUPrimitiveTriangle::GPUPrimitiveTriangle()
     : totalPrimitiveCount(0)
@@ -146,10 +93,10 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
 
         std::vector<AABB3> aabbList;
         std::vector<Vector2ul> primRange;
-        std::vector<Vector2ul> dataRange;
+        //std::vector<Vector2ul> dataRange;
         //std::vector<size_t> primCounts;
         size_t loaderPCount, loaderUVCount, loaderICount;
-        size_t loaderNCount, loaderTCount;
+        //size_t loaderNCount, loaderTCount;
 
         // Load Aux Data
         if((e = loader->AABB(aabbList)) != SceneError::OK)
@@ -182,11 +129,11 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             Vector2ul currentPRange = primRange[i];
             currentPRange += Vector2ul(totalPrimitiveCount);
 
-            Vector2ul currentDRange = dataRange[i];
-            currentDRange += Vector2ul(totalDataCount);
+            //Vector2ul currentDRange = dataRange[i];
+            //currentDRange += Vector2ul(totalDataCount);
 
-            batchRanges.emplace(id, currentPRange);
-            batchDataRanges.emplace(id, currentDRange);
+            //batchRanges.emplace(id, currentPRange);
+            //batchDataRanges.emplace(id, currentDRange);
             batchAABBs.emplace(id, aabbList[i]);
             batchOffsets.push_back(currentPRange[0]);
 
@@ -215,20 +162,27 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     constexpr size_t IndexSize = PrimitiveDataLayoutToSize(INDEX_LAYOUT);
     constexpr size_t RotationSize = sizeof(QuatF);
 
+    // Stationary buffers
     std::vector<Byte> postitionsCPU(totalDataCount * VertPosSize);
     std::vector<Byte> uvsCPU(totalDataCount* VertUVSize);    
     std::vector<Byte> rotationsCPU(totalDataCount* RotationSize);
     std::vector<Byte> indexCPU(totalIndexCount * IndexSize);
   
+    // Temporary buffers (re-allocated per batch)
+    std::vector<Vector3> tangents;
+    std::vector<Vector3> normals;
+
     size_t i = 0;
     for(const auto& loader : loaders)
     {
         const SceneNodeI& node = loader->SceneNode();
 
-        const size_t offsetVertex = loaderVOffsets[i];
+        const size_t offsetVertex = loaderVOffsets[i];        
         const size_t offsetIndex = loaderIOffsets[i];
         const size_t offsetIndexNext = loaderIOffsets[i + 1];
+        const size_t vertexCount = loaderVOffsets[i + 1] - offsetVertex;
 
+        // Load Mandatory Data
         if((e = loader->GetPrimitiveData(postitionsCPU.data() + offsetVertex * VertPosSize,
                                          PrimitiveDataType::POSITION)) != SceneError::OK)
             return e;
@@ -238,11 +192,10 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         if((e = loader->GetPrimitiveData(indexCPU.data() + offsetIndex * IndexSize,
                                          PrimitiveDataType::VERTEX_INDEX)) != SceneError::OK)
             return e;
-
-        
+       
         // Get temporary data to generate tangent space transformation
-        std::vector<Byte> normalsCPU(totalDataCount * VertNormSize);
-        if((e = loader->GetPrimitiveData(normalsCPU.data() + offsetVertex * VertNormSize,
+        normals.resize(vertexCount);
+        if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(normals.data()),
                                          PrimitiveDataType::NORMAL)) != SceneError::OK)
             return e;
         
@@ -254,53 +207,97 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         if((e = loader->PrimitiveDataCount(tangentCount, PrimitiveDataType::TANGENT)) != SceneError::OK)
             return e;
 
-        std::vector<Byte> tangents;
+
+        // Access index three by three for data generation
+        IndexTriplet* primStart = reinterpret_cast<IndexTriplet*>(indexCPU.data() + offsetIndex * IndexSize);
+        IndexTriplet* primEnd = reinterpret_cast<IndexTriplet*>(indexCPU.data() + offsetIndexNext * IndexSize);
+
+        // Manipulate Ptrs of in/out
+        QuatF* rotationsOut = reinterpret_cast<QuatF*>(rotationsCPU.data() + offsetVertex * RotationSize);
+        Vector3* normalsIn = normals.data();
         if(hasTangent)            
         {
-            tangents.resize(tangentCount* VertTangentSize);
-            if((e = loader->GetPrimitiveData(tangents.data(), PrimitiveDataType::TANGENT)) != SceneError::OK)
+            tangents.resize(tangentCount);
+            if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(tangents.data()), 
+                                             PrimitiveDataType::TANGENT)) != SceneError::OK)
                 return e;
+
+            Vector3* tangentsIn = tangents.data();
+
+            // Utilize tangent and normal for quat generation
+            std::for_each(std::execution::par_unseq,
+                          primStart, primEnd,
+                          [&](IndexTriplet& indices)
+                          {                        
+                              Vector3 normals[3];
+                              normals[0] = normalsIn[indices[0]];
+                              normals[1] = normalsIn[indices[1]];
+                              normals[2] = normalsIn[indices[2]];
+
+                              Vector3 tangents[3];
+                              tangents[0] = tangentsIn[indices[0]];
+                              tangents[1] = tangentsIn[indices[1]];
+                              tangents[2] = tangentsIn[indices[2]];
+
+                              // Generate rotations
+                              QuatF q0, q1, q2;
+                              Triangle::LocalRotation(q0, q1, q2, normals, tangents);
+
+                              rotationsOut[indices[0]] = q0;
+                              rotationsOut[indices[1]] = q1;
+                              rotationsOut[indices[2]] = q2;
+
+                              // Finally accumulate offset for combined vertex buffer usage
+                              if(i != 0)
+                              {
+                                  indices[0] += offsetVertex;
+                                  indices[1] += offsetVertex;
+                                  indices[2] += offsetVertex;
+                              }
+                          });
         }
         else
         {
+            Vector3* positionsIn = reinterpret_cast<Vector3*>(postitionsCPU.data() + offsetVertex * VertPosSize);
+            Vector2* uvsIn = reinterpret_cast<Vector2*>(uvsCPU.data() + offsetVertex * VertUVSize);
+
             // Utilize position and uv for transform generation
-            std::for_each(reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndex * IndexSize),
-                          reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndexNext * IndexSize),
-                          [offsetVertex](uint64_t& t)
-                          {
+            std::for_each(std::execution::par_unseq,
+                          primStart, primEnd,
+                          [&](IndexTriplet& indices)
+                          {                              // Skip three indices
+                              Vector3 normals[3];
+                              normals[0] = normalsIn[indices[0]];
+                              normals[1] = normalsIn[indices[1]];
+                              normals[2] = normalsIn[indices[2]];
+
+                              Vector3 positions[3];
+                              positions[0] = positionsIn[indices[0]];
+                              positions[1] = positionsIn[indices[1]];
+                              positions[2] = positionsIn[indices[2]];
+                                                          
+                              Vector2 uvs[3];
+                              uvs[0] = uvsIn[indices[0]];
+                              uvs[1] = uvsIn[indices[1]];
+                              uvs[2] = uvsIn[indices[2]];
+
+                              // Generate rotations
+                              QuatF q0, q1, q2;
+                              Triangle::LocalRotation(q0, q1, q2, positions, normals, uvs);
+
+                              rotationsOut[indices[0]] = q0;
+                              rotationsOut[indices[1]] = q1;
+                              rotationsOut[indices[2]] = q2;
+
+                              // Finally accumulate offset for combined vertex buffer usage
+                              if(i != 0)
+                              {
+                                  indices[0] += offsetVertex;
+                                  indices[1] += offsetVertex;
+                                  indices[2] += offsetVertex;
+                              }
                           });
         }
-
-        // Accumulate the offset to the indices
-        // TODO: utilize GPU here maybe
-        if(i != 0)
-        {
-            std::for_each(std::execution::par_unseq,
-                          reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndex * IndexSize),
-                          reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndexNext * IndexSize),
-                          [&](uint64_t& t) { t += offsetVertex; });
-        }
-
-        //if()
-
-        // Before offseting indices calculate rotations
-        //uint32_t* 
-
-        // TODO: After c++ ranges become the norm
-        // change this to std::views::iota_view(offsetIndex, offsetIndexNext);
-        //std::vector<uint64_t> rangeList;
-        //size_t indexCount = offsetIndexNext - offsetIndex;
-        //rangeList.resize(indexCount);
-        //std::iota(rangeList.begin(), rangeList.begin() + 4, offsetIndexNext);
-
-
-
-        //auto Lookup []()
-
-        //reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndex * IndexSize),
-        reinterpret_cast<uint64_t*>(indexCPU.data() + offsetIndexNext * IndexSize),
-
-
 
         i++;
     }

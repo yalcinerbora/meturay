@@ -1,5 +1,3 @@
-#pragma once
-
 template <int N, class T>
 template <class C , typename>
 __device__ __host__
@@ -1071,22 +1069,21 @@ inline Matrix<4, T> TransformGen::LookAt(const Vector<3, T>& eyePos,
 
 template<class T, typename>
 __device__ __host__
-inline Matrix<3, T> TransformGen::Space(const Vector<3, T>& x,
-                                        const Vector<3, T>& y,
-                                        const Vector<3, T>& z)
+inline void TransformGen::Space(Matrix<3, T>& m,
+                                const Vector<3, T>& x,
+                                const Vector<3, T>& y,
+                                const Vector<3, T>& z)
 {
-    return Matrix<4, T>(x[0], y[0], z[0], 0,
-                        x[1], y[1], z[1], 0,
-                        x[2], y[2], z[2], 0,
-                        0, 0, 0, 1);
+    m = Matrix<3, T>(x[0], y[0], z[0],
+                     x[1], y[1], z[1],
+                     x[2], y[2], z[2]);
 }
 
 template<class T, typename>
 __device__ __host__
-inline Matrix<3, T> TransformGen::InvSpace(const Vector<3, T>& x,
-                                           const Vector<3, T>& y,
-                                           const Vector<3, T>& z)
+inline void TransformGen::InvSpace(Matrix<3, T>& m, const Vector<3, T>& x,
+                                   const Vector<3, T>& y,
+                                   const Vector<3, T>& z)
 {
-    return Matrix<3, T>(x, y, z,
-                        Vector<3, T>(0, 0, 1));
+    m = Matrix<3, T>(x, y, z);
 }

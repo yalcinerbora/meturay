@@ -1,7 +1,3 @@
-#pragma once
-
-#include "Constants.h"
-
 //template<class T>
 //__device__ __host__
 //inline constexpr Quaternion<T>::Quaternion()
@@ -332,16 +328,23 @@ inline Quaternion<T> Quat::RotationBetweenZAxis(const Vector<3, T>& b)
 }
 
 template<class T>
-static __device__ __host__ Quaternion<T> operator*(T t, const Quaternion<T>& q)
+__device__ __host__ 
+inline Quaternion<T> operator*(T t, const Quaternion<T>& q)
 {
     return q * t;
 }
 
+#include <algorithm>
+#include <cmath>
+
 template <class T>
-static __device__ __host__ Quaternion<T> TransformGen::Space(const Vector<3, T>& x,
-                                                             const Vector<3, T>& y,
-                                                             const Vector<3, T>& z)
+__device__ __host__
+inline void TransformGen::Space(Quaternion<T>& q,
+                                const Vector<3, T>& x,
+                                const Vector<3, T>& y,
+                                const Vector<3, T>& z)
 {
+    using namespace std;
     T sqrtIn = max(static_cast<T>(0), 1 + x[0] - y[1] - z[2]);
     T qW = static_cast<T>(0.5) * sqrt(sqrtIn);
     T denom = static_cast<T>(0.25) / qW;
@@ -349,5 +352,23 @@ static __device__ __host__ Quaternion<T> TransformGen::Space(const Vector<3, T>&
     T qY = (x[2] - z[0]) * denom;
     T qZ = (y[0] - x[1]) * denom;
 
-    return Quaternion<T>(qW, qX, qY, qZ);
+    q = Quaternion<T>(qW, qX, qY, qZ);
+}
+
+template <class T>
+__device__ __host__
+inline void TransformGen::InvSpace(Quaternion<T>& q,
+                                   const Vector<3, T>& x,
+                                   const Vector<3, T>& y,
+                                   const Vector<3, T>& z)
+{
+    using namespace std;
+    T sqrtIn = max(static_cast<T>(0), 1 + x[0] - y[1] - z[2]);
+    T qW = static_cast<T>(0.5) * sqrt(sqrtIn);
+    T denom = static_cast<T>(0.25) / qW;
+    T qX = (z[1] - y[2]) * denom;
+    T qY = (x[2] - z[0]) * denom;
+    T qZ = (y[0] - x[1]) * denom;
+
+    q = Quaternion<T>(qW, qX, qY, qZ).ConjugateSelf();
 }
