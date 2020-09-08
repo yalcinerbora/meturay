@@ -4,8 +4,14 @@
 
 #include "RayLib/Matrix.h"
 #include "RayLib/SceneStructs.h"
+#include "RayLib/Ray.h"
+#include "NodeListing.h"
+
+class GPUTransformI;
 
 static constexpr uint32_t DEFAULT_TRANSFORM_INDEX = 0;
+
+using GPUTransformList = std::vector<const GPUTransformI*>;
 
 // GPU Transform Holds transformation data
 // required to transform
@@ -15,27 +21,40 @@ class GPUTransformI
 		virtual ~GPUTransformI() = default;
 
 		// Classic Transformations
-		// One overload is for non-rigid skeletal based transformations
+		// extra params are for non-rigid skeletal based transformations
 		// or maybe morph targets
-		__device__ __host__
-		virtual RayF WorldToLocal(const RayF&) const = 0;		
 		__device__  __host__
 		virtual RayF WorldToLocal(const RayF&,
-								  const uint32_t* indices, const float* weights,
-								  uint32_t count) const = 0;
-		__device__ __host__
-		virtual Vector3 LocalToWorld(const Vector3&) const = 0;
+								  const uint32_t* indices = nullptr,
+								  const float* weights = nullptr,
+								  uint32_t count = 0) const = 0;
 		__device__  __host__
 		virtual Vector3 LocalToWorld(const Vector3&,
-									 const uint32_t* indices, const float* weights,
-									 uint32_t count) const = 0;
-
-
+									 const uint32_t* indices = nullptr,
+									 const float* weights = nullptr,
+									 uint32_t count = 0) const = 0;
 		__device__  __host__
-		virtual QuatF ToLocalRotation() const = 0;
-		__device__  __host__
-		virtual QuatF ToLocalRotation(const uint32_t* indices, const float* weights,
-									  uint32_t count) const = 0;
+		virtual QuatF ToLocalRotation(const uint32_t* indices = nullptr,
+									  const float* weights = nullptr,
+									  uint32_t count = 0) const = 0;
+};
+
+class CPUTransformI
+{
+	public:
+	virtual	~CPUTransformI() = default;
+
+	// Interface
+	virtual const char*					Type() const = 0;
+	virtual const GPUTransformList&		GPUTransforms() const = 0;
+	virtual SceneError					InitializeGroup(const NodeListing& transformNodes,
+														double time,
+														const std::string& scenePath) = 0;
+	virtual SceneError					ChangeTime(const NodeListing& transformNodes, double time,
+												   const std::string& scenePath) = 0;
+
+	virtual size_t						UsedGPUMemory() const = 0;
+	virtual size_t						UsedCPUMemory() const = 0;
 };
 
 //// Converts to GPUTransform (Matrix4x4) also inverts the converted matrix

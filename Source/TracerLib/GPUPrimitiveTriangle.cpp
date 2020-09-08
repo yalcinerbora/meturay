@@ -132,7 +132,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             //Vector2ul currentDRange = dataRange[i];
             //currentDRange += Vector2ul(totalDataCount);
 
-            //batchRanges.emplace(id, currentPRange);
+            batchRanges.emplace(id, currentPRange);
             //batchDataRanges.emplace(id, currentDRange);
             batchAABBs.emplace(id, aabbList[i]);
             batchOffsets.push_back(currentPRange[0]);

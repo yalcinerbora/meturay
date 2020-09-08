@@ -61,6 +61,9 @@
     <Filter Include="Cuda System">
       <UniqueIdentifier>{e75d18a5-0e64-494c-97de-38d07f77c656}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GPU Classes">
+      <UniqueIdentifier>{5459f924-f003-490e-a258-9f1bb381669c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp">
@@ -91,9 +94,14 @@
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp">
       <Filter>Cuda System</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUDistribution.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp">
       <Filter>Default Primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUDistribution.cpp">
+      <Filter>GPU Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUTransformSingle.cpp">
+      <Filter>GPU Classes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -294,10 +302,21 @@
     <ClInclude Include="..\..\..\Source\TracerLib\MetaMaterialFunctions.cuh">
       <Filter>Default Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUDistribution.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUMedium.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUTransform.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUSurface.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUSurface.h">
+      <Filter>GPU Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMedium.cuh">
+      <Filter>GPU Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUDistribution.h">
+      <Filter>GPU Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformI.h">
+      <Filter>GPU Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformSingle.cuh">
+      <Filter>GPU Classes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">

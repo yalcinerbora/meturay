@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\AuxiliaryDataKernels.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformSingle.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.hpp" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorBVHKC.cuh" />
@@ -30,7 +31,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialLight.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialLightKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMedium.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUTransform.h" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ImageStructs.h" />
@@ -101,6 +102,7 @@
       <FileType>Document</FileType>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\RNGMemory.cu" />
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUTransformSingle.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\MangledNames.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\SceneNodeJson.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\ScenePartitioner.cpp" />
