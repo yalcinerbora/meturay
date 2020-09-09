@@ -100,9 +100,6 @@
     <ClCompile Include="..\..\..\Source\TracerLib\GPUDistribution.cpp">
       <Filter>GPU Classes</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUTransformSingle.cpp">
-      <Filter>GPU Classes</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
@@ -365,6 +362,9 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUMaterialLight.cu">
       <Filter>Default Materials</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUTransformSingle.cu">
+      <Filter>GPU Classes</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

@@ -120,7 +120,7 @@ void ImageMemory::Reset(const CudaSystem& system)
     if(pixelCount != 0)
     {
         // Pixel Count is relatively small single GPU should handle it
-        const CudaGPU& gpu = *(system.GPUList().begin());
+        const CudaGPU& gpu = system.BestGPU(); //*(system.GPUList().begin());
         //// TODO: Do generic image handling
         //gpu.GridStrideKC_X(0, (cudaStream_t)0,
         //                   pixelCount,

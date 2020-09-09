@@ -375,7 +375,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
 
     // Set Device
-    const CudaGPU& gpu = (*system.GPUList().begin());
+    const CudaGPU& gpu = system.BestGPU();//(*system.GPUList().begin());
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
 
     uint32_t innerIndex = idLookup.at(surface);

@@ -21,7 +21,7 @@ All of them should be provided
 #include "RayLib/Triangle.h"
 
 #include "GPUPrimitiveP.cuh"
-#include "GPUTransform.h"
+#include "GPUTransformI.h"
 #include "GPUSurface.h"
 #include "DefaultLeaf.h"
 #include "DeviceMemory.h"

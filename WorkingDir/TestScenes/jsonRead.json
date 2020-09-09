@@ -49,15 +49,15 @@
 		"id": 1,
 		"type": "SingleTransform",
 		"layout": "matrix4x4",
-		"data": [ 1, 0, 0, 0,
-				  0, 1, 0, 0,
-				  0, 0, 1, 0,
-				  0, 0, 0, 1]
+		"matrix": [ 1, 0, 0, 0,
+				    0, 1, 0, 0,
+				    0, 0, 1, 0,
+				    0, 0, 0, 1]
 	},
 	{
 		"id": 2,
 		"type": "SingleTransform",
-		"layout": "TRS",
+		"layout": "trs",
 		"translation": [0, 0, 0],
 		"rotation": [0, 0, 0],
 		"scale": [0, 0, 0]

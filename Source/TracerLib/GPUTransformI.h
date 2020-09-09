@@ -8,6 +8,7 @@
 #include "NodeListing.h"
 
 class GPUTransformI;
+class CudaSystem;
 
 static constexpr uint32_t DEFAULT_TRANSFORM_INDEX = 0;
 
@@ -23,38 +24,41 @@ class GPUTransformI
 		// Classic Transformations
 		// extra params are for non-rigid skeletal based transformations
 		// or maybe morph targets
-		__device__  __host__
+		__device__ __host__
 		virtual RayF WorldToLocal(const RayF&,
 								  const uint32_t* indices = nullptr,
 								  const float* weights = nullptr,
 								  uint32_t count = 0) const = 0;
-		__device__  __host__
+		__device__ __host__
 		virtual Vector3 LocalToWorld(const Vector3&,
 									 const uint32_t* indices = nullptr,
 									 const float* weights = nullptr,
 									 uint32_t count = 0) const = 0;
-		__device__  __host__
+		__device__ __host__
 		virtual QuatF ToLocalRotation(const uint32_t* indices = nullptr,
 									  const float* weights = nullptr,
 									  uint32_t count = 0) const = 0;
 };
 
-class CPUTransformI
+class CPUTransformGroupI
 {
 	public:
-	virtual	~CPUTransformI() = default;
+		virtual								~CPUTransformGroupI() = default;
 
-	// Interface
-	virtual const char*					Type() const = 0;
-	virtual const GPUTransformList&		GPUTransforms() const = 0;
-	virtual SceneError					InitializeGroup(const NodeListing& transformNodes,
-														double time,
-														const std::string& scenePath) = 0;
-	virtual SceneError					ChangeTime(const NodeListing& transformNodes, double time,
-												   const std::string& scenePath) = 0;
+		// Interface
+		virtual const char*					Type() const = 0;
+		virtual const GPUTransformList&		GPUTransforms() const = 0;
+		virtual const GPUTransformList&		CPUTransforms() const = 0;
+		virtual SceneError					InitializeGroup(const NodeListing& transformNodes,
+															double time,
+															const std::string& scenePath) = 0;
+		virtual SceneError					ChangeTime(const NodeListing& transformNodes, double time,
+													   const std::string& scenePath) = 0;
+		virtual TracerError					ConstructTransforms(const CudaSystem&) = 0;
+		virtual uint32_t					TransformCount() const = 0;
 
-	virtual size_t						UsedGPUMemory() const = 0;
-	virtual size_t						UsedCPUMemory() const = 0;
+		virtual size_t						UsedGPUMemory() const = 0;
+		virtual size_t						UsedCPUMemory() const = 0;
 };
 
 //// Converts to GPUTransform (Matrix4x4) also inverts the converted matrix

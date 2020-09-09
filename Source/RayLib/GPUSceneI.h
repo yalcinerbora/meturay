@@ -29,10 +29,10 @@ class GPUSceneI
         virtual HitKey                              BaseBoundaryMaterial() const = 0;
         virtual uint32_t                            HitStructUnionSize() const = 0;
         // Access CPU                
-        virtual const std::vector<CPULight>&        LightsCPU() const = 0;
-        virtual const std::vector<CPUCamera>&       CamerasCPU() const = 0;
-        virtual const std::vector<CPUTransform>&    TransformsCPU() const = 0;
-        virtual const std::vector<CPUMedium>&       MediumsCPU() const = 0;
+        virtual const std::vector<CPULight>&            LightsCPU() const = 0;
+        virtual const std::vector<CPUCamera>&           CamerasCPU() const = 0;
+        virtual const std::vector<CPUTransformGPtr>&    TransformsCPU() const = 0;
+        virtual const std::vector<CPUMedium>&           MediumsCPU() const = 0;
         // Generated Classes of Materials / Accelerators
         // Work Maps
         virtual const WorkBatchCreationInfo&        WorkBatchInfo() const = 0;

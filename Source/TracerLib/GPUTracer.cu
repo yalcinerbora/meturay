@@ -11,9 +11,10 @@
 #include "CudaConstants.h"
 #include "GPUAcceleratorI.h"
 #include "GPUWorkI.h"
-#include "GPUTransform.h"
+#include "GPUTransformI.h"
 #include "GPUMedium.cuh"
 #include "GPUMaterialI.h"
+#include "GPUTransformI.h"
 
 #include "TracerDebug.h"
 
@@ -56,8 +57,21 @@ TracerError GPUTracer::Initialize()
     //    i++;
     //}
 
+    std::vector<const GPUTransformI*> dGPUTransforms;
+
+    size_t totalTrasformSize = 0;
+    for(auto& transform : transforms)
+    {
+        totalTrasformSize += transform->TransformCount();
+        const auto& hTList = transform->CPUTransforms();
+        const auto& dTList = transform->GPUTransforms();
+
+        hGPUTransforms.insert(hGPUTransforms.end(), hTList.begin(), hTList.end());
+        dGPUTransforms.insert(dGPUTransforms.end(), dTList.begin(), dTList.end());
+    }
+
     // Allocate
-    size_t transformSize = transforms.size() * sizeof(GPUTransformI*);
+    size_t transformSize = totalTrasformSize * sizeof(GPUTransformI*);
     transformSize = Memory::AlignSize(transformSize, AlignByteCount);
     size_t mediumSize = transforms.size() * sizeof(GPUMedium);
     mediumSize = Memory::AlignSize(mediumSize, AlignByteCount);
@@ -73,9 +87,10 @@ TracerError GPUTracer::Initialize()
     assert(offset == (mediumSize + transformSize));
 
     // Copy Data
-    //CUDA_CHECK(cudaMemcpy(const_cast<GPUTransformI**>(dTransforms), 
-    //                      gpuTransform.data(), transformSize,
-    //                      cudaMemcpyHostToDevice));
+    hTransforms = hGPUTransforms.data();
+    CUDA_CHECK(cudaMemcpy(const_cast<GPUTransformI**>(dTransforms), 
+                          dGPUTransforms.data(), transformSize,
+                          cudaMemcpyHostToDevice));
     //CUDA_CHECK(cudaMemcpy(const_cast<GPUMedium*>(dMediums),
     //                      gpuMedium.data(), mediumSize,
     //                      cudaMemcpyHostToDevice));
@@ -87,7 +102,7 @@ TracerError GPUTracer::Initialize()
 
     // Attach Transform gpu pointer to the Accelerator Batches
     for(const auto& acc : accelBatches)
-        acc.second->AttachGlobalTransformArray(dTransforms);
+        acc.second->AttachGlobalTransformArray(dTransforms, hTransforms);
         
 
     // Construct Tracers

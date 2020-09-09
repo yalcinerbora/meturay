@@ -49,8 +49,9 @@ class GPUTracer : public GPUTracerI
         // Batches of Material
         const std::map<NameGPUPair, GPUMatGPtr>&    materialGroups;
 
-        const std::vector<CPUTransform>&            transforms;
+        const std::vector<CPUTransformGPtr>&        transforms;
         const std::vector<CPUMedium>&               mediums;
+        std::vector<const GPUTransformI*>           hGPUTransforms;
 
         // GPU Memory
         DeviceMemory                                mediumAndTransformMemory;
@@ -62,8 +63,10 @@ class GPUTracer : public GPUTracerI
         RNGMemory                           rngMemory;
         RayMemory                           rayMemory;
         ImageMemory                         imgMemory;        
-        const GPUTransformI* const*         dTransforms;
+        const GPUTransformI* const*         dTransforms;        
         const GPUMedium*                    dMediums;
+        // CPUMemory
+        const GPUTransformI* const*         hTransforms;
         //
         TracerParameters                    params;
         //

@@ -14,6 +14,7 @@ Structures that is related to TracerI
 
 class CudaGPU;
 
+class CPUTransformGroupI;
 class GPUBaseAcceleratorI;
 class GPUAcceleratorGroupI;
 class GPUPrimitiveGroupI;
@@ -28,6 +29,7 @@ using GPUBaseAccelPtr = SharedLibPtr<GPUBaseAcceleratorI>;
 using GPUAccelGPtr = SharedLibPtr<GPUAcceleratorGroupI>;
 using GPUPrimGPtr = SharedLibPtr<GPUPrimitiveGroupI>;
 using GPUMatGPtr = SharedLibPtr<GPUMaterialGroupI>;
+using CPUTransformGPtr = SharedLibPtr<CPUTransformGroupI>;
 
 // Kernel Mappings
 using AcceleratorBatchMap = std::map<uint32_t, GPUAcceleratorGroupI*>;

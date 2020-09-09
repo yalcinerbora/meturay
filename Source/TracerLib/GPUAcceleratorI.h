@@ -96,7 +96,8 @@ class GPUAcceleratorGroupI
                                                 const uint32_t rayCount) const = 0;
 
         virtual const GPUPrimitiveGroupI&   PrimitiveGroup() const = 0;
-        virtual void                        AttachGlobalTransformArray(const GPUTransformI* const*) = 0;
+        virtual void                        AttachGlobalTransformArray(const GPUTransformI* const* deviceTransforms,
+                                                                       const GPUTransformI* const* hostTransforms) = 0;
 };
 
 class GPUBaseAcceleratorI

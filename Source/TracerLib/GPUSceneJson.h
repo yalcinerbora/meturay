@@ -147,10 +147,10 @@ class GPUSceneJson : public GPUSceneI
         HitKey                              BaseBoundaryMaterial() const override;
         uint32_t                            HitStructUnionSize() const override;
         // Access CPU
-        const std::vector<CPULight>&        LightsCPU() const override;
-        const std::vector<CPUCamera>&       CamerasCPU() const override;
-        const std::vector<CPUTransform>&    TransformsCPU() const override;
-        const std::vector<CPUMedium>&       MediumsCPU() const override;
+        const std::vector<CPULight>&            LightsCPU() const override;
+        const std::vector<CPUCamera>&           CamerasCPU() const override;
+        const std::vector<CPUTransformGPtr>&    TransformsCPU() const override;
+        const std::vector<CPUMedium>&           MediumsCPU() const override;
                 
         // Generated Classes of Materials / Accelerators
         // Work Maps

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RayStructs.h"
-#include "GPUTransform.h"
+#include "GPUTransformI.h"
 
 #include "RayLib/HitStructs.h"
 #include "RayLib/AABB.h"

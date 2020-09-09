@@ -102,7 +102,9 @@
       <FileType>Document</FileType>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\RNGMemory.cu" />
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUTransformSingle.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUTransformSingle.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\MangledNames.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\SceneNodeJson.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\ScenePartitioner.cpp" />

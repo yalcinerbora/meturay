@@ -165,7 +165,7 @@ void GPUBaseAcceleratorBVH::GetReady(const CudaSystem& system,
 
 
     // Set Device
-    const CudaGPU& gpu = (*system.GPUList().begin());
+    const CudaGPU& gpu = system.BestGPU(); //(*system.GPUList().begin());
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
 
     // Init Ray State
