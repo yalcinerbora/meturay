@@ -12,7 +12,7 @@
 #include "GPUAcceleratorI.h"
 #include "GPUWorkI.h"
 #include "GPUTransformI.h"
-#include "GPUMedium.cuh"
+#include "GPUMediumI.h"
 #include "GPUMaterialI.h"
 #include "GPUTransformI.h"
 
@@ -25,8 +25,8 @@ GPUTracer::GPUTracer(const CudaSystem& system,
     , baseAccelerator(*scene.BaseAccelerator())
     , accelBatches(scene.AcceleratorBatchMappings())
     , materialGroups(scene.MaterialGroups())
-    , transforms(scene.TransformsCPU())
-    , mediums(scene.MediumsCPU())
+    , transforms(scene.Transforms())
+    , mediums(scene.Mediums())
     , maxAccelBits(Vector2i(Utility::FindFirstSet32(scene.MaxAccelIds()[0]) + 1,
                             Utility::FindFirstSet32(scene.MaxAccelIds()[1]) + 1))
     , maxWorkBits(Vector2i(Utility::FindFirstSet32(scene.MaxMatIds()[0]) + 1,
@@ -58,51 +58,55 @@ TracerError GPUTracer::Initialize()
     //}
 
     std::vector<const GPUTransformI*> dGPUTransforms;
+    std::vector<const GPUMediumI*> dGPUMediums;
 
-    size_t totalTrasformSize = 0;
+    for(auto& medium : mediums)
+    {
+        const CPUMediumGroupI& m = *(medium.second);
+        const auto& dMList = m.GPUMediums();
+        dGPUMediums.insert(dGPUMediums.end(), dMList.begin(), dMList.end());
+    }
+    mediumCount = static_cast<uint32_t>(dGPUMediums.size());
+
     for(auto& transform : transforms)
     {
-        totalTrasformSize += transform->TransformCount();
-        const auto& hTList = transform->CPUTransforms();
-        const auto& dTList = transform->GPUTransforms();
-
-        hGPUTransforms.insert(hGPUTransforms.end(), hTList.begin(), hTList.end());
+        const CPUTransformGroupI& t = *(transform.second);
+        const auto& dTList = t.GPUTransforms();
         dGPUTransforms.insert(dGPUTransforms.end(), dTList.begin(), dTList.end());
     }
+    transformCount = static_cast<uint32_t>(dGPUTransforms.size());
 
     // Allocate
-    size_t transformSize = totalTrasformSize * sizeof(GPUTransformI*);
+    size_t transformSize = dGPUTransforms.size() * sizeof(GPUTransformI*);
     transformSize = Memory::AlignSize(transformSize, AlignByteCount);
-    size_t mediumSize = transforms.size() * sizeof(GPUMedium);
+    size_t mediumSize = transforms.size() * sizeof(GPUMediumI*);
     mediumSize = Memory::AlignSize(mediumSize, AlignByteCount);
     DeviceMemory::EnlargeBuffer(mediumAndTransformMemory,
                                  transformSize + mediumSize);
     // Determine pointers from allocation
     size_t offset = 0;
-    const Byte* memory = static_cast<const Byte*>(mediumAndTransformMemory);
-    dTransforms = reinterpret_cast<const GPUTransformI* const*>(memory + offset);
+    Byte* memory = static_cast<Byte*>(mediumAndTransformMemory);
+    dTransforms = reinterpret_cast<const GPUTransformI**>(memory + offset);
     offset += transformSize;
-    dMediums = reinterpret_cast<const GPUMedium*>(memory + offset);
+    dMediums = reinterpret_cast<const GPUMediumI**>(memory + offset);
     offset += mediumSize;
     assert(offset == (mediumSize + transformSize));
 
     // Copy Data
-    hTransforms = hGPUTransforms.data();
     CUDA_CHECK(cudaMemcpy(const_cast<GPUTransformI**>(dTransforms), 
                           dGPUTransforms.data(), transformSize,
                           cudaMemcpyHostToDevice));
-    //CUDA_CHECK(cudaMemcpy(const_cast<GPUMedium*>(dMediums),
-    //                      gpuMedium.data(), mediumSize,
-    //                      cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(const_cast<GPUMediumI**>(dMediums),
+                          dGPUMediums.data(), mediumSize,
+                          cudaMemcpyHostToDevice));
 
     // Attach Medium gpu pointer to Material Groups
     for(const auto& mg : materialGroups)
         mg.second->AttachGlobalMediumArray(dMediums);
         
-
     // Attach Transform gpu pointer to the Accelerator Batches
     for(const auto& acc : accelBatches)
-        acc.second->AttachGlobalTransformArray(dTransforms, hTransforms);
+        acc.second->AttachGlobalTransformArray(dTransforms);
         
 
     // Construct Tracers

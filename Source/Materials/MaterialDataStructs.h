@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RayLib/Vector.h"
-#include "TracerLib/GPUMedium.cuh"
+#include "TracerLib/GPUMediumI.h"
 
 struct NullData {};
 
@@ -21,7 +21,7 @@ struct RefractMatData
     const uint32_t* mediumIndices;
     
     // Global Medium Array pointer
-    const GPUMedium* dMediums;
+    const GPUMediumI* const* dMediums;
 };
 
 using EmissiveMatData = AlbedoMatData;

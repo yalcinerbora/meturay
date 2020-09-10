@@ -4,6 +4,18 @@
 #include "RayStructs.h"
 #include "Random.cuh"
 
+template <class T>
+__global__ void KCConstructGPUClass(T* gLocation,
+                                    uint32_t mediumCount)
+{
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < mediumCount;
+        globalId += blockDim.x * gridDim.x)
+    {
+        new (gLocation) T();
+    }
+}
+
 template<class RayAuxData>
 using RayFinalizeFunc = void(*)(// Output
                                 Vector4* gImage,

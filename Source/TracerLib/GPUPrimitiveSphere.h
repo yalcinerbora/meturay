@@ -36,7 +36,7 @@ using SphereHit = Vector2f;
 struct SphrFunctions
 {
     // Sphere Hit Acceptance
-    __device__ __host__
+    __device__
     static inline HitResult Hit(// Output
                                 HitKey& newMat,
                                 PrimitiveId& newPrimitive,
@@ -77,7 +77,7 @@ struct SphrFunctions
         return HitResult{false, closerHit};
     }
 
-    __device__ __host__
+    __device__
     static inline AABB3f AABB(const GPUTransformI& transform, 
                               PrimitiveId primitiveId,
                               const SphereData& primData)
@@ -90,7 +90,7 @@ struct SphrFunctions
         return Sphere::BoundingBox(center, radius);
     }
 
-    __device__ __host__
+    __device__
     static inline float Area(PrimitiveId primitiveId,
                              const SphereData& primData)
     {
@@ -102,7 +102,7 @@ struct SphrFunctions
         return radius * radius;
     }
 
-    __device__ __host__
+    __device__
     static inline Vector3 Center(PrimitiveId primitiveId,
                                  const SphereData& primData)
     {
@@ -117,7 +117,7 @@ struct SphrFunctions
 
 struct SphereSurfaceGenerator
 {
-    __device__ __host__
+    __device__
     static inline BasicSurface GenBasicSurface(const SphereHit& sphrCoords,
                                                const GPUTransformI& transform,
                                                //
@@ -140,7 +140,7 @@ struct SphereSurfaceGenerator
         return BasicSurface{tbn};
     }
 
-    __device__ __host__
+    __device__
     static inline SphrSurface GenSphrSurface(const SphereHit& sphrCoords,
                                              const GPUTransformI& transform,
                                              //
@@ -150,7 +150,7 @@ struct SphereSurfaceGenerator
         return SphrSurface{sphrCoords};
     }
 
-    __device__ __host__
+    __device__
     static inline UVSurface GenUVSurface(const SphereHit& sphrCoords,
                                          const GPUTransformI& transform,
                                          //

@@ -7,7 +7,7 @@
 #include "GPUSurface.h"
 #include "TextureReference.cuh"
 
-class GPUMedium;
+class GPUMediumI;
 struct TexCoords;
 
 struct LightMatData
@@ -29,7 +29,7 @@ __device__ inline
 Vector3 EmitLight(// Input
                   const Vector3& wo,
                   const Vector3& pos,
-                  const GPUMedium& m,
+                  const GPUMediumI& m,
                   //
                   const EmptySurface& surface,
                   const TexCoords* uvs,
@@ -44,7 +44,7 @@ __device__ inline
 Vector3 EmitLightTex(// Input
                      const Vector3& wo,
                      const Vector3& pos,
-                     const GPUMedium& m,
+                     const GPUMediumI& m,
                      //
                      const UVSurface& surface,
                      const TexCoords* uvs,
@@ -60,7 +60,7 @@ __device__ inline
 Vector3 EmitLightCube(// Input
                       const Vector3& wo,
                       const Vector3& pos,
-                      const GPUMedium& m,
+                      const GPUMediumI& m,
                       //
                       const EmptySurface& surface,
                       const TexCoords* uvs,

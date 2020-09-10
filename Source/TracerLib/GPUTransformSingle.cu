@@ -85,7 +85,7 @@ SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes
 
     // Generated/Loaded matrices
     // Allocate transform class and matrix on GPU
-    transformCount = static_cast<uint32_t>(transforms.size());
+    size_t transformCount = static_cast<uint32_t>(transforms.size());
     size_t sizeOfMatrices = sizeof(Matrix4x4) * transformCount;
     sizeOfMatrices = Memory::AlignSize(sizeOfMatrices);
     size_t sizeOfTransformClasses = sizeof(GPUTransformSingle) * transformCount;
@@ -128,25 +128,20 @@ TracerError CPUTransformSingle::ConstructTransforms(const CudaSystem& system)
     // Call allocation kernel
     const CudaGPU& gpu = system.BestGPU();
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
-    gpu.AsyncGridStrideKC_X(0, transformCount,
+    gpu.AsyncGridStrideKC_X(0, TransformCount(),
                             //
                             KCConstructGPUTransform,
                             //
                             const_cast<GPUTransformSingle*>(dGPUTransforms),
                             const_cast<Matrix4x4*>(dInvTransforms),
                             dTransforms,
-                            transformCount);
+                            TransformCount());
 
     gpu.WaitAllStreams();
 
     // Generate transform list
-    for(uint32_t i = 0; i < transformCount; i++)
+    for(uint32_t i = 0; i < TransformCount(); i++)
     {        
-        const Matrix4x4& transform = dTransforms[i];
-        const Matrix4x4& invTransform = dInvTransforms[i];
-        hGPUTransforms.emplace_back(transform, invTransform);
-        cpuTransformList.push_back(&hGPUTransforms.back());
-
         const auto* ptr =  static_cast<const GPUTransformI*>(dGPUTransforms + i);
         gpuTransformList.push_back(ptr);
     }

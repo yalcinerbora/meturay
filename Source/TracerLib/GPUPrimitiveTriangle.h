@@ -54,7 +54,7 @@ struct TriFunctions
 {
 
     // Triangle Hit Acceptance
-    __device__ __host__
+    __device__
     static inline HitResult Hit(// Output
                                 HitKey& newMat,
                                 PrimitiveId& newPrim,
@@ -133,7 +133,7 @@ struct TriFunctions
         return HitResult{false, closerHit};
     }
 
-    __device__ __host__
+    __device__
     static inline AABB3f AABB(const GPUTransformI& transform,
                               //
                               PrimitiveId primitiveId, 
@@ -155,7 +155,7 @@ struct TriFunctions
         return Triangle::BoundingBox(position0, position1, position2);
     }
 
-    __device__ __host__
+    __device__
     static inline float Area(PrimitiveId primitiveId, const TriData& primData)
     {
         // Get Position
@@ -174,7 +174,7 @@ struct TriFunctions
         return Cross(vec0, vec1).Length() * 0.5f;
     }
 
-    __device__ __host__
+    __device__
     static inline Vector3 Center(PrimitiveId primitiveId, const TriData& primData)
     {
         // Get Position
@@ -198,7 +198,7 @@ class GPUPrimitiveTriangle;
 
 struct TriangleSurfaceGenerator
 {
-    __device__ __host__
+    __device__
     static inline BasicSurface GenBasicSurface(const TriangleHit& baryCoords,
                                                const GPUTransformI& transform,
                                                //
@@ -221,7 +221,7 @@ struct TriangleSurfaceGenerator
         return BasicSurface{tbn};
     }
 
-    __device__ __host__
+    __device__
     static inline BarySurface GenBarySurface(const TriangleHit& baryCoords,
                                              const GPUTransformI& transform,
                                              //
@@ -232,7 +232,7 @@ struct TriangleSurfaceGenerator
         return BarySurface{Vector3(baryCoords[0], baryCoords[1], c)};
     }
 
-    __device__ __host__
+    __device__
     static inline UVSurface GenUVSurface(const TriangleHit& baryCoords,
                                          const GPUTransformI& transform,
                                          //

@@ -26,9 +26,7 @@ struct EmptyHit {};
 
 struct EPrimFunctions
 {
-
-// Triangle Hit Acceptance
-    __device__ __host__
+    __device__
     static inline HitResult Hit(// Output
                                 HitKey& newMat,
                                 PrimitiveId& newPrimitive,
@@ -43,7 +41,7 @@ struct EPrimFunctions
         return HitResult{false, -FLT_MAX};
     }
 
-    __device__ __host__
+    __device__
     static inline AABB3f AABB(const GPUTransformI& transform, 
                               PrimitiveId primitiveId, const EmptyData& primData)
     {
@@ -51,13 +49,13 @@ struct EPrimFunctions
         return AABB3f(minInf, minInf);
     }
 
-    __device__ __host__
+    __device__
     static inline float Area(PrimitiveId primitiveId, const EmptyData& primData)
     {
         return 0.0f;
     }
 
-    __device__ __host__
+    __device__
     static inline Vector3f Center(PrimitiveId primitiveId, const EmptyData& primData)
     {
         return Zero3;

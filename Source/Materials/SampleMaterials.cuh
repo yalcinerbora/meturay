@@ -201,7 +201,7 @@ class RefractMat final
         bool                    IsSpecularGroup() const override { return true; }
 
         // Post initialization
-        void                    AttachGlobalMediumArray(const GPUMedium*) override;
+        void                    AttachGlobalMediumArray(const GPUMediumI* const*) override;
 
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture

@@ -15,11 +15,11 @@ __device__ inline
 Vector3 ConstantSample(// Sampled Output
                        RayF& wo,
                        float& pdf,
-                       GPUMedium& outMedium,
+                       const GPUMediumI*& outMedium,
                        // Input
                        const Vector3& wi,
                        const Vector3& pos,
-                       const GPUMedium& m,
+                       const GPUMediumI& m,
                        //
                        const EmptySurface& surface,
                        const TexCoords* uvs,
@@ -30,7 +30,9 @@ Vector3 ConstantSample(// Sampled Output
                        const HitKey::Type& matId,
                        uint32_t sampleIndex)
 {
-    outMedium = m;
+    // No medium change
+    outMedium = &m;
+
     static constexpr Vector3 ZERO = Zero3;
     pdf = 1.0f;
     wo = RayF(ZERO, ZERO);
@@ -42,7 +44,7 @@ Vector3 ConstantEvaluate(// Input
                          const Vector3& wo,
                          const Vector3& wi,
                          const Vector3& pos,
-                         const GPUMedium& m,
+                         const GPUMediumI& m,
                          //
                          const EmptySurface& surface,
                          const TexCoords* uvs,
@@ -57,11 +59,11 @@ __device__ inline
 Vector3 BarycentricSample(// Sampled Output
                           RayF& wo,
                           float& pdf,
-                          GPUMedium& outMedium,
+                          const GPUMediumI*& outMedium,
                           // Input
                           const Vector3& wi,
                           const Vector3& pos,
-                          const GPUMedium& m,
+                          const GPUMediumI& m,
                           //
                           const BarySurface& surface,
                           const TexCoords* uvs,
@@ -72,7 +74,9 @@ Vector3 BarycentricSample(// Sampled Output
                           const HitKey::Type& matId,
                           uint32_t sampleIndex)
 {
-    outMedium = m;
+    // No medium change
+    outMedium = &m;
+
     static constexpr Vector3 ZERO = Zero3;
     pdf = 1.0f;
     wo = RayF(ZERO, ZERO);
@@ -84,7 +88,7 @@ Vector3 BarycentricEvaluate(// Input
                             const Vector3& wo,
                             const Vector3& wi,
                             const Vector3& pos,
-                            const GPUMedium& m,
+                            const GPUMediumI& m,
                             //
                             const BarySurface& surface,
                             const TexCoords* uvs,
@@ -99,11 +103,11 @@ __device__ inline
 Vector3 SphericalSample(// Sampled Output
                         RayF& wo,
                         float& pdf,
-                        GPUMedium& outMedium,
+                        const GPUMediumI*& outMedium,
                         // Input
                         const Vector3& wi,
                         const Vector3& pos,
-                        const GPUMedium& m,
+                        const GPUMediumI& m,
                         //
                         const SphrSurface& surface,
                         const TexCoords* uvs,
@@ -114,7 +118,9 @@ Vector3 SphericalSample(// Sampled Output
                         const HitKey::Type& matId,
                         uint32_t sampleIndex)
 {
-    outMedium = m;
+    // No medium change
+    outMedium = &m;
+
     static constexpr Vector3 ZERO = Zero3;
     pdf = 1.0f;
     wo = RayF(ZERO, ZERO);
@@ -128,7 +134,7 @@ Vector3 SphericalEvaluate(// Input
                           const Vector3& wo,
                           const Vector3& wi,
                           const Vector3& pos,
-                          const GPUMedium& m,
+                          const GPUMediumI& m,
                           //
                           const SphrSurface& surface,
                           const TexCoords* uvs,

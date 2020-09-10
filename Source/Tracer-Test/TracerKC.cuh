@@ -8,6 +8,7 @@
 #include "TracerLib/TextureStructs.h"
 #include "TracerLib/GPULight.cuh"
 #include "TracerLib/EstimatorFunctions.cuh"
+#include "TracerLib/GPUMediumVacuum.cuh"
 
 struct DirectTracerGlobal
 {
@@ -19,7 +20,7 @@ struct PathTracerGlobal : public DirectTracerGlobal
     const GPULightI**   lightList;
     uint32_t            totalLightCount;
 
-    const GPUMedium*    mediumList;
+    const GPUMediumI**  mediumList;
     uint32_t            totalMediumCount;
 
     // Options
@@ -71,7 +72,8 @@ inline void BasicWork(// Output
     const RayF& r = ray.ray;
     HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
 
-    GPUMedium m, outM;
+    const GPUMediumVacuum m;
+    const GPUMediumI* outM;
     RayF outRay; float pdf;
     Vector3 radiance = MGroup::Sample(// Outputs
                                       outRay, pdf, outM,
@@ -140,7 +142,7 @@ inline void PathLightWork(// Output
         const RayF& r = ray.ray;
         HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
         Vector3 position = r.AdvancedPos(ray.tMax);
-        GPUMedium m = gRenderState.mediumList[aux.mediumIndex];
+        const GPUMediumI& m = *(gRenderState.mediumList[aux.mediumIndex]);
 
         // Calculate Transmittance factor of the medium
         Vector3 transFactor = m.Transmittance(ray.tMax);
@@ -219,7 +221,7 @@ inline void PathWork(// Output
     HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
     Vector3 position = r.AdvancedPos(ray.tMax);
     Vector3 wi = -(r.getDirection().Normalize());
-    GPUMedium m = gRenderState.mediumList[aux.mediumIndex];
+    const GPUMediumI& m = *(gRenderState.mediumList[aux.mediumIndex]);
     // Outputs
     RayReg rayOut = {};
     RayAuxPath auxOut = aux;
@@ -252,7 +254,7 @@ inline void PathWork(// Output
     if(sampleCount == 0) return;
 
     // Sample a path from material
-    RayF rayPath; float pdfPath; GPUMedium outM;
+    RayF rayPath; float pdfPath; const GPUMediumI* outM;
     Vector3 reflectance = MGroup::Sample(// Outputs
                                          rayPath, pdfPath, outM,
                                          // Inputs
@@ -275,7 +277,7 @@ inline void PathWork(// Output
     auxOut.radianceFactor = (pdfPath == 0.0f) ? Zero3 : (auxOut.radianceFactor / pdfPath);
 
     // Change current medium of the ray
-    auxOut.mediumIndex = static_cast<uint16_t>(outM.ID());
+    auxOut.mediumIndex = static_cast<uint16_t>(outM->ID());
 
     // Check Russian Roulette
     float avgThroughput = auxOut.radianceFactor.Dot(Vector3f(0.333f));

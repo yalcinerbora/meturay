@@ -182,7 +182,7 @@ SceneError RefractMat::ChangeTime(const NodeListing& materialNodes, double time,
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }
 
-void RefractMat::AttachGlobalMediumArray(const GPUMedium* dMediumList)
+void RefractMat::AttachGlobalMediumArray(const GPUMediumI* const* dMediumList)
 {
     dData.dMediums = dMediumList;
 }

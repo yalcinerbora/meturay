@@ -12,28 +12,26 @@ class GPUTransformSingle : public GPUTransformI
     protected:
     public:
 		// Constructors & Destructor
-		__device__ __host__
+		__device__
 						GPUTransformSingle(const Matrix4x4& transform,
 										   const Matrix4x4& invTransform);
 		virtual			~GPUTransformSingle() = default;
 
-		__device__ __host__
+		__device__
 		RayF			WorldToLocal(const RayF&,
 									 const uint32_t* indices = nullptr, 
 									 const float* weights = nullptr,
 									 uint32_t count = 0) const override;	
-		__device__ __host__
+		__device__
 		Vector3			LocalToWorld(const Vector3&,
 									 const uint32_t* indices = nullptr,
 									 const float* weights = nullptr,
 									 uint32_t count = 0) const override;
-		__device__ __host__
+		__device__
 		QuatF			ToLocalRotation(const uint32_t* indices = nullptr,
 										const float* weights = nullptr,
 										uint32_t count = 0) const override;
 };
-
-using CPUTransformList = std::vector<GPUTransformSingle>;
 
 class CPUTransformSingle : public CPUTransformGroupI
 {
@@ -53,19 +51,18 @@ class CPUTransformSingle : public CPUTransformGroupI
 		DeviceMemory				memory;		
 		const Matrix4x4*			dTransforms;
 		const Matrix4x4*			dInvTransforms;
-		const GPUTransformSingle*	dGPUTransforms;
-		
-		CPUTransformList			hGPUTransforms;
+		const GPUTransformSingle*	dGPUTransforms;		
 		GPUTransformList			gpuTransformList;
-		GPUTransformList			cpuTransformList;
-		uint32_t					transformCount;
 
     protected:
     public:
+		// Constructors & Destructor
+									CPUTransformSingle() = default;
+		virtual						~CPUTransformSingle() = default;
+
 		// Interface
 		const char*					Type() const override;
 		const GPUTransformList&		GPUTransforms() const override;
-		const GPUTransformList&		CPUTransforms() const override;
 		SceneError					InitializeGroup(const NodeListing& transformNodes,
 													double time,
 													const std::string& scenePath) override;
@@ -78,14 +75,14 @@ class CPUTransformSingle : public CPUTransformGroupI
 		size_t						UsedCPUMemory() const override;
 };
 
-__device__ __host__
+__device__
 GPUTransformSingle::GPUTransformSingle(const Matrix4x4& transform,
 									   const Matrix4x4& invTransform)
 	: transform(transform)
 	, invTransform(invTransform)
 {}
 
-__device__ __host__
+__device__
 inline RayF GPUTransformSingle::WorldToLocal(const RayF& r,
 											 const uint32_t* indices, const float* weights,
 											 uint32_t count) const
@@ -93,7 +90,7 @@ inline RayF GPUTransformSingle::WorldToLocal(const RayF& r,
 	return r.Transform(invTransform);
 }
 
-__device__ __host__
+__device__
 inline Vector3 GPUTransformSingle::LocalToWorld(const Vector3& vector,
 												const uint32_t* indices, const float* weights,
 												uint32_t count) const
@@ -101,7 +98,7 @@ inline Vector3 GPUTransformSingle::LocalToWorld(const Vector3& vector,
 	 return transform * vector;
 }
 
-__device__ __host__
+__device__
 inline QuatF GPUTransformSingle::ToLocalRotation(const uint32_t* indices, const float* weights,
 												 uint32_t count) const
 {
@@ -119,14 +116,9 @@ inline const GPUTransformList& CPUTransformSingle::GPUTransforms() const
 	return gpuTransformList;
 }
 
-inline const GPUTransformList& CPUTransformSingle::CPUTransforms() const
-{
-	return cpuTransformList;
-}
-
 inline uint32_t CPUTransformSingle::TransformCount() const
 {
-	return transformCount;
+	return static_cast<uint32_t>(gpuTransformList.size());
 }
 
 inline size_t CPUTransformSingle::UsedGPUMemory() const

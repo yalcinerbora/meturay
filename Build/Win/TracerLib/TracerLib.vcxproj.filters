@@ -302,9 +302,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUSurface.h">
       <Filter>GPU Classes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUMedium.cuh">
-      <Filter>GPU Classes</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUDistribution.h">
       <Filter>GPU Classes</Filter>
     </ClInclude>
@@ -312,6 +309,18 @@
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformSingle.cuh">
+      <Filter>GPU Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMediumI.h">
+      <Filter>GPU Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMediumVacuum.cuh">
+      <Filter>GPU Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUMediumHomogenous.cuh">
+      <Filter>GPU Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformIdentity.cuh">
       <Filter>GPU Classes</Filter>
     </ClInclude>
   </ItemGroup>
@@ -364,6 +373,9 @@
       <Filter>Default Materials</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUTransformSingle.cu">
+      <Filter>GPU Classes</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUMediumHomogenous.cu">
       <Filter>GPU Classes</Filter>
     </CudaCompile>
   </ItemGroup>

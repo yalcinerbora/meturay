@@ -5,7 +5,7 @@
 #include "RayLib/HitStructs.h"
 #include "RayLib/Ray.h"
 
-class GPUMedium;
+class GPUMediumI;
 class RandomGPU;
 struct TexCoords;
 
@@ -40,7 +40,7 @@ __device__ inline
 Vector3 EmitEmpty(// Input
                   const Vector3& wo,
                   const Vector3& pos,
-                  const GPUMedium& m,
+                  const GPUMediumI& m,
                   //
                   const Surface& surface,
                   const TexCoords* uvs,
@@ -56,11 +56,11 @@ __device__ inline
 Vector3 SampleEmpty(// Sampled Output
                     RayF& wo,
                     float& pdf,
-                    GPUMedium& outMedium,
+                    const GPUMediumI*& outMedium,
                     // Input
                     const Vector3& wi,
                     const Vector3& pos,
-                    const GPUMedium& m,
+                    const GPUMediumI& m,
                     //
                     const Surface& surface,
                     const TexCoords* uvs,
@@ -80,7 +80,7 @@ Vector3 EvaluateEmpty(// Input
                          const Vector3& wo,
                          const Vector3& wi,
                          const Vector3& pos,
-                         const GPUMedium& m,
+                         const GPUMediumI& m,
                          //
                          const Surface& surface,
                          const TexCoords* uvs,

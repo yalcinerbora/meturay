@@ -24,17 +24,17 @@ class GPUTransformI
 		// Classic Transformations
 		// extra params are for non-rigid skeletal based transformations
 		// or maybe morph targets
-		__device__ __host__
+		__device__
 		virtual RayF WorldToLocal(const RayF&,
 								  const uint32_t* indices = nullptr,
 								  const float* weights = nullptr,
 								  uint32_t count = 0) const = 0;
-		__device__ __host__
+		__device__
 		virtual Vector3 LocalToWorld(const Vector3&,
 									 const uint32_t* indices = nullptr,
 									 const float* weights = nullptr,
 									 uint32_t count = 0) const = 0;
-		__device__ __host__
+		__device__
 		virtual QuatF ToLocalRotation(const uint32_t* indices = nullptr,
 									  const float* weights = nullptr,
 									  uint32_t count = 0) const = 0;
@@ -48,7 +48,6 @@ class CPUTransformGroupI
 		// Interface
 		virtual const char*					Type() const = 0;
 		virtual const GPUTransformList&		GPUTransforms() const = 0;
-		virtual const GPUTransformList&		CPUTransforms() const = 0;
 		virtual SceneError					InitializeGroup(const NodeListing& transformNodes,
 															double time,
 															const std::string& scenePath) = 0;

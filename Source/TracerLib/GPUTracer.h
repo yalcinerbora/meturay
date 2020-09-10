@@ -24,7 +24,7 @@ All Tracers should inherit this class
 #include "RayMemory.h"
 #include "ImageMemory.h"
 
-class GPUMedium;
+class GPUMediumI;
 class GPUTransformI;
 class GPUSceneI;
 class CudaSystem;
@@ -48,14 +48,10 @@ class GPUTracer : public GPUTracerI
         const AcceleratorBatchMap&                  accelBatches;
         // Batches of Material
         const std::map<NameGPUPair, GPUMatGPtr>&    materialGroups;
-
-        const std::vector<CPUTransformGPtr>&        transforms;
-        const std::vector<CPUMedium>&               mediums;
-        std::vector<const GPUTransformI*>           hGPUTransforms;
-
+        const NamedList<CPUTransformGPtr>&          transforms;
+        const NamedList<CPUMediumGPtr>&             mediums;
         // GPU Memory
         DeviceMemory                                mediumAndTransformMemory;
-
     protected:
         // Cuda System For Kernel Calls
         const CudaSystem&                   cudaSystem;
@@ -63,14 +59,14 @@ class GPUTracer : public GPUTracerI
         RNGMemory                           rngMemory;
         RayMemory                           rayMemory;
         ImageMemory                         imgMemory;        
-        const GPUTransformI* const*         dTransforms;        
-        const GPUMedium*                    dMediums;
-        // CPUMemory
-        const GPUTransformI* const*         hTransforms;
+        const GPUTransformI**               dTransforms;        
+        const GPUMediumI**                  dMediums;
         //
         TracerParameters                    params;
         //
         uint32_t                            currentRayCount;
+        uint32_t                            transformCount;
+        uint32_t                            mediumCount;
         // Callbacks
         TracerCallbacksI*                   callbacks;
         bool                                crashed;

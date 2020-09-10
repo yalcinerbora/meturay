@@ -2,7 +2,7 @@
 
 #include "RayLib/Ray.h"
 #include "TextureStructs.h"
-#include "GPUMedium.cuh"
+#include "GPUMediumI.h"
 
 class RandomGPU;
 
@@ -26,11 +26,11 @@ template <class Data, class Surface>
 using SampleFunc = Vector3(*)(// Sampled Output
                               RayF& wo,                         // Out direction
                               float& pdf,                       // PDF for Monte Carlo
-                              GPUMedium& outMedium,
+                              const GPUMediumI*& outMedium,
                               // Input
                               const Vector3& wi,                // Incoming Radiance
                               const Vector3& pos,               // Position
-                              const GPUMedium& m,
+                              const GPUMediumI& m,
                               //
                               const Surface& surface,           // Surface info (normals uvs etc.)
                               const TexCoords* uvs,             // Translated texture coords from the cache system
@@ -49,7 +49,7 @@ template <class Data, class Surface>
 using EmissionFunc = Vector3(*)(// Input
                                 const Vector3& wo,              // Outgoing Radiance
                                 const Vector3& pos,             // Position
-                                const GPUMedium& m,
+                                const GPUMediumI& m,
                                 //
                                 const Surface& surface,         // Surface info (normals uvs etc.)
                                 const TexCoords* uvs,           // Translated texture coords from the cache system
@@ -63,7 +63,7 @@ using EvaluateFunc = Vector3(*)(// Input
                                 const Vector3& wo,              // Outgoing Radiance
                                 const Vector3& wi,              // Incoming Radiance
                                 const Vector3& pos,             // Position
-                                const GPUMedium& m,
+                                const GPUMediumI& m,
                                 //
                                 const Surface& surface,         // Surface info (normals uvs etc.)
                                 const TexCoords* uvs,           // Translated texture coords from the cache system

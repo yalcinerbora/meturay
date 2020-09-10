@@ -33,7 +33,6 @@ class GPUAcceleratorGroup
         // From Tracer
         const PGroup&                   primitiveGroup;
         const GPUTransformI* const*     dTransforms;
-        const GPUTransformI* const*     hTransforms;
         // Per accelerator data
         AcceleratorData                 accData;
 
@@ -44,8 +43,7 @@ class GPUAcceleratorGroup
 
 
         const GPUPrimitiveGroupI&       PrimitiveGroup() const override;
-        void                            AttachGlobalTransformArray(const GPUTransformI* const* deviceTranfsorms,
-                                                                   const GPUTransformI* const* hostTransforms) override;
+        void                            AttachGlobalTransformArray(const GPUTransformI* const* deviceTranfsorms) override;
 
 };
 
@@ -62,9 +60,7 @@ const GPUPrimitiveGroupI& GPUAcceleratorGroup<P>::PrimitiveGroup() const
 }
 
 template <class P>
-void GPUAcceleratorGroup<P>::AttachGlobalTransformArray(const GPUTransformI* const* deviceTranfsorms,
-                                                        const GPUTransformI* const* hostTransforms)
+void GPUAcceleratorGroup<P>::AttachGlobalTransformArray(const GPUTransformI* const* deviceTranfsorms)
 {
     dTransforms = deviceTranfsorms;
-    hTransforms = hostTransforms;
 }

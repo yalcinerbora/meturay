@@ -18,6 +18,8 @@ class SurfaceLoaderGeneratorI;
 
 using IndexLookup = std::map<NodeId, std::pair<NodeIndex, InnerIndex>>;
 
+using MediumNodeList = std::map<std::string, NodeListing>;
+using TransformNodeList = std::map<std::string, NodeListing>;
 using PrimitiveNodeList = std::map<std::string, NodeListing>;
 using AcceleratorBatchList = std::map<std::string, AccelGroupData>;
 
@@ -52,8 +54,8 @@ class GPUSceneJson : public GPUSceneI
         // GPU Memory
         GPUBaseAccelPtr                         baseAccelerator;
         std::map<NameGPUPair, GPUMatGPtr>       materials;
-        std::map<std::string, GPUAccelGPtr>     accelerators;
-        std::map<std::string, GPUPrimGPtr>      primitives;
+        NamedList<GPUAccelGPtr>                 accelerators;
+        NamedList<GPUPrimGPtr>                  primitives;
         // Information of the partitioning
         WorkBatchCreationInfo                   workInfo;
         AcceleratorBatchMap                     accelMap;
@@ -67,8 +69,8 @@ class GPUSceneJson : public GPUSceneI
         // CPU Data
         std::vector<CPUCamera>                  cameras;
         std::vector<CPULight>                   lights;
-        std::vector<CPUTransform>               transforms;
-        std::vector<CPUMedium>                  mediums;
+        NamedList<CPUTransformGPtr>             transforms;
+        NamedList<CPUMediumGPtr>                mediums;
 
         // Inners
         // Helper Logic
@@ -109,7 +111,8 @@ class GPUSceneJson : public GPUSceneI
                                                 double time = 0.0);
         SceneError      GenerateLightInfo(const MaterialKeyListing& materialKeys,
                                           double time);
-        SceneError      GenerateTransforms(std::map<uint32_t, uint32_t>& surfaceTransformIds);
+        SceneError      GenerateTransforms(std::map<uint32_t, uint32_t>& surfaceTransformIds,
+                                           const TransformNodeList& transformList);
 
         SceneError      GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                         const MultiGPUMatNodes& matNodes);
@@ -147,10 +150,11 @@ class GPUSceneJson : public GPUSceneI
         HitKey                              BaseBoundaryMaterial() const override;
         uint32_t                            HitStructUnionSize() const override;
         // Access CPU
-        const std::vector<CPULight>&            LightsCPU() const override;
-        const std::vector<CPUCamera>&           CamerasCPU() const override;
-        const std::vector<CPUTransformGPtr>&    TransformsCPU() const override;
-        const std::vector<CPUMedium>&           MediumsCPU() const override;
+        const std::vector<CPULight>&        LightsCPU() const override;
+        const std::vector<CPUCamera>&       CamerasCPU() const override;
+
+        const NamedList<CPUTransformGPtr>&  Transforms() const override;
+        const NamedList<CPUMediumGPtr>&     Mediums() const override;
                 
         // Generated Classes of Materials / Accelerators
         // Work Maps
@@ -159,8 +163,8 @@ class GPUSceneJson : public GPUSceneI
 
         // Allocated Types
         // All of which are allocated on the GPU
-        const GPUBaseAccelPtr&                          BaseAccelerator() const override;
-        const std::map<NameGPUPair, GPUMatGPtr>&        MaterialGroups() const override;
-        const std::map<std::string, GPUAccelGPtr>&      AcceleratorGroups() const override;
-        const std::map<std::string, GPUPrimGPtr>&       PrimitiveGroups() const override;
+        const GPUBaseAccelPtr&                      BaseAccelerator() const override;
+        const std::map<NameGPUPair, GPUMatGPtr>&    MaterialGroups() const override;
+        const NamedList<GPUAccelGPtr>&              AcceleratorGroups() const override;
+        const NamedList<GPUPrimGPtr>&               PrimitiveGroups() const override;
 };

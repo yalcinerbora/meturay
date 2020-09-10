@@ -16,7 +16,7 @@ __device__ inline
 Vector3 EmitConstant(// Input
                      const Vector3& wo,
                      const Vector3& pos,
-                     const GPUMedium& m,
+                     const GPUMediumI& m,
                      //
                      const EmptySurface& surface,
                      const TexCoords* uvs,
@@ -31,11 +31,11 @@ __device__ inline
 Vector3 LambertSample(// Sampled Output
                       RayF& wo,
                       float& pdf,
-                      GPUMedium& outMedium,
+                      const GPUMediumI*& outMedium,
                       // Input
                       const Vector3& wi,
                       const Vector3& pos,
-                      const GPUMedium& m,
+                      const GPUMediumI& m,
                       //
                       const BasicSurface& surface,
                       const TexCoords* uvs,
@@ -46,6 +46,9 @@ Vector3 LambertSample(// Sampled Output
                       const HitKey::Type& matId,
                       uint32_t sampleIndex)
 {
+    // No medium change
+    outMedium = &m;
+
     // Ray Selection
     const Vector3& position = pos;
     const Vector3& normal = GPUSurface::NormalWorld(surface.worldToTangent);;
@@ -76,7 +79,7 @@ Vector3 LambertEvaluate(// Input
                         const Vector3& wo,
                         const Vector3& wi,
                         const Vector3& pos,
-                        const GPUMedium& m,
+                        const GPUMediumI& m,
                         //
                         const BasicSurface& surface,
                         const TexCoords* uvs,
@@ -93,11 +96,11 @@ __device__ inline
 Vector3 ReflectSample(// Sampled Output
                       RayF& wo,
                       float& pdf,
-                      GPUMedium& outMedium,
+                      const GPUMediumI*& outMedium,
                       // Input
                       const Vector3& wi,
                       const Vector3& pos,
-                      const GPUMedium& m,
+                      const GPUMediumI& m,
                       //
                       const BasicSurface& surface,
                       const TexCoords* uvs,
@@ -108,14 +111,15 @@ Vector3 ReflectSample(// Sampled Output
                       const HitKey::Type& matId,
                       uint32_t sampleIndex)
 {
+    // No medium change
+    outMedium = &m;
+
     // Fetch Mat
     Vector4 data = matData.dAlbedoAndRoughness[matId];
     Vector3 albedo = data;
     float roughness = data[3];
 
     const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
-    // No medium change
-    outMedium = m;
     // Calculate Reflection   
     if(roughness == 0.0f)
     {
@@ -138,7 +142,7 @@ Vector3 ReflectEvaluate(// Input
                         const Vector3& wo,
                         const Vector3& wi,
                         const Vector3& pos,
-                        const GPUMedium& m,
+                        const GPUMediumI& m,
                         //
                         const BasicSurface& surface,
                         const TexCoords* uvs,
@@ -154,11 +158,11 @@ __device__ inline
 Vector3 RefractSample(// Sampled Output
                       RayF& wo,
                       float& pdf,
-                      GPUMedium& outMedium,
+                      const GPUMediumI*& outMedium,
                       // Input
                       const Vector3& wi,
                       const Vector3& pos,
-                      const GPUMedium& m,
+                      const GPUMediumI& m,
                       //
                       const BasicSurface& surface,
                       const TexCoords* uvs,
@@ -172,8 +176,8 @@ Vector3 RefractSample(// Sampled Output
     // Fetch Mat
     Vector3 albedo = matData.dAlbedo[matId];
     uint32_t mediumIndex = matData.mediumIndices[matId];
-    float iIOR = matData.dMediums[mediumIndex].IOR();
-    float dIOR = matData.dMediums[0].IOR();
+    float iIOR = matData.dMediums[mediumIndex]->IOR();
+    float dIOR = matData.dMediums[0]->IOR();
 
     const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
     const Vector3& position = pos;
@@ -208,7 +212,7 @@ Vector3 RefractSample(// Sampled Output
         // Frenel term is used to sample thus pdf is f
         pdf = f;
         // We reflected off of surface no medium change
-        outMedium = m;
+        outMedium = &m;
 
         float nDotL = wo.getDirection().Dot(refNormal);
         return f * albedo;
@@ -253,7 +257,7 @@ Vector3 RefractEvaluate(// Input
                         const Vector3& wo,
                         const Vector3& wi,
                         const Vector3& pos,
-                        const GPUMedium& m,
+                        const GPUMediumI& m,
                         //
                         const BasicSurface& surface,
                         const TexCoords* uvs,

@@ -15,7 +15,7 @@
 #include "ScenePartitionerI.h"
 #include "SceneNodeJson.h"
 #include "MangledNames.h"
-#include "GPUMedium.cuh"
+#include "GPUMediumI.h"
 #include "GPUMaterialLight.cuh"
 
 #include <nlohmann/json.hpp>
@@ -513,7 +513,8 @@ SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, AABB3>
     return e;
 }
 
-SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& surfaceTransformIds)
+SceneError GPUSceneJson::GenerateTransforms(//std::map<uint32_t, uint32_t>& surfaceTransformIds
+                                            const TransformNodeList& transformList)
 {
 
     const nlohmann::json* transformJson = nullptr;
@@ -547,20 +548,24 @@ SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& surfac
             if((loc = allTransformIdIndexPairs.find(pair.second)) == allTransformIdIndexPairs.cend())
                 return SceneError::TRANSFORM_ID_NOT_FOUND;
 
-            CPUTransform t = SceneIO::LoadTransform((*transformJson)[loc->second]);
+            const auto& transformJson = (*transformJson)[loc->second];
+
+            logicGenerator.GenerateTransformGroup()
+
+            CPUTransform t = SceneIO::LoadTransform();
             transforms.emplace_back(t);
             i++;
         }
     }
-    // Load and update transform id's of the surface
-    for(auto& pair : surfaceTransformIds)
-        pair.second = transformIdList.at(pair.second);
+    //// Load and update transform id's of the surface
+    //for(auto& pair : surfaceTransformIds)
+    //    pair.second = transformIdList.at(pair.second);
 
-    // Check if first transform is identitiy matrix
-    const CPUTransform& t = transforms.at(0);
-    if((t.type != TransformType::MATRIX) ||
-       (t.type == TransformType::MATRIX && t.matrix != Indentity4x4))
-        return SceneError::FIST_TRANSFORM_IS_NOT_IDENTITIY;
+    //// Check if first transform is identitiy matrix
+    //const CPUTransform& t = transforms.at(0);
+    //if((t.type != TransformType::MATRIX) ||
+    //   (t.type == TransformType::MATRIX && t.matrix != Indentity4x4))
+    //    return SceneError::FIST_TRANSFORM_IS_NOT_IDENTITIY;
 
     return SceneError::OK;
 }
@@ -898,12 +903,12 @@ const std::vector<CPUCamera>& GPUSceneJson::CamerasCPU() const
     return cameras;
 }
 
-const std::vector<CPUTransform>& GPUSceneJson::TransformsCPU() const
+const NamedList<CPUTransformGPtr>& GPUSceneJson::Transforms() const
 {
     return transforms;
 }
 
-const std::vector<CPUMedium>& GPUSceneJson::MediumsCPU() const
+const NamedList<CPUMediumGPtr>& GPUSceneJson::Mediums() const
 {
     return mediums;
 }
@@ -928,12 +933,12 @@ const std::map<NameGPUPair, GPUMatGPtr>& GPUSceneJson::MaterialGroups() const
     return materials;
 }
 
-const std::map<std::string, GPUAccelGPtr>& GPUSceneJson::AcceleratorGroups() const
+const NamedList<GPUAccelGPtr>& GPUSceneJson::AcceleratorGroups() const
 {
     return accelerators;
 }
 
-const std::map<std::string, GPUPrimGPtr>& GPUSceneJson::PrimitiveGroups() const
+const NamedList<GPUPrimGPtr>& GPUSceneJson::PrimitiveGroups() const
 {
     return primitives;
 }
