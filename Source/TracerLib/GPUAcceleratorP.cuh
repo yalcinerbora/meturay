@@ -18,7 +18,7 @@ enum class AccTransformType
     PER_PRIMITIVE_TRANSFORM
 };
 
-struct AcceleratorData
+struct TransformData
 {
     const AccTransformType*     gTransformTypes;
     const TransformId*          gTransformIds;
@@ -32,9 +32,8 @@ class GPUAcceleratorGroup
     protected:
         // From Tracer
         const PGroup&                   primitiveGroup;
-        const GPUTransformI* const*     dTransforms;
-        // Per accelerator data
-        AcceleratorData                 accData;
+        // Global Transform List
+        const GPUTransformI**           dTransforms;
 
     public:
         // Constructors & Destructor
@@ -43,7 +42,7 @@ class GPUAcceleratorGroup
 
 
         const GPUPrimitiveGroupI&       PrimitiveGroup() const override;
-        void                            AttachGlobalTransformArray(const GPUTransformI* const* deviceTranfsorms) override;
+        void                            AttachGlobalTransformArray(const GPUTransformI** deviceTranfsorms) override;
 
 };
 
@@ -60,7 +59,7 @@ const GPUPrimitiveGroupI& GPUAcceleratorGroup<P>::PrimitiveGroup() const
 }
 
 template <class P>
-void GPUAcceleratorGroup<P>::AttachGlobalTransformArray(const GPUTransformI* const* deviceTranfsorms)
+void GPUAcceleratorGroup<P>::AttachGlobalTransformArray(const GPUTransformI** deviceTranfsorms)
 {
     dTransforms = deviceTranfsorms;
 }

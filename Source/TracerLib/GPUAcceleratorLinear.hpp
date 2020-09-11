@@ -22,6 +22,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
                                                       // pairings that uses this accelerator type
                                                       // and primitive type
                                                       const std::map<uint32_t, IdPairs>& pairingList,
+                                                      const std::vector<uint32_t>& transformList,
                                                       double time)
 {
     accRanges.clear();
@@ -36,9 +37,11 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
     size_t totalSize = 0;
     for(const auto& pairings : pairingList)
     {
+        PrimitiveIdList primIdList;
         PrimitiveRangeList primRangeList;
         HitKeyList hitKeyList;
         primRangeList.fill(Zero2ul);
+        primIdList.fill(std::numeric_limits<uint32_t>::max());
         hitKeyList.fill(HitKey::InvalidKey);
         
         Vector2ul range = Vector2ul(totalSize, 0);
@@ -50,14 +53,17 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
             const auto& p = pList[i];
             if(p.first == std::numeric_limits<uint32_t>::max()) break;
 
+            primIdList[i] = p.second;
             primRangeList[i] = primitiveGroup.PrimitiveBatchRange(p.second);
             hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.first));
             localSize += primRangeList[i][1] - primRangeList[i][0];
+            
         }
         range[1] = range[0] + localSize;
         totalSize += localSize;
         
         // Put generated AABB
+        primitiveIds.push_back(primIdList);
         primitiveRanges.push_back(primRangeList);
         primitiveMaterialKeys.push_back(hitKeyList);
         accRanges.push_back(range);
@@ -79,20 +85,6 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
     CUDA_CHECK(cudaMemcpy(dAccRanges, accRanges.data(), accRangeSize,
                           cudaMemcpyHostToDevice));
 
-    return SceneError::OK;
-}
-
-template <class PGroup>
-SceneError GPUAccLinearGroup<PGroup>::ChangeTime(// Map of hit keys for all materials
-                                                 // w.r.t matId and primitive type
-                                                 const std::map<TypeIdPair, HitKey>&,
-                                                 // List of surface/material
-                                                 // pairings that uses this accelerator type
-                                                 // and primitive type
-                                                 const std::map<uint32_t, IdPairs>& pairingList,
-                                                 double time)
-{
-    // TODO:
     return SceneError::OK;
 }
 
@@ -156,6 +148,84 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         primData,
         index
     );
+
+
+    // Check if this accelerator utilizes constant transform
+    if(true)
+    {
+        // Rays are going to be transformed
+        // utilize local space primitive AABB
+        AABB3f unionAABB = NegativeAABB3f;
+        for(uint32_t primBatchId : primitiveIds[index])
+        {
+            if(primBatchId == std::numeric_limits<uint32_t>::max()) break;
+
+            AABB3f aabb = primitiveGroup.PrimitiveBatchAABB(primBatchId);
+            unionAABB.UnionSelf(aabb);
+        }       
+        surfaceAABBs.emplace(surface, unionAABB);
+    }
+    else
+    {
+        // Use transformation & primitive data to generate AABB
+        size_t totalAABBCount = 0;
+        for(const auto& primRange : primitiveRanges[index])
+        {
+            if(primRange == Zero2ul) break;
+            totalAABBCount = primRange[0] - primRange[1];
+        }
+                
+        // Check cub reduction temp storage size
+        size_t cubTempStorageSize = 0;
+        AABB3f* dInAABBs = nullptr;
+        AABB3f* dOutAABB = nullptr;
+        CUDA_CHECK(cub::DeviceReduce::Reduce(nullptr, cubTempStorageSize,
+                                             dInAABBs, dOutAABB,
+                                             static_cast<int>(totalAABBCount),
+                                             AABBUnion(), NegativeAABB3f));
+
+
+        size_t aabbSizes = (totalAABBCount + 1) * sizeof(AABB3f);
+        DeviceMemory memory(aabbSizes + cubTempStorageSize);
+
+        size_t offset = 0;
+        Byte* memPtr = static_cast<Byte*>(memory);
+        dInAABBs = reinterpret_cast<AABB3f*>(memPtr + offset);
+        offset += totalAABBCount * sizeof(AABB3f);
+        dOutAABB = reinterpret_cast<AABB3f*>(memPtr + offset);
+        offset += sizeof(AABB3f);
+        void* dTempStorage = memPtr + offset;
+        offset += cubTempStorageSize;
+        assert(offset == memory.Size());
+
+        CUDA_CHECK(cub::DeviceReduce::Reduce(dTempStorage, cubTempStorageSize,
+                                             dInAABBs, dOutAABB,
+                                             static_cast<int>(totalAABBCount),
+                                             AABBUnion(), NegativeAABB3f));
+
+        // First Generate AABBs from Primitives
+        // TODO:
+        //gpu.GridStrideKC_X(0, 0,
+        //                   totalAABBCount,
+        //                   //
+        //                   KCGenAABBs<PGroup>,
+        //                   //
+        //                   dPrimAABBs,
+        //                   //
+        //                   dIdsIn,
+        //                   dPrimIds,
+        //                   //
+        //                   AABBGen<PGroup>(primData, *transform),
+        //                   static_cast<uint32_t>(totalAABBCount));
+
+
+        // Sync device to access gpu memory from host
+        AABB3f hostAABB;
+        CUDA_CHECK(cudaMemcpy(&hostAABB, dOutAABB, sizeof(AABB3f),
+                              cudaMemcpyDeviceToHost));
+        
+        surfaceAABBs.emplace(surface, hostAABB);
+    }
 
     return TracerError::OK;
 }
@@ -261,8 +331,15 @@ void GPUAccLinearGroup<PGroup>::Hit(const CudaGPU& gpu,
         dLeafList,
         dAccRanges,
         dTransforms,
+        dAccTransformTypes,
+        dAccTransformIds,
         //
-        primData,
-        accData
+        primData
     );
+}
+
+template <class PGroup>
+const SurfaceAABBList& GPUAccLinearGroup<PGroup>::AcceleratorAABBs() const
+{
+    return surfaceAABBs;
 }

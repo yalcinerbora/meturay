@@ -285,6 +285,7 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
                                                    // pairings that uses this accelerator type
                                                    // and primitive type
                                                    const std::map<uint32_t, IdPairs>& pairingList,
+                                                   const std::vector<uint32_t>& transformList,
                                                    double time)
 {
 
@@ -331,20 +332,6 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
 }
 
 template <class PGroup>
-SceneError GPUAccBVHGroup<PGroup>::ChangeTime(// Map of hit keys for all materials
-                                              // w.r.t matId and primitive type
-                                              const std::map<TypeIdPair, HitKey>&,
-                                              // List of surface/material
-                                              // pairings that uses this accelerator type
-                                              // and primitive type
-                                              const std::map<uint32_t, IdPairs>& pairingList,
-                                              double time)
-{
-    // TODO:
-    return SceneError::OK;
-}
-
-template <class PGroup>
 uint32_t GPUAccBVHGroup<PGroup>::InnerId(uint32_t surfaceId) const
 {
     return idLookup.at(surfaceId);
@@ -380,8 +367,8 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
     uint32_t innerIndex = idLookup.at(surface);
     const PrimitiveRangeList& primRangeList = primitiveRanges[innerIndex];
-    const AccTransformType tType = accData.gTransformTypes[innerIndex];
-    const GPUTransformI* transform = dTransforms[accData.gTransformIds[innerIndex]];
+    const AccTransformType tType = dAccTransformTypes[innerIndex];
+    const GPUTransformI* transform = dTransforms[dAccTransformIds[innerIndex]];
 
     size_t currentOffset = 0;
     PrimitiveRangeList indexOffsets;
@@ -398,7 +385,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     size_t totalPrimCount = currentOffset;
 
     if(tType == AccTransformType::CONSTANT_LOCAL_TRANSFORM)
-        transform = dTransforms[0];
+        transform = dTransforms[IDENTITY_TRANSFORM_INDEX];
 
     // Determine Partition / Reduce Memories
     size_t cubIfMemSize = 0;
@@ -709,8 +696,10 @@ void GPUAccBVHGroup<PGroup>::Hit(const CudaGPU& gpu,
                                        const HitKey*,
                                        uint32_t,
                                        const BVHNode<LeafData>**,
-                                       const GPUTransformI* const*, PrimitiveData, 
-                                       AcceleratorData);
+                                       const GPUTransformI**, 
+                                       const AccTransformType*,
+                                       const TransformId*,
+                                       PrimitiveData);
 
     BVHIntersectKernel kernel = (params.useStack) ? KCIntersectBVH<PGroup> : 
                                                     KCIntersectBVHStackless<PGroup>;
@@ -737,8 +726,15 @@ void GPUAccBVHGroup<PGroup>::Hit(const CudaGPU& gpu,
         // Constants
         dBVHLists,
         dTransforms,
+        dAccTransformTypes,
+        dAccTransformIds,
         //
-        primData,
-        accData
+        primData
     );
+}
+
+template <class PGroup>
+const SurfaceAABBList& GPUAccBVHGroup<PGroup>::AcceleratorAABBs() const
+{
+    return surfaceAABBs;
 }

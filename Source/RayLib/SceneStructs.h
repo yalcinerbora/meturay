@@ -68,6 +68,8 @@ using TypeIdPair = std::pair<std::string, uint32_t>;
 using IdPair = std::pair<uint32_t, uint32_t>;
 using IdPairs = std::array<IdPair, SceneConstants::MaxPrimitivePerSurface>;
 
+using IdPairsWithAnId = std::pair<uint32_t, IdPairs>;
+
 class SceneNodeI;
 
 // Compiled Data which will be used to create actual class later
@@ -76,6 +78,7 @@ struct AccelGroupData
     std::string                     accelType;
     std::string                     primType;
     std::map<uint32_t, IdPairs>     matPrimIdPairs;
+    std::vector<uint32_t>           transformIds;
     std::unique_ptr<SceneNodeI>     accelNode;
 };
 

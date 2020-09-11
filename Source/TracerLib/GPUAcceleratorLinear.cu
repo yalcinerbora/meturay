@@ -32,7 +32,6 @@ void GPUBaseAcceleratorLinear::GetReady(const CudaSystem& system,
 
 void GPUBaseAcceleratorLinear::Hit(const CudaSystem& system,
                                    // Output
-                                   TransformId* dTransformIds,
                                    HitKey* dAcceleratorKeys,
                                    // Inputs
                                    const RayGMem* dRays,
@@ -57,7 +56,6 @@ void GPUBaseAcceleratorLinear::Hit(const CudaSystem& system,
                            //
                            KCIntersectBaseLinear,
                            // Output
-                           dTransformIds,
                            dAcceleratorKeys + offset,
                            // I-O
                            dPrevLocList,
@@ -73,51 +71,68 @@ void GPUBaseAcceleratorLinear::Hit(const CudaSystem& system,
     }
 }
 
+
 SceneError GPUBaseAcceleratorLinear::Initialize(// Accelerator Option Node
                                                 const SceneNodePtr& node,
-                                                // List of surface to transform id hit key mappings
-                                                const std::map<uint32_t, BaseLeaf>& map)
+                                                // List of surface to leaf accelerator ids
+                                                const std::map<uint32_t, HitKey>& keyMap)
 {
-    innerIds.clear();
+    idLookup.clear();
 
-    leafCount = static_cast<uint32_t>(map.size());
+    leafCount = static_cast<uint32_t>(keyMap.size());
     size_t requiredSize = leafCount * sizeof(BaseLeaf);
 
-    std::vector<BaseLeaf> leafCPU(leafCount);
+    std::vector<HitKey> keyList(leafCount);
     uint32_t i = 0;
-    for(const auto& pair : map)
+    for(const auto& pair : keyMap)
     {
-        leafCPU[i] = pair.second;
-        innerIds.emplace(pair.first, i);
+        keyList[i] = pair.second;
+        idLookup.emplace(pair.first, i);
         i++;
     }
-
     // Allocate and copy
     if(leafMemory.Size() < requiredSize)
         leafMemory = std::move(DeviceMemory(requiredSize));
-
+    //
     dLeafs = static_cast<const BaseLeaf*>(leafMemory);
-    CUDA_CHECK(cudaMemcpy(const_cast<BaseLeaf*>(dLeafs),
-                          leafCPU.data(), sizeof(BaseLeaf) * leafCount,
-                          cudaMemcpyHostToDevice));
+    Byte* keyLocation = static_cast<Byte*>(leafMemory) + offsetof(BaseLeaf, accKey);
+    CUDA_CHECK(cudaMemcpy2D(keyLocation, sizeof(BaseLeaf),
+                            keyList.data(), sizeof(HitKey),
+                            sizeof(HitKey), leafCount,
+                            cudaMemcpyHostToDevice));
     return SceneError::OK;
 }
 
-SceneError GPUBaseAcceleratorLinear::Change(// List of only changed surface to transform id hit key mappings
-                                            const std::map<uint32_t, BaseLeaf>& map)
+TracerError GPUBaseAcceleratorLinear::Constrcut(const CudaSystem&,
+                                                // List of surface AABBs
+                                                const SurfaceAABBList& aabbMap)
 {
-    for(const auto& pair : map)
+    if(aabbMap.size() != idLookup.size())
+        return TracerError::UNABLE_TO_CONSTRUCT_BASE_ACCELERATOR;
+
+    size_t aabbCount = static_cast<uint32_t>(aabbMap.size());
+    std::vector<Vector3> aabbMin(aabbCount);
+    std::vector<Vector3> aabbMax(aabbCount);
+
+    for(const auto& pair : aabbMap)
     {
-        // Use managed memory functionality
-        uint32_t index = innerIds[pair.first];
-        const_cast<BaseLeaf*>(dLeafs)[index] = pair.second;
+        uint32_t index = idLookup.at(pair.first);
+        aabbMin[index] = pair.second.Min();
+        aabbMax[index] = pair.second.Max();
     }
-    return SceneError::OK;
-}
 
-TracerError GPUBaseAcceleratorLinear::Constrcut(const CudaSystem&)
-{
-    // Nothing to do here
+    // Copy AABB data to leaf structs
+    dLeafs = static_cast<const BaseLeaf*>(leafMemory);
+    Byte* aabbMinLocation = static_cast<Byte*>(leafMemory) + offsetof(BaseLeaf, aabbMin);
+    Byte* aabbMaxLocation = static_cast<Byte*>(leafMemory) + offsetof(BaseLeaf, aabbMax);
+    CUDA_CHECK(cudaMemcpy2D(aabbMinLocation, sizeof(BaseLeaf),
+                            aabbMin.data(), sizeof(Vector3f),
+                            sizeof(Vector3f), aabbCount,
+                            cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy2D(aabbMaxLocation, sizeof(BaseLeaf),
+                            aabbMax.data(), sizeof(Vector3f),
+                            sizeof(Vector3f), aabbCount,
+                            cudaMemcpyHostToDevice));
     return TracerError::OK;
 }
 

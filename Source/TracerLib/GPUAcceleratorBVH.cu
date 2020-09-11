@@ -178,7 +178,6 @@ void GPUBaseAcceleratorBVH::GetReady(const CudaSystem& system,
 
 void GPUBaseAcceleratorBVH::Hit(const CudaSystem& system,
                                 // Output
-                                TransformId* dTransformIds,
                                 HitKey* dAcceleratorKeys,
                                 // Inputs
                                 const RayGMem* dRays,
@@ -203,7 +202,6 @@ void GPUBaseAcceleratorBVH::Hit(const CudaSystem& system,
                            //
                            KCIntersectBaseBVH,
                            // Output
-                           dTransformIds,
                            dAcceleratorKeys + offset,
                            // I-O
                            dRayStates,
@@ -221,36 +219,42 @@ void GPUBaseAcceleratorBVH::Hit(const CudaSystem& system,
 
 SceneError GPUBaseAcceleratorBVH::Initialize(// Accelerator Option Node
                                              const SceneNodePtr& node,
-                                             // List of surface to transform id hit key mappings
-                                             const std::map<uint32_t, BaseLeaf>& map)
+                                             // List of surface to leaf accelerator ids
+                                             const std::map<uint32_t, HitKey>& keyMap)
 {
     idLookup.clear();
-    leafs.resize(map.size());
+    leafs.resize(keyMap.size());
 
     uint32_t i = 0;
-    for(const auto& pair : map)
+    for(const auto& pair : keyMap)
     {
-        leafs[i] = pair.second;
+        leafs[i].accKey = pair.second;
         idLookup.emplace(pair.first, i);
         i++;
     }
     return SceneError::OK;
 }
 
-SceneError GPUBaseAcceleratorBVH::Change(// List of only changed surface to transform id hit key mappings
-                                         const std::map<uint32_t, BaseLeaf>&)
+TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&,
+                                             // List of surface AABBs
+                                             const SurfaceAABBList& aabbMap)
 {
-    // TODO: Implement
-    return SceneError::OK;
-}
+    if(aabbMap.size() != idLookup.size())
+        return TracerError::UNABLE_TO_CONSTRUCT_BASE_ACCELERATOR;
 
-TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&)
-{
     // Alloc Id List & BVH Node List
     size_t totalSurfaceCount = idLookup.size();
     std::vector<uint32_t> surfaceIndices(totalSurfaceCount);    
     std::vector<BVHNode<BaseLeaf>> bvhNodes;
     
+    // Load aabb data to leafs
+    for(const auto& pair : aabbMap)
+    {
+        uint32_t index = idLookup.at(pair.first);
+        leafs[index].aabbMin = pair.second.Min();
+        leafs[index].aabbMax = pair.second.Max();
+    }
+
     // Generate Centers for Convenience
     // Also init indices
     uint32_t i = 0;

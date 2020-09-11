@@ -8,6 +8,7 @@
 
 using HitKeyList = std::array<HitKey, SceneConstants::MaxPrimitivePerSurface>;
 using PrimitiveRangeList = std::array<Vector2ul, SceneConstants::MaxPrimitivePerSurface>;
+using PrimitiveIdList = std::array<uint32_t, SceneConstants::MaxPrimitivePerSurface>;
 
 using HitResult = Vector<2, bool>;
 
@@ -20,7 +21,6 @@ struct /*alignas(16)*/ BaseLeaf
     Vector3f aabbMin;
     HitKey accKey;
     Vector3f aabbMax;
-    TransformId transformId;
 };
 
 // Accept hit function
@@ -68,3 +68,41 @@ using AreaGenFunction = float(*)(PrimitiveId primitiveId, const PrimitiveData&);
 // Center generation function for bound hierarcy generation
 template <class PrimitiveData>
 using CenterGenFunction = Vector3(*)(PrimitiveId primitiveId, const PrimitiveData&);
+
+// Common Functors for gpu AABB Generation
+template<class PrimitiveGroup>
+struct AABBGen
+{
+    public:
+        using PData = typename PrimitiveGroup::PrimitiveData;
+
+    private:
+
+
+        PData                   pData;
+        const GPUTransformI&    transform;
+
+    protected:
+    public:
+        // Constructors & Destructor                                
+        AABBGen(PData pData, const GPUTransformI& t) 
+            : pData(pData)
+            , transform(t) 
+        {}
+
+        __device__ __host__
+        __forceinline__ AABB3f operator()(const PrimitiveId& id) const
+        {
+            return PrimitiveGroup::AABB(transform, id, pData);
+        }
+};
+
+struct AABBUnion
+{
+    __device__ __host__
+    __forceinline__ AABB3f operator()(const AABB3f& a,
+                                      const AABB3f& b) const
+    {
+        return a.Union(b);
+    }
+};

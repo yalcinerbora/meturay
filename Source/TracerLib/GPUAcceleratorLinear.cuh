@@ -44,15 +44,21 @@ class GPUAccLinearGroup final
 
     private:
         // CPU Memory
+        std::vector<PrimitiveIdList>        primitiveIds;
         std::vector<PrimitiveRangeList>     primitiveRanges;
         std::vector<HitKeyList>             primitiveMaterialKeys;
         std::vector<Vector2ul>              accRanges;
+        
         std::map<uint32_t, uint32_t>        idLookup;
+        SurfaceAABBList                     surfaceAABBs;
 
         // GPU Memory
         DeviceMemory                        memory;
         Vector2ul*                          dAccRanges;
         LeafData*                           dLeafList;
+        AccTransformType*                   dAccTransformTypes;
+        TransformId*                        dAccTransformIds;
+
 
     protected:
 
@@ -73,48 +79,43 @@ class GPUAccLinearGroup final
                                             // List of surface/material
                                             // pairings that uses this accelerator type
                                             // and primitive type
-                                            const std::map<uint32_t, IdPairs>& parList,
+                                            const std::map<uint32_t, IdPairs>& pairingList,
+                                            const std::vector<uint32_t>& transformList,
                                             double time) override;
-        SceneError          ChangeTime(// Map of hit keys for all materials
-                                       // w.r.t matId and primitive type
-                                       const std::map<TypeIdPair, HitKey>&,
-                                       // List of surface/material
-                                       // pairings that uses this accelerator type
-                                       // and primitive type
-                                       const std::map<uint32_t, IdPairs>& pairList,
-                                       double time) override;
 
         // Surface Queries
-        uint32_t            InnerId(uint32_t surfaceId) const override;
+        uint32_t                InnerId(uint32_t surfaceId) const override;
 
         // Batched and singular construction
-        TracerError         ConstructAccelerators(const CudaSystem&) override;
-        TracerError         ConstructAccelerator(uint32_t surface,
-                                                 const CudaSystem&) override;
-        TracerError         ConstructAccelerators(const std::vector<uint32_t>& surfaces,
-                                                  const CudaSystem&) override;
-        TracerError         DestroyAccelerators(const CudaSystem&) override;
-        TracerError         DestroyAccelerator(uint32_t surface,
-                                               const CudaSystem&) override;
-        TracerError         DestroyAccelerators(const std::vector<uint32_t>& surfaces,
-                                                const CudaSystem&) override;
+        TracerError             ConstructAccelerators(const CudaSystem&) override;
+        TracerError             ConstructAccelerator(uint32_t surface,
+                                                     const CudaSystem&) override;
+        TracerError             ConstructAccelerators(const std::vector<uint32_t>& surfaces,
+                                                      const CudaSystem&) override;
+        TracerError             DestroyAccelerators(const CudaSystem&) override;
+        TracerError             DestroyAccelerator(uint32_t surface,
+                                                   const CudaSystem&) override;
+        TracerError             DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+                                                    const CudaSystem&) override;
 
-        size_t              UsedGPUMemory() const override;
-        size_t              UsedCPUMemory() const override;
+        size_t                  UsedGPUMemory() const override;
+        size_t                  UsedCPUMemory() const override;
 
         // Logic
-        void                Hit(const CudaGPU&,
-                                // O
-                                HitKey* dMaterialKeys,
-                                TransformId* dTransformIds,
-                                PrimitiveId* dPrimitiveIds,
-                                HitStructPtr dHitStructs,
-                                // I-O
-                                RayGMem* dRays,
-                                // Input
-                                const RayId* dRayIds,
-                                const HitKey* dAcceleratorKeys,
-                                const uint32_t rayCount) const override;
+        void                    Hit(const CudaGPU&,
+                                    // O
+                                    HitKey* dMaterialKeys,
+                                    TransformId* dTransformIds,
+                                    PrimitiveId* dPrimitiveIds,
+                                    HitStructPtr dHitStructs,
+                                    // I-O
+                                    RayGMem* dRays,
+                                    // Input
+                                    const RayId* dRayIds,
+                                    const HitKey* dAcceleratorKeys,
+                                    const uint32_t rayCount) const override;
+
+        const SurfaceAABBList&  AcceleratorAABBs() const override;
 };
 
 
@@ -132,7 +133,7 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
         uint32_t*                       dPrevLocList;
 
         // CPU
-        std::map<uint32_t, uint32_t>    innerIds;
+        std::map<uint32_t, uint32_t>    idLookup;
         uint32_t                        leafCount;
 
     protected:
@@ -155,7 +156,6 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
         // which is either means data is out of bounds or ray is invalid.
         void                        Hit(const CudaSystem&,
                                         // Output
-                                        TransformId* dTransformIds,
                                         HitKey* dAcceleratorKeys,
                                         // Inputs
                                         const RayGMem* dRays,
@@ -165,12 +165,12 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
 
         SceneError                  Initialize(// Accelerator Option Node
                                                const SceneNodePtr& node,
-                                               // List of surface to transform id hit key mappings
-                                               const std::map<uint32_t, BaseLeaf>&) override;
-        SceneError                  Change(// List of only changed surface to transform id hit key mappings
-                                           const std::map<uint32_t, BaseLeaf>&) override;
+                                               // List of surface to leaf accelerator ids
+                                               const std::map<uint32_t, HitKey>&) override;
 
-        TracerError                 Constrcut(const CudaSystem&) override;
+        TracerError                 Constrcut(const CudaSystem&,
+                                              // List of surface AABBs
+                                              const SurfaceAABBList&) override;
         TracerError                 Destruct(const CudaSystem&) override;
 };
 

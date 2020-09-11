@@ -10,7 +10,7 @@
 class GPUTransformI;
 class CudaSystem;
 
-static constexpr uint32_t DEFAULT_TRANSFORM_INDEX = 0;
+static constexpr uint32_t IDENTITY_TRANSFORM_INDEX = 0;
 
 using GPUTransformList = std::vector<const GPUTransformI*>;
 

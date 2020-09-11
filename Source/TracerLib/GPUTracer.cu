@@ -107,19 +107,25 @@ TracerError GPUTracer::Initialize()
     // Attach Transform gpu pointer to the Accelerator Batches
     for(const auto& acc : accelBatches)
         acc.second->AttachGlobalTransformArray(dTransforms);
-        
 
-    // Construct Tracers
+    // Construct Accelerators
     TracerError e = TracerError::OK;
-    if((e = baseAccelerator.Constrcut(cudaSystem)) != TracerError::OK)
-        return e;
-
+    SurfaceAABBList allSurfaceAABBs;
     for(const auto& accBatch : accelBatches)
     {
         GPUAcceleratorGroupI* acc = accBatch.second;
         if((e = acc->ConstructAccelerators(cudaSystem)) != TracerError::OK)
             return e;
-    }    
+        // Acquire surface aabb listings for base accelerator consrtuction  
+        allSurfaceAABBs.insert(acc->AcceleratorAABBs().cbegin(), 
+                               acc->AcceleratorAABBs().cend());
+
+    }
+
+    // Construct Base accelerator using aabb list
+    if((e = baseAccelerator.Constrcut(cudaSystem, allSurfaceAABBs)) != TracerError::OK)
+        return e;
+
     cudaSystem.SyncGPUAll();
     return TracerError::OK;
 }
@@ -169,7 +175,6 @@ void GPUTracer::HitAndPartitionRays()
         // Base accelerator provides potential hits
         // Cannot provide an absolute hit (its not its job)
         baseAccelerator.Hit(cudaSystem,
-                            dTransfomIds, 
                             dCurrentKeys + validRayOffset,
                             dRays,
                             dCurrentRayIds + validRayOffset,

@@ -28,6 +28,7 @@ class SceneNodeI;
 class GPUTransformI;
 
 using SceneNodePtr = std::unique_ptr<SceneNodeI>;
+using SurfaceAABBList = std::map<uint32_t, AABB3f>;
 
 // Accelerator Group defines same type of accelerators
 // This struct holds accelerator data
@@ -52,15 +53,8 @@ class GPUAcceleratorGroupI
                                                 // pairings that uses this accelerator type
                                                 // and primitive type
                                                 const std::map<uint32_t, IdPairs>& pairingList,
+                                                const std::vector<uint32_t>& transformList,
                                                 double time) = 0;
-        virtual SceneError      ChangeTime(// Map of hit keys for all materials
-                                           // w.r.t matId and primitive type
-                                           const std::map<TypeIdPair, HitKey>&,
-                                           // List of surface/material
-                                           // pairings that uses this accelerator type
-                                           // and primitive type
-                                           const std::map<uint32_t, IdPairs>& pairingList,
-                                           double time) = 0;
 
         // Surface Queries
         virtual uint32_t                    InnerId(uint32_t surfaceId) const = 0;
@@ -95,8 +89,9 @@ class GPUAcceleratorGroupI
                                                 const HitKey* dAcceleratorKeys,
                                                 const uint32_t rayCount) const = 0;
 
+        virtual const SurfaceAABBList&      AcceleratorAABBs() const = 0;
         virtual const GPUPrimitiveGroupI&   PrimitiveGroup() const = 0;
-        virtual void                        AttachGlobalTransformArray(const GPUTransformI* const* deviceTransforms) = 0;
+        virtual void                        AttachGlobalTransformArray(const GPUTransformI** deviceTransforms) = 0;
 };
 
 class GPUBaseAcceleratorI
@@ -115,7 +110,6 @@ class GPUBaseAcceleratorI
         // which is either means data is out of bounds or ray is invalid.
         virtual void            Hit(const CudaSystem&,
                                     // Output
-                                    TransformId* dTransformIds,
                                     HitKey* dMaterialKeys,
                                     // Inputs
                                     const RayGMem* dRays,
@@ -125,12 +119,12 @@ class GPUBaseAcceleratorI
         // Initialization
         virtual SceneError      Initialize(// Accelerator Option Node
                                            const SceneNodePtr& node,
-                                           // List of surface to transform id hit key mappings
-                                           const std::map<uint32_t, BaseLeaf>&) = 0;
-        virtual SceneError      Change(// List of only changed surface to transform id hit key mappings
-                                       const std::map<uint32_t, BaseLeaf>&) = 0;
+                                           // List of surface to leaf accelerator ids
+                                           const std::map<uint32_t, HitKey>&) = 0;
 
         // Construction & Destruction
-        virtual TracerError     Constrcut(const CudaSystem&) = 0;
+        virtual TracerError     Constrcut(const CudaSystem&,
+                                          // List of surface AABBs
+                                          const SurfaceAABBList&) = 0;
         virtual TracerError     Destruct(const CudaSystem&) = 0;
 };

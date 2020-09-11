@@ -5,6 +5,7 @@
 #include "RayLib/Types.h"
 
 #include "AcceleratorFunctions.h"
+#include "GPUTransformIdentity.cuh"
 
 #pragma warning( push )
 #pragma warning( disable : 4834)
@@ -85,36 +86,6 @@ struct CentroidGen
         {
             return PGroup::Center(id, pData);
         }
-};
-
-template<class PGroup>
-struct AABBGen
-{
-    private:
-        PGroup::PrimitiveData   pData;
-        const GPUTransformI&    transform;
-
-    protected:
-    public:
-        // Constructors & Destructor                                
-        AABBGen(PGroup::PrimitiveData pData,
-                const GPUTransformI& t) : pData(pData), transform(t) {}
-
-        __device__ __host__
-        __forceinline__ AABB3f operator()(const PrimitiveId& id) const
-        {
-            return PGroup::AABB(transform, id, pData);
-        }
-};
-
-struct AABBUnion
-{
-    __device__ __host__
-    __forceinline__ AABB3f operator()(const AABB3f& a,
-                                      const AABB3f& b) const
-    {
-        return a.Union(b);
-    }
 };
 
 // Fundamental BVH Tree Node
@@ -309,10 +280,11 @@ void KCIntersectBVH(// O
                     const uint32_t rayCount,
                     // Constants
                     const BVHNode<PGroup::LeafData>** gBVHList,
-                    const GPUTransformI* const* gTransforms,
+                    const GPUTransformI** gTransforms,
+                    const AccTransformType* gAccTransformTypes,
+                    const TransformId* gAccTransformIds,
                     //
-                    const PGroup::PrimitiveData primData,
-                    AcceleratorData accData)
+                    const PGroup::PrimitiveData primData)
 {
     using HitData = typename PGroup::HitData;       // HitRegister is defined by primitive
     using LeafData = typename PGroup::LeafData;     // LeafStruct is defined by primitive
@@ -347,8 +319,8 @@ void KCIntersectBVH(// O
     {
         const RayId id = gRayIds[globalId];
         const uint64_t accId = HitKey::FetchIdPortion(gAccelKeys[globalId]);
-        const TransformId transformId = accData.gTransformIds[accId];
-        const AccTransformType type = accData.gTransformTypes[accId];
+        const TransformId transformId = gAccTransformIds[accId];
+        const AccTransformType type = gAccTransformTypes[accId];
 
         // Load Ray/Hit to Register
         RayReg ray(gRays, id);
@@ -357,7 +329,8 @@ void KCIntersectBVH(// O
         const BVHNode<LeafData>* gBVH = gBVHList[accId];
 
         // Check transforms
-        const GPUTransformI* localTransform = gTransforms[0];
+        GPUTransformIdentity identityTransform;
+        const GPUTransformI* localTransform = &identityTransform;
         if(type == AccTransformType::CONSTANT_LOCAL_TRANSFORM)
         {
             const GPUTransformI& t = (*gTransforms[transformId]);
@@ -435,10 +408,11 @@ void KCIntersectBVHStackless(// O
                              const uint32_t rayCount,
                              // Constants
                              const BVHNode<PGroup::LeafData>** gBVHList,
-                             const GPUTransformI* const* gTransforms,
+                             const GPUTransformI** gTransforms,
+                             const AccTransformType* gAccTransformTypes,
+                             const TransformId* gAccTransformIds,
                              //
-                             const PGroup::PrimitiveData primData,
-                             AcceleratorData accData)
+                             const PGroup::PrimitiveData primData)
 {
     using HitData = typename PGroup::HitData;       // HitRegister is defined by primitive
     using LeafData = typename PGroup::LeafData;     // LeafStruct is defined by primitive
@@ -474,8 +448,8 @@ void KCIntersectBVHStackless(// O
     {
         const RayId id = gRayIds[globalId];
         const uint64_t accId = HitKey::FetchIdPortion(gAccelKeys[globalId]);
-        const TransformId transformId = accData.gTransformIds[accId];
-        const AccTransformType type = accData.gTransformTypes[accId];
+        const TransformId transformId = gAccTransformIds[accId];
+        const AccTransformType type = gAccTransformTypes[accId];
         
         // Load Ray/Hit to Register
         RayReg ray(gRays, id);
@@ -485,7 +459,8 @@ void KCIntersectBVHStackless(// O
         const BVHNode<LeafData>* gBVH = gBVHList[accId];
 
         // Check transforms
-        const GPUTransformI* localTransform = gTransforms[0];
+        GPUTransformIdentity identityTransform;
+        const GPUTransformI* localTransform = &identityTransform;
         if(type == AccTransformType::CONSTANT_LOCAL_TRANSFORM)
         {
             const GPUTransformI& t = (*gTransforms[transformId]);
@@ -586,7 +561,6 @@ void KCIntersectBVHStackless(// O
 
 __global__ __launch_bounds__(StaticThreadPerBlock1D)
 static void KCIntersectBaseBVH(// Output
-                               TransformId* gTransformIds,
                                HitKey* gHitKeys,
                                // I-O 
                                uint32_t* gRayStates,
@@ -677,9 +651,8 @@ static void KCIntersectBaseBVH(// Output
                         // So save state                        
                         gRayStates[id] = SaveRayState(list, depth);
                         gPrevBVHIndex[id] = currentNode->parent;
-                        // Set AcceleratorId and TransformId for lower accelerator
+                        // Set AcceleratorId and lower accelerator
                         gHitKeys[globalId] = currentNode->leaf.accKey;
-                        gTransformIds[id] = currentNode->leaf.transformId;                                               
 
                         //if(id == 144)
                         //    printf("[L]               depth %u list 0x%08X\n", depth, list);

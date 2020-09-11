@@ -55,13 +55,16 @@ class GPUAccBVHGroup final
         // CPU Memory
         std::vector<PrimitiveRangeList>     primitiveRanges;
         std::vector<HitKeyList>             primitiveMaterialKeys;
-        std::vector<uint8_t>                bvhDepths;
-
+        std::vector<uint8_t>                bvhDepths;        
         std::map<uint32_t, uint32_t>        idLookup;
+        SurfaceAABBList                     surfaceAABBs;
         // GPU Memory
         DeviceMemory                        bvhListMemory;
         std::vector<DeviceMemory>           bvhMemories;
         const BVHNode<LeafData>**           dBVHLists;
+        // Per accelerator data
+        AccTransformType*                   dAccTransformTypes;
+        TransformId*                        dAccTransformIds;
 
         // Recursive Construction
         HitKey                  FindHitKey(uint32_t accIndex, PrimitiveId id);
@@ -93,7 +96,7 @@ class GPUAccBVHGroup final
 
         // Interface
         // Type(as string) of the accelerator group
-        const char*                     Type() const override;
+        const char*             Type() const override;
         // Loads required data to CPU cache for
         SceneError              InitializeGroup(// Accelerator Option Node
                                                 const SceneNodePtr& node,
@@ -103,16 +106,9 @@ class GPUAccBVHGroup final
                                                 // List of surface/material
                                                 // pairings that uses this accelerator type
                                                 // and primitive type
-                                                const std::map<uint32_t, IdPairs>& parList,
+                                                const std::map<uint32_t, IdPairs>& pairingList,
+                                                const std::vector<uint32_t>& transformList,
                                                 double time) override;
-        SceneError              ChangeTime(// Map of hit keys for all materials
-                                           // w.r.t matId and primitive type
-                                           const std::map<TypeIdPair, HitKey>&,
-                                           // List of surface/material
-                                           // pairings that uses this accelerator type
-                                           // and primitive type
-                                           const std::map<uint32_t, IdPairs>& parList,
-                                           double time) override;
 
         // Surface Queries
         uint32_t                InnerId(uint32_t surfaceId) const override;
@@ -145,6 +141,8 @@ class GPUAccBVHGroup final
                                     const RayId* dRayIds,
                                     const HitKey* dAcceleratorKeys,
                                     const uint32_t rayCount) const override;
+
+        const SurfaceAABBList&  AcceleratorAABBs() const override;
 };
 
 class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
@@ -198,7 +196,6 @@ class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
         // which is either means data is out of bounds or ray is invalid.
         void                        Hit(const CudaSystem&,
                                         // Output
-                                        TransformId* dTransformIds,
                                         HitKey* dAcceleratorKeys,
                                         // Inputs
                                         const RayGMem* dRays,
@@ -208,12 +205,12 @@ class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
 
         SceneError                  Initialize(// Accelerator Option Node
                                                const SceneNodePtr& node,
-                                               // List of surface to transform id hit key mappings
-                                               const std::map<uint32_t, BaseLeaf>&) override;
-        SceneError                  Change(// List of only changed surface to transform id hit key mappings
-                                           const std::map<uint32_t, BaseLeaf>&) override;
+                                               // List of surface to leaf accelerator ids
+                                               const std::map<uint32_t, HitKey>&) override;
 
-        TracerError                 Constrcut(const CudaSystem&) override;
+        TracerError                 Constrcut(const CudaSystem&,
+                                              // List of surface AABBs
+                                              const SurfaceAABBList&) override;
         TracerError                 Destruct(const CudaSystem&) override;
 };
 

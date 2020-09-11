@@ -40,6 +40,8 @@ struct SceneError : public ErrorI
             DUPLICATE_ACCELERATOR_ID,
             DUPLICATE_MATERIAL_ID,
             DUPLICATE_PRIMITIVE_ID,
+            DUPLICATE_TRANSFORM_ID,
+            DUPLICATE_MEDIUM_ID,
             // Id not found
             ACCELERATOR_ID_NOT_FOUND,
             MATERIAL_ID_NOT_FOUND,
@@ -166,6 +168,8 @@ inline SceneError::operator std::string() const
         "Duplicate accelerator id",
         "Duplicate material id",
         "Duplicate primitive id",
+        "Duplicate transform id",
+        "Duplicate medium id",
         //
         "Accelerator id not found",
         "Material id not found",

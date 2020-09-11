@@ -12,6 +12,12 @@ with ustom Intersection and Hit
 #include "RayLib/SceneStructs.h"
 
 #include "AcceleratorFunctions.h"
+#include "GPUTransformIdentity.cuh"
+
+#pragma warning( push )
+#pragma warning( disable : 4834)
+#include <cub/cub.cuh>
+#pragma warning( pop )
 
 struct HKList
 {
@@ -92,7 +98,7 @@ static void KCConstructLinear(// O
 
 // This is fundemental Linear traversal kernel
 template <class PGroup>
-__global__ __launch_bounds__(StaticThreadPerBlock1D)
+__global__ //__launch_bounds__(StaticThreadPerBlock1D)
 static void KCIntersectLinear(// O
                               HitKey* gMaterialKeys,
                               TransformId* gTransformIds,
@@ -107,10 +113,11 @@ static void KCIntersectLinear(// O
                               // Constants
                               const PGroup::LeafData* gLeafList,
                               const Vector2ul* gAccRanges,
-                              const GPUTransformI* const* gTransforms,
+                              const GPUTransformI** gTransforms,
+                              const AccTransformType* gAccTransformTypes,
+                              const TransformId* gAccTransformIds,
                               //
-                              const PGroup::PrimitiveData primData,
-                              AcceleratorData accData)
+                              const PGroup::PrimitiveData primData)
 {
     // Fetch Types from Template Classes
     using HitData = typename PGroup::HitData;       // HitRegister is defined by primitive
@@ -122,8 +129,8 @@ static void KCIntersectLinear(// O
     {
         const uint32_t id = gRayIds[globalId];
         const uint64_t accId = HitKey::FetchIdPortion(gAccelKeys[globalId]);
-        const TransformId transformId = accData.gTransformIds[accId];
-        const AccTransformType type = accData.gTransformTypes[accId];
+        const TransformId transformId = gAccTransformIds[accId];
+        const AccTransformType type = gAccTransformTypes[accId];
 
         // Load Ray to Register
         RayReg ray(gRays, id);
@@ -134,7 +141,8 @@ static void KCIntersectLinear(// O
         const uint32_t endCount = static_cast<uint32_t>(accRange[1] - accRange[0]);
 
         // Check transforms
-        const GPUTransformI* localTransform = gTransforms[0];
+        GPUTransformIdentity identityTransform;
+        const GPUTransformI* localTransform = &identityTransform;
         if(type == AccTransformType::CONSTANT_LOCAL_TRANSFORM)
         {
             const GPUTransformI& t = (*gTransforms[transformId]);
@@ -150,7 +158,6 @@ static void KCIntersectLinear(// O
         // Linear check over array
         for(uint32_t i = 0; i < endCount; i++)
         {
-            
             // Get Leaf Data and
             // Do acceptance check
             const LeafData leaf = gLeaf[i];
@@ -187,8 +194,7 @@ static void KCIntersectLinear(// O
 
 
 __global__ __launch_bounds__(StaticThreadPerBlock1D)
-static void KCIntersectBaseLinear(// Output
-                                  TransformId* gTransformIds,
+static void KCIntersectBaseLinear(// Output                                  
                                   HitKey* gHitKeys,
                                   // I-O
                                   uint32_t* gPrevLoc,
@@ -217,7 +223,6 @@ static void KCIntersectBaseLinear(// Output
         primStart = rayData.IsInvalidRay() ? leafCount : primStart;
         // Check next potential hit     
         HitKey nextAccKey = HitKey::InvalidKey;
-        TransformId transformId = 0;
         for(; primStart < leafCount; primStart++)
         {
             BaseLeaf l = gLeafs[primStart];
@@ -226,7 +231,6 @@ static void KCIntersectBaseLinear(// Output
                 //printf("Found Intersection %u, prev %u, Key %X\n", primStart,
                 //       gPrevLoc[id], l.accKey.value);
                 nextAccKey = l.accKey;
-                transformId = l.transformId;
                 break;
             }
         }
@@ -236,7 +240,6 @@ static void KCIntersectBaseLinear(// Output
         {            
             // Set AcceleratorId and TransformId for lower accelerator
             gHitKeys[globalId] = nextAccKey;
-            gTransformIds[id] = transformId;
             // Save State for next iteration
             gPrevLoc[id] = primStart + 1;
             

@@ -5,10 +5,6 @@
 
 #include "VisorGL/VisorGLEntry.h"
 
-#include "TracerCUDA/TracerCUDAEntry.h"
-#include "RayLib/TracerThread.h"
-
-#include "RayLib/TracerI.h"
 #include "RayLib/MayaCacheIO.h"
 #include "RayLib/Log.h"
 #include "RayLib/Camera.h"
