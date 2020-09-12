@@ -62,8 +62,7 @@ class GPUAccBVHGroup final
         DeviceMemory                        bvhListMemory;
         std::vector<DeviceMemory>           bvhMemories;
         const BVHNode<LeafData>**           dBVHLists;
-        // Per accelerator data
-        AccTransformType*                   dAccTransformTypes;
+        // Per accelerator data       
         TransformId*                        dAccTransformIds;
 
         // Recursive Construction

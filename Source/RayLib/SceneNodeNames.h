@@ -16,6 +16,7 @@ namespace NodeNames
     static constexpr const char* SURFACE_DATA_BASE = "SurfaceData";
     static constexpr const char* BASE_ACCELERATOR = "BaseAccelerator";
     static constexpr const char* BASE_OUTSIDE_MATERIAL = "BaseBoundaryMaterial";
+    static constexpr const char* BASE_MEDIUM = "BaseMedium";
     static constexpr const char* TRACER_LOGIC = "Tracer";
     static constexpr const char* ESTIMATOR = "Estimator";
     // Common Names
@@ -26,7 +27,6 @@ namespace NodeNames
     // Common Names
     static constexpr const char* POSITION = "position";
     static constexpr const char* DATA = "data";
-    static constexpr const char* MEDIUM = "medium";
     // Surface Related Names
     static constexpr const char* TRANSFORM = "transform";
     static constexpr const char* PRIMITIVE = "primitive";
@@ -39,14 +39,10 @@ namespace NodeNames
     static constexpr const char* CAMERA_FOV = "fov";
     static constexpr const char* CAMERA_GAZE = "gaze";
     static constexpr const char* CAMERA_UP = "up";
-    // Medium Related Names
-    static constexpr const char* MEDIUM_ABSORBTION = "absorption";
-    static constexpr const char* MEDIUM_SCATTERING = "scattering";
-    static constexpr const char* MEDIUM_IOR = "ior";
-    static constexpr const char* MEDIUM_Phase = "phase";
+    // Material & Light Common Names
+    static constexpr const char* MEDIUM = "medium";
     // Light Related Names
     // Light Type Values
-    //static constexpr const char* LIGHT_POWER = "radiance";
     static constexpr const char* LIGHT_POSITION = POSITION;
     static constexpr const char* LIGHT_DIRECTION = "direction";
     static constexpr const char* LIGHT_SPHR_CENTER = "center";
@@ -56,13 +52,13 @@ namespace NodeNames
     static constexpr const char* LIGHT_RECT_V0 = "v0";
     static constexpr const char* LIGHT_RECT_V1 = "v1";
     static constexpr const char* LIGHT_CONE_APERTURE = "aperture";
+    static constexpr const char* LIGHT_MATERIAL = MATERIAL;
+    static constexpr const char* LIGHT_PRIMITIVE = PRIMITIVE;
     // Texture Related Names
     static constexpr const char* TEXTURE_IS_CACHED = "isCached";
     static constexpr const char* TEXTURE_FILTER = "filter";
-    // Common
-    static constexpr const char* LIGHT_MATERIAL = "material";
-    static constexpr const char* LIGHT_PRIMITIVE = "primitive";
-    // Transform Related Names
-    static constexpr const char* TRANSFORM_FORM_MATRIX4 = "matrix4x4";
-    static constexpr const char* TRANSFORM_FORM_T_R_S = "translateRotateScale";
+    // Indentity Transform Type Name
+    static constexpr const char* TRANSFORM_IDENTITY = "identity";
+
+
 }

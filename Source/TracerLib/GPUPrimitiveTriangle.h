@@ -337,6 +337,9 @@ class GPUPrimitiveTriangle final
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
 
+        // Primitive Transform Info for accelerator
+        PrimTransformType                       TransformType() const;
+
         // Error check
         // Queries in order to check if this primitive group supports certain primitive data
         // Material may need that data

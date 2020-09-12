@@ -1,6 +1,6 @@
 #include "GPUMediumHomogenous.cuh"
 
-SceneError CPUMediumHomogenous::InitializeGroup(const NodeListing& transformNodes,
+SceneError CPUMediumHomogenous::InitializeGroup(const NodeListing& mediumNodes,
 												double time,
 												const std::string& scenePath)
 {

@@ -292,6 +292,11 @@ AABB3 GPUPrimitiveSphere::PrimitiveBatchAABB(uint32_t surfaceDataId) const
     return batchAABBs.at(surfaceDataId);
 }
 
+PrimTransformType GPUPrimitiveSphere::TransformType() const
+{
+    return PrimTransformType::CONSTANT_LOCAL_TRANSFORM;
+}
+
 bool GPUPrimitiveSphere::CanGenerateData(const std::string& s) const
 {
     return (s == PrimitiveDataTypeToString(PrimitiveDataType::POSITION) ||

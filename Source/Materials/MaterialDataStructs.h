@@ -22,6 +22,7 @@ struct RefractMatData
     
     // Global Medium Array pointer
     const GPUMediumI* const* dMediums;
+    uint32_t baseMediumIndex;
 };
 
 using EmissiveMatData = AlbedoMatData;

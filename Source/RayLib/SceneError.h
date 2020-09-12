@@ -29,6 +29,7 @@ struct SceneError : public ErrorI
             MEDIUM_ARRAY_NOT_FOUND,
             BASE_ACCELERATOR_NODE_NOT_FOUND,
             BASE_BOUND_MAT_NODE_NOT_FOUND,
+            BASE_MEDIUM_NODE_NOT_FOUND,
             // No Logic
             NO_LOGIC_FOR_ACCELERATOR,
             NO_LOGIC_FOR_MATERIAL,
@@ -70,13 +71,7 @@ struct SceneError : public ErrorI
             TOO_MANY_ACCELERATOR_GROUPS,
             TOO_MANY_ACCELERATOR_IN_GROUP,
             TOO_MANY_MATERIAL_GROUPS,
-            TOO_MANY_MATERIAL_IN_GROUP,
-            // Transform & Medium Related
-            AT_LEAST_ONE_MEDUIM_REQUIRED,
-            FIRST_MEDIUM_ID_MUST_BE_ZERO,
-            AT_LEAST_ONE_TRANSFORM_REQUIRED,
-            FIRST_TRANSFORM_ID_MUST_BE_ZERO,
-            FIST_TRANSFORM_IS_NOT_IDENTITIY,            
+            TOO_MANY_MATERIAL_IN_GROUP,       
             // Texture Related
             UNKNOWN_TEXTURE_TYPE,
             UNKNOWN_FILTER_TYPE,
@@ -157,6 +152,7 @@ inline SceneError::operator std::string() const
         "\"Mediums\" array not found",
         "\"BaseAccelerator\" node not found",
         "\"BaseBoundaryMaterial\" node not found",
+        "\"BaseMedium\" node not found",
         // No Logic
         "No logic found for that accelerator",
         "No logic found for that material",
@@ -199,12 +195,6 @@ inline SceneError::operator std::string() const
         "Accelerators in a group required for this scene exceeds limit",
         "Material groups required for this scene exceeds limit",
         "Materials in a batch required for this scene exceeds limit",
-        // Transform & Medium Related      
-        "At least one medium should be available as id 0 for default medium",
-        "First medium id must be zero (since it is considered as default medium)",
-        "At least one transform should be avaialable as id 0 for default transform",
-        "First transform id must be zero (since it is considered as identity transform)",
-        "First transform has to be identity matrix with an Id of Zero",
         // Texture Related
         "Texture type name is unknown",
         "Filter type name is unknown",

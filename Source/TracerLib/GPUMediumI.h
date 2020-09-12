@@ -8,8 +8,6 @@ class CudaSystem;
 
 using GPUMediumList = std::vector<const GPUMediumI*>;
 
-static constexpr uint32_t DEFAULT_MEDIUM_INDEX = 0;
-
 class GPUMediumI
 {
     public:
@@ -43,7 +41,7 @@ class CPUMediumGroupI
         virtual SceneError				InitializeGroup(const NodeListing& transformNodes,
                                                 double time,
                                                 const std::string& scenePath) = 0;
-        virtual SceneError				ChangeTime(const NodeListing& transformNodes, double time,
+        virtual SceneError				ChangeTime(const NodeListing& mediumNodes, double time,
                                                    const std::string& scenePath) = 0;
         virtual TracerError				ConstructMediums(const CudaSystem&) = 0;
         virtual uint32_t				MediumCount() const = 0;

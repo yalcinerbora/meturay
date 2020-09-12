@@ -47,6 +47,11 @@ AABB3 GPUPrimitiveEmpty::PrimitiveBatchAABB(uint32_t surfaceDataId) const
     return AABB3f(minInf, minInf);
 }
 
+PrimTransformType GPUPrimitiveEmpty::TransformType() const
+{
+    return PrimTransformType::CONSTANT_LOCAL_TRANSFORM;
+}
+
 bool GPUPrimitiveEmpty::CanGenerateData(const std::string& s) const
 {
     return false;

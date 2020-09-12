@@ -151,7 +151,7 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
 
     // Check if this accelerator utilizes constant transform
-    if(true)
+    if(primitiveGroup.TransformType() == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
     {
         // Rays are going to be transformed
         // utilize local space primitive AABB
@@ -203,21 +203,32 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                              static_cast<int>(totalAABBCount),
                                              AABBUnion(), NegativeAABB3f));
 
+        // Select transform for AABB generation
+        const GPUTransformI* transform = dTransforms[dAccTransformIds[index]];
+
         // First Generate AABBs from Primitives
         // TODO:
-        //gpu.GridStrideKC_X(0, 0,
-        //                   totalAABBCount,
-        //                   //
-        //                   KCGenAABBs<PGroup>,
-        //                   //
-        //                   dPrimAABBs,
-        //                   //
-        //                   dIdsIn,
-        //                   dPrimIds,
-        //                   //
-        //                   AABBGen<PGroup>(primData, *transform),
-        //                   static_cast<uint32_t>(totalAABBCount));
+        uint32_t aabbOffset = 0;
+        for(uint32_t i = 0; i < primitiveRanges[index].size(); i++)
+        {
+            Vector2ul primRange = primitiveRanges[index][i];
+            uint32_t aabbCount = static_cast<uint32_t>(primRange[1] - primRange[0]);
 
+            gpu.GridStrideKC_X(0, 0,
+                               aabbCount,
+                               //
+                               KCGenAABBs<PGroup>,
+                               //
+                               dInAABBs + aabbOffset,
+                               //
+                               primRange,
+                               //
+                               AABBGen<PGroup>(primData, *transform),
+                               aabbCount);
+
+            aabbOffset += aabbCount;
+        }
+        assert(aabbOffset = static_cast<uint32_t>(accRanges[index][1] - accRanges[index][0]));
 
         // Sync device to access gpu memory from host
         AABB3f hostAABB;
@@ -331,8 +342,8 @@ void GPUAccLinearGroup<PGroup>::Hit(const CudaGPU& gpu,
         dLeafList,
         dAccRanges,
         dTransforms,
-        dAccTransformTypes,
         dAccTransformIds,
+        primitiveGroup.TransformType(),
         //
         primData
     );

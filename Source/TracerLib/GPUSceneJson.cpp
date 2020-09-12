@@ -166,6 +166,23 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     IndexLookup mediumList;
 
     // Lambdas for cleaner code
+    auto AttachMedium = [&](uint32_t mediumId) -> SceneError
+    {
+
+        if(auto loc = mediumList.find(mediumId); loc != mediumList.end())
+        {
+            const NodeIndex nIndex = loc->second.first;
+            const InnerIndex iIndex = loc->second.second;
+            const auto& jsnNode = (*mediums)[nIndex];
+            std::string mediumType = jsnNode[NodeNames::TYPE];
+
+            auto& mediumSet = mediumGroupNodes.emplace(mediumType, NodeListing()).first->second;
+            auto& node = *mediumSet.emplace(std::make_unique<SceneNodeJson>(jsnNode, nIndex)).first;
+            node->AddIdIndexPair(mediumId, iIndex);
+        }
+        else return SceneError::MEDIUM_ID_NOT_FOUND;
+        return SceneError::OK;
+    };
     auto AttachWorkBatch = [&](const std::string& primType,
                                const std::string& matType,
                                const NodeId matId)
@@ -184,7 +201,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         workBatch->second.matIds.emplace(matId);
     };
     auto AttachMatAll = [&] (const std::string& primType,
-                             const NodeId matId)
+                             const NodeId matId) -> SceneError
     {
         if(auto loc = materialList.find(matId); loc != materialList.end())
         {
@@ -199,23 +216,16 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             node->AddIdIndexPair(matId, iIndex);
             AttachWorkBatch(primType, matName, matId);
 
+            
             // Check if this mat requires a medium
             // add to the medium list if available
-            if(!node->CheckNode(NodeNames::MEDIUM)) return SceneError::OK;            
+            if(!node->CheckNode(NodeNames::MEDIUM)) return SceneError::OK;
             std::vector<uint32_t> mediumIds = node->AccessUInt(NodeNames::MEDIUM);
             uint32_t mediumId = mediumIds[iIndex];
-            if(auto loc = mediumList.find(mediumId); loc != mediumList.end())
-            {
-                const NodeIndex nIndex = loc->second.first;
-                const InnerIndex iIndex = loc->second.second;
-                const auto& jsnNode = (*mediums)[nIndex];
-                std::string mediumType = jsnNode[NodeNames::TYPE];
 
-                auto& mediumSet = mediumGroupNodes.emplace(mediumType, NodeListing()).first->second;
-                auto& node = *mediumSet.emplace(std::make_unique<SceneNodeJson>(jsnNode, nIndex)).first;
-                node->AddIdIndexPair(mediumId, iIndex);
-            }
-            else return SceneError::MEDIUM_ID_NOT_FOUND;
+            SceneError e = SceneError::OK;
+            if((e = AttachMedium(mediumId)) != SceneError::OK)
+                return e;
 
         }
         else return SceneError::MATERIAL_ID_NOT_FOUND;
@@ -350,12 +360,21 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME, matId)) != SceneError::OK)
            return e;
     }
-    // Finally Boundary Material
+    // Boundary Material
     const nlohmann::json* baseMatNode = nullptr;
     if(!FindNode(baseMatNode, NodeNames::BASE_OUTSIDE_MATERIAL))
         return SceneError::BASE_BOUND_MAT_NODE_NOT_FOUND;
     if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME,
                          SceneIO::LoadNumber<uint32_t>(*baseMatNode, time))) != SceneError::OK)
+        return e;
+
+    // And finally base medium
+    // Find the base medium and tag its index
+    const nlohmann::json* baseMediumNode = nullptr;
+    if(!FindNode(baseMediumNode, NodeNames::BASE_MEDIUM))
+        return SceneError::BASE_MEDIUM_NODE_NOT_FOUND;
+    uint32_t baseMediumId = SceneIO::LoadNumber<uint32_t>(*baseMediumNode, time);    
+    if((e = AttachMedium(baseMediumId)) != SceneError::OK)
         return e;
     return e;
 }
@@ -541,114 +560,97 @@ SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, HitKey
 }
 
 SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& surfaceTransformIds,
-                                            const TransformNodeList& transformList)
+                                            uint32_t& identityTIndex,
+                                            const TransformNodeList& transformList,
+                                            double time)
 {
+    // Generate Transform Groups
+    SceneError e = SceneError::OK;
+    uint32_t indexCounter = 0;
+    for(const auto& transformGroup : transformList)
+    {
+        std::string transTypeName = transformGroup.first;
+        const auto& transNodes = transformGroup.second;
+        //
+        CPUTransformGPtr tg = CPUTransformGPtr(nullptr, nullptr);
+        if(e = logicGenerator.GenerateTransformGroup(tg, transTypeName))
+            return e;
+        if(e = tg->InitializeGroup(transNodes, time, parentPath))
+            return e;
+        transforms.emplace(transTypeName, std::move(tg));
 
-    //const nlohmann::json* transformJson = nullptr;
-    //if(!FindNode(transformJson, NodeNames::TRANSFORM_BASE))
-    //    return SceneError::TRANSFORMS_ARRAY_NOT_FOUND;
-    //if(transformJson->size() == 0)
-    //    return SceneError::AT_LEAST_ONE_TRANSFORM_REQUIRED;
+        if(transTypeName == NodeNames::TRANSFORM_IDENTITY)
+            identityTransformIndex = indexCounter;
+        
+        // Generate Global Id Index Lookup
+        for(const auto& node : transNodes)
+        {
+            for(const auto& indexIdPair : node->Ids())
+            {
+                uint32_t id = indexIdPair.second;
+                surfaceTransformIds.emplace(id, indexCounter);
+                indexCounter++;
+            }
+        }
+    }
 
-    //std::map<uint32_t, uint32_t> allTransformIdIndexPairs;
-    //uint32_t i = 0;
-    //for(const auto& tJsn : (*transformJson))
-    //{
-    //    uint32_t id = SceneIO::LoadNumber<uint32_t>(tJsn[NodeNames::ID]);
-    //    allTransformIdIndexPairs.emplace(id, i);
-    //    i++;
-    //}
-    //if(allTransformIdIndexPairs.cbegin()->first != 0 ||
-    //   allTransformIdIndexPairs.cbegin()->second != 0)
-    //    return SceneError::FIRST_TRANSFORM_ID_MUST_BE_ZERO;
+    // Check if identity transform is loaded
+    if(const auto& loc = transforms.find(NodeNames::TRANSFORM_IDENTITY);
+       loc == transforms.end())
+    {
+        NodeListing empty;
+        CPUTransformGPtr tg = CPUTransformGPtr(nullptr, nullptr);
+        if(e = logicGenerator.GenerateTransformGroup(tg, NodeNames::TRANSFORM_IDENTITY))
+            return e;
+        if(e = tg->InitializeGroup(empty, time, parentPath))
+            return e;
+        transforms.emplace(NodeNames::TRANSFORM_IDENTITY, std::move(tg));
 
-    //// Find out used transforms
-    //std::map<uint32_t, uint32_t> transformIdList;
-    //i = 0;
-    //for(const auto& pair : surfaceTransformIds)
-    //{
-    //    auto r = transformIdList.emplace(pair.second, i);
-    //    // If emplace successfull
-    //    if(r.second)
-    //    {
-    //        auto loc = allTransformIdIndexPairs.cend();
-    //        if((loc = allTransformIdIndexPairs.find(pair.second)) == allTransformIdIndexPairs.cend())
-    //            return SceneError::TRANSFORM_ID_NOT_FOUND;
-
-    //        const auto& transformJson = (*transformJson)[loc->second];
-
-    //        logicGenerator.GenerateTransformGroup()
-
-    //        CPUTransform t = SceneIO::LoadTransform();
-    //        transforms.emplace_back(t);
-    //        i++;
-    //    }
-    //}
-    //// Load and update transform id's of the surface
-    //for(auto& pair : surfaceTransformIds)
-    //    pair.second = transformIdList.at(pair.second);
-
-    //// Check if first transform is identitiy matrix
-    //const CPUTransform& t = transforms.at(0);
-    //if((t.type != TransformType::MATRIX) ||
-    //   (t.type == TransformType::MATRIX && t.matrix != Indentity4x4))
-    //    return SceneError::FIST_TRANSFORM_IS_NOT_IDENTITIY;
-
-    return SceneError::OK;
+        identityTransformIndex = indexCounter;
+    }
+    return e;
 }
 
 SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
-                                         const MediumNodeList& mediumNodes)
+                                         uint32_t& baseMIndex,
+                                         const MediumNodeList& mediumList,
+                                         double time)
 {
-    //const nlohmann::json* mediumJson = nullptr;
-    //if(!FindNode(mediumJson, NodeNames::MEDIUM_BASE))
-    //    return SceneError::MEDIUM_ARRAY_NOT_FOUND;
-    //if(mediumJson->size() == 0) 
-    //    return SceneError::AT_LEAST_ONE_MEDUIM_REQUIRED;
+    // Generate Transform Groups
+    SceneError e = SceneError::OK;
+    uint32_t indexCounter = 0;
+    for(const auto& mediumGroup : mediumList)
+    {
+        std::string mediumTypeName = mediumGroup.first;
+        const auto& mediumNodes = mediumGroup.second;
+        //
+        CPUMediumGPtr mg = CPUMediumGPtr(nullptr, nullptr);
+        if(e = logicGenerator.GenerateMediumGroup(mg, mediumTypeName))
+            return e;
+        if(e = mg->InitializeGroup(mediumNodes, time, parentPath))
+            return e;
+        mediums.emplace(mediumTypeName, std::move(mg));
 
-    //std::map<uint32_t, uint32_t> allMediumIdIndexPairs;
-    //uint32_t i = 0;
-    //for(const auto& mJsn : (*mediumJson))
-    //{
-    //    uint32_t id = SceneIO::LoadNumber<uint32_t>(mJsn[NodeNames::ID]);
-    //    allMediumIdIndexPairs.emplace(id, i);
-    //    i++;
-    //}
-    //if(allMediumIdIndexPairs.cbegin()->first != 0 ||
-    //   allMediumIdIndexPairs.cbegin()->second != 0)
-    //    return SceneError::FIRST_MEDIUM_ID_MUST_BE_ZERO;
+        // Generate Global Id Index Lookup
+        for(const auto& node : mediumNodes)
+        {
+            for(const auto& indexIdPair : node->Ids())
+            {
+                uint32_t id = indexIdPair.second;
+                mediumIdIndexPairs.emplace(id, indexCounter);
+                indexCounter++;
+            }
+        }
+    }
 
-    //// Check mediums and remove unsued mediums
-    //// Add default medium
-    //const auto& node = (*mediumJson)[0];
-    //mediums.emplace_back(SceneIO::LoadMedium(node));
-    //mediumIdIndexPairs.emplace(0, 0);
+    // Find the base medium and tag its index
+    const nlohmann::json* baseMediumNode = nullptr;
+    if(!FindNode(baseMediumNode, NodeNames::BASE_MEDIUM))
+        return SceneError::BASE_MEDIUM_NODE_NOT_FOUND;
+    uint32_t baseMediumId = SceneIO::LoadNumber<uint32_t>(*baseMediumNode, time);
+    baseMediumIndex = mediumIdIndexPairs.at(baseMediumId);
 
-    //i = 1;
-    //for(const auto& matGroup : matNodes)
-    //for(const auto& mat : matGroup.second)
-    //{
-    //    if(!mat->CheckNode(NodeNames::MEDIUM)) continue;
-
-    //    // Check medium of the node group
-    //    std::vector<uint32_t> mediumIds = mat->AccessUInt(NodeNames::MEDIUM);
-    //    for(uint32_t id : mediumIds)
-    //    {
-    //        auto r = mediumIdIndexPairs.emplace(id, i);
-    //        // If emplace successfull
-    //        if(r.second)
-    //        {
-    //            auto loc = allMediumIdIndexPairs.cend();
-    //            if((loc = allMediumIdIndexPairs.find(id)) == allMediumIdIndexPairs.cend())
-    //                return SceneError::MEDIUM_ID_NOT_FOUND;
-
-    //            CPUMedium m = SceneIO::LoadMedium((*mediumJson)[loc->second]);
-    //            mediums.emplace_back(m);
-    //            i++;
-    //        }
-    //    }
-    //}
-    return SceneError::OK;
+    return e;
 }
 
 SceneError GPUSceneJson::GenerateLightInfo(const MaterialKeyListing& materialKeys,
@@ -776,16 +778,16 @@ SceneError GPUSceneJson::LoadLogicRelated(double time)
 
     // Transforms
     std::map<uint32_t, uint32_t> transformIdIndexPairs;
-    if((e = GenerateTransforms(transformIdIndexPairs, transformGroupNodes)) != SceneError::OK)
+    if((e = GenerateTransforms(transformIdIndexPairs, identityTransformIndex, 
+                               transformGroupNodes,
+                               time)) != SceneError::OK)
         return e;
 
     // Partition Material Data to Multi GPU Material Data
-    int boundaryMaterialGPUId;
     MultiGPUMatNodes multiGPUMatNodes;
     MultiGPUWorkBatches multiGPUWorkBatches;
     if((e = partitioner.PartitionMaterials(multiGPUMatNodes,
                                            multiGPUWorkBatches,
-                                           boundaryMaterialGPUId,
                                            //
                                            matGroupNodes,
                                            workListings)))
@@ -793,7 +795,9 @@ SceneError GPUSceneJson::LoadLogicRelated(double time)
 
     // Mediums
     std::map<uint32_t, uint32_t> mediumIdIndexPairs;
-    if((e = GenerateMediums(mediumIdIndexPairs, mediumGroupNodes)) != SceneError::OK)
+    if((e = GenerateMediums(mediumIdIndexPairs, baseMediumIndex, 
+                            mediumGroupNodes,
+                            time)) != SceneError::OK)
         return e;
 
     // Using those constructs generate
@@ -940,6 +944,16 @@ const NamedList<CPUTransformGPtr>& GPUSceneJson::Transforms() const
 const NamedList<CPUMediumGPtr>& GPUSceneJson::Mediums() const
 {
     return mediums;
+}
+
+uint32_t GPUSceneJson::BaseMediumIndex() const
+{
+    return baseMediumIndex;
+}
+
+uint32_t GPUSceneJson::IdentityTransformIndex() const
+{
+    return identityTransformIndex;
 }
 
 const WorkBatchCreationInfo& GPUSceneJson::WorkBatchInfo() const

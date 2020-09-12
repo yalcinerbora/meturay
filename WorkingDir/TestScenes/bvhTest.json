@@ -16,26 +16,11 @@
 	"BaseAccelerator": {"type": "Linear"},
 	"BaseBoundaryMaterial": 0,
 
-	"Mediums": [
-	{
-		"id": 0,
-		"absorption": [0, 0, 0],
-		"scattering": [0, 0, 0],
-		"ior": 1,
-		"phase": 0
-	}],
+    "Mediums": [{ "id" : 0, "type" : "Vacuum"}],
 
 	"Lights": [],
 
-	"Transforms":[
-	{
-		"id": 0,
-		"type": "matrix4x4",
-		"data": [ 1, 0, 0, 0,
-			      0, 1, 0, 0,
-			      0, 0, 1, 0,
-			      0, 0, 0, 1]
-	}],
+	"Transforms":[{"id": 0, "type": "identity"}],
 
 	"Materials":[
 	{

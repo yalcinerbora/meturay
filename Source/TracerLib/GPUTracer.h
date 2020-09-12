@@ -50,6 +50,9 @@ class GPUTracer : public GPUTracerI
         const std::map<NameGPUPair, GPUMatGPtr>&    materialGroups;
         const NamedList<CPUTransformGPtr>&          transforms;
         const NamedList<CPUMediumGPtr>&             mediums;
+        // 
+        uint32_t                                    baseMedIndex;
+        uint32_t                                    identityTransformIndex;
         // GPU Memory
         DeviceMemory                                mediumAndTransformMemory;
     protected:

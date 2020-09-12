@@ -32,6 +32,17 @@ class SceneNodeI;
 class SurfaceLoaderGeneratorI;
 class CudaSystem;
 
+enum class PrimTransformType
+{
+    // Single transform is applied to the group of primitives
+    CONSTANT_LOCAL_TRANSFORM,
+    // Each primitive will different (maybe) multiple transforms
+    // this prevents the accelerator to utilize local space 
+    // accelerator structure and transforming ray to local space
+    // instead of opposite
+    PER_PRIMITIVE_TRANSFORM
+};
+
 class GPUPrimitiveGroupI
 {
     public: 
@@ -60,6 +71,9 @@ class GPUPrimitiveGroupI
         virtual AABB3               PrimitiveBatchAABB(uint32_t surfaceDataId) const = 0;
 
         virtual uint32_t            PrimitiveHitSize() const = 0;
+
+        // Primitive Transform Info for accelerator
+        virtual PrimTransformType   TransformType() const = 0;
 
         // Error check
         // Queries in order to check if this primitive group supports certain primitive data

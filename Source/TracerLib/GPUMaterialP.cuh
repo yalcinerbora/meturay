@@ -63,7 +63,8 @@ class GPUMaterialGroup
 
 
         virtual bool                    IsSpecularGroup() const override;
-        virtual void                    AttachGlobalMediumArray(const GPUMediumI* const*) override;
+        virtual void                    AttachGlobalMediumArray(const GPUMediumI* const*,
+                                                                uint32_t baseMediumIndex) override;
 };
 
 template <class D, class S, 
@@ -149,7 +150,8 @@ template <class D, class S,
     EmissionFunc<D, S> EmF,
     IsEmissiveFunc<D> IEF,
     AcquireUVList<D, S> AF>
-void GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::AttachGlobalMediumArray(const GPUMediumI* const*)
+void GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::AttachGlobalMediumArray(const GPUMediumI* const*,
+                                                                           uint32_t)
 {}
 
 struct MatDataAccessor

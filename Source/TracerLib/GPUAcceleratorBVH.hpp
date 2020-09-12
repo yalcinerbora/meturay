@@ -367,8 +367,12 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
     uint32_t innerIndex = idLookup.at(surface);
     const PrimitiveRangeList& primRangeList = primitiveRanges[innerIndex];
-    const AccTransformType tType = dAccTransformTypes[innerIndex];
+    const PrimTransformType tType = primitiveGroup.TransformType();
+
+    // Select Transform for construction
     const GPUTransformI* transform = dTransforms[dAccTransformIds[innerIndex]];
+    if(tType == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
+        transform = dTransforms[identityTransformIndex];
 
     size_t currentOffset = 0;
     PrimitiveRangeList indexOffsets;
@@ -383,9 +387,6 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         indexOffsets[i][1] = currentOffset;
     }
     size_t totalPrimCount = currentOffset;
-
-    if(tType == AccTransformType::CONSTANT_LOCAL_TRANSFORM)
-        transform = dTransforms[IDENTITY_TRANSFORM_INDEX];
 
     // Determine Partition / Reduce Memories
     size_t cubIfMemSize = 0;
@@ -587,6 +588,11 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     //Debug::DumpMemToFile("dIds", dIdsIn, totalPrimCount);
     //METU_LOG("-------");
 
+    // Before copying get roots AABB for base accelerator
+    AABB3f accAABB(dBVHLists[innerIndex][0].aabbMin,
+                   dBVHLists[innerIndex][0].aabbMax);
+    surfaceAABBs.emplace(surface, accAABB);
+
     CUDA_CHECK(cudaMemcpy(bvhMemories[innerIndex],
                           bvhNodes.data(),
                           sizeof(BVHNode<LeafData>) * bvhNodes.size(),
@@ -697,8 +703,8 @@ void GPUAccBVHGroup<PGroup>::Hit(const CudaGPU& gpu,
                                        uint32_t,
                                        const BVHNode<LeafData>**,
                                        const GPUTransformI**, 
-                                       const AccTransformType*,
                                        const TransformId*,
+                                       const PrimTransformType,
                                        PrimitiveData);
 
     BVHIntersectKernel kernel = (params.useStack) ? KCIntersectBVH<PGroup> : 
@@ -726,8 +732,8 @@ void GPUAccBVHGroup<PGroup>::Hit(const CudaGPU& gpu,
         // Constants
         dBVHLists,
         dTransforms,
-        dAccTransformTypes,
         dAccTransformIds,
+        primitiveGroup.TransformType(),
         //
         primData
     );

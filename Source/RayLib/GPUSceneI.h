@@ -33,6 +33,9 @@ class GPUSceneI
         virtual const std::vector<CPUCamera>&       CamerasCPU() const = 0;
         virtual const NamedList<CPUTransformGPtr>&  Transforms() const = 0;
         virtual const NamedList<CPUMediumGPtr>&     Mediums() const = 0;
+        //
+        virtual uint32_t                            BaseMediumIndex() const = 0;
+        virtual uint32_t                            IdentityTransformIndex() const = 0;
         // Generated Classes of Materials / Accelerators
         // Work Maps
         virtual const WorkBatchCreationInfo&        WorkBatchInfo() const = 0;

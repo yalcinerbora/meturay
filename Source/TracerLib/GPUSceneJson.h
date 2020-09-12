@@ -50,6 +50,8 @@ class GPUSceneJson : public GPUSceneI
         Vector2i                                maxMatIds;
         HitKey                                  baseBoundaryMatKey;
         uint32_t                                hitStructSize;
+        uint32_t                                identityTransformIndex;
+        uint32_t                                baseMediumIndex;
 
         // GPU Memory
         GPUBaseAccelPtr                         baseAccelerator;
@@ -113,10 +115,14 @@ class GPUSceneJson : public GPUSceneI
         SceneError      GenerateLightInfo(const MaterialKeyListing& materialKeys,
                                           double time);
         SceneError      GenerateTransforms(std::map<uint32_t, uint32_t>& surfaceTransformIds,
-                                           const TransformNodeList& transformList);
+                                           uint32_t& identityTransformIndex,
+                                           const TransformNodeList& transformList,
+                                           double time);
 
         SceneError      GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
-                                        const MediumNodeList& mediumNodes);
+                                        uint32_t& baseMediumIndex,
+                                        const MediumNodeList& mediumList,
+                                        double time);
 
         SceneError      FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,
                                              double time = 0.0f);
@@ -157,6 +163,9 @@ class GPUSceneJson : public GPUSceneI
         const NamedList<CPUTransformGPtr>&  Transforms() const override;
         const NamedList<CPUMediumGPtr>&     Mediums() const override;
                 
+        uint32_t                            BaseMediumIndex() const override;
+        uint32_t                            IdentityTransformIndex() const override;
+
         // Generated Classes of Materials / Accelerators
         // Work Maps
         const WorkBatchCreationInfo&        WorkBatchInfo() const override;

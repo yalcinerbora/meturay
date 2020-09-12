@@ -56,9 +56,7 @@ class GPUAccLinearGroup final
         DeviceMemory                        memory;
         Vector2ul*                          dAccRanges;
         LeafData*                           dLeafList;
-        AccTransformType*                   dAccTransformTypes;
         TransformId*                        dAccTransformIds;
-
 
     protected:
 

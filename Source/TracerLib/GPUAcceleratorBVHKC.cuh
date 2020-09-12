@@ -281,8 +281,8 @@ void KCIntersectBVH(// O
                     // Constants
                     const BVHNode<PGroup::LeafData>** gBVHList,
                     const GPUTransformI** gTransforms,
-                    const AccTransformType* gAccTransformTypes,
                     const TransformId* gAccTransformIds,
+                    const PrimTransformType transformType,
                     //
                     const PGroup::PrimitiveData primData)
 {
@@ -320,7 +320,6 @@ void KCIntersectBVH(// O
         const RayId id = gRayIds[globalId];
         const uint64_t accId = HitKey::FetchIdPortion(gAccelKeys[globalId]);
         const TransformId transformId = gAccTransformIds[accId];
-        const AccTransformType type = gAccTransformTypes[accId];
 
         // Load Ray/Hit to Register
         RayReg ray(gRays, id);
@@ -331,7 +330,7 @@ void KCIntersectBVH(// O
         // Check transforms
         GPUTransformIdentity identityTransform;
         const GPUTransformI* localTransform = &identityTransform;
-        if(type == AccTransformType::CONSTANT_LOCAL_TRANSFORM)
+        if(transformType == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
         {
             const GPUTransformI& t = (*gTransforms[transformId]);
             ray.ray = t.WorldToLocal(ray.ray);
@@ -409,8 +408,8 @@ void KCIntersectBVHStackless(// O
                              // Constants
                              const BVHNode<PGroup::LeafData>** gBVHList,
                              const GPUTransformI** gTransforms,
-                             const AccTransformType* gAccTransformTypes,
                              const TransformId* gAccTransformIds,
+                             const PrimTransformType transformType,
                              //
                              const PGroup::PrimitiveData primData)
 {
@@ -449,8 +448,7 @@ void KCIntersectBVHStackless(// O
         const RayId id = gRayIds[globalId];
         const uint64_t accId = HitKey::FetchIdPortion(gAccelKeys[globalId]);
         const TransformId transformId = gAccTransformIds[accId];
-        const AccTransformType type = gAccTransformTypes[accId];
-        
+
         // Load Ray/Hit to Register
         RayReg ray(gRays, id);
         Vector2f tMinMax(ray.tMin, ray.tMax);
@@ -461,7 +459,7 @@ void KCIntersectBVHStackless(// O
         // Check transforms
         GPUTransformIdentity identityTransform;
         const GPUTransformI* localTransform = &identityTransform;
-        if(type == AccTransformType::CONSTANT_LOCAL_TRANSFORM)
+        if(transformType == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
         {
             const GPUTransformI& t = (*gTransforms[transformId]);
             ray.ray = t.WorldToLocal(ray.ray);

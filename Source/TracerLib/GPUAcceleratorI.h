@@ -91,7 +91,8 @@ class GPUAcceleratorGroupI
 
         virtual const SurfaceAABBList&      AcceleratorAABBs() const = 0;
         virtual const GPUPrimitiveGroupI&   PrimitiveGroup() const = 0;
-        virtual void                        AttachGlobalTransformArray(const GPUTransformI** deviceTransforms) = 0;
+        virtual void                        AttachGlobalTransformArray(const GPUTransformI** deviceTransforms,
+                                                                       uint32_t identityTransformIndex) = 0;
 };
 
 class GPUBaseAcceleratorI

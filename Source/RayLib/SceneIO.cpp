@@ -73,40 +73,57 @@ inline SceneError LightTypeStringToEnum(LightType& type,
     return SceneError::UNKNOWN_LIGHT_TYPE;
 }
 
-CPUTransform SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
-{
-    CPUTransform t;
-    if(jsn.is_string())
-    {
-        return LoadFromAnim<CPUTransform>(jsn, time);
-    }
-    else if(jsn.is_object())
-    {
-        std::string type = LoadString(jsn[TYPE], time);
-        if(type == TRANSFORM_FORM_MATRIX4)
-        {
-            t.type = TransformType::MATRIX;
-            t.matrix = LoadMatrix<4, float>(jsn[DATA], time);
-            return t;
-        }
-        else if(type == TRANSFORM_FORM_T_R_S)
-        {
-            Vector3 translation = LoadVector<3, float>(jsn[DATA][0], time);
-            Vector3 rotation = LoadVector<3, float>(jsn[DATA][1], time);
-            Vector3 scale = LoadVector<3, float>(jsn[DATA][2], time);
-            rotation *= MathConstants::DegToRadCoef;
-
-            t.type = TransformType::TRS;
-            t.trs.rotation = rotation;
-            t.trs.scale = scale;
-            t.trs.translation = translation;
-            return t;
-        }
-        else throw SceneException(SceneError::UNKNOWN_TRANSFORM_TYPE);
-
-    }
-    else throw SceneException(SceneError::TYPE_MISMATCH);
-}
+//CPUTransform SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
+//{
+//    CPUTransform t;
+//    if(jsn.is_string())
+//    {
+//        return LoadFromAnim<CPUTransform>(jsn, time);
+//    }
+//    else if(jsn.is_object())
+//    {
+//        std::string type = LoadString(jsn[TYPE], time);
+//        if(type == TRANSFORM_FORM_MATRIX4)
+//        {
+//            t.type = TransformType::MATRIX;
+//            t.matrix = LoadMatrix<4, float>(jsn[DATA], time);
+//            return t;
+//        }
+//        else if(type == TRANSFORM_FORM_T_R_S)
+//        {
+//            Vector3 translation = LoadVector<3, float>(jsn[DATA][0], time);
+//            Vector3 rotation = LoadVector<3, float>(jsn[DATA][1], time);
+//            Vector3 scale = LoadVector<3, float>(jsn[DATA][2], time);
+//            rotation *= MathConstants::DegToRadCoef;
+//
+//            t.type = TransformType::TRS;
+//            t.trs.rotation = rotation;
+//            t.trs.scale = scale;
+//            t.trs.translation = translation;
+//            return t;
+//        }
+//        else throw SceneException(SceneError::UNKNOWN_TRANSFORM_TYPE);
+//
+//    }
+//    else throw SceneException(SceneError::TYPE_MISMATCH);
+//}
+//CPUMedium SceneIO::LoadMedium(const nlohmann::json& jsn, double time)
+//{
+//    if(jsn.is_string())
+//    {
+//        return LoadFromAnim<CPUMedium>(jsn, time);
+//    }
+//    else if(jsn.is_object())
+//    {
+//        CPUMedium med = {};
+//        med.sigmaA = LoadVector<3, float>(jsn[MEDIUM_ABSORBTION], time);
+//        med.sigmaS = LoadVector<3, float>(jsn[MEDIUM_SCATTERING], time);
+//        med.index = LoadNumber<float>(jsn[MEDIUM_IOR], time);
+//        
+//        return med;
+//    }
+//    else throw SceneException(SceneError::TYPE_MISMATCH);
+//}
 
 CPUCamera SceneIO::LoadCamera(const nlohmann::json& jsn, double time)
 {
@@ -130,24 +147,6 @@ CPUCamera SceneIO::LoadCamera(const nlohmann::json& jsn, double time)
         cam.fov *= MathConstants::DegToRadCoef;
 
         return cam;
-    }
-    else throw SceneException(SceneError::TYPE_MISMATCH);
-}
-
-CPUMedium SceneIO::LoadMedium(const nlohmann::json& jsn, double time)
-{
-    if(jsn.is_string())
-    {
-        return LoadFromAnim<CPUMedium>(jsn, time);
-    }
-    else if(jsn.is_object())
-    {
-        CPUMedium med = {};
-        med.sigmaA = LoadVector<3, float>(jsn[MEDIUM_ABSORBTION], time);
-        med.sigmaS = LoadVector<3, float>(jsn[MEDIUM_SCATTERING], time);
-        med.index = LoadNumber<float>(jsn[MEDIUM_IOR], time);
-        
-        return med;
     }
     else throw SceneException(SceneError::TYPE_MISMATCH);
 }

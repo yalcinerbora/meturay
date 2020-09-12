@@ -177,7 +177,7 @@ Vector3 RefractSample(// Sampled Output
     Vector3 albedo = matData.dAlbedo[matId];
     uint32_t mediumIndex = matData.mediumIndices[matId];
     float iIOR = matData.dMediums[mediumIndex]->IOR();
-    float dIOR = matData.dMediums[0]->IOR();
+    float dIOR = matData.dMediums[matData.baseMediumIndex]->IOR();
 
     const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
     const Vector3& position = pos;
@@ -245,7 +245,7 @@ Vector3 RefractSample(// Sampled Output
         pdf = 1.0f - f;
 
         // Change medium
-        uint32_t outMediumIndex = (entering) ? mediumIndex : 0;
+        uint32_t outMediumIndex = (entering) ? mediumIndex : matData.baseMediumIndex;
         outMedium = matData.dMediums[outMediumIndex];
 
         return albedo * (1.0f - f);

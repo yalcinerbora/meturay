@@ -76,7 +76,7 @@ inline const char* CPUMediumVacuum::Type() const
     return TypeName();
 }
 
-inline SceneError CPUMediumVacuum::InitializeGroup(const NodeListing& transformNodes,
+inline SceneError CPUMediumVacuum::InitializeGroup(const NodeListing& medNodes,
                                                    double time,
                                                    const std::string& scenePath)
 {

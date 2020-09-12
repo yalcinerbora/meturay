@@ -43,17 +43,23 @@ class CPUMediumHomogenous : public CPUMediumGroupI
     public:
         static const char* TypeName() { return "Homogenous"; }
 
-    private:
-        DeviceMemory                memory;
+        static constexpr const char*    ABSORBTION = "absorption";
+        static constexpr const char*    SCATTERING = "scattering";
+        static constexpr const char*    IOR = "ior";
+        static constexpr const char*    Phase = "phase";
 
-        GPUMediumList               gpuMediumList;
+
+    private:
+        DeviceMemory                    memory;
+
+        GPUMediumList                   gpuMediumList;
 
     protected:
     public:
         // Interface
 		const char*					Type() const override;
 		const GPUMediumList&        GPUMediums() const override;
-		SceneError					InitializeGroup(const NodeListing& transformNodes,
+		SceneError					InitializeGroup(const NodeListing& mediumNodes,
 													double time,
 													const std::string& scenePath) override;
 		SceneError					ChangeTime(const NodeListing& transformNodes, double time,

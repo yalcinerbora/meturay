@@ -27,6 +27,8 @@ GPUTracer::GPUTracer(const CudaSystem& system,
     , materialGroups(scene.MaterialGroups())
     , transforms(scene.Transforms())
     , mediums(scene.Mediums())
+    , baseMedIndex(scene.BaseMediumIndex())
+    , identityTransformIndex(scene.IdentityTransformIndex())
     , maxAccelBits(Vector2i(Utility::FindFirstSet32(scene.MaxAccelIds()[0]) + 1,
                             Utility::FindFirstSet32(scene.MaxAccelIds()[1]) + 1))
     , maxWorkBits(Vector2i(Utility::FindFirstSet32(scene.MaxMatIds()[0]) + 1,
@@ -102,11 +104,11 @@ TracerError GPUTracer::Initialize()
 
     // Attach Medium gpu pointer to Material Groups
     for(const auto& mg : materialGroups)
-        mg.second->AttachGlobalMediumArray(dMediums);
+        mg.second->AttachGlobalMediumArray(dMediums, baseMedIndex);
         
     // Attach Transform gpu pointer to the Accelerator Batches
     for(const auto& acc : accelBatches)
-        acc.second->AttachGlobalTransformArray(dTransforms);
+        acc.second->AttachGlobalTransformArray(dTransforms, identityTransformIndex);
 
     // Construct Accelerators
     TracerError e = TracerError::OK;

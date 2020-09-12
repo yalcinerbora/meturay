@@ -29,6 +29,25 @@ struct PRList
     const Vector2ul primRanges[SceneConstants::MaxPrimitivePerSurface];
 };
 
+template <class PGroup>
+__global__
+void KCGenAABBs(// O
+                AABB3f* gAABBs,
+                // Input
+                Vector2ul primRange,
+                //
+                AABBGen<PGroup> aabbFunc,
+                uint32_t primCount)
+{
+    // Grid Stride Loop
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < primCount; globalId += blockDim.x * gridDim.x)
+    {
+        PrimitiveId primId = primRange[0] + globalId;
+        gAABBs[globalId] = aabbFunc(primId);
+    }
+}
+
 // Fundamental Construction Kernel
 template <class PGroup>
 __global__ __launch_bounds__(StaticThreadPerBlock1D)
@@ -114,8 +133,8 @@ static void KCIntersectLinear(// O
                               const PGroup::LeafData* gLeafList,
                               const Vector2ul* gAccRanges,
                               const GPUTransformI** gTransforms,
-                              const AccTransformType* gAccTransformTypes,
                               const TransformId* gAccTransformIds,
+                              PrimTransformType transformType,
                               //
                               const PGroup::PrimitiveData primData)
 {
@@ -130,7 +149,6 @@ static void KCIntersectLinear(// O
         const uint32_t id = gRayIds[globalId];
         const uint64_t accId = HitKey::FetchIdPortion(gAccelKeys[globalId]);
         const TransformId transformId = gAccTransformIds[accId];
-        const AccTransformType type = gAccTransformTypes[accId];
 
         // Load Ray to Register
         RayReg ray(gRays, id);
@@ -143,7 +161,7 @@ static void KCIntersectLinear(// O
         // Check transforms
         GPUTransformIdentity identityTransform;
         const GPUTransformI* localTransform = &identityTransform;
-        if(type == AccTransformType::CONSTANT_LOCAL_TRANSFORM)
+        if(transformType == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
         {
             const GPUTransformI& t = (*gTransforms[transformId]);
             ray.ray = t.WorldToLocal(ray.ray);

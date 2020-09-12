@@ -15,14 +15,9 @@
 
 	"BaseAccelerator": {"type": "Linear"},
 	"BaseBoundaryMaterial": 1,
+	"BaseMedium" : 0,
 
-	"Mediums": [
-	{
-		"absorption": [0, 0, 0],
-		"scattering": [0, 0, 0],
-		"ior": 1,
-		"phase": 0
-	}],
+    "Mediums": [{ "id" : 0, "type" : "Vacuum"}],
 
 	"Lights": [],
 

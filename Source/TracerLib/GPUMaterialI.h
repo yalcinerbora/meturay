@@ -61,7 +61,8 @@ class GPUMaterialGroupI
         virtual bool                        IsEmissiveGroup() const = 0;
         virtual bool                        IsSpecularGroup() const = 0;
         // Post initialization
-        virtual void                        AttachGlobalMediumArray(const GPUMediumI* const*) = 0;
+        virtual void                        AttachGlobalMediumArray(const GPUMediumI* const*,
+                                                                    uint32_t baseMediumIndex) = 0;
 
         // Returns how many different sampling strategy this material has
         virtual uint8_t                     SampleStrategyCount() const = 0;

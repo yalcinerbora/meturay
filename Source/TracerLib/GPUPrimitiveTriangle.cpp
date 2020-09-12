@@ -533,6 +533,11 @@ AABB3 GPUPrimitiveTriangle::PrimitiveBatchAABB(uint32_t surfaceDataId) const
     return batchAABBs.at(surfaceDataId);
 }
 
+PrimTransformType GPUPrimitiveTriangle::TransformType() const
+{
+    return PrimTransformType::CONSTANT_LOCAL_TRANSFORM;
+}
+
 bool GPUPrimitiveTriangle::CanGenerateData(const std::string& s) const
 {
     return (s == PrimitiveDataTypeToString(PrimitiveDataType::POSITION) ||

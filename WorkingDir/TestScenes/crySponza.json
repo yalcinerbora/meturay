@@ -15,15 +15,9 @@
 
 	"BaseAccelerator": {"type": "BasicBVH"},
 	"BaseBoundaryMaterial": 0,
+	"BaseMedium" : 0,
 
-	"Mediums": [
-	{
-		"id": 0,
-		"absorption": [0, 0, 0],
-		"scattering": [0, 0, 0],
-		"ior": 1,
-		"phase": 0
-	}],
+    "Mediums": [{ "id" : 0, "type" : "Vacuum"}],
 
 	"Lights": [
 	// Single Directional Light Information
@@ -36,15 +30,7 @@
 	}
 	],
 
-	"Transforms":[
-	{
-		"id": 0,
-		"type": "matrix4x4",
-		"data": [ 1, 0, 0, 0,
-			      0, 1, 0, 0,
-			      0, 0, 1, 0,
-			      0, 0, 0, 1]
-	}],
+	"Transforms":[{"id": 0, "type": "identity"}],
 
 	"Materials":[
 	{

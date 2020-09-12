@@ -166,10 +166,10 @@ class RefractMat final
                               AcquireUVEmpty<RefractMatData, BasicSurface>>
 {
     public:
-        static const char*              TypeName() { return "Refract"; }
+        static const char*      TypeName() { return "Refract"; }
 
     private:
-        DeviceMemory                    memory;
+        DeviceMemory            memory;
 
     protected:
     public:
@@ -201,7 +201,8 @@ class RefractMat final
         bool                    IsSpecularGroup() const override { return true; }
 
         // Post initialization
-        void                    AttachGlobalMediumArray(const GPUMediumI* const*) override;
+        void                    AttachGlobalMediumArray(const GPUMediumI* const*,
+                                                        uint32_t baseMediumIndex) override;
 
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture

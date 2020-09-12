@@ -12,18 +12,6 @@
 #include "GPUPrimitiveI.h"
 #include "MangledNames.h"
 
-enum class AccTransformType
-{
-    CONSTANT_LOCAL_TRANSFORM,
-    PER_PRIMITIVE_TRANSFORM
-};
-
-struct TransformData
-{
-    const AccTransformType*     gTransformTypes;
-    const TransformId*          gTransformIds;
-};
-
 template <class PGroup>
 class GPUAcceleratorGroup 
     :  public GPUAcceleratorGroupI
@@ -34,6 +22,7 @@ class GPUAcceleratorGroup
         const PGroup&                   primitiveGroup;
         // Global Transform List
         const GPUTransformI**           dTransforms;
+        uint32_t                        identityTransformIndex;
 
     public:
         // Constructors & Destructor
@@ -42,7 +31,8 @@ class GPUAcceleratorGroup
 
 
         const GPUPrimitiveGroupI&       PrimitiveGroup() const override;
-        void                            AttachGlobalTransformArray(const GPUTransformI** deviceTranfsorms) override;
+        void                            AttachGlobalTransformArray(const GPUTransformI** deviceTranfsorms,
+                                                                   uint32_t identityTransformIndex) override;
 
 };
 
@@ -59,7 +49,9 @@ const GPUPrimitiveGroupI& GPUAcceleratorGroup<P>::PrimitiveGroup() const
 }
 
 template <class P>
-void GPUAcceleratorGroup<P>::AttachGlobalTransformArray(const GPUTransformI** deviceTranfsorms)
+void GPUAcceleratorGroup<P>::AttachGlobalTransformArray(const GPUTransformI** deviceTranfsorms,
+                                                        uint32_t identityTIndex)
 {
     dTransforms = deviceTranfsorms;
+    identityTransformIndex = identityTIndex;
 }

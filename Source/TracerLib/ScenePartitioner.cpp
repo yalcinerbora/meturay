@@ -9,17 +9,14 @@ SingleGPUScenePartitioner::SingleGPUScenePartitioner(const CudaSystem& cudaSyste
 
 // Algo assumes a single healthy GPU
 SceneError SingleGPUScenePartitioner::PartitionMaterials(MultiGPUMatNodes& multiGroups,
-                                                         MultiGPUWorkBatches& multiBatches,
-                                                         int& boundaryMaterialGPU,
+                                                         MultiGPUWorkBatches& multiBatches,                                                     
                                                          // Single Input
                                                          MaterialNodeList& materialGroups,
                                                          WorkBatchList& workBatches) const
 {
     // Just use the first gpu avail
     assert(!system.GPUList().empty());
-    const CudaGPU& gpu = *(system.GPUList().begin());
-
-    boundaryMaterialGPU = 0;
+    const CudaGPU& gpu = system.BestGPU();//*(system.GPUList().begin());
 
     for(auto& mg : materialGroups)
     {
