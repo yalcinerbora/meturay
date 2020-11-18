@@ -33,20 +33,21 @@ class GPUMediumI
 class CPUMediumGroupI
 {
     public:
-        virtual                         ~CPUMediumGroupI() = default;
+        virtual                                 ~CPUMediumGroupI() = default;
 
         // Interface
-        virtual const char*             Type() const = 0;
-        virtual const GPUMediumList&    GPUMediums() const = 0;
-        virtual SceneError				InitializeGroup(const NodeListing& transformNodes,
-                                                double time,
-                                                const std::string& scenePath) = 0;
-        virtual SceneError				ChangeTime(const NodeListing& mediumNodes, double time,
-                                                   const std::string& scenePath) = 0;
-        virtual TracerError				ConstructMediums(const CudaSystem&) = 0;
-        virtual uint32_t				MediumCount() const = 0;
+        virtual const char*                     Type() const = 0;
+        virtual const GPUMediumList&            GPUMediums() const = 0;
+        virtual SceneError				        InitializeGroup(const NodeListing& transformNodes,
+                                                        double time,
+                                                        const std::string& scenePath) = 0;
+        virtual SceneError				        ChangeTime(const NodeListing& mediumNodes, double time,
+                                                           const std::string& scenePath) = 0;
+        virtual TracerError				        ConstructMediums(const CudaSystem&) = 0;
+        virtual uint32_t				        MediumCount() const = 0;
+        virtual const std::vector<uint32_t>&    SceneIdList() const = 0;
 
-        virtual size_t					UsedGPUMemory() const = 0;
-        virtual size_t					UsedCPUMemory() const = 0;  
+        virtual size_t					        UsedGPUMemory() const = 0;
+        virtual size_t					        UsedCPUMemory() const = 0;  
 };
 

@@ -64,6 +64,12 @@
     <Filter Include="GPU Classes">
       <UniqueIdentifier>{5459f924-f003-490e-a258-9f1bb381669c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Default Mediums">
+      <UniqueIdentifier>{08ffe0fd-ed37-4782-85f3-6599b5cdd715}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Default Transforms">
+      <UniqueIdentifier>{a1e1a6ca-a78f-40a3-bdfd-d3dd40ac5aa4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp">
@@ -308,20 +314,20 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformI.h">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformSingle.cuh">
-      <Filter>GPU Classes</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMediumI.h">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMediumVacuum.cuh">
-      <Filter>GPU Classes</Filter>
+      <Filter>Default Mediums</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMediumHomogenous.cuh">
-      <Filter>GPU Classes</Filter>
+      <Filter>Default Mediums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformSingle.cuh">
+      <Filter>Default Transforms</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformIdentity.cuh">
-      <Filter>GPU Classes</Filter>
+      <Filter>Default Transforms</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -372,11 +378,11 @@
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUMaterialLight.cu">
       <Filter>Default Materials</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUTransformSingle.cu">
-      <Filter>GPU Classes</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUMediumHomogenous.cu">
-      <Filter>GPU Classes</Filter>
+      <Filter>Default Mediums</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUTransformSingle.cu">
+      <Filter>Default Transforms</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

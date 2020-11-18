@@ -98,7 +98,7 @@ class GPUSceneJson : public GPUSceneI
         SceneError      GeneratePrimitiveGroups(const PrimitiveNodeList&,
                                                 double time = 0.0);
         SceneError      GenerateMaterialGroups(const MultiGPUMatNodes&,
-                                               const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
+                                               const std::map<uint32_t, uint32_t>& mediumIdMappings,
                                                double time = 0.0);
         SceneError      GenerateWorkBatches(MaterialKeyListing&,
                                             const MultiGPUWorkBatches&,
@@ -108,18 +108,18 @@ class GPUSceneJson : public GPUSceneI
                                              const AcceleratorBatchList& acceleratorBatchList,
                                              const MaterialKeyListing& matHitKeyList,
                                              //
-                                             const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
+                                             const std::map<uint32_t, uint32_t>& transformIdMappings,
                                              double time = 0.0);
         SceneError      GenerateBaseAccelerator(const std::map<uint32_t, HitKey>& accHitKeyList,
                                                 double time = 0.0);
         SceneError      GenerateLightInfo(const MaterialKeyListing& materialKeys,
                                           double time);
-        SceneError      GenerateTransforms(std::map<uint32_t, uint32_t>& surfaceTransformIds,
+        SceneError      GenerateTransforms(std::map<uint32_t, uint32_t>& transformIdMappings,
                                            uint32_t& identityTransformIndex,
                                            const TransformNodeList& transformList,
                                            double time);
 
-        SceneError      GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
+        SceneError      GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdMappings,
                                         uint32_t& baseMediumIndex,
                                         const MediumNodeList& mediumList,
                                         double time);

@@ -380,7 +380,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
 }
 
 SceneError GPUSceneJson::GenerateMaterialGroups(const MultiGPUMatNodes& matGroupNodes,
-                                                const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
+                                                const std::map<uint32_t, uint32_t>& mediumIdMappings,
                                                 double time)
 {
     // Generate Partitioned Material Groups
@@ -394,7 +394,7 @@ SceneError GPUSceneJson::GenerateMaterialGroups(const MultiGPUMatNodes& matGroup
         GPUMatGPtr matGroup = GPUMatGPtr(nullptr, nullptr);
         if(e = logicGenerator.GenerateMaterialGroup(matGroup, *gpu, matTypeName))
             return e;
-        if(e = matGroup->InitializeGroup(matNodes, mediumIdIndexPairs, time, parentPath))
+        if(e = matGroup->InitializeGroup(matNodes, mediumIdMappings, time, parentPath))
             return e;
         materials.emplace(std::make_pair(matTypeName, gpu), std::move(matGroup));
     }
@@ -467,7 +467,7 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, HitKey>& accHit
                                               const AcceleratorBatchList& acceleratorBatchList,
                                               const MaterialKeyListing& matHitKeyList,
                                               //
-                                              const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
+                                              const std::map<uint32_t, uint32_t>& transformIdMappings,
                                               double time)
 {
     SceneError e = SceneError::OK;
@@ -495,7 +495,7 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, HitKey>& accHit
         std::transform(std::execution::par_unseq,
                        transformIdList.cbegin(), transformIdList.cend(),
                        transformIndexList.end(),
-        [&indexLookup = std::as_const(transformIdIndexPairs)](uint32_t id)
+        [&indexLookup = std::as_const(transformIdMappings)](uint32_t id)
         {
             // Convert id to index
             return indexLookup.at(id);
@@ -559,14 +559,13 @@ SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, HitKey
     return e;
 }
 
-SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& surfaceTransformIds,
+SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& transformIdMappings,
                                             uint32_t& identityTIndex,
                                             const TransformNodeList& transformList,
                                             double time)
 {
     // Generate Transform Groups
     SceneError e = SceneError::OK;
-    uint32_t indexCounter = 0;
     for(const auto& transformGroup : transformList)
     {
         std::string transTypeName = transformGroup.first;
@@ -578,23 +577,10 @@ SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& surfac
         if(e = tg->InitializeGroup(transNodes, time, parentPath))
             return e;
         transforms.emplace(transTypeName, std::move(tg));
-
-        if(transTypeName == NodeNames::TRANSFORM_IDENTITY)
-            identityTransformIndex = indexCounter;
-        
-        // Generate Global Id Index Lookup
-        for(const auto& node : transNodes)
-        {
-            for(const auto& indexIdPair : node->Ids())
-            {
-                uint32_t id = indexIdPair.second;
-                surfaceTransformIds.emplace(id, indexCounter);
-                indexCounter++;
-            }
-        }
     }
 
     // Check if identity transform is loaded
+    // and load if not loaded
     if(const auto& loc = transforms.find(NodeNames::TRANSFORM_IDENTITY);
        loc == transforms.end())
     {
@@ -605,20 +591,37 @@ SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& surfac
         if(e = tg->InitializeGroup(empty, time, parentPath))
             return e;
         transforms.emplace(NodeNames::TRANSFORM_IDENTITY, std::move(tg));
-
-        identityTransformIndex = indexCounter;
     }
+
+
+    // Iterate through all named transforms
+    // and generate linear array index list for GPU interfaces
+    uint32_t linearIndex = 0;
+    for(const auto& t : transforms)
+    {
+        const CPUTransformGroupI& transform = *t.second;
+        const std::string& typeName = t.first;
+        if(typeName == NodeNames::TRANSFORM_IDENTITY)
+            identityTransformIndex = linearIndex;
+
+        const auto& sceneIdList = transform.SceneIdList();        
+        for(const auto& sceneId : sceneIdList)
+        {
+            transformIdMappings.emplace(sceneId, linearIndex);
+            linearIndex++;
+        }
+    }
+
     return e;
 }
 
-SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
+SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdMappings,
                                          uint32_t& baseMIndex,
                                          const MediumNodeList& mediumList,
                                          double time)
 {
     // Generate Transform Groups
     SceneError e = SceneError::OK;
-    uint32_t indexCounter = 0;
     for(const auto& mediumGroup : mediumList)
     {
         std::string mediumTypeName = mediumGroup.first;
@@ -630,17 +633,6 @@ SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdI
         if(e = mg->InitializeGroup(mediumNodes, time, parentPath))
             return e;
         mediums.emplace(mediumTypeName, std::move(mg));
-
-        // Generate Global Id Index Lookup
-        for(const auto& node : mediumNodes)
-        {
-            for(const auto& indexIdPair : node->Ids())
-            {
-                uint32_t id = indexIdPair.second;
-                mediumIdIndexPairs.emplace(id, indexCounter);
-                indexCounter++;
-            }
-        }
     }
 
     // Find the base medium and tag its index
@@ -648,8 +640,31 @@ SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdI
     if(!FindNode(baseMediumNode, NodeNames::BASE_MEDIUM))
         return SceneError::BASE_MEDIUM_NODE_NOT_FOUND;
     uint32_t baseMediumId = SceneIO::LoadNumber<uint32_t>(*baseMediumNode, time);
-    baseMediumIndex = mediumIdIndexPairs.at(baseMediumId);
+    
+    // Iterate through all named mediums
+    // and generate linear array index list for GPU interfaces
+    bool baseMediumFound = false;
+    uint32_t linearIndex = 0;
+    for(const auto& m : mediums)
+    {
+        const CPUMediumGroupI& medium = *m.second;
+        const std::string& typeName = m.first;
 
+        const auto& sceneIdList = medium.SceneIdList();
+        for(const auto& sceneId : sceneIdList)
+        {
+            mediumIdMappings.emplace(sceneId, linearIndex);
+            if(baseMediumId == sceneId)
+            {
+                baseMediumIndex = linearIndex;
+                baseMediumFound = true;
+            }
+            linearIndex++;
+        }
+    }
+
+    if(!baseMediumFound) 
+        return SceneError::MEDIUM_ID_NOT_FOUND;
     return e;
 }
 
@@ -777,8 +792,8 @@ SceneError GPUSceneJson::LoadLogicRelated(double time)
         return e;
 
     // Transforms
-    std::map<uint32_t, uint32_t> transformIdIndexPairs;
-    if((e = GenerateTransforms(transformIdIndexPairs, identityTransformIndex, 
+    std::map<uint32_t, uint32_t> transformIdMappings;
+    if((e = GenerateTransforms(transformIdMappings, identityTransformIndex,
                                transformGroupNodes,
                                time)) != SceneError::OK)
         return e;
@@ -794,8 +809,8 @@ SceneError GPUSceneJson::LoadLogicRelated(double time)
         return e;
 
     // Mediums
-    std::map<uint32_t, uint32_t> mediumIdIndexPairs;
-    if((e = GenerateMediums(mediumIdIndexPairs, baseMediumIndex, 
+    std::map<uint32_t, uint32_t> mediumIdMappings;
+    if((e = GenerateMediums(mediumIdMappings, baseMediumIndex,
                             mediumGroupNodes,
                             time)) != SceneError::OK)
         return e;
@@ -805,7 +820,7 @@ SceneError GPUSceneJson::LoadLogicRelated(double time)
     if((e = GeneratePrimitiveGroups(primGroupNodes, time)) != SceneError::OK)
         return e;
     // Material Groups
-    if((e = GenerateMaterialGroups(multiGPUMatNodes, mediumIdIndexPairs, time)) != SceneError::OK)
+    if((e = GenerateMaterialGroups(multiGPUMatNodes, mediumIdMappings, time)) != SceneError::OK)
         return e;
     // Work Batches
     MaterialKeyListing allMaterialKeys;
@@ -819,7 +834,7 @@ SceneError GPUSceneJson::LoadLogicRelated(double time)
     // Accelerators
     std::map<uint32_t, HitKey> accHitKeyList;
     if((e = GenerateAccelerators(accHitKeyList, accelListings,
-                                 allMaterialKeys, transformIdIndexPairs, 
+                                 allMaterialKeys, transformIdMappings,
                                  time)) != SceneError::OK)
         return e;
     // Base Accelerator

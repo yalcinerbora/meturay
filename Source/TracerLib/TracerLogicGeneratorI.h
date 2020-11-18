@@ -39,6 +39,12 @@ class TracerLogicGeneratorI
         // Base Accelerator should be fetched after all the stuff is generated
         virtual SceneError      GenerateBaseAccelerator(GPUBaseAccelPtr&,
                                                         const std::string& accelType) = 0;
+        // Medium
+        virtual SceneError      GenerateMediumGroup(CPUMediumGPtr&,
+                                                    const std::string& mediumType) = 0;
+        // Transform
+        virtual SceneError      GenerateTransformGroup(CPUTransformGPtr&,
+                                                       const std::string& transformType) = 0;
         // Tracer Logic
         virtual SceneError      GenerateTracer(GPUTracerPtr&,
                                                const CudaSystem&,

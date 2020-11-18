@@ -41,21 +41,22 @@ class GPUTransformI
 class CPUTransformGroupI
 {
 	public:
-		virtual								~CPUTransformGroupI() = default;
+		virtual									~CPUTransformGroupI() = default;
 
 		// Interface
-		virtual const char*					Type() const = 0;
-		virtual const GPUTransformList&		GPUTransforms() const = 0;
-		virtual SceneError					InitializeGroup(const NodeListing& transformNodes,
-															double time,
-															const std::string& scenePath) = 0;
-		virtual SceneError					ChangeTime(const NodeListing& transformNodes, double time,
-													   const std::string& scenePath) = 0;
-		virtual TracerError					ConstructTransforms(const CudaSystem&) = 0;
-		virtual uint32_t					TransformCount() const = 0;
+		virtual const char*						Type() const = 0;
+		virtual const GPUTransformList&			GPUTransforms() const = 0;
+		virtual SceneError						InitializeGroup(const NodeListing& transformNodes,
+																double time,
+																const std::string& scenePath) = 0;
+		virtual SceneError						ChangeTime(const NodeListing& transformNodes, double time,
+														   const std::string& scenePath) = 0;
+		virtual TracerError						ConstructTransforms(const CudaSystem&) = 0;
+		virtual uint32_t						TransformCount() const = 0;
+		virtual const std::vector<uint32_t>&	SceneIdList() const = 0;
 
-		virtual size_t						UsedGPUMemory() const = 0;
-		virtual size_t						UsedCPUMemory() const = 0;
+		virtual size_t							UsedGPUMemory() const = 0;
+		virtual size_t							UsedCPUMemory() const = 0;
 };
 
 //// Converts to GPUTransform (Matrix4x4) also inverts the converted matrix
