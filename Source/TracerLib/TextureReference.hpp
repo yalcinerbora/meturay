@@ -54,7 +54,7 @@ T TexRef<D, T>::operator()(const TexFloatType_t<D>& index) const
 {
     if constexpr(D == 1)
     {
-        return ConvertTexReturnType<T>(tex1D<typename CudaType>(t, index));
+        return ConvertTexReturnType<T>(tex1D<CudaReturn_t<T>>(t, index));
     }
     else if constexpr(D == 2)
     {

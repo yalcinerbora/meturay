@@ -19,7 +19,7 @@
 
 	"Mediums": [
 	{
-		"id" : 0, 
+		"id" : 0,
 		"type" : "Vacuum"
 	},
 	{
@@ -150,5 +150,15 @@
 		"primitive": 6,
 		"material": 4
 	}
+	],
+
+	"LightSurfaces":[
+		{"primitive":4, "material":2, "transform": 0},
+		{"light":2, "material":2, "transform": 0}
+
 	]
+	"CameraSurfaces":[
+		{"camera":, "material": 2, "transform", 0 }
+	]
+
 }

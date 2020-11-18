@@ -73,7 +73,13 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         // Base Accelerator should be fetched after all the stuff is generated
         SceneError                  GenerateBaseAccelerator(GPUBaseAccelPtr&,
                                                             const std::string& accelType) override;
-                // Tracer Logic
+        // Medium
+        SceneError                  GenerateMediumGroup(CPUMediumGPtr&,
+                                                    const std::string& mediumType) override;
+        // Transform
+        SceneError                  GenerateTransformGroup(CPUTransformGPtr&,
+                                                       const std::string& transformType) override;
+        // Tracer Logic
         SceneError                  GenerateTracer(GPUTracerPtr&,
                                                    const CudaSystem&,
                                                    const GPUSceneI&,

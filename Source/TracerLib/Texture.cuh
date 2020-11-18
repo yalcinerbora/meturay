@@ -82,10 +82,10 @@ struct is_TextureType
 };
 
 template <class T>
-inline constexpr bool is_TextureNormalizedType_v = is_TextureNormalizedType<T>::value;
+constexpr bool is_TextureNormalizedType_v = is_TextureNormalizedType<T>::value;
 
 template <class T>
-inline constexpr bool is_TextureType_v = is_TextureType<T>::value;
+constexpr bool is_TextureType_v = is_TextureType<T>::value;
 
 static constexpr cudaTextureAddressMode DetermineAddressMode(EdgeResolveType);
 static constexpr cudaTextureFilterMode DetermineFilterMode(InterpolationType);

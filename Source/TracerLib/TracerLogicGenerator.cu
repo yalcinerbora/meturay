@@ -161,6 +161,19 @@ SceneError TracerLogicGenerator::GenerateBaseAccelerator(GPUBaseAccelPtr& baseAc
     return SceneError::OK;
 }
 
+        // Medium
+SceneError TracerLogicGenerator::GenerateMediumGroup(CPUMediumGPtr&,
+                                                     const std::string& mediumType)
+{
+    return SceneError::MEDIUM_ID_NOT_FOUND;
+}
+    // Transform
+SceneError TracerLogicGenerator::GenerateTransformGroup(CPUTransformGPtr&,
+                                                        const std::string& transformType)
+{
+    return SceneError::TRANSFORM_ID_NOT_FOUND;
+}
+
 SceneError TracerLogicGenerator::GenerateTracer(GPUTracerPtr& tracerPtr,
                                                 // Args
                                                 const CudaSystem& s,                                                
