@@ -57,8 +57,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         template <class T>
         DLLError                                    FindOrGeneratePool(SharedLibPtr<T>*&,
                                                                        std::map<PoolKey, SharedLibPtr<T>>&,
-                                                                       const PoolKey& libName);
-
+                                                                       const PoolKey& libName);        
     public:
         // Constructor & Destructor
                                     TracerLogicGenerator();
