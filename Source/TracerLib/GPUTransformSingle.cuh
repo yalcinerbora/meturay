@@ -48,36 +48,36 @@ class CPUTransformSingle : public CPUTransformGroupI
 		static constexpr const char*	SCALE			= "scale";
 
     private:
-		DeviceMemory				memory;		
-		const Matrix4x4*			dTransforms;
-		const Matrix4x4*			dInvTransforms;
-		const GPUTransformSingle*	dGPUTransforms;		
-		GPUTransformList			gpuTransformList;
+		DeviceMemory					memory;		
+		const Matrix4x4*				dTransforms;
+		const Matrix4x4*				dInvTransforms;
+		const GPUTransformSingle*		dGPUTransforms;		
+		GPUTransformList				gpuTransformList;
 
     protected:
     public:
-		// Constructors & Destructor
-									CPUTransformSingle() = default;
-		virtual						~CPUTransformSingle() = default;
+		// Constructors & Destructor	
+										CPUTransformSingle() = default;
+		virtual							~CPUTransformSingle() = default;
 
 		// Interface
-		const char*					Type() const override;
-		const GPUTransformList&		GPUTransforms() const override;
-		SceneError					InitializeGroup(const NodeListing& transformNodes,
-													double time,
-													const std::string& scenePath) override;
-		SceneError					ChangeTime(const NodeListing& transformNodes, double time,
-											   const std::string& scenePath) override;
-		TracerError					ConstructTransforms(const CudaSystem&) override;
-		uint32_t					TransformCount() const override;
+		const char*						Type() const override;
+		const GPUTransformList&			GPUTransforms() const override;
+		SceneError						InitializeGroup(const NodeListing& transformNodes,
+														double time,
+														const std::string& scenePath) override;
+		SceneError						ChangeTime(const NodeListing& transformNodes, double time,
+												   const std::string& scenePath) override;
+		TracerError						ConstructTransforms(const CudaSystem&) override;
+		uint32_t						TransformCount() const override;
 
-		size_t						UsedGPUMemory() const override;
-		size_t						UsedCPUMemory() const override;
+		size_t							UsedGPUMemory() const override;
+		size_t							UsedCPUMemory() const override;
 };
 
 __device__
-GPUTransformSingle::GPUTransformSingle(const Matrix4x4& transform,
-									   const Matrix4x4& invTransform)
+inline GPUTransformSingle::GPUTransformSingle(const Matrix4x4& transform,
+											  const Matrix4x4& invTransform)
 	: transform(transform)
 	, invTransform(invTransform)
 {}

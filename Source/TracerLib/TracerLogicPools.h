@@ -67,13 +67,42 @@ class TracerPoolI
         std::map<std::string, GPUTracerGen>   tracerGenerators;
 
     public:
-        static constexpr const char* DefaultConstructorName = "GenTracerPoolPool";
+        static constexpr const char* DefaultConstructorName = "GenTracerPool";
         static constexpr const char* DefaultDestructorName = "DelTracerPool";
 
         virtual                         ~TracerPoolI() = default;
 
         virtual std::map<std::string, GPUTracerGen> TracerGenerators(const std::string regex = ".*") const;
 };
+
+class TransformPoolI
+{
+    protected:
+        std::map<std::string, CPUTransformGen>   transformGenerators;
+
+    public:
+        static constexpr const char* DefaultConstructorName = "GenTransformPool";
+        static constexpr const char* DefaultDestructorName = "DelTransformPool";
+
+        virtual                         ~TransformPoolI() = default;
+
+        virtual std::map<std::string, CPUTransformGen> TransformGenerators(const std::string regex = ".*") const;
+};
+
+class MediumPoolI
+{
+    protected:
+        std::map<std::string, CPUMediumGen>   mediumGenerators;
+
+    public:
+        static constexpr const char* DefaultConstructorName = "GenMediumPool";
+        static constexpr const char* DefaultDestructorName = "DelMediumPool";
+
+        virtual                         ~MediumPoolI() = default;
+
+        virtual std::map<std::string, CPUMediumGen> MediumGenerators(const std::string regex = ".*") const;
+};
+
 
 inline std::map<std::string, GPUAccelGroupGen> AcceleratorLogicPoolI::AcceleratorGroupGenerators(const std::string regex) const
 {
@@ -131,6 +160,30 @@ inline std::map<std::string, GPUTracerGen> TracerPoolI::TracerGenerators(const s
     {
         if(std::regex_match(tracerGenerator.first, regExpression))
             result.emplace(tracerGenerator);
+    }
+    return result;
+}
+
+inline std::map<std::string, CPUTransformGen> TransformPoolI::TransformGenerators(const std::string regex) const
+{
+    std::map<std::string, CPUTransformGen> result;
+    std::regex regExpression(regex);
+    for(const auto& transformGenerator : transformGenerators)
+    {
+        if(std::regex_match(transformGenerator.first, regExpression))
+            result.emplace(transformGenerator);
+    }
+    return result;
+}
+
+inline std::map<std::string, CPUMediumGen> MediumPoolI::MediumGenerators(const std::string regex) const
+{
+    std::map<std::string, CPUMediumGen> result;
+    std::regex regExpression(regex);
+    for(const auto& mediumGenerator : mediumGenerators)
+    {
+        if(std::regex_match(mediumGenerator.first, regExpression))
+            result.emplace(mediumGenerator);
     }
     return result;
 }

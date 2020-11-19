@@ -37,6 +37,9 @@ using MaterialGroupGeneratorFunc = MaterialGroup* (*)(const CudaGPU& gpuId);
 using GPUBaseAccelGen = GeneratorNoArg<GPUBaseAcceleratorI>;
 using GPUPrimGroupGen = GeneratorNoArg<GPUPrimitiveGroupI>;
 
+using CPUTransformGen = GeneratorNoArg<CPUTransformGroupI>;
+using CPUMediumGen = GeneratorNoArg<CPUMediumGroupI>;
+
 class GPUTracerGen
 {
     private:

@@ -36,7 +36,8 @@ struct SceneError : public ErrorI
             NO_LOGIC_FOR_PRIMITIVE,
             NO_LOGIC_FOR_SURFACE_DATA,
             NO_LOGIC_FOR_TRACER,
-            NO_LOGIC_FOR_ESTIMATOR,
+            NO_LOGIC_FOR_TRANSFORM,
+            NO_LOGIC_FOR_MEDIUM,
             // Id Errors
             DUPLICATE_ACCELERATOR_ID,
             DUPLICATE_MATERIAL_ID,
@@ -159,7 +160,8 @@ inline SceneError::operator std::string() const
         "No logic found for that primitive",
         "No logic found for loading that surface data",
         "No logic found for that tracer",
-        "No logic found for that estimator",
+        "No logic found for that transform",
+        "No logic found for that medium",
         // Id Errors
         "Duplicate accelerator id",
         "Duplicate material id",

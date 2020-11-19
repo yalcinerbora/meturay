@@ -67,6 +67,7 @@ using InnerIndex = uint32_t;    // Inner Index is sub index of the node
 using TypeIdPair = std::pair<std::string, uint32_t>;
 using IdPair = std::pair<uint32_t, uint32_t>;
 using IdPairs = std::array<IdPair, SceneConstants::MaxPrimitivePerSurface>;
+using IdList = std::vector<uint32_t>;
 
 using IdPairsWithAnId = std::pair<uint32_t, IdPairs>;
 

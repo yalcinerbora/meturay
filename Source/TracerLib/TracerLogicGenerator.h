@@ -23,6 +23,8 @@ using MaterialPoolPtr = SharedLibPtr<MaterialLogicPoolI>;
 using PrimitivePoolPtr = SharedLibPtr<PrimitiveLogicPoolI>;
 using BaseAcceleratorPoolPtr = SharedLibPtr<BaseAcceleratorLogicPoolI>;
 using TracerPoolPtr = SharedLibPtr<TracerPoolI>;
+using TransformPoolPtr = SharedLibPtr<TransformPoolI>;
+using MediumPoolPtr = SharedLibPtr<MediumPoolI>;
 
 class TracerLogicGenerator : public TracerLogicGeneratorI
 {
@@ -35,7 +37,9 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         std::map<PoolKey, MaterialPoolPtr>          loadedMatPools;
         std::map<PoolKey, PrimitivePoolPtr>         loadedPrimPools;
         std::map<PoolKey, BaseAcceleratorPoolPtr>   loadedBaseAccPools;
-        std::map<PoolKey, TracerPoolPtr>            loadedTracerPools;        
+        std::map<PoolKey, TracerPoolPtr>            loadedTracerPools;
+        std::map<PoolKey, TransformPoolPtr>         loadedTransformPools;
+        std::map<PoolKey, MediumPoolPtr>            loadedMediumPools;
         // All Combined Type Generation Functions
         // Type Generation Functions
         std::map<std::string, GPUPrimGroupGen>      primGroupGenerators;
@@ -43,6 +47,9 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         std::map<std::string, GPUMatGroupGen>       matGroupGenerators;
         std::map<std::string, GPUBaseAccelGen>      baseAccelGenerators;
         std::map<std::string, GPUTracerGen>         tracerGenerators;
+        std::map<std::string, CPUTransformGen>      transGroupGenerators;
+        std::map<std::string, CPUMediumGen>         medGroupGenerators;
+
         // Helper Funcs
         DLLError                                    FindOrGenerateSharedLib(SharedLib*& libOut,
                                                                             const std::string& libName);

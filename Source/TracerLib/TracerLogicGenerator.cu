@@ -9,6 +9,12 @@
 #include "GPUAcceleratorLinear.cuh"
 #include "GPUAcceleratorBVH.cuh"
 
+#include "GPUMediumHomogenous.cuh"
+#include "GPUMediumVacuum.cuh"
+
+#include "GPUTransformSingle.cuh"
+#include "GPUTransformIdentity.cuh"
+
 #include "GPUMaterialLight.cuh"
 
 #include "GPUMaterialI.h"
@@ -111,6 +117,22 @@ TracerLogicGenerator::TracerLogicGenerator()
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LightMatCube>,
                                               DefaultDestruct<GPUMaterialGroupI>));
 
+    // Transform Types
+    transGroupGenerators.emplace(CPUTransformIdentity::TypeName(),
+                                 CPUTransformGen(DefaultConstruct<CPUTransformGroupI, CPUTransformIdentity>,
+                                                 DefaultDestruct<CPUTransformGroupI>));
+    transGroupGenerators.emplace(CPUTransformSingle::TypeName(),
+                                 CPUTransformGen(DefaultConstruct<CPUTransformGroupI, CPUTransformSingle>,
+                                                 DefaultDestruct<CPUTransformGroupI>));
+
+    // Medium Types
+    medGroupGenerators.emplace(CPUMediumVacuum::TypeName(),
+                               CPUMediumGen(DefaultConstruct<CPUMediumGroupI, CPUMediumVacuum>,
+                                            DefaultDestruct<CPUMediumGroupI>));
+    medGroupGenerators.emplace(CPUMediumHomogenous::TypeName(),
+                               CPUMediumGen(DefaultConstruct<CPUMediumGroupI, CPUMediumHomogenous>,
+                                            DefaultDestruct<CPUMediumGroupI>));
+
     // Default Types are loaded
     // Other Types are strongly tied to base tracer logic
     // i.e. Auxiliary Struct Etc.
@@ -162,16 +184,22 @@ SceneError TracerLogicGenerator::GenerateBaseAccelerator(GPUBaseAccelPtr& baseAc
 }
 
         // Medium
-SceneError TracerLogicGenerator::GenerateMediumGroup(CPUMediumGPtr&,
+SceneError TracerLogicGenerator::GenerateMediumGroup(CPUMediumGPtr& mg,
                                                      const std::string& mediumType)
 {
-    return SceneError::MEDIUM_ID_NOT_FOUND;
+    auto loc = medGroupGenerators.find(mediumType);
+    if(loc == medGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_MEDIUM;
+    mg = std::move(loc->second());
+    return SceneError::OK;
 }
     // Transform
-SceneError TracerLogicGenerator::GenerateTransformGroup(CPUTransformGPtr&,
+SceneError TracerLogicGenerator::GenerateTransformGroup(CPUTransformGPtr& tg,
                                                         const std::string& transformType)
 {
-    return SceneError::TRANSFORM_ID_NOT_FOUND;
+    auto loc = transGroupGenerators.find(transformType);
+    if(loc == transGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_TRANSFORM;
+    tg = std::move(loc->second());
+    return SceneError::OK;
 }
 
 SceneError TracerLogicGenerator::GenerateTracer(GPUTracerPtr& tracerPtr,
