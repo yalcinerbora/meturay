@@ -251,7 +251,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         return e;
     if((e = GenIdLookup(transformList, *transforms, TRANSFORM)) != SceneError::OK)
         return e;
-    if((e = GenIdLookup(transformList, *transforms, MEDIUM)) != SceneError::OK)
+    if((e = GenIdLookup(mediumList, *mediums, MEDIUM)) != SceneError::OK)
         return e;
 
     // Iterate over surfaces

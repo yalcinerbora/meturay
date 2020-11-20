@@ -8,23 +8,30 @@
 #include "DeviceMemory.h"
 #include "GPUMediumI.h"
 
+struct GPUHomogenousMediumData
+{
+};
+
 class GPUMediumHomogenous : public GPUMediumI
 {
-    private:
-        Vector3         sigmaA;
-        Vector3         sigmaS;
-        Vector3         sigmaT;
-        float           ior;
-        float           phase;
+    public:
+        struct Data
+        {
+            Vector3         sigmaA;
+            Vector3         sigmaS;
+            Vector3         sigmaT;
+            float           ior;
+            float           phase;
 
-        uint32_t        id;
+            uint32_t        id;
+        };
+
+    private:
+        const Data&         data;
 
     public:
         // Constructors & Destructor
-        __device__                  GPUMediumHomogenous(Vector3 sigmaA,
-                                                      Vector3 sigmaS,
-                                                      float ior, float phase,
-                                                      uint32_t id);
+        __device__                  GPUMediumHomogenous(const Data&);
         virtual                     ~GPUMediumHomogenous() = default;
 
        // Interface
@@ -46,13 +53,14 @@ class CPUMediumHomogenous : public CPUMediumGroupI
         static constexpr const char*    ABSORBTION = "absorption";
         static constexpr const char*    SCATTERING = "scattering";
         static constexpr const char*    IOR = "ior";
-        static constexpr const char*    Phase = "phase";
+        static constexpr const char*    PHASE = "phase";
 
 
     private:
-        DeviceMemory                    memory;
+        DeviceMemory                        memory;
+        const GPUMediumHomogenous::Data*    mediumData;
 
-        GPUMediumList                   gpuMediumList;
+        GPUMediumList                       gpuMediumList;
 
     protected:
     public:
@@ -73,34 +81,32 @@ class CPUMediumHomogenous : public CPUMediumGroupI
 
 
 __device__
-inline GPUMediumHomogenous::GPUMediumHomogenous(Vector3 sigmaA,
-                                                Vector3 sigmaS,
-                                                float ior, float phase,
-                                                uint32_t id)
-    : sigmaA(sigmaA)
-    , sigmaS(sigmaS)
-    , sigmaT(sigmaA + sigmaS)
-    , ior(ior)
-    , phase(phase)
-    , id(id)
+inline GPUMediumHomogenous::GPUMediumHomogenous(const GPUMediumHomogenous::Data& d)
+    : data(d)
+    //: sigmaA(sigmaA)
+    //, sigmaS(sigmaS)
+    //, sigmaT(sigmaA + sigmaS)
+    //, ior(ior)
+    //, phase(phase)
+    //, id(id)
 {}
 
-__device__ inline Vector3 GPUMediumHomogenous::SigmaA() const {return sigmaA;}
-__device__ inline Vector3 GPUMediumHomogenous::SigmaS() const { return sigmaS; }
-__device__ inline Vector3 GPUMediumHomogenous::SigmaT() const { return sigmaT; }
-__device__ inline float GPUMediumHomogenous::IOR() const { return ior; }
-__device__ inline float GPUMediumHomogenous::Phase() const { return phase; }
-__device__ inline uint32_t GPUMediumHomogenous::ID() const { return id; }
+__device__ inline Vector3 GPUMediumHomogenous::SigmaA() const {return data.sigmaA;}
+__device__ inline Vector3 GPUMediumHomogenous::SigmaS() const { return data.sigmaS; }
+__device__ inline Vector3 GPUMediumHomogenous::SigmaT() const { return data.sigmaT; }
+__device__ inline float GPUMediumHomogenous::IOR() const { return data.ior; }
+__device__ inline float GPUMediumHomogenous::Phase() const { return data.phase; }
+__device__ inline uint32_t GPUMediumHomogenous::ID() const { return data.id; }
 
 __device__
 inline Vector3 GPUMediumHomogenous::Transmittance(float distance) const
 {
     constexpr Vector3 Zero = Zero3;
-    if(sigmaT == Zero) return Vector3(1.0f);
+    if(data.sigmaT == Zero) return Vector3(1.0f);
     if(distance == INFINITY) return Zero;
 
     // Beer's Law
-    Vector3 result = (-sigmaT) * distance;
+    Vector3 result = (-data.sigmaT) * distance;
     result[0] = expf(result[0]);
     result[1] = expf(result[1]);
     result[2] = expf(result[2]);

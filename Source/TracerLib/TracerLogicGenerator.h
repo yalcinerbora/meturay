@@ -81,10 +81,10 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
                                                             const std::string& accelType) override;
         // Medium
         SceneError                  GenerateMediumGroup(CPUMediumGPtr&,
-                                                    const std::string& mediumType) override;
+                                                        const std::string& mediumType) override;
         // Transform
         SceneError                  GenerateTransformGroup(CPUTransformGPtr&,
-                                                       const std::string& transformType) override;
+                                                           const std::string& transformType) override;
         // Tracer Logic
         SceneError                  GenerateTracer(GPUTracerPtr&,
                                                    const CudaSystem&,

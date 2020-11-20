@@ -80,6 +80,13 @@ inline SceneError CPUMediumVacuum::InitializeGroup(const NodeListing& medNodes,
                                                    double time,
                                                    const std::string& scenePath)
 {
+    if(medNodes.size() != 1 &&
+       (*medNodes.begin())->IdCount() != 1)
+        return SceneError::MEDIUM_TYPE_INTERNAL_ERROR;
+
+    const NodeId id = (*medNodes.begin())->Ids().begin()->second;
+    idList.push_back(id);
+
     DeviceMemory::EnlargeBuffer(memory, sizeof(GPUMediumVacuum));
     dGPUMediums = static_cast<GPUMediumVacuum*>(memory);
     return SceneError::OK;

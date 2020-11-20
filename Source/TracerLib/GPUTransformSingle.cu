@@ -37,11 +37,9 @@ SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes
 											   const std::string& scenePath)
 {
     std::vector<Matrix4x4> transforms;
-
     for(const auto& node : transformNodes)
     {
         std::string layoutName = node->CommonString(LAYOUT);
-
 
         std::vector<Matrix4x4> nodeTransforms;
         if(layoutName == LAYOUT_MATRIX)
@@ -72,6 +70,12 @@ SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes
                 m = TransformGen::Scale(s[0], s[1], s[2]) * m;
                 m = TransformGen::Translate(t);                
                 nodeTransforms.push_back(std::move(m));                
+            }
+
+            const auto& nodeIdList = node->Ids();
+            for(const auto& id : nodeIdList)
+            {
+                idList.push_back(id.second);
             }
 
         }

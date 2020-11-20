@@ -58,7 +58,7 @@ namespace NodeNames
     static constexpr const char* TEXTURE_IS_CACHED = "isCached";
     static constexpr const char* TEXTURE_FILTER = "filter";
     // Indentity Transform Type Name
-    static constexpr const char* TRANSFORM_IDENTITY = "identity";
+    static constexpr const char* TRANSFORM_IDENTITY = "Identity";
 
 
 }

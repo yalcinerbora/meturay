@@ -36,7 +36,7 @@ class GPUTransformSingle : public GPUTransformI
 class CPUTransformSingle : public CPUTransformGroupI
 {
 	public:	
-		static const char*				TypeName() { return "SingleTransform"; }
+		static const char*				TypeName() { return "Single"; }
 
 		static constexpr const char*	LAYOUT_MATRIX	= "matrix4x4";
 		static constexpr const char*	LAYOUT_TRS		= "trs";

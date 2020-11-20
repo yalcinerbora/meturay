@@ -3,6 +3,7 @@
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
 #include "AuxiliaryDataKernels.cuh"
+#include "RayLib/SceneNodeNames.h"
 
 class GPUTransformIdentity : public GPUTransformI
 {
@@ -32,7 +33,7 @@ class GPUTransformIdentity : public GPUTransformI
 class CPUTransformIdentity : public CPUTransformGroupI
 {
 	public:	
-		static const char*			TypeName() { return "Indentity"; }
+		static const char*			TypeName() { return NodeNames::TRANSFORM_IDENTITY; }
     private:
 		DeviceMemory				memory;		
 		const GPUTransformIdentity*	dGPUTransforms;		
@@ -91,6 +92,13 @@ inline SceneError CPUTransformIdentity::InitializeGroup(const NodeListing& trans
 														double time,
 														const std::string& scenePath)
 {
+	if(transformNodes.size() != 1 &&
+	   (*transformNodes.begin())->IdCount() != 1)
+		return SceneError::TRANSFORM_TYPE_INTERNAL_ERROR;
+
+	const NodeId id = (*transformNodes.begin())->Ids().begin()->second;
+	idList.push_back(id);
+
 	DeviceMemory::EnlargeBuffer(memory, sizeof(GPUTransformIdentity));
 	dGPUTransforms = static_cast<GPUTransformIdentity*>(memory);
 	return SceneError::OK;
