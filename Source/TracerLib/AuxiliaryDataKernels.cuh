@@ -4,15 +4,16 @@
 #include "RayStructs.h"
 #include "Random.cuh"
 
-template <class T>
+template <class T, class... Args>
 __global__ void KCConstructGPUClass(T* gLocation,
-                                    uint32_t mediumCount)
+                                    uint32_t classCount,
+                                    Args... args)
 {
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-        globalId < mediumCount;
+        globalId < classCount;
         globalId += blockDim.x * gridDim.x)
     {
-        new (gLocation) T();
+        new (gLocation) T(args...);
     }
 }
 

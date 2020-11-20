@@ -49,9 +49,9 @@ class CPUTransformSingle : public CPUTransformGroupI
 
     private:
 		DeviceMemory					memory;		
-		const Matrix4x4*				dTransforms;
-		const Matrix4x4*				dInvTransforms;
-		const GPUTransformSingle*		dGPUTransforms;		
+		const Matrix4x4*				dTransformMatrices;
+		const Matrix4x4*				dInvTransformMatrices;
+		const GPUTransformSingle*		dGPUTransforms;
 		GPUTransformList				gpuTransformList;
 
     protected:

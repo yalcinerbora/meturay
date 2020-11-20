@@ -24,7 +24,7 @@ class GPUMediumI
         __device__
         virtual float       Phase() const = 0;
         __device__
-        virtual uint32_t    ID() const = 0;
+        virtual uint32_t    GlobalIndex() const = 0;
 
         __device__ 
         virtual Vector3     Transmittance(float distance) const = 0;
@@ -48,7 +48,8 @@ class CPUMediumGroupI
                                                 const std::string& scenePath) = 0;
         virtual SceneError				ChangeTime(const NodeListing& mediumNodes, double time,
                                                    const std::string& scenePath) = 0;
-        virtual TracerError				ConstructMediums(const CudaSystem&) = 0;
+        virtual TracerError				ConstructMediums(const CudaSystem&,
+                                                         uint32_t indexStartOffset) = 0;
         virtual uint32_t				MediumCount() const = 0;        
 
         virtual size_t					UsedGPUMemory() const = 0;

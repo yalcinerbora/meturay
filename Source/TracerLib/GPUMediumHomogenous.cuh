@@ -22,16 +22,15 @@ class GPUMediumHomogenous : public GPUMediumI
             Vector3         sigmaT;
             float           ior;
             float           phase;
-
-            uint32_t        id;
         };
 
     private:
         const Data&         data;
+        uint32_t            index;
 
     public:
         // Constructors & Destructor
-        __device__                  GPUMediumHomogenous(const Data&);
+        __device__                  GPUMediumHomogenous(const Data&, uint32_t index);
         virtual                     ~GPUMediumHomogenous() = default;
 
        // Interface
@@ -40,7 +39,7 @@ class GPUMediumHomogenous : public GPUMediumI
        __device__ Vector3           SigmaT() const override;
        __device__ float             IOR() const override;
        __device__ float             Phase() const override;
-       __device__ uint32_t          ID() const override;
+       __device__ uint32_t          GlobalIndex() const override;
 
        __device__ Vector3           Transmittance(float distance) const override;
 };
@@ -58,8 +57,8 @@ class CPUMediumHomogenous : public CPUMediumGroupI
 
     private:
         DeviceMemory                        memory;
-        const GPUMediumHomogenous::Data*    mediumData;
-
+        const GPUMediumHomogenous::Data*    dMediumData;
+        const GPUMediumHomogenous*          dGPUMediums;
         GPUMediumList                       gpuMediumList;
 
     protected:
@@ -72,7 +71,8 @@ class CPUMediumHomogenous : public CPUMediumGroupI
 													const std::string& scenePath) override;
 		SceneError					ChangeTime(const NodeListing& transformNodes, double time,
 											   const std::string& scenePath) override;
-		TracerError					ConstructMediums(const CudaSystem&) override;
+		TracerError					ConstructMediums(const CudaSystem&,
+                                                     uint32_t indexStartOffset) override;
 		uint32_t					MediumCount() const override;
 
 		size_t						UsedGPUMemory() const override;
@@ -81,8 +81,10 @@ class CPUMediumHomogenous : public CPUMediumGroupI
 
 
 __device__
-inline GPUMediumHomogenous::GPUMediumHomogenous(const GPUMediumHomogenous::Data& d)
+inline GPUMediumHomogenous::GPUMediumHomogenous(const GPUMediumHomogenous::Data& d,
+                                                uint32_t index)
     : data(d)
+    , index(index)
     //: sigmaA(sigmaA)
     //, sigmaS(sigmaS)
     //, sigmaT(sigmaA + sigmaS)
@@ -96,7 +98,7 @@ __device__ inline Vector3 GPUMediumHomogenous::SigmaS() const { return data.sigm
 __device__ inline Vector3 GPUMediumHomogenous::SigmaT() const { return data.sigmaT; }
 __device__ inline float GPUMediumHomogenous::IOR() const { return data.ior; }
 __device__ inline float GPUMediumHomogenous::Phase() const { return data.phase; }
-__device__ inline uint32_t GPUMediumHomogenous::ID() const { return data.id; }
+__device__ inline uint32_t GPUMediumHomogenous::GlobalIndex() const { return index; }
 
 __device__
 inline Vector3 GPUMediumHomogenous::Transmittance(float distance) const

@@ -103,16 +103,16 @@ SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes
 
     size_t offset = 0;
     std::uint8_t* dBasePtr = static_cast<uint8_t*>(memory);
-    dTransforms = reinterpret_cast<Matrix4x4*>(dBasePtr + offset);
+    dTransformMatrices = reinterpret_cast<Matrix4x4*>(dBasePtr + offset);
     offset += sizeOfMatrices;
-    dInvTransforms = reinterpret_cast<Matrix4x4*>(dBasePtr + offset);
+    dInvTransformMatrices = reinterpret_cast<Matrix4x4*>(dBasePtr + offset);
     offset += sizeOfMatrices;
     dGPUTransforms = reinterpret_cast<GPUTransformSingle*>(dBasePtr + offset);
     offset += sizeOfTransformClasses;    
     assert(requiredSize == offset);
 
     // Copy
-    CUDA_CHECK(cudaMemcpy(const_cast<Matrix4x4*>(dTransforms), 
+    CUDA_CHECK(cudaMemcpy(const_cast<Matrix4x4*>(dTransformMatrices), 
                           transforms.data(),
                           transformCount * sizeof(Matrix4x4),
                           cudaMemcpyHostToDevice));
@@ -137,8 +137,8 @@ TracerError CPUTransformSingle::ConstructTransforms(const CudaSystem& system)
                             KCConstructGPUTransform,
                             //
                             const_cast<GPUTransformSingle*>(dGPUTransforms),
-                            const_cast<Matrix4x4*>(dInvTransforms),
-                            dTransforms,
+                            const_cast<Matrix4x4*>(dInvTransformMatrices),
+                            dTransformMatrices,
                             TransformCount());
 
     gpu.WaitAllStreams();

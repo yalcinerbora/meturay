@@ -72,7 +72,7 @@ inline void BasicWork(// Output
     const RayF& r = ray.ray;
     HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
 
-    const GPUMediumVacuum m;
+    const GPUMediumVacuum m(0);
     const GPUMediumI* outM;
     RayF outRay; float pdf;
     Vector3 radiance = MGroup::Sample(// Outputs
@@ -277,7 +277,7 @@ inline void PathWork(// Output
     auxOut.radianceFactor = (pdfPath == 0.0f) ? Zero3 : (auxOut.radianceFactor / pdfPath);
 
     // Change current medium of the ray
-    auxOut.mediumIndex = static_cast<uint16_t>(outM->ID());
+    auxOut.mediumIndex = static_cast<uint16_t>(outM->GlobalIndex());
 
     // Check Russian Roulette
     float avgThroughput = auxOut.radianceFactor.Dot(Vector3f(0.333f));

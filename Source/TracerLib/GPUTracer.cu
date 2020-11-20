@@ -62,17 +62,21 @@ TracerError GPUTracer::Initialize()
     std::vector<const GPUTransformI*> dGPUTransforms;
     std::vector<const GPUMediumI*> dGPUMediums;
 
+    uint32_t indexOffset = 0;
     for(auto& medium : mediums)
     {
-        const CPUMediumGroupI& m = *(medium.second);
+        CPUMediumGroupI& m = *(medium.second);
+        m.ConstructMediums(cudaSystem, indexOffset);
         const auto& dMList = m.GPUMediums();
         dGPUMediums.insert(dGPUMediums.end(), dMList.begin(), dMList.end());
+        indexOffset += m.SceneIdList().size();
     }
     mediumCount = static_cast<uint32_t>(dGPUMediums.size());
 
     for(auto& transform : transforms)
     {
-        const CPUTransformGroupI& t = *(transform.second);
+        CPUTransformGroupI& t = *(transform.second);
+        t.ConstructTransforms(cudaSystem);
         const auto& dTList = t.GPUTransforms();
         dGPUTransforms.insert(dGPUTransforms.end(), dTList.begin(), dTList.end());
     }

@@ -24,6 +24,8 @@
 	},
 	{
 		"id": 1,
+		"type" : "Homogenous",
+		
 		"absorption": [0.2075, 0.0825, 0.1615],
 		"scattering": [0, 0, 0],
 		"ior": 1.53,
@@ -53,7 +55,7 @@
 	}
 	],
 
-	"Transforms":[{"id": 0, "type": "Identity"}],
+	"Transforms":[{"id": 0, "type": "identity"}],
 
 	"Materials":[
 	{
@@ -136,7 +138,7 @@
 		// Bunny
 		"transform": 0,
 		"accelerator": 0,
-		"material": 2,
+		"material": 6,
         "primitive": 1
 	}
 	]
