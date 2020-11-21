@@ -44,6 +44,7 @@ GPUTracer::GPUTracer(const CudaSystem& system,
 TracerError GPUTracer::Initialize()
 {
     // Init RNGs for each block
+    TracerError e = TracerError::OK;
     rngMemory = RNGMemory(params.seed, cudaSystem);
 
     //// Convert Transforms (Invert them)
@@ -66,17 +67,19 @@ TracerError GPUTracer::Initialize()
     for(auto& medium : mediums)
     {
         CPUMediumGroupI& m = *(medium.second);
-        m.ConstructMediums(cudaSystem, indexOffset);
+        if((e = m.ConstructMediums(cudaSystem, indexOffset)) != TracerError::OK)
+            return e;
         const auto& dMList = m.GPUMediums();
         dGPUMediums.insert(dGPUMediums.end(), dMList.begin(), dMList.end());
-        indexOffset += m.SceneIdList().size();
+        indexOffset += m.MediumCount();
     }
     mediumCount = static_cast<uint32_t>(dGPUMediums.size());
 
     for(auto& transform : transforms)
     {
         CPUTransformGroupI& t = *(transform.second);
-        t.ConstructTransforms(cudaSystem);
+        if((e = t.ConstructTransforms(cudaSystem)) != TracerError::OK)
+            return e;
         const auto& dTList = t.GPUTransforms();
         dGPUTransforms.insert(dGPUTransforms.end(), dTList.begin(), dTList.end());
     }
@@ -115,7 +118,6 @@ TracerError GPUTracer::Initialize()
         acc.second->AttachGlobalTransformArray(dTransforms, identityTransformIndex);
 
     // Construct Accelerators
-    TracerError e = TracerError::OK;
     SurfaceAABBList allSurfaceAABBs;
     for(const auto& accBatch : accelBatches)
     {

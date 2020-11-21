@@ -381,9 +381,11 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     // And finally force load Identity transform
     if((transformGroupNodes.find(NodeNames::TRANSFORM_IDENTITY)) == transformGroupNodes.cend())
     {
-        transformGroupNodes.emplace(NodeNames::TRANSFORM_IDENTITY, NodeListing());
         // Assign an Unused ID
-        node->AddIdIndexPair(std::numeric_limits<uint32_t>::max(), 0);
+        constexpr uint32_t MAX_UINT = std::numeric_limits<uint32_t>::max();
+        auto& transformSet = transformGroupNodes.emplace(NodeNames::TRANSFORM_IDENTITY, NodeListing()).first->second;
+        auto& node = *transformSet.emplace(std::make_unique<SceneNodeJson>(nullptr, MAX_UINT)).first;        
+        node->AddIdIndexPair(MAX_UINT, 0);
     }
     return e;
 }

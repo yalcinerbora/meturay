@@ -60,6 +60,7 @@ class CPUMediumHomogenous : public CPUMediumGroupI
         const GPUMediumHomogenous::Data*    dMediumData;
         const GPUMediumHomogenous*          dGPUMediums;
         GPUMediumList                       gpuMediumList;
+        uint32_t                            mediumCount;
 
     protected:
     public:
@@ -134,7 +135,7 @@ inline const GPUMediumList& CPUMediumHomogenous::GPUMediums() const
 
 inline uint32_t CPUMediumHomogenous::MediumCount() const
 {
-    return static_cast<uint32_t>(gpuMediumList.size());
+    return mediumCount;
 }
 
 inline size_t CPUMediumHomogenous::UsedGPUMemory() const

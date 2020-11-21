@@ -53,6 +53,7 @@ class CPUTransformSingle : public CPUTransformGroupI
 		const Matrix4x4*				dInvTransformMatrices;
 		const GPUTransformSingle*		dGPUTransforms;
 		GPUTransformList				gpuTransformList;
+		uint32_t                        transformCount;
 
     protected:
     public:
@@ -118,7 +119,7 @@ inline const GPUTransformList& CPUTransformSingle::GPUTransforms() const
 
 inline uint32_t CPUTransformSingle::TransformCount() const
 {
-	return static_cast<uint32_t>(gpuTransformList.size());
+	return transformCount;
 }
 
 inline size_t CPUTransformSingle::UsedGPUMemory() const

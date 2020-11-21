@@ -137,7 +137,7 @@ inline const GPUTransformList& CPUTransformIdentity::GPUTransforms() const
 
 inline uint32_t CPUTransformIdentity::TransformCount() const
 {
-	return static_cast<uint32_t>(gpuTransformList.size());
+	return 1;
 }
 
 inline size_t CPUTransformIdentity::UsedGPUMemory() const

@@ -82,7 +82,7 @@ SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes
 
     // Generated/Loaded matrices
     // Allocate transform class and matrix on GPU
-    size_t transformCount = static_cast<uint32_t>(transforms.size());
+    transformCount = static_cast<uint32_t>(transforms.size());
     size_t sizeOfMatrices = sizeof(Matrix4x4) * transformCount;
     sizeOfMatrices = Memory::AlignSize(sizeOfMatrices);
     size_t sizeOfTransformClasses = sizeof(GPUTransformSingle) * transformCount;

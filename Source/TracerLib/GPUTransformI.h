@@ -58,11 +58,6 @@ class CPUTransformGroupI
 		virtual size_t						UsedCPUMemory() const = 0;
 };
 
-inline const IdList& CPUTransformGroupI::SceneIdList() const
-{
-	return idList;
-}
-
 //// Converts to GPUTransform (Matrix4x4) also inverts the converted matrix
 //// since we do not transform the primitive while calculating intersection
 //// we transform the ray to the local space of the primitive

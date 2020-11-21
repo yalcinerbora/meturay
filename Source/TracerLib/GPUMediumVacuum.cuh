@@ -135,7 +135,7 @@ inline const GPUMediumList& CPUMediumVacuum::GPUMediums() const
 
 inline uint32_t CPUMediumVacuum::MediumCount() const
 {
-    return 0;
+    return 1;
 }
 
 inline size_t CPUMediumVacuum::UsedGPUMemory() const

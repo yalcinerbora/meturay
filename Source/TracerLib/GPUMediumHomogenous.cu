@@ -49,7 +49,7 @@ SceneError CPUMediumHomogenous::InitializeGroup(const NodeListing& mediumNodes,
         }
     }
     // Finally Allocate and load to GPU memory
-    size_t mediumCount = static_cast<uint32_t>(mediumData.size());
+    mediumCount = static_cast<uint32_t>(mediumData.size());
     size_t sizeOfData = sizeof(GPUMediumHomogenous::Data) * mediumCount;
     sizeOfData = Memory::AlignSize(sizeOfData);
     size_t sizeOfMediumClasses = sizeof(GPUMediumHomogenous) * mediumCount;
@@ -95,6 +95,7 @@ TracerError CPUMediumHomogenous::ConstructMediums(const CudaSystem& system,
                             KCConstructGPUMediumHomogenous,
                             //
                             const_cast<GPUMediumHomogenous*>(dGPUMediums),
+                            dMediumData,
                             MediumCount(),
                             indexStartOffset);
 
