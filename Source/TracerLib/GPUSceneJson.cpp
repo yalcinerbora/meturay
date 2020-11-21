@@ -83,7 +83,7 @@ SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
                                      const nlohmann::json& array, 
                                      IdBasedNodeType t)
 {
-    static constexpr uint32_t MAX_UINT32 = std::numeric_limits<uint32_t>::max();
+    //static constexpr uint32_t MAX_UINT32 = std::numeric_limits<uint32_t>::max();
 
     result.clear();
     uint32_t i = 0;
@@ -92,7 +92,8 @@ SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
         const nlohmann::json& ids = jsn[NodeNames::ID];
         if(!ids.is_array())
         {
-            auto r = result.emplace(jsn[NodeNames::ID], std::make_pair(i, MAX_UINT32));
+            //auto r = result.emplace(jsn[NodeNames::ID], std::make_pair(i, MAX_UINT32));
+            auto r = result.emplace(jsn[NodeNames::ID], std::make_pair(i, 0));
             if(!r.second)
             {
                 unsigned int i = static_cast<int>(SceneError::DUPLICATE_ACCELERATOR_ID) + t;
@@ -367,8 +368,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME,
                          SceneIO::LoadNumber<uint32_t>(*baseMatNode, time))) != SceneError::OK)
         return e;
-
-    // And finally base medium
+    
     // Find the base medium and tag its index
     const nlohmann::json* baseMediumNode = nullptr;
     if(!FindNode(baseMediumNode, NodeNames::BASE_MEDIUM))
@@ -376,6 +376,15 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     uint32_t baseMediumId = SceneIO::LoadNumber<uint32_t>(*baseMediumNode, time);    
     if((e = AttachMedium(baseMediumId)) != SceneError::OK)
         return e;
+    
+    
+    // And finally force load Identity transform
+    if((transformGroupNodes.find(NodeNames::TRANSFORM_IDENTITY)) == transformGroupNodes.cend())
+    {
+        transformGroupNodes.emplace(NodeNames::TRANSFORM_IDENTITY, NodeListing());
+        // Assign an Unused ID
+        node->AddIdIndexPair(std::numeric_limits<uint32_t>::max(), 0);
+    }
     return e;
 }
 
@@ -491,10 +500,10 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, HitKey>& accHit
         auto& transformIdList = accelGroupBatch.second.transformIds;
 
         std::vector<uint32_t> transformIndexList;
-        transformIndexList.reserve(transformIdList.size());
+        transformIndexList.resize(transformIdList.size());
         std::transform(std::execution::par_unseq,
                        transformIdList.cbegin(), transformIdList.cend(),
-                       transformIndexList.end(),
+                       transformIndexList.begin(),
         [&indexLookup = std::as_const(transformIdMappings)](uint32_t id)
         {
             // Convert id to index
@@ -566,6 +575,8 @@ SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& transf
 {
     // Generate Transform Groups
     SceneError e = SceneError::OK;
+    uint32_t linearIndex = 0;
+    bool hadIdentityTransform = false;
     for(const auto& transformGroup : transformList)
     {
         std::string transTypeName = transformGroup.first;
@@ -577,41 +588,19 @@ SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& transf
         if(e = tg->InitializeGroup(transNodes, time, parentPath))
             return e;
         transforms.emplace(transTypeName, std::move(tg));
-    }
 
-    // Check if identity transform is loaded
-    // and load if not loaded
-    if(const auto& loc = transforms.find(NodeNames::TRANSFORM_IDENTITY);
-       loc == transforms.end())
-    {
-        NodeListing empty;
-        CPUTransformGPtr tg = CPUTransformGPtr(nullptr, nullptr);
-        if(e = logicGenerator.GenerateTransformGroup(tg, NodeNames::TRANSFORM_IDENTITY))
-            return e;
-        if(e = tg->InitializeGroup(empty, time, parentPath))
-            return e;
-        transforms.emplace(NodeNames::TRANSFORM_IDENTITY, std::move(tg));
-    }
-
-
-    // Iterate through all named transforms
-    // and generate linear array index list for GPU interfaces
-    uint32_t linearIndex = 0;
-    for(const auto& t : transforms)
-    {
-        const CPUTransformGroupI& transform = *t.second;
-        const std::string& typeName = t.first;
-        if(typeName == NodeNames::TRANSFORM_IDENTITY)
-            identityTransformIndex = linearIndex;
-
-        const auto& sceneIdList = transform.SceneIdList();        
-        for(const auto& sceneId : sceneIdList)
+        for(const auto& node : transNodes)
+        for(const auto& idPair : node->Ids())
         {
-            transformIdMappings.emplace(sceneId, linearIndex);
+            uint32_t sceneTransId = idPair.first;
+            transformIdMappings.emplace(sceneTransId, linearIndex);
             linearIndex++;
         }
-    }
 
+        // Set Identity Transform Index
+        if(transTypeName == std::string(NodeNames::TRANSFORM_IDENTITY))
+            identityTransformIndex = linearIndex;
+    }
     return e;
 }
 
@@ -620,7 +609,15 @@ SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdM
                                          const MediumNodeList& mediumList,
                                          double time)
 {
+    // Find the base medium and tag its index
+    const nlohmann::json* baseMediumNode = nullptr;
+    if(!FindNode(baseMediumNode, NodeNames::BASE_MEDIUM))
+        return SceneError::BASE_MEDIUM_NODE_NOT_FOUND;
+    uint32_t baseMediumId = SceneIO::LoadNumber<uint32_t>(*baseMediumNode, time);
+
     // Generate Transform Groups
+    uint32_t linearIndex = 0;
+    bool baseMediumFound = false;
     SceneError e = SceneError::OK;
     for(const auto& mediumGroup : mediumList)
     {
@@ -633,28 +630,14 @@ SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdM
         if(e = mg->InitializeGroup(mediumNodes, time, parentPath))
             return e;
         mediums.emplace(mediumTypeName, std::move(mg));
-    }
 
-    // Find the base medium and tag its index
-    const nlohmann::json* baseMediumNode = nullptr;
-    if(!FindNode(baseMediumNode, NodeNames::BASE_MEDIUM))
-        return SceneError::BASE_MEDIUM_NODE_NOT_FOUND;
-    uint32_t baseMediumId = SceneIO::LoadNumber<uint32_t>(*baseMediumNode, time);
-    
-    // Iterate through all named mediums
-    // and generate linear array index list for GPU interfaces
-    bool baseMediumFound = false;
-    uint32_t linearIndex = 0;
-    for(const auto& m : mediums)
-    {
-        const CPUMediumGroupI& medium = *m.second;
-        const std::string& typeName = m.first;
-
-        const auto& sceneIdList = medium.SceneIdList();
-        for(const auto& sceneId : sceneIdList)
+        for(const auto& node : mediumNodes)
+        for(const auto& idPair : node->Ids())
         {
-            mediumIdMappings.emplace(sceneId, linearIndex);
-            if(baseMediumId == sceneId)
+            uint32_t sceneMedId = idPair.first;
+
+            mediumIdMappings.emplace(sceneMedId, linearIndex);
+            if(baseMediumId == sceneMedId)
             {
                 baseMediumIndex = linearIndex;
                 baseMediumFound = true;
@@ -662,7 +645,7 @@ SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdM
             linearIndex++;
         }
     }
-
+    
     if(!baseMediumFound) 
         return SceneError::MEDIUM_ID_NOT_FOUND;
     return e;

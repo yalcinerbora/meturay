@@ -20,7 +20,7 @@
 
 	"Lights": [],
 
-	"Transforms":[{"id": 0, "type": "identity"}],
+	"Transforms":[{"id": 0, "type": "Identity"}],
 
 	"Materials":[
 	{

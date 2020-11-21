@@ -71,13 +71,6 @@ SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes
                 m = TransformGen::Translate(t);                
                 nodeTransforms.push_back(std::move(m));                
             }
-
-            const auto& nodeIdList = node->Ids();
-            for(const auto& id : nodeIdList)
-            {
-                idList.push_back(id.second);
-            }
-
         }
         else return SceneError::UNKNOWN_TRANSFORM_TYPE;
 

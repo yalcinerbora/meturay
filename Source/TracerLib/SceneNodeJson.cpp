@@ -9,12 +9,12 @@ std::vector<T> SceneNodeJson::AccessSingle(const std::string& name,
 {
     const nlohmann::json& nodeInner = node[name];
     std::vector<T> result;
-    result.reserve(indexIdPairs.size());
+    result.reserve(idIndexPairs.size());
 
-    for(const auto& list : indexIdPairs)
+    for(const auto& list : idIndexPairs)
     {
         const InnerIndex i = list.second;
-        const nlohmann::json& node = (indexIdPairs.size() > 1) ? nodeInner[i] : nodeInner;
+        const nlohmann::json& node = (idIndexPairs.size() > 1) ? nodeInner[i] : nodeInner;
         result.push_back(LoadF(node, time));
     }
     return std::move(result);
@@ -25,9 +25,9 @@ std::vector<T> SceneNodeJson::AccessRanged(const std::string& name) const
 {
     const nlohmann::json& nodeInner = node[name];
     std::vector<T> result;
-    result.reserve(indexIdPairs.size());
+    result.reserve(idIndexPairs.size());
 
-    if(indexIdPairs.size() == 1)
+    if(idIndexPairs.size() == 1)
     {
         result.push_back(SceneIO::LoadNumber<T>(nodeInner));
     }
@@ -38,7 +38,7 @@ std::vector<T> SceneNodeJson::AccessRanged(const std::string& name) const
         T total = 0;
         size_t j = 0;
         // Do single loop over pairings and ranges
-        for(const auto& list : indexIdPairs)
+        for(const auto& list : idIndexPairs)
         {
             // Find Data from the ranges
             const InnerIndex i = list.second;
@@ -67,14 +67,14 @@ std::vector<std::vector<T>> SceneNodeJson::AccessList(const std::string& name,
 {
     const nlohmann::json& nodeInner = node[name];
     std::vector<std::vector<T>> result;
-    result.reserve(indexIdPairs.size());
+    result.reserve(idIndexPairs.size());
 
-    for(const auto& list : indexIdPairs)
+    for(const auto& list : idIndexPairs)
     {  
         result.emplace_back();
 
         const InnerIndex i = list.second;
-        const nlohmann::json& node = (indexIdPairs.size() > 1) ? nodeInner[i] : nodeInner;
+        const nlohmann::json& node = (idIndexPairs.size() > 1) ? nodeInner[i] : nodeInner;
 
         for(const nlohmann::json& n : node)
             result.back().push_back(LoadF(n, time));
@@ -235,12 +235,12 @@ std::vector<size_t> SceneNodeJson::AccessListCount(const std::string& name) cons
 {
     const nlohmann::json& nodeInner = node[name];
     std::vector<size_t> result;
-    result.reserve(indexIdPairs.size());
+    result.reserve(idIndexPairs.size());
 
-    for(const auto& list : indexIdPairs)
+    for(const auto& list : idIndexPairs)
     {
         const InnerIndex i = list.second;
-        const nlohmann::json& node = (indexIdPairs.size() > 1) ? nodeInner[i] : nodeInner;
+        const nlohmann::json& node = (idIndexPairs.size() > 1) ? nodeInner[i] : nodeInner;
 
         result.push_back(node.size());
     }

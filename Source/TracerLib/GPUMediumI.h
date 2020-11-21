@@ -32,13 +32,8 @@ class GPUMediumI
 
 class CPUMediumGroupI
 {
-    protected:
-        IdList							idList;
-
     public:
         virtual                         ~CPUMediumGroupI() = default;
-
-        const IdList&                   SceneIdList() const;
 
         // Interface
         virtual const char*             Type() const = 0;
@@ -55,8 +50,3 @@ class CPUMediumGroupI
         virtual size_t					UsedGPUMemory() const = 0;
         virtual size_t					UsedCPUMemory() const = 0;  
 };
-
-inline const IdList& CPUMediumGroupI::SceneIdList() const
-{
-    return idList;
-}

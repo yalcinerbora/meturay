@@ -47,14 +47,6 @@ SceneError CPUMediumHomogenous::InitializeGroup(const NodeListing& mediumNodes,
                 nodePhaseList[i]
             });
         }
-
-        // Id list on load
-        const auto& nodeIdList = node->Ids();
-        for(const auto& id : nodeIdList)
-        {
-            idList.push_back(id.second);
-        }
-
     }
     // Finally Allocate and load to GPU memory
     size_t mediumCount = static_cast<uint32_t>(mediumData.size());

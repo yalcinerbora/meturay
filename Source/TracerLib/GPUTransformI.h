@@ -40,13 +40,8 @@ class GPUTransformI
 
 class CPUTransformGroupI
 {
-	protected:
-		IdList								idList;
-
 	public:
 		virtual								~CPUTransformGroupI() = default;
-
-		const IdList&						SceneIdList() const;
 
 		// Interface
 		virtual const char*					Type() const = 0;

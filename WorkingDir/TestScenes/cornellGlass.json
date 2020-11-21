@@ -38,7 +38,7 @@
 	}
 	],
 
-	"Transforms":[{"id": 0, "type": "identity"}],
+	"Transforms":[{"id": 0, "type": "Identity"}],
 
 	"Materials":[
 	{
@@ -156,7 +156,8 @@
 		{"primitive":4, "material":2, "transform": 0},
 		{"light":2, "material":2, "transform": 0}
 
-	]
+	],
+	
 	"CameraSurfaces":[
 		{"camera":, "material": 2, "transform", 0 }
 	]

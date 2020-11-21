@@ -27,7 +27,7 @@ class SceneNodeI
     private:
     protected:
         NodeIndex                           nodeIndex;
-        std::set<IdPair>                    indexIdPairs;
+        std::set<IdPair>                    idIndexPairs;
 
     public:
         // Constructors & Destructor
@@ -116,17 +116,17 @@ inline uint32_t SceneNodeI::Index() const
 
 inline const std::set<IdPair>& SceneNodeI::Ids() const
 {
-    return indexIdPairs;
+    return idIndexPairs;
 }
 
 inline size_t SceneNodeI::IdCount() const
 {
-    return indexIdPairs.size();
+    return idIndexPairs.size();
 }
 
 inline void SceneNodeI::AddIdIndexPair(NodeId id, InnerIndex index)
 {
-    indexIdPairs.emplace(std::make_pair(id, index));
+    idIndexPairs.emplace(std::make_pair(id, index));
 }
 
 inline bool SceneNodeI::operator<(const SceneNodeI& node) const
