@@ -59,7 +59,7 @@ class GPUAccBVHGroup final
         std::map<uint32_t, uint32_t>        idLookup;
         SurfaceAABBList                     surfaceAABBs;
         // GPU Memory
-        DeviceMemory                        bvhListMemory;
+        DeviceMemory                        memory;
         std::vector<DeviceMemory>           bvhMemories;
         const BVHNode<LeafData>**           dBVHLists;
         // Per accelerator data       

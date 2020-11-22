@@ -258,10 +258,10 @@ void CudaGPU::KC_X(uint32_t sharedMemSize,
     uint32_t blockSize = StaticThreadPerBlock1D;
 
     //f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);
-    //CUDA_KERNEL_CHECK();
     void* argsList[] = {((void*)&args)...};
     CUDA_CHECK(cudaLaunchKernel(f, blockCount, blockSize, argsList,
                                 sharedMemSize, stream));
+    CUDA_KERNEL_CHECK();
 }
 
 template<class Function, class... Args>
@@ -278,10 +278,10 @@ void CudaGPU::KC_XY(uint32_t sharedMemSize,
     uint32_t blockSize = StaticThreadPerBlock1D;
 
     //f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);
-    //CUDA_KERNEL_CHECK();
     void* argsList[] = {((void*)&args)...};
     CUDA_CHECK(cudaLaunchKernel(f, blockCount, blockSize, argsList,
                                 sharedMemSize, stream));
+    CUDA_KERNEL_CHECK();
 }
 
 template<class Function, class... Args>
@@ -299,11 +299,11 @@ inline void CudaGPU::GridStrideKC_X(uint32_t sharedMemSize,
     CUDA_CHECK(cudaSetDevice(deviceId));
     uint32_t blockSize = StaticThreadPerBlock1D;
 
-    //f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);
-    //CUDA_KERNEL_CHECK();
+    //f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);    
     void* argsList[] = {((void*)&args)...};
     CUDA_CHECK(cudaLaunchKernel(f, blockCount, blockSize, argsList,
                                 sharedMemSize, stream));
+    CUDA_KERNEL_CHECK();
 }
 
 template<class Function, class... Args>
@@ -322,10 +322,10 @@ inline void CudaGPU::GridStrideKC_XY(uint32_t sharedMemSize,
     dim3 blockSize = dim3(StaticThreadPerBlock2D[0], StaticThreadPerBlock2D[1]);
    
     //f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);
-    //CUDA_KERNEL_CHECK();
     void* argsList[] = {((void*)&args)...};
     CUDA_CHECK(cudaLaunchKernel(f, blockCount, blockSize, argsList,
                      sharedMemSize, stream));
+    CUDA_KERNEL_CHECK();
 }
 
 
@@ -344,11 +344,10 @@ __host__ void CudaGPU::AsyncGridStrideKC_X(uint32_t sharedMemSize,
     uint32_t blockSize = StaticThreadPerBlock1D;
 
     //f<<<requiredSMCount, blockSize, sharedMemSize, stream>>>(args...);
-    //CUDA_KERNEL_CHECK();
-
     void* argsList[] = {((void*)&args)...};
     CUDA_CHECK(cudaLaunchKernel(f, requiredSMCount, blockSize, argsList,
                      sharedMemSize, stream));
+    CUDA_KERNEL_CHECK();
 }
 
 template<class Function, class... Args>
@@ -366,10 +365,10 @@ __host__ void CudaGPU::AsyncGridStrideKC_XY(uint32_t sharedMemSize,
     dim3 blockSize = dim3(StaticThreadPerBlock2D[0], StaticThreadPerBlock2D[1]);
 
     //f<<<requiredSMCount, blockSize, sharedMemSize, stream>>>(args...);
-    //CUDA_KERNEL_CHECK();
     void* argsList[] = {((void*)&args)...};
     CUDA_CHECK(cudaLaunchKernel(f, requiredSMCount, blockSize, argsList,
                                 sharedMemSize, stream));
+    CUDA_KERNEL_CHECK();
 }
 
 inline const GPUList& CudaSystem::GPUList() const

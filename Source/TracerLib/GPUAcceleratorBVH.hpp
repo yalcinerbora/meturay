@@ -323,8 +323,36 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
     // Allocate Empty Device memory Objects
     bvhDepths.resize(j, 0);
     bvhMemories.resize(j);
-    bvhListMemory = std::move(DeviceMemory(j * sizeof(BVHNode<LeafData>*)));
-    dBVHLists = static_cast<const BVHNode<LeafData>**>(bvhListMemory);
+
+    // Allocate device memory for BVH root ptrs
+    // and transform indices
+    assert(j == transformList.size());
+    uint32_t bvhCount = j;
+
+    // Finally Allocate and load to GPU memory
+    size_t sizeOfTransformIndices = sizeof(uint32_t) * bvhCount;
+    sizeOfTransformIndices = Memory::AlignSize(sizeOfTransformIndices);
+    size_t sizeOfBVHRootPtrs = sizeof(BVHNode<LeafData>*) * bvhCount;
+    sizeOfBVHRootPtrs = Memory::AlignSize(sizeOfBVHRootPtrs);
+
+    size_t requiredSize = (sizeOfTransformIndices + sizeOfBVHRootPtrs);
+
+    // Reallocate if memory is not enough
+    DeviceMemory::EnlargeBuffer(memory, requiredSize);
+
+    size_t offset = 0;
+    std::uint8_t* dBasePtr = static_cast<uint8_t*>(memory);
+    dAccTransformIds = reinterpret_cast<uint32_t*>(dBasePtr + offset);
+    offset += sizeOfTransformIndices;
+    dBVHLists = reinterpret_cast<const BVHNode<LeafData>**>(dBasePtr + offset);
+    offset += sizeOfBVHRootPtrs;
+    assert(requiredSize == offset);
+    
+    // Copy Transforms
+    CUDA_CHECK(cudaMemcpy(dAccTransformIds,
+                          transformList.data(),
+                          bvhCount * sizeof(uint32_t),
+                          cudaMemcpyHostToDevice));
 
     assert(primitiveRanges.size() == primitiveMaterialKeys.size());
     assert(primitiveMaterialKeys.size() == idLookup.size());
@@ -656,7 +684,7 @@ TracerError GPUAccBVHGroup<PGroup>::DestroyAccelerators(const std::vector<uint32
 template <class PGroup>
 size_t GPUAccBVHGroup<PGroup>::UsedGPUMemory() const
 {
-    size_t total = bvhListMemory.Size();
+    size_t total = memory.Size();
     for(const DeviceMemory& m : bvhMemories)
     {
         total += m.Size();

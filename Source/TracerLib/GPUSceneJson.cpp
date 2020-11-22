@@ -596,12 +596,13 @@ SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& transf
         {
             uint32_t sceneTransId = idPair.first;
             transformIdMappings.emplace(sceneTransId, linearIndex);
+
+            // Set Identity Transform Index
+            if(transTypeName == std::string(NodeNames::TRANSFORM_IDENTITY))
+                identityTransformIndex = linearIndex;
+
             linearIndex++;
         }
-
-        // Set Identity Transform Index
-        if(transTypeName == std::string(NodeNames::TRANSFORM_IDENTITY))
-            identityTransformIndex = linearIndex;
     }
     return e;
 }

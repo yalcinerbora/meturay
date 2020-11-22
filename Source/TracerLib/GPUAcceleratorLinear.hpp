@@ -75,14 +75,40 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
     assert(idLookup.size() == accRanges.size());
 
     // Allocate memory
+    assert(j == transformList.size());
+    uint32_t bvhCount = j;
+
+    // Finally Allocate and load to GPU memory
+    size_t sizeOfTransformIndices = sizeof(uint32_t) * bvhCount;
+    sizeOfTransformIndices = Memory::AlignSize(sizeOfTransformIndices);
     size_t leafDataSize = totalSize * sizeof(LeafData);
+    leafDataSize = Memory::AlignSize(leafDataSize);
     size_t accRangeSize = idLookup.size() * sizeof(Vector2ul);
-    memory = std::move(DeviceMemory(leafDataSize + accRangeSize));
-    dLeafList = static_cast<LeafData*>(memory);
-    dAccRanges = reinterpret_cast<Vector2ul*>(static_cast<uint8_t*>(memory) + leafDataSize);
+    accRangeSize = Memory::AlignSize(accRangeSize);
+
+    size_t requiredSize = (sizeOfTransformIndices + leafDataSize + accRangeSize);
+
+    // Reallocate if memory is not enough
+    DeviceMemory::EnlargeBuffer(memory, requiredSize);
+
+    size_t offset = 0;
+    std::uint8_t* dBasePtr = static_cast<uint8_t*>(memory);
+    dAccTransformIds = reinterpret_cast<uint32_t*>(dBasePtr + offset);
+    offset += sizeOfTransformIndices;
+    dLeafList = reinterpret_cast<LeafData*>(dBasePtr + offset);
+    offset += leafDataSize;
+    dAccRanges = reinterpret_cast<Vector2ul*>(dBasePtr + offset);
+    offset += accRangeSize;
+    assert(requiredSize == offset);
 
     // Copy Leaf counts to cpu memory
-    CUDA_CHECK(cudaMemcpy(dAccRanges, accRanges.data(), accRangeSize,
+    CUDA_CHECK(cudaMemcpy(dAccRanges, accRanges.data(), 
+                          idLookup.size() * sizeof(Vector2ul),
+                          cudaMemcpyHostToDevice));
+        // Copy Transforms
+    CUDA_CHECK(cudaMemcpy(dAccTransformIds,
+                          transformList.data(),
+                          bvhCount * sizeof(uint32_t),
                           cudaMemcpyHostToDevice));
 
     return SceneError::OK;

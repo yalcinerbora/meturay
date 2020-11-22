@@ -18,6 +18,7 @@ tree constructio would provide additional overhead.
 #include "RayLib/SceneStructs.h"
 #include "RayLib/Vector.h"
 #include "RayLib/Constants.h"
+#include "RayLib/MemoryAlignment.h"
 
 #include "DeviceMemory.h"
 #include "GPUAcceleratorP.cuh"
