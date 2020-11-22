@@ -67,9 +67,17 @@ struct EPrimFunctions
 struct EmptySurfaceGenerator
 {
     template<class Surface>
+    __device__
+    static Surface GetEmptySurface(const EmptyHit&, const GPUTransformI&,
+                                   PrimitiveId, const EmptyData&)
+    {
+        return Surface{};
+    }
+
+    template<class Surface>
     static constexpr SurfaceFunc<Surface, EmptyHit, EmptyData> GetSurfaceFunction()
     {
-        return nullptr;
+        return &GetEmptySurface<Surface>;
     }
 };
 
