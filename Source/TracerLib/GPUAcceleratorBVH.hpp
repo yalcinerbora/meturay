@@ -617,8 +617,8 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     //METU_LOG("-------");
 
     // Before copying get roots AABB for base accelerator
-    AABB3f accAABB(dBVHLists[innerIndex][0].aabbMin,
-                   dBVHLists[innerIndex][0].aabbMax);
+    AABB3f accAABB(bvhNodes[0].aabbMin,
+                   bvhNodes[0].aabbMax);
     surfaceAABBs.emplace(surface, accAABB);
 
     CUDA_CHECK(cudaMemcpy(bvhMemories[innerIndex],
