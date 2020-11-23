@@ -15,8 +15,6 @@ __global__ void KCConstructGPUClass(T* gLocation,
     {
 
         auto a = new (gLocation) T(args...);
-
-        printf("Constructing.. %p output %p\n", gLocation, a);
     }
 }
 

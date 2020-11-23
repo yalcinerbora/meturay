@@ -25,7 +25,7 @@
 	{
 		"id": 1,
 		"type" : "Homogenous",
-		
+
 		"absorption": [0.2075, 0.0825, 0.1615],
 		"scattering": [0, 0, 0],
 		"ior": 1.53,
