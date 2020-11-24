@@ -16,6 +16,9 @@ class CudaGPU;
 
 class CPUMediumGroupI;
 class CPUTransformGroupI;
+class CPUCameraGroupI;
+class CPULightGroupI;
+
 class GPUBaseAcceleratorI;
 class GPUAcceleratorGroupI;
 class GPUPrimitiveGroupI;
@@ -32,6 +35,8 @@ using GPUPrimGPtr = SharedLibPtr<GPUPrimitiveGroupI>;
 using GPUMatGPtr = SharedLibPtr<GPUMaterialGroupI>;
 using CPUTransformGPtr = SharedLibPtr<CPUTransformGroupI>;
 using CPUMediumGPtr = SharedLibPtr<CPUMediumGroupI>;
+using CPUCameraGPtr = SharedLibPtr<CPUCameraGroupI>;
+using CPULightGPtr = SharedLibPtr<CPULightGroupI>;
 
 template <class T>
 using NamedList = std::map<std::string, T>;

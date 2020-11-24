@@ -4,8 +4,8 @@
 
 #include "RayLib/Constants.h"
 #include "RayLib/SceneStructs.h"
+#include "CudaConstants.h"
 
-#include "Random.cuh"
 #include "NodeListing.h"
 
 #include <type_traits>
@@ -14,6 +14,7 @@
 //#include "RayLib/Quaternion.h"
 
 class GPUTransformI;
+class RandomGPU;
 
 using GPULightI = GPUEndpointI;
 using GPULightList = std::vector<const GPULightI*>;

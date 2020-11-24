@@ -183,7 +183,6 @@ SceneError TracerLogicGenerator::GenerateBaseAccelerator(GPUBaseAccelPtr& baseAc
     return SceneError::OK;
 }
 
-        // Medium
 SceneError TracerLogicGenerator::GenerateMediumGroup(CPUMediumGPtr& mg,
                                                      const std::string& mediumType)
 {
@@ -192,13 +191,31 @@ SceneError TracerLogicGenerator::GenerateMediumGroup(CPUMediumGPtr& mg,
     mg = std::move(loc->second());
     return SceneError::OK;
 }
-    // Transform
+
 SceneError TracerLogicGenerator::GenerateTransformGroup(CPUTransformGPtr& tg,
                                                         const std::string& transformType)
 {
     auto loc = transGroupGenerators.find(transformType);
     if(loc == transGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_TRANSFORM;
     tg = std::move(loc->second());
+    return SceneError::OK;
+}
+
+SceneError TracerLogicGenerator::GenerateCameraGroup(CPUCameraGPtr& cam,
+                                                     const std::string& cameraType)
+{
+    auto loc = camGroupGenerators.find(cameraType);
+    if(loc == camGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_CAMERA;
+    cam = std::move(loc->second());
+    return SceneError::OK;
+}
+
+SceneError TracerLogicGenerator::GenerateLightGroup(CPULightGPtr& light,
+                                                    const std::string& lightType)
+{
+    auto loc = lightGroupGenerators.find(lightType);
+    if(loc == lightGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_LIGHT;
+    light = std::move(loc->second());
     return SceneError::OK;
 }
 

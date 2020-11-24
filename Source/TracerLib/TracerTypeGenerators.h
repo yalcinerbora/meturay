@@ -39,6 +39,8 @@ using GPUPrimGroupGen = GeneratorNoArg<GPUPrimitiveGroupI>;
 
 using CPUTransformGen = GeneratorNoArg<CPUTransformGroupI>;
 using CPUMediumGen = GeneratorNoArg<CPUMediumGroupI>;
+using CPULightGen = GeneratorNoArg<CPULightGroupI>;
+using CPUCameraGen = GeneratorNoArg<CPUCameraGroupI>;
 
 class GPUTracerGen
 {

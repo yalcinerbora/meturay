@@ -744,16 +744,17 @@ SceneError GPUSceneJson::FindBoundaryMaterial(const MaterialKeyListing& matHitKe
 
 SceneError GPUSceneJson::LoadCommon(double time)
 {
-    SceneError e = SceneError::OK;    
-    // Cameras
-    const nlohmann::json* camerasJson = nullptr;
-    if(!FindNode(camerasJson, NodeNames::CAMERA_BASE))
-        return SceneError::CAMERAS_ARRAY_NOT_FOUND;
-    cameras.reserve(camerasJson->size());
-    for(const auto& cameraJson : (*camerasJson))
-        cameras.push_back(SceneIO::LoadCamera(cameraJson, time));
+    //SceneError e = SceneError::OK;    
+    //// Cameras
+    //const nlohmann::json* camerasJson = nullptr;
+    //if(!FindNode(camerasJson, NodeNames::CAMERA_BASE))
+    //    return SceneError::CAMERAS_ARRAY_NOT_FOUND;
+    //cameras.reserve(camerasJson->size());
+    //for(const auto& cameraJson : (*camerasJson))
+    //    cameras.push_back(SceneIO::LoadCamera(cameraJson, time));
 
-    return e;
+    //return e;
+    return SceneError::OK;
 }
 
 SceneError GPUSceneJson::LoadLogicRelated(double time)

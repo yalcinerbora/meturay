@@ -92,17 +92,44 @@ class TransformPoolI
 class MediumPoolI
 {
     protected:
-        std::map<std::string, CPUMediumGen>   mediumGenerators;
+        std::map<std::string, CPUMediumGen>     mediumGenerators;
 
     public:
         static constexpr const char* DefaultConstructorName = "GenMediumPool";
         static constexpr const char* DefaultDestructorName = "DelMediumPool";
 
-        virtual                         ~MediumPoolI() = default;
+        virtual                                 ~MediumPoolI() = default;
 
         virtual std::map<std::string, CPUMediumGen> MediumGenerators(const std::string regex = ".*") const;
 };
 
+class CameraPoolI
+{
+    protected:
+        std::map<std::string, CPUCameraGen>   mediumGenerators;
+
+    public:
+        static constexpr const char* DefaultConstructorName = "GenCameraPool";
+        static constexpr const char* DefaultDestructorName = "DelCameraPool";
+
+        virtual                         ~CameraPoolI() = default;
+
+        virtual std::map<std::string, CPUCameraGen> CameraGenerators(const std::string regex = ".*") const;
+};
+
+class LightPoolI
+{
+    protected:
+        std::map<std::string, CPULightGen>   mediumGenerators;
+
+    public:
+        static constexpr const char* DefaultConstructorName = "GenMediumPool";
+        static constexpr const char* DefaultDestructorName = "DelMediumPool";
+
+        virtual                         ~LightPoolI() = default;
+
+        virtual std::map<std::string, CPULightGen> LightGenerators(const std::string regex = ".*") const;
+};
 
 inline std::map<std::string, GPUAccelGroupGen> AcceleratorLogicPoolI::AcceleratorGroupGenerators(const std::string regex) const
 {

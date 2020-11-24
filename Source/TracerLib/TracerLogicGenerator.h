@@ -25,6 +25,8 @@ using BaseAcceleratorPoolPtr = SharedLibPtr<BaseAcceleratorLogicPoolI>;
 using TracerPoolPtr = SharedLibPtr<TracerPoolI>;
 using TransformPoolPtr = SharedLibPtr<TransformPoolI>;
 using MediumPoolPtr = SharedLibPtr<MediumPoolI>;
+using CameraPoolPtr = SharedLibPtr<CameraPoolI>;
+using LightPoolPtr = SharedLibPtr<LightPoolI>;
 
 class TracerLogicGenerator : public TracerLogicGeneratorI
 {
@@ -49,6 +51,8 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         std::map<std::string, GPUTracerGen>         tracerGenerators;
         std::map<std::string, CPUTransformGen>      transGroupGenerators;
         std::map<std::string, CPUMediumGen>         medGroupGenerators;
+        std::map<std::string, CPULightGen>          lightGroupGenerators;
+        std::map<std::string, CPUCameraGen>         camGroupGenerators;
 
         // Helper Funcs
         DLLError                                    FindOrGenerateSharedLib(SharedLib*& libOut,
@@ -85,6 +89,13 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         // Transform
         SceneError                  GenerateTransformGroup(CPUTransformGPtr&,
                                                            const std::string& transformType) override;
+
+        // Camera
+        SceneError                  GenerateCameraGroup(CPUCameraGPtr&,
+                                                        const std::string& cameraType) override;
+        // Light
+        SceneError                  GenerateLightGroup(CPULightGPtr&,
+                                                   const std::string& lightType) override;
         // Tracer Logic
         SceneError                  GenerateTracer(GPUTracerPtr&,
                                                    const CudaSystem&,

@@ -38,6 +38,8 @@ struct SceneError : public ErrorI
             NO_LOGIC_FOR_TRACER,
             NO_LOGIC_FOR_TRANSFORM,
             NO_LOGIC_FOR_MEDIUM,
+            NO_LOGIC_FOR_CAMERA,
+            NO_LOGIC_FOR_LIGHT,
             // Id Errors
             DUPLICATE_ACCELERATOR_ID,
             DUPLICATE_MATERIAL_ID,
@@ -166,6 +168,8 @@ inline SceneError::operator std::string() const
         "No logic found for that tracer",
         "No logic found for that transform",
         "No logic found for that medium",
+        "No logic found for that camera",
+        "No logic found for that light",
         // Id Errors
         "Duplicate accelerator id",
         "Duplicate material id",

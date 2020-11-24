@@ -3,6 +3,7 @@
 #include "TracerLib/GPUTracer.h"
 #include "TracerLib/TypeTraits.h"
 #include "TracerLib/GPUEndpointI.cuh"
+#include "TracerLib/GPUCameraI.cuh"
 
 #include "RayAuxStruct.h"
 

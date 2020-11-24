@@ -18,7 +18,7 @@ __global__ void KRandomNumbers(RNGGMem gMemory,
 {
     extern __shared__ uint32_t sStates[];
 
-    RandomGPU rand(gMemory.state);
+    RandomGPU rand(gMemory.state, LINEAR_GLOBAL_ID);
 
     for(int i = 0; i < numberPerThread; i++)
     {

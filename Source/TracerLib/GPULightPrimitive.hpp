@@ -31,7 +31,7 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const NodeListing& lightNodes,
                                                   double time,
                                                   const std::string& scenePath)
 {
-
+    return SceneError::LIGHT_TYPE_INTERNAL_ERRROR;
 }
 
 template <class PGroup>

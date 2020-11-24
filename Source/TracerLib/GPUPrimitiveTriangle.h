@@ -92,13 +92,6 @@ struct TriFunctions
                 position2 * c);
     }
 
-    __device__
-    static inline Vector3f Normal(PrimitiveId primitiveId,
-                                  const TriData& primData)
-    {
-
-    }
-
     // Triangle Hit Acceptance
     __device__
     static inline HitResult Hit(// Output

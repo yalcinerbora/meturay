@@ -13,7 +13,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\AuxiliaryDataKernels.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraPinole.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraPinhole.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightPrimitive.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightDirectional.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightPoint.cuh" />
@@ -106,6 +106,7 @@
       <FileType>Document</FileType>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUCameraPinhole.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\GPULightPrimitive.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUMaterialLight.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUMediumHomogenous.cu" />

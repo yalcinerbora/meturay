@@ -3,7 +3,9 @@
 #include "GPULightI.cuh"
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
+#include "RayStructs.h"
 #include "RayLib/HemiDistribution.h"
+#include "Random.cuh"
 
 // Meta Primitive Related Light
 template <class PGroup>
@@ -67,7 +69,7 @@ class CPULightGroup : public CPULightGroupI
         std::vector<PrimitiveId>        hPrimitiveIds;
         std::vector<TransformId>        hTransformIds;
         // Copy of the PData on GPU Memory
-        const PData&                    dPData;
+        const PData*                    dPData;
         // Global Transform Array
         const GPUTransformI**           dGPUTransforms;
         // Allocations of the GPU Class
@@ -78,6 +80,11 @@ class CPULightGroup : public CPULightGroupI
         
     protected:
     public:
+        // Cosntructors & Destructor
+                                CPULightGroup(const PGroup&);
+                                ~CPULightGroup() = default;
+
+
         const char*				Type() const override;
 		const GPULightList&		GPULights() const override;
 		SceneError				InitializeGroup(const NodeListing& lightNodes,
@@ -98,12 +105,12 @@ class CPULightGroup : public CPULightGroupI
 };
 
 template <class PGroup>
-GPULight<PGroup>::GPULight(HitKey k,
-                           uint16_t mediumIndex,
-                           PrimitiveId pId,
-                           const GPUTransformI& gTransform,
-                           // Common Data
-                           const PData& gPData)
+__device__ GPULight<PGroup>::GPULight(HitKey k,
+                                      uint16_t mediumIndex,
+                                      PrimitiveId pId,
+                                      const GPUTransformI& gTransform,
+                                      // Common Data
+                                      const PData& gPData)
     : GPUEndpointI(k, mediumIndex)
     , transform(gTransform)
     , pId(pId)
@@ -187,6 +194,14 @@ __device__ PrimitiveId GPULight<PGroup>::PrimitiveIndex() const
 }
 
 template <class PGroup>
+CPULightGroup<PGroup>::CPULightGroup(const PGroup& pg)
+    : pg(pg) 
+    , dPData(nullptr)
+    , dGPUTransforms(nullptr)
+    , dGPULights(nullptr)
+{}
+
+template <class PGroup>
 const char* CPULightGroup<PGroup>::Type() const
 {
     return Type();
@@ -197,7 +212,6 @@ const GPULightList& CPULightGroup<PGroup>::GPULights() const
 {
     return gpuLightList;
 }
-
 
 template <class PGroup>
 uint32_t  CPULightGroup<PGroup>::LightCount() const
@@ -214,7 +228,12 @@ size_t CPULightGroup<PGroup>::UsedGPUMemory() const
 template <class PGroup>
 size_t CPULightGroup<PGroup>::UsedCPUMemory() const
 {
-    return 0;
+    size_t totalSize = (hHitKeys.size() +
+                        hMediumIds.size() +
+                        hPrimitiveIds.size() +
+                        hTransformIds.size());
+
+    return totalSize;
 }
 
 template <class PGroup>

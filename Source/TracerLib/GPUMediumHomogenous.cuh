@@ -49,10 +49,10 @@ class CPUMediumHomogenous : public CPUMediumGroupI
     public:
         static const char* TypeName() { return "Homogenous"; }
 
-        static constexpr const char*    ABSORBTION = "absorption";
-        static constexpr const char*    SCATTERING = "scattering";
-        static constexpr const char*    IOR = "ior";
-        static constexpr const char*    PHASE = "phase";
+        static constexpr const char*    ABSORBTION  = "absorption";
+        static constexpr const char*    SCATTERING  = "scattering";
+        static constexpr const char*    IOR         = "ior";
+        static constexpr const char*    PHASE       = "phase";
 
 
     private:

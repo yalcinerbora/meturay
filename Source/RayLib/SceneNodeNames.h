@@ -32,13 +32,6 @@ namespace NodeNames
     static constexpr const char* PRIMITIVE = "primitive";
     static constexpr const char* ACCELERATOR = "accelerator";
     static constexpr const char* MATERIAL = "material";
-    // Camera Related Names
-    static constexpr const char* CAMERA_APERTURE = "apertureSize";
-    static constexpr const char* CAMERA_FOCUS = "focusDistance";
-    static constexpr const char* CAMERA_PLANES = "planes";
-    static constexpr const char* CAMERA_FOV = "fov";
-    static constexpr const char* CAMERA_GAZE = "gaze";
-    static constexpr const char* CAMERA_UP = "up";
     // Material & Light Common Names
     static constexpr const char* MEDIUM = "medium";
     // Light Related Names

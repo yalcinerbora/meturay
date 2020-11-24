@@ -125,31 +125,31 @@ inline SceneError LightTypeStringToEnum(LightType& type,
 //    else throw SceneException(SceneError::TYPE_MISMATCH);
 //}
 
-CPUCamera SceneIO::LoadCamera(const nlohmann::json& jsn, double time)
-{
-    if(jsn.is_string())
-    {
-        return LoadFromAnim<CPUCamera>(jsn, time);
-    }
-    else if(jsn.is_object())
-    {
-        CPUCamera cam = {};
-        cam.position = LoadVector<3, float>(jsn[POSITION], time);
-        cam.up = LoadVector<3, float>(jsn[CAMERA_UP], time);
-        cam.gazePoint = LoadVector<3, float>(jsn[CAMERA_GAZE], time);
-        Vector2 planes = LoadVector<2, float>(jsn[CAMERA_PLANES], time);
-        cam.nearPlane = planes[0];
-        cam.farPlane = planes[1];
-        cam.fov = LoadVector<2, float>(jsn[CAMERA_FOV], time);
-        cam.apertureSize = LoadNumber<float>(jsn[CAMERA_APERTURE], time);
-        cam.mediumIndex = OptionalFetch<uint16_t>(jsn, MEDIUM, 0);
-        // Convert FOV to Radians
-        cam.fov *= MathConstants::DegToRadCoef;
-
-        return cam;
-    }
-    else throw SceneException(SceneError::TYPE_MISMATCH);
-}
+//CPUCamera SceneIO::LoadCamera(const nlohmann::json& jsn, double time)
+//{
+//    if(jsn.is_string())
+//    {
+//        return LoadFromAnim<CPUCamera>(jsn, time);
+//    }
+//    else if(jsn.is_object())
+//    {
+//        CPUCamera cam = {};
+//        cam.position = LoadVector<3, float>(jsn[POSITION], time);
+//        cam.up = LoadVector<3, float>(jsn[CAMERA_UP], time);
+//        cam.gazePoint = LoadVector<3, float>(jsn[CAMERA_GAZE], time);
+//        Vector2 planes = LoadVector<2, float>(jsn[CAMERA_PLANES], time);
+//        cam.nearPlane = planes[0];
+//        cam.farPlane = planes[1];
+//        cam.fov = LoadVector<2, float>(jsn[CAMERA_FOV], time);
+//        cam.apertureSize = LoadNumber<float>(jsn[CAMERA_APERTURE], time);
+//        cam.mediumIndex = OptionalFetch<uint16_t>(jsn, MEDIUM, 0);
+//        // Convert FOV to Radians
+//        cam.fov *= MathConstants::DegToRadCoef;
+//
+//        return cam;
+//    }
+//    else throw SceneException(SceneError::TYPE_MISMATCH);
+//}
 
 uint32_t SceneIO::LoadLightMatId(const nlohmann::json& jsn)
 {

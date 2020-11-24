@@ -103,11 +103,11 @@
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp">
       <Filter>Cuda System</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp">
-      <Filter>Default Primitives</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\GPUDistribution.cpp">
       <Filter>GPU Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp">
+      <Filter>Default Primitives</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -332,9 +332,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraI.cuh">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraPinole.cuh">
-      <Filter>Default Cameras</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightSpot.cuh">
       <Filter>Default Lights</Filter>
     </ClInclude>
@@ -349,6 +346,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightPrimitive.hpp">
       <Filter>Default Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraPinhole.cuh">
+      <Filter>Default Cameras</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -407,6 +407,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPULightPrimitive.cu">
       <Filter>Default Lights</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPUCameraPinhole.cu">
+      <Filter>Default Cameras</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

@@ -54,21 +54,8 @@ class GPUEndpointI
 
         __device__ HitKey               BoundaryMaterial() const;
         __device__ uint16_t             MediumIndex() const;
-        __device__ TransformId          TransformIndex() const;        
+        //__device__ TransformId          TransformIndex() const;
 };
-
-//// Additional to sampling stuff, Light returns flux
-//// which can be used to determine light importance
-//class GPULightI : public GPUEndpointI
-//{
-//    protected:
-//        const GPUDistribution2D*            dLumDistribution;
-//
-//    public: 
-//        __device__                          GPULightI(/*const GPUDistribution2D* lumDist,*/ HitKey k,
-//                                                      uint16_t mediumIndex);
-//        virtual                             ~GPULightI() = default;
-//};
 
 __device__      
 inline  GPUEndpointI::GPUEndpointI(HitKey k, uint16_t mediumIndex) 
@@ -87,12 +74,3 @@ inline uint16_t GPUEndpointI::MediumIndex() const
 {
     return mediumIndex;
 }
-
-//__device__
-//inline GPULightI::GPULightI(HitKey k, PrimitiveId id,
-//                            uint16_t mediumIndex)
-//    : GPUEndpointI(k, id, mediumIndex)
-//    , dLumDistribution(nullptr)
-//{}
-
-using GPUCameraI = GPUEndpointI;
