@@ -20,12 +20,26 @@ All of them should be provided
 #include "DefaultLeaf.h"
 #include "GPUPrimitiveP.cuh"
 #include "TypeTraits.h"
+#include "Random.cuh"
 
 struct EmptyData {};
 struct EmptyHit {};
 
 struct EPrimFunctions
 {
+    __device__
+    static inline Vector3f Sample(// Output
+                                  Vector3f& normal,
+                                  float& pdf,
+                                  // Input
+                                  PrimitiveId primitiveId,
+                                  const EmptyData& primData,
+                                  // I-O
+                                  RandomGPU& rng)
+    {
+        return Zero3;
+    }
+
     __device__
     static inline HitResult Hit(// Output
                                 HitKey& newMat,
@@ -86,7 +100,8 @@ class GPUPrimitiveEmpty final
                                EmptySurfaceGenerator, 
                                EPrimFunctions::Hit,
                                EPrimFunctions::Leaf, EPrimFunctions::AABB, 
-                               EPrimFunctions::Area, EPrimFunctions::Center>
+                               EPrimFunctions::Area, EPrimFunctions::Center,
+                               EPrimFunctions::Sample>
 {
     public:
         static constexpr const char*            TypeName() { return BaseConstants::EMPTY_PRIMITIVE_NAME; }

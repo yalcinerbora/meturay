@@ -1,7 +1,7 @@
 #include "BasicMaterials.cuh"
 
 SceneError ConstantMat::InitializeGroup(const NodeListing& materialNodes, 
-                                        std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                        const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                         double time, const std::string& scenePath)
 {
     constexpr const char* ALBEDO = "albedo";

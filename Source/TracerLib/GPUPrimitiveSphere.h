@@ -15,6 +15,7 @@ All of them should be provided
 #include <cuda_fp16.h>
 
 #include "DefaultLeaf.h"
+#include "Random.cuh"
 #include "GPUPrimitiveP.cuh"
 #include "DeviceMemory.h"
 #include "TypeTraits.h"
@@ -35,6 +36,40 @@ using SphereHit = Vector2f;
 
 struct SphrFunctions
 {
+    __device__
+    static inline Vector3f Sample(// Output
+                                  Vector3f& normal,
+                                  float& pdf,
+                                  // Input
+                                  PrimitiveId primitiveId,
+                                  const SphereData& primData,
+                                  // I-O
+                                  RandomGPU& rng)
+    {    
+        Vector4f data = primData.centerRadius[primitiveId];
+        Vector3f center = data;
+        float radius = data[3];
+
+        // Marsaglia 1972
+        // http://mathworld.wolfram.com/SpherePointPicking.html
+        float x1 = GPUDistribution::Uniform<float>(rng) * 2.0f - 1.0f;
+        float x2 = GPUDistribution::Uniform<float>(rng) * 2.0f - 1.0f;
+
+        float x1Sqr = x1 * x1;
+        float x2Sqr = x2 * x2;
+        float coeff = sqrt(1 - x1Sqr - x2Sqr);
+
+        pdf = 1.0f / SphrFunctions::Area(primitiveId, primData);
+
+        Vector3f sphrLoc = Vector3(2.0f * x1 * coeff,
+                                   2.0f * x2 * coeff,
+                                   1.0f - 2.0f * (x1Sqr + x2Sqr));
+
+        normal = sphrLoc;
+        sphrLoc = sphrLoc * radius + center;
+        return sphrLoc;
+    }
+
     // Sphere Hit Acceptance
     __device__
     static inline HitResult Hit(// Output
@@ -96,10 +131,7 @@ struct SphrFunctions
     {
         Vector4f data = primData.centerRadius[primitiveId];
         float radius = data[3];
-
-        // Surface area is related to radius only (wrt of its square)
-        // TODO: check if this is a good estimation
-        return radius * radius;
+        return MathConstants::Pi * radius * radius;
     }
 
     __device__
@@ -197,7 +229,8 @@ class GPUPrimitiveSphere final
     : public GPUPrimitiveGroup<SphereHit, SphereData, DefaultLeaf,
                                SphereSurfaceGenerator, SphrFunctions::Hit,
                                SphrFunctions::Leaf, SphrFunctions::AABB, 
-                               SphrFunctions::Area, SphrFunctions::Center>
+                               SphrFunctions::Area, SphrFunctions::Center,
+                               SphrFunctions::Sample>
 {
     public:
         static constexpr const char*            TypeName() { return "Sphere"; }

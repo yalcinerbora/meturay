@@ -35,7 +35,7 @@ class ConstantMat final
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
         SceneError              InitializeGroup(const NodeListing& materialNodes, 
-                                                std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                                const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override;
@@ -82,7 +82,7 @@ class BarycentricMat final
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
         SceneError              InitializeGroup(const NodeListing& materialNodes, 
-                                                std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                                const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override {return GenerateInnerIds(materialNodes);}
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override {return SceneError::OK;}
@@ -129,7 +129,7 @@ class SphericalMat final
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
         SceneError              InitializeGroup(const NodeListing& materialNodes, 
-                                                std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                                const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override {return GenerateInnerIds(materialNodes);}
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override {return SceneError::OK;}

@@ -49,9 +49,6 @@
     <Filter Include="GPU Interfaces">
       <UniqueIdentifier>{53f72f87-4f4d-49be-b1cb-a23718154cc7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Light &amp; Camera">
-      <UniqueIdentifier>{e71549dc-2b27-4e37-8185-0dbb359cc277}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Default Materials">
       <UniqueIdentifier>{a2687996-760b-45ce-95dd-bdb00b67850a}</UniqueIdentifier>
     </Filter>
@@ -69,6 +66,12 @@
     </Filter>
     <Filter Include="Default Transforms">
       <UniqueIdentifier>{a1e1a6ca-a78f-40a3-bdfd-d3dd40ac5aa4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Default Lights">
+      <UniqueIdentifier>{fae3e646-d18b-4c34-9325-173b48b25ee2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Default Cameras">
+      <UniqueIdentifier>{65c5bcd6-8108-42c8-afd6-48c9d8fad45c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -251,15 +254,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\MaterialFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.cuh">
-      <Filter>Light &amp; Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULight.cuh">
-      <Filter>Light &amp; Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUCamera.cuh">
-      <Filter>Light &amp; Camera</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorFunctions.h">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
@@ -329,6 +323,33 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformIdentity.cuh">
       <Filter>Default Transforms</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.cuh">
+      <Filter>GPU Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULightI.cuh">
+      <Filter>GPU Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraI.cuh">
+      <Filter>GPU Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraPinole.cuh">
+      <Filter>Default Cameras</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULightSpot.cuh">
+      <Filter>Default Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULightDirectional.cuh">
+      <Filter>Default Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULightPoint.cuh">
+      <Filter>Default Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULightPrimitive.cuh">
+      <Filter>Default Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULightPrimitive.hpp">
+      <Filter>Default Lights</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">
@@ -383,6 +404,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUTransformSingle.cu">
       <Filter>Default Transforms</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightPrimitive.cu">
+      <Filter>Default Lights</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

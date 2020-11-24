@@ -2,7 +2,7 @@
 #include "RayLib/ColorConversion.h"
 
 SceneError LightMatConstant::InitializeGroup(const NodeListing& materialNodes, 
-                                             std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                             const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                              double time, const std::string& scenePath)
 {
     constexpr const char* RADIANCE = "radiance";
@@ -53,7 +53,7 @@ const GPUDistribution2D& LightMatConstant::LuminanceDistribution(uint32_t materi
 }
 
 SceneError LightMatTextured::InitializeGroup(const NodeListing& materialNodes, 
-                                             std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                             const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                              double time, const std::string& scenePath)
 {
     // TODO: Implement
@@ -73,7 +73,7 @@ const GPUDistribution2D& LightMatTextured::LuminanceDistribution(uint32_t materi
 }
 
 SceneError LightMatCube::InitializeGroup(const NodeListing& materialNodes, 
-                                         std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                         const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                          double time, const std::string& scenePath)
 {
     // TODO: Implement

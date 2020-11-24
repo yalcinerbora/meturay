@@ -20,6 +20,7 @@ All of them should be provided
 #include "RayLib/Vector.h"
 #include "RayLib/Triangle.h"
 
+#include "Random.cuh"
 #include "GPUPrimitiveP.cuh"
 #include "GPUTransformI.h"
 #include "GPUSurface.h"
@@ -52,6 +53,51 @@ using TriangleHit = Vector2f;
 
 struct TriFunctions
 {
+    __device__
+    static inline Vector3f Sample(// Output
+                                  Vector3f& normal,
+                                  float& pdf,                                  
+                                  // Input
+                                  PrimitiveId primitiveId,
+                                  const TriData& primData,
+                                  // I-O
+                                  RandomGPU& rng)
+    {
+        float r1 = sqrt(GPUDistribution::Uniform<float>(rng));
+        float r2 = GPUDistribution::Uniform<float>(rng);
+
+        uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
+        uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
+        uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
+
+        Vector3 position0 = primData.positions[index0];
+        Vector3 position1 = primData.positions[index1];
+        Vector3 position2 = primData.positions[index2];
+
+        pdf = 1.0f / TriFunctions::Area(primitiveId, primData);
+
+        // Calculate Normal
+        // CCW
+        Vector3 vec0 = position1 - position0;
+        Vector3 vec1 = position2 - position0;
+        normal = Cross(vec0, vec1).Normalize();
+
+        // Osada 2002
+        // http://graphics.stanford.edu/courses/cs468-08-fall/pdf/osada.pdf
+        float a = 1 - r1;
+        float b = (1 - r2) * r1;
+        float c = r1 * r2;
+        return (position0 * a + 
+                position1 * b + 
+                position2 * c);
+    }
+
+    __device__
+    static inline Vector3f Normal(PrimitiveId primitiveId,
+                                  const TriData& primData)
+    {
+
+    }
 
     // Triangle Hit Acceptance
     __device__
@@ -286,7 +332,8 @@ class GPUPrimitiveTriangle final
                                TriangleSurfaceGenerator,
                                TriFunctions::Hit, 
                                TriFunctions::Leaf, TriFunctions::AABB, 
-                               TriFunctions::Area, TriFunctions::Center>
+                               TriFunctions::Area, TriFunctions::Center,
+                               TriFunctions::Sample>
 {
     public:
         static constexpr const char*            TypeName() { return "Triangle"; }

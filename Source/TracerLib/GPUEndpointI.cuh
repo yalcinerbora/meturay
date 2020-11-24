@@ -18,15 +18,12 @@ class GPUEndpointI
         // Launch a ray using this key
         // if nothing hits Tracer batches the ray with this key
         HitKey                  boundaryMaterialKey;
-        // Primitive Id is required for primitive lights for NEE estimation
-        PrimitiveId             primitiveId;
         // Medium of the endpoint
         // used to initialize rays when generated
         uint16_t                mediumIndex;
         
     public:
-        __device__              GPUEndpointI(HitKey k, PrimitiveId id,
-                                             uint16_t mediumIndex);
+        __device__              GPUEndpointI(HitKey k, uint16_t mediumIndex);
         virtual                 ~GPUEndpointI() = default;
 
         // Interface
@@ -53,29 +50,29 @@ class GPUEndpointI
                                             // I-O
                                             RandomGPU&) const = 0;
 
-        __device__ HitKey       BoundaryMaterial() const;
-        __device__ PrimitiveId  Primitive() const;
-        __device__ uint16_t     MediumIndex() const;
+        virtual __device__ PrimitiveId  PrimitiveIndex() const = 0;
+
+        __device__ HitKey               BoundaryMaterial() const;
+        __device__ uint16_t             MediumIndex() const;
+        __device__ TransformId          TransformIndex() const;        
 };
 
-// Additional to sampling stuff, Light returns flux
-// which can be used to determine light importance
-class GPULightI : public GPUEndpointI
-{
-    protected:
-        const GPUDistribution2D*            dLumDistribution;
-
-    public: 
-        __device__                          GPULightI(const GPUDistribution2D* lumDist, HitKey k,
-                                                      PrimitiveId id, uint16_t mediumIndex);
-        virtual                             ~GPULightI() = default;
-};
+//// Additional to sampling stuff, Light returns flux
+//// which can be used to determine light importance
+//class GPULightI : public GPUEndpointI
+//{
+//    protected:
+//        const GPUDistribution2D*            dLumDistribution;
+//
+//    public: 
+//        __device__                          GPULightI(/*const GPUDistribution2D* lumDist,*/ HitKey k,
+//                                                      uint16_t mediumIndex);
+//        virtual                             ~GPULightI() = default;
+//};
 
 __device__      
-inline  GPUEndpointI::GPUEndpointI(HitKey k, PrimitiveId id,
-                                   uint16_t mediumIndex) 
+inline  GPUEndpointI::GPUEndpointI(HitKey k, uint16_t mediumIndex) 
     : boundaryMaterialKey(k) 
-    , primitiveId(id)
     , mediumIndex(mediumIndex)
 {}
 
@@ -86,22 +83,16 @@ inline HitKey GPUEndpointI::BoundaryMaterial() const
 }
 
 __device__
-inline PrimitiveId GPUEndpointI::Primitive() const
-{
-    return primitiveId;
-}
-
-__device__
 inline uint16_t GPUEndpointI::MediumIndex() const
 {
     return mediumIndex;
 }
 
-__device__
-inline GPULightI::GPULightI(const GPUDistribution2D* lumDist, HitKey k, PrimitiveId id,
-                            uint16_t mediumIndex)
-    : GPUEndpointI(k, id, mediumIndex)
-    , dLumDistribution(lumDist)
-{}
+//__device__
+//inline GPULightI::GPULightI(HitKey k, PrimitiveId id,
+//                            uint16_t mediumIndex)
+//    : GPUEndpointI(k, id, mediumIndex)
+//    , dLumDistribution(nullptr)
+//{}
 
 using GPUCameraI = GPUEndpointI;

@@ -93,6 +93,8 @@ struct SceneError : public ErrorI
             SURFACE_LOADER_INTERNAL_ERROR,
             TRANSFORM_TYPE_INTERNAL_ERROR,
             MEDIUM_TYPE_INTERNAL_ERROR,
+            LIGHT_TYPE_INTERNAL_ERRROR,
+            CAMERA_TYPE_INTERNAL_ERROR,
             // End
             END
         };
@@ -218,7 +220,9 @@ inline SceneError::operator std::string() const
         "Internal Error on the Material Type",
         "Internal Error on the Surface Loader",
         "Internal Error on the Transform Type",
-        "Internal Error on the Medium Type"
+        "Internal Error on the Medium Type",
+        "Internal Error on the Light Type",
+        "Internal Error on the Camera Type"
     };
     static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(SceneError::END),
                   "Enum and enum string list size mismatch.");

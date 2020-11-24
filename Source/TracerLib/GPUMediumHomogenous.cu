@@ -2,7 +2,7 @@
 #include "CudaConstants.h"
 #include "RayLib/MemoryAlignment.h"
 
-__global__ void KCConstructGPUMediumHomogenous(GPUMediumHomogenous* gLocation,
+__global__ void KCConstructGPUMediumHomogenous(GPUMediumHomogenous* gMediumLocations,
                                                //
                                                const GPUMediumHomogenous::Data* gDataList,
                                                uint32_t indexOffset,
@@ -12,8 +12,8 @@ __global__ void KCConstructGPUMediumHomogenous(GPUMediumHomogenous* gLocation,
         globalId < mediumCount;
         globalId += blockDim.x * gridDim.x)
     {
-        new (gLocation) GPUMediumHomogenous(gDataList[globalId],
-                                            indexOffset + globalId);
+        new (gMediumLocations + globalId) GPUMediumHomogenous(gDataList[globalId],
+                                                              indexOffset + globalId);
     }
 }
 

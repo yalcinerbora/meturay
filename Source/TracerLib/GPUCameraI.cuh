@@ -52,7 +52,7 @@ static constexpr size_t GPUCameraUnionSize = *std::max_element(std::begin(Camera
 
 __device__
 inline PinholeCamera::PinholeCamera(const CPUCamera& cam)
-    : GPUEndpointI(cam.matKey, 0, cam.mediumIndex)
+    : GPUEndpointI(cam.matKey, cam.mediumIndex)
 {
     // Find world space window sizes
     float widthHalf = tanf(cam.fov[0] * 0.5f) * cam.nearPlane;

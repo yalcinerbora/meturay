@@ -6,7 +6,7 @@
 #include "TracerLib/ImageStructs.h"
 #include "TracerLib/RayStructs.h"
 #include "TracerLib/TextureStructs.h"
-#include "TracerLib/GPULight.cuh"
+#include "TracerLib/GPULightI.cuh"
 #include "TracerLib/EstimatorFunctions.cuh"
 #include "TracerLib/GPUMediumVacuum.cuh"
 
@@ -127,7 +127,7 @@ inline void PathLightWork(// Output
     {
         //
         const GPUEndpointI* endPoint = gRenderState.lightList[aux.endPointIndex];
-        PrimitiveId neePrimId = endPoint->Primitive();
+        PrimitiveId neePrimId = endPoint->PrimitiveIndex();
         HitKey neeKey = endPoint->BoundaryMaterial();
 
         // Check if NEE ray actual hit the requested light

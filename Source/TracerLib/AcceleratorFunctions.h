@@ -13,6 +13,7 @@ using PrimitiveIdList = std::array<uint32_t, SceneConstants::MaxPrimitivePerSurf
 using HitResult = Vector<2, bool>;
 
 class GPUTransformI;
+class RandomGPU;
 
 // This is Leaf of Base Accelerator
 // It points to another accelerator pair
@@ -68,6 +69,17 @@ using AreaGenFunction = float(*)(PrimitiveId primitiveId, const PrimitiveData&);
 // Center generation function for bound hierarcy generation
 template <class PrimitiveData>
 using CenterGenFunction = Vector3(*)(PrimitiveId primitiveId, const PrimitiveData&);
+
+// Sample function for generating rays and/or finding an arbitrary point
+template <class PrimitiveData>
+using SampleFunction = Vector3(*)(Vector3& normal,
+                                  float& pdf,
+
+                                  PrimitiveId primitiveId,
+                                  const PrimitiveData&,
+                                  // I-O
+                                  RandomGPU& rng);
+
 
 // Common Functors for gpu AABB Generation
 template<class PrimitiveGroup>

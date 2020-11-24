@@ -18,6 +18,7 @@ Uses statified sampling
 #include "ImageStructs.h"
 #include "Random.cuh"
 #include "GPUEndpointI.cuh"
+#include "GPUCameraI.cuh"
 
 #include "ImageFunctions.cuh"
 
@@ -128,8 +129,6 @@ __global__ void KCGenerateCameraRaysCPU(// Output
 
     }
 }
-
-#include "GPUCamera.cuh"
 
 // Templated Camera Ray Generation Kernel
 template<class RayAuxData, AuxInitFunc<RayAuxData> AuxFunc>

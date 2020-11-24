@@ -2,7 +2,7 @@
 #include "RayLib/MemoryAlignment.h"
 
 SceneError EmissiveMat::InitializeGroup(const NodeListing& materialNodes, 
-                                        std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                        const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                         double time, const std::string& scenePath)
 {
     constexpr const char* IRRADIANCE = "radiance";
@@ -46,7 +46,7 @@ SceneError EmissiveMat::ChangeTime(const NodeListing& materialNodes, double time
 
 // -------------
 SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes, 
-                                       std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                       const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                        double time, const std::string& scenePath)
 {
     constexpr const char* ALBEDO = "albedo";
@@ -82,7 +82,7 @@ SceneError LambertMat::ChangeTime(const NodeListing& materialNodes, double time,
 
 // -------------
 SceneError ReflectMat::InitializeGroup(const NodeListing& materialNodes, 
-                                       std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                       const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                        double time, const std::string& scenePath)
 {
     constexpr const char* ALBEDO = "albedo";
@@ -125,7 +125,7 @@ SceneError ReflectMat::ChangeTime(const NodeListing& materialNodes, double time,
 
 // -------------
 SceneError RefractMat::InitializeGroup(const NodeListing& materialNodes, 
-                                       std::map<uint32_t, uint32_t> mediumIdIndexPairs,
+                                       const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                        double time, const std::string& scenePath)
 {
     constexpr const char* ALBEDO = "albedo";
