@@ -1,34 +1,9 @@
 {
-	"Cameras": [
-    {
-		"apertureSize": 1.0,
-		"focusDistance": 21,
-		// 16:9 FoV
-		"fov": [94.45, 53.13],
-		// 1:1 FoV
-		//"fov": [53.13, 53.13],
-		"gaze": [0.0, 2, 0.0],
-		"planes": [0.1, 20.0],
-		"position": [0.0, 3.0, 7.0],
-		"up": [0.0, 1.0, 0.0]
-    }],
-
 	"BaseAccelerator": {"type": "BasicBVH"},
 	"BaseBoundaryMaterial": 0,
 	"BaseMedium" : 0,
 
     "Mediums": [{ "id" : 0, "type" : "Vacuum"}],
-
-	"Lights": [
-	// Single Directional Light Information
-	{
-		"type": "directional",
-		"material" : 1,
-		//"direction": [0, -1, 0],
-		"direction": [0.40825, -0.8165, 0.40825],
-		"power": [1.0, 1.0, 1.0]
-	}
-	],
 
 	"Transforms":[{"id": 0, "type": "Identity"}],
 
@@ -72,5 +47,31 @@
     "Accelerators":[{"id": 0, "type":"BasicBVH", "useStack": true}],
 
     // Surfaces
-	"Surfaces": ["crySponzaSurfaces.bin"]
+	"Surfaces": ["crySponzaSurfaces.bin"],
+
+	"Lights": [
+	{
+		"type": "Directional",
+		"material" : 1,
+		//"direction": [0, -1, 0],
+		"direction": [0.40825, -0.8165, 0.40825],
+		"power": [1.0, 1.0, 1.0]
+	}],
+
+	"Cameras": [		
+    {
+		"type": "Pinhole",
+
+		"apertureSize": 1.0,
+		"focusDistance": 21,
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"gaze": [0.0, 2, 0.0],
+		"planes": [0.1, 20.0],
+		"position": [0.0, 3.0, 7.0],
+		"up": [0.0, 1.0, 0.0]
+    }],
+
 }

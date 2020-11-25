@@ -34,6 +34,7 @@ namespace NodeNames
     static constexpr const char* MATERIAL = "material";
     // Material & Light Common Names
     static constexpr const char* MEDIUM = "medium";
+    static constexpr const char* LIGHT = "light";
     // Light Related Names
     // Light Type Values
     static constexpr const char* LIGHT_POSITION = POSITION;

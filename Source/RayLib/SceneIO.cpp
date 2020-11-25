@@ -5,73 +5,73 @@
 
 using namespace NodeNames;
 
-static constexpr const char* LightTypeNames[static_cast<int>(LightType::END)] =
-{
-    "point",
-    "directional",
-    "spot",
-    "rectangular",
-    "triangular",
-    "disk",
-    "spherical",
-    "primitive"
-};
-
-static constexpr const char* TextureTypeNames[static_cast<int>(TextureType::END)] =
-{
-    "1D",
-    "2D",
-    "3D",
-    "cube"
-};
-
-static constexpr const char* FilterTypeNames[static_cast<int>(FilterType::END)] =
-{
-    "linear",
-    "nearest"
-};
-
-inline SceneError TextureTypeStringToEnum(TextureType& type,
-                                          const std::string& str)
-{
-    for(int i = 0; i < static_cast<int>(TextureType::END); i++)
-    {
-        if(str == std::string(TextureTypeNames[i]))
-        {
-            type = static_cast<TextureType>(i);
-            return SceneError::OK;
-        }
-    }
-    return SceneError::UNKNOWN_TEXTURE_TYPE;
-}
-
-inline SceneError FilterTypeStringToEnum(FilterType& type,
-                                          const std::string& str)
-{
-    for(int i = 0; i < static_cast<int>(FilterType::END); i++)
-    {
-        if(str == std::string(FilterTypeNames[i]))
-        {
-            type = static_cast<FilterType>(i);
-            return SceneError::OK;
-        }
-    }
-    return SceneError::UNKNOWN_FILTER_TYPE;
-}
-
-inline SceneError LightTypeStringToEnum(LightType& type,
-                                        const std::string& str)
-{
-    for(int i = 0; i < static_cast<int>(LightType::END); i++)
-    {
-        if(str == std::string(LightTypeNames[i]))
-        {
-            type = static_cast<LightType>(i);
-            return SceneError::OK;
-        }
-    }
-    return SceneError::UNKNOWN_LIGHT_TYPE;
-}
+//static constexpr const char* LightTypeNames[static_cast<int>(LightType::END)] =
+//{
+//    "point",
+//    "directional",
+//    "spot",
+//    "rectangular",
+//    "triangular",
+//    "disk",
+//    "spherical",
+//    "primitive"
+//};
+//
+//static constexpr const char* TextureTypeNames[static_cast<int>(TextureType::END)] =
+//{
+//    "1D",
+//    "2D",
+//    "3D",
+//    "cube"
+//};
+//
+//static constexpr const char* FilterTypeNames[static_cast<int>(FilterType::END)] =
+//{
+//    "linear",
+//    "nearest"
+//};
+//
+//inline SceneError TextureTypeStringToEnum(TextureType& type,
+//                                          const std::string& str)
+//{
+//    for(int i = 0; i < static_cast<int>(TextureType::END); i++)
+//    {
+//        if(str == std::string(TextureTypeNames[i]))
+//        {
+//            type = static_cast<TextureType>(i);
+//            return SceneError::OK;
+//        }
+//    }
+//    return SceneError::UNKNOWN_TEXTURE_TYPE;
+//}
+//
+//inline SceneError FilterTypeStringToEnum(FilterType& type,
+//                                          const std::string& str)
+//{
+//    for(int i = 0; i < static_cast<int>(FilterType::END); i++)
+//    {
+//        if(str == std::string(FilterTypeNames[i]))
+//        {
+//            type = static_cast<FilterType>(i);
+//            return SceneError::OK;
+//        }
+//    }
+//    return SceneError::UNKNOWN_FILTER_TYPE;
+//}
+//
+//inline SceneError LightTypeStringToEnum(LightType& type,
+//                                        const std::string& str)
+//{
+//    for(int i = 0; i < static_cast<int>(LightType::END); i++)
+//    {
+//        if(str == std::string(LightTypeNames[i]))
+//        {
+//            type = static_cast<LightType>(i);
+//            return SceneError::OK;
+//        }
+//    }
+//    return SceneError::UNKNOWN_LIGHT_TYPE;
+//}
 
 //CPUTransform SceneIO::LoadTransform(const nlohmann::json& jsn, double time)
 //{
@@ -156,95 +156,95 @@ uint32_t SceneIO::LoadLightMatId(const nlohmann::json& jsn)
     return jsn[LIGHT_MATERIAL];
 }
 
-LightType SceneIO::LoadLightType(const nlohmann::json& jsn)
-{
-    LightType t;
-    std::string type = jsn[TYPE];
-    SceneError e = LightTypeStringToEnum(t, type);
-    if(e != SceneError::OK) throw SceneException(SceneError::UNKNOWN_LIGHT_TYPE);
-    return t;
-}
-
-CPULight SceneIO::LoadLight(const nlohmann::json& jsn, double time)
-{
-    if(jsn.is_string())
-    {
-        return LoadFromAnim<CPULight>(jsn, time);
-    }
-    else if(jsn.is_object())
-    {
-        CPULight light = CPULight{};
-        light.position0 = Zero3;
-        light.position1 = Zero3;
-        light.position2 = Zero3;
-        light.primId = 0;
-        light.matKey = HitKey::InvalidKey;
-        light.dLuminanceDistribution = nullptr;
-        light.mediumIndex = OptionalFetch<uint16_t>(jsn, MEDIUM, 0);
-
-        std::string type = jsn[TYPE];
-        SceneError e = LightTypeStringToEnum(light.type, type);
-        if(e != SceneError::OK) throw SceneException(SceneError::UNKNOWN_LIGHT_TYPE);
-
-        switch(light.type)
-        {
-            // Fetch from Node if analytic light
-            case LightType::POINT:
-            {
-                light.position0 = LoadVector<3, float>(jsn[LIGHT_POSITION], time);
-                break;
-            }
-            case LightType::DIRECTIONAL:
-            {
-                light.position0 = LoadVector<3, float>(jsn[LIGHT_DIRECTION], time);
-                break;
-            }
-            case LightType::SPOT:
-            {
-                light.position0 = LoadVector<3, float>(jsn[LIGHT_POSITION], time);
-                light.position1 = LoadVector<3, float>(jsn[LIGHT_DIRECTION], time);
-                Vector2 angles = LoadVector<2, float>(jsn[LIGHT_CONE_APERTURE], time);
-                angles *= MathConstants::DegToRadCoef;
-                angles[0] = std::cos(angles[0]);
-                angles[1] = std::cos(angles[1]);
-                light.position2 = Vector3(angles, 0.0f);
-                break;
-            }
-            case LightType::RECTANGULAR:
-            {
-                light.position0 = LoadVector<3, float>(jsn[LIGHT_POSITION], time);
-                light.position1 = LoadVector<3, float>(jsn[LIGHT_RECT_V0], time);
-                light.position2 = LoadVector<3, float>(jsn[LIGHT_RECT_V1], time);
-                break;
-            }
-            case LightType::TRIANGULAR:
-            {
-                light.position0 = LoadVector<3, float>(jsn[LIGHT_POSITION][0], time);
-                light.position1 = LoadVector<3, float>(jsn[LIGHT_POSITION][1], time);
-                light.position2 = LoadVector<3, float>(jsn[LIGHT_POSITION][2], time);
-                break;
-            }
-            case LightType::DISK:
-            {
-                light.position0 = LoadVector<3, float>(jsn[LIGHT_DIRECTION], time);
-                light.position1 = LoadVector<3, float>(jsn[LIGHT_POSITION], time);
-                light.position2[0] = LoadNumber<float>(jsn[LIGHT_DISK_RADIUS], time);
-                break;
-            }
-            case LightType::SPHERICAL:
-            {
-                light.position0 = LoadVector<3, float>(jsn[LIGHT_SPHR_CENTER], time);
-                light.position1[0] = LoadNumber<float>(jsn[LIGHT_SPHR_RADIUS], time);
-                break;
-            }
-            // Skip primitive ones
-            case LightType::PRIMITIVE: { break; }
-            default: throw SceneException(SceneError::UNKNOWN_LIGHT_TYPE);
-        }
-        return light;
-    }
-    else throw SceneException(SceneError::TYPE_MISMATCH);
-}
+//LightType SceneIO::LoadLightType(const nlohmann::json& jsn)
+//{
+//    LightType t;
+//    std::string type = jsn[TYPE];
+//    SceneError e = LightTypeStringToEnum(t, type);
+//    if(e != SceneError::OK) throw SceneException(SceneError::UNKNOWN_LIGHT_TYPE);
+//    return t;
+//}
+//
+//CPULight SceneIO::LoadLight(const nlohmann::json& jsn, double time)
+//{
+//    if(jsn.is_string())
+//    {
+//        return LoadFromAnim<CPULight>(jsn, time);
+//    }
+//    else if(jsn.is_object())
+//    {
+//        CPULight light = CPULight{};
+//        light.position0 = Zero3;
+//        light.position1 = Zero3;
+//        light.position2 = Zero3;
+//        light.primId = 0;
+//        light.matKey = HitKey::InvalidKey;
+//        light.dLuminanceDistribution = nullptr;
+//        light.mediumIndex = OptionalFetch<uint16_t>(jsn, MEDIUM, 0);
+//
+//        std::string type = jsn[TYPE];
+//        SceneError e = LightTypeStringToEnum(light.type, type);
+//        if(e != SceneError::OK) throw SceneException(SceneError::UNKNOWN_LIGHT_TYPE);
+//
+//        switch(light.type)
+//        {
+//            // Fetch from Node if analytic light
+//            case LightType::POINT:
+//            {
+//                light.position0 = LoadVector<3, float>(jsn[LIGHT_POSITION], time);
+//                break;
+//            }
+//            case LightType::DIRECTIONAL:
+//            {
+//                light.position0 = LoadVector<3, float>(jsn[LIGHT_DIRECTION], time);
+//                break;
+//            }
+//            case LightType::SPOT:
+//            {
+//                light.position0 = LoadVector<3, float>(jsn[LIGHT_POSITION], time);
+//                light.position1 = LoadVector<3, float>(jsn[LIGHT_DIRECTION], time);
+//                Vector2 angles = LoadVector<2, float>(jsn[LIGHT_CONE_APERTURE], time);
+//                angles *= MathConstants::DegToRadCoef;
+//                angles[0] = std::cos(angles[0]);
+//                angles[1] = std::cos(angles[1]);
+//                light.position2 = Vector3(angles, 0.0f);
+//                break;
+//            }
+//            case LightType::RECTANGULAR:
+//            {
+//                light.position0 = LoadVector<3, float>(jsn[LIGHT_POSITION], time);
+//                light.position1 = LoadVector<3, float>(jsn[LIGHT_RECT_V0], time);
+//                light.position2 = LoadVector<3, float>(jsn[LIGHT_RECT_V1], time);
+//                break;
+//            }
+//            case LightType::TRIANGULAR:
+//            {
+//                light.position0 = LoadVector<3, float>(jsn[LIGHT_POSITION][0], time);
+//                light.position1 = LoadVector<3, float>(jsn[LIGHT_POSITION][1], time);
+//                light.position2 = LoadVector<3, float>(jsn[LIGHT_POSITION][2], time);
+//                break;
+//            }
+//            case LightType::DISK:
+//            {
+//                light.position0 = LoadVector<3, float>(jsn[LIGHT_DIRECTION], time);
+//                light.position1 = LoadVector<3, float>(jsn[LIGHT_POSITION], time);
+//                light.position2[0] = LoadNumber<float>(jsn[LIGHT_DISK_RADIUS], time);
+//                break;
+//            }
+//            case LightType::SPHERICAL:
+//            {
+//                light.position0 = LoadVector<3, float>(jsn[LIGHT_SPHR_CENTER], time);
+//                light.position1[0] = LoadNumber<float>(jsn[LIGHT_SPHR_RADIUS], time);
+//                break;
+//            }
+//            // Skip primitive ones
+//            case LightType::PRIMITIVE: { break; }
+//            default: throw SceneException(SceneError::UNKNOWN_LIGHT_TYPE);
+//        }
+//        return light;
+//    }
+//    else throw SceneException(SceneError::TYPE_MISMATCH);
+//}
 
 SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn)
 {
@@ -308,6 +308,46 @@ SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn)
         s.pairCount = static_cast<int8_t>(primIdArray.size());
         return s;
     }
+}
+
+LightSurfaceStruct SceneIO::LoadLightSurface(uint32_t baseMediumId,
+                                             uint32_t identityTransformId,
+                                             const nlohmann::json& jsn)
+{
+    LightSurfaceStruct s;
+
+    // Transform
+    auto i = jsn.end();
+    if((i = jsn.find(TRANSFORM)) != jsn.end())
+        s.transformId = *i;
+    else s.transformId = identityTransformId;
+
+    // Medium        
+    i = jsn.end();
+    if((i = jsn.find(LIGHT)) != jsn.end())
+        s.mediumId = *i;
+    else s.mediumId = baseMediumId;
+
+    // PrimId or LightId
+    i = jsn.end();
+    if((i = jsn.find(LIGHT)) != jsn.end())
+    {
+        s.isPrimitive = false;
+        s.lightOrPrimId = *i;
+        s.acceleratorId = std::numeric_limits<uint32_t>::max();
+    }
+    else if((i = jsn.find(PRIMITIVE)) != jsn.end())
+    {
+        s.isPrimitive = true;
+        s.acceleratorId = jsn[ACCELERATOR];
+        s.lightOrPrimId = *i;
+    }
+    else throw SceneException(SceneError::TYPE_MISMATCH);
+
+    // Material
+    s.materialId = jsn[MATERIAL];
+        
+    return s;
 }
 
 //TextureStruct SceneIO::LoadTexture(const nlohmann::json& jsn, double time)

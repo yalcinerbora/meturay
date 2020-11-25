@@ -13,46 +13,46 @@
 
 class GPUDistribution2D;
 
-enum class LightType : uint16_t
-{
-    POINT,
-    DIRECTIONAL,
-    SPOT,
-    RECTANGULAR,
-    TRIANGULAR,
-    DISK,
-    SPHERICAL,
-    PRIMITIVE,
-    //
-    END
+//enum class LightType : uint16_t
+//{
+//    POINT,
+//    DIRECTIONAL,
+//    SPOT,
+//    RECTANGULAR,
+//    TRIANGULAR,
+//    DISK,
+//    SPHERICAL,
+//    PRIMITIVE,
+//    //
+//    END
+//
+//};
+//
+//enum class TransformType : uint8_t
+//{
+//    MATRIX,         // 4x4 Transformation matrix
+//    TRS,            // Transform Rotate Scale
+//    ROTATION,       // Rotation only
+//    TRANSLATION,    // Translation only
+//};
 
-};
-
-enum class TransformType : uint8_t
-{
-    MATRIX,         // 4x4 Transformation matrix
-    TRS,            // Transform Rotate Scale
-    ROTATION,       // Rotation only
-    TRANSLATION,    // Translation only
-};
-
-enum class FilterType
-{
-    LINEAR,
-    NEAREST,
-
-    END
-};
-
-enum class TextureType
-{
-    TEX_1D,
-    TEX_2D,
-    TEX_3D,
-    CUBE,
-
-    END
-};
+//enum class FilterType
+//{
+//    LINEAR,
+//    NEAREST,
+//
+//    END
+//};
+//
+//enum class TextureType
+//{
+//    TEX_1D,
+//    TEX_2D,
+//    TEX_3D,
+//    CUBE,
+//
+//    END
+//};
 
 using NodeId = uint32_t;        // Node Id is generic name of the id logic
 using MaterialId = uint32_t;    // Material Id represent material of some kind 
@@ -85,53 +85,30 @@ struct AccelGroupData
 
 struct WorkBatchData
 {
-    std::string             primType;
-    std::string             matType;
-    std::set<MaterialId>    matIds;
+    std::string                     primType;
+    std::string                     matType;
+    std::set<MaterialId>            matIds;
+};
+
+struct LightGroupData
+{
+    std::unique_ptr<SceneNodeI>     lightNode;
+
+    bool                            isPrimitive;
+    uint32_t                        transformId;
+    uint32_t                        mediumId;
+    uint32_t                        lightOrPrimitiveId;
+    
 };
 
 using MaterialKeyListing = std::map<TypeIdPair, HitKey>;
 
-// CPU Representation of Light
-// No inheritance here
-struct CPULight
+struct EndpointStruct
 {
-    uint16_t        mediumIndex;
-    LightType       type;
-    Vector3         position0;
-    Vector3         position1;
-    Vector3         position2;
-    PrimitiveId     primId;
-
-    // Populated by scene system
-    HitKey                      matKey;    
-    const GPUDistribution2D*    dLuminanceDistribution;
-};
-
-struct CPUMedium
-{    
-    // Scattering and Absorbtion Coeffs
-    Vector3 sigmaA;
-    Vector3 sigmaS;     
-    // Phase Function g parameter
-    float phase;
-    // IoR
-    float index;
-};
-
-struct CPUTransform
-{
-    TransformType type;
-    union
-    {
-        Matrix4x4 matrix;
-        struct
-        {
-            Vector3 translation;
-            Vector3 rotation;
-            Vector3 scale;
-        } trs;
-    };
+    uint32_t        acceleratorId;
+    uint32_t        transformId;
+    uint32_t        materialId;
+    uint32_t        mediumId;
 };
 
 struct SurfaceStruct
@@ -143,4 +120,14 @@ struct SurfaceStruct
     uint32_t        transformId;
     IdPairs         matPrimPairs;
     int8_t          pairCount;
+};
+
+struct LightSurfaceStruct
+{
+    bool        isPrimitive;
+    uint32_t    mediumId;
+    uint32_t    transformId;
+    uint32_t    acceleratorId;
+    uint32_t    materialId;
+    uint32_t    lightOrPrimId;
 };

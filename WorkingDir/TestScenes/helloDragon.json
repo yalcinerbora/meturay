@@ -1,18 +1,4 @@
 {
-	"Cameras": [
-    {
-		"apertureSize": 1.0,
-		"focusDistance": 21,
-		// 16:9 FoV
-		"fov": [94.45, 53.13],
-		// 1:1 FoV
-		//"fov": [53.13, 53.13],
-		"gaze": [0.0, 2.0, 0.0],
-		"planes": [0.1, 20.0],
-		"position": [0.0, 3.0, 7.0],
-		"up": [0.0, 1.0, 0.0]
-    }],
-
 	"BaseAccelerator": {"type": "Linear"},
 	"BaseBoundaryMaterial": 0,
 	"BaseMedium" : 0,
@@ -30,22 +16,6 @@
 		"ior": 1.53,
 		"phase": 0
 	}],
-
-	"Lights": [
-	// {
-	// 	"type": "rectangular",
-	// 	"material": 1,
-	// 	// Value
-	// 	"position": [-5.371554, 7.565777, -0.362448],
-	// 	"v0" : [-1.5, -2.12132, 1.5],
-	// 	"v1" : [4.24264, 0, 4.24264]
-	// }
-	{
-		"type": "primitive",
-	 	"material": 1,
-		"primitive": 2
-	}
-	],
 
 	"Transforms":[{"id": 0, "type": "Identity"}],
 	
@@ -135,5 +105,37 @@
 		"accelerator": 0,
 		"material": 2,
         "primitive": 1
-	}]
+	}],
+
+	"Lights": [
+	// {
+	// 	"type": "rectangular",
+	// 	"material": 1,
+	// 	// Value
+	// 	"position": [-5.371554, 7.565777, -0.362448],
+	// 	"v0" : [-1.5, -2.12132, 1.5],
+	// 	"v1" : [4.24264, 0, 4.24264]
+	// }
+	{
+		"type": "Primitive",
+		"material": 1,
+		"primitive": 2
+	}],
+
+	"Cameras": [
+    {
+		"type": "Pinhole",
+
+		"apertureSize": 1.0,
+		"focusDistance": 21,
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"gaze": [0.0, 2.0, 0.0],
+		"planes": [0.1, 20.0],
+		"position": [0.0, 3.0, 7.0],
+		"up": [0.0, 1.0, 0.0]
+    }]
+
 }

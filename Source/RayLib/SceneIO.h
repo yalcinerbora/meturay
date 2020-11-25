@@ -62,8 +62,8 @@ namespace SceneIO
 
     // Common Types
     uint32_t                LoadLightMatId(const nlohmann::json&);
-    LightType               LoadLightType(const nlohmann::json&);    
-    CPULight                LoadLight(const nlohmann::json&, double time = 0.0);
+    //LightType               LoadLightType(const nlohmann::json&);    
+    //CPULight                LoadLight(const nlohmann::json&, double time = 0.0);
 
     //CPUCamera               LoadCamera(const nlohmann::json&, double time = 0.0);
     //CPUTransform            LoadTransform(const nlohmann::json&, double time = 0.0);
@@ -71,6 +71,10 @@ namespace SceneIO
     //TextureStruct           LoadTexture(const nlohmann::json&, double time = 0.0);
 
     SurfaceStruct           LoadSurface(const nlohmann::json&);
+
+    LightSurfaceStruct      LoadLightSurface(uint32_t baseMediumId,
+                                             uint32_t identityTransformId,
+                                             const nlohmann::json& jsn);
 
 };
 

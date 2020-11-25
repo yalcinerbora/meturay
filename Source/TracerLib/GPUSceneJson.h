@@ -22,6 +22,8 @@ using MediumNodeList = std::map<std::string, NodeListing>;
 using TransformNodeList = std::map<std::string, NodeListing>;
 using PrimitiveNodeList = std::map<std::string, NodeListing>;
 using AcceleratorBatchList = std::map<std::string, AccelGroupData>;
+using LightNodeList = std::map<std::string, NodeListing>;
+using CameraNodeList = std::map<std::string, NodeListing>;
 
 using LightPrimitives = std::vector<const GPUPrimitiveGroupI*>;
 
@@ -69,10 +71,10 @@ class GPUSceneJson : public GPUSceneI
         double                                  currentTime;
 
         // CPU Data
-        std::vector<CPUCamera>                  cameras;
-        std::vector<CPULight>                   lights;
         NamedList<CPUTransformGPtr>             transforms;
         NamedList<CPUMediumGPtr>                mediums;
+        NamedList<CPULightGPtr>                 lights;
+        NamedList<CPUCameraGPtr>                cameras;
 
         // Inners
         // Helper Logic
@@ -93,6 +95,9 @@ class GPUSceneJson : public GPUSceneI
                                                  MaterialNodeList& matGroupNodes,
                                                  WorkBatchList& matBatchListings,
                                                  AcceleratorBatchList& accelBatchListings,
+                                                 //
+                                                 CameraNodeList& cameraGroupNodes,
+                                                 LightNodeList& lightGroupNodes,
                                                  //
                                                  double time = 0.0);
         SceneError      GeneratePrimitiveGroups(const PrimitiveNodeList&,
@@ -127,11 +132,8 @@ class GPUSceneJson : public GPUSceneI
         SceneError      FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,
                                              double time = 0.0f);
 
-        SceneError      LoadCommon(double time);
-        SceneError      LoadLogicRelated(double time);
-
-        SceneError      ChangeCommon(double time);
-        SceneError      ChangeLogicRelated(double time);
+        SceneError      LoadAll(double time);
+        SceneError      ChangeAll(double time);
 
     public:
         // Constructors & Destructor
@@ -157,8 +159,8 @@ class GPUSceneJson : public GPUSceneI
         HitKey                              BaseBoundaryMaterial() const override;
         uint32_t                            HitStructUnionSize() const override;
         // Access CPU
-        const std::vector<CPULight>&        LightsCPU() const override;
-        const std::vector<CPUCamera>&       CamerasCPU() const override;
+        const NamedList<CPULightGPtr>&      Lights() const override;
+        const NamedList<CPUCameraGPtr>&     Cameras() const override;
 
         const NamedList<CPUTransformGPtr>&  Transforms() const override;
         const NamedList<CPUMediumGPtr>&     Mediums() const override;
