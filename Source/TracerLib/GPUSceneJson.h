@@ -3,7 +3,6 @@
 #include <vector>
 #include <nlohmann/json_fwd.hpp>
 
-#include "RayLib/Camera.h"
 #include "RayLib/AABB.h"
 #include "RayLib/GPUSceneI.h"
 

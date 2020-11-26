@@ -33,10 +33,6 @@ RayTracer::RayTracer(const CudaSystem& s,
                      const TracerParameters& param)
     : GPUTracer(s, scene, param)
     , scene(scene)
-    , dCustomCamera(nullptr)
-    , dSceneCameras(nullptr)
-    , dCustomCameraAlloc(nullptr)
-    , dSceneCameraAllocs(nullptr)
     , dAuxIn(&auxBuffer0)
     , dAuxOut(&auxBuffer1)
 {}
@@ -166,9 +162,7 @@ void RayTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount)
     currentRayCount = totalRayCount;
 }
 
-void RayTracer::LoadCameraToGPU(const CPUCamera& c)
+void RayTracer::GenerateRays(const VisorCamera& camera, int32_t sampleCount)
 {
-    LightCameraKernels::ConstructSingleCamera(*dCustomCamera,
-                                              dCustomCameraAlloc, 
-                                              c, cudaSystem);
+
 }

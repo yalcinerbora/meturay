@@ -23,7 +23,7 @@ It is also responsible for utilizing all GPUs on the computer.
 #include "TracerOptionsI.h"
 
 struct TracerError;
-struct CPUCamera;
+struct VisorCamera;
 class TracerCallbacksI;
 
 class GPUTracerI
@@ -51,7 +51,7 @@ class GPUTracerI
         // Generate Work for Scene Camera
         virtual void                    GenerateWork(int cameraId) = 0;
         // Generate Work for Arbitrary Camera
-        virtual void                    GenerateWork(const CPUCamera&) = 0;
+        virtual void                    GenerateWork(const VisorCamera&) = 0;
         virtual bool                    Render() = 0;   // Continue Working (untill no work is left)
         virtual void                    Finalize() = 0; // Finalize work (write to image)
 

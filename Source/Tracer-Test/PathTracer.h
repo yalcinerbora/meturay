@@ -40,6 +40,7 @@ class PathTracer final : public RayTracer
     protected:
 
         void                    GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount) override;
+        void                    GenerateRays(const VisorCamera& camera, int32_t sampleCount) override;
 
     public:
         // Constructors & Destructor
@@ -53,7 +54,7 @@ class PathTracer final : public RayTracer
         void                    AskOptions() override;
 
         void                    GenerateWork(int cameraId) override;
-        void                    GenerateWork(const CPUCamera&) override;
+        void                    GenerateWork(const VisorCamera&) override;
         bool                    Render() override;
 };
 

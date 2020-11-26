@@ -39,9 +39,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\Endian.h">
       <Filter>System</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\Camera.h">
-      <Filter>Structs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\VisorInputI.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
@@ -232,6 +229,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\ConfigParsers.h">
       <Filter>FileI-O</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\VisorCamera.h">
+      <Filter>Structs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

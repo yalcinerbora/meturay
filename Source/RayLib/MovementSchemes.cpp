@@ -1,7 +1,7 @@
 #include "MovementSchemes.h"
 #include "Vector.h"
 #include "Quaternion.h"
-#include "Camera.h"
+#include "VisorCamera.h"
 
 MovementSchemeFPS::MovementSchemeFPS(double sensitivity,
                                      double moveRatio,
@@ -15,7 +15,7 @@ MovementSchemeFPS::MovementSchemeFPS(double sensitivity,
 {}
 
 // Interface
-bool MovementSchemeFPS::InputAction(CPUCamera& camera,
+bool MovementSchemeFPS::InputAction(VisorCamera& camera,
                                     VisorActionType visorAction,
                                     KeyAction action)
 {
@@ -80,7 +80,7 @@ bool MovementSchemeFPS::InputAction(CPUCamera& camera,
     return false;
 }
 
-bool MovementSchemeFPS::MouseMovementAction(CPUCamera& camera,
+bool MovementSchemeFPS::MouseMovementAction(VisorCamera& camera,
                                             double x, double y)
 {
     // Check with latest recorded input
@@ -114,7 +114,7 @@ bool MovementSchemeFPS::MouseMovementAction(CPUCamera& camera,
     return mouseToggle;
 }
 
-bool MovementSchemeFPS::MouseScrollAction(CPUCamera&,
+bool MovementSchemeFPS::MouseScrollAction(VisorCamera&,
                                           double x, double y)
 {
     return false;

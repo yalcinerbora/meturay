@@ -3,7 +3,6 @@
 #include <fstream>
 
 #include "RayLib/SceneIO.h"
-#include "RayLib/Camera.h"
 #include "RayLib/Log.h"
 #include "RayLib/SceneNodeNames.h"
 #include "RayLib/StripComments.h"
@@ -22,21 +21,21 @@ static nlohmann::json ReadTestFile(const std::string& fileName = TestSceneName)
 
 TEST(SceneIOCommon, Camera)
 {
-    static constexpr CPUCamera CamResult =
-    {
-        0,
-        CameraType::APERTURE,
-        HitKey::InvalidKey,
-        Vector3(0.0f, 5.0f, 0.0f),
-        0.1f,
-        Vector3(0.0f, 5.0f, 10.0f),
-        100.0f,
-        Vector3(0.0f, 1.0f, 0.0f),
-        1.0f,
-        Vector2(MathConstants::Pi * 0.25, MathConstants::Pi * 0.25)
-    };
+    //static constexpr CPUCamera CamResult =
+    //{
+    //    0,
+    //    CameraType::APERTURE,
+    //    HitKey::InvalidKey,
+    //    Vector3(0.0f, 5.0f, 0.0f),
+    //    0.1f,
+    //    Vector3(0.0f, 5.0f, 10.0f),
+    //    100.0f,
+    //    Vector3(0.0f, 1.0f, 0.0f),
+    //    1.0f,
+    //    Vector2(MathConstants::Pi * 0.25, MathConstants::Pi * 0.25)
+    //};
 
-    nlohmann::json jsn = ReadTestFile()[NodeNames::CAMERA_BASE];
+    //nlohmann::json jsn = ReadTestFile()[NodeNames::CAMERA_BASE];
     //CPUCamera camera = SceneIO::LoadCamera(jsn[0]);
 
     //EXPECT_EQ(CamResult.mediumIndex, camera.mediumIndex);

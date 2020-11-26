@@ -4,7 +4,7 @@
 
 #include "Vector.h"
 #include "Types.h"
-#include "Camera.h"
+#include "VisorCamera.h"
 
 #include "TracerStructs.h"
 
@@ -15,7 +15,7 @@ struct TracerStatus
 
     unsigned int                latestSceneCamId;       // Latest camera that has been used
                                                         // from the scene (for switching from that)
-    CPUCamera                   currentCamera;          // Current Camera (as data)
+    VisorCamera                 currentCamera;          // Current Camera (as data)
 
     Vector2i                    currentRes;             // Current Resolution of the scene;
     PixelFormat                 currentPixelFormat;     // Pixel format of the image that is being generated

@@ -35,7 +35,7 @@ class SelfNode
         void        ChangeTime(const double) override;
         void        IncreaseTime(const double) override;
         void        DecreaseTime(const double) override;
-        void        ChangeCamera(const CPUCamera) override;
+        void        ChangeCamera(const VisorCamera) override;
         void        ChangeCamera(const unsigned int) override;
         void        StartStopTrace(const bool) override;
         void        PauseContTrace(const bool) override;

@@ -7,6 +7,8 @@
 
 #include "RayAuxStruct.h"
 
+class GPUCameraVisor;
+
 // Generic Ray Tracer Class
 class RayTracer : public GPUTracer
 
@@ -16,8 +18,6 @@ class RayTracer : public GPUTracer
         static constexpr const char* SAMPLE_NAME = "Samples";
 
     private:
-        // GPU Image of the camera
-        DeviceMemory            cameraMemory;
     protected:
         // Auxiliary Data for Each Ray
         DeviceMemory            auxBuffer0;
@@ -25,16 +25,11 @@ class RayTracer : public GPUTracer
         //
         DeviceMemory*           dAuxIn;
         DeviceMemory*           dAuxOut;
-        // Camera Realted Ptrs
-        GPUCameraI**            dCustomCamera;
-        const GPUCameraI**      dSceneCameras;
-        Byte*                   dCustomCameraAlloc;
-        Byte*                   dSceneCameraAllocs;
 
         const GPUSceneI&        scene;
 
         virtual void            GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount);
-        void                    LoadCameraToGPU(const CPUCamera&);
+        virtual void            GenerateRays(const VisorCamera& camera, int32_t sampleCount);
         void                    SwapAuxBuffers();
 
     public:

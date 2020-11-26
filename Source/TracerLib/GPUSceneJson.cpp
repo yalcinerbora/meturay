@@ -260,6 +260,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             node->AddIdIndexPair(transformId, iIndex);
         }
         else return SceneError::TRANSFORM_ID_NOT_FOUND;
+        return SceneError::OK;
     };
 
     auto AttachAccelerator = [&](uint32_t accId, uint32_t surfId, uint32_t transformId,
@@ -292,6 +293,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                                            std::move(accGData)).first;
         result->second.matPrimIdPairs.emplace(surfId, idPairs);
         result->second.transformIds.emplace_back(transformId);
+        return SceneError::OK;
     };
 
     // Function Start
@@ -447,7 +449,6 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             if((e = AttachAccelerator(s.acceleratorId, surfId, s.transformId,
                                       primTypeName, pairs)) != SceneError::OK)
                 return e;
-
             surfId++;
         }
 
@@ -483,16 +484,16 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             (s.isPrimitive) ? primTypeName : "",
             std::vector<ConstructionData>()
         };
-        auto& lightData = lightGroupNodes.emplace(primTypeName, data).first->second;
+        auto& lightData = lightGroupNodes.emplace(primTypeName, std::move(data)).first->second;
         auto& constructionInfo = lightData.constructionInfo;
-        constructionInfo.emplace_back(std::move(ConstructionData
-                                                {
-                                                    s.transformId,
-                                                    s.mediumId,
-                                                    s.lightOrPrimId,
-                                                    s.materialId,
-                                                    std::move(lightNode)
-                                                }));
+        constructionInfo.emplace_back(ConstructionData
+                                      {
+                                          s.transformId,
+                                          s.mediumId,
+                                          s.lightOrPrimId,
+                                          s.materialId,
+                                          std::move(lightNode)
+                                      });
 
     }
 

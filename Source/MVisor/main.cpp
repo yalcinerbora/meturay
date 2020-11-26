@@ -7,7 +7,7 @@
 
 #include "RayLib/MayaCacheIO.h"
 #include "RayLib/Log.h"
-#include "RayLib/Camera.h"
+#include "RayLib/VisorCamera.h"
 #include "RayLib/ImageIO.h"
 
 #include <fstream>

@@ -12,7 +12,7 @@ Uses statified sampling
 #include <cuda_runtime.h>
 
 #include "RayLib/Vector.h"
-#include "RayLib/Camera.h"
+#include "RayLib/VisorCamera.h"
 
 #include "RayStructs.h"
 #include "ImageStructs.h"
@@ -41,7 +41,7 @@ __global__ void KCGenerateCameraRaysCPU(// Output
                                         ImageGMem<Vector4f> imgMem,
                                         // Input
                                         RNGGMem gRNGStates,
-                                        const CPUCamera cam,
+                                        const VisorCamera cam,
                                         const uint32_t samplePerLocation,
                                         const Vector2i resolution,
                                         const Vector2i pixelStart,

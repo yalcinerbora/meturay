@@ -2,7 +2,7 @@
 #include "MovementSchemeI.h"
 
 #include "Vector.h"
-#include "Camera.h"
+#include "VisorCamera.h"
 #include "VisorCallbacksI.h"
 #include "Quaternion.h"
 
@@ -86,7 +86,7 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
 VisorWindowInput::VisorWindowInput(KeyboardKeyBindings&& keyBinds,
                                    MouseKeyBindings&& mouseBinds,                                   
                                    MovementScemeList&& movementSchemes,
-                                   const CPUCamera& customCamera)
+                                   const VisorCamera& customCamera)
     : mouseBindings(std::move(mouseBinds))
     , keyboardBindings(std::move(keyBinds))
     , movementSchemes(std::move(movementSchemes))

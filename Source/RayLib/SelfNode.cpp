@@ -1,5 +1,5 @@
 #include "SelfNode.h"
-#include "Camera.h"
+#include "VisorCamera.h"
 #include "TracerStructs.h"
 #include "TracerError.h"
 #include "AnalyticData.h"
@@ -34,7 +34,7 @@ void SelfNode::DecreaseTime(const double)
 
 }
 
-void SelfNode::ChangeCamera(const CPUCamera c)
+void SelfNode::ChangeCamera(const VisorCamera c)
 {
 
 }

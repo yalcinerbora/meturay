@@ -1,5 +1,4 @@
 #include "SceneIO.h"
-#include "Camera.h"
 #include "Constants.h"
 #include "SceneNodeNames.h"
 
@@ -151,10 +150,10 @@ using namespace NodeNames;
 //    else throw SceneException(SceneError::TYPE_MISMATCH);
 //}
 
-uint32_t SceneIO::LoadLightMatId(const nlohmann::json& jsn)
-{
-    return jsn[LIGHT_MATERIAL];
-}
+//uint32_t SceneIO::LoadLightMatId(const nlohmann::json& jsn)
+//{
+//    return jsn[LIGHT_MATERIAL];
+//}
 
 //LightType SceneIO::LoadLightType(const nlohmann::json& jsn)
 //{

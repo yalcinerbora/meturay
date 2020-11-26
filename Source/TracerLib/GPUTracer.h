@@ -29,8 +29,10 @@ class GPUTransformI;
 class GPUSceneI;
 class CudaSystem;
 
-struct CPUTransform;
-struct CPUMedium;
+class GPUEndpointI;
+using GPULightI = GPUEndpointI;
+using GPUCameraI = GPUEndpointI;
+
 struct TracerError;
 
 class GPUTracer : public GPUTracerI
@@ -50,11 +52,20 @@ class GPUTracer : public GPUTracerI
         const std::map<NameGPUPair, GPUMatGPtr>&    materialGroups;
         const NamedList<CPUTransformGPtr>&          transforms;
         const NamedList<CPUMediumGPtr>&             mediums;
+        const NamedList<CPULightGPtr>&              lights;
+        const NamedList<CPUCameraGPtr>&             cameras;
+
         // 
         uint32_t                                    baseMedIndex;
         uint32_t                                    identityTransformIndex;
         // GPU Memory
-        DeviceMemory                                mediumAndTransformMemory;
+        DeviceMemory                                commonTypeMemory;
+
+        TracerError                                 LoadCameras(std::vector<const GPUCameraI*>&);
+        TracerError                                 LoadLights(std::vector<const GPULightI*>&);
+        TracerError                                 LoadTransforms(std::vector<const GPUTransformI*>&);
+        TracerError                                 LoadMediums(std::vector<const GPUMediumI*>&);
+
     protected:
         // Cuda System For Kernel Calls
         const CudaSystem&                   cudaSystem;
@@ -62,14 +73,19 @@ class GPUTracer : public GPUTracerI
         RNGMemory                           rngMemory;
         RayMemory                           rayMemory;
         ImageMemory                         imgMemory;        
-        const GPUTransformI**               dTransforms;        
+        const GPUTransformI**               dTransforms;
         const GPUMediumI**                  dMediums;
+        const GPUCameraI**                  dCameras;
+        const GPULightI**                   dLights;
+
         //
         TracerParameters                    params;
         //
         uint32_t                            currentRayCount;
         uint32_t                            transformCount;
         uint32_t                            mediumCount;
+        uint32_t                            lightCount;
+        uint32_t                            cameraCount;
         // Callbacks
         TracerCallbacksI*                   callbacks;
         bool                                crashed;
@@ -95,7 +111,6 @@ class GPUTracer : public GPUTracerI
 
         RayPartitions<uint32_t>             PartitionOutputRays(uint32_t& totalOutRay,
                                                                 const WorkBatchMap&) const;
-
     public:
         // Constructors & Destructor
                                             GPUTracer(const CudaSystem&, 

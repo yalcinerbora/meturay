@@ -5,7 +5,7 @@
 */
 
 #include "VisorInputI.h"
-#include "Camera.h"
+#include "VisorCamera.h"
 
 class MovementSchemeI;
 
@@ -25,7 +25,7 @@ class VisorWindowInput : public VisorInputI
         // Camera Related States
         unsigned int                    currentSceneCam;    // Currently selected scene camera
         CameraMode                      cameraMode;
-        CPUCamera                       customCamera;
+        VisorCamera                     customCamera;
         bool                            lockedCamera;
 
         // Other States
@@ -46,7 +46,7 @@ class VisorWindowInput : public VisorInputI
                                 VisorWindowInput(KeyboardKeyBindings&&,
                                                  MouseKeyBindings&&,
                                                  MovementScemeList&&,
-                                                 const CPUCamera& customCamera);
+                                                 const VisorCamera& customCamera);
                                 ~VisorWindowInput() = default;
 
         void                    ChangeDeltaT(double);

@@ -221,14 +221,13 @@ bool PathTracer::Render()
 
 void PathTracer::GenerateWork(int cameraId)
 {
-    GenerateRays(dSceneCameras[cameraId], options.sampleCount);
+    GenerateRays(dCameras[cameraId], options.sampleCount);
     currentDepth = 0;
 }
 
-void PathTracer::GenerateWork(const CPUCamera& cam)
+void PathTracer::GenerateWork(const VisorCamera& cam)
 {
-    LoadCameraToGPU(cam);
-    GenerateRays(*dCustomCamera, options.sampleCount);
+    GenerateRays(cam, options.sampleCount);
     currentDepth = 0;
 }
 
@@ -312,4 +311,9 @@ void PathTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount)
     SwapAuxBuffers();
     rayMemory.SwapRays();
     currentRayCount = totalRayCount;
+}
+
+void PathTracer::GenerateRays(const VisorCamera& camera, int32_t sampleCount)
+{
+
 }

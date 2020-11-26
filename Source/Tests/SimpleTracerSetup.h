@@ -70,7 +70,7 @@ class MockNode
         void        ChangeTime(const double) override {}
         void        IncreaseTime(const double) override {}
         void        DecreaseTime(const double) override {}
-        void        ChangeCamera(const CPUCamera) override {}
+        void        ChangeCamera(const VisorCamera) override {}
         void        ChangeCamera(const unsigned int) override {}
         void        StartStopTrace(const bool) override {}
         void        PauseContTrace(const bool) override {}
@@ -250,7 +250,7 @@ inline bool SimpleTracerSetup::Init()
 
         0,
 
-        CPUCamera{},
+        VisorCamera{},
 
         MockNode::IMAGE_RESOLUTION,
         IMAGE_PIXEL_FORMAT,
@@ -305,7 +305,7 @@ inline bool SimpleTracerSetup::Init()
     visorInput = std::make_unique<VisorWindowInput>(std::move(KeyBinds),
                                                     std::move(MouseBinds),
                                                     std::move(MovementSchemeList),
-                                                    CPUCamera{});
+                                                    VisorCamera{});
                                                     
     // Window Params
     VisorOptions visorOpts;

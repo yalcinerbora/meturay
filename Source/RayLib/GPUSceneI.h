@@ -6,10 +6,6 @@
 #include "TracerStructs.h"
 
 struct SceneError;
-struct CPULight;
-struct CPUCamera;
-struct CPUMedium;
-struct CPUTransform;
 struct TextureStruct;
 
 class GPUSceneI

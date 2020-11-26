@@ -1,7 +1,6 @@
 #pragma once
 
 #include "GPUEndpointI.cuh"
-#include "RayLib/Camera.h"
 
 #include "RayLib/Constants.h"
 #include "RayLib/SceneStructs.h"

@@ -14,8 +14,6 @@ Scene file json interpeter and writer
 #include <fstream>
 #include <nlohmann/json.hpp>
 
-struct CPUCamera;
-
 template<class T>
 using IntegerEnable = typename std::enable_if<std::is_integral<T>::value>::type;
 
@@ -61,15 +59,6 @@ namespace SceneIO
     std::string             StripFileExt(const std::string& string);
 
     // Common Types
-    uint32_t                LoadLightMatId(const nlohmann::json&);
-    //LightType               LoadLightType(const nlohmann::json&);    
-    //CPULight                LoadLight(const nlohmann::json&, double time = 0.0);
-
-    //CPUCamera               LoadCamera(const nlohmann::json&, double time = 0.0);
-    //CPUTransform            LoadTransform(const nlohmann::json&, double time = 0.0);
-    //CPUMedium               LoadMedium(const nlohmann::json& jsn, double time = 0.0);
-    //TextureStruct           LoadTexture(const nlohmann::json&, double time = 0.0);
-
     SurfaceStruct           LoadSurface(const nlohmann::json&);
     LightSurfaceStruct      LoadLightSurface(uint32_t baseMediumId,
                                              uint32_t identityTransformId,
