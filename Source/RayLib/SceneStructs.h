@@ -13,28 +13,6 @@
 
 class GPUDistribution2D;
 
-//enum class LightType : uint16_t
-//{
-//    POINT,
-//    DIRECTIONAL,
-//    SPOT,
-//    RECTANGULAR,
-//    TRIANGULAR,
-//    DISK,
-//    SPHERICAL,
-//    PRIMITIVE,
-//    //
-//    END
-//
-//};
-//
-//enum class TransformType : uint8_t
-//{
-//    MATRIX,         // 4x4 Transformation matrix
-//    TRS,            // Transform Rotate Scale
-//    ROTATION,       // Rotation only
-//    TRANSLATION,    // Translation only
-//};
 
 //enum class FilterType
 //{
@@ -90,16 +68,26 @@ struct WorkBatchData
     std::set<MaterialId>            matIds;
 };
 
-struct LightGroupData
+// Construction data is used to create camera or lights
+// SceneNode Interface is used singular in this case
+// meaning only single element on the node is enabled
+struct ConstructionData
 {
-    std::unique_ptr<SceneNodeI>     lightNode;
-
-    bool                            isPrimitive;
     uint32_t                        transformId;
     uint32_t                        mediumId;
-    uint32_t                        lightOrPrimitiveId;
-    
+    uint32_t                        constructionId;
+    uint32_t                        materialId;
+    std::unique_ptr<SceneNodeI>     node;
 };
+
+struct LightGroupData
+{
+    bool                            isPrimitive;
+    std::string                     primTypeName;
+    std::vector<ConstructionData>     constructionInfo;
+};
+
+using CameraGroupData = std::vector<ConstructionData>;
 
 using MaterialKeyListing = std::map<TypeIdPair, HitKey>;
 
@@ -130,4 +118,13 @@ struct LightSurfaceStruct
     uint32_t    acceleratorId;
     uint32_t    materialId;
     uint32_t    lightOrPrimId;
+};
+
+struct CameraSurfaceStruct
+{
+    bool        isPrimitive;
+    uint32_t    mediumId;
+    uint32_t    transformId;
+    uint32_t    materialId;
+    uint32_t    cameraId;
 };

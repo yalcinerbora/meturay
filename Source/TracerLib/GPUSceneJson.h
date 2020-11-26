@@ -22,10 +22,10 @@ using MediumNodeList = std::map<std::string, NodeListing>;
 using TransformNodeList = std::map<std::string, NodeListing>;
 using PrimitiveNodeList = std::map<std::string, NodeListing>;
 using AcceleratorBatchList = std::map<std::string, AccelGroupData>;
-using LightNodeList = std::map<std::string, NodeListing>;
-using CameraNodeList = std::map<std::string, NodeListing>;
+using LightNodeList = std::map<std::string, LightGroupData>;
+using CameraNodeList = std::map<std::string, CameraGroupData>;
 
-using LightPrimitives = std::vector<const GPUPrimitiveGroupI*>;
+//using LightPrimitives = std::vector<const GPUPrimitiveGroupI*>;
 
 class GPUSceneJson : public GPUSceneI
 {
@@ -36,7 +36,9 @@ class GPUSceneJson : public GPUSceneI
             MATERIAL,
             PRIMITIVE,
             TRANSFORM,
-            MEDIUM
+            MEDIUM,
+            LIGHT,
+            CAMERA
         };
 
     private:
@@ -117,20 +119,27 @@ class GPUSceneJson : public GPUSceneI
                                              double time = 0.0);
         SceneError      GenerateBaseAccelerator(const std::map<uint32_t, HitKey>& accHitKeyList,
                                                 double time = 0.0);
-        SceneError      GenerateLightInfo(const MaterialKeyListing& materialKeys,
-                                          double time);
         SceneError      GenerateTransforms(std::map<uint32_t, uint32_t>& transformIdMappings,
                                            uint32_t& identityTransformIndex,
                                            const TransformNodeList& transformList,
-                                           double time);
-
+                                           double time = 0.0);
         SceneError      GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdMappings,
                                         uint32_t& baseMediumIndex,
                                         const MediumNodeList& mediumList,
-                                        double time);
+                                        double time = 0.0);
+        SceneError      GenerateCameras(const CameraNodeList&, 
+                                        const std::map<uint32_t, uint32_t>& transformIdMappings,
+                                        const std::map<uint32_t, uint32_t>& mediumIdMappings,
+                                        const MaterialKeyListing& materialKeys,
+                                        double time = 0.0);
+        SceneError      GenerateLights(const LightNodeList&,
+                                       const std::map<uint32_t, uint32_t>& transformIdMappings,
+                                       const std::map<uint32_t, uint32_t>& mediumIdMappings,
+                                       const MaterialKeyListing& materialKeys,
+                                       double time = 0.0);
 
         SceneError      FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,
-                                             double time = 0.0f);
+                                             double time = 0.0);
 
         SceneError      LoadAll(double time);
         SceneError      ChangeAll(double time);

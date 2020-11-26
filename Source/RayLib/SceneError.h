@@ -30,6 +30,8 @@ struct SceneError : public ErrorI
             BASE_ACCELERATOR_NODE_NOT_FOUND,
             BASE_BOUND_MAT_NODE_NOT_FOUND,
             BASE_MEDIUM_NODE_NOT_FOUND,
+            LIGHT_SURFACES_ARRAY_NOT_FOUND,
+            CAMERA_SURFACES_ARRAY_NOT_FOUND,
             // No Logic
             NO_LOGIC_FOR_ACCELERATOR,
             NO_LOGIC_FOR_MATERIAL,
@@ -46,12 +48,16 @@ struct SceneError : public ErrorI
             DUPLICATE_PRIMITIVE_ID,
             DUPLICATE_TRANSFORM_ID,
             DUPLICATE_MEDIUM_ID,
+            DUPLICATE_LIGHT_ID,
+            DUPLICATE_CAMERA_ID,
             // Id not found
             ACCELERATOR_ID_NOT_FOUND,
             MATERIAL_ID_NOT_FOUND,
             PRIMITIVE_ID_NOT_FOUND,
             TRANSFORM_ID_NOT_FOUND,
             MEDIUM_ID_NOT_FOUND,
+            LIGHT_ID_NOT_FOUND,
+            CAMERA_ID_NOT_FOUND,
             // Json parse errors
             LOGIC_MISMATCH,
             TYPE_MISMATCH,
@@ -160,6 +166,8 @@ inline SceneError::operator std::string() const
         "\"BaseAccelerator\" node not found",
         "\"BaseBoundaryMaterial\" node not found",
         "\"BaseMedium\" node not found",
+        "\"LightSurfaces\" node not found",
+        "\"CameraSurfaces\" node not found",
         // No Logic
         "No logic found for that accelerator",
         "No logic found for that material",
@@ -176,12 +184,16 @@ inline SceneError::operator std::string() const
         "Duplicate primitive id",
         "Duplicate transform id",
         "Duplicate medium id",
+        "Duplicate light id",
+        "Duplicate camera id",
         //
         "Accelerator id not found",
         "Material id not found",
         "Primitive id not found",
         "Transform id not found",
         "Medium id not found",
+        "Light id not found",
+        "Camera id not found",
         // Json Parse Errors
         "Logics does not match",
         "JSON type does not match with required type",

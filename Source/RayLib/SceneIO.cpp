@@ -350,6 +350,13 @@ LightSurfaceStruct SceneIO::LoadLightSurface(uint32_t baseMediumId,
     return s;
 }
 
+CameraSurfaceStruct SceneIO::LoadCameraSurface(uint32_t baseMediumId,
+                                               uint32_t identityTransformId,
+                                               const nlohmann::json& jsn)
+{
+    return {};
+}
+
 //TextureStruct SceneIO::LoadTexture(const nlohmann::json& jsn, double time)
 //{
 //    if(jsn.is_string())

@@ -492,37 +492,6 @@ SceneError GPUPrimitiveTriangle::ChangeTime(const NodeListing& surfaceDataNodes,
     //return e;
 }
 
-bool GPUPrimitiveTriangle::HasPrimitive(uint32_t surfaceDataId) const
-{
-    auto it = batchRanges.end();
-    if((it = batchRanges.find(surfaceDataId)) == batchRanges.end())
-       return false;
-    return true;
-}
-
-SceneError GPUPrimitiveTriangle::GenerateLights(std::vector<CPULight>& result,
-                                                const GPUDistribution2D& luminanceDistribution, 
-                                                HitKey key,
-                                                uint32_t id, const Matrix4x4& transform) const
-{
-    const auto& range = batchRanges.at(id);
-    result.reserve(range[1] - range[0]);
-    for(uint64_t i = range[0]; i < range[1]; i++)
-    {
-        CPULight ls;
-        ls.matKey = key;
-        ls.dLuminanceDistribution = &luminanceDistribution;
-        ls.type = LightType::TRIANGULAR;
-        ls.position0 = transform * dData.positions[dData.indexList[i * 3 + 0]];
-        ls.position1 = transform * dData.positions[dData.indexList[i * 3 + 1]];
-        ls.position2 = transform * dData.positions[dData.indexList[i * 3 + 2]];
-        ls.primId = i;
-
-        result.push_back(ls);
-    }
-    return SceneError::OK;
-}
-
 Vector2ul GPUPrimitiveTriangle::PrimitiveBatchRange(uint32_t surfaceDataId) const
 {
     return batchRanges.at(surfaceDataId);

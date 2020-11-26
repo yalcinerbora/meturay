@@ -247,40 +247,13 @@ SceneError GPUPrimitiveSphere::ChangeTime(const NodeListing& surfaceDataNodes, d
     //return e;
 }
 
-bool GPUPrimitiveSphere::HasPrimitive(uint32_t surfaceDataId) const
-{
-    auto it = batchRanges.end();
-    if((it = batchRanges.find(surfaceDataId)) == batchRanges.end())
-        return false;
-    return true;
-}
-
-SceneError GPUPrimitiveSphere::GenerateLights(std::vector<CPULight>& result,
-                                              const GPUDistribution2D& luminanceDistribution, 
-                                              HitKey key,
-                                              uint32_t surfaceDataId,
-                                              const Matrix4x4& transform) const
-{
-    const auto& range = batchRanges.at(surfaceDataId);
-    result.reserve(range[1] - range[0]);
-    for(uint64_t i = range[0]; i < range[1]; i++)
-    {
-        Vector4 centerRad = dData.centerRadius[i];
-
-        Vector3 scale = TransformGen::ExtractScale(transform);
-        assert((scale[0] != scale[1]) || (scale[1] != scale[2]));
-
-        CPULight ls;
-        ls.matKey = key;
-        ls.dLuminanceDistribution = &luminanceDistribution;
-        ls.type = LightType::SPHERICAL;
-        ls.position0 = transform * centerRad;
-        ls.position1[0] = centerRad[3] * scale[0];
-        ls.primId = i;
-        result.push_back(ls);
-    }
-    return SceneError::OK;
-}
+//bool GPUPrimitiveSphere::HasPrimitive(uint32_t surfaceDataId) const
+//{
+//    auto it = batchRanges.end();
+//    if((it = batchRanges.find(surfaceDataId)) == batchRanges.end())
+//        return false;
+//    return true;
+//}
 
 Vector2ul GPUPrimitiveSphere::PrimitiveBatchRange(uint32_t surfaceDataId) const
 {

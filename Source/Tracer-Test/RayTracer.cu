@@ -48,38 +48,38 @@ void RayTracer::SwapAuxBuffers()
 
 TracerError RayTracer::Initialize()
 {
-    const auto& cameras = scene.CamerasCPU();
-    size_t cameraCount = cameras.size() + 1;
-    // Determine Size
-    size_t camPtrSize = sizeof(GPUCameraI*) * cameraCount;
-    size_t cameraSize = LightCameraKernels::CameraClassesUnionSize() * cameraCount;
-    size_t totalSize = camPtrSize + cameraSize;
-    
-    if(cameras.size() != 0)
-    {
+    //const auto& cameras = scene.CamerasCPU();
+    //size_t cameraCount = cameras.size() + 1;
+    //// Determine Size
+    //size_t camPtrSize = sizeof(GPUCameraI*) * cameraCount;
+    //size_t cameraSize = LightCameraKernels::CameraClassesUnionSize() * cameraCount;
+    //size_t totalSize = camPtrSize + cameraSize;
+    //
+    //if(cameras.size() != 0)
+    //{
 
-        DeviceMemory::EnlargeBuffer(cameraMemory, totalSize);
-        // Load Camera and create camera interfaces
-        // Determine Ptrs
-        size_t offset = 0;
-        Byte* dMem = static_cast<Byte*>(cameraMemory);
-        dCustomCamera = reinterpret_cast<GPUCameraI**>(dMem + offset);
-        offset += sizeof(GPUCameraI*);
-        dSceneCameras = reinterpret_cast<const GPUCameraI**>(dMem + offset);
-        offset += camPtrSize - sizeof(GPUCameraI*);
-        dCustomCameraAlloc = dMem + offset;
-        offset += LightCameraKernels::CameraClassesUnionSize();
-        dSceneCameraAllocs = dMem + offset;
-        offset += cameraSize - LightCameraKernels::CameraClassesUnionSize();
-        assert(offset == totalSize);
+    //    DeviceMemory::EnlargeBuffer(cameraMemory, totalSize);
+    //    // Load Camera and create camera interfaces
+    //    // Determine Ptrs
+    //    size_t offset = 0;
+    //    Byte* dMem = static_cast<Byte*>(cameraMemory);
+    //    dCustomCamera = reinterpret_cast<GPUCameraI**>(dMem + offset);
+    //    offset += sizeof(GPUCameraI*);
+    //    dSceneCameras = reinterpret_cast<const GPUCameraI**>(dMem + offset);
+    //    offset += camPtrSize - sizeof(GPUCameraI*);
+    //    dCustomCameraAlloc = dMem + offset;
+    //    offset += LightCameraKernels::CameraClassesUnionSize();
+    //    dSceneCameraAllocs = dMem + offset;
+    //    offset += cameraSize - LightCameraKernels::CameraClassesUnionSize();
+    //    assert(offset == totalSize);
 
-        // Construct Cameras on GPU
-        LightCameraKernels::ConstructCameras(const_cast<GPUCameraI**>(dSceneCameras), 
-                                             dSceneCameraAllocs,
-                                             cameras,
-                                             cudaSystem);
-    }
-    // Initilize parent
+    //    // Construct Cameras on GPU
+    //    LightCameraKernels::ConstructCameras(const_cast<GPUCameraI**>(dSceneCameras), 
+    //                                         dSceneCameraAllocs,
+    //                                         cameras,
+    //                                         cudaSystem);
+    //}
+    //// Initilize parent
     return GPUTracer::Initialize();
 }
 

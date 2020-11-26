@@ -22,20 +22,6 @@ SceneError GPUPrimitiveEmpty::ChangeTime(const NodeListing& surfaceDatalNodes, d
     return SceneError::OK;
 }
 
-bool GPUPrimitiveEmpty::HasPrimitive(uint32_t surfaceDataId) const
-{
-    return false;
-}
-
-SceneError GPUPrimitiveEmpty::GenerateLights(std::vector<CPULight>&,
-                                             const GPUDistribution2D&,
-                                             HitKey key,
-                                             uint32_t surfaceDataId,
-                                             const Matrix4x4& transform) const
-{
-    return SceneError::OK;
-}
-
 Vector2ul GPUPrimitiveEmpty::PrimitiveBatchRange(uint32_t surfaceDataId) const
 {
     return Zero2ul;

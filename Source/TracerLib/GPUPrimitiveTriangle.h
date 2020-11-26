@@ -366,13 +366,6 @@ class GPUPrimitiveTriangle final
         SceneError                              ChangeTime(const NodeListing& surfaceDataNodes, double time,
                                                            const SurfaceLoaderGeneratorI&,
                                                            const std::string& scenePath) override;
-        // Provides data to Event Estimator
-        bool                                    HasPrimitive(uint32_t surfaceDataId) const override;
-        SceneError                              GenerateLights(std::vector<CPULight>&,
-                                                               const GPUDistribution2D&,
-                                                               HitKey key,
-                                                               uint32_t surfaceDataId,
-                                                               const Matrix4x4& transform) const override;
         // Access primitive range from Id
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
