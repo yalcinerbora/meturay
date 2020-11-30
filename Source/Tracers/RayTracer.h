@@ -2,8 +2,7 @@
 
 #include "TracerLib/GPUTracer.h"
 #include "TracerLib/TypeTraits.h"
-#include "TracerLib/GPUEndpointI.cuh"
-#include "TracerLib/GPUCameraI.cuh"
+#include "TracerLib/GPUCameraI.h"
 #include "TracerLib/CameraFunctions.h"
 
 // Generic Ray Tracer Class

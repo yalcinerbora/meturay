@@ -1,13 +1,13 @@
 #pragma once
 
-#include "GPULightI.cuh"
+#include "GPULightI.h"
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
 
 class GPULightDirectional : public GPULightI
 {
     private:        
-        Vector3f            direction;
+        Vector3f                direction;
 
     protected:
     public:
@@ -44,7 +44,29 @@ class GPULightDirectional : public GPULightI
 
 class CPULightGroupDirectional : public CPULightGroupI
 {
+    public:
+        // Constructors & Destructor
+                                CPULightGroupDirectional(const GPUPrimitiveGroupI*);
+                                ~CPULightGroupDirectional() = default;
 
+
+        const char*				Type() const override;
+		const GPULightList&		GPULights() const override;
+		SceneError				InitializeGroup(const ConstructionDataList& lightNodes,
+                                                const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
+                                                const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
+                                                const MaterialKeyListing& allMaterialKeys,
+												double time,
+												const std::string& scenePath) override;
+		SceneError				ChangeTime(const NodeListing& lightNodes, double time,
+										   const std::string& scenePath) override;
+		TracerError				ConstructLights(const CudaSystem&) override;
+		uint32_t				LightCount() const override;
+
+		size_t					UsedGPUMemory() const override;
+		size_t					UsedCPUMemory() const override;
+
+        void                    AttachGlobalTransformArray(const GPUTransformI** deviceTranfsorms) override;
 };
 
 GPULightDirectional::GPULightDirectional(// Per Light Data

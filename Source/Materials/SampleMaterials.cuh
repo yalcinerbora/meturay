@@ -211,11 +211,11 @@ class RefractMat final
         TextureMask             CachedTextures() const { return 0; }
 };
 
-static_assert(IsTracerClass<EmissiveMat>::value,
-              "EmissiveMat is not a Tracer Class.");
-static_assert(IsTracerClass<LambertMat>::value,
-              "LambertMat is not a Tracer Class.");
-static_assert(IsTracerClass<ReflectMat>::value,
-              "ReflectMat is not a Tracer Class.");
-static_assert(IsTracerClass<RefractMat>::value,
-              "RefractMat is not a Tracer Class.");
+static_assert(IsMaterialGroupClass<EmissiveMat>::value,
+              "EmissiveMat is not a GPU Material Group Class.");
+static_assert(IsMaterialGroupClass<LambertMat>::value,
+              "LambertMat is not a GPU Material Group Class.");
+static_assert(IsMaterialGroupClass<ReflectMat>::value,
+              "ReflectMat is not a GPU Material Group Class.");
+static_assert(IsMaterialGroupClass<RefractMat>::value,
+              "RefractMat is not a GPU Material Group Class.");

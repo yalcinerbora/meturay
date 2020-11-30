@@ -57,37 +57,37 @@ class GPUAcceleratorGroupI
                                                 double time) = 0;
 
         // Surface Queries
-        virtual uint32_t                    InnerId(uint32_t surfaceId) const = 0;
+        virtual uint32_t                InnerId(uint32_t surfaceId) const = 0;
 
         // Batched and singular construction
-        virtual TracerError                ConstructAccelerators(const CudaSystem&) = 0;
-        virtual TracerError                ConstructAccelerator(uint32_t surface,
-                                                                const CudaSystem&) = 0;
-        virtual TracerError                ConstructAccelerators(const std::vector<uint32_t>& surfaces,
-                                                                 const CudaSystem&) = 0;
-
-        virtual TracerError                DestroyAccelerators(const CudaSystem&) = 0;
-        virtual TracerError                DestroyAccelerator(uint32_t surface,
+        virtual TracerError             ConstructAccelerators(const CudaSystem&) = 0;
+        virtual TracerError             ConstructAccelerator(uint32_t surface,
+                                                             const CudaSystem&) = 0;
+        virtual TracerError             ConstructAccelerators(const std::vector<uint32_t>& surfaces,
                                                               const CudaSystem&) = 0;
-        virtual TracerError                DestroyAccelerators(const std::vector<uint32_t>& surfaces,
-                                                               const CudaSystem&) = 0;
 
-        virtual size_t                      UsedGPUMemory() const = 0;
-        virtual size_t                      UsedCPUMemory() const = 0;
+        virtual TracerError             DestroyAccelerators(const CudaSystem&) = 0;
+        virtual TracerError             DestroyAccelerator(uint32_t surface,
+                                                           const CudaSystem&) = 0;
+        virtual TracerError             DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+                                                            const CudaSystem&) = 0;
+
+        virtual size_t                  UsedGPUMemory() const = 0;
+        virtual size_t                  UsedCPUMemory() const = 0;
 
         // Kernel Logic
-        virtual void                        Hit(const CudaGPU&,
+        virtual void                    Hit(const CudaGPU&,
                                                 // O
-                                                HitKey* dMaterialKeys,
-                                                TransformId* dTransformIds,
-                                                PrimitiveId* dPrimitiveIds,
-                                                HitStructPtr dHitStructs,
-                                                // I-O
-                                                RayGMem* dRays,
-                                                // Input
-                                                const RayId* dRayIds,
-                                                const HitKey* dAcceleratorKeys,
-                                                const uint32_t rayCount) const = 0;
+                                            HitKey* dMaterialKeys,
+                                            TransformId* dTransformIds,
+                                            PrimitiveId* dPrimitiveIds,
+                                            HitStructPtr dHitStructs,
+                                            // I-O
+                                            RayGMem* dRays,
+                                            // Input
+                                            const RayId* dRayIds,
+                                            const HitKey* dAcceleratorKeys,
+                                            const uint32_t rayCount) const = 0;
 
         virtual const SurfaceAABBList&      AcceleratorAABBs() const = 0;
         virtual const GPUPrimitiveGroupI&   PrimitiveGroup() const = 0;

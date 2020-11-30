@@ -153,9 +153,9 @@ class SphericalMat final
         TextureMask             CachedTextures() const { return 0; }
 };
 
-static_assert(IsTracerClass<ConstantMat>::value,
-              "ConstantMat is not a Tracer Class.");
-static_assert(IsTracerClass<BarycentricMat>::value,
-              "BarycentricMat is not a Tracer Class.");
-static_assert(IsTracerClass<SphericalMat>::value,
-              "SphericalMat is not a Tracer Class.");
+static_assert(IsMaterialGroupClass<ConstantMat>::value,
+              "ConstantMat is not a GPU Material Group Class.");
+static_assert(IsMaterialGroupClass<BarycentricMat>::value,
+              "BarycentricMat is not a GPU Material Group Class.");
+static_assert(IsMaterialGroupClass<SphericalMat>::value,
+              "SphericalMat is not a GPU Material Group Class.");

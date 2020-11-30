@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GPULightI.cuh"
+#include "GPULightI.h"
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
 

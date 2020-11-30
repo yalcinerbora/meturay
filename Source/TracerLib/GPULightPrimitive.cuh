@@ -1,11 +1,15 @@
 #pragma once
 
-#include "GPULightI.cuh"
+#include "GPULightI.h"
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
 #include "RayStructs.h"
-#include "RayLib/HemiDistribution.h"
 #include "Random.cuh"
+
+#include "RayLib/HemiDistribution.h"
+#include "RayLib/MemoryAlignment.h"
+
+#include "TracerLib/GPUPrimitiveP.cuh"
 
 // Meta Primitive Related Light
 template <class PGroup>
@@ -15,7 +19,7 @@ class GPULight : public GPULightI
         using PData = typename PGroup::PrimitiveData;
         
     private:        
-        PrimitiveId                         pId;
+        PrimitiveId                         primId;
         const GPUTransformI&                transform;
         const PData&                        gPData;
         
@@ -56,12 +60,12 @@ template <class PGroup>
 class CPULightGroup : public CPULightGroupI
 {
     public:
-        static const char*              TypeName() { return ""; }
+        static const char*              TypeName() { return PGroup::TypeName(); }
 
         using PData                     = typename PGroup::PrimitiveData;
         
     private:
-        const PGroup&                   pg;        
+        const PGroup&                   primGroup;        
         DeviceMemory                    memory;
         //
         std::vector<HitKey>             hHitKeys;
@@ -81,13 +85,13 @@ class CPULightGroup : public CPULightGroupI
     protected:
     public:
         // Cosntructors & Destructor
-                                CPULightGroup(const PGroup&);
+                                CPULightGroup(const GPUPrimitiveGroupI*);
                                 ~CPULightGroup() = default;
 
 
         const char*				Type() const override;
 		const GPULightList&		GPULights() const override;
-		SceneError				InitializeGroup(const NodeListing& lightNodes,
+		SceneError				InitializeGroup(const ConstructionDataList& lightNodes,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                                 const MaterialKeyListing& allMaterialKeys,
@@ -113,7 +117,7 @@ __device__ GPULight<PGroup>::GPULight(HitKey k,
                                       const PData& gPData)
     : GPUEndpointI(k, mediumIndex)
     , transform(gTransform)
-    , pId(pId)
+    , primId(pId)
     , gPData(gPData)
 {}
 
@@ -131,10 +135,9 @@ __device__ void GPULight<PGroup>::Sample(// Output
     Vector3 position = PrimSample(normal,
                                   pdf,
                                   //
-                                  pId,
+                                  primId,
                                   gPData,
                                   rng);
-
     // Transform
     position = transform.LocalToWorld(position);
     normal = transform.LocalToWorld(normal);
@@ -146,6 +149,7 @@ __device__ void GPULight<PGroup>::Sample(// Output
 
     float nDotL = max(normal.Dot(-direction), 0.0f);
     pdf *= distanceSqr / nDotL;
+
 }
 
 
@@ -164,11 +168,10 @@ __device__ void  GPULight<PGroup>::GenerateRay(// Output
     Vector3 position = PrimSample(normal,
                                   pdf,
                                   //
-                                  pId,
+                                  primId,
                                   gPData,
                                   rng);
 
-    
     Vector2 xi(GPUDistribution::Uniform<float>(rng),
                GPUDistribution::Uniform<float>(rng));
     Vector3 direction = HemiDistribution::HemiUniformCDF(xi, pdf);
@@ -190,12 +193,12 @@ __device__ void  GPULight<PGroup>::GenerateRay(// Output
 template <class PGroup>
 __device__ PrimitiveId GPULight<PGroup>::PrimitiveIndex() const
 {
-    return pId;
+    return primId;
 }
 
 template <class PGroup>
-CPULightGroup<PGroup>::CPULightGroup(const PGroup& pg)
-    : pg(pg) 
+CPULightGroup<PGroup>::CPULightGroup(const GPUPrimitiveGroupI* pg)
+    : primGroup(static_cast<const PGroup&>(*pg))
     , dPData(nullptr)
     , dGPUTransforms(nullptr)
     , dGPULights(nullptr)

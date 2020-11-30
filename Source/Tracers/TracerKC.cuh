@@ -6,7 +6,7 @@
 #include "TracerLib/ImageStructs.h"
 #include "TracerLib/RayStructs.h"
 #include "TracerLib/TextureStructs.h"
-#include "TracerLib/GPULightI.cuh"
+#include "TracerLib/GPULightI.h"
 #include "TracerLib/EstimatorFunctions.cuh"
 #include "TracerLib/GPUMediumVacuum.cuh"
 

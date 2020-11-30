@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GPUCameraI.cuh"
+#include "GPUCameraI.h"
 #include "DeviceMemory.h"
 
 class GPUCameraPinhole : public GPUCameraI
@@ -83,7 +83,7 @@ class CPUCameraPinhole : public CPUCameraGroupI
         // Interface
         const char*                     Type() const override;
         const GPUCameraList&            GPUCameras() const override;
-        SceneError					    InitializeGroup(const NodeListing& lightNodes,
+        SceneError					    InitializeGroup(const CameraGroupData& cameraNodes,
                                                         const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                         const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                                         const MaterialKeyListing& allMaterialKeys,

@@ -2,7 +2,7 @@
 
 #include "RayTracer.h"
 #include "TracerLib/WorkPool.h"
-#include "TracerLib/GPULightI.cuh"
+#include "TracerLib/GPULightI.h"
 
 class PathTracer final : public RayTracer
 {

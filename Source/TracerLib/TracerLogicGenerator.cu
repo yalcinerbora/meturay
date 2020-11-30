@@ -211,11 +211,12 @@ SceneError TracerLogicGenerator::GenerateCameraGroup(CPUCameraGPtr& cam,
 }
 
 SceneError TracerLogicGenerator::GenerateLightGroup(CPULightGPtr& light,
+                                                    const GPUPrimitiveGroupI* pg,
                                                     const std::string& lightType)
 {
     auto loc = lightGroupGenerators.find(lightType);
     if(loc == lightGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_LIGHT;
-    light = std::move(loc->second());
+    light = std::move(loc->second(pg));
     return SceneError::OK;
 }
 

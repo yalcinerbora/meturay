@@ -47,11 +47,12 @@ class TracerLogicGeneratorI
                                                        const std::string& transformType) = 0;
         // Camera
         virtual SceneError      GenerateCameraGroup(CPUCameraGPtr&,
-                                                    const std::string& transformType) = 0;
+                                                    const std::string& cameraType) = 0;
 
         // Light
         virtual SceneError      GenerateLightGroup(CPULightGPtr&,
-                                                    const std::string& transformType) = 0;
+                                                   const GPUPrimitiveGroupI*,
+                                                   const std::string& lightType) = 0;
 
         // Tracer Logic
         virtual SceneError      GenerateTracer(GPUTracerPtr&,

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GPULightI.cuh"
+#include "GPULightI.h"
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
 
@@ -42,7 +42,31 @@ class GPULightPoint : public GPULightI
 
 class CPULightGroupPoint : public CPULightGroupI
 {
+    private:
+    protected:
+    public:
+        // Cosntructors & Destructor
+                                CPULightGroupPoint(const GPUPrimitiveGroupI*);
+                                ~CPULightGroupPoint() = default;
 
+
+        const char*				Type() const override;
+		const GPULightList&		GPULights() const override;
+		SceneError				InitializeGroup(const ConstructionDataList& lightNodes,
+                                                const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
+                                                const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
+                                                const MaterialKeyListing& allMaterialKeys,
+												double time,
+												const std::string& scenePath) override;
+		SceneError				ChangeTime(const NodeListing& lightNodes, double time,
+										   const std::string& scenePath) override;
+		TracerError				ConstructLights(const CudaSystem&) override;
+		uint32_t				LightCount() const override;
+
+		size_t					UsedGPUMemory() const override;
+		size_t					UsedCPUMemory() const override;
+
+        void                    AttachGlobalTransformArray(const GPUTransformI** deviceTranfsorms) override;
 };
 
 GPULightPoint::GPULightPoint(// Per Light Data

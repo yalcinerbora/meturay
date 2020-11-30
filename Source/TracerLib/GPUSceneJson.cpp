@@ -7,6 +7,8 @@
 #include "RayLib/SceneNodeNames.h"
 #include "RayLib/StripComments.h"
 
+#include "GPUCameraI.h"
+#include "GPULightI.h"
 #include "GPUAcceleratorI.h"
 #include "GPUPrimitiveI.h"
 #include "GPUMaterialI.h"
@@ -511,7 +513,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         {
             const NodeIndex nIndex = loc->second.first;
             const InnerIndex iIndex = loc->second.second;
-            const auto& jsnNode = (*lights)[nIndex];
+            const auto& jsnNode = (*cameras)[nIndex];
 
             camTypeName = jsnNode[NodeNames::TYPE];
 
@@ -658,7 +660,7 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, HitKey>& accHit
         });
 
         // Fetch Primitive
-        GPUPrimitiveGroupI* pGroup = primitives.at(primTName).get();        
+        GPUPrimitiveGroupI* pGroup = primitives.at(primTName).get();
 
         // Group Generation
         GPUAccelGPtr aGroup = GPUAccelGPtr(nullptr, nullptr);
@@ -867,21 +869,62 @@ SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdM
 //}
 
 
-SceneError GPUSceneJson::GenerateCameras(const CameraNodeList&,
+SceneError GPUSceneJson::GenerateCameras(const CameraNodeList& camGroupList,
                                          const std::map<uint32_t, uint32_t>& transformIdMappings,
                                          const std::map<uint32_t, uint32_t>& mediumIdMappings,
                                          const MaterialKeyListing& materialKeys,
                                          double time)
 {
+    SceneError e = SceneError::OK;
+    for(const auto& camGroup : camGroupList)
+    {
+        const std::string& camTypeName = camGroup.first;
+        const auto& camNodes = camGroup.second;
+
+        CPUCameraGPtr cg = CPUCameraGPtr(nullptr, nullptr);
+        if(e = logicGenerator.GenerateCameraGroup(cg, camTypeName))
+            return e;
+        if(e = cg->InitializeGroup(camNodes,
+                                   mediumIdMappings,
+                                   transformIdMappings,
+                                   materialKeys,
+                                   time,
+                                   parentPath))
+            return e;
+    }
     return SceneError::OK;
 }
 
-SceneError GPUSceneJson::GenerateLights(const LightNodeList&,
+SceneError GPUSceneJson::GenerateLights(const LightNodeList& lightGroupList,
                                         const std::map<uint32_t, uint32_t>& transformIdMappings,
                                         const std::map<uint32_t, uint32_t>& mediumIdMappings,
                                         const MaterialKeyListing& materialKeys,
                                         double time)
 {
+    SceneError e = SceneError::OK;
+    for(const auto& lightGroup : lightGroupList)
+    {
+        const std::string& lightTypeName = lightGroup.first;
+        const std::string& primTypeName = lightGroup.second.primTypeName;
+        bool isPrimLight = lightGroup.second.isPrimitive;
+        const auto& lightNodes = lightGroup.second.constructionInfo;
+
+        // Find Primitive
+        GPUPrimitiveGroupI* primGroup = nullptr;
+        if(isPrimLight)
+            primGroup = primitives.at(primTypeName).get();
+
+        CPULightGPtr cg = CPULightGPtr(nullptr, nullptr);
+        if(e = logicGenerator.GenerateLightGroup(cg, primGroup, lightTypeName))
+            return e;
+        if(e = cg->InitializeGroup(lightNodes,
+                                   mediumIdMappings,
+                                   transformIdMappings,
+                                   materialKeys,
+                                   time,
+                                   parentPath))
+            return e;
+    }
     return SceneError::OK;
 }
 

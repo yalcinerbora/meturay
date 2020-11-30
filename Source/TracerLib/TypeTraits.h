@@ -61,3 +61,36 @@ struct IsTracerClass
                                   is_class_v &&
                                   not_abstract_v;
 };
+
+template <class T>
+struct IsMaterialGroupClass
+{
+    static constexpr bool has_proper_constructor_v = std::is_constructible<T, const CudaGPU&>::value;
+    static_assert(has_proper_constructor_v, "A Material Group class should have"
+                  "\"MaterialGroup(const CudaGPU&)\" constructor");
+
+    static constexpr bool value = IsTracerClass<T>::value &&
+                                  has_proper_constructor_v;
+};
+
+template <class T>
+struct IsAcceleratorGroupClass
+{
+    static constexpr bool has_proper_constructor_v = std::is_constructible<T, const GPUPrimitiveGroupI&>::value;
+    static_assert(has_proper_constructor_v, "An Accelerator Group class should have"
+                  "\"AcceleratorGroup(const GPUPrimitiveGroupI&)\" constructor");
+
+    static constexpr bool value = IsTracerClass<T>::value &&
+                                  has_proper_constructor_v;   
+};
+
+template <class T>
+struct IsLightGroupClass
+{
+    static constexpr bool has_proper_constructor_v = std::is_constructible<T, const GPUPrimitiveGroupI*>::value;
+    static_assert(has_proper_constructor_v, "A Light Group class should have"
+                  "\"LightGroup(const GPUPrimitiveGroupI*)\" constructor");
+
+    static constexpr bool value = IsTracerClass<T>::value &&
+                                  has_proper_constructor_v;                                  
+};

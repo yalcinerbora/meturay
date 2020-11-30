@@ -106,7 +106,7 @@ class MediumPoolI
 class CameraPoolI
 {
     protected:
-        std::map<std::string, CPUCameraGen>   mediumGenerators;
+        std::map<std::string, CPUCameraGen>   cameraGenerators;
 
     public:
         static constexpr const char* DefaultConstructorName = "GenCameraPool";
@@ -120,15 +120,15 @@ class CameraPoolI
 class LightPoolI
 {
     protected:
-        std::map<std::string, CPULightGen>   mediumGenerators;
+        std::map<std::string, GPULightGroupGen>   lightGenerators;
 
     public:
-        static constexpr const char* DefaultConstructorName = "GenMediumPool";
-        static constexpr const char* DefaultDestructorName = "DelMediumPool";
+        static constexpr const char* DefaultConstructorName = "GenLightPool";
+        static constexpr const char* DefaultDestructorName = "DelLightPool";
 
         virtual                         ~LightPoolI() = default;
 
-        virtual std::map<std::string, CPULightGen> LightGenerators(const std::string regex = ".*") const;
+        virtual std::map<std::string, GPULightGroupGen> LightGenerators(const std::string regex = ".*") const;
 };
 
 inline std::map<std::string, GPUAccelGroupGen> AcceleratorLogicPoolI::AcceleratorGroupGenerators(const std::string regex) const
@@ -211,6 +211,30 @@ inline std::map<std::string, CPUMediumGen> MediumPoolI::MediumGenerators(const s
     {
         if(std::regex_match(mediumGenerator.first, regExpression))
             result.emplace(mediumGenerator);
+    }
+    return result;
+}
+
+inline std::map<std::string, CPUCameraGen> CameraPoolI::CameraGenerators(const std::string regex) const
+{
+    std::map<std::string, CPUCameraGen> result;
+    std::regex regExpression(regex);
+    for(const auto& cameraGenerator : cameraGenerators)
+    {
+        if(std::regex_match(cameraGenerator.first, regExpression))
+            result.emplace(cameraGenerator);
+    }
+    return result;
+}
+
+inline std::map<std::string, GPULightGroupGen> LightPoolI::LightGenerators(const std::string regex) const
+{
+    std::map<std::string, GPULightGroupGen> result;
+    std::regex regExpression(regex);
+    for(const auto& lightGenerator : lightGenerators)
+    {
+        if(std::regex_match(lightGenerator.first, regExpression))
+            result.emplace(lightGenerator);
     }
     return result;
 }

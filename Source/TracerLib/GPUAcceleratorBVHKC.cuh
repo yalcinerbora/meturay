@@ -23,7 +23,7 @@ static constexpr const uint8_t MAX_BASE_DEPTH_BITS = 5;
 static_assert((MAX_BASE_DEPTH + MAX_BASE_DEPTH_BITS) <= sizeof(uint32_t) * BYTE_BITS,
               "Base Accelerator State Bits should fit in 32-bit data.");
 static_assert((1llu << MAX_BASE_DEPTH_BITS) >= MAX_BASE_DEPTH, 
-              "Base Accelerator bits should hold depth.");
+              "Base Accelerator bits shouldbe able to hold depth.");
 
 // Base BVH Kernel Save/Load State
 __device__

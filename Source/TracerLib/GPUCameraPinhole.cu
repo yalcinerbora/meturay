@@ -5,7 +5,7 @@ __global__ void KCConstructPinholeCamera()
 
 }
 
-SceneError CPUCameraPinhole::InitializeGroup(const NodeListing& lightNodes,
+SceneError CPUCameraPinhole::InitializeGroup(const CameraGroupData& cameraNodes,
                                              const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                              const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                              const MaterialKeyListing& allMaterialKeys,

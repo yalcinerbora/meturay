@@ -84,10 +84,12 @@ struct LightGroupData
 {
     bool                            isPrimitive;
     std::string                     primTypeName;
-    std::vector<ConstructionData>     constructionInfo;
+    std::vector<ConstructionData>   constructionInfo;
 };
 
-using CameraGroupData = std::vector<ConstructionData>;
+using ConstructionDataList = std::vector<ConstructionData>;
+using CameraGroupData = ConstructionDataList;
+
 
 using MaterialKeyListing = std::map<TypeIdPair, HitKey>;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GPUEndpointI.cuh"
+#include "GPUEndpointI.h"
 
 #include "RayLib/Constants.h"
 #include "RayLib/SceneStructs.h"
@@ -27,7 +27,7 @@ class CPULightGroupI
 		// Interface
 		virtual const char*					Type() const = 0;
 		virtual const GPULightList&		    GPULights() const = 0;
-		virtual SceneError					InitializeGroup(const NodeListing& lightNodes,
+		virtual SceneError					InitializeGroup(const ConstructionDataList& lightNodes,
                                                             const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                             const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                                             const MaterialKeyListing& allMaterialKeys,

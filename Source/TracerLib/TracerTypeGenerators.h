@@ -31,6 +31,9 @@ using TracerGeneratorFunc = GPUTracerI* (*)(const CudaSystem&,
 template<class Accel>
 using AccelGroupGeneratorFunc = Accel* (*)(const GPUPrimitiveGroupI&);
 
+template<class Light>
+using LightGroupGeneratorFunc = Light* (*)(const GPUPrimitiveGroupI*);
+
 template<class MaterialGroup>
 using MaterialGroupGeneratorFunc = MaterialGroup* (*)(const CudaGPU& gpuId);
 
@@ -39,7 +42,6 @@ using GPUPrimGroupGen = GeneratorNoArg<GPUPrimitiveGroupI>;
 
 using CPUTransformGen = GeneratorNoArg<CPUTransformGroupI>;
 using CPUMediumGen = GeneratorNoArg<CPUMediumGroupI>;
-using CPULightGen = GeneratorNoArg<CPULightGroupI>;
 using CPUCameraGen = GeneratorNoArg<CPUCameraGroupI>;
 
 class GPUTracerGen
@@ -104,6 +106,27 @@ class GPUAccelGroupGen
         {
             GPUAcceleratorGroupI* accel = gFunc(pg);
             return GPUAccelGPtr(accel, dFunc);
+        }
+};
+
+class GPULightGroupGen
+{
+    private:
+        LightGroupGeneratorFunc<CPULightGroupI>     gFunc;
+        ObjDestroyerFunc<CPULightGroupI>            dFunc;
+
+    public:
+        // Constructor & Destructor
+        GPULightGroupGen(LightGroupGeneratorFunc<CPULightGroupI> g,
+                         ObjDestroyerFunc<CPULightGroupI> d)
+            : gFunc(g)
+            , dFunc(d)
+        {}
+
+        CPULightGPtr operator()(const GPUPrimitiveGroupI* pg)
+        {
+            CPULightGroupI* light = gFunc(pg);
+            return CPULightGPtr(light, dFunc);
         }
 };
 

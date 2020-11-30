@@ -15,8 +15,8 @@
 #include "GPUMediumI.h"
 #include "GPUMaterialI.h"
 #include "GPUTransformI.h"
-#include "GPULightI.cuh"
-#include "GPUCameraI.cuh"
+#include "GPULightI.h"
+#include "GPUCameraI.h"
 
 #include "TracerDebug.h"
 

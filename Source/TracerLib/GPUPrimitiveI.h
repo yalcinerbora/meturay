@@ -61,7 +61,6 @@ class GPUPrimitiveGroupI
         // Access primitive range from Id     
         virtual Vector2ul           PrimitiveBatchRange(uint32_t surfaceDataId) const = 0;
         virtual AABB3               PrimitiveBatchAABB(uint32_t surfaceDataId) const = 0;
-
         virtual uint32_t            PrimitiveHitSize() const = 0;
 
         // Primitive Transform Info for accelerator

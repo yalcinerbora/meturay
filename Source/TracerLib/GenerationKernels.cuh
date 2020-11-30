@@ -17,8 +17,7 @@ Uses statified sampling
 #include "RayStructs.h"
 #include "ImageStructs.h"
 #include "Random.cuh"
-#include "GPUEndpointI.cuh"
-#include "GPUCameraI.cuh"
+#include "GPUCameraI.h"
 #include "CameraFunctions.h"
 
 #include "ImageFunctions.cuh"

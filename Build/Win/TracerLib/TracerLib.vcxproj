@@ -27,7 +27,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.hpp" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorBVHKC.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraI.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\BitonicSort.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GenerationKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\ComparisonFunctions.cuh" />
@@ -35,9 +35,9 @@
     <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUDistribution.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUEvent.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULightI.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULightI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialLight.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialLightKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMediumHomogenous.cuh" />

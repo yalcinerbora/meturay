@@ -109,7 +109,7 @@ class GPUPrimitiveGroup
         static constexpr auto Sample    = SampleF;
 
     private:
-    protected:   
+    protected:
     public:
         // Constructors & Destructor
                             GPUPrimitiveGroup() = default;

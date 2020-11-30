@@ -320,15 +320,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformIdentity.cuh">
       <Filter>Default Transforms</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.cuh">
-      <Filter>GPU Interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULightI.cuh">
-      <Filter>GPU Interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraI.cuh">
-      <Filter>GPU Interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightSpot.cuh">
       <Filter>Default Lights</Filter>
     </ClInclude>
@@ -349,6 +340,15 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\CameraFunctions.h">
       <Filter>GPUTemplateFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraI.h">
+      <Filter>GPU Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.h">
+      <Filter>GPU Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULightI.h">
+      <Filter>GPU Interfaces</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

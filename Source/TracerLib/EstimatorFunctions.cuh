@@ -1,7 +1,7 @@
 #pragma once
 
 #include  "RayLib/HybridFunctions.h"
-#include "GPUEndpointI.cuh"
+#include "GPUEndpointI.h"
 #include "Random.cuh"
 
 // Basic Next Event Estimation
