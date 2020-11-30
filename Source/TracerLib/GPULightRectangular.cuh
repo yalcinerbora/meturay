@@ -3,23 +3,30 @@
 #include "GPULightI.h"
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
+#include "Random.cuh"
 
-class GPULightDirectional : public GPULightI
+class GPULightRectangular final : public GPULightI
 {
     private:        
-        Vector3f                direction;
+        Vector3         topLeft;
+        Vector3         right;
+        Vector3         down;
+        Vector3         normal;
+        float           area;
 
     protected:
     public:
         // Constructors & Destructor
-        __device__              GPULightDirectional(// Per Light Data
+        __device__              GPULightRectangular(// Per Light Data
                                                     TransformId tIndex,
-                                                    const Vector3f& direction,
+                                                    const Vector3& topLeft,
+                                                    const Vector3& right,
+                                                    const Vector3& down,
                                                     // Common Data
                                                     const GPUTransformI** gTransforms,
                                                     // Endpoint Related Data
                                                     HitKey k, uint16_t mediumIndex);
-                                ~GPULightDirectional() = default;
+                                ~GPULightRectangular() = default;
         // Interface
         __device__ void         Sample(// Output
                                        float& distance,
@@ -37,35 +44,36 @@ class GPULightDirectional : public GPULightI
                                             const Vector2i& sampleMax,
                                             // I-O
                                             RandomGPU&) const override;
-
         __device__ PrimitiveId  PrimitiveIndex() const override;
 };
 
-
-class CPULightGroupDirectional : public CPULightGroupI
+class CPULightGroupRectangular final : public CPULightGroupI
 {
     public:
-        static constexpr const char*    TypeName() { return "Directional"; }
+        static constexpr const char*    TypeName(){return "Rectangular"; }
 
     private:
         DeviceMemory                    memory;
         //
-        std::vector<Vector3f>           hDirections;
+        std::vector<Vector3f>           hTopLefts;
+        std::vector<Vector3f>           hRights;
+        std::vector<Vector3f>           hDowns;
+
         std::vector<HitKey>             hHitKeys;
         std::vector<uint16_t>           hMediumIds;
         std::vector<PrimitiveId>        hPrimitiveIds;
         std::vector<TransformId>        hTransformIds;
         // Allocations of the GPU Class
-        const GPULightDirectional*      dGPULights;
+        const GPULightRectangular*      dGPULights;
         // GPU pointers to those allocated classes on the CPU
         GPULightList				    gpuLightList;
         uint32_t                        lightCount;
-        
+
     protected:
     public:
         // Cosntructors & Destructor
-                                CPULightGroupDirectional(const GPUPrimitiveGroupI*);
-                                ~CPULightGroupDirectional() = default;
+                                CPULightGroupRectangular(const GPUPrimitiveGroupI*);
+                                ~CPULightGroupRectangular() = default;
 
 
         const char*				Type() const override;
@@ -82,84 +90,108 @@ class CPULightGroupDirectional : public CPULightGroupI
 		uint32_t				LightCount() const override;
 
 		size_t					UsedGPUMemory() const override;
-        size_t					UsedCPUMemory() const override; 
+		size_t					UsedCPUMemory() const override;
 };
 
 __device__
-inline GPULightDirectional::GPULightDirectional(// Per Light Data
+inline GPULightRectangular::GPULightRectangular(// Per Light Data
                                                 TransformId tIndex,
-                                                const Vector3f& direction,
+                                                const Vector3& topLeft,
+                                                const Vector3& right,
+                                                const Vector3& down,
                                                 // Common Data
                                                 const GPUTransformI** gTransforms,
                                                 // Endpoint Related Data
                                                 HitKey k, uint16_t mediumIndex)
     : GPUEndpointI(k, mediumIndex)
-    , direction(gTransforms[tIndex]->LocalToWorld(direction))
-{}
+    , topLeft(gTransforms[tIndex]->LocalToWorld(topLeft))
+    , right(gTransforms[tIndex]->LocalToWorld(right))
+    , down(gTransforms[tIndex]->LocalToWorld(down))
+{
+    Vector3 cross = Cross(down, right);
+    area = cross.Length();
+    normal = cross.Normalize();
+}
 
-__device__ void GPULightDirectional::Sample(// Output
+__device__ void GPULightRectangular::Sample(// Output
                                             float& distance,
-                                            Vector3& dir,
+                                            Vector3& direction,
                                             float& pdf,
                                             // Input
                                             const Vector3& worldLoc,
                                             // I-O
-                                            RandomGPU&) const
+                                            RandomGPU& rng) const
 {
-    dir = -direction;
-    distance = FLT_MAX;
-    pdf = 1.0f;
+    float x = GPUDistribution::Uniform<float>(rng);
+    float y = GPUDistribution::Uniform<float>(rng);
+    Vector3 position = topLeft + right * x + down * y;
+    
+    direction = position - worldLoc;
+    float distanceSqr = direction.LengthSqr();
+    distance = sqrt(distanceSqr);
+    direction *= (1.0f / distance);
+
+    float nDotL = max(normal.Dot(-direction), 0.0f);
+    pdf = distanceSqr / (nDotL * area);
+    //direction = (position - worldLoc);
+    //distance = direction.Length();
+    //direction *= (1.0f / distance);
+
+    //// Fake pdf to incorporate square faloff
+    //pdf = (distance * distance);
 }
 
-__device__ void GPULightDirectional::GenerateRay(// Output
+__device__ void GPULightRectangular::GenerateRay(// Output
                                                  RayReg&,
                                                  // Input
                                                  const Vector2i& sampleId,
                                                  const Vector2i& sampleMax,
                                                  // I-O
-                                                 RandomGPU& rng) const
+                                                 RandomGPU&) const
 {
-    // TODO: implement
+    // TODO: Implement
 }
 
-__device__ PrimitiveId GPULightDirectional::PrimitiveIndex() const
+__device__ PrimitiveId GPULightRectangular::PrimitiveIndex() const
 {
     return 0;
 }
 
-inline CPULightGroupDirectional::CPULightGroupDirectional(const GPUPrimitiveGroupI*)
+inline CPULightGroupRectangular::CPULightGroupRectangular(const GPUPrimitiveGroupI*)
     : CPULightGroupI()
     , lightCount(0)
     , dGPULights(nullptr)
 {}
 
-inline const char* CPULightGroupDirectional::Type() const
+inline const char* CPULightGroupRectangular::Type() const
 {
     return TypeName();
 }
 
-inline const GPULightList& CPULightGroupDirectional::GPULights() const
+inline const GPULightList& CPULightGroupRectangular::GPULights() const
 {
     return gpuLightList;
 }
 
-inline uint32_t CPULightGroupDirectional::LightCount() const
+inline uint32_t CPULightGroupRectangular::LightCount() const
 {
     return lightCount;
 }
 
-inline size_t CPULightGroupDirectional::UsedGPUMemory() const
+inline size_t CPULightGroupRectangular::UsedGPUMemory() const
 {
     return memory.Size();
 }
 
-inline size_t CPULightGroupDirectional::UsedCPUMemory() const
+inline size_t CPULightGroupRectangular::UsedCPUMemory() const
 {
     size_t totalSize = (hHitKeys.size() * sizeof(HitKey) +
                         hMediumIds.size() * sizeof(uint16_t) +
                         hPrimitiveIds.size() * sizeof(PrimitiveId) +
                         hTransformIds.size() * sizeof(TransformId) + 
-                        hDirections.size() * sizeof(Vector3f));
+                        hTopLefts.size() * sizeof(Vector3f) + 
+                        hRights.size() * sizeof(Vector3f) + 
+                        hDowns.size() * sizeof(Vector3f));
 
     return totalSize;
 }

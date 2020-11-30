@@ -4,7 +4,7 @@
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
 
-class GPULightPoint : public GPULightI
+class GPULightPoint final : public GPULightI
 {
     private:        
         Vector3f            position;
@@ -40,9 +40,25 @@ class GPULightPoint : public GPULightI
         __device__ PrimitiveId  PrimitiveIndex() const override;
 };
 
-class CPULightGroupPoint : public CPULightGroupI
+class CPULightGroupPoint final : public CPULightGroupI
 {
+    public:
+        static constexpr const char*    TypeName(){return "Point"; }
+
     private:
+        DeviceMemory                    memory;
+        //
+        std::vector<Vector3f>           hPositions;
+        std::vector<HitKey>             hHitKeys;
+        std::vector<uint16_t>           hMediumIds;
+        std::vector<PrimitiveId>        hPrimitiveIds;
+        std::vector<TransformId>        hTransformIds;
+        // Allocations of the GPU Class
+        const GPULightPoint*            dGPULights;
+        // GPU pointers to those allocated classes on the CPU
+        GPULightList				    gpuLightList;
+        uint32_t                        lightCount;
+
     protected:
     public:
         // Cosntructors & Destructor
@@ -65,17 +81,16 @@ class CPULightGroupPoint : public CPULightGroupI
 
 		size_t					UsedGPUMemory() const override;
 		size_t					UsedCPUMemory() const override;
-
-        void                    AttachGlobalTransformArray(const GPUTransformI** deviceTranfsorms) override;
 };
 
-GPULightPoint::GPULightPoint(// Per Light Data
-                             TransformId tIndex,
-                             const Vector3f& position,
-                             // Common Data
-                             const GPUTransformI** gTransforms,
-                             // Endpoint Related Data
-                             HitKey k, uint16_t mediumIndex)
+__device__
+inline GPULightPoint::GPULightPoint(// Per Light Data
+                                    TransformId tIndex,
+                                    const Vector3f& position,
+                                    // Common Data
+                                    const GPUTransformI** gTransforms,
+                                    // Endpoint Related Data
+                                    HitKey k, uint16_t mediumIndex)
     : GPUEndpointI(k, mediumIndex)
     , position(gTransforms[tIndex]->LocalToWorld(position))
 {}
@@ -111,4 +126,41 @@ __device__ void GPULightPoint::GenerateRay(// Output
 __device__ PrimitiveId GPULightPoint::PrimitiveIndex() const
 {
     return 0;
+}
+
+inline CPULightGroupPoint::CPULightGroupPoint(const GPUPrimitiveGroupI*)
+    : CPULightGroupI()
+    , lightCount(0)
+    , dGPULights(nullptr)
+{}
+
+inline const char* CPULightGroupPoint::Type() const
+{
+    return TypeName();
+}
+
+inline const GPULightList& CPULightGroupPoint::GPULights() const
+{
+    return gpuLightList;
+}
+
+inline uint32_t CPULightGroupPoint::LightCount() const
+{
+    return lightCount;
+}
+
+inline size_t CPULightGroupPoint::UsedGPUMemory() const
+{
+    return memory.Size();
+}
+
+inline size_t CPULightGroupPoint::UsedCPUMemory() const
+{
+    size_t totalSize = (hHitKeys.size() * sizeof(HitKey) +
+                        hMediumIds.size() * sizeof(uint16_t) +
+                        hPrimitiveIds.size() * sizeof(PrimitiveId) +
+                        hTransformIds.size() * sizeof(TransformId) + 
+                        hPositions.size() * sizeof(Vector3f));
+
+    return totalSize;
 }

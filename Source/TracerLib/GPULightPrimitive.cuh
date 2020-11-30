@@ -60,12 +60,12 @@ template <class PGroup>
 class CPULightGroup : public CPULightGroupI
 {
     public:
-        static const char*              TypeName() { return PGroup::TypeName(); }
+        static constexpr const char*    TypeName() { return PGroup::TypeName(); }
 
         using PData                     = typename PGroup::PrimitiveData;
         
     private:
-        const PGroup&                   primGroup;        
+        const PGroup&                   primGroup;
         DeviceMemory                    memory;
         //
         std::vector<HitKey>             hHitKeys;
@@ -74,8 +74,6 @@ class CPULightGroup : public CPULightGroupI
         std::vector<TransformId>        hTransformIds;
         // Copy of the PData on GPU Memory
         const PData*                    dPData;
-        // Global Transform Array
-        const GPUTransformI**           dGPUTransforms;
         // Allocations of the GPU Class
         const GPULight<PGroup>*         dGPULights;
         // GPU pointers to those allocated classes on the CPU
@@ -103,9 +101,7 @@ class CPULightGroup : public CPULightGroupI
 		uint32_t				LightCount() const override;
 
 		size_t					UsedGPUMemory() const override;
-		size_t					UsedCPUMemory() const override;
-
-        void                    AttachGlobalTransformArray(const GPUTransformI** deviceTranfsorms) override;
+        size_t					UsedCPUMemory() const override;
 };
 
 template <class PGroup>
@@ -198,10 +194,11 @@ __device__ PrimitiveId GPULight<PGroup>::PrimitiveIndex() const
 
 template <class PGroup>
 CPULightGroup<PGroup>::CPULightGroup(const GPUPrimitiveGroupI* pg)
-    : primGroup(static_cast<const PGroup&>(*pg))
-    , dPData(nullptr)
-    , dGPUTransforms(nullptr)
+    : CPULightGroupI()
+    , primGroup(static_cast<const PGroup&>(*pg))
+    , dPData(nullptr)    
     , dGPULights(nullptr)
+    , lightCount(0)
 {}
 
 template <class PGroup>
@@ -237,12 +234,6 @@ size_t CPULightGroup<PGroup>::UsedCPUMemory() const
                         hTransformIds.size());
 
     return totalSize;
-}
-
-template <class PGroup>
-void CPULightGroup<PGroup>::AttachGlobalTransformArray(const GPUTransformI** deviceTranfsorms)
-{
-    dGPUTransforms = deviceTranfsorms;
 }
 
 #include "GPULightPrimitive.hpp"

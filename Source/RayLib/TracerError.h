@@ -25,6 +25,8 @@ struct TracerError : public ErrorI
             // Accelerator Related
             UNABLE_TO_CONSTRUCT_BASE_ACCELERATOR,
             UNABLE_TO_CONSTRUCT_ACCELERATOR,
+            UNABLE_TO_CONSTRUCT_CAMERA,
+            UNABLE_TO_CONSTRUCT_LIGHT,
             // Work Related
             UNABLE_TO_GENERATE_WORK,
             // ...
@@ -88,6 +90,8 @@ inline TracerError::operator std::string() const
         // Accelerator Related
         "Unable to construct base accelerator",
         "Unable to construct accelerator",
+        "Unable to construct camera",
+        "Unable to construct light",
         //
         "Unable to generate work for material/primitive pair"
     }; 

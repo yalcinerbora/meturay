@@ -19,6 +19,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightDirectional.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightPoint.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightPrimitive.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULightRectangular.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightSpot.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMediumI.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUMediumVacuum.cuh" />
@@ -107,7 +108,11 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp" />
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUCameraPinhole.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightDirectional.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightPoint.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\GPULightPrimitive.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightRectangular.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightSpot.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUMaterialLight.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUMediumHomogenous.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\ImageMemory.cu">

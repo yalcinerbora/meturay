@@ -168,5 +168,12 @@ TracerError CPULightGroup<PGroup>::ConstructLights(const CudaSystem& system)
         const auto* ptr = static_cast<const GPULightI*>(dGPULights + i);
         gpuLightList.push_back(ptr);
     }
+
+    // Clear CPU Memory
+    hHitKeys.clear();
+    hMediumIds.clear();
+    hPrimitiveIds.clear();
+    hTransformIds.clear();
+
     return TracerError::OK;
 }

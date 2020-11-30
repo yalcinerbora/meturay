@@ -350,6 +350,9 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightI.h">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULightRectangular.cuh">
+      <Filter>Default Lights</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">
@@ -410,6 +413,18 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUCameraPinhole.cu">
       <Filter>Default Cameras</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightPoint.cu">
+      <Filter>Default Lights</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightDirectional.cu">
+      <Filter>Default Lights</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightRectangular.cu">
+      <Filter>Default Lights</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightSpot.cu">
+      <Filter>Default Lights</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>
