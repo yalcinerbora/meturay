@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RayAuxStruct.h"
+#include "RayAuxStruct.cuh"
 
 #include "TracerLib/MaterialFunctions.cuh"
 #include "TracerLib/ImageStructs.h"

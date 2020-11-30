@@ -19,19 +19,9 @@ Uses statified sampling
 #include "Random.cuh"
 #include "GPUEndpointI.cuh"
 #include "GPUCameraI.cuh"
+#include "CameraFunctions.h"
 
 #include "ImageFunctions.cuh"
-
-// Commands that initialize ray auxiliary data
-template<class RayAuxData>
-using AuxInitFunc = void(*)(RayAuxData&,
-                            // Input
-                            const RayAuxData&,
-                            const RayReg&,                            
-                            // Index
-                            const uint16_t mediumIndex,
-                            const uint32_t localPixelId,
-                            const uint32_t pixelSampleId);
 
 // Templated Camera Ray Generation Kernel
 template<class RayAuxData, AuxInitFunc<RayAuxData> AuxFunc>
@@ -113,9 +103,8 @@ __global__ void KCGenerateCameraRaysCPU(// Output
         ray.tMax = cam.farPlane;
         ray.Update(gRays, threadId);
 
-        // Initialize Auxiliary Data
-        AuxFunc(gAuxiliary,
-                threadId,
+        // Initialize Auxiliary Data        
+        AuxFunc(gAuxiliary[threadId],
                 // Input
                 auxBaseData,
                 ray,
@@ -123,6 +112,7 @@ __global__ void KCGenerateCameraRaysCPU(// Output
                 cam.mediumIndex,
                 pixelIdLinear,
                 sampleIdLinear);
+
 
         // Initialize Samples
         ImageAddSample(imgMem, pixelIdLinear, 1);

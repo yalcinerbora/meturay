@@ -1,5 +1,7 @@
 #include "DirectTracer.h"
 #include "TracerWorks.cuh"
+#include "RayAuxStruct.cuh"
+#include "RayTracer.hpp"
 
 #include "TracerLib/GPUWork.cuh"
 
@@ -112,10 +114,13 @@ bool DirectTracer::Render()
 void DirectTracer::GenerateWork(int cameraId)
 {
     // Generate Rays
-    GenerateRays(dCameras[cameraId], options.sampleCount);
+    GenerateRays<RayAuxBasic, RayInitBasic>(dCameras[cameraId], 
+                                            options.sampleCount,
+                                            InitialBasicAux);
 }
 
 void DirectTracer::GenerateWork(const VisorCamera& c)
 {
-    GenerateRays(c, options.sampleCount);
+    GenerateRays<RayAuxBasic, RayInitBasic>(c, options.sampleCount,
+                                            InitialBasicAux);
 }

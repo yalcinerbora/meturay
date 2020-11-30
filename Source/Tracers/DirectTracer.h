@@ -1,6 +1,5 @@
 #pragma once
 
-#include "DirectTracer.h"
 #include "RayTracer.h"
 #include "TracerLib/WorkPool.h"
 

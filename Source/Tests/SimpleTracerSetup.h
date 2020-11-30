@@ -183,8 +183,8 @@ class SimpleTracerSetup
         static constexpr const char*        SAMPLE_MAT_POOL_DEL = "DeleteSampleMaterialPool";
 
         static constexpr const char*        TRACER_DLL = "Tracers";
-        static constexpr const char*        TRACER_LOGIC_POOL_GEN = "GenerateTestTracerPool";
-        static constexpr const char*        TRACER_LOGIC_POOL_DEL = "DeleteTestTracerPool";
+        static constexpr const char*        TRACER_LOGIC_POOL_GEN = "GenerateBasicTracerPool";
+        static constexpr const char*        TRACER_LOGIC_POOL_DEL = "DeleteBasicTracerPool";
 
         static constexpr const char*        SURF_LOAD_DLL = "AssimpSurfaceLoaders";
         static constexpr const char*        SURF_LOAD_GEN = "GenerateAssimpPool";

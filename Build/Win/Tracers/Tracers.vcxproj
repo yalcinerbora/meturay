@@ -11,29 +11,26 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerWorks.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\PathTracer.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\TestPools.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\RayTracer.cu">
-      <FileType>Document</FileType>
-    </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracers\DirectTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracers\PathTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracers\RayTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracers\BasicTracerPools.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracers\TracerWorks.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\DirectTracer.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerKC.cuh" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\RayAuxStruct.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\PathTracer.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\TestPools.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\RayTracer.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerWorks.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracers\DirectTracer.h" />
+    <ClInclude Include="..\..\..\Source\Tracers\EntryPoints.h" />
+    <ClInclude Include="..\..\..\Source\Tracers\PathTracer.h" />
+    <ClInclude Include="..\..\..\Source\Tracers\RayAuxStruct.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracers\RayTracer.h" />
+    <ClInclude Include="..\..\..\Source\Tracers\BasicTracerPools.h" />
+    <ClInclude Include="..\..\..\Source\Tracers\RayTracer.hpp" />
+    <ClInclude Include="..\..\..\Source\Tracers\TracerKC.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracers\TracerWorks.cuh" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cpp">
-      <FileType>Document</FileType>
-    </ClCompile>
+    <ClCompile Include="..\..\..\Source\Tracers\EntryPoints.cpp" />
+    <ClCompile Include="..\..\..\Source\Tracers\Tracers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Materials\Materials.vcxproj">
@@ -45,12 +42,6 @@
     <ProjectReference Include="..\TracerLib\TracerLib.vcxproj">
       <Project>{dff6854d-aad8-489d-bb4a-03048bfcb6e2}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\DirectTracer.cu">
-      <FileType>Document</FileType>
-    </CudaCompile>
-    <ClCompile Include="..\..\..\Source\Tracer-Test\Tracers.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{96F7395D-FA00-4E97-9FB2-98881123033A}</ProjectGuid>

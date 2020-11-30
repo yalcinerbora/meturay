@@ -4,10 +4,7 @@
 #include "TracerLib/TypeTraits.h"
 #include "TracerLib/GPUEndpointI.cuh"
 #include "TracerLib/GPUCameraI.cuh"
-
-#include "RayAuxStruct.h"
-
-class GPUCameraVisor;
+#include "TracerLib/CameraFunctions.h"
 
 // Generic Ray Tracer Class
 class RayTracer : public GPUTracer
@@ -28,8 +25,12 @@ class RayTracer : public GPUTracer
 
         const GPUSceneI&        scene;
 
-        virtual void            GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount);
-        virtual void            GenerateRays(const VisorCamera& camera, int32_t sampleCount);
+        template <class AuxStruct, AuxInitFunc<AuxStruct> AuxFunc>
+        void                    GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount,
+                                             const AuxStruct& initialValues);
+        template <class AuxStruct, AuxInitFunc<AuxStruct> AuxFunc>
+        void                    GenerateRays(const VisorCamera& camera, int32_t sampleCount,
+                                             const AuxStruct& initialValues);
         void                    SwapAuxBuffers();
 
     public:
@@ -41,6 +42,3 @@ class RayTracer : public GPUTracer
 
         TracerError             Initialize() override;
 };
-
-
-

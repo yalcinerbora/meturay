@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Implementations">
-      <UniqueIdentifier>{982ec2ab-3283-4dc1-83de-9076a6d53e38}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Structs">
       <UniqueIdentifier>{088fecb1-e7ee-4557-8487-173064731f30}</UniqueIdentifier>
     </Filter>
@@ -15,52 +12,49 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\Tracers.cu">
-      <Filter>Implementations</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\TestPools.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\PathTracer.cu">
+    <CudaCompile Include="..\..\..\Source\Tracers\DirectTracer.cu">
       <Filter>Tracers</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\TracerWorks.cu">
+    <CudaCompile Include="..\..\..\Source\Tracers\PathTracer.cu">
+      <Filter>Tracers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\Tracers\RayTracer.cu">
+      <Filter>Tracers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\Tracers\TracerWorks.cu">
       <Filter>Works</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\RayTracer.cu">
-      <Filter>Tracers</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer-Test\DirectTracer.cu">
-      <Filter>Tracers</Filter>
-    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\Tracers\BasicTracerPools.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\Tracers.h">
-      <Filter>Implementations</Filter>
+    <ClInclude Include="..\..\..\Source\Tracers\DirectTracer.h">
+      <Filter>Tracers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\EntryPoints.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\RayAuxStruct.h">
+    <ClInclude Include="..\..\..\Source\Tracers\PathTracer.h">
+      <Filter>Tracers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracers\RayTracer.h">
+      <Filter>Tracers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracers\TracerKC.cuh">
+      <Filter>Works</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracers\TracerWorks.cuh">
+      <Filter>Works</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\Tracers\RayAuxStruct.cuh">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\TestPools.h" />
-    <ClInclude Include="..\..\..\Source\Tracer-Test\PathTracer.h">
+    <ClInclude Include="..\..\..\Source\Tracers\EntryPoints.h" />
+    <ClInclude Include="..\..\..\Source\Tracers\BasicTracerPools.h" />
+    <ClInclude Include="..\..\..\Source\Tracers\RayTracer.hpp">
       <Filter>Tracers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerWorks.cuh">
-      <Filter>Works</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\RayTracer.h">
-      <Filter>Tracers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\DirectTracer.h">
-      <Filter>Tracers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer-Test\TracerKC.cuh">
-      <Filter>Works</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\Tracer-Test\Tracers.cpp">
+    <ClCompile Include="..\..\..\Source\Tracers\Tracers.cpp">
       <Filter>Tracers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\Tracer-Test\EntryPoints.cpp" />
+    <ClCompile Include="..\..\..\Source\Tracers\EntryPoints.cpp" />
   </ItemGroup>
 </Project>

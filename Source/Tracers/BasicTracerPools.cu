@@ -1,11 +1,11 @@
-#include "TestPools.h"
+#include "BasicTracerPools.h"
 
 #include "DirectTracer.h"
 #include "PathTracer.h"
 
 using namespace TypeGenWrappers;
 
-TestTracerPool::TestTracerPool()
+BasicTracerPool::BasicTracerPool()
 {
     tracerGenerators.emplace(DirectTracer::TypeName(),
                              GPUTracerGen(TracerLogicConstruct<GPUTracerI, DirectTracer>,

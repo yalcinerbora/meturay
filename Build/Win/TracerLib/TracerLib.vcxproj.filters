@@ -263,9 +263,6 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TextureStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\LightCameraKernels.cuh">
-      <Filter>GPU Template Kernels</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
@@ -349,6 +346,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraPinhole.cuh">
       <Filter>Default Cameras</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\CameraFunctions.h">
+      <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
