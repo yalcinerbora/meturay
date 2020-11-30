@@ -1,8 +1,23 @@
-{
-	"BaseAccelerator": {"type": "Linear"},
-	"BaseBoundaryMaterial": 0,
-	"BaseMedium" : 0,
+{	
+	"Cameras": [
+    {
+		"id": 0,
+		"type": "Pinhole",
+
+		"apertureSize": 1.0,
+	  	"focusDistance": 21,
+		// 16:9 FoV
+		"fov": [53.13, 29.88],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"gaze": [0.0, 0.5, 0.0],
+		"planes": [0.4, 10.0],
+		"position": [0.0, 0.5, 3.5],
+		"up": [0.0, 1.0, 0.0]
+	}],
 	
+	"Lights": [],
+
     "Mediums": [{ "id" : 0, "type" : "Vacuum"}],
 
 	"Transforms":[{"id": 0, "type": "Identity"}],
@@ -27,6 +42,13 @@
 
 	"Accelerators": [{"id" : 0, "type" : "BasicBVH", "useStack" : true}],
 
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "Linear"},
+    "BaseBoundaryMaterial": 0,
+    "BaseMedium" : 0,
+
 	"Surfaces": [
 	{
 		"transform": 0,
@@ -35,19 +57,6 @@
 		"primitive": 0
 	}],
 
-	"Lights": [],
-
-	"Cameras": [
-    {
-		"apertureSize": 1.0,
-	  	"focusDistance": 21,
-		// 16:9 FoV
-		"fov": [53.13, 29.88],
-		// 1:1 FoV
-		//"fov": [53.13, 53.13],
-		"gaze": [0.0, 0.5, 0.0],
-		"planes": [0.4, 10.0],
-		"position": [0.0, 0.5, 3.5],
-		"up": [0.0, 1.0, 0.0]
-    }]
+    "LightSurfaces": [],
+    "CameraSurfaces": [{"camera": 0, "material": 0}]
 }

@@ -1,9 +1,31 @@
 {
+	
+	"Cameras": [
+    {
+		"id": 0,
+		"type": "Pinhole",
 
+		"apertureSize": 1.0,
+		"focusDistance": 21,
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"gaze": [0.0, 2, 0.0],
+		"planes": [0.1, 20.0],
+		"position": [0.0, 3.0, 7.0],
+		"up": [0.0, 1.0, 0.0]
+	}],
 
-	"BaseAccelerator": {"type": "Linear"},
-	"BaseBoundaryMaterial": 0,
-	"BaseMedium" : 0,
+	"Lights": [
+	{
+		"id": 0,
+		"type": "Rectangular",
+
+		"position": [-5.371554, 7.565777, -0.362448],
+		"v0" : [-1.5, -2.12132, 1.5],
+		"v1" : [4.24264, 0, 4.24264]
+	}],
 
 	"Mediums": [
 	{
@@ -84,6 +106,13 @@
 	"Accelerators": [{"id" : 0, "type" : "BasicBVH", "useStack": true},
 					 {"id" : 1, "type" : "Linear"}],
 
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "Linear"},
+    "BaseBoundaryMaterial": 0,
+    "BaseMedium" : 0,
+
 	"Surfaces": [
 	{
 		// Floor
@@ -93,55 +122,17 @@
 		"primitive": 0
 	},
 	{
-		// Light
-		"transform": 0,
-		"accelerator": 1,
-		"material": 1,
-		"primitive": 2
-	},
-	{
 		// Bunny
 		"transform": 0,
 		"accelerator": 0,
 		"material": 6,
         "primitive": 1
-	}
+	}],
+
+	"LightSurfaces": [
+		{"primitive": 2, "material": 1, "accelerator": 1}
+		//{"light": 0, "material": 1}
 	],
 
-	"Lights": [
-	// {
-	// 	"type": "Rectangular",
-	// 	"material": 1,
-	// 	// Value
-	// 	"position": [-5.371554, 7.565777, -0.362448],
-	// 	"v0" : [-1.5, -2.12132, 1.5],
-	// 	"v1" : [4.24264, 0, 4.24264]
-	// }
-	// {
-	// 	"type": "Point",
-	// 	"material": 1,
-	// 	// Value
-	// 	"position": [-5.371554, 7.565777, -0.362448]
-	// }
-	{
-	 	"material": 1,
-		"type": "Primitive",
-		"primitive": 2
-	}],
-	
-	"Cameras": [
-    {
-		"type": "Pinhole",
-
-		"apertureSize": 1.0,
-		"focusDistance": 21,
-		// 16:9 FoV
-		"fov": [94.45, 53.13],
-		// 1:1 FoV
-		//"fov": [53.13, 53.13],
-		"gaze": [0.0, 2, 0.0],
-		"planes": [0.1, 20.0],
-		"position": [0.0, 3.0, 7.0],
-		"up": [0.0, 1.0, 0.0]
-	}]
+    "CameraSurfaces": [{"camera": 0, "material": 0}]
 }
