@@ -36,19 +36,6 @@ namespace NodeNames
     // Material & Light Common Names
     static constexpr const char* MEDIUM = "medium";
     static constexpr const char* LIGHT = "light";
-    // Light Related Names
-    // Light Type Values
-    static constexpr const char* LIGHT_POSITION = POSITION;
-    static constexpr const char* LIGHT_DIRECTION = "direction";
-    static constexpr const char* LIGHT_SPHR_CENTER = "center";
-    static constexpr const char* LIGHT_DISK_CENTER = LIGHT_SPHR_CENTER;
-    static constexpr const char* LIGHT_SPHR_RADIUS = "radius";
-    static constexpr const char* LIGHT_DISK_RADIUS = LIGHT_SPHR_RADIUS;
-    static constexpr const char* LIGHT_RECT_V0 = "v0";
-    static constexpr const char* LIGHT_RECT_V1 = "v1";
-    static constexpr const char* LIGHT_CONE_APERTURE = "aperture";
-    static constexpr const char* LIGHT_MATERIAL = MATERIAL;
-    static constexpr const char* LIGHT_PRIMITIVE = PRIMITIVE;
     // Texture Related Names
     static constexpr const char* TEXTURE_IS_CACHED = "isCached";
     static constexpr const char* TEXTURE_FILTER = "filter";

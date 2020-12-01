@@ -3,26 +3,27 @@
 #include "GPULightI.h"
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
+#include "Random.cuh"
 
-class GPULightSpot : public GPULightI
+class GPULightDisk final : public GPULightI
 {
     private:        
-        Vector3             position;
-        float               cosMin;
-        Vector3             direction;
-        float               cosMax;
+        Vector3f                center;
+        Vector3f                normal;
+        float                   radius;
+        float                   area;
 
     protected:
     public:
         // Constructors & Destructor
-        __device__              GPULightSpot(// Per Light Data
-                                             const Vector3& position,
-                                             const Vector3& direction,
-                                             const Vector2& aperture,
+        __device__              GPULightDisk(// Per Light Data
+                                             const Vector3f& center,
+                                             const Vector3f& normal,
+                                             const float& radius,
                                              const GPUTransformI& gTransform,
                                              // Endpoint Related Data
                                              HitKey k, uint16_t mediumIndex);
-                                ~GPULightSpot() = default;
+                                ~GPULightDisk() = default;
         // Interface
         __device__ void         Sample(// Output
                                        float& distance,
@@ -40,32 +41,30 @@ class GPULightSpot : public GPULightI
                                             const Vector2i& sampleMax,
                                             // I-O
                                             RandomGPU&) const override;
-
         __device__ PrimitiveId  PrimitiveIndex() const override;
 };
 
-class CPULightGroupSpot : public CPULightGroupI
+class CPULightGroupDisk final : public CPULightGroupI
 {
     public:
-        static constexpr const char*    TypeName(){return "Spot"; }
+        static constexpr const char*    TypeName(){return "Disk"; }
 
-        static constexpr const char*    NAME_POSITION = "position";
-        static constexpr const char*    NAME_DIRECTION = "direction";
-        static constexpr const char*    NAME_CONE_APERTURE = "aperture";
+        static constexpr const char*    NAME_POSITION = "center";
+        static constexpr const char*    NAME_NORMAL = "normal";
+        static constexpr const char*    NAME_RADIUS = "radius";
 
     private:
         DeviceMemory                    memory;
         //
-        std::vector<Vector3f>           hPositions;
-        std::vector<Vector3f>           hDirections;
-        std::vector<Vector2f>           hCosines;
+        std::vector<Vector3f>           hCenters;
+        std::vector<Vector3f>           hNormals;
+        std::vector<float>              hRadius;
 
         std::vector<HitKey>             hHitKeys;
         std::vector<uint16_t>           hMediumIds;
         std::vector<TransformId>        hTransformIds;
-
         // Allocations of the GPU Class
-        const GPULightSpot*             dGPULights;
+        const GPULightDisk*             dGPULights;
         // GPU pointers to those allocated classes on the CPU
         GPULightList				    gpuLightList;
         uint32_t                        lightCount;
@@ -73,8 +72,8 @@ class CPULightGroupSpot : public CPULightGroupI
     protected:
     public:
         // Cosntructors & Destructor
-                                CPULightGroupSpot(const GPUPrimitiveGroupI*);
-                                ~CPULightGroupSpot() = default;
+                                CPULightGroupDisk(const GPUPrimitiveGroupI*);
+                                ~CPULightGroupDisk() = default;
 
 
         const char*				Type() const override;
@@ -96,37 +95,55 @@ class CPULightGroupSpot : public CPULightGroupI
 };
 
 __device__
-inline GPULightSpot::GPULightSpot(// Per Light Data
-                                  const Vector3& position,
-                                  const Vector3& direction,
-                                  const Vector2& aperture,
+inline GPULightDisk::GPULightDisk(// Per Light Data
+                                  const Vector3f& center,
+                                  const Vector3f& normal,
+                                  const float& radius,
                                   const GPUTransformI& gTransform,
                                   // Endpoint Related Data
                                   HitKey k, uint16_t mediumIndex)
     : GPUEndpointI(k, mediumIndex)
-    , position(gTransform.LocalToWorld(position))
-    , direction(gTransform.LocalToWorld(direction, true))
-    , cosMin(aperture[0])
-    , cosMax(aperture[1])
-{}
-
-__device__ void GPULightSpot::Sample(// Output
-                                     float& distance,
-                                     Vector3& dir,
-                                     float& pdf,
-                                     // Input
-                                     const Vector3& worldLoc,
-                                     // I-O
-                                     RandomGPU&) const
+    , center(gTransform.LocalToWorld(center))
+    , normal(gTransform.LocalToWorld(normal, true))
+    , radius(radius)
+    , area(MathConstants::Pi* radius* radius)
 {
-    dir = -direction;
-    distance = (position - worldLoc).Length();
-    
-    // Fake pdf to incorporate square faloff
-    pdf = (distance * distance);
+    // TODO: check the scale on the transform
+    // since this wont work if transform contains scale
 }
 
-__device__ void GPULightSpot::GenerateRay(// Output
+__device__ void GPULightDisk::Sample(// Output
+                                      float& distance,
+                                      Vector3& direction,
+                                      float& pdf,
+                                      // Input
+                                      const Vector3& worldLoc,
+                                      // I-O
+                                      RandomGPU& rng) const
+{
+    float r = GPUDistribution::Uniform<float>(rng) * radius;
+    float tetha = GPUDistribution::Uniform<float>(rng) * 2.0f * MathConstants::Pi;
+
+    // Aligned to Axis Z
+    Vector3 disk = Vector3(sqrt(r) * cos(tetha),
+                           sqrt(r) * sin(tetha),
+                           0.0f);
+
+    // Rotate to disk normal
+    QuatF rotation = Quat::RotationBetweenZAxis(normal);
+    Vector3 worldDisk = rotation.ApplyRotation(disk);
+    Vector3 position = center + worldDisk;
+
+    direction = position - worldLoc;
+    float distanceSqr = direction.LengthSqr();
+    distance = sqrt(distanceSqr);
+    direction *= (1.0f / distance);
+
+    float nDotL = max(normal.Dot(-direction), 0.0f);
+    pdf = distanceSqr / (nDotL * area);
+}
+
+__device__ void GPULightDisk::GenerateRay(// Output
                                           RayReg&,
                                           // Input
                                           const Vector2i& sampleId,
@@ -137,45 +154,45 @@ __device__ void GPULightSpot::GenerateRay(// Output
     // TODO: Implement
 }
 
-__device__ PrimitiveId GPULightSpot::PrimitiveIndex() const
+__device__ PrimitiveId GPULightDisk::PrimitiveIndex() const
 {
     return 0;
 }
 
-inline CPULightGroupSpot::CPULightGroupSpot(const GPUPrimitiveGroupI*)
+inline CPULightGroupDisk::CPULightGroupDisk(const GPUPrimitiveGroupI*)
     : CPULightGroupI()
     , lightCount(0)
     , dGPULights(nullptr)
 {}
 
-inline const char* CPULightGroupSpot::Type() const
+inline const char* CPULightGroupDisk::Type() const
 {
     return TypeName();
 }
 
-inline const GPULightList& CPULightGroupSpot::GPULights() const
+inline const GPULightList& CPULightGroupDisk::GPULights() const
 {
     return gpuLightList;
 }
 
-inline uint32_t CPULightGroupSpot::LightCount() const
+inline uint32_t CPULightGroupDisk::LightCount() const
 {
     return lightCount;
 }
 
-inline size_t CPULightGroupSpot::UsedGPUMemory() const
+inline size_t CPULightGroupDisk::UsedGPUMemory() const
 {
     return memory.Size();
 }
 
-inline size_t CPULightGroupSpot::UsedCPUMemory() const
+inline size_t CPULightGroupDisk::UsedCPUMemory() const
 {
     size_t totalSize = (hHitKeys.size() * sizeof(HitKey) +
                         hMediumIds.size() * sizeof(uint16_t) +
                         hTransformIds.size() * sizeof(TransformId) + 
-                        hPositions.size() * sizeof(Vector3f) + 
-                        hDirections.size() * sizeof(Vector3f) +
-                        hCosines.size() * sizeof(Vector2f));
+                        hCenters.size() * sizeof(Vector3f) +
+                        hNormals.size() * sizeof(Vector3f) +
+                        hRadius.size() * sizeof(float));
 
     return totalSize;
 }

@@ -18,9 +18,15 @@ class GPUTransformIdentity : public GPUTransformI
 		RayF			WorldToLocal(const RayF&,
 									 const uint32_t* indices = nullptr, 
 									 const float* weights = nullptr,
-									 uint32_t count = 0) const override;	
+									 uint32_t count = 0) const override;									 
 		__device__
-		Vector3			LocalToWorld(const Vector3&,
+		Vector3			WorldToLocal(const Vector3&, bool isDirection = false,
+									 const uint32_t* indices = nullptr,
+									 const float* weights = nullptr,
+									 uint32_t count = 0) const override;
+
+		__device__
+		Vector3			LocalToWorld(const Vector3&, bool isDirection = false,
 									 const uint32_t* indices = nullptr,
 									 const float* weights = nullptr,
 									 uint32_t count = 0) const override;
@@ -62,23 +68,31 @@ class CPUTransformIdentity : public CPUTransformGroupI
 
 __device__
 inline RayF GPUTransformIdentity::WorldToLocal(const RayF& r,
-											   const uint32_t* indices, const float* weights,
-											   uint32_t count) const
+											   const uint32_t*, const float*,
+											   uint32_t) const
 {
 	return r;
 }
 
 __device__
-inline Vector3 GPUTransformIdentity::LocalToWorld(const Vector3& vector,
-												  const uint32_t* indices, const float* weights,
-												  uint32_t count) const
+inline Vector3f GPUTransformIdentity::WorldToLocal(const Vector3f& vec, bool,
+												   const uint32_t*, const float*,
+												   uint32_t) const
+{
+	return vec;
+}
+
+__device__
+inline Vector3 GPUTransformIdentity::LocalToWorld(const Vector3& vector, bool,
+												  const uint32_t*, const float*,
+												  uint32_t) const
 {
 	return vector;
 }
 
 __device__
-inline QuatF GPUTransformIdentity::ToLocalRotation(const uint32_t* indices, const float* weights,
-												   uint32_t count) const
+inline QuatF GPUTransformIdentity::ToLocalRotation(const uint32_t*, const float*,
+												   uint32_t) const
 {
 	return IdentityQuatF;
 }

@@ -353,6 +353,9 @@
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightRectangular.cuh">
       <Filter>Default Lights</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULightDisk.cuh">
+      <Filter>Default Lights</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">
@@ -424,6 +427,9 @@
       <Filter>Default Lights</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerLib\GPULightSpot.cu">
+      <Filter>Default Lights</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightDisk.cu">
       <Filter>Default Lights</Filter>
     </CudaCompile>
   </ItemGroup>

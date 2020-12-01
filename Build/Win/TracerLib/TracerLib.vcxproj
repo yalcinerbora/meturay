@@ -15,6 +15,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\AuxiliaryDataKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\CameraFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraPinhole.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerLib\GPULightDisk.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightPrimitive.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightDirectional.cuh" />
     <ClInclude Include="..\..\..\Source\TracerLib\GPULightPoint.cuh" />
@@ -97,6 +98,7 @@
     <ClInclude Include="..\..\..\Source\TracerLib\TypeTraits.h" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightDisk.cu" />
     <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.cu" />
     <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp" />

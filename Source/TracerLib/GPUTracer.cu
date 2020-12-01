@@ -41,7 +41,7 @@ TracerError GPUTracer::LoadLights(std::vector<const GPULightI*>& dGPULights)
     for(auto& light : lights)
     {
         CPULightGroupI& l = *(light.second);
-        if((e = l.ConstructLights(cudaSystem)) != TracerError::OK)
+        if((e = l.ConstructLights(cudaSystem, dTransforms)) != TracerError::OK)
             return e;
         const auto& dLList = l.GPULights();
         dGPULights.insert(dGPULights.end(), dLList.begin(), dLList.end());

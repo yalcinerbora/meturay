@@ -44,7 +44,7 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const ConstructionDataList& li
         // Convert Ids to inner index
         Vector2ul primitiveRange = primGroup.PrimitiveBatchRange(primitiveId);
         uint32_t mediumIndex = mediumIdIndexPairs.at(node.mediumId);
-        uint32_t transformIndex = transformIdIndexPairs.at(node.mediumId);
+        uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
         HitKey materialKey = allMaterialKeys.at(std::make_pair(primGroup.Type(), node.materialId));
             
         for(PrimitiveId primId = primitiveRange[0]; primId < primitiveRange[1]; primId++)
@@ -90,7 +90,8 @@ SceneError CPULightGroup<PGroup>::ChangeTime(const NodeListing& lightNodes, doub
 }
 
 template <class PGroup>
-TracerError CPULightGroup<PGroup>::ConstructLights(const CudaSystem& system)
+TracerError CPULightGroup<PGroup>::ConstructLights(const CudaSystem& system,
+                                                   const GPUTransformI** dGlobalTransformArray)
 {
     // Gen Temporary Memory
     DeviceMemory tempMemory;
@@ -157,7 +158,7 @@ TracerError CPULightGroup<PGroup>::ConstructLights(const CudaSystem& system)
                        dLightMaterialIds,
 
                        dPData,
-                       dGPUTransforms,
+                       dGlobalTransformArray,
                        LightCount());
 
     gpu.WaitAllStreams();
@@ -168,12 +169,5 @@ TracerError CPULightGroup<PGroup>::ConstructLights(const CudaSystem& system)
         const auto* ptr = static_cast<const GPULightI*>(dGPULights + i);
         gpuLightList.push_back(ptr);
     }
-
-    // Clear CPU Memory
-    hHitKeys.clear();
-    hMediumIds.clear();
-    hPrimitiveIds.clear();
-    hTransformIds.clear();
-
     return TracerError::OK;
 }

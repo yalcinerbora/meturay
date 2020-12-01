@@ -13,10 +13,8 @@ class GPULightDirectional : public GPULightI
     public:
         // Constructors & Destructor
         __device__              GPULightDirectional(// Per Light Data
-                                                    TransformId tIndex,
                                                     const Vector3f& direction,
-                                                    // Common Data
-                                                    const GPUTransformI** gTransforms,
+                                                    const GPUTransformI& gTransform,
                                                     // Endpoint Related Data
                                                     HitKey k, uint16_t mediumIndex);
                                 ~GPULightDirectional() = default;
@@ -47,13 +45,15 @@ class CPULightGroupDirectional : public CPULightGroupI
     public:
         static constexpr const char*    TypeName() { return "Directional"; }
 
+        static constexpr const char*    NAME_DIRECTION = "direction";
+
     private:
         DeviceMemory                    memory;
         //
         std::vector<Vector3f>           hDirections;
+
         std::vector<HitKey>             hHitKeys;
         std::vector<uint16_t>           hMediumIds;
-        std::vector<PrimitiveId>        hPrimitiveIds;
         std::vector<TransformId>        hTransformIds;
         // Allocations of the GPU Class
         const GPULightDirectional*      dGPULights;
@@ -78,7 +78,8 @@ class CPULightGroupDirectional : public CPULightGroupI
 												const std::string& scenePath) override;
 		SceneError				ChangeTime(const NodeListing& lightNodes, double time,
 										   const std::string& scenePath) override;
-		TracerError				ConstructLights(const CudaSystem&) override;
+		TracerError				ConstructLights(const CudaSystem&,
+                                                const GPUTransformI**) override;
 		uint32_t				LightCount() const override;
 
 		size_t					UsedGPUMemory() const override;
@@ -87,14 +88,12 @@ class CPULightGroupDirectional : public CPULightGroupI
 
 __device__
 inline GPULightDirectional::GPULightDirectional(// Per Light Data
-                                                TransformId tIndex,
                                                 const Vector3f& direction,
-                                                // Common Data
-                                                const GPUTransformI** gTransforms,
+                                                const GPUTransformI& gTransform,
                                                 // Endpoint Related Data
                                                 HitKey k, uint16_t mediumIndex)
     : GPUEndpointI(k, mediumIndex)
-    , direction(gTransforms[tIndex]->LocalToWorld(direction))
+    , direction(gTransform.LocalToWorld(direction, true))
 {}
 
 __device__ void GPULightDirectional::Sample(// Output
@@ -157,7 +156,6 @@ inline size_t CPULightGroupDirectional::UsedCPUMemory() const
 {
     size_t totalSize = (hHitKeys.size() * sizeof(HitKey) +
                         hMediumIds.size() * sizeof(uint16_t) +
-                        hPrimitiveIds.size() * sizeof(PrimitiveId) +
                         hTransformIds.size() * sizeof(TransformId) + 
                         hDirections.size() * sizeof(Vector3f));
 

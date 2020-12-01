@@ -1,12 +1,12 @@
-#include "GPULightSpot.cuh"
+#include "GPULightDisk.cuh"
 #include "TypeTraits.h"
 #include "RayLib/MemoryAlignment.h"
 
-__global__ void KCConstructGPULightSpot(GPULightSpot* gLightLocations,
+__global__ void KCConstructGPULightDisk(GPULightDisk* gLightLocations,
                                         //
-                                        const Vector3f* gPositions,
-                                        const Vector3f* gDirections,
-                                        const Vector2f* gApertures,
+                                        const Vector3f* gCenters,
+                                        const Vector3f* gNormals,
+                                        const float* gRadius,
                                         //
                                         const TransformId* gTransformIds,
                                         const uint16_t* gMediumIndices,
@@ -19,9 +19,9 @@ __global__ void KCConstructGPULightSpot(GPULightSpot* gLightLocations,
         globalId < lightCount;
         globalId += blockDim.x * gridDim.x)
     {
-        new (gLightLocations + globalId) GPULightSpot(gPositions[globalId],
-                                                      gDirections[globalId],
-                                                      gApertures[globalId],
+        new (gLightLocations + globalId) GPULightDisk(gCenters[globalId],
+                                                      gNormals[globalId],
+                                                      gRadius[globalId],
                                                       *gTransforms[gTransformIds[globalId]],
                                                       //
                                                       gLightMaterialIds[globalId],
@@ -29,7 +29,7 @@ __global__ void KCConstructGPULightSpot(GPULightSpot* gLightLocations,
     }
 }
 
-SceneError CPULightGroupSpot::InitializeGroup(const ConstructionDataList& lightNodes,
+SceneError CPULightGroupDisk::InitializeGroup(const ConstructionDataList& lightNodes,
                                               const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                               const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                               const MaterialKeyListing& allMaterialKeys,
@@ -41,9 +41,9 @@ SceneError CPULightGroupSpot::InitializeGroup(const ConstructionDataList& lightN
     hMediumIds.reserve(lightCount);
     hTransformIds.reserve(lightCount);
 
-    hPositions.reserve(lightCount);
-    hDirections.reserve(lightCount);
-    hCosines.reserve(lightCount);
+    hCenters.reserve(lightCount);
+    hNormals.reserve(lightCount);
+    hRadius.reserve(lightCount);
 
     for(const auto& node : lightNodes)
     {
@@ -51,48 +51,48 @@ SceneError CPULightGroupSpot::InitializeGroup(const ConstructionDataList& lightN
         // Convert Ids to inner index
         uint32_t mediumIndex = mediumIdIndexPairs.at(node.mediumId);
         uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
-        HitKey materialKey = allMaterialKeys.at(std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME,
+        HitKey materialKey = allMaterialKeys.at(std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME, 
                                                                node.materialId));
 
-        const auto positions = node.node->AccessVector3(NAME_POSITION);
-        const auto directions = node.node->AccessVector3(NAME_DIRECTION);
-        const auto apertures = node.node->AccessVector2(NAME_CONE_APERTURE);
+        const auto centers = node.node->AccessVector3(NAME_POSITION);
+        const auto normals = node.node->AccessVector3(NAME_NORMAL);
+        const auto radius = node.node->AccessFloat(NAME_RADIUS);
 
         // Load to host memory
         hHitKeys.push_back(materialKey);
         hMediumIds.push_back(mediumIndex);
         hTransformIds.push_back(transformIndex);
-        hPositions.insert(hPositions.end(), positions.begin(), positions.end());
-        hDirections.insert(hDirections.end(), directions.begin(), directions.end());
-        hCosines.insert(hCosines.end(), apertures.begin(), apertures.end());
+        hCenters.insert(hCenters.end(), centers.begin(), centers.end());
+        hNormals.insert(hNormals.end(), normals.begin(), normals.end());
+        hRadius.insert(hRadius.end(), radius.begin(), radius.end());
     }
 
     // Allocate for GPULight classes
-    size_t totalClassSize = sizeof(GPULightSpot) * lightCount;
+    size_t totalClassSize = sizeof(GPULightDisk) * lightCount;
     totalClassSize = Memory::AlignSize(totalClassSize);
 
     DeviceMemory::EnlargeBuffer(memory, totalClassSize);
 
     size_t offset = 0;
     std::uint8_t* dBasePtr = static_cast<uint8_t*>(memory);
-    dGPULights = reinterpret_cast<const GPULightSpot*>(dBasePtr + offset);
-    offset += totalClassSize;
+    dGPULights = reinterpret_cast<const GPULightDisk*>(dBasePtr + offset);
+    offset += totalClassSize;    
     assert(totalClassSize == offset);
 
     return SceneError::OK;
 }
 
-SceneError CPULightGroupSpot::ChangeTime(const NodeListing& lightNodes, double time,
+SceneError CPULightGroupDisk::ChangeTime(const NodeListing& lightNodes, double time,
                                          const std::string& scenePath)
 {
     // TODO: Implement
     return SceneError::LIGHT_TYPE_INTERNAL_ERRROR;
 }
 
-TracerError CPULightGroupSpot::ConstructLights(const CudaSystem& system,
+TracerError CPULightGroupDisk::ConstructLights(const CudaSystem& system,
                                                const GPUTransformI** dGlobalTransformArray)
 {
-     // Gen Temporary Memory
+    // Gen Temporary Memory
     DeviceMemory tempMemory;
     // Allocate for GPULight classes
     size_t matKeySize = sizeof(HitKey) * lightCount;
@@ -101,19 +101,19 @@ TracerError CPULightGroupSpot::ConstructLights(const CudaSystem& system,
     mediumSize = Memory::AlignSize(mediumSize);
     size_t transformIdSize = sizeof(TransformId) * lightCount;
     transformIdSize = Memory::AlignSize(transformIdSize);
-    size_t positionSize = sizeof(Vector3f) * lightCount;
-    positionSize = Memory::AlignSize(positionSize);
-    size_t directionSize = sizeof(Vector3f) * lightCount;
-    directionSize = Memory::AlignSize(directionSize);
-    size_t apertureSize = sizeof(Vector2f) * lightCount;
-    apertureSize = Memory::AlignSize(apertureSize);
+    size_t centerSize = sizeof(Vector3f) * lightCount;
+    centerSize = Memory::AlignSize(centerSize);
+    size_t normalSize = sizeof(Vector3f) * lightCount;
+    normalSize = Memory::AlignSize(normalSize);
+    size_t radiusSize = sizeof(float) * lightCount;
+    radiusSize = Memory::AlignSize(radiusSize);
 
     size_t totalSize = (matKeySize + 
                         mediumSize + 
                         transformIdSize + 
-                        positionSize +
-                        directionSize +
-                        apertureSize);
+                        centerSize +
+                        normalSize +
+                        radiusSize);
     DeviceMemory::EnlargeBuffer(tempMemory, totalSize);
 
     size_t offset = 0;
@@ -124,12 +124,12 @@ TracerError CPULightGroupSpot::ConstructLights(const CudaSystem& system,
     offset += mediumSize;
     const TransformId* dTransformIds = reinterpret_cast<const TransformId*>(dBasePtr + offset);
     offset += transformIdSize;
-    const Vector3f* dPositions = reinterpret_cast<const Vector3f*>(dBasePtr + offset);
-    offset += positionSize;
-    const Vector3f* dDirections = reinterpret_cast<const Vector3f*>(dBasePtr + offset);
-    offset += directionSize;
-    const Vector2f* dApertures = reinterpret_cast<const Vector2f*>(dBasePtr + offset);
-    offset += apertureSize;
+    const Vector3f* dCenters = reinterpret_cast<const Vector3f*>(dBasePtr + offset);
+    offset += centerSize;
+    const Vector3f* dNormals = reinterpret_cast<const Vector3f*>(dBasePtr + offset);
+    offset += normalSize;
+    const float* dRadius = reinterpret_cast<const float*>(dBasePtr + offset);
+    offset += radiusSize;
     assert(totalSize == offset);
 
     // Set a GPU
@@ -148,30 +148,30 @@ TracerError CPULightGroupSpot::ConstructLights(const CudaSystem& system,
                           hTransformIds.data(),
                           sizeof(TransformId) * lightCount,
                           cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy(const_cast<Vector3*>(dPositions),
-                          hPositions.data(),
+    CUDA_CHECK(cudaMemcpy(const_cast<Vector3*>(dCenters),
+                          hCenters.data(),
                           sizeof(Vector3) * lightCount,
                           cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy(const_cast<Vector3*>(dDirections),
-                          hDirections.data(),
+    CUDA_CHECK(cudaMemcpy(const_cast<Vector3*>(dNormals),
+                          hNormals.data(),
                           sizeof(Vector3) * lightCount,
                           cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy(const_cast<Vector2*>(dApertures),
-                          hCosines.data(),
-                          sizeof(Vector2) * lightCount,
+    CUDA_CHECK(cudaMemcpy(const_cast<float*>(dRadius),
+                          hRadius.data(),
+                          sizeof(float) * lightCount,
                           cudaMemcpyHostToDevice));
 
     // Call allocation kernel
     gpu.GridStrideKC_X(0, 0,
                        LightCount(),
                        //
-                       KCConstructGPULightSpot,
+                       KCConstructGPULightDisk,
                        //
-                       const_cast<GPULightSpot*>(dGPULights),
+                       const_cast<GPULightDisk*>(dGPULights),
                        //
-                       dPositions,
-                       dDirections,
-                       dApertures,
+                       dCenters,
+                       dNormals,
+                       dRadius,
                        //
                        dTransformIds,
                        dMediumIndices,
@@ -191,5 +191,5 @@ TracerError CPULightGroupSpot::ConstructLights(const CudaSystem& system,
     return TracerError::OK;
 }
 
-static_assert(IsLightGroupClass<CPULightGroupSpot>::value,
-              "CPULightGroupSpot is not a Light Group class.");
+static_assert(IsLightGroupClass<CPULightGroupDisk>::value,
+              "CPULightGroupRectangular is not a Light Group class.");

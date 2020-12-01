@@ -8,22 +8,20 @@
 class GPULightRectangular final : public GPULightI
 {
     private:        
-        Vector3         topLeft;
-        Vector3         right;
-        Vector3         down;
-        Vector3         normal;
-        float           area;
+        Vector3                 topLeft;
+        Vector3                 right;
+        Vector3                 down;
+        Vector3                 normal;
+        float                   area;
 
     protected:
     public:
         // Constructors & Destructor
         __device__              GPULightRectangular(// Per Light Data
-                                                    TransformId tIndex,
                                                     const Vector3& topLeft,
                                                     const Vector3& right,
                                                     const Vector3& down,
-                                                    // Common Data
-                                                    const GPUTransformI** gTransforms,
+                                                    const GPUTransformI& gTransform,
                                                     // Endpoint Related Data
                                                     HitKey k, uint16_t mediumIndex);
                                 ~GPULightRectangular() = default;
@@ -52,6 +50,11 @@ class CPULightGroupRectangular final : public CPULightGroupI
     public:
         static constexpr const char*    TypeName(){return "Rectangular"; }
 
+
+        static constexpr const char* NAME_POSITION = "topLeft";
+        static constexpr const char* NAME_RECT_V0 = "right";
+        static constexpr const char* NAME_RECT_V1 = "down";
+
     private:
         DeviceMemory                    memory;
         //
@@ -61,7 +64,6 @@ class CPULightGroupRectangular final : public CPULightGroupI
 
         std::vector<HitKey>             hHitKeys;
         std::vector<uint16_t>           hMediumIds;
-        std::vector<PrimitiveId>        hPrimitiveIds;
         std::vector<TransformId>        hTransformIds;
         // Allocations of the GPU Class
         const GPULightRectangular*      dGPULights;
@@ -86,7 +88,8 @@ class CPULightGroupRectangular final : public CPULightGroupI
 												const std::string& scenePath) override;
 		SceneError				ChangeTime(const NodeListing& lightNodes, double time,
 										   const std::string& scenePath) override;
-		TracerError				ConstructLights(const CudaSystem&) override;
+		TracerError				ConstructLights(const CudaSystem&,
+                                                const GPUTransformI**) override;
 		uint32_t				LightCount() const override;
 
 		size_t					UsedGPUMemory() const override;
@@ -95,18 +98,16 @@ class CPULightGroupRectangular final : public CPULightGroupI
 
 __device__
 inline GPULightRectangular::GPULightRectangular(// Per Light Data
-                                                TransformId tIndex,
                                                 const Vector3& topLeft,
                                                 const Vector3& right,
                                                 const Vector3& down,
-                                                // Common Data
-                                                const GPUTransformI** gTransforms,
+                                                const GPUTransformI& gTransform,
                                                 // Endpoint Related Data
                                                 HitKey k, uint16_t mediumIndex)
     : GPUEndpointI(k, mediumIndex)
-    , topLeft(gTransforms[tIndex]->LocalToWorld(topLeft))
-    , right(gTransforms[tIndex]->LocalToWorld(right))
-    , down(gTransforms[tIndex]->LocalToWorld(down))
+    , topLeft(gTransform.LocalToWorld(topLeft))
+    , right(gTransform.LocalToWorld(right, true))
+    , down(gTransform.LocalToWorld(down, true))
 {
     Vector3 cross = Cross(down, right);
     area = cross.Length();
@@ -122,10 +123,12 @@ __device__ void GPULightRectangular::Sample(// Output
                                             // I-O
                                             RandomGPU& rng) const
 {
+    // Sample in the lights local space
     float x = GPUDistribution::Uniform<float>(rng);
     float y = GPUDistribution::Uniform<float>(rng);
     Vector3 position = topLeft + right * x + down * y;
     
+    // Calculate PDF on the local space (it is same on 
     direction = position - worldLoc;
     float distanceSqr = direction.LengthSqr();
     distance = sqrt(distanceSqr);
@@ -187,7 +190,6 @@ inline size_t CPULightGroupRectangular::UsedCPUMemory() const
 {
     size_t totalSize = (hHitKeys.size() * sizeof(HitKey) +
                         hMediumIds.size() * sizeof(uint16_t) +
-                        hPrimitiveIds.size() * sizeof(PrimitiveId) +
                         hTransformIds.size() * sizeof(TransformId) + 
                         hTopLefts.size() * sizeof(Vector3f) + 
                         hRights.size() * sizeof(Vector3f) + 

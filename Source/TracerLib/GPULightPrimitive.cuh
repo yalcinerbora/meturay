@@ -97,7 +97,8 @@ class CPULightGroup : public CPULightGroupI
 												const std::string& scenePath) override;
 		SceneError				ChangeTime(const NodeListing& lightNodes, double time,
 										   const std::string& scenePath) override;
-		TracerError				ConstructLights(const CudaSystem&) override;
+		TracerError				ConstructLights(const CudaSystem&,
+                                                const GPUTransformI**) override;
 		uint32_t				LightCount() const override;
 
 		size_t					UsedGPUMemory() const override;
@@ -136,7 +137,7 @@ __device__ void GPULight<PGroup>::Sample(// Output
                                   rng);
     // Transform
     position = transform.LocalToWorld(position);
-    normal = transform.LocalToWorld(normal);
+    normal = transform.LocalToWorld(normal, true);
 
     direction = position - worldLoc;
     float distanceSqr = direction.LengthSqr();
@@ -147,7 +148,6 @@ __device__ void GPULight<PGroup>::Sample(// Output
     pdf *= distanceSqr / nDotL;
 
 }
-
 
 template <class PGroup>
 __device__ void  GPULight<PGroup>::GenerateRay(// Output

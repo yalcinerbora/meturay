@@ -7,16 +7,14 @@
 class GPULightPoint final : public GPULightI
 {
     private:        
-        Vector3f            position;
+        Vector3f                position;
 
     protected:
     public:
         // Constructors & Destructor
         __device__              GPULightPoint(// Per Light Data
-                                              TransformId tIndex,
                                               const Vector3f& position,
-                                              // Common Data
-                                              const GPUTransformI** gTransforms,
+                                              const GPUTransformI& gTransform,
                                               // Endpoint Related Data
                                               HitKey k, uint16_t mediumIndex);
                                 ~GPULightPoint() = default;
@@ -45,13 +43,15 @@ class CPULightGroupPoint final : public CPULightGroupI
     public:
         static constexpr const char*    TypeName(){return "Point"; }
 
+        static constexpr const char*    NAME_POSITION = "position";
+
     private:
         DeviceMemory                    memory;
         //
         std::vector<Vector3f>           hPositions;
+
         std::vector<HitKey>             hHitKeys;
         std::vector<uint16_t>           hMediumIds;
-        std::vector<PrimitiveId>        hPrimitiveIds;
         std::vector<TransformId>        hTransformIds;
         // Allocations of the GPU Class
         const GPULightPoint*            dGPULights;
@@ -76,7 +76,8 @@ class CPULightGroupPoint final : public CPULightGroupI
 												const std::string& scenePath) override;
 		SceneError				ChangeTime(const NodeListing& lightNodes, double time,
 										   const std::string& scenePath) override;
-		TracerError				ConstructLights(const CudaSystem&) override;
+		TracerError				ConstructLights(const CudaSystem&,
+                                                const GPUTransformI**) override;
 		uint32_t				LightCount() const override;
 
 		size_t					UsedGPUMemory() const override;
@@ -85,14 +86,12 @@ class CPULightGroupPoint final : public CPULightGroupI
 
 __device__
 inline GPULightPoint::GPULightPoint(// Per Light Data
-                                    TransformId tIndex,
                                     const Vector3f& position,
-                                    // Common Data
-                                    const GPUTransformI** gTransforms,
+                                    const GPUTransformI& gTransform,
                                     // Endpoint Related Data
                                     HitKey k, uint16_t mediumIndex)
     : GPUEndpointI(k, mediumIndex)
-    , position(gTransforms[tIndex]->LocalToWorld(position))
+    , position(gTransform.LocalToWorld(position))
 {}
 
 __device__ void GPULightPoint::Sample(// Output
@@ -158,8 +157,7 @@ inline size_t CPULightGroupPoint::UsedCPUMemory() const
 {
     size_t totalSize = (hHitKeys.size() * sizeof(HitKey) +
                         hMediumIds.size() * sizeof(uint16_t) +
-                        hPrimitiveIds.size() * sizeof(PrimitiveId) +
-                        hTransformIds.size() * sizeof(TransformId) + 
+                        hTransformIds.size() * sizeof(TransformId) +
                         hPositions.size() * sizeof(Vector3f));
 
     return totalSize;
