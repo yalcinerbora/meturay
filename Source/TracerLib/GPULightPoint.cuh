@@ -94,14 +94,15 @@ inline GPULightPoint::GPULightPoint(// Per Light Data
     , position(gTransform.LocalToWorld(position))
 {}
 
-__device__ void GPULightPoint::Sample(// Output
-                                      float& distance,
-                                      Vector3& direction,
-                                      float& pdf,
-                                      // Input
-                                      const Vector3& worldLoc,
-                                      // I-O
-                                      RandomGPU&) const
+__device__
+inline void GPULightPoint::Sample(// Output
+                                  float& distance,
+                                  Vector3& direction,
+                                  float& pdf,
+                                  // Input
+                                  const Vector3& worldLoc,
+                                  // I-O
+                                  RandomGPU&) const
 {
     direction = (position - worldLoc);
     distance = direction.Length();
@@ -111,18 +112,20 @@ __device__ void GPULightPoint::Sample(// Output
     pdf = (distance * distance);
 }
 
-__device__ void GPULightPoint::GenerateRay(// Output
-                                           RayReg&,
-                                           // Input
-                                           const Vector2i& sampleId,
-                                           const Vector2i& sampleMax,
-                                           // I-O
-                                           RandomGPU&) const
+__device__
+inline void GPULightPoint::GenerateRay(// Output
+                                       RayReg&,
+                                       // Input
+                                       const Vector2i& sampleId,
+                                       const Vector2i& sampleMax,
+                                       // I-O
+                                       RandomGPU&) const
 {
     // TODO: Implement
 }
 
-__device__ PrimitiveId GPULightPoint::PrimitiveIndex() const
+__device__ 
+inline PrimitiveId GPULightPoint::PrimitiveIndex() const
 {
     return 0;
 }

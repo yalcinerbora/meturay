@@ -26,7 +26,7 @@ TracerError GPUTracer::LoadCameras(std::vector<const GPUCameraI*>& dGPUCameras)
     for(auto& camera : cameras)
     {
         CPUCameraGroupI& c = *(camera.second);
-        if((e = c.ConstructCameras(cudaSystem)) != TracerError::OK)
+        if((e = c.ConstructCameras(cudaSystem, dTransforms)) != TracerError::OK)
             return e;
         const auto& dCList = c.GPUCameras();
         dGPUCameras.insert(dGPUCameras.end(), dCList.begin(), dCList.end());
@@ -118,27 +118,40 @@ TracerError GPUTracer::Initialize()
     std::vector<const GPULightI*> dGPULights;
     std::vector<const GPUCameraI*> dGPUCameras;
 
-    // Transforms
-    if((e = LoadTransforms(dGPUTransforms)) != TracerError::OK)
-        return e;
-    // Mediums
-    if((e = LoadMediums(dGPUMediums)) != TracerError::OK)
-        return e;
-    // Lights
-    if((e = LoadLights(dGPULights)) != TracerError::OK)
-        return e;
-    // Cameras
-    if((e = LoadCameras(dGPUCameras)) != TracerError::OK)
-        return e;
+    // Calculate Total Sizes
+    size_t transformCount = 0;
+    size_t mediumCount = 0;
+    size_t lightCount = 0;
+    size_t cameraCount = 0;
+    std::for_each(transforms.cbegin(), transforms.cend(),
+                  [&transformCount](const auto& transform)
+                  {
+                      transformCount += transform.second->TransformCount();
+                  });
+    std::for_each(mediums.cbegin(), mediums.cend(),
+                  [&mediumCount](const auto& medium)
+                  {
+                      mediumCount += medium.second->MediumCount();
+                  });
+    std::for_each(lights.cbegin(), lights.cend(),
+                  [&lightCount](const auto& light)
+                  {
+                      lightCount += light.second->LightCount();
+                  });
+    std::for_each(cameras.cbegin(), cameras.cend(),
+                  [&cameraCount](const auto& camera)
+                  {
+                      cameraCount += camera.second->CameraCount();
+                  });
 
     // Allocate
-    size_t transformSize = dGPUTransforms.size() * sizeof(GPUTransformI*);
+    size_t transformSize = transformCount * sizeof(GPUTransformI*);
     transformSize = Memory::AlignSize(transformSize, AlignByteCount);
-    size_t mediumSize = dGPUMediums.size() * sizeof(GPUMediumI*);
+    size_t mediumSize = mediumCount * sizeof(GPUMediumI*);
     mediumSize = Memory::AlignSize(mediumSize, AlignByteCount);
-    size_t lightSize = dGPULights.size() * sizeof(GPULightI*);
+    size_t lightSize = lightCount * sizeof(GPULightI*);
     lightSize = Memory::AlignSize(lightSize, AlignByteCount);
-    size_t cameraSize = dGPUCameras.size() * sizeof(GPUCameraI*);
+    size_t cameraSize = cameraCount * sizeof(GPUCameraI*);
     cameraSize = Memory::AlignSize(cameraSize, AlignByteCount);
 
     size_t totalSize = (transformSize +
@@ -161,19 +174,30 @@ TracerError GPUTracer::Initialize()
     offset += lightSize;
     assert(offset == totalSize);
 
-    // Copy Data
-    CUDA_CHECK(cudaMemcpy(const_cast<GPUTransformI**>(dTransforms), 
-                          dGPUTransforms.data(), 
+    // Transforms
+    if((e = LoadTransforms(dGPUTransforms)) != TracerError::OK)
+        return e;
+    CUDA_CHECK(cudaMemcpy(const_cast<GPUTransformI**>(dTransforms),
+                          dGPUTransforms.data(),
                           dGPUTransforms.size() * sizeof(GPUTransformI*),
                           cudaMemcpyHostToDevice));
+    // Mediums
+    if((e = LoadMediums(dGPUMediums)) != TracerError::OK)
+        return e;
     CUDA_CHECK(cudaMemcpy(const_cast<GPUMediumI**>(dMediums),
-                          dGPUMediums.data(), 
+                          dGPUMediums.data(),
                           dGPUMediums.size() * sizeof(GPUMediumI*),
                           cudaMemcpyHostToDevice));
+    // Lights
+    if((e = LoadLights(dGPULights)) != TracerError::OK)
+        return e;
     CUDA_CHECK(cudaMemcpy(const_cast<GPULightI**>(dLights),
                           dGPULights.data(),
                           dGPULights.size() * sizeof(GPULightI*),
                           cudaMemcpyHostToDevice));
+    // Cameras
+    if((e = LoadCameras(dGPUCameras)) != TracerError::OK)
+        return e;
     CUDA_CHECK(cudaMemcpy(const_cast<GPUCameraI**>(dCameras),
                           dGPUCameras.data(),
                           dGPUCameras.size() * sizeof(GPUCameraI*),

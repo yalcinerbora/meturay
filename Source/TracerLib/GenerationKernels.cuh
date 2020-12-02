@@ -155,10 +155,10 @@ __global__ void KCGenerateCameraRaysGPU(// Output
 
         RayReg ray;
         gCam->GenerateRay(ray,
-                         //
-                         globalSampleId,
-                         totalSamples,
-                         rng);
+                          //
+                          globalSampleId,
+                          totalSamples,
+                          rng);
         // Generate Required Parameters
         Vector2i pixelSampleId = threadId2d % samplePerLocation;
         Vector2i localPixelId = globalPixelId - pixelStart;

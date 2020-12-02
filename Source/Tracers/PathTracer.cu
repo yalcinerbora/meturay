@@ -52,33 +52,6 @@ TracerError PathTracer::Initialize()
     if((err = RayTracer::Initialize()) != TracerError::OK)
         return err;
 
-    //const auto& lights = scene.LightsCPU();
-    //lightCount = static_cast<uint32_t>(lights.size());
-    //// Determine Size
-    //size_t lightPtrSize = sizeof(GPULightI*) * lightCount;
-    //size_t lightSize = LightCameraKernels::LightClassesUnionSize() * lightCount;
-    //size_t totalSize = lightPtrSize + lightSize;
-
-    //if(lights.size() != 0)
-    //{
-    //    DeviceMemory::EnlargeBuffer(lightMemory, totalSize);
-    //    // Load light and create light interfaces
-    //    // Determine Ptrs
-    //    size_t offset = 0;
-    //    Byte* dMem = static_cast<Byte*>(lightMemory);
-    //    dLights = reinterpret_cast<const GPULightI**>(dMem + offset);
-    //    offset += lightPtrSize;
-    //    dLightAlloc = dMem + offset;
-    //    offset += lightSize;
-    //    assert(offset == totalSize);
-
-    //    // Construct lights on GPU
-    //    LightCameraKernels::ConstructLights(const_cast<GPULightI**>(dLights),
-    //                                        dLightAlloc,
-    //                                        lights,
-    //                                        cudaSystem);
-    //}
-
     // Generate your worklist
     const auto& infoList = scene.WorkBatchInfo();
     for(const auto& workInfo : infoList)

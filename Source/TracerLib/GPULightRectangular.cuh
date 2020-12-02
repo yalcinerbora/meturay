@@ -114,14 +114,15 @@ inline GPULightRectangular::GPULightRectangular(// Per Light Data
     normal = cross.Normalize();
 }
 
-__device__ void GPULightRectangular::Sample(// Output
-                                            float& distance,
-                                            Vector3& direction,
-                                            float& pdf,
-                                            // Input
-                                            const Vector3& worldLoc,
-                                            // I-O
-                                            RandomGPU& rng) const
+__device__
+inline void GPULightRectangular::Sample(// Output
+                                        float& distance,
+                                        Vector3& direction,
+                                        float& pdf,
+                                        // Input
+                                        const Vector3& worldLoc,
+                                        // I-O
+                                        RandomGPU& rng) const
 {
     // Sample in the lights local space
     float x = GPUDistribution::Uniform<float>(rng);
@@ -144,18 +145,20 @@ __device__ void GPULightRectangular::Sample(// Output
     //pdf = (distance * distance);
 }
 
-__device__ void GPULightRectangular::GenerateRay(// Output
-                                                 RayReg&,
-                                                 // Input
-                                                 const Vector2i& sampleId,
-                                                 const Vector2i& sampleMax,
-                                                 // I-O
-                                                 RandomGPU&) const
+__device__ void
+inline GPULightRectangular::GenerateRay(// Output
+                                        RayReg&,
+                                        // Input
+                                        const Vector2i& sampleId,
+                                        const Vector2i& sampleMax,
+                                        // I-O
+                                        RandomGPU&) const
 {
     // TODO: Implement
 }
 
-__device__ PrimitiveId GPULightRectangular::PrimitiveIndex() const
+__device__ 
+inline PrimitiveId GPULightRectangular::PrimitiveIndex() const
 {
     return 0;
 }

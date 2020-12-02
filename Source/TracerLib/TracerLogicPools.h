@@ -120,7 +120,7 @@ class CameraPoolI
 class LightPoolI
 {
     protected:
-        std::map<std::string, GPULightGroupGen>   lightGenerators;
+        std::map<std::string, CPULightGroupGen>   lightGenerators;
 
     public:
         static constexpr const char* DefaultConstructorName = "GenLightPool";
@@ -128,7 +128,7 @@ class LightPoolI
 
         virtual                         ~LightPoolI() = default;
 
-        virtual std::map<std::string, GPULightGroupGen> LightGenerators(const std::string regex = ".*") const;
+        virtual std::map<std::string, CPULightGroupGen> LightGenerators(const std::string regex = ".*") const;
 };
 
 inline std::map<std::string, GPUAccelGroupGen> AcceleratorLogicPoolI::AcceleratorGroupGenerators(const std::string regex) const
@@ -227,9 +227,9 @@ inline std::map<std::string, CPUCameraGen> CameraPoolI::CameraGenerators(const s
     return result;
 }
 
-inline std::map<std::string, GPULightGroupGen> LightPoolI::LightGenerators(const std::string regex) const
+inline std::map<std::string, CPULightGroupGen> LightPoolI::LightGenerators(const std::string regex) const
 {
-    std::map<std::string, GPULightGroupGen> result;
+    std::map<std::string, CPULightGroupGen> result;
     std::regex regExpression(regex);
     for(const auto& lightGenerator : lightGenerators)
     {

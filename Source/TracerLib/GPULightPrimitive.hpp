@@ -37,6 +37,7 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const ConstructionDataList& li
     hPrimitiveIds.reserve(lightCount);
     hTransformIds.reserve(lightCount);
 
+    lightCount = 0;
     for(const auto& node : lightNodes)
     {
         uint32_t primitiveId = node.constructionId;
@@ -47,6 +48,7 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const ConstructionDataList& li
         uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
         HitKey materialKey = allMaterialKeys.at(std::make_pair(primGroup.Type(), node.materialId));
             
+        lightCount += primitiveRange[1] - primitiveRange[0];
         for(PrimitiveId primId = primitiveRange[0]; primId < primitiveRange[1]; primId++)
         {
             // Load to host memory

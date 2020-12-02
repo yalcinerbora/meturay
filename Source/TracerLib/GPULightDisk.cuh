@@ -112,14 +112,15 @@ inline GPULightDisk::GPULightDisk(// Per Light Data
     // since this wont work if transform contains scale
 }
 
-__device__ void GPULightDisk::Sample(// Output
-                                      float& distance,
-                                      Vector3& direction,
-                                      float& pdf,
-                                      // Input
-                                      const Vector3& worldLoc,
-                                      // I-O
-                                      RandomGPU& rng) const
+__device__
+inline void GPULightDisk::Sample(// Output
+                                 float& distance,
+                                 Vector3& direction,
+                                 float& pdf,
+                                 // Input
+                                 const Vector3& worldLoc,
+                                 // I-O
+                                 RandomGPU& rng) const
 {
     float r = GPUDistribution::Uniform<float>(rng) * radius;
     float tetha = GPUDistribution::Uniform<float>(rng) * 2.0f * MathConstants::Pi;
@@ -143,18 +144,20 @@ __device__ void GPULightDisk::Sample(// Output
     pdf = distanceSqr / (nDotL * area);
 }
 
-__device__ void GPULightDisk::GenerateRay(// Output
-                                          RayReg&,
-                                          // Input
-                                          const Vector2i& sampleId,
-                                          const Vector2i& sampleMax,
-                                          // I-O
-                                          RandomGPU&) const
+__device__
+inline void GPULightDisk::GenerateRay(// Output
+                                      RayReg&,
+                                      // Input
+                                      const Vector2i& sampleId,
+                                      const Vector2i& sampleMax,
+                                      // I-O
+                                      RandomGPU&) const
 {
     // TODO: Implement
 }
 
-__device__ PrimitiveId GPULightDisk::PrimitiveIndex() const
+__device__ 
+inline PrimitiveId GPULightDisk::PrimitiveIndex() const
 {
     return 0;
 }

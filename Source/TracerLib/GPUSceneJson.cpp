@@ -801,74 +801,6 @@ SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdM
     return e;
 }
 
-//SceneError GPUSceneJson::GenerateLightInfo(const MaterialKeyListing& materialKeys,
-//                                           double time)
-//{ 
-//    std::vector<CPULight> primLights;
-//    // Lights
-//    const nlohmann::json* lightsJson = nullptr;
-//    if(!FindNode(lightsJson, NodeNames::LIGHT_BASE))
-//        return SceneError::LIGHTS_ARRAY_NOT_FOUND;
-//  
-//    // Prim List
-//    const auto& primList = primitives;
-//    const auto& matList = materials;
-//
-//    SceneError err = SceneError::OK;
-//    for(const auto& lightJson : (*lightsJson))
-//    {
-//        CPULight light = SceneIO::LoadLight(lightJson, time);
-//        uint32_t matId = SceneIO::LoadLightMatId(lightJson);
-//
-//        // Find Material Group
-//        const GPUMaterialGroupI* matGroup = nullptr;
-//        const auto FindMatFunc = [matId](const auto& pair) -> bool
-//        {
-//            return pair.second->HasMaterial(matId);
-//        };
-//        auto itMat = matList.end();
-//        if((itMat = std::find_if(matList.begin(), matList.end(), FindMatFunc)) == matList.end())
-//            return SceneError::LIGHT_MATERIAL_NOT_FOUND;
-//        matGroup = (*itMat).second.get();
-//        // Find 2D Distribution of the radiance of this light
-//        const LightMaterialI* lightMatGroup = dynamic_cast<const LightMaterialI*>(matGroup);
-//        if(lightMatGroup == nullptr) return SceneError::NON_LIGHT_MAT_ATTACHED_TO_LIGHT;
-//        const GPUDistribution2D& luminanceDistribution = lightMatGroup->LuminanceDistribution(matId);
-//
-//        // Additionally Ask Primitive Group to populate primitives as lights
-//        if(light.type == LightType::PRIMITIVE)
-//        {
-//            uint32_t primId = lightJson[NodeNames::LIGHT_PRIMITIVE];
-//            const auto FindPrimFunc = [primId](const auto& pair) -> bool
-//            {
-//                return pair.second->HasPrimitive(primId);
-//            };
-//            auto it = primList.end();
-//            if((it = std::find_if(primList.begin(), primList.end(), FindPrimFunc)) == primList.end())
-//                return SceneError::LIGHT_PRIMITIVE_NOT_FOUND;
-//
-//            const auto matLookup = std::make_pair((*it).second->Type(), matId);
-//            HitKey key = materialKeys.at(matLookup);
-//            primLights.clear();
-//            if((err = (*it).second->GenerateLights(primLights, luminanceDistribution, key, primId,
-//                                                   Indentity4x4)) != SceneError::OK)
-//                return err;
-//            lights.insert(lights.end(), primLights.begin(), primLights.end());
-//        }
-//        else
-//        {
-//            // Just find empty prim one
-//            const auto matLookup = std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME, matId);
-//            HitKey key = materialKeys.at(matLookup);
-//            light.matKey = key;
-//            light.dLuminanceDistribution = &luminanceDistribution;
-//            lights.push_back(light);
-//        }        
-//    }
-//    return SceneError::OK;
-//}
-
-
 SceneError GPUSceneJson::GenerateCameras(const CameraNodeList& camGroupList,
                                          const std::map<uint32_t, uint32_t>& transformIdMappings,
                                          const std::map<uint32_t, uint32_t>& mediumIdMappings,
@@ -891,6 +823,7 @@ SceneError GPUSceneJson::GenerateCameras(const CameraNodeList& camGroupList,
                                    time,
                                    parentPath))
             return e;
+        cameras.emplace(camTypeName, std::move(cg));
     }
     return SceneError::OK;
 }
@@ -914,16 +847,17 @@ SceneError GPUSceneJson::GenerateLights(const LightNodeList& lightGroupList,
         if(isPrimLight)
             primGroup = primitives.at(primTypeName).get();
 
-        CPULightGPtr cg = CPULightGPtr(nullptr, nullptr);
-        if(e = logicGenerator.GenerateLightGroup(cg, primGroup, lightTypeName))
+        CPULightGPtr lg = CPULightGPtr(nullptr, nullptr);
+        if(e = logicGenerator.GenerateLightGroup(lg, primGroup, lightTypeName))
             return e;
-        if(e = cg->InitializeGroup(lightNodes,
+        if(e = lg->InitializeGroup(lightNodes,
                                    mediumIdMappings,
                                    transformIdMappings,
                                    materialKeys,
                                    time,
                                    parentPath))
             return e;
+        lights.emplace(lightTypeName, std::move(lg));
     }
     return SceneError::OK;
 }

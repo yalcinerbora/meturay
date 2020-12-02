@@ -32,11 +32,10 @@ class CPUCameraGroupI
                                                             const std::string& scenePath) = 0;
         virtual SceneError					ChangeTime(const NodeListing& lightNodes, double time,
                                                        const std::string& scenePath) = 0;
-        virtual TracerError					ConstructCameras(const CudaSystem&) = 0;
+        virtual TracerError					ConstructCameras(const CudaSystem&,
+                                                             const GPUTransformI**) = 0;
         virtual uint32_t					CameraCount() const = 0;
     
         virtual size_t						UsedGPUMemory() const = 0;
         virtual size_t						UsedCPUMemory() const = 0;
-    
-        virtual void						AttachGlobalTransformArray(const GPUTransformI** deviceTranfsorms) = 0;
 };

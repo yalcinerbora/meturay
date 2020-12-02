@@ -109,7 +109,7 @@ class GPUAccelGroupGen
         }
 };
 
-class GPULightGroupGen
+class CPULightGroupGen
 {
     private:
         LightGroupGeneratorFunc<CPULightGroupI>     gFunc;
@@ -117,7 +117,7 @@ class GPULightGroupGen
 
     public:
         // Constructor & Destructor
-        GPULightGroupGen(LightGroupGeneratorFunc<CPULightGroupI> g,
+        CPULightGroupGen(LightGroupGeneratorFunc<CPULightGroupI> g,
                          ObjDestroyerFunc<CPULightGroupI> d)
             : gFunc(g)
             , dFunc(d)
@@ -150,5 +150,11 @@ namespace TypeGenWrappers
     Base* MaterialGroupConstruct(const CudaGPU& gpu)
     {
         return new MatBatch(gpu);
+    }
+
+    template <class Base, class LightGroup>
+    Base* LightGroupConstruct(const GPUPrimitiveGroupI* pg)
+    {
+        return new LightGroup(pg);
     }
 }

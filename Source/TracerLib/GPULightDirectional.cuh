@@ -96,32 +96,35 @@ inline GPULightDirectional::GPULightDirectional(// Per Light Data
     , direction(gTransform.LocalToWorld(direction, true))
 {}
 
-__device__ void GPULightDirectional::Sample(// Output
-                                            float& distance,
-                                            Vector3& dir,
-                                            float& pdf,
-                                            // Input
-                                            const Vector3& worldLoc,
-                                            // I-O
-                                            RandomGPU&) const
+__device__
+inline void GPULightDirectional::Sample(// Output
+                                        float& distance,
+                                        Vector3& dir,
+                                        float& pdf,
+                                        // Input
+                                        const Vector3& worldLoc,
+                                        // I-O
+                                        RandomGPU&) const
 {
     dir = -direction;
     distance = FLT_MAX;
     pdf = 1.0f;
 }
 
-__device__ void GPULightDirectional::GenerateRay(// Output
-                                                 RayReg&,
-                                                 // Input
-                                                 const Vector2i& sampleId,
-                                                 const Vector2i& sampleMax,
-                                                 // I-O
-                                                 RandomGPU& rng) const
+__device__
+inline void GPULightDirectional::GenerateRay(// Output
+                                             RayReg&,
+                                             // Input
+                                             const Vector2i& sampleId,
+                                             const Vector2i& sampleMax,
+                                             // I-O
+                                             RandomGPU& rng) const
 {
     // TODO: implement
 }
 
-__device__ PrimitiveId GPULightDirectional::PrimitiveIndex() const
+__device__ 
+inline PrimitiveId GPULightDirectional::PrimitiveIndex() const
 {
     return 0;
 }

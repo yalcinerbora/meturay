@@ -110,14 +110,15 @@ inline GPULightSpot::GPULightSpot(// Per Light Data
     , cosMax(aperture[1])
 {}
 
-__device__ void GPULightSpot::Sample(// Output
-                                     float& distance,
-                                     Vector3& dir,
-                                     float& pdf,
-                                     // Input
-                                     const Vector3& worldLoc,
-                                     // I-O
-                                     RandomGPU&) const
+__device__
+inline void GPULightSpot::Sample(// Output
+                                 float& distance,
+                                 Vector3& dir,
+                                 float& pdf,
+                                 // Input
+                                 const Vector3& worldLoc,
+                                 // I-O
+                                 RandomGPU&) const
 {
     dir = -direction;
     distance = (position - worldLoc).Length();
@@ -126,18 +127,20 @@ __device__ void GPULightSpot::Sample(// Output
     pdf = (distance * distance);
 }
 
-__device__ void GPULightSpot::GenerateRay(// Output
-                                          RayReg&,
-                                          // Input
-                                          const Vector2i& sampleId,
-                                          const Vector2i& sampleMax,
-                                          // I-O
-                                          RandomGPU&) const
+__device__
+inline void GPULightSpot::GenerateRay(// Output
+                                      RayReg&,
+                                      // Input
+                                      const Vector2i& sampleId,
+                                      const Vector2i& sampleMax,
+                                      // I-O
+                                      RandomGPU&) const
 {
     // TODO: Implement
 }
 
-__device__ PrimitiveId GPULightSpot::PrimitiveIndex() const
+__device__ 
+inline PrimitiveId GPULightSpot::PrimitiveIndex() const
 {
     return 0;
 }

@@ -102,7 +102,7 @@ inline Vector3 GPUTransformSingle::WorldToLocal(const Vector3& vec, bool isDirec
 												const uint32_t*, const float*,
 												uint32_t) const
 {
-	Vector4 vector = Vector4(vec, (isDirection) ? 0 : 1);
+	Vector4 vector = Vector4(vec, (isDirection) ? 0.0f : 1.0f);
 	return invTransform * vector;
 }
 
@@ -110,7 +110,7 @@ __device__
 inline Vector3 GPUTransformSingle::LocalToWorld(const Vector3& vec, bool isDirection,
 												const uint32_t*, const float*, uint32_t) const
 {
-	Vector4 vector = Vector4(vec, (isDirection) ? 0 : 1);
+	Vector4 vector = Vector4(vec, (isDirection) ? 0.0f : 1.0f);
 	return transform * vector;
 }
 

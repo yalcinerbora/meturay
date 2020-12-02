@@ -17,6 +17,15 @@
 
 #include "GPUMaterialLight.cuh"
 
+#include "GPULightPrimitive.cuh"
+#include "GPULightDirectional.cuh"
+#include "GPULightRectangular.cuh"
+#include "GPULightPoint.cuh"
+#include "GPULightSpot.cuh"
+#include "GPULightDisk.cuh"
+
+#include "GPUCameraPinhole.cuh"
+
 #include "GPUMaterialI.h"
 
 // Type to utilize the generated ones
@@ -25,6 +34,12 @@ extern template class GPUAccLinearGroup<GPUPrimitiveSphere>;
 
 extern template class GPUAccBVHGroup<GPUPrimitiveTriangle>;
 extern template class GPUAccBVHGroup<GPUPrimitiveSphere>;
+
+extern template class GPULight<GPUPrimitiveSphere>;
+extern template class GPULight<GPUPrimitiveTriangle>;
+
+extern template class CPULightGroup<GPUPrimitiveSphere>;
+extern template class CPULightGroup<GPUPrimitiveTriangle>;
 
 // Typedefs for ease of read
 using GPUAccTriLinearGroup = GPUAccLinearGroup<GPUPrimitiveTriangle>;
@@ -132,6 +147,34 @@ TracerLogicGenerator::TracerLogicGenerator()
     medGroupGenerators.emplace(CPUMediumHomogenous::TypeName(),
                                CPUMediumGen(DefaultConstruct<CPUMediumGroupI, CPUMediumHomogenous>,
                                             DefaultDestruct<CPUMediumGroupI>));
+
+    // Light Types
+    lightGroupGenerators.emplace(CPULightGroupPoint::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupPoint>,
+                                                  DefaultDestruct<CPULightGroupI>));
+    lightGroupGenerators.emplace(CPULightGroupDirectional::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupDirectional>,
+                                                  DefaultDestruct<CPULightGroupI>));
+    lightGroupGenerators.emplace(CPULightGroupDisk::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupDisk>,
+                                                  DefaultDestruct<CPULightGroupI>));
+    lightGroupGenerators.emplace(CPULightGroupRectangular::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupRectangular>,
+                                                  DefaultDestruct<CPULightGroupI>));
+    lightGroupGenerators.emplace(CPULightGroupSpot::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupSpot>,
+                                                  DefaultDestruct<CPULightGroupI>));
+    lightGroupGenerators.emplace(CPULightGroup<GPUPrimitiveTriangle>::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroup<GPUPrimitiveTriangle>>,
+                                                  DefaultDestruct<CPULightGroupI>));
+    lightGroupGenerators.emplace(CPULightGroup<GPUPrimitiveSphere>::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroup<GPUPrimitiveSphere>>,
+                                                  DefaultDestruct<CPULightGroupI>));
+
+    // Camera Types
+    camGroupGenerators.emplace(CPUCameraGroupPinhole::TypeName(),
+                               CPUCameraGen(DefaultConstruct<CPUCameraGroupI, CPUCameraGroupPinhole>,
+                                            DefaultDestruct<CPUCameraGroupI>));
 
     // Default Types are loaded
     // Other Types are strongly tied to base tracer logic

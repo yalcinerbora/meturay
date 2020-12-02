@@ -10,9 +10,6 @@
 
 #include <type_traits>
 
-//#include "RayLib/HybridFunctions.h"
-//#include "RayLib/Quaternion.h"
-
 class GPUTransformI;
 class RandomGPU;
 

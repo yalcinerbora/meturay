@@ -51,7 +51,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         std::map<std::string, GPUTracerGen>         tracerGenerators;
         std::map<std::string, CPUTransformGen>      transGroupGenerators;
         std::map<std::string, CPUMediumGen>         medGroupGenerators;
-        std::map<std::string, GPULightGroupGen>     lightGroupGenerators;
+        std::map<std::string, CPULightGroupGen>     lightGroupGenerators;
         std::map<std::string, CPUCameraGen>         camGroupGenerators;
 
         // Helper Funcs

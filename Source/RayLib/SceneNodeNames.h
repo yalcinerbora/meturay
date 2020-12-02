@@ -17,6 +17,7 @@ namespace NodeNames
     static constexpr const char* BASE_ACCELERATOR = "BaseAccelerator";
     static constexpr const char* BASE_OUTSIDE_MATERIAL = "BaseBoundaryMaterial";
     static constexpr const char* BASE_MEDIUM = "BaseMedium";
+
     static constexpr const char* LIGHT_SURFACE_BASE = "LightSurfaces";
     static constexpr const char* CAMERA_SURFACE_BASE = "CameraSurfaces";
 
