@@ -76,7 +76,7 @@
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
       <AdditionalCompilerOptions>
       </AdditionalCompilerOptions>
-      <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
     <Lib>
@@ -124,7 +124,7 @@
       <AdditionalCompilerOptions>
       </AdditionalCompilerOptions>
       <HostDebugInfo>true</HostDebugInfo>
-      <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
     <Lib>

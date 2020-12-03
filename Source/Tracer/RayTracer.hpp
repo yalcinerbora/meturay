@@ -14,7 +14,7 @@ void RayTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount,
 
     Vector2i pixelCount = (pixelEnd - pixelStart);
     uint32_t totalRayCount = pixelCount[0] * pixelCount[1] * sampleCountSqr;
-    size_t auxBufferSize = totalRayCount * sizeof(RayAuxBasic);
+    size_t auxBufferSize = totalRayCount * sizeof(AuxStruct);
 
     // Allocate enough space for ray
     rayMemory.ResizeRayOut(totalRayCount, scene.BaseBoundaryMaterial());

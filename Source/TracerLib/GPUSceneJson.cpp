@@ -12,12 +12,13 @@
 #include "GPUAcceleratorI.h"
 #include "GPUPrimitiveI.h"
 #include "GPUMaterialI.h"
+#include "GPUMediumI.h"
+
 #include "TracerLogicGeneratorI.h"
 #include "ScenePartitionerI.h"
-#include "SceneNodeJson.h"
 #include "MangledNames.h"
-#include "GPUMediumI.h"
-#include "GPUMaterialLight.cuh"
+
+#include "SceneNodeJson.h"
 
 #include <nlohmann/json.hpp>
 #include <filesystem>

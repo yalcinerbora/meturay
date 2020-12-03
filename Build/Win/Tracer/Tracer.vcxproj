@@ -11,37 +11,43 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\Tracers\DirectTracer.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracers\PathTracer.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracers\RayTracer.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracers\BasicTracerPools.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracers\TracerWorks.cu" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\Source\Tracers\DirectTracer.h" />
-    <ClInclude Include="..\..\..\Source\Tracers\EntryPoints.h" />
-    <ClInclude Include="..\..\..\Source\Tracers\PathTracer.h" />
-    <ClInclude Include="..\..\..\Source\Tracers\RayAuxStruct.cuh" />
-    <ClInclude Include="..\..\..\Source\Tracers\RayTracer.h" />
-    <ClInclude Include="..\..\..\Source\Tracers\BasicTracerPools.h" />
-    <ClInclude Include="..\..\..\Source\Tracers\RayTracer.hpp" />
-    <ClInclude Include="..\..\..\Source\Tracers\TracerKC.cuh" />
-    <ClInclude Include="..\..\..\Source\Tracers\TracerWorks.cuh" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\Source\Tracers\EntryPoints.cpp" />
-    <ClCompile Include="..\..\..\Source\Tracers\Tracers.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Materials\Materials.vcxproj">
-      <Project>{439aad9e-e3de-49ee-abb0-263b5079c845}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">
       <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
     </ProjectReference>
     <ProjectReference Include="..\TracerLib\TracerLib.vcxproj">
       <Project>{dff6854d-aad8-489d-bb4a-03048bfcb6e2}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\..\Source\Tracer\BasicMaterials.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer\BasicTracerPools.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer\DirectTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer\PathTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer\RayTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer\SampleMaterialPool.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer\SampleMaterials.cu" />
+    <CudaCompile Include="..\..\..\Source\Tracer\TracerWorks.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Source\Tracer\BasicMaterials.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracer\BasicMaterialsKC.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracer\BasicTracerPools.h" />
+    <ClInclude Include="..\..\..\Source\Tracer\DirectTracer.h" />
+    <ClInclude Include="..\..\..\Source\Tracer\EntryPoints.h" />
+    <ClInclude Include="..\..\..\Source\Tracer\MaterialDataStructs.h" />
+    <ClInclude Include="..\..\..\Source\Tracer\PathTracer.h" />
+    <ClInclude Include="..\..\..\Source\Tracer\RayAuxStruct.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracer\RayTracer.h" />
+    <ClInclude Include="..\..\..\Source\Tracer\RayTracer.hpp" />
+    <ClInclude Include="..\..\..\Source\Tracer\SampleMaterialPool.h" />
+    <ClInclude Include="..\..\..\Source\Tracer\SampleMaterials.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracer\SampleMaterialsKC.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracer\TracerKC.cuh" />
+    <ClInclude Include="..\..\..\Source\Tracer\TracerWorks.cuh" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Source\Tracer\EntryPoints.cpp" />
+    <ClCompile Include="..\..\..\Source\Tracer\Tracers.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{96F7395D-FA00-4E97-9FB2-98881123033A}</ProjectGuid>
@@ -97,7 +103,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(CUDA_PATH)\lib\$(Platform);$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration);%(AdditionalLibraryDirectories);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CUDA_PATH)\lib\$(Platform);$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
@@ -130,7 +136,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(CUDA_PATH)\lib\$(Platform);$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration);%(AdditionalLibraryDirectories);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CUDA_PATH)\lib\$(Platform);$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>

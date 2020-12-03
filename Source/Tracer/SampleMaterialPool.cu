@@ -1,7 +1,7 @@
 #include "SampleMaterialPool.h"
 
-#include "Materials/BasicMaterials.cuh"
-#include "Materials/SampleMaterials.cuh"
+#include "BasicMaterials.cuh"
+#include "SampleMaterials.cuh"
 
 using namespace TypeGenWrappers;
 

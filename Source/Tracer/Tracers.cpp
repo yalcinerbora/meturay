@@ -6,9 +6,6 @@
 
 // Variant Does not compile on cuda code
 // special cpp for functions that uses "TracerOptions"
-
-
-
 void PathTracer::AskOptions()
 {
     // Generate Tracer Object
