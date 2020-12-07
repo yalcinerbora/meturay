@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TracerLib/TracerLogicPools.h"
+#include "TracerCUDALib/TracerLogicPools.h"
 
 class SampleMaterialPool final : public MaterialLogicPoolI
 {

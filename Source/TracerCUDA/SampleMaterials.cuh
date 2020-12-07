@@ -2,11 +2,11 @@
 
 #include "SampleMaterialsKC.cuh"
 
-#include "TracerLib/MetaMaterialFunctions.cuh"
-#include "TracerLib/GPUSurface.h"
-#include "TracerLib/GPUMaterialP.cuh"
-#include "TracerLib/TypeTraits.h"
-#include "TracerLib/DeviceMemory.h"
+#include "TracerCUDALib/MetaMaterialFunctions.cuh"
+#include "TracerCUDALib/GPUSurface.h"
+#include "TracerCUDALib/GPUMaterialP.cuh"
+#include "TracerCUDALib/TypeTraits.h"
+#include "TracerCUDALib/DeviceMemory.h"
 
 // Light Material that constantly emits all directions
 class EmissiveMat final 

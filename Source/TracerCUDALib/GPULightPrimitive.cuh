@@ -9,7 +9,7 @@
 #include "RayLib/HemiDistribution.h"
 #include "RayLib/MemoryAlignment.h"
 
-#include "TracerLib/GPUPrimitiveP.cuh"
+#include "TracerCUDALib/GPUPrimitiveP.cuh"
 
 // Meta Primitive Related Light
 template <class PGroup>

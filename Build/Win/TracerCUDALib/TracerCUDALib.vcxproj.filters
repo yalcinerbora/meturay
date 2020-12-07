@@ -75,361 +75,361 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\TracerLib\TracerDebug.cpp">
+    <ClCompile Include="..\..\..\Source\TracerCUDALib\TracerDebug.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.cpp">
+    <ClCompile Include="..\..\..\Source\TracerCUDALib\GPUPrimitiveSphere.cpp">
       <Filter>Default Primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\DeviceMemory.cpp">
+    <ClCompile Include="..\..\..\Source\TracerCUDALib\DeviceMemory.cpp">
       <Filter>Memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveEmpty.cpp">
+    <ClCompile Include="..\..\..\Source\TracerCUDALib\GPUPrimitiveEmpty.cpp">
       <Filter>Default Primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\ScenePartitioner.cpp">
+    <ClCompile Include="..\..\..\Source\TracerCUDALib\ScenePartitioner.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\SceneNodeJson.cpp">
+    <ClCompile Include="..\..\..\Source\TracerCUDALib\SceneNodeJson.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\MangledNames.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUSceneJson.cpp">
+    <ClCompile Include="..\..\..\Source\TracerCUDALib\MangledNames.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDALib\GPUSceneJson.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\Texture.cpp">
+    <ClCompile Include="..\..\..\Source\TracerCUDALib\Texture.cpp">
       <Filter>Memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\CudaConstants.cpp">
+    <ClCompile Include="..\..\..\Source\TracerCUDALib\CudaConstants.cpp">
       <Filter>Cuda System</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUDistribution.cpp">
+    <ClCompile Include="..\..\..\Source\TracerCUDALib\GPUDistribution.cpp">
       <Filter>GPU Classes</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.cpp">
+    <ClCompile Include="..\..\..\Source\TracerCUDALib\GPUPrimitiveTriangle.cpp">
       <Filter>Default Primitives</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Source\TracerLib\ImageMemory.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\ImageMemory.h">
       <Filter>Memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\RayMemory.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\RayMemory.h">
       <Filter>Memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\RNGMemory.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\RNGMemory.h">
       <Filter>Memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorI.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUAcceleratorI.h">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialI.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUMaterialI.h">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\RayStructs.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\RayStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\RNGStructs.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\RNGStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\ParallelReduction.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\ParallelReduction.cuh">
       <Filter>GPU Algorithms</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\ParallelScan.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\ParallelScan.cuh">
       <Filter>GPU Algorithms</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\RadixSort.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\RadixSort.cuh">
       <Filter>GPU Algorithms</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\Random.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\Random.cuh">
       <Filter>GPU Algorithms</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\ComparisonFunctions.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\ComparisonFunctions.cuh">
       <Filter>GPU Algorithms\Functions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\FunctionEnablers.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\FunctionEnablers.cuh">
       <Filter>GPU Algorithms\Functions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\ReduceFunctions.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\ReduceFunctions.cuh">
       <Filter>GPU Algorithms\Functions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\BitonicSort.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\BitonicSort.cuh">
       <Filter>GPU Algorithms</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerDebug.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\TracerDebug.h">
       <Filter>Debug</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveI.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUPrimitiveI.h">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveTriangle.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUPrimitiveTriangle.h">
       <Filter>Default Primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveSphere.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUPrimitiveSphere.h">
       <Filter>Default Primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\DefaultLeaf.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\DefaultLeaf.h">
       <Filter>Default Primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGeneratorI.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\TracerLogicGeneratorI.h">
       <Filter>SharedLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicGenerator.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\TracerLogicGenerator.h">
       <Filter>SharedLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialP.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUMaterialP.cuh">
       <Filter>Partial Implementations</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorP.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUAcceleratorP.cuh">
       <Filter>Partial Implementations</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveP.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUPrimitiveP.cuh">
       <Filter>Partial Implementations</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\DeviceMemory.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\DeviceMemory.h">
       <Filter>Memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\Texture.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\Texture.cuh">
       <Filter>Memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\Texture.hpp">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\Texture.hpp">
       <Filter>Memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUPrimitiveEmpty.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUPrimitiveEmpty.h">
       <Filter>Default Primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\AuxiliaryDataKernels.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\AuxiliaryDataKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\ScenePartitionerI.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\ScenePartitionerI.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\ScenePartitioner.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\ScenePartitioner.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TypeTraits.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\SceneNodeJson.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\TypeTraits.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\SceneNodeJson.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\NodeListing.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\NodeListing.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUSceneJson.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUSceneJson.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerLogicPools.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\TracerLogicPools.h">
       <Filter>SharedLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerTypeGenerators.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\TracerTypeGenerators.h">
       <Filter>SharedLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\ImageStructs.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\ImageStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\MangledNames.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\MangledNames.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUAcceleratorLinear.cuh">
       <Filter>Default Accelerators\Linear</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.hpp">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUAcceleratorLinear.hpp">
       <Filter>Default Accelerators\Linear</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorLinearKC.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUAcceleratorLinearKC.cuh">
       <Filter>Default Accelerators\Linear</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUAcceleratorBVH.cuh">
       <Filter>Default Accelerators\BVH</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.hpp">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUAcceleratorBVH.hpp">
       <Filter>Default Accelerators\BVH</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUAcceleratorBVHKC.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUAcceleratorBVHKC.cuh">
       <Filter>Default Accelerators\BVH</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUWorkI.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUWorkI.h">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\WorkKernels.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\WorkKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\MaterialFunctions.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\MaterialFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\AcceleratorFunctions.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\AcceleratorFunctions.h">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GenerationKernels.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GenerationKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TextureStructs.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\TextureStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\ImageFunctions.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\ImageFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\EstimatorFunctions.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\EstimatorFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TracerFunctions.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\TracerFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\TextureReference.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerLib\TextureReference.hpp" />
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUWork.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\TextureReference.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\TextureReference.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUWork.cuh">
       <Filter>Work</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\WorkPool.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\WorkPool.h">
       <Filter>Work</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUTracer.h" />
-    <ClInclude Include="..\..\..\Source\TracerLib\CudaConstants.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUTracer.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\CudaConstants.h">
       <Filter>Cuda System</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUEvent.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUEvent.h">
       <Filter>Cuda System</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialLight.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUMaterialLight.cuh">
       <Filter>Default Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUMaterialLightKC.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUMaterialLightKC.cuh">
       <Filter>Default Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\MetaMaterialFunctions.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\MetaMaterialFunctions.cuh">
       <Filter>Default Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUSurface.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUSurface.h">
       <Filter>GPU Classes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUDistribution.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUDistribution.h">
       <Filter>GPU Classes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformI.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUTransformI.h">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUMediumI.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUMediumI.h">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUMediumVacuum.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUMediumVacuum.cuh">
       <Filter>Default Mediums</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUMediumHomogenous.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUMediumHomogenous.cuh">
       <Filter>Default Mediums</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformSingle.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUTransformSingle.cuh">
       <Filter>Default Transforms</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUTransformIdentity.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUTransformIdentity.cuh">
       <Filter>Default Transforms</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULightSpot.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPULightSpot.cuh">
       <Filter>Default Lights</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULightDirectional.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPULightDirectional.cuh">
       <Filter>Default Lights</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULightPoint.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPULightPoint.cuh">
       <Filter>Default Lights</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULightPrimitive.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPULightPrimitive.cuh">
       <Filter>Default Lights</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULightPrimitive.hpp">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPULightPrimitive.hpp">
       <Filter>Default Lights</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraPinhole.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUCameraPinhole.cuh">
       <Filter>Default Cameras</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\CameraFunctions.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\CameraFunctions.h">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUCameraI.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUCameraI.h">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPUEndpointI.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUEndpointI.h">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULightI.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPULightI.h">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULightRectangular.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPULightRectangular.cuh">
       <Filter>Default Lights</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerLib\GPULightDisk.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\GPULightDisk.cuh">
       <Filter>Default Lights</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\TracerLib\RayMemory.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\RayMemory.cu">
       <Filter>Memory</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\ParallelReduction.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\ParallelReduction.cu">
       <Filter>GPU Algorithms\Implementations</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanArithmetic.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\ParallelScanArithmetic.cu">
       <Filter>GPU Algorithms\Implementations</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanMatrix2x2.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\ParallelScanMatrix2x2.cu">
       <Filter>GPU Algorithms\Implementations</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanMatrix3x3.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\ParallelScanMatrix3x3.cu">
       <Filter>GPU Algorithms\Implementations</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanMatrix4x4.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\ParallelScanMatrix4x4.cu">
       <Filter>GPU Algorithms\Implementations</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanQuaternion.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\ParallelScanQuaternion.cu">
       <Filter>GPU Algorithms\Implementations</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\ParallelScanVector.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\ParallelScanVector.cu">
       <Filter>GPU Algorithms\Implementations</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\RadixSort.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\RadixSort.cu">
       <Filter>GPU Algorithms\Implementations</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\TracerLogicGenerator.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\TracerLogicGenerator.cu">
       <Filter>SharedLib</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\RNGMemory.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\RNGMemory.cu">
       <Filter>Memory</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\ImageMemory.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\ImageMemory.cu">
       <Filter>Memory</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorLinear.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\GPUAcceleratorLinear.cu">
       <Filter>Default Accelerators\Linear</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUAcceleratorBVH.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\GPUAcceleratorBVH.cu">
       <Filter>Default Accelerators\BVH</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\TextureReference.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUTracer.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUMaterialLight.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\TextureReference.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\GPUTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\GPUMaterialLight.cu">
       <Filter>Default Materials</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUMediumHomogenous.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\GPUMediumHomogenous.cu">
       <Filter>Default Mediums</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUTransformSingle.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\GPUTransformSingle.cu">
       <Filter>Default Transforms</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightPrimitive.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\GPULightPrimitive.cu">
       <Filter>Default Lights</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPUCameraPinhole.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\GPUCameraPinhole.cu">
       <Filter>Default Cameras</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightPoint.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\GPULightPoint.cu">
       <Filter>Default Lights</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightDirectional.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\GPULightDirectional.cu">
       <Filter>Default Lights</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightRectangular.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\GPULightRectangular.cu">
       <Filter>Default Lights</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightSpot.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\GPULightSpot.cu">
       <Filter>Default Lights</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerLib\GPULightDisk.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDALib\GPULightDisk.cu">
       <Filter>Default Lights</Filter>
     </CudaCompile>
   </ItemGroup>

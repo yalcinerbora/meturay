@@ -3,7 +3,7 @@
 
 #include "RayLib/Vector.h"
 
-#include "TracerLib/DeviceMemory.h"
+#include "TracerCUDALib/DeviceMemory.h"
 
 #include <cuda_runtime.h>
 

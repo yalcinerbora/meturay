@@ -3,10 +3,9 @@
 
 #include "RayLib/Vector.h"
 
-#include "TracerLib/DeviceMemory.h"
-#include "TracerLib/ParallelReduction.cuh"
-
-#include "TracerLib/GPUPrimitiveTriangle.h"
+#include "TracerCUDALib/DeviceMemory.h"
+#include "TracerCUDALib/ParallelReduction.cuh"
+#include "TracerCUDALib/GPUPrimitiveTriangle.h"
 
 using ::testing::FloatEq;
 

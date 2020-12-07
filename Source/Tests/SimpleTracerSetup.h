@@ -19,9 +19,9 @@
 #include "VisorGL/VisorGLEntry.h"
 
 // Tracer
-#include "TracerLib/GPUSceneJson.h"
-#include "TracerLib/ScenePartitioner.h"
-#include "TracerLib/TracerLogicGenerator.h"
+#include "TracerCUDALib/GPUSceneJson.h"
+#include "TracerCUDALib/ScenePartitioner.h"
+#include "TracerCUDALib/TracerLogicGenerator.h"
 
 // Node
 #include "RayLib/VisorCallbacksI.h"

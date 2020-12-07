@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TracerLib/TracerLogicGenerator.h"
+#include "TracerCUDALib/TracerLogicGenerator.h"
 
 class BasicTracerPool final : public TracerPoolI
 {

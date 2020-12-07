@@ -2,10 +2,10 @@
 
 #include "RayLib/TracerStructs.h"
 
-#include "TracerLib/TracerLogicPools.h"
+#include "TracerCUDALib/TracerLogicPools.h"
 
-#include "TracerLib/TracerLogicGeneratorI.h"
-#include "TracerLib/ScenePartitionerI.h"
+#include "TracerCUDALib/TracerLogicGeneratorI.h"
+#include "TracerCUDALib/ScenePartitionerI.h"
 
 //extern "C" _declspec(dllexport) TracerPoolI * __stdcall GenerateBasicTracerPool();
 //

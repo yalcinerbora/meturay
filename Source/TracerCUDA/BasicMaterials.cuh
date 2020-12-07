@@ -1,10 +1,10 @@
 #pragma once
 
-#include "TracerLib/GPUMaterialP.cuh"
-#include "TracerLib/GPUSurface.h"
-#include "TracerLib/TypeTraits.h"
-#include "TracerLib/MetaMaterialFunctions.cuh"
-#include "TracerLib/DeviceMemory.h"
+#include "TracerCUDALib/GPUMaterialP.cuh"
+#include "TracerCUDALib/GPUSurface.h"
+#include "TracerCUDALib/TypeTraits.h"
+#include "TracerCUDALib/MetaMaterialFunctions.cuh"
+#include "TracerCUDALib/DeviceMemory.h"
 
 #include "BasicMaterialsKC.cuh"
 

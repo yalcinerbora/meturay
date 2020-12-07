@@ -1,9 +1,9 @@
 #pragma once
 
-#include "TracerLib/GPUTracer.h"
-#include "TracerLib/TypeTraits.h"
-#include "TracerLib/GPUCameraI.h"
-#include "TracerLib/CameraFunctions.h"
+#include "TracerCUDALib/GPUTracer.h"
+#include "TracerCUDALib/TypeTraits.h"
+#include "TracerCUDALib/GPUCameraI.h"
+#include "TracerCUDALib/CameraFunctions.h"
 
 // Generic Ray Tracer Class
 class RayTracer : public GPUTracer

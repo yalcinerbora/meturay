@@ -14,40 +14,40 @@
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">
       <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\TracerLib\TracerLib.vcxproj">
+    <ProjectReference Include="..\TracerCUDALib\TracerCUDALib.vcxproj">
       <Project>{dff6854d-aad8-489d-bb4a-03048bfcb6e2}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\Tracer\BasicMaterials.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer\BasicTracerPools.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer\DirectTracer.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer\PathTracer.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer\RayTracer.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer\SampleMaterialPool.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer\SampleMaterials.cu" />
-    <CudaCompile Include="..\..\..\Source\Tracer\TracerWorks.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\BasicMaterials.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\BasicTracerPools.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RayTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\SampleMaterialPool.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\SampleMaterials.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerWorks.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Source\Tracer\BasicMaterials.cuh" />
-    <ClInclude Include="..\..\..\Source\Tracer\BasicMaterialsKC.cuh" />
-    <ClInclude Include="..\..\..\Source\Tracer\BasicTracerPools.h" />
-    <ClInclude Include="..\..\..\Source\Tracer\DirectTracer.h" />
-    <ClInclude Include="..\..\..\Source\Tracer\EntryPoints.h" />
-    <ClInclude Include="..\..\..\Source\Tracer\MaterialDataStructs.h" />
-    <ClInclude Include="..\..\..\Source\Tracer\PathTracer.h" />
-    <ClInclude Include="..\..\..\Source\Tracer\RayAuxStruct.cuh" />
-    <ClInclude Include="..\..\..\Source\Tracer\RayTracer.h" />
-    <ClInclude Include="..\..\..\Source\Tracer\RayTracer.hpp" />
-    <ClInclude Include="..\..\..\Source\Tracer\SampleMaterialPool.h" />
-    <ClInclude Include="..\..\..\Source\Tracer\SampleMaterials.cuh" />
-    <ClInclude Include="..\..\..\Source\Tracer\SampleMaterialsKC.cuh" />
-    <ClInclude Include="..\..\..\Source\Tracer\TracerKC.cuh" />
-    <ClInclude Include="..\..\..\Source\Tracer\TracerWorks.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterials.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterialsKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BasicTracerPools.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracer.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\EntryPoints.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialDataStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracer.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayAuxStruct.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayTracer.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayTracer.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SampleMaterialPool.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SampleMaterials.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SampleMaterialsKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerWorks.cuh" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\Tracer\EntryPoints.cpp" />
-    <ClCompile Include="..\..\..\Source\Tracer\Tracers.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\EntryPoints.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\Tracers.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{96F7395D-FA00-4E97-9FB2-98881123033A}</ProjectGuid>

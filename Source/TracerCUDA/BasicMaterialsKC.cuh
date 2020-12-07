@@ -7,9 +7,9 @@ class RandomGPU;
 
 #include "RayLib/Constants.h"
 
-#include "TracerLib/ImageFunctions.cuh"
-#include "TracerLib/GPUSurface.h"
-#include "TracerLib/TextureStructs.h"
+#include "TracerCUDALib/ImageFunctions.cuh"
+#include "TracerCUDALib/GPUSurface.h"
+#include "TracerCUDALib/TextureStructs.h"
 
 __device__ inline
 Vector3 ConstantSample(// Sampled Output

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RayLib/Vector.h"
-#include "TracerLib/GPUMediumI.h"
+#include "TracerCUDALib/GPUMediumI.h"
 
 struct NullData {};
 

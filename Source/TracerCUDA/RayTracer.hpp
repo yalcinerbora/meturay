@@ -1,5 +1,5 @@
 
-#include "TracerLib/GenerationKernels.cuh"
+#include "TracerCUDALib/GenerationKernels.cuh"
 #include "RayTracer.h"
 
 template <class AuxStruct, AuxInitFunc<AuxStruct> AuxFunc>

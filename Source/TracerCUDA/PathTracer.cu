@@ -5,8 +5,8 @@
 
 #include "RayLib/GPUSceneI.h"
 
-#include "TracerLib/GenerationKernels.cuh"
-#include "TracerLib/GPUWork.cuh"
+#include "TracerCUDALib/GenerationKernels.cuh"
+#include "TracerCUDALib/GPUWork.cuh"
 
 //#include "TracerLib/TracerDebug.h"
 //std::ostream& operator<<(std::ostream& stream, const RayAuxPath& v)

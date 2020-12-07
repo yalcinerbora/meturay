@@ -3,7 +3,7 @@
 #include "RayAuxStruct.cuh"
 #include "RayTracer.hpp"
 
-#include "TracerLib/GPUWork.cuh"
+#include "TracerCUDALib/GPUWork.cuh"
 
 #include "RayLib/GPUSceneI.h"
 

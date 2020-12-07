@@ -27,79 +27,79 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\Tracer\DirectTracer.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracer.cu">
       <Filter>Tracers\Tracers</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer\PathTracer.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracer.cu">
       <Filter>Tracers\Tracers</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer\RayTracer.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RayTracer.cu">
       <Filter>Tracers\Tracers</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer\TracerWorks.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerWorks.cu">
       <Filter>Tracers\Works</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer\SampleMaterials.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\SampleMaterials.cu">
       <Filter>Materials</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer\BasicMaterials.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\BasicMaterials.cu">
       <Filter>Materials\Basic</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer\SampleMaterialPool.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\SampleMaterialPool.cu">
       <Filter>Pools</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tracer\BasicTracerPools.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\BasicTracerPools.cu">
       <Filter>Pools</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Source\Tracer\EntryPoints.h" />
-    <ClInclude Include="..\..\..\Source\Tracer\DirectTracer.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\EntryPoints.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracer.h">
       <Filter>Tracers\Tracers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer\PathTracer.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracer.h">
       <Filter>Tracers\Tracers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer\RayTracer.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayTracer.h">
       <Filter>Tracers\Tracers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer\TracerWorks.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerWorks.cuh">
       <Filter>Tracers\Works</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer\TracerKC.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerKC.cuh">
       <Filter>Tracers\Works</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer\RayAuxStruct.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayAuxStruct.cuh">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer\RayTracer.hpp">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayTracer.hpp">
       <Filter>Tracers\Tracers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer\SampleMaterials.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SampleMaterials.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer\SampleMaterialsKC.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SampleMaterialsKC.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer\MaterialDataStructs.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialDataStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer\BasicMaterialsKC.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterialsKC.cuh">
       <Filter>Materials\Basic</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer\BasicMaterials.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterials.cuh">
       <Filter>Materials\Basic</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer\SampleMaterialPool.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SampleMaterialPool.h">
       <Filter>Pools</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\Tracer\BasicTracerPools.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BasicTracerPools.h">
       <Filter>Pools</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\Tracer\EntryPoints.cpp" />
-    <ClCompile Include="..\..\..\Source\Tracer\Tracers.cpp">
+    <ClCompile Include="..\..\..\Source\TracerCUDA\EntryPoints.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\Tracers.cpp">
       <Filter>Tracers\Tracers</Filter>
     </ClCompile>
   </ItemGroup>

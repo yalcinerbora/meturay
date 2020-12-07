@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RayTracer.h"
-#include "TracerLib/WorkPool.h"
+#include "TracerCUDALib/WorkPool.h"
 
 class DirectTracer : public RayTracer
 {

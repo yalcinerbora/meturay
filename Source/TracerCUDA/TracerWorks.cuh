@@ -1,16 +1,16 @@
 #pragma once
 
 
-#include "Materials/BasicMaterials.cuh"
-#include "Materials/SampleMaterials.cuh"
+#include "BasicMaterials.cuh"
+#include "SampleMaterials.cuh"
 #include "TracerKC.cuh"
 
-#include "TracerLib/WorkPool.h"
-#include "TracerLib/GPUWork.cuh"
-#include "TracerLib/GPUPrimitiveTriangle.h"
-#include "TracerLib/GPUPrimitiveSphere.h"
-#include "TracerLib/GPUPrimitiveEmpty.h"
-#include "TracerLib/GPUMaterialLight.cuh"
+#include "TracerCUDALib/WorkPool.h"
+#include "TracerCUDALib/GPUWork.cuh"
+#include "TracerCUDALib/GPUPrimitiveTriangle.h"
+#include "TracerCUDALib/GPUPrimitiveSphere.h"
+#include "TracerCUDALib/GPUPrimitiveEmpty.h"
+#include "TracerCUDALib/GPUMaterialLight.cuh"
 
 template<class MGroup, class PGroup>
 class DirectTracerWork 

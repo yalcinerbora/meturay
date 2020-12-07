@@ -2,13 +2,13 @@
 
 #include "RayAuxStruct.cuh"
 
-#include "TracerLib/MaterialFunctions.cuh"
-#include "TracerLib/ImageStructs.h"
-#include "TracerLib/RayStructs.h"
-#include "TracerLib/TextureStructs.h"
-#include "TracerLib/GPULightI.h"
-#include "TracerLib/EstimatorFunctions.cuh"
-#include "TracerLib/GPUMediumVacuum.cuh"
+#include "TracerCUDALib/MaterialFunctions.cuh"
+#include "TracerCUDALib/ImageStructs.h"
+#include "TracerCUDALib/RayStructs.h"
+#include "TracerCUDALib/TextureStructs.h"
+#include "TracerCUDALib/GPULightI.h"
+#include "TracerCUDALib/EstimatorFunctions.cuh"
+#include "TracerCUDALib/GPUMediumVacuum.cuh"
 
 struct DirectTracerGlobal
 {
