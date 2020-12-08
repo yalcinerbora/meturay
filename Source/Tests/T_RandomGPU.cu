@@ -2,8 +2,8 @@
 #include <gmock/gmock.h>
 #include <random>
 
-#include "TracerLib/Random.cuh"
-#include "TracerLib/DeviceMemory.h"
+#include "TracerCUDALib/Random.cuh"
+#include "TracerCUDALib/DeviceMemory.h"
 #include "RayLib/Log.h"
 
 __global__ void KInitRandStates(uint32_t seed,
