@@ -3,8 +3,8 @@
 
 #include "RayLib/Vector.h"
 
-#include "TracerCUDALib/DeviceMemory.h"
-#include "TracerCUDALib/ParallelScan.cuh"
+#include "TracerCUDA/DeviceMemory.h"
+#include "TracerCUDA/ParallelScan.cuh"
 
 using ::testing::FloatEq;
 

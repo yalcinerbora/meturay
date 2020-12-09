@@ -5,12 +5,12 @@
 #include "RayLib/Constants.h"
 #include "RayLib/HemiDistribution.h"
 
-#include "TracerCUDALib/Random.cuh"
-#include "TracerCUDALib/TextureStructs.h"
-#include "TracerCUDALib/ImageFunctions.cuh"
-#include "TracerCUDALib/MaterialFunctions.cuh"
-#include "TracerCUDALib/TracerFunctions.cuh"
-#include "TracerCUDALib/GPUSurface.h"
+#include "Random.cuh"
+#include "TextureStructs.h"
+#include "ImageFunctions.cuh"
+#include "MaterialFunctions.cuh"
+#include "TracerFunctions.cuh"
+#include "GPUSurface.h"
 
 __device__ inline
 Vector3 EmitConstant(// Input

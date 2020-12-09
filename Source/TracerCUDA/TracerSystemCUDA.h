@@ -3,9 +3,9 @@
 #include "RayLib/TracerSystemI.h"
 #include "RayLib/SurfaceLoaderGenerator.h"
 
-#include "TracerCUDALib/CudaConstants.h"
-#include "TracerCUDALib/ScenePartitionerI.h"
-#include "TracerCUDALib/TracerLogicGeneratorI.h"
+#include "CudaConstants.h"
+#include "ScenePartitionerI.h"
+#include "TracerLogicGeneratorI.h"
 
 class TracerSystemCUDA final : public TracerSystemI
 {

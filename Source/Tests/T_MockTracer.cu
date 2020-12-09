@@ -7,11 +7,10 @@ using namespace std::chrono_literals;
 #include "RayLib/Log.h"
 #include "RayLib/TracerError.h"
 
-#include "TracerCUDALib/GPUTracer.h"
-#include "TracerCUDALib/GPUAcceleratorI.h"
-#include "TracerCUDALib/GPUWorkI.h"
-
-#include "TracerCUDALib/GenerationKernels.cuh"
+#include "TracerCUDA/GPUTracer.h"
+#include "TracerCUDA/GPUAcceleratorI.h"
+#include "TracerCUDA/GPUWorkI.h"
+#include "TracerCUDA/GenerationKernels.cuh"
 
 //struct RayAuxGMem {};
 //

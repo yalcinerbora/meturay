@@ -5,12 +5,12 @@
 #include "SampleMaterials.cuh"
 #include "TracerKC.cuh"
 
-#include "TracerCUDALib/WorkPool.h"
-#include "TracerCUDALib/GPUWork.cuh"
-#include "TracerCUDALib/GPUPrimitiveTriangle.h"
-#include "TracerCUDALib/GPUPrimitiveSphere.h"
-#include "TracerCUDALib/GPUPrimitiveEmpty.h"
-#include "TracerCUDALib/GPUMaterialLight.cuh"
+#include "WorkPool.h"
+#include "GPUWork.cuh"
+#include "GPUPrimitiveTriangle.h"
+#include "GPUPrimitiveSphere.h"
+#include "GPUPrimitiveEmpty.h"
+#include "GPUMaterialLight.cuh"
 
 template<class MGroup, class PGroup>
 class DirectTracerWork 

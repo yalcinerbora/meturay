@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "TracerCUDALib/Texture.cuh"
+#include "TracerCUDA/Texture.cuh"
 
 TEST(Texture, Construction)
 {

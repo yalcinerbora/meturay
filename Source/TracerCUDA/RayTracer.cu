@@ -4,10 +4,10 @@
 #include "RayLib/GPUSceneI.h"
 #include "RayLib/TracerCallbacksI.h"
 
-#include "TracerCUDALib/RayMemory.h"
-#include "TracerCUDALib/ImageMemory.h"
-#include "TracerCUDALib/CudaConstants.h"
-#include "TracerCUDALib/GenerationKernels.cuh"
+#include "RayMemory.h"
+#include "ImageMemory.h"
+#include "CudaConstants.h"
+#include "GenerationKernels.cuh"
 
 RayTracer::RayTracer(const CudaSystem& s, 
                      const GPUSceneI& scene,

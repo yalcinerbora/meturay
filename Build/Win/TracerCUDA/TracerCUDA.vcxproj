@@ -11,22 +11,91 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RayLib\RayLib.vcxproj">
-      <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\TracerCUDALib\TracerCUDALib.vcxproj">
-      <Project>{dff6854d-aad8-489d-bb4a-03048bfcb6e2}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\BasicMaterials.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracer.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracer.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\RayTracer.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\SampleMaterials.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerWorks.cu" />
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\AcceleratorFunctions.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\AuxiliaryDataKernels.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\CameraFunctions.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\CudaConstants.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraPinhole.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightDisk.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightPrimitive.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightDirectional.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightPoint.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightPrimitive.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightRectangular.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightSpot.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMediumI.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMediumVacuum.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformIdentity.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformSingle.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVHKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraI.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BitonicSort.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GenerationKernels.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ComparisonFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\CudaConstants.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DefaultLeaf.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\EstimatorFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUDistribution.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUEndpointI.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUEvent.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightI.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMaterialLight.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMaterialLightKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMediumHomogenous.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformI.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUWorkI.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ImageFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ImageStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\MangledNames.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUWork.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\MetaMaterialFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUSurface.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\WorkPool.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TextureStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerTypeGenerators.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DeviceMemory.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\FunctionEnablers.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorI.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorLinear.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorLinear.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorLinearKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorP.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMaterialI.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMaterialP.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUPrimitiveEmpty.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUPrimitiveI.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUPrimitiveP.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUPrimitiveSphere.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUPrimitiveTriangle.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUSceneJson.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ImageMemory.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\WorkKernels.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\NodeListing.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelReduction.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelScan.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RadixSort.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\Random.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayMemory.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ReduceFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RNGMemory.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RNGStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SceneNodeJson.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ScenePartitioner.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ScenePartitionerI.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\Texture.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\Texture.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTracer.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerDebug.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerLogicGenerator.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerLogicGeneratorI.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TypeTraits.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterials.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterialsKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracer.h" />
@@ -39,19 +108,74 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\SampleMaterials.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SampleMaterialsKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerKC.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerLogicGeneratorAll.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerSystemCUDA.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerWorks.cuh" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\EntryPoint.cpp" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerLogicGeneratorAll.cu" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\Tracers.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerSystemCUDA.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightDisk.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.cu" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\CudaConstants.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\DeviceMemory.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUDistribution.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveEmpty.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveSphere.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveTriangle.cpp">
+      <FileType>Document</FileType>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUSceneJson.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUCameraPinhole.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightDirectional.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightPoint.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightPrimitive.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightRectangular.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightSpot.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUMaterialLight.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUMediumHomogenous.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\ImageMemory.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RNGMemory.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUTransformSingle.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
+    <ClCompile Include="..\..\..\Source\TracerCUDA\MangledNames.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\SceneNodeJson.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\ScenePartitioner.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\Texture.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\TracerDebug.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\BasicMaterials.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RayTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\SampleMaterials.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerWorks.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUAcceleratorLinear.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\ParallelReduction.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\ParallelScanArithmetic.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\ParallelScanMatrix2x2.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\ParallelScanMatrix3x3.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\ParallelScanMatrix4x4.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\ParallelScanQuaternion.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\ParallelScanVector.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RadixSort.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\TextureReference.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerLogicGenerator.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RayLib\RayLib.vcxproj">
+      <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{96F7395D-FA00-4E97-9FB2-98881123033A}</ProjectGuid>
-    <RootNamespace>Tracer_Test</RootNamespace>
+    <ProjectGuid>{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}</ProjectGuid>
+    <RootNamespace>TracerLib</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -94,24 +218,22 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>METU_CUDA;WIN32;WIN64;METU_DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(CUDA_PATH)\lib\$(Platform);$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration);%(AdditionalLibraryDirectories);$(CUDA_PATH)\lib\$(Platform)</AdditionalLibraryDirectories>
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
-      <AdditionalCompilerOptions>
-      </AdditionalCompilerOptions>
+      <AdditionalCompilerOptions>/wd4834</AdditionalCompilerOptions>
       <PtxAsOptionV>true</PtxAsOptionV>
-      <FastMath>false</FastMath>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <MaxRegCount />
       <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
@@ -125,10 +247,10 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>METU_CUDA;WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -136,18 +258,16 @@
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(CUDA_PATH)\lib\$(Platform);$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration);%(AdditionalLibraryDirectories);$(CUDA_PATH)\lib\$(Platform)</AdditionalLibraryDirectories>
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
-      <AdditionalCompilerOptions>
-      </AdditionalCompilerOptions>
+      <AdditionalCompilerOptions>/wd4834</AdditionalCompilerOptions>
       <MaxRegCount>
       </MaxRegCount>
       <GenerateLineInfo>true</GenerateLineInfo>
       <PtxAsOptionV>true</PtxAsOptionV>
-      <FastMath>false</FastMath>
       <HostDebugInfo>true</HostDebugInfo>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>

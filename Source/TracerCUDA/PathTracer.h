@@ -1,8 +1,8 @@
 #pragma once
 
 #include "RayTracer.h"
-#include "TracerCUDALib/WorkPool.h"
-#include "TracerCUDALib/GPULightI.h"
+#include "WorkPool.h"
+#include "GPULightI.h"
 
 class PathTracer final : public RayTracer
 {

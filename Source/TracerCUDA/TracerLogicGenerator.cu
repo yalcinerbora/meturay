@@ -16,6 +16,11 @@
 #include "GPUTransformIdentity.cuh"
 
 #include "GPUMaterialLight.cuh"
+#include "BasicMaterials.cuh"
+#include "SampleMaterials.cuh"
+
+#include "DirectTracer.h"
+#include "PathTracer.h"
 
 #include "GPULightPrimitive.cuh"
 #include "GPULightDirectional.cuh"
@@ -131,6 +136,29 @@ TracerLogicGenerator::TracerLogicGenerator()
     matGroupGenerators.emplace(LightMatConstant::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LightMatCube>,
                                               DefaultDestruct<GPUMaterialGroupI>));
+    // Basic Materials
+    matGroupGenerators.emplace(ConstantMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, ConstantMat>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
+    matGroupGenerators.emplace(BarycentricMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BarycentricMat>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
+    matGroupGenerators.emplace(SphericalMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, SphericalMat>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
+    // Sample Materials
+    matGroupGenerators.emplace(EmissiveMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, EmissiveMat>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
+    matGroupGenerators.emplace(LambertMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LambertMat>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
+    matGroupGenerators.emplace(ReflectMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, ReflectMat>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
+    matGroupGenerators.emplace(RefractMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, RefractMat>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
 
     // Transform Types
     transGroupGenerators.emplace(CPUTransformIdentity::TypeName(),
@@ -175,10 +203,13 @@ TracerLogicGenerator::TracerLogicGenerator()
     camGroupGenerators.emplace(CPUCameraGroupPinhole::TypeName(),
                                CPUCameraGen(DefaultConstruct<CPUCameraGroupI, CPUCameraGroupPinhole>,
                                             DefaultDestruct<CPUCameraGroupI>));
-
-    // Default Types are loaded
-    // Other Types are strongly tied to base tracer logic
-    // i.e. Auxiliary Struct Etc.
+    // Tracers
+    tracerGenerators.emplace(DirectTracer::TypeName(),
+                             GPUTracerGen(TracerLogicConstruct<GPUTracerI, DirectTracer>,
+                                          DefaultDestruct<GPUTracerI>));
+    tracerGenerators.emplace(PathTracer::TypeName(),
+                             GPUTracerGen(TracerLogicConstruct<GPUTracerI, PathTracer>,
+                                          DefaultDestruct<GPUTracerI>));
 }
 
 SceneError TracerLogicGenerator::GeneratePrimitiveGroup(GPUPrimGPtr& pg,

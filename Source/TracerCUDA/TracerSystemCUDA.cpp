@@ -1,13 +1,13 @@
 #include "TracerSystemCUDA.h"
-#include "TracerLogicGeneratorAll.h"
+#include "TracerLogicGenerator.h"
 
 #include "RayLib/SurfaceLoaderGenerator.h"
 #include "RayLib/GPUTracerI.h"
 #include "RayLib/TracerOptions.h"
 #include "RayLib/Log.h"
 
-#include "TracerCUDALib/ScenePartitioner.h"
-#include "TracerCUDALib/GPUSceneJson.h"
+#include "ScenePartitioner.h"
+#include "GPUSceneJson.h"
 
 TracerError TracerSystemCUDA::Initialize(const std::vector<SurfaceLoaderSharedLib>& sLoaderArgs,
                                          ScenePartitionerType partitionerType)
@@ -51,7 +51,7 @@ void TracerSystemCUDA::GenerateScene(GPUSceneI*& newScene,
                                      const std::u8string& scenePath)
 {
     // Clear Logic List by constructing new logic generator
-    logicGenerator = std::make_unique<TracerLogicGeneratorAll>();
+    logicGenerator = std::make_unique<TracerLogicGenerator>();
     // Override old scene with new scene
     gpuScene = std::make_unique<GPUSceneJson>(scenePath,
                                               *scenePartitioner,
