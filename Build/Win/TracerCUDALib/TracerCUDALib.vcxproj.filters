@@ -217,9 +217,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDALib\GPUSceneJson.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDALib\TracerLogicPools.h">
-      <Filter>SharedLib</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDALib\TracerTypeGenerators.h">
       <Filter>SharedLib</Filter>
     </ClInclude>

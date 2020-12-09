@@ -56,6 +56,8 @@ void RayTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount,
         RNGGMem rngData = rngMemory.RNGData(gpu);
         ImageGMem<Vector4f> gImgData = imgMemory.GMem<Vector4f>();
 
+        cudaSystem.SyncGPUAll();
+
         // Kernel Call
         gpu.AsyncGridStrideKC_X
         (

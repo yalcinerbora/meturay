@@ -16,7 +16,7 @@ struct TracerError : public ErrorI
             OK,
             // Logical
             NO_LOGIC_SET,
-            // General
+            // General            
             CPU_OUT_OF_MEMORY,
             GPU_OUT_OF_MEMORY,
             // Options Related
@@ -29,6 +29,10 @@ struct TracerError : public ErrorI
             UNABLE_TO_CONSTRUCT_LIGHT,
             // Work Related
             UNABLE_TO_GENERATE_WORK,
+            // Initialization Related
+            UNABLE_TO_INITIALIZE,
+            UNKNOWN_SCENE_PARTITIONER_TYPE,
+            NO_LOGIC_FOR_TRACER,
             // ...
 
 
@@ -93,7 +97,11 @@ inline TracerError::operator std::string() const
         "Unable to construct camera",
         "Unable to construct light",
         //
-        "Unable to generate work for material/primitive pair"
+        "Unable to generate work for material/primitive pair",
+        // Initialization Related
+        "Unable to initialize tracer",
+        "Unknown scene partitioner type",
+        "No logic found for that tracer"
     }; 
     static_assert(std::extent<decltype(ErrorStrings)>::value == static_cast<size_t>(TracerError::END),
                   "Enum and enum string list size mismatch.");

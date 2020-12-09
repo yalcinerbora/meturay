@@ -61,24 +61,24 @@ class TracerLogicGeneratorI
                                                const TracerParameters&,
                                                const std::string& tracerType) = 0;
 
-        // Inclusion Functionality
-        // Additionally includes the materials from these libraries
-        // No exclusion functionality provided just add what you need
-        virtual DLLError    IncludeBaseAcceleratorsFromDLL(const std::string& libName,
-                                                           const std::string& regex,
-                                                           const SharedLibArgs& mangledName) = 0;
-        virtual DLLError    IncludeAcceleratorsFromDLL(const std::string& libName,
-                                                       const std::string& regex,
-                                                       const SharedLibArgs& mangledName) = 0;
-        virtual DLLError    IncludeMaterialsFromDLL(const std::string& libName,
-                                                    const std::string& regex,
-                                                    const SharedLibArgs& mangledName) = 0;
-        virtual DLLError    IncludePrimitivesFromDLL(const std::string& libName,
-                                                     const std::string& regex,
-                                                     const SharedLibArgs& mangledName) = 0;
-        virtual DLLError    IncludeTracersFromDLL(const std::string& libName,
-                                                  const std::string& regex,
-                                                  const SharedLibArgs& mangledName) = 0;
+        //// Inclusion Functionality
+        //// Additionally includes the materials from these libraries
+        //// No exclusion functionality provided just add what you need
+        //virtual DLLError    IncludeBaseAcceleratorsFromDLL(const std::string& libName,
+        //                                                   const std::string& regex,
+        //                                                   const SharedLibArgs& mangledName) = 0;
+        //virtual DLLError    IncludeAcceleratorsFromDLL(const std::string& libName,
+        //                                               const std::string& regex,
+        //                                               const SharedLibArgs& mangledName) = 0;
+        //virtual DLLError    IncludeMaterialsFromDLL(const std::string& libName,
+        //                                            const std::string& regex,
+        //                                            const SharedLibArgs& mangledName) = 0;
+        //virtual DLLError    IncludePrimitivesFromDLL(const std::string& libName,
+        //                                             const std::string& regex,
+        //                                             const SharedLibArgs& mangledName) = 0;
+        //virtual DLLError    IncludeTracersFromDLL(const std::string& libName,
+        //                                          const std::string& regex,
+        //                                          const SharedLibArgs& mangledName) = 0;
         //// Exclusion functionality
         //// Unload A Library
         //virtual DLLError    UnloadLibrary(std::string& libName) = 0;

@@ -94,7 +94,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDALib\TracerDebug.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDALib\TracerLogicGenerator.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDALib\TracerLogicGeneratorI.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDALib\TracerLogicPools.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDALib\TypeTraits.h" />
   </ItemGroup>
   <ItemGroup>

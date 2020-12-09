@@ -20,34 +20,34 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\BasicMaterials.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\BasicTracerPools.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayTracer.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\SampleMaterialPool.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\SampleMaterials.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerWorks.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterials.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterialsKC.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\BasicTracerPools.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracer.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\EntryPoints.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\EntryPoint.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialDataStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracer.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\RayAuxStruct.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\RayTracer.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\RayTracer.hpp" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\SampleMaterialPool.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SampleMaterials.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SampleMaterialsKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerLogicGeneratorAll.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerSystemCUDA.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerWorks.cuh" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\TracerCUDA\EntryPoints.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\EntryPoint.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerLogicGeneratorAll.cu" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\Tracers.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\TracerSystemCUDA.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{96F7395D-FA00-4E97-9FB2-98881123033A}</ProjectGuid>

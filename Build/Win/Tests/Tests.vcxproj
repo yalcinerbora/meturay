@@ -150,9 +150,6 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">
       <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\TracerCUDALib\TracerCUDALib.vcxproj">
-      <Project>{dff6854d-aad8-489d-bb4a-03048bfcb6e2}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\VisorGL\VisorGL.vcxproj">
       <Project>{73e98dc9-d340-4704-9db7-b3f7156f97d3}</Project>
     </ProjectReference>

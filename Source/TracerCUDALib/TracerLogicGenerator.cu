@@ -61,29 +61,29 @@ template void TypeGenWrappers::DefaultDestruct(GPUPrimitiveGroupI*);
 template void TypeGenWrappers::DefaultDestruct(GPUMaterialGroupI*);
 template void TypeGenWrappers::DefaultDestruct(GPUAcceleratorGroupI*);
 
-// Helper Funcs
-DLLError TracerLogicGenerator::FindOrGenerateSharedLib(SharedLib*& libOut,
-                                                       const std::string& libName)
-{
-    auto it = openedLibs.end();
-    if((it = openedLibs.find(libName)) != openedLibs.end())
-    {
-        libOut = &it->second;
-    }
-    else
-    {
-        try
-        {
-            auto it = openedLibs.emplace(libName, SharedLib(libName));
-            libOut = &it.first->second;
-        }
-        catch(const DLLException& e)
-        {
-            return e;
-        }
-    }
-    return DLLError::OK;
-}
+//// Helper Funcs
+//DLLError TracerLogicGenerator::FindOrGenerateSharedLib(SharedLib*& libOut,
+//                                                       const std::string& libName)
+//{
+//    auto it = openedLibs.end();
+//    if((it = openedLibs.find(libName)) != openedLibs.end())
+//    {
+//        libOut = &it->second;
+//    }
+//    else
+//    {
+//        try
+//        {
+//            auto it = openedLibs.emplace(libName, SharedLib(libName));
+//            libOut = &it.first->second;
+//        }
+//        catch(const DLLException& e)
+//        {
+//            return e;
+//        }
+//    }
+//    return DLLError::OK;
+//}
 
 TracerLogicGenerator::TracerLogicGenerator()
 {
@@ -278,99 +278,99 @@ SceneError TracerLogicGenerator::GenerateTracer(GPUTracerPtr& tracerPtr,
     return SceneError::OK;
 }
 
-DLLError TracerLogicGenerator::IncludeBaseAcceleratorsFromDLL(const std::string& libName,
-                                                              const std::string& regex,
-                                                              const SharedLibArgs& mangledName)
-{
-    DLLError e = DLLError::OK;
-    SharedLib* lib = nullptr;
-    e = FindOrGenerateSharedLib(lib, libName);
-    if(e != DLLError::OK) return e;
-
-    BaseAcceleratorPoolPtr* pool = nullptr;
-    e = FindOrGeneratePool<BaseAcceleratorLogicPoolI>(pool, loadedBaseAccPools,
-                                                      {lib, mangledName});
-    if(e != DLLError::OK) return e;
-
-    auto map = (*pool)->BaseAcceleratorGenerators(regex);
-    baseAccelGenerators.insert(map.cbegin(), map.cend());
-    return e;
-    return DLLError::OK;
-    // Then 
-}
-
-DLLError TracerLogicGenerator::IncludeAcceleratorsFromDLL(const std::string& libName,
-                                                          const std::string& regex,
-                                                          const SharedLibArgs& mangledName)
-{
-    DLLError e = DLLError::OK;
-    SharedLib* lib = nullptr;
-    e = FindOrGenerateSharedLib(lib, libName);
-    if(e != DLLError::OK) return e;
-
-    AcceleratorPoolPtr* pool = nullptr;
-    e = FindOrGeneratePool<AcceleratorLogicPoolI>(pool, loadedAccPools,
-                                                  {lib, mangledName});
-    if(e != DLLError::OK) return e;
-
-    auto groupMap = (*pool)->AcceleratorGroupGenerators(regex);
-    accelGroupGenerators.insert(groupMap.cbegin(), groupMap.cend());
-    return e;
-}
-
-DLLError TracerLogicGenerator::IncludeMaterialsFromDLL(const std::string& libName,
-                                                       const std::string& regex,
-                                                       const SharedLibArgs& mangledName)
-{
-    DLLError e = DLLError::OK;
-    SharedLib* lib = nullptr;
-    e = FindOrGenerateSharedLib(lib, libName);
-    if(e != DLLError::OK) return e;
-
-    MaterialPoolPtr* pool = nullptr;
-    e = FindOrGeneratePool<MaterialLogicPoolI>(pool, loadedMatPools,
-                                                {lib, mangledName});
-    if(e != DLLError::OK) return e;
-
-    auto groupMap = (*pool)->MaterialGroupGenerators(regex);
-    matGroupGenerators.insert(groupMap.cbegin(), groupMap.cend());
-    return e;
-}
-
-DLLError TracerLogicGenerator::IncludePrimitivesFromDLL(const std::string& libName,
-                                                        const std::string& regex,
-                                                        const SharedLibArgs& mangledName)
-{
-    DLLError e = DLLError::OK;
-    SharedLib* lib = nullptr;
-    e = FindOrGenerateSharedLib(lib, libName);
-    if(e != DLLError::OK) return e;
-
-    PrimitivePoolPtr* pool = nullptr;
-    e = FindOrGeneratePool<PrimitiveLogicPoolI>(pool, loadedPrimPools,
-                                                {lib, mangledName});
-    if(e != DLLError::OK) return e;
-
-    auto map = (*pool)->PrimitiveGenerators(regex);
-    primGroupGenerators.insert(map.cbegin(), map.cend());
-    return e;
-}
-
-DLLError TracerLogicGenerator::IncludeTracersFromDLL(const std::string& libName,
-                                                     const std::string& regex,
-                                                     const SharedLibArgs& mangledName)
-{
-    DLLError e = DLLError::OK;
-    SharedLib* lib = nullptr;
-    e = FindOrGenerateSharedLib(lib, libName);
-    if(e != DLLError::OK) return e;
-
-    TracerPoolPtr* pool = nullptr;
-    e = FindOrGeneratePool<TracerPoolI>(pool, loadedTracerPools,
-                                        {lib, mangledName});
-    if(e != DLLError::OK) return e;
-
-    auto map = (*pool)->TracerGenerators(regex);
-    tracerGenerators.insert(map.cbegin(), map.cend());
-    return e;
-}
+//DLLError TracerLogicGenerator::IncludeBaseAcceleratorsFromDLL(const std::string& libName,
+//                                                              const std::string& regex,
+//                                                              const SharedLibArgs& mangledName)
+//{
+//    DLLError e = DLLError::OK;
+//    SharedLib* lib = nullptr;
+//    e = FindOrGenerateSharedLib(lib, libName);
+//    if(e != DLLError::OK) return e;
+//
+//    BaseAcceleratorPoolPtr* pool = nullptr;
+//    e = FindOrGeneratePool<BaseAcceleratorLogicPoolI>(pool, loadedBaseAccPools,
+//                                                      {lib, mangledName});
+//    if(e != DLLError::OK) return e;
+//
+//    auto map = (*pool)->BaseAcceleratorGenerators(regex);
+//    baseAccelGenerators.insert(map.cbegin(), map.cend());
+//    return e;
+//    return DLLError::OK;
+//    // Then 
+//}
+//
+//DLLError TracerLogicGenerator::IncludeAcceleratorsFromDLL(const std::string& libName,
+//                                                          const std::string& regex,
+//                                                          const SharedLibArgs& mangledName)
+//{
+//    DLLError e = DLLError::OK;
+//    SharedLib* lib = nullptr;
+//    e = FindOrGenerateSharedLib(lib, libName);
+//    if(e != DLLError::OK) return e;
+//
+//    AcceleratorPoolPtr* pool = nullptr;
+//    e = FindOrGeneratePool<AcceleratorLogicPoolI>(pool, loadedAccPools,
+//                                                  {lib, mangledName});
+//    if(e != DLLError::OK) return e;
+//
+//    auto groupMap = (*pool)->AcceleratorGroupGenerators(regex);
+//    accelGroupGenerators.insert(groupMap.cbegin(), groupMap.cend());
+//    return e;
+//}
+//
+//DLLError TracerLogicGenerator::IncludeMaterialsFromDLL(const std::string& libName,
+//                                                       const std::string& regex,
+//                                                       const SharedLibArgs& mangledName)
+//{
+//    DLLError e = DLLError::OK;
+//    SharedLib* lib = nullptr;
+//    e = FindOrGenerateSharedLib(lib, libName);
+//    if(e != DLLError::OK) return e;
+//
+//    MaterialPoolPtr* pool = nullptr;
+//    e = FindOrGeneratePool<MaterialLogicPoolI>(pool, loadedMatPools,
+//                                                {lib, mangledName});
+//    if(e != DLLError::OK) return e;
+//
+//    auto groupMap = (*pool)->MaterialGroupGenerators(regex);
+//    matGroupGenerators.insert(groupMap.cbegin(), groupMap.cend());
+//    return e;
+//}
+//
+//DLLError TracerLogicGenerator::IncludePrimitivesFromDLL(const std::string& libName,
+//                                                        const std::string& regex,
+//                                                        const SharedLibArgs& mangledName)
+//{
+//    DLLError e = DLLError::OK;
+//    SharedLib* lib = nullptr;
+//    e = FindOrGenerateSharedLib(lib, libName);
+//    if(e != DLLError::OK) return e;
+//
+//    PrimitivePoolPtr* pool = nullptr;
+//    e = FindOrGeneratePool<PrimitiveLogicPoolI>(pool, loadedPrimPools,
+//                                                {lib, mangledName});
+//    if(e != DLLError::OK) return e;
+//
+//    auto map = (*pool)->PrimitiveGenerators(regex);
+//    primGroupGenerators.insert(map.cbegin(), map.cend());
+//    return e;
+//}
+//
+//DLLError TracerLogicGenerator::IncludeTracersFromDLL(const std::string& libName,
+//                                                     const std::string& regex,
+//                                                     const SharedLibArgs& mangledName)
+//{
+//    DLLError e = DLLError::OK;
+//    SharedLib* lib = nullptr;
+//    e = FindOrGenerateSharedLib(lib, libName);
+//    if(e != DLLError::OK) return e;
+//
+//    TracerPoolPtr* pool = nullptr;
+//    e = FindOrGeneratePool<TracerPoolI>(pool, loadedTracerPools,
+//                                        {lib, mangledName});
+//    if(e != DLLError::OK) return e;
+//
+//    auto map = (*pool)->TracerGenerators(regex);
+//    tracerGenerators.insert(map.cbegin(), map.cend());
+//    return e;
+//}

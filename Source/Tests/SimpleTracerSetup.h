@@ -11,6 +11,7 @@
 #include "RayLib/TracerStatus.h"
 #include "RayLib/DLLError.h"
 #include "RayLib/GPUTracerI.h"
+#include "RayLib/TracerSystemI.h"
 
 // Visor
 #include "RayLib/VisorI.h"
@@ -18,18 +19,14 @@
 #include "RayLib/MovementSchemes.h"
 #include "VisorGL/VisorGLEntry.h"
 
-// Tracer
-#include "TracerCUDALib/GPUSceneJson.h"
-#include "TracerCUDALib/ScenePartitioner.h"
-#include "TracerCUDALib/TracerLogicGenerator.h"
-
 // Node
 #include "RayLib/VisorCallbacksI.h"
 #include "RayLib/TracerCallbacksI.h"
 #include "RayLib/NodeI.h"
 #include "RayLib/AnalyticData.h"
-#include "RayLib/TracerError.h"
 #include "RayLib/TracerOptions.h"
+#include "RayLib/TracerError.h"
+#include "RayLib/SceneError.h"
 
 class MockNode
     : public VisorCallbacksI
@@ -177,14 +174,10 @@ class SimpleTracerSetup
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
         static constexpr PixelFormat        WINDOW_PIXEL_FORMAT = PixelFormat::RGB8_UNORM;
-        
-        static constexpr const char*        MATERIAL_DLL = "Materials";
-        static constexpr const char*        SAMPLE_MAT_POOL_GEN = "GenerateSampleMaterialPool";
-        static constexpr const char*        SAMPLE_MAT_POOL_DEL = "DeleteSampleMaterialPool";
 
-        static constexpr const char*        TRACER_DLL = "Tracers";
-        static constexpr const char*        TRACER_LOGIC_POOL_GEN = "GenerateBasicTracerPool";
-        static constexpr const char*        TRACER_LOGIC_POOL_DEL = "DeleteBasicTracerPool";
+        static constexpr const char*        TRACER_DLL = "TracerCUDA";
+        static constexpr const char*        TRACER_GEN = "GenerateTracerSystem";
+        static constexpr const char*        TRACER_DEL = "DeleteTracerSystem";
 
         static constexpr const char*        SURF_LOAD_DLL = "AssimpSurfaceLoaders";
         static constexpr const char*        SURF_LOAD_GEN = "GenerateAssimpPool";
@@ -195,19 +188,15 @@ class SimpleTracerSetup
             false,  // Verbose
             0       // Seed
         };
-
-        // Surface Loader Generators (Classes of primitive file loaders)
-        SurfaceLoaderGenerator              surfaceLoaders;
-        // Tracer Logic Generators (Classes of CUDA Coda Segments)
-        TracerLogicGenerator                generator;
-
-        // Scene Tracer and Visor
+       
+        // Tracer Related
+        SharedLib                           tracerDLL;
+        SharedLibPtr<TracerSystemI>         tracerSystem;
+        GPUSceneI*                          gpuScene;
         GPUTracerPtr                        tracer;
-        std::unique_ptr<VisorI>             visorView;
-        std::unique_ptr<GPUSceneJson>       gpuScene;
-        std::unique_ptr<CudaSystem>         cudaSystem;
 
-        // Visor Input
+        // Visor Related
+        std::unique_ptr<VisorI>             visorView;
         std::unique_ptr<VisorWindowInput>   visorInput;
 
         // Self Node
@@ -235,9 +224,11 @@ inline SimpleTracerSetup::SimpleTracerSetup(std::string tracerType,
     , sceneTime(sceneTime)
     , tracerType(tracerType)
     , visorView(nullptr)
+    , tracerSystem(nullptr, nullptr)
     , gpuScene(nullptr)
     , visorInput(nullptr)
     , node(nullptr)
+    , tracerDLL(TRACER_DLL)
     , tracer(nullptr, nullptr)
 {}
 
@@ -262,51 +253,28 @@ inline bool SimpleTracerSetup::Init()
 
         TRACER_PARAMETERS
     };   
-    // Load Materials from Test-Material Shared Library
-    DLLError dllE = generator.IncludeMaterialsFromDLL(MATERIAL_DLL, ".*",
-                                                      SharedLibArgs{SAMPLE_MAT_POOL_GEN, SAMPLE_MAT_POOL_DEL});
+
+    // Load Tracer System DLL
+    DLLError dllE = tracerDLL.GenerateObject(tracerSystem, SharedLibArgs{TRACER_GEN, TRACER_DEL});
     ERROR_CHECK(DLLError, dllE);
-    // Load Tracer Logics from Test-Material Shared Library
-    dllE = generator.IncludeTracersFromDLL(TRACER_DLL, ".*",
-                                           SharedLibArgs{TRACER_LOGIC_POOL_GEN, TRACER_LOGIC_POOL_DEL});
-    ERROR_CHECK(DLLError, dllE);
-    // Load Assimp Surface Loader for loading files
-    dllE = surfaceLoaders.IncludeLoadersFromDLL(SURF_LOAD_DLL, ".*",
-                                                SharedLibArgs{SURF_LOAD_GEN, SURF_LOAD_DEL});
-    ERROR_CHECK(DLLError, dllE);
-
-    // Load GFG Surface Loader for gfg data
-    // TODO:
-
-    // Generate GPU List & A Partitioner
-    // Check cuda system error here
-    cudaSystem = std::make_unique<CudaSystem>();
-    CudaError cudaE = cudaSystem->Initialize();
-    ERROR_CHECK(CudaError, cudaE);
-
-    // GPU Data Partitioner
-    // Basically delegates all work to single GPU
-    SingleGPUScenePartitioner partitioner(*cudaSystem);
-
-    // Load Scene & get material/primitive mappings
-    gpuScene = std::make_unique<GPUSceneJson>(sceneName,
-                                              partitioner,
-                                              generator,
-                                              surfaceLoaders,
-                                              *cudaSystem);
+    // Initialize Tracer System
+    TracerError trcE = tracerSystem->Initialize({{SURF_LOAD_DLL, ".*", {SURF_LOAD_GEN, SURF_LOAD_DEL}}},
+                                                ScenePartitionerType::SINGLE_GPU);
+    ERROR_CHECK(TracerError, trcE);
+    
+    // Construct & Load Scene
+    tracerSystem->GenerateScene(gpuScene, sceneName);   
     SceneError scnE = gpuScene->LoadScene(sceneTime);
     ERROR_CHECK(SceneError, scnE);
 
+    // Visor Input Generation
     MovementScemeList MovementSchemeList = {};    
     KeyboardKeyBindings KeyBinds = VisorConstants::DefaultKeyBinds;
-    MouseKeyBindings MouseBinds = VisorConstants::DefaultButtonBinds;
-
-    // Visor Input Generation
+    MouseKeyBindings MouseBinds = VisorConstants::DefaultButtonBinds;        
     visorInput = std::make_unique<VisorWindowInput>(std::move(KeyBinds),
                                                     std::move(MouseBinds),
                                                     std::move(MovementSchemeList),
                                                     VisorCamera{});
-                                                    
     // Window Params
     VisorOptions visorOpts;
     visorOpts.stereoOn = false;
@@ -316,7 +284,6 @@ inline bool SimpleTracerSetup::Init()
 
     visorOpts.wSize = SCREEN_RESOLUTION;
     visorOpts.wFormat = WINDOW_PIXEL_FORMAT;
-
 
     visorOpts.iFormat = IMAGE_PIXEL_FORMAT;
     visorOpts.iSize = MockNode::IMAGE_RESOLUTION;
@@ -333,28 +300,22 @@ inline bool SimpleTracerSetup::Init()
     visorView->SetWindowSize(newImgSize);
 
     // Generate Tracer Object
-    scnE = generator.GenerateTracer(tracer,
-                                    *cudaSystem,
-                                    *gpuScene,
-                                    TRACER_PARAMETERS,
-                                    tracerType);
-    ERROR_CHECK(SceneError, scnE);
+    // & Set Options
+    const TracerOptions opts = TracerOptions(
+        {
+            {"Samples", OptionVariable(MockNode::SAMPLE_COUNT)},
+            {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
+            {"NextEventEstimation", OptionVariable(true)},
+            {"RussianRouletteStart", OptionVariable(3u)}
+        });    
+    trcE = tracerSystem->GenerateTracer(tracer, TRACER_PARAMETERS, opts,
+                                        tracerType);
+    ERROR_CHECK(TracerError, trcE);
     tracer->SetImagePixelFormat(IMAGE_PIXEL_FORMAT);
     tracer->ResizeImage(MockNode::IMAGE_RESOLUTION);
     tracer->ReportionImage();
     tracer->ResetImage();
     
-    // Set Options
-    const TracerOptions opts = TracerOptions(
-    {
-        {"Samples", OptionVariable(MockNode::SAMPLE_COUNT)},
-        {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
-        {"NextEventEstimation", OptionVariable(true)},
-        {"RussianRouletteStart", OptionVariable(3u)}
-    });
-    TracerError trcE = tracer->SetOptions(opts);
-    ERROR_CHECK(TracerError, trcE);
-
     // Tracer Init
     trcE = tracer->Initialize();
     ERROR_CHECK(TracerError, trcE);

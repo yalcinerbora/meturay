@@ -8,7 +8,6 @@ Slightly overengineered meta pool generation class
 #include <tuple>
 #include <list>
 
-#include "TracerLogicPools.h"
 #include "TracerTypeGenerators.h"
 #include "MangledNames.h"
 #include "GPUMaterialI.h"
