@@ -10,6 +10,7 @@
 #include "RayLib/MemoryAlignment.h"
 
 #include "TracerCUDALib/GPUPrimitiveP.cuh"
+#include "TracerCUDALib/CudaConstants.hpp"
 
 // Meta Primitive Related Light
 template <class PGroup>

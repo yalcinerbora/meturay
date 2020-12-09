@@ -13,6 +13,7 @@ with ustom Intersection and Hit
 
 #include "AcceleratorFunctions.h"
 #include "GPUTransformIdentity.cuh"
+#include "CudaConstants.hpp"
 
 #pragma warning( push )
 #pragma warning( disable : 4834)

@@ -21,6 +21,7 @@ Uses statified sampling
 #include "CameraFunctions.h"
 
 #include "ImageFunctions.cuh"
+#include "CudaConstants.hpp"
 
 // Templated Camera Ray Generation Kernel
 template<class RayAuxData, AuxInitFunc<RayAuxData> AuxFunc>

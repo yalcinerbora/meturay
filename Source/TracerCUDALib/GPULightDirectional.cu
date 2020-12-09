@@ -1,6 +1,7 @@
 #include "GPULightDirectional.cuh"
 #include "TypeTraits.h"
 #include "RayLib/MemoryAlignment.h"
+#include "CudaConstants.hpp"
 
 __global__ void KCConstructGPULightDirectional(GPULightDirectional* gLightLocations,
                                                //

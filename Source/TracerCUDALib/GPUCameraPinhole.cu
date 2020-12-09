@@ -1,6 +1,6 @@
 #include "GPUCameraPinhole.cuh"
 #include "RayLib/MemoryAlignment.h"
-
+#include "TracerCUDALib/CudaConstants.hpp"
 
 __device__
 GPUCameraPinhole::GPUCameraPinhole(const Vector3& pos,

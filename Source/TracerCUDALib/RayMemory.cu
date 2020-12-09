@@ -3,6 +3,7 @@
 #include "RayLib/MemoryAlignment.h"
 
 #include "CudaConstants.h"
+#include "CudaConstants.hpp"
 //#include "TracerDebug.h"
 
 #include <type_traits>

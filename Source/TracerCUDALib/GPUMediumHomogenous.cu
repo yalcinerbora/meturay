@@ -1,6 +1,7 @@
 #include "GPUMediumHomogenous.cuh"
 #include "CudaConstants.h"
 #include "RayLib/MemoryAlignment.h"
+#include "CudaConstants.hpp"
 
 __global__ void KCConstructGPUMediumHomogenous(GPUMediumHomogenous* gMediumLocations,
                                                //

@@ -6,6 +6,7 @@
 #include "ImageStructs.h"
 #include "TextureStructs.h"
 #include "GPUPrimitiveP.cuh"
+#include "CudaConstants.hpp"
 
 // Device Work Function Template
 //

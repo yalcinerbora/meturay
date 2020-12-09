@@ -1,5 +1,6 @@
 #include "RNGMemory.h"
 #include "CudaConstants.h"
+#include "CudaConstants.hpp"
 
 #include <random>
 #include <curand_kernel.h>

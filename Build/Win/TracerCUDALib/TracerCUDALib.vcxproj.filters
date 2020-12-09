@@ -353,6 +353,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDALib\GPULightDisk.cuh">
       <Filter>Default Lights</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDALib\CudaConstants.hpp">
+      <Filter>Cuda System</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDALib\RayMemory.cu">

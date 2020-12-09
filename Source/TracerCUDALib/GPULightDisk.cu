@@ -1,6 +1,7 @@
 #include "GPULightDisk.cuh"
 #include "TypeTraits.h"
 #include "RayLib/MemoryAlignment.h"
+#include "CudaConstants.hpp"
 
 __global__ void KCConstructGPULightDisk(GPULightDisk* gLightLocations,
                                         //

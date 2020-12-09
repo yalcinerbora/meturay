@@ -146,6 +146,8 @@ TracerError CPULightGroup<PGroup>::ConstructLights(const CudaSystem& system,
                           sizeof(TransformId) * lightCount,
                           cudaMemcpyHostToDevice));
 
+    gpu.WaitMainStream();
+
     // Call allocation kernel
     gpu.GridStrideKC_X(0, 0,
                        LightCount(),
@@ -159,11 +161,11 @@ TracerError CPULightGroup<PGroup>::ConstructLights(const CudaSystem& system,
                        dMediumIndices,
                        dLightMaterialIds,
 
-                       dPData,
+                       *dPData,
                        dGlobalTransformArray,
                        LightCount());
 
-    gpu.WaitAllStreams();
+    gpu.WaitMainStream();
 
     // Generate transform list
     for(uint32_t i = 0; i < LightCount(); i++)
