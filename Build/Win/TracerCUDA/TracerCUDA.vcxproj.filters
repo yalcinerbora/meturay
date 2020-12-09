@@ -46,12 +46,6 @@
     <Filter Include="GPU Classes">
       <UniqueIdentifier>{5459f924-f003-490e-a258-9f1bb381669c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Default Tracers">
-      <UniqueIdentifier>{8e8b843c-2670-475f-86b5-b8e5365b2770}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Default Tracers\Works">
-      <UniqueIdentifier>{73276d73-c966-4643-b94c-4620a3b64ef0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Accelerators">
       <UniqueIdentifier>{6c5602af-4af7-4ce9-8305-16346e29109f}</UniqueIdentifier>
     </Filter>
@@ -81,6 +75,12 @@
     </Filter>
     <Filter Include="Textures">
       <UniqueIdentifier>{f80a3483-4570-419b-ac60-ffa5ca3c77b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracers">
+      <UniqueIdentifier>{8e8b843c-2670-475f-86b5-b8e5365b2770}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracers\Works">
+      <UniqueIdentifier>{73276d73-c966-4643-b94c-4620a3b64ef0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -119,7 +119,7 @@
       <Filter>Primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerCUDA\Tracers.cpp">
-      <Filter>Default Tracers</Filter>
+      <Filter>Tracers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerSystemCUDA.cpp">
       <Filter>SharedLib</Filter>
@@ -384,31 +384,31 @@
       <Filter>Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\RayTracer.hpp">
-      <Filter>Default Tracers</Filter>
+      <Filter>Tracers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\RayTracer.h">
-      <Filter>Default Tracers</Filter>
+      <Filter>Tracers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracer.h">
-      <Filter>Default Tracers</Filter>
+      <Filter>Tracers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracer.h">
-      <Filter>Default Tracers</Filter>
+      <Filter>Tracers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialDataStructs.h">
       <Filter>Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\RayAuxStruct.cuh">
-      <Filter>Default Tracers</Filter>
+      <Filter>Tracers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerWorks.cuh">
-      <Filter>Default Tracers\Works</Filter>
+      <Filter>Tracers\Works</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerKC.cuh">
-      <Filter>Default Tracers\Works</Filter>
+      <Filter>Tracers\Works</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTracer.h">
-      <Filter>Default Tracers</Filter>
+      <Filter>Tracers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerSystemCUDA.h">
       <Filter>SharedLib</Filter>
@@ -503,19 +503,19 @@
       <Filter>Materials</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayTracer.cu">
-      <Filter>Default Tracers</Filter>
+      <Filter>Tracers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracer.cu">
-      <Filter>Default Tracers</Filter>
+      <Filter>Tracers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracer.cu">
-      <Filter>Default Tracers</Filter>
+      <Filter>Tracers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerWorks.cu">
-      <Filter>Default Tracers\Works</Filter>
+      <Filter>Tracers\Works</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUTracer.cu">
-      <Filter>Default Tracers</Filter>
+      <Filter>Tracers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TextureReference.cu">
       <Filter>Textures</Filter>
