@@ -123,8 +123,8 @@ namespace TransformGen
 #include "Quaternion.hpp"
 
 // Constants
-static constexpr QuatF  IdentityQuatF = QuatF(1.0f, 0.0f, 0.0f, 0.0f);
-static constexpr QuatD  IdentityQuatD = QuatD(1.0, 0.0, 0.0, 0.0);
+static constexpr QuatF IdentityQuatF = QuatF(1.0f, 0.0f, 0.0f, 0.0f);
+static constexpr QuatD IdentityQuatD = QuatD(1.0, 0.0, 0.0, 0.0);
 
 // Quaternion Traits
 template<class T>

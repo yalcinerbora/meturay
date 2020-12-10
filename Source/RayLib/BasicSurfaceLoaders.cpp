@@ -156,7 +156,7 @@ SceneError InNodeTriLoader::GetPrimitiveData(Byte* result, PrimitiveDataType pri
 SceneError InNodeTriLoader::HasPrimitiveData(bool& r, PrimitiveDataType primitiveDataType) const
 {
     r = (primitiveDataType == PrimitiveDataType::POSITION ||
-         primitiveDataType == PrimitiveDataType::NORMAL ||
+         primitiveDataType == PrimitiveDataType::NORMAL ||      
          primitiveDataType == PrimitiveDataType::UV);
     return SceneError::OK;
 }

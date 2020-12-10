@@ -80,10 +80,15 @@ template<class T>
 __device__ __host__
 inline Quaternion<T> Quaternion<T>::operator*(const Quaternion& right) const
 {
-    return Quaternion(vec[0] * right[0] - vec[1] * right[1] - vec[2] * right[2] - vec[3] * right[3],        // W
-                      vec[0] * right[1] + vec[1] * right[0] + vec[2] * right[3] - vec[3] * right[2],        // X
-                      vec[0] * right[2] + vec[2] * right[0] + vec[3] * right[1] - vec[1] * right[3],        // Y
-                      vec[0] * right[3] + vec[3] * right[0] + vec[1] * right[2] - vec[2] * right[1]);       // Z
+    //return Quaternion(vec[0] * right[0] - vec[1] * right[1] - vec[2] * right[2] - vec[3] * right[3],        // W
+    //                  vec[0] * right[1] + vec[1] * right[0] + vec[2] * right[3] - vec[3] * right[2],        // X
+    //                  vec[0] * right[2] + vec[2] * right[0] + vec[3] * right[1] - vec[1] * right[3],        // Y
+    //                  vec[0] * right[3] + vec[3] * right[0] + vec[1] * right[2] - vec[2] * right[1]);       // Z
+
+    return Quaternion(vec[0] * right[0] - vec[1] * right[1] - vec[2] * right[2] - vec[3] * right[3],    // W
+                      vec[0] * right[1] + vec[1] * right[0] + vec[2] * right[3] - vec[3] * right[2],    // X
+                      vec[0] * right[2] - vec[1] * right[3] + vec[2] * right[0] + vec[3] * right[1],    // Y
+                      vec[0] * right[3] + vec[1] * right[2] - vec[2] * right[1] + vec[3] * right[0]);   // Z
 }
 
 template<class T>
@@ -344,15 +349,69 @@ inline void TransformGen::Space(Quaternion<T>& q,
                                 const Vector<3, T>& y,
                                 const Vector<3, T>& z)
 {
-    using namespace std;
-    T sqrtIn = max(static_cast<T>(0), 1 + x[0] - y[1] - z[2]);
-    T qW = static_cast<T>(0.5) * sqrt(sqrtIn);
-    T denom = static_cast<T>(0.25) / qW;
-    T qX = (z[1] - y[2]) * denom;
-    T qY = (x[2] - z[0]) * denom;
-    T qZ = (y[0] - x[1]) * denom;
+    // Converting a Rotation Matrix to a Quaternion
+    // Mike Day, Insomniac Games (2015)
+    // https://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf
 
-    q = Quaternion<T>(qW, qX, qY, qZ);
+    // Coord Systems should match 
+    // both should be right-handed coord system
+    assert((Cross(x, y) - z) >= Zero3);
+
+    //static constexpr Quaternion<T> Identity = Quaternion<T>(1, 0, 0, 0);
+    //using namespace std;
+    //T sqrtIn = max(static_cast<T>(0), 1 + x[0] - y[1] - z[2]);
+    //T qW = static_cast<T>(0.5) * sqrt(sqrtIn);
+    //if(qW <= MathConstants::Epsilon)
+    //{
+    //    q = Identity;
+    //    return;
+    //}
+
+    //T denom = static_cast<T>(0.25) / qW;
+    //T qX = (z[1] - y[2]) * denom;
+    //T qY = (x[2] - z[0]) * denom;
+    //T qZ = (y[0] - x[1]) * denom;
+    //q = Quaternion<T>(qW, qX, qY, qZ);
+    T t;
+    if(z[2] < 0)
+    {
+        if(x[0] > y[1])
+        {
+            t = 1 + x[0] - y[1] - z[2];
+            q = Quaternion<T>(y[2] - z[1],
+                              t,
+                              x[1] + y[0],
+                              z[0] + x[2]);
+        }
+        else
+        {
+            t = 1 - x[0] + y[1] - z[2];
+            q = Quaternion<T>(z[0] - x[2],
+                              x[1] + y[0],
+                              t, 
+                              y[2] + z[1]);
+        }
+    }
+    else
+    {
+        if(x[0] < -y[1])
+        {
+            t = 1 - x[0] - y[1] + z[2];
+            q = Quaternion<T>(x[1] - y[0],
+                              z[0] + x[2],
+                              y[2] + z[1], 
+                              t);
+        }
+        else
+        {
+            t = 1 + x[0] + y[1] + z[2];
+            q = Quaternion<T>(t,
+                              y[2] - z[1],
+                              z[0] - x[2], 
+                              x[1] - y[0]);
+        }
+    }
+    q *= static_cast<T>(0.5) / sqrt(t);  
 }
 
 template <class T>
@@ -362,9 +421,16 @@ inline void TransformGen::InvSpace(Quaternion<T>& q,
                                    const Vector<3, T>& y,
                                    const Vector<3, T>& z)
 {
+    static constexpr Quaternion<T> Identity = Quaternion<T>(1, 0, 0, 0);
     using namespace std;
     T sqrtIn = max(static_cast<T>(0), 1 + x[0] - y[1] - z[2]);
     T qW = static_cast<T>(0.5) * sqrt(sqrtIn);
+    if(qW <= MathConstants::Epsilon)
+    {
+        q = Identity;
+        return;
+    }
+
     T denom = static_cast<T>(0.25) / qW;
     T qX = (z[1] - y[2]) * denom;
     T qY = (x[2] - z[0]) * denom;

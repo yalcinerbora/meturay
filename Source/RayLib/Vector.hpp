@@ -374,14 +374,26 @@ template <int N, class T>
 __device__ __host__
 inline bool Vector<N, T>::operator>(const Vector& right) const
 {
-    return !(*this <= right);
+    bool b = true;
+    UNROLL_LOOP
+    for(int i = 0; i < N; i++)
+    {
+        b &= vector[i] > right[i];
+    }
+    return b;
 }
 
 template <int N, class T>
 __device__ __host__
 inline bool Vector<N, T>::operator>=(const Vector& right) const
 {
-    return !(*this < right);
+    bool b = true;
+    UNROLL_LOOP
+    for(int i = 0; i < N; i++)
+    {
+        b &= vector[i] >= right[i];
+    }
+    return b;
 }
 
 template <int N, class T>

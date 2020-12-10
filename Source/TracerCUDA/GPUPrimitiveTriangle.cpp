@@ -203,8 +203,9 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         bool hasTangent;
         size_t tangentCount;
         if((e = loader->HasPrimitiveData(hasTangent, PrimitiveDataType::TANGENT)) != SceneError::OK)
-            return e;
-        if((e = loader->PrimitiveDataCount(tangentCount, PrimitiveDataType::TANGENT)) != SceneError::OK)
+            return e;        
+        if(hasTangent &&
+           (e = loader->PrimitiveDataCount(tangentCount, PrimitiveDataType::TANGENT)) != SceneError::OK)
             return e;
 
 
@@ -225,7 +226,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             Vector3* tangentsIn = tangents.data();
 
             // Utilize tangent and normal for quat generation
-            std::for_each(std::execution::par_unseq,
+            std::for_each(//std::execution::par_unseq,
                           primStart, primEnd,
                           [&](IndexTriplet& indices)
                           {                        
@@ -302,10 +303,20 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         i++;
     }
 
-    std::vector<uint64_t>asd(totalIndexCount);
-    std::copy(reinterpret_cast<uint64_t*>(indexCPU.data()),
-              reinterpret_cast<uint64_t*>(indexCPU.data()) + totalIndexCount,
-              asd.data());
+    //std::vector<uint64_t>asd(totalIndexCount);
+    //std::copy(reinterpret_cast<uint64_t*>(indexCPU.data()),
+    //          reinterpret_cast<uint64_t*>(indexCPU.data()) + totalIndexCount,
+    //          asd.data());
+
+    for(int i = 0; i < totalDataCount; i++)
+    {
+        QuatF quaternion = reinterpret_cast<QuatF*>(rotationsCPU.data())[i];
+        METU_DEBUG_LOG("Q: %f, %f, %f, %f",
+                       quaternion[0],
+                       quaternion[1],
+                       quaternion[2],
+                       quaternion[3]);
+    }
 
     // All loaded to CPU, copy to GPU
     size_t posSize = sizeof(Vector3f) * totalDataCount;
