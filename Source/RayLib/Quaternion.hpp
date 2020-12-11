@@ -341,6 +341,7 @@ inline Quaternion<T> operator*(T t, const Quaternion<T>& q)
 
 #include <algorithm>
 #include <cmath>
+#include "Log.h"
 
 template <class T>
 __device__ __host__
@@ -353,9 +354,24 @@ inline void TransformGen::Space(Quaternion<T>& q,
     // Mike Day, Insomniac Games (2015)
     // https://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf
 
+    if(x[0] != x[0] ||
+       x[1] != x[1] ||
+       x[2] != x[2] ||
+       y[0] != y[0] ||
+       y[1] != y[1] ||
+       y[2] != y[2] ||
+       z[0] != z[0] ||
+       z[1] != z[1] ||
+       z[2] != z[2])
+    {
+        METU_ERROR_LOG("NAN FOUND");
+    }
+
     // Coord Systems should match 
     // both should be right-handed coord system
-    assert((Cross(x, y) - z) >= Zero3);
+    Vector3 crs = Cross(x, y);
+    assert((Cross(x, y) - z) <= Vector3(MathConstants::Epsilon) &&
+           (Cross(x, y) - z) >= Vector3(-MathConstants::Epsilon));
 
     //static constexpr Quaternion<T> Identity = Quaternion<T>(1, 0, 0, 0);
     //using namespace std;

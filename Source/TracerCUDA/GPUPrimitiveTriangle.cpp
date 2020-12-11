@@ -226,7 +226,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             Vector3* tangentsIn = tangents.data();
 
             // Utilize tangent and normal for quat generation
-            std::for_each(//std::execution::par_unseq,
+            std::for_each(std::execution::par_unseq,
                           primStart, primEnd,
                           [&](IndexTriplet& indices)
                           {                        
@@ -262,8 +262,8 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             Vector3* positionsIn = reinterpret_cast<Vector3*>(postitionsCPU.data() + offsetVertex * VertPosSize);
             Vector2* uvsIn = reinterpret_cast<Vector2*>(uvsCPU.data() + offsetVertex * VertUVSize);
 
-            // Utilize position and uv for transform generation
-            std::for_each(std::execution::par_unseq,
+            // Utilize position and uv for quat generation
+            std::for_each(//std::execution::par_unseq,
                           primStart, primEnd,
                           [&](IndexTriplet& indices)
                           {                              // Skip three indices
@@ -300,22 +300,26 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                           });
         }
 
+        for(int i = 0; i < vertexCount; i++)
+        {
+            QuatF quaternion = rotationsOut[i];
+            Vector3 normal = normalsIn[i];
+            //Vector3 normalTransformed = quaternion.ApplyRotation(normal);
+            Vector3 normalTransformed2 = quaternion.Conjugate().ApplyRotation(normal);
+            METU_DEBUG_LOG("Q: (%f, %f, %f, %f); N: (%f, %f, %f), NT: (%f, %f, %f)",
+                           quaternion[0],
+                           quaternion[1],
+                           quaternion[2],
+                           quaternion[3],
+                           normal[0],
+                           normal[1],
+                           normal[2],
+                           normalTransformed2[0],
+                           normalTransformed2[1],
+                           normalTransformed2[2]);
+        }
+
         i++;
-    }
-
-    //std::vector<uint64_t>asd(totalIndexCount);
-    //std::copy(reinterpret_cast<uint64_t*>(indexCPU.data()),
-    //          reinterpret_cast<uint64_t*>(indexCPU.data()) + totalIndexCount,
-    //          asd.data());
-
-    for(int i = 0; i < totalDataCount; i++)
-    {
-        QuatF quaternion = reinterpret_cast<QuatF*>(rotationsCPU.data())[i];
-        METU_DEBUG_LOG("Q: %f, %f, %f, %f",
-                       quaternion[0],
-                       quaternion[1],
-                       quaternion[2],
-                       quaternion[3]);
     }
 
     // All loaded to CPU, copy to GPU
