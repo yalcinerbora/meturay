@@ -155,14 +155,6 @@ SceneError GPUPrimitiveSphere::ChangeTime(const NodeListing& surfaceDataNodes, d
     return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
 }
 
-//bool GPUPrimitiveSphere::HasPrimitive(uint32_t surfaceDataId) const
-//{
-//    auto it = batchRanges.end();
-//    if((it = batchRanges.find(surfaceDataId)) == batchRanges.end())
-//        return false;
-//    return true;
-//}
-
 Vector2ul GPUPrimitiveSphere::PrimitiveBatchRange(uint32_t surfaceDataId) const
 {
     return batchRanges.at(surfaceDataId);

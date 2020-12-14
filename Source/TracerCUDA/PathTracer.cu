@@ -39,8 +39,6 @@ PathTracer::PathTracer(const CudaSystem& s,
                        const TracerParameters& p)
     : RayTracer(s, scene, p)
     , currentDepth(0)
-    , dLights(nullptr)
-    , dLightAlloc(nullptr)
 {
     workPool.AppendGenerators(PathTracerWorkerList{});
     lightWorkPool.AppendGenerators(PathTracerLightWorkerList{});

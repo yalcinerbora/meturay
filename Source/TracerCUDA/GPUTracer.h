@@ -55,9 +55,6 @@ class GPUTracer : public GPUTracerI
         const NamedList<CPULightGPtr>&              lights;
         const NamedList<CPUCameraGPtr>&             cameras;
 
-        // 
-        uint32_t                                    baseMedIndex;
-        uint32_t                                    identityTransformIndex;
         // GPU Memory
         DeviceMemory                                commonTypeMemory;
 
@@ -78,6 +75,9 @@ class GPUTracer : public GPUTracerI
         const GPUCameraI**                  dCameras;
         const GPULightI**                   dLights;
 
+        // 
+        const uint32_t                      baseMediumIndex;
+        const uint32_t                      identityTransformIndex;
         //
         TracerParameters                    params;
         //

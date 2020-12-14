@@ -51,14 +51,17 @@ __global__ void ResetHitKeysKC(HitKey* gKeys,
 }
 
 __global__ void ResetHitIdsKC(HitKey* gAcceleratorKeys, RayId* gIds,
-                              const RayGMem* gRays, uint32_t rayCount)
+                              TransformId* dTransformIds,
+                              uint32_t identityTransformIndex, 
+                              uint32_t rayCount)
 {
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < rayCount;
         globalId += blockDim.x * gridDim.x)
-    {
+    {        
         gIds[globalId] = globalId;
+        dTransformIds[globalId] = identityTransformIndex;
         gAcceleratorKeys[globalId] = HitKey::InvalidKey;
     }
 }
@@ -143,7 +146,8 @@ void RayMemory::SwapRays()
     std::swap(dRayIn, dRayOut);
 }
 
-void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
+void RayMemory::ResetHitMemory(TransformId identityTransformIndex,
+                               uint32_t rayCount, size_t hitStructSize)
 {
     size_t sizeOfTransformIds = sizeof(TransformId) * rayCount;
     sizeOfTransformIds = Memory::AlignSize(sizeOfTransformIds);
@@ -225,7 +229,10 @@ void RayMemory::ResetHitMemory(uint32_t rayCount, size_t hitStructSize)
     // Initialize memory
     leaderDevice.GridStrideKC_X(0, 0, rayCount,
                                 ResetHitIdsKC,
-                                dCurrentKeys, dCurrentIds, dRayIn,
+                                dCurrentKeys, 
+                                dCurrentIds, 
+                                dTransformIds, 
+                                identityTransformIndex,
                                 static_cast<uint32_t>(rayCount));
 }
 

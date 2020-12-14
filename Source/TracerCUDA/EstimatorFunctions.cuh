@@ -32,6 +32,8 @@ inline bool DoNextEventEstimation(HitKey& key,
     // if it happens just return the last light on the list
     if(index == lightCount) index--;
 
+    //printf("NEE Index %u total lights %u\n", index, lightCount);
+
     const GPULightI* point = gLights[index];
     point->Sample(lDistance, direction,
                   pdf, position, rng);

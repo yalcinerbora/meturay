@@ -93,7 +93,7 @@ GPUTracer::GPUTracer(const CudaSystem& system,
     , mediums(scene.Mediums())
     , cameras(scene.Cameras())
     , lights(scene.Lights())
-    , baseMedIndex(scene.BaseMediumIndex())
+    , baseMediumIndex(scene.BaseMediumIndex())
     , identityTransformIndex(scene.IdentityTransformIndex())
     , maxAccelBits(Vector2i(Utility::FindFirstSet32(scene.MaxAccelIds()[0]) + 1,
                             Utility::FindFirstSet32(scene.MaxAccelIds()[1]) + 1))
@@ -119,30 +119,34 @@ TracerError GPUTracer::Initialize()
     std::vector<const GPUCameraI*> dGPUCameras;
 
     // Calculate Total Sizes
-    size_t transformCount = 0;
-    size_t mediumCount = 0;
-    size_t lightCount = 0;
-    size_t cameraCount = 0;
+    size_t tCount = 0;
+    size_t mCount = 0;
+    size_t lCount = 0;
+    size_t cCount = 0;
     std::for_each(transforms.cbegin(), transforms.cend(),
-                  [&transformCount](const auto& transform)
+                  [&tCount](const auto& transform)
                   {
-                      transformCount += transform.second->TransformCount();
+                      tCount += transform.second->TransformCount();
                   });
     std::for_each(mediums.cbegin(), mediums.cend(),
-                  [&mediumCount](const auto& medium)
+                  [&mCount](const auto& medium)
                   {
-                      mediumCount += medium.second->MediumCount();
+                      mCount += medium.second->MediumCount();
                   });
     std::for_each(lights.cbegin(), lights.cend(),
-                  [&lightCount](const auto& light)
+                  [&lCount](const auto& light)
                   {
-                      lightCount += light.second->LightCount();
+                      lCount += light.second->LightCount();
                   });
     std::for_each(cameras.cbegin(), cameras.cend(),
-                  [&cameraCount](const auto& camera)
+                  [&cCount](const auto& camera)
                   {
-                      cameraCount += camera.second->CameraCount();
+                      cCount += camera.second->CameraCount();
                   });
+    transformCount = static_cast<uint32_t>(tCount);
+    mediumCount = static_cast<uint32_t>(mCount);
+    lightCount = static_cast<uint32_t>(lCount);
+    cameraCount = static_cast<uint32_t>(cCount);
 
     // Allocate
     size_t transformSize = transformCount * sizeof(GPUTransformI*);
@@ -205,7 +209,7 @@ TracerError GPUTracer::Initialize()
 
     // Attach Medium gpu pointer to Material Groups
     for(const auto& mg : materialGroups)
-        mg.second->AttachGlobalMediumArray(dMediums, baseMedIndex);
+        mg.second->AttachGlobalMediumArray(dMediums, baseMediumIndex);
         
     // Attach Transform gpu pointer to the Accelerator Batches
     for(const auto& acc : accelBatches)
@@ -249,7 +253,7 @@ void GPUTracer::HitAndPartitionRays()
     const Vector2i& accBitCounts = maxAccelBits;
     const AcceleratorBatchMap& subAccelerators = accelBatches;
     // Reset Hit Memory for hit loop
-    rayMemory.ResetHitMemory(currentRayCount, maxHitSize);
+    rayMemory.ResetHitMemory(identityTransformIndex, currentRayCount, maxHitSize);
     // Make Base Accelerator to get ready for hitting
     baseAccelerator.GetReady(cudaSystem, currentRayCount);
     // Ray Memory Pointers
@@ -261,6 +265,10 @@ void GPUTracer::HitAndPartitionRays()
     // These are sorted etc.
     HitKey* dCurrentKeys = rayMemory.CurrentKeys();
     RayId*  dCurrentRayIds = rayMemory.CurrentIds();
+
+    //CUDA_CHECK(cudaMemset(dTransfomIds, 0xFF, currentRayCount * sizeof(TransformId)));
+    //Debug::DumpMemToFile("dTransforms", dTransfomIds, currentRayCount);
+
 
     // Try to hit rays until no ray is left
     // (these rays will be assigned with a material)
@@ -401,6 +409,8 @@ void GPUTracer::HitAndPartitionRays()
     workPartition.clear();
     workPartition = rayMemory.Partition(currentRayCount);
 
+
+    //Debug::DumpMemToFile("dTransforms", dTransfomIds, currentRayCount);
     //printf("HIT PORTION END\n");
 }
 

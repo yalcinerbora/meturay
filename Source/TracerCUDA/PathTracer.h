@@ -31,12 +31,6 @@ class PathTracer final : public RayTracer
         // Light material work pool
         WorkPool<bool, bool>    lightWorkPool;
         
-        // Light Next Event Estimation
-        uint32_t                lightCount;
-        DeviceMemory            lightMemory;
-        const GPULightI**       dLights;
-        Byte*                   dLightAlloc;
-
     protected:
     public:
         // Constructors & Destructor

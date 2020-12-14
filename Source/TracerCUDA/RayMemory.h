@@ -110,7 +110,8 @@ class RayMemory
         const CudaGPU&              LeaderDevice() const;
 
         // Memory Allocation
-        void                        ResetHitMemory(uint32_t rayCount, size_t hitStructSize);
+        void                        ResetHitMemory(TransformId identityTransformIndex,
+                                                   uint32_t rayCount, size_t hitStructSize);
         void                        ResizeRayOut(uint32_t rayCount, HitKey baseBoundMatKey);
         void                        SwapRays();
 

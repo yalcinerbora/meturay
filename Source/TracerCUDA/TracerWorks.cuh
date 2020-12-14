@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "BasicMaterials.cuh"
 #include "SampleMaterials.cuh"
 #include "TracerKC.cuh"

@@ -166,7 +166,7 @@ struct SphereSurfaceGenerator
                                  cos(sphrCoords[0]));
 
         // Align this normal to Z axis to define tangent space rotation
-        QuatF tbn = Quat::RotationBetweenZAxis(normal);
+        QuatF tbn = Quat::RotationBetweenZAxis(normal).Conjugate();
         tbn = tbn * transform.ToLocalRotation();
 
         return BasicSurface{tbn};
