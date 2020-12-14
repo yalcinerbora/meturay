@@ -6,14 +6,16 @@
 #include "RayLib/SurfaceLoaderI.h"
 #include "RayLib/MemoryAlignment.h"
 
+#include "TracerDebug.h"
+
 #include <execution>
 
 struct IndexTriplet
 {
     uint64_t i[3]; 
 
-    uint64_t& operator[](int j) { return i[j]; }
-    const uint64_t& operator[](int j) const { return i[j]; }
+    uint64_t&           operator[](int j) { return i[j]; }
+    const uint64_t&     operator[](int j) const { return i[j]; }
 };
 static_assert(sizeof(IndexTriplet) == sizeof(uint64_t) * 3);
 
@@ -300,24 +302,41 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                           });
         }
 
+        std::vector<Vector3f> transformedNormals;
         for(int i = 0; i < vertexCount; i++)
         {
             QuatF quaternion = rotationsOut[i];
             Vector3 normal = normalsIn[i];
             //Vector3 normalTransformed = quaternion.ApplyRotation(normal);
             Vector3 normalTransformed2 = quaternion.Conjugate().ApplyRotation(normal);
-            METU_DEBUG_LOG("Q: (%f, %f, %f, %f); N: (%f, %f, %f), NT: (%f, %f, %f)",
-                           quaternion[0],
-                           quaternion[1],
-                           quaternion[2],
-                           quaternion[3],
-                           normal[0],
-                           normal[1],
-                           normal[2],
-                           normalTransformed2[0],
-                           normalTransformed2[1],
-                           normalTransformed2[2]);
+            //METU_DEBUG_LOG("Q: (%f, %f, %f, %f); N: (%f, %f, %f), NT: (%f, %f, %f)",
+            //               quaternion[0],
+            //               quaternion[1],
+            //               quaternion[2],
+            //               quaternion[3],
+            //               normal[0],
+            //               normal[1],
+            //               normal[2],
+            //               normalTransformed2[0],
+            //               normalTransformed2[1],
+            //               normalTransformed2[2]);
+
+            normalTransformed2[0] = (std::abs(normalTransformed2[0]) < 0.00001f) ? 0.0f : normalTransformed2[0];
+            normalTransformed2[1] = (std::abs(normalTransformed2[1]) < 0.00001f) ? 0.0f : normalTransformed2[1];
+            normalTransformed2[2] = ((1.0f - std::abs(normalTransformed2[2])) < 0.00001f) ? 1.0f : normalTransformed2[2];
+
+            if(std::isnan(quaternion[0]) ||
+               std::isnan(quaternion[1]) || 
+               std::isnan(quaternion[2]))
+            {
+                transformedNormals.push_back(Vector3(NAN));
+                METU_DEBUG_LOG("FOUND_NAN");
+            }
+            else
+                transformedNormals.push_back(normalTransformed2);
         }
+        Debug::DumpMemToFile(std::string("PrimBatch") + std::to_string(i),
+                             transformedNormals.data(), transformedNormals.size());
 
         i++;
     }

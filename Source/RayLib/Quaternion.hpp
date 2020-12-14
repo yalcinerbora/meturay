@@ -369,9 +369,10 @@ inline void TransformGen::Space(Quaternion<T>& q,
 
     // Coord Systems should match 
     // both should be right-handed coord system
-    Vector3 crs = Cross(x, y);
-    assert((Cross(x, y) - z) <= Vector3(MathConstants::Epsilon) &&
-           (Cross(x, y) - z) >= Vector3(-MathConstants::Epsilon));
+    //Vector3 crs = Cross(x, y);
+    //Vector3 diff = crs - z;
+    //assert((Cross(x, y) - z) <= Vector3(0.01f) &&
+    //       (Cross(x, y) - z) >= Vector3(-0.01f));
 
     //static constexpr Quaternion<T> Identity = Quaternion<T>(1, 0, 0, 0);
     //using namespace std;
