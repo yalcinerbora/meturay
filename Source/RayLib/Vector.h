@@ -135,6 +135,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
         __device__ __host__ Vector                      Clamp(T min, T max) const;
         __device__ __host__ Vector&                     ClampSelf(const Vector&, const Vector&);
         __device__ __host__ Vector&                     ClampSelf(T min, T max);
+        __device__ __host__ bool                        HasNaN() const;
 
         template<class Q = T>
         __device__ __host__ SignedEnable<Q, Vector>     Abs() const;

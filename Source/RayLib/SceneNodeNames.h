@@ -37,6 +37,7 @@ namespace NodeNames
     // Material & Light Common Names
     static constexpr const char* MEDIUM = "medium";
     static constexpr const char* LIGHT = "light";
+    static constexpr const char* CAMERA = "camera";
     // Texture Related Names
     static constexpr const char* TEXTURE_IS_CACHED = "isCached";
     static constexpr const char* TEXTURE_FILTER = "filter";

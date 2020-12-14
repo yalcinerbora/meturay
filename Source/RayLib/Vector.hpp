@@ -501,7 +501,21 @@ inline Vector<N, T>& Vector<N, T>::ClampSelf(T minVal, T maxVal)
     {
         vector[i] = min(max(minVal, vector[i]), maxVal);
     }
-    return *this;
+    return *this;    
+}
+
+template <int N, class T>
+__device__ __host__ bool Vector<N, T>::HasNaN() const
+{
+    bool hasNan = false;
+    UNROLL_LOOP
+    for(int i = 0; i < N; i++)
+    {
+        hasNan |= ((vector[i] != vector[i]) ||
+                   (vector[i] == INFINITY) ||
+                   (vector[i] == -INFINITY));
+    }
+    return hasNan;
 }
 
 template <int N, class T>

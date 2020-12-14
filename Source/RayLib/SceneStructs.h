@@ -124,7 +124,6 @@ struct LightSurfaceStruct
 
 struct CameraSurfaceStruct
 {
-    bool        isPrimitive;
     uint32_t    mediumId;
     uint32_t    transformId;
     uint32_t    materialId;

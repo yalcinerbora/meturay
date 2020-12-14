@@ -145,16 +145,16 @@ inline GPUCameraPinhole::GPUCameraPinhole(const Vector3& pos,
     float heightHalf = tanf(fov[1] * 0.5f) * nearPlane;
 
     // Camera Vector Correction
-    Vector3 gaze = gazePoint - position;
-    right = Cross(gaze, up).Normalize();
-    up = Cross(right, gaze).Normalize();
-    gaze = Cross(up, right).Normalize();
+    Vector3 gazeDir = gazePoint - position;
+    right = Cross(gazeDir, up).Normalize();
+    up = Cross(right, gazeDir).Normalize();
+    gazeDir = Cross(up, right).Normalize();
 
     // Camera parameters
     bottomLeft = (position
                   - right * widthHalf
                   - up * heightHalf
-                  + gaze * nearPlane);
+                  + gazeDir * nearPlane);
 
     planeSize = Vector2(widthHalf, heightHalf) * 2.0f;
 }
@@ -198,8 +198,8 @@ inline void GPUCameraPinhole::GenerateRay(// Output
     Vector2 sampleDistance = Vector2(static_cast<float>(sampleId[0]),
                                      static_cast<float>(sampleId[1])) * delta;
     sampleDistance += (randomOffset * delta);
-    Vector3 samplePoint = bottomLeft + (sampleDistance[0] * right)
-        + (sampleDistance[1] * up);
+    Vector3 samplePoint = bottomLeft + ((sampleDistance[0] * right) +
+                                        (sampleDistance[1] * up));
     Vector3 rayDir = (samplePoint - position).Normalize();
 
     // Initialize Ray

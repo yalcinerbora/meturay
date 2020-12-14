@@ -128,7 +128,7 @@ struct TriFunctions
         };
 
         //if(leaf.matId.value == 0x2000002)
-            //printf("PrimId %llu, MatId %x\n", leaf.primitiveId, leaf.matId.value);
+        //    printf("PrimId %llu, MatId %x\n", leaf.primitiveId, leaf.matId.value);
 
         // Get Position
         uint64_t index0 = primData.indexList[leaf.primitiveId * 3 + 0];

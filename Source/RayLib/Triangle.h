@@ -57,8 +57,6 @@ inline static AABB<3, T> Triangle::BoundingBox(const Vector<3, T>& p0,
     return aabb;
 }
 
-#include "Log.h"
-
 template <class T>
 __device__ __host__
 Vector<3, T> Triangle::CalculateTangent(const Vector<3, T>& p0,
@@ -76,47 +74,13 @@ Vector<3, T> Triangle::CalculateTangent(const Vector<3, T>& p0,
     Vector<2, T> dUV0 = uv1 - uv0;
     Vector<2, T> dUV1 = uv2 - uv0;
 
-    Matrix<4, T> localToTangent(vec0[0], vec1[0], p0[0], 0,
-                                vec0[1], vec1[1], p0[1], 0,
-                                vec0[2], vec1[2], p0[2], 0,
-                                0,       0,       0,     1);
-    Matrix<4, T> localToTexture(dUV0[0], dUV1[0], uv0[0], 0,
-                                dUV0[1], dUV1[1], uv0[1], 0,
-                                0,       0,       1,      0,
-                                0,       0,       0,      1);
-
-    Matrix4x4 tbn = localToTangent.Transpose() * localToTexture.Transpose().Inverse();
-    Vector3 Mtangent = tbn * XAxis;
-    Vector3 Mbtangent = tbn * YAxis;
-    Vector3 Mnormal = tbn * ZAxis;
-
-    T t = 1 / (dUV0[0] * dUV1[1] -
-               dUV1[0] * dUV0[1]);
-
-    if(t != t)
-    {
-        METU_ERROR_LOG("NAN FOUND");
-    }
+    T t = (dUV0[0] * dUV1[1] -
+           dUV1[0] * dUV0[1]);
 
     Vector<3, T> tangent;
     tangent = t * (dUV1[1] * vec0 - dUV0[1] * vec1);
-
-    if(tangent[0] != tangent[0] ||
-       tangent[1] != tangent[1] ||
-       tangent[2] != tangent[2])
-    {
-        METU_ERROR_LOG("NAN FOUND");
-    }
-
-    Vector<3, T> tgntNormal = tangent.NormalizeSelf();
-
-    if(tangent[0] != tangent[0] ||
-       tangent[1] != tangent[1] ||
-       tangent[2] != tangent[2])
-    {
-        METU_ERROR_LOG("NAN FOUND");
-    }
-
+    tangent.NormalizeSelf();
+   
     return tangent;
 }
 
@@ -129,13 +93,17 @@ void Triangle::LocalRotation(Quaternion<T>& q0,
                              const Vector<3, T>* n,
                              const Vector<3, T>* t)
 {
-    Vector<3, T> b0 = Cross(n[0], t[0]);
-    Vector<3, T> b1 = Cross(n[1], t[1]);
-    Vector<3, T> b2 = Cross(n[2], t[2]);
+    Vector<3, T> b0 = Cross(t[0], n[0]);
+    Vector<3, T> b1 = Cross(t[1], n[1]);
+    Vector<3, T> b2 = Cross(t[2], n[2]);
 
     TransformGen::Space(q0, b0, t[0], n[0]);
     TransformGen::Space(q1, b1, t[1], n[1]);
     TransformGen::Space(q2, b2, t[2], n[2]);
+
+    q0.ConjugateSelf();
+    q1.ConjugateSelf();
+    q2.ConjugateSelf();
 }
 
 template <class T>
@@ -151,15 +119,19 @@ void Triangle::LocalRotation(Quaternion<T>& q0,
     // We calculate tangent once
     // is this consistent? (should i calculate for all vertices of tri?
     Vector<3, T> t0 = CalculateTangent<T>(p[0], p[1], p[2], uv[0], uv[1], uv[2]);
-    //Vector<3, T> t1 = CalculateTangent(p[1], p[2], p[0], uv[1], uv[2], uv[0]);
-    //Vector<3, T> t2 = CalculateTangent(p[2], p[0], p[1], uv[2], uv[0], uv[1]);
-    Vector<3, T> t1 = t0;
-    Vector<3, T> t2 = t0;
+    Vector<3, T> t1 = CalculateTangent<T>(p[1], p[2], p[0], uv[1], uv[2], uv[0]);
+    Vector<3, T> t2 = CalculateTangent<T>(p[2], p[0], p[1], uv[2], uv[0], uv[1]);
+    //Vector<3, T> t1 = t0;
+    //Vector<3, T> t2 = t0;
 
-    if(t0[0] != t0[0] || t0[1] != t0[1] || t0[2] != t0[2])
-    {
-        METU_ERROR_LOG("NAN FOUND");
-    }
+    // Degenerate triangle is found,
+    // arbitrarily find a tangent
+    if(t0.HasNaN())
+        t0 = Quaternion<T>(90.0f * MathConstants::DegToRadCoef, XAxis).ApplyRotation(n[0]);
+    if(t1.HasNaN())    
+        t1 = Quaternion<T>(90.0f * MathConstants::DegToRadCoef, XAxis).ApplyRotation(n[1]);
+    if(t2.HasNaN())
+        t2 = Quaternion<T>(90.0f * MathConstants::DegToRadCoef, XAxis).ApplyRotation(n[2]);
 
     // Gram–Schmidt othonormalization
     // This is required since normal may be skewed to hide
@@ -172,14 +144,11 @@ void Triangle::LocalRotation(Quaternion<T>& q0,
     Vector<3, T> b1 = Cross(t1, n[1]);
     Vector<3, T> b2 = Cross(t2, n[2]);
 
-    if(t0[0] != t0[0] || t0[1] != t0[1] || t0[2] != t0[2] ||
-       b0[0] != b0[0] || b0[1] != b0[1] || b0[2] != b0[2] ||
-       n[0][0] != n[0][0] || n[0][1] != n[0][1] || n[0][2] != n[0][2])
-    {
-        METU_ERROR_LOG("NAN FOUND");
-    }
-
     TransformGen::Space(q0, b0, t0, n[0]);
     TransformGen::Space(q1, b1, t1, n[1]);
     TransformGen::Space(q2, b2, t2, n[2]);
+
+    q0.ConjugateSelf();
+    q1.ConjugateSelf();
+    q2.ConjugateSelf();
 }

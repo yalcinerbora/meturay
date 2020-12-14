@@ -23,12 +23,22 @@ AssimpMetaSurfaceLoader::AssimpMetaSurfaceLoader(Assimp::Importer& i,
     const std::string filePath = Utilitiy::MergeFileFolder(scenePath, node.Name());
 
     scene = importer.ReadFile(filePath,
-                              //aiProcess_CalcTangentSpace |
+                              // Generate Bounding Boxes
                               aiProcess_GenBoundingBoxes |
+                              // Generate Normals if not avail
                               aiProcess_GenNormals |
+                              // Generate Tangent and Bitangents if not avail
+                              aiProcess_CalcTangentSpace |
+                              // Triangulate
                               aiProcess_Triangulate |
+                              // Improve triangle order
+                              aiProcess_ImproveCacheLocality |
+                              // Reduce Vertex Count
                               aiProcess_JoinIdenticalVertices |
+                              // Remove Degenerate triangles
+                              aiProcess_FindDegenerates |
                               aiProcess_SortByPType |
+                              // 
                               aiProcess_RemoveRedundantMaterials);
 
     // Report Failed Import

@@ -114,6 +114,8 @@ namespace MathConstants
     static constexpr double RadToDegCoef_d = 180.0 / Pi_d;
 
     static constexpr double Epsilon_d = 1.0e-6;
+    static constexpr double LargeEpsilon_d = 1.0e-4;
+    static constexpr double VeryLargeEpsilon_d = 1.0e-2;
 
     static constexpr float Pi = static_cast<float>(Pi_d);
     static constexpr float PiSqr = static_cast<float>(PiSqr_d);
@@ -127,5 +129,7 @@ namespace MathConstants
     static constexpr float DegToRadCoef = static_cast<float>(DegToRadCoef_d);
     static constexpr float RadToDegCoef = static_cast<float>(RadToDegCoef_d);
 
-    static constexpr float Epsilon = static_cast<float>(Epsilon_d);
+    static constexpr double Epsilon = static_cast<float>(Epsilon_d);
+    static constexpr double LargeEpsilon = static_cast<float>(LargeEpsilon_d);
+    static constexpr double VeryLargeEpsilon = static_cast<float>(VeryLargeEpsilon_d);
 }

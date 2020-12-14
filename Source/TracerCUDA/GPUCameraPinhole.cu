@@ -55,7 +55,7 @@ SceneError CPUCameraGroupPinhole::InitializeGroup(const CameraGroupData& cameraN
 
         const auto positions = node.node->AccessVector3(NAME_POSITION);
         const auto ups = node.node->AccessVector3(NAME_UP);
-        const auto gazes = node.node->AccessVector3(NAME_POSITION);
+        const auto gazes = node.node->AccessVector3(NAME_GAZE);
         const auto nearFar = node.node->AccessVector2(NAME_PLANES);
         const auto fovs = node.node->AccessVector2(NAME_FOV);
         const auto apertureSize = node.node->AccessFloat(NAME_APERTURE);
@@ -154,7 +154,7 @@ TracerError CPUCameraGroupPinhole::ConstructCameras(const CudaSystem& system,
                           cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemcpy(const_cast<Data*>(dDatas),
                           hCameraData.data(),
-                          sizeof(Vector3) * cameraCount,
+                          sizeof(Data) * cameraCount,
                           cudaMemcpyHostToDevice));
 
     system.SyncGPUAll();

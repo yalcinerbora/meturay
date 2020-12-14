@@ -124,7 +124,7 @@ LightSurfaceStruct SceneIO::LoadLightSurface(uint32_t baseMediumId,
 
     // Medium        
     i = jsn.end();
-    if((i = jsn.find(LIGHT)) != jsn.end())
+    if((i = jsn.find(MEDIUM)) != jsn.end())
         s.mediumId = *i;
     else s.mediumId = baseMediumId;
 
@@ -154,7 +154,27 @@ CameraSurfaceStruct SceneIO::LoadCameraSurface(uint32_t baseMediumId,
                                                uint32_t identityTransformId,
                                                const nlohmann::json& jsn)
 {
-    return {};
+    CameraSurfaceStruct s;
+
+    // Transform
+    auto i = jsn.end();
+    if((i = jsn.find(TRANSFORM)) != jsn.end())
+        s.transformId = *i;
+    else s.transformId = identityTransformId;
+
+    // Medium        
+    i = jsn.end();
+    if((i = jsn.find(LIGHT)) != jsn.end())
+        s.mediumId = *i;
+    else s.mediumId = baseMediumId;
+
+    // CamId
+    s.cameraId = jsn[CAMERA];
+
+    // Material
+    s.materialId = jsn[MATERIAL];
+
+    return s;
 }
 
 //TextureStruct SceneIO::LoadTexture(const nlohmann::json& jsn, double time)

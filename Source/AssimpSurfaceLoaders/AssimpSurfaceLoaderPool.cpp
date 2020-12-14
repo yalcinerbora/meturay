@@ -2,7 +2,7 @@
 
 #include <assimp/scene.h>
 #include <assimp/DefaultLogger.hpp>
-
+#include <assimp/postprocess.h>
 // Surface Loaders
 #include "MetaSurfaceLoader.h"
 
@@ -28,6 +28,14 @@ AssimpSurfaceLoaderPool::AssimpSurfaceLoaderPool()
     // Start Logging
     Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE,
                                   aiDefaultLogStream_STDOUT);
+
+    // Do not import line or points
+    importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
+                                aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+    // Import only position, normal, tangent (if provided) and uv
+    importer.SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS,
+                                aiComponent_BONEWEIGHTS |
+                                aiComponent_COLORS);
 
     // First Generate Surface Loader Generators
     // Convenience Lambda
