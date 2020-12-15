@@ -26,6 +26,8 @@
 	},
 	{
 		"id": 1,
+		"type" : "Homogenous",
+
 		"absorption": [1.25, 0.35, 0.97],
 		"scattering": [0, 0, 0],
 		"ior": 1.53,
@@ -153,6 +155,6 @@
 	}
 	],
 
-	"LightSurfaces": [{"primitive": 4, "material": 1}],
+	"LightSurfaces": [{"primitive": 4, "material": 1, "accelerator": 0}],
     "CameraSurfaces": [{"camera": 0, "material": 0}]
 }

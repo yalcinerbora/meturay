@@ -181,7 +181,6 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     // Lambdas for cleaner code
     auto AttachMedium = [&](uint32_t mediumId) -> SceneError
     {
-
         if(auto loc = mediumList.find(mediumId); loc != mediumList.end())
         {
             const NodeIndex nIndex = loc->second.first;
