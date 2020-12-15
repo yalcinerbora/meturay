@@ -27,8 +27,8 @@ __global__ void KCConstructGPUCameraPinhole(GPUCameraPinhole* gCameraLocations,
                                                            data.aperture,
                                                            *gTransforms[gTransformIds[globalId]],
                                                            //
-                                                           gCameraMaterialIds[globalId],
-                                                           gMediumIndices[globalId]);
+                                                           gMediumIndices[globalId],
+                                                           gCameraMaterialIds[globalId]);
     }
 }
 
@@ -157,8 +157,6 @@ TracerError CPUCameraGroupPinhole::ConstructCameras(const CudaSystem& system,
                           sizeof(Data) * cameraCount,
                           cudaMemcpyHostToDevice));
 
-    system.SyncGPUAll();
-
     // Call allocation kernel
     gpu.GridStrideKC_X(0, 0,
                        CameraCount(),
@@ -176,8 +174,7 @@ TracerError CPUCameraGroupPinhole::ConstructCameras(const CudaSystem& system,
                        dGlobalTransformArray,
                        CameraCount());
 
-    //gpu.WaitAllStreams();
-    system.SyncGPUAll();
+    gpu.WaitMainStream();
 
     // Generate transform list
     for(uint32_t i = 0; i < CameraCount(); i++)

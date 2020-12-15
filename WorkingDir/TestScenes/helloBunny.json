@@ -1,5 +1,5 @@
 {
-	
+
 	"Cameras": [
     {
 		"id": 0,
@@ -125,7 +125,7 @@
 		// Bunny
 		"transform": 0,
 		"accelerator": 0,
-		"material": 6,
+		"material": 2,
         "primitive": 1
 	}],
 

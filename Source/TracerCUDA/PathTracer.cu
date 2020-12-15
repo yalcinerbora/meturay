@@ -8,7 +8,7 @@
 #include "GenerationKernels.cuh"
 #include "GPUWork.cuh"
 
-//#include "TracerLib/TracerDebug.h"
+//#include "TracerDebug.h"
 //std::ostream& operator<<(std::ostream& stream, const RayAuxPath& v)
 //{
 //    stream << std::setw(0)
@@ -16,7 +16,8 @@
 //        << "{" << v.radianceFactor[0]
 //        << "," << v.radianceFactor[1]
 //        << "," << v.radianceFactor[2] << "} "
-//        << v.endPointIndex << " ";
+//        << v.endPointIndex << ", "
+//        << v.mediumIndex << " ";
 //    switch(v.type)
 //    {
 //        case RayType::CAMERA_RAY:
@@ -25,8 +26,8 @@
 //        case RayType::NEE_RAY:
 //            stream << "NEE_RAY";
 //            break;
-//        case RayType::TRANS_RAY:
-//            stream << "TRANS_RAY";
+//        case RayType::SPECULAR_PATH_RAY:
+//            stream << "SPEC_PATH_RAY";
 //            break;
 //        case RayType::PATH_RAY:
 //            stream << "PATH_RAY";

@@ -12,7 +12,7 @@ struct GPUHomogenousMediumData
 {
 };
 
-class GPUMediumHomogenous : public GPUMediumI
+class GPUMediumHomogenous final : public GPUMediumI
 {
     public:
         struct Data
@@ -44,7 +44,7 @@ class GPUMediumHomogenous : public GPUMediumI
        __device__ Vector3           Transmittance(float distance) const override;
 };
 
-class CPUMediumHomogenous : public CPUMediumGroupI
+class CPUMediumHomogenous final : public CPUMediumGroupI
 {
     public:
         static const char* TypeName() { return "Homogenous"; }

@@ -9,7 +9,7 @@
 #include "CudaConstants.h"
 #include "DeviceMemory.h"
 
-class GPUMediumVacuum : public GPUMediumI
+class GPUMediumVacuum final : public GPUMediumI
 {
     private:
         uint32_t                    index;
@@ -30,7 +30,7 @@ class GPUMediumVacuum : public GPUMediumI
         __device__ Vector3           Transmittance(float distance) const override;
 };
 
-class CPUMediumVacuum : public CPUMediumGroupI
+class CPUMediumVacuum final : public CPUMediumGroupI
 {
     public:
         static const char* TypeName() { return "Vacuum"; }

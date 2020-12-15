@@ -126,16 +126,17 @@ TracerError CPUTransformSingle::ConstructTransforms(const CudaSystem& system)
     // Call allocation kernel
     const CudaGPU& gpu = system.BestGPU();
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
-    gpu.AsyncGridStrideKC_X(0, TransformCount(),
-                            //
-                            KCConstructGPUTransform,
-                            //
-                            const_cast<GPUTransformSingle*>(dGPUTransforms),
-                            const_cast<Matrix4x4*>(dInvTransformMatrices),
-                            dTransformMatrices,
-                            TransformCount());
+    gpu.GridStrideKC_X(0, 0,
+                       TransformCount(),
+                       //
+                       KCConstructGPUTransform,
+                       //
+                       const_cast<GPUTransformSingle*>(dGPUTransforms),
+                       const_cast<Matrix4x4*>(dInvTransformMatrices),
+                       dTransformMatrices,
+                       TransformCount());
 
-    gpu.WaitAllStreams();
+    gpu.WaitMainStream();
 
     // Generate transform list
     for(uint32_t i = 0; i < TransformCount(); i++)

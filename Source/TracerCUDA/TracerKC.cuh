@@ -215,7 +215,6 @@ inline void PathWork(// Output
             InvalidRayWrite(i);
         return;
     }
-
     // Inputs    
     const RayF& r = ray.ray;
     HitKey::Type matIndex = HitKey::FetchIdPortion(matId);

@@ -35,7 +35,7 @@ class MockNode
 {
     public:
         static constexpr uint32_t       MAX_BOUNCES = 15;
-        static constexpr int            SAMPLE_COUNT = 1;
+        static constexpr int            SAMPLE_COUNT = 2;
 
         //static constexpr Vector2i       IMAGE_RESOLUTION = {16, 9};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 18};
@@ -51,16 +51,16 @@ class MockNode
     private:
         const double                    Duration;
 
-        VisorI& visor;
-        GPUTracerI& tracer;
-        GPUSceneI& scene;
+        VisorI&                         visor;
+        GPUTracerI&                     tracer;
+        GPUSceneI&                      scene;
 
     protected:
     public:
         // Constructor & Destructor
-        MockNode(VisorI&, GPUTracerI&, GPUSceneI&,
-                 double duration);
-        ~MockNode() = default;
+                    MockNode(VisorI&, GPUTracerI&, GPUSceneI&,
+                             double duration);
+                    ~MockNode() = default;
 
         // From Command Callbacks
         void        ChangeScene(const std::string) override {}
