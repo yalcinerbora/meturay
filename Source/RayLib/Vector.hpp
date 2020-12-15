@@ -505,7 +505,8 @@ inline Vector<N, T>& Vector<N, T>::ClampSelf(T minVal, T maxVal)
 }
 
 template <int N, class T>
-__device__ __host__ bool Vector<N, T>::HasNaN() const
+__device__ __host__ 
+inline bool Vector<N, T>::HasNaN() const
 {
     bool hasNan = false;
     UNROLL_LOOP

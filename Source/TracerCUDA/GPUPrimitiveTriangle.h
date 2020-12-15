@@ -256,6 +256,14 @@ struct TriangleSurfaceGenerator
         QuatF tbn = Quat::BarySLerp(q0, q1, q2,
                                     baryCoords[0],
                                     baryCoords[1]);
+
+        //printf("tbnRotAccess {%f, %f, %f, %f} = {%f, %f, %f, %f}, "
+        //       "{%f, %f, %f, %f}, {%f, %f, %f, %f}\n",
+        //       tbn[0], tbn[1], tbn[2], tbn[3],
+        //       q0[0], q0[1], q0[2], q0[3],
+        //       q1[0], q1[1], q1[2], q1[3],
+        //       q2[0], q2[1], q2[2], q2[3]);
+
         tbn = tbn * transform.ToLocalRotation();        
         return BasicSurface{tbn};
     }
