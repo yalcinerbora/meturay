@@ -161,7 +161,7 @@ inline void PathLightWork(// Output
 
         // And accumulate pixel
         // and add as a sample
-        Vector3f total = emission * radianceFactor;
+        Vector3f total = /*emission **/ radianceFactor;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
     }
 }
@@ -346,7 +346,7 @@ inline void PathWork(// Output
         rayOut.Update(gOutRays, NEE_RAY_INDEX);
 
         // Calculate Radiance Factor
-        auxOut.radianceFactor = radianceFactor * reflectance;
+        auxOut.radianceFactor = /*radianceFactor **/ reflectance;
         // Check singularities
         auxOut.radianceFactor = (pdfLight == 0.0f) ? Zero3 : (auxOut.radianceFactor / pdfLight);
         // Write auxilary data

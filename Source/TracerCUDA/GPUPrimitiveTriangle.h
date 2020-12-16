@@ -43,6 +43,7 @@ struct TriData
 
     const Vector3f* positions;
     const QuatF*    tbnRotations;
+    const Vector3f* normals;
     const Vector2*  uvs;
     const uint64_t* indexList;
 };
@@ -255,7 +256,21 @@ struct TriangleSurfaceGenerator
         QuatF q2 = primData.tbnRotations[i2];
         QuatF tbn = Quat::BarySLerp(q0, q1, q2,
                                     baryCoords[0],
-                                    baryCoords[1]);
+                                    baryCoords[1]).Normalize();
+
+        //Vector3f n0 = primData.normals[i0];
+        //Vector3f n1 = primData.normals[i1];
+        //Vector3f n2 = primData.normals[i2];
+        Vector3f z = ZAxis;
+        Vector3f n0 = q0.Conjugate().ApplyRotation(z);
+        Vector3f n1 = q1.Conjugate().ApplyRotation(z);
+        Vector3f n2 = q2.Conjugate().ApplyRotation(z);
+       
+        Vector3f normal = (n0 * baryCoords[0] +
+                           n1 * baryCoords[1] +
+                           n2 * c);
+
+        
 
         //printf("tbnRotAccess {%f, %f, %f, %f} = {%f, %f, %f, %f}, "
         //       "{%f, %f, %f, %f}, {%f, %f, %f, %f}\n",
@@ -264,8 +279,8 @@ struct TriangleSurfaceGenerator
         //       q1[0], q1[1], q1[2], q1[3],
         //       q2[0], q2[1], q2[2], q2[3]);
 
-        tbn = tbn * transform.ToLocalRotation();        
-        return BasicSurface{tbn};
+        tbn = tbn * transform.ToLocalRotation();
+        return BasicSurface{tbn, normal};
     }
 
     __device__

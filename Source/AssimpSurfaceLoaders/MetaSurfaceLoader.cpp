@@ -26,15 +26,15 @@ AssimpMetaSurfaceLoader::AssimpMetaSurfaceLoader(Assimp::Importer& i,
                               // Generate Bounding Boxes
                               aiProcess_GenBoundingBoxes |
                               // Generate Normals if not avail
-                              aiProcess_GenNormals |
+                              //aiProcess_GenNormals |
                               // Generate Tangent and Bitangents if not avail
-                              aiProcess_CalcTangentSpace |
+                              //aiProcess_CalcTangentSpace |
                               // Triangulate
                               aiProcess_Triangulate |
                               // Improve triangle order
-                              aiProcess_ImproveCacheLocality |
+                              //aiProcess_ImproveCacheLocality |
                               // Reduce Vertex Count
-                              aiProcess_JoinIdenticalVertices |
+                              //aiProcess_JoinIdenticalVertices |
                               // Remove Degenerate triangles
                               aiProcess_FindDegenerates |
                               aiProcess_SortByPType |

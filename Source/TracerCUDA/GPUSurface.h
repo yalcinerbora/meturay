@@ -23,14 +23,14 @@ namespace GPUSurface
     __device__
     inline Vector3 TangentWorld(const QuatF& toTangentTransform)
     {
-        Vector3 v = XAxis;
+        Vector3 v = YAxis;
         return toTangentTransform.Conjugate().ApplyRotation(v);
     }
 
     __device__
     inline Vector3 BitangentWorld(const QuatF& toTangentTransform)
     {
-        Vector3 v = YAxis;
+        Vector3 v = XAxis;
         return toTangentTransform.Conjugate().ApplyRotation(v);
     }
 
@@ -38,7 +38,7 @@ namespace GPUSurface
     inline Vector3 ToTangent(const Vector3f& v,
                              const QuatF& toTangentTransform)
     {
-        return toTangentTransform.Conjugate().ApplyRotation(v);
+        return toTangentTransform.ApplyRotation(v);
     }
 
     __device__
@@ -115,7 +115,8 @@ struct SphrSurface
 struct BasicSurface
 {
     // World to tangent space transformation
-    QuatF   worldToTangent;
+    QuatF       worldToTangent;
+    Vector3f    normal;
 };
 
 struct UVSurface

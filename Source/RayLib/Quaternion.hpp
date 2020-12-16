@@ -246,7 +246,16 @@ template<class T>
 __device__ __host__
 inline Quaternion<T> Quat::NLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t)
 {
-    return (start + t * (end - start));// .Normalize();
+    T cosTetha = start.Dot(end);
+    // Select closest approach
+    T cosFlipped = (cosTetha >= 0) ? cosTetha : (-cosTetha);
+            
+    T s0 = (1 - t);
+    T s1 = t;
+    // Flip scale if cos is flipped
+    s1 = (cosTetha >= 0) ? s1 : (-s1);
+    Quaternion<T> result = (start * s0) + (end * s1);
+    return result;
 }
 
 template<class T>
@@ -273,12 +282,6 @@ inline Quaternion<T> Quat::SLerp(const Quaternion<T>& start, const Quaternion<T>
     // Flip scale if cos is flipped
     s1 = (cosTetha >= 0) ? s1 : (-s1);
     Quaternion<T> result = (start * s0) + (end * s1);
-
-    if(static_cast<Vector<4, T>&>(result).HasNaN())
-    {
-        printf("QUAT HAS NAN\n");
-    }
-
     return result;
 }
 
@@ -303,17 +306,23 @@ inline Quaternion<T> Quat::BarySLerp(const Quaternion<T>& q0,
     
     // Align tovards q0
     const Quaternion<T>& qA = q0;
-    //Quaternion<T> qB = (q1.Dot(q0) < 0) ? q1.Conjugate() : q1;
-    //Quaternion<T> qC = (q2.Dot(q0) < 0) ? q2.Conjugate() : q2;
-    Quaternion<T> qB = q1;
-    Quaternion<T> qC = q2;
+    Quaternion<T> qB = (q1.Dot(q0) < 0) ? q1.Conjugate() : q1;
+    Quaternion<T> qC = (q2.Dot(q0) < 0) ? q2.Conjugate() : q2;
+    //Quaternion<T> qB = q1;
+    //Quaternion<T> qC = q2;
 
     T c = (1 - a - b);
-    T ab = a / (a + b);
-    Quaternion<T> qAB = Quat::SLerp(qA, qB, ab);
-    Quaternion<T> result = Quat::SLerp(qC, qAB, c);
+    //Quaternion<T> result;
+    //if(abs(a + b) < MathConstants::Epsilon)
+    //    result = qC;
+    //else
+    //{
+    //    T ab = a / (a + b);
+    //    Quaternion<T> qAB = Quat::SLerp(qA, qB, ab);
+    //    result = Quat::SLerp(qC, qAB, c);
+    //}
 
-    //Quaternion<T> result = qA * a + qB * b + qC * c;
+    Quaternion<T> result = qA * a + qB * b + qC * c;
     return result.Normalize();
 }
 
@@ -385,10 +394,6 @@ inline void TransformGen::Space(Quaternion<T>& q,
 
     // Coord Systems should match 
     // both should be right-handed coord system
-    //Vector3 crs = Cross(x, y);
-    //Vector3 diff = crs - z;
-    //if((Cross(x, y) - z).Abs() >= Vector3(MathConstants::VeryLargeEpsilon))
-    //    METU_ERROR_LOG("Quaternion: Coord Systam is not right handed.");
     assert((Cross(x, y) - z).Abs() <= Vector3(0.5));
 
     T t;
@@ -431,6 +436,7 @@ inline void TransformGen::Space(Quaternion<T>& q,
         }
     }
     q *= static_cast<T>(0.5) / sqrt(t);  
+    q.NormalizeSelf();
 }
 
 template <class T>
