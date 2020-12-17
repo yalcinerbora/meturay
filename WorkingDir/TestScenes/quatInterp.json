@@ -1,0 +1,64 @@
+{
+	"Cameras": [
+    {
+		"id": 0,
+		"type": "Pinhole",
+
+		"apertureSize": 1.0,
+		"focusDistance": 21,
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"gaze": [0.0, 2, 0.0],
+		"planes": [0.1, 20.0],
+		"position": [0.0, 3.0, 7.0],
+		"up": [0.0, 1.0, 0.0]
+	}],
+
+	"Lights": [],
+
+    "Mediums": [{ "id" : 0, "type" : "Vacuum"}],
+
+	"Transforms":[{"id": 0, "type": "Identity"}],
+
+	"Materials":[
+	{
+		"id": 0,
+		"type": "NormalRender"
+	},
+	{
+		"id": 1,
+		"type": "Constant",
+		"albedo" : [0, 0, 0]
+	}],
+
+	"Primitives":[
+    {
+        "id": 0,
+        "type": "Triangle",
+        "name": "../Surfaces/low_poly_sphere.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    }],
+
+	"Accelerators": [{"id" : 0, "type" : "Linear"}],
+	
+	//================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "Linear"},
+    "BaseBoundaryMaterial": 1,
+	"BaseMedium" : 0,
+	
+	"Surfaces": [
+	{
+		"transform": 0,
+		"accelerator": 0,
+		"material": 0,
+		"primitive": 0
+	}],
+
+	"LightSurfaces": [],
+    "CameraSurfaces": [{"camera": 0, "material": 1}]
+}

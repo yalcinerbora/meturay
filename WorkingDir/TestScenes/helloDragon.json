@@ -55,7 +55,7 @@
 		// Light Boundary Material
 		"id": 1,
 		"type": "LightConstant",
-		"radiance" : [15, 15, 15]
+		"radiance" : [12, 12, 12]
     },
 	{
 		// Green Diffuse Mat

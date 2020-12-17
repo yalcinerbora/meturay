@@ -95,11 +95,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
 
         std::vector<AABB3> aabbList;
         std::vector<Vector2ul> primRange;
-        //std::vector<Vector2ul> dataRange;
-        //std::vector<size_t> primCounts;
         size_t loaderPCount, loaderUVCount, loaderICount;
-        size_t loaderNCount;
-        //size_t loaderNCount, loaderTCount;
 
         // Load Aux Data
         if((e = loader->AABB(aabbList)) != SceneError::OK)
@@ -112,19 +108,9 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             return e;
         if((e = loader->PrimitiveDataCount(loaderICount, PrimitiveDataType::VERTEX_INDEX)) != SceneError::OK)
             return e;
-        if((e = loader->PrimitiveDataCount(loaderNCount, PrimitiveDataType::NORMAL)) != SceneError::OK)
-            return e;
-
-        //if((e = loader->PrimitiveDataCount(loaderTCount, PrimitiveDataType::TANGENT)) != SceneError::OK)
-        //    return e;
-        //if((e = loader->PrimitiveDataRanges(dataRange)) != SceneError::OK)
-        //    return e;
-        //if((e = loader->PrimitiveDataCount(loaderNCount, PrimitiveDataType::NORMAL)) != SceneError::OK)
-        //    return e;
 
         // Single indexed vertex data sanity check
         assert(loaderPCount == loaderUVCount);
-        assert(loaderPCount == loaderNCount);
 
         // Populate
         size_t i = 0, totalPrimCountOnLoader = 0;
@@ -137,9 +123,9 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
 
             //Vector2ul currentDRange = dataRange[i];
             //currentDRange += Vector2ul(totalDataCount);
-
-            batchRanges.emplace(id, currentPRange);
             //batchDataRanges.emplace(id, currentDRange);
+
+            batchRanges.emplace(id, currentPRange);            
             batchAABBs.emplace(id, aabbList[i]);
             batchOffsets.push_back(currentPRange[0]);
 
@@ -173,11 +159,9 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     std::vector<Byte> uvsCPU(totalDataCount * VertUVSize);
     std::vector<Byte> rotationsCPU(totalDataCount * RotationSize);
     std::vector<Byte> indexCPU(totalIndexCount * IndexSize);
-    std::vector<Byte> normalsCPU(totalDataCount * VertNormSize);
   
     // Temporary buffers (re-allocated per batch)
     std::vector<Vector3> tangents;
-    std::vector<Vector3> biTangents;
     std::vector<Vector3> normals;
 
     size_t i = 0;
@@ -199,9 +183,6 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             return e;
         if((e = loader->GetPrimitiveData(indexCPU.data() + offsetIndex * IndexSize,
                                          PrimitiveDataType::VERTEX_INDEX)) != SceneError::OK)
-            return e;
-        if((e = loader->GetPrimitiveData(normalsCPU.data() + offsetVertex * VertNormSize,
-                                         PrimitiveDataType::NORMAL)) != SceneError::OK)
             return e;
        
         // Get temporary data to generate tangent space transformation
@@ -230,19 +211,14 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         if(hasTangent)            
         {
             tangents.resize(tangentCount);
-            biTangents.resize(tangentCount);
             if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(tangents.data()), 
                                              PrimitiveDataType::TANGENT)) != SceneError::OK)
                 return e;
-            if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(biTangents.data()),
-                                             PrimitiveDataType::BITANGENT)) != SceneError::OK)
-                return e;
 
             Vector3* tangentsIn = tangents.data();
-            Vector3* biTangentsIn = biTangents.data();
 
             // Utilize tangent and normal for quat generation
-            std::for_each(/*std::execution::par_unseq,*/
+            std::for_each(std::execution::par_unseq,
                           primStart, primEnd,
                           [&](IndexTriplet& indices)
                           {
@@ -256,42 +232,14 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                               tangents[1] = tangentsIn[indices[1]];
                               tangents[2] = tangentsIn[indices[2]];
 
-                              Vector3 biTangents[3];
-                              biTangents[0] = biTangentsIn[indices[0]];
-                              biTangents[1] = biTangentsIn[indices[1]];
-                              biTangents[2] = biTangentsIn[indices[2]];
+                              //Vector3 biTangents[3];
+                              //biTangents[0] = biTangentsIn[indices[0]];
+                              //biTangents[1] = biTangentsIn[indices[1]];
+                              //biTangents[2] = biTangentsIn[indices[2]];
 
                               // Generate rotations
                               QuatF q0, q1, q2;
-                              TransformGen::InvSpace(q0, tangents[0], biTangents[0], normals[0]);
-                              TransformGen::InvSpace(q1, tangents[1], biTangents[1], normals[1]);
-                              TransformGen::InvSpace(q2, tangents[2], biTangents[2], normals[2]);
-                              //Triangle::LocalRotation(q0, q1, q2, normals, tangents);
-
-                              if(rotationsOut[indices[0]] != q0)
-                                  METU_ERROR_LOG("WRITING DIFFERENT!!");
-                              METU_LOG("0-Wrt: {%f,%f,%f,%f} <--- {%f,%f,%f,%f}",
-                                       rotationsOut[indices[0]][0],
-                                       rotationsOut[indices[0]][1],
-                                       rotationsOut[indices[0]][2],
-                                       rotationsOut[indices[0]][3],
-                                       q0[0], q0[1], q0[2], q0[3]);
-                              if(rotationsOut[indices[1]] != q2)
-                                  METU_ERROR_LOG("WRITING DIFFERENT!!");
-                              METU_LOG("1-Wrt: {%f,%f,%f,%f} <--- {%f,%f,%f,%f}",
-                                       rotationsOut[indices[1]][0],
-                                       rotationsOut[indices[1]][1],
-                                       rotationsOut[indices[1]][2],
-                                       rotationsOut[indices[1]][3],
-                                       q1[0], q1[1], q1[2], q1[3]);
-                              if(rotationsOut[indices[2]] != q2)
-                                  METU_ERROR_LOG("WRITING DIFFERENT!!");
-                              METU_LOG("2-Wrt: {%f,%f,%f,%f} <--- {%f,%f,%f,%f}",
-                                       rotationsOut[indices[2]][0],
-                                       rotationsOut[indices[2]][1],
-                                       rotationsOut[indices[2]][2],
-                                       rotationsOut[indices[2]][3],
-                                       q2[0], q2[1], q2[2], q2[3]);
+                              Triangle::LocalRotation(q0, q1, q2, normals, tangents);
 
                               rotationsOut[indices[0]] = q0;
                               rotationsOut[indices[1]] = q1;
@@ -305,18 +253,17 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                                   indices[2] += offsetVertex;
                               }
                           });
-            METU_LOG("---------------");
         }
         else
         {
             Vector3* positionsIn = reinterpret_cast<Vector3*>(postitionsCPU.data() + offsetVertex * VertPosSize);
             Vector2* uvsIn = reinterpret_cast<Vector2*>(uvsCPU.data() + offsetVertex * VertUVSize);
-
+            
             // Utilize position and uv for quat generation
-            std::for_each(//std::execution::par_unseq,
+            std::for_each(std::execution::par_unseq,
                           primStart, primEnd,
                           [&](IndexTriplet& indices)
-                          {                              // Skip three indices
+                          {
                               Vector3 normals[3];
                               normals[0] = normalsIn[indices[0]];
                               normals[1] = normalsIn[indices[1]];
@@ -349,43 +296,6 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                               }
                           });
         }
-
-        std::vector<Vector3f> transformedNormals;
-        for(int i = 0; i < vertexCount; i++)
-        {
-            QuatF quaternion = rotationsOut[i];
-            Vector3 normal = normalsIn[i];
-            Vector3 normalTransformed = quaternion.ApplyRotation(normal);            
-            METU_DEBUG_LOG("Q: (%f, %f, %f, %f); N: (%f, %f, %f), NT: (%f, %f, %f)",
-                           quaternion[0],
-                           quaternion[1],
-                           quaternion[2],
-                           quaternion[3],
-                           normal[0],
-                           normal[1],
-                           normal[2],
-                           normalTransformed[0],
-                           normalTransformed[1],
-                           normalTransformed[2]);
-
-            normalTransformed[0] = (std::abs(normalTransformed[0]) < 0.00001f) ? 0.0f : normalTransformed[0];
-            normalTransformed[1] = (std::abs(normalTransformed[1]) < 0.00001f) ? 0.0f : normalTransformed[1];
-            normalTransformed[2] = ((1.0f - std::abs(normalTransformed[2])) < 0.00001f) ? 1.0f : normalTransformed[2];
-
-            if(std::isnan(quaternion[0]) ||
-               std::isnan(quaternion[1]) || 
-               std::isnan(quaternion[2]))
-            {
-                transformedNormals.push_back(Vector3(NAN));
-                METU_DEBUG_LOG("FOUND_NAN");
-            }
-            else
-                transformedNormals.push_back(normalTransformed);
-        }
-        METU_LOG("--------------");
-        Debug::DumpMemToFile(std::string("PrimBatch") + std::to_string(i),
-                             transformedNormals.data(), transformedNormals.size());
-
         i++;
     }
 
@@ -396,14 +306,12 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     uvSize = Memory::AlignSize(uvSize);
     size_t quatSize = sizeof(QuatF) * totalDataCount;
     quatSize = Memory::AlignSize(quatSize);
-    size_t normalSize = sizeof(Vector3f) * totalDataCount;
-    normalSize = Memory::AlignSize(normalSize);
     size_t indexSize = sizeof(uint64_t) * totalIndexCount;
     indexSize = Memory::AlignSize(indexSize);
     size_t cullSize = sizeof(bool) * batchRanges.size();
     cullSize = Memory::AlignSize(cullSize);
     size_t offsetSize = sizeof(uint64_t) * batchOffsets.size();
-    size_t totalSize = (posSize + uvSize + normalSize +
+    size_t totalSize = (posSize + uvSize +
                         quatSize + indexSize + 
                         cullSize + offsetSize);
 
@@ -415,8 +323,6 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     offset += uvSize;
     Byte* dQuats = static_cast<Byte*>(memory) + offset;
     offset += quatSize;
-    Byte* dNormals = static_cast<Byte*>(memory) + offset;
-    offset += normalSize;
     Byte* dIndices = static_cast<Byte*>(memory) + offset;
     offset += indexSize;
     Byte* dCulls = static_cast<Byte*>(memory) + offset;
@@ -434,9 +340,6 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                           cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemcpy(dQuats, rotationsCPU.data(),
                           sizeof(QuatF)* totalDataCount,
-                          cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy(dNormals, normalsCPU.data(),
-                          sizeof(Vector3f)* totalDataCount,
                           cudaMemcpyHostToDevice));
     // Copy Indices
     CUDA_CHECK(cudaMemcpy(dIndices, indexCPU.data(),
@@ -459,9 +362,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     dData.indexList = reinterpret_cast<uint64_t*>(dIndices);
     dData.cullFace = reinterpret_cast<bool*>(dCulls);
     dData.primOffsets = reinterpret_cast<uint64_t*>(dOffsets);
-    dData.primBatchCount = static_cast<uint32_t>(batchOffsets.size());
-    dData.normals = reinterpret_cast<Vector3f*>(dNormals);
-    
+    dData.primBatchCount = static_cast<uint32_t>(batchOffsets.size());    
     return e;
 }
 

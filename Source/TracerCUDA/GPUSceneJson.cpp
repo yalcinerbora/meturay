@@ -1009,6 +1009,8 @@ SceneError GPUSceneJson::LoadScene(double time)
     }
     catch (SceneException const& e)
     {
+        if(e.what() != nullptr)
+            METU_ERROR_LOG("%s", e.what());
         return e;
     }
     catch(nlohmann::json::parse_error const& e)

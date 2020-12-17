@@ -146,3 +146,53 @@ Vector3 SphericalEvaluate(// Input
                     surface.sphrCoords[1],
                     0.0f);
 }
+
+__device__ inline
+Vector3 NormalSample(// Sampled Output
+                     RayF& wo,
+                     float& pdf,
+                     const GPUMediumI*& outMedium,
+                     // Input
+                     const Vector3& wi,
+                     const Vector3& pos,
+                     const GPUMediumI& m,
+                     //
+                     const BasicSurface& surface,
+                     const TexCoords* uvs,
+                     // I-O
+                     RandomGPU& rng,
+                     // Constants
+                     const NullData& matData,
+                     const HitKey::Type& matId,
+                     uint32_t sampleIndex)
+{
+    // No medium change
+    outMedium = &m;
+    static constexpr Vector3 ZERO = Zero3;
+    pdf = 1.0f;
+    wo = RayF(ZERO, ZERO);
+
+    Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
+    normal = 0.5f * normal + 0.5f;
+
+    return normal;
+}
+
+__device__ inline
+Vector3 NormalEvaluate(// Input
+                       const Vector3& wo,
+                       const Vector3& wi,
+                       const Vector3& pos,
+                       const GPUMediumI& m,
+                       //
+                       const BasicSurface& surface,
+                       const TexCoords* uvs,
+                       // Constants
+                       const NullData& matData,
+                       const HitKey::Type& matId)
+{
+    Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
+    normal = 0.5f * normal + 0.5f;
+
+    return normal;
+}

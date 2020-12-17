@@ -7,8 +7,10 @@ template class DirectTracerWork<ConstantMat, GPUPrimitiveTriangle>;
 template class DirectTracerWork<ConstantMat, GPUPrimitiveSphere>;
 
 template class DirectTracerWork<BarycentricMat, GPUPrimitiveTriangle>;
-
 template class DirectTracerWork<SphericalMat, GPUPrimitiveSphere>;
+
+template class DirectTracerWork<NormalRenderMat, GPUPrimitiveTriangle>;
+template class DirectTracerWork<NormalRenderMat, GPUPrimitiveSphere>;
 // ===================================================
 // Path Tracer Work Batches
 template class PathTracerWork<EmissiveMat, GPUPrimitiveEmpty>;

@@ -52,7 +52,6 @@ Vector3 LambertSample(// Sampled Output
     // Ray Selection
     const Vector3& position = pos;
     const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
-    //const Vector3& normal = surface.normal;
     // Generate New Ray Directiion
     Vector2 xi(GPUDistribution::Uniform<float>(rng),
                GPUDistribution::Uniform<float>(rng));
@@ -88,15 +87,14 @@ Vector3 LambertEvaluate(// Input
                         const AlbedoMatData& matData,
                         const HitKey::Type& matId)
 {
-    //const Vector3& normal = surface.normal;
-    Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent).Normalize();
-    
-    //float nDotL = max(normal.Dot(wo), 0.0f);
+    Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
+
+    float nDotL = max(normal.Dot(wo), 0.0f);
     //Vector3 wOTangentSpace = GPUSurface::ToTangent(wo, surface.worldToTangent);
     //float nDotL = max(wOTangentSpace[2], 0.0f);
     
-    //return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
-    return normal;
+    return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
+    //return normal;
 }
 
 __device__ inline

@@ -435,59 +435,6 @@ inline void TransformGen::Space(Quaternion<T>& q,
     }
     q *= static_cast<T>(0.5) / sqrt(t);  
     q.NormalizeSelf();
-
-
-    //const Vector3 M[] = {x, y, z};
-
-    //float s;
-    //// Check diagonal (trace)
-    //const float tr = M[0][0] + M[1][1] + M[2][2];
-
-    //if(tr > 0.0f)
-    //{
-    //    float InvS = 1.0f / sqrt(tr + 1.f);
-    //    q[0] = 0.5f * (1.f / InvS);
-    //    s = 0.5f * InvS;
-
-    //    q[1] = (M[1][2] - M[2][1]) * s;
-    //    q[2] = (M[2][0] - M[0][2]) * s;
-    //    q[3] = (M[0][1] - M[1][0]) * s;
-    //}
-    //else
-    //{
-    //    // diagonal is negative
-    //    int32_t i = 0;
-
-    //    if(M[1][1] > M[0][0])
-    //        i = 1;
-
-    //    if(M[2][2] > M[i][i])
-    //        i = 2;
-
-    //    static const int32_t nxt[3] = {1, 2, 0};
-    //    const int32_t j = nxt[i];
-    //    const int32_t k = nxt[j];
-
-    //    s = M[i][i] - M[j][j] - M[k][k] + 1.0f;
-
-    //    float InvS = 1.0f / sqrt(s);
-
-    //    float qt[4];
-    //    qt[i] = 0.5f * (1.f / InvS);
-
-    //    s = 0.5f * InvS;
-
-    //    qt[3] = (M[j][k] - M[k][j]) * s;
-    //    qt[j] = (M[i][j] + M[j][i]) * s;
-    //    qt[k] = (M[i][k] + M[k][i]) * s;
-
-    //    q[1] = qt[0];
-    //    q[2] = qt[1];
-    //    q[3] = qt[2];
-    //    q[0] = qt[3];
-    //}
-    //q.NormalizeSelf();
-
 }
 
 template <class T>

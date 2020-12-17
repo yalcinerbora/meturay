@@ -1,5 +1,4 @@
 {
-
 	"Cameras": [
     {
 		"id": 0,
@@ -55,7 +54,7 @@
 		// Light Boundary Material
 		"id": 1,
 		"type": "LightConstant",
-		"radiance" : [15, 15, 15]
+		"radiance" : [12, 12, 12]
     },
 	{
 		// Green Diffuse Mat
@@ -98,8 +97,7 @@
 		// Object Reading (inner index i top down order of meshes)
 		"id": 1,
 		"type": "Triangle",
-		//"name": "../Surfaces/stan_bunny.obj",
-		"name": "../Surfaces/poly_sphere2.fbx",
+		"name": "../Surfaces/stan_bunny.obj",
 		"tag": "assimp_",
 		"innerIndex": 0
 	}],
@@ -115,14 +113,13 @@
     "BaseMedium" : 0,
 
 	"Surfaces": [
-// 	{
-// 		// Floor
-// 		"transform": 0,
-// 		"accelerator": 1,
-// 		"material": 3,
-// 		"primitive": 0
-// //	}
-// 	},
+	{
+		// Floor
+		"transform": 0,
+		"accelerator": 1,
+		"material": 3,
+		"primitive": 0
+ 	},
 	{
 		// Bunny
 		"transform": 0,

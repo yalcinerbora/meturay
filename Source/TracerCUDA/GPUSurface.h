@@ -116,7 +116,6 @@ struct BasicSurface
 {
     // World to tangent space transformation
     QuatF       worldToTangent;
-    Vector3f    normal;
 };
 
 struct UVSurface

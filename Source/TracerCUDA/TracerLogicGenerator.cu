@@ -146,6 +146,9 @@ TracerLogicGenerator::TracerLogicGenerator()
     matGroupGenerators.emplace(SphericalMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, SphericalMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
+    matGroupGenerators.emplace(NormalRenderMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, NormalRenderMat>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
     // Sample Materials
     matGroupGenerators.emplace(EmissiveMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, EmissiveMat>,
