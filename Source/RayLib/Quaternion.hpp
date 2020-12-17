@@ -306,23 +306,23 @@ inline Quaternion<T> Quat::BarySLerp(const Quaternion<T>& q0,
     
     // Align tovards q0
     const Quaternion<T>& qA = q0;
-    Quaternion<T> qB = (q1.Dot(q0) < 0) ? q1.Conjugate() : q1;
-    Quaternion<T> qC = (q2.Dot(q0) < 0) ? q2.Conjugate() : q2;
-    //Quaternion<T> qB = q1;
-    //Quaternion<T> qC = q2;
+    //Quaternion<T> qB = (q1.Dot(q0) < 0) ? q1.Conjugate() : q1;
+    //Quaternion<T> qC = (q2.Dot(q0) < 0) ? q2.Conjugate() : q2;
+    Quaternion<T> qB = q1;
+    Quaternion<T> qC = q2;
 
     T c = (1 - a - b);
-    //Quaternion<T> result;
-    //if(abs(a + b) < MathConstants::Epsilon)
-    //    result = qC;
-    //else
-    //{
-    //    T ab = a / (a + b);
-    //    Quaternion<T> qAB = Quat::SLerp(qA, qB, ab);
-    //    result = Quat::SLerp(qC, qAB, c);
-    //}
+    Quaternion<T> result;
+    if(abs(a + b) < MathConstants::Epsilon)
+        result = qC;
+    else
+    {
+        T ab = a / (a + b);
+        Quaternion<T> qAB = Quat::SLerp(qB, qA, ab);
+        result = Quat::SLerp(qAB, qC, c);
+    }
 
-    Quaternion<T> result = qA * a + qB * b + qC * c;
+    //Quaternion<T> result = qA * a + qB * b + qC * c;
     return result.Normalize();
 }
 
@@ -377,10 +377,6 @@ inline Quaternion<T> operator*(T t, const Quaternion<T>& q)
     return q * t;
 }
 
-//#include <algorithm>
-//#include <cmath>
-//#include "Log.h"
-
 template <class T>
 __device__ __host__
 inline void TransformGen::Space(Quaternion<T>& q,
@@ -394,6 +390,8 @@ inline void TransformGen::Space(Quaternion<T>& q,
 
     // Coord Systems should match 
     // both should be right-handed coord system
+    Vector3 crs = Cross(x, y);
+    Vector3 diff = crs - z;
     assert((Cross(x, y) - z).Abs() <= Vector3(0.5));
 
     T t;
@@ -437,6 +435,59 @@ inline void TransformGen::Space(Quaternion<T>& q,
     }
     q *= static_cast<T>(0.5) / sqrt(t);  
     q.NormalizeSelf();
+
+
+    //const Vector3 M[] = {x, y, z};
+
+    //float s;
+    //// Check diagonal (trace)
+    //const float tr = M[0][0] + M[1][1] + M[2][2];
+
+    //if(tr > 0.0f)
+    //{
+    //    float InvS = 1.0f / sqrt(tr + 1.f);
+    //    q[0] = 0.5f * (1.f / InvS);
+    //    s = 0.5f * InvS;
+
+    //    q[1] = (M[1][2] - M[2][1]) * s;
+    //    q[2] = (M[2][0] - M[0][2]) * s;
+    //    q[3] = (M[0][1] - M[1][0]) * s;
+    //}
+    //else
+    //{
+    //    // diagonal is negative
+    //    int32_t i = 0;
+
+    //    if(M[1][1] > M[0][0])
+    //        i = 1;
+
+    //    if(M[2][2] > M[i][i])
+    //        i = 2;
+
+    //    static const int32_t nxt[3] = {1, 2, 0};
+    //    const int32_t j = nxt[i];
+    //    const int32_t k = nxt[j];
+
+    //    s = M[i][i] - M[j][j] - M[k][k] + 1.0f;
+
+    //    float InvS = 1.0f / sqrt(s);
+
+    //    float qt[4];
+    //    qt[i] = 0.5f * (1.f / InvS);
+
+    //    s = 0.5f * InvS;
+
+    //    qt[3] = (M[j][k] - M[k][j]) * s;
+    //    qt[j] = (M[i][j] + M[j][i]) * s;
+    //    qt[k] = (M[i][k] + M[k][i]) * s;
+
+    //    q[1] = qt[0];
+    //    q[2] = qt[1];
+    //    q[3] = qt[2];
+    //    q[0] = qt[3];
+    //}
+    //q.NormalizeSelf();
+
 }
 
 template <class T>

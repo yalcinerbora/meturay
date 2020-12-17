@@ -251,12 +251,19 @@ struct TriangleSurfaceGenerator
         uint64_t i1 = primData.indexList[primitiveId * 3 + 1];
         uint64_t i2 = primData.indexList[primitiveId * 3 + 2];
 
-        QuatF q0 = primData.tbnRotations[i0];
-        QuatF q1 = primData.tbnRotations[i1];
-        QuatF q2 = primData.tbnRotations[i2];
+        QuatF q0 = primData.tbnRotations[i0].Normalize();
+        QuatF q1 = primData.tbnRotations[i1].Normalize();
+        QuatF q2 = primData.tbnRotations[i2].Normalize();
         QuatF tbn = Quat::BarySLerp(q0, q1, q2,
                                     baryCoords[0],
                                     baryCoords[1]).Normalize();
+
+        float cos0 = acos(q0.Dot(q1)) * MathConstants::RadToDegCoef;
+        float cos1 = acos(q1.Dot(q2)) * MathConstants::RadToDegCoef;
+        float cos2 = acos(q0.Dot(q2)) * MathConstants::RadToDegCoef;
+
+        //printf("{%f, %f, %f}\n",
+        //       cos0, cos1, cos2);
 
         //Vector3f n0 = primData.normals[i0];
         //Vector3f n1 = primData.normals[i1];

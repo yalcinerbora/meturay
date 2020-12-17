@@ -98,7 +98,8 @@
 		// Object Reading (inner index i top down order of meshes)
 		"id": 1,
 		"type": "Triangle",
-        "name": "../Surfaces/stan_bunny.obj",
+		//"name": "../Surfaces/stan_bunny.obj",
+		"name": "../Surfaces/poly_sphere2.fbx",
 		"tag": "assimp_",
 		"innerIndex": 0
 	}],
@@ -114,20 +115,22 @@
     "BaseMedium" : 0,
 
 	"Surfaces": [
-	{
-		// Floor
-		"transform": 0,
-		"accelerator": 1,
-		"material": 3,
-		"primitive": 0
-	},
+// 	{
+// 		// Floor
+// 		"transform": 0,
+// 		"accelerator": 1,
+// 		"material": 3,
+// 		"primitive": 0
+// //	}
+// 	},
 	{
 		// Bunny
 		"transform": 0,
 		"accelerator": 0,
 		"material": 2,
         "primitive": 1
-	}],
+	}
+],
 
 	"LightSurfaces": [
 		{"primitive": 2, "material": 1, "accelerator": 1}

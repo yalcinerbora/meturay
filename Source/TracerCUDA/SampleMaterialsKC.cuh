@@ -88,11 +88,10 @@ Vector3 LambertEvaluate(// Input
                         const AlbedoMatData& matData,
                         const HitKey::Type& matId)
 {
-    const Vector3& normal = surface.normal;
-    //Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
-    //normal.NormalizeSelf();
-    float nDotL = max(normal.Dot(wo), 0.0f);
-
+    //const Vector3& normal = surface.normal;
+    Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent).Normalize();
+    
+    //float nDotL = max(normal.Dot(wo), 0.0f);
     //Vector3 wOTangentSpace = GPUSurface::ToTangent(wo, surface.worldToTangent);
     //float nDotL = max(wOTangentSpace[2], 0.0f);
     

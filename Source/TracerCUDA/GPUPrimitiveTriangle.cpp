@@ -177,6 +177,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
   
     // Temporary buffers (re-allocated per batch)
     std::vector<Vector3> tangents;
+    std::vector<Vector3> biTangents;
     std::vector<Vector3> normals;
 
     size_t i = 0;
@@ -229,11 +230,16 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         if(hasTangent)            
         {
             tangents.resize(tangentCount);
+            biTangents.resize(tangentCount);
             if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(tangents.data()), 
                                              PrimitiveDataType::TANGENT)) != SceneError::OK)
                 return e;
+            if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(biTangents.data()),
+                                             PrimitiveDataType::BITANGENT)) != SceneError::OK)
+                return e;
 
             Vector3* tangentsIn = tangents.data();
+            Vector3* biTangentsIn = biTangents.data();
 
             // Utilize tangent and normal for quat generation
             std::for_each(/*std::execution::par_unseq,*/
@@ -250,9 +256,17 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                               tangents[1] = tangentsIn[indices[1]];
                               tangents[2] = tangentsIn[indices[2]];
 
+                              Vector3 biTangents[3];
+                              biTangents[0] = biTangentsIn[indices[0]];
+                              biTangents[1] = biTangentsIn[indices[1]];
+                              biTangents[2] = biTangentsIn[indices[2]];
+
                               // Generate rotations
                               QuatF q0, q1, q2;
-                              Triangle::LocalRotation(q0, q1, q2, normals, tangents);
+                              TransformGen::InvSpace(q0, tangents[0], biTangents[0], normals[0]);
+                              TransformGen::InvSpace(q1, tangents[1], biTangents[1], normals[1]);
+                              TransformGen::InvSpace(q2, tangents[2], biTangents[2], normals[2]);
+                              //Triangle::LocalRotation(q0, q1, q2, normals, tangents);
 
                               if(rotationsOut[indices[0]] != q0)
                                   METU_ERROR_LOG("WRITING DIFFERENT!!");
@@ -336,40 +350,41 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                           });
         }
 
-        //std::vector<Vector3f> transformedNormals;
-        //for(int i = 0; i < vertexCount; i++)
-        //{
-        //    QuatF quaternion = rotationsOut[i];
-        //    Vector3 normal = normalsIn[i];
-        //    Vector3 normalTransformed = quaternion.ApplyRotation(normal);            
-        //    //METU_DEBUG_LOG("Q: (%f, %f, %f, %f); N: (%f, %f, %f), NT: (%f, %f, %f)",
-        //    //               quaternion[0],
-        //    //               quaternion[1],
-        //    //               quaternion[2],
-        //    //               quaternion[3],
-        //    //               normal[0],
-        //    //               normal[1],
-        //    //               normal[2],
-        //    //               normalTransformed2[0],
-        //    //               normalTransformed2[1],
-        //    //               normalTransformed2[2]);
+        std::vector<Vector3f> transformedNormals;
+        for(int i = 0; i < vertexCount; i++)
+        {
+            QuatF quaternion = rotationsOut[i];
+            Vector3 normal = normalsIn[i];
+            Vector3 normalTransformed = quaternion.ApplyRotation(normal);            
+            METU_DEBUG_LOG("Q: (%f, %f, %f, %f); N: (%f, %f, %f), NT: (%f, %f, %f)",
+                           quaternion[0],
+                           quaternion[1],
+                           quaternion[2],
+                           quaternion[3],
+                           normal[0],
+                           normal[1],
+                           normal[2],
+                           normalTransformed[0],
+                           normalTransformed[1],
+                           normalTransformed[2]);
 
-        //    normalTransformed[0] = (std::abs(normalTransformed[0]) < 0.00001f) ? 0.0f : normalTransformed[0];
-        //    normalTransformed[1] = (std::abs(normalTransformed[1]) < 0.00001f) ? 0.0f : normalTransformed[1];
-        //    normalTransformed[2] = ((1.0f - std::abs(normalTransformed[2])) < 0.00001f) ? 1.0f : normalTransformed[2];
+            normalTransformed[0] = (std::abs(normalTransformed[0]) < 0.00001f) ? 0.0f : normalTransformed[0];
+            normalTransformed[1] = (std::abs(normalTransformed[1]) < 0.00001f) ? 0.0f : normalTransformed[1];
+            normalTransformed[2] = ((1.0f - std::abs(normalTransformed[2])) < 0.00001f) ? 1.0f : normalTransformed[2];
 
-        //    if(std::isnan(quaternion[0]) ||
-        //       std::isnan(quaternion[1]) || 
-        //       std::isnan(quaternion[2]))
-        //    {
-        //        transformedNormals.push_back(Vector3(NAN));
-        //        METU_DEBUG_LOG("FOUND_NAN");
-        //    }
-        //    else
-        //        transformedNormals.push_back(normalTransformed);
-        //}
-        //Debug::DumpMemToFile(std::string("PrimBatch") + std::to_string(i),
-        //                     transformedNormals.data(), transformedNormals.size());
+            if(std::isnan(quaternion[0]) ||
+               std::isnan(quaternion[1]) || 
+               std::isnan(quaternion[2]))
+            {
+                transformedNormals.push_back(Vector3(NAN));
+                METU_DEBUG_LOG("FOUND_NAN");
+            }
+            else
+                transformedNormals.push_back(normalTransformed);
+        }
+        METU_LOG("--------------");
+        Debug::DumpMemToFile(std::string("PrimBatch") + std::to_string(i),
+                             transformedNormals.data(), transformedNormals.size());
 
         i++;
     }
