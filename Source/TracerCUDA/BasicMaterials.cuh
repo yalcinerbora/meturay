@@ -1,7 +1,6 @@
 #pragma once
 
 #include "GPUMaterialP.cuh"
-#include "GPUSurface.h"
 #include "TypeTraits.h"
 #include "MetaMaterialFunctions.cuh"
 #include "DeviceMemory.h"

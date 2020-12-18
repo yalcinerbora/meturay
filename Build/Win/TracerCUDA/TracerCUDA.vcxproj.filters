@@ -422,6 +422,12 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.cuh">
       <Filter>Textures</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterialKC.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">
@@ -519,6 +525,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TextureReference.cu">
       <Filter>Textures</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cu">
+      <Filter>Materials</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>
