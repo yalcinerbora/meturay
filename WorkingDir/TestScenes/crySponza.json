@@ -15,7 +15,7 @@
 		"position": [0.0, 3.0, 7.0],
 		"up": [0.0, 1.0, 0.0]
 	}],
-	
+
 	"Lights": [
 	{
 		"id": 0,
@@ -80,6 +80,6 @@
     // Surfaces
 	"Surfaces": ["crySponzaSurfaces.bin"],
 
-	"LightSurfaces": [{"light": , "material": 1}],
+	"LightSurfaces": [{"light": 0, "material": 1}],
     "CameraSurfaces": [{"camera": 0, "material": 0}]
 }

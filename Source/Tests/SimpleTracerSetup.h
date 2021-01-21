@@ -41,9 +41,10 @@ class MockNode
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 18};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 32};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};
-        static constexpr Vector2i       IMAGE_RESOLUTION = {640, 360};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {640, 360};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {512, 512};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {900, 900};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
+        static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1600, 900};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1920, 1080};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {3840, 2160};
@@ -298,6 +299,7 @@ inline bool SimpleTracerSetup::Init()
     newImgSize[0] = static_cast<int>(SCREEN_RESOLUTION[0] * ratio);
     newImgSize[1] = static_cast<int>(SCREEN_RESOLUTION[1] * ratio);
     visorView->SetWindowSize(newImgSize);
+    //visorView->SetWindowSize(Vector2i(800));
 
     // Generate Tracer Object
     // & Set Options
