@@ -25,4 +25,11 @@ struct RefractMatData
     uint32_t baseMediumIndex;
 };
 
+struct UnrealMatData
+{
+    const Vector3*  dAlbedo;
+    const float*    dRoughness;
+
+};
+
 using EmissiveMatData = AlbedoMatData;

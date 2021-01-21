@@ -55,6 +55,8 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUSurface.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterialKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\WorkPool.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerFunctions.cuh" />
@@ -152,6 +154,7 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\SampleMaterials.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerWorks.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cu" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUAcceleratorLinear.cu" />

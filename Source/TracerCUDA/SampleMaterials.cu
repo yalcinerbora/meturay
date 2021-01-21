@@ -22,10 +22,10 @@ SceneError EmissiveMat::InitializeGroup(const NodeListing& materialNodes,
         }
     }
 
-    // Generate Id List
-    SceneError e = SceneError::OK;
-    if((e = GenerateInnerIds(materialNodes)) != SceneError::OK)
-        return e;
+    //// Generate Id List
+    //SceneError e = SceneError::OK;
+    //if((e = GenerateInnerIds(materialNodes)) != SceneError::OK)
+    //    return e;
 
     // Alloc etc
     size_t dIrradianceSize = irradianceCPU.size() * sizeof(Vector3);
