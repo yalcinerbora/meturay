@@ -1,7 +1,6 @@
 #pragma once
 
 #include "RayLib/Ray.h"
-#include "TextureStructs.h"
 #include "GPUMediumI.h"
 
 class RandomGPU;
@@ -33,7 +32,6 @@ using SampleFunc = Vector3(*)(// Sampled Output
                               const GPUMediumI& m,
                               //
                               const Surface& surface,           // Surface info (normals uvs etc.)
-                              const TexCoords* uvs,             // Translated texture coords from the cache system
                               // I-O
                               RandomGPU& rng,
                               // Constants
@@ -52,7 +50,6 @@ using EmissionFunc = Vector3(*)(// Input
                                 const GPUMediumI& m,
                                 //
                                 const Surface& surface,         // Surface info (normals uvs etc.)
-                                const TexCoords* uvs,           // Translated texture coords from the cache system
                                 // Constants
                                 const Data&,
                                 const HitKey::Type& matId);
@@ -66,25 +63,27 @@ using EvaluateFunc = Vector3(*)(// Input
                                 const GPUMediumI& m,
                                 //
                                 const Surface& surface,         // Surface info (normals uvs etc.)
-                                const TexCoords* uvs,           // Translated texture coords from the cache system
                                 // Constants
                                 const Data&,
                                 const HitKey::Type& matId);
 
-//===================================//
-// Texture Caching Related Functions //
-//===================================//
 
-// This call is per-ray which returns multiple of UVs
-// that is dependant of the material.
+// TEXTURE CACHING IS SHELVED
+
+////===================================//
+//// Texture Caching Related Functions //
+////===================================//
 //
-// Each ray returns its own UV location which may be required by the texture cache
-// 
-template <class Data, class Surface>
-using AcquireUVList = void(*)(//Output
-                              TexCoords*, 
-                              const Surface& surface,
-                              // Constants
-                              const Data&,
-                              const HitKey::Type& matId);
+//// This call is per-ray which returns multiple of UVs
+//// that is dependant of the material.
+////
+//// Each ray returns its own UV location which may be required by the texture cache
+//// 
+//template <class Data, class Surface>
+//using AcquireUVList = void(*)(//Output
+//                              TexCoords*, 
+//                              const Surface& surface,
+//                              // Constants
+//                              const Data&,
+//                              const HitKey::Type& matId);
 

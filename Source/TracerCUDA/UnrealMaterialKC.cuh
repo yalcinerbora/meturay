@@ -6,7 +6,6 @@
 #include "RayLib/HemiDistribution.h"
 
 #include "Random.cuh"
-#include "TextureStructs.h"
 #include "ImageFunctions.cuh"
 #include "MaterialFunctions.cuh"
 #include "TracerFunctions.cuh"
@@ -23,7 +22,6 @@ Vector3 UnrealSample(// Sampled Output
                       const GPUMediumI& m,
                       //
                       const UVSurface& surface,
-                      const TexCoords* uvs,
                       // I-O
                       RandomGPU& rng,
                       // Constants
@@ -47,7 +45,6 @@ Vector3 UnrealEvaluate(// Input
                        const GPUMediumI& m,
                        //
                        const UVSurface& surface,
-                       const TexCoords* uvs,
                        // Constants
                        const UnrealMatData& matData,
                        const HitKey::Type& matId)

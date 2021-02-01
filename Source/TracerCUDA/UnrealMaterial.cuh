@@ -21,8 +21,7 @@ class UnrealMat final
     : public GPUMaterialGroup<UnrealMatData, UVSurface,
                               UnrealSample, UnrealEvaluate,
                               EmitEmpty<UnrealMatData, UVSurface>,
-                              IsEmissiveFalse<UnrealMatData>,
-                              AcquireUVEmpty<UnrealMatData, UVSurface>>
+                              IsEmissiveFalse<UnrealMatData>>
 {
     public:
         static const char*          TypeName() { return "Unreal"; }

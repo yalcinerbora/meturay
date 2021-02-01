@@ -13,8 +13,7 @@ class ConstantMat final
     : public GPUMaterialGroup<AlbedoMatData, EmptySurface,
                               ConstantSample, ConstantEvaluate,
                               EmitEmpty<AlbedoMatData, EmptySurface>,
-                              IsEmissiveFalse<AlbedoMatData>,
-                              AcquireUVEmpty<AlbedoMatData, EmptySurface>>
+                              IsEmissiveFalse<AlbedoMatData>>
 {
     public:
         static const char*              TypeName() { return "Constant"; }
@@ -62,8 +61,7 @@ class BarycentricMat final
                               BarycentricSample,
                               BarycentricEvaluate,
                               EmitEmpty<NullData, BarySurface>,
-                              IsEmissiveFalse<NullData>,
-                              AcquireUVEmpty<NullData, BarySurface>>
+                              IsEmissiveFalse<NullData>>
 {
    public:
         static const char*      TypeName() { return "Barycentric"; }
@@ -109,8 +107,7 @@ class SphericalMat final
                               SphericalSample,
                               SphericalEvaluate,
                               EmitEmpty<NullData, SphrSurface>,
-                              IsEmissiveFalse<NullData>,
-                              AcquireUVEmpty<NullData, SphrSurface>>
+                              IsEmissiveFalse<NullData>>
 {
     public:
         static const char*      TypeName() { return "Spherical"; }
@@ -156,8 +153,7 @@ class NormalRenderMat final
                               NormalSample,
                               NormalEvaluate,
                               EmitEmpty<NullData, BasicSurface>,
-                              IsEmissiveFalse<NullData>,
-                              AcquireUVEmpty<NullData, BasicSurface>>
+                              IsEmissiveFalse<NullData>>
 {
    public:
         static const char*      TypeName() { return "NormalRender"; }

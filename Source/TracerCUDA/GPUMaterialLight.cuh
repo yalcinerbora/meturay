@@ -13,8 +13,7 @@ class LightMatConstant final
                               SampleEmpty<LightMatData, EmptySurface>, 
                               EvaluateEmpty<LightMatData, EmptySurface>,
                               EmitLight,
-                              IsEmissiveTrue<LightMatData>,
-                              AcquireUVEmpty<LightMatData, EmptySurface>>
+                              IsEmissiveTrue<LightMatData>>
     , public LightMaterialI
 {
     public:
@@ -64,8 +63,7 @@ class LightMatTextured final
                               SampleEmpty<LightMatTexData, UVSurface>,
                               EvaluateEmpty<LightMatTexData, UVSurface>,
                               EmitLightTex,
-                              IsEmissiveTrue<LightMatTexData>,
-                              AcquireUVEmpty<LightMatTexData, UVSurface>>
+                              IsEmissiveTrue<LightMatTexData>>
     , public LightMaterialI
 {
     public:
@@ -116,8 +114,7 @@ class LightMatCube final
                               SampleEmpty<LightMatCubeData, EmptySurface>,
                               EvaluateEmpty<LightMatCubeData, EmptySurface>,
                               EmitLightCube,
-                              IsEmissiveTrue<LightMatCubeData>,
-                              AcquireUVEmpty<LightMatCubeData, EmptySurface>>
+                              IsEmissiveTrue<LightMatCubeData>>
     , public LightMaterialI
 {
     public:

@@ -13,8 +13,7 @@ class EmissiveMat final
                               SampleEmpty<EmissiveMatData, EmptySurface>, 
                               EvaluateEmpty<EmissiveMatData, EmptySurface>,
                               EmitConstant,
-                              IsEmissiveTrue<EmissiveMatData>,
-                              AcquireUVEmpty<EmissiveMatData, EmptySurface>>
+                              IsEmissiveTrue<EmissiveMatData>>
 {
     public:
         static const char*              TypeName() { return "Emissive"; }
@@ -62,8 +61,7 @@ class LambertMat final
     : public GPUMaterialGroup<AlbedoMatData, BasicSurface,
                               LambertSample, LambertEvaluate,
                               EmitEmpty<AlbedoMatData, BasicSurface>,
-                              IsEmissiveFalse<AlbedoMatData>,
-                              AcquireUVEmpty<AlbedoMatData, BasicSurface>>
+                              IsEmissiveFalse<AlbedoMatData>>
 {
     public:
         static const char*              TypeName() { return "Lambert"; }
@@ -111,8 +109,7 @@ class ReflectMat final
     : public GPUMaterialGroup<ReflectMatData, BasicSurface,
                               ReflectSample, ReflectEvaluate,
                               EmitEmpty<ReflectMatData, BasicSurface>,
-                              IsEmissiveFalse<ReflectMatData>,
-                              AcquireUVEmpty<ReflectMatData, BasicSurface>>
+                              IsEmissiveFalse<ReflectMatData>>
 {
     public:
         static const char*              TypeName() { return "Reflect"; }
@@ -161,8 +158,7 @@ class RefractMat final
     : public GPUMaterialGroup<RefractMatData, BasicSurface,
                               RefractSample, RefractEvaluate,
                               EmitEmpty<RefractMatData, BasicSurface>,
-                              IsEmissiveFalse<RefractMatData>,
-                              AcquireUVEmpty<RefractMatData, BasicSurface>>
+                              IsEmissiveFalse<RefractMatData>>
 {
     public:
         static const char*      TypeName() { return "Refract"; }

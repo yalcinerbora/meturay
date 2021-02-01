@@ -5,7 +5,6 @@
 #include "MaterialFunctions.cuh"
 #include "ImageStructs.h"
 #include "RayStructs.h"
-#include "TextureStructs.h"
 #include "GPULightI.h"
 #include "EstimatorFunctions.cuh"
 #include "GPUMediumVacuum.cuh"
@@ -55,7 +54,6 @@ inline void BasicWork(// Output
                       const RayReg& ray,
                       const RayAuxBasic& aux,
                       const MGroup::Surface& surface,
-                      const TexCoords* uvs,
                       // I-O
                       EmptyState& gLocalState,
                       DirectTracerGlobal& gRenderState,
@@ -83,7 +81,6 @@ inline void BasicWork(// Output
                                       m,
                                       //
                                       surface,
-                                      nullptr,
                                       // I-O
                                       rng,
                                       // Constants
@@ -106,7 +103,6 @@ inline void PathLightWork(// Output
                           const RayReg& ray,
                           const RayAuxPath& aux,
                           const typename MGroup::Surface& surface,
-                          const TexCoords* uvs,
                           // I-O
                           PathTracerLocal& gLocalState,
                           PathTracerGlobal& gRenderState,
@@ -154,7 +150,6 @@ inline void PathLightWork(// Output
                                         m,
                                         //
                                         surface,
-                                        nullptr,
                                         // Constants
                                         gMatData,
                                         matIndex);
@@ -177,7 +172,6 @@ inline void PathWork(// Output
                      const RayReg& ray,
                      const RayAuxPath& aux,
                      const typename MGroup::Surface& surface,
-                     const TexCoords* uvs,
                      // I-O
                      PathTracerLocal& gLocalState,
                      PathTracerGlobal& gRenderState,
@@ -239,7 +233,6 @@ inline void PathWork(// Output
                                         m,
                                         //
                                         surface,
-                                        nullptr,
                                         // Constants
                                         gMatData,
                                         matIndex);
@@ -262,7 +255,6 @@ inline void PathWork(// Output
                                          m,
                                          //
                                          surface,
-                                         nullptr,
                                          // I-O
                                          rng,
                                          // Constants
@@ -327,7 +319,6 @@ inline void PathWork(// Output
                                        m,
                                        //
                                        surface,
-                                       nullptr,
                                        // Constants
                                        gMatData,
                                        matIndex);
@@ -370,7 +361,6 @@ inline void AOMissWork(// Output
                        const RayReg& ray,
                        const RayAuxAO& aux,
                        const typename MGroup::Surface& surface,
-                       const TexCoords* uvs,
                        // I-O
                        EmptyState& gLocalState,
                        AmbientOcclusionGlobal& gRenderState,
@@ -396,7 +386,6 @@ inline void AOWork(// Output
                    const RayReg& ray,
                    const RayAuxAO& aux,
                    const typename MGroup::Surface& surface,
-                   const TexCoords* uvs,
                    // I-O
                    EmptyState& gLocalState,
                    AmbientOcclusionGlobal& gRenderState,

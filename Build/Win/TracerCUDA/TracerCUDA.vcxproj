@@ -48,17 +48,20 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUWorkI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ImageFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ImageStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\LambertTexMaterial.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\LambertTexMaterialKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MangledNames.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUWork.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MetaMaterialFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUSurface.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SamplerI.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TextureManager.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.hpp" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterialKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\WorkPool.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\TextureStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerTypeGenerators.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DeviceMemory.h" />
@@ -115,6 +118,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\EntryPoint.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\TextureManager.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\Tracers.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerSystemCUDA.cpp" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightDisk.cu" />
@@ -139,6 +143,7 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\ImageMemory.cu">
       <FileType>Document</FileType>
     </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\LambertTexMaterial.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RNGMemory.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUTransformSingle.cu">
       <FileType>Document</FileType>

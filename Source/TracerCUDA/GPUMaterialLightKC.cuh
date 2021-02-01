@@ -32,7 +32,6 @@ Vector3 EmitLight(// Input
                   const GPUMediumI& m,
                   //
                   const EmptySurface& surface,
-                  const TexCoords* uvs,
                   // Constants
                   const LightMatData& matData,
                   const HitKey::Type& matId)
@@ -47,7 +46,6 @@ Vector3 EmitLightTex(// Input
                      const GPUMediumI& m,
                      //
                      const UVSurface& surface,
-                     const TexCoords* uvs,
                      // Constants
                      const LightMatTexData& matData,
                      const HitKey::Type& matId)
@@ -63,7 +61,6 @@ Vector3 EmitLightCube(// Input
                       const GPUMediumI& m,
                       //
                       const EmptySurface& surface,
-                      const TexCoords* uvs,
                       // Constants
                       const LightMatCubeData& matData,
                       const HitKey::Type& matId)

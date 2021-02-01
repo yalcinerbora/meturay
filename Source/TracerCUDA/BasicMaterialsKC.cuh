@@ -9,7 +9,6 @@ class RandomGPU;
 
 #include "ImageFunctions.cuh"
 #include "GPUSurface.h"
-#include "TextureStructs.h"
 
 __device__ inline
 Vector3 ConstantSample(// Sampled Output
@@ -22,7 +21,6 @@ Vector3 ConstantSample(// Sampled Output
                        const GPUMediumI& m,
                        //
                        const EmptySurface& surface,
-                       const TexCoords* uvs,
                        // I-O
                        RandomGPU& rng,
                        // Constants
@@ -47,7 +45,6 @@ Vector3 ConstantEvaluate(// Input
                          const GPUMediumI& m,
                          //
                          const EmptySurface& surface,
-                         const TexCoords* uvs,
                          // Constants
                          const AlbedoMatData& matData,
                          const HitKey::Type& matId)
@@ -66,7 +63,6 @@ Vector3 BarycentricSample(// Sampled Output
                           const GPUMediumI& m,
                           //
                           const BarySurface& surface,
-                          const TexCoords* uvs,
                           // I-O
                           RandomGPU& rng,
                           // Constants
@@ -91,7 +87,6 @@ Vector3 BarycentricEvaluate(// Input
                             const GPUMediumI& m,
                             //
                             const BarySurface& surface,
-                            const TexCoords* uvs,
                             // Constants
                             const NullData& matData,
                             const HitKey::Type& matId)
@@ -110,7 +105,6 @@ Vector3 SphericalSample(// Sampled Output
                         const GPUMediumI& m,
                         //
                         const SphrSurface& surface,
-                        const TexCoords* uvs,
                         // I-O
                         RandomGPU& rng,
                         // Constants
@@ -137,7 +131,6 @@ Vector3 SphericalEvaluate(// Input
                           const GPUMediumI& m,
                           //
                           const SphrSurface& surface,
-                          const TexCoords* uvs,
                           // Constants
                           const NullData& matData,
                           const HitKey::Type& matId)
@@ -158,7 +151,6 @@ Vector3 NormalSample(// Sampled Output
                      const GPUMediumI& m,
                      //
                      const BasicSurface& surface,
-                     const TexCoords* uvs,
                      // I-O
                      RandomGPU& rng,
                      // Constants
@@ -186,7 +178,6 @@ Vector3 NormalEvaluate(// Input
                        const GPUMediumI& m,
                        //
                        const BasicSurface& surface,
-                       const TexCoords* uvs,
                        // Constants
                        const NullData& matData,
                        const HitKey::Type& matId)

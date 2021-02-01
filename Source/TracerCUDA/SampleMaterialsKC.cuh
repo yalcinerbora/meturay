@@ -6,7 +6,6 @@
 #include "RayLib/HemiDistribution.h"
 
 #include "Random.cuh"
-#include "TextureStructs.h"
 #include "ImageFunctions.cuh"
 #include "MaterialFunctions.cuh"
 #include "TracerFunctions.cuh"
@@ -19,7 +18,6 @@ Vector3 EmitConstant(// Input
                      const GPUMediumI& m,
                      //
                      const EmptySurface& surface,
-                     const TexCoords* uvs,
                      // Constants
                      const EmissiveMatData& matData,
                      const HitKey::Type& matId)
@@ -38,7 +36,6 @@ Vector3 LambertSample(// Sampled Output
                       const GPUMediumI& m,
                       //
                       const BasicSurface& surface,
-                      const TexCoords* uvs,
                       // I-O
                       RandomGPU& rng,
                       // Constants
@@ -82,19 +79,13 @@ Vector3 LambertEvaluate(// Input
                         const GPUMediumI& m,
                         //
                         const BasicSurface& surface,
-                        const TexCoords* uvs,
                         // Constants
                         const AlbedoMatData& matData,
                         const HitKey::Type& matId)
 {
     Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
-
-    float nDotL = max(normal.Dot(wo), 0.0f);
-    //Vector3 wOTangentSpace = GPUSurface::ToTangent(wo, surface.worldToTangent);
-    //float nDotL = max(wOTangentSpace[2], 0.0f);
-    
+    float nDotL = max(normal.Dot(wo), 0.0f);    
     return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
-    //return normal;
 }
 
 __device__ inline
@@ -108,7 +99,6 @@ Vector3 ReflectSample(// Sampled Output
                       const GPUMediumI& m,
                       //
                       const BasicSurface& surface,
-                      const TexCoords* uvs,
                       // I-O
                       RandomGPU& rng,
                       // Constants
@@ -150,7 +140,6 @@ Vector3 ReflectEvaluate(// Input
                         const GPUMediumI& m,
                         //
                         const BasicSurface& surface,
-                        const TexCoords* uvs,
                         // Constants
                         const ReflectMatData& matData,
                         const HitKey::Type& matId)
@@ -170,7 +159,6 @@ Vector3 RefractSample(// Sampled Output
                       const GPUMediumI& m,
                       //
                       const BasicSurface& surface,
-                      const TexCoords* uvs,
                       // I-O
                       RandomGPU& rng,
                       // Constants
@@ -265,7 +253,6 @@ Vector3 RefractEvaluate(// Input
                         const GPUMediumI& m,
                         //
                         const BasicSurface& surface,
-                        const TexCoords* uvs,
                         // Constants
                         const RefractMatData& matData,
                         const HitKey::Type& matId)

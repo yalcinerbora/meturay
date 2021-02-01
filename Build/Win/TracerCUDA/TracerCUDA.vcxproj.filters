@@ -127,6 +127,9 @@
     <ClCompile Include="..\..\..\Source\TracerCUDA\EntryPoint.cpp">
       <Filter>SharedLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerCUDA\TextureManager.cpp">
+      <Filter>Textures</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerCUDA\ImageMemory.h">
@@ -274,9 +277,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GenerationKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\TextureStructs.h">
-      <Filter>Structs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\ImageFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
@@ -428,6 +428,18 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterialKC.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SamplerI.cuh">
+      <Filter>Textures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\LambertTexMaterial.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\LambertTexMaterialKC.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TextureManager.h">
+      <Filter>Textures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">
@@ -527,6 +539,9 @@
       <Filter>Textures</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cu">
+      <Filter>Materials</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\LambertTexMaterial.cu">
       <Filter>Materials</Filter>
     </CudaCompile>
   </ItemGroup>

@@ -4,7 +4,6 @@
 #include "RayStructs.h"
 #include "Random.cuh"
 #include "ImageStructs.h"
-#include "TextureStructs.h"
 #include "GPUPrimitiveP.cuh"
 #include "CudaConstants.hpp"
 
@@ -31,7 +30,6 @@ using WorkFunc = void(*)(// Output
                          const RayReg& ray,
                          const RayAuxiliary& aux,
                          const MGroup::Surface& surface,
-                         const TexCoords* uvs,
                          // I-O
                          LocalState& gLocalState,
                          GlobalState& gRenderState,
@@ -121,8 +119,7 @@ void KCWork(// Output
               // Input as registers
               ray,              
               aux,
-              surface,
-              nullptr,
+              surface,              
               // I-O
               gLocalState,
               gRenderState,

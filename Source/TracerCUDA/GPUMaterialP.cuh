@@ -23,8 +23,7 @@ template <class D, class S,
           SampleFunc<D, S> SampleF,
           EvaluateFunc<D, S> EvalF,
           EmissionFunc<D, S> EmitF,
-          IsEmissiveFunc<D> IsEmitF,
-          AcquireUVList<D, S> AcqF>
+          IsEmissiveFunc<D> IsEmitF>
 class GPUMaterialGroup
     : public GPUMaterialGroupI
     , public GPUMaterialGroupD<D>
@@ -40,7 +39,6 @@ class GPUMaterialGroup
         static constexpr EvaluateFunc<Data, Surface>    Evaluate = EvalF;
         static constexpr EmissionFunc<Data, Surface>    Emit = EmitF;
         static constexpr IsEmissiveFunc<Data>           IsEmissive = IsEmitF;
-        static constexpr AcquireUVList<Data, Surface>   AcquireUVList = AcqF;
 
     private:
         // Designated GPU
@@ -71,9 +69,8 @@ template <class D, class S,
           SampleFunc<D, S> SF,           
           EvaluateFunc<D, S> EF,
           EmissionFunc<D, S> EmF,
-          IsEmissiveFunc<D> IEF,
-          AcquireUVList<D, S> AF>
-GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::GPUMaterialGroup(const CudaGPU& gpu)
+          IsEmissiveFunc<D> IEF>
+GPUMaterialGroup<D, S, SF, EF, EmF, IEF>::GPUMaterialGroup(const CudaGPU& gpu)
     : gpu(gpu)
 {}
 
@@ -81,9 +78,8 @@ template <class D, class S,
           SampleFunc<D, S> SF,           
           EvaluateFunc<D, S> EF,
           EmissionFunc<D, S> EmF,
-          IsEmissiveFunc<D> IEF,
-          AcquireUVList<D, S> AF>
-SceneError GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::GenerateInnerIds(const NodeListing& nodes)
+          IsEmissiveFunc<D> IEF>
+SceneError GPUMaterialGroup<D, S, SF, EF, EmF, IEF>::GenerateInnerIds(const NodeListing& nodes)
 {
     uint32_t i = 0;
     for(const auto& sceneNode : nodes)
@@ -102,9 +98,8 @@ template <class D, class S,
           SampleFunc<D, S> SF,           
           EvaluateFunc<D, S> EF,
           EmissionFunc<D, S> EmF,
-          IsEmissiveFunc<D> IEF,
-          AcquireUVList<D, S> AF>
-bool GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::HasMaterial(uint32_t materialId) const
+          IsEmissiveFunc<D> IEF>
+bool GPUMaterialGroup<D, S, SF, EF, EmF, IEF>::HasMaterial(uint32_t materialId) const
 {
     if(innerIds.find(materialId) != innerIds.cend())
         return true;
@@ -115,9 +110,8 @@ template <class D, class S,
           SampleFunc<D, S> SF,           
           EvaluateFunc<D, S> EF,
           EmissionFunc<D, S> EmF,
-          IsEmissiveFunc<D> IEF,
-          AcquireUVList<D, S> AF>
-uint32_t GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::InnerId(uint32_t materialId) const
+          IsEmissiveFunc<D> IEF>
+uint32_t GPUMaterialGroup<D, S, SF, EF, EmF, IEF>::InnerId(uint32_t materialId) const
 {
     return innerIds.at(materialId);
 }
@@ -126,9 +120,8 @@ template <class D, class S,
     SampleFunc<D, S> SF,
     EvaluateFunc<D, S> EF,
     EmissionFunc<D, S> EmF,
-    IsEmissiveFunc<D> IEF,
-    AcquireUVList<D, S> AF>
-const CudaGPU& GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::GPU() const
+    IsEmissiveFunc<D> IEF>
+const CudaGPU& GPUMaterialGroup<D, S, SF, EF, EmF, IEF>::GPU() const
 {
     return gpu;
 }
@@ -137,9 +130,8 @@ template <class D, class S,
     SampleFunc<D, S> SF,
     EvaluateFunc<D, S> EF,
     EmissionFunc<D, S> EmF,
-    IsEmissiveFunc<D> IEF,
-    AcquireUVList<D, S> AF>
-bool GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::IsSpecularGroup() const
+    IsEmissiveFunc<D> IEF>
+bool GPUMaterialGroup<D, S, SF, EF, EmF, IEF>::IsSpecularGroup() const
 {
     return false;
 }
@@ -148,10 +140,9 @@ template <class D, class S,
     SampleFunc<D, S> SF,
     EvaluateFunc<D, S> EF,
     EmissionFunc<D, S> EmF,
-    IsEmissiveFunc<D> IEF,
-    AcquireUVList<D, S> AF>
-void GPUMaterialGroup<D, S, SF, EF, EmF, IEF, AF>::AttachGlobalMediumArray(const GPUMediumI* const*,
-                                                                           uint32_t)
+    IsEmissiveFunc<D> IEF>
+void GPUMaterialGroup<D, S, SF, EF, EmF, IEF>::AttachGlobalMediumArray(const GPUMediumI* const*,
+                                                                       uint32_t)
 {}
 
 struct MatDataAccessor

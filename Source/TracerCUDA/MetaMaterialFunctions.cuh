@@ -27,23 +27,12 @@ bool IsEmissiveTrue(const Data&,
 
 template <class Data, class Surface>
 __device__ inline
-void AcquireUVEmpty(//Output
-                    TexCoords*,
-                    const Surface&,
-                    // Constants
-                    const Data&,
-                    const HitKey::Type& matId)
-{}
-
-template <class Data, class Surface>
-__device__ inline
 Vector3 EmitEmpty(// Input
                   const Vector3& wo,
                   const Vector3& pos,
                   const GPUMediumI& m,
                   //
                   const Surface& surface,
-                  const TexCoords* uvs,
                   // Constants
                   const Data&,
                   const HitKey::Type& matId)
@@ -63,7 +52,6 @@ Vector3 SampleEmpty(// Sampled Output
                     const GPUMediumI& m,
                     //
                     const Surface& surface,
-                    const TexCoords* uvs,
                     // I-O
                     RandomGPU& rng,
                     // Constants
@@ -83,7 +71,6 @@ Vector3 EvaluateEmpty(// Input
                          const GPUMediumI& m,
                          //
                          const Surface& surface,
-                         const TexCoords* uvs,
                          // Constants
                          const Data& matData,
                          const HitKey::Type& matId)
