@@ -2,7 +2,7 @@
 
 #include "RayLib/Vector.h"
 #include "GPUMediumI.h"
-#include "SamplerI.cuh"
+#include "TextureReference.cuh"
 
 struct NullData {};
 
@@ -28,16 +28,17 @@ struct RefractMatData
 
 struct UnrealMatData
 {
-    const SamplerCF<2, 3, float>* dAlbedo;
-    const SamplerCF<2, 1, float>* dRoughness;
-    const SamplerCF<2, 1, float>* dMetallic;
-    const SamplerI<2, 3, float>** dNormal;
+
+    const TextureRefI<2, Vector3f>** dAlbedo;
+    const TextureRefI<2, float>**    dRoughness;
+    const TextureRefI<2, float>**    dMetallic;
+    const TextureRefI<2, Vector3f>** dNormal;
 };
 
 struct LambertTMatData
 {
-    const SamplerCF<2, 3, float>* dAlbedo;
-    const SamplerI<2, 3, float>** dNormal;
+    const TextureRefI<2, Vector3f>** dAlbedo;
+    const TextureRefI<2, Vector3f>** dNormal;
 };
 
 using EmissiveMatData = AlbedoMatData;

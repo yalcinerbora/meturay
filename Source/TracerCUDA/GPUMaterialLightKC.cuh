@@ -17,7 +17,7 @@ struct LightMatData
 
 struct LightMatTexData
 {
-    TexRef<2, Vector3>* dRadianceTextures;
+    TextureRef<2, Vector3>* dRadianceTextures;
 };
 
 struct LightMatCubeData

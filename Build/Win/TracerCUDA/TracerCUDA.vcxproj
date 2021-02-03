@@ -55,10 +55,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUWork.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MetaMaterialFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUSurface.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\SamplerI.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\TextureManager.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReferenceGenerators.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterialKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\WorkPool.h" />
@@ -118,7 +117,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\EntryPoint.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerCUDA\TextureManager.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\Tracers.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerSystemCUDA.cpp" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightDisk.cu" />

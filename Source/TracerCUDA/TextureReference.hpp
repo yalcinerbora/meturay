@@ -44,13 +44,13 @@ T ConstantRef<D, T>::operator()(const TexFloatType_t<D>&,
 }
 
 template <int D, class T>
-__device__ TexRef<D, T>::TexRef(cudaTextureObject_t tId)
+__device__ TextureRef<D, T>::TextureRef(cudaTextureObject_t tId)
  : t(tId)
 {}
 
 template <int D, class T>
 __device__
-T TexRef<D, T>::operator()(const TexFloatType_t<D>& index) const
+T TextureRef<D, T>::operator()(const TexFloatType_t<D>& index) const
 {
     if constexpr(D == 1)
     {
@@ -69,7 +69,7 @@ T TexRef<D, T>::operator()(const TexFloatType_t<D>& index) const
 
 template <int D, class T>
 __device__
-T TexRef<D, T>::operator()(const TexFloatType_t<D>& index, float mip) const
+T TextureRef<D, T>::operator()(const TexFloatType_t<D>& index, float mip) const
 {
     if constexpr(D == 1)
     {
@@ -88,9 +88,9 @@ T TexRef<D, T>::operator()(const TexFloatType_t<D>& index, float mip) const
 
 template <int D, class T>
 __device__
-T TexRef<D, T>::operator()(const TexFloatType_t<D>& index,
-                           const TexFloatType_t<D>& dx,
-                           const TexFloatType_t<D>& dy) const
+T TextureRef<D, T>::operator()(const TexFloatType_t<D>& index,
+                               const TexFloatType_t<D>& dx,
+                               const TexFloatType_t<D>& dy) const
 {
     if constexpr(D == 1)
     {

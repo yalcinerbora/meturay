@@ -39,10 +39,10 @@ __device__
 T ConvertTexReturnType(CudaReturn_t<T>);
 
 template <int D, class T>
-class TextureRef
+class TextureRefI
 {
     public:
-        virtual     ~TextureRef() = default;
+        virtual     ~TextureRefI() = default;
 
         __device__
         virtual T   operator()(const TexFloatType_t<D>&) const = 0;
@@ -57,7 +57,7 @@ class TextureRef
 };
 
 template <int D, class T>
-class ConstantRef : public TextureRef<D, T>
+class ConstantRef : public TextureRefI<D, T>
 {
     private:
         T               data;
@@ -79,7 +79,7 @@ class ConstantRef : public TextureRef<D, T>
 };
 
 template <int D, class T>
-class TexRef : public TextureRef<D, T>
+class TextureRef : public TextureRefI<D, T>
 {
     using CudaType = typename CudaReturn_t<T>;
 
@@ -88,8 +88,8 @@ class TexRef : public TextureRef<D, T>
 
     public:
         // Constructors & Destructor
-        __device__      TexRef(cudaTextureObject_t);
-                        ~TexRef() = default;
+        __device__      TextureRef(cudaTextureObject_t);
+                        ~TextureRef() = default;
 
         __device__
         T               operator()(const TexFloatType_t<D>&) const  override;
@@ -105,7 +105,7 @@ class TexRef : public TextureRef<D, T>
 };
 
 template <int D, class T>
-class TexArrayRef : public TextureRef<D, T>
+class TexArrayRef : public TextureRefI<D, T>
 {
     private:
         cudaTextureObject_t     t;
@@ -129,7 +129,7 @@ class TexArrayRef : public TextureRef<D, T>
 };
 
 template <class T>
-class TexCubeRef : public TextureRef<3, T>
+class TexCubeRef : public TextureRefI<3, T>
 {
     private:
         cudaTextureObject_t     t;
@@ -168,17 +168,17 @@ extern template class ConstantRef<3, Vector2>;
 extern template class ConstantRef<3, Vector3>;
 extern template class ConstantRef<3, Vector4>;
 
-extern template class TexRef<1, float>;
-extern template class TexRef<1, Vector2>;
-extern template class TexRef<1, Vector3>;
-extern template class TexRef<1, Vector4>;
+extern template class TextureRef<1, float>;
+extern template class TextureRef<1, Vector2>;
+extern template class TextureRef<1, Vector3>;
+extern template class TextureRef<1, Vector4>;
 
-extern template class TexRef<2, float>;
-extern template class TexRef<2, Vector2>;
-extern template class TexRef<2, Vector3>;
-extern template class TexRef<2, Vector4>;
+extern template class TextureRef<2, float>;
+extern template class TextureRef<2, Vector2>;
+extern template class TextureRef<2, Vector3>;
+extern template class TextureRef<2, Vector4>;
 
-extern template class TexRef<3, float>;
-extern template class TexRef<3, Vector2>;
-extern template class TexRef<3, Vector3>;
-extern template class TexRef<3, Vector4>;
+extern template class TextureRef<3, float>;
+extern template class TextureRef<3, Vector2>;
+extern template class TextureRef<3, Vector3>;
+extern template class TextureRef<3, Vector4>;

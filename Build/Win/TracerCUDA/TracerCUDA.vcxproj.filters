@@ -127,9 +127,6 @@
     <ClCompile Include="..\..\..\Source\TracerCUDA\EntryPoint.cpp">
       <Filter>SharedLib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerCUDA\TextureManager.cpp">
-      <Filter>Textures</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerCUDA\ImageMemory.h">
@@ -428,16 +425,13 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterialKC.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\SamplerI.cuh">
-      <Filter>Textures</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\LambertTexMaterial.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\LambertTexMaterialKC.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\TextureManager.h">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReferenceGenerators.cuh">
       <Filter>Textures</Filter>
     </ClInclude>
   </ItemGroup>
