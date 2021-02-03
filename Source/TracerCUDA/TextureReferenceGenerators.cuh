@@ -4,6 +4,15 @@
 #include "TextureReference.cuh"
 #include <cuda.h>
 
+template <class T>
+struct TextureOrConstReferenceData
+{
+    bool isConstData;
+    cudaTextureObject_t tex;
+    uint32_t textureArrayIndex;
+    T data;
+};
+
 __global__
 template <int D, class T>
 void GenerateTextureReference(TextureRef<D, T>* gRefLocations,
@@ -23,6 +32,7 @@ void GenerateTextureReference(TextureRef<D, T>* gRefLocations,
     }
 }
 
+__global__
 template <int D, class T>
 void GenerateConstantReference(ConstantRef<D, T>* gRefLocations,
                                const T* gConstantData,
@@ -35,5 +45,78 @@ void GenerateConstantReference(ConstantRef<D, T>* gRefLocations,
     {
 
         new (gRefLocations + globalId) ConstantRef<D, T>(gConstants[globalId]);
+    }
+}
+
+__global__
+template <int D, class T>
+void GenerateEitherTexOrConstantReference(TextureRefI<D, T>** gTexRefInterfaces,
+                                          ConstantRef<D, T>* gCRefLocations,
+                                          TextureRef<D, T>* gTRefLocations,
+                                          // Atomic Counters
+                                          uint32_t& gInterfaceCounter,
+                                          uint32_t& gTRefCounter,
+                                          uint32_t& gCRefCounter,
+                                          //
+                                          const TextureOrConstReferenceData<T>* gRefData,
+                                          uint32_t totalRefCount)
+{
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < totalRefCount;
+        globalId += blockDim.x * gridDim.x)
+    {
+        const ReferenceDataList<T> data = gRefData[globalId];
+
+        TextureRefI<D, T>* refAddress = nullptr;
+        if(data.isConstData)
+        {
+            uint32_t location = atomicAdd(&gCRefCounter, 1);
+            refAddress = new (gCRefLocations + location) ConstantRef<D, T>(data.data);
+        }
+        else
+        {
+            uint32_t location = atomicAdd(&gTRefCounter, 1);
+            refAddress = new (gTRefLocations + location) TextureRef<D, T>(data.tex);
+        }
+
+        uint32_t interfaceLocation = atomicAdd(&gInterfaceCounter, 1);
+        gTexRefInterfaces[interfaceLocation] = refAddress;
+    }
+}
+
+__global__
+template <int D, class T>
+void GenerateEitherTexOrConstantReference(TextureRefI<D, T>** gTexRefInterfaces,
+                                          ConstantRef<D, T>* gCRefLocations,
+                                          TexArrayRef<D, T>* gTRefLocations,
+                                          // Atomic Counters
+                                          uint32_t& gInterfaceCounter,
+                                          uint32_t& gTRefCounter,
+                                          uint32_t& gCRefCounter,
+                                          //
+                                          const TextureOrConstReferenceData<T>* gRefData,
+                                          uint32_t totalRefCount)
+{
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < totalRefCount;
+        globalId += blockDim.x * gridDim.x)
+    {
+        const ReferenceDataList<T> data = gRefData[globalId];
+
+        TextureRefI<D, T>* refAddress = nullptr;
+        if(data.isConstData)
+        {
+            uint32_t location = atomicAdd(&gCRefCounter, 1);
+            refAddress = new (gCRefLocations + location) ConstantRef<D, T>(data.data);
+        }
+        else
+        {
+            uint32_t location = atomicAdd(&gTRefCounter, 1);
+            refAddress = new (gTRefLocations + location) TexArrayRef<D, T>(data.tex, 
+                                                                           data.textureArrayIndex);
+        }
+
+        uint32_t interfaceLocation = atomicAdd(&gInterfaceCounter, 1);
+        gTexRefInterfaces[interfaceLocation] = refAddress;
     }
 }

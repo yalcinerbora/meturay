@@ -9,22 +9,22 @@
 #include "GPUSurface.h"
 
 __device__ inline
-Vector3 LambertSample(// Sampled Output
-                      RayF& wo,
-                      float& pdf,
-                      const GPUMediumI*& outMedium,
-                      // Input
-                      const Vector3& wi,
-                      const Vector3& pos,
-                      const GPUMediumI& m,
-                      //
-                      const UVSurface& surface,
-                      // I-O
-                      RandomGPU& rng,
-                      // Constants
-                      const LambertTMatData& matData,
-                      const HitKey::Type& matId,
-                      uint32_t sampleIndex)
+Vector3 LambertTSample(// Sampled Output
+                       RayF& wo,
+                       float& pdf,
+                       const GPUMediumI*& outMedium,
+                       // Input
+                       const Vector3& wi,
+                       const Vector3& pos,
+                       const GPUMediumI& m,
+                       //
+                       const UVSurface& surface,
+                       // I-O
+                       RandomGPU& rng,
+                       // Constants
+                       const LambertTMatData& matData,
+                       const HitKey::Type& matId,
+                       uint32_t sampleIndex)
 {
     // No medium change
     outMedium = &m;
@@ -36,8 +36,8 @@ Vector3 LambertSample(// Sampled Output
     Vector3 normal;
     if(matData.dNormal[matId])
     {
-        const auto& dNormalSampler = matData.dNormal[matId];
-        normal = GPUSurface::ToWorld(dNormalSampler->Sample(surface.uv),
+        const auto& dNormalSampler = *matData.dNormal[matId];
+        normal = GPUSurface::ToWorld(dNormalSampler(surface.uv),
                                      surface.worldToTangent);
     }    
     // Tangent space normal not present (mat has not tangent space normal)
@@ -63,28 +63,28 @@ Vector3 LambertSample(// Sampled Output
     Vector3 outPos = position + normal * MathConstants::Epsilon;
     wo = RayF(direction, outPos);
     // BSDF Calculation
-    const Vector3f albedo = matData.dAlbedo->Sample(surface.uv);
+    const Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
     return nDotL * albedo * MathConstants::InvPi;
 }
 
 __device__ inline
-Vector3 LambertEvaluate(// Input
-                        const Vector3& wo,
-                        const Vector3& wi,
-                        const Vector3& pos,
-                        const GPUMediumI& m,
-                        //
-                        const UVSurface& surface,
-                        // Constants
-                        const LambertTMatData& matData,
-                        const HitKey::Type& matId)
+Vector3 LambertTEvaluate(// Input
+                         const Vector3& wo,
+                         const Vector3& wi,
+                         const Vector3& pos,
+                         const GPUMediumI& m,
+                         //
+                         const UVSurface& surface,
+                         // Constants
+                         const LambertTMatData& matData,
+                         const HitKey::Type& matId)
 {
     // Check if tangent space normal is avail
     Vector3 normal;
     if(matData.dNormal[matId])
     {
-        const auto& dNormalSampler = matData.dNormal[matId];
-        normal = GPUSurface::ToWorld(dNormalSampler->Sample(surface.uv),
+        const auto& dNormalSampler = *matData.dNormal[matId];
+        normal = GPUSurface::ToWorld(dNormalSampler(surface.uv),
                                      surface.worldToTangent);
     }
     // Tangent space normal not present (mat has not tangent space normal)
@@ -93,6 +93,6 @@ Vector3 LambertEvaluate(// Input
 
     float nDotL = max(normal.Dot(wo), 0.0f);
        
-    const Vector3f albedo = matData.dAlbedo->Sample(surface.uv);
+    const Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
     return nDotL * albedo * MathConstants::InvPi;
 }
