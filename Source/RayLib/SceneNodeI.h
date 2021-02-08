@@ -22,6 +22,26 @@ using Matrix4x4List = std::vector<Matrix4x4>;
 using UIntList = std::vector<uint32_t>;
 using UInt64List = std::vector<uint64_t>;
 
+template <class T>
+using OptionalNode = std::pair<bool, T>;
+
+template <class T>
+struct TexturedDataNode
+{
+    bool isTexture;
+    union
+    {
+        T data;
+        MaterialTextureStruct texNode;
+    };
+};
+
+template <class T>
+using OptionalNodeList = std::vector<OptionalNode<T>>;
+
+template <class T>
+using TexturedDataNodeList = std::vector<TexturedDataNode<T>>;
+
 class SceneNodeI
 {
     private:
@@ -91,7 +111,7 @@ class SceneNodeI
         virtual std::vector<Matrix4x4>      AccessMatrix4x4(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<uint32_t>       AccessUInt(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<uint64_t>       AccessUInt64(const std::string& name, double time = 0.0) const = 0;
-
+                
         virtual std::vector<BoolList>       AccessBoolList(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<StringList>     AccessStringList(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<FloatList>      AccessFloatList(const std::string& name, double time) const = 0;
@@ -101,6 +121,18 @@ class SceneNodeI
         virtual std::vector<Matrix4x4List>  AccessMatrix4x4List(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<UIntList>       AccessUIntList(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<UInt64List>     AccessUInt64List(const std::string& name, double time = 0.0) const = 0;
+
+        // Texture Related
+        virtual TexturedDataNodeList<float>             AccessTexturedDataFloat(const std::string& name,
+                                                                                double time = 0.0) const = 0;
+        virtual TexturedDataNodeList<Vector2>           AccessTexturedDataVector2(const std::string& name,
+                                                                                  double time = 0.0) const = 0;
+        virtual TexturedDataNodeList<Vector3>           AccessTexturedDataVector3(const std::string& name,
+                                                                                  double time = 0.0) const = 0;
+        virtual TexturedDataNodeList<Vector4>           AccessTexturedDataVector4(const std::string& name,
+                                                                                  double time = 0.0) const = 0;
+        virtual OptionalNodeList<MaterialTextureStruct> AccessOptionalTextureNode(const std::string& name,
+                                                                                  double time = 0.0) const = 0;
 };
 
 using SceneNodePtr = std::unique_ptr<SceneNodeI>;

@@ -23,7 +23,7 @@ class LambertTexMat final
 
     private:
         DeviceMemory            memory;
-        Tex2DMap<Vector3>       textureMemory;
+        Tex2DMap<Vector4>       textureMemory;
 
         Vector3f*               dConstAlbedo;
 
@@ -38,16 +38,18 @@ class LambertTexMat final
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
         SceneError              InitializeGroup(const NodeListing& materialNodes, 
+                                                const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
-        SceneError              ChangeTime(const NodeListing& materialNodes, double time,
+        SceneError              ChangeTime(const NodeListing& materialNodes, 
+                                           double time,
                                            const std::string& scenePath) override;
 
         // Material Queries
         bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
 
         size_t                  UsedGPUMemory() const override;
-        size_t                  UsedCPUMemory() const override { return sizeof(LambertTMatData); }
+        size_t                  UsedCPUMemory() const override;
         size_t                  UsedGPUMemory(uint32_t materialId) const override;
         size_t                  UsedCPUMemory(uint32_t materialId) const override;
 
@@ -58,9 +60,8 @@ class LambertTexMat final
 
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture
-        uint8_t                 UsedTextureCount() const { return 0; }
-        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask             CachedTextures() const { return 0; }
+        uint8_t                 UsedTextureCount() const;
+        std::vector<uint32_t>   UsedTextureIds() const;
 };
 
 static_assert(IsMaterialGroupClass<LambertTexMat>::value,

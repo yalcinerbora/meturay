@@ -46,6 +46,34 @@ using namespace NodeNames;
 //    return SceneError::UNKNOWN_FILTER_TYPE;
 //}
 
+TextureAccessLayout SceneIO::LoadTextureAccessLayout(const nlohmann::json& node)
+{
+    std::string layout = node;
+    if(layout == "r")
+        return TextureAccessLayout::R;
+    else if(layout == "g")
+        return TextureAccessLayout::G;
+    else if(layout == "b")
+        return TextureAccessLayout::B;
+    else if(layout == "a")
+        return TextureAccessLayout::A;
+    else if(layout == "rg")
+        return TextureAccessLayout::RG;
+    else if(layout == "rgb")
+        return TextureAccessLayout::RGB;
+    else if(layout == "rgba")
+        return TextureAccessLayout::RGBA;
+    else throw SceneException(SceneError::UNKNOWN_TEXTURE_ACCESS_LAYOUT);
+}
+
+TextureStruct SceneIO::LoadTexture(const nlohmann::json& jsn)
+{
+    TextureStruct result;
+    result.texId = jsn[ID];
+    result.filePath = jsn[TEXTURE_FILE];
+    return result;
+}
+
 SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn)
 {
     // Load as array
@@ -174,6 +202,15 @@ CameraSurfaceStruct SceneIO::LoadCameraSurface(uint32_t baseMediumId,
     // Material
     s.materialId = jsn[MATERIAL];
 
+    return s;
+}
+
+MaterialTextureStruct SceneIO::LoadMaterialTextureStruct(const nlohmann::json& node,
+                                                         double time)
+{
+    MaterialTextureStruct s;
+    s.texId = LoadNumber<uint32_t>(node[ID]);
+    s.channelLayout = LoadTextureAccessLayout(node[TEXTURE_CHANNEL]);
     return s;
 }
 

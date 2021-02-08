@@ -20,10 +20,15 @@ class SceneNodeJson final : public SceneNodeI
                                                      double time) const;
         template <class T>
         std::vector<T>                  AccessRanged(const std::string& name) const;
-
         template <class T, LoadFunc<T>>
         std::vector<T>                  CommonList(const std::string& name,
                                                    double time) const;
+        template <class T, LoadFunc<T>>
+        TexturedDataNodeList<T>         AccessTextured(const std::string& name,
+                                                       double time) const;
+        template <class T, LoadFunc<T>>
+        OptionalNodeList<T>             AccessOptional(const std::string& name,
+                                                       double time) const;
 
     protected:
     public:
@@ -88,4 +93,16 @@ class SceneNodeJson final : public SceneNodeI
         std::vector<Matrix4x4List>      AccessMatrix4x4List(const std::string& name, double time = 0.0) const override;
         std::vector<UIntList>           AccessUIntList(const std::string& name, double time = 0.0) const override;
         std::vector<UInt64List>         AccessUInt64List(const std::string& name, double time = 0.0) const override;
+
+        // Texture Related
+        TexturedDataNodeList<float>             AccessTexturedDataFloat(const std::string& name,
+                                                                        double time = 0.0) const override;
+        TexturedDataNodeList<Vector2>           AccessTexturedDataVector2(const std::string& name,
+                                                                          double time = 0.0) const override;
+        TexturedDataNodeList<Vector3>           AccessTexturedDataVector3(const std::string& name,
+                                                                          double time = 0.0) const override;
+        TexturedDataNodeList<Vector4>           AccessTexturedDataVector4(const std::string& name,
+                                                                          double time = 0.0) const override;
+        OptionalNodeList<MaterialTextureStruct> AccessOptionalTextureNode(const std::string& name,
+                                                                          double time = 0.0) const override;
 };

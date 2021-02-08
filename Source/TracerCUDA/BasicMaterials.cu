@@ -1,6 +1,7 @@
 #include "BasicMaterials.cuh"
 
-SceneError ConstantMat::InitializeGroup(const NodeListing& materialNodes, 
+SceneError ConstantMat::InitializeGroup(const NodeListing& materialNodes,
+                                        const TextureNodeMap& textures,
                                         const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                         double time, const std::string& scenePath)
 {

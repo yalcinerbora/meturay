@@ -32,6 +32,7 @@ class EmissiveMat final
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
         SceneError              InitializeGroup(const NodeListing& materialNodes, 
+                                                const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
@@ -53,7 +54,6 @@ class EmissiveMat final
         // No Texture
         uint8_t                 UsedTextureCount() const { return 0; }
         std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask             CachedTextures() const { return 0; }
 };
 
 // Constant Lambert Material
@@ -79,7 +79,8 @@ class LambertMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+        SceneError              InitializeGroup(const NodeListing& materialNodes,
+                                                const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
@@ -101,7 +102,6 @@ class LambertMat final
         // No Texture
         uint8_t                 UsedTextureCount() const { return 0; }
         std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask             CachedTextures() const { return 0; }
 };
 
 // Delta distribution reflect material
@@ -128,6 +128,7 @@ class ReflectMat final
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
         SceneError              InitializeGroup(const NodeListing& materialNodes, 
+                                                const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
@@ -150,7 +151,6 @@ class ReflectMat final
         // No Texture
         uint8_t                 UsedTextureCount() const { return 0; }
         std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask             CachedTextures() const { return 0; }
 };
 
 // Delta distribution refract material
@@ -177,6 +177,7 @@ class RefractMat final
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
         SceneError              InitializeGroup(const NodeListing& materialNodes, 
+                                                const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
@@ -203,7 +204,6 @@ class RefractMat final
         // No Texture
         uint8_t                 UsedTextureCount() const { return 0; }
         std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask             CachedTextures() const { return 0; }
 };
 
 static_assert(IsMaterialGroupClass<EmissiveMat>::value,

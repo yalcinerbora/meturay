@@ -58,6 +58,7 @@ struct SceneError : public ErrorI
             MEDIUM_ID_NOT_FOUND,
             LIGHT_ID_NOT_FOUND,
             CAMERA_ID_NOT_FOUND,
+            TEXTURE_ID_NOT_FOUND,
             // Json parse errors
             LOGIC_MISMATCH,
             TYPE_MISMATCH,
@@ -82,6 +83,7 @@ struct SceneError : public ErrorI
             TOO_MANY_MATERIAL_GROUPS,
             TOO_MANY_MATERIAL_IN_GROUP,       
             // Texture Related
+            UNKNOWN_TEXTURE_ACCESS_LAYOUT,
             UNKNOWN_TEXTURE_TYPE,
             UNKNOWN_FILTER_TYPE,
             NON_2D_CACHED_TEXTURE,
@@ -194,6 +196,7 @@ inline SceneError::operator std::string() const
         "Medium id not found",
         "Light id not found",
         "Camera id not found",
+        "Texture id not found",
         // Json Parse Errors
         "Logics does not match",
         "JSON type does not match with required type",
@@ -218,6 +221,7 @@ inline SceneError::operator std::string() const
         "Material groups required for this scene exceeds limit",
         "Materials in a batch required for this scene exceeds limit",
         // Texture Related
+        "Texture access layout is unknown",
         "Texture type name is unknown",
         "Filter type name is unknown",
         "Non-2D Texture is marked as \"cached\", only 2D textures can be cached",

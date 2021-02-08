@@ -31,7 +31,8 @@ class ConstantMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+        SceneError              InitializeGroup(const NodeListing& materialNodes,
+                                                const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
@@ -53,7 +54,6 @@ class ConstantMat final
         // No Texture
         uint8_t                 UsedTextureCount() const { return 0; }
         std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask             CachedTextures() const { return 0; }
 };
 
 class BarycentricMat final
@@ -77,7 +77,8 @@ class BarycentricMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+        SceneError              InitializeGroup(const NodeListing& materialNodes,
+                                                const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override {return GenerateInnerIds(materialNodes);}
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
@@ -99,7 +100,6 @@ class BarycentricMat final
         // No Texture
         uint8_t                 UsedTextureCount() const { return 0; }
         std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask             CachedTextures() const { return 0; }
 };
 
 class SphericalMat final
@@ -124,6 +124,7 @@ class SphericalMat final
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
         SceneError              InitializeGroup(const NodeListing& materialNodes, 
+                                                const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override {return GenerateInnerIds(materialNodes);}
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
@@ -145,7 +146,6 @@ class SphericalMat final
         // No Texture
         uint8_t                 UsedTextureCount() const { return 0; }
         std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask             CachedTextures() const { return 0; }
 };
 
 class NormalRenderMat final
@@ -169,7 +169,8 @@ class NormalRenderMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+        SceneError              InitializeGroup(const NodeListing& materialNodes,
+                                                const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override {return GenerateInnerIds(materialNodes);}
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
@@ -191,7 +192,6 @@ class NormalRenderMat final
         // No Texture
         uint8_t                 UsedTextureCount() const { return 0; }
         std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask             CachedTextures() const { return 0; }
 };
 
 static_assert(IsMaterialGroupClass<ConstantMat>::value,

@@ -51,6 +51,15 @@ using IdPairsWithAnId = std::pair<uint32_t, IdPairs>;
 
 class SceneNodeI;
 
+enum class TextureAccessLayout
+{
+    R, G, B, A,
+    RG,
+    RGB,
+    RGBA
+    // TODO: add more here for swizzle access etc.
+};
+
 // Compiled Data which will be used to create actual class later
 struct AccelGroupData
 {
@@ -128,4 +137,16 @@ struct CameraSurfaceStruct
     uint32_t    transformId;
     uint32_t    materialId;
     uint32_t    cameraId;
+};
+
+struct MaterialTextureStruct
+{
+    uint32_t            texId;
+    TextureAccessLayout channelLayout;
+};
+
+struct TextureStruct
+{
+    uint32_t    texId;
+    std::string filePath;
 };

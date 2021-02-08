@@ -32,7 +32,8 @@ class LightMatConstant final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+        SceneError              InitializeGroup(const NodeListing& materialNodes,
+                                                const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
@@ -55,7 +56,6 @@ class LightMatConstant final
         // No Texture
         uint8_t                     UsedTextureCount() const { return 0; }
         std::vector<uint32_t>       UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask                 CachedTextures() const { return 0; }
 };
 
 class LightMatTextured final 
@@ -84,6 +84,7 @@ class LightMatTextured final
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
         SceneError              InitializeGroup(const NodeListing& materialNodes, 
+                                                const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
@@ -106,7 +107,6 @@ class LightMatTextured final
         // No Texture
         uint8_t                     UsedTextureCount() const { return 0; }
         std::vector<uint32_t>       UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask                 CachedTextures() const { return 0; }
 };
 
 class LightMatCube final 
@@ -135,6 +135,7 @@ class LightMatCube final
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
         SceneError              InitializeGroup(const NodeListing& materialNodes, 
+                                                const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
@@ -157,7 +158,6 @@ class LightMatCube final
         // No Texture
         uint8_t                     UsedTextureCount() const { return 0; }
         std::vector<uint32_t>       UsedTextureIds() const { return std::vector<uint32_t>(); }
-        TextureMask                 CachedTextures() const { return 0; }
 };
 
 static_assert(IsTracerClass<LightMatConstant>::value,

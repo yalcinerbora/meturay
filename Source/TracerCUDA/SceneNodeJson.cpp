@@ -83,6 +83,37 @@ std::vector<std::vector<T>> SceneNodeJson::AccessList(const std::string& name,
 }
 
 template <class T, LoadFunc<T> LoadF>
+OptionalNodeList<T> SceneNodeJson::AccessOptional(const std::string& name,
+                                                  double time) const
+{    
+    const nlohmann::json& nodeInner = node[name];
+
+    OptionalNodeList<T> result;
+    result.reserve(idIndexPairs.size());
+
+    for(const auto& list : idIndexPairs)
+    {
+        const InnerIndex i = list.second;
+        const nlohmann::json& node = (idIndexPairs.size() > 1) ? nodeInner[i] : nodeInner;
+
+        OptionalNode<T> optNode;
+        if(node.is_string())
+        {
+            std::string s = node;
+            if(s == "")
+                optNode.first = false;
+        }
+        else
+        {
+            optNode.first = true;
+            optNode.second = LoadF(node, time);
+        }
+        result.push_back(optNode);
+    }
+    return std::move(result);
+}
+
+template <class T, LoadFunc<T> LoadF>
 std::vector<T> SceneNodeJson::CommonList(const std::string& name,
                                          double time) const
 {
@@ -90,6 +121,36 @@ std::vector<T> SceneNodeJson::CommonList(const std::string& name,
     const nlohmann::json& nodeInner = node[name];
     for(const nlohmann::json& n : nodeInner)
         result.push_back(LoadF(n, time));
+    return std::move(result);
+}
+
+template <class T, LoadFunc<T> LoadF>
+TexturedDataNodeList<T> SceneNodeJson::AccessTextured(const std::string& name,
+                                                      double time) const
+{
+    const nlohmann::json& nodeInner = node[name];
+    TexturedDataNodeList<T> result;
+    result.reserve(idIndexPairs.size());
+
+    for(const auto& list : idIndexPairs)
+    {
+        const InnerIndex i = list.second;
+        const nlohmann::json& node = (idIndexPairs.size() > 1) ? nodeInner[i] : nodeInner;
+
+        TexturedDataNode<T> texNode;
+        if(node.is_object())
+        {
+            MaterialTextureStruct n = SceneIO::LoadMaterialTextureStruct(node, time);            
+            texNode.isTexture = true;
+            texNode.texNode = n;
+        }
+        else
+        {
+            texNode.isTexture = false;
+            texNode.data = LoadF(node, time);
+        }
+        result.push_back(texNode);
+    }
     return std::move(result);
 }
 
@@ -345,4 +406,30 @@ std::vector<UIntList> SceneNodeJson::AccessUIntList(const std::string& name, dou
 std::vector<UInt64List> SceneNodeJson::AccessUInt64List(const std::string& name, double time) const
 {
     return AccessList<uint64_t, SceneIO::LoadNumber<uint64_t>>(name, time);
+}
+
+TexturedDataNodeList<float> SceneNodeJson::AccessTexturedDataFloat(const std::string& name, double time) const
+{
+    return AccessTextured<float, SceneIO::LoadNumber<float>>(name, time);
+}
+
+TexturedDataNodeList<Vector2> SceneNodeJson::AccessTexturedDataVector2(const std::string& name, double time) const
+{
+    return AccessTextured<Vector2, SceneIO::LoadVector<2, float>>(name, time);
+}
+
+TexturedDataNodeList<Vector3> SceneNodeJson::AccessTexturedDataVector3(const std::string& name, double time) const
+{
+    return AccessTextured<Vector3, SceneIO::LoadVector<3, float>>(name, time);
+}
+
+TexturedDataNodeList<Vector4> SceneNodeJson::AccessTexturedDataVector4(const std::string& name, double time) const
+{
+    return AccessTextured<Vector4, SceneIO::LoadVector<4, float>>(name, time);
+}
+
+OptionalNodeList<MaterialTextureStruct> SceneNodeJson::AccessOptionalTextureNode(const std::string& name,
+                                                                                 double time) const
+{
+    return AccessOptional<MaterialTextureStruct, SceneIO::LoadMaterialTextureStruct>(name, time);
 }

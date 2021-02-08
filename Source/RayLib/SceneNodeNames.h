@@ -8,6 +8,7 @@ namespace NodeNames
     static constexpr const char* CAMERA_BASE = "Cameras";
     static constexpr const char* LIGHT_BASE = "Lights";
     static constexpr const char* MEDIUM_BASE = "Mediums";
+    static constexpr const char* TEXTURE_BASE = "Mediums";
     static constexpr const char* ACCELERATOR_BASE = "Accelerators";
     static constexpr const char* TRANSFORM_BASE = "Transforms";
     static constexpr const char* PRIMITIVE_BASE = "Primitives";
@@ -41,6 +42,8 @@ namespace NodeNames
     // Texture Related Names
     static constexpr const char* TEXTURE_IS_CACHED = "isCached";
     static constexpr const char* TEXTURE_FILTER = "filter";
+    static constexpr const char* TEXTURE_FILE = "file";
+    static constexpr const char* TEXTURE_CHANNEL = "channels";
     // Indentity Transform Type Name
     static constexpr const char* TRANSFORM_IDENTITY = "Identity";
 

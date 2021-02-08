@@ -1,6 +1,7 @@
 #include "UnrealMaterial.cuh"
 
 SceneError UnrealMat::InitializeGroup(const NodeListing& materialNodes,
+                                      const TextureNodeMap& textures,
                                       const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                       double time, const std::string& scenePath)
 {    
@@ -39,5 +40,43 @@ SceneError UnrealMat::InitializeGroup(const NodeListing& materialNodes,
 SceneError UnrealMat::ChangeTime(const NodeListing& materialNodes, double time,
                                  const std::string& scenePath)
 {
+    // TODO: Implement
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
+}
+
+size_t UnrealMat::UsedGPUMemory() const
+{
+    // TODO: Implement
+    return 0;
+}
+
+size_t UnrealMat::UsedCPUMemory() const
+{
+    // TODO: Implement
+    return 0;
+}
+
+
+size_t UnrealMat::UsedGPUMemory(uint32_t materialId) const
+{
+    // TODO: Implement
+    return 0;
+}
+
+size_t UnrealMat::UsedCPUMemory(uint32_t materialId) const
+{
+    // TODO: Implement
+    return 0;
+}
+
+uint8_t UnrealMat::UsedTextureCount() const
+{
+    // TODO: Implement
+    return 0;
+}
+
+std::vector<uint32_t> UnrealMat::UsedTextureIds() const
+{
+    // TODO: Implement
+    return std::vector<uint32_t>();
 }

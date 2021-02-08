@@ -1,7 +1,8 @@
 #include "SampleMaterials.cuh"
 #include "RayLib/MemoryAlignment.h"
 
-SceneError EmissiveMat::InitializeGroup(const NodeListing& materialNodes, 
+SceneError EmissiveMat::InitializeGroup(const NodeListing& materialNodes,
+                                        const TextureNodeMap& textures,
                                         const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                         double time, const std::string& scenePath)
 {
@@ -46,6 +47,7 @@ SceneError EmissiveMat::ChangeTime(const NodeListing& materialNodes, double time
 
 // -------------
 SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes, 
+                                       const TextureNodeMap& textures,
                                        const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                        double time, const std::string& scenePath)
 {
@@ -82,6 +84,7 @@ SceneError LambertMat::ChangeTime(const NodeListing& materialNodes, double time,
 
 // -------------
 SceneError ReflectMat::InitializeGroup(const NodeListing& materialNodes, 
+                                       const TextureNodeMap& textures,
                                        const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                        double time, const std::string& scenePath)
 {
@@ -124,7 +127,8 @@ SceneError ReflectMat::ChangeTime(const NodeListing& materialNodes, double time,
 }
 
 // -------------
-SceneError RefractMat::InitializeGroup(const NodeListing& materialNodes, 
+SceneError RefractMat::InitializeGroup(const NodeListing& materialNodes,
+                                       const TextureNodeMap& textures,
                                        const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                        double time, const std::string& scenePath)
 {

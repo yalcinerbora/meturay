@@ -1,7 +1,8 @@
 #include "GPUMaterialLight.cuh"
 #include "RayLib/ColorConversion.h"
 
-SceneError LightMatConstant::InitializeGroup(const NodeListing& materialNodes, 
+SceneError LightMatConstant::InitializeGroup(const NodeListing& materialNodes,
+                                             const TextureNodeMap& textures,
                                              const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                              double time, const std::string& scenePath)
 {
@@ -52,7 +53,8 @@ const GPUDistribution2D& LightMatConstant::LuminanceDistribution(uint32_t materi
     return luminanceDistributions[innerIds.at(materialId)].DistributionGPU2D();
 }
 
-SceneError LightMatTextured::InitializeGroup(const NodeListing& materialNodes, 
+SceneError LightMatTextured::InitializeGroup(const NodeListing& materialNodes,
+                                             const TextureNodeMap&,
                                              const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                              double time, const std::string& scenePath)
 {
@@ -72,7 +74,8 @@ const GPUDistribution2D& LightMatTextured::LuminanceDistribution(uint32_t materi
     return luminanceDistributions[innerIds.at(materialId)].DistributionGPU();
 }
 
-SceneError LightMatCube::InitializeGroup(const NodeListing& materialNodes, 
+SceneError LightMatCube::InitializeGroup(const NodeListing& materialNodes,
+                                         const TextureNodeMap&,
                                          const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                          double time, const std::string& scenePath)
 {

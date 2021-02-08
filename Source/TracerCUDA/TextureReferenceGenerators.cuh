@@ -54,7 +54,6 @@ void GenerateEitherTexOrConstantReference(TextureRefI<D, T>** gTexRefInterfaces,
                                           ConstantRef<D, T>* gCRefLocations,
                                           TextureRef<D, T>* gTRefLocations,
                                           // Atomic Counters
-                                          uint32_t& gInterfaceCounter,
                                           uint32_t& gTRefCounter,
                                           uint32_t& gCRefCounter,
                                           //
@@ -79,8 +78,7 @@ void GenerateEitherTexOrConstantReference(TextureRefI<D, T>** gTexRefInterfaces,
             refAddress = new (gTRefLocations + location) TextureRef<D, T>(data.tex);
         }
 
-        uint32_t interfaceLocation = atomicAdd(&gInterfaceCounter, 1);
-        gTexRefInterfaces[interfaceLocation] = refAddress;
+        gTexRefInterfaces[globalId] = refAddress;
     }
 }
 
@@ -90,7 +88,6 @@ void GenerateEitherTexOrConstantReference(TextureRefI<D, T>** gTexRefInterfaces,
                                           ConstantRef<D, T>* gCRefLocations,
                                           TexArrayRef<D, T>* gTRefLocations,
                                           // Atomic Counters
-                                          uint32_t& gInterfaceCounter,
                                           uint32_t& gTRefCounter,
                                           uint32_t& gCRefCounter,
                                           //
@@ -115,8 +112,6 @@ void GenerateEitherTexOrConstantReference(TextureRefI<D, T>** gTexRefInterfaces,
             refAddress = new (gTRefLocations + location) TexArrayRef<D, T>(data.tex, 
                                                                            data.textureArrayIndex);
         }
-
-        uint32_t interfaceLocation = atomicAdd(&gInterfaceCounter, 1);
-        gTexRefInterfaces[interfaceLocation] = refAddress;
+        gTexRefInterfaces[globalId] = refAddress;
     }
 }

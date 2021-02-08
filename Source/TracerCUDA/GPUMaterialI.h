@@ -13,6 +13,7 @@
 
 struct RayGMem;
 struct SceneError;
+struct TextureStruct;
 
 class CudaGPU;
 class SceneNodeI;
@@ -22,8 +23,7 @@ class GPUPrimitiveGroupI;
 class GPUTransformI;
 class GPUMediumI;
 
-// METURay only supports 64 texture per material
-using TextureMask = uint64_t;
+using TextureNodeMap = std::map<uint32_t, TextureStruct>;
 
 // Defines the same type materials
 // Logics consists of loading certain material
@@ -39,6 +39,7 @@ class GPUMaterialGroupI
         virtual const char*                 Type() const = 0;
         // Allocates and Generates data
         virtual SceneError                  InitializeGroup(const NodeListing& materialNodes,
+                                                            const TextureNodeMap& textures,
                                                             const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                             double time, const std::string& scenePath) = 0;
         // Changes the Generated data
@@ -69,7 +70,6 @@ class GPUMaterialGroupI
         // Returns the cached textures
         virtual uint8_t                     UsedTextureCount() const = 0;
         virtual std::vector<uint32_t>       UsedTextureIds() const = 0;
-        virtual TextureMask                 CachedTextures() const = 0;
 };
 
 // Additional Interface for light materials
