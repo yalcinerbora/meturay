@@ -5,7 +5,6 @@
 		"type": "Pinhole",
 
 		"apertureSize": 1.0,
-		"focusDistance": 21,
 		// 16:9 FoV
 		"fov": [94.45, 53.13],
 		// 1:1 FoV

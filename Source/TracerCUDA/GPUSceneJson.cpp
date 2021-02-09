@@ -156,8 +156,11 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                                   CameraNodeList& cameraGroupNodes,
                                                   LightNodeList& lightGroupNodes,
                                                   //
+                                                  TextureNodeMap& textureNodes,
+                                                  //
                                                   double time)
 {
+    const nlohmann::json emptyJson;
     const nlohmann::json* surfaces = nullptr;
     const nlohmann::json* primitives = nullptr;
     const nlohmann::json* materials = nullptr;
@@ -168,6 +171,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     const nlohmann::json* mediums = nullptr;
     const nlohmann::json* cameraSurfaces = nullptr;
     const nlohmann::json* lightSurfaces = nullptr;
+    const nlohmann::json* textures = nullptr;
     uint32_t identityTransformId = std::numeric_limits<uint32_t>::max();
 
     IndexLookup primList;
@@ -243,7 +247,6 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         else return SceneError::MATERIAL_ID_NOT_FOUND;
         return SceneError::OK;
     };
-
     auto AttachTransform = [&](uint32_t transformId)
     {
         // Add Transform Group to generation list
@@ -264,7 +267,6 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         else return SceneError::TRANSFORM_ID_NOT_FOUND;
         return SceneError::OK;
     };
-
     auto AttachAccelerator = [&](uint32_t accId, uint32_t surfId, uint32_t transformId,
                                  const std::string& primGroupType,
                                  const IdPairs& idPairs)
@@ -312,6 +314,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     if(!FindNode(accelerators, NodeNames::ACCELERATOR_BASE)) return SceneError::ACCELERATORS_ARRAY_NOT_FOUND;
     if(!FindNode(transforms, NodeNames::TRANSFORM_BASE)) return SceneError::TRANSFORMS_ARRAY_NOT_FOUND;
     if(!FindNode(mediums, NodeNames::MEDIUM_BASE)) return SceneError::MEDIUM_ARRAY_NOT_FOUND;
+    if(!FindNode(textures, NodeNames::TEXTURE_BASE)) textures = &emptyJson;
     if((e = GenIdLookup(primList, *primitives, PRIMITIVE)) != SceneError::OK) 
         return e;
     if((e = GenIdLookup(materialList, *materials, MATERIAL)) != SceneError::OK)
@@ -534,10 +537,18 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                          });
 
     }
+    // Finally Load Texture Info for material access
+    // Load all textures here material will actually load the textures
+    for(const auto& jsn : (*textures))
+    {
+        TextureStruct s = SceneIO::LoadTexture(jsn);
+        textureNodes.emplace(s.texId, s);
+    }
     return e;
 }
 
 SceneError GPUSceneJson::GenerateMaterialGroups(const MultiGPUMatNodes& matGroupNodes,
+                                                const TextureNodeMap& textureNodes,
                                                 const std::map<uint32_t, uint32_t>& mediumIdMappings,
                                                 double time)
 {
@@ -552,7 +563,8 @@ SceneError GPUSceneJson::GenerateMaterialGroups(const MultiGPUMatNodes& matGroup
         GPUMatGPtr matGroup = GPUMatGPtr(nullptr, nullptr);
         if(e = logicGenerator.GenerateMaterialGroup(matGroup, *gpu, matTypeName))
             return e;
-        if(e = matGroup->InitializeGroup(matNodes, mediumIdMappings, time, parentPath))
+        if(e = matGroup->InitializeGroup(matNodes, textureNodes, 
+                                         mediumIdMappings, time, parentPath))
             return e;
         materials.emplace(std::make_pair(matTypeName, gpu), std::move(matGroup));
     }
@@ -896,6 +908,7 @@ SceneError GPUSceneJson::LoadAll(double time)
     AcceleratorBatchList accelListings;
     CameraNodeList camListings;
     LightNodeList lightListings;
+    TextureNodeMap textureNodes;
     // Parse Json and find necessary nodes
     if((e = GenerateConstructionData(primGroupNodes,
                                      mediumGroupNodes,
@@ -905,6 +918,7 @@ SceneError GPUSceneJson::LoadAll(double time)
                                      accelListings,
                                      camListings,
                                      lightListings,
+                                     textureNodes,
                                      time)) != SceneError::OK)
         return e;
 
@@ -937,7 +951,8 @@ SceneError GPUSceneJson::LoadAll(double time)
     if((e = GeneratePrimitiveGroups(primGroupNodes, time)) != SceneError::OK)
         return e;
     // Material Groups
-    if((e = GenerateMaterialGroups(multiGPUMatNodes, mediumIdMappings, time)) != SceneError::OK)
+    if((e = GenerateMaterialGroups(multiGPUMatNodes, textureNodes,
+                                   mediumIdMappings, time)) != SceneError::OK)
         return e;
     // Work Batches
     MaterialKeyListing allMaterialKeys;

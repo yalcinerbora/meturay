@@ -21,11 +21,33 @@ class LambertTexMat final
     public:
         static const char*      TypeName() { return "LambertT"; }
 
-    private:
-        DeviceMemory            memory;
-        Tex2DMap<Vector4>       textureMemory;
+        using ConstantAlbedoRef = ConstantRef<2, Vector3>;
+        using Texture2DRef      = TextureRef<2, Vector3>;
+        using Texture2DRefI     = TextureRefI<2, Vector3>;
 
-        Vector3f*               dConstAlbedo;
+        struct ConstructionInfo
+        {
+            bool                isConstantAlbedo = true;
+            bool                hasNormalMap = false;
+            Vector3f            constantAlbedo = Zero3;
+            cudaTextureObject_t albedoTexture = 0;
+            cudaTextureObject_t normalTexture = 0;
+        };
+
+    private:
+        DeviceMemory                memory;
+        // Actual Allocation of Textures
+        Tex2DMap<Vector4>           dTextureMemory;
+        // Device Allocations of Texture References
+        const ConstantAlbedoRef*    dConstAlbedo;        
+        const Texture2DRef*         dTextureAlbedoRef;
+        const Texture2DRef*         dTextureNormalRef;
+        // Aligned pointers for material access from kernel
+        const Texture2DRefI**       dAlbedo;
+        const Texture2DRefI**       dNormal;
+
+        // CPU Construction Info
+        std::vector<ConstructionInfo> matConstructionInfo;
 
     protected:
     public:
@@ -46,8 +68,6 @@ class LambertTexMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
-
         size_t                  UsedGPUMemory() const override;
         size_t                  UsedCPUMemory() const override;
         size_t                  UsedGPUMemory(uint32_t materialId) const override;

@@ -49,7 +49,6 @@ class GPUMaterialGroupI
         // Material Queries
         virtual bool                        HasMaterial(uint32_t materialId) const = 0;
         virtual uint32_t                    InnerId(uint32_t materialId) const = 0;
-        virtual bool                        HasCachedTextures(uint32_t materialId) const = 0;
         virtual const CudaGPU&              GPU() const = 0;
 
         // Total used GPU memory, this includes static textures

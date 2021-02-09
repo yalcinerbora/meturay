@@ -6,7 +6,6 @@
 
 		// Custom Camera Related
 		"apertureSize": 1.0,
-		"focusDistance": 21,
 		// 16:9 FoV
 		"fov": [94.45, 53.13],
 		// 1:1 FoV
@@ -123,7 +122,7 @@
     "BaseAccelerator": {"type": "Linear"},
     "BaseBoundaryMaterial": 0,
 	"BaseMedium" : 0,
-	
+
 	"Surfaces": [
 	{
 		// Sphere Back

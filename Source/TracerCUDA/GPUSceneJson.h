@@ -23,8 +23,7 @@ using PrimitiveNodeList = std::map<std::string, NodeListing>;
 using AcceleratorBatchList = std::map<std::string, AccelGroupData>;
 using LightNodeList = std::map<std::string, LightGroupData>;
 using CameraNodeList = std::map<std::string, CameraGroupData>;
-
-//using LightPrimitives = std::vector<const GPUPrimitiveGroupI*>;
+using TextureNodeMap = std::map<uint32_t, TextureStruct>;
 
 class GPUSceneJson : public GPUSceneI
 {
@@ -100,10 +99,13 @@ class GPUSceneJson : public GPUSceneI
                                                  CameraNodeList& cameraGroupNodes,
                                                  LightNodeList& lightGroupNodes,
                                                  //
+                                                 TextureNodeMap& textureNodes,
+                                                 //
                                                  double time = 0.0);
         SceneError      GeneratePrimitiveGroups(const PrimitiveNodeList&,
                                                 double time = 0.0);
         SceneError      GenerateMaterialGroups(const MultiGPUMatNodes&,
+                                               const TextureNodeMap& textureNodes,
                                                const std::map<uint32_t, uint32_t>& mediumIdMappings,
                                                double time = 0.0);
         SceneError      GenerateWorkBatches(MaterialKeyListing&,

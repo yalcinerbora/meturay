@@ -47,3 +47,11 @@ TEST(SimpleTracers, QuatInterpTest)
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
+
+TEST(SimpleTracers, TextureTest)
+{
+    EnableVTMode();
+    SimpleTracerSetup setup("TestDirect", u8"TestScenes/textureTest.json", 0.0);
+    ASSERT_TRUE(setup.Init());
+    setup.Body();
+}
