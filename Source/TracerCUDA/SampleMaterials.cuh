@@ -39,8 +39,6 @@ class EmissiveMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
-
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
         size_t                  UsedCPUMemory() const override { return sizeof(AlbedoMatData); }
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
@@ -87,8 +85,6 @@ class LambertMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
-
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
         size_t                  UsedCPUMemory() const override { return sizeof(AlbedoMatData); }
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
@@ -135,8 +131,6 @@ class ReflectMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
-
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
         size_t                  UsedCPUMemory() const override { return sizeof(ReflectMatData); }
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector4); }
@@ -184,8 +178,6 @@ class RefractMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
-
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
         size_t                  UsedCPUMemory() const override { return sizeof(RefractMatData); }
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f) + sizeof(uint32_t); }

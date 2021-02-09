@@ -85,8 +85,9 @@ struct SceneError : public ErrorI
             // Texture Related
             UNKNOWN_TEXTURE_ACCESS_LAYOUT,
             UNKNOWN_TEXTURE_TYPE,
-            UNKNOWN_FILTER_TYPE,
-            NON_2D_CACHED_TEXTURE,
+            UNABLE_TO_LOAD_TEXTURE,
+            TEXTURE_DIMENSION_MISMATCH,
+            TEXTURE_NOT_FOUND,
             // Misc
             TOO_MANY_SURFACE_ON_NODE,
             PRIM_MATERIAL_NOT_SAME_SIZE,
@@ -222,9 +223,10 @@ inline SceneError::operator std::string() const
         "Materials in a batch required for this scene exceeds limit",
         // Texture Related
         "Texture access layout is unknown",
-        "Texture type name is unknown",
-        "Filter type name is unknown",
-        "Non-2D Texture is marked as \"cached\", only 2D textures can be cached",
+        "Texture type is unknown",
+        "Unable to load texture file",
+        "Texture Dimension does not match to the requested type",
+        "Unable to find the texture file",
         // Misc
         "Too many data/material pairs per surface node",
         "Prim/Material pairs on surface node does not have same size",

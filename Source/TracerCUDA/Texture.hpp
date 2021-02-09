@@ -97,7 +97,6 @@ static constexpr cudaTextureFilterMode DetermineFilterMode(InterpolationType i)
         case InterpolationType::LINEAR:
             return cudaTextureFilterMode::cudaFilterModeLinear;
     }
-
 }
 
 template<int D, class T>

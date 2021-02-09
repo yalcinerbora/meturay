@@ -1,5 +1,6 @@
 #include "LambertTexMaterial.cuh"
 #include "RayLib/MemoryAlignment.h"
+#include "TextureFunctions.h"
 
 SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
                                           const TextureNodeMap& textureNodes,
@@ -26,9 +27,7 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
 
         std::vector<ConstructionInfo> localInfo;
         // Iterate over these nodes one by one to find textures
-        for(int j = 0; j < matAlbedoNodes.size(); i++)
-
-        for(const auto& albedoNode : matAlbedoNodes)        
+        for(int j = 0; j < matAlbedoNodes.size(); j++)
         {
             const TexturedDataNode<Vector3>& albedoNode = matAlbedoNodes[j];
             const OptionalNode<MaterialTextureStruct>& normalNode = matNormalNodes[j];
@@ -39,13 +38,14 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
             {
                 const MaterialTextureStruct& texInfo = albedoNode.texNode;
 
-                Texture<2, float>* texture;
-                if((err = AllocateTexture(texInfo, dTextureMemory,
-                                          textureNodes, scenePath)) != SceneError::OK)
+                Texture<2, Vector4>* texture;
+                if((err = TextureFunctions::AllocateTexture(texture,
+                                                            dTextureMemory, texInfo,
+                                                            textureNodes, scenePath)) != SceneError::OK)
                     return err;
 
                 constructionInfo.isConstantAlbedo = false;
-                constructionInfo.albedoTexture = texture->CudaTexureObject();
+                constructionInfo.albedoTexture = static_cast<cudaTextureObject_t>(*texture);
 
                 //// Find the texture node
                 //auto loc = textureNodes.cend();
@@ -68,13 +68,14 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
             if(normalNode.first)
             {
                 const MaterialTextureStruct& texInfo = normalNode.second;
-                Texture<2, float>* texture;
-                if((err = AllocateTexture(texInfo, dTextureMemory,
-                                          textureNodes, scenePath)) != SceneError::OK)
+                Texture<2, Vector4>* texture;
+                if((err = TextureFunctions::AllocateTexture(texture,
+                                                            dTextureMemory, texInfo,
+                                                            textureNodes, scenePath)) != SceneError::OK)
                     return err;
 
                 constructionInfo.hasNormalMap = true;
-                constructionInfo.normalTexture = texture->CudaTextureObject();
+                constructionInfo.normalTexture = static_cast<cudaTextureObject_t>(*texture);
             }
 
 
@@ -120,16 +121,11 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
     offset += albedoTexRefSize;
     dTextureNormalRef = reinterpret_cast<Texture2DRef*>(memPtr + offset);
     offset += normalTexRefSize;
-    dAlbedo = reinterpret_cast<Texture2DRefI**>(memPtr + offset);
+    dAlbedo = reinterpret_cast<const Texture2DRefI**>(memPtr + offset);
     offset += albedoPtrSize;
-    dNormal = reinterpret_cast<Texture2DRefI**>(memPtr + offset);
+    dNormal = reinterpret_cast<const Texture2DRefI**>(memPtr + offset);
     offset += normalPtrSize;
     assert(totalSize == offset);
-
-
-
-    CUDA_CHECK(cudaMemcpy(dIrradiance, irradianceCPU.data(), dIrradianceSize,
-                          cudaMemcpyHostToDevice));
 
     // Finally Initialize Struct
     dData = LambertTMatData{dAlbedo, dNormal};

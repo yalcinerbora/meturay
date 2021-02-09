@@ -39,8 +39,6 @@ class ConstantMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
-
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
         size_t                  UsedCPUMemory() const override { return sizeof(AlbedoMatData); }
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
@@ -85,8 +83,6 @@ class BarycentricMat final
                                            const std::string& scenePath) override {return SceneError::OK;}
 
         // Material Queries
-        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
-
         size_t                  UsedGPUMemory() const override { return 0; }
         size_t                  UsedCPUMemory() const override { return 0; }
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return 0; }
@@ -131,8 +127,6 @@ class SphericalMat final
                                            const std::string& scenePath) override {return SceneError::OK;}
 
         // Material Queries
-        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
-
         size_t                  UsedGPUMemory() const override { return 0; }
         size_t                  UsedCPUMemory() const override { return 0; }
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return 0; }
@@ -177,8 +171,6 @@ class NormalRenderMat final
                                            const std::string& scenePath) override {return SceneError::OK;}
 
         // Material Queries
-        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
-
         size_t                  UsedGPUMemory() const override { return 0; }
         size_t                  UsedCPUMemory() const override { return 0; }
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return 0; }

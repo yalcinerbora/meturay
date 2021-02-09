@@ -90,6 +90,8 @@ constexpr bool is_TextureType_v = is_TextureType<T>::value;
 static constexpr cudaTextureAddressMode DetermineAddressMode(EdgeResolveType);
 static constexpr cudaTextureFilterMode DetermineFilterMode(InterpolationType);
 
+//class T>
+
 template<int D, class T>
 class Texture 
     : public DeviceLocalMemoryI
@@ -121,14 +123,16 @@ class Texture
         Texture&            operator=(Texture&&);
                             ~Texture();
 
+
+        constexpr explicit  operator cudaTextureObject_t() const;
         // Copy Data
         void                Copy(const Byte* sourceData,
                                  const TexDimType_t<D>& size,
-                                 const TexDimType_t<D>& offset = TexDimType_t<D>::Zero,
+                                 const TexDimType_t<D>& offset = TexDimType_t<D>::ZERO,
                                  int mipLevel = 0);
         GPUFence            CopyAsync(const Byte* sourceData,
                                       const TexDimType_t<D>& size,
-                                      const TexDimType_t<D>& offset = TexDimType_t<D>::Zero,
+                                      const TexDimType_t<D>& offset = TexDimType_t<D>::ZERO,
                                       int mipLevel = 0,
                                       cudaStream_t stream = nullptr);
 
@@ -177,16 +181,18 @@ class TextureArray : public DeviceLocalMemoryI
         TextureArray&       operator=(TextureArray&&);
                             ~TextureArray();
 
+        constexpr explicit  operator cudaTextureObject_t() const;
+
         // Copy Data
         void                Copy(const Byte* sourceData,
                                  const TexDimType_t<D>& size,
                                  int layer,
-                                 const TexDimType_t<D>& offset = TexDimType_t<D>::Zero,
+                                 const TexDimType_t<D>& offset = TexDimType_t<D>::ZERO,
                                  int mipLevel = 0);
         GPUFence            CopyAsync(const Byte* sourceData,
                                       const TexDimType_t<D>& size,
                                       int layer,
-                                      const TexDimType_t<D>& offset = TexDimType_t<D>::Zero,
+                                      const TexDimType_t<D>& offset = TexDimType_t<D>::ZERO,
                                       int mipLevel = 0,
                                       cudaStream_t stream = nullptr);
 
@@ -235,6 +241,8 @@ class TextureCube : public DeviceLocalMemoryI
         TextureCube&        operator=(TextureCube&&);
                             ~TextureCube();
 
+        constexpr explicit  operator cudaTextureObject_t() const;
+
         // Copy Data
         void                Copy(const Byte* sourceData,
                                  const Vector2ui& size,
@@ -265,6 +273,24 @@ template<class T> using Texture3D = Texture<3, T>;
 
 template<class T> using Texture1DArray = TextureArray<1, T>;
 template<class T> using Texture2DArray = TextureArray<2, T>;
+
+template<int D, class T>
+constexpr Texture<D, T>::operator cudaTextureObject_t() const
+{
+    return t;
+}
+
+template<int D, class T>
+constexpr TextureArray<D, T>::operator cudaTextureObject_t() const
+{
+    return t;
+}
+
+template<class T>
+constexpr TextureCube<T>::operator cudaTextureObject_t() const
+{
+    return t;
+}
 
 #include "Texture.hpp"
 

@@ -51,8 +51,6 @@ class UnrealMat final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        bool                    HasCachedTextures(uint32_t materialId) const override { return false; }
-
         size_t                  UsedGPUMemory() const override;
         size_t                  UsedCPUMemory() const override;
         size_t                  UsedGPUMemory(uint32_t materialId) const override;
