@@ -4,7 +4,6 @@
 #include "RayLib/SceneStructs.h"
 #include "Texture.cuh"
 
-#include <map>
 #include <string>
 #include <FreeImage.h>
 
@@ -14,12 +13,8 @@ class TextureLoader
         static std::unique_ptr<TextureLoader>& Instance();       
 
     private:
-        using ExtToTypeMap          = std::multimap<std::string, FREE_IMAGE_FORMAT>;
-        static const ExtToTypeMap   ExtToTypeList;
-
-        static SceneError           ConvertFileExtToFormat(FREE_IMAGE_FORMAT&,
-                                                           const std::string& filePath);
-    
+    protected:
+    public:
         // Constructors & Destructor
                                     TextureLoader();
                                     TextureLoader(const TextureLoader&) = delete;
@@ -28,8 +23,6 @@ class TextureLoader
         TextureLoader&              operator=(TextureLoader&&) = delete;
                                     ~TextureLoader();
 
-    protected:
-    public:
         // Functionality
         SceneError                  LoadTexture(const std::string& filePath);
 };
@@ -46,7 +39,7 @@ inline std::unique_ptr<TextureLoader>& TextureLoader::Instance()
 namespace TextureFunctions
 {
     template <int D, class T>
-    SceneError AllocateTexture(Texture<D, T>*& tex,
+    SceneError AllocateTexture(const Texture<D, T>*& tex,
                                std::map<uint32_t, Texture<2, T>>& textureAllocations,
                                const MaterialTextureStruct& requestedTextureInfo,
                                const std::map<uint32_t, TextureStruct>& loadableTextureInfo,
@@ -54,7 +47,7 @@ namespace TextureFunctions
 }
 
 template <int D, class T>
-SceneError TextureFunctions::AllocateTexture(Texture<D, T>*& tex,
+SceneError TextureFunctions::AllocateTexture(const Texture<D, T>*& tex,
                                              std::map<uint32_t, Texture<2, T>>& textureAllocations,
                                              const MaterialTextureStruct& requestedTextureInfo,
                                              const std::map<uint32_t, TextureStruct>& loadableTextureInfo,

@@ -99,14 +99,67 @@ static constexpr cudaTextureFilterMode DetermineFilterMode(InterpolationType i)
     }
 }
 
+template<int D, int C>
+TextureI<D, C>::TextureI(TextureI&& other)
+    : texture(other.texture)
+{
+    other.texture = 0;
+}
+
+template<int D, int C>
+TextureI<D, C>& TextureI<D, C>::operator=(TextureI&& other)
+{
+    assert(this != &other);
+    texture = other.texture;
+    other.texture = 0;
+}
+
+template<int D, int C>
+TextureArrayI<D, C>::TextureArrayI(TextureArrayI&& other)
+    : texture(other.texture)
+    , length(other.length)
+{
+    other.texture = 0;
+    other.length = 0;
+}
+
+template<int D, int C>
+TextureArrayI<D, C>& TextureArrayI<D, C>::operator=(TextureArrayI&& other)
+{
+    assert(this != &other);
+    texture = other.texture;
+    length = other.length;
+
+    other.texture = 0;
+    other.length = 0;
+}
+
+
+template<int C>
+TextureCubeI<C>::TextureCubeI(TextureCubeI&& other)
+    : texture(other.texture)
+{
+    other.texture = 0;
+}
+
+template<int C>
+TextureCubeI<C>& TextureCubeI<C>::operator=(TextureCubeI&& other)
+{
+    assert(this != &other);
+    texture = other.texture;
+    other.texture = 0;
+}
+
 template<int D, class T>
 Texture<D, T>::Texture(int deviceId,
                        InterpolationType interp,
                        EdgeResolveType eResolve,
+                       bool normalizeIntegers,
                        bool convertSRGB,
                        const TexDimType_t<D>& dim,
                        int mipCount)
     : DeviceLocalMemoryI(deviceId)
+    , TextureI<D, TextureChannelCount<T>::value>(texture)
     , dim(dim)
     , interpType(interp)
     , edgeResolveType(eResolve)
@@ -120,7 +173,7 @@ Texture<D, T>::Texture(int deviceId,
     cudaResourceDesc rDesc = {};
     cudaTextureDesc tDesc = {};
 
-    bool unormType = is_TextureNormalizedType_v<T>;
+    bool unormType = normalizeIntegers;
 
     rDesc.resType = cudaResourceType::cudaResourceTypeMipmappedArray;
     rDesc.res.mipmap.mipmap = data;
@@ -145,18 +198,18 @@ Texture<D, T>::Texture(int deviceId,
     tDesc.minMipmapLevelClamp = -100.0f;
     tDesc.maxMipmapLevelClamp = 100.0f;
 
-    CUDA_CHECK(cudaCreateTextureObject(&t, &rDesc, &tDesc, nullptr));
+    CUDA_CHECK(cudaCreateTextureObject(&texture, &rDesc, &tDesc, nullptr));
 }
 
 template<int D, class T>
 Texture<D, T>::Texture(Texture&& other)
-    : data(other.data)
+    : DeviceLocalMemoryI(other)
+    , TextureI<D, TextureChannelCount<T>::value>(std::move(other))
+    , data(other.data)
     , dim(other.dim)
-    , t(other.t)
     , interpType(other.interpType)
     , edgeResolveType(other.edgeResolveType)
 {
-    other.t = 0;
     other.dim = TexDimType<D>::ZERO;
     other.data = nullptr;
 }
@@ -168,18 +221,17 @@ Texture<D, T>& Texture<D, T>::operator=(Texture&& other)
     if(data)
     {
         CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
 
     data = other.data;
-    t = other.t;
     dim = other.dim;
     interpType = other.interpType;
     edgeResolveType = other.edgeResolveType;
 
     other.data = nullptr;
     other.dim = TexDimType<D>::ZERO;
-    other.t = 0;
 
     return *this;
 }
@@ -190,6 +242,7 @@ Texture<D, T>::~Texture()
     if(data)
     {
         CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
 }
@@ -282,11 +335,13 @@ template<int D, class T>
 TextureArray<D, T>::TextureArray(int deviceId,
                                  InterpolationType interp,
                                  EdgeResolveType eResolve,
+                                 bool normalizeIntegers,
                                  bool convertSRGB,
                                  const TexDimType_t<D>& dim,
                                  unsigned int length,
                                  int mipCount)
     : DeviceLocalMemoryI(deviceId)
+    , TextureArrayI<D, TextureChannelCount<T>::value>(texture, length)
     , dim(dim)
     , length(length)
     , interpType(interp)
@@ -302,7 +357,7 @@ TextureArray<D, T>::TextureArray(int deviceId,
     cudaResourceDesc rDesc = {};
     cudaTextureDesc tDesc = {};
 
-    bool unormType = is_TextureNormalizedType_v<T>;
+    bool unormType = normalizeIntegers;
 
     rDesc.resType = cudaResourceType::cudaResourceTypeMipmappedArray;
     rDesc.res.mipmap.mipmap = data;
@@ -327,21 +382,19 @@ TextureArray<D, T>::TextureArray(int deviceId,
     tDesc.minMipmapLevelClamp = -100.0f;
     tDesc.maxMipmapLevelClamp = 100.0f;
 
-    CUDA_CHECK(cudaCreateTextureObject(&t, &rDesc, &tDesc, nullptr));
+    CUDA_CHECK(cudaCreateTextureObject(&texture, &rDesc, &tDesc, nullptr));
 }
 
 template<int D, class T>
 TextureArray<D, T>::TextureArray(TextureArray&& other)
-    : data(other.data)
+    : DeviceLocalMemoryI(other)
+    , TextureArrayI<D, TextureChannelCount<T>::value>(std::move(other))
+    , data(other.data)
     , dim(other.dim)
-    , length(other.length)
-    , t(other.t)
     , interpType(other.interpType)
     , edgeResolveType(other.edgeResolveType)
 {
-    other.t = 0;
     other.dim = TexDimType<D>::ZERO;
-    other.length = 0;
     other.data = nullptr;
 }
 
@@ -352,20 +405,17 @@ TextureArray<D, T>& TextureArray<D, T>::operator=(TextureArray&& other)
     if(data)
     {
         CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
 
     data = other.data;
-    t = other.t;
     dim = other.dim;
-    length = other.length;
     interpType = other.interpType;
     edgeResolveType = other.edgeResolveType;
 
     other.data = nullptr;
     other.dim = TexDimType<D>::ZERO;
-    other.length = 0;
-    other.t = 0;
 
     return *this;
 }
@@ -376,6 +426,7 @@ TextureArray<D, T>::~TextureArray()
     if(data)
     {
         CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
 }
@@ -475,10 +526,12 @@ template <class T>
 TextureCube<T>::TextureCube(int deviceId,
                             InterpolationType interp,
                             EdgeResolveType eResolve,
+                            bool normalizeIntegers,
                             bool convertSRGB,
                             const Vector2ui& dim,
                             int mipCount)
     : DeviceLocalMemoryI(deviceId)
+    , TextureCubeI<TextureChannelCount<T>::value>(texture)
     , dim(dim)
     , interpType(interp)
     , edgeResolveType(eResolve)
@@ -494,7 +547,7 @@ TextureCube<T>::TextureCube(int deviceId,
     cudaResourceDesc rDesc = {};
     cudaTextureDesc tDesc = {};
 
-    bool unormType = is_TextureNormalizedType_v<T>;
+    bool unormType = normalizeIntegers;
 
     rDesc.resType = cudaResourceType::cudaResourceTypeMipmappedArray;
     rDesc.res.mipmap.mipmap = data;
@@ -519,18 +572,18 @@ TextureCube<T>::TextureCube(int deviceId,
     tDesc.minMipmapLevelClamp = -100.0f;
     tDesc.maxMipmapLevelClamp = 100.0f;
 
-    CUDA_CHECK(cudaCreateTextureObject(&t, &rDesc, &tDesc, nullptr));
+    CUDA_CHECK(cudaCreateTextureObject(&texture, &rDesc, &tDesc, nullptr));
 }
 
 template<class T>
 TextureCube<T>::TextureCube(TextureCube&& other)
-    : data(other.data)
+    : DeviceLocalMemoryI(other)
+    , TextureCubeI<TextureChannelCount<T>::value>(std::move(other))
+    , data(other.data)
     , dim(other.dim)
-    , t(other.t)
     , interpType(other.interpType)
     , edgeResolveType(other.edgeResolveType)
 {
-    other.t = 0;
     other.dim = Zero2ui;
     other.data = nullptr;
 }
@@ -542,18 +595,17 @@ TextureCube<T>& TextureCube<T>::operator=(TextureCube&& other)
     if(data)
     {
         CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
 
     data = other.data;
-    t = other.t;
     dim = other.dim;
     interpType = other.interpType;
     edgeResolveType = other.edgeResolveType;
 
     other.data = nullptr;
     other.dim = Zero2ui;
-    other.t = 0;
 
     return *this;
 }
@@ -564,6 +616,7 @@ TextureCube<T>::~TextureCube()
     if(data)
     {
         CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
 }

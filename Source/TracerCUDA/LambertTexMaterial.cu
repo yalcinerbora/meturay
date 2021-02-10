@@ -38,7 +38,7 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
             {
                 const MaterialTextureStruct& texInfo = albedoNode.texNode;
 
-                Texture<2, Vector4>* texture;
+                const Texture<2, Vector4>* texture;
                 if((err = TextureFunctions::AllocateTexture(texture,
                                                             dTextureMemory, texInfo,
                                                             textureNodes, scenePath)) != SceneError::OK)
@@ -68,7 +68,7 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
             if(normalNode.first)
             {
                 const MaterialTextureStruct& texInfo = normalNode.second;
-                Texture<2, Vector4>* texture;
+                const Texture<2, Vector4>* texture;
                 if((err = TextureFunctions::AllocateTexture(texture,
                                                             dTextureMemory, texInfo,
                                                             textureNodes, scenePath)) != SceneError::OK)

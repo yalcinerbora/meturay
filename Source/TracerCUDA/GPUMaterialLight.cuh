@@ -68,9 +68,9 @@ class LightMatTextured final
         static const char*      TypeName() { return "LightTextured"; }
 
     private:
-        DeviceMemory                    memory;
-        Texture2DArray<Vector4>         textureList;
-        std::vector<Distribution2D>     luminanceDistributions;
+        DeviceMemory                        memory;
+        std::vector<Texture2D<Vector4>>     textureList;
+        std::vector<Distribution2D>         luminanceDistributions;
 
     public:
         // Constructors & Destructor
@@ -89,7 +89,7 @@ class LightMatTextured final
                                            const std::string& scenePath) override;
 
         // Material Queries
-        size_t                  UsedGPUMemory() const override { return memory.Size() + textureList.Size(); }
+        size_t                  UsedGPUMemory() const override;
         size_t                  UsedCPUMemory() const override { return sizeof(LightMatTexData); }
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
@@ -117,9 +117,9 @@ class LightMatCube final
         static const char*      TypeName() { return "LightCube"; }
 
     private:
-        DeviceMemory                    memory;
-        TextureCube<Vector4>            textureList;
-        std::vector<Distribution2D>     luminanceDistributions;
+        DeviceMemory                        memory;
+        std::vector<TextureCube<Vector4>>   textureList;
+        std::vector<Distribution2D>         luminanceDistributions;
 
     public:
         // Constructors & Destructor
@@ -138,7 +138,7 @@ class LightMatCube final
                                            const std::string& scenePath) override;
 
         // Material Queries        
-        size_t                  UsedGPUMemory() const override { return memory.Size() + textureList.Size(); }
+        size_t                  UsedGPUMemory() const override;
         size_t                  UsedCPUMemory() const override { return sizeof(LightMatTexData); }
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
@@ -153,6 +153,22 @@ class LightMatCube final
         uint8_t                     UsedTextureCount() const { return 0; }
         std::vector<uint32_t>       UsedTextureIds() const { return std::vector<uint32_t>(); }
 };
+
+inline size_t LightMatTextured::UsedGPUMemory() const
+{ 
+    size_t totalSize = memory.Size();
+    for(const auto& t : textureList)
+        totalSize += t.Size();
+    return totalSize;
+}
+
+inline size_t LightMatCube::UsedGPUMemory() const
+{
+    size_t totalSize = memory.Size();
+    for(const auto& t : textureList)
+        totalSize += t.Size();
+    return totalSize;
+}
 
 static_assert(IsTracerClass<LightMatConstant>::value,
               "LightMatConstant is not a Tracer Class.");

@@ -54,18 +54,35 @@ struct TexDimType<3> { using type = Vector3ui; static constexpr typename type ZE
 template <int D>
 using TexDimType_t = typename TexDimType<D>::type;
 
-
 template <class T>
-struct is_TextureNormalizedType
+struct TextureChannelCount
 {
-    static constexpr bool value = is_any <T,
-                                          char, char2, char4,
-                                          short, short2, short4,
-                                          int, int2, int4,
-                                          unsigned char, uchar2, uchar4,
-                                          unsigned short, ushort2, ushort4,
-                                          unsigned int, uint2, uint4>::value;
+    private:
+        static constexpr int SelectSize()
+        {        
+            if constexpr(is_any<T, 
+                                float,
+                                char, short, int, 
+                                unsigned char, 
+                                unsigned short,
+                                unsigned int>::value)
+                return 1;
+            else if constexpr(is_any<T,
+                                     Vector2,
+                                     char2, short2, int2, 
+                                     uchar2, ushort2, uint2>::value)
+                return 2;
+            else if constexpr(is_any<T,
+                                     Vector4,
+                                     char4, short4, int4,
+                                     uchar4, ushort4, uint4>::value)
+                return 4;
 
+            return 0;    
+        }
+
+    public:
+        static constexpr int value = SelectSize();
 };
 
 template <class T>
@@ -82,26 +99,91 @@ struct is_TextureType
 };
 
 template <class T>
-constexpr bool is_TextureNormalizedType_v = is_TextureNormalizedType<T>::value;
-
-template <class T>
 constexpr bool is_TextureType_v = is_TextureType<T>::value;
 
 static constexpr cudaTextureAddressMode DetermineAddressMode(EdgeResolveType);
 static constexpr cudaTextureFilterMode DetermineFilterMode(InterpolationType);
 
-//class T>
+// Generic Texture Type
+// used to group different of textures
+template<int D, int C>
+class TextureI
+{
+    private:    
+        static constexpr uint32_t   Dimension = D;
+        static constexpr uint32_t   ChannelCount = C;
+       
+        cudaTextureObject_t&        texture;
+    protected:
+    public:
+        // Constructors & Destructor
+                                    TextureI(cudaTextureObject_t);
+                                    TextureI(const TextureI&) = delete;
+                                    TextureI(TextureI&&);
+        TextureI&                   operator=(const TextureI&) = delete;
+        TextureI&                   operator=(TextureI&&);
+                                    ~TextureI() = default;
+
+        constexpr explicit          operator cudaTextureObject_t() const;
+};
+
+template<int D, int C>
+class TextureArrayI
+{
+    private:    
+        static constexpr uint32_t   Dimension = D;
+        static constexpr uint32_t   ChannelCount = C;
+       
+        cudaTextureObject_t&        texture;
+        uint32_t&                   length;
+
+    protected:
+    public:
+        // Constructors & Destructor
+                                    TextureArrayI(cudaTextureObject_t,
+                                                  uint32_t layerCount);
+                                    TextureArrayI(const TextureArrayI&) = delete;
+                                    TextureArrayI(TextureArrayI&&);
+        TextureArrayI&              operator=(const TextureArrayI&) = delete;
+        TextureArrayI&              operator=(TextureArrayI&&);
+                                    ~TextureArrayI() = default;
+
+        constexpr explicit          operator cudaTextureObject_t() const;
+};
+
+template<int C>
+class TextureCubeI
+{
+    private:
+        static constexpr uint32_t   Dimension = 2;
+        static constexpr uint32_t   ChannelCount = C;
+        static constexpr uint32_t   CubeSideCount = 6;
+
+        cudaTextureObject_t&        texture;
+    protected:
+    public:
+        // Constructors & Destructor
+                                    TextureCubeI(cudaTextureObject_t);
+                                    TextureCubeI(const TextureCubeI&) = delete;
+                                    TextureCubeI(TextureCubeI&&);
+        TextureCubeI&               operator=(const TextureCubeI&) = delete;
+        TextureCubeI&               operator=(TextureCubeI&&);
+                                    ~TextureCubeI() = default;
+
+        constexpr explicit          operator cudaTextureObject_t() const;
+};
 
 template<int D, class T>
 class Texture 
     : public DeviceLocalMemoryI
+    , public TextureI<D, TextureChannelCount<T>::value>
 {
     static_assert(D >= 1 && D <= 3, "At most 3D textures are supported");
     static_assert(is_TextureType_v<T>, "Invalid texture type");
 
     private:
         cudaMipmappedArray_t        data    = nullptr;
-        cudaTextureObject_t         t       = 0;        
+        cudaTextureObject_t         texture = 0;
         TexDimType_t<D>             dim     = TexDimType<D>::ZERO;
         
         InterpolationType           interpType;
@@ -110,10 +192,11 @@ class Texture
     protected:
     public:
         // Constructors & Destructor
-                            Texture() = default;
+                            Texture() = delete;
                             Texture(int deviceId,
                                     InterpolationType,
                                     EdgeResolveType,
+                                    bool normalizeIntegers,
                                     bool convertSRGB,
                                     const TexDimType_t<D>& dim,
                                     int mipCount);
@@ -123,8 +206,6 @@ class Texture
         Texture&            operator=(Texture&&);
                             ~Texture();
 
-
-        constexpr explicit  operator cudaTextureObject_t() const;
         // Copy Data
         void                Copy(const Byte* sourceData,
                                  const TexDimType_t<D>& size,
@@ -149,17 +230,18 @@ class Texture
 };
 
 template<int D, class T>
-class TextureArray : public DeviceLocalMemoryI
+class TextureArray 
+    : public DeviceLocalMemoryI
+    , public TextureArrayI<D, TextureChannelCount<T>::value>
 {    
     static_assert(D >= 1 && D <= 2, "At most 2D texture arrays are supported");
     static_assert(is_TextureType_v<T>, "Invalid texture array type");
 
     private:
         cudaMipmappedArray_t        data    = nullptr;
-        cudaTextureObject_t         t       = 0;
-
-        TexDimType_t<D>             dim     = TexDimType<D>::ZERO;
-        unsigned int                length  = 0;
+        cudaTextureObject_t         texture = 0;
+        TexDimType_t<D>             dim     = TexDimType<D>::ZERO;        
+        uint32_t                    length = 0;
 
         InterpolationType           interpType;
         EdgeResolveType             edgeResolveType;
@@ -167,10 +249,11 @@ class TextureArray : public DeviceLocalMemoryI
     protected:
     public:
         // Constructors & Destructor
-                            TextureArray() = default;
+                            TextureArray() = delete;
                             TextureArray(int deviceId,
                                          InterpolationType,
                                          EdgeResolveType,
+                                         bool normalizeIntegers,
                                          bool convertSRGB,
                                          const TexDimType_t<D>& dim,
                                          unsigned int length,
@@ -180,8 +263,6 @@ class TextureArray : public DeviceLocalMemoryI
         TextureArray&       operator=(const TextureArray&) = delete;
         TextureArray&       operator=(TextureArray&&);
                             ~TextureArray();
-
-        constexpr explicit  operator cudaTextureObject_t() const;
 
         // Copy Data
         void                Copy(const Byte* sourceData,
@@ -210,7 +291,9 @@ class TextureArray : public DeviceLocalMemoryI
 };
 
 template<class T>
-class TextureCube : public DeviceLocalMemoryI
+class TextureCube 
+    : public DeviceLocalMemoryI
+    , public TextureCubeI<TextureChannelCount<T>::value>
 {
     static_assert(is_TextureType_v<T>, "Invalid texture cube type");
 
@@ -219,19 +302,20 @@ class TextureCube : public DeviceLocalMemoryI
 
     private:
         cudaMipmappedArray_t        data    = nullptr;
-        cudaTextureObject_t         t       = 0;
+        cudaTextureObject_t         texture = 0;
         Vector2ui                   dim     = Zero3ui;
-
+        
         InterpolationType           interpType;
         EdgeResolveType             edgeResolveType;
 
     protected:
     public:
         // Constructors & Destructor
-                            TextureCube() = default;
+                            TextureCube() = delete;
                             TextureCube(int deviceId,
                                         InterpolationType,
                                         EdgeResolveType,
+                                        bool normalizeIntegers,
                                         bool convertSRGB,
                                         const Vector2ui& dim,
                                         int mipCount);
@@ -240,8 +324,6 @@ class TextureCube : public DeviceLocalMemoryI
         TextureCube&        operator=(const TextureCube&) = delete;
         TextureCube&        operator=(TextureCube&&);
                             ~TextureCube();
-
-        constexpr explicit  operator cudaTextureObject_t() const;
 
         // Copy Data
         void                Copy(const Byte* sourceData,
@@ -274,22 +356,40 @@ template<class T> using Texture3D = Texture<3, T>;
 template<class T> using Texture1DArray = TextureArray<1, T>;
 template<class T> using Texture2DArray = TextureArray<2, T>;
 
-template<int D, class T>
-constexpr Texture<D, T>::operator cudaTextureObject_t() const
+
+template<int D, int C>
+inline TextureI<D, C>::TextureI(cudaTextureObject_t t)
+    : texture(t)
+{}
+
+template<int D, int C>
+constexpr TextureI<D, C>::operator cudaTextureObject_t() const
 {
-    return t;
+    return texture;
 }
 
-template<int D, class T>
-constexpr TextureArray<D, T>::operator cudaTextureObject_t() const
+template<int D, int C>
+inline TextureArrayI<D, C>::TextureArrayI(cudaTextureObject_t t,
+                                          uint32_t length)
+    : texture(t)
+    , length(length)
+{}
+
+template<int D, int C>
+constexpr TextureArrayI<D, C>::operator cudaTextureObject_t() const
 {
-    return t;
+    return texture;
 }
 
-template<class T>
-constexpr TextureCube<T>::operator cudaTextureObject_t() const
+template<int C>
+inline TextureCubeI<C>::TextureCubeI(cudaTextureObject_t t)
+    : texture(t)
+{}
+
+template<int C>
+constexpr TextureCubeI<C>::operator cudaTextureObject_t() const
 {
-    return t;
+    return texture;
 }
 
 #include "Texture.hpp"
