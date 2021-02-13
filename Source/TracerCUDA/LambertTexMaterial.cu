@@ -38,10 +38,14 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
             {
                 const MaterialTextureStruct& texInfo = albedoNode.texNode;
 
-                const Texture<2, Vector4>* texture;
+                const TextureI<2, 4>* texture;
                 if((err = TextureFunctions::AllocateTexture(texture,
                                                             dTextureMemory, texInfo,
-                                                            textureNodes, scenePath)) != SceneError::OK)
+                                                            textureNodes,
+                                                            EdgeResolveType::WRAP,
+                                                            InterpolationType::LINEAR,
+                                                            true,
+                                                            gpu, scenePath)) != SceneError::OK)
                     return err;
 
                 constructionInfo.isConstantAlbedo = false;
@@ -68,10 +72,14 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
             if(normalNode.first)
             {
                 const MaterialTextureStruct& texInfo = normalNode.second;
-                const Texture<2, Vector4>* texture;
+                const TextureI<2, 4>* texture;
                 if((err = TextureFunctions::AllocateTexture(texture,
                                                             dTextureMemory, texInfo,
-                                                            textureNodes, scenePath)) != SceneError::OK)
+                                                            textureNodes,
+                                                            EdgeResolveType::WRAP,
+                                                            InterpolationType::LINEAR,
+                                                            true,
+                                                            gpu, scenePath)) != SceneError::OK)
                     return err;
 
                 constructionInfo.hasNormalMap = true;

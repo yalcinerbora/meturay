@@ -44,6 +44,8 @@ namespace NodeNames
     static constexpr const char* TEXTURE_FILTER = "filter";
     static constexpr const char* TEXTURE_FILE = "file";
     static constexpr const char* TEXTURE_CHANNEL = "channels";
+    static constexpr const char* TEXTURE_NAME = "texture";
+
     // Indentity Transform Type Name
     static constexpr const char* TRANSFORM_IDENTITY = "Identity";
 

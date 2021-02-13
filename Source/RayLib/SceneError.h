@@ -87,6 +87,7 @@ struct SceneError : public ErrorI
             UNKNOWN_TEXTURE_TYPE,
             UNABLE_TO_LOAD_TEXTURE,
             TEXTURE_DIMENSION_MISMATCH,
+            TEXTURE_CHANNEL_MISMATCH,
             TEXTURE_NOT_FOUND,
             // Misc
             TOO_MANY_SURFACE_ON_NODE,
@@ -226,6 +227,7 @@ inline SceneError::operator std::string() const
         "Texture type is unknown",
         "Unable to load texture file",
         "Texture Dimension does not match to the requested type",
+        "Texture Channel does not match to the requested type",
         "Unable to find the texture file",
         // Misc
         "Too many data/material pairs per surface node",

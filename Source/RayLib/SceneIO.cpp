@@ -209,7 +209,7 @@ MaterialTextureStruct SceneIO::LoadMaterialTextureStruct(const nlohmann::json& n
                                                          double time)
 {
     MaterialTextureStruct s;
-    s.texId = LoadNumber<uint32_t>(node[ID]);
+    s.texId = LoadNumber<uint32_t>(node[TEXTURE_NAME]);
     s.channelLayout = LoadTextureAccessLayout(node[TEXTURE_CHANNEL]);
     return s;
 }

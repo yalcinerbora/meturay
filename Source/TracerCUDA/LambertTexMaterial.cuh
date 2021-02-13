@@ -7,9 +7,8 @@
 #include "DeviceMemory.h"
 #include "Texture.cuh"
 
-
-template<class T>
-using Tex2DMap = std::map<uint32_t, Texture<2, T>>;
+template<int C>
+using Tex2DMap = std::map<uint32_t, std::unique_ptr<TextureI<2, C>>>;
 
 // Delta distribution refract material
 class LambertTexMat final 
@@ -37,7 +36,7 @@ class LambertTexMat final
     private:
         DeviceMemory                memory;
         // Actual Allocation of Textures
-        Tex2DMap<Vector4>           dTextureMemory;
+        Tex2DMap<4>                 dTextureMemory;
         // Device Allocations of Texture References
         const ConstantAlbedoRef*    dConstAlbedo;        
         const Texture2DRef*         dTextureAlbedoRef;

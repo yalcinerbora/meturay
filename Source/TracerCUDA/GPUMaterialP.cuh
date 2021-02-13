@@ -40,11 +40,10 @@ class GPUMaterialGroup
         static constexpr EmissionFunc<Data, Surface>    Emit = EmitF;
         static constexpr IsEmissiveFunc<Data>           IsEmissive = IsEmitF;
 
-    private:
+    private:      
+    protected:
         // Designated GPU
         const CudaGPU&                  gpu;
-        
-    protected:
         std::map<uint32_t, uint32_t>    innerIds;
         const GPUTransformI* const*     dTransforms;
 

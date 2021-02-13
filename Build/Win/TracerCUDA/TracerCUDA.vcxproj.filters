@@ -127,6 +127,9 @@
     <ClCompile Include="..\..\..\Source\TracerCUDA\EntryPoint.cpp">
       <Filter>SharedLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerCUDA\TextureFunctions.cpp">
+      <Filter>Textures</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerCUDA\ImageMemory.h">

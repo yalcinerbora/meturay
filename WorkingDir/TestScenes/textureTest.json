@@ -24,7 +24,7 @@
     "Textures":[
     {
         "id": 0,
-        "file": "../Textures/checkerboard.png"
+        "file": "../Textures/checkerboard_color.png"
     }],
 
     "Materials":[

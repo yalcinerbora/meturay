@@ -18,6 +18,8 @@
 #include "GPUMaterialLight.cuh"
 #include "BasicMaterials.cuh"
 #include "SampleMaterials.cuh"
+#include "LambertTexMaterial.cuh"
+#include "UnrealMaterial.cuh"
 
 #include "DirectTracer.h"
 #include "PathTracer.h"
@@ -161,6 +163,14 @@ TracerLogicGenerator::TracerLogicGenerator()
                                               DefaultDestruct<GPUMaterialGroupI>));
     matGroupGenerators.emplace(RefractMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, RefractMat>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
+
+    // Proper Materials
+    matGroupGenerators.emplace(LambertTexMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LambertTexMat>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
+    matGroupGenerators.emplace(UnrealMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, UnrealMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
 
     // Transform Types

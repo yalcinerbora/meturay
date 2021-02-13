@@ -85,11 +85,23 @@ std::vector<std::vector<T>> SceneNodeJson::AccessList(const std::string& name,
 template <class T, LoadFunc<T> LoadF>
 OptionalNodeList<T> SceneNodeJson::AccessOptional(const std::string& name,
                                                   double time) const
-{    
-    const nlohmann::json& nodeInner = node[name];
-
+{   
     OptionalNodeList<T> result;
     result.reserve(idIndexPairs.size());
+
+    // Check if entire data is missing then allocate for each innerId a empty node
+    auto it = node.cend();
+    if((it = node.find(name)) == node.cend())
+    {
+        OptionalNode<T> optNode;
+        optNode.first = false;
+        result.resize(idIndexPairs.size(), optNode);
+        return std::move(result);
+    }
+        
+    // Access the node and continue
+    const nlohmann::json& nodeInner = node[name];
+
 
     for(const auto& list : idIndexPairs)
     {
