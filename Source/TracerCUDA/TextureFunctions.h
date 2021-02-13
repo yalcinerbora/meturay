@@ -230,13 +230,13 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>&,
 
 
         BYTE* pixels = FreeImage_GetBits(imgCPU);
-        for(int y = 0; y < h; y++)
-        for(int x = 0; x < w; x++)
+        for(uint32_t y = 0; y < h; y++)
+        for(uint32_t x = 0; x < w; x++)
         {
             RGBQUAD c;
-            bool b = FreeImage_GetPixelColor(imgCPU, x, y, c)
+            bool b = FreeImage_GetPixelColor(imgCPU, x, y, &c);
 
-            METU_DEBUG_LOG(c)
+            //METU_DEBUG_LOG(c);
         }
 
         // It looks ok
