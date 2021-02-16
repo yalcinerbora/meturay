@@ -45,6 +45,7 @@ class GPUMaterialGroupI
         // Changes the Generated data
         virtual SceneError                  ChangeTime(const NodeListing& materialNodes, double time,
                                                        const std::string& scenePath) = 0;
+        virtual TracerError                 ConstructTextureReferences() = 0;
 
         // Material Queries
         virtual bool                        HasMaterial(uint32_t materialId) const = 0;

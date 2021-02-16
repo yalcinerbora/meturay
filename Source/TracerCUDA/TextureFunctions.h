@@ -3,7 +3,9 @@
 #include "RayLib/SceneError.h"
 #include "RayLib/SceneStructs.h"
 #include "RayLib/Log.h"
+#include "RayLib/BitManipulation.h"
 #include "Texture.cuh"
+#include "CudaConstants.h"
 
 #include <string>
 #include <FreeImage.h>
@@ -28,6 +30,12 @@ class TextureLoader
     private:
         static int                  ColorTypeToChannelCount(FREE_IMAGE_COLOR_TYPE cType);
 
+        template<class T>
+        static void                 Expand2DData3ChannelTo4Channel(std::vector<Byte>& expandedData,
+                                                                   const Byte* packedData,
+                                                                   const Vector2ui& dim,
+                                                                   uint32_t sourcePitch);
+
     protected:
     public:
         // Constructors & Destructor
@@ -43,6 +51,7 @@ class TextureLoader
         SceneError                  LoadTexture(std::unique_ptr<TextureI<D, C>>&,
                                                 EdgeResolveType, InterpolationType,
                                                 bool normalizeIntegers,
+                                                bool normalizeCoordinates,
                                                 const CudaGPU& gpu,
                                                 const std::string& filePath);
 
@@ -51,6 +60,7 @@ class TextureLoader
         SceneError                  LoadTexture2D(std::unique_ptr<TextureI<2, C>>&,
                                                   EdgeResolveType, InterpolationType,
                                                   bool normalizeIntegers,
+                                                  bool normalizeCoordinates,
                                                   const CudaGPU& gpu,
                                                   const std::string& filePath);
         //template <int D, int C>
@@ -66,6 +76,30 @@ class TextureLoader
         //                                            const CudaGPU& gpu,
         //                                            const std::string& filePath);
 };
+
+template<class T>
+void TextureLoader::Expand2DData3ChannelTo4Channel(std::vector<Byte>& expandedData,
+                                                   const Byte* packedData,
+                                                   const Vector2ui& dim,
+                                                   uint32_t sourcePitch)
+{
+    expandedData.resize(sizeof(T) * 4 * dim[0] * dim[1]); 
+    for(uint32_t y = 0; y < dim[1]; y++)
+    {
+        const Byte* srcRowPtr = packedData + sourcePitch * y;
+        for(uint32_t x = 0; x < dim[0]; x++)
+        {
+            // Pixel by pixel copy
+            ptrdiff_t dstOffset = (dim[0] * y * sizeof(T) * 4 +
+                                            x * sizeof(T) * 4);
+            ptrdiff_t srcRowOffset = (x * sizeof(T) * 3);
+
+            Byte* destPixel = expandedData.data() + dstOffset;
+            const Byte* srcPixel = srcRowPtr + srcRowOffset;
+            std::memcpy(destPixel, srcPixel, sizeof(T) * 3);
+        }
+    }
+}
 
 inline std::unique_ptr<TextureLoader>& TextureLoader::Instance()
 {
@@ -92,6 +126,7 @@ namespace TextureFunctions
                                EdgeResolveType, 
                                InterpolationType,
                                bool normalizeIntegers,
+                               bool normalizeCoordinates,
                                // GPU info
                                const CudaGPU& gpu,
                                // Scene file path (all file specifiers are relative to this path)
@@ -111,6 +146,7 @@ SceneError TextureFunctions::AllocateTexture(// Returned Texture Ptr
                                              EdgeResolveType edgeResolve,
                                              InterpolationType interp,
                                              bool normalizeIntegers,
+                                             bool normalizeCoordinates,
                                              // GPU info
                                              const CudaGPU& gpu,
                                              // Scene file path (all file specifiers are relative to this path)
@@ -145,6 +181,7 @@ SceneError TextureFunctions::AllocateTexture(// Returned Texture Ptr
     if((e = TextureLoader::Instance()->LoadTexture(ptr,
                                                    edgeResolve, interp,
                                                    normalizeIntegers,
+                                                   normalizeCoordinates,
                                                    gpu,
                                                    combinedPath)) != SceneError::OK)
         return e;
@@ -177,12 +214,15 @@ template <int D, int C>
 SceneError TextureLoader::LoadTexture(std::unique_ptr<TextureI<D, C>>& t,
                                       EdgeResolveType edgeR, InterpolationType interp,
                                       bool normalizeIntegers,
+                                      bool normalizeCoordinates,
                                       const CudaGPU& gpu,
                                       const std::string& filePath)
 {
     if constexpr(D == 2)
         // Delegate to the FreeImagLib Loading function
-        return LoadTexture2D(t, edgeR, interp, normalizeIntegers,
+        return LoadTexture2D(t, edgeR, interp, 
+                             normalizeIntegers,
+                             normalizeCoordinates,
                              gpu, filePath);
     // TODO: add more texture loading functions
     else return SceneError::UNABLE_TO_LOAD_TEXTURE;
@@ -192,9 +232,10 @@ SceneError TextureLoader::LoadTexture(std::unique_ptr<TextureI<D, C>>& t,
 
 
 template <int C>
-SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>&,
-                                        EdgeResolveType, InterpolationType,
+SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>& tex,
+                                        EdgeResolveType edgeR, InterpolationType interp,
                                         bool normalizeIntegers,
+                                        bool normalizeCoordinates,
                                         const CudaGPU& gpu,
                                         const std::string& filePath)
 {
@@ -215,6 +256,7 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>&,
         uint32_t w = FreeImage_GetWidth(imgCPU);
         uint32_t h = FreeImage_GetHeight(imgCPU);   
         uint32_t pitch = FreeImage_GetPitch(imgCPU);
+        const Vector2ui dimension(w, h);
 
         FREE_IMAGE_TYPE imgType = FreeImage_GetImageType(imgCPU);
         FREE_IMAGE_COLOR_TYPE colorType = FreeImage_GetColorType(imgCPU);
@@ -226,21 +268,10 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>&,
         int cudaChannels = (channels == 3) ? 4 : channels;
         if(cudaChannels != C) 
             return SceneError::TEXTURE_CHANNEL_MISMATCH;
-
-
-
-        BYTE* pixels = FreeImage_GetBits(imgCPU);
-        for(uint32_t y = 0; y < h; y++)
-        for(uint32_t x = 0; x < w; x++)
-        {
-            RGBQUAD c;
-            bool b = FreeImage_GetPixelColor(imgCPU, x, y, &c);
-
-            //METU_DEBUG_LOG(c);
-        }
-
-        // It looks ok
-        std::unique_ptr<TextureI<2, C>> tex;
+                
+        // It looks ok (channels match etc.)
+        // Generate Texutre and Copy Image to GPU
+        std::vector<Byte> expandedPixels;
         switch(imgType)
         {
             case FREE_IMAGE_TYPE::FIT_BITMAP:
@@ -248,54 +279,57 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>&,
                 // Equal mask is mandatory for bitmap images
                 int rMask = FreeImage_GetRedMask(imgCPU);
                 int gMask = FreeImage_GetGreenMask(imgCPU);
-                int bMask = FreeImage_GetBlueMask(imgCPU);
+                int bMask = FreeImage_GetBlueMask(imgCPU);                
 
-                // Classic bitmap determine channel from
-                // bpp
-                if(bpp == 16)
-                {
-                    
-                }
-                else if(bpp == 24)
-                {
+                if(Utility::BitCount(rMask) != Utility::BitCount(gMask) ||
+                   Utility::BitCount(rMask) != Utility::BitCount(bMask))
+                    return SceneError::UNABLE_TO_LOAD_TEXTURE;
 
-                }
-                else if(bpp == 32)
+                // Only two bpp are supported
+                if(bpp == 24 ||
+                   bpp == 32)
                 {
+                    // std::unique_ptr<Texture2D<uchar4>>
+                    auto texPtr = std::make_unique<Texture2D<uchar4>>(gpu.DeviceId(),
+                                                                      interp,
+                                                                      edgeR,
+                                                                      normalizeIntegers,
+                                                                      normalizeCoordinates,
+                                                                      false,
+                                                                      dimension,
+                                                                      1);
 
+                    BYTE* imgPixels = FreeImage_GetBits(imgCPU);
+                    Byte* srcPixels;
+                    if(bpp == 24)
+                    {
+                        Expand2DData3ChannelTo4Channel<unsigned char>(expandedPixels,
+                                                                      imgPixels,
+                                                                      dimension,
+                                                                      pitch);
+                        srcPixels = expandedPixels.data();
+                    }
+                    else srcPixels = imgPixels;
+                    texPtr->Copy(srcPixels, dimension);
+
+                    // Transfer to the Interface ptr
+                    tex = std::move(texPtr);
+                                 
                 }
                 // Skip low bitrate bitmaps
                 else return SceneError::UNABLE_TO_LOAD_TEXTURE;
                 break;
             }
+            // TODO: Add other tpyes of textures (16bit 32bit HDR etc.)
+            default:
+                return SceneError::UNABLE_TO_LOAD_TEXTURE;
+            
         }
-
-
-        // Do some checks for compatilbility
-        
-
-        
-
-        //if((e = ConstructTexture(Channel,...)) != SceneError::OK)
-        //    return e;
-
-        //tex = std::make_unique(new Texture<D, >(
-        //    gpu.DeviceId(),
-        //    interp, edgeR, normalizeIntegers,
-        //    
-        //    ));
-
-
-
-        //FreeImage_GetBits()
-
-
-
-
+        // All done!
+        // Unallocate cpu image
         FreeImage_Unload(imgCPU);
     }
     else return SceneError::UNABLE_TO_LOAD_TEXTURE;
-
 
     return SceneError::OK;
 }

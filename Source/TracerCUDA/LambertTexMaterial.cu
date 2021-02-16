@@ -41,10 +41,10 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
                 const TextureI<2, 4>* texture;
                 if((err = TextureFunctions::AllocateTexture(texture,
                                                             dTextureMemory, texInfo,
-                                                            textureNodes,
+                                                            textureNodes,                                                            
                                                             EdgeResolveType::WRAP,
                                                             InterpolationType::LINEAR,
-                                                            true,
+                                                            true, true,
                                                             gpu, scenePath)) != SceneError::OK)
                     return err;
 
@@ -78,7 +78,7 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
                                                             textureNodes,
                                                             EdgeResolveType::WRAP,
                                                             InterpolationType::LINEAR,
-                                                            true,
+                                                            true, true,
                                                             gpu, scenePath)) != SceneError::OK)
                     return err;
 
@@ -145,6 +145,11 @@ SceneError LambertTexMat::ChangeTime(const NodeListing& materialNodes, double ti
 {
     // TODO: Implement
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
+}
+
+TracerError LambertTexMat::ConstructTextureReferences()
+{
+    return TracerError::OK;
 }
 
 size_t LambertTexMat::UsedGPUMemory() const

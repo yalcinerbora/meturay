@@ -155,6 +155,7 @@ Texture<D, T>::Texture(int deviceId,
                        InterpolationType interp,
                        EdgeResolveType eResolve,
                        bool normalizeIntegers,
+                       bool normalizeCoordinates,
                        bool convertSRGB,
                        const TexDimType_t<D>& dim,
                        int mipCount)
@@ -189,7 +190,7 @@ Texture<D, T>::Texture(int deviceId,
     tDesc.borderColor[1] = 0.0f;
     tDesc.borderColor[2] = 0.0f;
     tDesc.borderColor[3] = 0.0f;
-    tDesc.normalizedCoords = 1;
+    tDesc.normalizedCoords = normalizeCoordinates;
     tDesc.mipmapFilterMode = DetermineFilterMode(interp);
 
     //
@@ -261,7 +262,6 @@ void Texture<D, T>::Copy(const Byte* sourceData,
     p.kind = cudaMemcpyHostToDevice;
     p.extent = MakeCudaExtent<D>(size);
     
-
     p.dstArray = levelArray;
     p.dstPos = MakeCudaOffset<D>(offset);
 
@@ -336,6 +336,7 @@ TextureArray<D, T>::TextureArray(int deviceId,
                                  InterpolationType interp,
                                  EdgeResolveType eResolve,
                                  bool normalizeIntegers,
+                                 bool normalizeCoordinates,
                                  bool convertSRGB,
                                  const TexDimType_t<D>& dim,
                                  unsigned int length,
@@ -373,7 +374,7 @@ TextureArray<D, T>::TextureArray(int deviceId,
     tDesc.borderColor[1] = 0.0f;
     tDesc.borderColor[2] = 0.0f;
     tDesc.borderColor[3] = 0.0f;
-    tDesc.normalizedCoords = 1;
+    tDesc.normalizedCoords = normalizeCoordinates;
     tDesc.mipmapFilterMode = DetermineFilterMode(interp);
 
     //

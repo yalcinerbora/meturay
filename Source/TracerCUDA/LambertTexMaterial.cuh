@@ -66,6 +66,8 @@ class LambertTexMat final
                                            double time,
                                            const std::string& scenePath) override;
 
+        TracerError             ConstructTextureReferences() override;
+
         // Material Queries
         size_t                  UsedGPUMemory() const override;
         size_t                  UsedCPUMemory() const override;

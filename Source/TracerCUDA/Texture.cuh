@@ -197,6 +197,7 @@ class Texture
                                     InterpolationType,
                                     EdgeResolveType,
                                     bool normalizeIntegers,
+                                    bool normalizeCoordinates,
                                     bool convertSRGB,
                                     const TexDimType_t<D>& dim,
                                     int mipCount);
@@ -209,11 +210,11 @@ class Texture
         // Copy Data
         void                Copy(const Byte* sourceData,
                                  const TexDimType_t<D>& size,
-                                 const TexDimType_t<D>& offset = TexDimType_t<D>::ZERO,
+                                 const TexDimType_t<D>& offset = TexDimType<D>::ZERO,
                                  int mipLevel = 0);
         GPUFence            CopyAsync(const Byte* sourceData,
                                       const TexDimType_t<D>& size,
-                                      const TexDimType_t<D>& offset = TexDimType_t<D>::ZERO,
+                                      const TexDimType_t<D>& offset = TexDimType<D>::ZERO,
                                       int mipLevel = 0,
                                       cudaStream_t stream = nullptr);
 
@@ -254,6 +255,7 @@ class TextureArray
                                          InterpolationType,
                                          EdgeResolveType,
                                          bool normalizeIntegers,
+                                         bool normalizeCoordinates,
                                          bool convertSRGB,
                                          const TexDimType_t<D>& dim,
                                          unsigned int length,
@@ -268,12 +270,12 @@ class TextureArray
         void                Copy(const Byte* sourceData,
                                  const TexDimType_t<D>& size,
                                  int layer,
-                                 const TexDimType_t<D>& offset = TexDimType_t<D>::ZERO,
+                                 const TexDimType_t<D>& offset = TexDimType<D>::ZERO,
                                  int mipLevel = 0);
         GPUFence            CopyAsync(const Byte* sourceData,
                                       const TexDimType_t<D>& size,
                                       int layer,
-                                      const TexDimType_t<D>& offset = TexDimType_t<D>::ZERO,
+                                      const TexDimType_t<D>& offset = TexDimType<D>::ZERO,
                                       int mipLevel = 0,
                                       cudaStream_t stream = nullptr);
 

@@ -54,6 +54,8 @@ class GPUMaterialGroup
                                         GPUMaterialGroup(const CudaGPU&);
         virtual                         ~GPUMaterialGroup() = default;
 
+        TracerError                     ConstructTextureReferences() override;
+
         bool                            HasMaterial(uint32_t materialId) const override;
         uint32_t                        InnerId(uint32_t materialId) const override;
         const CudaGPU&                  GPU() const override;
@@ -91,6 +93,16 @@ SceneError GPUMaterialGroup<D, S, SF, EF, EmF, IEF>::GenerateInnerIds(const Node
         }
     }
     return SceneError::OK;
+}
+
+template <class D, class S,
+          SampleFunc<D, S> SF,
+          EvaluateFunc<D, S> EF,
+          EmissionFunc<D, S> EmF,
+          IsEmissiveFunc<D> IEF>
+TracerError GPUMaterialGroup<D, S, SF, EF, EmF, IEF>::ConstructTextureReferences()
+{
+    return TracerError::OK;
 }
 
 template <class D, class S, 
