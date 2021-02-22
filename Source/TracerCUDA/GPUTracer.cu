@@ -209,7 +209,11 @@ TracerError GPUTracer::Initialize()
 
     // Attach Medium gpu pointer to Material Groups
     for(const auto& mg : materialGroups)
+    {
         mg.second->AttachGlobalMediumArray(dMediums, baseMediumIndex);
+        if((e = mg.second->ConstructTextureReferences()) == TracerError::OK)
+            return e;
+    }
         
     // Attach Transform gpu pointer to the Accelerator Batches
     for(const auto& acc : accelBatches)

@@ -159,8 +159,7 @@ Texture<D, T>::Texture(int deviceId,
                        bool convertSRGB,
                        const TexDimType_t<D>& dim,
                        int mipCount)
-    : DeviceLocalMemoryI(deviceId)
-    , TextureI<D, TextureChannelCount<T>::value>(texture)
+    : TextureI<D, TextureChannelCount<T>::value>(texture, deviceId)
     , dim(dim)
     , interpType(interp)
     , edgeResolveType(eResolve)
@@ -204,8 +203,7 @@ Texture<D, T>::Texture(int deviceId,
 
 template<int D, class T>
 Texture<D, T>::Texture(Texture&& other)
-    : DeviceLocalMemoryI(other)
-    , TextureI<D, TextureChannelCount<T>::value>(std::move(other))
+    : TextureI<D, TextureChannelCount<T>::value>(std::move(other))
     , data(other.data)
     , dim(other.dim)
     , interpType(other.interpType)
@@ -341,8 +339,7 @@ TextureArray<D, T>::TextureArray(int deviceId,
                                  const TexDimType_t<D>& dim,
                                  unsigned int length,
                                  int mipCount)
-    : DeviceLocalMemoryI(deviceId)
-    , TextureArrayI<D, TextureChannelCount<T>::value>(texture, length)
+    : TextureArrayI<D, TextureChannelCount<T>::value>(texture, length, deviceId)
     , dim(dim)
     , length(length)
     , interpType(interp)
@@ -388,8 +385,7 @@ TextureArray<D, T>::TextureArray(int deviceId,
 
 template<int D, class T>
 TextureArray<D, T>::TextureArray(TextureArray&& other)
-    : DeviceLocalMemoryI(other)
-    , TextureArrayI<D, TextureChannelCount<T>::value>(std::move(other))
+    : TextureArrayI<D, TextureChannelCount<T>::value>(std::move(other))
     , data(other.data)
     , dim(other.dim)
     , interpType(other.interpType)
@@ -531,8 +527,7 @@ TextureCube<T>::TextureCube(int deviceId,
                             bool convertSRGB,
                             const Vector2ui& dim,
                             int mipCount)
-    : DeviceLocalMemoryI(deviceId)
-    , TextureCubeI<TextureChannelCount<T>::value>(texture)
+    : TextureCubeI<TextureChannelCount<T>::value>(texture, deviceId)
     , dim(dim)
     , interpType(interp)
     , edgeResolveType(eResolve)
@@ -578,8 +573,7 @@ TextureCube<T>::TextureCube(int deviceId,
 
 template<class T>
 TextureCube<T>::TextureCube(TextureCube&& other)
-    : DeviceLocalMemoryI(other)
-    , TextureCubeI<TextureChannelCount<T>::value>(std::move(other))
+    : TextureCubeI<TextureChannelCount<T>::value>(std::move(other))
     , data(other.data)
     , dim(other.dim)
     , interpType(other.interpType)

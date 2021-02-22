@@ -23,6 +23,7 @@ TODO: should we interface these?
 // Textures are one example
 class DeviceLocalMemoryI
 {
+    private:
     protected:
         int                     currentDevice;
 

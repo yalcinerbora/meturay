@@ -107,7 +107,7 @@ static constexpr cudaTextureFilterMode DetermineFilterMode(InterpolationType);
 // Generic Texture Type
 // used to group different of textures
 template<int D, int C>
-class TextureI
+class TextureI : public DeviceLocalMemoryI
 {
     private:    
         static constexpr uint32_t   Dimension = D;
@@ -117,18 +117,19 @@ class TextureI
     protected:
     public:
         // Constructors & Destructor
-                                    TextureI(cudaTextureObject_t);
+                                    TextureI(cudaTextureObject_t,
+                                             int currentDevice);
                                     TextureI(const TextureI&) = delete;
                                     TextureI(TextureI&&);
         TextureI&                   operator=(const TextureI&) = delete;
         TextureI&                   operator=(TextureI&&);
-                                    ~TextureI() = default;
+        virtual                     ~TextureI() = default;
 
         constexpr explicit          operator cudaTextureObject_t() const;
 };
 
 template<int D, int C>
-class TextureArrayI
+class TextureArrayI : public DeviceLocalMemoryI
 {
     private:    
         static constexpr uint32_t   Dimension = D;
@@ -141,18 +142,19 @@ class TextureArrayI
     public:
         // Constructors & Destructor
                                     TextureArrayI(cudaTextureObject_t,
-                                                  uint32_t layerCount);
+                                                  uint32_t layerCount,
+                                                  int currentDevice);
                                     TextureArrayI(const TextureArrayI&) = delete;
                                     TextureArrayI(TextureArrayI&&);
         TextureArrayI&              operator=(const TextureArrayI&) = delete;
         TextureArrayI&              operator=(TextureArrayI&&);
-                                    ~TextureArrayI() = default;
+        virtual                     ~TextureArrayI() = default;
 
         constexpr explicit          operator cudaTextureObject_t() const;
 };
 
 template<int C>
-class TextureCubeI
+class TextureCubeI : public DeviceLocalMemoryI
 {
     private:
         static constexpr uint32_t   Dimension = 2;
@@ -163,20 +165,19 @@ class TextureCubeI
     protected:
     public:
         // Constructors & Destructor
-                                    TextureCubeI(cudaTextureObject_t);
+                                    TextureCubeI(cudaTextureObject_t,
+                                                 int currentDevice);
                                     TextureCubeI(const TextureCubeI&) = delete;
                                     TextureCubeI(TextureCubeI&&);
         TextureCubeI&               operator=(const TextureCubeI&) = delete;
         TextureCubeI&               operator=(TextureCubeI&&);
-                                    ~TextureCubeI() = default;
+        virtual                     ~TextureCubeI() = default;
 
         constexpr explicit          operator cudaTextureObject_t() const;
 };
 
 template<int D, class T>
-class Texture 
-    : public DeviceLocalMemoryI
-    , public TextureI<D, TextureChannelCount<T>::value>
+class Texture final : public TextureI<D, TextureChannelCount<T>::value>
 {
     static_assert(D >= 1 && D <= 3, "At most 3D textures are supported");
     static_assert(is_TextureType_v<T>, "Invalid texture type");
@@ -231,9 +232,7 @@ class Texture
 };
 
 template<int D, class T>
-class TextureArray 
-    : public DeviceLocalMemoryI
-    , public TextureArrayI<D, TextureChannelCount<T>::value>
+class TextureArray final : public TextureArrayI<D, TextureChannelCount<T>::value>
 {    
     static_assert(D >= 1 && D <= 2, "At most 2D texture arrays are supported");
     static_assert(is_TextureType_v<T>, "Invalid texture array type");
@@ -293,9 +292,7 @@ class TextureArray
 };
 
 template<class T>
-class TextureCube 
-    : public DeviceLocalMemoryI
-    , public TextureCubeI<TextureChannelCount<T>::value>
+class TextureCube final : public TextureCubeI<TextureChannelCount<T>::value>
 {
     static_assert(is_TextureType_v<T>, "Invalid texture cube type");
 
@@ -360,8 +357,10 @@ template<class T> using Texture2DArray = TextureArray<2, T>;
 
 
 template<int D, int C>
-inline TextureI<D, C>::TextureI(cudaTextureObject_t t)
-    : texture(t)
+inline TextureI<D, C>::TextureI(cudaTextureObject_t t,
+                                int currentDevice)
+    : DeviceLocalMemoryI(currentDevice)
+    , texture(t)
 {}
 
 template<int D, int C>
@@ -372,8 +371,10 @@ constexpr TextureI<D, C>::operator cudaTextureObject_t() const
 
 template<int D, int C>
 inline TextureArrayI<D, C>::TextureArrayI(cudaTextureObject_t t,
-                                          uint32_t length)
-    : texture(t)
+                                          uint32_t length,
+                                          int currentDevice)
+    : DeviceLocalMemoryI(currentDevice)
+    , texture(t)
     , length(length)
 {}
 
@@ -384,8 +385,10 @@ constexpr TextureArrayI<D, C>::operator cudaTextureObject_t() const
 }
 
 template<int C>
-inline TextureCubeI<C>::TextureCubeI(cudaTextureObject_t t)
-    : texture(t)
+inline TextureCubeI<C>::TextureCubeI(cudaTextureObject_t t,
+                                     int currentDevice)
+    : DeviceLocalMemoryI(currentDevice)
+    , texture(t)
 {}
 
 template<int C>
