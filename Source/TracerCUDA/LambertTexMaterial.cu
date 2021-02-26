@@ -1,6 +1,8 @@
 #include "LambertTexMaterial.cuh"
 #include "RayLib/MemoryAlignment.h"
 #include "TextureFunctions.h"
+#include "TextureReferenceGenerators.cuh"
+#include "CudaConstants.hpp"
 
 SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
                                           const TextureNodeMap& textureNodes,
@@ -143,8 +145,42 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
 SceneError LambertTexMat::ChangeTime(const NodeListing& materialNodes, double time,
                                      const std::string& scenePath)
 {
-    // TODO: Implement
-    return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
+    //return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
+
+
+    size_t materialCount = matConstructionInfo.size();
+
+    // Generate temp memory for construction
+    DeviceMemory tempMemory;
+
+
+    TextureOrConstReferenceData<Vector3>* dConstructionData;
+    uint32_t* dAlbedoTexCounter;
+    uint32_t* dNormalTexCounter;
+
+
+    // Load temp memory with data
+    
+
+
+
+    // Kernel Call For Albedo Texture Generation
+    gpu.AsyncGridStrideKC_X(0, materialCount,
+                            GenerateEitherTexOrConstantReference<2, Vector3>,
+                            const_cast<TextureRefI<2, Vector3f>**>(dData.dAlbedo),
+                            const_cast<ConstantAlbedoRef*>(dConstAlbedo),
+                            const_cast<Texture2DRef*>(dTextureAlbedoRef),
+                            //
+                            *dAlbedoTexCounter,
+                            *dNormalTexCounter,
+                            //
+                            dConstructionData,
+                            materialCount);
+
+    // Clear temporary CPU data
+    matConstructionInfo.clear();
+    // All Done!
+    return SceneError::OK;
 }
 
 TracerError LambertTexMat::ConstructTextureReferences()

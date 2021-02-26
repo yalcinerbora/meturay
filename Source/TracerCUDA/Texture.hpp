@@ -219,7 +219,7 @@ Texture<D, T>& Texture<D, T>::operator=(Texture&& other)
     assert(this != &other);
     if(data)
     {
-        CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaSetDevice(this->currentDevice));
         CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
@@ -240,7 +240,7 @@ Texture<D, T>::~Texture()
 {
     if(data)
     {
-        CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaSetDevice(this->currentDevice));
         CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
@@ -253,7 +253,7 @@ void Texture<D, T>::Copy(const Byte* sourceData,
                          int mipLevel)
 {
     cudaArray_t levelArray;
-    CUDA_CHECK(cudaSetDevice(currentDevice));
+    CUDA_CHECK(cudaSetDevice(this->currentDevice));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     cudaMemcpy3DParms p = {};
@@ -279,7 +279,7 @@ GPUFence Texture<D, T>::CopyAsync(const Byte* sourceData,
                                   cudaStream_t stream)
 {
     cudaArray_t levelArray;
-    CUDA_CHECK(cudaSetDevice(currentDevice));
+    CUDA_CHECK(cudaSetDevice(this->currentDevice));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     cudaMemcpy3DParms p = {};
@@ -401,7 +401,7 @@ TextureArray<D, T>& TextureArray<D, T>::operator=(TextureArray&& other)
     assert(this != &other);
     if(data)
     {
-        CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaSetDevice(this->currentDevice));
         CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
@@ -422,7 +422,7 @@ TextureArray<D, T>::~TextureArray()
 {
     if(data)
     {
-        CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaSetDevice(this->currentDevice));
         CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
@@ -436,7 +436,7 @@ void TextureArray<D, T>::Copy(const Byte* sourceData,
                               int mipLevel)
 {
     cudaArray_t levelArray;
-    CUDA_CHECK(cudaSetDevice(currentDevice));
+    CUDA_CHECK(cudaSetDevice(this->currentDevice));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     cudaMemcpy3DParms p = {};
@@ -463,7 +463,7 @@ GPUFence TextureArray<D, T>::CopyAsync(const Byte* sourceData,
                                        cudaStream_t stream)
 {
     cudaArray_t levelArray;
-    CUDA_CHECK(cudaSetDevice(currentDevice));
+    CUDA_CHECK(cudaSetDevice(this->currentDevice));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     cudaMemcpy3DParms p = {};
@@ -589,7 +589,7 @@ TextureCube<T>& TextureCube<T>::operator=(TextureCube&& other)
     assert(this != &other);
     if(data)
     {
-        CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaSetDevice(this->currentDevice));
         CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
@@ -610,7 +610,7 @@ TextureCube<T>::~TextureCube()
 {
     if(data)
     {
-        CUDA_CHECK(cudaSetDevice(currentDevice));
+        CUDA_CHECK(cudaSetDevice(this->currentDevice));
         CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
@@ -624,7 +624,7 @@ void TextureCube<T>::Copy(const Byte* sourceData,
                           int mipLevel)
 {
     cudaArray_t levelArray;
-    CUDA_CHECK(cudaSetDevice(currentDevice));
+    CUDA_CHECK(cudaSetDevice(this->currentDevice));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     size_t sideIndex = static_cast<size_t>(side);
@@ -653,7 +653,7 @@ GPUFence TextureCube<T>::CopyAsync(const Byte* sourceData,
                                    cudaStream_t stream)
 {
     cudaArray_t levelArray;
-    CUDA_CHECK(cudaSetDevice(currentDevice));
+    CUDA_CHECK(cudaSetDevice(this->currentDevice));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     size_t sideIndex = static_cast<size_t>(side);
