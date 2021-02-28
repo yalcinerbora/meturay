@@ -211,7 +211,7 @@ TracerError GPUTracer::Initialize()
     for(const auto& mg : materialGroups)
     {
         mg.second->AttachGlobalMediumArray(dMediums, baseMediumIndex);
-        if((e = mg.second->ConstructTextureReferences()) == TracerError::OK)
+        if((e = mg.second->ConstructTextureReferences()) != TracerError::OK)
             return e;
     }
         

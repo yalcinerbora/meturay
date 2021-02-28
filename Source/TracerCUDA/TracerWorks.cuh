@@ -2,6 +2,8 @@
 
 #include "BasicMaterials.cuh"
 #include "SampleMaterials.cuh"
+#include "UnrealMaterial.cuh"
+#include "LambertTexMaterial.cuh"
 #include "TracerKC.cuh"
 
 #include "WorkPool.h"
@@ -196,6 +198,13 @@ extern template class DirectTracerWork<SphericalMat, GPUPrimitiveSphere>;
 
 extern template class DirectTracerWork<NormalRenderMat, GPUPrimitiveTriangle>;
 extern template class DirectTracerWork<NormalRenderMat, GPUPrimitiveSphere>;
+
+extern template class DirectTracerWork<LambertTexMat, GPUPrimitiveTriangle>;
+extern template class DirectTracerWork<LambertTexMat, GPUPrimitiveSphere>;
+
+extern template class DirectTracerWork<UnrealMat, GPUPrimitiveTriangle>;
+extern template class DirectTracerWork<UnrealMat, GPUPrimitiveSphere>;
+
 // ===================================================
 // Path Tracer Work Batches
 extern template class PathTracerWork<EmissiveMat, GPUPrimitiveEmpty>;
@@ -210,6 +219,12 @@ extern template class PathTracerWork<ReflectMat, GPUPrimitiveSphere>;
 
 extern template class PathTracerWork<RefractMat, GPUPrimitiveTriangle>;
 extern template class PathTracerWork<RefractMat, GPUPrimitiveSphere>;
+
+extern template class PathTracerWork<LambertTexMat, GPUPrimitiveTriangle>;
+extern template class PathTracerWork<LambertTexMat, GPUPrimitiveSphere>;
+
+extern template class PathTracerWork<UnrealMat, GPUPrimitiveTriangle>;
+extern template class PathTracerWork<UnrealMat, GPUPrimitiveSphere>;
 
 extern template class PathTracerLightWork<LightMatConstant, GPUPrimitiveEmpty>;
 extern template class PathTracerLightWork<LightMatConstant, GPUPrimitiveTriangle>;
@@ -229,7 +244,11 @@ using DirectTracerWorkerList = TypeList<DirectTracerWork<ConstantMat, GPUPrimiti
                                         DirectTracerWork<BarycentricMat, GPUPrimitiveTriangle>,
                                         DirectTracerWork<SphericalMat, GPUPrimitiveSphere>,
                                         DirectTracerWork<NormalRenderMat, GPUPrimitiveTriangle>,
-                                        DirectTracerWork<NormalRenderMat, GPUPrimitiveSphere>>;
+                                        DirectTracerWork<NormalRenderMat, GPUPrimitiveSphere>,
+                                        DirectTracerWork<LambertTexMat, GPUPrimitiveTriangle>,
+                                        DirectTracerWork<LambertTexMat, GPUPrimitiveSphere>,
+                                        DirectTracerWork<UnrealMat, GPUPrimitiveTriangle>,
+                                        DirectTracerWork<UnrealMat, GPUPrimitiveSphere>>;
 // ===================================================
 using PathTracerWorkerList = TypeList<PathTracerWork<EmissiveMat, GPUPrimitiveEmpty>,
                                       PathTracerWork<EmissiveMat, GPUPrimitiveTriangle>,
@@ -239,7 +258,11 @@ using PathTracerWorkerList = TypeList<PathTracerWork<EmissiveMat, GPUPrimitiveEm
                                       PathTracerWork<ReflectMat, GPUPrimitiveTriangle>,
                                       PathTracerWork<ReflectMat, GPUPrimitiveSphere>,
                                       PathTracerWork<RefractMat, GPUPrimitiveTriangle>,
-                                      PathTracerWork<RefractMat, GPUPrimitiveSphere>>;
+                                      PathTracerWork<RefractMat, GPUPrimitiveSphere>,
+                                      PathTracerWork<LambertTexMat, GPUPrimitiveTriangle>,
+                                      PathTracerWork<LambertTexMat, GPUPrimitiveSphere>,
+                                      PathTracerWork<UnrealMat, GPUPrimitiveTriangle>,
+                                      PathTracerWork<UnrealMat, GPUPrimitiveSphere>>;
 // ===================================================
 using PathTracerLightWorkerList = TypeList<PathTracerLightWork<LightMatConstant, GPUPrimitiveEmpty>,
                                            PathTracerLightWork<LightMatConstant, GPUPrimitiveTriangle>,

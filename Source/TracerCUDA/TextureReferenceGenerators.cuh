@@ -9,7 +9,6 @@ struct TextureOrConstReferenceData
 {
     bool isConstData;
     cudaTextureObject_t tex;
-    uint32_t textureArrayIndex;
     T data;
 };
 
@@ -24,7 +23,6 @@ void GenerateTextureReference(TextureRef<D, T>* gRefLocations,
         globalId < refCount;
         globalId += blockDim.x * gridDim.x)
     {
-
         new (gRefLocations + globalId) TextureRef<D, T>(gTextures[globalId]);
     }
 }
@@ -75,6 +73,31 @@ void GenerateEitherTexOrConstantReference(TextureRefI<D, T>** gTexRefInterfaces,
             refAddress = new (gTRefLocations + location) TextureRef<D, T>(data.tex);
         }
 
+        gTexRefInterfaces[globalId] = refAddress;
+    }
+}
+
+template <int D, class T>
+__global__
+void GenerateOptionalTexReference(TextureRefI<D, T>** gTexRefInterfaces,
+                                  TextureRef<D, T>* gTRefLocations,
+                                  // Atomic Counter
+                                  uint32_t& gTRefCounter,
+                                  //
+                                  const cudaTextureObject_t* gTexObjects,
+                                  uint32_t totalRefCount)
+{
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < totalRefCount;
+        globalId += blockDim.x * gridDim.x)
+    {
+        const cudaTextureObject_t tObj = gTexObjects[globalId];
+        TextureRefI<D, T>* refAddress = nullptr;
+        if(tObj != 0)
+        {
+            uint32_t location = atomicAdd(&gTRefCounter, 1);
+            refAddress = new (gTRefLocations + location) TextureRef<D, T>(tObj);
+        }
         gTexRefInterfaces[globalId] = refAddress;
     }
 }

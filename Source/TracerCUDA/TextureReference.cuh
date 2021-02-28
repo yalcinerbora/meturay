@@ -172,8 +172,8 @@ extern template class TextureRef<1, float>;
 extern template class TextureRef<1, Vector2>;
 extern template class TextureRef<1, Vector3>;
 extern template class TextureRef<1, Vector4>;
-
-extern template class TextureRef<2, float>;
+//
+//extern template class TextureRef<2, float>;
 extern template class TextureRef<2, Vector2>;
 extern template class TextureRef<2, Vector3>;
 extern template class TextureRef<2, Vector4>;

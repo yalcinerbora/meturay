@@ -11,6 +11,12 @@ template class DirectTracerWork<SphericalMat, GPUPrimitiveSphere>;
 
 template class DirectTracerWork<NormalRenderMat, GPUPrimitiveTriangle>;
 template class DirectTracerWork<NormalRenderMat, GPUPrimitiveSphere>;
+
+template class DirectTracerWork<LambertTexMat, GPUPrimitiveTriangle>;
+template class DirectTracerWork<LambertTexMat, GPUPrimitiveSphere>;
+
+template class DirectTracerWork<UnrealMat, GPUPrimitiveTriangle>;
+template class DirectTracerWork<UnrealMat, GPUPrimitiveSphere>;
 // ===================================================
 // Path Tracer Work Batches
 template class PathTracerWork<EmissiveMat, GPUPrimitiveEmpty>;
@@ -25,6 +31,13 @@ template class PathTracerWork<ReflectMat, GPUPrimitiveSphere>;
 
 template class PathTracerWork<RefractMat, GPUPrimitiveTriangle>;
 template class PathTracerWork<RefractMat, GPUPrimitiveSphere>;
+
+template class PathTracerWork<LambertTexMat, GPUPrimitiveTriangle>;
+template class PathTracerWork<LambertTexMat, GPUPrimitiveSphere>;
+
+template class PathTracerWork<UnrealMat, GPUPrimitiveTriangle>;
+template class PathTracerWork<UnrealMat, GPUPrimitiveSphere>;
+
 // ===================================================
 // Path Tracer Light Work Batches
 template class PathTracerLightWork<LightMatConstant, GPUPrimitiveEmpty>;

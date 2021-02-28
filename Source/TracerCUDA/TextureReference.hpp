@@ -58,7 +58,12 @@ T TextureRef<D, T>::operator()(const TexFloatType_t<D>& index) const
     }
     else if constexpr(D == 2)
     {
-        return ConvertTexReturnType<T>(tex2D<CudaReturn_t<T>>(t, index[0], index[1]));
+        T val = ConvertTexReturnType<T>(tex2D<CudaReturn_t<T>>(t, index[0], index[1]));
+        printf("T(%f, %f) = (%f, %f, %f)\n", 
+               index[0], index[1],
+               val[0], val[1], val[2]);
+        return val;
+        //return ConvertTexReturnType<T>(tex2D<CudaReturn_t<T>>(t, index[0], index[1]));
     }
     else if constexpr(D == 3)
     {

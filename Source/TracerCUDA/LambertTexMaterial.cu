@@ -145,24 +145,77 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
 SceneError LambertTexMat::ChangeTime(const NodeListing& materialNodes, double time,
                                      const std::string& scenePath)
 {
-    //return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
+    // TODO: Implement
+    return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
+}
 
-
+TracerError LambertTexMat::ConstructTextureReferences()
+{
     size_t materialCount = matConstructionInfo.size();
 
-    // Generate temp memory for construction
-    DeviceMemory tempMemory;
+    // CPU Split Data
+    std::vector<cudaTextureObject_t> hNormalTextureObjects(materialCount, 0);
+    std::vector<TextureOrConstReferenceData<Vector3>> hAlbedoData(materialCount);
 
+    // Split Mat Construction Info
+    uint32_t i = 0;
+    for(const auto& mInfo : matConstructionInfo)
+    {
+        if(mInfo.hasNormalMap)
+            hNormalTextureObjects[i] = mInfo.normalTexture;
+        hAlbedoData[i].isConstData = mInfo.isConstantAlbedo;
+        if(mInfo.isConstantAlbedo)
+            hAlbedoData[i].data = mInfo.constantAlbedo;
+        else
+            hAlbedoData[i].tex = mInfo.albedoTexture;
 
-    TextureOrConstReferenceData<Vector3>* dConstructionData;
-    uint32_t* dAlbedoTexCounter;
-    uint32_t* dNormalTexCounter;
+        i++;
+    }
 
+    // Allocate Temp GPU Memory
+    // Size Determination
+    
+    size_t counterSize = sizeof(uint32_t) * 3;
+    counterSize = Memory::AlignSize(counterSize);
+    size_t albedoConstructionSize = sizeof(TextureOrConstReferenceData<Vector3>) * materialCount;
+    albedoConstructionSize = Memory::AlignSize(albedoConstructionSize);
+    size_t normalConstructionSize = sizeof(cudaTextureObject_t) * materialCount;
+    normalConstructionSize = Memory::AlignSize(normalConstructionSize);
+
+    //
+    size_t totalSize = (counterSize + 
+                        albedoConstructionSize +
+                        normalConstructionSize);
+    DeviceMemory tempMemory(totalSize);
+
+    size_t offset = 0;
+    Byte* tempMemPtr = static_cast<Byte*>(tempMemory);
+
+    TextureOrConstReferenceData<Vector3>* dConstructionData = reinterpret_cast<TextureOrConstReferenceData<Vector3>*>(tempMemPtr + offset);
+    offset += albedoConstructionSize;
+    cudaTextureObject_t* dNormalTextures = reinterpret_cast<cudaTextureObject_t*>(tempMemPtr + offset);
+    offset += normalConstructionSize;
+    uint32_t* dAlbedoTexCounter = reinterpret_cast<uint32_t*>(tempMemPtr + offset);
+    offset += sizeof(uint32_t);
+    uint32_t* dConstantRefCounter = reinterpret_cast<uint32_t*>(tempMemPtr + offset);
+    offset += sizeof(uint32_t);
+    uint32_t* dNormalTexCounter = reinterpret_cast<uint32_t*>(tempMemPtr + offset);
+    offset += sizeof(uint32_t);
+    offset += counterSize - (sizeof(uint32_t) * 3);
+    assert(offset == totalSize);
 
     // Load temp memory with data
-    
-
-
+    CUDA_CHECK(cudaMemset(dAlbedoTexCounter, 0x00, sizeof(uint32_t)));
+    CUDA_CHECK(cudaMemset(dConstantRefCounter, 0x00, sizeof(uint32_t)));
+    CUDA_CHECK(cudaMemset(dNormalTexCounter, 0x00, sizeof(uint32_t)));
+    CUDA_CHECK(cudaMemcpy(dConstructionData,
+                          hAlbedoData.data(),
+                          sizeof(TextureOrConstReferenceData<Vector3>) * materialCount,
+                          cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(dNormalTextures,
+                          hNormalTextureObjects.data(),
+                          sizeof(cudaTextureObject_t) * materialCount,
+                          cudaMemcpyHostToDevice));
 
     // Kernel Call For Albedo Texture Generation
     gpu.AsyncGridStrideKC_X(0, materialCount,
@@ -172,19 +225,26 @@ SceneError LambertTexMat::ChangeTime(const NodeListing& materialNodes, double ti
                             const_cast<Texture2DRef*>(dTextureAlbedoRef),
                             //
                             *dAlbedoTexCounter,
-                            *dNormalTexCounter,
+                            *dConstantRefCounter,
                             //
                             dConstructionData,
-                            materialCount);
+                            static_cast<uint32_t>(materialCount));
+
+    // Kernel Call For Normal Map Texture Generation
+    gpu.AsyncGridStrideKC_X(0, materialCount,
+                            GenerateOptionalTexReference<2, Vector3>,
+                            const_cast<TextureRefI<2, Vector3f>**>(dData.dNormal),
+                            const_cast<Texture2DRef*>(dTextureNormalRef),
+                            //
+                            *dNormalTexCounter,
+                            //
+                            dNormalTextures,
+                            static_cast<uint32_t>(materialCount));
+
 
     // Clear temporary CPU data
     matConstructionInfo.clear();
     // All Done!
-    return SceneError::OK;
-}
-
-TracerError LambertTexMat::ConstructTextureReferences()
-{
     return TracerError::OK;
 }
 

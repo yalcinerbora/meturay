@@ -31,8 +31,8 @@
     {
         // General Boundary Material
         "id": 0,
-        "type": "LightConstant",
-        "radiance" : [1, 1, 1]
+        "type": "Constant",
+        "albedo" : [1, 1, 1]
     },
     {
         // Main Walls
@@ -68,5 +68,5 @@
 	}],
 
 	"LightSurfaces": [],
-    "CameraSurfaces": [{"camera": 0, "material": 1}]
+    "CameraSurfaces": [{"camera": 0, "material": 0}]
 }

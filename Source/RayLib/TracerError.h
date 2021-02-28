@@ -27,6 +27,7 @@ struct TracerError : public ErrorI
             UNABLE_TO_CONSTRUCT_ACCELERATOR,
             UNABLE_TO_CONSTRUCT_CAMERA,
             UNABLE_TO_CONSTRUCT_LIGHT,
+            UNABLE_TO_CONSTRUCT_TEXTURE_REFERENCE,
             // Work Related
             UNABLE_TO_GENERATE_WORK,
             // Initialization Related
@@ -96,7 +97,8 @@ inline TracerError::operator std::string() const
         "Unable to construct accelerator",
         "Unable to construct camera",
         "Unable to construct light",
-        //
+        "Unable to construct texture reference",
+        // Work Related
         "Unable to generate work for material/primitive pair",
         // Initialization Related
         "Unable to initialize tracer",

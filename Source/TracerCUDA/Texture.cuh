@@ -117,7 +117,7 @@ class TextureI : public DeviceLocalMemoryI
     protected:
     public:
         // Constructors & Destructor
-                                    TextureI(cudaTextureObject_t,
+                                    TextureI(cudaTextureObject_t&,
                                              int currentDevice);
                                     TextureI(const TextureI&) = delete;
                                     TextureI(TextureI&&);
@@ -141,7 +141,7 @@ class TextureArrayI : public DeviceLocalMemoryI
     protected:
     public:
         // Constructors & Destructor
-                                    TextureArrayI(cudaTextureObject_t,
+                                    TextureArrayI(cudaTextureObject_t&,
                                                   uint32_t layerCount,
                                                   int currentDevice);
                                     TextureArrayI(const TextureArrayI&) = delete;
@@ -165,7 +165,7 @@ class TextureCubeI : public DeviceLocalMemoryI
     protected:
     public:
         // Constructors & Destructor
-                                    TextureCubeI(cudaTextureObject_t,
+                                    TextureCubeI(cudaTextureObject_t&,
                                                  int currentDevice);
                                     TextureCubeI(const TextureCubeI&) = delete;
                                     TextureCubeI(TextureCubeI&&);
@@ -357,7 +357,7 @@ template<class T> using Texture2DArray = TextureArray<2, T>;
 
 
 template<int D, int C>
-inline TextureI<D, C>::TextureI(cudaTextureObject_t t,
+inline TextureI<D, C>::TextureI(cudaTextureObject_t& t,
                                 int currentDevice)
     : DeviceLocalMemoryI(currentDevice)
     , texture(t)
@@ -370,7 +370,7 @@ constexpr TextureI<D, C>::operator cudaTextureObject_t() const
 }
 
 template<int D, int C>
-inline TextureArrayI<D, C>::TextureArrayI(cudaTextureObject_t t,
+inline TextureArrayI<D, C>::TextureArrayI(cudaTextureObject_t& t,
                                           uint32_t length,
                                           int currentDevice)
     : DeviceLocalMemoryI(currentDevice)
@@ -385,7 +385,7 @@ constexpr TextureArrayI<D, C>::operator cudaTextureObject_t() const
 }
 
 template<int C>
-inline TextureCubeI<C>::TextureCubeI(cudaTextureObject_t t,
+inline TextureCubeI<C>::TextureCubeI(cudaTextureObject_t& t,
                                      int currentDevice)
     : DeviceLocalMemoryI(currentDevice)
     , texture(t)

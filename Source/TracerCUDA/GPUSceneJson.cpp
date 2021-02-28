@@ -509,7 +509,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                                            identityTransformId,
                                                            jsn);
 
-        // Find the light node
+        // Find the camera node
         std::string camTypeName;
         std::unique_ptr<SceneNodeI> cameraNode = nullptr;
         if(auto loc = cameraList.find(s.cameraId); loc != cameraList.end())

@@ -21,7 +21,7 @@ template class TextureRef<1, Vector2>;
 template class TextureRef<1, Vector3>;
 template class TextureRef<1, Vector4>;
 
-template class TextureRef<2, float>;
+//template class TextureRef<2, float>;
 template class TextureRef<2, Vector2>;
 template class TextureRef<2, Vector3>;
 template class TextureRef<2, Vector4>;
