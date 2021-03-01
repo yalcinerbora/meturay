@@ -194,10 +194,10 @@ struct SphereSurfaceGenerator
 
         // Gen UV    
         Vector2 uv = sphrCoords;
-        // tetha is [-pi, pi], normalize
-        uv[0] = (uv[0] + MathConstants::Pi) * 0.5f * MathConstants::InvPi;
-        // phi is [0, pi], normalize 
-        uv[1] /= MathConstants::Pi;
+        // tetha is [0, 2 * pi], normalize
+        uv[0] *= 0.5 * MathConstants::InvPi;
+        // phi is [-pi/2, pi/2], normalize 
+        uv[1] = uv[1] * MathConstants::InvPi + 0.5f;
 
         return UVSurface{bs.worldToTangent, uv};
     }

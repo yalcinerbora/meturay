@@ -88,6 +88,8 @@ inline void BasicWork(// Output
                                       matIndex,
                                       0);
 
+    radiance = (pdf == 0.0f) ? Zero3 : (radiance / pdf);
+
     // And accumulate pixel
     ImageAccumulatePixel(img, aux.pixelIndex, Vector4(radiance, 1.0f));
 }

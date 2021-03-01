@@ -12,6 +12,23 @@ size_t TotalPixelCount(const TexDimType_t<D>& dim)
 }
 
 template <int D>
+cudaExtent MakeCudaCopySize(const TexDimType_t<D>& dim)
+{
+    if constexpr(D == 1)
+    {
+        return make_cudaExtent(dim, 1, 1);
+    }
+    else if constexpr(D == 2)
+    {
+        return make_cudaExtent(dim[0], dim[1], 1);
+    }
+    else if constexpr(D == 3)
+    {
+        return make_cudaExtent(dim[0], dim[1], dim[2]);
+    }
+}
+
+template <int D>
 cudaExtent MakeCudaExtent(const TexDimType_t<D>& dim)
 {
     if constexpr(D == 1)
@@ -192,7 +209,7 @@ Texture<D, T>::Texture(int deviceId,
     tDesc.normalizedCoords = normalizeCoordinates;
     tDesc.mipmapFilterMode = DetermineFilterMode(interp);
 
-    //
+    
     tDesc.maxAnisotropy = 4;
     tDesc.mipmapLevelBias = 0.0f;
     tDesc.minMipmapLevelClamp = -100.0f;
@@ -255,10 +272,10 @@ void Texture<D, T>::Copy(const Byte* sourceData,
     cudaArray_t levelArray;
     CUDA_CHECK(cudaSetDevice(this->currentDevice));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
-
-    cudaMemcpy3DParms p = {};
+    
+    cudaMemcpy3DParms p = {0};
     p.kind = cudaMemcpyHostToDevice;
-    p.extent = MakeCudaExtent<D>(size);
+    p.extent = MakeCudaCopySize<D>(size);
     
     p.dstArray = levelArray;
     p.dstPos = MakeCudaOffset<D>(offset);
@@ -267,7 +284,6 @@ void Texture<D, T>::Copy(const Byte* sourceData,
     p.srcPtr = make_cudaPitchedPtr(const_cast<Byte*>(sourceData),
                                    p.extent.width * sizeof(T),
                                    p.extent.width, p.extent.height);
-
     CUDA_CHECK(cudaMemcpy3D(&p));
 }
 
@@ -284,7 +300,7 @@ GPUFence Texture<D, T>::CopyAsync(const Byte* sourceData,
 
     cudaMemcpy3DParms p = {};
     p.kind = cudaMemcpyHostToDevice;
-    p.extent = MakeCudaExtent<D>(size);
+    p.extent = MakeCudaCopySize<D>(size);
 
     p.dstArray = levelArray;
     p.dstPos = MakeCudaOffset<D>(offset);
