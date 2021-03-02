@@ -70,7 +70,8 @@ struct EPrimFunctions
     }
 
     __device__
-    static inline Vector3f Center(PrimitiveId primitiveId, const EmptyData& primData)
+        static inline Vector3f Center(const GPUTransformI& transform,
+                                      PrimitiveId primitiveId, const EmptyData& primData)
     {
         return Zero3;
     }

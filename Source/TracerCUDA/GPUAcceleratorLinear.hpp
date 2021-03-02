@@ -188,7 +188,8 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
             AABB3f aabb = primitiveGroup.PrimitiveBatchAABB(primBatchId);
             unionAABB.UnionSelf(aabb);
-        }       
+        }
+
         surfaceAABBs.emplace(surface, unionAABB);
     }
     else

@@ -33,10 +33,18 @@ TEST(PathTracers, ReflectRefract)
     setup.Body();
 }
 
+TEST(PathTracers, Door)
+{
+    EnableVTMode();
+    SimpleTracerSetup setup("TestPath", u8"Scenes/veachDoor.json", 0.0);
+    ASSERT_TRUE(setup.Init());
+    setup.Body();
+}
+
 TEST(PathTracers, Sponza)
 {
     ////EnableVTMode();
-    ////SimpleTracerSetup setup("TestPath", u8"TestScenes/crySponza.json", 0.0);
+    ////SimpleTracerSetup setup("TestPath", u8"Scenes/crySponza.json", 0.0);
     ////ASSERT_TRUE(setup.Init());
     ////setup.Body();
 }

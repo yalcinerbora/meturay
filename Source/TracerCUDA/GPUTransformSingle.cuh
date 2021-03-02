@@ -28,10 +28,16 @@ class GPUTransformSingle : public GPUTransformI
 									 const float* weights = nullptr,
 									 uint32_t count = 0) const override;
 		__device__
+		AABB3f			WorldToLocal(const AABB3f&) const override;
+
+		__device__
 		Vector3			LocalToWorld(const Vector3&, bool isDirection = false,
 									 const uint32_t* indices = nullptr,
 									 const float* weights = nullptr,
 									 uint32_t count = 0) const override;
+		__device__
+		AABB3f			LocalToWorld(const AABB3f&) const override;
+
 		__device__
 		QuatF			ToLocalRotation(const uint32_t* indices = nullptr,
 										const float* weights = nullptr,
@@ -107,11 +113,23 @@ inline Vector3 GPUTransformSingle::WorldToLocal(const Vector3& vec, bool isDirec
 }
 
 __device__
+inline AABB3f GPUTransformSingle::WorldToLocal(const AABB3f& aabb) const
+{
+	return aabb;
+}
+
+__device__
 inline Vector3 GPUTransformSingle::LocalToWorld(const Vector3& vec, bool isDirection,
 												const uint32_t*, const float*, uint32_t) const
 {
 	Vector4 vector = Vector4(vec, (isDirection) ? 0.0f : 1.0f);
 	return transform * vector;
+}
+
+__device__
+inline AABB3f GPUTransformSingle::LocalToWorld(const AABB3f& aabb) const
+{
+	return aabb;
 }
 
 __device__

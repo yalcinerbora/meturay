@@ -117,6 +117,7 @@ struct SphrFunctions
                               PrimitiveId primitiveId,
                               const SphereData& primData)
     {
+        // TODO: incorporate transform here
         // Get Packed data and unpack
         Vector4f data = primData.centerRadius[primitiveId];
         Vector3f center = data;
@@ -135,9 +136,11 @@ struct SphrFunctions
     }
 
     __device__
-    static inline Vector3 Center(PrimitiveId primitiveId,
+    static inline Vector3 Center(const GPUTransformI& transform, 
+                                 PrimitiveId primitiveId,
                                  const SphereData& primData)
     {
+        // TODO: incorporate transform here
         Vector4f data = primData.centerRadius[primitiveId];
         Vector3f center = data;
 

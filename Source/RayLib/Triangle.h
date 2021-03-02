@@ -5,6 +5,8 @@
 #include "Quaternion.h"
 #include "Matrix.h"
 
+#include "Log.h"
+
 namespace Triangle
 {
     template <class T>
@@ -78,9 +80,8 @@ Vector<3, T> Triangle::CalculateTangent(const Vector<3, T>& p0,
            dUV1[0] * dUV0[1]);
 
     Vector<3, T> tangent;
-    tangent = t * (dUV1[1] * vec0 - dUV0[1] * vec1);
-    tangent.NormalizeSelf();
-   
+    tangent = t * (dUV1[1] * vec0 - dUV0[1] * vec1);   
+    tangent.NormalizeSelf();   
     return tangent;
 }
 

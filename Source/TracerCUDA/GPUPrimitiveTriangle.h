@@ -214,7 +214,8 @@ struct TriFunctions
     }
 
     __device__
-    static inline Vector3 Center(PrimitiveId primitiveId, const TriData& primData)
+    static inline Vector3 Center(const GPUTransformI& transform,
+                                 PrimitiveId primitiveId, const TriData& primData)
     {
         // Get Position
         uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
@@ -224,6 +225,10 @@ struct TriFunctions
         Vector3 position0 = primData.positions[index0];
         Vector3 position1 = primData.positions[index1];
         Vector3 position2 = primData.positions[index2];
+
+        position0 = transform.LocalToWorld(position0);
+        position1 = transform.LocalToWorld(position1);
+        position2 = transform.LocalToWorld(position2);
 
         return (position0 * 0.33333f +
                 position1 * 0.33333f +

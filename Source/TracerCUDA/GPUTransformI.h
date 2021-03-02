@@ -5,6 +5,7 @@
 #include "RayLib/Matrix.h"
 #include "RayLib/SceneStructs.h"
 #include "RayLib/Ray.h"
+#include "RayLib/AABB.h"
 #include "NodeListing.h"
 
 class GPUTransformI;
@@ -33,10 +34,16 @@ class GPUTransformI
 									 const float* weights = nullptr,
 									 uint32_t count = 0) const = 0;
 		__device__
+		virtual AABB3f	WorldToLocal(const AABB3f&) const = 0;
+
+		__device__
 		virtual Vector3 LocalToWorld(const Vector3&, bool isDirection = false,
 									 const uint32_t* indices = nullptr,
 									 const float* weights = nullptr,
 									 uint32_t count = 0) const = 0;
+		__device__
+		virtual AABB3f	LocalToWorld(const AABB3f&) const = 0;
+
 		__device__
 		virtual QuatF	ToLocalRotation(const uint32_t* indices = nullptr,
 									    const float* weights = nullptr,

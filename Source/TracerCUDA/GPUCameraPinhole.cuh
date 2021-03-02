@@ -22,7 +22,6 @@ class GPUCameraPinhole final : public GPUCameraI
                                              const Vector3& up,
                                              const Vector2& nearFar,
                                              const Vector2& fov,
-                                             const float& aperture,
                                              const GPUTransformI& transform,
                                              //
                                              uint16_t mediumId,
@@ -59,10 +58,6 @@ class CPUCameraGroupPinhole final : public CPUCameraGroupI
         static constexpr const char* NAME_GAZE      = "gaze";
         static constexpr const char* NAME_UP        = "up";
         static constexpr const char* NAME_PLANES    = "planes";
-
-        static constexpr const char* NAME_APERTURE  = "apertureSize";
-        static constexpr const char* NAME_FOCUS     = "focusDistance";
-
         static constexpr const char* NAME_FOV       = "fov";
 
         struct Data
@@ -74,7 +69,6 @@ class CPUCameraGroupPinhole final : public CPUCameraGroupI
             Vector3                 up;
             Vector2                 nearFar;
             Vector2                 fov;
-            float                   aperture;
         };
 
 
@@ -124,7 +118,6 @@ inline GPUCameraPinhole::GPUCameraPinhole(const Vector3& pos,
                                           const Vector3& upp,
                                           const Vector2& nearFar,
                                           const Vector2& fov,
-                                          const float& aperture,
                                           const GPUTransformI& transform,
                                           //
                                           uint16_t mediumId,

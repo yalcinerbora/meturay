@@ -68,7 +68,8 @@ using AreaGenFunction = float(*)(PrimitiveId primitiveId, const PrimitiveData&);
 
 // Center generation function for bound hierarcy generation
 template <class PrimitiveData>
-using CenterGenFunction = Vector3(*)(PrimitiveId primitiveId, const PrimitiveData&);
+using CenterGenFunction = Vector3(*)(const GPUTransformI& transform, 
+                                     PrimitiveId primitiveId, const PrimitiveData&);
 
 // Sample function for generating rays and/or finding an arbitrary point
 template <class PrimitiveData>
@@ -106,6 +107,31 @@ struct AABBGen
         __forceinline__ AABB3f operator()(const PrimitiveId& id) const
         {
             return PrimitiveGroup::AABB(transform, id, pData);
+        }
+};
+
+template<class PrimitiveGroup>
+struct CentroidGen
+{
+    public:
+        using PData = typename PrimitiveGroup::PrimitiveData;
+
+    private:
+        PData                   pData;
+        const GPUTransformI&    transform;
+
+    protected:
+    public:
+        // Constructors & Destructor                                
+        CentroidGen(PData pData, const GPUTransformI& t) 
+            : pData(pData) 
+            , transform(t)
+        {}
+
+        __device__ __host__
+        __forceinline__ Vector3 operator()(const PrimitiveId& id) const
+        {
+            return PrimitiveGroup::Center(transform, id, pData);
         }
 };
 

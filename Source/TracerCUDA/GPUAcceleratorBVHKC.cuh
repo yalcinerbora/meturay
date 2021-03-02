@@ -71,24 +71,6 @@ struct SpacePartition
         }
 };
 
-template<class PGroup>
-struct CentroidGen
-{
-    private:
-        PGroup::PrimitiveData   pData;
-
-    protected:
-    public:
-        // Constructors & Destructor                                
-        CentroidGen(PGroup::PrimitiveData pData) : pData(pData) {}
-
-        __device__ __host__
-        __forceinline__ Vector3 operator()(const PrimitiveId& id) const
-        {
-            return PGroup::Center(id, pData);
-        }
-};
-
 // Fundamental BVH Tree Node
 template<class LeafStruct>
 struct alignas(16) BVHNode

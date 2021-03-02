@@ -15,6 +15,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\AuxiliaryDataKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CameraFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CudaConstants.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorCommonKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraPinhole.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightDisk.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightPrimitive.cuh" />

@@ -1,8 +1,6 @@
 {
 	"Cameras": [
 	{
-		"apertureSize": 1.0,
-		"focusDistance": 21,
 		"fov": [45, 45],
 		"gaze": [0.0, 5.0, 0.0],
 		"planes": [0.1, 100.0],

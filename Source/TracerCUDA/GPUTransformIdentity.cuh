@@ -24,12 +24,17 @@ class GPUTransformIdentity : public GPUTransformI
 									 const uint32_t* indices = nullptr,
 									 const float* weights = nullptr,
 									 uint32_t count = 0) const override;
+		__device__
+		AABB3f			WorldToLocal(const AABB3f&) const override;
 
 		__device__
 		Vector3			LocalToWorld(const Vector3&, bool isDirection = false,
 									 const uint32_t* indices = nullptr,
 									 const float* weights = nullptr,
 									 uint32_t count = 0) const override;
+		__device__
+		AABB3f			LocalToWorld(const AABB3f&) const override;
+
 		__device__
 		QuatF			ToLocalRotation(const uint32_t* indices = nullptr,
 										const float* weights = nullptr,
@@ -83,11 +88,23 @@ inline Vector3f GPUTransformIdentity::WorldToLocal(const Vector3f& vec, bool,
 }
 
 __device__
+inline AABB3f GPUTransformIdentity::WorldToLocal(const AABB3f& aabb) const
+{
+	return aabb;
+}
+
+__device__
 inline Vector3 GPUTransformIdentity::LocalToWorld(const Vector3& vector, bool,
 												  const uint32_t*, const float*,
 												  uint32_t) const
 {
 	return vector;
+}
+
+__device__
+inline AABB3f GPUTransformIdentity::LocalToWorld(const AABB3f& aabb) const
+{
+	return aabb;
 }
 
 __device__

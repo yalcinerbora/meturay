@@ -24,7 +24,6 @@ __global__ void KCConstructGPUCameraPinhole(GPUCameraPinhole* gCameraLocations,
                                                            data.up,
                                                            data.nearFar,
                                                            data.fov,
-                                                           data.aperture,
                                                            *gTransforms[gTransformIds[globalId]],
                                                            //
                                                            gMediumIndices[globalId],
@@ -58,13 +57,11 @@ SceneError CPUCameraGroupPinhole::InitializeGroup(const CameraGroupData& cameraN
         const auto gazes = node.node->AccessVector3(NAME_GAZE);
         const auto nearFar = node.node->AccessVector2(NAME_PLANES);
         const auto fovs = node.node->AccessVector2(NAME_FOV);
-        const auto apertureSize = node.node->AccessFloat(NAME_APERTURE);
         assert(positions.size() == 1);
         assert(ups.size() == 1);
         assert(gazes.size() == 1);
         assert(nearFar.size() == 1);
         assert(fovs.size() == 1);
-        assert(apertureSize.size() == 1);
         assert(node.node->IdCount() == 1);
 
         Data data = {};
@@ -73,7 +70,6 @@ SceneError CPUCameraGroupPinhole::InitializeGroup(const CameraGroupData& cameraN
         data.gaze = gazes[0];
         data.nearFar = nearFar[0];        
         data.fov = fovs[0] * MathConstants::DegToRadCoef;
-        data.aperture = apertureSize[0];
 
         // Load to host memory
         hHitKeys.push_back(materialKey);

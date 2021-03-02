@@ -513,7 +513,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                        dIdsIn,
                        dPrimIds,
                        //
-                       CentroidGen<PGroup>(primData),
+                       CentroidGen<PGroup>(primData, *transform),
                        static_cast<uint32_t>(totalPrimCount));
     //
     gpu.GridStrideKC_X(0, 0,
@@ -619,6 +619,19 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     // Before copying get roots AABB for base accelerator
     AABB3f accAABB(bvhNodes[0].aabbMin,
                    bvhNodes[0].aabbMax);
+
+    if(tType == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
+    {
+        DeviceMemory tMem(sizeof(AABB3f));
+
+        // Generate World Space AABB from Local AABB
+        gpu.KC_X(0, 0, 1,
+                 KCTransformAABB,
+                 *static_cast<AABB3f*>(tMem), 
+                 *transform,
+                 accAABB);
+        
+    }
     surfaceAABBs.emplace(surface, accAABB);
 
     CUDA_CHECK(cudaMemcpy(bvhMemories[innerIndex],

@@ -99,12 +99,14 @@ SceneError ReflectMat::InitializeGroup(const NodeListing& materialNodes,
         std::vector<float> rougnessList = sceneNode->AccessFloat(ROUGHNESS);
 
         const auto& ids = sceneNode->Ids();
+        uint32_t localId = 0;
         for(IdPair id : ids)
         {
-            Vector4 data = Vector4(albedos[i], rougnessList[i]);
+            Vector4 data = Vector4(albedos[localId], rougnessList[localId]);
             matDataCPU.push_back(data);
             
             innerIds.emplace(std::make_pair(id.first, i));
+            localId++;
             i++;
         }
     }

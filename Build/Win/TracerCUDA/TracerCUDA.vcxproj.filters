@@ -440,6 +440,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureFunctions.h">
       <Filter>Textures</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorCommonKC.cuh">
+      <Filter>Accelerators</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">

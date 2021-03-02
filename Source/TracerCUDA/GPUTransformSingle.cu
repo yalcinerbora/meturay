@@ -73,7 +73,7 @@ SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes
                 nodeTransforms.push_back(std::move(m));                
             }
         }
-        else return SceneError::UNKNOWN_TRANSFORM_TYPE;
+        else return SceneError::TRANSFORM_TYPE_INTERNAL_ERROR;
 
         transforms.insert(transforms.end(), 
                           nodeTransforms.begin(),

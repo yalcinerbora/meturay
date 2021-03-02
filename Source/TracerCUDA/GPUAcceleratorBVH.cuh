@@ -12,6 +12,7 @@
 
 #include "GPUAcceleratorP.cuh"
 #include "GPUAcceleratorBVHKC.cuh"
+#include "GPUAcceleratorCommonKC.cuh"
 
 struct BVHParameters
 {

@@ -260,7 +260,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             Vector2* uvsIn = reinterpret_cast<Vector2*>(uvsCPU.data() + offsetVertex * VertUVSize);
             
             // Utilize position and uv for quat generation
-            std::for_each(std::execution::par_unseq,
+            std::for_each(//std::execution::par_unseq,
                           primStart, primEnd,
                           [&](IndexTriplet& indices)
                           {
