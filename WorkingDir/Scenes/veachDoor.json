@@ -1,0 +1,326 @@
+{
+	"Cameras": [
+    {
+        "id": 0,
+        "type" : "Pinhole",
+
+        // 16:9 FoV
+        "fov": [97.0672, 54.6003],
+        //"fov": [54.6003, 30.7127],
+        // 1:1 FoV
+        //"fov": [54.6003, 54.6003],
+        "gaze": [-71.1997, 71.4202, 204.321],
+        "position": [-71.39, 71.49, 205.3],
+        "up": [0.013401, 0.99756, -0.0685194],
+        "planes": [10, 2800.0]
+    }],
+
+    "Lights":[],
+
+    "Mediums":[ 
+    { 
+        "id" : 0, 
+        "type" : "Vacuum"
+    },
+    {
+		"id": 1,
+		"type" : "Homogenous",
+
+		"absorption": [0, 0 ,0],
+		"scattering": [0, 0, 0],
+		"ior": 1.5,
+		"phase": 0
+	}],
+
+    "Transforms":[
+    {
+        "id": 0, 
+        "type": "Identity"
+    },
+    { 
+        "id":1,
+        "type": "Single",
+        "layout": "matrix4x4",
+        "matrix": [1, 0, 0, 0,
+                   0, 0, 1, 0, 
+                   0, -1, 0, 0, 
+                   0,  0, 0, 1]
+    }],
+    
+    "Textures":[
+    {
+        "id": 0,
+        "file": "../Textures/Door/marble.jpg"        
+    },
+    {
+        "id": 1,
+        "file": "../Textures/Door/checker.png"        
+    },
+    {
+        "id": 2,
+        "file": "../Textures/Door/light_wood.jpg"        
+    },
+    {
+        "id": 3,
+        "file": "../Textures/Door/dark_wood.jpg"       
+    },
+    {
+        "id": 4,
+        "file": "../Textures/Door/frame_pic.jpg"        
+    },
+    {
+        "id": 5,
+        "file": "../Textures/Door/marble.jpg"        
+    }],
+
+    "Materials":[
+    {
+        // General Boundary Material
+        "id": 0,
+        "type": "Emissive",
+        "radiance" : [1, 1, 1]
+    },
+    {
+        // Light Boundary Material
+        "id": 1,
+        "type": "LightConstant",
+        "radiance" : [1420, 1552, 1642]
+    },
+    {
+        // Main Walls
+        "id": 2,
+        "type": "Lambert",
+        "albedo": [0.73, 0.73, 0.73]
+    },
+    {
+        // Table Legs
+        "id": 3,
+        "type": "Lambert",
+        "albedo": [0.65, 0.65, 0.47]
+    },
+    {
+        // Door Frame
+        "id": 4,
+        "type": "Lambert",
+        "albedo": [0.3, 0.2, 0.1]
+    },
+    {
+        // Hinge Metal
+        "id": 5,
+        "type": "Reflect",
+		"albedo" : [0.9, 0.7, 0.5],
+		"roughness" : 0.0
+    },
+    {
+        // Picture Frame
+        "id": 6,
+        "type": "Lambert",
+        "albedo": [0.2, 0.1, 0.05]
+    },
+    {
+        // Glass Teapot
+        "id": 7,
+        "type": "Refract",
+        "albedo" : [1, 1, 1],
+        "medium" : 1
+    },
+    {
+        // Metal Teapot
+        "id": 8,
+        "type": "Reflect",
+		"albedo" : [1.0, 1.0, 1.0],
+		"roughness" : 0.0
+    },
+    {
+        // Marble Teapot
+        "id": 9,
+        "type": "LambertT",
+		"albedo" : {"texture": 0, "channels": "rgb"}
+    },
+    {
+        // Floor
+        "id": 10,
+        "type": "LambertT",
+        "albedo": {"texture": 1, "channels": "rgb"}
+    },
+    {
+        // Wood Table
+        "id": 11,
+        "type": "LambertT",
+        "albedo": {"texture": 2, "channels": "rgb"}
+    },
+    {
+        // Wood Door
+        "id": 12,
+        "type": "LambertT",
+        "albedo": {"texture": 3, "channels": "rgb"}
+    },
+    {
+        // Picture
+        "id": 13,
+        "type": "LambertT",
+        "albedo": {"texture": 4, "channels": "rgb"}
+    }],
+
+    "Primitives":[
+    {
+        // Table
+        "id": 0,
+        "type": "Triangle",
+        "name": "../Surfaces/Door/table.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        // Table Legs
+        "id": [1, 2, 3, 4],
+        "type": "Triangle",
+        "name": "../Surfaces/Door/table_legs.obj",
+        "tag": "assimp_",
+        "innerIndex": [0, 1, 2, 3]
+    },
+    {
+        // Teapots
+        "id": [5, 6, 7],
+        "type": "Triangle",
+        "name": "../Surfaces/Door/teapots.obj",
+        "tag": "assimp_",
+        "innerIndex": [0, 1, 2]
+    },
+    {
+        // Door Frame
+        "id": [8, 9, 10],
+        "type": "Triangle",
+        "name": "../Surfaces/Door/door_frames.obj",
+        "tag": "assimp_",
+        "innerIndex": [0, 1, 2]
+    },
+    {
+        // Door
+        "id": 11,
+        "type": "Triangle",
+        "name": "../Surfaces/Door/door.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        // Door Hinge
+        "id": [12, 13, 14],
+        "type": "Triangle",
+        "name": "../Surfaces/Door/door_hinges.obj",
+        "tag": "assimp_",
+        "innerIndex": [0, 1, 2]
+    },
+    {
+        // Door Knob
+        "id": 15,
+        "type": "Triangle",
+        "name": "../Surfaces/Door/door_knob.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        // Floor Front
+        "id": 16,
+        "type": "Triangle",
+        "name": "../Surfaces/Door/floor.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        // Floor Back
+        "id": 17,
+        "type": "Triangle",
+        "name": "../Surfaces/Door/floor_back.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        // Picture Frame
+        "id": 18,
+        "type": "Triangle",
+        "name": "../Surfaces/Door/picture_frame.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        // Picture
+        "id": 19,
+        "type": "Triangle",
+        "name": "../Surfaces/Door/picture_image.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        // Light
+        "id": 20,
+        "type": "Triangle",
+        "name": "../Surfaces/Door/lamp.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        // Walls
+        "id": 21,
+        "type": "Triangle",
+        "name": "../Surfaces/Door/walls.obj",
+        //"name": "../Surfaces/Door/walls2.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    }],
+
+    "Accelerators": [{"id" : 0, "type" : "BasicBVH", "useStack": true}],
+
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "BasicBVH"},
+    "BaseBoundaryMaterial": 0,
+	"BaseMedium" : 0,
+	
+	"Surfaces": [        
+    // {
+    //     // Table & Table Legs
+    //     "transform": 1, "accelerator":0,
+    //     "material": [11, 3, 3, 3, 3],
+    //     "primitive": [0, 1, 2, 3, 4]
+    // },
+    // // Teapots 
+    // // Metal
+    // {"transform": 1, "accelerator":0, "material": 8, "primitive": 5},
+    // // Marble
+    // {"transform": 1, "accelerator":0, "material": 9, "primitive": 6},
+    // // Glass
+    // {"transform": 1, "accelerator":0, "material": 7, "primitive": 7},
+    // // Entire Door
+    // {
+    //     // Table & Table Legs
+    //     "transform": 1, "accelerator":0,
+    //     "material": [4, 4, 4, 12, 5, 5, 5, 5],
+    //     "primitive": [8, 9, 10, 11, 12, 13, 14, 15]
+    // },
+    // // Floor Front
+    // {"transform": 1, "accelerator": 0, "material": 10, "primitive": 16},        
+    // // Floor Back
+    // {"transform": 1, "accelerator": 0, "material": 2, "primitive": 17},
+    // // Picture Frame & Picture
+    // {
+    //     "transform": 1, "accelerator": 0, 
+    //     "material": [6, 13], 
+    //     "primitive": [18, 19]
+    // },
+    // Walls
+    {"transform": 1, "accelerator": 0, "material": 2, "primitive": 21}],
+    //{"transform": 0, "accelerator": 0, "material": 2, "primitive": 21}],
+
+    // Lights
+    "LightSurfaces": [
+    {
+        "transform": 1,
+        "primitive": 20, 
+        "material": 1, 
+        "accelerator": 0
+    }],
+    // Cameras
+    "CameraSurfaces": [{"camera": 0, "material": 0}]
+}

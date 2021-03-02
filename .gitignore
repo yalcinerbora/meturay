@@ -364,6 +364,8 @@ WorkingDir/*
 # Except Test Scenes
 !WorkingDir/TestScenes/
 !WorkingDir/TestScenes/*.json
+!WorkingDir/Scenes/
+!WorkingDir/Scenes/*.json
 
 
 /Build/Win/*.nvsettings
