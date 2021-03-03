@@ -190,6 +190,11 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
             unionAABB.UnionSelf(aabb);
         }
 
+        // Transform this AABB to world space
+        // since base Accelerator works on world space
+        const GPUTransformI* transform = dTransforms[dAccTransformIds[index]];
+        TransformLocalAABBToWorld(unionAABB, *transform, gpu);
+
         surfaceAABBs.emplace(surface, unionAABB);
     }
     else

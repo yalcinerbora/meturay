@@ -620,18 +620,17 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     AABB3f accAABB(bvhNodes[0].aabbMin,
                    bvhNodes[0].aabbMax);
 
+    // If constant local primitive's transform requirement is
+    // constant local transform,
     if(tType == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
-    {
-        DeviceMemory tMem(sizeof(AABB3f));
-
-        // Generate World Space AABB from Local AABB
-        gpu.KC_X(0, 0, 1,
-                 KCTransformAABB,
-                 *static_cast<AABB3f*>(tMem), 
-                 *transform,
-                 accAABB);
-        
+    {    
+        // transform this AABB to world space
+        // since base Accelerator works on world space
+        const GPUTransformI* transform = dTransforms[dAccTransformIds[innerIndex]];
+        TransformLocalAABBToWorld(accAABB, *transform, gpu);
     }
+        
+    // Add to the list which will be delegated to the base accelerator
     surfaceAABBs.emplace(surface, accAABB);
 
     CUDA_CHECK(cudaMemcpy(bvhMemories[innerIndex],
