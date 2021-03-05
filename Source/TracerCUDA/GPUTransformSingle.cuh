@@ -9,6 +9,10 @@ class GPUTransformSingle : public GPUTransformI
 		const Matrix4x4&		transform;
 		const Matrix4x4&		invTransform;
 
+		// Rotation only parts
+		QuatF					rotation;
+		QuatF					invRotation;
+
     protected:
     public:
 		// Constructors & Destructor
@@ -92,7 +96,14 @@ inline GPUTransformSingle::GPUTransformSingle(const Matrix4x4& transform,
 											  const Matrix4x4& invTransform)
 	: transform(transform)
 	, invTransform(invTransform)
-{}
+{
+	// TODO: This should word for only rigid body transformations?
+	TransformGen::Space(invRotation,
+						Vector3f(transform(0, 0), transform(0, 1), transform(0, 2)),
+						Vector3f(transform(1, 0), transform(1, 1), transform(1, 2)),
+						Vector3f(transform(2, 0), transform(2, 1), transform(2, 2)));
+	rotation = invRotation.Conjugate();
+}
 
 __device__
 inline RayF GPUTransformSingle::WorldToLocal(const RayF& r, 
@@ -115,7 +126,20 @@ inline Vector3 GPUTransformSingle::WorldToLocal(const Vector3& vec, bool isDirec
 __device__
 inline AABB3f GPUTransformSingle::WorldToLocal(const AABB3f& aabb) const
 {
-	return aabb;
+	AABB3f result = NegativeAABB3f;
+	for(int i = 0; i < AABB3f::AABBVertexCount; i++)
+	{
+		Vector4f vertex;
+		vertex[0] = ((i >> 0 & 0x1) ? aabb.Max() : aabb.Min())[0];
+		vertex[1] = ((i >> 1 & 0x1) ? aabb.Max() : aabb.Min())[1];
+		vertex[2] = ((i >> 2 & 0x1) ? aabb.Max() : aabb.Min())[2];
+		vertex[3] = 1.0f;
+
+		vertex = invTransform * vertex;
+		result.SetMax(Vector3f::Max(result.Max(), vertex));
+		result.SetMin(Vector3f::Min(result.Min(), vertex));
+	}
+	return result;
 }
 
 __device__
@@ -129,15 +153,28 @@ inline Vector3 GPUTransformSingle::LocalToWorld(const Vector3& vec, bool isDirec
 __device__
 inline AABB3f GPUTransformSingle::LocalToWorld(const AABB3f& aabb) const
 {
-	return aabb;
+	AABB3f result = NegativeAABB3f;
+	for(int i = 0; i < AABB3f::AABBVertexCount; i++)
+	{
+		Vector4f vertex;		
+		vertex[0] = ((i >> 0 & 0x1) ? aabb.Max() : aabb.Min())[0];
+		vertex[1] = ((i >> 1 & 0x1) ? aabb.Max() : aabb.Min())[1];
+		vertex[2] = ((i >> 2 & 0x1) ? aabb.Max() : aabb.Min())[2];
+		vertex[3] = 1.0f;
+
+		vertex = transform * vertex;
+
+		result.SetMax(Vector3f::Max(result.Max(), vertex));
+		result.SetMin(Vector3f::Min(result.Min(), vertex));
+	}
+	return result;
 }
 
 __device__
 inline QuatF GPUTransformSingle::ToLocalRotation(const uint32_t*, const float*,
 												 uint32_t) const
 {
-	// TODO: fetch rotation portion of the matrix and convert it to quaternion
-	return IdentityQuatF;
+	return invRotation;
 }
 
 inline const char* CPUTransformSingle::Type() const

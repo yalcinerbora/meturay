@@ -145,9 +145,9 @@ __device__ void GPULight<PGroup>::Sample(// Output
     distance = sqrt(distanceSqr);
     direction *= (1.0f / distance);
 
-    float nDotL = max(normal.Dot(-direction), 0.0f);
+    //float nDotL = max(normal.Dot(-direction), 0.0f);
+    float nDotL = abs(normal.Dot(-direction));
     pdf *= distanceSqr / nDotL;
-
 }
 
 template <class PGroup>

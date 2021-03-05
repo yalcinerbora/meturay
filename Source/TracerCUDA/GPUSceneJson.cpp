@@ -405,16 +405,6 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     if((e = AttachMedium(baseMediumId)) != SceneError::OK)
         return e;
        
-    // And finally force load Identity transform
-    if((transformGroupNodes.find(NodeNames::TRANSFORM_IDENTITY)) == transformGroupNodes.cend())
-    {
-        // Assign an Unused ID
-        constexpr uint32_t MAX_UINT = std::numeric_limits<uint32_t>::max();
-        auto& transformSet = transformGroupNodes.emplace(NodeNames::TRANSFORM_IDENTITY, NodeListing()).first->second;
-        auto& node = *transformSet.emplace(std::make_unique<SceneNodeJson>(nullptr, MAX_UINT)).first;        
-        node->AddIdIndexPair(MAX_UINT, 0);
-    }
-
     // Process Lights
     for(const auto& jsn : (*lightSurfaces))
     {
@@ -542,6 +532,18 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                          });
 
     }
+    
+    
+    // And finally force load Identity transform
+    if((transformGroupNodes.find(NodeNames::TRANSFORM_IDENTITY)) == transformGroupNodes.cend())
+    {
+        // Assign an Unused ID
+        constexpr uint32_t MAX_UINT = std::numeric_limits<uint32_t>::max();
+        auto& transformSet = transformGroupNodes.emplace(NodeNames::TRANSFORM_IDENTITY, NodeListing()).first->second;
+        auto& node = *transformSet.emplace(std::make_unique<SceneNodeJson>(nullptr, MAX_UINT)).first;
+        node->AddIdIndexPair(MAX_UINT, 0);
+    }
+        
     // Finally Load Texture Info for material access
     // Load all textures here material will actually load the textures
     for(const auto& jsn : (*textures))

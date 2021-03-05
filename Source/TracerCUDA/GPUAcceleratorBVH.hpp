@@ -270,8 +270,6 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
         // Init Nodes
         node.aabbMin = aabb.Min();
         node.aabbMax = aabb.Max();
-
-        gpu.WaitMainStream();
     }
 }
 
@@ -398,9 +396,20 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     const PrimTransformType tType = primitiveGroup.TransformType();
 
     // Select Transform for construction
-    const GPUTransformI* transform = dTransforms[dAccTransformIds[innerIndex]];
+    const GPUTransformI* worldTransform = nullptr;
+    AcquireAcceleratorGPUTransform(worldTransform,
+                                   dAccTransformIds,
+                                   dTransforms,
+                                   innerIndex,
+                                   gpu);
+    const GPUTransformI* transform = worldTransform;
     if(tType == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
-        transform = dTransforms[identityTransformIndex];
+    {
+        AcquireIdentityTransform(transform,
+                                 dTransforms,
+                                 identityTransformIndex,
+                                 gpu);
+    }
 
     size_t currentOffset = 0;
     PrimitiveRangeList indexOffsets;
@@ -553,6 +562,10 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
     gpu.WaitMainStream();
 
+    // TODO: this is required for cuda when accessing managed memory
+    // but is shouldnt
+    system.SyncGPU(gpu);
+
     // Breath first tree generation (top-down)
     uint8_t maxDepth = 0;
     while(!partitionQueue.empty())
@@ -626,8 +639,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     {    
         // transform this AABB to world space
         // since base Accelerator works on world space
-        const GPUTransformI* transform = dTransforms[dAccTransformIds[innerIndex]];
-        TransformLocalAABBToWorld(accAABB, *transform, gpu);
+        TransformLocalAABBToWorld(accAABB, *worldTransform, gpu);
     }
         
     // Add to the list which will be delegated to the base accelerator
@@ -650,6 +662,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
              maxDepth,
              t.Elapsed<CPUTimeSeconds>());
 
+    gpu.WaitMainStream();
     return TracerError::OK;
 }
 

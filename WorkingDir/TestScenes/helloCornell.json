@@ -104,8 +104,9 @@
 	{
 		"id": 7,
 		"type": "Triangle",
-        "name": "../Surfaces/cornell_box_occlusion.obj",
+        "name": "../Surfaces/cornell_box_light_occluder.obj",
 		"tag": "assimp_",
+		"cullFace": false,
 		"innerIndex": 0
 	}],
 

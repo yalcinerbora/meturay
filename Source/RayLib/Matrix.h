@@ -53,8 +53,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
         __device__ __host__ explicit                    operator const T*() const;
         __device__ __host__ T&                          operator[](int);
         __device__ __host__ const T&                    operator[](int) const;
-        __device__ __host__ T&                          operator()(int, int);
-        __device__ __host__ const T&                    operator()(int, int) const;
+        __device__ __host__ T&                          operator()(int row, int column);
+        __device__ __host__ const T&                    operator()(int row, int column) const;
 
         // Modify
         __device__ __host__ void                        operator+=(const Matrix&);

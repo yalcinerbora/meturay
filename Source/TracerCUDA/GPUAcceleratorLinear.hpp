@@ -175,6 +175,13 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         index
     );
 
+    // Acquire GPU Transform Ptr for this accelerator to the CPU
+    const GPUTransformI* transform = nullptr;
+    AcquireAcceleratorGPUTransform(transform,
+                                   dAccTransformIds,
+                                   dTransforms,
+                                   index,
+                                   gpu);
 
     // Check if this accelerator utilizes constant transform
     if(primitiveGroup.TransformType() == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
@@ -192,7 +199,6 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
         // Transform this AABB to world space
         // since base Accelerator works on world space
-        const GPUTransformI* transform = dTransforms[dAccTransformIds[index]];
         TransformLocalAABBToWorld(unionAABB, *transform, gpu);
 
         surfaceAABBs.emplace(surface, unionAABB);
@@ -234,9 +240,6 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                              dInAABBs, dOutAABB,
                                              static_cast<int>(totalAABBCount),
                                              AABBUnion(), NegativeAABB3f));
-
-        // Select transform for AABB generation
-        const GPUTransformI* transform = dTransforms[dAccTransformIds[index]];
 
         // First Generate AABBs from Primitives
         // TODO:

@@ -34,13 +34,13 @@ inline bool DoNextEventEstimation(HitKey& key,
 
     //printf("NEE Index %u total lights %u\n", index, lightCount);
 
-    const GPULightI* point = gLights[index];
-    point->Sample(lDistance, direction,
+    const GPULightI* light = gLights[index];
+    light->Sample(lDistance, direction,
                   pdf, position, rng);
     // Incorporate the PDF of selecting that ligjt
     pdf *= (1.0f / static_cast<float>(lightCount));
     lightIndex = index;
-    key = point->BoundaryMaterial();
+    key = light->BoundaryMaterial();
     return true;
 }
 

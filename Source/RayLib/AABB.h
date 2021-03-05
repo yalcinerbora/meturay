@@ -18,6 +18,8 @@ class AABB;
 template<int N, class T>
 class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
 {
+    public:
+        static constexpr int                        AABBVertexCount = 8;
     private:
         Vector<N, T> min;
         Vector<N, T> max;

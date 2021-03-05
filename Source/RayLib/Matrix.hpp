@@ -958,6 +958,7 @@ template<class T, typename>
 __device__ __host__
 inline Matrix<4, T> TransformGen::Rotate(const Quaternion<T>& q)
 {
+    //QuatF q = quat.Normalize();
     Matrix<4, T> result;
     T xx = q[1] * q[1];
     T xy = q[1] * q[2];
@@ -968,27 +969,25 @@ inline Matrix<4, T> TransformGen::Rotate(const Quaternion<T>& q)
     T yw = q[2] * q[0];
     T zz = q[3] * q[3];
     T zw = q[3] * q[0];
-
-    result[0]  = 1 - (2 * (yy + zz));
-    result[4]  =     (2 * (xy - zw));
-    result[8]  =     (2 * (xz + yw));
+    result[0] = 1 - (2 * (yy + zz));
+    result[4] = (2 * (xy - zw));
+    result[8] = (2 * (xz + yw));
     result[12] = 0;
 
-    result[1]  =     (2 * (xy + zw));
-    result[5]  = 1 - (2 * (xx + zz));
-    result[9]  =     (2 * (yz - xw));
+    result[1] = (2 * (xy + zw));
+    result[5] = 1 - (2 * (xx + zz));
+    result[9] = (2 * (yz - xw));
     result[13] = 0;
 
-    result[2]  =     (2 * (xz - yw));
-    result[6]  =     (2 * (yz + xw));
+    result[2] = (2 * (xz - yw));
+    result[6] = (2 * (yz + xw));
     result[10] = 1 - (2 * (xx + yy));
     result[14] = 0;
 
-    result[3]  = 0;
-    result[7]  = 0;
+    result[3] = 0;
+    result[7] = 0;
     result[11] = 0;
     result[15] = 1;
-
     return result;
 }
 
