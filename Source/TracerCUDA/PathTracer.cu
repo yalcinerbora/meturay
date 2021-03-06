@@ -110,6 +110,10 @@ bool PathTracer::Render()
     //                     currentRayCount);
     //Debug::DumpMemToFile("rayIdIn", rayMemory.CurrentIds(),
     //                     currentRayCount);
+    //Debug::DumpMemToFile("primIds", rayMemory.PrimitiveIds(),
+    //                     currentRayCount); 
+    //Debug::DumpMemToFile("hitKeys", rayMemory.CurrentKeys(),
+    //                     currentRayCount);
 
     // Generate Global Data Struct
     PathTracerGlobal globalData;
@@ -155,8 +159,7 @@ bool PathTracer::Render()
              totalOutRayCount, 
              scene.BaseBoundaryMaterial());
 
-    // Swap auxiliary buffers since output rays are now input rays
-    // for the next iteration
+
     //Debug::DumpMemToFile("auxOut",
     //                     static_cast<const RayAuxPath*>(*dAuxOut),
     //                     totalOutRayCount);
@@ -165,7 +168,9 @@ bool PathTracer::Render()
     //                     totalOutRayCount);
     //Debug::DumpMemToFile("rayIdOut", rayMemory.CurrentIds(),
     //                     totalOutRayCount);
-
+    
+    // Swap auxiliary buffers since output rays are now input rays
+    // for the next iteration
     SwapAuxBuffers();
     // Check tracer termination conditions
     currentDepth++;

@@ -258,14 +258,13 @@
         "type": "Triangle",
         "name": "../Surfaces/Door/lamp.obj",
         "tag": "assimp_",
-        "cullFace": true,
         "innerIndex": 0
     },
     {
         // Walls
         "id": 21,
         "type": "Triangle",
-        "name": "../Surfaces/Door/walls2.obj",
+        "name": "../Surfaces/Door/walls.obj",
         "tag": "assimp_",
         "innerIndex": 0
     }],
@@ -299,16 +298,16 @@
     // Glass
     {"transform": 0, "accelerator":0, "material": 7, "primitive": 7},
     // Entire Door
-    // {
-    //     // Door & Door Frame
-    //     "transform": 0, "accelerator": 0,
-    //     "material": [4, 4, 4, 12, 5, 5, 5, 5],
-    //     "primitive": [8, 9, 10, 11, 12, 13, 14, 15]
-    // },
+    {
+        // Door & Door Frame
+        "transform": 0, "accelerator": 0,
+        "material": [4, 4, 4, 12, 5, 5, 5, 5],
+        "primitive": [8, 9, 10, 11, 12, 13, 14, 15]
+    },
      // Floor Front
-     {"transform": 1, "accelerator": 1, "material": 10, "primitive": 16},        
+     {"transform": 0, "accelerator": 1, "material": 10, "primitive": 16},        
      // Floor Back
-     {"transform": 1, "accelerator": 1, "material": 2, "primitive": 17},
+     {"transform": 0, "accelerator": 1, "material": 2, "primitive": 17},
     // Picture Frame & Picture
     {
         "transform": 0, "accelerator": 1, 
@@ -316,7 +315,7 @@
         "primitive": [18, 19]
     },
     // Walls
-    {"transform": 0, "accelerator": 0, "material": 2, "primitive": 21}
+    {"transform": 1, "accelerator": 0, "material": 2, "primitive": 21}
     ],
 
     // Lights

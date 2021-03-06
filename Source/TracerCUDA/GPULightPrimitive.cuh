@@ -141,8 +141,8 @@ __device__ void GPULight<PGroup>::Sample(// Output
     normal = transform.LocalToWorld(normal, true);
 
     direction = position - worldLoc;
-    float distanceSqr = direction.LengthSqr();
-    distance = sqrt(distanceSqr);
+    float distanceSqr = direction.LengthSqr();    
+    distance = sqrt(distanceSqr);    
     direction *= (1.0f / distance);
 
     //float nDotL = max(normal.Dot(-direction), 0.0f);

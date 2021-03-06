@@ -51,7 +51,8 @@ __global__ void ResetHitKeysKC(HitKey* gKeys,
 }
 
 __global__ void ResetHitIdsKC(HitKey* gAcceleratorKeys, RayId* gIds,
-                              TransformId* dTransformIds,
+                              TransformId* gTransformIds,
+                              PrimitiveId* gPrimitiveIds,
                               uint32_t identityTransformIndex, 
                               uint32_t rayCount)
 {
@@ -61,7 +62,8 @@ __global__ void ResetHitIdsKC(HitKey* gAcceleratorKeys, RayId* gIds,
         globalId += blockDim.x * gridDim.x)
     {        
         gIds[globalId] = globalId;
-        dTransformIds[globalId] = identityTransformIndex;
+        gTransformIds[globalId] = identityTransformIndex;
+        gPrimitiveIds[globalId] = INVALID_PRIMITIVE_ID;
         gAcceleratorKeys[globalId] = HitKey::InvalidKey;
     }
 }
@@ -230,8 +232,9 @@ void RayMemory::ResetHitMemory(TransformId identityTransformIndex,
     leaderDevice.GridStrideKC_X(0, 0, rayCount,
                                 ResetHitIdsKC,
                                 dCurrentKeys, 
-                                dCurrentIds, 
+                                dCurrentIds,                                 
                                 dTransformIds, 
+                                dPrimitiveIds,
                                 identityTransformIndex,
                                 static_cast<uint32_t>(rayCount));
 }

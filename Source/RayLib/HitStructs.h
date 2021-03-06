@@ -12,6 +12,8 @@
 typedef uint32_t TransformId;
 typedef uint64_t PrimitiveId;
 
+static constexpr PrimitiveId INVALID_PRIMITIVE_ID = std::numeric_limits<PrimitiveId>::max();
+
 // TODO: Implement
 struct HitStructPtr
 {

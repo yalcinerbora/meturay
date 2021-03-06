@@ -123,7 +123,6 @@ inline void PathLightWork(// Output
     bool neeMatch = (!gRenderState.nee);
     if(gRenderState.nee && aux.type == RayType::NEE_RAY)
     {
-        //
         const GPUEndpointI* endPoint = gRenderState.lightList[aux.endPointIndex];
         PrimitiveId neePrimId = endPoint->PrimitiveIndex();
         HitKey neeKey = endPoint->BoundaryMaterial();
@@ -131,7 +130,7 @@ inline void PathLightWork(// Output
         // Check if NEE ray actual hit the requested light
         neeMatch = (matId.value == neeKey.value);
         if(!gLocalState.emptyPrimitive)
-            neeMatch &= (primId == neePrimId);
+            neeMatch &= (primId == neePrimId);            
     }
     if(neeMatch || 
        aux.type == RayType::CAMERA_RAY ||
@@ -286,7 +285,7 @@ inline void PathWork(// Output
         rayOut.Update(gOutRays, PATH_RAY_INDEX);
         
         // Write Aux
-        auxOut.type =(specularMat) ? RayType::SPECULAR_PATH_RAY : RayType::PATH_RAY;
+        auxOut.type = (specularMat) ? RayType::SPECULAR_PATH_RAY : RayType::PATH_RAY;
         gOutRayAux[PATH_RAY_INDEX] = auxOut;
     }
     else InvalidRayWrite(PATH_RAY_INDEX);
@@ -335,7 +334,7 @@ inline void PathWork(// Output
         rayNEE.AdvanceSelf(MathConstants::Epsilon);
         rayOut.ray = rayNEE;
         rayOut.tMin = 0.0f;
-        rayOut.tMax = lDistance + MathConstants::Epsilon;
+        rayOut.tMax = lDistance;
         rayOut.Update(gOutRays, NEE_RAY_INDEX);
 
         // Calculate Radiance Factor

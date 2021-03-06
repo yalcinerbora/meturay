@@ -152,11 +152,19 @@ struct TriFunctions
         // Check if the hit is closer
         bool closerHit = intersects && (newT < rayData.tMax);
         if(closerHit)
-        {
+        {            
             rayData.tMax = newT;
             newMat = leaf.matId;
             newPrim = leaf.primitiveId;
-            newHit = {baryCoords[0], baryCoords[1]};
+            newHit = TriangleHit(baryCoords[0], baryCoords[1]);
+
+            //if(0x3000000 == leaf.matId)
+            //{
+            //    printf("CloserHit-> Mat 0x%X, Prim %llu\n",
+            //           leaf.matId.value, leaf.primitiveId);
+            //}
+
+
         }
         //printf("ray dir{%f, %f, %f} "
         //       "old %f new %f --- Testing Mat: %x -> {%s, %s}\n",

@@ -160,7 +160,7 @@ inline void GPULightDisk::GenerateRay(// Output
 __device__ 
 inline PrimitiveId GPULightDisk::PrimitiveIndex() const
 {
-    return 0;
+    return INVALID_PRIMITIVE_ID;
 }
 
 inline CPULightGroupDisk::CPULightGroupDisk(const GPUPrimitiveGroupI*)

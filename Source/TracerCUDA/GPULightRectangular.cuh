@@ -161,7 +161,7 @@ inline GPULightRectangular::GenerateRay(// Output
 __device__ 
 inline PrimitiveId GPULightRectangular::PrimitiveIndex() const
 {
-    return 0;
+    return INVALID_PRIMITIVE_ID;
 }
 
 inline CPULightGroupRectangular::CPULightGroupRectangular(const GPUPrimitiveGroupI*)

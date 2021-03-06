@@ -59,19 +59,19 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
     protected:
     public:
         // Constructors & Destructor
-        constexpr                           Vector() = default;
+        constexpr                               Vector() = default;
         template<class C, typename = ArithmeticEnable<C>>
-        __device__ __host__                 Vector(C);
+        __device__ __host__ explicit            Vector(C);
         template<class C, typename = ArithmeticEnable<C>>
-        __device__ __host__                 Vector(const C* data);
+        __device__ __host__ explicit            Vector(const C* data);
         template <class... Args, typename = AllArithmeticEnable<Args...>>
-        constexpr __device__ __host__       Vector(const Args... dataList);
+        constexpr __device__ __host__ explicit  Vector(const Args... dataList);
         template <class... Args, typename = std::enable_if_t<((N - sizeof...(Args)) > 1)>>
-        __device__ __host__                 Vector(const Vector<N - sizeof...(Args), T>&,
-                                                   const Args... dataList);
+        __device__ __host__                     Vector(const Vector<N - sizeof...(Args), T>&,
+                                                       const Args... dataList);
         template <int M, typename = std::enable_if_t<(M >= N)>>
-        __device__ __host__                 Vector(const Vector<M, T>&);
-                                            ~Vector() = default;
+        __device__ __host__                     Vector(const Vector<M, T>&);
+                                                ~Vector() = default;
 
         // MVC bug? these trigger std::trivially_copyable static assert
         // __device__ __host__              Vector(const Vector&) = default;
@@ -96,7 +96,9 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
         __device__ __host__ void                        operator/=(T);
 
         __device__ __host__ Vector                      operator+(const Vector&) const;
+        __device__ __host__ Vector                      operator+(T) const;
         __device__ __host__ Vector                      operator-(const Vector&) const;
+        __device__ __host__ Vector                      operator-(T) const;
         template<class Q = T>
         __device__ __host__ SignedEnable<Q, Vector>     operator-() const;
         __device__ __host__ Vector                      operator*(const Vector&) const;

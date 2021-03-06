@@ -41,6 +41,14 @@ inline bool DoNextEventEstimation(HitKey& key,
     pdf *= (1.0f / static_cast<float>(lightCount));
     lightIndex = index;
     key = light->BoundaryMaterial();
+
+    // Return infinite (or very large distance) for
+    // primitive lights since those have to hit in order to function properly
+    // with the light materials
+    lDistance = (light->PrimitiveIndex() != INVALID_PRIMITIVE_ID) 
+                    ? FLT_MAX 
+                    : (lDistance + MathConstants::Epsilon);
+
     return true;
 }
 

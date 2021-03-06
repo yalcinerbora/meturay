@@ -127,7 +127,7 @@ inline void GPULightPoint::GenerateRay(// Output
 __device__ 
 inline PrimitiveId GPULightPoint::PrimitiveIndex() const
 {
-    return 0;
+    return INVALID_PRIMITIVE_ID;
 }
 
 inline CPULightGroupPoint::CPULightGroupPoint(const GPUPrimitiveGroupI*)

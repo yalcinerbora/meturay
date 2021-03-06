@@ -66,9 +66,9 @@ inline GPUMediumVacuum::GPUMediumVacuum(uint32_t index)
     : index(index)
 {}
 
-__device__ inline Vector3 GPUMediumVacuum::SigmaA() const { return 0.0f; }
-__device__ inline Vector3 GPUMediumVacuum::SigmaS() const { return 0.0f; }
-__device__ inline Vector3 GPUMediumVacuum::SigmaT() const { return 0.0f; }
+__device__ inline Vector3 GPUMediumVacuum::SigmaA() const { return Vector3(0.0f); }
+__device__ inline Vector3 GPUMediumVacuum::SigmaS() const { return Vector3(0.0f); }
+__device__ inline Vector3 GPUMediumVacuum::SigmaT() const { return Vector3(0.0f); }
 __device__ inline float GPUMediumVacuum::IOR() const { return 1.0f; }
 __device__ inline float GPUMediumVacuum::Phase() const { return 1.0f; }
 __device__ inline uint32_t GPUMediumVacuum::GlobalIndex() const { return index; }

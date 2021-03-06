@@ -191,6 +191,19 @@ inline Vector<N, T> Vector<N, T>::operator+(const Vector& right) const
 
 template <int N, class T>
 __device__ __host__
+inline Vector<N, T> Vector<N, T>::operator+(T r) const
+{
+    Vector v;
+    UNROLL_LOOP
+    for(int i = 0; i < N; i++)
+    {
+        v[i] = vector[i] + r;
+    }
+    return v;
+}
+
+template <int N, class T>
+__device__ __host__
 inline Vector<N, T> Vector<N, T>::operator-(const Vector& right) const
 {
     Vector v;
@@ -199,6 +212,19 @@ inline Vector<N, T> Vector<N, T>::operator-(const Vector& right) const
     {
         v[i] = vector[i] - right[i];
     }
+    return v;
+}
+
+template <int N, class T>
+__device__ __host__
+inline Vector<N, T> Vector<N, T>::operator-(T r) const
+{
+    Vector v;
+    UNROLL_LOOP
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = vector[i] - r;
+        }
     return v;
 }
 
