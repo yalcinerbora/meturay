@@ -11,6 +11,8 @@ and vice versa.
 #include "NodeI.h"
 #include "VisorCallbacksI.h"
 #include "TracerCallBacksI.h"
+#include "VisorThread.h"
+#include "TracerThread.h"
 
 class VisorI;
 class GPUTracerI;
@@ -21,8 +23,15 @@ class SelfNode
     , public NodeI
 {
     private:
-        VisorI&         visor;
-        GPUTracerI&     tracer;
+        VisorThread     visorThread;
+        TracerThread    tracerThread;
+        //VisorI&         visor;
+        //GPUTracerI&     tracer;
+
+        // Tracer thread
+        //TracerThread
+
+        // Visor will use main thread
 
     protected:
     public:
@@ -31,7 +40,7 @@ class SelfNode
                     ~SelfNode() = default;
 
         // From Command Callbacks
-        void        ChangeScene(const std::string) override;
+        void        ChangeScene(const std::u8string) override;
         void        ChangeTime(const double) override;
         void        IncreaseTime(const double) override;
         void        DecreaseTime(const double) override;
@@ -50,6 +59,7 @@ class SelfNode
         void        WindowCloseAction() override;
 
         // From Tracer Callbacks
+        void        SendCrashSignal() override;
         void        SendLog(const std::string) override;
         void        SendError(TracerError) override;
         void        SendAnalyticData(AnalyticData) override;
@@ -57,6 +67,8 @@ class SelfNode
                               PixelFormat, size_t offset,
                               Vector2i start = Zero2i,
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+         void       SendCurrentOptions(TracerOptions) override;
+         void       SendCurrentParameters(TracerParameters) override;
 
         // From Node Interface
         NodeError   Initialize() override;

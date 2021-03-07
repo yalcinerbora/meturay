@@ -34,7 +34,7 @@ class MockNode
     , public NodeI
 {
     public:
-        static constexpr uint32_t       MAX_BOUNCES = 100;
+        static constexpr uint32_t       MAX_BOUNCES = 10;
         static constexpr int            SAMPLE_COUNT = 2;
 
         //static constexpr Vector2i       IMAGE_RESOLUTION = {16, 9};
@@ -64,7 +64,7 @@ class MockNode
                     ~MockNode() = default;
 
         // From Command Callbacks
-        void        ChangeScene(const std::string) override {}
+        void        ChangeScene(const std::u8string) override {}
         void        ChangeTime(const double) override {}
         void        IncreaseTime(const double) override {}
         void        DecreaseTime(const double) override {}
@@ -294,12 +294,12 @@ inline bool SimpleTracerSetup::Init()
     visorView->SetInputScheme(*visorInput);
 
     // Set Window Res wrt to monitor resolution
-    Vector2i newImgSize = 3 * visorView->MonitorResolution() / 5;
-    float ratio = static_cast<float>(newImgSize[1]) / SCREEN_RESOLUTION[1];
-    newImgSize[0] = static_cast<int>(SCREEN_RESOLUTION[0] * ratio);
-    newImgSize[1] = static_cast<int>(SCREEN_RESOLUTION[1] * ratio);
-    visorView->SetWindowSize(newImgSize);
-    //visorView->SetWindowSize(Vector2i(800));
+    //Vector2i newImgSize = 3 * visorView->MonitorResolution() / 5;
+    //float ratio = static_cast<float>(newImgSize[1]) / SCREEN_RESOLUTION[1];
+    //newImgSize[0] = static_cast<int>(SCREEN_RESOLUTION[0] * ratio);
+    //newImgSize[1] = static_cast<int>(SCREEN_RESOLUTION[1] * ratio);
+    //visorView->SetWindowSize(newImgSize);
+    //visorView->SetWindowSize(Vector2i(800, 600));
 
     // Generate Tracer Object
     // & Set Options
@@ -308,7 +308,7 @@ inline bool SimpleTracerSetup::Init()
             {"Samples", OptionVariable(MockNode::SAMPLE_COUNT)},
             {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
             {"NextEventEstimation", OptionVariable(true)},
-            {"RussianRouletteStart", OptionVariable(3u)}
+            {"RussianRouletteStart", OptionVariable(5u)}
         });    
     trcE = tracerSystem->GenerateTracer(tracer, TRACER_PARAMETERS, opts,
                                         tracerType);

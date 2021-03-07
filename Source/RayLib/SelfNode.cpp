@@ -1,20 +1,29 @@
 #include "SelfNode.h"
-#include "VisorCamera.h"
-#include "TracerStructs.h"
-#include "TracerError.h"
-#include "AnalyticData.h"
-#include "Log.h"
-#include "CPUTimer.h"
 
-#include "VisorI.h"
-#include "GPUTracerI.h"
+#include "TracerOptions.h"
+#include "VisorCamera.h"
+#include "AnalyticData.h"
+
+
+//#include "TracerStructs.h"
+//#include "TracerError.h"
+
+
+
+#include "Log.h"
+//#include "CPUTimer.h"
+
+//#include "VisorI.h"
+//#include "GPUTracerI.h"
+
+
 
 SelfNode::SelfNode(VisorI& v, GPUTracerI& t)
     : visor(v)
     , tracer(t)
 {}
 
-void SelfNode::ChangeScene(const std::string s)
+void SelfNode::ChangeScene(const std::u8string s)
 {
 
 }
@@ -64,6 +73,11 @@ void SelfNode::WindowCloseAction()
     // TODO:: Terminate the tracer thread
 }
 
+void SelfNode::SendCrashSignal()
+{
+
+}
+
 void SelfNode::SendLog(const std::string s)
 {
     METU_LOG("Tracer: %s", s.c_str());
@@ -87,37 +101,70 @@ void SelfNode::SendImage(const std::vector<Byte> data,
     visor.AccumulatePortion(std::move(data), f, offset, start, end);
 }
 
+void SelfNode::SendCurrentOptions(TracerOptions)
+{
+    // We have only one trader so no delegation to other tracers
+    // Only refresh the visor if it shows the current options
+
+    //visor.
+}
+
+void SelfNode::SendCurrentParameters(TracerParameters)
+{
+    // Same as Tracer Options
+}
+
 // From Node Interface
 NodeError SelfNode::Initialize()
 {
-    // OGL always wants to be in main thread
 
     // Create a tracer thread and make run along
     // Create an interface
 
+
+    tracerThread.Start();
+    visorThread.Start();
     return NodeError::OK;
 }
 
 void SelfNode::Work()
 { 
-    //GPUSceneI& scene = *gpuScene;
-
-    // Specifically do not use self nodes loop functionality here
-    // Main Poll Loop
-    while(visor.IsOpen())
+    while(!visorThread.IsTerminated())
     {
-        // Run tracer
-        //tracer.GenerateInitialRays(scene, 0, 1);
-        while(tracer.Render())
-        {
-            // Node should check if it is requested to do stuff
-        }
-        tracer.Finalize();
-
-        // Before try to show do render loop
-        tracer.Render();
-
-        // Present Back Buffer
-        visor.ProcessInputs();
+        // Process Inputs MUST be called on main thread
+        // since Windows OS event poll is required to be called
+        // on main thread, I don't know about other operating systems
+        //
+        // OGL Visor will use GLFW for window operations
+        // and it also requires "glfwPollEvents()" function
+        // (which this function calls it internally)
+        // to be called on main thread
+        visorThread.ProcessInputs();
     }
+        
+    // Visor thread is closed terminate tracer thread
+    tracerThread.Stop();
+
+    // All done!
+
+    ////GPUSceneI& scene = *gpuScene;
+
+    //// Specifically do not use self nodes loop functionality here
+    //// Main Poll Loop
+    //while(visor.IsOpen())
+    //{
+    //    // Run tracer
+    //    //tracer.GenerateInitialRays(scene, 0, 1);
+    //    while(tracer.Render())
+    //    {
+    //        // Node should check if it is requested to do stuff
+    //    }
+    //    tracer.Finalize();
+
+    //    // Before try to show do render loop
+    //    tracer.Render();
+
+    //    // Present Back Buffer
+    //    visor.ProcessInputs();
+    //}
 }

@@ -36,7 +36,6 @@ class VisorWindowInput : public VisorInputI
         // Visor Callback
         VisorCallbacksI*                visorCallbacks;
         
-
         // Internals
         void                            ProcessInput(VisorActionType, KeyAction);
 

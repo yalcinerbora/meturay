@@ -140,8 +140,9 @@ inline GPUCameraPinhole::GPUCameraPinhole(const Vector3& pos,
     // Camera Vector Correction
     Vector3 gazeDir = gazePoint - position;
     right = Cross(gazeDir, up).Normalize();
-    up = Cross(right, gazeDir).Normalize();
-    gazeDir = Cross(up, right).Normalize();
+    //up = Cross(right, gazeDir).Normalize();
+    //gazeDir = Cross(up, right).Normalize();
+
 
     // Camera parameters
     bottomLeft = (position

@@ -43,6 +43,8 @@ class LoopingThreadI
         void                        Stop();
         void                        Pause(bool pause);
 
+        bool                        IsTerminated();
+
 };
 
 inline void LoopingThreadI::THRDEntry()
@@ -98,4 +100,9 @@ inline void LoopingThreadI::Pause(bool pause)
     pauseSignal = pause;
     mutex.unlock();
     conditionVar.notify_one();
+}
+
+bool LoopingThreadI::IsTerminated()
+{
+    return thread.joinable();
 }

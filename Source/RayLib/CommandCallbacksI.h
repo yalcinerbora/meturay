@@ -14,7 +14,7 @@ class CommandCallbacksI
 
         // Fundamental Scene Commands
         // Current Scene and Current Time on that Scene
-        virtual void        ChangeScene(const std::string) = 0;
+        virtual void        ChangeScene(const std::u8string) = 0;
         virtual void        ChangeTime(const double) = 0;
         virtual void        IncreaseTime(const double) = 0;
         virtual void        DecreaseTime(const double) = 0;
