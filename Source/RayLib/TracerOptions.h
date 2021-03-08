@@ -31,6 +31,7 @@ class TracerOptions : public TracerOptionsI
 
     public:
         // Constructors & Destructor
+                        TracerOptions();
                         TracerOptions(VariableList&&);
                         ~TracerOptions() = default;
 
@@ -61,6 +62,9 @@ class TracerOptions : public TracerOptionsI
         TracerError     SetVector2i(const Vector2i, const std::string&) override;
         TracerError     SetVector2ui(const Vector2ui, const std::string&) override;
 };
+
+inline TracerOptions::TracerOptions()
+{}
 
 inline TracerOptions::TracerOptions(VariableList&& v)
  : variables(v)

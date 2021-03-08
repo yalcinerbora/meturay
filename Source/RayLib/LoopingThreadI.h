@@ -102,7 +102,7 @@ inline void LoopingThreadI::Pause(bool pause)
     conditionVar.notify_one();
 }
 
-bool LoopingThreadI::IsTerminated()
+inline bool LoopingThreadI::IsTerminated()
 {
     return thread.joinable();
 }

@@ -19,8 +19,8 @@
 
 
 SelfNode::SelfNode(VisorI& v, GPUTracerI& t)
-    : visor(v)
-    , tracer(t)
+    : visorThread(v)
+    , tracerThread(t)
 {}
 
 void SelfNode::ChangeScene(const std::u8string s)
@@ -48,7 +48,7 @@ void SelfNode::ChangeCamera(const VisorCamera c)
 
 }
 
-void SelfNode::ChangeCamera(const unsigned int)
+void SelfNode::ChangeCamera(const unsigned int cameraId)
 {
 
 }
@@ -61,6 +61,24 @@ void SelfNode::StartStopTrace(const bool)
 void SelfNode::PauseContTrace(const bool)
 {
     //TODO: Adjust tracer thread
+}
+
+void SelfNode::SetTimeIncrement(const double)
+{
+
+}
+
+void SelfNode::SaveImage()
+{
+
+}
+
+void SelfNode::SaveImage(const std::string& path,
+                         const std::string& fileName,
+                         ImageType,
+                         bool overwriteFile)
+{
+
 }
 
 void SelfNode::WindowMinimizeAction(bool minimized)
@@ -98,7 +116,7 @@ void SelfNode::SendImage(const std::vector<Byte> data,
                          PixelFormat f, size_t offset,
                          Vector2i start, Vector2i end)
 {
-    visor.AccumulatePortion(std::move(data), f, offset, start, end);
+    visorThread.AccumulateImagePortion(std::move(data), f, offset, start, end);
 }
 
 void SelfNode::SendCurrentOptions(TracerOptions)
@@ -129,7 +147,8 @@ NodeError SelfNode::Initialize()
 
 void SelfNode::Work()
 { 
-    while(!visorThread.IsTerminated())
+    while(!visorThread.IsTerminated() &&
+          !tracerThread.IsTerminated())
     {
         // Process Inputs MUST be called on main thread
         // since Windows OS event poll is required to be called

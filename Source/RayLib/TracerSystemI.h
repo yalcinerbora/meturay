@@ -18,14 +18,16 @@ enum class ScenePartitionerType
 {
     SINGLE_GPU,
     // Not yet implemented
-    MULTI_GPU_MATERIAL
+    MULTI_GPU_MATERIAL,
+    
+    END
 };
 
 struct SurfaceLoaderSharedLib
 {
-    const std::string       libName;
-    const std::string       regex;
-    const SharedLibArgs     mangledName;
+    std::string       libName;
+    std::string       regex;
+    SharedLibArgs     mangledName;
 };
 
 class TracerSystemI

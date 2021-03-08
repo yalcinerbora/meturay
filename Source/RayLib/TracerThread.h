@@ -8,15 +8,16 @@ class GPUTracerI;
 class TracerThread : public LoopingThreadI
 {
     private:
-        GPUTracerI&     tracer;
+        GPUTracerI&         tracer;
 
         //uint32_t        boolTracerCamera;
+        std::atomic_bool    tracerCrashSignal;
 
     protected:
-        bool            InternallyTerminated() const override;
-        void            InitialWork() override;
-        void            LoopWork() override;
-        void            FinalWork() override;
+        bool                InternallyTerminated() const override;
+        void                InitialWork() override;
+        void                LoopWork() override;
+        void                FinalWork() override;
 
     public:
         // Constructors & Destructor
@@ -25,4 +26,5 @@ class TracerThread : public LoopingThreadI
 
         // All of these functions are delegated to the visor
         // in a thread safe manner
+        void            SetTracerCrashSignal(bool);
 };

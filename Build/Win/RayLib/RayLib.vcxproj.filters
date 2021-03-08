@@ -236,6 +236,15 @@
     <ClInclude Include="..\..\..\Source\RayLib\TracerSystemI.h">
       <Filter>Structs</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\VisorThread.h">
+      <Filter>Threads</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerThread.h">
+      <Filter>Threads</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\EnumStringConversions.h">
+      <Filter>FileI-O</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">
@@ -307,6 +316,18 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\BitManipulation.cpp">
       <Filter>Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\VisorThread.cpp">
+      <Filter>Threads</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\TracerThread.cpp">
+      <Filter>Threads</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\ConfigParsers.cpp">
+      <Filter>FileI-O</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\EnumStringConversions.cpp">
+      <Filter>FileI-O</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

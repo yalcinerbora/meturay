@@ -1,23 +1,49 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <memory>
 
-#include "SharedLib.h"
 #include "VisorInputStructs.h"
-#include "VisorI.h"
 
-using LibInfo = std::tuple<std::string, SharedLibArgs, std::string>;
+class TracerOptions;
+class MovementSchemeI;
+
+struct VisorCamera;
+struct VisorOptions;
+struct TracerParameters;
+struct SharedLibArgs;
+struct SurfaceLoaderSharedLib;
+
+enum class ScenePartitionerType;
+
+using MovementScemeList = std::vector<std::unique_ptr<MovementSchemeI>>;
 
 namespace ConfigParser
 {
-    //bool ParseVisorOptions(KeyboardKeyBindings& keyBindings,
-    //                       MouseKeyBindings& mouseBindings,
-    //                       VisorOptions& opts,
-    //                       const std::u8string& file);
-    //bool ParseTracerOptions(std::vector<LibInfo>& tracerPools,
-    //                        std::vector<LibInfo>& materialPools,
-    //                        std::vector<LibInfo>& primitivePools,
-    //                        std::vector<LibInfo>& acceleratorPools,
-    //                        std::vector<LibInfo>& tracerPooDLLs,
-    //                        std::vector<LibInfo>& surfaceLoaderDLLs);
+    bool ParseVisorOptions(// Visor Input Related
+                           KeyboardKeyBindings& keyBindings,
+                           MouseKeyBindings& mouseBindings,
+                           MovementScemeList& movementSchemes,
+                           VisorCamera& visorCamera,
+                           // Visor Related
+                           VisorOptions& opts,
+                           // Visor DLL Related
+                           std::string& visorDLLName,
+                           SharedLibArgs dllEntryPointName,
+                           //
+                           const std::string& configFileName);
+
+    bool ParseTracerOptions(// Tracer Related
+                            TracerOptions& tracerOptions,
+                            TracerParameters& tracerParameters,
+                            std::string& tracerTypeName,
+                            // Tracer DLL Related
+                            std::string& tracerDLLName,
+                            SharedLibArgs& dllEntryPointName,
+                            // Misc
+                            std::vector<SurfaceLoaderSharedLib>& surfaceLoaderDLLs,
+                            ScenePartitionerType& gpuUsage,
+                            //
+                            const std::string& configFileName);
 }

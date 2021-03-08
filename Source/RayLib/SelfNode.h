@@ -23,13 +23,9 @@ class SelfNode
     , public NodeI
 {
     private:
+        // Threads
         VisorThread     visorThread;
         TracerThread    tracerThread;
-        //VisorI&         visor;
-        //GPUTracerI&     tracer;
-
-        // Tracer thread
-        //TracerThread
 
         // Visor will use main thread
 

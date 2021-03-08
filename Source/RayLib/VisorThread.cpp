@@ -24,3 +24,17 @@ void VisorThread::FinalWork()
 {
     // No final work for Visor
 }
+
+void VisorThread::AccumulateImagePortion(const std::vector<Byte> data,
+                                         PixelFormat f, size_t offset,
+                                         Vector2i start, Vector2i end)
+{
+    // Visor itself has thread safe queue for these operations
+    // Directly delegate
+    visor.AccumulatePortion(std::move(data), f, offset, start, end);
+}
+
+void VisorThread::ProcessInputs()
+{
+    visor.ProcessInputs();
+}

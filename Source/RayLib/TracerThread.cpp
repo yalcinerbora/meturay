@@ -7,7 +7,7 @@ TracerThread::TracerThread(GPUTracerI& t)
 
 bool TracerThread::InternallyTerminated() const
 {
-
+    return tracerCrashSignal;
 }
 
 void TracerThread::InitialWork()
@@ -32,4 +32,9 @@ void TracerThread::FinalWork()
 {
     // No final work for tracer
     // Eveything should destroy gracefully
+}
+
+void TracerThread::SetTracerCrashSignal(bool crashed)
+{
+    tracerCrashSignal = crashed;
 }

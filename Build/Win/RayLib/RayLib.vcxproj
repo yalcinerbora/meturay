@@ -141,7 +141,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\AnalyticData.h" />
     <ClInclude Include="..\..\..\Source\RayLib\AnalyticNodeI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\BitManipulation.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\EnumStringConversions.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerSystemI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\TracerThread.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorCamera.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ColorConversion.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CommandCallbacksI.h" />
@@ -217,11 +219,14 @@
     <ClInclude Include="..\..\..\Source\RayLib\ArrayPortion.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorInputI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\VisorThread.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorWindowInput.h" />
     <ClInclude Include="..\..\..\Source\RayLib\WorkerThread.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\RayLib\BitManipulation.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\ConfigParsers.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\EnumStringConversions.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MDistributor.cpp" />
@@ -231,6 +236,8 @@
     <ClCompile Include="..\..\..\Source\RayLib\SharedLib.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\BasicSurfaceLoaders.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\SurfaceLoaderGenerator.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\TracerThread.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\VisorThread.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\VisorWindowInput.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
   </ItemGroup>

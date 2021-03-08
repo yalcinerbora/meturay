@@ -3,19 +3,25 @@
 #include "RayLib/System.h"
 #include "RayLib/Log.h"
 #include "RayLib/UTF8StringConversion.h"
+#include "RayLib/DLLError.h"
+#include "RayLib/SharedLib.h"
+#include "RayLib/ConfigParsers.h"
+
 //#include "RayLib/Constants.h"
 //#include "RayLib/SurfaceLoaderGenerator.h"
 //#include "RayLib/TracerStatus.h"
-//#include "RayLib/DLLError.h"
+
 //#include "RayLib/GPUTracerI.h"
 
-//// Visor
-//#include "RayLib/VisorI.h"
-//#include "RayLib/VisorWindowInput.h"
-//#include "RayLib/MovementSchemes.h"
+// Visor
+#include "RayLib/VisorI.h"
+#include "RayLib/VisorWindowInput.h"
+#include "RayLib/MovementSchemes.h"
 //#include "VisorGL/VisorGLEntry.h"
 //
-//// Tracer
+// Tracer
+#include "RayLib/TracerOptions.h"
+#include "RayLib/TracerSystemI.h"
 ////#include "TracerLib/GPUSceneJson.h"
 ////#include "TracerLib/ScenePartitioner.h"
 ////#include "TracerLib/TracerLogicGenerator.h"
@@ -38,8 +44,8 @@ int main(int argc, const char* argv[])
     EnableVTMode();
 
     std::array<int, 2> resolution;
-    std::string tracerConfig;
-    std::string visorConfig;
+    std::string tracerConfigFileName;
+    std::string visorConfigFileName;
     std::string sceneFileName = "";
 
     // Header
@@ -51,11 +57,11 @@ int main(int argc, const char* argv[])
     // Command Line Arguments
     CLI::App app{header};
     app.footer(ProgramConstants::Footer);
-    app.add_option("-t,--tracerConfig", tracerConfig, "Tracer Configuration json File")
+    app.add_option("-t,--tracerConfig", tracerConfigFileName, "Tracer Configuration json File")
         ->required()
         ->expected(1)
         ->check(CLI::ExistingFile);
-    app.add_option("-v,--visorConfig", visorConfig, "Visor Configuration json File")
+    app.add_option("-v,--visorConfig", visorConfigFileName, "Visor Configuration json File")
         ->required()
         ->expected(1)
         ->check(CLI::ExistingFile);   
@@ -78,49 +84,90 @@ int main(int argc, const char* argv[])
     }
 
     std::cout << "Res   " << resolution[0] << "x" << resolution[1] << std::endl;
-    std::cout << "TC    " << tracerConfig << std::endl;
-    std::cout << "VC    " << visorConfig << std::endl;
+    std::cout << "TC    " << tracerConfigFileName << std::endl;
+    std::cout << "VC    " << visorConfigFileName << std::endl;
     std::cout << "Scene " << sceneFileName << std::endl;
 
+    // Error Vars
+    TracerError tError = TracerError::OK;
+    DLLError dError = DLLError::OK;
+    NodeError nError = NodeError::OK;
+
+    // Variables Related to the MRay
+    SharedLibPtr<TracerSystemI> tracerSystem = {nullptr, nullptr};
+    SharedLibPtr<GPUTracerI> tracer = {nullptr, nullptr};
+    std::unique_ptr<VisorInputI> visorInput = nullptr;
 
     // Parse Tracer Config
     TracerOptions tracerOptions;
     TracerParameters tracerParameters;
-    std::string tracerType;
+    SharedLibArgs tracerDLLEntryFunctionNames;
+    std::string tracerDLLName;
+    std::string tracerTypeName;
+    std::vector<SurfaceLoaderSharedLib> surfaceLoaderLibraries;
+    ScenePartitionerType scenePartitionType;
+
+    if(!ConfigParser::ParseTracerOptions(tracerOptions, tracerParameters,
+                                         tracerTypeName, tracerDLLName,
+                                         tracerDLLEntryFunctionNames,
+                                         surfaceLoaderLibraries, scenePartitionType,
+                                         //
+                                         tracerConfigFileName))
+    {
+        METU_ERROR_LOG("Unable to parse Tracer Options");
+        return 1;
+    }
 
     // Parse Visor Config
     VisorOptions visorOpts;
-    std::string visorDLL;
-    MovementScemeList MovementSchemeList = {};
-    KeyboardKeyBindings KeyBinds = VisorConstants::DefaultKeyBinds;
-    MouseKeyBindings MouseBinds = VisorConstants::DefaultButtonBinds;
-    visorInput = std::make_unique<VisorWindowInput>(std::move(KeyBinds),
-                                                    std::move(MouseBinds),
-                                                    std::move(MovementSchemeList),
-                                                    VisorCamera{});
+    std::string visorDLLName;
+    SharedLibArgs visorDLLEntryFunctionNames;
+    MovementScemeList movementSchemeList = {};
+    VisorCamera visorCamera;
+    KeyboardKeyBindings keyBinds;
+    MouseKeyBindings mouseBinds;
+
+    if(!ConfigParser::ParseVisorOptions(keyBinds, mouseBinds,
+                                        movementSchemeList, visorCamera,
+                                        visorOpts, visorDLLName,
+                                        visorDLLEntryFunctionNames,
+                                        //
+                                        visorConfigFileName))
+    {
+        METU_ERROR_LOG("Unable to parse Visor Options");
+        return 1;
+    }
 
     // Generate Visor
-    SharedLibPtr<VisorI> visor;
-
+    SharedLib visorDLL(visorDLLName);
+    SharedLibPtr<VisorI> visor = {nullptr, nullptr};
+    dError = visorDLL.GenerateObjectWithArgs(visor, tracerDLLEntryFunctionNames,
+                                             visorOpts);
+    ERROR_CHECK(DLLError, dError);
+    visorInput = std::make_unique<VisorWindowInput>(std::move(keyBinds),
+                                                    std::move(mouseBinds),
+                                                    std::move(movementSchemeList),
+                                                    visorCamera);
     visor->SetInputScheme(*visorInput);
 
     // Generate Tracer
-    SharedLibPtr<GPUTracerI> tracer;
-    TracerError tError = tracerSystem->GenerateTracer(tracer,
-                                                      tracerParameters,
-                                                      tracerOptions,
-                                                      tracerType);
+    SharedLib tracerDLL(tracerDLLName);    
+    dError = tracerDLL.GenerateObject(tracerSystem, tracerDLLEntryFunctionNames);
+    ERROR_CHECK(DLLError, dError);
+    tError = tracerSystem->Initialize(surfaceLoaderLibraries, scenePartitionType);
+    ERROR_CHECK(TracerError, tError);
+
+    tError = tracerSystem->GenerateTracer(tracer,
+                                          tracerParameters,
+                                          tracerOptions,
+                                          tracerTypeName);
     ERROR_CHECK(TracerError, tError);
 
     // Create a Self Node
     SelfNode selfNode(*visor, *tracer);
 
-
-    NodeError nError = selfNode.Initialize();
+    nError = selfNode.Initialize();
     ERROR_CHECK(NodeError, nError);
-
-
-
 
     // Do work loop of the self node
     try

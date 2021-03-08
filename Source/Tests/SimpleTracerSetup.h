@@ -264,7 +264,7 @@ inline bool SimpleTracerSetup::Init()
     ERROR_CHECK(TracerError, trcE);
     
     // Construct & Load Scene
-    tracerSystem->GenerateScene(gpuScene, sceneName);   
+    tracerSystem->GenerateScene(gpuScene, sceneName);
     SceneError scnE = gpuScene->LoadScene(sceneTime);
     ERROR_CHECK(SceneError, scnE);
 
@@ -290,7 +290,7 @@ inline bool SimpleTracerSetup::Init()
     visorOpts.iSize = MockNode::IMAGE_RESOLUTION;
 
     // Create Visor
-    visorView = CreateVisorGL(visorOpts);
+    visorView = std::unique_ptr<VisorI>(CreateVisorGL(visorOpts));
     visorView->SetInputScheme(*visorInput);
 
     // Set Window Res wrt to monitor resolution

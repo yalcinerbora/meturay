@@ -67,7 +67,7 @@ enum class KeyboardKeyType
     PAGE_UP,
     PAGE_DOWN,
     HOME,
-    END,
+    END_KEY,
     CAPS_LOCK,
     SCROLL_LOCK,
     NUM_LOCK,
@@ -123,7 +123,9 @@ enum class KeyboardKeyType
     RIGHT_CONTROL,
     RIGHT_ALT,
     RIGHT_SUPER,
-    MENU
+    MENU,
+
+    END
 };
 
 enum class MouseButtonType
@@ -135,7 +137,9 @@ enum class MouseButtonType
     BUTTON_5,
     BUTTON_6,
     BUTTON_7,
-    BUTTON_8
+    BUTTON_8,
+
+    END
 };
 
 enum class KeyAction
@@ -143,6 +147,8 @@ enum class KeyAction
     PRESSED,
     RELEASED,
     REPEATED,
+
+    END
 };
 
 enum class VisorActionType
@@ -173,13 +179,17 @@ enum class VisorActionType
     // Image Related
     SAVE_IMAGE,
     // Lifetime Realted
-    CLOSE
+    CLOSE,
+
+    END
 };
 
 enum class CameraMode
 {
     SCENE_CAM,
-    CUSTOM_CAM
+    CUSTOM_CAM,
+
+    END
 };
 
 using KeyboardKeyBindings = std::multimap<KeyboardKeyType, VisorActionType>;
