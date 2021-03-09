@@ -44,6 +44,10 @@ TracerError TracerSystemCUDA::Initialize(const std::vector<SurfaceLoaderSharedLi
             return TracerError::UNKNOWN_SCENE_PARTITIONER_TYPE;
             break;
     }
+
+    // Finally Generate a Clean Logic Generator
+    logicGenerator = std::make_unique<TracerLogicGenerator>();
+
     return TracerError::OK;
 }
 

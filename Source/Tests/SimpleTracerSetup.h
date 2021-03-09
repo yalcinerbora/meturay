@@ -35,16 +35,16 @@ class MockNode
 {
     public:
         static constexpr uint32_t       MAX_BOUNCES = 10;
-        static constexpr int            SAMPLE_COUNT = 2;
+        static constexpr int            SAMPLE_COUNT = 1;
 
         //static constexpr Vector2i       IMAGE_RESOLUTION = {16, 9};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 18};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 32};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {640, 360};
+        static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(640, 360);
         //static constexpr Vector2i       IMAGE_RESOLUTION = {512, 512};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {900, 900};
-        static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1600, 900};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {1920, 1080};
         //static constexpr Vector2i       IMAGE_RESOLUTION = {3840, 2160};
@@ -72,12 +72,6 @@ class MockNode
         void        ChangeCamera(const unsigned int) override {}
         void        StartStopTrace(const bool) override {}
         void        PauseContTrace(const bool) override {}
-        void        SetTimeIncrement(const double) override {}
-        void        SaveImage() override {}
-        void        SaveImage(const std::string& path,
-                              const std::string& fileName,
-                              ImageType,
-                              bool overwriteFile) override {}
 
         void        WindowMinimizeAction(bool minimized) override {}
         void        WindowCloseAction() override {}
@@ -169,8 +163,7 @@ inline void MockNode::Work()
 class SimpleTracerSetup
 {
     private:        
-        static constexpr Vector2i           SCREEN_RESOLUTION = {1280, 720};
-        //static constexpr Vector2i           SCREEN_RESOLUTION = {900, 900};
+        static constexpr Vector2i           SCREEN_RESOLUTION = Vector2i(1280, 720);
        
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
@@ -286,20 +279,23 @@ inline bool SimpleTracerSetup::Init()
     visorOpts.wSize = SCREEN_RESOLUTION;
     visorOpts.wFormat = WINDOW_PIXEL_FORMAT;
 
-    visorOpts.iFormat = IMAGE_PIXEL_FORMAT;
-    visorOpts.iSize = MockNode::IMAGE_RESOLUTION;
+    //visorOpts.iFormat = IMAGE_PIXEL_FORMAT;
+    //visorOpts.iSize = MockNode::IMAGE_RESOLUTION;
 
     // Create Visor
-    visorView = std::unique_ptr<VisorI>(CreateVisorGL(visorOpts));
+    visorView = std::unique_ptr<VisorI>(CreateVisorGL(visorOpts,
+                                                      MockNode::IMAGE_RESOLUTION,
+                                                      IMAGE_PIXEL_FORMAT));
     visorView->SetInputScheme(*visorInput);
+    visorView->SetImageFormat(IMAGE_PIXEL_FORMAT);
+    visorView->SetImageRes(MockNode::IMAGE_RESOLUTION);
 
     // Set Window Res wrt to monitor resolution
-    //Vector2i newImgSize = 3 * visorView->MonitorResolution() / 5;
-    //float ratio = static_cast<float>(newImgSize[1]) / SCREEN_RESOLUTION[1];
-    //newImgSize[0] = static_cast<int>(SCREEN_RESOLUTION[0] * ratio);
-    //newImgSize[1] = static_cast<int>(SCREEN_RESOLUTION[1] * ratio);
-    //visorView->SetWindowSize(newImgSize);
-    //visorView->SetWindowSize(Vector2i(800, 600));
+    Vector2i newImgSize = 3 * visorView->MonitorResolution() / 5;
+    float ratio = static_cast<float>(newImgSize[1]) / SCREEN_RESOLUTION[1];
+    newImgSize[0] = static_cast<int>(SCREEN_RESOLUTION[0] * ratio);
+    newImgSize[1] = static_cast<int>(SCREEN_RESOLUTION[1] * ratio);
+    visorView->SetWindowSize(newImgSize);
 
     // Generate Tracer Object
     // & Set Options

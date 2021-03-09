@@ -15,7 +15,7 @@ and vice versa.
 #include "TracerThread.h"
 
 class VisorI;
-class GPUTracerI;
+class TracerSystemI;
 
 class SelfNode
     : public VisorCallbacksI
@@ -32,24 +32,21 @@ class SelfNode
     protected:
     public:
         // Constructor & Destructor
-                    SelfNode(VisorI&, GPUTracerI&);
+                    SelfNode(VisorI&, TracerSystemI&,
+                             const TracerOptions&,
+                             const TracerParameters&,
+                             const std::string& tracerTypeName);
                     ~SelfNode() = default;
 
         // From Command Callbacks
-        void        ChangeScene(const std::u8string) override;
-        void        ChangeTime(const double) override;
-        void        IncreaseTime(const double) override;
-        void        DecreaseTime(const double) override;
-        void        ChangeCamera(const VisorCamera) override;
-        void        ChangeCamera(const unsigned int) override;
-        void        StartStopTrace(const bool) override;
-        void        PauseContTrace(const bool) override;
-        void        SetTimeIncrement(const double) override;
-        void        SaveImage() override;
-        void        SaveImage(const std::string& path,
-                              const std::string& fileName,
-                              ImageType,
-                              bool overwriteFile) override;
+        void        ChangeScene(std::u8string) override;
+        void        ChangeTime(double) override;
+        void        IncreaseTime(double) override;
+        void        DecreaseTime(double) override;
+        void        ChangeCamera(VisorCamera) override;
+        void        ChangeCamera(unsigned int) override;
+        void        StartStopTrace(bool) override;
+        void        PauseContTrace(bool) override;
 
         void        WindowMinimizeAction(bool minimized) override;
         void        WindowCloseAction() override;

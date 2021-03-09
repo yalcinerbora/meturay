@@ -16,7 +16,7 @@
         fprintf(stdout, s.c_str(), args...);
     }
 #else
-    static const bool IS_DEBUG_MODE = false;
+    static constexpr bool IS_DEBUG_MODE = false;
     template<class... Args>
     static inline constexpr void METU_DEBUG_LOG(const char* string, Args... args) {}
 #endif

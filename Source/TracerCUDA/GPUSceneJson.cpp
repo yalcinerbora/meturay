@@ -1084,6 +1084,12 @@ uint32_t GPUSceneJson::HitStructUnionSize() const
     return hitStructSize;
 }
 
+double GPUSceneJson::MaxSceneTime() const
+{
+    // TODO: change this when animation is fully implemented
+    return 0.0;
+}
+
 const NamedList<CPULightGPtr>& GPUSceneJson::Lights() const
 {
     return lights;

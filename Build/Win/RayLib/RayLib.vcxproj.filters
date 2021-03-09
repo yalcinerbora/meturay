@@ -45,9 +45,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\WorkerThread.h">
       <Filter>Threads</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\ThreadData.h">
-      <Filter>Threads</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\ArrayPortion.h">
       <Filter>Structs</Filter>
     </ClInclude>
@@ -244,6 +241,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\EnumStringConversions.h">
       <Filter>FileI-O</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\ThreadVariable.h">
+      <Filter>Threads</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

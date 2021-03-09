@@ -4,53 +4,42 @@
 #include "VisorCamera.h"
 #include "AnalyticData.h"
 
-
-//#include "TracerStructs.h"
-//#include "TracerError.h"
-
-
-
-#include "Log.h"
-//#include "CPUTimer.h"
-
-//#include "VisorI.h"
-//#include "GPUTracerI.h"
-
-
-
-SelfNode::SelfNode(VisorI& v, GPUTracerI& t)
+SelfNode::SelfNode(VisorI& v, TracerSystemI& t,
+                   const TracerOptions& opts,
+                   const TracerParameters& params,
+                   const std::string& tracerTypeName)
     : visorThread(v)
-    , tracerThread(t)
+    , tracerThread(t, opts, params, *this, tracerTypeName)
 {}
 
 void SelfNode::ChangeScene(const std::u8string s)
 {
-
+    tracerThread.SetScene(s);
 }
 
-void SelfNode::ChangeTime(const double)
+void SelfNode::ChangeTime(const double t)
 {
-
+    tracerThread.ChangeTime(t);
 }
 
-void SelfNode::IncreaseTime(const double)
+void SelfNode::IncreaseTime(const double t)
 {
-
+    tracerThread.IncreaseTime(t);
 }
 
-void SelfNode::DecreaseTime(const double)
+void SelfNode::DecreaseTime(const double t)
 {
-
+    tracerThread.DecreaseTime(t);
 }
 
 void SelfNode::ChangeCamera(const VisorCamera c)
 {
-
+    tracerThread.ChangeCamera(c);
 }
 
 void SelfNode::ChangeCamera(const unsigned int cameraId)
 {
-
+    tracerThread.ChangeCamera(cameraId);
 }
 
 void SelfNode::StartStopTrace(const bool)
@@ -63,23 +52,6 @@ void SelfNode::PauseContTrace(const bool)
     //TODO: Adjust tracer thread
 }
 
-void SelfNode::SetTimeIncrement(const double)
-{
-
-}
-
-void SelfNode::SaveImage()
-{
-
-}
-
-void SelfNode::SaveImage(const std::string& path,
-                         const std::string& fileName,
-                         ImageType,
-                         bool overwriteFile)
-{
-
-}
 
 void SelfNode::WindowMinimizeAction(bool minimized)
 {
@@ -89,6 +61,7 @@ void SelfNode::WindowMinimizeAction(bool minimized)
 void SelfNode::WindowCloseAction()
 {
     // TODO:: Terminate the tracer thread
+    tracerThread.Stop();
 }
 
 void SelfNode::SendCrashSignal()
@@ -135,11 +108,7 @@ void SelfNode::SendCurrentParameters(TracerParameters)
 // From Node Interface
 NodeError SelfNode::Initialize()
 {
-
-    // Create a tracer thread and make run along
-    // Create an interface
-
-
+    // Start threads
     tracerThread.Start();
     visorThread.Start();
     return NodeError::OK;
@@ -162,28 +131,6 @@ void SelfNode::Work()
     }
         
     // Visor thread is closed terminate tracer thread
-    tracerThread.Stop();
-
-    // All done!
-
-    ////GPUSceneI& scene = *gpuScene;
-
-    //// Specifically do not use self nodes loop functionality here
-    //// Main Poll Loop
-    //while(visor.IsOpen())
-    //{
-    //    // Run tracer
-    //    //tracer.GenerateInitialRays(scene, 0, 1);
-    //    while(tracer.Render())
-    //    {
-    //        // Node should check if it is requested to do stuff
-    //    }
-    //    tracer.Finalize();
-
-    //    // Before try to show do render loop
-    //    tracer.Render();
-
-    //    // Present Back Buffer
-    //    visor.ProcessInputs();
-    //}
+    visorThread.Stop();
+    tracerThread.Stop();    
 }

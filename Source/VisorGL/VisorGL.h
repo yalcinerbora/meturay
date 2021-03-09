@@ -18,7 +18,7 @@ the VisorGL singleton.
 #include "RayLib/VisorInputI.h"
 
 #include "RayLib/MPMCQueue.h"
-#include "RayLib/ThreadData.h"
+#include "RayLib/ThreadVariable.h"
 
 #include "ShaderGL.h"
 
@@ -44,11 +44,11 @@ struct VisorGLCommand
         size_t                  offset;
 
         // Commands should not be copied
-        VisorGLCommand() = default;
-        VisorGLCommand(VisorGLCommand&&) = default;
-        VisorGLCommand(const VisorGLCommand&) = delete;
-        VisorGLCommand& operator=(const VisorGLCommand&) = delete;
-        VisorGLCommand& operator=(VisorGLCommand&&) = default;
+                                VisorGLCommand() = default;
+                                VisorGLCommand(VisorGLCommand&&) = default;
+                                VisorGLCommand(const VisorGLCommand&) = delete;
+        VisorGLCommand&         operator=(const VisorGLCommand&) = delete;
+        VisorGLCommand&         operator=(VisorGLCommand&&) = default;
 };
 
 class VisorGL : public VisorI
@@ -89,10 +89,12 @@ class VisorGL : public VisorI
         bool                        open;
 
         VisorOptions                vOpts;
+        Vector2i                    imageSize;
+        PixelFormat                 imagePixFormat;
 
         // Image portion list
         MPMCQueue<VisorGLCommand>   commandList;
-        ThreadData<Vector2i>        viewportSize;
+        ThreadVariable<Vector2i>    viewportSize;
 
         // Data coming from tracer nodes
 
@@ -157,7 +159,9 @@ class VisorGL : public VisorI
     protected:
     public:
         // Constructors & Destructor
-                                VisorGL(const VisorOptions&);
+                                VisorGL(const VisorOptions&,
+                                        const Vector2i& imgRes,
+                                        const PixelFormat& imagePixelFormat);
                                 VisorGL(const VisorGL&) = delete;
         VisorGL&                operator=(const VisorGL&) = delete;
                                 ~VisorGL();

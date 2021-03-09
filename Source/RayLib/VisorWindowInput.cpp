@@ -70,7 +70,6 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
         }
         case VisorActionType::SAVE_IMAGE:
         {
-            visorCallbacks->SaveImage();
             break;
         }
         case VisorActionType::CLOSE:

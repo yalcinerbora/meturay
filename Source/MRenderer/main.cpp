@@ -141,8 +141,11 @@ int main(int argc, const char* argv[])
     // Generate Visor
     SharedLib visorDLL(visorDLLName);
     SharedLibPtr<VisorI> visor = {nullptr, nullptr};
-    dError = visorDLL.GenerateObjectWithArgs(visor, tracerDLLEntryFunctionNames,
-                                             visorOpts);
+    dError = visorDLL.GenerateObjectWithArgs(visor, visorDLLEntryFunctionNames,
+                                             // Args
+                                             visorOpts,
+                                             resolution,
+                                             PixelFormat::RGBA_FLOAT);
     ERROR_CHECK(DLLError, dError);
     visorInput = std::make_unique<VisorWindowInput>(std::move(keyBinds),
                                                     std::move(mouseBinds),
@@ -157,24 +160,23 @@ int main(int argc, const char* argv[])
     tError = tracerSystem->Initialize(surfaceLoaderLibraries, scenePartitionType);
     ERROR_CHECK(TracerError, tError);
 
-    tError = tracerSystem->GenerateTracer(tracer,
-                                          tracerParameters,
-                                          tracerOptions,
-                                          tracerTypeName);
-    ERROR_CHECK(TracerError, tError);
-
     // Create a Self Node
-    SelfNode selfNode(*visor, *tracer);
-
+    SelfNode selfNode(*visor, *tracerSystem,
+                      tracerOptions, tracerParameters,
+                      tracerTypeName);
     nError = selfNode.Initialize();
+    visorInput->AttachVisorCallback(selfNode);
     ERROR_CHECK(NodeError, nError);
+
+    
+    
 
     // Do work loop of the self node
     try
     {
-        // If scene file is provided as a argument set scene for the node        
-        selfNode.ChangeScene(Utility::CopyStringU8(sceneFileName));
+        // If scene file is provided as a argument set scene for the node
         if(!sceneFileName.empty())
+            selfNode.ChangeScene(Utility::CopyStringU8(sceneFileName));
 
         // Work returns when a crash occurs or user terminates
         selfNode.Work();
@@ -185,5 +187,11 @@ int main(int argc, const char* argv[])
         METU_ERROR_LOG("%s (%s)", err.c_str(), e.what());
         return 1;
     }
+
+    // Orderly Delete Unique Ptrs
+    // Shared lib dependent ptrs should be released first
+    tracerSystem = SharedLibPtr<TracerSystemI>(nullptr, nullptr);
+    visor = SharedLibPtr<VisorI>(nullptr, nullptr);
+    // Shared Libs etc. will destroy on scope exit
     return 0;
 }

@@ -406,27 +406,27 @@ void VisorGL::ReallocImages()
     for(int i = 0; i < 2; i++)
     {
         glBindTexture(GL_TEXTURE_2D, outputTextures[i]);
-        glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(vOpts.iFormat),
-                       vOpts.iSize[0], vOpts.iSize[1]);
+        glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(imagePixFormat),
+                       imageSize[0], imageSize[1]);
     }
     // Sample count texture
     glDeleteTextures(1, &sampleCountTexture);
     glGenTextures(1, &sampleCountTexture);
     glBindTexture(GL_TEXTURE_2D, sampleCountTexture);
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32I,
-                   vOpts.iSize[0], vOpts.iSize[1]);
+                   imageSize[0], imageSize[1]);
     // Buffer input texture
     glDeleteTextures(1, &bufferTexture);
     glGenTextures(1, &bufferTexture);
     glBindTexture(GL_TEXTURE_2D, bufferTexture);
-    glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(vOpts.iFormat),
-                   vOpts.iSize[0], vOpts.iSize[1]);
+    glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(imagePixFormat),
+                   imageSize[0], imageSize[1]);
     // Sample input texture
     glDeleteTextures(1, &sampleTexture);
     glGenTextures(1, &sampleTexture);
     glBindTexture(GL_TEXTURE_2D, sampleTexture);
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32I,
-                   vOpts.iSize[0], vOpts.iSize[1]);
+                   imageSize[0], imageSize[1]);
 }
 
 void VisorGL::ProcessCommand(const VisorGLCommand& c)
@@ -442,16 +442,17 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             // Let the case fall to reset image 
             // since we just allocated and need reset on image
             // as well.
+            [[fallthrough]];
         }
         case VisorGLCommand::RESET_IMAGE:
         {
             // Just clear the sample count to zero
             const GLuint clearData = 0;
             glBindTexture(GL_TEXTURE_2D, sampleCountTexture);
-            glClearTexSubImage(GL_TEXTURE_2D, 0, 
+            glClearTexSubImage(sampleCountTexture, 0,
                                c.start[0], c.start[1], 0,
                                inSize[0], inSize[1], 1,
-                               GL_R, GL_UNSIGNED_INT, &clearData);
+                               GL_RED_INTEGER, GL_UNSIGNED_INT, &clearData);
             break;
         }
         case VisorGLCommand::SET_PORTION:
@@ -491,17 +492,18 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             glBindImageTexture(I_SAMPLE, sampleCountTexture,
                                0, false, 0, GL_READ_WRITE, GL_R32I);
             glBindImageTexture(I_OUT_COLOR, outTexture,
-                               0, false, 0, GL_WRITE_ONLY, PixelFormatToSizedGL(vOpts.iFormat));
+                               0, false, 0, GL_WRITE_ONLY, 
+                               PixelFormatToSizedGL(imagePixFormat));
 
             // Uniforms
-            glUniform2iv(U_RES, 1, static_cast<const int*>(vOpts.iSize));
+            glUniform2iv(U_RES, 1, static_cast<const int*>(imageSize));
             glUniform2iv(U_START, 1, static_cast<const int*>(c.start));
             glUniform2iv(U_END, 1, static_cast<const int*>(c.end));
 
             // Call for entire image (we also copy image)
             // 
-            GLuint gridX = (vOpts.iSize[0] + 16 - 1) / 16;
-            GLuint gridY = (vOpts.iSize[1] + 16 - 1) / 16;
+            GLuint gridX = (imageSize[0] + 16 - 1) / 16;
+            GLuint gridY = (imageSize[1] + 16 - 1) / 16;
             glDispatchCompute(gridX, gridY, 1);
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
@@ -536,7 +538,9 @@ void VisorGL::RenderImage()
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-VisorGL::VisorGL(const VisorOptions& opts)
+VisorGL::VisorGL(const VisorOptions& opts,
+                 const Vector2i& imgRes,
+                 const PixelFormat& imagePixelFormat)
     : input(nullptr)
     , window(nullptr)
     , open(false)
@@ -550,6 +554,8 @@ VisorGL::VisorGL(const VisorOptions& opts)
     , vBuffer(0)
     , vao(0)
     , vOpts(opts)
+    , imageSize(imgRes)
+    , imagePixFormat(imagePixelFormat)
 {
     if(instance != nullptr) return;
     instance = this;
@@ -565,29 +571,33 @@ VisorGL::VisorGL(const VisorOptions& opts)
     // Common Window Hints
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
     glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-    glfwWindowHint(GLFW_SRGB_CAPABLE, GL_FALSE);    // Buggy
+
+    // This was buggy on nvidia cards couple of years ago
+    // So instead manually convert image using 
+    // computer shader or w/e sRGB space
+    glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_FALSE);
 
     glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
-    glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
+    glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     glfwWindowHint(GLFW_CONTEXT_RELEASE_BEHAVIOR, GLFW_RELEASE_BEHAVIOR_NONE);
 
     if(vOpts.stereoOn)
-        glfwWindowHint(GLFW_STEREO, GL_TRUE);
+        glfwWindowHint(GLFW_STEREO, GLFW_TRUE);
 
     // Debug Context
     if constexpr(IS_DEBUG_MODE)
-        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
     else
-        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_FALSE);
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_FALSE);
 
     // At most 16x MSAA
     glfwWindowHint(GLFW_SAMPLES, 16);
@@ -825,33 +835,33 @@ void VisorGL::SetInputScheme(VisorInputI& i)
 
 void VisorGL::SetImageRes(Vector2i resolution)
 {
-    vOpts.iSize = resolution;
+    imageSize = resolution;
 
     VisorGLCommand command = {};
     command.type = VisorGLCommand::REALLOC_IMAGES;
     command.start = Zero2i;
-    command.end = vOpts.iSize;
+    command.end = imageSize;
     commandList.Enqueue(std::move(command));
 }
 
 void VisorGL::SetImageFormat(PixelFormat format)
 {
-    vOpts.iFormat = format;
+    imagePixFormat = format;
     
     VisorGLCommand command = {};
     command.type = VisorGLCommand::REALLOC_IMAGES;
     command.start = Zero2i;
-    command.end = vOpts.iSize;
+    command.end = imageSize;
     commandList.Enqueue(std::move(command));
 }
 
 void VisorGL::ResetSamples(Vector2i start, Vector2i end)
 {
-    end = Vector2i::Min(end, vOpts.iSize);
+    end = Vector2i::Min(end, imageSize);
 
     VisorGLCommand command;
     command.type = VisorGLCommand::RESET_IMAGE;
-    command.format = vOpts.iFormat;
+    command.format = imagePixFormat;
     command.start = start;
     command.end = end;
 
@@ -863,7 +873,7 @@ void VisorGL::AccumulatePortion(const std::vector<Byte> data,
                                 Vector2i start,
                                 Vector2i end)
 {
-    end = Vector2i::Min(end, vOpts.iSize);
+    end = Vector2i::Min(end, imageSize);
 
     VisorGLCommand command;
     command.type = VisorGLCommand::SET_PORTION;

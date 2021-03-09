@@ -168,6 +168,7 @@ class GPUSceneJson : public GPUSceneI
         Vector2i                            MaxAccelIds() const override;
         HitKey                              BaseBoundaryMaterial() const override;
         uint32_t                            HitStructUnionSize() const override;
+        double                              MaxSceneTime() const override;
         // Access CPU
         const NamedList<CPULightGPtr>&      Lights() const override;
         const NamedList<CPUCameraGPtr>&     Cameras() const override;

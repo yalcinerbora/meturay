@@ -31,11 +31,6 @@ struct VisorOptions
     PixelFormat         wFormat;
     Vector2i            wSize;
     float               fpsLimit;
-
-    // Image Related
-    Vector2i            iSize;
-    PixelFormat         iFormat;
-
 };
 
 class VisorI

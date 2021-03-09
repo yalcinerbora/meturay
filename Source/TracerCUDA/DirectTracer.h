@@ -6,7 +6,7 @@
 class DirectTracer : public RayTracer
 {
         public:
-        static constexpr const char*    TypeName() { return "TestDirect"; }
+        static constexpr const char*    TypeName() { return "DirectTracer"; }
         
         struct Options                 
         {

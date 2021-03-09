@@ -13,9 +13,9 @@ static const EnumNameList<ScenePartitionerType> ScenePartitionerTypeNames =
 
 static const EnumNameList<TracerOptionsI::OptionType> TracerOptionTypeNames = 
 {
-    "bool",
-    "uint",
+    "bool",    
     "int",
+    "uint",
     "float",
     "vec2i",
     "vec2ui",

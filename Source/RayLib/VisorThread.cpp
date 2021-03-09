@@ -1,6 +1,8 @@
 #include "VisorThread.h"
 #include "VisorI.h"
 
+#include "Log.h"
+
 VisorThread::VisorThread(VisorI& v)
     : visor(v)
 {}

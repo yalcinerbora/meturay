@@ -3,7 +3,7 @@
 TEST(SimpleTracers, HelloTriangle)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("TestDirect", u8"TestScenes/helloTriangle.json", 0.0);
+    SimpleTracerSetup setup("DirectTracer", u8"TestScenes/helloTriangle.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
@@ -11,7 +11,7 @@ TEST(SimpleTracers, HelloTriangle)
 TEST(SimpleTracers, HelloSphere)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("TestDirect", u8"TestScenes/helloSphere.json", 0.0);
+    SimpleTracerSetup setup("DirectTracer", u8"TestScenes/helloSphere.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
@@ -19,7 +19,7 @@ TEST(SimpleTracers, HelloSphere)
 TEST(SimpleTracers, HelloBox)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("TestDirect", u8"TestScenes/helloBox.json", 0.0);
+    SimpleTracerSetup setup("DirectTracer", u8"TestScenes/helloBox.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
@@ -27,7 +27,7 @@ TEST(SimpleTracers, HelloBox)
 TEST(SimpleTracers, BVHTest)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("TestDirect", u8"TestScenes/bvhTest.json", 0.0);
+    SimpleTracerSetup setup("DirectTracer", u8"TestScenes/bvhTest.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
@@ -35,7 +35,7 @@ TEST(SimpleTracers, BVHTest)
 TEST(SimpleTracers, BaseBVHTest)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("TestDirect", u8"TestScenes/baseBVHTest.json", 0.0);
+    SimpleTracerSetup setup("DirectTracer", u8"TestScenes/baseBVHTest.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
@@ -43,7 +43,7 @@ TEST(SimpleTracers, BaseBVHTest)
 TEST(SimpleTracers, QuatInterpTest)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("TestDirect", u8"TestScenes/quatInterp.json", 0.0);
+    SimpleTracerSetup setup("DirectTracer", u8"TestScenes/quatInterp.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
@@ -51,7 +51,7 @@ TEST(SimpleTracers, QuatInterpTest)
 TEST(SimpleTracers, TextureTest)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("TestDirect", u8"TestScenes/textureTest.json", 0.0);
+    SimpleTracerSetup setup("DirectTracer", u8"TestScenes/textureTest.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }

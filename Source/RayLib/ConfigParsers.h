@@ -30,7 +30,7 @@ namespace ConfigParser
                            VisorOptions& opts,
                            // Visor DLL Related
                            std::string& visorDLLName,
-                           SharedLibArgs dllEntryPointName,
+                           SharedLibArgs& dllEntryPointName,
                            //
                            const std::string& configFileName);
 

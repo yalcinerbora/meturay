@@ -7,7 +7,7 @@
 class PathTracer final : public RayTracer
 {
     public:
-        static constexpr const char*    TypeName() { return "TestPath"; }
+        static constexpr const char*    TypeName() { return "PathTracer"; }
 
         static constexpr const char*    MAX_DEPTH_NAME = "MaxDepth";
         static constexpr const char*    NEE_NAME = "NextEventEstimation";

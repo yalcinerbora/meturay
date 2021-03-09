@@ -9,7 +9,9 @@
 #include "RayLib/VisorI.h"
 
 extern "C" METU_SHARED_VISORGL_ENTRY_POINT 
-VisorI* __stdcall CreateVisorGL(const VisorOptions&);
+VisorI* __stdcall CreateVisorGL(const VisorOptions&,
+                                const Vector2i& imgRes,
+                                const PixelFormat&);
 
 extern "C" METU_SHARED_VISORGL_ENTRY_POINT
 void __stdcall DeleteVisorGL(VisorI*);

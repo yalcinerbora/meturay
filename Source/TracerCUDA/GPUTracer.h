@@ -136,7 +136,7 @@ class GPUTracer : public GPUTracerI
         void                    AskParameters() override;
         void                    Finalize() override;
 
-         // Image Related
+        // Image Related
         void                    SetImagePixelFormat(PixelFormat) override;
         void                    ReportionImage(Vector2i start = Zero2i,
                                                Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;

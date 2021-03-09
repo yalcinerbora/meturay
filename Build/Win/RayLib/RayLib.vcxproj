@@ -197,7 +197,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\SurfaceLoaderPoolI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\System.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\ThreadData.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\ThreadVariable.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerCallbacksI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\GPUTracerI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerNode.h" />

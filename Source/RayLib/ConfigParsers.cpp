@@ -46,8 +46,6 @@ namespace ConfigParser
         static constexpr const char* W_PIXEL_FORMAT_NAME = "windowPixelFormat";
         static constexpr const char* WINDOW_SIZE_NAME = "windowSize";
         static constexpr const char* FPS_LIMIT_NAME = "fpsLimit";
-        static constexpr const char* I_PIXEL_FORMAT_NAME = "imagePixelFormat";
-        static constexpr const char* IMAGE_SIZE_NAME = "imageSize";
 
         // Load VisorOptions
         opts.eventBufferSize = SceneIO::LoadNumber<uint32_t>(optsJson[EVENT_BUFFER_SIZE_NAME]);
@@ -55,8 +53,6 @@ namespace ConfigParser
         opts.wFormat = EnumStringConverter::StringToPixelFormatType(optsJson[W_PIXEL_FORMAT_NAME]);
         opts.wSize = SceneIO::LoadVector<2, int>(optsJson[WINDOW_SIZE_NAME]);
         opts.fpsLimit = SceneIO::LoadNumber<float>(optsJson[FPS_LIMIT_NAME]);
-        opts.iFormat = EnumStringConverter::StringToPixelFormatType(optsJson[I_PIXEL_FORMAT_NAME]);
-        opts.iSize = SceneIO::LoadVector<2, int>(optsJson[IMAGE_SIZE_NAME]);
     }
 }
 
@@ -69,7 +65,7 @@ bool ConfigParser::ParseVisorOptions(// Visor Input Related
                                      VisorOptions& opts,
                                      // Visor DLL Related
                                      std::string& visorDLLName,
-                                     SharedLibArgs dllEntryPointName,
+                                     SharedLibArgs& dllEntryPointName,
                                      //
                                      const std::string& configFileName)
 {
@@ -97,14 +93,16 @@ bool ConfigParser::ParseVisorOptions(// Visor Input Related
         auto keyJson = configJson.end();
         if((keyJson = configJson.find(KEY_BIND_NAME)) != configJson.end())
         {
-
+            // TODO: Implement
+            return false;
         }
         else keyBindings = VisorConstants::DefaultKeyBinds;
         // Load Button Binds
         auto buttonJson = configJson.end();
         if((buttonJson = configJson.find(MOUSE_BIND_NAME)) != configJson.end())
         {
-
+            // TODO: Implement
+            return false;
         }
         else mouseBindings = VisorConstants::DefaultButtonBinds;
 
@@ -113,7 +111,9 @@ bool ConfigParser::ParseVisorOptions(// Visor Input Related
         auto schemesJson = configJson.end();
         if((schemesJson = configJson.find(MOVEMENT_SCEHEMES_NAME)) != configJson.end())
         {
-            movementSchemes.reserve(schemesJson->size());
+            //movementSchemes.reserve(schemesJson->size());
+            // TODO: Implement
+            return false;
         }        
 
         // Load VisorOptions

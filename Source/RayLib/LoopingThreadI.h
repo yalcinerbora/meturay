@@ -64,7 +64,9 @@ inline void LoopingThreadI::THRDEntry()
                 return stopSignal || !pauseSignal;
             });
         }
-        //if(stopSignal) return;
+
+        // Break the thread loop and terminate
+        if(stopSignal) break;
     }
     FinalWork();
 }
@@ -104,5 +106,5 @@ inline void LoopingThreadI::Pause(bool pause)
 
 inline bool LoopingThreadI::IsTerminated()
 {
-    return thread.joinable();
+    return !thread.joinable();
 }
