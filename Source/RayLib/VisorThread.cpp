@@ -14,7 +14,8 @@ bool VisorThread::InternallyTerminated() const
 
 void VisorThread::InitialWork()
 {
-    // No initial work for Visor
+    // Set Rendering context for this thread
+    visor.SetRenderingContextCurrent();
 }
 
 void VisorThread::LoopWork()

@@ -103,8 +103,9 @@ void TracerThread::LoopWork()
     }
     Vector2i newStart;
     Vector2i newEnd;
-    if(imgPortionStart.CheckChanged(newStart) ||
-       imgPortionEnd.CheckChanged(newEnd))
+    bool startChanged = imgPortionStart.CheckChanged(newStart);
+    bool endChanged = imgPortionEnd.CheckChanged(newEnd);
+    if(startChanged || endChanged)
     {
         tracer->ReportionImage(newStart, newEnd);
     }

@@ -6,36 +6,18 @@
 #include "RayLib/DLLError.h"
 #include "RayLib/SharedLib.h"
 #include "RayLib/ConfigParsers.h"
-
-//#include "RayLib/Constants.h"
-//#include "RayLib/SurfaceLoaderGenerator.h"
-//#include "RayLib/TracerStatus.h"
-
-//#include "RayLib/GPUTracerI.h"
-
 // Visor
 #include "RayLib/VisorI.h"
 #include "RayLib/VisorWindowInput.h"
 #include "RayLib/MovementSchemes.h"
-//#include "VisorGL/VisorGLEntry.h"
-//
 // Tracer
 #include "RayLib/TracerOptions.h"
 #include "RayLib/TracerSystemI.h"
-////#include "TracerLib/GPUSceneJson.h"
-////#include "TracerLib/ScenePartitioner.h"
-////#include "TracerLib/TracerLogicGenerator.h"
-
 // Node
 #include "RayLib/SelfNode.h"
-//#include "RayLib/VisorCallbacksI.h"
-//#include "RayLib/TracerCallbacksI.h"
-//#include "RayLib/NodeI.h"
-//#include "RayLib/AnalyticData.h"
-//#include "RayLib/TracerError.h"
-//#include "RayLib/TracerOptions.h"
-
+// Args Parser
 #include <CLI11.hpp>
+
 #include <array>
 
 int main(int argc, const char* argv[])
@@ -73,8 +55,12 @@ int main(int argc, const char* argv[])
     app.add_option("Scene File", sceneFileName, "Scene file");
 
     if(argc == 1)
+    {
         METU_LOG(app.help().c_str());
-    else try 
+        return 0;
+    }
+
+    try 
     {
         app.parse((argc), (argv));
     }
@@ -163,13 +149,11 @@ int main(int argc, const char* argv[])
     // Create a Self Node
     SelfNode selfNode(*visor, *tracerSystem,
                       tracerOptions, tracerParameters,
-                      tracerTypeName);
+                      tracerTypeName,
+                      Vector2i(resolution.data()));
     nError = selfNode.Initialize();
     visorInput->AttachVisorCallback(selfNode);
     ERROR_CHECK(NodeError, nError);
-
-    
-    
 
     // Do work loop of the self node
     try

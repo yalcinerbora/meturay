@@ -7,10 +7,16 @@
 SelfNode::SelfNode(VisorI& v, TracerSystemI& t,
                    const TracerOptions& opts,
                    const TracerParameters& params,
-                   const std::string& tracerTypeName)
+                   const std::string& tracerTypeName,
+                   const Vector2i& resolution)
     : visorThread(v)
     , tracerThread(t, opts, params, *this, tracerTypeName)
-{}
+{
+    tracerThread.SetImageResolution(resolution);
+    // Self Node has only one tracer
+    // so set image portion to resolution
+    tracerThread.SetImagePortion();
+}
 
 void SelfNode::ChangeScene(const std::u8string s)
 {

@@ -188,12 +188,10 @@ void VisorGL::WindowPosGLFW(GLFWwindow* w, int x, int y)
 void VisorGL::WindowFBGLFW(GLFWwindow* w, int width, int height)
 {
     assert(instance->window == w);
+    Vector2i size(width, height);
+    instance->viewportSize = size;
     if(instance->input)
-    {
-        Vector2i size(width, height);
-        instance->viewportSize = size;
         instance->input->WindowFBChanged(width, height);
-    }
 }
 
 void VisorGL::WindowSizeGLFW(GLFWwindow* w, int width, int height)
@@ -524,6 +522,7 @@ void VisorGL::RenderImage()
     }
 
     // Clear Buffer
+    glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Bind Shaders
@@ -773,6 +772,10 @@ VisorGL::VisorGL(const VisorOptions& opts,
     // Finally Show Window
     glfwShowWindow(window);
     open = true;
+    
+    // Unmake context current on this 
+    // thread after initialization
+    glfwMakeContextCurrent(nullptr);
 }
 
 VisorGL::~VisorGL()
@@ -818,8 +821,12 @@ void VisorGL::Render()
         t.Stop();
         double sleepMS = (1000.0 / vOpts.fpsLimit);
         sleepMS -= t.Elapsed<std::milli>();
-        std::chrono::duration<double, std::milli> chronoMillis(sleepMS);
-        std::this_thread::sleep_for(chronoMillis);
+        sleepMS = std::max(0.0, sleepMS);
+        if(sleepMS != 0.0)
+        {
+            std::chrono::duration<double, std::milli> chronoMillis(sleepMS);
+            std::this_thread::sleep_for(chronoMillis);
+        }        
     }
 }
 
@@ -907,4 +914,9 @@ Vector2i VisorGL::MonitorResolution() const
     const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
 
     return Vector2i(mode->width, mode->height);
+}
+
+void VisorGL::SetRenderingContextCurrent()
+{
+    glfwMakeContextCurrent(window);
 }

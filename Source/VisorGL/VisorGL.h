@@ -169,7 +169,6 @@ class VisorGL : public VisorI
         // Interface
         bool                    IsOpen() override;
         void                    Render() override;
-        void                    ProcessInputs() override;
         // Input System
         void                    SetInputScheme(VisorInputI&) override;
         // Data Related
@@ -184,13 +183,15 @@ class VisorGL : public VisorI
                                                   PixelFormat, size_t offset,
                                                   Vector2i start = Zero2i,
                                                   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-
         // Options
         const VisorOptions&     VisorOpts() const override;
         // Misc
-
         void                    SetWindowSize(const Vector2i& size) override;
         void                    SetFPSLimit(float) override;
-
         Vector2i                MonitorResolution() const override;
+
+        // Setting rendering context on current thread
+        void                    SetRenderingContextCurrent() override;
+        // Main Thread only Calls
+        void                    ProcessInputs() override;
 };

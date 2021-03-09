@@ -26,16 +26,15 @@ class SelfNode
         // Threads
         VisorThread     visorThread;
         TracerThread    tracerThread;
-
-        // Visor will use main thread
-
+        
     protected:
     public:
         // Constructor & Destructor
                     SelfNode(VisorI&, TracerSystemI&,
                              const TracerOptions&,
                              const TracerParameters&,
-                             const std::string& tracerTypeName);
+                             const std::string& tracerTypeName,
+                             const Vector2i& resolution);
                     ~SelfNode() = default;
 
         // From Command Callbacks

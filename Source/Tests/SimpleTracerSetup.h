@@ -286,11 +286,11 @@ inline bool SimpleTracerSetup::Init()
     visorView = std::unique_ptr<VisorI>(CreateVisorGL(visorOpts,
                                                       MockNode::IMAGE_RESOLUTION,
                                                       IMAGE_PIXEL_FORMAT));
+    visorView->SetRenderingContextCurrent();
     visorView->SetInputScheme(*visorInput);
     visorView->SetImageFormat(IMAGE_PIXEL_FORMAT);
-    visorView->SetImageRes(MockNode::IMAGE_RESOLUTION);
-
-    // Set Window Res wrt to monitor resolution
+    visorView->SetImageRes(MockNode::IMAGE_RESOLUTION);   
+    // Set Window Res wrt. monitor resolution
     Vector2i newImgSize = 3 * visorView->MonitorResolution() / 5;
     float ratio = static_cast<float>(newImgSize[1]) / SCREEN_RESOLUTION[1];
     newImgSize[0] = static_cast<int>(SCREEN_RESOLUTION[0] * ratio);
