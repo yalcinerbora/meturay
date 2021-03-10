@@ -11,7 +11,7 @@ in a single thread.
 
 // JESUS THAT NAMESPACES+TEMPLATES
 using CPUClock = std::chrono::high_resolution_clock;
-using CPUTimePoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
+using CPUTimePoint = std::chrono::time_point<CPUClock>;
 using CPUDuration = CPUTimePoint::duration;
 
 using CPUTimeNanos = std::nano;
@@ -19,6 +19,11 @@ using CPUTimeMicros = std::micro;
 using CPUTimeMillis = std::milli;
 using CPUTimeSeconds = std::ratio<1>;
 using CPUTimeMins = std::ratio<60>;
+
+#include "System.h"
+
+#ifdef METU_WINDOWS
+
 
 namespace Utility
 {

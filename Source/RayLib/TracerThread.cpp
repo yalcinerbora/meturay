@@ -5,6 +5,8 @@
 #include "VisorCamera.h"
 #include "SceneError.h"
 
+#include "RayLib/CPUTimer.h"
+
 TracerThread::TracerThread(TracerSystemI& t,
                            const TracerOptions& opts,
                            const TracerParameters& params,
@@ -34,6 +36,9 @@ void TracerThread::InitialWork()
 
 void TracerThread::LoopWork()
 {
+    Utility::CPUTimer timer;
+    timer.Start();
+
     bool imageAlreadyChanged = false;
     bool newSceneGenerated = false;
     bool reallocateTracer = false;
@@ -129,6 +134,16 @@ void TracerThread::LoopWork()
     // Finalaze the Works
     // (send the generated image to the visor etc.)
     tracer->Finalize();
+
+
+    double elapsedS = timer.Elapsed<CPUTimeSeconds>();
+    double rps = 2 * 2 * resolution.Get()[0] * resolution.Get()[1];
+    rps *= (1.0 / elapsedS);
+    rps /= 1'000'000.0;
+
+    ///*fprintf(stdout, "%c[2K", 27);*/
+    fprintf(stdout, "Time: %fs Rps: %fM ray/s\n",
+            elapsedS, rps);
 }
 
 void TracerThread::FinalWork()
