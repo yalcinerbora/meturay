@@ -20,6 +20,9 @@ Visor
 class VisorInputI;
 class VisorCallbacksI;
 
+struct VisorError;
+
+
 struct VisorOptions
 {
     // Technical
@@ -39,6 +42,7 @@ class VisorI
         virtual                         ~VisorI() = default;
 
         // Interface
+        virtual VisorError              Initialize() = 0;
         virtual bool                    IsOpen() = 0;
         virtual void                    Render() = 0;        
         // Input System
@@ -62,8 +66,9 @@ class VisorI
         virtual void                    SetWindowSize(const Vector2i& size) = 0;
         virtual void                    SetFPSLimit(float) = 0;
         virtual Vector2i                MonitorResolution() const = 0;
-        // Setting rendering context on current thread
+        // Setting/Releasing rendering context on current thread
         virtual void                    SetRenderingContextCurrent() = 0;
+        virtual void                    ReleaseRenderingContext() = 0;
         // Main Thread only Calls
         virtual void                    ProcessInputs() = 0;
 

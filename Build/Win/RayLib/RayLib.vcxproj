@@ -211,6 +211,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\TypeTraits.h" />
     <ClInclude Include="..\..\..\Source\RayLib\UTF8StringConversion.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorCallbacksI.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\VisorError.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorInputStructs.h" />
     <ClInclude Include="..\..\..\Source\RayLib\MovementSchemeI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorNode.h" />

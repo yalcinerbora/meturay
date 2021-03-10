@@ -245,6 +245,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\ThreadVariable.h">
       <Filter>Threads</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\VisorError.h">
+      <Filter>Errors</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

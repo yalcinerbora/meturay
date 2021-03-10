@@ -106,5 +106,5 @@ inline void LoopingThreadI::Pause(bool pause)
 
 inline bool LoopingThreadI::IsTerminated()
 {
-    return !thread.joinable();
+    return !thread.joinable() || InternallyTerminated();
 }

@@ -26,6 +26,7 @@ void VisorThread::LoopWork()
 void VisorThread::FinalWork() 
 {
     // No final work for Visor
+    visor.ReleaseRenderingContext();
 }
 
 void VisorThread::AccumulateImagePortion(const std::vector<Byte> data,

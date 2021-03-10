@@ -167,6 +167,8 @@ class VisorGL : public VisorI
                                 ~VisorGL();
 
         // Interface
+        VisorError              Initialize() override;
+
         bool                    IsOpen() override;
         void                    Render() override;
         // Input System
@@ -192,6 +194,7 @@ class VisorGL : public VisorI
 
         // Setting rendering context on current thread
         void                    SetRenderingContextCurrent() override;
+        void                    ReleaseRenderingContext() override;
         // Main Thread only Calls
         void                    ProcessInputs() override;
 };

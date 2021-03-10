@@ -114,6 +114,8 @@ void SelfNode::SendCurrentParameters(TracerParameters)
 // From Node Interface
 NodeError SelfNode::Initialize()
 {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
     // Start threads
     tracerThread.Start();
     visorThread.Start();

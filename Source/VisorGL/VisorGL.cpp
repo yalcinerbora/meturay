@@ -2,6 +2,7 @@
 
 #include "RayLib/Log.h"
 #include "RayLib/CPUTimer.h"
+#include"RayLib/VisorError.h"
 
 #include <map>
 #include <cassert>
@@ -559,223 +560,7 @@ VisorGL::VisorGL(const VisorOptions& opts,
     if(instance != nullptr) return;
     instance = this;
 
-    if(!glfwInit())
-    {
-        METU_ERROR_LOG("Could not Init GLFW");
-        assert(false);
-    }
-
-    glfwSetErrorCallback(ErrorCallbackGLFW);
-
-    // Common Window Hints
-    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-
-    // This was buggy on nvidia cards couple of years ago
-    // So instead manually convert image using 
-    // computer shader or w/e sRGB space
-    glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_FALSE);
-
-    glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
-    glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
-
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    glfwWindowHint(GLFW_CONTEXT_RELEASE_BEHAVIOR, GLFW_RELEASE_BEHAVIOR_NONE);
-
-    if(vOpts.stereoOn)
-        glfwWindowHint(GLFW_STEREO, GLFW_TRUE);
-
-    // Debug Context
-    if constexpr(IS_DEBUG_MODE)
-        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-    else
-        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_FALSE);
-
-    // At most 16x MSAA
-    glfwWindowHint(GLFW_SAMPLES, 16);
-
-    // Pixel of WindowFBO
-    // Full precision output
-    // TODO: make it to utilize vOpts.wFormat
-    int rBits = 0, 
-        gBits = 0, 
-        bBits = 0, 
-        aBits = 0;
-    switch(vOpts.wFormat)
-    {
-        case PixelFormat::RGBA8_UNORM:
-            aBits = 8;
-        case PixelFormat::RGB8_UNORM:
-            bBits = 8;
-        case PixelFormat::RG8_UNORM:
-            gBits = 8;
-        case PixelFormat::R8_UNORM:
-            rBits = 8;
-            break;              
-        case PixelFormat::RGBA16_UNORM:
-            aBits = 16;
-        case PixelFormat::RGB16_UNORM:
-            bBits = 16;
-        case PixelFormat::RG16_UNORM:
-            gBits = 16;
-        case PixelFormat::R16_UNORM:
-            rBits = 16;
-            break;                
-        case PixelFormat::RGBA_HALF:
-            aBits = 16;
-        case PixelFormat::RGB_HALF:
-            bBits = 16;
-        case PixelFormat::RG_HALF:
-            gBits = 16;
-        case PixelFormat::R_HALF:
-            rBits = 16;
-            break;
-        case PixelFormat::RGBA_FLOAT:
-            aBits = 32;
-        case PixelFormat::RGB_FLOAT:
-            bBits = 32;
-        case PixelFormat::RG_FLOAT:
-            gBits = 32;
-        case PixelFormat::R_FLOAT:
-            rBits = 32;
-            break;
-        default:
-            aBits = 8;
-            bBits = 8;
-            gBits = 8;
-            rBits = 8;
-            break;
-    }
-    glfwWindowHint(GLFW_RED_BITS, rBits);
-    glfwWindowHint(GLFW_GREEN_BITS, gBits);
-    glfwWindowHint(GLFW_BLUE_BITS, bBits);
-    glfwWindowHint(GLFW_ALPHA_BITS, aBits);
-
-    // No depth buffer or stencil buffer etc    
-    glfwWindowHint(GLFW_DEPTH_BITS, 0);
-    glfwWindowHint(GLFW_STENCIL_BITS, 0);
-
-    window = glfwCreateWindow(vOpts.wSize[0],
-                              vOpts.wSize[1],
-                              "METU Visor",
-                              nullptr,
-                              nullptr);
-    if(window == nullptr)
-    {
-        METU_ERROR_LOG("Could not create window.");
-        assert(false);
-    }
-    glfwMakeContextCurrent(window);
-
-    // Initial Option set
-    glfwSwapInterval((vOpts.vSyncOn) ? 1 : 0);
-
-    // Now Init GLEW
-    glewExperimental = GL_TRUE;
-    GLenum err = glewInit();
-    if(err != GLEW_OK)
-    {
-        METU_ERROR_LOG("%s", glewGetErrorString(err));
-        assert(false);
-    }
-
-    // Print Stuff Now
-    // Window Done
-    METU_LOG("Window Initialized.");
-    METU_LOG("GLEW\t: %s", glewGetString(GLEW_VERSION));
-    METU_LOG("GLFW\t: %s", glfwGetVersionString());
-    METU_LOG("");
-    METU_LOG("Renderer Information...");
-    METU_LOG("OpenGL\t: %s", glGetString(GL_VERSION));
-    METU_LOG("GLSL\t: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
-    METU_LOG("Device\t: %s", glGetString(GL_RENDERER));
-    METU_LOG("");
-
-    if constexpr(IS_DEBUG_MODE)
-    {
-        // Add Callback
-        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(VisorGL::OGLCallbackRender, nullptr);
-        glDebugMessageControl(GL_DONT_CARE,
-                              GL_DONT_CARE,
-                              GL_DONT_CARE,
-                              0,
-                              nullptr,
-                              GL_TRUE);
-    }
-
-    // Set Callbacks
-    glfwSetWindowPosCallback(window, VisorGL::WindowPosGLFW);
-    glfwSetFramebufferSizeCallback(window, VisorGL::WindowFBGLFW);
-    glfwSetWindowSizeCallback(window, VisorGL::WindowSizeGLFW);
-    glfwSetWindowCloseCallback(window, VisorGL::WindowCloseGLFW);
-    glfwSetWindowRefreshCallback(window, VisorGL::WindowRefreshGLFW);
-    glfwSetWindowFocusCallback(window, VisorGL::WindowFocusedGLFW);
-    glfwSetWindowIconifyCallback(window, VisorGL::WindowMinimizedGLFW);
-
-    glfwSetKeyCallback(window, VisorGL::KeyboardUsedGLFW);
-    glfwSetCursorPosCallback(window, VisorGL::MouseMovedGLFW);
-    glfwSetMouseButtonCallback(window, VisorGL::MousePressedGLFW);
-    glfwSetScrollCallback(window, VisorGL::MouseScrolledGLFW);
-
-    // Shaders
-    vertPP = ShaderGL(ShaderType::VERTEX, u8"Shaders/PProcessGeneric.vert");
-    fragPP = ShaderGL(ShaderType::FRAGMENT, u8"Shaders/PProcessGeneric.frag");
-    compAccum = ShaderGL(ShaderType::COMPUTE, u8"Shaders/AccumInput.comp");
-
-    ReallocImages();
-
-    // Sampler
-    glGenSamplers(1, &linearSampler);
-    glSamplerParameteri(linearSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glSamplerParameteri(linearSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-    // Buffer
-    glGenBuffers(1, &vBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6, PostProcessTriData, GL_STATIC_DRAW);
-
-    // Vertex Buffer
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    glBindVertexBuffer(0, vBuffer, 0, sizeof(float) * 2);
-    glEnableVertexAttribArray(IN_POS);
-    glVertexAttribFormat(IN_POS, 2, GL_FLOAT, false, 0);
-    glVertexAttribBinding(IN_POS, 0);
-
-    // Pre-Bind Everything
-    // States
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-
-    // Intel OGL complaints about this as redundant call?
-    //glBindFramebuffer(GL_FRAMEBUFFER, 0); 
-    // FBO
-    glColorMask(true, true, true, true);
-    glDepthMask(false);
-    glStencilMask(false);
-
-    // Sampler
-    glBindSampler(T_IN_COLOR, linearSampler);
-
-    // Bind VAO
-    glBindVertexArray(vao);
-
-    // Finally Show Window
-    glfwShowWindow(window);
-    open = true;
-    
-    // Unmake context current on this 
-    // thread after initialization
-    glfwMakeContextCurrent(nullptr);
+    Initialize();
 }
 
 VisorGL::~VisorGL()
@@ -919,4 +704,242 @@ Vector2i VisorGL::MonitorResolution() const
 void VisorGL::SetRenderingContextCurrent()
 {
     glfwMakeContextCurrent(window);
+
+    // TODO: temp fix for multi threaded visor
+    // GLEW functions does not? accesible between threads?
+    // It works on Maxwell but it did not work on
+    // Pascal (GTX 1050 is pascal?).
+
+    // Also this is not a permanent solution
+    // Program should not reload entire gl functions
+    // on every context set
+    // Threaded visor programs should set this once anyway
+    glewExperimental = GL_TRUE;
+    GLenum err = glewInit();
+    if(err != GLEW_OK)
+    {
+        METU_ERROR_LOG("%s", glewGetErrorString(err));
+        METU_ERROR_LOG("CONTEXT GENERATIOn");
+    }
+}
+
+void VisorGL::ReleaseRenderingContext()
+{
+    glfwMakeContextCurrent(nullptr);
+}
+
+VisorError VisorGL::Initialize()
+{
+    if(!glfwInit())
+    {
+        METU_ERROR_LOG("Could not Init GLFW");
+        return VisorError::WINDOW_GENERATOR_ERROR;
+    }
+
+    glfwSetErrorCallback(ErrorCallbackGLFW);
+
+    // Common Window Hints
+    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+
+    // This was buggy on nvidia cards couple of years ago
+    // So instead manually convert image using 
+    // computer shader or w/e sRGB space
+    glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_FALSE);
+
+    glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
+    glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    glfwWindowHint(GLFW_CONTEXT_RELEASE_BEHAVIOR, GLFW_RELEASE_BEHAVIOR_FLUSH);
+
+    if(vOpts.stereoOn)
+        glfwWindowHint(GLFW_STEREO, GLFW_TRUE);
+
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, IS_DEBUG_MODE);
+
+    // At most 16x MSAA
+    glfwWindowHint(GLFW_SAMPLES, 16);
+
+    // Pixel of WindowFBO
+    // Full precision output
+    // TODO: make it to utilize vOpts.wFormat
+    int rBits = 0, 
+        gBits = 0, 
+        bBits = 0, 
+        aBits = 0;
+    switch(vOpts.wFormat)
+    {
+        case PixelFormat::RGBA8_UNORM:
+            aBits = 8;
+        case PixelFormat::RGB8_UNORM:
+            bBits = 8;
+        case PixelFormat::RG8_UNORM:
+            gBits = 8;
+        case PixelFormat::R8_UNORM:
+            rBits = 8;
+            break;              
+        case PixelFormat::RGBA16_UNORM:
+            aBits = 16;
+        case PixelFormat::RGB16_UNORM:
+            bBits = 16;
+        case PixelFormat::RG16_UNORM:
+            gBits = 16;
+        case PixelFormat::R16_UNORM:
+            rBits = 16;
+            break;                
+        case PixelFormat::RGBA_HALF:
+            aBits = 16;
+        case PixelFormat::RGB_HALF:
+            bBits = 16;
+        case PixelFormat::RG_HALF:
+            gBits = 16;
+        case PixelFormat::R_HALF:
+            rBits = 16;
+            break;
+        case PixelFormat::RGBA_FLOAT:
+            aBits = 32;
+        case PixelFormat::RGB_FLOAT:
+            bBits = 32;
+        case PixelFormat::RG_FLOAT:
+            gBits = 32;
+        case PixelFormat::R_FLOAT:
+            rBits = 32;
+            break;
+        default:
+            aBits = 8;
+            bBits = 8;
+            gBits = 8;
+            rBits = 8;
+            break;
+    }
+    glfwWindowHint(GLFW_RED_BITS, rBits);
+    glfwWindowHint(GLFW_GREEN_BITS, gBits);
+    glfwWindowHint(GLFW_BLUE_BITS, bBits);
+    glfwWindowHint(GLFW_ALPHA_BITS, aBits);
+
+    // No depth buffer or stencil buffer etc    
+    glfwWindowHint(GLFW_DEPTH_BITS, 0);
+    glfwWindowHint(GLFW_STENCIL_BITS, 0);
+
+    window = glfwCreateWindow(vOpts.wSize[0],
+                              vOpts.wSize[1],
+                              "METU Visor",
+                              nullptr,
+                              nullptr);
+    if(window == nullptr)
+    {
+        return VisorError::WINDOW_GENERATION_ERROR;
+    }
+    glfwMakeContextCurrent(window);
+
+    // Initial Option set
+    glfwSwapInterval((vOpts.vSyncOn) ? 1 : 0);
+
+    // Now Init GLEW
+    glewExperimental = GL_TRUE;
+    GLenum err = glewInit();
+    if(err != GLEW_OK)
+    {
+        METU_ERROR_LOG("%s", glewGetErrorString(err));
+        return VisorError::RENDER_FUCTION_GENERATOR_ERROR;
+    }
+
+    // Print Stuff Now
+    // Window Done
+    METU_LOG("Window Initialized.");
+    METU_LOG("GLEW\t: %s", glewGetString(GLEW_VERSION));
+    METU_LOG("GLFW\t: %s", glfwGetVersionString());
+    METU_LOG("");
+    METU_LOG("Renderer Information...");
+    METU_LOG("OpenGL\t: %s", glGetString(GL_VERSION));
+    METU_LOG("GLSL\t: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+    METU_LOG("Device\t: %s", glGetString(GL_RENDERER));
+    METU_LOG("");
+
+    if constexpr(IS_DEBUG_MODE)
+    {
+        // Add Callback
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(VisorGL::OGLCallbackRender, nullptr);
+        glDebugMessageControl(GL_DONT_CARE,
+                              GL_DONT_CARE,
+                              GL_DONT_CARE,
+                              0,
+                              nullptr,
+                              GL_TRUE);
+    }
+
+    // Set Callbacks
+    glfwSetWindowPosCallback(window, VisorGL::WindowPosGLFW);
+    glfwSetFramebufferSizeCallback(window, VisorGL::WindowFBGLFW);
+    glfwSetWindowSizeCallback(window, VisorGL::WindowSizeGLFW);
+    glfwSetWindowCloseCallback(window, VisorGL::WindowCloseGLFW);
+    glfwSetWindowRefreshCallback(window, VisorGL::WindowRefreshGLFW);
+    glfwSetWindowFocusCallback(window, VisorGL::WindowFocusedGLFW);
+    glfwSetWindowIconifyCallback(window, VisorGL::WindowMinimizedGLFW);
+
+    glfwSetKeyCallback(window, VisorGL::KeyboardUsedGLFW);
+    glfwSetCursorPosCallback(window, VisorGL::MouseMovedGLFW);
+    glfwSetMouseButtonCallback(window, VisorGL::MousePressedGLFW);
+    glfwSetScrollCallback(window, VisorGL::MouseScrolledGLFW);
+
+    // Shaders
+    vertPP = ShaderGL(ShaderType::VERTEX, u8"Shaders/PProcessGeneric.vert");
+    fragPP = ShaderGL(ShaderType::FRAGMENT, u8"Shaders/PProcessGeneric.frag");
+    compAccum = ShaderGL(ShaderType::COMPUTE, u8"Shaders/AccumInput.comp");
+
+    ReallocImages();
+
+    // Sampler
+    glGenSamplers(1, &linearSampler);
+    glSamplerParameteri(linearSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glSamplerParameteri(linearSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    // Buffer
+    glGenBuffers(1, &vBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6, PostProcessTriData, GL_STATIC_DRAW);
+
+    // Vertex Buffer
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glBindVertexBuffer(0, vBuffer, 0, sizeof(float) * 2);
+    glEnableVertexAttribArray(IN_POS);
+    glVertexAttribFormat(IN_POS, 2, GL_FLOAT, false, 0);
+    glVertexAttribBinding(IN_POS, 0);
+
+    // Pre-Bind Everything
+    // States
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
+    // Intel OGL complaints about this as redundant call?
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+    // FBO
+    glColorMask(true, true, true, true);
+    glDepthMask(false);
+    glStencilMask(false);
+
+    // Sampler
+    glBindSampler(T_IN_COLOR, linearSampler);
+
+    // Bind VAO
+    glBindVertexArray(vao);
+
+    // Finally Show Window
+    glfwShowWindow(window);
+    open = true;
+    
+    // Unmake context current on this 
+    // thread after initialization
+    glfwMakeContextCurrent(nullptr);
 }
