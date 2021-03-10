@@ -20,58 +20,52 @@ using CPUTimeMillis = std::milli;
 using CPUTimeSeconds = std::ratio<1>;
 using CPUTimeMins = std::ratio<60>;
 
-#include "System.h"
-
-#ifdef METU_WINDOWS
-
-
 namespace Utility
 {
 
 class CPUTimer
 {
-    private:
-        CPUDuration             elapsed;
-        CPUTimePoint            start;
-
+    private:        
+        CPUDuration     elapsed;
+        CPUTimePoint    start;
 
     protected:
     public:
         // Constructors & Destructor
-                                CPUTimer() = default;
-                                ~CPUTimer() = default;
+                        CPUTimer() = default;
+                        ~CPUTimer() = default;
 
         // Util
-        void                    Start();
-        void			        Stop();
-        void			        Lap();
+        void            Start();
+        void			Stop();
+        void			Lap();
 
         template <class Time>
-        double                  Elapsed();
-    };
+        double          Elapsed();
+};
 
-    inline void CPUTimer::Start()
-    {
-        start = CPUClock::now();
-    }
+inline void CPUTimer::Start()
+{
+    start = CPUClock::now();
+}
 
-    inline void CPUTimer::Stop()
-    {
-        CPUTimePoint end = CPUClock::now();
-        elapsed = end - start;
-    }
+inline void CPUTimer::Stop()
+{
+    CPUTimePoint end = CPUClock::now();
+    elapsed = end - start;
+}
 
-    inline void CPUTimer::Lap()
-    {
-        CPUTimePoint end = CPUClock::now();
-        elapsed = end - start;
-        start = end;
-    }
+inline void CPUTimer::Lap()
+{
+    CPUTimePoint end = CPUClock::now();
+    elapsed = end - start;
+    start = end;
+}
 
-    template <class Time>
-    double CPUTimer::Elapsed()
-    {
-        return std::chrono::duration<double, Time>(elapsed).count();
-    }
+template <class Time>
+double CPUTimer::Elapsed()
+{
+    return std::chrono::duration<double, Time>(elapsed).count();
+}
 
 }

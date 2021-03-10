@@ -136,13 +136,14 @@ void TracerThread::LoopWork()
     tracer->Finalize();
 
 
+    timer.Stop();
     double elapsedS = timer.Elapsed<CPUTimeSeconds>();
     double rps = 2 * 2 * resolution.Get()[0] * resolution.Get()[1];
     rps *= (1.0 / elapsedS);
     rps /= 1'000'000.0;
 
-    ///*fprintf(stdout, "%c[2K", 27);*/
-    fprintf(stdout, "Time: %fs Rps: %fM ray/s\n",
+    fprintf(stdout, "%c[2K", 27);
+    fprintf(stdout, "Time: %fs Rps: %fM ray/s\r",
             elapsedS, rps);
 }
 
