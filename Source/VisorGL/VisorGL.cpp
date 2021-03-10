@@ -609,12 +609,9 @@ void VisorGL::Render()
     // TODO: optimize this skip multiple reset commands
     // just process the last and other commands afterwards
     VisorGLCommand command;
-    if(commandList.TryDequeue(command))
+    while(commandList.TryDequeue(command))
     {
         ProcessCommand(command);
-
-        if(command.type == VisorGLCommand::SET_PORTION)
-            commandList.TryEnqueue(std::move(command));
     }
 
     // Render Image
