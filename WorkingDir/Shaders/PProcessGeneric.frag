@@ -26,6 +26,5 @@ uniform T_IN_COLOR sampler2D gColor;
 
 void main(void)
 {
-	//fboColor = texture(gColor, fUV) + vec4(0.0f, 1.0f, 0.0f, 0.0f);
-	fboColor = vec4(0.0f, 1.0f, 0.0f, 0.0f);
+	fboColor = texture(gColor, fUV);
 }

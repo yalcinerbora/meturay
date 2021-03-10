@@ -69,10 +69,10 @@ int main(int argc, const char* argv[])
         return (app).exit(e);
     }
 
-    std::cout << "Res   " << resolution[0] << "x" << resolution[1] << std::endl;
-    std::cout << "TC    " << tracerConfigFileName << std::endl;
-    std::cout << "VC    " << visorConfigFileName << std::endl;
-    std::cout << "Scene " << sceneFileName << std::endl;
+    //std::cout << "Res   " << resolution[0] << "x" << resolution[1] << std::endl;
+    //std::cout << "TC    " << tracerConfigFileName << std::endl;
+    //std::cout << "VC    " << visorConfigFileName << std::endl;
+    //std::cout << "Scene " << sceneFileName << std::endl;
 
     // Error Vars
     TracerError tError = TracerError::OK;

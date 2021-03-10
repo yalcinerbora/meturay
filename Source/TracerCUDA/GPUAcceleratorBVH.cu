@@ -239,6 +239,9 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&,
                                              // List of surface AABBs
                                              const SurfaceAABBList& aabbMap)
 {
+    Utility::CPUTimer t;
+    t.Start();
+
     if(aabbMap.size() != idLookup.size())
         return TracerError::UNABLE_TO_CONSTRUCT_BASE_ACCELERATOR;
 
@@ -338,6 +341,11 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&,
     CUDA_CHECK(cudaMemcpy(bvhMemory, bvhNodes.data(),
                           sizeof(BVHNode<BaseLeaf>) * bvhNodes.size(),
                           cudaMemcpyHostToDevice));
+
+    t.Stop();
+    METU_LOG("Base BVH(d=%u) generated in %f seconds.",
+             maxDepth,
+             t.Elapsed<CPUTimeSeconds>());
 
     return TracerError::OK;
 }
