@@ -96,15 +96,13 @@ class VisorGL : public VisorI
         MPMCQueue<VisorGLCommand>   commandList;
         ThreadVariable<Vector2i>    viewportSize;
 
-        // Data coming from tracer nodes
-
-
         // Texture Related
         GLuint                      outputTextures[2];
         GLuint                      sampleCountTexture;
         GLuint                      bufferTexture;
         GLuint                      sampleTexture;
         GLuint                      linearSampler;
+        GLuint                      nearestSampler;
         int                         currentIndex;
  
         // Shader

@@ -67,7 +67,6 @@ void main(void)
 			colorOut = colorIn;
 		else
 			colorOut = (sampleCount * colorIn + bufferIn * 1) / totalSamples;
-
 		// Write
 		imageStore(iSample, pixIdOut, ivec4(totalSamples));
 	}

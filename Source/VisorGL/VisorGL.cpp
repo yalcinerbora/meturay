@@ -551,6 +551,7 @@ VisorGL::VisorGL(const VisorOptions& opts,
     , sampleTexture(0)
     , currentIndex(0)
     , linearSampler(0)
+    , nearestSampler(0)
     , vBuffer(0)
     , vao(0)
     , vOpts(opts)
@@ -565,7 +566,25 @@ VisorGL::VisorGL(const VisorOptions& opts,
 
 VisorGL::~VisorGL()
 {
-    // TODO: Delete buffers etc..
+    // Delete Vertex Arrays & Buffers
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vBuffer);
+
+    // Delete Shaders
+    vertPP = ShaderGL();
+    fragPP = ShaderGL();
+    compAccum = ShaderGL();
+
+    // Delete Samplers
+    glDeleteSamplers(1, &linearSampler);
+    glDeleteSamplers(1, &nearestSampler);
+
+    // Delete Textures
+    glDeleteTextures(1, &bufferTexture);
+    glDeleteTextures(1, &sampleTexture);
+    glDeleteTextures(1, &sampleCountTexture);
+    glDeleteTextures(2, outputTextures);
+
     if(window != nullptr) glfwDestroyWindow(window);
     instance = nullptr;
     glfwTerminate();
@@ -590,9 +609,12 @@ void VisorGL::Render()
     // TODO: optimize this skip multiple reset commands
     // just process the last and other commands afterwards
     VisorGLCommand command;
-    while(commandList.TryDequeue(command))
+    if(commandList.TryDequeue(command))
     {
         ProcessCommand(command);
+
+        if(command.type == VisorGLCommand::SET_PORTION)
+            commandList.TryEnqueue(std::move(command));
     }
 
     // Render Image
@@ -719,7 +741,6 @@ void VisorGL::SetRenderingContextCurrent()
     if(err != GLEW_OK)
     {
         METU_ERROR_LOG("%s", glewGetErrorString(err));
-        METU_ERROR_LOG("CONTEXT GENERATIOn");
     }
 }
 
@@ -903,6 +924,10 @@ VisorError VisorGL::Initialize()
     glSamplerParameteri(linearSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glSamplerParameteri(linearSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
+    glGenSamplers(1, &nearestSampler);
+    glSamplerParameteri(nearestSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glSamplerParameteri(nearestSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
     // Buffer
     glGenBuffers(1, &vBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vBuffer);
@@ -931,6 +956,8 @@ VisorError VisorGL::Initialize()
 
     // Sampler
     glBindSampler(T_IN_COLOR, linearSampler);
+    glBindSampler(T_IN_BUFFER, linearSampler);
+    glBindSampler(T_IN_SAMPLE, nearestSampler);
 
     // Bind VAO
     glBindVertexArray(vao);
@@ -942,4 +969,5 @@ VisorError VisorGL::Initialize()
     // Unmake context current on this 
     // thread after initialization
     glfwMakeContextCurrent(nullptr);
+    return VisorError::OK;
 }
