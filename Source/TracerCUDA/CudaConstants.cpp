@@ -178,6 +178,11 @@ uint32_t CudaGPU::SMCount() const
     return static_cast<uint32_t>(props.multiProcessorCount);
 }
 
+uint32_t CudaGPU::MaxActiveBlockPerSM(uint32_t threadsPerBlock) const
+{
+    return static_cast<uint32_t>(props.maxThreadsPerMultiProcessor) / threadsPerBlock;
+}
+
 uint32_t CudaGPU::RecommendedBlockCountPerSM(void* kernelFunc,
                                              uint32_t threadsPerBlock,
                                              uint32_t sharedSize) const

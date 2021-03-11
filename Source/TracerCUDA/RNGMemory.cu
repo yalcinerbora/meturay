@@ -33,7 +33,7 @@ RNGMemory::RNGMemory(uint32_t seed,
     {
         ranges.push_back(Vector2ul(0));
         ranges.back()[0] = totalCount;
-        ranges.back()[1] = BlocksPerSM * gpu.SMCount() * StaticThreadPerBlock1D;
+        ranges.back()[1] = gpu.MaxActiveBlockPerSM() * gpu.SMCount() * StaticThreadPerBlock1D;
         totalCount += ranges.back()[1];
     }
 
@@ -58,8 +58,9 @@ RNGMemory::RNGMemory(uint32_t seed,
     size_t totalOffset = 0;
     for(const auto& gpu : system.GPUList())
     {
-        randomStacks.emplace(&gpu, RNGGMem{d_ptr + totalOffset});
-        totalOffset += BlocksPerSM * gpu.SMCount() * StaticThreadPerBlock1D;
+        uint32_t gpuRNGStateCount = gpu.MaxActiveBlockPerSM() * gpu.SMCount() * StaticThreadPerBlock1D;
+        randomStacks.emplace(&gpu, RNGGMem{d_ptr + totalOffset, gpuRNGStateCount});
+        totalOffset += gpuRNGStateCount;
     }
     assert(totalCount == totalOffset);
 

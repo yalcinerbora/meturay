@@ -249,7 +249,7 @@ void KCGenAABBs(// O
 }
 
 template <class PGroup>
-__global__ __launch_bounds__(StaticThreadPerBlock1D)
+__global__ CUDA_LAUNCH_BOUNDS_1D
 void KCIntersectBVH(// O
                     HitKey* gMaterialKeys,
                     TransformId* gTransformIds,
@@ -376,7 +376,7 @@ void KCIntersectBVH(// O
 // This is fundemental BVH traversal kernel
 // It supparts partial traversal and continuation traversal(for scene tree)
 template <class PGroup>
-__global__ __launch_bounds__(StaticThreadPerBlock1D)
+__global__ CUDA_LAUNCH_BOUNDS_1D
 void KCIntersectBVHStackless(// O
                              HitKey* gMaterialKeys,
                              TransformId* gTransformIds,
@@ -540,7 +540,7 @@ void KCIntersectBVHStackless(// O
     }
 }
 
-__global__ __launch_bounds__(StaticThreadPerBlock1D)
+__global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCIntersectBaseBVH(// Output
                                HitKey* gHitKeys,
                                // I-O 

@@ -39,7 +39,7 @@ __global__ void KCGenerateCameraRaysCPU(// Output
                                         // Data to initialize auxiliary base data
                                         const RayAuxData auxBaseData)
 {
-    RandomGPU rng(gRNGStates.state, LINEAR_GLOBAL_ID);
+    RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
 
     // Total work
     const uint32_t totalWorkCount = pixelCount[0] * samplePerLocation *
@@ -136,7 +136,7 @@ __global__ void KCGenerateCameraRaysGPU(// Output
                                         // Data to initialize auxiliary base data
                                         const RayAuxData auxBaseData)
 {
-    RandomGPU rng(gRNGStates.state, LINEAR_GLOBAL_ID);
+    RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
 
     // Total work
     const Vector2i totalSamples = Vector2i(pixelCount[0] * samplePerLocation,

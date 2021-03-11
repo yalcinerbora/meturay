@@ -27,14 +27,14 @@ class RandomGPU
         static constexpr uint32_t   Range = Max-Min;
 
     private:
+        uint32_t                    threadId;
         curandStateMRG32k3a_t*      gStates;
         curandStateMRG32k3a_t       rState;
-        uint32_t                    threadId;
-
+        
     protected:
     public:
         // Constructor
-        __device__                  RandomGPU(curandStateMRG32k3a_t* gStates, uint32_t threadId);
+        __device__                  RandomGPU(RNGGMem& gStates, uint32_t threadId);
                                     RandomGPU(const RandomGPU&) = delete;
         RandomGPU&                  operator=(const RandomGPU&) = delete;
         __device__                  ~RandomGPU();
@@ -46,10 +46,10 @@ class RandomGPU
 };
 
 __device__
-inline RandomGPU::RandomGPU(curandStateMRG32k3a_t* gStates, uint32_t threadId)
-    : gStates(gStates)
-    , threadId(threadId)
-    , rState(gStates[threadId])
+inline RandomGPU::RandomGPU(RNGGMem& gStates, uint32_t localThreadId)
+    : threadId(localThreadId% gStates.count)
+    , gStates(gStates.state)
+    , rState(gStates.state[threadId])
 {}
 
 __device__

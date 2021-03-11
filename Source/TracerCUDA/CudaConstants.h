@@ -26,12 +26,18 @@ Thread per Block etc..
 static constexpr unsigned int WarpSize = 32;
 
 // Thread Per Block Constants
-static constexpr unsigned int BlocksPerSM = 32;
 static constexpr unsigned int StaticThreadPerBlock1D = 256;
 static constexpr unsigned int StaticThreadPerBlock2D_X = 16;
 static constexpr unsigned int StaticThreadPerBlock2D_Y = 16;
 static constexpr Vector2ui StaticThreadPerBlock2D = Vector2ui(StaticThreadPerBlock2D_X,
                                                               StaticThreadPerBlock2D_Y);
+
+// Cuda Kernel Optimization Hints
+// Since we call all of the kernels in a static manner
+// (in case of Block Size) hint the compiler
+// using __launch_bounds__ expression
+#define CUDA_LAUNCH_BOUNDS_1D __launch_bounds__(StaticThreadPerBlock1D)
+#define CUDA_LAUNCH_BOUNDS_2D __launch_bounds__(StaticThreadPerBlock2D_X * StaticThreadPerBlock2D_Y);
 
 struct CudaError : public ErrorI
 {
@@ -151,6 +157,7 @@ class CudaGPU
         Vector2i                MaxTexture2DSize() const;
 
         uint32_t                SMCount() const;
+        uint32_t                MaxActiveBlockPerSM(uint32_t threadsPerBlock = StaticThreadPerBlock1D) const;
         uint32_t                RecommendedBlockCountPerSM(void* kernkernelFuncelPtr,
                                                            uint32_t threadsPerBlock = StaticThreadPerBlock1D,
                                                            uint32_t sharedMemSize = 0) const;

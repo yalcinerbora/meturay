@@ -244,7 +244,7 @@
       <AdditionalCompilerOptions>/wd4834</AdditionalCompilerOptions>
       <PtxAsOptionV>true</PtxAsOptionV>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
-      <MaxRegCount />
+      <MaxRegCount>64</MaxRegCount>
       <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
   </ItemDefinitionGroup>
@@ -273,8 +273,7 @@
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;</CodeGeneration>
       <AdditionalCompilerOptions>/wd4834</AdditionalCompilerOptions>
-      <MaxRegCount>
-      </MaxRegCount>
+      <MaxRegCount>64</MaxRegCount>
       <GenerateLineInfo>true</GenerateLineInfo>
       <PtxAsOptionV>true</PtxAsOptionV>
       <HostDebugInfo>true</HostDebugInfo>

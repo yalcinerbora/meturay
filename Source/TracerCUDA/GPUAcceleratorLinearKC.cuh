@@ -51,7 +51,7 @@ void KCGenAABBs(// O
 
 // Fundamental Construction Kernel
 template <class PGroup>
-__global__ __launch_bounds__(StaticThreadPerBlock1D)
+__global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCConstructLinear(// O
                               PGroup::LeafData* gLeafOut,
                               // Input
@@ -118,7 +118,7 @@ static void KCConstructLinear(// O
 
 // This is fundemental Linear traversal kernel
 template <class PGroup>
-__global__ //__launch_bounds__(StaticThreadPerBlock1D)
+__global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCIntersectLinear(// O
                               HitKey* gMaterialKeys,
                               TransformId* gTransformIds,
@@ -212,7 +212,7 @@ static void KCIntersectLinear(// O
 }
 
 
-__global__ __launch_bounds__(StaticThreadPerBlock1D)
+__global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCIntersectBaseLinear(// Output                                  
                                   HitKey* gHitKeys,
                                   // I-O

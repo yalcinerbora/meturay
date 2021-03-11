@@ -46,7 +46,7 @@ template<class GlobalState, class LocalState,
          SurfaceFunc<MGroup::Surface, 
                      PGroup::HitData, 
                      PGroup::PrimitiveData> SurfFunc>
-__global__ __launch_bounds__(StaticThreadPerBlock1D)
+__global__ CUDA_LAUNCH_BOUNDS_1D
 void KCWork(// Output
             HitKey* gOutBoundKeys,
             RayGMem* gOutRays,
@@ -77,7 +77,7 @@ void KCWork(// Output
 
     // Pre-grid stride loop
     // RNG is allocated for each SM (not for each thread)
-    RandomGPU rng(gRNGStates.state, LINEAR_GLOBAL_ID);
+    RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
    
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;

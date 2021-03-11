@@ -5,5 +5,6 @@
 
 struct RNGGMem
 {
-    curandStateMRG32k3a_t* state;
+    curandStateMRG32k3a_t*  state;
+    uint32_t                count;
 };
