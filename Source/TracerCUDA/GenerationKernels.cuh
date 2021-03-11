@@ -25,19 +25,20 @@ Uses statified sampling
 
 // Templated Camera Ray Generation Kernel
 template<class RayAuxData, AuxInitFunc<RayAuxData> AuxFunc>
-__global__ void KCGenerateCameraRaysCPU(// Output
-                                        RayGMem* gRays,
-                                        RayAuxData* gAuxiliary,
-                                        ImageGMem<Vector4f> imgMem,
-                                        // Input
-                                        RNGGMem gRNGStates,
-                                        const VisorCamera cam,
-                                        const uint32_t samplePerLocation,
-                                        const Vector2i resolution,
-                                        const Vector2i pixelStart,
-                                        const Vector2i pixelCount,
-                                        // Data to initialize auxiliary base data
-                                        const RayAuxData auxBaseData)
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void KCGenerateCameraRaysCPU(// Output
+                             RayGMem* gRays,
+                             RayAuxData* gAuxiliary,
+                             ImageGMem<Vector4f> imgMem,
+                             // Input
+                             RNGGMem gRNGStates,
+                             const VisorCamera cam,
+                             const uint32_t samplePerLocation,
+                             const Vector2i resolution,
+                             const Vector2i pixelStart,
+                             const Vector2i pixelCount,
+                             // Data to initialize auxiliary base data
+                             const RayAuxData auxBaseData)
 {
     RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
 
@@ -113,28 +114,27 @@ __global__ void KCGenerateCameraRaysCPU(// Output
                 pixelIdLinear,
                 sampleIdLinear);
 
-
         // Initialize Samples
         ImageAddSample(imgMem, pixelIdLinear, 1);
-
     }
 }
 
 // Templated Camera Ray Generation Kernel
 template<class RayAuxData, AuxInitFunc<RayAuxData> AuxFunc>
-__global__ void KCGenerateCameraRaysGPU(// Output
-                                        RayGMem* gRays,
-                                        RayAuxData* gAuxiliary,
-                                        ImageGMem<Vector4f> imgMem,
-                                        // Input
-                                        RNGGMem gRNGStates,
-                                        const GPUCameraI* gCam,
-                                        const uint32_t samplePerLocation,
-                                        const Vector2i resolution,
-                                        const Vector2i pixelStart,
-                                        const Vector2i pixelCount,
-                                        // Data to initialize auxiliary base data
-                                        const RayAuxData auxBaseData)
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void KCGenerateCameraRaysGPU(// Output
+                             RayGMem* gRays,
+                             RayAuxData* gAuxiliary,
+                             ImageGMem<Vector4f> imgMem,
+                             // Input
+                             RNGGMem gRNGStates,
+                             const GPUCameraI* gCam,
+                             const uint32_t samplePerLocation,
+                             const Vector2i resolution,
+                             const Vector2i pixelStart,
+                             const Vector2i pixelCount,
+                             // Data to initialize auxiliary base data
+                             const RayAuxData auxBaseData)
 {
     RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
 

@@ -28,8 +28,7 @@ class DirectTracerWork
         // Constrcutors & Destructor
                                         DirectTracerWork(const GPUMaterialGroupI& mg,
                                                          const GPUPrimitiveGroupI& pg,
-                                                         const GPUTransformI* const* t)
-                                            : GPUWorkBatch(mg, pg, t) {}
+                                                         const GPUTransformI* const* t);
                                         ~DirectTracerWork() = default;
 
         void                            GetReady() override {}
@@ -128,7 +127,8 @@ class AmbientOcclusionMissWork
     public:
         // Constrcutors & Destructor
                                         AmbientOcclusionMissWork(const GPUMaterialGroupI& mg,
-                                                                 const GPUPrimitiveGroupI& pg);
+                                                                 const GPUPrimitiveGroupI& pg,
+                                                                 const GPUTransformI* const* t);
                                         ~AmbientOcclusionMissWork() = default;
 
         void                            GetReady() override {}
@@ -136,13 +136,23 @@ class AmbientOcclusionMissWork
         
 };
 
+template<class M, class P>
+DirectTracerWork<M, P>::DirectTracerWork(const GPUMaterialGroupI& mg,
+                                         const GPUPrimitiveGroupI& pg,
+                                         const GPUTransformI* const* t)
+    : GPUWorkBatch<DirectTracerGlobal, EmptyState, RayAuxBasic,
+                   M, P, BasicWork<M>, 
+                   P::GetSurfaceFunction>(mg, pg, t)
+{}
 
 template<class M, class P>
 PathTracerWork<M, P>::PathTracerWork(const GPUMaterialGroupI& mg,
                                      const GPUPrimitiveGroupI& pg,
                                      const GPUTransformI* const* t,
                                      bool neeOn)
-    : GPUWorkBatch(mg, pg, t)
+    : GPUWorkBatch<PathTracerGlobal, PathTracerLocal, RayAuxPath,
+                   M, P, PathWork<M>,
+                   P::GetSurfaceFunction>(mg, pg, t)
     , neeOn(neeOn) 
 {
     // Populate localData
@@ -167,7 +177,9 @@ PathTracerLightWork<M, P>::PathTracerLightWork(const GPUMaterialGroupI& mg,
                                                const GPUTransformI* const* t,
                                                bool neeOn,
                                                bool emptyPrimitive)
-    : GPUWorkBatch(mg, pg, t)
+    : GPUWorkBatch<PathTracerGlobal, PathTracerLocal, RayAuxPath,
+                   M, P, PathLightWork<M>,
+                   P::GetSurfaceFunction>(mg, pg, t)
     , neeOn(neeOn) 
 {
     // Populate localData
@@ -179,13 +191,18 @@ template<class M, class P>
 AmbientOcclusionWork<M, P>::AmbientOcclusionWork(const GPUMaterialGroupI& mg,
                                                  const GPUPrimitiveGroupI& pg,
                                                  const GPUTransformI* const* t)
-    : GPUWorkBatch(mg, pg, t)
+    : GPUWorkBatch<AmbientOcclusionGlobal, EmptyState, RayAuxAO,
+                   M, P, AOWork<M>, 
+                   P::GetSurfaceFunction>(mg, pg, t)
 {}
 
 template<class M, class P>
 AmbientOcclusionMissWork<M, P>::AmbientOcclusionMissWork(const GPUMaterialGroupI& mg,
-                                                         const GPUPrimitiveGroupI& pg)
-    : GPUWorkBatch(mg, pg)
+                                                         const GPUPrimitiveGroupI& pg,
+                                                         const GPUTransformI* const* t)
+    : GPUWorkBatch<AmbientOcclusionGlobal, EmptyState, RayAuxAO,
+                   M, P, AOMissWork<M>,
+                   P::GetSurfaceFunction>(mg, pg, t)
 {}
 
 // Basic Tracer Work Batches
