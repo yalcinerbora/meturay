@@ -46,7 +46,7 @@ int main(int argc, const char* argv[])
     app.add_option("-v,--visorConfig", visorConfigFileName, "Visor Configuration json File")
         ->required()
         ->expected(1)
-        ->check(CLI::ExistingFile);   
+        ->check(CLI::ExistingFile);
     app.add_option("-r, --resolution", resolution, "Initial Image Resolution")
         ->required()
         ->expected(1)
@@ -60,11 +60,11 @@ int main(int argc, const char* argv[])
         return 0;
     }
 
-    try 
+    try
     {
         app.parse((argc), (argv));
     }
-    catch(const CLI::ParseError& e) 
+    catch(const CLI::ParseError& e)
     {
         return (app).exit(e);
     }
@@ -140,7 +140,7 @@ int main(int argc, const char* argv[])
     visor->SetInputScheme(*visorInput);
 
     // Generate Tracer
-    SharedLib tracerDLL(tracerDLLName);    
+    SharedLib tracerDLL(tracerDLLName);
     dError = tracerDLL.GenerateObject(tracerSystem, tracerDLLEntryFunctionNames);
     ERROR_CHECK(DLLError, dError);
     tError = tracerSystem->Initialize(surfaceLoaderLibraries, scenePartitionType);
