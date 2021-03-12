@@ -21,6 +21,7 @@ the VisorGL singleton.
 #include "RayLib/ThreadVariable.h"
 
 #include "ShaderGL.h"
+#include "VisorGUI.h"
 
 // Basic command list implementation
 struct VisorGLCommand
@@ -113,6 +114,9 @@ class VisorGL : public VisorI
         // Vertex
         GLuint                      vao;
         GLuint                      vBuffer;
+
+        // GUI
+        std::unique_ptr<VisorGUI>   visorGUI;
 
         static KeyAction            DetermineAction(int);
         static MouseButtonType      DetermineMouseButton(int);

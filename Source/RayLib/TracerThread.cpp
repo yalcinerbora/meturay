@@ -99,6 +99,7 @@ void TracerThread::LoopWork()
 
         imageAlreadyChanged = true;
     }
+    if(!tracer) return;
 
     // Check if image is changed
     Vector2i newRes;

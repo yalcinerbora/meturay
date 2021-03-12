@@ -557,6 +557,7 @@ VisorGL::VisorGL(const VisorOptions& opts,
     , vOpts(opts)
     , imageSize(imgRes)
     , imagePixFormat(imagePixelFormat)
+    , visorGUI(nullptr)
 {
     if(instance != nullptr) return;
     instance = this;
@@ -598,6 +599,8 @@ bool VisorGL::IsOpen()
 void VisorGL::ProcessInputs()
 {
     glfwPollEvents();
+    if(visorGUI)
+        visorGUI->ProcessInputs();
 }
 
 void VisorGL::Render()
@@ -614,8 +617,15 @@ void VisorGL::Render()
         ProcessCommand(command);
     }
 
+    if(vOpts.enableGUI)
+        visorGUI->RenderStart();
+
     // Render Image
     RenderImage();
+
+    // Render GUI
+    if(vOpts.enableGUI)
+        visorGUI->RenderEnd();
 
     // Finally Swap Buffers
     glfwSwapBuffers(window);
@@ -962,6 +972,10 @@ VisorError VisorGL::Initialize()
     // Finally Show Window
     glfwShowWindow(window);
     open = true;
+
+    // CheckGUI and Initialize
+    if(vOpts.enableGUI)
+        visorGUI = std::make_unique<VisorGUI>(window);
     
     // Unmake context current on this 
     // thread after initialization

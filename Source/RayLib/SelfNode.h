@@ -24,9 +24,11 @@ class SelfNode
 {
     private:
         // Threads
-        VisorThread     visorThread;
+        //VisorThread     visorThread;
         TracerThread    tracerThread;
-        
+
+        VisorI&         visor;
+
     protected:
     public:
         // Constructor & Destructor

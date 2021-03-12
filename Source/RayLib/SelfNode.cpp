@@ -3,14 +3,16 @@
 #include "TracerOptions.h"
 #include "VisorCamera.h"
 #include "AnalyticData.h"
+#include "VisorI.h"
 
 SelfNode::SelfNode(VisorI& v, TracerSystemI& t,
                    const TracerOptions& opts,
                    const TracerParameters& params,
                    const std::string& tracerTypeName,
                    const Vector2i& resolution)
-    : visorThread(v)
-    , tracerThread(t, opts, params, *this, tracerTypeName)
+    : tracerThread(t, opts, params, *this, tracerTypeName)
+    //, visorThread(v)
+    , visor(v)
 {
     tracerThread.SetImageResolution(resolution);
     // Self Node has only one tracer
@@ -95,7 +97,8 @@ void SelfNode::SendImage(const std::vector<Byte> data,
                          PixelFormat f, size_t offset,
                          Vector2i start, Vector2i end)
 {
-    visorThread.AccumulateImagePortion(std::move(data), f, offset, start, end);
+    //visorThread.AccumulateImagePortion(std::move(data), f, offset, start, end);
+    visor.AccumulatePortion(std::move(data), f, offset, start, end);
 }
 
 void SelfNode::SendCurrentOptions(TracerOptions)
@@ -118,15 +121,25 @@ NodeError SelfNode::Initialize()
 
     // Start threads
     tracerThread.Start();
-    visorThread.Start();
+    //visorThread.Start();
+
+    // Set Rendering context on main thread
+    visor.SetRenderingContextCurrent();
+
     return NodeError::OK;
 }
 
 void SelfNode::Work()
 { 
-    while(!visorThread.IsTerminated() &&
+    //while(!visorThread.IsTerminated() &&
+    //      !tracerThread.IsTerminated())
+    while(visor.IsOpen() &&
           !tracerThread.IsTerminated())
     {
+        // Render Loop
+        visor.Render();
+        visor.ProcessInputs();
+
         // Process Inputs MUST be called on main thread
         // since Windows OS event poll is required to be called
         // on main thread, I don't know about other operating systems
@@ -135,10 +148,10 @@ void SelfNode::Work()
         // and it also requires "glfwPollEvents()" function
         // (which this function calls it internally)
         // to be called on main thread
-        visorThread.ProcessInputs();
+        //visorThread.ProcessInputs();
     }
         
     // Visor thread is closed terminate tracer thread
-    visorThread.Stop();
+    //visorThread.Stop();
     tracerThread.Stop();    
 }

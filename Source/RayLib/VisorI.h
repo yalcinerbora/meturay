@@ -34,6 +34,8 @@ struct VisorOptions
     PixelFormat         wFormat;
     Vector2i            wSize;
     float               fpsLimit;
+    // Misc
+    bool                enableGUI;
 };
 
 class VisorI
