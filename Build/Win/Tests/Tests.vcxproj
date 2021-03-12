@@ -81,7 +81,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <AdditionalCompilerOptions>
       </AdditionalCompilerOptions>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
-      <FastMath>true</FastMath>
+      <FastMath>false</FastMath>
     </CudaCompile>
     <CudaLink />
   </ItemDefinitionGroup>
@@ -122,7 +122,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       </AdditionalCompilerOptions>
       <HostDebugInfo>true</HostDebugInfo>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
-      <FastMath>true</FastMath>
+      <FastMath>false</FastMath>
     </CudaCompile>
     <CudaLink />
   </ItemDefinitionGroup>

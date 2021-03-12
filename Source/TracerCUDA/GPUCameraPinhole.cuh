@@ -3,6 +3,7 @@
 #include "GPUCameraI.h"
 #include "DeviceMemory.h"
 #include "GPUTransformI.h"
+#include "TypeTraits.h"
 
 class GPUCameraPinhole final : public GPUCameraI
 {
@@ -140,9 +141,8 @@ inline GPUCameraPinhole::GPUCameraPinhole(const Vector3& pos,
     // Camera Vector Correction
     Vector3 gazeDir = gazePoint - position;
     right = Cross(gazeDir, up).Normalize();
-    //up = Cross(right, gazeDir).Normalize();
-    //gazeDir = Cross(up, right).Normalize();
-
+    up = Cross(right, gazeDir).Normalize();
+    gazeDir = Cross(up, right).Normalize();
 
     // Camera parameters
     bottomLeft = (position
@@ -240,3 +240,6 @@ inline size_t CPUCameraGroupPinhole::UsedCPUMemory() const
             sizeof(TransformId) * hTransformIds.size() +
             sizeof(Data) * hCameraData.size());
 }
+
+static_assert(IsTracerClass<CPUCameraGroupPinhole>::value,
+              "CPUCameraPinhole is not a tracer class");

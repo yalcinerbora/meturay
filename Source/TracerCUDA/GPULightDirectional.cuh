@@ -3,6 +3,7 @@
 #include "GPULightI.h"
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
+#include "TypeTraits.h"
 
 class GPULightDirectional : public GPULightI
 {
@@ -164,3 +165,6 @@ inline size_t CPULightGroupDirectional::UsedCPUMemory() const
 
     return totalSize;
 }
+
+static_assert(IsTracerClass<CPULightGroupDirectional>::value,
+              "CPULightGroupDirectional is not a tracer class");

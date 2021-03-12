@@ -79,7 +79,7 @@
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <FastMath>true</FastMath>
+      <FastMath>false</FastMath>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
@@ -130,7 +130,7 @@
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <FastMath>true</FastMath>
+      <FastMath>false</FastMath>
     </CudaCompile>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;Ws2_32.lib</AdditionalDependencies>

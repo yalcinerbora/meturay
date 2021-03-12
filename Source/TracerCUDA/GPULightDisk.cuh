@@ -4,6 +4,7 @@
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
 #include "Random.cuh"
+#include "TypeTraits.h"
 
 class GPULightDisk final : public GPULightI
 {
@@ -200,3 +201,6 @@ inline size_t CPULightGroupDisk::UsedCPUMemory() const
 
     return totalSize;
 }
+
+static_assert(IsTracerClass<CPULightGroupDisk>::value,
+              "CPULightGroupDisk is not a tracer class");

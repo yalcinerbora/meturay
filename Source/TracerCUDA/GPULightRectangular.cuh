@@ -4,6 +4,7 @@
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
 #include "Random.cuh"
+#include "TypeTraits.h"
 
 class GPULightRectangular final : public GPULightI
 {
@@ -201,3 +202,6 @@ inline size_t CPULightGroupRectangular::UsedCPUMemory() const
 
     return totalSize;
 }
+
+static_assert(IsTracerClass<CPULightGroupRectangular>::value,
+              "CPULightGroupRectangular is not a tracer class");

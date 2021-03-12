@@ -247,7 +247,7 @@
       <MaxRegCount>
       </MaxRegCount>
       <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
-      <FastMath>true</FastMath>
+      <FastMath>false</FastMath>
     </CudaCompile>
     <CudaLink />
   </ItemDefinitionGroup>
@@ -283,7 +283,7 @@
       <HostDebugInfo>true</HostDebugInfo>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
-      <FastMath>true</FastMath>
+      <FastMath>false</FastMath>
     </CudaCompile>
     <CudaLink />
   </ItemDefinitionGroup>

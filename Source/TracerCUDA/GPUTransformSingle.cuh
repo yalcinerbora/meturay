@@ -2,6 +2,7 @@
 
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
+#include "TypeTraits.h"
 
 class GPUTransformSingle : public GPUTransformI
 {
@@ -97,11 +98,19 @@ inline GPUTransformSingle::GPUTransformSingle(const Matrix4x4& transform,
 	: transform(transform)
 	, invTransform(invTransform)
 {
-	// TODO: This should word for only rigid body transformations?
-	TransformGen::Space(invRotation,
-						Vector3f(transform(0, 0), transform(0, 1), transform(0, 2)),
-						Vector3f(transform(1, 0), transform(1, 1), transform(1, 2)),
-						Vector3f(transform(2, 0), transform(2, 1), transform(2, 2)));
+	// Top Left 3x3 Matrix defines rotation which is space defining 3 vectors
+	Vector3f x(transform(0, 0), transform(0, 1), transform(0, 2));
+	Vector3f y(transform(1, 0), transform(1, 1), transform(1, 2));
+	Vector3f z(transform(2, 0), transform(2, 1), transform(2, 2));
+	// Normalize space definiting linearly indepenent 
+	// and orthogonal vectors
+	// These may not be unit vectors since transformation
+	// may include scale factor
+	x.NormalizeSelf();
+	y.NormalizeSelf();
+	z.NormalizeSelf();
+
+	TransformGen::Space(invRotation, x, y, z);
 	rotation = invRotation.Conjugate();
 }
 
@@ -201,3 +210,6 @@ inline size_t CPUTransformSingle::UsedCPUMemory() const
 {
 	return 0;
 }
+
+static_assert(IsTracerClass<CPUTransformSingle>::value,
+			  "CPUTransformSingle is not a tracer class");

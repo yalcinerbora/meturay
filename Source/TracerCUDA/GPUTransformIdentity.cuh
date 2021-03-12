@@ -4,6 +4,7 @@
 #include "DeviceMemory.h"
 #include "AuxiliaryDataKernels.cuh"
 #include "RayLib/SceneNodeNames.h"
+#include "TypeTraits.h"
 
 class GPUTransformIdentity : public GPUTransformI
 {
@@ -180,3 +181,6 @@ inline size_t CPUTransformIdentity::UsedCPUMemory() const
 {
 	return 0;
 }
+
+static_assert(IsTracerClass<CPUTransformIdentity>::value,
+			  "CPUTransformIdentity is not a tracer class");

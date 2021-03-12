@@ -48,7 +48,6 @@ inline bool DoNextEventEstimation(HitKey& key,
     lDistance = (light->PrimitiveIndex() != INVALID_PRIMITIVE_ID) 
                     ? FLT_MAX 
                     : (lDistance + MathConstants::Epsilon);
-
     return true;
 }
 

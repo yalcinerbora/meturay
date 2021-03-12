@@ -3,6 +3,7 @@
 #include "GPULightI.h"
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
+#include "TypeTraits.h"
 
 class GPULightPoint final : public GPULightI
 {
@@ -165,3 +166,6 @@ inline size_t CPULightGroupPoint::UsedCPUMemory() const
 
     return totalSize;
 }
+
+static_assert(IsTracerClass<CPULightGroupPoint>::value,
+              "CPULightGroupPoint is not a tracer class");

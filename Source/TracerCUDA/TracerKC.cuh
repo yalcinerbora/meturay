@@ -350,7 +350,6 @@ inline void PathWork(// Output
     else InvalidRayWrite(NEE_RAY_INDEX);
 }
 
-
 template <class MGroup>
 __device__
 inline void AOMissWork(// Output

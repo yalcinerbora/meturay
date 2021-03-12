@@ -113,7 +113,7 @@ namespace MathConstants
     static constexpr double DegToRadCoef_d = Pi_d / 180.0;
     static constexpr double RadToDegCoef_d = 180.0 / Pi_d;
 
-    static constexpr double Epsilon_d = 1.0e-6;
+    static constexpr double Epsilon_d = 1.0e-5;
     static constexpr double LargeEpsilon_d = 1.0e-4;
     static constexpr double VeryLargeEpsilon_d = 1.0e-2;
 
