@@ -11,7 +11,6 @@ and vice versa.
 #include "NodeI.h"
 #include "VisorCallbacksI.h"
 #include "TracerCallBacksI.h"
-#include "VisorThread.h"
 #include "TracerThread.h"
 
 class VisorI;
@@ -24,9 +23,7 @@ class SelfNode
 {
     private:
         // Threads
-        //VisorThread     visorThread;
         TracerThread    tracerThread;
-
         VisorI&         visor;
 
     protected:

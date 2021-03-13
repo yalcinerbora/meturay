@@ -28,4 +28,12 @@
       <Filter>Shaders</Filter>
     </Text>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\WorkingDir\Shaders\Reinhard2002.comp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\..\..\WorkingDir\Shaders\LumReduction.comp">
+      <Filter>Shaders</Filter>
+    </None>
+  </ItemGroup>
 </Project>

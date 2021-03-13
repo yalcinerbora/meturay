@@ -110,6 +110,8 @@ class VisorGL : public VisorI
         ShaderGL                    vertPP;
         ShaderGL                    fragPP;
         ShaderGL                    compAccum;
+        ShaderGL                    compLumReduce;
+        ShaderGL                    compToneMap;
 
         // Vertex
         GLuint                      vao;

@@ -2,11 +2,15 @@
 /*
 	**Accumulate Input Generic Shader**
 
-	File Name	: AccumInput.frag
+	File Name	: AccumInput.comp
 	Author		: Bora Yalciner
 	Description	:
 
-		Pass Trough Shader
+		Shader Averages the current image that is 
+		being displayed with the new image that is
+		brought by Tracer System.
+
+		It supports sub image averaging etc.
 */
 
 // Defines
@@ -16,7 +20,6 @@
 #define U_RES layout(location = 0)
 #define U_START layout(location = 1)
 #define U_END layout(location = 2)
-#define U_SAMPLE layout(location = 3)
 
 #define T_IN_COLOR layout(binding = 0)
 #define T_IN_BUFFER layout(binding = 1)

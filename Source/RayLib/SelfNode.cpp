@@ -11,7 +11,6 @@ SelfNode::SelfNode(VisorI& v, TracerSystemI& t,
                    const std::string& tracerTypeName,
                    const Vector2i& resolution)
     : tracerThread(t, opts, params, *this, tracerTypeName)
-    //, visorThread(v)
     , visor(v)
 {
     tracerThread.SetImageResolution(resolution);
@@ -97,7 +96,6 @@ void SelfNode::SendImage(const std::vector<Byte> data,
                          PixelFormat f, size_t offset,
                          Vector2i start, Vector2i end)
 {
-    //visorThread.AccumulateImagePortion(std::move(data), f, offset, start, end);
     visor.AccumulatePortion(std::move(data), f, offset, start, end);
 }
 
@@ -117,11 +115,8 @@ void SelfNode::SendCurrentParameters(TracerParameters)
 // From Node Interface
 NodeError SelfNode::Initialize()
 {
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-
-    // Start threads
+    // Start tracer thread
     tracerThread.Start();
-    //visorThread.Start();
 
     // Set Rendering context on main thread
     visor.SetRenderingContextCurrent();
@@ -131,14 +126,11 @@ NodeError SelfNode::Initialize()
 
 void SelfNode::Work()
 { 
-    //while(!visorThread.IsTerminated() &&
-    //      !tracerThread.IsTerminated())
     while(visor.IsOpen() &&
           !tracerThread.IsTerminated())
     {
         // Render Loop
         visor.Render();
-        visor.ProcessInputs();
 
         // Process Inputs MUST be called on main thread
         // since Windows OS event poll is required to be called
@@ -148,10 +140,9 @@ void SelfNode::Work()
         // and it also requires "glfwPollEvents()" function
         // (which this function calls it internally)
         // to be called on main thread
-        //visorThread.ProcessInputs();
+        visor.ProcessInputs();
     }
         
-    // Visor thread is closed terminate tracer thread
-    //visorThread.Stop();
+    // Visor is closed terminate tracer thread
     tracerThread.Stop();    
 }

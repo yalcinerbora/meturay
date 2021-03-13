@@ -1,0 +1,121 @@
+#version 430
+/*
+	**Luminance Reduction Shader**
+
+	File Name	: LumReduction.comp
+	Author		: Bora Yalciner
+	Description	:
+
+		Luminance Reduction shader is a parallel reduction shader
+		that generates average luminance (although only adds luminance,
+		division should be done outside of the kernel) and
+		Max luminance value of the image.
+
+		It assumes image is RGB[A] format and it converts It to YCbCr
+		color space and uses Y as Luminance value.
+		
+*/
+
+// Utilize Nvidia Shuffle Operations if avail
+#extension GL_NV_shader_thread_shuffle: enable
+
+//#if supported(NV_shader_thread_shuffle)
+//#extension NV_shader_thread_shuffle: enable
+//#endif
+
+#ifdef GL_NV_shader_thread_shuffle
+#endif
+
+// Defines
+#define U_RES layout(location = 0)
+
+#define T_IN_IMAGE layout(binding = 0)
+
+#define B_OUTPUT layout(std430, binding = 0) coherent
+
+// Textures
+uniform T_IN_IMAGE sampler2D tInImage;
+
+// SSBOs
+B_OUTPUT buffer LuminanceData
+{
+	uint outMaxLum;
+	uint outAvgLum;
+};
+
+// Uniforms
+U_RES uniform ivec2 resolution;
+
+// Functions
+float ComputeLuminance(in vec4 color)
+{
+    // https://en.wikipedia.org/wiki/Relative_luminance
+    // RBG should be in linear space
+    return (0.2120f * color.r +
+            0.7150f * color.g +
+            0.0722f * color.b);
+}
+
+void AtomicAddToSSBO(float val)
+{
+	uint prevVal, newVal;
+	uint readVal = outAvgLum;
+	do 
+	{
+		prevVal = readVal;
+		newVal = floatBitsToUint(uintBitsToFloat(readVal) + val);
+		readVal = atomicCompSwap(outAvgLum, prevVal, newVal);
+	} while(readVal != prevVal);
+}
+
+void AtomicMaxToSSBO(float val)
+{
+	uint prevVal, newVal;
+	uint readVal = outAvgLum;
+	do 
+	{
+		prevVal = readVal;
+		newVal = floatBitsToUint(max(uintBitsToFloat(readVal),val));
+		readVal = atomicCompSwap(outMaxLum, prevVal, newVal);
+	} while(readVal != prevVal);
+}
+
+void ReduceBlock(out float maxLum, out float avgLum,
+				 in float lum)
+{
+
+}
+
+// 16x16 block is always nice
+layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+void main(void)
+{
+	// Call logic is per pixel
+	uvec2 globalId = gl_GlobalInvocationID.xy;
+	// Generate pixelIds
+	ivec2 pixId = ivec2(globalId);
+
+	// Skip out of image threads
+	if(any(greaterThanEqual(globalId, resolution))) return;
+
+	// Read from current buffer buffers
+	vec4 colorIn = texelFetch(tInImage, pixId, 0);
+
+	float luminance = ComputeLuminance(colorIn);
+
+	float maxLum, avgLum;
+	ReduceBlock(maxLum, avgLum, luminance);
+
+	// Local main thread will write to global memory
+	// in an atomic manner. 
+	// Normally for large images that does not fit into single block
+	// (which most of the images are) you call this function again 
+	// with a newly generated image (but it is more complex)
+	// instead we atomically combine each blocks result
+	if(all(equal(gl_LocalInvocationID.xy, uvec2(0))))
+	{
+		// No support for
+		AtomicAddToSSBO(avgLum);
+		AtomicMaxToSSBO(maxLum);
+	}
+}

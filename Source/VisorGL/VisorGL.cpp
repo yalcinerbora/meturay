@@ -575,6 +575,8 @@ VisorGL::~VisorGL()
     vertPP = ShaderGL();
     fragPP = ShaderGL();
     compAccum = ShaderGL();
+    compLumReduce = ShaderGL();
+    compToneMap = ShaderGL();
 
     // Delete Samplers
     glDeleteSamplers(1, &linearSampler);
@@ -585,6 +587,8 @@ VisorGL::~VisorGL()
     glDeleteTextures(1, &sampleTexture);
     glDeleteTextures(1, &sampleCountTexture);
     glDeleteTextures(2, outputTextures);
+
+    if(visorGUI) visorGUI = nullptr;
 
     if(window != nullptr) glfwDestroyWindow(window);
     instance = nullptr;
@@ -794,7 +798,7 @@ VisorError VisorGL::Initialize()
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, IS_DEBUG_MODE);
 
     // At most 16x MSAA
-    glfwWindowHint(GLFW_SAMPLES, 16);
+    //glfwWindowHint(GLFW_SAMPLES, 16);
 
     // Pixel of WindowFBO
     // Full precision output
@@ -923,6 +927,8 @@ VisorError VisorGL::Initialize()
     vertPP = ShaderGL(ShaderType::VERTEX, u8"Shaders/PProcessGeneric.vert");
     fragPP = ShaderGL(ShaderType::FRAGMENT, u8"Shaders/PProcessGeneric.frag");
     compAccum = ShaderGL(ShaderType::COMPUTE, u8"Shaders/AccumInput.comp");
+    compLumReduce = ShaderGL(ShaderType::COMPUTE, u8"Shaders/LumReduction.comp");
+    compToneMap = ShaderGL(ShaderType::COMPUTE, u8"Shaders/Reinhard2002.comp");
 
     ReallocImages();
 
