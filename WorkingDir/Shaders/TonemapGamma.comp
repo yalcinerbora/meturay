@@ -2,13 +2,13 @@
 /*
 	**Reinhard 2002 Tone map Shader**
 
-	File Name	: Reinhard2002.comp
+	File Name	: TonemapGamma.comp
 	Author		: Bora Yalciner
 	Description	:
 
 		Partial Implementation of the Paper
 		"Photographics Tone Reproduction for Digital Images"
-		by Reinhard et al.
+		by Reinhard et al. and applies gamma correction.
 
 		Only implemented Equation 1,2 and 4. Only global keys are supported
 		there are no any gaussian rings to select optimal key per pixel.
@@ -19,12 +19,11 @@
 
 // Defines
 #define U_RES layout(location = 0)
-#define U_DO_TONEMAP layout(location = 1)
 
 #define T_IN_HDR_IMAGE layout(binding = 0)
 
-#define UB_LUM_DATA layout(std140, binding = 0)
-#define UB_PARAMS layout(std140, binding = 1)
+#define UB_LUM_DATA layout(shared, binding = 0)
+#define UB_TM_PARAMS layout(shared, binding = 1)
 
 #define I_OUT_SDR_IMAGE layout(binding = 0) restrict writeonly
 
@@ -40,14 +39,15 @@ UB_LUM_DATA uniform LuminanceData
 	float outAvgLum;
 };
 
-UB_PARAMS uniform Parameters
+UB_TM_PARAMS uniform Parameters
 {
-	bool doGamma2;
+	bool	doToneMap;
+	bool	doGamma;
+	float	gammaValue;
 };
 
 // Uniforms
 U_RES uniform ivec2 resolution;
-U_DO_TONEMAP uniform bool doToneMap;
 
 // Functions
 vec4 TonemapReinhard2002(in vec4 hdrColor)
@@ -81,6 +81,10 @@ void main(void)
 		sdrColorOut = TonemapReinhard2002(hdrColorIn);
 	else 
 		sdrColorOut = hdrColorIn;
+
+	// Check gamma correction
+	if(doGamma)
+		sdrColorOut.rgb = pow(sdrColorOut.rgb, vec3(1.0f/gammaValue));
 	
 	imageStore(iSDROut, pixId, sdrColorOut);
 }

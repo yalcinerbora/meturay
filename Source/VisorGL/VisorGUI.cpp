@@ -27,28 +27,7 @@ VisorGUI::~VisorGUI()
     ImGui::DestroyContext();
 }
 
-bool VisorGUI::InitThread(GLFWwindow* window)
-{
-    //if(!init)
-    //{
-    //    init = true;
-    //    IMGUI_CHECKVERSION();
-    //    ImGui::CreateContext();
-    //    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-
-    //    // ImGUI Dark
-    //    ImGui::StyleColorsDark();
-
-    //    // Initi renderer & platform
-    //    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    //    ImGui_ImplOpenGL3_Init(IMGUI_GLSL_STRING);
-    //}
-    //return init;
-    return false;
-}
-
-void VisorGUI::RenderStart()
+void VisorGUI::Render()
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -58,14 +37,5 @@ void VisorGUI::RenderStart()
     ImGui::ShowDemoWindow(&showDemo);
 
     ImGui::Render();
-    
-}
-
-void VisorGUI::RenderEnd()
-{
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void VisorGUI::ProcessInputs()
-{
 }

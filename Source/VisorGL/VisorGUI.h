@@ -1,6 +1,10 @@
 #pragma once
 
+#include "TMOptionWindow.h"
+
 struct GLFWwindow;
+
+
 
 class VisorGUI
 {
@@ -8,18 +12,25 @@ class VisorGUI
         static constexpr const char*    IMGUI_GLSL_STRING = "#version 430 core";
         bool init = false;
 
+        TMOptionWindow                  tmWindow;
+
     protected:
     public:
         // Construtors & Destructor
                                         VisorGUI(GLFWwindow*);
                                         ~VisorGUI();
         // Members
-        bool                            InitThread(GLFWwindow*);
-        void                            RenderStart();
-        void                            RenderEnd();
-
-        void                            ProcessInputs();
+        void                            Render();
+        // Access GUI Controlled Parameters
+        const ToneMapOptions&           ToneMapOptions() const;
 
         // Callbacks of the GUI
 
+
+
 };
+
+inline const ToneMapOptions& VisorGUI::ToneMapOptions() const
+{
+    return tmWindow.GetToneMapOptions();
+}

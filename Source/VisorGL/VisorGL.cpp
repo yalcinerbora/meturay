@@ -2,7 +2,8 @@
 
 #include "RayLib/Log.h"
 #include "RayLib/CPUTimer.h"
-#include"RayLib/VisorError.h"
+#include "RayLib/VisorError.h"
+#include "GLConversionFunctions.h"
 
 #include <map>
 #include <cassert>
@@ -315,86 +316,7 @@ void __stdcall VisorGL::OGLCallbackRender(GLenum,
     METU_DEBUG_LOG("---------------------OGL-Callback-Render-End--------------");
 }
 
-GLenum VisorGL::PixelFormatToGL(PixelFormat f)
-{
-    static constexpr GLenum TypeList[static_cast<int>(PixelFormat::END)] =
-    {
-        GL_R,
-        GL_RG,
-        GL_RGB,
-        GL_RGBA,
 
-        GL_R,
-        GL_RG,
-        GL_RGB,
-        GL_RGBA,
-
-        GL_R,
-        GL_RG,
-        GL_RGB,
-        GL_RGBA,
-
-        GL_R,
-        GL_RG,
-        GL_RGB,
-        GL_RGBA
-    };
-    return TypeList[static_cast<int>(f)];
-}
-
-GLenum VisorGL::PixelFormatToSizedGL(PixelFormat f)
-{
-    static constexpr GLenum TypeList[static_cast<int>(PixelFormat::END)] =
-    {
-        GL_R8,
-        GL_RG8,
-        GL_RGB8,
-        GL_RGBA8,
-
-        GL_R16,
-        GL_RG16,
-        GL_RGB16,
-        GL_RGBA16,
-
-        GL_R16F,
-        GL_RG16F,
-        GL_RGB16F,
-        GL_RGBA16F,
-
-        GL_R32F,
-        GL_RG32F,
-        GL_RGB32F,
-        GL_RGBA32F
-    };
-    return TypeList[static_cast<int>(f)];
-}
-
-GLenum VisorGL::PixelFormatToTypeGL(PixelFormat f)
-{
-    static constexpr GLenum TypeList[static_cast<int>(PixelFormat::END)] =
-    {
-        GL_UNSIGNED_BYTE,
-        GL_UNSIGNED_BYTE,
-        GL_UNSIGNED_BYTE,
-        GL_UNSIGNED_BYTE,
-
-        GL_UNSIGNED_SHORT,
-        GL_UNSIGNED_SHORT,
-        GL_UNSIGNED_SHORT,
-        GL_UNSIGNED_SHORT,
-
-        GL_SHORT,  // TODO: Wrong
-        GL_SHORT,  // TODO: Wrong
-        GL_SHORT,  // TODO: Wrong
-        GL_SHORT,  // TODO: Wrong
-
-        GL_FLOAT,
-        GL_FLOAT,
-        GL_FLOAT,
-        GL_FLOAT
-    };
-    return TypeList[static_cast<int>(f)];
-}
 
 void VisorGL::ReallocImages()
 {
@@ -425,6 +347,12 @@ void VisorGL::ReallocImages()
     glGenTextures(1, &sampleTexture);
     glBindTexture(GL_TEXTURE_2D, sampleTexture);
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32I,
+                   imageSize[0], imageSize[1]);
+    // SDR Texture
+    glDeleteTextures(1, &sdrTexture);
+    glGenTextures(1, &sdrTexture);
+    glBindTexture(GL_TEXTURE_2D, sdrTexture);
+    glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(PixelFormat::RGBA8_UNORM),
                    imageSize[0], imageSize[1]);
 }
 
@@ -533,6 +461,7 @@ void VisorGL::RenderImage()
     // Bind Texture
     glActiveTexture(GL_TEXTURE0 + T_IN_COLOR);
     glBindTexture(GL_TEXTURE_2D, outputTextures[currentIndex]);
+    //glBindTexture(GL_TEXTURE_2D, sdrTexture);
 
     // Draw
     glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -549,6 +478,7 @@ VisorGL::VisorGL(const VisorOptions& opts,
     , sampleCountTexture(0)
     , bufferTexture(0)
     , sampleTexture(0)
+    , sdrTexture(0)
     , currentIndex(0)
     , linearSampler(0)
     , nearestSampler(0)
@@ -575,8 +505,6 @@ VisorGL::~VisorGL()
     vertPP = ShaderGL();
     fragPP = ShaderGL();
     compAccum = ShaderGL();
-    compLumReduce = ShaderGL();
-    compToneMap = ShaderGL();
 
     // Delete Samplers
     glDeleteSamplers(1, &linearSampler);
@@ -587,6 +515,7 @@ VisorGL::~VisorGL()
     glDeleteTextures(1, &sampleTexture);
     glDeleteTextures(1, &sampleCountTexture);
     glDeleteTextures(2, outputTextures);
+    glDeleteTextures(2, &sdrTexture);
 
     if(visorGUI) visorGUI = nullptr;
 
@@ -603,8 +532,6 @@ bool VisorGL::IsOpen()
 void VisorGL::ProcessInputs()
 {
     glfwPollEvents();
-    if(visorGUI)
-        visorGUI->ProcessInputs();
 }
 
 void VisorGL::Render()
@@ -615,25 +542,48 @@ void VisorGL::Render()
     // Consume commands
     // TODO: optimize this skip multiple reset commands
     // just process the last and other commands afterwards
+    bool imageModified = false;
     VisorGLCommand command;
     while(commandList.TryDequeue(command))
     {
+        // Image is considered modified if at least one command is
+        // processed on this frame
+        imageModified = true;
         ProcessCommand(command);
     }
 
-    if(vOpts.enableGUI)
-        visorGUI->RenderStart();
+    // Do Tone Map
+    // Only do tone map if HDR image is modified
+    if(imageModified)
+    {
+        ToneMapOptions tmOpts;
+        if(visorGUI)
+            tmOpts = visorGUI->ToneMapOptions();
+        else
+            ToneMapOptions tmOpts = DefaultTMOptions;
+
+        // Always call this even if there are not parameters
+        // set to do tone mapping since(this function)
+        // will write to sdr image and RenderImage function
+        // will use it to present it to the FB
+        toneMapGL.ToneMap(sdrTexture,
+                          PixelFormat::RGBA8_UNORM,
+                          outputTextures[currentIndex],
+                          tmOpts,
+                          imageSize);
+    }
 
     // Render Image
     RenderImage();
 
-    // Render GUI
-    if(vOpts.enableGUI)
-        visorGUI->RenderEnd();
+    // After Render GUI
+    if(vOpts.enableGUI) visorGUI->Render();
 
     // Finally Swap Buffers
     glfwSwapBuffers(window);
 
+    // TODO: This is kinda wrong?? check it
+    // since it does not excatly makes it to a certain FPS value
     if(vOpts.fpsLimit > 0.0f)
     {
         t.Stop();
@@ -927,8 +877,6 @@ VisorError VisorGL::Initialize()
     vertPP = ShaderGL(ShaderType::VERTEX, u8"Shaders/PProcessGeneric.vert");
     fragPP = ShaderGL(ShaderType::FRAGMENT, u8"Shaders/PProcessGeneric.frag");
     compAccum = ShaderGL(ShaderType::COMPUTE, u8"Shaders/AccumInput.comp");
-    compLumReduce = ShaderGL(ShaderType::COMPUTE, u8"Shaders/LumReduction.comp");
-    compToneMap = ShaderGL(ShaderType::COMPUTE, u8"Shaders/Reinhard2002.comp");
 
     ReallocImages();
 
@@ -936,7 +884,6 @@ VisorError VisorGL::Initialize()
     glGenSamplers(1, &linearSampler);
     glSamplerParameteri(linearSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glSamplerParameteri(linearSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
     glGenSamplers(1, &nearestSampler);
     glSamplerParameteri(nearestSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glSamplerParameteri(nearestSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

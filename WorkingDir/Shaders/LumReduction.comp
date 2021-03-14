@@ -29,15 +29,15 @@
 // Defines
 #define U_RES layout(location = 0)
 
-#define T_IN_IMAGE layout(binding = 0)
+#define T_IN_HDR_IMAGE layout(binding = 0)
 
-#define B_OUTPUT layout(std430, binding = 0) coherent
+#define SSB_OUTPUT layout(std430, binding = 0) coherent
 
 // Textures
-uniform T_IN_IMAGE sampler2D tInImage;
+uniform T_IN_HDR_IMAGE sampler2D tInImage;
 
 // SSBOs
-B_OUTPUT buffer LuminanceData
+SSB_OUTPUT buffer LuminanceData
 {
 	uint outMaxLum;
 	uint outAvgLum;

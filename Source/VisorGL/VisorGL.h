@@ -22,6 +22,7 @@ the VisorGL singleton.
 
 #include "ShaderGL.h"
 #include "VisorGUI.h"
+#include "ToneMapGL.h"
 
 // Basic command list implementation
 struct VisorGLCommand
@@ -93,6 +94,9 @@ class VisorGL : public VisorI
         Vector2i                    imageSize;
         PixelFormat                 imagePixFormat;
 
+        // GLClasses
+        ToneMapGL                   toneMapGL;
+
         // Image portion list
         MPMCQueue<VisorGLCommand>   commandList;
         ThreadVariable<Vector2i>    viewportSize;
@@ -104,14 +108,13 @@ class VisorGL : public VisorI
         GLuint                      sampleTexture;
         GLuint                      linearSampler;
         GLuint                      nearestSampler;
+        GLuint                      sdrTexture;
         int                         currentIndex;
  
         // Shader
         ShaderGL                    vertPP;
         ShaderGL                    fragPP;
         ShaderGL                    compAccum;
-        ShaderGL                    compLumReduce;
-        ShaderGL                    compToneMap;
 
         // Vertex
         GLuint                      vao;
@@ -148,10 +151,6 @@ class VisorGL : public VisorI
                                                       GLsizei length,
                                                       const char* message,
                                                       const void* userParam);
-        // Visor to OGL conversions
-        static GLenum               PixelFormatToGL(PixelFormat);
-        static GLenum               PixelFormatToSizedGL(PixelFormat);
-        static GLenum               PixelFormatToTypeGL(PixelFormat);
 
         // Image Allocation
         void                        ReallocImages();
