@@ -57,7 +57,7 @@
     <None Include="..\..\..\WorkingDir\Shaders\LumReduction.comp">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\..\..\WorkingDir\Shaders\TonemapGamma.comp">
+    <None Include="..\..\..\WorkingDir\Shaders\TonemapAndGamma.comp">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -2,8 +2,8 @@
 
 struct ToneMapOptions
 {
-    bool    doGamma;
     bool    doToneMap;
+    bool    doGamma;
     float   gamma;
 };
 

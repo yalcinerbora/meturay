@@ -460,8 +460,7 @@ void VisorGL::RenderImage()
 
     // Bind Texture
     glActiveTexture(GL_TEXTURE0 + T_IN_COLOR);
-    glBindTexture(GL_TEXTURE_2D, outputTextures[currentIndex]);
-    //glBindTexture(GL_TEXTURE_2D, sdrTexture);
+    glBindTexture(GL_TEXTURE_2D, sdrTexture);
 
     // Draw
     glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -497,6 +496,9 @@ VisorGL::VisorGL(const VisorOptions& opts,
 
 VisorGL::~VisorGL()
 {
+    // Tonemapper
+    toneMapGL = ToneMapGL();
+
     // Delete Vertex Arrays & Buffers
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vBuffer);
@@ -879,6 +881,9 @@ VisorError VisorGL::Initialize()
     compAccum = ShaderGL(ShaderType::COMPUTE, u8"Shaders/AccumInput.comp");
 
     ReallocImages();
+
+    // ToneMaper
+    toneMapGL = ToneMapGL(true);
 
     // Sampler
     glGenSamplers(1, &linearSampler);

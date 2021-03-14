@@ -22,6 +22,9 @@ namespace Debug
     void                WriteHitPairs(const RayId* ids, const HitKey* keys, size_t count, const std::string& file);
     void                DumpImage(const std::string& fName,
                                   const ImageMemory&);
+    void                DumpImage(const std::string& fName,
+                                  const Vector4* iMem,
+                                  const Vector2ui& resolution);
 
     // Memory Debugging
     template<class T>

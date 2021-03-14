@@ -1,8 +1,8 @@
 #version 430
 /*
-	**Reinhard 2002 Tone map Shader**
+	**Reinhard 2002 Tone Map & Gamma correction Shader**
 
-	File Name	: TonemapGamma.comp
+	File Name	: TonemapAndGamma.comp
 	Author		: Bora Yalciner
 	Description	:
 
@@ -13,17 +13,17 @@
 		Only implemented Equation 1,2 and 4. Only global keys are supported
 		there are no any gaussian rings to select optimal key per pixel.
 		
+		Additionally it applies gamma correction to the image assuming
+		supplied image is in linear space
 */
-
-// Utilize Nvidia Shuffle Operations if avail
 
 // Defines
 #define U_RES layout(location = 0)
 
 #define T_IN_HDR_IMAGE layout(binding = 0)
 
-#define UB_LUM_DATA layout(shared, binding = 0)
-#define UB_TM_PARAMS layout(shared, binding = 1)
+#define UB_LUM_DATA layout(std140, binding = 0)
+#define UB_TM_PARAMS layout(std140, binding = 1)
 
 #define I_OUT_SDR_IMAGE layout(binding = 0) restrict writeonly
 
@@ -77,7 +77,7 @@ void main(void)
 	vec4 hdrColorIn = texelFetch(tInImage, pixId, 0);
 
 	vec4 sdrColorOut;
-	if(doToneMap)
+	if(doToneMap)	
 		sdrColorOut = TonemapReinhard2002(hdrColorIn);
 	else 
 		sdrColorOut = hdrColorIn;

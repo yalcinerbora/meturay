@@ -25,11 +25,20 @@ void Debug::Detail::OutputHitPairs(std::ostream& s, const RayId* ids, const HitK
 void Debug::DumpImage(const std::string& fName,
                       const ImageMemory& iMem)
 {
+    CUDA_CHECK(cudaDeviceSynchronize());
     ImageIO io;
     Vector2ui size(iMem.SegmentSize()[0],
                    iMem.SegmentSize()[1]);
     auto image = iMem.GMem<Vector4f>();
     io.WriteAsPNG(image.gPixels, size, fName);
+}
+
+void Debug::DumpImage(const std::string& fName,
+                      const Vector4* iMem,
+                      const Vector2ui& resolution)
+{
+    ImageIO io;
+    io.WriteAsPNG(iMem, resolution, fName);
 }
 
 void Debug::PrintHitPairs(const RayId* ids, const HitKey* keys, size_t count)

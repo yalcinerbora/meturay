@@ -139,7 +139,7 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\WorkingDir\Shaders\LumReduction.comp" />
-    <None Include="..\..\..\WorkingDir\Shaders\TonemapGamma.comp" />
+    <None Include="..\..\..\WorkingDir\Shaders\TonemapAndGamma.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

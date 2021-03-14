@@ -2,6 +2,9 @@
 /**
 
 */
+
+#include <cstdint>
+
 typedef unsigned char Byte;
 
 static constexpr uint16_t NullBatchId = 0;

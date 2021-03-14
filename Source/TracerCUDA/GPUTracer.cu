@@ -293,7 +293,6 @@ void GPUTracer::HitAndPartitionRays()
                             dRays,
                             dCurrentRayIds + validRayOffset,
                             rayCount);
-
         // Wait all GPUs to finish...
         cudaSystem.SyncGPUMainStreamAll();
 
@@ -395,7 +394,6 @@ void GPUTracer::HitAndPartitionRays()
         // wait all GPUs to finish
         cudaSystem.SyncGPUAll();
     }
-
     // At the end of iteration all rays found a material, primitive
     // and interpolation weights (which should be on hitStruct)
 
@@ -590,9 +588,15 @@ void GPUTracer::Finalize()
 
     // Flush Devices and Get the Image
     cudaSystem.SyncGPUAll();
-    std::vector<Byte> imageData = imgMemory.GetImageToCPU(cudaSystem);
-
+    std::vector<Byte> imageData = imgMemory.GetImageToCPU(cudaSystem);  
     size_t pixelCount1D = static_cast<size_t>(pixelCount[0]) * pixelCount[1];
+
+    //Debug::DumpMemToFile("TestFile",
+    //                     reinterpret_cast<Vector4*>(imageData.data()),
+    //                     pixelCount1D);
+    //Debug::DumpImage("SentImage.png",
+    //                 reinterpret_cast<Vector4*>(imageData.data()),
+    //                 Vector2ui(pixelCount[0], pixelCount[1]));
 
     // Launch finished image
     if(callbacks) callbacks->SendImage(std::move(imageData),

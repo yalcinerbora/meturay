@@ -1,5 +1,4 @@
 #include "ToneMapGL.h"
-#include "RayLib/Types.h"
 #include "GLConversionFunctions.h"
 
 void ToneMapGL::ToneMap(GLuint sdrTexture,
@@ -33,11 +32,22 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
     // since we need to transport image to SDR image
     // Post process sahder requires it to be there
 
+    // Align Padding for UBO
+    TMOBufferGL tmOptsGL;
+    tmOptsGL.doToneMap = static_cast<uint32_t>(false);
+    tmOptsGL.doGamma = static_cast<uint32_t>(true);
+    tmOptsGL.gammaValue = 2.2f;
+    //tmOptsGL.doToneMap = static_cast<uint32_t>(tmOpts.doToneMap);
+    //tmOptsGL.doGamma = static_cast<uint32_t>(tmOpts.doGamma);
+    //tmOptsGL.gammaValue = tmOpts.gamma;
+
+    static_assert(sizeof(TMOBufferGL) == 12);
+
     // Transfer options to GPU Memory
     glBindBuffer(GL_UNIFORM_BUFFER, tmOptionBuffer);
-    glBufferData(GL_UNIFORM_BUFFER,
-                 sizeof(ToneMapOptions),
-                 &tmOpts, GL_STREAM_READ);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0,
+                    sizeof(TMOBufferGL),
+                    &tmOptsGL);
 
     // Bind Shader
     compToneMap.Bind();
