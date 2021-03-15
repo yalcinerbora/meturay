@@ -44,6 +44,7 @@ UB_TM_PARAMS uniform Parameters
 	bool	doToneMap;
 	bool	doGamma;
 	float	gammaValue;
+	float	burnRatio;
 };
 
 // Uniforms
@@ -54,7 +55,8 @@ vec4 TonemapReinhard2002(in vec4 hdrColor)
 {
 	vec3 hdrColorPart = hdrColor.rgb;
 	// Equation 3
-	float whiteSqr = outMaxLum * outMaxLum;
+	float white = outMaxLum * burnRatio;
+	float whiteSqr = white * white;
 	vec3 sdrColor = hdrColorPart * (1 + (hdrColorPart / whiteSqr));
 	sdrColor /= (1 + hdrColorPart);
 

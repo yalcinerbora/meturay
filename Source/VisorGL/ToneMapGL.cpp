@@ -1,5 +1,6 @@
 #include "ToneMapGL.h"
 #include "GLConversionFunctions.h"
+#include "RayLib/Log.h"
 
 void ToneMapGL::ToneMap(GLuint sdrTexture,
                         const PixelFormat sdrPixelFormat,
@@ -22,11 +23,19 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
         glActiveTexture(GL_TEXTURE0 + T_IN_HDR_IMAGE);
         glBindTexture(GL_TEXTURE_2D, hdrTexture);
 
-        //// Call the Kernel
-        //GLuint gridX = (resolution[0] + 16 - 1) / 16;
-        //GLuint gridY = (resolution[1] + 16 - 1) / 16;
-        //glDispatchCompute(gridX, gridY, 1);
-        //glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        // Call the Kernel
+        GLuint gridX = (resolution[0] + 16 - 1) / 16;
+        GLuint gridY = (resolution[1] + 16 - 1) / 16;
+        glDispatchCompute(gridX, gridY, 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+
+        Vector2f v;
+        glBindBuffer(GL_COPY_READ_BUFFER, luminanceBuffer);
+        glGetBufferSubData(GL_COPY_READ_BUFFER, 0, sizeof(Vector2),
+                           &v);
+
+        METU_LOG("max %f, avg %f", v[0], v[1]);
     }
     // Either gamma or not call ToneMap shader
     // since we need to transport image to SDR image
@@ -37,11 +46,11 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
     tmOptsGL.doToneMap = static_cast<uint32_t>(false);
     tmOptsGL.doGamma = static_cast<uint32_t>(true);
     tmOptsGL.gammaValue = 2.2f;
+    tmOptsGL.burnRatio = 1.0f;
     //tmOptsGL.doToneMap = static_cast<uint32_t>(tmOpts.doToneMap);
     //tmOptsGL.doGamma = static_cast<uint32_t>(tmOpts.doGamma);
     //tmOptsGL.gammaValue = tmOpts.gamma;
-
-    static_assert(sizeof(TMOBufferGL) == 12);
+    //tmOptsGL.gammaValue = tmOpts.burnRatio;
 
     // Transfer options to GPU Memory
     glBindBuffer(GL_UNIFORM_BUFFER, tmOptionBuffer);

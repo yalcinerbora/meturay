@@ -47,6 +47,7 @@ class ToneMapGL
             uint32_t    doToneMap;
             uint32_t    doGamma;
             float       gammaValue;
+            float       burnRatio;
         };
         #pragma pack(pop)
 
@@ -82,7 +83,9 @@ inline ToneMapGL::ToneMapGL(bool isOGLContextActive)
     glBufferStorage(GL_COPY_WRITE_BUFFER,
                     sizeof(LumBufferGL), nullptr,
                     // This buffer is GPU only so no flags required
-                    0x0);
+                    //0x0);
+                    GL_MAP_READ_BIT |
+                    GL_DYNAMIC_STORAGE_BIT);
     
     glGenBuffers(1, &tmOptionBuffer);
     glBindBuffer(GL_COPY_WRITE_BUFFER, tmOptionBuffer);

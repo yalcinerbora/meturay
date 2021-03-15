@@ -18,13 +18,7 @@
 
 // Utilize Nvidia Shuffle Operations if avail
 #extension GL_NV_shader_thread_shuffle: enable
-
-//#if supported(NV_shader_thread_shuffle)
-//#extension NV_shader_thread_shuffle: enable
-//#endif
-
-#ifdef GL_NV_shader_thread_shuffle
-#endif
+#extension GL_NV_shader_thread_group: enable
 
 // Defines
 #define U_RES layout(location = 0)
@@ -32,6 +26,15 @@
 #define T_IN_HDR_IMAGE layout(binding = 0)
 
 #define SSB_OUTPUT layout(std430, binding = 0) coherent
+
+// WorkGroup Dimension
+#define WORK_X 16
+#define WORK_Y 16
+#define WORK_LINEAR (WORK_X * WORK_Y)
+
+// Extension does not have compile time constant
+// This may cahange in future (probably not)
+#define NV_WRAP_SIZE 32
 
 // Textures
 uniform T_IN_HDR_IMAGE sampler2D tInImage;
@@ -45,6 +48,15 @@ SSB_OUTPUT buffer LuminanceData
 
 // Uniforms
 U_RES uniform ivec2 resolution;
+
+// Shared Variables
+#ifdef GL_NV_shader_thread_shuffle
+#define TOTAL_WARP_ON_BLOCK (WORK_LINEAR / NV_WRAP_SIZE)
+shared float reduceMaxBuffer[TOTAL_WARP_ON_BLOCK];
+shared float reduceAvgBuffer[TOTAL_WARP_ON_BLOCK];
+#else
+shared float reduceBuffer[WORK_LINEAR / 2];
+#endif
 
 // Functions
 float ComputeLuminance(in vec4 color)
@@ -80,10 +92,72 @@ void AtomicMaxToSSBO(float val)
 	} while(readVal != prevVal);
 }
 
+void ReduceBlockNV(out float maxLum, out float avgLum,
+				   in float lum)
+{
+	//Do 
+	float localMaxLum = lum;
+	float localAvgLum = lum;
+		
+	for(uint offset = NV_WRAP_SIZE / 2; offset > 0; offset >>= 1)
+	{		
+		float warpMaxLum, warpAvgLum;
+		warpMaxLum = shuffleDownNV(localMaxLum, offset, NV_WRAP_SIZE);
+		warpAvgLum = shuffleDownNV(localMaxLum, offset, NV_WRAP_SIZE);
+
+		localMaxLum = max(warpMaxLum, localMaxLum);
+		localAvgLum = warpAvgLum + localAvgLum;		
+	}
+	
+	if(gl_ThreadInWarpNV == 0)
+	{
+		reduceMaxBuffer[gl_WarpIDNV] = localMaxLum;
+		reduceAvgBuffer[gl_WarpIDNV] = localAvgLum;
+	}
+	memoryBarrierShared();
+	barrier();
+
+	// Only first warp (on that warp 8 thread will do the last reduce)
+	if(gl_WarpIDNV == 0 &&
+	   gl_ThreadInWarpNV < TOTAL_WARP_ON_BLOCK)
+	{
+		localMaxLum = reduceMaxBuffer[gl_ThreadInWarpNV];
+		localAvgLum = reduceAvgBuffer[gl_ThreadInWarpNV];
+
+		// Do one more pass of warp reduce
+		for(uint offset = TOTAL_WARP_ON_BLOCK / 2; offset > 0; offset >>= 1)
+		{		
+			float warpMaxLum, warpAvgLum;
+			warpMaxLum = shuffleDownNV(localMaxLum, offset, TOTAL_WARP_ON_BLOCK);
+			warpAvgLum = shuffleDownNV(localMaxLum, offset, TOTAL_WARP_ON_BLOCK);
+
+			localMaxLum = max(warpMaxLum, localMaxLum);
+			localAvgLum = warpAvgLum + localAvgLum;		
+		}
+		if(gl_ThreadInWarpNV == 0)
+		{
+			maxLum = localMaxLum;
+			avgLum = localAvgLum;
+		}
+	}
+}
+
+void ReduceBlockGeneric(out float maxLum, out float avgLum,
+				        in float lum)
+{
+
+}
+
 void ReduceBlock(out float maxLum, out float avgLum,
 				 in float lum)
 {
-
+	// Utilize Warp Intrinsics on Nvidia GPUs
+	#ifdef GL_NV_shader_thread_shuffle
+	ReduceBlockNV(maxLum, avgLum, lum);
+	#else 
+	#error "NV Card Required"
+	ReduceBlockGeneric(maxLum, avgLum, lum)
+	#endif
 }
 
 // 16x16 block is always nice
@@ -103,6 +177,7 @@ void main(void)
 
 	float luminance = ComputeLuminance(colorIn);
 
+	luminance = 1.0f;
 	float maxLum, avgLum;
 	ReduceBlock(maxLum, avgLum, luminance);
 
