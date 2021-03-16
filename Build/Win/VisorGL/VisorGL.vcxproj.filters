@@ -60,5 +60,8 @@
     <None Include="..\..\..\WorkingDir\Shaders\TonemapAndGamma.comp">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="..\..\..\WorkingDir\Shaders\AvgDivisor.comp">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

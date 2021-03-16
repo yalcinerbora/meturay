@@ -1,7 +1,7 @@
 #include "ToneMapGL.h"
 #include "GLConversionFunctions.h"
 #include "RayLib/Log.h"
-
+#include <vector>
 void ToneMapGL::ToneMap(GLuint sdrTexture,
                         const PixelFormat sdrPixelFormat,
                         const GLuint hdrTexture,
@@ -10,8 +10,15 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
 {
     // Check options if tone map is requested update
     // max/avg luminance
-    if(tmOpts.doToneMap)
+    //if(tmOpts.doToneMap)
     {
+        // Clear Luminance Buffer
+        glBindBuffer(GL_COPY_READ_BUFFER, luminanceBuffer);
+        glClearBufferData(GL_COPY_READ_BUFFER, GL_R8, GL_RED,
+                          GL_BYTE, nullptr);
+
+        // Unbind Luminance buffer as UBO just to be sure
+        glBindBufferBase(GL_UNIFORM_BUFFER, UB_LUM_DATA, 0);
         // Bind the Shader
         compLumReduce.Bind();
         // Bind Uniforms
@@ -24,18 +31,35 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
         glBindTexture(GL_TEXTURE_2D, hdrTexture);
 
         // Call the Kernel
-        GLuint gridX = (resolution[0] + 16 - 1) / 16;
-        GLuint gridY = (resolution[1] + 16 - 1) / 16;
-        glDispatchCompute(gridX, gridY, 1);
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        GLuint workCount = resolution[1] * resolution[0];
+        GLuint gridX = (workCount + 256 - 1) / 256;
+        glDispatchCompute(gridX, 1, 1);
+        glMemoryBarrier(GL_UNIFORM_BARRIER_BIT | 
+                        GL_SHADER_STORAGE_BARRIER_BIT);
 
+        // Now Call simle Average Kernel
+        compAvgDivisor.Bind();
+        // Bind Uniforms
+        glUniform2iv(U_RES, 1, static_cast<const int*>(resolution));
+        glDispatchCompute(1, 1, 1);
+        glMemoryBarrier(GL_UNIFORM_BARRIER_BIT);
+        glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
 
-        Vector2f v;
+        size_t lumBufferSizeDebug = sizeof(LumBufferGL) + sizeof(float) * 64;
+        std::vector<float> lumBufferCPU(66);
+        //Vector2f v;
         glBindBuffer(GL_COPY_READ_BUFFER, luminanceBuffer);
-        glGetBufferSubData(GL_COPY_READ_BUFFER, 0, sizeof(Vector2),
-                           &v);
+        //glGetBufferSubData(GL_COPY_READ_BUFFER, 0, sizeof(Vector2),
+        //                   &v);
+        glGetBufferSubData(GL_COPY_READ_BUFFER, 0, lumBufferSizeDebug,
+                           lumBufferCPU.data());
 
-        METU_LOG("max %f, avg %f", v[0], v[1]);
+        METU_LOG("max %f, avg %f", lumBufferCPU[0], lumBufferCPU[1]);
+        //METU_LOG("max %f, avg %f, [%f, %f, %f, %f, %f, %f, %f, %f, %f]", 
+        //         lumBufferCPU[0], lumBufferCPU[1],
+        //         lumBufferCPU[2], lumBufferCPU[3], lumBufferCPU[4],
+        //         lumBufferCPU[5], lumBufferCPU[6], lumBufferCPU[7],
+        //         lumBufferCPU[8], lumBufferCPU[9], lumBufferCPU[10]);
     }
     // Either gamma or not call ToneMap shader
     // since we need to transport image to SDR image
@@ -43,7 +67,7 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
 
     // Align Padding for UBO
     TMOBufferGL tmOptsGL;
-    tmOptsGL.doToneMap = static_cast<uint32_t>(false);
+    tmOptsGL.doToneMap = static_cast<uint32_t>(true);
     tmOptsGL.doGamma = static_cast<uint32_t>(true);
     tmOptsGL.gammaValue = 2.2f;
     tmOptsGL.burnRatio = 1.0f;
@@ -81,6 +105,7 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
     GLuint gridX = (resolution[0] + 16 - 1) / 16;
     GLuint gridY = (resolution[1] + 16 - 1) / 16;
     glDispatchCompute(gridX, gridY, 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
+                    GL_TEXTURE_FETCH_BARRIER_BIT);
 
 }

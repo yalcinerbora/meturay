@@ -138,6 +138,7 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     </Text>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\WorkingDir\Shaders\AvgDivisor.comp" />
     <None Include="..\..\..\WorkingDir\Shaders\LumReduction.comp" />
     <None Include="..\..\..\WorkingDir\Shaders\TonemapAndGamma.comp" />
   </ItemGroup>

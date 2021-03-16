@@ -432,7 +432,8 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             GLuint gridX = (imageSize[0] + 16 - 1) / 16;
             GLuint gridY = (imageSize[1] + 16 - 1) / 16;
             glDispatchCompute(gridX, gridY, 1);
-            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
+                            GL_TEXTURE_FETCH_BARRIER_BIT);
 
             // Swap input and output
             currentIndex = nextIndex;
@@ -556,7 +557,7 @@ void VisorGL::Render()
 
     // Do Tone Map
     // Only do tone map if HDR image is modified
-    if(imageModified)
+    //if(imageModified)
     {
         ToneMapOptions tmOpts;
         if(visorGUI)

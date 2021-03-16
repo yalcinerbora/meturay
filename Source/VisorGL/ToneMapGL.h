@@ -14,6 +14,7 @@ class ToneMapGL
     private:
         ShaderGL                    compLumReduce;
         ShaderGL                    compToneMap;
+        ShaderGL                    compAvgDivisor;
 
         GLuint                      tmOptionBuffer;
         GLuint                      luminanceBuffer;
@@ -76,12 +77,16 @@ inline ToneMapGL::ToneMapGL(bool isOGLContextActive)
 
     compLumReduce = ShaderGL(ShaderType::COMPUTE, u8"Shaders/LumReduction.comp");
     compToneMap = ShaderGL(ShaderType::COMPUTE, u8"Shaders/TonemapAndGamma.comp");
+    compAvgDivisor = ShaderGL(ShaderType::COMPUTE, u8"Shaders/AvgDivisor.comp");
+    
 
+    size_t lumBufferSizeDebug = sizeof(LumBufferGL) + sizeof(float) * 64;
     // Allocate Buffers
     glGenBuffers(1, &luminanceBuffer);
     glBindBuffer(GL_COPY_WRITE_BUFFER, luminanceBuffer);
     glBufferStorage(GL_COPY_WRITE_BUFFER,
-                    sizeof(LumBufferGL), nullptr,
+                    //sizeof(LumBufferGL), nullptr,
+                    lumBufferSizeDebug, nullptr,
                     // This buffer is GPU only so no flags required
                     //0x0);
                     GL_MAP_READ_BIT |
@@ -99,6 +104,7 @@ inline ToneMapGL::~ToneMapGL()
 {
     compLumReduce = ShaderGL();
     compToneMap = ShaderGL();
+    compAvgDivisor = ShaderGL();
 
     glDeleteBuffers(1, &luminanceBuffer);
     glDeleteBuffers(1, &tmOptionBuffer);
@@ -109,6 +115,8 @@ inline ToneMapGL& ToneMapGL::operator=(ToneMapGL&& other)
     assert(this != &other);
     compLumReduce = std::move(other.compLumReduce);
     compToneMap = std::move(other.compToneMap);
+    compAvgDivisor = std::move(other.compAvgDivisor);
+
     luminanceBuffer = other.luminanceBuffer;
     tmOptionBuffer = other.tmOptionBuffer;
     other.luminanceBuffer = 0;

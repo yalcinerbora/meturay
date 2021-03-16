@@ -16,25 +16,15 @@
 		
 */
 
-// Utilize Nvidia Shuffle Operations if avail
-#extension GL_NV_shader_thread_shuffle: enable
-#extension GL_NV_shader_thread_group: enable
-
 // Defines
 #define U_RES layout(location = 0)
 
 #define T_IN_HDR_IMAGE layout(binding = 0)
 
-#define SSB_OUTPUT layout(std430, binding = 0) coherent
+#define SSB_OUTPUT layout(std430, binding = 0) coherent volatile
 
 // WorkGroup Dimension
-#define WORK_X 16
-#define WORK_Y 16
-#define WORK_LINEAR (WORK_X * WORK_Y)
-
-// Extension does not have compile time constant
-// This may cahange in future (probably not)
-#define NV_WRAP_SIZE 32
+#define WORK_X 256
 
 // Textures
 uniform T_IN_HDR_IMAGE sampler2D tInImage;
@@ -49,14 +39,8 @@ SSB_OUTPUT buffer LuminanceData
 // Uniforms
 U_RES uniform ivec2 resolution;
 
-// Shared Variables
-#ifdef GL_NV_shader_thread_shuffle
-#define TOTAL_WARP_ON_BLOCK (WORK_LINEAR / NV_WRAP_SIZE)
-shared float reduceMaxBuffer[TOTAL_WARP_ON_BLOCK];
-shared float reduceAvgBuffer[TOTAL_WARP_ON_BLOCK];
-#else
-shared float reduceBuffer[WORK_LINEAR / 2];
-#endif
+// Shared Memory
+shared float reduceBuffer[WORK_X];
 
 // Functions
 float ComputeLuminance(in vec4 color)
@@ -70,115 +54,106 @@ float ComputeLuminance(in vec4 color)
 
 void AtomicAddToSSBO(float val)
 {
-	uint prevVal, newVal;
-	uint readVal = outAvgLum;
-	do 
+	// CAS Atomic operation for Atomic Max for floats
+	// https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#atomic-functions
+	uint assumed;
+	uint old = outMaxLum;	
+	do
 	{
-		prevVal = readVal;
-		newVal = floatBitsToUint(uintBitsToFloat(readVal) + val);
-		readVal = atomicCompSwap(outAvgLum, prevVal, newVal);
-	} while(readVal != prevVal);
+		assumed = old;
+		uint newVal = floatBitsToUint(uintBitsToFloat(assumed) + val);
+		old = atomicCompSwap(outAvgLum, assumed, newVal);
+	} while(assumed != old);
 }
 
 void AtomicMaxToSSBO(float val)
 {
-	uint prevVal, newVal;
-	uint readVal = outAvgLum;
-	do 
+	// CAS Atomic operation for Atomic Max for floats
+	// https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#atomic-functions
+	uint assumed;
+	uint old = outMaxLum;	
+	do
 	{
-		prevVal = readVal;
-		newVal = floatBitsToUint(max(uintBitsToFloat(readVal),val));
-		readVal = atomicCompSwap(outMaxLum, prevVal, newVal);
-	} while(readVal != prevVal);
-}
-
-void ReduceBlockNV(out float maxLum, out float avgLum,
-				   in float lum)
-{
-	//Do 
-	float localMaxLum = lum;
-	float localAvgLum = lum;
-		
-	for(uint offset = NV_WRAP_SIZE / 2; offset > 0; offset >>= 1)
-	{		
-		float warpMaxLum, warpAvgLum;
-		warpMaxLum = shuffleDownNV(localMaxLum, offset, NV_WRAP_SIZE);
-		warpAvgLum = shuffleDownNV(localMaxLum, offset, NV_WRAP_SIZE);
-
-		localMaxLum = max(warpMaxLum, localMaxLum);
-		localAvgLum = warpAvgLum + localAvgLum;		
-	}
-	
-	if(gl_ThreadInWarpNV == 0)
-	{
-		reduceMaxBuffer[gl_WarpIDNV] = localMaxLum;
-		reduceAvgBuffer[gl_WarpIDNV] = localAvgLum;
-	}
-	memoryBarrierShared();
-	barrier();
-
-	// Only first warp (on that warp 8 thread will do the last reduce)
-	if(gl_WarpIDNV == 0 &&
-	   gl_ThreadInWarpNV < TOTAL_WARP_ON_BLOCK)
-	{
-		localMaxLum = reduceMaxBuffer[gl_ThreadInWarpNV];
-		localAvgLum = reduceAvgBuffer[gl_ThreadInWarpNV];
-
-		// Do one more pass of warp reduce
-		for(uint offset = TOTAL_WARP_ON_BLOCK / 2; offset > 0; offset >>= 1)
-		{		
-			float warpMaxLum, warpAvgLum;
-			warpMaxLum = shuffleDownNV(localMaxLum, offset, TOTAL_WARP_ON_BLOCK);
-			warpAvgLum = shuffleDownNV(localMaxLum, offset, TOTAL_WARP_ON_BLOCK);
-
-			localMaxLum = max(warpMaxLum, localMaxLum);
-			localAvgLum = warpAvgLum + localAvgLum;		
-		}
-		if(gl_ThreadInWarpNV == 0)
-		{
-			maxLum = localMaxLum;
-			avgLum = localAvgLum;
-		}
-	}
-}
-
-void ReduceBlockGeneric(out float maxLum, out float avgLum,
-				        in float lum)
-{
-
+		assumed = old;
+		uint newVal = floatBitsToUint(max(uintBitsToFloat(assumed),val));
+		old = atomicCompSwap(outMaxLum, assumed, newVal);
+	} while(assumed != old);
 }
 
 void ReduceBlock(out float maxLum, out float avgLum,
 				 in float lum)
 {
-	// Utilize Warp Intrinsics on Nvidia GPUs
-	#ifdef GL_NV_shader_thread_shuffle
-	ReduceBlockNV(maxLum, avgLum, lum);
-	#else 
-	#error "NV Card Required"
-	ReduceBlockGeneric(maxLum, avgLum, lum)
-	#endif
+	uint localId = gl_LocalInvocationID.x;
+
+	reduceBuffer[localId] = lum;
+	memoryBarrierShared(); barrier();
+	if(localId < 128) reduceBuffer[localId] = reduceBuffer[localId] + reduceBuffer[localId + 128];
+	memoryBarrierShared(); barrier();
+	if(localId < 64) reduceBuffer[localId] = reduceBuffer[localId] + reduceBuffer[localId + 64];
+	memoryBarrierShared(); barrier();
+	if(localId < 32) reduceBuffer[localId] = reduceBuffer[localId] + reduceBuffer[localId + 32];
+	memoryBarrierShared(); barrier();
+	if(localId < 16) reduceBuffer[localId] = reduceBuffer[localId] + reduceBuffer[localId + 16];
+	memoryBarrierShared(); barrier();
+	if(localId < 8) reduceBuffer[localId] = reduceBuffer[localId] + reduceBuffer[localId + 8];
+	memoryBarrierShared(); barrier();
+	if(localId < 4) reduceBuffer[localId] = reduceBuffer[localId] + reduceBuffer[localId + 4];
+	memoryBarrierShared(); barrier();
+	if(localId < 2) reduceBuffer[localId] = reduceBuffer[localId] + reduceBuffer[localId + 2];
+	memoryBarrierShared(); barrier();
+	if(localId < 1) reduceBuffer[localId] = reduceBuffer[localId] + reduceBuffer[localId + 1];
+	memoryBarrierShared(); barrier();
+	if(localId == 0) avgLum = reduceBuffer[localId];
+//	for(uint offset = WORK_X / 2; offset > 0; offset >>= 1)
+//	{
+//		if (localId < offset) 
+//		{
+//			reduceBuffer[localId] = lum + reduceBuffer[localId + offset];
+//		}		
+//		memoryBarrierShared();
+//		barrier();
+//	}
+	if(localId == 0) 
+		avgLum = reduceBuffer[localId];
+	memoryBarrierShared();
+	barrier();
+	// Again for max
+	reduceBuffer[localId] = lum;
+	memoryBarrierShared();
+	barrier();
+	for(uint offset = WORK_X / 2; offset > 0; offset >>= 1)
+	{
+		if (localId < offset) 
+		{
+			reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + offset]);
+		}		
+		memoryBarrierShared();
+		barrier();
+	}
+	if(localId == 0) 
+		maxLum = reduceBuffer[localId];	
 }
 
 // 16x16 block is always nice
-layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+layout (local_size_x = WORK_X, local_size_y = 1, local_size_z = 1) in;
 void main(void)
 {
 	// Call logic is per pixel
-	uvec2 globalId = gl_GlobalInvocationID.xy;
+	uint globalId = gl_GlobalInvocationID.x;
 	// Generate pixelIds
-	ivec2 pixId = ivec2(globalId);
+	ivec2 pixId = ivec2(globalId % uint(resolution[0]),
+						globalId / uint(resolution[0]));
 
 	// Skip out of image threads
-	if(any(greaterThanEqual(globalId, resolution))) return;
-
-	// Read from current buffer buffers
-	vec4 colorIn = texelFetch(tInImage, pixId, 0);
-
-	float luminance = ComputeLuminance(colorIn);
-
-	luminance = 1.0f;
-	float maxLum, avgLum;
+	float luminance = 0.0f;
+	if(all(lessThan(pixId, resolution)))	
+	{
+		// Read from current buffer buffers
+		vec4 colorIn = texelFetch(tInImage, pixId, 0);
+		luminance = 1.0f;// ComputeLuminance(colorIn);
+	}
+	// Do parallel reduction
+	float maxLum = 0, avgLum = 0;
 	ReduceBlock(maxLum, avgLum, luminance);
 
 	// Local main thread will write to global memory
@@ -187,10 +162,18 @@ void main(void)
 	// (which most of the images are) you call this function again 
 	// with a newly generated image (but it is more complex)
 	// instead we atomically combine each blocks result
-	if(all(equal(gl_LocalInvocationID.xy, uvec2(0))))
-	{
-		// No support for
-		AtomicAddToSSBO(avgLum);
-		AtomicMaxToSSBO(maxLum);
+	if(gl_LocalInvocationID.x == 0u)
+	{	
+		// No support for float atomics
+		// Create your own using atomicCAS
+//		AtomicAddToSSBO(avgLum);		
+//		AtomicMaxToSSBO(maxLum);
+
+		//AtomicAddToSSBO(luminance);
+		//AtomicMaxToSSBO(luminance);
+
+		outAvgLum = floatBitsToUint(avgLum);
+		outMaxLum = floatBitsToUint(maxLum);
+
 	}
 }
