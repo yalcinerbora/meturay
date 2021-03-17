@@ -85,7 +85,8 @@ void ReduceBlock(out float maxLum, out float avgLum,
 {
 	uint localId = gl_LocalInvocationID.x;
 
-	reduceBuffer[localId] = lum;
+	// Unrolled parallel reduction using shared mem
+	reduceBuffer[localId] = log(0.001f + lum);
 	memoryBarrierShared(); barrier();
 	if(localId < 128) reduceBuffer[localId] = reduceBuffer[localId] + reduceBuffer[localId + 128];
 	memoryBarrierShared(); barrier();
@@ -104,34 +105,53 @@ void ReduceBlock(out float maxLum, out float avgLum,
 	if(localId < 1) reduceBuffer[localId] = reduceBuffer[localId] + reduceBuffer[localId + 1];
 	memoryBarrierShared(); barrier();
 	if(localId == 0) avgLum = reduceBuffer[localId];
+	// Do this for max aswell
+	reduceBuffer[localId] = lum;
+	memoryBarrierShared(); barrier();
+	if(localId < 128) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 128]);
+	memoryBarrierShared(); barrier();
+	if(localId < 64) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 64]);
+	memoryBarrierShared(); barrier();
+	if(localId < 32) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 32]);
+	memoryBarrierShared(); barrier();
+	if(localId < 16) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 16]);
+	memoryBarrierShared(); barrier();
+	if(localId < 8) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 8]);
+	memoryBarrierShared(); barrier();
+	if(localId < 4) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 4]);
+	memoryBarrierShared(); barrier();
+	if(localId < 2) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 2]);
+	memoryBarrierShared(); barrier();
+	if(localId < 1) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 1]);
+	memoryBarrierShared(); barrier();
+	if(localId == 0) maxLum = reduceBuffer[localId];	
+
 //	for(uint offset = WORK_X / 2; offset > 0; offset >>= 1)
 //	{
 //		if (localId < offset) 
 //		{
-//			reduceBuffer[localId] = lum + reduceBuffer[localId + offset];
+//			reduceBuffer[localId] = reduceBuffer[localId] + reduceBuffer[localId + offset];
 //		}		
 //		memoryBarrierShared();
 //		barrier();
 //	}
-	if(localId == 0) 
-		avgLum = reduceBuffer[localId];
-	memoryBarrierShared();
-	barrier();
-	// Again for max
-	reduceBuffer[localId] = lum;
-	memoryBarrierShared();
-	barrier();
-	for(uint offset = WORK_X / 2; offset > 0; offset >>= 1)
-	{
-		if (localId < offset) 
-		{
-			reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + offset]);
-		}		
-		memoryBarrierShared();
-		barrier();
-	}
-	if(localId == 0) 
-		maxLum = reduceBuffer[localId];	
+//	if(localId == 0) avgLum = reduceBuffer[localId];
+//	memoryBarrierShared();
+//	barrier();
+//	// Again for max
+//	reduceBuffer[localId] = lum;
+//	memoryBarrierShared();
+//	barrier();
+//	for(uint offset = WORK_X / 2; offset > 0; offset >>= 1)
+//	{
+//		if (localId < offset) 
+//		{
+//			reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + offset]);
+//		}		
+//		memoryBarrierShared();
+//		barrier();
+//	}
+//	if(localId == 0) maxLum = reduceBuffer[localId];	
 }
 
 // 16x16 block is always nice
@@ -150,7 +170,7 @@ void main(void)
 	{
 		// Read from current buffer buffers
 		vec4 colorIn = texelFetch(tInImage, pixId, 0);
-		luminance = 1.0f;// ComputeLuminance(colorIn);
+		luminance = ComputeLuminance(colorIn);
 	}
 	// Do parallel reduction
 	float maxLum = 0, avgLum = 0;
@@ -166,14 +186,14 @@ void main(void)
 	{	
 		// No support for float atomics
 		// Create your own using atomicCAS
-//		AtomicAddToSSBO(avgLum);		
-//		AtomicMaxToSSBO(maxLum);
+		AtomicAddToSSBO(avgLum);		
+		AtomicMaxToSSBO(maxLum);
 
 		//AtomicAddToSSBO(luminance);
 		//AtomicMaxToSSBO(luminance);
 
-		outAvgLum = floatBitsToUint(avgLum);
-		outMaxLum = floatBitsToUint(maxLum);
+//		outAvgLum = floatBitsToUint(avgLum);
+//		outMaxLum = floatBitsToUint(maxLum);
 
 	}
 }
