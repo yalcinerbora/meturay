@@ -254,6 +254,11 @@ extern template class PathTracerLightWork<LightMatCube, GPUPrimitiveEmpty>;
 extern template class PathTracerLightWork<LightMatCube, GPUPrimitiveTriangle>;
 extern template class PathTracerLightWork<LightMatCube, GPUPrimitiveSphere>;
 
+// Ambient Occlusion Work Batches
+extern template class AmbientOcclusionWork<>;
+
+AmbientOcclusionMissWork
+
 // ===================================================
 using DirectTracerWorkerList = TypeList<DirectTracerWork<ConstantMat, GPUPrimitiveEmpty>,
                                         DirectTracerWork<ConstantMat, GPUPrimitiveTriangle>,

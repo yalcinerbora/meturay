@@ -44,7 +44,7 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
         glDispatchCompute(1, 1, 1);
         glMemoryBarrier(GL_UNIFORM_BARRIER_BIT);
 
-        // Debug check of the reduced values
+        //// Debug check of the reduced values
         //Vector2f v;
         //glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
         //glBindBuffer(GL_COPY_READ_BUFFER, luminanceBuffer);

@@ -44,6 +44,9 @@
     <ClCompile Include="..\..\..\Source\Tests\T_Quaternion.cpp">
       <Filter>Math</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\Tests\T_AOTracers.cpp">
+      <Filter>TracerMock</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="SceneIO">

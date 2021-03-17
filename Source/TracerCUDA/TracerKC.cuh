@@ -396,5 +396,16 @@ inline void AOWork(// Output
                    const PrimitiveId primId)
 {
 
-    // Pre-calculate ndotL
+    // Inputs    
+    const RayF& r = ray.ray;
+    HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
+    Vector3 position = r.AdvancedPos(ray.tMax);
+    Vector3 wi = -(r.getDirection().Normalize());
+    const GPUMediumI& m = *(gRenderState.mediumList[aux.mediumIndex]);
+    // Outputs
+    RayReg rayOut = {};
+    RayAuxPath auxOut = aux;
+    auxOut.depth++;
+
+
 }

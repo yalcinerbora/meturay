@@ -443,6 +443,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorCommonKC.cuh">
       <Filter>Accelerators</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\AOTracer.h">
+      <Filter>Tracers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">
@@ -546,6 +549,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\LambertTexMaterial.cu">
       <Filter>Materials</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracer.cu">
+      <Filter>Tracers</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

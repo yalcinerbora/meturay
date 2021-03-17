@@ -563,7 +563,7 @@ void VisorGL::Render()
         if(visorGUI)
             tmOpts = visorGUI->ToneMapOptions();
         else
-            ToneMapOptions tmOpts = DefaultTMOptions;
+            tmOpts = DefaultTMOptions;
 
         // Always call this even if there are not parameters
         // set to do tone mapping since(this function)

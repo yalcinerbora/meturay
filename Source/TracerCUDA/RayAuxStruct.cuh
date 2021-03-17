@@ -50,6 +50,12 @@ static const RayAuxPath InitialPathAux = RayAuxPath
     RayType::CAMERA_RAY
 };
 
+static const RayAuxAO InitialAOAux = RayAuxAO
+{
+    Vector3f(1.0f, 1.0f, 1.0f),
+    0
+};
+
 __device__ __host__
 inline void RayInitBasic(RayAuxBasic& gOutBasic,
                          // Input
@@ -81,4 +87,19 @@ inline void RayInitPath(RayAuxPath& gOutPath,
     init.mediumIndex = medumIndex;
     init.depth = 1;
     gOutPath = init;
+}
+
+__device__ __host__
+inline void RayInitAO(RayAuxAO& gOutAO,
+                      // Input
+                      const RayAuxAO& defaults,
+                      const RayReg& ray,
+                      // Index
+                      uint16_t medumIndex,
+                      const uint32_t localPixelId,
+                      const uint32_t pixelSampleId)
+{
+    RayAuxAO init = defaults;
+    init.pixelIndex = localPixelId;
+    gOutAO = init;
 }

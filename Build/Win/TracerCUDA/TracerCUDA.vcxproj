@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerCUDA\AcceleratorFunctions.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\AOTracer.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\AuxiliaryDataKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CameraFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CudaConstants.hpp" />
@@ -122,6 +123,7 @@
     <ClCompile Include="..\..\..\Source\TracerCUDA\TextureFunctions.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\Tracers.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerSystemCUDA.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightDisk.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.cu" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\CudaConstants.cpp" />
