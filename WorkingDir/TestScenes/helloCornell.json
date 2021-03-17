@@ -33,10 +33,7 @@
 		// Light Boundary Material
 		"id": 1,
 		"type": "LightConstant",
-		"radiance" : [1, 1, 1]
-		//"radiance" : [60, 60, 60]
-		//"radiance" : [150, 150, 150]
-		//"radiance" : [1500, 1500, 1500]
+		"radiance" : [50, 50, 50]		
     },
 	{
 		// Red Simple Material

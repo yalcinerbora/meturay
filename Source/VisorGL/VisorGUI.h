@@ -1,10 +1,11 @@
 #pragma once
 
 #include "TMOptionWindow.h"
+#include <gl/glew.h>
+
+#include "RayLib/Vector.h"
 
 struct GLFWwindow;
-
-
 
 class VisorGUI
 {
@@ -20,7 +21,8 @@ class VisorGUI
                                         VisorGUI(GLFWwindow*);
                                         ~VisorGUI();
         // Members
-        void                            Render();
+        void                            Render(GLuint sdrTex,
+                                               const Vector2i& resolution);
         // Access GUI Controlled Parameters
         const ToneMapOptions&           ToneMapOptions() const;
 

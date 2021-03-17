@@ -43,8 +43,10 @@ UB_TM_PARAMS uniform Parameters
 {
 	bool	doToneMap;
 	bool	doGamma;
+	bool	doKeyAdjust;
 	float	gammaValue;
 	float	burnRatio;
+	float	key;
 };
 
 vec3 RGBToYxy(in vec3 color)
@@ -88,19 +90,15 @@ vec4 TonemapReinhard2002(in vec4 hdrColor)
 {
 	// Fist Convert to Yxy
 	vec3 colorXxy = RGBToYxy(hdrColor.rgb);
-
-	float key = 0.18f;
 	// Equation 2
-	colorXxy.r = (key / avgLum) * colorXxy.r;
-
+	if(doKeyAdjust)
+		colorXxy.r = (key / avgLum) * colorXxy.r;
 	// Equation 4
 	float oldY = colorXxy.r;
-	float white = maxLum * burnRatio;
+	float white = maxLum;// * burnRatio;
 	float whiteSqr = white * white;
 	float newY = oldY * (1 + (oldY / whiteSqr)) / (1 + oldY);
 	colorXxy.r = newY;
-
-	//vec3 sdrColor = colorXxy;
 
 	// Convert back
 	return vec4(YxyToRGB(colorXxy), hdrColor.a);

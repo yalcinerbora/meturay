@@ -557,7 +557,7 @@ void VisorGL::Render()
 
     // Do Tone Map
     // Only do tone map if HDR image is modified
-    //if(imageModified)
+    if(imageModified)
     {
         ToneMapOptions tmOpts;
         if(visorGUI)
@@ -580,7 +580,8 @@ void VisorGL::Render()
     RenderImage();
 
     // After Render GUI
-    if(vOpts.enableGUI) visorGUI->Render();
+    if(vOpts.enableGUI) visorGUI->Render(sdrTexture,
+                                         imageSize);
 
     // Finally Swap Buffers
     glfwSwapBuffers(window);

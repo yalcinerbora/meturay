@@ -41,14 +41,14 @@ class ToneMapGL
         };
         struct TMOBufferGL
         {
-            // Just to be sure
-            static_assert(sizeof(bool) == 1);
             // OGL stores bools as uint
             // OGL Spec 4.5 page 137
             uint32_t    doToneMap;
             uint32_t    doGamma;
+            uint32_t    doKeyAdjust;
             float       gammaValue;
             float       burnRatio;
+            float       key;
         };
         #pragma pack(pop)
 
@@ -75,22 +75,21 @@ inline ToneMapGL::ToneMapGL(bool isOGLContextActive)
 {
     if(!isOGLContextActive) return;
 
+    // Compile Shaders
     compLumReduce = ShaderGL(ShaderType::COMPUTE, u8"Shaders/LumReduction.comp");
     compToneMap = ShaderGL(ShaderType::COMPUTE, u8"Shaders/TonemapAndGamma.comp");
     compAvgDivisor = ShaderGL(ShaderType::COMPUTE, u8"Shaders/AvgDivisor.comp");
     
-
     size_t lumBufferSizeDebug = sizeof(LumBufferGL) + sizeof(float) * 64;
     // Allocate Buffers
     glGenBuffers(1, &luminanceBuffer);
     glBindBuffer(GL_COPY_WRITE_BUFFER, luminanceBuffer);
     glBufferStorage(GL_COPY_WRITE_BUFFER,
-                    //sizeof(LumBufferGL), nullptr,
-                    lumBufferSizeDebug, nullptr,
+                    sizeof(LumBufferGL), nullptr,                    
                     // This buffer is GPU only so no flags required
-                    //0x0);
-                    GL_MAP_READ_BIT |
-                    GL_DYNAMIC_STORAGE_BIT);
+                    0x0);
+                    //GL_MAP_READ_BIT |
+                    //GL_DYNAMIC_STORAGE_BIT);
     
     glGenBuffers(1, &tmOptionBuffer);
     glBindBuffer(GL_COPY_WRITE_BUFFER, tmOptionBuffer);

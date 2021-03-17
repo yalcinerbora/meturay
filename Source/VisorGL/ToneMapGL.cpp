@@ -10,7 +10,7 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
 {
     // Check options if tone map is requested update
     // max/avg luminance
-    //if(tmOpts.doToneMap)
+    if(tmOpts.doToneMap)
     {
         // Clear Luminance Buffer
         glBindBuffer(GL_COPY_READ_BUFFER, luminanceBuffer);
@@ -43,38 +43,27 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
         glUniform2iv(U_RES, 1, static_cast<const int*>(resolution));
         glDispatchCompute(1, 1, 1);
         glMemoryBarrier(GL_UNIFORM_BARRIER_BIT);
-        glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
 
-        size_t lumBufferSizeDebug = sizeof(LumBufferGL) + sizeof(float) * 64;
-        std::vector<float> lumBufferCPU(66);
+        // Debug check of the reduced values
         //Vector2f v;
-        glBindBuffer(GL_COPY_READ_BUFFER, luminanceBuffer);
+        //glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+        //glBindBuffer(GL_COPY_READ_BUFFER, luminanceBuffer);
         //glGetBufferSubData(GL_COPY_READ_BUFFER, 0, sizeof(Vector2),
         //                   &v);
-        glGetBufferSubData(GL_COPY_READ_BUFFER, 0, lumBufferSizeDebug,
-                           lumBufferCPU.data());
-
-        METU_LOG("max %f, avg %f", lumBufferCPU[0], lumBufferCPU[1]);
-        //METU_LOG("max %f, avg %f, [%f, %f, %f, %f, %f, %f, %f, %f, %f]", 
-        //         lumBufferCPU[0], lumBufferCPU[1],
-        //         lumBufferCPU[2], lumBufferCPU[3], lumBufferCPU[4],
-        //         lumBufferCPU[5], lumBufferCPU[6], lumBufferCPU[7],
-        //         lumBufferCPU[8], lumBufferCPU[9], lumBufferCPU[10]);
+        //METU_LOG("max %f, avg %f", v[0], v[1]);
     }
-    // Either gamma or not call ToneMap shader
+    // Either gamma or not, call ToneMap shader
     // since we need to transport image to SDR image
     // Post process sahder requires it to be there
 
     // Align Padding for UBO
     TMOBufferGL tmOptsGL;
-    tmOptsGL.doToneMap = static_cast<uint32_t>(true);
-    tmOptsGL.doGamma = static_cast<uint32_t>(true);
-    tmOptsGL.gammaValue = 2.2f;
-    tmOptsGL.burnRatio = 1.0f;
-    //tmOptsGL.doToneMap = static_cast<uint32_t>(tmOpts.doToneMap);
-    //tmOptsGL.doGamma = static_cast<uint32_t>(tmOpts.doGamma);
-    //tmOptsGL.gammaValue = tmOpts.gamma;
-    //tmOptsGL.gammaValue = tmOpts.burnRatio;
+    tmOptsGL.doToneMap = static_cast<uint32_t>(tmOpts.doToneMap);
+    tmOptsGL.doGamma = static_cast<uint32_t>(tmOpts.doGamma);
+    tmOptsGL.doKeyAdjust = static_cast<uint32_t>(tmOpts.doKeyAdjust);
+    tmOptsGL.gammaValue = tmOpts.gamma;
+    tmOptsGL.burnRatio = tmOpts.burnRatio;
+    tmOptsGL.key = tmOpts.key;
 
     // Transfer options to GPU Memory
     glBindBuffer(GL_UNIFORM_BUFFER, tmOptionBuffer);

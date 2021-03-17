@@ -26,7 +26,7 @@ class TMOptionWindow : public VisorGUIWindowI
 
 inline TMOptionWindow::TMOptionWindow()
     : windowClosed(true)
-    , opts{}
+    , opts{DefaultTMOptions}
 {}
 
 inline TMOptionWindow::TMOptionWindow(bool windowClosed,
