@@ -105,27 +105,27 @@
     "BaseMedium" : 0,
 
 	"Surfaces": [
-	{
-		// Sphere Back
-		"transform": 0,
-		"accelerator": 0,
-		"material": 4,
-        "primitive": 0
-	},
-	{
-		// Sphere Front
-		"transform": 0,
-		"accelerator": 0,
-		"material": 4,
-        "primitive": 1
-	},
+	// {
+	// 	// Sphere Back
+	// 	"transform": 0,
+	// 	"accelerator": 0,
+	// 	"material": 4,
+    //     "primitive": 0
+	// },
+	// {
+	// 	// Sphere Front
+	// 	"transform": 0,
+	// 	"accelerator": 0,
+	// 	"material": 4,
+    //     "primitive": 1
+	// },
 	// Cornell Box
-    {
-		"transform": 0,
-		"accelerator": 0,
-		"primitive": [2, 3, 5],
-		"material": [4, 3, 2]
-	},
+    // {
+	// 	"transform": 0,
+	// 	"accelerator": 0,
+	// 	"primitive": [2, 3, 5],
+	// 	"material": [4, 3, 2]
+	// },
 	// // Cornell Box Light Occluder
 	// {
 	// 	"transform": 0,
@@ -134,12 +134,13 @@
 	// 	"material": 4
 	// },
 	// Cornell Box Back Face
-	{
-		"transform": 0,
-		"accelerator": 0,
-		"primitive": 6,
-		"material": 4
-	}],
+	// {
+	// 	"transform": 0,
+	// 	"accelerator": 0,
+	// 	"primitive": 6,
+	// 	"material": 4
+	// }
+	],
 
 	"LightSurfaces": [
 		{"primitive": 4, "material": 1, "accelerator": 0}

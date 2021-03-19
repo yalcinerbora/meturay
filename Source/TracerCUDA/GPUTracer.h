@@ -40,9 +40,6 @@ class GPUTracer : public GPUTracerI
     private:
         static constexpr const size_t       AlignByteCount = 128;
 
-        // Max Bit Sizes for Efficient Sorting
-        const Vector2i                              maxAccelBits;
-        const Vector2i                              maxWorkBits;
         //
         const uint32_t                              maxHitSize;
         // Batches of Accelerator
@@ -64,6 +61,9 @@ class GPUTracer : public GPUTracerI
         TracerError                                 LoadMediums(std::vector<const GPUMediumI*>&);
 
     protected:
+        // Max Bit Sizes for Efficient Sorting
+        Vector2i                            maxAccelBits;
+        Vector2i                            maxWorkBits;
         // Cuda System For Kernel Calls
         const CudaSystem&                   cudaSystem;
         // GPU Memory

@@ -8,6 +8,9 @@
 #include "GPULightI.h"
 #include "EstimatorFunctions.cuh"
 #include "GPUMediumVacuum.cuh"
+#include "GPUSurface.h"
+
+#include "RayLib/HemiDistribution.h"
 
 struct DirectTracerGlobal
 {
@@ -34,6 +37,8 @@ struct EmptyState {};
 struct AmbientOcclusionGlobal : public DirectTracerGlobal
 {
     float               maxDistance;
+    bool                hitPhase;
+    HitKey              aoMissKey;
 };
 
 struct PathTracerLocal
@@ -186,8 +191,8 @@ inline void PathWork(// Output
     uint32_t sampleCount = maxOutRay;
     bool emissiveMat = gLocalState.emissiveMaterial;
     bool specularMat = gLocalState.specularMaterial;
-    static int PATH_RAY_INDEX = 0;
-    static int NEE_RAY_INDEX = 1;
+    static constexpr int PATH_RAY_INDEX = 0;
+    static constexpr int NEE_RAY_INDEX = 1;
     
     // Output image
     auto& img = gRenderState.gImage;
@@ -372,7 +377,9 @@ inline void AOMissWork(// Output
 {
     // We did not hit anything just accumulate accumulate
     auto& img = gRenderState.gImage;
-    ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(aux.aoFactor, 1.0f));
+    Vector4f result = Vector4f(aux.aoFactor, 1.0f);
+    //Vector4f result = Vector4f(0.0f, 1.0f, 0.0f, 1.0f);
+    ImageAccumulatePixel(img, aux.pixelIndex, result);
 }
 
 template <class MGroup>
@@ -395,17 +402,55 @@ inline void AOWork(// Output
                    const HitKey matId,
                    const PrimitiveId primId)
 {
+    // Check pass
+    if(gRenderState.hitPhase)
+    {
+        // On hit phase
+        // If AO kernel is called that means we hit something
+        // Just skip
+        // Generate Dummy Ray and Terminate
+        RayReg rDummy = EMPTY_RAY_REGISTER;
+        rDummy.Update(gOutRays, 0);
+        gOutBoundKeys[0] = HitKey::InvalidKey;
+        gOutRayAux[0].pixelIndex = UINT32_MAX;
+    }
+    else
+    {
+        // Trace phase
+        // Just sample a hemispherical ray regardless of the Mat type
+        // and write that ray. Also write missAO Material HitKey
+        RayReg rayOut = {};
+        RayAuxAO auxOut = aux;
+        Vector3 position = ray.ray.AdvancedPos(ray.tMax);
 
-    // Inputs    
-    const RayF& r = ray.ray;
-    HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
-    Vector3 position = r.AdvancedPos(ray.tMax);
-    Vector3 wi = -(r.getDirection().Normalize());
-    const GPUMediumI& m = *(gRenderState.mediumList[aux.mediumIndex]);
-    // Outputs
-    RayReg rayOut = {};
-    RayAuxPath auxOut = aux;
-    auxOut.depth++;
+        float pdf;
+        // We are at generation phase generate a ray
+        Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
+        Vector2 xi(GPUDistribution::Uniform<float>(rng),
+                   GPUDistribution::Uniform<float>(rng));
+        Vector3 direction = HemiDistribution::HemiCosineCDF(xi, pdf);
+        QuatF q = Quat::RotationBetweenZAxis(normal);
+        direction = q.ApplyRotation(direction);
 
+        // Cos Tetha
+        float nDotL = max(normal.Dot(direction), 0.0f);
 
+        // Ray out
+        Vector3 outPos = position + normal * MathConstants::Epsilon;
+        RayF ray = RayF(direction, outPos);
+        // AO Calculation
+        Vector3 aoMultiplier = Vector3(/*nDotL **/ MathConstants::InvPi);
+        auxOut.aoFactor = aoMultiplier;
+        auxOut.aoFactor = (pdf == 0.0f) ? Zero3 : (auxOut.aoFactor / pdf);
+
+        // Finally Write
+        rayOut.ray = ray;
+        rayOut.tMin = 0.0f;
+        rayOut.tMax = gRenderState.maxDistance;
+        rayOut.Update(gOutRays, 0);
+        // Write Aux
+        gOutRayAux[0] = auxOut;
+        // Here Write the Hit shaders specific boundary material
+        gOutBoundKeys[0] = gRenderState.aoMissKey;
+    }
 }

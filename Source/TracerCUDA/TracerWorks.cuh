@@ -4,6 +4,7 @@
 #include "SampleMaterials.cuh"
 #include "UnrealMaterial.cuh"
 #include "LambertTexMaterial.cuh"
+#include "EmptyMaterial.cuh"
 #include "TracerKC.cuh"
 
 #include "WorkPool.h"
@@ -18,10 +19,7 @@ class DirectTracerWork
     : public GPUWorkBatch<DirectTracerGlobal, EmptyState, RayAuxBasic,
                           MGroup, PGroup, BasicWork<MGroup>, 
                           PGroup::GetSurfaceFunction>
-{
-    public:
-        const char*                     Type() const override { return TypeName(); }
-
+{   
     private:
     protected:
     public:
@@ -33,8 +31,9 @@ class DirectTracerWork
 
         void                            GetReady() override {}
         // We will not bounce more than once
-        uint8_t                         OutRayCount() const override { return 0; }
-        
+        uint8_t                         OutRayCount() const override { return 0; }        
+
+        const char*                     Type() const override { return TypeName(); }
 };
 
 template<class MGroup, class PGroup>
@@ -43,9 +42,6 @@ class PathTracerWork
                           MGroup, PGroup, PathWork<MGroup>, 
                           PGroup::GetSurfaceFunction>
 {
-    public:
-        const char*                     Type() const override { return TypeName(); }
-
     private:
         bool                            neeOn;
 
@@ -61,6 +57,7 @@ class PathTracerWork
         void                            GetReady() override {}
         uint8_t                         OutRayCount() const override;
         
+        const char*                     Type() const override { return TypeName(); }
 };
 
 template<class MGroup, class PGroup>
@@ -69,9 +66,6 @@ class PathTracerLightWork
                           MGroup, PGroup, PathLightWork<MGroup>, 
                           PGroup::GetSurfaceFunction>
 {
-    public:
-        const char*                     Type() const override { return TypeName(); }
-
     private:
         bool                            neeOn;
 
@@ -87,19 +81,19 @@ class PathTracerLightWork
 
         void                            GetReady() override {}
         uint8_t                         OutRayCount() const override { return 0; }
-        
+
+        const char*                     Type() const override { return TypeName(); }
 };
 
-template<class MGroup, class PGroup>
+template<class PGroup>
 class AmbientOcclusionWork 
     : public GPUWorkBatch<AmbientOcclusionGlobal, EmptyState, RayAuxAO,
-                          MGroup, PGroup, AOWork<MGroup>, 
+                          EmptyMat<BasicSurface>, PGroup, AOWork<EmptyMat<BasicSurface>>,
                           PGroup::GetSurfaceFunction>
 {
     public:
-        const char*                     Type() const override { return TypeName(); }
+        static const char*              TypeName() { return TypeNameGen("AO"); }
 
-    private:
     protected:
     public:
         // Constrcutors & Destructor
@@ -110,17 +104,17 @@ class AmbientOcclusionWork
 
         void                            GetReady() override {}
         uint8_t                         OutRayCount() const override { return 1; }
-        
+
+        const char*                     Type() const override { return TypeName(); }
 };
 
-template<class MGroup, class PGroup>
 class AmbientOcclusionMissWork 
     : public GPUWorkBatch<AmbientOcclusionGlobal, EmptyState, RayAuxAO,
-                          MGroup, PGroup, AOMissWork<MGroup>, 
-                          PGroup::GetSurfaceFunction>
+                          EmptyMat<EmptySurface>, GPUPrimitiveEmpty, AOMissWork<EmptyMat<EmptySurface>>,
+                          GPUPrimitiveEmpty::GetSurfaceFunction>
 {
-    public:
-        const char*                     Type() const override { return TypeName(); }
+    public:        
+        static const char*              TypeName() { return "AOMiss"; }
 
     private:
     protected:
@@ -132,8 +126,9 @@ class AmbientOcclusionMissWork
                                         ~AmbientOcclusionMissWork() = default;
 
         void                            GetReady() override {}
-        uint8_t                         OutRayCount() const override { return 1; }
-        
+        uint8_t                         OutRayCount() const override { return 0; }
+
+        const char*                     Type() const override { return TypeName(); }
 };
 
 template<class M, class P>
@@ -187,22 +182,21 @@ PathTracerLightWork<M, P>::PathTracerLightWork(const GPUMaterialGroupI& mg,
     localData.emissiveMaterial = materialGroup.IsEmissiveGroup();
 }
 
-template<class M, class P>
-AmbientOcclusionWork<M, P>::AmbientOcclusionWork(const GPUMaterialGroupI& mg,
-                                                 const GPUPrimitiveGroupI& pg,
-                                                 const GPUTransformI* const* t)
+template<class P>
+AmbientOcclusionWork<P>::AmbientOcclusionWork(const GPUMaterialGroupI& mg,
+                                              const GPUPrimitiveGroupI& pg,
+                                              const GPUTransformI* const* t)
     : GPUWorkBatch<AmbientOcclusionGlobal, EmptyState, RayAuxAO,
-                   M, P, AOWork<M>, 
+                   EmptyMat<BasicSurface>, P, AOWork<EmptyMat<BasicSurface>>,
                    P::GetSurfaceFunction>(mg, pg, t)
 {}
 
-template<class M, class P>
-AmbientOcclusionMissWork<M, P>::AmbientOcclusionMissWork(const GPUMaterialGroupI& mg,
-                                                         const GPUPrimitiveGroupI& pg,
-                                                         const GPUTransformI* const* t)
+inline AmbientOcclusionMissWork::AmbientOcclusionMissWork(const GPUMaterialGroupI& mg,
+                                                          const GPUPrimitiveGroupI& pg,
+                                                          const GPUTransformI* const* t)
     : GPUWorkBatch<AmbientOcclusionGlobal, EmptyState, RayAuxAO,
-                   M, P, AOMissWork<M>,
-                   P::GetSurfaceFunction>(mg, pg, t)
+                   EmptyMat<EmptySurface>, GPUPrimitiveEmpty, AOMissWork<EmptyMat<EmptySurface>>,
+                   GPUPrimitiveEmpty::GetSurfaceFunction>(mg, pg, t)
 {}
 
 // Basic Tracer Work Batches
@@ -253,11 +247,10 @@ extern template class PathTracerLightWork<LightMatTextured, GPUPrimitiveSphere>;
 extern template class PathTracerLightWork<LightMatCube, GPUPrimitiveEmpty>;
 extern template class PathTracerLightWork<LightMatCube, GPUPrimitiveTriangle>;
 extern template class PathTracerLightWork<LightMatCube, GPUPrimitiveSphere>;
-
+// ===================================================
 // Ambient Occlusion Work Batches
-extern template class AmbientOcclusionWork<>;
-
-AmbientOcclusionMissWork
+extern template class AmbientOcclusionWork<GPUPrimitiveTriangle>;
+extern template class AmbientOcclusionWork<GPUPrimitiveSphere>;
 
 // ===================================================
 using DirectTracerWorkerList = TypeList<DirectTracerWork<ConstantMat, GPUPrimitiveEmpty>,
@@ -294,3 +287,7 @@ using PathTracerLightWorkerList = TypeList<PathTracerLightWork<LightMatConstant,
                                            PathTracerLightWork<LightMatCube, GPUPrimitiveEmpty>,
                                            PathTracerLightWork<LightMatCube, GPUPrimitiveTriangle>,
                                            PathTracerLightWork<LightMatCube, GPUPrimitiveSphere>>;
+// ===================================================
+using AmbientOcclusionWorkerList = TypeList<AmbientOcclusionWork<GPUPrimitiveTriangle>,
+                                            AmbientOcclusionWork<GPUPrimitiveSphere>,
+                                            AmbientOcclusionMissWork>;

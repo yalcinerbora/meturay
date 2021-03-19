@@ -5,6 +5,8 @@
 
 #include <cuda_fp16.h>
 
+struct RayReg;
+
 enum class RayType : uint8_t
 {
     NEE_RAY,

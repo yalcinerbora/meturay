@@ -1,14 +1,13 @@
 #pragma once
 
-struct RayReg;
-class RandomGPU;
 
 #include "MaterialDataStructs.h"
 
 #include "RayLib/Constants.h"
 
-#include "ImageFunctions.cuh"
 #include "GPUSurface.h"
+
+class RandomGPU;
 
 __device__ inline
 Vector3 ConstantSample(// Sampled Output

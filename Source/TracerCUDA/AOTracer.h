@@ -3,10 +3,13 @@
 #include "WorkPool.h"
 #include "GPULightI.h"
 
+#include "EmptyMaterial.cuh"
+#include "GPUPrimitiveEmpty.h"
+
 class AOTracer final : public RayTracer
 {
     public:
-        static constexpr const char*    TypeName() { return "PathTracer"; }
+        static constexpr const char*    TypeName() { return "AOTracer"; }
 
         static constexpr const char*    MAX_DISTANCE_NAME = "MaxDistance";
 
@@ -20,10 +23,19 @@ class AOTracer final : public RayTracer
         Options                 options;
         WorkBatchMap            workMap;
 
-        // Generic work pool
+        // AOMiss HitKey
+        HitKey                  aoMissKey;
+
+        // Work pool
         WorkPool<>              workPool;
-        // Light material work pool
-        WorkPool<>              lightWorkPool;
+
+        // Empty Prim and Material (For generating custom work for hits)
+        GPUPrimitiveEmpty       emptyPrim;
+        EmptyMat<BasicSurface>  emptyMat;
+
+        // States
+        bool                    hitPhase;
+        uint32_t                depth;
         
     protected:
     public:

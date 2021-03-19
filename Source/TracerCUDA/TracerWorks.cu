@@ -50,3 +50,7 @@ template class PathTracerLightWork<LightMatTextured, GPUPrimitiveSphere>;
 template class PathTracerLightWork<LightMatCube, GPUPrimitiveEmpty>;
 template class PathTracerLightWork<LightMatCube, GPUPrimitiveTriangle>;
 template class PathTracerLightWork<LightMatCube, GPUPrimitiveSphere>;
+// ===================================================
+// Ambient Occlusion Work Batches
+template class AmbientOcclusionWork<GPUPrimitiveTriangle>;
+template class AmbientOcclusionWork<GPUPrimitiveSphere>;

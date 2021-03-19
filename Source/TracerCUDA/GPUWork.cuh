@@ -50,7 +50,9 @@ class GPUWorkBatch
     : public GPUWorkBatchD<GlobalData, RayData>
 {
     public:
-        static const char*              TypeName();
+        static const char*              TypeNameGen(const char* mgOverride = nullptr,
+                                                    const char* pgOverride = nullptr);
+        static const char*              TypeName() {return TypeNameGen();}
 
     private:
         using SF = SurfaceFunc<MGroup::Surface, 
@@ -111,10 +113,16 @@ void GPUWorkBatchD<GD, RD>::SetRayDataPtrs(RD* dRDOut,
 template <class GD, class LD, class RD, class MG, class PG,
           WorkFunc<GD, LD, RD, MG> WF,
           SurfaceFuncGenerator<MG::Surface, PG::HitData, PG::PrimitiveData> SF>
-inline const char* GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::TypeName()
+inline const char* GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::TypeNameGen(const char* mgOverride,
+                                                                         const char* pgOverride)
 {
-    static std::string typeName = MangledNames::WorkBatch(PG::TypeName(),
-                                                          MG::TypeName());
+    const char* pgName = PG::TypeName();
+    const char* mgName = MG::TypeName();
+    if(pgOverride) pgName = pgOverride;
+    if(mgOverride) mgName = mgOverride;
+
+    static std::string typeName = MangledNames::WorkBatch(pgName,
+                                                          mgName);
     return typeName.c_str();
 }
 

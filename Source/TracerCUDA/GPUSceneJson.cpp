@@ -330,6 +330,33 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     if((e = GenIdLookup(cameraList, *cameras, CAMERA)) != SceneError::OK)
         return e;
 
+
+    // Initially Find Identity Transform If available
+    // Or add it on your own
+    // And finally force load Identity transform
+    for(const auto& tNode : transformList)
+    {
+        const NodeIndex nIndex = tNode.second.first;
+        const auto& jsnNode = (*transforms)[nIndex];
+        std::string transformType = jsnNode[NodeNames::TYPE];
+        if(transformType == NodeNames::TRANSFORM_IDENTITY)
+        {
+            identityTransformId = tNode.first;
+            AttachTransform(identityTransformId);
+        }
+            
+    }
+    // If we did not found identity transform create it on your own
+    if((transformGroupNodes.find(NodeNames::TRANSFORM_IDENTITY)) == transformGroupNodes.cend())
+    {
+        // Assign an Unused ID
+        constexpr uint32_t MAX_UINT = std::numeric_limits<uint32_t>::max();
+        auto& transformSet = transformGroupNodes.emplace(NodeNames::TRANSFORM_IDENTITY, NodeListing()).first->second;
+        auto& node = *transformSet.emplace(std::make_unique<SceneNodeJson>(nullptr, MAX_UINT)).first;
+        node->AddIdIndexPair(MAX_UINT, 0);
+        identityTransformId = MAX_UINT;
+    }
+
     // Iterate over surfaces
     // and collect data for groups and batches
     uint32_t surfId = 0;
@@ -531,17 +558,6 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                              std::move(cameraNode)
                                          });
 
-    }
-    
-    
-    // And finally force load Identity transform
-    if((transformGroupNodes.find(NodeNames::TRANSFORM_IDENTITY)) == transformGroupNodes.cend())
-    {
-        // Assign an Unused ID
-        constexpr uint32_t MAX_UINT = std::numeric_limits<uint32_t>::max();
-        auto& transformSet = transformGroupNodes.emplace(NodeNames::TRANSFORM_IDENTITY, NodeListing()).first->second;
-        auto& node = *transformSet.emplace(std::make_unique<SceneNodeJson>(nullptr, MAX_UINT)).first;
-        node->AddIdIndexPair(MAX_UINT, 0);
     }
         
     // Finally Load Texture Info for material access

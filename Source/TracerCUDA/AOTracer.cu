@@ -3,18 +3,20 @@
 #include "RayTracer.hpp"
 
 #include "RayLib/GPUSceneI.h"
+#include "RayLib/BitManipulation.h"
 
 #include "GPUWork.cuh"
 #include "TracerKC.cuh"
+#include "TracerWorks.cuh"
 
 AOTracer::AOTracer(const CudaSystem& sys,
                    const GPUSceneI& scene,
                    const TracerParameters& params)
     : RayTracer(sys, scene, params)
+    , emptyMat(sys.BestGPU())
 {
 
-    workPool.AppendGenerators(AOTracerWorkerList{});
-    lightWorkPool.AppendGenerators(AOTracerLightWorkerList{});
+    workPool.AppendGenerators(AmbientOcclusionWorkerList{});
 }
 
 TracerError AOTracer::Initialize()
@@ -23,31 +25,50 @@ TracerError AOTracer::Initialize()
     if((err = RayTracer::Initialize()) != TracerError::OK)
         return err;
 
+    // We will add special work key for AO misses
+    // Check if max work bits support that if not increment
+    const Vector2i& workMaxIds = scene.MaxMatIds();
+    int32_t maxWorkBatchId = workMaxIds[0];
+    int32_t aoMissWorkBatchId = maxWorkBatchId + 1;
+    // Increment batch work id by one
+    int32_t newBatchWorkBits = Utility::FindFirstSet32(aoMissWorkBatchId) + 1;
+    maxWorkBits[0] = newBatchWorkBits;
+
+    // Generate Combined Key
+    aoMissKey = HitKey::CombinedKey(aoMissWorkBatchId, 0);
+    
+    // Add AO Miss Work
+    GPUWorkBatchI* aoMissBatch = nullptr;
+    if((err = workPool.GenerateWorkBatch(aoMissBatch,
+                                         AmbientOcclusionMissWork::TypeName(),
+                                         emptyMat, emptyPrim,
+                                         dTransforms)) != TracerError::OK)
+        return err;
+    workMap.emplace(aoMissWorkBatchId, aoMissBatch);
+
     // Generate your worklist
     const auto& infoList = scene.WorkBatchInfo();
     for(const auto& workInfo : infoList)
     {
+        // Dont fetch mat group since we are not going to use it
         const GPUPrimitiveGroupI& pg = *std::get<1>(workInfo);
-        const GPUMaterialGroupI& mg = *std::get<2>(workInfo);
         uint32_t batchId = std::get<0>(workInfo);
 
-        // Generate work batch from appropirate work pool
-        GPUWorkBatchI* batch = nullptr;
-        if(mg.IsLightGroup())
-        {
-            bool emptyPrim = (std::string(pg.Type()) ==
-                              std::string(BaseConstants::EMPTY_PRIMITIVE_NAME));
+        const std::string workTypeName = MangledNames::WorkBatch(pg.Type(), "AO");
 
-            WorkPool<>& wp = lightWorkPool;
-            if((err = wp.GenerateWorkBatch(batch, mg, pg, dTransforms)) != TracerError::OK)
-                return err;
-        }
-        else
+        if(std::string(pg.Type()) == std::string(BaseConstants::EMPTY_PRIMITIVE_NAME))
         {
-            WorkPool<>& wp = workPool;
-            if((err = wp.GenerateWorkBatch(batch, mg, pg, dTransforms)) != TracerError::OK)
-                return err;
+            workMap.emplace(batchId, aoMissBatch);
+            continue;
         }
+
+        // Generate work batch from appropirate work pool        
+        WorkPool<>& wp = workPool;
+        GPUWorkBatchI* batch = nullptr;
+        if((err = wp.GenerateWorkBatch(batch, workTypeName.c_str(),
+                                       emptyMat, pg, dTransforms)) != TracerError::OK)
+            return err;
+
         workMap.emplace(batchId, batch);
     }
     return TracerError::OK;
@@ -65,6 +86,8 @@ TracerError AOTracer::SetOptions(const TracerOptionsI& opts)
 
 void AOTracer::GenerateWork(int cameraId)
 {
+    depth = 0;
+    hitPhase = false;
     GenerateRays<RayAuxAO, RayInitAO>(dCameras[cameraId],
                                       options.sampleCount,
                                       InitialAOAux);
@@ -72,6 +95,8 @@ void AOTracer::GenerateWork(int cameraId)
 
 void AOTracer::GenerateWork(const VisorCamera& cam)
 {
+    depth = 0;
+    hitPhase = false;
     GenerateRays<RayAuxAO, RayInitAO>(cam, options.sampleCount,
                                       InitialAOAux);
 }
@@ -86,6 +111,8 @@ bool AOTracer::Render()
     AmbientOcclusionGlobal globalData;
     globalData.gImage = imgMemory.GMem<Vector4>();
     globalData.maxDistance = options.maxDistance;
+    globalData.hitPhase = hitPhase;
+    globalData.aoMissKey = aoMissKey;
 
     // Generate output partitions
     uint32_t totalOutRayCount = 0;
@@ -123,8 +150,10 @@ bool AOTracer::Render()
     // for the next iteration
     SwapAuxBuffers();
 
+    hitPhase = false;
+    depth++;
     // If we exausted the rays quit
-    if(totalOutRayCount == 0) return false;
+    if(totalOutRayCount == 0 || depth == 2) return false;
     // Or continue
     return true;
 }

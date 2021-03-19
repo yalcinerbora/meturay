@@ -371,12 +371,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\CudaConstants.hpp">
       <Filter>Cuda System</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterials.cuh">
-      <Filter>Materials</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterialsKC.cuh">
-      <Filter>Materials</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\SampleMaterials.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
@@ -445,6 +439,18 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\AOTracer.h">
       <Filter>Tracers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterial.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterialKC.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterials.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterialsKC.cuh">
+      <Filter>Materials</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -520,9 +526,6 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightDisk.cu">
       <Filter>Lights</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\BasicMaterials.cu">
-      <Filter>Materials</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\SampleMaterials.cu">
       <Filter>Materials</Filter>
     </CudaCompile>
@@ -552,6 +555,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracer.cu">
       <Filter>Tracers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\BasicMaterials.cu">
+      <Filter>Materials</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

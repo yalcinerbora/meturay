@@ -21,6 +21,7 @@ All of them should be provided
 #include "GPUPrimitiveP.cuh"
 #include "TypeTraits.h"
 #include "Random.cuh"
+#include "GPUSurface.h"
 
 struct EmptyData {};
 struct EmptyHit {};
@@ -81,18 +82,23 @@ struct EPrimFunctions
 
 struct EmptySurfaceGenerator
 {
-    template<class Surface>
-    __device__
-    static Surface GetEmptySurface(const EmptyHit&, const GPUTransformI&,
-                                   PrimitiveId, const EmptyData&)
+    template <class Surface, SurfaceFunc<Surface, EmptyHit, EmptyData> SF>
+    struct SurfaceFunctionType
     {
-        return Surface{};
-    }
+        using type = Surface;
+        static constexpr auto SurfaceGeneratorFunction = SF;
+    };
+
+    static constexpr auto GeneratorFunctionList = 
+        std::make_tuple(SurfaceFunctionType<EmptySurface, 
+                                            GenEmptySurface<EmptyHit, EmptyData>>{});
 
     template<class Surface>
     static constexpr SurfaceFunc<Surface, EmptyHit, EmptyData> GetSurfaceFunction()
     {
-        return &GetEmptySurface<Surface>;
+        using namespace PrimitiveSurfaceFind;
+        return LoopAndFindType<Surface, SurfaceFunc<Surface, EmptyHit, EmptyData>,
+                               decltype(GeneratorFunctionList)>(std::move(GeneratorFunctionList));
     }
 };
 

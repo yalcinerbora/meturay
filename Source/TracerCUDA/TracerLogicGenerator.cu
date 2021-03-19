@@ -23,6 +23,7 @@
 
 #include "DirectTracer.h"
 #include "PathTracer.h"
+#include "AOTracer.h"
 
 #include "GPULightPrimitive.cuh"
 #include "GPULightDirectional.cuh"
@@ -222,6 +223,9 @@ TracerLogicGenerator::TracerLogicGenerator()
                                           DefaultDestruct<GPUTracerI>));
     tracerGenerators.emplace(PathTracer::TypeName(),
                              GPUTracerGen(TracerLogicConstruct<GPUTracerI, PathTracer>,
+                                          DefaultDestruct<GPUTracerI>));
+    tracerGenerators.emplace(AOTracer::TypeName(),
+                             GPUTracerGen(TracerLogicConstruct<GPUTracerI, AOTracer>,
                                           DefaultDestruct<GPUTracerI>));
 }
 
