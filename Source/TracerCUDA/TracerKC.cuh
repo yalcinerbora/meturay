@@ -378,7 +378,6 @@ inline void AOMissWork(// Output
     // We did not hit anything just accumulate accumulate
     auto& img = gRenderState.gImage;
     Vector4f result = Vector4f(aux.aoFactor, 1.0f);
-    //Vector4f result = Vector4f(0.0f, 1.0f, 0.0f, 1.0f);
     ImageAccumulatePixel(img, aux.pixelIndex, result);
 }
 
@@ -439,7 +438,7 @@ inline void AOWork(// Output
         Vector3 outPos = position + normal * MathConstants::Epsilon;
         RayF ray = RayF(direction, outPos);
         // AO Calculation
-        Vector3 aoMultiplier = Vector3(/*nDotL **/ MathConstants::InvPi);
+        Vector3 aoMultiplier = Vector3(nDotL * MathConstants::InvPi);
         auxOut.aoFactor = aoMultiplier;
         auxOut.aoFactor = (pdf == 0.0f) ? Zero3 : (auxOut.aoFactor / pdf);
 

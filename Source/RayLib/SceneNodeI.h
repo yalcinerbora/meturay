@@ -46,13 +46,14 @@ class SceneNodeI
 {
     private:
     protected:
+        bool                                isMultiNode;
         NodeIndex                           nodeIndex;
         std::set<IdPair>                    idIndexPairs;
 
     public:
         // Constructors & Destructor
                                             SceneNodeI() = delete;
-                                            SceneNodeI(NodeIndex index);
+                                            SceneNodeI(NodeIndex index, bool isMultiNode = false);
                                             SceneNodeI(const SceneNodeI&) = default;
                                             SceneNodeI(SceneNodeI&&) = default;
         SceneNodeI&                         operator=(const SceneNodeI&) = delete;
@@ -137,8 +138,9 @@ class SceneNodeI
 
 using SceneNodePtr = std::unique_ptr<SceneNodeI>;
 
-inline SceneNodeI::SceneNodeI(NodeIndex index)
+inline SceneNodeI::SceneNodeI(NodeIndex index, bool isMultiNode)
     : nodeIndex(index)
+    , isMultiNode(isMultiNode)
 {}
 
 inline uint32_t SceneNodeI::Index() const

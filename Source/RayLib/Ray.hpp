@@ -86,6 +86,43 @@ inline bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
                                        const Vector<3, T>& t2,
                                        bool cullFace) const
 {
+    //// Moller-Trumbore 
+    //// Ray-Tri Intersection
+    //Vector<3, T> e0 = t1 - t0;
+    //Vector<3, T> e1 = t2 - t0;
+    //Vector<3, T> p = Cross<T>(direction, e1);
+    //T det = e0.Dot(p);
+
+    //if((cullFace && (det < MathConstants::SmallEpsilon)) ||
+    //   // Ray-Tri nearly parallel skip
+    //   (abs(det) < MathConstants::SmallEpsilon))
+    //    return false;
+
+    //T invDet = 1 / det;
+
+    //Vector<3, T> tVec = position - t0;
+    //baryCoords[0] = tVec.Dot(p) * invDet;
+    //// Early Skip
+    //if(baryCoords[0] < 0 || baryCoords[0] > 1) 
+    //    return false;
+
+    //Vector<3, T> qVec = Cross<T>(tVec, e0);
+    //baryCoords[1] = direction.Dot(qVec) * invDet;
+    //// Early Skip 2
+    //if((baryCoords[1] < 0) || (baryCoords[1] + baryCoords[0]) > 1)
+    //    return false;
+
+    //t = e1.Dot(qVec) * invDet;
+    //if(t <= MathConstants::SmallEpsilon)
+    //    return false;
+
+    //// Calculate C
+    //baryCoords[2] = 1 - baryCoords[0] - baryCoords[1];
+    //baryCoords = Vector<3, T>(baryCoords[2],
+    //                          baryCoords[0],
+    //                          baryCoords[1]);
+    //return true;
+
     // Matrix Solution
     // Kramers Rule
     Vector<3, T> abDiff = t0 - t1;

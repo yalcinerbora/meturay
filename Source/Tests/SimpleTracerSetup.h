@@ -305,7 +305,7 @@ inline bool SimpleTracerSetup::Init()
         {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
         {"NextEventEstimation", OptionVariable(true)},
         {"RussianRouletteStart", OptionVariable(5u)},
-        {"MaxDistance", OptionVariable(0.5f)}
+        {"MaxDistance", OptionVariable(0.17f)}
     });    
     trcE = tracerSystem->GenerateTracer(tracer, TRACER_PARAMETERS, opts,
                                         tracerType);

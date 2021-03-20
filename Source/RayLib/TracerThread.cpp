@@ -143,9 +143,9 @@ void TracerThread::LoopWork()
     rps *= (1.0 / elapsedS);
     rps /= 1'000'000.0;
 
-    //fprintf(stdout, "%c[2K", 27);
-    //fprintf(stdout, "Time: %fs Rps: %fM ray/s\r",
-    //        elapsedS, rps);
+    fprintf(stdout, "%c[2K", 27);
+    fprintf(stdout, "Time: %fs Rps: %fM ray/s\r",
+            elapsedS, rps);
 }
 
 void TracerThread::FinalWork()

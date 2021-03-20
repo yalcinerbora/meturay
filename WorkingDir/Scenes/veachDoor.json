@@ -5,8 +5,8 @@
         "type" : "Pinhole",
 
         // 16:9 FoV
-        "fov": [97.0672, 54.6003],
-        //"fov": [54.6003, 30.7127],
+        //"fov": [97.0672, 54.6003],
+        "fov": [54.6003, 30.7127],
         // 1:1 FoV
         //"fov": [54.6003, 54.6003],
         "gaze": [-71.1997, 71.4202, 204.321],
@@ -186,7 +186,8 @@
         "type": "Triangle",
         "name": "../Surfaces/Door/teapots.obj",
         "tag": "assimp_",
-        "innerIndex": [0, 1, 2]
+        "innerIndex": [0, 1, 2],
+        "cullFace": [true, true, false]
     },
     {
         // Door Frame

@@ -190,11 +190,6 @@ Vector3 RefractSample(// Sampled Output
     // Calculate Frenel Term
     float f = TracerFunctions::FrenelDielectric(abs(nDotI), fromMedium, toMedium);
 
-    if(!(f <= 1.0f && f >= 0.0f))
-    {
-        printf("frenel %f\n", f);
-    }
-
     // Sample ray according to the frenel term
     float xi = GPUDistribution::Uniform<float>(rng);
     if(xi < f)
@@ -212,8 +207,11 @@ Vector3 RefractSample(// Sampled Output
     }
     else
     {
-        //pdf = (1.0f - f);
-        //return Zero3;
+        // Write new medium
+        uint32_t outMediumIndex = (entering) ? mediumIndex : matData.baseMediumIndex;
+        outMedium = matData.dMediums[outMediumIndex];
+        // Write pdf
+        pdf = 1.0f - f;
 
         // Refraction is choosen
         // Convert wi, refract func needs 
@@ -223,9 +221,13 @@ Vector3 RefractSample(// Sampled Output
         bool refracted = rayIn.Refract(wo, refNormal, fromMedium, toMedium);
         // Since Frenel term is used to sample,
         // code should not arrive here (raise exception)
+        // Update:
+        // Well code does arrive here rarely (due to numerical error i guess)
+        // so return zero instead :)
         if(!refracted)
         {
             printf("CUDA Fatal Error: RefractMat reflected!\n");
+            pdf = 0.0f;
             return Zero3;
             //__threadfence();
             //__trap(); 
@@ -235,13 +237,12 @@ Vector3 RefractSample(// Sampled Output
         // advance towards opposite direction
         wo.AdvanceSelf(MathConstants::Epsilon, -refNormal);
         
-        pdf = 1.0f - f;
-
-        // Change medium
-        uint32_t outMediumIndex = (entering) ? mediumIndex : matData.baseMediumIndex;
-        outMedium = matData.dMediums[outMediumIndex];
-
-        return albedo * (1.0f - f);
+        // Factor in the radiance discrapency due to refraction
+        // Medium change causes rays to be scatter/focus
+        // Since we try to calculate radiance towards that ray
+        float radianceChangeFactor = (fromMedium * fromMedium) / (toMedium * toMedium);
+        // Final Factor
+        return albedo * radianceChangeFactor * (1.0f - f);
     }
 }
 

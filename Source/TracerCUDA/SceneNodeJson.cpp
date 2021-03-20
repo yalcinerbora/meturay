@@ -14,7 +14,7 @@ std::vector<T> SceneNodeJson::AccessSingle(const std::string& name,
     for(const auto& list : idIndexPairs)
     {
         const InnerIndex i = list.second;
-        const nlohmann::json& node = (idIndexPairs.size() > 1) ? nodeInner[i] : nodeInner;
+        const nlohmann::json& node = (isMultiNode) ? nodeInner[i] : nodeInner;
         result.push_back(LoadF(node, time));
     }
     return std::move(result);
@@ -27,7 +27,7 @@ std::vector<T> SceneNodeJson::AccessRanged(const std::string& name) const
     std::vector<T> result;
     result.reserve(idIndexPairs.size());
 
-    if(idIndexPairs.size() == 1)
+    if(!isMultiNode)
     {
         result.push_back(SceneIO::LoadNumber<T>(nodeInner));
     }
@@ -74,7 +74,7 @@ std::vector<std::vector<T>> SceneNodeJson::AccessList(const std::string& name,
         result.emplace_back();
 
         const InnerIndex i = list.second;
-        const nlohmann::json& node = (idIndexPairs.size() > 1) ? nodeInner[i] : nodeInner;
+        const nlohmann::json& node = (isMultiNode) ? nodeInner[i] : nodeInner;
 
         for(const nlohmann::json& n : node)
             result.back().push_back(LoadF(n, time));
@@ -106,7 +106,7 @@ OptionalNodeList<T> SceneNodeJson::AccessOptional(const std::string& name,
     for(const auto& list : idIndexPairs)
     {
         const InnerIndex i = list.second;
-        const nlohmann::json& node = (idIndexPairs.size() > 1) ? nodeInner[i] : nodeInner;
+        const nlohmann::json& node = (isMultiNode) ? nodeInner[i] : nodeInner;
 
         OptionalNode<T> optNode;
         if(node.is_string())
@@ -147,7 +147,7 @@ TexturedDataNodeList<T> SceneNodeJson::AccessTextured(const std::string& name,
     for(const auto& list : idIndexPairs)
     {
         const InnerIndex i = list.second;
-        const nlohmann::json& node = (idIndexPairs.size() > 1) ? nodeInner[i] : nodeInner;
+        const nlohmann::json& node = (isMultiNode) ? nodeInner[i] : nodeInner;
 
         TexturedDataNode<T> texNode;
         if(node.is_object())
@@ -175,11 +175,21 @@ SceneNodeJson::SceneNodeJson(const nlohmann::json& jsn, NodeId id, bool forceFet
         const auto idList = jsn[NodeNames::ID];
         if(idList.is_array())
         {
+            isMultiNode = true;
             uint32_t i = 0;
             for(uint32_t id : idList)
                 AddIdIndexPair(id, i);
         }
         else AddIdIndexPair(idList, 0);
+    }
+    else
+    {
+        // Determine if this node is a multinode
+        auto it = jsn.cend();
+        if((it = jsn.find(NodeNames::ID)) != jsn.cend())
+        {
+            isMultiNode = it->is_array();
+        }
     }
 }
 
