@@ -24,7 +24,12 @@ class EmissiveMat final
     protected:
     public:
         // Constructors & Destructor
-                                EmissiveMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                EmissiveMat(const CudaGPU& gpu) 
+                                    : GPUMaterialGroup<EmissiveMatData, EmptySurface,
+                                                       SampleEmpty<EmissiveMatData, EmptySurface>, 
+                                                       EvaluateEmpty<EmissiveMatData, EmptySurface>,
+                                                       EmitConstant,
+                                                       IsEmissiveTrue<EmissiveMatData>>(gpu) {}
                                 ~EmissiveMat() = default;
 
         // Interface
@@ -71,7 +76,11 @@ class LambertMat final
     protected:
     public:
         // Constructors & Destructor
-                                LambertMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                LambertMat(const CudaGPU& gpu) 
+                                    : GPUMaterialGroup<AlbedoMatData, BasicSurface,
+                                                       LambertSample, LambertEvaluate,
+                                                       EmitEmpty<AlbedoMatData, BasicSurface>,
+                                                       IsEmissiveFalse<AlbedoMatData>>(gpu) {}
                                 ~LambertMat() = default;
 
         // Interface
@@ -118,7 +127,11 @@ class ReflectMat final
     protected:
     public:
         // Constructors & Destructor
-                                ReflectMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                ReflectMat(const CudaGPU& gpu) 
+                                    : GPUMaterialGroup<ReflectMatData, BasicSurface,
+                                                       ReflectSample, ReflectEvaluate,
+                                                       EmitEmpty<ReflectMatData, BasicSurface>,
+                                                       IsEmissiveFalse<ReflectMatData>>(gpu) {}
                                 ~ReflectMat() = default;
 
         // Interface
@@ -166,7 +179,11 @@ class RefractMat final
     protected:
     public:
         // Constructors & Destructor
-                                RefractMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                RefractMat(const CudaGPU& gpu) 
+                                    : GPUMaterialGroup<RefractMatData, BasicSurface,
+                                                       RefractSample, RefractEvaluate,
+                                                       EmitEmpty<RefractMatData, BasicSurface>,
+                                                       IsEmissiveFalse<RefractMatData>>(gpu) {}
                                 ~RefractMat() = default;
 
         // Interface

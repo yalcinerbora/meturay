@@ -24,7 +24,12 @@ class LightMatConstant final
 
     public:
         // Constructors & Destructor
-                                LightMatConstant(const CudaGPU& gpu) : GPULightMaterialGroup(gpu) {}
+                                LightMatConstant(const CudaGPU& gpu) 
+                                    : GPULightMaterialGroup<LightMatData, EmptySurface,
+                                                            SampleEmpty<LightMatData, EmptySurface>, 
+                                                            EvaluateEmpty<LightMatData, EmptySurface>,
+                                                            EmitLight,
+                                                            IsEmissiveTrue<LightMatData>>(gpu) {}
                                 ~LightMatConstant() = default;
 
         // Interface
@@ -73,7 +78,12 @@ class LightMatTextured final
 
     public:
         // Constructors & Destructor
-                                LightMatTextured(const CudaGPU& gpu) : GPULightMaterialGroup(gpu) {}
+                                LightMatTextured(const CudaGPU& gpu) 
+                                    : GPULightMaterialGroup<LightMatTexData, UVSurface,
+                                                            SampleEmpty<LightMatTexData, UVSurface>,
+                                                            EvaluateEmpty<LightMatTexData, UVSurface>,
+                                                            EmitLightTex,
+                                                            IsEmissiveTrue<LightMatTexData>>(gpu) {}
                                 ~LightMatTextured() = default;
 
         // Interface
@@ -122,7 +132,12 @@ class LightMatCube final
 
     public:
         // Constructors & Destructor
-                                LightMatCube(const CudaGPU& gpu) : GPULightMaterialGroup(gpu) {}
+                                LightMatCube(const CudaGPU& gpu) 
+                                    : GPULightMaterialGroup<LightMatCubeData, EmptySurface,
+                                                            SampleEmpty<LightMatCubeData, EmptySurface>,
+                                                            EvaluateEmpty<LightMatCubeData, EmptySurface>,
+                                                            EmitLightCube,
+                                                            IsEmissiveTrue<LightMatCubeData>>(gpu) {}
                                 ~LightMatCube() = default;
 
         // Interface

@@ -24,7 +24,11 @@ class ConstantMat final
     protected:
     public:
         // Constructors & Destructor
-                                ConstantMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                ConstantMat(const CudaGPU& gpu) 
+                                    : GPUMaterialGroup<AlbedoMatData, EmptySurface,
+                                                       ConstantSample, ConstantEvaluate,
+                                                       EmitEmpty<AlbedoMatData, EmptySurface>,
+                                                       IsEmissiveFalse<AlbedoMatData>>(gpu) {}
                                 ~ConstantMat() = default;
 
         // Interface
@@ -69,7 +73,12 @@ class BarycentricMat final
     protected:
     public:
         // Constructors & Destructor
-                                BarycentricMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                BarycentricMat(const CudaGPU& gpu) 
+                                    : GPUMaterialGroup<NullData, BarySurface,
+                                                       BarycentricSample,
+                                                       BarycentricEvaluate,
+                                                       EmitEmpty<NullData, BarySurface>,
+                                                       IsEmissiveFalse<NullData>>(gpu) {}
                                 ~BarycentricMat() = default;
 
         // Interface
@@ -114,7 +123,12 @@ class SphericalMat final
     protected:
     public:
         // Constructors & Destructor
-                                SphericalMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                SphericalMat(const CudaGPU& gpu) 
+                                    : GPUMaterialGroup<NullData, SphrSurface,
+                                                       SphericalSample,
+                                                       SphericalEvaluate,
+                                                       EmitEmpty<NullData, SphrSurface>,
+                                                       IsEmissiveFalse<NullData>>(gpu) {}
                                 ~SphericalMat() = default;
 
         // Interface

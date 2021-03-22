@@ -51,7 +51,11 @@ class LambertTexMat final
     protected:
     public:
         // Constructors & Destructor
-                                LambertTexMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                LambertTexMat(const CudaGPU& gpu) 
+                                    : GPUMaterialGroup<LambertTMatData, UVSurface,
+                                                       LambertTSample, LambertTEvaluate,
+                                                       EmitEmpty<LambertTMatData, UVSurface>,
+                                                       IsEmissiveFalse<LambertTMatData>>(gpu) {}
                                 ~LambertTexMat() = default;
 
         // Interface

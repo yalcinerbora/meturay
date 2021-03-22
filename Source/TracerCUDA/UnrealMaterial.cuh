@@ -36,7 +36,11 @@ class UnrealMat final
             protected:
     public:
         // Constructors & Destructor
-                                UnrealMat(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                UnrealMat(const CudaGPU& gpu) 
+                                    : GPUMaterialGroup<UnrealMatData, UVSurface,
+                                                       UnrealSample, UnrealEvaluate,
+                                                       EmitEmpty<UnrealMatData, UVSurface>,
+                                                       IsEmissiveFalse<UnrealMatData>>(gpu) {}
                                 ~UnrealMat() = default;
 
         // Interface
