@@ -9,15 +9,14 @@
 #include "TypeTraits.h"
 
 class LightMatConstant final 
-    : public GPUMaterialGroup<LightMatData, EmptySurface,
-                              SampleEmpty<LightMatData, EmptySurface>, 
-                              EvaluateEmpty<LightMatData, EmptySurface>,
-                              EmitLight,
-                              IsEmissiveTrue<LightMatData>>
-    , public LightMaterialI
+    : public GPULightMaterialGroup<LightMatData, EmptySurface,
+                                   SampleEmpty<LightMatData, EmptySurface>, 
+                                   EvaluateEmpty<LightMatData, EmptySurface>,
+                                   EmitLight,
+                                   IsEmissiveTrue<LightMatData>>
 {
     public:
-        static const char*    TypeName() { return "LightConstant"; }
+        static const char*              TypeName() { return "LightConstant"; }
 
     private:
         DeviceMemory                    memory;
@@ -25,7 +24,7 @@ class LightMatConstant final
 
     public:
         // Constructors & Destructor
-                                LightMatConstant(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                LightMatConstant(const CudaGPU& gpu) : GPULightMaterialGroup(gpu) {}
                                 ~LightMatConstant() = default;
 
         // Interface
@@ -48,6 +47,7 @@ class LightMatConstant final
         // NEE Related
         bool                        IsLightGroup() const override { return true; }
         bool                        IsEmissiveGroup() const override { return true; }
+        bool                        IsCameraGroup() const override { return false; }
         const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const override;
 
         uint8_t                     SampleStrategyCount() const { return 0; };
@@ -57,12 +57,11 @@ class LightMatConstant final
 };
 
 class LightMatTextured final 
-    : public GPUMaterialGroup<LightMatTexData, UVSurface,
-                              SampleEmpty<LightMatTexData, UVSurface>,
-                              EvaluateEmpty<LightMatTexData, UVSurface>,
-                              EmitLightTex,
-                              IsEmissiveTrue<LightMatTexData>>
-    , public LightMaterialI
+    : public GPULightMaterialGroup<LightMatTexData, UVSurface,
+                                   SampleEmpty<LightMatTexData, UVSurface>,
+                                   EvaluateEmpty<LightMatTexData, UVSurface>,
+                                   EmitLightTex,
+                                   IsEmissiveTrue<LightMatTexData>>
 {
     public:
         static const char*      TypeName() { return "LightTextured"; }
@@ -74,7 +73,7 @@ class LightMatTextured final
 
     public:
         // Constructors & Destructor
-                                LightMatTextured(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                LightMatTextured(const CudaGPU& gpu) : GPULightMaterialGroup(gpu) {}
                                 ~LightMatTextured() = default;
 
         // Interface
@@ -97,6 +96,7 @@ class LightMatTextured final
         // NEE Related
         bool                        IsLightGroup() const override { return true; }
         bool                        IsEmissiveGroup() const override { return true; }
+        bool                        IsCameraGroup() const override { return false; }
         const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const override;
 
         uint8_t                     SampleStrategyCount() const { return 0; };
@@ -106,12 +106,11 @@ class LightMatTextured final
 };
 
 class LightMatCube final 
-    : public GPUMaterialGroup<LightMatCubeData, EmptySurface,
-                              SampleEmpty<LightMatCubeData, EmptySurface>,
-                              EvaluateEmpty<LightMatCubeData, EmptySurface>,
-                              EmitLightCube,
-                              IsEmissiveTrue<LightMatCubeData>>
-    , public LightMaterialI
+    : public GPULightMaterialGroup<LightMatCubeData, EmptySurface,
+                                   SampleEmpty<LightMatCubeData, EmptySurface>,
+                                   EvaluateEmpty<LightMatCubeData, EmptySurface>,
+                                   EmitLightCube,
+                                   IsEmissiveTrue<LightMatCubeData>>
 {
     public:
         static const char*      TypeName() { return "LightCube"; }
@@ -123,7 +122,7 @@ class LightMatCube final
 
     public:
         // Constructors & Destructor
-                                LightMatCube(const CudaGPU& gpu) : GPUMaterialGroup(gpu) {}
+                                LightMatCube(const CudaGPU& gpu) : GPULightMaterialGroup(gpu) {}
                                 ~LightMatCube() = default;
 
         // Interface
@@ -146,6 +145,7 @@ class LightMatCube final
         // NEE Related
         bool                        IsLightGroup() const override { return true; }
         bool                        IsEmissiveGroup() const override { return true; }
+        bool                        IsCameraGroup() const override { return false; }
         const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const override;
 
         uint8_t                     SampleStrategyCount() const { return 0; };

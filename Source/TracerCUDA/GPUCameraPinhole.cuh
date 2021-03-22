@@ -47,6 +47,9 @@ class GPUCameraPinhole final : public GPUCameraI
                                         // I-O
                                         RandomGPU&) const override;
 
+        __device__ uint32_t        FindPixelId(const RayReg& r,
+                                               const Vector2i& resolution) const override;
+
         __device__ PrimitiveId      PrimitiveIndex() const override;
 };
 
@@ -123,10 +126,9 @@ inline GPUCameraPinhole::GPUCameraPinhole(const Vector3& pos,
                                           //
                                           uint16_t mediumId,
                                           HitKey materialKey)
-    : GPUEndpointI(materialKey, mediumId)
+    : GPUCameraI(materialKey, mediumId)
     , position(transform.LocalToWorld(pos))
     , up(transform.LocalToWorld(upp))
-    , planeSize(planeSize)
     , nearFar(nearFar)
 {
 
@@ -200,6 +202,33 @@ inline void GPUCameraPinhole::GenerateRay(// Output
     ray.ray = RayF(rayDir, position);
     ray.tMin = nearFar[0];
     ray.tMax = nearFar[1];
+}
+
+__device__ 
+inline uint32_t GPUCameraPinhole::FindPixelId(const RayReg& r,
+                                              const Vector2i& resolution) const
+{
+    Vector3f normal = Cross(up, right);
+    //float ratio = normal.Dot(r.getDirection());
+    //// Only front facing intersections are considered
+    //if(ratio > 0) return UINT32_MAX;
+    //
+    //float t = (position - r.getPosition()).Dot(normal) / ratio;
+    //// Intersection is behind
+    //if(t < 0) return UINT32_MAX;
+
+    Vector3 planePoint = r.ray.AdvancedPos(r.tMax);
+    Vector3 p = planePoint - position;
+
+    Matrix3x3 invRot(right[0], right[1], right[2],
+                     up[0], up[1], up[2],
+                     normal[0], normal[1], normal[2]);
+    Vector3 localP = invRot * p;
+    // Convert to Pixelated System
+    Vector2i coords = Vector2i((Vector2(localP) / planeSize).Floor());
+
+    uint32_t pixelId = coords[1] * resolution[0] + coords[0];
+    return pixelId;
 }
 
 __device__

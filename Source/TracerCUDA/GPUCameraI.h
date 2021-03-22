@@ -13,8 +13,24 @@
 class GPUTransformI;
 class RandomGPU;
 
-using GPUCameraI = GPUEndpointI;
+class GPUCameraI : public GPUEndpointI
+{
+    public:
+        __device__              GPUCameraI(HitKey k, uint16_t mediumIndex);
+        virtual                 ~GPUCameraI() = default;
+
+        // Interface
+        __device__
+        virtual uint32_t        FindPixelId(const RayReg& r,
+                                            const Vector2i& resolution) const = 0;
+};
+
 using GPUCameraList = std::vector<const GPUCameraI*>;
+
+__device__
+inline GPUCameraI::GPUCameraI(HitKey k, uint16_t mediumIndex)
+    : GPUEndpointI(k, mediumIndex)
+{}
 
 class CPUCameraGroupI
 {

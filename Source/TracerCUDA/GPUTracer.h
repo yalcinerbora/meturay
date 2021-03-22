@@ -30,8 +30,8 @@ class GPUSceneI;
 class CudaSystem;
 
 class GPUEndpointI;
+class GPUCameraI;
 using GPULightI = GPUEndpointI;
-using GPUCameraI = GPUEndpointI;
 
 struct TracerError;
 

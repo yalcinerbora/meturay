@@ -78,6 +78,7 @@ class LambertTexMat final
         bool                    IsLightGroup() const override { return false; }
         bool                    IsEmissiveGroup() const override { return false; }
         bool                    IsSpecularGroup() const override { return true; }
+        bool                    IsCameraGroup() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture

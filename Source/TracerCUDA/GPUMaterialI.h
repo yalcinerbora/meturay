@@ -61,6 +61,7 @@ class GPUMaterialGroupI
         virtual bool                        IsLightGroup() const = 0;
         virtual bool                        IsEmissiveGroup() const = 0;
         virtual bool                        IsSpecularGroup() const = 0;
+        virtual bool                        IsCameraGroup() const = 0;
         // Post initialization
         virtual void                        AttachGlobalMediumArray(const GPUMediumI* const*,
                                                                     uint32_t baseMediumIndex) = 0;
@@ -73,11 +74,26 @@ class GPUMaterialGroupI
 };
 
 // Additional Interface for light materials
-class LightMaterialI
+class GPULightMaterialGroupI : public GPUMaterialGroupI
 {
     public:
-        virtual                             ~LightMaterialI() = default;
+        virtual                             ~GPULightMaterialGroupI() = default;
+        // Implementations
+        bool                                IsLightGroup() const override { return true; }
+        bool                                IsCameraGroup() const override { return false; }
         // Interface
         virtual const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const = 0;
+};
+
+// Additional Interface for Camera material
+class GPUCameraMaterialGroupI : public GPUMaterialGroupI
+{
+    public:                                            
+        virtual                             ~GPUCameraMaterialGroupI() = default;
+        // Implementations
+        bool                                IsLightGroup() const override { return false; }
+        bool                                IsCameraGroup() const override { return true; }
+        // Interface
+        virtual void                        AttachGlobalCameraArray() const = 0;
 };
 

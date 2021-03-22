@@ -47,6 +47,7 @@ class EmissiveMat final
         // NEE Related
         bool                    IsLightGroup() const override { return false; }
         bool                    IsEmissiveGroup() const override { return true; }
+        bool                    IsCameraGroup() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 0; };
         // No Texture
@@ -93,6 +94,7 @@ class LambertMat final
         // NEE Related
         bool                    IsLightGroup() const override { return false; }
         bool                    IsEmissiveGroup() const override { return false; }
+        bool                    IsCameraGroup() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture
@@ -140,6 +142,7 @@ class ReflectMat final
         bool                    IsLightGroup() const override { return false; }
         bool                    IsEmissiveGroup() const override { return false; }
         bool                    IsSpecularGroup() const override { return true; }
+        bool                    IsCameraGroup() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture
@@ -187,6 +190,7 @@ class RefractMat final
         bool                    IsLightGroup() const override { return false; }
         bool                    IsEmissiveGroup() const override { return false; }
         bool                    IsSpecularGroup() const override { return true; }
+        bool                    IsCameraGroup() const override { return false; }
 
         // Post initialization
         void                    AttachGlobalMediumArray(const GPUMediumI* const*,

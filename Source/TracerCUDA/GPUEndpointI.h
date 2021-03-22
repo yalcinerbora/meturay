@@ -54,7 +54,6 @@ class GPUEndpointI
 
         __device__ HitKey               BoundaryMaterial() const;
         __device__ uint16_t             MediumIndex() const;
-        //__device__ TransformId          TransformIndex() const;
 };
 
 __device__      
