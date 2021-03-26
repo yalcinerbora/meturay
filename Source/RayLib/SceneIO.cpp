@@ -192,15 +192,12 @@ CameraSurfaceStruct SceneIO::LoadCameraSurface(uint32_t baseMediumId,
 
     // Medium        
     i = jsn.end();
-    if((i = jsn.find(LIGHT)) != jsn.end())
+    if((i = jsn.find(MEDIUM)) != jsn.end())
         s.mediumId = *i;
     else s.mediumId = baseMediumId;
 
     // CamId
     s.cameraId = jsn[CAMERA];
-
-    // Material
-    s.materialId = jsn[MATERIAL];
 
     return s;
 }

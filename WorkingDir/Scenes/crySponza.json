@@ -79,5 +79,5 @@
 	"Surfaces": ["crySponzaSurfaces.bin"],
 
 	"LightSurfaces": [{"light": 0, "material": 1}],
-    "CameraSurfaces": [{"camera": 0, "material": 0}]
+    "CameraSurfaces": [{"camera": 0}]
 }

@@ -3,7 +3,7 @@
     {
         "id": 0,
         "type": "Pinhole",
-        
+
         // 16:9 FoV
         "fov": [94.45, 53.13],
         // 1:1 FoV
@@ -143,7 +143,7 @@
     {"transform": 0, "accelerator" : 0, "material" : 2, "primitive" : 49},
     {"transform": 0, "accelerator" : 0, "material" : 2, "primitive" : 50}
     ],
-    
+
     "LightSurfaces": [],
-    "CameraSurfaces": [{"camera": 0, "material": 0}]
+    "CameraSurfaces": [{"camera": 0}]
 }

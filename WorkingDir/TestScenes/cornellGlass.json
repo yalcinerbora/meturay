@@ -27,7 +27,7 @@
 
 		"absorption": [1.25, 0.35, 0.97],
 		"scattering": [0, 0, 0],
-		"ior": 1.53,
+		"ior": 1.5,
 		"phase": 0
 	}],
 
@@ -153,5 +153,5 @@
 	],
 
 	"LightSurfaces": [{"primitive": 4, "material": 1, "accelerator": 0}],
-    "CameraSurfaces": [{"camera": 0, "material": 0}]
+    "CameraSurfaces": [{"camera": 0}]
 }

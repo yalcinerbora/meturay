@@ -139,5 +139,5 @@
 		{"primitive": 4, "material": 1, "accelerator": 0}
 	],
 
-    "CameraSurfaces": [{"camera": 0, "material": 0}]
+    "CameraSurfaces": [{"camera": 0}]
 }

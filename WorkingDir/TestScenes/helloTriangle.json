@@ -65,5 +65,5 @@
 	}],
 
 	"LightSurfaces": [],
-    "CameraSurfaces": [{"camera": 0, "material": 1}]
+    "CameraSurfaces": [{"camera": 0}]
 }

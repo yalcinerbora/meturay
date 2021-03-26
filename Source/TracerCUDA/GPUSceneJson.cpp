@@ -526,6 +526,9 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                                            identityTransformId,
                                                            jsn);
 
+        //TODO: Fix camera material
+        NodeId cameraMatGroup = 0;
+
         // Find the camera node
         std::string camTypeName;
         std::unique_ptr<SceneNodeI> cameraNode = nullptr;
@@ -544,7 +547,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
 
         // Request material for loading
         if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME, 
-                             s.materialId)) != SceneError::OK)
+                             cameraMatGroup)) != SceneError::OK)
             return e;
 
         // Emplace to the list
@@ -554,7 +557,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                              s.transformId,
                                              s.mediumId,
                                              s.cameraId,
-                                             s.materialId,
+                                             cameraMatGroup,
                                              std::move(cameraNode)
                                          });
 

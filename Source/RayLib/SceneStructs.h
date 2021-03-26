@@ -135,7 +135,6 @@ struct CameraSurfaceStruct
 {
     uint32_t    mediumId;
     uint32_t    transformId;
-    uint32_t    materialId;
     uint32_t    cameraId;
 };
 
