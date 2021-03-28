@@ -64,12 +64,15 @@ void GenerateEitherTexOrConstantReference(TextureRefI<D, T>** gTexRefInterfaces,
         TextureRefI<D, T>* refAddress = nullptr;
         if(data.isConstData)
         {
+            //printf("Generating ConstantReference: %f, %f, %f\n",
+            //       data.data[0], data.data[1], data.data[2]);
             uint32_t location = atomicAdd(&gCRefCounter, 1);
             refAddress = new (gCRefLocations + location) ConstantRef<D, T>(data.data);
         }
         else
         {
             uint32_t location = atomicAdd(&gTRefCounter, 1);
+            //printf("Generating TexReference: %llu\n", data.tex);
             refAddress = new (gTRefLocations + location) TextureRef<D, T>(data.tex);
         }
 
