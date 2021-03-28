@@ -112,9 +112,6 @@
     <ClCompile Include="..\..\..\Source\TracerCUDA\CudaConstants.cpp">
       <Filter>Cuda System</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUDistribution.cpp">
-      <Filter>GPU Classes</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveTriangle.cpp">
       <Filter>Primitives</Filter>
     </ClCompile>
@@ -129,6 +126,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerCUDA\TextureFunctions.cpp">
       <Filter>Textures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPiecewiseDistribution.cu">
+      <Filter>GPU Classes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -173,9 +173,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\ReduceFunctions.cuh">
       <Filter>GPU Algorithms\Functions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\BitonicSort.cuh">
-      <Filter>GPU Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerDebug.h">
       <Filter>Debug</Filter>
@@ -309,9 +306,6 @@
       <Filter>Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUSurface.h">
-      <Filter>GPU Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUDistribution.h">
       <Filter>GPU Classes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformI.h">
@@ -452,6 +446,15 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterialsKC.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightSkySphere.cuh">
+      <Filter>Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUPiecewiseDistribution.cuh">
+      <Filter>GPU Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BinarySearch.cuh">
+      <Filter>GPU Algorithms</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">
@@ -558,6 +561,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\BasicMaterials.cu">
       <Filter>Materials</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightSkySphere.cu">
+      <Filter>Lights</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

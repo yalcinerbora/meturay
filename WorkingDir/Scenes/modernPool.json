@@ -1,0 +1,246 @@
+{
+	"Cameras": [
+    {
+        "id": 0,
+        "type" : "Pinhole",
+
+        // 16:9 FoV
+        //"fov": [97.0672, 54.6003],
+        "fov": [54.6003, 30.7127],
+        // 1:1 FoV
+        //"fov": [54.6003, 54.6003],
+        //"gaze": [20, 0, 0],
+        "gaze": [30, -20, 0],
+        //"position": [-12.39, 36.49, 41.3],
+        "position": [25.178, -17.669, 32.491],
+        "up": [0, 1, 0],
+        "planes": [1, 2800]
+    }],
+
+    "Lights":[],
+
+    "Mediums":[
+    {
+        "id" : 0,
+        "type" : "Vacuum"
+    },
+    {
+        // Glass Medium
+		"id": 1,
+		"type" : "Homogenous",
+
+		"absorption": [0, 0 ,0],
+		"scattering": [0, 0, 0],
+		"ior": 1.55,
+		"phase": 0
+	},
+    {
+        // Water Medium
+		"id": 2,
+		"type" : "Homogenous",
+
+		"absorption": [0, 0 ,0],
+		"scattering": [0, 0, 0],
+		"ior": 1.34,
+		"phase": 0
+	}
+    ],
+
+    "Transforms":[
+    {
+        "id": 0,
+        "type": "Identity"
+    }],
+
+    "Textures":[
+    {
+        "id": 0,
+        "file": "../Textures/ModernPool/floor_tiles_04_diff_2k.jpg"
+    },
+    {
+        "id": 1,
+        "file": "../Textures/ModernPool/floor_tiles_04_nor_2k.jpg"
+    },
+    {
+        "id": 2,
+        "file": "../Textures/ModernPool/floor_tiles_04_rough_2k.jpg"
+    },
+    {
+        "id": 3,
+        "file": "../Textures/ModernPool/floor_tiles_04_spec_2k.jpg"
+    },
+    {
+        "id": 4,
+        "file": "../Textures/ModernPool/pool_tiles_2K_Albedo.jpg"
+    },
+    {
+        "id": 5,
+        "file": "../Textures/ModernPool/pool_tiles_2K_Normal.jpg"
+    },
+    {
+        "id": 6,
+        "file": "../Textures/ModernPool/pool_tiles_2K_Roughness.jpg"
+    },
+    {
+        "id": 7,
+        "file": "../Textures/ModernPool/dirty_concrete_diff_2k.jpg"
+    },
+    {
+        "id": 8,
+        "file": "../Textures/ModernPool/dirty_concrete_nor_2k.jpg"
+    },
+    {
+        "id": 9,
+        "file": "../Textures/ModernPool/dirty_concrete_rough_2k.jpg"
+    },
+    {
+        "id": 10,
+        "file": "../Textures/ModernPool/lounge_fabric_diff_2k.jpg"
+    },
+    {
+        "id": 11,
+        "file": "../Textures/ModernPool/bench_wood_diff_2k.jpg"
+    },
+    {
+        "id": 12,
+        "file": "../Textures/ModernPool/towel_fabric_diff_1k.jpg"
+    },
+    {
+        "id": 13,
+        "file": "../Textures/ModernPool/bark_brown_02_diff_2k.png"
+    },
+    {
+        "id": 14,
+        "file": "../Textures/ModernPool/bark_brown_02_nor_2k.png"
+    },
+    {
+        "id": 15,
+        "file": "../Textures/ModernPool/bark_brown_02_rough_2k.png"
+    }],
+
+    "Materials":[
+    {
+        // General Boundary Material
+        "id": 0,
+        "type": "Emissive",
+        "radiance" : [0.0, 0.0, 0.0]
+    },
+    {
+        // Light Boundary Material
+        "id": 1,
+        "type": "LightConstant",
+        "radiance" : [550, 550, 550]
+    },
+    {
+        // Pool Floor
+        "id": 2,
+        "type": "LambertT",
+        "albedo": {"texture": 0, "channels": "rgb"}
+    },
+    {
+        // Pool Base
+        "id": 3,
+        "type": "Lambert",
+        //"albedo": {"texture": 4, "channels": "rgb"}
+        "albedo": [0.031373, 0.478431, 0.760784]
+    },
+    {
+        // Water
+        "id": 4,
+        "type": "Refract",
+        "albedo": [1, 1, 1],
+        "medium": 2
+    },
+    {
+        // Glass
+        "id": 5,
+        "type": "Refract",
+        "albedo": [1, 1, 1],
+        "medium": 1
+    },
+    {
+        // All Metals
+        "id": 6,
+        "type": "Reflect",
+		"albedo" : [0.9, 0.7, 0.5],
+		"roughness" : 0.0
+    }],
+
+    "Primitives":[
+    {
+        // Pool Floor
+        "id": 0,
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/pool_floor.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        // Pool Base
+        "id": 1,
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/pool_base.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        // Water
+        "id": 2,
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/water4.obj",
+        "tag": "assimp_",
+        "innerIndex": 0,
+        "cullFace": false
+    },
+    {
+        // Light Test
+        "id": 999,
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/light_test.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        "id" : 300,
+        "type": "Sphere",
+        "name": ".nodeSphere",
+        "radius": 3,
+        "position": [0, 6, 0]
+    }],
+
+    "Accelerators":
+    [
+        {"id" : 0, "type" : "BasicBVH", "useStack": true},
+        {"id" : 1, "type" : "Linear"}
+
+    ],
+
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "BasicBVH"},
+    "BaseBoundaryMaterial": 0,
+	"BaseMedium" : 0,
+
+	"Surfaces": [
+    {
+        // Pool, Pool Base & Water
+        "transform": 0, "accelerator":0,
+        "material": [2, 3, 4],
+        "primitive": [0, 1, 2]
+    },
+    {  "transform": 0, "accelerator": 1, "material": 4, "primitive": 300 }
+    ],
+
+    // Lights
+    "LightSurfaces": [
+    {
+        "transform": 0,
+        "primitive": 999,
+        "material": 1,
+        "accelerator": 1
+    }
+    ],
+    // Cameras
+    "CameraSurfaces": [{"camera": 0, "medium": 2}]
+}

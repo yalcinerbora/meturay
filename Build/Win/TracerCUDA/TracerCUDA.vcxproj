@@ -14,6 +14,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\AcceleratorFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\AOTracer.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\AuxiliaryDataKernels.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BinarySearch.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CameraFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CudaConstants.hpp" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterial.cuh" />
@@ -26,6 +27,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightPoint.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightPrimitive.hpp" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightRectangular.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightSkySphere.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightSpot.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMediumI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMediumVacuum.cuh" />
@@ -35,13 +37,12 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.hpp" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVHKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraI.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\BitonicSort.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GenerationKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ComparisonFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CudaConstants.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DefaultLeaf.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\EstimatorFunctions.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUDistribution.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUPiecewiseDistribution.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUEndpointI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUEvent.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightI.h" />
@@ -130,7 +131,9 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.cu" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\CudaConstants.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\DeviceMemory.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUDistribution.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUPiecewiseDistribution.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveEmpty.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveSphere.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveTriangle.cpp">
@@ -142,6 +145,7 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightPoint.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightPrimitive.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightRectangular.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightSkySphere.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightSpot.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUMaterialLight.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUMediumHomogenous.cu" />

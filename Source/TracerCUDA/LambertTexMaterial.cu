@@ -24,9 +24,7 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
         TexturedDataNodeList<Vector3> matAlbedoNodes = sceneNode->AccessTexturedDataVector3(ALBEDO);
         OptionalNodeList<MaterialTextureStruct> matNormalNodes = sceneNode->AccessOptionalTextureNode(NORMAL);        
         assert(matAlbedoNodes.size() == matNormalNodes.size());
-
         
-
         std::vector<ConstructionInfo> localInfo;
         // Iterate over these nodes one by one to find textures
         for(int j = 0; j < matAlbedoNodes.size(); j++)
