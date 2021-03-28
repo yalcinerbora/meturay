@@ -110,8 +110,12 @@ inline void GPULightSkySphere::Sample(// Output
 {
     distance = FLT_MAX;
 
+<<<<<<< HEAD
     Vector2i index;
     distribution.Sample(pdf, vectorInd);
+=======
+    distribution.
+>>>>>>> 2984fd412c5ad9a2e7782306afbcf97e07d01cda
 
 }
 
