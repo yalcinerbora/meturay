@@ -20,7 +20,7 @@ class GPUDistPiecewise1D
     protected:
     public:
         // Construtors & Destructor
-                                GPUDistPiecewise1D() = default;
+                                //GPUDistPiecewise1D() = default;
         __host__ __device__     GPUDistPiecewise1D(const float* dCDFList,
                                                    const float* dPDFList,
                                                    uint32_t count);
@@ -47,7 +47,7 @@ class GPUDistPiecewise2D
     protected:
     public:
         // Construtors & Destructor
-                                GPUDistPiecewise2D() = default;
+                                //GPUDistPiecewise2D() = default;
         __host__ __device__     GPUDistPiecewise2D(const GPUDistPiecewise1D dDistributionsY,
                                                    const GPUDistPiecewise1D* dDistributionsX,
                                                    uint32_t countX,
@@ -69,18 +69,20 @@ class GPUDistPiecewise2D
 class CPUDistGroupPiecewise1D
 {
     private:
-        DeviceMemory                    memory;
-        std::vector<GPUDistPiecewise1D> gpuDistributions;
+        DeviceMemory                            memory;
+        std::vector<GPUDistPiecewise1D>         gpuDistributions;
 
-        const std::vector<float*>       dPDFs;
-        const std::vector<float*>       dCDFs;
+        std::vector<size_t>                     counts;
+        std::vector<const float*>               dPDFs;
+        std::vector<const float*>               dCDFs;
+        std::vector<const GPUDistPiecewise1D*>  dXDistributions;
 
     protected:
     public:
         // Constructors & Destructor
                                         CPUDistGroupPiecewise1D() = default;
                                         CPUDistGroupPiecewise1D(const std::vector<std::vector<float>>& pdfValues,
-                                                                const CudaSystem& cudaSystem);
+                                                                const CudaSystem& system);
                                         CPUDistGroupPiecewise1D(const CPUDistGroupPiecewise1D&) = delete;
                                         CPUDistGroupPiecewise1D(CPUDistGroupPiecewise1D&&) = default;
         CPUDistGroupPiecewise1D&        operator=(const CPUDistGroupPiecewise1D&) = delete;
@@ -96,12 +98,17 @@ class CPUDistGroupPiecewise2D
         DeviceMemory                    memory;
         std::vector<GPUDistPiecewise2D> gpuDistributions;
 
+        std::vector<Vector2ui>          dimensions;
+        std::vector<const float*>       dPDFs;
+        std::vector<const float*>       dCDFs;
+
     protected:
     public:
         // Constructors & Destructor
                                         CPUDistGroupPiecewise2D() = default;
                                         CPUDistGroupPiecewise2D(const std::vector<std::vector<float>>& pdfValues,
-                                                                const std::vector<Vector2ui> dimensions);
+                                                                const std::vector<Vector2ui>& dimensions,
+                                                                const CudaSystem& system);
                                         CPUDistGroupPiecewise2D(const CPUDistGroupPiecewise2D&) = delete;
                                         CPUDistGroupPiecewise2D(CPUDistGroupPiecewise2D&&) = default;
         CPUDistGroupPiecewise2D&        operator=(const CPUDistGroupPiecewise2D&) = delete;

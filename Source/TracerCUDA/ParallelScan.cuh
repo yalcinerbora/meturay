@@ -24,9 +24,9 @@ Wrapping functions to it from now on.
 #include "ReduceFunctions.cuh"
 
 template<class Type, ReduceFunc<Type> F>
-__host__ void KCExclusiveScanArray(Type* out, const Type* in,
-                                   size_t elementCount, Type identityElement,
-                                   cudaStream_t stream = (cudaStream_t)0)
+__host__ void ExclusiveScanArrayGPU(Type* out, const Type* in,
+                                    size_t elementCount, Type identityElement,
+                                    cudaStream_t stream = (cudaStream_t)0)
 {
     // Delegating to cub here
     size_t bufferSize = 0;
@@ -48,8 +48,8 @@ __host__ void KCExclusiveScanArray(Type* out, const Type* in,
 }
 
 template<class Type, ReduceFunc<Type> F>
-__host__ void KCInclusiveScanArray(Type* out, const Type* in, size_t elementCount,
-                                   cudaStream_t stream = (cudaStream_t)0)
+__host__ void InclusiveScanArrayGPU(Type* out, const Type* in, size_t elementCount,
+                                    cudaStream_t stream = (cudaStream_t)0)
 {
     // Delegating to cub here
     size_t bufferSize = 0;
@@ -71,15 +71,15 @@ __host__ void KCInclusiveScanArray(Type* out, const Type* in, size_t elementCoun
 // Meta Definitions
 #define DEFINE_EXCLUSIVE_SCAN(type, func) \
     template \
-    __host__ void KCExclusiveScanArray<type, func>(type*, const type*, \
-                                                   size_t, type, \
-                                                   cudaStream_t);
+    __host__ void ExclusiveScanArrayGPU<type, func>(type*, const type*, \
+                                                    size_t, type, \
+                                                    cudaStream_t);
 
 #define DEFINE_INCLUSIVE_SCAN(type, func) \
     template \
-    __host__ void KCInclusiveScanArray<type, func>(type*, const type*, \
-                                                   size_t, \
-                                                   cudaStream_t);
+    __host__ void InclusiveScanArrayGPU<type, func>(type*, const type*, \
+                                                    size_t, \
+                                                    cudaStream_t);
 
 #define DEFINE_SCAN_BOTH(type, func) \
     DEFINE_EXCLUSIVE_SCAN(type, func) \
