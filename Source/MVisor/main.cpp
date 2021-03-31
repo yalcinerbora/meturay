@@ -41,8 +41,6 @@ int main(int argc, const char* argv[])
     ////        PLACEHOLDER     //
     //// =========================//
 
-
-
     //// Visor Determination
     //std::unique_ptr<VisorGL> visorView = CreateVisorGL();
     //visorView->ResetImageBuffer({1280, 720}, PixelFormat::RGB32_UNORM);
@@ -55,8 +53,6 @@ int main(int argc, const char* argv[])
     //  // Present Back Buffer
     //  visorView->Present();
     //}
-
-
 
     //// Load Maya Cache
     //MayaCache::MayaNSCacheInfo info;
@@ -114,10 +110,6 @@ int main(int argc, const char* argv[])
     //// Write Image
     //ImageIO::System().WriteAsPNG(image, resolution, "test.png");
 
-
-
-    
-    
     //try
     //{
     //  if(argc != 2)

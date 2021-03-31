@@ -36,28 +36,28 @@ inline __device__ __host__ Quaternion<T>::Quaternion(const Vector<4, T>& vec)
 
 template<class T>
 __device__ __host__
-inline Quaternion<T>::operator Vector<4, T>&()
+inline Quaternion<T>::operator Vector<4, T>& ()
 {
     return vec;
 }
 
 template<class T>
 __device__ __host__
-inline Quaternion<T>::operator const Vector<4, T>&() const
+inline Quaternion<T>::operator const Vector<4, T>& () const
 {
     return vec;
 }
 
 template<class T>
 __device__ __host__
-inline Quaternion<T>::operator T*()
+inline Quaternion<T>::operator T* ()
 {
     return static_cast<T*>(vec);
 }
 
 template<class T>
 __device__ __host__
-inline Quaternion<T>::operator const T*() const
+inline Quaternion<T>::operator const T* () const
 {
     return static_cast<const T*>(vec);
 }
@@ -239,7 +239,7 @@ inline Vector<3, T> Quaternion<T>::ApplyRotation(const Vector<3, T>& vector) con
     Quaternion vectorQ(0.0f, vector[0], vector[1], vector[2]);
 
     Quaternion result((*this) * (vectorQ * qInv));
-    return Vector<3,T>(result[1], result[2], result[3]);
+    return Vector<3, T>(result[1], result[2], result[3]);
 }
 
 template<class T>
@@ -249,7 +249,7 @@ inline Quaternion<T> Quat::NLerp(const Quaternion<T>& start, const Quaternion<T>
     T cosTetha = start.Dot(end);
     // Select closest approach
     T cosFlipped = (cosTetha >= 0) ? cosTetha : (-cosTetha);
-            
+
     T s0 = (1 - t);
     T s1 = t;
     // Flip scale if cos is flipped
@@ -266,12 +266,12 @@ inline Quaternion<T> Quat::SLerp(const Quaternion<T>& start, const Quaternion<T>
     // Select closest approach
     T cosFlipped = (cosTetha >= 0) ? cosTetha : (-cosTetha);
 
-    T s0, s1; 
+    T s0, s1;
     if(cosFlipped < (1 - MathConstants::Epsilon))
     {
         T angle = acos(cosFlipped);
         s0 = sin(angle * (1 - t)) / sin(angle);
-        s1 = sin(angle * t)       / sin(angle);
+        s1 = sin(angle * t) / sin(angle);
     }
     else
     {
@@ -303,7 +303,7 @@ inline Quaternion<T> Quat::BarySLerp(const Quaternion<T>& q0,
     //
     // One thing to note is to check quaternions are close
     // and use conjugate in order to have proper average
-    
+
     // Align tovards q0
     const Quaternion<T>& qA = q0;
     //Quaternion<T> qB = (q1.Dot(q0) < 0) ? q1.Conjugate() : q1;
@@ -328,7 +328,7 @@ inline Quaternion<T> Quat::BarySLerp(const Quaternion<T>& q0,
 
 template<class T>
 __device__ __host__
-inline Quaternion<T> Quat::RotationBetween(const Vector<3,T>& a, const Vector<3,T>& b)
+inline Quaternion<T> Quat::RotationBetween(const Vector<3, T>& a, const Vector<3, T>& b)
 {
     Vector<3, T> aCrossB = Cross(a, b);
     T aDotB = a.Dot(b);
@@ -371,7 +371,7 @@ inline Quaternion<T> Quat::RotationBetweenZAxis(const Vector<3, T>& b)
 }
 
 template<class T>
-__device__ __host__ 
+__device__ __host__
 inline Quaternion<T> operator*(T t, const Quaternion<T>& q)
 {
     return q * t;
@@ -388,7 +388,7 @@ inline void TransformGen::Space(Quaternion<T>& q,
     // Mike Day, Insomniac Games (2015)
     // https://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf
 
-    // Coord Systems should match 
+    // Coord Systems should match
     // both should be right-handed coord system
     Vector3 crs = Cross(x, y);
     Vector3 diff = crs - z;
@@ -410,7 +410,7 @@ inline void TransformGen::Space(Quaternion<T>& q,
             t = 1 - x[0] + y[1] - z[2];
             q = Quaternion<T>(z[0] - x[2],
                               x[1] + y[0],
-                              t, 
+                              t,
                               y[2] + z[1]);
         }
     }
@@ -421,7 +421,7 @@ inline void TransformGen::Space(Quaternion<T>& q,
             t = 1 - x[0] - y[1] + z[2];
             q = Quaternion<T>(x[1] - y[0],
                               z[0] + x[2],
-                              y[2] + z[1], 
+                              y[2] + z[1],
                               t);
         }
         else
@@ -429,11 +429,11 @@ inline void TransformGen::Space(Quaternion<T>& q,
             t = 1 + x[0] + y[1] + z[2];
             q = Quaternion<T>(t,
                               y[2] - z[1],
-                              z[0] - x[2], 
+                              z[0] - x[2],
                               x[1] - y[0]);
         }
     }
-    q *= static_cast<T>(0.5) / sqrt(t);  
+    q *= static_cast<T>(0.5) / sqrt(t);
     q.NormalizeSelf();
 }
 

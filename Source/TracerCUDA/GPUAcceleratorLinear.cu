@@ -19,12 +19,12 @@ const char* GPUBaseAcceleratorLinear::Type() const
     return TypeName();
 }
 
-void GPUBaseAcceleratorLinear::GetReady(const CudaSystem& system, 
+void GPUBaseAcceleratorLinear::GetReady(const CudaSystem& system,
                                         uint32_t rayCount)
 {
     size_t requiredSize = rayCount * sizeof(uint32_t);
     if(rayLocMemory.Size() < requiredSize)
-        rayLocMemory = std::move(DeviceMemory(requiredSize));        
+        rayLocMemory = std::move(DeviceMemory(requiredSize));
 
     dPrevLocList = static_cast<uint32_t*>(rayLocMemory);
     CUDA_CHECK(cudaMemset(dPrevLocList, 0x00, requiredSize));
@@ -70,7 +70,6 @@ void GPUBaseAcceleratorLinear::Hit(const CudaSystem& system,
         offset += workCount;
     }
 }
-
 
 SceneError GPUBaseAcceleratorLinear::Initialize(// Accelerator Option Node
                                                 const SceneNodePtr& node,

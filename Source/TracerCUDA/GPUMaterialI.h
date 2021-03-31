@@ -1,7 +1,6 @@
 #pragma once
 /**
 
-
 */
 
 #include <cstdint>
@@ -56,7 +55,7 @@ class GPUMaterialGroupI
         virtual size_t                      UsedGPUMemory() const = 0;
         virtual size_t                      UsedCPUMemory() const = 0;
         virtual size_t                      UsedGPUMemory(uint32_t materialId) const = 0;
-        virtual size_t                      UsedCPUMemory(uint32_t materialId) const = 0;        
+        virtual size_t                      UsedCPUMemory(uint32_t materialId) const = 0;
         // NEE Related
         virtual bool                        IsLightGroup() const = 0;
         virtual bool                        IsEmissiveGroup() const = 0;
@@ -82,13 +81,13 @@ class GPULightMaterialGroupI : public GPUMaterialGroupI
         bool                                IsLightGroup() const override { return true; }
         bool                                IsCameraGroup() const override { return false; }
         // Interface
-        virtual const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const = 0;
+        //virtual const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const = 0;
 };
 
 // Additional Interface for Camera material
 class GPUCameraMaterialGroupI : public GPUMaterialGroupI
 {
-    public:                                            
+    public:
         virtual                             ~GPUCameraMaterialGroupI() = default;
         // Implementations
         bool                                IsLightGroup() const override { return false; }
@@ -96,4 +95,3 @@ class GPUCameraMaterialGroupI : public GPUMaterialGroupI
         // Interface
         virtual void                        AttachGlobalCameraArray() const = 0;
 };
-

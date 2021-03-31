@@ -24,7 +24,7 @@ class GPUTransformI;
 // Surfaces are deemed by the materials
 // (i.e. a material may not require uv if a texture is present)
 //
-// This function is provided by the "WorkBatch" class 
+// This function is provided by the "WorkBatch" class
 // meaning different WorkBatch Class is generated for different
 // primitive/material pairs
 template <class Surface, class HitData, class PrimitiveData>
@@ -49,7 +49,6 @@ namespace PrimitiveSurfaceFind
         inline typename std::enable_if<(I < std::tuple_size<Tuple>::value), ReturnType>::type
         constexpr LoopAndFind(Tuple&& t)
         {
-            
             using ElementType = typename std::tuple_element_t<I, Tuple>;
             using CurrentType = typename ElementType::type;
             // Accelerator Types

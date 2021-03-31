@@ -16,11 +16,10 @@ struct VisorError : public ErrorI
         enum Type
         {
             OK,
-            
+
             WINDOW_GENERATOR_ERROR,
             WINDOW_GENERATION_ERROR,
             RENDER_FUCTION_GENERATOR_ERROR,
-
 
             // End
             END
@@ -73,7 +72,7 @@ inline VisorError::operator std::string() const
         "Window generator failed to initialize",
         "Window generator is unable to generate window",
         "Render function generator failed to initialize"
-    }; 
+    };
     static_assert(std::extent<decltype(ErrorStrings)>::value == static_cast<size_t>(VisorError::END),
                   "Enum and enum string list size mismatch.");
 

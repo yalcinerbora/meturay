@@ -78,7 +78,7 @@ TracerError TracerSystemCUDA::GenerateTracer(GPUTracerPtr& tracer,
     if(scnE != SceneError::OK)
     {
         return TracerError::NO_LOGIC_FOR_TRACER;
-    }        
+    }
     TracerError trcE = tracer->SetOptions(opts);
     if(trcE != TracerError::OK)
         return trcE;

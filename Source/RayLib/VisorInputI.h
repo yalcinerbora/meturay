@@ -5,7 +5,6 @@ MVisorInput Interface
 
 Can be attached to a Visor to capture window actions
 
-
 */
 
 #include <functional>

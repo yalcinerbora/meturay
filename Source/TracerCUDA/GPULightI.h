@@ -18,11 +18,7 @@ using GPULightList = std::vector<const GPULightI*>;
 
 class CPULightGroupI
 {
-	protected:
-		// Global Transform Array
-		const GPUTransformI** dGPUTransforms;
 	public:
-										CPULightGroupI();
 		virtual							~CPULightGroupI() = default;
 
 		// Interface
@@ -43,7 +39,3 @@ class CPULightGroupI
 		virtual size_t					UsedGPUMemory() const = 0;
 		virtual size_t					UsedCPUMemory() const = 0;
 };
-
-inline CPULightGroupI::CPULightGroupI()
-	: dGPUTransforms(nullptr)
-{}

@@ -4,13 +4,12 @@ SceneError UnrealMat::InitializeGroup(const NodeListing& materialNodes,
                                       const TextureNodeMap& textures,
                                       const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                       double time, const std::string& scenePath)
-{    
-
+{
     std::vector<Vector3> albedoCPU;
     std::vector<Vector3> rougnessMetallicSheenCPU;
     uint32_t i = 0;
     for(const auto& sceneNode : materialNodes)
-    {        
+    {
         const auto& ids = sceneNode->Ids();
         for(IdPair id : ids)
         {
@@ -55,7 +54,6 @@ size_t UnrealMat::UsedCPUMemory() const
     // TODO: Implement
     return 0;
 }
-
 
 size_t UnrealMat::UsedGPUMemory(uint32_t materialId) const
 {

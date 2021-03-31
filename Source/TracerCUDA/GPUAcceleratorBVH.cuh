@@ -56,14 +56,14 @@ class GPUAccBVHGroup final
         // CPU Memory
         std::vector<PrimitiveRangeList>     primitiveRanges;
         std::vector<HitKeyList>             primitiveMaterialKeys;
-        std::vector<uint8_t>                bvhDepths;        
+        std::vector<uint8_t>                bvhDepths;
         std::map<uint32_t, uint32_t>        idLookup;
         SurfaceAABBList                     surfaceAABBs;
         // GPU Memory
         DeviceMemory                        memory;
         std::vector<DeviceMemory>           bvhMemories;
         const BVHNode<LeafData>**           dBVHLists;
-        // Per accelerator data       
+        // Per accelerator data
         TransformId*                        dAccTransformIds;
 
         // Recursive Construction
@@ -76,7 +76,7 @@ class GPUAccBVHGroup final
                                                 size_t tempMemSize,
                                                 uint32_t* dPartitionSplitOut,
                                                 uint32_t* dIndicesTemp,
-                                                // Index Data                                             
+                                                // Index Data
                                                 uint32_t* dIndicesIn,
                                                 // Constants
                                                 const uint64_t* dPrimIds,
@@ -137,7 +137,7 @@ class GPUAccBVHGroup final
                                     HitStructPtr dHitStructs,
                                     // I-O
                                     RayGMem* dRays,
-                                    // Input                                    
+                                    // Input
                                     const RayId* dRayIds,
                                     const HitKey* dAcceleratorKeys,
                                     const uint32_t rayCount) const override;
@@ -167,7 +167,7 @@ class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
         static void                     GenerateBaseBVHNode(// Output
                                                             size_t& splitLoc,
                                                             BVHNode<BaseLeaf>& node,
-                                                            // Index Data                                             
+                                                            // Index Data
                                                             uint32_t* surfaceIndices,
                                                             // Constants
                                                             const BaseLeaf* leafs,
@@ -189,7 +189,7 @@ class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
         const char*                 Type() const override;
 
         // Get ready for hit loop
-        void                        GetReady(const CudaSystem& system, 
+        void                        GetReady(const CudaSystem& system,
                                              uint32_t rayCount) override;
         // Base accelerator only points to the next accelerator key.
         // It can return invalid key,
@@ -201,7 +201,6 @@ class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
                                         const RayGMem* dRays,
                                         const RayId* dRayIds,
                                         const uint32_t rayCount) const override;
-
 
         SceneError                  Initialize(// Accelerator Option Node
                                                const SceneNodePtr& node,

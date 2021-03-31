@@ -48,6 +48,4 @@ namespace NodeNames
 
     // Indentity Transform Type Name
     static constexpr const char* TRANSFORM_IDENTITY = "Identity";
-
-
 }

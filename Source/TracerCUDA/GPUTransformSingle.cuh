@@ -24,7 +24,7 @@ class GPUTransformSingle : public GPUTransformI
 
 		__device__
 		RayF			WorldToLocal(const RayF&,
-									 const uint32_t* indices = nullptr, 
+									 const uint32_t* indices = nullptr,
 									 const float* weights = nullptr,
 									 uint32_t count = 0) const override;
 		__device__
@@ -51,7 +51,7 @@ class GPUTransformSingle : public GPUTransformI
 
 class CPUTransformSingle : public CPUTransformGroupI
 {
-	public:	
+	public:
 		static const char*				TypeName() { return "Single"; }
 
 		static constexpr const char*	LAYOUT_MATRIX	= "matrix4x4";
@@ -64,7 +64,7 @@ class CPUTransformSingle : public CPUTransformGroupI
 		static constexpr const char*	SCALE			= "scale";
 
     private:
-		DeviceMemory					memory;		
+		DeviceMemory					memory;
 		const Matrix4x4*				dTransformMatrices;
 		const Matrix4x4*				dInvTransformMatrices;
 		const GPUTransformSingle*		dGPUTransforms;
@@ -73,7 +73,7 @@ class CPUTransformSingle : public CPUTransformGroupI
 
     protected:
     public:
-		// Constructors & Destructor	
+		// Constructors & Destructor
 										CPUTransformSingle() = default;
 		virtual							~CPUTransformSingle() = default;
 
@@ -102,7 +102,7 @@ inline GPUTransformSingle::GPUTransformSingle(const Matrix4x4& transform,
 	Vector3f x(transform(0, 0), transform(0, 1), transform(0, 2));
 	Vector3f y(transform(1, 0), transform(1, 1), transform(1, 2));
 	Vector3f z(transform(2, 0), transform(2, 1), transform(2, 2));
-	// Normalize space definiting linearly indepenent 
+	// Normalize space definiting linearly indepenent
 	// and orthogonal vectors
 	// These may not be unit vectors since transformation
 	// may include scale factor
@@ -115,8 +115,8 @@ inline GPUTransformSingle::GPUTransformSingle(const Matrix4x4& transform,
 }
 
 __device__
-inline RayF GPUTransformSingle::WorldToLocal(const RayF& r, 
-											 const uint32_t*, 
+inline RayF GPUTransformSingle::WorldToLocal(const RayF& r,
+											 const uint32_t*,
 											 const float*,
 											 uint32_t) const
 {
@@ -165,7 +165,7 @@ inline AABB3f GPUTransformSingle::LocalToWorld(const AABB3f& aabb) const
 	AABB3f result = NegativeAABB3f;
 	for(int i = 0; i < AABB3f::AABBVertexCount; i++)
 	{
-		Vector4f vertex;		
+		Vector4f vertex;
 		vertex[0] = ((i >> 0 & 0x1) ? aabb.Max() : aabb.Min())[0];
 		vertex[1] = ((i >> 1 & 0x1) ? aabb.Max() : aabb.Min())[1];
 		vertex[2] = ((i >> 2 & 0x1) ? aabb.Max() : aabb.Min())[2];

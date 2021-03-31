@@ -54,7 +54,7 @@ inline void CudaGPU::GridStrideKC_X(uint32_t sharedMemSize,
     CUDA_CHECK(cudaSetDevice(deviceId));
     uint32_t blockSize = StaticThreadPerBlock1D;
 
-    f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);    
+    f<<<blockCount, blockSize, sharedMemSize, stream>>>(args...);
     //void* argsList[] = {((void*)&args)...};
     //CUDA_CHECK(cudaLaunchKernel(f, blockCount, blockSize, argsList,
     //                            sharedMemSize, stream));
@@ -82,7 +82,6 @@ inline void CudaGPU::GridStrideKC_XY(uint32_t sharedMemSize,
     //                            sharedMemSize, stream));
     CUDA_KERNEL_CHECK();
 }
-
 
 template<class Function, class... Args>
 __host__ void CudaGPU::AsyncGridStrideKC_X(uint32_t sharedMemSize,

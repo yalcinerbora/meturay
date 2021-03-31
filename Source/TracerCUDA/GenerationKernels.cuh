@@ -87,7 +87,7 @@ void KCGenerateCameraRaysCPU(// Output
         Vector2 sampleDistance = Vector2(static_cast<float>(globalSampleId[0]),
                                          static_cast<float>(globalSampleId[1])) * delta;
         Vector2 samplePointDistance = sampleDistance + randomOffset * delta;
-        Vector3 samplePoint = bottomLeft + (samplePointDistance[0] * right) 
+        Vector3 samplePoint = bottomLeft + (samplePointDistance[0] * right)
                                          + (samplePointDistance[1] * up);
         Vector3 rayDir = (samplePoint - pos).Normalize();
 
@@ -104,7 +104,7 @@ void KCGenerateCameraRaysCPU(// Output
         ray.tMax = cam.farPlane;
         ray.Update(gRays, threadId);
 
-        // Initialize Auxiliary Data        
+        // Initialize Auxiliary Data
         AuxFunc(gAuxiliary[threadId],
                 // Input
                 auxBaseData,

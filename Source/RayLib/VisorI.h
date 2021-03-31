@@ -22,7 +22,6 @@ class VisorCallbacksI;
 
 struct VisorError;
 
-
 struct VisorOptions
 {
     // Technical
@@ -46,7 +45,7 @@ class VisorI
         // Interface
         virtual VisorError              Initialize() = 0;
         virtual bool                    IsOpen() = 0;
-        virtual void                    Render() = 0;        
+        virtual void                    Render() = 0;
         // Input System
         virtual void                    SetInputScheme(VisorInputI&) = 0;
         // Data Related
@@ -73,5 +72,4 @@ class VisorI
         virtual void                    ReleaseRenderingContext() = 0;
         // Main Thread only Calls
         virtual void                    ProcessInputs() = 0;
-
 };

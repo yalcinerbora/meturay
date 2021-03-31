@@ -11,9 +11,6 @@
 #include "Types.h"
 #include "HitStructs.h"
 
-class GPUDistribution2D;
-
-
 //enum class FilterType
 //{
 //    LINEAR,
@@ -33,7 +30,7 @@ class GPUDistribution2D;
 //};
 
 using NodeId = uint32_t;        // Node Id is generic name of the id logic
-using MaterialId = uint32_t;    // Material Id represent material of some kind 
+using MaterialId = uint32_t;    // Material Id represent material of some kind
 using SurfaceDataId = uint32_t; // Surface Id represent up to "MaxPrimitivePerSurface"
                                 // material-primitive pairings of some kind
 
@@ -99,7 +96,6 @@ struct LightGroupData
 using ConstructionDataList = std::vector<ConstructionData>;
 using CameraGroupData = ConstructionDataList;
 
-
 using MaterialKeyListing = std::map<TypeIdPair, HitKey>;
 
 struct EndpointStruct
@@ -114,7 +110,7 @@ struct SurfaceStruct
 {
     static constexpr int MATERIAL_INDEX = 0;
     static constexpr int PRIM_INDEX = 1;
-    
+
     uint32_t        acceleratorId;
     uint32_t        transformId;
     IdPairs         matPrimPairs;

@@ -8,7 +8,7 @@
 
 class GPULightDisk final : public GPULightI
 {
-    private:        
+    private:
         Vector3f                center;
         Vector3f                normal;
         float                   radius;
@@ -76,7 +76,6 @@ class CPULightGroupDisk final : public CPULightGroupI
                                 CPULightGroupDisk(const GPUPrimitiveGroupI*);
                                 ~CPULightGroupDisk() = default;
 
-
         const char*				Type() const override;
 		const GPULightList&		GPULights() const override;
 		SceneError				InitializeGroup(const ConstructionDataList& lightNodes,
@@ -103,7 +102,7 @@ inline GPULightDisk::GPULightDisk(// Per Light Data
                                   const GPUTransformI& gTransform,
                                   // Endpoint Related Data
                                   HitKey k, uint16_t mediumIndex)
-    : GPUEndpointI(k, mediumIndex)
+    : GPULightI(k, mediumIndex)
     , center(gTransform.LocalToWorld(center))
     , normal(gTransform.LocalToWorld(normal, true))
     , radius(radius)
@@ -158,15 +157,14 @@ inline void GPULightDisk::GenerateRay(// Output
     // TODO: Implement
 }
 
-__device__ 
+__device__
 inline PrimitiveId GPULightDisk::PrimitiveIndex() const
 {
     return INVALID_PRIMITIVE_ID;
 }
 
 inline CPULightGroupDisk::CPULightGroupDisk(const GPUPrimitiveGroupI*)
-    : CPULightGroupI()
-    , lightCount(0)
+    : lightCount(0)
     , dGPULights(nullptr)
 {}
 
@@ -194,7 +192,7 @@ inline size_t CPULightGroupDisk::UsedCPUMemory() const
 {
     size_t totalSize = (hHitKeys.size() * sizeof(HitKey) +
                         hMediumIds.size() * sizeof(uint16_t) +
-                        hTransformIds.size() * sizeof(TransformId) + 
+                        hTransformIds.size() * sizeof(TransformId) +
                         hCenters.size() * sizeof(Vector3f) +
                         hNormals.size() * sizeof(Vector3f) +
                         hRadius.size() * sizeof(float));

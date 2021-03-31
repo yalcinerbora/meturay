@@ -103,7 +103,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
                                                    const GPUSceneI&,
                                                    const TracerParameters&,
                                                    const std::string& tracerType) override;
-   
+
         //// Inclusion Functionality
         //// Additionally includes the materials, primitives etc. from other libraries
         //DLLError                    IncludeBaseAcceleratorsFromDLL(const std::string& libName,

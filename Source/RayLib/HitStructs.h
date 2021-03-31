@@ -1,7 +1,6 @@
 #pragma once
 /**
 
-
 */
 #include <cstdint>
 
@@ -76,9 +75,8 @@ struct alignas(sizeof(T)) HitKeyT
                   (IdMask & BatchMask) == std::numeric_limits<T>::min(),
                   "Masks representing portions of HitKey should complement each other.");
 
-
     static constexpr uint16_t       NullBatch = NullBatchId;
-    static constexpr T              InvalidKey = CombinedKey(NullBatch, 0);    
+    static constexpr T              InvalidKey = CombinedKey(NullBatch, 0);
 };
 
 template <class T, uint32_t BatchBits, uint32_t IdBits>
@@ -97,7 +95,7 @@ template <class T, uint32_t BatchBits, uint32_t IdBits>
 __device__ __host__
 constexpr T HitKeyT<T, BatchBits, IdBits>::CombinedKey(uint32_t batch, uint64_t id)
 {
-    return (static_cast<T>(batch) << IdBits) | 
+    return (static_cast<T>(batch) << IdBits) |
            (static_cast<T>(id) & IdMask);
 }
 

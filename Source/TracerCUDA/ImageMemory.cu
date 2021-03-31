@@ -95,7 +95,7 @@ void ImageMemory::Reportion(Vector2i start,
     if(pixelCount != 0)
     {
         memory = std::move(DeviceMemory(sizeOfPixels + sizeOfPixelCounts));
-        
+
         size_t offset = 0;
         std::uint8_t* dMem = static_cast<uint8_t*>(memory);
         dPixels = dMem + offset;
@@ -132,9 +132,7 @@ void ImageMemory::Reset(const CudaSystem& system)
         size_t totalBytes = PixelFormatToSize(format) * pixelCount +
                             sizeof(uint32_t) * pixelCount;
         CUDA_CHECK(cudaMemset(memory, 0x0, totalBytes));
-
     }
-
 }
 
 std::vector<Byte> ImageMemory::GetImageToCPU(const CudaSystem& system)

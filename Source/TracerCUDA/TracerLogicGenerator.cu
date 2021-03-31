@@ -31,6 +31,7 @@
 #include "GPULightPoint.cuh"
 #include "GPULightSpot.cuh"
 #include "GPULightDisk.cuh"
+#include "GPULightSkySphere.cuh"
 
 #include "GPUCameraPinhole.cuh"
 
@@ -68,30 +69,6 @@ template GPUAcceleratorGroupI* TypeGenWrappers::AccelGroupConstruct<GPUAccelerat
 template void TypeGenWrappers::DefaultDestruct(GPUPrimitiveGroupI*);
 template void TypeGenWrappers::DefaultDestruct(GPUMaterialGroupI*);
 template void TypeGenWrappers::DefaultDestruct(GPUAcceleratorGroupI*);
-
-//// Helper Funcs
-//DLLError TracerLogicGenerator::FindOrGenerateSharedLib(SharedLib*& libOut,
-//                                                       const std::string& libName)
-//{
-//    auto it = openedLibs.end();
-//    if((it = openedLibs.find(libName)) != openedLibs.end())
-//    {
-//        libOut = &it->second;
-//    }
-//    else
-//    {
-//        try
-//        {
-//            auto it = openedLibs.emplace(libName, SharedLib(libName));
-//            libOut = &it.first->second;
-//        }
-//        catch(const DLLException& e)
-//        {
-//            return e;
-//        }
-//    }
-//    return DLLError::OK;
-//}
 
 TracerLogicGenerator::TracerLogicGenerator()
 {
@@ -206,6 +183,9 @@ TracerLogicGenerator::TracerLogicGenerator()
     lightGroupGenerators.emplace(CPULightGroupSpot::TypeName(),
                                  CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupSpot>,
                                                   DefaultDestruct<CPULightGroupI>));
+    lightGroupGenerators.emplace(CPULightGroupSkySphere::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupSkySphere>,
+                                                  DefaultDestruct<CPULightGroupI>));
     lightGroupGenerators.emplace(CPULightGroup<GPUPrimitiveTriangle>::TypeName(),
                                  CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroup<GPUPrimitiveTriangle>>,
                                                   DefaultDestruct<CPULightGroupI>));
@@ -232,7 +212,7 @@ TracerLogicGenerator::TracerLogicGenerator()
 SceneError TracerLogicGenerator::GeneratePrimitiveGroup(GPUPrimGPtr& pg,
                                                         const std::string& primitiveType)
 {
-    pg = nullptr;       
+    pg = nullptr;
     auto loc = primGroupGenerators.find(primitiveType);
     if(loc == primGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_PRIMITIVE;
 
@@ -313,7 +293,7 @@ SceneError TracerLogicGenerator::GenerateLightGroup(CPULightGPtr& light,
 
 SceneError TracerLogicGenerator::GenerateTracer(GPUTracerPtr& tracerPtr,
                                                 // Args
-                                                const CudaSystem& s,                                                
+                                                const CudaSystem& s,
                                                 const GPUSceneI& scene,
                                                 const TracerParameters& p,
                                                 // Type
@@ -344,7 +324,7 @@ SceneError TracerLogicGenerator::GenerateTracer(GPUTracerPtr& tracerPtr,
 //    baseAccelGenerators.insert(map.cbegin(), map.cend());
 //    return e;
 //    return DLLError::OK;
-//    // Then 
+//    // Then
 //}
 //
 //DLLError TracerLogicGenerator::IncludeAcceleratorsFromDLL(const std::string& libName,

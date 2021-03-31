@@ -17,9 +17,8 @@ class DeviceDivideFunctor
                         DeviceDivideFunctor(const T& dValue);
                         ~DeviceDivideFunctor() = default;
 
-        __device__ 
+        __device__
         T               operator()(const T& in);
-        
 };
 
 template <class T>
@@ -33,9 +32,8 @@ class DeviceMultiplyFunctor
                         DeviceMultiplyFunctor(const T& dValue);
                         ~DeviceMultiplyFunctor() = default;
 
-        __device__ 
+        __device__
         T               operator()(const T& in);
-        
 };
 
 template <class T>
@@ -49,9 +47,8 @@ class HostDivideFunctor
                         HostDivideFunctor(const T& hValue);
                         ~HostDivideFunctor() = default;
 
-        __device__ 
+        __device__
         T               operator()(const T& in);
-        
 };
 
 template <class T>
@@ -65,9 +62,8 @@ class HostMultiplyFunctor
                         HostMultiplyFunctor(const T& hValue);
                         ~HostMultiplyFunctor() = default;
 
-        __device__ 
+        __device__
         T               operator()(const T& in);
-        
 };
 
 template <class T>

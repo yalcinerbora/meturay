@@ -26,7 +26,7 @@ using WorkFunc = void(*)(// Output
                          RayGMem* gOutRays,
                          RayAuxiliary* gOutRayAux,
                          const uint32_t maxOutRay,
-                         // Input as registers                         
+                         // Input as registers
                          const RayReg& ray,
                          const RayAuxiliary& aux,
                          const MGroup::Surface& surface,
@@ -42,9 +42,9 @@ using WorkFunc = void(*)(// Output
 // Meta Kernel for divding work.
 template<class GlobalState, class LocalState,
          class RayAuxiliary, class PGroup, class MGroup,
-         WorkFunc<GlobalState, LocalState, RayAuxiliary, MGroup> WFunc, 
-         SurfaceFunc<MGroup::Surface, 
-                     PGroup::HitData, 
+         WorkFunc<GlobalState, LocalState, RayAuxiliary, MGroup> WFunc,
+         SurfaceFunc<MGroup::Surface,
+                     PGroup::HitData,
                      PGroup::PrimitiveData> SurfFunc>
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCWork(// Output
@@ -57,11 +57,11 @@ void KCWork(// Output
             const RayAuxiliary* gInRayAux,
             const PrimitiveId* gPrimitiveIds,
             const TransformId* gTransformIds,
-            const HitStructPtr gHitStructs,            
+            const HitStructPtr gHitStructs,
             //
             const HitKey* gMatIds,
             const RayId* gRayIds,
-            // I-O 
+            // I-O
             LocalState gLocalState,
             GlobalState gRenderState,
             RNGGMem gRNGStates,
@@ -73,12 +73,12 @@ void KCWork(// Output
 {
     // Fetch Types from Template Classes
     using HitData = typename PGroup::HitData;   // HitData is defined by primitive
-    using Surface = typename MGroup::Surface;   // Surface is defined by material group    
+    using Surface = typename MGroup::Surface;   // Surface is defined by material group
 
     // Pre-grid stride loop
     // RNG is allocated for each SM (not for each thread)
     RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
-   
+
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < rayCount; globalId += blockDim.x * gridDim.x)
@@ -117,9 +117,9 @@ void KCWork(// Output
               gLocalAuxOut,
               maxOutRay,
               // Input as registers
-              ray,              
+              ray,
               aux,
-              surface,              
+              surface,
               // I-O
               gLocalState,
               gRenderState,

@@ -23,7 +23,7 @@ void VisorThread::LoopWork()
     visor.Render();
 }
 
-void VisorThread::FinalWork() 
+void VisorThread::FinalWork()
 {
     // No final work for Visor
     visor.ReleaseRenderingContext();

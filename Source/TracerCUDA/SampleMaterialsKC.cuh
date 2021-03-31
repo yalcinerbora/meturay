@@ -84,7 +84,7 @@ Vector3 LambertEvaluate(// Input
                         const HitKey::Type& matId)
 {
     Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
-    float nDotL = max(normal.Dot(wo), 0.0f);    
+    float nDotL = max(normal.Dot(wo), 0.0f);
     return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
 }
 
@@ -115,7 +115,7 @@ Vector3 ReflectSample(// Sampled Output
     float roughness = data[3];
 
     const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
-    // Calculate Reflection   
+    // Calculate Reflection
     if(roughness == 0.0f)
     {
         // Singularity Just Reflect
@@ -181,12 +181,12 @@ Vector3 RefractSample(// Sampled Output
 
     // Determine medium index of refractions
     float fromMedium = m.IOR();
-    float toMedium = (entering) ? iIOR : dIOR;    
+    float toMedium = (entering) ? iIOR : dIOR;
 
     // Normal also needs to be on the same side of the surface for the funcs
     // to work
     Vector3 refNormal = (entering) ? normal : (-normal);
-    
+
     // Calculate Frenel Term
     float f = TracerFunctions::FrenelDielectric(abs(nDotI), fromMedium, toMedium);
 
@@ -214,8 +214,8 @@ Vector3 RefractSample(// Sampled Output
         pdf = 1.0f - f;
 
         // Refraction is choosen
-        // Convert wi, refract func needs 
-        // the direction to be towards surface    
+        // Convert wi, refract func needs
+        // the direction to be towards surface
         RayF rayIn(wi, position);
         // Get refracted ray
         bool refracted = rayIn.Refract(wo, refNormal, fromMedium, toMedium);
@@ -230,13 +230,13 @@ Vector3 RefractSample(// Sampled Output
             pdf = 0.0f;
             return Zero3;
             //__threadfence();
-            //__trap(); 
+            //__trap();
         }
 
-        // We passed the boundary 
+        // We passed the boundary
         // advance towards opposite direction
         wo.AdvanceSelf(MathConstants::Epsilon, -refNormal);
-        
+
         // Factor in the radiance discrapency due to refraction
         // Medium change causes rays to be scatter/focus
         // Since we try to calculate radiance towards that ray

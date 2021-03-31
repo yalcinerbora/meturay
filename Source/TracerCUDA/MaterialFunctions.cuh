@@ -16,7 +16,7 @@ using IsEmissiveFunc = bool(*)(const Data&,
 // Returns evaluated BxDF function result, a sampled ray and prob density of the sample.
 // it returns a ray since subsurface evaluation makes wo to come out from a different
 // location.
-// 
+//
 // MGroup::Data holds the material information in batched manner
 // Function itself is responsible for accessing that structure using matId
 //
@@ -67,7 +67,6 @@ using EvaluateFunc = Vector3(*)(// Input
                                 const Data&,
                                 const HitKey::Type& matId);
 
-
 // TEXTURE CACHING IS SHELVED
 
 ////===================================//
@@ -78,12 +77,11 @@ using EvaluateFunc = Vector3(*)(// Input
 //// that is dependant of the material.
 ////
 //// Each ray returns its own UV location which may be required by the texture cache
-//// 
+////
 //template <class Data, class Surface>
 //using AcquireUVList = void(*)(//Output
-//                              TexCoords*, 
+//                              TexCoords*,
 //                              const Surface& surface,
 //                              // Constants
 //                              const Data&,
 //                              const HitKey::Type& matId);
-

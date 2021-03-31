@@ -9,11 +9,11 @@ class CudaSystem;
 using GPUMediumList = std::vector<const GPUMediumI*>;
 
 class GPUMediumI
-{    
+{
     public:
         virtual             ~GPUMediumI() = default;
        // Interface
-        __device__ 
+        __device__
         virtual Vector3     SigmaA() const = 0;
         __device__
         virtual Vector3     SigmaS() const = 0;
@@ -26,7 +26,7 @@ class GPUMediumI
         __device__
         virtual uint32_t    GlobalIndex() const = 0;
 
-        __device__ 
+        __device__
         virtual Vector3     Transmittance(float distance) const = 0;
 };
 
@@ -45,8 +45,8 @@ class CPUMediumGroupI
                                                    const std::string& scenePath) = 0;
         virtual TracerError				ConstructMediums(const CudaSystem&,
                                                          uint32_t indexStartOffset) = 0;
-        virtual uint32_t				MediumCount() const = 0;        
+        virtual uint32_t				MediumCount() const = 0;
 
         virtual size_t					UsedGPUMemory() const = 0;
-        virtual size_t					UsedCPUMemory() const = 0;  
+        virtual size_t					UsedCPUMemory() const = 0;
 };

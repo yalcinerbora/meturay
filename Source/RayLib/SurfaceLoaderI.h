@@ -20,13 +20,13 @@ class SurfaceLoaderI
         // Type Determination
         virtual const SceneNodeI&       SceneNode() const = 0;
         virtual const char*             SufaceDataFileExt() const = 0;
-        
+
         // Per Batch Fetch
-        virtual SceneError              AABB(std::vector<AABB3>&) const = 0;        
+        virtual SceneError              AABB(std::vector<AABB3>&) const = 0;
         virtual SceneError              PrimitiveRanges(std::vector<Vector2ul>&) const = 0;
         virtual SceneError              PrimitiveCounts(std::vector<size_t>&) const = 0;
         virtual SceneError              PrimitiveDataRanges(std::vector<Vector2ul>&) const = 0;
-        
+
         // Entire Data Fetch
         virtual SceneError              GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const = 0;
         virtual SceneError              HasPrimitiveData(bool&, PrimitiveDataType) const = 0;

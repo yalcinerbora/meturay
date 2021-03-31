@@ -8,12 +8,9 @@ using ::testing::ElementsAreArray;
 using ::testing::FloatEq;
 using ::testing::FloatNear;
 
-
 TEST(QuaternionCPU, Constructors)
 {
-
     //
-
 }
 
 TEST(QuaternionCPU, Space)
@@ -40,7 +37,7 @@ TEST(QuaternionCPU, Space)
 
     QuatF q1;
     Vector3 result1;
-    QuatF resultYZX = (QuatF(-90.0f * MathConstants::DegToRadCoef, YAxis) * 
+    QuatF resultYZX = (QuatF(-90.0f * MathConstants::DegToRadCoef, YAxis) *
                        QuatF(-90.0f * MathConstants::DegToRadCoef, XAxis));
     resultYZX.ConjugateSelf();
 
@@ -64,7 +61,7 @@ TEST(QuaternionCPU, Space)
     EXPECT_FLOAT_EQ(YAxis[0], result1[0]);
     EXPECT_FLOAT_EQ(YAxis[1], result1[1]);
     EXPECT_FLOAT_EQ(YAxis[2], result1[2]);
-    
+
     QuatF q2;
     Vector3 result2;
     QuatF resultZXY = (QuatF(90.0f * MathConstants::DegToRadCoef, XAxis) *

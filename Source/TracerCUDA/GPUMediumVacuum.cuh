@@ -113,7 +113,7 @@ inline TracerError CPUMediumVacuum::ConstructMediums(const CudaSystem& system,
                             //
                             KCConstructGPUClass<GPUMediumVacuum, uint32_t>,
                             //
-                            const_cast<GPUMediumVacuum*>(dGPUMediums),                            
+                            const_cast<GPUMediumVacuum*>(dGPUMediums),
                             MediumCount(),
                             indexStartOffset);
 

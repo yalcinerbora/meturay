@@ -34,7 +34,7 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
         GLuint workCount = resolution[1] * resolution[0];
         GLuint gridX = (workCount + 256 - 1) / 256;
         glDispatchCompute(gridX, 1, 1);
-        glMemoryBarrier(GL_UNIFORM_BARRIER_BIT | 
+        glMemoryBarrier(GL_UNIFORM_BARRIER_BIT |
                         GL_SHADER_STORAGE_BARRIER_BIT);
 
         // Now Call simle Average Kernel
@@ -96,5 +96,4 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
     glDispatchCompute(gridX, gridY, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
                     GL_TEXTURE_FETCH_BARRIER_BIT);
-
 }

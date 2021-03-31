@@ -1,4 +1,3 @@
-
 template <int D>
 size_t TotalPixelCount(const TexDimType_t<D>& dim)
 {
@@ -151,7 +150,6 @@ TextureArrayI<D, C>& TextureArrayI<D, C>::operator=(TextureArrayI&& other)
     other.length = 0;
 }
 
-
 template<int C>
 TextureCubeI<C>::TextureCubeI(TextureCubeI&& other)
     : texture(other.texture)
@@ -209,7 +207,6 @@ Texture<D, T>::Texture(int deviceId,
     tDesc.normalizedCoords = normalizeCoordinates;
     tDesc.mipmapFilterMode = DetermineFilterMode(interp);
 
-    
     tDesc.maxAnisotropy = 4;
     tDesc.mipmapLevelBias = 0.0f;
     tDesc.minMipmapLevelClamp = -100.0f;
@@ -272,11 +269,11 @@ void Texture<D, T>::Copy(const Byte* sourceData,
     cudaArray_t levelArray;
     CUDA_CHECK(cudaSetDevice(this->currentDevice));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
-    
+
     cudaMemcpy3DParms p = {0};
     p.kind = cudaMemcpyHostToDevice;
     p.extent = MakeCudaCopySize<D>(size);
-    
+
     p.dstArray = levelArray;
     p.dstPos = MakeCudaOffset<D>(offset);
 
@@ -361,7 +358,7 @@ TextureArray<D, T>::TextureArray(int deviceId,
     , interpType(interp)
     , edgeResolveType(eResolve)
 {
-    cudaExtent extent = MakeCudaExtent<D>(dim, length);   
+    cudaExtent extent = MakeCudaExtent<D>(dim, length);
     cudaChannelFormatDesc d = cudaCreateChannelDesc<T>();
     CUDA_CHECK(cudaSetDevice(deviceId));
     CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, mipCount,
@@ -664,7 +661,7 @@ template <class T>
 GPUFence TextureCube<T>::CopyAsync(const Byte* sourceData,
                                    const Vector2ui& size,
                                    CubeTexSide side,
-                                   const Vector2ui& offset,                                   
+                                   const Vector2ui& offset,
                                    int mipLevel,
                                    cudaStream_t stream)
 {

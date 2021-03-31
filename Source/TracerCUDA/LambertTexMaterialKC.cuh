@@ -39,11 +39,11 @@ Vector3 LambertTSample(// Sampled Output
         const auto& dNormalSampler = *matData.dNormal[matId];
         normal = GPUSurface::ToWorld(dNormalSampler(surface.uv),
                                      surface.worldToTangent);
-    }    
+    }
     // Tangent space normal not present (mat has not tangent space normal)
     // use interpolated normal
     else normal = GPUSurface::NormalWorld(surface.worldToTangent);
-    
+
     // Generate New Ray Direction
     Vector2 xi(GPUDistribution::Uniform<float>(rng),
                GPUDistribution::Uniform<float>(rng));
@@ -58,7 +58,7 @@ Vector3 LambertTSample(// Sampled Output
 
     // Cos Tetha
     float nDotL = max(normal.Dot(direction), 0.0f);
-    
+
     // Ray out
     Vector3 outPos = position + normal * MathConstants::Epsilon;
     wo = RayF(direction, outPos);
@@ -92,7 +92,7 @@ Vector3 LambertTEvaluate(// Input
     else normal = GPUSurface::NormalWorld(surface.worldToTangent);
 
     float nDotL = max(normal.Dot(wo), 0.0f);
-       
+
     const Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
     return nDotL * albedo * MathConstants::InvPi;
 }

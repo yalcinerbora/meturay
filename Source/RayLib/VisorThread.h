@@ -33,6 +33,4 @@ class VisorThread : public LoopingThreadI
 
         // Main Thread Call
         void            ProcessInputs();
-
-
 };

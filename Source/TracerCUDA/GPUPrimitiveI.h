@@ -4,7 +4,7 @@
 Primitive related structs
 
 Primitive is a simple building block of a surface.
-It can be numeric types (such as triangles, volumes etc.) 
+It can be numeric types (such as triangles, volumes etc.)
 or it can be analtyic types (such as splines, spheres)
 
 PrimtiveGroup holds multiple primitive lists (i.e. multiple meshes)
@@ -37,7 +37,7 @@ enum class PrimTransformType
     // Single transform is applied to the group of primitives
     CONSTANT_LOCAL_TRANSFORM,
     // Each primitive will different (maybe) multiple transforms
-    // this prevents the accelerator to utilize local space 
+    // this prevents the accelerator to utilize local space
     // accelerator structure and transforming ray to local space
     // instead of opposite
     PER_PRIMITIVE_TRANSFORM
@@ -45,7 +45,7 @@ enum class PrimTransformType
 
 class GPUPrimitiveGroupI
 {
-    public: 
+    public:
         virtual                     ~GPUPrimitiveGroupI() = default;
 
         // Interface
@@ -58,7 +58,7 @@ class GPUPrimitiveGroupI
         virtual SceneError          ChangeTime(const NodeListing& surfaceDatalNodes, double time,
                                                const SurfaceLoaderGeneratorI&,
                                                const std::string& scenePath) = 0;
-        // Access primitive range from Id     
+        // Access primitive range from Id
         virtual Vector2ul           PrimitiveBatchRange(uint32_t surfaceDataId) const = 0;
         virtual AABB3               PrimitiveBatchAABB(uint32_t surfaceDataId) const = 0;
         virtual uint32_t            PrimitiveHitSize() const = 0;

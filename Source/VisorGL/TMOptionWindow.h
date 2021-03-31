@@ -17,7 +17,6 @@ class TMOptionWindow : public VisorGUIWindowI
                                                const ToneMapOptions& defaultOptions);
                                 ~TMOptionWindow() = default;
 
-
         const ToneMapOptions&   GetToneMapOptions() const;
 
         void                    Render() override;

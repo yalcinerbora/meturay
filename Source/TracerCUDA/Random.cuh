@@ -30,7 +30,7 @@ class RandomGPU
         uint32_t                    threadId;
         curandStateMRG32k3a_t*      gStates;
         curandStateMRG32k3a_t       rState;
-        
+
     protected:
     public:
         // Constructor

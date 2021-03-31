@@ -30,7 +30,7 @@ class PathTracer final : public RayTracer
         WorkPool<bool>          workPool;
         // Light material work pool
         WorkPool<bool, bool>    lightWorkPool;
-        
+
     protected:
     public:
         // Constructors & Destructor

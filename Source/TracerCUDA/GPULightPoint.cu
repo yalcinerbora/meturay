@@ -42,11 +42,10 @@ SceneError CPULightGroupPoint::InitializeGroup(const ConstructionDataList& light
 
     for(const auto& node : lightNodes)
     {
-
         // Convert Ids to inner index
         uint32_t mediumIndex = mediumIdIndexPairs.at(node.mediumId);
         uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
-        HitKey materialKey = allMaterialKeys.at(std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME, 
+        HitKey materialKey = allMaterialKeys.at(std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME,
                                                                node.materialId));
 
         const auto positions = node.node->AccessVector3(NAME_POSITION);
@@ -67,7 +66,7 @@ SceneError CPULightGroupPoint::InitializeGroup(const ConstructionDataList& light
     size_t offset = 0;
     std::uint8_t* dBasePtr = static_cast<uint8_t*>(memory);
     dGPULights = reinterpret_cast<const GPULightPoint*>(dBasePtr + offset);
-    offset += totalClassSize;    
+    offset += totalClassSize;
     assert(totalClassSize == offset);
 
     return SceneError::OK;
@@ -161,6 +160,3 @@ TracerError CPULightGroupPoint::ConstructLights(const CudaSystem& system,
     }
     return TracerError::OK;
 }
-
-static_assert(IsLightGroupClass<CPULightGroupPoint>::value,
-              "CPULightGroupPoint is not a Light Group class.");

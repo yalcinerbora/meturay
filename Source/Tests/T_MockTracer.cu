@@ -189,7 +189,7 @@ using namespace std::chrono_literals;
 //                                                             Vector2i pixelStart = Zero2i,
 //                                                             Vector2i pixelEnd = BaseConstants::IMAGE_MAX_SIZE) override;
 //
-// 
+//
 //};
 //
 //const GPUPrimitiveGroupI& MockTracerLogic::AcceleratorMock::PrimitiveGroup() const
@@ -358,7 +358,7 @@ using namespace std::chrono_literals;
 //}
 //
 //
-//uint32_t MockTracerLogic::GenerateRays(const CudaSystem&, 
+//uint32_t MockTracerLogic::GenerateRays(const CudaSystem&,
 //                                       //
 //                                       ImageMemory&,
 //                                       RayMemory&, RNGMemory&,

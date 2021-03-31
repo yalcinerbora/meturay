@@ -33,7 +33,7 @@ const char* GPUBaseAcceleratorBVH::Type() const
 void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
                                                 size_t& splitLoc,
                                                 BVHNode<BaseLeaf>& node,
-                                                // Index Data                                             
+                                                // Index Data
                                                 uint32_t* surfaceIndices,
                                                 // Constants
                                                 const BaseLeaf* leafs,
@@ -49,7 +49,7 @@ void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
     // Populate Node
     node.parent = parentIndex;
     node.isLeaf = false;
-   
+
     // Base Case (CPU Mode)
     if(end - start == 1)
     {
@@ -62,7 +62,7 @@ void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
     }
     // Non-leaf Construct
     else
-    {    
+    {
         AABB3f aabbUnion = NegativeAABB3;
         Vector3 avgCenter = Zero3;
         // Try each split if split is not good
@@ -70,7 +70,7 @@ void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
         for(int i = 0; i < TOTAL_AXES; i++)
         {
             int testAxis = axisIndex + i % TOTAL_AXES;
-            
+
             // Find AABB and avg Center
             // Do it only once since it is same on all splits
             if(i == 0)
@@ -84,13 +84,12 @@ void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
 
                     AABB3f aabb = AABB3f(leafs[index].aabbMin, leafs[index].aabbMax);
                     aabbUnion.UnionSelf(aabb);
-
                 }
             }
 
             // Current axis of split
             float centerOfAxis = avgCenter[testAxis];
-            
+
             // Partition wrt. avg center
             int64_t splitStart = static_cast<int64_t>(start - 1);
             int64_t splitEnd = static_cast<int64_t>(end);
@@ -130,7 +129,7 @@ void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
         }
         // If we still not found a good split
         // then just split in half
-        if(splitLoc == 0) 
+        if(splitLoc == 0)
             splitLoc = (end - start) / 2;
         // Sanity Check
         assert(splitLoc != start);
@@ -139,11 +138,10 @@ void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
         // Save AABB
         node.aabbMin = aabbUnion.Min();
         node.aabbMax = aabbUnion.Max();
-      
     }
 }
 
-void GPUBaseAcceleratorBVH::GetReady(const CudaSystem& system, 
+void GPUBaseAcceleratorBVH::GetReady(const CudaSystem& system,
                                      uint32_t rayCount)
 {
     size_t stateSize = rayCount * sizeof(uint32_t);
@@ -160,9 +158,8 @@ void GPUBaseAcceleratorBVH::GetReady(const CudaSystem& system,
     // Set Ptrs
     Byte* memPtr = static_cast<Byte*>(rayStateMemory);
     dRayStates = reinterpret_cast<uint32_t*>(memPtr);
-    dPrevBVHIndex = reinterpret_cast<uint32_t*>(memPtr + stateSize);    
+    dPrevBVHIndex = reinterpret_cast<uint32_t*>(memPtr + stateSize);
     CUDA_CHECK(cudaMemset(dPrevBVHIndex, 0x00, prevIndexSize));
-
 
     // Set Device
     const CudaGPU& gpu = system.BestGPU(); //(*system.GPUList().begin());
@@ -247,9 +244,9 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&,
 
     // Alloc Id List & BVH Node List
     size_t totalSurfaceCount = idLookup.size();
-    std::vector<uint32_t> surfaceIndices(totalSurfaceCount);    
+    std::vector<uint32_t> surfaceIndices(totalSurfaceCount);
     std::vector<BVHNode<BaseLeaf>> bvhNodes;
-    
+
     // Load aabb data to leafs
     for(const auto& pair : aabbMap)
     {

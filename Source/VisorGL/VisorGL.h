@@ -6,7 +6,6 @@ Uses GLFW glfw has c style interface and required to be initalized
 at start of the program. We will need single window thus making
 the VisorGL singleton.
 
-
 */
 
 #include <gl\glew.h>
@@ -110,7 +109,7 @@ class VisorGL : public VisorI
         GLuint                      nearestSampler;
         GLuint                      sdrTexture;
         int                         currentIndex;
- 
+
         // Shader
         ShaderGL                    vertPP;
         ShaderGL                    fragPP;

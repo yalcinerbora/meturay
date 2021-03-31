@@ -16,7 +16,7 @@ struct TracerError : public ErrorI
             OK,
             // Logical
             NO_LOGIC_SET,
-            // General            
+            // General
             CPU_OUT_OF_MEMORY,
             GPU_OUT_OF_MEMORY,
             // Options Related
@@ -35,7 +35,6 @@ struct TracerError : public ErrorI
             UNKNOWN_SCENE_PARTITIONER_TYPE,
             NO_LOGIC_FOR_TRACER,
             // ...
-
 
             // End
             END
@@ -104,7 +103,7 @@ inline TracerError::operator std::string() const
         "Unable to initialize tracer",
         "Unknown scene partitioner type",
         "No logic found for that tracer"
-    }; 
+    };
     static_assert(std::extent<decltype(ErrorStrings)>::value == static_cast<size_t>(TracerError::END),
                   "Enum and enum string list size mismatch.");
 

@@ -11,7 +11,7 @@
 #pragma warning( push )
 #pragma warning( disable : 4834)
 #include <cub/cub.cuh>
-#pragma warning( pop ) 
+#pragma warning( pop )
 
 enum class SplitAxis { X, Y, Z, END };
 
@@ -23,7 +23,7 @@ static constexpr const uint8_t MAX_BASE_DEPTH_BITS = 5;
 
 static_assert((MAX_BASE_DEPTH + MAX_BASE_DEPTH_BITS) <= sizeof(uint32_t) * BYTE_BITS,
               "Base Accelerator State Bits should fit in 32-bit data.");
-static_assert((1llu << MAX_BASE_DEPTH_BITS) >= MAX_BASE_DEPTH, 
+static_assert((1llu << MAX_BASE_DEPTH_BITS) >= MAX_BASE_DEPTH,
               "Base Accelerator bits shouldbe able to hold depth.");
 
 // Base BVH Kernel Save/Load State
@@ -183,7 +183,6 @@ static void KCReduceCentroidsFirst(float* gCentersReduced,
 
     // Write
     if(threadIdx.x == 0) gCentersReduced[blockIdx.x] = valReduced;
-
 }
 
 __global__
@@ -336,7 +335,7 @@ void KCIntersectBVH(// O
 
             if(currentNode->isLeaf)
             {
-                HitResult result = PGroup::Hit(// Output                                            
+                HitResult result = PGroup::Hit(// Output
                                                materialKey,
                                                primitiveId,
                                                hit,
@@ -349,7 +348,6 @@ void KCIntersectBVH(// O
 
                 hitModified |= result[1];
                 if(result[0]) break;
-
             }
             else if(ray.ray.IntersectsAABB(currentNode->aabbMin, currentNode->aabbMax,
                                            Vector2f(ray.tMin, ray.tMax)))
@@ -433,7 +431,7 @@ void KCIntersectBVHStackless(// O
         // Load Ray/Hit to Register
         RayReg ray(gRays, id);
         Vector2f tMinMax(ray.tMin, ray.tMax);
-        
+
         // Key is the index of the inner BVH
         const BVHNode<LeafData>* gBVH = gBVHList[accId];
 
@@ -461,13 +459,12 @@ void KCIntersectBVHStackless(// O
             // Determine traverse information
             uint8_t info = TraverseInfo(list, depth);
             // First time entry check intersection
-            if(info == FIRST_ENTRY)                
+            if(info == FIRST_ENTRY)
             {
                 // Leaf, so do its custom primitive intersection
                 if(currentNode->isLeaf)
                 {
-
-                    HitResult result = PGroup::Hit(// Output                                            
+                    HitResult result = PGroup::Hit(// Output
                                                    materialKey,
                                                    primitiveId,
                                                    hit,
@@ -491,11 +488,10 @@ void KCIntersectBVHStackless(// O
                     // Since by construction BVH tree has either no or both children
                     // avail. If a node is non-leaf it means that it has both of its children
                     // no need to check for left or right index validty
-                    
+
                     // Directly go right
                     currentNode = gBVH + currentNode->left;
-                    depth--;                
-
+                    depth--;
                 }
                 // If we could not be able to hit AABB
                 // just go parent
@@ -525,7 +521,7 @@ void KCIntersectBVHStackless(// O
                 depth++;
             }
         }
-        // Write Updated Stuff 
+        // Write Updated Stuff
         // if we did hit something
         if(hitModified)
         {
@@ -541,7 +537,7 @@ void KCIntersectBVHStackless(// O
 __global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCIntersectBaseBVH(// Output
                                HitKey* gHitKeys,
-                               // I-O 
+                               // I-O
                                uint32_t* gRayStates,
                                uint32_t* gPrevBVHIndex,
                                // Input
@@ -550,7 +546,7 @@ static void KCIntersectBaseBVH(// Output
                                const uint32_t rayCount,
                                // Constants
                                const BVHNode<BaseLeaf>* gBVH)
-{    
+{
     static constexpr uint8_t FIRST_ENTRY = 0b00;
     static constexpr uint8_t U_TURN = 0b01;
 
@@ -586,12 +582,12 @@ static void KCIntersectBaseBVH(// Output
         RayReg rayData(gRays, id);
         Vector2f tMinMax(rayData.tMin, rayData.tMax);
         RayF& ray = rayData.ray;
-     
+
         // Initialize Previous States
         uint32_t list;
         uint8_t depth;
         LoadRayState(list, depth, gRayStates[id]);
-                      
+
         const BVHNode<BaseLeaf>* currentNode = gBVH + gPrevBVHIndex[id];
 
         //if(id == 144)
@@ -614,7 +610,7 @@ static void KCIntersectBaseBVH(// Output
 
                 // Check the leafs aabb or non-leaf aabb
                 // These are the same (cuz of union) but we need to be programatically correct
-                // 
+                //
                 Vector3 aabbMin = (isLeaf) ? currentNode->leaf.aabbMin : currentNode->aabbMin;
                 Vector3 aabbMax = (isLeaf) ? currentNode->leaf.aabbMax : currentNode->aabbMax;
 
@@ -627,7 +623,7 @@ static void KCIntersectBaseBVH(// Output
                         // Pop to parent go get ready for next iteration
                         // However iteration will continue after Leaf Accelerators
                         Pop(list, depth);
-                        // So save state                        
+                        // So save state
                         gRayStates[id] = SaveRayState(list, depth);
                         gPrevBVHIndex[id] = currentNode->parent;
                         // Set AcceleratorId and lower accelerator
@@ -636,7 +632,7 @@ static void KCIntersectBaseBVH(// Output
                         //if(id == 144)
                         //    printf("[L]               depth %u list 0x%08X\n", depth, list);
 
-                        //printf("[L] (%u, %u) depth %u list 0x%08X\n", 
+                        //printf("[L] (%u, %u) depth %u list 0x%08X\n",
                         //       id, globalId, depth, list);
 
                         break;
@@ -648,15 +644,14 @@ static void KCIntersectBaseBVH(// Output
                         currentNode = gBVH + currentNode->left;
                         depth--;
                     }
-               
+
                     //if(id == 144)
                     //    printf("[I]               depth %u list 0x%08X\n", depth, list);
-
                 }
                 // No intersection
                 // Turn back to parent
                 else
-                {                    
+                {
                     currentNode = gBVH + currentNode->parent;
                     Pop(list, depth);
 
@@ -670,10 +665,10 @@ static void KCIntersectBaseBVH(// Output
             else if(info == U_TURN)
             {
                 // Go to right child
-                MarkAsTraversed(list, depth - 1);                
+                MarkAsTraversed(list, depth - 1);
                 currentNode = gBVH + currentNode->right;
-                depth--;                
-                
+                depth--;
+
                 //if(id == 144)
                 //    printf("[U]               depth %u list 0x%08X\n", depth, list);
             }
@@ -692,7 +687,7 @@ static void KCIntersectBaseBVH(// Output
             //if(id == 144) printf("----------\n");
         }
 
-        // If all traverse is done 
+        // If all traverse is done
         // write invalid key in order to terminate
         // rays accelerator traversal
         if(depth > MAX_BASE_DEPTH)
@@ -700,6 +695,5 @@ static void KCIntersectBaseBVH(// Output
             //if(id == 144) printf("RAY ENDING\n");
             gHitKeys[globalId] = HitKey::InvalidKey;
         }
-        
     }
 }

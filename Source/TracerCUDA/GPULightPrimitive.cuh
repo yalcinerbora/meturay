@@ -18,12 +18,12 @@ class GPULight : public GPULightI
 {
     public:
         using PData = typename PGroup::PrimitiveData;
-        
-    private:        
+
+    private:
         PrimitiveId                         primId;
         const GPUTransformI&                transform;
         const PData&                        gPData;
-        
+
         static constexpr auto PrimSample    = PGroup::Sample;
 
     protected:
@@ -64,7 +64,7 @@ class CPULightGroup : public CPULightGroupI
         static constexpr const char*    TypeName() { return PGroup::TypeName(); }
 
         using PData                     = typename PGroup::PrimitiveData;
-        
+
     private:
         const PGroup&                   primGroup;
         DeviceMemory                    memory;
@@ -80,13 +80,12 @@ class CPULightGroup : public CPULightGroupI
         // GPU pointers to those allocated classes on the CPU
         GPULightList				    gpuLightList;
         uint32_t                        lightCount;
-        
+
     protected:
     public:
         // Cosntructors & Destructor
                                 CPULightGroup(const GPUPrimitiveGroupI*);
                                 ~CPULightGroup() = default;
-
 
         const char*				Type() const override;
 		const GPULightList&		GPULights() const override;
@@ -113,7 +112,7 @@ __device__ GPULight<PGroup>::GPULight(HitKey k,
                                       const GPUTransformI& gTransform,
                                       // Common Data
                                       const PData& gPData)
-    : GPUEndpointI(k, mediumIndex)
+    : GPULightI(k, mediumIndex)
     , transform(gTransform)
     , primId(pId)
     , gPData(gPData)
@@ -141,8 +140,8 @@ __device__ void GPULight<PGroup>::Sample(// Output
     normal = transform.LocalToWorld(normal, true);
 
     direction = position - worldLoc;
-    float distanceSqr = direction.LengthSqr();    
-    distance = sqrt(distanceSqr);    
+    float distanceSqr = direction.LengthSqr();
+    distance = sqrt(distanceSqr);
     direction *= (1.0f / distance);
 
     //float nDotL = max(normal.Dot(-direction), 0.0f);
@@ -195,9 +194,8 @@ __device__ PrimitiveId GPULight<PGroup>::PrimitiveIndex() const
 
 template <class PGroup>
 CPULightGroup<PGroup>::CPULightGroup(const GPUPrimitiveGroupI* pg)
-    : CPULightGroupI()
-    , primGroup(static_cast<const PGroup&>(*pg))
-    , dPData(nullptr)    
+    : primGroup(static_cast<const PGroup&>(*pg))
+    , dPData(nullptr)
     , dGPULights(nullptr)
     , lightCount(0)
 {}
@@ -209,7 +207,7 @@ const char* CPULightGroup<PGroup>::Type() const
 }
 
 template <class PGroup>
-const GPULightList& CPULightGroup<PGroup>::GPULights() const 
+const GPULightList& CPULightGroup<PGroup>::GPULights() const
 {
     return gpuLightList;
 }

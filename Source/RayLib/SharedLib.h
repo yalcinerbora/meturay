@@ -4,7 +4,6 @@
 
 Functionalty to Load DLLs or SOs
 
-
 */
 
 #include <string>
@@ -22,8 +21,8 @@ struct SharedLibArgs
 };
 
 inline bool SharedLibArgs::operator<(const SharedLibArgs& s) const
-{ 
-    std::less<std::string> less; 
+{
+    std::less<std::string> less;
     return less(mangledConstructorName, s.mangledConstructorName);
 }
 

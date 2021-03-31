@@ -128,7 +128,6 @@ __global__ void KCParallelReductionTex(Type* gOut,
         gOut[blockIdx.y * gridDim.x + blockIdx.x] = result;
 }
 
-
 template<class Type, ReduceFunc<Type> F, cudaMemcpyKind cpyKind = cudaMemcpyDeviceToDevice>
 __host__ void ReduceArrayGPU(Type& result,
                              const Type* dData,

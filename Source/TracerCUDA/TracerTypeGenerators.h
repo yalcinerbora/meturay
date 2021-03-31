@@ -12,7 +12,6 @@ accross DLL boundaries it should declare
 It also hints how a constructor should be defined. Accelerator should take primitive
 as an input. (since those types are storngly tied)
 
-
 */
 #include "RayLib/SceneStructs.h"
 #include "RayLib/TracerStructs.h"

@@ -3,7 +3,6 @@
 
 General Device memory manager for ray and it's auxiliary data
 
-
 */
 
 #include <set>
@@ -83,7 +82,6 @@ class RayMemory
         RayMemory&              operator=(const RayMemory&) = delete;
         RayMemory&              operator=(RayMemory&&) = default;
                                 ~RayMemory() = default;
-
 
         // Accessors
         // Ray In

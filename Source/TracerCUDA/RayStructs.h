@@ -70,7 +70,7 @@ __device__ __host__
 inline void RayReg::Update(RayGMem* mem,
                            unsigned int loc)
 {
-    RayGMem rayGMem = 
+    RayGMem rayGMem =
     {
         ray.getPosition(),
         tMin,
@@ -87,7 +87,7 @@ inline void RayReg::UpdateTMax(RayGMem* mem,
     mem[loc].tMax = tMax;
 }
 
-__device__ __host__ 
+__device__ __host__
 inline bool RayReg::IsInvalidRay() const
 {
     static const RayReg eRay = EMPTY_RAY_REGISTER;

@@ -58,10 +58,10 @@ class GPUDistPiecewiseConst2D
         GPUDistPiecewiseConst2D&    operator=(GPUDistPiecewiseConst2D&&) = default;
                                     ~GPUDistPiecewiseConst2D() = default;
 
-        // Interface                                
-        __device__ 
+        // Interface
+        __device__
         Vector2f                Sample(float& pdf, RandomGPU& rng) const;
-        __host__ __device__ 
+        __host__ __device__
         uint32_t                Width() const { return width; }
         __host__ __device__
         uint32_t                Height() const { return height; }
@@ -69,6 +69,9 @@ class GPUDistPiecewiseConst2D
 
 class CPUDistGroupPiecewiseConst1D
 {
+    public:
+        using GPUDistList = std::vector<GPUDistPiecewiseConst1D>;
+
     private:
         DeviceMemory                                memory;
         std::vector<GPUDistPiecewiseConst1D>        gpuDistributions;
@@ -91,6 +94,7 @@ class CPUDistGroupPiecewiseConst1D
                                         ~CPUDistGroupPiecewiseConst1D() = default;
 
         const GPUDistPiecewiseConst1D&  DistributionGPU(uint32_t index) const;
+        const GPUDistList&              DistributionGPU() const;
 };
 
 class CPUDistGroupPiecewiseConst2D
@@ -98,16 +102,19 @@ class CPUDistGroupPiecewiseConst2D
     public:
         struct DistData2D
         {
-            const float*                    dYPDF;
-            const float*                    dYCDF;
+            const float*                    dYPDF   = nullptr;
+            const float*                    dYCDF   = nullptr;
             std::vector<const float*>       dXPDFs;
             std::vector<const float*>       dXCDFs;
 
-            const GPUDistPiecewiseConst1D*  dXDists;
+            const GPUDistPiecewiseConst1D*  dXDists = nullptr;
             GPUDistPiecewiseConst1D         yDist;
         };
+
+        using GPUDistList = std::vector<GPUDistPiecewiseConst2D>;
+
     private:
-        DeviceMemory                                memory;        
+        DeviceMemory                                memory;
 
         std::vector<Vector2ui>                      dimensions;
         std::vector<DistData2D>                     distDataList;
@@ -128,8 +135,9 @@ class CPUDistGroupPiecewiseConst2D
         CPUDistGroupPiecewiseConst2D&   operator=(const CPUDistGroupPiecewiseConst2D&) = delete;
         CPUDistGroupPiecewiseConst2D&   operator=(CPUDistGroupPiecewiseConst2D&&) = default;
                                         ~CPUDistGroupPiecewiseConst2D() = default;
-       
+
         const GPUDistPiecewiseConst2D&  DistributionGPU(uint32_t index) const;
+        const GPUDistList&              DistributionGPU() const;
 };
 
 __host__ __device__

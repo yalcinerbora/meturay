@@ -124,8 +124,7 @@ class CudaGPU
             void                            WaitMainStream() const;
         };
 
-
-    private:    
+    private:
         int                     deviceId;
         cudaDeviceProp          props;
         GPUTier                 tier;
@@ -264,7 +263,7 @@ inline const CudaGPU& CudaSystem::BestGPU() const
     auto MemoryCompare = [](const CudaGPU& a, const CudaGPU& b)
     {
         return (a.TotalMemory() < b.TotalMemory());
-    };    
+    };
     auto element = std::max_element(systemGPUs.begin(), systemGPUs.end(), MemoryCompare);
     return *element;
 }

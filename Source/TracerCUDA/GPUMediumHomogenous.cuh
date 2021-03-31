@@ -54,7 +54,6 @@ class CPUMediumHomogenous final : public CPUMediumGroupI
         static constexpr const char*    IOR         = "ior";
         static constexpr const char*    PHASE       = "phase";
 
-
     private:
         DeviceMemory                        memory;
         const GPUMediumHomogenous::Data*    dMediumData;
@@ -79,7 +78,6 @@ class CPUMediumHomogenous final : public CPUMediumGroupI
 		size_t						UsedGPUMemory() const override;
 		size_t						UsedCPUMemory() const override;
 };
-
 
 __device__
 inline GPUMediumHomogenous::GPUMediumHomogenous(const GPUMediumHomogenous::Data& d,
@@ -114,7 +112,7 @@ inline Vector3 GPUMediumHomogenous::Transmittance(float distance) const
     result[1] = expf(result[1]);
     result[2] = expf(result[2]);
 
-    //printf("%f, %f, %f --- %f, %f, %f --- %f, %f, %f -- %f\n", 
+    //printf("%f, %f, %f --- %f, %f, %f --- %f, %f, %f -- %f\n",
     //       result[0], result[1], result[2],
     //       result2[0], result2[1], result2[2],
     //       sigmaT[0], sigmaT[1], sigmaT[2],

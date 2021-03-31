@@ -1,4 +1,3 @@
-
 #include "RayLib/System.h"
 
 int main(int argc, const char* argv[])

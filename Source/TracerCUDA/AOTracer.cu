@@ -15,7 +15,6 @@ AOTracer::AOTracer(const CudaSystem& sys,
     : RayTracer(sys, scene, params)
     , emptyMat(sys.BestGPU())
 {
-
     workPool.AppendGenerators(AmbientOcclusionWorkerList{});
 }
 
@@ -36,7 +35,7 @@ TracerError AOTracer::Initialize()
 
     // Generate Combined Key
     aoMissKey = HitKey::CombinedKey(aoMissWorkBatchId, 0);
-    
+
     // Add AO Miss Work
     GPUWorkBatchI* aoMissBatch = nullptr;
     if((err = workPool.GenerateWorkBatch(aoMissBatch,
@@ -62,7 +61,7 @@ TracerError AOTracer::Initialize()
             continue;
         }
 
-        // Generate work batch from appropirate work pool        
+        // Generate work batch from appropirate work pool
         WorkPool<>& wp = workPool;
         GPUWorkBatchI* batch = nullptr;
         if((err = wp.GenerateWorkBatch(batch, workTypeName.c_str(),
@@ -118,7 +117,7 @@ bool AOTracer::Render()
     uint32_t totalOutRayCount = 0;
     auto outPartitions = PartitionOutputRays(totalOutRayCount, workMap);
 
-    // Allocate new auxiliary buffer 
+    // Allocate new auxiliary buffer
     // to fit all potential ray outputs
     size_t auxOutSize = totalOutRayCount * sizeof(RayAuxAO);
     DeviceMemory::EnlargeBuffer(*dAuxOut, auxOutSize);

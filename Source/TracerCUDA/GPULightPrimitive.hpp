@@ -1,4 +1,3 @@
-
 template <class PGroup>
 __global__ void KCConstructGPULight(GPULight<PGroup>* gLightLocations,
                                     //
@@ -47,7 +46,7 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const ConstructionDataList& li
         uint32_t mediumIndex = mediumIdIndexPairs.at(node.mediumId);
         uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
         HitKey materialKey = allMaterialKeys.at(std::make_pair(primGroup.Type(), node.materialId));
-            
+
         lightCount += static_cast<uint32_t>(primitiveRange[1] - primitiveRange[0]);
         for(PrimitiveId primId = primitiveRange[0]; primId < primitiveRange[1]; primId++)
         {
@@ -107,9 +106,9 @@ TracerError CPULightGroup<PGroup>::ConstructLights(const CudaSystem& system,
     size_t transformIdSize = sizeof(TransformId) * lightCount;
     transformIdSize = Memory::AlignSize(transformIdSize);
 
-    size_t totalSize = (matKeySize + 
-                        mediumSize + 
-                        primIdSize + 
+    size_t totalSize = (matKeySize +
+                        mediumSize +
+                        primIdSize +
                         transformIdSize);
     DeviceMemory::EnlargeBuffer(tempMemory, totalSize);
 

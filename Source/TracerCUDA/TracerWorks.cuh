@@ -15,11 +15,11 @@
 #include "GPUMaterialLight.cuh"
 
 template<class MGroup, class PGroup>
-class DirectTracerWork 
+class DirectTracerWork
     : public GPUWorkBatch<DirectTracerGlobal, EmptyState, RayAuxBasic,
-                          MGroup, PGroup, BasicWork<MGroup>, 
+                          MGroup, PGroup, BasicWork<MGroup>,
                           PGroup::GetSurfaceFunction>
-{   
+{
     private:
     protected:
     public:
@@ -31,15 +31,15 @@ class DirectTracerWork
 
         void                            GetReady() override {}
         // We will not bounce more than once
-        uint8_t                         OutRayCount() const override { return 0; }        
+        uint8_t                         OutRayCount() const override { return 0; }
 
         const char*                     Type() const override { return TypeName(); }
 };
 
 template<class MGroup, class PGroup>
-class PathTracerWork 
+class PathTracerWork
     : public GPUWorkBatch<PathTracerGlobal, PathTracerLocal, RayAuxPath,
-                          MGroup, PGroup, PathWork<MGroup>, 
+                          MGroup, PGroup, PathWork<MGroup>,
                           PGroup::GetSurfaceFunction>
 {
     private:
@@ -56,14 +56,14 @@ class PathTracerWork
 
         void                            GetReady() override {}
         uint8_t                         OutRayCount() const override;
-        
+
         const char*                     Type() const override { return TypeName(); }
 };
 
 template<class MGroup, class PGroup>
-class PathTracerLightWork 
+class PathTracerLightWork
     : public GPUWorkBatch<PathTracerGlobal, PathTracerLocal, RayAuxPath,
-                          MGroup, PGroup, PathLightWork<MGroup>, 
+                          MGroup, PGroup, PathLightWork<MGroup>,
                           PGroup::GetSurfaceFunction>
 {
     private:
@@ -86,7 +86,7 @@ class PathTracerLightWork
 };
 
 template<class PGroup>
-class AmbientOcclusionWork 
+class AmbientOcclusionWork
     : public GPUWorkBatch<AmbientOcclusionGlobal, EmptyState, RayAuxAO,
                           EmptyMat<BasicSurface>, PGroup, AOWork<EmptyMat<BasicSurface>>,
                           PGroup::GetSurfaceFunction>
@@ -108,12 +108,12 @@ class AmbientOcclusionWork
         const char*                     Type() const override { return TypeName(); }
 };
 
-class AmbientOcclusionMissWork 
+class AmbientOcclusionMissWork
     : public GPUWorkBatch<AmbientOcclusionGlobal, EmptyState, RayAuxAO,
                           EmptyMat<EmptySurface>, GPUPrimitiveEmpty, AOMissWork<EmptyMat<EmptySurface>>,
                           GPUPrimitiveEmpty::GetSurfaceFunction>
 {
-    public:        
+    public:
         static const char*              TypeName() { return "AOMiss"; }
 
     private:
@@ -136,7 +136,7 @@ DirectTracerWork<M, P>::DirectTracerWork(const GPUMaterialGroupI& mg,
                                          const GPUPrimitiveGroupI& pg,
                                          const GPUTransformI* const* t)
     : GPUWorkBatch<DirectTracerGlobal, EmptyState, RayAuxBasic,
-                   M, P, BasicWork<M>, 
+                   M, P, BasicWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
 {}
 
@@ -148,7 +148,7 @@ PathTracerWork<M, P>::PathTracerWork(const GPUMaterialGroupI& mg,
     : GPUWorkBatch<PathTracerGlobal, PathTracerLocal, RayAuxPath,
                    M, P, PathWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
-    , neeOn(neeOn) 
+    , neeOn(neeOn)
 {
     // Populate localData
     localData.emptyPrimitive = false;
@@ -158,7 +158,7 @@ PathTracerWork<M, P>::PathTracerWork(const GPUMaterialGroupI& mg,
 
 template<class M, class P>
 uint8_t PathTracerWork<M, P>::OutRayCount() const
-{ 
+{
     if(materialGroup.IsSpecularGroup())
         return materialGroup.SampleStrategyCount();
     else if(materialGroup.SampleStrategyCount() != 0)
@@ -175,7 +175,7 @@ PathTracerLightWork<M, P>::PathTracerLightWork(const GPUMaterialGroupI& mg,
     : GPUWorkBatch<PathTracerGlobal, PathTracerLocal, RayAuxPath,
                    M, P, PathLightWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
-    , neeOn(neeOn) 
+    , neeOn(neeOn)
 {
     // Populate localData
     localData.emptyPrimitive = emptyPrimitive;

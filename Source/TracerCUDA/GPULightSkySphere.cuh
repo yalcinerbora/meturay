@@ -4,71 +4,77 @@
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
 #include "TypeTraits.h"
-#include "GPUDistribution.h"
+#include "GPUPiecewiseDistribution.cuh"
+#include "RayLib/CoordinateConversion.h"
 
 class GPULightSkySphere : public GPULightI
 {
     private:
-        const GPUDistribution2D&    distribution;
+        const GPUDistPiecewiseConst2D&  distribution;
+        const GPUTransformI&            transform;
+        bool                            isHemi;
 
     protected:
     public:
         // Constructors & Destructor
-    __device__                  GPULightSkySphere(// Per Light Data
-                                                  const GPUTransformI& gTransform,
-                                                  const GPUDistribution2D& dist,
-                                                  // Endpoint Related Data
-                                                  HitKey k, uint16_t mediumIndex);
-                                ~GPULightSkySphere() = default;
+        __device__                      GPULightSkySphere(// Per Light Data
+                                                          const GPUDistPiecewiseConst2D& dist,
+                                                          bool isHemi,
+                                                          const GPUTransformI& gTransform,
+                                                          // Endpoint Related Data
+                                                          HitKey k, uint16_t mediumIndex);
+                                        ~GPULightSkySphere() = default;
         // Interface
-        __device__ void         Sample(// Output
-                                       float& distance,
-                                       Vector3& direction,
-                                       float& pdf,
-                                       // Input
-                                       const Vector3& worldLoc,
-                                       // I-O
-                                       RandomGPU&) const override;
+        __device__ void                 Sample(// Output
+                                               float& distance,
+                                               Vector3& direction,
+                                               float& pdf,
+                                               // Input
+                                               const Vector3& worldLoc,
+                                               // I-O
+                                               RandomGPU&) const override;
 
-        __device__ void         GenerateRay(// Output
-                                            RayReg&,
-                                            // Input
-                                            const Vector2i& sampleId,
-                                            const Vector2i& sampleMax,
-                                            // I-O
-                                            RandomGPU&) const override;
+        __device__ void                 GenerateRay(// Output
+                                                    RayReg&,
+                                                    // Input
+                                                    const Vector2i& sampleId,
+                                                    const Vector2i& sampleMax,
+                                                    // I-O
+                                                    RandomGPU&) const override;
 
-        __device__ PrimitiveId  PrimitiveIndex() const override;
+        __device__ PrimitiveId          PrimitiveIndex() const override;
 };
-
 
 class CPULightGroupSkySphere : public CPULightGroupI
 {
     public:
         static constexpr const char*    TypeName() { return "SkySphere"; }
-
-        static constexpr const char*    NAME_DIRECTION = "direction";
+        static constexpr const char*    IS_HEMI_NAME = "isHemispherical";
 
     private:
-        DeviceMemory                    memory;
-        //
-        std::vector<Vector3f>           hDirections;
+        DeviceMemory                            memory;
+        // CPU Temp Allocation
+        std::vector<std::vector<float>>         hLuminances;
+        std::vector<Vector2ui>                  hLuminanceSizes;
 
-        std::vector<HitKey>             hHitKeys;
-        std::vector<uint16_t>           hMediumIds;
-        std::vector<TransformId>        hTransformIds;
+        std::vector<Byte>                       hIsHemiOptions;
+        std::vector<HitKey>                     hHitKeys;
+        std::vector<uint16_t>                   hMediumIds;
+        std::vector<TransformId>                hTransformIds;
+        // CPU Permanent Allocation
+        CPUDistGroupPiecewiseConst2D            hLuminanceDistributions;
         // Allocations of the GPU Class
-        const GPULightSkySphere*        dGPULights;
+        const GPULightSkySphere*                dGPULights;
+        const GPUDistPiecewiseConst2D*          dLuminanceDistributions;
         // GPU pointers to those allocated classes on the CPU
-        GPULightList				    gpuLightList;
-        uint32_t                        lightCount;
-        
+        GPULightList				            gpuLightList;
+        uint32_t                                lightCount;
+
     protected:
     public:
         // Cosntructors & Destructor
                                 CPULightGroupSkySphere(const GPUPrimitiveGroupI*);
                                 ~CPULightGroupSkySphere() = default;
-
 
         const char*				Type() const override;
 		const GPULightList&		GPULights() const override;
@@ -85,17 +91,20 @@ class CPULightGroupSkySphere : public CPULightGroupI
 		uint32_t				LightCount() const override;
 
 		size_t					UsedGPUMemory() const override;
-        size_t					UsedCPUMemory() const override; 
+        size_t					UsedCPUMemory() const override;
 };
 
 __device__
 inline GPULightSkySphere::GPULightSkySphere(// Per Light Data
+                                            const GPUDistPiecewiseConst2D& dist,
+                                            bool isHemi,
                                             const GPUTransformI& gTransform,
-                                            const GPUDistribution2D& dist,
                                             // Endpoint Related Data
                                             HitKey k, uint16_t mediumIndex)
-    : GPUEndpointI(k, mediumIndex)
+    : GPULightI(k, mediumIndex)
     , distribution(dist)
+    , transform(gTransform)
+    , isHemi(isHemi)
 {}
 
 __device__
@@ -106,17 +115,20 @@ inline void GPULightSkySphere::Sample(// Output
                                       // Input
                                       const Vector3& worldLoc,
                                       // I-O
-                                      RandomGPU&) const
+                                      RandomGPU& rng) const
 {
-    distance = FLT_MAX;
+    Vector2f uv = distribution.Sample(pdf, rng);
 
-<<<<<<< HEAD
-    Vector2i index;
-    distribution.Sample(pdf, vectorInd);
-=======
-    distribution.
->>>>>>> 2984fd412c5ad9a2e7782306afbcf97e07d01cda
+    Vector2f tethaPhi = Vector2f(// [-pi, pi]
+                                 (uv[0] * MathConstants::Pi * 2.0f) - MathConstants::Pi,
+                                  // [0, pi]
+                                 uv[1] * MathConstants::Pi);
+    dir = Utility::SphericalToCartesianUnit(tethaPhi);
+    // Transform Direction to World Space
+    dir = transform.LocalToWorld(dir, true);
 
+    // Sky is very far
+    distance = FLT_MAX;   
 }
 
 __device__
@@ -131,16 +143,16 @@ inline void GPULightSkySphere::GenerateRay(// Output
     // TODO: implement
 }
 
-__device__ 
+__device__
 inline PrimitiveId GPULightSkySphere::PrimitiveIndex() const
 {
     return INVALID_PRIMITIVE_ID;
 }
 
 inline CPULightGroupSkySphere::CPULightGroupSkySphere(const GPUPrimitiveGroupI*)
-    : CPULightGroupI()
-    , lightCount(0)
+    : lightCount(0)
     , dGPULights(nullptr)
+    , dLuminanceDistributions(nullptr)
 {}
 
 inline const char* CPULightGroupSkySphere::Type() const
@@ -165,10 +177,16 @@ inline size_t CPULightGroupSkySphere::UsedGPUMemory() const
 
 inline size_t CPULightGroupSkySphere::UsedCPUMemory() const
 {
+    size_t totalLumSize = 0;
+    for(const auto& lum : hLuminances)
+        totalLumSize += lum.size();
+    totalLumSize *= sizeof(float);
+
     size_t totalSize = (hHitKeys.size() * sizeof(HitKey) +
                         hMediumIds.size() * sizeof(uint16_t) +
-                        hTransformIds.size() * sizeof(TransformId) + 
-                        hDirections.size() * sizeof(Vector3f));
+                        hTransformIds.size() * sizeof(TransformId) +
+                        hLuminanceSizes.size() * sizeof(Vector2ui) +
+                        totalLumSize);
 
     return totalSize;
 }

@@ -1,4 +1,3 @@
-
 //#include "TracerDebug.h"
 //#include "DefaultLeaf.h"
 //
@@ -64,7 +63,7 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
                                              size_t tempMemSize,
                                              uint32_t* dPartitionSplitOut,
                                              uint32_t* dIndicesTemp,
-                                             // Index Data                                             
+                                             // Index Data
                                              uint32_t* dIndicesIn,
                                              // Constants
                                              const uint64_t* dPrimIds,
@@ -106,7 +105,7 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
         constexpr int TOTAL_AXES = 3;
         for(int i = 0; i < TOTAL_AXES; i++)
         {
-            int testAxis = axisIndex + i % TOTAL_AXES;            
+            int testAxis = axisIndex + i % TOTAL_AXES;
             // Find AABB and Center
             // Do it only once
             if(i == 0)
@@ -115,7 +114,7 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
                 {
                     uint32_t index = dIndicesIn[j];
 
-                    AABB3f aabb = dAABBs[index];                    
+                    AABB3f aabb = dAABBs[index];
                     aabbUnion.UnionSelf(aabb);
 
                     Vector3 center = dPrimCenters[index];
@@ -168,11 +167,10 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
         // Sanity Check
         assert(splitLoc != start);
         assert(splitLoc != end);
-        
+
         // Save AABB
         node.aabbMin = aabbUnion.Min();
         node.aabbMax = aabbUnion.Max();
-
     }
     else
     {
@@ -263,10 +261,10 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
 
         // If there is bad partition (location is start or end) then atleast put single node to a split
         if(partitionSplit == 0) partitionSplit += 1;
-        else if(partitionSplit == static_cast<uint32_t>(end - start)) partitionSplit -= 1;        
+        else if(partitionSplit == static_cast<uint32_t>(end - start)) partitionSplit -= 1;
         // Split Loc
         splitLoc = partitionSplit + start;
-        
+
         // Init Nodes
         node.aabbMin = aabb.Min();
         node.aabbMax = aabb.Max();
@@ -286,7 +284,6 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
                                                    const std::vector<uint32_t>& transformList,
                                                    double time)
 {
-
     const char* primGroupTypeName = primitiveGroup.Type();
 
     // Get params
@@ -345,7 +342,7 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
     dBVHLists = reinterpret_cast<const BVHNode<LeafData>**>(dBasePtr + offset);
     offset += sizeOfBVHRootPtrs;
     assert(requiredSize == offset);
-    
+
     // Copy Transforms
     CUDA_CHECK(cudaMemcpy(dAccTransformIds,
                           transformList.data(),
@@ -464,10 +461,9 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                         partitionOutSize +
                         tempMemSize);
 
-
     DeviceMemory memory = DeviceMemory(totalSize);
     Byte* memPtr = static_cast<Byte*>(memory);
-  
+
     // Memory Set
     size_t offset = 0;
     uint64_t* dPrimIds = reinterpret_cast<uint64_t*>(memPtr + offset);
@@ -540,7 +536,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
     // CPU Memory
     std::vector<BVHNode<LeafData>> bvhNodes;
-    // 
+    //
     struct SplitWork
     {
         bool left;
@@ -578,7 +574,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         // Do Generation
         GenerateBVHNode(splitLoc,
                         node,
-                        //Temp Memory                      
+                        //Temp Memory
                         dTemp,
                         tempMemSize,
                         dPartitionSplitOut,
@@ -622,7 +618,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     // Finally Nodes are Generated now copy it to GPU Memory
     bvhMemories[innerIndex] = std::move(DeviceMemory(sizeof(BVHNode<LeafData>) * bvhNodes.size()));
     bvhDepths[innerIndex] = maxDepth;
-       
+
     //Debug::DumpMemToFile("BVHNodes", bvhNodes.data(), bvhNodes.size());
     //Debug::DumpMemToFile("AABB", dPrimAABBs, totalPrimCount);
     //Debug::DumpMemToFile("dPrimIds", dPrimIds, totalPrimCount);
@@ -636,12 +632,12 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     // If constant local primitive's transform requirement is
     // constant local transform,
     if(tType == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
-    {    
+    {
         // transform this AABB to world space
         // since base Accelerator works on world space
         TransformLocalAABBToWorld(accAABB, *worldTransform, gpu);
     }
-        
+
     // Add to the list which will be delegated to the base accelerator
     surfaceAABBs.emplace(surface, accAABB);
 
@@ -657,7 +653,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                           cudaMemcpyHostToDevice));
 
     t.Stop();
-    METU_LOG("Surface%u BVH(d=%u) generated in %f seconds.", 
+    METU_LOG("Surface%u BVH(d=%u) generated in %f seconds.",
              surface,
              maxDepth,
              t.Elapsed<CPUTimeSeconds>());
@@ -733,7 +729,7 @@ void GPUAccBVHGroup<PGroup>::Hit(const CudaGPU& gpu,
                                  TransformId* dTransformIds,
                                  PrimitiveId* dPrimitiveIds,
                                  HitStructPtr dHitStructs,
-                                 // I-O                                                  
+                                 // I-O
                                  RayGMem* dRays,
                                  // Input
                                  const RayId* dRayIds,
@@ -744,8 +740,8 @@ void GPUAccBVHGroup<PGroup>::Hit(const CudaGPU& gpu,
     using LeafData = typename PGroup::LeafData;
     using PrimitiveData = typename PGroup::PrimitiveData;
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
-    
-    // Select Intersection algorithm with or without stack    
+
+    // Select Intersection algorithm with or without stack
     using BVHIntersectKernel = void(*)(HitKey*,
                                        TransformId*,
                                        PrimitiveId*,
@@ -755,12 +751,12 @@ void GPUAccBVHGroup<PGroup>::Hit(const CudaGPU& gpu,
                                        const HitKey*,
                                        uint32_t,
                                        const BVHNode<LeafData>**,
-                                       const GPUTransformI**, 
+                                       const GPUTransformI**,
                                        const TransformId*,
                                        const PrimTransformType,
                                        PrimitiveData);
 
-    BVHIntersectKernel kernel = (params.useStack) ? KCIntersectBVH<PGroup> : 
+    BVHIntersectKernel kernel = (params.useStack) ? KCIntersectBVH<PGroup> :
                                                     KCIntersectBVHStackless<PGroup>;
 
     // Kernel Call

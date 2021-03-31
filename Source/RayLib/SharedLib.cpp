@@ -42,7 +42,6 @@ std::wstring ConvertWinWchar(const std::string& unicodeStr)
     #endif
 }
 
-
 void* SharedLib::GetProcAdressInternal(const std::string& fName)
 {
     #if defined METURAY_WIN
@@ -60,7 +59,7 @@ SharedLib::SharedLib(const std::string& libName)
         libHandle = (void*)LoadLibrary(ConvertWinWchar(libWithExt).c_str());
     #elif defined METURAY_LINUX
         libWithExt += LinuxDLLExt;
-        libHandle = dlopen(libWithExt.c_str(), iMode, RTLD_NOW);        
+        libHandle = dlopen(libWithExt.c_str(), iMode, RTLD_NOW);
     #endif
 
     // Check if we found the DLL

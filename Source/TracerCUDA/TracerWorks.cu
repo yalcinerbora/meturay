@@ -1,4 +1,3 @@
-
 #include "TracerWorks.cuh"
 
 // Basic Tracer Work Batches

@@ -57,7 +57,7 @@ struct EPrimFunctions
     }
 
     __device__
-    static inline AABB3f AABB(const GPUTransformI& transform, 
+    static inline AABB3f AABB(const GPUTransformI& transform,
                               PrimitiveId primitiveId, const EmptyData& primData)
     {
         Vector3f minInf(-INFINITY);
@@ -89,8 +89,8 @@ struct EmptySurfaceGenerator
         static constexpr auto SurfaceGeneratorFunction = SF;
     };
 
-    static constexpr auto GeneratorFunctionList = 
-        std::make_tuple(SurfaceFunctionType<EmptySurface, 
+    static constexpr auto GeneratorFunctionList =
+        std::make_tuple(SurfaceFunctionType<EmptySurface,
                                             GenEmptySurface<EmptyHit, EmptyData>>{});
 
     template<class Surface>
@@ -104,9 +104,9 @@ struct EmptySurfaceGenerator
 
 class GPUPrimitiveEmpty final
     : public GPUPrimitiveGroup<EmptyHit, EmptyData, EmptyLeaf,
-                               EmptySurfaceGenerator, 
+                               EmptySurfaceGenerator,
                                EPrimFunctions::Hit,
-                               EPrimFunctions::Leaf, EPrimFunctions::AABB, 
+                               EPrimFunctions::Leaf, EPrimFunctions::AABB,
                                EPrimFunctions::Area, EPrimFunctions::Center,
                                EPrimFunctions::Sample>
 {
@@ -143,5 +143,5 @@ class GPUPrimitiveEmpty final
         bool                                    CanGenerateData(const std::string& s) const override;
 };
 
-static_assert(IsTracerClass<GPUPrimitiveEmpty>::value, 
+static_assert(IsTracerClass<GPUPrimitiveEmpty>::value,
               "GPUPrimitiveEmpty is not a Tracer Class.");

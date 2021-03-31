@@ -48,7 +48,6 @@ SceneError CPULightGroupSpot::InitializeGroup(const ConstructionDataList& lightN
 
     for(const auto& node : lightNodes)
     {
-
         // Convert Ids to inner index
         uint32_t mediumIndex = mediumIdIndexPairs.at(node.mediumId);
         uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
@@ -109,9 +108,9 @@ TracerError CPULightGroupSpot::ConstructLights(const CudaSystem& system,
     size_t apertureSize = sizeof(Vector2f) * lightCount;
     apertureSize = Memory::AlignSize(apertureSize);
 
-    size_t totalSize = (matKeySize + 
-                        mediumSize + 
-                        transformIdSize + 
+    size_t totalSize = (matKeySize +
+                        mediumSize +
+                        transformIdSize +
                         positionSize +
                         directionSize +
                         apertureSize);
@@ -191,6 +190,3 @@ TracerError CPULightGroupSpot::ConstructLights(const CudaSystem& system,
     }
     return TracerError::OK;
 }
-
-static_assert(IsLightGroupClass<CPULightGroupSpot>::value,
-              "CPULightGroupSpot is not a Light Group class.");

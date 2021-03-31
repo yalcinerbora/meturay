@@ -156,7 +156,7 @@ SceneError InNodeTriLoader::GetPrimitiveData(Byte* result, PrimitiveDataType pri
 SceneError InNodeTriLoader::HasPrimitiveData(bool& r, PrimitiveDataType primitiveDataType) const
 {
     r = (primitiveDataType == PrimitiveDataType::POSITION ||
-         primitiveDataType == PrimitiveDataType::NORMAL ||      
+         primitiveDataType == PrimitiveDataType::NORMAL ||
          primitiveDataType == PrimitiveDataType::UV);
     return SceneError::OK;
 }
@@ -285,7 +285,7 @@ SceneError InNodeTriLoaderIndexed::GetPrimitiveData(Byte* result, PrimitiveDataT
     {
         Vector3List data = node.CommonVector3List(name, time);
         Vector3* writeLoc = reinterpret_cast<Vector3*>(result);
-        std::copy(data.begin(), data.end(), writeLoc); 
+        std::copy(data.begin(), data.end(), writeLoc);
         return SceneError::OK;
     }
     else if(primitiveDataType == PrimitiveDataType::UV)
@@ -351,7 +351,6 @@ SceneError InNodeTriLoaderIndexed::PrimDataLayout(PrimitiveDataLayout& result,
     else return SceneError::SURFACE_DATA_TYPE_NOT_FOUND;
     return SceneError::OK;
 }
-
 
 //===============//
 // SPHERE LOADER //
@@ -433,7 +432,7 @@ SceneError InNodeSphrLoader::GetPrimitiveData(Byte* memory, PrimitiveDataType pr
 }
 
 SceneError InNodeSphrLoader::HasPrimitiveData(bool& r, PrimitiveDataType primitiveDataType) const
-{    
+{
     r = (primitiveDataType == PrimitiveDataType::POSITION ||
          primitiveDataType == PrimitiveDataType::RADIUS);
     return SceneError::OK;

@@ -44,7 +44,6 @@ class LoopingThreadI
         void                        Pause(bool pause);
 
         bool                        IsTerminated();
-
 };
 
 inline void LoopingThreadI::THRDEntry()

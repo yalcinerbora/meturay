@@ -82,7 +82,7 @@ TracerError GPUTracer::LoadMediums(std::vector<const GPUMediumI*>& dGPUMediums)
     return TracerError::OK;
 }
 
-GPUTracer::GPUTracer(const CudaSystem& system, 
+GPUTracer::GPUTracer(const CudaSystem& system,
                      const GPUSceneI& scene,
                      const TracerParameters& p)
     : cudaSystem(system)
@@ -214,7 +214,7 @@ TracerError GPUTracer::Initialize()
         if((e = mg.second->ConstructTextureReferences()) != TracerError::OK)
             return e;
     }
-        
+
     // Attach Transform gpu pointer to the Accelerator Batches
     for(const auto& acc : accelBatches)
         acc.second->AttachGlobalTransformArray(dTransforms, identityTransformIndex);
@@ -226,10 +226,9 @@ TracerError GPUTracer::Initialize()
         GPUAcceleratorGroupI* acc = accBatch.second;
         if((e = acc->ConstructAccelerators(cudaSystem)) != TracerError::OK)
             return e;
-        // Acquire surface aabb listings for base accelerator consrtuction  
-        allSurfaceAABBs.insert(acc->AcceleratorAABBs().cbegin(), 
+        // Acquire surface aabb listings for base accelerator consrtuction
+        allSurfaceAABBs.insert(acc->AcceleratorAABBs().cbegin(),
                                acc->AcceleratorAABBs().cend());
-
     }
 
     // Construct Base accelerator using aabb list
@@ -247,7 +246,7 @@ void GPUTracer::ResetHitMemory(uint32_t rayCount, HitKey baseBoundMatKey)
 }
 
 void GPUTracer::HitAndPartitionRays()
-{   
+{
     if(crashed) return;
 
     // Sort and Partition happens on the leader device
@@ -272,7 +271,6 @@ void GPUTracer::HitAndPartitionRays()
 
     //CUDA_CHECK(cudaMemset(dTransfomIds, 0xFF, currentRayCount * sizeof(TransformId)));
     //Debug::DumpMemToFile("dTransforms", dTransfomIds, currentRayCount);
-
 
     // Try to hit rays until no ray is left
     // (these rays will be assigned with a material)
@@ -411,12 +409,11 @@ void GPUTracer::HitAndPartitionRays()
     workPartition.clear();
     workPartition = rayMemory.Partition(currentRayCount);
 
-
     //Debug::DumpMemToFile("dTransforms", dTransfomIds, currentRayCount);
     //printf("HIT PORTION END\n");
 }
 
-void GPUTracer::WorkRays(const WorkBatchMap& workMap, 
+void GPUTracer::WorkRays(const WorkBatchMap& workMap,
                          const RayPartitions<uint32_t>& outPortions,
                          uint32_t totalRayOut,
                          HitKey baseBoundMatKey)
@@ -560,7 +557,7 @@ RayPartitions<uint32_t> GPUTracer::PartitionOutputRays(uint32_t& totalOutRay,
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;
 
-        uint32_t count = (static_cast<uint32_t>(p.count) * 
+        uint32_t count = (static_cast<uint32_t>(p.count) *
                           loc->second->OutRayCount());
 
         outPartitions.emplace(ArrayPortion<uint32_t>
@@ -578,7 +575,7 @@ void GPUTracer::Finalize()
 {
     if(crashed) return;
     SendLog("Finalizing...");
-   
+
     // Determine Size
     Vector2i pixelCount = imgMemory.SegmentSize();
     Vector2i start = imgMemory.SegmentOffset();
@@ -588,7 +585,7 @@ void GPUTracer::Finalize()
 
     // Flush Devices and Get the Image
     cudaSystem.SyncGPUAll();
-    std::vector<Byte> imageData = imgMemory.GetImageToCPU(cudaSystem);  
+    std::vector<Byte> imageData = imgMemory.GetImageToCPU(cudaSystem);
     size_t pixelCount1D = static_cast<size_t>(pixelCount[0]) * pixelCount[1];
 
     //Debug::DumpMemToFile("TestFile",

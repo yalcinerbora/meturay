@@ -29,7 +29,6 @@ KeyAction VisorGL::DetermineAction(int action)
         assert(false);
         return KeyAction::PRESSED;
     }
-
 }
 
 MouseButtonType VisorGL::DetermineMouseButton(int button)
@@ -243,7 +242,6 @@ void VisorGL::MouseMovedGLFW(GLFWwindow* w, double x, double y)
 {
     assert(instance->window == w);
     if(instance->input) instance->input->MouseMoved(x, y);
-
 }
 
 void VisorGL::MousePressedGLFW(GLFWwindow* w, int button, int action, int modifier)
@@ -316,8 +314,6 @@ void __stdcall VisorGL::OGLCallbackRender(GLenum,
     METU_DEBUG_LOG("---------------------OGL-Callback-Render-End--------------");
 }
 
-
-
 void VisorGL::ReallocImages()
 {
     // Textures
@@ -366,7 +362,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
         {
             // Do realloc images
             ReallocImages();
-            // Let the case fall to reset image 
+            // Let the case fall to reset image
             // since we just allocated and need reset on image
             // as well.
             [[fallthrough]];
@@ -387,7 +383,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             // Copy (Let OGL do the conversion)
             glBindTexture(GL_TEXTURE_2D, sampleTexture);
             glTexSubImage2D(GL_TEXTURE_2D, 0,
-                            0, 0, 
+                            0, 0,
                             inSize[0], inSize[1],
                             GL_RED_INTEGER,
                             GL_UNSIGNED_INT,
@@ -419,7 +415,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             glBindImageTexture(I_SAMPLE, sampleCountTexture,
                                0, false, 0, GL_READ_WRITE, GL_R32I);
             glBindImageTexture(I_OUT_COLOR, outTexture,
-                               0, false, 0, GL_WRITE_ONLY, 
+                               0, false, 0, GL_WRITE_ONLY,
                                PixelFormatToSizedGL(imagePixFormat));
 
             // Uniforms
@@ -428,7 +424,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             glUniform2iv(U_END, 1, static_cast<const int*>(c.end));
 
             // Call for entire image (we also copy image)
-            // 
+            //
             GLuint gridX = (imageSize[0] + 16 - 1) / 16;
             GLuint gridY = (imageSize[1] + 16 - 1) / 16;
             glDispatchCompute(gridX, gridY, 1);
@@ -602,7 +598,7 @@ void VisorGL::Render()
         {
             std::chrono::duration<double, std::milli> chronoMillis(sleepMS);
             std::this_thread::sleep_for(chronoMillis);
-        }        
+        }
     }
 }
 
@@ -630,7 +626,7 @@ void VisorGL::SetImageRes(Vector2i resolution)
 void VisorGL::SetImageFormat(PixelFormat format)
 {
     imagePixFormat = format;
-    
+
     VisorGLCommand command = {};
     command.type = VisorGLCommand::REALLOC_IMAGES;
     command.start = Zero2i;
@@ -733,7 +729,7 @@ VisorError VisorGL::Initialize()
     glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
 
     // This was buggy on nvidia cards couple of years ago
-    // So instead manually convert image using 
+    // So instead manually convert image using
     // computer shader or w/e sRGB space
     glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_FALSE);
 
@@ -761,9 +757,9 @@ VisorError VisorGL::Initialize()
     // Pixel of WindowFBO
     // Full precision output
     // TODO: make it to utilize vOpts.wFormat
-    int rBits = 0, 
-        gBits = 0, 
-        bBits = 0, 
+    int rBits = 0,
+        gBits = 0,
+        bBits = 0,
         aBits = 0;
     switch(vOpts.wFormat)
     {
@@ -775,7 +771,7 @@ VisorError VisorGL::Initialize()
             gBits = 8;
         case PixelFormat::R8_UNORM:
             rBits = 8;
-            break;              
+            break;
         case PixelFormat::RGBA16_UNORM:
             aBits = 16;
         case PixelFormat::RGB16_UNORM:
@@ -784,7 +780,7 @@ VisorError VisorGL::Initialize()
             gBits = 16;
         case PixelFormat::R16_UNORM:
             rBits = 16;
-            break;                
+            break;
         case PixelFormat::RGBA_HALF:
             aBits = 16;
         case PixelFormat::RGB_HALF:
@@ -815,7 +811,7 @@ VisorError VisorGL::Initialize()
     glfwWindowHint(GLFW_BLUE_BITS, bBits);
     glfwWindowHint(GLFW_ALPHA_BITS, aBits);
 
-    // No depth buffer or stencil buffer etc    
+    // No depth buffer or stencil buffer etc
     glfwWindowHint(GLFW_DEPTH_BITS, 0);
     glfwWindowHint(GLFW_STENCIL_BITS, 0);
 
@@ -919,7 +915,7 @@ VisorError VisorGL::Initialize()
     glDisable(GL_CULL_FACE);
 
     // Intel OGL complaints about this as redundant call?
-    //glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // FBO
     glColorMask(true, true, true, true);
     glDepthMask(false);
@@ -940,8 +936,8 @@ VisorError VisorGL::Initialize()
     // CheckGUI and Initialize
     if(vOpts.enableGUI)
         visorGUI = std::make_unique<VisorGUI>(window);
-    
-    // Unmake context current on this 
+
+    // Unmake context current on this
     // thread after initialization
     glfwMakeContextCurrent(nullptr);
     return VisorError::OK;

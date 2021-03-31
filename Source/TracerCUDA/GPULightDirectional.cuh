@@ -7,7 +7,7 @@
 
 class GPULightDirectional : public GPULightI
 {
-    private:        
+    private:
         Vector3f                direction;
 
     protected:
@@ -40,7 +40,6 @@ class GPULightDirectional : public GPULightI
         __device__ PrimitiveId  PrimitiveIndex() const override;
 };
 
-
 class CPULightGroupDirectional : public CPULightGroupI
 {
     public:
@@ -61,13 +60,12 @@ class CPULightGroupDirectional : public CPULightGroupI
         // GPU pointers to those allocated classes on the CPU
         GPULightList				    gpuLightList;
         uint32_t                        lightCount;
-        
+
     protected:
     public:
         // Cosntructors & Destructor
                                 CPULightGroupDirectional(const GPUPrimitiveGroupI*);
                                 ~CPULightGroupDirectional() = default;
-
 
         const char*				Type() const override;
 		const GPULightList&		GPULights() const override;
@@ -84,7 +82,7 @@ class CPULightGroupDirectional : public CPULightGroupI
 		uint32_t				LightCount() const override;
 
 		size_t					UsedGPUMemory() const override;
-        size_t					UsedCPUMemory() const override; 
+        size_t					UsedCPUMemory() const override;
 };
 
 __device__
@@ -93,7 +91,7 @@ inline GPULightDirectional::GPULightDirectional(// Per Light Data
                                                 const GPUTransformI& gTransform,
                                                 // Endpoint Related Data
                                                 HitKey k, uint16_t mediumIndex)
-    : GPUEndpointI(k, mediumIndex)
+    : GPULightI(k, mediumIndex)
     , direction(gTransform.LocalToWorld(direction, true))
 {}
 
@@ -124,15 +122,14 @@ inline void GPULightDirectional::GenerateRay(// Output
     // TODO: implement
 }
 
-__device__ 
+__device__
 inline PrimitiveId GPULightDirectional::PrimitiveIndex() const
 {
     return INVALID_PRIMITIVE_ID;
 }
 
-inline CPULightGroupDirectional::CPULightGroupDirectional(const GPUPrimitiveGroupI*)
-    : CPULightGroupI()
-    , lightCount(0)
+inline CPULightGroupDirectional::CPULightGroupDirectional(const GPUPrimitiveGroupI*)    
+    : lightCount(0)
     , dGPULights(nullptr)
 {}
 
@@ -160,7 +157,7 @@ inline size_t CPULightGroupDirectional::UsedCPUMemory() const
 {
     size_t totalSize = (hHitKeys.size() * sizeof(HitKey) +
                         hMediumIds.size() * sizeof(uint16_t) +
-                        hTransformIds.size() * sizeof(TransformId) + 
+                        hTransformIds.size() * sizeof(TransformId) +
                         hDirections.size() * sizeof(Vector3f));
 
     return totalSize;

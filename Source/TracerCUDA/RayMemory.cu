@@ -11,7 +11,7 @@
 #pragma warning( push )
 #pragma warning( disable : 4834)
 #include <cub/cub.cuh>
-#pragma warning( pop ) 
+#pragma warning( pop )
 
 static constexpr uint32_t INVALID_LOCATION = std::numeric_limits<uint32_t>::max();
 
@@ -53,14 +53,14 @@ __global__ void ResetHitKeysKC(HitKey* gKeys,
 __global__ void ResetHitIdsKC(HitKey* gAcceleratorKeys, RayId* gIds,
                               TransformId* gTransformIds,
                               PrimitiveId* gPrimitiveIds,
-                              uint32_t identityTransformIndex, 
+                              uint32_t identityTransformIndex,
                               uint32_t rayCount)
 {
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < rayCount;
         globalId += blockDim.x * gridDim.x)
-    {        
+    {
         gIds[globalId] = globalId;
         gTransformIds[globalId] = identityTransformIndex;
         gPrimitiveIds[globalId] = INVALID_PRIMITIVE_ID;
@@ -118,7 +118,7 @@ void RayMemory::ResizeRayOut(uint32_t rayCount, HitKey baseBoundMatKey)
     //sizeOfAuxiliary = Memory::AlignSize(sizeOfAuxiliary);
 
     size_t requiredSize = sizeOfRays + sizeOfWorkKeys;
-    DeviceMemory::EnlargeBuffer(memOut, requiredSize);    
+    DeviceMemory::EnlargeBuffer(memOut, requiredSize);
 
     size_t offset = 0;
     std::uint8_t* dRay = static_cast<uint8_t*>(memOut);
@@ -156,10 +156,10 @@ void RayMemory::ResetHitMemory(TransformId identityTransformIndex,
 
     size_t sizeOfPrimitiveIds = sizeof(PrimitiveId) * rayCount;
     sizeOfPrimitiveIds = Memory::AlignSize(sizeOfPrimitiveIds);
-    
+
     size_t sizeOfHitStructs = hitStructSize * rayCount;
     sizeOfHitStructs = Memory::AlignSize(sizeOfHitStructs);
-    
+
     size_t sizeOfIds = sizeof(RayId) * rayCount;
     sizeOfIds = Memory::AlignSize(sizeOfIds);
 
@@ -199,7 +199,7 @@ void RayMemory::ResetHitMemory(TransformId identityTransformIndex,
 
     // Reallocate if memory is not enough
     DeviceMemory::EnlargeBuffer(memHit, requiredSize);
- 
+
     // Populate pointers
     size_t offset = 0;
     std::uint8_t* dBasePtr = static_cast<uint8_t*>(memHit);
@@ -231,9 +231,9 @@ void RayMemory::ResetHitMemory(TransformId identityTransformIndex,
     // Initialize memory
     leaderDevice.GridStrideKC_X(0, 0, rayCount,
                                 ResetHitIdsKC,
-                                dCurrentKeys, 
-                                dCurrentIds,                                 
-                                dTransformIds, 
+                                dCurrentKeys,
+                                dCurrentIds,
+                                dTransformIds,
                                 dPrimitiveIds,
                                 identityTransformIndex,
                                 static_cast<uint32_t>(rayCount));

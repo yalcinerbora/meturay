@@ -1,7 +1,6 @@
 #pragma once
 /**
 
-
 */
 
 #include "VisorInputI.h"
@@ -35,7 +34,7 @@ class VisorWindowInput : public VisorInputI
 
         // Visor Callback
         VisorCallbacksI*                visorCallbacks;
-        
+
         // Internals
         void                            ProcessInput(VisorActionType, KeyAction);
 
@@ -49,7 +48,7 @@ class VisorWindowInput : public VisorInputI
                                 ~VisorWindowInput() = default;
 
         void                    ChangeDeltaT(double);
-                       
+
         // Implementation
         void                    AttachVisorCallback(VisorCallbacksI&) override;
 

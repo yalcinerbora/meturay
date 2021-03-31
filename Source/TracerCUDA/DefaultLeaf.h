@@ -13,7 +13,6 @@ struct DefaultLeaf
 
 struct EmptyLeaf {};
 
-
 template <class PrimData>
 __device__ __host__
 inline EmptyLeaf GenerateEmptyLeaf(const HitKey matId,

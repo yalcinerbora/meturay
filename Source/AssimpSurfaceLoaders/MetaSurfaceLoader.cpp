@@ -18,7 +18,7 @@ AssimpMetaSurfaceLoader::AssimpMetaSurfaceLoader(Assimp::Importer& i,
     , extension(fileExt)
     , scene(nullptr)
     , innerIds(node.AccessUIntRanged(InnerIdJSON))
-{    
+{
     // Get File Name
     const std::string filePath = Utilitiy::MergeFileFolder(scenePath, node.Name());
 
@@ -38,14 +38,14 @@ AssimpMetaSurfaceLoader::AssimpMetaSurfaceLoader(Assimp::Importer& i,
                               // Remove Degenerate triangles
                               aiProcess_FindDegenerates |
                               aiProcess_SortByPType |
-                              // 
+                              //
                               aiProcess_RemoveRedundantMaterials);
 
     // Report Failed Import
     if(!scene) throw SceneException(SceneError::SURFACE_DATA_INVALID_READ,
                                     importer.GetErrorString());
 
-    // Do some checking    
+    // Do some checking
     for(unsigned int innerId : innerIds)
     {
         const auto& mesh = scene->mMeshes[innerId];
@@ -115,7 +115,7 @@ SceneError AssimpMetaSurfaceLoader::PrimitiveRanges(std::vector<Vector2ul>& resu
         if(meshIndexCount % 3 != 0) return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
         meshIndexCount /= 3;
 
-        result.back()[1] = result.back()[0] + meshIndexCount;        
+        result.back()[1] = result.back()[0] + meshIndexCount;
         prevOffset += meshIndexCount;
     }
     return SceneError::OK;
@@ -207,7 +207,7 @@ SceneError AssimpMetaSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveData
             }
             case PrimitiveDataType::VERTEX_INDEX:
             {
-                uint64_t* indexStart = reinterpret_cast<uint64_t*>(meshStart);                                
+                uint64_t* indexStart = reinterpret_cast<uint64_t*>(meshStart);
                 for(unsigned int i = 0; i < mesh->mNumFaces; i++)
                 {
                     const auto& face = mesh->mFaces[i];
@@ -277,10 +277,10 @@ SceneError AssimpMetaSurfaceLoader::PrimitiveDataCount(size_t& total, PrimitiveD
             case PrimitiveDataType::BITANGENT:
                 if(!mesh->HasTangentsAndBitangents()) break;
                 total += mesh->mNumVertices;
-                break;            
+                break;
             case PrimitiveDataType::VERTEX_INDEX:
             {
-                total += mesh->mNumFaces * 3ull;             
+                total += mesh->mNumFaces * 3ull;
                 break;
             }
         }

@@ -39,7 +39,7 @@ enum class CubeTexSide
     X_NEG = 1,
     Y_POS = 2,
     Y_NEG = 3,
-    Z_POS = 4,    
+    Z_POS = 4,
     Z_NEG = 5
 };
 
@@ -59,17 +59,17 @@ struct TextureChannelCount
 {
     private:
         static constexpr int SelectSize()
-        {        
-            if constexpr(is_any<T, 
+        {
+            if constexpr(is_any<T,
                                 float,
-                                char, short, int, 
-                                unsigned char, 
+                                char, short, int,
+                                unsigned char,
                                 unsigned short,
                                 unsigned int>::value)
                 return 1;
             else if constexpr(is_any<T,
                                      Vector2,
-                                     char2, short2, int2, 
+                                     char2, short2, int2,
                                      uchar2, ushort2, uint2>::value)
                 return 2;
             else if constexpr(is_any<T,
@@ -78,7 +78,7 @@ struct TextureChannelCount
                                      uchar4, ushort4, uint4>::value)
                 return 4;
 
-            return 0;    
+            return 0;
         }
 
     public:
@@ -109,10 +109,10 @@ static constexpr cudaTextureFilterMode DetermineFilterMode(InterpolationType);
 template<int D, int C>
 class TextureI : public DeviceLocalMemoryI
 {
-    private:    
+    private:
         static constexpr uint32_t   Dimension = D;
         static constexpr uint32_t   ChannelCount = C;
-       
+
         cudaTextureObject_t&        texture;
     protected:
     public:
@@ -131,10 +131,10 @@ class TextureI : public DeviceLocalMemoryI
 template<int D, int C>
 class TextureArrayI : public DeviceLocalMemoryI
 {
-    private:    
+    private:
         static constexpr uint32_t   Dimension = D;
         static constexpr uint32_t   ChannelCount = C;
-       
+
         cudaTextureObject_t&        texture;
         uint32_t&                   length;
 
@@ -186,7 +186,7 @@ class Texture final : public TextureI<D, TextureChannelCount<T>::value>
         cudaMipmappedArray_t        data    = nullptr;
         cudaTextureObject_t         texture = 0;
         TexDimType_t<D>             dim     = TexDimType<D>::ZERO;
-        
+
         InterpolationType           interpType;
         EdgeResolveType             edgeResolveType;
 
@@ -233,14 +233,14 @@ class Texture final : public TextureI<D, TextureChannelCount<T>::value>
 
 template<int D, class T>
 class TextureArray final : public TextureArrayI<D, TextureChannelCount<T>::value>
-{    
+{
     static_assert(D >= 1 && D <= 2, "At most 2D texture arrays are supported");
     static_assert(is_TextureType_v<T>, "Invalid texture array type");
 
     private:
         cudaMipmappedArray_t        data    = nullptr;
         cudaTextureObject_t         texture = 0;
-        TexDimType_t<D>             dim     = TexDimType<D>::ZERO;        
+        TexDimType_t<D>             dim     = TexDimType<D>::ZERO;
         uint32_t                    length = 0;
 
         InterpolationType           interpType;
@@ -259,7 +259,7 @@ class TextureArray final : public TextureArrayI<D, TextureChannelCount<T>::value
                                          const TexDimType_t<D>& dim,
                                          unsigned int length,
                                          int mipCount);
-                            TextureArray(const TextureArray&) = delete;            
+                            TextureArray(const TextureArray&) = delete;
                             TextureArray(TextureArray&&);
         TextureArray&       operator=(const TextureArray&) = delete;
         TextureArray&       operator=(TextureArray&&);
@@ -303,7 +303,7 @@ class TextureCube final : public TextureCubeI<TextureChannelCount<T>::value>
         cudaMipmappedArray_t        data    = nullptr;
         cudaTextureObject_t         texture = 0;
         Vector2ui                   dim     = Zero3ui;
-        
+
         InterpolationType           interpType;
         EdgeResolveType             edgeResolveType;
 
@@ -354,7 +354,6 @@ template<class T> using Texture3D = Texture<3, T>;
 
 template<class T> using Texture1DArray = TextureArray<1, T>;
 template<class T> using Texture2DArray = TextureArray<2, T>;
-
 
 template<int D, int C>
 inline TextureI<D, C>::TextureI(cudaTextureObject_t& t,

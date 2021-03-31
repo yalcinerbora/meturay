@@ -1,6 +1,6 @@
 #pragma once
 
-/* 
+/*
     Simple  (String - Type - Value) triplet interface
 
     each tracer will have many different options
@@ -52,7 +52,7 @@ class TracerOptionsI
         virtual TracerError     SetVector2(const Vector2&, const std::string&) = 0;
         virtual TracerError     SetVector3(const Vector3&, const std::string&) = 0;
         virtual TracerError     SetVector4(const Vector4&, const std::string&) = 0;
-                                
+
         virtual TracerError     SetInt(int32_t, const std::string&) = 0;
         virtual TracerError     SetUInt(uint32_t, const std::string&) = 0;
         virtual TracerError     SetVector2i(const Vector2i, const std::string&) = 0;

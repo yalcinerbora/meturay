@@ -11,7 +11,7 @@ template<int C>
 using Tex2DMap = std::map<uint32_t, std::unique_ptr<TextureI<2, C>>>;
 
 // Delta distribution refract material
-class LambertTexMat final 
+class LambertTexMat final
     : public GPUMaterialGroup<LambertTMatData, UVSurface,
                               LambertTSample, LambertTEvaluate,
                               EmitEmpty<LambertTMatData, UVSurface>,
@@ -38,7 +38,7 @@ class LambertTexMat final
         // Actual Allocation of Textures
         Tex2DMap<4>                 dTextureMemory;
         // Device Allocations of Texture References
-        const ConstantAlbedoRef*    dConstAlbedo;        
+        const ConstantAlbedoRef*    dConstAlbedo;
         const Texture2DRef*         dTextureAlbedoRef;
         const Texture2DRef*         dTextureNormalRef;
         // Aligned pointers for material access from kernel
@@ -51,7 +51,7 @@ class LambertTexMat final
     protected:
     public:
         // Constructors & Destructor
-                                LambertTexMat(const CudaGPU& gpu) 
+                                LambertTexMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<LambertTMatData, UVSurface,
                                                        LambertTSample, LambertTEvaluate,
                                                        EmitEmpty<LambertTMatData, UVSurface>,
@@ -62,11 +62,11 @@ class LambertTexMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+        SceneError              InitializeGroup(const NodeListing& materialNodes,
                                                 const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
-        SceneError              ChangeTime(const NodeListing& materialNodes, 
+        SceneError              ChangeTime(const NodeListing& materialNodes,
                                            double time,
                                            const std::string& scenePath) override;
 

@@ -93,7 +93,7 @@ class MockNode
         void        Work() override;
 };
 
-inline MockNode::MockNode(VisorI& v, GPUTracerI& t, 
+inline MockNode::MockNode(VisorI& v, GPUTracerI& t,
                           GPUSceneI& s, double duration)
     : visor(v)
     , tracer(t)
@@ -130,7 +130,7 @@ inline void MockNode::Work()
     {
         // Run tracer
         tracer.GenerateWork(0);
-        
+
         // Render
         while(tracer.Render());
         // Finalize (send image to visor)
@@ -146,14 +146,14 @@ inline void MockNode::Work()
         // Timing and Window Termination
         t.Lap();
         elapsed += t.Elapsed<CPUTimeSeconds>();
-        
+
         double elapsedS = t.Elapsed<CPUTimeSeconds>();
         double rps = SAMPLE_COUNT * SAMPLE_COUNT * IMAGE_RESOLUTION[0] * IMAGE_RESOLUTION[1];
         rps *= (1.0 / elapsedS);
         rps /= 1'000'000.0;
 
         fprintf(stdout, "%c[2K", 27);
-        fprintf(stdout, "Time: %fs Rps: %fM ray/s  Total: %fm\r", 
+        fprintf(stdout, "Time: %fs Rps: %fM ray/s  Total: %fm\r",
                 elapsedS, rps, (elapsed / 60.0));
         //if(elapsed >= Duration) break;
     }
@@ -162,9 +162,9 @@ inline void MockNode::Work()
 
 class SimpleTracerSetup
 {
-    private:        
+    private:
         static constexpr Vector2i           SCREEN_RESOLUTION = Vector2i(1280, 720);
-       
+
         static constexpr double             WINDOW_DURATION = 3.5;
         static constexpr PixelFormat        IMAGE_PIXEL_FORMAT = PixelFormat::RGBA_FLOAT;
         static constexpr PixelFormat        WINDOW_PIXEL_FORMAT = PixelFormat::RGB8_UNORM;
@@ -177,12 +177,12 @@ class SimpleTracerSetup
         static constexpr const char*        SURF_LOAD_GEN = "GenerateAssimpPool";
         static constexpr const char*        SURF_LOAD_DEL = "DeleteAssimpPool";
 
-        static constexpr TracerParameters   TRACER_PARAMETERS = 
+        static constexpr TracerParameters   TRACER_PARAMETERS =
         {
             false,  // Verbose
             0       // Seed
         };
-       
+
         // Tracer Related
         SharedLib                           tracerDLL;
         SharedLibPtr<TracerSystemI>         tracerSystem;
@@ -246,7 +246,7 @@ inline bool SimpleTracerSetup::Init()
         false,
 
         TRACER_PARAMETERS
-    };   
+    };
 
     // Load Tracer System DLL
     DLLError dllE = tracerDLL.GenerateObject(tracerSystem, SharedLibArgs{TRACER_GEN, TRACER_DEL});
@@ -255,16 +255,16 @@ inline bool SimpleTracerSetup::Init()
     TracerError trcE = tracerSystem->Initialize({{SURF_LOAD_DLL, ".*", {SURF_LOAD_GEN, SURF_LOAD_DEL}}},
                                                 ScenePartitionerType::SINGLE_GPU);
     ERROR_CHECK(TracerError, trcE);
-    
+
     // Construct & Load Scene
     tracerSystem->GenerateScene(gpuScene, sceneName);
     SceneError scnE = gpuScene->LoadScene(sceneTime);
     ERROR_CHECK(SceneError, scnE);
 
     // Visor Input Generation
-    MovementScemeList MovementSchemeList = {};    
+    MovementScemeList MovementSchemeList = {};
     KeyboardKeyBindings KeyBinds = VisorConstants::DefaultKeyBinds;
-    MouseKeyBindings MouseBinds = VisorConstants::DefaultButtonBinds;        
+    MouseKeyBindings MouseBinds = VisorConstants::DefaultButtonBinds;
     visorInput = std::make_unique<VisorWindowInput>(std::move(KeyBinds),
                                                     std::move(MouseBinds),
                                                     std::move(MovementSchemeList),
@@ -289,7 +289,7 @@ inline bool SimpleTracerSetup::Init()
     visorView->SetRenderingContextCurrent();
     visorView->SetInputScheme(*visorInput);
     visorView->SetImageFormat(IMAGE_PIXEL_FORMAT);
-    visorView->SetImageRes(MockNode::IMAGE_RESOLUTION);   
+    visorView->SetImageRes(MockNode::IMAGE_RESOLUTION);
     // Set Window Res wrt. monitor resolution
     Vector2i newImgSize = 3 * visorView->MonitorResolution() / 5;
     float ratio = static_cast<float>(newImgSize[1]) / SCREEN_RESOLUTION[1];
@@ -306,7 +306,7 @@ inline bool SimpleTracerSetup::Init()
         {"NextEventEstimation", OptionVariable(true)},
         {"RussianRouletteStart", OptionVariable(5u)},
         {"MaxDistance", OptionVariable(0.17f)}
-    });    
+    });
     trcE = tracerSystem->GenerateTracer(tracer, TRACER_PARAMETERS, opts,
                                         tracerType);
     ERROR_CHECK(TracerError, trcE);
@@ -314,7 +314,7 @@ inline bool SimpleTracerSetup::Init()
     tracer->ResizeImage(MockNode::IMAGE_RESOLUTION);
     tracer->ReportionImage();
     tracer->ResetImage();
-    
+
     // Tracer Init
     trcE = tracer->Initialize();
     ERROR_CHECK(TracerError, trcE);

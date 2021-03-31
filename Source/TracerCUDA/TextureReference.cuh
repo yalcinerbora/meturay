@@ -75,7 +75,6 @@ class ConstantRef : public TextureRefI<D, T>
         T               operator()(const TexFloatType_t<D>&,
                                    const TexFloatType_t<D>& dx,
                                    const TexFloatType_t<D>& dy) const override;
-
 };
 
 template <int D, class T>
@@ -101,7 +100,6 @@ class TextureRef : public TextureRefI<D, T>
         T               operator()(const TexFloatType_t<D>&,
                                    const TexFloatType_t<D>& dx,
                                    const TexFloatType_t<D>& dy) const override;
-
 };
 
 template <int D, class T>
@@ -125,7 +123,6 @@ class TexArrayRef : public TextureRefI<D, T>
         T               operator()(const TexFloatType_t<D>&,
                                    const TexFloatType_t<D>& dx,
                                    const TexFloatType_t<D>& dy) const override;
-
 };
 
 template <class T>

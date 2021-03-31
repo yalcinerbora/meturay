@@ -69,13 +69,13 @@ class GPUTracer : public GPUTracerI
         // GPU Memory
         RNGMemory                           rngMemory;
         RayMemory                           rayMemory;
-        ImageMemory                         imgMemory;        
+        ImageMemory                         imgMemory;
         const GPUTransformI**               dTransforms;
         const GPUMediumI**                  dMediums;
         const GPUCameraI**                  dCameras;
         const GPULightI**                   dLights;
 
-        // 
+        //
         const uint32_t                      baseMediumIndex;
         const uint32_t                      identityTransformIndex;
         //
@@ -113,7 +113,7 @@ class GPUTracer : public GPUTracerI
                                                                 const WorkBatchMap&) const;
     public:
         // Constructors & Destructor
-                                            GPUTracer(const CudaSystem&, 
+                                            GPUTracer(const CudaSystem&,
                                                       const GPUSceneI&,
                                                       const TracerParameters&);
                                             GPUTracer(const GPUTracer&) = delete;
@@ -142,8 +142,6 @@ class GPUTracer : public GPUTracerI
                                                Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void                    ResizeImage(Vector2i resolution) override;
         void                    ResetImage() override;
-
-
 };
 
 inline void GPUTracer::AttachTracerCallbacks(TracerCallbacksI& tc)

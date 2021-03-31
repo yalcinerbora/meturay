@@ -31,7 +31,7 @@ class static_string
         template <int M>
         constexpr static_string(const char(&s1)[M],
                                 const char(&s2)[N - M])
-         
+
         {
             for(int i = 0; i < M; ++i)
                 str[i] = s1[i];

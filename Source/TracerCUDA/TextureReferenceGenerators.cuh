@@ -38,7 +38,6 @@ void GenerateConstantReference(ConstantRef<D, T>* gRefLocations,
         globalId < refCount;
         globalId += blockDim.x * gridDim.x)
     {
-
         new (gRefLocations + globalId) ConstantRef<D, T>(gConstantData[globalId]);
     }
 }
@@ -132,7 +131,7 @@ void GenerateOptionalTexReference(TextureRefI<D, T>** gTexRefInterfaces,
 //        else
 //        {
 //            uint32_t location = atomicAdd(&gTRefCounter, 1);
-//            refAddress = new (gTRefLocations + location) TexArrayRef<D, T>(data.tex, 
+//            refAddress = new (gTRefLocations + location) TexArrayRef<D, T>(data.tex,
 //                                                                           data.textureArrayIndex);
 //        }
 //        gTexRefInterfaces[globalId] = refAddress;

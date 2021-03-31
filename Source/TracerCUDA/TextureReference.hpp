@@ -1,4 +1,3 @@
-
 template <class T>
 __device__
 inline T ConvertTexReturnType(CudaReturn_t<T> cudaData)

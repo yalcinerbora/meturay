@@ -10,8 +10,7 @@ Uses cub backend.
 #pragma warning( push )
 #pragma warning( disable : 4834)
 #include <cub/cub.cuh>
-#pragma warning( pop ) 
-
+#pragma warning( pop )
 
 #include "RayLib/CudaCheck.h"
 #include "DeviceMemory.h"

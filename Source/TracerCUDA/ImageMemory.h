@@ -18,7 +18,7 @@ class CudaSystem;
 
 class ImageMemory
 {
-    private:        
+    private:
         DeviceMemory                memory;
         PixelFormat                 format;
         int                         pixelSize;
@@ -106,4 +106,3 @@ inline ImageGMemConst<T> ImageMemory::GMem() const
 {
     return ImageGMemConst<T>{static_cast<T*>(dPixels), dSampleCounts};
 }
-

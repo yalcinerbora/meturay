@@ -16,7 +16,7 @@ Wrapping functions to it from now on.
 #pragma warning( push )
 #pragma warning( disable : 4834)
 #include <cub/cub.cuh>
-#pragma warning( pop ) 
+#pragma warning( pop )
 
 #include "RayLib/CudaCheck.h"
 #include "DeviceMemory.h"
@@ -106,46 +106,46 @@ __host__ void InclusiveScanArrayGPU(Type* out, const Type* in, size_t elementCou
     EXTERN_SCAN_BOTH(type, ReduceMin) \
     EXTERN_SCAN_BOTH(type, ReduceMax)
 
-// Integral Types
-EXTERN_SCAN_ALL(int)
-EXTERN_SCAN_ALL(unsigned int)
-EXTERN_SCAN_ALL(float)
-EXTERN_SCAN_ALL(double)
-EXTERN_SCAN_ALL(int64_t)
-EXTERN_SCAN_ALL(uint64_t)
-
-// Vector Types
-EXTERN_SCAN_ALL(Vector2f)
-EXTERN_SCAN_ALL(Vector2d)
-EXTERN_SCAN_ALL(Vector2i)
-EXTERN_SCAN_ALL(Vector2ui)
-
-EXTERN_SCAN_ALL(Vector3f)
-EXTERN_SCAN_ALL(Vector3d)
-EXTERN_SCAN_ALL(Vector3i)
-EXTERN_SCAN_ALL(Vector3ui)
-
-EXTERN_SCAN_ALL(Vector4f)
-EXTERN_SCAN_ALL(Vector4d)
-EXTERN_SCAN_ALL(Vector4i)
-EXTERN_SCAN_ALL(Vector4ui)
-
-// Matrix Types
-EXTERN_SCAN_ALL(Matrix2x2f)
-EXTERN_SCAN_ALL(Matrix2x2d)
-EXTERN_SCAN_ALL(Matrix2x2i)
-EXTERN_SCAN_ALL(Matrix2x2ui)
-
-EXTERN_SCAN_ALL(Matrix3x3f)
-EXTERN_SCAN_ALL(Matrix3x3d)
-EXTERN_SCAN_ALL(Matrix3x3i)
-EXTERN_SCAN_ALL(Matrix3x3ui)
-
-EXTERN_SCAN_ALL(Matrix4x4f)
-EXTERN_SCAN_ALL(Matrix4x4d)
-EXTERN_SCAN_ALL(Matrix4x4i)
-EXTERN_SCAN_ALL(Matrix4x4ui)
-
-// Quaternion Types
-EXTERN_SCAN_BOTH(QuatF, ReduceMultiply)
-EXTERN_SCAN_BOTH(QuatD, ReduceMultiply)
+//// Integral Types
+//EXTERN_SCAN_ALL(int)
+//EXTERN_SCAN_ALL(unsigned int)
+//EXTERN_SCAN_ALL(float)
+//EXTERN_SCAN_ALL(double)
+//EXTERN_SCAN_ALL(int64_t)
+//EXTERN_SCAN_ALL(uint64_t)
+//
+//// Vector Types
+//EXTERN_SCAN_ALL(Vector2f)
+//EXTERN_SCAN_ALL(Vector2d)
+//EXTERN_SCAN_ALL(Vector2i)
+//EXTERN_SCAN_ALL(Vector2ui)
+//
+//EXTERN_SCAN_ALL(Vector3f)
+//EXTERN_SCAN_ALL(Vector3d)
+//EXTERN_SCAN_ALL(Vector3i)
+//EXTERN_SCAN_ALL(Vector3ui)
+//
+//EXTERN_SCAN_ALL(Vector4f)
+//EXTERN_SCAN_ALL(Vector4d)
+//EXTERN_SCAN_ALL(Vector4i)
+//EXTERN_SCAN_ALL(Vector4ui)
+//
+//// Matrix Types
+//EXTERN_SCAN_ALL(Matrix2x2f)
+//EXTERN_SCAN_ALL(Matrix2x2d)
+//EXTERN_SCAN_ALL(Matrix2x2i)
+//EXTERN_SCAN_ALL(Matrix2x2ui)
+//
+//EXTERN_SCAN_ALL(Matrix3x3f)
+//EXTERN_SCAN_ALL(Matrix3x3d)
+//EXTERN_SCAN_ALL(Matrix3x3i)
+//EXTERN_SCAN_ALL(Matrix3x3ui)
+//
+//EXTERN_SCAN_ALL(Matrix4x4f)
+//EXTERN_SCAN_ALL(Matrix4x4d)
+//EXTERN_SCAN_ALL(Matrix4x4i)
+//EXTERN_SCAN_ALL(Matrix4x4ui)
+//
+//// Quaternion Types
+//EXTERN_SCAN_BOTH(QuatF, ReduceMultiply)
+//EXTERN_SCAN_BOTH(QuatD, ReduceMultiply)

@@ -32,7 +32,7 @@ CudaGPU::WorkGroup::WorkGroup(WorkGroup&& other)
     , events{}
     , works{}
     , mainEvent(other.mainEvent)
-{    
+{
     other.mainEvent = nullptr;
     for(int i = 0; i < totalStreams; i++)
     {
@@ -54,7 +54,7 @@ CudaGPU::WorkGroup& CudaGPU::WorkGroup::operator=(WorkGroup&& other)
         {
             if(works[i]) CUDA_CHECK(cudaStreamDestroy(works[i]));
             if(events[i]) CUDA_CHECK(cudaEventDestroy(events[i]));
-        }            
+        }
         if(i < other.totalStreams)
         {
             works[i] = other.works[i];
@@ -257,7 +257,6 @@ const std::vector<size_t> CudaSystem::GridStrideMultiGPUSplit(size_t workCount,
                                                               uint32_t sharedMemSize,
                                                               void* f) const
 {
-
     std::vector<size_t> workPerGPU;
     // Split work into all GPUs
     uint32_t totalAvailBlocks = 0;

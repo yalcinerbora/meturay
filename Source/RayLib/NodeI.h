@@ -26,5 +26,5 @@ class NodeI
 //        virtual TracerStatus        Status() const = 0;
 
         // Main Thead
-        virtual void                Work() = 0;     
+        virtual void                Work() = 0;
 };

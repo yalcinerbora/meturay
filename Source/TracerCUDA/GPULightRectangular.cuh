@@ -8,7 +8,7 @@
 
 class GPULightRectangular final : public GPULightI
 {
-    private:        
+    private:
         Vector3                 topLeft;
         Vector3                 right;
         Vector3                 down;
@@ -51,7 +51,6 @@ class CPULightGroupRectangular final : public CPULightGroupI
     public:
         static constexpr const char*    TypeName(){return "Rectangular"; }
 
-
         static constexpr const char* NAME_POSITION = "topLeft";
         static constexpr const char* NAME_RECT_V0 = "right";
         static constexpr const char* NAME_RECT_V1 = "down";
@@ -77,7 +76,6 @@ class CPULightGroupRectangular final : public CPULightGroupI
         // Cosntructors & Destructor
                                 CPULightGroupRectangular(const GPUPrimitiveGroupI*);
                                 ~CPULightGroupRectangular() = default;
-
 
         const char*				Type() const override;
 		const GPULightList&		GPULights() const override;
@@ -105,7 +103,7 @@ inline GPULightRectangular::GPULightRectangular(// Per Light Data
                                                 const GPUTransformI& gTransform,
                                                 // Endpoint Related Data
                                                 HitKey k, uint16_t mediumIndex)
-    : GPUEndpointI(k, mediumIndex)
+    : GPULightI(k, mediumIndex)
     , topLeft(gTransform.LocalToWorld(topLeft))
     , right(gTransform.LocalToWorld(right, true))
     , down(gTransform.LocalToWorld(down, true))
@@ -129,8 +127,8 @@ inline void GPULightRectangular::Sample(// Output
     float x = GPUDistribution::Uniform<float>(rng);
     float y = GPUDistribution::Uniform<float>(rng);
     Vector3 position = topLeft + right * x + down * y;
-    
-    // Calculate PDF on the local space (it is same on 
+
+    // Calculate PDF on the local space (it is same on
     direction = position - worldLoc;
     float distanceSqr = direction.LengthSqr();
     distance = sqrt(distanceSqr);
@@ -159,15 +157,14 @@ inline GPULightRectangular::GenerateRay(// Output
     // TODO: Implement
 }
 
-__device__ 
+__device__
 inline PrimitiveId GPULightRectangular::PrimitiveIndex() const
 {
     return INVALID_PRIMITIVE_ID;
 }
 
 inline CPULightGroupRectangular::CPULightGroupRectangular(const GPUPrimitiveGroupI*)
-    : CPULightGroupI()
-    , lightCount(0)
+    : lightCount(0)
     , dGPULights(nullptr)
 {}
 
@@ -195,9 +192,9 @@ inline size_t CPULightGroupRectangular::UsedCPUMemory() const
 {
     size_t totalSize = (hHitKeys.size() * sizeof(HitKey) +
                         hMediumIds.size() * sizeof(uint16_t) +
-                        hTransformIds.size() * sizeof(TransformId) + 
-                        hTopLefts.size() * sizeof(Vector3f) + 
-                        hRights.size() * sizeof(Vector3f) + 
+                        hTransformIds.size() * sizeof(TransformId) +
+                        hTopLefts.size() * sizeof(Vector3f) +
+                        hRights.size() * sizeof(Vector3f) +
                         hDowns.size() * sizeof(Vector3f));
 
     return totalSize;

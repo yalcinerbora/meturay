@@ -29,7 +29,7 @@ class GPUCameraPinhole final : public GPUCameraI
                                              HitKey materialKey);
                             ~GPUCameraPinhole() = default;
 
-        // Interface 
+        // Interface
         __device__ void     Sample(// Output
                                    float& distance,
                                    Vector3& direction,
@@ -74,8 +74,6 @@ class CPUCameraGroupPinhole final : public CPUCameraGroupI
             Vector2                 nearFar;
             Vector2                 fov;
         };
-
-
 
         //using Data = GPUCameraPinhole::Data;
 
@@ -131,7 +129,6 @@ inline GPUCameraPinhole::GPUCameraPinhole(const Vector3& pos,
     , up(transform.LocalToWorld(upp))
     , nearFar(nearFar)
 {
-
     Vector3 gazePoint = transform.LocalToWorld(gz);
     float nearPlane = nearFar[0];
     float farPLane = nearFar[1];
@@ -204,7 +201,7 @@ inline void GPUCameraPinhole::GenerateRay(// Output
     ray.tMax = nearFar[1];
 }
 
-__device__ 
+__device__
 inline uint32_t GPUCameraPinhole::FindPixelId(const RayReg& r,
                                               const Vector2i& resolution) const
 {
@@ -237,7 +234,7 @@ inline PrimitiveId GPUCameraPinhole::PrimitiveIndex() const
     return 0;
 }
 
-inline CPUCameraGroupPinhole::CPUCameraGroupPinhole()    
+inline CPUCameraGroupPinhole::CPUCameraGroupPinhole()
     : dGPUCameras(nullptr)
     , cameraCount(0)
 {}
@@ -263,7 +260,7 @@ inline size_t CPUCameraGroupPinhole::UsedGPUMemory() const
 }
 
 inline size_t CPUCameraGroupPinhole::UsedCPUMemory() const
-{  
+{
     return (sizeof(HitKey) * hHitKeys.size() +
             sizeof(uint16_t) * hMediumIds.size() +
             sizeof(TransformId) * hTransformIds.size() +

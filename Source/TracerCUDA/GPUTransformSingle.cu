@@ -69,16 +69,15 @@ SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes
                 m = TransformGen::Rotate(r[1], YAxis) * m;
                 m = TransformGen::Rotate(r[2], ZAxis) * m;
                 m = TransformGen::Scale(s[0], s[1], s[2]) * m;
-                m = TransformGen::Translate(t);                
-                nodeTransforms.push_back(std::move(m));                
+                m = TransformGen::Translate(t);
+                nodeTransforms.push_back(std::move(m));
             }
         }
         else return SceneError::TRANSFORM_TYPE_INTERNAL_ERROR;
 
-        transforms.insert(transforms.end(), 
+        transforms.insert(transforms.end(),
                           nodeTransforms.begin(),
                           nodeTransforms.end());
-
     }
 
     // Generated/Loaded matrices
@@ -102,11 +101,11 @@ SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes
     dInvTransformMatrices = reinterpret_cast<Matrix4x4*>(dBasePtr + offset);
     offset += sizeOfMatrices;
     dGPUTransforms = reinterpret_cast<GPUTransformSingle*>(dBasePtr + offset);
-    offset += sizeOfTransformClasses;    
+    offset += sizeOfTransformClasses;
     assert(requiredSize == offset);
 
     // Copy
-    CUDA_CHECK(cudaMemcpy(const_cast<Matrix4x4*>(dTransformMatrices), 
+    CUDA_CHECK(cudaMemcpy(const_cast<Matrix4x4*>(dTransformMatrices),
                           transforms.data(),
                           transformCount * sizeof(Matrix4x4),
                           cudaMemcpyHostToDevice));
@@ -122,7 +121,6 @@ SceneError CPUTransformSingle::ChangeTime(const NodeListing& transformNodes, dou
 
 TracerError CPUTransformSingle::ConstructTransforms(const CudaSystem& system)
 {
-
     // Call allocation kernel
     const CudaGPU& gpu = system.BestGPU();
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
@@ -140,10 +138,9 @@ TracerError CPUTransformSingle::ConstructTransforms(const CudaSystem& system)
 
     // Generate transform list
     for(uint32_t i = 0; i < TransformCount(); i++)
-    {        
+    {
         const auto* ptr =  static_cast<const GPUTransformI*>(dGPUTransforms + i);
         gpuTransformList.push_back(ptr);
     }
     return TracerError::OK;
 }
-

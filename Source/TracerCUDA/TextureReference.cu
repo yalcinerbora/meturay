@@ -1,4 +1,3 @@
-
 #include "TextureReference.cuh"
 
 template class ConstantRef<1, float>;

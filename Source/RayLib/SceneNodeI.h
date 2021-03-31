@@ -112,7 +112,7 @@ class SceneNodeI
         virtual std::vector<Matrix4x4>      AccessMatrix4x4(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<uint32_t>       AccessUInt(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<uint64_t>       AccessUInt64(const std::string& name, double time = 0.0) const = 0;
-                
+
         virtual std::vector<BoolList>       AccessBoolList(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<StringList>     AccessStringList(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<FloatList>      AccessFloatList(const std::string& name, double time) const = 0;

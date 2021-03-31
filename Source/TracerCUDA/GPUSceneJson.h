@@ -128,7 +128,7 @@ class GPUSceneJson : public GPUSceneI
                                         uint32_t& baseMediumIndex,
                                         const MediumNodeList& mediumList,
                                         double time = 0.0);
-        SceneError      GenerateCameras(const CameraNodeList&, 
+        SceneError      GenerateCameras(const CameraNodeList&,
                                         const std::map<uint32_t, uint32_t>& transformIdMappings,
                                         const std::map<uint32_t, uint32_t>& mediumIdMappings,
                                         const MaterialKeyListing& materialKeys,
@@ -175,7 +175,7 @@ class GPUSceneJson : public GPUSceneI
 
         const NamedList<CPUTransformGPtr>&  Transforms() const override;
         const NamedList<CPUMediumGPtr>&     Mediums() const override;
-                
+
         uint32_t                            BaseMediumIndex() const override;
         uint32_t                            IdentityTransformIndex() const override;
 

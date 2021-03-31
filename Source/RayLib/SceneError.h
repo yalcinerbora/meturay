@@ -81,7 +81,7 @@ struct SceneError : public ErrorI
             TOO_MANY_ACCELERATOR_GROUPS,
             TOO_MANY_ACCELERATOR_IN_GROUP,
             TOO_MANY_MATERIAL_GROUPS,
-            TOO_MANY_MATERIAL_IN_GROUP,       
+            TOO_MANY_MATERIAL_IN_GROUP,
             // Texture Related
             UNKNOWN_TEXTURE_ACCESS_LAYOUT,
             UNKNOWN_TEXTURE_TYPE,

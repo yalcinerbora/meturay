@@ -25,7 +25,7 @@ using Tex1DEnable = typename std::enable_if<D == 1, RType>::type;
 class TextureLoader
 {
     public:
-        static std::unique_ptr<TextureLoader>& Instance();       
+        static std::unique_ptr<TextureLoader>& Instance();
 
     private:
         static int                  ColorTypeToChannelCount(FREE_IMAGE_COLOR_TYPE cType);
@@ -55,7 +55,6 @@ class TextureLoader
                                                 const CudaGPU& gpu,
                                                 const std::string& filePath);
 
-
         template <int C>
         SceneError                  LoadTexture2D(std::unique_ptr<TextureI<2, C>>&,
                                                   EdgeResolveType, InterpolationType,
@@ -83,7 +82,7 @@ void TextureLoader::Expand2DData3ChannelTo4Channel(std::vector<Byte>& expandedDa
                                                    const Vector2ui& dim,
                                                    uint32_t sourcePitch)
 {
-    expandedData.resize(sizeof(T) * 4 * dim[0] * dim[1]); 
+    expandedData.resize(sizeof(T) * 4 * dim[0] * dim[1]);
     for(uint32_t y = 0; y < dim[1]; y++)
     {
         const Byte* srcRowPtr = packedData + sourcePitch * y;
@@ -112,7 +111,6 @@ inline std::unique_ptr<TextureLoader>& TextureLoader::Instance()
 
 namespace TextureFunctions
 {
-    
     template <int D, int C>
     SceneError AllocateTexture(// Returned Texture Ptr
                                const TextureI<D, C>*& tex,
@@ -123,7 +121,7 @@ namespace TextureFunctions
                                // Available textures that are defined on the scene file
                                const std::map<uint32_t, TextureStruct>& loadableTextureInfo,
                                // Texture Access Specifiers
-                               EdgeResolveType, 
+                               EdgeResolveType,
                                InterpolationType,
                                bool normalizeIntegers,
                                bool normalizeCoordinates,
@@ -220,16 +218,15 @@ SceneError TextureLoader::LoadTexture(std::unique_ptr<TextureI<D, C>>& t,
 {
     if constexpr(D == 2)
         // Delegate to the FreeImagLib Loading function
-        return LoadTexture2D(t, edgeR, interp, 
+        return LoadTexture2D(t, edgeR, interp,
                              normalizeIntegers,
                              normalizeCoordinates,
                              gpu, filePath);
     // TODO: add more texture loading functions
     else return SceneError::UNABLE_TO_LOAD_TEXTURE;
-    
+
     return SceneError::OK;
 }
-
 
 template <int C>
 SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>& tex,
@@ -254,7 +251,7 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>& tex,
         // Bit per pixel
         uint32_t bpp = FreeImage_GetBPP(imgCPU);
         uint32_t w = FreeImage_GetWidth(imgCPU);
-        uint32_t h = FreeImage_GetHeight(imgCPU);   
+        uint32_t h = FreeImage_GetHeight(imgCPU);
         uint32_t pitch = FreeImage_GetPitch(imgCPU);
         const Vector2ui dimension(w, h);
 
@@ -266,9 +263,9 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>& tex,
 
         // Cuda Textures does not support 3 channel textures convert accordingly
         int cudaChannels = (channels == 3) ? 4 : channels;
-        if(cudaChannels != C) 
+        if(cudaChannels != C)
             return SceneError::TEXTURE_CHANNEL_MISMATCH;
-                
+
         // It looks ok (channels match etc.)
         // Generate Texutre and Copy Image to GPU
         std::vector<Byte> expandedPixels;
@@ -279,7 +276,7 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>& tex,
                 // Equal mask is mandatory for bitmap images
                 int rMask = FreeImage_GetRedMask(imgCPU);
                 int gMask = FreeImage_GetGreenMask(imgCPU);
-                int bMask = FreeImage_GetBlueMask(imgCPU);                
+                int bMask = FreeImage_GetBlueMask(imgCPU);
 
                 if(Utility::BitCount(rMask) != Utility::BitCount(gMask) ||
                    Utility::BitCount(rMask) != Utility::BitCount(bMask))
@@ -314,7 +311,6 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>& tex,
 
                     // Transfer to the Interface ptr
                     tex = std::move(texPtr);
-                                 
                 }
                 // Skip low bitrate bitmaps
                 else return SceneError::UNABLE_TO_LOAD_TEXTURE;
@@ -323,7 +319,6 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>& tex,
             // TODO: Add other tpyes of textures (16bit 32bit HDR etc.)
             default:
                 return SceneError::UNABLE_TO_LOAD_TEXTURE;
-            
         }
         // All done!
         // Unallocate cpu image

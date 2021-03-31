@@ -71,7 +71,6 @@ namespace SceneIO
 
     TextureAccessLayout     LoadTextureAccessLayout(const nlohmann::json&);
     TextureStruct           LoadTexture(const nlohmann::json&);
-
 };
 
 inline bool SceneIO::IsTimeDependent(const nlohmann::json& jsn)
@@ -177,7 +176,7 @@ Matrix<N, T> SceneIO::LoadMatrix(const nlohmann::json& jsn, double time)
 template <class T, typename>
 std::vector<Range<T>> SceneIO::LoadRangedNumbers(const nlohmann::json& jsn)
 {
-    // It is mandatory for node to be an array    
+    // It is mandatory for node to be an array
     if(jsn.is_array())
     {
         std::vector<Range<T>> result;
@@ -190,7 +189,6 @@ std::vector<Range<T>> SceneIO::LoadRangedNumbers(const nlohmann::json& jsn)
             {
                 T num = n;
                 result.push_back(Range<T>{num, num + 1});
-                
             }
             else if(n.is_string())
             {

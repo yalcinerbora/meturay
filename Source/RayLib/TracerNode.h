@@ -6,7 +6,6 @@ Tracer Node Interface.
 
 This interface defines process behaviour between
 
-
 */
 
 #include "TracerCallbacksI.h"
@@ -16,6 +15,4 @@ class TracerNode
     : public TracerCallbacksI
     , public DistributorI
 {
-
-
 };

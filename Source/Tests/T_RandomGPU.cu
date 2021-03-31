@@ -46,7 +46,7 @@
 //    // Set State
 //    std::mt19937 engine(2109);
 //    curandStateMRG32k3a_t* states = static_cast<curandStateMRG32k3a_t*>(randomState);
-//   
+//
 //    KInitRandStates<<<1, ThreadCount, StateSize>>>(engine(), states);
 //    CUDA_KERNEL_CHECK();
 //    CUDA_CHECK(cudaDeviceSynchronize());

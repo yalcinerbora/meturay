@@ -77,7 +77,7 @@ class Ray<T>
         __device__ __host__ Ray&                    NormalizeDirSelf();
         __device__ __host__ Ray                     Advance(T) const;
         __device__ __host__ Ray                     Advance(T t, const Vector<3,T>&) const;
-        __device__ __host__ Ray&                    AdvanceSelf(T);        
+        __device__ __host__ Ray&                    AdvanceSelf(T);
         __device__ __host__ Ray&                    AdvanceSelf(T t, const Vector<3, T>&);
         __device__ __host__ Ray                     Transform(const Quaternion<T>&) const;
         __device__ __host__ Ray                     Transform(const Matrix<3, T>&) const;

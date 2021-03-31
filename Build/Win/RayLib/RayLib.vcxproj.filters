@@ -248,6 +248,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\VisorError.h">
       <Filter>Errors</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\CoordinateConversion.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

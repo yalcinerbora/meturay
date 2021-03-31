@@ -33,10 +33,9 @@ namespace EnumStringConverter
 
     // Tracer Option Related
     std::string             TracerOptionTypeToString(TracerOptionsI::OptionType);
-    
+
     // General
     std::string             PixelFormatTypeToString(PixelFormat);
-
 
     //================//
     // STRING -> ENUM //

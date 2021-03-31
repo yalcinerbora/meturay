@@ -7,7 +7,7 @@
 
 class GPULightSpot : public GPULightI
 {
-    private:        
+    private:
         Vector3             position;
         float               cosMin;
         Vector3             direction;
@@ -77,7 +77,6 @@ class CPULightGroupSpot : public CPULightGroupI
                                 CPULightGroupSpot(const GPUPrimitiveGroupI*);
                                 ~CPULightGroupSpot() = default;
 
-
         const char*				Type() const override;
 		const GPULightList&		GPULights() const override;
 		SceneError				InitializeGroup(const ConstructionDataList& lightNodes,
@@ -104,7 +103,7 @@ inline GPULightSpot::GPULightSpot(// Per Light Data
                                   const GPUTransformI& gTransform,
                                   // Endpoint Related Data
                                   HitKey k, uint16_t mediumIndex)
-    : GPUEndpointI(k, mediumIndex)
+    : GPULightI(k, mediumIndex)
     , position(gTransform.LocalToWorld(position))
     , direction(gTransform.LocalToWorld(direction, true))
     , cosMin(aperture[0])
@@ -123,7 +122,7 @@ inline void GPULightSpot::Sample(// Output
 {
     dir = -direction;
     distance = (position - worldLoc).Length();
-    
+
     // Fake pdf to incorporate square faloff
     pdf = (distance * distance);
 }
@@ -140,15 +139,14 @@ inline void GPULightSpot::GenerateRay(// Output
     // TODO: Implement
 }
 
-__device__ 
+__device__
 inline PrimitiveId GPULightSpot::PrimitiveIndex() const
 {
     return INVALID_PRIMITIVE_ID;
 }
 
 inline CPULightGroupSpot::CPULightGroupSpot(const GPUPrimitiveGroupI*)
-    : CPULightGroupI()
-    , lightCount(0)
+    : lightCount(0)
     , dGPULights(nullptr)
 {}
 
@@ -176,8 +174,8 @@ inline size_t CPULightGroupSpot::UsedCPUMemory() const
 {
     size_t totalSize = (hHitKeys.size() * sizeof(HitKey) +
                         hMediumIds.size() * sizeof(uint16_t) +
-                        hTransformIds.size() * sizeof(TransformId) + 
-                        hPositions.size() * sizeof(Vector3f) + 
+                        hTransformIds.size() * sizeof(TransformId) +
+                        hPositions.size() * sizeof(Vector3f) +
                         hDirections.size() * sizeof(Vector3f) +
                         hCosines.size() * sizeof(Vector2f));
 

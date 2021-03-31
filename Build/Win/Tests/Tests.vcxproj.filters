@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\Tests\T_ParallelReduction.cu" />
-    <CudaCompile Include="..\..\..\Source\Tests\T_ParallelScan.cu" />
-    <CudaCompile Include="..\..\..\Source\Tests\T_RandomGPU.cu" />
     <CudaCompile Include="..\..\..\Source\Tests\T_Texture.cu" />
     <CudaCompile Include="..\..\..\Source\Tests\T_MatrixGPU.cu">
       <Filter>Math</Filter>
@@ -13,6 +10,18 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\Tests\T_MockTracer.cu">
       <Filter>TracerMock</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\Tests\T_RandomGPU.cu">
+      <Filter>CUDA</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\Tests\T_ParallelReduction.cu">
+      <Filter>CUDA</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\Tests\T_ParallelScan.cu">
+      <Filter>CUDA</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\Tests\T_PiecewiseDistribution.cu">
+      <Filter>CUDA</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
@@ -57,6 +66,9 @@
     </Filter>
     <Filter Include="TracerMock">
       <UniqueIdentifier>{7a674633-d085-4983-83e2-20ed80c90cbb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CUDA">
+      <UniqueIdentifier>{ab213619-3123-4d25-bbb4-952bd06de9c5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

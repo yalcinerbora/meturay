@@ -68,7 +68,7 @@ using AreaGenFunction = float(*)(PrimitiveId primitiveId, const PrimitiveData&);
 
 // Center generation function for bound hierarcy generation
 template <class PrimitiveData>
-using CenterGenFunction = Vector3(*)(const GPUTransformI& transform, 
+using CenterGenFunction = Vector3(*)(const GPUTransformI& transform,
                                      PrimitiveId primitiveId, const PrimitiveData&);
 
 // Sample function for generating rays and/or finding an arbitrary point
@@ -81,7 +81,6 @@ using SampleFunction = Vector3(*)(Vector3& normal,
                                   // I-O
                                   RandomGPU& rng);
 
-
 // Common Functors for gpu AABB Generation
 template<class PrimitiveGroup>
 struct AABBGen
@@ -91,16 +90,15 @@ struct AABBGen
 
     private:
 
-
         PData                   pData;
         const GPUTransformI&    transform;
 
     protected:
     public:
-        // Constructors & Destructor                                
-        AABBGen(PData pData, const GPUTransformI& t) 
+        // Constructors & Destructor
+        AABBGen(PData pData, const GPUTransformI& t)
             : pData(pData)
-            , transform(t) 
+            , transform(t)
         {}
 
         __device__ __host__
@@ -122,9 +120,9 @@ struct CentroidGen
 
     protected:
     public:
-        // Constructors & Destructor                                
-        CentroidGen(PData pData, const GPUTransformI& t) 
-            : pData(pData) 
+        // Constructors & Destructor
+        CentroidGen(PData pData, const GPUTransformI& t)
+            : pData(pData)
             , transform(t)
         {}
 

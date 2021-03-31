@@ -1,7 +1,7 @@
 #include "VisorGLEntry.h"
 #include "VisorGL.h"
 
-METU_SHARED_VISORGL_ENTRY_POINT 
+METU_SHARED_VISORGL_ENTRY_POINT
 VisorI* __stdcall CreateVisorGL(const VisorOptions& opts,
                                 const Vector2i& imgRes,
                                 const PixelFormat& f)

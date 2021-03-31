@@ -7,8 +7,8 @@ class DirectTracer : public RayTracer
 {
         public:
         static constexpr const char*    TypeName() { return "DirectTracer"; }
-        
-        struct Options                 
+
+        struct Options
         {
             int32_t     sampleCount = 1;    // Per-axis sample per pixel
         };

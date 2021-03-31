@@ -59,7 +59,6 @@ void SelfNode::PauseContTrace(const bool)
     //TODO: Adjust tracer thread
 }
 
-
 void SelfNode::WindowMinimizeAction(bool minimized)
 {
     // TODO:
@@ -73,7 +72,6 @@ void SelfNode::WindowCloseAction()
 
 void SelfNode::SendCrashSignal()
 {
-
 }
 
 void SelfNode::SendLog(const std::string s)
@@ -89,7 +87,6 @@ void SelfNode::SendError(TracerError err)
 void SelfNode::SendAnalyticData(AnalyticData data)
 {
     //TODO:
-
 }
 
 void SelfNode::SendImage(const std::vector<Byte> data,
@@ -125,7 +122,7 @@ NodeError SelfNode::Initialize()
 }
 
 void SelfNode::Work()
-{ 
+{
     while(visor.IsOpen() &&
           !tracerThread.IsTerminated())
     {
@@ -142,7 +139,7 @@ void SelfNode::Work()
         // to be called on main thread
         visor.ProcessInputs();
     }
-        
+
     // Visor is closed terminate tracer thread
-    tracerThread.Stop();    
+    tracerThread.Stop();
 }

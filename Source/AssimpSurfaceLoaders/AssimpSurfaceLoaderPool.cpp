@@ -47,12 +47,11 @@ AssimpSurfaceLoaderPool::AssimpSurfaceLoaderPool()
                                         TypeGenWrappers::DefaultDestruct<SurfaceLoaderI>);
         surfaceLoaderGenerators.emplace(std::string(AssimpPrefix) + extension,
                                         &assimpSLGenerators.back());
-
     };
 
-    // Add Surface Loaders    
+    // Add Surface Loaders
     using namespace std::string_literals;
-    
+
     // Some basic stuff to use assimp for
     GenSurfaceLoader("obj"s);
     GenSurfaceLoader("fbx"s);

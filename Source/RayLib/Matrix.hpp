@@ -1,13 +1,13 @@
 template <int N, class T>
-template <class C , typename>
+template <class C, typename>
 __device__ __host__
 inline Matrix<N, T>::Matrix(C t)
 {
     UNROLL_LOOP
-    for(int i = 0; i < N*N; i++)
-    {
-        matrix[i] = static_cast<C>(t);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            matrix[i] = static_cast<C>(t);
+        }
 }
 
 template <int N, class T>
@@ -16,21 +16,21 @@ __device__ __host__
 inline Matrix<N, T>::Matrix(const C* data)
 {
     UNROLL_LOOP
-    for(int i = 0; i < N*N; i++)
-    {
-        matrix[i] = static_cast<C>(data[i]);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            matrix[i] = static_cast<C>(data[i]);
+        }
 }
 
 template <int N, class T>
 template <class... Args, typename>
 __device__ __host__
-inline constexpr Matrix<N,T>::Matrix(const Args... dataList)
+inline constexpr Matrix<N, T>::Matrix(const Args... dataList)
     : matrix{static_cast<T>(dataList) ...}
 {
     static_assert(sizeof...(dataList) == N * N, "Matrix constructor should have exact "
-                                                "same count of template count "
-                                                "as arguments");
+                  "same count of template count "
+                  "as arguments");
 }
 
 template <int N, class T>
@@ -38,15 +38,15 @@ __device__ __host__
 inline Matrix<N, T>::Matrix(const Vector<N, T> columns[])
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        const Vector<N, T>& vec = columns[i];
-        UNROLL_LOOP
-        for(int j = 0; j < N; j++)
+        for(int i = 0; i < N; i++)
         {
-            matrix[i * N + j] = vec[j];
+            const Vector<N, T>& vec = columns[i];
+            UNROLL_LOOP
+                for(int j = 0; j < N; j++)
+                {
+                    matrix[i * N + j] = vec[j];
+                }
         }
-    }
 }
 
 template <int N, class T>
@@ -56,31 +56,31 @@ inline Matrix<N, T>::Matrix(const Matrix<M, T>& other)
 {
     static_assert(M >= N, "enable_if sanity check.");
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        UNROLL_LOOP
-        for(int j = 0; j < N; j++)
+        for(int i = 0; i < N; i++)
         {
-            if(i < M && j < M)
-                matrix[i * N + j] = other[i * M + j];
-            else if(i == N && j == N)
-                matrix[i * M + j] = 1;
-            else
-                matrix[i * M + j] = 0;
+            UNROLL_LOOP
+                for(int j = 0; j < N; j++)
+                {
+                    if(i < M && j < M)
+                        matrix[i * N + j] = other[i * M + j];
+                    else if(i == N && j == N)
+                        matrix[i * M + j] = 1;
+                    else
+                        matrix[i * M + j] = 0;
+                }
         }
-    }
 }
 
 template <int N, class T>
 __device__ __host__
-inline Matrix<N, T>::operator T*()
+inline Matrix<N, T>::operator T* ()
 {
     return matrix;
 }
 
 template <int N, class T>
 __device__ __host__
-inline Matrix<N, T>::operator const T*() const
+inline Matrix<N, T>::operator const T* () const
 {
     return matrix;
 }
@@ -118,10 +118,10 @@ __device__ __host__
 inline void Matrix<N, T>::operator+=(const Matrix& right)
 {
     UNROLL_LOOP
-    for(int i =0; i < N*N; i++)
-    {
-        matrix[i] += right.matrix[i];
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            matrix[i] += right.matrix[i];
+        }
 }
 
 template <int N, class T>
@@ -129,10 +129,10 @@ __device__ __host__
 inline void Matrix<N, T>::operator-=(const Matrix& right)
 {
     UNROLL_LOOP
-    for(int i =0; i < N*N; i++)
-    {
-        matrix[i] -= right.matrix[i];
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            matrix[i] -= right.matrix[i];
+        }
 }
 
 template <int N, class T>
@@ -147,11 +147,11 @@ template <int N, class T>
 __device__ __host__
 inline void Matrix<N, T>::operator*=(T right)
 {
-        UNROLL_LOOP
-    for(int i =0; i < N*N; i++)
-    {
-        matrix[i] *= right;
-    }
+    UNROLL_LOOP
+        for(int i = 0; i < N * N; i++)
+        {
+            matrix[i] *= right;
+        }
 }
 
 template <int N, class T>
@@ -159,10 +159,10 @@ __device__ __host__
 inline void Matrix<N, T>::operator/=(const Matrix& right)
 {
     UNROLL_LOOP
-    for(int i =0; i < N*N; i++)
-    {
-        matrix[i] /= right.matrix[i];
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            matrix[i] /= right.matrix[i];
+        }
 }
 
 template <int N, class T>
@@ -170,10 +170,10 @@ __device__ __host__
 inline void Matrix<N, T>::operator/=(T right)
 {
     UNROLL_LOOP
-    for(int i =0; i < N*N; i++)
-    {
-        matrix[i] /= right;
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            matrix[i] /= right;
+        }
 }
 
 template <int N, class T>
@@ -182,10 +182,10 @@ inline Matrix<N, T> Matrix<N, T>::operator+(const Matrix& right) const
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i =0; i < N*N; i++)
-    {
-        m.matrix[i] = matrix[i] + right.matrix[i];
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m.matrix[i] = matrix[i] + right.matrix[i];
+        }
     return m;
 }
 
@@ -195,10 +195,10 @@ inline Matrix<N, T> Matrix<N, T>::operator-(const Matrix& right) const
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i =0; i < N*N; i++)
-    {
-        m.matrix[i] = matrix[i] - right.matrix[i];
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m.matrix[i] = matrix[i] - right.matrix[i];
+        }
     return m;
 }
 
@@ -209,10 +209,10 @@ inline SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::operator-() const
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i =0; i < N*N; i++)
-    {
-        m.matrix[i] = -matrix[i];
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m.matrix[i] = -matrix[i];
+        }
     return m;
 }
 
@@ -222,10 +222,10 @@ inline Matrix<N, T> Matrix<N, T>::operator/(const Matrix& right) const
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i =0; i < N*N; i++)
-    {
-        m.matrix[i] = matrix[i] / right.matrix[i];
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m.matrix[i] = matrix[i] / right.matrix[i];
+        }
     return m;
 }
 
@@ -235,10 +235,10 @@ inline Matrix<N, T> Matrix<N, T>::operator/(T right) const
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i =0; i < N*N; i++)
-    {
-        m.matrix[i] = matrix[i] / right;
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m.matrix[i] = matrix[i] / right;
+        }
     return m;
 }
 
@@ -248,21 +248,21 @@ inline Matrix<N, T> Matrix<N, T>::operator*(const Matrix& right) const
 {
     Matrix m;
     UNROLL_LOOP
-    for(int j = 0; j < N; j++)
-    {
-        UNROLL_LOOP
-        for(int i = 0; i < N; i++)
+        for(int j = 0; j < N; j++)
         {
-            T result = 0;
             UNROLL_LOOP
-            for(int k = 0; k < N; k++)
-            {
-                result += matrix[j + N * k] * right[i * N + k];
-            }
-            // Dot Product
-            m(j, i) = result;
+                for(int i = 0; i < N; i++)
+                {
+                    T result = 0;
+                    UNROLL_LOOP
+                        for(int k = 0; k < N; k++)
+                        {
+                            result += matrix[j + N * k] * right[i * N + k];
+                        }
+                        // Dot Product
+                    m(j, i) = result;
+                }
         }
-    }
     return m;
 }
 
@@ -275,17 +275,17 @@ inline Vector<M, T> Matrix<N, T>::operator*(const Vector<M, T>& right) const
 
     Vector<M, T> v;
     UNROLL_LOOP
-    for(int i = 0; i < M; i++)
-    {
-        T result = 0;
-        UNROLL_LOOP
-        for(int k = 0; k < M; k++)
+        for(int i = 0; i < M; i++)
         {
-            result += matrix[i + N * k] * right[k];
+            T result = 0;
+            UNROLL_LOOP
+                for(int k = 0; k < M; k++)
+                {
+                    result += matrix[i + N * k] * right[k];
+                }
+                // Dot Product
+            v[i] = result;
         }
-        // Dot Product
-        v[i] = result;
-    }
     return v;
 }
 
@@ -295,10 +295,10 @@ inline Matrix<N, T> Matrix<N, T>::operator*(T right) const
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i =0; i < N*N; i++)
-    {
-        m.matrix[i] = matrix[i] * right;
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m.matrix[i] = matrix[i] * right;
+        }
     return m;
 }
 
@@ -308,10 +308,10 @@ inline bool Matrix<N, T>::operator==(const Matrix& right) const
 {
     bool eq = true;
     UNROLL_LOOP
-    for(int i =0; i < N*N; i++)
-    {
-        eq &= matrix[i] == right.matrix[i];
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            eq &= matrix[i] == right.matrix[i];
+        }
     return eq;
 }
 
@@ -326,8 +326,8 @@ template <int N, class T>
 __device__ __host__
 inline T Matrix<N, T>::Determinant() const
 {
-    #pragma warning(suppress:4984)
-    // TODO: use constexpr if when CUDA supports it
+#pragma warning(suppress:4984)
+// TODO: use constexpr if when CUDA supports it
     if constexpr(N == 2)
         return Determinant2<T>(static_cast<const T*>(*this));
     else if constexpr(N == 3)
@@ -342,11 +342,11 @@ template <class Q>
 __device__ __host__
 inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Inverse() const
 {
-    #pragma warning(suppress:4984)
-    // TODO: use constexpr if when CUDA supports it
-    if constexpr (N == 2)
+#pragma warning(suppress:4984)
+// TODO: use constexpr if when CUDA supports it
+    if constexpr(N == 2)
         return Inverse2<T>(static_cast<const T*>(*this));
-    else if constexpr (N == 3)
+    else if constexpr(N == 3)
         return Inverse3<T>(static_cast<const T*>(*this));
     else
         return Inverse4<T>(static_cast<const T*>(*this));
@@ -358,11 +358,11 @@ template <class Q>
 __device__ __host__
 inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::InverseSelf()
 {
-    #pragma warning(suppress:4984)
-    // TODO: use constexpr if when CUDA supports it
-    if constexpr (N == 2)
+#pragma warning(suppress:4984)
+// TODO: use constexpr if when CUDA supports it
+    if constexpr(N == 2)
         (*this) = Inverse2<T>(static_cast<const T*>(*this));
-    else if constexpr (N == 3)
+    else if constexpr(N == 3)
         (*this) = Inverse3<T>(static_cast<const T*>(*this));
     else
         (*this) = Inverse4<T>(static_cast<const T*>(*this));
@@ -375,14 +375,14 @@ inline Matrix<N, T> Matrix<N, T>::Transpose() const
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        UNROLL_LOOP
-        for(int j = 0; j < N; j++)
+        for(int i = 0; i < N; i++)
         {
-            m(j, i) = (*this)(i, j);
+            UNROLL_LOOP
+                for(int j = 0; j < N; j++)
+                {
+                    m(j, i) = (*this)(i, j);
+                }
         }
-    }
     return m;
 }
 
@@ -391,17 +391,17 @@ __device__ __host__
 inline Matrix<N, T>& Matrix<N, T>::TransposeSelf()
 {
     UNROLL_LOOP
-    for(int i = 1; i < N; i++)
-    {
-        UNROLL_LOOP
-        for(int j = 0; j < i; j++)
+        for(int i = 1; i < N; i++)
         {
-            // CARPRAZ SWAP
-            T a = (*this)(i, j);
-            (*this)(i, j) = (*this)(j, i);
-            (*this)(j, i) = a;
+            UNROLL_LOOP
+                for(int j = 0; j < i; j++)
+                {
+                    // CARPRAZ SWAP
+                    T a = (*this)(i, j);
+                    (*this)(i, j) = (*this)(j, i);
+                    (*this)(j, i) = a;
+                }
         }
-    }
     return *this;
 }
 
@@ -411,10 +411,10 @@ inline Matrix<N, T> Matrix<N, T>::Clamp(const Matrix& minVal, const Matrix& maxV
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        m[i] = min(max(minVal[i], matrix[i]), maxVal[i]);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m[i] = min(max(minVal[i], matrix[i]), maxVal[i]);
+        }
     return m;
 }
 
@@ -424,10 +424,10 @@ inline Matrix<N, T> Matrix<N, T>::Clamp(T minVal, T maxVal) const
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        m[i] = min(max(minVal, matrix[i]), maxVal);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m[i] = min(max(minVal, matrix[i]), maxVal);
+        }
     return m;
 }
 
@@ -436,10 +436,10 @@ __device__ __host__
 inline Matrix<N, T>& Matrix<N, T>::ClampSelf(const Matrix& minVal, const Matrix& maxVal)
 {
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        matrix[i] = min(max(minVal[i], matrix[i]), maxVal[i]);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            matrix[i] = min(max(minVal[i], matrix[i]), maxVal[i]);
+        }
     return *this;
 }
 
@@ -448,10 +448,10 @@ __device__ __host__
 inline Matrix<N, T>& Matrix<N, T>::ClampSelf(T minVal, T maxVal)
 {
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        matrix[i] = min(max(minVal, matrix[i]), maxVal);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            matrix[i] = min(max(minVal, matrix[i]), maxVal);
+        }
     return *this;
 }
 
@@ -462,10 +462,10 @@ inline SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::Abs() const
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        m[i] = abs(matrix[i]);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m[i] = abs(matrix[i]);
+        }
     return m;
 }
 
@@ -475,10 +475,10 @@ __device__ __host__
 inline SignedEnable<Q, Matrix<N, T>&> Matrix<N, T>::AbsSelf()
 {
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        matrix[i] = abs(matrix[i]);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            matrix[i] = abs(matrix[i]);
+        }
     return *this;
 }
 
@@ -489,10 +489,10 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Round() const
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        m[i] = round(matrix[i]);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m[i] = round(matrix[i]);
+        }
     return m;
 }
 
@@ -502,10 +502,10 @@ __device__ __host__
 inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::RoundSelf()
 {
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        matrix[i] = round(matrix[i]);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            matrix[i] = round(matrix[i]);
+        }
     return *this;
 }
 
@@ -516,10 +516,10 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Floor() const
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        m[i] = floor(matrix[i]);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m[i] = floor(matrix[i]);
+        }
     return m;
 }
 
@@ -529,10 +529,10 @@ __device__ __host__
 inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::FloorSelf()
 {
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        matrix[i] = floor(matrix[i]);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            matrix[i] = floor(matrix[i]);
+        }
     return *this;
 }
 
@@ -543,10 +543,10 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Ceil() const
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        m[i] = ceil(matrix[i]);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m[i] = ceil(matrix[i]);
+        }
     return m;
 }
 
@@ -556,10 +556,10 @@ __device__ __host__
 inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::CeilSelf()
 {
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        matrix[i] = ceil(matrix[i]);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            matrix[i] = ceil(matrix[i]);
+        }
     return *this;
 }
 
@@ -569,10 +569,10 @@ inline Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, const Matrix& mat1)
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        m[i] = min(mat0[i], mat1[i]);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m[i] = min(mat0[i], mat1[i]);
+        }
     return m;
 }
 
@@ -582,10 +582,10 @@ inline Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, T t)
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        m[i] = min(mat0[i], t);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m[i] = min(mat0[i], t);
+        }
     return m;
 }
 
@@ -595,10 +595,10 @@ inline Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, const Matrix& mat1)
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        m[i] = max(mat0[i], mat1[i]);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m[i] = max(mat0[i], mat1[i]);
+        }
     return m;
 }
 
@@ -608,10 +608,10 @@ inline Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, T t)
 {
     Matrix m;
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        m[i] = max(mat0[i], t);
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m[i] = max(mat0[i], t);
+        }
     return m;
 }
 
@@ -623,10 +623,10 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Lerp(const Matrix& mat0, const
     assert(t >= 0 && t <= 1);
     Matrix m;
     UNROLL_LOOP
-    for(int i = 0; i < N * N; i++)
-    {
-        m[i] = (1 - t) * mat0[i] + t * mat1[i];
-    }
+        for(int i = 0; i < N * N; i++)
+        {
+            m[i] = (1 - t) * mat0[i] + t * mat1[i];
+        }
     return m;
 }
 
@@ -654,28 +654,28 @@ inline static T Determinant4(const T* m)
     // Hardcoded should be most optimizer friendly
     // TODO: Maybe register size etc.. for GPU
     // YOLO
-    T det1 = m[0] * (  m[5] * m[10] * m[15]
+    T det1 = m[0] * (m[5] * m[10] * m[15]
                      + m[9] * m[14] * m[7]
                      + m[6] * m[11] * m[13]
                      - m[13] * m[10] * m[7]
                      - m[9] * m[6] * m[15]
                      - m[5] * m[14] * m[11]);
 
-    T det2 = m[4] * (  m[1] * m[10] * m[15]
+    T det2 = m[4] * (m[1] * m[10] * m[15]
                      + m[9] * m[14] * m[3]
                      + m[2] * m[11] * m[13]
                      - m[3] * m[10] * m[13]
                      - m[2] * m[9] * m[15]
                      - m[1] * m[11] * m[14]);
 
-    T det3 =  m[8] * (  m[1] * m[6] * m[15]
-                      + m[5] * m[14] * m[3]
-                      + m[2] * m[7] * m[13]
-                      - m[3] * m[6] * m[13]
-                      - m[2] * m[5] * m[15]
-                      - m[14] * m[7] * m[1]);
+    T det3 = m[8] * (m[1] * m[6] * m[15]
+                     + m[5] * m[14] * m[3]
+                     + m[2] * m[7] * m[13]
+                     - m[3] * m[6] * m[13]
+                     - m[2] * m[5] * m[15]
+                     - m[14] * m[7] * m[1]);
 
-    T det4 = m[12] * (  m[1] * m[6] * m[11]
+    T det4 = m[12] * (m[1] * m[6] * m[11]
                       + m[5] * m[10] * m[3]
                       + m[2] * m[7] * m[9]
                       - m[9] * m[6] * m[3]
@@ -729,116 +729,116 @@ inline static Matrix<4, T> Inverse4(const T* m)
     Matrix<4, T> inv;
 
     inv[0] = m[5] * m[10] * m[15] -
-             m[5] * m[11] * m[14] -
-             m[9] * m[6] * m[15] +
-             m[9] * m[7] * m[14] +
-             m[13] * m[6] * m[11] -
-             m[13] * m[7] * m[10];
+        m[5] * m[11] * m[14] -
+        m[9] * m[6] * m[15] +
+        m[9] * m[7] * m[14] +
+        m[13] * m[6] * m[11] -
+        m[13] * m[7] * m[10];
 
     inv[4] = -m[4] * m[10] * m[15] +
-             m[4] * m[11] * m[14] +
-             m[8] * m[6] * m[15] -
-             m[8] * m[7] * m[14] -
-             m[12] * m[6] * m[11] +
-             m[12] * m[7] * m[10];
+        m[4] * m[11] * m[14] +
+        m[8] * m[6] * m[15] -
+        m[8] * m[7] * m[14] -
+        m[12] * m[6] * m[11] +
+        m[12] * m[7] * m[10];
 
     inv[8] = m[4] * m[9] * m[15] -
-             m[4] * m[11] * m[13] -
-             m[8] * m[5] * m[15] +
-             m[8] * m[7] * m[13] +
-             m[12] * m[5] * m[11] -
-             m[12] * m[7] * m[9];
+        m[4] * m[11] * m[13] -
+        m[8] * m[5] * m[15] +
+        m[8] * m[7] * m[13] +
+        m[12] * m[5] * m[11] -
+        m[12] * m[7] * m[9];
 
     inv[12] = -m[4] * m[9] * m[14] +
-              m[4] * m[10] * m[13] +
-              m[8] * m[5] * m[14] -
-              m[8] * m[6] * m[13] -
-              m[12] * m[5] * m[10] +
-              m[12] * m[6] * m[9];
+        m[4] * m[10] * m[13] +
+        m[8] * m[5] * m[14] -
+        m[8] * m[6] * m[13] -
+        m[12] * m[5] * m[10] +
+        m[12] * m[6] * m[9];
 
     inv[1] = -m[1] * m[10] * m[15] +
-             m[1] * m[11] * m[14] +
-             m[9] * m[2] * m[15] -
-             m[9] * m[3] * m[14] -
-             m[13] * m[2] * m[11] +
-             m[13] * m[3] * m[10];
+        m[1] * m[11] * m[14] +
+        m[9] * m[2] * m[15] -
+        m[9] * m[3] * m[14] -
+        m[13] * m[2] * m[11] +
+        m[13] * m[3] * m[10];
 
     inv[5] = m[0] * m[10] * m[15] -
-             m[0] * m[11] * m[14] -
-             m[8] * m[2] * m[15] +
-             m[8] * m[3] * m[14] +
-             m[12] * m[2] * m[11] -
-             m[12] * m[3] * m[10];
+        m[0] * m[11] * m[14] -
+        m[8] * m[2] * m[15] +
+        m[8] * m[3] * m[14] +
+        m[12] * m[2] * m[11] -
+        m[12] * m[3] * m[10];
 
     inv[9] = -m[0] * m[9] * m[15] +
-             m[0] * m[11] * m[13] +
-             m[8] * m[1] * m[15] -
-             m[8] * m[3] * m[13] -
-             m[12] * m[1] * m[11] +
-             m[12] * m[3] * m[9];
+        m[0] * m[11] * m[13] +
+        m[8] * m[1] * m[15] -
+        m[8] * m[3] * m[13] -
+        m[12] * m[1] * m[11] +
+        m[12] * m[3] * m[9];
 
     inv[13] = m[0] * m[9] * m[14] -
-              m[0] * m[10] * m[13] -
-              m[8] * m[1] * m[14] +
-              m[8] * m[2] * m[13] +
-              m[12] * m[1] * m[10] -
-              m[12] * m[2] * m[9];
+        m[0] * m[10] * m[13] -
+        m[8] * m[1] * m[14] +
+        m[8] * m[2] * m[13] +
+        m[12] * m[1] * m[10] -
+        m[12] * m[2] * m[9];
 
     inv[2] = m[1] * m[6] * m[15] -
-             m[1] * m[7] * m[14] -
-             m[5] * m[2] * m[15] +
-             m[5] * m[3] * m[14] +
-             m[13] * m[2] * m[7] -
-             m[13] * m[3] * m[6];
+        m[1] * m[7] * m[14] -
+        m[5] * m[2] * m[15] +
+        m[5] * m[3] * m[14] +
+        m[13] * m[2] * m[7] -
+        m[13] * m[3] * m[6];
 
     inv[6] = -m[0] * m[6] * m[15] +
-             m[0] * m[7] * m[14] +
-             m[4] * m[2] * m[15] -
-             m[4] * m[3] * m[14] -
-             m[12] * m[2] * m[7] +
-             m[12] * m[3] * m[6];
+        m[0] * m[7] * m[14] +
+        m[4] * m[2] * m[15] -
+        m[4] * m[3] * m[14] -
+        m[12] * m[2] * m[7] +
+        m[12] * m[3] * m[6];
 
     inv[10] = m[0] * m[5] * m[15] -
-              m[0] * m[7] * m[13] -
-              m[4] * m[1] * m[15] +
-              m[4] * m[3] * m[13] +
-              m[12] * m[1] * m[7] -
-              m[12] * m[3] * m[5];
+        m[0] * m[7] * m[13] -
+        m[4] * m[1] * m[15] +
+        m[4] * m[3] * m[13] +
+        m[12] * m[1] * m[7] -
+        m[12] * m[3] * m[5];
 
     inv[14] = -m[0] * m[5] * m[14] +
-              m[0] * m[6] * m[13] +
-              m[4] * m[1] * m[14] -
-              m[4] * m[2] * m[13] -
-              m[12] * m[1] * m[6] +
-              m[12] * m[2] * m[5];
+        m[0] * m[6] * m[13] +
+        m[4] * m[1] * m[14] -
+        m[4] * m[2] * m[13] -
+        m[12] * m[1] * m[6] +
+        m[12] * m[2] * m[5];
 
     inv[3] = -m[1] * m[6] * m[11] +
-             m[1] * m[7] * m[10] +
-             m[5] * m[2] * m[11] -
-             m[5] * m[3] * m[10] -
-             m[9] * m[2] * m[7] +
-             m[9] * m[3] * m[6];
+        m[1] * m[7] * m[10] +
+        m[5] * m[2] * m[11] -
+        m[5] * m[3] * m[10] -
+        m[9] * m[2] * m[7] +
+        m[9] * m[3] * m[6];
 
     inv[7] = m[0] * m[6] * m[11] -
-             m[0] * m[7] * m[10] -
-             m[4] * m[2] * m[11] +
-             m[4] * m[3] * m[10] +
-             m[8] * m[2] * m[7] -
-             m[8] * m[3] * m[6];
+        m[0] * m[7] * m[10] -
+        m[4] * m[2] * m[11] +
+        m[4] * m[3] * m[10] +
+        m[8] * m[2] * m[7] -
+        m[8] * m[3] * m[6];
 
     inv[11] = -m[0] * m[5] * m[11] +
-              m[0] * m[7] * m[9] +
-              m[4] * m[1] * m[11] -
-              m[4] * m[3] * m[9] -
-              m[8] * m[1] * m[7] +
-              m[8] * m[3] * m[5];
+        m[0] * m[7] * m[9] +
+        m[4] * m[1] * m[11] -
+        m[4] * m[3] * m[9] -
+        m[8] * m[1] * m[7] +
+        m[8] * m[3] * m[5];
 
     inv[15] = m[0] * m[5] * m[10] -
-              m[0] * m[6] * m[9] -
-              m[4] * m[1] * m[10] +
-              m[4] * m[2] * m[9] +
-              m[8] * m[1] * m[6] -
-              m[8] * m[2] * m[5];
+        m[0] * m[6] * m[9] -
+        m[4] * m[1] * m[10] +
+        m[4] * m[2] * m[9] +
+        m[8] * m[1] * m[6] -
+        m[8] * m[2] * m[5];
 
     T det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
     det = 1 / det;
@@ -854,7 +854,7 @@ Matrix<N, T> operator*(float t, const Matrix<N, T>& mat)
 }
 
 template<class T, typename>
-__device__ __host__ 
+__device__ __host__
 inline Vector<3, T> TransformGen::ExtractScale(const Matrix<4, T>& m)
 {
     // This is kinda hacky
@@ -867,7 +867,7 @@ inline Vector<3, T> TransformGen::ExtractScale(const Matrix<4, T>& m)
 }
 
 template<class T, typename>
-__device__ __host__ 
+__device__ __host__
 inline Vector<3, T> TransformGen::ExtractTranslation(const Matrix<4, T>& m)
 {
     return Vector<3, T>(m[12], m[13], m[14]);
@@ -881,10 +881,10 @@ inline Matrix<4, T> TransformGen::Translate(const Vector<3, T>& v)
     //  0       1       0       ty
     //  0       0       1       tz
     //  0       0       0       1
-    return Matrix<4, T>(1,      0,      0,      0,
-                        0,      1,      0,      0,
-                        0,      0,      1,      0,
-                        v[0],   v[1],   v[2],   1);
+    return Matrix<4, T>(1, 0, 0, 0,
+                        0, 1, 0, 0,
+                        0, 0, 1, 0,
+                        v[0], v[1], v[2], 1);
 }
 
 template<class T, typename>
@@ -895,10 +895,10 @@ inline Matrix<4, T> TransformGen::Scale(T s)
     //  0       s       0       0
     //  0       0       s       0
     //  0       0       0       1
-    return Matrix<4, T>(s,      0,      0,      0,
-                        0,      s,      0,      0,
-                        0,      0,      s,      0,
-                        0,      0,      0,      1);
+    return Matrix<4, T>(s, 0, 0, 0,
+                        0, s, 0, 0,
+                        0, 0, s, 0,
+                        0, 0, 0, 1);
 }
 
 template<class T, typename>
@@ -909,10 +909,10 @@ inline Matrix<4, T> TransformGen::Scale(T x, T y, T z)
     //  0       sy      0       0
     //  0       0       sz      0
     //  0       0       0       1
-    return Matrix<4, T>(x,      0,      0,      0,
-                        0,      y,      0,      0,
-                        0,      0,      z,      0,
-                        0,      0,      0,      1);
+    return Matrix<4, T>(x, 0, 0, 0,
+                        0, y, 0, 0,
+                        0, 0, z, 0,
+                        0, 0, 0, 1);
 }
 
 template<class T, typename>
@@ -948,10 +948,10 @@ inline Matrix<4, T> TransformGen::Rotate(T angle, const Vector<3, T>& axis)
     T m22 = cosAngle + axis[1] * axis[1] * t;
     T m33 = cosAngle + axis[2] * axis[2] * t;
 
-    return Matrix<4, T>(m11,    m21,    m31,    0,
-                        m12,    m22,    m32,    0,
-                        m13,    m23,    m33,    0,
-                        0,      0,      0,      1);
+    return Matrix<4, T>(m11, m21, m31, 0,
+                        m12, m22, m32, 0,
+                        m13, m23, m33, 0,
+                        0, 0, 0, 1);
 }
 
 template<class T, typename>
@@ -1002,14 +1002,14 @@ inline Matrix<4, T> TransformGen::Perspective(T fovXRadians, T aspectRatio,
     //  0       0       p       0
     T f = 1 / std::tan(fovXRadians * static_cast<T>(0.5));
     T m33 = (farPlane + nearPlane) / (nearPlane - farPlane);
-    T m34 = (2 * farPlane * nearPlane) /  (nearPlane - farPlane);
+    T m34 = (2 * farPlane * nearPlane) / (nearPlane - farPlane);
     //float m33 = farPlane / (nearPlane - farPlane);
     //float m34 = (nearPlane * farPlane) / (nearPlane - farPlane);
 
-    return Matrix<4, T>(f,      0,                  0,      0,
-                        0,      f * aspectRatio,    0,      0,
-                        0,      0,                  m33,    -1,
-                        0,      0,                  m34,    0);
+    return Matrix<4, T>(f, 0, 0, 0,
+                        0, f * aspectRatio, 0, 0,
+                        0, 0, m33, -1,
+                        0, 0, m34, 0);
 }
 
 template<class T, typename>
@@ -1026,10 +1026,10 @@ inline  Matrix<4, T> TransformGen::Ortogonal(T left, T right,
     T yt = -((top + bottom) / (top - bottom));
     T zt = -((nearPlane) / (farPlane - nearPlane));
 
-    return Matrix<4, T>(2 / (right - left),     0,                  0,                          0,
-                        0,                      2 / (top - bottom), 0,                          0,
-                        0,                      0,                  1 / (nearPlane - farPlane), 0,
-                        xt,                     yt,                 zt,                         1);
+    return Matrix<4, T>(2 / (right - left), 0, 0, 0,
+                        0, 2 / (top - bottom), 0, 0,
+                        0, 0, 1 / (nearPlane - farPlane), 0,
+                        xt, yt, zt, 1);
 }
 
 template<class T, typename>
@@ -1042,10 +1042,10 @@ inline Matrix<4, T> TransformGen::Ortogonal(T width, T height,
     //  0       0       orto    0
     //  0       0       orto    1
     T zt = nearPlane / (nearPlane - farPlane);
-    return Matrix<4, T>(2 / width,  0,          0,                          0,
-                        0,          2 / height, 0,                          0,
-                        0,          0,          1 / (nearPlane - farPlane), 0,
-                        0,          0,          zt,                         1);
+    return Matrix<4, T>(2 / width, 0, 0, 0,
+                        0, 2 / height, 0, 0,
+                        0, 0, 1 / (nearPlane - farPlane), 0,
+                        0, 0, zt, 1);
 }
 
 template<class T, typename>
@@ -1060,9 +1060,9 @@ inline Matrix<4, T> TransformGen::LookAt(const Vector<3, T>& eyePos,
     Vector<3, T> yAxis = zAxis.CrossProduct(xAxis).NormalizeSelf();
 
     // Also Add Translation part
-    return Matrix<4, T>(xAxis[0],           yAxis[0],           zAxis[0],           0,
-                        xAxis[1],           yAxis[1],           zAxis[1],           0,
-                        xAxis[2],           yAxis[2],           zAxis[2],           0,
+    return Matrix<4, T>(xAxis[0], yAxis[0], zAxis[0], 0,
+                        xAxis[1], yAxis[1], zAxis[1], 0,
+                        xAxis[2], yAxis[2], zAxis[2], 0,
                         -xAxis.Dot(eyePos), -yAxis.Dot(eyePos), -zAxis.Dot(eyePos), 1);
 }
 

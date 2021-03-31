@@ -45,7 +45,7 @@ using NamedList = std::map<std::string, T>;
 using AcceleratorBatchMap = std::map<uint32_t, GPUAcceleratorGroupI*>;
 using WorkBatchMap = std::map<uint32_t, GPUWorkBatchI*>;
 using WorkBatchCreationInfo = std::vector<std::tuple<uint32_t,
-                                                     const GPUPrimitiveGroupI*, 
+                                                     const GPUPrimitiveGroupI*,
                                                      const GPUMaterialGroupI*>>;
 
 // Logic Independent parameters for tracer

@@ -22,7 +22,7 @@ namespace TracerFunctions
         float perpendicular = ((iorIn * cosIn - iorOut * cosOut) /
                                (iorIn * cosIn + iorOut * cosOut));
         perpendicular = perpendicular * perpendicular;
-        
+
         return (parallel + perpendicular) * 0.5f;
     }
 }

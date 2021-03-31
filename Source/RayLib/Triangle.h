@@ -11,37 +11,36 @@ namespace Triangle
 {
     template <class T>
     __device__ __host__
-    AABB<3, T> BoundingBox(const Vector<3, T>& p0,
-                           const Vector<3, T>& p1,
-                           const Vector<3, T>& p2);
+        AABB<3, T> BoundingBox(const Vector<3, T>& p0,
+                               const Vector<3, T>& p1,
+                               const Vector<3, T>& p2);
 
     template <class T>
     __device__ __host__
-    Vector<3, T> CalculateTangent(const Vector<3, T>& p0,
-                                  const Vector<3, T>& p1,
-                                  const Vector<3, T>& p2,
+        Vector<3, T> CalculateTangent(const Vector<3, T>& p0,
+                                      const Vector<3, T>& p1,
+                                      const Vector<3, T>& p2,
 
-                                  const Vector<2, T>& uv0,
-                                  const Vector<2, T>& uv1,
-                                  const Vector<2, T>& uv2);
-
-    template <class T>
-    __device__ __host__
-    void LocalRotation(Quaternion<T>&,
-                       Quaternion<T>&,
-                       Quaternion<T>&,
-                       const Vector<3, T>* positions,
-                       const Vector<3, T>* normals,
-                       const Vector<2, T>* uvs);
+                                      const Vector<2, T>& uv0,
+                                      const Vector<2, T>& uv1,
+                                      const Vector<2, T>& uv2);
 
     template <class T>
     __device__ __host__
-    void LocalRotation(Quaternion<T>&,
-                       Quaternion<T>&,
-                       Quaternion<T>&,
-                       const Vector<3, T>* normals,
-                       const Vector<3, T>* tangents);
+        void LocalRotation(Quaternion<T>&,
+                           Quaternion<T>&,
+                           Quaternion<T>&,
+                           const Vector<3, T>* positions,
+                           const Vector<3, T>* normals,
+                           const Vector<2, T>* uvs);
 
+    template <class T>
+    __device__ __host__
+        void LocalRotation(Quaternion<T>&,
+                           Quaternion<T>&,
+                           Quaternion<T>&,
+                           const Vector<3, T>* normals,
+                           const Vector<3, T>* tangents);
 }
 
 template <class T>
@@ -80,8 +79,8 @@ Vector<3, T> Triangle::CalculateTangent(const Vector<3, T>& p0,
            dUV1[0] * dUV0[1]);
 
     Vector<3, T> tangent;
-    tangent = t * (dUV1[1] * vec0 - dUV0[1] * vec1);   
-    tangent.NormalizeSelf();   
+    tangent = t * (dUV1[1] * vec0 - dUV0[1] * vec1);
+    tangent.NormalizeSelf();
     return tangent;
 }
 
@@ -129,7 +128,7 @@ void Triangle::LocalRotation(Quaternion<T>& q0,
     // arbitrarily find a tangent
     if(t0.HasNaN())
         t0 = Quaternion<T>(90.0f * MathConstants::DegToRadCoef, XAxis).ApplyRotation(n[0]);
-    if(t1.HasNaN())    
+    if(t1.HasNaN())
         t1 = Quaternion<T>(90.0f * MathConstants::DegToRadCoef, XAxis).ApplyRotation(n[1]);
     if(t2.HasNaN())
         t2 = Quaternion<T>(90.0f * MathConstants::DegToRadCoef, XAxis).ApplyRotation(n[2]);

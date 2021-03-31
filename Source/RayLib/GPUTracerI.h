@@ -46,7 +46,7 @@ class GPUTracerI
         virtual void                    SetParameters(const TracerParameters&) = 0;
         virtual void                    AskOptions() = 0;
         virtual void                    AskParameters() = 0;
-        
+
         // Rendering Related
         // Generate Work for Scene Camera
         virtual void                    GenerateWork(int cameraId) = 0;

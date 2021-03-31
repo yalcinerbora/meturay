@@ -30,18 +30,18 @@ class TracerThread : public LoopingThreadI
         // Tracer Parameters & Options
         // In case of reloading of tracer
         TracerOptions               tracerOptions;
-        TracerParameters            tracerParameters;        
+        TracerParameters            tracerParameters;
         std::string                 tracerTypeName;
         TracerCallbacksI&           tracerCallbacks;
 
         // Internal Bool for checking if tracer is crashed
         // This technically is not needed to be an atomic
         // but just to be sure, it is.
-        // 
+        //
         // If Tracer uses multiple threads (which it should not
         // since it is GPU based) this will come in handy
         std::atomic_bool            tracerCrashSignal;
-        
+
         // State variables
         // Camera Related
         ThreadVariable<bool>            isSceneCameraActive;
@@ -57,7 +57,7 @@ class TracerThread : public LoopingThreadI
         ThreadVariable<Vector2i>        resolution;
         ThreadVariable<Vector2i>        imgPortionStart;
         ThreadVariable<Vector2i>        imgPortionEnd;
-        
+
     protected:
         bool                InternallyTerminated() const override;
         void                InitialWork() override;
@@ -71,7 +71,7 @@ class TracerThread : public LoopingThreadI
 
     public:
         // Constructors & Destructor
-                        TracerThread(TracerSystemI&,                                     
+                        TracerThread(TracerSystemI&,
                                      const TracerOptions&,
                                      const TracerParameters&,
                                      TracerCallbacksI&,

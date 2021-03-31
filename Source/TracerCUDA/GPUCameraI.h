@@ -36,7 +36,7 @@ class CPUCameraGroupI
 {
     public:
         virtual								~CPUCameraGroupI() = default;
-    
+
         // Interface
         virtual const char*                 Type() const = 0;
         virtual const GPUCameraList&        GPUCameras() const = 0;
@@ -51,7 +51,7 @@ class CPUCameraGroupI
         virtual TracerError					ConstructCameras(const CudaSystem&,
                                                              const GPUTransformI**) = 0;
         virtual uint32_t					CameraCount() const = 0;
-    
+
         virtual size_t						UsedGPUMemory() const = 0;
         virtual size_t						UsedCPUMemory() const = 0;
 };

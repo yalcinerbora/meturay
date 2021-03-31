@@ -1,4 +1,3 @@
-
 // Common
 #include "RayLib/System.h"
 #include "RayLib/Log.h"

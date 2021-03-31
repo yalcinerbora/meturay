@@ -125,7 +125,6 @@ struct UVSurface
     Vector2 uv;
 };
 
-
 template <class HitData, class PrimData>
 __device__ __host__
 EmptySurface GenEmptySurface(const HitData&,
@@ -224,7 +223,7 @@ EmptySurface GenEmptySurface(const HitData&,
 //    // Convert spherical hit to cartesian
 //    Vector3 normal = Vector3(sin(hData[0]) * cos(hData[1]),
 //                              sin(hData[0]) * sin(hData[1]),
-//                              cos(hData[0]));   
+//                              cos(hData[0]));
 //    return BasicSurface{normal};
 //}
 //
@@ -241,12 +240,12 @@ EmptySurface GenEmptySurface(const HitData&,
 //    Vector3 normal = Vector3(sin(hData[0]) * cos(hData[1]),
 //                             sin(hData[0]) * sin(hData[1]),
 //                             cos(hData[0]));
-//    // Gen UV    
+//    // Gen UV
 //    Vector2 uv = hData;
 //    // tetha is [-pi, pi], normalize
-//    uv[0] = (uv[0] + MathConstants::Pi) * 0.5f * MathConstants::InvPi; 
-//    // phi is [0, pi], normalize 
-//    uv[1] /= MathConstants::Pi; 
+//    uv[0] = (uv[0] + MathConstants::Pi) * 0.5f * MathConstants::InvPi;
+//    // phi is [0, pi], normalize
+//    uv[1] /= MathConstants::Pi;
 //
 //    return UVSurface{normal, uv};
 //}

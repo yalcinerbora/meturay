@@ -83,7 +83,7 @@ bool GPUSceneJson::FindNode(const nlohmann::json*& jsn, const char* c)
 };
 
 SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
-                                     const nlohmann::json& array, 
+                                     const nlohmann::json& array,
                                      IdBasedNodeType t)
 {
     //static constexpr uint32_t MAX_UINT32 = std::numeric_limits<uint32_t>::max();
@@ -232,7 +232,6 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             node->AddIdIndexPair(matId, iIndex);
             AttachWorkBatch(primType, matName, matId);
 
-            
             // Check if this mat requires a medium
             // add to the medium list if available
             if(!node->CheckNode(NodeNames::MEDIUM)) return SceneError::OK;
@@ -242,7 +241,6 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             SceneError e = SceneError::OK;
             if((e = AttachMedium(mediumId)) != SceneError::OK)
                 return e;
-
         }
         else return SceneError::MATERIAL_ID_NOT_FOUND;
         return SceneError::OK;
@@ -315,7 +313,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     if(!FindNode(transforms, NodeNames::TRANSFORM_BASE)) return SceneError::TRANSFORMS_ARRAY_NOT_FOUND;
     if(!FindNode(mediums, NodeNames::MEDIUM_BASE)) return SceneError::MEDIUM_ARRAY_NOT_FOUND;
     if(!FindNode(textures, NodeNames::TEXTURE_BASE)) textures = &emptyJson;
-    if((e = GenIdLookup(primList, *primitives, PRIMITIVE)) != SceneError::OK) 
+    if((e = GenIdLookup(primList, *primitives, PRIMITIVE)) != SceneError::OK)
         return e;
     if((e = GenIdLookup(materialList, *materials, MATERIAL)) != SceneError::OK)
         return e;
@@ -330,7 +328,6 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     if((e = GenIdLookup(cameraList, *cameras, CAMERA)) != SceneError::OK)
         return e;
 
-
     // Initially Find Identity Transform If available
     // Or add it on your own
     // And finally force load Identity transform
@@ -344,7 +341,6 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             identityTransformId = tNode.first;
             AttachTransform(identityTransformId);
         }
-            
     }
     // If we did not found identity transform create it on your own
     if((transformGroupNodes.find(NodeNames::TRANSFORM_IDENTITY)) == transformGroupNodes.cend())
@@ -364,7 +360,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     {
         SurfaceStruct surf = SceneIO::LoadSurface(jsn);
         const uint32_t transformId = surf.transformId;
-        
+
         // Start loading mats and surface data
         // Iterate mat surface pairs
         std::string primGroupType;
@@ -372,7 +368,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         {
             const auto& pairs = surf.matPrimPairs;
             const uint32_t primId = pairs[i].second;
-            const uint32_t matId = pairs[i].first;            
+            const uint32_t matId = pairs[i].first;
 
             // Check if primitive exists
             // add it to primitive group list for later construction
@@ -412,10 +408,10 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         // Generate transform pair also
         surfId++;
     }
-    // Additionally For Lights and Base Boundary Material 
+    // Additionally For Lights and Base Boundary Material
     // Generate a Empty primitive (if not already requrested)
     primGroupNodes.emplace(BaseConstants::EMPTY_PRIMITIVE_NAME, NodeListing());
-    
+
     // Boundary Material
     const nlohmann::json* baseMatNode = nullptr;
     if(!FindNode(baseMatNode, NodeNames::BASE_OUTSIDE_MATERIAL))
@@ -423,15 +419,15 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME,
                          SceneIO::LoadNumber<uint32_t>(*baseMatNode, time))) != SceneError::OK)
         return e;
-    
+
     // Find the base medium and tag its index
     const nlohmann::json* baseMediumNode = nullptr;
     if(!FindNode(baseMediumNode, NodeNames::BASE_MEDIUM))
         return SceneError::BASE_MEDIUM_NODE_NOT_FOUND;
-    uint32_t baseMediumId = SceneIO::LoadNumber<uint32_t>(*baseMediumNode, time);    
+    uint32_t baseMediumId = SceneIO::LoadNumber<uint32_t>(*baseMediumNode, time);
     if((e = AttachMedium(baseMediumId)) != SceneError::OK)
         return e;
-       
+
     // Process Lights
     for(const auto& jsn : (*lightSurfaces))
     {
@@ -516,12 +512,11 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                           s.materialId,
                                           std::move(lightNode)
                                       });
-
     }
 
     // Process Cameras
     for(const auto& jsn : (*cameraSurfaces))
-    { 
+    {
         CameraSurfaceStruct s = SceneIO::LoadCameraSurface(baseMediumId,
                                                            identityTransformId,
                                                            jsn);
@@ -546,7 +541,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         else return SceneError::CAMERA_ID_NOT_FOUND;
 
         // Request material for loading
-        if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME, 
+        if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME,
                              cameraMatGroup)) != SceneError::OK)
             return e;
 
@@ -560,9 +555,8 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                              cameraMatGroup,
                                              std::move(cameraNode)
                                          });
-
     }
-        
+
     // Finally Load Texture Info for material access
     // Load all textures here material will actually load the textures
     for(const auto& jsn : (*textures))
@@ -589,7 +583,7 @@ SceneError GPUSceneJson::GenerateMaterialGroups(const MultiGPUMatNodes& matGroup
         GPUMatGPtr matGroup = GPUMatGPtr(nullptr, nullptr);
         if(e = logicGenerator.GenerateMaterialGroup(matGroup, *gpu, matTypeName))
             return e;
-        if(e = matGroup->InitializeGroup(matNodes, textureNodes, 
+        if(e = matGroup->InitializeGroup(matNodes, textureNodes,
                                          mediumIdMappings, time, parentPath))
             return e;
         materials.emplace(std::make_pair(matTypeName, gpu), std::move(matGroup));
@@ -704,7 +698,7 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, HitKey>& accHit
         GPUAccelGPtr aGroup = GPUAccelGPtr(nullptr, nullptr);
         if((e = logicGenerator.GenerateAcceleratorGroup(aGroup, *pGroup, accelGroupName)) != SceneError::OK)
             return e;
-        if((e = aGroup->InitializeGroup(accelNode, matHitKeyList, 
+        if((e = aGroup->InitializeGroup(accelNode, matHitKeyList,
                                         pairsList, transformIndexList,
                                         time)) != SceneError::OK)
             return e;
@@ -833,8 +827,8 @@ SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdM
             linearIndex++;
         }
     }
-    
-    if(!baseMediumFound) 
+
+    if(!baseMediumFound)
         return SceneError::MEDIUM_ID_NOT_FOUND;
     return e;
 }
@@ -997,12 +991,12 @@ SceneError GPUSceneJson::LoadAll(double time)
         return e;
     // Boundary Material
     if((e = FindBoundaryMaterial(allMaterialKeys, time)) != SceneError::OK)
-       return e;    
+       return e;
     // Cameras
     if((e = GenerateCameras(camListings,
                             transformIdMappings,
                             mediumIdMappings,
-                            allMaterialKeys, 
+                            allMaterialKeys,
                             time)) != SceneError::OK)
         return e;
     // Lights

@@ -34,8 +34,8 @@ class RayTracer : public GPUTracer
 
     public:
         // Constructors & Destructor
-                                RayTracer(const CudaSystem&, 
-                                          const GPUSceneI&, 
+                                RayTracer(const CudaSystem&,
+                                          const GPUSceneI&,
                                           const TracerParameters&);
                                 ~RayTracer() = default;
 

@@ -17,19 +17,19 @@ struct DLLError : public ErrorI
             OK,
             // Logical
             DLL_NOT_FOUND,
-            MANGLED_NAME_NOT_FOUND,          
+            MANGLED_NAME_NOT_FOUND,
             // End
             END
         };
-    
+
     private:
         Type        type;
-    
+
     public:
                     // Constructors & Destructor
                     DLLError(Type);
                     ~DLLError() = default;
-    
+
                     operator Type() const;
                     operator std::string() const override;
 };

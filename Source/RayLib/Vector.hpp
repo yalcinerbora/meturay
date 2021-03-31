@@ -4,10 +4,10 @@ __device__ __host__
 inline Vector<N, T>::Vector(C data)
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] = static_cast<T>(data);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] = static_cast<T>(data);
+        }
 }
 
 template <int N, class T>
@@ -16,10 +16,10 @@ __device__ __host__
 inline Vector<N, T>::Vector(const C* data)
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] = static_cast<T>(data[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] = static_cast<T>(data[i]);
+        }
 }
 
 template <int N, class T>
@@ -29,8 +29,8 @@ inline constexpr Vector<N, T>::Vector(const Args... dataList)
     : vector{static_cast<T>(dataList) ...}
 {
     static_assert(sizeof...(dataList) == N, "Vector constructor should have exact "
-                                            "same template count "
-                                            "as arguments");
+                  "same template count "
+                  "as arguments");
 }
 
 template <int N, class T>
@@ -41,19 +41,19 @@ inline Vector<N, T>::Vector(const Vector<N - sizeof...(Args), T>& v,
 {
     constexpr int vectorSize = N - sizeof...(dataList);
     static_assert(sizeof...(dataList) + vectorSize == N, "Total type count of the partial vector"
-                                                         "constructor should exactly match vector size");
+                  "constructor should exactly match vector size");
 
     UNROLL_LOOP
-    for(int i = 0; i < vectorSize; i++)
-    {
-        vector[i] = v[i];
-    }
+        for(int i = 0; i < vectorSize; i++)
+        {
+            vector[i] = v[i];
+        }
     const T arr[] = {dataList...};
     UNROLL_LOOP
-    for(int i = vectorSize; i < N; i++)
-    {
-        vector[i] = arr[i - vectorSize];
-    }
+        for(int i = vectorSize; i < N; i++)
+        {
+            vector[i] = arr[i - vectorSize];
+        }
 }
 
 template <int N, class T>
@@ -63,22 +63,22 @@ inline Vector<N, T>::Vector(const Vector<M, T>& other)
 {
     static_assert(M > N, "enable_if sanity check.");
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] = other[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] = other[i];
+        }
 }
 
 template <int N, class T>
 __device__ __host__
-inline Vector<N, T>::operator T*()
+inline Vector<N, T>::operator T* ()
 {
     return vector;
 }
 
 template <int N, class T>
 __device__ __host__
-inline Vector<N, T>::operator const T*() const
+inline Vector<N, T>::operator const T* () const
 {
     return vector;
 }
@@ -89,10 +89,10 @@ inline Vector<N, T>::operator Vector<M, C>() const
 {
     Vector<M, C> result;
     UNROLL_LOOP
-    for(int i = 0; i < M; i++)
-    {
-        result[i] = static_cast<C>(vector[i]);
-    }
+        for(int i = 0; i < M; i++)
+        {
+            result[i] = static_cast<C>(vector[i]);
+        }
     return result;
 }
 
@@ -115,10 +115,10 @@ __device__ __host__
 inline void Vector<N, T>::operator+=(const Vector& right)
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] += right[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] += right[i];
+        }
 }
 
 template <int N, class T>
@@ -126,10 +126,10 @@ __device__ __host__
 inline void Vector<N, T>::operator-=(const Vector& right)
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] -= right[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] -= right[i];
+        }
 }
 
 template <int N, class T>
@@ -137,10 +137,10 @@ __device__ __host__
 inline void Vector<N, T>::operator*=(const Vector& right)
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] *= right[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] *= right[i];
+        }
 }
 
 template <int N, class T>
@@ -148,10 +148,10 @@ __device__ __host__
 inline void Vector<N, T>::operator*=(T right)
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] *= right;
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] *= right;
+        }
 }
 
 template <int N, class T>
@@ -159,10 +159,10 @@ __device__ __host__
 inline void Vector<N, T>::operator/=(const Vector& right)
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] /= right[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] /= right[i];
+        }
 }
 
 template <int N, class T>
@@ -170,10 +170,10 @@ __device__ __host__
 inline void Vector<N, T>::operator/=(T right)
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] /= right;
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] /= right;
+        }
 }
 
 template <int N, class T>
@@ -182,10 +182,10 @@ inline Vector<N, T> Vector<N, T>::operator+(const Vector& right) const
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = vector[i] + right[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = vector[i] + right[i];
+        }
     return v;
 }
 
@@ -195,10 +195,10 @@ inline Vector<N, T> Vector<N, T>::operator+(T r) const
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = vector[i] + r;
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = vector[i] + r;
+        }
     return v;
 }
 
@@ -208,10 +208,10 @@ inline Vector<N, T> Vector<N, T>::operator-(const Vector& right) const
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = vector[i] - right[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = vector[i] - right[i];
+        }
     return v;
 }
 
@@ -235,10 +235,10 @@ inline SignedEnable<Q, Vector<N, T>> Vector<N, T>::operator-() const
 {
     Vector<N, T> v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = -vector[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = -vector[i];
+        }
     return v;
 }
 
@@ -248,10 +248,10 @@ inline Vector<N, T> Vector<N, T>::operator*(const Vector& right) const
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = vector[i] * right[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = vector[i] * right[i];
+        }
     return v;
 }
 
@@ -261,10 +261,10 @@ inline Vector<N, T> Vector<N, T>::operator*(T right) const
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = vector[i] * right;
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = vector[i] * right;
+        }
     return v;
 }
 
@@ -274,10 +274,10 @@ inline Vector<N, T> Vector<N, T>::operator/(const Vector& right) const
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = vector[i] / right[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = vector[i] / right[i];
+        }
     return v;
 }
 
@@ -287,10 +287,10 @@ inline Vector<N, T> Vector<N, T>::operator/(T right) const
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = vector[i] / right;
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = vector[i] / right;
+        }
     return v;
 }
 
@@ -301,10 +301,10 @@ inline IntegralEnable<Q, Vector<N, T>> Vector<N, T>::operator%(const Vector& rig
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = vector[i] % right[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = vector[i] % right[i];
+        }
     return v;
 }
 
@@ -315,10 +315,10 @@ inline IntegralEnable<Q, Vector<N, T>> Vector<N, T>::operator%(T right) const
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = vector[i] % right;
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = vector[i] % right;
+        }
     return v;
 }
 
@@ -329,10 +329,10 @@ inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::operator%(const Vector& right)
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = std::fmod(vector[i], right[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = std::fmod(vector[i], right[i]);
+        }
     return v;
 }
 
@@ -343,10 +343,10 @@ inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::operator%(T right) const
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = fmod(vector[i], right);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = fmod(vector[i], right);
+        }
     return v;
 }
 
@@ -356,10 +356,10 @@ inline bool Vector<N, T>::operator==(const Vector& right) const
 {
     bool b = true;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        b &= vector[i] == right[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            b &= vector[i] == right[i];
+        }
     return b;
 }
 
@@ -376,10 +376,10 @@ inline bool Vector<N, T>::operator<(const Vector& right) const
 {
     bool b = true;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        b &= vector[i] < right[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            b &= vector[i] < right[i];
+        }
     return b;
 }
 
@@ -389,10 +389,10 @@ inline bool Vector<N, T>::operator<=(const Vector& right) const
 {
     bool b = true;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        b &= vector[i] <= right[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            b &= vector[i] <= right[i];
+        }
     return b;
 }
 
@@ -402,10 +402,10 @@ inline bool Vector<N, T>::operator>(const Vector& right) const
 {
     bool b = true;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        b &= vector[i] > right[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            b &= vector[i] > right[i];
+        }
     return b;
 }
 
@@ -415,10 +415,10 @@ inline bool Vector<N, T>::operator>=(const Vector& right) const
 {
     bool b = true;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        b &= vector[i] >= right[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            b &= vector[i] >= right[i];
+        }
     return b;
 }
 
@@ -428,10 +428,10 @@ inline T Vector<N, T>::Dot(const Vector& right) const
 {
     T data = 0;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        data += (vector[i] * right[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            data += (vector[i] * right[i]);
+        }
     return data;
 }
 
@@ -459,10 +459,10 @@ inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Normalize() const
 
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = vector[i] * lengthInv;
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = vector[i] * lengthInv;
+        }
     return v;
 }
 
@@ -473,10 +473,10 @@ inline FloatEnable<Q, Vector<N, T>&> Vector<N, T>::NormalizeSelf()
 {
     T lengthInv = static_cast<T>(1) / Length();
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] *= lengthInv;
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] *= lengthInv;
+        }
     return *this;
 }
 
@@ -486,10 +486,10 @@ inline Vector<N, T> Vector<N, T>::Clamp(const Vector& minVal, const Vector& maxV
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = min(max(minVal[i], vector[i]), maxVal[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = min(max(minVal[i], vector[i]), maxVal[i]);
+        }
     return v;
 }
 
@@ -499,10 +499,10 @@ inline Vector<N, T> Vector<N, T>::Clamp(T minVal, T maxVal) const
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = min(max(minVal, vector[i]), maxVal);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = min(max(minVal, vector[i]), maxVal);
+        }
     return v;
 }
 
@@ -511,10 +511,10 @@ __device__ __host__
 inline Vector<N, T>& Vector<N, T>::ClampSelf(const Vector& minVal, const Vector& maxVal)
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] = min(max(minVal[i], vector[i]), maxVal[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] = min(max(minVal[i], vector[i]), maxVal[i]);
+        }
     return *this;
 }
 
@@ -523,25 +523,25 @@ __device__ __host__
 inline Vector<N, T>& Vector<N, T>::ClampSelf(T minVal, T maxVal)
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] = min(max(minVal, vector[i]), maxVal);
-    }
-    return *this;    
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] = min(max(minVal, vector[i]), maxVal);
+        }
+    return *this;
 }
 
 template <int N, class T>
-__device__ __host__ 
+__device__ __host__
 inline bool Vector<N, T>::HasNaN() const
 {
     bool hasNan = false;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        hasNan |= ((vector[i] != vector[i]) ||
-                   (vector[i] == INFINITY) ||
-                   (vector[i] == -INFINITY));
-    }
+        for(int i = 0; i < N; i++)
+        {
+            hasNan |= ((vector[i] != vector[i]) ||
+                       (vector[i] == INFINITY) ||
+                       (vector[i] == -INFINITY));
+        }
     return hasNan;
 }
 
@@ -552,10 +552,10 @@ inline SignedEnable<Q, Vector<N, T>> Vector<N, T>::Abs() const
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = abs(vector[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = abs(vector[i]);
+        }
     return v;
 }
 
@@ -565,10 +565,10 @@ __device__ __host__
 inline SignedEnable<Q, Vector<N, T>&> Vector<N, T>::AbsSelf()
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] = abs(vector[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] = abs(vector[i]);
+        }
     return *this;
 }
 
@@ -579,10 +579,10 @@ inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Round() const
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = round(vector[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = round(vector[i]);
+        }
     return v;
 }
 
@@ -592,10 +592,10 @@ __device__ __host__
 inline FloatEnable<Q, Vector<N, T>&> Vector<N, T>::RoundSelf()
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] = round(vector[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] = round(vector[i]);
+        }
     return *this;
 }
 
@@ -606,10 +606,10 @@ inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Floor() const
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = floor(vector[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = floor(vector[i]);
+        }
     return v;
 }
 
@@ -619,10 +619,10 @@ __device__ __host__
 inline FloatEnable<Q, Vector<N, T>&> Vector<N, T>::FloorSelf()
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] = floor(vector[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] = floor(vector[i]);
+        }
     return *this;
 }
 
@@ -633,10 +633,10 @@ inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Ceil() const
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = ceil(vector[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = ceil(vector[i]);
+        }
     return v;
 }
 
@@ -646,10 +646,10 @@ __device__ __host__
 inline FloatEnable<Q, Vector<N, T>&> Vector<N, T>::CeilSelf()
 {
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        vector[i] = ceil(vector[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            vector[i] = ceil(vector[i]);
+        }
     return *this;
 }
 
@@ -659,10 +659,10 @@ inline Vector<N, T> Vector<N, T>::Min(const Vector& v0, const Vector& v1)
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = min(v0[i], v1[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = min(v0[i], v1[i]);
+        }
     return v;
 }
 
@@ -672,10 +672,10 @@ inline Vector<N, T> Vector<N, T>::Min(const Vector& v0, T v1)
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = min(v0[i], v1);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = min(v0[i], v1);
+        }
     return v;
 }
 
@@ -685,10 +685,10 @@ inline Vector<N, T> Vector<N, T>::Max(const Vector& v0, const Vector& v1)
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = max(v0[i], v1[i]);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = max(v0[i], v1[i]);
+        }
     return v;
 }
 
@@ -698,10 +698,10 @@ inline Vector<N, T> Vector<N, T>::Max(const Vector& v0, T v1)
 {
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = max(v0[i], v1);
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = max(v0[i], v1);
+        }
     return v;
 }
 
@@ -713,10 +713,10 @@ inline FloatEnable<Q, Vector<N, T>> Vector<N, T>::Lerp(const Vector& v0, const V
     assert(t >= 0 && t <= 1);
     Vector v;
     UNROLL_LOOP
-    for(int i = 0; i < N; i++)
-    {
-        v[i] = (1 - t) * v0[i] + t * v1[i];
-    }
+        for(int i = 0; i < N; i++)
+        {
+            v[i] = (1 - t) * v0[i] + t * v1[i];
+        }
     return v;
 }
 

@@ -54,34 +54,34 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
     static_assert(N == 2 || N == 3 || N == 4, "Vector size should be 2, 3 or 4");
 
     private:
-        T                                   vector[N];
+    T                                   vector[N];
 
     protected:
     public:
         // Constructors & Destructor
-        constexpr                               Vector() = default;
-        template<class C, typename = ArithmeticEnable<C>>
-        __device__ __host__ explicit            Vector(C);
-        template<class C, typename = ArithmeticEnable<C>>
-        __device__ __host__ explicit            Vector(const C* data);
-        template <class... Args, typename = AllArithmeticEnable<Args...>>
-        constexpr __device__ __host__ explicit  Vector(const Args... dataList);
-        template <class... Args, typename = std::enable_if_t<((N - sizeof...(Args)) > 1)>>
+    constexpr                               Vector() = default;
+    template<class C, typename = ArithmeticEnable<C>>
+    __device__ __host__ explicit            Vector(C);
+    template<class C, typename = ArithmeticEnable<C>>
+    __device__ __host__ explicit            Vector(const C* data);
+    template <class... Args, typename = AllArithmeticEnable<Args...>>
+    constexpr __device__ __host__ explicit  Vector(const Args... dataList);
+    template <class... Args, typename = std::enable_if_t<((N - sizeof...(Args)) > 1)>>
         __device__ __host__                     Vector(const Vector<N - sizeof...(Args), T>&,
                                                        const Args... dataList);
         template <int M, typename = std::enable_if_t<(M >= N)>>
         __device__ __host__                     Vector(const Vector<M, T>&);
-                                                ~Vector() = default;
+        ~Vector() = default;
 
-        // MVC bug? these trigger std::trivially_copyable static assert
-        // __device__ __host__              Vector(const Vector&) = default;
-        // __device__ __host__ Vector&      operator=(const Vector&) = default;
+// MVC bug? these trigger std::trivially_copyable static assert
+// __device__ __host__              Vector(const Vector&) = default;
+// __device__ __host__ Vector&      operator=(const Vector&) = default;
 
-        // Accessors
-        __device__ __host__ explicit            operator T*();
-        __device__ __host__ explicit            operator const T*() const;
-        __device__ __host__ T&                  operator[](int);
-        __device__ __host__ constexpr const T&  operator[](int) const;
+// Accessors
+        __device__ __host__ explicit            operator T* ();
+        __device__ __host__ explicit            operator const T* () const;
+        __device__ __host__ T& operator[](int);
+        __device__ __host__ constexpr const T& operator[](int) const;
 
         // Type cast
         template<int M, class C, typename = std::enable_if_t<(M <= N)>>
@@ -135,8 +135,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
         __device__ __host__ FloatEnable<Q, Vector&>     NormalizeSelf();
         __device__ __host__ Vector                      Clamp(const Vector&, const Vector&) const;
         __device__ __host__ Vector                      Clamp(T min, T max) const;
-        __device__ __host__ Vector&                     ClampSelf(const Vector&, const Vector&);
-        __device__ __host__ Vector&                     ClampSelf(T min, T max);
+        __device__ __host__ Vector& ClampSelf(const Vector&, const Vector&);
+        __device__ __host__ Vector& ClampSelf(T min, T max);
         __device__ __host__ bool                        HasNaN() const;
 
         template<class Q = T>
@@ -169,7 +169,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 
 // Left scalars
 template<int N, class T>
-static __device__ __host__ Vector<N,T> operator*(T, const Vector<N, T>&);
+static __device__ __host__ Vector<N, T> operator*(T, const Vector<N, T>&);
 
 // Typeless vectors are defaulted to float
 using Vector2 = Vector<2, float>;

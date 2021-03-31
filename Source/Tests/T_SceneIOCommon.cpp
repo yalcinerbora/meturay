@@ -111,7 +111,6 @@ TEST(SceneIOCommon, Surface)
             EXPECT_EQ(static_cast<SceneError>(e), SceneError::PRIM_MATERIAL_NOT_SAME_SIZE);
             throw;
         }
-                
     }, SceneException);
 
     EXPECT_THROW({

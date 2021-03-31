@@ -2,6 +2,7 @@
 #include "ParallelScan.cuh"
 #include "ParallelReduction.cuh"
 #include "ParallelTransform.cuh"
+#include "CudaConstants.hpp"
 
 #include "RayLib/Types.h"
 #include "RayLib/MemoryAlignment.h"
@@ -59,12 +60,12 @@ CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<std
     // Construct CDFs and Memcpy
     std::vector<float> cdfValues;
     for(size_t i = 0; i < alignedSizes.size(); i++)
-    {        
-        CUDA_CHECK(cudaMemcpy(const_cast<float*>(dPDFs[i]), 
+    {
+        CUDA_CHECK(cudaMemcpy(const_cast<float*>(dPDFs[i]),
                               functions[i].data(),
                               counts[i] * sizeof(float),
                               cudaMemcpyHostToDevice));
-        
+
         // Normalize PDF
         TransformArrayGPU(dPDFs[i], counts[i],
                           HostMultiplyFunctor<float>(1.0f / static_cast<float>(counts[i])));
@@ -95,6 +96,11 @@ CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<std
 const GPUDistPiecewiseConst1D& CPUDistGroupPiecewiseConst1D::DistributionGPU(uint32_t index) const
 {
     return gpuDistributions[index];
+}
+
+const CPUDistGroupPiecewiseConst1D::GPUDistList& CPUDistGroupPiecewiseConst1D::DistributionGPU() const
+{
+    return gpuDistributions;
 }
 
 CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std::vector<float>>& functionValues,
@@ -147,7 +153,6 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
         hXDists.resize(dimension[1]);
         for(uint32_t y = 0; y < dimension[1]; y++)
         {
-            
             distData.dXPDFs.push_back(reinterpret_cast<const float*>(dPtr + offset));
             offset += sizes[0];
             distData.dXCDFs.push_back(reinterpret_cast<const float*>(dPtr + offset));
@@ -167,7 +172,7 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
                                                  dimension[1]);
 
         // Memcpy Constructed 1D Distributions
-        CUDA_CHECK(cudaMemcpy(const_cast<GPUDistPiecewiseConst1D*>(distData.dXDists), 
+        CUDA_CHECK(cudaMemcpy(const_cast<GPUDistPiecewiseConst1D*>(distData.dXDists),
                               hXDists.data(), dimension[1] * sizeof(GPUDistPiecewiseConst1D),
                               cudaMemcpyHostToDevice));
 
@@ -186,11 +191,11 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
         {
             const float* rowFunctionValues = functionValues[i].data() + (y * dim[1]);
             float& rowFunction = const_cast<float&>(distData.dYPDF[y]);
-           
+
             float* dRowPDF = const_cast<float*>(distData.dXPDFs[i]);
             float* dRowCDF = const_cast<float*>(distData.dXPDFs[i]);
 
-            CUDA_CHECK(cudaMemcpy(dRowPDF, rowFunctionValues, 
+            CUDA_CHECK(cudaMemcpy(dRowPDF, rowFunctionValues,
                                   dim[0] * sizeof(float),
                                   cudaMemcpyHostToDevice));
 
@@ -200,14 +205,14 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
 
             // Utilize GPU to do Scan Algorithm to find CDF
             ExclusiveScanArrayGPU<float, ReduceAdd<float>>(dRowCDF, dRowPDF,
-                                                           dim[i] + 1, 
+                                                           dim[i] + 1u,
                                                            0.0f);
 
             // Use last element to normalize Function values to PDF
             DeviceDivideFunctor<float> normlizeFunctor(dRowCDF[dim[0]]);
             TransformArrayGPU(dRowPDF, dim[0], normlizeFunctor);
             // Normalize CDF Also
-            TransformArrayGPU(dRowCDF, dim[0] + 1, normlizeFunctor);   
+            TransformArrayGPU(dRowCDF, dim[0] + 1, normlizeFunctor);
 
             // Reduce PDFs for Y dim
             ReduceArrayGPU<float, ReduceAdd<float>>(rowFunction, dRowPDF, dim[0], 0.0f);
@@ -226,12 +231,12 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
         TransformArrayGPU(dYPDF, dim[1], normlizeFunctor);
         // Normalize CDF Also
         TransformArrayGPU(dYCDF, dim[1] + 1, normlizeFunctor);
-        
+
         // Construct 2D Dist
         GPUDistPiecewiseConst2D dist(distData.yDist, distData.dXDists,
                                      dimensions[i][0], dimensions[i][1]);
         gpuDistributions.push_back(dist);
-    }   
+    }
     // All Done!
 }
 
@@ -240,3 +245,7 @@ const GPUDistPiecewiseConst2D& CPUDistGroupPiecewiseConst2D::DistributionGPU(uin
     return gpuDistributions[index];
 }
 
+const CPUDistGroupPiecewiseConst2D::GPUDistList& CPUDistGroupPiecewiseConst2D::DistributionGPU() const
+{
+    return gpuDistributions;
+}

@@ -22,8 +22,8 @@ class AssimpMetaSurfaceLoader : public SurfaceLoader
 
     protected:
     public:
-        // Constructors & Destructor    
-                                    AssimpMetaSurfaceLoader(Assimp::Importer&,                                                         
+        // Constructors & Destructor
+                                    AssimpMetaSurfaceLoader(Assimp::Importer&,
                                                             const std::string& scenePath,
                                                             const std::string& fileExt,
                                                             const SceneNodeI& node, double time = 0.0);
@@ -37,7 +37,7 @@ class AssimpMetaSurfaceLoader : public SurfaceLoader
         SceneError                  AABB(std::vector<AABB3>&) const override;
         SceneError                  PrimitiveRanges(std::vector<Vector2ul>&) const override;
         SceneError                  PrimitiveCounts(std::vector<size_t>&) const override;
-        SceneError                  PrimitiveDataRanges(std::vector<Vector2ul>&) const override;        
+        SceneError                  PrimitiveDataRanges(std::vector<Vector2ul>&) const override;
         // Entire Data Fetch
         SceneError                  GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const override;
         SceneError                  HasPrimitiveData(bool&, PrimitiveDataType) const override;

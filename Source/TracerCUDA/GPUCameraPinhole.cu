@@ -68,7 +68,7 @@ SceneError CPUCameraGroupPinhole::InitializeGroup(const CameraGroupData& cameraN
         data.position = positions[0];
         data.up = ups[0];
         data.gaze = gazes[0];
-        data.nearFar = nearFar[0];        
+        data.nearFar = nearFar[0];
         data.fov = fovs[0] * MathConstants::DegToRadCoef;
 
         // Load to host memory

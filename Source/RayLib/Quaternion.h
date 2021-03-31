@@ -19,57 +19,56 @@ template<class T>
 class Quaternion<T>
 {
     private:
-            Vector<4, T>                        vec;
+    Vector<4, T>                        vec;
 
     protected:
 
     public:
         // Constructors & Destructor
-        constexpr                               Quaternion() = default;
-        constexpr __device__ __host__           Quaternion(T w, T x, T y, T z);
-        constexpr __device__ __host__           Quaternion(const T*);
-        __device__ __host__                     Quaternion(T angle, const Vector<3, T>& axis);
-        __device__ __host__                     Quaternion(const Vector<4, T>& vec);
-                                                Quaternion(const Quaternion&) = default;
-                                                ~Quaternion() = default;
-        Quaternion&                             operator=(const Quaternion&) = default;
+    constexpr                               Quaternion() = default;
+    constexpr __device__ __host__           Quaternion(T w, T x, T y, T z);
+    constexpr __device__ __host__           Quaternion(const T*);
+    __device__ __host__                     Quaternion(T angle, const Vector<3, T>& axis);
+    __device__ __host__                     Quaternion(const Vector<4, T>& vec);
+    Quaternion(const Quaternion&) = default;
+    ~Quaternion() = default;
+    Quaternion& operator=(const Quaternion&) = default;
 
-        //
-        __device__ __host__ explicit            operator Vector<4, T>&();
-        __device__ __host__ explicit            operator const Vector<4, T>&() const;
-        __device__ __host__ explicit            operator T*();
-        __device__ __host__ explicit            operator const T*() const;
-        __device__ __host__ T&                  operator[](int);
-        __device__ __host__ const T&            operator[](int) const;
+    //
+    __device__ __host__ explicit            operator Vector<4, T>& ();
+    __device__ __host__ explicit            operator const Vector<4, T>& () const;
+    __device__ __host__ explicit            operator T* ();
+    __device__ __host__ explicit            operator const T* () const;
+    __device__ __host__ T& operator[](int);
+    __device__ __host__ const T& operator[](int) const;
 
-        // Operators
-        __device__ __host__ Quaternion          operator*(const Quaternion&) const;
-        __device__ __host__ Quaternion          operator*(T) const;
-        __device__ __host__ Quaternion          operator+(const Quaternion&) const;
-        __device__ __host__ Quaternion          operator-(const Quaternion&) const;
-        __device__ __host__ Quaternion          operator-() const;
-        __device__ __host__ Quaternion          operator/(T) const;
+    // Operators
+    __device__ __host__ Quaternion          operator*(const Quaternion&) const;
+    __device__ __host__ Quaternion          operator*(T) const;
+    __device__ __host__ Quaternion          operator+(const Quaternion&) const;
+    __device__ __host__ Quaternion          operator-(const Quaternion&) const;
+    __device__ __host__ Quaternion          operator-() const;
+    __device__ __host__ Quaternion          operator/(T) const;
 
-        __device__ __host__ void                operator*=(const Quaternion&);
-        __device__ __host__ void                operator*=(T);
-        __device__ __host__ void                operator+=(const Quaternion&);
-        __device__ __host__ void                operator-=(const Quaternion&);
-        __device__ __host__ void                operator/=(T);
+    __device__ __host__ void                operator*=(const Quaternion&);
+    __device__ __host__ void                operator*=(T);
+    __device__ __host__ void                operator+=(const Quaternion&);
+    __device__ __host__ void                operator-=(const Quaternion&);
+    __device__ __host__ void                operator/=(T);
 
-        // Logic
-        __device__ __host__ bool                operator==(const Quaternion&) const;
-        __device__ __host__ bool                operator!=(const Quaternion&) const;
+    // Logic
+    __device__ __host__ bool                operator==(const Quaternion&) const;
+    __device__ __host__ bool                operator!=(const Quaternion&) const;
 
-        // Utility
-        __device__ __host__ Quaternion          Normalize() const;
-        __device__ __host__ Quaternion&         NormalizeSelf();
-        __device__ __host__ T                   Length() const;
-        __device__ __host__ T                   LengthSqr() const;
-        __device__ __host__ Quaternion          Conjugate() const;
-        __device__ __host__ Quaternion&         ConjugateSelf();
-        __device__ __host__ T                   Dot(const Quaternion&) const;
-        __device__ __host__ Vector<3,T>         ApplyRotation(const Vector<3, T>&) const;
-
+    // Utility
+    __device__ __host__ Quaternion          Normalize() const;
+    __device__ __host__ Quaternion& NormalizeSelf();
+    __device__ __host__ T                   Length() const;
+    __device__ __host__ T                   LengthSqr() const;
+    __device__ __host__ Quaternion          Conjugate() const;
+    __device__ __host__ Quaternion& ConjugateSelf();
+    __device__ __host__ T                   Dot(const Quaternion&) const;
+    __device__ __host__ Vector<3, T>         ApplyRotation(const Vector<3, T>&) const;
 };
 
 // Quaternion Alias
@@ -85,7 +84,6 @@ static_assert(sizeof(QuatF) == sizeof(float) * 4, "IEQuaternion size is not 16 b
 template<class T>
 static __device__ __host__ Quaternion<T> operator*(T, const Quaternion<T>&);
 
-
 // Static Utility
 namespace Quat
 {
@@ -94,8 +92,8 @@ namespace Quat
     template <class T>
     static __device__ __host__ Quaternion<T> SLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t);
     template <class T>
-    static __device__ __host__ Quaternion<T> BarySLerp(const Quaternion<T>& q0, 
-                                                       const Quaternion<T>& q1, 
+    static __device__ __host__ Quaternion<T> BarySLerp(const Quaternion<T>& q0,
+                                                       const Quaternion<T>& q1,
                                                        const Quaternion<T>& q2,
                                                        T a, T b);
     template <class T>

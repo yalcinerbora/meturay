@@ -17,9 +17,9 @@ class GPUTransformIdentity : public GPUTransformI
 
 		__device__
 		RayF			WorldToLocal(const RayF&,
-									 const uint32_t* indices = nullptr, 
+									 const uint32_t* indices = nullptr,
 									 const float* weights = nullptr,
-									 uint32_t count = 0) const override;									 
+									 uint32_t count = 0) const override;
 		__device__
 		Vector3			WorldToLocal(const Vector3&, bool isDirection = false,
 									 const uint32_t* indices = nullptr,
@@ -44,11 +44,11 @@ class GPUTransformIdentity : public GPUTransformI
 
 class CPUTransformIdentity : public CPUTransformGroupI
 {
-	public:	
+	public:
 		static const char*			TypeName() { return NodeNames::TRANSFORM_IDENTITY; }
     private:
-		DeviceMemory				memory;		
-		const GPUTransformIdentity*	dGPUTransforms;		
+		DeviceMemory				memory;
+		const GPUTransformIdentity*	dGPUTransforms;
 		GPUTransformList			gpuTransformList;
 
     protected:

@@ -91,7 +91,7 @@ inline void AcquireIdentityTransform(const GPUTransformI*& transform,
     DeviceMemory tempMem(sizeof(GPUTransformI*));
     // Generate World Space AABB from Local AABB
     gpu.KC_X(0, 0, 1,
-             static_cast<void (*)(const GPUTransformI**, const GPUTransformI**, 
+             static_cast<void (*)(const GPUTransformI**, const GPUTransformI**,
                                   uint32_t)>
              (KCAcquireTransform),
              static_cast<const GPUTransformI**>(tempMem),

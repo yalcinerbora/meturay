@@ -3,7 +3,6 @@
 
 Tracer Data Structure Type trait
 
-
 */
 
 #include <type_traits>
@@ -57,7 +56,7 @@ struct IsTracerClass
     static_assert(is_class_v, "A Tracer class must be a class. (duh)");
     static_assert(not_abstract_v, "A Tracer class must not be a abstract class. (duh)");
 
-    static constexpr bool value = has_type_name_v && 
+    static constexpr bool value = has_type_name_v &&
                                   is_class_v &&
                                   not_abstract_v;
 };
@@ -81,7 +80,7 @@ struct IsAcceleratorGroupClass
                   "\"AcceleratorGroup(const GPUPrimitiveGroupI&)\" constructor");
 
     static constexpr bool value = IsTracerClass<T>::value &&
-                                  has_proper_constructor_v;   
+                                  has_proper_constructor_v;
 };
 
 template <class T>
@@ -92,5 +91,5 @@ struct IsLightGroupClass
                   "\"LightGroup(const GPUPrimitiveGroupI*)\" constructor");
 
     static constexpr bool value = IsTracerClass<T>::value &&
-                                  has_proper_constructor_v;                                  
+                                  has_proper_constructor_v;
 };

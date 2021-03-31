@@ -53,9 +53,6 @@ void VisorGUI::Render(GLuint sdrTex, const Vector2i& resolution)
 
     //ImGui::End();
 
-    
-
-
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

@@ -25,7 +25,7 @@ class GPUSceneI
         virtual HitKey          BaseBoundaryMaterial() const = 0;
         virtual uint32_t        HitStructUnionSize() const = 0;
         virtual double          MaxSceneTime() const = 0;
-        // Access CPU                
+        // Access CPU
         virtual const NamedList<CPULightGPtr>&      Lights() const = 0;
         virtual const NamedList<CPUCameraGPtr>&     Cameras() const = 0;
         virtual const NamedList<CPUTransformGPtr>&  Transforms() const = 0;

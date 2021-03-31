@@ -71,7 +71,7 @@ static void KCConstructLinear(// O
 
     // SceneConstants
     uint32_t RangeLocation[SceneConstants::MaxPrimitivePerSurface];
-    
+
     auto FindIndex = [&](uint32_t globalId) -> int
     {
         static constexpr int LastLocation = SceneConstants::MaxPrimitivePerSurface - 1;
@@ -80,7 +80,7 @@ static void KCConstructLinear(// O
         {
             //
             if(globalId >= RangeLocation[i] &&
-               globalId < RangeLocation[i + 1]) 
+               globalId < RangeLocation[i + 1])
                 return i;
         }
         return LastLocation;
@@ -92,7 +92,7 @@ static void KCConstructLinear(// O
     for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
     {
         RangeLocation[i] = totalPrimCount;
-        uint32_t primCount = static_cast<uint32_t>(prList.primRanges[i][1] - 
+        uint32_t primCount = static_cast<uint32_t>(prList.primRanges[i][1] -
                                                    prList.primRanges[i][0]);
         totalPrimCount += primCount;
     }
@@ -153,7 +153,7 @@ static void KCIntersectLinear(// O
 
         // Load Ray to Register
         RayReg ray(gRays, id);
-        
+
         // Key is the index of the inner Linear Array
         const Vector2ul accRange = gAccRanges[accId];
         const LeafData* gLeaf = gLeafList + accRange[0];
@@ -180,12 +180,12 @@ static void KCIntersectLinear(// O
             // Get Leaf Data and
             // Do acceptance check
             const LeafData leaf = gLeaf[i];
-            //printf("my accId 0x%X, matId %x, range{%llu, %llu}, \n", 
+            //printf("my accId 0x%X, matId %x, range{%llu, %llu}, \n",
             //       gAccelKeys[globalId],
             //       leaf.matId.value,
             //       accRange[0], accRange[1]);
 
-            HitResult result = PGroup::Hit(// Output                                            
+            HitResult result = PGroup::Hit(// Output
                                            materialKey,
                                            primitiveId,
                                            hit,
@@ -211,9 +211,8 @@ static void KCIntersectLinear(// O
     }
 }
 
-
 __global__ CUDA_LAUNCH_BOUNDS_1D
-static void KCIntersectBaseLinear(// Output                                  
+static void KCIntersectBaseLinear(// Output
                                   HitKey* gHitKeys,
                                   // I-O
                                   uint32_t* gPrevLoc,
@@ -227,11 +226,11 @@ static void KCIntersectBaseLinear(// Output
 {
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-        globalId < rayCount; 
+        globalId < rayCount;
         globalId += blockDim.x * gridDim.x)
     {
         const uint32_t id = gRayIds[globalId];
-        
+
         // Load Ray to Register
         RayReg rayData(gRays, id);
         Vector2f tMinMax(rayData.tMin, rayData.tMax);
@@ -240,7 +239,7 @@ static void KCIntersectBaseLinear(// Output
         // Load initial traverse location
         uint32_t primStart = gPrevLoc[id];
         primStart = rayData.IsInvalidRay() ? leafCount : primStart;
-        // Check next potential hit     
+        // Check next potential hit
         HitKey nextAccKey = HitKey::InvalidKey;
         for(; primStart < leafCount; primStart++)
         {
@@ -256,12 +255,11 @@ static void KCIntersectBaseLinear(// Output
 
         // Write next potential hit
         if(primStart < leafCount)
-        {            
+        {
             // Set AcceleratorId and TransformId for lower accelerator
             gHitKeys[globalId] = nextAccKey;
             // Save State for next iteration
             gPrevLoc[id] = primStart + 1;
-            
         }
         // If we are out of bounds write invalid key
         else gHitKeys[globalId] = HitKey::InvalidKey;

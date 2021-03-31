@@ -19,41 +19,41 @@ template<int N, class T>
 class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
 {
     public:
-        static constexpr int                        AABBVertexCount = 8;
+    static constexpr int                        AABBVertexCount = 8;
     private:
-        Vector<N, T> min;
-        Vector<N, T> max;
+    Vector<N, T> min;
+    Vector<N, T> max;
 
     protected:
     public:
         // Constructors & Destructor
-        constexpr                                   AABB() = default;
-        constexpr __device__ __host__               AABB(const Vector<N, T>& min,
-                                                         const Vector<N, T>& max);
-        __device__ __host__                         AABB(const T* dataMin,
-                                                         const T* dataMax);
+    constexpr                                   AABB() = default;
+    constexpr __device__ __host__               AABB(const Vector<N, T>& min,
+                                                     const Vector<N, T>& max);
+    __device__ __host__                         AABB(const T* dataMin,
+                                                     const T* dataMax);
 
-        template <class... Args0, class... Args1,
-                  typename = AllArithmeticEnable<Args1...>,
-                  typename = AllArithmeticEnable<Args0...>>
+    template <class... Args0, class... Args1,
+        typename = AllArithmeticEnable<Args1...>,
+        typename = AllArithmeticEnable<Args0...>>
         constexpr __device__ __host__               AABB(const Args0... dataList0,
                                                          const Args1... dataList1);
-                                                    ~AABB() = default;
+    ~AABB() = default;
 
-        // Accessors
-        __device__ __host__ const Vector<N, T>&     Min() const;
-        __device__ __host__ const Vector<N, T>&     Max() const;
-        __device__ __host__ Vector<N, T>            Min();
-        __device__ __host__ Vector<N, T>            Max();
+// Accessors
+    __device__ __host__ const Vector<N, T>& Min() const;
+    __device__ __host__ const Vector<N, T>& Max() const;
+    __device__ __host__ Vector<N, T>            Min();
+    __device__ __host__ Vector<N, T>            Max();
 
-        // Mutators
-        __device__ __host__ void                    SetMin(const Vector<N, T>&);
-        __device__ __host__ void                    SetMax(const Vector<N, T>&);
+    // Mutators
+    __device__ __host__ void                    SetMin(const Vector<N, T>&);
+    __device__ __host__ void                    SetMax(const Vector<N, T>&);
 
-        // Functionality
-        __device__ __host__ Vector<N, T>            Centroid() const;
-        __device__ __host__ AABB                    Union(const AABB&) const;
-        __device__ __host__ AABB&                   UnionSelf(const AABB&);
+    // Functionality
+    __device__ __host__ Vector<N, T>            Centroid() const;
+    __device__ __host__ AABB                    Union(const AABB&) const;
+    __device__ __host__ AABB& UnionSelf(const AABB&);
 };
 
 // Typeless aabbs are defaulted to float
@@ -129,7 +129,6 @@ static constexpr AABB4 NegativeAABB4 = NegativeAABB4f;
 static constexpr AABB2 ZeroAABB2 = ZeroAABB2f;
 static constexpr AABB3 ZeroAABB3 = ZeroAABB3f;
 static constexpr AABB4 ZeroAABB4 = ZeroAABB4f;
-
 
 // AABB Extern
 extern template class AABB<2, float>;

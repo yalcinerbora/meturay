@@ -28,7 +28,6 @@ class ImageIO
                                             Vector2ui& size,
                                             const std::string& fileName) const;
 
-
         // Write
         bool                        WriteAsPNG(const Vector4f* image,
                                                const Vector2ui& size,

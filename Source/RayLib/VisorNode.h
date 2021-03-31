@@ -17,5 +17,4 @@ class VisorNodeI
     : public VisorCallbacksI
     , public DistributorI
 {
-
 };

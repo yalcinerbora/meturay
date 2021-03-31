@@ -1,4 +1,3 @@
-
 template<class T>
 bool MPMCQueue<T>::Empty()
 {
@@ -50,7 +49,7 @@ bool MPMCQueue<T>::TryDequeue(T& item)
     {
         std::unique_lock<std::mutex> lock(mutex);
         if(Empty() || terminate) return false;
-        
+
         Increment(dequeueLoc);
         item = std::move(data[dequeueLoc]);
     }
@@ -60,7 +59,7 @@ bool MPMCQueue<T>::TryDequeue(T& item)
 
 template<class T>
 void MPMCQueue<T>::Enqueue(T&& item)
-{   
+{
     {
         std::unique_lock<std::mutex> lock(mutex);
         enqueWake.wait(lock, [&]()

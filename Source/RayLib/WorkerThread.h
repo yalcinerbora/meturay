@@ -6,7 +6,6 @@ Worker Implementation
 Basic worker implementation. Single thread and
 a job queue that assigns any function to the worker.
 
-
 */
 #include <queue>
 #include <mutex>

@@ -12,7 +12,6 @@ Many Constants that are used throught the tracer
 #include "TracerStructs.h"
 #include "VisorInputStructs.h"
 
-
 namespace ProgramConstants
 {
     static constexpr std::array<std::array<const char* const, 3>, 1> ContributorList =
@@ -36,9 +35,6 @@ namespace ProgramConstants
                                        + ContributorCompaq + " and offered with " + LicenseName
                                        + " License. Please check *_LICENSE files for used third-party "
                                        + "licenses");
-
-
-
 }
 
 namespace VisorConstants

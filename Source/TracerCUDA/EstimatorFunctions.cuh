@@ -25,7 +25,7 @@ inline bool DoNextEventEstimation(HitKey& key,
     float r1 = GPUDistribution::Uniform<float>(rng);
     r1 *= static_cast<float>(lightCount);
     uint32_t index = static_cast<uint32_t>(r1);
-    
+
     // Extremely rarely index becomes the ligjt count
     // although GPUDistribution::Uniform should return [0, 1)
     // it still happens due to fp error i guess?
@@ -45,8 +45,8 @@ inline bool DoNextEventEstimation(HitKey& key,
     // Return infinite (or very large distance) for
     // primitive lights since those have to hit in order to function properly
     // with the light materials
-    lDistance = (light->PrimitiveIndex() != INVALID_PRIMITIVE_ID) 
-                    ? FLT_MAX 
+    lDistance = (light->PrimitiveIndex() != INVALID_PRIMITIVE_ID)
+                    ? FLT_MAX
                     : (lDistance + MathConstants::Epsilon);
     return true;
 }

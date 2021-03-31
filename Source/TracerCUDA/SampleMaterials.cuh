@@ -8,9 +8,9 @@
 #include "DeviceMemory.h"
 
 // Light Material that constantly emits all directions
-class EmissiveMat final 
+class EmissiveMat final
     : public GPUMaterialGroup<EmissiveMatData, EmptySurface,
-                              SampleEmpty<EmissiveMatData, EmptySurface>, 
+                              SampleEmpty<EmissiveMatData, EmptySurface>,
                               EvaluateEmpty<EmissiveMatData, EmptySurface>,
                               EmitConstant,
                               IsEmissiveTrue<EmissiveMatData>>
@@ -24,9 +24,9 @@ class EmissiveMat final
     protected:
     public:
         // Constructors & Destructor
-                                EmissiveMat(const CudaGPU& gpu) 
+                                EmissiveMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<EmissiveMatData, EmptySurface,
-                                                       SampleEmpty<EmissiveMatData, EmptySurface>, 
+                                                       SampleEmpty<EmissiveMatData, EmptySurface>,
                                                        EvaluateEmpty<EmissiveMatData, EmptySurface>,
                                                        EmitConstant,
                                                        IsEmissiveTrue<EmissiveMatData>>(gpu) {}
@@ -36,7 +36,7 @@ class EmissiveMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+        SceneError              InitializeGroup(const NodeListing& materialNodes,
                                                 const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
@@ -61,7 +61,7 @@ class EmissiveMat final
 };
 
 // Constant Lambert Material
-class LambertMat final 
+class LambertMat final
     : public GPUMaterialGroup<AlbedoMatData, BasicSurface,
                               LambertSample, LambertEvaluate,
                               EmitEmpty<AlbedoMatData, BasicSurface>,
@@ -76,7 +76,7 @@ class LambertMat final
     protected:
     public:
         // Constructors & Destructor
-                                LambertMat(const CudaGPU& gpu) 
+                                LambertMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<AlbedoMatData, BasicSurface,
                                                        LambertSample, LambertEvaluate,
                                                        EmitEmpty<AlbedoMatData, BasicSurface>,
@@ -112,7 +112,7 @@ class LambertMat final
 };
 
 // Delta distribution reflect material
-class ReflectMat final 
+class ReflectMat final
     : public GPUMaterialGroup<ReflectMatData, BasicSurface,
                               ReflectSample, ReflectEvaluate,
                               EmitEmpty<ReflectMatData, BasicSurface>,
@@ -127,7 +127,7 @@ class ReflectMat final
     protected:
     public:
         // Constructors & Destructor
-                                ReflectMat(const CudaGPU& gpu) 
+                                ReflectMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<ReflectMatData, BasicSurface,
                                                        ReflectSample, ReflectEvaluate,
                                                        EmitEmpty<ReflectMatData, BasicSurface>,
@@ -138,7 +138,7 @@ class ReflectMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+        SceneError              InitializeGroup(const NodeListing& materialNodes,
                                                 const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
@@ -164,7 +164,7 @@ class ReflectMat final
 };
 
 // Delta distribution refract material
-class RefractMat final 
+class RefractMat final
     : public GPUMaterialGroup<RefractMatData, BasicSurface,
                               RefractSample, RefractEvaluate,
                               EmitEmpty<RefractMatData, BasicSurface>,
@@ -179,7 +179,7 @@ class RefractMat final
     protected:
     public:
         // Constructors & Destructor
-                                RefractMat(const CudaGPU& gpu) 
+                                RefractMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<RefractMatData, BasicSurface,
                                                        RefractSample, RefractEvaluate,
                                                        EmitEmpty<RefractMatData, BasicSurface>,
@@ -190,7 +190,7 @@ class RefractMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+        SceneError              InitializeGroup(const NodeListing& materialNodes,
                                                 const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;

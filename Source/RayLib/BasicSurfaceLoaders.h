@@ -20,13 +20,13 @@ class InNodeTriLoader : public SurfaceLoader
 
         // Type Determination
          const char*             SufaceDataFileExt() const override;
-        
+
         // Per Batch Fetch
-         SceneError              AABB(std::vector<AABB3>&) const override;        
+         SceneError              AABB(std::vector<AABB3>&) const override;
          SceneError              PrimitiveRanges(std::vector<Vector2ul>&) const override;
          SceneError              PrimitiveCounts(std::vector<size_t>&) const override;
          SceneError              PrimitiveDataRanges(std::vector<Vector2ul>&) const override;
-        
+
         // Entire Data Fetch
          SceneError              GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const override;
          SceneError              HasPrimitiveData(bool&, PrimitiveDataType) const override;
@@ -49,13 +49,13 @@ class InNodeTriLoaderIndexed : public SurfaceLoader
 
         // Type Determination
          const char*             SufaceDataFileExt() const override;
-        
+
         // Per Batch Fetch
-         SceneError              AABB(std::vector<AABB3>&) const override;        
+         SceneError              AABB(std::vector<AABB3>&) const override;
          SceneError              PrimitiveRanges(std::vector<Vector2ul>&) const override;
          SceneError              PrimitiveCounts(std::vector<size_t>&) const override;
          SceneError              PrimitiveDataRanges(std::vector<Vector2ul>&) const override;
-        
+
         // Entire Data Fetch
          SceneError              GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const override;
          SceneError              HasPrimitiveData(bool&, PrimitiveDataType) const override;
@@ -78,13 +78,13 @@ class InNodeSphrLoader : public SurfaceLoader
 
         // Type Determination
          const char*             SufaceDataFileExt() const override;
-        
+
         // Per Batch Fetch
-         SceneError              AABB(std::vector<AABB3>&) const override;        
+         SceneError              AABB(std::vector<AABB3>&) const override;
          SceneError              PrimitiveRanges(std::vector<Vector2ul>&) const override;
          SceneError              PrimitiveCounts(std::vector<size_t>&) const override;
          SceneError              PrimitiveDataRanges(std::vector<Vector2ul>&) const override;
-        
+
         // Entire Data Fetch
          SceneError              GetPrimitiveData(Byte*, PrimitiveDataType primitiveDataType) const override;
          SceneError              HasPrimitiveData(bool&, PrimitiveDataType) const override;

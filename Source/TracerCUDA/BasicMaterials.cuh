@@ -6,10 +6,9 @@
 #include "DeviceMemory.h"
 #include "BasicMaterialsKC.cuh"
 
-
 // Unrealistic mat that directly returns an albedo regardless of wi.
 // also generates invalid ray when sampled
-class ConstantMat final 
+class ConstantMat final
     : public GPUMaterialGroup<AlbedoMatData, EmptySurface,
                               ConstantSample, ConstantEvaluate,
                               EmitEmpty<AlbedoMatData, EmptySurface>,
@@ -24,7 +23,7 @@ class ConstantMat final
     protected:
     public:
         // Constructors & Destructor
-                                ConstantMat(const CudaGPU& gpu) 
+                                ConstantMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<AlbedoMatData, EmptySurface,
                                                        ConstantSample, ConstantEvaluate,
                                                        EmitEmpty<AlbedoMatData, EmptySurface>,
@@ -73,7 +72,7 @@ class BarycentricMat final
     protected:
     public:
         // Constructors & Destructor
-                                BarycentricMat(const CudaGPU& gpu) 
+                                BarycentricMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<NullData, BarySurface,
                                                        BarycentricSample,
                                                        BarycentricEvaluate,
@@ -123,7 +122,7 @@ class SphericalMat final
     protected:
     public:
         // Constructors & Destructor
-                                SphericalMat(const CudaGPU& gpu) 
+                                SphericalMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<NullData, SphrSurface,
                                                        SphericalSample,
                                                        SphericalEvaluate,
@@ -135,7 +134,7 @@ class SphericalMat final
         // Type (as string) of the primitive group
         const char*             Type() const override { return TypeName(); }
         // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes, 
+        SceneError              InitializeGroup(const NodeListing& materialNodes,
                                                 const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override {return GenerateInnerIds(materialNodes);}
@@ -173,7 +172,7 @@ class NormalRenderMat final
     protected:
     public:
         // Constructors & Destructor
-                                NormalRenderMat(const CudaGPU& gpu) 
+                                NormalRenderMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<NullData, BasicSurface,
                                                        NormalSample,
                                                        NormalEvaluate,

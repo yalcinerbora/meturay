@@ -9,7 +9,7 @@ SingleGPUScenePartitioner::SingleGPUScenePartitioner(const CudaSystem& cudaSyste
 
 // Algo assumes a single healthy GPU
 SceneError SingleGPUScenePartitioner::PartitionMaterials(MultiGPUMatNodes& multiGroups,
-                                                         MultiGPUWorkBatches& multiBatches,                                                     
+                                                         MultiGPUWorkBatches& multiBatches,
                                                          // Single Input
                                                          MaterialNodeList& materialGroups,
                                                          WorkBatchList& workBatches) const

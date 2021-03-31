@@ -45,7 +45,7 @@ struct SphrFunctions
                                   const SphereData& primData,
                                   // I-O
                                   RandomGPU& rng)
-    {    
+    {
         Vector4f data = primData.centerRadius[primitiveId];
         Vector3f center = data;
         float radius = data[3];
@@ -113,7 +113,7 @@ struct SphrFunctions
     }
 
     __device__
-    static inline AABB3f AABB(const GPUTransformI& transform, 
+    static inline AABB3f AABB(const GPUTransformI& transform,
                               PrimitiveId primitiveId,
                               const SphereData& primData)
     {
@@ -136,7 +136,7 @@ struct SphrFunctions
     }
 
     __device__
-    static inline Vector3 Center(const GPUTransformI& transform, 
+    static inline Vector3 Center(const GPUTransformI& transform,
                                  PrimitiveId primitiveId,
                                  const SphereData& primData)
     {
@@ -147,7 +147,7 @@ struct SphrFunctions
         return center;
     }
 
-    static constexpr auto Leaf          = GenerateDefaultLeaf<SphereData>;    
+    static constexpr auto Leaf          = GenerateDefaultLeaf<SphereData>;
 };
 
 struct SphereSurfaceGenerator
@@ -181,7 +181,7 @@ struct SphereSurfaceGenerator
                                              //
                                              PrimitiveId primitiveId,
                                              const SphereData& primData)
-    {        
+    {
         return SphrSurface{sphrCoords};
     }
 
@@ -195,16 +195,15 @@ struct SphereSurfaceGenerator
         BasicSurface bs = GenBasicSurface(sphrCoords, transform,
                                           primitiveId, primData);
 
-        // Gen UV    
+        // Gen UV
         Vector2 uv = sphrCoords;
         // tetha is [0, 2 * pi], normalize
         uv[0] *= 0.5 * MathConstants::InvPi;
-        // phi is [-pi/2, pi/2], normalize 
+        // phi is [-pi/2, pi/2], normalize
         uv[1] = uv[1] * MathConstants::InvPi + 0.5f;
 
         return UVSurface{bs.worldToTangent, uv};
     }
-
 
     template <class Surface, SurfaceFunc<Surface, SphereHit, SphereData> SF>
     struct SurfaceFunctionType
@@ -213,7 +212,7 @@ struct SphereSurfaceGenerator
         static constexpr auto SurfaceGeneratorFunction = SF;
     };
 
-    static constexpr auto GeneratorFunctionList = 
+    static constexpr auto GeneratorFunctionList =
         std::make_tuple(SurfaceFunctionType<EmptySurface, GenEmptySurface<SphereHit, SphereData>>{},
                         SurfaceFunctionType<BasicSurface, GenBasicSurface>{},
                         SurfaceFunctionType<SphrSurface, GenSphrSurface>{},
@@ -231,7 +230,7 @@ struct SphereSurfaceGenerator
 class GPUPrimitiveSphere final
     : public GPUPrimitiveGroup<SphereHit, SphereData, DefaultLeaf,
                                SphereSurfaceGenerator, SphrFunctions::Hit,
-                               SphrFunctions::Leaf, SphrFunctions::AABB, 
+                               SphrFunctions::Leaf, SphrFunctions::AABB,
                                SphrFunctions::Area, SphrFunctions::Center,
                                SphrFunctions::Sample>
 {

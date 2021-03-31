@@ -50,4 +50,3 @@ class GPUWorkBatchI
 
         virtual uint8_t                     OutRayCount() const = 0;
 };
-

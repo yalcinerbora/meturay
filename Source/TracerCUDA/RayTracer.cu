@@ -9,7 +9,7 @@
 #include "CudaConstants.h"
 #include "GenerationKernels.cuh"
 
-RayTracer::RayTracer(const CudaSystem& s, 
+RayTracer::RayTracer(const CudaSystem& s,
                      const GPUSceneI& scene,
                      const TracerParameters& param)
     : GPUTracer(s, scene, param)

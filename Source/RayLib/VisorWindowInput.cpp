@@ -83,7 +83,7 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
 }
 
 VisorWindowInput::VisorWindowInput(KeyboardKeyBindings&& keyBinds,
-                                   MouseKeyBindings&& mouseBinds,                                   
+                                   MouseKeyBindings&& mouseBinds,
                                    MovementScemeList&& movementSchemes,
                                    const VisorCamera& customCamera)
     : mouseBindings(std::move(mouseBinds))

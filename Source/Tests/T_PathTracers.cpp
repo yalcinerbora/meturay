@@ -1,6 +1,5 @@
 #include "SimpleTracerSetup.h"
 
-
 TEST(PathTracers, CornellBox)
 {
     EnableVTMode();

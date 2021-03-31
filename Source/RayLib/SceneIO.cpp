@@ -150,7 +150,7 @@ LightSurfaceStruct SceneIO::LoadLightSurface(uint32_t baseMediumId,
         s.transformId = *i;
     else s.transformId = identityTransformId;
 
-    // Medium        
+    // Medium
     i = jsn.end();
     if((i = jsn.find(MEDIUM)) != jsn.end())
         s.mediumId = *i;
@@ -174,7 +174,7 @@ LightSurfaceStruct SceneIO::LoadLightSurface(uint32_t baseMediumId,
 
     // Material
     s.materialId = jsn[MATERIAL];
-        
+
     return s;
 }
 
@@ -190,7 +190,7 @@ CameraSurfaceStruct SceneIO::LoadCameraSurface(uint32_t baseMediumId,
         s.transformId = *i;
     else s.transformId = identityTransformId;
 
-    // Medium        
+    // Medium
     i = jsn.end();
     if((i = jsn.find(MEDIUM)) != jsn.end())
         s.mediumId = *i;

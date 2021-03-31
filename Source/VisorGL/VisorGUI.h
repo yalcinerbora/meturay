@@ -27,9 +27,6 @@ class VisorGUI
         const ToneMapOptions&           ToneMapOptions() const;
 
         // Callbacks of the GUI
-
-
-
 };
 
 inline const ToneMapOptions& VisorGUI::ToneMapOptions() const

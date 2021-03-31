@@ -7,7 +7,7 @@
 #include <string>
 
 template<class Loader>
-using SurfaceLoaderGeneratorFunc = Loader* (*)(const std::string& scenePath, 
+using SurfaceLoaderGeneratorFunc = Loader* (*)(const std::string& scenePath,
                                                const SceneNodeI&,
                                                double time);
 

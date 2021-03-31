@@ -13,9 +13,8 @@ class TracerSystemCUDA final : public TracerSystemI
         std::unique_ptr<CudaSystem>                 cudaSystem;
         std::unique_ptr<TracerLogicGeneratorI>      logicGenerator;
 
-
         std::unique_ptr<ScenePartitionerI>          scenePartitioner;
-        std::unique_ptr<SurfaceLoaderGenerator>     surfaceLoaders;        
+        std::unique_ptr<SurfaceLoaderGenerator>     surfaceLoaders;
         ScenePartitionerType                        partitionType;
         std::unique_ptr<GPUSceneI>                  gpuScene;
 
@@ -27,7 +26,6 @@ class TracerSystemCUDA final : public TracerSystemI
                                 TracerSystemCUDA(TracerSystemCUDA&&) = delete;
         TracerSystemCUDA&       operator=(const TracerSystemCUDA&) = delete;
         TracerSystemCUDA&       operator=(TracerSystemCUDA&&) = delete;
-
 
         TracerError             Initialize(const std::vector<SurfaceLoaderSharedLib>&,
                                            ScenePartitionerType) override;

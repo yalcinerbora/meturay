@@ -41,7 +41,7 @@ class SceneNodeJson final : public SceneNodeI
         std::string                     Tag() const override;
 
         // Check availability of certain node
-        bool                            CheckNode(const std::string& name) const override;        
+        bool                            CheckNode(const std::string& name) const override;
 
         // Id pair inspecific data loading
         size_t                          CommonListSize(const std::string& name) const override;

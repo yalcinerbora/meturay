@@ -37,7 +37,7 @@ TracerError DirectTracer::SetOptions(const TracerOptionsI& opts)
 TracerError DirectTracer::Initialize()
 {
     TracerError err = TracerError::OK;
-    if((err = RayTracer::Initialize()) != TracerError::OK) 
+    if((err = RayTracer::Initialize()) != TracerError::OK)
         return err;
 
     // Generate your worklist
@@ -47,11 +47,11 @@ TracerError DirectTracer::Initialize()
         const GPUPrimitiveGroupI& pg = *std::get<1>(workInfo);
         const GPUMaterialGroupI& mg = *std::get<2>(workInfo);
         uint32_t batchId = std::get<0>(workInfo);
-        
+
         GPUWorkBatchI* batch = nullptr;
         if((err = workPool.GenerateWorkBatch(batch, mg, pg,
                                              dTransforms)) != TracerError::OK)
-            return err;        
+            return err;
         workMap.emplace(batchId, batch);
     }
     return err;
@@ -70,7 +70,7 @@ bool DirectTracer::Render()
     uint32_t totalOutRayCount = 0;
     auto outPartitions = PartitionOutputRays(totalOutRayCount, workMap);
 
-    // Allocate new auxiliary buffer 
+    // Allocate new auxiliary buffer
     // to fit all potential ray outputs
     size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPath);
     DeviceMemory::EnlargeBuffer(*dAuxOut, auxOutSize);
@@ -79,7 +79,7 @@ bool DirectTracer::Render()
     //for(auto pIt = workPartition.crbegin();
     //    pIt != workPartition.crend(); pIt++)
     for(auto p : outPartitions)
-    
+
     {
         // Skip if null batch or unfound material
         if(p.portionId == HitKey::NullBatch) continue;
@@ -95,13 +95,12 @@ bool DirectTracer::Render()
         auto& wData = static_cast<WorkData&>(*loc->second);
         wData.SetGlobalData(globalData);
         wData.SetRayDataPtrs(dAuxOutLocal, dAuxInGlobal);
-
     }
 
     // Launch Kernels
-    WorkRays(workMap, 
+    WorkRays(workMap,
              outPartitions,
-             totalOutRayCount,             
+             totalOutRayCount,
              scene.BaseBoundaryMaterial());
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration
@@ -114,7 +113,7 @@ bool DirectTracer::Render()
 void DirectTracer::GenerateWork(int cameraId)
 {
     // Generate Rays
-    GenerateRays<RayAuxBasic, RayInitBasic>(dCameras[cameraId], 
+    GenerateRays<RayAuxBasic, RayInitBasic>(dCameras[cameraId],
                                             options.sampleCount,
                                             InitialBasicAux);
 }

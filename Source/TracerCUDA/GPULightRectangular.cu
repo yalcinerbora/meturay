@@ -48,11 +48,10 @@ SceneError CPULightGroupRectangular::InitializeGroup(const ConstructionDataList&
 
     for(const auto& node : lightNodes)
     {
-
         // Convert Ids to inner index
         uint32_t mediumIndex = mediumIdIndexPairs.at(node.mediumId);
         uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
-        HitKey materialKey = allMaterialKeys.at(std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME, 
+        HitKey materialKey = allMaterialKeys.at(std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME,
                                                                node.materialId));
 
         const auto topLefts = node.node->AccessVector3(NAME_POSITION);
@@ -77,7 +76,7 @@ SceneError CPULightGroupRectangular::InitializeGroup(const ConstructionDataList&
     size_t offset = 0;
     std::uint8_t* dBasePtr = static_cast<uint8_t*>(memory);
     dGPULights = reinterpret_cast<const GPULightRectangular*>(dBasePtr + offset);
-    offset += totalClassSize;    
+    offset += totalClassSize;
     assert(totalClassSize == offset);
 
     return SceneError::OK;
@@ -109,11 +108,11 @@ TracerError CPULightGroupRectangular::ConstructLights(const CudaSystem& system,
     size_t downSize = sizeof(Vector3f) * lightCount;
     downSize = Memory::AlignSize(downSize);
 
-    size_t totalSize = (matKeySize + 
-                        mediumSize + 
-                        transformIdSize + 
-                        topLeftSize + 
-                        rightSize + 
+    size_t totalSize = (matKeySize +
+                        mediumSize +
+                        transformIdSize +
+                        topLeftSize +
+                        rightSize +
                         downSize);
     DeviceMemory::EnlargeBuffer(tempMemory, totalSize);
 
@@ -191,6 +190,3 @@ TracerError CPULightGroupRectangular::ConstructLights(const CudaSystem& system,
     }
     return TracerError::OK;
 }
-
-static_assert(IsLightGroupClass<CPULightGroupRectangular>::value,
-              "CPULightGroupRectangular is not a Light Group class.");

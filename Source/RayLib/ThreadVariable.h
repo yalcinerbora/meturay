@@ -4,7 +4,6 @@
 
 Stated storage of simple Thread data.
 
-
 Can be set from outside of the tread.
 Thread will check the status that this variable is changed
 and act accordingly.
@@ -34,7 +33,7 @@ class ThreadVariable
 
         // Additional Operators
         ThreadVariable&         operator=(const T& t);
-        // Members        
+        // Members
         bool                    CheckChanged(T& newData);
         T                       Get() const;
 };
@@ -63,12 +62,12 @@ inline ThreadVariable<T>& ThreadVariable<T>::operator=(const T& t)
 
 template <class T>
 inline bool ThreadVariable<T>::CheckChanged(T& newData)
-{    
+{
     std::unique_lock<std::mutex> lock(mutex);
     newData = data;
     if(changedOutside)
     {
-        changedOutside = false;        
+        changedOutside = false;
         return true;
     }
     return false;
@@ -76,7 +75,7 @@ inline bool ThreadVariable<T>::CheckChanged(T& newData)
 
 template <class T>
 inline T ThreadVariable<T>::Get() const
-{    
+{
     std::unique_lock<std::mutex> lock(mutex);
     return data;
 }

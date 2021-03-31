@@ -56,7 +56,7 @@ class TracerOptions : public TracerOptionsI
         TracerError     SetVector2(const Vector2&, const std::string&) override;
         TracerError     SetVector3(const Vector3&, const std::string&) override;
         TracerError     SetVector4(const Vector4&, const std::string&) override;
-                        
+
         TracerError     SetInt(int32_t, const std::string&) override;
         TracerError     SetUInt(uint32_t, const std::string&) override;
         TracerError     SetVector2i(const Vector2i, const std::string&) override;

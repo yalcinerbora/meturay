@@ -46,7 +46,7 @@ SceneError EmissiveMat::ChangeTime(const NodeListing& materialNodes, double time
 }
 
 // -------------
-SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes, 
+SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
                                        const TextureNodeMap& textures,
                                        const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                        double time, const std::string& scenePath)
@@ -83,7 +83,7 @@ SceneError LambertMat::ChangeTime(const NodeListing& materialNodes, double time,
 }
 
 // -------------
-SceneError ReflectMat::InitializeGroup(const NodeListing& materialNodes, 
+SceneError ReflectMat::InitializeGroup(const NodeListing& materialNodes,
                                        const TextureNodeMap& textures,
                                        const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                        double time, const std::string& scenePath)
@@ -104,7 +104,7 @@ SceneError ReflectMat::InitializeGroup(const NodeListing& materialNodes,
         {
             Vector4 data = Vector4(albedos[localId], rougnessList[localId]);
             matDataCPU.push_back(data);
-            
+
             innerIds.emplace(std::make_pair(id.first, i));
             localId++;
             i++;
@@ -147,7 +147,7 @@ SceneError RefractMat::InitializeGroup(const NodeListing& materialNodes,
         for(uint32_t& i : mediumIds)
         {
             mediumIndicesCPU.push_back(mediumIdIndexPairs.at(i));
-        }        
+        }
         albedosCPU.insert(albedosCPU.end(), albedos.begin(), albedos.end());
     }
 
@@ -171,10 +171,10 @@ SceneError RefractMat::InitializeGroup(const NodeListing& materialNodes,
     offset += mediumIndicesSize;
     assert(offset == (albedoSize + mediumIndicesSize));
 
-    CUDA_CHECK(cudaMemcpy(dAlbedos, albedosCPU.data(), 
+    CUDA_CHECK(cudaMemcpy(dAlbedos, albedosCPU.data(),
                           albedosCPU.size() * sizeof(Vector3),
                           cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy(dMedIndices, mediumIndicesCPU.data(), 
+    CUDA_CHECK(cudaMemcpy(dMedIndices, mediumIndicesCPU.data(),
                           mediumIndicesCPU.size() * sizeof(uint32_t),
                           cudaMemcpyHostToDevice));
 

@@ -56,7 +56,7 @@ struct TriFunctions
     __device__
     static inline Vector3f Sample(// Output
                                   Vector3f& normal,
-                                  float& pdf,                                  
+                                  float& pdf,
                                   // Input
                                   PrimitiveId primitiveId,
                                   const TriData& primData,
@@ -87,8 +87,8 @@ struct TriFunctions
         float a = 1 - r1;
         float b = (1 - r2) * r1;
         float c = r1 * r2;
-        return (position0 * a + 
-                position1 * b + 
+        return (position0 * a +
+                position1 * b +
                 position2 * c);
     }
 
@@ -113,7 +113,7 @@ struct TriFunctions
             int32_t end = primData.primBatchCount;
             while(start <= end)
             {
-                int32_t mid = (start + end) / 2;            
+                int32_t mid = (start + end) / 2;
                 uint64_t current = primData.primOffsets[mid];
                 uint64_t next = primData.primOffsets[mid + 1];
                 if(id >= current && id < next)
@@ -121,7 +121,7 @@ struct TriFunctions
                 else if(id < current)
                     end = mid - 1;
                 else if(id >= next)
-                    start = mid + 1;            
+                    start = mid + 1;
             }
             // Default to true
             return true;
@@ -152,7 +152,7 @@ struct TriFunctions
         // Check if the hit is closer
         bool closerHit = intersects && (newT < rayData.tMax);
         if(closerHit)
-        {            
+        {
             rayData.tMax = newT;
             newMat = leaf.matId;
             newPrim = leaf.primitiveId;
@@ -163,8 +163,6 @@ struct TriFunctions
             //    printf("CloserHit-> Mat 0x%X, Prim %llu\n",
             //           leaf.matId.value, leaf.primitiveId);
             //}
-
-
         }
         //printf("ray dir{%f, %f, %f} "
         //       "old %f new %f --- Testing Mat: %x -> {%s, %s}\n",
@@ -173,7 +171,7 @@ struct TriFunctions
         //       rayData.ray.getDirection()[2],
 
         //       oldT, newT,
-        //       leaf.matId.value, 
+        //       leaf.matId.value,
         //       closerHit ? "Close!" : "      ",
         //       intersects ? "Intersects!" : "           ");
 
@@ -183,7 +181,7 @@ struct TriFunctions
     __device__
     static inline AABB3f AABB(const GPUTransformI& transform,
                               //
-                              PrimitiveId primitiveId, 
+                              PrimitiveId primitiveId,
                               const TriData& primData)
     {
         // Get Position
@@ -306,12 +304,12 @@ struct TriangleSurfaceGenerator
         Vector2 uv2 = primData.uvs[i2];
 
         Vector2 uv = (uv0 * baryCoords[0] +
-                      uv1 * baryCoords[1] + 
+                      uv1 * baryCoords[1] +
                       uv2 * c);
 
         return UVSurface{bs.worldToTangent, uv};
     }
-   
+
     template <class Surface, SurfaceFunc<Surface, TriangleHit, TriData> SF>
     struct SurfaceFunctionType
     {
@@ -319,7 +317,7 @@ struct TriangleSurfaceGenerator
         static constexpr auto SurfaceGeneratorFunction = SF;
     };
 
-    static constexpr auto GeneratorFunctionList = 
+    static constexpr auto GeneratorFunctionList =
         std::make_tuple(SurfaceFunctionType<EmptySurface, GenEmptySurface<TriangleHit, TriData>>{},
                         SurfaceFunctionType<BasicSurface, GenBasicSurface>{},
                         SurfaceFunctionType<BarySurface, GenBarySurface>{},
@@ -337,8 +335,8 @@ struct TriangleSurfaceGenerator
 class GPUPrimitiveTriangle final
     : public GPUPrimitiveGroup<TriangleHit, TriData, DefaultLeaf,
                                TriangleSurfaceGenerator,
-                               TriFunctions::Hit, 
-                               TriFunctions::Leaf, TriFunctions::AABB, 
+                               TriFunctions::Hit,
+                               TriFunctions::Leaf, TriFunctions::AABB,
                                TriFunctions::Area, TriFunctions::Center,
                                TriFunctions::Sample>
 {

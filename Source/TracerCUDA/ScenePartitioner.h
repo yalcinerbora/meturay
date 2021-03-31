@@ -15,7 +15,7 @@ class SingleGPUScenePartitioner : public ScenePartitionerI
                             SingleGPUScenePartitioner(const CudaSystem&);
                             ~SingleGPUScenePartitioner() = default;
 
-        // Interface        
+        // Interface
         SceneError          PartitionMaterials(MultiGPUMatNodes&,
                                                MultiGPUWorkBatches&,
                                                // Single Input

@@ -58,12 +58,12 @@ TracerError PathTracer::Initialize()
         const GPUPrimitiveGroupI& pg = *std::get<1>(workInfo);
         const GPUMaterialGroupI& mg = *std::get<2>(workInfo);
         uint32_t batchId = std::get<0>(workInfo);
-        
+
         // Generate work batch from appropirate work pool
         GPUWorkBatchI* batch = nullptr;
         if(mg.IsLightGroup())
         {
-            bool emptyPrim = (std::string(pg.Type()) == 
+            bool emptyPrim = (std::string(pg.Type()) ==
                               std::string(BaseConstants::EMPTY_PRIMITIVE_NAME));
 
             WorkPool<bool, bool>& wp = lightWorkPool;
@@ -113,7 +113,7 @@ bool PathTracer::Render()
     //Debug::DumpMemToFile("rayIdIn", rayMemory.CurrentIds(),
     //                     currentRayCount);
     //Debug::DumpMemToFile("primIds", rayMemory.PrimitiveIds(),
-    //                     currentRayCount); 
+    //                     currentRayCount);
     //Debug::DumpMemToFile("hitKeys", rayMemory.CurrentKeys(),
     //                     currentRayCount);
 
@@ -123,15 +123,15 @@ bool PathTracer::Render()
     globalData.lightList = dLights;
     globalData.totalLightCount = lightCount;
     globalData.mediumList = dMediums;
-    globalData.totalMediumCount = mediumCount;  
+    globalData.totalMediumCount = mediumCount;
     globalData.nee = options.nextEventEstimation;
     globalData.rrStart = options.rrStart;
 
     // Generate output partitions
-    uint32_t totalOutRayCount = 0;    
+    uint32_t totalOutRayCount = 0;
     auto outPartitions = PartitionOutputRays(totalOutRayCount, workMap);
 
-    // Allocate new auxiliary buffer 
+    // Allocate new auxiliary buffer
     // to fit all potential ray outputs
     size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPath);
     DeviceMemory::EnlargeBuffer(*dAuxOut, auxOutSize);
@@ -149,7 +149,7 @@ bool PathTracer::Render()
         // Set pointers
         RayAuxPath* dAuxOutLocal = static_cast<RayAuxPath*>(*dAuxOut) + p.offset;
         const RayAuxPath* dAuxInLocal = static_cast<const RayAuxPath*>(*dAuxIn);
-                                                    
+
         using WorkData = typename GPUWorkBatchD<PathTracerGlobal, RayAuxPath>;
         auto& wData = static_cast<WorkData&>(*loc->second);
         wData.SetGlobalData(globalData);
@@ -158,9 +158,8 @@ bool PathTracer::Render()
 
     // Launch Kernels
     WorkRays(workMap, outPartitions,
-             totalOutRayCount, 
+             totalOutRayCount,
              scene.BaseBoundaryMaterial());
-
 
     //Debug::DumpMemToFile("auxOut",
     //                     static_cast<const RayAuxPath*>(*dAuxOut),
@@ -170,7 +169,7 @@ bool PathTracer::Render()
     //                     totalOutRayCount);
     //Debug::DumpMemToFile("rayIdOut", rayMemory.CurrentIds(),
     //                     totalOutRayCount);
-    
+
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration
     SwapAuxBuffers();
@@ -183,8 +182,7 @@ bool PathTracer::Render()
 
 void PathTracer::GenerateWork(int cameraId)
 {
-    
-    GenerateRays<RayAuxPath, RayInitPath>(dCameras[cameraId], 
+    GenerateRays<RayAuxPath, RayInitPath>(dCameras[cameraId],
                                           options.sampleCount,
                                           InitialPathAux);
     currentDepth = 0;

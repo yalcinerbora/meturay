@@ -6,7 +6,7 @@
 #include "EmptyMaterialKC.cuh"
 
 template <class Surface>
-class EmptyMat final 
+class EmptyMat final
     : public GPUMaterialGroup<NullData, Surface,
                               EmptySample<Surface>, EmptyEvaluate<Surface>,
                               EmitEmpty<NullData, Surface>,
@@ -55,5 +55,5 @@ EmptyMat<S>::EmptyMat(const CudaGPU& gpu)
     : GPUMaterialGroup<NullData, S,
                        EmptySample<S>, EmptyEvaluate<S>,
                        EmitEmpty<NullData, S>,
-                       IsEmissiveFalse<NullData>>(gpu) 
+                       IsEmissiveFalse<NullData>>(gpu)
 {}

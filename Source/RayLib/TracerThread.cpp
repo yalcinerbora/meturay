@@ -26,7 +26,7 @@ bool TracerThread::InternallyTerminated() const
 }
 
 void TracerThread::InitialWork()
-{    
+{
     // No initial work for tracer
 
     // TODO: CHANGE THIS LATERR
@@ -67,7 +67,7 @@ void TracerThread::LoopWork()
         {
             PrintErrorAndSignalTerminate(sError);
             return;
-        }            
+        }
         else if((sError = currentScene->ChangeTime(newTime)) != SceneError::OK)
         {
             PrintErrorAndSignalTerminate(sError);
@@ -91,7 +91,7 @@ void TracerThread::LoopWork()
             PrintErrorAndSignalTerminate(tError);
             return;
         }
-        // Reset the Image aswell        
+        // Reset the Image aswell
         tracer->SetImagePixelFormat(PixelFormat::RGBA_FLOAT);
         tracer->ResizeImage(resolution.Get());
         tracer->ReportionImage(imgPortionStart.Get(),
@@ -135,7 +135,6 @@ void TracerThread::LoopWork()
     // Finalaze the Works
     // (send the generated image to the visor etc.)
     tracer->Finalize();
-
 
     timer.Stop();
     double elapsedS = timer.Elapsed<CPUTimeSeconds>();
@@ -187,7 +186,7 @@ void TracerThread::IncreaseTime(double t)
     {
         nextTime = std::min(currentScene->MaxSceneTime(), nextTime);
         currentTime = nextTime;
-    }        
+    }
 }
 
 void TracerThread::DecreaseTime(double t)
@@ -225,7 +224,6 @@ void TracerThread::StartStopTrace(bool start)
     //// already available
     //// Start(), Stop() functions cannot be used here we need to utilize new
     //// condition_var mutex pair for this
-
 
     //if(start)
     //    Start();

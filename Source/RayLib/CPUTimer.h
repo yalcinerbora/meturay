@@ -4,7 +4,6 @@
 std::chrono wrapper for high performance time querying
 in a single thread.
 
-
 */
 
 #include <chrono>
@@ -22,10 +21,9 @@ using CPUTimeMins = std::ratio<60>;
 
 namespace Utility
 {
-
 class CPUTimer
 {
-    private:        
+    private:
         CPUDuration     elapsed;
         CPUTimePoint    start;
 
@@ -67,5 +65,4 @@ double CPUTimer::Elapsed()
 {
     return std::chrono::duration<double, Time>(elapsed).count();
 }
-
 }

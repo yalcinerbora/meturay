@@ -41,11 +41,8 @@ if(e != ErrType::OK) \
     {}
 #endif
 
-
 #ifdef __linux__
     #define METURAY_UNIX
 #else
 
 #endif
-
-

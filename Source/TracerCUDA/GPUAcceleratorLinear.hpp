@@ -1,4 +1,3 @@
-
 template <class PGroup>
 GPUAccLinearGroup<PGroup>::GPUAccLinearGroup(const GPUPrimitiveGroupI& pGroup)
     : GPUAcceleratorGroup<PGroup>(pGroup)
@@ -31,7 +30,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
     idLookup.clear();
 
     const char* primGroupTypeName = primitiveGroup.Type();
-    
+
     // Iterate over pairings
     int j = 0;
     size_t totalSize = 0;
@@ -43,7 +42,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
         primRangeList.fill(Zero2ul);
         primIdList.fill(std::numeric_limits<uint32_t>::max());
         hitKeyList.fill(HitKey::InvalidKey);
-        
+
         Vector2ul range = Vector2ul(totalSize, 0);
 
         size_t localSize = 0;
@@ -57,11 +56,10 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
             primRangeList[i] = primitiveGroup.PrimitiveBatchRange(p.second);
             hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.first));
             localSize += primRangeList[i][1] - primRangeList[i][0];
-            
         }
         range[1] = range[0] + localSize;
         totalSize += localSize;
-        
+
         // Put generated AABB
         primitiveIds.push_back(primIdList);
         primitiveRanges.push_back(primRangeList);
@@ -69,7 +67,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
         accRanges.push_back(range);
         idLookup.emplace(pairings.first, j);
         j++;
-    }   
+    }
     assert(primitiveRanges.size() == primitiveMaterialKeys.size());
     assert(primitiveMaterialKeys.size() == idLookup.size());
     assert(idLookup.size() == accRanges.size());
@@ -102,7 +100,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
     assert(requiredSize == offset);
 
     // Copy Leaf counts to cpu memory
-    CUDA_CHECK(cudaMemcpy(dAccRanges, accRanges.data(), 
+    CUDA_CHECK(cudaMemcpy(dAccRanges, accRanges.data(),
                           idLookup.size() * sizeof(Vector2ul),
                           cudaMemcpyHostToDevice));
         // Copy Transforms
@@ -212,7 +210,7 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
             if(primRange == Zero2ul) break;
             totalAABBCount = primRange[0] - primRange[1];
         }
-                
+
         // Check cub reduction temp storage size
         size_t cubTempStorageSize = 0;
         AABB3f* dInAABBs = nullptr;
@@ -221,7 +219,6 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                              dInAABBs, dOutAABB,
                                              static_cast<int>(totalAABBCount),
                                              AABBUnion(), NegativeAABB3f));
-
 
         size_t aabbSizes = (totalAABBCount + 1) * sizeof(AABB3f);
         DeviceMemory memory(aabbSizes + cubTempStorageSize);
@@ -269,7 +266,7 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         AABB3f hostAABB;
         CUDA_CHECK(cudaMemcpy(&hostAABB, dOutAABB, sizeof(AABB3f),
                               cudaMemcpyDeviceToHost));
-        
+
         surfaceAABBs.emplace(surface, hostAABB);
     }
 
@@ -339,12 +336,12 @@ size_t GPUAccLinearGroup<PGroup>::UsedCPUMemory() const
 
 template <class PGroup>
 void GPUAccLinearGroup<PGroup>::Hit(const CudaGPU& gpu,
-                                    // O                                    
+                                    // O
                                     HitKey* dMaterialKeys,
                                     TransformId* dTransformIds,
                                     PrimitiveId* dPrimitiveIds,
                                     HitStructPtr dHitStructs,
-                                    // I-O                                                  
+                                    // I-O
                                     RayGMem* dRays,
                                     // Input
                                     const RayId* dRayIds,

@@ -64,7 +64,7 @@ SceneError CPUMediumHomogenous::InitializeGroup(const NodeListing& mediumNodes,
     size_t offset = 0;
     std::uint8_t* dBasePtr = static_cast<uint8_t*>(memory);
     dMediumData = reinterpret_cast<GPUMediumHomogenous::Data*>(dBasePtr + offset);
-    offset += sizeOfData;    
+    offset += sizeOfData;
     dGPUMediums = reinterpret_cast<GPUMediumHomogenous*>(dBasePtr + offset);
     offset += sizeOfMediumClasses;
     assert(requiredSize == offset);
@@ -74,7 +74,7 @@ SceneError CPUMediumHomogenous::InitializeGroup(const NodeListing& mediumNodes,
                           mediumData.data(),
                           mediumCount * sizeof(GPUMediumHomogenous::Data),
                           cudaMemcpyHostToDevice));
-   
+
 	return SceneError::OK;
 }
 

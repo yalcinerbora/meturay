@@ -3,7 +3,6 @@
 
 ..............................
 
-
 */
 
 #include "RayLib/SceneStructs.h"
@@ -13,7 +12,7 @@
 #include "MangledNames.h"
 
 template <class PGroup>
-class GPUAcceleratorGroup 
+class GPUAcceleratorGroup
     :  public GPUAcceleratorGroupI
 {
     private:
@@ -29,11 +28,9 @@ class GPUAcceleratorGroup
                                         GPUAcceleratorGroup(const GPUPrimitiveGroupI&);
                                         ~GPUAcceleratorGroup() = default;
 
-
         const GPUPrimitiveGroupI&       PrimitiveGroup() const override;
         void                            AttachGlobalTransformArray(const GPUTransformI** deviceTranfsorms,
                                                                    uint32_t identityTransformIndex) override;
-
 };
 
 template <class P>

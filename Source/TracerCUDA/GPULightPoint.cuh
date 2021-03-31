@@ -7,7 +7,7 @@
 
 class GPULightPoint final : public GPULightI
 {
-    private:        
+    private:
         Vector3f                position;
 
     protected:
@@ -66,7 +66,6 @@ class CPULightGroupPoint final : public CPULightGroupI
                                 CPULightGroupPoint(const GPUPrimitiveGroupI*);
                                 ~CPULightGroupPoint() = default;
 
-
         const char*				Type() const override;
 		const GPULightList&		GPULights() const override;
 		SceneError				InitializeGroup(const ConstructionDataList& lightNodes,
@@ -91,7 +90,7 @@ inline GPULightPoint::GPULightPoint(// Per Light Data
                                     const GPUTransformI& gTransform,
                                     // Endpoint Related Data
                                     HitKey k, uint16_t mediumIndex)
-    : GPUEndpointI(k, mediumIndex)
+    : GPULightI(k, mediumIndex)
     , position(gTransform.LocalToWorld(position))
 {}
 
@@ -125,15 +124,14 @@ inline void GPULightPoint::GenerateRay(// Output
     // TODO: Implement
 }
 
-__device__ 
+__device__
 inline PrimitiveId GPULightPoint::PrimitiveIndex() const
 {
     return INVALID_PRIMITIVE_ID;
 }
 
 inline CPULightGroupPoint::CPULightGroupPoint(const GPUPrimitiveGroupI*)
-    : CPULightGroupI()
-    , lightCount(0)
+    : lightCount(0)
     , dGPULights(nullptr)
 {}
 

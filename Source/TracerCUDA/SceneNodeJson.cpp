@@ -42,7 +42,7 @@ std::vector<T> SceneNodeJson::AccessRanged(const std::string& name) const
         {
             // Find Data from the ranges
             const InnerIndex i = list.second;
-            
+
             //for(const Range<T>& r : ranges)
             for(; j < ranges.size() ; j++)
             {
@@ -70,7 +70,7 @@ std::vector<std::vector<T>> SceneNodeJson::AccessList(const std::string& name,
     result.reserve(idIndexPairs.size());
 
     for(const auto& list : idIndexPairs)
-    {  
+    {
         result.emplace_back();
 
         const InnerIndex i = list.second;
@@ -85,7 +85,7 @@ std::vector<std::vector<T>> SceneNodeJson::AccessList(const std::string& name,
 template <class T, LoadFunc<T> LoadF>
 OptionalNodeList<T> SceneNodeJson::AccessOptional(const std::string& name,
                                                   double time) const
-{   
+{
     OptionalNodeList<T> result;
     result.reserve(idIndexPairs.size());
 
@@ -98,10 +98,9 @@ OptionalNodeList<T> SceneNodeJson::AccessOptional(const std::string& name,
         result.resize(idIndexPairs.size(), optNode);
         return std::move(result);
     }
-        
+
     // Access the node and continue
     const nlohmann::json& nodeInner = node[name];
-
 
     for(const auto& list : idIndexPairs)
     {
@@ -152,7 +151,7 @@ TexturedDataNodeList<T> SceneNodeJson::AccessTextured(const std::string& name,
         TexturedDataNode<T> texNode;
         if(node.is_object())
         {
-            MaterialTextureStruct n = SceneIO::LoadMaterialTextureStruct(node, time);            
+            MaterialTextureStruct n = SceneIO::LoadMaterialTextureStruct(node, time);
             texNode.isTexture = true;
             texNode.texNode = n;
         }

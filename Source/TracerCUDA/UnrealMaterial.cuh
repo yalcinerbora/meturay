@@ -36,7 +36,7 @@ class UnrealMat final
             protected:
     public:
         // Constructors & Destructor
-                                UnrealMat(const CudaGPU& gpu) 
+                                UnrealMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<UnrealMatData, UVSurface,
                                                        UnrealSample, UnrealEvaluate,
                                                        EmitEmpty<UnrealMatData, UVSurface>,
@@ -70,7 +70,6 @@ class UnrealMat final
         // No Texture
         uint8_t                 UsedTextureCount() const;
         std::vector<uint32_t>   UsedTextureIds() const;
-
 };
 
 static_assert(IsMaterialGroupClass<UnrealMat>::value,

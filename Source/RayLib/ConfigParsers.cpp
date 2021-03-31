@@ -89,7 +89,7 @@ bool ConfigParser::ParseVisorOptions(// Visor Input Related
         // Parse Json
         nlohmann::json configJson;
         stream >> configJson;
-          
+
         // Json is Loaded
         // Load Key Binds
         auto keyJson = configJson.end();
@@ -116,7 +116,7 @@ bool ConfigParser::ParseVisorOptions(// Visor Input Related
             //movementSchemes.reserve(schemesJson->size());
             // TODO: Implement
             return false;
-        }        
+        }
 
         // Load VisorOptions
         ParseVisorOptions(opts, configJson[VISOR_OPTIONS_NAME]);
@@ -124,7 +124,6 @@ bool ConfigParser::ParseVisorOptions(// Visor Input Related
         // Load Visor DLL
         ParseDLL(dllEntryPointName, visorDLLName,
                  configJson[VISOR_DLL_NAME]);
-
     }
     catch(nlohmann::json::parse_error const& e)
     {
@@ -133,7 +132,6 @@ bool ConfigParser::ParseVisorOptions(// Visor Input Related
     }
     return true;
 }
-
 
 bool ConfigParser::ParseTracerOptions(// Tracer Related
                                       TracerOptions& tracerOptions,
@@ -164,7 +162,7 @@ bool ConfigParser::ParseTracerOptions(// Tracer Related
         static constexpr const char* VARIANT_VAL_NAME = "val";
 
         name = SceneIO::LoadString(jsnObj[VARIANT_NAME]);
-        std::string typeName = SceneIO::LoadString(jsnObj[VARIANT_TYPE_NAME]);        
+        std::string typeName = SceneIO::LoadString(jsnObj[VARIANT_TYPE_NAME]);
         TracerOptionsI::OptionType optType = EnumStringConverter::StringToTracerOptionType(typeName);
         const nlohmann::json& valJson = jsnObj[VARIANT_VAL_NAME];
 
@@ -215,7 +213,7 @@ bool ConfigParser::ParseTracerOptions(// Tracer Related
 
         // Parse Json
         nlohmann::json configJson;
-        stream >> configJson;          
+        stream >> configJson;
         // Json is Loaded
 
         // Load Tracer Options
@@ -229,7 +227,7 @@ bool ConfigParser::ParseTracerOptions(// Tracer Related
             if(!ParseVariantObject(varName, var, optsNode))
                 return false;
 
-            varList.emplace(varName, var);            
+            varList.emplace(varName, var);
         }
         tracerOptions = TracerOptions(std::move(varList));
 
@@ -265,4 +263,3 @@ bool ConfigParser::ParseTracerOptions(// Tracer Related
     }
     return true;
 }
-

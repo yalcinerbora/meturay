@@ -1,4 +1,3 @@
-
 #include "GenerationKernels.cuh"
 #include "RayTracer.h"
 

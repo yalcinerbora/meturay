@@ -6,7 +6,7 @@
 
 SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
                                           const TextureNodeMap& textureNodes,
-                                          const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,                                          
+                                          const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                           double time, const std::string& scenePath)
 {
     constexpr const char* ALBEDO = "albedo";
@@ -22,9 +22,9 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
     {
         // Load Textured Albedo Data
         TexturedDataNodeList<Vector3> matAlbedoNodes = sceneNode->AccessTexturedDataVector3(ALBEDO);
-        OptionalNodeList<MaterialTextureStruct> matNormalNodes = sceneNode->AccessOptionalTextureNode(NORMAL);        
+        OptionalNodeList<MaterialTextureStruct> matNormalNodes = sceneNode->AccessOptionalTextureNode(NORMAL);
         assert(matAlbedoNodes.size() == matNormalNodes.size());
-        
+
         std::vector<ConstructionInfo> localInfo;
         // Iterate over these nodes one by one to find textures
         for(int j = 0; j < matAlbedoNodes.size(); j++)
@@ -41,7 +41,7 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
                 const TextureI<2, 4>* texture;
                 if((err = TextureFunctions::AllocateTexture(texture,
                                                             dTextureMemory, texInfo,
-                                                            textureNodes,                                                            
+                                                            textureNodes,
                                                             EdgeResolveType::WRAP,
                                                             InterpolationType::LINEAR,
                                                             true, true,
@@ -56,7 +56,7 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
                 //if((loc = textureNodes.find(textureId)) != textureNodes.cend())
                 //{
                 //    const TextureStruct& texInfo = loc->second;
-                //    
+                //
                 //}
                 //else return SceneError::TEXTURE_ID_NOT_FOUND;
 
@@ -86,11 +86,10 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
                 constructionInfo.normalTexture = static_cast<cudaTextureObject_t>(*texture);
             }
 
-
             localInfo.push_back(constructionInfo);
         }
-        matConstructionInfo.insert(matConstructionInfo.end(), 
-                                   localInfo.begin(), 
+        matConstructionInfo.insert(matConstructionInfo.end(),
+                                   localInfo.begin(),
                                    localInfo.end());
 
         // Generate Id lookup
@@ -118,7 +117,6 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
     size_t totalSize = (albedoSize + albedoTexRefSize +
                         normalTexRefSize + albedoPtrSize +
                         normalPtrSize);
-
 
     memory = std::move(DeviceMemory(totalSize));
     Byte* memPtr = static_cast<Byte*>(memory);
@@ -172,7 +170,7 @@ TracerError LambertTexMat::ConstructTextureReferences()
 
     // Allocate Temp GPU Memory
     // Size Determination
-    
+
     size_t counterSize = sizeof(uint32_t) * 3;
     counterSize = Memory::AlignSize(counterSize);
     size_t albedoConstructionSize = sizeof(TextureOrConstReferenceData<Vector3>) * materialCount;
@@ -181,7 +179,7 @@ TracerError LambertTexMat::ConstructTextureReferences()
     normalConstructionSize = Memory::AlignSize(normalConstructionSize);
 
     //
-    size_t totalSize = (counterSize + 
+    size_t totalSize = (counterSize +
                         albedoConstructionSize +
                         normalConstructionSize);
     DeviceMemory tempMemory(totalSize);
@@ -239,7 +237,6 @@ TracerError LambertTexMat::ConstructTextureReferences()
                             dNormalTextures,
                             static_cast<uint32_t>(materialCount));
 
-
     // Clear temporary CPU data
     matConstructionInfo.clear();
     // All Done!
@@ -252,9 +249,9 @@ size_t LambertTexMat::UsedGPUMemory() const
     return 0;
 }
 
-size_t LambertTexMat::UsedCPUMemory() const 
-{ 
-    return sizeof(LambertTMatData); 
+size_t LambertTexMat::UsedCPUMemory() const
+{
+    return sizeof(LambertTMatData);
 }
 
 size_t LambertTexMat::UsedGPUMemory(uint32_t materialId) const

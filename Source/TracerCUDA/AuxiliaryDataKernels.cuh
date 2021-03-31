@@ -14,7 +14,6 @@ __global__ void KCConstructGPUClass(T* gLocation,
         globalId < classCount;
         globalId += blockDim.x * gridDim.x)
     {
-
         auto a = new (gLocation) T(args...);
     }
 }
@@ -27,7 +26,6 @@ using RayFinalizeFunc = void(*)(// Output
                                 const RayReg&,
                                 //
                                 RandomGPU& rng);
-
 
 template <class RayAuxData, RayFinalizeFunc<RayAuxData> FinalizeFunc>
 __global__ void KCFinalizeRay(// Output

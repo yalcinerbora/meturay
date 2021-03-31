@@ -102,7 +102,7 @@ class WorkPool
         TracerError             GenerateWorkBatch(GPUWorkBatchI*&,
                                                   const char* workNameOverride,
                                                   const GPUMaterialGroupI&,
-                                                  const GPUPrimitiveGroupI&,                                                  
+                                                  const GPUPrimitiveGroupI&,
                                                   const GPUTransformI* const*,
                                                   Args...);
 };
@@ -153,7 +153,7 @@ TracerError WorkPool<Args...>::GenerateWorkBatch(GPUWorkBatchI*& work,
     auto loc = generators.end();
     if((loc = generators.find(mangledName)) != generators.end())
     {
-        auto ptr = loc->second(mg, pg, t, args...);        
+        auto ptr = loc->second(mg, pg, t, args...);
         work = ptr.get();
         allocatedResources.emplace_back(std::move(ptr));
     }
@@ -166,7 +166,7 @@ TracerError WorkPool<Args...>::GenerateWorkBatch(GPUWorkBatchI*& work,
                                                  const char* workNameOverride,
                                                  const GPUMaterialGroupI& mg,
                                                  const GPUPrimitiveGroupI& pg,
-                                                 const GPUTransformI* const* t,                                                 
+                                                 const GPUTransformI* const* t,
                                                  Args... args)
 {
     auto loc = generators.end();

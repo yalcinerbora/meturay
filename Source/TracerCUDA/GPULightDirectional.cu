@@ -18,7 +18,7 @@ __global__ void KCConstructGPULightDirectional(GPULightDirectional* gLightLocati
         globalId < lightCount;
         globalId += blockDim.x * gridDim.x)
     {
-        new (gLightLocations + globalId) GPULightDirectional(gDirections[globalId],                                                             
+        new (gLightLocations + globalId) GPULightDirectional(gDirections[globalId],
                                                              *gTransforms[gTransformIds[globalId]],
                                                              //
                                                              gLightMaterialIds[globalId],
@@ -42,14 +42,13 @@ SceneError CPULightGroupDirectional::InitializeGroup(const ConstructionDataList&
 
     for(const auto& node : lightNodes)
     {
-
         // Convert Ids to inner index
         uint32_t mediumIndex = mediumIdIndexPairs.at(node.mediumId);
         uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
-        HitKey materialKey = allMaterialKeys.at(std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME, 
+        HitKey materialKey = allMaterialKeys.at(std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME,
                                                                node.materialId));
 
-        const auto directions = node.node->AccessVector3(NAME_DIRECTION);        
+        const auto directions = node.node->AccessVector3(NAME_DIRECTION);
 
         // Load to host memory
         hHitKeys.push_back(materialKey);
@@ -67,7 +66,7 @@ SceneError CPULightGroupDirectional::InitializeGroup(const ConstructionDataList&
     size_t offset = 0;
     std::uint8_t* dBasePtr = static_cast<uint8_t*>(memory);
     dGPULights = reinterpret_cast<const GPULightDirectional*>(dBasePtr + offset);
-    offset += totalClassSize;    
+    offset += totalClassSize;
     assert(totalClassSize == offset);
 
     return SceneError::OK;
@@ -83,7 +82,7 @@ SceneError CPULightGroupDirectional::ChangeTime(const NodeListing& lightNodes, d
 TracerError CPULightGroupDirectional::ConstructLights(const CudaSystem& system,
                                                       const GPUTransformI** dGlobalTransformArray)
 {
-      // Gen Temporary Memory
+    // Gen Temporary Memory
     DeviceMemory tempMemory;
     // Allocate for GPULight classes
     size_t matKeySize = sizeof(HitKey) * lightCount;
@@ -95,9 +94,9 @@ TracerError CPULightGroupDirectional::ConstructLights(const CudaSystem& system,
     size_t directionSize = sizeof(Vector3f) * lightCount;
     directionSize = Memory::AlignSize(directionSize);
 
-    size_t totalSize = (matKeySize + 
-                        mediumSize + 
-                        transformIdSize + 
+    size_t totalSize = (matKeySize +
+                        mediumSize +
+                        transformIdSize +
                         directionSize);
     DeviceMemory::EnlargeBuffer(tempMemory, totalSize);
 
@@ -110,7 +109,7 @@ TracerError CPULightGroupDirectional::ConstructLights(const CudaSystem& system,
     const TransformId* dTransformIds = reinterpret_cast<const TransformId*>(dBasePtr + offset);
     offset += transformIdSize;
     const Vector3f* dDirections = reinterpret_cast<const Vector3f*>(dBasePtr + offset);
-    offset += directionSize;   
+    offset += directionSize;
     assert(totalSize == offset);
 
     // Set a GPU
@@ -161,6 +160,3 @@ TracerError CPULightGroupDirectional::ConstructLights(const CudaSystem& system,
     }
     return TracerError::OK;
 }
-
-static_assert(IsLightGroupClass<CPULightGroupDirectional>::value,
-              "CPULightGroupDirectional is not a Light Group class.");

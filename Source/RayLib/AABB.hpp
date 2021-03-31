@@ -3,7 +3,7 @@
 template<int N, class T>
 __device__ __host__
 constexpr AABB<N, T>::AABB(const Vector<N, T>& min,
-                        const Vector<N, T>& max)
+                           const Vector<N, T>& max)
     : min(min)
     , max(max)
 {}
@@ -87,6 +87,6 @@ __device__ __host__
 inline AABB<N, T>& AABB<N, T>::UnionSelf(const AABB<N, T>& aabb)
 {
     min = Vector<N, T>::Min(min, aabb.min),
-    max = Vector<N, T>::Max(max, aabb.max);
+        max = Vector<N, T>::Max(max, aabb.max);
     return *this;
 }

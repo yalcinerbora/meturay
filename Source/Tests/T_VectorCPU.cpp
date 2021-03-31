@@ -22,7 +22,6 @@ TEST(VectorCPU, Construction)
     Vector4 vec3(dataArray);
     Vector4 vec4(dataArrayLarge);
 
-
     //
     Vector2 vec5(vecAssign1);
     Vector2 vec6(vecAssign2);
@@ -54,7 +53,6 @@ TEST(VectorCPU, Construction)
     EXPECT_THAT(std::vector<float>(static_cast<const float*>(vec4),
                                    static_cast<const float*>(vec4) + 4),
                 ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(3.0f), FloatEq(4.0f)));
-
 
     EXPECT_THAT(std::vector<float>(static_cast<const float*>(vec5),
                                    static_cast<const float*>(vec5) + 2),

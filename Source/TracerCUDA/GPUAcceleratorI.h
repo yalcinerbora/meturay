@@ -104,7 +104,7 @@ class GPUBaseAcceleratorI
         // Type(as string) of the accelerator group
         virtual const char*     Type() const = 0;
         // Get ready for hit loop
-        virtual void            GetReady(const CudaSystem& system, 
+        virtual void            GetReady(const CudaSystem& system,
                                          uint32_t rayCount) = 0;
         // Base accelerator only points to the next accelerator key.
         // It can return invalid key,

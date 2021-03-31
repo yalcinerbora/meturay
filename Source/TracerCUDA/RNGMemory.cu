@@ -44,7 +44,7 @@ RNGMemory::RNGMemory(uint32_t seed,
     // Before touching gpu mem from cpu do a sync
     // since other initialization probably launched a kernel
     system.SyncGPUAll();
-    std::for_each(static_cast<uint32_t*>(seeds), 
+    std::for_each(static_cast<uint32_t*>(seeds),
                   static_cast<uint32_t*>(seeds) + totalCount,
                   [&](uint32_t& t) { t = rng(); });
 

@@ -55,7 +55,7 @@ inline void BasicWork(// Output
                       RayGMem* gOutRays,
                       RayAuxBasic* gOutRayAux,
                       const uint32_t maxOutRay,
-                      // Input as registers                         
+                      // Input as registers
                       const RayReg& ray,
                       const RayAuxBasic& aux,
                       const MGroup::Surface& surface,
@@ -106,7 +106,7 @@ inline void PathLightWork(// Output
                           RayGMem* gOutRays,
                           RayAuxPath* gOutRayAux,
                           const uint32_t maxOutRay,
-                          // Input as registers                         
+                          // Input as registers
                           const RayReg& ray,
                           const RayAuxPath& aux,
                           const typename MGroup::Surface& surface,
@@ -135,9 +135,9 @@ inline void PathLightWork(// Output
         // Check if NEE ray actual hit the requested light
         neeMatch = (matId.value == neeKey.value);
         if(!gLocalState.emptyPrimitive)
-            neeMatch &= (primId == neePrimId);            
+            neeMatch &= (primId == neePrimId);
     }
-    if(neeMatch || 
+    if(neeMatch ||
        aux.type == RayType::CAMERA_RAY ||
        aux.type == RayType::SPECULAR_PATH_RAY)
     {
@@ -174,7 +174,7 @@ inline void PathWork(// Output
                      RayGMem* gOutRays,
                      RayAuxPath* gOutRayAux,
                      const uint32_t maxOutRay,
-                     // Input as registers                         
+                     // Input as registers
                      const RayReg& ray,
                      const RayAuxPath& aux,
                      const typename MGroup::Surface& surface,
@@ -193,7 +193,7 @@ inline void PathWork(// Output
     bool specularMat = gLocalState.specularMaterial;
     static constexpr int PATH_RAY_INDEX = 0;
     static constexpr int NEE_RAY_INDEX = 1;
-    
+
     // Output image
     auto& img = gRenderState.gImage;
 
@@ -215,7 +215,7 @@ inline void PathWork(// Output
             InvalidRayWrite(i);
         return;
     }
-    // Inputs    
+    // Inputs
     const RayF& r = ray.ray;
     HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
     Vector3 position = r.AdvancedPos(ray.tMax);
@@ -225,13 +225,13 @@ inline void PathWork(// Output
     RayReg rayOut = {};
     RayAuxPath auxOut = aux;
     auxOut.depth++;
-   
+
     // Calculate Transmittance factor of the medium
     Vector3 transFactor = m.Transmittance(ray.tMax);
     Vector3 radianceFactor = aux.radianceFactor * transFactor;
 
     // Sample the emission if avail
-    if(emissiveMat)    
+    if(emissiveMat)
     {
         Vector3 emission = MGroup::Emit(// Input
                                         wi,
@@ -268,7 +268,7 @@ inline void PathWork(// Output
                                          matIndex,
                                          0);
 
-    // Factor the radiance of the surface        
+    // Factor the radiance of the surface
     auxOut.radianceFactor = radianceFactor * reflectance;
     // Check singularities
     auxOut.radianceFactor = (pdfPath == 0.0f) ? Zero3 : (auxOut.radianceFactor / pdfPath);
@@ -288,7 +288,7 @@ inline void PathWork(// Output
         rayOut.tMin = 0.0f;
         rayOut.tMax = INFINITY;
         rayOut.Update(gOutRays, PATH_RAY_INDEX);
-        
+
         // Write Aux
         auxOut.type = (specularMat) ? RayType::SPECULAR_PATH_RAY : RayType::PATH_RAY;
         gOutRayAux[PATH_RAY_INDEX] = auxOut;
@@ -362,7 +362,7 @@ inline void AOMissWork(// Output
                        RayGMem* gOutRays,
                        RayAuxAO* gOutRayAux,
                        const uint32_t maxOutRay,
-                       // Input as registers                         
+                       // Input as registers
                        const RayReg& ray,
                        const RayAuxAO& aux,
                        const typename MGroup::Surface& surface,
@@ -388,7 +388,7 @@ inline void AOWork(// Output
                    RayGMem* gOutRays,
                    RayAuxAO* gOutRayAux,
                    const uint32_t maxOutRay,
-                   // Input as registers                         
+                   // Input as registers
                    const RayReg& ray,
                    const RayAuxAO& aux,
                    const typename MGroup::Surface& surface,

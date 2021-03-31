@@ -20,7 +20,7 @@ struct RefractMatData
 {
     const Vector3* dAlbedo;
     const uint32_t* mediumIndices;
-    
+
     // Global Medium Array pointer
     const GPUMediumI* const* dMediums;
     uint32_t baseMediumIndex;
@@ -28,7 +28,6 @@ struct RefractMatData
 
 struct UnrealMatData
 {
-
     const TextureRefI<2, Vector3f>** dAlbedo;
     const TextureRefI<2, float>**    dRoughness;
     const TextureRefI<2, float>**    dMetallic;

@@ -36,7 +36,7 @@ class AOTracer final : public RayTracer
         // States
         bool                    hitPhase;
         uint32_t                depth;
-        
+
     protected:
     public:
         // Constructors & Destructor

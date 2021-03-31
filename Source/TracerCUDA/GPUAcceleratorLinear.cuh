@@ -50,7 +50,7 @@ class GPUAccLinearGroup final
         std::vector<PrimitiveRangeList>     primitiveRanges;
         std::vector<HitKeyList>             primitiveMaterialKeys;
         std::vector<Vector2ul>              accRanges;
-        
+
         std::map<uint32_t, uint32_t>        idLookup;
         SurfaceAABBList                     surfaceAABBs;
 
@@ -118,7 +118,6 @@ class GPUAccLinearGroup final
         const SurfaceAABBList&  AcceleratorAABBs() const override;
 };
 
-
 class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
 {
     public:
@@ -149,7 +148,7 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
         const char*                 Type() const override;
 
         // Get ready for hit loop
-        void                        GetReady(const CudaSystem& system, 
+        void                        GetReady(const CudaSystem& system,
                                              uint32_t rayCount) override;
         // Base accelerator only points to the next accelerator key.
         // It can return invalid key,
@@ -161,7 +160,6 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
                                         const RayGMem* dRays,
                                         const RayId* dRayIds,
                                         const uint32_t rayCount) const override;
-
 
         SceneError                  Initialize(// Accelerator Option Node
                                                const SceneNodePtr& node,

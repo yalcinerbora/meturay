@@ -19,7 +19,7 @@ enum class ScenePartitionerType
     SINGLE_GPU,
     // Not yet implemented
     MULTI_GPU_MATERIAL,
-    
+
     END
 };
 
@@ -32,7 +32,6 @@ struct SurfaceLoaderSharedLib
 
 class TracerSystemI
 {
-
     public:
         virtual                         ~TracerSystemI() = default;
 
