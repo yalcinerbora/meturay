@@ -127,9 +127,6 @@
     <ClCompile Include="..\..\..\Source\TracerCUDA\TextureFunctions.cpp">
       <Filter>Textures</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPiecewiseDistribution.cu">
-      <Filter>GPU Classes</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerCUDA\ImageMemory.h">
@@ -455,6 +452,12 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\BinarySearch.cuh">
       <Filter>GPU Algorithms</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelTransform.cuh">
+      <Filter>GPU Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TransformFunctions.cuh">
+      <Filter>GPU Algorithms\Functions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">
@@ -564,6 +567,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightSkySphere.cu">
       <Filter>Lights</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUPiecewiseDistribution.cu">
+      <Filter>GPU Classes</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

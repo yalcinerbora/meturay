@@ -30,7 +30,7 @@ inline bool BinarySearchInBetween(float& index, T value, const T* list, uint32_t
             index = static_cast<float>(mid) + (dist / totalDist);
             return true;
         }            
-        else if(LessFunc(current, value))
+        else if(current < value)
             end = mid - 1;
         else
             start = mid + 1;

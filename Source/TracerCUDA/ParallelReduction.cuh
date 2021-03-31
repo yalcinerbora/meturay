@@ -93,10 +93,10 @@ __device__ inline void BlockReduce2D(Type& val, Type identityElement)
 }
 
 template <class Type, ReduceFunc<Type> F>
-__global__ void ParalelReduction(Type* gOut,
-                                 const Type* gIn,
-                                 unsigned int totalCount,
-                                 Type identityElement)
+__global__ void KCParallelReduction(Type* gOut,
+                                    const Type* gIn,
+                                    unsigned int totalCount,
+                                    Type identityElement)
 {
     Type result = identityElement;
     unsigned int globalId = blockIdx.x * blockDim.x + threadIdx.x;
@@ -107,10 +107,10 @@ __global__ void ParalelReduction(Type* gOut,
 }
 
 template <class Type, ReduceFunc<Type> F>
-__global__ void ParalelReductionTex(Type* gOut,
-                                    cudaTextureObject_t tIn,
-                                    uint2 dimensions, uint2 offset,
-                                    Type identityElement)
+__global__ void KCParallelReductionTex(Type* gOut,
+                                       cudaTextureObject_t tIn,
+                                       uint2 dimensions, uint2 offset,
+                                       Type identityElement)
 {
     Type result = identityElement;
     uint2 globalId = {blockIdx.x * blockDim.x + threadIdx.x,
@@ -130,11 +130,11 @@ __global__ void ParalelReductionTex(Type* gOut,
 
 
 template<class Type, ReduceFunc<Type> F, cudaMemcpyKind cpyKind = cudaMemcpyDeviceToDevice>
-__host__ void KCReduceArray(Type& result,
-                            const Type* dData,
-                            size_t elementCount,
-                            Type identityElement,
-                            cudaStream_t stream = (cudaStream_t)0)
+__host__ void ReduceArrayGPU(Type& result,
+                             const Type* dData,
+                             size_t elementCount,
+                             Type identityElement,
+                             cudaStream_t stream = (cudaStream_t)0)
 {
     static constexpr unsigned int TPB = StaticThreadPerBlock1D;
     static constexpr unsigned int SharedSize = (TPB / WarpSize) * sizeof(Type);
@@ -156,7 +156,7 @@ __host__ void KCReduceArray(Type& result,
         gridSize = (dataSize + TPB - 1) / TPB;
 
         // KC Paralel Reduction
-        ParalelReduction<Type, F> <<<gridSize, TPB, SharedSize, stream>>>
+        KCParallelReduction<Type, F> <<<gridSize, TPB, SharedSize, stream>>>
         (
             dWrite,
             inData,
@@ -175,12 +175,12 @@ __host__ void KCReduceArray(Type& result,
 }
 
 template<class Type, ReduceFunc<Type> F, cudaMemcpyKind cpyKind = cudaMemcpyDeviceToDevice>
-__host__ void KCReduceTexture(Type& result,
-                              cudaTextureObject_t texture,
-                              const uint2& dim,
-                              const uint2& offset,
-                              Type identityElement,
-                              cudaStream_t stream = (cudaStream_t)0)
+__host__ void ReduceTextureGPU(Type& result,
+                               cudaTextureObject_t texture,
+                               const uint2& dim,
+                               const uint2& offset,
+                               Type identityElement,
+                               cudaStream_t stream = (cudaStream_t)0)
 {
     static constexpr Vector2ui TPB = StaticThreadPerBlock2D;
     static constexpr unsigned int SharedSize = (TPB[0] * TPB[1]);// / WarpSize) * sizeof(Type);
@@ -193,7 +193,7 @@ __host__ void KCReduceTexture(Type& result,
     Type* dReduceBuffer = static_cast<Type*>(reduceBuffer);
 
     // KC Paralel Reduction
-    ParalelReductionTex<Type, F> <<<gridSize, blockSize, SharedSize, stream>>>
+    KCParallelReductionTex<Type, F> <<<gridSize, blockSize, SharedSize, stream>>>
     (
         dReduceBuffer,
         texture,
@@ -203,11 +203,11 @@ __host__ void KCReduceTexture(Type& result,
     CUDA_KERNEL_CHECK();
 
     // Array portion does the rest
-    KCReduceArray<Type, F>(result,
-                           dReduceBuffer,
-                           gridSize.x * gridSize.y,
-                           identityElement,
-                           stream);
+    ReduceArrayGPU<Type, F>(result,
+                            dReduceBuffer,
+                            gridSize.x * gridSize.y,
+                            identityElement,
+                            stream);
     CUDA_KERNEL_CHECK();
     // Just get the data from gpu (first element at dRead
     CUDA_CHECK(cudaMemcpyAsync(&result, dReduceBuffer, sizeof(Type), cpyKind, stream));
@@ -216,15 +216,15 @@ __host__ void KCReduceTexture(Type& result,
 // Meta Definition
 #define DEFINE_REDUCE_ARRAY_SINGLE(type, func, cpy) \
     template \
-    __host__ void KCReduceArray<type, func, cpy>(type&, const type*, \
-                                                 size_t, type, \
-                                                 cudaStream_t);
+    __host__ void ReduceArrayGPU<type, func, cpy>(type&, const type*, \
+                                                  size_t, type, \
+                                                  cudaStream_t);
 #define DEFINE_REDUCE_TEXTURE_SINGLE(type, func, cpy) \
     template \
-    __host__ void KCReduceTexture<type, func, cpy>(type&, cudaTextureObject_t, \
-                                                   const uint2&, \
-                                                   const uint2&, \
-                                                   type, cudaStream_t);
+    __host__ void ReduceTextureGPU<type, func, cpy>(type&, cudaTextureObject_t, \
+                                                    const uint2&, \
+                                                    const uint2&, \
+                                                    type, cudaStream_t);
 
 // Cluster Definitions ARRAY
 #define EXTERN_REDUCE_ARRAY_SINGLE(type, func, copy) \

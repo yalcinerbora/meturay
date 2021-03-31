@@ -10,7 +10,7 @@
 #include "Random.cuh"
 #include "BinarySearch.cuh"
 
-class GPUDistPiecewise1D
+class GPUDistPiecewiseConst1D
 {
     private:
         const float*    gPDF    = nullptr;
@@ -20,115 +20,129 @@ class GPUDistPiecewise1D
     protected:
     public:
         // Construtors & Destructor
-                                //GPUDistPiecewise1D() = default;
-        __host__ __device__     GPUDistPiecewise1D(const float* dCDFList,
-                                                   const float* dPDFList,
-                                                   uint32_t count);
-                                GPUDistPiecewise1D(const GPUDistPiecewise1D&) = default;
-                                GPUDistPiecewise1D(GPUDistPiecewise1D&&) = default;
-        GPUDistPiecewise1D&     operator=(const GPUDistPiecewise1D&) = default;
-        GPUDistPiecewise1D&     operator=(GPUDistPiecewise1D&&) = default;
-                                ~GPUDistPiecewise1D() = default;
+                                    GPUDistPiecewiseConst1D() = default;
+        __host__ __device__         GPUDistPiecewiseConst1D(const float* dCDFList,
+                                                            const float* dPDFList,
+                                                            uint32_t count);
+                                    GPUDistPiecewiseConst1D(const GPUDistPiecewiseConst1D&) = default;
+                                    GPUDistPiecewiseConst1D(GPUDistPiecewiseConst1D&&) = default;
+        GPUDistPiecewiseConst1D&    operator=(const GPUDistPiecewiseConst1D&) = default;
+        GPUDistPiecewiseConst1D&    operator=(GPUDistPiecewiseConst1D&&) = default;
+                                    ~GPUDistPiecewiseConst1D() = default;
 
-        __host__ __device__
+        __device__
         float                   Sample(float& pdf, RandomGPU& rng) const;
         __host__ __device__
         uint32_t                Count() const { return count; }
 };
 
-class GPUDistPiecewise2D
+class GPUDistPiecewiseConst2D
 {
     private:
-        const GPUDistPiecewise1D   gDistributionsY;
-        const GPUDistPiecewise1D*  gDistributionsX  = nullptr;
-        uint32_t                   width            = 0;
-        uint32_t                   height           = 0;
+        const GPUDistPiecewiseConst1D   gDistributionsY;
+        const GPUDistPiecewiseConst1D*  gDistributionsX  = nullptr;
+        uint32_t                        width            = 0;
+        uint32_t                        height           = 0;
 
     protected:
     public:
         // Construtors & Destructor
-                                //GPUDistPiecewise2D() = default;
-        __host__ __device__     GPUDistPiecewise2D(const GPUDistPiecewise1D dDistributionsY,
-                                                   const GPUDistPiecewise1D* dDistributionsX,
-                                                   uint32_t countX,
-                                                   uint32_t countY);
-                                GPUDistPiecewise2D(const GPUDistPiecewise2D&) = default;
-                                GPUDistPiecewise2D(GPUDistPiecewise2D&&) = default;
-        GPUDistPiecewise2D&     operator=(const GPUDistPiecewise2D&) = default;
-        GPUDistPiecewise2D&     operator=(GPUDistPiecewise2D&&) = default;
-                                ~GPUDistPiecewise2D() = default;
+                                    GPUDistPiecewiseConst2D() = default;
+        __host__ __device__         GPUDistPiecewiseConst2D(const GPUDistPiecewiseConst1D dDistributionsY,
+                                                            const GPUDistPiecewiseConst1D* dDistributionsX,
+                                                            uint32_t countX,
+                                                            uint32_t countY);
+                                    GPUDistPiecewiseConst2D(const GPUDistPiecewiseConst2D&) = default;
+                                    GPUDistPiecewiseConst2D(GPUDistPiecewiseConst2D&&) = default;
+        GPUDistPiecewiseConst2D&    operator=(const GPUDistPiecewiseConst2D&) = default;
+        GPUDistPiecewiseConst2D&    operator=(GPUDistPiecewiseConst2D&&) = default;
+                                    ~GPUDistPiecewiseConst2D() = default;
 
         // Interface                                
-        __host__ __device__ 
+        __device__ 
         Vector2f                Sample(float& pdf, RandomGPU& rng) const;
         __host__ __device__ 
         uint32_t                Width() const { return width; }
+        __host__ __device__
         uint32_t                Height() const { return height; }
 };
 
-class CPUDistGroupPiecewise1D
+class CPUDistGroupPiecewiseConst1D
 {
     private:
-        DeviceMemory                            memory;
-        std::vector<GPUDistPiecewise1D>         gpuDistributions;
+        DeviceMemory                                memory;
+        std::vector<GPUDistPiecewiseConst1D>        gpuDistributions;
 
-        std::vector<size_t>                     counts;
-        std::vector<const float*>               dPDFs;
-        std::vector<const float*>               dCDFs;
-        std::vector<const GPUDistPiecewise1D*>  dXDistributions;
+        std::vector<size_t>                         counts;
+        std::vector<const float*>                   dPDFs;
+        std::vector<const float*>                   dCDFs;
+        std::vector<const GPUDistPiecewiseConst1D*> dXDistributions;
 
     protected:
     public:
         // Constructors & Destructor
-                                        CPUDistGroupPiecewise1D() = default;
-                                        CPUDistGroupPiecewise1D(const std::vector<std::vector<float>>& pdfValues,
-                                                                const CudaSystem& system);
-                                        CPUDistGroupPiecewise1D(const CPUDistGroupPiecewise1D&) = delete;
-                                        CPUDistGroupPiecewise1D(CPUDistGroupPiecewise1D&&) = default;
-        CPUDistGroupPiecewise1D&        operator=(const CPUDistGroupPiecewise1D&) = delete;
-        CPUDistGroupPiecewise1D&        operator=(CPUDistGroupPiecewise1D&&) = default;
-                                        ~CPUDistGroupPiecewise1D() = default;
+                                        CPUDistGroupPiecewiseConst1D() = default;
+                                        CPUDistGroupPiecewiseConst1D(const std::vector<std::vector<float>>& functions,
+                                                                     const CudaSystem& system);
+                                        CPUDistGroupPiecewiseConst1D(const CPUDistGroupPiecewiseConst1D&) = delete;
+                                        CPUDistGroupPiecewiseConst1D(CPUDistGroupPiecewiseConst1D&&) = default;
+        CPUDistGroupPiecewiseConst1D&   operator=(const CPUDistGroupPiecewiseConst1D&) = delete;
+        CPUDistGroupPiecewiseConst1D&   operator=(CPUDistGroupPiecewiseConst1D&&) = default;
+                                        ~CPUDistGroupPiecewiseConst1D() = default;
 
-        const GPUDistPiecewise1D&       DistributionGPU(uint32_t index) const;
+        const GPUDistPiecewiseConst1D&  DistributionGPU(uint32_t index) const;
 };
 
-class CPUDistGroupPiecewise2D
+class CPUDistGroupPiecewiseConst2D
 {
-    private:
-        DeviceMemory                    memory;
-        std::vector<GPUDistPiecewise2D> gpuDistributions;
+    public:
+        struct DistData2D
+        {
+            const float*                    dYPDF;
+            const float*                    dYCDF;
+            std::vector<const float*>       dXPDFs;
+            std::vector<const float*>       dXCDFs;
 
-        std::vector<Vector2ui>          dimensions;
-        std::vector<const float*>       dPDFs;
-        std::vector<const float*>       dCDFs;
+            const GPUDistPiecewiseConst1D*  dXDists;
+            GPUDistPiecewiseConst1D         yDist;
+        };
+    private:
+        DeviceMemory                                memory;        
+
+        std::vector<Vector2ui>                      dimensions;
+        std::vector<DistData2D>                     distDataList;
+
+        std::vector<const float*>                   dCDFs;
+        std::vector<const GPUDistPiecewiseConst1D*> dXDistributions;
+        std::vector<GPUDistPiecewiseConst2D>        gpuDistributions;
 
     protected:
     public:
         // Constructors & Destructor
-                                        CPUDistGroupPiecewise2D() = default;
-                                        CPUDistGroupPiecewise2D(const std::vector<std::vector<float>>& pdfValues,
+                                        CPUDistGroupPiecewiseConst2D() = default;
+                                        CPUDistGroupPiecewiseConst2D(const std::vector<std::vector<float>>& functions,
                                                                 const std::vector<Vector2ui>& dimensions,
                                                                 const CudaSystem& system);
-                                        CPUDistGroupPiecewise2D(const CPUDistGroupPiecewise2D&) = delete;
-                                        CPUDistGroupPiecewise2D(CPUDistGroupPiecewise2D&&) = default;
-        CPUDistGroupPiecewise2D&        operator=(const CPUDistGroupPiecewise2D&) = delete;
-        CPUDistGroupPiecewise2D&        operator=(CPUDistGroupPiecewise2D&&) = default;
-                                        ~CPUDistGroupPiecewise2D() = default;
+                                        CPUDistGroupPiecewiseConst2D(const CPUDistGroupPiecewiseConst2D&) = delete;
+                                        CPUDistGroupPiecewiseConst2D(CPUDistGroupPiecewiseConst2D&&) = default;
+        CPUDistGroupPiecewiseConst2D&   operator=(const CPUDistGroupPiecewiseConst2D&) = delete;
+        CPUDistGroupPiecewiseConst2D&   operator=(CPUDistGroupPiecewiseConst2D&&) = default;
+                                        ~CPUDistGroupPiecewiseConst2D() = default;
        
-        const GPUDistPiecewise2D&       DistributionGPU(uint32_t index) const;
+        const GPUDistPiecewiseConst2D&  DistributionGPU(uint32_t index) const;
 };
 
-__host__
-inline GPUDistPiecewise1D::GPUDistPiecewise1D(const float* dCDFList,
-                                              const float* dPDFList,
-                                              uint32_t count)
+__host__ __device__
+inline GPUDistPiecewiseConst1D::GPUDistPiecewiseConst1D(const float* dCDFList,
+                                                        const float* dPDFList,
+                                                        uint32_t count)
     : gCDF(dCDFList)
     , gPDF(dPDFList)
     , count(count)
 {}
 
-__host__
-inline float GPUDistPiecewise1D::Sample(float& pdf, RandomGPU& rng) const
+__device__
+inline float GPUDistPiecewiseConst1D::Sample(float& pdf, RandomGPU& rng) const
 {
     float xi = GPUDistribution::Uniform<float>(rng);
     float index;
@@ -137,11 +151,11 @@ inline float GPUDistPiecewise1D::Sample(float& pdf, RandomGPU& rng) const
     return index;
 }
 
-__host__
-inline GPUDistPiecewise2D::GPUDistPiecewise2D(const GPUDistPiecewise1D dDistributionsY,
-                                              const GPUDistPiecewise1D* dDistributionsX,
-                                              uint32_t countX,
-                                              uint32_t countY)
+__host__ __device__
+inline GPUDistPiecewiseConst2D::GPUDistPiecewiseConst2D(const GPUDistPiecewiseConst1D dDistributionsY,
+                                                        const GPUDistPiecewiseConst1D* dDistributionsX,
+                                                        uint32_t countX,
+                                                        uint32_t countY)
     : gDistributionsY(dDistributionsY)
     , gDistributionsX(dDistributionsX)
     , width(countX)
@@ -149,15 +163,15 @@ inline GPUDistPiecewise2D::GPUDistPiecewise2D(const GPUDistPiecewise1D dDistribu
 {}
 
 __device__
-inline Vector2f GPUDistPiecewise2D::Sample(float& pdf, RandomGPU& rng) const
+inline Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, RandomGPU& rng) const
 {
     // Fist select a row using Y distribution
     float pdfY;
-    float indexY = gDistributionsY.Sample(pdf, rng);
+    float indexY = gDistributionsY.Sample(pdfY, rng);
 
     // Now select column using X distribution of that row
     float pdfX;
-    float indexX = gDistributionsX[static_cast<uint32_t>(indexX)].Sample(pdfY, rng);
+    float indexX = gDistributionsX[static_cast<uint32_t>(indexY)].Sample(pdfX, rng);
 
     // Combined PDF is multiplication since SampleX depends on SampleY
     pdf = pdfX * pdfY;

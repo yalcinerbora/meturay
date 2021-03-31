@@ -334,8 +334,6 @@ void KCIntersectBVH(// O
             uint32_t loc = Pop(depth);
             currentNode = gBVH + loc;
 
-            //char debugChar = 'N';
-
             if(currentNode->isLeaf)
             {
                 HitResult result = PGroup::Hit(// Output                                            
