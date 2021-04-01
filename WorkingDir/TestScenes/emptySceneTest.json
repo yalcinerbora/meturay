@@ -1,0 +1,36 @@
+{
+    "Cameras": [
+    {
+		"id": 0,
+		"type": "Pinhole",
+
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"gaze": [0.0, 2, 0.0],
+		"planes": [0.1, 20.0],
+		"position": [0.0, 0.0, 7.0],
+		"up": [0.0, 1.0, 0.0]
+	}],
+
+	"Mediums": [{"id" : 0, "type" : "Vacuum"}],
+	"Transforms":[{"id": 0, "type": "Identity"}],
+
+	"Materials":[],
+
+	"Primitives":[],
+
+	"Accelerators": [],
+
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "Linear"},
+    "BaseBoundaryMaterial": 0,
+    "BaseMedium" : 0,
+
+	"Surfaces": [],
+	"LightSurfaces": [],
+    "CameraSurfaces": [{"camera": 0}]
+}

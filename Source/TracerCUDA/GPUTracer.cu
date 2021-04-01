@@ -93,6 +93,7 @@ GPUTracer::GPUTracer(const CudaSystem& system,
     , mediums(scene.Mediums())
     , cameras(scene.Cameras())
     , lights(scene.Lights())
+    , workInfo(scene.WorkBatchInfo())
     , baseMediumIndex(scene.BaseMediumIndex())
     , identityTransformIndex(scene.IdentityTransformIndex())
     , maxAccelBits(Vector2i(Utility::FindFirstSet32(scene.MaxAccelIds()[0]) + 1,
@@ -234,6 +235,46 @@ TracerError GPUTracer::Initialize()
     // Construct Base accelerator using aabb list
     if((e = baseAccelerator.Constrcut(cudaSystem, allSurfaceAABBs)) != TracerError::OK)
         return e;
+
+    // Attach Luminance Distributions To Lights    
+    for(auto& light : lights)
+    {
+        CPULightGroupI& lightGroup = *light.second;
+
+        if(lightGroup.RequiresLuminance())
+        {
+            const std::vector<HitKey> materialKeys = lightGroup.AcquireMaterialKeys();
+            std::sort(materialKeys.begin(), materialKeys.end());
+
+            std::vector<std::vector<float>> luminanceData;
+            std::vector<Vector2ui> luminanceDimensions;
+
+            const GPULightMaterialGroupI* matGroup;
+            HitKey currentKey = HitKey::InvalidKey;
+            for(const HitKey key : materialKeys)
+            {
+                if(key != currentKey)
+                {
+                    currentKey = key;
+                    //const GPUMaterialGroupI* asd =
+                    std::binary_search(materialGroups.cbegin(), materialGroups.cend(),
+                                       )
+
+                    matGroup = static_cast<const GPULightMaterialGroupI*>(workInfo.at(HitKey::FetchBatchPortion(currentKey)).second.get());
+                }
+                
+                Vector2ui dimension;
+                std::vector<float> lumData = matGroup->LuminanceData(dimension, currentKey);
+                luminanceData.push_back(std::move(lumData));
+                luminanceDimensions.push_back(dimension);
+            }
+
+            // Compiled Luminance Info
+            if((e = lightGroup.GenerateLuminanceDistribution(luminanceData,
+                                                             luminanceDimensions)) != TracerError::OK)
+                return e;
+        }
+    }
 
     cudaSystem.SyncGPUAll();
     return TracerError::OK;

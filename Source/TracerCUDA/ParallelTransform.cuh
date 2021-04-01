@@ -13,7 +13,7 @@ __global__ void TransformArray(Type* gInOut,
 
     Type input = gInOut[globalId];
     Type result = f(input);
-    //gIn[globalId] = result;
+    gInOut[globalId] = result;
 }
 
 template<class Type, class ReduceFunctor>
