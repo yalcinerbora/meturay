@@ -38,7 +38,7 @@ struct TracerError;
 class GPUTracer : public GPUTracerI
 {
     private:
-        static constexpr const size_t       AlignByteCount = 128;
+        static constexpr const size_t   AlignByteCount = 128;
 
         //
         const uint32_t                              maxHitSize;
@@ -51,6 +51,7 @@ class GPUTracer : public GPUTracerI
         const NamedList<CPUMediumGPtr>&             mediums;
         const NamedList<CPULightGPtr>&              lights;
         const NamedList<CPUCameraGPtr>&             cameras;
+        const WorkBatchCreationInfo&                workInfo;
 
         // GPU Memory
         DeviceMemory                                commonTypeMemory;
@@ -59,6 +60,7 @@ class GPUTracer : public GPUTracerI
         TracerError                                 LoadLights(std::vector<const GPULightI*>&);
         TracerError                                 LoadTransforms(std::vector<const GPUTransformI*>&);
         TracerError                                 LoadMediums(std::vector<const GPUMediumI*>&);
+        TracerError                                 AttachDistributions();
 
     protected:
         // Max Bit Sizes for Efficient Sorting

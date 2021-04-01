@@ -190,3 +190,10 @@ TracerError CPULightGroupSkySphere::ConstructLights(const CudaSystem& system,
 
     return TracerError::OK;
 }
+
+TracerError CPULightGroupSkySphere::GenerateLumDistribution(const std::vector<std::vector<float>>& luminance,
+                                                            const std::vector<Vector2ui>& dimension,
+                                                            const CudaSystem&)
+{
+    return TracerError::LIGHT_GROUP_CAN_NOT_GENERATE_DISTRIBUTION;
+}

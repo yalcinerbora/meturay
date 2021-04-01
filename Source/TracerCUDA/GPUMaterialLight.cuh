@@ -20,7 +20,6 @@ class LightMatConstant final
 
     private:
         DeviceMemory                    memory;
-        //std::vector<Distribution1D>     luminanceDistributions;
 
     public:
         // Constructors & Destructor
@@ -53,7 +52,11 @@ class LightMatConstant final
         bool                        IsLightGroup() const override { return true; }
         bool                        IsEmissiveGroup() const override { return true; }
         bool                        IsCameraGroup() const override { return false; }
-        //const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const override;
+
+        // Light Material Interface
+        TracerError                 LuminanceData(std::vector<float>& lumData,
+                                                  Vector2ui& dim,
+                                                  uint32_t innerId) const override;
 
         uint8_t                     SampleStrategyCount() const { return 0; };
         // No Texture
@@ -74,7 +77,6 @@ class LightMatTextured final
     private:
         DeviceMemory                        memory;
         std::vector<Texture2D<Vector4>>     textureList;
-        //std::vector<Distribution2D>         luminanceDistributions;
 
     public:
         // Constructors & Destructor
@@ -107,7 +109,11 @@ class LightMatTextured final
         bool                        IsLightGroup() const override { return true; }
         bool                        IsEmissiveGroup() const override { return true; }
         bool                        IsCameraGroup() const override { return false; }
-        //const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const override;
+        
+        // Light Material Interface
+        TracerError                 LuminanceData(std::vector<float>& lumData,
+                                                  Vector2ui& dim,
+                                                  uint32_t innerId) const override;
 
         uint8_t                     SampleStrategyCount() const { return 0; };
         // No Texture
@@ -128,7 +134,6 @@ class LightMatCube final
     private:
         DeviceMemory                        memory;
         std::vector<TextureCube<Vector4>>   textureList;
-        //std::vector<Distribution2D>         luminanceDistributions;
 
     public:
         // Constructors & Destructor
@@ -161,7 +166,11 @@ class LightMatCube final
         bool                        IsLightGroup() const override { return true; }
         bool                        IsEmissiveGroup() const override { return true; }
         bool                        IsCameraGroup() const override { return false; }
-        //const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const override;
+        
+        // Light Material Interface
+        TracerError                 LuminanceData(std::vector<float>& lumData,
+                                                  Vector2ui& dim,
+                                                  uint32_t innerId) const override;
 
         uint8_t                     SampleStrategyCount() const { return 0; };
         // No Texture
@@ -178,11 +187,19 @@ class LightMatSkySphere final
 {
     public:
         static const char*      TypeName() { return "LightSkySphere"; }
+        // Type Convenience
+        using Tex2DMap          = std::map<uint32_t, std::unique_ptr<TextureI<2, 4>>>;
+        using Texture2DRef      = TextureRef<2, Vector3>;
 
     private:
         DeviceMemory                        memory;
-        std::vector<Texture2D<Vector4>>     textureList;
-        //std::vector<Distribution2D>         luminanceDistributions;
+        // Actual Allocation of Textures
+        Tex2DMap                            textureMemory;
+        // Temp List of Textures which will be used on
+        // texture reference construction
+        std::vector<Texture2DRef>    textureList;
+
+        
 
     public:
         // Constructors & Destructor
@@ -204,18 +221,23 @@ class LightMatSkySphere final
                                                 double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override;
-
+        TracerError             ConstructTextureReferences() override;
         // Material Queries
         size_t                  UsedGPUMemory() const override;
         size_t                  UsedCPUMemory() const override { return sizeof(LightMatTexData); }
         size_t                  UsedGPUMemory(uint32_t materialId) const override;
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
+        // Light Material Interface
+        TracerError                 LuminanceData(std::vector<float>& lumData,
+                                                  Vector2ui& dim,
+                                                  uint32_t innerId) const override;
+
         // NEE Related
         bool                        IsLightGroup() const override { return true; }
         bool                        IsEmissiveGroup() const override { return true; }
         bool                        IsCameraGroup() const override { return false; }
-        //const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const override;
+
 
         uint8_t                     SampleStrategyCount() const { return 0; };
         // No Texture
@@ -264,8 +286,8 @@ inline size_t LightMatCube::UsedGPUMemory(uint32_t materialId) const
 inline size_t LightMatSkySphere::UsedGPUMemory() const
 {
     size_t totalSize = memory.Size();
-    for(const auto& t : textureList)
-        totalSize += t.Size();
+    for(const auto& t : textureMemory)
+        totalSize += .Size();
     return totalSize;
 }
 

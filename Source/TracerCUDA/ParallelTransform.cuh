@@ -3,10 +3,10 @@
 #include "RayLib/CudaCheck.h"
 #include "TransformFunctions.cuh"
 
-template <class Type, class ReduceFunctor>
+template <class Type, class TransformFunctor>
 __global__ void TransformArray(Type* gInOut,
                                unsigned int elementCount,
-                               ReduceFunctor f)
+                               TransformFunctor f)
 {
     unsigned int globalId = blockIdx.x * blockDim.x + threadIdx.x;
     if(globalId >= elementCount) return;
@@ -16,10 +16,10 @@ __global__ void TransformArray(Type* gInOut,
     gInOut[globalId] = result;
 }
 
-template<class Type, class ReduceFunctor>
+template<class Type, class TransformFunctor>
 __host__ void TransformArrayGPU(Type* dData,
                                 size_t elementCount,
-                                const ReduceFunctor& f,
+                                const TransformFunctor& f,
                                 cudaStream_t stream = (cudaStream_t)0)
 {
     static constexpr unsigned int TPB = StaticThreadPerBlock1D;

@@ -82,6 +82,60 @@ TracerError GPUTracer::LoadMediums(std::vector<const GPUMediumI*>& dGPUMediums)
     return TracerError::OK;
 }
 
+TracerError GPUTracer::AttachDistributions()
+{
+    TracerError e = TracerError::OK;
+    // Attach Luminance Distributions To Lights    
+    for(auto& light : lights)
+    {
+        CPULightGroupI& lightGroup = *light.second;
+
+        if(lightGroup.RequiresLuminance())
+        {
+            const std::vector<HitKey> materialKeys = lightGroup.AcquireMaterialKeys();
+            std::sort(materialKeys.begin(), materialKeys.end());
+
+            std::vector<std::vector<float>> luminanceData;
+            std::vector<Vector2ui> luminanceDimensions;
+
+            const GPULightMaterialGroupI* matGroup;
+            HitKey currentKey = HitKey::InvalidKey;
+            for(const HitKey key : materialKeys)
+            {
+                if(key != currentKey)
+                {
+                    currentKey = key;
+                    const auto loc = std::find_if(workInfo.cbegin(),
+                                                  workInfo.cend(),
+                                                  [&](const auto& info)
+                                                  {
+                                                      return (std::get<0>(info) == HitKey::FetchBatchPortion(currentKey));
+                                                  });
+                    // Acquire Light Material Group
+                    matGroup = static_cast<const GPULightMaterialGroupI*>(std::get<2>(*loc));
+                }
+
+                Vector2ui dimension;
+                std::vector<float> lumData;
+                if((e = matGroup->LuminanceData(lumData,
+                                                dimension, 
+                                                currentKey,
+                                                cudaSystem)) != TracerError::OK)
+                    return e;
+
+                luminanceData.push_back(std::move(lumData));
+                luminanceDimensions.push_back(dimension);
+            }
+
+            // Compiled Luminance Info
+            if((e = lightGroup.GenerateLumDistribution(luminanceData,
+                                                       luminanceDimensions,
+                                                       cudaSystem)) != TracerError::OK)
+                return e;
+        }
+    }
+}
+
 GPUTracer::GPUTracer(const CudaSystem& system,
                      const GPUSceneI& scene,
                      const TracerParameters& p)
@@ -236,45 +290,8 @@ TracerError GPUTracer::Initialize()
     if((e = baseAccelerator.Constrcut(cudaSystem, allSurfaceAABBs)) != TracerError::OK)
         return e;
 
-    // Attach Luminance Distributions To Lights    
-    for(auto& light : lights)
-    {
-        CPULightGroupI& lightGroup = *light.second;
-
-        if(lightGroup.RequiresLuminance())
-        {
-            const std::vector<HitKey> materialKeys = lightGroup.AcquireMaterialKeys();
-            std::sort(materialKeys.begin(), materialKeys.end());
-
-            std::vector<std::vector<float>> luminanceData;
-            std::vector<Vector2ui> luminanceDimensions;
-
-            const GPULightMaterialGroupI* matGroup;
-            HitKey currentKey = HitKey::InvalidKey;
-            for(const HitKey key : materialKeys)
-            {
-                if(key != currentKey)
-                {
-                    currentKey = key;
-                    //const GPUMaterialGroupI* asd =
-                    std::binary_search(materialGroups.cbegin(), materialGroups.cend(),
-                                       )
-
-                    matGroup = static_cast<const GPULightMaterialGroupI*>(workInfo.at(HitKey::FetchBatchPortion(currentKey)).second.get());
-                }
-                
-                Vector2ui dimension;
-                std::vector<float> lumData = matGroup->LuminanceData(dimension, currentKey);
-                luminanceData.push_back(std::move(lumData));
-                luminanceDimensions.push_back(dimension);
-            }
-
-            // Compiled Luminance Info
-            if((e = lightGroup.GenerateLuminanceDistribution(luminanceData,
-                                                             luminanceDimensions)) != TracerError::OK)
-                return e;
-        }
-    }
+    if((e = AttachDistributions()) != TracerError::OK)
+        return e;
 
     cudaSystem.SyncGPUAll();
     return TracerError::OK;

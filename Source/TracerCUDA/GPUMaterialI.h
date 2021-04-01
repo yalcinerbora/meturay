@@ -80,8 +80,11 @@ class GPULightMaterialGroupI : public GPUMaterialGroupI
         // Implementations
         bool                                IsLightGroup() const override { return true; }
         bool                                IsCameraGroup() const override { return false; }
+
         // Interface
-        //virtual const GPUDistribution2D&    LuminanceDistribution(uint32_t materialId) const = 0;
+        virtual TracerError                 LuminanceData(std::vector<float>& lumData,
+                                                          Vector2ui& dim,
+                                                          uint32_t innerId) const = 0;
 };
 
 // Additional Interface for Camera material
