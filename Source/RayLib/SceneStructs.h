@@ -134,7 +134,7 @@ struct CameraSurfaceStruct
     uint32_t    cameraId;
 };
 
-struct MaterialTextureStruct
+struct NodelTextureStruct
 {
     uint32_t            texId;
     TextureAccessLayout channelLayout;

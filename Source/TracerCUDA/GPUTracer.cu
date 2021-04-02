@@ -92,8 +92,12 @@ TracerError GPUTracer::AttachDistributions()
 
         if(lightGroup.RequiresLuminance())
         {
-            const std::vector<HitKey> materialKeys = lightGroup.AcquireMaterialKeys();
-            std::sort(materialKeys.begin(), materialKeys.end());
+            std::vector<HitKey> materialKeys = lightGroup.AcquireMaterialKeys();
+            std::sort(materialKeys.begin(), materialKeys.end(),
+                      [](const HitKey& k0, const HitKey& k1) -> bool
+                      {
+                          return k0 < k1;
+                      });
 
             std::vector<std::vector<float>> luminanceData;
             std::vector<Vector2ui> luminanceDimensions;
@@ -119,8 +123,7 @@ TracerError GPUTracer::AttachDistributions()
                 std::vector<float> lumData;
                 if((e = matGroup->LuminanceData(lumData,
                                                 dimension, 
-                                                currentKey,
-                                                cudaSystem)) != TracerError::OK)
+                                                currentKey)) != TracerError::OK)
                     return e;
 
                 luminanceData.push_back(std::move(lumData));

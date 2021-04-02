@@ -22,7 +22,7 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
     {
         // Load Textured Albedo Data
         TexturedDataNodeList<Vector3> matAlbedoNodes = sceneNode->AccessTexturedDataVector3(ALBEDO);
-        OptionalNodeList<MaterialTextureStruct> matNormalNodes = sceneNode->AccessOptionalTextureNode(NORMAL);
+        OptionalNodeList<NodelTextureStruct> matNormalNodes = sceneNode->AccessOptionalTextureNode(NORMAL);
         assert(matAlbedoNodes.size() == matNormalNodes.size());
 
         std::vector<ConstructionInfo> localInfo;
@@ -30,13 +30,13 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
         for(int j = 0; j < matAlbedoNodes.size(); j++)
         {
             const TexturedDataNode<Vector3>& albedoNode = matAlbedoNodes[j];
-            const OptionalNode<MaterialTextureStruct>& normalNode = matNormalNodes[j];
+            const OptionalNode<NodelTextureStruct>& normalNode = matNormalNodes[j];
 
             // Check if this is texture node
             ConstructionInfo constructionInfo;
             if(albedoNode.isTexture)
             {
-                const MaterialTextureStruct& texInfo = albedoNode.texNode;
+                const NodelTextureStruct& texInfo = albedoNode.texNode;
 
                 const TextureI<2, 4>* texture;
                 if((err = TextureFunctions::AllocateTexture(texture,
@@ -71,7 +71,7 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
             // Check NormalMap
             if(normalNode.first)
             {
-                const MaterialTextureStruct& texInfo = normalNode.second;
+                const NodelTextureStruct& texInfo = normalNode.second;
                 const TextureI<2, 4>* texture;
                 if((err = TextureFunctions::AllocateTexture(texture,
                                                             dTextureMemory, texInfo,

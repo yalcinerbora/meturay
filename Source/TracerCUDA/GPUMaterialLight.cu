@@ -157,7 +157,7 @@ SceneError LightMatSkySphere::InitializeGroup(const NodeListing& materialNodes,
         TextureList radianceTextures = sceneNode->AccessTextureNode(RADIANCE);
         
         // Calculate Distributions
-        for(const MaterialTextureStruct& texInfo : radianceTextures)
+        for(const NodelTextureStruct& texInfo : radianceTextures)
         {
             const TextureI<2, 4>* texture;
             if((err = TextureFunctions::AllocateTexture(texture,

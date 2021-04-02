@@ -151,7 +151,7 @@ TexturedDataNodeList<T> SceneNodeJson::AccessTextured(const std::string& name,
         TexturedDataNode<T> texNode;
         if(node.is_object())
         {
-            MaterialTextureStruct n = SceneIO::LoadMaterialTextureStruct(node, time);
+            NodelTextureStruct n = SceneIO::LoadNodeTextureStruct(node, time);
             texNode.isTexture = true;
             texNode.texNode = n;
         }
@@ -429,6 +429,11 @@ std::vector<UInt64List> SceneNodeJson::AccessUInt64List(const std::string& name,
     return AccessList<uint64_t, SceneIO::LoadNumber<uint64_t>>(name, time);
 }
 
+TextureList SceneNodeJson::AccessTexture(const std::string& name, double time) const
+{
+    return AccessSingle<NodelTextureStruct, SceneIO::LoadNodeTextureStruct>(name, time);
+}
+
 TexturedDataNodeList<float> SceneNodeJson::AccessTexturedDataFloat(const std::string& name, double time) const
 {
     return AccessTextured<float, SceneIO::LoadNumber<float>>(name, time);
@@ -449,8 +454,8 @@ TexturedDataNodeList<Vector4> SceneNodeJson::AccessTexturedDataVector4(const std
     return AccessTextured<Vector4, SceneIO::LoadVector<4, float>>(name, time);
 }
 
-OptionalNodeList<MaterialTextureStruct> SceneNodeJson::AccessOptionalTextureNode(const std::string& name,
-                                                                                 double time) const
+OptionalNodeList<NodelTextureStruct> SceneNodeJson::AccessOptionalTextureNode(const std::string& name,
+                                                                              double time) const
 {
-    return AccessOptional<MaterialTextureStruct, SceneIO::LoadMaterialTextureStruct>(name, time);
+    return AccessOptional<NodelTextureStruct, SceneIO::LoadNodeTextureStruct>(name, time);
 }
