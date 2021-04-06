@@ -98,10 +98,10 @@ class CPUCameraGroupPinhole final : public CPUCameraGroupI
         // Interface
         const char*                     Type() const override;
         const GPUCameraList&            GPUCameras() const override;
-        SceneError					    InitializeGroup(const CameraGroupData& cameraNodes,
+        SceneError					    InitializeGroup(const CameraGroupDataList& cameraNodes,
                                                         const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                         const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
-                                                        const MaterialKeyListing& allMaterialKeys,
+                                                        uint32_t cameraMaterialBatchId,
                                                         double time,
                                                         const std::string& scenePath) override;
         SceneError					    ChangeTime(const NodeListing& lightNodes, double time,

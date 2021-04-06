@@ -67,7 +67,7 @@ CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<std
                               cudaMemcpyHostToDevice));
 
         // Normalize PDF
-        TransformArrayGPU(dPDFs[i], counts[i],
+        TransformArrayGPU(const_cast<float*>(dPDFs[i]), counts[i],
                           HostMultiplyFunctor<float>(1.0f / static_cast<float>(counts[i])));
 
         // Utilize GPU to do Scan Algorithm to find CDF
@@ -75,11 +75,11 @@ CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<std
                                                        dPDFs[i], counts[i] + 1, 0.0f);
 
         // Use last element to normalize Function values to PDF
-        TransformArrayGPU(dPDFs[i], counts[i],
+        TransformArrayGPU(const_cast<float*>(dPDFs[i]), counts[i],
                           DeviceDivideFunctor<float>(dCDFs[i][counts[i]]));
 
         // Transform CDF Also
-        TransformArrayGPU(dCDFs[i], counts[i],
+        TransformArrayGPU(const_cast<float*>(dCDFs[i]), counts[i],
                           DeviceDivideFunctor<float>(dCDFs[i][counts[i]]));
     }
 

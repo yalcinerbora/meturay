@@ -23,9 +23,9 @@
 	"Materials":[
 	{
 		"id": [0, 1],
-		"type": "Constant",
-        "albedo" : [[0, 0, 0],
-                    [0.5, 0.5, 0.5]]
+		"type": "BConstant",
+        "radiance" : [[0, 0, 0],
+                      [0.5, 0.5, 0.5]]
 	}],
 
 	"Primitives":[

@@ -53,15 +53,12 @@ class CPULightGroupSkySphere : public CPULightGroupI
 
     private:
         DeviceMemory                            memory;
-        // CPU Temp Allocation
-        std::vector<std::vector<float>>         hLuminances;
-        std::vector<Vector2ui>                  hLuminanceSizes;
-
+        // CPU Temp Allocations
         std::vector<Byte>                       hIsHemiOptions;
         std::vector<HitKey>                     hHitKeys;
         std::vector<uint16_t>                   hMediumIds;
         std::vector<TransformId>                hTransformIds;
-        // CPU Permanent Allocation
+        // CPU Permanent Allocations
         CPUDistGroupPiecewiseConst2D            hLuminanceDistributions;
         // Allocations of the GPU Class
         const GPULightSkySphere*                dGPULights;
@@ -78,7 +75,7 @@ class CPULightGroupSkySphere : public CPULightGroupI
 
         const char*				    Type() const override;
 		const GPULightList&		    GPULights() const override;
-		SceneError				    InitializeGroup(const ConstructionDataList& lightNodes,
+		SceneError				    InitializeGroup(const LightGroupDataList& lightNodes,
                                                     const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                     const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                                     const MaterialKeyListing& allMaterialKeys,
@@ -87,15 +84,9 @@ class CPULightGroupSkySphere : public CPULightGroupI
 		SceneError				    ChangeTime(const NodeListing& lightNodes, double time,
 								    		   const std::string& scenePath) override;
 		TracerError				    ConstructLights(const CudaSystem&,
-                                                    const GPUTransformI**) override;
+                                                    const GPUTransformI**,
+                                                    const KeyMaterialMap&) override;
 		uint32_t				    LightCount() const override;
-
-        // Luminance Dist Related
-		bool						RequiresLuminance() const override;
-		const std::vector<HitKey>&	AcquireMaterialKeys() const override;
-		TracerError					GenerateLumDistribution(const std::vector<std::vector<float>>& luminance,
-															const std::vector<Vector2ui>& dimension,
-															const CudaSystem&) override;
 
 		size_t					    UsedGPUMemory() const override;
         size_t					    UsedCPUMemory() const override;
@@ -179,33 +170,18 @@ inline uint32_t CPULightGroupSkySphere::LightCount() const
 
 inline size_t CPULightGroupSkySphere::UsedGPUMemory() const
 {
-    return memory.Size();
-}
-
-inline size_t CPULightGroupSkySphere::UsedCPUMemory() const
-{
-    size_t totalLumSize = 0;
-    for(const auto& lum : hLuminances)
-        totalLumSize += lum.size();
-    totalLumSize *= sizeof(float);
-
-    size_t totalSize = (hHitKeys.size() * sizeof(HitKey) +
-                        hMediumIds.size() * sizeof(uint16_t) +
-                        hTransformIds.size() * sizeof(TransformId) +
-                        hLuminanceSizes.size() * sizeof(Vector2ui) +
-                        totalLumSize);
-
+    size_t totalSize = (memory.Size() +
+                        hLuminanceDistributions.UsedGPUMemory());
     return totalSize;
 }
 
-inline bool CPULightGroupSkySphere::RequiresLuminance() const
-{
-    return true;
-}
+inline size_t CPULightGroupSkySphere::UsedCPUMemory() const
+{    
+    size_t totalSize = (hHitKeys.size() * sizeof(HitKey) +
+                        hMediumIds.size() * sizeof(uint16_t) +
+                        hTransformIds.size() * sizeof(TransformId));
 
-inline const std::vector<HitKey>& CPULightGroupSkySphere::AcquireMaterialKeys() const
-{
-    return hHitKeys;
+    return totalSize;
 }
 
 static_assert(IsTracerClass<CPULightGroupSkySphere>::value,

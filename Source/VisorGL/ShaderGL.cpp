@@ -103,7 +103,17 @@ ShaderGL& ShaderGL::operator=(ShaderGL&& other) noexcept
     assert(this != &other);
     glDeleteProgram(shaderID);
     if(shaderID != 0)
+    {
         METU_LOG("Shader Deleted. Shader ID: %d", shaderID);
+        // Deleting shader pipeline if no shader is left
+        shaderCount--;
+        if(shaderCount == 0)
+        {
+            glBindProgramPipeline(0);
+            glDeleteProgramPipelines(1, &shaderPipelineID);
+            shaderPipelineID = 0;
+        }
+    }        
     shaderID = other.shaderID;
     shaderType = other.shaderType;
     valid = other.valid;

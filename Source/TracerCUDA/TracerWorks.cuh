@@ -1,9 +1,9 @@
 #pragma once
 
-#include "BasicMaterials.cuh"
-#include "SampleMaterials.cuh"
+#include "DebugMaterials.cuh"
+#include "SimpleMaterials.cuh"
 #include "UnrealMaterial.cuh"
-#include "LambertTexMaterial.cuh"
+#include "LambertMaterial.cuh"
 #include "EmptyMaterial.cuh"
 #include "TracerKC.cuh"
 
@@ -12,7 +12,7 @@
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveSphere.h"
 #include "GPUPrimitiveEmpty.h"
-#include "GPUMaterialLight.cuh"
+#include "BoundaryMaterials.cuh"
 
 template<class MGroup, class PGroup>
 class DirectTracerWork
@@ -61,7 +61,7 @@ class PathTracerWork
 };
 
 template<class MGroup, class PGroup>
-class PathTracerLightWork
+class PathTracerBoundaryWork
     : public GPUWorkBatch<PathTracerGlobal, PathTracerLocal, RayAuxPath,
                           MGroup, PGroup, PathLightWork<MGroup>,
                           PGroup::GetSurfaceFunction>
@@ -72,12 +72,12 @@ class PathTracerLightWork
     protected:
     public:
         // Constrcutors & Destructor
-                                        PathTracerLightWork(const GPUMaterialGroupI& mg,
-                                                            const GPUPrimitiveGroupI& pg,
-                                                            const GPUTransformI* const* t,
-                                                            bool neeOn,
-                                                            bool emptyPrimitive);
-                                        ~PathTracerLightWork() = default;
+                                        PathTracerBoundaryWork(const GPUMaterialGroupI& mg,
+                                                               const GPUPrimitiveGroupI& pg,
+                                                               const GPUTransformI* const* t,
+                                                               bool neeOn,
+                                                               bool emptyPrimitive);
+                                        ~PathTracerBoundaryWork() = default;
 
         void                            GetReady() override {}
         uint8_t                         OutRayCount() const override { return 0; }
@@ -152,26 +152,33 @@ PathTracerWork<M, P>::PathTracerWork(const GPUMaterialGroupI& mg,
 {
     // Populate localData
     localData.emptyPrimitive = false;
-    localData.emissiveMaterial = materialGroup.IsEmissiveGroup();
-    localData.specularMaterial = materialGroup.IsSpecularGroup();
+    // Mark as Specular Group if material cannot be sampled
+    localData.specularMaterial = (!materialGroup.CanBeSampled());
 }
 
 template<class M, class P>
 uint8_t PathTracerWork<M, P>::OutRayCount() const
 {
-    if(materialGroup.IsSpecularGroup())
+    // Incorporate NEE Ray as an addition
+    // If material can be sampled (i.e no Dirac Delta BxDF)
+    if(!materialGroup.CanBeSampled())
+        // Material Cannot be sampled just allocate whatever
+        // the material is requesting
         return materialGroup.SampleStrategyCount();
     else if(materialGroup.SampleStrategyCount() != 0)
+        // Material can be sampled add one extra nee ray allocation
         return materialGroup.SampleStrategyCount() + ((neeOn) ? 1 : 0);
+    // Material does not require any samples meaning it is boundary material
+    // Do not allocate any rays for this kind of mat
     return 0;
 }
 
 template<class M, class P>
-PathTracerLightWork<M, P>::PathTracerLightWork(const GPUMaterialGroupI& mg,
-                                               const GPUPrimitiveGroupI& pg,
-                                               const GPUTransformI* const* t,
-                                               bool neeOn,
-                                               bool emptyPrimitive)
+PathTracerBoundaryWork<M, P>::PathTracerBoundaryWork(const GPUMaterialGroupI& mg,
+                                                     const GPUPrimitiveGroupI& pg,
+                                                     const GPUTransformI* const* t,
+                                                     bool neeOn,
+                                                     bool emptyPrimitive)
     : GPUWorkBatch<PathTracerGlobal, PathTracerLocal, RayAuxPath,
                    M, P, PathLightWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
@@ -179,7 +186,6 @@ PathTracerLightWork<M, P>::PathTracerLightWork(const GPUMaterialGroupI& mg,
 {
     // Populate localData
     localData.emptyPrimitive = emptyPrimitive;
-    localData.emissiveMaterial = materialGroup.IsEmissiveGroup();
 }
 
 template<class P>
@@ -200,28 +206,29 @@ inline AmbientOcclusionMissWork::AmbientOcclusionMissWork(const GPUMaterialGroup
 {}
 
 // Basic Tracer Work Batches
-extern template class DirectTracerWork<ConstantMat, GPUPrimitiveEmpty>;
-extern template class DirectTracerWork<ConstantMat, GPUPrimitiveTriangle>;
-extern template class DirectTracerWork<ConstantMat, GPUPrimitiveSphere>;
-
 extern template class DirectTracerWork<BarycentricMat, GPUPrimitiveTriangle>;
 extern template class DirectTracerWork<SphericalMat, GPUPrimitiveSphere>;
 
 extern template class DirectTracerWork<NormalRenderMat, GPUPrimitiveTriangle>;
 extern template class DirectTracerWork<NormalRenderMat, GPUPrimitiveSphere>;
 
-extern template class DirectTracerWork<LambertTexMat, GPUPrimitiveTriangle>;
-extern template class DirectTracerWork<LambertTexMat, GPUPrimitiveSphere>;
+extern template class DirectTracerWork<LambertMat, GPUPrimitiveTriangle>;
+extern template class DirectTracerWork<LambertMat, GPUPrimitiveSphere>;
 
 extern template class DirectTracerWork<UnrealMat, GPUPrimitiveTriangle>;
 extern template class DirectTracerWork<UnrealMat, GPUPrimitiveSphere>;
 
+extern template class DirectTracerWork<BoundaryMatConstant, GPUPrimitiveEmpty>;
+extern template class DirectTracerWork<BoundaryMatConstant, GPUPrimitiveTriangle>;
+extern template class DirectTracerWork<BoundaryMatConstant, GPUPrimitiveSphere>;
+
+extern template class DirectTracerWork<BoundaryMatTextured, GPUPrimitiveTriangle>;
+extern template class DirectTracerWork<BoundaryMatTextured, GPUPrimitiveSphere>;
+
+extern template class DirectTracerWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
+
 // ===================================================
 // Path Tracer Work Batches
-extern template class PathTracerWork<EmissiveMat, GPUPrimitiveEmpty>;
-extern template class PathTracerWork<EmissiveMat, GPUPrimitiveTriangle>;
-extern template class PathTracerWork<EmissiveMat, GPUPrimitiveSphere>;
-
 extern template class PathTracerWork<LambertMat, GPUPrimitiveTriangle>;
 extern template class PathTracerWork<LambertMat, GPUPrimitiveSphere>;
 
@@ -231,62 +238,59 @@ extern template class PathTracerWork<ReflectMat, GPUPrimitiveSphere>;
 extern template class PathTracerWork<RefractMat, GPUPrimitiveTriangle>;
 extern template class PathTracerWork<RefractMat, GPUPrimitiveSphere>;
 
-extern template class PathTracerWork<LambertTexMat, GPUPrimitiveTriangle>;
-extern template class PathTracerWork<LambertTexMat, GPUPrimitiveSphere>;
+extern template class PathTracerWork<LambertMat, GPUPrimitiveTriangle>;
+extern template class PathTracerWork<LambertMat, GPUPrimitiveSphere>;
 
 extern template class PathTracerWork<UnrealMat, GPUPrimitiveTriangle>;
 extern template class PathTracerWork<UnrealMat, GPUPrimitiveSphere>;
 
-extern template class PathTracerLightWork<LightMatConstant, GPUPrimitiveEmpty>;
-extern template class PathTracerLightWork<LightMatConstant, GPUPrimitiveTriangle>;
-extern template class PathTracerLightWork<LightMatConstant, GPUPrimitiveSphere>;
+extern template class PathTracerBoundaryWork<BoundaryMatConstant, GPUPrimitiveEmpty>;
+extern template class PathTracerBoundaryWork<BoundaryMatConstant, GPUPrimitiveTriangle>;
+extern template class PathTracerBoundaryWork<BoundaryMatConstant, GPUPrimitiveSphere>;
 
-extern template class PathTracerLightWork<LightMatTextured, GPUPrimitiveTriangle>;
-extern template class PathTracerLightWork<LightMatTextured, GPUPrimitiveSphere>;
+extern template class PathTracerBoundaryWork<BoundaryMatTextured, GPUPrimitiveTriangle>;
+extern template class PathTracerBoundaryWork<BoundaryMatTextured, GPUPrimitiveSphere>;
+                                             
+extern template class PathTracerBoundaryWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
 
-extern template class PathTracerLightWork<LightMatCube, GPUPrimitiveEmpty>;
-extern template class PathTracerLightWork<LightMatCube, GPUPrimitiveTriangle>;
-extern template class PathTracerLightWork<LightMatCube, GPUPrimitiveSphere>;
 // ===================================================
 // Ambient Occlusion Work Batches
 extern template class AmbientOcclusionWork<GPUPrimitiveTriangle>;
 extern template class AmbientOcclusionWork<GPUPrimitiveSphere>;
 
 // ===================================================
-using DirectTracerWorkerList = TypeList<DirectTracerWork<ConstantMat, GPUPrimitiveEmpty>,
-                                        DirectTracerWork<ConstantMat, GPUPrimitiveTriangle>,
-                                        DirectTracerWork<ConstantMat, GPUPrimitiveSphere>,
-                                        DirectTracerWork<BarycentricMat, GPUPrimitiveTriangle>,
+using DirectTracerWorkerList = TypeList<DirectTracerWork<BarycentricMat, GPUPrimitiveTriangle>,
                                         DirectTracerWork<SphericalMat, GPUPrimitiveSphere>,
                                         DirectTracerWork<NormalRenderMat, GPUPrimitiveTriangle>,
                                         DirectTracerWork<NormalRenderMat, GPUPrimitiveSphere>,
-                                        DirectTracerWork<LambertTexMat, GPUPrimitiveTriangle>,
-                                        DirectTracerWork<LambertTexMat, GPUPrimitiveSphere>,
+                                        DirectTracerWork<LambertMat, GPUPrimitiveTriangle>,
+                                        DirectTracerWork<LambertMat, GPUPrimitiveSphere>,
                                         DirectTracerWork<UnrealMat, GPUPrimitiveTriangle>,
-                                        DirectTracerWork<UnrealMat, GPUPrimitiveSphere>>;
+                                        DirectTracerWork<UnrealMat, GPUPrimitiveSphere>,
+                                        DirectTracerWork<BoundaryMatConstant, GPUPrimitiveEmpty>,
+                                        DirectTracerWork<BoundaryMatConstant, GPUPrimitiveTriangle>,
+                                        DirectTracerWork<BoundaryMatConstant, GPUPrimitiveSphere>,
+                                        DirectTracerWork<BoundaryMatTextured, GPUPrimitiveTriangle>,
+                                        DirectTracerWork<BoundaryMatTextured, GPUPrimitiveSphere>,
+                                        DirectTracerWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>>;
 // ===================================================
-using PathTracerWorkerList = TypeList<PathTracerWork<EmissiveMat, GPUPrimitiveEmpty>,
-                                      PathTracerWork<EmissiveMat, GPUPrimitiveTriangle>,
-                                      PathTracerWork<EmissiveMat, GPUPrimitiveSphere>,
-                                      PathTracerWork<LambertMat, GPUPrimitiveTriangle>,
+using PathTracerWorkerList = TypeList<PathTracerWork<LambertMat, GPUPrimitiveTriangle>,
                                       PathTracerWork<LambertMat, GPUPrimitiveSphere>,
                                       PathTracerWork<ReflectMat, GPUPrimitiveTriangle>,
                                       PathTracerWork<ReflectMat, GPUPrimitiveSphere>,
                                       PathTracerWork<RefractMat, GPUPrimitiveTriangle>,
                                       PathTracerWork<RefractMat, GPUPrimitiveSphere>,
-                                      PathTracerWork<LambertTexMat, GPUPrimitiveTriangle>,
-                                      PathTracerWork<LambertTexMat, GPUPrimitiveSphere>,
+                                      PathTracerWork<LambertMat, GPUPrimitiveTriangle>,
+                                      PathTracerWork<LambertMat, GPUPrimitiveSphere>,
                                       PathTracerWork<UnrealMat, GPUPrimitiveTriangle>,
                                       PathTracerWork<UnrealMat, GPUPrimitiveSphere>>;
 // ===================================================
-using PathTracerLightWorkerList = TypeList<PathTracerLightWork<LightMatConstant, GPUPrimitiveEmpty>,
-                                           PathTracerLightWork<LightMatConstant, GPUPrimitiveTriangle>,
-                                           PathTracerLightWork<LightMatConstant, GPUPrimitiveSphere>,
-                                           PathTracerLightWork<LightMatTextured, GPUPrimitiveTriangle>,
-                                           PathTracerLightWork<LightMatTextured, GPUPrimitiveSphere>,
-                                           PathTracerLightWork<LightMatCube, GPUPrimitiveEmpty>,
-                                           PathTracerLightWork<LightMatCube, GPUPrimitiveTriangle>,
-                                           PathTracerLightWork<LightMatCube, GPUPrimitiveSphere>>;
+using PathTracerBoundaryWorkerList = TypeList<PathTracerBoundaryWork<BoundaryMatConstant, GPUPrimitiveEmpty>,
+                                              PathTracerBoundaryWork<BoundaryMatConstant, GPUPrimitiveTriangle>,
+                                              PathTracerBoundaryWork<BoundaryMatConstant, GPUPrimitiveSphere>,
+                                              PathTracerBoundaryWork<BoundaryMatTextured, GPUPrimitiveTriangle>,
+                                              PathTracerBoundaryWork<BoundaryMatTextured, GPUPrimitiveSphere>,
+                                              PathTracerBoundaryWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>>;
 // ===================================================
 using AmbientOcclusionWorkerList = TypeList<AmbientOcclusionWork<GPUPrimitiveTriangle>,
                                             AmbientOcclusionWork<GPUPrimitiveSphere>,

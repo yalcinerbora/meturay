@@ -22,27 +22,22 @@ struct LightMatTexData
     const TextureRef<2, Vector3>* dRadianceTextures;
 };
 
-struct LightMatCubeData
-{
-    const TexCubeRef<Vector3>* dCubeTextures;
-};
-
 __device__ inline
-Vector3 EmitLight(// Input
-                  const Vector3& wo,
-                  const Vector3& pos,
-                  const GPUMediumI& m,
-                  //
-                  const EmptySurface& surface,
-                  // Constants
-                  const LightMatData& matData,
-                  const HitKey::Type& matId)
+Vector3 EmitConstant(// Input
+                     const Vector3& wo,
+                     const Vector3& pos,
+                     const GPUMediumI& m,
+                     //
+                     const EmptySurface& surface,
+                     // Constants
+                     const LightMatData& matData,
+                     const HitKey::Type& matId)
 {
     return matData.dRadiances[matId];
 }
 
 __device__ inline
-Vector3 EmitLightTex(// Input
+Vector3 EmitTextured(// Input
                      const Vector3& wo,
                      const Vector3& pos,
                      const GPUMediumI& m,
@@ -57,30 +52,15 @@ Vector3 EmitLightTex(// Input
 }
 
 __device__ inline
-Vector3 EmitLightCube(// Input
+Vector3 EmitSkySphere(// Input
                       const Vector3& wo,
                       const Vector3& pos,
                       const GPUMediumI& m,
                       //
                       const EmptySurface& surface,
                       // Constants
-                      const LightMatCubeData& matData,
+                      const LightMatTexData& matData,
                       const HitKey::Type& matId)
-{
-    // Gen Directional vector
-    return matData.dCubeTextures[matId](pos);
-}
-
-__device__ inline
-Vector3 EmitLightSkySphere(// Input
-                           const Vector3& wo,
-                           const Vector3& pos,
-                           const GPUMediumI& m,
-                           //
-                           const EmptySurface& surface,
-                           // Constants
-                           const LightMatTexData& matData,
-                           const HitKey::Type& matId)
 {
     // Convert to Spherical Coordinates
     Vector2f tehtaPhi = Utility::CartesianToSphericalUnit(wo);

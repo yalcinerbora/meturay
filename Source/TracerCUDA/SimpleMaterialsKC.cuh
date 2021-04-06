@@ -12,36 +12,22 @@
 #include "GPUSurface.h"
 
 __device__ inline
-Vector3 EmitConstant(// Input
-                     const Vector3& wo,
-                     const Vector3& pos,
-                     const GPUMediumI& m,
-                     //
-                     const EmptySurface& surface,
-                     // Constants
-                     const EmissiveMatData& matData,
-                     const HitKey::Type& matId)
-{
-    return matData.dAlbedo[matId];
-}
-
-__device__ inline
-Vector3 LambertSample(// Sampled Output
-                      RayF& wo,
-                      float& pdf,
-                      const GPUMediumI*& outMedium,
-                      // Input
-                      const Vector3& wi,
-                      const Vector3& pos,
-                      const GPUMediumI& m,
-                      //
-                      const BasicSurface& surface,
-                      // I-O
-                      RandomGPU& rng,
-                      // Constants
-                      const AlbedoMatData& matData,
-                      const HitKey::Type& matId,
-                      uint32_t sampleIndex)
+Vector3 LambertCSample(// Sampled Output
+                       RayF& wo,
+                       float& pdf,
+                       const GPUMediumI*& outMedium,
+                       // Input
+                       const Vector3& wi,
+                       const Vector3& pos,
+                       const GPUMediumI& m,
+                       //
+                       const BasicSurface& surface,
+                       // I-O
+                       RandomGPU& rng,
+                       // Constants
+                       const AlbedoMatData& matData,
+                       const HitKey::Type& matId,
+                       uint32_t sampleIndex)
 {
     // No medium change
     outMedium = &m;
@@ -72,16 +58,16 @@ Vector3 LambertSample(// Sampled Output
 }
 
 __device__ inline
-Vector3 LambertEvaluate(// Input
-                        const Vector3& wo,
-                        const Vector3& wi,
-                        const Vector3& pos,
-                        const GPUMediumI& m,
-                        //
-                        const BasicSurface& surface,
-                        // Constants
-                        const AlbedoMatData& matData,
-                        const HitKey::Type& matId)
+Vector3 LambertCEvaluate(// Input
+                         const Vector3& wo,
+                         const Vector3& wi,
+                         const Vector3& pos,
+                         const GPUMediumI& m,
+                         //
+                         const BasicSurface& surface,
+                         // Constants
+                         const AlbedoMatData& matData,
+                         const HitKey::Type& matId)
 {
     Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
     float nDotL = max(normal.Dot(wo), 0.0f);

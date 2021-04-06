@@ -293,12 +293,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUEvent.h">
       <Filter>Cuda System</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMaterialLight.cuh">
-      <Filter>Materials</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMaterialLightKC.cuh">
-      <Filter>Materials</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\MetaMaterialFunctions.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
@@ -362,12 +356,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\CudaConstants.hpp">
       <Filter>Cuda System</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\SampleMaterials.cuh">
-      <Filter>Materials</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\SampleMaterialsKC.cuh">
-      <Filter>Materials</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\RayTracer.hpp">
       <Filter>Tracers</Filter>
     </ClInclude>
@@ -413,12 +401,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterialKC.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\LambertTexMaterial.cuh">
-      <Filter>Materials</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\LambertTexMaterialKC.cuh">
-      <Filter>Materials</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReferenceGenerators.cuh">
       <Filter>Textures</Filter>
     </ClInclude>
@@ -437,12 +419,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterialKC.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterials.cuh">
-      <Filter>Materials</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\BasicMaterialsKC.cuh">
-      <Filter>Materials</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightSkySphere.cuh">
       <Filter>Lights</Filter>
     </ClInclude>
@@ -457,6 +433,30 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\TransformFunctions.cuh">
       <Filter>GPU Algorithms\Functions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BoundaryMaterials.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\BoundaryMaterialsKC.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\LambertMaterial.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\LambertMaterialKC.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DebugMaterials.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DebugMaterialsKC.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SimpleMaterialsKC.cuh">
+      <Filter>Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SimpleMaterials.cuh">
+      <Filter>Materials</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -502,9 +502,6 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.cu">
       <Filter>Accelerators\BVH</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUMaterialLight.cu">
-      <Filter>Materials</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUMediumHomogenous.cu">
       <Filter>Mediums</Filter>
     </CudaCompile>
@@ -532,9 +529,6 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightDisk.cu">
       <Filter>Lights</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\SampleMaterials.cu">
-      <Filter>Materials</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayTracer.cu">
       <Filter>Tracers</Filter>
     </CudaCompile>
@@ -556,20 +550,26 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cu">
       <Filter>Materials</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\LambertTexMaterial.cu">
-      <Filter>Materials</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracer.cu">
       <Filter>Tracers</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\BasicMaterials.cu">
-      <Filter>Materials</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightSkySphere.cu">
       <Filter>Lights</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUPiecewiseDistribution.cu">
       <Filter>GPU Classes</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\BoundaryMaterials.cu">
+      <Filter>Materials</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\LambertMaterial.cu">
+      <Filter>Materials</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\DebugMaterials.cu">
+      <Filter>Materials</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\SimpleMaterials.cu">
+      <Filter>Materials</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

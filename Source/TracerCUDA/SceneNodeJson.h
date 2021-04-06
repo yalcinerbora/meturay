@@ -95,6 +95,8 @@ class SceneNodeJson final : public SceneNodeI
         std::vector<UInt64List>         AccessUInt64List(const std::string& name, double time = 0.0) const override;
 
         // Texture Related
+        std::vector<MaterialTextureStruct>      AccessTextureNode(const std::string& name,
+                                                                  double time = 0.0) const override;
         TexturedDataNodeList<float>             AccessTexturedDataFloat(const std::string& name,
                                                                         double time = 0.0) const override;
         TexturedDataNodeList<Vector2>           AccessTexturedDataVector2(const std::string& name,

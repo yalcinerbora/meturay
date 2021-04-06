@@ -89,7 +89,7 @@ class CPULightGroup : public CPULightGroupI
 
         const char*				    Type() const override;
 		const GPULightList&		    GPULights() const override;
-		SceneError				    InitializeGroup(const ConstructionDataList& lightNodes,
+		SceneError				    InitializeGroup(const LightGroupDataList& lightNodes,
                                                     const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                     const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                                     const MaterialKeyListing& allMaterialKeys,
@@ -98,15 +98,9 @@ class CPULightGroup : public CPULightGroupI
 		SceneError				    ChangeTime(const NodeListing& lightNodes, double time,
 								    		   const std::string& scenePath) override;
 		TracerError				    ConstructLights(const CudaSystem&,
-                                                    const GPUTransformI**) override;
+                                                    const GPUTransformI**,
+                                                    const KeyMaterialMap&) override;
 		uint32_t				    LightCount() const override;
-
-        // Luminance Dist Related
-		bool						RequiresLuminance() const override;
-		const std::vector<HitKey>&	AcquireMaterialKeys() const override;
-		TracerError					GenerateLumDistribution(const std::vector<std::vector<float>>& luminance,
-															const std::vector<Vector2ui>& dimension,
-															const CudaSystem&) override;
 
 		size_t					    UsedGPUMemory() const override;
         size_t					    UsedCPUMemory() const override;
@@ -240,26 +234,6 @@ size_t CPULightGroup<PGroup>::UsedCPUMemory() const
                         hTransformIds.size());
 
     return totalSize;
-}
-
-template <class PGroup>
-bool CPULightGroup<PGroup>::RequiresLuminance() const
-{
-    return false;
-}
-
-template <class PGroup>
-const std::vector<HitKey>& CPULightGroup<PGroup>::AcquireMaterialKeys() const
-{
-    return hHitKeys;
-}
-
-template <class PGroup>
-TracerError CPULightGroup<PGroup>::GenerateLumDistribution(const std::vector<std::vector<float>>& luminance,
-                                                           const std::vector<Vector2ui>& dimension,
-                                                           const CudaSystem&)
-{
-    return TracerError::LIGHT_GROUP_CAN_NOT_GENERATE_DISTRIBUTION;
 }
 
 #include "GPULightPrimitive.hpp"

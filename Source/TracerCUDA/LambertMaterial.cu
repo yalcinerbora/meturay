@@ -1,13 +1,13 @@
-#include "LambertTexMaterial.cuh"
+#include "LambertMaterial.cuh"
 #include "RayLib/MemoryAlignment.h"
 #include "TextureFunctions.h"
 #include "TextureReferenceGenerators.cuh"
 #include "CudaConstants.hpp"
 
-SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
-                                          const TextureNodeMap& textureNodes,
-                                          const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
-                                          double time, const std::string& scenePath)
+SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
+                                       const TextureNodeMap& textureNodes,
+                                       const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
+                                       double time, const std::string& scenePath)
 {
     constexpr const char* ALBEDO = "albedo";
     constexpr const char* NORMAL = "normal";
@@ -134,18 +134,18 @@ SceneError LambertTexMat::InitializeGroup(const NodeListing& materialNodes,
     assert(totalSize == offset);
 
     // Finally Initialize Struct
-    dData = LambertTMatData{dAlbedo, dNormal};
+    dData = LambertMatData{dAlbedo, dNormal};
     return SceneError::OK;
 }
 
-SceneError LambertTexMat::ChangeTime(const NodeListing& materialNodes, double time,
-                                     const std::string& scenePath)
+SceneError LambertMat::ChangeTime(const NodeListing& materialNodes, double time,
+                                  const std::string& scenePath)
 {
     // TODO: Implement
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }
 
-TracerError LambertTexMat::ConstructTextureReferences()
+TracerError LambertMat::ConstructTextureReferences()
 {
     size_t materialCount = matConstructionInfo.size();
 
@@ -243,36 +243,36 @@ TracerError LambertTexMat::ConstructTextureReferences()
     return TracerError::OK;
 }
 
-size_t LambertTexMat::UsedGPUMemory() const
+size_t LambertMat::UsedGPUMemory() const
 {
     // TODO: Implement
     return 0;
 }
 
-size_t LambertTexMat::UsedCPUMemory() const
+size_t LambertMat::UsedCPUMemory() const
 {
-    return sizeof(LambertTMatData);
+    return sizeof(LambertMatData);
 }
 
-size_t LambertTexMat::UsedGPUMemory(uint32_t materialId) const
-{
-    // TODO: Implement
-    return 0;
-}
-
-size_t LambertTexMat::UsedCPUMemory(uint32_t materialId) const
+size_t LambertMat::UsedGPUMemory(uint32_t materialId) const
 {
     // TODO: Implement
     return 0;
 }
 
-uint8_t LambertTexMat::UsedTextureCount() const
+size_t LambertMat::UsedCPUMemory(uint32_t materialId) const
 {
     // TODO: Implement
     return 0;
 }
 
-std::vector<uint32_t> LambertTexMat::UsedTextureIds() const
+uint8_t LambertMat::UsedTextureCount() const
+{
+    // TODO: Implement
+    return 0;
+}
+
+std::vector<uint32_t> LambertMat::UsedTextureIds() const
 {
     // TODO: Implement
     return std::vector<uint32_t>();

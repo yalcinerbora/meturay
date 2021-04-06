@@ -37,13 +37,13 @@
 	{
 		// General Boundary Material
 		"id": 0,
-        "type": "Emissive",
+        "type": "BConstant",
 		"radiance" : [0, 0, 0]
     },
     {
 		// Light Boundary Material
 		"id": 1,
-		"type": "LightConstant",
+		"type": "BConstant",
 		"radiance" : [150, 150, 150]
     },
 	{

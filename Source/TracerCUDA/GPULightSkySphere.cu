@@ -2,6 +2,7 @@
 #include "CudaConstants.hpp"
 
 #include "RayLib/MemoryAlignment.h"
+#include "GPUMaterialI.h"
 
 __global__ void KCConstructGPULightSkySphere(GPULightSkySphere* gLightLocations,
                                              //
@@ -28,7 +29,7 @@ __global__ void KCConstructGPULightSkySphere(GPULightSkySphere* gLightLocations,
     }
 }
 
-SceneError CPULightGroupSkySphere::InitializeGroup(const ConstructionDataList& lightNodes,
+SceneError CPULightGroupSkySphere::InitializeGroup(const LightGroupDataList& lightNodes,
                                                    const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                    const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                                    const MaterialKeyListing& allMaterialKeys,
@@ -42,9 +43,6 @@ SceneError CPULightGroupSkySphere::InitializeGroup(const ConstructionDataList& l
     hTransformIds.reserve(lightCount);
     hIsHemiOptions.reserve(lightCount);
 
-    hLuminances.reserve(lightCount);
-    hLuminanceSizes.reserve(lightCount);
-
     for(const auto& node : lightNodes)
     {
         // Convert Ids to inner index
@@ -53,9 +51,7 @@ SceneError CPULightGroupSkySphere::InitializeGroup(const ConstructionDataList& l
         HitKey materialKey = allMaterialKeys.at(std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME,
                                                 node.materialId));
 
-        // Find Light Material and Acquire Luminance
-        std::vector<std::vector<float>> luminances;
-        std::vector<Vector2ui> luminanceSizes;
+        // Fetch Options from the Node
         std::vector<bool> isHemiOptions = node.node->AccessBool(IS_HEMI_NAME);
 
         // Load to host memory
@@ -63,11 +59,7 @@ SceneError CPULightGroupSkySphere::InitializeGroup(const ConstructionDataList& l
         hMediumIds.push_back(mediumIndex);
         hTransformIds.push_back(transformIndex);
 
-        hIsHemiOptions.insert(hIsHemiOptions.end(), isHemiOptions.cbegin(), isHemiOptions.cend());
-
-        hLuminances.insert(hLuminances.end(), luminances.cbegin(), luminances.cend());
-        hLuminanceSizes.insert(hLuminanceSizes.end(), luminanceSizes.cbegin(), luminanceSizes.cend());
-        
+        hIsHemiOptions.insert(hIsHemiOptions.end(), isHemiOptions.cbegin(), isHemiOptions.cend());        
     }
 
     // Allocate for GPULight classes
@@ -98,8 +90,35 @@ SceneError CPULightGroupSkySphere::ChangeTime(const NodeListing& lightNodes,
 }
 
 TracerError CPULightGroupSkySphere::ConstructLights(const CudaSystem& system,
-                                                    const GPUTransformI** dGlobalTransformArray)
+                                                    const GPUTransformI** dGlobalTransformArray,
+                                                    const KeyMaterialMap& materialMap)
 {
+    std::vector<std::vector<float>> hLuminances;
+    std::vector<Vector2ui> hLuminanceSizes;
+
+    // Acquire Luminance Information for each light
+    TracerError err = TracerError::OK;
+    for(HitKey& key : hHitKeys)
+    {     
+        const auto loc = materialMap.find(HitKey::FetchIdPortion(key));
+        if(loc == materialMap.cend())
+            return TracerError::UNABLE_TO_CONSTRUCT_LIGHT;
+
+        const GPUMaterialGroupI* matGroup = loc->second;
+
+        Vector2ui dimension;
+        std::vector<float> lumData;
+        //if((err = matGroup->LuminanceData(lumData,
+        //                                  dimension, 
+        //                                  key,
+        //                                  system)) != TracerError::OK)
+        //    return err;
+
+        hLuminances.push_back(std::move(lumData));
+        hLuminanceSizes.push_back(dimension);
+
+    }
+
     // Construct Distribution Data
     hLuminanceDistributions = CPUDistGroupPiecewiseConst2D(hLuminances, hLuminanceSizes,
                                                            system);
@@ -189,11 +208,4 @@ TracerError CPULightGroupSkySphere::ConstructLights(const CudaSystem& system,
     }
 
     return TracerError::OK;
-}
-
-TracerError CPULightGroupSkySphere::GenerateLumDistribution(const std::vector<std::vector<float>>& luminance,
-                                                            const std::vector<Vector2ui>& dimension,
-                                                            const CudaSystem&)
-{
-    return TracerError::LIGHT_GROUP_CAN_NOT_GENERATE_DISTRIBUTION;
 }

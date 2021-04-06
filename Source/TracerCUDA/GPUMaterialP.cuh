@@ -61,7 +61,6 @@ class GPUMaterialGroupT
         uint32_t                        InnerId(uint32_t materialId) const override;
         const CudaGPU&                  GPU() const override;
 
-        virtual bool                    IsSpecularGroup() const override;
         virtual void                    AttachGlobalMediumArray(const GPUMediumI* const*,
                                                                 uint32_t baseMediumIndex) override;
 };
@@ -149,17 +148,6 @@ template <class D, class S,
           EmissionFunc<D, S> EmF,
           IsEmissiveFunc<D> IEF,
           class P>
-bool GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, P>::IsSpecularGroup() const
-{
-    return false;
-}
-
-template <class D, class S,
-          SampleFunc<D, S> SF,
-          EvaluateFunc<D, S> EF,
-          EmissionFunc<D, S> EmF,
-          IsEmissiveFunc<D> IEF,
-          class P>
 void GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, P>::AttachGlobalMediumArray(const GPUMediumI* const*,
                                                                            uint32_t)
 {}
@@ -191,11 +179,4 @@ template <class D, class S,
     EvaluateFunc<D, S> EF,
     EmissionFunc<D, S> EmF,
     IsEmissiveFunc<D> IEF>
-using GPULightMaterialGroup = GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, GPULightMaterialGroupI>;
-
-template <class D, class S,
-    SampleFunc<D, S> SF,
-    EvaluateFunc<D, S> EF,
-    EmissionFunc<D, S> EmF,
-    IsEmissiveFunc<D> IEF>
-using GPUCameraMaterialGroup = GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, GPUCameraMaterialGroupI>;
+using GPUBoundaryMaterialGroup = GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, GPUBoundaryMaterialGroupI>;

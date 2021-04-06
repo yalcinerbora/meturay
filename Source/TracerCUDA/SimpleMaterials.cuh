@@ -1,74 +1,74 @@
 #pragma once
 
-#include "SampleMaterialsKC.cuh"
+#include "SimpleMaterialsKC.cuh"
 
 #include "MetaMaterialFunctions.cuh"
 #include "GPUMaterialP.cuh"
 #include "TypeTraits.h"
 #include "DeviceMemory.h"
 
-// Light Material that constantly emits all directions
-class EmissiveMat final
-    : public GPUMaterialGroup<EmissiveMatData, EmptySurface,
-                              SampleEmpty<EmissiveMatData, EmptySurface>,
-                              EvaluateEmpty<EmissiveMatData, EmptySurface>,
-                              EmitConstant,
-                              IsEmissiveTrue<EmissiveMatData>>
-{
-    public:
-        static const char*              TypeName() { return "Emissive"; }
-
-    private:
-        DeviceMemory                    memory;
-
-    protected:
-    public:
-        // Constructors & Destructor
-                                EmissiveMat(const CudaGPU& gpu)
-                                    : GPUMaterialGroup<EmissiveMatData, EmptySurface,
-                                                       SampleEmpty<EmissiveMatData, EmptySurface>,
-                                                       EvaluateEmpty<EmissiveMatData, EmptySurface>,
-                                                       EmitConstant,
-                                                       IsEmissiveTrue<EmissiveMatData>>(gpu) {}
-                                ~EmissiveMat() = default;
-
-        // Interface
-        // Type (as string) of the primitive group
-        const char*             Type() const override { return TypeName(); }
-        // Allocates and Generates Data
-        SceneError              InitializeGroup(const NodeListing& materialNodes,
-                                                const TextureNodeMap& textures,
-                                                const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
-                                                double time, const std::string& scenePath) override;
-        SceneError              ChangeTime(const NodeListing& materialNodes, double time,
-                                           const std::string& scenePath) override;
-
-        // Material Queries
-        size_t                  UsedGPUMemory() const override { return memory.Size(); }
-        size_t                  UsedCPUMemory() const override { return sizeof(AlbedoMatData); }
-        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
-        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
-
-        // NEE Related
-        bool                    IsLightGroup() const override { return false; }
-        bool                    IsEmissiveGroup() const override { return true; }
-        bool                    IsCameraGroup() const override { return false; }
-
-        uint8_t                 SampleStrategyCount() const { return 0; };
-        // No Texture
-        uint8_t                 UsedTextureCount() const { return 0; }
-        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
-};
+//// Light Material that constantly emits all directions
+//class EmissiveMat final
+//    : public GPUMaterialGroup<EmissiveMatData, EmptySurface,
+//                              SampleEmpty<EmissiveMatData, EmptySurface>,
+//                              EvaluateEmpty<EmissiveMatData, EmptySurface>,
+//                              EmitConstant,
+//                              IsEmissiveTrue<EmissiveMatData>>
+//{
+//    public:
+//        static const char*              TypeName() { return "Emissive"; }
+//
+//    private:
+//        DeviceMemory                    memory;
+//
+//    protected:
+//    public:
+//        // Constructors & Destructor
+//                                EmissiveMat(const CudaGPU& gpu)
+//                                    : GPUMaterialGroup<EmissiveMatData, EmptySurface,
+//                                                       SampleEmpty<EmissiveMatData, EmptySurface>,
+//                                                       EvaluateEmpty<EmissiveMatData, EmptySurface>,
+//                                                       EmitConstant,
+//                                                       IsEmissiveTrue<EmissiveMatData>>(gpu) {}
+//                                ~EmissiveMat() = default;
+//
+//        // Interface
+//        // Type (as string) of the primitive group
+//        const char*             Type() const override { return TypeName(); }
+//        // Allocates and Generates Data
+//        SceneError              InitializeGroup(const NodeListing& materialNodes,
+//                                                const TextureNodeMap& textures,
+//                                                const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
+//                                                double time, const std::string& scenePath) override;
+//        SceneError              ChangeTime(const NodeListing& materialNodes, double time,
+//                                           const std::string& scenePath) override;
+//
+//        // Material Queries
+//        size_t                  UsedGPUMemory() const override { return memory.Size(); }
+//        size_t                  UsedCPUMemory() const override { return sizeof(AlbedoMatData); }
+//        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
+//        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+//
+//        // NEE Related
+//        bool                    IsLightGroup() const override { return false; }
+//        bool                    IsEmissiveGroup() const override { return true; }
+//        bool                    IsCameraGroup() const override { return false; }
+//
+//        uint8_t                 SampleStrategyCount() const { return 0; };
+//        // No Texture
+//        uint8_t                 UsedTextureCount() const { return 0; }
+//        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
+//};
 
 // Constant Lambert Material
-class LambertMat final
+class LambertCMat final
     : public GPUMaterialGroup<AlbedoMatData, BasicSurface,
-                              LambertSample, LambertEvaluate,
+                              LambertCSample, LambertCEvaluate,
                               EmitEmpty<AlbedoMatData, BasicSurface>,
                               IsEmissiveFalse<AlbedoMatData>>
 {
     public:
-        static const char*              TypeName() { return "Lambert"; }
+        static const char*              TypeName() { return "LambertC"; }
 
     private:
         DeviceMemory                    memory;
@@ -76,12 +76,12 @@ class LambertMat final
     protected:
     public:
         // Constructors & Destructor
-                                LambertMat(const CudaGPU& gpu)
+                                LambertCMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<AlbedoMatData, BasicSurface,
-                                                       LambertSample, LambertEvaluate,
+                                                       LambertCSample, LambertCEvaluate,
                                                        EmitEmpty<AlbedoMatData, BasicSurface>,
                                                        IsEmissiveFalse<AlbedoMatData>>(gpu) {}
-                                ~LambertMat() = default;
+                                ~LambertCMat() = default;
 
         // Interface
         // Type (as string) of the primitive group
@@ -99,11 +99,6 @@ class LambertMat final
         size_t                  UsedCPUMemory() const override { return sizeof(AlbedoMatData); }
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
-
-        // NEE Related
-        bool                    IsLightGroup() const override { return false; }
-        bool                    IsEmissiveGroup() const override { return false; }
-        bool                    IsCameraGroup() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture
@@ -152,10 +147,7 @@ class ReflectMat final
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
         // NEE Related
-        bool                    IsLightGroup() const override { return false; }
-        bool                    IsEmissiveGroup() const override { return false; }
-        bool                    IsSpecularGroup() const override { return true; }
-        bool                    IsCameraGroup() const override { return false; }
+        bool                    CanBeSampled() const { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture
@@ -204,10 +196,7 @@ class RefractMat final
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
         // NEE Related
-        bool                    IsLightGroup() const override { return false; }
-        bool                    IsEmissiveGroup() const override { return false; }
-        bool                    IsSpecularGroup() const override { return true; }
-        bool                    IsCameraGroup() const override { return false; }
+        bool                    CanBeSampled() const { return false; }
 
         // Post initialization
         void                    AttachGlobalMediumArray(const GPUMediumI* const*,
@@ -219,10 +208,8 @@ class RefractMat final
         std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
 };
 
-static_assert(IsMaterialGroupClass<EmissiveMat>::value,
-              "EmissiveMat is not a GPU Material Group Class.");
-static_assert(IsMaterialGroupClass<LambertMat>::value,
-              "LambertMat is not a GPU Material Group Class.");
+static_assert(IsMaterialGroupClass<LambertCMat>::value,
+              "LambertCMat is not a GPU Material Group Class.");
 static_assert(IsMaterialGroupClass<ReflectMat>::value,
               "ReflectMat is not a GPU Material Group Class.");
 static_assert(IsMaterialGroupClass<RefractMat>::value,

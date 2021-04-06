@@ -42,7 +42,7 @@ PathTracer::PathTracer(const CudaSystem& s,
     , currentDepth(0)
 {
     workPool.AppendGenerators(PathTracerWorkerList{});
-    lightWorkPool.AppendGenerators(PathTracerLightWorkerList{});
+    lightWorkPool.AppendGenerators(PathTracerBoundaryWorkerList{});
 }
 
 TracerError PathTracer::Initialize()
@@ -61,7 +61,7 @@ TracerError PathTracer::Initialize()
 
         // Generate work batch from appropirate work pool
         GPUWorkBatchI* batch = nullptr;
-        if(mg.IsLightGroup())
+        if(mg.IsBoundary())
         {
             bool emptyPrim = (std::string(pg.Type()) ==
                               std::string(BaseConstants::EMPTY_PRIMITIVE_NAME));

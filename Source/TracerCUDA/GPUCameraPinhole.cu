@@ -31,10 +31,10 @@ __global__ void KCConstructGPUCameraPinhole(GPUCameraPinhole* gCameraLocations,
     }
 }
 
-SceneError CPUCameraGroupPinhole::InitializeGroup(const CameraGroupData& cameraNodes,
+SceneError CPUCameraGroupPinhole::InitializeGroup(const CameraGroupDataList& cameraNodes,
                                                   const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                   const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
-                                                  const MaterialKeyListing& allMaterialKeys,
+                                                  uint32_t cameraMaterialBatchId,
                                                   double time,
                                                   const std::string& scenePath)
 {
@@ -44,13 +44,14 @@ SceneError CPUCameraGroupPinhole::InitializeGroup(const CameraGroupData& cameraN
     hTransformIds.reserve(cameraCount);
     hCameraData.reserve(cameraCount);
 
+    uint32_t innerIndex = 0;
     for(const auto& node : cameraNodes)
     {
         // Convert Ids to inner index
         uint32_t mediumIndex = mediumIdIndexPairs.at(node.mediumId);
         uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
-        HitKey materialKey = allMaterialKeys.at(std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME,
-                                                               node.materialId));
+        HitKey materialKey = HitKey::CombinedKey(cameraMaterialBatchId,
+                                                 innerIndex);
 
         const auto positions = node.node->AccessVector3(NAME_POSITION);
         const auto ups = node.node->AccessVector3(NAME_UP);
@@ -76,6 +77,7 @@ SceneError CPUCameraGroupPinhole::InitializeGroup(const CameraGroupData& cameraN
         hMediumIds.push_back(mediumIndex);
         hTransformIds.push_back(transformIndex);
         hCameraData.push_back(data);
+        innerIndex++;
     }
 
     // Allocate for GPULight classes

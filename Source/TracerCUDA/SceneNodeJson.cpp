@@ -429,6 +429,11 @@ std::vector<UInt64List> SceneNodeJson::AccessUInt64List(const std::string& name,
     return AccessList<uint64_t, SceneIO::LoadNumber<uint64_t>>(name, time);
 }
 
+std::vector<MaterialTextureStruct> SceneNodeJson::AccessTextureNode(const std::string& name, double time) const
+{
+    return AccessSingle<MaterialTextureStruct, SceneIO::LoadMaterialTextureStruct>(name, time);
+}
+
 TexturedDataNodeList<float> SceneNodeJson::AccessTexturedDataFloat(const std::string& name, double time) const
 {
     return AccessTextured<float, SceneIO::LoadNumber<float>>(name, time);

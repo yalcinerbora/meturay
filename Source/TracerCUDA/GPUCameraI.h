@@ -40,10 +40,10 @@ class CPUCameraGroupI
         // Interface
         virtual const char*                 Type() const = 0;
         virtual const GPUCameraList&        GPUCameras() const = 0;
-        virtual SceneError					InitializeGroup(const CameraGroupData& cameraNodes,
+        virtual SceneError					InitializeGroup(const CameraGroupDataList& cameraNodes,
                                                             const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                             const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
-                                                            const MaterialKeyListing& allMaterialKeys,
+                                                            uint32_t cameraMaterialBatchId,
                                                             double time,
                                                             const std::string& scenePath) = 0;
         virtual SceneError					ChangeTime(const NodeListing& lightNodes, double time,

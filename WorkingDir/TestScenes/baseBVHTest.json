@@ -24,20 +24,20 @@
 	{
 		// General Boundary Material
 		"id": 0,
-        "type": "Constant",
-		"albedo" : [0, 0, 0]
+        "type": "BConstant",
+		"radiance" : [0, 0, 0]
     },
 	{
 		// Green Diffuse Mat
 		"id": 2,
-        "type": "Constant",
-        "albedo" : [0.0745, 0.9137, 0.4117]
+        "type": "BConstant",
+        "radiance" : [0.0745, 0.9137, 0.4117]
     },
     {
 		// Gray Diffuse Mat
 		"id": 3,
-		"type": "Constant",
-		"albedo" : [0.5, 0.5, 0.5]
+		"type": "BConstant",
+		"radiance" : [0.5, 0.5, 0.5]
     }],
 
 	"Primitives":[

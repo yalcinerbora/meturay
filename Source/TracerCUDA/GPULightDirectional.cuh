@@ -69,7 +69,7 @@ class CPULightGroupDirectional : public CPULightGroupI
 
         const char*				    Type() const override;
 		const GPULightList&		    GPULights() const override;
-		SceneError				    InitializeGroup(const ConstructionDataList& lightNodes,
+		SceneError				    InitializeGroup(const LightGroupDataList& lightNodes,
                                                     const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                     const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                                     const MaterialKeyListing& allMaterialKeys,
@@ -78,15 +78,9 @@ class CPULightGroupDirectional : public CPULightGroupI
 		SceneError				    ChangeTime(const NodeListing& lightNodes, double time,
 								    		   const std::string& scenePath) override;
 		TracerError				    ConstructLights(const CudaSystem&,
-                                                    const GPUTransformI**) override;
+                                                    const GPUTransformI**,
+                                                    const KeyMaterialMap&) override;
 		uint32_t				    LightCount() const override;
-
-        // Luminance Dist Related
-		bool						RequiresLuminance() const override;
-		const std::vector<HitKey>&	AcquireMaterialKeys() const override;
-        TracerError					GenerateLumDistribution(const std::vector<std::vector<float>>& luminance,
-                                                            const std::vector<Vector2ui>& dimension,
-                                                            const CudaSystem&) override;
 
 		size_t					    UsedGPUMemory() const override;
         size_t					    UsedCPUMemory() const override;
@@ -168,23 +162,6 @@ inline size_t CPULightGroupDirectional::UsedCPUMemory() const
                         hDirections.size() * sizeof(Vector3f));
 
     return totalSize;
-}
-
-inline bool CPULightGroupDirectional::RequiresLuminance() const
-{
-    return false;
-}
-
-inline const std::vector<HitKey>& CPULightGroupDirectional::AcquireMaterialKeys() const
-{
-    return hHitKeys;
-}
-
-inline TracerError CPULightGroupDirectional::GenerateLumDistribution(const std::vector<std::vector<float>>& luminance,
-                                                                     const std::vector<Vector2ui>& dimension,
-                                                                     const CudaSystem&)
-{
-    return TracerError::LIGHT_GROUP_CAN_NOT_GENERATE_DISTRIBUTION;
 }
 
 static_assert(IsTracerClass<CPULightGroupDirectional>::value,

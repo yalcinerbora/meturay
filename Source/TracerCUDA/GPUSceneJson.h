@@ -22,7 +22,7 @@ using TransformNodeList = std::map<std::string, NodeListing>;
 using PrimitiveNodeList = std::map<std::string, NodeListing>;
 using AcceleratorBatchList = std::map<std::string, AccelGroupData>;
 using LightNodeList = std::map<std::string, LightGroupData>;
-using CameraNodeList = std::map<std::string, CameraGroupData>;
+using CameraNodeList = std::map<std::string, CameraGroupDataList>;
 using TextureNodeMap = std::map<uint32_t, TextureStruct>;
 
 class GPUSceneJson : public GPUSceneI

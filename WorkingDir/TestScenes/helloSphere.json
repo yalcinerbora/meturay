@@ -15,7 +15,7 @@
 	}],
 
 	"Lights": [],
-	
+
     "Mediums": [{ "id" : 0, "type" : "Vacuum"}],
 
 	"Transforms":[{"id": 0, "type": "Identity"}],
@@ -27,8 +27,8 @@
 	},
 	{
 		"id": 1,
-		"type": "Constant",
-		"albedo" : [0, 0, 0]
+		"type": "BConstant",
+		"radiance" : [0, 0, 0]
 	}],
 
 	"Primitives":[

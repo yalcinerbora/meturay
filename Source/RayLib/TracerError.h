@@ -34,8 +34,7 @@ struct TracerError : public ErrorI
             UNABLE_TO_INITIALIZE,
             UNKNOWN_SCENE_PARTITIONER_TYPE,
             NO_LOGIC_FOR_TRACER,
-            LIGHT_GROUP_CAN_NOT_GENERATE_DISTRIBUTION,
-            LIGHT_MAT_CAN_NOT_GENERATE_LUMINANCE,
+            MATERIAL_CAN_NOT_GENERATE_LUMINANCE,
             // ...
 
             // End
@@ -105,8 +104,7 @@ inline TracerError::operator std::string() const
         "Unable to initialize tracer",
         "Unknown scene partitioner type",
         "No logic found for that tracer",
-        "Light group could not be able to generate luminance distribution",
-        "Light material could not be able to generate luminance"
+        "Material could not be able to generate luminance"
     };
     static_assert(std::extent<decltype(ErrorStrings)>::value == static_cast<size_t>(TracerError::END),
                   "Enum and enum string list size mismatch.");

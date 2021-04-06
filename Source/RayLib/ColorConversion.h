@@ -4,9 +4,11 @@
 
 namespace Utility
 {
+    __device__ __host__
     float RGBToLuminance(const Vector3& rgb);
 }
 
+__device__ __host__
 inline
 float Utility::RGBToLuminance(const Vector3& rgb)
 {

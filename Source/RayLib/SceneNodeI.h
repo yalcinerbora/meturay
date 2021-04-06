@@ -125,6 +125,8 @@ class SceneNodeI
         virtual std::vector<UInt64List>     AccessUInt64List(const std::string& name, double time = 0.0) const = 0;
 
         // Texture Related
+        virtual std::vector<MaterialTextureStruct>      AccessTextureNode(const std::string& name,
+                                                                          double time = 0.0) const = 0;
         virtual TexturedDataNodeList<float>             AccessTexturedDataFloat(const std::string& name,
                                                                                 double time = 0.0) const = 0;
         virtual TexturedDataNodeList<Vector2>           AccessTexturedDataVector2(const std::string& name,

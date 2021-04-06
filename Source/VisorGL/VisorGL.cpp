@@ -561,9 +561,9 @@ void VisorGL::Render()
         else
             tmOpts = DefaultTMOptions;
 
-        //tmOpts.doKeyAdjust = false;
-        //tmOpts.doGamma = false;
-        //tmOpts.doToneMap = false;
+        tmOpts.doKeyAdjust = false;
+        tmOpts.doGamma = false;
+        tmOpts.doToneMap = false;
 
         // Always call this even if there are not parameters
         // set to do tone mapping since(this function)

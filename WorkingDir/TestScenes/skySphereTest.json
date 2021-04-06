@@ -39,7 +39,7 @@
     {
 		// Light Boundary Material
 		"id": 0,
-		"type": "LightSkySphere",
+		"type": "BSkySphere",
 		"radiance" : {"texture": 0, "channels": "rgb"}
     }],
 

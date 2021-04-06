@@ -26,7 +26,7 @@ __global__ void KCConstructGPULightPoint(GPULightPoint* gLightLocations,
     }
 }
 
-SceneError CPULightGroupPoint::InitializeGroup(const ConstructionDataList& lightNodes,
+SceneError CPULightGroupPoint::InitializeGroup(const LightGroupDataList& lightNodes,
                                                const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                                const MaterialKeyListing& allMaterialKeys,
@@ -80,7 +80,8 @@ SceneError CPULightGroupPoint::ChangeTime(const NodeListing& lightNodes, double 
 }
 
 TracerError CPULightGroupPoint::ConstructLights(const CudaSystem& system,
-                                                const GPUTransformI** dGlobalTransformArray)
+                                                const GPUTransformI** dGlobalTransformArray,
+                                                const KeyMaterialMap&)
 {
      // Gen Temporary Memory
     DeviceMemory tempMemory;

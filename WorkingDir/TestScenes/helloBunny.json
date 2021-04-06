@@ -45,25 +45,25 @@
 	{
 		// Black Background
 		"id": 0,
-		"type": "Emissive",
+		"type": "BConstant",
 		"radiance" : [0, 0, 0]
 	},
     {
 		// Light Boundary Material
 		"id": 1,
-		"type": "LightConstant",
+		"type": "BConstant",
 		"radiance" : [12, 12, 12]
     },
 	{
 		// Green Diffuse Mat
 		"id": 2,
-		"type": "Lambert",
+		"type": "LambertC",
 		"albedo" : [0.0745, 0.9137, 0.4117]
     },
     {
 		// Gray Diffuse Mat
 		"id": 3,
-		"type": "Lambert",
+		"type": "LambertC",
 		"albedo" : [0.5, 0.5, 0.5]
 	},
 	{

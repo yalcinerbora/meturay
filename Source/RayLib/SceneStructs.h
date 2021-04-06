@@ -77,24 +77,28 @@ struct WorkBatchData
 // Construction data is used to create camera or lights
 // SceneNode Interface is used singular in this case
 // meaning only single element on the node is enabled
-struct ConstructionData
+struct CameraConstructionData
 {
     uint32_t                        transformId;
     uint32_t                        mediumId;
     uint32_t                        constructionId;
-    uint32_t                        materialId;
     std::unique_ptr<SceneNodeI>     node;
+};
+
+struct LightConstructionData : public CameraConstructionData
+{
+    uint32_t                        materialId;
 };
 
 struct LightGroupData
 {
-    bool                            isPrimitive;
-    std::string                     primTypeName;
-    std::vector<ConstructionData>   constructionInfo;
+    bool                                isPrimitive;
+    std::string                         primTypeName;
+    std::vector<LightConstructionData>  constructionInfo;
 };
 
-using ConstructionDataList = std::vector<ConstructionData>;
-using CameraGroupData = ConstructionDataList;
+using LightGroupDataList = std::vector<LightConstructionData>;
+using CameraGroupDataList = std::vector<CameraConstructionData>;
 
 using MaterialKeyListing = std::map<TypeIdPair, HitKey>;
 

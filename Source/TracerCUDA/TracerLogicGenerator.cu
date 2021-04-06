@@ -15,10 +15,10 @@
 #include "GPUTransformSingle.cuh"
 #include "GPUTransformIdentity.cuh"
 
-#include "GPUMaterialLight.cuh"
-#include "BasicMaterials.cuh"
-#include "SampleMaterials.cuh"
-#include "LambertTexMaterial.cuh"
+#include "BoundaryMaterials.cuh"
+#include "DebugMaterials.cuh"
+#include "SimpleMaterials.cuh"
+#include "LambertMaterial.cuh"
 #include "UnrealMaterial.cuh"
 
 #include "DirectTracer.h"
@@ -107,19 +107,16 @@ TracerLogicGenerator::TracerLogicGenerator()
                                                 DefaultDestruct<GPUBaseAcceleratorI>));
 
     // Material Types
-    matGroupGenerators.emplace(LightMatConstant::TypeName(),
-                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LightMatConstant>,
+    matGroupGenerators.emplace(BoundaryMatConstant::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BoundaryMatConstant>,
                                               DefaultDestruct<GPUMaterialGroupI>));
-    matGroupGenerators.emplace(LightMatConstant::TypeName(),
-                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LightMatTextured>,
+    matGroupGenerators.emplace(BoundaryMatTextured::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BoundaryMatTextured>,
                                               DefaultDestruct<GPUMaterialGroupI>));
-    matGroupGenerators.emplace(LightMatConstant::TypeName(),
-                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LightMatCube>,
-                                              DefaultDestruct<GPUMaterialGroupI>));
-    // Basic Materials
-    matGroupGenerators.emplace(ConstantMat::TypeName(),
-                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, ConstantMat>,
-                                              DefaultDestruct<GPUMaterialGroupI>));
+    matGroupGenerators.emplace(BoundaryMatSkySphere::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BoundaryMatSkySphere>,
+                               DefaultDestruct<GPUMaterialGroupI>));
+    // Debug Materials    
     matGroupGenerators.emplace(BarycentricMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BarycentricMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
@@ -129,12 +126,9 @@ TracerLogicGenerator::TracerLogicGenerator()
     matGroupGenerators.emplace(NormalRenderMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, NormalRenderMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
-    // Sample Materials
-    matGroupGenerators.emplace(EmissiveMat::TypeName(),
-                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, EmissiveMat>,
-                                              DefaultDestruct<GPUMaterialGroupI>));
-    matGroupGenerators.emplace(LambertMat::TypeName(),
-                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LambertMat>,
+    // Basic Materials
+    matGroupGenerators.emplace(LambertCMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LambertCMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
     matGroupGenerators.emplace(ReflectMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, ReflectMat>,
@@ -142,10 +136,9 @@ TracerLogicGenerator::TracerLogicGenerator()
     matGroupGenerators.emplace(RefractMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, RefractMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
-
     // Proper Materials
-    matGroupGenerators.emplace(LambertTexMat::TypeName(),
-                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LambertTexMat>,
+    matGroupGenerators.emplace(LambertMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LambertMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
     matGroupGenerators.emplace(UnrealMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, UnrealMat>,

@@ -30,7 +30,7 @@ __global__ void KCConstructGPULightDisk(GPULightDisk* gLightLocations,
     }
 }
 
-SceneError CPULightGroupDisk::InitializeGroup(const ConstructionDataList& lightNodes,
+SceneError CPULightGroupDisk::InitializeGroup(const LightGroupDataList& lightNodes,
                                               const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                               const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                               const MaterialKeyListing& allMaterialKeys,
@@ -90,7 +90,8 @@ SceneError CPULightGroupDisk::ChangeTime(const NodeListing& lightNodes, double t
 }
 
 TracerError CPULightGroupDisk::ConstructLights(const CudaSystem& system,
-                                               const GPUTransformI** dGlobalTransformArray)
+                                               const GPUTransformI** dGlobalTransformArray,
+                                               const KeyMaterialMap&)
 {
     // Gen Temporary Memory
     DeviceMemory tempMemory;

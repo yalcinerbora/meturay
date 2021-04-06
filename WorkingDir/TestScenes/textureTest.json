@@ -30,13 +30,13 @@
     {
         // General Boundary Material
         "id": 0,
-        "type": "Constant",
-        "albedo" : [1, 1, 1]
+        "type": "BConstant",
+        "radiance" : [1, 1, 1]
     },
     {
         // Main Walls
         "id": 1,
-        "type": "LambertT",
+        "type": "Lambert",
         "albedo": {"texture": 0, "channels": "rgb"}
     }],
 

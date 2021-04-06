@@ -60,12 +60,6 @@ class UnrealMat final
         size_t                  UsedGPUMemory(uint32_t materialId) const override;
         size_t                  UsedCPUMemory(uint32_t materialId) const override;
 
-        // NEE Related
-        bool                    IsLightGroup() const override { return false; }
-        bool                    IsEmissiveGroup() const override { return false; }
-        bool                    IsSpecularGroup() const override { return true; }
-        bool                    IsCameraGroup() const override { return false; }
-
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture
         uint8_t                 UsedTextureCount() const;

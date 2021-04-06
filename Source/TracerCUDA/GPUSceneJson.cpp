@@ -500,17 +500,17 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         {
             s.isPrimitive,
             (s.isPrimitive) ? primTypeName : "",
-            std::vector<ConstructionData>()
+            std::vector<LightConstructionData>()
         };
         auto& lightData = lightGroupNodes.emplace(primTypeName, std::move(data)).first->second;
         auto& constructionInfo = lightData.constructionInfo;
-        constructionInfo.emplace_back(ConstructionData
+        constructionInfo.emplace_back(LightConstructionData
                                       {
                                           s.transformId,
                                           s.mediumId,
                                           s.lightOrPrimId,
-                                          s.materialId,
-                                          std::move(lightNode)
+                                          std::move(lightNode),
+                                          s.materialId
                                       });
     }
 
@@ -520,9 +520,6 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         CameraSurfaceStruct s = SceneIO::LoadCameraSurface(baseMediumId,
                                                            identityTransformId,
                                                            jsn);
-
-        //TODO: Fix camera material
-        NodeId cameraMatGroup = 0;
 
         // Find the camera node
         std::string camTypeName;
@@ -540,19 +537,13 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         }
         else return SceneError::CAMERA_ID_NOT_FOUND;
 
-        // Request material for loading
-        if((e = AttachMatAll(BaseConstants::EMPTY_PRIMITIVE_NAME,
-                             cameraMatGroup)) != SceneError::OK)
-            return e;
-
         // Emplace to the list
-        auto& camConstructionInfo = cameraGroupNodes.emplace(camTypeName, std::vector<ConstructionData>()).first->second;
-        camConstructionInfo.emplace_back(ConstructionData
+        auto& camConstructionInfo = cameraGroupNodes.emplace(camTypeName, std::vector<CameraConstructionData>()).first->second;
+        camConstructionInfo.emplace_back(CameraConstructionData
                                          {
                                              s.transformId,
                                              s.mediumId,
                                              s.cameraId,
-                                             cameraMatGroup,
                                              std::move(cameraNode)
                                          });
     }
@@ -839,6 +830,10 @@ SceneError GPUSceneJson::GenerateCameras(const CameraNodeList& camGroupList,
                                          const MaterialKeyListing& materialKeys,
                                          double time)
 {
+    // Generate a special Camera Material Id
+    uint32_t cameraBatchId = maxMatIds[0] + 1;
+    maxMatIds[0] += 1;
+
     SceneError e = SceneError::OK;
     for(const auto& camGroup : camGroupList)
     {
@@ -851,7 +846,7 @@ SceneError GPUSceneJson::GenerateCameras(const CameraNodeList& camGroupList,
         if(e = cg->InitializeGroup(camNodes,
                                    mediumIdMappings,
                                    transformIdMappings,
-                                   materialKeys,
+                                   cameraBatchId,
                                    time,
                                    parentPath))
             return e;

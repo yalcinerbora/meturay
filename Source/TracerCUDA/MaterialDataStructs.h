@@ -34,7 +34,7 @@ struct UnrealMatData
     const TextureRefI<2, Vector3f>** dNormal;
 };
 
-struct LambertTMatData
+struct LambertMatData
 {
     const TextureRefI<2, Vector3f>** dAlbedo;
     const TextureRefI<2, Vector3f>** dNormal;

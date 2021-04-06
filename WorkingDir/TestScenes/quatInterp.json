@@ -27,8 +27,8 @@
 	},
 	{
 		"id": 1,
-		"type": "Constant",
-		"albedo" : [0, 0, 0]
+		"type": "BConstant",
+		"radiance" : [0, 0, 0]
 	}],
 
 	"Primitives":[
@@ -41,14 +41,14 @@
     }],
 
 	"Accelerators": [{"id" : 0, "type" : "Linear"}],
-	
+
 	//================================================//
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "Linear"},
     "BaseBoundaryMaterial": 1,
 	"BaseMedium" : 0,
-	
+
 	"Surfaces": [
 	{
 		"transform": 0,

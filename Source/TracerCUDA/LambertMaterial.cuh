@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LambertTexMaterialKC.cuh"
+#include "LambertMaterialKC.cuh"
 #include "MetaMaterialFunctions.cuh"
 #include "GPUMaterialP.cuh"
 #include "TypeTraits.h"
@@ -11,14 +11,14 @@ template<int C>
 using Tex2DMap = std::map<uint32_t, std::unique_ptr<TextureI<2, C>>>;
 
 // Delta distribution refract material
-class LambertTexMat final
-    : public GPUMaterialGroup<LambertTMatData, UVSurface,
-                              LambertTSample, LambertTEvaluate,
-                              EmitEmpty<LambertTMatData, UVSurface>,
-                              IsEmissiveFalse<LambertTMatData>>
+class LambertMat final
+    : public GPUMaterialGroup<LambertMatData, UVSurface,
+                              LambertSample, LambertEvaluate,
+                              EmitEmpty<LambertMatData, UVSurface>,
+                              IsEmissiveFalse<LambertMatData>>
 {
     public:
-        static const char*      TypeName() { return "LambertT"; }
+        static const char*      TypeName() { return "Lambert"; }
 
         using ConstantAlbedoRef = ConstantRef<2, Vector3>;
         using Texture2DRef      = TextureRef<2, Vector3>;
@@ -51,12 +51,12 @@ class LambertTexMat final
     protected:
     public:
         // Constructors & Destructor
-                                LambertTexMat(const CudaGPU& gpu)
-                                    : GPUMaterialGroup<LambertTMatData, UVSurface,
-                                                       LambertTSample, LambertTEvaluate,
-                                                       EmitEmpty<LambertTMatData, UVSurface>,
-                                                       IsEmissiveFalse<LambertTMatData>>(gpu) {}
-                                ~LambertTexMat() = default;
+                                LambertMat(const CudaGPU& gpu)
+                                    : GPUMaterialGroup<LambertMatData, UVSurface,
+                                                       LambertSample, LambertEvaluate,
+                                                       EmitEmpty<LambertMatData, UVSurface>,
+                                                       IsEmissiveFalse<LambertMatData>>(gpu) {}
+                                ~LambertMat() = default;
 
         // Interface
         // Type (as string) of the primitive group
@@ -78,17 +78,11 @@ class LambertTexMat final
         size_t                  UsedGPUMemory(uint32_t materialId) const override;
         size_t                  UsedCPUMemory(uint32_t materialId) const override;
 
-        // NEE Related
-        bool                    IsLightGroup() const override { return false; }
-        bool                    IsEmissiveGroup() const override { return false; }
-        bool                    IsSpecularGroup() const override { return true; }
-        bool                    IsCameraGroup() const override { return false; }
-
         uint8_t                 SampleStrategyCount() const { return 1; };
         // No Texture
         uint8_t                 UsedTextureCount() const;
         std::vector<uint32_t>   UsedTextureIds() const;
 };
 
-static_assert(IsMaterialGroupClass<LambertTexMat>::value,
-              "LambertTexMat is not a GPU Material Group Class.");
+static_assert(IsMaterialGroupClass<LambertMat>::value,
+              "LambertMat is not a GPU Material Group Class.");

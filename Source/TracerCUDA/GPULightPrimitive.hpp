@@ -23,7 +23,7 @@ __global__ void KCConstructGPULight(GPULight<PGroup>* gLightLocations,
 }
 
 template <class PGroup>
-SceneError CPULightGroup<PGroup>::InitializeGroup(const ConstructionDataList& lightNodes,
+SceneError CPULightGroup<PGroup>::InitializeGroup(const LightGroupDataList& lightNodes,
                                                   const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                   const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                                   const MaterialKeyListing& allMaterialKeys,
@@ -92,7 +92,8 @@ SceneError CPULightGroup<PGroup>::ChangeTime(const NodeListing& lightNodes, doub
 
 template <class PGroup>
 TracerError CPULightGroup<PGroup>::ConstructLights(const CudaSystem& system,
-                                                   const GPUTransformI** dGlobalTransformArray)
+                                                   const GPUTransformI** dGlobalTransformArray,
+                                                   const KeyMaterialMap&)
 {
     // Gen Temporary Memory
     DeviceMemory tempMemory;

@@ -30,7 +30,7 @@ __global__ void KCConstructGPULightRectangular(GPULightRectangular* gLightLocati
     }
 }
 
-SceneError CPULightGroupRectangular::InitializeGroup(const ConstructionDataList& lightNodes,
+SceneError CPULightGroupRectangular::InitializeGroup(const LightGroupDataList& lightNodes,
                                                      const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                      const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                                      const MaterialKeyListing& allMaterialKeys,
@@ -90,7 +90,8 @@ SceneError CPULightGroupRectangular::ChangeTime(const NodeListing& lightNodes, d
 }
 
 TracerError CPULightGroupRectangular::ConstructLights(const CudaSystem& system,
-                                                      const GPUTransformI** dGlobalTransformArray)
+                                                      const GPUTransformI** dGlobalTransformArray,
+                                                      const KeyMaterialMap&)
 {
      // Gen Temporary Memory
     DeviceMemory tempMemory;

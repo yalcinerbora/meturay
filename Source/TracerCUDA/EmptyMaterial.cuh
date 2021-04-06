@@ -40,9 +40,8 @@ class EmptyMat final
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
         // NEE Related
-        bool                    IsLightGroup() const override { return false; }
-        bool                    IsEmissiveGroup() const override { return false; }
-        bool                    IsCameraGroup() const override { return false; }
+        bool                    IsBoundary() const override { return false; }
+        bool                    CanBeSampled() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const { return 0; };
         // No Texture

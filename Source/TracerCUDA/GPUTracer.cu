@@ -37,11 +37,24 @@ TracerError GPUTracer::LoadCameras(std::vector<const GPUCameraI*>& dGPUCameras)
 
 TracerError GPUTracer::LoadLights(std::vector<const GPULightI*>& dGPULights)
 {
+    // Generate Global Key Material Map for Light Construction
+    KeyMaterialMap hitKeyMaterialMap;
+    for(const auto& w : workInfo)
+    {
+        const GPUMaterialGroupI* matG = std::get<2>(w);
+        if(matG->IsBoundary())
+        {
+            const GPUBoundaryMaterialGroupI* bMatG = static_cast<const GPUBoundaryMaterialGroupI*>(matG);
+            hitKeyMaterialMap.emplace(std::get<0>(w), bMatG);
+        }        
+    }
+
     TracerError e = TracerError::OK;
     for(auto& light : lights)
     {
         CPULightGroupI& l = *(light.second);
-        if((e = l.ConstructLights(cudaSystem, dTransforms)) != TracerError::OK)
+        if((e = l.ConstructLights(cudaSystem, dTransforms,
+                                  hitKeyMaterialMap)) != TracerError::OK)
             return e;
         const auto& dLList = l.GPULights();
         dGPULights.insert(dGPULights.end(), dLList.begin(), dLList.end());
@@ -80,60 +93,6 @@ TracerError GPUTracer::LoadMediums(std::vector<const GPUMediumI*>& dGPUMediums)
     }
     mediumCount = static_cast<uint32_t>(dGPUMediums.size());
     return TracerError::OK;
-}
-
-TracerError GPUTracer::AttachDistributions()
-{
-    TracerError e = TracerError::OK;
-    // Attach Luminance Distributions To Lights    
-    for(auto& light : lights)
-    {
-        CPULightGroupI& lightGroup = *light.second;
-
-        if(lightGroup.RequiresLuminance())
-        {
-            const std::vector<HitKey> materialKeys = lightGroup.AcquireMaterialKeys();
-            std::sort(materialKeys.begin(), materialKeys.end());
-
-            std::vector<std::vector<float>> luminanceData;
-            std::vector<Vector2ui> luminanceDimensions;
-
-            const GPULightMaterialGroupI* matGroup;
-            HitKey currentKey = HitKey::InvalidKey;
-            for(const HitKey key : materialKeys)
-            {
-                if(key != currentKey)
-                {
-                    currentKey = key;
-                    const auto loc = std::find_if(workInfo.cbegin(),
-                                                  workInfo.cend(),
-                                                  [&](const auto& info)
-                                                  {
-                                                      return (std::get<0>(info) == HitKey::FetchBatchPortion(currentKey));
-                                                  });
-                    // Acquire Light Material Group
-                    matGroup = static_cast<const GPULightMaterialGroupI*>(std::get<2>(*loc));
-                }
-
-                Vector2ui dimension;
-                std::vector<float> lumData;
-                if((e = matGroup->LuminanceData(lumData,
-                                                dimension, 
-                                                currentKey,
-                                                cudaSystem)) != TracerError::OK)
-                    return e;
-
-                luminanceData.push_back(std::move(lumData));
-                luminanceDimensions.push_back(dimension);
-            }
-
-            // Compiled Luminance Info
-            if((e = lightGroup.GenerateLumDistribution(luminanceData,
-                                                       luminanceDimensions,
-                                                       cudaSystem)) != TracerError::OK)
-                return e;
-        }
-    }
 }
 
 GPUTracer::GPUTracer(const CudaSystem& system,
@@ -233,6 +192,8 @@ TracerError GPUTracer::Initialize()
     offset += lightSize;
     assert(offset == totalSize);
 
+    // Do transforms and Mediums fist
+    // since materials and accelerators requires these objects
     // Transforms
     if((e = LoadTransforms(dGPUTransforms)) != TracerError::OK)
         return e;
@@ -246,20 +207,6 @@ TracerError GPUTracer::Initialize()
     CUDA_CHECK(cudaMemcpy(const_cast<GPUMediumI**>(dMediums),
                           dGPUMediums.data(),
                           dGPUMediums.size() * sizeof(GPUMediumI*),
-                          cudaMemcpyHostToDevice));
-    // Lights
-    if((e = LoadLights(dGPULights)) != TracerError::OK)
-        return e;
-    CUDA_CHECK(cudaMemcpy(const_cast<GPULightI**>(dLights),
-                          dGPULights.data(),
-                          dGPULights.size() * sizeof(GPULightI*),
-                          cudaMemcpyHostToDevice));
-    // Cameras
-    if((e = LoadCameras(dGPUCameras)) != TracerError::OK)
-        return e;
-    CUDA_CHECK(cudaMemcpy(const_cast<GPUCameraI**>(dCameras),
-                          dGPUCameras.data(),
-                          dGPUCameras.size() * sizeof(GPUCameraI*),
                           cudaMemcpyHostToDevice));
 
     // Attach Medium gpu pointer to Material Groups
@@ -290,8 +237,22 @@ TracerError GPUTracer::Initialize()
     if((e = baseAccelerator.Constrcut(cudaSystem, allSurfaceAABBs)) != TracerError::OK)
         return e;
 
-    if((e = AttachDistributions()) != TracerError::OK)
+
+    // Finally Construct GPU Light and Camera Lists
+    // Lights
+    if((e = LoadLights(dGPULights)) != TracerError::OK)
         return e;
+    CUDA_CHECK(cudaMemcpy(const_cast<GPULightI**>(dLights),
+                          dGPULights.data(),
+                          dGPULights.size() * sizeof(GPULightI*),
+                          cudaMemcpyHostToDevice));
+    // Cameras
+    if((e = LoadCameras(dGPUCameras)) != TracerError::OK)
+        return e;
+    CUDA_CHECK(cudaMemcpy(const_cast<GPUCameraI**>(dCameras),
+                          dGPUCameras.data(),
+                          dGPUCameras.size() * sizeof(GPUCameraI*),
+                          cudaMemcpyHostToDevice));
 
     cudaSystem.SyncGPUAll();
     return TracerError::OK;

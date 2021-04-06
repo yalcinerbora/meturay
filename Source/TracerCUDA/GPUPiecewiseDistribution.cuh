@@ -79,7 +79,6 @@ class CPUDistGroupPiecewiseConst1D
         std::vector<size_t>                         counts;
         std::vector<const float*>                   dPDFs;
         std::vector<const float*>                   dCDFs;
-        std::vector<const GPUDistPiecewiseConst1D*> dXDistributions;
 
     protected:
     public:
@@ -95,6 +94,9 @@ class CPUDistGroupPiecewiseConst1D
 
         const GPUDistPiecewiseConst1D&  DistributionGPU(uint32_t index) const;
         const GPUDistList&              DistributionGPU() const;
+
+        size_t                          UsedCPUMemory() const;
+        size_t                          UsedGPUMemory() const;
 };
 
 class CPUDistGroupPiecewiseConst2D
@@ -138,6 +140,9 @@ class CPUDistGroupPiecewiseConst2D
 
         const GPUDistPiecewiseConst2D&  DistributionGPU(uint32_t index) const;
         const GPUDistList&              DistributionGPU() const;
+
+        size_t                          UsedCPUMemory() const;
+        size_t                          UsedGPUMemory() const;
 };
 
 __host__ __device__
@@ -184,4 +189,31 @@ inline Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, RandomGPU& rng) cons
     // Combined PDF is multiplication since SampleX depends on SampleY
     pdf = pdfX * pdfY;
     return Vector2(indexX, indexY);
+}
+
+inline size_t CPUDistGroupPiecewiseConst1D::UsedCPUMemory() const
+{
+    return (gpuDistributions.size() * sizeof(GPUDistPiecewiseConst1D) +
+            counts.size() * sizeof(size_t) +
+            dPDFs.size() * sizeof(float*) +
+            dCDFs.size() * sizeof(float*));
+}
+
+inline size_t CPUDistGroupPiecewiseConst1D::UsedGPUMemory() const
+{
+    return memory.Size();
+}
+
+inline size_t CPUDistGroupPiecewiseConst2D::UsedCPUMemory() const
+{
+    return (dimensions.size() * sizeof(Vector2ui) +
+            distDataList.size() * sizeof(DistData2D) +
+            dCDFs.size() * sizeof(float*) +
+            dXDistributions.size() * sizeof(GPUDistPiecewiseConst1D*) +
+            gpuDistributions.size() * sizeof(GPUDistPiecewiseConst2D));
+}
+
+inline size_t CPUDistGroupPiecewiseConst2D::UsedGPUMemory() const
+{
+    return memory.Size();
 }

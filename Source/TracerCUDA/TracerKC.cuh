@@ -44,7 +44,6 @@ struct AmbientOcclusionGlobal : public DirectTracerGlobal
 struct PathTracerLocal
 {
     bool    emptyPrimitive;
-    bool    emissiveMaterial;
     bool    specularMaterial;
 };
 
@@ -78,6 +77,16 @@ inline void BasicWork(// Output
     const GPUMediumVacuum m(0);
     const GPUMediumI* outM;
     RayF outRay; float pdf;
+
+    Vector3 emission = MGroup::Emit(-r.getDirection(),
+                                    r.AdvancedPos(ray.tMax),
+                                    m,
+                                    //
+                                    surface,
+                                    //
+                                    gMatData,
+                                    matIndex);
+
     Vector3 radiance = MGroup::Sample(// Outputs
                                       outRay, pdf, outM,
                                       // Inputs
@@ -94,6 +103,7 @@ inline void BasicWork(// Output
                                       0);
 
     radiance = (pdf == 0.0f) ? Zero3 : (radiance / pdf);
+    radiance += emission;
 
     // And accumulate pixel
     ImageAccumulatePixel(img, aux.pixelIndex, Vector4(radiance, 1.0f));
@@ -187,9 +197,10 @@ inline void PathWork(// Output
                      const HitKey matId,
                      const PrimitiveId primId)
 {
+    static constexpr Vector3 ZERO_3 = Zero3;
+
     // Check Material Sample Strategy
     uint32_t sampleCount = maxOutRay;
-    bool emissiveMat = gLocalState.emissiveMaterial;
     bool specularMat = gLocalState.specularMaterial;
     static constexpr int PATH_RAY_INDEX = 0;
     static constexpr int NEE_RAY_INDEX = 1;
@@ -231,23 +242,22 @@ inline void PathWork(// Output
     Vector3 radianceFactor = aux.radianceFactor * transFactor;
 
     // Sample the emission if avail
-    if(emissiveMat)
+    Vector3 emission = MGroup::Emit(// Input
+                                    wi,
+                                    position,
+                                    m,
+                                    //
+                                    surface,
+                                    // Constants
+                                    gMatData,
+                                    matIndex);
+    // Only accumulate if emission has energy
+    if(emission != ZERO_3)
     {
-        Vector3 emission = MGroup::Emit(// Input
-                                        wi,
-                                        position,
-                                        m,
-                                        //
-                                        surface,
-                                        // Constants
-                                        gMatData,
-                                        matIndex);
-        // And accumulate pixel
-        // and add as a sample
         Vector3f total = emission * radianceFactor;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
     }
-
+    
     // If this material does not require to have any samples just quit
     if(sampleCount == 0) return;
 
