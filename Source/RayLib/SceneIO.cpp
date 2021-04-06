@@ -202,10 +202,10 @@ CameraSurfaceStruct SceneIO::LoadCameraSurface(uint32_t baseMediumId,
     return s;
 }
 
-NodelTextureStruct SceneIO::LoadNodeTextureStruct(const nlohmann::json& node,
-                                                     double time)
+NodeTextureStruct SceneIO::LoadNodeTextureStruct(const nlohmann::json& node,
+                                                 double time)
 {
-    NodelTextureStruct s;
+    NodeTextureStruct s;
     s.texId = LoadNumber<uint32_t>(node[TEXTURE_NAME]);
     s.channelLayout = LoadTextureAccessLayout(node[TEXTURE_CHANNEL]);
     return s;

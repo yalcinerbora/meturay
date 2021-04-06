@@ -21,7 +21,7 @@ using Vector4List = std::vector<Vector4>;
 using Matrix4x4List = std::vector<Matrix4x4>;
 using UIntList = std::vector<uint32_t>;
 using UInt64List = std::vector<uint64_t>;
-using TextureList = std::vector<MaterialTextureStruct>;
+using TextureList = std::vector<TextureStruct>;
 
 template <class T>
 using OptionalNode = std::pair<bool, T>;
@@ -33,7 +33,7 @@ struct TexturedDataNode
     union
     {
         T data;
-        MaterialTextureStruct texNode;
+        TextureStruct texNode;
     };
 };
 
@@ -125,7 +125,7 @@ class SceneNodeI
         virtual std::vector<UInt64List>     AccessUInt64List(const std::string& name, double time = 0.0) const = 0;
 
         // Texture Related
-        virtual std::vector<MaterialTextureStruct>      AccessTextureNode(const std::string& name,
+        virtual std::vector<NodeTextureStruct>          AccessTextureNode(const std::string& name,
                                                                           double time = 0.0) const = 0;
         virtual TexturedDataNodeList<float>             AccessTexturedDataFloat(const std::string& name,
                                                                                 double time = 0.0) const = 0;
@@ -135,7 +135,7 @@ class SceneNodeI
                                                                                   double time = 0.0) const = 0;
         virtual TexturedDataNodeList<Vector4>           AccessTexturedDataVector4(const std::string& name,
                                                                                   double time = 0.0) const = 0;
-        virtual OptionalNodeList<MaterialTextureStruct> AccessOptionalTextureNode(const std::string& name,
+        virtual OptionalNodeList<NodeTextureStruct>     AccessOptionalTextureNode(const std::string& name,
                                                                                   double time = 0.0) const = 0;
 };
 

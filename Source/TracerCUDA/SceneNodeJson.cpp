@@ -429,9 +429,9 @@ std::vector<UInt64List> SceneNodeJson::AccessUInt64List(const std::string& name,
     return AccessList<uint64_t, SceneIO::LoadNumber<uint64_t>>(name, time);
 }
 
-std::vector<MaterialTextureStruct> SceneNodeJson::AccessTextureNode(const std::string& name, double time) const
+std::vector<NodeTextureStruct> SceneNodeJson::AccessTextureNode(const std::string& name, double time) const
 {
-    return AccessSingle<MaterialTextureStruct, SceneIO::LoadMaterialTextureStruct>(name, time);
+    return AccessSingle<NodeTextureStruct, SceneIO::LoadNodeTextureStruct>(name, time);
 }
 
 TexturedDataNodeList<float> SceneNodeJson::AccessTexturedDataFloat(const std::string& name, double time) const
@@ -454,8 +454,8 @@ TexturedDataNodeList<Vector4> SceneNodeJson::AccessTexturedDataVector4(const std
     return AccessTextured<Vector4, SceneIO::LoadVector<4, float>>(name, time);
 }
 
-OptionalNodeList<MaterialTextureStruct> SceneNodeJson::AccessOptionalTextureNode(const std::string& name,
-                                                                                 double time) const
+OptionalNodeList<NodeTextureStruct> SceneNodeJson::AccessOptionalTextureNode(const std::string& name,
+                                                                             double time) const
 {
-    return AccessOptional<MaterialTextureStruct, SceneIO::LoadMaterialTextureStruct>(name, time);
+    return AccessOptional<NodeTextureStruct, SceneIO::LoadNodeTextureStruct>(name, time);
 }
