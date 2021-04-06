@@ -151,7 +151,7 @@ TexturedDataNodeList<T> SceneNodeJson::AccessTextured(const std::string& name,
         TexturedDataNode<T> texNode;
         if(node.is_object())
         {
-            MaterialTextureStruct n = SceneIO::LoadMaterialTextureStruct(node, time);
+            NodeTextureStruct n = SceneIO::LoadNodeTextureStruct(node, time);
             texNode.isTexture = true;
             texNode.texNode = n;
         }

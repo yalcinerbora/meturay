@@ -22,7 +22,7 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
     {
         // Load Textured Albedo Data
         TexturedDataNodeList<Vector3> matAlbedoNodes = sceneNode->AccessTexturedDataVector3(ALBEDO);
-        OptionalNodeList<NodelTextureStruct> matNormalNodes = sceneNode->AccessOptionalTextureNode(NORMAL);
+        OptionalNodeList<NodeTextureStruct> matNormalNodes = sceneNode->AccessOptionalTextureNode(NORMAL);
         assert(matAlbedoNodes.size() == matNormalNodes.size());
 
         std::vector<ConstructionInfo> localInfo;
@@ -30,13 +30,13 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
         for(int j = 0; j < matAlbedoNodes.size(); j++)
         {
             const TexturedDataNode<Vector3>& albedoNode = matAlbedoNodes[j];
-            const OptionalNode<NodelTextureStruct>& normalNode = matNormalNodes[j];
+            const OptionalNode<NodeTextureStruct>& normalNode = matNormalNodes[j];
 
             // Check if this is texture node
             ConstructionInfo constructionInfo;
             if(albedoNode.isTexture)
             {
-                const NodelTextureStruct& texInfo = albedoNode.texNode;
+                const NodeTextureStruct& texInfo = albedoNode.texNode;
 
                 const TextureI<2, 4>* texture;
                 if((err = TextureFunctions::AllocateTexture(texture,
@@ -71,7 +71,7 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
             // Check NormalMap
             if(normalNode.first)
             {
-                const NodelTextureStruct& texInfo = normalNode.second;
+                const NodeTextureStruct& texInfo = normalNode.second;
                 const TextureI<2, 4>* texture;
                 if((err = TextureFunctions::AllocateTexture(texture,
                                                             dTextureMemory, texInfo,
@@ -103,8 +103,8 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
 
     size_t totalMatCount = matConstructionInfo.size();
     // Allocation
-    size_t albedoSize = constAlbedoCount * sizeof(Vector3);
-    albedoSize = Memory::AlignSize(albedoSize);
+    size_t constAlbedoSize = constAlbedoCount * sizeof(ConstantAlbedoRef);
+    constAlbedoSize = Memory::AlignSize(constAlbedoSize);
     size_t albedoTexRefSize = texAlbedoCount * sizeof(Texture2DRef);
     albedoTexRefSize = Memory::AlignSize(albedoTexRefSize);
     size_t normalTexRefSize = texNormalCount * sizeof(Texture2DRef);
@@ -114,7 +114,7 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
     size_t normalPtrSize = totalMatCount * sizeof(Texture2DRefI*);
     normalPtrSize = Memory::AlignSize(normalPtrSize);
     //
-    size_t totalSize = (albedoSize + albedoTexRefSize +
+    size_t totalSize = (constAlbedoSize + albedoTexRefSize +
                         normalTexRefSize + albedoPtrSize +
                         normalPtrSize);
 
@@ -122,7 +122,7 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
     Byte* memPtr = static_cast<Byte*>(memory);
     size_t offset = 0;
     dConstAlbedo = reinterpret_cast<ConstantAlbedoRef*>(memPtr + offset);
-    offset += albedoSize;
+    offset += constAlbedoSize;
     dTextureAlbedoRef = reinterpret_cast<Texture2DRef*>(memPtr + offset);
     offset += albedoTexRefSize;
     dTextureNormalRef = reinterpret_cast<Texture2DRef*>(memPtr + offset);

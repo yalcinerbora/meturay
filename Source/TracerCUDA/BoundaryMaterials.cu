@@ -134,7 +134,7 @@ SceneError BoundaryMatSkySphere::InitializeGroup(const NodeListing& materialNode
         TextureList radianceTextures = sceneNode->AccessTextureNode(RADIANCE);
         
         // Calculate Distributions
-        for(const NodelTextureStruct& texInfo : radianceTextures)
+        for(const NodeTextureStruct& texInfo : radianceTextures)
         {
             const TextureI<2, 4>* texture;
             if((err = TextureFunctions::AllocateTexture(texture,

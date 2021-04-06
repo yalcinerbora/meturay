@@ -62,6 +62,7 @@ Vector3 LambertSample(// Sampled Output
     // Ray out
     Vector3 outPos = position + normal * MathConstants::Epsilon;
     wo = RayF(direction, outPos);
+
     // BSDF Calculation
     const Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
     return nDotL * albedo * MathConstants::InvPi;

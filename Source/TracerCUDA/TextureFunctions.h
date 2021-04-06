@@ -117,7 +117,7 @@ namespace TextureFunctions
                                // Allocation Data structure
                                TextureAllocationMap<D, C>& textureAllocations,
                                // Information about the texture (name and channels)
-                               const NodelTextureStruct& requestedTextureInfo,
+                               const NodeTextureStruct& requestedTextureInfo,
                                // Available textures that are defined on the scene file
                                const std::map<uint32_t, TextureStruct>& loadableTextureInfo,
                                // Texture Access Specifiers
@@ -137,7 +137,7 @@ SceneError TextureFunctions::AllocateTexture(// Returned Texture Ptr
                                              // Allocation Data structure
                                              TextureAllocationMap<D, C>& textureAllocations,
                                              // Information about the texture (name and channels)
-                                             const NodelTextureStruct& requestedTextureInfo,
+                                             const NodeTextureStruct& requestedTextureInfo,
                                              // Available textures that are defined on the scene file
                                              const std::map<uint32_t, TextureStruct>& loadableTextureInfo,
                                              // Texture Access Specifiers

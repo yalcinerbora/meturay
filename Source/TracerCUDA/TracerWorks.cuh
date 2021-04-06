@@ -229,8 +229,8 @@ extern template class DirectTracerWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
 
 // ===================================================
 // Path Tracer Work Batches
-extern template class PathTracerWork<LambertMat, GPUPrimitiveTriangle>;
-extern template class PathTracerWork<LambertMat, GPUPrimitiveSphere>;
+extern template class PathTracerWork<LambertCMat, GPUPrimitiveTriangle>;
+extern template class PathTracerWork<LambertCMat, GPUPrimitiveSphere>;
 
 extern template class PathTracerWork<ReflectMat, GPUPrimitiveTriangle>;
 extern template class PathTracerWork<ReflectMat, GPUPrimitiveSphere>;
@@ -274,8 +274,8 @@ using DirectTracerWorkerList = TypeList<DirectTracerWork<BarycentricMat, GPUPrim
                                         DirectTracerWork<BoundaryMatTextured, GPUPrimitiveSphere>,
                                         DirectTracerWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>>;
 // ===================================================
-using PathTracerWorkerList = TypeList<PathTracerWork<LambertMat, GPUPrimitiveTriangle>,
-                                      PathTracerWork<LambertMat, GPUPrimitiveSphere>,
+using PathTracerWorkerList = TypeList<PathTracerWork<LambertCMat, GPUPrimitiveTriangle>,
+                                      PathTracerWork<LambertCMat, GPUPrimitiveSphere>,
                                       PathTracerWork<ReflectMat, GPUPrimitiveTriangle>,
                                       PathTracerWork<ReflectMat, GPUPrimitiveSphere>,
                                       PathTracerWork<RefractMat, GPUPrimitiveTriangle>,

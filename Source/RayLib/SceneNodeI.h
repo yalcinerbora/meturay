@@ -21,7 +21,7 @@ using Vector4List = std::vector<Vector4>;
 using Matrix4x4List = std::vector<Matrix4x4>;
 using UIntList = std::vector<uint32_t>;
 using UInt64List = std::vector<uint64_t>;
-using TextureList = std::vector<TextureStruct>;
+using TextureList = std::vector<NodeTextureStruct>;
 
 template <class T>
 using OptionalNode = std::pair<bool, T>;
@@ -33,7 +33,7 @@ struct TexturedDataNode
     union
     {
         T data;
-        TextureStruct texNode;
+        NodeTextureStruct texNode;
     };
 };
 

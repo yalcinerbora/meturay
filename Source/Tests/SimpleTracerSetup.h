@@ -37,17 +37,18 @@ class MockNode
         static constexpr uint32_t       MAX_BOUNCES = 10;
         static constexpr int            SAMPLE_COUNT = 1;
 
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {16, 9};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 18};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {32, 32};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {320, 180};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(16, 9);
+        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(32, 18);
+        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(32, 32);
+        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(320, 180);
         static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(640, 360);
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {512, 512};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {900, 900};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {1280, 720};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {1600, 900};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {1920, 1080};
-        //static constexpr Vector2i       IMAGE_RESOLUTION = {3840, 2160};
+        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(944, 531);
+        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(512, 512);
+        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(900, 900);
+        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(1280, 720);
+        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(1600, 900);
+        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(1920, 1080);
+        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(3840, 2160);
 
     private:
         const double                    Duration;

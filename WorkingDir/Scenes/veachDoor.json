@@ -77,13 +77,13 @@
     {
         // General Boundary Material
         "id": 0,
-        "type": "Emissive",
+        "type": "BConstant",
         "radiance" : [0.0, 0.0, 0.0]
     },
     {
         // Light Boundary Material
         "id": 1,
-        "type": "LightConstant",
+        "type": "BConstant",
         "radiance" : [1420, 1552, 1642]
     },
     {
@@ -135,31 +135,31 @@
     {
         // Marble Teapot
         "id": 9,
-        "type": "LambertT",
+        "type": "Lambert",
 		"albedo" : {"texture": 0, "channels": "rgb"}
     },
     {
         // Floor
         "id": 10,
-        "type": "LambertT",
+        "type": "Lambert",
         "albedo": {"texture": 1, "channels": "rgb"}
     },
     {
         // Wood Table
         "id": 11,
-        "type": "LambertT",
+        "type": "Lambert",
         "albedo": {"texture": 2, "channels": "rgb"}
     },
     {
         // Wood Door
         "id": 12,
-        "type": "LambertT",
+        "type": "Lambert",
         "albedo": {"texture": 3, "channels": "rgb"}
     },
     {
         // Picture
         "id": 13,
-        "type": "LambertT",
+        "type": "Lambert",
         "albedo": {"texture": 4, "channels": "rgb"}
     }],
 
