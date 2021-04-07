@@ -250,10 +250,10 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
                                            reinterpret_cast<HitKey::Type*>(keysOther));
     cub::DoubleBuffer<RayId> dbIds(dCurrentIds,
                                    idsOther);
-    int bitStart = 0;
-    int bitEnd = bitMaxValues[1];
 
     // First sort internals
+    int bitStart = 0;
+    int bitEnd = bitMaxValues[1];    
     if(bitStart != bitEnd)
     {
         CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(dTempMemory, cubSortMemSize,

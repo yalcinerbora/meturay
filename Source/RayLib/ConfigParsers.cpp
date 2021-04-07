@@ -47,6 +47,7 @@ namespace ConfigParser
         static constexpr const char* WINDOW_SIZE_NAME = "windowSize";
         static constexpr const char* FPS_LIMIT_NAME = "fpsLimit";
         static constexpr const char* ENABLE_GUI_NAME = "enableGUI";
+        static constexpr const char* ENABLE_TMO_NAME = "enableTMO";
 
         // Load VisorOptions
         opts.eventBufferSize = SceneIO::LoadNumber<uint32_t>(optsJson[EVENT_BUFFER_SIZE_NAME]);
@@ -55,6 +56,7 @@ namespace ConfigParser
         opts.wSize = SceneIO::LoadVector<2, int>(optsJson[WINDOW_SIZE_NAME]);
         opts.fpsLimit = SceneIO::LoadNumber<float>(optsJson[FPS_LIMIT_NAME]);
         opts.enableGUI = SceneIO::LoadBool(optsJson[ENABLE_GUI_NAME]);
+        opts.enableTMO = SceneIO::LoadBool(optsJson[ENABLE_TMO_NAME]);
     }
 }
 

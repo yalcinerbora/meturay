@@ -5,13 +5,15 @@
 #include "GPUPrimitiveSphere.h"
 
 __global__ void KCSetRayState(uint32_t* gRayStates,
+                              bool isEmptyBVH,
                               uint32_t rayCount)
 {
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < rayCount; globalId += blockDim.x * gridDim.x)
     {
-        gRayStates[globalId] = SaveRayState(0, MAX_BASE_DEPTH);
+        const uint8_t depth = (isEmptyBVH) ? (MAX_BASE_DEPTH + 1) : MAX_BASE_DEPTH;
+        gRayStates[globalId] = SaveRayState(0, depth);
     }
 }
 
@@ -159,10 +161,12 @@ void GPUBaseAcceleratorBVH::GetReady(const CudaSystem& system,
     Byte* memPtr = static_cast<Byte*>(rayStateMemory);
     dRayStates = reinterpret_cast<uint32_t*>(memPtr);
     dPrevBVHIndex = reinterpret_cast<uint32_t*>(memPtr + stateSize);
+
+    // Memset previous bvh index as the root (index 0)
     CUDA_CHECK(cudaMemset(dPrevBVHIndex, 0x00, prevIndexSize));
 
     // Set Device
-    const CudaGPU& gpu = system.BestGPU(); //(*system.GPUList().begin());
+    const CudaGPU& gpu = system.BestGPU();
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
 
     // Init Ray State
@@ -170,6 +174,7 @@ void GPUBaseAcceleratorBVH::GetReady(const CudaSystem& system,
                        //
                        KCSetRayState,
                        dRayStates,
+                       (leafs.size() == 0),
                        rayCount);
 }
 
@@ -236,6 +241,13 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&,
                                              // List of surface AABBs
                                              const SurfaceAABBList& aabbMap)
 {
+    // Skip if there are no objects present on the scene
+    if(leafs.size() == 0)
+    {
+        METU_LOG("Base BVH(d=0) generated in 0.0 seconds.");
+        return TracerError::OK;
+    }
+
     Utility::CPUTimer t;
     t.Start();
 
@@ -266,7 +278,6 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&,
         surfaceIndices[i] = i;
         i++;
     }
-
     // Gen recursive queue and do work
     struct SplitWork
     {
@@ -327,7 +338,8 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&,
             maxDepth = current.depth + 1;
         }
     }
-     // BVH cannot hold this surface return error
+
+    // BVH cannot hold this surface return error
     if(maxDepth > MAX_BASE_DEPTH)
         return TracerError::UNABLE_TO_CONSTRUCT_BASE_ACCELERATOR;
 
@@ -349,6 +361,7 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&,
 
 TracerError GPUBaseAcceleratorBVH::Destruct(const CudaSystem&)
 {
+    // TODO: Implement?
     return TracerError::OK;
 }
 

@@ -201,9 +201,12 @@ class SimpleTracerSetup
         const std::u8string                 sceneName;
         const double                        sceneTime;
 
+        bool                                disableTMO;
+
     public:
         // Constructors & Destructor
                             SimpleTracerSetup(std::string tracerType,
+                                              bool disableTMO,
                                               std::u8string sceneName,
                                               double sceneTime);
                             SimpleTracerSetup() = default;
@@ -213,6 +216,7 @@ class SimpleTracerSetup
 };
 
 inline SimpleTracerSetup::SimpleTracerSetup(std::string tracerType,
+                                            bool disableTMO,
                                             std::u8string sceneName,
                                             double sceneTime)
     : sceneName(sceneName)
@@ -225,6 +229,7 @@ inline SimpleTracerSetup::SimpleTracerSetup(std::string tracerType,
     , node(nullptr)
     , tracerDLL(TRACER_DLL)
     , tracer(nullptr, nullptr)
+    , disableTMO(disableTMO)
 {}
 
 inline bool SimpleTracerSetup::Init()
@@ -276,12 +281,10 @@ inline bool SimpleTracerSetup::Init()
     visorOpts.vSyncOn = false;
     visorOpts.eventBufferSize = 128;
     visorOpts.fpsLimit = 24.0f;
-
+    visorOpts.enableGUI = false;
     visorOpts.wSize = SCREEN_RESOLUTION;
     visorOpts.wFormat = WINDOW_PIXEL_FORMAT;
-
-    //visorOpts.iFormat = IMAGE_PIXEL_FORMAT;
-    //visorOpts.iSize = MockNode::IMAGE_RESOLUTION;
+    visorOpts.enableTMO = !disableTMO;
 
     // Create Visor
     visorView = std::unique_ptr<VisorI>(CreateVisorGL(visorOpts,

@@ -35,6 +35,7 @@ struct VisorOptions
     float               fpsLimit;
     // Misc
     bool                enableGUI;
+    bool                enableTMO;
 };
 
 class VisorI

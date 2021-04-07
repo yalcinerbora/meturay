@@ -36,8 +36,8 @@ class ToneMapGL
         #pragma pack(push, 1)
         struct LumBufferGL
         {
-            float                   outMaxLum;
-            float                   outAvgLum;
+            float       outMaxLum;
+            float       outAvgLum;
         };
         struct TMOBufferGL
         {

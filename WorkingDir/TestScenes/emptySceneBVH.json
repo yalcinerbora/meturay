@@ -17,16 +17,23 @@
 	"Mediums": [{"id" : 0, "type" : "Vacuum"}],
 	"Transforms":[{"id": 0, "type": "Identity"}],
 
-	"Materials":[],
+	"Materials":[	{
+		// Black Background
+		"id": 0,
+		"type": "BConstant",
+		"radiance" : [0, 0, 0]
+	}],
 
 	"Primitives":[],
 
 	"Accelerators": [],
 
+	"Lights": [],
+
     //================================================//
     //        Actual Scene Related Declarations       //
     //================================================//
-    "BaseAccelerator": {"type": "Linear"},
+    "BaseAccelerator": {"type": "BasicBVH"},
     "BaseBoundaryMaterial": 0,
     "BaseMedium" : 0,
 

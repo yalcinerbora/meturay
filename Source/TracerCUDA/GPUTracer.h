@@ -60,7 +60,6 @@ class GPUTracer : public GPUTracerI
         TracerError                                 LoadLights(std::vector<const GPULightI*>&);
         TracerError                                 LoadTransforms(std::vector<const GPUTransformI*>&);
         TracerError                                 LoadMediums(std::vector<const GPUMediumI*>&);
-        TracerError                                 AttachDistributions();
 
     protected:
         // Max Bit Sizes for Efficient Sorting
@@ -113,6 +112,9 @@ class GPUTracer : public GPUTracerI
 
         RayPartitions<uint32_t>             PartitionOutputRays(uint32_t& totalOutRay,
                                                                 const WorkBatchMap&) const;
+
+        static Vector2i                     DetermineMaxBitFromId(const Vector2i&);
+
     public:
         // Constructors & Destructor
                                             GPUTracer(const CudaSystem&,

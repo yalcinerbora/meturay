@@ -27,13 +27,15 @@ TracerError AOTracer::Initialize()
     // We will add special work key for AO misses
     // Check if max work bits support that if not increment
     const Vector2i& workMaxIds = scene.MaxMatIds();
-    int32_t maxWorkBatchId = workMaxIds[0];
-    int32_t aoMissWorkBatchId = maxWorkBatchId + 1;
+    Vector2i newMaxIds = scene.MaxMatIds();
     // Increment batch work id by one
-    int32_t newBatchWorkBits = Utility::FindFirstSet32(aoMissWorkBatchId) + 1;
-    maxWorkBits[0] = newBatchWorkBits;
+    newMaxIds[0] += 1;
+    // Check if we flipped a new bit
+    Vector2i newWorkBits = DetermineMaxBitFromId(newMaxIds);
+    maxWorkBits[0] = newWorkBits[0];
 
     // Generate Combined Key
+    uint32_t aoMissWorkBatchId = newMaxIds[0];
     aoMissKey = HitKey::CombinedKey(aoMissWorkBatchId, 0);
 
     // Add AO Miss Work

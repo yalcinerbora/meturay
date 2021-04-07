@@ -109,10 +109,8 @@ GPUTracer::GPUTracer(const CudaSystem& system,
     , workInfo(scene.WorkBatchInfo())
     , baseMediumIndex(scene.BaseMediumIndex())
     , identityTransformIndex(scene.IdentityTransformIndex())
-    , maxAccelBits(Vector2i(Utility::FindFirstSet32(scene.MaxAccelIds()[0]) + 1,
-                            Utility::FindFirstSet32(scene.MaxAccelIds()[1]) + 1))
-    , maxWorkBits(Vector2i(Utility::FindFirstSet32(scene.MaxMatIds()[0]) + 1,
-                           Utility::FindFirstSet32(scene.MaxMatIds()[1]) + 1))
+    , maxAccelBits(DetermineMaxBitFromId(scene.MaxAccelIds()))
+    , maxWorkBits(DetermineMaxBitFromId(scene.MaxMatIds()))
     , params(p)
     , maxHitSize(scene.HitStructUnionSize())
     , rayMemory(system.BestGPU())
@@ -321,7 +319,6 @@ void GPUTracer::HitAndPartitionRays()
 
         // After that, system sorts rays according to the keys
         // and partitions the array according to batches
-
         // Sort and Partition happens on the leader device
         CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
 
@@ -588,6 +585,13 @@ RayPartitions<uint32_t> GPUTracer::PartitionOutputRays(uint32_t& totalOutRay,
         totalOutRay += count;
     }
     return outPartitions;
+}
+
+Vector2i GPUTracer::DetermineMaxBitFromId(const Vector2i& maxIds)
+{
+    Vector2i result((maxIds[0] == 0) ? 0 : (Utility::FindLastSet32(maxIds[0]) + 1),
+                    (maxIds[1] == 0) ? 0 : (Utility::FindLastSet32(maxIds[1]) + 1));
+    return result;
 }
 
 void GPUTracer::Finalize()

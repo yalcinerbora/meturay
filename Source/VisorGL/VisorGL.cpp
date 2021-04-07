@@ -556,17 +556,19 @@ void VisorGL::Render()
     if(imageModified)
     {
         ToneMapOptions tmOpts;
+        if(!vOpts.enableTMO)
+        {
+            tmOpts.doKeyAdjust = false;
+            tmOpts.doGamma = false;
+            tmOpts.doToneMap = false;
+        }
         if(visorGUI)
             tmOpts = visorGUI->ToneMapOptions();
         else
             tmOpts = DefaultTMOptions;
-
-        tmOpts.doKeyAdjust = false;
-        tmOpts.doGamma = false;
-        tmOpts.doToneMap = false;
-
-        // Always call this even if there are not parameters
-        // set to do tone mapping since(this function)
+        
+        // Always call this even if there are no parameters
+        // set to do tone mapping since this function
         // will write to sdr image and RenderImage function
         // will use it to present it to the FB
         toneMapGL.ToneMap(sdrTexture,
@@ -606,11 +608,6 @@ void VisorGL::SetInputScheme(VisorInputI& i)
 {
     input = &i;
 }
-
-//void VisorGL::SetCallbacks(VisorCallbacksI& cb)
-//{
-//    callbacks = &cb;
-//}
 
 void VisorGL::SetImageRes(Vector2i resolution)
 {

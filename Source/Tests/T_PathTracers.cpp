@@ -3,7 +3,8 @@
 TEST(PathTracers, CornellBox)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("PathTracer", u8"TestScenes/helloCornell.json", 0.0);
+    SimpleTracerSetup setup("PathTracer", true,
+                            u8"TestScenes/helloCornell.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
@@ -11,7 +12,8 @@ TEST(PathTracers, CornellBox)
 TEST(PathTracers, Bunny)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("PathTracer", u8"TestScenes/helloBunny.json", 0.0);
+    SimpleTracerSetup setup("PathTracer", true,
+                            u8"TestScenes/helloBunny.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
@@ -19,7 +21,8 @@ TEST(PathTracers, Bunny)
 TEST(PathTracers, Dragon)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("PathTracer", u8"TestScenes/helloDragon.json", 0.0);
+    SimpleTracerSetup setup("PathTracer", true,
+                            u8"TestScenes/helloDragon.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
@@ -27,7 +30,8 @@ TEST(PathTracers, Dragon)
 TEST(PathTracers, ReflectRefract)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("PathTracer", u8"TestScenes/cornellGlass.json", 0.0);
+    SimpleTracerSetup setup("PathTracer", true,
+                            u8"TestScenes/cornellGlass.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
@@ -35,7 +39,8 @@ TEST(PathTracers, ReflectRefract)
 TEST(PathTracers, Door)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("PathTracer", u8"Scenes/veachDoor.json", 0.0);
+    SimpleTracerSetup setup("PathTracer", true,
+                            u8"Scenes/veachDoor.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
