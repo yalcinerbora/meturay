@@ -184,30 +184,30 @@ TracerError BoundaryMatSkySphere::LuminanceData(std::vector<float>& lumData,
                                                 Vector2ui& dim,
                                                 uint32_t innerId) const
 {
-    //if(innerId >= innerIds.size())
-    //    return TracerError::MATERIAL_CAN_NOT_GENERATE_LUMINANCE;
+    if(innerId >= innerIds.size())
+        return TracerError::MATERIAL_CAN_NOT_GENERATE_LUMINANCE;
 
-    //// Size
-    //dim = textureList[innerId].Dim();
-    //uint32_t totalCount = dim[0] * dim[1];
+    // Size
+    dim = textureList[innerId].Dim();
+    uint32_t totalCount = dim[0] * dim[1];
 
-    //// Allocate Temp GPU Memory for Lum values
-    //// then call a kernel to populate luminances
-    //DeviceMemory lumValueMem(totalCount * sizeof(float));
-    //float* dLumArray = static_cast<float*>(lumValueMem);
+    // Allocate Temp GPU Memory for Lum values
+    // then call a kernel to populate luminances
+    DeviceMemory lumValueMem(totalCount * sizeof(float));
+    float* dLumArray = static_cast<float*>(lumValueMem);
 
-    //// Use your own gpu since texture resides there
-    //gpu.GridStrideKC_X(0, (cudaStream_t)0, totalCount,
-    //                   // Kernel
-    //                   KCRGBTextureToLuminanceArray,
-    //                   // Args
-    //                   dLumArray,
-    //                   dData.dRadianceTextures[innerId],
-    //                   dim);
+    // Use your own gpu since texture resides there
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, totalCount,
+                       // Kernel
+                       KCRGBTextureToLuminanceArray,
+                       // Args
+                       dLumArray,
+                       dData.dRadianceTextures[innerId],
+                       dim);
 
-    //lumData.resize(totalCount);
-    //CUDA_CHECK(cudaMemcpy(lumData.data(),
-    //           dLumArray, totalCount * sizeof(float),
-    //           cudaMemcpyDeviceToHost));
+    lumData.resize(totalCount);
+    CUDA_CHECK(cudaMemcpy(lumData.data(),
+               dLumArray, totalCount * sizeof(float),
+               cudaMemcpyDeviceToHost));
     return TracerError::OK;
 }

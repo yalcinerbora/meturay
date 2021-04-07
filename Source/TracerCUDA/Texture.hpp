@@ -172,10 +172,9 @@ Texture<D, T>::Texture(int deviceId,
                        bool normalizeIntegers,
                        bool normalizeCoordinates,
                        bool convertSRGB,
-                       const TexDimType_t<D>& dim,
+                       const TexDimType_t<D>& size,
                        int mipCount)
-    : TextureI<D, TextureChannelCount<T>::value>(texture, deviceId)
-    , dim(dim)
+    : TextureI<D, TextureChannelCount<T>::value>(size, deviceId)
     , interpType(interp)
     , edgeResolveType(eResolve)
 {
@@ -312,12 +311,6 @@ GPUFence Texture<D, T>::CopyAsync(const Byte* sourceData,
 }
 
 template<int D, class T>
-const TexDimType_t<D>& Texture<D, T>::Dim() const
-{
-    return dim;
-}
-
-template<int D, class T>
 InterpolationType Texture<D, T>::InterpType() const
 {
     return interpType;
@@ -349,12 +342,10 @@ TextureArray<D, T>::TextureArray(int deviceId,
                                  bool normalizeIntegers,
                                  bool normalizeCoordinates,
                                  bool convertSRGB,
-                                 const TexDimType_t<D>& dim,
+                                 const TexDimType_t<D>& size,
                                  unsigned int length,
                                  int mipCount)
-    : TextureArrayI<D, TextureChannelCount<T>::value>(texture, length, deviceId)
-    , dim(dim)
-    , length(length)
+    : TextureArrayI<D, TextureChannelCount<T>::value>(size, length, deviceId)
     , interpType(interp)
     , edgeResolveType(eResolve)
 {
@@ -496,18 +487,6 @@ GPUFence TextureArray<D, T>::CopyAsync(const Byte* sourceData,
 }
 
 template<int D, class T>
-const TexDimType_t<D>& TextureArray<D, T>::Dim() const
-{
-    return dim;
-}
-
-template<int D, class T>
-unsigned int TextureArray<D, T>::Length() const
-{
-    return length;
-}
-
-template<int D, class T>
 InterpolationType TextureArray<D, T>::InterpType() const
 {
     return interpType;
@@ -538,10 +517,9 @@ TextureCube<T>::TextureCube(int deviceId,
                             EdgeResolveType eResolve,
                             bool normalizeIntegers,
                             bool convertSRGB,
-                            const Vector2ui& dim,
+                            const Vector2ui& size,
                             int mipCount)
-    : TextureCubeI<TextureChannelCount<T>::value>(texture, deviceId)
-    , dim(dim)
+    : TextureCubeI<TextureChannelCount<T>::value>(size, deviceId)
     , interpType(interp)
     , edgeResolveType(eResolve)
 {
@@ -685,12 +663,6 @@ GPUFence TextureCube<T>::CopyAsync(const Byte* sourceData,
 
     CUDA_CHECK(cudaMemcpy3DAsync(&p, stream));
     return GPUFence(stream);
-}
-
-template <class T>
-const Vector2ui& TextureCube<T>::Dim() const
-{
-    return dim;
 }
 
 template <class T>

@@ -110,20 +110,24 @@ template<int D, int C>
 class TextureI : public DeviceLocalMemoryI
 {
     private:
-        static constexpr uint32_t   Dimension = D;
-        static constexpr uint32_t   ChannelCount = C;
+        static constexpr uint32_t   DimensionCount  = D;
+        static constexpr uint32_t   ChannelCount    = C;
 
-        cudaTextureObject_t&        texture;
     protected:
+        cudaTextureObject_t         texture = 0;
+        TexDimType_t<D>             dimensions = TexDimType<D>::ZERO;
+
     public:
         // Constructors & Destructor
-                                    TextureI(cudaTextureObject_t&,
-                                             int currentDevice);
+                                    TextureI(const TexDimType_t<D>& size,
+                                             int deviceId);
                                     TextureI(const TextureI&) = delete;
                                     TextureI(TextureI&&);
         TextureI&                   operator=(const TextureI&) = delete;
         TextureI&                   operator=(TextureI&&);
         virtual                     ~TextureI() = default;
+
+        const TexDimType_t<D>&      Dimensions() const;
 
         constexpr explicit          operator cudaTextureObject_t() const;
 };
@@ -132,23 +136,28 @@ template<int D, int C>
 class TextureArrayI : public DeviceLocalMemoryI
 {
     private:
-        static constexpr uint32_t   Dimension = D;
-        static constexpr uint32_t   ChannelCount = C;
-
-        cudaTextureObject_t&        texture;
-        uint32_t&                   length;
+        static constexpr uint32_t   DimensionCount  = D;
+        static constexpr uint32_t   ChannelCount    = C;
 
     protected:
+        cudaTextureObject_t         texture = 0;
+        TexDimType_t<D>             size    = TexDimType<D>::ZERO;
+        uint32_t                    length  = 0;
+
     public:
         // Constructors & Destructor
-                                    TextureArrayI(cudaTextureObject_t&,
+                                    TextureArrayI(const TexDimType_t<D>& size,
                                                   uint32_t layerCount,
-                                                  int currentDevice);
+                                                  int deviceId);
                                     TextureArrayI(const TextureArrayI&) = delete;
                                     TextureArrayI(TextureArrayI&&);
         TextureArrayI&              operator=(const TextureArrayI&) = delete;
         TextureArrayI&              operator=(TextureArrayI&&);
         virtual                     ~TextureArrayI() = default;
+
+
+        const TexDimType_t<D>&      Dimensions() const;
+        uint32_t                    Length() const;
 
         constexpr explicit          operator cudaTextureObject_t() const;
 };
@@ -157,21 +166,25 @@ template<int C>
 class TextureCubeI : public DeviceLocalMemoryI
 {
     private:
-        static constexpr uint32_t   Dimension = 2;
-        static constexpr uint32_t   ChannelCount = C;
-        static constexpr uint32_t   CubeSideCount = 6;
+        static constexpr uint32_t   DimensionCount  = 2;
+        static constexpr uint32_t   ChannelCount    = C;
+        static constexpr uint32_t   CubeSideCount   = 6;
 
-        cudaTextureObject_t&        texture;
     protected:
+        cudaTextureObject_t         texture     = 0;
+        Vector2ui                   dimensions  = Zero2ui;
+
     public:
         // Constructors & Destructor
-                                    TextureCubeI(cudaTextureObject_t&,
+                                    TextureCubeI(const Vector2ui& size,
                                                  int currentDevice);
                                     TextureCubeI(const TextureCubeI&) = delete;
                                     TextureCubeI(TextureCubeI&&);
         TextureCubeI&               operator=(const TextureCubeI&) = delete;
         TextureCubeI&               operator=(TextureCubeI&&);
         virtual                     ~TextureCubeI() = default;
+
+        const Vector2ui&            Dimensions() const;
 
         constexpr explicit          operator cudaTextureObject_t() const;
 };
@@ -183,9 +196,8 @@ class Texture final : public TextureI<D, TextureChannelCount<T>::value>
     static_assert(is_TextureType_v<T>, "Invalid texture type");
 
     private:
-        cudaMipmappedArray_t        data    = nullptr;
-        cudaTextureObject_t         texture = 0;
-        TexDimType_t<D>             dim     = TexDimType<D>::ZERO;
+        cudaMipmappedArray_t        data = nullptr;
+
 
         InterpolationType           interpType;
         EdgeResolveType             edgeResolveType;
@@ -219,7 +231,7 @@ class Texture final : public TextureI<D, TextureChannelCount<T>::value>
                                       int mipLevel = 0,
                                       cudaStream_t stream = nullptr);
 
-        const TexDimType_t<D>&  Dim() const;
+        // Accessors
         InterpolationType       InterpType() const;
         EdgeResolveType         EdgeType() const;
 
@@ -240,8 +252,7 @@ class TextureArray final : public TextureArrayI<D, TextureChannelCount<T>::value
     private:
         cudaMipmappedArray_t        data    = nullptr;
         cudaTextureObject_t         texture = 0;
-        TexDimType_t<D>             dim     = TexDimType<D>::ZERO;
-        uint32_t                    length = 0;
+
 
         InterpolationType           interpType;
         EdgeResolveType             edgeResolveType;
@@ -279,8 +290,6 @@ class TextureArray final : public TextureArrayI<D, TextureChannelCount<T>::value
                                       cudaStream_t stream = nullptr);
 
         // Accessors
-        const TexDimType_t<D>&  Dim() const;
-        unsigned int            Length() const;
         InterpolationType       InterpType() const;
         EdgeResolveType         EdgeType() const;
 
@@ -340,7 +349,6 @@ class TextureCube final : public TextureCubeI<TextureChannelCount<T>::value>
         // Misc
         size_t              Size() const;
 
-        const Vector2ui&    Dim() const;
         InterpolationType   InterpType() const;
         EdgeResolveType     EdgeType() const;
 
@@ -356,10 +364,10 @@ template<class T> using Texture1DArray = TextureArray<1, T>;
 template<class T> using Texture2DArray = TextureArray<2, T>;
 
 template<int D, int C>
-inline TextureI<D, C>::TextureI(cudaTextureObject_t& t,
+inline TextureI<D, C>::TextureI(const TexDimType_t<D>& size,
                                 int currentDevice)
     : DeviceLocalMemoryI(currentDevice)
-    , texture(t)
+    , size(size)
 {}
 
 template<int D, int C>
@@ -369,11 +377,17 @@ constexpr TextureI<D, C>::operator cudaTextureObject_t() const
 }
 
 template<int D, int C>
-inline TextureArrayI<D, C>::TextureArrayI(cudaTextureObject_t& t,
+const TexDimType_t<D>& TextureI<D, C>::Dimensions() const
+{
+    return dimensions;
+}
+
+template<int D, int C>
+inline TextureArrayI<D, C>::TextureArrayI(const TexDimType_t<D>& size,
                                           uint32_t length,
                                           int currentDevice)
     : DeviceLocalMemoryI(currentDevice)
-    , texture(t)
+    , size(size)
     , length(length)
 {}
 
@@ -383,17 +397,35 @@ constexpr TextureArrayI<D, C>::operator cudaTextureObject_t() const
     return texture;
 }
 
+template<int D, int C>
+const TexDimType_t<D>& TextureArrayI<D, C>::Dimensions() const
+{
+    return dimensions;
+}
+
+template<int D, int C>
+uint32_t TextureArrayI<D, C>::Length() const
+{
+    return length;
+}
+
 template<int C>
-inline TextureCubeI<C>::TextureCubeI(cudaTextureObject_t& t,
+inline TextureCubeI<C>::TextureCubeI(const Vector2ui& size,
                                      int currentDevice)
     : DeviceLocalMemoryI(currentDevice)
-    , texture(t)
+    , size(size)
 {}
 
 template<int C>
 constexpr TextureCubeI<C>::operator cudaTextureObject_t() const
 {
     return texture;
+}
+
+template<int C>
+const Vector2ui& TextureCubeI<C>::Dimensions() const
+{
+    return dimensions;
 }
 
 #include "Texture.hpp"
