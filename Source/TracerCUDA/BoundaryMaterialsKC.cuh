@@ -62,8 +62,11 @@ Vector3 EmitSkySphere(// Input
                       const LightMatTexData& matData,
                       const HitKey::Type& matId)
 {
+    // Convert Y up from Z up
+    Vector3 woZup = Vector3(wo[2], wo[0], wo[1]);
+
     // Convert to Spherical Coordinates
-    Vector2f tehtaPhi = Utility::CartesianToSphericalUnit(wo);
+    Vector2f tehtaPhi = Utility::CartesianToSphericalUnit(woZup);
 
     // Normalize to generate UV [0, 1]
     // tetha range [-pi, pi]

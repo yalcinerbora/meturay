@@ -4,7 +4,9 @@
 #include <cstdint>
 #include <cuda.h>
 #include <algorithm>
+
 #include "RayLib/Vector.h"
+#include "RayLib/Constants.h"
 
 #include "DeviceMemory.h"
 #include "Random.cuh"
@@ -65,6 +67,8 @@ class GPUDistPiecewiseConst2D
         uint32_t                Width() const { return width; }
         __host__ __device__
         uint32_t                Height() const { return height; }
+        __host__ __device__
+        Vector2ui               WidthHeight() const { return Vector2ui(width, height); }
 };
 
 class CPUDistGroupPiecewiseConst1D
@@ -158,9 +162,24 @@ __device__
 inline float GPUDistPiecewiseConst1D::Sample(float& pdf, RandomGPU& rng) const
 {
     float xi = GPUDistribution::Uniform<float>(rng);
+    // Extremely rarely index becomes the light count
+    // although GPUDistribution::Uniform should return [0, 1)
+    // it still happens due to fp error i guess?
+    // if it happens just return the last light on the list
+    //if(xi == 1.0f) xi -= MathConstants::VeryLargeEpsilon;
+
     float index;
     GPUFunctions::BinarySearchInBetween<float>(index, xi, gCDF, count);
-    pdf = gPDF[static_cast<uint32_t>(index)];
+    //index = xi * static_cast<float>(count);
+    uint32_t indexInt = static_cast<uint32_t>(index);
+
+    if(indexInt == count)
+    {
+        printf("Illegal Index %u\f", indexInt);
+        indexInt--;
+    }
+
+    pdf = gPDF[indexInt];
     return index;
 }
 

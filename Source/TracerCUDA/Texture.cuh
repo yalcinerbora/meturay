@@ -43,6 +43,15 @@ enum class CubeTexSide
     Z_NEG = 5
 };
 
+template <class T>
+struct ChannelDescType { using type = T; };
+template <>
+struct ChannelDescType<Vector2> { using type = float2; };
+template <>
+struct ChannelDescType<Vector4> { using type = float4; };
+template <class T>
+using ChannelDescType_t = typename ChannelDescType<T>::type;
+
 template <int D>
 struct TexDimType {};
 template <>

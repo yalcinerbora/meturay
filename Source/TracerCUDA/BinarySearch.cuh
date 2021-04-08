@@ -21,6 +21,7 @@ inline bool BinarySearchInBetween(float& index, T value, const T* list, uint32_t
 
         T current = list[mid];
         T next = list[mid + 1];
+
         if(current <= value &&
            next > value)
         {
@@ -29,7 +30,7 @@ inline bool BinarySearchInBetween(float& index, T value, const T* list, uint32_t
             index = static_cast<float>(mid) + (dist / totalDist);
             return true;
         }
-        else if(current < value)
+        else if(value < current)
             end = mid - 1;
         else
             start = mid + 1;

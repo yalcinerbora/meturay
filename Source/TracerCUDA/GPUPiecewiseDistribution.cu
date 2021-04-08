@@ -6,6 +6,7 @@
 
 #include "RayLib/Types.h"
 #include "RayLib/MemoryAlignment.h"
+#include "TracerDebug.h"
 
 #include <numeric>
 
@@ -157,7 +158,7 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
             offset += sizes[0];
             distData.dXCDFs.push_back(reinterpret_cast<const float*>(dPtr + offset));
             offset += sizes[1];
-            hXDists[i] = GPUDistPiecewiseConst1D(distData.dXCDFs.back(),
+            hXDists[y] = GPUDistPiecewiseConst1D(distData.dXCDFs.back(),
                                                  distData.dXPDFs.back(),
                                                  dimension[0]);
         }
@@ -192,8 +193,8 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
             const float* rowFunctionValues = functionValues[i].data() + (y * dim[1]);
             float& rowFunction = const_cast<float&>(distData.dYPDF[y]);
 
-            float* dRowPDF = const_cast<float*>(distData.dXPDFs[i]);
-            float* dRowCDF = const_cast<float*>(distData.dXPDFs[i]);
+            float* dRowPDF = const_cast<float*>(distData.dXPDFs[y]);
+            float* dRowCDF = const_cast<float*>(distData.dXCDFs[y]);
 
             CUDA_CHECK(cudaMemcpy(dRowPDF, rowFunctionValues,
                                   dim[0] * sizeof(float),
@@ -205,7 +206,7 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
 
             // Utilize GPU to do Scan Algorithm to find CDF
             ExclusiveScanArrayGPU<float, ReduceAdd<float>>(dRowCDF, dRowPDF,
-                                                           dim[i] + 1u,
+                                                           dim[0] + 1u,
                                                            0.0f);
 
             // Use last element to normalize Function values to PDF
@@ -231,6 +232,21 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
         TransformArrayGPU(dYPDF, dim[1], normlizeFunctor);
         // Normalize CDF Also
         TransformArrayGPU(dYCDF, dim[1] + 1, normlizeFunctor);
+
+        //// Check
+        //system.SyncGPUAll();
+
+        //for(uint32_t y = 0; y < dim[1]; y++)
+        //{
+        //    Debug::DumpMemToFile(std::string("xPDF") + std::to_string(y),
+        //                         distData.dXPDFs[y], dim[0]);
+        //    Debug::DumpMemToFile(std::string("xCDF") + std::to_string(y),
+        //                         distData.dXCDFs[y], dim[0] + 1);
+        //}
+        //Debug::DumpMemToFile(std::string("yCDF"),
+        //                     distData.dYCDF, dim[1] + 1);
+        //Debug::DumpMemToFile(std::string("yPDF"),
+        //                     distData.dYPDF, dim[1]);
 
         // Construct 2D Dist
         GPUDistPiecewiseConst2D dist(distData.yDist, distData.dXDists,

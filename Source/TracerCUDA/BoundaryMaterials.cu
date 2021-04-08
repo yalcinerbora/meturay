@@ -9,10 +9,9 @@
 
 __global__
 void KCRGBTextureToLuminanceArray(float* gOutLuminance,
-                                  const Texture2DRef* gTexture,
-                                  Vector2ui dimension)
+                                  const Texture2DRef& gTexture,
+                                  const Vector2ui dimension)
 {
-    const TextureRef<2, Vector3>& texRef = *gTexture;
     uint32_t totalWorkCount = dimension[0] * dimension[1];
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
         threadId < totalWorkCount;
@@ -21,11 +20,12 @@ void KCRGBTextureToLuminanceArray(float* gOutLuminance,
         Vector2ui id2D = Vector2ui(threadId % dimension[1],
                                    threadId / dimension[1]);
         // Convert to UV coordinates
-        Vector2f uv = Vector2f(id2D) / Vector2f(dimension);
+        Vector2f invDim = Vector2f(1.0f) / Vector2f(dimension);
+        Vector2f uv = Vector2f(id2D) * invDim;
         // Bypass linear interp
-        uv += Vector2f(0.5f);
+        uv += Vector2f(0.5f) * invDim;
 
-        Vector3 rgb = texRef(uv);
+        Vector3 rgb = gTexture(uv);
         gOutLuminance[threadId] = Utility::RGBToLuminance(rgb);
     }
 }
@@ -160,7 +160,10 @@ TracerError BoundaryMatTextured::ConstructTextureReferences()
     size_t totalMatCount = textureList.size();
     DeviceMemory tempMemory(sizeof(cudaTextureObject_t) * totalMatCount);
 
-    const cudaTextureObject_t* dTextureObjects = static_cast<cudaTextureObject_t*>(tempMemory);
+    cudaTextureObject_t* dTextureObjects = static_cast<cudaTextureObject_t*>(tempMemory);
+    CUDA_CHECK(cudaMemcpy(dTextureObjects, hTextureObjectList.data(), 
+                          hTextureObjectList.size() * sizeof(cudaTextureObject_t),
+                          cudaMemcpyHostToDevice));
 
     // Call Kernel and Allocate
     gpu.AsyncGridStrideKC_X(0, totalMatCount,
@@ -197,7 +200,7 @@ TracerError BoundaryMatTextured::LuminanceData(std::vector<float>& lumData,
                        KCRGBTextureToLuminanceArray,
                        // Args
                        dLumArray,
-                       dData.dRadianceTextures + innerId,
+                       dData.dRadianceTextures[innerId],
                        dim);
 
     lumData.resize(totalCount);
@@ -277,7 +280,11 @@ TracerError BoundaryMatSkySphere::ConstructTextureReferences()
     size_t totalMatCount = textureList.size();
     DeviceMemory tempMemory(sizeof(cudaTextureObject_t) * totalMatCount);
 
-    const cudaTextureObject_t* dTextureObjects = static_cast<cudaTextureObject_t*>(tempMemory);
+    cudaTextureObject_t* dTextureObjects = static_cast<cudaTextureObject_t*>(tempMemory);
+
+    CUDA_CHECK(cudaMemcpy(dTextureObjects, hTextureObjectList.data(), 
+                          hTextureObjectList.size() * sizeof(cudaTextureObject_t),
+                          cudaMemcpyHostToDevice));
 
     // Call Kernel and Allocate
     gpu.AsyncGridStrideKC_X(0, totalMatCount,
@@ -316,7 +323,7 @@ TracerError BoundaryMatSkySphere::LuminanceData(std::vector<float>& lumData,
          KCRGBTextureToLuminanceArray,
          // Args
          dLumArray,
-         dData.dRadianceTextures + innerId,
+         dData.dRadianceTextures[innerId],
          dim
     );
 

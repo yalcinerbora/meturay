@@ -22,6 +22,17 @@ using Tex3DEnable = typename std::enable_if<D == 3, RType>::type;
 template<int D, class RType = SceneError>
 using Tex1DEnable = typename std::enable_if<D == 1, RType>::type;
 
+template <int C>
+struct PixelFloatType {};
+template <>
+struct PixelFloatType<1> { using type = float;};
+template <>
+struct PixelFloatType<2> { using type = Vector2f;};
+template <>
+struct PixelFloatType<4> { using type = Vector4f;};
+template <int C>
+using PixelFloatType_t = typename PixelFloatType<C>::type;
+
 class TextureLoader
 {
     public:
@@ -286,7 +297,6 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>& tex,
                 if(bpp == 24 ||
                    bpp == 32)
                 {
-                    // std::unique_ptr<Texture2D<uchar4>>
                     auto texPtr = std::make_unique<Texture2D<uchar4>>(gpu.DeviceId(),
                                                                       interp,
                                                                       edgeR,
@@ -314,6 +324,40 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>& tex,
                 }
                 // Skip low bitrate bitmaps
                 else return SceneError::UNABLE_TO_LOAD_TEXTURE;
+                break;
+            }
+            case FREE_IMAGE_TYPE::FIT_RGBF:
+            {
+                // Probably HDRI Image
+                // Kinda dull but if but float image should be 32-bit
+                if((bpp / channels) != sizeof(float) * BYTE_BITS)
+                    return SceneError::UNABLE_TO_LOAD_TEXTURE;
+
+                // Float textures cannot be normalized so set this as false
+                normalizeIntegers = false;
+
+                // Allocate
+                auto texPtr = std::make_unique<Texture2D<PixelFloatType_t<C>>>(gpu.DeviceId(),
+                                                                               interp,
+                                                                               edgeR,
+                                                                               normalizeIntegers,
+                                                                               normalizeCoordinates,
+                                                                               false,
+                                                                               dimension,
+                                                                               1);
+
+                BYTE* imgPixels = FreeImage_GetBits(imgCPU);
+                Expand2DData3ChannelTo4Channel<float>(expandedPixels,
+                                                      FreeImage_GetBits(imgCPU),
+                                                      dimension,
+                                                      pitch);
+                Byte* srcPixels = expandedPixels.data();
+
+                texPtr->Copy(srcPixels, dimension);
+
+                // Transfer to the Interface ptr
+                tex = std::move(texPtr);
+
                 break;
             }
             // TODO: Add other tpyes of textures (16bit 32bit HDR etc.)

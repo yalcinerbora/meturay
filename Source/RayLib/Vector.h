@@ -80,8 +80,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 // Accessors
         __device__ __host__ explicit            operator T* ();
         __device__ __host__ explicit            operator const T* () const;
-        __device__ __host__ T& operator[](int);
-        __device__ __host__ constexpr const T& operator[](int) const;
+        __device__ __host__ T&                  operator[](int);
+        __device__ __host__ constexpr const T&  operator[](int) const;
 
         // Type cast
         template<int M, class C, typename = std::enable_if_t<(M <= N)>>

@@ -81,11 +81,11 @@ TEST(SimpleTracers, TextureTest)
     setup.Body();
 }
 
-TEST(SimpleTracers, SkySphereTest)
+TEST(SimpleTracers, SkySphere)
 {
     EnableVTMode();
     SimpleTracerSetup setup("DirectTracer", false,
-                            u8"TestScenes/skySphereTest.json", 0.0);
+                            u8"TestScenes/skySphere.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }

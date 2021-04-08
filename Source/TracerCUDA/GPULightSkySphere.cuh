@@ -116,14 +116,30 @@ inline void GPULightSkySphere::Sample(// Output
                                       RandomGPU& rng) const
 {
     Vector2f uv = distribution.Sample(pdf, rng);
+    // Normalize uv for utilization
+    uv /= Vector2f(distribution.Width(),
+                   distribution.Height());
+
+
+    //Vector2f uv = Vector2f(GPUDistribution::Uniform<float>(rng),
+    //                       GPUDistribution::Uniform<float>(rng));
+    //pdf = 1.0f;
 
     Vector2f tethaPhi = Vector2f(// [-pi, pi]
                                  (uv[0] * MathConstants::Pi * 2.0f) - MathConstants::Pi,
                                   // [0, pi]
                                  uv[1] * MathConstants::Pi);
-    dir = Utility::SphericalToCartesianUnit(tethaPhi);
+    Vector3 dirZUp = Utility::SphericalToCartesianUnit(tethaPhi);
+    // Spherical Coords calculates as Zup change it to y up
+    Vector3 dirYUp = Vector3(dirZUp[1], dirZUp[2], dirZUp[0]);
     // Transform Direction to World Space
-    dir = transform.LocalToWorld(dir, true);
+    dir = transform.LocalToWorld(dirYUp, true);
+
+    // Convert to solid angle pdf
+    // http://www.pbr-book.org/3ed-2018/Light_Transport_I_Surface_Reflection/Sampling_Light_Sources.html
+    float sinPhi = sin(tethaPhi[1]);
+    if(sinPhi == 0.0f) pdf = 0.0f;
+    else pdf = pdf / (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
 
     // Sky is very far
     distance = FLT_MAX;   

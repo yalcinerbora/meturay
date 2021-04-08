@@ -192,7 +192,7 @@ Texture<D, T>::Texture(int deviceId,
     , edgeResolveType(eResolve)
 {
     cudaExtent extent = MakeCudaExtent<D>(this->dimensions);
-    cudaChannelFormatDesc d = cudaCreateChannelDesc<T>();
+    cudaChannelFormatDesc d = cudaCreateChannelDesc<ChannelDescType_t<T>>();
     CUDA_CHECK(cudaSetDevice(deviceId));
     CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, mipCount));
 
@@ -359,7 +359,7 @@ TextureArray<D, T>::TextureArray(int deviceId,
     , edgeResolveType(eResolve)
 {
     cudaExtent extent = MakeCudaExtent<D>(this->dimensions, length);
-    cudaChannelFormatDesc d = cudaCreateChannelDesc<T>();
+    cudaChannelFormatDesc d = cudaCreateChannelDesc<ChannelDescType_t<T>>();
     CUDA_CHECK(cudaSetDevice(deviceId));
     CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, mipCount,
                                                cudaArrayLayered));
@@ -530,7 +530,7 @@ TextureCube<T>::TextureCube(int deviceId,
 {
     assert(this->dimensions[0] == this->dimensions[1]);
     cudaExtent extent = make_cudaExtent(this->dimensions[0], this->dimensions[1], CUBE_FACE_COUNT);
-    cudaChannelFormatDesc d = cudaCreateChannelDesc<T>();
+    cudaChannelFormatDesc d = cudaCreateChannelDesc<ChannelDescType_t<T>>();
     CUDA_CHECK(cudaSetDevice(deviceId));
     CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, mipCount,
                                                cudaArrayCubemap));

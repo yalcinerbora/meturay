@@ -36,11 +36,38 @@ TEST(PathTracers, ReflectRefract)
     setup.Body();
 }
 
+TEST(PathTracers, SkySphereHDR)
+{
+    EnableVTMode();
+    SimpleTracerSetup setup("PathTracer", true,
+                            u8"TestScenes/skySphereHDR.json", 0.0);
+    ASSERT_TRUE(setup.Init());
+    setup.Body();
+}
+
 TEST(PathTracers, Door)
 {
     EnableVTMode();
     SimpleTracerSetup setup("PathTracer", true,
                             u8"Scenes/veachDoor.json", 0.0);
+    ASSERT_TRUE(setup.Init());
+    setup.Body();
+}
+
+TEST(PathTracers, HDRReflection)
+{
+    EnableVTMode();
+    SimpleTracerSetup setup("PathTracer", true,
+                            u8"TestScenes/hdrReflection.json", 0.0);
+    ASSERT_TRUE(setup.Init());
+    setup.Body();
+}
+
+TEST(PathTracers, HDRRefraction)
+{
+    EnableVTMode();
+    SimpleTracerSetup setup("PathTracer", false,
+                            u8"TestScenes/hdrRefraction.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }

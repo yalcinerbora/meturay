@@ -26,7 +26,7 @@ inline bool DoNextEventEstimation(HitKey& key,
     r1 *= static_cast<float>(lightCount);
     uint32_t index = static_cast<uint32_t>(r1);
 
-    // Extremely rarely index becomes the ligjt count
+    // Extremely rarely index becomes the light count
     // although GPUDistribution::Uniform should return [0, 1)
     // it still happens due to fp error i guess?
     // if it happens just return the last light on the list
