@@ -562,7 +562,7 @@ void VisorGL::Render()
             tmOpts.doGamma = false;
             tmOpts.doToneMap = false;
         }
-        if(visorGUI)
+        else if(visorGUI)
             tmOpts = visorGUI->ToneMapOptions();
         else
             tmOpts = DefaultTMOptions;

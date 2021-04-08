@@ -19,9 +19,19 @@ TODO: should we interface these?
 #include <fstream>
 #include <iostream>
 
+class DeviceMemoryI
+{
+    public:
+        virtual             ~DeviceMemoryI() = default;
+
+        // Interface
+        virtual size_t      Size() const = 0;
+
+};
+
 // Basic semi-interface for memories that are static for each GPU
 // Textures are one example
-class DeviceLocalMemoryI
+class DeviceLocalMemoryI : public DeviceMemoryI
 {
     private:
     protected:
@@ -72,7 +82,7 @@ class DeviceMemoryCPUBacked : public DeviceLocalMemoryI
         template<class T>
         constexpr const T*          HostData() const;
         // Misc
-        size_t                      Size() const;
+        size_t                      Size() const override;
         // Interface
         void                        MigrateToOtherDevice(int deviceTo, cudaStream_t stream = (cudaStream_t)0);
 };
@@ -80,7 +90,7 @@ class DeviceMemoryCPUBacked : public DeviceLocalMemoryI
 // Generic Device Memory (most of the cases this should be used)
 // Fire and forget type memory
 // In our case rays and hit records will be stored in this form
-class DeviceMemory
+class DeviceMemory : public DeviceMemoryI
 {
     private:
         void*                       m_ptr;  // managed pointer
@@ -106,7 +116,7 @@ class DeviceMemory
         constexpr                   operator void*();
         constexpr                   operator const void*() const;
         // Misc
-        size_t                      Size() const;
+        size_t                      Size() const override;
 
         static void                 EnlargeBuffer(DeviceMemory&, size_t);
 };

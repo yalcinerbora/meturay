@@ -118,8 +118,10 @@ static constexpr cudaTextureFilterMode DetermineFilterMode(InterpolationType i)
 template<int D, int C>
 TextureI<D, C>::TextureI(TextureI&& other)
     : texture(other.texture)
+    , dimensions(other.dimensions)
 {
     other.texture = 0;
+    other.dimensions = TexDimType<D>::ZERO;
 }
 
 template<int D, int C>
@@ -127,15 +129,20 @@ TextureI<D, C>& TextureI<D, C>::operator=(TextureI&& other)
 {
     assert(this != &other);
     texture = other.texture;
+    dimensions = other.dimensions;
+
     other.texture = 0;
+    other.dimensions = TexDimType<D>::ZERO;
 }
 
 template<int D, int C>
 TextureArrayI<D, C>::TextureArrayI(TextureArrayI&& other)
     : texture(other.texture)
+    , dimensions(other.dimensions)
     , length(other.length)
 {
     other.texture = 0;
+    other.dimensions = TexDimType<D>::ZERO;
     other.length = 0;
 }
 
@@ -144,17 +151,21 @@ TextureArrayI<D, C>& TextureArrayI<D, C>::operator=(TextureArrayI&& other)
 {
     assert(this != &other);
     texture = other.texture;
+    dimensions = other.dimensions;
     length = other.length;
 
     other.texture = 0;
+    other.dimensions = TexDimType<D>::ZERO;
     other.length = 0;
 }
 
 template<int C>
 TextureCubeI<C>::TextureCubeI(TextureCubeI&& other)
     : texture(other.texture)
+    , dimensions(other.dimensions)
 {
     other.texture = 0;
+    other.dimensions = Zero2ui;
 }
 
 template<int C>
@@ -162,7 +173,9 @@ TextureCubeI<C>& TextureCubeI<C>::operator=(TextureCubeI&& other)
 {
     assert(this != &other);
     texture = other.texture;
+    dimensions = other.dimensions;
     other.texture = 0;
+    other.dimensions = Zero2ui;
 }
 
 template<int D, class T>
@@ -172,13 +185,13 @@ Texture<D, T>::Texture(int deviceId,
                        bool normalizeIntegers,
                        bool normalizeCoordinates,
                        bool convertSRGB,
-                       const TexDimType_t<D>& size,
+                       const TexDimType_t<D>& dim,
                        int mipCount)
-    : TextureI<D, TextureChannelCount<T>::value>(size, deviceId)
+    : TextureI<D, TextureChannelCount<T>::value>(dim, deviceId)
     , interpType(interp)
     , edgeResolveType(eResolve)
 {
-    cudaExtent extent = MakeCudaExtent<D>(dim);
+    cudaExtent extent = MakeCudaExtent<D>(this->dimensions);
     cudaChannelFormatDesc d = cudaCreateChannelDesc<T>();
     CUDA_CHECK(cudaSetDevice(deviceId));
     CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, mipCount));
@@ -211,18 +224,16 @@ Texture<D, T>::Texture(int deviceId,
     tDesc.minMipmapLevelClamp = -100.0f;
     tDesc.maxMipmapLevelClamp = 100.0f;
 
-    CUDA_CHECK(cudaCreateTextureObject(&texture, &rDesc, &tDesc, nullptr));
+    CUDA_CHECK(cudaCreateTextureObject(&this->texture, &rDesc, &tDesc, nullptr));
 }
 
 template<int D, class T>
 Texture<D, T>::Texture(Texture&& other)
     : TextureI<D, TextureChannelCount<T>::value>(std::move(other))
     , data(other.data)
-    , dim(other.dim)
     , interpType(other.interpType)
     , edgeResolveType(other.edgeResolveType)
 {
-    other.dim = TexDimType<D>::ZERO;
     other.data = nullptr;
 }
 
@@ -233,17 +244,15 @@ Texture<D, T>& Texture<D, T>::operator=(Texture&& other)
     if(data)
     {
         CUDA_CHECK(cudaSetDevice(this->currentDevice));
-        CUDA_CHECK(cudaDestroyTextureObject(texture));
+        CUDA_CHECK(cudaDestroyTextureObject(this->texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
 
     data = other.data;
-    dim = other.dim;
     interpType = other.interpType;
     edgeResolveType = other.edgeResolveType;
 
     other.data = nullptr;
-    other.dim = TexDimType<D>::ZERO;
 
     return *this;
 }
@@ -254,7 +263,7 @@ Texture<D, T>::~Texture()
     if(data)
     {
         CUDA_CHECK(cudaSetDevice(this->currentDevice));
-        CUDA_CHECK(cudaDestroyTextureObject(texture));
+        CUDA_CHECK(cudaDestroyTextureObject(this->texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
 }
@@ -325,7 +334,7 @@ EdgeResolveType Texture<D, T>::EdgeType() const
 template<int D, class T>
 size_t Texture<D, T>::Size() const
 {
-    return TotalPixelCount<D>(dim) * sizeof(T);
+    return TotalPixelCount<D>(this->dimensions) * sizeof(T);
 }
 
 template<int D, class T>
@@ -349,7 +358,7 @@ TextureArray<D, T>::TextureArray(int deviceId,
     , interpType(interp)
     , edgeResolveType(eResolve)
 {
-    cudaExtent extent = MakeCudaExtent<D>(dim, length);
+    cudaExtent extent = MakeCudaExtent<D>(this->dimensions, length);
     cudaChannelFormatDesc d = cudaCreateChannelDesc<T>();
     CUDA_CHECK(cudaSetDevice(deviceId));
     CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, mipCount,
@@ -391,11 +400,9 @@ template<int D, class T>
 TextureArray<D, T>::TextureArray(TextureArray&& other)
     : TextureArrayI<D, TextureChannelCount<T>::value>(std::move(other))
     , data(other.data)
-    , dim(other.dim)
     , interpType(other.interpType)
     , edgeResolveType(other.edgeResolveType)
 {
-    other.dim = TexDimType<D>::ZERO;
     other.data = nullptr;
 }
 
@@ -411,12 +418,10 @@ TextureArray<D, T>& TextureArray<D, T>::operator=(TextureArray&& other)
     }
 
     data = other.data;
-    dim = other.dim;
     interpType = other.interpType;
     edgeResolveType = other.edgeResolveType;
 
     other.data = nullptr;
-    other.dim = TexDimType<D>::ZERO;
 
     return *this;
 }
@@ -501,7 +506,7 @@ EdgeResolveType TextureArray<D, T>::EdgeType() const
 template<int D, class T>
 size_t TextureArray<D, T>::Size() const
 {
-    return TotalPixelCount<D>(dim) * length * sizeof(T);
+    return TotalPixelCount<D>(this->dimensions) * this->length * sizeof(T);
 }
 
 template<int D, class T>
@@ -523,8 +528,8 @@ TextureCube<T>::TextureCube(int deviceId,
     , interpType(interp)
     , edgeResolveType(eResolve)
 {
-    assert(dim[0] == dim[1]);
-    cudaExtent extent = make_cudaExtent(dim[0], dim[1], CUBE_FACE_COUNT);
+    assert(this->dimensions[0] == this->dimensions[1]);
+    cudaExtent extent = make_cudaExtent(this->dimensions[0], this->dimensions[1], CUBE_FACE_COUNT);
     cudaChannelFormatDesc d = cudaCreateChannelDesc<T>();
     CUDA_CHECK(cudaSetDevice(deviceId));
     CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, mipCount,
@@ -566,11 +571,9 @@ template<class T>
 TextureCube<T>::TextureCube(TextureCube&& other)
     : TextureCubeI<TextureChannelCount<T>::value>(std::move(other))
     , data(other.data)
-    , dim(other.dim)
     , interpType(other.interpType)
     , edgeResolveType(other.edgeResolveType)
 {
-    other.dim = Zero2ui;
     other.data = nullptr;
 }
 
@@ -586,13 +589,10 @@ TextureCube<T>& TextureCube<T>::operator=(TextureCube&& other)
     }
 
     data = other.data;
-    dim = other.dim;
     interpType = other.interpType;
     edgeResolveType = other.edgeResolveType;
 
     other.data = nullptr;
-    other.dim = Zero2ui;
-
     return *this;
 }
 
@@ -680,7 +680,7 @@ EdgeResolveType TextureCube<T>::EdgeType() const
 template<class T>
 size_t TextureCube<T>::Size() const
 {
-    return static_cast<size_t>(dim[0]) * dim[1] * CUBE_FACE_COUNT * sizeof(T);
+    return static_cast<size_t>(this->dimensions[0]) * this->dimensions[1] * CUBE_FACE_COUNT * sizeof(T);
 }
 
 template <class T>

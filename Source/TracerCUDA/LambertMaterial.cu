@@ -25,7 +25,6 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
         OptionalNodeList<NodeTextureStruct> matNormalNodes = sceneNode->AccessOptionalTextureNode(NORMAL);
         assert(matAlbedoNodes.size() == matNormalNodes.size());
 
-        std::vector<ConstructionInfo> localInfo;
         // Iterate over these nodes one by one to find textures
         for(int j = 0; j < matAlbedoNodes.size(); j++)
         {
@@ -33,6 +32,7 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
             const OptionalNode<NodeTextureStruct>& normalNode = matNormalNodes[j];
 
             // Check if this is texture node
+            Vector2ui texIds;
             ConstructionInfo constructionInfo;
             if(albedoNode.isTexture)
             {
@@ -51,21 +51,14 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
                 constructionInfo.isConstantAlbedo = false;
                 constructionInfo.albedoTexture = static_cast<cudaTextureObject_t>(*texture);
 
-                //// Find the texture node
-                //auto loc = textureNodes.cend();
-                //if((loc = textureNodes.find(textureId)) != textureNodes.cend())
-                //{
-                //    const TextureStruct& texInfo = loc->second;
-                //
-                //}
-                //else return SceneError::TEXTURE_ID_NOT_FOUND;
-
                 texAlbedoCount++;
+                texIds[0] = texInfo.texId;
             }
             else
             {
                 constructionInfo.constantAlbedo = albedoNode.data;
                 constAlbedoCount++;
+                texIds[0] = std::numeric_limits<uint32_t>::max();
             }
 
             // Check NormalMap
@@ -84,13 +77,14 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
 
                 constructionInfo.hasNormalMap = true;
                 constructionInfo.normalTexture = static_cast<cudaTextureObject_t>(*texture);
+                texNormalCount++;
+                texIds[1] = texInfo.texId;
             }
+            else texIds[1] = std::numeric_limits<uint32_t>::max();
 
-            localInfo.push_back(constructionInfo);
+            matTextureIds.push_back(texIds);
+            matConstructionInfo.push_back(constructionInfo);
         }
-        matConstructionInfo.insert(matConstructionInfo.end(),
-                                   localInfo.begin(),
-                                   localInfo.end());
 
         // Generate Id lookup
         const auto& ids = sceneNode->Ids();
@@ -245,25 +239,51 @@ TracerError LambertMat::ConstructTextureReferences()
 
 size_t LambertMat::UsedGPUMemory() const
 {
-    // TODO: Implement
-    return 0;
+    size_t totalSize = 0;
+    for(const auto& tex : dTextureMemory)
+    {
+        totalSize += tex.second->Size();
+    }
+    totalSize += memory.Size();
+    return totalSize;
 }
 
 size_t LambertMat::UsedCPUMemory() const
 {
-    return sizeof(LambertMatData);
+    return matConstructionInfo.size();
 }
 
 size_t LambertMat::UsedGPUMemory(uint32_t materialId) const
 {
-    // TODO: Implement
-    return 0;
+    size_t totalSize = 0;
+    auto i = innerIds.cend();
+    if((i = innerIds.find(materialId)) == innerIds.cend())
+        return 0;
+    
+    uint32_t index = i->second;
+    uint32_t albedoTexId = matTextureIds[index][0];
+    uint32_t normalTexId = matTextureIds[index][1];
+
+    // Find the textures and size
+    auto texLoc = dTextureMemory.cend();
+    if(albedoTexId != std::numeric_limits<uint32_t>::max() &&
+       ((texLoc = dTextureMemory.find(albedoTexId)) != dTextureMemory.cend()))
+    {
+        totalSize += texLoc->second->Size();
+    }
+    else totalSize += sizeof(Vector3);
+
+    if(normalTexId != std::numeric_limits<uint32_t>::max() &&
+       ((texLoc = dTextureMemory.find(normalTexId)) != dTextureMemory.cend()))
+    {
+        totalSize += texLoc->second->Size();
+    }
+    return totalSize;
 }
 
 size_t LambertMat::UsedCPUMemory(uint32_t materialId) const
 {
-    // TODO: Implement
-    return 0;
+    return sizeof(Vector2ui); 
 }
 
 uint8_t LambertMat::UsedTextureCount() const

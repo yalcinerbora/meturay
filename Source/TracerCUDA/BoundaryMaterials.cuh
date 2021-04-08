@@ -5,8 +5,13 @@
 #include "GPUSurface.h"
 #include "MetaMaterialFunctions.cuh"
 #include "Texture.cuh"
-//#include "GPUDistribution.h"
 #include "TypeTraits.h"
+
+
+// Some Types for Convenience
+template<int C>
+using Tex2DMap = std::map<uint32_t, std::unique_ptr<TextureI<2, C>>>;
+using Texture2DRef = TextureRef<2, Vector3>;
 
 class BoundaryMatConstant final
     : public GPUBoundaryMaterialGroup<LightMatData, EmptySurface,
@@ -71,7 +76,9 @@ class BoundaryMatTextured final
 
     private:
         DeviceMemory                        memory;
-        std::vector<Texture2D<Vector4>>     textureList;
+        Tex2DMap<4>                         textureMemory;
+        // Texture list for accessing which material uses which texture
+        std::vector<const TextureI<2, 4>*>  textureList;
 
     public:
         // Constructors & Destructor
@@ -120,20 +127,15 @@ class BoundaryMatSkySphere final
 {
     public:
         static const char*      TypeName() { return "BSkySphere"; }
-        // Type Convenience
-        using Tex2DMap          = std::map<uint32_t, std::unique_ptr<TextureI<2, 4>>>;
-        using Texture2DRef      = TextureRef<2, Vector3>;
 
     private:
-        DeviceMemory                memory;
+        DeviceMemory                        memory;
         // Actual Allocation of Textures
-        Tex2DMap                    textureMemory;
-        // Temp List of Textures which will be used on
-        // texture reference construction
-        std::vector<Texture2DRef>    textureList;
-        std::vector<Texture2DI
-
-        
+        Tex2DMap<4>                         textureMemory;
+        // Texture list for accessing which material uses which texture
+        std::vector<const TextureI<2, 4>*>  textureList;
+        // GPU Ptrs
+        const Texture2DRef*                 dTextureRef;
 
     public:
         // Constructors & Destructor

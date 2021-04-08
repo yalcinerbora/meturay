@@ -47,6 +47,7 @@ class LambertMat final
 
         // CPU Construction Info
         std::vector<ConstructionInfo> matConstructionInfo;
+        std::vector<Vector2ui>        matTextureIds;
 
     protected:
     public:

@@ -119,7 +119,7 @@ class TextureI : public DeviceLocalMemoryI
 
     public:
         // Constructors & Destructor
-                                    TextureI(const TexDimType_t<D>& size,
+                                    TextureI(const TexDimType_t<D>& dim,
                                              int deviceId);
                                     TextureI(const TextureI&) = delete;
                                     TextureI(TextureI&&);
@@ -140,13 +140,13 @@ class TextureArrayI : public DeviceLocalMemoryI
         static constexpr uint32_t   ChannelCount    = C;
 
     protected:
-        cudaTextureObject_t         texture = 0;
-        TexDimType_t<D>             size    = TexDimType<D>::ZERO;
-        uint32_t                    length  = 0;
+        cudaTextureObject_t         texture     = 0;
+        TexDimType_t<D>             dimensions  = TexDimType<D>::ZERO;
+        uint32_t                    length      = 0;
 
     public:
         // Constructors & Destructor
-                                    TextureArrayI(const TexDimType_t<D>& size,
+                                    TextureArrayI(const TexDimType_t<D>& dim,
                                                   uint32_t layerCount,
                                                   int deviceId);
                                     TextureArrayI(const TextureArrayI&) = delete;
@@ -176,7 +176,7 @@ class TextureCubeI : public DeviceLocalMemoryI
 
     public:
         // Constructors & Destructor
-                                    TextureCubeI(const Vector2ui& size,
+                                    TextureCubeI(const Vector2ui& dim,
                                                  int currentDevice);
                                     TextureCubeI(const TextureCubeI&) = delete;
                                     TextureCubeI(TextureCubeI&&);
@@ -236,7 +236,7 @@ class Texture final : public TextureI<D, TextureChannelCount<T>::value>
         EdgeResolveType         EdgeType() const;
 
         // Misc
-        size_t                  Size() const;
+        size_t                  Size() const override;
 
         // Memory Migration
         void                    MigrateToOtherDevice(int deviceTo,
@@ -294,7 +294,7 @@ class TextureArray final : public TextureArrayI<D, TextureChannelCount<T>::value
         EdgeResolveType         EdgeType() const;
 
         // Misc
-        size_t                  Size() const;
+        size_t                  Size() const override;
 
         void                    MigrateToOtherDevice(int deviceTo,
                                                      cudaStream_t stream = nullptr) override;
@@ -346,11 +346,11 @@ class TextureCube final : public TextureCubeI<TextureChannelCount<T>::value>
                                       int mipLevel = 0,
                                       cudaStream_t stream = nullptr);
 
-        // Misc
-        size_t              Size() const;
-
         InterpolationType   InterpType() const;
         EdgeResolveType     EdgeType() const;
+
+        // Misc
+        size_t              Size() const override;
 
         void                MigrateToOtherDevice(int deviceTo, cudaStream_t stream = nullptr) override;
 };
@@ -364,10 +364,10 @@ template<class T> using Texture1DArray = TextureArray<1, T>;
 template<class T> using Texture2DArray = TextureArray<2, T>;
 
 template<int D, int C>
-inline TextureI<D, C>::TextureI(const TexDimType_t<D>& size,
+inline TextureI<D, C>::TextureI(const TexDimType_t<D>& dim,
                                 int currentDevice)
     : DeviceLocalMemoryI(currentDevice)
-    , size(size)
+    , dimensions(dim)
 {}
 
 template<int D, int C>
@@ -383,11 +383,11 @@ const TexDimType_t<D>& TextureI<D, C>::Dimensions() const
 }
 
 template<int D, int C>
-inline TextureArrayI<D, C>::TextureArrayI(const TexDimType_t<D>& size,
+inline TextureArrayI<D, C>::TextureArrayI(const TexDimType_t<D>& dim,
                                           uint32_t length,
                                           int currentDevice)
     : DeviceLocalMemoryI(currentDevice)
-    , size(size)
+    , dimensions(dim)
     , length(length)
 {}
 
@@ -410,10 +410,10 @@ uint32_t TextureArrayI<D, C>::Length() const
 }
 
 template<int C>
-inline TextureCubeI<C>::TextureCubeI(const Vector2ui& size,
+inline TextureCubeI<C>::TextureCubeI(const Vector2ui& dim,
                                      int currentDevice)
     : DeviceLocalMemoryI(currentDevice)
-    , size(size)
+    , dimensions(dim)
 {}
 
 template<int C>

@@ -201,7 +201,7 @@ class SimpleTracerSetup
         const std::u8string                 sceneName;
         const double                        sceneTime;
 
-        bool                                disableTMO;
+        bool                                enableTMO;
 
     public:
         // Constructors & Destructor
@@ -216,7 +216,7 @@ class SimpleTracerSetup
 };
 
 inline SimpleTracerSetup::SimpleTracerSetup(std::string tracerType,
-                                            bool disableTMO,
+                                            bool enableTMO,
                                             std::u8string sceneName,
                                             double sceneTime)
     : sceneName(sceneName)
@@ -229,7 +229,7 @@ inline SimpleTracerSetup::SimpleTracerSetup(std::string tracerType,
     , node(nullptr)
     , tracerDLL(TRACER_DLL)
     , tracer(nullptr, nullptr)
-    , disableTMO(disableTMO)
+    , enableTMO(enableTMO)
 {}
 
 inline bool SimpleTracerSetup::Init()
@@ -284,7 +284,7 @@ inline bool SimpleTracerSetup::Init()
     visorOpts.enableGUI = false;
     visorOpts.wSize = SCREEN_RESOLUTION;
     visorOpts.wFormat = WINDOW_PIXEL_FORMAT;
-    visorOpts.enableTMO = !disableTMO;
+    visorOpts.enableTMO = enableTMO;
 
     // Create Visor
     visorView = std::unique_ptr<VisorI>(CreateVisorGL(visorOpts,
