@@ -7,7 +7,6 @@
 #include "Texture.cuh"
 #include "TypeTraits.h"
 
-
 // Some Types for Convenience
 template<int C>
 using Tex2DMap = std::map<uint32_t, std::unique_ptr<TextureI<2, C>>>;
@@ -100,6 +99,7 @@ class BoundaryMatTextured final
                                                 double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override;
+        TracerError             ConstructTextureReferences() override;
 
         // Material Queries
         size_t                  UsedGPUMemory() const override;
@@ -134,8 +134,6 @@ class BoundaryMatSkySphere final
         Tex2DMap<4>                         textureMemory;
         // Texture list for accessing which material uses which texture
         std::vector<const TextureI<2, 4>*>  textureList;
-        // GPU Ptrs
-        const Texture2DRef*                 dTextureRef;
 
     public:
         // Constructors & Destructor
@@ -177,45 +175,40 @@ class BoundaryMatSkySphere final
 
 inline size_t BoundaryMatTextured::UsedGPUMemory() const
 {
-    //size_t totalSize = memory.Size();
-    //for(const auto& t : textureList)
-    //    totalSize += t.Size();
-    //return totalSize;
-    return 0;
+    size_t totalSize = memory.Size();
+    for(const auto& t : textureMemory)
+        totalSize += t.second->Size();
+    return totalSize;
 }
 
 inline size_t BoundaryMatTextured::UsedGPUMemory(uint32_t materialId) const
 {
-    //auto loc = innerIds.find(materialId);
-    //if(loc == innerIds.cend()) 
-    //    return 0;
+    auto loc = innerIds.find(materialId);
+    if(loc == innerIds.cend())
+        return 0;
 
-    //uint32_t innerId = loc->second;
-    //size_t totalSize = textureList[innerId].Size() + sizeof(TextureRef<2, Vector3>*);    
-
-    //return totalSize;
-    return 0;
+    uint32_t innerId = loc->second;
+    size_t totalSize = textureList[innerId]->Size() + sizeof(TextureRef<2, Vector3>*);
+    return totalSize;
 }
 
 inline size_t BoundaryMatSkySphere::UsedGPUMemory() const
 {
-    //size_t totalSize = memory.Size();
-    //for(const auto& t : textureMemory)
-    //    totalSize += .Size();
-    //return totalSize;
-    return 0;
+    size_t totalSize = memory.Size();
+    for(const auto& t : textureMemory)
+        totalSize += t.second->Size();
+    return totalSize;
 }
 
 inline size_t BoundaryMatSkySphere::UsedGPUMemory(uint32_t materialId) const
 {
-    //auto loc = innerIds.find(materialId);
-    //if(loc == innerIds.cend())
-    //    return 0;
+    auto loc = innerIds.find(materialId);
+    if(loc == innerIds.cend())
+        return 0;
 
-    //uint32_t innerId = loc->second;
-    //size_t totalSize = textureList[innerId].Size() + sizeof(TextureRef<2, Vector3>*);
-    //return totalSize;
-    return 0;
+    uint32_t innerId = loc->second;
+    size_t totalSize = textureList[innerId]->Size() + sizeof(TextureRef<2, Vector3>*);
+    return totalSize;
 }
 
 static_assert(IsTracerClass<BoundaryMatConstant>::value,

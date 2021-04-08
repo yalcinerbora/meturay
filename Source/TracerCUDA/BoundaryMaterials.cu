@@ -9,9 +9,10 @@
 
 __global__
 void KCRGBTextureToLuminanceArray(float* gOutLuminance,
-                                  const TextureRef<2, Vector3>& gTexture,
+                                  const Texture2DRef* gTexture,
                                   Vector2ui dimension)
 {
+    const TextureRef<2, Vector3>& texRef = *gTexture;
     uint32_t totalWorkCount = dimension[0] * dimension[1];
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
         threadId < totalWorkCount;
@@ -24,7 +25,7 @@ void KCRGBTextureToLuminanceArray(float* gOutLuminance,
         // Bypass linear interp
         uv += Vector2f(0.5f);
 
-        Vector3 rgb = gTexture(uv);
+        Vector3 rgb = texRef(uv);
         gOutLuminance[threadId] = Utility::RGBToLuminance(rgb);
     }
 }
@@ -43,12 +44,6 @@ SceneError BoundaryMatConstant::InitializeGroup(const NodeListing& materialNodes
         std::vector<Vector3> radiances = sceneNode->AccessVector3(RADIANCE);
         radianceCPU.insert(radianceCPU.end(), radiances.begin(), radiances.end());
 
-        // Calculate Distributions
-        for(const Vector3& r : radiances)
-        {
-            float lum = Utility::RGBToLuminance(r);
-            //luminanceDistributions.emplace_back(std::vector<float>(1, lum));
-        }
         // Generate Id pairs
         const auto& ids = sceneNode->Ids();
         for(IdPair id : ids)
@@ -95,13 +90,53 @@ TracerError BoundaryMatConstant::LuminanceData(std::vector<float>& lumData,
 }
 
 SceneError BoundaryMatTextured::InitializeGroup(const NodeListing& materialNodes,
-                                                const TextureNodeMap&,
+                                                const TextureNodeMap& textureNodes,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath)
   
 {
-    // TODO: Implement
-    return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
+    constexpr const char* RADIANCE = "radiance";
+    SceneError err = SceneError::OK;
+
+    uint32_t i = 0;
+    for(const auto& sceneNode : materialNodes)
+    {
+        TextureList radianceTextures = sceneNode->AccessTextureNode(RADIANCE);
+
+        // Calculate Distributions
+        for(const NodeTextureStruct& texInfo : radianceTextures)
+        {
+            const TextureI<2, 4>* texture;
+            if((err = TextureFunctions::AllocateTexture(texture,
+               textureMemory, texInfo,
+               textureNodes,
+               EdgeResolveType::WRAP,
+               InterpolationType::LINEAR,
+               true, true,
+               gpu, scenePath)) != SceneError::OK)
+                return err;
+
+            textureList.push_back(texture);
+        }
+
+        // Generate Id pairs
+        const auto& ids = sceneNode->Ids();
+        for(IdPair id : ids)
+        {
+            innerIds.emplace(std::make_pair(id.first, i));
+            i++;
+        }
+    }
+
+    size_t totalMatCount = textureList.size();
+    // Alloc etc
+    size_t texRefSize = totalMatCount * sizeof(Texture2DRef);
+    texRefSize = Memory::AlignSize(texRefSize);
+
+    memory = std::move(DeviceMemory(texRefSize));
+    Texture2DRef* dTexReferences = static_cast<Texture2DRef*>(memory);
+    dData = LightMatTexData{dTexReferences};
+    return SceneError::OK;
 }
 
 SceneError BoundaryMatTextured::ChangeTime(const NodeListing& materialNodes, double time,
@@ -111,12 +146,65 @@ SceneError BoundaryMatTextured::ChangeTime(const NodeListing& materialNodes, dou
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }
 
+TracerError BoundaryMatTextured::ConstructTextureReferences()
+{
+    std::vector<cudaTextureObject_t> hTextureObjectList;
+    hTextureObjectList.reserve(textureList.size());
+    // Acquire Cuda Texture Objects for each material
+    for(const auto& t : textureList)
+    {
+        hTextureObjectList.push_back(static_cast<cudaTextureObject_t>(*t));
+    }
+
+    // Allocate Temp Device Memory for 
+    size_t totalMatCount = textureList.size();
+    DeviceMemory tempMemory(sizeof(cudaTextureObject_t) * totalMatCount);
+
+    const cudaTextureObject_t* dTextureObjects = static_cast<cudaTextureObject_t*>(tempMemory);
+
+    // Call Kernel and Allocate
+    gpu.AsyncGridStrideKC_X(0, totalMatCount,
+                            // Kernel
+                            GenerateTextureReference<2, Vector3>,
+                            // Args
+                            const_cast<TextureRef<2, Vector3>*>(dData.dRadianceTextures),
+                            dTextureObjects,
+                            static_cast<uint32_t>(totalMatCount));
+
+
+    return TracerError::OK;
+}
+
 TracerError BoundaryMatTextured::LuminanceData(std::vector<float>& lumData,
                                                Vector2ui& dim,
                                                uint32_t innerId) const
 {   
-    // TODO: Implement
-    return TracerError::MATERIAL_CAN_NOT_GENERATE_LUMINANCE;
+    if(innerId >= innerIds.size())
+        return TracerError::MATERIAL_CAN_NOT_GENERATE_LUMINANCE;
+
+    // Size
+    dim = textureList[innerId]->Dimensions();
+    uint32_t totalCount = dim[0] * dim[1];
+
+    // Allocate Temp GPU Memory for Lum values
+    // then call a kernel to populate luminances
+    DeviceMemory lumValueMem(totalCount * sizeof(float));
+    float* dLumArray = static_cast<float*>(lumValueMem);
+
+    // Use your own gpu since texture resides there
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, totalCount,
+                       // Kernel
+                       KCRGBTextureToLuminanceArray,
+                       // Args
+                       dLumArray,
+                       dData.dRadianceTextures + innerId,
+                       dim);
+
+    lumData.resize(totalCount);
+    CUDA_CHECK(cudaMemcpy(lumData.data(),
+               dLumArray, totalCount * sizeof(float),
+               cudaMemcpyDeviceToHost));
+    return TracerError::OK;
 }
 
 SceneError BoundaryMatSkySphere::InitializeGroup(const NodeListing& materialNodes,
@@ -127,7 +215,6 @@ SceneError BoundaryMatSkySphere::InitializeGroup(const NodeListing& materialNode
     constexpr const char* RADIANCE = "radiance";
     SceneError err = SceneError::OK;
 
-    std::vector<Vector3> radianceCPU;
     uint32_t i = 0;
     for(const auto& sceneNode : materialNodes)
     {
@@ -204,6 +291,7 @@ TracerError BoundaryMatSkySphere::ConstructTextureReferences()
 
     return TracerError::OK;
 }
+
 TracerError BoundaryMatSkySphere::LuminanceData(std::vector<float>& lumData,
                                                 Vector2ui& dim,
                                                 uint32_t innerId) const
@@ -211,27 +299,30 @@ TracerError BoundaryMatSkySphere::LuminanceData(std::vector<float>& lumData,
     if(innerId >= innerIds.size())
         return TracerError::MATERIAL_CAN_NOT_GENERATE_LUMINANCE;
 
-    //// Size
-    //dim = textureList[innerId].Dim();
-    //uint32_t totalCount = dim[0] * dim[1];
+    // Size
+    dim = textureList[innerId]->Dimensions();
+    uint32_t totalCount = dim[0] * dim[1];
 
-    //// Allocate Temp GPU Memory for Lum values
-    //// then call a kernel to populate luminances
-    //DeviceMemory lumValueMem(totalCount * sizeof(float));
-    //float* dLumArray = static_cast<float*>(lumValueMem);
+    // Allocate Temp GPU Memory for Lum values
+    // then call a kernel to populate luminances
+    DeviceMemory lumValueMem(totalCount * sizeof(float));
+    float* dLumArray = static_cast<float*>(lumValueMem);
 
-    //// Use your own gpu since texture resides there
-    //gpu.GridStrideKC_X(0, (cudaStream_t)0, totalCount,
-    //                   // Kernel
-    //                   KCRGBTextureToLuminanceArray,
-    //                   // Args
-    //                   dLumArray,
-    //                   dData.dRadianceTextures[innerId],
-    //                   dim);
+    // Use your own gpu since texture resides there
+    gpu.GridStrideKC_X
+    (
+        0, (cudaStream_t)0, totalCount,
+         // Kernel
+         KCRGBTextureToLuminanceArray,
+         // Args
+         dLumArray,
+         dData.dRadianceTextures + innerId,
+         dim
+    );
 
-    //lumData.resize(totalCount);
-    //CUDA_CHECK(cudaMemcpy(lumData.data(),
-    //           dLumArray, totalCount * sizeof(float),
-    //           cudaMemcpyDeviceToHost));
+    lumData.resize(totalCount);
+    CUDA_CHECK(cudaMemcpy(lumData.data(),
+               dLumArray, totalCount * sizeof(float),
+               cudaMemcpyDeviceToHost));
     return TracerError::OK;
 }

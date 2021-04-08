@@ -479,6 +479,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             return e;
 
         // Finally add to required lights
+        std::string lightTypeName = "";
         std::unique_ptr<SceneNodeI> lightNode = nullptr;
         if(!s.isPrimitive)
         {
@@ -488,6 +489,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                 const NodeIndex nIndex = loc->second.first;
                 const InnerIndex iIndex = loc->second.second;
                 const auto& jsnNode = (*lights)[nIndex];
+                lightTypeName = jsnNode[NodeNames::TYPE];
 
                 lightNode = std::make_unique<SceneNodeJson>(jsnNode, nIndex);
                 lightNode->AddIdIndexPair(s.lightOrPrimId, iIndex);
@@ -502,7 +504,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             (s.isPrimitive) ? primTypeName : "",
             std::vector<LightConstructionData>()
         };
-        auto& lightData = lightGroupNodes.emplace(primTypeName, std::move(data)).first->second;
+        auto& lightData = lightGroupNodes.emplace(lightTypeName, std::move(data)).first->second;
         auto& constructionInfo = lightData.constructionInfo;
         constructionInfo.emplace_back(LightConstructionData
                                       {

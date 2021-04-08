@@ -17,7 +17,7 @@
 	"Textures":[
 	{
 		"id": 0,
-		"file": "../Textures/Door/checkerboard.png"
+		"file": "../Textures/checkerboard.png"
 	}],
 
 	"Lights": [

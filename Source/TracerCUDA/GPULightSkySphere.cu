@@ -100,19 +100,20 @@ TracerError CPULightGroupSkySphere::ConstructLights(const CudaSystem& system,
     TracerError err = TracerError::OK;
     for(HitKey& key : hHitKeys)
     {     
-        const auto loc = materialMap.find(HitKey::FetchIdPortion(key));
+        const auto loc = materialMap.find(HitKey::FetchBatchPortion(key));
         if(loc == materialMap.cend())
             return TracerError::UNABLE_TO_CONSTRUCT_LIGHT;
 
-        const GPUMaterialGroupI* matGroup = loc->second;
+        // Materials of light has to be LightMaterial
+        // it should be safe to cast here
+        const GPUBoundaryMaterialGroupI* matGroup = loc->second;
 
         Vector2ui dimension;
         std::vector<float> lumData;
-        //if((err = matGroup->LuminanceData(lumData,
-        //                                  dimension, 
-        //                                  key,
-        //                                  system)) != TracerError::OK)
-        //    return err;
+        if((err = matGroup->LuminanceData(lumData,
+                                          dimension, 
+                                          HitKey::FetchIdPortion(key))) != TracerError::OK)
+            return err;
 
         hLuminances.push_back(std::move(lumData));
         hLuminanceSizes.push_back(dimension);
