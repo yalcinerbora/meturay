@@ -10,6 +10,35 @@
 
 #include <numeric>
 
+template <class T>
+class DevicHostMulDivideComboFunctor
+{
+    private:
+        const T&    gDivValue;
+        const T     mulValue;
+
+    protected:
+    public:
+                    DevicHostMulDivideComboFunctor(const T& dDivValue, T hMulValue);
+                    ~DevicHostMulDivideComboFunctor() = default;
+
+    __device__
+    T               operator()(const T& in) const;
+};
+
+template <class T>
+DevicHostMulDivideComboFunctor<T>::DevicHostMulDivideComboFunctor(const T& dDivValue, T hMulValue)
+    : gDivValue(dDivValue)
+    , mulValue(hMulValue)
+{}
+
+template <class T>
+__device__
+inline T DevicHostMulDivideComboFunctor<T>::operator()(const T& in) const
+{
+    return in * mulValue / gDivValue;
+}
+
 CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<std::vector<float>>& functions,
                                                            const CudaSystem& system)
 {
@@ -106,6 +135,7 @@ const CPUDistGroupPiecewiseConst1D::GPUDistList& CPUDistGroupPiecewiseConst1D::D
 
 CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std::vector<float>>& functionValues,
                                                            const std::vector<Vector2ui>& dimensions,
+                                                           const std::vector<bool>& factorSpherical,
                                                            const CudaSystem& system)
     : dimensions(dimensions)
 {
@@ -187,10 +217,18 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
     {
         const DistData2D& distData = distDataList[i];
         const Vector2ui& dim = dimensions[i];
+        bool factorSphr = factorSpherical[i];
+
+        //// Yolo check image
+        //const float* pixels = functionValues[i].data();
+        //float pix0, pix1;
+        //pix0 = pixels[dim[0] * 176 + 2456];
+        //pix1 = pixels[dim[0] * (2048 - 176) + 2456];
+        //METU_LOG("Pix on Dist (%f) (%f)", pix0, pix1);
 
         for(uint32_t y = 0; y < dim[1]; y++)
         {
-            const float* rowFunctionValues = functionValues[i].data() + (y * dim[1]);
+            const float* rowFunctionValues = functionValues[i].data() + (y * dim[0]);
             float& rowFunction = const_cast<float&>(distData.dYPDF[y]);
 
             float* dRowPDF = const_cast<float*>(distData.dXPDFs[y]);
@@ -200,31 +238,72 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
                                   dim[0] * sizeof(float),
                                   cudaMemcpyHostToDevice));
 
+            //if(y == 1872)
+            //    Debug::DumpMemToFile(std::string("row1872-FUNC"), dRowPDF, dim[0]);
+            //if(y == 176)
+            //    Debug::DumpMemToFile(std::string("row176-FUNC"), dRowPDF, dim[0]);
+
+            // From PBR-Book factoring in the spherical phi term
+            if(factorSphr)
+            {
+                float v = (static_cast<float>(y) + 0.5f) / static_cast<float>(dim[1]);
+                // V is [0,1] convert it to [0,pi]
+                // so that middle sections will have higher priority
+                float phi = v  * MathConstants::Pi;
+                float sinPhi = std::sin(phi);
+                HostMultiplyFunctor<float> sphericalTermFunctor(sinPhi);
+                TransformArrayGPU(dRowPDF, dim[0], sphericalTermFunctor);
+            }
+
             // Currently dRowPDF is the function value
             // Reduce it first to get row weight
             ReduceArrayGPU<float, ReduceAdd<float>>(rowFunction, dRowPDF, dim[0], 0.0f);
 
+            //Debug::DumpMemToFile(std::string("xFunc-TEST-AFTER"),
+            //                     dRowPDF, dim[0]);
+
             // Normalize PDF
+            HostMultiplyFunctor<float> normLength(1.0f / static_cast<float>(dim[0]));
+            HostMultiplyFunctor<float> length(static_cast<float>(dim[0]));
             TransformArrayGPU(dRowPDF, dim[0],
                               HostMultiplyFunctor<float>(1.0f / static_cast<float>(dim[0])));
+
+            //Debug::DumpMemToFile(std::string("xPDF-TEST"),
+            //                     dRowPDF, dim[0]);
 
             // Utilize GPU to do Scan Algorithm to find CDF
             ExclusiveScanArrayGPU<float, ReduceAdd<float>>(dRowCDF, dRowPDF,
                                                            dim[0] + 1u,
                                                            0.0f);
 
+            //Debug::DumpMemToFile(std::string("xCDF-TEST"),
+            //                     dRowCDF, dim[0] + 1u);
+
             // Use last element to normalize Function values to PDF
-            DeviceDivideFunctor<float> normlizeFunctor(dRowCDF[dim[0]]);
-            TransformArrayGPU(dRowPDF, dim[0], normlizeFunctor);
-            // Normalize CDF Also
-            TransformArrayGPU(dRowCDF, dim[0] + 1, normlizeFunctor);
+            // Since we used PDF buffer to calculate CDF
+            // multiply the function with the size aswell
+            DevicHostMulDivideComboFunctor<float> pdfNormFunctor(dRowCDF[dim[0]], static_cast<float>(dim[0]));
+            TransformArrayGPU(dRowPDF, dim[0], pdfNormFunctor);
+            // Normalize CDF with the total accumulation (last element)
+            // to perfectly match the [0,1) interval
+            DeviceDivideFunctor<float> cdfNormFunctor(static_cast<float>(dRowCDF[dim[0]]));
+            TransformArrayGPU(dRowCDF, dim[0] + 1, cdfNormFunctor);
+
+            //if(y == 1872)
+            //{
+            //    Debug::DumpMemToFile(std::string("row1872-CDF"),
+            //                         dRowCDF, dim[0] + 1u);
+            //    Debug::DumpMemToFile(std::string("row1872-PDF"),
+            //                         dRowPDF, dim[0]);
+            //}
+            
         }
 
         float* dYPDF = const_cast<float*>(distData.dYPDF);
         float* dYCDF = const_cast<float*>(distData.dYCDF);
 
-        Debug::DumpMemToFile(std::string("yFunction"),
-                             dYPDF, dim[1]);
+        //Debug::DumpMemToFile(std::string("yFunction"),
+        //                     dYPDF, dim[1]);
 
         // Generate Y Axis Distribution Data
         TransformArrayGPU(dYPDF, dim[1],
@@ -232,14 +311,17 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
 
         ExclusiveScanArrayGPU<float, ReduceAdd<float>>(dYCDF, dYPDF, (dim[1] + 1), 0.0f);
         // Use last element to normalize Function values to PDF
-        DeviceDivideFunctor<float> normlizeFunctor(dYCDF[dim[1]]);
-        TransformArrayGPU(dYPDF, dim[1], normlizeFunctor);
-        // Normalize CDF Also
-        TransformArrayGPU(dYCDF, dim[1] + 1, normlizeFunctor);
+        // Since we used PDF buffer to calculate CDF
+        // multiply the function with the size aswell
+        DeviceDivideFunctor<float> cdfNormFunctor(dYCDF[dim[1]]);
+        DevicHostMulDivideComboFunctor<float> pdfNormFunctor(dYCDF[dim[1]], static_cast<float>(dim[1]));
+        TransformArrayGPU(dYPDF, dim[1], pdfNormFunctor);
+        // Normalize CDF with the total accumulation (last element)
+        // to perfectly match the [0,1) interval
+        TransformArrayGPU(dYCDF, dim[1] + 1, cdfNormFunctor);
 
-        //// Check
-        //system.SyncGPUAll();
-        //for(uint32_t y = 0; y < dim[1]; y+= 64)
+        //// DEBUG
+        //for(uint32_t y = 0; y < dim[1]; y+= 31)
         //{
         //    Debug::DumpMemToFile(std::string("xPDF") + std::to_string(y),
         //                         distData.dXPDFs[y], dim[0]);

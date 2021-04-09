@@ -134,8 +134,9 @@ class CPUDistGroupPiecewiseConst2D
         // Constructors & Destructor
                                         CPUDistGroupPiecewiseConst2D() = default;
                                         CPUDistGroupPiecewiseConst2D(const std::vector<std::vector<float>>& functions,
-                                                                const std::vector<Vector2ui>& dimensions,
-                                                                const CudaSystem& system);
+                                                                     const std::vector<Vector2ui>& dimensions,
+                                                                     const std::vector<bool>& factorSpherical,
+                                                                     const CudaSystem& system);
                                         CPUDistGroupPiecewiseConst2D(const CPUDistGroupPiecewiseConst2D&) = delete;
                                         CPUDistGroupPiecewiseConst2D(CPUDistGroupPiecewiseConst2D&&) = default;
         CPUDistGroupPiecewiseConst2D&   operator=(const CPUDistGroupPiecewiseConst2D&) = delete;
@@ -173,8 +174,8 @@ inline float GPUDistPiecewiseConst1D::Sample(float& pdf, float& index, RandomGPU
 
     if(indexInt == count)
     {
-        printf("Illegal Index %u\f", indexInt);
-        indexInt--;
+        printf("CUDA Error: Illegal Index on PwC Sample\n");
+        index--;
     }
 
     pdf = gPDF[indexInt];
@@ -207,9 +208,6 @@ inline Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, Ran
     // Combined PDF is multiplication since SampleX depends on SampleY
     pdf = pdfX * pdfY;
     index = Vector2f(indexX, indexY);
-
-    printf("Sample, Loc: (%f, %f) pdf: %f\n",
-           index[0], index[1], pdf);
 
     return Vector2(xiX, xiY);
 }

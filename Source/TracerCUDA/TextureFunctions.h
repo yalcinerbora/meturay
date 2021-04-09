@@ -334,8 +334,7 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>& tex,
                     return SceneError::UNABLE_TO_LOAD_TEXTURE;
 
                 // Float textures cannot be normalized so set this as false
-                normalizeIntegers = false;
-
+                normalizeIntegers = false;                
                 // Allocate
                 auto texPtr = std::make_unique<Texture2D<PixelFloatType_t<C>>>(gpu.DeviceId(),
                                                                                interp,
@@ -352,6 +351,16 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>& tex,
                                                       dimension,
                                                       pitch);
                 Byte* srcPixels = expandedPixels.data();
+
+
+                //// Yolo check image
+                //const Vector4* pixels = reinterpret_cast<Vector4*>(srcPixels);
+                //Vector4 pix0, pix1;
+                //pix0 = pixels[w * 176 + 2456];
+                //pix1 = pixels[w * (2048 - 176) + 2456];
+                //METU_LOG("Pix on Image (%f, %f, %f) (%f, %f, %f)",
+                //         pix0[0], pix0[1], pix0[2],
+                //         pix1[0], pix1[1], pix1[2]);
 
                 texPtr->Copy(srcPixels, dimension);
 

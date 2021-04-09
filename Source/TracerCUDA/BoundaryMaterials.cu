@@ -17,8 +17,8 @@ void KCRGBTextureToLuminanceArray(float* gOutLuminance,
         threadId < totalWorkCount;
         threadId += (blockDim.x * gridDim.x))
     {
-        Vector2ui id2D = Vector2ui(threadId % dimension[1],
-                                   threadId / dimension[1]);
+        Vector2ui id2D = Vector2ui(threadId % dimension[0],
+                                   threadId / dimension[0]);
         // Convert to UV coordinates
         Vector2f invDim = Vector2f(1.0f) / Vector2f(dimension);
         Vector2f uv = Vector2f(id2D) * invDim;
@@ -26,7 +26,17 @@ void KCRGBTextureToLuminanceArray(float* gOutLuminance,
         uv += Vector2f(0.5f) * invDim;
 
         Vector3 rgb = gTexture(uv);
-        gOutLuminance[threadId] = Utility::RGBToLuminance(rgb);
+        float luminance = Utility::RGBToLuminance(rgb);
+
+        //// Yolo check image
+        //if(id2D == Vector2ui(2456, 176))
+        //    printf("Pix on Kernel 0 (%f, %f, %f) %f\n",
+        //           rgb[0], rgb[1], rgb[2], luminance);
+        //if(id2D == Vector2ui(2456, 1872))
+        //    printf("Pix on Kernel 1 (%f, %f, %f) %f\n",
+        //           rgb[0], rgb[1], rgb[2], luminance);
+
+        gOutLuminance[threadId] = luminance;
     }
 }
 

@@ -121,8 +121,9 @@ TracerError CPULightGroupSkySphere::ConstructLights(const CudaSystem& system,
     }
 
     // Construct Distribution Data
+    std::vector<bool> factorInSpherical(true, hLuminances.size());
     hLuminanceDistributions = CPUDistGroupPiecewiseConst2D(hLuminances, hLuminanceSizes,
-                                                           system);
+                                                           factorInSpherical, system);
 
     // Copy Generated GPU Distributions
     CUDA_CHECK(cudaMemcpy(const_cast<GPUDistPiecewiseConst2D*>(dLuminanceDistributions),

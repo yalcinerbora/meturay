@@ -117,17 +117,12 @@ inline void GPULightSkySphere::Sample(// Output
 {
     Vector2f index;
     Vector2f uv = distribution.Sample(pdf, index, rng);
-    
-    //Vector2f uv = Vector2f(GPUDistribution::Uniform<float>(rng),
-    //                       GPUDistribution::Uniform<float>(rng));
-    //pdf = 1.0f;
-
     Vector2f tethaPhi = Vector2f(// [-pi, pi]
                                  (uv[0] * MathConstants::Pi * 2.0f) - MathConstants::Pi,
                                   // [0, pi]
                                  uv[1] * MathConstants::Pi);
     Vector3 dirZUp = Utility::SphericalToCartesianUnit(tethaPhi);
-    // Spherical Coords calculates as Zup change it to y up
+    // Spherical Coords calculates as Z up change it to Y up
     Vector3 dirYUp = Vector3(dirZUp[1], dirZUp[2], dirZUp[0]);
     // Transform Direction to World Space
     dir = transform.LocalToWorld(dirYUp, true);
@@ -193,7 +188,6 @@ inline size_t CPULightGroupSkySphere::UsedCPUMemory() const
     size_t totalSize = (hHitKeys.size() * sizeof(HitKey) +
                         hMediumIds.size() * sizeof(uint16_t) +
                         hTransformIds.size() * sizeof(TransformId));
-
     return totalSize;
 }
 

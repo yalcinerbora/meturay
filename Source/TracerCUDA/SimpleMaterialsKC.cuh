@@ -212,7 +212,7 @@ Vector3 RefractSample(// Sampled Output
         // so return zero instead :)
         if(!refracted)
         {
-            printf("CUDA Fatal Error: RefractMat reflected!\n");
+            printf("CUDA Error: RefractMat reflected!\n");
             pdf = 0.0f;
             return Zero3;
             //__threadfence();
