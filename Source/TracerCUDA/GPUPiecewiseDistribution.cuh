@@ -33,7 +33,7 @@ class GPUDistPiecewiseConst1D
                                     ~GPUDistPiecewiseConst1D() = default;
 
         __device__
-        float                   Sample(float& pdf, RandomGPU& rng) const;
+        float                   Sample(float& pdf, float& index, RandomGPU& rng) const;
         __host__ __device__
         uint32_t                Count() const { return count; }
 };
@@ -62,7 +62,7 @@ class GPUDistPiecewiseConst2D
 
         // Interface
         __device__
-        Vector2f                Sample(float& pdf, RandomGPU& rng) const;
+        Vector2f                Sample(float& pdf, Vector2f& index, RandomGPU& rng) const;
         __host__ __device__
         uint32_t                Width() const { return width; }
         __host__ __device__
@@ -159,7 +159,7 @@ inline GPUDistPiecewiseConst1D::GPUDistPiecewiseConst1D(const float* dCDFList,
 {}
 
 __device__
-inline float GPUDistPiecewiseConst1D::Sample(float& pdf, RandomGPU& rng) const
+inline float GPUDistPiecewiseConst1D::Sample(float& pdf, float& index, RandomGPU& rng) const
 {
     float xi = GPUDistribution::Uniform<float>(rng);
     // Extremely rarely index becomes the light count
@@ -168,9 +168,7 @@ inline float GPUDistPiecewiseConst1D::Sample(float& pdf, RandomGPU& rng) const
     // if it happens just return the last light on the list
     //if(xi == 1.0f) xi -= MathConstants::VeryLargeEpsilon;
 
-    float index;
     GPUFunctions::BinarySearchInBetween<float>(index, xi, gCDF, count);
-    //index = xi * static_cast<float>(count);
     uint32_t indexInt = static_cast<uint32_t>(index);
 
     if(indexInt == count)
@@ -180,7 +178,7 @@ inline float GPUDistPiecewiseConst1D::Sample(float& pdf, RandomGPU& rng) const
     }
 
     pdf = gPDF[indexInt];
-    return index;
+    return index / float(count);
 }
 
 __host__ __device__
@@ -195,19 +193,25 @@ inline GPUDistPiecewiseConst2D::GPUDistPiecewiseConst2D(const GPUDistPiecewiseCo
 {}
 
 __device__
-inline Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, RandomGPU& rng) const
+inline Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, RandomGPU& rng) const
 {
     // Fist select a row using Y distribution
-    float pdfY;
-    float indexY = gDistributionsY.Sample(pdfY, rng);
+    float pdfY, indexY;
+    float xiY = gDistributionsY.Sample(pdfY, indexY, rng);
+    uint32_t indexYInt = static_cast<uint32_t>(indexY);
 
     // Now select column using X distribution of that row
-    float pdfX;
-    float indexX = gDistributionsX[static_cast<uint32_t>(indexY)].Sample(pdfX, rng);
+    float pdfX, indexX;
+    float xiX = gDistributionsX[indexYInt].Sample(pdfX, indexX, rng);
 
     // Combined PDF is multiplication since SampleX depends on SampleY
     pdf = pdfX * pdfY;
-    return Vector2(indexX, indexY);
+    index = Vector2f(indexX, indexY);
+
+    printf("Sample, Loc: (%f, %f) pdf: %f\n",
+           index[0], index[1], pdf);
+
+    return Vector2(xiX, xiY);
 }
 
 inline size_t CPUDistGroupPiecewiseConst1D::UsedCPUMemory() const

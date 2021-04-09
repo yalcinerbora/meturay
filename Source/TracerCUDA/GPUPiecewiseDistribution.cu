@@ -200,6 +200,10 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
                                   dim[0] * sizeof(float),
                                   cudaMemcpyHostToDevice));
 
+            // Currently dRowPDF is the function value
+            // Reduce it first to get row weight
+            ReduceArrayGPU<float, ReduceAdd<float>>(rowFunction, dRowPDF, dim[0], 0.0f);
+
             // Normalize PDF
             TransformArrayGPU(dRowPDF, dim[0],
                               HostMultiplyFunctor<float>(1.0f / static_cast<float>(dim[0])));
@@ -214,13 +218,13 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
             TransformArrayGPU(dRowPDF, dim[0], normlizeFunctor);
             // Normalize CDF Also
             TransformArrayGPU(dRowCDF, dim[0] + 1, normlizeFunctor);
-
-            // Reduce PDFs for Y dim
-            ReduceArrayGPU<float, ReduceAdd<float>>(rowFunction, dRowPDF, dim[0], 0.0f);
         }
 
         float* dYPDF = const_cast<float*>(distData.dYPDF);
         float* dYCDF = const_cast<float*>(distData.dYCDF);
+
+        Debug::DumpMemToFile(std::string("yFunction"),
+                             dYPDF, dim[1]);
 
         // Generate Y Axis Distribution Data
         TransformArrayGPU(dYPDF, dim[1],
@@ -235,8 +239,7 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
 
         //// Check
         //system.SyncGPUAll();
-
-        //for(uint32_t y = 0; y < dim[1]; y++)
+        //for(uint32_t y = 0; y < dim[1]; y+= 64)
         //{
         //    Debug::DumpMemToFile(std::string("xPDF") + std::to_string(y),
         //                         distData.dXPDFs[y], dim[0]);

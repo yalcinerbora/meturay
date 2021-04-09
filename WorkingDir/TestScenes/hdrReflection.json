@@ -17,7 +17,8 @@
 	"Textures":[
 	{
 		"id": 0,
-		"file": "../Textures/hdr_test.hdr"
+		//"file": "../Textures/hdr_test.hdr"
+		"file": "../Textures/checkerboard.png"
 	}],
 
 	"Lights": [

@@ -115,12 +115,9 @@ inline void GPULightSkySphere::Sample(// Output
                                       // I-O
                                       RandomGPU& rng) const
 {
-    Vector2f uv = distribution.Sample(pdf, rng);
-    // Normalize uv for utilization
-    uv /= Vector2f(distribution.Width(),
-                   distribution.Height());
-
-
+    Vector2f index;
+    Vector2f uv = distribution.Sample(pdf, index, rng);
+    
     //Vector2f uv = Vector2f(GPUDistribution::Uniform<float>(rng),
     //                       GPUDistribution::Uniform<float>(rng));
     //pdf = 1.0f;
