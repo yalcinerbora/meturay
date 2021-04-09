@@ -120,12 +120,16 @@ inline void GPULightSkySphere::Sample(// Output
     Vector2f tethaPhi = Vector2f(// [-pi, pi]
                                  (uv[0] * MathConstants::Pi * 2.0f) - MathConstants::Pi,
                                   // [0, pi]
-                                 uv[1] * MathConstants::Pi);
+                                 (1.0f - uv[1]) * MathConstants::Pi);
     Vector3 dirZUp = Utility::SphericalToCartesianUnit(tethaPhi);
     // Spherical Coords calculates as Z up change it to Y up
     Vector3 dirYUp = Vector3(dirZUp[1], dirZUp[2], dirZUp[0]);
     // Transform Direction to World Space
     dir = transform.LocalToWorld(dirYUp, true);
+
+
+    //printf("Dir %f, %f, %f\n",
+    //       dir[0], dir[1], dir[2]);
 
     // Convert to solid angle pdf
     // http://www.pbr-book.org/3ed-2018/Light_Transport_I_Surface_Reflection/Sampling_Light_Sources.html

@@ -17,8 +17,8 @@
 	"Textures":[
 	{
 		"id": 0,
-		//"file": "../Textures/hdr_test.hdr"
-        "file": "../Textures/test_HDR2.hdr"
+		"file": "../Textures/hdr_test.hdr"
+        //"file": "../Textures/test_HDR2.hdr"
         //"file": "../Textures/ModernPool/kloppenheim_05_4k_cropped.hdr"
 		//"file": "../Textures/checkerboard.png"
         //"file": "../Textures/white_32.png"
@@ -86,12 +86,12 @@
     "BaseMedium" : 0,
 
 	"Surfaces": [
-    // {
-	// 	"transform": 0,
-	// 	"accelerator": 0,
-	// 	"material": 1,
-	// 	"primitive": 0
-	// },
+    {
+		"transform": 0,
+		"accelerator": 0,
+		"material": 1,
+		"primitive": 0
+	},
     {
 		"transform": 0,
 		"accelerator": 0,

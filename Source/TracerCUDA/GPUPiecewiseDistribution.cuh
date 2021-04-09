@@ -209,6 +209,8 @@ inline Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, Ran
     pdf = pdfX * pdfY;
     index = Vector2f(indexX, indexY);
 
+    //printf("Index (%f, %f) UV (%f, %f)  ", index[0], index[1], xiX, xiY);
+
     return Vector2(xiX, xiY);
 }
 

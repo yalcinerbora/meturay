@@ -289,13 +289,13 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
             DeviceDivideFunctor<float> cdfNormFunctor(static_cast<float>(dRowCDF[dim[0]]));
             TransformArrayGPU(dRowCDF, dim[0] + 1, cdfNormFunctor);
 
-            //if(y == 1872)
-            //{
-            //    Debug::DumpMemToFile(std::string("row1872-CDF"),
-            //                         dRowCDF, dim[0] + 1u);
-            //    Debug::DumpMemToFile(std::string("row1872-PDF"),
-            //                         dRowPDF, dim[0]);
-            //}
+            if(y == 1872)
+            {
+                Debug::DumpMemToFile(std::string("row1872-CDF"),
+                                     dRowCDF, dim[0] + 1u);
+                Debug::DumpMemToFile(std::string("row1872-PDF"),
+                                     dRowPDF, dim[0]);
+            }
             
         }
 
@@ -328,10 +328,21 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
         //    Debug::DumpMemToFile(std::string("xCDF") + std::to_string(y),
         //                         distData.dXCDFs[y], dim[0] + 1);
         //}
-        //Debug::DumpMemToFile(std::string("yCDF"),
-        //                     distData.dYCDF, dim[1] + 1);
-        //Debug::DumpMemToFile(std::string("yPDF"),
-        //                     distData.dYPDF, dim[1]);
+        Debug::DumpMemToFile(std::string("yCDF"),
+                             distData.dYCDF, dim[1] + 1);
+        Debug::DumpMemToFile(std::string("yPDF"),
+                             distData.dYPDF, dim[1]);
+
+        //Matrix4x4 m;
+        //m = (TransformGen::Rotate(90.0f * MathConstants::DegToRadCoef, ZAxis) *
+        //     TransformGen::Rotate(90.0f * MathConstants::DegToRadCoef, XAxis));
+
+        //Matrix4x4 m2(0, 1, 0, 0,
+        //             0, 0, 1, 0,
+        //             1, 0, 0, 0,
+        //             0, 0, 0, 1);
+        //Matrix4x4 m2I = m2.Inverse();
+        //Matrix4x4 m2T = m2.Transpose();
 
         // Construct 2D Dist
         GPUDistPiecewiseConst2D dist(distData.yDist, distData.dXDists,

@@ -57,7 +57,7 @@ TEST(PathTracers, Door)
 TEST(PathTracers, HDRReflection)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("PathTracer", false,
+    SimpleTracerSetup setup("PathTracer", true,
                             u8"TestScenes/hdrReflection.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();
