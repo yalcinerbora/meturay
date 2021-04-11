@@ -48,6 +48,14 @@ using IdPairsWithAnId = std::pair<uint32_t, IdPairs>;
 
 class SceneNodeI;
 
+enum class TextureChannelType
+{
+    R,
+    G,
+    B,
+    A
+};
+
 enum class TextureAccessLayout
 {
     R, G, B, A,
@@ -149,3 +157,5 @@ struct TextureStruct
     uint32_t    texId;
     std::string filePath;
 };
+
+using TextureNodeMap = std::map<uint32_t, TextureStruct>;

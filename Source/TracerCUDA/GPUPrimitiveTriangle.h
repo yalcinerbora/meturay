@@ -22,11 +22,14 @@ All of them should be provided
 
 #include "Random.cuh"
 #include "GPUPrimitiveP.cuh"
+#include "BinarySearch.cuh"
+
 #include "GPUTransformI.h"
 #include "GPUSurface.h"
 #include "DefaultLeaf.h"
 #include "DeviceMemory.h"
 #include "TypeTraits.h"
+#include "TextureFunctions.h"
 
 class SurfaceDataLoaderI;
 using SurfaceDataLoaders = std::vector<std::unique_ptr<SurfaceDataLoaderI>>;
@@ -36,15 +39,18 @@ struct TriData
 {
     // Kinda Perf Hog but most memory efficient
     // Binary search cull face for each prim
-    const bool* cullFace;
-    const uint64_t* primOffsets;
-    uint32_t primBatchCount;
+    const GPUBitmap**   alphaMaps;
+    const bool*         cullFace;
+    const uint64_t*     primOffsets;
+    uint32_t            primBatchCount;
     // TODO: add alpha map
 
-    const Vector3f* positions;
-    const QuatF*    tbnRotations;
-    const Vector2*  uvs;
-    const uint64_t* indexList;
+    // Per vertex attributes
+    const Vector3f*     positions;
+    const QuatF*        tbnRotations;
+    const Vector2*      uvs;
+    // Single indexed vertices
+    const uint64_t*     indexList;
 };
 
 // Triangle Hit is barycentric coordinates
@@ -107,25 +113,32 @@ struct TriFunctions
     {
         // Simple Binary Search to determine
         // cull flag from primitiveId
-        auto BinSearchCull = [&primData](PrimitiveId id)
-        {
-            int32_t start = 0;
-            int32_t end = primData.primBatchCount;
-            while(start <= end)
-            {
-                int32_t mid = (start + end) / 2;
-                uint64_t current = primData.primOffsets[mid];
-                uint64_t next = primData.primOffsets[mid + 1];
-                if(id >= current && id < next)
-                    return primData.cullFace[mid];
-                else if(id < current)
-                    end = mid - 1;
-                else if(id >= next)
-                    start = mid + 1;
-            }
-            // Default to true
-            return true;
-        };
+        //auto BinSearchCull = [&primData](PrimitiveId id)
+        //{
+        //    int32_t start = 0;
+        //    int32_t end = primData.primBatchCount;
+        //    while(start <= end)
+        //    {
+        //        int32_t mid = (start + end) / 2;
+        //        uint64_t current = primData.primOffsets[mid];
+        //        uint64_t next = primData.primOffsets[mid + 1];
+        //        if(id >= current && id < next)
+        //            return primData.cullFace[mid];
+        //        else if(id < current)
+        //            end = mid - 1;
+        //        else if(id >= next)
+        //            start = mid + 1;
+        //    }
+        //    // Default to true
+        //    return true;
+        //};
+
+        // Find the primitive
+        float index;
+        GPUFunctions::BinarySearchInBetween(index, leaf.primitiveId, primData.primOffsets, primData.primBatchCount);
+        uint32_t indexInt = static_cast<uint32_t>(index);
+        
+        bool cullBackface = primData.cullFace[indexInt];
 
         //if(leaf.matId.value == 0x2000002)
         //    printf("PrimId %llu, MatId %x\n", leaf.primitiveId, leaf.matId.value);
@@ -139,7 +152,7 @@ struct TriFunctions
         Vector3 position1 = primData.positions[index1];
         Vector3 position2 = primData.positions[index2];
 
-        bool cull = BinSearchCull(leaf.primitiveId);
+        //bool cull = BinSearchCull(leaf.primitiveId);
 
         // Do Intersecton test on local space
         RayF r = transform.WorldToLocal(rayData.ray);
@@ -148,7 +161,25 @@ struct TriFunctions
                                                position0,
                                                position1,
                                                position2,
-                                               cull);
+                                               cullBackface);
+
+        // Check if an alpha map exists and accept reject intersection
+        const GPUBitmap* alphaMap = primData.alphaMaps[indexInt];
+        if(alphaMap && intersects)
+        {
+            Vector2f uv0 = primData.positions[index0];
+            Vector2f uv1 = primData.positions[index1];
+            Vector2f uv2 = primData.positions[index2];
+
+            float c = 1.0f - baryCoords[0] - baryCoords[1];
+            Vector2f uv = (baryCoords[0] * uv0 +
+                           baryCoords[1] * uv1 + 
+                           c             * uv2);
+
+            bool b = (*alphaMap)(uv);
+            intersects &= b;
+        }
+
         // Check if the hit is closer
         bool closerHit = intersects && (newT < rayData.tMax);
         if(closerHit)
@@ -350,18 +381,23 @@ class GPUPrimitiveTriangle final
         static constexpr PrimitiveDataLayout    INDEX_LAYOUT = PrimitiveDataLayout::UINT64_1;
 
         static constexpr const char*            CULL_FLAG_NAME = "cullFace";
+        static constexpr const char*            ALPHA_MAP_NAME = "alphaMap";
+
+        using LoadedBitmapIndices = std::map<std::pair<uint32_t, TextureChannelType>, uint32_t>;
 
     private:
         DeviceMemory                            memory;
-
         // List of ranges for each batch
         uint64_t                                totalPrimitiveCount;
         uint64_t                                totalDataCount;
-
+        // CPU Allocation of Bitmaps
+        LoadedBitmapIndices                     loadedBitmaps;
+        CPUBitmapGroup                          bitmaps;
+        // Misc Data
         std::map<uint32_t, Vector2ul>           batchRanges;
         std::map<uint32_t, Vector2ul>           batchDataRanges;
         std::map<uint32_t, AABB3>               batchAABBs;
-
+        
     protected:
     public:
         // Constructors & Destructor
@@ -374,6 +410,7 @@ class GPUPrimitiveTriangle final
         // Allocates and Generates Data
         SceneError                              InitializeGroup(const NodeListing& surfaceDataNodes, double time,
                                                                 const SurfaceLoaderGeneratorI&,
+                                                                const TextureNodeMap& textureNodes,
                                                                 const std::string& scenePath) override;
         SceneError                              ChangeTime(const NodeListing& surfaceDataNodes, double time,
                                                            const SurfaceLoaderGeneratorI&,

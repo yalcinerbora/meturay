@@ -624,6 +624,7 @@ SceneError GPUSceneJson::GenerateWorkBatches(MaterialKeyListing& allMatKeys,
 }
 
 SceneError GPUSceneJson::GeneratePrimitiveGroups(const PrimitiveNodeList& primGroupNodes,
+                                                 const TextureNodeMap& textureNodes,
                                                  double time)
 {
     // Generate Primitive Groups
@@ -636,7 +637,8 @@ SceneError GPUSceneJson::GeneratePrimitiveGroups(const PrimitiveNodeList& primGr
         GPUPrimGPtr pg = GPUPrimGPtr(nullptr, nullptr);
         if(e = logicGenerator.GeneratePrimitiveGroup(pg, primTypeName))
             return e;
-        if(e = pg->InitializeGroup(primNodes, time, surfaceLoaderGenerator, parentPath))
+        if(e = pg->InitializeGroup(primNodes, time, surfaceLoaderGenerator,
+                                   textureNodes, parentPath))
             return e;
 
         ExpandHitStructSize(*pg.get());
@@ -965,7 +967,8 @@ SceneError GPUSceneJson::LoadAll(double time)
 
     // Using those constructs generate
     // Primitive Groups
-    if((e = GeneratePrimitiveGroups(primGroupNodes, time)) != SceneError::OK)
+    if((e = GeneratePrimitiveGroups(primGroupNodes, textureNodes,
+                                    time)) != SceneError::OK)
         return e;
     // Material Groups
     if((e = GenerateMaterialGroups(multiGPUMatNodes, textureNodes,

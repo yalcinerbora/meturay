@@ -126,6 +126,7 @@ class GPUPrimitiveEmpty final
         // Allocates and Generates Data
         SceneError                              InitializeGroup(const NodeListing& surfaceDatalNodes, double time,
                                                                 const SurfaceLoaderGeneratorI&,
+                                                                const TextureNodeMap&,
                                                                 const std::string&) override;
         SceneError                              ChangeTime(const NodeListing& surfaceDatalNodes, double time,
                                                            const SurfaceLoaderGeneratorI&,

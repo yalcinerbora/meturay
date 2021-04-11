@@ -54,6 +54,7 @@ class GPUPrimitiveGroupI
         // Allocates and Generates Data
         virtual SceneError          InitializeGroup(const NodeListing& surfaceDataNodes, double time,
                                                     const SurfaceLoaderGeneratorI&,
+                                                    const TextureNodeMap& textureNodes,
                                                     const std::string& scenePath) = 0;
         virtual SceneError          ChangeTime(const NodeListing& surfaceDatalNodes, double time,
                                                const SurfaceLoaderGeneratorI&,

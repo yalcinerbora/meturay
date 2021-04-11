@@ -335,6 +335,9 @@
     <ClCompile Include="..\..\..\Source\RayLib\EnumStringConversions.cpp">
       <Filter>FileI-O</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\RayLib\FileSystemUtility.cpp">
+      <Filter>Utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\RayLib\Matrix.cu">

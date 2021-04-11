@@ -458,6 +458,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\SimpleMaterials.cuh">
       <Filter>Materials</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUBitmap.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">

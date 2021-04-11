@@ -20,6 +20,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterialKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorCommonKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUBitmap.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraPinhole.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightDisk.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightPrimitive.cuh" />

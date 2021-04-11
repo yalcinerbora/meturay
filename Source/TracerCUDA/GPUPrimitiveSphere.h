@@ -259,6 +259,7 @@ class GPUPrimitiveSphere final
         // Allocates and Generates Data
         SceneError                              InitializeGroup(const NodeListing& surfaceDatalNodes, double time,
                                                                 const SurfaceLoaderGeneratorI& loaderGen,
+                                                                const TextureNodeMap& textureNodes,
                                                                 const std::string& scenePath) override;
         SceneError                              ChangeTime(const NodeListing& surfaceDatalNodes, double time,
                                                            const SurfaceLoaderGeneratorI& loaderGen,

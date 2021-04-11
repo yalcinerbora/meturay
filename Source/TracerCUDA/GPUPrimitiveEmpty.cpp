@@ -10,6 +10,7 @@ const char* GPUPrimitiveEmpty::Type() const
 
 SceneError GPUPrimitiveEmpty::InitializeGroup(const NodeListing& surfaceDatalNodes, double time,
                                               const SurfaceLoaderGeneratorI&,
+                                              const TextureNodeMap& textureNodes,
                                               const std::string&)
 {
     return SceneError::OK;

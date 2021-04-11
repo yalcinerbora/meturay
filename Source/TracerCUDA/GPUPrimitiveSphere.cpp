@@ -19,6 +19,7 @@ const char* GPUPrimitiveSphere::Type() const
 SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNodes,
                                                double time,
                                                const SurfaceLoaderGeneratorI& loaderGen,
+                                               const TextureNodeMap& textureNodes,
                                                const std::string& scenePath)
 {
     SceneError e = SceneError::OK;

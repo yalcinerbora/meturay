@@ -235,6 +235,7 @@
     <ClCompile Include="..\..\..\Source\RayLib\BitManipulation.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\ConfigParsers.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\EnumStringConversions.cpp" />
+    <ClCompile Include="..\..\..\Source\RayLib\FileSystemUtility.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MayaCacheIO.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\MDistributor.cpp" />

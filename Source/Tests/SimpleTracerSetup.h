@@ -308,7 +308,7 @@ inline bool SimpleTracerSetup::Init()
     {
         {"Samples", OptionVariable(MockNode::SAMPLE_COUNT)},
         {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
-        {"NextEventEstimation", OptionVariable(true)},
+        {"NextEventEstimation", OptionVariable(false)},
         {"RussianRouletteStart", OptionVariable(5u)},
         {"MaxDistance", OptionVariable(0.17f)}
     });

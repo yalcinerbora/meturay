@@ -103,6 +103,7 @@ class GPUSceneJson : public GPUSceneI
                                                  //
                                                  double time = 0.0);
         SceneError      GeneratePrimitiveGroups(const PrimitiveNodeList&,
+                                                const TextureNodeMap&,
                                                 double time = 0.0);
         SceneError      GenerateMaterialGroups(const MultiGPUMatNodes&,
                                                const TextureNodeMap& textureNodes,

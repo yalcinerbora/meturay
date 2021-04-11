@@ -4,8 +4,11 @@
 #include "RayLib/SceneStructs.h"
 #include "RayLib/Log.h"
 #include "RayLib/BitManipulation.h"
+#include "RayLib/FileSystemUtility.h"
+
 #include "Texture.cuh"
 #include "CudaConstants.h"
+#include "GPUBitmap.h"
 
 #include <string>
 #include <FreeImage.h>
@@ -39,13 +42,21 @@ class TextureLoader
         static std::unique_ptr<TextureLoader>& Instance();
 
     private:
-        static int                  ColorTypeToChannelCount(FREE_IMAGE_COLOR_TYPE cType);
+        static uint32_t             ColorTypeToChannelCount(FREE_IMAGE_COLOR_TYPE cType);
 
         template<class T>
         static void                 Expand2DData3ChannelTo4Channel(std::vector<Byte>& expandedData,
                                                                    const Byte* packedData,
                                                                    const Vector2ui& dim,
                                                                    uint32_t sourcePitch);
+
+        template<class T>
+        static void                 PackImageChannelToBits(std::vector<Byte>& bitmap,
+                                                           const Byte* imgPixels,
+                                                           const Vector2ui& dimension,
+                                                           uint32_t pitch,
+                                                           uint32_t channelIndex,
+                                                           uint32_t imgChannelCount);
 
     protected:
     public:
@@ -85,6 +96,11 @@ class TextureLoader
         //                                            bool normalizeIntegers,
         //                                            const CudaGPU& gpu,
         //                                            const std::string& filePath);
+
+        SceneError                  LoadBitMapFromTexture(std::vector<Byte>& bits,
+                                                          Vector2ui& dimension,
+                                                          TextureChannelType channel,
+                                                          const std::string& filePath);
 };
 
 template<class T>
@@ -111,6 +127,38 @@ void TextureLoader::Expand2DData3ChannelTo4Channel(std::vector<Byte>& expandedDa
     }
 }
 
+template<class T>
+void TextureLoader::PackImageChannelToBits(std::vector<Byte>& bitmap,
+                                           const Byte* imgPixels,
+                                           const Vector2ui& dim,
+                                           uint32_t sourcePitch,
+                                           uint32_t channelIndex,
+                                           uint32_t imgChannelCount)
+{
+    size_t bitmapByteSize = (dim[0] * dim[1] + BYTE_BITS - 1) / BYTE_BITS;
+    bitmap.resize(bitmapByteSize, 0);
+    for(uint32_t y = 0; y < dim[1]; y++)
+    {
+        const Byte* srcRowPtr = imgPixels + sourcePitch * y;
+        for(uint32_t x = 0; x < dim[0]; x++)
+        {
+            // Pixel by pixel copy
+            ptrdiff_t srcRowOffset = (x * sizeof(T) * imgChannelCount + channelIndex);
+            T srcPixel = *reinterpret_cast<const T*>(srcRowPtr + srcRowOffset);
+            bool srcBit = srcPixel;
+
+            // Find Destination Bit
+            if(srcBit)
+            {
+                size_t pixelLinearIndex = (y * dim[0] + x);
+                size_t byteIndex = pixelLinearIndex / BYTE_BITS;
+                size_t byteInnerIndex = pixelLinearIndex % BYTE_BITS;
+                bitmap[byteIndex] |= (0x1 << byteInnerIndex);
+            }            
+        }
+    }
+}
+
 inline std::unique_ptr<TextureLoader>& TextureLoader::Instance()
 {
     // Singleton using unique_ptr
@@ -122,6 +170,11 @@ inline std::unique_ptr<TextureLoader>& TextureLoader::Instance()
 
 namespace TextureFunctions
 {
+    // Firstly bitmaps require only one channel check if 
+    // access layout is single channel
+    std::vector<TextureChannelType> TextureAccessLayoutToTextureChannels(TextureAccessLayout);
+    uint32_t                        ConvertChannelTypeToChannelIndex(TextureChannelType);
+
     template <int D, int C>
     SceneError AllocateTexture(// Returned Texture Ptr
                                const TextureI<D, C>*& tex,
@@ -140,6 +193,17 @@ namespace TextureFunctions
                                const CudaGPU& gpu,
                                // Scene file path (all file specifiers are relative to this path)
                                const std::string& scenePath);
+
+    SceneError LoadBitMap(// Returned Bitmap Data
+                          std::vector<Byte>& bits,
+                          Vector2ui& dimension,
+                          // Requested Texture Information
+                          uint32_t textureId,
+                          TextureChannelType  channel,
+                          // Available textures that are defined on the scene file
+                          const std::map<uint32_t, TextureStruct>& loadableTextureInfo,
+                          // Scene file path (all file specifiers are relative to this path)
+                          const std::string& scenePath);
 }
 
 template <int D, int C>
@@ -182,7 +246,7 @@ SceneError TextureFunctions::AllocateTexture(// Returned Texture Ptr
     else return SceneError::TEXTURE_ID_NOT_FOUND;
 
     // Combine file name and scene path for combined path
-    std::string combinedPath = scenePath + "/" + filePath;
+    std::string combinedPath = Utility::MergeFileFolder(scenePath, filePath);
 
     // Load the texture to the CPU first
     SceneError e = SceneError::OK;
@@ -203,7 +267,7 @@ SceneError TextureFunctions::AllocateTexture(// Returned Texture Ptr
     return SceneError::OK;
 }
 
-inline int TextureLoader::ColorTypeToChannelCount(FREE_IMAGE_COLOR_TYPE cType)
+inline uint32_t TextureLoader::ColorTypeToChannelCount(FREE_IMAGE_COLOR_TYPE cType)
 {
     switch(cType)
     {
@@ -269,11 +333,11 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>& tex,
         FREE_IMAGE_TYPE imgType = FreeImage_GetImageType(imgCPU);
         FREE_IMAGE_COLOR_TYPE colorType = FreeImage_GetColorType(imgCPU);
 
-        int channels = ColorTypeToChannelCount(colorType);
+        uint32_t channels = ColorTypeToChannelCount(colorType);
         if(channels == 0) return SceneError::UNABLE_TO_LOAD_TEXTURE;
 
         // Cuda Textures does not support 3 channel textures convert accordingly
-        int cudaChannels = (channels == 3) ? 4 : channels;
+        uint32_t cudaChannels = (channels == 3) ? 4 : channels;
         if(cudaChannels != C)
             return SceneError::TEXTURE_CHANNEL_MISMATCH;
 

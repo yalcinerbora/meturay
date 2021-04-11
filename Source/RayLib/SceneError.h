@@ -89,6 +89,7 @@ struct SceneError : public ErrorI
             TEXTURE_DIMENSION_MISMATCH,
             TEXTURE_CHANNEL_MISMATCH,
             TEXTURE_NOT_FOUND,
+            BITMAP_LOAD_CALLED_WITH_MULTIPLE_CHANNELS,
             // Misc
             TOO_MANY_SURFACE_ON_NODE,
             PRIM_MATERIAL_NOT_SAME_SIZE,
@@ -229,6 +230,7 @@ inline SceneError::operator std::string() const
         "Texture Dimension does not match to the requested type",
         "Texture Channel does not match to the requested type",
         "Unable to find the texture file",
+        "Cannot load a bitmap with multiple channels",
         // Misc
         "Too many data/material pairs per surface node",
         "Prim/Material pairs on surface node does not have same size",
