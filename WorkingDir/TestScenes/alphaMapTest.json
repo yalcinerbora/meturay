@@ -8,54 +8,35 @@
 		"fov": [94.45, 53.13],
 		// 1:1 FoV
 		//"fov": [53.13, 53.13],
-		"gaze": [0.0, 18.52, 0.0],
-		"planes": [0.1, 50.0],
-		"position": [0, 18.524, -68.619],
+		"gaze": [0.0, 15.0, 0.0],
+		"planes": [0.1, 200.0],
+		"position": [0, 30, 38],
 		"up": [0.0, 1.0, 0.0]
 	}],
 
-	"Lights": [
-	{
-		"id": 0,
-		"type": "Rectangular",
+	"Lights": [],
 
-		"position": [-25.371554, 37.565777, -30.362448],
-		"v0" : [-1.5, -2.12132, 1.5],
-		"v1" : [4.24264, 0, 4.24264]
-	}],
-
-	"Mediums": [
-	{
-		"id" : 0,
-		"type" : "Vacuum"
-	}],
+	"Mediums": [{"id" : 0, "type" : "Vacuum"}],
 
 	"Transforms":[{"id": 0, "type": "Identity"}],
 
     "Textures": [
-        {
-            "id": 0,
-            "file": "../Textures/bark006_2k_color.png"
-        },
-        {
-            "id": 1,
-            "file": "../Textures/branch0.png"
-        }
-    ],
+	{
+		"id": 0,
+		"file": "../Textures/bark006_2k_color.png"
+	},
+	{
+		"id": 1,
+		"file": "../Textures/branch0.png"
+	}],
 
 	"Materials":[
 	{
 		// Black Background
 		"id": 0,
 		"type": "BConstant",
-		"radiance" : [0, 0, 0]
+		"radiance" : [1, 1, 1]
 	},
-    {
-		// Light Boundary Material
-		"id": 1,
-		"type": "BConstant",
-		"radiance" : [12, 12, 12]
-    },
     {
 		// Gray Diffuse Mat
 		"id": 2,
@@ -84,21 +65,14 @@
         "tag": "assimp_",
 		"innerIndex": 0
 	},
-	{
-		// Area Light
-		"id": 1,
-		"type": "Triangle",
-        "name": "../Surfaces/light_plane.obj",
-        "tag": "assimp_",
-		"innerIndex": 0
-    },
     {
 		// Tree (inner index i top down order of meshes)
 		"id": [2, 3],
 		"type": "Triangle",
-		"name": "../Surfaces/treeTest.obj",
+		"name": "../Surfaces/test_tree.obj",
 		"tag": "assimp_",
-		"innerIndex": [0,1],
+		"innerIndex": [0, 1],
+		"cullFace": [true, false],
         "alphaMap": ["-", {"texture": 1, "channels": "a"}]
 	}],
 
@@ -124,12 +98,12 @@
 		// Tree
 		"transform": 0,
 		"accelerator": 0,
-		"material": [2, 3],
+		"material": [3, 4],
         "primitive": [2, 3]
 	}
-],
+	],
 
-	"LightSurfaces": [{"primitive": 1, "material": 1, "accelerator": 1}],
+	"LightSurfaces": [],
 
     "CameraSurfaces": [{"camera": 0}]
 }

@@ -41,6 +41,14 @@ void Debug::DumpImage(const std::string& fName,
     io.WriteAsPNG(iMem, resolution, fName);
 }
 
+void Debug::DumpBitmap(const std::string& fName,
+                       const Byte* bits,
+                       const Vector2ui& resolution)
+{
+    ImageIO io;
+    io.WriteBitmap(bits, resolution, fName);
+}
+
 void Debug::PrintHitPairs(const RayId* ids, const HitKey* keys, size_t count)
 {
     std::stringstream s;

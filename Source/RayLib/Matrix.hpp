@@ -4,10 +4,10 @@ __device__ __host__
 inline Matrix<N, T>::Matrix(C t)
 {
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            matrix[i] = static_cast<C>(t);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        matrix[i] = static_cast<C>(t);
+    }
 }
 
 template <int N, class T>
@@ -16,10 +16,10 @@ __device__ __host__
 inline Matrix<N, T>::Matrix(const C* data)
 {
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            matrix[i] = static_cast<C>(data[i]);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        matrix[i] = static_cast<C>(data[i]);
+    }
 }
 
 template <int N, class T>
@@ -38,15 +38,15 @@ __device__ __host__
 inline Matrix<N, T>::Matrix(const Vector<N, T> columns[])
 {
     UNROLL_LOOP
-        for(int i = 0; i < N; i++)
+    for(int i = 0; i < N; i++)
+    {
+        const Vector<N, T>& vec = columns[i];
+        UNROLL_LOOP
+        for(int j = 0; j < N; j++)
         {
-            const Vector<N, T>& vec = columns[i];
-            UNROLL_LOOP
-                for(int j = 0; j < N; j++)
-                {
-                    matrix[i * N + j] = vec[j];
-                }
+            matrix[i * N + j] = vec[j];
         }
+    }
 }
 
 template <int N, class T>
@@ -56,19 +56,19 @@ inline Matrix<N, T>::Matrix(const Matrix<M, T>& other)
 {
     static_assert(M >= N, "enable_if sanity check.");
     UNROLL_LOOP
-        for(int i = 0; i < N; i++)
+    for(int i = 0; i < N; i++)
+    {
+        UNROLL_LOOP
+        for(int j = 0; j < N; j++)
         {
-            UNROLL_LOOP
-                for(int j = 0; j < N; j++)
-                {
-                    if(i < M && j < M)
-                        matrix[i * N + j] = other[i * M + j];
-                    else if(i == N && j == N)
-                        matrix[i * M + j] = 1;
-                    else
-                        matrix[i * M + j] = 0;
-                }
+            if(i < M && j < M)
+                matrix[i * N + j] = other[i * M + j];
+            else if(i == N && j == N)
+                matrix[i * M + j] = 1;
+            else
+                matrix[i * M + j] = 0;
         }
+    }
 }
 
 template <int N, class T>
@@ -118,10 +118,10 @@ __device__ __host__
 inline void Matrix<N, T>::operator+=(const Matrix& right)
 {
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            matrix[i] += right.matrix[i];
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        matrix[i] += right.matrix[i];
+    }
 }
 
 template <int N, class T>
@@ -129,10 +129,10 @@ __device__ __host__
 inline void Matrix<N, T>::operator-=(const Matrix& right)
 {
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            matrix[i] -= right.matrix[i];
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        matrix[i] -= right.matrix[i];
+    }
 }
 
 template <int N, class T>
@@ -148,10 +148,10 @@ __device__ __host__
 inline void Matrix<N, T>::operator*=(T right)
 {
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            matrix[i] *= right;
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        matrix[i] *= right;
+    }
 }
 
 template <int N, class T>
@@ -159,10 +159,10 @@ __device__ __host__
 inline void Matrix<N, T>::operator/=(const Matrix& right)
 {
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            matrix[i] /= right.matrix[i];
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        matrix[i] /= right.matrix[i];
+    }
 }
 
 template <int N, class T>
@@ -170,10 +170,10 @@ __device__ __host__
 inline void Matrix<N, T>::operator/=(T right)
 {
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            matrix[i] /= right;
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        matrix[i] /= right;
+    }
 }
 
 template <int N, class T>
@@ -182,10 +182,10 @@ inline Matrix<N, T> Matrix<N, T>::operator+(const Matrix& right) const
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m.matrix[i] = matrix[i] + right.matrix[i];
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m.matrix[i] = matrix[i] + right.matrix[i];
+    }
     return m;
 }
 
@@ -195,10 +195,10 @@ inline Matrix<N, T> Matrix<N, T>::operator-(const Matrix& right) const
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m.matrix[i] = matrix[i] - right.matrix[i];
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m.matrix[i] = matrix[i] - right.matrix[i];
+    }
     return m;
 }
 
@@ -209,10 +209,10 @@ inline SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::operator-() const
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m.matrix[i] = -matrix[i];
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m.matrix[i] = -matrix[i];
+    }
     return m;
 }
 
@@ -222,10 +222,10 @@ inline Matrix<N, T> Matrix<N, T>::operator/(const Matrix& right) const
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m.matrix[i] = matrix[i] / right.matrix[i];
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m.matrix[i] = matrix[i] / right.matrix[i];
+    }
     return m;
 }
 
@@ -235,10 +235,10 @@ inline Matrix<N, T> Matrix<N, T>::operator/(T right) const
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m.matrix[i] = matrix[i] / right;
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m.matrix[i] = matrix[i] / right;
+    }
     return m;
 }
 
@@ -248,21 +248,21 @@ inline Matrix<N, T> Matrix<N, T>::operator*(const Matrix& right) const
 {
     Matrix m;
     UNROLL_LOOP
-        for(int j = 0; j < N; j++)
+    for(int j = 0; j < N; j++)
+    {
+        UNROLL_LOOP
+        for(int i = 0; i < N; i++)
         {
+            T result = 0;
             UNROLL_LOOP
-                for(int i = 0; i < N; i++)
-                {
-                    T result = 0;
-                    UNROLL_LOOP
-                        for(int k = 0; k < N; k++)
-                        {
-                            result += matrix[j + N * k] * right[i * N + k];
-                        }
-                        // Dot Product
-                    m(j, i) = result;
-                }
+            for(int k = 0; k < N; k++)
+            {
+                result += matrix[j + N * k] * right[i * N + k];
+            }
+            // Dot Product
+            m(j, i) = result;
         }
+    }
     return m;
 }
 
@@ -275,17 +275,17 @@ inline Vector<M, T> Matrix<N, T>::operator*(const Vector<M, T>& right) const
 
     Vector<M, T> v;
     UNROLL_LOOP
-        for(int i = 0; i < M; i++)
+    for(int i = 0; i < M; i++)
+    {
+        T result = 0;
+        UNROLL_LOOP
+        for(int k = 0; k < M; k++)
         {
-            T result = 0;
-            UNROLL_LOOP
-                for(int k = 0; k < M; k++)
-                {
-                    result += matrix[i + N * k] * right[k];
-                }
-                // Dot Product
-            v[i] = result;
+            result += matrix[i + N * k] * right[k];
         }
+        // Dot Product
+        v[i] = result;
+    }
     return v;
 }
 
@@ -295,10 +295,10 @@ inline Matrix<N, T> Matrix<N, T>::operator*(T right) const
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m.matrix[i] = matrix[i] * right;
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m.matrix[i] = matrix[i] * right;
+    }
     return m;
 }
 
@@ -308,10 +308,10 @@ inline bool Matrix<N, T>::operator==(const Matrix& right) const
 {
     bool eq = true;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            eq &= matrix[i] == right.matrix[i];
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        eq &= matrix[i] == right.matrix[i];
+    }
     return eq;
 }
 
@@ -375,14 +375,14 @@ inline Matrix<N, T> Matrix<N, T>::Transpose() const
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N; i++)
+    for(int i = 0; i < N; i++)
+    {
+        UNROLL_LOOP
+        for(int j = 0; j < N; j++)
         {
-            UNROLL_LOOP
-                for(int j = 0; j < N; j++)
-                {
-                    m(j, i) = (*this)(i, j);
-                }
+            m(j, i) = (*this)(i, j);
         }
+    }
     return m;
 }
 
@@ -391,17 +391,17 @@ __device__ __host__
 inline Matrix<N, T>& Matrix<N, T>::TransposeSelf()
 {
     UNROLL_LOOP
-        for(int i = 1; i < N; i++)
+    for(int i = 1; i < N; i++)
+    {
+        UNROLL_LOOP
+        for(int j = 0; j < i; j++)
         {
-            UNROLL_LOOP
-                for(int j = 0; j < i; j++)
-                {
-                    // CARPRAZ SWAP
-                    T a = (*this)(i, j);
-                    (*this)(i, j) = (*this)(j, i);
-                    (*this)(j, i) = a;
-                }
+            // CARPRAZ SWAP
+            T a = (*this)(i, j);
+            (*this)(i, j) = (*this)(j, i);
+            (*this)(j, i) = a;
         }
+    }
     return *this;
 }
 
@@ -411,10 +411,10 @@ inline Matrix<N, T> Matrix<N, T>::Clamp(const Matrix& minVal, const Matrix& maxV
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m[i] = min(max(minVal[i], matrix[i]), maxVal[i]);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m[i] = min(max(minVal[i], matrix[i]), maxVal[i]);
+    }
     return m;
 }
 
@@ -424,10 +424,10 @@ inline Matrix<N, T> Matrix<N, T>::Clamp(T minVal, T maxVal) const
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m[i] = min(max(minVal, matrix[i]), maxVal);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m[i] = min(max(minVal, matrix[i]), maxVal);
+    }
     return m;
 }
 
@@ -436,10 +436,10 @@ __device__ __host__
 inline Matrix<N, T>& Matrix<N, T>::ClampSelf(const Matrix& minVal, const Matrix& maxVal)
 {
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            matrix[i] = min(max(minVal[i], matrix[i]), maxVal[i]);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        matrix[i] = min(max(minVal[i], matrix[i]), maxVal[i]);
+    }
     return *this;
 }
 
@@ -448,10 +448,10 @@ __device__ __host__
 inline Matrix<N, T>& Matrix<N, T>::ClampSelf(T minVal, T maxVal)
 {
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            matrix[i] = min(max(minVal, matrix[i]), maxVal);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        matrix[i] = min(max(minVal, matrix[i]), maxVal);
+    }
     return *this;
 }
 
@@ -462,10 +462,10 @@ inline SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::Abs() const
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m[i] = abs(matrix[i]);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m[i] = abs(matrix[i]);
+    }
     return m;
 }
 
@@ -475,10 +475,10 @@ __device__ __host__
 inline SignedEnable<Q, Matrix<N, T>&> Matrix<N, T>::AbsSelf()
 {
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            matrix[i] = abs(matrix[i]);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        matrix[i] = abs(matrix[i]);
+    }
     return *this;
 }
 
@@ -489,10 +489,10 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Round() const
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m[i] = round(matrix[i]);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m[i] = round(matrix[i]);
+    }
     return m;
 }
 
@@ -502,10 +502,10 @@ __device__ __host__
 inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::RoundSelf()
 {
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            matrix[i] = round(matrix[i]);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        matrix[i] = round(matrix[i]);
+    }
     return *this;
 }
 
@@ -516,10 +516,10 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Floor() const
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m[i] = floor(matrix[i]);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m[i] = floor(matrix[i]);
+    }
     return m;
 }
 
@@ -529,10 +529,10 @@ __device__ __host__
 inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::FloorSelf()
 {
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            matrix[i] = floor(matrix[i]);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        matrix[i] = floor(matrix[i]);
+    }
     return *this;
 }
 
@@ -543,10 +543,10 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Ceil() const
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m[i] = ceil(matrix[i]);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m[i] = ceil(matrix[i]);
+    }
     return m;
 }
 
@@ -556,10 +556,10 @@ __device__ __host__
 inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::CeilSelf()
 {
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            matrix[i] = ceil(matrix[i]);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        matrix[i] = ceil(matrix[i]);
+    }
     return *this;
 }
 
@@ -569,10 +569,10 @@ inline Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, const Matrix& mat1)
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m[i] = min(mat0[i], mat1[i]);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m[i] = min(mat0[i], mat1[i]);
+    }
     return m;
 }
 
@@ -582,10 +582,10 @@ inline Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, T t)
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m[i] = min(mat0[i], t);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m[i] = min(mat0[i], t);
+    }
     return m;
 }
 
@@ -595,10 +595,10 @@ inline Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, const Matrix& mat1)
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m[i] = max(mat0[i], mat1[i]);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m[i] = max(mat0[i], mat1[i]);
+    }
     return m;
 }
 
@@ -608,10 +608,10 @@ inline Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, T t)
 {
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m[i] = max(mat0[i], t);
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m[i] = max(mat0[i], t);
+    }
     return m;
 }
 
@@ -623,10 +623,10 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Lerp(const Matrix& mat0, const
     assert(t >= 0 && t <= 1);
     Matrix m;
     UNROLL_LOOP
-        for(int i = 0; i < N * N; i++)
-        {
-            m[i] = (1 - t) * mat0[i] + t * mat1[i];
-        }
+    for(int i = 0; i < N * N; i++)
+    {
+        m[i] = (1 - t) * mat0[i] + t * mat1[i];
+    }
     return m;
 }
 

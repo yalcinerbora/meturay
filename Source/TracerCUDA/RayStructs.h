@@ -40,7 +40,7 @@ struct RayReg
     __device__ __host__ void        UpdateTMax(RayGMem* mem,
                                                unsigned int loc);
 
-    __device__ __host__ bool                 IsInvalidRay() const;
+    __device__ __host__ bool        IsInvalidRay() const;
 };
 
 constexpr RayReg::RayReg(RayF ray, float tMin, float tMax)

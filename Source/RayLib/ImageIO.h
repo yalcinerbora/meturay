@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "Vector.h"
+#include "Types.h"
 
 class ImageIO
 {
@@ -30,6 +31,9 @@ class ImageIO
 
         // Write
         bool                        WriteAsPNG(const Vector4f* image,
+                                               const Vector2ui& size,
+                                               const std::string& fileName) const;               
+        bool                        WriteBitmap(const Byte* bits,
                                                const Vector2ui& size,
                                                const std::string& fileName) const;
 };

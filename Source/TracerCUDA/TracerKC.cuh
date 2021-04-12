@@ -105,6 +105,11 @@ inline void BasicWork(// Output
     radiance = (pdf == 0.0f) ? Zero3 : (radiance / pdf);
     radiance += emission;
 
+    //printf("r(%f, %f, %f), e(%f, %f, %f), pdf %f\n",
+    //       radiance[0], radiance[1], radiance[2],
+    //       emission[0], emission[1], emission[2],
+    //       pdf);
+
     // And accumulate pixel
     ImageAccumulatePixel(img, aux.pixelIndex, Vector4(radiance, 1.0f));
 }

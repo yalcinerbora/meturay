@@ -6,7 +6,7 @@
 
 #include "RayLib/Types.h"
 #include "RayLib/MemoryAlignment.h"
-#include "TracerDebug.h"
+//#include "TracerDebug.h"
 
 #include <numeric>
 
@@ -238,11 +238,6 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
                                   dim[0] * sizeof(float),
                                   cudaMemcpyHostToDevice));
 
-            //if(y == 1872)
-            //    Debug::DumpMemToFile(std::string("row1872-FUNC"), dRowPDF, dim[0]);
-            //if(y == 176)
-            //    Debug::DumpMemToFile(std::string("row176-FUNC"), dRowPDF, dim[0]);
-
             // From PBR-Book factoring in the spherical phi term
             if(factorSphr)
             {
@@ -259,8 +254,6 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
             // Reduce it first to get row weight
             ReduceArrayGPU<float, ReduceAdd<float>>(rowFunction, dRowPDF, dim[0], 0.0f);
 
-            //Debug::DumpMemToFile(std::string("xFunc-TEST-AFTER"),
-            //                     dRowPDF, dim[0]);
 
             // Normalize PDF
             HostMultiplyFunctor<float> normLength(1.0f / static_cast<float>(dim[0]));
@@ -268,16 +261,10 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
             TransformArrayGPU(dRowPDF, dim[0],
                               HostMultiplyFunctor<float>(1.0f / static_cast<float>(dim[0])));
 
-            //Debug::DumpMemToFile(std::string("xPDF-TEST"),
-            //                     dRowPDF, dim[0]);
-
             // Utilize GPU to do Scan Algorithm to find CDF
             ExclusiveScanArrayGPU<float, ReduceAdd<float>>(dRowCDF, dRowPDF,
                                                            dim[0] + 1u,
                                                            0.0f);
-
-            //Debug::DumpMemToFile(std::string("xCDF-TEST"),
-            //                     dRowCDF, dim[0] + 1u);
 
             // Use last element to normalize Function values to PDF
             // Since we used PDF buffer to calculate CDF
@@ -287,23 +274,11 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
             // Normalize CDF with the total accumulation (last element)
             // to perfectly match the [0,1) interval
             DeviceDivideFunctor<float> cdfNormFunctor(static_cast<float>(dRowCDF[dim[0]]));
-            TransformArrayGPU(dRowCDF, dim[0] + 1, cdfNormFunctor);
-
-            //if(y == 1872)
-            //{
-            //    Debug::DumpMemToFile(std::string("row1872-CDF"),
-            //                         dRowCDF, dim[0] + 1u);
-            //    Debug::DumpMemToFile(std::string("row1872-PDF"),
-            //                         dRowPDF, dim[0]);
-            //}
-            
+            TransformArrayGPU(dRowCDF, dim[0] + 1, cdfNormFunctor);   
         }
 
         float* dYPDF = const_cast<float*>(distData.dYPDF);
         float* dYCDF = const_cast<float*>(distData.dYCDF);
-
-        //Debug::DumpMemToFile(std::string("yFunction"),
-        //                     dYPDF, dim[1]);
 
         // Generate Y Axis Distribution Data
         TransformArrayGPU(dYPDF, dim[1],
@@ -319,30 +294,6 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
         // Normalize CDF with the total accumulation (last element)
         // to perfectly match the [0,1) interval
         TransformArrayGPU(dYCDF, dim[1] + 1, cdfNormFunctor);
-
-        //// DEBUG
-        //for(uint32_t y = 0; y < dim[1]; y+= 31)
-        //{
-        //    Debug::DumpMemToFile(std::string("xPDF") + std::to_string(y),
-        //                         distData.dXPDFs[y], dim[0]);
-        //    Debug::DumpMemToFile(std::string("xCDF") + std::to_string(y),
-        //                         distData.dXCDFs[y], dim[0] + 1);
-        //}
-        //Debug::DumpMemToFile(std::string("yCDF"),
-        //                     distData.dYCDF, dim[1] + 1);
-        //Debug::DumpMemToFile(std::string("yPDF"),
-        //                     distData.dYPDF, dim[1]);
-
-        //Matrix4x4 m;
-        //m = (TransformGen::Rotate(90.0f * MathConstants::DegToRadCoef, ZAxis) *
-        //     TransformGen::Rotate(90.0f * MathConstants::DegToRadCoef, XAxis));
-
-        //Matrix4x4 m2(0, 1, 0, 0,
-        //             0, 0, 1, 0,
-        //             1, 0, 0, 0,
-        //             0, 0, 0, 1);
-        //Matrix4x4 m2I = m2.Inverse();
-        //Matrix4x4 m2T = m2.Transpose();
 
         // Construct 2D Dist
         GPUDistPiecewiseConst2D dist(distData.yDist, distData.dXDists,

@@ -25,6 +25,9 @@ namespace Debug
     void                DumpImage(const std::string& fName,
                                   const Vector4* iMem,
                                   const Vector2ui& resolution);
+    void                DumpBitmap(const std::string& fName,
+                                  const Byte* bits,
+                                  const Vector2ui& resolution);
 
     // Memory Debugging
     template<class T>

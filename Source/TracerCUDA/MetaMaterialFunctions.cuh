@@ -59,21 +59,23 @@ Vector3 SampleEmpty(// Sampled Output
                     const HitKey::Type& matId,
                     uint32_t sampleIndex)
 {
+    wo = InvalidRayF;
+    pdf = 0.0f;
     return Zero3f;
 }
 
 template <class Data, class Surface>
 __device__ inline
 Vector3 EvaluateEmpty(// Input
-                         const Vector3& wo,
-                         const Vector3& wi,
-                         const Vector3& pos,
-                         const GPUMediumI& m,
-                         //
-                         const Surface& surface,
-                         // Constants
-                         const Data& matData,
-                         const HitKey::Type& matId)
+                      const Vector3& wo,
+                      const Vector3& wi,
+                      const Vector3& pos,
+                      const GPUMediumI& m,
+                      //
+                      const Surface& surface,
+                      // Constants
+                      const Data& matData,
+                      const HitKey::Type& matId)
 {
     return Zero3;
 }

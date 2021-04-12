@@ -89,3 +89,12 @@ TEST(SimpleTracers, SkySphere)
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
+
+TEST(SimpleTracers, AlphaMap)
+{
+    EnableVTMode();
+    SimpleTracerSetup setup("DirectTracer", false,
+                            u8"TestScenes/alphaMapTest.json", 0.0);
+    ASSERT_TRUE(setup.Init());
+    setup.Body();
+}

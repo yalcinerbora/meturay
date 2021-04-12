@@ -6,7 +6,7 @@
 #include "RayLib/SurfaceLoaderI.h"
 #include "RayLib/MemoryAlignment.h"
 
-#include "TracerDebug.h"
+//#include "TracerDebug.h"
 #include "TextureFunctions.h"
 
 #include <execution>
@@ -15,10 +15,16 @@ struct IndexTriplet
 {
     uint64_t i[3];
 
-    uint64_t&           operator[](int j) { return i[j]; }
-    const uint64_t&     operator[](int j) const { return i[j]; }
+    uint64_t& operator[](int j) { return i[j]; }
+    const uint64_t& operator[](int j) const { return i[j]; }
 };
 static_assert(sizeof(IndexTriplet) == sizeof(uint64_t) * 3);
+
+//std::ostream& operator<<(std::ostream& stream, const IndexTriplet& t)
+//{
+//    stream << t[0] << ", " << t[1] << ", " << t[2];
+//    return stream;
+//}
 
 GPUPrimitiveTriangle::GPUPrimitiveTriangle()
     : totalPrimitiveCount(0)
@@ -47,9 +53,9 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     for(const auto& sPtr : surfaceDataNodes)
     {
         const SceneNodeI& s = *sPtr;
-        SharedLibPtr<SurfaceLoaderI> sl(nullptr, [] (SurfaceLoaderI*)->void {});
+        SharedLibPtr<SurfaceLoaderI> sl(nullptr, [](SurfaceLoaderI*)->void {});
         if((e = loaderGen.GenerateSurfaceLoader(sl, scenePath, s, time)) != SceneError::OK)
-           return e;
+            return e;
         try
         {
             loaders.emplace_back(std::move(sl));
@@ -231,76 +237,77 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                               Vector3 normals[3];
                               normals[0] = normalsIn[indices[0]];
                               normals[1] = normalsIn[indices[1]];
-normals[2] = normalsIn[indices[2]];
+                              normals[2] = normalsIn[indices[2]];
 
-Vector3 tangents[3];
-tangents[0] = tangentsIn[indices[0]];
-tangents[1] = tangentsIn[indices[1]];
-tangents[2] = tangentsIn[indices[2]];
+                              Vector3 tangents[3];
+                              tangents[0] = tangentsIn[indices[0]];
+                              tangents[1] = tangentsIn[indices[1]];
+                              tangents[2] = tangentsIn[indices[2]];
 
-//Vector3 biTangents[3];
-//biTangents[0] = biTangentsIn[indices[0]];
-//biTangents[1] = biTangentsIn[indices[1]];
-//biTangents[2] = biTangentsIn[indices[2]];
+                              //Vector3 biTangents[3];
+                              //biTangents[0] = biTangentsIn[indices[0]];
+                              //biTangents[1] = biTangentsIn[indices[1]];
+                              //biTangents[2] = biTangentsIn[indices[2]];
 
-// Generate rotations
-QuatF q0, q1, q2;
-Triangle::LocalRotation(q0, q1, q2, normals, tangents);
+                              // Generate rotations
+                              QuatF q0, q1, q2;
+                              Triangle::LocalRotation(q0, q1, q2, normals, tangents);
 
-rotationsOut[indices[0]] = q0;
-rotationsOut[indices[1]] = q1;
-rotationsOut[indices[2]] = q2;
+                              rotationsOut[indices[0]] = q0;
+                              rotationsOut[indices[1]] = q1;
+                              rotationsOut[indices[2]] = q2;
 
-// Finally accumulate offset for combined vertex buffer usage
-if(i != 0)
-{
-    indices[0] += offsetVertex;
-    indices[1] += offsetVertex;
-    indices[2] += offsetVertex;
-}
+                              // Finally accumulate offset for combined vertex buffer usage
+                              if(i != 0)
+                              {
+                                  indices[0] += offsetVertex;
+                                  indices[1] += offsetVertex;
+                                  indices[2] += offsetVertex;
+                              }
                           });
         }
         else
         {
-        Vector3* positionsIn = reinterpret_cast<Vector3*>(postitionsCPU.data() + offsetVertex * VertPosSize);
-        Vector2* uvsIn = reinterpret_cast<Vector2*>(uvsCPU.data() + offsetVertex * VertUVSize);
-
-        // Utilize position and uv for quat generation
-        std::for_each(std::execution::par_unseq,
-                      primStart, primEnd,
-                      [&](IndexTriplet& indices)
-                      {
-                          Vector3 normals[3];
-                          normals[0] = normalsIn[indices[0]];
-                          normals[1] = normalsIn[indices[1]];
-                          normals[2] = normalsIn[indices[2]];
-
-                          Vector3 positions[3];
-                          positions[0] = positionsIn[indices[0]];
-                          positions[1] = positionsIn[indices[1]];
-                          positions[2] = positionsIn[indices[2]];
-
-                          Vector2 uvs[3];
-                          uvs[0] = uvsIn[indices[0]];
-                          uvs[1] = uvsIn[indices[1]];
-                          uvs[2] = uvsIn[indices[2]];
-
-                          // Generate rotations
-                          QuatF q0, q1, q2;
-                          Triangle::LocalRotation(q0, q1, q2, positions, normals, uvs);
-
-                          rotationsOut[indices[0]] = q0;
-                          rotationsOut[indices[1]] = q1;
-                          rotationsOut[indices[2]] = q2;
-
-                          // Finally accumulate offset for combined vertex buffer usage
-                          if(i != 0)
+            Vector3* positionsIn = reinterpret_cast<Vector3*>(postitionsCPU.data() + offsetVertex * VertPosSize);
+            Vector2* uvsIn = reinterpret_cast<Vector2*>(uvsCPU.data() + offsetVertex * VertUVSize);
+            
+            int asd = 0;
+            // Utilize position and uv for quat generation
+            std::for_each(//std::execution::par_unseq,
+                          primStart, primEnd,
+                          [&](IndexTriplet& indices)
                           {
-                              indices[0] += offsetVertex;
-                              indices[1] += offsetVertex;
-                              indices[2] += offsetVertex;
-                          }
-                      });
+                              Vector3 normals[3];
+                              normals[0] = normalsIn[indices[0]];
+                              normals[1] = normalsIn[indices[1]];
+                              normals[2] = normalsIn[indices[2]];
+
+                              Vector3 positions[3];
+                              positions[0] = positionsIn[indices[0]];
+                              positions[1] = positionsIn[indices[1]];
+                              positions[2] = positionsIn[indices[2]];
+
+                              Vector2 uvs[3];
+                              uvs[0] = uvsIn[indices[0]];
+                              uvs[1] = uvsIn[indices[1]];
+                              uvs[2] = uvsIn[indices[2]];
+
+                              // Generate rotations
+                              QuatF q0, q1, q2;
+                              Triangle::LocalRotation(q0, q1, q2, positions, normals, uvs);
+
+                              rotationsOut[indices[0]] = q0;
+                              rotationsOut[indices[1]] = q1;
+                              rotationsOut[indices[2]] = q2;
+
+                              // Finally accumulate offset for combined vertex buffer usage
+                              if(i != 0)
+                              {
+                                  indices[0] += offsetVertex;
+                                  indices[1] += offsetVertex;
+                                  indices[2] += offsetVertex;
+                              }
+                          });
         }
         i++;
     }
@@ -308,7 +315,7 @@ if(i != 0)
     // Construct Alpha Maps
     std::vector<uint32_t> bitMapIndex;
     std::vector<Vector2ui> bitmapDims;
-    std::vector<std::vector<Byte>> bitmapData;    
+    std::vector<std::vector<Byte>> bitmapData;
     bitMapIndex.reserve(alphaMapInfo.size());
     for(const auto& texInfo : alphaMapInfo)
     {
@@ -321,9 +328,9 @@ if(i != 0)
         uint32_t textureId = texInfo.second.texId;
         TextureAccessLayout access = texInfo.second.channelLayout;
 
-        if(access != TextureAccessLayout::R ||
-           access != TextureAccessLayout::G ||
-           access != TextureAccessLayout::B ||
+        if(access != TextureAccessLayout::R &&
+           access != TextureAccessLayout::G &&
+           access != TextureAccessLayout::B &&
            access != TextureAccessLayout::A)
             return SceneError::BITMAP_LOAD_CALLED_WITH_MULTIPLE_CHANNELS;
 
@@ -331,7 +338,7 @@ if(i != 0)
 
         // Check if this texture/channel pair is already loaded
         auto loc = loadedBitmaps.cend();
-        if((loc = loadedBitmaps.find(std::make_pair(textureId, channel))) == loadedBitmaps.cend())
+        if((loc = loadedBitmaps.find(std::make_pair(textureId, channel))) != loadedBitmaps.cend())
         {
             bitMapIndex.push_back(loc->second);
         }
@@ -357,7 +364,7 @@ if(i != 0)
     // Generate Bitmap Group
     bitmaps = std::move(CPUBitmapGroup(bitmapData, bitmapDims));
     // Acquire GPUBitmap ptrs from CPU Bitmap
-    std::vector<const GPUBitmap*> hGPUBitmapPtrs; 
+    std::vector<const GPUBitmap*> hGPUBitmapPtrs;
     hGPUBitmapPtrs.reserve(bitMapIndex.size());
     for(uint32_t index : bitMapIndex)
     {
@@ -383,7 +390,7 @@ if(i != 0)
     size_t offsetSize = sizeof(uint64_t) * batchOffsets.size();
     size_t totalSize = (posSize + uvSize +
                         quatSize + indexSize +
-                        cullSize + alphaMapPtrSize + 
+                        cullSize + alphaMapPtrSize +
                         offsetSize);
 
     memory = std::move(DeviceMemory(totalSize));
@@ -395,7 +402,7 @@ if(i != 0)
     Byte* dQuats = static_cast<Byte*>(memory) + offset;
     offset += quatSize;
     Byte* dIndices = static_cast<Byte*>(memory) + offset;
-    offset += indexSize;    
+    offset += indexSize;
     Byte* dCulls = static_cast<Byte*>(memory) + offset;
     offset += cullSize;
     Byte* dAlphaMapPtrs = static_cast<Byte*>(memory) + offset;
@@ -405,14 +412,14 @@ if(i != 0)
     assert(offset == totalSize);
 
     // Copy Vertex Data
-    CUDA_CHECK(cudaMemcpy(dPositions,  postitionsCPU.data(),
-                          sizeof(Vector3f)  * totalDataCount,
+    CUDA_CHECK(cudaMemcpy(dPositions, postitionsCPU.data(),
+                          sizeof(Vector3f) * totalDataCount,
                           cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemcpy(dUVs, uvsCPU.data(),
-                          sizeof(Vector2f)* totalDataCount,
+                          sizeof(Vector2f) * totalDataCount,
                           cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemcpy(dQuats, rotationsCPU.data(),
-                          sizeof(QuatF)* totalDataCount,
+                          sizeof(QuatF) * totalDataCount,
                           cudaMemcpyHostToDevice));
     // Copy Indices
     CUDA_CHECK(cudaMemcpy(dIndices, indexCPU.data(),

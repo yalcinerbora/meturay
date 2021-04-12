@@ -42,11 +42,11 @@ class MockNode
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(32, 18);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(32, 32);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(320, 180);
-        static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(640, 360);
+        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(640, 360);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(944, 531);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(512, 512);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(900, 900);
-        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(1280, 720);
+        static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(1280, 720);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(1600, 900);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(1920, 1080);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(3840, 2160);

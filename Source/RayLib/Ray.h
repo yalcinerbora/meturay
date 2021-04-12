@@ -99,6 +99,9 @@ static_assert(sizeof(RayF) == sizeof(float) * 6, "Ray<float> size is not 24 byte
 
 #include "Ray.hpp"
 
+static constexpr RayF InvalidRayF = RayF(Zero3f, Zero3f);
+static constexpr RayF InvalidRayD = RayF(Zero3d, Zero3d);
+
 // Ray Extern
 extern template class Ray<float>;
 extern template class Ray<double>;

@@ -69,23 +69,28 @@ inline GPUBitmap::GPUBitmap(const Byte* dVals,
 __device__ 
 inline bool GPUBitmap::operator()(const Vector2f& uv) const
 {
-    Vector2ui index = Vector2ui(uv * Vector2f(dimensions));
+    // Wrap Texture
+    Vector2f uvNorm = Vector2f(uv[0] - floorf(uv[0]),
+                               uv[1] - floorf(uv[1]));
+
+    Vector2ui index = Vector2ui(uvNorm * Vector2f(dimensions));
     uint32_t linearSize = index[1] * dimensions[0] + index[0];
     uint32_t byteIndex = linearSize / BYTE_BITS;
     uint32_t innerIndex = linearSize % BYTE_BITS;
-
-    return static_cast<bool>((gBools[byteIndex] >> innerIndex) & 0x1);
+    bool opaque = static_cast<bool>((gBools[byteIndex] >> innerIndex) & 0x01);
+    return opaque;
 }
 
 inline CPUBitmapGroup::CPUBitmapGroup(const std::vector<std::vector<Byte>>& bits,
                                       const std::vector<Vector2ui>& dimensions)
-    : memory(bits.size() * sizeof(Byte))
-    , dimensions(dimensions)
+    : dimensions(dimensions)
     , dGPUBitmaps(nullptr)
 {    
+    if(dimensions.size() == 0) return;
+
     size_t totalSize = 0;
     std::vector<size_t> allocationOffsets;
-    allocationOffsets.reserve(bits.size());
+    allocationOffsets.reserve(bits.size() + 1);
     for(const auto& bit : bits)
     {
         size_t allocSize = bit.size() * sizeof(Byte);
@@ -93,10 +98,13 @@ inline CPUBitmapGroup::CPUBitmapGroup(const std::vector<std::vector<Byte>>& bits
         allocationOffsets.push_back(totalSize);
         totalSize += allocSize;
     }
-    size_t bitmapClassSize = bits.size() + sizeof(GPUBitmap);
+    allocationOffsets.push_back(totalSize);
+    // Calculate GPUBitmap Size
+    size_t bitmapClassSize = bits.size() * sizeof(GPUBitmap);
     bitmapClassSize = Memory::AlignSize(bitmapClassSize);
     totalSize += bitmapClassSize;
 
+    // Allocation
     memory = DeviceMemory(totalSize);
     
     std::vector<GPUBitmap> hGPUBitmaps;    
@@ -111,7 +119,6 @@ inline CPUBitmapGroup::CPUBitmapGroup(const std::vector<std::vector<Byte>>& bits
                               cudaMemcpyHostToDevice));
 
         hGPUBitmaps.emplace_back(dPtr, dimensions[i]);
-        i++;
     }
     dGPUBitmaps = reinterpret_cast<GPUBitmap*>(static_cast<Byte*>(memory) + allocationOffsets.back());
     // Copy GPU Bitmaps to GPU

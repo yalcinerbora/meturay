@@ -1,4 +1,5 @@
 #include "TextureFunctions.h"
+//#include "TracerDebug.h"
 
 TextureLoader::TextureLoader()
 {
@@ -43,7 +44,7 @@ SceneError TextureLoader::LoadBitMapFromTexture(std::vector<Byte>& bits,
 
         // Check if requested channel is available on this texture
         uint32_t channelIndex = TextureFunctions::ConvertChannelTypeToChannelIndex(channel);
-        if(channelIndex > channels)
+        if(channelIndex >= channels)
             return SceneError::TEXTURE_CHANNEL_MISMATCH;
 
         // It looks ok (channels match etc.)
@@ -61,14 +62,17 @@ SceneError TextureLoader::LoadBitMapFromTexture(std::vector<Byte>& bits,
                 if(bpp == 24 || bpp == 32)
                 {
                     BYTE* imgPixels = FreeImage_GetBits(imgCPU);
+
                     PackImageChannelToBits<unsigned char>(bits,
                                                           imgPixels,
                                                           dimension,
                                                           pitch,
                                                           channelIndex,
-                                                          channels);                    
+                                                          channels);
+                    break;
                 }
                 else return SceneError::UNABLE_TO_LOAD_TEXTURE;
+                
             }
             // TODO: Add more later
             default:

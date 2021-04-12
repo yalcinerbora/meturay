@@ -167,17 +167,16 @@ struct TriFunctions
         const GPUBitmap* alphaMap = primData.alphaMaps[indexInt];
         if(alphaMap && intersects)
         {
-            Vector2f uv0 = primData.positions[index0];
-            Vector2f uv1 = primData.positions[index1];
-            Vector2f uv2 = primData.positions[index2];
+            Vector2f uv0 = primData.uvs[index0];
+            Vector2f uv1 = primData.uvs[index1];
+            Vector2f uv2 = primData.uvs[index2];
 
-            float c = 1.0f - baryCoords[0] - baryCoords[1];
             Vector2f uv = (baryCoords[0] * uv0 +
                            baryCoords[1] * uv1 + 
-                           c             * uv2);
+                           baryCoords[2] * uv2);
 
-            bool b = (*alphaMap)(uv);
-            intersects &= b;
+            bool opaque = (*alphaMap)(uv);
+            intersects &= opaque;
         }
 
         // Check if the hit is closer
