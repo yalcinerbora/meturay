@@ -879,7 +879,8 @@ SceneError GPUSceneJson::GenerateLights(const LightNodeList& lightGroupList,
             primGroup = primitives.at(primTypeName).get();
 
         CPULightGPtr lg = CPULightGPtr(nullptr, nullptr);
-        if(e = logicGenerator.GenerateLightGroup(lg, primGroup, lightTypeName))
+        if(e = logicGenerator.GenerateLightGroup(lg, primGroup, 
+                                                 (isPrimLight) ? primTypeName : lightTypeName))
             return e;
         if(e = lg->InitializeGroup(lightNodes,
                                    mediumIdMappings,

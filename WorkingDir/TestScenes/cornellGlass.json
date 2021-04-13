@@ -44,7 +44,7 @@
 		// Light Boundary Material
 		"id": 1,
 		"type": "BConstant",
-		"radiance" : [150, 150, 150]
+		"radiance" : [5, 5, 5]
     },
 	{
 		// Red Simple Material
