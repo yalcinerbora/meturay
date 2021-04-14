@@ -54,13 +54,15 @@ class SelfNode
         void        SendLog(const std::string) override;
         void        SendError(TracerError) override;
         void        SendAnalyticData(AnalyticData) override;
+        void        SendImageSectionReset(Vector2i start = Zero2i,
+                                          Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void        SendImage(const std::vector<Byte> data,
                               PixelFormat, size_t offset,
                               Vector2i start = Zero2i,
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
          void       SendCurrentOptions(TracerOptions) override;
          void       SendCurrentParameters(TracerParameters) override;
-         void       SendCurrentSceneCamera(VisorCamera) override;
+         void       SendCurrentCamera(VisorCamera) override;
 
         // From Node Interface
         NodeError   Initialize() override;

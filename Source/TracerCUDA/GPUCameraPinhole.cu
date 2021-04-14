@@ -1,6 +1,6 @@
 #include "GPUCameraPinhole.cuh"
-#include "RayLib/MemoryAlignment.h"
 #include "CudaConstants.hpp"
+#include "RayLib/MemoryAlignment.h"
 
 __global__ void KCConstructGPUCameraPinhole(GPUCameraPinhole* gCameraLocations,
                                             //
@@ -71,6 +71,20 @@ SceneError CPUCameraGroupPinhole::InitializeGroup(const CameraGroupDataList& cam
         data.gaze = gazes[0];
         data.nearFar = nearFar[0];
         data.fov = fovs[0] * MathConstants::DegToRadCoef;
+
+        // Generate VisorCamera
+        visorCameraList.push_back(VisorCamera
+                                  {
+                                      static_cast<uint16_t>(mediumIndex),
+                                      materialKey,
+                                      gazes[0],
+                                      nearFar[0][0],
+                                      positions[0],
+                                      nearFar[0][1],
+                                      ups[0],
+                                      0.0f,
+                                      fovs[0]
+                                  });
 
         // Load to host memory
         hHitKeys.push_back(materialKey);

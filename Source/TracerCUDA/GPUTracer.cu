@@ -32,7 +32,7 @@ TracerError GPUTracer::LoadCameras(std::vector<const GPUCameraI*>& dGPUCameras)
         const auto& dCList = c.GPUCameras();
         const auto& vCams = c.VisorCameras();
         dGPUCameras.insert(dGPUCameras.end(), dCList.begin(), dCList.end());
-        visorCams.insert(visorCams.end(), )
+        visorCams.insert(visorCams.end(), vCams.cbegin(), vCams.cend());
     }
     cameraCount = static_cast<uint32_t>(dGPUCameras.size());
     return TracerError::OK;
@@ -516,7 +516,7 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
 
 VisorCamera GPUTracer::SceneCamToVisorCam(uint32_t cameraInnerId)
 {
-    return sceneCams[cameraInnerId];
+    return visorCams[cameraInnerId];
 }
 
 void GPUTracer::SetParameters(const TracerParameters& p)
@@ -545,6 +545,12 @@ void GPUTracer::ResizeImage(Vector2i resolution)
 void GPUTracer::ResetImage()
 {
     imgMemory.Reset(cudaSystem);
+    if(callbacks)
+    {
+        Vector2i start = imgMemory.SegmentOffset();
+        Vector2i end = start + imgMemory.SegmentSize();
+        callbacks->SendImageSectionReset(start, end);
+    }
 }
 
 template <class... Args>

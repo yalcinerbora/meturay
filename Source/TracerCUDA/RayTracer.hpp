@@ -92,6 +92,12 @@ template <class AuxStruct, AuxInitFunc<AuxStruct> AuxFunc>
 void RayTracer::GenerateRays(const VisorCamera& cam, int32_t sampleCount,
                              const AuxStruct& initialValues)
 {
+    // Visor Camera is GUI represented camera
+    // Its fov values are in degrees (since its more intuitive to show as such
+    // on GUI) so convert it to radians
+    VisorCamera camera = cam;
+    camera.fov = camera.fov * MathConstants::DegToRadCoef;
+
     int32_t sampleCountSqr = sampleCount * sampleCount;
 
     const Vector2i resolution = imgMemory.Resolution();
@@ -154,7 +160,7 @@ void RayTracer::GenerateRays(const VisorCamera& cam, int32_t sampleCount,
             gImgData,
             // Input
             rngData,
-            cam,
+            camera,
             sampleCount,
             resolution,
             localPixelStart,

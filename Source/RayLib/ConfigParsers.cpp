@@ -122,6 +122,7 @@ bool ConfigParser::ParseVisorOptions(// Visor Input Related
         {
             // Add defaults
             movementSchemes.emplace_back(new MovementSchemeFPS());
+            movementSchemes.emplace_back(new MovementSchemeMaya());
         }
 
         // Load VisorOptions

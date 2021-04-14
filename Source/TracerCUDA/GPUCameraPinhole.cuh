@@ -5,6 +5,8 @@
 #include "GPUTransformI.h"
 #include "TypeTraits.h"
 
+#include "RayLib/VisorCamera.h"
+
 class GPUCameraPinhole final : public GPUCameraI
 {
     private:
@@ -87,6 +89,7 @@ class CPUCameraGroupPinhole final : public CPUCameraGroupI
         std::vector<Data>               hCameraData;
 
         GPUCameraList                   gpuCameraList;
+        VisorCameraList                 visorCameraList;
         uint32_t                        cameraCount;
 
     protected:
@@ -98,6 +101,7 @@ class CPUCameraGroupPinhole final : public CPUCameraGroupI
         // Interface
         const char*                     Type() const override;
         const GPUCameraList&            GPUCameras() const override;
+        const VisorCameraList&          VisorCameras() const override;
         SceneError					    InitializeGroup(const CameraGroupDataList& cameraNodes,
                                                         const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                         const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
@@ -247,6 +251,11 @@ inline const char* CPUCameraGroupPinhole::Type() const
 inline const GPUCameraList& CPUCameraGroupPinhole::GPUCameras() const
 {
     return gpuCameraList;
+}
+
+inline const VisorCameraList& CPUCameraGroupPinhole::VisorCameras() const
+{
+    return visorCameraList;
 }
 
 inline uint32_t CPUCameraGroupPinhole::CameraCount() const

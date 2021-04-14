@@ -73,7 +73,7 @@ namespace VisorConstants
         {MouseButtonType::LEFT, VisorActionType::MOUSE_MOVE_TOGGLE},
         {MouseButtonType::RIGHT, VisorActionType::MOUSE_MOVE_TOGGLE},
 
-        {MouseButtonType::MIDDLE, VisorActionType::LOCK_UNLOCK_CAMERA}
+        {MouseButtonType::MIDDLE, VisorActionType::MOUSE_TRANSLATE_TOGGLE}
     };
 }
 

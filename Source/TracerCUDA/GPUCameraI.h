@@ -28,7 +28,7 @@ class GPUCameraI : public GPUEndpointI
 };
 
 using GPUCameraList = std::vector<const GPUCameraI*>;
-using VisorCameraList = std::vector<const VisorCamera>;
+using VisorCameraList = std::vector<VisorCamera>;
 
 __device__
 inline GPUCameraI::GPUCameraI(HitKey k, uint16_t mediumIndex)
@@ -55,7 +55,6 @@ class CPUCameraGroupI
         virtual TracerError					ConstructCameras(const CudaSystem&,
                                                              const GPUTransformI**) = 0;
         virtual uint32_t					CameraCount() const = 0;
-        virtual VisorCamera                 GetCameraAsVisorCam(uint32_t camId) = 0;
 
         virtual size_t						UsedGPUMemory() const = 0;
         virtual size_t						UsedCPUMemory() const = 0;

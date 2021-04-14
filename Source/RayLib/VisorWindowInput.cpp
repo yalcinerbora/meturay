@@ -12,43 +12,50 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
     {
         case VisorActionType::MOVE_TYPE_NEXT:
         {
-            if(lockedCamera || (action == KeyAction::PRESSED)) break;
+            if(action != KeyAction::RELEASED) break;
             currentMovementScheme = (currentMovementScheme + 1) % movementSchemes.size();
             break;
         }
         case VisorActionType::MOVE_TYPE_PREV:
         {
-            if(lockedCamera || (action == KeyAction::PRESSED)) break;
+            if(action != KeyAction::RELEASED) break;
             currentMovementScheme = (currentMovementScheme - 1) % movementSchemes.size();
             break;
         }
         case VisorActionType::TOGGLE_CUSTOM_SCENE_CAMERA:
         {
-            if(lockedCamera || (action == KeyAction::PRESSED)) break;
-            cameraMode = (cameraMode == CameraMode::CUSTOM_CAM) ? CameraMode::SCENE_CAM : CameraMode::CUSTOM_CAM;
+            if(action != KeyAction::RELEASED) break;
+            cameraMode = (cameraMode == CameraMode::CUSTOM_CAM) 
+                            ? CameraMode::SCENE_CAM 
+                            : CameraMode::CUSTOM_CAM;
             break;
         }
         case VisorActionType::LOCK_UNLOCK_CAMERA:
         {
+            if(action != KeyAction::RELEASED) break;
             lockedCamera = !lockedCamera;
             break;
         }
         case VisorActionType::SCENE_CAM_NEXT:
         {
-            if(lockedCamera || (action == KeyAction::PRESSED)) break;
+            if(cameraMode == CameraMode::CUSTOM_CAM ||
+               lockedCamera || (action != KeyAction::RELEASED))
+                break;
 
             visorCallbacks->ChangeCamera(currentSceneCam);
             break;
         }
         case VisorActionType::SCENE_CAM_PREV:
         {
-            if(lockedCamera || (action == KeyAction::PRESSED)) break;
+            if(cameraMode == CameraMode::CUSTOM_CAM ||
+               lockedCamera || (action != KeyAction::RELEASED))
+                break;
             visorCallbacks->ChangeCamera(currentSceneCam);
             break;
         }
         case VisorActionType::START_STOP_TRACE:
         {
-            if(action == KeyAction::PRESSED) break;
+            if(action != KeyAction::RELEASED) break;
 
             visorCallbacks->StartStopTrace(startStop);
             startStop = !startStop;
@@ -56,7 +63,7 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
         }
         case VisorActionType::PAUSE_CONT_TRACE:
         {
-            if(action == KeyAction::PRESSED) break;
+            if(action != KeyAction::RELEASED) break;
 
             visorCallbacks->PauseContTrace(pauseCont);
             pauseCont = !pauseCont;
@@ -64,14 +71,14 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
         }
         case VisorActionType::FRAME_NEXT:
         {
-            if(action == KeyAction::PRESSED) break;
+            if(action != KeyAction::RELEASED) break;
 
             visorCallbacks->IncreaseTime(deltaT);
             break;
         }
         case VisorActionType::FRAME_PREV:
         {
-            if(action == KeyAction::PRESSED) break;
+            if(action != KeyAction::RELEASED) break;
 
             visorCallbacks->DecreaseTime(deltaT);
             break;
@@ -82,7 +89,7 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
         }
         case VisorActionType::CLOSE:
         {
-            if(action == KeyAction::PRESSED) break;
+            if(action != KeyAction::RELEASED) break;
 
             visorCallbacks->WindowCloseAction();
             break;
@@ -145,7 +152,7 @@ void VisorWindowInput::WindowMinimized(bool minimized)
 
 void VisorWindowInput::MouseScrolled(double xOffset, double yOffset)
 {
-    if(cameraMode == CameraMode::CUSTOM_CAM)
+    if(cameraMode == CameraMode::CUSTOM_CAM && !lockedCamera)
     {
         MovementSchemeI& currentScheme = *(movementSchemes[currentMovementScheme]);
 
@@ -156,7 +163,7 @@ void VisorWindowInput::MouseScrolled(double xOffset, double yOffset)
 
 void VisorWindowInput::MouseMoved(double x, double y)
 {
-    if(cameraMode == CameraMode::CUSTOM_CAM)
+    if(cameraMode == CameraMode::CUSTOM_CAM && !lockedCamera)
     {
         MovementSchemeI& currentScheme = *(movementSchemes[currentMovementScheme]);
 
@@ -174,7 +181,7 @@ void VisorWindowInput::KeyboardUsed(KeyboardKeyType key,
     VisorActionType visorAction = i->second;
 
     // Do custom cam
-    if(cameraMode == CameraMode::CUSTOM_CAM)
+    if(cameraMode == CameraMode::CUSTOM_CAM && !lockedCamera)
     {
         MovementSchemeI& currentScheme = *(movementSchemes[currentMovementScheme]);
         if(currentScheme.InputAction(customCamera, visorAction, action))
@@ -193,7 +200,7 @@ void VisorWindowInput::MouseButtonUsed(MouseButtonType button, KeyAction action)
     VisorActionType visorAction = i->second;
 
     // Do Custom Camera
-    if(cameraMode == CameraMode::CUSTOM_CAM)
+    if(cameraMode == CameraMode::CUSTOM_CAM && !lockedCamera)
     {
         MovementSchemeI& currentScheme = *(movementSchemes[currentMovementScheme]);
         if(currentScheme.InputAction(customCamera, visorAction, action))

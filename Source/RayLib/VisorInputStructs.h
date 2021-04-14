@@ -159,6 +159,7 @@ enum class VisorActionType
     MOVE_RIGHT,
     MOVE_LEFT,
     MOUSE_MOVE_TOGGLE,
+    MOUSE_TRANSLATE_TOGGLE,
     FAST_MOVE_TOGGLE,
     // Change Camera Movement Type
     MOVE_TYPE_NEXT,

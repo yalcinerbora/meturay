@@ -83,13 +83,14 @@ class MockNode
         void        SendLog(const std::string) override;
         void        SendError(TracerError) override;
         void        SendAnalyticData(AnalyticData) override {}
+        void        SendImageSectionReset(Vector2i start, Vector2i end) override {}        
         void        SendImage(const std::vector<Byte> data,
                               PixelFormat, size_t offset,
                               Vector2i start = Zero2i,
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void        SendCurrentOptions(TracerOptions) {};
         void        SendCurrentParameters(TracerParameters) {};
-        void        SendCurrentSceneCamera(VisorCamera) {};
+        void        SendCurrentCamera(VisorCamera) {};
 
         // From Node Interface
         NodeError   Initialize() override { return NodeError::OK; }
