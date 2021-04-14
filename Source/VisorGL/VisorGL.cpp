@@ -685,6 +685,11 @@ Vector2i VisorGL::MonitorResolution() const
     return Vector2i(mode->width, mode->height);
 }
 
+void VisorGL::SetCamera(const VisorCamera& c)
+{
+    if(input) input->SetCamera(c);
+}
+
 void VisorGL::SetRenderingContextCurrent()
 {
     glfwMakeContextCurrent(window);

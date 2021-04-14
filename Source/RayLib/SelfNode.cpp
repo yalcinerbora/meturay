@@ -39,8 +39,22 @@ void SelfNode::DecreaseTime(const double t)
     tracerThread.DecreaseTime(t);
 }
 
+#include <iostream>
 void SelfNode::ChangeCamera(const VisorCamera c)
 {
+   
+    std::cout << "Gaze: [" 
+              << c.gazePoint[0] << ", " 
+              << c.gazePoint[1] << ", "
+              << c.gazePoint[2] << "]" << std::endl;
+    std::cout << "Pos: [" 
+              << c.position[0] << ", " 
+              << c.position[1] << ", "
+              << c.position[2] << "]" << std::endl;
+    std::cout << "Up: [" 
+              << c.up[0] << ", " 
+              << c.up[1] << ", "
+              << c.up[2] << "]" << std::endl;
     tracerThread.ChangeCamera(c);
 }
 
@@ -107,6 +121,11 @@ void SelfNode::SendCurrentOptions(TracerOptions)
 void SelfNode::SendCurrentParameters(TracerParameters)
 {
     // Same as Tracer Options
+}
+
+void SelfNode::SendCurrentSceneCamera(VisorCamera c)
+{
+    visor.SetCamera(c);
 }
 
 // From Node Interface

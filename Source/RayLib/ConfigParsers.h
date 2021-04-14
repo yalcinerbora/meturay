@@ -25,7 +25,6 @@ namespace ConfigParser
                            KeyboardKeyBindings& keyBindings,
                            MouseKeyBindings& mouseBindings,
                            MovementScemeList& movementSchemes,
-                           VisorCamera& visorCamera,
                            // Visor Related
                            VisorOptions& opts,
                            // Visor DLL Related

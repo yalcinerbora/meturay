@@ -15,6 +15,8 @@ class VisorCallbacksI;
 using KeyCallbacks = std::multimap<std::pair<KeyboardKeyType, KeyAction>, std::function<void()>>;
 using MouseButtonCallbacks = std::multimap<std::pair<MouseButtonType, KeyAction>, std::function<void()>>;
 
+struct VisorCamera;
+
 class VisorInputI
 {
     private:
@@ -44,6 +46,8 @@ class VisorInputI
 
         virtual void                        KeyboardUsed(KeyboardKeyType key, KeyAction action) = 0;
         virtual void                        MouseButtonUsed(MouseButtonType button, KeyAction action) = 0;
+
+        virtual void                        SetCamera(const VisorCamera&) = 0;
 
         // Defining Custom Callback
         template <class Function, class... Args>

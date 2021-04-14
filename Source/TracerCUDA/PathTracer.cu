@@ -4,6 +4,7 @@
 #include "RayTracer.hpp"
 
 #include "RayLib/GPUSceneI.h"
+#include "RayLib/TracerCallbacksI.h"
 
 #include "GenerationKernels.cuh"
 #include "GPUWork.cuh"
@@ -182,6 +183,9 @@ bool PathTracer::Render()
 
 void PathTracer::GenerateWork(int cameraId)
 {
+    if(callbacks)
+        callbacks->SendCurrentCamera(SceneCamToVisorCam(cameraId));
+
     GenerateRays<RayAuxPath, RayInitPath>(dCameras[cameraId],
                                           options.sampleCount,
                                           InitialPathAux);

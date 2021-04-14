@@ -12,19 +12,19 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
     {
         case VisorActionType::MOVE_TYPE_NEXT:
         {
-            if(lockedCamera) break;
+            if(lockedCamera || (action == KeyAction::PRESSED)) break;
             currentMovementScheme = (currentMovementScheme + 1) % movementSchemes.size();
             break;
         }
         case VisorActionType::MOVE_TYPE_PREV:
         {
-            if(lockedCamera) break;
+            if(lockedCamera || (action == KeyAction::PRESSED)) break;
             currentMovementScheme = (currentMovementScheme - 1) % movementSchemes.size();
             break;
         }
         case VisorActionType::TOGGLE_CUSTOM_SCENE_CAMERA:
         {
-            if(lockedCamera) break;
+            if(lockedCamera || (action == KeyAction::PRESSED)) break;
             cameraMode = (cameraMode == CameraMode::CUSTOM_CAM) ? CameraMode::SCENE_CAM : CameraMode::CUSTOM_CAM;
             break;
         }
@@ -35,36 +35,44 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
         }
         case VisorActionType::SCENE_CAM_NEXT:
         {
-            if(lockedCamera) break;
+            if(lockedCamera || (action == KeyAction::PRESSED)) break;
 
             visorCallbacks->ChangeCamera(currentSceneCam);
             break;
         }
         case VisorActionType::SCENE_CAM_PREV:
         {
-            if(lockedCamera) break;
+            if(lockedCamera || (action == KeyAction::PRESSED)) break;
             visorCallbacks->ChangeCamera(currentSceneCam);
             break;
         }
         case VisorActionType::START_STOP_TRACE:
         {
+            if(action == KeyAction::PRESSED) break;
+
             visorCallbacks->StartStopTrace(startStop);
             startStop = !startStop;
             break;
         }
         case VisorActionType::PAUSE_CONT_TRACE:
         {
+            if(action == KeyAction::PRESSED) break;
+
             visorCallbacks->PauseContTrace(pauseCont);
             pauseCont = !pauseCont;
             break;
         }
         case VisorActionType::FRAME_NEXT:
         {
+            if(action == KeyAction::PRESSED) break;
+
             visorCallbacks->IncreaseTime(deltaT);
             break;
         }
         case VisorActionType::FRAME_PREV:
         {
+            if(action == KeyAction::PRESSED) break;
+
             visorCallbacks->DecreaseTime(deltaT);
             break;
         }
@@ -74,6 +82,8 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
         }
         case VisorActionType::CLOSE:
         {
+            if(action == KeyAction::PRESSED) break;
+
             visorCallbacks->WindowCloseAction();
             break;
         }
@@ -84,15 +94,13 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
 
 VisorWindowInput::VisorWindowInput(KeyboardKeyBindings&& keyBinds,
                                    MouseKeyBindings&& mouseBinds,
-                                   MovementScemeList&& movementSchemes,
-                                   const VisorCamera& customCamera)
+                                   MovementScemeList&& movementSchemes)
     : mouseBindings(std::move(mouseBinds))
     , keyboardBindings(std::move(keyBinds))
     , movementSchemes(std::move(movementSchemes))
     , currentMovementScheme(0)
     , currentSceneCam(0)
     , cameraMode(CameraMode::SCENE_CAM)
-    , customCamera(customCamera)
     , lockedCamera(false)
     , pauseCont(false)
     , startStop(false)
@@ -181,7 +189,7 @@ void VisorWindowInput::MouseButtonUsed(MouseButtonType button, KeyAction action)
 {
     // Find an action if avail
     MouseKeyBindings::const_iterator i;
-    if((i = mouseBindings.find(button)) != mouseBindings.cend()) return;
+    if((i = mouseBindings.find(button)) == mouseBindings.cend()) return;
     VisorActionType visorAction = i->second;
 
     // Do Custom Camera
@@ -194,4 +202,10 @@ void VisorWindowInput::MouseButtonUsed(MouseButtonType button, KeyAction action)
 
     // Do Other
     ProcessInput(visorAction, action);
+}
+
+void VisorWindowInput::SetCamera(const VisorCamera& c)
+{
+    if(cameraMode == CameraMode::SCENE_CAM)
+        customCamera = c;
 }

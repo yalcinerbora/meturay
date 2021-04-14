@@ -10,6 +10,7 @@
 struct TracerError;
 struct AnalyticData;
 struct TracerParameters;
+struct VisorCamera;
 
 class TracerOptions;
 
@@ -28,4 +29,5 @@ class TracerCallbacksI
                                   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
         virtual void    SendCurrentOptions(TracerOptions) = 0;
         virtual void    SendCurrentParameters(TracerParameters) = 0;
+        virtual void    SendCurrentCamera(VisorCamera) = 0;
 };

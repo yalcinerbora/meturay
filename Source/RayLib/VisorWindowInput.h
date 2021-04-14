@@ -43,8 +43,7 @@ class VisorWindowInput : public VisorInputI
         // Constructor & Destructor
                                 VisorWindowInput(KeyboardKeyBindings&&,
                                                  MouseKeyBindings&&,
-                                                 MovementScemeList&&,
-                                                 const VisorCamera& customCamera);
+                                                 MovementScemeList&&);
                                 ~VisorWindowInput() = default;
 
         void                    ChangeDeltaT(double);
@@ -65,4 +64,6 @@ class VisorWindowInput : public VisorInputI
 
         void                    KeyboardUsed(KeyboardKeyType key, KeyAction action) override;
         void                    MouseButtonUsed(MouseButtonType button, KeyAction action) override;
+
+        void                    SetCamera(const VisorCamera&) override;
 };

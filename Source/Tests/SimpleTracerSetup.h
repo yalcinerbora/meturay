@@ -89,6 +89,7 @@ class MockNode
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void        SendCurrentOptions(TracerOptions) {};
         void        SendCurrentParameters(TracerParameters) {};
+        void        SendCurrentSceneCamera(VisorCamera) {};
 
         // From Node Interface
         NodeError   Initialize() override { return NodeError::OK; }
@@ -274,8 +275,7 @@ inline bool SimpleTracerSetup::Init()
     MouseKeyBindings MouseBinds = VisorConstants::DefaultButtonBinds;
     visorInput = std::make_unique<VisorWindowInput>(std::move(KeyBinds),
                                                     std::move(MouseBinds),
-                                                    std::move(MovementSchemeList),
-                                                    VisorCamera{});
+                                                    std::move(MovementSchemeList));
     // Window Params
     VisorOptions visorOpts;
     visorOpts.stereoOn = false;

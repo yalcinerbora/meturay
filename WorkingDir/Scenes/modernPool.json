@@ -5,35 +5,43 @@
         "type" : "Pinhole",
 
         // 16:9 FoV
-        //"fov": [97.0672, 54.6003],
-        "fov": [54.6003, 30.7127],
+        "fov": [97.0672, 54.6003],
+        //"fov": [54.6003, 30.7127],
         // 1:1 FoV
         //"fov": [54.6003, 54.6003],
-        //"gaze": [20, 0, 0],
-        "gaze": [30, -20, 0],
+        "gaze": [20, 0, 0],
+        //"gaze": [30, -20, 0],
         //"position": [-12.39, 36.49, 41.3],
-        "position": [25.178, -17.669, 32.491],
+        //"position": [25.178, -17.669, 32.491],
+        "position": [-29.191, 70.518, 116.644],
+
         "up": [0, 1, 0],
         "planes": [1, 2800]
     }],
 
-    "Lights":[],
+    "Lights":[
+    {
+        "id": 0,
+        "type": "SkySphere",
+        "isHemispherical": true
+    }
+],
 
     "Mediums":[
     {
         "id" : 0,
         "type" : "Vacuum"
     },
-    {
-        // Glass Medium
-		"id": 1,
-		"type" : "Homogenous",
+    // {
+    //     // Glass Medium
+	// 	"id": 1,
+	// 	"type" : "Homogenous",
 
-		"absorption": [0, 0 ,0],
-		"scattering": [0, 0, 0],
-		"ior": 1.55,
-		"phase": 0
-	},
+	// 	"absorption": [0, 0 ,0],
+	// 	"scattering": [0, 0, 0],
+	// 	"ior": 1.55,
+	// 	"phase": 0
+	// },
     {
         // Water Medium
 		"id": 2,
@@ -116,25 +124,23 @@
     {
         "id": 15,
         "file": "../Textures/ModernPool/bark_brown_02_rough_2k.png"
+    },
+    {
+        "id": 16,
+        "file": "../Textures/ModernPool/kloppenheim_05_4k_cropped.hdr"
     }],
 
     "Materials":[
     {
-        // General Boundary Material
-        "id": 0,
-        "type": "Emissive",
-        "radiance" : [0.0, 0.0, 0.0]
-    },
-    {
         // Light Boundary Material
-        "id": 1,
-        "type": "LightConstant",
-        "radiance" : [550, 550, 550]
+        "id": 0,
+        "type": "BSkySphere",
+        "radiance" : {"texture": 16, "channels": "rgb"}
     },
     {
         // Pool Floor
         "id": 2,
-        "type": "LambertT",
+        "type": "Lambert",
         "albedo": {"texture": 0, "channels": "rgb"}
     },
     {
@@ -151,13 +157,13 @@
         "albedo": [1, 1, 1],
         "medium": 2
     },
-    {
-        // Glass
-        "id": 5,
-        "type": "Refract",
-        "albedo": [1, 1, 1],
-        "medium": 1
-    },
+    // {
+    //     // Glass
+    //     "id": 5,
+    //     "type": "Refract",
+    //     "albedo": [1, 1, 1],
+    //     "medium": 1
+    // },
     {
         // All Metals
         "id": 6,
@@ -191,21 +197,6 @@
         "tag": "assimp_",
         "innerIndex": 0,
         "cullFace": false
-    },
-    {
-        // Light Test
-        "id": 999,
-        "type": "Triangle",
-        "name": "../Surfaces/ModernPool/light_test.obj",
-        "tag": "assimp_",
-        "innerIndex": 0
-    },
-    {
-        "id" : 300,
-        "type": "Sphere",
-        "name": ".nodeSphere",
-        "radius": 3,
-        "position": [0, 6, 0]
     }],
 
     "Accelerators":
@@ -223,24 +214,23 @@
 	"BaseMedium" : 0,
 
 	"Surfaces": [
-    {
-        // Pool, Pool Base & Water
-        "transform": 0, "accelerator":0,
-        "material": [2, 3, 4],
-        "primitive": [0, 1, 2]
-    },
-    {  "transform": 0, "accelerator": 1, "material": 4, "primitive": 300 }
+    // {
+    //     // Pool, Pool Base & Water
+    //     "transform": 0, "accelerator":0,
+    //     "material": [2, 3, 4],
+    //     "primitive": [0, 1, 2]
+    // }
+    // {
+    //     // Pool, Pool Base & Water
+    //     "transform": 0, "accelerator":0,
+    //     "material": 2,
+    //     "primitive": 0
+    // }
+    //{  "transform": 0, "accelerator": 1, "material": 4, "primitive": 300 }
     ],
 
     // Lights
-    "LightSurfaces": [
-    {
-        "transform": 0,
-        "primitive": 999,
-        "material": 1,
-        "accelerator": 1
-    }
-    ],
+    "LightSurfaces": [{"light": 0, "material": 0}],
     // Cameras
-    "CameraSurfaces": [{"camera": 0, "medium": 2}]
+    "CameraSurfaces": [{"camera": 0, "medium": 0}]
 }

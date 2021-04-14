@@ -21,6 +21,7 @@ class VisorInputI;
 class VisorCallbacksI;
 
 struct VisorError;
+struct VisorCamera;
 
 struct VisorOptions
 {
@@ -73,4 +74,5 @@ class VisorI
         virtual void                    ReleaseRenderingContext() = 0;
         // Main Thread only Calls
         virtual void                    ProcessInputs() = 0;
+        virtual void                    SetCamera(const VisorCamera&) = 0;
 };

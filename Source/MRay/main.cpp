@@ -107,13 +107,12 @@ int main(int argc, const char* argv[])
     VisorOptions visorOpts;
     std::string visorDLLName;
     SharedLibArgs visorDLLEntryFunctionNames;
-    MovementScemeList movementSchemeList = {};
-    VisorCamera visorCamera;
+    MovementScemeList movementSchemeList;
     KeyboardKeyBindings keyBinds;
     MouseKeyBindings mouseBinds;
 
     if(!ConfigParser::ParseVisorOptions(keyBinds, mouseBinds,
-                                        movementSchemeList, visorCamera,
+                                        movementSchemeList,
                                         visorOpts, visorDLLName,
                                         visorDLLEntryFunctionNames,
                                         //
@@ -134,8 +133,7 @@ int main(int argc, const char* argv[])
     ERROR_CHECK(DLLError, dError);
     visorInput = std::make_unique<VisorWindowInput>(std::move(keyBinds),
                                                     std::move(mouseBinds),
-                                                    std::move(movementSchemeList),
-                                                    visorCamera);
+                                                    std::move(movementSchemeList));
     visor->SetInputScheme(*visorInput);
 
     // Generate Tracer

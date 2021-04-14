@@ -5,7 +5,7 @@
 #include "TracerOptions.h"
 #include "StripComments.h"
 #include "EnumStringConversions.h"
-#include "MovementSchemeI.h"
+#include "MovementSchemes.h"
 
 #include "TracerSystemI.h"
 #include "VisorI.h"
@@ -64,7 +64,6 @@ bool ConfigParser::ParseVisorOptions(// Visor Input Related
                                      KeyboardKeyBindings& keyBindings,
                                      MouseKeyBindings& mouseBindings,
                                      MovementScemeList& movementSchemes,
-                                     VisorCamera& visorCamera,
                                      // Visor Related
                                      VisorOptions& opts,
                                      // Visor DLL Related
@@ -118,6 +117,11 @@ bool ConfigParser::ParseVisorOptions(// Visor Input Related
             //movementSchemes.reserve(schemesJson->size());
             // TODO: Implement
             return false;
+        }
+        else
+        {
+            // Add defaults
+            movementSchemes.emplace_back(new MovementSchemeFPS());
         }
 
         // Load VisorOptions

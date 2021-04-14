@@ -120,14 +120,16 @@ void TracerThread::LoopWork()
     {
         uint32_t cam;
         if(sceneCam.CheckChanged(cam))
-        {
-            // Camera changed reset image
-            tracer->ResetImage();
-        }
-
-        tracer->GenerateWork(sceneCam.Get());
+            tracer->ResetImage();       
+        tracer->GenerateWork(cam);
     }
-    else tracer->GenerateWork(visorCam.Get());
+    else
+    {
+        VisorCamera vc;
+        if(visorCam.CheckChanged(vc))
+            tracer->ResetImage();
+        tracer->GenerateWork(vc);
+    }
 
     // Exaust all the generated work
     while(tracer->Render());
