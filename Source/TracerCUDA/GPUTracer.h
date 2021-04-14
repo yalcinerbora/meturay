@@ -75,10 +75,13 @@ class GPUTracer : public GPUTracerI
         const GPUMediumI**                  dMediums;
         const GPUCameraI**                  dCameras;
         const GPULightI**                   dLights;
-
-        //
+        // Indices for Identity Transform &
+        // Base Medium
         const uint32_t                      baseMediumIndex;
         const uint32_t                      identityTransformIndex;
+        // Visor Cam Representations of the current scene cameras
+        // This is send to visor (if available)
+        std::vector<VisorCamera>            visorCams;
         //
         TracerParameters                    params;
         //
@@ -104,6 +107,8 @@ class GPUTracer : public GPUTracerI
                                                      const RayPartitions<uint32_t>& outPortions,
                                                      uint32_t totalRayOut,
                                                      HitKey baseBoundMatKey);
+        // Convert GPUCamera to VisorCam
+        VisorCamera                         SceneCamToVisorCam(uint32_t cameraInnerId);
 
         // Internals
         template <class... Args>

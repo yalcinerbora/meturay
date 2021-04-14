@@ -538,6 +538,12 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             cameraNode->AddIdIndexPair(s.cameraId, iIndex);
         }
         else return SceneError::CAMERA_ID_NOT_FOUND;
+        //
+        if((e = AttachMedium(s.mediumId)) != SceneError::OK)
+            return e;
+        //
+        if((e = AttachTransform(s.transformId)) != SceneError::OK)
+            return e;
 
         // Emplace to the list
         auto& camConstructionInfo = cameraGroupNodes.emplace(camTypeName, std::vector<CameraConstructionData>()).first->second;

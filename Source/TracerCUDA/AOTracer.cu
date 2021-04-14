@@ -4,6 +4,7 @@
 
 #include "RayLib/GPUSceneI.h"
 #include "RayLib/BitManipulation.h"
+#include "RayLib/TracerCallbacksI.h"
 
 #include "GPUWork.cuh"
 #include "TracerKC.cuh"
@@ -87,6 +88,9 @@ TracerError AOTracer::SetOptions(const TracerOptionsI& opts)
 
 void AOTracer::GenerateWork(int cameraId)
 {
+    if(callbacks)
+        callbacks->SendCurrentCamera(SceneCamToVisorCam(cameraId));
+
     depth = 0;
     hitPhase = false;
     GenerateRays<RayAuxAO, RayInitAO>(dCameras[cameraId],

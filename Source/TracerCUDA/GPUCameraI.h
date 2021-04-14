@@ -13,6 +13,8 @@
 class GPUTransformI;
 class RandomGPU;
 
+struct VisorCamera;
+
 class GPUCameraI : public GPUEndpointI
 {
     public:
@@ -26,6 +28,7 @@ class GPUCameraI : public GPUEndpointI
 };
 
 using GPUCameraList = std::vector<const GPUCameraI*>;
+using VisorCameraList = std::vector<const VisorCamera>;
 
 __device__
 inline GPUCameraI::GPUCameraI(HitKey k, uint16_t mediumIndex)
@@ -40,17 +43,19 @@ class CPUCameraGroupI
         // Interface
         virtual const char*                 Type() const = 0;
         virtual const GPUCameraList&        GPUCameras() const = 0;
+        virtual const VisorCameraList&      VisorCameras() const = 0;
         virtual SceneError					InitializeGroup(const CameraGroupDataList& cameraNodes,
                                                             const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                             const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                                             uint32_t cameraMaterialBatchId,
                                                             double time,
                                                             const std::string& scenePath) = 0;
-        virtual SceneError					ChangeTime(const NodeListing& lightNodes, double time,
+        virtual SceneError					ChangeTime(const NodeListing& cameraNodes, double time,
                                                        const std::string& scenePath) = 0;
         virtual TracerError					ConstructCameras(const CudaSystem&,
                                                              const GPUTransformI**) = 0;
         virtual uint32_t					CameraCount() const = 0;
+        virtual VisorCamera                 GetCameraAsVisorCam(uint32_t camId) = 0;
 
         virtual size_t						UsedGPUMemory() const = 0;
         virtual size_t						UsedCPUMemory() const = 0;

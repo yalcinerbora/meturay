@@ -6,6 +6,7 @@
 #include "GPUWork.cuh"
 
 #include "RayLib/GPUSceneI.h"
+#include "RayLib/TracerCallbacksI.h"
 
 //#include "TracerLib/TracerDebug.h"
 //std::ostream& operator<<(std::ostream& stream, const RayAuxBasic& v)
@@ -112,6 +113,9 @@ bool DirectTracer::Render()
 
 void DirectTracer::GenerateWork(int cameraId)
 {
+    if(callbacks)
+        callbacks->SendCurrentCamera(SceneCamToVisorCam(cameraId));
+
     // Generate Rays
     GenerateRays<RayAuxBasic, RayInitBasic>(dCameras[cameraId],
                                             options.sampleCount,

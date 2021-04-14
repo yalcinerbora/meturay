@@ -60,6 +60,7 @@ class SelfNode
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
          void       SendCurrentOptions(TracerOptions) override;
          void       SendCurrentParameters(TracerParameters) override;
+         void       SendCurrentSceneCamera(VisorCamera) override;
 
         // From Node Interface
         NodeError   Initialize() override;

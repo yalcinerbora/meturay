@@ -7,6 +7,7 @@
 #include "RayLib/GPUSceneI.h"
 #include "RayLib/MemoryAlignment.h"
 #include "RayLib/SceneStructs.h"
+#include "RayLib/VisorCamera.h"
 
 #include "CudaConstants.h"
 #include "GPUAcceleratorI.h"
@@ -29,6 +30,7 @@ TracerError GPUTracer::LoadCameras(std::vector<const GPUCameraI*>& dGPUCameras)
         if((e = c.ConstructCameras(cudaSystem, dTransforms)) != TracerError::OK)
             return e;
         const auto& dCList = c.GPUCameras();
+        const auto& vCams = c.VisorCameras();
         dGPUCameras.insert(dGPUCameras.end(), dCList.begin(), dCList.end());
     }
     cameraCount = static_cast<uint32_t>(dGPUCameras.size());
@@ -509,6 +511,11 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
     // Now make "RayOut" to "RayIn"
     // and continue
     rayMemory.SwapRays();
+}
+
+VisorCamera GPUTracer::SceneCamToVisorCam(uint32_t cameraInnerId)
+{
+    return sceneCams[cameraInnerId];
 }
 
 void GPUTracer::SetParameters(const TracerParameters& p)
