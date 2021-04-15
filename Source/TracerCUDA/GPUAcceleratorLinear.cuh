@@ -23,7 +23,7 @@ tree constructio would provide additional overhead.
 #include "DeviceMemory.h"
 #include "GPUAcceleratorP.cuh"
 #include "GPUPrimitiveI.h"
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 #include "TypeTraits.h"
 
 #include "GPUAcceleratorLinearKC.cuh"

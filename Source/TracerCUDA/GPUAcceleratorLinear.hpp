@@ -154,7 +154,7 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     size_t workCount = accRanges[index][1] - accRanges[index][0];
 
     // TODO: Select a GPU
-    const CudaGPU& gpu = system.BestGPU();//*system.GPUList().begin();
+    const CudaGPU& gpu = system.BestGPU();
     // KC
     gpu.AsyncGridStrideKC_X
     (

@@ -11,7 +11,7 @@ Implementation of Warp Std Generator
 #include <limits>
 #include <cuda_runtime.h>
 #include "RayLib/Vector.h"
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 #include "RNGStructs.h"
 
 #define GLOBAL_ID_X (threadIdx.x + blockDim.x * blockIdx.x)

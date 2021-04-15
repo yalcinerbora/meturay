@@ -1,5 +1,5 @@
 ﻿#include "GPULightSkySphere.cuh"
-#include "CudaConstants.hpp"
+#include "CudaSystem.hpp"
 
 #include "RayLib/MemoryAlignment.h"
 #include "GPUMaterialI.h"
@@ -200,7 +200,7 @@ TracerError CPULightGroupSkySphere::ConstructLights(const CudaSystem& system,
                        dGlobalTransformArray,
                        LightCount());
 
-    gpu.WaitAllStreams();
+    gpu.WaitMainStream();
 
     // Generate transform list
     for(uint32_t i = 0; i < LightCount(); i++)

@@ -2,8 +2,8 @@
 #include "RayLib/Log.h"
 #include "RayLib/MemoryAlignment.h"
 
-#include "CudaConstants.h"
-#include "CudaConstants.hpp"
+#include "CudaSystem.h"
+#include "CudaSystem.hpp"
 //#include "TracerDebug.h"
 
 #include <type_traits>

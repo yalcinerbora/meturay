@@ -245,11 +245,9 @@ class CudaSystem
         const CudaGPU&              BestGPU() const;
 
         // Device Synchronization
-        void                        SyncGPUMainStreamAll() const;
-        void                        SyncGPUMainStream(const CudaGPU& deviceId) const;
+        void                        SyncAllGPUsMainStreamOnly() const;
+        void                        SyncAllGPUs() const;
 
-        void                        SyncGPUAll() const;
-        void                        SyncGPU(const CudaGPU& deviceId) const;
 };
 
 inline const GPUList& CudaSystem::GPUList() const
@@ -268,7 +266,7 @@ inline const CudaGPU& CudaSystem::BestGPU() const
     return *element;
 }
 
-inline void CudaSystem::SyncGPUMainStreamAll() const
+inline void CudaSystem::SyncAllGPUsMainStreamOnly() const
 {
     int currentDevice;
     CUDA_CHECK(cudaGetDevice(&currentDevice));
@@ -279,40 +277,14 @@ inline void CudaSystem::SyncGPUMainStreamAll() const
     CUDA_CHECK(cudaSetDevice(currentDevice));
 }
 
-inline void CudaSystem::SyncGPUMainStream(const CudaGPU& gpu) const
-{
-    int currentDevice;
-    CUDA_CHECK(cudaGetDevice(&currentDevice));
-    auto i = systemGPUs.end();
-    if((i = systemGPUs.find(gpu)) != systemGPUs.end())
-    {
-        i->WaitMainStream();
-    }
-    CUDA_CHECK(cudaSetDevice(currentDevice));
-}
-
-inline void CudaSystem::SyncGPUAll() const
+inline void CudaSystem::SyncAllGPUs() const
 {
     int currentDevice;
     CUDA_CHECK(cudaGetDevice(&currentDevice));
     for(const auto& gpu : systemGPUs)
     {
         gpu.WaitAllStreams();
-        gpu.WaitMainStream();
         break;
-    }
-    CUDA_CHECK(cudaSetDevice(currentDevice));
-}
-
-inline void CudaSystem::SyncGPU(const CudaGPU& gpu) const
-{
-    int currentDevice;
-    CUDA_CHECK(cudaGetDevice(&currentDevice));
-    auto i = systemGPUs.end();
-    if((i = systemGPUs.find(gpu)) != systemGPUs.end())
-    {
-        i->WaitAllStreams();
-        i->WaitMainStream();
     }
     CUDA_CHECK(cudaSetDevice(currentDevice));
 }

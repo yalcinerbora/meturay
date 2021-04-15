@@ -1,7 +1,7 @@
 #include "GPULightPoint.cuh"
 #include "TypeTraits.h"
 #include "RayLib/MemoryAlignment.h"
-#include "CudaConstants.hpp"
+#include "CudaSystem.hpp"
 
 __global__ void KCConstructGPULightPoint(GPULightPoint* gLightLocations,
                                          //
@@ -151,7 +151,7 @@ TracerError CPULightGroupPoint::ConstructLights(const CudaSystem& system,
                        dGlobalTransformArray,
                        LightCount());
 
-    gpu.WaitAllStreams();
+    gpu.WaitMainStream();
 
     // Generate transform list
     for(uint32_t i = 0; i < LightCount(); i++)

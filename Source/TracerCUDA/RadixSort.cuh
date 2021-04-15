@@ -14,7 +14,7 @@ Uses cub backend.
 
 #include "RayLib/CudaCheck.h"
 #include "DeviceMemory.h"
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 
 template<class Type, bool isAscending = true>
 __host__ void KCRadixSortArray(Type* dataOut, const Type* dataIn,

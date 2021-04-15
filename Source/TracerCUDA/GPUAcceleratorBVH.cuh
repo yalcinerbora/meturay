@@ -8,7 +8,7 @@
 #include "RayLib/Log.h"
 
 #include "DeviceMemory.h"
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 
 #include "GPUAcceleratorP.cuh"
 #include "GPUAcceleratorBVHKC.cuh"

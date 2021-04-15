@@ -1,6 +1,6 @@
 #include "RNGMemory.h"
-#include "CudaConstants.h"
-#include "CudaConstants.hpp"
+#include "CudaSystem.h"
+#include "CudaSystem.hpp"
 
 #include <random>
 #include <curand_kernel.h>
@@ -43,7 +43,7 @@ RNGMemory::RNGMemory(uint32_t seed,
 
     // Before touching gpu mem from cpu do a sync
     // since other initialization probably launched a kernel
-    system.SyncGPUAll();
+    system.SyncAllGPUs();
     std::for_each(static_cast<uint32_t*>(seeds),
                   static_cast<uint32_t*>(seeds) + totalCount,
                   [&](uint32_t& t) { t = rng(); });

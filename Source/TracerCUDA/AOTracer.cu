@@ -110,7 +110,7 @@ bool AOTracer::Render()
 {
     HitAndPartitionRays();
 
-    cudaSystem.SyncGPUAll();
+    cudaSystem.SyncAllGPUs();
 
     // Generate Global Data for Work Kernels
     AmbientOcclusionGlobal globalData;

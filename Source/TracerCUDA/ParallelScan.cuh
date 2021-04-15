@@ -20,7 +20,7 @@ Wrapping functions to it from now on.
 
 #include "RayLib/CudaCheck.h"
 #include "DeviceMemory.h"
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 #include "ReduceFunctions.cuh"
 
 template<class Type, ReduceFunc<Type> F>

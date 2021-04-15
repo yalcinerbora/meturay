@@ -2,7 +2,7 @@
 #include "RayLib/MemoryAlignment.h"
 #include "TextureFunctions.h"
 #include "TextureReferenceGenerators.cuh"
-#include "CudaConstants.hpp"
+#include "CudaSystem.hpp"
 
 SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
                                        const TextureNodeMap& textureNodes,
@@ -230,6 +230,7 @@ TracerError LambertMat::ConstructTextureReferences()
                             //
                             dNormalTextures,
                             static_cast<uint32_t>(materialCount));
+    gpu.WaitAllStreams();
 
     // Clear temporary CPU data
     matConstructionInfo.clear();

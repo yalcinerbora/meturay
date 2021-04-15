@@ -11,7 +11,7 @@
 #include "RayLib/AABB.h"
 
 #include "RayStructs.h"
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 
 class ImageMemory;
 struct DefaultLeaf;

@@ -2,7 +2,7 @@
 #include "ParallelScan.cuh"
 #include "ParallelReduction.cuh"
 #include "ParallelTransform.cuh"
-#include "CudaConstants.hpp"
+#include "CudaSystem.hpp"
 
 #include "RayLib/Types.h"
 #include "RayLib/MemoryAlignment.h"

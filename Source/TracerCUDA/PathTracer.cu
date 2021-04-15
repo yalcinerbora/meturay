@@ -103,8 +103,6 @@ bool PathTracer::Render()
 {
     HitAndPartitionRays();
 
-    cudaSystem.SyncGPUAll();
-
     //Debug::DumpMemToFile("auxIn",
     //                     static_cast<const RayAuxPath*>(*dAuxIn),
     //                     currentRayCount);

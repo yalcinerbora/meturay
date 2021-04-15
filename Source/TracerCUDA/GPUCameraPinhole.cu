@@ -1,5 +1,5 @@
 #include "GPUCameraPinhole.cuh"
-#include "CudaConstants.hpp"
+#include "CudaSystem.hpp"
 #include "RayLib/MemoryAlignment.h"
 
 __global__ void KCConstructGPUCameraPinhole(GPUCameraPinhole* gCameraLocations,

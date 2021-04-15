@@ -6,7 +6,6 @@
 
 #include "RayMemory.h"
 #include "ImageMemory.h"
-#include "CudaConstants.h"
 #include "GenerationKernels.cuh"
 
 RayTracer::RayTracer(const CudaSystem& s,

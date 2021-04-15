@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ScenePartitionerI.h"
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 
 // Basic Partitioner (Throws everything to first GPU)
 class SingleGPUScenePartitioner : public ScenePartitionerI

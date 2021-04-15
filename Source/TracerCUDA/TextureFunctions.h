@@ -7,7 +7,7 @@
 #include "RayLib/FileSystemUtility.h"
 
 #include "Texture.cuh"
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 #include "GPUBitmap.h"
 
 #include <string>

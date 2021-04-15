@@ -6,7 +6,7 @@
 
 #include "AcceleratorFunctions.h"
 #include "GPUTransformIdentity.cuh"
-#include "CudaConstants.hpp"
+#include "CudaSystem.hpp"
 
 #pragma warning( push )
 #pragma warning( disable : 4834)
@@ -593,11 +593,15 @@ static void KCIntersectBaseBVH(// Output
         //if(id == 144)
         //printf("RCOUNT %u id %u, globalId %u\n", rayCount, id, globalId);
 
+        //if(globalId == 0)
+        //    printf("RayLOAD List: %u Depth: %u\n", list, depth);
+
         while(depth <= MAX_BASE_DEPTH)
         {
             //if(id == 144)
+            //if(globalId == 0)
             //    printf("[ ] [%03u %03u %03u] depth %u list 0x%08X\n",
-            //    (currentNode->isLeaf) ? 0 : currentNode->left,
+            //           (currentNode->isLeaf) ? 0 : currentNode->left,
             //           (currentNode->isLeaf) ? 0 : currentNode->right,
             //           currentNode->parent, depth, list);
 
@@ -628,6 +632,9 @@ static void KCIntersectBaseBVH(// Output
                         gPrevBVHIndex[id] = currentNode->parent;
                         // Set AcceleratorId and lower accelerator
                         gHitKeys[globalId] = currentNode->leaf.accKey;
+
+                        printf("foundHit depth %u list %x\n",
+                               depth, list);
 
                         //if(id == 144)
                         //    printf("[L]               depth %u list 0x%08X\n", depth, list);
@@ -692,6 +699,7 @@ static void KCIntersectBaseBVH(// Output
         // rays accelerator traversal
         if(depth > MAX_BASE_DEPTH)
         {
+            printf("writingHit depth %u list %x\n", depth, list);
             //if(id == 144) printf("RAY ENDING\n");
             gHitKeys[globalId] = HitKey::InvalidKey;
         }

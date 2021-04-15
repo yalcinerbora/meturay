@@ -55,7 +55,7 @@ void RayTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount,
         RNGGMem rngData = rngMemory.RNGData(gpu);
         ImageGMem<Vector4f> gImgData = imgMemory.GMem<Vector4f>();
 
-        cudaSystem.SyncGPUAll();
+        cudaSystem.SyncAllGPUs();
 
         // Kernel Call
         gpu.AsyncGridStrideKC_X
@@ -82,6 +82,7 @@ void RayTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount,
         localPixelStart = localPixelEnd;
         i++;
     }
+    cudaSystem.SyncAllGPUs();
 
     SwapAuxBuffers();
     rayMemory.SwapRays();
@@ -172,6 +173,7 @@ void RayTracer::GenerateRays(const VisorCamera& cam, int32_t sampleCount,
         localPixelStart = localPixelEnd;
         i++;
     }
+    cudaSystem.SyncAllGPUs();
 
     SwapAuxBuffers();
     rayMemory.SwapRays();

@@ -385,7 +385,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
 
     // Set Device
-    const CudaGPU& gpu = system.BestGPU();//(*system.GPUList().begin());
+    const CudaGPU& gpu = system.BestGPU();
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
 
     uint32_t innerIndex = idLookup.at(surface);
@@ -559,8 +559,8 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     gpu.WaitMainStream();
 
     // TODO: this is required for cuda when accessing managed memory
-    // but is shouldnt
-    system.SyncGPU(gpu);
+    // but it shouldnt since we are syncing main stream just above
+    //system.SyncGPU(gpu);
 
     // Breath first tree generation (top-down)
     uint8_t maxDepth = 0;

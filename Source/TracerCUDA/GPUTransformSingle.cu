@@ -1,6 +1,6 @@
 #include "GPUTransformSingle.cuh"
-#include "CudaConstants.h"
-#include "CudaConstants.hpp"
+#include "CudaSystem.h"
+#include "CudaSystem.hpp"
 
 #include "RayLib/SceneNodeNames.h"
 #include "RayLib/MemoryAlignment.h"

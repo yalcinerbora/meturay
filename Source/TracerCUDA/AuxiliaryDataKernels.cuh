@@ -3,7 +3,7 @@
 #include "RayLib/HitStructs.h"
 #include "RayStructs.h"
 #include "Random.cuh"
-#include "CudaConstants.hpp"
+#include "CudaSystem.hpp"
 
 template <class T, class... Args>
 __global__ void KCConstructGPUClass(T* gLocation,

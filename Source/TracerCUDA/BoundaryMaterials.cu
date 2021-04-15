@@ -1,6 +1,6 @@
 #include "BoundaryMaterials.cuh"
-#include "CudaConstants.h"
-#include "CudaConstants.hpp"
+#include "CudaSystem.h"
+#include "CudaSystem.hpp"
 #include "TextureFunctions.h"
 #include "TextureReferenceGenerators.cuh"
 
@@ -183,7 +183,7 @@ TracerError BoundaryMatTextured::ConstructTextureReferences()
                             const_cast<TextureRef<2, Vector3>*>(dData.dRadianceTextures),
                             dTextureObjects,
                             static_cast<uint32_t>(totalMatCount));
-
+    gpu.WaitAllStreams();
 
     return TracerError::OK;
 }
@@ -304,7 +304,7 @@ TracerError BoundaryMatSkySphere::ConstructTextureReferences()
                             const_cast<TextureRef<2, Vector3>*>(dData.dRadianceTextures),
                             dTextureObjects,
                             static_cast<uint32_t>(totalMatCount));
-
+    gpu.WaitAllStreams();
 
     return TracerError::OK;
 }

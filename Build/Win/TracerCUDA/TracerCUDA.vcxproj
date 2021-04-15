@@ -16,7 +16,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\AuxiliaryDataKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\BinarySearch.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CameraFunctions.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\CudaConstants.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\CudaSystem.hpp" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterialKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorCommonKC.cuh" />
@@ -40,7 +40,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GenerationKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ComparisonFunctions.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\CudaConstants.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\CudaSystem.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DefaultLeaf.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\EstimatorFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUPiecewiseDistribution.cuh" />
@@ -132,7 +132,7 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightDisk.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.cu" />
-    <ClCompile Include="..\..\..\Source\TracerCUDA\CudaConstants.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\CudaSystem.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\DeviceMemory.cpp" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUPiecewiseDistribution.cu">
       <FileType>Document</FileType>

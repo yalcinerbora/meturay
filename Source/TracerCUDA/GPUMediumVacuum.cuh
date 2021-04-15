@@ -6,7 +6,7 @@
 
 #include "AuxiliaryDataKernels.cuh"
 #include "GPUMediumI.h"
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 #include "DeviceMemory.h"
 
 class GPUMediumVacuum final : public GPUMediumI
@@ -109,15 +109,15 @@ inline TracerError CPUMediumVacuum::ConstructMediums(const CudaSystem& system,
     // Call allocation kernel
     const CudaGPU& gpu = system.BestGPU();
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
-    gpu.AsyncGridStrideKC_X(0, MediumCount(),
-                            //
-                            KCConstructGPUClass<GPUMediumVacuum, uint32_t>,
-                            //
-                            const_cast<GPUMediumVacuum*>(dGPUMediums),
-                            MediumCount(),
-                            indexStartOffset);
+    gpu.GridStrideKC_X(0, 0, MediumCount(),
+                       //
+                       KCConstructGPUClass<GPUMediumVacuum, uint32_t>,
+                       //
+                       const_cast<GPUMediumVacuum*>(dGPUMediums),
+                       MediumCount(),
+                       indexStartOffset);
 
-    gpu.WaitAllStreams();
+    gpu.WaitMainStream();
 
     // Generate transform list
     for(uint32_t i = 0; i < MediumCount(); i++)

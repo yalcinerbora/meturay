@@ -5,7 +5,7 @@
 #include "Random.cuh"
 #include "ImageStructs.h"
 #include "GPUPrimitiveP.cuh"
-#include "CudaConstants.hpp"
+#include "CudaSystem.hpp"
 
 // Device Work Function Template
 //

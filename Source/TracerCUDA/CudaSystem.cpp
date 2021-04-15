@@ -1,4 +1,4 @@
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 
 CudaGPU::WorkGroup::WorkGroup()
     : currentIndex(0)
@@ -93,14 +93,13 @@ void CudaGPU::WorkGroup::WaitAllStreams() const
     for(int i = 0; i < totalStreams; i++)
     {
         CUDA_CHECK(cudaEventSynchronize(events[i]));
-    }
-    //CUDA_CHECK(cudaDeviceSynchronize());
+    }    
+    // Dont forget to wait on main stream as well
+    WaitMainStream();
 }
 
 void CudaGPU::WorkGroup::WaitMainStream() const
 {
-    //CUDA_CHECK(cudaDeviceSynchronize());
-
     CUDA_CHECK(cudaEventRecord(mainEvent));
     CUDA_CHECK(cudaEventSynchronize(mainEvent));
 }

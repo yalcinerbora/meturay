@@ -10,7 +10,7 @@
 #include "RayLib/MemoryAlignment.h"
 
 #include "GPUPrimitiveP.cuh"
-#include "CudaConstants.hpp"
+#include "CudaSystem.hpp"
 
 // Meta Primitive Related Light
 template <class PGroup>

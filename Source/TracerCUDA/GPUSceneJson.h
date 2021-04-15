@@ -7,7 +7,7 @@
 #include "RayLib/GPUSceneI.h"
 
 #include "DeviceMemory.h"
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 #include "ScenePartitionerI.h"
 
 struct SceneError;

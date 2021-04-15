@@ -1,6 +1,6 @@
 #include "ImageMemory.h"
 #include "ImageFunctions.cuh"
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 #include "RayLib/MemoryAlignment.h"
 
 //__global__ void KCAverageSamples(ImageGMem<Vector4f> mem, size_t totalPixelCount)

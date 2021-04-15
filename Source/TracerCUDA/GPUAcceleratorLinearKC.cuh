@@ -13,7 +13,7 @@ with ustom Intersection and Hit
 
 #include "AcceleratorFunctions.h"
 #include "GPUTransformIdentity.cuh"
-#include "CudaConstants.hpp"
+#include "CudaSystem.hpp"
 
 #pragma warning( push )
 #pragma warning( disable : 4834)
@@ -180,10 +180,10 @@ static void KCIntersectLinear(// O
             // Get Leaf Data and
             // Do acceptance check
             const LeafData leaf = gLeaf[i];
-            //printf("my accId 0x%X, matId %x, range{%llu, %llu}, \n",
-            //       gAccelKeys[globalId],
-            //       leaf.matId.value,
-            //       accRange[0], accRange[1]);
+            printf("my accId 0x%X, matId %x, range{%llu, %llu}, \n",
+                   gAccelKeys[globalId].value,
+                   leaf.matId.value,
+                   accRange[0], accRange[1]);
 
             HitResult result = PGroup::Hit(// Output
                                            materialKey,
@@ -201,7 +201,9 @@ static void KCIntersectLinear(// O
         // Write Updated Stuff
         if(hitModified)
         {
-            //if(id == 95) printf("MatFound %x\n", materialKey.value);
+            //if(id == 95) 
+            printf("MatFound %x\n", materialKey.value);
+            
             ray.UpdateTMax(gRays, id);
             gHitStructs.Ref<HitData>(id) = hit;
             gTransformIds[id] = transformId;

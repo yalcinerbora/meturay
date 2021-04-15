@@ -109,9 +109,6 @@
     <ClCompile Include="..\..\..\Source\TracerCUDA\Texture.cpp">
       <Filter>Memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\TracerCUDA\CudaConstants.cpp">
-      <Filter>Cuda System</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveTriangle.cpp">
       <Filter>Primitives</Filter>
     </ClCompile>
@@ -126,6 +123,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerCUDA\TextureFunctions.cpp">
       <Filter>Textures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerCUDA\CudaSystem.cpp">
+      <Filter>Cuda System</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -287,9 +287,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\WorkPool.h">
       <Filter>Work</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\CudaConstants.h">
-      <Filter>Cuda System</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUEvent.h">
       <Filter>Cuda System</Filter>
     </ClInclude>
@@ -352,9 +349,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightDisk.cuh">
       <Filter>Lights</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\CudaConstants.hpp">
-      <Filter>Cuda System</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\RayTracer.hpp">
       <Filter>Tracers</Filter>
@@ -460,6 +454,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUBitmap.h">
       <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\CudaSystem.h">
+      <Filter>Cuda System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\CudaSystem.hpp">
+      <Filter>Cuda System</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

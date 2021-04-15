@@ -4,7 +4,7 @@
 
 #include "RayLib/Constants.h"
 #include "RayLib/SceneStructs.h"
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 
 #include "NodeListing.h"
 

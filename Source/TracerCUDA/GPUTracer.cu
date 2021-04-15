@@ -9,7 +9,7 @@
 #include "RayLib/SceneStructs.h"
 #include "RayLib/VisorCamera.h"
 
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 #include "GPUAcceleratorI.h"
 #include "GPUWorkI.h"
 #include "GPUTransformI.h"
@@ -255,7 +255,7 @@ TracerError GPUTracer::Initialize()
                           dGPUCameras.size() * sizeof(GPUCameraI*),
                           cudaMemcpyHostToDevice));
 
-    cudaSystem.SyncGPUAll();
+    cudaSystem.SyncAllGPUs();
     return TracerError::OK;
 }
 
@@ -312,7 +312,9 @@ void GPUTracer::HitAndPartitionRays()
                             dCurrentRayIds + validRayOffset,
                             rayCount);
         // Wait all GPUs to finish...
-        cudaSystem.SyncGPUMainStreamAll();
+        cudaSystem.SyncAllGPUsMainStreamOnly();
+
+        //METU_LOG("------------------------------------");
 
         //Debug::DumpMemToFile("dAccKeys", dCurrentKeys, currentRayCount);
         //Debug::DumpMemToFile("dRayIds", dCurrentRayIds, currentRayCount);
@@ -391,8 +393,6 @@ void GPUTracer::HitAndPartitionRays()
             // Hit function updates material key,
             // primitive id and struct if this hit is accepted
         }
-        //printf("=====================================================\n");
-
         // Update new ray count
         // On partition array check first partition
         // it may contain invalid key meaning
@@ -409,7 +409,8 @@ void GPUTracer::HitAndPartitionRays()
         //
         // Tracer logic mostly utilizies mutiple GPUs so we need to
         // wait all GPUs to finish
-        cudaSystem.SyncGPUAll();
+        cudaSystem.SyncAllGPUs();
+        //METU_LOG("=====================================================");
     }
     // At the end of iteration all rays found a material, primitive
     // and interpolation weights (which should be on hitStruct)
@@ -429,7 +430,7 @@ void GPUTracer::HitAndPartitionRays()
     workPartition = rayMemory.Partition(currentRayCount);
 
     //Debug::DumpMemToFile("dTransforms", dTransfomIds, currentRayCount);
-    //printf("HIT PORTION END\n");
+    //METU_LOG("HIT PORTION END");
 }
 
 void GPUTracer::WorkRays(const WorkBatchMap& workMap,
@@ -458,6 +459,9 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
     // (sort by gpu and order for better async access)
     // ....
     // TODO:
+
+    // Wait that "ResizeRayOut" is completed on the leader device
+    rayMemory.LeaderDevice().WaitMainStream();
 
     // For each partition
     //for(auto pIt = workPartition.crbegin();
@@ -504,7 +508,7 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
 
     // Again wait all of the GPU's since
     // CUDA functions will be on multiple-gpus
-    cudaSystem.SyncGPUAll();
+    cudaSystem.SyncAllGPUs();
 
     //Debug::DumpMemToFile("workKeyOut", rayMemory.WorkKeys(), totalRayOut);
 
@@ -593,7 +597,7 @@ RayPartitions<uint32_t> GPUTracer::PartitionOutputRays(uint32_t& totalOutRay,
         outPartitions.emplace(ArrayPortion<uint32_t>
         {
             p.portionId,
-                totalOutRay,
+            totalOutRay,
             count
         });
         totalOutRay += count;
@@ -621,7 +625,7 @@ void GPUTracer::Finalize()
                      imgMemory.PixelSize());
 
     // Flush Devices and Get the Image
-    cudaSystem.SyncGPUAll();
+    cudaSystem.SyncAllGPUs();
     std::vector<Byte> imageData = imgMemory.GetImageToCPU(cudaSystem);
     size_t pixelCount1D = static_cast<size_t>(pixelCount[0]) * pixelCount[1];
 

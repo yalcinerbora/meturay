@@ -3,7 +3,7 @@
 #include "RayLib/TracerSystemI.h"
 #include "RayLib/SurfaceLoaderGenerator.h"
 
-#include "CudaConstants.h"
+#include "CudaSystem.h"
 #include "ScenePartitionerI.h"
 #include "TracerLogicGeneratorI.h"
 
