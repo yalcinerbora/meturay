@@ -7,6 +7,7 @@
 
 #include "RayLib/Vector.h"
 #include "RayLib/Constants.h"
+#include "RayLib/CudaCheck.h"
 
 #include "DeviceMemory.h"
 #include "Random.cuh"
@@ -162,19 +163,18 @@ inline GPUDistPiecewiseConst1D::GPUDistPiecewiseConst1D(const float* dCDFList,
 __device__
 inline float GPUDistPiecewiseConst1D::Sample(float& pdf, float& index, RandomGPU& rng) const
 {
-    float xi = GPUDistribution::Uniform<float>(rng);
-    // Extremely rarely index becomes the light count
-    // although GPUDistribution::Uniform should return [0, 1)
-    // it still happens due to fp error i guess?
-    // if it happens just return the last light on the list
-    //if(xi == 1.0f) xi -= MathConstants::VeryLargeEpsilon;
+    float xi = GPUDistribution::Uniform<float>(rng);   
 
     GPUFunctions::BinarySearchInBetween<float>(index, xi, gCDF, count);
     uint32_t indexInt = static_cast<uint32_t>(index);
 
+    // Extremely rarely index becomes the light count
+    // although GPUDistribution::Uniform should return [0, 1)
+    // it still happens due to fp error i guess?
+    // if it happens just return the last light on the list
     if(indexInt == count)
     {
-        printf("CUDA Error: Illegal Index on PwC Sample\n");
+        KERNEL_DEBUG_LOG("CUDA Error: Illegal Index on PwC Sample\n");
         index--;
     }
 

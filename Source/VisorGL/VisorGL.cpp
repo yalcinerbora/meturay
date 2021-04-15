@@ -893,9 +893,15 @@ VisorError VisorGL::Initialize()
     glGenSamplers(1, &linearSampler);
     glSamplerParameteri(linearSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glSamplerParameteri(linearSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glSamplerParameteri(linearSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(linearSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(linearSampler, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     glGenSamplers(1, &nearestSampler);
     glSamplerParameteri(nearestSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glSamplerParameteri(nearestSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glSamplerParameteri(nearestSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(nearestSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(nearestSampler, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     // Buffer
     glGenBuffers(1, &vBuffer);

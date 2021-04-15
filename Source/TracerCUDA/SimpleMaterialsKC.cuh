@@ -4,6 +4,7 @@
 
 #include "RayLib/Constants.h"
 #include "RayLib/HemiDistribution.h"
+#include "RayLib/CudaCheck.h"
 
 #include "Random.cuh"
 #include "ImageFunctions.cuh"
@@ -212,7 +213,7 @@ Vector3 RefractSample(// Sampled Output
         // so return zero instead :)
         if(!refracted)
         {
-            printf("CUDA Error: RefractMat reflected!\n");
+            KERNEL_DEBUG_LOG("CUDA Error: RefractMat reflected!\n");
             pdf = 0.0f;
             return Zero3;
             //__threadfence();

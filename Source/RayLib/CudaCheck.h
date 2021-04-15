@@ -39,12 +39,21 @@ Utility header for header only cuda vector and cpu vector implementations
 #endif
 
 #ifdef __CUDA_ARCH__
-    #define UNROLL_LOOP #pragma unroll
-    #define UNROLL_LOOP_COUNT(count) _Pragma(unroll(count))
+    #define UNROLL_LOOP _Pragma("unroll")
+    #define UNROLL_LOOP_COUNT(count) _Pragma("unroll")(count)
 #else
     #define UNROLL_LOOP
     #define UNROLL_LOOP_COUNT(count)
 #endif
+
+template<class... Args>
+__device__
+static inline void KERNEL_DEBUG_LOG(const char* const string, Args... args)
+{
+    #if defined(__CUDA_ARCH__) && defined(METU_DEBUG)
+        printf(string, args...);
+    #endif
+}
 
 #ifdef METU_DEBUG
     constexpr bool METU_DEBUG_BOOL = true;
@@ -58,6 +67,7 @@ Utility header for header only cuda vector and cpu vector implementations
     #define CUDA_CHECK(func) func
     #define CUDA_CHECK_ERROR(err)
     #define CUDA_KERNEL_CHECK()
+    #define CUDA_KERNEL_PRINTF()
     //#define CUDA_KERNEL_CHECK() \
     //        CUDA_CHECK(cudaGetLastError())
     //#define CUDA_CHECK(func) GPUAssert((func), __FILE__, __LINE__)

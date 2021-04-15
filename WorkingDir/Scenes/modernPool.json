@@ -42,7 +42,19 @@
 ],
 
     "Mediums":[
-    { "id" : 0, "type" : "Vacuum"}
+    {
+        "id" : 0,
+        "type" : "Vacuum"},
+    {
+        // Water Medium
+		"id": 2,
+		"type" : "Homogenous",
+
+		"absorption": [0, 0 ,0],
+		"scattering": [0, 0, 0],
+		"ior": 1.34,
+		"phase": 0
+	}
     // {
     //     // Glass Medium
 	// 	"id": 1,
@@ -53,89 +65,79 @@
 	// 	"ior": 1.55,
 	// 	"phase": 0
 	// },
-    // {
-    //     // Water Medium
-	// 	"id": 2,
-	// 	"type" : "Homogenous",
-
-	// 	"absorption": [0, 0 ,0],
-	// 	"scattering": [0, 0, 0],
-	// 	"ior": 1.34,
-	// 	"phase": 0
-	// }
     ],
 
     "Transforms":[{"id": 0, "type": "Identity"}],
 
     "Textures":[
-    // {
-    //     "id": 0,
-    //     "file": "../Textures/ModernPool/floor_tiles_04_diff_2k.jpg"
-    // },
-    // {
-    //     "id": 1,
-    //     "file": "../Textures/ModernPool/floor_tiles_04_nor_2k.jpg"
-    // },
-    // {
-    //     "id": 2,
-    //     "file": "../Textures/ModernPool/floor_tiles_04_rough_2k.jpg"
-    // },
-    // {
-    //     "id": 3,
-    //     "file": "../Textures/ModernPool/floor_tiles_04_spec_2k.jpg"
-    // },
-    // {
-    //     "id": 4,
-    //     "file": "../Textures/ModernPool/pool_tiles_2K_Albedo.jpg"
-    // },
-    // {
-    //     "id": 5,
-    //     "file": "../Textures/ModernPool/pool_tiles_2K_Normal.jpg"
-    // },
-    // {
-    //     "id": 6,
-    //     "file": "../Textures/ModernPool/pool_tiles_2K_Roughness.jpg"
-    // },
-    // {
-    //     "id": 7,
-    //     "file": "../Textures/ModernPool/dirty_concrete_diff_2k.jpg"
-    // },
-    // {
-    //     "id": 8,
-    //     "file": "../Textures/ModernPool/dirty_concrete_nor_2k.jpg"
-    // },
-    // {
-    //     "id": 9,
-    //     "file": "../Textures/ModernPool/dirty_concrete_rough_2k.jpg"
-    // },
-    // {
-    //     "id": 10,
-    //     "file": "../Textures/ModernPool/lounge_fabric_diff_2k.jpg"
-    // },
-    // {
-    //     "id": 11,
-    //     "file": "../Textures/ModernPool/bench_wood_diff_2k.jpg"
-    // },
-    // {
-    //     "id": 12,
-    //     "file": "../Textures/ModernPool/towel_fabric_diff_1k.jpg"
-    // },
-    // {
-    //     "id": 13,
-    //     "file": "../Textures/ModernPool/bark_brown_02_diff_2k.png"
-    // },
-    // {
-    //     "id": 14,
-    //     "file": "../Textures/ModernPool/bark_brown_02_nor_2k.png"
-    // },
-    // {
-    //     "id": 15,
-    //     "file": "../Textures/ModernPool/bark_brown_02_rough_2k.png"
-    // },
     {
         "id": 0,
+        "file": "../Textures/ModernPool/floor_tiles_04_diff_2k.jpg"
+    },
+    {
+        "id": 1,
+        "file": "../Textures/ModernPool/floor_tiles_04_nor_2k.jpg"
+    },
+    {
+        "id": 2,
+        "file": "../Textures/ModernPool/floor_tiles_04_rough_2k.jpg"
+    },
+    {
+        "id": 3,
+        "file": "../Textures/ModernPool/floor_tiles_04_spec_2k.jpg"
+    },
+    {
+        "id": 4,
+        "file": "../Textures/ModernPool/pool_tiles_2K_Albedo.jpg"
+    },
+    {
+        "id": 5,
+        "file": "../Textures/ModernPool/pool_tiles_2K_Normal.jpg"
+    },
+    {
+        "id": 6,
+        "file": "../Textures/ModernPool/pool_tiles_2K_Roughness.jpg"
+    },
+    {
+        "id": 7,
+        "file": "../Textures/ModernPool/dirty_concrete_diff_2k.jpg"
+    },
+    {
+        "id": 8,
+        "file": "../Textures/ModernPool/dirty_concrete_nor_2k.jpg"
+    },
+    {
+        "id": 9,
+        "file": "../Textures/ModernPool/dirty_concrete_rough_2k.jpg"
+    },
+    {
+        "id": 10,
+        "file": "../Textures/ModernPool/lounge_fabric_diff_2k.jpg"
+    },
+    {
+        "id": 11,
+        "file": "../Textures/ModernPool/bench_wood_diff_2k.jpg"
+    },
+    {
+        "id": 12,
+        "file": "../Textures/ModernPool/towel_fabric_diff_1k.jpg"
+    },
+    {
+        "id": 13,
+        "file": "../Textures/ModernPool/bark_brown_02_diff_2k.png"
+    },
+    {
+        "id": 14,
+        "file": "../Textures/ModernPool/bark_brown_02_nor_2k.png"
+    },
+    {
+        "id": 15,
+        "file": "../Textures/ModernPool/bark_brown_02_rough_2k.png"
+    },
+    {
+        "id": 16,
         //"file": "../Textures/ModernPool/kloppenheim_05_4k_cropped.hdr"
-        "file": "../Textures/hdr_test.hdr"
+        "file": "../Textures/ModernPool/lakeside_4k.hdr"
     }],
 
     "Materials":[
@@ -143,29 +145,28 @@
         // Light Boundary Material
         "id": 0,
         "type": "BSkySphere",
-        "radiance" : {"texture": 0, "channels": "rgb"}
+        "radiance" : {"texture": 16, "channels": "rgb"}
     },
     {
         // Pool Floor
         "id": 2,
         "type": "Lambert",
-        //"albedo": {"texture": 0, "channels": "rgb"}
-        "albedo": [1.0, 0, 0]
+        "albedo": {"texture": 0, "channels": "rgb"}
+    },
+    {
+        // Pool Base
+        "id": 3,
+        "type": "Lambert",
+        "albedo": {"texture": 4, "channels": "rgb"}
+        //"albedo": [0.031373, 0.478431, 0.760784]
+    },
+    {
+        // Water
+        "id": 4,
+        "type": "Refract",
+        "albedo": [1, 1, 1],
+        "medium": 2
     }
-    // {
-    //     // Pool Base
-    //     "id": 3,
-    //     "type": "Lambert",
-    //     //"albedo": {"texture": 4, "channels": "rgb"}
-    //     "albedo": [0.031373, 0.478431, 0.760784]
-    // },
-    // {
-    //     // Water
-    //     "id": 4,
-    //     "type": "Refract",
-    //     "albedo": [1, 1, 1],
-    //     "medium": 2
-    // },
     // {
     //     // Glass
     //     "id": 5,
@@ -183,44 +184,36 @@
     ],
 
     "Primitives":[
-    // {
-    //     // Pool Floor
-    //     "id": 0,
-    //     "type": "Triangle",
-    //     "name": "../Surfaces/ModernPool/pool_floor.obj",
-    //     "tag": "assimp_",
-    //     "innerIndex": 0
-    // },
-    // {
-    //     // Pool Base
-    //     "id": 1,
-    //     "type": "Triangle",
-    //     "name": "../Surfaces/ModernPool/pool_base.obj",
-    //     "tag": "assimp_",
-    //     "innerIndex": 0
-    // },
-    // {
-    //     // Water
-    //     "id": 2,
-    //     "type": "Triangle",
-    //     "name": "../Surfaces/ModernPool/water4.obj",
-    //     "tag": "assimp_",
-    //     "innerIndex": 0,
-    //     "cullFace": false
-    // },
     {
-		// Plane Floor
-		"id": 3,
-		"type": "Triangle",
-        "name": "../Surfaces/floor_plane.obj",
+        // Pool Floor
+        "id": 0,
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/pool_floor.obj",
         "tag": "assimp_",
-		"innerIndex": 0
-	}
+        "innerIndex": 0
+    },
+    {
+        // Pool Base
+        "id": 1,
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/pool_base.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        // Water
+        "id": 2,
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/water4.obj",
+        "tag": "assimp_",
+        "innerIndex": 0,
+        "cullFace": false
+    }
     ],
 
     "Accelerators":
     [
-        //{"id" : 0, "type" : "BasicBVH", "useStack": true},
+        {"id" : 0, "type" : "BasicBVH", "useStack": true},
         {"id" : 1, "type" : "Linear"}
     ],
 
@@ -232,22 +225,11 @@
 	"BaseMedium" : 0,
 
 	"Surfaces": [
-    // {
-    //     // Pool, Pool Base & Water
-    //     "transform": 0, "accelerator":0,
-    //     "material": [2, 3, 4],
-    //     "primitive": [0, 1, 2]
-    // }
-    // {
-    //     "transform": 0, "accelerator":0,
-    //     "material": 2,
-    //     "primitive": 0
-    // }
     {
         // Pool, Pool Base & Water
-        "transform": 0, "accelerator":1,
-        "material": 2,
-        "primitive": 3
+        "transform": 0, "accelerator":0,
+        "material": [2, 3, 4],
+        "primitive": [0, 1, 2]
     }
     ],
 
@@ -257,111 +239,3 @@
     //"CameraSurfaces": [{"camera": 0, "medium": 0}]
     "CameraSurfaces": [{"camera": 0}]
 }
-
-// {
-//     "Cameras": [
-//     {
-// 		"id": 0,
-// 		"type": "Pinhole",
-
-// 		// 16:9 FoV
-// 		"fov": [94.45, 53.13],
-// 		// 1:1 FoV
-// 		//"fov": [53.13, 53.13],
-// 		"gaze": [0.0, 2.0, 0.0],
-// 		"planes": [0.1, 20.0],
-// 		"position": [0.0, 2.0, 5.0],
-// 		"up": [0.0, 1.0, 0.0]
-// 	}],
-
-// 	"Textures":[
-// 	{
-// 		"id": 0,
-// 		"file": "../Textures/hdr_test.hdr"
-//         //"file": "../Textures/test_HDR2.hdr"
-//         //"file": "../Textures/ModernPool/kloppenheim_05_4k_cropped.hdr"
-// 		//"file": "../Textures/checkerboard.png"
-//         //"file": "../Textures/white_32.png"
-//         //"file": "../Textures/white_1024.png"
-// 	}],
-
-// 	"Lights": [
-// 	{
-// 		"id": 0,
-// 		"type": "SkySphere",
-// 		"isHemispherical": false
-// 	}],
-
-// 	"Mediums": [
-// 	{
-// 		"id" : 0,
-// 		"type" : "Vacuum"
-// 	}],
-
-// 	"Transforms":[{"id": 0, "type": "Identity"}],
-
-// 	"Materials":[
-//     {
-// 		// Light Boundary Material
-// 		"id": 0,
-// 		"type": "BSkySphere",
-// 		"radiance" : {"texture": 0, "channels": "rgb"}
-//     },
-//     {
-// 		// Perfect Mirror
-// 		"id": 1,
-// 		"type": "Reflect",
-// 		"albedo" : [1.0, 1.0, 1.0],
-// 		"roughness" : 0.0
-//     },
-//     {
-// 		"id": 2,
-// 		"type" : "LambertC",
-// 		"albedo" : [0.5, 0.5, 0.5]
-// 	}],
-
-// 	"Primitives":[{
-// 		"id": 0,
-// 		"type": "Sphere",
-// 		"name": ".nodeSphere",
-// 		"position": [0, 2, 0],
-// 		"radius": 2
-// 	},
-//     {
-// 		// Plane Floor
-// 		"id": 1,
-// 		"type": "Triangle",
-//         "name": "../Surfaces/floor_plane.obj",
-//         "tag": "assimp_",
-// 		"innerIndex": 0
-// 	}],
-
-// 	"Accelerators": [{"id" : 0, "type" : "Linear"}],
-
-//     //================================================//
-//     //        Actual Scene Related Declarations       //
-//     //================================================//
-//     "BaseAccelerator": {"type": "Linear"},
-//     "BaseBoundaryMaterial": 0,
-//     "BaseMedium" : 0,
-
-// 	"Surfaces": [
-//     {
-// 		"transform": 0,
-// 		"accelerator": 0,
-// 		"material": 1,
-// 		"primitive": 0
-// 	},
-//     {
-// 		"transform": 0,
-// 		"accelerator": 0,
-// 		"material": 2,
-// 		"primitive": 1
-// 	}],
-
-// 	"LightSurfaces": [
-// 		{"light": 0, "material": 0}
-// 	],
-
-//     "CameraSurfaces": [{"camera": 0}]
-// }
