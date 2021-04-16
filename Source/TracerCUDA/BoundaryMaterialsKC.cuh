@@ -47,7 +47,6 @@ Vector3 EmitTextured(// Input
                      const LightMatTexData& matData,
                      const HitKey::Type& matId)
 {
-    // If cubemap
     return matData.dRadianceTextures[matId](surface.uv);
 }
 
@@ -57,14 +56,21 @@ Vector3 EmitSkySphere(// Input
                       const Vector3& pos,
                       const GPUMediumI& m,
                       //
-                      const EmptySurface& surface,
+                      const BasicSurface& surface,
                       // Constants
                       const LightMatTexData& matData,
                       const HitKey::Type& matId)
 {
+    //printf("WtT: %f, %f, %f, %f\n",
+    //       surface.worldToTangent[0],
+    //       surface.worldToTangent[1],
+    //       surface.worldToTangent[2],
+    //       surface.worldToTangent[3]);
+
     // Convert Y up from Z up
     // Also invert since that direction is used to sample HDR texture
-    Vector3 woZup = -Vector3(wo[2], wo[0], wo[1]);
+    Vector3 woTrans = GPUSurface::ToTangent(wo, surface.worldToTangent);
+    Vector3 woZup = -Vector3(woTrans[2], woTrans[0], woTrans[1]);
 
     // Convert to Spherical Coordinates
     Vector2f tehtaPhi = Utility::CartesianToSphericalUnit(woZup);

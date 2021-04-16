@@ -67,7 +67,20 @@
 	// },
     ],
 
-    "Transforms":[{"id": 0, "type": "Identity"}],
+    "Transforms":[
+        {
+            "id": 0,
+            "type": "Identity"
+        },
+        {
+            "id": 1,
+            "type": "Single",
+
+            "layout": "trs",
+            "translate": [0, 0, 0],
+            "rotate": [0, -150, 0],
+            "scale": [1, 1, 1]
+        }],
 
     "Textures":[
     {
@@ -158,7 +171,6 @@
         "id": 3,
         "type": "Lambert",
         "albedo": {"texture": 4, "channels": "rgb"}
-        //"albedo": [0.031373, 0.478431, 0.760784]
     },
     {
         // Water
@@ -222,6 +234,7 @@
     //================================================//
     "BaseAccelerator": {"type": "BasicBVH"},
     "BaseBoundaryMaterial": 0,
+    "BaseBoundaryTransform": 1,
 	"BaseMedium" : 0,
 
 	"Surfaces": [
@@ -234,7 +247,7 @@
     ],
 
     // Lights
-    "LightSurfaces": [{"light": 0, "material": 0}],
+    "LightSurfaces": [{"light": 0, "material": 0, "transform": 1}],
     // Cameras
     //"CameraSurfaces": [{"camera": 0, "medium": 0}]
     "CameraSurfaces": [{"camera": 0}]

@@ -112,6 +112,7 @@ GPUTracer::GPUTracer(const CudaSystem& system,
     , workInfo(scene.WorkBatchInfo())
     , baseMediumIndex(scene.BaseMediumIndex())
     , identityTransformIndex(scene.IdentityTransformIndex())
+    , boundaryTransformIndex(scene.BoundaryTransformIndex())
     , maxAccelBits(DetermineMaxBitFromId(scene.MaxAccelIds()))
     , maxWorkBits(DetermineMaxBitFromId(scene.MaxMatIds()))
     , params(p)
@@ -276,7 +277,7 @@ void GPUTracer::HitAndPartitionRays()
     const Vector2i& accBitCounts = maxAccelBits;
     const AcceleratorBatchMap& subAccelerators = accelBatches;
     // Reset Hit Memory for hit loop
-    rayMemory.ResetHitMemory(identityTransformIndex, currentRayCount, maxHitSize);
+    rayMemory.ResetHitMemory(boundaryTransformIndex, currentRayCount, maxHitSize);
     // Make Base Accelerator to get ready for hitting
     baseAccelerator.GetReady(cudaSystem, currentRayCount);
     // Ray Memory Pointers

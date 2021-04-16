@@ -119,9 +119,9 @@ class BoundaryMatTextured final
 };
 
 class BoundaryMatSkySphere final
-    : public GPUBoundaryMaterialGroup<LightMatTexData, EmptySurface,
-                                   SampleEmpty<LightMatTexData, EmptySurface>,
-                                   EvaluateEmpty<LightMatTexData, EmptySurface>,
+    : public GPUBoundaryMaterialGroup<LightMatTexData, BasicSurface,
+                                   SampleEmpty<LightMatTexData, BasicSurface>,
+                                   EvaluateEmpty<LightMatTexData, BasicSurface>,
                                    EmitSkySphere,
                                    IsEmissiveTrue<LightMatTexData>>
 {
@@ -138,9 +138,9 @@ class BoundaryMatSkySphere final
     public:
         // Constructors & Destructor
                                 BoundaryMatSkySphere(const CudaGPU& gpu)
-                                    : GPUBoundaryMaterialGroup<LightMatTexData, EmptySurface,
-                                                               SampleEmpty<LightMatTexData, EmptySurface>,
-                                                               EvaluateEmpty<LightMatTexData, EmptySurface>,
+                                    : GPUBoundaryMaterialGroup<LightMatTexData, BasicSurface,
+                                                               SampleEmpty<LightMatTexData, BasicSurface>,
+                                                               EvaluateEmpty<LightMatTexData, BasicSurface>,
                                                                EmitSkySphere,
                                                                IsEmissiveTrue<LightMatTexData>>(gpu) {}
                                 ~BoundaryMatSkySphere() = default;

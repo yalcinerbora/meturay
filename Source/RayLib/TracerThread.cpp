@@ -140,7 +140,7 @@ void TracerThread::LoopWork()
 
     timer.Stop();
     double elapsedS = timer.Elapsed<CPUTimeSeconds>();
-    double rps = 2 * 2 * resolution.Get()[0] * resolution.Get()[1];
+    double rps = resolution.Get()[0] * resolution.Get()[1];
     rps *= (1.0 / elapsedS);
     rps /= 1'000'000.0;
 

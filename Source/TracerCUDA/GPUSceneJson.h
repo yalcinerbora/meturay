@@ -53,6 +53,7 @@ class GPUSceneJson : public GPUSceneI
         HitKey                                  baseBoundaryMatKey;
         uint32_t                                hitStructSize;
         uint32_t                                identityTransformIndex;
+        uint32_t                                boundaryTransformIndex;
         uint32_t                                baseMediumIndex;
 
         // GPU Memory
@@ -91,6 +92,7 @@ class GPUSceneJson : public GPUSceneI
                                                  //
                                                  MediumNodeList& mediumGroupNodes,
                                                  TransformNodeList& transformGroupNodes,
+                                                 uint32_t& boundaryTransformId,
                                                  //
                                                  MaterialNodeList& matGroupNodes,
                                                  WorkBatchList& matBatchListings,
@@ -123,7 +125,9 @@ class GPUSceneJson : public GPUSceneI
                                                 double time = 0.0);
         SceneError      GenerateTransforms(std::map<uint32_t, uint32_t>& transformIdMappings,
                                            uint32_t& identityTransformIndex,
+                                           uint32_t& boundaryTransformIndex,
                                            const TransformNodeList& transformList,
+                                           uint32_t boundaryTransformId,
                                            double time = 0.0);
         SceneError      GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdMappings,
                                         uint32_t& baseMediumIndex,
@@ -179,6 +183,7 @@ class GPUSceneJson : public GPUSceneI
 
         uint32_t                            BaseMediumIndex() const override;
         uint32_t                            IdentityTransformIndex() const override;
+        uint32_t                            BoundaryTransformIndex() const override;
 
         // Generated Classes of Materials / Accelerators
         // Work Maps

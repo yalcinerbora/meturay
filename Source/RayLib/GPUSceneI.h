@@ -33,6 +33,7 @@ class GPUSceneI
         //
         virtual uint32_t                            BaseMediumIndex() const = 0;
         virtual uint32_t                            IdentityTransformIndex() const = 0;
+        virtual uint32_t                            BoundaryTransformIndex() const = 0;
         // Generated Classes of Materials / Accelerators
         // Work Maps
         virtual const WorkBatchCreationInfo&        WorkBatchInfo() const = 0;

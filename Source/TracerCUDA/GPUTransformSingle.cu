@@ -50,10 +50,11 @@ SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes
         else if(layoutName == LAYOUT_TRS)
         {
             nodeTransforms.reserve(node->IdCount());
+            nodeTransforms.clear();
 
             std::vector<Vector3> translations = node->AccessVector3(TRANSLATE, time);
-            std::vector<Vector3> rotations = node->AccessVector3(TRANSLATE, time);
-            std::vector<Vector3> scales = node->AccessVector3(TRANSLATE, time);
+            std::vector<Vector3> rotations = node->AccessVector3(ROTATE, time);
+            std::vector<Vector3> scales = node->AccessVector3(SCALE, time);
             assert(translations.size() == rotations.size());
             assert(rotations.size() == scales.size());
 
@@ -69,7 +70,7 @@ SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes
                 m = TransformGen::Rotate(r[1], YAxis) * m;
                 m = TransformGen::Rotate(r[2], ZAxis) * m;
                 m = TransformGen::Scale(s[0], s[1], s[2]) * m;
-                m = TransformGen::Translate(t);
+                m = TransformGen::Translate(t) * m;
                 nodeTransforms.push_back(std::move(m));
             }
         }

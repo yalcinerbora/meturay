@@ -148,6 +148,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                                   //
                                                   MediumNodeList& mediumGroupNodes,
                                                   TransformNodeList& transformGroupNodes,
+                                                  uint32_t& boundaryTransformId,
                                                   //
                                                   MaterialNodeList& matGroupNodes,
                                                   WorkBatchList& workBatchListings,
@@ -428,6 +429,18 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     if((e = AttachMedium(baseMediumId)) != SceneError::OK)
         return e;
 
+    // Find the boundary transform id if available
+    // If not default to identity transform id
+    const nlohmann::json* boundaryTransformNode = nullptr;
+    if(!FindNode(boundaryTransformNode, NodeNames::BASE_BOUNDARY_TRANSFORM))
+        boundaryTransformId = identityTransformId;
+    else
+    {
+        boundaryTransformId = SceneIO::LoadNumber<uint32_t>(*boundaryTransformNode, time);
+        if((e = AttachTransform(boundaryTransformId)) != SceneError::OK)
+            return e;        
+    }
+
     // Process Lights
     for(const auto& jsn : (*lightSurfaces))
     {
@@ -557,7 +570,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     }
 
     // Finally Load Texture Info for material access
-    // Load all textures here material will actually load the textures
+    // Load all textures here materials will actually load the textures
     for(const auto& jsn : (*textures))
     {
         TextureStruct s = SceneIO::LoadTexture(jsn);
@@ -752,7 +765,9 @@ SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, HitKey
 
 SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& transformIdMappings,
                                             uint32_t& identityTIndex,
+                                            uint32_t& boundaryTIndex,
                                             const TransformNodeList& transformList,
+                                            uint32_t boundaryTransformId,
                                             double time)
 {
     // Generate Transform Groups
@@ -780,6 +795,9 @@ SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& transf
             // Set Identity Transform Index
             if(transTypeName == std::string(NodeNames::TRANSFORM_IDENTITY))
                 identityTransformIndex = linearIndex;
+            // Set Boundary Transform Index
+            if(sceneTransId == boundaryTransformId)
+                boundaryTIndex = linearIndex;
 
             linearIndex++;
         }
@@ -935,10 +953,12 @@ SceneError GPUSceneJson::LoadAll(double time)
     CameraNodeList camListings;
     LightNodeList lightListings;
     TextureNodeMap textureNodes;
+    uint32_t boundaryTransformId;
     // Parse Json and find necessary nodes
     if((e = GenerateConstructionData(primGroupNodes,
                                      mediumGroupNodes,
                                      transformGroupNodes,
+                                     boundaryTransformId,
                                      matGroupNodes,
                                      workListings,
                                      accelListings,
@@ -950,8 +970,11 @@ SceneError GPUSceneJson::LoadAll(double time)
 
     // Transforms
     std::map<uint32_t, uint32_t> transformIdMappings;
-    if((e = GenerateTransforms(transformIdMappings, identityTransformIndex,
+    if((e = GenerateTransforms(transformIdMappings, 
+                               identityTransformIndex,
+                               boundaryTransformIndex,
                                transformGroupNodes,
+                               boundaryTransformId,
                                time)) != SceneError::OK)
         return e;
 
@@ -1138,6 +1161,11 @@ uint32_t GPUSceneJson::BaseMediumIndex() const
 uint32_t GPUSceneJson::IdentityTransformIndex() const
 {
     return identityTransformIndex;
+}
+
+uint32_t GPUSceneJson::BoundaryTransformIndex() const
+{
+    return boundaryTransformIndex;
 }
 
 const WorkBatchCreationInfo& GPUSceneJson::WorkBatchInfo() const

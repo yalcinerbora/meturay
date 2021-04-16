@@ -79,6 +79,7 @@ class GPUTracer : public GPUTracerI
         // Base Medium
         const uint32_t                      baseMediumIndex;
         const uint32_t                      identityTransformIndex;
+        const uint32_t                      boundaryTransformIndex;
         // Visor Cam Representations of the current scene cameras
         // This is send to visor (if available)
         std::vector<VisorCamera>            visorCams;
