@@ -31,18 +31,10 @@ Vector3 LambertSample(// Sampled Output
 
     // Ray Selection
     const Vector3& position = pos;
-
+    Vector3 normal = ZAxis;
     // Check if tangent space normal is avail
-    Vector3 normal;
     if(matData.dNormal[matId])
-    {
-        const auto& dNormalSampler = *matData.dNormal[matId];
-        normal = GPUSurface::ToWorld(dNormalSampler(surface.uv),
-                                     surface.worldToTangent);
-    }
-    // Tangent space normal not present (mat has not tangent space normal)
-    // use interpolated normal
-    else normal = GPUSurface::NormalWorld(surface.worldToTangent);
+        normal = (*matData.dNormal[matId])(surface.uv);
 
     // Generate New Ray Direction
     Vector2 xi(GPUDistribution::Uniform<float>(rng),
@@ -51,19 +43,19 @@ Vector3 LambertSample(// Sampled Output
     //Vector3 direction = HemiDistribution::HemiUniformCDF(xi, pdf);
     direction.NormalizeSelf();
 
-    // Generated direction vector is on surface space (hemisperical)
-    // Convert it to normal oriented hemisphere (world space)
-    QuatF q = Quat::RotationBetweenZAxis(normal);
-    direction = q.ApplyRotation(direction);
-
     // Cos Tetha
     float nDotL = max(normal.Dot(direction), 0.0f);
 
     // Ray out
-    Vector3 outPos = position + normal * MathConstants::Epsilon;
-    wo = RayF(direction, outPos);
+    Vector3 normalW = GPUSurface::ToWorld(normal, surface.worldToTangent);
 
-    // BSDF Calculation
+    Vector3 outPos = position + normalW * MathConstants::Epsilon;
+    Vector3 outDir = GPUSurface::ToWorld(direction, surface.worldToTangent);
+
+    // Ray out
+    wo = RayF(outDir, outPos);
+
+    // Radiance Calculation
     const Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
     return nDotL * albedo * MathConstants::InvPi;
 }
@@ -80,17 +72,13 @@ Vector3 LambertEvaluate(// Input
                         const LambertMatData& matData,
                         const HitKey::Type& matId)
 {
+    Vector3 normal = ZAxis;
     // Check if tangent space normal is avail
-    Vector3 normal;
     if(matData.dNormal[matId])
-    {
-        const auto& dNormalSampler = *matData.dNormal[matId];
-        normal = GPUSurface::ToWorld(dNormalSampler(surface.uv),
-                                     surface.worldToTangent);
-    }
-    // Tangent space normal not present (mat has not tangent space normal)
-    // use interpolated normal
-    else normal = GPUSurface::NormalWorld(surface.worldToTangent);
+        normal = (*matData.dNormal[matId])(surface.uv);
+    // Calculate lightning in world space since
+    // wo is already in world space
+    normal = GPUSurface::ToWorld(normal, surface.worldToTangent);
 
     float nDotL = max(normal.Dot(wo), 0.0f);
 

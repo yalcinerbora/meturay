@@ -32,7 +32,6 @@ Vector3 LambertCSample(// Sampled Output
 {
     // No medium change
     outMedium = &m;
-
     // Ray Selection
     const Vector3& position = pos;
     const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);

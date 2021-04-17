@@ -1,0 +1,122 @@
+{
+    "Cameras": [
+    {
+		"id": 0,
+		"type": "Pinhole",
+
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"gaze": [0.5, 0.0, 0.0],
+		"planes": [0.1, 20.0],
+		"position": [0.5, 0.0, 15.0],
+		"up": [0.0, 1.0, 0.0]
+	}],
+
+	"Textures":[
+	{
+		"id": 0,
+		"file": "../Textures/hdr_test.hdr"
+	}],
+
+	"Lights": [
+	{
+		"id": 0,
+		"type": "SkySphere",
+		"isHemispherical": false
+	}],
+
+	"Mediums": [
+	{
+		"id" : 0,
+		"type" : "Vacuum"
+	}],
+
+	"Transforms":[{"id": 0, "type": "Identity"}],
+
+	"Materials":[
+    {
+		// Light Boundary Material
+		"id": 0,
+		"type": "BSkySphere",
+		"radiance" : {"texture": 0, "channels": "rgb"}
+    },
+    // Roughness Unreal
+    {
+		"id": [1, 2, 3, 4, 5, 6],
+		"type" : "Unreal",
+		"albedo" : [[0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5],
+                    [0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]],
+        "specular": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+        "metallic": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+        "roughness": [0, 0.2, 0.4, 0.6, 0.8, 1.0]
+	},
+    // Metallic Unreal
+    {
+		"id": [7, 8, 9, 10, 11, 12],
+		"type" : "Unreal",
+        "albedo" : [[0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5],
+                    [0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]],
+        "specular": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+        "metallic": [0, 0.2, 0.4, 0.6, 0.8, 1.0],
+        "roughness": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+	},
+    // Specular Unreal
+    {
+		"id": [13, 14, 15, 16, 17, 18],
+		"type" : "Unreal",
+        "albedo" : [[0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5],
+                    [0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]],
+        "specular": [0, 0.2, 0.4, 0.6, 0.8, 1.0],
+        "metallic": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+        "roughness": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+	}],
+
+	"Primitives":[{
+		"id": [0, 1, 2, 3, 4, 5,
+               6, 7, 8, 9, 10, 11,
+               12, 13, 14, 15, 16, 17],
+		"type": "Sphere",
+		"name": ".nodeSphere",
+		"position": [[-2, 1, 0], [-1, 1, 0], [0, 1, 0], [1, 1, 0], [2, 1, 0], [3, 1, 0],
+                     [-2, 0, 0], [-1, 0, 0], [0, 0, 0], [1, 0, 0], [2, 0, 0], [3, 0, 0],
+                     [-2, -1, 0], [-1, -1, 0], [0, -1, 0], [1, -1, 0], [2, -1, 0], [3, -1, 0]],
+		"radius": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+                   0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+                   0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+	}],
+
+	"Accelerators": [{"id" : 0, "type" : "Linear"}],
+
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "BasicBVH"},
+    "BaseBoundaryMaterial": 0,
+    "BaseMedium" : 0,
+
+	"Surfaces": [
+    // Roughness Group
+    {
+		"transform": 0, "accelerator": 0,
+		"material": [1, 2, 3, 4, 5, 6],
+		"primitive": [0, 1, 2, 3, 4, 5]
+	},
+    // Roughness Group
+    {
+		"transform": 0, "accelerator": 0,
+		"material": [7, 8, 9, 10, 11, 12],
+		"primitive": [6, 7, 8, 9, 10, 11]
+	},
+    // Roughness Group
+    {
+		"transform": 0, "accelerator": 0,
+		"material": [13, 14, 15, 16, 17, 18],
+		"primitive": [12, 13, 14, 15, 16, 17]
+	}],
+
+	"LightSurfaces": [{"light": 0, "material": 0}],
+
+    "CameraSurfaces": [{"camera": 0}]
+}

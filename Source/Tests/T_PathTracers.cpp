@@ -72,6 +72,15 @@ TEST(PathTracers, HDRRefraction)
     setup.Body();
 }
 
+TEST(PathTracers, UnrealMaterial)
+{
+    EnableVTMode();
+    SimpleTracerSetup setup("PathTracer", true,
+                            u8"TestScenes/unrealMaterial.json", 0.0);
+    ASSERT_TRUE(setup.Init());
+    setup.Body();
+}
+
 //TEST(PathTracers, Sponza)
 //{
 //    ////EnableVTMode();

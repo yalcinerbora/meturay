@@ -18,6 +18,11 @@ namespace Utility
 
     template<class T>
     __host__ __device__
+    FloatEnable<T, Vector<3, T>> SphericalToCartesianUnit(const Vector<2, T>& sinCosTheta,
+                                                          const Vector<2, T>& sinCosPhi);
+
+    template<class T>
+    __host__ __device__
     FloatEnable<T, Vector<2, T>> CartesianToSphericalUnit(const Vector<3, T>&);
 }
 
@@ -51,6 +56,17 @@ FloatEnable<T, Vector<3, T>> Utility::SphericalToCartesianUnit(const Vector<2, T
     T x = cos(sphr[0]) * sin(sphr[1]);
     T y = sin(sphr[0]) * sin(sphr[1]);
     T z = cos(sphr[1]);
+    return Vector<3, T>(x, y, z);
+}
+
+template<class T>
+__host__ __device__
+FloatEnable<T, Vector<3, T>> Utility::SphericalToCartesianUnit(const Vector<2, T>& sinCosTheta,
+                                                               const Vector<2, T>& sinCosTPhi)
+{
+    T x = sinCosTheta[1] * sinCosTPhi[0];
+    T y = sinCosTheta[0] * sinCosTPhi[0];
+    T z = sinCosTPhi[1];
     return Vector<3, T>(x, y, z);
 }
 
