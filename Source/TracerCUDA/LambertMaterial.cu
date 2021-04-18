@@ -38,7 +38,7 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
             {
                 const NodeTextureStruct& texInfo = albedoNode.texNode;
 
-                const TextureI<2, 4>* texture;
+                const TextureI<2>* texture;
                 if((err = TextureFunctions::AllocateTexture(texture,
                                                             dTextureMemory, texInfo,
                                                             textureNodes,
@@ -65,7 +65,7 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
             if(normalNode.first)
             {
                 const NodeTextureStruct& texInfo = normalNode.second;
-                const TextureI<2, 4>* texture;
+                const TextureI<2>* texture;
                 if((err = TextureFunctions::AllocateTexture(texture,
                                                             dTextureMemory, texInfo,
                                                             textureNodes,
@@ -164,7 +164,6 @@ TracerError LambertMat::ConstructTextureReferences()
 
     // Allocate Temp GPU Memory
     // Size Determination
-
     size_t counterSize = sizeof(uint32_t) * 3;
     counterSize = Memory::AlignSize(counterSize);
     size_t albedoConstructionSize = sizeof(TextureOrConstReferenceData<Vector3>) * materialCount;
@@ -231,7 +230,6 @@ TracerError LambertMat::ConstructTextureReferences()
                             dNormalTextures,
                             static_cast<uint32_t>(materialCount));
     gpu.WaitAllStreams();
-
     // Clear temporary CPU data
     matConstructionInfo.clear();
     // All Done!

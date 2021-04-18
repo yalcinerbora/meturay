@@ -71,6 +71,12 @@ TextureStruct SceneIO::LoadTexture(const nlohmann::json& jsn)
     TextureStruct result;
     result.texId = jsn[ID];
     result.filePath = jsn[TEXTURE_FILE];
+    // Optional Signed data flag
+    auto loc = jsn.cend();
+    if((loc = jsn.find(TEXTURE_SIGNED)) != jsn.cend())
+        result.isSigned = *loc;
+    else result.isSigned = false;
+
     return result;
 }
 

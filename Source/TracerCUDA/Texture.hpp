@@ -115,67 +115,56 @@ static constexpr cudaTextureFilterMode DetermineFilterMode(InterpolationType i)
     }
 }
 
-template<int D, int C>
-TextureI<D, C>::TextureI(TextureI&& other)
+template<int D>
+TextureI<D>::TextureI(TextureI&& other)
     : texture(other.texture)
     , dimensions(other.dimensions)
+    , channelCount(other.channelCount)
 {
     other.texture = 0;
     other.dimensions = TexDimType<D>::ZERO;
+    other.channelCount = 0;
 }
 
-template<int D, int C>
-TextureI<D, C>& TextureI<D, C>::operator=(TextureI&& other)
+template<int D>
+TextureI<D>& TextureI<D>::operator=(TextureI&& other)
 {
     assert(this != &other);
     texture = other.texture;
     dimensions = other.dimensions;
+    channelCount = other.channelCount;
 
+    other.channelCount = 0;
     other.texture = 0;
     other.dimensions = TexDimType<D>::ZERO;
 }
 
-template<int D, int C>
-TextureArrayI<D, C>::TextureArrayI(TextureArrayI&& other)
+template<int D>
+TextureArrayI<D>::TextureArrayI(TextureArrayI&& other)
     : texture(other.texture)
     , dimensions(other.dimensions)
     , length(other.length)
+    , channelCount(other.channelCount)
 {
     other.texture = 0;
     other.dimensions = TexDimType<D>::ZERO;
     other.length = 0;
+    other.channelCount = 0;
 }
 
-template<int D, int C>
-TextureArrayI<D, C>& TextureArrayI<D, C>::operator=(TextureArrayI&& other)
+template<int D>
+TextureArrayI<D>& TextureArrayI<D>::operator=(TextureArrayI&& other)
 {
     assert(this != &other);
     texture = other.texture;
     dimensions = other.dimensions;
     length = other.length;
+    channelCount = other.channelCount;
 
     other.texture = 0;
     other.dimensions = TexDimType<D>::ZERO;
     other.length = 0;
-}
-
-template<int C>
-TextureCubeI<C>::TextureCubeI(TextureCubeI&& other)
-    : texture(other.texture)
-    , dimensions(other.dimensions)
-{
-    other.texture = 0;
-    other.dimensions = Zero2ui;
-}
-
-template<int C>
-TextureCubeI<C>& TextureCubeI<C>::operator=(TextureCubeI&& other)
-{
-    assert(this != &other);
-    texture = other.texture;
-    dimensions = other.dimensions;
-    other.texture = 0;
-    other.dimensions = Zero2ui;
+    other.channelCount = 0;
 }
 
 template<int D, class T>
@@ -187,7 +176,7 @@ Texture<D, T>::Texture(int deviceId,
                        bool convertSRGB,
                        const TexDimType_t<D>& dim,
                        int mipCount)
-    : TextureI<D, TextureChannelCount<T>::value>(dim, deviceId)
+    : TextureI<D>(dim, TextureChannelCount<T>::value, deviceId)
     , interpType(interp)
     , edgeResolveType(eResolve)
 {
@@ -229,7 +218,7 @@ Texture<D, T>::Texture(int deviceId,
 
 template<int D, class T>
 Texture<D, T>::Texture(Texture&& other)
-    : TextureI<D, TextureChannelCount<T>::value>(std::move(other))
+    : TextureI<D>(std::move(other))
     , data(other.data)
     , interpType(other.interpType)
     , edgeResolveType(other.edgeResolveType)
@@ -354,7 +343,7 @@ TextureArray<D, T>::TextureArray(int deviceId,
                                  const TexDimType_t<D>& size,
                                  unsigned int length,
                                  int mipCount)
-    : TextureArrayI<D, TextureChannelCount<T>::value>(size, length, deviceId)
+    : TextureArrayI<D>(size, TextureChannelCount<T>::value, length, deviceId)
     , interpType(interp)
     , edgeResolveType(eResolve)
 {
@@ -398,7 +387,7 @@ TextureArray<D, T>::TextureArray(int deviceId,
 
 template<int D, class T>
 TextureArray<D, T>::TextureArray(TextureArray&& other)
-    : TextureArrayI<D, TextureChannelCount<T>::value>(std::move(other))
+    : TextureArrayI<D>(std::move(other))
     , data(other.data)
     , interpType(other.interpType)
     , edgeResolveType(other.edgeResolveType)
@@ -524,7 +513,7 @@ TextureCube<T>::TextureCube(int deviceId,
                             bool convertSRGB,
                             const Vector2ui& size,
                             int mipCount)
-    : TextureCubeI<TextureChannelCount<T>::value>(size, deviceId)
+    : TextureCubeI(size, TextureChannelCount<T>::value, deviceId)
     , interpType(interp)
     , edgeResolveType(eResolve)
 {
@@ -569,7 +558,7 @@ TextureCube<T>::TextureCube(int deviceId,
 
 template<class T>
 TextureCube<T>::TextureCube(TextureCube&& other)
-    : TextureCubeI<TextureChannelCount<T>::value>(std::move(other))
+    : TextureCubeI(std::move(other))
     , data(other.data)
     , interpType(other.interpType)
     , edgeResolveType(other.edgeResolveType)

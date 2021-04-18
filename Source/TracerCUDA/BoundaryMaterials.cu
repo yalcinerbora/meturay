@@ -27,15 +27,6 @@ void KCRGBTextureToLuminanceArray(float* gOutLuminance,
 
         Vector3 rgb = gTexture(uv);
         float luminance = Utility::RGBToLuminance(rgb);
-
-        //// Yolo check image
-        //if(id2D == Vector2ui(2456, 176))
-        //    printf("Pix on Kernel 0 (%f, %f, %f) %f\n",
-        //           rgb[0], rgb[1], rgb[2], luminance);
-        //if(id2D == Vector2ui(2456, 1872))
-        //    printf("Pix on Kernel 1 (%f, %f, %f) %f\n",
-        //           rgb[0], rgb[1], rgb[2], luminance);
-
         gOutLuminance[threadId] = luminance;
     }
 }
@@ -116,14 +107,14 @@ SceneError BoundaryMatTextured::InitializeGroup(const NodeListing& materialNodes
         // Calculate Distributions
         for(const NodeTextureStruct& texInfo : radianceTextures)
         {
-            const TextureI<2, 4>* texture;
+            const TextureI<2>* texture;
             if((err = TextureFunctions::AllocateTexture(texture,
-               textureMemory, texInfo,
-               textureNodes,
-               EdgeResolveType::WRAP,
-               InterpolationType::LINEAR,
-               true, true,
-               gpu, scenePath)) != SceneError::OK)
+                                                        textureMemory, texInfo,
+                                                        textureNodes,
+                                                        EdgeResolveType::WRAP,
+                                                        InterpolationType::LINEAR,
+                                                        true, true,
+                                                        gpu, scenePath)) != SceneError::OK)
                 return err;
 
             textureList.push_back(texture);
@@ -236,7 +227,7 @@ SceneError BoundaryMatSkySphere::InitializeGroup(const NodeListing& materialNode
         // Calculate Distributions
         for(const NodeTextureStruct& texInfo : radianceTextures)
         {
-            const TextureI<2, 4>* texture;
+            const TextureI<2>* texture;
             if((err = TextureFunctions::AllocateTexture(texture,
                                                         textureMemory, texInfo,
                                                         textureNodes,

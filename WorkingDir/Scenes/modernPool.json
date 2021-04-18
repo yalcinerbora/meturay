@@ -89,7 +89,9 @@
     },
     {
         "id": 1,
+        "signed": true,
         "file": "../Textures/ModernPool/floor_tiles_04_nor_2k.jpg"
+
     },
     {
         "id": 2,
@@ -105,7 +107,9 @@
     },
     {
         "id": 5,
+        //"signed": true,
         "file": "../Textures/ModernPool/pool_tiles_2K_Normal.jpg"
+
     },
     {
         "id": 6,
@@ -117,6 +121,7 @@
     },
     {
         "id": 8,
+        "signed": true,
         "file": "../Textures/ModernPool/dirty_concrete_nor_2k.jpg"
     },
     {
@@ -141,6 +146,7 @@
     },
     {
         "id": 14,
+        "signed": true,
         "file": "../Textures/ModernPool/bark_brown_02_nor_2k.png"
     },
     {
@@ -149,7 +155,6 @@
     },
     {
         "id": 16,
-        //"file": "../Textures/ModernPool/kloppenheim_05_4k_cropped.hdr"
         "file": "../Textures/ModernPool/lakeside_4k.hdr"
     }],
 
@@ -164,12 +169,14 @@
         // Pool Floor
         "id": 2,
         "type": "Lambert",
+        "normal": {"texture": 1, "channels": "rgb"},
         "albedo": {"texture": 0, "channels": "rgb"}
     },
     {
         // Pool Base
         "id": 3,
         "type": "Lambert",
+        "normal": {"texture": 5, "channels": "rgb"},
         "albedo": {"texture": 4, "channels": "rgb"}
     },
     {

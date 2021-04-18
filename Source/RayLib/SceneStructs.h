@@ -155,6 +155,7 @@ struct NodeTextureStruct
 struct TextureStruct
 {
     uint32_t    texId;
+    bool        isSigned;
     std::string filePath;
 };
 

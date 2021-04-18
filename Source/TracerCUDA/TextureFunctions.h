@@ -13,28 +13,17 @@
 #include <string>
 #include <FreeImage.h>
 
-template <int D, int C>
-using TextureAllocationMap = std::map<uint32_t, std::unique_ptr<TextureI<D, C>>>;
+template <int D>
+using TextureAllocationMap = std::map<uint32_t, std::unique_ptr<TextureI<D>>>;
 
 template<int D, class RType = SceneError>
-using Tex2DEnable = typename std::enable_if<D==2, RType>::type;
+using Tex2DEnable = typename std::enable_if<D == 2, RType>::type;
 
 template<int D, class RType = SceneError>
 using Tex3DEnable = typename std::enable_if<D == 3, RType>::type;
 
 template<int D, class RType = SceneError>
 using Tex1DEnable = typename std::enable_if<D == 1, RType>::type;
-
-template <int C>
-struct PixelFloatType {};
-template <>
-struct PixelFloatType<1> { using type = float;};
-template <>
-struct PixelFloatType<2> { using type = Vector2f;};
-template <>
-struct PixelFloatType<4> { using type = Vector4f;};
-template <int C>
-using PixelFloatType_t = typename PixelFloatType<C>::type;
 
 class TextureLoader
 {
@@ -48,7 +37,8 @@ class TextureLoader
         static void                 Expand2DData3ChannelTo4Channel(std::vector<Byte>& expandedData,
                                                                    const Byte* packedData,
                                                                    const Vector2ui& dim,
-                                                                   uint32_t sourcePitch);
+                                                                   uint32_t sourcePitch,
+                                                                   bool isSigned);
 
         template<class T>
         static void                 PackImageChannelToBits(std::vector<Byte>& bitmap,
@@ -69,19 +59,20 @@ class TextureLoader
                                     ~TextureLoader();
 
         // Functionality
-        template <int D, int C>
-        SceneError                  LoadTexture(std::unique_ptr<TextureI<D, C>>&,
+        template <int D>
+        SceneError                  LoadTexture(std::unique_ptr<TextureI<D>>&,
                                                 EdgeResolveType, InterpolationType,
                                                 bool normalizeIntegers,
                                                 bool normalizeCoordinates,
+                                                bool asSigned,
                                                 const CudaGPU& gpu,
                                                 const std::string& filePath);
 
-        template <int C>
-        SceneError                  LoadTexture2D(std::unique_ptr<TextureI<2, C>>&,
+        SceneError                  LoadTexture2D(std::unique_ptr<TextureI<2>>&,
                                                   EdgeResolveType, InterpolationType,
                                                   bool normalizeIntegers,
                                                   bool normalizeCoordinates,
+                                                  bool asSigned,
                                                   const CudaGPU& gpu,
                                                   const std::string& filePath);
         //template <int D, int C>
@@ -106,23 +97,36 @@ class TextureLoader
 template<class T>
 void TextureLoader::Expand2DData3ChannelTo4Channel(std::vector<Byte>& expandedData,
                                                    const Byte* packedData,
-                                                   const Vector2ui& dim,
-                                                   uint32_t sourcePitch)
+                                                   const Vector2ui& dim,                                                   
+                                                   uint32_t sourcePitch,
+                                                   bool isSigned)
 {
-    expandedData.resize(sizeof(T) * 4 * dim[0] * dim[1]);
+    static constexpr uint32_t InChannelCount = 3;
+    static constexpr uint32_t OutChannelCount = 4;
+
+    expandedData.resize(sizeof(T) * OutChannelCount * dim[0] * dim[1]);
     for(uint32_t y = 0; y < dim[1]; y++)
     {
         const Byte* srcRowPtr = packedData + sourcePitch * y;
         for(uint32_t x = 0; x < dim[0]; x++)
         {
             // Pixel by pixel copy
-            ptrdiff_t dstOffset = (dim[0] * y * sizeof(T) * 4 +
-                                            x * sizeof(T) * 4);
-            ptrdiff_t srcRowOffset = (x * sizeof(T) * 3);
+            ptrdiff_t dstOffset = (dim[0] * y * sizeof(T) * OutChannelCount +
+                                            x * sizeof(T) * OutChannelCount);
+            ptrdiff_t srcRowOffset = (x * sizeof(T) * InChannelCount);
 
             Byte* destPixel = expandedData.data() + dstOffset;
             const Byte* srcPixel = srcRowPtr + srcRowOffset;
-            std::memcpy(destPixel, srcPixel, sizeof(T) * 3);
+            std::memcpy(destPixel, srcPixel, sizeof(T) * InChannelCount);
+            
+            // Convert unsigned data to signed
+            if(isSigned)
+            for(uint32_t i = 0; i < InChannelCount; i++)
+            {
+                T& t = *reinterpret_cast<T*>(destPixel + sizeof(T) * i);
+                constexpr T mid = 0x1 << ((sizeof(T) * 8) - 1);
+                t -= mid;
+            }
         }
     }
 }
@@ -175,11 +179,11 @@ namespace TextureFunctions
     std::vector<TextureChannelType> TextureAccessLayoutToTextureChannels(TextureAccessLayout);
     uint32_t                        ConvertChannelTypeToChannelIndex(TextureChannelType);
 
-    template <int D, int C>
+    template <int D>
     SceneError AllocateTexture(// Returned Texture Ptr
-                               const TextureI<D, C>*& tex,
+                               const TextureI<D>*& tex,
                                // Allocation Data structure
-                               TextureAllocationMap<D, C>& textureAllocations,
+                               TextureAllocationMap<D>& textureAllocations,
                                // Information about the texture (name and channels)
                                const NodeTextureStruct& requestedTextureInfo,
                                // Available textures that are defined on the scene file
@@ -206,11 +210,11 @@ namespace TextureFunctions
                           const std::string& scenePath);
 }
 
-template <int D, int C>
+template <int D>
 SceneError TextureFunctions::AllocateTexture(// Returned Texture Ptr
-                                             const TextureI<D, C>*& tex,
+                                             const TextureI<D>*& tex,
                                              // Allocation Data structure
-                                             TextureAllocationMap<D, C>& textureAllocations,
+                                             TextureAllocationMap<D>& textureAllocations,
                                              // Information about the texture (name and channels)
                                              const NodeTextureStruct& requestedTextureInfo,
                                              // Available textures that are defined on the scene file
@@ -237,24 +241,25 @@ SceneError TextureFunctions::AllocateTexture(// Returned Texture Ptr
     }
 
     // Texture is not loaded load
-    std::string filePath;
+    TextureStruct s;
     auto j = loadableTextureInfo.cend();
     if((j = loadableTextureInfo.find(textureId)) != loadableTextureInfo.cend())
     {
-        filePath = j->second.filePath;
+        s = j->second;
     }
     else return SceneError::TEXTURE_ID_NOT_FOUND;
 
     // Combine file name and scene path for combined path
-    std::string combinedPath = Utility::MergeFileFolder(scenePath, filePath);
+    std::string combinedPath = Utility::MergeFileFolder(scenePath, s.filePath);
 
     // Load the texture to the CPU first
     SceneError e = SceneError::OK;
-    std::unique_ptr<TextureI<D, C>> ptr;
+    std::unique_ptr<TextureI<D>> ptr;
     if((e = TextureLoader::Instance()->LoadTexture(ptr,
                                                    edgeResolve, interp,
                                                    normalizeIntegers,
                                                    normalizeCoordinates,
+                                                   s.isSigned,
                                                    gpu,
                                                    combinedPath)) != SceneError::OK)
         return e;
@@ -283,11 +288,12 @@ inline uint32_t TextureLoader::ColorTypeToChannelCount(FREE_IMAGE_COLOR_TYPE cTy
     }
 }
 
-template <int D, int C>
-SceneError TextureLoader::LoadTexture(std::unique_ptr<TextureI<D, C>>& t,
+template <int D>
+SceneError TextureLoader::LoadTexture(std::unique_ptr<TextureI<D>>& t,
                                       EdgeResolveType edgeR, InterpolationType interp,
                                       bool normalizeIntegers,
                                       bool normalizeCoordinates,
+                                      bool asSigned,
                                       const CudaGPU& gpu,
                                       const std::string& filePath)
 {
@@ -296,151 +302,8 @@ SceneError TextureLoader::LoadTexture(std::unique_ptr<TextureI<D, C>>& t,
         return LoadTexture2D(t, edgeR, interp,
                              normalizeIntegers,
                              normalizeCoordinates,
-                             gpu, filePath);
+                             asSigned, gpu, filePath);
     // TODO: add more texture loading functions
-    else return SceneError::UNABLE_TO_LOAD_TEXTURE;
-
-    return SceneError::OK;
-}
-
-template <int C>
-SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2, C>>& tex,
-                                        EdgeResolveType edgeR, InterpolationType interp,
-                                        bool normalizeIntegers,
-                                        bool normalizeCoordinates,
-                                        const CudaGPU& gpu,
-                                        const std::string& filePath)
-{
-    FREE_IMAGE_FORMAT f;
-    // Check file to find type
-    if((f = FreeImage_GetFileType(filePath.c_str())) == FIF_UNKNOWN)
-        // Use file extension to determine type
-        f = FreeImage_GetFIFFromFilename(filePath.c_str());
-    // If it is still unknown just return error
-    if(f == FIF_UNKNOWN)
-        return SceneError::UNKNOWN_TEXTURE_TYPE;
-
-    FIBITMAP* imgCPU = FreeImage_Load(f, filePath.c_str(), 0);
-    if(imgCPU)
-    {
-        // Bit per pixel
-        uint32_t bpp = FreeImage_GetBPP(imgCPU);
-        uint32_t w = FreeImage_GetWidth(imgCPU);
-        uint32_t h = FreeImage_GetHeight(imgCPU);
-        uint32_t pitch = FreeImage_GetPitch(imgCPU);
-        const Vector2ui dimension(w, h);
-
-        FREE_IMAGE_TYPE imgType = FreeImage_GetImageType(imgCPU);
-        FREE_IMAGE_COLOR_TYPE colorType = FreeImage_GetColorType(imgCPU);
-
-        uint32_t channels = ColorTypeToChannelCount(colorType);
-        if(channels == 0) return SceneError::UNABLE_TO_LOAD_TEXTURE;
-
-        // Cuda Textures does not support 3 channel textures convert accordingly
-        uint32_t cudaChannels = (channels == 3) ? 4 : channels;
-        if(cudaChannels != C)
-            return SceneError::TEXTURE_CHANNEL_MISMATCH;
-
-        // It looks ok (channels match etc.)
-        // Generate Texutre and Copy Image to GPU
-        std::vector<Byte> expandedPixels;
-        switch(imgType)
-        {
-            case FREE_IMAGE_TYPE::FIT_BITMAP:
-            {
-                // Equal mask is mandatory for bitmap images
-                int rMask = FreeImage_GetRedMask(imgCPU);
-                int gMask = FreeImage_GetGreenMask(imgCPU);
-                int bMask = FreeImage_GetBlueMask(imgCPU);
-
-                if(Utility::BitCount(rMask) != Utility::BitCount(gMask) ||
-                   Utility::BitCount(rMask) != Utility::BitCount(bMask))
-                    return SceneError::UNABLE_TO_LOAD_TEXTURE;
-
-                // Only two bpp are supported
-                if(bpp == 24 ||
-                   bpp == 32)
-                {
-                    auto texPtr = std::make_unique<Texture2D<uchar4>>(gpu.DeviceId(),
-                                                                      interp,
-                                                                      edgeR,
-                                                                      normalizeIntegers,
-                                                                      normalizeCoordinates,
-                                                                      false,
-                                                                      dimension,
-                                                                      1);
-
-                    BYTE* imgPixels = FreeImage_GetBits(imgCPU);
-                    Byte* srcPixels;
-                    if(bpp == 24)
-                    {
-                        Expand2DData3ChannelTo4Channel<unsigned char>(expandedPixels,
-                                                                      imgPixels,
-                                                                      dimension,
-                                                                      pitch);
-                        srcPixels = expandedPixels.data();
-                    }
-                    else srcPixels = imgPixels;
-                    texPtr->Copy(srcPixels, dimension);
-
-                    // Transfer to the Interface ptr
-                    tex = std::move(texPtr);
-                }
-                // Skip low bitrate bitmaps
-                else return SceneError::UNABLE_TO_LOAD_TEXTURE;
-                break;
-            }
-            case FREE_IMAGE_TYPE::FIT_RGBF:
-            {
-                // Probably HDRI Image
-                // Kinda dull but if but float image should be 32-bit
-                if((bpp / channels) != sizeof(float) * BYTE_BITS)
-                    return SceneError::UNABLE_TO_LOAD_TEXTURE;
-
-                // Float textures cannot be normalized so set this as false
-                normalizeIntegers = false;                
-                // Allocate
-                auto texPtr = std::make_unique<Texture2D<PixelFloatType_t<C>>>(gpu.DeviceId(),
-                                                                               interp,
-                                                                               edgeR,
-                                                                               normalizeIntegers,
-                                                                               normalizeCoordinates,
-                                                                               false,
-                                                                               dimension,
-                                                                               1);
-
-                BYTE* imgPixels = FreeImage_GetBits(imgCPU);
-                Expand2DData3ChannelTo4Channel<float>(expandedPixels,
-                                                      FreeImage_GetBits(imgCPU),
-                                                      dimension,
-                                                      pitch);
-                Byte* srcPixels = expandedPixels.data();
-
-
-                //// Yolo check image
-                //const Vector4* pixels = reinterpret_cast<Vector4*>(srcPixels);
-                //Vector4 pix0, pix1;
-                //pix0 = pixels[w * 176 + 2456];
-                //pix1 = pixels[w * (2048 - 176) + 2456];
-                //METU_LOG("Pix on Image (%f, %f, %f) (%f, %f, %f)",
-                //         pix0[0], pix0[1], pix0[2],
-                //         pix1[0], pix1[1], pix1[2]);
-
-                texPtr->Copy(srcPixels, dimension);
-
-                // Transfer to the Interface ptr
-                tex = std::move(texPtr);
-
-                break;
-            }
-            // TODO: Add other tpyes of textures (16bit 32bit HDR etc.)
-            default:
-                return SceneError::UNABLE_TO_LOAD_TEXTURE;
-        }
-        // All done!
-        // Unallocate cpu image
-        FreeImage_Unload(imgCPU);
-    }
     else return SceneError::UNABLE_TO_LOAD_TEXTURE;
 
     return SceneError::OK;

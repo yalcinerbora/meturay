@@ -71,7 +71,13 @@
         "specular": [0, 0.2, 0.4, 0.6, 0.8, 1.0],
         "metallic": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
         "roughness": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-	}],
+	},
+	{
+		"id" : 19,
+		"type": "Lambert",
+		"albedo": [0.5, 0.5, 0.5]
+	}
+	],
 
 	"Primitives":[{
 		"id": [0, 1, 2, 3, 4, 5,
@@ -98,23 +104,29 @@
 
 	"Surfaces": [
     // Roughness Group
-    {
+    // {
+	// 	"transform": 0, "accelerator": 0,
+	// 	"material": [1, 2, 3, 4, 5, 6],
+	// 	"primitive": [0, 1, 2, 3, 4, 5]
+	// },
+	{
 		"transform": 0, "accelerator": 0,
-		"material": [1, 2, 3, 4, 5, 6],
-		"primitive": [0, 1, 2, 3, 4, 5]
-	},
-    // Roughness Group
-    {
-		"transform": 0, "accelerator": 0,
-		"material": [7, 8, 9, 10, 11, 12],
-		"primitive": [6, 7, 8, 9, 10, 11]
-	},
-    // Roughness Group
-    {
-		"transform": 0, "accelerator": 0,
-		"material": [13, 14, 15, 16, 17, 18],
-		"primitive": [12, 13, 14, 15, 16, 17]
-	}],
+		"material": 19,
+		"primitive": 0
+	}
+    // // Metallic Group
+    // {
+	// 	"transform": 0, "accelerator": 0,
+	// 	"material": [7, 8, 9, 10, 11, 12],
+	// 	"primitive": [6, 7, 8, 9, 10, 11]
+	// },
+    // // Specular Group
+    // {
+	// 	"transform": 0, "accelerator": 0,
+	// 	"material": [13, 14, 15, 16, 17, 18],
+	// 	"primitive": [12, 13, 14, 15, 16, 17]
+	// }
+	],
 
 	"LightSurfaces": [{"light": 0, "material": 0}],
 

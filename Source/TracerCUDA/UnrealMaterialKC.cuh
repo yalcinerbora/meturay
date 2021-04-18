@@ -51,7 +51,7 @@ Vector3 UnrealSample(// Sampled Output
         N = (*matData.dNormal[matId])(surface.uv);            
     float roughness = (*matData.dRoughness[matId])(surface.uv);
     float metallic = (*matData.dMetallic[matId])(surface.uv);
-    float specular = 1.0f;
+    float specular = (*matData.dSpecular[matId])(surface.uv);
     Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
    
     // Since we using capital terms alias wi as V
@@ -80,10 +80,6 @@ Vector3 UnrealSample(// Sampled Output
     // Frenel Term (Schlick's Approx)
     Vector3f f0 = CalculateF0(albedo, metallic, specular);
     Vector3f F = TracerFunctions::FSchlick(VdH, f0);
-
-    // All Done!
-    // Generate Ray using calculated params
-
     // We need to slightly nudge the ray start
     // to prevent self intersection
     // Normal is on tangent space so convert it to world space
@@ -105,6 +101,7 @@ Vector3 UnrealSample(// Sampled Output
     // PDF is already written
 
     // Finally Radiance
+    // All Done!
     return diffBlended + specularTerm;
 }
 

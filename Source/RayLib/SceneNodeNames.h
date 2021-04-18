@@ -44,6 +44,7 @@ namespace NodeNames
     static constexpr const char* TEXTURE_IS_CACHED = "isCached";
     static constexpr const char* TEXTURE_FILTER = "filter";
     static constexpr const char* TEXTURE_FILE = "file";
+    static constexpr const char* TEXTURE_SIGNED = "signed";
     static constexpr const char* TEXTURE_CHANNEL = "channels";
     static constexpr const char* TEXTURE_NAME = "texture";
 

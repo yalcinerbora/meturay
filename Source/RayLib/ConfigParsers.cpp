@@ -63,7 +63,7 @@ namespace ConfigParser
 bool ConfigParser::ParseVisorOptions(// Visor Input Related
                                      KeyboardKeyBindings& keyBindings,
                                      MouseKeyBindings& mouseBindings,
-                                     MovementScemeList& movementSchemes,
+                                     MovementSchemeList& movementSchemes,
                                      // Visor Related
                                      VisorOptions& opts,
                                      // Visor DLL Related

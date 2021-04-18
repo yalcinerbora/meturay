@@ -8,8 +8,7 @@
 #include "TypeTraits.h"
 
 // Some Types for Convenience
-template<int C>
-using Tex2DMap = std::map<uint32_t, std::unique_ptr<TextureI<2, C>>>;
+using Tex2DMap = std::map<uint32_t, std::unique_ptr<TextureI<2>>>;
 using Texture2DRef = TextureRef<2, Vector3>;
 
 class BoundaryMatConstant final
@@ -75,9 +74,9 @@ class BoundaryMatTextured final
 
     private:
         DeviceMemory                        memory;
-        Tex2DMap<4>                         textureMemory;
+        Tex2DMap                            textureMemory;
         // Texture list for accessing which material uses which texture
-        std::vector<const TextureI<2, 4>*>  textureList;
+        std::vector<const TextureI<2>*>     textureList;
 
     public:
         // Constructors & Destructor
@@ -131,9 +130,9 @@ class BoundaryMatSkySphere final
     private:
         DeviceMemory                        memory;
         // Actual Allocation of Textures
-        Tex2DMap<4>                         textureMemory;
+        Tex2DMap                            textureMemory;
         // Texture list for accessing which material uses which texture
-        std::vector<const TextureI<2, 4>*>  textureList;
+        std::vector<const TextureI<2>*>     textureList;
 
     public:
         // Constructors & Destructor

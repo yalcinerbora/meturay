@@ -101,7 +101,7 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
 
 VisorWindowInput::VisorWindowInput(KeyboardKeyBindings&& keyBinds,
                                    MouseKeyBindings&& mouseBinds,
-                                   MovementScemeList&& movementSchemes)
+                                   MovementSchemeList&& movementSchemes)
     : mouseBindings(std::move(mouseBinds))
     , keyboardBindings(std::move(keyBinds))
     , movementSchemes(std::move(movementSchemes))

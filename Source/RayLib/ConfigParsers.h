@@ -17,14 +17,14 @@ struct SurfaceLoaderSharedLib;
 
 enum class ScenePartitionerType;
 
-using MovementScemeList = std::vector<std::unique_ptr<MovementSchemeI>>;
+using MovementSchemeList = std::vector<std::unique_ptr<MovementSchemeI>>;
 
 namespace ConfigParser
 {
     bool ParseVisorOptions(// Visor Input Related
                            KeyboardKeyBindings& keyBindings,
                            MouseKeyBindings& mouseBindings,
-                           MovementScemeList& movementSchemes,
+                           MovementSchemeList& movementSchemes,
                            // Visor Related
                            VisorOptions& opts,
                            // Visor DLL Related

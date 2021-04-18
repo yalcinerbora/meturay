@@ -8,7 +8,7 @@
 
 class MovementSchemeI;
 
-using MovementScemeList = std::vector<std::unique_ptr<MovementSchemeI>>;
+using MovementSchemeList = std::vector<std::unique_ptr<MovementSchemeI>>;
 
 class VisorWindowInput : public VisorInputI
 {
@@ -18,7 +18,7 @@ class VisorWindowInput : public VisorInputI
         const KeyboardKeyBindings       keyboardBindings;
 
         // Movement Related
-        const MovementScemeList         movementSchemes;    // List of available movers
+        const MovementSchemeList        movementSchemes;    // List of available movers
         unsigned int                    currentMovementScheme;
 
         // Camera Related States
@@ -43,7 +43,7 @@ class VisorWindowInput : public VisorInputI
         // Constructor & Destructor
                                 VisorWindowInput(KeyboardKeyBindings&&,
                                                  MouseKeyBindings&&,
-                                                 MovementScemeList&&);
+                                                 MovementSchemeList&&);
                                 ~VisorWindowInput() = default;
 
         void                    ChangeDeltaT(double);

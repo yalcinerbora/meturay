@@ -115,20 +115,21 @@ static constexpr cudaTextureFilterMode DetermineFilterMode(InterpolationType);
 
 // Generic Texture Type
 // used to group different of textures
-template<int D, int C>
+template<int D>
 class TextureI : public DeviceLocalMemoryI
 {
     private:
-        static constexpr uint32_t   DimensionCount  = D;
-        static constexpr uint32_t   ChannelCount    = C;
+        static constexpr uint32_t   DimensionCount  = D;       
 
     protected:
-        cudaTextureObject_t         texture = 0;
-        TexDimType_t<D>             dimensions = TexDimType<D>::ZERO;
+        uint32_t                    channelCount    = 0;
+        cudaTextureObject_t         texture         = 0;
+        TexDimType_t<D>             dimensions      = TexDimType<D>::ZERO;
 
     public:
         // Constructors & Destructor
                                     TextureI(const TexDimType_t<D>& dim,
+                                             uint32_t channelCount,
                                              int deviceId);
                                     TextureI(const TextureI&) = delete;
                                     TextureI(TextureI&&);
@@ -137,25 +138,27 @@ class TextureI : public DeviceLocalMemoryI
         virtual                     ~TextureI() = default;
 
         const TexDimType_t<D>&      Dimensions() const;
+        uint32_t                    ChannelCount() const;
 
         constexpr explicit          operator cudaTextureObject_t() const;
 };
 
-template<int D, int C>
+template<int D>
 class TextureArrayI : public DeviceLocalMemoryI
 {
     private:
         static constexpr uint32_t   DimensionCount  = D;
-        static constexpr uint32_t   ChannelCount    = C;
 
     protected:
-        cudaTextureObject_t         texture     = 0;
-        TexDimType_t<D>             dimensions  = TexDimType<D>::ZERO;
-        uint32_t                    length      = 0;
+        cudaTextureObject_t         texture         = 0;
+        uint32_t                    channelCount    = 0;
+        TexDimType_t<D>             dimensions      = TexDimType<D>::ZERO;
+        uint32_t                    length          = 0;
 
     public:
         // Constructors & Destructor
                                     TextureArrayI(const TexDimType_t<D>& dim,
+                                                  uint32_t channelCount,
                                                   uint32_t layerCount,
                                                   int deviceId);
                                     TextureArrayI(const TextureArrayI&) = delete;
@@ -167,25 +170,26 @@ class TextureArrayI : public DeviceLocalMemoryI
 
         const TexDimType_t<D>&      Dimensions() const;
         uint32_t                    Length() const;
+        uint32_t                    ChannelCount() const;
 
         constexpr explicit          operator cudaTextureObject_t() const;
 };
 
-template<int C>
 class TextureCubeI : public DeviceLocalMemoryI
 {
     private:
         static constexpr uint32_t   DimensionCount  = 2;
-        static constexpr uint32_t   ChannelCount    = C;
         static constexpr uint32_t   CubeSideCount   = 6;
 
     protected:
-        cudaTextureObject_t         texture     = 0;
-        Vector2ui                   dimensions  = Zero2ui;
+        uint32_t                    channelCount    = 0;
+        cudaTextureObject_t         texture         = 0;
+        Vector2ui                   dimensions      = Zero2ui;
 
     public:
         // Constructors & Destructor
                                     TextureCubeI(const Vector2ui& dim,
+                                                 uint32_t channelCount,
                                                  int currentDevice);
                                     TextureCubeI(const TextureCubeI&) = delete;
                                     TextureCubeI(TextureCubeI&&);
@@ -194,12 +198,13 @@ class TextureCubeI : public DeviceLocalMemoryI
         virtual                     ~TextureCubeI() = default;
 
         const Vector2ui&            Dimensions() const;
+        uint32_t                    ChannelCount() const;
 
         constexpr explicit          operator cudaTextureObject_t() const;
 };
 
 template<int D, class T>
-class Texture final : public TextureI<D, TextureChannelCount<T>::value>
+class Texture final : public TextureI<D>
 {
     static_assert(D >= 1 && D <= 3, "At most 3D textures are supported");
     static_assert(is_TextureType_v<T>, "Invalid texture type");
@@ -253,7 +258,7 @@ class Texture final : public TextureI<D, TextureChannelCount<T>::value>
 };
 
 template<int D, class T>
-class TextureArray final : public TextureArrayI<D, TextureChannelCount<T>::value>
+class TextureArray final : public TextureArrayI<D>
 {
     static_assert(D >= 1 && D <= 2, "At most 2D texture arrays are supported");
     static_assert(is_TextureType_v<T>, "Invalid texture array type");
@@ -310,7 +315,7 @@ class TextureArray final : public TextureArrayI<D, TextureChannelCount<T>::value
 };
 
 template<class T>
-class TextureCube final : public TextureCubeI<TextureChannelCount<T>::value>
+class TextureCube final : public TextureCubeI
 {
     static_assert(is_TextureType_v<T>, "Invalid texture cube type");
 
@@ -372,69 +377,90 @@ template<class T> using Texture3D = Texture<3, T>;
 template<class T> using Texture1DArray = TextureArray<1, T>;
 template<class T> using Texture2DArray = TextureArray<2, T>;
 
-template<int D, int C>
-inline TextureI<D, C>::TextureI(const TexDimType_t<D>& dim,
-                                int currentDevice)
+template<int D>
+inline TextureI<D>::TextureI(const TexDimType_t<D>& dim,
+                             uint32_t channelCount,
+                             int currentDevice)
     : DeviceLocalMemoryI(currentDevice)
     , dimensions(dim)
+    , channelCount(channelCount)
 {}
 
-template<int D, int C>
-constexpr TextureI<D, C>::operator cudaTextureObject_t() const
+template<int D>
+constexpr TextureI<D>::operator cudaTextureObject_t() const
 {
     return texture;
 }
 
-template<int D, int C>
-const TexDimType_t<D>& TextureI<D, C>::Dimensions() const
+template<int D>
+const TexDimType_t<D>& TextureI<D>::Dimensions() const
 {
     return dimensions;
 }
 
-template<int D, int C>
-inline TextureArrayI<D, C>::TextureArrayI(const TexDimType_t<D>& dim,
-                                          uint32_t length,
-                                          int currentDevice)
+template<int D>
+uint32_t TextureI<D>::ChannelCount() const
+{
+    return channelCount;
+}
+
+template<int D>
+inline TextureArrayI<D>::TextureArrayI(const TexDimType_t<D>& dim,
+                                       uint32_t channelCount,
+                                       uint32_t length,
+                                       int currentDevice)
     : DeviceLocalMemoryI(currentDevice)
     , dimensions(dim)
     , length(length)
+    , channelCount(channelCount)
 {}
 
-template<int D, int C>
-constexpr TextureArrayI<D, C>::operator cudaTextureObject_t() const
+template<int D>
+constexpr TextureArrayI<D>::operator cudaTextureObject_t() const
 {
     return texture;
 }
 
-template<int D, int C>
-const TexDimType_t<D>& TextureArrayI<D, C>::Dimensions() const
+template<int D>
+const TexDimType_t<D>& TextureArrayI<D>::Dimensions() const
 {
     return dimensions;
 }
 
-template<int D, int C>
-uint32_t TextureArrayI<D, C>::Length() const
+template<int D>
+uint32_t TextureArrayI<D>::Length() const
 {
     return length;
 }
 
-template<int C>
-inline TextureCubeI<C>::TextureCubeI(const Vector2ui& dim,
-                                     int currentDevice)
+template<int D>
+uint32_t TextureArrayI<D>::ChannelCount() const
+{
+    return channelCount;
+}
+
+inline TextureCubeI::TextureCubeI(const Vector2ui& dim,
+                                  uint32_t channelCount,
+                                  int currentDevice)
     : DeviceLocalMemoryI(currentDevice)
     , dimensions(dim)
+    , channelCount(channelCount)
 {}
 
-template<int C>
-constexpr TextureCubeI<C>::operator cudaTextureObject_t() const
+constexpr TextureCubeI::operator cudaTextureObject_t() const
 {
     return texture;
 }
 
-template<int C>
-const Vector2ui& TextureCubeI<C>::Dimensions() const
+inline const Vector2ui& TextureCubeI::Dimensions() const
 {
     return dimensions;
+}
+
+
+inline uint32_t TextureCubeI::ChannelCount() const
+{
+    return channelCount;
 }
 
 #include "Texture.hpp"

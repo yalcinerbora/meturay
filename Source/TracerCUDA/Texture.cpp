@@ -1,5 +1,25 @@
 #include "Texture.cuh"
 
+TextureCubeI::TextureCubeI(TextureCubeI&& other)
+    : texture(other.texture)
+    , dimensions(other.dimensions)
+    , channelCount(other.channelCount)
+{
+    other.texture = 0;
+    other.dimensions = Zero2ui;
+    other.channelCount = 0;
+}
+
+TextureCubeI& TextureCubeI::operator=(TextureCubeI&& other)
+{
+    assert(this != &other);
+    texture = other.texture;
+    dimensions = other.dimensions;
+    other.texture = 0;
+    other.dimensions = Zero2ui;
+    return *this;
+}
+
 template class Texture<1, float>;
 template class Texture<1, Vector2>;
 template class Texture<1, Vector4>;

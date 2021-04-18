@@ -7,9 +7,6 @@
 #include "DeviceMemory.h"
 #include "Texture.cuh"
 
-template<int C>
-using Tex2DMap = std::map<uint32_t, std::unique_ptr<TextureI<2, C>>>;
-
 // Delta distribution refract material
 class LambertMat final
     : public GPUMaterialGroup<LambertMatData, UVSurface,
@@ -23,6 +20,7 @@ class LambertMat final
         using ConstantAlbedoRef = ConstantRef<2, Vector3>;
         using Texture2DRef      = TextureRef<2, Vector3>;
         using Texture2DRefI     = TextureRefI<2, Vector3>;
+        using Tex2DMap          = std::map<uint32_t, std::unique_ptr<TextureI<2>>>;
 
         struct ConstructionInfo
         {
@@ -36,7 +34,7 @@ class LambertMat final
     private:
         DeviceMemory                memory;
         // Actual Allocation of Textures
-        Tex2DMap<4>                 dTextureMemory;
+        Tex2DMap                    dTextureMemory;
         // Device Allocations of Texture References
         const ConstantAlbedoRef*    dConstAlbedo;
         const Texture2DRef*         dTextureAlbedoRef;
@@ -70,7 +68,6 @@ class LambertMat final
         SceneError              ChangeTime(const NodeListing& materialNodes,
                                            double time,
                                            const std::string& scenePath) override;
-
         TracerError             ConstructTextureReferences() override;
 
         // Material Queries

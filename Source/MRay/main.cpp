@@ -107,7 +107,7 @@ int main(int argc, const char* argv[])
     VisorOptions visorOpts;
     std::string visorDLLName;
     SharedLibArgs visorDLLEntryFunctionNames;
-    MovementScemeList movementSchemeList;
+    MovementSchemeList movementSchemeList;
     KeyboardKeyBindings keyBinds;
     MouseKeyBindings mouseBinds;
 

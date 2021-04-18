@@ -34,7 +34,14 @@ Vector3 LambertSample(// Sampled Output
     Vector3 normal = ZAxis;
     // Check if tangent space normal is avail
     if(matData.dNormal[matId])
+    {        
         normal = (*matData.dNormal[matId])(surface.uv);
+        //normal = normal * 2.0f - 1.0f;
+        /*normal.NormalizeSelf();*/
+        //printf("NormalMap %f, %f, %f\n",
+        //       normal[0], normal[1], normal[2]);
+    }
+        
 
     // Generate New Ray Direction
     Vector2 xi(GPUDistribution::Uniform<float>(rng),
@@ -47,9 +54,8 @@ Vector3 LambertSample(// Sampled Output
     float nDotL = max(normal.Dot(direction), 0.0f);
 
     // Ray out
-    Vector3 normalW = GPUSurface::ToWorld(normal, surface.worldToTangent);
-
-    Vector3 outPos = position + normalW * MathConstants::Epsilon;
+    Vector3 gNnormalW = GPUSurface::NormalWorld(surface.worldToTangent);
+    Vector3 outPos = position + gNnormalW * MathConstants::Epsilon;
     Vector3 outDir = GPUSurface::ToWorld(direction, surface.worldToTangent);
 
     // Ray out
@@ -75,7 +81,11 @@ Vector3 LambertEvaluate(// Input
     Vector3 normal = ZAxis;
     // Check if tangent space normal is avail
     if(matData.dNormal[matId])
+    {
         normal = (*matData.dNormal[matId])(surface.uv);
+        //normal = normal * 2.0f - 1.0f;
+        /*normal.NormalizeSelf();*/
+    }
     // Calculate lightning in world space since
     // wo is already in world space
     normal = GPUSurface::ToWorld(normal, surface.worldToTangent);

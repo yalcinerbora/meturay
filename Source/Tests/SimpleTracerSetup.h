@@ -271,12 +271,13 @@ inline bool SimpleTracerSetup::Init()
     ERROR_CHECK(SceneError, scnE);
 
     // Visor Input Generation
-    MovementScemeList MovementSchemeList = {};
+    MovementSchemeList movementSchemeList = {};
+    movementSchemeList.emplace_back(new MovementSchemeFPS());
     KeyboardKeyBindings KeyBinds = VisorConstants::DefaultKeyBinds;
     MouseKeyBindings MouseBinds = VisorConstants::DefaultButtonBinds;
     visorInput = std::make_unique<VisorWindowInput>(std::move(KeyBinds),
                                                     std::move(MouseBinds),
-                                                    std::move(MovementSchemeList));
+                                                    std::move(movementSchemeList));
     // Window Params
     VisorOptions visorOpts;
     visorOpts.stereoOn = false;
@@ -309,7 +310,7 @@ inline bool SimpleTracerSetup::Init()
     {
         {"Samples", OptionVariable(MockNode::SAMPLE_COUNT)},
         {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
-        {"NextEventEstimation", OptionVariable(false)},
+        {"NextEventEstimation", OptionVariable(true)},
         {"RussianRouletteStart", OptionVariable(5u)},
         {"MaxDistance", OptionVariable(0.17f)}
     });
