@@ -1,17 +1,25 @@
 #include "ImageMemory.h"
 #include "ImageFunctions.cuh"
 #include "CudaSystem.h"
+#include "CudaSystem.hpp"
+
 #include "RayLib/MemoryAlignment.h"
 
-//__global__ void KCAverageSamples(ImageGMem<Vector4f> mem, size_t totalPixelCount)
-//{
-//    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
-//        threadId < totalPixelCount;
-//        threadId += (blockDim.x * gridDim.x))
-//    {
-//        ImageAverageSample(mem, threadId);
-//    }
-//}
+__global__ void KCChekPixels(ImageGMem<Vector4f> mem, size_t totalPixelCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < totalPixelCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        Vector4 pixel = mem.gPixels[threadId];
+        if(pixel.HasNaN())
+        {
+            // Push bright magenta to visualize NaN
+            pixel = Vector4(1.0e30, 0.0, 1.0e30, 1.0f);
+            mem.gPixels[threadId] = pixel;
+        }
+    }
+}
 
 __global__ void KCResetSamples(ImageGMem<Vector4f> mem, size_t totalPixelCount)
 {
@@ -142,18 +150,17 @@ std::vector<Byte> ImageMemory::GetImageToCPU(const CudaSystem& system)
                         sizeof(uint32_t) * pixelCount;
     size_t sampleStart = PixelFormatToSize(format) * pixelCount;
 
-    //if(pixelCount != 0)
-    //{
-    //// Pixel Count is relatively small single GPU should handle it
-    //    const CudaGPU& gpu = *(system.GPUList().begin());
-
-    //    gpu.GridStrideKC_X(0, (cudaStream_t)0,
-    //                       pixelCount,
-    //                       KCAverageSamples,
-    //                       //
-    //                       GMem<Vector4f>(),
-    //                       pixelCount);
-    //}
+    if(pixelCount != 0)
+    {
+        // Pixel Count is relatively small single GPU should handle it
+        const CudaGPU& gpu =system.BestGPU();
+        gpu.GridStrideKC_X(0, (cudaStream_t)0,
+                           pixelCount,
+                           KCChekPixels,
+                           //
+                           GMem<Vector4f>(),
+                           pixelCount);
+    }
 
     std::vector<Byte> result(totalBytes);
     // Copy Pixels

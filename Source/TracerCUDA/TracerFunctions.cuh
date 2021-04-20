@@ -35,7 +35,7 @@ namespace TracerFunctions
         float alphaSqr = alpha * alpha;
         float dDenom = NdH * NdH * (alphaSqr - 1.0f) + 1.0f;
         dDenom = dDenom * dDenom;
-        dDenom *= MathConstants::Pi * NdH * NdH;
+        dDenom *= MathConstants::Pi;
         return (alphaSqr / dDenom);
     }
 
@@ -57,7 +57,7 @@ namespace TracerFunctions
         float aSqr = a * a;
 
         float phi = 2.0f * MathConstants::Pi * xi0;
-        float cosTheta = sqrt(1.0f - xi1 / ((aSqr / 1.0f) * xi1 + 1.0f));
+        float cosTheta = sqrt(max(0.0f, (1.0f - xi1) / ((aSqr - 1.0f) * xi1 + 1.0f)));
         float sinTheta = sqrt(max(0.0f, 1.0f - cosTheta * cosTheta));
 
         // Spherical Coord conversion functions has azimuth as phi so
@@ -66,10 +66,13 @@ namespace TracerFunctions
                                               Vector2f(sinTheta, cosTheta));
 
         // Pdf
-        float ggxResult = GGX(cosTheta, roughness);
-        pdf = ggxResult * cosTheta * sinTheta;
+        //float ggxResult = GGX(cosTheta, roughness);
+        //pdf = ggxResult * cosTheta;// *sinTheta
+        //return ggxResult;
 
-        return ggxResult;
+        // Pre-cancel ggx (to avoid NaN's)
+        pdf = cosTheta;
+        return 1.0f;
     }
 
     __device__ 

@@ -168,7 +168,7 @@ SceneError UnrealMat::InitializeGroup(const NodeListing& materialNodes,
             // ROUGHNESS TEXTURE
             const TextureI<2>* roughT = nullptr;
             if((err = Load1CTexture(roughT,
-                                    constructionInfo.metallicConst,
+                                    constructionInfo.roughnessConst,
                                     roughnessTexCount, roughnessConstCount,
                                     roughnessNode, textureNodes, scenePath)) != SceneError::OK)
                 return err;
@@ -454,7 +454,7 @@ TracerError UnrealMat::ConstructTextureReferences()
                             dCounters[7],
                             dCounters[8],
                             //
-                            dSpecularConstructionData,
+                            dRoughnessConstructionData,
                             static_cast<uint32_t>(materialCount));
 
     gpu.WaitAllStreams();
