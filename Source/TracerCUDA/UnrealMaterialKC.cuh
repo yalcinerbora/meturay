@@ -54,7 +54,6 @@ Vector3 UnrealSample(// Sampled Output
     float specular = (*matData.dSpecular[matId])(surface.uv);
     Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
 
-    //if(roughness == 0.0f) roughness = 0.001f;
     // Since we using capital terms alias wi as V
     Vector3 V = GPUSurface::ToTangent(wi, surface.worldToTangent);
     // Sample a H (Half Vector)
@@ -65,8 +64,6 @@ Vector3 UnrealSample(// Sampled Output
     //Vector3 H = HemiDistribution::HemiCosineCDF(xi, pdf);
     //float D = TracerFunctions::GGX(max(N.Dot(H), 0.0f),
     //                               roughness);
-
-         
     
     // Gen L (aka. wo)
     Vector3 L = 2.0f * V.Dot(H) * H - V;
@@ -148,8 +145,8 @@ Vector3 UnrealEvaluate(// Input
     Vector3 N = ZAxis;
     if(matData.dNormal[matId])
         N = (*matData.dNormal[matId])(surface.uv);
-    Vector3 L = GPUSurface::ToWorld(wo, surface.worldToTangent);
-    Vector3 V = GPUSurface::ToWorld(wi, surface.worldToTangent);
+    Vector3 L = GPUSurface::ToTangent(wo, surface.worldToTangent);
+    Vector3 V = GPUSurface::ToTangent(wi, surface.worldToTangent);
     Vector3 H = (L + V).Normalize();
 
     // BRDF Calculation

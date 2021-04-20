@@ -83,7 +83,7 @@
                18, 19, 20, 21, 22, 23, 24, 25, 26],
 		"type": "Sphere",
 		"name": ".nodeSphere",
-		"position": 
+		"position":
 		[
 			[-4, 1, 0], [-3, 1, 0], [-2, 1, 0], [-1, 1, 0], [0, 1, 0], [1, 1, 0], [2, 1, 0], [3, 1, 0], [4, 1, 0],
 			[-4, 0, 0], [-3, 0, 0], [-2, 0, 0], [-1, 0, 0], [0, 0, 0], [1, 0, 0], [2, 0, 0], [3, 0, 0], [4, 0, 0],
@@ -94,7 +94,10 @@
 				   0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3]
 	}],
 
-	"Accelerators": [{"id" : 0, "type" : "Linear"}],
+	"Accelerators": [
+		{"id" : 0, "type" : "Linear"},
+		{"id" : 1, "type" : "BasicBVH", "useStack" : true}
+	],
 
     //================================================//
     //        Actual Scene Related Declarations       //
@@ -106,7 +109,7 @@
 	"Surfaces": [
     // Roughness Group 0
     {
-		"transform": 0, "accelerator": 0,
+		"transform": 0, "accelerator": 1,
 		"material": [1, 2, 3, 4, 5],
 		"primitive": [0, 1, 2, 3, 4]
 	},
@@ -118,7 +121,7 @@
 	},
 	// Metallic Group 0
     {
-		"transform": 0, "accelerator": 0,
+		"transform": 0, "accelerator": 1,
 		"material": [10, 11, 12, 13, 14],
 		"primitive": [9, 10, 11, 12, 13]
 	},
@@ -130,7 +133,7 @@
 	},
     // Specular Group 0
     {
-		"transform": 0, "accelerator": 0,
+		"transform": 0, "accelerator": 1,
 		"material": [19, 20, 21, 22, 23],
 		"primitive": [18, 19, 20, 21, 22]
 	},
