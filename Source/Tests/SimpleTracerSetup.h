@@ -187,6 +187,16 @@ class SimpleTracerSetup
             0       // Seed
         };
 
+        const TracerOptions                 opts = VariableList
+        {
+            {"Samples", OptionVariable(MockNode::SAMPLE_COUNT)},
+            {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
+            {"NextEventEstimation", OptionVariable(true)},
+            {"NextEventEstimation", OptionVariable(true)},
+            {"DirectLightMIS", OptionVariable(5u)},
+            {"MaxDistance", OptionVariable(0.17f)}
+        };
+
         // Tracer Related
         SharedLib                           tracerDLL;
         SharedLibPtr<TracerSystemI>         tracerSystem;
@@ -306,14 +316,6 @@ inline bool SimpleTracerSetup::Init()
 
     // Generate Tracer Object
     // & Set Options
-    const TracerOptions opts = TracerOptions(
-    {
-        {"Samples", OptionVariable(MockNode::SAMPLE_COUNT)},
-        {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
-        {"NextEventEstimation", OptionVariable(true)},
-        {"RussianRouletteStart", OptionVariable(5u)},
-        {"MaxDistance", OptionVariable(0.17f)}
-    });
     trcE = tracerSystem->GenerateTracer(tracer, TRACER_PARAMETERS, opts,
                                         tracerType);
     ERROR_CHECK(TracerError, trcE);

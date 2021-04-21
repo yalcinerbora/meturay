@@ -40,14 +40,14 @@ inline void ImageAccumulatePixel(ImageGMem<Vector3f>& img, uint32_t location, co
 
 template<class T>
 __device__
-inline void ImageSetSample<Vector4f>(ImageGMem<T>& img, uint32_t location, uint32_t sampleCount)
+inline void ImageSetSample<T>(ImageGMem<T>& img, uint32_t location, uint32_t sampleCount)
 {
 	img.gSampleCounts[location] = sampleCount;
 }
 
 template<class T>
 __device__
-inline void ImageAddSample<Vector4f>(ImageGMem<T>& img, uint32_t location, uint32_t sampleCount)
+inline void ImageAddSample<T>(ImageGMem<T>& img, uint32_t location, uint32_t sampleCount)
 {
 	atomicAdd(&img.gSampleCounts[location], sampleCount);
 }

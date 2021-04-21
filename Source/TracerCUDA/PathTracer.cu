@@ -96,6 +96,9 @@ TracerError PathTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = opts.GetUInt(options.rrStart, RR_START_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetBool(options.directLightMIS, DIRECT_LIGHT_MIS_NAME)) != TracerError::OK)
+        return err;
+    
     return TracerError::OK;
 }
 
@@ -125,6 +128,7 @@ bool PathTracer::Render()
     globalData.totalMediumCount = mediumCount;
     globalData.nee = options.nextEventEstimation;
     globalData.rrStart = options.rrStart;
+    globalData.directLightMIS = options.directLightMIS;
 
     // Generate output partitions
     uint32_t totalOutRayCount = 0;

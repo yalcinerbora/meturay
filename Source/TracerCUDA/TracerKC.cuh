@@ -27,6 +27,7 @@ struct PathTracerGlobal : public DirectTracerGlobal
 
     // Options
     // Options for NEE
+    bool                directLightMIS;
     bool                nee;
     int                 rrStart;
 };
