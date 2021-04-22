@@ -16,7 +16,7 @@ SceneError SingleGPUScenePartitioner::PartitionMaterials(MultiGPUMatNodes& multi
 {
     // Just use the first gpu avail
     assert(!system.GPUList().empty());
-    const CudaGPU& gpu = system.BestGPU();//*(system.GPUList().begin());
+    const CudaGPU& gpu = system.BestGPU();
 
     for(auto& mg : materialGroups)
     {
