@@ -181,18 +181,6 @@ inline void PathLightWork(// Output
         Vector3f total = emission * radianceFactor;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
     }
-    //else if(gRenderState.directLightMIS && aux.type == RayType::PATH_RAY)
-    //{
-    //    // Path ray happen to hit a light
-    //    // While MIS mode is on
-    //    // Incorporate as if NEE ray and Path ray is launched in MIS mode
-
-    //    const GPUEndpointI* endPoint = gRenderState.lightList[....];
-    //    prevBRDF = aux.prevBxDFPDF
-    //    calculate 
-
-
-    //}
 }
 
 template <class MGroup>
