@@ -17,11 +17,13 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\BinarySearch.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CameraFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CudaSystem.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUDirectLightSamplerI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterialKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorCommonKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUBitmap.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraPinhole.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightSamplerUniform.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightDisk.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightPrimitive.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightDirectional.cuh" />

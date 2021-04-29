@@ -25,6 +25,7 @@ class GPULight : public GPULightI
         const PData&                        gPData;
 
         static constexpr auto PrimSample    = PGroup::Sample;
+        static constexpr auto PrimIntersect = PGroup::Intersect;
 
     protected:
     public:
@@ -53,6 +54,11 @@ class GPULight : public GPULightI
                                             const Vector2i& sampleMax,
                                             // I-O
                                             RandomGPU&) const override;
+
+        __device__ float        Pdf(const Vector3& direction,
+                                    const Vector3 position) const override;
+
+        __device__ bool         CanBeSampled() const override;
 
         __device__ PrimitiveId  PrimitiveIndex() const override;
 };
@@ -185,6 +191,19 @@ __device__ void  GPULight<PGroup>::GenerateRay(// Output
 
     RayF ray = {position, direction};
     rReg = RayReg(ray, 0, INFINITY);
+}
+
+template <class PGroup>
+__device__ float GPULight<PGroup>::Pdf(const Vector3& direction,
+                                       const Vector3 position) const
+{
+    return ...;
+}
+
+template <class PGroup>
+__device__ bool GPULight<PGroup>::CanBeSampled() const
+{
+    return true;
 }
 
 template <class PGroup>

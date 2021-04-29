@@ -48,10 +48,14 @@ class GPUCameraPinhole final : public GPUCameraI
                                         const Vector2i& sampleMax,
                                         // I-O
                                         RandomGPU&) const override;
+        __device__ float    Pdf(const Vector3& direction,
+                                const Vector3 position) const override;
 
-        __device__ uint32_t        FindPixelId(const RayReg& r,
+
+        __device__ uint32_t         FindPixelId(const RayReg& r,
                                                const Vector2i& resolution) const override;
 
+        __device__ bool             CanBeSampled() const override;
         __device__ PrimitiveId      PrimitiveIndex() const override;
 };
 
@@ -205,6 +209,13 @@ inline void GPUCameraPinhole::GenerateRay(// Output
     ray.tMax = nearFar[1];
 }
 
+__device__ 
+inline float GPUCameraPinhole::Pdf(const Vector3& direction,
+                                   const Vector3 position) const
+{
+    return 0.0f;
+}
+
 __device__
 inline uint32_t GPUCameraPinhole::FindPixelId(const RayReg& r,
                                               const Vector2i& resolution) const
@@ -230,6 +241,11 @@ inline uint32_t GPUCameraPinhole::FindPixelId(const RayReg& r,
 
     uint32_t pixelId = coords[1] * resolution[0] + coords[0];
     return pixelId;
+}
+
+inline __device__ bool GPUCameraPinhole::CanBeSampled() const
+{
+    return false;
 }
 
 __device__

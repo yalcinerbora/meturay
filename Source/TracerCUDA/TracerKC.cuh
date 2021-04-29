@@ -6,9 +6,10 @@
 #include "ImageStructs.h"
 #include "RayStructs.h"
 #include "GPULightI.h"
-#include "EstimatorFunctions.cuh"
+#include "GPUDirectLightSamplerI.h"
 #include "GPUMediumVacuum.cuh"
 #include "GPUSurface.h"
+#include "TracerFunctions.cuh"
 
 #include "RayLib/HemiDistribution.h"
 
@@ -19,11 +20,12 @@ struct DirectTracerGlobal
 
 struct PathTracerGlobal : public DirectTracerGlobal
 {
-    const GPULightI**   lightList;
-    uint32_t            totalLightCount;
+    const GPULightI**               lightList;
+    uint32_t                        totalLightCount;
+    const GPUDirectLightSamplerI*   lightSampler;
 
-    const GPUMediumI**  mediumList;
-    uint32_t            totalMediumCount;
+    const GPUMediumI**              mediumList;
+    uint32_t                        totalMediumCount;
 
     // Options
     // Options for NEE
@@ -210,6 +212,7 @@ inline void PathWork(// Output
     bool specularMat = gLocalState.specularMaterial;
     static constexpr int PATH_RAY_INDEX = 0;
     static constexpr int NEE_RAY_INDEX = 1;
+    static constexpr int MIS_RAY_INDEX = 2;
 
     // Output image
     auto& img = gRenderState.gImage;
@@ -296,7 +299,7 @@ inline void PathWork(// Output
     float avgThroughput = auxOut.radianceFactor.Dot(Vector3f(0.333f));
     if(auxOut.depth <= gRenderState.rrStart ||
        gLocalState.specularMaterial ||
-       !RussianRoulette(auxOut.radianceFactor, avgThroughput, rng))
+       !TracerFunctions::RussianRoulette(auxOut.radianceFactor, avgThroughput, rng))
     {
         // Write Ray
         RayReg rayOut;
@@ -312,43 +315,63 @@ inline void PathWork(// Output
     else InvalidRayWrite(PATH_RAY_INDEX);
 
     // Dont launch NEE if not requested
-    if((!gRenderState.nee) ||
-       gLocalState.specularMaterial) return;
+    if((!gRenderState.nee) || gLocalState.specularMaterial) 
+        return;
+
 
     // NEE Ray Generation
     float pdfLight, lDistance;
     HitKey matLight;
     Vector3 lDirection;
     uint32_t lightIndex;
-    reflectance = Zero3;
-    if(DoNextEventEstimation(matLight,
-                             lightIndex,
-                             lDirection,
-                             lDistance,
-                             pdfLight,
-                             // Input
-                             position,
-                             rng,
-                             //
-                             gRenderState.lightList,
-                             gRenderState.totalLightCount))
+    Vector3f neeReflectance = Zero3;
+    if(gRenderState.lightSampler->SampleLight(matLight,
+                                              lightIndex,
+                                              lDirection,
+                                              lDistance,
+                                              pdfLight,
+                                              // Input
+                                              position,
+                                              rng))
     {
         // Evaluate mat for this direction
-        reflectance = MGroup::Evaluate(// Input
-                                       lDirection,
-                                       wi,
-                                       position,
-                                       m,
-                                       //
-                                       surface,
-                                       // Constants
-                                       gMatData,
-                                       matIndex);
+        neeReflectance = MGroup::Evaluate(// Input
+                                          lDirection,
+                                          wi,
+                                          position,
+                                          m,
+                                          //
+                                          surface,
+                                          // Constants
+                                          gMatData,
+                                          matIndex);
     }
+
+    // Sample Another ray for MIS
+    RayF rayMIS; float pdfMIS; const GPUMediumI* outMMIS;
+    Vector3f misReflectance = Zero3;
+    if(gRenderState.directLightMIS)
+    {
+        misReflectance = MGroup::Sample(// Outputs
+                                        rayMIS, pdfMIS, outMMIS,
+                                        // Inputs
+                                        wi,
+                                        position,
+                                        m,
+                                        //
+                                        surface,
+                                        // I-O
+                                        rng,
+                                        // Constants
+                                        gMatData,
+                                        matIndex,
+                                        0);
+    }
+
 
     // Do not waste a ray if material does not reflect light
     // towards light's sampled position
-    if(reflectance != Vector3(0.0f))
+    if(neeReflectance != Vector3(0.0f))
     {
         // Generate & Write Ray
         RayF rayNEE = RayF(lDirection, position);
@@ -358,10 +381,16 @@ inline void PathWork(// Output
         rayOut.tMax = lDistance;
         rayOut.Update(gOutRays, NEE_RAY_INDEX);
 
+        float pdfCombined;
+        if(gRenderState.directLightMIS)
+            pdfCombined = TracerFunctions::PowerHeuristic(1, pdfLight, 1, pdfMIS);
+        else
+            pdfCombined = pdfLight;
+
         // Calculate Radiance Factor
-        auxOut.radianceFactor = radianceFactor * reflectance;
+        auxOut.radianceFactor = radianceFactor * neeReflectance;
         // Check singularities
-        auxOut.radianceFactor = (pdfLight == 0.0f) ? Zero3 : (auxOut.radianceFactor / pdfLight);
+        auxOut.radianceFactor = (pdfCombined == 0.0f) ? Zero3 : (auxOut.radianceFactor / pdfCombined);
         // Write auxilary data
         auxOut.endPointIndex = lightIndex;
         auxOut.type = RayType::NEE_RAY;
@@ -369,6 +398,36 @@ inline void PathWork(// Output
         gOutBoundKeys[NEE_RAY_INDEX] = matLight;
     }
     else InvalidRayWrite(NEE_RAY_INDEX);
+
+    // Check MIS Ray return if not requested (since no ray is allocated for it)
+    if(!gRenderState.directLightMIS)
+        return;
+
+    if(misReflectance != Vector3(0.0f))
+    {
+        // Write Ray
+        RayReg rayOut;
+        rayOut.ray = rayPath;
+        rayOut.tMin = 0.0f;
+        rayOut.tMax = INFINITY;
+        rayOut.Update(gOutRays, PATH_RAY_INDEX);
+
+        float pdfCombined = TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLight);
+
+        // Write Aux
+        // Calculate Radiance Factor
+        auxOut.radianceFactor = radianceFactor * misReflectance;
+        // Check singularities
+        auxOut.radianceFactor = (pdfCombined == 0.0f) ? Zero3 : (auxOut.radianceFactor / pdfCombined);
+        // Write auxilary data
+        auxOut.endPointIndex = lightIndex;
+        auxOut.type = RayType::NEE_RAY;
+        gOutRayAux[NEE_RAY_INDEX] = auxOut;
+        gOutBoundKeys[NEE_RAY_INDEX] = matLight;
+        auxOut.type = RayType::NEE_RAY;
+        gOutRayAux[MIS_RAY_INDEX] = auxOut;
+    }
+    else InvalidRayWrite(MIS_RAY_INDEX);
 }
 
 template <class MGroup>

@@ -37,6 +37,11 @@ class GPULightDirectional : public GPULightI
                                             // I-O
                                             RandomGPU&) const override;
 
+        __device__ float        Pdf(const Vector3& direction,
+                                    const Vector3 position) const override;
+
+        __device__ bool         CanBeSampled() const override;
+
         __device__ PrimitiveId  PrimitiveIndex() const override;
 };
 
@@ -121,6 +126,19 @@ inline void GPULightDirectional::GenerateRay(// Output
                                              RandomGPU& rng) const
 {
     // TODO: implement
+}
+
+__device__
+inline float GPULightDirectional::Pdf(const Vector3& direction,
+                               const Vector3 position) const
+{
+    return 0.0f;
+}
+
+__device__
+inline bool GPULightDirectional::CanBeSampled() const
+{
+    return false;
 }
 
 __device__

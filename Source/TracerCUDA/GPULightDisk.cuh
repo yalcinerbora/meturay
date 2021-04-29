@@ -42,6 +42,11 @@ class GPULightDisk final : public GPULightI
                                             const Vector2i& sampleMax,
                                             // I-O
                                             RandomGPU&) const override;
+        __device__ float        Pdf(const Vector3& direction,
+                                    const Vector3 position) const override;
+
+        __device__ bool         CanBeSampled() const override;
+
         __device__ PrimitiveId  PrimitiveIndex() const override;
 };
 
@@ -156,6 +161,19 @@ inline void GPULightDisk::GenerateRay(// Output
                                       RandomGPU&) const
 {
     // TODO: Implement
+}
+
+__device__
+inline float GPULightDisk::Pdf(const Vector3& direction,
+                                const Vector3 position) const
+{
+    return ...;
+}
+
+__device__
+inline bool GPULightDisk::CanBeSampled() const
+{
+    return true;
 }
 
 __device__

@@ -19,11 +19,11 @@ class GPUEndpointI
         HitKey                  boundaryMaterialKey;
         // Medium of the endpoint
         // used to initialize rays when generated
-        uint16_t                mediumIndex;
+        uint16_t                    mediumIndex;
 
     public:
-        __device__              GPUEndpointI(HitKey k, uint16_t mediumIndex);
-        virtual                 ~GPUEndpointI() = default;
+        __device__                  GPUEndpointI(HitKey k, uint16_t mediumIndex);
+        virtual                     ~GPUEndpointI() = default;
 
         // Interface
         // Sample the endpoint from a point
@@ -31,26 +31,27 @@ class GPUEndpointI
         // Direction is NOT normalized (and should not be normalized)
         // that data may be usefull (when sampling a light source using NEE)
         // tMax can be generated from it
-        virtual __device__ void Sample(// Output
-                                       float& distance,
-                                       Vector3& direction,
-                                       float& pdf,
-                                       // Input
-                                       const Vector3& position,
-                                       // I-O
-                                       RandomGPU&) const = 0;
-
+        virtual __device__ void     Sample(// Output
+                                           float& distance,
+                                           Vector3& direction,
+                                           float& pdf,
+                                           // Input
+                                           const Vector3& position,
+                                           // I-O
+                                           RandomGPU&) const = 0;
         // Generate a Ray from this endpoint
-        virtual __device__ void GenerateRay(// Output
-                                            RayReg&,
-                                            // Input
-                                            const Vector2i& sampleId,
-                                            const Vector2i& sampleMax,
-                                            // I-O
-                                            RandomGPU&) const = 0;
+        virtual __device__ void     GenerateRay(// Output
+                                                RayReg&,
+                                                // Input
+                                                const Vector2i& sampleId,
+                                                const Vector2i& sampleMax,
+                                                // I-O
+                                                RandomGPU&) const = 0;
+        virtual __device__ float    Pdf(const Vector3& direction,
+                                        const Vector3 position) const = 0;
 
         virtual __device__ PrimitiveId  PrimitiveIndex() const = 0;
-
+        virtual __device__ bool         CanBeSampled() const = 0;
         __device__ HitKey               BoundaryMaterial() const;
         __device__ uint16_t             MediumIndex() const;
 };

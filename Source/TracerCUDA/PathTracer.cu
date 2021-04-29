@@ -2,6 +2,7 @@
 #include "TracerWorks.cuh"
 #include "RayAuxStruct.cuh"
 #include "RayTracer.hpp"
+#include "GPULightSamplerUniform.cuh"
 
 #include "RayLib/GPUSceneI.h"
 #include "RayLib/TracerCallbacksI.h"
@@ -36,6 +37,23 @@
 //    return stream;
 //}
 
+void PathTracer::ConstructLightSampler()
+{
+    switch(options.lightSamplerType)
+    {
+        case LightSamplerType::UNIFORM:
+        {
+            DeviceMemory::EnlargeBuffer(memory,
+                                        sizeof(GPULightSamplerUniform));
+
+            //....
+
+
+            lightSampler = static_cast<const GPUDirectLightSamplerI*>(memory);
+        }
+    }
+}
+
 PathTracer::PathTracer(const CudaSystem& s,
                        const GPUSceneI& scene,
                        const TracerParameters& p)
@@ -52,6 +70,9 @@ TracerError PathTracer::Initialize()
     if((err = RayTracer::Initialize()) != TracerError::OK)
         return err;
 
+    // Generate Light Sampler (for nee)
+    ConstructLightSampler();
+
     // Generate your worklist
     const auto& infoList = scene.WorkBatchInfo();
     for(const auto& workInfo : infoList)
@@ -67,17 +88,19 @@ TracerError PathTracer::Initialize()
             bool emptyPrim = (std::string(pg.Type()) ==
                               std::string(BaseConstants::EMPTY_PRIMITIVE_NAME));
 
-            WorkPool<bool, bool>& wp = lightWorkPool;
+            WorkPool<bool, bool, bool>& wp = lightWorkPool;
             if((err = wp.GenerateWorkBatch(batch, mg, pg, dTransforms,
                                            options.nextEventEstimation,
+                                           options.directLightMIS,
                                            emptyPrim)) != TracerError::OK)
                 return err;
         }
         else
         {
-            WorkPool<bool>& wp = workPool;
+            WorkPool<bool, bool>& wp = workPool;
             if((err = wp.GenerateWorkBatch(batch, mg, pg, dTransforms,
-                                           options.nextEventEstimation)) != TracerError::OK)
+                                           options.nextEventEstimation,
+                                           options.directLightMIS)) != TracerError::OK)
                 return err;
         }
         workMap.emplace(batchId, batch);
@@ -129,6 +152,7 @@ bool PathTracer::Render()
     globalData.nee = options.nextEventEstimation;
     globalData.rrStart = options.rrStart;
     globalData.directLightMIS = options.directLightMIS;
+    globalData.lightSampler = lightSampler;
 
     // Generate output partitions
     uint32_t totalOutRayCount = 0;

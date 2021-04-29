@@ -82,6 +82,9 @@
     <Filter Include="Tracers\Works">
       <UniqueIdentifier>{73276d73-c966-4643-b94c-4620a3b64ef0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="LightSamplers">
+      <UniqueIdentifier>{742232d5-4c67-4823-882b-5285458c97a4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerDebug.cpp">
@@ -460,6 +463,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\CudaSystem.hpp">
       <Filter>Cuda System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUDirectLightSamplerI.h">
+      <Filter>GPU Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightSamplerUniform.cuh">
+      <Filter>LightSamplers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

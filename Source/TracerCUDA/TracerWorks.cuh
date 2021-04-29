@@ -44,6 +44,7 @@ class PathTracerWork
 {
     private:
         bool                            neeOn;
+        bool                            misOn;
 
     protected:
     public:
@@ -51,7 +52,7 @@ class PathTracerWork
                                         PathTracerWork(const GPUMaterialGroupI& mg,
                                                        const GPUPrimitiveGroupI& pg,
                                                        const GPUTransformI* const* t,
-                                                       bool neeOn);
+                                                       bool neeOn, bool misOn);
                                         ~PathTracerWork() = default;
 
         void                            GetReady() override {}
@@ -68,6 +69,7 @@ class PathTracerBoundaryWork
 {
     private:
         bool                            neeOn;
+        bool                            misOn;
 
     protected:
     public:
@@ -75,7 +77,7 @@ class PathTracerBoundaryWork
                                         PathTracerBoundaryWork(const GPUMaterialGroupI& mg,
                                                                const GPUPrimitiveGroupI& pg,
                                                                const GPUTransformI* const* t,
-                                                               bool neeOn,
+                                                               bool neeOn, bool misOn,
                                                                bool emptyPrimitive);
                                         ~PathTracerBoundaryWork() = default;
 
@@ -144,11 +146,12 @@ template<class M, class P>
 PathTracerWork<M, P>::PathTracerWork(const GPUMaterialGroupI& mg,
                                      const GPUPrimitiveGroupI& pg,
                                      const GPUTransformI* const* t,
-                                     bool neeOn)
+                                     bool neeOn, bool misOn)
     : GPUWorkBatch<PathTracerGlobal, PathTracerLocal, RayAuxPath,
                    M, P, PathWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
     , neeOn(neeOn)
+    , misOn(misOn)
 {
     // Populate localData
     localData.emptyPrimitive = false;
@@ -162,14 +165,24 @@ uint8_t PathTracerWork<M, P>::OutRayCount() const
     // Incorporate NEE Ray as an addition
     // If material can be sampled (i.e no Dirac Delta BxDF)
     if(!materialGroup.CanBeSampled())
+    {
         // Material Cannot be sampled just allocate whatever
         // the material is requesting
         return materialGroup.SampleStrategyCount();
+    }        
     else if(materialGroup.SampleStrategyCount() != 0)
-        // Material can be sampled add one extra nee ray allocation
-        return materialGroup.SampleStrategyCount() + ((neeOn) ? 1 : 0);
+    {
+        // Material can be sampled 
+        // Add one extra nee ray allocation
+        uint8_t neeRay = (neeOn) ? 1 : 0;
+        // Add one extra MIS ray for allocation
+        // MIS ray is extra NEE ray for multiple importance sampling
+        uint8_t misRay = (neeOn && misOn) ? 1 : 0;
+
+        return materialGroup.SampleStrategyCount() + misRay + neeRay;
+    }        
     // Material does not require any samples meaning it is boundary material
-    // Do not allocate any rays for this kind of mat
+    // Do not allocate any rays for this kind of material
     return 0;
 }
 
@@ -177,12 +190,13 @@ template<class M, class P>
 PathTracerBoundaryWork<M, P>::PathTracerBoundaryWork(const GPUMaterialGroupI& mg,
                                                      const GPUPrimitiveGroupI& pg,
                                                      const GPUTransformI* const* t,
-                                                     bool neeOn,
+                                                     bool neeOn, bool misOn,
                                                      bool emptyPrimitive)
     : GPUWorkBatch<PathTracerGlobal, PathTracerLocal, RayAuxPath,
                    M, P, PathLightWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
     , neeOn(neeOn)
+    , misOn(misOn)
 {
     // Populate localData
     localData.emptyPrimitive = emptyPrimitive;

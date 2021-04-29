@@ -22,7 +22,7 @@ using KeyMaterialMap = std::map<uint32_t, const GPUBoundaryMaterialGroupI*>;
 class CPULightGroupI
 {
 	public:
-		virtual							~CPULightGroupI() = default;
+		virtual									~CPULightGroupI() = default;
 
 		// Interface
 		virtual const char*						Type() const = 0;

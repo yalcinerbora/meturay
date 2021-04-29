@@ -42,6 +42,11 @@ class GPULightSpot : public GPULightI
                                             // I-O
                                             RandomGPU&) const override;
 
+        __device__ float        Pdf(const Vector3& direction,
+                                    const Vector3 position) const override;
+
+        __device__ bool         CanBeSampled() const override;
+
         __device__ PrimitiveId  PrimitiveIndex() const override;
 };
 
@@ -138,6 +143,19 @@ inline void GPULightSpot::GenerateRay(// Output
                                       RandomGPU&) const
 {
     // TODO: Implement
+}
+
+__device__
+inline float GPULightSpot::Pdf(const Vector3& direction,
+                               const Vector3 position) const
+{
+    return 0.0f;
+}
+
+__device__
+inline bool GPULightSpot::CanBeSampled() const
+{
+    return false;
 }
 
 __device__

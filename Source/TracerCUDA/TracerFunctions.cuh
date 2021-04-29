@@ -99,4 +99,27 @@ namespace TracerFunctions
         result += f0;
         return result;
     }
+
+    __device__
+    inline float PowerHeuristic(int n0, float pdf0, int n1, float pdf1)
+    {
+        // This is power-2 heuristic
+        float w0 = static_cast<float>(n0) * pdf0;
+        float w1 = static_cast<float>(n1) * pdf1;
+
+        return (w0 * w0) / (w0 * w0 + w1 * w1);
+    }
+
+    // Basic Russian Roulette
+    __device__
+    inline bool RussianRoulette(Vector3& irradianceFactor,
+                                float probFactor, RandomGPU& rng)
+    {
+        // Basic Russian Roulette
+        probFactor = HybridFuncs::Clamp(probFactor, 0.005f, 1.0f);
+        if(GPUDistribution::Uniform<float>(rng) >= probFactor)
+            return true;
+        else irradianceFactor *= (1.0f / probFactor);
+        return false;
+    }
 }
