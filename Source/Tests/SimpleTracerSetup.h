@@ -187,13 +187,16 @@ class SimpleTracerSetup
             0       // Seed
         };
 
-        const TracerOptions                 opts = VariableList
+        const TracerOptions opts = VariableList
         {
+            // Mixed
             {"Samples", OptionVariable(MockNode::SAMPLE_COUNT)},
             {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
             {"NextEventEstimation", OptionVariable(true)},
-            {"NextEventEstimation", OptionVariable(true)},
-            {"DirectLightMIS", OptionVariable(5u)},
+            {"DirectLightMIS", OptionVariable(true)},
+            {"RussianRouletteStart", OptionVariable(5u)},            
+            {"NEESampler", OptionVariable("Uniform")},
+            // AO Related
             {"MaxDistance", OptionVariable(0.17f)}
         };
 

@@ -9,6 +9,7 @@
 class GPULightDisk final : public GPULightI
 {
     private:
+        const GPUTransformI&    transform;
         Vector3f                center;
         Vector3f                normal;
         float                   radius;
@@ -109,8 +110,9 @@ inline GPULightDisk::GPULightDisk(// Per Light Data
                                   // Endpoint Related Data
                                   HitKey k, uint16_t mediumIndex)
     : GPULightI(k, mediumIndex)
-    , center(gTransform.LocalToWorld(center))
-    , normal(gTransform.LocalToWorld(normal, true))
+    , transform(gTransform)
+    , center(center)
+    , normal(normal)
     , radius(radius)
     , area(MathConstants::Pi* radius* radius)
 {
@@ -138,8 +140,9 @@ inline void GPULightDisk::Sample(// Output
 
     // Rotate to disk normal
     QuatF rotation = Quat::RotationBetweenZAxis(normal);
-    Vector3 worldDisk = rotation.ApplyRotation(disk);
-    Vector3 position = center + worldDisk;
+    Vector3 localDisk = rotation.ApplyRotation(disk);
+    Vector3 localPosition = center + localDisk;
+    Vector3 position = transform.LocalToWorld(position);
 
     direction = position - worldLoc;
     float distanceSqr = direction.LengthSqr();
@@ -167,7 +170,16 @@ __device__
 inline float GPULightDisk::Pdf(const Vector3& direction,
                                 const Vector3 position) const
 {
-    return ...;
+    RayF r(direction, position);
+    r = transform.WorldToLocal(r);
+
+    float distance;
+    Vector3f planeIntersectPos;
+    bool intersects = r.IntersectsPlane(planeIntersectPos, distance,
+                                        center, normal);
+
+    intersects &= (planeIntersectPos - center).LengthSqr() <= (radius * radius);
+    return (intersects) ? (1.0f / area) : 0.0f;   
 }
 
 __device__

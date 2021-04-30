@@ -70,6 +70,38 @@ struct SphrFunctions
         return sphrLoc;
     }
 
+    __device__
+    static inline void PDF(// Outputs
+                           Vector3f& normal,
+                           float& pdf,
+                           float& distance,
+                           // Inputs
+                           const Vector3f& position,
+                           const Vector3f& direction,
+                           const GPUTransformI& transform,
+                           const PrimitiveId primitiveId,
+                           const SphereData& primData)
+    {
+        Vector4f data = primData.centerRadius[primitiveId];
+        Vector3f center = data;
+        float radius = data[3];
+
+        RayF r(direction, position);
+        r = transform.WorldToLocal(r);
+
+        Vector3 sphrPos;
+        bool intersects = r.IntersectsSphere(sphrPos, distance,
+                                             center, radius);
+
+        sphrPos = transform.LocalToWorld(sphrPos);
+        normal = (position - sphrPos).Normalize();
+
+        // Return non zero if it intersected        
+        if(intersects)
+            pdf = 1.0f / SphrFunctions::Area(primitiveId, primData);
+        else pdf = 0.0f;
+    }
+
     // Sphere Hit Acceptance
     __device__
     static inline HitResult Hit(// Output
@@ -232,7 +264,8 @@ class GPUPrimitiveSphere final
                                SphereSurfaceGenerator, SphrFunctions::Hit,
                                SphrFunctions::Leaf, SphrFunctions::AABB,
                                SphrFunctions::Area, SphrFunctions::Center,
-                               SphrFunctions::Sample>
+                               SphrFunctions::Sample,
+                               SphrFunctions::PDF>
 {
     public:
         static constexpr const char*            TypeName() { return "Sphere"; }

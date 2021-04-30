@@ -15,8 +15,10 @@ class BoundaryMatConstant final
     : public GPUBoundaryMaterialGroup<LightMatData, EmptySurface,
                                       SampleEmpty<LightMatData, EmptySurface>,
                                       EvaluateEmpty<LightMatData, EmptySurface>,
+                                      PdfOne<LightMatData, EmptySurface>,
                                       EmitConstant,
-                                      IsEmissiveTrue<LightMatData>>
+                                      IsEmissiveTrue<LightMatData>,
+                                      SpecularityDiffuse<LightMatData, EmptySurface>>
 {
     public:
         static const char*              TypeName() { return "BConstant"; }
@@ -30,8 +32,10 @@ class BoundaryMatConstant final
                                     : GPUBoundaryMaterialGroup<LightMatData, EmptySurface,
                                                                SampleEmpty<LightMatData, EmptySurface>,
                                                                EvaluateEmpty<LightMatData, EmptySurface>,
+                                                               PdfOne<LightMatData, EmptySurface>,
                                                                EmitConstant,
-                                                               IsEmissiveTrue<LightMatData>>(gpu) {}
+                                                               IsEmissiveTrue<LightMatData>,
+                                                               SpecularityDiffuse<LightMatData>>(gpu) {}
                                 ~BoundaryMatConstant() = default;
 
         // Interface
@@ -66,8 +70,10 @@ class BoundaryMatTextured final
     : public GPUBoundaryMaterialGroup<LightMatTexData, UVSurface,
                                    SampleEmpty<LightMatTexData, UVSurface>,
                                    EvaluateEmpty<LightMatTexData, UVSurface>,
+                                   PdfOne<LightMatTexData, UVSurface>,
                                    EmitTextured,
-                                   IsEmissiveTrue<LightMatTexData>>
+                                   IsEmissiveTrue<LightMatTexData>,
+                                   SpecularityDiffuse<LightMatTexData, UVSurface>>
 {
     public:
         static const char*      TypeName() { return "BTextured"; }
@@ -84,8 +90,10 @@ class BoundaryMatTextured final
                                     : GPUBoundaryMaterialGroup<LightMatTexData, UVSurface,
                                                                SampleEmpty<LightMatTexData, UVSurface>,
                                                                EvaluateEmpty<LightMatTexData, UVSurface>,
+                                                               PdfOne<LightMatTexData, UVSurface>,
                                                                EmitTextured,
-                                                               IsEmissiveTrue<LightMatTexData>>(gpu) {}
+                                                               IsEmissiveTrue<LightMatTexData>,
+                                                               SpecularityDiffuse<LightMatTexData, UVSurface>>(gpu) {}
                                 ~BoundaryMatTextured() = default;
 
         // Interface
@@ -121,8 +129,10 @@ class BoundaryMatSkySphere final
     : public GPUBoundaryMaterialGroup<LightMatTexData, BasicSurface,
                                    SampleEmpty<LightMatTexData, BasicSurface>,
                                    EvaluateEmpty<LightMatTexData, BasicSurface>,
+                                   PdfOne<LightMatTexData, BasicSurface>,
                                    EmitSkySphere,
-                                   IsEmissiveTrue<LightMatTexData>>
+                                   IsEmissiveTrue<LightMatTexData>,
+                                   SpecularityDiffuse<LightMatTexData, BasicSurface>>
 {
     public:
         static const char*      TypeName() { return "BSkySphere"; }
@@ -140,8 +150,10 @@ class BoundaryMatSkySphere final
                                     : GPUBoundaryMaterialGroup<LightMatTexData, BasicSurface,
                                                                SampleEmpty<LightMatTexData, BasicSurface>,
                                                                EvaluateEmpty<LightMatTexData, BasicSurface>,
+                                                               PdfOne<LightMatTexData, BasicSurface>,
                                                                EmitSkySphere,
-                                                               IsEmissiveTrue<LightMatTexData>>(gpu) {}
+                                                               IsEmissiveTrue<LightMatTexData>,
+                                                               SpecularityDiffuse<LightMatTexData, BasicSurface>>(gpu) {}
                                 ~BoundaryMatSkySphere() = default;
 
         // Interface

@@ -154,9 +154,7 @@ PathTracerWork<M, P>::PathTracerWork(const GPUMaterialGroupI& mg,
     , misOn(misOn)
 {
     // Populate localData
-    localData.emptyPrimitive = false;
-    // Mark as Specular Group if material cannot be sampled
-    localData.specularMaterial = (!materialGroup.CanBeSampled());
+    localData.emptyPrimitive = false;   
 }
 
 template<class M, class P>

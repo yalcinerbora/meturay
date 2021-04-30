@@ -73,13 +73,13 @@ Vector3 EmitSkySphere(// Input
     Vector3 woZup = -Vector3(woTrans[2], woTrans[0], woTrans[1]);
 
     // Convert to Spherical Coordinates
-    Vector2f tehtaPhi = Utility::CartesianToSphericalUnit(woZup);
+    Vector2f thetaPhi = Utility::CartesianToSphericalUnit(woZup);
 
     // Normalize to generate UV [0, 1]
     // tetha range [-pi, pi]
-    float u = (tehtaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
+    float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
     // phi range [0, pi]
-    float v = 1.0f - (tehtaPhi[1] / MathConstants::Pi);
+    float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);
 
     //printf("Received Light from (%f, %f, %f)\n"
     //       "Zup     : %f, %f, %f\n"

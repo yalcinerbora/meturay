@@ -166,9 +166,36 @@ inline GPULightRectangular::GenerateRay(// Output
 
 __device__
 inline float GPULightRectangular::Pdf(const Vector3& direction,
-                                      const Vector3 position) const
+                                      const Vector3 worldLoc) const
 {
-    return ...;
+    // Generate 2 Triangle
+    Vector3f positions[4] = 
+    {
+        topLeft + right + down,
+        topLeft + right,
+        topLeft,
+        topLeft + down,
+    };
+    Vector3f normal;    
+    RayF r(direction, worldLoc);
+
+    Vector3 bCoords;
+    float distance;
+    bool intersects = r.IntersectsTriangle(bCoords, distance,
+                                           positions[0],
+                                           positions[1],
+                                           positions[2]);
+    intersects = r.IntersectsTriangle(bCoords, distance,
+                                      positions[0],
+                                      positions[2],
+                                      positions[3]);
+
+    normal = Cross(down, right).Normalize();
+        
+    //float nDotL = max(normal.Dot(-direction), 0.0f);
+    float nDotL = abs(normal.Dot(-direction));
+    float pdf = (distance * distance) / (nDotL * area);
+    return (intersects) ? pdf : 0.0f;
 }
 
 __device__

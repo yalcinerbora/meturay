@@ -49,6 +49,9 @@ class Ray<T>
                                                                        const Vector<3, T>& t1,
                                                                        const Vector<3, T>& t2,
                                                                        bool cullFace = true) const;
+        __device__ __host__ bool                    IntersectsPlane(Vector<3, T>& position, T& t,
+                                                                    const Vector<3, T>& planePos,
+                                                                    const Vector<3, T>& normal);
         __device__ __host__ bool                    IntersectsAABB(const Vector<3, T>& min,
                                                                const Vector<3, T>& max,
                                                                const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;

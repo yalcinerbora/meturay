@@ -21,8 +21,10 @@ Implementation of Microfacet Shader definition of the Unreal Engine
 class UnrealMat final
     : public GPUMaterialGroup<UnrealMatData, UVSurface,
                               UnrealSample, UnrealEvaluate,
+                              UnrealPdf,
                               EmitEmpty<UnrealMatData, UVSurface>,
-                              IsEmissiveFalse<UnrealMatData>>
+                              IsEmissiveFalse<UnrealMatData>,
+                              UnrealSpecularity>
 {
     public:
         static const char*          TypeName() { return "Unreal"; }
@@ -118,8 +120,10 @@ class UnrealMat final
                                 UnrealMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<UnrealMatData, UVSurface,
                                                        UnrealSample, UnrealEvaluate,
+                                                       UnrealPdf,
                                                        EmitEmpty<UnrealMatData, UVSurface>,
-                                                       IsEmissiveFalse<UnrealMatData>>(gpu) {}
+                                                       IsEmissiveFalse<UnrealMatData>,
+                                                       UnrealSpecularity>(gpu) {}
                                 ~UnrealMat() = default;
 
         // Interface

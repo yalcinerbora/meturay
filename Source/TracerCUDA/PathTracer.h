@@ -15,10 +15,13 @@ class PathTracer final : public RayTracer
         static constexpr const char*    NEE_NAME = "NextEventEstimation";
         static constexpr const char*    RR_START_NAME = "RussianRouletteStart";
         static constexpr const char*    DIRECT_LIGHT_MIS_NAME = "DirectLightMIS";
+        static constexpr const char*    LIGHT_SAMPLER_TYPE_NAME = "NEESampler";
         
         enum LightSamplerType
         {
-            UNIFORM
+            UNIFORM,
+
+            END
         };
 
         struct Options
@@ -28,7 +31,7 @@ class PathTracer final : public RayTracer
             bool                nextEventEstimation = true;
             uint32_t            rrStart             = 3;
             bool                directLightMIS      = false;
-            LightSamplerType    lightSamplerType    = UNIFORM;
+            std::string         lightSamplerType    = "Uniform";
         };
 
     private:
@@ -45,7 +48,9 @@ class PathTracer final : public RayTracer
         const GPUDirectLightSamplerI*   lightSampler;
 
 
-        void                            ConstructLightSampler();
+        static TracerError              LightSamplerNameToEnum(LightSamplerType&,
+                                                               const std::string&);
+        TracerError                     ConstructLightSampler();
 
     protected:
     public:

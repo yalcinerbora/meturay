@@ -71,6 +71,12 @@ struct TriFunctions
     {
         float r1 = sqrt(GPUDistribution::Uniform<float>(rng));
         float r2 = GPUDistribution::Uniform<float>(rng);
+        // Generate Random Barycentrics
+        // Osada 2002
+        // http://graphics.stanford.edu/courses/cs468-08-fall/pdf/osada.pdf
+        float a = 1 - r1;
+        float b = (1 - r2) * r1;
+        float c = r1 * r2;
 
         uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
         uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
@@ -84,18 +90,97 @@ struct TriFunctions
 
         // Calculate Normal
         // CCW
-        Vector3 vec0 = position1 - position0;
-        Vector3 vec1 = position2 - position0;
-        normal = Cross(vec0, vec1).Normalize();
+        //Vector3 vec0 = position1 - position0;
+        //Vector3 vec1 = position2 - position0;
+        //normal = Cross(vec0, vec1).Normalize();
+        QuatF q0 = primData.tbnRotations[index0].Normalize();
+        QuatF q1 = primData.tbnRotations[index1].Normalize();
+        QuatF q2 = primData.tbnRotations[index2].Normalize();
+        QuatF tbn = Quat::BarySLerp(q0, q1, q2, a, b);
+        Vector3 Z_AXIS = ZAxis;
+        normal = tbn.Conjugate().ApplyRotation(Z_AXIS);
 
-        // Osada 2002
-        // http://graphics.stanford.edu/courses/cs468-08-fall/pdf/osada.pdf
-        float a = 1 - r1;
-        float b = (1 - r2) * r1;
-        float c = r1 * r2;
         return (position0 * a +
                 position1 * b +
                 position2 * c);
+    }
+
+    __device__
+    static inline void PDF(// Outputs
+                           Vector3f& normal,
+                           float& pdf,
+                           float& distance,
+                           // Inputs
+                           const Vector3f& position,
+                           const Vector3f& direction,
+                           const GPUTransformI& transform,
+                           const PrimitiveId primitiveId,
+                           const TriData& primData)
+    {
+        // Find the primitive
+        float index;
+        GPUFunctions::BinarySearchInBetween(index, primitiveId, 
+                                            primData.primOffsets, 
+                                            primData.primBatchCount);
+        uint32_t indexInt = static_cast<uint32_t>(index);
+        bool cullBackface = primData.cullFace[indexInt];
+
+        // Find the primitive
+        uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
+        uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
+        uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
+
+        Vector3 position0 = primData.positions[index0];
+        Vector3 position1 = primData.positions[index1];
+        Vector3 position2 = primData.positions[index2];
+
+        RayF r(direction, position);
+        r = transform.WorldToLocal(r);
+
+        Vector3 baryCoords;
+        bool intersects = r.IntersectsTriangle(baryCoords, distance,
+                                               position0,
+                                               position1,
+                                               position2,
+                                               cullBackface);
+
+        // Check if an alpha map exists and accept/reject intersection
+        const GPUBitmap* alphaMap = primData.alphaMaps[indexInt];
+        if(alphaMap && intersects)
+        {
+            Vector2f uv0 = primData.uvs[index0];
+            Vector2f uv1 = primData.uvs[index1];
+            Vector2f uv2 = primData.uvs[index2];
+            Vector2f uv = (baryCoords[0] * uv0 +
+                           baryCoords[1] * uv1 +
+                           baryCoords[2] * uv2);
+
+            bool opaque = (*alphaMap)(uv);
+            intersects &= opaque;
+
+            if(opaque)
+            {
+                QuatF q0 = primData.tbnRotations[index0].Normalize();
+                QuatF q1 = primData.tbnRotations[index1].Normalize();
+                QuatF q2 = primData.tbnRotations[index2].Normalize();
+                QuatF tbn = Quat::BarySLerp(q0, q1, q2, 
+                                            baryCoords[0],
+                                            baryCoords[1]);
+                // Tangent Space to Local Space Transform
+                Vector3 Z_AXIS = ZAxis;
+                normal = tbn.Conjugate().ApplyRotation(Z_AXIS);
+                // Local Space to World Space Transform
+                normal = transform.LocalToWorld(normal);
+            }
+        }
+
+        // TODO: THIS IS WRONG?
+        // Since alpha map can cull particular positions of the primitive
+        // pdf is not uniform (thus it is not 1/Area)
+        // fix it later since it is not common to lights having alpha mapped primitive
+        if(intersects)
+            pdf = 1.0f / TriFunctions::Area(primitiveId, primData);
+        else pdf = 0.0f;
     }
 
     // Triangle Hit Acceptance
@@ -111,28 +196,6 @@ struct TriFunctions
                                 const DefaultLeaf& leaf,
                                 const TriData& primData)
     {
-        // Simple Binary Search to determine
-        // cull flag from primitiveId
-        //auto BinSearchCull = [&primData](PrimitiveId id)
-        //{
-        //    int32_t start = 0;
-        //    int32_t end = primData.primBatchCount;
-        //    while(start <= end)
-        //    {
-        //        int32_t mid = (start + end) / 2;
-        //        uint64_t current = primData.primOffsets[mid];
-        //        uint64_t next = primData.primOffsets[mid + 1];
-        //        if(id >= current && id < next)
-        //            return primData.cullFace[mid];
-        //        else if(id < current)
-        //            end = mid - 1;
-        //        else if(id >= next)
-        //            start = mid + 1;
-        //    }
-        //    // Default to true
-        //    return true;
-        //};
-
         // Find the primitive
         float index;
         GPUFunctions::BinarySearchInBetween(index, leaf.primitiveId, primData.primOffsets, primData.primBatchCount);
@@ -368,7 +431,8 @@ class GPUPrimitiveTriangle final
                                TriFunctions::Hit,
                                TriFunctions::Leaf, TriFunctions::AABB,
                                TriFunctions::Area, TriFunctions::Center,
-                               TriFunctions::Sample>
+                               TriFunctions::Sample,
+                               TriFunctions::PDF>
 {
     public:
         static constexpr const char*            TypeName() { return "Triangle"; }

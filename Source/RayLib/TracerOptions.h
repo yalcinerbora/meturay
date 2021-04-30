@@ -8,13 +8,15 @@
 
 #include <variant>
 #include <map>
+#include <string>
 
 #include "TracerOptionsI.h"
 
 // ORDER OF THIS SHOULD BE SAME AS THE "OPTION_TYPE" ENUM
 using OptionVariable = std::variant<bool, int32_t, uint32_t, float,
                                     Vector2i, Vector2ui,
-                                    Vector2, Vector3, Vector4>;
+                                    Vector2, Vector3, Vector4,
+                                    std::string>;
 // Cuda did not liked this :(
 
 using VariableList = std::map<std::string, OptionVariable>;
@@ -40,6 +42,8 @@ class TracerOptions : public TracerOptionsI
         //
         TracerError     GetBool(bool&, const std::string&) const override;
 
+        TracerError     GetString(std::string&, const std::string&) const override;
+
         TracerError     GetFloat(float&, const std::string&) const override;
         TracerError     GetVector2(Vector2&, const std::string&) const override;
         TracerError     GetVector3(Vector3&, const std::string&) const override;
@@ -51,6 +55,8 @@ class TracerOptions : public TracerOptionsI
         TracerError     GetVector2ui(Vector2ui&, const std::string&) const override;
         //
         TracerError     SetBool(bool, const std::string&) override;
+
+        TracerError     SetString(const std::string&, const std::string&) override;
 
         TracerError     SetFloat(float, const std::string&) override;
         TracerError     SetVector2(const Vector2&, const std::string&) override;
@@ -76,7 +82,7 @@ TracerError TracerOptions::Get(T& v, const std::string& s) const
     auto loc = variables.end();
     if((loc = variables.find(s)) == variables.end())
     {
-        return TracerError::UNKNOWN_OPTION;
+        return TracerError::OPTION_NOT_FOUND;
     }
     try { v = std::get<T>(loc->second); }
     catch(const std::bad_variant_access&) { return TracerError::OPTION_TYPE_MISMATCH; }
@@ -89,7 +95,7 @@ TracerError TracerOptions::Set(const T& v, const std::string& s)
     auto loc = variables.end();
     if((loc = variables.find(s)) == variables.end())
     {
-        return TracerError::UNKNOWN_OPTION;
+        return TracerError::OPTION_NOT_FOUND;
     }
     if(std::holds_alternative<T>(loc->second))
     {
@@ -104,13 +110,18 @@ inline TracerError TracerOptions::GetType(OptionType& t, const std::string& s) c
     auto loc = variables.end();
     if((loc = variables.find(s)) == variables.end())
     {
-        return TracerError::UNKNOWN_OPTION;
+        return TracerError::OPTION_NOT_FOUND;
     }
     t = static_cast<OptionType>(loc->second.index());
     return TracerError::OK;
 }
 
 inline TracerError TracerOptions::GetBool(bool& v, const std::string& s) const
+{
+    return Get(v, s);
+}
+
+inline TracerError TracerOptions::GetString(std::string& v, const std::string& s) const
 {
     return Get(v, s);
 }
@@ -156,6 +167,11 @@ inline TracerError TracerOptions::GetVector2ui(Vector2ui& v, const std::string& 
 }
 //==================================
 inline TracerError TracerOptions::SetBool(bool v, const std::string& s)
+{
+    return Set(v, s);
+}
+
+inline TracerError TracerOptions::SetString(const std::string& v, const std::string& s)
 {
     return Set(v, s);
 }

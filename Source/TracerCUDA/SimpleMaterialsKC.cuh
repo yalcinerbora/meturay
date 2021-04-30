@@ -39,7 +39,6 @@ Vector3 LambertCSample(// Sampled Output
     Vector2 xi(GPUDistribution::Uniform<float>(rng),
                GPUDistribution::Uniform<float>(rng));
     Vector3 direction = HemiDistribution::HemiCosineCDF(xi, pdf);
-    //Vector3 direction = HemiDistribution::HemiUniformCDF(xi, pdf);
     direction.NormalizeSelf();
 
     // Generated direction vector is on surface space (hemisperical)
@@ -55,6 +54,24 @@ Vector3 LambertCSample(// Sampled Output
     wo = RayF(direction, outPos);
     // BSDF Calculation
     return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
+}
+
+__device__ inline
+float LambertCPdf(const Vector3& wo,
+                  const Vector3& wi,
+                  const Vector3& pos,
+                  const GPUMediumI& m,
+                  //
+                  const BasicSurface& surface,
+                  // Constants
+                  const AlbedoMatData& matData,
+                  const HitKey::Type& matId)
+{
+    const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
+    float pdf = max(wo.Dot(normal), 0.0f);
+
+    pdf *= MathConstants::InvPi;
+    return pdf;
 }
 
 __device__ inline

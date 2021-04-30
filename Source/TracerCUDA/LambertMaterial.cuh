@@ -11,8 +11,10 @@
 class LambertMat final
     : public GPUMaterialGroup<LambertMatData, UVSurface,
                               LambertSample, LambertEvaluate,
+                              LambertPDF,
                               EmitEmpty<LambertMatData, UVSurface>,
-                              IsEmissiveFalse<LambertMatData>>
+                              IsEmissiveFalse<LambertMatData>,
+                              SpecularityDiffuse<LambertMatData, UVSurface>>
 {
     public:
         static const char*      TypeName() { return "Lambert"; }
@@ -53,8 +55,10 @@ class LambertMat final
                                 LambertMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<LambertMatData, UVSurface,
                                                        LambertSample, LambertEvaluate,
+                                                       LambertPDF,
                                                        EmitEmpty<LambertMatData, UVSurface>,
-                                                       IsEmissiveFalse<LambertMatData>>(gpu) {}
+                                                       IsEmissiveFalse<LambertMatData>,
+                                                       SpecularityDiffuse<LambertMatData, UVSurface>>(gpu) {}
                                 ~LambertMat() = default;
 
         // Interface

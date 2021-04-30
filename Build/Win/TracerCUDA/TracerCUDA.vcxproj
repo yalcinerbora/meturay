@@ -68,6 +68,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.hpp" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReferenceGenerators.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerConstants.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TransformFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterialKC.cuh" />

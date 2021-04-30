@@ -64,6 +64,36 @@ Vector3 SampleEmpty(// Sampled Output
     return Zero3f;
 }
 
+template<class Data, class Surface>
+__device__ inline
+float PdfZero(const Vector3&,
+              const Vector3&,
+              const Vector3&,
+              const GPUMediumI&,
+              //
+              const Surface&,
+              // Constants
+              const Data& matData,
+              const HitKey::Type& matId)
+{
+    return 0.0f;
+}
+
+template<class Data, class Surface>
+__device__ inline
+float PdfOne(const Vector3&,
+             const Vector3&,
+             const Vector3&,
+             const GPUMediumI&,
+             //
+             const Surface&,
+             // Constants
+             const Data& matData,
+             const HitKey::Type& matId)
+{
+    return 1.0f;
+}
+
 template <class Data, class Surface>
 __device__ inline
 Vector3 EvaluateEmpty(// Input
@@ -78,4 +108,22 @@ Vector3 EvaluateEmpty(// Input
                       const HitKey::Type& matId)
 {
     return Zero3;
+}
+
+template <class Data, class Surface>
+__device__ inline
+float SpecularityPerfect(const Surface&, 
+                         const Data& matData,
+                         const HitKey::Type& matId)
+{
+    return 1.0f;
+}
+
+template <class Data, class Surface>
+__device__ inline
+float SpecularityDiffuse(const Surface&,
+                         const Data& matData,
+                         const HitKey::Type& matId)
+{
+    return 0.0f;
 }

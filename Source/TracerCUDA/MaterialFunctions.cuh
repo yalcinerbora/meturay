@@ -10,6 +10,11 @@ template <class Data>
 using IsEmissiveFunc = bool(*)(const Data&,
                                const HitKey::Type& matId);
 
+template <class Data, class Surface>
+using SpecularityFunc = float(*)(const Surface&,
+                                 const Data&,
+                                 const HitKey::Type& matId);
+
 // Sample function is responsible for random BRDF evalulation
 // and required data access for BRDFs
 //
@@ -66,6 +71,19 @@ using EvaluateFunc = Vector3(*)(// Input
                                 // Constants
                                 const Data&,
                                 const HitKey::Type& matId);
+
+// Checking PDF of such wo - wi relation
+template <class Data, class Surface>
+using PdfFunc = float(*)(// Input
+                         const Vector3& wo,              // Outgoing Radiance
+                         const Vector3& wi,              // Incoming Radiance
+                         const Vector3& pos,             // Position
+                         const GPUMediumI& m,
+                         //
+                         const Surface& surface,         // Surface info (normals uvs etc.)
+                         // Constants
+                         const Data&,
+                         const HitKey::Type& matId);
 
 // TEXTURE CACHING IS SHELVED
 

@@ -281,9 +281,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\EstimatorFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerFunctions.cuh">
-      <Filter>GPUTemplateFunctions</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUWork.cuh">
       <Filter>Work</Filter>
     </ClInclude>
@@ -469,6 +466,10 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightSamplerUniform.cuh">
       <Filter>LightSamplers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerConstants.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerFunctions.cuh">
+      <Filter>Tracers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -166,6 +166,24 @@ inline bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
 }
 
 template<class T>
+__device__ __host__ 
+inline bool Ray<T>::IntersectsPlane(Vector<3, T>& intersectPos, T& t,
+                                    const Vector<3, T>& planePos,
+                                    const Vector<3, T>& normal)
+{
+    T nDotD = normal.Dot(direction);
+    // Nearly parallel
+    if(abs(nDotD) <= MathConstants::Epsilon)
+    {
+        t = INFINITY;
+        return false;
+    }        
+    t = (planePos - position).Dot(normal) / nDotD;
+    intersectPos = position + t * direction;
+    return true;
+}
+
+template<class T>
 __device__ __host__
 inline bool Ray<T>::IntersectsAABB(const Vector<3, T>& aabbMin,
                                    const Vector<3, T>& aabbMax,

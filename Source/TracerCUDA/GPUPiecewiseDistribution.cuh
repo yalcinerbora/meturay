@@ -35,6 +35,8 @@ class GPUDistPiecewiseConst1D
 
         __device__
         float                   Sample(float& pdf, float& index, RandomGPU& rng) const;
+        __device__
+        float                   Pdf(float index) const;
         __host__ __device__
         uint32_t                Count() const { return count; }
 };
@@ -42,7 +44,7 @@ class GPUDistPiecewiseConst1D
 class GPUDistPiecewiseConst2D
 {
     private:
-        const GPUDistPiecewiseConst1D   gDistributionsY;
+        const GPUDistPiecewiseConst1D   gDistributionY;
         const GPUDistPiecewiseConst1D*  gDistributionsX  = nullptr;
         uint32_t                        width            = 0;
         uint32_t                        height           = 0;
@@ -64,6 +66,8 @@ class GPUDistPiecewiseConst2D
         // Interface
         __device__
         Vector2f                Sample(float& pdf, Vector2f& index, RandomGPU& rng) const;
+        __device__
+        float                   Pdf(const Vector2f& index) const;
         __host__ __device__
         uint32_t                Width() const { return width; }
         __host__ __device__
@@ -182,12 +186,19 @@ inline float GPUDistPiecewiseConst1D::Sample(float& pdf, float& index, RandomGPU
     return index / float(count);
 }
 
+__device__
+inline float GPUDistPiecewiseConst1D::Pdf(float index) const
+{
+    uint32_t indexInt = static_cast<uint32_t>(index);
+    return gPDF[indexInt];
+}
+
 __host__ __device__
-inline GPUDistPiecewiseConst2D::GPUDistPiecewiseConst2D(const GPUDistPiecewiseConst1D dDistributionsY,
+inline GPUDistPiecewiseConst2D::GPUDistPiecewiseConst2D(const GPUDistPiecewiseConst1D dDistributionY,
                                                         const GPUDistPiecewiseConst1D* dDistributionsX,
                                                         uint32_t countX,
                                                         uint32_t countY)
-    : gDistributionsY(dDistributionsY)
+    : gDistributionY(dDistributionY)
     , gDistributionsX(dDistributionsX)
     , width(countX)
     , height(countY)
@@ -198,7 +209,7 @@ inline Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, Ran
 {
     // Fist select a row using Y distribution
     float pdfY, indexY;
-    float xiY = gDistributionsY.Sample(pdfY, indexY, rng);
+    float xiY = gDistributionY.Sample(pdfY, indexY, rng);
     uint32_t indexYInt = static_cast<uint32_t>(indexY);
 
     // Now select column using X distribution of that row
@@ -212,6 +223,17 @@ inline Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, Ran
     //printf("Index (%f, %f) UV (%f, %f)  ", index[0], index[1], xiX, xiY);
 
     return Vector2(xiX, xiY);
+}
+
+__device__
+inline float GPUDistPiecewiseConst2D::Pdf(const Vector2f& index) const
+{
+    //int indexX = static_cast<uint32_t>(index[0] * width);
+    int indexY = static_cast<uint32_t>(index[1] * height);
+
+    float pdfY = gDistributionY.Pdf(index[1]);
+    float pdfX = gDistributionsX[indexY].Pdf(index[0]);
+    return pdfX * pdfY;
 }
 
 inline size_t CPUDistGroupPiecewiseConst1D::UsedCPUMemory() const

@@ -67,7 +67,7 @@ namespace TracerFunctions
 
         // Pdf
         //float ggxResult = GGX(cosTheta, roughness);
-        //pdf = ggxResult * cosTheta;// *sinTheta
+        //pdf = ggxResult * cosTheta;
         //return ggxResult;
 
         // Pre-cancel ggx (to avoid NaN's)

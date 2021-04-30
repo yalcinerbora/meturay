@@ -24,6 +24,16 @@ Vector3 CalculateF0(const Vector3f& baseAlbedo, float metallic, float specular)
 }
 
 __device__ inline
+float UnrealSpecularity(const UVSurface& surface,
+                        const UnrealMatData& matData,
+                        const HitKey::Type& matId)
+{
+    float roughness = (*matData.dRoughness[matId])(surface.uv);
+    float alpha = roughness *roughness;
+    return 1.0f - alpha * alpha;
+}
+
+__device__ inline
 Vector3 UnrealSample(// Sampled Output
                       RayF& wo,
                       float& pdf,
@@ -123,6 +133,32 @@ Vector3 UnrealSample(// Sampled Output
     // Finally Radiance
     // All Done!
     return diffBlended + specularTerm;
+}
+
+__device__ inline
+float UnrealPdf(// Input
+                const Vector3& wo,
+                const Vector3& wi,
+                const Vector3& pos,
+                const GPUMediumI& m,
+                //
+                const UVSurface& surface,
+                // Constants
+                const UnrealMatData& matData,
+                const HitKey::Type& matId)
+{
+    float roughness = (*matData.dRoughness[matId])(surface.uv);
+    Vector3 N = ZAxis;
+    if(matData.dNormal[matId])
+        N = (*matData.dNormal[matId])(surface.uv);
+
+    Vector3 L = GPUSurface::ToTangent(wo, surface.worldToTangent);
+    Vector3 V = GPUSurface::ToTangent(wi, surface.worldToTangent);
+    Vector3 H = (L + V).Normalize();
+
+    float NdH = max(N.Dot(H), 0.0f);
+    float pdf = TracerFunctions::GGX(NdH, roughness) * NdH;
+    return pdf;
 }
 
 __device__ inline

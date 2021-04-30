@@ -160,9 +160,22 @@ inline void GPULightSkySphere::GenerateRay(// Output
 
 __device__
 inline float GPULightSkySphere::Pdf(const Vector3& direction,
-                                       const Vector3 position) const
+                                    const Vector3 position) const
 {
-    return ...;
+    // Convert to spherical coordinates
+    Vector3 dirYUp = transform.WorldToLocal(direction, true);
+    Vector3 dirZup = -Vector3(dirYUp[2], dirYUp[0], dirYUp[1]);
+    Vector2 thetaPhi = Utility::CartesianToSphericalUnit(dirZup);
+        
+    // Normalize to generate UV [0, 1]
+    // tetha range [-pi, pi]
+    float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
+    // phi range [0, pi]
+    float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);
+
+    // Fetch Conditional/Marginal Probs
+    float pdf = distribution.Pdf(Vector2f(u, v));
+    return pdf;
 }
 
 __device__

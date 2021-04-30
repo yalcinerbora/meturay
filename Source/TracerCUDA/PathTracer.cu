@@ -37,21 +37,67 @@
 //    return stream;
 //}
 
-void PathTracer::ConstructLightSampler()
+template <class T>
+__global__ void KCConstructLightSampler(T* loc,
+                                        const GPULightI** gLights,
+                                        const uint32_t lightCount)
 {
-    switch(options.lightSamplerType)
+    uint32_t globalId = threadIdx.x + blockIdx.x * blockDim.x;
+    if(globalId == 0)
+    {
+        T* lightSampler = new (loc) T(gLights, lightCount);
+    }
+}
+
+TracerError PathTracer::LightSamplerNameToEnum(PathTracer::LightSamplerType& ls,
+                                               const std::string& lsName)
+{
+    const std::array<std::string, LightSamplerType::END> samplerNames =
+    {
+        "Uniform"
+    };
+
+    uint32_t i = 0;
+    for(const std::string s : samplerNames)
+    {
+        if(lsName == s)
+        {
+            ls = static_cast<LightSamplerType>(i);
+            return TracerError::OK;
+        }
+        i++;
+    }
+    return TracerError::UNABLE_TO_INITIALIZE;
+}
+
+TracerError PathTracer::ConstructLightSampler()
+{
+    LightSamplerType lst;
+    TracerError e = LightSamplerNameToEnum(lst, options.lightSamplerType);
+
+    if(e != TracerError::OK) 
+        return e;
+
+    switch(lst)
     {
         case LightSamplerType::UNIFORM:
         {
-            DeviceMemory::EnlargeBuffer(memory,
-                                        sizeof(GPULightSamplerUniform));
-
-            //....
-
-
+            DeviceMemory::EnlargeBuffer(memory, sizeof(GPULightSamplerUniform));
             lightSampler = static_cast<const GPUDirectLightSamplerI*>(memory);
+
+            const auto& gpu = cudaSystem.BestGPU();
+            gpu.KC_X(0, (cudaStream_t)0, 1,
+                     // Kernel
+                     KCConstructLightSampler<GPULightSamplerUniform>,
+                     // Args
+                     static_cast<GPULightSamplerUniform*>(memory),
+                     dLights, 
+                     lightCount);
+
+            return TracerError::OK;
         }
     }
+    return TracerError::UNABLE_TO_INITIALIZE;
 }
 
 PathTracer::PathTracer(const CudaSystem& s,
@@ -120,6 +166,8 @@ TracerError PathTracer::SetOptions(const TracerOptionsI& opts)
     if((err = opts.GetUInt(options.rrStart, RR_START_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetBool(options.directLightMIS, DIRECT_LIGHT_MIS_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetString(options.lightSamplerType, LIGHT_SAMPLER_TYPE_NAME)) != TracerError::OK)
         return err;
     
     return TracerError::OK;

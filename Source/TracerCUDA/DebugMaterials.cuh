@@ -10,8 +10,10 @@ class BarycentricMat final
     : public GPUMaterialGroup<NullData, BarySurface,
                               BarycentricSample,
                               BarycentricEvaluate,
+                              PdfOne<NullData, BarySurface>,
                               EmitEmpty<NullData, BarySurface>,
-                              IsEmissiveFalse<NullData>>
+                              IsEmissiveFalse<NullData>,
+                              SpecularityDiffuse<NullData, BarySurface>>
 {
    public:
         static const char*      TypeName() { return "Barycentric"; }
@@ -24,8 +26,10 @@ class BarycentricMat final
                                     : GPUMaterialGroup<NullData, BarySurface,
                                                        BarycentricSample,
                                                        BarycentricEvaluate,
+                                                       PdfOne<NullData, BarySurface>,
                                                        EmitEmpty<NullData, BarySurface>,
-                                                       IsEmissiveFalse<NullData>>(gpu) {}
+                                                       IsEmissiveFalse<NullData>,
+                                                       SpecularityDiffuse<NullData, BarySurface>>(gpu) {}
                                 ~BarycentricMat() = default;
 
         // Interface
@@ -58,8 +62,10 @@ class SphericalMat final
     : public GPUMaterialGroup<NullData, SphrSurface,
                               SphericalSample,
                               SphericalEvaluate,
+                              PdfOne<NullData, SphrSurface>,
                               EmitEmpty<NullData, SphrSurface>,
-                              IsEmissiveFalse<NullData>>
+                              IsEmissiveFalse<NullData>,
+                              SpecularityDiffuse<NullData, SphrSurface>>
 {
     public:
         static const char*      TypeName() { return "Spherical"; }
@@ -72,8 +78,10 @@ class SphericalMat final
                                     : GPUMaterialGroup<NullData, SphrSurface,
                                                        SphericalSample,
                                                        SphericalEvaluate,
+                                                       PdfOne<NullData, SphrSurface>,
                                                        EmitEmpty<NullData, SphrSurface>,
-                                                       IsEmissiveFalse<NullData>>(gpu) {}
+                                                       IsEmissiveFalse<NullData>,
+                                                       SpecularityDiffuse<NullData, SphrSurface>>(gpu) {}
                                 ~SphericalMat() = default;
 
         // Interface
@@ -106,8 +114,10 @@ class NormalRenderMat final
     : public GPUMaterialGroup<NullData, BasicSurface,
                               NormalSample,
                               NormalEvaluate,
+                              PdfOne<NullData, BasicSurface>,
                               EmitEmpty<NullData, BasicSurface>,
-                              IsEmissiveFalse<NullData>>
+                              IsEmissiveFalse<NullData>,
+                              SpecularityDiffuse<NullData, BasicSurface>>
 {
    public:
         static const char*      TypeName() { return "NormalRender"; }
@@ -120,8 +130,10 @@ class NormalRenderMat final
                                     : GPUMaterialGroup<NullData, BasicSurface,
                                                        NormalSample,
                                                        NormalEvaluate,
+                                                       PdfOne<NullData, BasicSurface>,
                                                        EmitEmpty<NullData, BasicSurface>,
-                                                       IsEmissiveFalse<NullData>>(gpu) {}
+                                                       IsEmissiveFalse<NullData>,
+                                                       SpecularityDiffuse<NullData, BasicSurface>>(gpu) {}
                                 ~NormalRenderMat() = default;
 
         // Interface

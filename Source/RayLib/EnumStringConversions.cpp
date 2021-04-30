@@ -21,7 +21,8 @@ static const EnumNameList<TracerOptionsI::OptionType> TracerOptionTypeNames =
     "vec2ui",
     "vec2",
     "vec3",
-    "vec4"
+    "vec4",
+    "string"
 };
 
 static const EnumNameList<CameraMode> CameraModeTypeNames =

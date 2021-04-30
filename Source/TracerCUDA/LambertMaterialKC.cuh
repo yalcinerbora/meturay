@@ -33,21 +33,13 @@ Vector3 LambertSample(// Sampled Output
     const Vector3& position = pos;
     Vector3 normal = ZAxis;
     // Check if tangent space normal is avail
-    if(matData.dNormal[matId])
-    {        
+    if(matData.dNormal[matId])    
         normal = (*matData.dNormal[matId])(surface.uv);
-        //normal = normal * 2.0f - 1.0f;
-        /*normal.NormalizeSelf();*/
-        //printf("NormalMap %f, %f, %f\n",
-        //       normal[0], normal[1], normal[2]);
-    }
-        
 
     // Generate New Ray Direction
     Vector2 xi(GPUDistribution::Uniform<float>(rng),
                GPUDistribution::Uniform<float>(rng));
     Vector3 direction = HemiDistribution::HemiCosineCDF(xi, pdf);
-    //Vector3 direction = HemiDistribution::HemiUniformCDF(xi, pdf);
     direction.NormalizeSelf();
 
     // Cos Tetha
@@ -67,6 +59,28 @@ Vector3 LambertSample(// Sampled Output
 }
 
 __device__ inline
+float LambertPDF(const Vector3& wo,
+                  const Vector3& wi,
+                  const Vector3& pos,
+                  const GPUMediumI& m,
+                  //
+                  const UVSurface& surface,
+                  // Constants
+                  const LambertMatData& matData,
+                  const HitKey::Type& matId)
+{    
+    Vector3 normal = ZAxis;
+    // Check if tangent space normal is avail
+    if(matData.dNormal[matId])
+        normal = (*matData.dNormal[matId])(surface.uv);       
+    normal = GPUSurface::NormalWorld(surface.worldToTangent);
+
+    float pdf = max(wo.Dot(normal), 0.0f);
+    pdf *= MathConstants::InvPi;
+    return pdf;
+}
+
+__device__ inline
 Vector3 LambertEvaluate(// Input
                         const Vector3& wo,
                         const Vector3& wi,
@@ -81,17 +95,13 @@ Vector3 LambertEvaluate(// Input
     Vector3 normal = ZAxis;
     // Check if tangent space normal is avail
     if(matData.dNormal[matId])
-    {
         normal = (*matData.dNormal[matId])(surface.uv);
-        //normal = normal * 2.0f - 1.0f;
-        /*normal.NormalizeSelf();*/
-    }
+
     // Calculate lightning in world space since
     // wo is already in world space
     normal = GPUSurface::ToWorld(normal, surface.worldToTangent);
 
     float nDotL = max(normal.Dot(wo), 0.0f);
-
     const Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
     return nDotL * albedo * MathConstants::InvPi;
 }

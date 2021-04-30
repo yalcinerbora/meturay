@@ -20,7 +20,7 @@ struct TracerError : public ErrorI
             CPU_OUT_OF_MEMORY,
             GPU_OUT_OF_MEMORY,
             // Options Related
-            UNKNOWN_OPTION,
+            OPTION_NOT_FOUND,
             OPTION_TYPE_MISMATCH,
             // Accelerator Related
             UNABLE_TO_CONSTRUCT_BASE_ACCELERATOR,
@@ -90,7 +90,7 @@ inline TracerError::operator std::string() const
         "CPU is out of memory",
         "GPU is out of memory",
         // Option Related
-        "Unknown option",
+        "Option not found",
         "Option type mismatch",
         // Accelerator Related
         "Unable to construct base accelerator",

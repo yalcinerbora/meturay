@@ -24,6 +24,7 @@ class TracerOptionsI
             VECTOR2,
             VECTOR3,
             VECTOR4,
+            STRING,
 
             END
         };
@@ -35,6 +36,7 @@ class TracerOptionsI
         virtual TracerError     GetType(OptionType&, const std::string&) const = 0;
         //
         virtual TracerError     GetBool(bool&, const std::string&) const = 0;
+        virtual TracerError     GetString(std::string&, const std::string&) const = 0;
 
         virtual TracerError     GetFloat(float&, const std::string&) const = 0;
         virtual TracerError     GetVector2(Vector2&, const std::string&) const = 0;
@@ -47,6 +49,8 @@ class TracerOptionsI
         virtual TracerError     GetVector2ui(Vector2ui&, const std::string&) const = 0;
         //
         virtual TracerError     SetBool(bool, const std::string&) = 0;
+
+        virtual TracerError     SetString(const std::string&, const std::string&) = 0;
 
         virtual TracerError     SetFloat(float, const std::string&) = 0;
         virtual TracerError     SetVector2(const Vector2&, const std::string&) = 0;

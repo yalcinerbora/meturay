@@ -87,7 +87,8 @@ template <class HitD, class PrimitiveD, class LeafD,
           BoxGenFunction<PrimitiveD> BoxF,
           AreaGenFunction<PrimitiveD> AreaF,
           CenterGenFunction<PrimitiveD> CenterF,
-          SampleFunction<PrimitiveD> SampleF>
+          SampleFunction<PrimitiveD> SampleF,
+          PDFFunction<PrimitiveD> PDFF>
 class GPUPrimitiveGroup
     : public GPUPrimitiveGroupI
     , public GPUPrimitiveGroupP<PrimitiveD>
@@ -106,6 +107,7 @@ class GPUPrimitiveGroup
         static constexpr auto Area      = AreaF;
         static constexpr auto Center    = CenterF;
         static constexpr auto Sample    = SampleF;
+        static constexpr auto Pdf       = PDFF;
 
     private:
     protected:

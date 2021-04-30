@@ -25,7 +25,7 @@ class GPULight : public GPULightI
         const PData&                        gPData;
 
         static constexpr auto PrimSample    = PGroup::Sample;
-        static constexpr auto PrimIntersect = PGroup::Intersect;
+        static constexpr auto PrimPdf       = PGroup::Pdf;
 
     protected:
     public:
@@ -196,8 +196,28 @@ __device__ void  GPULight<PGroup>::GenerateRay(// Output
 template <class PGroup>
 __device__ float GPULight<PGroup>::Pdf(const Vector3& direction,
                                        const Vector3 position) const
-{
-    return ...;
+{    
+    // First check if we are actually intersecting
+    float distance, pdf;
+    Vector3 normal;
+    PrimPdf(normal, 
+            pdf,
+            distance,            
+            //
+            position,
+            direction,
+            transform,
+            primId, 
+            gPData);
+
+    if(pdf != 0.0f)
+    {
+        float distanceSqr = distance * distance;
+        float nDotL = abs(normal.Dot(-direction));
+        pdf *= distanceSqr / nDotL;
+        return pdf;
+    }
+    else return 0.0f;
 }
 
 template <class PGroup>

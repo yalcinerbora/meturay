@@ -42,6 +42,22 @@ struct EPrimFunctions
     }
 
     __device__
+    static inline void PDF(// Outputs
+                           Vector3f& normal,
+                           float& pdf,
+                           float& distance,
+                           // Inputs
+                           const Vector3f& position,
+                           const Vector3f& direction,
+                           const GPUTransformI& transform,
+                           const PrimitiveId primitiveId,
+                           const EmptyData& primData)
+    {
+        distance = INFINITY;
+        pdf = 0.0f;
+    }
+
+    __device__
     static inline HitResult Hit(// Output
                                 HitKey& newMat,
                                 PrimitiveId& newPrimitive,
@@ -110,7 +126,8 @@ class GPUPrimitiveEmpty final
                                EPrimFunctions::Hit,
                                EPrimFunctions::Leaf, EPrimFunctions::AABB,
                                EPrimFunctions::Area, EPrimFunctions::Center,
-                               EPrimFunctions::Sample>
+                               EPrimFunctions::Sample,
+                               EPrimFunctions::PDF>
 {
     public:
         static constexpr const char*            TypeName() { return BaseConstants::EMPTY_PRIMITIVE_NAME; }

@@ -81,6 +81,20 @@ using SampleFunction = Vector3(*)(Vector3& normal,
                                   // I-O
                                   RandomGPU& rng);
 
+// PDF function for calculating a PDF function for hitting from such
+// position/direction
+template <class PrimitiveData>
+using PDFFunction = void(*)(// Outputs
+                            Vector3f& normal,
+                            float& pdf,
+                            float& distance,
+                            // Inputs
+                            const Vector3f& position,
+                            const Vector3f& direction,
+                            const GPUTransformI& transform,
+                            const PrimitiveId primitiveId,
+                            const PrimitiveData& primData);
+
 // Common Functors for gpu AABB Generation
 template<class PrimitiveGroup>
 struct AABBGen

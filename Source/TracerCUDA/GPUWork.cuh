@@ -37,7 +37,7 @@ class GPUWorkBatchD : public GPUWorkBatchI
 
         void            SetGlobalData(const GlobalData&);
         void            SetRayDataPtrs(RayData* rayDataOutLocal,
-                                      const RayData* rayDataInGlobal);
+                                       const RayData* rayDataInGlobal);
 };
 
 template<class GlobalData, class LocalData, class RayData,

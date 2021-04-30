@@ -203,6 +203,9 @@ bool ConfigParser::ParseTracerOptions(// Tracer Related
             case TracerOptionsI::VECTOR4:
                 var = SceneIO::LoadVector<4, float>(valJson);
                 break;
+            case TracerOptionsI::STRING:
+                var = SceneIO::LoadString(valJson);
+                break;
             default:
                 return false;
         }

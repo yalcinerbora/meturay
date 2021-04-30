@@ -22,8 +22,10 @@ class GPUMaterialGroupD
 template <class D, class S,
           SampleFunc<D, S> SampleF,
           EvaluateFunc<D, S> EvalF,
+          PdfFunc<D, S> PdfF,
           EmissionFunc<D, S> EmitF,
           IsEmissiveFunc<D> IsEmitF,
+          SpecularityFunc<D, S> SpecF,
           class Parent>
 class GPUMaterialGroupT
     : public Parent
@@ -38,8 +40,10 @@ class GPUMaterialGroupT
         // Device Functions
         static constexpr SampleFunc<Data, Surface>      Sample = SampleF;
         static constexpr EvaluateFunc<Data, Surface>    Evaluate = EvalF;
+        static constexpr PdfFunc<Data, Surface>         Pdf = PdfF;
         static constexpr EmissionFunc<Data, Surface>    Emit = EmitF;
         static constexpr IsEmissiveFunc<Data>           IsEmissive = IsEmitF;
+        static constexpr SpecularityFunc<Data, Surface> Specularity = SpecF;
 
     private:
     protected:
@@ -68,20 +72,24 @@ class GPUMaterialGroupT
 template <class D, class S,
           SampleFunc<D, S> SF,
           EvaluateFunc<D, S> EF,
+          PdfFunc<D,S> PF,
           EmissionFunc<D, S> EmF,
           IsEmissiveFunc<D> IEF,
+          SpecularityFunc<D, S> ISF,
           class P>
-GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, P>::GPUMaterialGroupT(const CudaGPU& gpu)
+GPUMaterialGroupT<D, S, SF, EF, PF, EmF, IEF, ISF, P>::GPUMaterialGroupT(const CudaGPU& gpu)
     : gpu(gpu)
 {}
 
 template <class D, class S,
           SampleFunc<D, S> SF,
           EvaluateFunc<D, S> EF,
+          PdfFunc<D, S> PF,
           EmissionFunc<D, S> EmF,
           IsEmissiveFunc<D> IEF,
+          SpecularityFunc<D, S> ISF,
           class P>
-SceneError GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, P>::GenerateInnerIds(const NodeListing& nodes)
+SceneError GPUMaterialGroupT<D, S, SF, EF, PF, EmF, IEF, ISF, P>::GenerateInnerIds(const NodeListing& nodes)
 {
     uint32_t i = 0;
     for(const auto& sceneNode : nodes)
@@ -99,10 +107,12 @@ SceneError GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, P>::GenerateInnerIds(const 
 template <class D, class S,
           SampleFunc<D, S> SF,
           EvaluateFunc<D, S> EF,
+          PdfFunc<D, S> PF,
           EmissionFunc<D, S> EmF,
           IsEmissiveFunc<D> IEF,
+          SpecularityFunc<D, S> ISF,
           class P>
-TracerError GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, P>::ConstructTextureReferences()
+TracerError GPUMaterialGroupT<D, S, SF, EF, PF, EmF, IEF, ISF, P>::ConstructTextureReferences()
 {
     return TracerError::OK;
 }
@@ -110,10 +120,12 @@ TracerError GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, P>::ConstructTextureRefere
 template <class D, class S,
           SampleFunc<D, S> SF,
           EvaluateFunc<D, S> EF,
+          PdfFunc<D, S> PF,
           EmissionFunc<D, S> EmF,
           IsEmissiveFunc<D> IEF,
+          SpecularityFunc<D, S> ISF,
           class P>
-bool GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, P>::HasMaterial(uint32_t materialId) const
+bool GPUMaterialGroupT<D, S, SF, EF, PF, EmF, IEF, ISF, P>::HasMaterial(uint32_t materialId) const
 {
     if(innerIds.find(materialId) != innerIds.cend())
         return true;
@@ -123,10 +135,12 @@ bool GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, P>::HasMaterial(uint32_t material
 template <class D, class S,
           SampleFunc<D, S> SF,
           EvaluateFunc<D, S> EF,
+          PdfFunc<D, S> PF,
           EmissionFunc<D, S> EmF,
           IsEmissiveFunc<D> IEF,
+          SpecularityFunc<D, S> ISF,
           class P>
-uint32_t GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, P>::InnerId(uint32_t materialId) const
+uint32_t GPUMaterialGroupT<D, S, SF, EF, PF, EmF, IEF, ISF, P>::InnerId(uint32_t materialId) const
 {
     return innerIds.at(materialId);
 }
@@ -134,10 +148,12 @@ uint32_t GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, P>::InnerId(uint32_t material
 template <class D, class S,
           SampleFunc<D, S> SF,
           EvaluateFunc<D, S> EF,
+          PdfFunc<D, S> PF,
           EmissionFunc<D, S> EmF,
           IsEmissiveFunc<D> IEF,
+          SpecularityFunc<D, S> ISF,
           class P>
-const CudaGPU& GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, P>::GPU() const
+const CudaGPU& GPUMaterialGroupT<D, S, SF, EF, PF, EmF, IEF, ISF, P>::GPU() const
 {
     return gpu;
 }
@@ -145,11 +161,13 @@ const CudaGPU& GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, P>::GPU() const
 template <class D, class S,
           SampleFunc<D, S> SF,
           EvaluateFunc<D, S> EF,
+          PdfFunc<D, S> PF,
           EmissionFunc<D, S> EmF,
           IsEmissiveFunc<D> IEF,
+          SpecularityFunc<D, S> ISF,
           class P>
-void GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, P>::AttachGlobalMediumArray(const GPUMediumI* const*,
-                                                                           uint32_t)
+void GPUMaterialGroupT<D, S, SF, EF, PF, EmF, IEF, ISF, P>::AttachGlobalMediumArray(const GPUMediumI* const*,
+                                                                                    uint32_t)
 {}
 
 struct MatDataAccessor
@@ -170,13 +188,17 @@ struct MatDataAccessor
 template <class D, class S,
     SampleFunc<D, S> SF,
     EvaluateFunc<D, S> EF,
+    PdfFunc<D,S> PF,
     EmissionFunc<D, S> EmF,
-    IsEmissiveFunc<D> IEF>
-using GPUMaterialGroup = GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, GPUMaterialGroupI>;
+    IsEmissiveFunc<D> IEF,
+    SpecularityFunc<D, S> ISF>
+using GPUMaterialGroup = GPUMaterialGroupT<D, S, SF, EF, PF, EmF, IEF, ISF, GPUMaterialGroupI>;
 
 template <class D, class S,
     SampleFunc<D, S> SF,
     EvaluateFunc<D, S> EF,
+    PdfFunc<D, S> PF,
     EmissionFunc<D, S> EmF,
-    IsEmissiveFunc<D> IEF>
-using GPUBoundaryMaterialGroup = GPUMaterialGroupT<D, S, SF, EF, EmF, IEF, GPUBoundaryMaterialGroupI>;
+    IsEmissiveFunc<D> IEF,
+    SpecularityFunc<D, S> ISF>
+using GPUBoundaryMaterialGroup = GPUMaterialGroupT<D, S, SF, EF, PF, EmF, IEF, ISF, GPUBoundaryMaterialGroupI>;

@@ -7,65 +7,14 @@
 #include "TypeTraits.h"
 #include "DeviceMemory.h"
 
-//// Light Material that constantly emits all directions
-//class EmissiveMat final
-//    : public GPUMaterialGroup<EmissiveMatData, EmptySurface,
-//                              SampleEmpty<EmissiveMatData, EmptySurface>,
-//                              EvaluateEmpty<EmissiveMatData, EmptySurface>,
-//                              EmitConstant,
-//                              IsEmissiveTrue<EmissiveMatData>>
-//{
-//    public:
-//        static const char*              TypeName() { return "Emissive"; }
-//
-//    private:
-//        DeviceMemory                    memory;
-//
-//    protected:
-//    public:
-//        // Constructors & Destructor
-//                                EmissiveMat(const CudaGPU& gpu)
-//                                    : GPUMaterialGroup<EmissiveMatData, EmptySurface,
-//                                                       SampleEmpty<EmissiveMatData, EmptySurface>,
-//                                                       EvaluateEmpty<EmissiveMatData, EmptySurface>,
-//                                                       EmitConstant,
-//                                                       IsEmissiveTrue<EmissiveMatData>>(gpu) {}
-//                                ~EmissiveMat() = default;
-//
-//        // Interface
-//        // Type (as string) of the primitive group
-//        const char*             Type() const override { return TypeName(); }
-//        // Allocates and Generates Data
-//        SceneError              InitializeGroup(const NodeListing& materialNodes,
-//                                                const TextureNodeMap& textures,
-//                                                const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
-//                                                double time, const std::string& scenePath) override;
-//        SceneError              ChangeTime(const NodeListing& materialNodes, double time,
-//                                           const std::string& scenePath) override;
-//
-//        // Material Queries
-//        size_t                  UsedGPUMemory() const override { return memory.Size(); }
-//        size_t                  UsedCPUMemory() const override { return sizeof(AlbedoMatData); }
-//        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
-//        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
-//
-//        // NEE Related
-//        bool                    IsLightGroup() const override { return false; }
-//        bool                    IsEmissiveGroup() const override { return true; }
-//        bool                    IsCameraGroup() const override { return false; }
-//
-//        uint8_t                 SampleStrategyCount() const { return 0; };
-//        // No Texture
-//        uint8_t                 UsedTextureCount() const { return 0; }
-//        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
-//};
-
 // Constant Lambert Material
 class LambertCMat final
     : public GPUMaterialGroup<AlbedoMatData, BasicSurface,
                               LambertCSample, LambertCEvaluate,
+                              LambertCPdf,
                               EmitEmpty<AlbedoMatData, BasicSurface>,
-                              IsEmissiveFalse<AlbedoMatData>>
+                              IsEmissiveFalse<AlbedoMatData>,
+                              SpecularityDiffuse<AlbedoMatData>>
 {
     public:
         static const char*              TypeName() { return "LambertC"; }
@@ -79,8 +28,10 @@ class LambertCMat final
                                 LambertCMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<AlbedoMatData, BasicSurface,
                                                        LambertCSample, LambertCEvaluate,
+                                                       LambertCPdf,
                                                        EmitEmpty<AlbedoMatData, BasicSurface>,
-                                                       IsEmissiveFalse<AlbedoMatData>>(gpu) {}
+                                                       IsEmissiveFalse<AlbedoMatData>,
+                                                       SpecularityDiffuse<AlbedoMatData>>(gpu) {}
                                 ~LambertCMat() = default;
 
         // Interface
@@ -110,8 +61,10 @@ class LambertCMat final
 class ReflectMat final
     : public GPUMaterialGroup<ReflectMatData, BasicSurface,
                               ReflectSample, ReflectEvaluate,
+                              PdfZero<ReflectMatData, BasicSurface>,
                               EmitEmpty<ReflectMatData, BasicSurface>,
-                              IsEmissiveFalse<ReflectMatData>>
+                              IsEmissiveFalse<ReflectMatData>,
+                              SpecularityPerfect<ReflectMatData>>
 {
     public:
         static const char*              TypeName() { return "Reflect"; }
@@ -125,8 +78,10 @@ class ReflectMat final
                                 ReflectMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<ReflectMatData, BasicSurface,
                                                        ReflectSample, ReflectEvaluate,
+                                                       PdfZero<ReflectMatData, BasicSurface>,
                                                        EmitEmpty<ReflectMatData, BasicSurface>,
-                                                       IsEmissiveFalse<ReflectMatData>>(gpu) {}
+                                                       IsEmissiveFalse<ReflectMatData>,
+                                                       SpecularityPerfect<ReflectMatData>>(gpu) {}
                                 ~ReflectMat() = default;
 
         // Interface
@@ -159,8 +114,10 @@ class ReflectMat final
 class RefractMat final
     : public GPUMaterialGroup<RefractMatData, BasicSurface,
                               RefractSample, RefractEvaluate,
+                              PdfZero<RefractMatData, BasicSurface>,
                               EmitEmpty<RefractMatData, BasicSurface>,
-                              IsEmissiveFalse<RefractMatData>>
+                              IsEmissiveFalse<RefractMatData>,
+                              SpecularityPerfect<RefractMatData, BasicSurface>>
 {
     public:
         static const char*      TypeName() { return "Refract"; }
@@ -174,8 +131,10 @@ class RefractMat final
                                 RefractMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<RefractMatData, BasicSurface,
                                                        RefractSample, RefractEvaluate,
+                                                       PdfZero<RefractMatData, BasicSurface>,
                                                        EmitEmpty<RefractMatData, BasicSurface>,
-                                                       IsEmissiveFalse<RefractMatData>>(gpu) {}
+                                                       IsEmissiveFalse<RefractMatData>,
+                                                       SpecularityPerfect<RefractMatData, BasicSurface>>(gpu) {}
                                 ~RefractMat() = default;
 
         // Interface
