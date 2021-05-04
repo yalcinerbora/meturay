@@ -64,6 +64,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\MetaMaterialFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUSurface.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelTransform.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.hpp" />
