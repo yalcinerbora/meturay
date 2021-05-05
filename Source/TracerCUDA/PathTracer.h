@@ -38,16 +38,15 @@ class PathTracer final : public RayTracer
         Options                         options;
         uint32_t                        currentDepth;
         WorkBatchMap                    workMap;
-        // Generic work pool
-        WorkPool<bool,bool>             workPool;
-        // Light material work pool
-        WorkPool<bool, bool, bool>      lightWorkPool;
-
-        //
+        // Work Pools
+        WorkPool<bool, bool, bool>      boundaryWorkPool;
+        WorkPool<>                      pathWorkPool;
+        WorkPool<bool>                  neeWorkPool;
+        WorkPool<>                      misWorkPool;       
+        // Light Sampler Memory and Pointer
         DeviceMemory                    memory;
         const GPUDirectLightSamplerI*   lightSampler;
-
-
+        // Misc
         static TracerError              LightSamplerNameToEnum(LightSamplerType&,
                                                                const std::string&);
         TracerError                     ConstructLightSampler();

@@ -1,9 +1,8 @@
 #include "DirectTracer.h"
-#include "TracerWorks.cuh"
-#include "RayAuxStruct.cuh"
 #include "RayTracer.hpp"
 
 #include "GPUWork.cuh"
+#include "DirectTracerWork.cuh"
 
 #include "RayLib/GPUSceneI.h"
 #include "RayLib/TracerCallbacksI.h"
@@ -53,7 +52,7 @@ TracerError DirectTracer::Initialize()
         if((err = workPool.GenerateWorkBatch(batch, mg, pg,
                                              dTransforms)) != TracerError::OK)
             return err;
-        workMap.emplace(batchId, batch);
+        workMap.emplace(batchId, WorkBatchList{batch});
     }
     return err;
 }
@@ -64,7 +63,7 @@ bool DirectTracer::Render()
     HitAndPartitionRays();
 
     // Generate Global Data Struct
-    DirectTracerGlobal globalData;
+    DirectTracerGlobalState globalData;
     globalData.gImage = imgMemory.GMem<Vector4>();
 
     // Generate output partitions
@@ -77,7 +76,7 @@ bool DirectTracer::Render()
     DeviceMemory::EnlargeBuffer(*dAuxOut, auxOutSize);
 
     // Set Auxiliary Pointers
-    //for(auto pIt = workPartition.crbegin();
+    //for(auto pIt = work+Partition.crbegin();
     //    pIt != workPartition.crend(); pIt++)
     for(auto p : outPartitions)
 
@@ -92,10 +91,13 @@ bool DirectTracer::Render()
         const RayAuxBasic* dAuxInGlobal = static_cast<const RayAuxBasic*>(*dAuxIn);
         //auto& wBatch = static_cast<GPUWorkBatchI&>(*(loc->second));
 
-        using WorkData = typename GPUWorkBatchD<DirectTracerGlobal, RayAuxBasic>;
-        auto& wData = static_cast<WorkData&>(*loc->second);
-        wData.SetGlobalData(globalData);
-        wData.SetRayDataPtrs(dAuxOutLocal, dAuxInGlobal);
+        using WorkData = typename GPUWorkBatchD<DirectTracerGlobalState, RayAuxBasic>;     
+        for(auto& work : loc->second)
+        {
+            auto& wData = static_cast<WorkData&>(*work);
+            wData.SetGlobalData(globalData);
+            wData.SetRayDataPtrs(dAuxOutLocal, dAuxInGlobal);
+        }
     }
 
     // Launch Kernels

@@ -13,10 +13,14 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerCUDA\AcceleratorFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\AOTracer.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\AOTracerKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\AOTracerWork.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\AuxiliaryDataKernels.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\BinarySearch.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CameraFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CudaSystem.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerWork.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUDirectLightSamplerI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterialKC.cuh" />
@@ -65,6 +69,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUSurface.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelTransform.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracerKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracerWorks.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.hpp" />
@@ -124,9 +129,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\RayTracer.hpp" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SimpleMaterials.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\SimpleMaterialsKC.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerSystemCUDA.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerWorks.cuh" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\EntryPoint.cpp" />
@@ -134,6 +137,8 @@
     <ClCompile Include="..\..\..\Source\TracerCUDA\Tracers.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerSystemCUDA.cpp" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracerWork.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracerWork.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightDisk.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.cu" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\CudaSystem.cpp" />
@@ -160,6 +165,7 @@
       <FileType>Document</FileType>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\LambertMaterial.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracerWorks.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RNGMemory.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUTransformSingle.cu">
       <FileType>Document</FileType>
@@ -174,7 +180,6 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\SimpleMaterials.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerWorks.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cu" />
   </ItemGroup>
   <ItemGroup>

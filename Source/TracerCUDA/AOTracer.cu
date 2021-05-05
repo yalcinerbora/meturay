@@ -6,9 +6,7 @@
 #include "RayLib/BitManipulation.h"
 #include "RayLib/TracerCallbacksI.h"
 
-#include "GPUWork.cuh"
-#include "TracerKC.cuh"
-#include "TracerWorks.cuh"
+#include "AOTracerWork.cuh"
 
 AOTracer::AOTracer(const CudaSystem& sys,
                    const GPUSceneI& scene,
@@ -45,8 +43,8 @@ TracerError AOTracer::Initialize()
                                          AmbientOcclusionMissWork::TypeName(),
                                          emptyMat, emptyPrim,
                                          dTransforms)) != TracerError::OK)
-        return err;
-    workMap.emplace(aoMissWorkBatchId, aoMissBatch);
+        return err;    
+    workMap.emplace(aoMissWorkBatchId, WorkBatchList{aoMissBatch});
 
     // Generate your worklist
     const auto& infoList = scene.WorkBatchInfo();
@@ -60,7 +58,7 @@ TracerError AOTracer::Initialize()
 
         if(std::string(pg.Type()) == std::string(BaseConstants::EMPTY_PRIMITIVE_NAME))
         {
-            workMap.emplace(batchId, aoMissBatch);
+            workMap.emplace(batchId, WorkBatchList{aoMissBatch});
             continue;
         }
 
@@ -71,7 +69,7 @@ TracerError AOTracer::Initialize()
                                        emptyMat, pg, dTransforms)) != TracerError::OK)
             return err;
 
-        workMap.emplace(batchId, batch);
+        workMap.emplace(batchId, WorkBatchList{batch});
     }
     return TracerError::OK;
 }
@@ -113,7 +111,7 @@ bool AOTracer::Render()
     cudaSystem.SyncAllGPUs();
 
     // Generate Global Data for Work Kernels
-    AmbientOcclusionGlobal globalData;
+    AmbientOcclusionGlobalState globalData;
     globalData.gImage = imgMemory.GMem<Vector4>();
     globalData.maxDistance = options.maxDistance;
     globalData.hitPhase = hitPhase;
@@ -140,10 +138,13 @@ bool AOTracer::Render()
         RayAuxAO* dAuxOutLocal = static_cast<RayAuxAO*>(*dAuxOut) + p.offset;
         const RayAuxAO* dAuxInLocal = static_cast<const RayAuxAO*>(*dAuxIn);
 
-        using WorkData = typename GPUWorkBatchD<AmbientOcclusionGlobal, RayAuxAO>;
-        auto& wData = static_cast<WorkData&>(*loc->second);
-        wData.SetGlobalData(globalData);
-        wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
+        using WorkData = typename GPUWorkBatchD<AmbientOcclusionGlobalState, RayAuxAO>;
+        for(auto& work : loc->second)
+        {
+            auto& wData = static_cast<WorkData&>(*work);
+            wData.SetGlobalData(globalData);
+            wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
+        }
     }
 
     // Launch Kernels

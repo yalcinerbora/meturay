@@ -79,11 +79,17 @@
     <Filter Include="Tracers">
       <UniqueIdentifier>{8e8b843c-2670-475f-86b5-b8e5365b2770}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Tracers\Works">
-      <UniqueIdentifier>{73276d73-c966-4643-b94c-4620a3b64ef0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="LightSamplers">
       <UniqueIdentifier>{742232d5-4c67-4823-882b-5285458c97a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracers\PathTracer">
+      <UniqueIdentifier>{4596f161-cd79-44fa-a126-77305394863c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracers\AOTracer">
+      <UniqueIdentifier>{25857a03-dc1b-4e1e-a933-8fd37485d009}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracers\DirectTracer">
+      <UniqueIdentifier>{c6899011-41a9-4824-bb06-029f1a4210b4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -356,23 +362,11 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\RayTracer.h">
       <Filter>Tracers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracer.h">
-      <Filter>Tracers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracer.h">
-      <Filter>Tracers</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialDataStructs.h">
       <Filter>Materials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\RayAuxStruct.cuh">
       <Filter>Tracers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerWorks.cuh">
-      <Filter>Tracers\Works</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\TracerKC.cuh">
-      <Filter>Tracers\Works</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTracer.h">
       <Filter>Tracers</Filter>
@@ -403,9 +397,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorCommonKC.cuh">
       <Filter>Accelerators</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\AOTracer.h">
-      <Filter>Tracers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterial.cuh">
       <Filter>Materials</Filter>
@@ -471,8 +462,32 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerFunctions.cuh">
       <Filter>Tracers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\AOTracer.h">
+      <Filter>Tracers\AOTracer</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracerKC.cuh">
-      <Filter>Tracers\Works</Filter>
+      <Filter>Tracers\PathTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracer.h">
+      <Filter>Tracers\PathTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracerWorks.cuh">
+      <Filter>Tracers\PathTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerKC.cuh">
+      <Filter>Tracers\DirectTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracer.h">
+      <Filter>Tracers\DirectTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerWork.cuh">
+      <Filter>Tracers\DirectTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\AOTracerWork.cuh">
+      <Filter>Tracers\AOTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\AOTracerKC.cuh">
+      <Filter>Tracers\AOTracer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -548,15 +563,6 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayTracer.cu">
       <Filter>Tracers</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracer.cu">
-      <Filter>Tracers</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracer.cu">
-      <Filter>Tracers</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerWorks.cu">
-      <Filter>Tracers\Works</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUTracer.cu">
       <Filter>Tracers</Filter>
     </CudaCompile>
@@ -565,9 +571,6 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cu">
       <Filter>Materials</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracer.cu">
-      <Filter>Tracers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightSkySphere.cu">
       <Filter>Lights</Filter>
@@ -586,6 +589,24 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\SimpleMaterials.cu">
       <Filter>Materials</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracer.cu">
+      <Filter>Tracers\AOTracer</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracer.cu">
+      <Filter>Tracers\PathTracer</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracerWorks.cu">
+      <Filter>Tracers\PathTracer</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracer.cu">
+      <Filter>Tracers\DirectTracer</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracerWork.cu">
+      <Filter>Tracers\DirectTracer</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracerWork.cu">
+      <Filter>Tracers\AOTracer</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

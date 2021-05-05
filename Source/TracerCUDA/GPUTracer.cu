@@ -487,21 +487,23 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
         RayGMem* dRayOutStart = dRaysOut + pOut.offset;
         HitKey* dBoundKeyStart = dBoundKeyOut + pOut.offset;
 
-        // Actual Shade Call
-        loc->second->Work(dBoundKeyStart,
-                          dRayOutStart,
-                          //  Input
-                          dRays,
-                          dPrimitiveIds,
-                          dTransformIds,
-                          dHitStructs,
-                          // Ids
-                          dKeyStart,
-                          dRayIdStart,
-                          //
-                          static_cast<uint32_t>(p.count),
-                          rngMemory);
-
+        // Actual Shade Calls
+        for(auto& workBatch : loc->second)
+        {
+            workBatch->Work(dBoundKeyStart,
+                            dRayOutStart,
+                            //  Input
+                            dRays,
+                            dPrimitiveIds,
+                            dTransformIds,
+                            dHitStructs,
+                            // Ids
+                            dKeyStart,
+                            dRayIdStart,
+                            //
+                            static_cast<uint32_t>(p.count),
+                            rngMemory);
+        }
         //cudaSystem.SyncGPUAll();
         //METU_LOG("--------------------------");
     }

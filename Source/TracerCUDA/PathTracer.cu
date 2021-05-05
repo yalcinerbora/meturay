@@ -1,12 +1,11 @@
 #include "PathTracer.h"
-#include "TracerWorks.cuh"
-#include "RayAuxStruct.cuh"
 #include "RayTracer.hpp"
-#include "GPULightSamplerUniform.cuh"
 
 #include "RayLib/GPUSceneI.h"
 #include "RayLib/TracerCallbacksI.h"
 
+#include "PathTracerWorks.cuh"
+#include "GPULightSamplerUniform.cuh"
 #include "GenerationKernels.cuh"
 #include "GPUWork.cuh"
 
@@ -106,8 +105,11 @@ PathTracer::PathTracer(const CudaSystem& s,
     : RayTracer(s, scene, p)
     , currentDepth(0)
 {
-    workPool.AppendGenerators(PathTracerWorkerList{});
-    lightWorkPool.AppendGenerators(PathTracerBoundaryWorkerList{});
+    // Append Work Types for generation
+    boundaryWorkPool.AppendGenerators(PTBoundaryWorkerList{});
+    pathWorkPool.AppendGenerators(PTPathWorkerList{});;
+    neeWorkPool.AppendGenerators(PTNEEWorkerList{});;
+    misWorkPool.AppendGenerators(PTMISWorkerList{});;
 }
 
 TracerError PathTracer::Initialize()
@@ -128,28 +130,54 @@ TracerError PathTracer::Initialize()
         uint32_t batchId = std::get<0>(workInfo);
 
         // Generate work batch from appropirate work pool
-        GPUWorkBatchI* batch = nullptr;
+        WorkBatchList workBatchList;
         if(mg.IsBoundary())
         {
             bool emptyPrim = (std::string(pg.Type()) ==
                               std::string(BaseConstants::EMPTY_PRIMITIVE_NAME));
 
-            WorkPool<bool, bool, bool>& wp = lightWorkPool;
+            WorkPool<bool, bool, bool>& wp = boundaryWorkPool;
+            GPUWorkBatchI* batch = nullptr;
             if((err = wp.GenerateWorkBatch(batch, mg, pg, dTransforms,
                                            options.nextEventEstimation,
                                            options.directLightMIS,
                                            emptyPrim)) != TracerError::OK)
                 return err;
+            workBatchList.push_back(batch);
         }
         else
         {
-            WorkPool<bool, bool>& wp = workPool;
-            if((err = wp.GenerateWorkBatch(batch, mg, pg, dTransforms,
-                                           options.nextEventEstimation,
-                                           options.directLightMIS)) != TracerError::OK)
+            WorkPool<>& wpPath = pathWorkPool;
+            WorkPool<bool>& wpNEE = neeWorkPool;
+            WorkPool<>& wpMIS = misWorkPool;
+            GPUWorkBatchI* pathBatch = nullptr;
+            GPUWorkBatchI* neeBatch = nullptr;
+            GPUWorkBatchI* misBatch = nullptr;
+            
+            if((err = wpPath.GenerateWorkBatch(pathBatch, mg, pg, 
+                                               dTransforms)) != TracerError::OK)
                 return err;
+            workBatchList.push_back(pathBatch);
+
+            if(options.nextEventEstimation)
+            {
+                if((err = wpNEE.GenerateWorkBatch(neeBatch, mg, pg, 
+                                                  dTransforms,
+                                                  options.directLightMIS)) != TracerError::OK)
+                    return err;
+                workBatchList.push_back(neeBatch);
+            }
+            
+            if(options.nextEventEstimation &&
+               options.directLightMIS)
+            {
+                if((err = wpMIS.GenerateWorkBatch(misBatch, mg, pg,
+                                                  dTransforms)) != TracerError::OK)
+                    return err;
+                workBatchList.push_back(misBatch);
+            }
         }
-        workMap.emplace(batchId, batch);
+        workMap.emplace(batchId, workBatchList);
     }
     return TracerError::OK;
 }
@@ -191,7 +219,7 @@ bool PathTracer::Render()
     //                     currentRayCount);
 
     // Generate Global Data Struct
-    PathTracerGlobal globalData;
+    PathTracerGlobalState globalData;
     globalData.gImage = imgMemory.GMem<Vector4>();
     globalData.lightList = dLights;
     globalData.totalLightCount = lightCount;
@@ -225,10 +253,13 @@ bool PathTracer::Render()
         RayAuxPath* dAuxOutLocal = static_cast<RayAuxPath*>(*dAuxOut) + p.offset;
         const RayAuxPath* dAuxInLocal = static_cast<const RayAuxPath*>(*dAuxIn);
 
-        using WorkData = typename GPUWorkBatchD<PathTracerGlobal, RayAuxPath>;
-        auto& wData = static_cast<WorkData&>(*loc->second);
-        wData.SetGlobalData(globalData);
-        wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
+        using WorkData = typename GPUWorkBatchD<PathTracerGlobalState, RayAuxPath>;
+        for(auto& work : loc->second)
+        {
+            auto& wData = static_cast<WorkData&>(*work);
+            wData.SetGlobalData(globalData);
+            wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
+        }
     }
 
     // Launch Kernels
