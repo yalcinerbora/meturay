@@ -45,26 +45,27 @@ class RandomGPU
         __device__                  operator curandStateMRG32k3a_t*();
 };
 
-__device__
-inline RandomGPU::RandomGPU(RNGGMem& gStates, uint32_t localThreadId)
-    : threadId(localThreadId% gStates.count)
+__device__ __forceinline__
+RandomGPU::RandomGPU(RNGGMem& gStates, uint32_t localThreadId)
+    : threadId(localThreadId % gStates.count)
     , gStates(gStates.state)
     , rState(gStates.state[threadId])
 {}
 
-__device__
-inline RandomGPU::~RandomGPU()
+__device__ __forceinline__
+RandomGPU::~RandomGPU()
 {
     gStates[threadId] = rState;
 }
 
-__device__
-inline uint32_t RandomGPU::Generate()
+__device__ __forceinline__
+uint32_t RandomGPU::Generate()
 {
     return curand(&rState);
 }
 
-inline __device__ RandomGPU::operator curandStateMRG32k3a_t*()
+__device__ __forceinline__
+RandomGPU::operator curandStateMRG32k3a_t*()
 {
     return &rState;
 }
@@ -73,48 +74,52 @@ inline __device__ RandomGPU::operator curandStateMRG32k3a_t*()
 namespace GPUDistribution
 {
     template <class T, typename = FloatEnable<T>>
-    __device__ T Uniform(RandomGPU& r)
+    __device__ __forceinline__
+    T Uniform(RandomGPU& r)
     {
         return static_cast<T>(1.0f - curand_uniform(r));
     }
 
     template <class T, typename = FloatEnable<T>>
-    __device__ T Uniform(RandomGPU& r, T min, T max)
+    __device__ __forceinline__
+    T Uniform(RandomGPU& r, T min, T max)
     {
         return static_cast<T>(1.0f - curand_uniform(r)) * (min - max) + min;
     }
 
     template <class T, typename = FloatEnable<T>>
-    __device__ T Normal(RandomGPU& r);
+    __device__ __forceinline__ 
+    T Normal(RandomGPU& r);
 
     template <class T, typename = FloatEnable<T>>
-    __device__ T Normal(RandomGPU& r, T mean, T stdDev);
+    __device__ __forceinline__
+    T Normal(RandomGPU& r, T mean, T stdDev);
 }
 
 template<>
-__device__
-inline float GPUDistribution::Normal(RandomGPU& r)
+__device__ __forceinline__
+float GPUDistribution::Normal(RandomGPU& r)
 {
     return curand_normal(r);
 }
 
 template<>
-__device__
-inline double GPUDistribution::Normal(RandomGPU& r)
+__device__ __forceinline__
+double GPUDistribution::Normal(RandomGPU& r)
 {
     return curand_normal_double(r);
 }
 
 template<>
-__device__
-inline float GPUDistribution::Normal(RandomGPU& r, float mean, float stdDev)
+__device__ __forceinline__
+float GPUDistribution::Normal(RandomGPU& r, float mean, float stdDev)
 {
     return curand_normal(r) * stdDev + mean;
 }
 
 template<>
-__device__
-inline double GPUDistribution::Normal(RandomGPU& r, double mean, double stdDev)
+__device__ __forceinline__
+double GPUDistribution::Normal(RandomGPU& r, double mean, double stdDev)
 {
     return curand_normal_double(r) * stdDev + mean;
 }

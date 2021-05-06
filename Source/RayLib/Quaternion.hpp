@@ -309,8 +309,8 @@ Quaternion<T> Quat::BarySLerp(const Quaternion<T>& q0,
     const Quaternion<T>& qA = q0;
     //Quaternion<T> qB = (q1.Dot(q0) < 0) ? q1.Conjugate() : q1;
     //Quaternion<T> qC = (q2.Dot(q0) < 0) ? q2.Conjugate() : q2;
-    Quaternion<T> qB = q1;
-    Quaternion<T> qC = q2;
+    const Quaternion<T>& qB = q1;
+    const Quaternion<T>& qC = q2;
 
     T c = (1 - a - b);
     Quaternion<T> result;
@@ -324,7 +324,7 @@ Quaternion<T> Quat::BarySLerp(const Quaternion<T>& q0,
     }
 
     //Quaternion<T> result = qA * a + qB * b + qC * c;
-    return result.Normalize();
+    return result;// .Normalize();
 }
 
 template<class T>

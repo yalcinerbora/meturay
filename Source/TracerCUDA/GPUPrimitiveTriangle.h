@@ -354,9 +354,9 @@ struct TriangleSurfaceGenerator
         uint64_t i1 = primData.indexList[primitiveId * 3 + 1];
         uint64_t i2 = primData.indexList[primitiveId * 3 + 2];
 
-        QuatF q0 = primData.tbnRotations[i0].Normalize();
-        QuatF q1 = primData.tbnRotations[i1].Normalize();
-        QuatF q2 = primData.tbnRotations[i2].Normalize();
+        QuatF q0 = primData.tbnRotations[i0];//.Normalize();
+        QuatF q1 = primData.tbnRotations[i1];//.Normalize();
+        QuatF q2 = primData.tbnRotations[i2];//.Normalize();
         QuatF tbn = Quat::BarySLerp(q0, q1, q2,
                                     baryCoords[0],
                                     baryCoords[1]);
@@ -376,7 +376,7 @@ struct TriangleSurfaceGenerator
         return BarySurface{Vector3(baryCoords[0], baryCoords[1], c)};
     }
 
-    __device__
+    __device__ __forceinline__
     static UVSurface GenUVSurface(const TriangleHit& baryCoords,
                                   const GPUTransformI& transform,
                                   //

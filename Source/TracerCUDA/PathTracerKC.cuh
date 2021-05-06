@@ -860,49 +860,49 @@ void PathTracerMISWork(// Output
                        const HitKey matId,
                        const PrimitiveId primId)
 {
-    //static constexpr Vector3 ZERO_3 = Zero3;
+    ////static constexpr Vector3 ZERO_3 = Zero3;
 
-    static constexpr int MIS_RAY_INDEX = 0;
+    //static constexpr int MIS_RAY_INDEX = 0;
 
-    // Inputs
-    // Current Ray
-    const RayF& r = ray.ray;
-    // Current Material Index
-    HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
-    // Hit Position
-    Vector3 position = r.AdvancedPos(ray.tMax);
-    // Wi (direction is swapped as if it is coming out of the surface
-    Vector3 wi = -(r.getDirection().Normalize());
-    // Current ray's medium
-    const GPUMediumI& m = *(gRenderState.mediumList[aux.mediumIndex]);
+    //// Inputs
+    //// Current Ray
+    //const RayF& r = ray.ray;
+    //// Current Material Index
+    //HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
+    //// Hit Position
+    //Vector3 position = r.AdvancedPos(ray.tMax);
+    //// Wi (direction is swapped as if it is coming out of the surface
+    //Vector3 wi = -(r.getDirection().Normalize());
+    //// Current ray's medium
+    //const GPUMediumI& m = *(gRenderState.mediumList[aux.mediumIndex]);
 
-    // Check Material Sample Strategy
-    const uint32_t sampleCount = maxOutRay;
-    // Check Material's specularity;
-    float specularity = MGroup::Specularity(surface, gMatData, matIndex);
-    bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
+    //// Check Material Sample Strategy
+    //const uint32_t sampleCount = maxOutRay;
+    //// Check Material's specularity;
+    //float specularity = MGroup::Specularity(surface, gMatData, matIndex);
+    //bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
 
-    // Invalid Ray Write Helper Function
-    auto InvalidRayWrite = [&gOutRays, &gOutBoundKeys, &gOutRayAux, &sampleCount](int index)
-    {
-        assert(index < sampleCount);
+    //// Invalid Ray Write Helper Function
+    //auto InvalidRayWrite = [&gOutRays, &gOutBoundKeys, &gOutRayAux, &sampleCount](int index)
+    //{
+    //    assert(index < sampleCount);
 
-        // Generate Dummy Ray and Terminate
-        RayReg rDummy = EMPTY_RAY_REGISTER;
-        rDummy.Update(gOutRays, index);
-        gOutBoundKeys[index] = HitKey::InvalidKey;
-        gOutRayAux[index].pixelIndex = UINT32_MAX;
-    };
+    //    // Generate Dummy Ray and Terminate
+    //    RayReg rDummy = EMPTY_RAY_REGISTER;
+    //    rDummy.Update(gOutRays, index);
+    //    gOutBoundKeys[index] = HitKey::InvalidKey;
+    //    gOutRayAux[index].pixelIndex = UINT32_MAX;
+    //};
 
-    // If NEE ray hits to this material
-    // just skip since this is not a light material
-    if(aux.type == RayType::NEE_RAY)
-    {
-        InvalidRayWrite(MIS_RAY_INDEX);
-        return;
-    }
+    //// If NEE ray hits to this material
+    //// just skip since this is not a light material
+    //if(aux.type == RayType::NEE_RAY)
+    //{
+    //    InvalidRayWrite(MIS_RAY_INDEX);
+    //    return;
+    //}
 
-    // Calculate Transmittance factor of the medium
-    Vector3 transFactor = m.Transmittance(ray.tMax);
-    Vector3 radianceFactor = aux.radianceFactor * transFactor;
+    //// Calculate Transmittance factor of the medium
+    //Vector3 transFactor = m.Transmittance(ray.tMax);
+    //Vector3 radianceFactor = aux.radianceFactor * transFactor;
 }
