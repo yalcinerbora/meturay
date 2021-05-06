@@ -22,7 +22,7 @@ struct LightMatTexData
     const TextureRef<2, Vector3>* dRadianceTextures;
 };
 
-__device__ inline
+__device__ __forceinline__
 Vector3 EmitConstant(// Input
                      const Vector3& wo,
                      const Vector3& pos,
@@ -36,7 +36,7 @@ Vector3 EmitConstant(// Input
     return matData.dRadiances[matId];
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 EmitTextured(// Input
                      const Vector3& wo,
                      const Vector3& pos,
@@ -50,7 +50,7 @@ Vector3 EmitTextured(// Input
     return matData.dRadianceTextures[matId](surface.uv);
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 EmitSkySphere(// Input
                       const Vector3& wo,
                       const Vector3& pos,

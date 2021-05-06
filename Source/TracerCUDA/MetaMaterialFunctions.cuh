@@ -10,7 +10,7 @@ class RandomGPU;
 struct TexCoords;
 
 template <class Data>
-__device__ inline
+__device__ __forceinline__
 bool IsEmissiveFalse(const Data&,
                      const HitKey::Type&)
 {
@@ -18,7 +18,7 @@ bool IsEmissiveFalse(const Data&,
 }
 
 template <class Data>
-__device__ inline
+__device__ __forceinline__
 bool IsEmissiveTrue(const Data&,
                     const HitKey::Type&)
 {
@@ -26,7 +26,7 @@ bool IsEmissiveTrue(const Data&,
 }
 
 template <class Data, class Surface>
-__device__ inline
+__device__ __forceinline__
 Vector3 EmitEmpty(// Input
                   const Vector3& wo,
                   const Vector3& pos,
@@ -41,7 +41,7 @@ Vector3 EmitEmpty(// Input
 }
 
 template <class Data, class Surface>
-__device__ inline
+__device__ __forceinline__
 Vector3 SampleEmpty(// Sampled Output
                     RayF& wo,
                     float& pdf,
@@ -65,7 +65,7 @@ Vector3 SampleEmpty(// Sampled Output
 }
 
 template<class Data, class Surface>
-__device__ inline
+__device__ __forceinline__
 float PdfZero(const Vector3&,
               const Vector3&,
               const Vector3&,
@@ -80,7 +80,7 @@ float PdfZero(const Vector3&,
 }
 
 template<class Data, class Surface>
-__device__ inline
+__device__ __forceinline__
 float PdfOne(const Vector3&,
              const Vector3&,
              const Vector3&,
@@ -95,7 +95,7 @@ float PdfOne(const Vector3&,
 }
 
 template <class Data, class Surface>
-__device__ inline
+__device__ __forceinline__
 Vector3 EvaluateEmpty(// Input
                       const Vector3& wo,
                       const Vector3& wi,
@@ -111,7 +111,7 @@ Vector3 EvaluateEmpty(// Input
 }
 
 template <class Data, class Surface>
-__device__ inline
+__device__ __forceinline__
 float SpecularityPerfect(const Surface&, 
                          const Data& matData,
                          const HitKey::Type& matId)
@@ -120,7 +120,7 @@ float SpecularityPerfect(const Surface&,
 }
 
 template <class Data, class Surface>
-__device__ inline
+__device__ __forceinline__
 float SpecularityDiffuse(const Surface&,
                          const Data& matData,
                          const HitKey::Type& matId)

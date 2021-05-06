@@ -50,7 +50,7 @@ class RandomGPU;
 //    return matData.dAlbedo[matId];
 //}
 
-__device__ inline
+__device__ __forceinline__
 Vector3 BarycentricSample(// Sampled Output
                           RayF& wo,
                           float& pdf,
@@ -77,7 +77,7 @@ Vector3 BarycentricSample(// Sampled Output
     return surface.baryCoords;
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 BarycentricEvaluate(// Input
                             const Vector3& wo,
                             const Vector3& wi,
@@ -92,7 +92,7 @@ Vector3 BarycentricEvaluate(// Input
     return surface.baryCoords;
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 SphericalSample(// Sampled Output
                         RayF& wo,
                         float& pdf,
@@ -121,7 +121,7 @@ Vector3 SphericalSample(// Sampled Output
                     0.0f);
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 SphericalEvaluate(// Input
                           const Vector3& wo,
                           const Vector3& wi,
@@ -138,7 +138,7 @@ Vector3 SphericalEvaluate(// Input
                     0.0f);
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 NormalSample(// Sampled Output
                      RayF& wo,
                      float& pdf,
@@ -168,7 +168,7 @@ Vector3 NormalSample(// Sampled Output
     return normal;
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 NormalEvaluate(// Input
                        const Vector3& wo,
                        const Vector3& wi,

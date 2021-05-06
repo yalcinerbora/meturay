@@ -61,8 +61,8 @@ struct SpacePartition
             , dPrimCenters(dPCenters)
         {}
 
-        __device__ __host__
-        __forceinline__ bool operator()(const uint32_t& id) const
+        __device__ __host__ HYBRID_INLINE
+        bool operator()(const uint32_t& id) const
         {
             int axisIndex = static_cast<int>(axis);
             // Get center location of tri

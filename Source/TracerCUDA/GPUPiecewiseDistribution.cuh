@@ -155,17 +155,17 @@ class CPUDistGroupPiecewiseConst2D
         size_t                          UsedGPUMemory() const;
 };
 
-__host__ __device__
-inline GPUDistPiecewiseConst1D::GPUDistPiecewiseConst1D(const float* dCDFList,
-                                                        const float* dPDFList,
-                                                        uint32_t count)
+__host__ __device__ HYBRID_INLINE
+GPUDistPiecewiseConst1D::GPUDistPiecewiseConst1D(const float* dCDFList,
+                                                 const float* dPDFList,
+                                                 uint32_t count)
     : gCDF(dCDFList)
     , gPDF(dPDFList)
     , count(count)
 {}
 
-__device__
-inline float GPUDistPiecewiseConst1D::Sample(float& pdf, float& index, RandomGPU& rng) const
+__device__ __forceinline__
+float GPUDistPiecewiseConst1D::Sample(float& pdf, float& index, RandomGPU& rng) const
 {
     float xi = GPUDistribution::Uniform<float>(rng);   
 
@@ -186,14 +186,14 @@ inline float GPUDistPiecewiseConst1D::Sample(float& pdf, float& index, RandomGPU
     return index / float(count);
 }
 
-__device__
-inline float GPUDistPiecewiseConst1D::Pdf(float index) const
+__device__ __forceinline__
+float GPUDistPiecewiseConst1D::Pdf(float index) const
 {
     uint32_t indexInt = static_cast<uint32_t>(index);
     return gPDF[indexInt];
 }
 
-__host__ __device__
+__host__ __device__ HYBRID_INLINE
 inline GPUDistPiecewiseConst2D::GPUDistPiecewiseConst2D(const GPUDistPiecewiseConst1D dDistributionY,
                                                         const GPUDistPiecewiseConst1D* dDistributionsX,
                                                         uint32_t countX,
@@ -204,7 +204,7 @@ inline GPUDistPiecewiseConst2D::GPUDistPiecewiseConst2D(const GPUDistPiecewiseCo
     , height(countY)
 {}
 
-__device__
+__device__ __forceinline__
 inline Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, RandomGPU& rng) const
 {
     // Fist select a row using Y distribution
@@ -225,7 +225,7 @@ inline Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, Ran
     return Vector2(xiX, xiY);
 }
 
-__device__
+__device__ __forceinline__
 inline float GPUDistPiecewiseConst2D::Pdf(const Vector2f& index) const
 {
     //int indexX = static_cast<uint32_t>(index[0] * width);

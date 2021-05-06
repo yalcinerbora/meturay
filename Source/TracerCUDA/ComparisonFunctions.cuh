@@ -10,40 +10,46 @@ template<class Type>
 using CompFunc = bool(*)(const Type&, const Type&);
 
 template <class T>
-inline __device__ EnableRest<T, bool> CompareST(const T& a, const T&b)
+__device__ __forceinline__ 
+EnableRest<T, bool> CompareST(const T& a, const T&b)
 {
     return a < b;
 }
 
 template <class T>
-inline __device__ EnableRest<T, bool> CompareGT(const T& a, const T&b)
+__device__ __forceinline__ 
+EnableRest<T, bool> CompareGT(const T& a, const T&b)
 {
     return a > b;
 }
 
 // Dim 1
 template <class T>
-inline __device__ EnableNV1Type<T, bool> CompareST(const T& a, const T&b)
+__device__ __forceinline__ 
+EnableNV1Type<T, bool> CompareST(const T& a, const T&b)
 {
     return a.x < b.x;
 }
 
 template <class T>
-inline __device__ EnableNV1Type<T, bool> CompareGT(const T& a, const T&b)
+__device__ __forceinline__ 
+EnableNV1Type<T, bool> CompareGT(const T& a, const T&b)
 {
     return a.x > b.x;
 }
 
 // Dim 2
 template <class T>
-inline __device__ EnableNV2Type<T, bool> ReduceST(const T& a, const T&b)
+__device__ __forceinline__ 
+EnableNV2Type<T, bool> ReduceST(const T& a, const T&b)
 {
     return (a.x < b.x &&
             a.y < b.y);
 }
 
 template <class T>
-inline __device__ EnableNV2Type<T, bool> ReduceGT(const T& a, const T&b)
+__device__ __forceinline__ 
+EnableNV2Type<T, bool> ReduceGT(const T& a, const T&b)
 {
     return (a.x > b.x &&
             a.y > b.y);
@@ -51,7 +57,8 @@ inline __device__ EnableNV2Type<T, bool> ReduceGT(const T& a, const T&b)
 
 // Dim 3
 template <class T>
-inline __device__ EnableNV3Type<T, bool> ReduceST(const T& a, const T&b)
+__device__ __forceinline__ 
+EnableNV3Type<T, bool> ReduceST(const T& a, const T&b)
 {
     return (a.x < b.x &&
             a.y < b.y &&
@@ -59,7 +66,8 @@ inline __device__ EnableNV3Type<T, bool> ReduceST(const T& a, const T&b)
 }
 
 template <class T>
-inline __device__ EnableNV3Type<T, bool> ReduceGT(const T& a, const T&b)
+__device__ __forceinline__ 
+EnableNV3Type<T, bool> ReduceGT(const T& a, const T&b)
 {
     return (a.x > b.x &&
             a.y > b.y &&
@@ -68,7 +76,8 @@ inline __device__ EnableNV3Type<T, bool> ReduceGT(const T& a, const T&b)
 
 // Dim 4
 template <class T>
-inline __device__ EnableNV4Type<T, bool> ReduceST(const T& a, const T&b)
+__device__ __forceinline__ 
+EnableNV4Type<T, bool> ReduceST(const T& a, const T&b)
 {
     return (a.x < b.x &&
             a.y < b.y &&
@@ -77,7 +86,8 @@ inline __device__ EnableNV4Type<T, bool> ReduceST(const T& a, const T&b)
 }
 
 template <class T>
-inline __device__ EnableNV4Type<T, bool> ReduceGT(const T& a, const T&b)
+__device__ __forceinline__ 
+EnableNV4Type<T, bool> ReduceGT(const T& a, const T&b)
 {
     return (a.x > b.x &&
             a.y > b.y &&
@@ -92,7 +102,7 @@ inline __device__ EnableNV4Type<T, bool> ReduceGT(const T& a, const T&b)
 template<class Type, CompFunc<Type> F>
 struct CompareWrapper
 {
-    __host__ __device__ __forceinline__
+    __host__ __device__ HYBRID_INLINE
     bool operator()(const Type &a, const Type &b) const
     {
         return F(a, b);

@@ -12,7 +12,7 @@
 #include "TracerFunctions.cuh"
 #include "GPUSurface.h"
 
-__device__ inline
+__device__ __forceinline__
 Vector3 LambertCSample(// Sampled Output
                        RayF& wo,
                        float& pdf,
@@ -56,7 +56,7 @@ Vector3 LambertCSample(// Sampled Output
     return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
 }
 
-__device__ inline
+__device__ __forceinline__
 float LambertCPdf(const Vector3& wo,
                   const Vector3& wi,
                   const Vector3& pos,
@@ -74,7 +74,7 @@ float LambertCPdf(const Vector3& wo,
     return pdf;
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 LambertCEvaluate(// Input
                          const Vector3& wo,
                          const Vector3& wi,
@@ -91,7 +91,7 @@ Vector3 LambertCEvaluate(// Input
     return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 ReflectSample(// Sampled Output
                       RayF& wo,
                       float& pdf,
@@ -135,7 +135,7 @@ Vector3 ReflectSample(// Sampled Output
     }
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 ReflectEvaluate(// Input
                         const Vector3& wo,
                         const Vector3& wi,
@@ -151,7 +151,7 @@ Vector3 ReflectEvaluate(// Input
     return Zero3;
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 RefractSample(// Sampled Output
                       RayF& wo,
                       float& pdf,
@@ -249,7 +249,7 @@ Vector3 RefractSample(// Sampled Output
     }
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 RefractEvaluate(// Input
                         const Vector3& wo,
                         const Vector3& wi,

@@ -7,7 +7,7 @@
 class RandomGPU;
 
 template <class Surface>
-__device__
+__device__ __forceinline__
 Vector3 EmptySample(// Sampled Output
                        RayF& wo,
                        float& pdf,
@@ -33,7 +33,7 @@ Vector3 EmptySample(// Sampled Output
 }
 
 template <class Surface>
-__device__
+__device__ __forceinline__
 Vector3 EmptyEvaluate(// Input
                       const Vector3& wo,
                       const Vector3& wi,

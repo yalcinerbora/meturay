@@ -11,7 +11,7 @@
 #include "TracerFunctions.cuh"
 #include "GPUSurface.h"
 
-__device__ inline
+__device__ __forceinline__
 Vector3 CalculateF0(const Vector3f& baseAlbedo, float metallic, float specular)
 {
     // https://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf
@@ -23,7 +23,7 @@ Vector3 CalculateF0(const Vector3f& baseAlbedo, float metallic, float specular)
     return Vector3f::Lerp(Vector3f(specular), baseAlbedo, metallic);
 }
 
-__device__ inline
+__device__ __forceinline__
 float UnrealSpecularity(const UVSurface& surface,
                         const UnrealMatData& matData,
                         const HitKey::Type& matId)
@@ -33,7 +33,7 @@ float UnrealSpecularity(const UVSurface& surface,
     return 1.0f - alpha * alpha;
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 UnrealSample(// Sampled Output
                       RayF& wo,
                       float& pdf,
@@ -135,7 +135,7 @@ Vector3 UnrealSample(// Sampled Output
     return diffBlended + specularTerm;
 }
 
-__device__ inline
+__device__ __forceinline__
 float UnrealPdf(// Input
                 const Vector3& wo,
                 const Vector3& wi,
@@ -161,7 +161,7 @@ float UnrealPdf(// Input
     return pdf;
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 UnrealEvaluate(// Input
                        const Vector3& wo,
                        const Vector3& wi,

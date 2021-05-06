@@ -27,7 +27,7 @@ namespace Utility
 }
 
 template<class T>
-__host__ __device__
+__host__ __device__ HYBRID_INLINE
 FloatEnable<T, Vector<3, T>> Utility::SphericalToCartesian(const Vector<3, T>& sphr)
 {
     T x = sphr[0] * cos(sphr[1]) * sin(sphr[2]);
@@ -37,7 +37,7 @@ FloatEnable<T, Vector<3, T>> Utility::SphericalToCartesian(const Vector<3, T>& s
 }
 
 template<class T>
-__host__ __device__
+__host__ __device__ HYBRID_INLINE
 FloatEnable<T, Vector<3, T>> Utility::CartesianToSpherical(const Vector<3, T>& cart)
 {
     // Convert to Spherical Coordinates
@@ -50,7 +50,7 @@ FloatEnable<T, Vector<3, T>> Utility::CartesianToSpherical(const Vector<3, T>& c
 }
 
 template<class T>
-__host__ __device__
+__host__ __device__ HYBRID_INLINE
 FloatEnable<T, Vector<3, T>> Utility::SphericalToCartesianUnit(const Vector<2, T>& sphr)
 {
     T x = cos(sphr[0]) * sin(sphr[1]);
@@ -60,7 +60,7 @@ FloatEnable<T, Vector<3, T>> Utility::SphericalToCartesianUnit(const Vector<2, T
 }
 
 template<class T>
-__host__ __device__
+__host__ __device__ HYBRID_INLINE
 FloatEnable<T, Vector<3, T>> Utility::SphericalToCartesianUnit(const Vector<2, T>& sinCosTheta,
                                                                const Vector<2, T>& sinCosTPhi)
 {
@@ -71,7 +71,7 @@ FloatEnable<T, Vector<3, T>> Utility::SphericalToCartesianUnit(const Vector<2, T
 }
 
 template<class T>
-__host__ __device__
+__host__ __device__ HYBRID_INLINE
 FloatEnable<T, Vector<2, T>> Utility::CartesianToSphericalUnit(const Vector<3, T>& cart)
 {
     // Convert to Spherical Coordinates

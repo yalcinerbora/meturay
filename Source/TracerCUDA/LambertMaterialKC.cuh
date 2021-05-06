@@ -8,7 +8,7 @@
 #include "MaterialFunctions.cuh"
 #include "GPUSurface.h"
 
-__device__ inline
+__device__ __forceinline__
 Vector3 LambertSample(// Sampled Output
                       RayF& wo,
                       float& pdf,
@@ -58,7 +58,7 @@ Vector3 LambertSample(// Sampled Output
     return nDotL * albedo * MathConstants::InvPi;
 }
 
-__device__ inline
+__device__ __forceinline__
 float LambertPDF(const Vector3& wo,
                   const Vector3& wi,
                   const Vector3& pos,
@@ -80,7 +80,7 @@ float LambertPDF(const Vector3& wo,
     return pdf;
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3 LambertEvaluate(// Input
                         const Vector3& wo,
                         const Vector3& wi,
