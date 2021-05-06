@@ -29,10 +29,12 @@ Utility header for header only cuda vector and cpu vector implementations
             throw TracerException(TracerError::GPU_OUT_OF_MEMORY, cudaGetErrorString(code));
         }
     }
+    #define HYBRID_INLINE __forceinline__
     #define CUDA_MEMORY_CHECK(func){GPUMemoryCheck((func));}
 #else
     #define __device__
     #define __host__
+    #define HYBRID_INLINE inline
     typedef int cudaError_t;
 
     inline static constexpr void GPUAssert(cudaError_t code, const char *file, int line) {}

@@ -10,8 +10,8 @@
 namespace HemiDistribution
 {
     template <class T, class = FloatEnable<T>>
-    __device__ __host__
-    inline Vector<3, T> HemiCosineCDF(const Vector<2, T>& xi, float& pdf)
+    __device__ __host__ HYBRID_INLINE
+    Vector<3, T> HemiCosineCDF(const Vector<2, T>& xi, float& pdf)
     {
         T xi1Coeff = 2 * static_cast<T>(MathConstants::Pi_d) * xi[1];
         Vector<3, T> dir;
@@ -28,8 +28,8 @@ namespace HemiDistribution
     }
 
     template <class T, class = FloatEnable<T>>
-    __device__ __host__
-        inline Vector<3, T> HemiUniformCDF(const Vector<2, T>& xi, float& pdf)
+    __device__ __host__ HYBRID_INLINE
+    Vector<3, T> HemiUniformCDF(const Vector<2, T>& xi, float& pdf)
     {
         T xi0Coeff = sqrt(max((T)0, 1 - xi[0] * xi[0]));
         T xi1Coeff = 2 * static_cast<T>(MathConstants::Pi_d) * xi[1];

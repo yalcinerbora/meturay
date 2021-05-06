@@ -13,7 +13,7 @@ namespace HybridFuncs
 }
 
 template <class T>
-__device__ __host__
+__device__ __host__ HYBRID_INLINE
 void HybridFuncs::Swap(T& t0, T& t1)
 {
     T temp = t0;
@@ -22,15 +22,15 @@ void HybridFuncs::Swap(T& t0, T& t1)
 }
 
 template <>
-__device__ __host__
-inline float HybridFuncs::Clamp(const float& t, const float& minVal, const float& maxVal)
+__device__ __host__ HYBRID_INLINE
+float HybridFuncs::Clamp(const float& t, const float& minVal, const float& maxVal)
 {
     return fminf(fmaxf(minVal, t), maxVal);
 }
 
 template <>
-__device__ __host__
-inline double HybridFuncs::Clamp(const double& t, const double& minVal, const double& maxVal)
+__device__ __host__ HYBRID_INLINE
+double HybridFuncs::Clamp(const double& t, const double& minVal, const double& maxVal)
 {
     return fmin(fmax(minVal, t), maxVal);
 }

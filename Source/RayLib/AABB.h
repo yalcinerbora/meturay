@@ -40,7 +40,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
                                                          const Args1... dataList1);
     ~AABB() = default;
 
-// Accessors
+    // Accessors
     __device__ __host__ const Vector<N, T>& Min() const;
     __device__ __host__ const Vector<N, T>& Max() const;
     __device__ __host__ Vector<N, T>            Min();

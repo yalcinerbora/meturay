@@ -96,7 +96,7 @@ template<class MGroup, class PGroup>
 class PTNEEWork
     : public GPUWorkBatch<PathTracerGlobalState, 
                           PathTracerLocalState, RayAuxPath,
-                          MGroup, PGroup, PathTracerPathWork<MGroup>,
+                          MGroup, PGroup, PathTracerNEEWork<MGroup>,
                           PGroup::GetSurfaceFunction>
 {
     private:
@@ -121,7 +121,7 @@ template<class MGroup, class PGroup>
 class PTMISWork
     : public GPUWorkBatch<PathTracerGlobalState, 
                           PathTracerLocalState, RayAuxPath,
-                          MGroup, PGroup, PathTracerPathWork<MGroup>,
+                          MGroup, PGroup, PathTracerMISWork<MGroup>,
                           PGroup::GetSurfaceFunction>
 {
     private:

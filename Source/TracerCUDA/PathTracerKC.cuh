@@ -43,24 +43,24 @@ struct PathTracerLocalState
 };
 
 template <class MGroup>
-__device__
-inline void PathTracerBoundaryWork(// Output
-                                   HitKey* gOutBoundKeys,
-                                   RayGMem* gOutRays,
-                                   RayAuxPath* gOutRayAux,
-                                   const uint32_t maxOutRay,
-                                   // Input as registers
-                                   const RayReg& ray,
-                                   const RayAuxPath& aux,
-                                   const typename MGroup::Surface& surface,
-                                   // I-O
-                                   PathTracerLocalState& gLocalState,
-                                   PathTracerGlobalState& gRenderState,
-                                   RandomGPU& rng,
-                                   // Constants
-                                   const typename MGroup::Data& gMatData,
-                                   const HitKey matId,
-                                   const PrimitiveId primId)
+__device__ __forceinline__
+void PathTracerBoundaryWork(// Output
+                            HitKey* gOutBoundKeys,
+                            RayGMem* gOutRays,
+                            RayAuxPath* gOutRayAux,
+                            const uint32_t maxOutRay,
+                            // Input as registers
+                            const RayReg& ray,
+                            const RayAuxPath& aux,
+                            const typename MGroup::Surface& surface,
+                            // I-O
+                            PathTracerLocalState& gLocalState,
+                            PathTracerGlobalState& gRenderState,
+                            RandomGPU& rng,
+                            // Constants
+                            const typename MGroup::Data& gMatData,
+                            const HitKey matId,
+                            const PrimitiveId primId)
 {
     // Check Material Sample Strategy
     assert(maxOutRay == 0);
@@ -112,24 +112,24 @@ inline void PathTracerBoundaryWork(// Output
 
 
 template <class MGroup>
-__device__
-inline void PathTracerComboWork(// Output
-                                HitKey* gOutBoundKeys,
-                                RayGMem* gOutRays,
-                                RayAuxPath* gOutRayAux,
-                                const uint32_t maxOutRay,
-                                // Input as registers
-                                const RayReg& ray,
-                                const RayAuxPath& aux,
-                                const typename MGroup::Surface& surface,
-                                // I-O
-                                PathTracerLocalState& gLocalState,
-                                PathTracerGlobalState& gRenderState,
-                                RandomGPU& rng,
-                                // Constants
-                                const typename MGroup::Data& gMatData,
-                                const HitKey matId,
-                                const PrimitiveId primId)
+__device__ __forceinline__
+void PathTracerComboWork(// Output
+                         HitKey* gOutBoundKeys,
+                         RayGMem* gOutRays,
+                         RayAuxPath* gOutRayAux,
+                         const uint32_t maxOutRay,
+                         // Input as registers
+                         const RayReg& ray,
+                         const RayAuxPath& aux,
+                         const typename MGroup::Surface& surface,
+                         // I-O
+                         PathTracerLocalState& gLocalState,
+                         PathTracerGlobalState& gRenderState,
+                         RandomGPU& rng,
+                         // Constants
+                         const typename MGroup::Data& gMatData,
+                         const HitKey matId,
+                         const PrimitiveId primId)
 {
     static constexpr Vector3 ZERO_3 = Zero3;
 
@@ -396,24 +396,24 @@ inline void PathTracerComboWork(// Output
 }
 
 template <class MGroup>
-__device__
-inline void PathTracerPathWork(// Output
-                               HitKey* gOutBoundKeys,
-                               RayGMem* gOutRays,
-                               RayAuxPath* gOutRayAux,
-                               const uint32_t maxOutRay,
-                               // Input as registers
-                               const RayReg& ray,
-                               const RayAuxPath& aux,
-                               const typename MGroup::Surface& surface,
-                               // I-O
-                               PathTracerLocalState& gLocalState,
-                               PathTracerGlobalState& gRenderState,
-                               RandomGPU& rng,
-                               // Constants
-                               const typename MGroup::Data& gMatData,
-                               const HitKey matId,
-                               const PrimitiveId primId)
+__device__ __forceinline__
+void PathTracerPathWork(// Output
+                        HitKey* gOutBoundKeys,
+                        RayGMem* gOutRays,
+                        RayAuxPath* gOutRayAux,
+                        const uint32_t maxOutRay,
+                        // Input as registers
+                        const RayReg& ray,
+                        const RayAuxPath& aux,
+                        const typename MGroup::Surface& surface,
+                        // I-O
+                        PathTracerLocalState& gLocalState,
+                        PathTracerGlobalState& gRenderState,
+                        RandomGPU& rng,
+                        // Constants
+                        const typename MGroup::Data& gMatData,
+                        const HitKey matId,
+                        const PrimitiveId primId)
 {
     static constexpr Vector3 ZERO_3 = Zero3;
 
@@ -538,24 +538,24 @@ inline void PathTracerPathWork(// Output
 }
 
 template <class MGroup>
-__device__
-inline void PathTracerNEEWork(// Output
-                              HitKey* gOutBoundKeys,
-                              RayGMem* gOutRays,
-                              RayAuxPath* gOutRayAux,
-                              const uint32_t maxOutRay,
-                              // Input as registers
-                              const RayReg& ray,
-                              const RayAuxPath& aux,
-                              const typename MGroup::Surface& surface,
-                              // I-O
-                              PathTracerLocalState& gLocalState,
-                              PathTracerGlobalState& gRenderState,
-                              RandomGPU& rng,
-                              // Constants
-                              const typename MGroup::Data& gMatData,
-                              const HitKey matId,
-                              const PrimitiveId primId)
+__device__ __forceinline__
+void PathTracerNEEWork(// Output
+                       HitKey* gOutBoundKeys,
+                       RayGMem* gOutRays,
+                       RayAuxPath* gOutRayAux,
+                       const uint32_t maxOutRay,
+                       // Input as registers
+                       const RayReg& ray,
+                       const RayAuxPath& aux,
+                       const typename MGroup::Surface& surface,
+                       // I-O
+                       PathTracerLocalState& gLocalState,
+                       PathTracerGlobalState& gRenderState,
+                       RandomGPU& rng,
+                       // Constants
+                       const typename MGroup::Data& gMatData,
+                       const HitKey matId,
+                       const PrimitiveId primId)
 {
     static constexpr Vector3 ZERO_3 = Zero3;
 
@@ -841,24 +841,68 @@ inline void PathTracerNEEWork(// Output
 }
 
 template <class MGroup>
-__device__
-inline void PathTracerMISWork(// Output
-                              HitKey* gOutBoundKeys,
-                              RayGMem* gOutRays,
-                              RayAuxPath* gOutRayAux,
-                              const uint32_t maxOutRay,
-                              // Input as registers
-                              const RayReg& ray,
-                              const RayAuxPath& aux,
-                              const typename MGroup::Surface& surface,
-                              // I-O
-                              PathTracerLocalState& gLocalState,
-                              PathTracerGlobalState& gRenderState,
-                              RandomGPU& rng,
-                              // Constants
-                              const typename MGroup::Data& gMatData,
-                              const HitKey matId,
-                              const PrimitiveId primId)
+__device__ __forceinline__
+void PathTracerMISWork(// Output
+                       HitKey* gOutBoundKeys,
+                       RayGMem* gOutRays,
+                       RayAuxPath* gOutRayAux,
+                       const uint32_t maxOutRay,
+                       // Input as registers
+                       const RayReg& ray,
+                       const RayAuxPath& aux,
+                       const typename MGroup::Surface& surface,
+                       // I-O
+                       PathTracerLocalState& gLocalState,
+                       PathTracerGlobalState& gRenderState,
+                       RandomGPU& rng,
+                       // Constants
+                       const typename MGroup::Data& gMatData,
+                       const HitKey matId,
+                       const PrimitiveId primId)
 {
+    //static constexpr Vector3 ZERO_3 = Zero3;
 
+    static constexpr int MIS_RAY_INDEX = 0;
+
+    // Inputs
+    // Current Ray
+    const RayF& r = ray.ray;
+    // Current Material Index
+    HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
+    // Hit Position
+    Vector3 position = r.AdvancedPos(ray.tMax);
+    // Wi (direction is swapped as if it is coming out of the surface
+    Vector3 wi = -(r.getDirection().Normalize());
+    // Current ray's medium
+    const GPUMediumI& m = *(gRenderState.mediumList[aux.mediumIndex]);
+
+    // Check Material Sample Strategy
+    const uint32_t sampleCount = maxOutRay;
+    // Check Material's specularity;
+    float specularity = MGroup::Specularity(surface, gMatData, matIndex);
+    bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
+
+    // Invalid Ray Write Helper Function
+    auto InvalidRayWrite = [&gOutRays, &gOutBoundKeys, &gOutRayAux, &sampleCount](int index)
+    {
+        assert(index < sampleCount);
+
+        // Generate Dummy Ray and Terminate
+        RayReg rDummy = EMPTY_RAY_REGISTER;
+        rDummy.Update(gOutRays, index);
+        gOutBoundKeys[index] = HitKey::InvalidKey;
+        gOutRayAux[index].pixelIndex = UINT32_MAX;
+    };
+
+    // If NEE ray hits to this material
+    // just skip since this is not a light material
+    if(aux.type == RayType::NEE_RAY)
+    {
+        InvalidRayWrite(MIS_RAY_INDEX);
+        return;
+    }
+
+    // Calculate Transmittance factor of the medium
+    Vector3 transFactor = m.Transmittance(ray.tMax);
+    Vector3 radianceFactor = aux.radianceFactor * transFactor;
 }

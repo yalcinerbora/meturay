@@ -130,7 +130,7 @@ TracerError PathTracer::Initialize()
         uint32_t batchId = std::get<0>(workInfo);
 
         // Generate work batch from appropirate work pool
-        WorkBatchList workBatchList;
+        WorkBatchArray workBatchList;
         if(mg.IsBoundary())
         {
             bool emptyPrim = (std::string(pg.Type()) ==
@@ -249,16 +249,18 @@ bool PathTracer::Render()
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;
 
-        // Set pointers
-        RayAuxPath* dAuxOutLocal = static_cast<RayAuxPath*>(*dAuxOut) + p.offset;
+        // Set pointers        
         const RayAuxPath* dAuxInLocal = static_cast<const RayAuxPath*>(*dAuxIn);
-
         using WorkData = typename GPUWorkBatchD<PathTracerGlobalState, RayAuxPath>;
+        int i = 0;
         for(auto& work : loc->second)
         {
+            RayAuxPath* dAuxOutLocal = static_cast<RayAuxPath*>(*dAuxOut) + p.offsets[i];
+
             auto& wData = static_cast<WorkData&>(*work);
             wData.SetGlobalData(globalData);
             wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
+            i++;
         }
     }
 

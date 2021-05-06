@@ -1,24 +1,24 @@
 //template<class T>
 //__device__ __host__
-//inline constexpr Quaternion<T>::Quaternion()
+//constexpr Quaternion<T>::Quaternion()
 //  : vec(1, 0, 0, 0)
 //{}
 
 template<class T>
-__device__ __host__
-inline constexpr Quaternion<T>::Quaternion(T w, T x, T y, T z)
+__device__ __host__ HYBRID_INLINE
+constexpr Quaternion<T>::Quaternion(T w, T x, T y, T z)
     : vec(w, x, y, z)
 {}
 
 template<class T>
-__device__ __host__
-inline constexpr Quaternion<T>::Quaternion(const T* v)
+__device__ __host__ HYBRID_INLINE
+constexpr Quaternion<T>::Quaternion(const T* v)
     : vec(v)
 {}
 
 template<class T>
-__device__ __host__
-inline Quaternion<T>::Quaternion(T angle, const Vector<3, T>& axis)
+__device__ __host__ HYBRID_INLINE
+Quaternion<T>::Quaternion(T angle, const Vector<3, T>& axis)
 {
     angle *= 0.5;
     T sinAngle = sin(angle);
@@ -29,56 +29,57 @@ inline Quaternion<T>::Quaternion(T angle, const Vector<3, T>& axis)
     vec[0] = cos(angle);
 }
 
-template<class T>
-inline __device__ __host__ Quaternion<T>::Quaternion(const Vector<4, T>& vec)
+template<class T> 
+__device__ __host__ HYBRID_INLINE
+Quaternion<T>::Quaternion(const Vector<4, T>& vec)
     : vec(vec)
 {}
 
 template<class T>
-__device__ __host__
-inline Quaternion<T>::operator Vector<4, T>& ()
+__device__ __host__ HYBRID_INLINE
+Quaternion<T>::operator Vector<4, T>& ()
 {
     return vec;
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T>::operator const Vector<4, T>& () const
+__device__ __host__ HYBRID_INLINE
+Quaternion<T>::operator const Vector<4, T>& () const
 {
     return vec;
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T>::operator T* ()
+__device__ __host__ HYBRID_INLINE
+Quaternion<T>::operator T* ()
 {
     return static_cast<T*>(vec);
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T>::operator const T* () const
+__device__ __host__ HYBRID_INLINE
+Quaternion<T>::operator const T* () const
 {
     return static_cast<const T*>(vec);
 }
 
 template<class T>
-__device__ __host__
-inline T& Quaternion<T>::operator[](int i)
+__device__ __host__ HYBRID_INLINE
+T& Quaternion<T>::operator[](int i)
 {
     return vec[i];
 }
 
 template<class T>
-__device__ __host__
-inline const T& Quaternion<T>::operator[](int i) const
+__device__ __host__ HYBRID_INLINE
+const T& Quaternion<T>::operator[](int i) const
 {
     return vec[i];
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T> Quaternion<T>::operator*(const Quaternion& right) const
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> Quaternion<T>::operator*(const Quaternion& right) const
 {
     //return Quaternion(vec[0] * right[0] - vec[1] * right[1] - vec[2] * right[2] - vec[3] * right[3],        // W
     //                  vec[0] * right[1] + vec[1] * right[0] + vec[2] * right[3] - vec[3] * right[2],        // X
@@ -92,129 +93,129 @@ inline Quaternion<T> Quaternion<T>::operator*(const Quaternion& right) const
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T> Quaternion<T>::operator*(T right) const
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> Quaternion<T>::operator*(T right) const
 {
     return Quaternion<T>(vec * right);
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T> Quaternion<T>::operator+(const Quaternion& right) const
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> Quaternion<T>::operator+(const Quaternion& right) const
 {
     return Quaternion(vec + right.vec);
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T> Quaternion<T>::operator-(const Quaternion& right) const
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> Quaternion<T>::operator-(const Quaternion& right) const
 {
     return Quaternion(vec - right.vec);
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T> Quaternion<T>::operator-() const
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> Quaternion<T>::operator-() const
 {
     return Quaternion(-vec);
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T> Quaternion<T>::operator/(T right) const
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> Quaternion<T>::operator/(T right) const
 {
     return Quaternion<T>(vec / right);
 }
 
 template<class T>
-__device__ __host__
-inline void Quaternion<T>::operator*=(const Quaternion& right)
+__device__ __host__ HYBRID_INLINE
+void Quaternion<T>::operator*=(const Quaternion& right)
 {
     Quaternion copy(*this);
     (*this) = copy * right;
 }
 
 template<class T>
-__device__ __host__
-inline void Quaternion<T>::operator*=(T right)
+__device__ __host__ HYBRID_INLINE
+void Quaternion<T>::operator*=(T right)
 {
     vec *= right;
 }
 
 template<class T>
-__device__ __host__
-inline void Quaternion<T>::operator+=(const Quaternion& right)
+__device__ __host__ HYBRID_INLINE
+void Quaternion<T>::operator+=(const Quaternion& right)
 {
     vec += right.vec;
 }
 
 template<class T>
-__device__ __host__
-inline void Quaternion<T>::operator-=(const Quaternion& right)
+__device__ __host__ HYBRID_INLINE
+void Quaternion<T>::operator-=(const Quaternion& right)
 {
     vec -= right.vec;
 }
 
 template<class T>
-__device__ __host__
-inline void Quaternion<T>::operator/=(T right)
+__device__ __host__ HYBRID_INLINE
+void Quaternion<T>::operator/=(T right)
 {
     vec /= right;
 }
 
 template<class T>
-__device__ __host__
-inline bool Quaternion<T>::operator==(const Quaternion& right) const
+__device__ __host__ HYBRID_INLINE
+bool Quaternion<T>::operator==(const Quaternion& right) const
 {
     return vec == right.vec;
 }
 
 template<class T>
-__device__ __host__
-inline bool Quaternion<T>::operator!=(const Quaternion& right) const
+__device__ __host__ HYBRID_INLINE
+bool Quaternion<T>::operator!=(const Quaternion& right) const
 {
     return vec != right.vec;
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T> Quaternion<T>::Normalize() const
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> Quaternion<T>::Normalize() const
 {
     return Quaternion(vec.Normalize());
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T>& Quaternion<T>::NormalizeSelf()
+__device__ __host__ HYBRID_INLINE
+Quaternion<T>& Quaternion<T>::NormalizeSelf()
 {
     vec.NormalizeSelf();
     return *this;
 }
 
 template<class T>
-__device__ __host__
-inline T Quaternion<T>::Length() const
+__device__ __host__ HYBRID_INLINE
+T Quaternion<T>::Length() const
 {
     return vec.Length();
 }
 
 template<class T>
-__device__ __host__
-inline T Quaternion<T>::LengthSqr() const
+__device__ __host__ HYBRID_INLINE
+T Quaternion<T>::LengthSqr() const
 {
     return vec.LengthSqr();
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T> Quaternion<T>::Conjugate() const
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> Quaternion<T>::Conjugate() const
 {
     return Quaternion(vec[0], -vec[1], -vec[2], -vec[3]);
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T>& Quaternion<T>::ConjugateSelf()
+__device__ __host__ HYBRID_INLINE
+Quaternion<T>& Quaternion<T>::ConjugateSelf()
 {
     vec[1] = -vec[1];
     vec[2] = -vec[2];
@@ -223,15 +224,15 @@ inline Quaternion<T>& Quaternion<T>::ConjugateSelf()
 }
 
 template<class T>
-__device__ __host__
-inline T Quaternion<T>::Dot(const Quaternion& right) const
+__device__ __host__ HYBRID_INLINE
+T Quaternion<T>::Dot(const Quaternion& right) const
 {
     return vec.Dot(right.vec);
 }
 
 template<class T>
-__device__ __host__
-inline Vector<3, T> Quaternion<T>::ApplyRotation(const Vector<3, T>& vector) const
+__device__ __host__ HYBRID_INLINE
+Vector<3, T> Quaternion<T>::ApplyRotation(const Vector<3, T>& vector) const
 {
     // q * v * qInv
     // .Normalize();
@@ -243,8 +244,8 @@ inline Vector<3, T> Quaternion<T>::ApplyRotation(const Vector<3, T>& vector) con
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T> Quat::NLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t)
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> Quat::NLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t)
 {
     T cosTetha = start.Dot(end);
     // Select closest approach
@@ -259,8 +260,8 @@ inline Quaternion<T> Quat::NLerp(const Quaternion<T>& start, const Quaternion<T>
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T> Quat::SLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t)
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> Quat::SLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t)
 {
     T cosTetha = start.Dot(end);
     // Select closest approach
@@ -286,11 +287,11 @@ inline Quaternion<T> Quat::SLerp(const Quaternion<T>& start, const Quaternion<T>
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T> Quat::BarySLerp(const Quaternion<T>& q0,
-                                     const Quaternion<T>& q1,
-                                     const Quaternion<T>& q2,
-                                     T a, T b)
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> Quat::BarySLerp(const Quaternion<T>& q0,
+                              const Quaternion<T>& q1,
+                              const Quaternion<T>& q2,
+                              T a, T b)
 {
     // Proper way to do this is
     // http://www.acsu.buffalo.edu/~johnc/ave_quat07.pdf
@@ -327,8 +328,8 @@ inline Quaternion<T> Quat::BarySLerp(const Quaternion<T>& q0,
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T> Quat::RotationBetween(const Vector<3, T>& a, const Vector<3, T>& b)
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> Quat::RotationBetween(const Vector<3, T>& a, const Vector<3, T>& b)
 {
     Vector<3, T> aCrossB = Cross(a, b);
     T aDotB = a.Dot(b);
@@ -338,8 +339,8 @@ inline Quaternion<T> Quat::RotationBetween(const Vector<3, T>& a, const Vector<3
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T> Quat::RotationBetweenZAxis(const Vector<3, T>& b)
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> Quat::RotationBetweenZAxis(const Vector<3, T>& b)
 {
     Vector<3, T> zCrossD(-b[1], b[0], 0);
     T zDotD = b[2];
@@ -371,18 +372,18 @@ inline Quaternion<T> Quat::RotationBetweenZAxis(const Vector<3, T>& b)
 }
 
 template<class T>
-__device__ __host__
-inline Quaternion<T> operator*(T t, const Quaternion<T>& q)
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> operator*(T t, const Quaternion<T>& q)
 {
     return q * t;
 }
 
 template <class T>
-__device__ __host__
-inline void TransformGen::Space(Quaternion<T>& q,
-                                const Vector<3, T>& x,
-                                const Vector<3, T>& y,
-                                const Vector<3, T>& z)
+__device__ __host__ HYBRID_INLINE
+void TransformGen::Space(Quaternion<T>& q,
+                         const Vector<3, T>& x,
+                         const Vector<3, T>& y,
+                         const Vector<3, T>& z)
 {
     // Converting a Rotation Matrix to a Quaternion
     // Mike Day, Insomniac Games (2015)
@@ -438,11 +439,11 @@ inline void TransformGen::Space(Quaternion<T>& q,
 }
 
 template <class T>
-__device__ __host__
-inline void TransformGen::InvSpace(Quaternion<T>& q,
-                                   const Vector<3, T>& x,
-                                   const Vector<3, T>& y,
-                                   const Vector<3, T>& z)
+__device__ __host__ HYBRID_INLINE
+void TransformGen::InvSpace(Quaternion<T>& q,
+                            const Vector<3, T>& x,
+                            const Vector<3, T>& y,
+                            const Vector<3, T>& z)
 {
     TransformGen::Space(q, x, y, z);
     q.ConjugateSelf();

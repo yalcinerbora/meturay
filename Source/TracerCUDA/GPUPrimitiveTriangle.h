@@ -59,15 +59,15 @@ using TriangleHit = Vector2f;
 
 struct TriFunctions
 {
-    __device__
-    static inline Vector3f Sample(// Output
-                                  Vector3f& normal,
-                                  float& pdf,
-                                  // Input
-                                  PrimitiveId primitiveId,
-                                  const TriData& primData,
-                                  // I-O
-                                  RandomGPU& rng)
+    __device__ __forceinline__
+    static Vector3f Sample(// Output
+                           Vector3f& normal,
+                           float& pdf,
+                           // Input
+                           PrimitiveId primitiveId,
+                           const TriData& primData,
+                           // I-O
+                           RandomGPU& rng)
     {
         float r1 = sqrt(GPUDistribution::Uniform<float>(rng));
         float r2 = GPUDistribution::Uniform<float>(rng);
@@ -105,17 +105,17 @@ struct TriFunctions
                 position2 * c);
     }
 
-    __device__
-    static inline void PDF(// Outputs
-                           Vector3f& normal,
-                           float& pdf,
-                           float& distance,
-                           // Inputs
-                           const Vector3f& position,
-                           const Vector3f& direction,
-                           const GPUTransformI& transform,
-                           const PrimitiveId primitiveId,
-                           const TriData& primData)
+    __device__ __forceinline__
+    static void PDF(// Outputs
+                    Vector3f& normal,
+                    float& pdf,
+                    float& distance,
+                    // Inputs
+                    const Vector3f& position,
+                    const Vector3f& direction,
+                    const GPUTransformI& transform,
+                    const PrimitiveId primitiveId,
+                    const TriData& primData)
     {
         // Find the primitive
         float index;
@@ -184,17 +184,17 @@ struct TriFunctions
     }
 
     // Triangle Hit Acceptance
-    __device__
-    static inline HitResult Hit(// Output
-                                HitKey& newMat,
-                                PrimitiveId& newPrim,
-                                TriangleHit& newHit,
-                                // I-O
-                                RayReg& rayData,
-                                // Input
-                                const GPUTransformI& transform,
-                                const DefaultLeaf& leaf,
-                                const TriData& primData)
+    __device__ __forceinline__
+    static HitResult Hit(// Output
+                         HitKey& newMat,
+                         PrimitiveId& newPrim,
+                         TriangleHit& newHit,
+                         // I-O
+                         RayReg& rayData,
+                         // Input
+                         const GPUTransformI& transform,
+                         const DefaultLeaf& leaf,
+                         const TriData& primData)
     {
         // Find the primitive
         float index;
@@ -271,11 +271,11 @@ struct TriFunctions
         return HitResult{false, closerHit};
     }
 
-    __device__
-    static inline AABB3f AABB(const GPUTransformI& transform,
-                              //
-                              PrimitiveId primitiveId,
-                              const TriData& primData)
+    __device__ __forceinline__
+    static AABB3f AABB(const GPUTransformI& transform,
+                       //
+                       PrimitiveId primitiveId,
+                       const TriData& primData)
     {
         // Get Position
         uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
@@ -293,8 +293,8 @@ struct TriFunctions
         return Triangle::BoundingBox(position0, position1, position2);
     }
 
-    __device__
-    static inline float Area(PrimitiveId primitiveId, const TriData& primData)
+    __device__ __forceinline__
+    static float Area(PrimitiveId primitiveId, const TriData& primData)
     {
         // Get Position
         uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
@@ -312,9 +312,9 @@ struct TriFunctions
         return Cross(vec0, vec1).Length() * 0.5f;
     }
 
-    __device__
-    static inline Vector3 Center(const GPUTransformI& transform,
-                                 PrimitiveId primitiveId, const TriData& primData)
+    __device__ __forceinline__
+    static Vector3 Center(const GPUTransformI& transform,
+                          PrimitiveId primitiveId, const TriData& primData)
     {
         // Get Position
         uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
@@ -341,12 +341,12 @@ class GPUPrimitiveTriangle;
 
 struct TriangleSurfaceGenerator
 {
-    __device__
-    static inline BasicSurface GenBasicSurface(const TriangleHit& baryCoords,
-                                               const GPUTransformI& transform,
-                                               //
-                                               PrimitiveId primitiveId,
-                                               const TriData& primData)
+    __device__ __forceinline__
+    static BasicSurface GenBasicSurface(const TriangleHit& baryCoords,
+                                        const GPUTransformI& transform,
+                                        //
+                                        PrimitiveId primitiveId,
+                                        const TriData& primData)
     {
         //float c = 1 - baryCoords[0] - baryCoords[1];
 
@@ -365,23 +365,23 @@ struct TriangleSurfaceGenerator
         return BasicSurface{tbn};
     }
 
-    __device__
-    static inline BarySurface GenBarySurface(const TriangleHit& baryCoords,
-                                             const GPUTransformI& transform,
-                                             //
-                                             PrimitiveId primitiveId,
-                                             const TriData& primData)
+    __device__ __forceinline__
+    static BarySurface GenBarySurface(const TriangleHit& baryCoords,
+                                      const GPUTransformI& transform,
+                                      //
+                                      PrimitiveId primitiveId,
+                                      const TriData& primData)
     {
         float c = 1.0f - baryCoords[0] - baryCoords[1];
         return BarySurface{Vector3(baryCoords[0], baryCoords[1], c)};
     }
 
     __device__
-    static inline UVSurface GenUVSurface(const TriangleHit& baryCoords,
-                                         const GPUTransformI& transform,
-                                         //
-                                         PrimitiveId primitiveId,
-                                         const TriData& primData)
+    static UVSurface GenUVSurface(const TriangleHit& baryCoords,
+                                  const GPUTransformI& transform,
+                                  //
+                                  PrimitiveId primitiveId,
+                                  const TriData& primData)
     {
         BasicSurface bs = GenBasicSurface(baryCoords, transform,
                                           primitiveId, primData);

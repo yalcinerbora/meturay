@@ -105,7 +105,7 @@ class GPUTracer : public GPUTracerI
         void                                HitAndPartitionRays();
         // Determine auxiliary size
         void                                WorkRays(const WorkBatchMap&,
-                                                     const RayPartitions<uint32_t>& outPortions,
+                                                     const RayPartitionsMulti<uint32_t>& outPortions,
                                                      uint32_t totalRayOut,
                                                      HitKey baseBoundMatKey);
         // Convert GPUCamera to VisorCam
@@ -116,7 +116,7 @@ class GPUTracer : public GPUTracerI
         void                                SendLog(const char*, Args...);
         void                                SendError(TracerError e, bool isFatal);
 
-        RayPartitions<uint32_t>             PartitionOutputRays(uint32_t& totalOutRay,
+        RayPartitionsMulti<uint32_t>        PartitionOutputRays(uint32_t& totalOutRay,
                                                                 const WorkBatchMap&) const;
 
         static Vector2i                     DetermineMaxBitFromId(const Vector2i&);

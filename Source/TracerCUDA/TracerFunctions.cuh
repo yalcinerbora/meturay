@@ -4,8 +4,8 @@
 
 namespace TracerFunctions
 {
-    __device__
-    inline float FrenelDielectric(float cosIn, float iorIn, float iorOut)
+    __device__ __forceinline__
+    float FrenelDielectric(float cosIn, float iorIn, float iorOut)
     {
         // Calculate Sin from Snell's Law
         float sinIn = sqrt(max(0.0f, 1.0f - cosIn * cosIn));
@@ -28,8 +28,8 @@ namespace TracerFunctions
         return (parallel + perpendicular) * 0.5f;
     }
 
-    __device__ 
-    inline float GGX(float NdH, float roughness)
+    __device__ __forceinline__
+    float GGX(float NdH, float roughness)
     {
         float alpha = roughness * roughness;
         float alphaSqr = alpha * alpha;
@@ -39,11 +39,11 @@ namespace TracerFunctions
         return (alphaSqr / dDenom);
     }
 
-    __device__
-    inline float GGXSample(Vector3& H,
-                            float& pdf,
-                            float roughness,
-                            RandomGPU& rng)
+    __device__ __forceinline__
+    float GGXSample(Vector3& H,
+                    float& pdf,
+                    float roughness,
+                    RandomGPU& rng)
     {
         // https://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf
         // Page 4 it does not include pdf it is included from
@@ -75,8 +75,8 @@ namespace TracerFunctions
         return 1.0f;
     }
 
-    __device__ 
-    inline float GSchlick(float dot, float roughness)
+    __device__ __forceinline__
+    float GSchlick(float dot, float roughness)
     {
         float k = (roughness + 1);
         k = k * k;
@@ -88,8 +88,8 @@ namespace TracerFunctions
         return dot / (dot * (1 - k) + k);
     }
 
-    __device__ 
-    inline Vector3f FSchlick(float VdH, const Vector3f& f0)
+    __device__ __forceinline__
+    Vector3f FSchlick(float VdH, const Vector3f& f0)
     {
         static constexpr float t0 = -5.55473f;
         static constexpr float t1 = -6.98316f;
@@ -100,8 +100,8 @@ namespace TracerFunctions
         return result;
     }
 
-    __device__
-    inline float PowerHeuristic(int n0, float pdf0, int n1, float pdf1)
+    __device__ __forceinline__
+    float PowerHeuristic(int n0, float pdf0, int n1, float pdf1)
     {
         // This is power-2 heuristic
         float w0 = static_cast<float>(n0) * pdf0;
@@ -111,9 +111,9 @@ namespace TracerFunctions
     }
 
     // Basic Russian Roulette
-    __device__
-    inline bool RussianRoulette(Vector3& irradianceFactor,
-                                float probFactor, RandomGPU& rng)
+    __device__ __forceinline__
+    bool RussianRoulette(Vector3& irradianceFactor,
+                         float probFactor, RandomGPU& rng)
     {
         // Basic Russian Roulette
         probFactor = HybridFuncs::Clamp(probFactor, 0.005f, 1.0f);

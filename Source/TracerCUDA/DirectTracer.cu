@@ -52,7 +52,7 @@ TracerError DirectTracer::Initialize()
         if((err = workPool.GenerateWorkBatch(batch, mg, pg,
                                              dTransforms)) != TracerError::OK)
             return err;
-        workMap.emplace(batchId, WorkBatchList{batch});
+        workMap.emplace(batchId, WorkBatchArray{batch});
     }
     return err;
 }
@@ -87,16 +87,17 @@ bool DirectTracer::Render()
         if(loc == workMap.end()) continue;
 
         // Set pointers
-        RayAuxBasic* dAuxOutLocal = static_cast<RayAuxBasic*>(*dAuxOut) + p.offset;
         const RayAuxBasic* dAuxInGlobal = static_cast<const RayAuxBasic*>(*dAuxIn);
-        //auto& wBatch = static_cast<GPUWorkBatchI&>(*(loc->second));
-
-        using WorkData = typename GPUWorkBatchD<DirectTracerGlobalState, RayAuxBasic>;     
+        using WorkData = typename GPUWorkBatchD<DirectTracerGlobalState, RayAuxBasic>;
+        int i = 0;
         for(auto& work : loc->second)
         {
+            RayAuxBasic* dAuxOutLocal = static_cast<RayAuxBasic*>(*dAuxOut) + p.offsets[i];
+
             auto& wData = static_cast<WorkData&>(*work);
             wData.SetGlobalData(globalData);
             wData.SetRayDataPtrs(dAuxOutLocal, dAuxInGlobal);
+            i++;
         }
     }
 

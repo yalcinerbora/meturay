@@ -435,7 +435,7 @@ void GPUTracer::HitAndPartitionRays()
 }
 
 void GPUTracer::WorkRays(const WorkBatchMap& workMap,
-                         const RayPartitions<uint32_t>& outPortions,
+                         const RayPartitionsMulti<uint32_t>& outPortions,
                          uint32_t totalRayOut,
                          HitKey baseBoundMatKey)
 {
@@ -478,18 +478,23 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
 
         // TODO: change this loop to combine iterator instead of find
         //const auto& pIn = *(workPartition.find<uint32_t>(p.portionId));
-        const auto& pOut = *(outPortions.find(ArrayPortion<uint32_t>{p.portionId}));
+        const auto& pOut = *(outPortions.find(MultiArrayPortion<uint32_t>{p.portionId}));
 
         // Relativize input & output pointers
         const RayId* dRayIdStart = dCurrentRayIds + p.offset;
         const HitKey* dKeyStart = dCurrentKeys + p.offset;
-        // Output
-        RayGMem* dRayOutStart = dRaysOut + pOut.offset;
-        HitKey* dBoundKeyStart = dBoundKeyOut + pOut.offset;
+
+        assert(pOut.counts.size() == pOut.offsets.size());
+        assert(pOut.counts.size() == loc->second.size());
 
         // Actual Shade Calls
+        int i = 0;
         for(auto& workBatch : loc->second)
         {
+            // Output
+            RayGMem* dRayOutStart = dRaysOut + pOut.offsets[i];
+            HitKey* dBoundKeyStart = dBoundKeyOut + pOut.offsets[i];
+        
             workBatch->Work(dBoundKeyStart,
                             dRayOutStart,
                             //  Input
@@ -503,6 +508,8 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
                             //
                             static_cast<uint32_t>(p.count),
                             rngMemory);
+
+            i++;
         }
         //cudaSystem.SyncGPUAll();
         //METU_LOG("--------------------------");
@@ -577,10 +584,10 @@ void GPUTracer::SendError(TracerError e, bool isFatal)
     crashed = isFatal;
 }
 
-RayPartitions<uint32_t> GPUTracer::PartitionOutputRays(uint32_t& totalOutRay,
-                                                       const WorkBatchMap& workMap) const
+RayPartitionsMulti<uint32_t> GPUTracer::PartitionOutputRays(uint32_t& totalOutRay,
+                                                            const WorkBatchMap& workMap) const
 {
-    RayPartitions<uint32_t> outPartitions;
+    RayPartitionsMulti<uint32_t> outPartitions;
 
     // Find total ray out
     totalOutRay = 0;
@@ -594,16 +601,26 @@ RayPartitions<uint32_t> GPUTracer::PartitionOutputRays(uint32_t& totalOutRay,
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;
 
-        uint32_t count = (static_cast<uint32_t>(p.count) *
-                          loc->second->OutRayCount());
+        std::vector<size_t> offsets;
+        std::vector<size_t> counts;
 
-        outPartitions.emplace(ArrayPortion<uint32_t>
+        // Generate Portions for each shade call
+        for(const auto& wb : loc->second)
+        {
+            uint32_t count = (static_cast<uint32_t>(p.count) *
+                              wb->OutRayCount());
+
+            counts.push_back(count);
+            offsets.push_back(totalOutRay);
+            totalOutRay += count;
+        }
+        
+        outPartitions.emplace(MultiArrayPortion<uint32_t>
         {
             p.portionId,
-            totalOutRay,
-            count
+            offsets,
+            counts
         });
-        totalOutRay += count;
     }
     return outPartitions;
 }

@@ -36,15 +36,15 @@ using SphereHit = Vector2f;
 
 struct SphrFunctions
 {
-    __device__
-    static inline Vector3f Sample(// Output
-                                  Vector3f& normal,
-                                  float& pdf,
-                                  // Input
-                                  PrimitiveId primitiveId,
-                                  const SphereData& primData,
-                                  // I-O
-                                  RandomGPU& rng)
+    __device__ __forceinline__
+    static Vector3f Sample(// Output
+                           Vector3f& normal,
+                           float& pdf,
+                           // Input
+                           PrimitiveId primitiveId,
+                           const SphereData& primData,
+                           // I-O
+                           RandomGPU& rng)
     {
         Vector4f data = primData.centerRadius[primitiveId];
         Vector3f center = data;
@@ -70,17 +70,17 @@ struct SphrFunctions
         return sphrLoc;
     }
 
-    __device__
-    static inline void PDF(// Outputs
-                           Vector3f& normal,
-                           float& pdf,
-                           float& distance,
-                           // Inputs
-                           const Vector3f& position,
-                           const Vector3f& direction,
-                           const GPUTransformI& transform,
-                           const PrimitiveId primitiveId,
-                           const SphereData& primData)
+    __device__ __forceinline__
+    static void PDF(// Outputs
+                    Vector3f& normal,
+                    float& pdf,
+                    float& distance,
+                    // Inputs
+                    const Vector3f& position,
+                    const Vector3f& direction,
+                    const GPUTransformI& transform,
+                    const PrimitiveId primitiveId,
+                    const SphereData& primData)
     {
         Vector4f data = primData.centerRadius[primitiveId];
         Vector3f center = data;
@@ -103,17 +103,17 @@ struct SphrFunctions
     }
 
     // Sphere Hit Acceptance
-    __device__
-    static inline HitResult Hit(// Output
-                                HitKey& newMat,
-                                PrimitiveId& newPrimitive,
-                                SphereHit& newHit,
-                                // I-O
-                                RayReg& rayData,
-                                // Input
-                                const GPUTransformI& transform,
-                                const DefaultLeaf& leaf,
-                                const SphereData& primData)
+    __device__ __forceinline__
+    static HitResult Hit(// Output
+                         HitKey& newMat,
+                         PrimitiveId& newPrimitive,
+                         SphereHit& newHit,
+                         // I-O
+                         RayReg& rayData,
+                         // Input
+                         const GPUTransformI& transform,
+                         const DefaultLeaf& leaf,
+                         const SphereData& primData)
     {
         // Get Packed data and unpack
         Vector4f data = primData.centerRadius[leaf.primitiveId];
@@ -144,10 +144,10 @@ struct SphrFunctions
         return HitResult{false, closerHit};
     }
 
-    __device__
-    static inline AABB3f AABB(const GPUTransformI& transform,
-                              PrimitiveId primitiveId,
-                              const SphereData& primData)
+    __device__ __forceinline__
+    static AABB3f AABB(const GPUTransformI& transform,
+                       PrimitiveId primitiveId,
+                       const SphereData& primData)
     {
         // TODO: incorporate transform here
         // Get Packed data and unpack
@@ -158,19 +158,19 @@ struct SphrFunctions
         return Sphere::BoundingBox(center, radius);
     }
 
-    __device__
-    static inline float Area(PrimitiveId primitiveId,
-                             const SphereData& primData)
+    __device__ __forceinline__
+    static float Area(PrimitiveId primitiveId,
+                      const SphereData& primData)
     {
         Vector4f data = primData.centerRadius[primitiveId];
         float radius = data[3];
         return MathConstants::Pi * radius * radius;
     }
 
-    __device__
-    static inline Vector3 Center(const GPUTransformI& transform,
-                                 PrimitiveId primitiveId,
-                                 const SphereData& primData)
+    __device__ __forceinline__
+    static Vector3 Center(const GPUTransformI& transform,
+                          PrimitiveId primitiveId,
+                          const SphereData& primData)
     {
         // TODO: incorporate transform here
         Vector4f data = primData.centerRadius[primitiveId];
@@ -184,12 +184,12 @@ struct SphrFunctions
 
 struct SphereSurfaceGenerator
 {
-    __device__
-    static inline BasicSurface GenBasicSurface(const SphereHit& sphrCoords,
-                                               const GPUTransformI& transform,
-                                               //
-                                               PrimitiveId primitiveId,
-                                               const SphereData& primData)
+    __device__ __forceinline__
+    static BasicSurface GenBasicSurface(const SphereHit& sphrCoords,
+                                        const GPUTransformI& transform,
+                                        //
+                                        PrimitiveId primitiveId,
+                                        const SphereData& primData)
     {
         Vector4f data = primData.centerRadius[primitiveId];
         Vector3f center = data;
@@ -207,22 +207,22 @@ struct SphereSurfaceGenerator
         return BasicSurface{tbn};
     }
 
-    __device__
-    static inline SphrSurface GenSphrSurface(const SphereHit& sphrCoords,
-                                             const GPUTransformI& transform,
-                                             //
-                                             PrimitiveId primitiveId,
-                                             const SphereData& primData)
+    __device__ __forceinline__
+    static SphrSurface GenSphrSurface(const SphereHit& sphrCoords,
+                                      const GPUTransformI& transform,
+                                      //
+                                      PrimitiveId primitiveId,
+                                      const SphereData& primData)
     {
         return SphrSurface{sphrCoords};
     }
 
-    __device__
-    static inline UVSurface GenUVSurface(const SphereHit& sphrCoords,
-                                         const GPUTransformI& transform,
-                                         //
-                                         PrimitiveId primitiveId,
-                                         const SphereData& primData)
+    __device__ __forceinline__
+    static UVSurface GenUVSurface(const SphereHit& sphrCoords,
+                                  const GPUTransformI& transform,
+                                  //
+                                  PrimitiveId primitiveId,
+                                  const SphereData& primData)
     {
         BasicSurface bs = GenBasicSurface(sphrCoords, transform,
                                           primitiveId, primData);

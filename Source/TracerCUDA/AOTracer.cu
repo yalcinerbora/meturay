@@ -44,7 +44,7 @@ TracerError AOTracer::Initialize()
                                          emptyMat, emptyPrim,
                                          dTransforms)) != TracerError::OK)
         return err;    
-    workMap.emplace(aoMissWorkBatchId, WorkBatchList{aoMissBatch});
+    workMap.emplace(aoMissWorkBatchId, WorkBatchArray{aoMissBatch});
 
     // Generate your worklist
     const auto& infoList = scene.WorkBatchInfo();
@@ -58,7 +58,7 @@ TracerError AOTracer::Initialize()
 
         if(std::string(pg.Type()) == std::string(BaseConstants::EMPTY_PRIMITIVE_NAME))
         {
-            workMap.emplace(batchId, WorkBatchList{aoMissBatch});
+            workMap.emplace(batchId, WorkBatchArray{aoMissBatch});
             continue;
         }
 
@@ -69,7 +69,7 @@ TracerError AOTracer::Initialize()
                                        emptyMat, pg, dTransforms)) != TracerError::OK)
             return err;
 
-        workMap.emplace(batchId, WorkBatchList{batch});
+        workMap.emplace(batchId, WorkBatchArray{batch});
     }
     return TracerError::OK;
 }
@@ -134,16 +134,18 @@ bool AOTracer::Render()
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;
 
-        // Set pointers
-        RayAuxAO* dAuxOutLocal = static_cast<RayAuxAO*>(*dAuxOut) + p.offset;
+        // Set pointers        
         const RayAuxAO* dAuxInLocal = static_cast<const RayAuxAO*>(*dAuxIn);
-
         using WorkData = typename GPUWorkBatchD<AmbientOcclusionGlobalState, RayAuxAO>;
+        int i = 0;
         for(auto& work : loc->second)
         {
+            RayAuxAO* dAuxOutLocal = static_cast<RayAuxAO*>(*dAuxOut) + p.offsets[i];
+
             auto& wData = static_cast<WorkData&>(*work);
             wData.SetGlobalData(globalData);
             wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
+            i++;
         }
     }
 

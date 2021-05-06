@@ -18,6 +18,9 @@ class CudaGPU;
 template<class T>
 using RayPartitions = std::set<ArrayPortion<T>>;
 
+template<class T>
+using RayPartitionsMulti = std::set<MultiArrayPortion<T>>;
+
 class RayMemory
 {
     private:

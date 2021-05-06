@@ -5,6 +5,8 @@ Sub-space of the array with a unique id
 
 */
 
+#include <vector>
+
 template<class T>
 struct ArrayPortion
 {
@@ -16,6 +18,18 @@ struct ArrayPortion
     bool        operator<(uint32_t portionId) const;
 };
 
+template <class T>
+struct MultiArrayPortion
+{
+    T                       portionId;
+    std::vector<size_t>     offsets;
+    std::vector<size_t>     counts;
+
+    bool                    operator<(const MultiArrayPortion&) const;
+    bool                    operator<(uint32_t portionId) const;
+};
+
+
 template<class T>
 inline bool ArrayPortion<T>::operator<(const ArrayPortion& o) const
 {
@@ -24,6 +38,18 @@ inline bool ArrayPortion<T>::operator<(const ArrayPortion& o) const
 
 template<class T>
 inline bool ArrayPortion<T>::operator<(uint32_t pId) const
+{
+    return portionId < pId;
+}
+
+template<class T>
+inline bool MultiArrayPortion<T>::operator<(const MultiArrayPortion& o) const
+{
+    return portionId < o.portionId;
+}
+
+template<class T>
+inline bool MultiArrayPortion<T>::operator<(uint32_t pId) const
 {
     return portionId < pId;
 }

@@ -43,8 +43,8 @@ using NamedList = std::map<std::string, T>;
 
 // Kernel Mappings
 using AcceleratorBatchMap = std::map<uint32_t, GPUAcceleratorGroupI*>;
-using WorkBatchList = std::vector<GPUWorkBatchI*>;
-using WorkBatchMap = std::map<uint32_t, WorkBatchList>;
+using WorkBatchArray = std::vector<GPUWorkBatchI*>;
+using WorkBatchMap = std::map<uint32_t, WorkBatchArray>;
 using WorkBatchCreationInfo = std::vector<std::tuple<uint32_t,
                                                      const GPUPrimitiveGroupI*,
                                                      const GPUMaterialGroupI*>>;

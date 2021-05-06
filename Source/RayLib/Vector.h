@@ -54,30 +54,30 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
     static_assert(N == 2 || N == 3 || N == 4, "Vector size should be 2, 3 or 4");
 
     private:
-    T                                   vector[N];
+        T                                       vector[N];
 
     protected:
     public:
         // Constructors & Destructor
-    constexpr                               Vector() = default;
-    template<class C, typename = ArithmeticEnable<C>>
-    __device__ __host__ explicit            Vector(C);
-    template<class C, typename = ArithmeticEnable<C>>
-    __device__ __host__ explicit            Vector(const C* data);
-    template <class... Args, typename = AllArithmeticEnable<Args...>>
-    constexpr __device__ __host__ explicit  Vector(const Args... dataList);
-    template <class... Args, typename = std::enable_if_t<((N - sizeof...(Args)) > 1)>>
+        constexpr                               Vector() = default;
+        template<class C, typename = ArithmeticEnable<C>>
+        __device__ __host__ explicit            Vector(C);
+        template<class C, typename = ArithmeticEnable<C>>
+        __device__ __host__ explicit            Vector(const C* data);
+        template <class... Args, typename = AllArithmeticEnable<Args...>>
+        constexpr __device__ __host__ explicit  Vector(const Args... dataList);
+        template <class... Args, typename = std::enable_if_t<((N - sizeof...(Args)) > 1)>>
         __device__ __host__                     Vector(const Vector<N - sizeof...(Args), T>&,
                                                        const Args... dataList);
         template <int M, typename = std::enable_if_t<(M >= N)>>
         __device__ __host__                     Vector(const Vector<M, T>&);
         ~Vector() = default;
 
-// MVC bug? these trigger std::trivially_copyable static assert
-// __device__ __host__              Vector(const Vector&) = default;
-// __device__ __host__ Vector&      operator=(const Vector&) = default;
-
-// Accessors
+        // MVC bug? these trigger std::trivially_copyable static assert
+        // __device__ __host__              Vector(const Vector&) = default;
+        // __device__ __host__ Vector&      operator=(const Vector&) = default;
+        
+        // Accessors
         __device__ __host__ explicit            operator T* ();
         __device__ __host__ explicit            operator const T* () const;
         __device__ __host__ T&                  operator[](int);

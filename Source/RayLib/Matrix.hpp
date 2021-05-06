@@ -1,7 +1,7 @@
 template <int N, class T>
 template <class C, typename>
-__device__ __host__
-inline Matrix<N, T>::Matrix(C t)
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T>::Matrix(C t)
 {
     UNROLL_LOOP
     for(int i = 0; i < N * N; i++)
@@ -12,8 +12,8 @@ inline Matrix<N, T>::Matrix(C t)
 
 template <int N, class T>
 template <class C, typename>
-__device__ __host__
-inline Matrix<N, T>::Matrix(const C* data)
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T>::Matrix(const C* data)
 {
     UNROLL_LOOP
     for(int i = 0; i < N * N; i++)
@@ -24,8 +24,8 @@ inline Matrix<N, T>::Matrix(const C* data)
 
 template <int N, class T>
 template <class... Args, typename>
-__device__ __host__
-inline constexpr Matrix<N, T>::Matrix(const Args... dataList)
+__device__ __host__ HYBRID_INLINE
+constexpr Matrix<N, T>::Matrix(const Args... dataList)
     : matrix{static_cast<T>(dataList) ...}
 {
     static_assert(sizeof...(dataList) == N * N, "Matrix constructor should have exact "
@@ -34,8 +34,8 @@ inline constexpr Matrix<N, T>::Matrix(const Args... dataList)
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T>::Matrix(const Vector<N, T> columns[])
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T>::Matrix(const Vector<N, T> columns[])
 {
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -51,8 +51,8 @@ inline Matrix<N, T>::Matrix(const Vector<N, T> columns[])
 
 template <int N, class T>
 template <int M, typename>
-__device__ __host__
-inline Matrix<N, T>::Matrix(const Matrix<M, T>& other)
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T>::Matrix(const Matrix<M, T>& other)
 {
     static_assert(M >= N, "enable_if sanity check.");
     UNROLL_LOOP
@@ -72,50 +72,50 @@ inline Matrix<N, T>::Matrix(const Matrix<M, T>& other)
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T>::operator T* ()
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T>::operator T* ()
 {
     return matrix;
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T>::operator const T* () const
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T>::operator const T* () const
 {
     return matrix;
 }
 
 template <int N, class T>
-__device__ __host__
-inline T& Matrix<N, T>::operator[](int i)
+__device__ __host__ HYBRID_INLINE
+T& Matrix<N, T>::operator[](int i)
 {
     return matrix[i];
 }
 
 template <int N, class T>
-__device__ __host__
-inline const T& Matrix<N, T>::operator[](int i) const
+__device__ __host__ HYBRID_INLINE
+const T& Matrix<N, T>::operator[](int i) const
 {
     return matrix[i];
 }
 
 template <int N, class T>
-__device__ __host__
-inline T& Matrix<N, T>::operator()(int row, int column)
+__device__ __host__ HYBRID_INLINE
+T& Matrix<N, T>::operator()(int row, int column)
 {
     return matrix[column * N + row];
 }
 
 template <int N, class T>
-__device__ __host__
-inline const T& Matrix<N, T>::operator()(int row, int column) const
+__device__ __host__ HYBRID_INLINE
+const T& Matrix<N, T>::operator()(int row, int column) const
 {
     return matrix[column * N + row];
 }
 
 template <int N, class T>
-__device__ __host__
-inline void Matrix<N, T>::operator+=(const Matrix& right)
+__device__ __host__ HYBRID_INLINE
+void Matrix<N, T>::operator+=(const Matrix& right)
 {
     UNROLL_LOOP
     for(int i = 0; i < N * N; i++)
@@ -125,8 +125,8 @@ inline void Matrix<N, T>::operator+=(const Matrix& right)
 }
 
 template <int N, class T>
-__device__ __host__
-inline void Matrix<N, T>::operator-=(const Matrix& right)
+__device__ __host__ HYBRID_INLINE
+void Matrix<N, T>::operator-=(const Matrix& right)
 {
     UNROLL_LOOP
     for(int i = 0; i < N * N; i++)
@@ -136,16 +136,16 @@ inline void Matrix<N, T>::operator-=(const Matrix& right)
 }
 
 template <int N, class T>
-__device__ __host__
-inline void Matrix<N, T>::operator*=(const Matrix& right)
+__device__ __host__ HYBRID_INLINE
+void Matrix<N, T>::operator*=(const Matrix& right)
 {
     Matrix m = (*this) * right;
     *this = m;
 }
 
 template <int N, class T>
-__device__ __host__
-inline void Matrix<N, T>::operator*=(T right)
+__device__ __host__ HYBRID_INLINE
+void Matrix<N, T>::operator*=(T right)
 {
     UNROLL_LOOP
     for(int i = 0; i < N * N; i++)
@@ -155,8 +155,8 @@ inline void Matrix<N, T>::operator*=(T right)
 }
 
 template <int N, class T>
-__device__ __host__
-inline void Matrix<N, T>::operator/=(const Matrix& right)
+__device__ __host__ HYBRID_INLINE
+void Matrix<N, T>::operator/=(const Matrix& right)
 {
     UNROLL_LOOP
     for(int i = 0; i < N * N; i++)
@@ -166,8 +166,8 @@ inline void Matrix<N, T>::operator/=(const Matrix& right)
 }
 
 template <int N, class T>
-__device__ __host__
-inline void Matrix<N, T>::operator/=(T right)
+__device__ __host__ HYBRID_INLINE
+void Matrix<N, T>::operator/=(T right)
 {
     UNROLL_LOOP
     for(int i = 0; i < N * N; i++)
@@ -177,8 +177,8 @@ inline void Matrix<N, T>::operator/=(T right)
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T> Matrix<N, T>::operator+(const Matrix& right) const
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T> Matrix<N, T>::operator+(const Matrix& right) const
 {
     Matrix m;
     UNROLL_LOOP
@@ -190,8 +190,8 @@ inline Matrix<N, T> Matrix<N, T>::operator+(const Matrix& right) const
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T> Matrix<N, T>::operator-(const Matrix& right) const
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T> Matrix<N, T>::operator-(const Matrix& right) const
 {
     Matrix m;
     UNROLL_LOOP
@@ -204,8 +204,8 @@ inline Matrix<N, T> Matrix<N, T>::operator-(const Matrix& right) const
 
 template <int N, class T>
 template <class Q>
-__device__ __host__
-inline SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::operator-() const
+__device__ __host__ HYBRID_INLINE
+SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::operator-() const
 {
     Matrix m;
     UNROLL_LOOP
@@ -217,8 +217,8 @@ inline SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::operator-() const
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T> Matrix<N, T>::operator/(const Matrix& right) const
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T> Matrix<N, T>::operator/(const Matrix& right) const
 {
     Matrix m;
     UNROLL_LOOP
@@ -230,8 +230,8 @@ inline Matrix<N, T> Matrix<N, T>::operator/(const Matrix& right) const
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T> Matrix<N, T>::operator/(T right) const
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T> Matrix<N, T>::operator/(T right) const
 {
     Matrix m;
     UNROLL_LOOP
@@ -243,8 +243,8 @@ inline Matrix<N, T> Matrix<N, T>::operator/(T right) const
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T> Matrix<N, T>::operator*(const Matrix& right) const
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T> Matrix<N, T>::operator*(const Matrix& right) const
 {
     Matrix m;
     UNROLL_LOOP
@@ -268,8 +268,8 @@ inline Matrix<N, T> Matrix<N, T>::operator*(const Matrix& right) const
 
 template <int N, class T>
 template <int M>
-__device__ __host__
-inline Vector<M, T> Matrix<N, T>::operator*(const Vector<M, T>& right) const
+__device__ __host__ HYBRID_INLINE
+Vector<M, T> Matrix<N, T>::operator*(const Vector<M, T>& right) const
 {
     static_assert(M <= N, "Cannot Multiply with large vector.");
 
@@ -290,8 +290,8 @@ inline Vector<M, T> Matrix<N, T>::operator*(const Vector<M, T>& right) const
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T> Matrix<N, T>::operator*(T right) const
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T> Matrix<N, T>::operator*(T right) const
 {
     Matrix m;
     UNROLL_LOOP
@@ -303,8 +303,8 @@ inline Matrix<N, T> Matrix<N, T>::operator*(T right) const
 }
 
 template <int N, class T>
-__device__ __host__
-inline bool Matrix<N, T>::operator==(const Matrix& right) const
+__device__ __host__ HYBRID_INLINE
+bool Matrix<N, T>::operator==(const Matrix& right) const
 {
     bool eq = true;
     UNROLL_LOOP
@@ -316,18 +316,17 @@ inline bool Matrix<N, T>::operator==(const Matrix& right) const
 }
 
 template <int N, class T>
-__device__ __host__
-inline bool Matrix<N, T>::operator!=(const Matrix& right) const
+__device__ __host__ HYBRID_INLINE
+bool Matrix<N, T>::operator!=(const Matrix& right) const
 {
     return !(*this == right);
 }
 
 template <int N, class T>
-__device__ __host__
-inline T Matrix<N, T>::Determinant() const
+__device__ __host__ HYBRID_INLINE
+T Matrix<N, T>::Determinant() const
 {
-#pragma warning(suppress:4984)
-// TODO: use constexpr if when CUDA supports it
+    #pragma warning(suppress:4984)
     if constexpr(N == 2)
         return Determinant2<T>(static_cast<const T*>(*this));
     else if constexpr(N == 3)
@@ -342,8 +341,7 @@ template <class Q>
 __device__ __host__
 inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Inverse() const
 {
-#pragma warning(suppress:4984)
-// TODO: use constexpr if when CUDA supports it
+    #pragma warning(suppress:4984)
     if constexpr(N == 2)
         return Inverse2<T>(static_cast<const T*>(*this));
     else if constexpr(N == 3)
@@ -358,8 +356,7 @@ template <class Q>
 __device__ __host__
 inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::InverseSelf()
 {
-#pragma warning(suppress:4984)
-// TODO: use constexpr if when CUDA supports it
+    #pragma warning(suppress:4984)
     if constexpr(N == 2)
         (*this) = Inverse2<T>(static_cast<const T*>(*this));
     else if constexpr(N == 3)
@@ -370,8 +367,8 @@ inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::InverseSelf()
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T> Matrix<N, T>::Transpose() const
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T> Matrix<N, T>::Transpose() const
 {
     Matrix m;
     UNROLL_LOOP
@@ -387,8 +384,8 @@ inline Matrix<N, T> Matrix<N, T>::Transpose() const
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T>& Matrix<N, T>::TransposeSelf()
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T>& Matrix<N, T>::TransposeSelf()
 {
     UNROLL_LOOP
     for(int i = 1; i < N; i++)
@@ -406,8 +403,8 @@ inline Matrix<N, T>& Matrix<N, T>::TransposeSelf()
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T> Matrix<N, T>::Clamp(const Matrix& minVal, const Matrix& maxVal) const
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T> Matrix<N, T>::Clamp(const Matrix& minVal, const Matrix& maxVal) const
 {
     Matrix m;
     UNROLL_LOOP
@@ -419,8 +416,8 @@ inline Matrix<N, T> Matrix<N, T>::Clamp(const Matrix& minVal, const Matrix& maxV
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T> Matrix<N, T>::Clamp(T minVal, T maxVal) const
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T> Matrix<N, T>::Clamp(T minVal, T maxVal) const
 {
     Matrix m;
     UNROLL_LOOP
@@ -432,8 +429,8 @@ inline Matrix<N, T> Matrix<N, T>::Clamp(T minVal, T maxVal) const
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T>& Matrix<N, T>::ClampSelf(const Matrix& minVal, const Matrix& maxVal)
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T>& Matrix<N, T>::ClampSelf(const Matrix& minVal, const Matrix& maxVal)
 {
     UNROLL_LOOP
     for(int i = 0; i < N * N; i++)
@@ -444,8 +441,8 @@ inline Matrix<N, T>& Matrix<N, T>::ClampSelf(const Matrix& minVal, const Matrix&
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T>& Matrix<N, T>::ClampSelf(T minVal, T maxVal)
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T>& Matrix<N, T>::ClampSelf(T minVal, T maxVal)
 {
     UNROLL_LOOP
     for(int i = 0; i < N * N; i++)
@@ -457,8 +454,8 @@ inline Matrix<N, T>& Matrix<N, T>::ClampSelf(T minVal, T maxVal)
 
 template <int N, class T>
 template <class Q>
-__device__ __host__
-inline SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::Abs() const
+__device__ __host__ HYBRID_INLINE
+SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::Abs() const
 {
     Matrix m;
     UNROLL_LOOP
@@ -471,8 +468,8 @@ inline SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::Abs() const
 
 template <int N, class T>
 template <class Q>
-__device__ __host__
-inline SignedEnable<Q, Matrix<N, T>&> Matrix<N, T>::AbsSelf()
+__device__ __host__ HYBRID_INLINE
+SignedEnable<Q, Matrix<N, T>&> Matrix<N, T>::AbsSelf()
 {
     UNROLL_LOOP
     for(int i = 0; i < N * N; i++)
@@ -484,8 +481,8 @@ inline SignedEnable<Q, Matrix<N, T>&> Matrix<N, T>::AbsSelf()
 
 template <int N, class T>
 template <class Q>
-__device__ __host__
-inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Round() const
+__device__ __host__ HYBRID_INLINE
+FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Round() const
 {
     Matrix m;
     UNROLL_LOOP
@@ -498,8 +495,8 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Round() const
 
 template <int N, class T>
 template <class Q>
-__device__ __host__
-inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::RoundSelf()
+__device__ __host__ HYBRID_INLINE
+FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::RoundSelf()
 {
     UNROLL_LOOP
     for(int i = 0; i < N * N; i++)
@@ -511,8 +508,8 @@ inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::RoundSelf()
 
 template <int N, class T>
 template <class Q>
-__device__ __host__
-inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Floor() const
+__device__ __host__ HYBRID_INLINE
+FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Floor() const
 {
     Matrix m;
     UNROLL_LOOP
@@ -525,8 +522,8 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Floor() const
 
 template <int N, class T>
 template <class Q>
-__device__ __host__
-inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::FloorSelf()
+__device__ __host__ HYBRID_INLINE
+FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::FloorSelf()
 {
     UNROLL_LOOP
     for(int i = 0; i < N * N; i++)
@@ -538,8 +535,8 @@ inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::FloorSelf()
 
 template <int N, class T>
 template <class Q>
-__device__ __host__
-inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Ceil() const
+__device__ __host__ HYBRID_INLINE
+FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Ceil() const
 {
     Matrix m;
     UNROLL_LOOP
@@ -552,8 +549,8 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Ceil() const
 
 template <int N, class T>
 template <class Q>
-__device__ __host__
-inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::CeilSelf()
+__device__ __host__ HYBRID_INLINE
+FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::CeilSelf()
 {
     UNROLL_LOOP
     for(int i = 0; i < N * N; i++)
@@ -564,8 +561,8 @@ inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::CeilSelf()
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, const Matrix& mat1)
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, const Matrix& mat1)
 {
     Matrix m;
     UNROLL_LOOP
@@ -577,8 +574,8 @@ inline Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, const Matrix& mat1)
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, T t)
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, T t)
 {
     Matrix m;
     UNROLL_LOOP
@@ -590,8 +587,8 @@ inline Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, T t)
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, const Matrix& mat1)
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, const Matrix& mat1)
 {
     Matrix m;
     UNROLL_LOOP
@@ -603,8 +600,8 @@ inline Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, const Matrix& mat1)
 }
 
 template <int N, class T>
-__device__ __host__
-inline Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, T t)
+__device__ __host__ HYBRID_INLINE
+Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, T t)
 {
     Matrix m;
     UNROLL_LOOP
@@ -617,8 +614,8 @@ inline Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, T t)
 
 template <int N, class T>
 template <class Q>
-__device__ __host__
-inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Lerp(const Matrix& mat0, const Matrix& mat1, T t)
+__device__ __host__ HYBRID_INLINE
+FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Lerp(const Matrix& mat0, const Matrix& mat1, T t)
 {
     assert(t >= 0 && t <= 1);
     Matrix m;
@@ -631,15 +628,15 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Lerp(const Matrix& mat0, const
 }
 
 template<class T>
-__device__ __host__
-inline static T Determinant2(const T* m)
+__device__ __host__ HYBRID_INLINE
+static T Determinant2(const T* m)
 {
     return m[0] * m[3] - m[2] * m[1];
 }
 
 template<class T>
-__device__ __host__
-inline static T Determinant3(const T* m)
+__device__ __host__ HYBRID_INLINE
+static T Determinant3(const T* m)
 {
     T det1 = m[0] * (m[4] * m[8] - m[7] * m[5]);
     T det2 = m[3] * (m[1] * m[8] - m[7] * m[2]);
@@ -648,8 +645,8 @@ inline static T Determinant3(const T* m)
 }
 
 template<class T>
-__device__ __host__
-inline static T Determinant4(const T* m)
+__device__ __host__ HYBRID_INLINE
+static T Determinant4(const T* m)
 {
     // Hardcoded should be most optimizer friendly
     // TODO: Maybe register size etc.. for GPU
@@ -685,8 +682,8 @@ inline static T Determinant4(const T* m)
 }
 
 template<class T>
-__device__ __host__
-inline static Matrix<2, T> Inverse2(const T* m)
+__device__ __host__ HYBRID_INLINE
+static Matrix<2, T> Inverse2(const T* m)
 {
     Matrix<2, T> result;
     T detRecip = 1 / Determinant2<T>(m);
@@ -699,8 +696,8 @@ inline static Matrix<2, T> Inverse2(const T* m)
 }
 
 template<class T>
-__device__ __host__
-inline static Matrix<3, T> Inverse3(const T* m)
+__device__ __host__ HYBRID_INLINE
+static Matrix<3, T> Inverse3(const T* m)
 {
     T m11 = m[4] * m[8] - m[7] * m[5];
     T m12 = -(m[1] * m[8] - m[7] * m[2]);
@@ -722,8 +719,8 @@ inline static Matrix<3, T> Inverse3(const T* m)
 }
 
 template<class T>
-__device__ __host__
-inline static Matrix<4, T> Inverse4(const T* m)
+__device__ __host__ HYBRID_INLINE
+static Matrix<4, T> Inverse4(const T* m)
 {
     // MESA GLUT Copy Paste
     Matrix<4, T> inv;
@@ -847,15 +844,15 @@ inline static Matrix<4, T> Inverse4(const T* m)
 }
 
 template<int N, class T>
-__device__ __host__
+__device__ __host__ HYBRID_INLINE
 Matrix<N, T> operator*(float t, const Matrix<N, T>& mat)
 {
     return mat * t;
 }
 
 template<class T, typename>
-__device__ __host__
-inline Vector<3, T> TransformGen::ExtractScale(const Matrix<4, T>& m)
+__device__ __host__ HYBRID_INLINE
+Vector<3, T> TransformGen::ExtractScale(const Matrix<4, T>& m)
 {
     // This is kinda hacky
     // First it cannot determine negative scalings,
@@ -867,15 +864,15 @@ inline Vector<3, T> TransformGen::ExtractScale(const Matrix<4, T>& m)
 }
 
 template<class T, typename>
-__device__ __host__
-inline Vector<3, T> TransformGen::ExtractTranslation(const Matrix<4, T>& m)
+__device__ __host__ HYBRID_INLINE
+Vector<3, T> TransformGen::ExtractTranslation(const Matrix<4, T>& m)
 {
     return Vector<3, T>(m[12], m[13], m[14]);
 }
 
 template<class T, typename>
-__device__ __host__
-inline Matrix<4, T> TransformGen::Translate(const Vector<3, T>& v)
+__device__ __host__ HYBRID_INLINE
+Matrix<4, T> TransformGen::Translate(const Vector<3, T>& v)
 {
     //  1       0       0       tx
     //  0       1       0       ty
@@ -888,8 +885,8 @@ inline Matrix<4, T> TransformGen::Translate(const Vector<3, T>& v)
 }
 
 template<class T, typename>
-__device__ __host__
-inline Matrix<4, T> TransformGen::Scale(T s)
+__device__ __host__ HYBRID_INLINE
+Matrix<4, T> TransformGen::Scale(T s)
 {
     //  s       0       0       0
     //  0       s       0       0
@@ -902,8 +899,8 @@ inline Matrix<4, T> TransformGen::Scale(T s)
 }
 
 template<class T, typename>
-__device__ __host__
-inline Matrix<4, T> TransformGen::Scale(T x, T y, T z)
+__device__ __host__ HYBRID_INLINE
+Matrix<4, T> TransformGen::Scale(T x, T y, T z)
 {
     //  sx      0       0       0
     //  0       sy      0       0
@@ -916,8 +913,8 @@ inline Matrix<4, T> TransformGen::Scale(T x, T y, T z)
 }
 
 template<class T, typename>
-__device__ __host__
-inline Matrix<4, T> TransformGen::Rotate(T angle, const Vector<3, T>& axis)
+__device__ __host__ HYBRID_INLINE
+Matrix<4, T> TransformGen::Rotate(T angle, const Vector<3, T>& axis)
 {
     //  r       r       r       0
     //  r       r       r       0
@@ -955,8 +952,8 @@ inline Matrix<4, T> TransformGen::Rotate(T angle, const Vector<3, T>& axis)
 }
 
 template<class T, typename>
-__device__ __host__
-inline Matrix<4, T> TransformGen::Rotate(const Quaternion<T>& q)
+__device__ __host__ HYBRID_INLINE
+Matrix<4, T> TransformGen::Rotate(const Quaternion<T>& q)
 {
     //QuatF q = quat.Normalize();
     Matrix<4, T> result;
@@ -992,9 +989,9 @@ inline Matrix<4, T> TransformGen::Rotate(const Quaternion<T>& q)
 }
 
 template<class T, typename>
-__device__ __host__
-inline Matrix<4, T> TransformGen::Perspective(T fovXRadians, T aspectRatio,
-                                              T nearPlane, T farPlane)
+__device__ __host__ HYBRID_INLINE
+Matrix<4, T> TransformGen::Perspective(T fovXRadians, T aspectRatio,
+                                       T nearPlane, T farPlane)
 {
     //  p       0       0       0
     //  0       p       0       0
@@ -1013,10 +1010,10 @@ inline Matrix<4, T> TransformGen::Perspective(T fovXRadians, T aspectRatio,
 }
 
 template<class T, typename>
-__device__ __host__
-inline  Matrix<4, T> TransformGen::Ortogonal(T left, T right,
-                                             T top, T bottom,
-                                             T nearPlane, T farPlane)
+__device__ __host__ HYBRID_INLINE
+Matrix<4, T> TransformGen::Ortogonal(T left, T right,
+                                     T top, T bottom,
+                                     T nearPlane, T farPlane)
 {
     //  orto    0       0       0
     //  0       orto    0       0
@@ -1033,8 +1030,8 @@ inline  Matrix<4, T> TransformGen::Ortogonal(T left, T right,
 }
 
 template<class T, typename>
-__device__ __host__
-inline Matrix<4, T> TransformGen::Ortogonal(T width, T height,
+__device__ __host__ HYBRID_INLINE
+Matrix<4, T> TransformGen::Ortogonal(T width, T height,
                                             T nearPlane, T farPlane)
 {
     //  orto    0       0       0
@@ -1049,8 +1046,8 @@ inline Matrix<4, T> TransformGen::Ortogonal(T width, T height,
 }
 
 template<class T, typename>
-__device__ __host__
-inline Matrix<4, T> TransformGen::LookAt(const Vector<3, T>& eyePos,
+__device__ __host__ HYBRID_INLINE
+Matrix<4, T> TransformGen::LookAt(const Vector<3, T>& eyePos,
                                          const Vector<3, T>& at,
                                          const Vector<3, T>& up)
 {
@@ -1067,11 +1064,11 @@ inline Matrix<4, T> TransformGen::LookAt(const Vector<3, T>& eyePos,
 }
 
 template<class T, typename>
-__device__ __host__
-inline void TransformGen::Space(Matrix<3, T>& m,
-                                const Vector<3, T>& x,
-                                const Vector<3, T>& y,
-                                const Vector<3, T>& z)
+__device__ __host__ HYBRID_INLINE
+void TransformGen::Space(Matrix<3, T>& m,
+                         const Vector<3, T>& x,
+                         const Vector<3, T>& y,
+                         const Vector<3, T>& z)
 {
     m = Matrix<3, T>(x[0], y[0], z[0],
                      x[1], y[1], z[1],
@@ -1079,10 +1076,11 @@ inline void TransformGen::Space(Matrix<3, T>& m,
 }
 
 template<class T, typename>
-__device__ __host__
-inline void TransformGen::InvSpace(Matrix<3, T>& m, const Vector<3, T>& x,
-                                   const Vector<3, T>& y,
-                                   const Vector<3, T>& z)
+__device__ __host__ HYBRID_INLINE
+void TransformGen::InvSpace(Matrix<3, T>& m, 
+                            const Vector<3, T>& x,
+                            const Vector<3, T>& y,
+                            const Vector<3, T>& z)
 {
     m = Matrix<3, T>(x, y, z);
 }

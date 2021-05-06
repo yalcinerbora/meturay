@@ -28,67 +28,67 @@ struct EmptyHit {};
 
 struct EPrimFunctions
 {
-    __device__
-    static inline Vector3f Sample(// Output
-                                  Vector3f& normal,
-                                  float& pdf,
-                                  // Input
-                                  PrimitiveId primitiveId,
-                                  const EmptyData& primData,
-                                  // I-O
-                                  RandomGPU& rng)
+    __device__ __forceinline__
+    static Vector3f Sample(// Output
+                           Vector3f& normal,
+                           float& pdf,
+                           // Input
+                           PrimitiveId primitiveId,
+                           const EmptyData& primData,
+                           // I-O
+                           RandomGPU& rng)
     {
         return Zero3;
     }
 
-    __device__
-    static inline void PDF(// Outputs
-                           Vector3f& normal,
-                           float& pdf,
-                           float& distance,
-                           // Inputs
-                           const Vector3f& position,
-                           const Vector3f& direction,
-                           const GPUTransformI& transform,
-                           const PrimitiveId primitiveId,
-                           const EmptyData& primData)
+    __device__ __forceinline__
+    static void PDF(// Outputs
+                    Vector3f& normal,
+                    float& pdf,
+                    float& distance,
+                    // Inputs
+                    const Vector3f& position,
+                    const Vector3f& direction,
+                    const GPUTransformI& transform,
+                    const PrimitiveId primitiveId,
+                    const EmptyData& primData)
     {
         distance = INFINITY;
         pdf = 0.0f;
     }
 
     __device__
-    static inline HitResult Hit(// Output
-                                HitKey& newMat,
-                                PrimitiveId& newPrimitive,
-                                EmptyHit& newHit,
-                                // I-O
-                                RayReg& rayData,
-                                // Input
-                                const GPUTransformI& transform,
-                                const EmptyLeaf& leaf,
-                                const EmptyData& primData)
+    static HitResult Hit(// Output
+                         HitKey& newMat,
+                         PrimitiveId& newPrimitive,
+                         EmptyHit& newHit,
+                         // I-O
+                         RayReg& rayData,
+                         // Input
+                         const GPUTransformI& transform,
+                         const EmptyLeaf& leaf,
+                         const EmptyData& primData)
     {
         return HitResult{false, -FLT_MAX};
     }
 
-    __device__
-    static inline AABB3f AABB(const GPUTransformI& transform,
+    __device__ __forceinline__
+    static AABB3f AABB(const GPUTransformI& transform,
                               PrimitiveId primitiveId, const EmptyData& primData)
     {
         Vector3f minInf(-INFINITY);
         return AABB3f(minInf, minInf);
     }
 
-    __device__
-    static inline float Area(PrimitiveId primitiveId, const EmptyData& primData)
+    __device__ __forceinline__
+    static float Area(PrimitiveId primitiveId, const EmptyData& primData)
     {
         return 0.0f;
     }
 
-    __device__
-        static inline Vector3f Center(const GPUTransformI& transform,
-                                      PrimitiveId primitiveId, const EmptyData& primData)
+    __device__ __forceinline__
+    static Vector3f Center(const GPUTransformI& transform,
+                           PrimitiveId primitiveId, const EmptyData& primData)
     {
         return Zero3;
     }
