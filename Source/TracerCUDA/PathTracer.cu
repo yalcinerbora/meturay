@@ -107,9 +107,10 @@ PathTracer::PathTracer(const CudaSystem& s,
 {
     // Append Work Types for generation
     boundaryWorkPool.AppendGenerators(PTBoundaryWorkerList{});
-    pathWorkPool.AppendGenerators(PTPathWorkerList{});;
-    neeWorkPool.AppendGenerators(PTNEEWorkerList{});;
-    misWorkPool.AppendGenerators(PTMISWorkerList{});;
+    pathWorkPool.AppendGenerators(PTPathWorkerList{});
+    neeWorkPool.AppendGenerators(PTNEEWorkerList{});
+    misWorkPool.AppendGenerators(PTMISWorkerList{});
+    comboWorkPool.AppendGenerators(PTComboWorkerList{});
 }
 
 TracerError PathTracer::Initialize()
@@ -147,34 +148,47 @@ TracerError PathTracer::Initialize()
         }
         else
         {
-            WorkPool<>& wpPath = pathWorkPool;
-            WorkPool<bool>& wpNEE = neeWorkPool;
-            WorkPool<>& wpMIS = misWorkPool;
-            GPUWorkBatchI* pathBatch = nullptr;
-            GPUWorkBatchI* neeBatch = nullptr;
-            GPUWorkBatchI* misBatch = nullptr;
-            
-            if((err = wpPath.GenerateWorkBatch(pathBatch, mg, pg, 
-                                               dTransforms)) != TracerError::OK)
-                return err;
-            workBatchList.push_back(pathBatch);
-
-            if(options.nextEventEstimation)
+            if constexpr(USE_SINGLE_PATH_KERNEL)            
             {
-                if((err = wpNEE.GenerateWorkBatch(neeBatch, mg, pg, 
-                                                  dTransforms,
-                                                  options.directLightMIS)) != TracerError::OK)
+                WorkPool<bool, bool>& wpCombo = comboWorkPool;
+                GPUWorkBatchI* batch = nullptr;
+                if((err = wpCombo.GenerateWorkBatch(batch, mg, pg,
+                                                    dTransforms,
+                                                    options.nextEventEstimation,
+                                                    options.directLightMIS)) != TracerError::OK)
                     return err;
-                workBatchList.push_back(neeBatch);
+                workBatchList.push_back(batch);
             }
-            
-            if(options.nextEventEstimation &&
-               options.directLightMIS)
+            else
             {
-                if((err = wpMIS.GenerateWorkBatch(misBatch, mg, pg,
-                                                  dTransforms)) != TracerError::OK)
+                WorkPool<>& wpPath = pathWorkPool;
+                GPUWorkBatchI* pathBatch = nullptr;
+                if((err = wpPath.GenerateWorkBatch(pathBatch, mg, pg,
+                                                   dTransforms)) != TracerError::OK)
                     return err;
-                workBatchList.push_back(misBatch);
+                workBatchList.push_back(pathBatch);
+
+                if(options.nextEventEstimation)
+                {
+                    WorkPool<bool>& wpNEE = neeWorkPool;
+                    GPUWorkBatchI* neeBatch = nullptr;
+                    if((err = wpNEE.GenerateWorkBatch(neeBatch, mg, pg,
+                                                      dTransforms,
+                                                      options.directLightMIS)) != TracerError::OK)
+                        return err;
+                    workBatchList.push_back(neeBatch);
+                }
+
+                if(options.nextEventEstimation &&
+                   options.directLightMIS)
+                {
+                    WorkPool<>& wpMIS = misWorkPool;
+                    GPUWorkBatchI* misBatch = nullptr;
+                    if((err = wpMIS.GenerateWorkBatch(misBatch, mg, pg,
+                                                      dTransforms)) != TracerError::OK)
+                        return err;
+                    workBatchList.push_back(misBatch);
+                }
             }
         }
         workMap.emplace(batchId, workBatchList);

@@ -11,7 +11,7 @@
 #include <numeric>
 
 template <class T>
-class DevicHostMulDivideComboFunctor
+class DeviceHostMulDivideComboFunctor
 {
     private:
         const T&    gDivValue;
@@ -19,22 +19,22 @@ class DevicHostMulDivideComboFunctor
 
     protected:
     public:
-                    DevicHostMulDivideComboFunctor(const T& dDivValue, T hMulValue);
-                    ~DevicHostMulDivideComboFunctor() = default;
+                    DeviceHostMulDivideComboFunctor(const T& dDivValue, T hMulValue);
+                    ~DeviceHostMulDivideComboFunctor() = default;
 
     __device__
     T               operator()(const T& in) const;
 };
 
 template <class T>
-DevicHostMulDivideComboFunctor<T>::DevicHostMulDivideComboFunctor(const T& dDivValue, T hMulValue)
+DeviceHostMulDivideComboFunctor<T>::DeviceHostMulDivideComboFunctor(const T& dDivValue, T hMulValue)
     : gDivValue(dDivValue)
     , mulValue(hMulValue)
 {}
 
 template <class T>
-__device__
-inline T DevicHostMulDivideComboFunctor<T>::operator()(const T& in) const
+__device__  __forceinline__
+inline T DeviceHostMulDivideComboFunctor<T>::operator()(const T& in) const
 {
     return in * mulValue / gDivValue;
 }
@@ -269,7 +269,7 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
             // Use last element to normalize Function values to PDF
             // Since we used PDF buffer to calculate CDF
             // multiply the function with the size aswell
-            DevicHostMulDivideComboFunctor<float> pdfNormFunctor(dRowCDF[dim[0]], static_cast<float>(dim[0]));
+            DeviceHostMulDivideComboFunctor<float> pdfNormFunctor(dRowCDF[dim[0]], static_cast<float>(dim[0]));
             TransformArrayGPU(dRowPDF, dim[0], pdfNormFunctor);
             // Normalize CDF with the total accumulation (last element)
             // to perfectly match the [0,1) interval
@@ -289,7 +289,7 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
         // Since we used PDF buffer to calculate CDF
         // multiply the function with the size aswell
         DeviceDivideFunctor<float> cdfNormFunctor(dYCDF[dim[1]]);
-        DevicHostMulDivideComboFunctor<float> pdfNormFunctor(dYCDF[dim[1]], static_cast<float>(dim[1]));
+        DeviceHostMulDivideComboFunctor<float> pdfNormFunctor(dYCDF[dim[1]], static_cast<float>(dim[1]));
         TransformArrayGPU(dYPDF, dim[1], pdfNormFunctor);
         // Normalize CDF with the total accumulation (last element)
         // to perfectly match the [0,1) interval
