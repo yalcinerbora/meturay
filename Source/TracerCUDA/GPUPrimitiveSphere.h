@@ -24,6 +24,7 @@ All of them should be provided
 #include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/Vector.h"
 #include "RayLib/Sphere.h"
+#include "RayLib/CoordinateConversion.h"
 
 // Sphere memory layout
 struct SphereData
@@ -50,23 +51,28 @@ struct SphrFunctions
         Vector3f center = data;
         float radius = data[3];
 
-        // Marsaglia 1972
         // http://mathworld.wolfram.com/SpherePointPicking.html
-        float x1 = GPUDistribution::Uniform<float>(rng) * 2.0f - 1.0f;
-        float x2 = GPUDistribution::Uniform<float>(rng) * 2.0f - 1.0f;
+        float xi1 = GPUDistribution::Uniform<float>(rng);
+        float xi2 = GPUDistribution::Uniform<float>(rng);
 
-        float x1Sqr = x1 * x1;
-        float x2Sqr = x2 * x2;
-        float coeff = sqrt(1 - x1Sqr - x2Sqr);
+        float theta = 2.0f * MathConstants::Pi * xi1;
+        float cosPhi = 2.0f * xi2 - 1.0f;
+        float sinPhi = sqrtf(fmaxf(0.0f, 1.0f - cosPhi * cosPhi));
+
+        Vector3f unitPos = Utility::SphericalToCartesianUnit(Vector2f(sin(theta), cos(theta)),
+                                                             Vector2f(sinPhi, cosPhi));
+
+        ////float x1 = GPUDistribution::Uniform<float>(rng) * 2.0f - 1.0f;
+        ////float x2 = GPUDistribution::Uniform<float>(rng) * 2.0f - 1.0f;
+        //float x1Sqr = x1 * x1;
+        //float x2Sqr = x2 * x2;
+        //float coeff = sqrt(1 - x1Sqr - x2Sqr);
 
         pdf = 1.0f / SphrFunctions::Area(primitiveId, primData);
 
-        Vector3f sphrLoc = Vector3(2.0f * x1 * coeff,
-                                   2.0f * x2 * coeff,
-                                   1.0f - 2.0f * (x1Sqr + x2Sqr));
+        Vector3f sphrLoc = center + radius * unitPos;
 
-        normal = sphrLoc;
-        sphrLoc = sphrLoc * radius + center;
+        normal = unitPos;        
         return sphrLoc;
     }
 

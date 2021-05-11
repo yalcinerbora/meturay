@@ -29,8 +29,8 @@ float UnrealSpecularity(const UVSurface& surface,
                         const HitKey::Type& matId)
 {
     float roughness = (*matData.dRoughness[matId])(surface.uv);
-    float alpha = roughness *roughness;
-    return 1.0f - alpha * alpha;
+    float alpha = roughness * roughness;
+    return 1.0f - alpha;
 }
 
 __device__ __forceinline__

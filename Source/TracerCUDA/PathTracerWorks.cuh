@@ -32,10 +32,10 @@ class PTBoundaryWork
     public:
         // Constrcutors & Destructor
                                         PTBoundaryWork(const GPUMaterialGroupI& mg,
-                                                               const GPUPrimitiveGroupI& pg,
-                                                               const GPUTransformI* const* t,
-                                                               bool neeOn, bool misOn,
-                                                               bool emptyPrimitive);
+                                                       const GPUPrimitiveGroupI& pg,
+                                                       const GPUTransformI* const* t,
+                                                       bool neeOn, bool misOn,
+                                                       bool emptyPrimitive);
                                         ~PTBoundaryWork() = default;
 
         void                            GetReady() override {}
@@ -59,8 +59,8 @@ class PTComboWork
     public:
         // Constrcutors & Destructor
                                         PTComboWork(const GPUMaterialGroupI& mg,
-                                                   const GPUPrimitiveGroupI& pg,
-                                                   const GPUTransformI* const* t,
+                                                    const GPUPrimitiveGroupI& pg,
+                                                    const GPUTransformI* const* t,
                                                     bool neeOn, bool misOn);
                                         ~PTComboWork() = default;
 
@@ -106,9 +106,9 @@ class PTNEEWork
     public:
         // Constrcutors & Destructor
                                         PTNEEWork(const GPUMaterialGroupI& mg,
-                                                   const GPUPrimitiveGroupI& pg,
-                                                   const GPUTransformI* const* t,
-                                                   bool misOn);
+                                                  const GPUPrimitiveGroupI& pg,
+                                                  const GPUTransformI* const* t,
+                                                  bool misOn);
                                         ~PTNEEWork() = default;
 
         void                            GetReady() override {}
@@ -129,8 +129,8 @@ class PTMISWork
     public:
         // Constrcutors & Destructor
                                         PTMISWork(const GPUMaterialGroupI& mg,
-                                                   const GPUPrimitiveGroupI& pg,
-                                                   const GPUTransformI* const* t);
+                                                  const GPUPrimitiveGroupI& pg,
+                                                  const GPUTransformI* const* t);
                                         ~PTMISWork() = default;
 
         void                            GetReady() override {}

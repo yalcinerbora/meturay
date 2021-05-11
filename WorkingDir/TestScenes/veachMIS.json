@@ -1,0 +1,121 @@
+{
+	"Cameras": [
+    {
+		"id": 0,
+		"type": "Pinhole",
+
+		// 16:9 FoV
+		//"fov": [94.45, 53.13],
+        "fov": [60, 33.75],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"gaze": [0.0, 8.0, 0.0],
+		"planes": [0.01, 700.0],
+		"position": [0, 8, 45],
+		"up": [0.0, 1.0, 0.0]
+	}],
+
+	"Lights": [],
+
+	"Mediums": [{"id" : 0, "type" : "Vacuum"}],
+
+	"Transforms":[{"id": 0, "type": "Identity"}],
+
+    "Textures": [],
+
+	"Materials":[
+	{
+		// Black Background
+		"id": 0,
+		"type": "BConstant",
+		"radiance" : [0, 0, 0]
+	},
+    {
+		// Gray Diffuse Mat
+		"id": 1,
+		"type": "Lambert",
+		"albedo" : [0.5, 0.5, 0.5]
+	},
+    {
+		// Unreal Rough Materials
+		"id": [2, 3, 4, 5],
+		"type": "Unreal",
+		"albedo": [[1, 1, 1], [1, 1, 1],
+                   [1, 1, 1], [1, 1, 1]],
+        "roughness": [0.01, 0.03, 0.06, 0.1],
+        "metallic": [1, 1, 1, 1],
+        "specular": [1, 1, 1, 1]
+	},
+    {
+		// Lights
+		"id": [6, 7, 8, 9],
+		"type": "BConstant",
+		"radiance" : [[94.9, 69.8, 82.0], [100, 91.4, 65.1],
+                      [79.2, 99.6, 66.7], [49.4, 67.8, 75.7]]
+	}],
+
+	"Primitives":[
+	{
+		// Backplane
+		"id": 0,
+		"type": "Triangle",
+        "name": "../Surfaces/mis_backplane.obj",
+        "tag": "assimp_",
+		"innerIndex": 0
+	},
+    {
+		// MIS Planes
+		"id": [1, 2, 3, 4],
+		"type": "Triangle",
+		"name": "../Surfaces/mis_planes2.obj",
+		"tag": "assimp_",
+		"innerIndex": [0, 1, 2, 3],
+        "cullFace": [false, false, false, false]
+	},
+    {
+        // Light Spheres
+        "id": [5, 6, 7, 8],
+        "type": "Sphere",
+        "name": ".nodeSphere",
+        "position": [[-15, 22, -30], [-5, 22, -30],
+                     [5, 22, -30], [15, 22, -30]],
+        "radius": [0.3, 1, 2, 3]
+
+    }],
+
+	"Accelerators": [{"id" : 0, "type" : "BasicBVH", "useStack": true},
+					 {"id" : 1, "type" : "Linear"}],
+
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "BasicBVH"},
+    "BaseBoundaryMaterial": 0,
+    "BaseMedium" : 0,
+
+	"Surfaces": [
+	{
+		// Backplane
+		"transform": 0,
+		"accelerator": 0,
+		"material": 1,
+		"primitive": 0
+ 	},
+	{
+		// MIS Planes
+		"transform": 0,
+		"accelerator": 0,
+		"material": [2, 3, 4, 5],
+        "primitive": [1, 2, 3, 4]
+	}
+],
+
+	"LightSurfaces": [
+        {"primitive": 5, "accelerator": 1, "material": 6},
+        {"primitive": 6, "accelerator": 1, "material": 7},
+        {"primitive": 7, "accelerator": 1, "material": 8},
+        {"primitive": 8, "accelerator": 1, "material": 9}
+    ],
+
+    "CameraSurfaces": [{"camera": 0}]
+}

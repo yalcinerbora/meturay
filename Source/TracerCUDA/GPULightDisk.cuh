@@ -114,7 +114,7 @@ inline GPULightDisk::GPULightDisk(// Per Light Data
     , center(center)
     , normal(normal)
     , radius(radius)
-    , area(MathConstants::Pi* radius* radius)
+    , area(MathConstants::Pi * radius * radius)
 {
     // TODO: check the scale on the transform
     // since this wont work if transform contains scale
@@ -138,11 +138,21 @@ inline void GPULightDisk::Sample(// Output
                            sqrt(r) * sin(tetha),
                            0.0f);
 
+    //printf("diskSample\n");
+    if(disk.HasNaN())
+        printf("DiskSample Has NAN\n");
+
     // Rotate to disk normal
     QuatF rotation = Quat::RotationBetweenZAxis(normal);
     Vector3 localDisk = rotation.ApplyRotation(disk);
     Vector3 localPosition = center + localDisk;
-    Vector3 position = transform.LocalToWorld(position);
+    Vector3 position = transform.LocalToWorld(localPosition);
+
+    //printf("c: {%f %f %f}, n: {%f %f %f}, r: %f, p: {%f %f %f}\n",
+    //       center[0], center[1], center[2],
+    //       normal[0], normal[1], normal[2],
+    //       radius,
+    //       position[0], position[1], position[2]);
 
     direction = position - worldLoc;
     float distanceSqr = direction.LengthSqr();

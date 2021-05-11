@@ -560,7 +560,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
     // TODO: this is required for cuda when accessing managed memory
     // but it shouldnt since we are syncing main stream just above
-    //system.SyncGPU(gpu);
+    CUDA_CHECK(cudaDeviceSynchronize());
 
     // Breath first tree generation (top-down)
     uint8_t maxDepth = 0;

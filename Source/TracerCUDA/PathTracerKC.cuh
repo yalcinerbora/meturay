@@ -132,6 +132,11 @@ void PathTracerComboWork(// Output
 {
     static constexpr Vector3 ZERO_3 = Zero3;
 
+    // TODO: change this currently only first strategy is sampled
+    static constexpr int PATH_RAY_INDEX = 0;
+    static constexpr int NEE_RAY_INDEX = 1;
+    static constexpr int MIS_RAY_INDEX = 2;
+
     // Inputs
     // Current Ray
     const RayF& r = ray.ray;
@@ -150,14 +155,6 @@ void PathTracerComboWork(// Output
     float specularity = MGroup::Specularity(surface, gMatData, matIndex);
     bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
    
-    // TODO: change this currently only first strategy is sampled
-    static constexpr int PATH_RAY_INDEX = 0;
-    static constexpr int NEE_RAY_INDEX = 1;
-    static constexpr int MIS_RAY_INDEX = 2;
-
-    // Output image
-    auto& img = gRenderState.gImage;
-
     // Invalid Ray Write Helper Function
     auto InvalidRayWrite = [&gOutRays, &gOutBoundKeys, &gOutRayAux, &sampleCount](int index)
     {
@@ -198,6 +195,8 @@ void PathTracerComboWork(// Output
                                         matIndex);
 
         Vector3f total = emission * radianceFactor;
+        // Output image
+        auto& img = gRenderState.gImage;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
     }
         
@@ -259,17 +258,20 @@ void PathTracerComboWork(// Output
     if(!gRenderState.nee) return;
 
     // Renderer requested a NEE Ray but material is highly specular
-    // Write invalid Rays
-    if(isSpecularMat)
+    // Check if nee is requested
+    if(isSpecularMat && maxOutRay == 1)
+        return;
+    else if(isSpecularMat)
     {
+        // Write invalid rays then return
         InvalidRayWrite(NEE_RAY_INDEX);
         if(gRenderState.directLightMIS)
             InvalidRayWrite(MIS_RAY_INDEX);
         return;
     }
 
-    // Material is not specular & we requested NEE ray
-    // Generate NEE Ray    
+    // Material is not specular & tracer requested a NEE ray
+    // Generate a NEE Ray
     float pdfLight, lDistance;
     HitKey matLight;
     Vector3 lDirection;
@@ -711,113 +713,113 @@ void PathTracerMISWork(// Output
                        const HitKey matId,
                        const PrimitiveId primId)
 {
-    static constexpr Vector3 ZERO_3 = Zero3;
-    static constexpr int MIS_RAY_INDEX = 0;
+    //static constexpr Vector3 ZERO_3 = Zero3;
+    //static constexpr int MIS_RAY_INDEX = 0;
 
-    uint32_t lightIndex;
-    HitKey matLight;
+    //uint32_t lightIndex;
+    //HitKey matLight;
 
-    // Inputs
-    // Current Ray
-    const RayF& r = ray.ray;
-    // Current Material Index
-    HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
-    // Hit Position
-    Vector3 position = r.AdvancedPos(ray.tMax);
-    // Wi (direction is swapped as if it is coming out of the surface
-    Vector3 wi = -(r.getDirection().Normalize());
-    // Current ray's medium
-    const GPUMediumI& m = *(gRenderState.mediumList[aux.mediumIndex]);
+    //// Inputs
+    //// Current Ray
+    //const RayF& r = ray.ray;
+    //// Current Material Index
+    //HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
+    //// Hit Position
+    //Vector3 position = r.AdvancedPos(ray.tMax);
+    //// Wi (direction is swapped as if it is coming out of the surface
+    //Vector3 wi = -(r.getDirection().Normalize());
+    //// Current ray's medium
+    //const GPUMediumI& m = *(gRenderState.mediumList[aux.mediumIndex]);
 
-    // Check Material Sample Strategy
-    const uint32_t sampleCount = maxOutRay;
-    // Check Material's specularity;
-    float specularity = MGroup::Specularity(surface, gMatData, matIndex);
-    bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
-      
-    // Invalid Ray Write Helper Function
-    auto InvalidRayWrite = [&gOutRays, &gOutBoundKeys, &gOutRayAux, &sampleCount](int index)
-    {
-        assert(index < sampleCount);
+    //// Check Material Sample Strategy
+    //const uint32_t sampleCount = maxOutRay;
+    //// Check Material's specularity;
+    //float specularity = MGroup::Specularity(surface, gMatData, matIndex);
+    //bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
+    //  
+    //// Invalid Ray Write Helper Function
+    //auto InvalidRayWrite = [&gOutRays, &gOutBoundKeys, &gOutRayAux, &sampleCount](int index)
+    //{
+    //    assert(index < sampleCount);
 
-        // Generate Dummy Ray and Terminate
-        RayReg rDummy = EMPTY_RAY_REGISTER;
-        rDummy.Update(gOutRays, index);
-        gOutBoundKeys[index] = HitKey::InvalidKey;
-        gOutRayAux[index].pixelIndex = UINT32_MAX;
-     };
+    //    // Generate Dummy Ray and Terminate
+    //    RayReg rDummy = EMPTY_RAY_REGISTER;
+    //    rDummy.Update(gOutRays, index);
+    //    gOutBoundKeys[index] = HitKey::InvalidKey;
+    //    gOutRayAux[index].pixelIndex = UINT32_MAX;
+    // };
 
-    // If NEE ray hits to this material
-    // just skip since this is not a light material
-    // Also skip is material is specular since
-    // you cant sample specular material
-    if(aux.type == RayType::NEE_RAY || isSpecularMat)
-    {
-        InvalidRayWrite(MIS_RAY_INDEX);
-        return;
-    }
-    
-    // Calculate Transmittance factor of the medium
-    Vector3 transFactor = m.Transmittance(ray.tMax);
-    Vector3 radianceFactor = aux.radianceFactor * transFactor;
+    //// If NEE ray hits to this material
+    //// just skip since this is not a light material
+    //// Also skip is material is specular since
+    //// you cant sample specular material
+    //if(aux.type == RayType::NEE_RAY || isSpecularMat)
+    //{
+    //    InvalidRayWrite(MIS_RAY_INDEX);
+    //    return;
+    //}
+    //
+    //// Calculate Transmittance factor of the medium
+    //Vector3 transFactor = m.Transmittance(ray.tMax);
+    //Vector3 radianceFactor = aux.radianceFactor * transFactor;
 
-    // Check if mis ray should be sampled
-    bool launchedMISRay = (gRenderState.directLightMIS &&
-                           // Check if light can be sampled (meaning it is not a
-                           // dirac delta light (point light spot light etc.)
-                           gRenderState.lightList[lightIndex]->CanBeSampled());
+    //// Check if mis ray should be sampled
+    //bool launchedMISRay = (gRenderState.directLightMIS &&
+    //                       // Check if light can be sampled (meaning it is not a
+    //                       // dirac delta light (point light spot light etc.)
+    //                       gRenderState.lightList[lightIndex]->CanBeSampled());
 
-    // Sample Another ray for MIS (from BxDF)
-    float pdfMIS = 0.0f;
-    RayF rayMIS; const GPUMediumI* outMMIS;    
-    Vector3f misReflectance = Zero3;
-    if(launchedMISRay)
-    {
-        misReflectance = MGroup::Sample(// Outputs
-                                        rayMIS, pdfMIS, outMMIS,
-                                        // Inputs
-                                        wi,
-                                        position,
-                                        m,
-                                        //
-                                        surface,
-                                        // I-O
-                                        rng,
-                                        // Constants
-                                        gMatData,
-                                        matIndex,
-                                        0);
+    //// Sample Another ray for MIS (from BxDF)
+    //float pdfMIS = 0.0f;
+    //RayF rayMIS; const GPUMediumI* outMMIS;    
+    //Vector3f misReflectance = Zero3;
+    //if(launchedMISRay)
+    //{
+    //    misReflectance = MGroup::Sample(// Outputs
+    //                                    rayMIS, pdfMIS, outMMIS,
+    //                                    // Inputs
+    //                                    wi,
+    //                                    position,
+    //                                    m,
+    //                                    //
+    //                                    surface,
+    //                                    // I-O
+    //                                    rng,
+    //                                    // Constants
+    //                                    gMatData,
+    //                                    matIndex,
+    //                                    0);
 
-        // We are subsampling a single light pdf of BxDF also incorporate this
-        float pdfLightM, pdfLightC;
-        gRenderState.lightSampler->Pdf(pdfLightM, pdfLightC,
-                                       lightIndex, position,
-                                       rayMIS.getDirection());
+    //    // We are subsampling a single light pdf of BxDF also incorporate this
+    //    float pdfLightM, pdfLightC;
+    //    gRenderState.lightSampler->Pdf(pdfLightM, pdfLightC,
+    //                                   lightIndex, position,
+    //                                   rayMIS.getDirection());
 
-        pdfMIS /= TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLightC);
-        pdfMIS /= pdfLightM;
-    }
+    //    pdfMIS /= TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLightC);
+    //    pdfMIS /= pdfLightM;
+    //}
 
-    // Calculate Combined PDF
-    Vector3 misRadianceFactor = radianceFactor * misReflectance;
-    misRadianceFactor = (pdfMIS == 0.0f) ? Zero3 : (misRadianceFactor / pdfMIS);
-    if(launchedMISRay && misRadianceFactor != ZERO_3)
-    {
-        // Write Ray
-        RayReg rayOut;
-        rayOut.ray = rayMIS;
-        rayOut.tMin = 0.0f;
-        rayOut.tMax = INFINITY;
-        rayOut.Update(gOutRays, MIS_RAY_INDEX);
+    //// Calculate Combined PDF
+    //Vector3 misRadianceFactor = radianceFactor * misReflectance;
+    //misRadianceFactor = (pdfMIS == 0.0f) ? Zero3 : (misRadianceFactor / pdfMIS);
+    //if(launchedMISRay && misRadianceFactor != ZERO_3)
+    //{
+    //    // Write Ray
+    //    RayReg rayOut;
+    //    rayOut.ray = rayMIS;
+    //    rayOut.tMin = 0.0f;
+    //    rayOut.tMax = INFINITY;
+    //    rayOut.Update(gOutRays, MIS_RAY_INDEX);
 
-        // Write Aux
-        RayAuxPath auxOut = aux;
-        auxOut.radianceFactor = misRadianceFactor;
-        auxOut.endPointIndex = lightIndex;
-        auxOut.type = RayType::NEE_RAY;
+    //    // Write Aux
+    //    RayAuxPath auxOut = aux;
+    //    auxOut.radianceFactor = misRadianceFactor;
+    //    auxOut.endPointIndex = lightIndex;
+    //    auxOut.type = RayType::NEE_RAY;
 
-        gOutBoundKeys[MIS_RAY_INDEX] = matLight;
-        gOutRayAux[MIS_RAY_INDEX] = auxOut;
-    }
-    else InvalidRayWrite(MIS_RAY_INDEX);
+    //    gOutBoundKeys[MIS_RAY_INDEX] = matLight;
+    //    gOutRayAux[MIS_RAY_INDEX] = auxOut;
+    //}
+    //else InvalidRayWrite(MIS_RAY_INDEX);
 }
