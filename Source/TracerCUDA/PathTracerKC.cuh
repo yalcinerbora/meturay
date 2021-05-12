@@ -318,6 +318,10 @@ void PathTracerComboWork(// Output
                                     matIndex);
 
         pdfNEE /= TracerFunctions::PowerHeuristic(1, pdfLight, 1, pdfBxDF);
+
+        // PDF can become NaN if both BxDF pdf and light pdf is both zero 
+        // (meaning both sampling schemes does not cover this direction)
+        if(isnan(pdfNEE)) pdfNEE = 0.0f;
     }
 
     // Do not waste a ray if material does not reflect
@@ -376,8 +380,23 @@ void PathTracerComboWork(// Output
                                        lightIndex, position,
                                        rayMIS.getDirection());
 
+        float oldPDF = pdfMIS;
+
         pdfMIS /= TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLightC);
         pdfMIS /= pdfLightM;
+
+        // PDF can become NaN if both BxDF pdf and light pdf is both zero 
+        // (meaning both sampling schemes does not cover this direction)
+        if(isnan(pdfMIS)) pdfMIS = 0.0f;
+
+        //if(isnan(pdfMIS))
+        //    printf("Refl %f %f %f\n"
+        //           "pdfLC %f, PdfLM %f, PdfBxDF %f\n"
+        //           "weight %f\n"
+        //           "---\n",
+        //           misReflectance[0], misReflectance[1], misReflectance[2],
+        //           pdfLightC, pdfLightM, oldPDF, TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLightC));
+        
     }
 
     // Calculate Combined PDF
@@ -394,6 +413,7 @@ void PathTracerComboWork(// Output
 
         // Write Aux
         RayAuxPath auxOut = aux;
+        auxOut.mediumIndex = static_cast<uint16_t>(outMMIS->GlobalIndex());
         auxOut.radianceFactor = misRadianceFactor;
         auxOut.endPointIndex = lightIndex;
         auxOut.type = RayType::NEE_RAY;

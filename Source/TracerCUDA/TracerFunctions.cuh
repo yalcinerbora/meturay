@@ -33,10 +33,14 @@ namespace TracerFunctions
     {
         float alpha = roughness * roughness;
         float alphaSqr = alpha * alpha;
-        float dDenom = NdH * NdH * (alphaSqr - 1.0f) + 1.0f;
-        dDenom = dDenom * dDenom;
-        dDenom *= MathConstants::Pi;
-        return (alphaSqr / dDenom);
+        float denom = NdH * NdH * (alphaSqr - 1.0f) + 1.0f;
+        denom = denom * denom;
+        denom *= MathConstants::Pi;
+
+        //if(abs(denom) < MathConstants::SmallEpsilon)
+        //    return 0.0f;
+        float result = (alphaSqr / denom);
+        return isnan(result) ? 0.0f : result;
     }
 
     __device__ __forceinline__

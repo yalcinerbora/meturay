@@ -210,11 +210,18 @@ __device__ float GPULight<PGroup>::Pdf(const Vector3& direction,
             primId, 
             gPData);
 
+    if(isnan(pdf))
+        printf("primPDF NAN\n");
+
     if(pdf != 0.0f)
     {
         float distanceSqr = distance * distance;
         float nDotL = abs(normal.Dot(-direction));
         pdf *= distanceSqr / nDotL;
+
+        if(isnan(pdf))
+            printf("2     primPDF NAN\n");
+
         return pdf;
     }
     else return 0.0f;

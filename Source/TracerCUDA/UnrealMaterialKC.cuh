@@ -111,6 +111,11 @@ Vector3 UnrealSample(// Sampled Output
     Vector3f woDir = GPUSurface::ToWorld(L, surface.worldToTangent);
     Vector3f woPos = pos + normalWorld * MathConstants::Epsilon;
 
+
+    if(isnan(G)) printf("S: G Term NANn");
+    if(F.HasNaN()) printf("S: F Term NANn");
+    if(isnan(D)) printf("S: D Term NANn");
+
     // Calculate Radiance    
     Vector3f diffuseTerm = NdL * albedo * MathConstants::InvPi;
     // Notice that NdL terms are cancelled out
@@ -191,6 +196,12 @@ Vector3 UnrealEvaluate(// Input
     float NdH = max(N.Dot(H), 0.0f);
     float VdH = max(V.Dot(H), 0.0f);
     float LdH = max(V.Dot(H), 0.0f);
+
+    // Edge cases
+    if(NdV == 0.0f || LdH == 0.0f)
+    {    
+        return Zero3;
+    }
 
     // GGX
     float D = TracerFunctions::GGX(NdH, roughness);
