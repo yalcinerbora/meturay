@@ -29,7 +29,7 @@ namespace TracerFunctions
     }
 
     __device__ __forceinline__
-    float GGX(float NdH, float roughness)
+    float DGGX(float NdH, float roughness)
     {
         float alpha = roughness * roughness;
         float alphaSqr = alpha * alpha;
@@ -44,10 +44,10 @@ namespace TracerFunctions
     }
 
     __device__ __forceinline__
-    float GGXSample(Vector3& H,
-                    float& pdf,
-                    float roughness,
-                    RandomGPU& rng)
+    float DGGXSample(Vector3& H,
+                     float& pdf,
+                     float roughness,
+                     RandomGPU& rng)
     {
         // https://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf
         // Page 4 it does not include pdf it is included from
@@ -82,26 +82,65 @@ namespace TracerFunctions
     __device__ __forceinline__
     float GSchlick(float dot, float roughness)
     {
-        float k = (roughness + 1);
-        k = k * k;
+        if(dot == 0.0f) return 0;
+        float alpha = roughness * roughness;
+
+        // Unreal Version
         // This is much more verbose than 0.125f
         // and it shoud have same perf
-        static constexpr float denom = 1.0f / 8.0f;
-        k *= denom;
+        //static constexpr float denom = 1.0f / 8.0f;     
+        //float k = (roughness + 1);
+        //k = k * k;
+        //k *= denom;
+        //return dot / (dot * (1 - k) + k);
 
+        // Straight from the paper
+        // Schlick 1994 [An Inexpensive BRDF Model for Physically - based Rendering]
+        constexpr float PiOvrTwo = MathConstants::Sqrt2 / MathConstants::SqrtPi;
+        float k = alpha * PiOvrTwo;
         return dot / (dot * (1 - k) + k);
+    }
+
+    __device__ __forceinline__
+    float GeomGGX(float dot, float roughness)
+    {
+        // Straight from paper
+        // https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf
+        if(dot == 0.0f) return 0;
+
+        float alpha = roughness * roughness;
+        float alphaSqr = alpha * alpha;
+
+        float dotSqr = dot;
+        float denom = (1.0f - dotSqr) / dotSqr;
+        denom *= alphaSqr;
+        denom += 1.0f;
+        denom = sqrt(denom) + 1;
+
+        return 2.0f / denom;
     }
 
     __device__ __forceinline__
     Vector3f FSchlick(float VdH, const Vector3f& f0)
     {
-        static constexpr float t0 = -5.55473f;
-        static constexpr float t1 = -6.98316f;
+        // Unreal Version from their course notes
+        //static constexpr float t0 = -5.55473f;
+        //static constexpr float t1 = -6.98316f;
+        //float pw = pow(2.0f, (t0 * VdH - t1) * VdH);
+        //Vector3f result = (Vector3f(1.0f) - f0) * pw;
+        //result += f0;
+        //return result;
 
-        float pw = pow(2.0f, (t0 * VdH - t1) * VdH);
-        Vector3f result = (Vector3f(1.0f) - f0) * pw;
+        // Classic Schlick' Approx
+        float pwTerm = 1.0f - VdH;
+        float pw5 = pwTerm * pwTerm;
+        pw5 *= pw5;
+        pw5 *= pwTerm;
+
+        Vector3f result = (Vector3f(1.0f) - f0) * pw5;
         result += f0;
         return result;
+
     }
 
     __device__ __forceinline__

@@ -142,6 +142,7 @@ SceneError UnrealMat::InitializeGroup(const NodeListing& materialNodes,
                                                             scenePath)) != SceneError::OK)
                     return err;
                 normalTexCount++;
+                constructionInfo.normalMap = static_cast<cudaTextureObject_t>(*normT);
                 texIdList[TexType::NORMAL] = normalNode.second.texId;
             }
             else texIdList[TexType::NORMAL] = std::numeric_limits<uint32_t>::max();

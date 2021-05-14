@@ -33,21 +33,6 @@ class TextureLoader
     private:
         static uint32_t             ColorTypeToChannelCount(FREE_IMAGE_COLOR_TYPE cType);
 
-        template<class T>
-        static void                 Expand2DData3ChannelTo4Channel(std::vector<Byte>& expandedData,
-                                                                   const Byte* packedData,
-                                                                   const Vector2ui& dim,
-                                                                   uint32_t sourcePitch,
-                                                                   bool isSigned);
-
-        template<class T>
-        static void                 PackImageChannelToBits(std::vector<Byte>& bitmap,
-                                                           const Byte* imgPixels,
-                                                           const Vector2ui& dimension,
-                                                           uint32_t pitch,
-                                                           uint32_t channelIndex,
-                                                           uint32_t imgChannelCount);
-
     protected:
     public:
         // Constructors & Destructor
@@ -57,6 +42,24 @@ class TextureLoader
         TextureLoader&              operator=(const TextureLoader&) = delete;
         TextureLoader&              operator=(TextureLoader&&) = delete;
                                     ~TextureLoader();
+
+        template<class T>
+        static void                 ConvertData(std::vector<Byte>& expandedData,
+                                                const Byte* packedData,
+                                                const Vector2ui& dim,
+                                                uint32_t sourcePitch,
+                                                bool doSingedConversion,
+                                                bool expand3DDataTo4D,
+                                                uint32_t inChannelCount);
+
+        template<class T>
+        static void                 PackImageChannelToBits(std::vector<Byte>& bitmap,
+                                                           const Byte* imgPixels,
+                                                           const Vector2ui& dimension,
+                                                           uint32_t pitch,
+                                                           uint32_t channelIndex,
+                                                           uint32_t imgChannelCount);
+
 
         // Functionality
         template <int D>
@@ -95,36 +98,41 @@ class TextureLoader
 };
 
 template<class T>
-void TextureLoader::Expand2DData3ChannelTo4Channel(std::vector<Byte>& expandedData,
-                                                   const Byte* packedData,
-                                                   const Vector2ui& dim,                                                   
-                                                   uint32_t sourcePitch,
-                                                   bool isSigned)
+void TextureLoader::ConvertData(std::vector<Byte>& expandedData,
+                                const Byte* packedData,
+                                const Vector2ui& dim,
+                                uint32_t sourcePitch,
+                                bool doSingedConversion,
+                                bool expand3DDataTo4D,
+                                uint32_t inChannelCount)
 {
-    static constexpr uint32_t InChannelCount = 3;
-    static constexpr uint32_t OutChannelCount = 4;
+    // Skip if no conversion
+    if(!doSingedConversion && !expand3DDataTo4D)
+        return;
 
-    expandedData.resize(sizeof(T) * OutChannelCount * dim[0] * dim[1]);
+    const uint32_t outChannelCount = expand3DDataTo4D ? 4: inChannelCount;
+
+    expandedData.resize(sizeof(T) * outChannelCount * dim[0] * dim[1]);
     for(uint32_t y = 0; y < dim[1]; y++)
     {
         const Byte* srcRowPtr = packedData + sourcePitch * y;
         for(uint32_t x = 0; x < dim[0]; x++)
         {
-            // Pixel by pixel copy
-            ptrdiff_t dstOffset = (dim[0] * y * sizeof(T) * OutChannelCount +
-                                            x * sizeof(T) * OutChannelCount);
-            ptrdiff_t srcRowOffset = (x * sizeof(T) * InChannelCount);
+            ptrdiff_t dstOffset = (dim[0] * y * sizeof(T) * outChannelCount +
+                                            x * sizeof(T) * outChannelCount);
+            ptrdiff_t srcRowOffset = (x * sizeof(T) * inChannelCount);
 
             Byte* destPixel = expandedData.data() + dstOffset;
             const Byte* srcPixel = srcRowPtr + srcRowOffset;
-            std::memcpy(destPixel, srcPixel, sizeof(T) * InChannelCount);
-            
+
+            std::memcpy(destPixel, srcPixel, sizeof(T) * inChannelCount);
+
             // Convert unsigned data to signed
-            if(isSigned)
-            for(uint32_t i = 0; i < InChannelCount; i++)
+            if(doSingedConversion)
+            for(uint32_t i = 0; i < inChannelCount; i++)
             {
                 T& t = *reinterpret_cast<T*>(destPixel + sizeof(T) * i);
-                constexpr T mid = 0x1 << ((sizeof(T) * 8) - 1);
+                constexpr T mid = static_cast<T>(0x1 << ((sizeof(T) * 8) - 1));
                 t -= mid;
             }
         }

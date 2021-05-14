@@ -573,8 +573,9 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     // Load all textures here materials will actually load the textures
     for(const auto& jsn : (*textures))
     {
-        TextureStruct s = SceneIO::LoadTexture(jsn);
-        textureNodes.emplace(s.texId, s);
+        std::vector<TextureStruct> textures = SceneIO::LoadTexture(jsn);
+        for(const auto& t : textures)
+            textureNodes.emplace(t.texId, t);
     }
     return e;
 }

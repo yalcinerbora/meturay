@@ -63,12 +63,12 @@ Vector3 UnrealSample(// Sampled Output
     float metallic = (*matData.dMetallic[matId])(surface.uv);
     float specular = (*matData.dSpecular[matId])(surface.uv);
     Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
-
+   /* albedo = N;*/
     // Since we using capital terms alias wi as V
     Vector3 V = GPUSurface::ToTangent(wi, surface.worldToTangent);
     // Sample a H (Half Vector)
     Vector3 H;
-    float D = TracerFunctions::GGXSample(H, pdf, roughness, rng);
+    float D = TracerFunctions::DGGXSample(H, pdf, roughness, rng);
     //Vector2 xi(GPUDistribution::Uniform<float>(rng),
     //           GPUDistribution::Uniform<float>(rng));
     //Vector3 H = HemiDistribution::HemiCosineCDF(xi, pdf);
@@ -111,17 +111,16 @@ Vector3 UnrealSample(// Sampled Output
     Vector3f woDir = GPUSurface::ToWorld(L, surface.worldToTangent);
     Vector3f woPos = pos + normalWorld * MathConstants::Epsilon;
 
-
-    if(isnan(G)) printf("S: G Term NANn");
-    if(F.HasNaN()) printf("S: F Term NANn");
-    if(isnan(D)) printf("S: D Term NANn");
+    //if(isnan(G)) printf("S: G Term NANn");
+    //if(F.HasNaN()) printf("S: F Term NANn");
+    //if(isnan(D)) printf("S: D Term NANn");
 
     // Calculate Radiance    
-    Vector3f diffuseTerm = NdL * albedo * MathConstants::InvPi;
+    // Blend between albedo-black for metallic material
+    Vector3f diffuseAlbedo = (1.0f - metallic) * albedo;
+    Vector3f diffuseTerm = NdL * diffuseAlbedo * MathConstants::InvPi;
     // Notice that NdL terms are cancelled out
     Vector3f specularTerm = D * F * G * 0.25f / NdV;
-    // Blend diffuse term due to metallic
-    Vector3f diffBlended = Vector3f::Lerp(diffuseTerm, Vector3(0.0f), metallic);    
 
     if(specularTerm.HasNaN())
     printf("pdf %f, G %f, D %f \n"
@@ -137,7 +136,7 @@ Vector3 UnrealSample(// Sampled Output
 
     // Finally Radiance
     // All Done!
-    return diffBlended + specularTerm;
+    return diffuseTerm + specularTerm;
 }
 
 __device__ __forceinline__
@@ -162,7 +161,7 @@ float UnrealPdf(// Input
     Vector3 H = (L + V).Normalize();
 
     float NdH = max(N.Dot(H), 0.0f);
-    float pdf = TracerFunctions::GGX(NdH, roughness) * NdH;
+    float pdf = TracerFunctions::DGGX(NdH, roughness) * NdH;
     return pdf;
 }
 
@@ -189,7 +188,7 @@ Vector3 UnrealEvaluate(// Input
     Vector3 L = GPUSurface::ToTangent(wo, surface.worldToTangent);
     Vector3 V = GPUSurface::ToTangent(wi, surface.worldToTangent);
     Vector3 H = (L + V).Normalize();
-
+    /*albedo = N;*/
     // BRDF Calculation
     float NdL = max(N.Dot(L), 0.0f);
     float NdV = max(N.Dot(V), 0.0f);
@@ -204,7 +203,7 @@ Vector3 UnrealEvaluate(// Input
     }
 
     // GGX
-    float D = TracerFunctions::GGX(NdH, roughness);
+    float D = TracerFunctions::DGGX(NdH, roughness);
     // Shadowing Term (Schlick Model)    
     float G = TracerFunctions::GSchlick(NdL, roughness) * 
               TracerFunctions::GSchlick(NdV, roughness);
@@ -212,13 +211,13 @@ Vector3 UnrealEvaluate(// Input
     Vector3f f0 = CalculateF0(albedo, metallic, specular);
     Vector3f F = TracerFunctions::FSchlick(VdH, f0);
     // Calculate Radiance    
-    Vector3f diffuseTerm = NdL * albedo * MathConstants::InvPi;
+    // Blend between albedo-black for metallic material
+    Vector3f diffuseAlbedo = (1.0f - metallic) * albedo;
+    Vector3f diffuseTerm = NdL * diffuseAlbedo * MathConstants::InvPi;
     // Notice that NdL terms are cancelled out
     Vector3f specularTerm = D * F * G * 0.25f / NdV;
     specularTerm = (NdV == 0.0f) ? Zero3 : specularTerm;
     // Blend diffuse term due to metallic
-    Vector3f diffBlended = Vector3f::Lerp(diffuseTerm, Vector3(0.0f), metallic); 
-
     if(specularTerm.HasNaN())
         printf("G %f, D %f \n"
                "NdL %f, NdV %f, NdH %f, VdH %f, LdH %f\n"
@@ -227,5 +226,5 @@ Vector3 UnrealEvaluate(// Input
                NdL, NdV, NdH, VdH, LdH,
                F[0], F[1], F[2]);
 
-    return diffBlended + specularTerm;
+    return diffuseTerm + specularTerm;
 }

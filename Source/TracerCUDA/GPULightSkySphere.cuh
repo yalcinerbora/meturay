@@ -122,11 +122,11 @@ inline void GPULightSkySphere::Sample(// Output
 {
     Vector2f index;
     Vector2f uv = distribution.Sample(pdf, index, rng);
-    Vector2f tethaPhi = Vector2f(// [-pi, pi]
+    Vector2f thetaPhi = Vector2f(// [-pi, pi]
                                  (uv[0] * MathConstants::Pi * 2.0f) - MathConstants::Pi,
                                   // [0, pi]
                                  (1.0f - uv[1]) * MathConstants::Pi);
-    Vector3 dirZUp = Utility::SphericalToCartesianUnit(tethaPhi);
+    Vector3 dirZUp = Utility::SphericalToCartesianUnit(thetaPhi);
     // Spherical Coords calculates as Z up change it to Y up
     Vector3 dirYUp = Vector3(dirZUp[1], dirZUp[2], dirZUp[0]);
     // Transform Direction to World Space
@@ -138,7 +138,7 @@ inline void GPULightSkySphere::Sample(// Output
 
     // Convert to solid angle pdf
     // http://www.pbr-book.org/3ed-2018/Light_Transport_I_Surface_Reflection/Sampling_Light_Sources.html
-    float sinPhi = sin(tethaPhi[1]);
+    float sinPhi = sin(thetaPhi[1]);
     if(sinPhi == 0.0f) pdf = 0.0f;
     else pdf = pdf / (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
 
@@ -170,11 +170,30 @@ inline float GPULightSkySphere::Pdf(const Vector3& direction,
     // Normalize to generate UV [0, 1]
     // tetha range [-pi, pi]
     float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
+    // If we are at edge point (u == 1) make it zero since 
+    // piecewise constant function will not have that pdf (out of bounds)
+    u = (u == 1.0f) ? 0.0f : u;
     // phi range [0, pi]
     float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);
+    // If (v == 1) then again pdf of would be out of bounds.
+    // make it inbound
+    v = (v == 1.0f) ? (v - MathConstants::SmallEpsilon) : v;
+
+    // If we are at the edge point
+    Vector2f indexNorm = Vector2f(u, v);
+
+    // Expand to size
+    Vector2f index = indexNorm * (distribution.Width(), distribution.Height());
 
     // Fetch Conditional/Marginal Probs
-    float pdf = distribution.Pdf(Vector2f(u, v));
+    float pdf = distribution.Pdf(index);
+
+    // Convert to solid angle pdf
+    // http://www.pbr-book.org/3ed-2018/Light_Transport_I_Surface_Reflection/Sampling_Light_Sources.html
+    float sinPhi = sin(thetaPhi[1]);
+    if(sinPhi == 0.0f) pdf = 0.0f;
+    else pdf = pdf / (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
+
     return pdf;
 }
 

@@ -380,7 +380,7 @@ void PathTracerComboWork(// Output
                                        lightIndex, position,
                                        rayMIS.getDirection());
 
-        float oldPDF = pdfMIS;
+//        float oldPDF = pdfMIS;
 
         pdfMIS /= TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLightC);
         pdfMIS /= pdfLightM;

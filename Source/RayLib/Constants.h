@@ -100,7 +100,8 @@ namespace MathConstants
     static constexpr double Pi_d = 3.1415926535897932384626433;
     static constexpr double PiSqr_d = Pi_d * Pi_d;
     static constexpr double InvPi_d = 1.0 / Pi_d;
-    static constexpr double InvPiSqr_d = 1.0 / (Pi_d * Pi_d);
+    static constexpr double InvPiSqr_d = 1.0 / (Pi_d * Pi_d);                                       
+    static constexpr double SqrtPi_d = 1.772453850905516027298167;
     static constexpr double Sqrt2_d = 1.4142135623730950488016887;
     static constexpr double Sqrt3_d = 1.7320508075688772935274463;
     static constexpr double E_d = 2.7182818284590452353602874;
@@ -119,6 +120,7 @@ namespace MathConstants
     static constexpr float PiSqr = static_cast<float>(PiSqr_d);
     static constexpr float InvPi = static_cast<float>(InvPi_d);
     static constexpr float InvPiSqr = static_cast<float>(InvPiSqr_d);
+    static constexpr float SqrtPi = static_cast<float>(SqrtPi_d);
     static constexpr float Sqrt2 = static_cast<float>(Sqrt2_d);
     static constexpr float Sqrt3 = static_cast<float>(Sqrt3_d);
     static constexpr float E = static_cast<float>(E_d);

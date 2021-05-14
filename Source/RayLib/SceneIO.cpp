@@ -66,18 +66,46 @@ TextureAccessLayout SceneIO::LoadTextureAccessLayout(const nlohmann::json& node)
     else throw SceneException(SceneError::UNKNOWN_TEXTURE_ACCESS_LAYOUT);
 }
 
-TextureStruct SceneIO::LoadTexture(const nlohmann::json& jsn)
+std::vector<TextureStruct> SceneIO::LoadTexture(const nlohmann::json& jsn)
 {
-    TextureStruct result;
-    result.texId = jsn[ID];
-    result.filePath = jsn[TEXTURE_FILE];
-    // Optional Signed data flag
-    auto loc = jsn.cend();
-    if((loc = jsn.find(TEXTURE_SIGNED)) != jsn.cend())
-        result.isSigned = *loc;
-    else result.isSigned = false;
+    std::vector<TextureStruct> result;
 
-    return result;
+    const nlohmann::json& id = jsn[ID];
+    if(id.is_array())
+    {
+        // Pre-check singed data is avail
+        auto loc = jsn.cend();
+        bool hasSignedNode = (jsn.find(TEXTURE_SIGNED) != jsn.cend());
+
+        size_t texCount = id.size();
+        for(size_t i = 0; i < texCount; i++)
+        {
+            TextureStruct tex;
+            tex.texId = jsn[ID][i];
+            tex.filePath = jsn[TEXTURE_FILE][i];
+            // Optional Signed data flag
+            if(hasSignedNode)
+                tex.isSigned = jsn[TEXTURE_SIGNED][i];
+            else 
+                tex.isSigned = false;
+
+            result.push_back(tex);
+        }
+    }
+    else
+    {
+        TextureStruct singleTex;
+        singleTex.texId = jsn[ID];
+        singleTex.filePath = jsn[TEXTURE_FILE];
+        // Optional Signed data flag
+        auto loc = jsn.cend();
+        if((loc = jsn.find(TEXTURE_SIGNED)) != jsn.cend())
+            singleTex.isSigned = *loc;
+        else singleTex.isSigned = false;
+
+        result.push_back(singleTex);
+    }
+    return std::move(result);
 }
 
 SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn)

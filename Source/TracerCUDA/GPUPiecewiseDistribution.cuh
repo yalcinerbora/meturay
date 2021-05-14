@@ -228,8 +228,7 @@ inline Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, Ran
 __device__ __forceinline__
 inline float GPUDistPiecewiseConst2D::Pdf(const Vector2f& index) const
 {
-    //int indexX = static_cast<uint32_t>(index[0] * width);
-    int indexY = static_cast<uint32_t>(index[1] * height);
+    int indexY = static_cast<uint32_t>(index[1]);
 
     float pdfY = gDistributionY.Pdf(index[1]);
     float pdfX = gDistributionsX[indexY].Pdf(index[0]);

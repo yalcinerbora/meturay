@@ -127,12 +127,6 @@ inline void GPULightSamplerUniform::Pdf(float& marginal,
 
     // Probability of sampling such direction from the particular light
     float pdfLight = gLights[lightIndex]->Pdf(direction, position);
-
-    if(isnan(pdfLight))
-        printf("UniformSampler:     lightC  %f\n", pdfLight);
-    if(isnan(pdf))
-        printf("UniformSampler:     lightM  %f\n", pdf);
-
     // Probabilities are conditional thus multiply
     marginal = pdf;
     conditional = pdfLight;

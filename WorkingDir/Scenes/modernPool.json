@@ -44,7 +44,8 @@
     "Mediums":[
     {
         "id" : 0,
-        "type" : "Vacuum"},
+        "type" : "Vacuum"
+    },
     {
         // Water Medium
 		"id": 2,
@@ -54,130 +55,166 @@
 		"scattering": [0, 0, 0],
 		"ior": 1.34,
 		"phase": 0
-	}
-    // {
-    //     // Glass Medium
-	// 	"id": 1,
-	// 	"type" : "Homogenous",
+},
+    {
+        // Glass Medium
+		"id": 1,
+		"type" : "Homogenous",
 
-	// 	"absorption": [0, 0 ,0],
-	// 	"scattering": [0, 0, 0],
-	// 	"ior": 1.55,
-	// 	"phase": 0
-	// },
-    ],
+		"absorption": [0, 0 ,0],
+		"scattering": [0, 0, 0],
+		"ior": 1.55,
+		"phase": 0
+	}],
 
     "Transforms":[
-        {
-            "id": 0,
-            "type": "Identity"
-        },
-        {
-            "id": 1,
-            "type": "Single",
-
-            "layout": "trs",
-            "translate": [0, 0, 0],
-            "rotate": [0, -150, 0],
-            "scale": [1, 1, 1]
-        }],
-
-    "Textures":[
     {
         "id": 0,
-        "file": "../Textures/ModernPool/floor_tiles_04_diff_2k.jpg"
+        "type": "Identity"
     },
     {
         "id": 1,
-        "signed": true,
-        "file": "../Textures/ModernPool/floor_tiles_04_nor_2k.jpg"
+        "type": "Single",
 
-    },
-    {
-        "id": 2,
-        "file": "../Textures/ModernPool/floor_tiles_04_rough_2k.jpg"
-    },
-    {
-        "id": 3,
-        "file": "../Textures/ModernPool/floor_tiles_04_spec_2k.jpg"
-    },
-    {
-        "id": 4,
-        "file": "../Textures/ModernPool/pool_tiles_2K_Albedo.jpg"
-    },
-    {
-        "id": 5,
-        //"signed": true,
-        "file": "../Textures/ModernPool/pool_tiles_2K_Normal.jpg"
+        "layout": "trs",
+        "translate": [0, 0, 0],
+        "rotate": [0, -150, 0],
+        "scale": [1, 1, 1]
+    }],
 
+    "Textures": [
+    {
+        // Floor Textures
+        "id": [0, 1, 2, 3],
+        "signed": [false, true, false, false],
+        "file": [
+            "../Textures/ModernPool/floor_tiles_04_diff_2k.jpg",
+            "../Textures/ModernPool/floor_tiles_04_nor_2k.jpg",
+            "../Textures/ModernPool/floor_tiles_04_rough_2k.jpg",
+            "../Textures/ModernPool/floor_tiles_04_spec_2k.jpg"
+        ]
     },
     {
-        "id": 6,
-        "file": "../Textures/ModernPool/pool_tiles_2K_Roughness.jpg"
+        // Pool Textures
+        "id": [4, 5, 6],
+        "signed": [false, true, false],
+        "file": [
+            "../Textures/ModernPool/pool_tiles_2k_albedo.jpg",
+            "../Textures/ModernPool/pool_tiles_2k_normal.jpg",
+            "../Textures/ModernPool/pool_tiles_2k_roughness.jpg"
+        ]
     },
     {
-        "id": 7,
-        "file": "../Textures/ModernPool/dirty_concrete_diff_2k.jpg"
+        // House Walls
+        "id": [7, 8, 9],
+        "signed": [false, true, false],
+        "file": [
+            "../Textures/ModernPool/dirty_concrete_diff_2k.jpg",
+            "../Textures/ModernPool/dirty_concrete_nor_2k.jpg",
+            "../Textures/ModernPool/dirty_concrete_rough_2k.jpg"
+        ]
     },
     {
-        "id": 8,
-        "signed": true,
-        "file": "../Textures/ModernPool/dirty_concrete_nor_2k.jpg"
-    },
-    {
-        "id": 9,
-        "file": "../Textures/ModernPool/dirty_concrete_rough_2k.jpg"
-    },
-    {
+        // Lounge Fabric
         "id": 10,
         "file": "../Textures/ModernPool/lounge_fabric_diff_2k.jpg"
     },
     {
+        // Wood Bench
         "id": 11,
         "file": "../Textures/ModernPool/bench_wood_diff_2k.jpg"
     },
     {
+        // Towel Fabric
         "id": 12,
         "file": "../Textures/ModernPool/towel_fabric_diff_1k.jpg"
     },
     {
-        "id": 13,
-        "file": "../Textures/ModernPool/bark_brown_02_diff_2k.png"
+        // Tree Bark
+        "id": [13, 14, 15, 16],
+        "signed": [false, true, false, false],
+        "file": [
+            "../Textures/ModernPool/bark_brown_02_diff_2k.png",
+            "../Textures/ModernPool/bark_brown_02_nor_2k.png",
+            "../Textures/ModernPool/bark_brown_02_rough_2k.png",
+            "../Textures/ModernPool/bark_brown_02_spec_2k.png"
+        ]
     },
     {
-        "id": 14,
-        "signed": true,
-        "file": "../Textures/ModernPool/bark_brown_02_nor_2k.png"
-    },
-    {
-        "id": 15,
-        "file": "../Textures/ModernPool/bark_brown_02_rough_2k.png"
-    },
-    {
-        "id": 16,
+        // HDR
+        "id": 17,
         "file": "../Textures/ModernPool/lakeside_4k.hdr"
-    }],
+    },
+    {
+        // Tree Leaf
+        "id": [18, 19, 20],
+        "signed": [false, true, false],
+        "file": [
+            "../Textures/ModernPool/branch0.png",
+            "../Textures/ModernPool/branch0_n.png",
+            "../Textures/ModernPool/branch0_s.png"
+        ]
+    },
+    {
+        // Tree Brick
+        "id": [21, 22, 23],
+        "signed": [false, true, false],
+        "file": [
+            "../Textures/ModernPool/rough_block_wall_diff_1k.png",
+            "../Textures/ModernPool/rough_block_wall_nor_1k.png",
+            "../Textures/ModernPool/rough_block_wall_rough_1k.png"
+        ]
+    },
+    {
+        // Tree Soil
+        "id": [24, 25, 26, 27],
+        "signed": [false, true, false, false],
+        "file": [
+            "../Textures/ModernPool/brown_mud_leaves_01_diff_1k.png",
+            "../Textures/ModernPool/brown_mud_leaves_01_nor_1k.png",
+            "../Textures/ModernPool/brown_mud_leaves_01_rough_1k.png",
+            "../Textures/ModernPool/brown_mud_leaves_01_spec_1k.png"
+        ]
+    }
+
+],
 
     "Materials":[
     {
         // Light Boundary Material
         "id": 0,
         "type": "BSkySphere",
-        "radiance" : {"texture": 16, "channels": "rgb"}
+        "radiance" : {"texture": 17, "channels": "rgb"}
     },
     {
         // Pool Floor
-        "id": 2,
-        "type": "Lambert",
+        "id": 1,
+        "type": "Unreal",
+        "albedo": {"texture": 0, "channels": "rgb"},
         "normal": {"texture": 1, "channels": "rgb"},
-        "albedo": {"texture": 0, "channels": "rgb"}
+        "roughness": {"texture": 2, "channels": "r"},
+        "specular": {"texture": 3, "channels": "r"},
+        "metallic": 0.0
     },
     {
         // Pool Base
-        "id": 3,
-        "type": "Lambert",
+        "id": 2,
+        "type": "Unreal",
+        "albedo": {"texture": 4, "channels": "rgb"},
         "normal": {"texture": 5, "channels": "rgb"},
-        "albedo": {"texture": 4, "channels": "rgb"}
+        "roughness": {"texture": 6, "channels": "r"},
+        "specular": 0.1,
+        "metallic": 0.0
+    },
+    {
+        // House Walls
+        "id": 3,
+        "type": "Unreal",
+        "albedo": {"texture": 7, "channels": "rgb"},
+        "normal": {"texture": 8, "channels": "rgb"},
+        "roughness": {"texture": 9, "channels": "r"},
+        "specular": 0.2,
+        "metallic": 0.0
     },
     {
         // Water
@@ -185,21 +222,69 @@
         "type": "Refract",
         "albedo": [1, 1, 1],
         "medium": 2
+    },
+    {
+        // House Glass
+        "id": 5,
+        "type": "Refract",
+        "albedo": [1, 1, 1],
+        "medium": 1
+    },
+    {
+        // All Metals
+        "id": 6,
+        "type": "Unreal",
+		"albedo" : [0.9, 0.7, 0.5],
+		"roughness" : 0.23,
+        "specular": 0.5,
+        "metallic": 0.95
+    },
+    {
+        // Tree Bark
+        "id": 7,
+        "type": "Unreal",
+		"albedo" : {"texture": 13, "channels": "rgb"},
+        "normal": {"texture": 14, "channels": "rgb"},
+		"roughness" : {"texture": 15, "channels": "r"},
+        "specular": {"texture": 16, "channels": "r"},
+        "metallic": 0.0
+    },
+    {
+        // Tree Leaves
+        "id": 8,
+        "type": "Unreal",
+		"albedo" : {"texture": 18, "channels": "rgb"},
+        "normal": {"texture": 19, "channels": "rgb"},
+		"roughness" : {"texture": 20, "channels": "r"},
+        "specular": 0.1,
+        "metallic": 0.0
+    },
+    {
+        // Tree Soil
+        "id": 9,
+        "type": "Unreal",
+		"albedo" : {"texture": 24, "channels": "rgb"},
+        "normal": {"texture": 25, "channels": "rgb"},
+		"roughness" : {"texture": 26, "channels": "r"},
+        "specular": {"texture": 27, "channels": "r"},
+        "metallic": 0.0
+    },
+    {
+        // Tree Brick
+        "id": 10,
+        "type": "Unreal",
+		"albedo" : {"texture": 21, "channels": "rgb"},
+        "normal": {"texture": 22, "channels": "rgb"},
+		"roughness" : {"texture": 23, "channels": "r"},
+        "specular": 0.1,
+        "metallic": 0.0
     }
     // {
-    //     // Glass
-    //     "id": 5,
-    //     "type": "Refract",
-    //     "albedo": [1, 1, 1],
-    //     "medium": 1
+    //     // Perimeter Walls
     // },
-    // {
-    //     // All Metals
-    //     "id": 6,
-    //     "type": "Reflect",
-	// 	"albedo" : [0.9, 0.7, 0.5],
-	// 	"roughness" : 0.0
-    // }
+
+
+
     ],
 
     "Primitives":[
@@ -223,11 +308,36 @@
         // Water
         "id": 2,
         "type": "Triangle",
-        "name": "../Surfaces/ModernPool/water4.obj",
+        "name": "../Surfaces/ModernPool/water.obj",
         "tag": "assimp_",
         "innerIndex": 0,
         "cullFace": false
+    },
+    {
+        // Pool Ladder
+        "id": 3,
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/pool_ladder2.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        // Tree Soil
+        "id": 4,
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/soil.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        // Tree Bricks
+        "id": 5,
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/tree_bricks.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
     }
+
     ],
 
     "Accelerators":
@@ -246,16 +356,28 @@
 
 	"Surfaces": [
     {
-        // Pool, Pool Base & Water
-        "transform": 0, "accelerator":0,
-        "material": [2, 3, 4],
-        "primitive": [0, 1, 2]
+        // Pool, Pool Base & Ladder
+        "transform": 0, "accelerator": 0,
+        "material": [1, 2, 6],
+        "primitive": [0, 1, 3]
+    },
+    {
+        // Tree Soil & Bricks
+        "transform": 0, "accelerator": 0,
+        "material": [9, 10],
+        "primitive": [4, 5]
     }
+    //,
+    // Water
+    //{ "transform": 0, "accelerator": 0, "material": 4, "primitive": 2 }
+
     ],
 
     // Lights
     "LightSurfaces": [{"light": 0, "material": 0, "transform": 1}],
     // Cameras
-    //"CameraSurfaces": [{"camera": 0, "medium": 0}]
-    "CameraSurfaces": [{"camera": 0}]
+    "CameraSurfaces": [
+        // Overall View
+        {"camera": 0}
+    ]
 }

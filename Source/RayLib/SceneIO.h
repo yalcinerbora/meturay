@@ -28,49 +28,49 @@ struct Range
 namespace SceneIO
 {
     // Generic Time Dependency Check
-    bool                    IsTimeDependent(const nlohmann::json&);
+    bool                        IsTimeDependent(const nlohmann::json&);
 
     // Load from anim
     template <class T>
-    T                       LoadFromAnim(const std::string& fileName, double time = 0.0);
+    T                           LoadFromAnim(const std::string& fileName, double time = 0.0);
 
     // Static Loads
-    bool                    LoadBool(const nlohmann::json&, double time = 0.0);
-    std::string             LoadString(const nlohmann::json&, double time = 0.0);
+    bool                        LoadBool(const nlohmann::json&, double time = 0.0);
+    std::string                 LoadString(const nlohmann::json&, double time = 0.0);
     template <class T>
-    T                       LoadNumber(const nlohmann::json&, double time = 0.0);
+    T                           LoadNumber(const nlohmann::json&, double time = 0.0);
     template <class T>
-    Quaternion<T>           LoadQuaternion(const nlohmann::json&, double time = 0.0);
+    Quaternion<T>               LoadQuaternion(const nlohmann::json&, double time = 0.0);
     template <int N, class T>
-    Vector<N, T>            LoadVector(const nlohmann::json&, double time = 0.0);
+    Vector<N, T>                LoadVector(const nlohmann::json&, double time = 0.0);
     template <int N, class T>
-    Matrix<N, T>            LoadMatrix(const nlohmann::json&, double time = 0.0);
+    Matrix<N, T>                LoadMatrix(const nlohmann::json&, double time = 0.0);
 
     // Ranged Arrays
     template <class T, typename = IntegerEnable<T>>
-    std::vector<Range<T>>   LoadRangedNumbers(const nlohmann::json&);
+    std::vector<Range<T>>       LoadRangedNumbers(const nlohmann::json&);
 
     // Optional Fetch
     template <class T>
-    T                       OptionalFetch(const nlohmann::json&, const char* name,
-                                          T defaultValue);
+    T                           OptionalFetch(const nlohmann::json&, const char* name,
+                                              T defaultValue);
 
     // Utility
-    std::string             StripFileExt(const std::string& string);
+    std::string                 StripFileExt(const std::string& string);
 
     // Common Types
-    SurfaceStruct           LoadSurface(const nlohmann::json&);
-    LightSurfaceStruct      LoadLightSurface(uint32_t baseMediumId,
-                                             uint32_t identityTransformId,
-                                             const nlohmann::json& jsn);
-    CameraSurfaceStruct     LoadCameraSurface(uint32_t baseMediumId,
-                                              uint32_t identityTransformId,
-                                              const nlohmann::json& jsn);
-    NodeTextureStruct       LoadNodeTextureStruct(const nlohmann::json&,
-                                                  double time);
+    SurfaceStruct               LoadSurface(const nlohmann::json&);
+    LightSurfaceStruct          LoadLightSurface(uint32_t baseMediumId,
+                                                 uint32_t identityTransformId,
+                                                 const nlohmann::json& jsn);
+    CameraSurfaceStruct         LoadCameraSurface(uint32_t baseMediumId,
+                                                  uint32_t identityTransformId,
+                                                  const nlohmann::json& jsn);
+    NodeTextureStruct           LoadNodeTextureStruct(const nlohmann::json&,
+                                                      double time);
 
-    TextureAccessLayout     LoadTextureAccessLayout(const nlohmann::json&);
-    TextureStruct           LoadTexture(const nlohmann::json&);
+    TextureAccessLayout         LoadTextureAccessLayout(const nlohmann::json&);
+    std::vector<TextureStruct>  LoadTexture(const nlohmann::json&);
 };
 
 inline bool SceneIO::IsTimeDependent(const nlohmann::json& jsn)
