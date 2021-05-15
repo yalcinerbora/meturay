@@ -1,36 +1,47 @@
 {
 	"Cameras": [
-    // {
-    //     "id": 0,
-    //     "type" : "Pinhole",
-
-    //     // 16:9 FoV
-    //     "fov": [97.0672, 54.6003],
-    //     //"fov": [54.6003, 30.7127],
-    //     // 1:1 FoV
-    //     //"fov": [54.6003, 54.6003],
-    //     "gaze": [20, 0, 0],
-    //     //"gaze": [30, -20, 0],
-    //     //"position": [-12.39, 36.49, 41.3],
-    //     //"position": [25.178, -17.669, 32.491],
-    //     "position": [-29.191, 70.518, 116.644],
-
-    //     "up": [0, 1, 0],
-    //     "planes": [1, 2800]
-    // },
     {
+        // Overall Camera
 		"id": 0,
 		"type": "Pinhole",
-
 		// 16:9 FoV
 		"fov": [94.45, 53.13],
 		// 1:1 FoV
 		//"fov": [53.13, 53.13],
-		"gaze": [0.0, 0.0, 0.0],
-		"planes": [0.01, 2000.0],
-		"position": [0.0, 2.0, 5.0],
+        "planes": [0.01, 2000.0],
+		"gaze": [26.9687, 23.8233, 58.1056],
+		"position": [27.0884, 26.2886, 62.8918],
+		"up": [0.0, 1.0, 0.0]
+	},
+    {
+        // Pool Camera
+		"id": 1,
+		"type": "Pinhole",
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+        "planes": [0.01, 2000.0],
+		"gaze": [19.3556, -5.59312, 34.678],
+		"position": [16.8446, -3.61809, 39.0131],
 		"up": [0.0, 1.0, 0.0]
 	}
+
+    // {
+    //     "id": 0,
+    //     "type": "Pinhole",
+
+    //     // 16:9 FoV
+    //     "fov": [94.45, 53.13],
+    //     // 1:1 FoV
+    //     //"fov": [53.13, 53.13],
+    //     "gaze": [0.0, 0.0, 0.0],
+    //     "planes": [0.01, 2000.0],
+    //     "position": [0.0, 2.0, 5.0],
+    //     "up": [0.0, 1.0, 0.0]
+    // }
+
+
     ],
 
     "Lights":[
@@ -55,7 +66,7 @@
 		"scattering": [0, 0, 0],
 		"ior": 1.34,
 		"phase": 0
-},
+    },
     {
         // Glass Medium
 		"id": 1,
@@ -109,9 +120,9 @@
         "id": [7, 8, 9],
         "signed": [false, true, false],
         "file": [
-            "../Textures/ModernPool/dirty_concrete_diff_2k.jpg",
-            "../Textures/ModernPool/dirty_concrete_nor_2k.jpg",
-            "../Textures/ModernPool/dirty_concrete_rough_2k.jpg"
+            "../Textures/ModernPool/Plaster006_2K_Color.jpg",
+            "../Textures/ModernPool/Plaster006_2K_Normal.jpg",
+            "../Textures/ModernPool/Plaster006_2K_Roughness.jpg"
         ]
     },
     {
@@ -137,7 +148,7 @@
             "../Textures/ModernPool/bark_brown_02_diff_2k.png",
             "../Textures/ModernPool/bark_brown_02_nor_2k.png",
             "../Textures/ModernPool/bark_brown_02_rough_2k.png",
-            "../Textures/ModernPool/bark_brown_02_spec_2k.png"
+            "../Textures/ModernPool/bark_brown_02_spec_2k.jpg"
         ]
     },
     {
@@ -176,7 +187,6 @@
             "../Textures/ModernPool/brown_mud_leaves_01_spec_1k.png"
         ]
     }
-
 ],
 
     "Materials":[
@@ -278,10 +288,16 @@
 		"roughness" : {"texture": 23, "channels": "r"},
         "specular": 0.1,
         "metallic": 0.0
+    },
+    {
+        // House Window Frame
+        "id": 11,
+        "type": "Unreal",
+		"albedo" : [0.1, 0.1, 0.1],
+		"roughness" : 0.9,
+        "specular": 0.5,
+        "metallic": 0.1
     }
-    // {
-    //     // Perimeter Walls
-    // },
 
 
 
@@ -317,7 +333,7 @@
         // Pool Ladder
         "id": 3,
         "type": "Triangle",
-        "name": "../Surfaces/ModernPool/pool_ladder2.obj",
+        "name": "../Surfaces/ModernPool/pool_ladder.obj",
         "tag": "assimp_",
         "innerIndex": 0
     },
@@ -336,8 +352,35 @@
         "name": "../Surfaces/ModernPool/tree_bricks.obj",
         "tag": "assimp_",
         "innerIndex": 0
-    }
+    },
+    {
+        // House
+        "id": [6, 7, 8],
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/house.obj",
+        "tag": "assimp_",
+        "innerIndex": [0, 1, 2],
+        "cullFace": [true, true, false]
 
+    },
+    {
+        // Perimeter Walls
+        "id": 9,
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/perimeter_walls.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    },
+    {
+        // Tree
+        "id": [10, 11],
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/tree.obj",
+        "tag": "assimp_",
+        "innerIndex": [0, 1],
+        "cullFace": [true, false],
+        "alphaMap": ["-", {"texture": 18, "channels": "a"}]
+    }
     ],
 
     "Accelerators":
@@ -355,6 +398,11 @@
 	"BaseMedium" : 0,
 
 	"Surfaces": [
+    // Water
+    { "transform": 0, "accelerator": 0, "material": 4, "primitive": 2 },
+    // Perimeter Walls
+    { "transform": 0, "accelerator": 0, "material": 3, "primitive": 9 },
+    //
     {
         // Pool, Pool Base & Ladder
         "transform": 0, "accelerator": 0,
@@ -366,10 +414,19 @@
         "transform": 0, "accelerator": 0,
         "material": [9, 10],
         "primitive": [4, 5]
+    },
+    {
+        // House
+        "transform": 0, "accelerator": 0,
+        "material": [3, 11, 5],
+        "primitive": [6, 7, 8]
+    },
+    {
+        // Tree
+        "transform": 0, "accelerator": 0,
+        "material": [7, 8],
+        "primitive": [10, 11]
     }
-    //,
-    // Water
-    //{ "transform": 0, "accelerator": 0, "material": 4, "primitive": 2 }
 
     ],
 
@@ -378,6 +435,8 @@
     // Cameras
     "CameraSurfaces": [
         // Overall View
-        {"camera": 0}
+        {"camera": 0},
+        // Pool Camera
+        {"camera": 1, "medium": 2}
     ]
 }

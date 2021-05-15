@@ -48,6 +48,7 @@ class VisorInputI
         virtual void                        MouseButtonUsed(MouseButtonType button, KeyAction action) = 0;
 
         virtual void                        SetCamera(const VisorCamera&) = 0;
+        virtual void                        SetSceneCameraCount(uint32_t) = 0;
 
         // Defining Custom Callback
         template <class Function, class... Args>

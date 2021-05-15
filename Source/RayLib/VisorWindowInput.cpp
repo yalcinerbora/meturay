@@ -5,6 +5,7 @@
 #include "VisorCamera.h"
 #include "VisorCallbacksI.h"
 #include "Quaternion.h"
+#include "Log.h"
 
 void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
 {
@@ -37,20 +38,25 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
             break;
         }
         case VisorActionType::SCENE_CAM_NEXT:
-        {
-            if(cameraMode == CameraMode::CUSTOM_CAM ||
-               lockedCamera || (action != KeyAction::RELEASED))
-                break;
-
-            visorCallbacks->ChangeCamera(currentSceneCam);
-            break;
-        }
         case VisorActionType::SCENE_CAM_PREV:
         {
             if(cameraMode == CameraMode::CUSTOM_CAM ||
                lockedCamera || (action != KeyAction::RELEASED))
                 break;
+
+            currentSceneCam = (vAction == VisorActionType::SCENE_CAM_NEXT)
+                                ? currentSceneCam + 1
+                                : currentSceneCam - 1;
+            currentSceneCam %= sceneCameraCount;
             visorCallbacks->ChangeCamera(currentSceneCam);
+            break;
+        }
+        case VisorActionType::PRINT_CUSTOM_CAMERA:
+        {
+            if(action != KeyAction::RELEASED) break;
+
+            std::string vCamAsString = VisorCameraToString(customCamera);
+            METU_LOG("%s", vCamAsString.c_str());
             break;
         }
         case VisorActionType::START_STOP_TRACE:
@@ -107,6 +113,7 @@ VisorWindowInput::VisorWindowInput(KeyboardKeyBindings&& keyBinds,
     , movementSchemes(std::move(movementSchemes))
     , currentMovementScheme(0)
     , currentSceneCam(0)
+    , sceneCameraCount(0)
     , cameraMode(CameraMode::SCENE_CAM)
     , lockedCamera(false)
     , pauseCont(false)
@@ -215,4 +222,12 @@ void VisorWindowInput::SetCamera(const VisorCamera& c)
 {
     if(cameraMode == CameraMode::SCENE_CAM)
         customCamera = c;
+}
+
+void VisorWindowInput::SetSceneCameraCount(uint32_t camCount)
+{
+    sceneCameraCount = camCount;
+
+    if(currentSceneCam > sceneCameraCount)
+        currentSceneCam = 0;
 }

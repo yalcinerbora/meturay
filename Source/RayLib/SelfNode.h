@@ -63,6 +63,7 @@ class SelfNode
          void       SendCurrentOptions(TracerOptions) override;
          void       SendCurrentParameters(TracerParameters) override;
          void       SendCurrentCamera(VisorCamera) override;
+         void       SendCurrentSceneCameraCount(uint32_t) override;
 
         // From Node Interface
         NodeError   Initialize() override;

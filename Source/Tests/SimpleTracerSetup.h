@@ -88,9 +88,10 @@ class MockNode
                               PixelFormat, size_t offset,
                               Vector2i start = Zero2i,
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-        void        SendCurrentOptions(TracerOptions) {};
-        void        SendCurrentParameters(TracerParameters) {};
-        void        SendCurrentCamera(VisorCamera) {};
+        void        SendCurrentOptions(TracerOptions) override {};
+        void        SendCurrentParameters(TracerParameters) override {};
+        void        SendCurrentCamera(VisorCamera) override {};
+        void        SendCurrentSceneCameraCount(uint32_t) override {};
 
         // From Node Interface
         NodeError   Initialize() override { return NodeError::OK; }

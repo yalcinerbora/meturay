@@ -74,5 +74,7 @@ class VisorI
         virtual void                    ReleaseRenderingContext() = 0;
         // Main Thread only Calls
         virtual void                    ProcessInputs() = 0;
+        // Camera Related (Tracer Callbacks)
         virtual void                    SetCamera(const VisorCamera&) = 0;
+        virtual void                    SetSceneCameraCount(uint32_t) = 0;
 };

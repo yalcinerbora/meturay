@@ -690,6 +690,11 @@ void VisorGL::SetCamera(const VisorCamera& c)
     if(input) input->SetCamera(c);
 }
 
+void VisorGL::SetSceneCameraCount(uint32_t c)
+{
+    if(input) input->SetSceneCameraCount(c);
+}
+
 void VisorGL::SetRenderingContextCurrent()
 {
     glfwMakeContextCurrent(window);

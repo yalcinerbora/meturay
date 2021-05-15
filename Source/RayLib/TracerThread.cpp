@@ -1,6 +1,7 @@
 #include "TracerThread.h"
 #include "TracerSystemI.h"
 #include "GPUTracerI.h"
+#include "TracerCallbacksI.h"
 #include "Log.h"
 #include "VisorCamera.h"
 #include "SceneError.h"
@@ -80,6 +81,13 @@ void TracerThread::LoopWork()
         PrintErrorAndSignalTerminate(sError);
         return;
     }
+
+    // Send new camera count to the visor(s)
+    if(newSceneGenerated)
+    {
+        tracerCallbacks.SendCurrentSceneCameraCount(currentScene->CameraCount());
+    }
+
     // Now scene is reorganized
     // Recreate tracer if necessary
     if(reallocateTracer)

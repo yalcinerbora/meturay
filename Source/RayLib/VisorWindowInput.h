@@ -26,6 +26,7 @@ class VisorWindowInput : public VisorInputI
         CameraMode                      cameraMode;
         VisorCamera                     customCamera;
         bool                            lockedCamera;
+        uint32_t                        sceneCameraCount;
 
         // Other States
         bool                            pauseCont;
@@ -66,4 +67,5 @@ class VisorWindowInput : public VisorInputI
         void                    MouseButtonUsed(MouseButtonType button, KeyAction action) override;
 
         void                    SetCamera(const VisorCamera&) override;
+        void                    SetSceneCameraCount(uint32_t) override;
 };

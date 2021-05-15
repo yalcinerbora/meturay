@@ -55,6 +55,7 @@ class GPUSceneJson : public GPUSceneI
         uint32_t                                identityTransformIndex;
         uint32_t                                boundaryTransformIndex;
         uint32_t                                baseMediumIndex;
+        uint32_t                                cameraCount;
 
         // GPU Memory
         GPUBaseAccelPtr                         baseAccelerator;
@@ -174,6 +175,8 @@ class GPUSceneJson : public GPUSceneI
         HitKey                              BaseBoundaryMaterial() const override;
         uint32_t                            HitStructUnionSize() const override;
         double                              MaxSceneTime() const override;
+        uint32_t                            CameraCount() const override;
+
         // Access CPU
         const NamedList<CPULightGPtr>&      Lights() const override;
         const NamedList<CPUCameraGPtr>&     Cameras() const override;

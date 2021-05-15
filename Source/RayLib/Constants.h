@@ -53,6 +53,7 @@ namespace VisorConstants
 
         {KeyboardKeyType::KP_5, VisorActionType::TOGGLE_CUSTOM_SCENE_CAMERA},
         {KeyboardKeyType::L, VisorActionType::LOCK_UNLOCK_CAMERA},
+        {KeyboardKeyType::KP_DECIMAL, VisorActionType::PRINT_CUSTOM_CAMERA},
         //
         {KeyboardKeyType::KP_6, VisorActionType::SCENE_CAM_NEXT},
         {KeyboardKeyType::KP_4, VisorActionType::SCENE_CAM_PREV},

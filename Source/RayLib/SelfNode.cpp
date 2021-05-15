@@ -131,6 +131,11 @@ void SelfNode::SendCurrentCamera(VisorCamera c)
     visor.SetCamera(c);
 }
 
+void SelfNode::SendCurrentSceneCameraCount(uint32_t camCount)
+{
+    visor.SetSceneCameraCount(camCount);
+}
+
 // From Node Interface
 NodeError SelfNode::Initialize()
 {

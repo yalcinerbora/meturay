@@ -168,6 +168,7 @@ enum class VisorActionType
     // Enable Disable Camera Movement
     TOGGLE_CUSTOM_SCENE_CAMERA,
     LOCK_UNLOCK_CAMERA,
+    PRINT_CUSTOM_CAMERA,
     //
     SCENE_CAM_NEXT,
     SCENE_CAM_PREV,

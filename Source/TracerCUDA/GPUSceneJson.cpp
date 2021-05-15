@@ -70,6 +70,7 @@ GPUSceneJson::GPUSceneJson(const std::u8string& fileName,
     , fileName(fileName)
     , parentPath(std::filesystem::path(fileName).parent_path().string())
     , currentTime(0.0)
+    , cameraCount(0)
     , sceneJson(nullptr)
     , baseAccelerator(nullptr, nullptr)
 {}
@@ -530,6 +531,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     }
 
     // Process Cameras
+    cameraCount = static_cast<uint32_t>(cameraSurfaces->size());
     for(const auto& jsn : (*cameraSurfaces))
     {
         CameraSurfaceStruct s = SceneIO::LoadCameraSurface(baseMediumId,
@@ -1132,6 +1134,11 @@ double GPUSceneJson::MaxSceneTime() const
 {
     // TODO: change this when animation is fully implemented
     return 0.0;
+}
+
+uint32_t GPUSceneJson::CameraCount() const
+{
+    return cameraCount;
 }
 
 const NamedList<CPULightGPtr>& GPUSceneJson::Lights() const

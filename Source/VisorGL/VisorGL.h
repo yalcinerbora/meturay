@@ -194,6 +194,7 @@ class VisorGL : public VisorI
         void                    SetFPSLimit(float) override;
         Vector2i                MonitorResolution() const override;
         void                    SetCamera(const VisorCamera&) override;
+        void                    SetSceneCameraCount(uint32_t) override;
 
         // Setting rendering context on current thread
         void                    SetRenderingContextCurrent() override;

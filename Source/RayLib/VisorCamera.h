@@ -11,6 +11,8 @@ so it is somehow maintainable without using Interitance
 #include "Vector.h"
 #include "HitStructs.h"
 
+#include <sstream>
+
 struct VisorCamera
 {
     uint16_t    mediumIndex;
@@ -24,3 +26,26 @@ struct VisorCamera
     float       apertureSize;
     Vector2     fov;            // degree
 };
+
+static std::string VisorCameraToString(const VisorCamera& c)
+{
+    std::stringstream s;
+
+    s << "M Index  : " << c.mediumIndex << std::endl;
+    s << "Key      : " << std::hex << c.matKey.value << std::dec << std::endl;
+    s << "Gaze     : [" << c.gazePoint[0] << ", " 
+                        << c.gazePoint[1]  << ", " 
+                        << c.gazePoint[2] << "]" << std:: endl;
+    s << "Pos      : [" << c.position[0] << ", "
+                        << c.position[1]  << ", "
+                        << c.position[2] << "]" << std:: endl;
+    s << "Up       : [" << c.up[0] << ", "
+                        << c.up[1]  << ", "
+                        << c.up[2] << "]" << std:: endl;
+    s << "Near Far : [" << c.nearPlane << ", "                        
+                        << c.farPlane << "]" << std::endl;
+    s << "Fov      : [" << c.fov[0] << ", "
+                        << c.fov[1] << "]" << std::endl;
+    s << "Aperture : " << c.apertureSize << std::endl;
+    return s.str();
+}

@@ -32,4 +32,5 @@ class TracerCallbacksI
         virtual void    SendCurrentOptions(TracerOptions) = 0;
         virtual void    SendCurrentParameters(TracerParameters) = 0;
         virtual void    SendCurrentCamera(VisorCamera) = 0;
+        virtual void    SendCurrentSceneCameraCount(uint32_t) = 0;
 };
