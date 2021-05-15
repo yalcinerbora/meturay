@@ -136,11 +136,6 @@
         "file": "../Textures/ModernPool/bench_wood_diff_2k.jpg"
     },
     {
-        // Towel Fabric
-        "id": 12,
-        "file": "../Textures/ModernPool/towel_fabric_diff_1k.jpg"
-    },
-    {
         // Tree Bark
         "id": [13, 14, 15, 16],
         "signed": [false, true, false, false],
@@ -185,6 +180,28 @@
             "../Textures/ModernPool/brown_mud_leaves_01_nor_1k.png",
             "../Textures/ModernPool/brown_mud_leaves_01_rough_1k.png",
             "../Textures/ModernPool/brown_mud_leaves_01_spec_1k.png"
+        ]
+    },
+    {
+        // Bench Wood
+        "id": 28,
+        "file": "../Textures/ModernPool/bench_wood_diff_2k.jpg"
+    },
+    {
+        "id":[29, 30],
+        "signed": [false, true],
+        "file": [
+            "../Textures/ModernPool/Fabric_006_COLOR.jpg",
+            "../Textures/ModernPool/Fabric_006_NORM.jpg"
+        ]
+    },
+    {
+        // Towel Fabric
+        "id": [12, 31],
+        "signed": [false, true],
+        "file": [
+            "../Textures/ModernPool/fabric_towel_1k_albedo.jpg",
+            "../Textures/ModernPool/fabric_towel_1k_normal.jpg"
         ]
     }
 ],
@@ -293,14 +310,31 @@
         // House Window Frame
         "id": 11,
         "type": "Unreal",
-		"albedo" : [0.1, 0.1, 0.1],
+		"albedo" : [0.01, 0.01, 0.01],
 		"roughness" : 0.9,
         "specular": 0.5,
         "metallic": 0.1
+    },
+    {
+        // Bench
+        "id": 12,
+        "type": "Lambert",
+		"albedo" : {"texture": 28, "channels": "rgb"}
+    },
+    {
+        // Bench Towel
+        "id": 13,
+        "type": "Lambert",
+		"albedo" : {"texture": 12, "channels": "rgb"},
+        "normal" : {"texture": 31, "channels": "rgb"}
+    },
+    {
+        // Lounge Fabric
+        "id": 14,
+        "type": "Lambert",
+		"albedo" : {"texture": 29, "channels": "rgb"},
+        "normal" : {"texture": 30, "channels": "rgb"}
     }
-
-
-
     ],
 
     "Primitives":[
@@ -380,6 +414,31 @@
         "innerIndex": [0, 1],
         "cullFace": [true, false],
         "alphaMap": ["-", {"texture": 18, "channels": "a"}]
+    },
+    {
+        // Bench
+        "id": [12, 13],
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/bench.obj",
+        "tag": "assimp_",
+        "innerIndex": [0, 1]
+    },
+    {
+        // Lounge
+        "id": [14, 15, 16],
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/lounge.obj",
+        "tag": "assimp_",
+        "innerIndex": [0, 1, 2]
+    },
+    {
+        // Lounge with Towel
+        "id": [17, 18, 19, 20],
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/lounge2.obj",
+        "tag": "assimp_",
+        "cullFace": [true, true, true, false],
+        "innerIndex": [0, 1, 2, 3]
     }
     ],
 
@@ -426,9 +485,25 @@
         "transform": 0, "accelerator": 0,
         "material": [7, 8],
         "primitive": [10, 11]
-    }
-
-    ],
+    },
+    {
+        // Bench
+        "transform": 0, "accelerator": 0,
+        "material": [12, 13],
+        "primitive": [12, 13]
+    },
+    {
+        // Lounge
+        "transform": 0, "accelerator": 0,
+        "material": [14, 6, 11],
+        "primitive": [14, 15, 16]
+    },
+    {
+        // Lounge with Towel
+        "transform": 0, "accelerator": 0,
+        "material": [14, 6, 11, 13],
+        "primitive": [17, 18, 19, 20]
+    }],
 
     // Lights
     "LightSurfaces": [{"light": 0, "material": 0, "transform": 1}],
