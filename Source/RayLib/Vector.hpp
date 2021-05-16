@@ -738,3 +738,16 @@ Vector<3, T> Cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
                         v0[0] * v1[1] - v0[1] * v1[0]);
     return result;
 }
+
+template <class T>
+__device__ __host__ HYBRID_INLINE 
+Vector<3, T> OrthogonalVector(const Vector<3, T>& v)
+{
+    // PBRT Book
+    // https://www.pbr-book.org/3ed-2018/Geometry_and_Transformations/Vectors#CoordinateSystem
+
+    if(abs(v[0]) > abs(v[1]))
+        return Vector<3, T>(-v[2], 0, v[0]) / sqrt(v[0] * v[0] + v[2] * v[2]);
+    else
+        return Vector<3, T>(0, v[2], -v[1]) / sqrt(v[1] * v[1] + v[2] * v[2]);
+}

@@ -125,13 +125,11 @@ void Triangle::LocalRotation(Quaternion<T>& q0,
     //Vector<3, T> t2 = t0;
 
     // Degenerate triangle is found,
+    // (or uv's are degenerate)
     // arbitrarily find a tangent
-    if(t0.HasNaN())
-        t0 = Quaternion<T>(90.0f * MathConstants::DegToRadCoef, XAxis).ApplyRotation(n[0]);
-    if(t1.HasNaN())
-        t1 = Quaternion<T>(90.0f * MathConstants::DegToRadCoef, XAxis).ApplyRotation(n[1]);
-    if(t2.HasNaN())
-        t2 = Quaternion<T>(90.0f * MathConstants::DegToRadCoef, XAxis).ApplyRotation(n[2]);
+    if(t0.HasNaN()) t0 = OrthogonalVector(n[0]);        
+    if(t1.HasNaN()) t1 = OrthogonalVector(n[1]);
+    if(t2.HasNaN()) t2 = OrthogonalVector(n[2]);
 
     // Gram–Schmidt othonormalization
     // This is required since normal may be skewed to hide

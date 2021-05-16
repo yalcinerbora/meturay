@@ -212,6 +212,10 @@ static_assert(sizeof(Vector4) == 16, "Vector4 should be tightly packed");
 template <class T>
 static __device__ __host__ Vector<3, T> Cross(const Vector<3, T>&, const Vector<3, T>&);
 
+// Arbitrary Orthogonal Vector Generation (only for 3D Vectors)
+template <class T>
+static __device__ __host__ Vector<3, T> OrthogonalVector(const Vector<3, T>&);
+
 // Implementation
 #include "Vector.hpp"   // CPU & GPU
 

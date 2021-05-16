@@ -1,0 +1,696 @@
+{
+	"Cameras": [
+    {
+        // Overall Camera
+		"id": 0,
+		"type": "Pinhole",
+		// 16:9 FoV
+		"fov": [60, 33.75],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+        "planes": [0.01, 2000.0],
+        "gaze": [-0.066870, 0.6448959, 0.5292789],
+        "position": [-0.5196635, 0.81700700, 3.82438969],
+		"up": [0.0, 1.0, 0.0]
+	}],
+
+    "Lights":[
+        {
+            "id": 0,
+		    "type": "Rectangular",
+
+		    "topLeft": [2.0497, 5.144720, 0.97479],
+		    "right" : [4.0994, 0, 0],
+		    "down" : [0, 0, 1.272]
+        },
+        {
+            "id": 1,
+		    "type": "Rectangular",
+		    "topLeft": [2.0497, 5.144720, -2.24679],
+		    "right" : [4.0994, 0, 0],
+		    "down" : [0, 0, 1.272]
+        },
+        {
+            "id": 2,
+            "type": "SkySphere",
+            "isHemispherical": false
+        }
+    ],
+
+    "Mediums": [
+        {
+            "id" : 0,
+            "type" : "Vacuum"
+        },
+        {
+            // Glass Medium
+            "id": 1,
+            "type" : "Homogenous",
+
+            "absorption": [0, 0 ,0],
+            "scattering": [0, 0, 0],
+            "ior": 1.5,
+            "phase": 0
+        }
+    ],
+
+    "Transforms":[
+        {"id": 0, "type": "Identity"},
+        {
+            "id": 1,
+            "type": "Single",
+
+            "layout": "trs",
+            "translate": [0, 5.14472, -1.61079],
+            "rotate": [0, 0, 0],
+            "scale": [1, 1, 1]
+        },
+        {
+            "id": 2,
+            "type": "Single",
+
+            "layout": "trs",
+            "translate": [0, 5.14472, 1.61079],
+            "rotate": [0, 0, 0],
+            "scale": [1, 1, 1]
+        }
+    ],
+
+    "Textures": [],
+
+    "Materials":[
+        {
+            // Gray Background
+            "id": 0,
+            "type": "BConstant",
+            "radiance" : [0.3, 0.3, 0.3]
+        },
+        {
+            // Light 0
+            "id": 1,
+            "type": "BConstant",
+            //"radiance" : [900, 900, 1000],
+            "radiance" : [9, 9, 10]
+        },
+        {
+            // Dark Rubber
+            "id": 2,
+            "type": "Unreal",
+            "albedo": [0.025, 0.025, 0.025],
+            "roughness": 0.63245,
+            "specular": 0.5,
+            "metallic": 0
+        },
+        {
+            // Bright Pink Leather
+            "id": 3,
+            "type": "Unreal",
+            "albedo": [0.772, 0.175, 0.262],
+            "roughness": 0.63245,
+            "specular": 0.5,
+            "metallic": 0
+        },
+        {
+            // Red Leather
+            "id": 4,
+            "type": "Unreal",
+            "albedo": [0.163, 0.03, 0.037],
+            "roughness": 0.63245,
+            "specular": 0.5,
+            "metallic": 0
+        },
+        {
+            // Leather
+            "id": 5,
+            "type": "Unreal",
+            "albedo": [0.034, 0.014, 0.008],
+            "roughness": 0.63245,
+            "specular": 0.5,
+            "metallic": 0
+        },
+        {
+            // Pink Leather
+            "id": 6,
+            "type": "Unreal",
+            "albedo": [0.256, 0.013, 0.08],
+            "roughness": 0.63245,
+            "specular": 0.5,
+            "metallic": 0
+        },
+        {
+            // Dark Plastic
+            "id": 7,
+            "type": "Unreal",
+            "albedo": [0.01, 0.01, 0.01],
+            "roughness": 0.44721,
+            "specular": 0.5,
+            "metallic": 0
+        },
+        {
+            // Rough Steel
+            "id": 8,
+            "type": "Unreal",
+            "albedo": [0.2, 0.2, 0.2],
+            "roughness": 0.31622,
+            "specular": 0.1,
+            "metallic": 1
+        },
+        {
+            // Rough Aluminium
+            "id": 9,
+            "type": "Unreal",
+            "albedo": [0.578596, 0.578596, 0.578596],
+            "roughness": 0.31622,
+            "specular": 0.1,
+            "metallic": 1
+        },
+        {
+            // Glass
+            "id": 10,
+            "type": "Refract",
+            "albedo": [1, 1, 1],
+            "medium" : 1
+        },
+        {
+            // Backdrop & Black
+            "id": [11, 12],
+            "type": "Lambert",
+            "albedo": [
+                [0.1, 0.1, 0.1],
+                [0, 0, 0]
+            ]
+        },
+        {
+            // Spaceship Lights
+            "id": [13, 14],
+            "type": "BConstant",
+            "radiance": [
+                [20, 3, 3],
+                [3.88628, 3.77255, 3.43137]
+            ]
+        }
+
+    ],
+
+    "Primitives": [
+        {
+            "id": 0, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh050.obj"
+        },
+        {
+            "id": 1, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh042.obj"
+        },
+        {
+            "id": 2, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh044.obj"
+        },
+        {
+            "id": 3, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh038.obj"
+        },
+        {
+            "id": 4, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh040.obj"
+        },
+        {
+            "id": 5, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh072.obj"
+        },
+        {
+            "id": 6, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh033.obj"
+        },
+        {
+            "id": 7, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh043.obj"
+        },
+        {
+            "id": 8, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh028.obj"
+        },
+        {
+            "id": 9, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh055.obj"
+        },
+        {
+            "id": 10, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh053.obj"
+        },
+        {
+            "id": 11, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh036.obj"
+        },
+        {
+            "id": 12, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh035.obj"
+        },
+        {
+            "id": 13, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh031.obj"
+        },
+        {
+            "id": 14, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh030.obj"
+        },
+        {
+            "id": 15, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh027.obj"
+        },
+        {
+            "id": 16, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh064.obj"
+        },
+        {
+            "id": 17, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh058.obj"
+        },
+        {
+            "id": 18, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh029.obj"
+        },
+        {
+            "id": 19, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh080.obj"
+        },
+        {
+            "id": 20, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh067.obj"
+        },
+        {
+            "id": 21, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh060.obj"
+        },
+        {
+            "id": 22, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh026.obj"
+        },
+        {
+            "id": 23, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh047.obj"
+        },
+        {
+            "id": 24, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh061.obj"
+        },
+        {
+            "id": 25, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh063.obj"
+        },
+        {
+            "id": 26, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh065.obj"
+        },
+        {
+            "id": 27, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh048.obj"
+        },
+        {
+            "id": 28, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh066.obj"
+        },
+        {
+            "id": 29, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh068.obj"
+        },
+        {
+            "id": 30, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh071.obj"
+        },
+        {
+            "id": 31, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh046.obj"
+        },
+        {
+            "id": 32, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh076.obj"
+        },
+        {
+            "id": 33, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh059.obj"
+        },
+        {
+            "id": 34, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh057.obj"
+        },
+        {
+            "id": 35, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh062.obj"
+        },
+        {
+            "id": 36, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh074.obj"
+        },
+        {
+            "id": 37, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh075.obj"
+        },
+        {
+            "id": 38, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh078.obj"
+        },
+        {
+            "id": 39, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh081.obj"
+        },
+        {
+            "id": 40, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh034.obj"
+        },
+        {
+            "id": 41, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh084.obj"
+        },
+        {
+            "id": 42, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh085.obj"
+        },
+        {
+            "id": 43, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh073.obj"
+        },
+        {
+            "id": 44, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh077.obj"
+        },
+        {
+            "id": 45, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh087.obj"
+        },
+        {
+            "id": 46, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh052.obj"
+        },
+        {
+            "id": 47, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh025.obj"
+        },
+        {
+            "id": 48, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh024.obj"
+        },
+        {
+            "id": 49, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh086.obj"
+        },
+        {
+            "id": 50, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh023.obj"
+        },
+        {
+            "id": 51, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh021.obj"
+        },
+        {
+            "id": 52, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh039.obj"
+        },
+        {
+            "id": 53, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh020.obj"
+        },
+        {
+            "id": 54, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh032.obj"
+        },
+        {
+            "id": 55, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh019.obj"
+        },
+        {
+            "id": 56, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh018.obj"
+        },
+        {
+            "id": 57, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh070.obj"
+        },
+        {
+            "id": 58, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh016.obj"
+        },
+        {
+            "id": 59, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh015.obj"
+        },
+        {
+            "id": 60, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh054.obj"
+        },
+        {
+            "id": 61, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh013.obj"
+        },
+        {
+            "id": 62, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh079.obj"
+        },
+        {
+            "id": 63, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh041.obj"
+        },
+        {
+            "id": 64, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh012.obj"
+        },
+        {
+            "id": 65, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh011.obj"
+        },
+        {
+            "id": 66, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh083.obj"
+        },
+        {
+            "id": 67, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh010.obj"
+        },
+        {
+            "id": 68, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh069.obj"
+        },
+        {
+            "id": 69, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh009.obj"
+        },
+        {
+            "id": 70, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh007.obj"
+        },
+        {
+            "id": 71, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh017.obj"
+        },
+        {
+            "id": 72, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh006.obj"
+        },
+        {
+            "id": 73, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh037.obj"
+        },
+        {
+            "id": 74, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh008.obj"
+        },
+        {
+            "id": 75, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh045.obj"
+        },
+        {
+            "id": 76, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh005.obj"
+        },
+        {
+            "id": 77, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh004.obj"
+        },
+        {
+            "id": 78, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh049.obj"
+        },
+        {
+            "id": 79, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh082.obj"
+        },
+        {
+            "id": 80, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh014.obj"
+        },
+        {
+            "id": 81, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh003.obj"
+        },
+        {
+            "id": 82, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh002.obj"
+        },
+        {
+            "id": 83, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh051.obj"
+        },
+        {
+            "id": 84, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh001.obj",
+            "cullFace": false
+        },
+        {
+            "id": 85, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh056.obj"
+        },
+        {
+            "id": 86, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh000.obj"
+        },
+        {
+            "id": 87, "type": "Triangle", "tag": "assimp_", "innerIndex": 0,
+            "name": "../Surfaces/Spaceship/Mesh022.obj"
+        },
+        {
+            // Backdrop & Lights
+            "id": [88, 89],
+            "type": "Triangle",
+            "name": ".nodeTriangleIndexed",
+		    "position": [[-39.2, -39.2, -30],
+					     [ 39.2, -39.2, -30],
+					     [ 39.2,  39.2, -30],
+                         [-39.2,  39.2, -30],
+
+                         [-2.04975, 0,  0.6364],
+					     [-2.04975, 0, -0.6364],
+					     [ 2.04975, 0, -0.6364],
+                         [ 2.04975, 0,  0.6364]
+                        ],
+		    "normal": [[0, 0, 1],
+                       [0, 0, 1],
+				       [0, 0, 1],
+                       [0, 0, 1],
+                       [0, -1, 0],
+                       [0, -1, 0],
+                       [0, -1, 0],
+                       [0, -1, 0]],
+		    "uv": [[0, 0], [1, 0], [1, 1], [0, 1],
+                   [0, 0], [1, 0], [1, 1], [0, 1]],
+            "index": [[0, 1, 2, 0, 2, 3],
+                      [4, 5, 6, 4, 6, 7]]
+        }
+    ],
+
+    "Accelerators":
+    [
+        {"id" : 0, "type" : "BasicBVH", "useStack": true},
+        {"id" : 1, "type" : "Linear"}
+    ],
+
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "BasicBVH"},
+    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryTransform": 0,
+	"BaseMedium" : 0,
+
+    "Surfaces": [
+        // Floor
+        { "transform": 0, "accelerator": 0, "material": 11, "primitive": 0 },
+        // Spaceship
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 1 },
+        { "transform": 0, "accelerator": 0, "material": 5, "primitive": 2 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 3 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 4 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 5 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 6 },
+        { "transform": 0, "accelerator": 0, "material": 5, "primitive": 8 },
+        { "transform": 0, "accelerator": 0, "material": 4, "primitive": 9 },
+        { "transform": 0, "accelerator": 0, "material": 7, "primitive": 10 },
+        { "transform": 0, "accelerator": 0, "material": 4, "primitive": 11 },
+        { "transform": 0, "accelerator": 0, "material": 6, "primitive": 12 },
+        { "transform": 0, "accelerator": 0, "material": 4, "primitive": 13 },
+        { "transform": 0, "accelerator": 0, "material": 6, "primitive": 14 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 15 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 16 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 17 },
+        { "transform": 0, "accelerator": 0, "material": 12, "primitive": 19 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 20 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 21 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 22 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 23 },
+        { "transform": 0, "accelerator": 0, "material": 7, "primitive": 24 },
+        { "transform": 0, "accelerator": 0, "material": 2, "primitive": 25 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 26 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 27 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 28 },
+        { "transform": 0, "accelerator": 0, "material": 2, "primitive": 29 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 30 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 31 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 32 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 33 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 34 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 35 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 36 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 37 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 38 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 39 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 40 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 41 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 42 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 43 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 44 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 45 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 46 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 47 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 48 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 49 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 50 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 51 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 52 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 53 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 54 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 55 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 56 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 57 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 58 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 59 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 60 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 61 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 62 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 63 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 64 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 65 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 66 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 67 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 68 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 69 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 70 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 71 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 72 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 73 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 74 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 75 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 76 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 77 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 78 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 79 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 80 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 81 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 82 },
+        { "transform": 0, "accelerator": 0, "material": 8, "primitive": 83 },
+        { "transform": 0, "accelerator": 0, "material": 10, "primitive": 84 },
+        { "transform": 0, "accelerator": 0, "material": 9, "primitive": 85 },
+        { "transform": 0, "accelerator": 0, "material": 3, "primitive": 86 },
+        { "transform": 0, "accelerator": 0, "material": 4, "primitive": 87 },
+        // Backdrop
+        { "transform": 0, "accelerator": 0, "material": 11, "primitive": 88 }
+    ],
+
+     // Lights
+     "LightSurfaces": [
+        { "light": 2, "material": 0},
+        { "accelerator": 1, "material": 1, "primitive": 89, "transform": 1 },
+        { "accelerator": 1, "material": 1, "primitive": 89, "transform": 2 },
+        { "accelerator": 0, "material": 13, "primitive": 7 },
+        { "accelerator": 0, "material": 14, "primitive": 18 }
+    ],
+    // Cameras
+    "CameraSurfaces": [{"camera": 0}]
+}
