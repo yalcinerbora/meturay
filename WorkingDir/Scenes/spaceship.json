@@ -150,7 +150,7 @@
             // Rough Steel
             "id": 8,
             "type": "Unreal",
-            "albedo": [0.2, 0.2, 0.2],
+            "albedo": [0.15, 0.15, 0.15],
             "roughness": 0.31622,
             "specular": 0.1,
             "metallic": 1

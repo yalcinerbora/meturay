@@ -29,6 +29,40 @@ namespace TracerFunctions
     }
 
     __device__ __forceinline__
+    float FrenelConductor(float cosIn, float iorIn, float kIn)
+    {
+        // https://pbr-book.org/3ed-2018/Reflection_Models/Specular_Reflection_and_Transmission#FrConductor
+        // 
+        // https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
+        // Find sin from trigonometry
+        float cosInSqr = cosIn * cosIn;
+        float sinInSqr = max(0.0f, 1.0f - cosInSqr);
+        float sinInSqr4 = sinInSqr * sinInSqr;
+        float sinIn = sqrt(max(sinInSqr, 0.0f));
+
+        float nSqr = iorIn * iorIn;
+        float kSqr = kIn * kIn;
+
+        float a2b2 = (nSqr - kSqr - sinInSqr);
+        a2b2 *= a2b2;
+        a2b2 += 4.0f * nSqr * kSqr;
+        a2b2 = sqrt(max(a2b2, 0.0f)); // Complex Skip
+        // 
+        float a = 0.5f * (a2b2 + (nSqr - kSqr - sinInSqr));
+        a = sqrt(max(a, 0.0f));
+
+        float perpendicular = a2b2 - (2.0f * a * cosIn) + cosInSqr;
+        perpendicular /= (a2b2 + (2.0f * a * cosIn) + cosInSqr);
+
+        float parallel = cosInSqr * a2b2 - (2.0f * a * cosIn * sinInSqr) + sinInSqr4;
+        parallel /= (cosInSqr * a2b2 + (2.0f * a * cosIn * sinInSqr) + sinInSqr4);
+        parallel *= perpendicular;
+
+
+        return (parallel + perpendicular) * 0.5f;
+    }
+
+    __device__ __forceinline__
     float DGGX(float NdH, float roughness)
     {
         float alpha = roughness * roughness;

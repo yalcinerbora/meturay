@@ -379,11 +379,12 @@ void PathTracerComboWork(// Output
         gRenderState.lightSampler->Pdf(pdfLightM, pdfLightC,
                                        lightIndex, position,
                                        rayMIS.getDirection());
+        //pdfLightC =
 
 //        float oldPDF = pdfMIS;
 
-        pdfMIS /= TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLightC);
-        pdfMIS /= pdfLightM;
+        pdfMIS /= TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLightC * pdfLightM);
+        //pdfMIS /= pdfLightM;
 
         // PDF can become NaN if both BxDF pdf and light pdf is both zero 
         // (meaning both sampling schemes does not cover this direction)
