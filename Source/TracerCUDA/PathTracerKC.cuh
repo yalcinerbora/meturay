@@ -374,30 +374,20 @@ void PathTracerComboWork(// Output
                                         matIndex,
                                         0);
 
-        // We are subsampling a single light pdf of BxDF also incorporate this
+        // Find out the pdf of the light
         float pdfLightM, pdfLightC;
         gRenderState.lightSampler->Pdf(pdfLightM, pdfLightC,
                                        lightIndex, position,
                                        rayMIS.getDirection());
-        //pdfLightC =
-
-//        float oldPDF = pdfMIS;
+        // We are subsampling (discretely sampling) a single light 
+        // pdf of BxDF should also incorporate this
+        pdfMIS *= pdfLightM;
 
         pdfMIS /= TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLightC * pdfLightM);
-        //pdfMIS /= pdfLightM;
 
         // PDF can become NaN if both BxDF pdf and light pdf is both zero 
         // (meaning both sampling schemes does not cover this direction)
         if(isnan(pdfMIS)) pdfMIS = 0.0f;
-
-        //if(isnan(pdfMIS))
-        //    printf("Refl %f %f %f\n"
-        //           "pdfLC %f, PdfLM %f, PdfBxDF %f\n"
-        //           "weight %f\n"
-        //           "---\n",
-        //           misReflectance[0], misReflectance[1], misReflectance[2],
-        //           pdfLightC, pdfLightM, oldPDF, TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLightC));
-        
     }
 
     // Calculate Combined PDF
