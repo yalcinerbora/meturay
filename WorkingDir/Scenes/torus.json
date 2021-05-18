@@ -1,0 +1,149 @@
+{
+	"Cameras": [
+    {
+        // Overall Camera
+		"id": 0,
+		"type": "Pinhole",
+		// 16:9 FoV
+		"fov": [34.62, 19.47375],
+        //"fov": [60, 33.75],
+		// 1:1 FoV
+		//"fov": [34.62, 34.62],
+        "planes": [0.01, 1000],
+		"gaze": [-18.1685, 19.1921 , -11.637],
+		"position": [-45.0558, 39.3673, -29.0346],
+        "up": [0, 1, 0]
+	}],
+
+    "Lights":[
+    {
+        "id": 0,
+        "type": "SkySphere",
+        "isHemispherical": false
+    }],
+
+    "Mediums":[
+    {
+        "id" : 0,
+        "type" : "Vacuum"
+    },
+    {
+        // Glass Medium
+		"id": 1,
+		"type" : "Homogenous",
+
+		"absorption": [0, 0 ,0],
+		"scattering": [0, 0, 0],
+		"ior": 1.55,
+		"phase": 0
+	}],
+
+    "Transforms":[
+        {"id": 0, "type": "Identity"},
+        {
+            "id": 1,
+            "type": "Single",
+
+            "layout": "trs",
+            "translate": [0, 0, 0],
+            "rotate": [0, -95, -10],
+            "scale": [1, 1, 1]
+        }],
+
+    "Textures": [{"id": 0, "file": "../Textures/Torus/flower_road_4k.hdr"}],
+
+    "Materials":[
+    {
+        // Light Boundary Material
+        "id": 0,
+        "type": "BSkySphere",
+        "radiance" : {"texture": 0, "channels": "rgb"}
+    },
+    {
+        // Torus
+        "id": 1,
+        "type": "Lambert",
+        "albedo": [0.8, 0.8, 0.4]
+    },
+    {
+        // Floor
+        "id": 2,
+        "type": "Unreal",
+        "albedo": [0.135, 0.135, 0.135],
+        "roughness": 0.45,
+        "specular": 0.75,
+        "metallic": 0.0
+    },
+    {
+        // Glass
+        "id": 3,
+        "type": "Refract",
+        "medium": 1,
+        "albedo": [1, 1, 1]
+    },
+    {
+        // Feet
+        "id": 4,
+        "type": "Reflect",
+        "albedo": [1, 1, 1],
+        "roughness": 0
+    }],
+
+    "Primitives":[
+    {
+        // Floor
+        "id": 0,
+        "type": "Triangle",
+        "name": ".nodeTriangleIndexed",
+        "position": [[-100, 0,  100],
+                     [ 100, 0,  100],
+                     [ 100, 0, -100],
+                     [-100, 0, -100]],
+        "normal": [[0, 1, 0],
+                   [0, 1, 0],
+                   [0, 1, 0],
+                   [0, 1, 0]],
+        "uv": [[0, 0], [1, 0], [1, 1], [0, 1]],
+        "index": [0, 1, 2, 0, 2, 3]
+    },
+    {
+        // Glass Cube Torus & Foot
+        "id": [1, 2, 3, 4],
+        "type": "Triangle",
+        "name": "../Surfaces/Torus/all_objects.obj",
+		"tag": "assimp_",
+		"innerIndex": [0, 1, 2, 3],
+        "cullFace": [false, true, true, true]
+    }],
+
+    "Accelerators":
+    [
+        {"id" : 0, "type" : "BasicBVH", "useStack": true},
+        {"id" : 1, "type" : "Linear"}
+    ],
+
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "BasicBVH"},
+    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryTransform": 1,
+	"BaseMedium" : 0,
+
+	"Surfaces": [
+        // Floor
+        { "transform": 0, "accelerator": 0, "material": 2, "primitive": 0 },
+        // Torus & Friends
+        {
+            "transform": 0,
+            "accelerator": 0,
+            "material": [3, 1, 4, 4],
+            "primitive": [1, 2, 3, 4]
+        }
+    ],
+
+    // Lights
+    "LightSurfaces": [{"light": 0, "material": 0, "transform": 1}],
+    // Cameras
+    "CameraSurfaces": [{"camera": 0}]
+}

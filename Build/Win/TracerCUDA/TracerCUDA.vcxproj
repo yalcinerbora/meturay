@@ -21,6 +21,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\CudaSystem.hpp" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerWork.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DTree.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUDirectLightSamplerI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterialKC.cuh" />

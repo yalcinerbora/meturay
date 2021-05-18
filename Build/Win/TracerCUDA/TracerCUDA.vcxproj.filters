@@ -91,6 +91,9 @@
     <Filter Include="Tracers\DirectTracer">
       <UniqueIdentifier>{c6899011-41a9-4824-bb06-029f1a4210b4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Tracers\PPGTracer">
+      <UniqueIdentifier>{8caf4884-6d27-407f-aa80-57e2483dab9d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerDebug.cpp">
@@ -488,6 +491,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\AOTracerKC.cuh">
       <Filter>Tracers\AOTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DTree.cuh">
+      <Filter>Tracers\PPGTracer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

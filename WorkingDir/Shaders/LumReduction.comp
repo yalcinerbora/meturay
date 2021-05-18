@@ -125,33 +125,6 @@ void ReduceBlock(out float maxLum, out float avgLum,
 	if(localId < 1) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 1]);
 	memoryBarrierShared(); barrier();
 	if(localId == 0) maxLum = reduceBuffer[localId];	
-
-//	for(uint offset = WORK_X / 2; offset > 0; offset >>= 1)
-//	{
-//		if (localId < offset) 
-//		{
-//			reduceBuffer[localId] = reduceBuffer[localId] + reduceBuffer[localId + offset];
-//		}		
-//		memoryBarrierShared();
-//		barrier();
-//	}
-//	if(localId == 0) avgLum = reduceBuffer[localId];
-//	memoryBarrierShared();
-//	barrier();
-//	// Again for max
-//	reduceBuffer[localId] = lum;
-//	memoryBarrierShared();
-//	barrier();
-//	for(uint offset = WORK_X / 2; offset > 0; offset >>= 1)
-//	{
-//		if (localId < offset) 
-//		{
-//			reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + offset]);
-//		}		
-//		memoryBarrierShared();
-//		barrier();
-//	}
-//	if(localId == 0) maxLum = reduceBuffer[localId];	
 }
 
 // 16x16 block is always nice
@@ -188,12 +161,5 @@ void main(void)
 		// Create your own using atomicCAS
 		AtomicAddToSSBO(avgLum);		
 		AtomicMaxToSSBO(maxLum);
-
-		//AtomicAddToSSBO(luminance);
-		//AtomicMaxToSSBO(luminance);
-
-//		outAvgLum = floatBitsToUint(avgLum);
-//		outMaxLum = floatBitsToUint(maxLum);
-
 	}
 }

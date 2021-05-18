@@ -86,7 +86,7 @@ vec3 YxyToRGB(in vec3 color)
 U_RES uniform ivec2 resolution;
 
 // Functions
-vec4 TonemapReinhard2002(in vec4 hdrColor)
+vec4 TonemapReinhard2005(in vec4 hdrColor)
 {
 	// Fist Convert to Yxy
 	vec3 colorXxy = RGBToYxy(hdrColor.rgb);
@@ -121,7 +121,7 @@ void main(void)
 
 	vec4 sdrColorOut;
 	if(doToneMap)	
-		sdrColorOut = TonemapReinhard2002(hdrColorIn);
+		sdrColorOut = TonemapReinhard2005(hdrColorIn);
 	else 
 		sdrColorOut = hdrColorIn;
 
