@@ -25,7 +25,21 @@
 		"gaze": [19.3556, -5.59312, 34.678],
 		"position": [16.8446, -3.61809, 39.0131],
 		"up": [0.0, 1.0, 0.0]
-	}],
+	},
+    {
+        // Reflection of Caustics Camera
+		"id": 2,
+		"type": "Pinhole",
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+        "planes": [0.01, 2000.0],
+		"gaze": [47.4224, 23.3561, 32.964],
+		"position": [42.256, 23.305, 34.4823],
+		"up": [0.0, 1.0, 0.0]
+    }
+    ],
 
     "Lights":[
     {
@@ -72,7 +86,7 @@
 
         "layout": "trs",
         "translate": [0, 0, 0],
-        "rotate": [0, -150, 0],
+        "rotate": [0, -150, -10],
         "scale": [1, 1, 1]
     }],
 
@@ -132,7 +146,8 @@
     {
         // HDR
         "id": 17,
-        "file": "../Textures/ModernPool/lakeside_4k.hdr"
+        //"file": "../Textures/ModernPool/lakeside_4k.hdr"
+        "file": "../Textures/ModernPool/kiara_5_noon_4k.hdr"
     },
     {
         // Tree Leaf
@@ -186,6 +201,12 @@
             "../Textures/ModernPool/fabric_towel_1k_albedo.jpg",
             "../Textures/ModernPool/fabric_towel_1k_normal.jpg"
         ]
+    },
+    {
+        // Slipper Normal
+        "id": 32,
+        "signed": true,
+        "file": "../Textures/ModernPool/slippers_normal-2k.png"
     }
 ],
 
@@ -209,7 +230,7 @@
     {
         // Pool Base
         "id": 2,
-        "type": "Unreal",
+        "type": "Lambert",
         "albedo": {"texture": 4, "channels": "rgb"},
         "normal": {"texture": 5, "channels": "rgb"},
         "roughness": {"texture": 6, "channels": "r"},
@@ -244,7 +265,7 @@
         // All Metals
         "id": 6,
         "type": "Unreal",
-		"albedo" : [0.9, 0.7, 0.5],
+		"albedo" : [0.65, 0.65, 0.65],
 		"roughness" : 0.23,
         "specular": 0.5,
         "metallic": 0.95
@@ -317,6 +338,16 @@
         "type": "Lambert",
 		"albedo" : {"texture": 29, "channels": "rgb"},
         "normal" : {"texture": 30, "channels": "rgb"}
+    },
+    {
+        // Slippers
+        "id": [15, 16],
+        "type": "Unreal",
+        "albedo": [[0.005, 0.005, 0.005], [0.85, 0.85, 0.85]],
+        "normal": [{"texture": 32, "channels": "rgb"}, {"texture": 32, "channels": "rgb"}],
+        "roughness": [0.7, 0.7],
+        "metallic": [0, 0],
+        "specular": [0.2, 0.5]
     }
     ],
 
@@ -422,8 +453,15 @@
         "tag": "assimp_",
         "cullFace": [true, true, true, false],
         "innerIndex": [0, 1, 2, 3]
-    }
-    ],
+    },
+    {
+        // Slippers
+        "id": [21, 22, 23, 24],
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/slippers.obj",
+        "tag": "assimp_",
+        "innerIndex": [0, 1, 2, 3]
+    }],
 
     "Accelerators":
     [
@@ -486,6 +524,12 @@
         "transform": 0, "accelerator": 0,
         "material": [14, 6, 11, 13],
         "primitive": [17, 18, 19, 20]
+    },
+    {
+        // Slippers
+        "transform": 0, "accelerator": 0,
+        "material": [15, 16, 15, 16],
+        "primitive": [21, 22, 23, 24]
     }],
 
     // Lights
@@ -495,6 +539,8 @@
         // Overall View
         {"camera": 0},
         // Pool Camera
-        {"camera": 1, "medium": 2}
+        {"camera": 1, "medium": 2},
+        // Reflection of Caustics Camera
+        {"camera": 2}
     ]
 }
