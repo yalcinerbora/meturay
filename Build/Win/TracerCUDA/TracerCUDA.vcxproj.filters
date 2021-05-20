@@ -498,6 +498,15 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathNode.h">
       <Filter>Tracers\PPGTracer</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\STree.cuh">
+      <Filter>Tracers\PPGTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\STreeKC.cuh">
+      <Filter>Tracers\PPGTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PPGWork.h">
+      <Filter>Tracers\PPGTracer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">

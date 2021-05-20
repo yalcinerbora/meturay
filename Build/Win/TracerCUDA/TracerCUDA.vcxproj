@@ -72,6 +72,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathNode.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracerWorks.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PPGWork.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\STree.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\STreeKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.hpp" />

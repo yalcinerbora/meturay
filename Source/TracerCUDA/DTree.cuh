@@ -20,7 +20,7 @@ struct DTreeNode
         TOP_RIGHT       = 3
     };
 
-    Vector4ui   childIndex;
+    uint32_t    childIndex;
     Vector4f    cdfs;
 };
 
