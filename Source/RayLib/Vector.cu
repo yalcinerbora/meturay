@@ -21,3 +21,6 @@ template class Vector<2, uint64_t>;
 
 template class Vector<2, int16_t>;
 template class Vector<2, uint16_t>;
+
+template class Vector<4, int16_t>;
+template class Vector<4, uint16_t>;

@@ -16,18 +16,21 @@ This is a GPU-oriented implementation of such tree
 #include "STreeKC.cuh"
 #include "DeviceMemory.h"
 
+#include "DTree.cuh"
+
+class CudaSystem;
+
 class STree
 {
     private:
-        DeviceMemory    sTreeNodeMemory;
-        STreeNode*      sTreeNodes;
-
+        DeviceMemory        sTreeNodeMemory;
+        STreeNode*          dSTreeNodes;
         //
-        DeviceMemory    sTreeNodeMemory;
-        STreeNode*      dTreeNodes;
+        STreeGPU            sTreeGPU;
 
-        //
-        STreeGPU        sTreeGPU;
+        std::vector<DTree>  dTrees;
+        
+        
 
     protected:
 
@@ -41,7 +44,7 @@ class STree
                         ~STree() = default;
 
         // Members
-        void            SplitLeaves();
+        void            SplitLeaves(const CudaSystem&);
 
 
 };

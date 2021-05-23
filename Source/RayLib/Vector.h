@@ -126,6 +126,12 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
         // Utilty
         __device__ __host__ T                           Dot(const Vector&) const;
 
+        // Reduction
+        __device__ __host__ T                           Sum() const;
+        __device__ __host__ T                           Multiply() const;
+        __device__ __host__ int                         Max() const;
+        __device__ __host__ int                         Min() const;
+
         template<class Q = T>
         __device__ __host__ FloatEnable<Q, T>           Length() const;
         __device__ __host__ T                           LengthSqr() const;
@@ -135,8 +141,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
         __device__ __host__ FloatEnable<Q, Vector&>     NormalizeSelf();
         __device__ __host__ Vector                      Clamp(const Vector&, const Vector&) const;
         __device__ __host__ Vector                      Clamp(T min, T max) const;
-        __device__ __host__ Vector& ClampSelf(const Vector&, const Vector&);
-        __device__ __host__ Vector& ClampSelf(T min, T max);
+        __device__ __host__ Vector&                     ClampSelf(const Vector&, const Vector&);
+        __device__ __host__ Vector&                     ClampSelf(T min, T max);
         __device__ __host__ bool                        HasNaN() const;
 
         template<class Q = T>
@@ -197,6 +203,8 @@ using Vector2ul = Vector<2, uint64_t>;
 // Short
 using Vector2s = Vector<2, uint16_t>;
 using Vector2us = Vector<2, uint16_t>;
+using Vector4s = Vector<2, uint16_t>;
+using Vector4us = Vector<2, uint16_t>;
 
 // Requirements of Vectors
 //static_assert(std::is_literal_type<Vector3>::value == true, "Vectors has to be literal types");
@@ -256,14 +264,22 @@ struct IsVectorType
         std::is_same<T, Vector2d>::value ||
         std::is_same<T, Vector2i>::value ||
         std::is_same<T, Vector2ui>::value ||
+        std::is_same<T, Vector2l>::value ||
+        std::is_same<T, Vector2ul>::value ||
+        std::is_same<T, Vector2s>::value ||
+        std::is_same<T, Vector2us>::value ||
+
         std::is_same<T, Vector3f>::value ||
         std::is_same<T, Vector3d>::value ||
         std::is_same<T, Vector3i>::value ||
         std::is_same<T, Vector3ui>::value ||
+
         std::is_same<T, Vector4f>::value ||
         std::is_same<T, Vector4d>::value ||
         std::is_same<T, Vector4i>::value ||
-        std::is_same<T, Vector4ui>::value;
+        std::is_same<T, Vector4ui>::value ||
+        std::is_same<T, Vector4s>::value || 
+        std::is_same<T, Vector4us>::value;
 };
 
 // Vector Etern
@@ -287,3 +303,6 @@ extern template class Vector<2, uint64_t>;
 
 extern template class Vector<2, int16_t>;
 extern template class Vector<2, uint16_t>;
+
+extern template class Vector<4, int16_t>;
+extern template class Vector<4, uint16_t>;

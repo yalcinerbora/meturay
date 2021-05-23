@@ -437,6 +437,68 @@ T Vector<N, T>::Dot(const Vector& right) const
 }
 
 template <int N, class T>
+__device__ __host__ HYBRID_INLINE
+T Vector<N, T>::Sum() const
+{
+    T result = 0;
+    UNROLL_LOOP
+    for(int i = 0; i < N; i++)
+    {
+        result += vector[i];
+    }
+    return result;
+}
+
+template <int N, class T>
+__device__ __host__ HYBRID_INLINE
+T Vector<N, T>::Multiply() const
+{
+    T result = 0;
+    UNROLL_LOOP
+    for(int i = 0; i < N; i++)
+    {
+        result *= vector[i];
+    }
+    return result;
+}
+
+template <int N, class T>
+__device__ __host__ HYBRID_INLINE
+int Vector<N, T>::Max() const
+{
+    int result = 0;
+    T max = vector[0];
+    UNROLL_LOOP
+    for(int i = 1; i < N; i++)
+    {
+        if(vector[i] > max)
+        {
+            max = vector[i];
+            result = i;
+        }
+    }
+    return result;
+}
+
+template <int N, class T>
+__device__ __host__ HYBRID_INLINE
+int Vector<N, T>::Min() const
+{
+    int result = 0;
+    T min = vector[0];
+    UNROLL_LOOP
+    for(int i = 1; i < N; i++)
+    {
+        if(vector[i] < min)
+        {
+            min = vector[i];
+            result = i;
+        }
+    }
+    return result;
+}
+
+template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
 FloatEnable<Q, T> Vector<N, T>::Length() const

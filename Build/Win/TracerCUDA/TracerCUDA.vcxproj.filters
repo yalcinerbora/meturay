@@ -507,6 +507,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGWork.h">
       <Filter>Tracers\PPGTracer</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DTreeKC.cuh">
+      <Filter>Tracers\PPGTracer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">
@@ -625,6 +628,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracerWork.cu">
       <Filter>Tracers\AOTracer</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\DTree.cu">
+      <Filter>Tracers\PPGTracer</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>
