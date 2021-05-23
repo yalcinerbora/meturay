@@ -37,6 +37,7 @@ DTree::DTreeBuffer& DTree::DTreeBuffer::operator=(const DTreeBuffer& other)
                           sizeof(DTreeGPU) + nodeCount * sizeof(DTreeNode),
                           cudaMemcpyDeviceToDevice));
     FixPointers();
+    return *this;
 }
 
 void DTree::SwapTrees(const CudaSystem&)
