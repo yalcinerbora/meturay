@@ -175,6 +175,26 @@ void DTree::SwapTrees(const CudaGPU& gpu, float fluxRatio, uint32_t depthLimit)
     std::swap(readTree, writeTree);
 }
 
+void DTree::AddRadiancesFromPaths(const uint32_t* dNodeIndexArray,
+                                  const PathGuidingNode* dPathNodes,
+                                  const ArrayPortion<uint32_t>& portion,
+                                  uint32_t maxPathNodePerRay,
+                                  const CudaGPU& gpu)
+{
+    cudaStream_t stream = gpu.DetermineStream();
+    uint32_t nodeCount = static_cast<uint32_t>(portion.count);
+
+    gpu.GridStrideKC_X(0, stream, portion.count,
+                       //
+                       KCAccumulateRadianceToLeaf,
+                       //
+                       writeTree.TreeGPU(),
+                       dNodeIndexArray,
+                       dPathNodes,
+                       nodeCount,
+                       maxPathNodePerRay);
+}
+
 void DTree::GetReadTreeToCPU(DTreeGPU& tree, std::vector<DTreeNode>& nodes) const
 {
     readTree.DumpTree(tree, nodes);

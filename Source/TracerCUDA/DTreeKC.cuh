@@ -3,9 +3,10 @@
 #include "RayLib/Vector.h"
 #include "RayLib/CoordinateConversion.h"
 #include "RayLib/Constants.h"
+#include "RayLib/ColorConversion.h"
 
 #include "Random.cuh"
-
+#include "PathNode.h"
 
 struct DTreeNode
 {
@@ -500,5 +501,32 @@ static void KCInitDTreeNodes(DTreeGPU* gTree, uint32_t nodeCount)
             // Root node is always assumed to be allocated
             gTree->nodeCount = 1;
         }
+    }
+}
+
+__global__
+static void KCAccumulateRadianceToLeaf(DTreeGPU* gDTree,
+                                       // Input
+                                       const uint32_t* gNodeIndices,
+                                       const PathGuidingNode* gPathNodes,
+                                       uint32_t nodeCount,
+                                       uint32_t maxPathNodePerRay)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < nodeCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        uint32_t nodeIndex = gNodeIndices[threadId];
+        uint32_t rayId = nodeIndex / maxPathNodePerRay;
+
+        PathGuidingNode gPathNode = gPathNodes[nodeIndex];
+
+        if(!gPathNode.HasNext()) continue;
+
+        //PathGuidingNode gNextPathNode = gPathNodes[rayId + gPathNode.Next()];
+        Vector3f wi = gPathNode.Wi(gPathNodes, rayId);
+        float luminance = Utility::RGBToLuminance(gPathNode.totalRadiance);
+
+        gDTree->AddRadianceToLeaf(wi, luminance);
     }
 }

@@ -7,11 +7,14 @@ DTree Implementation
 */ 
 
 #include "DeviceMemory.h"
+
+#include "RayLib/ArrayPortion.h"
+
 #include <vector>
 
 struct DTreeNode;
 struct DTreeGPU;
-struct PathNode;
+struct PathGuidingNode;
 
 class CudaGPU;
 
@@ -68,6 +71,11 @@ class DTree
         // Members        
         void                    SwapTrees(const CudaGPU&, float fluxRatio, 
                                           uint32_t depthLimit);
+        void                    AddRadiancesFromPaths(const uint32_t* dNodeIndexArray,
+                                                      const PathGuidingNode* dPathNodes,
+                                                      const ArrayPortion<uint32_t>& portion,
+                                                      uint32_t maxPathNodePerRay,
+                                                      const CudaGPU&);
         
         void                    GetReadTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
         void                    GetWriteTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;

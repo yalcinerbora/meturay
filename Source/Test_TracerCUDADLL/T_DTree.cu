@@ -99,53 +99,30 @@ TEST(PPG_DTree, AddThenSwap)
     std::vector<DTreeNode> nodes;
     DTreeGPU tree;
 
-    PathGuidingNode cd = PathGuidingNode
-    {
-        PathNode
-        {
-            Vector3f{0.0f, 0.0f, 0.0f},
-            Vector<2, PathNode::IndexType>{PathNode::InvalidIndex, 1}
-        },
-        Vector3f{1.0f, 1.0f, 1.0f},
-        static_cast<uint32_t>(0u),
-        Vector3f{10.0f, 10.0f, 10.0f}
-    };
+    PathGuidingNode camNode;
+    camNode.worldPosition = Vector3f{0.0f, 0.0f, 0.0f};
+    camNode.prevNext = Vector<2, PathNode::IndexType>{PathNode::InvalidIndex, 1};
+    camNode.radFactor = Vector3f{1.0f, 1.0f, 1.0f};
+    camNode.nearestDTreeIndex = 0;
+    camNode.totalRadiance = Vector3f{10.0f, 10.0f, 10.0f};
+    PathGuidingNode midNode;
+    midNode.worldPosition = Vector3f{2.0f, 4.0f, 5.0f};
+    midNode.prevNext = Vector<2, PathNode::IndexType>{0, 2};
+    midNode.radFactor = Vector3f{0.8f, 0.8f, 0.8f};
+    midNode.nearestDTreeIndex = 0;
+    midNode.totalRadiance = Vector3f{70.0f, 2.0f, 33.0f};
+    PathGuidingNode endNode;
+    endNode.worldPosition = Vector3f{-3.0f, -5.0f, -2.0f};
+    endNode.prevNext = Vector<2, PathNode::IndexType>{1, PathNode::InvalidIndex};
+    endNode.radFactor = Vector3f{0.5f, 0.5f, 0.5f};
+    endNode.nearestDTreeIndex = 0;
+    endNode.totalRadiance = Vector3f{1.0f, 2.0f, 3.0f};
 
-    std::vector<PathGuidingNode> pathNodes =
+    std::vector<PathGuidingNode>  pathNodes =
     {
-        PathGuidingNode
-        {
-            PathNode
-            {
-                Vector3f{0.0f, 0.0f, 0.0f},
-                Vector<2, PathNode::IndexType>{PathNode::InvalidIndex, 1}
-            },
-            Vector3f{1.0f, 1.0f, 1.0f},
-            static_cast<uint32_t>(0u),
-            Vector3f{10.0f, 10.0f, 10.0f}
-        },
-        PathGuidingNode
-        {
-            PathNode
-            {
-                Vector3f{2.0f, 4.0f, 5.0f},
-                Vector<2, PathNode::IndexType>{0, 2}
-            },
-            Vector3f{0.8f, 0.8f, 0.8f},
-            static_cast<uint32_t>(0u),
-            Vector3f{70.0f, 2.0f, 33.0f}
-        },
-        PathGuidingNode
-        {
-            PathNode
-            {
-                Vector3f{-3.0f, -5.0f, -2.0f},
-                Vector<2, PathNode::IndexType>{1, PathNode::InvalidIndex}
-            },
-            Vector3f{0.5f, 0.5f, 0.5f},
-            static_cast<uint32_t>(0u),
-            Vector3f{1.0f, 2.0f, 3.0f}
-        },
+        camNode,
+        midNode,
+        endNode
     };
 
     std::vector<Vector3f> directions;
@@ -153,11 +130,24 @@ TEST(PPG_DTree, AddThenSwap)
     {
         if(p.prevNext[1] != PathNode::InvalidIndex)
         {
-            directions.push_back(pathNodes[p.prevNext[0]].worldPosition - p.worldPosition);
+            directions.push_back(pathNodes[p.prevNext[1]].worldPosition - p.worldPosition);
             directions.back().NormalizeSelf();
         }            
     }
 
+    // Create Tree
+    DTree testTree;
     // Copy Vertices to the GPU
+    
+    //testTree.AddRadiancesFromPaths();
+
+
+    testTree.GetWriteTreeToCPU(tree, nodes);
+
+    // Do the swap
+    testTree.SwapTrees(system.BestGPU(), fluxRatio, depthLimit);
+
+    // Check again
+    testTree.GetWriteTreeToCPU(tree, nodes);
     
 }
