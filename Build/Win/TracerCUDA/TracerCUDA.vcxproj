@@ -252,7 +252,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>METU_CUDA;WIN32;WIN64;METU_DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>METU_SHARED_TRACER_CUDA;METU_CUDA;WIN32;WIN64;METU_DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -275,6 +275,7 @@
       </MaxRegCount>
       <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
       <FastMath>false</FastMath>
+      <KeepDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\$(ProjectName)\Cuda</KeepDir>
     </CudaCompile>
     <CudaLink />
   </ItemDefinitionGroup>
@@ -284,7 +285,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>METU_CUDA;WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>METU_SHARED_TRACER_CUDA;METU_CUDA;WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -311,6 +312,7 @@
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
       <FastMath>false</FastMath>
+      <KeepDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\$(ProjectName)\Cuda</KeepDir>
     </CudaCompile>
     <CudaLink />
   </ItemDefinitionGroup>

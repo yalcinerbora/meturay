@@ -8,12 +8,6 @@ Thread per Block etc..
 
 */
 
-#ifdef METU_SHARED_GPULIST
-#define METU_SHARED_TRACER_ENTRY_POINT __declspec(dllexport)
-#else
-#define METU_SHARED_TRACER_ENTRY_POINT __declspec(dllimport)
-#endif
-
 #include <cuda.h>
 #include <set>
 #include <array>
@@ -160,7 +154,7 @@ class CudaGPU
         uint32_t                RecommendedBlockCountPerSM(void* kernkernelFuncelPtr,
                                                            uint32_t threadsPerBlock = StaticThreadPerBlock1D,
                                                            uint32_t sharedMemSize = 0) const;
-        cudaStream_t            DetermineStream(uint32_t requiredSMCount) const;
+        cudaStream_t            DetermineStream(uint32_t requiredSMCount = 0) const;
         void                    WaitAllStreams() const;
         void                    WaitMainStream() const;
 

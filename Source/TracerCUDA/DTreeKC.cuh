@@ -18,7 +18,7 @@ struct DTreeNode
     };
 
     uint16_t                parentIndex;
-    Vector4us               childIndices;
+    Vector4ui               childIndices;
     Vector4f                irradianceEstimates;
 
     __device__ bool         IsRoot() const;
@@ -33,6 +33,7 @@ struct DTreeNode
 struct DTreeGPU
 {
     DTreeNode*              gRoot;
+    uint32_t                nodeCount;
 
     uint32_t                totalSamples;
     float                   irradiance;
@@ -47,7 +48,7 @@ struct DTreeGPU
 __device__ __forceinline__
 bool DTreeNode::IsRoot() const
 {
-    return parentIndex == UINT32_MAX;
+    return parentIndex == UINT16_MAX;
 }
 
 __device__ __forceinline__
@@ -56,13 +57,14 @@ bool DTreeNode::IsLeaf(uint8_t childId) const
     return childIndices[childId] == UINT32_MAX;
 }
 
-__device__ 
+__device__ __forceinline__
 float DTreeNode::IrradianceEst(NodeOrder o) const
 {
     return irradianceEstimates[static_cast<int>(o)];
 }
 
-__device__ float DTreeNode::LocalPDF(uint8_t childIndex) const
+__device__ __forceinline__
+float DTreeNode::LocalPDF(uint8_t childIndex) const
 {
     // I do not understand where this 4 is coming from
     return 4 * irradianceEstimates[childIndex] / irradianceEstimates.Sum();
@@ -249,16 +251,16 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance)
 }
 
 __device__ __forceinline__ 
-uint16_t AtomicAllocateNode(bool& allocated, 
+uint32_t AtomicAllocateNode(bool& allocated, 
                             uint8_t childId, 
                             DTreeNode* gParentNode, 
                             uint32_t& gAllocator)
 {    
     allocated = false;
     // 0xFFFFFFFF means empty (non-allocated) node
-    static constexpr uint16_t EMPTY_NODE = UINT16_MAX;
+    static constexpr uint32_t EMPTY_NODE = UINT32_MAX;
     // 0xFFFFFFFE means allocation in progress
-    static constexpr uint16_t ALLOCATING = UINT16_MAX - 1;
+    static constexpr uint32_t ALLOCATING = UINT32_MAX - 1;
     // All other numbers are valid nodes 
     // (unless of course those are out of bounds)
 
@@ -268,7 +270,7 @@ uint16_t AtomicAllocateNode(bool& allocated,
         return gParentNode->childIndices[childId];
 
     // Try to lock the node and allocate for that node
-    uint16_t old = ALLOCATING;
+    uint32_t old = ALLOCATING;
     while(old == ALLOCATING)
     {
         old = atomicCAS(&gParentNode->childIndices[childId], EMPTY_NODE, ALLOCATING);
@@ -277,8 +279,8 @@ uint16_t AtomicAllocateNode(bool& allocated,
             // This thread is selected to actually allocate
             // Do atmost minimal here only set the child id on the parent
             // We are allocating in a top-down fashion set other memory stuff later
-            uint16_t location = static_cast<uint16_t>(atomicAdd(&gAllocator, 1u));
-            reinterpret_cast<volatile uint16_t&>(gParentNode->childIndices[childId]) = location;
+            uint32_t location = static_cast<uint32_t>(atomicAdd(&gAllocator, 1u));
+            reinterpret_cast<volatile uint32_t&>(gParentNode->childIndices[childId]) = location;
             old = location;
 
             // Just flag here do the rest after
@@ -290,30 +292,29 @@ uint16_t AtomicAllocateNode(bool& allocated,
     return old;
 }
 
-
 __device__ __forceinline__
 DTreeNode* PunchThroughNode(uint32_t& gNodeAllocLocation, DTreeGPU* gDTree,
                             const Vector2f& discreteCoords, uint32_t depth)
 {
     // Go to the depth and allocate through the way
-    uint32_t currentDepth = 1;
+    uint32_t currentDepth = 0;
     Vector2f localCoords = discreteCoords;
     DTreeNode* node = gDTree->gRoot;
-    do
+    while(currentDepth < depth)
     {
         uint8_t childId = node->DetermineChild(localCoords);
 
         // Atomically Allocate a node from the array
         bool allocated;
-        uint16_t childIndex = AtomicAllocateNode(allocated, childId, node, gNodeAllocLocation);
+        uint32_t childIndex = AtomicAllocateNode(allocated, childId, node, gNodeAllocLocation);
         
         // This thread is allocated the node
         // Do the rest of the initialization work here
         if(allocated)
         {
-            uint16_t parentIndex = static_cast<uint16_t>(node - gDTree->gRoot);
+            uint32_t parentIndex = static_cast<uint32_t>(node - gDTree->gRoot);
             DTreeNode* childNode = gDTree->gRoot + childIndex;
-            childNode->parentIndex = parentIndex;            
+            childNode->parentIndex = static_cast<uint16_t>(parentIndex);
         }
 
         // Continue Traversal
@@ -321,54 +322,61 @@ DTreeNode* PunchThroughNode(uint32_t& gNodeAllocLocation, DTreeGPU* gDTree,
         node = gDTree->gRoot + node->childIndices[childId];
         currentDepth++;
     }
-    while(currentDepth <= depth);
+    //while(currentDepth <= depth);
     return node;
 }
 
 __global__
-void CalculateParentIrradiance(// Output
-                               uint32_t* gParentIndexMark,
-                               // I-O
-                               DTreeGPU* gDTree,
-                               // Input
-                               const uint32_t* gNodeIndices,
-                               uint32_t levelNodeCount)
+static void KCCalculateParentIrradiance(// I-O
+                                        DTreeGPU* gDTree,
+                                        // Input
+                                        uint32_t totalNodeCount)
 {
     // Kernel Grid - Stride Loop
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
-        threadId < levelNodeCount;
+        threadId < totalNodeCount;
         threadId += (blockDim.x * gridDim.x))
     {
-        uint32_t nodeIndex = gNodeIndices[threadId];
-        DTreeNode* currentNode = gDTree->gRoot + nodeIndex;
+        DTreeNode* currentNode = gDTree->gRoot + threadId;
+        
+        // Total leaf irrad        
+        float sum = 0.0f;
+        sum += currentNode->IsLeaf(0) ? currentNode->irradianceEstimates[0] : 0.0f;
+        sum += currentNode->IsLeaf(1) ? currentNode->irradianceEstimates[1] : 0.0f;
+        sum += currentNode->IsLeaf(2) ? currentNode->irradianceEstimates[2] : 0.0f;
+        sum += currentNode->IsLeaf(3) ? currentNode->irradianceEstimates[3] : 0.0f;
 
-        uint32_t parentIndex = currentNode->parentIndex;
-        DTreeNode* parentNode = gDTree->gRoot + parentIndex;
+        // Back-propogate the sum towards the root
+        DTreeNode* n = currentNode;
+        while(!(n->IsRoot()))
+        {
+            DTreeNode* parentNode = gDTree->gRoot + n->parentIndex;
+            uint32_t nodeIndex = static_cast<uint32_t>(n - gDTree->gRoot);
 
-        float sum = currentNode->irradianceEstimates.Sum();
+            uint32_t childId = UINT32_MAX;
+            childId = (parentNode->childIndices[0] == nodeIndex) ? 0 : childId;
+            childId = (parentNode->childIndices[1] == nodeIndex) ? 1 : childId;
+            childId = (parentNode->childIndices[2] == nodeIndex) ? 2 : childId;
+            childId = (parentNode->childIndices[3] == nodeIndex) ? 3 : childId;
 
-        // Determine the location of the irradiance estimate
-        uint32_t childId = UINT32_MAX;
-        childId = (parentNode->childIndices[0] == nodeIndex) ? 0 : childId;
-        childId = (parentNode->childIndices[1] == nodeIndex) ? 1 : childId;
-        childId = (parentNode->childIndices[2] == nodeIndex) ? 2 : childId;
-        childId = (parentNode->childIndices[3] == nodeIndex) ? 3 : childId;
+            // Atomically add since other threads will add to the estimate
+            atomicAdd(&parentNode->irradianceEstimates[childId], sum);
+            // Traverse upwards
+            n = parentNode;
+        }
 
-        // Accumulate the result
-        parentNode->irradianceEstimates[childId] = sum;
-
-        // Mark the parent for next iteration
-        gParentIndexMark[threadId] = parentIndex;
+        // Finally add to the total aswell
+        atomicAdd(&gDTree->irradiance, sum);        
     }
 }
 
 __global__
-void MarkChildRequest(// Output
-                      uint8_t* gRequestedChilds,                      
-                      // Input               
-                      const DTreeGPU* gDTree,
-                      float fluxRatio,
-                      uint32_t totalNodeCount)
+static void KCMarkChildRequest(// Output
+                               uint32_t* gRequestedChilds,
+                               // Input               
+                               const DTreeGPU* gDTree,
+                               float fluxRatio,
+                               uint32_t totalNodeCount)
 {
     // Kernel Grid - Stride Loop
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
@@ -376,7 +384,7 @@ void MarkChildRequest(// Output
         threadId += (blockDim.x * gridDim.x))
     {
         DTreeNode* node = gDTree->gRoot + threadId;
-        uint8_t requestedChildCount = 0;
+        uint32_t requestedChildCount = 0;
         // Check if we need
         UNROLL_LOOP
         for(uint32_t i = 0; i < 4; i++)
@@ -392,15 +400,13 @@ void MarkChildRequest(// Output
 }
 
 __global__
-void ReconstructEmptyTree(// Output
-                          DTreeGPU* gDTree,
-                          uint32_t& nodeAllocLocation,
-                          // I-O
-                          const DTreeGPU* gSiblingTree,
-                          // Input               
-                          float fluxRatio,
-                          uint32_t depthLimit,
-                          uint32_t siblingNodeCount)
+static void KCReconstructEmptyTree(// Output
+                                   DTreeGPU* gDTree,
+                                   // Input               
+                                   const DTreeGPU* gSiblingTree,
+                                   float fluxRatio,
+                                   uint32_t depthLimit,
+                                   uint32_t siblingNodeCount)
 {
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
         threadId < siblingNodeCount;
@@ -422,7 +428,7 @@ void ReconstructEmptyTree(// Output
         while(!(n->IsRoot()))
         {
             DTreeNode* parentNode = gSiblingTree->gRoot + n->parentIndex;
-            uint16_t nodeIndex = static_cast<uint16_t>(n - gSiblingTree->gRoot);
+            uint32_t nodeIndex = static_cast<uint32_t>(n - gSiblingTree->gRoot);
 
             uint32_t childId = UINT32_MAX;
             childId = (parentNode->childIndices[0] == nodeIndex) ? 0 : childId;
@@ -434,15 +440,21 @@ void ReconstructEmptyTree(// Output
                                       ((childId >> 1) & 0b01) ? 0.5f : 0.0f);
             discretePoint += childCoordOffset + 0.5f * discretePoint;
             depth++;
+
+            // Traverse upwards
+            n = parentNode;
         }
 
         // Punchthrough this node to the new tree
         // Meaning, traverse and allocate (if not already allocated)
         // until we created the equavilent node
-        DTreeNode* punchedNode = PunchThroughNode(nodeAllocLocation, gDTree,
+        DTreeNode* punchedNode = PunchThroughNode(gDTree->nodeCount, gDTree,
                                                   discretePoint, depth);
         uint32_t punchedNodeId = static_cast<uint32_t>(punchedNode - gDTree->gRoot);
       
+
+        printf("PunchId %u\n", punchedNodeId);
+
         // We allocated up to this point
         // Check childs if they need allocation
         for(uint32_t i = 0; i < 4; i++)
@@ -450,20 +462,43 @@ void ReconstructEmptyTree(// Output
             float localIrrad = siblingNode->irradianceEstimates[i];
             float percentFlux = localIrrad / gSiblingTree->irradiance;
             
-            if(percentFlux > fluxRatio)
+            if(percentFlux > fluxRatio &&
+               // Iff create if node was not available on the sibling tree
+               siblingNode->IsLeaf(i))
             {
                 // Allocate a new node
-                uint32_t childNodeIndex = atomicAdd(&nodeAllocLocation, 1);
+                uint32_t childNodeIndex = atomicAdd(&gDTree->nodeCount, 1);
                 DTreeNode* childNode = gDTree->gRoot + childNodeIndex;
-                childNode->parentIndex = punchedNodeId;
+                childNode->parentIndex = static_cast<uint16_t>(punchedNodeId);
                 punchedNode->childIndices[i] = childNodeIndex;
-                childNode->irradianceEstimates = Zero4f;
-            }
-            else
-            {
-                punchedNode->childIndices[i] = 0;
+
+                printf("DOING STUFF\n");
             }
         }
         // All Done!
+    }
+}
+
+__global__ 
+static void KCInitDTreeNodes(DTreeGPU* gTree, uint32_t nodeCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < nodeCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        DTreeNode node;
+        node.irradianceEstimates = Zero4;
+        node.parentIndex = UINT16_MAX;
+        node.childIndices = Vector4ui(UINT32_MAX);
+
+        gTree->gRoot[threadId] = node;
+
+        if(threadId == 0)
+        {
+            gTree->irradiance = 0.0f;
+            gTree->totalSamples = 0;
+            // Root node is always assumed to be allocated
+            gTree->nodeCount = 1;
+        }
     }
 }

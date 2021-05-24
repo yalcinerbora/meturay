@@ -94,6 +94,9 @@
     <Filter Include="Tracers\PPGTracer">
       <UniqueIdentifier>{8caf4884-6d27-407f-aa80-57e2483dab9d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Tracers\Structs">
+      <UniqueIdentifier>{db9220e3-8509-42a1-a030-c328df3285c3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerDebug.cpp">
@@ -368,9 +371,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialDataStructs.h">
       <Filter>Materials</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\RayAuxStruct.cuh">
-      <Filter>Tracers</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTracer.h">
       <Filter>Tracers</Filter>
     </ClInclude>
@@ -495,9 +495,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\DTree.cuh">
       <Filter>Tracers\PPGTracer</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\PathNode.h">
-      <Filter>Tracers\PPGTracer</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\STree.cuh">
       <Filter>Tracers\PPGTracer</Filter>
     </ClInclude>
@@ -509,6 +506,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\DTreeKC.cuh">
       <Filter>Tracers\PPGTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayAuxStruct.cuh">
+      <Filter>Tracers\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PathNode.h">
+      <Filter>Tracers\Structs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -27,7 +27,7 @@ struct PathNode
 {
     using IndexType = uint8_t;
     // No path will self intersect
-    static constexpr IndexType InvalidIndex = 0;
+    static constexpr IndexType InvalidIndex = std::numeric_limits<IndexType>::max();
 
     // Local Position of the path
     Vector3f                worldPosition;

@@ -7,11 +7,13 @@ DTree Implementation
 */ 
 
 #include "DeviceMemory.h"
+#include <vector>
 
 struct DTreeNode;
 struct DTreeGPU;
+struct PathNode;
 
-class CudaSystem;
+class CudaGPU;
 
 class DTree
 {
@@ -34,12 +36,24 @@ class DTree
                 DTreeBuffer&        operator=(const DTreeBuffer&);
                 DTreeBuffer&        operator=(DTreeBuffer&&) = default;
                                     ~DTreeBuffer() = default;
+
+
+                DTreeGPU*           TreeGPU();
+                const DTreeGPU*     TreeGPU() const;
+
+                size_t              NodeCount() const;
+                void                ResetAndReserve(size_t nodeCount,
+                                                    const CudaGPU&,
+                                                    cudaStream_t);
+                void                CopyGPUNodeCountToCPU();
+
+                void                DumpTree(DTreeGPU&, std::vector<DTreeNode>&) const;
         };
 
     private:
         // Tree Nodes (one for read other for write
-        DTreeBuffer            dReadTree;
-        DTreeBuffer            dWriteTree;
+        DTreeBuffer            readTree;
+        DTreeBuffer            writeTree;
 
     protected:
     public:
@@ -51,7 +65,25 @@ class DTree
         DTree&                  operator=(DTree&&) = default;
                                 ~DTree() = default;
 
-        // Members
-        void                    SwapTrees(const CudaSystem&);
+        // Members        
+        void                    SwapTrees(const CudaGPU&, float fluxRatio, 
+                                          uint32_t depthLimit);
         
+        void                    GetReadTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
+        void                    GetWriteTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
+
 };
+
+inline DTreeGPU* DTree::DTreeBuffer::TreeGPU()
+{
+    return dDTree;
+}
+inline const DTreeGPU* DTree::DTreeBuffer::TreeGPU() const
+{
+    return dDTree;
+}
+
+inline size_t DTree::DTreeBuffer::NodeCount() const
+{
+    return nodeCount;
+}
