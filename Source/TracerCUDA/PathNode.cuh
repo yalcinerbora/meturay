@@ -37,15 +37,18 @@ struct PathNode
     // you will end up on the light
     Vector<2, IndexType>    prevNext;
     
-    __device__ Vector3f     Wi(const PathNode* gNodeList, uint32_t pathStartIndex);
-    __device__ Vector3f     Wo(const PathNode* gNodeList, uint32_t pathStartIndex);
+    template <class Node>
+    __device__ Vector3f     Wi(const Node* gNodeList, uint32_t pathStartIndex);
+    template <class Node>
+    __device__ Vector3f     Wo(const Node* gNodeList, uint32_t pathStartIndex);
            
     __device__ bool         HasPrev();
     __device__ bool         HasNext();
 };
 
+template <class Node>
 __device__ __forceinline__ 
-Vector3f PathNode::Wi(const PathNode* gNodeList, uint32_t pathStartIndex)
+Vector3f PathNode::Wi(const Node* gNodeList, uint32_t pathStartIndex)
 {
     IndexType next = prevNext[1];
     // Specifically put infinty here to catch some errors
@@ -55,8 +58,9 @@ Vector3f PathNode::Wi(const PathNode* gNodeList, uint32_t pathStartIndex)
     return wi.Normalize();
 }
 
+template <class Node>
 __device__ __forceinline__ 
-Vector3f PathNode::Wo(const PathNode* gNodeList, uint32_t pathStartIndex)
+Vector3f PathNode::Wo(const Node* gNodeList, uint32_t pathStartIndex)
 {
     IndexType prev = prevNext[0];
     // Specifically put infinty here to catch some errors

@@ -6,7 +6,7 @@
 #include "RayLib/ColorConversion.h"
 
 #include "Random.cuh"
-#include "PathNode.h"
+#include "PathNode.cuh"
 
 struct DTreeNode
 {
@@ -33,17 +33,20 @@ struct DTreeNode
 
 struct DTreeGPU
 {
-    DTreeNode*              gRoot;
-    uint32_t                nodeCount;
+    DTreeNode*                  gRoot;
+    uint32_t                    nodeCount;
 
-    uint32_t                totalSamples;
-    float                   irradiance;
+    uint32_t                    totalSamples;
+    float                       irradiance;    
+    
+    static __device__ Vector2f  WorldDirToTreeCoords(const Vector3f& worldDir);
+    
+    static __device__ Vector3f  TreeCoordsToWorldDir(const Vector2f& discreteCoords);
 
-    __device__ Vector3f     Sample(float& pdf, RandomGPU& rng) const;
-    __device__ float        Pdf(const Vector3f& worldDir) const;
-
-    __device__ void         AddRadianceToLeaf(const Vector3f& worldDir,
-                                              float radiance);
+    __device__ Vector3f         Sample(float& pdf, RandomGPU& rng) const;
+    __device__ float            Pdf(const Vector3f& worldDir) const;
+    __device__ void             AddRadianceToLeaf(const Vector3f& worldDir,
+                                                  float radiance);
 };
 
 __device__ __forceinline__
@@ -92,6 +95,48 @@ Vector2f DTreeNode::NormalizeCoordsForChild(uint8_t childIndex, const Vector2f& 
 
     localCoords *= 2.0f;
     return localCoords;
+}
+
+__device__ __forceinline__
+Vector2f DTreeGPU::WorldDirToTreeCoords(const Vector3f& worldDir)
+{
+    // Sphr coords return {[-pi, pi], [0, pi]}
+    Vector2f sphrCoords = Utility::CartesianToSphericalUnit(worldDir);
+    // {[-1, 1], [0, 1]}
+    Vector2f discreteCoords = sphrCoords * MathConstants::InvPi;
+    // {[0, 2], [0, 1]}
+    discreteCoords = discreteCoords + Vector2f(1.0f, 0.0f);
+    // {[0, 1], [0, 1]}
+    discreteCoords[0] *= 0.5f;
+
+    //printf("Dir = [%f, %f, %f] \n"
+    //       "Sphr= [%f, %f] \n"
+    //       "Coords = [%f, %f]\n"
+    //       "---\n",
+    //       worldDir[0], worldDir[1], worldDir[2],
+    //       sphrCoords[0], sphrCoords[1],
+    //       discreteCoords[0], discreteCoords[1]);
+
+
+    return discreteCoords;
+}
+
+__device__ __forceinline__
+Vector3f DTreeGPU::TreeCoordsToWorldDir(const Vector2f& discreteCoords)
+{
+    // Convert the Local 2D cartesian coords to spherical coords
+    // Convert using the same scheme above to prevent mismathc
+    // {[0, 1], [0, 1]}
+    Vector2f sphrCoords = discreteCoords;
+    // {[0, 2], [0, 1]}
+    sphrCoords[0] *= 2.0f;
+    // {[-1, 1], [0, 1]}
+    sphrCoords -= Vector2f(1.0f, 0.0f);
+    // {[-pi, pi], [0, pi]}
+    sphrCoords *= MathConstants::Pi;
+
+    // Then convert spherical coords to 3D cartesian world space coords
+    return Utility::SphericalToCartesianUnit(sphrCoords);
 }
 
 __device__ __forceinline__
@@ -177,21 +222,14 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
     // Convert PDF to Solid Angle PDF
     pdf *= 0.25f * MathConstants::InvPi;
 
-    // Convert the Local 2D cartesian coords to spherical coords
-    Vector2f sphrCoords = Vector2f(2.0f * discreteCoords[0],
-                                   (2.0f * discreteCoords[1] - 1.0f));
-    sphrCoords *= MathConstants::Pi;
-    // Then convert spherical coords to 3D cartesian world space coords
-    return Utility::SphericalToCartesianUnit(sphrCoords);
+    // Convert Tree Coords to World Direction
+    return TreeCoordsToWorldDir(discreteCoords);
 }
 
 __device__ __forceinline__
 float DTreeGPU::Pdf(const Vector3f& worldDir) const
 {
-    Vector2f sphrCoords = Utility::CartesianToSphericalUnit(worldDir);
-    Vector2f discreteCoords = sphrCoords * MathConstants::InvPi;
-    discreteCoords = discreteCoords + Vector2f(0.0f, 1.0f);
-    discreteCoords *= 0.5f;
+    Vector2f discreteCoords = WorldDirToTreeCoords(worldDir);
 
     float pdf = 1.0f;
     DTreeNode* node = gRoot;
@@ -225,10 +263,7 @@ float DTreeGPU::Pdf(const Vector3f& worldDir) const
 __device__ __forceinline__
 void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance)
 {
-    Vector2f sphrCoords = Utility::CartesianToSphericalUnit(worldDir);
-    Vector2f discreteCoords = sphrCoords * MathConstants::InvPi;
-    discreteCoords = discreteCoords + Vector2f(0.0f, 1.0f);
-    discreteCoords *= 0.5f;
+    Vector2f discreteCoords = WorldDirToTreeCoords(worldDir);
 
     // Descent and find the leaf
     DTreeNode* node = gRoot;
@@ -453,9 +488,6 @@ static void KCReconstructEmptyTree(// Output
                                                   discretePoint, depth);
         uint32_t punchedNodeId = static_cast<uint32_t>(punchedNode - gDTree->gRoot);
       
-
-        printf("PunchId %u\n", punchedNodeId);
-
         // We allocated up to this point
         // Check childs if they need allocation
         for(uint32_t i = 0; i < 4; i++)
@@ -473,7 +505,7 @@ static void KCReconstructEmptyTree(// Output
                 childNode->parentIndex = static_cast<uint16_t>(punchedNodeId);
                 punchedNode->childIndices[i] = childNodeIndex;
 
-                printf("DOING STUFF\n");
+                printf("SET_CHILD %u TO %u\n", i, childNodeIndex);
             }
         }
         // All Done!
@@ -520,11 +552,9 @@ static void KCAccumulateRadianceToLeaf(DTreeGPU* gDTree,
         uint32_t rayId = nodeIndex / maxPathNodePerRay;
 
         PathGuidingNode gPathNode = gPathNodes[nodeIndex];
-
         if(!gPathNode.HasNext()) continue;
 
-        //PathGuidingNode gNextPathNode = gPathNodes[rayId + gPathNode.Next()];
-        Vector3f wi = gPathNode.Wi(gPathNodes, rayId);
+        Vector3f wi = gPathNode.Wi<PathGuidingNode>(gPathNodes, rayId);
         float luminance = Utility::RGBToLuminance(gPathNode.totalRadiance);
 
         gDTree->AddRadianceToLeaf(wi, luminance);

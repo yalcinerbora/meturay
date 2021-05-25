@@ -70,7 +70,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\MetaMaterialFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUSurface.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelTransform.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\PathNode.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PathNode.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracerWorks.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGWork.h" />

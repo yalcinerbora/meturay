@@ -1,6 +1,5 @@
 ﻿#include "DTree.cuh"
 #include "DTreeKC.cuh"
-#include "PathNode.h"
 #include "ParallelReduction.cuh"
 #include "CudaSystem.hpp"
 
@@ -77,18 +76,18 @@ void DTree::DTreeBuffer::ResetAndReserve(size_t newNodeCount,
     size_t capacity = (memory.Size() - AlignedOffsetDTreeGPU) / sizeof(DTreeNode);
     if(capacity < newNodeCount)
     {
-        size_t size = AlignedOffsetDTreeGPU + (capacity * sizeof(DTreeNode));
+        size_t size = AlignedOffsetDTreeGPU + (newNodeCount * sizeof(DTreeNode));
         DeviceMemory::EnlargeBuffer(memory, size);
         dDTree = static_cast<DTreeGPU*>(memory);
         FixPointers();        
     }
     // Reset all node values
-    gpu.GridStrideKC_X(0, stream, nodeCount,
+    gpu.GridStrideKC_X(0, stream, newNodeCount,
                         //
                        KCInitDTreeNodes,
                        //
                        dDTree,
-                       static_cast<uint32_t>(capacity));
+                       static_cast<uint32_t>(newNodeCount));
     
     nodeCount = 0;
 }
