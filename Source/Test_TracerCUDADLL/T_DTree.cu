@@ -28,6 +28,12 @@ std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
 std::ostream& operator<<(std::ostream& s, const DTreeNode& n)
 {
     constexpr uint32_t UINT32_T_MAX = std::numeric_limits<uint32_t>::max();
+    constexpr uint16_t UINT16_T_MAX = std::numeric_limits<uint16_t>::max();
+
+    s << "P{"; 
+    if(n.parentIndex == UINT16_T_MAX) s << "-";
+    else s << n.parentIndex;
+    s << "} ";
     s << "C{";
     if(n.childIndices[0] == UINT32_T_MAX) s << "-";
     else s << n.childIndices[0];
@@ -64,9 +70,9 @@ TEST(PPG_DTree, Empty)
 
     // Constants
     // If a node has %10 or more total energy, split
-    static constexpr float fluxRatio = 0.1f;
+    static constexpr float FLUX_RATIO = 0.1f;
     // Maximum allowed depth of the tree
-    static constexpr uint32_t depthLimit = 10;
+    static constexpr uint32_t DEPTH_LIMIT = 10;
 
     std::vector<DTreeNode> nodes;
     DTreeGPU tree;
@@ -103,7 +109,7 @@ TEST(PPG_DTree, Empty)
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[3]);
 
     // After Swap Check
-    testTree.SwapTrees(system.BestGPU(), fluxRatio, depthLimit);
+    testTree.SwapTrees(system.BestGPU(), FLUX_RATIO, DEPTH_LIMIT);
     system.SyncAllGPUs();
     testTree.GetReadTreeToCPU(tree, nodes);
     EXPECT_EQ(0.0f, tree.irradiance);
@@ -142,12 +148,13 @@ TEST(PPG_DTree, AddThenSwap)
 
     // Constants
     // If a node has %10 or more total energy, split
-    static constexpr float fluxRatio = 0.001f;
+    static constexpr float FLUX_RATIO = 0.001f;
     // Maximum allowed depth of the tree
-    static constexpr uint32_t depthLimit = 10;
+    static constexpr uint32_t DEPTH_LIMIT = 10;
 
+    // Check buffers
     std::vector<DTreeNode> nodes;
-    DTreeGPU tree;
+    DTreeGPU treeGPU;
 
     PathGuidingNode camNode;
     camNode.worldPosition = Vector3f{0.0f, 0.0f, 0.0f};
@@ -224,19 +231,77 @@ TEST(PPG_DTree, AddThenSwap)
     system.SyncAllGPUs();
 
     // Check Tree
-    testTree.GetWriteTreeToCPU(tree, nodes);
+    testTree.GetWriteTreeToCPU(treeGPU, nodes);
+    for(size_t i = 0; i < nodes.size(); i++)
+    {
+        const DTreeNode& node = nodes[i];
+        if(node.parentIndex == std::numeric_limits<uint16_t>::max())
+        {
+            // This is root
+            // Root should be the very first element
+            EXPECT_EQ(0, i);
+            EXPECT_EQ(treeGPU.totalSamples, pathNodes.size());
+            continue;
+        }
+
+        // Only leafs should have value
+        if(node.childIndices[0] != std::numeric_limits<uint32_t>::max())
+            EXPECT_EQ(0.0f, node.irradianceEstimates[0]);
+        if(node.childIndices[1] != std::numeric_limits<uint32_t>::max())
+            EXPECT_EQ(0.0f, node.irradianceEstimates[1]);
+        if(node.childIndices[2] != std::numeric_limits<uint32_t>::max())
+            EXPECT_EQ(0.0f, node.irradianceEstimates[2]);
+        if(node.childIndices[3] != std::numeric_limits<uint32_t>::max())
+            EXPECT_EQ(0.0f, node.irradianceEstimates[3]);
+    }
 
     // Do the swap
-    testTree.SwapTrees(system.BestGPU(), fluxRatio, depthLimit);
+    testTree.SwapTrees(system.BestGPU(), FLUX_RATIO, DEPTH_LIMIT);
     system.SyncAllGPUs();
 
     // Check again
-    testTree.GetReadTreeToCPU(tree, nodes);
+    testTree.GetReadTreeToCPU(treeGPU, nodes);
+    for(size_t i = 0; i < nodes.size(); i++)
+    {
+        const DTreeNode& node = nodes[i];
+        float total = node.irradianceEstimates.Sum();
+        if(node.parentIndex == std::numeric_limits<uint16_t>::max())
+        {
+            // This is root
+            // Root should be the very first element
+            EXPECT_EQ(0, i);
+            EXPECT_EQ(treeGPU.totalSamples, pathNodes.size());
+            EXPECT_FLOAT_EQ(treeGPU.irradiance, total);
+            continue;
+        }
 
-    std::vector<DTreeNode> nodesW;
-    DTreeGPU treeW;
-    testTree.GetWriteTreeToCPU(treeW, nodesW);
-    
+        const DTreeNode& parent = nodes[node.parentIndex];
+        uint32_t childId = UINT32_MAX;
+        childId = (parent.childIndices[0] == i) ? 0 : childId;
+        childId = (parent.childIndices[1] == i) ? 1 : childId;
+        childId = (parent.childIndices[2] == i) ? 2 : childId;
+        childId = (parent.childIndices[3] == i) ? 3 : childId;
+        EXPECT_FLOAT_EQ(total, parent.irradianceEstimates[childId]);
+    }    
+    testTree.GetWriteTreeToCPU(treeGPU, nodes);
+    for(size_t i = 0; i < nodes.size(); i++)
+    {
+        const DTreeNode& node = nodes[i];
+        float total = node.irradianceEstimates.Sum();
+        if(node.parentIndex == std::numeric_limits<uint16_t>::max())
+        {
+            // This is root
+            // Root should be the very first element
+            EXPECT_EQ(0, i);
+            EXPECT_EQ(treeGPU.totalSamples, 0);
+            EXPECT_FLOAT_EQ(treeGPU.irradiance, 0);
+            EXPECT_EQ(treeGPU.nodeCount, 5);
+        }
+        EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[0]);
+        EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[1]);
+        EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[2]);
+        EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[3]);
+    }  
 }
 
 TEST(PPG_DTree, Stress)
@@ -253,16 +318,16 @@ TEST(PPG_DTree, Stress)
     constexpr Vector3f MAX_TOTAL_RADIANCE = Vector3f(1, 1, 1);
     constexpr Vector3f MIN_WORLD_BOUND = Vector3f(-10, -10, -10);
     constexpr Vector3f MAX_WORLD_BOUND = Vector3f(10, 10, 10);
+    // Change depth on each iteration
+    // just sto stress
+    constexpr uint32_t DEPTH_MIN = 0;
+    constexpr uint32_t DEPTH_MAX = 16;    
+    // Also change the flux
+    constexpr float FLUX_MIN = 0.001f;
+    constexpr float FLUX_MAX = 0.1f;
 
     const Vector3f worldBound = MAX_WORLD_BOUND - MIN_WORLD_BOUND;
-
     std::uniform_real_distribution<float> uniformDist(0.0f, 1.0f);
-
-    // Constants
-    // If a node has %10 or more total energy, split
-    static constexpr float fluxRatio = 0.001f;
-    // Maximum allowed depth of the tree
-    static constexpr uint32_t depthLimit = 0;
 
     std::mt19937 rng;
     rng.seed(0);
@@ -281,11 +346,23 @@ TEST(PPG_DTree, Stress)
                           cudaMemcpyHostToDevice));
     hIndices.clear();
     
+    // Check buffer
+    DTreeGPU treeGPU;
+    std::vector<DTreeNode> nodes;
 
+    // Stress the Tree by randomly adding data multiple times
     DTree testTree;
     std::vector<PathGuidingNode> paths(PATH_PER_ITERATION);
     for(int iCount = 0; iCount < ITERATION_COUNT; iCount++)
     {
+        // Constants for this itertion
+        // If a node has %X or more total energy, split
+        const float fluxRatio = FLUX_MIN + uniformDist(rng) * (FLUX_MAX - FLUX_MIN);
+        // Maximum allowed depth of the tree
+        uint32_t depthLimit = DEPTH_MIN + static_cast<uint32_t>(uniformDist(rng) * (DEPTH_MAX - DEPTH_MIN));
+
+        //METU_LOG("Depth %u, Flux %f", depthLimit, fluxRatio);
+
         for(size_t i = 0; i < PATH_PER_ITERATION; i++)
         {
             uint32_t localIndex = i % PATH_PER_RAY;
@@ -305,28 +382,106 @@ TEST(PPG_DTree, Stress)
             paths[i] = p;
         }
 
-        Debug::DumpMemToFile("TESTOO", paths.data(), paths.size());
 
+        // Copy Vertices to the GPU
         CUDA_CHECK(cudaMemcpy(dPathNodes, paths.data(),
                               PATH_PER_ITERATION * sizeof(PathGuidingNode),
                               cudaMemcpyHostToDevice));
-        // Copy Vertices to the GPU
+        // Do add radiance kernel
         testTree.AddRadiancesFromPaths(dIndices, dPathNodes,
                                        ArrayPortion<uint32_t>{DTREE_ID, 0, PATH_PER_ITERATION},
                                        PATH_PER_RAY, system.BestGPU());
         system.SyncAllGPUs();
 
+        // Check if radiance is properly added
+        testTree.GetWriteTreeToCPU(treeGPU, nodes);
+        for(size_t i = 0; i < nodes.size(); i++)
+        {
+            const DTreeNode& node = nodes[i];
+            if(node.parentIndex == std::numeric_limits<uint16_t>::max())
+            {
+                // This is root
+                // Root should be the very first element
+                EXPECT_EQ(0, i);
+                EXPECT_EQ(treeGPU.totalSamples, PATH_PER_ITERATION);
+                continue;
+            }
+
+            // Only leafs should have value
+            if(node.childIndices[0] != std::numeric_limits<uint32_t>::max())
+                EXPECT_EQ(0.0f, node.irradianceEstimates[0]);
+            if(node.childIndices[1] != std::numeric_limits<uint32_t>::max())
+                EXPECT_EQ(0.0f, node.irradianceEstimates[1]);
+            if(node.childIndices[2] != std::numeric_limits<uint32_t>::max())
+                EXPECT_EQ(0.0f, node.irradianceEstimates[2]);
+            if(node.childIndices[3] != std::numeric_limits<uint32_t>::max())
+                EXPECT_EQ(0.0f, node.irradianceEstimates[3]);            
+        }
+
         testTree.SwapTrees(system.BestGPU(), fluxRatio, depthLimit);
         system.SyncAllGPUs();
 
-        // DEBUG
-        DTreeGPU treeW, treeR;
-        std::vector<DTreeNode> nodesW, nodesR;
-        testTree.GetWriteTreeToCPU(treeW, nodesW);
-        testTree.GetReadTreeToCPU(treeR, nodesR);
-        Debug::DumpMemToFile("RT", &treeR, 1);
-        Debug::DumpMemToFile("RTN", nodesR.data(), nodesR.size());
-        Debug::DumpMemToFile("WT", &treeW, 1);
-        Debug::DumpMemToFile("WTN", nodesW.data(), nodesW.size());        
+        // Check integrity of the new write tree
+        testTree.GetWriteTreeToCPU(treeGPU, nodes);
+        for(size_t i = 0; i < nodes.size(); i++)
+        {
+            const DTreeNode& node = nodes[i];
+            EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[0]);
+            EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[1]);
+            EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[2]);
+            EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[3]);
+
+            if(node.parentIndex == std::numeric_limits<uint16_t>::max())
+            {
+                // This is root
+                // Root should be the very first element
+                EXPECT_EQ(0, i);
+                EXPECT_EQ(treeGPU.totalSamples, 0);
+                EXPECT_EQ(0.0f, treeGPU.irradiance);
+                continue;
+            }
+
+            // Try to go to the parent
+            const DTreeNode* n = &node;
+            while(n->parentIndex != std::numeric_limits<uint16_t>::max())
+            {
+                n = &nodes[n->parentIndex];
+            }
+            // After back propogation
+            // check if we actually reached to the parent
+            ptrdiff_t index = n - nodes.data();
+            EXPECT_EQ(0, index);
+        }
+        //// DEBUG
+        //Debug::DumpMemToFile("WT", &treeGPU, 1);
+        //Debug::DumpMemToFile("WTN", nodes.data(), nodes.size());
+
+        // Check integrity of the new read tree
+        testTree.GetReadTreeToCPU(treeGPU, nodes);
+        for(size_t i = 0; i < nodes.size(); i++)
+        {
+            const DTreeNode& node = nodes[i];
+            float total = node.irradianceEstimates.Sum();
+            if(node.parentIndex == std::numeric_limits<uint16_t>::max())
+            {
+                // This is root
+                // Root should be the very first element
+                EXPECT_EQ(0, i);
+                EXPECT_EQ(treeGPU.totalSamples, PATH_PER_ITERATION);
+                EXPECT_FLOAT_EQ(treeGPU.irradiance, total);
+                continue;
+            }
+
+            const DTreeNode& parent = nodes[node.parentIndex];
+            uint32_t childId = UINT32_MAX;
+            childId = (parent.childIndices[0] == i) ? 0 : childId;
+            childId = (parent.childIndices[1] == i) ? 1 : childId;
+            childId = (parent.childIndices[2] == i) ? 2 : childId;
+            childId = (parent.childIndices[3] == i) ? 3 : childId;
+            EXPECT_FLOAT_EQ(total, parent.irradianceEstimates[childId]);
+        }
+        //// DEBUG
+        //Debug::DumpMemToFile("RT", &treeGPU, 1);
+        //Debug::DumpMemToFile("RTN", nodes.data(), nodes.size());    
     }
-}
+ }

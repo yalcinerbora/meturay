@@ -351,11 +351,13 @@ DTreeNode* PunchThroughNode(uint32_t& gNodeAllocLocation, DTreeGPU* gDTree,
             uint32_t parentIndex = static_cast<uint32_t>(node - gDTree->gRoot);
             DTreeNode* childNode = gDTree->gRoot + childIndex;
             childNode->parentIndex = static_cast<uint16_t>(parentIndex);
+
+            //printf("Punched Node %u \n", childIndex);
         }
 
         // Continue Traversal
         localCoords = node->NormalizeCoordsForChild(childId, localCoords);
-        node = gDTree->gRoot + node->childIndices[childId];
+        node = gDTree->gRoot + childIndex;
         currentDepth++;
     }
     //while(currentDepth <= depth);
@@ -450,7 +452,7 @@ static void KCReconstructEmptyTree(// Output
     {
         DTreeNode* siblingNode = gSiblingTree->gRoot + threadId;
         float localIrrad = siblingNode->irradianceEstimates.Sum();
-        float percentFlux = localIrrad / gDTree->irradiance;
+        float percentFlux = localIrrad / gSiblingTree->irradiance;
 
         // Skip if there is no need for this node on the next tree
         if(percentFlux <= fluxRatio) continue;
@@ -474,12 +476,17 @@ static void KCReconstructEmptyTree(// Output
 
             Vector2f childCoordOffset(((childId >> 0) & 0b01) ? 0.5f : 0.0f,
                                       ((childId >> 1) & 0b01) ? 0.5f : 0.0f);
-            discretePoint += childCoordOffset + 0.5f * discretePoint;
+            discretePoint = childCoordOffset + 0.5f * discretePoint;
             depth++;
 
             // Traverse upwards
             n = parentNode;
         }
+
+        // Do not create this not if it is over depth limit
+        if(depth > depthLimit) continue;
+
+        //printf("My Point %f %f \n", discretePoint[0], discretePoint[1]);
 
         // Punchthrough this node to the new tree
         // Meaning, traverse and allocate (if not already allocated)
@@ -488,24 +495,52 @@ static void KCReconstructEmptyTree(// Output
                                                   discretePoint, depth);
         uint32_t punchedNodeId = static_cast<uint32_t>(punchedNode - gDTree->gRoot);
       
+        // Do not create children if children over depth limit
+        if((depth + 1) > depthLimit) continue;
+
         // We allocated up to this point
         // Check childs if they need allocation
+        uint8_t childCount = 0;
+        Vector<4, uint8_t> childOffsets;
+        UNROLL_LOOP
         for(uint32_t i = 0; i < 4; i++)
         {
             float localIrrad = siblingNode->irradianceEstimates[i];
             float percentFlux = localIrrad / gSiblingTree->irradiance;
             
-            if(percentFlux > fluxRatio &&
-               // Iff create if node was not available on the sibling tree
-               siblingNode->IsLeaf(i))
+            // Iff create if node was not available on the sibling tree
+            if(percentFlux > fluxRatio && siblingNode->IsLeaf(i))
             {
-                // Allocate a new node
-                uint32_t childNodeIndex = atomicAdd(&gDTree->nodeCount, 1);
+                childOffsets[i] = childCount;
+                childCount++;
+            }               
+        }
+
+        uint32_t childGlobalOffset = atomicAdd(&gDTree->nodeCount, childCount);
+
+        //printf("Child Count %u, Offsets %u %u %u %u\n",
+        //       static_cast<uint32_t>(childCount),
+        //       static_cast<uint32_t>(childOffsets[0]),
+        //       static_cast<uint32_t>(childOffsets[1]),
+        //       static_cast<uint32_t>(childOffsets[2]),
+        //       static_cast<uint32_t>(childOffsets[3]));
+
+        UNROLL_LOOP
+        for(uint32_t i = 0; i < 4; i++)
+        {
+            float localIrrad = siblingNode->irradianceEstimates[i];
+            float percentFlux = localIrrad / gSiblingTree->irradiance;
+
+            // Iff create if node was not available on the sibling tree
+            if(percentFlux > fluxRatio && siblingNode->IsLeaf(i))
+            {
+                // Allocate a new node                
+                uint32_t childNodeIndex = childGlobalOffset + childOffsets[i];
                 DTreeNode* childNode = gDTree->gRoot + childNodeIndex;
                 childNode->parentIndex = static_cast<uint16_t>(punchedNodeId);
                 punchedNode->childIndices[i] = childNodeIndex;
 
-                printf("SET_CHILD %u TO %u\n", i, childNodeIndex);
+                //printf("Creating Child %u \n", childNodeIndex);
             }
         }
         // All Done!

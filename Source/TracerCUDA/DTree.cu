@@ -192,6 +192,10 @@ void DTree::AddRadiancesFromPaths(const uint32_t* dNodeIndexArray,
                        dPathNodes,
                        nodeCount,
                        maxPathNodePerRay);
+
+    uint32_t totalSampleCount = static_cast<uint32_t>(portion.count);
+    CUDA_CHECK(cudaMemcpy(&writeTree.TreeGPU()->totalSamples, &totalSampleCount,
+                          sizeof(uint32_t), cudaMemcpyHostToDevice));               
 }
 
 void DTree::GetReadTreeToCPU(DTreeGPU& tree, std::vector<DTreeNode>& nodes) const
