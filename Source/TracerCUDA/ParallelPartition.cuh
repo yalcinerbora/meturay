@@ -22,7 +22,6 @@ struct ValidSplit
     }
 };
 
-
 template <class T, class Key, class FetchFunctor>
 __global__
 static void KCFetch(Key* gKeyOut,
@@ -37,31 +36,55 @@ static void KCFetch(Key* gKeyOut,
     }
 }
 
+template<class Key>
 __global__
 static void KCMarkSplits(uint32_t* gPartLoc,
-                         const uint32_t* gKeys,
+                         const Key* gKeys,
                          const uint32_t locCount)
 {
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < locCount;
         globalId += blockDim.x * gridDim.x)
     {
-        uint32_t key = gKeys[globalId];
-        uint32_t keyN = gKeys[globalId + 1];
+        Key key = gKeys[globalId];
+        Key keyN = gKeys[globalId + 1];
 
-                // Write location if split is found
+        // Write they if split is found
         if(key != keyN) gPartLoc[globalId + 1] = globalId + 1;
         else gPartLoc[globalId + 1] = INVALID_LOCATION;
     }
 }
+
+template <class Key>
+__global__
+static void KCFindSplitBatches(Key* gDenseKeys,
+                               const uint32_t* gDenseIndices,
+                               const Key* gSparseKeys,
+                               const uint32_t denseCount)
+{
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < denseCount;
+        globalId += blockDim.x * gridDim.x)
+    {
+        uint32_t index = gDenseIndices[globalId];
+        Key key = gSparseKeys[index];
+        gDenseKeys[globalId] = key;
+    }
+}
+
 
 template<class Type, class Key, class KeyFetchFunctor>
 __host__ void PartitionGPU(std::set<ArrayPortion<Key>>& segmentList,
                            DeviceMemory& sortedIndexBuffer,
                            const Type* dArray, size_t elementCount,
                            KeyFetchFunctor f,
+                           Key maxKey,
                            cudaStream_t stream = (cudaStream_t)0)
 {
+    // This is memory problem that i was too lazy to fix
+    static_assert(sizeof(Key) == sizeof(uint32_t),
+                  "Partition code only works with 32-bit width Keys");
+
     static constexpr unsigned int TPB = StaticThreadPerBlock1D;
     uint32_t totalCount = static_cast<uint32_t>(elementCount);
 
@@ -80,8 +103,7 @@ __host__ void PartitionGPU(std::set<ArrayPortion<Key>>& segmentList,
 
     // Generate Index List
     IotaGPU(static_cast<uint32_t*>(sortedIndexBuffer0), totalCount, 0);
-
-    //
+    // Generate Keys
     unsigned int gridSize = static_cast<unsigned int>((totalCount + TPB - 1) / TPB);
     KCFetch<<<gridSize, TPB, 0, stream>>>
     (
@@ -90,17 +112,17 @@ __host__ void PartitionGPU(std::set<ArrayPortion<Key>>& segmentList,
         totalCount,
         f
     );
-    
+   
     // Do not sort all 32-bits
     int bitStart = 0;
-    int bitEnd = (totalCount == 0) ? 0 : (Utility::FindLastSet32(totalCount) + 1);
+    int bitEnd = (maxKey == 0) ? 0 : (Utility::FindLastSet32(maxKey) + 1);
 
     // Check temp memory requirements of the kernels and alloc mem
     size_t sortTempBufferSize;
     CUDA_CHECK(cub::DeviceRadixSort::SortPairs(nullptr, sortTempBufferSize,
                                                dbKeys, dbIndices,
                                                static_cast<int>(totalCount),
-                                               bitStart, bitEnd));
+                                               bitStart, bitEnd, stream));
 
     size_t ifTempBufferSize;
     CUDA_CHECK(cub::DeviceSelect::If(nullptr, ifTempBufferSize,
@@ -108,14 +130,14 @@ __host__ void PartitionGPU(std::set<ArrayPortion<Key>>& segmentList,
                                      static_cast<uint32_t*>(sortedIndexBuffer0),
                                      static_cast<uint32_t*>(sortedIndexBuffer0),
                                      static_cast<int>(totalCount),
-                                     ValidSplit()));
+                                     ValidSplit(), stream));
     DeviceMemory tempBuffer(std::max(ifTempBufferSize, sortTempBufferSize));
 
     // Now do the actual sorting
     CUDA_CHECK(cub::DeviceRadixSort::SortPairs(static_cast<void*>(tempBuffer), sortTempBufferSize,
                                                dbKeys, dbIndices,
                                                static_cast<int>(totalCount),
-                                               bitStart, bitEnd));
+                                               bitStart, bitEnd, stream));
 
     // Check which buffers are used etc.
     // Get one of the buffers for If Kernel output
@@ -141,20 +163,64 @@ __host__ void PartitionGPU(std::set<ArrayPortion<Key>>& segmentList,
         sortedIndices = std::move(sortedIndexBuffer1);
         ifInput = std::move(sortedIndexBuffer0);
     }    
-    //// First find split locations
-    //uint32_t locCount = totalNodeCount - 1;
-    //bestGPU.GridStrideKC_X(0, 0, totalNodeCount,
-    //                       KCMarkSplits,
-    //                       ifInput, sortedIds,
-    //                       locCount);
+    // First find split locations
+    uint32_t locCount = totalCount - 1;
+    gridSize = static_cast<unsigned int>((locCount + TPB - 1) / TPB);
+    KCMarkSplits<<<gridSize, TPB, 0, stream>>>
+    (
+        static_cast<uint32_t*>(ifInput),
+        static_cast<Key*>(sortedIds),
+        locCount
+    );
 
-    //CUDA_CHECK(cub::DeviceSelect::If(static_cast<void*>(tempBuffer), ifTempBufferSize,
-    //                                 ifOutput, ifInput, ---,
-    //                                 static_cast<int>(totalNodeCount),
-    //                                 ValidSplit()));
+    // We have start location of each partition densely packed
+    uint32_t* dSplitCount = static_cast<uint32_t*>(ifOutput);
+    uint32_t* dDenseSplitIndices = static_cast<uint32_t*>(ifOutput) + 1;
+    CUDA_CHECK(cub::DeviceSelect::If(static_cast<void*>(tempBuffer), ifTempBufferSize,
+                                     static_cast<uint32_t*>(ifInput),
+                                     dDenseSplitIndices, dSplitCount,
+                                     static_cast<int>(totalCount),
+                                     ValidSplit(), stream));
+    CUDA_CHECK(cudaStreamSynchronize(stream));
 
-    // We have start location of each partition
-    //
+    // Load the dense size (so we can allocate)
+    uint32_t hSelectCount;
+    CUDA_CHECK(cudaMemcpy(&hSelectCount, dSplitCount,
+                          sizeof(uint32_t), cudaMemcpyDeviceToHost));
+
+    Key* dDenseKeys = static_cast<uint32_t*>(ifInput);
+    gridSize = static_cast<unsigned int>((locCount + TPB - 1) / TPB);
+    KCFindSplitBatches<<<gridSize, TPB, 0, stream>>>
+    (
+        dDenseKeys,
+        dDenseSplitIndices,
+        static_cast<Key*>(sortedIds), // Aka sparse keys
+        hSelectCount
+    );
+
+    // Fetch these to host
+    std::vector<Key> hDenseKeys(hSelectCount);
+    std::vector<uint32_t> hDenseIndices(hSelectCount);
+    CUDA_CHECK(cudaMemcpy(hDenseKeys.data(), dDenseKeys,
+                          sizeof(Key) * hSelectCount,
+                          cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(hDenseIndices.data(), dDenseSplitIndices,
+                          sizeof(uint32_t) * hSelectCount,
+                          cudaMemcpyDeviceToHost));
 
     // Sorted All nodes now do partition
+    // Construct The Set
+    // Add extra index to end as rayCount for cleaner code
+    hDenseIndices.push_back(totalCount);
+    std::set<ArrayPortion<Key>> partitions;
+    for(uint32_t i = 0; i < hSelectCount; i++)
+    {
+        Key id = hDenseKeys[i];
+        uint32_t offset = hDenseIndices[i];
+        size_t count = hDenseIndices[i + 1] - hDenseIndices[i];
+        partitions.emplace(ArrayPortion<uint32_t>{id, offset, count});
+    }
+    // Done!
+    segmentList = std::move(partitions);
+    sortedIndexBuffer = std::move(sortedIndices);    
 }

@@ -41,5 +41,6 @@ void STree::AccumulateRaidances(const PathGuidingNode* dPGNodes,
     CUDA_CHECK(cudaSetDevice(bestGPU.DeviceId()));    
     PartitionGPU(partitions, sortedIndices,
                  dPGNodes, totalNodeCount,
-                 FetchTreeIdFunctor());
+                 FetchTreeIdFunctor(),
+                 static_cast<uint32_t>(dTrees.size()));
 }
