@@ -11,20 +11,23 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\Test_TracerCUDADLL\T_DTree.cu" />
-    <CudaCompile Include="..\..\..\Source\Test_TracerCUDADLL\T_ParallelReduction.cu" />
-    <CudaCompile Include="..\..\..\Source\Test_TracerCUDADLL\T_ParallelScan.cu" />
-    <CudaCompile Include="..\..\..\Source\Test_TracerCUDADLL\T_PiecewiseDistribution.cu" />
-    <CudaCompile Include="..\..\..\Source\Test_TracerCUDADLL\T_RandomGPU.cu" />
-    <CudaCompile Include="..\..\..\Source\Test_TracerCUDADLL\T_Texture.cu" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\Source\Test_TracerCUDADLL\main.cpp" />
+    <ClCompile Include="..\..\..\Source\Test_TracerCUDA\main.cpp" />
+    <CudaCompile Include="..\..\..\Source\Test_TracerCUDA\T_STree.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">
       <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\..\Source\Test_TracerCUDA\T_DTree.cu" />
+    <CudaCompile Include="..\..\..\Source\Test_TracerCUDA\T_ParallelReduction.cu" />
+    <CudaCompile Include="..\..\..\Source\Test_TracerCUDA\T_ParallelScan.cu" />
+    <CudaCompile Include="..\..\..\Source\Test_TracerCUDA\T_PiecewiseDistribution.cu" />
+    <CudaCompile Include="..\..\..\Source\Test_TracerCUDA\T_RandomGPU.cu" />
+    <CudaCompile Include="..\..\..\Source\Test_TracerCUDA\T_Texture.cu" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C18DE611-BC91-456C-A2B6-F4CAFEFE48CC}</ProjectGuid>

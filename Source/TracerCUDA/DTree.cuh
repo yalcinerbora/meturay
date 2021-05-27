@@ -2,7 +2,9 @@
 
 /**
 
-DTree Implementation
+STree Implementation from PPG
+
+[Müller et al. 2017] https://dl.acm.org/doi/10.1111/cgf.13227
 
 */ 
 

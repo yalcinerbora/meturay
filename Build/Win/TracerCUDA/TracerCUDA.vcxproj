@@ -69,6 +69,8 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUWork.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MetaMaterialFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUSurface.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelPartition.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelSequence.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelTransform.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathNode.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracerKC.cuh" />
@@ -187,6 +189,7 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\SimpleMaterials.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\STree.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cu" />
   </ItemGroup>
   <ItemGroup>

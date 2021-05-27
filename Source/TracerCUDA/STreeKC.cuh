@@ -40,7 +40,7 @@ class STreeGPU
         AABB3f              extents;
 
     public:
-        __device__ void     AcquireDTree(uint32_t& dTreeIndex, const Vector3f& worldPos);
+        __device__ void     AcquireNearesDTree(uint32_t& dTreeIndex, const Vector3f& worldPos);
 };
 
 __device__ __forceinline__
@@ -49,7 +49,7 @@ bool STreeNode::DetermineChild(const Vector3f& normalizedCoords) const
     // Binary tree is always mid split so check half
     return normalizedCoords[static_cast<int>(splitAxis)] >= 0.5f;
 }
-// Normalize coordinates for the next iteration
+
 __device__ __forceinline__
 Vector3f STreeNode::NormalizeCoordsForChild(bool leftRight,
                                             const Vector3f& parentNormalizedCoords) const
@@ -69,10 +69,10 @@ STreeNode::AxisType STreeNode::NextAxis(STreeNode::AxisType t)
 }
 
 __device__ __forceinline__
-void STreeGPU::AcquireDTree(uint32_t& dTreeIndex,
-                            const Vector3f& worldPos)
+void STreeGPU::AcquireNearesDTree(uint32_t& dTreeIndex,
+                                  const Vector3f& worldPos)
 {
-    dTreeIndex == UINT32_MAX;
+    dTreeIndex = UINT32_MAX;
     if(gRoot == nullptr) return;
 
     // Convert to Normalized Tree Space
@@ -97,23 +97,21 @@ void STreeGPU::AcquireDTree(uint32_t& dTreeIndex,
     while(true);
 }
 
-
 class SplitCountFunctor
 {
 
 };
 
-
 __global__ //CUDA_LAUNCH_BOUNDS_1D
-void SplitSTree(STreeNode* gRoot,
-                const uint32_t* gLeafIndices,
-                const uint32_t* gLeafAllocLocations,
-                // Split Threshold
-                uint32_t sTreeSplitThreshold,
-                // Last empty spot on the root array
-                uint32_t lastEmptySpot,
-                // Total Leafs to be 
-                uint32_t leafCount)
+static void SplitSTree(STreeNode* gRoot,
+                       const uint32_t* gLeafIndices,
+                       const uint32_t* gLeafAllocLocations,
+                       // Split Threshold
+                       uint32_t sTreeSplitThreshold,
+                       // Last empty spot on the root array
+                       uint32_t lastEmptySpot,
+                       // Total Leafs to be 
+                       uint32_t leafCount)
 {
     // Kernel Grid - Stride Loop
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
@@ -124,7 +122,7 @@ void SplitSTree(STreeNode* gRoot,
         STreeNode* leafNode = gRoot + gLeafIndices[threadId];
 
         // Check if this leaf should split
-        if(m_samples...)
+        if(true)
         {
             // We are splitting 
             uint32_t childrenLoc = gLeafAllocLocations[threadId];
@@ -150,12 +148,12 @@ void SplitSTree(STreeNode* gRoot,
 }
 
 __global__ //CUDA_LAUNCH_BOUNDS_1D
-void SplitSTree(STreeNode* gRoot,
-                const uint32_t* gLeafIndices,
-                const uint32_t* gLeafAllocLocations,
-                // Options
-                uint32_t sTreeSplitThreshold,
-                uint32_t leafCount)
+static void SplitSTree(STreeNode* gRoot,
+                       const uint32_t* gLeafIndices,
+                       const uint32_t* gLeafAllocLocations,
+                       // Options
+                       uint32_t sTreeSplitThreshold,
+                       uint32_t leafCount)
 {
     // Kernel Grid - Stride Loop
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
@@ -166,7 +164,7 @@ void SplitSTree(STreeNode* gRoot,
         STreeNode* leafNode = gRoot + gLeafIndices[threadId];
 
         // Check if this leaf should split
-        if(m_samples...)
+        if(true)
         {
             // We are splitting 
             uint32_t childrenLoc = gLeafAllocLocations[threadId];

@@ -7,7 +7,6 @@
 #include "TracerCUDA/DTree.cuh"
 #include "TracerCUDA/CudaSystem.h"
 #include "TracerCUDA/DTreeKC.cuh"
-//#include "TracerCUDA/PathNode.h"
 
 #include "TracerCUDA/TracerDebug.h"
 

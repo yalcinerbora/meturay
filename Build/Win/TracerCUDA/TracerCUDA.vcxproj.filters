@@ -513,6 +513,12 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathNode.cuh">
       <Filter>Tracers\Structs</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelSequence.cuh">
+      <Filter>GPU Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelPartition.cuh">
+      <Filter>GPU Algorithms</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">
@@ -633,6 +639,9 @@
       <Filter>Tracers\AOTracer</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DTree.cu">
+      <Filter>Tracers\PPGTracer</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\STree.cu">
       <Filter>Tracers\PPGTracer</Filter>
     </CudaCompile>
   </ItemGroup>

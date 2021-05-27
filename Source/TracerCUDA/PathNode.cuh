@@ -15,7 +15,6 @@ information
 
 #include "RayLib/Vector.h"
 
-
 // Path node is base class for path related data
 // It is designed to have minimal memory footprint in order to save
 // well memory especially on GPU Hardware

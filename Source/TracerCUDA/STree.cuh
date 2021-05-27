@@ -23,28 +23,45 @@ class CudaSystem;
 class STree
 {
     private:
-        DeviceMemory        sTreeNodeMemory;
-        STreeNode*          dSTreeNodes;
-        //
-        STreeGPU            sTreeGPU;
-
+        // Device Memory
+        DeviceMemory    memory;
+        STreeGPU*       dSTree;
+        size_t          nodeCount;
+       
+        // DTree Allocations
         std::vector<DTree>  dTrees;
-        
-        
 
+        // DTree Buffer for Tracer
+        DeviceMemory        readDTreeGPUBuffer;
+        const DTreeGPU*     dDTreesRead;
+        
     protected:
 
     public:
         // Constructors & Destructor
-                        STree(const AABB3f& sceneExtents);
-                        STree(const STree&) = delete;
-                        STree(STree&&) = default;
-        STree&          operator=(const STree&) = delete;
-        STree&          operator=(STree&&) = default;
-                        ~STree() = default;
+                            STree(const AABB3f& sceneExtents);
+                            STree(const STree&) = delete;
+                            STree(STree&&) = default;
+        STree&              operator=(const STree&) = delete;
+        STree&              operator=(STree&&) = default;
+                            ~STree() = default;
 
         // Members
-        void            SplitLeaves(const CudaSystem&);
+        void                SplitLeaves(const CudaSystem&);
+        void                AccumulateRaidances(const PathGuidingNode* dPGNodes, 
+                                                uint32_t totalNodeCount,
+                                                uint32_t maxPathNodePerRay,
+                                                const CudaSystem&);
+
+        void                TreeGPU(const STreeGPU*& dSTree,
+                                    const DTreeGPU*& dDTrees) const;
 
 
 };
+
+inline void STree::TreeGPU(const STreeGPU*& dSTreeOut,
+                           const DTreeGPU*& dDTreesOut) const
+{
+    dSTreeOut = dSTree;
+    dDTreesOut = dDTreesRead;
+}
