@@ -25,10 +25,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MRay", "MRay\MRay.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TracerCUDA", "TracerCUDA\TracerCUDA.vcxproj", "{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test_TracerCUDADLL", "Test_TracerCUDADLL\Test_TracerCUDADLL.vcxproj", "{C18DE611-BC91-456C-A2B6-F4CAFEFE48CC}"
-	ProjectSection(ProjectDependencies) = postProject
-		{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2} = {DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test_TracerCUDA", "Test_TracerCUDA\Test_TracerCUDA.vcxproj", "{C18DE611-BC91-456C-A2B6-F4CAFEFE48CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
