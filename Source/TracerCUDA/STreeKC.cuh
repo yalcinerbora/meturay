@@ -33,14 +33,13 @@ struct STreeNode
     static AxisType         NextAxis(AxisType t);
 };
 
-class STreeGPU
-{
-    private:
-        STreeNode*          gRoot;
-        AABB3f              extents;
-
-    public:
-        __device__ void     AcquireNearesDTree(uint32_t& dTreeIndex, const Vector3f& worldPos);
+struct STreeGPU
+{    
+    STreeNode*          gRoot;
+    uint32_t            nodeCount;
+    AABB3f              extents;
+    
+    __device__ void     AcquireNearestDTree(uint32_t& dTreeIndex, const Vector3f& worldPos);
 };
 
 __device__ __forceinline__
@@ -69,15 +68,15 @@ STreeNode::AxisType STreeNode::NextAxis(STreeNode::AxisType t)
 }
 
 __device__ __forceinline__
-void STreeGPU::AcquireNearesDTree(uint32_t& dTreeIndex,
-                                  const Vector3f& worldPos)
+void STreeGPU::AcquireNearestDTree(uint32_t& dTreeIndex,
+                                   const Vector3f& worldPos)
 {
     dTreeIndex = UINT32_MAX;
     if(gRoot == nullptr) return;
 
     // Convert to Normalized Tree Space
     Vector3f normalizedCoords = worldPos - extents.Min();
-    normalizedCoords /= extents.Max() - extents.Min();
+    normalizedCoords /= (extents.Max() - extents.Min());
 
     const STreeNode* node = gRoot;    
     do

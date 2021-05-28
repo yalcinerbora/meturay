@@ -15,6 +15,10 @@ TEST(PPG_STree, Empty)
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
 
+    // Arbitrary Scene Extents
+    AABB3f worldAABB(Vector3f(-10.0f), Vector3f(10.0f));
+    STree tree(worldAABB);
+
     //// Constants
     //// If a node has %10 or more total energy, split
     //static constexpr float FLUX_RATIO = 0.1f;

@@ -23,10 +23,12 @@ class CudaSystem;
 class STree
 {
     private:
+        static constexpr size_t INITIAL_NODE_CAPACITY = 1'000;
+
         // Device Memory
-        DeviceMemory    memory;
-        STreeGPU*       dSTree;
-        size_t          nodeCount;
+        DeviceMemory        memory;
+        STreeGPU*           dSTree;
+        size_t              nodeCount;
        
         // DTree Allocations
         std::vector<DTree>  dTrees;
@@ -35,6 +37,8 @@ class STree
         DeviceMemory        readDTreeGPUBuffer;
         const DTreeGPU*     dDTreesRead;
         
+        void                ExpandTree(size_t newNodeCount);
+
     protected:
 
     public:
