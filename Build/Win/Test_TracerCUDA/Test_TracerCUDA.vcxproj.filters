@@ -11,5 +11,6 @@
     <CudaCompile Include="..\..\..\Source\Test_TracerCUDA\T_PiecewiseDistribution.cu" />
     <CudaCompile Include="..\..\..\Source\Test_TracerCUDA\T_RandomGPU.cu" />
     <CudaCompile Include="..\..\..\Source\Test_TracerCUDA\T_Texture.cu" />
+    <CudaCompile Include="..\..\..\Source\Test_TracerCUDA\T_ParallelPartition.cu" />
   </ItemGroup>
 </Project>

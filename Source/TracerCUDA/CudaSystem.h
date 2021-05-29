@@ -216,8 +216,7 @@ using GPUList = std::set<CudaGPU>;
 class CudaSystem
 {
     private:
-        GPUList                systemGPUs;
-        //CudaError                           systemStatus;
+        GPUList                     systemGPUs;
 
     protected:
     public:

@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\Test_TracerCUDA\main.cpp" />
+    <CudaCompile Include="..\..\..\Source\Test_TracerCUDA\T_ParallelPartition.cu" />
     <CudaCompile Include="..\..\..\Source\Test_TracerCUDA\T_STree.cu">
       <FileType>Document</FileType>
     </CudaCompile>
