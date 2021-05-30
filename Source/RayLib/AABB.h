@@ -36,8 +36,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
     template <class... Args0, class... Args1,
         typename = AllArithmeticEnable<Args1...>,
         typename = AllArithmeticEnable<Args0...>>
-        constexpr __device__ __host__               AABB(const Args0... dataList0,
-                                                         const Args1... dataList1);
+        constexpr __device__ __host__           AABB(const Args0... dataList0,
+                                                     const Args1... dataList1);
     ~AABB() = default;
 
     // Accessors
@@ -51,9 +51,10 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
     __device__ __host__ void                    SetMax(const Vector<N, T>&);
 
     // Functionality
+    __device__ __host__ Vector<N, T>            Span() const;
     __device__ __host__ Vector<N, T>            Centroid() const;
     __device__ __host__ AABB                    Union(const AABB&) const;
-    __device__ __host__ AABB& UnionSelf(const AABB&);
+    __device__ __host__ AABB&                   UnionSelf(const AABB&);
 };
 
 // Typeless aabbs are defaulted to float

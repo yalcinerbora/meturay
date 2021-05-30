@@ -3,8 +3,11 @@
 
 #include "RayLib/Vector.h"
 #include "RayLib/AABB.h"
+#include "DTreeKC.cuh"
 
 #include "CudaSystem.h"
+
+static constexpr uint32_t INVALID_NODE = std::numeric_limits<uint32_t>::max();
 
 struct STreeNode
 {
@@ -39,7 +42,7 @@ struct STreeGPU
     uint32_t            nodeCount;
     AABB3f              extents;
     
-    __device__ void     AcquireNearestDTree(uint32_t& dTreeIndex, const Vector3f& worldPos);
+    __device__ void     AcquireNearestDTree(uint32_t& dTreeIndex, const Vector3f& worldPos) const;
 };
 
 __device__ __forceinline__
@@ -69,7 +72,7 @@ STreeNode::AxisType STreeNode::NextAxis(STreeNode::AxisType t)
 
 __device__ __forceinline__
 void STreeGPU::AcquireNearestDTree(uint32_t& dTreeIndex,
-                                   const Vector3f& worldPos)
+                                   const Vector3f& worldPos) const
 {
     dTreeIndex = UINT32_MAX;
     if(gRoot == nullptr) return;
@@ -96,94 +99,83 @@ void STreeGPU::AcquireNearestDTree(uint32_t& dTreeIndex,
     while(true);
 }
 
-class SplitCountFunctor
-{
-
-};
-
 __global__ //CUDA_LAUNCH_BOUNDS_1D
-static void SplitSTree(STreeNode* gRoot,
-                       const uint32_t* gLeafIndices,
-                       const uint32_t* gLeafAllocLocations,
-                       // Split Threshold
-                       uint32_t sTreeSplitThreshold,
-                       // Last empty spot on the root array
-                       uint32_t lastEmptySpot,
-                       // Total Leafs to be 
-                       uint32_t leafCount)
+static void KCMarkSTreeSplitLeaf(uint32_t* leafIndices,
+                                 //
+                                 const STreeGPU& gTree,
+                                 DTreeGPU** gDTrees,
+                                 //
+                                 uint32_t treeSplitThreshold,
+                                 // Total Node count
+                                 uint32_t nodeCount)
 {
     // Kernel Grid - Stride Loop
-    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
-        threadId < leafCount; 
-        threadId += (blockDim.x * gridDim.x))
+    for(uint32_t globalId = threadIdx.x + blockDim.x * blockIdx.x;
+        globalId < nodeCount;
+        globalId += (blockDim.x * gridDim.x))
     {
-        // For each leaf
-        STreeNode* leafNode = gRoot + gLeafIndices[threadId];
+        const STreeNode* node = gTree.gRoot + globalId;
 
-        // Check if this leaf should split
-        if(true)
+        uint32_t output = INVALID_NODE;
+        if(node->isLeaf)
         {
-            // We are splitting 
-            uint32_t childrenLoc = gLeafAllocLocations[threadId];
-            STreeNode* gLeft = gRoot + lastEmptySpot + childrenLoc;
-            STreeNode* gRight = gLeft + 1;
-            STreeNode::AxisType nextAxis = STreeNode::NextAxis(leafNode->splitAxis);
-
-            uint32_t dTreeIndex = leafNode->index;
-            leafNode->isLeaf = false;
-            leafNode->index = childrenLoc;
-
-            gLeft->isLeaf = true;
-            gLeft->splitAxis = nextAxis;
-            gLeft->index = dTreeIndex;
-
-            gRight->isLeaf = true;
-            gRight->splitAxis = nextAxis;
-            gRight->index = dTreeIndex;
-
-            // Allocate 2x
+            // Check if this leaf should split
+            uint32_t totalSamples = gDTrees[node->index]->totalSamples;
+            if(totalSamples > treeSplitThreshold)
+            {
+                // Pre divide the sample count since this leaf will be split
+                gDTrees[node->index]->totalSamples /= 2;
+                output = globalId;  
+            }
         }
+        leafIndices[globalId] = output;
     }
 }
 
 __global__ //CUDA_LAUNCH_BOUNDS_1D
-static void SplitSTree(STreeNode* gRoot,
-                       const uint32_t* gLeafIndices,
-                       const uint32_t* gLeafAllocLocations,
-                       // Options
-                       uint32_t sTreeSplitThreshold,
-                       uint32_t leafCount)
+static void KCSplitSTree(uint32_t* gOldTrees,
+                         STreeGPU& gTree,
+                         //
+                         const uint32_t* gLeafIndices,
+                         // Options
+                         uint32_t leafAllocStartIndex,
+                         uint32_t treeAllocStartIndex,
+                         uint32_t splitLeafCount)
 {
     // Kernel Grid - Stride Loop
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
-        threadId < leafCount; 
+        threadId < splitLeafCount;
         threadId += (blockDim.x * gridDim.x))
     {
-        // For each leaf
-        STreeNode* leafNode = gRoot + gLeafIndices[threadId];
+        // For each split node
+        STreeNode* leafNode = gTree.gRoot + gLeafIndices[threadId];
 
-        // Check if this leaf should split
-        if(true)
-        {
-            // We are splitting 
-            uint32_t childrenLoc = gLeafAllocLocations[threadId];
-            STreeNode* gLeft = gRoot + childrenLoc;
-            STreeNode* gRight = gLeft + 1;
-            STreeNode::AxisType nextAxis = STreeNode::NextAxis(leafNode->splitAxis);
+        // Determine child loc from allocation offsets
+        uint32_t childrenLoc = leafAllocStartIndex + threadId * 2;
+        uint32_t newTreeIndex = treeAllocStartIndex + threadId;
+        
+        // We are splitting             
+        STreeNode* gLeft = gTree.gRoot + childrenLoc;
+        STreeNode* gRight = gLeft + 1;
+        STreeNode::AxisType nextAxis = STreeNode::NextAxis(leafNode->splitAxis);
 
-            uint32_t dTreeIndex = leafNode->index;
-            leafNode->isLeaf = false;
-            leafNode->index = childrenLoc;
+        // Do the wiring
+        uint32_t oldTreeIndex = leafNode->index;
+        leafNode->isLeaf = false;
+        leafNode->index = childrenLoc;
 
-            gLeft->isLeaf = true;
-            gLeft->splitAxis = nextAxis;
-            gLeft->index = dTreeIndex;
+        gLeft->isLeaf = true;
+        gLeft->splitAxis = nextAxis;
+        // Left child acquires the old tree
+        gLeft->index = oldTreeIndex;
 
-            gRight->isLeaf = true;
-            gRight->splitAxis = nextAxis;
-            gRight->index = dTreeIndex;
+        gRight->isLeaf = true;
+        gRight->splitAxis = nextAxis;
+        // Right child on the other hand gets a new tree
+        gRight->index = newTreeIndex;
 
-            // Subdivide the
-        }
+        // Copy the old tree so that cpu will copy it to the new tree
+        // New tree location is implicit so no need to store
+        gOldTrees[threadId] = oldTreeIndex;
     }
 }

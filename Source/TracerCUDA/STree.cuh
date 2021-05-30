@@ -15,7 +15,6 @@ This is a GPU-oriented implementation of such tree
 
 #include "STreeKC.cuh"
 #include "DeviceMemory.h"
-
 #include "DTree.cuh"
 
 class CudaSystem;
@@ -35,10 +34,15 @@ class STree
 
         // DTree Buffer for Tracer
         DeviceMemory        readDTreeGPUBuffer;
-        const DTreeGPU*     dDTreesRead;
+        const DTreeGPU**    dReadDTrees;
         
+        DeviceMemory        LinearizeDTreeGPUPtrs(bool readTree);
         void                ExpandTree(size_t newNodeCount);
-
+        void                SplitLeaves(uint32_t maxSamplesPerNode,
+                                        const CudaSystem&);
+        void                SwapTrees(float fluxRatio,
+                                      uint32_t depthLimit,
+                                      const CudaSystem& system);
     protected:
 
     public:
@@ -51,21 +55,35 @@ class STree
                             ~STree() = default;
 
         // Members
-        void                SplitLeaves(const CudaSystem&);
+        void                SplitAndSwapTrees(uint32_t sTreeMaxSamplePerLeaf,
+                                              float dTreeFluxRatio, 
+                                              uint32_t dTreeDepthLimit, 
+                                              const CudaSystem& system);
+                            
         void                AccumulateRaidances(const PathGuidingNode* dPGNodes, 
                                                 uint32_t totalNodeCount,
                                                 uint32_t maxPathNodePerRay,
                                                 const CudaSystem&);
 
+
         void                TreeGPU(const STreeGPU*& dSTree,
-                                    const DTreeGPU*& dDTrees) const;
+                                    const DTreeGPU**& dDTrees) const;
+        uint32_t            TotalTreeCount() const;
+
+        // Debugging
+        void                GetTreeToCPU(STreeGPU&, std::vector<STreeNode>&) const;
 
 
 };
 
 inline void STree::TreeGPU(const STreeGPU*& dSTreeOut,
-                           const DTreeGPU*& dDTreesOut) const
+                           const DTreeGPU**& dDTreesOut) const
 {
     dSTreeOut = dSTree;
-    dDTreesOut = dDTreesRead;
+    dDTreesOut = dReadDTrees;
+}
+
+inline uint32_t STree::TotalTreeCount() const
+{
+    return static_cast<uint32_t>(dTrees.size());
 }

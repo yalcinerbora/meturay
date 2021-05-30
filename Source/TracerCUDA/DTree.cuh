@@ -71,14 +71,19 @@ class DTree
                                 ~DTree() = default;
 
         // Members        
-        void                    SwapTrees(const CudaGPU&, float fluxRatio, 
-                                          uint32_t depthLimit);
+        void                    SwapTrees(float fluxRatio, 
+                                          uint32_t depthLimit,
+                                          const CudaGPU&);
         void                    AddRadiancesFromPaths(const uint32_t* dNodeIndexArray,
                                                       const PathGuidingNode* dPathNodes,
                                                       const ArrayPortion<uint32_t>& portion,
                                                       uint32_t maxPathNodePerRay,
                                                       const CudaGPU&);
-        
+        // Access
+        DTreeGPU*               TreeGPU(bool readTree);
+        const DTreeGPU*         TreeGPU(bool writeTree) const;
+
+        // Debugging
         void                    GetReadTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
         void                    GetWriteTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
 
@@ -96,4 +101,16 @@ inline const DTreeGPU* DTree::DTreeBuffer::TreeGPU() const
 inline size_t DTree::DTreeBuffer::NodeCount() const
 {
     return nodeCount;
+}
+
+inline DTreeGPU* DTree::TreeGPU(bool fetchReadTree)
+{
+    DTreeBuffer& b = (fetchReadTree) ? readTree : writeTree;
+    return b.TreeGPU();
+}
+
+inline const DTreeGPU* DTree::TreeGPU(bool fetchReadTree) const
+{
+    const DTreeBuffer& b = (fetchReadTree) ? readTree : writeTree;
+    return b.TreeGPU();
 }

@@ -69,9 +69,16 @@ void AABB<N, T>::SetMax(const Vector<N, T>& v)
 
 template<int N, class T>
 __device__ __host__ HYBRID_INLINE
+Vector<N, T> AABB<N, T>::Span() const
+{
+    return (max - min);
+}
+
+template<int N, class T>
+__device__ __host__ HYBRID_INLINE
 Vector<N, T> AABB<N, T>::Centroid() const
 {
-    return (max - min) * static_cast<T>(0.5);
+    return Span() * static_cast<T>(0.5);
 }
 
 template<int N, class T>

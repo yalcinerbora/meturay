@@ -108,7 +108,7 @@ TEST(PPG_DTree, Empty)
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[3]);
 
     // After Swap Check
-    testTree.SwapTrees(system.BestGPU(), FLUX_RATIO, DEPTH_LIMIT);
+    testTree.SwapTrees(FLUX_RATIO, DEPTH_LIMIT, system.BestGPU());
     system.SyncAllGPUs();
     testTree.GetReadTreeToCPU(tree, nodes);
     EXPECT_EQ(0.0f, tree.irradiance);
@@ -255,7 +255,7 @@ TEST(PPG_DTree, AddThenSwap)
     }
 
     // Do the swap
-    testTree.SwapTrees(system.BestGPU(), FLUX_RATIO, DEPTH_LIMIT);
+    testTree.SwapTrees(FLUX_RATIO, DEPTH_LIMIT, system.BestGPU());
     system.SyncAllGPUs();
 
     // Check again
@@ -417,7 +417,7 @@ TEST(PPG_DTree, Stress)
                 EXPECT_EQ(0.0f, node.irradianceEstimates[3]);            
         }
 
-        testTree.SwapTrees(system.BestGPU(), fluxRatio, depthLimit);
+        testTree.SwapTrees(fluxRatio, depthLimit, system.BestGPU());
         system.SyncAllGPUs();
 
         // Check integrity of the new write tree

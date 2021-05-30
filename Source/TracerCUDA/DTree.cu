@@ -110,7 +110,8 @@ void DTree::DTreeBuffer::DumpTree(DTreeGPU& treeCPU, std::vector<DTreeNode>& nod
                           cudaMemcpyDeviceToHost));
 }
 
-void DTree::SwapTrees(const CudaGPU& gpu, float fluxRatio, uint32_t depthLimit)
+void DTree::SwapTrees(float fluxRatio, uint32_t depthLimit,
+                      const CudaGPU& gpu)
 {
     // Get an arbitrary stream
     cudaStream_t stream = gpu.DetermineStream();
@@ -148,6 +149,7 @@ void DTree::SwapTrees(const CudaGPU& gpu, float fluxRatio, uint32_t depthLimit)
         0u, 
         stream
     );
+    CUDA_CHECK(cudaStreamSynchronize(stream));
 
     // Add root node (DTree will atleast have a root node)
     // And above kernel only checks if childs should be generated
