@@ -11,6 +11,8 @@
 #include "TracerCUDA/TracerDebug.h"
 #include "TracerCUDA/DTreeKC.cuh"
 
+#include "RayLib/CPUTimer.h"
+
 std::ostream& operator<<(std::ostream& s, const STreeNode& n)
 {
     s << "C{";
@@ -121,13 +123,13 @@ TEST(PPG_STree, Split)
     static constexpr Vector3f WORLD_MAX = Vector3f(-10.0f, -10.0f, -10.0f);
     static const AABB3f WorldAABB = AABB3f(WORLD_MIN, WORLD_MAX);
     // Maximum of 5 depth for each DTree
-    static constexpr uint32_t D_MAX_DEPT = 5;
+    static constexpr uint32_t D_MAX_DEPT = 50;
     // Split a DTree when it reaches more than %10 of total energy
-    static constexpr float D_FLUX_SPLIT = 0.05f;
-    // Split a STree leaf when it reaches 5 samples
-    static constexpr uint32_t S_SPLIT = 1'000;
+    static constexpr float D_FLUX_SPLIT = 0.001f;
+    // Split a STree leaf when it reaches 100 samples
+    static constexpr uint32_t S_SPLIT = 100;
     // 
-    static constexpr uint32_t ITERATION_COUNT = 50;
+    static constexpr uint32_t ITERATION_COUNT = 15;
     static constexpr uint32_t PATH_PER_ITERATION = 100'000;
     static constexpr uint32_t RAY_COUNT = 10'000;
     static constexpr uint32_t PATH_PER_RAY = PATH_PER_ITERATION / RAY_COUNT;
@@ -177,21 +179,34 @@ TEST(PPG_STree, Split)
                               cudaMemcpyHostToDevice));
 
         //// DEBUGGING
+        //Utility::CPUTimer t;
         //STreeGPU treeGPU;
         //std::vector<STreeNode> nodes;
         //testTree.GetTreeToCPU(treeGPU, nodes);
         //Debug::DumpMemToFile("BS-Nodes", nodes.data(), nodes.size());
-
-
         // Accumulate Radiances
+        //t.Start();
         testTree.AccumulateRaidances(dPathNodes, PATH_PER_ITERATION, PATH_PER_RAY, system);
         system.SyncAllGPUs();
+        //t.Lap();
+        //METU_LOG("Accum-Rad %f", t.Elapsed<CPUTimeSeconds>());
 
         // Split and Swap trees
         testTree.SplitAndSwapTrees(S_SPLIT, D_FLUX_SPLIT, D_MAX_DEPT, system);
+        system.SyncAllGPUs();
 
         //// DEBUGGING
+        //t.Lap();
+        //METU_LOG("Split&Swap %f", t.Elapsed<CPUTimeSeconds>());
         //testTree.GetTreeToCPU(treeGPU, nodes);
         //Debug::DumpMemToFile("AS-Nodes", nodes.data(), nodes.size());
+        //METU_LOG("iter %u", iCount);
+        //METU_LOG("-----------------------------------------------------");
     }
+
+    //// DEBUGGING
+    //STreeGPU treeGPU;
+    //std::vector<STreeNode> nodes;
+    //testTree.GetTreeToCPU(treeGPU, nodes);
+    //Debug::DumpMemToFile("Final Nodes", nodes.data(), nodes.size());
 }

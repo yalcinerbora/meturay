@@ -27,6 +27,7 @@ inline void DirectWork(// Output
                        const RayReg& ray,
                        const RayAuxBasic& aux,
                        const typename MGroup::Surface& surface,
+                       const RayId rayId,
                        // I-O
                        DirectTracerLocalState& gLocalState,
                        DirectTracerGlobalState& gRenderState,

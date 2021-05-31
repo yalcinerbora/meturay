@@ -99,7 +99,7 @@ void STreeGPU::AcquireNearestDTree(uint32_t& dTreeIndex,
     while(true);
 }
 
-__global__ //CUDA_LAUNCH_BOUNDS_1D
+__global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCMarkSTreeSplitLeaf(uint32_t* leafIndices,
                                  //
                                  const STreeGPU& gTree,
@@ -132,7 +132,7 @@ static void KCMarkSTreeSplitLeaf(uint32_t* leafIndices,
     }
 }
 
-__global__ //CUDA_LAUNCH_BOUNDS_1D
+__global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCSplitSTree(uint32_t* gOldTrees,
                          STreeGPU& gTree,
                          //

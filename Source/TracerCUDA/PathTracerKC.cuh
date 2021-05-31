@@ -53,6 +53,7 @@ void PathTracerBoundaryWork(// Output
                             const RayReg& ray,
                             const RayAuxPath& aux,
                             const typename MGroup::Surface& surface,
+                            const RayId rayId,
                             // I-O
                             PathTracerLocalState& gLocalState,
                             PathTracerGlobalState& gRenderState,
@@ -121,6 +122,7 @@ void PathTracerComboWork(// Output
                          const RayReg& ray,
                          const RayAuxPath& aux,
                          const typename MGroup::Surface& surface,
+                         const RayId rayId,
                          // I-O
                          PathTracerLocalState& gLocalState,
                          PathTracerGlobalState& gRenderState,
@@ -428,6 +430,7 @@ void PathTracerPathWork(// Output
                         const RayReg& ray,
                         const RayAuxPath& aux,
                         const typename MGroup::Surface& surface,
+                        const RayId rayId,
                         // I-O
                         PathTracerLocalState& gLocalState,
                         PathTracerGlobalState& gRenderState,
@@ -570,6 +573,7 @@ void PathTracerNEEWork(// Output
                        const RayReg& ray,
                        const RayAuxPath& aux,
                        const typename MGroup::Surface& surface,
+                       const RayId rayId,
                        // I-O
                        PathTracerLocalState& gLocalState,
                        PathTracerGlobalState& gRenderState,
@@ -715,6 +719,7 @@ void PathTracerMISWork(// Output
                        const RayReg& ray,
                        const RayAuxPath& aux,
                        const typename MGroup::Surface& surface,
+                       const RayId rayId,
                        // I-O
                        PathTracerLocalState& gLocalState,
                        PathTracerGlobalState& gRenderState,

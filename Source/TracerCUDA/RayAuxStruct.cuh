@@ -39,6 +39,20 @@ struct RayAuxPath
     RayType         type;           // Ray Type
 };
 
+struct RayAuxPPG
+{
+    // Path throughput
+    // (a.k.a. total radiance coefficient along the path)
+    Vector3f        radianceFactor;
+
+    uint32_t        pixelIndex;     // Starting pixel index of the ray
+    uint32_t        endPointIndex;  // Destination of the ray if applicable (i.e. NEE Ray)
+    uint16_t        mediumIndex;    // Current Medium of the Ray
+    uint8_t         depth;          // Current path depth
+    RayType         type;           // Ray Type
+    uint8_t         pathIndex;      // Local path node index
+};
+
 static const RayAuxBasic InitialBasicAux = RayAuxBasic
 {
     0

@@ -30,6 +30,7 @@ using WorkFunc = void(*)(// Output
                          const RayReg& ray,
                          const RayAuxiliary& aux,
                          const MGroup::Surface& surface,
+                         const RayId rayId,
                          // I-O
                          LocalState& gLocalState,
                          GlobalState& gRenderState,
@@ -120,6 +121,7 @@ void KCWork(// Output
               ray,
               aux,
               surface,
+              rayId,
               // I-O
               gLocalState,
               gRenderState,

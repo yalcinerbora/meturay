@@ -93,6 +93,7 @@ STree::STree(const AABB3f& sceneExtents)
     CUDA_CHECK(cudaMemcpy(nodeCountLocPtr, &nodeCount, sizeof(uint32_t),
                cudaMemcpyHostToDevice));
     // Create a default single tree
+    dTrees.reserve(INITIAL_TREE_RESERVE_COUNT);
     dTrees.emplace_back();
 }
 
@@ -137,7 +138,6 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
                           dDenseIndices, dDenseIndexCount,
                           static_cast<int>(nodeCount),
                           IsSplittedLeafFunctor());
-
     // Clear Mems
     tempMemory = std::move(DeviceMemory());
     splitMarks = std::move(DeviceMemory());
@@ -150,17 +150,14 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
                           cudaMemcpyDeviceToHost));
 
     // No need to continue since there are no leaves to split
-    if(hSplitLeafCount == 0) return;
-
-    // Thi each individual node will create two childs
+    if(hSplitLeafCount == 0) return;   
+    // Each individual node will create two childs
     uint32_t extraChildCount = hSplitLeafCount * 2;
     // And we need one extra tree
     uint32_t extraTreeCount = hSplitLeafCount;
 
-    // Allocate extra
-    uint32_t oldTreeCount = static_cast<uint32_t>(dTrees.size());
-    dTrees.reserve(oldTreeCount + extraTreeCount);
-
+    // Old Tree count will be the next "allocation"
+    uint32_t oldTreeCount = static_cast<uint32_t>(dTrees.size());    
     // Expand nodes
     uint32_t oldNodeCount = static_cast<uint32_t>(nodeCount);
     ExpandTree(nodeCount + extraChildCount);
@@ -178,19 +175,20 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
                        oldNodeCount,
                        oldTreeCount,
                        hSplitLeafCount);
-
     // Copy old indices to the CPU
     std::vector<uint32_t> hOldTreeIds(hSplitLeafCount);
     CUDA_CHECK(cudaMemcpy(hOldTreeIds.data(),
                           static_cast<uint32_t*>(oldTreeIds),
                           hSplitLeafCount * sizeof(uint32_t),
                           cudaMemcpyDeviceToHost));
-    for(uint32_t i = 0; i < hSplitLeafCount; i++)
+
+    // Create the tree copies
+    for(uint32_t i = 0; i < extraTreeCount; i++)
     {
         // Copy the old tree to the new
         DTree& oldTree = dTrees[hOldTreeIds[i]];
         dTrees.push_back(oldTree);
-    }
+    }        
 }
 
 void STree::AccumulateRaidances(const PathGuidingNode* dPGNodes,
@@ -242,6 +240,7 @@ void STree::SwapTrees(float fluxRatio, uint32_t depthLimit, const CudaSystem& sy
         currentGPU++;
         if(currentGPU == gpuList.cend()) currentGPU = gpuList.cbegin();
     }
+    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 void STree::SplitAndSwapTrees(uint32_t sTreeMaxSamplePerLeaf,

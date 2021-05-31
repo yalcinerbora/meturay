@@ -32,6 +32,7 @@ inline void AOMissWork(// Output
                        const RayReg& ray,
                        const RayAuxAO& aux,
                        const typename MGroup::Surface& surface,
+                       const RayId rayId,
                        // I-O
                        AmbientOcclusionLocalState& gLocalState,
                        AmbientOcclusionGlobalState& gRenderState,
@@ -58,6 +59,7 @@ inline void AOWork(// Output
                    const RayReg& ray,
                    const RayAuxAO& aux,
                    const typename MGroup::Surface& surface,
+                   const RayId rayId,
                    // I-O
                    AmbientOcclusionLocalState& gLocalState,
                    AmbientOcclusionGlobalState& gRenderState,

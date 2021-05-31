@@ -4,6 +4,7 @@
 #include "DirectTracer.h"
 #include "PathTracer.h"
 #include "AOTracer.h"
+#include "PPGTracer.h"
 
 // Variant Does not compile on cuda code
 // special cpp for functions that uses "TracerOptions"
@@ -32,6 +33,17 @@ void AOTracer::AskOptions()
     // Generate Tracer Object
     VariableList list;
     list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
+
+    if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
+}
+
+void PPGTracer::AskOptions()
+{
+    // Generate Tracer Object
+    VariableList list;
+    list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
+    list.emplace(MAX_DEPTH_NAME, OptionVariable(options.maximumDepth));
+    list.emplace(NEE_NAME, OptionVariable(options.nextEventEstimation));
 
     if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
 }

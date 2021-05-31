@@ -364,7 +364,7 @@ DTreeNode* PunchThroughNode(uint32_t& gNodeAllocLocation, DTreeGPU* gDTree,
     return node;
 }
 
-__global__
+__global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCCalculateParentIrradiance(// I-O
                                         DTreeGPU* gDTree,
                                         // Input
@@ -408,7 +408,7 @@ static void KCCalculateParentIrradiance(// I-O
     }
 }
 
-__global__
+__global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCMarkChildRequest(// Output
                                uint32_t* gRequestedChilds,
                                // Input               
@@ -437,7 +437,7 @@ static void KCMarkChildRequest(// Output
     }
 }
 
-__global__
+__global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCReconstructEmptyTree(// Output
                                    DTreeGPU* gDTree,
                                    // Input               
@@ -547,7 +547,7 @@ static void KCReconstructEmptyTree(// Output
     }
 }
 
-__global__ 
+__global__  CUDA_LAUNCH_BOUNDS_1D
 static void KCInitDTreeNodes(DTreeGPU* gTree, uint32_t nodeCount)
 {
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
@@ -571,7 +571,7 @@ static void KCInitDTreeNodes(DTreeGPU* gTree, uint32_t nodeCount)
     }
 }
 
-__global__
+__global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCAccumulateRadianceToLeaf(DTreeGPU* gDTree,
                                        // Input
                                        const uint32_t* gNodeIndices,

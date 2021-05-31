@@ -75,6 +75,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathNode.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracerWorks.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracer.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerWork.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGWork.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\STree.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\STreeKC.cuh" />
@@ -175,6 +178,8 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\LambertMaterial.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracerWorks.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracerWork.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RNGMemory.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUTransformSingle.cu">
       <FileType>Document</FileType>

@@ -23,6 +23,7 @@ class STree
 {
     private:
         static constexpr size_t INITIAL_NODE_CAPACITY = 1'000;
+        static constexpr size_t INITIAL_TREE_RESERVE_COUNT = 10'000;
 
         // Device Memory
         DeviceMemory        memory;

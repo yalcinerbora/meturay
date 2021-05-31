@@ -6,6 +6,9 @@
 #include "RayLib/Types.h"
 #include "RayLib/MemoryAlignment.h"
 
+#include "RayLib/Log.h"
+#include "RayLib/CPUTimer.h"
+
 static constexpr size_t AlignedOffsetDTreeGPU = Memory::AlignSize(sizeof(DTreeGPU));
 
 void DTree::DTreeBuffer::FixPointers()
@@ -94,10 +97,8 @@ void DTree::DTreeBuffer::ResetAndReserve(size_t newNodeCount,
 
 void DTree::DTreeBuffer::CopyGPUNodeCountToCPU()
 {
-    uint32_t constructedNodeCount;
-    CUDA_CHECK(cudaMemcpy(&constructedNodeCount, reinterpret_cast<Byte*>(dDTree) + offsetof(DTreeGPU, nodeCount),
+    CUDA_CHECK(cudaMemcpy(&nodeCount, reinterpret_cast<Byte*>(dDTree) + offsetof(DTreeGPU, nodeCount),
                           sizeof(uint32_t), cudaMemcpyDeviceToHost));
-    nodeCount = constructedNodeCount;
 }
 
 void DTree::DTreeBuffer::DumpTree(DTreeGPU& treeCPU, std::vector<DTreeNode>& nodesCPU) const
@@ -138,6 +139,7 @@ void DTree::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        writeTree.TreeGPU(),
                        fluxRatio,
                        nodeCount);
+
     // Sum all values on the GPU
     uint32_t newNodeCount;
     ReduceArrayGPU<uint32_t, ReduceAdd<uint32_t>,
@@ -171,7 +173,6 @@ void DTree::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        nodeCount);
 
     readTree.CopyGPUNodeCountToCPU();
-
     // Finally swap the trees
     std::swap(readTree, writeTree);
 }

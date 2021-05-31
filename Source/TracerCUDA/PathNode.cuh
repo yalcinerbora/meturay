@@ -91,13 +91,43 @@ struct PathGuidingNode : public PathNode
     // Radiance provided has to be from the camera (or starting point)
     // of the path so that the class can utilize its own throuhput to calculate
     // radiance of that path
-    __device__ void     AccumRadiance(Vector3f camRadiance);
+    __device__ void     AccumRadiance(const Vector3f& camRadiance);
+    __device__ void     AccumRadianceDownChain(const Vector3f& camRadiance,
+                                               PathGuidingNode* gLocalChain);
+    __device__ void     AccumRadianceUpChain(const Vector3f& camRadiance,
+                                             PathGuidingNode* gLocalChain);
 };
 
 __device__ __forceinline__
-void PathGuidingNode::AccumRadiance(Vector3f camRadiance)
+void PathGuidingNode::AccumRadiance(const Vector3f& camRadiance)
 {
     // Radiance Factor shows the energy ratio between the path start point
     // and this location, so divison will give the radiance of that location
     totalRadiance += camRadiance / radFactor;
+}
+
+__device__ __forceinline__
+void PathGuidingNode::AccumRadianceDownChain(const Vector3f& camRadiance,
+                                             PathGuidingNode* gLocalChain)
+{
+    // Add to yourself
+    AccumRadiance(camRadiance);
+    for(IndexType i = prevNext[0]; i != InvalidIndex;)
+    {
+        gLocalChain[i].AccumRadiance(camRadiance);
+        i = gLocalChain[i].prevNext[0];
+    }
+}
+
+__device__ __forceinline__
+void PathGuidingNode::AccumRadianceUpChain(const Vector3f& camRadiance,
+                                           PathGuidingNode* gLocalChain)
+{
+    // Add to yourself
+    AccumRadiance(camRadiance);
+    for(IndexType i = prevNext[1]; i != InvalidIndex;)
+    {
+        gLocalChain[i].AccumRadiance(camRadiance);
+        i = gLocalChain[i].prevNext[1];
+    }
 }
