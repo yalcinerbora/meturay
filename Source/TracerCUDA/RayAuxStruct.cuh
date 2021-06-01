@@ -7,6 +7,8 @@
 
 struct RayReg;
 
+using PathId = HitKeyT<uint32_t, 26, 6>;
+
 enum class RayType : uint8_t
 {
     NEE_RAY,
@@ -50,7 +52,8 @@ struct RayAuxPPG
     uint16_t        mediumIndex;    // Current Medium of the Ray
     uint8_t         depth;          // Current path depth
     RayType         type;           // Ray Type
-    uint8_t         pathIndex;      // Local path node index
+    
+    PathId          pathIndex;      // Global/Local path node index
 };
 
 static const RayAuxBasic InitialBasicAux = RayAuxBasic
@@ -70,6 +73,14 @@ static const RayAuxAO InitialAOAux = RayAuxAO
 {
     Vector3f(1.0f, 1.0f, 1.0f),
     0
+};
+
+static const RayAuxPPG InitialPPGAux = RayAuxPPG
+{
+    Vector3f(1.0f, 1.0f, 1.0f),
+    0, 0, 0,
+    1,
+    RayType::CAMERA_RAY
 };
 
 __device__ __host__
@@ -117,5 +128,21 @@ inline void RayInitAO(RayAuxAO& gOutAO,
 {
     RayAuxAO init = defaults;
     init.pixelIndex = localPixelId;
+    gOutAO = init;
+}
+
+__device__ __host__
+inline void RayInitPPG(RayAuxPPG& gOutAO,
+                      // Input
+                       const RayAuxPPG& defaults,
+                       const RayReg& ray,
+                       // Index
+                       uint16_t medumIndex,
+                       const uint32_t localPixelId,
+                       const uint32_t pixelSampleId)
+{
+    RayAuxPPG init = defaults;
+    init.pixelIndex = localPixelId;
+    init.pathIndex = localPixelId * pixelSampleId;
     gOutAO = init;
 }

@@ -13,11 +13,13 @@ This is a GPU-oriented implementation of such tree
 
 */ 
 
-#include "STreeKC.cuh"
 #include "DeviceMemory.h"
 #include "DTree.cuh"
 
 class CudaSystem;
+
+struct STreeGPU;
+struct STreeNode;
 
 class STree
 {

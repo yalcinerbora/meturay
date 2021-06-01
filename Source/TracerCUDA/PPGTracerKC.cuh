@@ -13,6 +13,7 @@
 #include "TracerConstants.h"
 
 #include "STreeKC.cuh"
+#include "DTreeKC.cuh"
 
 struct PPGTracerGlobalState
 {
@@ -58,33 +59,33 @@ void PPGTracerBoundaryWork(// Output
                            const typename MGroup::Surface& surface,
                            const RayId rayId,
                            // I-O
-                           PPGTracerLocalState& gLocalState,
-                           PPGTracerGlobalState& gRenderState,
+                           PPGTracerLocalState& localState,
+                           PPGTracerGlobalState& renderState,
                            RandomGPU& rng,
                            // Constants
                            const typename MGroup::Data& gMatData,
                            const HitKey matId,
                            const PrimitiveId primId)
 {
-    uint32_t globalRayOffset = rayId * gRenderState.maximumPathNodePerRay;
-    PathGuidingNode* gLocalPathNodes = gRenderState.gPathNodes + globalRayOffset;
+    uint32_t globalRayOffset = rayId * renderState.maximumPathNodePerRay;
+    PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + globalRayOffset;
 
     // Check Material Sample Strategy
     assert(maxOutRay == 0);
-    auto& img = gRenderState.gImage;
+    auto& img = renderState.gImage;
 
     // If NEE ray hits to this material
     // sample it or just sample it anyway if NEE is not activated
-    bool neeMatch = (!gRenderState.nee);
-    if(gRenderState.nee && aux.type == RayType::NEE_RAY)
+    bool neeMatch = (!renderState.nee);
+    if(renderState.nee && aux.type == RayType::NEE_RAY)
     {
-        const GPUEndpointI* endPoint = gRenderState.lightList[aux.endPointIndex];
+        const GPUEndpointI* endPoint = renderState.lightList[aux.endPointIndex];
         PrimitiveId neePrimId = endPoint->PrimitiveIndex();
         HitKey neeKey = endPoint->BoundaryMaterial();
 
         // Check if NEE ray actual hit the requested light
         neeMatch = (matId.value == neeKey.value);
-        if(!gLocalState.emptyPrimitive)
+        if(!localState.emptyPrimitive)
             neeMatch &= (primId == neePrimId);
     }
     if(neeMatch ||
@@ -94,7 +95,7 @@ void PPGTracerBoundaryWork(// Output
         const RayF& r = ray.ray;
         HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
         Vector3 position = r.AdvancedPos(ray.tMax);
-        const GPUMediumI& m = *(gRenderState.mediumList[aux.mediumIndex]);
+        const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
 
         // Calculate Transmittance factor of the medium
         Vector3 transFactor = m.Transmittance(ray.tMax);
@@ -133,8 +134,8 @@ void PPGTracerPathWork(// Output
                        const typename MGroup::Surface& surface,
                        const RayId rayId,
                        // I-O
-                       PPGTracerLocalState& gLocalState,
-                       PPGTracerGlobalState& gRenderState,
+                       PPGTracerLocalState& localState,
+                       PPGTracerGlobalState& renderState,
                        RandomGPU& rng,
                        // Constants
                        const typename MGroup::Data& gMatData,
@@ -148,8 +149,8 @@ void PPGTracerPathWork(// Output
     //static constexpr int NEE_RAY_INDEX = 1;
     //static constexpr int MIS_RAY_INDEX = 2;
 
-    uint32_t globalRayOffset = rayId * gRenderState.maximumPathNodePerRay;
-    PathGuidingNode* gLocalPathNodes = gRenderState.gPathNodes + globalRayOffset;
+    uint32_t globalRayOffset = rayId * renderState.maximumPathNodePerRay;
+    PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + globalRayOffset;
 
     // Inputs
     // Current Ray
@@ -161,7 +162,7 @@ void PPGTracerPathWork(// Output
     // Wi (direction is swapped as if it is coming out of the surface
     Vector3 wi = -(r.getDirection().Normalize());
     // Current ray's medium
-    const GPUMediumI& m = *(gRenderState.mediumList[aux.mediumIndex]);
+    const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
 
     // Check Material Sample Strategy
     uint32_t sampleCount = maxOutRay;
@@ -210,7 +211,7 @@ void PPGTracerPathWork(// Output
 
         Vector3f total = emission * radianceFactor;
         // Output image
-        auto& img = gRenderState.gImage;
+        auto& img = renderState.gImage;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
         // Accumulate this to the paths aswell
         gLocalPathNodes[aux.pathIndex].AccumRadianceDownChain(total, gLocalPathNodes);
@@ -221,17 +222,19 @@ void PPGTracerPathWork(// Output
     if(sampleCount == 0) return;
 
     // Find nearest DTree
-    uint32_t dTreeIndex;
-    gRenderState.gStree->AcquireNearestDTree(dTreeIndex, position);
+    uint32_t dTreeIndex = 0;
+    renderState.gStree->AcquireNearestDTree(dTreeIndex, position);
     
     float pdf;
-    Vector3f reflectance;
-    const GPUMediumI* outM = nullptr;
     RayF rayPath;
+    Vector3f reflectance;
+    const GPUMediumI* outM = &m;    
     if(!isSpecularMat)
     {
         // Sample a path using SDTree
-        Vector3f direction = gRenderState.gDTrees[dTreeIndex]->Sample(pdf, rng);
+        const DTreeGPU* dTree = renderState.gDTrees[dTreeIndex];
+        Vector3f direction = dTree->Sample(pdf, rng);
+        pdf = 1.0f;
 
         // Calculate BxDF
         reflectance = MGroup::Evaluate(// Input
@@ -251,9 +254,8 @@ void PPGTracerPathWork(// Output
     else
     {
         // Sample the BxDF        
-        float pdfPath; const GPUMediumI* outM = &m;
         reflectance = MGroup::Sample(// Outputs
-                                     rayPath, pdfPath, outM,
+                                     rayPath, pdf, outM,
                                      // Inputs
                                      wi,
                                      position,
@@ -276,7 +278,7 @@ void PPGTracerPathWork(// Output
 
     // Check Russian Roulette
     float avgThroughput = pathRadianceFactor.Dot(Vector3f(0.333f));
-    bool terminateRay = ((aux.depth > gRenderState.rrStart) &&
+    bool terminateRay = ((aux.depth > renderState.rrStart) &&
                          TracerFunctions::RussianRoulette(pathRadianceFactor, avgThroughput, rng));
 
     // Do not terminate rays ever for specular mats 
@@ -312,7 +314,7 @@ void PPGTracerPathWork(// Output
 
     //// Dont launch NEE if not requested
     //// or material is highly specula
-    //if(!gRenderState.nee) return;
+    //if(!renderState.nee) return;
 
     //// Renderer requested a NEE Ray but material is highly specular
     //// Check if nee is requested
@@ -322,7 +324,7 @@ void PPGTracerPathWork(// Output
     //{
     //    // Write invalid rays then return
     //    InvalidRayWrite(NEE_RAY_INDEX);
-    //    if(gRenderState.directLightMIS)
+    //    if(renderState.directLightMIS)
     //        InvalidRayWrite(MIS_RAY_INDEX);
     //    return;
     //}
@@ -334,7 +336,7 @@ void PPGTracerPathWork(// Output
     //Vector3 lDirection;
     //uint32_t lightIndex;
     //Vector3f neeReflectance = Zero3;
-    //if(gRenderState.lightSampler->SampleLight(matLight,
+    //if(renderState.lightSampler->SampleLight(matLight,
     //                                          lightIndex,
     //                                          lDirection,
     //                                          lDistance,
@@ -357,10 +359,10 @@ void PPGTracerPathWork(// Output
     //}
 
     //// Check if mis ray should be sampled
-    //bool launchedMISRay = (gRenderState.directLightMIS &&
+    //bool launchedMISRay = (renderState.directLightMIS &&
     //                       // Check if light can be sampled (meaning it is not a
     //                       // dirac delta light (point light spot light etc.)
-    //                       gRenderState.lightList[lightIndex]->CanBeSampled());
+    //                       renderState.lightList[lightIndex]->CanBeSampled());
 
     //float pdfNEE = pdfLight;
     //if(launchedMISRay)
@@ -408,7 +410,7 @@ void PPGTracerPathWork(// Output
     //else InvalidRayWrite(NEE_RAY_INDEX);
 
     //// Check MIS Ray return if not requested (since no ray is allocated for it)
-    //if(!gRenderState.directLightMIS) return;
+    //if(!renderState.directLightMIS) return;
 
     //// Sample Another ray for MIS (from BxDF)
     //float pdfMIS = 0.0f;
@@ -433,7 +435,7 @@ void PPGTracerPathWork(// Output
 
     //    // Find out the pdf of the light
     //    float pdfLightM, pdfLightC;
-    //    gRenderState.lightSampler->Pdf(pdfLightM, pdfLightC,
+    //    renderState.lightSampler->Pdf(pdfLightM, pdfLightC,
     //                                   lightIndex, position,
     //                                   rayMIS.getDirection());
     //    // We are subsampling (discretely sampling) a single light 
@@ -474,7 +476,7 @@ void PPGTracerPathWork(// Output
     //// All Done!
     //// Dont launch NEE if not requested
     //// or material is highly specula
-    //if(!gRenderState.nee) return;
+    //if(!renderState.nee) return;
 
     //// Renderer requested a NEE Ray but material is highly specular
     //// Check if nee is requested
@@ -484,7 +486,7 @@ void PPGTracerPathWork(// Output
     //{
     //    // Write invalid rays then return
     //    InvalidRayWrite(NEE_RAY_INDEX);
-    //    if(gRenderState.directLightMIS)
+    //    if(renderState.directLightMIS)
     //        InvalidRayWrite(MIS_RAY_INDEX);
     //    return;
     //}
@@ -496,7 +498,7 @@ void PPGTracerPathWork(// Output
     //Vector3 lDirection;
     //uint32_t lightIndex;
     //Vector3f neeReflectance = Zero3;
-    //if(gRenderState.lightSampler->SampleLight(matLight,
+    //if(renderState.lightSampler->SampleLight(matLight,
     //                                          lightIndex,
     //                                          lDirection,
     //                                          lDistance,
@@ -519,10 +521,10 @@ void PPGTracerPathWork(// Output
     //}
 
     //// Check if mis ray should be sampled
-    //bool launchedMISRay = (gRenderState.directLightMIS &&
+    //bool launchedMISRay = (renderState.directLightMIS &&
     //                       // Check if light can be sampled (meaning it is not a
     //                       // dirac delta light (point light spot light etc.)
-    //                       gRenderState.lightList[lightIndex]->CanBeSampled());
+    //                       renderState.lightList[lightIndex]->CanBeSampled());
 
     //float pdfNEE = pdfLight;
     //if(launchedMISRay)
@@ -570,7 +572,7 @@ void PPGTracerPathWork(// Output
     //else InvalidRayWrite(NEE_RAY_INDEX);
 
     //// Check MIS Ray return if not requested (since no ray is allocated for it)
-    //if(!gRenderState.directLightMIS) return;
+    //if(!renderState.directLightMIS) return;
 
     //// Sample Another ray for MIS (from BxDF)
     //float pdfMIS = 0.0f;
@@ -595,7 +597,7 @@ void PPGTracerPathWork(// Output
 
     //    // Find out the pdf of the light
     //    float pdfLightM, pdfLightC;
-    //    gRenderState.lightSampler->Pdf(pdfLightM, pdfLightC,
+    //    renderState.lightSampler->Pdf(pdfLightM, pdfLightC,
     //                                   lightIndex, position,
     //                                   rayMIS.getDirection());
     //    // We are subsampling (discretely sampling) a single light 

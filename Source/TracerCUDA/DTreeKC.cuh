@@ -152,7 +152,7 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
 
     pdf = 1.0f;
     DTreeNode* node = gRoot;
-    do
+    while(true)
     {
         // Generate Local CDF
         float totalIrrad = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
@@ -216,8 +216,7 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
         }
         node = gRoot + node->childIndices[nextIndex];
         
-    }
-    while(true);
+    }    
 
     // Convert PDF to Solid Angle PDF
     pdf *= 0.25f * MathConstants::InvPi;
@@ -234,7 +233,7 @@ float DTreeGPU::Pdf(const Vector3f& worldDir) const
     float pdf = 1.0f;
     DTreeNode* node = gRoot;
     Vector2f localCoords = discreteCoords;
-    do
+    while(true)
     {
         uint8_t childIndex = node->DetermineChild(localCoords);
 
@@ -252,8 +251,7 @@ float DTreeGPU::Pdf(const Vector3f& worldDir) const
         // Continue Traversal
         localCoords = node->NormalizeCoordsForChild(childIndex, localCoords);
         node = gRoot + node->childIndices[childIndex];
-    }
-    while(true);
+    }    
 
     // Convert PDF to Solid Angle PDF
     pdf *= 0.25f * MathConstants::InvPi;
@@ -268,7 +266,7 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance)
     // Descent and find the leaf
     DTreeNode* node = gRoot;
     Vector2f localCoords = discreteCoords;
-    do
+    while(true)
     {
         uint8_t childIndex = node->DetermineChild(localCoords);
 
@@ -283,7 +281,6 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance)
         localCoords = node->NormalizeCoordsForChild(childIndex, localCoords);
         node = gRoot + node->childIndices[childIndex];
     }
-    while(true);
 }
 
 __device__ __forceinline__ 

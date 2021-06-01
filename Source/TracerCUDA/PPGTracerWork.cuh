@@ -130,33 +130,33 @@ uint8_t PPGWork<M, P>::OutRayCount() const
     return 0;
 }
 
-//// PPG Tracer Work Batches
-//// ===================================================
-//// Boundary
-//extern template class PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveEmpty>;
-//extern template class PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveTriangle>;
-//extern template class PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveSphere>;
-//
-//extern template class PPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveTriangle>;
-//extern template class PPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveSphere>;
-//
-//extern template class PPGBoundaryWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
-//// ===================================================
-//// Path
-//extern template class PPGWork<LambertCMat, GPUPrimitiveTriangle>;
-//extern template class PPGWork<LambertCMat, GPUPrimitiveSphere>;
-//
-//extern template class PPGWork<ReflectMat, GPUPrimitiveTriangle>;
-//extern template class PPGWork<ReflectMat, GPUPrimitiveSphere>;
-//
-//extern template class PPGWork<RefractMat, GPUPrimitiveTriangle>;
-//extern template class PPGWork<RefractMat, GPUPrimitiveSphere>;
-//
-//extern template class PPGWork<LambertMat, GPUPrimitiveTriangle>;
-//extern template class PPGWork<LambertMat, GPUPrimitiveSphere>;
-//
-//extern template class PPGWork<UnrealMat, GPUPrimitiveTriangle>;
-//extern template class PPGWork<UnrealMat, GPUPrimitiveSphere>;
+// PPG Tracer Work Batches
+// ===================================================
+// Boundary
+extern template class PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveEmpty>;
+extern template class PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveTriangle>;
+extern template class PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveSphere>;
+
+extern template class PPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveTriangle>;
+extern template class PPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveSphere>;
+
+extern template class PPGBoundaryWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
+// ===================================================
+// Path
+extern template class PPGWork<LambertCMat, GPUPrimitiveTriangle>;
+extern template class PPGWork<LambertCMat, GPUPrimitiveSphere>;
+
+extern template class PPGWork<ReflectMat, GPUPrimitiveTriangle>;
+extern template class PPGWork<ReflectMat, GPUPrimitiveSphere>;
+
+extern template class PPGWork<RefractMat, GPUPrimitiveTriangle>;
+extern template class PPGWork<RefractMat, GPUPrimitiveSphere>;
+
+extern template class PPGWork<LambertMat, GPUPrimitiveTriangle>;
+extern template class PPGWork<LambertMat, GPUPrimitiveSphere>;
+
+extern template class PPGWork<UnrealMat, GPUPrimitiveTriangle>;
+extern template class PPGWork<UnrealMat, GPUPrimitiveSphere>;
 // ===================================================
 using PPGBoundaryWorkerList = TypeList<PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveEmpty>,
                                        PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveTriangle>,

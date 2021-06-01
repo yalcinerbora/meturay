@@ -3,6 +3,7 @@
 
 #include "RayLib/GPUSceneI.h"
 #include "RayLib/TracerCallbacksI.h"
+#include "RayLib/BitManipulation.h"
 
 #include "PPGTracerWork.cuh"
 #include "GPULightSamplerUniform.cuh"
@@ -81,15 +82,15 @@ TracerError PPGTracer::ConstructLightSampler()
     {
         case LightSamplerType::UNIFORM:
         {
-            DeviceMemory::EnlargeBuffer(memory, sizeof(GPULightSamplerUniform));
-            lightSampler = static_cast<const GPUDirectLightSamplerI*>(memory);
+            DeviceMemory::EnlargeBuffer(pathMemory, sizeof(GPULightSamplerUniform));
+            dLightSampler = static_cast<const GPUDirectLightSamplerI*>(pathMemory);
 
             const auto& gpu = cudaSystem.BestGPU();
             gpu.KC_X(0, (cudaStream_t)0, 1,
                      // Kernel
                      KCConstructLightSampler<GPULightSamplerUniform>,
                      // Args
-                     static_cast<GPULightSamplerUniform*>(memory),
+                     static_cast<GPULightSamplerUniform*>(pathMemory),
                      dLights, 
                      lightCount);
 
@@ -99,11 +100,32 @@ TracerError PPGTracer::ConstructLightSampler()
     return TracerError::UNABLE_TO_INITIALIZE;
 }
 
+void PPGTracer::ResizeAndInitPathMemory(size_t pixelCount,
+                                        size_t samplePerPixel)
+{
+    size_t totalPathCount = pixelCount * samplePerPixel;
+    size_t totalPathNodeCount = totalPathCount * options.maximumDepth;
+
+    METU_LOG("Allocating PPGTracer global path buffer: Size %llu MiB", 
+             totalPathNodeCount * sizeof(PathGuidingNode) / 1024 / 1024);
+
+    DeviceMemory::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(PathGuidingNode));
+    dPathNodes = static_cast<PathGuidingNode*>(pathMemory);
+}
+
+uint32_t PPGTracer::TotalPathNodeCount() const
+{
+    return (imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1] *
+            options.sampleCount * options.sampleCount);
+}
+
 PPGTracer::PPGTracer(const CudaSystem& s,
                       const GPUSceneI& scene,
                       const TracerParameters& p)
     : RayTracer(s, scene, p)
     , currentDepth(0)
+    , currentTreeIteration(0)
+    , nextTreeSwap(1)
 {
     // Append Work Types for generation
     boundaryWorkPool.AppendGenerators(PPGBoundaryWorkerList{});
@@ -155,7 +177,7 @@ TracerError PPGTracer::Initialize()
             workBatchList.push_back(batch);            
         }
         workMap.emplace(batchId, workBatchList);
-    }
+    }    
     return TracerError::OK;
 }
 
@@ -198,15 +220,27 @@ bool PPGTracer::Render()
     // Generate Global Data Struct
     PPGTracerGlobalState globalData;
     globalData.gImage = imgMemory.GMem<Vector4>();
-    globalData.lightList = dLights;
+    globalData.lightList = dLights;    
     globalData.totalLightCount = lightCount;
+    globalData.lightSampler = dLightSampler;
+    //
     globalData.mediumList = dMediums;
     globalData.totalMediumCount = mediumCount;
+    //
+    // Set SD Tree
+    const STreeGPU* dSTree;
+    const DTreeGPU** dDTrees;
+    sTree->TreeGPU(dSTree, dDTrees);
+    globalData.gStree = dSTree;
+    globalData.gDTrees = dDTrees;    
+    //
+    globalData.gPathNodes = dPathNodes;
+    globalData.maximumPathNodePerRay = options.maximumDepth;
+    // Todo change these later
+    globalData.rawPathGuiding = true;
     globalData.nee = options.nextEventEstimation;
-    globalData.rrStart = options.rrStart;
-    //globalData.directLightMIS = options.directLightMIS;
-    globalData.lightSampler = lightSampler;
-
+    globalData.rrStart = options.rrStart;    
+    
     // Generate output partitions
     uint32_t totalOutRayCount = 0;
     auto outPartitions = PartitionOutputRays(totalOutRayCount, workMap);
@@ -257,12 +291,55 @@ bool PPGTracer::Render()
 
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration
-    SwapAuxBuffers();
-    // Check tracer termination conditions
+    SwapAuxBuffers();    
     currentDepth++;
+
+    // Check tracer termination conditions
+    // Either there is no ray left for iteration or maximum depth is exceeded
     if(totalOutRayCount == 0 || currentDepth >= options.maximumDepth)
         return false;
     return true;
+}
+
+void PPGTracer::Finalize()
+{
+    uint32_t totalPathNodeCount = TotalPathNodeCount();
+
+    // Accumulate the finished radiances to the STree
+    sTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
+                              options.maximumDepth, cudaSystem);
+
+    // We iterated once
+    currentTreeIteration+= options.sampleCount * options.sampleCount;
+    // Swap the trees if we achieved treshold
+    if(currentTreeIteration == nextTreeSwap)
+    {
+        // Double the amount of iterations required for this
+        nextTreeSwap <<= 1;
+     
+        uint32_t treeSwapIterationCount = Utility::FindLastSet32(nextTreeSwap) - 1;
+        uint32_t currentSTreeSplitThreshold = (std::pow(2.0f, treeSwapIterationCount) * 
+                                               options.sTreeSplitThreshold);
+
+        // Split and Swap the trees
+        sTree->SplitAndSwapTrees(options.sTreeSplitThreshold,
+                                 options.dTreeSplitThreshold,
+                                 options.maxDTreeDepth,
+                                 cudaSystem);
+
+        // Completely Reset the Image
+        // This is done to eliminate variance from prev samples
+        ResetImage();
+    }
+
+    uint32_t prevTreeSwap = (nextTreeSwap >> 1);
+    if(options.alwaysSendSamples ||
+       // Do not send samples untill we exceed prev iteration samples
+       (currentTreeIteration - prevTreeSwap) >= prevTreeSwap)
+    {
+        // Base class finalize directly sends the image
+        GPUTracer::Finalize();
+    }
 }
 
 void PPGTracer::GenerateWork(int cameraId)
@@ -270,15 +347,21 @@ void PPGTracer::GenerateWork(int cameraId)
     if(callbacks)
         callbacks->SendCurrentCamera(SceneCamToVisorCam(cameraId));
 
-    GenerateRays<RayAuxPath, RayInitPath>(dCameras[cameraId],
-                                          options.sampleCount,
-                                          InitialPathAux);
+    GenerateRays<RayAuxPPG, RayInitPPG>(dCameras[cameraId],
+                                        options.sampleCount,
+                                        InitialPPGAux);
+
+    ResizeAndInitPathMemory(imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1],
+                            options.sampleCount * options.sampleCount);
     currentDepth = 0;
 }
 
 void PPGTracer::GenerateWork(const VisorCamera& cam)
 {
-    GenerateRays<RayAuxPath, RayInitPath>(cam, options.sampleCount,
-                                          InitialPathAux);
+    GenerateRays<RayAuxPPG, RayInitPPG>(cam, options.sampleCount,
+                                        InitialPPGAux);
+    ResizeAndInitPathMemory(imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1],
+                            options.sampleCount * options.sampleCount);
+
     currentDepth = 0;
 }
