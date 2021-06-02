@@ -3,6 +3,7 @@
 #include "CudaSystem.h"
 #include "CudaSystem.hpp"
 #include "ParallelPartition.cuh"
+#include "STreeKC.cuh"
 
 #include "RayLib/MemoryAlignment.h"
 
@@ -213,6 +214,9 @@ void STree::AccumulateRaidances(const PathGuidingNode* dPGNodes,
     for(const auto& partition : partitions)
     {        
         uint32_t treeIndex = partition.portionId;
+        // Skip if these nodes are invalid
+        if(treeIndex == InvalidDTreeIndex) continue;
+
         dTrees[treeIndex].AddRadiancesFromPaths(static_cast<uint32_t*>(sortedIndices),
                                                 dPGNodes, partition,
                                                 maxPathNodePerRay,

@@ -37,6 +37,24 @@
 //    return stream;
 //}
 
+__global__
+static void KCInitializePaths(PathGuidingNode* gPathNodes,
+                              uint32_t totalNodeCount)
+{
+    uint32_t globalId = threadIdx.x + blockIdx.x * blockDim.x;
+    if(globalId < totalNodeCount)
+    {
+        PathGuidingNode node;
+        node.nearestDTreeIndex = STree::InvalidDTreeIndex;
+        node.radFactor = Zero3;
+        node.prevNext = Vector<2, PathGuidingNode::IndexType>(PathGuidingNode::InvalidIndex);
+        node.totalRadiance = Zero3;
+        node.worldPosition = Zero3;
+
+        gPathNodes[globalId] = node;
+    }
+}
+
 template <class T>
 __global__ void KCConstructLightSampler(T* loc,
                                         const GPULightI** gLights,
@@ -111,6 +129,16 @@ void PPGTracer::ResizeAndInitPathMemory(size_t pixelCount,
 
     DeviceMemory::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(PathGuidingNode));
     dPathNodes = static_cast<PathGuidingNode*>(pathMemory);
+
+    // Initialize Paths
+    const CudaGPU& bestGPU = cudaSystem.BestGPU();
+    bestGPU.KC_X(0, 0, totalPathNodeCount,
+                 //
+                 KCInitializePaths,
+                 //
+                 dPathNodes,
+                 static_cast<uint32_t>(totalPathNodeCount));
+
 }
 
 uint32_t PPGTracer::TotalPathNodeCount() const

@@ -16,6 +16,8 @@ This is a GPU-oriented implementation of such tree
 #include "DeviceMemory.h"
 #include "DTree.cuh"
 
+#include <RayLib/AABB.h>
+
 class CudaSystem;
 
 struct STreeGPU;
@@ -23,6 +25,9 @@ struct STreeNode;
 
 class STree
 {
+    public:
+        static constexpr uint32_t InvalidDTreeIndex = std::numeric_limits<uint32_t>::max();
+
     private:
         static constexpr size_t INITIAL_NODE_CAPACITY = 1'000;
         static constexpr size_t INITIAL_TREE_RESERVE_COUNT = 10'000;
