@@ -11,14 +11,22 @@ struct PathGuidingNode;
 class PPGTracer final : public RayTracer
 {
     public:
-        static constexpr const char*    TypeName() { return "PPGTracer"; }
+        static constexpr const char* TypeName() { return "PPGTracer"; }
 
-        static constexpr const char*    MAX_DEPTH_NAME = "MaxDepth";
-        static constexpr const char*    NEE_NAME = "NextEventEstimation";
-        static constexpr const char*    RR_START_NAME = "RussianRouletteStart";
-        static constexpr const char*    DIRECT_LIGHT_MIS_NAME = "DirectLightMIS";
-        static constexpr const char*    LIGHT_SAMPLER_TYPE_NAME = "NEESampler";
+        static constexpr const char* MAX_DEPTH_NAME             = "MaxDepth";
+        static constexpr const char* SAMPLE_NAME                = "Samples";        
+        static constexpr const char* RR_START_NAME              = "RussianRouletteStart";        
+        static constexpr const char* LIGHT_SAMPLER_TYPE_NAME    = "NEESampler";
         
+        static constexpr const char* NEE_NAME                   = "NextEventEstimation";
+        static constexpr const char* DIRECT_LIGHT_MIS_NAME      = "DirectLightMIS";
+
+        static constexpr const char* RAW_PG_NAME                = "RawPathGuiding";
+        static constexpr const char* ALWAYS_SEND_NAME           = "AlwaysSendSamples";
+        static constexpr const char* D_TREE_MAX_DEPTH_NAME      = "DTreeMaximumDepth";
+        static constexpr const char* D_TREE_FLUX_RATIO_NAME     = "DTreeFluxRatio";
+        static constexpr const char* S_TREE_SAMPLE_SPLIT_NAME   = "STreeMaxSamples";
+
         enum LightSamplerType
         {
             UNIFORM,
@@ -43,6 +51,7 @@ class PPGTracer final : public RayTracer
 
             // Misc
             bool                alwaysSendSamples   = false;
+            bool                rawPathGuiding      = true;
 
 
             bool                nextEventEstimation = true;            

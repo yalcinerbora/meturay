@@ -53,7 +53,7 @@ struct RayAuxPPG
     uint8_t         depth;          // Current path depth
     RayType         type;           // Ray Type
     
-    PathId          pathIndex;      // Global/Local path node index
+    uint32_t        pathIndex;      // Global/Local path node index
 };
 
 static const RayAuxBasic InitialBasicAux = RayAuxBasic
@@ -80,7 +80,8 @@ static const RayAuxPPG InitialPPGAux = RayAuxPPG
     Vector3f(1.0f, 1.0f, 1.0f),
     0, 0, 0,
     1,
-    RayType::CAMERA_RAY
+    RayType::CAMERA_RAY,
+    0
 };
 
 __device__ __host__
@@ -143,6 +144,7 @@ inline void RayInitPPG(RayAuxPPG& gOutAO,
 {
     RayAuxPPG init = defaults;
     init.pixelIndex = localPixelId;
-    init.pathIndex = localPixelId * pixelSampleId;
+    // TODO: change this with total sample count
+    init.pathIndex = localPixelId * 1;
     gOutAO = init;
 }

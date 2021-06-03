@@ -11,7 +11,7 @@
 #include "GPUWork.cuh"
 #include "GPUAcceleratorI.h"
 
-//#include "TracerDebug.h"
+#include "TracerDebug.h"
 //std::ostream& operator<<(std::ostream& stream, const RayAuxPPG& v)
 //{
 //    stream << std::setw(0)
@@ -37,6 +37,64 @@
 //    }
 //    return stream;
 //}
+static std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
+{
+    s << "W:{" << n.worldPosition[0] << ", " 
+               << n.worldPosition[1] << ", " 
+               << n.worldPosition[2] << "} PN:{"
+      << static_cast<uint32_t>(n.prevNext[0]) << ", "
+      << static_cast<uint32_t>(n.prevNext[1]) << "} R: {";
+    s << n.totalRadiance[0] << ", "
+      << n.totalRadiance[1] << ", "
+      << n.totalRadiance[2] << "} RF: {";
+    s << n.radFactor[0] << ", "
+      << n.radFactor[1] << ", "
+      << n.radFactor[2] << "}";
+    s << " Tree: ";
+    if(n.nearestDTreeIndex == STree::InvalidDTreeIndex)
+        s << "-";
+    else
+        s << n.nearestDTreeIndex;
+    return s;
+}
+
+static std::ostream& operator<<(std::ostream& s, const DTreeNode& n)
+{
+    constexpr uint32_t UINT32_T_MAX = std::numeric_limits<uint32_t>::max();
+    constexpr uint16_t UINT16_T_MAX = std::numeric_limits<uint16_t>::max();
+
+    s << "P{";
+    if(n.parentIndex == UINT16_T_MAX) s << "-";
+    else s << n.parentIndex;
+    s << "} ";
+    s << "C{";
+    if(n.childIndices[0] == UINT32_T_MAX) s << "-";
+    else s << n.childIndices[0];
+    s << ", ";
+    if(n.childIndices[1] == UINT32_T_MAX) s << "-";
+    else s << n.childIndices[1];
+    s << ", ";
+    if(n.childIndices[2] == UINT32_T_MAX) s << "-";
+    else s << n.childIndices[2];
+    s << ", ";
+    if(n.childIndices[3] == UINT32_T_MAX) s << "-";
+    else s << n.childIndices[3];
+    s << "} ";
+    s << "I{"
+        << n.irradianceEstimates[0] << ", "
+        << n.irradianceEstimates[1] << ", "
+        << n.irradianceEstimates[2] << ", "
+        << n.irradianceEstimates[3] << "}";
+    return s;
+}
+
+static std::ostream& operator<<(std::ostream& s, const DTreeGPU& n)
+{
+    s << "Irradiane  : " << n.irradiance << std::endl;
+    s << "NodeCount  : " << n.nodeCount << std::endl;
+    s << "SampleCount: " << n.totalSamples << std::endl;
+    return s;
+}
 
 __global__
 static void KCInitializePaths(PathGuidingNode* gPathNodes,
@@ -218,17 +276,30 @@ TracerError PPGTracer::Initialize()
 TracerError PPGTracer::SetOptions(const TracerOptionsI& opts)
 {
     TracerError err = TracerError::OK;
-    if((err = opts.GetInt(options.sampleCount, SAMPLE_NAME)) != TracerError::OK)
-        return err;
     if((err = opts.GetUInt(options.maximumDepth, MAX_DEPTH_NAME)) != TracerError::OK)
         return err;
-    if((err = opts.GetBool(options.nextEventEstimation, NEE_NAME)) != TracerError::OK)
+    if((err = opts.GetInt(options.sampleCount, SAMPLE_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetUInt(options.rrStart, RR_START_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetString(options.lightSamplerType, LIGHT_SAMPLER_TYPE_NAME)) != TracerError::OK)
+        return err;
+
+    if((err = opts.GetBool(options.nextEventEstimation, NEE_NAME)) != TracerError::OK)
+        return err;    
     if((err = opts.GetBool(options.directLightMIS, DIRECT_LIGHT_MIS_NAME)) != TracerError::OK)
         return err;
-    if((err = opts.GetString(options.lightSamplerType, LIGHT_SAMPLER_TYPE_NAME)) != TracerError::OK)
+
+    if((err = opts.GetBool(options.rawPathGuiding, RAW_PG_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetBool(options.alwaysSendSamples, ALWAYS_SEND_NAME)) != TracerError::OK)
+        return err;
+
+    if((err = opts.GetUInt(options.maxDTreeDepth, D_TREE_MAX_DEPTH_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetFloat(options.dTreeSplitThreshold, D_TREE_FLUX_RATIO_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetUInt(options.sTreeSplitThreshold, S_TREE_SAMPLE_SPLIT_NAME)) != TracerError::OK)
         return err;
     
     return TracerError::OK;
@@ -343,8 +414,11 @@ void PPGTracer::Finalize()
     sTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
                               options.maximumDepth, cudaSystem);
 
+
+    Debug::DumpMemToFile("PathNodes", dPathNodes, totalPathNodeCount);
+
     // We iterated once
-    currentTreeIteration+= options.sampleCount * options.sampleCount;
+    currentTreeIteration += options.sampleCount * options.sampleCount;
     // Swap the trees if we achieved treshold
     if(currentTreeIteration == nextTreeSwap)
     {
@@ -352,14 +426,16 @@ void PPGTracer::Finalize()
         nextTreeSwap <<= 1;
      
         uint32_t treeSwapIterationCount = Utility::FindLastSet32(nextTreeSwap) - 1;
-        uint32_t currentSTreeSplitThreshold = (std::pow(2.0f, treeSwapIterationCount) * 
-                                               options.sTreeSplitThreshold);
+        uint32_t currentSTreeSplitThreshold = static_cast<uint32_t>((std::pow(2.0f, treeSwapIterationCount) *
+                                                                     options.sTreeSplitThreshold));
 
         // Split and Swap the trees
         sTree->SplitAndSwapTrees(options.sTreeSplitThreshold,
                                  options.dTreeSplitThreshold,
                                  options.maxDTreeDepth,
                                  cudaSystem);
+
+        printf("Splitting and Swapping Trees\n");
 
         // Completely Reset the Image
         // This is done to eliminate variance from prev samples

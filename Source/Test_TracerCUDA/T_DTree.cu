@@ -12,7 +12,7 @@
 
 using ::testing::FloatEq;
 
-std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
+static std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
 {
     s << "{"   << std::endl
       << "   " << n.worldPosition[0] << ", " 
@@ -24,7 +24,7 @@ std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
     return s;
 }
 
-std::ostream& operator<<(std::ostream& s, const DTreeNode& n)
+static std::ostream& operator<<(std::ostream& s, const DTreeNode& n)
 {
     constexpr uint32_t UINT32_T_MAX = std::numeric_limits<uint32_t>::max();
     constexpr uint16_t UINT16_T_MAX = std::numeric_limits<uint16_t>::max();
@@ -54,7 +54,7 @@ std::ostream& operator<<(std::ostream& s, const DTreeNode& n)
     return s;
 }
 
-std::ostream& operator<<(std::ostream& s, const DTreeGPU& n)
+static std::ostream& operator<<(std::ostream& s, const DTreeGPU& n)
 {
     s << "Irradiane  : " << n.irradiance << std::endl;
     s << "NodeCount  : " << n.nodeCount << std::endl;

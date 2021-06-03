@@ -67,8 +67,8 @@ void PPGTracerBoundaryWork(// Output
                            const HitKey matId,
                            const PrimitiveId primId)
 {
-    uint32_t globalRayOffset = rayId * renderState.maximumPathNodePerRay;
-    PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + globalRayOffset;
+    uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
+    PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // Check Material Sample Strategy
     assert(maxOutRay == 0);
@@ -117,7 +117,11 @@ void PPGTracerBoundaryWork(// Output
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
 
         // Also backpropogate this radiance to the path nodes
-        gLocalPathNodes[aux.pathIndex].AccumRadianceDownChain(total, gLocalPathNodes);
+
+        printf("AddingRadiance: %f %f %f\n",
+               total[0], total[1], total[2]);
+
+        gLocalPathNodes[aux.depth - 1].AccumRadianceDownChain(total, gLocalPathNodes);
     }
 }
 
@@ -149,8 +153,8 @@ void PPGTracerPathWork(// Output
     //static constexpr int NEE_RAY_INDEX = 1;
     //static constexpr int MIS_RAY_INDEX = 2;
 
-    uint32_t globalRayOffset = rayId * renderState.maximumPathNodePerRay;
-    PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + globalRayOffset;
+    uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
+    PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // Inputs
     // Current Ray
@@ -214,7 +218,7 @@ void PPGTracerPathWork(// Output
         auto& img = renderState.gImage;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
         // Accumulate this to the paths aswell
-        gLocalPathNodes[aux.pathIndex].AccumRadianceDownChain(total, gLocalPathNodes);
+        gLocalPathNodes[aux.depth - 1].AccumRadianceDownChain(total, gLocalPathNodes);
     }
 
     // If this material does not require to have any samples just quit
@@ -234,7 +238,10 @@ void PPGTracerPathWork(// Output
         // Sample a path using SDTree
         const DTreeGPU* dTree = renderState.gDTrees[dTreeIndex];
         Vector3f direction = dTree->Sample(pdf, rng);
-        pdf = 1.0f;
+
+        if(isnan(pdf) | direction.HasNaN())
+            printf("pdf % f, dir % f, % f, % f\n", pdf,
+                   direction[0], direction[1], direction[2]);
 
         // Calculate BxDF
         reflectance = MGroup::Evaluate(// Input
@@ -299,16 +306,24 @@ void PPGTracerPathWork(// Output
         auxOut.radianceFactor = pathRadianceFactor;
         auxOut.type = (isSpecularMat) ? RayType::SPECULAR_PATH_RAY : RayType::PATH_RAY;
         auxOut.depth++;
-        auxOut.pathIndex++;
         gOutRayAux[PATH_RAY_INDEX] = auxOut;
 
         // Also create a path
+        gLocalPathNodes[aux.depth - 1].prevNext[1] = auxOut.depth - 1;
+
         PathGuidingNode node;
-        node.prevNext[0] = aux.pathIndex;
+
+        printf("WritingNode (%u %u) W:(%f, %f, %f) Path: %u\n",
+               static_cast<uint32_t>(aux.depth), static_cast<uint32_t>(auxOut.depth),
+               position[0], position[1], position[2],
+               aux.pathIndex);
+
+        node.prevNext[0] = aux.depth - 1;        
         node.nearestDTreeIndex = dTreeIndex;
         node.radFactor = pathRadianceFactor;
         node.totalRadiance = Zero3;
-        gLocalPathNodes[auxOut.pathIndex] = node;
+        node.worldPosition = position;
+        gLocalPathNodes[auxOut.depth - 1] = node;
     }
     else InvalidRayWrite(PATH_RAY_INDEX);
 
