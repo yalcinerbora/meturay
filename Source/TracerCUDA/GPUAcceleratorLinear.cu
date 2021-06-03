@@ -113,11 +113,14 @@ TracerError GPUBaseAcceleratorLinear::Constrcut(const CudaSystem&,
     std::vector<Vector3> aabbMin(aabbCount);
     std::vector<Vector3> aabbMax(aabbCount);
 
+    sceneAABB = NegativeAABB3f;
     for(const auto& pair : aabbMap)
     {
         uint32_t index = idLookup.at(pair.first);
         aabbMin[index] = pair.second.Min();
         aabbMax[index] = pair.second.Max();
+        sceneAABB.UnionSelf(AABB3f(pair.second.Min(),
+                                   pair.second.Max()));
     }
 
     // Copy AABB data to leaf structs
@@ -139,6 +142,11 @@ TracerError GPUBaseAcceleratorLinear::Destruct(const CudaSystem&)
 {
     // Nothing to do here
     return TracerError::OK;
+}
+
+const AABB3f& GPUBaseAcceleratorLinear::SceneExtents() const
+{
+    return sceneAABB;
 }
 
 static_assert(IsTracerClass<GPUBaseAcceleratorLinear>::value,

@@ -346,6 +346,10 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&,
     bvhMemory = DeviceMemory(bvhNodes.size() * sizeof(BVHNode<BaseLeaf>));
     dBVH = static_cast<const BVHNode<BaseLeaf>*>(bvhMemory);
 
+    // Record Scene AABB
+    sceneAABB = AABB3f(bvhNodes.front().aabbMin,
+                       bvhNodes.front().aabbMax);
+
     // Copy and All Done!
     CUDA_CHECK(cudaMemcpy(bvhMemory, bvhNodes.data(),
                           sizeof(BVHNode<BaseLeaf>) * bvhNodes.size(),
@@ -353,8 +357,7 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&,
 
     t.Stop();
     METU_LOG("Base BVH(d=%u) generated in %f seconds.",
-             maxDepth,
-             t.Elapsed<CPUTimeSeconds>());
+             maxDepth, t.Elapsed<CPUTimeSeconds>());
 
     return TracerError::OK;
 }
@@ -363,6 +366,11 @@ TracerError GPUBaseAcceleratorBVH::Destruct(const CudaSystem&)
 {
     // TODO: Implement?
     return TracerError::OK;
+}
+
+const AABB3f& GPUBaseAcceleratorBVH::SceneExtents() const
+{
+    return sceneAABB;
 }
 
 // Accelerator Instancing for basic primitives

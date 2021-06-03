@@ -163,6 +163,7 @@ class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
         // CPU Memory
         std::map<uint32_t, uint32_t>    idLookup;
         std::vector<BaseLeaf>           leafs;
+        AABB3f                          sceneAABB;
 
         static void                     GenerateBaseBVHNode(// Output
                                                             size_t& splitLoc,
@@ -211,6 +212,8 @@ class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
                                               // List of surface AABBs
                                               const SurfaceAABBList&) override;
         TracerError                 Destruct(const CudaSystem&) override;
+
+        const AABB3f& SceneExtents() const override;
 };
 
 #include "GPUAcceleratorBVH.hpp"

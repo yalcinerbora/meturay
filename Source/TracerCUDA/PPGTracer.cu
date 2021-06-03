@@ -9,6 +9,7 @@
 #include "GPULightSamplerUniform.cuh"
 #include "GenerationKernels.cuh"
 #include "GPUWork.cuh"
+#include "GPUAcceleratorI.h"
 
 //#include "TracerDebug.h"
 //std::ostream& operator<<(std::ostream& stream, const RayAuxPath& v)
@@ -206,6 +207,11 @@ TracerError PPGTracer::Initialize()
         }
         workMap.emplace(batchId, workBatchList);
     }    
+
+    // Init sTree
+    AABB3f worldAABB = scene.BaseAccelerator()->SceneExtents();
+    sTree = std::make_unique<STree>(worldAABB);
+
     return TracerError::OK;
 }
 

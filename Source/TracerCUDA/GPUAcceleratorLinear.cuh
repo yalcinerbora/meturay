@@ -134,6 +134,7 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
         // CPU
         std::map<uint32_t, uint32_t>    idLookup;
         uint32_t                        leafCount;
+        AABB3f                          sceneAABB;
 
     protected:
     public:
@@ -170,6 +171,8 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
                                               // List of surface AABBs
                                               const SurfaceAABBList&) override;
         TracerError                 Destruct(const CudaSystem&) override;
+
+        const AABB3f&               SceneExtents() const override;
 };
 
 #include "GPUAcceleratorLinear.hpp"

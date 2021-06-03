@@ -128,4 +128,6 @@ class GPUBaseAcceleratorI
                                           // List of surface AABBs
                                           const SurfaceAABBList&) = 0;
         virtual TracerError     Destruct(const CudaSystem&) = 0;
+
+        virtual const AABB3f&   SceneExtents() const = 0;
 };
