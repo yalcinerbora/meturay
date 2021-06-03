@@ -12,7 +12,7 @@
 #include "GPUAcceleratorI.h"
 
 //#include "TracerDebug.h"
-//std::ostream& operator<<(std::ostream& stream, const RayAuxPath& v)
+//std::ostream& operator<<(std::ostream& stream, const RayAuxPPG& v)
 //{
 //    stream << std::setw(0)
 //        << v.pixelIndex << ", "
@@ -239,7 +239,7 @@ bool PPGTracer::Render()
     HitAndPartitionRays();
 
     //Debug::DumpMemToFile("auxIn",
-    //                     static_cast<const RayAuxPath*>(*dAuxIn),
+    //                     static_cast<const RayAuxPPG*>(*dAuxIn),
     //                     currentRayCount);
     //Debug::DumpMemToFile("rayIn",
     //                     rayMemory.Rays(),
@@ -281,7 +281,7 @@ bool PPGTracer::Render()
 
     // Allocate new auxiliary buffer
     // to fit all potential ray outputs
-    size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPath);
+    size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPPG);
     DeviceMemory::EnlargeBuffer(*dAuxOut, auxOutSize);
 
     // Set Auxiliary Pointers
@@ -295,12 +295,12 @@ bool PPGTracer::Render()
         if(loc == workMap.end()) continue;
 
         // Set pointers        
-        const RayAuxPath* dAuxInLocal = static_cast<const RayAuxPath*>(*dAuxIn);
-        using WorkData = typename GPUWorkBatchD<PPGTracerGlobalState, RayAuxPath>;
+        const RayAuxPPG* dAuxInLocal = static_cast<const RayAuxPPG*>(*dAuxIn);
+        using WorkData = typename GPUWorkBatchD<PPGTracerGlobalState, RayAuxPPG>;
         int i = 0;
         for(auto& work : loc->second)
         {
-            RayAuxPath* dAuxOutLocal = static_cast<RayAuxPath*>(*dAuxOut) + p.offsets[i];
+            RayAuxPPG* dAuxOutLocal = static_cast<RayAuxPPG*>(*dAuxOut) + p.offsets[i];
 
             auto& wData = static_cast<WorkData&>(*work);
             wData.SetGlobalData(globalData);
@@ -315,7 +315,7 @@ bool PPGTracer::Render()
              scene.BaseBoundaryMaterial());
 
     //Debug::DumpMemToFile("auxOut",
-    //                     static_cast<const RayAuxPath*>(*dAuxOut),
+    //                     static_cast<const RayAuxPPG*>(*dAuxOut),
     //                     totalOutRayCount);
     //// Work rays swapped the ray buffer so read input rays
     //Debug::DumpMemToFile("rayOut", rayMemory.Rays(),

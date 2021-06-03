@@ -96,6 +96,10 @@ STree::STree(const AABB3f& sceneExtents)
     // Create a default single tree
     dTrees.reserve(INITIAL_TREE_RESERVE_COUNT);
     dTrees.emplace_back();
+
+    // Adjust DTree pointers for Tracer Kernels
+    readDTreeGPUBuffer = std::move(LinearizeDTreeGPUPtrs(true));
+    dReadDTrees = static_cast<const DTreeGPU**>(readDTreeGPUBuffer);
 }
 
 void STree::SplitLeaves(uint32_t maxSamplesPerNode,
