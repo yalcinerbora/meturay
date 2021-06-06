@@ -1,9 +1,9 @@
 #include "GenerationKernels.cuh"
 #include "RayTracer.h"
 
-template <class AuxStruct, AuxInitFunc<AuxStruct> AuxFunc>
+template <class AuxStruct, class AuxInitFunctor>
 void RayTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount,
-                             const AuxStruct& initialValues)
+                             const AuxInitFunctor& initFunctor)
 {
     int32_t sampleCountSqr = sampleCount * sampleCount;
 
@@ -25,7 +25,7 @@ void RayTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount,
     const uint32_t TPB = StaticThreadPerBlock1D;
     // GPUSplits
     const auto splits = cudaSystem.GridStrideMultiGPUSplit(totalRayCount, TPB, 0,
-                                                           KCGenerateCameraRaysGPU<AuxStruct, AuxFunc>);
+                                                           KCGenerateCameraRaysGPU<AuxStruct, AuxInitFunctor>);
 
     // Only use splits as guidance
     // and Split work into columns (much easier to maintain..
@@ -61,7 +61,7 @@ void RayTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount,
         gpu.AsyncGridStrideKC_X
         (
             0, localWorkCount,
-            KCGenerateCameraRaysGPU<AuxStruct, AuxFunc>,
+            KCGenerateCameraRaysGPU<AuxStruct, AuxInitFunctor>,
             // Args
             // Inputs
             gRays,
@@ -74,8 +74,8 @@ void RayTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount,
             resolution,
             localPixelStart,
             localPixelEnd,
-            // Data to initialize auxiliary base data
-            initialValues
+            // Functor to initialize auxiliary base data
+            initFunctor
         );
 
         // Adjust for next call
@@ -89,9 +89,9 @@ void RayTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount,
     currentRayCount = totalRayCount;
 }
 
-template <class AuxStruct, AuxInitFunc<AuxStruct> AuxFunc>
+template <class AuxStruct, class AuxInitFunctor>
 void RayTracer::GenerateRays(const VisorCamera& cam, int32_t sampleCount,
-                             const AuxStruct& initialValues)
+                             const AuxInitFunctor& initFunctor)
 {
     // Visor Camera is GUI represented camera
     // Its fov values are in degrees (since its more intuitive to show as such
@@ -119,7 +119,7 @@ void RayTracer::GenerateRays(const VisorCamera& cam, int32_t sampleCount,
     const uint32_t TPB = StaticThreadPerBlock1D;
     // GPUSplits
     const auto splits = cudaSystem.GridStrideMultiGPUSplit(totalRayCount, TPB, 0,
-                                                           KCGenerateCameraRaysCPU<AuxStruct, AuxFunc>);
+                                                           KCGenerateCameraRaysCPU<AuxStruct, AuxInitFunctor>);
 
     // Only use splits as guidance
     // and Split work into columns (much easier to maintain..
@@ -153,7 +153,7 @@ void RayTracer::GenerateRays(const VisorCamera& cam, int32_t sampleCount,
         gpu.AsyncGridStrideKC_X
         (
             0, localWorkCount,
-            KCGenerateCameraRaysCPU<AuxStruct, AuxFunc>,
+            KCGenerateCameraRaysCPU<AuxStruct, AuxInitFunctor>,
             // Args
             // Inputs
             gRays,
@@ -166,8 +166,8 @@ void RayTracer::GenerateRays(const VisorCamera& cam, int32_t sampleCount,
             resolution,
             localPixelStart,
             localPixelEnd,
-            // Data to initialize auxiliary base data
-            initialValues
+            // Functor to initialize auxiliary base data
+            initFunctor
         );
         // Adjust for next call
         localPixelStart = localPixelEnd;

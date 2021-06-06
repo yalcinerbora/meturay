@@ -53,7 +53,7 @@ struct RayAuxPPG
     uint8_t         depth;          // Current path depth
     RayType         type;           // Ray Type
     
-    uint32_t        pathIndex;      // Global/Local path node index
+    uint32_t        pathIndex;      // Global path node index
 };
 
 static const RayAuxBasic InitialBasicAux = RayAuxBasic
@@ -79,72 +79,115 @@ static const RayAuxPPG InitialPPGAux = RayAuxPPG
 {
     Vector3f(1.0f, 1.0f, 1.0f),
     0, 0, 0,
-    1,
+    0,
     RayType::CAMERA_RAY,
     0
 };
 
-__device__ __host__
-inline void RayInitBasic(RayAuxBasic& gOutBasic,
-                         // Input
-                         const RayAuxBasic& defaults,
-                         const RayReg& ray,
-                         // Index
-                         uint16_t mediumIndex,
-                         const uint32_t localPixelId,
-                         const uint32_t pixelSampleId)
+class RayAuxInitBasic
 {
-    RayAuxBasic init = defaults;
-    init.pixelIndex = localPixelId;
-    gOutBasic = init;
-}
+     private:
+         RayAuxBasic defaultValue;
 
-__device__ __host__
-inline void RayInitPath(RayAuxPath& gOutPath,
-                         // Input
-                        const RayAuxPath& defaults,
+    public:
+        RayAuxInitBasic(const RayAuxBasic& aux)
+            : defaultValue(aux)
+        {}
+
+        __device__ __host__ HYBRID_INLINE
+        void operator()(RayAuxBasic& gOutBasic,
+                        // Input    
                         const RayReg& ray,
                         // Index
                         uint16_t medumIndex,
                         const uint32_t localPixelId,
-                        const uint32_t pixelSampleId)
-{
-    RayAuxPath init = defaults;
-    init.pixelIndex = localPixelId;
-    init.type = RayType::CAMERA_RAY;
-    init.mediumIndex = medumIndex;
-    init.depth = 1;
-    gOutPath = init;
-}
+                        const uint32_t pixelSampleId) const
+        {
+            RayAuxBasic init = defaultValue;
+            init.pixelIndex = localPixelId;
+            gOutBasic = init;
+        }
+};
 
-__device__ __host__
-inline void RayInitAO(RayAuxAO& gOutAO,
-                      // Input
-                      const RayAuxAO& defaults,
-                      const RayReg& ray,
-                      // Index
-                      uint16_t medumIndex,
-                      const uint32_t localPixelId,
-                      const uint32_t pixelSampleId)
+class RayAuxInitPath
 {
-    RayAuxAO init = defaults;
-    init.pixelIndex = localPixelId;
-    gOutAO = init;
-}
+     private:
+        RayAuxPath defaultValue;
 
-__device__ __host__
-inline void RayInitPPG(RayAuxPPG& gOutAO,
-                      // Input
-                       const RayAuxPPG& defaults,
-                       const RayReg& ray,
-                       // Index
-                       uint16_t medumIndex,
-                       const uint32_t localPixelId,
-                       const uint32_t pixelSampleId)
+    public:
+        RayAuxInitPath(const RayAuxPath& aux)
+            : defaultValue(aux)
+        {}
+
+        __device__ __host__ HYBRID_INLINE
+        void operator()(RayAuxPath& gOutPath,
+                        // Input    
+                        const RayReg& ray,
+                        // Index
+                        uint16_t medumIndex,
+                        const uint32_t localPixelId,
+                        const uint32_t pixelSampleId) const
+        {
+            RayAuxPath init = defaultValue;
+            init.pixelIndex = localPixelId;
+            init.type = RayType::CAMERA_RAY;
+            init.mediumIndex = medumIndex;
+            init.depth = 1;
+            gOutPath = init;
+        }
+};
+
+
+class RayAuxInitAO
 {
-    RayAuxPPG init = defaults;
-    init.pixelIndex = localPixelId;
-    // TODO: change this with total sample count
-    init.pathIndex = localPixelId * 1;
-    gOutAO = init;
-}
+    private:
+        RayAuxAO defaultValue;
+
+    public:
+        RayAuxInitAO(const RayAuxAO& aux)
+            : defaultValue(aux)
+        {}
+
+        __device__ __host__ HYBRID_INLINE
+        void operator()(RayAuxAO& gOutAO,
+                        // Input    
+                        const RayReg& ray,
+                        // Index
+                        uint16_t medumIndex,
+                        const uint32_t localPixelId,
+                        const uint32_t pixelSampleId) const
+        {
+            RayAuxAO init = defaultValue;
+            init.pixelIndex = localPixelId;
+            gOutAO = init;
+        }
+};
+
+class RayAuxInitPPG
+{
+    private:
+        RayAuxPPG   defaultValue;
+        uint32_t    samplePerPixel;
+
+    public:
+        RayAuxInitPPG(const RayAuxPPG& aux, 
+                      uint32_t samplePerPixel)
+            : defaultValue(aux)
+            , samplePerPixel(samplePerPixel)
+        {}
+
+        __device__ __host__ HYBRID_INLINE
+        void operator()(RayAuxPPG& gOutPPG,
+                        // Input    
+                        const RayReg& ray,
+                        // Index
+                        uint16_t medumIndex,
+                        const uint32_t localPixelId,
+                        const uint32_t pixelSampleId) const
+        {
+            RayAuxPPG init = defaultValue;
+            init.pixelIndex = localPixelId;
+            init.pathIndex = localPixelId * samplePerPixel;
+            gOutPPG = init;
+        }
+};

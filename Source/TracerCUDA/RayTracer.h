@@ -24,12 +24,12 @@ class RayTracer : public GPUTracer
 
         const GPUSceneI&        scene;
 
-        template <class AuxStruct, AuxInitFunc<AuxStruct> AuxFunc>
+        template <class AuxStruct, class AuxInitFunctor>
         void                    GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount,
-                                             const AuxStruct& initialValues);
-        template <class AuxStruct, AuxInitFunc<AuxStruct> AuxFunc>
+                                             const AuxInitFunctor& initFunctor);
+        template <class AuxStruct, class AuxInitFunctor>
         void                    GenerateRays(const VisorCamera& camera, int32_t sampleCount,
-                                             const AuxStruct& initialValues);
+                                             const AuxInitFunctor& initFunctor);
         void                    SwapAuxBuffers();
 
     public:

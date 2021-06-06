@@ -120,13 +120,13 @@ void DirectTracer::GenerateWork(int cameraId)
         callbacks->SendCurrentCamera(SceneCamToVisorCam(cameraId));
 
     // Generate Rays
-    GenerateRays<RayAuxBasic, RayInitBasic>(dCameras[cameraId],
-                                            options.sampleCount,
-                                            InitialBasicAux);
+    GenerateRays<RayAuxBasic, RayAuxInitBasic>(dCameras[cameraId],
+                                               options.sampleCount,
+                                               RayAuxInitBasic(InitialBasicAux));
 }
 
 void DirectTracer::GenerateWork(const VisorCamera& c)
 {
-    GenerateRays<RayAuxBasic, RayInitBasic>(c, options.sampleCount,
-                                            InitialBasicAux);
+    GenerateRays<RayAuxBasic, RayAuxInitBasic>(c, options.sampleCount,
+                                               RayAuxInitBasic(InitialBasicAux));
 }

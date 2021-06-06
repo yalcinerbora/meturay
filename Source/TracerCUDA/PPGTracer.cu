@@ -105,7 +105,7 @@ static void KCInitializePaths(PathGuidingNode* gPathNodes,
     {
         PathGuidingNode node;
         node.nearestDTreeIndex = STree::InvalidDTreeIndex;
-        node.radFactor = Zero3;
+        node.radFactor = Vector3f(1.0f);
         node.prevNext = Vector<2, PathGuidingNode::IndexType>(PathGuidingNode::InvalidIndex);
         node.totalRadiance = Zero3;
         node.worldPosition = Zero3;
@@ -399,6 +399,9 @@ bool PPGTracer::Render()
     SwapAuxBuffers();    
     currentDepth++;
 
+    //
+    METU_LOG("PASS ENDED=============================================================");
+
     // Check tracer termination conditions
     // Either there is no ray left for iteration or maximum depth is exceeded
     if(totalOutRayCount == 0 || currentDepth >= options.maximumDepth)
@@ -410,12 +413,11 @@ void PPGTracer::Finalize()
 {
     uint32_t totalPathNodeCount = TotalPathNodeCount();
 
+    Debug::DumpMemToFile("PathNodes", dPathNodes, totalPathNodeCount);
+
     // Accumulate the finished radiances to the STree
     sTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
                               options.maximumDepth, cudaSystem);
-
-
-    Debug::DumpMemToFile("PathNodes", dPathNodes, totalPathNodeCount);
 
     // We iterated once
     currentTreeIteration += options.sampleCount * options.sampleCount;
@@ -457,9 +459,11 @@ void PPGTracer::GenerateWork(int cameraId)
     if(callbacks)
         callbacks->SendCurrentCamera(SceneCamToVisorCam(cameraId));
 
-    GenerateRays<RayAuxPPG, RayInitPPG>(dCameras[cameraId],
-                                        options.sampleCount,
-                                        InitialPPGAux);
+    GenerateRays<RayAuxPPG, RayAuxInitPPG>(dCameras[cameraId],
+                                           options.sampleCount,
+                                           RayAuxInitPPG(InitialPPGAux,
+                                                         options.sampleCount *
+                                                         options.sampleCount));
 
     ResizeAndInitPathMemory(imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1],
                             options.sampleCount * options.sampleCount);
@@ -468,8 +472,10 @@ void PPGTracer::GenerateWork(int cameraId)
 
 void PPGTracer::GenerateWork(const VisorCamera& cam)
 {
-    GenerateRays<RayAuxPPG, RayInitPPG>(cam, options.sampleCount,
-                                        InitialPPGAux);
+    GenerateRays<RayAuxPPG, RayAuxInitPPG>(cam, options.sampleCount,
+                                           RayAuxInitPPG(InitialPPGAux,
+                                                         options.sampleCount *
+                                                         options.sampleCount));
     ResizeAndInitPathMemory(imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1],
                             options.sampleCount * options.sampleCount);
 

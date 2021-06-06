@@ -24,7 +24,7 @@ Uses statified sampling
 #include "CudaSystem.hpp"
 
 // Templated Camera Ray Generation Kernel
-template<class RayAuxData, AuxInitFunc<RayAuxData> AuxFunc>
+template<class RayAuxData, class AuxInitFunctor>
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCGenerateCameraRaysCPU(// Output
                              RayGMem* gRays,
@@ -37,8 +37,8 @@ void KCGenerateCameraRaysCPU(// Output
                              const Vector2i resolution,
                              const Vector2i pixelStart,
                              const Vector2i pixelCount,
-                             // Data to initialize auxiliary base data
-                             const RayAuxData auxBaseData)
+                             // Functor to initialize auxiliary base data
+                             const AuxInitFunctor auxInitF)
 {
     RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
 
@@ -105,14 +105,13 @@ void KCGenerateCameraRaysCPU(// Output
         ray.Update(gRays, threadId);
 
         // Initialize Auxiliary Data
-        AuxFunc(gAuxiliary[threadId],
-                // Input
-                auxBaseData,
-                ray,
-                // Index
-                cam.mediumIndex,
-                pixelIdLinear,
-                sampleIdLinear);
+        auxInitF(gAuxiliary[threadId],
+                 // Input
+                 ray,
+                 // Index
+                 cam.mediumIndex,
+                 pixelIdLinear,
+                 sampleIdLinear);
 
         // Initialize Samples
         ImageAddSample(imgMem, pixelIdLinear, 1);
@@ -120,7 +119,7 @@ void KCGenerateCameraRaysCPU(// Output
 }
 
 // Templated Camera Ray Generation Kernel
-template<class RayAuxData, AuxInitFunc<RayAuxData> AuxFunc>
+template<class RayAuxData, class AuxInitFunctor>
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCGenerateCameraRaysGPU(// Output
                              RayGMem* gRays,
@@ -133,8 +132,8 @@ void KCGenerateCameraRaysGPU(// Output
                              const Vector2i resolution,
                              const Vector2i pixelStart,
                              const Vector2i pixelCount,
-                             // Data to initialize auxiliary base data
-                             const RayAuxData auxBaseData)
+                             // Functor to initialize auxiliary base data
+                             const AuxInitFunctor auxInitF)
 {
     RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
 
@@ -170,14 +169,13 @@ void KCGenerateCameraRaysGPU(// Output
         ray.Update(gRays, threadId);
 
         // Write Auxiliary Data
-        AuxFunc(gAuxiliary[threadId],
-                // Input
-                auxBaseData,
-                ray,
-                // Index
-                gCam->MediumIndex(),
-                pixelIdLinear,
-                sampleIdLinear);
+        auxInitF(gAuxiliary[threadId],
+                 // Input
+                 ray,
+                 // Index
+                 gCam->MediumIndex(),
+                 pixelIdLinear,
+                 sampleIdLinear);
 
         // Initialize Samples
         ImageAddSample(imgMem, pixelIdLinear, 1);

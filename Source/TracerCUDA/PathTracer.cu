@@ -307,15 +307,15 @@ void PathTracer::GenerateWork(int cameraId)
     if(callbacks)
         callbacks->SendCurrentCamera(SceneCamToVisorCam(cameraId));
 
-    GenerateRays<RayAuxPath, RayInitPath>(dCameras[cameraId],
+    GenerateRays<RayAuxPath, RayAuxInitPath>(dCameras[cameraId],
                                           options.sampleCount,
-                                          InitialPathAux);
+                                          RayAuxInitPath(InitialPathAux));
     currentDepth = 0;
 }
 
 void PathTracer::GenerateWork(const VisorCamera& cam)
 {
-    GenerateRays<RayAuxPath, RayInitPath>(cam, options.sampleCount,
-                                          InitialPathAux);
+    GenerateRays<RayAuxPath, RayAuxInitPath>(cam, options.sampleCount,
+                                             RayAuxInitPath(InitialPathAux));
     currentDepth = 0;
 }

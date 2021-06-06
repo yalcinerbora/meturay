@@ -123,7 +123,7 @@ void PPGTracerBoundaryWork(// Output
                emission[0], emission[1], emission[2],
                radianceFactor[0], radianceFactor[1], radianceFactor[2]);
 
-        gLocalPathNodes[aux.depth - 1].AccumRadianceDownChain(total, gLocalPathNodes);
+        gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
     }
 }
 
@@ -220,7 +220,7 @@ void PPGTracerPathWork(// Output
         auto& img = renderState.gImage;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
         // Accumulate this to the paths aswell
-        gLocalPathNodes[aux.depth - 1].AccumRadianceDownChain(total, gLocalPathNodes);
+        gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
     }
 
     // If this material does not require to have any samples just quit
@@ -309,26 +309,29 @@ void PPGTracerPathWork(// Output
         auxOut.type = (isSpecularMat) ? RayType::SPECULAR_PATH_RAY : RayType::PATH_RAY;
         auxOut.depth++;
         gOutRayAux[PATH_RAY_INDEX] = auxOut;
-
-        // Also create a path
-        gLocalPathNodes[aux.depth - 1].prevNext[1] = auxOut.depth - 1;
-
-        PathGuidingNode node;
-
-        printf("WritingNode (%u %u) W:(%f, %f, %f) RF:(%f, %f, %f) Path: %u\n",
-               static_cast<uint32_t>(aux.depth), static_cast<uint32_t>(auxOut.depth),
-               position[0], position[1], position[2],
-               pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
-               aux.pathIndex);
-
-        node.prevNext[0] = aux.depth - 1;        
-        node.nearestDTreeIndex = dTreeIndex;
-        node.radFactor = pathRadianceFactor;
-        node.totalRadiance = Zero3;
-        node.worldPosition = position;
-        gLocalPathNodes[auxOut.depth - 1] = node;
     }
     else InvalidRayWrite(PATH_RAY_INDEX);
+   
+
+    // Record this intersection on path chain
+    uint8_t currentDepth = aux.depth + 1;
+    uint8_t prevDepth = aux.depth;
+    PathGuidingNode node;
+    printf("WritingNode PC:(%u %u) W:(%f, %f, %f) RF:(%f, %f, %f) Path: %u\n",
+           static_cast<uint32_t>(prevDepth), static_cast<uint32_t>(currentDepth),
+           position[0], position[1], position[2],
+           pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
+           aux.pathIndex);
+
+    node.prevNext[0] = prevDepth;
+    node.nearestDTreeIndex = dTreeIndex;
+    node.radFactor = pathRadianceFactor;
+    node.totalRadiance = Zero3;
+    node.worldPosition = position;
+    gLocalPathNodes[currentDepth] = node;
+
+    // Set Previous Path node's next index
+    gLocalPathNodes[prevDepth].prevNext[1] = currentDepth;
 
     //// Dont launch NEE if not requested
     //// or material is highly specula
