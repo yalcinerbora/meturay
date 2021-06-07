@@ -50,7 +50,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\ComparisonFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CudaSystem.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DefaultLeaf.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\EstimatorFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUPiecewiseDistribution.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUEndpointI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUEvent.h" />
@@ -65,7 +64,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\LambertMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\LambertMaterialKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MangledNames.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialFunctions.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUWork.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MetaMaterialFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUSurface.h" />
@@ -78,7 +77,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracer.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerWork.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\PPGWork.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\STree.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\STreeKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureFunctions.h" />

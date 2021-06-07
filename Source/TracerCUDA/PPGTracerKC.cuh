@@ -123,7 +123,7 @@ void PPGTracerBoundaryWork(// Output
                emission[0], emission[1], emission[2],
                radianceFactor[0], radianceFactor[1], radianceFactor[2]);
 
-        gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
+        //gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
     }
 }
 
@@ -220,7 +220,7 @@ void PPGTracerPathWork(// Output
         auto& img = renderState.gImage;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
         // Accumulate this to the paths aswell
-        gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
+        //gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
     }
 
     // If this material does not require to have any samples just quit

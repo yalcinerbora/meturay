@@ -43,7 +43,7 @@ class GPUWorkBatchD : public GPUWorkBatchI
 template<class GlobalData, class LocalData, class RayData,
          class MGroup, class PGroup,
          WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
-         SurfaceFuncGenerator<MGroup::Surface, PGroup::HitData, PGroup::PrimitiveData> SGen>
+         SurfaceFuncGenerator<typename MGroup::Surface, typename PGroup::HitData, typename PGroup::PrimitiveData> SGen>
 class GPUWorkBatch
     : public GPUWorkBatchD<GlobalData, RayData>
 {
@@ -107,9 +107,13 @@ void GPUWorkBatchD<GD, RD>::SetRayDataPtrs(RD* dRDOut,
     dAuxOutLocal = dRDOut;
 }
 
-template <class GD, class LD, class RD, class MG, class PG,
-          WorkFunc<GD, LD, RD, MG> WF,
-          SurfaceFuncGenerator<MG::Surface, PG::HitData, PG::PrimitiveData> SF>
+
+template<class GD, class LD, class RD, class MG, class PG,
+         WorkFunc<GD, LD, RD, MG> WF,
+         SurfaceFuncGenerator<typename MG::Surface, typename PG::HitData, typename PG::PrimitiveData> SF>
+//template <class GD, class LD, class RD, class MG, class PG,
+//          WorkFunc<GD, LD, RD, MG> WF,
+//          SurfaceFuncGenerator<MG::Surface, PG::HitData, PG::PrimitiveData> SF>
 inline const char* GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::TypeNameGen(const char* mgOverride,
                                                                          const char* pgOverride)
 {
@@ -125,7 +129,7 @@ inline const char* GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::TypeNameGen(const c
 
 template <class GD, class LD, class RD, class MG, class PG,
           WorkFunc<GD, LD, RD, MG> WF,
-          SurfaceFuncGenerator<MG::Surface, PG::HitData, PG::PrimitiveData> SF>
+          SurfaceFuncGenerator<typename MG::Surface, typename PG::HitData, typename PG::PrimitiveData> SF>
 GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::GPUWorkBatch(const GPUMaterialGroupI& mg,
                                                        const GPUPrimitiveGroupI& pg,
                                                        const GPUTransformI* const* t)
@@ -136,7 +140,7 @@ GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::GPUWorkBatch(const GPUMaterialGroupI& 
 
 template <class GD, class LD, class RD, class MG, class PG,
           WorkFunc<GD, LD, RD, MG> WF,
-          SurfaceFuncGenerator<MG::Surface, PG::HitData, PG::PrimitiveData> SF>
+          SurfaceFuncGenerator<typename MG::Surface, typename PG::HitData, typename PG::PrimitiveData> SF>
 void GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::Work(// Output
                                                     HitKey* dBoundMatOut,
                                                     RayGMem* dRayOut,

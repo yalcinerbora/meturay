@@ -281,7 +281,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\WorkKernels.cuh">
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialFunctions.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialFunctions.h">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\AcceleratorFunctions.h">
@@ -291,9 +291,6 @@
       <Filter>GPU Template Kernels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\ImageFunctions.cuh">
-      <Filter>GPUTemplateFunctions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\EstimatorFunctions.cuh">
       <Filter>GPUTemplateFunctions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUWork.cuh">
@@ -494,9 +491,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\AOTracerKC.cuh">
       <Filter>Tracers\AOTracer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\PPGWork.h">
-      <Filter>Tracers\PPGTracer</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\RayAuxStruct.cuh">
       <Filter>Tracers\Structs</Filter>

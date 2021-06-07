@@ -91,17 +91,18 @@ void AOTracer::GenerateWork(int cameraId)
 
     depth = 0;
     hitPhase = false;
-    GenerateRays<RayAuxAO, RayInitAO>(dCameras[cameraId],
-                                      options.sampleCount,
-                                      InitialAOAux);
+    GenerateRays<RayAuxAO, RayAuxInitAO>(dCameras[cameraId],
+                                         options.sampleCount,
+                                         RayAuxInitAO(InitialAOAux));
 }
 
 void AOTracer::GenerateWork(const VisorCamera& cam)
 {
     depth = 0;
     hitPhase = false;
-    GenerateRays<RayAuxAO, RayInitAO>(cam, options.sampleCount,
-                                      InitialAOAux);
+    GenerateRays<RayAuxAO, RayAuxInitAO>(cam,
+                                         options.sampleCount,
+                                         RayAuxInitAO(InitialAOAux));
 }
 
 bool AOTracer::Render()

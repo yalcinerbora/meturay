@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GPUMaterialI.h"
-#include "MaterialFunctions.cuh"
+#include "MaterialFunctions.h"
 
 class GPUTransformI;
 

@@ -9,15 +9,6 @@
 #include "TracerFunctions.cuh"
 #include "TracerConstants.h"
 
-//#include "MaterialFunctions.cuh"
-//#include "ImageStructs.h"
-//#include "RayStructs.h"
-//#include "GPULightI.h"
-//#include "GPUDirectLightSamplerI.h"
-//#include "GPUMediumVacuum.cuh"
-//#include "GPUSurface.h"
-
-
 struct PathTracerGlobalState
 {
     // Output Image

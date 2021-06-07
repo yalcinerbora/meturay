@@ -5,7 +5,7 @@
 #include "RayLib/HemiDistribution.h"
 
 #include "Random.cuh"
-#include "MaterialFunctions.cuh"
+#include "MaterialFunctions.h"
 #include "GPUSurface.h"
 
 __device__ __forceinline__

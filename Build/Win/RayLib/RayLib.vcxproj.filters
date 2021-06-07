@@ -228,9 +228,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\VisorCamera.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\TracerSystemI.h">
-      <Filter>Structs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\VisorThread.h">
       <Filter>Threads</Filter>
     </ClInclude>
@@ -254,6 +251,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\MovementSchemes.h">
       <Filter>VisorInput</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\TracerSystemI.h">
+      <Filter>Interfaces</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -7,7 +7,7 @@
 
 #include "Random.cuh"
 #include "ImageFunctions.cuh"
-#include "MaterialFunctions.cuh"
+#include "MaterialFunctions.h"
 #include "TracerFunctions.cuh"
 #include "GPUSurface.h"
 
