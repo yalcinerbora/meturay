@@ -38,7 +38,9 @@ class Vector;
 
 static constexpr size_t ChooseVectorAlignment(size_t totalSize)
 {
-    if(totalSize <= 4)
+    if(totalSize <= 2)
+        return 2;
+    else if(totalSize <= 4)
         return 4;           // 1byte Vector Types
     else if(totalSize <= 8)
         return 8;           // 4byte Vector2 Types

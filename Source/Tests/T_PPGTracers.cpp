@@ -3,7 +3,7 @@
 TEST(PPGTracers, CornellBox)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("PathTracer", true,
+    SimpleTracerSetup setup("PPGTracer", true,
                             u8"TestScenes/helloCornell.json", 0.0);
     ASSERT_TRUE(setup.Init());
     setup.Body();

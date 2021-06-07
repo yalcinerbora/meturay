@@ -80,7 +80,9 @@ class STree
 
         // Debugging
         void                GetTreeToCPU(STreeGPU&, std::vector<STreeNode>&) const;
-
+        void                GetAllDTreesToCPU(std::vector<DTreeGPU>&,
+                                              std::vector<std::vector<DTreeNode>>&,
+                                              bool fetchReadTree) const;
 
 };
 

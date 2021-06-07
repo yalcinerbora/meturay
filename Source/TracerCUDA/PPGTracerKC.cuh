@@ -118,12 +118,11 @@ void PPGTracerBoundaryWork(// Output
 
         // Also backpropogate this radiance to the path nodes
         if(emission != Vector3(0.0f))
-        printf("AddingRadiance: T:(%f %f %f) E:(%f %f %f) RF:(%f %f %f)\n",
-               total[0], total[1], total[2],
-               emission[0], emission[1], emission[2],
-               radianceFactor[0], radianceFactor[1], radianceFactor[2]);
-
-        //gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
+            printf("AddingRadiance: E:(%f %f %f) RF:(%f %f %f) Path %u + %u\n",
+                   emission[0], emission[1], emission[2],
+                   radianceFactor[0], radianceFactor[1], radianceFactor[2],
+                   aux.pathIndex, aux.depth);
+        gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
     }
 }
 
@@ -219,8 +218,15 @@ void PPGTracerPathWork(// Output
         // Output image
         auto& img = renderState.gImage;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
+
+        if(emission != Vector3(0.0f))
+            printf("AddingRadiance: E:(%f %f %f) RF:(%f %f %f) Path %u + %u\n",
+                   emission[0], emission[1], emission[2],
+                   radianceFactor[0], radianceFactor[1], radianceFactor[2],
+                   aux.pathIndex, aux.depth);
+
         // Accumulate this to the paths aswell
-        //gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
+        gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
     }
 
     // If this material does not require to have any samples just quit
@@ -317,19 +323,19 @@ void PPGTracerPathWork(// Output
     uint8_t currentDepth = aux.depth + 1;
     uint8_t prevDepth = aux.depth;
     PathGuidingNode node;
-    printf("WritingNode PC:(%u %u) W:(%f, %f, %f) RF:(%f, %f, %f) Path: %u\n",
-           static_cast<uint32_t>(prevDepth), static_cast<uint32_t>(currentDepth),
-           position[0], position[1], position[2],
-           pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
-           aux.pathIndex);
+    //printf("WritingNode PC:(%u %u) W:(%f, %f, %f) RF:(%f, %f, %f) Path: %u\n",
+    //       static_cast<uint32_t>(prevDepth), static_cast<uint32_t>(currentDepth),
+    //       position[0], position[1], position[2],
+    //       pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
+    //       aux.pathIndex);
 
+    node.prevNext[1] = PathGuidingNode::InvalidIndex;
     node.prevNext[0] = prevDepth;
+    node.worldPosition = position;
     node.nearestDTreeIndex = dTreeIndex;
     node.radFactor = pathRadianceFactor;
-    node.totalRadiance = Zero3;
-    node.worldPosition = position;
+    node.totalRadiance = Zero3;    
     gLocalPathNodes[currentDepth] = node;
-
     // Set Previous Path node's next index
     gLocalPathNodes[prevDepth].prevNext[1] = currentDepth;
 

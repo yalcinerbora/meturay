@@ -274,3 +274,27 @@ void STree::GetTreeToCPU(STreeGPU& treeCPU, std::vector<STreeNode>& nodesCPU) co
                           nodeCount * sizeof(STreeNode),
                           cudaMemcpyDeviceToHost));
 }
+
+void STree::GetAllDTreesToCPU(std::vector<DTreeGPU>& dTreeStructs,
+                              std::vector<std::vector<DTreeNode>>& dTreeNodes,
+                              bool fetchReadTree) const
+{
+    dTreeStructs.reserve(dTrees.size());
+    dTreeNodes.reserve(dTrees.size());
+    for(const DTree& dT : dTrees)
+    {
+        std::vector<DTreeNode> currentNodes;
+        DTreeGPU currentStruct;
+        if(fetchReadTree)
+        {
+            dT.GetReadTreeToCPU(currentStruct, currentNodes);
+        }
+        else
+        {
+            dT.GetWriteTreeToCPU(currentStruct, currentNodes);
+        }
+        
+        dTreeStructs.push_back(std::move(currentStruct));
+        dTreeNodes.push_back(std::move(currentNodes));
+    }
+}

@@ -84,8 +84,7 @@ class PPGTracer final : public RayTracer
         static TracerError              LightSamplerNameToEnum(LightSamplerType&,
                                                                const std::string&);
         TracerError                     ConstructLightSampler();
-        void                            ResizeAndInitPathMemory(size_t pixelCount,
-                                                                size_t samplePerPixel);
+        void                            ResizeAndInitPathMemory();
         uint32_t                        TotalPathNodeCount() const;       
 
     protected:

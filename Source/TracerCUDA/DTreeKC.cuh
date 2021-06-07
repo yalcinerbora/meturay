@@ -150,78 +150,87 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
     // Use double here for higher numeric precision
     double descentFactor = 1;
 
-    pdf = 1.0f;
-    DTreeNode* node = gRoot;
-    while(true)
+    // If total irrad is zero in this node fetch data uniformly
+
+    if(irradiance == 0.0f)
     {
-        // Generate Local CDF
-        float totalIrrad = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
-                            node->IrradianceEst(DTreeNode::BOTTOM_RIGHT) +
-                            node->IrradianceEst(DTreeNode::TOP_LEFT) +
-                            node->IrradianceEst(DTreeNode::BOTTOM_RIGHT));
-        float totalIrradInverse = 1.0f / totalIrrad;
-            
-        // Generate a 2 data CDF for determine the sample
-        // with these we will do the inverse sampling
-        // only split points are required since the other CDF data will
-        // implcitly be one
-        float cdfMidX = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
-                         node->IrradianceEst(DTreeNode::TOP_LEFT)) * totalIrradInverse;
-        float cdfMidY = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
-                         node->IrradianceEst(DTreeNode::BOTTOM_RIGHT)) * totalIrradInverse;
-                
-        uint8_t nextIndex = 0b00;
-        // Locate X pos
-        if(xi[0] < cdfMidX)
+        pdf = 0.25f * MathConstants::InvPi;
+        discreteCoords = xi;
+    }
+    else
+    {
+        pdf = 1.0f;
+        DTreeNode* node = gRoot;
+        while(true)
         {
-            // Renormalize sample for next iteration
-            xi[0] = xi[0] / cdfMidX;
-        }
-        else
-        {
-            // Renormalize sample for next iteration
-            xi[0] = (xi[0] - cdfMidX) / (1.0f - cdfMidX);
-            // Set the X bit on the iteration
-            nextIndex |= (1 << 0) & (0b01);
-        }
-        // Locate Y Pos
-        if(xi[1] < cdfMidY)
-        {
-            // Renormalize sample for next iteration
-            xi[1] = xi[1] / cdfMidY;
-        }
-        else
-        {
-            // Renormalize sample for next iteration
-            xi[1] = (xi[1] - cdfMidY) / (1.0f - cdfMidY);
-            // Set the X bit on the iteration
-            nextIndex |= (1 << 1) & (0b10);            
+            // Generate Local CDF
+            float totalIrrad = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
+                                node->IrradianceEst(DTreeNode::BOTTOM_RIGHT) +
+                                node->IrradianceEst(DTreeNode::TOP_LEFT) +
+                                node->IrradianceEst(DTreeNode::BOTTOM_RIGHT));
+            float totalIrradInverse = 1.0f / totalIrrad;
+
+            // Generate a 2 data CDF for determine the sample
+            // with these we will do the inverse sampling
+            // only split points are required since the other CDF data will
+            // implcitly be one
+            float cdfMidX = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
+                             node->IrradianceEst(DTreeNode::TOP_LEFT)) * totalIrradInverse;
+            float cdfMidY = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
+                             node->IrradianceEst(DTreeNode::BOTTOM_RIGHT)) * totalIrradInverse;
+
+            uint8_t nextIndex = 0b00;
+            // Locate X pos
+            if(xi[0] < cdfMidX)
+            {
+                // Renormalize sample for next iteration
+                xi[0] = xi[0] / cdfMidX;
+            }
+            else
+            {
+                // Renormalize sample for next iteration
+                xi[0] = (xi[0] - cdfMidX) / (1.0f - cdfMidX);
+                // Set the X bit on the iteration
+                nextIndex |= (1 << 0) & (0b01);
+            }
+            // Locate Y Pos
+            if(xi[1] < cdfMidY)
+            {
+                // Renormalize sample for next iteration
+                xi[1] = xi[1] / cdfMidY;
+            }
+            else
+            {
+                // Renormalize sample for next iteration
+                xi[1] = (xi[1] - cdfMidY) / (1.0f - cdfMidY);
+                // Set the X bit on the iteration
+                nextIndex |= (1 << 1) & (0b10);
+            }
+
+            // Calculate current pdf and incorporate to the
+            // main pdf conditionally
+            pdf *= node->LocalPDF(nextIndex);
+
+
+            Vector2f gridOffset(((nextIndex >> 0) & 0b01) ? 0.5f : 0.0f,
+                                ((nextIndex >> 1) & 0b01) ? 0.5f : 0.0f);
+            discreteCoords += gridOffset * descentFactor;
+            descentFactor *= 0.5;
+
+            if(node->IsLeaf(nextIndex))
+            {
+                // On leaf directly use sample as offset
+                discreteCoords += xi * descentFactor;
+                break;
+            }
+            node = gRoot + node->childIndices[nextIndex];
+
         }
 
-        // Calculate current pdf and incorporate to the
-        // main pdf conditionally
-        pdf *= node->LocalPDF(nextIndex);
-
-
-        Vector2f gridOffset(((nextIndex >> 0) & 0b01) ? 0.5f : 0.0f,
-                            ((nextIndex >> 1) & 0b01) ? 0.5f : 0.0f);
-        discreteCoords += gridOffset * descentFactor;
-        descentFactor *= 0.5;
-
-        if(node->IsLeaf(nextIndex))
-        {
-            // On leaf directly use sample as offset
-            discreteCoords += xi * descentFactor;
-            break;
-        }
-        node = gRoot + node->childIndices[nextIndex];
-        
+        // Convert PDF to Solid Angle PDF
+        pdf *= 0.25f * MathConstants::InvPi;
+        // Convert Tree Coords to World Direction
     }    
-
-    // Convert PDF to Solid Angle PDF
-    pdf *= 0.25f * MathConstants::InvPi;
-
-    // Convert Tree Coords to World Direction
     return TreeCoordsToWorldDir(discreteCoords);
 }
 
@@ -266,6 +275,7 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance)
     // Descent and find the leaf
     DTreeNode* node = gRoot;
     Vector2f localCoords = discreteCoords;
+    int i = 0;
     while(true)
     {
         uint8_t childIndex = node->DetermineChild(localCoords);
@@ -280,6 +290,15 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance)
         // Continue Traversal
         localCoords = node->NormalizeCoordsForChild(childIndex, localCoords);
         node = gRoot + node->childIndices[childIndex];
+
+        i++;
+        if(i == 200)
+        {
+            printf("FATAL200 iterations reached, worldDir: %f %f %f, r: %f, dc %f, %f\n",
+                   worldDir[0], worldDir[1], worldDir[2], radiance,
+                   discreteCoords[0], discreteCoords[1]);
+            break;
+        }
     }
 }
 
@@ -588,6 +607,9 @@ static void KCAccumulateRadianceToLeaf(DTreeGPU* gDTree,
 
         Vector3f wi = gPathNode.Wi<PathGuidingNode>(gPathNodes, rayId);
         float luminance = Utility::RGBToLuminance(gPathNode.totalRadiance);
+
+        printf("adding radiance wi: %f %f %f, r: %f\n",
+               wi[0], wi[1], wi[2], luminance);
 
         gDTree->AddRadianceToLeaf(wi, luminance);
     }

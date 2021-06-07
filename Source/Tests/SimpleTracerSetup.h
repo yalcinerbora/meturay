@@ -193,8 +193,8 @@ class SimpleTracerSetup
             // Mixed
             {"Samples", OptionVariable(MockNode::SAMPLE_COUNT)},
             {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
-            {"NextEventEstimation", OptionVariable(true)},
-            {"DirectLightMIS", OptionVariable(true)},
+            {"NextEventEstimation", OptionVariable(false)},
+            {"DirectLightMIS", OptionVariable(false)},
             {"RussianRouletteStart", OptionVariable(5u)},            
             {"NEESampler", OptionVariable("Uniform")},
             // AO Related

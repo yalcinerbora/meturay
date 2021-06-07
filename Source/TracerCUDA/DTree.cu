@@ -32,14 +32,14 @@ DTree::DTreeBuffer::DTreeBuffer()
     DTreeGPU hDTree;
     hDTree.gRoot = dDTreeNodes;
     hDTree.nodeCount = 1;
-    hDTree.irradiance = 1.0f;
-    hDTree.totalSamples = 4;
+    hDTree.irradiance = 0.0f;
+    hDTree.totalSamples = 0;
     CUDA_CHECK(cudaMemcpy(dDTree, &hDTree, sizeof(DTreeGPU),
                           cudaMemcpyHostToDevice));
 
     // Init very first node
     DTreeNode hNode;
-    hNode.irradianceEstimates = Vector4f(0.25f);
+    hNode.irradianceEstimates = Zero4;
     hNode.childIndices = Vector4ui(std::numeric_limits<uint32_t>::max());
     hNode.parentIndex = std::numeric_limits<uint16_t>::max();
     CUDA_CHECK(cudaMemcpy(dDTreeNodes, &hNode, sizeof(DTreeNode),
@@ -102,7 +102,7 @@ void DTree::DTreeBuffer::CopyGPUNodeCountToCPU()
 }
 
 void DTree::DTreeBuffer::DumpTree(DTreeGPU& treeCPU, std::vector<DTreeNode>& nodesCPU) const
-{
+{    
     CUDA_CHECK(cudaMemcpy(&treeCPU, dDTree, sizeof(DTreeGPU),
                           cudaMemcpyDeviceToHost));
     nodesCPU.resize(nodeCount);

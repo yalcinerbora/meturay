@@ -37,6 +37,7 @@
 //    }
 //    return stream;
 //}
+
 static std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
 {
     s << "W:{" << n.worldPosition[0] << ", " 
@@ -177,12 +178,9 @@ TracerError PPGTracer::ConstructLightSampler()
     return TracerError::UNABLE_TO_INITIALIZE;
 }
 
-void PPGTracer::ResizeAndInitPathMemory(size_t pixelCount,
-                                        size_t samplePerPixel)
+void PPGTracer::ResizeAndInitPathMemory()
 {
-    size_t totalPathCount = pixelCount * samplePerPixel;
-    size_t totalPathNodeCount = totalPathCount * options.maximumDepth;
-
+    size_t totalPathNodeCount = TotalPathNodeCount();
     METU_LOG("Allocating PPGTracer global path buffer: Size %llu MiB", 
              totalPathNodeCount * sizeof(PathGuidingNode) / 1024 / 1024);
 
@@ -203,7 +201,7 @@ void PPGTracer::ResizeAndInitPathMemory(size_t pixelCount,
 uint32_t PPGTracer::TotalPathNodeCount() const
 {
     return (imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1] *
-            options.sampleCount * options.sampleCount);
+            options.sampleCount * options.sampleCount) * options.maximumDepth;
 }
 
 PPGTracer::PPGTracer(const CudaSystem& s,
@@ -417,7 +415,7 @@ void PPGTracer::Finalize()
 
     // Accumulate the finished radiances to the STree
     sTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
-                              options.maximumDepth, cudaSystem);
+                               options.maximumDepth, cudaSystem);
 
     // We iterated once
     currentTreeIteration += options.sampleCount * options.sampleCount;
@@ -438,6 +436,16 @@ void PPGTracer::Finalize()
                                  cudaSystem);
 
         printf("Splitting and Swapping Trees\n");
+        CUDA_CHECK(cudaDeviceSynchronize());
+        // PrintEveryDTree
+        std::vector<DTreeGPU> structs;
+        std::vector<std::vector<DTreeNode>> nodes;
+        sTree->GetAllDTreesToCPU(structs, nodes, false);
+        for(size_t i = 0; i < nodes.size(); i++)
+        {
+            Debug::DumpMemToFile("dTreeN" + std::to_string(i), nodes[i].data(), nodes[i].size());
+            Debug::DumpMemToFile("dTree" + std::to_string(i), &structs[i], 1);
+        }
 
         // Completely Reset the Image
         // This is done to eliminate variance from prev samples
@@ -465,8 +473,7 @@ void PPGTracer::GenerateWork(int cameraId)
                                                          options.sampleCount *
                                                          options.sampleCount));
 
-    ResizeAndInitPathMemory(imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1],
-                            options.sampleCount * options.sampleCount);
+    ResizeAndInitPathMemory();
     currentDepth = 0;
 }
 
@@ -476,8 +483,6 @@ void PPGTracer::GenerateWork(const VisorCamera& cam)
                                            RayAuxInitPPG(InitialPPGAux,
                                                          options.sampleCount *
                                                          options.sampleCount));
-    ResizeAndInitPathMemory(imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1],
-                            options.sampleCount * options.sampleCount);
-
+    ResizeAndInitPathMemory();
     currentDepth = 0;
 }
