@@ -53,10 +53,16 @@ class GPUWorkBatch
         static const char*              TypeName() {return TypeNameGen();}
 
     private:
-        using SF = SurfaceFunc<MGroup::Surface,
-                               PGroup::HitData,
-                               PGroup::PrimitiveData>;
-        static constexpr SF             SFunc = SGen();
+        using SF =                      SurfaceFunc<MGroup::Surface,
+                                                    PGroup::HitData,
+                                                    PGroup::PrimitiveData>;
+        using WF =                      WorkFunc<GlobalData, LocalData,
+                                                 RayData, MGroup>;
+
+        static constexpr SF             SurfF = SGen();
+        static constexpr WF             WorkF = WFunc;
+
+        
 
     protected:
         const MGroup&                   materialGroup;
@@ -138,10 +144,9 @@ GPUWorkBatch<GlobalData, LocalData, RayData,
     , dTransforms(t)
 {}
 
-template<class GlobalData, class LocalData, class RayData,
-    class MGroup, class PGroup,
-    WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
-    SurfaceFuncGenerator<MGroup::Surface, PGroup::HitData, PGroup::PrimitiveData> SGen>
+template<class GlobalData, class LocalData, class RayData, class MGroup, class PGroup,
+         WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
+         SurfaceFuncGenerator<MGroup::Surface, PGroup::HitData, PGroup::PrimitiveData> SGen>
 void GPUWorkBatch<GlobalData, LocalData, RayData,
                   MGroup, PGroup, WFunc, SGen>::Work(// Output
                                                      HitKey* dBoundMatOut,
@@ -166,9 +171,6 @@ void GPUWorkBatch<GlobalData, LocalData, RayData,
     using HitData = typename PGroup::HitData;
     using MaterialData = typename MGroup::Data;
     using MaterialSurface = typename MGroup::Surface;
-    // Fetch surface function from primitive list
-    //using SFuncType = SurfaceFunc<MaterialSurface, HitData, PrimitiveData>;
-    //constexpr SFuncType SFunc = PG::GetSurfaceFunction<MaterialSurface>();
 
     // Get Data
     const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
@@ -176,37 +178,37 @@ void GPUWorkBatch<GlobalData, LocalData, RayData,
 
     const uint32_t outRayCount = OutRayCount();
 
-    //const CudaGPU& gpu = materialGroup.GPU();
-    //gpu.AsyncGridStrideKC_X
-    //(
-    //    0,
-    //    rayCount,
-    //    //
-    //    KCWork<GlobalData, LocalData, RayData, PGroup, 
-    //           MGroup, WFunc, SGen>,
-    //    // Args
-    //    // Output
-    //    dBoundMatOut,
-    //    dRayOut,
-    //    dAuxOutLocal,
-    //    outRayCount,
-    //    // Input
-    //    dRayIn,
-    //    dAuxInGlobal,
-    //    dPrimitiveIds,
-    //    dTransformIds,
-    //    dHitStructs,
-    //    //
-    //    dMatIds,
-    //    dRayIds,
-    //    // I-O
-    //    localData,
-    //    globalData,
-    //    rngMem.RNGData(gpu),
-    //    // Constants
-    //    rayCount,
-    //    matData,
-    //    primData,
-    //    dTransforms
-    //);
+    const CudaGPU& gpu = materialGroup.GPU();
+    gpu.AsyncGridStrideKC_X
+    (
+        0,
+        rayCount,
+        //
+        KCWork<GlobalData, LocalData, RayData, PGroup, 
+               MGroup, WorkF, SurfF>,
+        // Args
+        // Output
+        dBoundMatOut,
+        dRayOut,
+        dAuxOutLocal,
+        outRayCount,
+        // Input
+        dRayIn,
+        dAuxInGlobal,
+        dPrimitiveIds,
+        dTransformIds,
+        dHitStructs,
+        //
+        dMatIds,
+        dRayIds,
+        // I-O
+        localData,
+        globalData,
+        rngMem.RNGData(gpu),
+        // Constants
+        rayCount,
+        matData,
+        primData,
+        dTransforms
+    );
 }

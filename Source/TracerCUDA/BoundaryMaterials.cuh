@@ -68,12 +68,12 @@ class BoundaryMatConstant final
 
 class BoundaryMatTextured final
     : public GPUBoundaryMaterialGroup<LightMatTexData, UVSurface,
-                                   SampleEmpty<LightMatTexData, UVSurface>,
-                                   EvaluateEmpty<LightMatTexData, UVSurface>,
-                                   PdfOne<LightMatTexData, UVSurface>,
-                                   EmitTextured,
-                                   IsEmissiveTrue<LightMatTexData>,
-                                   SpecularityDiffuse<LightMatTexData, UVSurface>>
+                                      SampleEmpty<LightMatTexData, UVSurface>,
+                                      EvaluateEmpty<LightMatTexData, UVSurface>,
+                                      PdfOne<LightMatTexData, UVSurface>,
+                                      EmitTextured,
+                                      IsEmissiveTrue<LightMatTexData>,
+                                      SpecularityDiffuse<LightMatTexData, UVSurface>>
 {
     public:
         static const char*      TypeName() { return "BTextured"; }
@@ -127,12 +127,12 @@ class BoundaryMatTextured final
 
 class BoundaryMatSkySphere final
     : public GPUBoundaryMaterialGroup<LightMatTexData, BasicSurface,
-                                   SampleEmpty<LightMatTexData, BasicSurface>,
-                                   EvaluateEmpty<LightMatTexData, BasicSurface>,
-                                   PdfOne<LightMatTexData, BasicSurface>,
-                                   EmitSkySphere,
-                                   IsEmissiveTrue<LightMatTexData>,
-                                   SpecularityDiffuse<LightMatTexData, BasicSurface>>
+                                      SampleEmpty<LightMatTexData, BasicSurface>,
+                                      EvaluateEmpty<LightMatTexData, BasicSurface>,
+                                      PdfOne<LightMatTexData, BasicSurface>,
+                                      EmitSkySphere,
+                                      IsEmissiveTrue<LightMatTexData>,
+                                      SpecularityDiffuse<LightMatTexData, BasicSurface>>
 {
     public:
         static const char*      TypeName() { return "BSkySphere"; }

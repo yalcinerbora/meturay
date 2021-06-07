@@ -29,7 +29,7 @@ set(MRAY_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../WorkingDir)
 # Determine Platform and Config
 if(MSVC)
     set(MRAY_PLATFORM_NAME Win)
-    set(MRAY_PREPROCESSOR_DEFS_GENERIC -D_UNICODE -DUNICODE)    
+    set(MRAY_PREPROCESSOR_DEFS_GENERIC -D_UNICODE -DUNICODE)
     # Ignore inline function not defined warning
     add_compile_options(
         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4984>
@@ -73,7 +73,7 @@ set(MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC
 # Libs
 add_subdirectory(RayLib)
 
-# DLLs 
+# DLLs
 add_subdirectory(AssimpSurfaceLoaders)
 add_subdirectory(TracerCUDA)
 add_subdirectory(VisorGL)
