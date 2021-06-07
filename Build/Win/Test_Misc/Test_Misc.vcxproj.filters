@@ -1,51 +1,51 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CudaCompile Include="..\..\..\Source\Tests\T_MatrixGPU.cu">
+    <CudaCompile Include="..\..\..\Source\Test_Misc\T_MatrixGPU.cu">
       <Filter>Math</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tests\T_VectorGPU.cu">
+    <CudaCompile Include="..\..\..\Source\Test_Misc\T_VectorGPU.cu">
       <Filter>Math</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\Tests\T_MockTracer.cu">
+    <CudaCompile Include="..\..\..\Source\Test_Misc\T_MockTracer.cu">
       <Filter>TracerMock</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\Tests\main.cpp" />
-    <ClCompile Include="..\..\..\Source\Tests\T_MatrixCPU.cpp">
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_MatrixCPU.cpp">
       <Filter>Math</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\Tests\T_VectorCPU.cpp">
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_Quaternion.cpp">
       <Filter>Math</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\Tests\T_SceneIO.cpp">
-      <Filter>SceneIO</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Source\Tests\T_SceneIOCommon.cpp">
-      <Filter>SceneIO</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Source\Tests\T_GPUScene.cpp">
-      <Filter>SceneIO</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Source\Tests\T_SelfNode.cpp">
-      <Filter>TracerMock</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Source\Tests\T_PathTracers.cpp">
-      <Filter>TracerMock</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Source\Tests\T_SimpleTracers.cpp">
-      <Filter>TracerMock</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Source\Tests\T_Quaternion.cpp">
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_VectorCPU.cpp">
       <Filter>Math</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\Tests\T_AOTracers.cpp">
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_GPUScene.cpp">
+      <Filter>SceneIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_SceneIO.cpp">
+      <Filter>SceneIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_SceneIOCommon.cpp">
+      <Filter>SceneIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_AOTracers.cpp">
       <Filter>TracerMock</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\Tests\T_PPGTracers.cpp">
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_PathTracers.cpp">
       <Filter>TracerMock</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_PPGTracers.cpp">
+      <Filter>TracerMock</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_SelfNode.cpp">
+      <Filter>TracerMock</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_SimpleTracers.cpp">
+      <Filter>TracerMock</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\Test_Misc\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="SceneIO">
@@ -59,7 +59,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Source\Tests\SimpleTracerSetup.h">
+    <ClInclude Include="..\..\..\Source\Test_Misc\SimpleTracerSetup.h">
       <Filter>TracerMock</Filter>
     </ClInclude>
   </ItemGroup>

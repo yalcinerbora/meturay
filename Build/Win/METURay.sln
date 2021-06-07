@@ -5,11 +5,6 @@ VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RayLib", "RayLib\RayLib.vcxproj", "{DFCD1274-CD37-4E84-A1DC-96F619B04EEA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tests", "Tests\Tests.vcxproj", "{6E191150-0CB7-40E2-999B-72A36EF4EF64}"
-	ProjectSection(ProjectDependencies) = postProject
-		{12AD8912-B00E-4C8C-B4F1-5F6190919129} = {12AD8912-B00E-4C8C-B4F1-5F6190919129}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VisorGL", "VisorGL\VisorGL.vcxproj", "{73E98DC9-D340-4704-9DB7-B3F7156F97D3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MVisor", "MVisor\MVisor.vcxproj", "{470D7F5C-0A9A-415C-A717-DCC4B15B3B9D}"
@@ -30,6 +25,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test_TracerCUDA", "Test_Tra
 		{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2} = {DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test_Misc", "Test_Misc\Test_Misc.vcxproj", "{6E191150-0CB7-40E2-999B-72A36EF4EF64}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -40,10 +37,6 @@ Global
 		{DFCD1274-CD37-4E84-A1DC-96F619B04EEA}.Debug|x64.Build.0 = Debug|x64
 		{DFCD1274-CD37-4E84-A1DC-96F619B04EEA}.Release|x64.ActiveCfg = Release|x64
 		{DFCD1274-CD37-4E84-A1DC-96F619B04EEA}.Release|x64.Build.0 = Release|x64
-		{6E191150-0CB7-40E2-999B-72A36EF4EF64}.Debug|x64.ActiveCfg = Debug|x64
-		{6E191150-0CB7-40E2-999B-72A36EF4EF64}.Debug|x64.Build.0 = Debug|x64
-		{6E191150-0CB7-40E2-999B-72A36EF4EF64}.Release|x64.ActiveCfg = Release|x64
-		{6E191150-0CB7-40E2-999B-72A36EF4EF64}.Release|x64.Build.0 = Release|x64
 		{73E98DC9-D340-4704-9DB7-B3F7156F97D3}.Debug|x64.ActiveCfg = Debug|x64
 		{73E98DC9-D340-4704-9DB7-B3F7156F97D3}.Debug|x64.Build.0 = Debug|x64
 		{73E98DC9-D340-4704-9DB7-B3F7156F97D3}.Release|x64.ActiveCfg = Release|x64
@@ -72,6 +65,10 @@ Global
 		{C18DE611-BC91-456C-A2B6-F4CAFEFE48CC}.Debug|x64.Build.0 = Debug|x64
 		{C18DE611-BC91-456C-A2B6-F4CAFEFE48CC}.Release|x64.ActiveCfg = Release|x64
 		{C18DE611-BC91-456C-A2B6-F4CAFEFE48CC}.Release|x64.Build.0 = Release|x64
+		{6E191150-0CB7-40E2-999B-72A36EF4EF64}.Debug|x64.ActiveCfg = Debug|x64
+		{6E191150-0CB7-40E2-999B-72A36EF4EF64}.Debug|x64.Build.0 = Debug|x64
+		{6E191150-0CB7-40E2-999B-72A36EF4EF64}.Release|x64.ActiveCfg = Release|x64
+		{6E191150-0CB7-40E2-999B-72A36EF4EF64}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

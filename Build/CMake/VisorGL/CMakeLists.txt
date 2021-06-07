@@ -31,7 +31,7 @@ set(SRC_COMMON
     ${CURRENT_SOURCE_DIR}/VisorGLEntry.cpp
     ${CURRENT_SOURCE_DIR}/VisorGLEntry.h)
 
-set(SRC_ALL    
+set(SRC_ALL
     ${SRC_GL}
     ${SRC_GUI}
     ${SRC_SHADERS}
@@ -43,7 +43,7 @@ source_group("Shaders" FILES ${SRC_SHADERS})
 source_group("" FILES ${SRC_COMMON})
 
 # Preprocessor Defs
-set(PREPROCESSOR_GENERIC 
+set(PREPROCESSOR_GENERIC
     ${MRAY_PREPROCESSOR_DEFS_GENERIC}
     METU_SHARED_VISORGL)
 
@@ -56,7 +56,7 @@ target_include_directories(VisorGL PRIVATE
 
 target_compile_definitions(VisorGL PRIVATE ${PREPROCESSOR_GENERIC})
 
-target_link_libraries(VisorGL 
+target_link_libraries(VisorGL
                       RayLib
                       Imgui
                       glew32

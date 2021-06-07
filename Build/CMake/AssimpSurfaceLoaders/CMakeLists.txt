@@ -3,7 +3,7 @@
 set(CURRENT_SOURCE_DIR ${MRAY_SOURCE_DIRECTORY}/AssimpSurfaceLoaders)
 
 # SOURCES
-set(SRC_ALL 
+set(SRC_ALL
     ${CURRENT_SOURCE_DIR}/AssimpForward.h
     ${CURRENT_SOURCE_DIR}/AssimpSurfaceLoaderPool.cpp
     ${CURRENT_SOURCE_DIR}/AssimpSurfaceLoaderPool.h
@@ -26,6 +26,6 @@ target_link_libraries(AssimpSurfaceLoaders PRIVATE
                       RayLib
                       assimp)
 
-                      
+
 
 #add_dependencies(AssimpSurfaceLoaders RayLib)

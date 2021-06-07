@@ -2,7 +2,7 @@
 set(CURRENT_SOURCE_DIR ${MRAY_SOURCE_DIRECTORY}/TracerCUDA)
 
 # SOURCES
-set(SRC_ACCELS_BVH 
+set(SRC_ACCELS_BVH
     ${CURRENT_SOURCE_DIR}/GPUAcceleratorBVH.cu
     ${CURRENT_SOURCE_DIR}/GPUAcceleratorBVH.cuh
     ${CURRENT_SOURCE_DIR}/GPUAcceleratorBVH.hpp
@@ -101,7 +101,7 @@ set(SRC_LIGHTS
     ${CURRENT_SOURCE_DIR}/GPULightSkySphere.cuh
     ${CURRENT_SOURCE_DIR}/GPULightSpot.cu
     ${CURRENT_SOURCE_DIR}/GPULightSpot.cuh)
- 
+
 set(SRC_LIGHT_SAMPLERS
     ${CURRENT_SOURCE_DIR}/GPULightSamplerUniform.cuh)
 
@@ -125,7 +125,7 @@ set(SRC_MATERIALS
     ${CURRENT_SOURCE_DIR}/SimpleMaterialsKC.cuh
     ${CURRENT_SOURCE_DIR}/MaterialDataStructs.h
     ${CURRENT_SOURCE_DIR}/MetaMaterialFunctions.cuh)
- 
+
 set(SRC_MEDIUMS
     ${CURRENT_SOURCE_DIR}/GPUMediumHomogenous.cu
     ${CURRENT_SOURCE_DIR}/GPUMediumHomogenous.cuh
@@ -158,7 +158,7 @@ set(SRC_PRIMITIVES
     ${CURRENT_SOURCE_DIR}/GPUPrimitiveTriangle.h
     ${CURRENT_SOURCE_DIR}/GPUPrimitiveSphere.cpp
     ${CURRENT_SOURCE_DIR}/GPUPrimitiveSphere.h)
-    
+
 set(SRC_SCENE
     ${CURRENT_SOURCE_DIR}/GPUSceneJson.cpp
     ${CURRENT_SOURCE_DIR}/GPUSceneJson.h
@@ -183,7 +183,7 @@ set(SRC_STRUCTS
     ${CURRENT_SOURCE_DIR}/RayStructs.h
     ${CURRENT_SOURCE_DIR}/RNGStructs.h)
 
-set(SRC_STRUCTS
+set(SRC_TEXTURES
     ${CURRENT_SOURCE_DIR}/TextureFunctions.cpp
     ${CURRENT_SOURCE_DIR}/TextureFunctions.h
     ${CURRENT_SOURCE_DIR}/TextureReference.cu
@@ -191,7 +191,7 @@ set(SRC_STRUCTS
     ${CURRENT_SOURCE_DIR}/TextureReference.hpp
     ${CURRENT_SOURCE_DIR}/TextureReferenceGenerators.cuh)
 
-set(SRC_TRACERS_COMMON 
+set(SRC_TRACERS_COMMON
     ${CURRENT_SOURCE_DIR}/GPUTracer.cu
     ${CURRENT_SOURCE_DIR}/GPUTracer.h
     ${CURRENT_SOURCE_DIR}/RayTracer.cu
@@ -200,38 +200,38 @@ set(SRC_TRACERS_COMMON
     ${CURRENT_SOURCE_DIR}/TracerFunctions.cuh
     ${CURRENT_SOURCE_DIR}/Tracers.cpp)
 
-set(SRC_TRACERS_STRUCTS 
+set(SRC_TRACERS_STRUCTS
     ${CURRENT_SOURCE_DIR}/PathNode.cuh
     ${CURRENT_SOURCE_DIR}/RayAuxStruct.cuh)
-    
-set(SRC_AO_TRACER 
+
+set(SRC_AO_TRACER
     ${CURRENT_SOURCE_DIR}/AOTracer.cu
     ${CURRENT_SOURCE_DIR}/AOTracer.h
     ${CURRENT_SOURCE_DIR}/AOTracerKC.cuh
     ${CURRENT_SOURCE_DIR}/AOTracerWork.cu
     ${CURRENT_SOURCE_DIR}/AOTracerWork.cuh)
 
-set(SRC_DIRECT_TRACER 
+set(SRC_DIRECT_TRACER
     ${CURRENT_SOURCE_DIR}/DirectTracer.cu
     ${CURRENT_SOURCE_DIR}/DirectTracer.h
     ${CURRENT_SOURCE_DIR}/DirectTracerKC.cuh
     ${CURRENT_SOURCE_DIR}/DirectTracerWork.cu
     ${CURRENT_SOURCE_DIR}/DirectTracerWork.cuh)
 
-set(SRC_PATH_TRACER 
+set(SRC_PATH_TRACER
     ${CURRENT_SOURCE_DIR}/PathTracer.cu
     ${CURRENT_SOURCE_DIR}/PathTracer.h
     ${CURRENT_SOURCE_DIR}/PathTracerKC.cuh
     ${CURRENT_SOURCE_DIR}/PathTracerWorks.cu
     ${CURRENT_SOURCE_DIR}/PathTracerWorks.cuh)
 
-set(SRC_PPG_TRACER 
+set(SRC_PPG_TRACER
     ${CURRENT_SOURCE_DIR}/PPGTracer.cu
     ${CURRENT_SOURCE_DIR}/PPGTracer.h
     ${CURRENT_SOURCE_DIR}/PPGTracerKC.cuh
     ${CURRENT_SOURCE_DIR}/PPGTracerWork.cu
     ${CURRENT_SOURCE_DIR}/PPGTracerWork.cuh)
-    
+
 set(SRC_PPG_TRACER_AUX_CLASSES
     ${CURRENT_SOURCE_DIR}/DTree.cu
     ${CURRENT_SOURCE_DIR}/DTree.cuh
@@ -279,7 +279,7 @@ set(SRC_ALL
     ${SRC_SCENE}
     ${SRC_SHARED_LIB}
     ${SRC_STRUCTS}
-    ${SRC_STRUCTS}
+    ${SRC_TEXTURES}
     ${SRC_TRACERS_COMMON}
     ${SRC_TRACERS_STRUCTS}
     ${SRC_AO_TRACER}
@@ -334,7 +334,7 @@ source_group("Work" FILES ${SRC_WORK})
 source_group("" FILES ${SRC_COMMON})
 
 # Preprocessor Defs
-set(PREPROCESSOR_GENERIC 
+set(PREPROCESSOR_GENERIC
     ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC}
     METU_SHARED_TRACER_CUDA)
 
@@ -349,16 +349,26 @@ target_compile_definitions(TracerCUDA PRIVATE ${PREPROCESSOR_GENERIC})
 
 target_compile_options(TracerCUDA PRIVATE ${MRAY_COMPILER_FLAGS_GENERIC})
 
-set_target_properties(TracerCUDA PROPERTIES 
+set_target_properties(TracerCUDA PROPERTIES
                       POSITION_INDEPENDENT_CODE ON
-                      CUDA_SEPARABLE_COMPILATION OFF)
+                      CUDA_SEPARABLE_COMPILATION ON
+                      CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
 target_link_libraries(TracerCUDA RayLib FreeImage.lib)
 
 # Object Group for testing
-# add_library(TracerCUDA_ForTest OBJECT ${SRC_ALL})                           
-# target_include_directories(TracerCUDA_ForTest PRIVATE
-#                            ${MRAY_LIB_INCLUDE_DIRECTORY}
-#                            ${MRAY_SOURCE_DIRECTORY})
-# target_compile_definitions(TracerCUDA_ForTest PRIVATE ${PREPROCESSOR_GENERIC})
-# add_dependencies(TracerCUDA RayLib)
+add_library(TracerCUDA_ForTest STATIC ${SRC_ALL})
+target_include_directories(TracerCUDA_ForTest PRIVATE
+                           ${MRAY_LIB_INCLUDE_DIRECTORY}
+                           ${MRAY_SOURCE_DIRECTORY})
+
+target_compile_definitions(TracerCUDA_ForTest PRIVATE ${PREPROCESSOR_GENERIC})
+
+target_compile_options(TracerCUDA_ForTest PRIVATE ${MRAY_COMPILER_FLAGS_GENERIC})
+
+set_target_properties(TracerCUDA_ForTest PROPERTIES
+                      POSITION_INDEPENDENT_CODE ON
+                      CUDA_SEPARABLE_COMPILATION ON
+                      CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+
+target_link_libraries(TracerCUDA_ForTest RayLib FreeImage.lib)

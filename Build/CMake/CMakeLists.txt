@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
+# Only Debug and Release
 set(CMAKE_CONFIGURATION_TYPES Debug;Release CACHE STRING "Selected by user")
-
-project(METURay LANGUAGES CUDA CXX)
 
 # Globals
 set(CMAKE_CUDA_STANDARD 17)
@@ -10,6 +9,10 @@ set(CMAKE_CUDA_STANDARD_REQUIRED True)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CUDA_RUNTIME_LIBRARY Shared)
+
+project(METURay LANGUAGES CUDA CXX)
+
+# Some User Properties
 
 # Architecture
 set(CMAKE_CUDA_ARCHITECTURES "52" CACHE STRING "Architecture chosen by the user at CMake configure time")
@@ -24,7 +27,6 @@ set(MRAY_BIN_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Bin)
 set(MRAY_BUILD_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Build)
 # Working Dir is used for debugging (currently shaders are here so...)
 set(MRAY_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../WorkingDir)
-
 
 # Determine Platform and Config
 if(MSVC)
@@ -84,5 +86,5 @@ add_subdirectory(MRay)
 #add_subdirectory(MVisor)
 
 # Tests
-#add_subdirectory(Test_Misc)
-#add_subdirectory(Test_TracerCUDA)
+add_subdirectory(Test_TracerCUDA)
+add_subdirectory(Test_Misc)

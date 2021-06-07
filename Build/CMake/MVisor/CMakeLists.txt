@@ -1,7 +1,11 @@
 
 
-add_executable(MRay ${MRAY_SOURCE_DIRECTORY}/MRay/main.cpp)
+set(CURRENT_SOURCE_DIR ${MRAY_SOURCE_DIRECTORY}/MVisor)
 
-target_include_directories(MRay PUBLIC
-                           ${MRAY_LIB_DIRECTORY}/include
-                           ${MRAY_SOURCE_DIRECTORY})
+add_executable(MVisor ${CURRENT_SOURCE_DIR}/main.cpp)
+
+source_group("" FILES ${CURRENT_SOURCE_DIR}/main.cpp)
+
+target_include_directories(MVisor PRIVATE
+                            ${MRAY_LIB_INCLUDE_DIRECTORY}
+                            ${MRAY_SOURCE_DIRECTORY})

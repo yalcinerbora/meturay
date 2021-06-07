@@ -182,4 +182,5 @@ target_compile_definitions(RayLib PRIVATE ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC}
 
 set_target_properties(RayLib PROPERTIES 
                       POSITION_INDEPENDENT_CODE ON
-                      CUDA_SEPARABLE_COMPILATION OFF)
+                      CUDA_SEPARABLE_COMPILATION ON
+                      CUDA_RESOLVE_DEVICE_SYMBOLS ON)

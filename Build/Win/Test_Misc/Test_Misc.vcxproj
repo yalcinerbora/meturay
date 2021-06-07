@@ -129,28 +129,21 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaLink />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\Tests\main.cpp" />
-    <CudaCompile Include="..\..\..\Source\Tests\T_MatrixGPU.cu" />
-    <ClCompile Include="..\..\..\Source\Tests\T_AOTracers.cpp" />
-    <ClCompile Include="..\..\..\Source\Tests\T_GPUScene.cpp" />
-    <ClCompile Include="..\..\..\Source\Tests\T_PPGTracers.cpp" />
-    <ClCompile Include="..\..\..\Source\Tests\T_Quaternion.cpp" />
-    <ClCompile Include="..\..\..\Source\Tests\T_SimpleTracers.cpp" />
-    <ClCompile Include="..\..\..\Source\Tests\T_PathTracers.cpp" />
-    <ClCompile Include="..\..\..\Source\Tests\T_SceneIOCommon.cpp" />
-    <ClCompile Include="..\..\..\Source\Tests\T_MatrixCPU.cpp" />
-    <CudaCompile Include="..\..\..\Source\Tests\T_MockTracer.cu">
-      <FileType>Document</FileType>
-    </CudaCompile>
-    <ClCompile Include="..\..\..\Source\Tests\T_SceneIO.cpp" />
-    <ClCompile Include="..\..\..\Source\Tests\T_SelfNode.cpp" />
-    <ClCompile Include="..\..\..\Source\Tests\T_VectorCPU.cpp" />
-    <CudaCompile Include="..\..\..\Source\Tests\T_VectorGPU.cu">
-      <FileType>Document</FileType>
-    </CudaCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\Source\Tests\SimpleTracerSetup.h" />
+    <ClCompile Include="..\..\..\Source\Test_Misc\main.cpp" />
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_AOTracers.cpp" />
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_GPUScene.cpp" />
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_MatrixCPU.cpp" />
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_PathTracers.cpp" />
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_PPGTracers.cpp" />
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_Quaternion.cpp" />
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_SceneIO.cpp" />
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_SceneIOCommon.cpp" />
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_SelfNode.cpp" />
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_SimpleTracers.cpp" />
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_VectorCPU.cpp" />
+    <CudaCompile Include="..\..\..\Source\Test_Misc\T_MatrixGPU.cu" />
+    <CudaCompile Include="..\..\..\Source\Test_Misc\T_MockTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\Test_Misc\T_VectorGPU.cu" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">
@@ -159,6 +152,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ProjectReference Include="..\VisorGL\VisorGL.vcxproj">
       <Project>{73e98dc9-d340-4704-9db7-b3f7156f97d3}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Source\Test_Misc\SimpleTracerSetup.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
