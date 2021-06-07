@@ -3,7 +3,7 @@
 
 std::unique_ptr<ImageIO> ImageIO::instance = nullptr;
 
-inline ImageIO::ImageIO()
+ImageIO::ImageIO()
 {
     FreeImage_Initialise();
 }

@@ -18,10 +18,7 @@ target_link_libraries(MRay PRIVATE
 if(MSVC)
 
     set(DEBUG_ARGS
-        -t TracerConfig.json
-        -v VisorConfig.json
-        -r  640x360
-        Scenes/modernPool.json)
+        "-t TracerConfig.json -v VisorConfig.json -r 640x360 Scenes/modernPool.json")
 
     set_target_properties(MRay PROPERTIES
                           VS_DEBUGGER_WORKING_DIRECTORY ${MRAY_WORKING_DIRECTORY}

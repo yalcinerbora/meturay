@@ -62,3 +62,9 @@ target_link_libraries(VisorGL
                       glew32
                       glfw3dll
                       opengl32)
+
+# Copy DLLS
+# add_custom_command(TARGET MyTest POST_BUILD
+#     COMMAND ${CMAKE_COMMAND} -E copy_directory
+#         "${PROJECT_SOURCE_DIR}/libs/$<CONFIGURATION>"
+#         $<TARGET_FILE_DIR:MyTest>)

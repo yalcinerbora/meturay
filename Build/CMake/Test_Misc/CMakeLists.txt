@@ -51,6 +51,7 @@ set_target_properties(Test_Misc PROPERTIES
 
 target_link_libraries(Test_Misc PRIVATE
                       RayLib
+                      VisorGL
                       gtest)
 
 if(MSVC)
