@@ -139,6 +139,8 @@ set(SRC_MEMORY
     ${CURRENT_SOURCE_DIR}/ImageMemory.h
     ${CURRENT_SOURCE_DIR}/RayMemory.cu
     ${CURRENT_SOURCE_DIR}/RayMemory.h
+    ${CURRENT_SOURCE_DIR}/RNGMemory.cu
+    ${CURRENT_SOURCE_DIR}/RNGMemory.h
     ${CURRENT_SOURCE_DIR}/Texture.cpp
     ${CURRENT_SOURCE_DIR}/Texture.cuh
     ${CURRENT_SOURCE_DIR}/Texture.hpp)

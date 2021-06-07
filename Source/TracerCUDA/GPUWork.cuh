@@ -43,7 +43,7 @@ class GPUWorkBatchD : public GPUWorkBatchI
 template<class GlobalData, class LocalData, class RayData,
          class MGroup, class PGroup,
          WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
-         SurfaceFuncGenerator<typename MGroup::Surface, typename PGroup::HitData, typename PGroup::PrimitiveData> SGen>
+         SurfaceFuncGenerator<MGroup::Surface, PGroup::HitData, PGroup::PrimitiveData> SGen>
 class GPUWorkBatch
     : public GPUWorkBatchD<GlobalData, RayData>
 {
@@ -69,9 +69,9 @@ class GPUWorkBatch
 
     public:
         // Constrcutors & Destructor
-                                        GPUWorkBatch(const GPUMaterialGroupI&,
-                                                     const GPUPrimitiveGroupI&,
-                                                     const GPUTransformI* const*);
+        GPUWorkBatch(const GPUMaterialGroupI& mg,
+                     const GPUPrimitiveGroupI& pg,
+                     const GPUTransformI* const* t);
                                         ~GPUWorkBatch() = default;
 
         void                            Work(// Output
@@ -107,18 +107,16 @@ void GPUWorkBatchD<GD, RD>::SetRayDataPtrs(RD* dRDOut,
     dAuxOutLocal = dRDOut;
 }
 
-
-template<class GD, class LD, class RD, class MG, class PG,
-         WorkFunc<GD, LD, RD, MG> WF,
-         SurfaceFuncGenerator<typename MG::Surface, typename PG::HitData, typename PG::PrimitiveData> SF>
-//template <class GD, class LD, class RD, class MG, class PG,
-//          WorkFunc<GD, LD, RD, MG> WF,
-//          SurfaceFuncGenerator<MG::Surface, PG::HitData, PG::PrimitiveData> SF>
-inline const char* GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::TypeNameGen(const char* mgOverride,
-                                                                         const char* pgOverride)
+template<class GlobalData, class LocalData, class RayData,
+         class MGroup, class PGroup,
+         WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
+         SurfaceFuncGenerator<MGroup::Surface, PGroup::HitData, PGroup::PrimitiveData> SGen>
+inline const char* GPUWorkBatch<GlobalData, LocalData, RayData, 
+                                MGroup, PGroup, WFunc, SGen>::TypeNameGen(const char* mgOverride,
+                                                                          const char* pgOverride)
 {
-    const char* pgName = PG::TypeName();
-    const char* mgName = MG::TypeName();
+    const char* pgName = PGroup::TypeName();
+    const char* mgName = MGroup::TypeName();
     if(pgOverride) pgName = pgOverride;
     if(mgOverride) mgName = mgOverride;
 
@@ -127,43 +125,47 @@ inline const char* GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::TypeNameGen(const c
     return typeName.c_str();
 }
 
-template <class GD, class LD, class RD, class MG, class PG,
-          WorkFunc<GD, LD, RD, MG> WF,
-          SurfaceFuncGenerator<typename MG::Surface, typename PG::HitData, typename PG::PrimitiveData> SF>
-GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::GPUWorkBatch(const GPUMaterialGroupI& mg,
-                                                       const GPUPrimitiveGroupI& pg,
-                                                       const GPUTransformI* const* t)
-    : materialGroup(static_cast<const MG&>(mg))
-    , primitiveGroup(static_cast<const PG&>(pg))
+template<class GlobalData, class LocalData, class RayData,
+         class MGroup, class PGroup,
+         WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
+         SurfaceFuncGenerator<MGroup::Surface, PGroup::HitData, PGroup::PrimitiveData> SGen>
+GPUWorkBatch<GlobalData, LocalData, RayData,
+             MGroup, PGroup, WFunc, SGen>::GPUWorkBatch(const GPUMaterialGroupI& mg,
+                                                        const GPUPrimitiveGroupI& pg,
+                                                        const GPUTransformI* const* t)
+    : materialGroup(static_cast<const MGroup&>(mg))
+    , primitiveGroup(static_cast<const PGroup&>(pg))
     , dTransforms(t)
 {}
 
-template <class GD, class LD, class RD, class MG, class PG,
-          WorkFunc<GD, LD, RD, MG> WF,
-          SurfaceFuncGenerator<typename MG::Surface, typename PG::HitData, typename PG::PrimitiveData> SF>
-void GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::Work(// Output
-                                                    HitKey* dBoundMatOut,
-                                                    RayGMem* dRayOut,
-                                                    //  Input
-                                                    const RayGMem* dRayIn,
-                                                    const PrimitiveId* dPrimitiveIds,
-                                                    const TransformId* dTransformIds,
-                                                    const HitStructPtr dHitStructs,
-                                                    // Ids
-                                                    const HitKey* dMatIds,
-                                                    const RayId* dRayIds,
-                                                    //
-                                                    const uint32_t rayCount,
-                                                    RNGMemory& rngMem)
+template<class GlobalData, class LocalData, class RayData,
+    class MGroup, class PGroup,
+    WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
+    SurfaceFuncGenerator<MGroup::Surface, PGroup::HitData, PGroup::PrimitiveData> SGen>
+void GPUWorkBatch<GlobalData, LocalData, RayData,
+                  MGroup, PGroup, WFunc, SGen>::Work(// Output
+                                                     HitKey* dBoundMatOut,
+                                                     RayGMem* dRayOut,
+                                                     //  Input
+                                                     const RayGMem* dRayIn,
+                                                     const PrimitiveId* dPrimitiveIds,
+                                                     const TransformId* dTransformIds,
+                                                     const HitStructPtr dHitStructs,
+                                                     // Ids
+                                                     const HitKey* dMatIds,
+                                                     const RayId* dRayIds,
+                                                     //
+                                                     const uint32_t rayCount,
+                                                     RNGMemory& rngMem)
 {
     // Do Pre-work (initialize local data etc.)
     GetReady();
 
-    using PrimitiveGroup = typename PG;
-    using PrimitiveData = typename PG::PrimitiveData;
-    using HitData = typename PG::HitData;
-    using MaterialData = typename MG::Data;
-    using MaterialSurface = typename MG::Surface;
+    using PrimitiveGroup = typename PGroup;
+    using PrimitiveData = typename PGroup::PrimitiveData;
+    using HitData = typename PGroup::HitData;
+    using MaterialData = typename MGroup::Data;
+    using MaterialSurface = typename MGroup::Surface;
     // Fetch surface function from primitive list
     //using SFuncType = SurfaceFunc<MaterialSurface, HitData, PrimitiveData>;
     //constexpr SFuncType SFunc = PG::GetSurfaceFunction<MaterialSurface>();
@@ -174,36 +176,37 @@ void GPUWorkBatch<GD, LD, RD, MG, PG, WF, SF>::Work(// Output
 
     const uint32_t outRayCount = OutRayCount();
 
-    const CudaGPU& gpu = materialGroup.GPU();
-    gpu.AsyncGridStrideKC_X
-    (
-        0,
-        rayCount,
-        //
-        KCWork<GD, LD, RD, PG, MG, WF, SFunc>,
-        // Args
-        // Output
-        dBoundMatOut,
-        dRayOut,
-        dAuxOutLocal,
-        outRayCount,
-        // Input
-        dRayIn,
-        dAuxInGlobal,
-        dPrimitiveIds,
-        dTransformIds,
-        dHitStructs,
-        //
-        dMatIds,
-        dRayIds,
-        // I-O
-        localData,
-        globalData,
-        rngMem.RNGData(gpu),
-        // Constants
-        rayCount,
-        matData,
-        primData,
-        dTransforms
-    );
+    //const CudaGPU& gpu = materialGroup.GPU();
+    //gpu.AsyncGridStrideKC_X
+    //(
+    //    0,
+    //    rayCount,
+    //    //
+    //    KCWork<GlobalData, LocalData, RayData, PGroup, 
+    //           MGroup, WFunc, SGen>,
+    //    // Args
+    //    // Output
+    //    dBoundMatOut,
+    //    dRayOut,
+    //    dAuxOutLocal,
+    //    outRayCount,
+    //    // Input
+    //    dRayIn,
+    //    dAuxInGlobal,
+    //    dPrimitiveIds,
+    //    dTransformIds,
+    //    dHitStructs,
+    //    //
+    //    dMatIds,
+    //    dRayIds,
+    //    // I-O
+    //    localData,
+    //    globalData,
+    //    rngMem.RNGData(gpu),
+    //    // Constants
+    //    rayCount,
+    //    matData,
+    //    primData,
+    //    dTransforms
+    //);
 }

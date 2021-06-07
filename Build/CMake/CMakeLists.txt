@@ -9,7 +9,7 @@ set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED True)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CUDA_RUNTIME_LIBRARY -cudart=shared)
+set(CUDA_RUNTIME_LIBRARY Shared)
 
 # Architecture
 set(CMAKE_CUDA_ARCHITECTURES "52" CACHE STRING "Architecture chosen by the user at CMake configure time")
@@ -34,10 +34,9 @@ if(MSVC)
     add_compile_options(
         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4984>
         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4506>)
-
+    # Filter annoying ALL_BUILD ZERO_CHECK projects
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
     set(PREDEFINED_TARGETS_FOLDER "CustomTargets")
-
 elseif(APPLE)
     set(MRAY_PLATFORM_NAME Mac)
 elseif(UNIX)
@@ -56,7 +55,7 @@ set(MRAY_CONFIG_BIN_DIRECTORY ${MRAY_PLATFORM_BIN_DIRECTORY}/$<CONFIG>)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${MRAY_CONFIG_BIN_DIRECTORY})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${MRAY_CONFIG_BIN_DIRECTORY})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MRAY_CONFIG_BIN_DIRECTORY})
-
+# Meta library directory
 link_directories(${MRAY_PLATFORM_LIB_DIRECTORY})
 
 # Generic Preprocessor Defitions
