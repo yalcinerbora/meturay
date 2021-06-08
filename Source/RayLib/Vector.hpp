@@ -48,7 +48,7 @@ Vector<N, T>::Vector(const Vector<N - sizeof...(Args), T>& v,
     {
         vector[i] = v[i];
     }
-    const T arr[] = {dataList...};
+    const T arr[] = {static_cast<T>(dataList)...};
     UNROLL_LOOP
     for(int i = vectorSize; i < N; i++)
     {

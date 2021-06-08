@@ -181,8 +181,8 @@ TracerError PPGTracer::ConstructLightSampler()
 void PPGTracer::ResizeAndInitPathMemory()
 {
     size_t totalPathNodeCount = TotalPathNodeCount();
-    METU_LOG("Allocating PPGTracer global path buffer: Size %llu MiB", 
-             totalPathNodeCount * sizeof(PathGuidingNode) / 1024 / 1024);
+    //METU_LOG("Allocating PPGTracer global path buffer: Size %llu MiB", 
+    //         totalPathNodeCount * sizeof(PathGuidingNode) / 1024 / 1024);
 
     DeviceMemory::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(PathGuidingNode));
     dPathNodes = static_cast<PathGuidingNode*>(pathMemory);
@@ -398,7 +398,7 @@ bool PPGTracer::Render()
     currentDepth++;
 
     //
-    METU_LOG("PASS ENDED=============================================================");
+    //METU_LOG("PASS ENDED=============================================================");
 
     // Check tracer termination conditions
     // Either there is no ray left for iteration or maximum depth is exceeded
@@ -411,7 +411,7 @@ void PPGTracer::Finalize()
 {
     uint32_t totalPathNodeCount = TotalPathNodeCount();
 
-    Debug::DumpMemToFile("PathNodes", dPathNodes, totalPathNodeCount);
+    //Debug::DumpMemToFile("PathNodes", dPathNodes, totalPathNodeCount);
 
     // Accumulate the finished radiances to the STree
     sTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
@@ -435,21 +435,21 @@ void PPGTracer::Finalize()
                                  options.maxDTreeDepth,
                                  cudaSystem);
 
-        printf("Splitting and Swapping Trees\n");
-        CUDA_CHECK(cudaDeviceSynchronize());
-        // PrintEveryDTree
-        std::vector<DTreeGPU> structs;
-        std::vector<std::vector<DTreeNode>> nodes;
-        sTree->GetAllDTreesToCPU(structs, nodes, false);
-        for(size_t i = 0; i < nodes.size(); i++)
-        {
-            Debug::DumpMemToFile("dTreeN" + std::to_string(i), nodes[i].data(), nodes[i].size());
-            Debug::DumpMemToFile("dTree" + std::to_string(i), &structs[i], 1);
-        }
+        METU_LOG("%u: Splitting and Swapping Trees", currentTreeIteration);
+        //CUDA_CHECK(cudaDeviceSynchronize());
+        //// PrintEveryDTree
+        //std::vector<DTreeGPU> structs;
+        //std::vector<std::vector<DTreeNode>> nodes;
+        //sTree->GetAllDTreesToCPU(structs, nodes, true);
+        //for(size_t i = 0; i < nodes.size(); i++)
+        //{
+        //    Debug::DumpMemToFile("dTreeN" + std::to_string(i), nodes[i].data(), nodes[i].size());
+        //    Debug::DumpMemToFile("dTree" + std::to_string(i), &structs[i], 1);
+        //}
 
         // Completely Reset the Image
         // This is done to eliminate variance from prev samples
-        ResetImage();
+        //ResetImage();
     }
 
     uint32_t prevTreeSwap = (nextTreeSwap >> 1);

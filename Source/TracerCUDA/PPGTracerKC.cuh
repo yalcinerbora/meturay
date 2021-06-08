@@ -117,11 +117,11 @@ void PPGTracerBoundaryWork(// Output
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
 
         // Also backpropogate this radiance to the path nodes
-        if(emission != Vector3(0.0f))
-            printf("AddingRadiance: E:(%f %f %f) RF:(%f %f %f) Path %u + %u\n",
-                   emission[0], emission[1], emission[2],
-                   radianceFactor[0], radianceFactor[1], radianceFactor[2],
-                   aux.pathIndex, aux.depth);
+        //if(emission != Vector3(0.0f))
+        //    printf("AddingRadiance: E:(%f %f %f) RF:(%f %f %f) Path %u + %u\n",
+        //           emission[0], emission[1], emission[2],
+        //           radianceFactor[0], radianceFactor[1], radianceFactor[2],
+        //           aux.pathIndex, aux.depth);
         gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
     }
 }
@@ -219,11 +219,11 @@ void PPGTracerPathWork(// Output
         auto& img = renderState.gImage;
         ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
 
-        if(emission != Vector3(0.0f))
-            printf("AddingRadiance: E:(%f %f %f) RF:(%f %f %f) Path %u + %u\n",
-                   emission[0], emission[1], emission[2],
-                   radianceFactor[0], radianceFactor[1], radianceFactor[2],
-                   aux.pathIndex, aux.depth);
+        //if(emission != Vector3(0.0f))
+        //    printf("AddingRadiance: E:(%f %f %f) RF:(%f %f %f) Path %u + %u\n",
+        //           emission[0], emission[1], emission[2],
+        //           radianceFactor[0], radianceFactor[1], radianceFactor[2],
+        //           aux.pathIndex, aux.depth);
 
         // Accumulate this to the paths aswell
         gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);

@@ -111,6 +111,8 @@ void DTree::DTreeBuffer::DumpTree(DTreeGPU& treeCPU, std::vector<DTreeNode>& nod
                           cudaMemcpyDeviceToHost));
 }
 
+#include "TracerDebug.h"
+
 void DTree::SwapTrees(float fluxRatio, uint32_t depthLimit,
                       const CudaGPU& gpu)
 {
@@ -126,6 +128,11 @@ void DTree::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        //
                        writeTree.TreeGPU(),
                        nodeCount);
+
+    //Byte* dIrrad = reinterpret_cast<Byte*>(readTree.TreeGPU()) + offsetof(DTreeGPU, irradiance);
+    //METU_LOG("TOTAL");
+    //Debug::DumpMemToStdout(reinterpret_cast<float*>(dIrrad), 1);
+    //METU_LOG("===================================================");
     // We have a valid tree now
     // New tree will be reconsturcted from this tree
     // Ask each node that how many child they will need

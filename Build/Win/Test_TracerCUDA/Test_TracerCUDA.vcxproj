@@ -21,6 +21,9 @@
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">
       <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\TracerCUDA\TracerCUDA.vcxproj">
+      <Project>{dff6854d-aad8-489d-bb4a-03048bfcb6e2}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\Test_TracerCUDA\T_DTree.cu" />

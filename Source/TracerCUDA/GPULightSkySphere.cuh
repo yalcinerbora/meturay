@@ -132,10 +132,6 @@ inline void GPULightSkySphere::Sample(// Output
     // Transform Direction to World Space
     dir = transform.LocalToWorld(dirYUp, true);
 
-
-    //printf("Dir %f, %f, %f\n",
-    //       dir[0], dir[1], dir[2]);
-
     // Convert to solid angle pdf
     // http://www.pbr-book.org/3ed-2018/Light_Transport_I_Surface_Reflection/Sampling_Light_Sources.html
     float sinPhi = sin(thetaPhi[1]);
