@@ -2,7 +2,7 @@
 #include "RayTracer.h"
 
 template <class AuxStruct, class AuxInitFunctor>
-void RayTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount,
+void RayTracer::GenerateRays(uint32_t sceneCamId, int32_t sampleCount,
                              const AuxInitFunctor& initFunctor)
 {
     int32_t sampleCountSqr = sampleCount * sampleCount;
@@ -69,7 +69,8 @@ void RayTracer::GenerateRays(const GPUCameraI* dCamera, int32_t sampleCount,
             gImgData,
             // Input
             rngData,
-            dCamera,
+            dCameras,
+            sceneCamId,
             sampleCount,
             resolution,
             localPixelStart,

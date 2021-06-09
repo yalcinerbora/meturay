@@ -83,7 +83,7 @@ class MockNode
         void        SendLog(const std::string) override;
         void        SendError(TracerError) override;
         void        SendAnalyticData(AnalyticData) override {}
-        void        SendImageSectionReset(Vector2i start, Vector2i end) override {}        
+        void        SendImageSectionReset(Vector2i start, Vector2i end) override;
         void        SendImage(const std::vector<Byte> data,
                               PixelFormat, size_t offset,
                               Vector2i start = Zero2i,
@@ -121,6 +121,11 @@ inline void MockNode::SendImage(const std::vector<Byte> data,
                                 Vector2i start, Vector2i end)
 {
     visor.AccumulatePortion(std::move(data), f, offset, start, end);
+}
+
+inline void MockNode::SendImageSectionReset(Vector2i start, Vector2i end)
+{
+    visor.ResetSamples(start, end); 
 }
 
 inline void MockNode::Work()
@@ -188,6 +193,8 @@ class SimpleTracerSetup
             0       // Seed
         };
 
+
+        static constexpr uint32_t MAX_S_TREE = std::numeric_limits<uint32_t>::max();
         const TracerOptions opts = VariableList
         {
             // Mixed
@@ -203,8 +210,8 @@ class SimpleTracerSetup
             {"RawPathGuiding", OptionVariable( true)},
             {"AlwaysSendSamples", OptionVariable(true)},
             {"DTreeMaximumDepth", OptionVariable(64u)},
-            {"DTreeFluxRatio", OptionVariable(0.01f)},
-            {"STreeMaxSamples", OptionVariable(12000u)},            
+            {"DTreeFluxRatio", OptionVariable(1.0f/*0.01f*/)},
+            {"STreeMaxSamples", OptionVariable(MAX_S_TREE)},
         };
 
         // Tracer Related

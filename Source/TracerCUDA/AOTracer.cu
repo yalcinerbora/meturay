@@ -91,7 +91,7 @@ void AOTracer::GenerateWork(int cameraId)
 
     depth = 0;
     hitPhase = false;
-    GenerateRays<RayAuxAO, RayAuxInitAO>(dCameras[cameraId],
+    GenerateRays<RayAuxAO, RayAuxInitAO>(cameraId,
                                          options.sampleCount,
                                          RayAuxInitAO(InitialAOAux));
 }

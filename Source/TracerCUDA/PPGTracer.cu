@@ -409,16 +409,18 @@ bool PPGTracer::Render()
 
 void PPGTracer::Finalize()
 {
+    cudaSystem.SyncAllGPUs();
+
     uint32_t totalPathNodeCount = TotalPathNodeCount();
 
     //Debug::DumpMemToFile("PathNodes", dPathNodes, totalPathNodeCount);
 
     // Accumulate the finished radiances to the STree
-    sTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
-                               options.maximumDepth, cudaSystem);
+    //sTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
+    //                           options.maximumDepth, cudaSystem);
 
     // We iterated once
-    currentTreeIteration += options.sampleCount * options.sampleCount;
+    currentTreeIteration += 1;// options.sampleCount* options.sampleCount;
     // Swap the trees if we achieved treshold
     if(currentTreeIteration == nextTreeSwap)
     {
@@ -430,12 +432,18 @@ void PPGTracer::Finalize()
                                                                      options.sTreeSplitThreshold));
 
         // Split and Swap the trees
-        sTree->SplitAndSwapTrees(options.sTreeSplitThreshold,
-                                 options.dTreeSplitThreshold,
-                                 options.maxDTreeDepth,
-                                 cudaSystem);
+        //sTree->SplitAndSwapTrees(options.sTreeSplitThreshold,
+        //                         options.dTreeSplitThreshold,
+        //                         options.maxDTreeDepth,
+        //                         cudaSystem);
 
-        METU_LOG("%u: Splitting and Swapping Trees", currentTreeIteration);
+        //size_t mbSize = sTree->UsedGPUMemory() / 1024 / 1024;
+        //METU_LOG("%4u: Splitting and Swapping Trees Size %llu Mib, Trees: %u",
+        //         currentTreeIteration,
+        //         mbSize,
+        //         sTree->TotalTreeCount());
+        //      
+        //// DEBUG
         //CUDA_CHECK(cudaDeviceSynchronize());
         //// PrintEveryDTree
         //std::vector<DTreeGPU> structs;
@@ -443,15 +451,18 @@ void PPGTracer::Finalize()
         //sTree->GetAllDTreesToCPU(structs, nodes, true);
         //for(size_t i = 0; i < nodes.size(); i++)
         //{
-        //    Debug::DumpMemToFile("dTreeN" + std::to_string(i), nodes[i].data(), nodes[i].size());
-        //    Debug::DumpMemToFile("dTree" + std::to_string(i), &structs[i], 1);
+        //    std::string iterAsString = std::to_string(currentTreeIteration);
+        //    Debug::DumpMemToFile(iterAsString + "_dTree_N" + std::to_string(i),
+        //                         nodes[i].data(), nodes[i].size());
+        //    Debug::DumpMemToFile(iterAsString + "_dTree" + std::to_string(i), 
+        //                         &structs[i], 1);
         //}
 
         // Completely Reset the Image
         // This is done to eliminate variance from prev samples
         //ResetImage();
     }
-
+        
     uint32_t prevTreeSwap = (nextTreeSwap >> 1);
     if(options.alwaysSendSamples ||
        // Do not send samples untill we exceed prev iteration samples
@@ -467,7 +478,7 @@ void PPGTracer::GenerateWork(int cameraId)
     if(callbacks)
         callbacks->SendCurrentCamera(SceneCamToVisorCam(cameraId));
 
-    GenerateRays<RayAuxPPG, RayAuxInitPPG>(dCameras[cameraId],
+    GenerateRays<RayAuxPPG, RayAuxInitPPG>(cameraId,
                                            options.sampleCount,
                                            RayAuxInitPPG(InitialPPGAux,
                                                          options.sampleCount *

@@ -127,7 +127,8 @@ void KCGenerateCameraRaysGPU(// Output
                              ImageGMem<Vector4f> imgMem,
                              // Input
                              RNGGMem gRNGStates,
-                             const GPUCameraI* gCam,
+                             const GPUCameraI** gCameras,
+                             const uint32_t sceneCamId,
                              const uint32_t samplePerLocation,
                              const Vector2i resolution,
                              const Vector2i pixelStart,
@@ -136,6 +137,9 @@ void KCGenerateCameraRaysGPU(// Output
                              const AuxInitFunctor auxInitF)
 {
     RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
+
+    // Fetch Camera
+    const GPUCameraI* gCam = gCameras[sceneCamId];
 
     // Total work
     const Vector2i totalSamples = Vector2i(pixelCount[0] * samplePerLocation,

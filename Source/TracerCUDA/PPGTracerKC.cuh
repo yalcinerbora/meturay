@@ -122,6 +122,7 @@ void PPGTracerBoundaryWork(// Output
         //           emission[0], emission[1], emission[2],
         //           radianceFactor[0], radianceFactor[1], radianceFactor[2],
         //           aux.pathIndex, aux.depth);
+        if(total.HasNaN()) printf("NAN Found boundary!!!\n");
         gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
     }
 }
@@ -226,6 +227,7 @@ void PPGTracerPathWork(// Output
         //           aux.pathIndex, aux.depth);
 
         // Accumulate this to the paths aswell
+        if(total.HasNaN()) printf("NAN Found emissive!!!\n");
         gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
     }
 
@@ -250,6 +252,8 @@ void PPGTracerPathWork(// Output
         if(isnan(pdf) | direction.HasNaN())
             printf("pdf % f, dir % f, % f, % f\n", pdf,
                    direction[0], direction[1], direction[2]);
+
+        //printf("D: %f, %f, %f\n", direction[0], direction[1], direction[2]);
 
         // Calculate BxDF
         reflectance = MGroup::Evaluate(// Input

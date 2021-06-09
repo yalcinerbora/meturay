@@ -78,6 +78,9 @@ class STree
                                     const DTreeGPU**& dDTrees) const;
         uint32_t            TotalTreeCount() const;
 
+        size_t              UsedGPUMemory() const;
+        size_t              UsedCPUMemory() const;
+
         // Debugging
         void                GetTreeToCPU(STreeGPU&, std::vector<STreeNode>&) const;
         void                GetAllDTreesToCPU(std::vector<DTreeGPU>&,
@@ -96,4 +99,20 @@ inline void STree::TreeGPU(const STreeGPU*& dSTreeOut,
 inline uint32_t STree::TotalTreeCount() const
 {
     return static_cast<uint32_t>(dTrees.size());
+}
+
+inline size_t STree::UsedGPUMemory() const
+{
+    size_t total = memory.Size();
+    for(const DTree& dt : dTrees)
+        total += dt.UsedGPUMemory();
+    return total;
+}
+
+inline size_t STree::UsedCPUMemory() const
+{
+    size_t total = 0;
+    for(const DTree& dt : dTrees)
+        total += dt.UsedCPUMemory();
+    return total;
 }

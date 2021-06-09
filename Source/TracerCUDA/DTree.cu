@@ -28,18 +28,25 @@ DTree::DTreeBuffer::DTreeBuffer()
     dDTree = static_cast<DTreeGPU*>(memory);
     DTreeNode* dDTreeNodes = reinterpret_cast<DTreeNode*>(static_cast<Byte*>(memory) + AlignedOffsetDTreeGPU);
 
+
+    Vector4f irrads = Vector4f(1.0f, 0.01f, 
+                               1.0f, 0.01f);
+
     // Init Tree
     DTreeGPU hDTree;
     hDTree.gRoot = dDTreeNodes;
     hDTree.nodeCount = 1;
     hDTree.irradiance = 0.0f;
+    hDTree.irradiance = irrads.Sum();
     hDTree.totalSamples = 0;
     CUDA_CHECK(cudaMemcpy(dDTree, &hDTree, sizeof(DTreeGPU),
                           cudaMemcpyHostToDevice));
 
     // Init very first node
     DTreeNode hNode;
-    hNode.irradianceEstimates = Zero4;
+    //hNode.irradianceEstimates = Zero4;
+    hNode.irradianceEstimates = irrads;
+
     hNode.childIndices = Vector4ui(std::numeric_limits<uint32_t>::max());
     hNode.parentIndex = std::numeric_limits<uint16_t>::max();
     CUDA_CHECK(cudaMemcpy(dDTreeNodes, &hNode, sizeof(DTreeNode),

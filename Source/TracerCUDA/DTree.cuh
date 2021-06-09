@@ -51,6 +51,7 @@ class DTree
                                                     const CudaGPU&,
                                                     cudaStream_t);
                 void                CopyGPUNodeCountToCPU();
+                size_t              UsedGPUMemory() const;
 
                 void                DumpTree(DTreeGPU&, std::vector<DTreeNode>&) const;
         };
@@ -83,6 +84,9 @@ class DTree
         DTreeGPU*               TreeGPU(bool readTree);
         const DTreeGPU*         TreeGPU(bool writeTree) const;
 
+        size_t                  UsedGPUMemory() const;
+        size_t                  UsedCPUMemory() const;
+
         // Debugging
         void                    GetReadTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
         void                    GetWriteTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
@@ -103,6 +107,11 @@ inline size_t DTree::DTreeBuffer::NodeCount() const
     return nodeCount;
 }
 
+inline size_t DTree::DTreeBuffer::UsedGPUMemory() const
+{
+    return memory.Size();
+}
+
 inline DTreeGPU* DTree::TreeGPU(bool fetchReadTree)
 {
     DTreeBuffer& b = (fetchReadTree) ? readTree : writeTree;
@@ -113,4 +122,15 @@ inline const DTreeGPU* DTree::TreeGPU(bool fetchReadTree) const
 {
     const DTreeBuffer& b = (fetchReadTree) ? readTree : writeTree;
     return b.TreeGPU();
+}
+
+inline size_t DTree::UsedGPUMemory() const
+{
+    return (writeTree.UsedGPUMemory() +
+            writeTree.UsedGPUMemory());
+}
+
+inline size_t DTree::UsedCPUMemory() const
+{
+    return sizeof(DTree);
 }

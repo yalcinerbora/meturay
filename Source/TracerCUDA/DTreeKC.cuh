@@ -71,12 +71,13 @@ __device__ __forceinline__
 float DTreeNode::LocalPDF(uint8_t childIndex) const
 {
     // I do not understand where this 4 is coming from
-    return irradianceEstimates[childIndex] / irradianceEstimates.Sum();
+    return 4.0f * irradianceEstimates[childIndex] / irradianceEstimates.Sum();
 }
 
 __device__ __forceinline__
 uint8_t DTreeNode::DetermineChild(const Vector2f& localCoords) const
 {
+    assert(localCoords <= Vector3(1.0f) && localCoords >= Vector3(0.0f));
     uint8_t result = 0b00;
     if(localCoords[0] > 0.5f) result |= (1 << 0) & (0b01);
     if(localCoords[1] > 0.5f) result |= (1 << 1) & (0b10);
@@ -292,6 +293,10 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance)
         // If leaf atomically add the irrad value
         if(node->IsLeaf(childIndex))
         {
+            if(isnan(radiance))
+                printf("NaN Radiance add on node %lld\n",
+                       static_cast<ptrdiff_t>(node - gRoot));
+
             atomicAdd(&node->irradianceEstimates[childIndex], radiance);
             break;
         }

@@ -81,7 +81,7 @@ class GPUTracer : public GPUTracerI
         const uint32_t                      identityTransformIndex;
         const uint32_t                      boundaryTransformIndex;
         // Visor Cam Representations of the current scene cameras
-        // This is send to visor (if available)
+        // These are sent to visor (if available)
         std::vector<VisorCamera>            visorCams;
         //
         TracerParameters                    params;
