@@ -44,7 +44,8 @@ class STree
         DeviceMemory        readDTreeGPUBuffer;
         const DTreeGPU**    dReadDTrees;
         
-        DeviceMemory        LinearizeDTreeGPUPtrs(bool readTree);
+        void                LinearizeDTreeGPUPtrs(DeviceMemory&,
+                                                  bool readTree, size_t offset = 0);
         void                ExpandTree(size_t newNodeCount);
         void                SplitLeaves(uint32_t maxSamplesPerNode,
                                         const CudaSystem&);

@@ -4,6 +4,10 @@
 
 #include "RayLib/ImageIO.h"
 
+#include "DTreeKC.cuh"
+#include "STreeKC.cuh"
+#include "PathNode.cuh"
+
 namespace Debug
 {
 namespace Detail
@@ -131,4 +135,85 @@ std::ostream& operator<<(std::ostream& stream, const DefaultLeaf& l)
     stream << std::setw(0)
            << "{ mat: " << l.matId << ", primId: " << l.primitiveId << "} ";
     return stream;
+}
+
+std::ostream& operator<<(std::ostream& s, const STreeNode& n)
+{
+    s << "C{";
+    if(n.isLeaf)
+    {
+        s << "-, -} ";
+        s << "T{" << n.index << "} ";
+    }
+    else
+    {
+        s << n.index << ", " << (n.index + 1) << "} ";
+        s << "T{-} ";
+    }
+
+    //static constexpr const char* XYZ = "XYZ";
+    s << "Axis {";
+    s << "XYZ"[static_cast<int>(n.splitAxis)];
+    s << "}";
+    return s;
+}
+
+std::ostream& operator<<(std::ostream& s, const STreeGPU& n)
+{
+    s << "NodeCount  : " << n.nodeCount << std::endl;
+    s << "Extents    : {{"
+        << n.extents.Min()[0] << ", " << n.extents.Min()[1] << ", " << n.extents.Min()[2] << "}, {"
+        << n.extents.Max()[0] << ", " << n.extents.Max()[1] << ", " << n.extents.Max()[2];
+    s << "}}" << std::endl;
+    return s;
+}
+
+std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
+{
+    s << "{"   << std::endl
+      << "   " << n.worldPosition[0] << ", " 
+               << n.worldPosition[1] << ", "
+               << n.worldPosition[2] << std::endl
+      << "   " << static_cast<uint32_t>(n.prevNext[0]) << ", "
+               << static_cast<uint32_t>(n.prevNext[1]) << std::endl
+      << "}";
+    return s;
+}
+
+std::ostream& operator<<(std::ostream& s, const DTreeNode& n)
+{
+    constexpr uint32_t UINT32_T_MAX = std::numeric_limits<uint32_t>::max();
+    constexpr uint16_t UINT16_T_MAX = std::numeric_limits<uint16_t>::max();
+
+    s << "P{"; 
+    if(n.parentIndex == UINT16_T_MAX) s << "-";
+    else s << n.parentIndex;
+    s << "} ";
+    s << "C{";
+    if(n.childIndices[0] == UINT32_T_MAX) s << "-";
+    else s << n.childIndices[0];
+    s << ", ";
+    if(n.childIndices[1] == UINT32_T_MAX) s << "-";
+    else s << n.childIndices[1];
+    s << ", ";
+    if(n.childIndices[2] == UINT32_T_MAX) s << "-";
+    else s << n.childIndices[2];
+    s << ", ";
+    if(n.childIndices[3] == UINT32_T_MAX) s << "-";
+    else s << n.childIndices[3];
+    s << "} ";
+    s << "I{"
+      << n.irradianceEstimates[0] << ", "
+      << n.irradianceEstimates[1] << ", "
+      << n.irradianceEstimates[2] << ", "
+      << n.irradianceEstimates[3] << "}";
+    return s;
+}
+
+std::ostream& operator<<(std::ostream& s, const DTreeGPU& n)
+{
+    s << "Irradiane  : " << n.irradiance << std::endl;
+    s << "NodeCount  : " << n.nodeCount << std::endl;
+    s << "SampleCount: " << n.totalSamples << std::endl;        
+    return s;
 }

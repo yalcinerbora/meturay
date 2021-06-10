@@ -12,6 +12,7 @@
 #include "GPUAcceleratorI.h"
 
 #include "TracerDebug.h"
+
 //std::ostream& operator<<(std::ostream& stream, const RayAuxPPG& v)
 //{
 //    stream << std::setw(0)
@@ -37,65 +38,6 @@
 //    }
 //    return stream;
 //}
-
-static std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
-{
-    s << "W:{" << n.worldPosition[0] << ", " 
-               << n.worldPosition[1] << ", " 
-               << n.worldPosition[2] << "} PN:{"
-      << static_cast<uint32_t>(n.prevNext[0]) << ", "
-      << static_cast<uint32_t>(n.prevNext[1]) << "} R: {";
-    s << n.totalRadiance[0] << ", "
-      << n.totalRadiance[1] << ", "
-      << n.totalRadiance[2] << "} RF: {";
-    s << n.radFactor[0] << ", "
-      << n.radFactor[1] << ", "
-      << n.radFactor[2] << "}";
-    s << " Tree: ";
-    if(n.nearestDTreeIndex == STree::InvalidDTreeIndex)
-        s << "-";
-    else
-        s << n.nearestDTreeIndex;
-    return s;
-}
-
-static std::ostream& operator<<(std::ostream& s, const DTreeNode& n)
-{
-    constexpr uint32_t UINT32_T_MAX = std::numeric_limits<uint32_t>::max();
-    constexpr uint16_t UINT16_T_MAX = std::numeric_limits<uint16_t>::max();
-
-    s << "P{";
-    if(n.parentIndex == UINT16_T_MAX) s << "-";
-    else s << n.parentIndex;
-    s << "} ";
-    s << "C{";
-    if(n.childIndices[0] == UINT32_T_MAX) s << "-";
-    else s << n.childIndices[0];
-    s << ", ";
-    if(n.childIndices[1] == UINT32_T_MAX) s << "-";
-    else s << n.childIndices[1];
-    s << ", ";
-    if(n.childIndices[2] == UINT32_T_MAX) s << "-";
-    else s << n.childIndices[2];
-    s << ", ";
-    if(n.childIndices[3] == UINT32_T_MAX) s << "-";
-    else s << n.childIndices[3];
-    s << "} ";
-    s << "I{"
-        << n.irradianceEstimates[0] << ", "
-        << n.irradianceEstimates[1] << ", "
-        << n.irradianceEstimates[2] << ", "
-        << n.irradianceEstimates[3] << "}";
-    return s;
-}
-
-static std::ostream& operator<<(std::ostream& s, const DTreeGPU& n)
-{
-    s << "Irradiane  : " << n.irradiance << std::endl;
-    s << "NodeCount  : " << n.nodeCount << std::endl;
-    s << "SampleCount: " << n.totalSamples << std::endl;
-    return s;
-}
 
 __global__
 static void KCInitializePaths(PathGuidingNode* gPathNodes,
@@ -416,9 +358,8 @@ void PPGTracer::Finalize()
     //Debug::DumpMemToFile("PathNodes", dPathNodes, totalPathNodeCount);
 
     // Accumulate the finished radiances to the STree
-    //sTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
-    //                           options.maximumDepth, cudaSystem);
-
+    sTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
+                               options.maximumDepth, cudaSystem);
     // We iterated once
     currentTreeIteration += 1;// options.sampleCount* options.sampleCount;
     // Swap the trees if we achieved treshold
@@ -432,31 +373,37 @@ void PPGTracer::Finalize()
                                                                      options.sTreeSplitThreshold));
 
         // Split and Swap the trees
-        //sTree->SplitAndSwapTrees(options.sTreeSplitThreshold,
-        //                         options.dTreeSplitThreshold,
-        //                         options.maxDTreeDepth,
-        //                         cudaSystem);
+        sTree->SplitAndSwapTrees(options.sTreeSplitThreshold,
+                                 options.dTreeSplitThreshold,
+                                 options.maxDTreeDepth,
+                                 cudaSystem);
 
-        //size_t mbSize = sTree->UsedGPUMemory() / 1024 / 1024;
-        //METU_LOG("%4u: Splitting and Swapping Trees Size %llu Mib, Trees: %u",
-        //         currentTreeIteration,
-        //         mbSize,
-        //         sTree->TotalTreeCount());
-        //      
-        //// DEBUG
-        //CUDA_CHECK(cudaDeviceSynchronize());
-        //// PrintEveryDTree
-        //std::vector<DTreeGPU> structs;
-        //std::vector<std::vector<DTreeNode>> nodes;
-        //sTree->GetAllDTreesToCPU(structs, nodes, true);
-        //for(size_t i = 0; i < nodes.size(); i++)
-        //{
-        //    std::string iterAsString = std::to_string(currentTreeIteration);
-        //    Debug::DumpMemToFile(iterAsString + "_dTree_N" + std::to_string(i),
-        //                         nodes[i].data(), nodes[i].size());
-        //    Debug::DumpMemToFile(iterAsString + "_dTree" + std::to_string(i), 
-        //                         &structs[i], 1);
-        //}
+        size_t mbSize = sTree->UsedGPUMemory() / 1024 / 1024;
+        METU_LOG("%4u: Splitting and Swapping Trees Size %llu Mib, Trees: %u",
+                 currentTreeIteration,
+                 mbSize,
+                 sTree->TotalTreeCount());
+              
+        // DEBUG
+        CUDA_CHECK(cudaDeviceSynchronize());
+        std::string iterAsString = std::to_string(currentTreeIteration);
+        // STree
+        STreeGPU sTreeGPU;
+        std::vector<STreeNode> sNodes;
+        sTree->GetTreeToCPU(sTreeGPU, sNodes);
+        Debug::DumpMemToFile(iterAsString + "_sTree", &sTreeGPU, 1);
+        Debug::DumpMemToFile(iterAsString + "_sTree_N", sNodes.data(), sNodes.size());
+        // PrintEveryDTree
+        std::vector<DTreeGPU> dTreeGPUs;
+        std::vector<std::vector<DTreeNode>> dTreeNodes;
+        sTree->GetAllDTreesToCPU(dTreeGPUs, dTreeNodes, true);
+        Debug::DumpMemToFile(iterAsString + "__dTrees",
+                             dTreeGPUs.data(), dTreeGPUs.size());
+        for(size_t i = 0; i < dTreeNodes.size(); i++)
+        {            
+            Debug::DumpMemToFile(iterAsString + "__dTree_N",
+                                 dTreeNodes[i].data(), dTreeNodes[i].size(), true);
+        }
 
         // Completely Reset the Image
         // This is done to eliminate variance from prev samples

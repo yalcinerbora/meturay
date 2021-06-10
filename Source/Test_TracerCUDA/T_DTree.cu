@@ -16,56 +16,6 @@
 
 using ::testing::FloatEq;
 
-//static std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
-//{
-//    s << "{"   << std::endl
-//      << "   " << n.worldPosition[0] << ", " 
-//               << n.worldPosition[1] << ", "
-//               << n.worldPosition[2] << std::endl
-//      << "   " << static_cast<uint32_t>(n.prevNext[0]) << ", "
-//               << static_cast<uint32_t>(n.prevNext[1]) << std::endl
-//      << "}";
-//    return s;
-//}
-//
-//static std::ostream& operator<<(std::ostream& s, const DTreeNode& n)
-//{
-//    constexpr uint32_t UINT32_T_MAX = std::numeric_limits<uint32_t>::max();
-//    constexpr uint16_t UINT16_T_MAX = std::numeric_limits<uint16_t>::max();
-//
-//    s << "P{"; 
-//    if(n.parentIndex == UINT16_T_MAX) s << "-";
-//    else s << n.parentIndex;
-//    s << "} ";
-//    s << "C{";
-//    if(n.childIndices[0] == UINT32_T_MAX) s << "-";
-//    else s << n.childIndices[0];
-//    s << ", ";
-//    if(n.childIndices[1] == UINT32_T_MAX) s << "-";
-//    else s << n.childIndices[1];
-//    s << ", ";
-//    if(n.childIndices[2] == UINT32_T_MAX) s << "-";
-//    else s << n.childIndices[2];
-//    s << ", ";
-//    if(n.childIndices[3] == UINT32_T_MAX) s << "-";
-//    else s << n.childIndices[3];
-//    s << "} ";
-//    s << "I{"
-//      << n.irradianceEstimates[0] << ", "
-//      << n.irradianceEstimates[1] << ", "
-//      << n.irradianceEstimates[2] << ", "
-//      << n.irradianceEstimates[3] << "}";
-//    return s;
-//}
-//
-//static std::ostream& operator<<(std::ostream& s, const DTreeGPU& n)
-//{
-//    s << "Irradiane  : " << n.irradiance << std::endl;
-//    s << "NodeCount  : " << n.nodeCount << std::endl;
-//    s << "SampleCount: " << n.totalSamples << std::endl;        
-//    return s;
-//}
-
 __global__ 
 static void KCSampleTree(Vector3f* gDirections,
                          float* gPdfs,

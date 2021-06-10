@@ -106,6 +106,8 @@ static void KCMarkSTreeSplitLeaf(uint32_t* leafIndices,
                                  DTreeGPU** gDTrees,
                                  //
                                  uint32_t treeSplitThreshold,
+                                 // Offset
+                                 uint32_t offset,
                                  // Total Node count
                                  uint32_t nodeCount)
 {
@@ -114,17 +116,19 @@ static void KCMarkSTreeSplitLeaf(uint32_t* leafIndices,
         globalId < nodeCount;
         globalId += (blockDim.x * gridDim.x))
     {
-        const STreeNode* node = gTree.gRoot + globalId;
+        const STreeNode* node = gTree.gRoot + offset + globalId;
 
         uint32_t output = INVALID_NODE;
         if(node->isLeaf)
         {
+            DTreeGPU* currentDTree = gDTrees[node->index];
+
             // Check if this leaf should split
             uint32_t totalSamples = gDTrees[node->index]->totalSamples;
             if(totalSamples > treeSplitThreshold)
             {
                 // Pre divide the sample count since this leaf will be split
-                gDTrees[node->index]->totalSamples /= 2;
+                currentDTree->totalSamples /= 2;
                 output = globalId;  
             }
         }
@@ -138,6 +142,7 @@ static void KCSplitSTree(uint32_t* gOldTrees,
                          //
                          const uint32_t* gLeafIndices,
                          // Options
+                         uint32_t processOffset,
                          uint32_t leafAllocStartIndex,
                          uint32_t treeAllocStartIndex,
                          uint32_t splitLeafCount)
@@ -148,7 +153,7 @@ static void KCSplitSTree(uint32_t* gOldTrees,
         threadId += (blockDim.x * gridDim.x))
     {
         // For each split node
-        STreeNode* leafNode = gTree.gRoot + gLeafIndices[threadId];
+        STreeNode* leafNode = gTree.gRoot + processOffset + gLeafIndices[threadId];
 
         // Determine child loc from allocation offsets
         uint32_t childrenLoc = leafAllocStartIndex + threadId * 2;

@@ -8,41 +8,11 @@
 #include "TracerCUDA/STreeKC.cuh"
 #include "TracerCUDA/CudaSystem.h"
 #include "TracerCUDA/CudaSystem.hpp"
-#include "TracerCUDA/TracerDebug.h"
 #include "TracerCUDA/DTreeKC.cuh"
 
 #include "RayLib/CPUTimer.h"
 
-std::ostream& operator<<(std::ostream& s, const STreeNode& n)
-{
-    s << "C{";
-    if(n.isLeaf)
-    {
-        s << "-, -} ";
-        s << "T{" << n.index << "} ";
-    }
-    else
-    {
-        s << n.index << ", " << (n.index + 1) << "} ";
-        s << "T{-} ";
-    }
-
-    //static constexpr const char* XYZ = "XYZ";
-    s << "Axis {";
-    s << "XYZ"[static_cast<int>(n.splitAxis)];
-    s << "}";
-    return s;
-}
-
-std::ostream& operator<<(std::ostream& s, const STreeGPU& n)
-{
-    s << "NodeCount  : " << n.nodeCount << std::endl;
-    s << "Extents    : {{"
-        << n.extents.Min()[0] << ", " << n.extents.Min()[1] << ", " << n.extents.Min()[2] << "}, {"
-        << n.extents.Max()[0] << ", " << n.extents.Max()[1] << ", " << n.extents.Max()[2];
-    s << "}}" << std::endl;
-    return s;
-}
+#include "TracerCUDA/TracerDebug.h"
 
 __global__
 static void KCFindNearestDTree(uint32_t* dTreeIndices,

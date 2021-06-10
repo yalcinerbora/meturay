@@ -16,6 +16,12 @@
 class ImageMemory;
 struct DefaultLeaf;
 
+struct STreeNode;
+struct STreeGPU;
+struct DTreeNode;
+struct DTreeGPU;
+struct PathGuidingNode;
+
 namespace Debug
 {
     void                PrintHitPairs(const RayId* ids, const HitKey* keys, size_t count);
@@ -33,6 +39,7 @@ namespace Debug
     template<class T>
     static void     DumpMemToFile(const std::string& fName,
                                   const T* mPtr, size_t count,
+                                  bool append = false, 
                                   const char* seperator = "\n",
                                   bool hex = false);
     template<class T>
@@ -61,13 +68,26 @@ extern std::ostream& operator<<(std::ostream& stream, const Vector3f&);
 extern std::ostream& operator<<(std::ostream& stream, const Vector4f&);
 extern std::ostream& operator<<(std::ostream& stream, const AABB3f&);
 extern std::ostream& operator<<(std::ostream& stream, const DefaultLeaf&);
+extern std::ostream& operator<<(std::ostream& stream, const STreeGPU&);
+extern std::ostream& operator<<(std::ostream& stream, const STreeNode&);
+extern std::ostream& operator<<(std::ostream& stream, const DTreeGPU&);
+extern std::ostream& operator<<(std::ostream& stream, const DTreeNode&);
+extern std::ostream& operator<<(std::ostream& stream, const PathGuidingNode&);
 
 template<class T>
 void Debug::DumpMemToFile(const std::string& fName,
                           const T* mPtr, size_t count,
-                          const char* seperator, bool hex)
+                          bool append, const char* seperator,
+                          bool hex)
 {
-    std::ofstream file(fName);
+    std::ofstream file;
+    if(append)
+    {
+        file = std::ofstream(fName, std::ofstream::app);
+        file << "============================" << std::endl;
+    }
+    else
+        file = std::ofstream(fName);
     DumpMemToStream(file, mPtr, count, seperator, hex);
 }
 

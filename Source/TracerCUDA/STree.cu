@@ -29,21 +29,21 @@ struct IsSplittedLeafFunctor
     }
 };
 
-DeviceMemory STree::LinearizeDTreeGPUPtrs(bool readTree)
+void STree::LinearizeDTreeGPUPtrs(DeviceMemory& mem, bool readTree, size_t offset)
 {
-    std::vector<DTreeGPU*> hTreePtrs(dTrees.size());
-    uint32_t i = 0;
-    for(DTree& tree : dTrees)
+    size_t currentSize = dTrees.size() - offset;
+    std::vector<DTreeGPU*> hTreePtrs(currentSize);
+
+    for(uint32_t i = 0; i < currentSize; i++)
     {
-        hTreePtrs[i] = tree.TreeGPU(readTree);
-        i++;
+        hTreePtrs[i] = dTrees[offset + i].TreeGPU(readTree);
     }
-    DeviceMemory treePtrs(dTrees.size() * sizeof(DTreeGPU*));
-    CUDA_CHECK(cudaMemcpy(static_cast<DTreeGPU**>(treePtrs),
+
+    DeviceMemory::EnlargeBuffer(mem, currentSize * sizeof(DTreeGPU*));
+    CUDA_CHECK(cudaMemcpy(static_cast<DTreeGPU**>(mem),
                           hTreePtrs.data(),
-                          dTrees.size() * sizeof(DTreeGPU*),
+                          currentSize * sizeof(DTreeGPU*),
                           cudaMemcpyHostToDevice));
-    return std::move(treePtrs);
 }
 
 void STree::ExpandTree(size_t newNodeCount)
@@ -68,8 +68,7 @@ void STree::ExpandTree(size_t newNodeCount)
     Byte* nodeStart = static_cast<Byte*>(newMem) + AlignedOffsetSTreeGPU;
     Byte* nodePtrLoc = static_cast<Byte*>(newMem) + offsetof(STreeGPU, gRoot);
     CUDA_CHECK(cudaMemcpy(nodePtrLoc, &nodeStart, sizeof(STreeNode*),
-                          cudaMemcpyHostToDevice));
-    
+                          cudaMemcpyHostToDevice));    
     memory = std::move(newMem);    
 }
 
@@ -93,12 +92,17 @@ STree::STree(const AABB3f& sceneExtents)
     Byte* nodeCountLocPtr = static_cast<Byte*>(memory) + offsetof(STreeGPU, nodeCount);
     CUDA_CHECK(cudaMemcpy(nodeCountLocPtr, &nodeCount, sizeof(uint32_t),
                cudaMemcpyHostToDevice));
+    // Copy AABB aswell
+    Byte* nodeAABBLoc = static_cast<Byte*>(memory) + offsetof(STreeGPU, extents);
+    CUDA_CHECK(cudaMemcpy(nodeAABBLoc, &sceneExtents, sizeof(AABB3f),
+                          cudaMemcpyHostToDevice));
+
     // Create a default single tree
     dTrees.reserve(INITIAL_TREE_RESERVE_COUNT);
     dTrees.emplace_back();
 
     // Adjust DTree pointers for Tracer Kernels
-    readDTreeGPUBuffer = std::move(LinearizeDTreeGPUPtrs(true));
+    LinearizeDTreeGPUPtrs(readDTreeGPUBuffer, true);
     dReadDTrees = static_cast<const DTreeGPU**>(readDTreeGPUBuffer);
 }
 
@@ -106,94 +110,119 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
                         const CudaSystem& system)
 {
     const CudaGPU& gpu = system.BestGPU();
-    CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
-    // Check the split cretaria on the leaf and respond
-    DeviceMemory splitMarks(nodeCount * sizeof(uint32_t));
-    // Use Read DTrees for determination
-    // Allocate temp writeTree Buffer   
-    DeviceMemory writeDTreeGPUBuffer = std::move(LinearizeDTreeGPUPtrs(false));
-    DTreeGPU** dWriteDTrees = static_cast<DTreeGPU**>(writeDTreeGPUBuffer);
-    
-    // Mark Leafs
-    gpu.GridStrideKC_X(0, 0, nodeCount,
-                       //
-                       KCMarkSTreeSplitLeaf,
-                       //
-                       static_cast<uint32_t*>(splitMarks),
-                       *dSTree,
-                       dWriteDTrees,
-                       maxSamplesPerNode,
-                       static_cast<uint32_t>(nodeCount));
-    
-    // Make dense leaf indices from sparse mark indices
-    size_t tempMemSize;
-    cub::DeviceSelect::If(nullptr, tempMemSize,
-                          static_cast<uint32_t*>(splitMarks),
-                          static_cast<uint32_t*>(splitMarks),
-                          static_cast<uint32_t*>(splitMarks),
-                          static_cast<int>(nodeCount),
-                          IsSplittedLeafFunctor());
-    // Output array and Temp
-    DeviceMemory tempMemory(tempMemSize);
-    DeviceMemory selectedIndices((nodeCount + 1) * sizeof(uint32_t));
-    uint32_t* dDenseIndexCount = static_cast<uint32_t*>(selectedIndices);
-    uint32_t* dDenseIndices = static_cast<uint32_t*>(selectedIndices) + 1;
-    cub::DeviceSelect::If(static_cast<void*>(tempMemory), tempMemSize,
-                          static_cast<uint32_t*>(splitMarks),
-                          dDenseIndices, dDenseIndexCount,
-                          static_cast<int>(nodeCount),
-                          IsSplittedLeafFunctor());
-    // Clear Mems
-    tempMemory = std::move(DeviceMemory());
-    splitMarks = std::move(DeviceMemory());
+    CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));    
+    // Temporary memories
+    size_t deviceIfTempMemSize;
+    DeviceMemory writeDTreeGPUBuffer;
+    DeviceMemory oldTreeIds;
+    DeviceMemory tempMemory;
+    DeviceMemory selectedIndices;//((nodeCount + 1) * sizeof(uint32_t));
+    DeviceMemory splitMarks;
 
-    // Check how many new trees we need to create
-    // then allocate these trees
-    uint32_t hSplitLeafCount = 0;
-    CUDA_CHECK(cudaMemcpy(&hSplitLeafCount, dDenseIndexCount,
-                          sizeof(uint32_t),
-                          cudaMemcpyDeviceToHost));
-
-    // No need to continue since there are no leaves to split
-    if(hSplitLeafCount == 0) return;   
-    // Each individual node will create two childs
-    uint32_t extraChildCount = hSplitLeafCount * 2;
-    // And we need one extra tree
-    uint32_t extraTreeCount = hSplitLeafCount;
-
-    // Old Tree count will be the next "allocation"
-    uint32_t oldTreeCount = static_cast<uint32_t>(dTrees.size());    
-    // Expand nodes
-    uint32_t oldNodeCount = static_cast<uint32_t>(nodeCount);
-    ExpandTree(nodeCount + extraChildCount);
-    nodeCount += extraChildCount;
-
-    DeviceMemory oldTreeIds(hSplitLeafCount * sizeof(uint32_t));
-    gpu.GridStrideKC_X(0, 0, hSplitLeafCount,
-                       //
-                       KCSplitSTree,
-                       //
-                       static_cast<uint32_t*>(oldTreeIds),
-                       *dSTree,
-                       //
-                       dDenseIndices,
-                       oldNodeCount,
-                       oldTreeCount,
-                       hSplitLeafCount);
-    // Copy old indices to the CPU
-    std::vector<uint32_t> hOldTreeIds(hSplitLeafCount);
-    CUDA_CHECK(cudaMemcpy(hOldTreeIds.data(),
-                          static_cast<uint32_t*>(oldTreeIds),
-                          hSplitLeafCount * sizeof(uint32_t),
-                          cudaMemcpyDeviceToHost));
-
-    // Create the tree copies
-    for(uint32_t i = 0; i < extraTreeCount; i++)
+    // Loop untill no subdivision is left
+    uint32_t offset = 0;
+    uint32_t processedNodeCount = nodeCount;
+    while(processedNodeCount > 0)
     {
-        // Copy the old tree to the new
-        DTree& oldTree = dTrees[hOldTreeIds[i]];
-        dTrees.push_back(oldTree);
-    }        
+        // Resize if buffer if required
+        cub::DeviceSelect::If(nullptr, deviceIfTempMemSize,
+                              static_cast<uint32_t*>(splitMarks),
+                              static_cast<uint32_t*>(splitMarks),
+                              static_cast<uint32_t*>(splitMarks),
+                              static_cast<int>(processedNodeCount),
+                              IsSplittedLeafFunctor());
+
+        DeviceMemory::EnlargeBuffer(tempMemory, deviceIfTempMemSize);
+        DeviceMemory::EnlargeBuffer(splitMarks, processedNodeCount * sizeof(uint32_t));
+        DeviceMemory::EnlargeBuffer(selectedIndices, (processedNodeCount + 1) *sizeof(uint32_t));
+        // Get a new write tree list
+        LinearizeDTreeGPUPtrs(writeDTreeGPUBuffer, false);
+        DTreeGPU** dWriteDTrees = static_cast<DTreeGPU**>(writeDTreeGPUBuffer);
+
+        // Mark Leafs
+        gpu.GridStrideKC_X(0, 0, nodeCount,
+                           //
+                           KCMarkSTreeSplitLeaf,
+                           //
+                           static_cast<uint32_t*>(splitMarks),
+                           *dSTree,
+                           dWriteDTrees,
+                           maxSamplesPerNode,
+                           offset,
+                           static_cast<uint32_t>(processedNodeCount));
+
+        // Make dense leaf indices from sparse mark indices
+        uint32_t* dDenseIndexCount = static_cast<uint32_t*>(selectedIndices);
+        uint32_t* dDenseIndices = static_cast<uint32_t*>(selectedIndices) + 1;
+        cub::DeviceSelect::If(static_cast<void*>(tempMemory), deviceIfTempMemSize,
+                              static_cast<uint32_t*>(splitMarks),
+                              dDenseIndices, dDenseIndexCount,
+                              static_cast<int>(processedNodeCount),
+                              IsSplittedLeafFunctor());
+
+        // Check how many new trees we need to create
+        // then allocate these trees
+        uint32_t hSubdivisionCount;
+        CUDA_CHECK(cudaMemcpy(&hSubdivisionCount, dDenseIndexCount,
+                              sizeof(uint32_t),
+                              cudaMemcpyDeviceToHost));
+
+        // No need to continue since there are no leaves to split
+        if(hSubdivisionCount == 0) break;
+        // Each individual node will create two childs
+        uint32_t extraChildCount = hSubdivisionCount * 2;
+        // And we need one extra tree
+        uint32_t extraTreeCount = hSubdivisionCount;
+
+        // Old Tree count will be the next "allocation"
+        uint32_t oldTreeCount = static_cast<uint32_t>(dTrees.size());    
+        // Expand nodes
+        uint32_t oldNodeCount = static_cast<uint32_t>(nodeCount);
+        ExpandTree(nodeCount + extraChildCount);
+        nodeCount += extraChildCount;
+
+        DeviceMemory::EnlargeBuffer(oldTreeIds, hSubdivisionCount * sizeof(uint32_t));
+        gpu.GridStrideKC_X(0, 0, hSubdivisionCount,
+                           //
+                           KCSplitSTree,
+                           //
+                           static_cast<uint32_t*>(oldTreeIds),
+                           *dSTree,
+                           //
+                           dDenseIndices,
+                           //
+                           offset,
+                           oldNodeCount,
+                           oldTreeCount,
+                           hSubdivisionCount);
+        // Copy old indices to the CPU
+        std::vector<uint32_t> hOldTreeIds(hSubdivisionCount);
+        CUDA_CHECK(cudaMemcpy(hOldTreeIds.data(),
+                              static_cast<uint32_t*>(oldTreeIds),
+                              hSubdivisionCount * sizeof(uint32_t),
+                              cudaMemcpyDeviceToHost));
+
+        // Create the tree copies
+        for(uint32_t i = 0; i < extraTreeCount; i++)
+        {
+            // Copy the old tree to the new
+            DTree& oldTree = dTrees[hOldTreeIds[i]];
+            dTrees.push_back(oldTree);
+        }
+
+        // Now get redy for next iteration
+        offset = oldNodeCount;
+        processedNodeCount = extraChildCount;
+
+    }
+    // Finally copy the new node count to the GPU
+    Byte* nodeCountLocPtr = static_cast<Byte*>(memory) + offsetof(STreeGPU, nodeCount);
+    CUDA_CHECK(cudaMemcpy(nodeCountLocPtr, &nodeCount, sizeof(uint32_t),
+                          cudaMemcpyHostToDevice));
+
+    // Subdivided recursively untill all leaf nodes 
+    // have sample count less than "maxSamplesPerNode"
+    // All done!
 }
 
 void STree::AccumulateRaidances(const PathGuidingNode* dPGNodes,
@@ -260,7 +289,7 @@ void STree::SplitAndSwapTrees(uint32_t sTreeMaxSamplePerLeaf,
     SwapTrees(dTreeFluxRatio, dTreeDepthLimit, system);
 
     // Adjust DTree pointers for Tracer Kernels
-    readDTreeGPUBuffer = std::move(LinearizeDTreeGPUPtrs(true));
+    LinearizeDTreeGPUPtrs(readDTreeGPUBuffer, true);
     dReadDTrees = static_cast<const DTreeGPU**>(readDTreeGPUBuffer);
 }
 

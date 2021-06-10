@@ -102,9 +102,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\TracerCUDA\TracerDebug.cpp">
-      <Filter>Debug</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveSphere.cpp">
       <Filter>Primitives</Filter>
     </ClCompile>
@@ -655,6 +652,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracerWork.cu">
       <Filter>Tracers\PPGTracer</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerDebug.cu">
+      <Filter>Debug</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

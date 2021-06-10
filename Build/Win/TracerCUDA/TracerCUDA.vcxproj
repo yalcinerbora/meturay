@@ -186,7 +186,9 @@
     <ClCompile Include="..\..\..\Source\TracerCUDA\SceneNodeJson.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\ScenePartitioner.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\Texture.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerCUDA\TracerDebug.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerDebug.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DebugMaterials.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracer.cu" />
