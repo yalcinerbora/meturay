@@ -540,7 +540,6 @@ static void KCReconstructEmptyTree(// Output
       
         // Do not create children if children over depth limit
         if((depth + 1) > depthLimit) continue;
-
         // We allocated up to this point
         // Check childs if they need allocation
         uint8_t childCount = 0;
@@ -559,6 +558,7 @@ static void KCReconstructEmptyTree(// Output
             }               
         }
 
+        // Allocate children
         uint32_t childGlobalOffset = atomicAdd(&gDTree->nodeCount, childCount);
 
         //printf("Child Count %u, Offsets %u %u %u %u\n",
@@ -583,7 +583,7 @@ static void KCReconstructEmptyTree(// Output
                 childNode->parentIndex = static_cast<uint16_t>(punchedNodeId);
                 punchedNode->childIndices[i] = childNodeIndex;
 
-                //printf("Creating Child %u \n", childNodeIndex);
+                printf("Creating Child %u, \n", childNodeIndex);
             }
         }
         // All Done!

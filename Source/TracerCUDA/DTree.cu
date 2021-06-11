@@ -126,6 +126,12 @@ void DTree::SwapTrees(float fluxRatio, uint32_t depthLimit,
     // Get an arbitrary stream
     cudaStream_t stream = gpu.DetermineStream();
 
+    DTreeGPU treeGPU;
+    std::vector<DTreeNode> nodes;
+    writeTree.DumpTree(treeGPU, nodes);
+    Debug::DumpMemToFile("WT_PC_N", nodes.data(), nodes.size());
+    Debug::DumpMemToFile("WT_PC", &treeGPU, 1);
+
     // Currently build tree that has its only leafs
     // are valid. Write values to the all nodes
     uint32_t nodeCount = static_cast<uint32_t>(writeTree.NodeCount());
@@ -135,6 +141,10 @@ void DTree::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        //
                        writeTree.TreeGPU(),
                        nodeCount);
+
+    writeTree.DumpTree(treeGPU, nodes);
+    Debug::DumpMemToFile("WT_AC_N", nodes.data(), nodes.size());
+    Debug::DumpMemToFile("WT_AC", &treeGPU, 1);
 
     //Byte* dIrrad = reinterpret_cast<Byte*>(readTree.TreeGPU()) + offsetof(DTreeGPU, irradiance);
     //METU_LOG("TOTAL");
@@ -172,6 +182,8 @@ void DTree::SwapTrees(float fluxRatio, uint32_t depthLimit,
     // Root does not have any parent so we need to manually include here
     newNodeCount++;
 
+    METU_LOG("NEW_NODE_COUT %u", newNodeCount);
+
     // Reserve enough nodes on the other tree for construction
     readTree.ResetAndReserve(newNodeCount, gpu, stream);
     // Reconstruct a new read tree from the findings
@@ -185,8 +197,12 @@ void DTree::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        fluxRatio,
                        depthLimit,
                        nodeCount);
-
     readTree.CopyGPUNodeCountToCPU();
+
+    readTree.DumpTree(treeGPU, nodes);
+    Debug::DumpMemToFile("RT_FINAL_N", nodes.data(), nodes.size());
+    Debug::DumpMemToFile("RT_FINAL", &treeGPU, 1);
+
     // Finally swap the trees
     std::swap(readTree, writeTree);
 }
