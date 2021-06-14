@@ -19,7 +19,7 @@
 #include "GPULightI.h"
 #include "GPUCameraI.h"
 
-//#include "TracerDebug.h"
+#include "TracerDebug.h"
 
 TracerError GPUTracer::LoadCameras(std::vector<const GPUCameraI*>& dGPUCameras)
 {

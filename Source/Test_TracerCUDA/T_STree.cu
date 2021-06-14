@@ -64,8 +64,9 @@ TEST(PPG_STree, Empty)
     const CudaGPU& bestGPU = system.BestGPU();
 
     const STreeGPU* dSTreeGPU;
-    const DTreeGPU** dDTrees;
-    tree.TreeGPU(dSTreeGPU, dDTrees);
+    const DTreeGPU** dReadDTrees;
+    DTreeGPU** dWriteDTrees;
+    tree.TreeGPU(dSTreeGPU, dReadDTrees, dWriteDTrees);
     bestGPU.GridStrideKC_X(0, 0, SAMPLE_COUNT,
                            //
                            KCFindNearestDTree,

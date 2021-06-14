@@ -161,7 +161,9 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
 {
     Vector2f xi = Vector2f(GPUDistribution::Uniform<float>(rng),
                            GPUDistribution::Uniform<float>(rng));
-
+    //xi[0] = (xi[0] == 1.0f) ? (xi[0] - MathConstants::VerySmallEpsilon) : xi[0];
+    //xi[1] = (xi[1] == 1.0f) ? (xi[1] - MathConstants::VerySmallEpsilon) : xi[1];
+         
     // First we need to find the sphr coords from the tree
     Vector2f discreteCoords = Zero2f;
     // Use double here for higher numeric precision
@@ -285,7 +287,6 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance)
     // Descent and find the leaf
     DTreeNode* node = gRoot;
     Vector2f localCoords = discreteCoords;
-    int i = 0;
     while(true)
     {
         uint8_t childIndex = node->DetermineChild(localCoords);
@@ -297,6 +298,9 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance)
                 printf("NaN Radiance add on node %lld\n",
                        static_cast<ptrdiff_t>(node - gRoot));
 
+            //if(radiance != 0.0f)
+            //    printf("%u  ", static_cast<uint32_t>(childIndex));
+
             atomicAdd(&node->irradianceEstimates[childIndex], radiance);
             break;
         }
@@ -304,15 +308,6 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance)
         // Continue Traversal
         localCoords = node->NormalizeCoordsForChild(childIndex, localCoords);
         node = gRoot + node->childIndices[childIndex];
-
-        i++;
-        if(i == 200)
-        {
-            printf("FATAL200 iterations reached, worldDir: %f %f %f, r: %f, dc %f, %f\n",
-                   worldDir[0], worldDir[1], worldDir[2], radiance,
-                   discreteCoords[0], discreteCoords[1]);
-            break;
-        }
     }
 }
 
@@ -407,6 +402,14 @@ static void KCCalculateParentIrradiance(// I-O
     {
         DTreeNode* currentNode = gDTree->gRoot + threadId;
         
+        Vector4f& irrad = currentNode->irradianceEstimates;
+
+        // Omit zeros on the tree
+        if(currentNode->IsLeaf(0)) irrad[0] = max(irrad[0], MathConstants::Epsilon);
+        if(currentNode->IsLeaf(1)) irrad[1] = max(irrad[1], MathConstants::Epsilon);
+        if(currentNode->IsLeaf(2)) irrad[2] = max(irrad[2], MathConstants::Epsilon);
+        if(currentNode->IsLeaf(3)) irrad[3] = max(irrad[3], MathConstants::Epsilon);        
+
         // Total leaf irrad        
         float sum = 0.0f;
         sum += currentNode->IsLeaf(0) ? currentNode->irradianceEstimates[0] : 0.0f;
@@ -583,7 +586,7 @@ static void KCReconstructEmptyTree(// Output
                 childNode->parentIndex = static_cast<uint16_t>(punchedNodeId);
                 punchedNode->childIndices[i] = childNodeIndex;
 
-                printf("Creating Child %u, \n", childNodeIndex);
+                //printf("Creating Child %u, \n", childNodeIndex);
             }
         }
         // All Done!

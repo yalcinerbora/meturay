@@ -28,7 +28,8 @@ struct PPGTracerGlobalState
     uint32_t                        totalMediumCount;
     // SDTree Related
     const STreeGPU*                 gStree;
-    const DTreeGPU**                gDTrees;
+    const DTreeGPU**                gReadDTrees;
+    DTreeGPU**                      gWriteDTrees;
     // Path Related
     PathGuidingNode*                gPathNodes;
     uint32_t                        maximumPathNodePerRay;
@@ -124,6 +125,24 @@ void PPGTracerBoundaryWork(// Output
         //           aux.pathIndex, aux.depth);
         if(total.HasNaN()) printf("NAN Found boundary!!!\n");
         gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
+
+        // Accumulate to the write tree aswell (instead of creating a node for each NEE
+        // end point directly accumulating to the tree will have less memory need)
+        if(aux.type != RayType::CAMERA_RAY)
+        {                       
+            uint32_t dTreeIndex = gLocalPathNodes[aux.depth].nearestDTreeIndex;
+            DTreeGPU* dWriteTree = renderState.gWriteDTrees[dTreeIndex];
+            dWriteTree->AddRadianceToLeaf(r.getDirection(), Utility::RGBToLuminance(total));
+
+            if(total != Vector3f(0.0f))
+            {
+                Vector3 position = r.AdvancedPos(ray.tMax);
+
+                //printf("Final Add - D: %f %f %f = %f\n",
+                //       r.getDirection()[0], r.getDirection()[1], r.getDirection()[2],
+                //       Utility::RGBToLuminance(total));
+            }
+        }
     }
 }
 
@@ -246,8 +265,8 @@ void PPGTracerPathWork(// Output
     if(!isSpecularMat)
     {
         // Sample a path using SDTree
-        const DTreeGPU* dTree = renderState.gDTrees[dTreeIndex];
-        Vector3f direction = dTree->Sample(pdf, rng);
+        const DTreeGPU* dReadTree = renderState.gReadDTrees[dTreeIndex];
+        Vector3f direction = dReadTree->Sample(pdf, rng);
 
         if(isnan(pdf) | direction.HasNaN())
             printf("pdf % f, dir % f, % f, % f\n", pdf,

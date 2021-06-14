@@ -274,10 +274,12 @@ bool PPGTracer::Render()
     //
     // Set SD Tree
     const STreeGPU* dSTree;
-    const DTreeGPU** dDTrees;
-    sTree->TreeGPU(dSTree, dDTrees);
+    const DTreeGPU** dReadDTrees;
+    DTreeGPU** dWriteDTrees;
+    sTree->TreeGPU(dSTree, dReadDTrees, dWriteDTrees);
     globalData.gStree = dSTree;
-    globalData.gDTrees = dDTrees;    
+    globalData.gReadDTrees = dReadDTrees;
+    globalData.gWriteDTrees = dWriteDTrees;
     //
     globalData.gPathNodes = dPathNodes;
     globalData.maximumPathNodePerRay = options.maximumDepth;
@@ -357,6 +359,14 @@ void PPGTracer::Finalize()
 
     //Debug::DumpMemToFile("PathNodes", dPathNodes, totalPathNodeCount);
 
+    //if(currentTreeIteration == 0)
+    //{     
+    //    std::filesystem::remove(std::filesystem::path("0_sTree"));
+    //    std::filesystem::remove(std::filesystem::path("0_sTree_N"));
+    //    std::filesystem::remove(std::filesystem::path("0__dTree_N"));
+    //    std::filesystem::remove(std::filesystem::path("0__dTrees"));
+    //}
+
     // Accumulate the finished radiances to the STree
     sTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
                                options.maximumDepth, cudaSystem);
@@ -386,7 +396,8 @@ void PPGTracer::Finalize()
               
         // DEBUG
         CUDA_CHECK(cudaDeviceSynchronize());
-        std::string iterAsString = std::to_string(currentTreeIteration);
+        //std::string iterAsString = std::to_string(currentTreeIteration);
+        std::string iterAsString = "0";
         // STree
         STreeGPU sTreeGPU;
         std::vector<STreeNode> sNodes;
@@ -407,7 +418,7 @@ void PPGTracer::Finalize()
 
         // Completely Reset the Image
         // This is done to eliminate variance from prev samples
-        //ResetImage();
+        ResetImage();
     }
         
     uint32_t prevTreeSwap = (nextTreeSwap >> 1);

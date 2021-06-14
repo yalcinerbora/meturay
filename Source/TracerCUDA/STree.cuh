@@ -41,11 +41,13 @@ class STree
         std::vector<DTree>  dTrees;
 
         // DTree Buffer for Tracer
-        DeviceMemory        readDTreeGPUBuffer;
+        DeviceMemory        rwDTreeGPUBuffer;
         const DTreeGPU**    dReadDTrees;
+        DTreeGPU**          dWriteDTrees;
         
         void                LinearizeDTreeGPUPtrs(DeviceMemory&,
                                                   bool readTree, size_t offset = 0);
+        void                LinearizeDTreeGPUPtrs(DeviceMemory&);
         void                ExpandTree(size_t newNodeCount);
         void                SplitLeaves(uint32_t maxSamplesPerNode,
                                         const CudaSystem&);
@@ -76,7 +78,8 @@ class STree
 
 
         void                TreeGPU(const STreeGPU*& dSTree,
-                                    const DTreeGPU**& dDTrees) const;
+                                    const DTreeGPU**& dReadDTrees,
+                                    DTreeGPU**& dWriteDTrees) const;
         uint32_t            TotalTreeCount() const;
 
         size_t              UsedGPUMemory() const;
@@ -91,10 +94,12 @@ class STree
 };
 
 inline void STree::TreeGPU(const STreeGPU*& dSTreeOut,
-                           const DTreeGPU**& dDTreesOut) const
+                           const DTreeGPU**& dReadDTreesOut,
+                           DTreeGPU**& dWriteDTreesOut) const
 {
     dSTreeOut = dSTree;
-    dDTreesOut = dReadDTrees;
+    dReadDTreesOut = dReadDTrees;
+    dWriteDTreesOut = dWriteDTrees;
 }
 
 inline uint32_t STree::TotalTreeCount() const

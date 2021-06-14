@@ -16,6 +16,35 @@
 
 using ::testing::FloatEq;
 
+__global__
+static void KCDirToCoord(Vector3f* dirs, 
+                         const Vector2f* coords,
+                         size_t coordCount)
+{
+    // Grid Stride Loop
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < coordCount; globalId += blockDim.x * gridDim.x)
+    {
+        float pdf;
+        dirs[globalId] = DTreeGPU::TreeCoordsToWorldDir(pdf, coords[globalId]);
+    }
+}
+
+__global__
+static void KCCoordToDir(Vector2f* coords,
+                         const Vector3f* dirs,
+                         size_t coordCount)
+{
+    // Grid Stride Loop
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < coordCount; globalId += blockDim.x * gridDim.x)
+    {
+        coords[globalId] = DTreeGPU::WorldDirToTreeCoords(dirs[globalId]);
+    }
+}
+
+
+
 __global__ 
 static void KCSampleTree(Vector3f* gDirections,
                          float* gPdfs,
@@ -860,4 +889,79 @@ TEST(PPG_DTree, SampleDeep)
     EXPECT_NEAR(reducedResult[0], direction[0], 0.01f);
     EXPECT_NEAR(reducedResult[1], direction[1], 0.01f);
     EXPECT_NEAR(reducedResult[2], direction[2], 0.01f);
+}
+
+TEST(PPG_DTree, DirToCoord)
+{
+    CudaSystem system;
+    ASSERT_EQ(CudaError::OK, system.Initialize());
+    const CudaGPU& gpu = system.BestGPU();
+
+    static constexpr uint32_t INTERVAL_COUNT = 12;
+    DeviceMemory dirs(sizeof(Vector3f) * INTERVAL_COUNT);
+    DeviceMemory coords(sizeof(Vector2f) * INTERVAL_COUNT);
+
+    // Generate Directions
+    std::vector<Vector2f> coordsCPU(INTERVAL_COUNT);
+    for(uint32_t i = 0;i < INTERVAL_COUNT; i++)
+    { 
+        float interval = 1.0f / static_cast<float>(INTERVAL_COUNT);
+        float x = interval * static_cast<float>(i);
+        
+        Vector2f coords(x, 0.75f);
+
+        coordsCPU[i] = coords;
+    }
+    CUDA_CHECK(cudaMemcpy(static_cast<Vector2f*>(coords), 
+                          coordsCPU.data(),
+                          sizeof(Vector2f) * INTERVAL_COUNT,
+                          cudaMemcpyHostToDevice));
+    
+    // Convert it to Coords
+    gpu.GridStrideKC_X(0, 0, INTERVAL_COUNT,
+                       //
+                       KCDirToCoord,
+                       //
+                       static_cast<Vector3f*>(dirs),
+                       static_cast<const Vector2f*>(coords),
+                       //                       
+                       INTERVAL_COUNT);
+
+    // Reset Coord Memory
+    CUDA_CHECK(cudaMemset(static_cast<Byte*>(coords), 0x00, sizeof(Vector2f) * INTERVAL_COUNT));  
+
+    // Convert it back
+    gpu.GridStrideKC_X(0, 0, INTERVAL_COUNT,
+                       //
+                       KCCoordToDir,
+                       //
+                       static_cast<Vector2f*>(coords),
+                       static_cast<const Vector3f*>(dirs),
+                       //                       
+                       INTERVAL_COUNT);
+
+    // Get to the CPU & Check
+    coordsCPU = std::vector<Vector2f>(INTERVAL_COUNT);
+    CUDA_CHECK(cudaMemcpy(coordsCPU.data(),
+                          static_cast<Vector2f*>(coords),
+                          sizeof(Vector2f) * INTERVAL_COUNT,
+                          cudaMemcpyDeviceToHost));
+
+    for(uint32_t i = 0; i < INTERVAL_COUNT; i++)
+    {
+        float interval = 1.0f / static_cast<float>(INTERVAL_COUNT);
+        float x = interval * static_cast<float>(i);
+
+        EXPECT_FLOAT_EQ(x, coordsCPU[i][0]);
+    }
+    //// DEBUG
+    //std::vector<Vector3f> outDirsCPU(INTERVAL_COUNT);
+    //CUDA_CHECK(cudaMemcpy(outDirsCPU.data(),
+    //                      static_cast<Vector3f*>(dirs),
+    //                      sizeof(Vector3f) * INTERVAL_COUNT,
+    //                      cudaMemcpyDeviceToHost));
+    //for(uint32_t i = 0; i < INTERVAL_COUNT; i++)
+    //{
+    //    printf("%f %f\n", outDirsCPU[i][0], outDirsCPU[i][2]);
+    //}
 }

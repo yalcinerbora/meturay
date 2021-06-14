@@ -46,6 +46,35 @@ void STree::LinearizeDTreeGPUPtrs(DeviceMemory& mem, bool readTree, size_t offse
                           cudaMemcpyHostToDevice));
 }
 
+void STree::LinearizeDTreeGPUPtrs(DeviceMemory& mem)
+{
+    size_t currentTreeCount = dTrees.size();
+    std::vector<DTreeGPU*> hReadTreePtrs(currentTreeCount);
+    std::vector<DTreeGPU*> hWriteTreePtrs(currentTreeCount);
+
+    size_t totalMemSize = currentTreeCount * sizeof(DTreeGPU*) * 2;
+
+    for(uint32_t i = 0; i < currentTreeCount; i++)
+    {
+        hReadTreePtrs[i] = dTrees[i].TreeGPU(true);
+        hWriteTreePtrs[i] = dTrees[i].TreeGPU(false);
+    }
+
+    DeviceMemory::EnlargeBuffer(mem, totalMemSize);
+    // Set new pointers
+    dReadDTrees = static_cast<const DTreeGPU**>(mem);
+    dWriteDTrees = static_cast<DTreeGPU**>(mem) + currentTreeCount;
+    // Copy data
+    CUDA_CHECK(cudaMemcpy(dReadDTrees,
+                          hReadTreePtrs.data(),
+                          currentTreeCount * sizeof(DTreeGPU*),
+                          cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(dWriteDTrees,
+                          hWriteTreePtrs.data(),
+                          currentTreeCount * sizeof(DTreeGPU*),
+                          cudaMemcpyHostToDevice));
+}
+
 void STree::ExpandTree(size_t newNodeCount)
 {
     // If its already large do not do stuff
@@ -102,8 +131,7 @@ STree::STree(const AABB3f& sceneExtents)
     dTrees.emplace_back();
 
     // Adjust DTree pointers for Tracer Kernels
-    LinearizeDTreeGPUPtrs(readDTreeGPUBuffer, true);
-    dReadDTrees = static_cast<const DTreeGPU**>(readDTreeGPUBuffer);
+    LinearizeDTreeGPUPtrs(rwDTreeGPUBuffer);
 }
 
 void STree::SplitLeaves(uint32_t maxSamplesPerNode,
@@ -116,12 +144,12 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
     DeviceMemory writeDTreeGPUBuffer;
     DeviceMemory oldTreeIds;
     DeviceMemory tempMemory;
-    DeviceMemory selectedIndices;//((nodeCount + 1) * sizeof(uint32_t));
+    DeviceMemory selectedIndices;
     DeviceMemory splitMarks;
 
     // Loop untill no subdivision is left
     uint32_t offset = 0;
-    uint32_t processedNodeCount = nodeCount;
+    uint32_t processedNodeCount = static_cast<uint32_t>(nodeCount);
     while(processedNodeCount > 0)
     {
         // Resize if buffer if required
@@ -289,8 +317,7 @@ void STree::SplitAndSwapTrees(uint32_t sTreeMaxSamplePerLeaf,
     SwapTrees(dTreeFluxRatio, dTreeDepthLimit, system);
 
     // Adjust DTree pointers for Tracer Kernels
-    LinearizeDTreeGPUPtrs(readDTreeGPUBuffer, true);
-    dReadDTrees = static_cast<const DTreeGPU**>(readDTreeGPUBuffer);
+    LinearizeDTreeGPUPtrs(rwDTreeGPUBuffer);
 }
 
 void STree::GetTreeToCPU(STreeGPU& treeCPU, std::vector<STreeNode>& nodesCPU) const

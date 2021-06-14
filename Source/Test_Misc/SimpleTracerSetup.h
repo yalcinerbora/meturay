@@ -39,10 +39,10 @@ class MockNode
 
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(1, 1);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(16, 9);
-        static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(32, 18);
+        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(32, 18);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(32, 32);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(320, 180);
-        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(640, 360);
+        static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(640, 360);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(944, 531);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(512, 512);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(900, 900);
@@ -209,11 +209,11 @@ class SimpleTracerSetup
             // PPG Related
             {"RawPathGuiding", OptionVariable( true)},
             {"AlwaysSendSamples", OptionVariable(true)},
-            {"DTreeMaximumDepth", OptionVariable(32u)},
+            {"DTreeMaximumDepth", OptionVariable(100u)},
             //{"DTreeFluxRatio", OptionVariable(1.0f)},
             {"DTreeFluxRatio", OptionVariable(0.01f)},
-            {"STreeMaxSamples", OptionVariable(MAX_S_TREE)},
-            //{"STreeMaxSamples", OptionVariable(12000u)},
+            //{"STreeMaxSamples", OptionVariable(MAX_S_TREE)},
+            {"STreeMaxSamples", OptionVariable(1200u)},
         };
 
         // Tracer Related
