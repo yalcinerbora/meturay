@@ -122,8 +122,11 @@ STree::STree(const AABB3f& sceneExtents)
     CUDA_CHECK(cudaMemcpy(nodeCountLocPtr, &nodeCount, sizeof(uint32_t),
                cudaMemcpyHostToDevice));
     // Copy AABB aswell
+    // Copy slightly larger AABB to prevent numerical unstabilities
+    AABB3f sceneAABB = AABB3f(sceneExtents.Min() - MathConstants::Epsilon,
+                              sceneExtents.Max() + MathConstants::Epsilon);
     Byte* nodeAABBLoc = static_cast<Byte*>(memory) + offsetof(STreeGPU, extents);
-    CUDA_CHECK(cudaMemcpy(nodeAABBLoc, &sceneExtents, sizeof(AABB3f),
+    CUDA_CHECK(cudaMemcpy(nodeAABBLoc, &sceneAABB, sizeof(AABB3f),
                           cudaMemcpyHostToDevice));
 
     // Create a default single tree

@@ -210,10 +210,10 @@ class SimpleTracerSetup
             {"RawPathGuiding", OptionVariable( true)},
             {"AlwaysSendSamples", OptionVariable(true)},
             {"DTreeMaximumDepth", OptionVariable(100u)},
-            //{"DTreeFluxRatio", OptionVariable(1.0f)},
-            {"DTreeFluxRatio", OptionVariable(0.01f)},
+            {"DTreeFluxRatio", OptionVariable(1.0f)},
+            //{"DTreeFluxRatio", OptionVariable(0.01f)},
             //{"STreeMaxSamples", OptionVariable(MAX_S_TREE)},
-            {"STreeMaxSamples", OptionVariable(1200u)},
+            {"STreeMaxSamples", OptionVariable(12000u)},
         };
 
         // Tracer Related

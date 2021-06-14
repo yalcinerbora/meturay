@@ -394,27 +394,27 @@ void PPGTracer::Finalize()
                  mbSize,
                  sTree->TotalTreeCount());
               
-        // DEBUG
-        CUDA_CHECK(cudaDeviceSynchronize());
-        //std::string iterAsString = std::to_string(currentTreeIteration);
-        std::string iterAsString = "0";
-        // STree
-        STreeGPU sTreeGPU;
-        std::vector<STreeNode> sNodes;
-        sTree->GetTreeToCPU(sTreeGPU, sNodes);
-        Debug::DumpMemToFile(iterAsString + "_sTree", &sTreeGPU, 1);
-        Debug::DumpMemToFile(iterAsString + "_sTree_N", sNodes.data(), sNodes.size());
-        // PrintEveryDTree
-        std::vector<DTreeGPU> dTreeGPUs;
-        std::vector<std::vector<DTreeNode>> dTreeNodes;
-        sTree->GetAllDTreesToCPU(dTreeGPUs, dTreeNodes, true);
-        Debug::DumpMemToFile(iterAsString + "__dTrees",
-                             dTreeGPUs.data(), dTreeGPUs.size());
-        for(size_t i = 0; i < dTreeNodes.size(); i++)
-        {            
-            Debug::DumpMemToFile(iterAsString + "__dTree_N",
-                                 dTreeNodes[i].data(), dTreeNodes[i].size(), true);
-        }
+        //// DEBUG
+        //CUDA_CHECK(cudaDeviceSynchronize());
+        ////std::string iterAsString = std::to_string(currentTreeIteration);
+        //std::string iterAsString = "0";
+        //// STree
+        //STreeGPU sTreeGPU;
+        //std::vector<STreeNode> sNodes;
+        //sTree->GetTreeToCPU(sTreeGPU, sNodes);
+        //Debug::DumpMemToFile(iterAsString + "_sTree", &sTreeGPU, 1);
+        //Debug::DumpMemToFile(iterAsString + "_sTree_N", sNodes.data(), sNodes.size());
+        //// PrintEveryDTree
+        //std::vector<DTreeGPU> dTreeGPUs;
+        //std::vector<std::vector<DTreeNode>> dTreeNodes;
+        //sTree->GetAllDTreesToCPU(dTreeGPUs, dTreeNodes, true);
+        //Debug::DumpMemToFile(iterAsString + "__dTrees",
+        //                     dTreeGPUs.data(), dTreeGPUs.size());
+        //for(size_t i = 0; i < dTreeNodes.size(); i++)
+        //{            
+        //    Debug::DumpMemToFile(iterAsString + "__dTree_N",
+        //                         dTreeNodes[i].data(), dTreeNodes[i].size(), true);
+        //}
 
         // Completely Reset the Image
         // This is done to eliminate variance from prev samples
