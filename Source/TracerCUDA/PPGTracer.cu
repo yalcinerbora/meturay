@@ -373,6 +373,7 @@ void PPGTracer::Finalize()
     // We iterated once
     currentTreeIteration += 1;// options.sampleCount* options.sampleCount;
     // Swap the trees if we achieved treshold
+    //if(currentTreeIteration <= 1)
     if(currentTreeIteration == nextTreeSwap)
     {
         // Double the amount of iterations required for this
@@ -394,16 +395,16 @@ void PPGTracer::Finalize()
                  mbSize,
                  sTree->TotalTreeCount());
               
-        //// DEBUG
-        //CUDA_CHECK(cudaDeviceSynchronize());
-        ////std::string iterAsString = std::to_string(currentTreeIteration);
-        //std::string iterAsString = "0";
-        //// STree
-        //STreeGPU sTreeGPU;
-        //std::vector<STreeNode> sNodes;
-        //sTree->GetTreeToCPU(sTreeGPU, sNodes);
-        //Debug::DumpMemToFile(iterAsString + "_sTree", &sTreeGPU, 1);
-        //Debug::DumpMemToFile(iterAsString + "_sTree_N", sNodes.data(), sNodes.size());
+        // DEBUG
+        CUDA_CHECK(cudaDeviceSynchronize());
+        //std::string iterAsString = std::to_string(currentTreeIteration);
+        std::string iterAsString = "0";
+        // STree
+        STreeGPU sTreeGPU;
+        std::vector<STreeNode> sNodes;
+        sTree->GetTreeToCPU(sTreeGPU, sNodes);
+        Debug::DumpMemToFile(iterAsString + "_sTree", &sTreeGPU, 1, true);
+        Debug::DumpMemToFile(iterAsString + "_sTree_N", sNodes.data(), sNodes.size(), true);
         //// PrintEveryDTree
         //std::vector<DTreeGPU> dTreeGPUs;
         //std::vector<std::vector<DTreeNode>> dTreeNodes;

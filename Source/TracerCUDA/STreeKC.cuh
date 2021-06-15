@@ -58,7 +58,7 @@ Vector3f STreeNode::NormalizeCoordsForChild(bool leftRight,
 {
     Vector3f result = parentNormalizedCoords;
     int axis = static_cast<int>(splitAxis);
-    if(!leftRight) result[axis] -= 0.5;
+    if(leftRight) result[axis] -= 0.5;
     result[axis] *= 2.0f;    
     return result;
 }
@@ -81,8 +81,8 @@ void STreeGPU::AcquireNearestDTree(uint32_t& dTreeIndex,
     Vector3f normalizedCoords = worldPos - extents.Min();
     normalizedCoords /= (extents.Max() - extents.Min());
 
-    const STreeNode* node = gRoot;    
-    do
+    const STreeNode* node = gRoot;
+    while(true)
     {
         if(node->isLeaf)
         {
@@ -92,11 +92,11 @@ void STreeGPU::AcquireNearestDTree(uint32_t& dTreeIndex,
         else
         {
             bool leftRight = node->DetermineChild(normalizedCoords);
-            node = gRoot + node->index + ((leftRight) ? 0 : 1);
             normalizedCoords = node->NormalizeCoordsForChild(leftRight, normalizedCoords);
+            // Traverse...
+            node = gRoot + node->index + ((leftRight) ? 0 : 1);
         }
     }
-    while(true);
 }
 
 __global__ CUDA_LAUNCH_BOUNDS_1D

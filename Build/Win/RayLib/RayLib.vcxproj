@@ -149,6 +149,7 @@
     <ClInclude Include="..\..\..\Source\RayLib\BitManipulation.h" />
     <ClInclude Include="..\..\..\Source\RayLib\CoordinateConversion.h" />
     <ClInclude Include="..\..\..\Source\RayLib\EnumStringConversions.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\RandomColor.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerSystemI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerThread.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorCamera.h" />

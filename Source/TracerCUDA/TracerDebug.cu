@@ -170,13 +170,19 @@ std::ostream& operator<<(std::ostream& s, const STreeGPU& n)
 
 std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
 {
-    s << "{"   << std::endl
-      << "   " << n.worldPosition[0] << ", " 
-               << n.worldPosition[1] << ", "
-               << n.worldPosition[2] << std::endl
-      << "   " << static_cast<uint32_t>(n.prevNext[0]) << ", "
-               << static_cast<uint32_t>(n.prevNext[1]) << std::endl
-      << "}";
+    s << "W: { "
+      << n.worldPosition[0] << ", " 
+      << n.worldPosition[1] << ", "
+      << n.worldPosition[2] << "} "
+      << "PN: {"
+      << static_cast<uint32_t>(n.prevNext[0]) << ", "
+      << static_cast<uint32_t>(n.prevNext[1]) << "} "
+      << "R: {"
+      << n.totalRadiance[0] << ", "
+      << n.totalRadiance[1] << ", "
+      << n.totalRadiance[2] << "} "
+      << "DT: " 
+      << n.nearestDTreeIndex;
     return s;
 }
 

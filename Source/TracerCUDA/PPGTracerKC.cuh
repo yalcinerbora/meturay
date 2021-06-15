@@ -12,6 +12,8 @@
 #include "TracerFunctions.cuh"
 #include "TracerConstants.h"
 
+#include "RayLib/RandomColor.h"
+
 #include "STreeKC.cuh"
 #include "DTreeKC.cuh"
 
@@ -268,23 +270,63 @@ void PPGTracerPathWork(// Output
         const DTreeGPU* dReadTree = renderState.gReadDTrees[dTreeIndex];
         Vector3f direction = dReadTree->Sample(pdf, rng);
 
-        if(isnan(pdf) | direction.HasNaN())
-            printf("pdf % f, dir % f, % f, % f\n", pdf,
-                   direction[0], direction[1], direction[2]);
+        //if(isnan(pdf) | direction.HasNaN())
+        //    printf("pdf % f, dir % f, % f, % f\n", pdf,
+        //           direction[0], direction[1], direction[2]);
 
         //printf("D: %f, %f, %f\n", direction[0], direction[1], direction[2]);
 
-        // Calculate BxDF
-        reflectance = MGroup::Evaluate(// Input
-                                       direction,
-                                       wi,
-                                       position,
-                                       m,
-                                       //
-                                       surface,
-                                       // Constants
-                                       gMatData,
-                                       matIndex);
+        static constexpr Vector3f DEBUG_COLORS[27] =
+        {
+            Vector3f(0.886, 0.243, 0),
+            Vector3f(0.717, 0.137, 0.019),
+            Vector3f(0.603, 0.964, 0.043),
+            Vector3f(0.411, 0.356, 0.047),
+            Vector3f(0.058, 0.666, 0.015),
+            Vector3f(0.886, 0.835, 0.019),
+            Vector3f(0.152, 0.125, 0.043),
+            Vector3f(0.168, 0.309, 0.039),
+            Vector3f(0.050, 0.568, 0.011),
+            Vector3f(0.396, 0.396, 0.035),
+            Vector3f(0.247, 0.568, 0.015),
+            Vector3f(0.929, 0.541, 0.011),
+            Vector3f(0.105, 0.109, 0),
+            Vector3f(0.996, 0.019, 0.050),
+            Vector3f(0.392, 0.137, 0.011),
+            Vector3f(0.843, 0.411, 0.003),
+            Vector3f(1.0f, 0.0f, 0.0f),
+            Vector3f(0.0f, 1.0f, 0.0f),
+            Vector3f(1.0f, 1.0f, 0.0f),
+            Vector3f(0.0f, 0.0f, 1.0f),
+            Vector3f(1.0f, 0.0f, 1.0f),
+            Vector3f(0.0f, 1.0f, 1.0f),
+            Vector3f(1.0f, 0.5f, 1.0f),
+            Vector3f(0.9f, 0.2f, 0.4f),
+            Vector3f(0.3f, 0.1f, 0.2f),
+            Vector3f(0.3f, 0.6f, 0.4f),
+            Vector3f(0.2f, 0.3f, 0.9f)
+        };
+
+        //printf("%u  ", dTreeIndex);
+        //static constexpr uint32_t PRIME = 7577;
+        //reflectance = DEBUG_COLORS[(dTreeIndex) % 27] * 2.0f;
+        reflectance = Utility::RandomColorRGB(dTreeIndex);
+
+        //// Calculate BxDF
+        //reflectance = MGroup::Evaluate(// Input
+        //                               direction,
+        //                               wi,
+        //                               position,
+        //                               m,
+        //                               //
+        //                               surface,
+        //                               // Constants
+        //                               gMatData,
+        //                               matIndex);
+
+        if(reflectance.HasNaN())
+            printf("NAN REFL %f %f %f\n",
+                   reflectance[0], reflectance[1], reflectance[2]);
 
         rayPath = RayF(direction, position);
         rayPath.AdvanceSelf(MathConstants::Epsilon);
@@ -313,6 +355,12 @@ void PPGTracerPathWork(// Output
     Vector3f pathRadianceFactor = radianceFactor * reflectance;
     // Check singularities
     pathRadianceFactor = (pdf == 0.0f) ? Zero3 : (pathRadianceFactor / pdf);
+
+    if(pathRadianceFactor.HasNaN())
+        printf("NAN PATH R: %f %f %f = {%f %f %f} * {%f %f %f} / %f  \n",
+               pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
+               radianceFactor[0], radianceFactor[1], radianceFactor[2],
+               reflectance[0], reflectance[1], reflectance[2], pdf);
 
     // Check Russian Roulette
     float avgThroughput = pathRadianceFactor.Dot(Vector3f(0.333f));

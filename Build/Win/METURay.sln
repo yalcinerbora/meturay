@@ -10,6 +10,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MVisor", "MVisor\MVisor.vcxproj", "{470D7F5C-0A9A-415C-A717-DCC4B15B3B9D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MTracer", "MTracer\MTracer.vcxproj", "{554D0B15-5FE8-448F-82DC-95237E034154}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2} = {DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AssimpSurfaceLoaders", "AssimpSurfaceLoaders\AssimpSurfaceLoaders.vcxproj", "{12AD8912-B00E-4C8C-B4F1-5F6190919129}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -17,6 +20,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AssimpSurfaceLoaders", "Ass
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MRay", "MRay\MRay.vcxproj", "{E38D20E3-A8DF-408A-8BCC-D3037A9AD59A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2} = {DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TracerCUDA", "TracerCUDA\TracerCUDA.vcxproj", "{DFF6854D-AAD8-489D-BB4A-03048BFCB6E2}"
 EndProject

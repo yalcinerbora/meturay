@@ -56,5 +56,8 @@ int main(int argc, const char* argv[])
         return (app).exit(e);
     }
 
+    // Load VisorGL
+
+
     return 0;
 }

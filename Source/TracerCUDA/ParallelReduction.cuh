@@ -167,7 +167,7 @@ __host__ void ReduceArrayGPU(Type& result,
         dataSize = gridSize;
         std::swap(dRead, dWrite);
         inData = dRead;
-    } while(dataSize != 1);
+    } while(dataSize > 1);
 
     // Just get the data from gpu (first element at dRead
     CUDA_CHECK(cudaMemcpyAsync(&result, dRead, sizeof(Type), cpyKind, stream));

@@ -103,7 +103,9 @@ void PathGuidingNode::AccumRadiance(const Vector3f& endPointRadiance)
 {
     // Radiance Factor shows the energy ratio between the path start point
     // and this location, so divison will give the radiance of that location
-    totalRadiance += endPointRadiance / radFactor;
+    totalRadiance[0] += (radFactor[0] == 0.0f) ? 0.0f : endPointRadiance[0] / radFactor[0];
+    totalRadiance[1] += (radFactor[1] == 0.0f) ? 0.0f : endPointRadiance[1] / radFactor[1];
+    totalRadiance[2] += (radFactor[2] == 0.0f) ? 0.0f : endPointRadiance[2] / radFactor[2];
 }
 
 __device__ __forceinline__

@@ -153,6 +153,14 @@ Vector3f DTreeGPU::TreeCoordsToWorldDir(float& pdf, const Vector2f& discreteCoor
     if(sinPhi == 0.0f) pdf = 0.0f;
     else pdf = pdf / (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
 
+    if(isnan(pdf))
+        printf("PDF CONVERT NAN(%f) sinPhi %f, "
+               "discreteCoords %f %f, "
+               "thetaPhi %f %f\n", 
+               pdf, sinPhi,
+               discreteCoords[0], discreteCoords[1],
+               thetaPhi[0], thetaPhi[1]);
+
     return dirYUp;
 }
 
@@ -161,8 +169,8 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
 {
     Vector2f xi = Vector2f(GPUDistribution::Uniform<float>(rng),
                            GPUDistribution::Uniform<float>(rng));
-    //xi[0] = (xi[0] == 1.0f) ? (xi[0] - MathConstants::VerySmallEpsilon) : xi[0];
-    //xi[1] = (xi[1] == 1.0f) ? (xi[1] - MathConstants::VerySmallEpsilon) : xi[1];
+    xi[0] = (xi[0] == 1.0f) ? (xi[0] - MathConstants::VerySmallEpsilon) : xi[0];
+    xi[1] = (xi[1] == 1.0f) ? (xi[1] - MathConstants::VerySmallEpsilon) : xi[1];
          
     // First we need to find the sphr coords from the tree
     Vector2f discreteCoords = Zero2f;
@@ -178,6 +186,7 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
     else
     {
         DTreeNode* node = gRoot;
+        int i = 0;
         while(true)
         {
             // Generate Local CDF
@@ -225,8 +234,32 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
 
             // Calculate current pdf and incorporate to the
             // main pdf conditionally
-            pdf *= node->LocalPDF(nextIndex);
+            if(xi[0] < 0.0f || xi[0] >= 1.0f)
+                printf("XI[0] OUT OF RANGE %f = cdf(%f, %f), I(%f %f %f %f)\n",
+                       xi[0], cdfMidX, cdfMidY, 
+                       node->irradianceEstimates[0],
+                       node->irradianceEstimates[1],
+                       node->irradianceEstimates[2],
+                       node->irradianceEstimates[3]);
+            if(xi[1] < 0.0f || xi[1] >= 1.0f)
+                printf("XI[1] OUT OF RANGE %f = cdf(%f, %f), I(%f %f %f %f)\n",
+                       xi[1], cdfMidX, cdfMidY,
+                       node->irradianceEstimates[0],
+                       node->irradianceEstimates[1],
+                       node->irradianceEstimates[2],
+                       node->irradianceEstimates[3]);
 
+            float localPDF = node->LocalPDF(nextIndex);
+            if(isnan(localPDF) || discreteCoords.HasNaN() || xi.HasNaN())
+                printf("%d NAN PDF(%f) DC(%f, %f) xi(%f, %f) cdf(%f, %f) = (%f %f %f %f)\n", i, localPDF,
+                       discreteCoords[0], discreteCoords[1],
+                       xi[0], xi[1],
+                       cdfMidX, cdfMidY,
+                       node->irradianceEstimates[0],
+                       node->irradianceEstimates[1], 
+                       node->irradianceEstimates[2], 
+                       node->irradianceEstimates[3]);
+            pdf *= localPDF;
 
             Vector2f gridOffset(((nextIndex >> 0) & 0b01) ? 0.5f : 0.0f,
                                 ((nextIndex >> 1) & 0b01) ? 0.5f : 0.0f);
@@ -240,8 +273,12 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
                 break;
             }
             node = gRoot + node->childIndices[nextIndex];
-
+            i++;
         }
+        if(isnan(pdf) || discreteCoords.HasNaN())
+            printf("%d NAN? PDF(%f) DC(%f, %f) xi(%f, %f)\n", i, pdf,
+                   discreteCoords[0], discreteCoords[1],
+                   xi[0], xi[1]);
     }    
 
     return TreeCoordsToWorldDir(pdf, discreteCoords);
@@ -403,19 +440,20 @@ static void KCCalculateParentIrradiance(// I-O
         DTreeNode* currentNode = gDTree->gRoot + threadId;
         
         Vector4f& irrad = currentNode->irradianceEstimates;
+        float normFactor = 0.25 * static_cast<float>(gDTree->totalSamples);
 
         // Omit zeros on the tree
-        if(currentNode->IsLeaf(0)) irrad[0] = max(irrad[0], MathConstants::Epsilon);
-        if(currentNode->IsLeaf(1)) irrad[1] = max(irrad[1], MathConstants::Epsilon);
-        if(currentNode->IsLeaf(2)) irrad[2] = max(irrad[2], MathConstants::Epsilon);
-        if(currentNode->IsLeaf(3)) irrad[3] = max(irrad[3], MathConstants::Epsilon);        
+        if(currentNode->IsLeaf(0)) irrad[0] = max(irrad[0] / normFactor, MathConstants::Epsilon);
+        if(currentNode->IsLeaf(1)) irrad[1] = max(irrad[1] / normFactor, MathConstants::Epsilon);
+        if(currentNode->IsLeaf(2)) irrad[2] = max(irrad[2] / normFactor, MathConstants::Epsilon);
+        if(currentNode->IsLeaf(3)) irrad[3] = max(irrad[3] / normFactor, MathConstants::Epsilon);        
 
         // Total leaf irrad        
         float sum = 0.0f;
-        sum += currentNode->IsLeaf(0) ? currentNode->irradianceEstimates[0] : 0.0f;
-        sum += currentNode->IsLeaf(1) ? currentNode->irradianceEstimates[1] : 0.0f;
-        sum += currentNode->IsLeaf(2) ? currentNode->irradianceEstimates[2] : 0.0f;
-        sum += currentNode->IsLeaf(3) ? currentNode->irradianceEstimates[3] : 0.0f;
+        sum += currentNode->IsLeaf(0) ? irrad[0] : 0.0f;
+        sum += currentNode->IsLeaf(1) ? irrad[1] : 0.0f;
+        sum += currentNode->IsLeaf(2) ? irrad[2] : 0.0f;
+        sum += currentNode->IsLeaf(3) ? irrad[3] : 0.0f;
 
         // Back-propogate the sum towards the root
         DTreeNode* n = currentNode;
