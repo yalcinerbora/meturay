@@ -13,7 +13,7 @@ namespace MangledNames
 #define ACCELERATOR_TYPE_NAME(name, P)\
 public: static const char* TypeName()\
 {\
-    static std::string typeName = MangledNames::AcceleratorGroup(##P##::TypeName(),\
-                                                                 ##name##);\
+    static std::string typeName = MangledNames::AcceleratorGroup(P::TypeName(),\
+                                                                 name);\
     return typeName.c_str();\
 }

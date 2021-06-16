@@ -42,7 +42,7 @@ namespace PrimitiveSurfaceFind
         inline typename std::enable_if<I == std::tuple_size<Tuple>::value, ReturnType>::type
         constexpr LoopAndFind(Tuple&&)
         {
-            static_assert(false, "Unable to find type in tuple");
+            static_assert(I == std::tuple_size<Tuple>::value, "Unable to find type in tuple");
         }
 
         template<class CheckType, class ReturnType, size_t I, class Tuple>

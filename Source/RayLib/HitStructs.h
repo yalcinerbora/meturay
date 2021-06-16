@@ -41,7 +41,7 @@ struct HitStructPtr
         //const T& operator[](int i) const { return *reinterpret_cast<const T&>(dPtr + combinedSize * i); }
 };
 
-template <class T, uint32_t BatchBits, uint32_t IdBits>
+template <class T, uint32_t BBits, uint32_t IBits>
 struct alignas(sizeof(T)) HitKeyT
 {
     using Type = T;
@@ -63,8 +63,8 @@ struct alignas(sizeof(T)) HitKeyT
     __device__ __host__
     static constexpr uint16_t       FetchBatchPortion(HitKeyT key);
 
-    static constexpr uint32_t       BatchBits = BatchBits;
-    static constexpr uint32_t       IdBits = IdBits;
+    static constexpr uint32_t       BatchBits = BBits;
+    static constexpr uint32_t       IdBits = IBits;
 
     static constexpr T              IdMask = (0x1ull << IdBits) - 1;
     static constexpr T              BatchMask = ((0x1ull << BatchBits) - 1) << IdBits;

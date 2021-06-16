@@ -55,11 +55,11 @@ using ChannelDescType_t = typename ChannelDescType<T>::type;
 template <int D>
 struct TexDimType {};
 template <>
-struct TexDimType<1> { using type = uint32_t; static constexpr typename type ZERO = 0; };
+struct TexDimType<1> { using type = uint32_t; static constexpr type ZERO = 0; };
 template <>
-struct TexDimType<2> { using type = Vector2ui; static constexpr typename type ZERO = Zero2ui; };
+struct TexDimType<2> { using type = Vector2ui; static constexpr type ZERO = Zero2ui; };
 template <>
-struct TexDimType<3> { using type = Vector3ui; static constexpr typename type ZERO = Zero3ui; };
+struct TexDimType<3> { using type = Vector3ui; static constexpr type ZERO = Zero3ui; };
 template <int D>
 using TexDimType_t = typename TexDimType<D>::type;
 

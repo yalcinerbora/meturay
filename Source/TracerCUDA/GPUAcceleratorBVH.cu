@@ -190,7 +190,7 @@ void GPUBaseAcceleratorBVH::Hit(const CudaSystem& system,
     const auto splits = system.GridStrideMultiGPUSplit(rayCount,
                                                        StaticThreadPerBlock1D,
                                                        0,
-                                                       KCIntersectBaseBVH);
+                                                       reinterpret_cast<void*>(&KCIntersectBaseBVH));
     // Split work into multiple GPU's
     size_t offset = 0;
     int i = 0;

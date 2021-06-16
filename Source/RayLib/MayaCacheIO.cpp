@@ -102,7 +102,7 @@ namespace MayaCache
         {
             return be32toh(out);
         }
-        else static_assert(false, "Word size should be 4 or 8 byte.");
+        return out;
     }
 
     float ReadFloat(std::ifstream& file)
@@ -173,11 +173,11 @@ namespace MayaCache
         {
             size_t offset = 0;
             size_t stride = 4;
-            if(h.logic == DENSITY)
+            if(h.logic == NSChannelHeader::NS_DENSITY)
             {
                 offset = 3;
             }
-            else if(h.logic == VELOCITY)
+            else if(h.logic == NSChannelHeader::NS_VELOCITY)
             {
             }
             else continue;
@@ -187,7 +187,7 @@ namespace MayaCache
 
             for(size_t i = 0; i < totalCount; i++)
             {
-                if(h.logic == DENSITY)
+                if(h.logic == NSChannelHeader::NS_DENSITY)
                 {
                     velocityDensityData[offset + i * stride] = ReadFloat(file);
                 }

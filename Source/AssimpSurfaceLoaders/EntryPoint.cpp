@@ -1,12 +1,14 @@
 #include "EntryPoint.h"
 #include "AssimpSurfaceLoaderPool.h"
 
-extern "C" _declspec(dllexport) SurfaceLoaderPoolI * __stdcall GenerateAssimpPool()
+extern "C" METU_SHARED_ASSIMP_ENTRY_POINT
+SurfaceLoaderPoolI* GenerateAssimpPool()
 {
     return new AssimpSurfaceLoaderPool();
 }
 
-extern "C" _declspec(dllexport) void __stdcall DeleteAssimpPool(SurfaceLoaderPoolI * sPool)
+extern "C" METU_SHARED_ASSIMP_ENTRY_POINT 
+void DeleteAssimpPool(SurfaceLoaderPoolI * sPool)
 {
     return delete sPool;
 }

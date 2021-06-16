@@ -9,6 +9,8 @@ if(e != ErrType::OK) \
 
 #ifdef _WIN32
     #define METURAY_WIN
+    #define MRAY_DLL_IMPORT __declspec(dllimport) __stdcall
+    #define MRAY_DLL_EXPORT __declspec(dllexport) __stdcall
     #ifndef NOMINMAX
         #define NOMINMAX
     #endif
@@ -36,13 +38,15 @@ if(e != ErrType::OK) \
         }
         return true;
     }
-#else
-    static inline bool EnableVTMode()
-    {}
 #endif
 
 #ifdef __linux__
-    #define METURAY_UNIX
-#else
-
+    #define METURAY_LINUX
+    #define MRAY_DLL_IMPORT __attribute__((dllimport))
+    #define MRAY_DLL_EXPORT __attribute__((dllexport))
+    
+    static inline bool EnableVTMode()
+    {
+        return true;
+    }
 #endif

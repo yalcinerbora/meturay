@@ -28,7 +28,7 @@ set(SRC_CUDA_SYSTEM
     ${CURRENT_SOURCE_DIR}/GPUEvent.h)
 
 set(SRC_DEBUG
-    ${CURRENT_SOURCE_DIR}/TracerDebug.cpp
+    ${CURRENT_SOURCE_DIR}/TracerDebug.cu
     ${CURRENT_SOURCE_DIR}/TracerDebug.h)
 
 set(SRC_GPU_ALGORITHMS_COMMON

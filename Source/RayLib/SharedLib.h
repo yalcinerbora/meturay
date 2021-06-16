@@ -63,8 +63,8 @@ template <class T>
 DLLError SharedLib::GenerateObject(SharedLibPtr<T>& ptr,
                                    const SharedLibArgs& args)
 {
-    ObjGeneratorFunc<T> genFunc = static_cast<ObjGeneratorFunc<T>>(GetProcAdressInternal(args.mangledConstructorName));
-    ObjDestroyerFunc<T> destFunc = static_cast<ObjDestroyerFunc<T>>(GetProcAdressInternal(args.mangledDestructorName));
+    ObjGeneratorFunc<T> genFunc = reinterpret_cast<ObjGeneratorFunc<T>>(GetProcAdressInternal(args.mangledConstructorName));
+    ObjDestroyerFunc<T> destFunc = reinterpret_cast<ObjDestroyerFunc<T>>(GetProcAdressInternal(args.mangledDestructorName));
     if(!genFunc) return DLLError::MANGLED_NAME_NOT_FOUND;
     if(!destFunc) return DLLError::MANGLED_NAME_NOT_FOUND;
     ptr = SharedLibPtr<T>(genFunc(), destFunc);
@@ -76,8 +76,8 @@ DLLError SharedLib::GenerateObjectWithArgs(SharedLibPtr<T>& ptr,
                                            const SharedLibArgs& mangledNames,
                                            Args&&... args)
 {
-    ObjGeneratorFuncArgs<T, Args&&...> genFunc = static_cast<ObjGeneratorFuncArgs<T, Args&&...>>(GetProcAdressInternal(mangledNames.mangledConstructorName));
-    ObjDestroyerFunc<T> destFunc = static_cast<ObjDestroyerFunc<T>>(GetProcAdressInternal(mangledNames.mangledDestructorName));
+    ObjGeneratorFuncArgs<T, Args&&...> genFunc = reinterpret_cast<ObjGeneratorFuncArgs<T, Args&&...>>(GetProcAdressInternal(mangledNames.mangledConstructorName));
+    ObjDestroyerFunc<T> destFunc = reinterpret_cast<ObjDestroyerFunc<T>>(GetProcAdressInternal(mangledNames.mangledDestructorName));
     if(!genFunc) return DLLError::MANGLED_NAME_NOT_FOUND;
     if(!destFunc) return DLLError::MANGLED_NAME_NOT_FOUND;
         ptr = SharedLibPtr<T>(genFunc(std::forward<Args&&>(args)...), destFunc);

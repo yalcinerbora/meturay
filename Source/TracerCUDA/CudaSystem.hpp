@@ -49,7 +49,8 @@ inline void CudaGPU::GridStrideKC_X(uint32_t sharedMemSize,
 {
     const size_t threadCount = StaticThreadPerBlock1D;
     uint32_t blockCount = DetermineGridStrideBlock(sharedMemSize,
-                                                   threadCount, workCount, &f);
+                                                   threadCount, workCount, 
+                                                   reinterpret_cast<void*>(&f));
     // Full potential GPU Call
     CUDA_CHECK(cudaSetDevice(deviceId));
     uint32_t blockSize = StaticThreadPerBlock1D;
@@ -71,7 +72,8 @@ inline void CudaGPU::GridStrideKC_XY(uint32_t sharedMemSize,
 {
     const size_t threadCount = StaticThreadPerBlock2D[0] * StaticThreadPerBlock2D[1];
     uint32_t blockCount = DetermineGridStrideBlock(sharedMemSize,
-                                                   threadCount, workCount, &f);
+                                                   threadCount, workCount, 
+                                                   reinterpret_cast<void*>(&f));
 
     CUDA_CHECK(cudaSetDevice(deviceId));
     dim3 blockSize = dim3(StaticThreadPerBlock2D[0], StaticThreadPerBlock2D[1]);
@@ -91,7 +93,8 @@ __host__ void CudaGPU::AsyncGridStrideKC_X(uint32_t sharedMemSize,
 {
     const size_t threadCount = StaticThreadPerBlock1D;
     uint32_t requiredSMCount = DetermineGridStrideBlock(sharedMemSize,
-                                                        threadCount, workCount, &f);
+                                                        threadCount, workCount, 
+                                                        reinterpret_cast<void*>(&f));
     cudaStream_t stream = DetermineStream(requiredSMCount);
 
     CUDA_CHECK(cudaSetDevice(deviceId));
@@ -112,7 +115,8 @@ __host__ void CudaGPU::AsyncGridStrideKC_XY(uint32_t sharedMemSize,
 {
     const size_t threadCount = StaticThreadPerBlock2D[0] * StaticThreadPerBlock2D[1];
     uint32_t requiredSMCount = DetermineGridStrideBlock(sharedMemSize,
-                                                        threadCount, workCount, &f);
+                                                        threadCount, workCount, 
+                                                        reinterpret_cast<void*>(&f));
     cudaStream_t stream = DetermineStream(requiredSMCount);
 
     CUDA_CHECK(cudaSetDevice(deviceId));

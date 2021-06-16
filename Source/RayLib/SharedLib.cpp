@@ -47,7 +47,7 @@ void* SharedLib::GetProcAdressInternal(const std::string& fName)
     #if defined METURAY_WIN
         return (void*)GetProcAddress((HINSTANCE)libHandle, fName.c_str());
     #elif defined METURAY_LINUX
-        return dlsym(Lib, Fnname);
+        return dlsym(libHandle, fName.c_str());
     #endif
 }
 
@@ -59,37 +59,8 @@ SharedLib::SharedLib(const std::string& libName)
         libHandle = (void*)LoadLibrary(ConvertWinWchar(libWithExt).c_str());
     #elif defined METURAY_LINUX
         libWithExt += LinuxDLLExt;
-        libHandle = dlopen(libWithExt.c_str(), iMode, RTLD_NOW);
+        libHandle = dlopen(libWithExt.c_str(), RTLD_NOW);
     #endif
-
-    // Check if we found the DLL
-    if(libHandle == nullptr)
-    {
-        LPVOID lpMsgBuf;
-        LPVOID lpDisplayBuf;
-        DWORD dw = GetLastError();
-
-        FormatMessage(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER |
-            FORMAT_MESSAGE_FROM_SYSTEM |
-            FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL,
-            dw,
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            (LPTSTR)&lpMsgBuf,
-            0, NULL);
-
-        // Display the error message and exit the process
-
-        lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT,
-            (lstrlen((LPCTSTR)lpMsgBuf) + 100) * sizeof(TCHAR));
-        StringCchPrintf((LPTSTR)lpDisplayBuf,
-                        LocalSize(lpDisplayBuf) / sizeof(TCHAR),
-                        TEXT("Failed with error %d: %s"),
-                        dw, lpMsgBuf);
-        MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK);
-        throw DLLException(DLLError::DLL_NOT_FOUND);
-    }
 }
 
 SharedLib::~SharedLib()

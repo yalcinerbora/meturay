@@ -10,7 +10,7 @@ and vice versa.
 
 #include "NodeI.h"
 #include "VisorCallbacksI.h"
-#include "TracerCallBacksI.h"
+#include "TracerCallbacksI.h"
 #include "TracerThread.h"
 
 class VisorI;

@@ -261,12 +261,12 @@ void KCIntersectBVH(// O
                     const HitKey* gAccelKeys,
                     const uint32_t rayCount,
                     // Constants
-                    const BVHNode<PGroup::LeafData>** gBVHList,
+                    const BVHNode<typename PGroup::LeafData>** gBVHList,
                     const GPUTransformI** gTransforms,
                     const TransformId* gAccTransformIds,
                     const PrimTransformType transformType,
                     //
-                    const PGroup::PrimitiveData primData)
+                    const typename PGroup::PrimitiveData primData)
 {
     using HitData = typename PGroup::HitData;       // HitRegister is defined by primitive
     using LeafData = typename PGroup::LeafData;     // LeafStruct is defined by primitive
@@ -383,12 +383,12 @@ void KCIntersectBVHStackless(// O
                              const HitKey* gAccelKeys,
                              const uint32_t rayCount,
                              // Constants
-                             const BVHNode<PGroup::LeafData>** gBVHList,
+                             const BVHNode<typename PGroup::LeafData>** gBVHList,
                              const GPUTransformI** gTransforms,
                              const TransformId* gAccTransformIds,
                              const PrimTransformType transformType,
                              //
-                             const PGroup::PrimitiveData primData)
+                             const typename PGroup::PrimitiveData primData)
 {
     using HitData = typename PGroup::HitData;       // HitRegister is defined by primitive
     using LeafData = typename PGroup::LeafData;     // LeafStruct is defined by primitive

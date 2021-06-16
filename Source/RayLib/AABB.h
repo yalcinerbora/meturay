@@ -11,6 +11,7 @@ These are convenience register classes for GPU.
 */
 
 #include "Vector.h"
+#include <cfloat>
 
 template<int N, class T, typename = ArithmeticEnable<T>>
 class AABB;

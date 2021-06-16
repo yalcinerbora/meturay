@@ -10,6 +10,7 @@
 #include "DeviceMemory.h"
 #include "CudaSystem.h"
 
+#include "GPUPrimitiveP.cuh"
 #include "GPUAcceleratorP.cuh"
 #include "GPUAcceleratorBVHKC.cuh"
 #include "GPUAcceleratorCommonKC.cuh"
@@ -43,7 +44,7 @@ class GPUAccBVHGroup final
     ACCELERATOR_TYPE_NAME("BasicBVH", PGroup);
 
     public:
-        using LeafData                                  = PGroup::LeafData;
+        using LeafData                                  = typename PGroup::LeafData;
         static constexpr const char* USE_STACK_NAME     = "useStack";
 
     private:

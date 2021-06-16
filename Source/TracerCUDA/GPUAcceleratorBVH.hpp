@@ -77,7 +77,7 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
                                              size_t start, size_t end)
 {
     using PrimitiveData = typename PGroup::PrimitiveData;
-    const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
+    const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
 
     int axisIndex = static_cast<int>(axis);
 
@@ -284,7 +284,7 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
                                                    const std::vector<uint32_t>& transformList,
                                                    double time)
 {
-    const char* primGroupTypeName = primitiveGroup.Type();
+    const char* primGroupTypeName = this->primitiveGroup.Type();
 
     // Get params
     bool useStack = node->CommonBool(USE_STACK_NAME);
@@ -306,7 +306,7 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
             if(p.first == std::numeric_limits<uint32_t>::max())
                 break;
 
-            primRangeList[i] = primitiveGroup.PrimitiveBatchRange(p.second);
+            primRangeList[i] = this->primitiveGroup.PrimitiveBatchRange(p.second);
             hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.first));
         }
         // Put generated AABB
@@ -382,7 +382,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
     using PrimitiveData = typename PGroup::PrimitiveData;
     using PrimitiveIndexStart = std::array<uint64_t, SceneConstants::MaxPrimitivePerSurface>;
-    const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
+    const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
 
     // Set Device
     const CudaGPU& gpu = system.BestGPU();
@@ -390,21 +390,21 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
     uint32_t innerIndex = idLookup.at(surface);
     const PrimitiveRangeList& primRangeList = primitiveRanges[innerIndex];
-    const PrimTransformType tType = primitiveGroup.TransformType();
+    const PrimTransformType tType = this->primitiveGroup.TransformType();
 
     // Select Transform for construction
     const GPUTransformI* worldTransform = nullptr;
     AcquireAcceleratorGPUTransform(worldTransform,
                                    dAccTransformIds,
-                                   dTransforms,
+                                   this->dTransforms,
                                    innerIndex,
                                    gpu);
     const GPUTransformI* transform = worldTransform;
     if(tType == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
     {
         AcquireIdentityTransform(transform,
-                                 dTransforms,
-                                 identityTransformIndex,
+                                 this->dTransforms,
+                                 this->identityTransformIndex,
                                  gpu);
     }
 
@@ -739,7 +739,7 @@ void GPUAccBVHGroup<PGroup>::Hit(const CudaGPU& gpu,
     // TODO: Is there a better way to implement this
     using LeafData = typename PGroup::LeafData;
     using PrimitiveData = typename PGroup::PrimitiveData;
-    const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
+    const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
 
     // Select Intersection algorithm with or without stack
     using BVHIntersectKernel = void(*)(HitKey*,
@@ -780,9 +780,9 @@ void GPUAccBVHGroup<PGroup>::Hit(const CudaGPU& gpu,
         rayCount,
         // Constants
         dBVHLists,
-        dTransforms,
+        this->dTransforms,
         dAccTransformIds,
-        primitiveGroup.TransformType(),
+        this->primitiveGroup.TransformType(),
         //
         primData
     );

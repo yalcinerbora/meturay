@@ -5,6 +5,7 @@
 
 #include "VisorInputI.h"
 #include "VisorCamera.h"
+#include <memory>
 
 class MovementSchemeI;
 
