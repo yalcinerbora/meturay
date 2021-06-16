@@ -458,10 +458,10 @@ void KCIntersectBVHStackless(// O
             uint8_t info = TraverseInfo(list, depth);
             // First time entry check intersection
             if(info == FIRST_ENTRY)
-            {               
+            {
                 // Leaf, so do its custom primitive intersection
                 if(currentNode->isLeaf)
-                {             
+                {
                     HitResult result = PGroup::Hit(// Output
                                                    materialKey,
                                                    primitiveId,
