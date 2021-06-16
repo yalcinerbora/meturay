@@ -2,13 +2,13 @@
 #include "TracerSystemCUDA.h"
 
 extern "C" METU_SHARED_TRACER_CUDA_ENTRY_POINT
-TracerSystemI* __stdcall GenerateTracerSystem()
+TracerSystemI* GenerateTracerSystem()
 {
     return new TracerSystemCUDA();
 }
 
 extern "C" METU_SHARED_TRACER_CUDA_ENTRY_POINT
-void __stdcall DeleteTracerSystem(TracerSystemI* ts)
+void DeleteTracerSystem(TracerSystemI* ts)
 {
     if(ts) delete ts;
 }

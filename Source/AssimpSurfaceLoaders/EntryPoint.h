@@ -14,4 +14,4 @@ extern "C" METU_SHARED_ASSIMP_ENTRY_POINT
 SurfaceLoaderPoolI* GenerateAssimpPool();
 
 extern "C" METU_SHARED_ASSIMP_ENTRY_POINT 
-void DeleteAssimpPool(SurfaceLoaderPoolI * tGen);
+void DeleteAssimpPool(SurfaceLoaderPoolI* tGen);

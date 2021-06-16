@@ -57,7 +57,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>METU_DEBUG;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>METU_DEBUG;_UNICODE;UNICODE;%(PreprocessorDefinitions);METU_SHARED_ASSIMP_LOADER</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -80,7 +80,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\..\Lib\Include;$(SolutionDir)..\..\Source;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <PreprocessorDefinitions>NDEBUG;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDLL;%(PreprocessorDefinitions);METU_SHARED_ASSIMP_LOADER</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

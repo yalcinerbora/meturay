@@ -276,36 +276,36 @@ void PPGTracerPathWork(// Output
 
         //printf("D: %f, %f, %f\n", direction[0], direction[1], direction[2]);
 
-        static constexpr Vector3f DEBUG_COLORS[27] =
-        {
-            Vector3f(0.886, 0.243, 0),
-            Vector3f(0.717, 0.137, 0.019),
-            Vector3f(0.603, 0.964, 0.043),
-            Vector3f(0.411, 0.356, 0.047),
-            Vector3f(0.058, 0.666, 0.015),
-            Vector3f(0.886, 0.835, 0.019),
-            Vector3f(0.152, 0.125, 0.043),
-            Vector3f(0.168, 0.309, 0.039),
-            Vector3f(0.050, 0.568, 0.011),
-            Vector3f(0.396, 0.396, 0.035),
-            Vector3f(0.247, 0.568, 0.015),
-            Vector3f(0.929, 0.541, 0.011),
-            Vector3f(0.105, 0.109, 0),
-            Vector3f(0.996, 0.019, 0.050),
-            Vector3f(0.392, 0.137, 0.011),
-            Vector3f(0.843, 0.411, 0.003),
-            Vector3f(1.0f, 0.0f, 0.0f),
-            Vector3f(0.0f, 1.0f, 0.0f),
-            Vector3f(1.0f, 1.0f, 0.0f),
-            Vector3f(0.0f, 0.0f, 1.0f),
-            Vector3f(1.0f, 0.0f, 1.0f),
-            Vector3f(0.0f, 1.0f, 1.0f),
-            Vector3f(1.0f, 0.5f, 1.0f),
-            Vector3f(0.9f, 0.2f, 0.4f),
-            Vector3f(0.3f, 0.1f, 0.2f),
-            Vector3f(0.3f, 0.6f, 0.4f),
-            Vector3f(0.2f, 0.3f, 0.9f)
-        };
+        //static constexpr Vector3f DEBUG_COLORS[27] =
+        //{
+        //    Vector3f(0.886, 0.243, 0),
+        //    Vector3f(0.717, 0.137, 0.019),
+        //    Vector3f(0.603, 0.964, 0.043),
+        //    Vector3f(0.411, 0.356, 0.047),
+        //    Vector3f(0.058, 0.666, 0.015),
+        //    Vector3f(0.886, 0.835, 0.019),
+        //    Vector3f(0.152, 0.125, 0.043),
+        //    Vector3f(0.168, 0.309, 0.039),
+        //    Vector3f(0.050, 0.568, 0.011),
+        //    Vector3f(0.396, 0.396, 0.035),
+        //    Vector3f(0.247, 0.568, 0.015),
+        //    Vector3f(0.929, 0.541, 0.011),
+        //    Vector3f(0.105, 0.109, 0),
+        //    Vector3f(0.996, 0.019, 0.050),
+        //    Vector3f(0.392, 0.137, 0.011),
+        //    Vector3f(0.843, 0.411, 0.003),
+        //    Vector3f(1.0f, 0.0f, 0.0f),
+        //    Vector3f(0.0f, 1.0f, 0.0f),
+        //    Vector3f(1.0f, 1.0f, 0.0f),
+        //    Vector3f(0.0f, 0.0f, 1.0f),
+        //    Vector3f(1.0f, 0.0f, 1.0f),
+        //    Vector3f(0.0f, 1.0f, 1.0f),
+        //    Vector3f(1.0f, 0.5f, 1.0f),
+        //    Vector3f(0.9f, 0.2f, 0.4f),
+        //    Vector3f(0.3f, 0.1f, 0.2f),
+        //    Vector3f(0.3f, 0.6f, 0.4f),
+        //    Vector3f(0.2f, 0.3f, 0.9f)
+        //};
 
         //printf("%u  ", dTreeIndex);
         //static constexpr uint32_t PRIME = 7577;

@@ -9,8 +9,8 @@ if(e != ErrType::OK) \
 
 #ifdef _WIN32
     #define METURAY_WIN
-    #define MRAY_DLL_IMPORT __declspec(dllimport) __stdcall
-    #define MRAY_DLL_EXPORT __declspec(dllexport) __stdcall
+    #define MRAY_DLL_IMPORT __declspec(dllimport)
+    #define MRAY_DLL_EXPORT __declspec(dllexport)
     #ifndef NOMINMAX
         #define NOMINMAX
     #endif
