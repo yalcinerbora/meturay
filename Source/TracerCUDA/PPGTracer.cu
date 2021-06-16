@@ -395,16 +395,16 @@ void PPGTracer::Finalize()
                  mbSize,
                  sTree->TotalTreeCount());
               
-        // DEBUG
-        CUDA_CHECK(cudaDeviceSynchronize());
-        //std::string iterAsString = std::to_string(currentTreeIteration);
-        std::string iterAsString = "0";
-        // STree
-        STreeGPU sTreeGPU;
-        std::vector<STreeNode> sNodes;
-        sTree->GetTreeToCPU(sTreeGPU, sNodes);
-        Debug::DumpMemToFile(iterAsString + "_sTree", &sTreeGPU, 1, true);
-        Debug::DumpMemToFile(iterAsString + "_sTree_N", sNodes.data(), sNodes.size(), true);
+        //// DEBUG
+        //CUDA_CHECK(cudaDeviceSynchronize());
+        ////std::string iterAsString = std::to_string(currentTreeIteration);
+        //std::string iterAsString = "0";
+        //// STree
+        //STreeGPU sTreeGPU;
+        //std::vector<STreeNode> sNodes;
+        //sTree->GetTreeToCPU(sTreeGPU, sNodes);
+        //Debug::DumpMemToFile(iterAsString + "_sTree", &sTreeGPU, 1, true);
+        //Debug::DumpMemToFile(iterAsString + "_sTree_N", sNodes.data(), sNodes.size(), true);
         //// PrintEveryDTree
         //std::vector<DTreeGPU> dTreeGPUs;
         //std::vector<std::vector<DTreeNode>> dTreeNodes;

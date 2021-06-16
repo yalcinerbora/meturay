@@ -1,17 +1,18 @@
 #pragma once
 
+#include "RayLib/VisorI.h"
+#include "RayLib/System.h"
+
 #ifdef METU_SHARED_VISORGL
-#define METU_SHARED_VISORGL_ENTRY_POINT MRAY_DLL(dllexport)
+#define METU_SHARED_VISORGL_ENTRY_POINT MRAY_DLL_EXPORT
 #else
-#define METU_SHARED_VISORGL_ENTRY_POINT MRAY_DLL(dllimport)
+#define METU_SHARED_VISORGL_ENTRY_POINT MRAY_DLL_IMPORT
 #endif
 
-#include "RayLib/VisorI.h"
-
 extern "C" METU_SHARED_VISORGL_ENTRY_POINT
-VisorI* __stdcall CreateVisorGL(const VisorOptions&,
+VisorI* CreateVisorGL(const VisorOptions&,
                                 const Vector2i& imgRes,
                                 const PixelFormat&);
 
 extern "C" METU_SHARED_VISORGL_ENTRY_POINT
-void __stdcall DeleteVisorGL(VisorI*);
+void DeleteVisorGL(VisorI*);
