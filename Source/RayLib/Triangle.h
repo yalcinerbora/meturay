@@ -10,51 +10,51 @@
 namespace Triangle
 {
     template <class T>
-    __device__ __host__
-        AABB<3, T> BoundingBox(const Vector<3, T>& p0,
-                               const Vector<3, T>& p1,
-                               const Vector<3, T>& p2);
+    __device__ __host__ HYBRID_INLINE
+    AABB<3, T> BoundingBox(const Vector<3, T>& p0,
+                           const Vector<3, T>& p1,
+                           const Vector<3, T>& p2);
 
     template <class T>
-    __device__ __host__
-        Vector<3, T> CalculateTangent(const Vector<3, T>& p0,
-                                      const Vector<3, T>& p1,
-                                      const Vector<3, T>& p2,
+    __device__ __host__ HYBRID_INLINE
+    Vector<3, T> CalculateTangent(const Vector<3, T>& p0,
+                                  const Vector<3, T>& p1,
+                                  const Vector<3, T>& p2,
 
-                                      const Vector<2, T>& uv0,
-                                      const Vector<2, T>& uv1,
-                                      const Vector<2, T>& uv2);
-
-    template <class T>
-    __device__ __host__
-        void LocalRotation(Quaternion<T>&,
-                           Quaternion<T>&,
-                           Quaternion<T>&,
-                           const Vector<3, T>* positions,
-                           const Vector<3, T>* normals,
-                           const Vector<2, T>* uvs);
+                                  const Vector<2, T>& uv0,
+                                  const Vector<2, T>& uv1,
+                                  const Vector<2, T>& uv2);
 
     template <class T>
-    __device__ __host__
-        void LocalRotation(Quaternion<T>&,
-                           Quaternion<T>&,
-                           Quaternion<T>&,
-                           const Vector<3, T>* normals,
-                           const Vector<3, T>* tangents);
+    __device__ __host__ HYBRID_INLINE
+    void LocalRotation(Quaternion<T>&,
+                       Quaternion<T>&,
+                       Quaternion<T>&,
+                       const Vector<3, T>* positions,
+                       const Vector<3, T>* normals,
+                       const Vector<2, T>* uvs);
+
+    template <class T>
+    __device__ __host__ HYBRID_INLINE
+    void LocalRotation(Quaternion<T>&,
+                       Quaternion<T>&,
+                       Quaternion<T>&,
+                       const Vector<3, T>* normals,
+                       const Vector<3, T>* tangents);
 }
 
 template <class T>
 __device__ __host__
-inline static AABB<3, T> Triangle::BoundingBox(const Vector<3, T>& p0,
-                                               const Vector<3, T>& p1,
-                                               const Vector<3, T>& p2)
+AABB<3, T> Triangle::BoundingBox(const Vector<3, T>& p0,
+                                 const Vector<3, T>& p1,
+                                 const Vector<3, T>& p2)
 {
-    AABB3f aabb(p0, p0);
-    aabb.SetMin(Vector3f::Min(aabb.Min(), p1));
-    aabb.SetMin(Vector3f::Min(aabb.Min(), p2));
+    AABB<3, T> aabb(p0, p0);
+    aabb.SetMin(Vector<3, T>::Min(aabb.Min(), p1));
+    aabb.SetMin(Vector<3, T>::Min(aabb.Min(), p2));
 
-    aabb.SetMax(Vector3f::Max(aabb.Max(), p1));
-    aabb.SetMax(Vector3f::Max(aabb.Max(), p2));
+    aabb.SetMax(Vector<3, T>::Max(aabb.Max(), p1));
+    aabb.SetMax(Vector<3, T>::Max(aabb.Max(), p2));
     return aabb;
 }
 
@@ -127,11 +127,11 @@ void Triangle::LocalRotation(Quaternion<T>& q0,
     // Degenerate triangle is found,
     // (or uv's are degenerate)
     // arbitrarily find a tangent
-    if(t0.HasNaN()) t0 = OrthogonalVector(n[0]);        
+    if(t0.HasNaN()) t0 = OrthogonalVector(n[0]);
     if(t1.HasNaN()) t1 = OrthogonalVector(n[1]);
     if(t2.HasNaN()) t2 = OrthogonalVector(n[2]);
 
-    // Gram–Schmidt othonormalization
+    // Gramï¿½Schmidt othonormalization
     // This is required since normal may be skewed to hide
     // edges (to create smooth lighting)
     t0 = (t0 - n[0] * n[0].Dot(t0)).Normalize();

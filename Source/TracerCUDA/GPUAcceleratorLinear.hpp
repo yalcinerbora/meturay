@@ -29,7 +29,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
     primitiveMaterialKeys.clear();
     idLookup.clear();
 
-    const char* primGroupTypeName = primitiveGroup.Type();
+    const char* primGroupTypeName = this->primitiveGroup.Type();
 
     // Iterate over pairings
     int j = 0;
@@ -53,7 +53,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
             if(p.first == std::numeric_limits<uint32_t>::max()) break;
 
             primIdList[i] = p.second;
-            primRangeList[i] = primitiveGroup.PrimitiveBatchRange(p.second);
+            primRangeList[i] = this->primitiveGroup.PrimitiveBatchRange(p.second);
             hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.first));
             localSize += primRangeList[i][1] - primRangeList[i][0];
         }
@@ -136,7 +136,7 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                                             const CudaSystem& system)
 {
     using PrimitiveData = typename PGroup::PrimitiveData;
-    const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
+    const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
 
     const uint32_t index = idLookup.at(surface);
     //const Vector2ul& accelRange = acceleratorRanges[index];
@@ -177,12 +177,12 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     const GPUTransformI* transform = nullptr;
     AcquireAcceleratorGPUTransform(transform,
                                    dAccTransformIds,
-                                   dTransforms,
+                                   this->dTransforms,
                                    index,
                                    gpu);
 
     // Check if this accelerator utilizes constant transform
-    if(primitiveGroup.TransformType() == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
+    if(this->primitiveGroup.TransformType() == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
     {
         // Rays are going to be transformed
         // utilize local space primitive AABB
@@ -191,7 +191,7 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         {
             if(primBatchId == std::numeric_limits<uint32_t>::max()) break;
 
-            AABB3f aabb = primitiveGroup.PrimitiveBatchAABB(primBatchId);
+            AABB3f aabb = this->primitiveGroup.PrimitiveBatchAABB(primBatchId);
             unionAABB.UnionSelf(aabb);
         }
 
@@ -350,7 +350,7 @@ void GPUAccLinearGroup<PGroup>::Hit(const CudaGPU& gpu,
 {
     // TODO: Is there a better way to implement this
     using PrimitiveData = typename PGroup::PrimitiveData;
-    const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
+    const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
 
     gpu.AsyncGridStrideKC_X
     (
@@ -373,9 +373,9 @@ void GPUAccLinearGroup<PGroup>::Hit(const CudaGPU& gpu,
         // Constants
         dLeafList,
         dAccRanges,
-        dTransforms,
+        this->dTransforms,
         dAccTransformIds,
-        primitiveGroup.TransformType(),
+        this->primitiveGroup.TransformType(),
         //
         primData
     );

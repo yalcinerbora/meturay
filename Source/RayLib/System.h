@@ -42,9 +42,11 @@ if(e != ErrType::OK) \
 
 #ifdef __linux__
     #define METURAY_LINUX
-    #define MRAY_DLL_IMPORT __attribute__((dllimport))
-    #define MRAY_DLL_EXPORT __attribute__((dllexport))
-    
+    //#define MRAY_DLL_IMPORT __attribute__((dllimport))
+    //#define MRAY_DLL_EXPORT __attribute__((dllexport))
+    #define MRAY_DLL_IMPORT
+    #define MRAY_DLL_EXPORT
+
     static inline bool EnableVTMode()
     {
         return true;

@@ -29,7 +29,7 @@ Quaternion<T>::Quaternion(T angle, const Vector<3, T>& axis)
     vec[0] = cos(angle);
 }
 
-template<class T> 
+template<class T>
 __device__ __host__ HYBRID_INLINE
 Quaternion<T>::Quaternion(const Vector<4, T>& vec)
     : vec(vec)
@@ -244,7 +244,7 @@ Vector<3, T> Quaternion<T>::ApplyRotation(const Vector<3, T>& vector) const
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Quaternion<T> Quat::NLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t)
 {
     T cosTetha = start.Dot(end);
@@ -260,7 +260,7 @@ Quaternion<T> Quat::NLerp(const Quaternion<T>& start, const Quaternion<T>& end, 
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Quaternion<T> Quat::SLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t)
 {
     T cosTetha = start.Dot(end);
@@ -287,7 +287,7 @@ Quaternion<T> Quat::SLerp(const Quaternion<T>& start, const Quaternion<T>& end, 
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Quaternion<T> Quat::BarySLerp(const Quaternion<T>& q0,
                               const Quaternion<T>& q1,
                               const Quaternion<T>& q2,
@@ -328,7 +328,7 @@ Quaternion<T> Quat::BarySLerp(const Quaternion<T>& q0,
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Quaternion<T> Quat::RotationBetween(const Vector<3, T>& a, const Vector<3, T>& b)
 {
     Vector<3, T> aCrossB = Cross(a, b);
@@ -339,7 +339,7 @@ Quaternion<T> Quat::RotationBetween(const Vector<3, T>& a, const Vector<3, T>& b
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Quaternion<T> Quat::RotationBetweenZAxis(const Vector<3, T>& b)
 {
     Vector<3, T> zCrossD(-b[1], b[0], 0);
@@ -372,14 +372,14 @@ Quaternion<T> Quat::RotationBetweenZAxis(const Vector<3, T>& b)
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Quaternion<T> operator*(T t, const Quaternion<T>& q)
 {
     return q * t;
 }
 
 template <class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 void TransformGen::Space(Quaternion<T>& q,
                          const Vector<3, T>& x,
                          const Vector<3, T>& y,
@@ -439,7 +439,7 @@ void TransformGen::Space(Quaternion<T>& q,
 }
 
 template <class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 void TransformGen::InvSpace(Quaternion<T>& q,
                             const Vector<3, T>& x,
                             const Vector<3, T>& y,

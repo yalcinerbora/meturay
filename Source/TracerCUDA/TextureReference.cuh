@@ -3,7 +3,7 @@
 #include <cuda.h>
 #include <RayLib/Vector.h>
 
-// GPU Texture objec w
+#include "TypeTraits.h"
 
 // I am not good at SFINAE
 // Here we go
@@ -80,7 +80,7 @@ class ConstantRef : public TextureRefI<D, T>
 template <int D, class T>
 class TextureRef : public TextureRefI<D, T>
 {
-    using CudaType = typename CudaReturn_t<T>;
+    using CudaType = CudaReturn_t<T>;
 
     private:
         cudaTextureObject_t t;

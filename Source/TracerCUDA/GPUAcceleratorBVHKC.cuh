@@ -88,7 +88,7 @@ struct alignas(16) BVHNode
             uint32_t left;
             Vector3 aabbMax;
             uint32_t right;
-        };
+        }body;
         // leaf part
         LeafStruct leaf;
     };
@@ -347,12 +347,12 @@ void KCIntersectBVH(// O
                 hitModified |= result[1];
                 if(result[0]) break;
             }
-            else if(ray.ray.IntersectsAABB(currentNode->aabbMin, currentNode->aabbMax,
+            else if(ray.ray.IntersectsAABB(currentNode->body.aabbMin, currentNode->body.aabbMax,
                                            Vector2f(ray.tMin, ray.tMax)))
             {
                 // Push to stack
-                Push(depth, currentNode->right);
-                Push(depth, currentNode->left);
+                Push(depth, currentNode->body.right);
+                Push(depth, currentNode->body.left);
             }
         }
         // Write Updated Stuff
@@ -480,7 +480,7 @@ void KCIntersectBVHStackless(// O
                     Pop(list, depth);
                 }
                 // If not leaf do non-leaf intersection (AABB-Ray Intersection)
-                else if(ray.ray.IntersectsAABB(currentNode->aabbMin, currentNode->aabbMax,
+                else if(ray.ray.IntersectsAABB(currentNode->body.aabbMin, currentNode->body.aabbMax,
                                                Vector2f(ray.tMin, ray.tMax)))
                 {
                     // Since by construction BVH tree has either no or both children
@@ -488,7 +488,7 @@ void KCIntersectBVHStackless(// O
                     // no need to check for left or right index validty
 
                     // Directly go right
-                    currentNode = gBVH + currentNode->left;
+                    currentNode = gBVH + currentNode->body.left;
                     depth--;
                 }
                 // If we could not be able to hit AABB
@@ -506,7 +506,7 @@ void KCIntersectBVHStackless(// O
             {
                 // Go to right child if avail
                 MarkAsTraversed(list, depth - 1);
-                currentNode = gBVH + currentNode->right;
+                currentNode = gBVH + currentNode->body.right;
                 depth--;
             }
             // Now both left and right are processed
@@ -601,8 +601,8 @@ static void KCIntersectBaseBVH(// Output
 
                 // Check the leafs aabb or non-leaf aabb
                 // These are the same (cuz of union) but we need to be programatically correct
-                Vector3 aabbMin = (isLeaf) ? currentNode->leaf.aabbMin : currentNode->aabbMin;
-                Vector3 aabbMax = (isLeaf) ? currentNode->leaf.aabbMax : currentNode->aabbMax;
+                Vector3 aabbMin = (isLeaf) ? currentNode->leaf.aabbMin : currentNode->body.aabbMin;
+                Vector3 aabbMax = (isLeaf) ? currentNode->leaf.aabbMax : currentNode->body.aabbMax;
 
                 // Check AABB
                 if(ray.IntersectsAABB(aabbMin, aabbMax, tMinMax))
@@ -629,7 +629,7 @@ static void KCIntersectBaseBVH(// Output
                     else
                     {
                         // Go left on first entry
-                        currentNode = gBVH + currentNode->left;
+                        currentNode = gBVH + currentNode->body.left;
                         depth--;
                     }
                 }
@@ -648,7 +648,7 @@ static void KCIntersectBaseBVH(// Output
             {
                 // Go to right child
                 MarkAsTraversed(list, depth - 1);
-                currentNode = gBVH + currentNode->right;
+                currentNode = gBVH + currentNode->body.right;
                 depth--;
             }
             // This means both left and right are processed

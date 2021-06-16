@@ -283,6 +283,8 @@ SceneError AssimpMetaSurfaceLoader::PrimitiveDataCount(size_t& total, PrimitiveD
                 total += mesh->mNumFaces * 3ull;
                 break;
             }
+            default:
+                return SceneError::SURFACE_LOADER_INTERNAL_ERROR;
         }
     }
     return SceneError::OK;

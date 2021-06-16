@@ -167,7 +167,7 @@ GPUDistPiecewiseConst1D::GPUDistPiecewiseConst1D(const float* dCDFList,
 __device__ __forceinline__
 float GPUDistPiecewiseConst1D::Sample(float& pdf, float& index, RandomGPU& rng) const
 {
-    float xi = GPUDistribution::Uniform<float>(rng);   
+    float xi = GPUDistribution::Uniform<float>(rng);
 
     GPUFunctions::BinarySearchInBetween<float>(index, xi, gCDF, count);
     uint32_t indexInt = static_cast<uint32_t>(index);
@@ -194,10 +194,10 @@ float GPUDistPiecewiseConst1D::Pdf(float index) const
 }
 
 __host__ __device__ HYBRID_INLINE
-inline GPUDistPiecewiseConst2D::GPUDistPiecewiseConst2D(const GPUDistPiecewiseConst1D dDistributionY,
-                                                        const GPUDistPiecewiseConst1D* dDistributionsX,
-                                                        uint32_t countX,
-                                                        uint32_t countY)
+GPUDistPiecewiseConst2D::GPUDistPiecewiseConst2D(const GPUDistPiecewiseConst1D dDistributionY,
+                                                 const GPUDistPiecewiseConst1D* dDistributionsX,
+                                                 uint32_t countX,
+                                                 uint32_t countY)
     : gDistributionY(dDistributionY)
     , gDistributionsX(dDistributionsX)
     , width(countX)
@@ -205,7 +205,7 @@ inline GPUDistPiecewiseConst2D::GPUDistPiecewiseConst2D(const GPUDistPiecewiseCo
 {}
 
 __device__ __forceinline__
-inline Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, RandomGPU& rng) const
+Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, RandomGPU& rng) const
 {
     // Fist select a row using Y distribution
     float pdfY, indexY;
@@ -226,7 +226,7 @@ inline Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, Ran
 }
 
 __device__ __forceinline__
-inline float GPUDistPiecewiseConst2D::Pdf(const Vector2f& index) const
+float GPUDistPiecewiseConst2D::Pdf(const Vector2f& index) const
 {
     int indexY = static_cast<uint32_t>(index[1]);
 

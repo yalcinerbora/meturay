@@ -6,15 +6,15 @@
 static constexpr uint32_t MAX_UINT32 = std::numeric_limits<uint32_t>::max();
 
 template<class T>
-__device__
+__device__ __forceinline__
 void ImageAccumulatePixel(ImageGMem<T>&, uint32_t location, const T& data);
 
 template<class T>
-__device__
+__device__ __forceinline__
 void ImageSetSample(ImageGMem<T>&, uint32_t location, uint32_t sampleCount);
 
 template<class T>
-__device__
+__device__ __forceinline__
 void ImageAddSample(ImageGMem<T>&, uint32_t location, uint32_t sampleCount);
 
 template<>
@@ -39,14 +39,14 @@ void ImageAccumulatePixel(ImageGMem<Vector3f>& img, uint32_t location, const Vec
 }
 
 template<class T>
-__device__ __forceinline__
+__device__
 void ImageSetSample<T>(ImageGMem<T>& img, uint32_t location, uint32_t sampleCount)
 {
 	img.gSampleCounts[location] = sampleCount;
 }
 
 template<class T>
-__device__ __forceinline__
+__device__
 void ImageAddSample<T>(ImageGMem<T>& img, uint32_t location, uint32_t sampleCount)
 {
 	atomicAdd(&img.gSampleCounts[location], sampleCount);

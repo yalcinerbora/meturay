@@ -334,6 +334,8 @@ SceneError InNodeTriLoaderIndexed::PrimitiveDataCount(size_t& result, PrimitiveD
         case PrimitiveDataType::VERTEX_INDEX:
             result = node.AccessListTotalCount(positionName);
             break;
+        default:
+            return SceneError::SURFACE_LOADER_INTERNAL_ERROR;
     }
     return SceneError::OK;
 }

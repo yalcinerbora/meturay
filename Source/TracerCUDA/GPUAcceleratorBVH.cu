@@ -138,8 +138,8 @@ void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
         assert(splitLoc != end);
 
         // Save AABB
-        node.aabbMin = aabbUnion.Min();
-        node.aabbMax = aabbUnion.Max();
+        node.body.aabbMin = aabbUnion.Min();
+        node.body.aabbMax = aabbUnion.Max();
     }
 }
 
@@ -194,7 +194,7 @@ void GPUBaseAcceleratorBVH::Hit(const CudaSystem& system,
     // Split work into multiple GPU's
     size_t offset = 0;
     int i = 0;
-    for(const CudaGPU& gpu : system.GPUList())
+    for(const CudaGPU& gpu : system.SystemGPUs())
     {
         if(splits[i] == 0) break;
         // Generic
@@ -321,13 +321,15 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&,
 
         bvhNodes.emplace_back(node);
         uint32_t nextParentId = static_cast<uint32_t>(bvhNodes.size() - 1);
-        SplitAxis nextSplit = DetermineNextSplit(current.axis, AABB3(node.aabbMin, node.aabbMax));
+        SplitAxis nextSplit = DetermineNextSplit(current.axis,
+                                                 AABB3(node.body.aabbMin,
+                                                       node.body.aabbMax));
 
         // Update parent
         if(current.parentId != std::numeric_limits<uint32_t>::max())
         {
-            if(current.left) bvhNodes[current.parentId].left = nextParentId;
-            else bvhNodes[current.parentId].right = nextParentId;
+            if(current.left) bvhNodes[current.parentId].body.left = nextParentId;
+            else bvhNodes[current.parentId].body.right = nextParentId;
         }
 
         // Check if not base case and add more generation
@@ -347,8 +349,8 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&,
     dBVH = static_cast<const BVHNode<BaseLeaf>*>(bvhMemory);
 
     // Record Scene AABB
-    sceneAABB = AABB3f(bvhNodes.front().aabbMin,
-                       bvhNodes.front().aabbMax);
+    sceneAABB = AABB3f(bvhNodes.front().body.aabbMin,
+                       bvhNodes.front().body.aabbMax);
 
     // Copy and All Done!
     CUDA_CHECK(cudaMemcpy(bvhMemory, bvhNodes.data(),

@@ -33,8 +33,8 @@ class GPUMaterialGroupT
 {
     public:
         //
-        using Data              = typename D;
-        using Surface           = typename S;
+        using Data              = D;
+        using Surface           = S;
 
         // Static Function Inheritance
         // Device Functions

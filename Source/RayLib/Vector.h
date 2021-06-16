@@ -9,10 +9,9 @@ N should be 2, 3 or 4 at most.
 
 */
 
-#include <algorithm>
+#include <cmath>
 #include <type_traits>
 #include <tuple>
-#include <cmath>
 #include "CudaCheck.h"
 
 template<class T>
@@ -73,12 +72,12 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
                                                        const Args... dataList);
         template <int M, typename = std::enable_if_t<(M >= N)>>
         __device__ __host__                     Vector(const Vector<M, T>&);
-        ~Vector() = default;
+                                                ~Vector() = default;
 
         // MVC bug? these trigger std::trivially_copyable static assert
         // __device__ __host__              Vector(const Vector&) = default;
         // __device__ __host__ Vector&      operator=(const Vector&) = default;
-        
+
         // Accessors
         __device__ __host__ explicit            operator T* ();
         __device__ __host__ explicit            operator const T* () const;
@@ -177,7 +176,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 
 // Left scalars
 template<int N, class T>
-static __device__ __host__ Vector<N, T> operator*(T, const Vector<N, T>&);
+__device__ __host__ HYBRID_INLINE
+Vector<N, T> operator*(T, const Vector<N, T>&);
 
 // Typeless vectors are defaulted to float
 using Vector2 = Vector<2, float>;
@@ -220,11 +220,13 @@ static_assert(sizeof(Vector4) == 16, "Vector4 should be tightly packed");
 
 // Cross product (only for 3d vectors)
 template <class T>
-static __device__ __host__ Vector<3, T> Cross(const Vector<3, T>&, const Vector<3, T>&);
+__device__ __host__ HYBRID_INLINE
+Vector<3, T> Cross(const Vector<3, T>&, const Vector<3, T>&);
 
 // Arbitrary Orthogonal Vector Generation (only for 3D Vectors)
 template <class T>
-static __device__ __host__ Vector<3, T> OrthogonalVector(const Vector<3, T>&);
+__device__ __host__ HYBRID_INLINE
+Vector<3, T> OrthogonalVector(const Vector<3, T>&);
 
 // Implementation
 #include "Vector.hpp"   // CPU & GPU
@@ -280,7 +282,7 @@ struct IsVectorType
         std::is_same<T, Vector4d>::value ||
         std::is_same<T, Vector4i>::value ||
         std::is_same<T, Vector4ui>::value ||
-        std::is_same<T, Vector4s>::value || 
+        std::is_same<T, Vector4s>::value ||
         std::is_same<T, Vector4us>::value;
 };
 

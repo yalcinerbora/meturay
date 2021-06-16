@@ -10,7 +10,7 @@ inline T ConvertTexReturnType(CudaReturn_t<T> cudaData)
         return Vector3f(cudaData.x, cudaData.y, cudaData.z);
     else if constexpr(std::is_same_v<T, Vector4f>)
         return Vector4f(cudaData.x, cudaData.y, cudaData.z, cudaData.w);
-    else static_assert(false, "Up to 4 channel float can be returned from a texture.");
+    else static_assert(always_false<T>, "Up to 4 channel float can be returned from a texture.");
     return T();
 }
 

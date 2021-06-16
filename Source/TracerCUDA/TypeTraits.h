@@ -7,6 +7,8 @@ Tracer Data Structure Type trait
 
 #include <type_traits>
 
+template <class T> constexpr std::false_type always_false{};
+
 template<typename, typename T>
 struct HasTypeNameT
 {

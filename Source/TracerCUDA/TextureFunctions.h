@@ -11,6 +11,7 @@
 #include "GPUBitmap.h"
 
 #include <string>
+#include <cstring>
 #include <FreeImage.h>
 
 template <int D>
@@ -166,7 +167,7 @@ void TextureLoader::PackImageChannelToBits(std::vector<Byte>& bitmap,
                 size_t byteIndex = pixelLinearIndex / BYTE_BITS;
                 size_t byteInnerIndex = pixelLinearIndex % BYTE_BITS;
                 bitmap[byteIndex] |= (0x1 << byteInnerIndex);
-            }            
+            }
         }
     }
 }
@@ -182,7 +183,7 @@ inline std::unique_ptr<TextureLoader>& TextureLoader::Instance()
 
 namespace TextureFunctions
 {
-    // Firstly bitmaps require only one channel check if 
+    // Firstly bitmaps require only one channel check if
     // access layout is single channel
     std::vector<TextureChannelType> TextureAccessLayoutToTextureChannels(TextureAccessLayout);
     uint32_t                        ConvertChannelTypeToChannelIndex(TextureChannelType);

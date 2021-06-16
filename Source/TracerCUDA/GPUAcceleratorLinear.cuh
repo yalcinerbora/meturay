@@ -21,10 +21,12 @@ tree constructio would provide additional overhead.
 #include "RayLib/MemoryAlignment.h"
 
 #include "DeviceMemory.h"
-#include "GPUAcceleratorP.cuh"
-#include "GPUPrimitiveI.h"
 #include "CudaSystem.h"
 #include "TypeTraits.h"
+
+#include "GPUPrimitiveP.cuh"
+#include "GPUAcceleratorP.cuh"
+#include "GPUPrimitiveI.h"
 
 #include "GPUAcceleratorLinearKC.cuh"
 #include "GPUAcceleratorCommonKC.cuh"
@@ -42,7 +44,7 @@ class GPUAccLinearGroup final
     ACCELERATOR_TYPE_NAME("Linear", PGroup);
 
     public:
-        using LeafData                      = PGroup::LeafData;
+        using LeafData                      = typename PGroup::LeafData;
 
     private:
         // CPU Memory

@@ -628,15 +628,15 @@ FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Lerp(const Matrix& mat0, const Matrix
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
-static T Determinant2(const T* m)
+__device__ __host__
+T Determinant2(const T* m)
 {
     return m[0] * m[3] - m[2] * m[1];
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
-static T Determinant3(const T* m)
+__device__ __host__
+T Determinant3(const T* m)
 {
     T det1 = m[0] * (m[4] * m[8] - m[7] * m[5]);
     T det2 = m[3] * (m[1] * m[8] - m[7] * m[2]);
@@ -645,8 +645,8 @@ static T Determinant3(const T* m)
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
-static T Determinant4(const T* m)
+__device__ __host__
+T Determinant4(const T* m)
 {
     // Hardcoded should be most optimizer friendly
     // TODO: Maybe register size etc.. for GPU
@@ -682,8 +682,8 @@ static T Determinant4(const T* m)
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
-static Matrix<2, T> Inverse2(const T* m)
+__device__ __host__
+Matrix<2, T> Inverse2(const T* m)
 {
     Matrix<2, T> result;
     T detRecip = 1 / Determinant2<T>(m);
@@ -696,8 +696,8 @@ static Matrix<2, T> Inverse2(const T* m)
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
-static Matrix<3, T> Inverse3(const T* m)
+__device__ __host__
+Matrix<3, T> Inverse3(const T* m)
 {
     T m11 = m[4] * m[8] - m[7] * m[5];
     T m12 = -(m[1] * m[8] - m[7] * m[2]);
@@ -719,8 +719,8 @@ static Matrix<3, T> Inverse3(const T* m)
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
-static Matrix<4, T> Inverse4(const T* m)
+__device__ __host__
+Matrix<4, T> Inverse4(const T* m)
 {
     // MESA GLUT Copy Paste
     Matrix<4, T> inv;
@@ -844,14 +844,14 @@ static Matrix<4, T> Inverse4(const T* m)
 }
 
 template<int N, class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Matrix<N, T> operator*(float t, const Matrix<N, T>& mat)
 {
     return mat * t;
 }
 
 template<class T, typename>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Vector<3, T> TransformGen::ExtractScale(const Matrix<4, T>& m)
 {
     // This is kinda hacky
@@ -864,14 +864,14 @@ Vector<3, T> TransformGen::ExtractScale(const Matrix<4, T>& m)
 }
 
 template<class T, typename>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Vector<3, T> TransformGen::ExtractTranslation(const Matrix<4, T>& m)
 {
     return Vector<3, T>(m[12], m[13], m[14]);
 }
 
 template<class T, typename>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Matrix<4, T> TransformGen::Translate(const Vector<3, T>& v)
 {
     //  1       0       0       tx
@@ -885,7 +885,7 @@ Matrix<4, T> TransformGen::Translate(const Vector<3, T>& v)
 }
 
 template<class T, typename>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Matrix<4, T> TransformGen::Scale(T s)
 {
     //  s       0       0       0
@@ -899,7 +899,7 @@ Matrix<4, T> TransformGen::Scale(T s)
 }
 
 template<class T, typename>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Matrix<4, T> TransformGen::Scale(T x, T y, T z)
 {
     //  sx      0       0       0
@@ -913,7 +913,7 @@ Matrix<4, T> TransformGen::Scale(T x, T y, T z)
 }
 
 template<class T, typename>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Matrix<4, T> TransformGen::Rotate(T angle, const Vector<3, T>& axis)
 {
     //  r       r       r       0
@@ -952,7 +952,7 @@ Matrix<4, T> TransformGen::Rotate(T angle, const Vector<3, T>& axis)
 }
 
 template<class T, typename>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Matrix<4, T> TransformGen::Rotate(const Quaternion<T>& q)
 {
     //QuatF q = quat.Normalize();
@@ -989,7 +989,7 @@ Matrix<4, T> TransformGen::Rotate(const Quaternion<T>& q)
 }
 
 template<class T, typename>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Matrix<4, T> TransformGen::Perspective(T fovXRadians, T aspectRatio,
                                        T nearPlane, T farPlane)
 {
@@ -997,7 +997,7 @@ Matrix<4, T> TransformGen::Perspective(T fovXRadians, T aspectRatio,
     //  0       p       0       0
     //  0       0       p       -1
     //  0       0       p       0
-    T f = 1 / std::tan(fovXRadians * static_cast<T>(0.5));
+    T f = 1 / tan(fovXRadians * static_cast<T>(0.5));
     T m33 = (farPlane + nearPlane) / (nearPlane - farPlane);
     T m34 = (2 * farPlane * nearPlane) / (nearPlane - farPlane);
     //float m33 = farPlane / (nearPlane - farPlane);
@@ -1010,7 +1010,7 @@ Matrix<4, T> TransformGen::Perspective(T fovXRadians, T aspectRatio,
 }
 
 template<class T, typename>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Matrix<4, T> TransformGen::Ortogonal(T left, T right,
                                      T top, T bottom,
                                      T nearPlane, T farPlane)
@@ -1030,7 +1030,7 @@ Matrix<4, T> TransformGen::Ortogonal(T left, T right,
 }
 
 template<class T, typename>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Matrix<4, T> TransformGen::Ortogonal(T width, T height,
                                             T nearPlane, T farPlane)
 {
@@ -1046,7 +1046,7 @@ Matrix<4, T> TransformGen::Ortogonal(T width, T height,
 }
 
 template<class T, typename>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Matrix<4, T> TransformGen::LookAt(const Vector<3, T>& eyePos,
                                          const Vector<3, T>& at,
                                          const Vector<3, T>& up)
@@ -1064,7 +1064,7 @@ Matrix<4, T> TransformGen::LookAt(const Vector<3, T>& eyePos,
 }
 
 template<class T, typename>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 void TransformGen::Space(Matrix<3, T>& m,
                          const Vector<3, T>& x,
                          const Vector<3, T>& y,
@@ -1076,8 +1076,8 @@ void TransformGen::Space(Matrix<3, T>& m,
 }
 
 template<class T, typename>
-__device__ __host__ HYBRID_INLINE
-void TransformGen::InvSpace(Matrix<3, T>& m, 
+__device__ __host__
+void TransformGen::InvSpace(Matrix<3, T>& m,
                             const Vector<3, T>& x,
                             const Vector<3, T>& y,
                             const Vector<3, T>& z)

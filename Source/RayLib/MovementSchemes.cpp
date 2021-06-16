@@ -150,7 +150,9 @@ bool MovementSchemeMaya::InputAction(VisorCamera&,
         case VisorActionType::MOUSE_TRANSLATE_TOGGLE:
         {
             translateMode = (action == KeyAction::RELEASED) ? false : true;
+            break;
         }
+        default: return false;
     }
     return false;
 }
@@ -214,5 +216,5 @@ bool MovementSchemeMaya::MouseScrollAction(VisorCamera& camera,
         camera.position = lookDir + camera.gazePoint;
         return true;
     }
-    return false;        
+    return false;
 }

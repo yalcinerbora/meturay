@@ -12,6 +12,7 @@ Thread per Block etc..
 #include <set>
 #include <array>
 #include <vector>
+#include <algorithm>
 
 #include "RayLib/Vector.h"
 #include "RayLib/Error.h"
@@ -234,7 +235,7 @@ class CudaSystem
                                                             void* f) const;
 
         // Misc
-        const GPUList&              GPUList() const;
+        const GPUList&              SystemGPUs() const;
         const CudaGPU&              BestGPU() const;
 
         // Device Synchronization
@@ -243,7 +244,7 @@ class CudaSystem
 
 };
 
-inline const GPUList& CudaSystem::GPUList() const
+inline const GPUList& CudaSystem::SystemGPUs() const
 {
     return systemGPUs;
 }

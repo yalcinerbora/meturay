@@ -42,11 +42,11 @@ void GPUBaseAcceleratorLinear::Hit(const CudaSystem& system,
     const auto splits = system.GridStrideMultiGPUSplit(rayCount,
                                                        StaticThreadPerBlock1D,
                                                        0,
-                                                       KCIntersectBaseLinear);
+                                                       reinterpret_cast<void*>(KCIntersectBaseLinear));
     // Split work into multiple GPU's
     size_t offset = 0;
     int i = 0;
-    for(const CudaGPU& gpu : system.GPUList())
+    for(const CudaGPU& gpu : system.SystemGPUs())
     {
         if(splits[i] == 0) break;
         // Generic

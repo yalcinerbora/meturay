@@ -82,39 +82,48 @@ static_assert(sizeof(QuatF) == sizeof(float) * 4, "IEQuaternion size is not 16 b
 
 // Left Scalar operators
 template<class T>
-static __device__ __host__ Quaternion<T> operator*(T, const Quaternion<T>&);
+__device__ __host__ HYBRID_INLINE
+Quaternion<T> operator*(T, const Quaternion<T>&);
 
 // Static Utility
 namespace Quat
 {
     template <class T>
-    static __device__ __host__ Quaternion<T> NLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t);
+    __device__ __host__ HYBRID_INLINE
+    Quaternion<T>           NLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t);
     template <class T>
-    static __device__ __host__ Quaternion<T> SLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t);
+    __device__ __host__ HYBRID_INLINE
+    Quaternion<T>           SLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t);
     template <class T>
-    static __device__ __host__ Quaternion<T> BarySLerp(const Quaternion<T>& q0,
-                                                       const Quaternion<T>& q1,
-                                                       const Quaternion<T>& q2,
-                                                       T a, T b);
+    __device__ __host__ HYBRID_INLINE
+    Quaternion<T>           BarySLerp(const Quaternion<T>& q0,
+                                      const Quaternion<T>& q1,
+                                      const Quaternion<T>& q2,
+                                      T a, T b);
     template <class T>
-    static __device__ __host__ Quaternion<T> RotationBetween(const Vector<3, T>& a, const Vector<3, T>& b);
+    __device__ __host__ HYBRID_INLINE
+    Quaternion<T>           RotationBetween(const Vector<3, T>& a,
+                                            const Vector<3, T>& b);
     template <class T>
-    static __device__ __host__ Quaternion<T> RotationBetweenZAxis(const Vector<3, T>& b);
+    __device__ __host__ HYBRID_INLINE
+    Quaternion<T>           RotationBetweenZAxis(const Vector<3, T>& b);
 }
 
 namespace TransformGen
 {
     template <class T>
-    static __device__ __host__ void Space(Quaternion<T>&,
-                                          const Vector<3, T>& x,
-                                          const Vector<3, T>& y,
-                                          const Vector<3, T>& z);
+    __device__ __host__ HYBRID_INLINE
+    void                    Space(Quaternion<T>&,
+                                  const Vector<3, T>& x,
+                                  const Vector<3, T>& y,
+                                  const Vector<3, T>& z);
 
     template <class T>
-    static __device__ __host__ void InvSpace(Quaternion<T>&,
-                                             const Vector<3, T>& x,
-                                             const Vector<3, T>& y,
-                                             const Vector<3, T>& z);
+    __device__ __host__ HYBRID_INLINE
+    void                    InvSpace(Quaternion<T>&,
+                                     const Vector<3, T>& x,
+                                     const Vector<3, T>& y,
+                                     const Vector<3, T>& z);
 }
 
 // Implementation

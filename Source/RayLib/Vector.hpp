@@ -85,7 +85,7 @@ Vector<N, T>::operator const T* () const
 
 template <int N, class T>
 template<int M, class C, typename>
-__device__ __host__ HYBRID_INLINE 
+__device__ __host__ HYBRID_INLINE
 Vector<N, T>::operator Vector<M, C>() const
 {
     Vector<M, C> result;
@@ -332,7 +332,7 @@ FloatEnable<Q, Vector<N, T>> Vector<N, T>::operator%(const Vector& right) const
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
     {
-        v[i] = std::fmod(vector[i], right[i]);
+        v[i] = fmod(vector[i], right[i]);
     }
     return v;
 }
@@ -585,6 +585,12 @@ template <int N, class T>
 __device__ __host__ HYBRID_INLINE
 Vector<N, T>& Vector<N, T>::ClampSelf(T minVal, T maxVal)
 {
+    // Clang min definition is only on std namespace
+    // this is a crappy workournd
+    #ifndef __CUDA_ARCH__
+        using namespace std;
+    #endif
+
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
     {
@@ -720,6 +726,12 @@ template <int N, class T>
 __device__ __host__ HYBRID_INLINE
 Vector<N, T> Vector<N, T>::Min(const Vector& v0, const Vector& v1)
 {
+    // Clang min definition is only on std namespace
+    // this is a crappy workournd
+    #ifndef __CUDA_ARCH__
+        using namespace std;
+    #endif
+
     Vector v;
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -746,6 +758,12 @@ template <int N, class T>
 __device__ __host__ HYBRID_INLINE
 Vector<N, T> Vector<N, T>::Max(const Vector& v0, const Vector& v1)
 {
+    // Clang min definition is only on std namespace
+    // this is a crappy workournd
+    #ifndef __CUDA_ARCH__
+        using namespace std;
+    #endif
+
     Vector v;
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -784,7 +802,7 @@ FloatEnable<Q, Vector<N, T>> Vector<N, T>::Lerp(const Vector& v0, const Vector& 
 }
 
 template<int N, class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Vector<N, T> operator*(T left, const Vector<N, T>& vec)
 {
     return vec * left;
@@ -792,7 +810,7 @@ Vector<N, T> operator*(T left, const Vector<N, T>& vec)
 
 // Cross product (only for 3d vectors)
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__
 Vector<3, T> Cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
 {
     Vector<3, T> result(v0[1] * v1[2] - v0[2] * v1[1],
@@ -802,7 +820,7 @@ Vector<3, T> Cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
 }
 
 template <class T>
-__device__ __host__ HYBRID_INLINE 
+__device__ __host__
 Vector<3, T> OrthogonalVector(const Vector<3, T>& v)
 {
     // PBRT Book

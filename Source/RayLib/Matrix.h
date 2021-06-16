@@ -43,17 +43,17 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
     __device__ __host__                 Matrix(const Matrix<M, T>&);
     ~Matrix() = default;
 
-// MVC bug? these trigger std::trivially_copyable static assert
-//                                  Matrix(const Matrix&) = default;
-//Matrix&                           operator=(const Matrix&) = default;
+    // MVC bug? these trigger std::trivially_copyable static assert
+    //                                  Matrix(const Matrix&) = default;
+    //Matrix&                           operator=(const Matrix&) = default;
 
-// Accessors
+    // Accessors
     __device__ __host__ explicit                    operator T* ();
     __device__ __host__ explicit                    operator const T* () const;
-    __device__ __host__ T& operator[](int);
-    __device__ __host__ const T& operator[](int) const;
-    __device__ __host__ T& operator()(int row, int column);
-    __device__ __host__ const T& operator()(int row, int column) const;
+    __device__ __host__ T&                          operator[](int);
+    __device__ __host__ const T&                    operator[](int) const;
+    __device__ __host__ T&                          operator()(int row, int column);
+    __device__ __host__ const T&                    operator()(int row, int column) const;
 
     // Modify
     __device__ __host__ void                        operator+=(const Matrix&);
@@ -86,7 +86,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
     template<class Q = T>
     __device__ __host__ FloatEnable<Q, Matrix&>     InverseSelf();
     __device__ __host__ Matrix                      Transpose() const;
-    __device__ __host__ Matrix& TransposeSelf();
+    __device__ __host__ Matrix&                     TransposeSelf();
 
     __device__ __host__ Matrix                      Clamp(const Matrix&, const Matrix&) const;
     __device__ __host__ Matrix                      Clamp(T min, T max) const;
@@ -113,35 +113,35 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
     template<class Q = T>
     static __device__ __host__ FloatEnable<Q, Matrix>   Lerp(const Matrix&, const Matrix&, T);
 
-    static __device__ __host__ Matrix               Min(const Matrix&, const Matrix&);
-    static __device__ __host__ Matrix               Min(const Matrix&, T);
-    static __device__ __host__ Matrix               Max(const Matrix&, const Matrix&);
-    static __device__ __host__ Matrix               Max(const Matrix&, T);
+    static __device__ __host__ Matrix                   Min(const Matrix&, const Matrix&);
+    static __device__ __host__ Matrix                   Min(const Matrix&, T);
+    static __device__ __host__ Matrix                   Max(const Matrix&, const Matrix&);
+    static __device__ __host__ Matrix                   Max(const Matrix&, T);
 };
 
 // Determinants
 template<class T>
-static __device__ __host__ T Determinant2(const T*);
+__device__ __host__ T Determinant2(const T*);
 
 template<class T>
-static __device__ __host__ T Determinant3(const T*);
+__device__ __host__ T Determinant3(const T*);
 
 template<class T>
-static __device__ __host__ T Determinant4(const T*);
+__device__ __host__ T Determinant4(const T*);
 
 // Inverse
 template<class T>
-static __device__ __host__ Matrix<2, T> Inverse2(const T*);
+__device__ __host__ Matrix<2, T> Inverse2(const T*);
 
 template<class T>
-static __device__ __host__ Matrix<3, T> Inverse3(const T*);
+__device__ __host__ Matrix<3, T> Inverse3(const T*);
 
 template<class T>
-static __device__ __host__ Matrix<4, T> Inverse4(const T*);
+__device__ __host__ Matrix<4, T> Inverse4(const T*);
 
 // Left Scalar operators
 template<int N, class T>
-static __device__ __host__ Matrix<N, T> operator*(float, const Matrix<N, T>&);
+__device__ __host__ Matrix<N, T> operator*(float, const Matrix<N, T>&);
 
 // Typeless matrices are defaulted to float
 using Matrix2x2 = Matrix<2, float>;
@@ -178,44 +178,57 @@ namespace TransformGen
 {
     // Extraction Functions
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ Vector<3, T>     ExtractScale(const Matrix<4, T>&);
+    __device__ __host__ HYBRID_INLINE
+    Vector<3, T>     ExtractScale(const Matrix<4, T>&);
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ Vector<3, T>     ExtractTranslation(const Matrix<4, T>&);
+    __device__ __host__ HYBRID_INLINE
+    Vector<3, T>     ExtractTranslation(const Matrix<4, T>&);
 
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ Matrix<4, T>     Translate(const Vector<3, T>&);
+    __device__ __host__ HYBRID_INLINE
+    Matrix<4, T>     Translate(const Vector<3, T>&);
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ Matrix<4, T>     Scale(T);
+    __device__ __host__ HYBRID_INLINE
+    Matrix<4, T>     Scale(T);
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ Matrix <4, T>    Scale(T x, T y, T z);
+    __device__ __host__ HYBRID_INLINE
+    Matrix <4, T>    Scale(T x, T y, T z);
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ Matrix<4, T>     Rotate(T angle, const Vector<3, T>&);
+    __device__ __host__ HYBRID_INLINE
+    Matrix<4, T>     Rotate(T angle, const Vector<3, T>&);
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ Matrix<4, T>     Rotate(const Quaternion<T>&);
+    __device__ __host__ HYBRID_INLINE
+    Matrix<4, T>     Rotate(const Quaternion<T>&);
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ Matrix<4, T>     Perspective(T fovXRadians, T aspectRatio,
-                                                            T nearPlane, T farPlane);
+    __device__ __host__ HYBRID_INLINE
+    Matrix<4, T>     Perspective(T fovXRadians, T aspectRatio,
+                                 T nearPlane, T farPlane);
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ Matrix<4, T>     Ortogonal(T left, T right,
-                                                          T top, T bottom,
-                                                          T nearPlane, T farPlane);
+    __device__ __host__ HYBRID_INLINE
+    Matrix<4, T>     Ortogonal(T left, T right,
+                               T top, T bottom,
+                               T nearPlane, T farPlane);
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ Matrix<4, T>     Ortogonal(T width, T height,
-                                                          T nearPlane, T farPlane);
+    __device__ __host__ HYBRID_INLINE
+    Matrix<4, T>     Ortogonal(T width, T height,
+                               T nearPlane, T farPlane);
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ Matrix<4, T>     LookAt(const Vector<3, T>& eyePos,
-                                                       const Vector<3, T>& at,
-                                                       const Vector<3, T>& up);
+    __device__ __host__ HYBRID_INLINE
+    Matrix<4, T>     LookAt(const Vector<3, T>& eyePos,
+                            const Vector<3, T>& at,
+                            const Vector<3, T>& up);
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ void             Space(Matrix<3, T>&,
-                                                      const Vector<3, T>& x,
-                                                      const Vector<3, T>& y,
-                                                      const Vector<3, T>& z);
+    __device__ __host__ HYBRID_INLINE
+    void             Space(Matrix<3, T>&,
+                           const Vector<3, T>& x,
+                           const Vector<3, T>& y,
+                           const Vector<3, T>& z);
     template<class T, typename = FloatEnable<T>>
-    static __device__ __host__ void             InvSpace(Matrix<3, T>&,
-                                                         const Vector<3, T>& x,
-                                                         const Vector<3, T>& y,
-                                                         const Vector<3, T>& z);
+    __device__ __host__ HYBRID_INLINE
+    void             InvSpace(Matrix<3, T>&,
+                              const Vector<3, T>& x,
+                              const Vector<3, T>& y,
+                              const Vector<3, T>& z);
 }
 
 // Implementation

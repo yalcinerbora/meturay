@@ -169,8 +169,8 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
         assert(splitLoc != end);
 
         // Save AABB
-        node.aabbMin = aabbUnion.Min();
-        node.aabbMax = aabbUnion.Max();
+        node.body.aabbMin = aabbUnion.Min();
+        node.body.aabbMax = aabbUnion.Max();
     }
     else
     {
@@ -266,8 +266,8 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
         splitLoc = partitionSplit + start;
 
         // Init Nodes
-        node.aabbMin = aabb.Min();
-        node.aabbMax = aabb.Max();
+        node.body.aabbMin = aabb.Min();
+        node.body.aabbMax = aabb.Max();
     }
 }
 
@@ -594,13 +594,15 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
         bvhNodes.emplace_back(node);
         uint32_t nextParentId = static_cast<uint32_t>(bvhNodes.size() - 1);
-        SplitAxis nextSplit = DetermineNextSplit(current.axis, AABB3(node.aabbMin, node.aabbMax));
+        SplitAxis nextSplit = DetermineNextSplit(current.axis,
+                                                 AABB3(node.body.aabbMin,
+                                                       node.body.aabbMax));
 
         // Update parent
         if(current.parentId != std::numeric_limits<uint32_t>::max())
         {
-            if(current.left) bvhNodes[current.parentId].left = nextParentId;
-            else bvhNodes[current.parentId].right = nextParentId;
+            if(current.left) bvhNodes[current.parentId].body.left = nextParentId;
+            else bvhNodes[current.parentId].body.right = nextParentId;
         }
 
         // Check if not base case and add more generation
@@ -626,8 +628,8 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     //METU_LOG("-------");
 
     // Before copying get roots AABB for base accelerator
-    AABB3f accAABB(bvhNodes[0].aabbMin,
-                   bvhNodes[0].aabbMax);
+    AABB3f accAABB(bvhNodes[0].body.aabbMin,
+                   bvhNodes[0].body.aabbMax);
 
     // If constant local primitive's transform requirement is
     // constant local transform,

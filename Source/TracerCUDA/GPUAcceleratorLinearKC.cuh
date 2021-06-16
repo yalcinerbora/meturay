@@ -53,12 +53,12 @@ void KCGenAABBs(// O
 template <class PGroup>
 __global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCConstructLinear(// O
-                              PGroup::LeafData* gLeafOut,
+                              typename PGroup::LeafData* gLeafOut,
                               // Input
                               const Vector2ul* gAccRanges,
                               const HKList mkList,
                               const PRList prList,
-                              const PGroup::PrimitiveData primData,
+                              const typename PGroup::PrimitiveData primData,
                               const uint32_t accIndex)
 {
     // Fetch Types from Template Classes
@@ -66,7 +66,7 @@ static void KCConstructLinear(// O
 
     // Your Data
     const Vector2ul accRange = gAccRanges[accIndex];
-    const uint32_t leafCount = static_cast<const uint32_t>(accRange[1]-accRange[0]);
+    const uint32_t leafCount = static_cast<uint32_t>(accRange[1]-accRange[0]);
     LeafData* gAccLeafs = gLeafOut + accRange[0];
 
     // SceneConstants
@@ -131,13 +131,13 @@ static void KCIntersectLinear(// O
                               const HitKey* gAccelKeys,
                               const uint32_t rayCount,
                               // Constants
-                              const PGroup::LeafData* gLeafList,
+                              const typename PGroup::LeafData* gLeafList,
                               const Vector2ul* gAccRanges,
                               const GPUTransformI** gTransforms,
                               const TransformId* gAccTransformIds,
                               PrimTransformType transformType,
                               //
-                              const PGroup::PrimitiveData primData)
+                              const typename PGroup::PrimitiveData primData)
 {
     // Fetch Types from Template Classes
     using HitData = typename PGroup::HitData;       // HitRegister is defined by primitive
@@ -195,7 +195,7 @@ static void KCIntersectLinear(// O
         }
         // Write Updated Stuff
         if(hitModified)
-        {            
+        {
             ray.UpdateTMax(gRays, id);
             gHitStructs.Ref<HitData>(id) = hit;
             gTransformIds[id] = transformId;

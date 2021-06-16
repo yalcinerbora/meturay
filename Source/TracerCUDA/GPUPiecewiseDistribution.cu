@@ -34,7 +34,7 @@ DeviceHostMulDivideComboFunctor<T>::DeviceHostMulDivideComboFunctor(const T& dDi
 
 template <class T>
 __device__  __forceinline__
-inline T DeviceHostMulDivideComboFunctor<T>::operator()(const T& in) const
+T DeviceHostMulDivideComboFunctor<T>::operator()(const T& in) const
 {
     return in * mulValue / gDivValue;
 }
@@ -274,7 +274,7 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
             // Normalize CDF with the total accumulation (last element)
             // to perfectly match the [0,1) interval
             DeviceDivideFunctor<float> cdfNormFunctor(static_cast<float>(dRowCDF[dim[0]]));
-            TransformArrayGPU(dRowCDF, dim[0] + 1, cdfNormFunctor);   
+            TransformArrayGPU(dRowCDF, dim[0] + 1, cdfNormFunctor);
         }
 
         float* dYPDF = const_cast<float*>(distData.dYPDF);
