@@ -382,9 +382,9 @@ void PPGTracer::Finalize()
         uint32_t treeSwapIterationCount = Utility::FindLastSet32(nextTreeSwap) - 1;
         uint32_t currentSTreeSplitThreshold = static_cast<uint32_t>((std::pow(2.0f, treeSwapIterationCount) *
                                                                      options.sTreeSplitThreshold));
-
+        METU_LOG("STreeSplit %u", currentSTreeSplitThreshold);
         // Split and Swap the trees
-        sTree->SplitAndSwapTrees(options.sTreeSplitThreshold,
+        sTree->SplitAndSwapTrees(currentSTreeSplitThreshold,
                                  options.dTreeSplitThreshold,
                                  options.maxDTreeDepth,
                                  cudaSystem);
@@ -395,27 +395,27 @@ void PPGTracer::Finalize()
                  mbSize,
                  sTree->TotalTreeCount());
               
-        //// DEBUG
-        //CUDA_CHECK(cudaDeviceSynchronize());
-        ////std::string iterAsString = std::to_string(currentTreeIteration);
-        //std::string iterAsString = "0";
-        //// STree
-        //STreeGPU sTreeGPU;
-        //std::vector<STreeNode> sNodes;
-        //sTree->GetTreeToCPU(sTreeGPU, sNodes);
-        //Debug::DumpMemToFile(iterAsString + "_sTree", &sTreeGPU, 1, true);
-        //Debug::DumpMemToFile(iterAsString + "_sTree_N", sNodes.data(), sNodes.size(), true);
-        //// PrintEveryDTree
-        //std::vector<DTreeGPU> dTreeGPUs;
-        //std::vector<std::vector<DTreeNode>> dTreeNodes;
-        //sTree->GetAllDTreesToCPU(dTreeGPUs, dTreeNodes, true);
-        //Debug::DumpMemToFile(iterAsString + "__dTrees",
-        //                     dTreeGPUs.data(), dTreeGPUs.size());
-        //for(size_t i = 0; i < dTreeNodes.size(); i++)
-        //{            
-        //    Debug::DumpMemToFile(iterAsString + "__dTree_N",
-        //                         dTreeNodes[i].data(), dTreeNodes[i].size(), true);
-        //}
+        // DEBUG
+        CUDA_CHECK(cudaDeviceSynchronize());
+        //std::string iterAsString = std::to_string(currentTreeIteration);
+        std::string iterAsString = "";
+        // STree
+        STreeGPU sTreeGPU;
+        std::vector<STreeNode> sNodes;
+        sTree->GetTreeToCPU(sTreeGPU, sNodes);
+        Debug::DumpMemToFile(iterAsString + "_sTree", &sTreeGPU, 1, true);
+        Debug::DumpMemToFile(iterAsString + "_sTree_N", sNodes.data(), sNodes.size(), true);
+        // PrintEveryDTree
+        std::vector<DTreeGPU> dTreeGPUs;
+        std::vector<std::vector<DTreeNode>> dTreeNodes;
+        sTree->GetAllDTreesToCPU(dTreeGPUs, dTreeNodes, true);
+        Debug::DumpMemToFile(iterAsString + "__dTrees",
+                             dTreeGPUs.data(), dTreeGPUs.size(), true);
+        for(size_t i = 0; i < dTreeNodes.size(); i++)
+        {            
+            Debug::DumpMemToFile(iterAsString + "__dTree_N",
+                                 dTreeNodes[i].data(), dTreeNodes[i].size(), true);
+        }
 
         // Completely Reset the Image
         // This is done to eliminate variance from prev samples

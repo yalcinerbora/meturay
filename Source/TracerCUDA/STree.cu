@@ -234,6 +234,7 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
                               cudaMemcpyDeviceToHost));
 
         // Create the tree copies
+        dTrees.reserve(dTrees.size() + extraTreeCount * 5);
         for(uint32_t i = 0; i < extraTreeCount; i++)
         {
             // Copy the old tree to the new

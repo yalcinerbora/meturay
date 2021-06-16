@@ -77,7 +77,13 @@ float DTreeNode::LocalPDF(uint8_t childIndex) const
 __device__ __forceinline__
 uint8_t DTreeNode::DetermineChild(const Vector2f& localCoords) const
 {
-    assert(localCoords <= Vector3(1.0f) && localCoords >= Vector3(0.0f));
+    //assert(localCoords <= Vector3(1.0f) && localCoords >= Vector3(0.0f));
+    if(localCoords > Vector3(1.0f) || localCoords < Vector3(0.0f))
+    {
+        printf("OUT OF RANGE LOCALS %f %f\n",
+               localCoords[0], localCoords[1]);
+    }
+
     uint8_t result = 0b00;
     if(localCoords[0] > 0.5f) result |= (1 << 0) & (0b01);
     if(localCoords[1] > 0.5f) result |= (1 << 1) & (0b10);
@@ -235,15 +241,15 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
             // Calculate current pdf and incorporate to the
             // main pdf conditionally
             if(xi[0] < 0.0f || xi[0] >= 1.0f)
-                printf("XI[0] OUT OF RANGE %f = cdf(%f, %f), I(%f %f %f %f)\n",
-                       xi[0], cdfMidX, cdfMidY, 
+                printf("%d: XI[0] OUT OF RANGE %f = cdf(%f, %f), I(%f %f %f %f)\n",
+                       i, xi[0], cdfMidX, cdfMidY, 
                        node->irradianceEstimates[0],
                        node->irradianceEstimates[1],
                        node->irradianceEstimates[2],
                        node->irradianceEstimates[3]);
             if(xi[1] < 0.0f || xi[1] >= 1.0f)
-                printf("XI[1] OUT OF RANGE %f = cdf(%f, %f), I(%f %f %f %f)\n",
-                       xi[1], cdfMidX, cdfMidY,
+                printf("%d: XI[1] OUT OF RANGE %f = cdf(%f, %f), I(%f %f %f %f)\n",
+                       i, xi[1], cdfMidX, cdfMidY,
                        node->irradianceEstimates[0],
                        node->irradianceEstimates[1],
                        node->irradianceEstimates[2],
