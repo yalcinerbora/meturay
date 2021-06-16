@@ -95,10 +95,10 @@ void DTree::DTreeBuffer::ResetAndReserve(size_t newNodeCount,
     nodeCount = 0;
 }
 
-void DTree::DTreeBuffer::CopyGPUNodeCountToCPU()
+void DTree::DTreeBuffer::CopyGPUNodeCountToCPU(cudaStream_t stream)
 {
-    CUDA_CHECK(cudaMemcpy(&nodeCount, reinterpret_cast<Byte*>(dDTree) + offsetof(DTreeGPU, nodeCount),
-                          sizeof(uint32_t), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpyAsync(&nodeCount, reinterpret_cast<Byte*>(dDTree) + offsetof(DTreeGPU, nodeCount),
+                               sizeof(uint32_t), cudaMemcpyDeviceToHost, stream));
 }
 
 void DTree::DTreeBuffer::DumpTree(DTreeGPU& treeCPU, std::vector<DTreeNode>& nodesCPU) const
@@ -190,7 +190,8 @@ void DTree::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        fluxRatio,
                        depthLimit,
                        nodeCount);
-    readTree.CopyGPUNodeCountToCPU();
+    readTree.CopyGPUNodeCountToCPU(stream);
+    CUDA_CHECK(cudaStreamSynchronize(stream));
 
     //readTree.DumpTree(treeGPU, nodes);
     //Debug::DumpMemToFile("RT_FINAL_N", nodes.data(), nodes.size());
@@ -224,6 +225,8 @@ void DTree::AddRadiancesFromPaths(const uint32_t* dNodeIndexArray,
     CUDA_CHECK(cudaMemcpy(&hSamples, &writeTree.TreeGPU()->totalSamples,
                           sizeof(uint32_t), cudaMemcpyDeviceToHost));
     hSamples += totalSampleCount;
+
+    METU_LOG("NewSamples %u-------------------", hSamples);
     CUDA_CHECK(cudaMemcpy(&writeTree.TreeGPU()->totalSamples, &hSamples,
                           sizeof(uint32_t), cudaMemcpyHostToDevice));               
 }

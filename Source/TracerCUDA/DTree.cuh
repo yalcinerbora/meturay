@@ -50,7 +50,7 @@ class DTree
                 void                ResetAndReserve(size_t nodeCount,
                                                     const CudaGPU&,
                                                     cudaStream_t);
-                void                CopyGPUNodeCountToCPU();
+                void                CopyGPUNodeCountToCPU(cudaStream_t stream);
                 size_t              UsedGPUMemory() const;
 
                 void                DumpTree(DTreeGPU&, std::vector<DTreeNode>&) const;
@@ -127,7 +127,7 @@ inline const DTreeGPU* DTree::TreeGPU(bool fetchReadTree) const
 inline size_t DTree::UsedGPUMemory() const
 {
     return (writeTree.UsedGPUMemory() +
-            writeTree.UsedGPUMemory());
+            readTree.UsedGPUMemory());
 }
 
 inline size_t DTree::UsedCPUMemory() const
