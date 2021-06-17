@@ -274,7 +274,7 @@ const std::vector<size_t> CudaSystem::GridStrideMultiGPUSplit(size_t workCount,
     size_t workDispatched = 0;
     //const uint32_t totalWorkPerSM = (workCount + totalSMs - 1) / totalSMs;
     int i = 0;
-    for(const CudaGPU& g : GPUList())
+    for(const CudaGPU& g : systemGPUs)
     {
         // Send Data
         size_t workPerBlock = threadCount * iterationPerThread;

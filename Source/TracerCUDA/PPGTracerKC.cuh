@@ -136,14 +136,14 @@ void PPGTracerBoundaryWork(// Output
             DTreeGPU* dWriteTree = renderState.gWriteDTrees[dTreeIndex];
             dWriteTree->AddRadianceToLeaf(r.getDirection(), Utility::RGBToLuminance(total));
 
-            if(total != Vector3f(0.0f))
-            {
-                Vector3 position = r.AdvancedPos(ray.tMax);
+            //if(total != Vector3f(0.0f))
+            //{
+            //    Vector3 position = r.AdvancedPos(ray.tMax);
 
-                //printf("Final Add - D: %f %f %f = %f\n",
-                //       r.getDirection()[0], r.getDirection()[1], r.getDirection()[2],
-                //       Utility::RGBToLuminance(total));
-            }
+            //    printf("Final Add - D: %f %f %f = %f\n",
+            //           r.getDirection()[0], r.getDirection()[1], r.getDirection()[2],
+            //           Utility::RGBToLuminance(total));
+            //}
         }
     }
 }
@@ -394,11 +394,11 @@ void PPGTracerPathWork(// Output
     uint8_t currentDepth = aux.depth + 1;
     uint8_t prevDepth = aux.depth;
     PathGuidingNode node;
-    //printf("WritingNode PC:(%u %u) W:(%f, %f, %f) RF:(%f, %f, %f) Path: %u\n",
+    //printf("WritingNode PC:(%u %u) W:(%f, %f, %f) RF:(%f, %f, %f) Path: %u DT %u\n",
     //       static_cast<uint32_t>(prevDepth), static_cast<uint32_t>(currentDepth),
     //       position[0], position[1], position[2],
     //       pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
-    //       aux.pathIndex);
+    //       aux.pathIndex, dTreeIndex);
 
     node.prevNext[1] = PathGuidingNode::InvalidIndex;
     node.prevNext[0] = prevDepth;

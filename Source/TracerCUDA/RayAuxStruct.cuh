@@ -137,7 +137,6 @@ class RayAuxInitPath
         }
 };
 
-
 class RayAuxInitAO
 {
     private:

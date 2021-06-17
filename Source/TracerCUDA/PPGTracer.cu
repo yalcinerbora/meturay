@@ -13,31 +13,31 @@
 
 #include "TracerDebug.h"
 
-//std::ostream& operator<<(std::ostream& stream, const RayAuxPPG& v)
-//{
-//    stream << std::setw(0)
-//        << v.pixelIndex << ", "
-//        << "{" << v.radianceFactor[0]
-//        << "," << v.radianceFactor[1]
-//        << "," << v.radianceFactor[2] << "} "
-//        << v.endPointIndex << ", "
-//        << v.mediumIndex << " ";
-//    switch(v.type)
-//    {
-//        case RayType::CAMERA_RAY:
-//            stream << "CAMERA_RAY";
-//            break;
-//        case RayType::NEE_RAY:
-//            stream << "NEE_RAY";
-//            break;
-//        case RayType::SPECULAR_PATH_RAY:
-//            stream << "SPEC_PATH_RAY";
-//            break;
-//        case RayType::PATH_RAY:
-//            stream << "PATH_RAY";
-//    }
-//    return stream;
-//}
+std::ostream& operator<<(std::ostream& stream, const RayAuxPPG& v)
+{
+    stream << std::setw(0)
+        << v.pixelIndex << ", "
+        << "{" << v.radianceFactor[0]
+        << "," << v.radianceFactor[1]
+        << "," << v.radianceFactor[2] << "} "
+        << v.endPointIndex << ", "
+        << v.mediumIndex << " ";
+    switch(v.type)
+    {
+        case RayType::CAMERA_RAY:
+            stream << "CAMERA_RAY";
+            break;
+        case RayType::NEE_RAY:
+            stream << "NEE_RAY";
+            break;
+        case RayType::SPECULAR_PATH_RAY:
+            stream << "SPEC_PATH_RAY";
+            break;
+        case RayType::PATH_RAY:
+            stream << "PATH_RAY";
+    }
+    return stream;
+}
 
 __global__
 static void KCInitializePaths(PathGuidingNode* gPathNodes,
