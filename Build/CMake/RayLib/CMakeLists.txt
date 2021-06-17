@@ -20,7 +20,7 @@ set(SRC_ERRORS
     ${CURRENT_SOURCE_DIR}/TracerError.h
     ${CURRENT_SOURCE_DIR}/VisorError.h)
 
-set(SRC_FILE_IO 
+set(SRC_FILE_IO
     ${CURRENT_SOURCE_DIR}/ConfigParsers.cpp
     ${CURRENT_SOURCE_DIR}/ConfigParsers.h
     ${CURRENT_SOURCE_DIR}/EnumStringConversions.cpp
@@ -34,7 +34,7 @@ set(SRC_FILE_IO
     ${CURRENT_SOURCE_DIR}/SceneNodeI.h
     ${CURRENT_SOURCE_DIR}/SceneNodeNames.h)
 
-set(SRC_INTERFACES 
+set(SRC_INTERFACES
     ${CURRENT_SOURCE_DIR}/CommandCallbacksI.h
     ${CURRENT_SOURCE_DIR}/GPUSceneI.h
     ${CURRENT_SOURCE_DIR}/GPUTracerI.h
@@ -46,8 +46,8 @@ set(SRC_INTERFACES
     ${CURRENT_SOURCE_DIR}/VisorCallbacksI.h
     ${CURRENT_SOURCE_DIR}/VisorI.h
     ${CURRENT_SOURCE_DIR}/VisorInputI.h)
-    
-set(SRC_MATH 
+
+set(SRC_MATH
     ${CURRENT_SOURCE_DIR}/AABB.cu
     ${CURRENT_SOURCE_DIR}/AABB.h
     ${CURRENT_SOURCE_DIR}/AABB.hpp
@@ -68,25 +68,25 @@ set(SRC_MATH
     ${CURRENT_SOURCE_DIR}/Vector.h
     ${CURRENT_SOURCE_DIR}/Vector.hpp)
 
-set(SRC_NODES 
+set(SRC_NODES
     ${CURRENT_SOURCE_DIR}/AnalyticNodeI.h
     ${CURRENT_SOURCE_DIR}/SelfNode.cpp
     ${CURRENT_SOURCE_DIR}/SelfNode.h
     ${CURRENT_SOURCE_DIR}/TracerNode.h
     ${CURRENT_SOURCE_DIR}/VisorNode.h)
 
-set(SRC_STRUCTS 
+set(SRC_STRUCTS
     ${CURRENT_SOURCE_DIR}/AnalyticData.h
     ${CURRENT_SOURCE_DIR}/ArrayPortion.h
     ${CURRENT_SOURCE_DIR}/HitStructs.h
     ${CURRENT_SOURCE_DIR}/ImageStructs.h
     ${CURRENT_SOURCE_DIR}/SceneStructs.h
     ${CURRENT_SOURCE_DIR}/TracerStatus.h
-    ${CURRENT_SOURCE_DIR}/TracerStructs.h    
+    ${CURRENT_SOURCE_DIR}/TracerStructs.h
     ${CURRENT_SOURCE_DIR}/VisorCamera.h
     ${CURRENT_SOURCE_DIR}/VisorInputStructs.h)
 
-set(SRC_SURFACE_LOADER 
+set(SRC_SURFACE_LOADER
     ${CURRENT_SOURCE_DIR}/BasicSurfaceLoaders.cpp
     ${CURRENT_SOURCE_DIR}/BasicSurfaceLoaders.h
     ${CURRENT_SOURCE_DIR}/SurfaceLoaderGenerator.cpp
@@ -94,7 +94,7 @@ set(SRC_SURFACE_LOADER
     ${CURRENT_SOURCE_DIR}/SurfaceLoaderGeneratorI.h
     ${CURRENT_SOURCE_DIR}/SurfaceLoaderI.h
     ${CURRENT_SOURCE_DIR}/SurfaceLoaderPoolI.h)
-    
+
 set(SRC_SYSTEM
     ${CURRENT_SOURCE_DIR}/Endian.h
     ${CURRENT_SOURCE_DIR}/ObjectFuncDefinitions.h
@@ -124,7 +124,8 @@ set(SRC_UTILITY
     ${CURRENT_SOURCE_DIR}/MemoryAlignment.h
     ${CURRENT_SOURCE_DIR}/StripComments.h
     ${CURRENT_SOURCE_DIR}/TypeTraits.h
-    ${CURRENT_SOURCE_DIR}/UTF8StringConversion.h)
+    ${CURRENT_SOURCE_DIR}/UTF8StringConversion.h
+    ${CURRENT_SOURCE_DIR}/RandomColor.h)
 
 set(SRC_VISOR_INPUT
     ${CURRENT_SOURCE_DIR}/MovementSchemes.cpp
@@ -180,7 +181,7 @@ target_include_directories(RayLib PRIVATE
 
 target_compile_definitions(RayLib PRIVATE ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC})
 
-set_target_properties(RayLib PROPERTIES 
+set_target_properties(RayLib PROPERTIES
                       POSITION_INDEPENDENT_CODE ON
                       CUDA_SEPARABLE_COMPILATION ON
                       CUDA_RESOLVE_DEVICE_SYMBOLS ON)

@@ -20,7 +20,7 @@ __global__ void KCInitRNGStates(const uint32_t* gSeeds, curandStateMRG32k3a_t* g
 RNGMemory::RNGMemory(uint32_t seed,
                      const CudaSystem& system)
 {
-    assert(system.GPUList().size() > 0);
+    assert(system.SystemGPUs().size() > 0);
 
     // CPU Mersenne Twister
     std::mt19937 rng;
@@ -29,7 +29,7 @@ RNGMemory::RNGMemory(uint32_t seed,
     // Determine GPU
     size_t totalCount = 0;
     std::vector<Vector2ul> ranges;
-    for(const auto& gpu : system.GPUList())
+    for(const auto& gpu : system.SystemGPUs())
     {
         ranges.push_back(Vector2ul(0));
         ranges.back()[0] = totalCount;
@@ -56,7 +56,7 @@ RNGMemory::RNGMemory(uint32_t seed,
     curandStateMRG32k3a_t* d_ptr = static_cast<curandStateMRG32k3a_t*>(memRandom);
 
     size_t totalOffset = 0;
-    for(const auto& gpu : system.GPUList())
+    for(const auto& gpu : system.SystemGPUs())
     {
         uint32_t gpuRNGStateCount = gpu.MaxActiveBlockPerSM() * gpu.SMCount() * StaticThreadPerBlock1D;
         randomStacks.emplace(&gpu, RNGGMem{d_ptr + totalOffset, gpuRNGStateCount});
@@ -66,7 +66,7 @@ RNGMemory::RNGMemory(uint32_t seed,
 
     // Make all GPU do its own
     int i = 0;
-    for(const auto& gpu : system.GPUList())
+    for(const auto& gpu : system.SystemGPUs())
     {
         gpu.GridStrideKC_X(0, 0, totalCount,
                            KCInitRNGStates,

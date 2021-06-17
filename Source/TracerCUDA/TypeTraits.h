@@ -7,6 +7,9 @@ Tracer Data Structure Type trait
 
 #include <type_traits>
 
+class GPUPrimitiveGroupI;
+class CudaGPU;
+
 template <class T> constexpr std::false_type always_false{};
 
 template<typename, typename T>

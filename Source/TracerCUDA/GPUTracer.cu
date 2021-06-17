@@ -354,8 +354,8 @@ void GPUTracer::HitAndPartitionRays()
         // (group partitions into gpus and order for better async access)
         // ....
         // TODO:
-        const int totalGPU = static_cast<int>(cudaSystem.GPUList().size());
-        const auto& gpus = cudaSystem.GPUList();
+        const int totalGPU = static_cast<int>(cudaSystem.SystemGPUs().size());
+        const auto& gpus = cudaSystem.SystemGPUs();
         auto currentGPU = gpus.begin();
 
         // For each partition

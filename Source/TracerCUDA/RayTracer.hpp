@@ -32,7 +32,7 @@ void RayTracer::GenerateRays(uint32_t sceneCamId, int32_t sampleCount,
     // however not perfectly balanced... (as all things should be))
     int i = 0;
     Vector2i localPixelStart = Zero2i;
-    for(const CudaGPU& gpu : cudaSystem.GPUList())
+    for(const CudaGPU& gpu : cudaSystem.SystemGPUs())
     {
         // If no work is splitted to this GPU skip
         if(splits[i] == 0) break;
@@ -127,7 +127,7 @@ void RayTracer::GenerateRays(const VisorCamera& cam, int32_t sampleCount,
     // however not perfectly balanced... (as all things should be))
     int i = 0;
     Vector2i localPixelStart = Zero2i;
-    for(const CudaGPU& gpu : cudaSystem.GPUList())
+    for(const CudaGPU& gpu : cudaSystem.SystemGPUs())
     {
         // If no work is splitted to this GPU skip
         if(splits[i] == 0) break;

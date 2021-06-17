@@ -273,7 +273,7 @@ void STree::AccumulateRaidances(const PathGuidingNode* dPGNodes,
                  FetchTreeIdFunctor(),
                  static_cast<uint32_t>(dTrees.size()));
 
-    const GPUList& gpuList = system.GPUList();
+    const GPUList& gpuList = system.SystemGPUs();
     auto currentGPU = gpuList.cbegin();
     // Call kernels
     for(const auto& partition : partitions)
@@ -298,7 +298,7 @@ void STree::AccumulateRaidances(const PathGuidingNode* dPGNodes,
 
 void STree::SwapTrees(float fluxRatio, uint32_t depthLimit, const CudaSystem& system)
 {
-    const GPUList& gpuList = system.GPUList();
+    const GPUList& gpuList = system.SystemGPUs();
     auto currentGPU = gpuList.cbegin();
     for(DTree& dTree : dTrees)
     {
