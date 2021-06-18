@@ -13,13 +13,18 @@
 
 template<class PGroup>
 class AmbientOcclusionWork
-    : public GPUWorkBatch<AmbientOcclusionGlobalState, 
+    : public GPUWorkBatch<AmbientOcclusionGlobalState,
                           AmbientOcclusionLocalState, RayAuxAO,
                           EmptyMat<BasicSurface>, PGroup, AOWork<EmptyMat<BasicSurface>>,
                           PGroup::GetSurfaceFunction>
 {
     public:
-        static const char*              TypeName() { return TypeNameGen("AO"); }
+        using Base = GPUWorkBatch<AmbientOcclusionGlobalState,
+                                  AmbientOcclusionLocalState, RayAuxAO,
+                                  EmptyMat<BasicSurface>, PGroup, AOWork<EmptyMat<BasicSurface>>,
+                                  PGroup::GetSurfaceFunction>;
+
+        static const char*              TypeName() { return Base::TypeNameGen("AO"); }
 
     protected:
     public:
@@ -36,7 +41,7 @@ class AmbientOcclusionWork
 };
 
 class AmbientOcclusionMissWork
-    : public GPUWorkBatch<AmbientOcclusionGlobalState, 
+    : public GPUWorkBatch<AmbientOcclusionGlobalState,
                           AmbientOcclusionLocalState, RayAuxAO,
                           EmptyMat<EmptySurface>, GPUPrimitiveEmpty, AOMissWork<EmptyMat<EmptySurface>>,
                           GPUPrimitiveEmpty::GetSurfaceFunction>
@@ -73,7 +78,7 @@ AmbientOcclusionWork<P>::AmbientOcclusionWork(const GPUMaterialGroupI& mg,
 inline AmbientOcclusionMissWork::AmbientOcclusionMissWork(const GPUMaterialGroupI& mg,
                                                           const GPUPrimitiveGroupI& pg,
                                                           const GPUTransformI* const* t)
-    : GPUWorkBatch<AmbientOcclusionGlobalState, 
+    : GPUWorkBatch<AmbientOcclusionGlobalState,
                    AmbientOcclusionLocalState, RayAuxAO,
                    EmptyMat<EmptySurface>, GPUPrimitiveEmpty, AOMissWork<EmptyMat<EmptySurface>>,
                    GPUPrimitiveEmpty::GetSurfaceFunction>(mg, pg, t)

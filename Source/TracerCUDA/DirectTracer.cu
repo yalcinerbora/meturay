@@ -88,7 +88,7 @@ bool DirectTracer::Render()
 
         // Set pointers
         const RayAuxBasic* dAuxInGlobal = static_cast<const RayAuxBasic*>(*dAuxIn);
-        using WorkData = typename GPUWorkBatchD<DirectTracerGlobalState, RayAuxBasic>;
+        using WorkData = GPUWorkBatchD<DirectTracerGlobalState, RayAuxBasic>;
         int i = 0;
         for(auto& work : loc->second)
         {

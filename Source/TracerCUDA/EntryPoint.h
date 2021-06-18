@@ -10,7 +10,7 @@
 #endif
 
 extern "C" METU_SHARED_TRACER_CUDA_ENTRY_POINT
-TracerSystemI* __stdcall GenerateTracerSystem();
+TracerSystemI* GenerateTracerSystem();
 
 extern "C" METU_SHARED_TRACER_CUDA_ENTRY_POINT
-void __stdcall DeleteTracerSystem(TracerSystemI*);
+void DeleteTracerSystem(TracerSystemI*);

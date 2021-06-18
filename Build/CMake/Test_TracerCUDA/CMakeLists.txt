@@ -12,6 +12,14 @@ set(SRC_COMMON
 
 source_group("" FILES ${SRC_COMMON})
 
+# Platform Specific Libraries
+if(MSVC)
+    set(PLATFORM_SPEC_LIBRARIES)
+elseif(UNIX)
+    set(PLATFORM_SPEC_LIBRARIES tbb)
+endif()
+
+# Exe
 add_executable(Test_TracerCUDA ${SRC_COMMON})
 
 target_include_directories(Test_TracerCUDA PRIVATE
@@ -30,7 +38,11 @@ set_target_properties(Test_TracerCUDA PROPERTIES
 target_link_libraries(Test_TracerCUDA PRIVATE
                       RayLib
                       TracerCUDA_ForTest
-                      gtest)
+                      $<$<CONFIG:Debug>:gtestd>
+                      $<$<CONFIG:Debug>:gmockd>
+                      $<$<CONFIG:Release>:gtest>
+                      $<$<CONFIG:Release>:gmock>
+                      ${PLATFORM_SPEC_LIBRARIES})
 
 if(MSVC)
 

@@ -43,7 +43,7 @@ TracerError AOTracer::Initialize()
                                          AmbientOcclusionMissWork::TypeName(),
                                          emptyMat, emptyPrim,
                                          dTransforms)) != TracerError::OK)
-        return err;    
+        return err;
     workMap.emplace(aoMissWorkBatchId, WorkBatchArray{aoMissBatch});
 
     // Generate your worklist
@@ -135,9 +135,9 @@ bool AOTracer::Render()
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;
 
-        // Set pointers        
+        // Set pointers
         const RayAuxAO* dAuxInLocal = static_cast<const RayAuxAO*>(*dAuxIn);
-        using WorkData = typename GPUWorkBatchD<AmbientOcclusionGlobalState, RayAuxAO>;
+        using WorkData = GPUWorkBatchD<AmbientOcclusionGlobalState, RayAuxAO>;
         int i = 0;
         for(auto& work : loc->second)
         {

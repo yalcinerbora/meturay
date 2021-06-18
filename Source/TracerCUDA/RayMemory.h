@@ -83,7 +83,7 @@ class RayMemory
                                 RayMemory(const RayMemory&) = delete;
                                 RayMemory(RayMemory&&) = default;
         RayMemory&              operator=(const RayMemory&) = delete;
-        RayMemory&              operator=(RayMemory&&) = default;
+        RayMemory&              operator=(RayMemory&&) = delete;
                                 ~RayMemory() = default;
 
         // Accessors

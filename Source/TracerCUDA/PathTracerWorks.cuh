@@ -19,7 +19,7 @@
 
 template<class MGroup, class PGroup>
 class PTBoundaryWork
-    : public GPUWorkBatch<PathTracerGlobalState, 
+    : public GPUWorkBatch<PathTracerGlobalState,
                           PathTracerLocalState, RayAuxPath,
                           MGroup, PGroup, PathTracerBoundaryWork<MGroup>,
                           PGroup::GetSurfaceFunction>
@@ -27,6 +27,11 @@ class PTBoundaryWork
     private:
         bool                            neeOn;
         bool                            misOn;
+
+        using Base = GPUWorkBatch<PathTracerGlobalState,
+                                  PathTracerLocalState, RayAuxPath,
+                                  MGroup, PGroup, PathTracerBoundaryWork<MGroup>,
+                                  PGroup::GetSurfaceFunction>;
 
     protected:
     public:
@@ -41,12 +46,12 @@ class PTBoundaryWork
         void                            GetReady() override {}
         uint8_t                         OutRayCount() const override { return 0; }
 
-        const char*                     Type() const override { return TypeName(); }
+        const char*                     Type() const override { return Base::TypeName(); }
 };
 
 template<class MGroup, class PGroup>
 class PTComboWork
-    : public GPUWorkBatch<PathTracerGlobalState, 
+    : public GPUWorkBatch<PathTracerGlobalState,
                           PathTracerLocalState, RayAuxPath,
                           MGroup, PGroup, PathTracerComboWork<MGroup>,
                           PGroup::GetSurfaceFunction>
@@ -55,6 +60,10 @@ class PTComboWork
         bool                            neeOn;
         bool                            misOn;
 
+        using Base = GPUWorkBatch<PathTracerGlobalState,
+                                  PathTracerLocalState, RayAuxPath,
+                                  MGroup, PGroup, PathTracerComboWork<MGroup>,
+                                  PGroup::GetSurfaceFunction>;
     protected:
     public:
         // Constrcutors & Destructor
@@ -67,17 +76,21 @@ class PTComboWork
         void                            GetReady() override {}
         uint8_t                         OutRayCount() const override;
 
-        const char*                     Type() const override { return TypeName(); }
+        const char*                     Type() const override { return Base::TypeName(); }
 };
 
 template<class MGroup, class PGroup>
 class PTPathWork
-    : public GPUWorkBatch<PathTracerGlobalState, 
+    : public GPUWorkBatch<PathTracerGlobalState,
                           PathTracerLocalState, RayAuxPath,
                           MGroup, PGroup, PathTracerPathWork<MGroup>,
                           PGroup::GetSurfaceFunction>
 {
     private:
+        using Base = GPUWorkBatch<PathTracerGlobalState,
+                                  PathTracerLocalState, RayAuxPath,
+                                  MGroup, PGroup, PathTracerPathWork<MGroup>,
+                                  PGroup::GetSurfaceFunction>;
     protected:
     public:
         // Constrcutors & Destructor
@@ -89,12 +102,12 @@ class PTPathWork
         void                            GetReady() override {}
         uint8_t                         OutRayCount() const override;
 
-        const char*                     Type() const override { return TypeName(); }
+        const char*                     Type() const override { return Base::TypeName(); }
 };
 
 template<class MGroup, class PGroup>
 class PTNEEWork
-    : public GPUWorkBatch<PathTracerGlobalState, 
+    : public GPUWorkBatch<PathTracerGlobalState,
                           PathTracerLocalState, RayAuxPath,
                           MGroup, PGroup, PathTracerNEEWork<MGroup>,
                           PGroup::GetSurfaceFunction>
@@ -102,6 +115,10 @@ class PTNEEWork
     private:
         bool                            misOn;
 
+        using Base = GPUWorkBatch<PathTracerGlobalState,
+                                  PathTracerLocalState, RayAuxPath,
+                                  MGroup, PGroup, PathTracerNEEWork<MGroup>,
+                                  PGroup::GetSurfaceFunction>;
     protected:
     public:
         // Constrcutors & Destructor
@@ -114,17 +131,21 @@ class PTNEEWork
         void                            GetReady() override {}
         uint8_t                         OutRayCount() const override;
 
-        const char*                     Type() const override { return TypeName(); }
+        const char*                     Type() const override { return Base::TypeName(); }
 };
 
 template<class MGroup, class PGroup>
 class PTMISWork
-    : public GPUWorkBatch<PathTracerGlobalState, 
+    : public GPUWorkBatch<PathTracerGlobalState,
                           PathTracerLocalState, RayAuxPath,
                           MGroup, PGroup, PathTracerMISWork<MGroup>,
                           PGroup::GetSurfaceFunction>
 {
     private:
+        using Base = GPUWorkBatch<PathTracerGlobalState,
+                                  PathTracerLocalState, RayAuxPath,
+                                  MGroup, PGroup, PathTracerMISWork<MGroup>,
+                                  PGroup::GetSurfaceFunction>;
     protected:
     public:
         // Constrcutors & Destructor
@@ -136,7 +157,7 @@ class PTMISWork
         void                            GetReady() override {}
         uint8_t                         OutRayCount() const override;
 
-        const char*                     Type() const override { return TypeName(); }
+        const char*                     Type() const override { return Base::TypeName(); }
 };
 
 template<class M, class P>
@@ -145,7 +166,7 @@ PTBoundaryWork<M, P>::PTBoundaryWork(const GPUMaterialGroupI& mg,
                                      const GPUTransformI* const* t,
                                      bool neeOn, bool misOn,
                                      bool emptyPrimitive)
-    : GPUWorkBatch<PathTracerGlobalState, 
+    : GPUWorkBatch<PathTracerGlobalState,
                    PathTracerLocalState, RayAuxPath,
                    M, P, PathTracerBoundaryWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
@@ -153,7 +174,7 @@ PTBoundaryWork<M, P>::PTBoundaryWork(const GPUMaterialGroupI& mg,
     , misOn(misOn)
 {
     // Populate localData
-    localData.emptyPrimitive = emptyPrimitive;
+    this->localData.emptyPrimitive = emptyPrimitive;
 }
 
 template<class M, class P>
@@ -161,15 +182,15 @@ PTComboWork<M, P>::PTComboWork(const GPUMaterialGroupI& mg,
                                const GPUPrimitiveGroupI& pg,
                                const GPUTransformI* const* t,
                                bool neeOn, bool misOn)
-    : GPUWorkBatch<PathTracerGlobalState, 
+    : GPUWorkBatch<PathTracerGlobalState,
                    PathTracerLocalState, RayAuxPath,
-                   M, P, PathTracerPathWork<M>,
+                   M, P, PathTracerComboWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
     , neeOn(neeOn)
     , misOn(misOn)
 {
     // Populate localData
-    localData.emptyPrimitive = false;
+    this->localData.emptyPrimitive = false;
 }
 
 template<class M, class P>
@@ -177,22 +198,22 @@ uint8_t PTComboWork<M, P>::OutRayCount() const
 {
     // Incorporate NEE Ray as an addition
     // If material can be sampled (i.e no Dirac Delta BxDF)
-    if(!materialGroup.CanBeSampled())
+    if(!this->materialGroup.CanBeSampled())
     {
         // Material Cannot be sampled just allocate whatever
         // the material is requesting
-        return materialGroup.SampleStrategyCount();
+        return this->materialGroup.SampleStrategyCount();
     }
-    else if(materialGroup.SampleStrategyCount() != 0)
+    else if(this->materialGroup.SampleStrategyCount() != 0)
     {
-        // Material can be sampled 
+        // Material can be sampled
         // Add one extra nee ray allocation
         uint8_t neeRay = (neeOn) ? 1 : 0;
         // Add one extra MIS ray for allocation
         // MIS ray is extra NEE ray for multiple importance sampling
         uint8_t misRay = (neeOn && misOn) ? 1 : 0;
 
-        return materialGroup.SampleStrategyCount() + misRay + neeRay;
+        return this->materialGroup.SampleStrategyCount() + misRay + neeRay;
     }
     // Material does not require any samples meaning it is boundary material
     // Do not allocate any rays for this kind of material
@@ -203,19 +224,19 @@ template<class M, class P>
 PTPathWork<M, P>::PTPathWork(const GPUMaterialGroupI& mg,
                              const GPUPrimitiveGroupI& pg,
                              const GPUTransformI* const* t)
-    : GPUWorkBatch<PathTracerGlobalState, 
+    : GPUWorkBatch<PathTracerGlobalState,
                    PathTracerLocalState, RayAuxPath,
                    M, P, PathTracerPathWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
 {
     // Populate localData
-    localData.emptyPrimitive = false;   
+    this->localData.emptyPrimitive = false;
 }
 
 template<class M, class P>
 uint8_t PTPathWork<M, P>::OutRayCount() const
 {
-    return materialGroup.SampleStrategyCount();
+    return this->materialGroup.SampleStrategyCount();
 }
 
 template<class M, class P>
@@ -223,14 +244,14 @@ PTNEEWork<M, P>::PTNEEWork(const GPUMaterialGroupI& mg,
                              const GPUPrimitiveGroupI& pg,
                              const GPUTransformI* const* t,
                              bool misOn)
-    : GPUWorkBatch<PathTracerGlobalState, 
+    : GPUWorkBatch<PathTracerGlobalState,
                    PathTracerLocalState, RayAuxPath,
                    M, P, PathTracerNEEWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
     , misOn(misOn)
 {
     // Populate localData
-    localData.emptyPrimitive = false;   
+    this->localData.emptyPrimitive = false;
 }
 
 template<class M, class P>
@@ -239,7 +260,7 @@ uint8_t PTNEEWork<M, P>::OutRayCount() const
     // If material can be sampled
     // non-zero radiance NEE Ray can be generated
     // else dont generate ray
-    uint8_t neeRay = (materialGroup.CanBeSampled()) ? 1 : 0;
+    uint8_t neeRay = (this->materialGroup.CanBeSampled()) ? 1 : 0;
     return neeRay;
 }
 
@@ -247,13 +268,13 @@ template<class M, class P>
 PTMISWork<M, P>::PTMISWork(const GPUMaterialGroupI& mg,
                            const GPUPrimitiveGroupI& pg,
                            const GPUTransformI* const* t)
-    : GPUWorkBatch<PathTracerGlobalState, 
+    : GPUWorkBatch<PathTracerGlobalState,
                    PathTracerLocalState, RayAuxPath,
                    M, P, PathTracerMISWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
 {
     // Populate localData
-    localData.emptyPrimitive = false;   
+    this->localData.emptyPrimitive = false;
 }
 
 template<class M, class P>
@@ -262,7 +283,7 @@ uint8_t PTMISWork<M, P>::OutRayCount() const
     // If material can be sampled
     // non-zero radiance NEE Ray can be generated
     // else dont generate ray
-    uint8_t misRay = (materialGroup.CanBeSampled()) ? 1 : 0;
+    uint8_t misRay = (this->materialGroup.CanBeSampled()) ? 1 : 0;
     return misRay;
 }
 

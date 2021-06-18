@@ -125,7 +125,7 @@ inline void MockNode::SendImage(const std::vector<Byte> data,
 
 inline void MockNode::SendImageSectionReset(Vector2i start, Vector2i end)
 {
-    visor.ResetSamples(start, end); 
+    visor.ResetSamples(start, end);
 }
 
 inline void MockNode::Work()
@@ -202,7 +202,7 @@ class SimpleTracerSetup
             {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
             {"NextEventEstimation", OptionVariable(false)},
             {"DirectLightMIS", OptionVariable(false)},
-            {"RussianRouletteStart", OptionVariable(5u)},            
+            {"RussianRouletteStart", OptionVariable(5u)},
             {"NEESampler", OptionVariable("Uniform")},
             // AO Related
             {"MaxDistance", OptionVariable(0.17f)},
@@ -241,7 +241,7 @@ class SimpleTracerSetup
                                               bool disableTMO,
                                               std::u8string sceneName,
                                               double sceneTime);
-                            SimpleTracerSetup() = default;
+                            ~SimpleTracerSetup() = default;
 
         bool                Init();
         void                Body();

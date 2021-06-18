@@ -44,7 +44,7 @@ class GPUDistPiecewiseConst1D
 class GPUDistPiecewiseConst2D
 {
     private:
-        const GPUDistPiecewiseConst1D   gDistributionY;
+        GPUDistPiecewiseConst1D         gDistributionY;
         const GPUDistPiecewiseConst1D*  gDistributionsX  = nullptr;
         uint32_t                        width            = 0;
         uint32_t                        height           = 0;

@@ -45,10 +45,10 @@ class EmptyMat final
         bool                    IsBoundary() const override { return false; }
         bool                    CanBeSampled() const override { return false; }
 
-        uint8_t                 SampleStrategyCount() const { return 0; };
+        uint8_t                 SampleStrategyCount() const override { return 0; };
         // No Texture
-        uint8_t                 UsedTextureCount() const { return 0; }
-        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
+        uint8_t                 UsedTextureCount() const override { return 0; }
+        std::vector<uint32_t>   UsedTextureIds() const override { return std::vector<uint32_t>(); }
 };
 
 template <class S>

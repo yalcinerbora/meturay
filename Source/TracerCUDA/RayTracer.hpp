@@ -1,5 +1,8 @@
+#pragma once
+
 #include "GenerationKernels.cuh"
 #include "RayTracer.h"
+#include "RayLib/GPUSceneI.h"
 
 template <class AuxStruct, class AuxInitFunctor>
 void RayTracer::GenerateRays(uint32_t sceneCamId, int32_t sampleCount,
@@ -25,7 +28,7 @@ void RayTracer::GenerateRays(uint32_t sceneCamId, int32_t sampleCount,
     const uint32_t TPB = StaticThreadPerBlock1D;
     // GPUSplits
     const auto splits = cudaSystem.GridStrideMultiGPUSplit(totalRayCount, TPB, 0,
-                                                           KCGenerateCameraRaysGPU<AuxStruct, AuxInitFunctor>);
+                                                           reinterpret_cast<void*>(&KCGenerateCameraRaysGPU<AuxStruct, AuxInitFunctor>));
 
     // Only use splits as guidance
     // and Split work into columns (much easier to maintain..
@@ -120,7 +123,7 @@ void RayTracer::GenerateRays(const VisorCamera& cam, int32_t sampleCount,
     const uint32_t TPB = StaticThreadPerBlock1D;
     // GPUSplits
     const auto splits = cudaSystem.GridStrideMultiGPUSplit(totalRayCount, TPB, 0,
-                                                           KCGenerateCameraRaysCPU<AuxStruct, AuxInitFunctor>);
+                                                           reinterpret_cast<void*>(&KCGenerateCameraRaysCPU<AuxStruct, AuxInitFunctor>));
 
     // Only use splits as guidance
     // and Split work into columns (much easier to maintain..

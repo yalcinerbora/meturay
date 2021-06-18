@@ -8,7 +8,7 @@ the VisorGL singleton.
 
 */
 
-#include <gl\glew.h>
+#include <GL/glew.h>
 #include <glfw/glfw3.h>
 #include <memory>
 #include <mutex>
@@ -143,7 +143,7 @@ class VisorGL : public VisorI
         static void                 MouseScrolledGLFW(GLFWwindow*, double, double);
 
         // OGL Debug Context Callback
-        static void __stdcall       OGLCallbackRender(GLenum source,
+        static void                 OGLCallbackRender(GLenum source,
                                                       GLenum type,
                                                       GLuint id,
                                                       GLenum severity,

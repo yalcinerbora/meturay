@@ -5,7 +5,7 @@ Shader Class that Compiles and Binds Shaders
 
 */
 
-#include <GL\glew.h>
+#include <GL/glew.h>
 #include <string>
 
 enum class ShaderType

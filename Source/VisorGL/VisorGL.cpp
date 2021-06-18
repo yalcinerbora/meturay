@@ -7,6 +7,7 @@
 
 #include <map>
 #include <cassert>
+#include <thread>
 
 VisorGL* VisorGL::instance = nullptr;
 
@@ -257,13 +258,13 @@ void VisorGL::MouseScrolledGLFW(GLFWwindow* w, double x, double y)
     if(instance->input) instance->input->MouseScrolled(x, y);
 }
 
-void __stdcall VisorGL::OGLCallbackRender(GLenum,
-                                          GLenum type,
-                                          GLuint id,
-                                          GLenum severity,
-                                          GLsizei,
-                                          const char* message,
-                                          const void*)
+void VisorGL::OGLCallbackRender(GLenum,
+                                GLenum type,
+                                GLuint id,
+                                GLenum severity,
+                                GLsizei,
+                                const char* message,
+                                const void*)
 {
     // Dont Show Others For Now
     if(type == GL_DEBUG_TYPE_OTHER ||   //
@@ -566,7 +567,7 @@ void VisorGL::Render()
             tmOpts = visorGUI->ToneMapOptions();
         else
             tmOpts = DefaultTMOptions;
-        
+
         tmOpts.doKeyAdjust = false;
 
         // Always call this even if there are no parameters

@@ -58,6 +58,8 @@ SharedLib::SharedLib(const std::string& libName)
         libWithExt += WinDLLExt;
         libHandle = (void*)LoadLibrary(ConvertWinWchar(libWithExt).c_str());
     #elif defined METURAY_LINUX
+        libWithExt = "lib";
+        libWithExt += libName;
         libWithExt += LinuxDLLExt;
         libHandle = dlopen(libWithExt.c_str(), RTLD_NOW);
     #endif

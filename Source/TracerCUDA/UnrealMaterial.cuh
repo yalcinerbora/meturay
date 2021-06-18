@@ -30,7 +30,7 @@ class UnrealMat final
         static const char*          TypeName() { return "Unreal"; }
 
         using Constant1CRef = ConstantRef<2, float>;
-        using Constant3CRef = ConstantRef<2, Vector3>;        
+        using Constant3CRef = ConstantRef<2, Vector3>;
         using Texture2D1CRef = TextureRef<2, float>;
         using Texture2D3CRef = TextureRef<2, Vector3>;
         using Texture2D1CRefI = TextureRefI<2, float>;
@@ -136,7 +136,7 @@ class UnrealMat final
                                                 double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override;
-        TracerError             ConstructTextureReferences();
+        TracerError             ConstructTextureReferences() override;
 
         // Material Queries
         size_t                  UsedGPUMemory() const override;
@@ -144,10 +144,10 @@ class UnrealMat final
         size_t                  UsedGPUMemory(uint32_t materialId) const override;
         size_t                  UsedCPUMemory(uint32_t materialId) const override;
 
-        uint8_t                 SampleStrategyCount() const { return 1; };
+        uint8_t                 SampleStrategyCount() const override { return 1; };
         // No Texture
-        uint8_t                 UsedTextureCount() const;
-        std::vector<uint32_t>   UsedTextureIds() const;
+        uint8_t                 UsedTextureCount() const override;
+        std::vector<uint32_t>   UsedTextureIds() const override;
 };
 
 static_assert(IsMaterialGroupClass<UnrealMat>::value,

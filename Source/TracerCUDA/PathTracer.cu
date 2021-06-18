@@ -74,7 +74,7 @@ TracerError PathTracer::ConstructLightSampler()
     LightSamplerType lst;
     TracerError e = LightSamplerNameToEnum(lst, options.lightSamplerType);
 
-    if(e != TracerError::OK) 
+    if(e != TracerError::OK)
         return e;
 
     switch(lst)
@@ -90,11 +90,13 @@ TracerError PathTracer::ConstructLightSampler()
                      KCConstructLightSampler<GPULightSamplerUniform>,
                      // Args
                      static_cast<GPULightSamplerUniform*>(memory),
-                     dLights, 
+                     dLights,
                      lightCount);
 
             return TracerError::OK;
         }
+        default:
+            return TracerError::UNABLE_TO_INITIALIZE;
     }
     return TracerError::UNABLE_TO_INITIALIZE;
 }
@@ -148,7 +150,7 @@ TracerError PathTracer::Initialize()
         }
         else
         {
-            if constexpr(USE_SINGLE_PATH_KERNEL)            
+            if constexpr(USE_SINGLE_PATH_KERNEL)
             {
                 WorkPool<bool, bool>& wpCombo = comboWorkPool;
                 GPUWorkBatchI* batch = nullptr;
@@ -211,7 +213,7 @@ TracerError PathTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = opts.GetString(options.lightSamplerType, LIGHT_SAMPLER_TYPE_NAME)) != TracerError::OK)
         return err;
-    
+
     return TracerError::OK;
 }
 
@@ -263,9 +265,9 @@ bool PathTracer::Render()
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;
 
-        // Set pointers        
+        // Set pointers
         const RayAuxPath* dAuxInLocal = static_cast<const RayAuxPath*>(*dAuxIn);
-        using WorkData = typename GPUWorkBatchD<PathTracerGlobalState, RayAuxPath>;
+        using WorkData = GPUWorkBatchD<PathTracerGlobalState, RayAuxPath>;
         int i = 0;
         for(auto& work : loc->second)
         {

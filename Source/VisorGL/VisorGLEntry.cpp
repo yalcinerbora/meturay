@@ -2,7 +2,7 @@
 #include "VisorGL.h"
 
 extern "C" METU_SHARED_VISORGL_ENTRY_POINT
-VisorI* __stdcall CreateVisorGL(const VisorOptions& opts,
+VisorI* CreateVisorGL(const VisorOptions& opts,
                                 const Vector2i& imgRes,
                                 const PixelFormat& f)
 {
@@ -10,7 +10,7 @@ VisorI* __stdcall CreateVisorGL(const VisorOptions& opts,
 }
 
 extern "C" METU_SHARED_VISORGL_ENTRY_POINT
-void __stdcall DeleteVisorGL(VisorI* v)
+void DeleteVisorGL(VisorI* v)
 {
     if(v) delete v;
 }

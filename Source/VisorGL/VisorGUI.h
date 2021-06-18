@@ -1,7 +1,7 @@
 #pragma once
 
 #include "TMOptionWindow.h"
-#include <gl/glew.h>
+#include <GL/glew.h>
 
 #include "RayLib/Vector.h"
 

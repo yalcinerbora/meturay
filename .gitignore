@@ -339,6 +339,9 @@ __pycache__/
 
 # End of https://www.gitignore.io/api/c++,visualstudio,visualstudiocode
 
+# No VS Code stuff
+.vscode
+
 # Keep Provided Libraries
 !Lib/**/
 !Lib/**/*.out
@@ -349,6 +352,7 @@ __pycache__/
 !Lib/**/*.lib
 !Lib/**/*.pdb
 !Lib/**/*.so
+!Lib/**/*.so*
 !Lib/**/*.dvlib
 !Lib/**/*.dll
 !Lib/**/*.pch

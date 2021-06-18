@@ -9,6 +9,8 @@
 #include "ScenePartitioner.h"
 #include "GPUSceneJson.h"
 
+#include <nlohmann/json.hpp>
+
 TracerError TracerSystemCUDA::Initialize(const std::vector<SurfaceLoaderSharedLib>& sLoaderArgs,
                                          ScenePartitionerType partitionerType)
 {

@@ -7,6 +7,13 @@ if(e != ErrType::OK) \
     return false;\
 }
 
+#define ERROR_CHECK_INT(ErrType, e) \
+if(e != ErrType::OK) \
+{\
+    METU_ERROR_LOG("%s", static_cast<std::string>(e).c_str()); \
+    return 1;\
+}
+
 #ifdef _WIN32
     #define METURAY_WIN
     #define MRAY_DLL_IMPORT __declspec(dllimport)
