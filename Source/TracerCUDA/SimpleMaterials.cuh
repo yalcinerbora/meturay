@@ -51,10 +51,10 @@ class LambertCMat final
         size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
-        uint8_t                 SampleStrategyCount() const { return 1; };
+        uint8_t                 SampleStrategyCount() const override { return 1; };
         // No Texture
-        uint8_t                 UsedTextureCount() const { return 0; }
-        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
+        uint8_t                 UsedTextureCount() const override { return 0; }
+        std::vector<uint32_t>   UsedTextureIds() const override { return std::vector<uint32_t>(); }
 };
 
 // Delta distribution reflect material
@@ -102,12 +102,12 @@ class ReflectMat final
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
         // NEE Related
-        bool                    CanBeSampled() const { return false; }
+        bool                    CanBeSampled() const override { return false; }
 
-        uint8_t                 SampleStrategyCount() const { return 1; };
+        uint8_t                 SampleStrategyCount() const override { return 1; };
         // No Texture
-        uint8_t                 UsedTextureCount() const { return 0; }
-        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
+        uint8_t                 UsedTextureCount() const override { return 0; }
+        std::vector<uint32_t>   UsedTextureIds() const override { return std::vector<uint32_t>(); }
 };
 
 // Delta distribution refract material
@@ -155,16 +155,16 @@ class RefractMat final
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
         // NEE Related
-        bool                    CanBeSampled() const { return false; }
+        bool                    CanBeSampled() const override { return false; }
 
         // Post initialization
         void                    AttachGlobalMediumArray(const GPUMediumI* const*,
                                                         uint32_t baseMediumIndex) override;
 
-        uint8_t                 SampleStrategyCount() const { return 1; };
+        uint8_t                 SampleStrategyCount() const override { return 1; };
         // No Texture
-        uint8_t                 UsedTextureCount() const { return 0; }
-        std::vector<uint32_t>   UsedTextureIds() const { return std::vector<uint32_t>(); }
+        uint8_t                 UsedTextureCount() const override { return 0; }
+        std::vector<uint32_t>   UsedTextureIds() const override { return std::vector<uint32_t>(); }
 };
 
 static_assert(IsMaterialGroupClass<LambertCMat>::value,

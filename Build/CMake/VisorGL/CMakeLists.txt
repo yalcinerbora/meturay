@@ -47,11 +47,18 @@ set(PREPROCESSOR_GENERIC
     ${MRAY_PREPROCESSOR_DEFS_GENERIC}
     METU_SHARED_VISORGL)
 
+# Platform Specific Libraries
+if(MSVC)
+    set(PLATFORM_SPEC_LIBRARIES opengl32 glew32 glfw3Lib)
+elseif(UNIX)
+    set(PLATFORM_SPEC_LIBRARIES GLEW glfw)
+endif()
+
 # DLL
 add_library(VisorGL SHARED ${SRC_ALL})
 
 target_include_directories(VisorGL PRIVATE
-                           ${MRAY_LIB_DIRECTORY}/include
+                           ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
 
 target_compile_definitions(VisorGL PRIVATE ${PREPROCESSOR_GENERIC})
@@ -59,9 +66,7 @@ target_compile_definitions(VisorGL PRIVATE ${PREPROCESSOR_GENERIC})
 target_link_libraries(VisorGL
                       RayLib
                       Imgui
-                      glew32
-                      glfw3dll
-                      opengl32)
+                      ${PLATFORM_SPEC_LIBRARIES})
 
 # Copy DLLS
 # add_custom_command(TARGET MyTest POST_BUILD

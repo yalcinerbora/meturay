@@ -108,7 +108,7 @@ struct EmptySurfaceGenerator
     static constexpr auto GeneratorFunctionList =
         std::make_tuple(SurfaceFunctionType<EmptySurface,
                                             GenEmptySurface<EmptyHit, EmptyData>>{},
-                        SurfaceFunctionType<BasicSurface, 
+                        SurfaceFunctionType<BasicSurface,
                                             GenBasicSurface<EmptyHit, EmptyData>>{});
 
     template<class Surface>
@@ -155,7 +155,7 @@ class GPUPrimitiveEmpty final
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
 
         // Primitive Transform Info for accelerator
-        PrimTransformType                       TransformType() const;
+        PrimTransformType                       TransformType() const override;
 
         // Error check
         // Queries in order to check if this primitive group supports certain primitive data

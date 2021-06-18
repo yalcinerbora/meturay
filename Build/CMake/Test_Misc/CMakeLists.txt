@@ -52,7 +52,10 @@ set_target_properties(Test_Misc PROPERTIES
 target_link_libraries(Test_Misc PRIVATE
                       RayLib
                       VisorGL
-                      gtest)
+                      $<$<CONFIG:Debug>:gtestd>
+                      $<$<CONFIG:Debug>:gmockd>
+                      $<$<CONFIG:Release>:gtest>
+                      $<$<CONFIG:Release>:gmock>)
 
 if(MSVC)
 

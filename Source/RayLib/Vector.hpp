@@ -547,6 +547,12 @@ template <int N, class T>
 __device__ __host__ HYBRID_INLINE
 Vector<N, T> Vector<N, T>::Clamp(const Vector& minVal, const Vector& maxVal) const
 {
+    // Clang min definition is only on std namespace
+    // this is a crappy workournd
+    #ifndef __CUDA_ARCH__
+        using namespace std;
+    #endif
+
     Vector v;
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -560,6 +566,12 @@ template <int N, class T>
 __device__ __host__ HYBRID_INLINE
 Vector<N, T> Vector<N, T>::Clamp(T minVal, T maxVal) const
 {
+    // Clang min definition is only on std namespace
+    // this is a crappy workournd
+    #ifndef __CUDA_ARCH__
+        using namespace std;
+    #endif
+
     Vector v;
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -573,6 +585,12 @@ template <int N, class T>
 __device__ __host__ HYBRID_INLINE
 Vector<N, T>& Vector<N, T>::ClampSelf(const Vector& minVal, const Vector& maxVal)
 {
+    // Clang min definition is only on std namespace
+    // this is a crappy workournd
+    #ifndef __CUDA_ARCH__
+        using namespace std;
+    #endif
+
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
     {
@@ -745,6 +763,12 @@ template <int N, class T>
 __device__ __host__ HYBRID_INLINE
 Vector<N, T> Vector<N, T>::Min(const Vector& v0, T v1)
 {
+    // Clang min definition is only on std namespace
+    // this is a crappy workournd
+    #ifndef __CUDA_ARCH__
+        using namespace std;
+    #endif
+
     Vector v;
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -777,6 +801,12 @@ template <int N, class T>
 __device__ __host__ HYBRID_INLINE
 Vector<N, T> Vector<N, T>::Max(const Vector& v0, T v1)
 {
+    // Clang min definition is only on std namespace
+    // this is a crappy workournd
+    #ifndef __CUDA_ARCH__
+        using namespace std;
+    #endif
+
     Vector v;
     UNROLL_LOOP
     for(int i = 0; i < N; i++)

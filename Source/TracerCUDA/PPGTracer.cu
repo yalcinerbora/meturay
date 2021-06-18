@@ -95,7 +95,7 @@ TracerError PPGTracer::ConstructLightSampler()
     LightSamplerType lst;
     TracerError e = LightSamplerNameToEnum(lst, options.lightSamplerType);
 
-    if(e != TracerError::OK) 
+    if(e != TracerError::OK)
         return e;
 
     switch(lst)
@@ -111,11 +111,14 @@ TracerError PPGTracer::ConstructLightSampler()
                      KCConstructLightSampler<GPULightSamplerUniform>,
                      // Args
                      static_cast<GPULightSamplerUniform*>(pathMemory),
-                     dLights, 
+                     dLights,
                      lightCount);
 
             return TracerError::OK;
         }
+        default:
+            return TracerError::UNABLE_TO_INITIALIZE;
+
     }
     return TracerError::UNABLE_TO_INITIALIZE;
 }
@@ -123,7 +126,7 @@ TracerError PPGTracer::ConstructLightSampler()
 void PPGTracer::ResizeAndInitPathMemory()
 {
     size_t totalPathNodeCount = TotalPathNodeCount();
-    //METU_LOG("Allocating PPGTracer global path buffer: Size %llu MiB", 
+    //METU_LOG("Allocating PPGTracer global path buffer: Size %llu MiB",
     //         totalPathNodeCount * sizeof(PathGuidingNode) / 1024 / 1024);
 
     DeviceMemory::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(PathGuidingNode));
@@ -193,7 +196,7 @@ TracerError PPGTracer::Initialize()
             workBatchList.push_back(batch);
         }
         else
-        {            
+        {
             WorkPool<bool, bool>& wpCombo = pathWorkPool;
             GPUWorkBatchI* batch = nullptr;
             if((err = wpCombo.GenerateWorkBatch(batch, mg, pg,
@@ -201,10 +204,10 @@ TracerError PPGTracer::Initialize()
                                                 options.nextEventEstimation,
                                                 options.directLightMIS)) != TracerError::OK)
                 return err;
-            workBatchList.push_back(batch);            
+            workBatchList.push_back(batch);
         }
         workMap.emplace(batchId, workBatchList);
-    }    
+    }
 
     // Init sTree
     AABB3f worldAABB = scene.BaseAccelerator()->SceneExtents();
@@ -226,7 +229,7 @@ TracerError PPGTracer::SetOptions(const TracerOptionsI& opts)
         return err;
 
     if((err = opts.GetBool(options.nextEventEstimation, NEE_NAME)) != TracerError::OK)
-        return err;    
+        return err;
     if((err = opts.GetBool(options.directLightMIS, DIRECT_LIGHT_MIS_NAME)) != TracerError::OK)
         return err;
 
@@ -241,7 +244,7 @@ TracerError PPGTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = opts.GetUInt(options.sTreeSplitThreshold, S_TREE_SAMPLE_SPLIT_NAME)) != TracerError::OK)
         return err;
-    
+
     return TracerError::OK;
 }
 
@@ -265,7 +268,7 @@ bool PPGTracer::Render()
     // Generate Global Data Struct
     PPGTracerGlobalState globalData;
     globalData.gImage = imgMemory.GMem<Vector4>();
-    globalData.lightList = dLights;    
+    globalData.lightList = dLights;
     globalData.totalLightCount = lightCount;
     globalData.lightSampler = dLightSampler;
     //
@@ -286,8 +289,8 @@ bool PPGTracer::Render()
     // Todo change these later
     globalData.rawPathGuiding = true;
     globalData.nee = options.nextEventEstimation;
-    globalData.rrStart = options.rrStart;    
-    
+    globalData.rrStart = options.rrStart;
+
     // Generate output partitions
     uint32_t totalOutRayCount = 0;
     auto outPartitions = PartitionOutputRays(totalOutRayCount, workMap);
@@ -307,9 +310,9 @@ bool PPGTracer::Render()
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;
 
-        // Set pointers        
+        // Set pointers
         const RayAuxPPG* dAuxInLocal = static_cast<const RayAuxPPG*>(*dAuxIn);
-        using WorkData = typename GPUWorkBatchD<PPGTracerGlobalState, RayAuxPPG>;
+        using WorkData = GPUWorkBatchD<PPGTracerGlobalState, RayAuxPPG>;
         int i = 0;
         for(auto& work : loc->second)
         {
@@ -338,7 +341,7 @@ bool PPGTracer::Render()
 
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration
-    SwapAuxBuffers();    
+    SwapAuxBuffers();
     currentDepth++;
 
     //
@@ -360,7 +363,7 @@ void PPGTracer::Finalize()
     //Debug::DumpMemToFile("PathNodes", dPathNodes, totalPathNodeCount);
 
     //if(currentTreeIteration == 0)
-    //{     
+    //{
     //    std::filesystem::remove(std::filesystem::path("0_sTree"));
     //    std::filesystem::remove(std::filesystem::path("0_sTree_N"));
     //    std::filesystem::remove(std::filesystem::path("0__dTree_N"));
@@ -378,7 +381,7 @@ void PPGTracer::Finalize()
     {
         // Double the amount of iterations required for this
         nextTreeSwap <<= 1;
-     
+
         uint32_t treeSwapIterationCount = Utility::FindLastSet32(nextTreeSwap) - 1;
         uint32_t currentSTreeSplitThreshold = static_cast<uint32_t>((std::pow(2.0f, treeSwapIterationCount) *
                                                                      options.sTreeSplitThreshold));
@@ -394,7 +397,7 @@ void PPGTracer::Finalize()
                  currentTreeIteration,
                  mbSize,
                  sTree->TotalTreeCount());
-              
+
         // DEBUG
         CUDA_CHECK(cudaDeviceSynchronize());
         //std::string iterAsString = std::to_string(currentTreeIteration);
@@ -412,7 +415,7 @@ void PPGTracer::Finalize()
         Debug::DumpMemToFile(iterAsString + "__dTrees",
                              dTreeGPUs.data(), dTreeGPUs.size(), true);
         for(size_t i = 0; i < dTreeNodes.size(); i++)
-        {            
+        {
             Debug::DumpMemToFile(iterAsString + "__dTree_N",
                                  dTreeNodes[i].data(), dTreeNodes[i].size(), true);
         }
@@ -421,7 +424,7 @@ void PPGTracer::Finalize()
         // This is done to eliminate variance from prev samples
         ResetImage();
     }
-        
+
     uint32_t prevTreeSwap = (nextTreeSwap >> 1);
     if(options.alwaysSendSamples ||
        // Do not send samples untill we exceed prev iteration samples

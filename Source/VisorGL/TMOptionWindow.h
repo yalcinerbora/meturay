@@ -17,7 +17,7 @@ class TMOptionWindow : public VisorGUIWindowI
                                                const ToneMapOptions& defaultOptions);
                                 ~TMOptionWindow() = default;
 
-        const ToneMapOptions&   GetToneMapOptions() const;
+        const ToneMapOptions&   TMOptions() const;
 
         void                    Render() override;
         bool                    IsWindowClosed() const override;
@@ -34,7 +34,7 @@ inline TMOptionWindow::TMOptionWindow(bool windowClosed,
     , opts(defaultOptions)
 {}
 
-inline const ToneMapOptions& TMOptionWindow::GetToneMapOptions() const
+inline const ToneMapOptions& TMOptionWindow::TMOptions() const
 {
     return opts;
 }

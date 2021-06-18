@@ -119,8 +119,8 @@ struct TriFunctions
     {
         // Find the primitive
         float index;
-        GPUFunctions::BinarySearchInBetween(index, primitiveId, 
-                                            primData.primOffsets, 
+        GPUFunctions::BinarySearchInBetween(index, primitiveId,
+                                            primData.primOffsets,
                                             primData.primBatchCount);
         uint32_t indexInt = static_cast<uint32_t>(index);
         bool cullBackface = primData.cullFace[indexInt];
@@ -163,7 +163,7 @@ struct TriFunctions
                 QuatF q0 = primData.tbnRotations[index0].Normalize();
                 QuatF q1 = primData.tbnRotations[index1].Normalize();
                 QuatF q2 = primData.tbnRotations[index2].Normalize();
-                QuatF tbn = Quat::BarySLerp(q0, q1, q2, 
+                QuatF tbn = Quat::BarySLerp(q0, q1, q2,
                                             baryCoords[0],
                                             baryCoords[1]);
                 // Tangent Space to Local Space Transform
@@ -200,7 +200,7 @@ struct TriFunctions
         float index;
         GPUFunctions::BinarySearchInBetween(index, leaf.primitiveId, primData.primOffsets, primData.primBatchCount);
         uint32_t indexInt = static_cast<uint32_t>(index);
-        
+
         bool cullBackface = primData.cullFace[indexInt];
 
         //if(leaf.matId.value == 0x2000002)
@@ -235,7 +235,7 @@ struct TriFunctions
             Vector2f uv2 = primData.uvs[index2];
 
             Vector2f uv = (baryCoords[0] * uv0 +
-                           baryCoords[1] * uv1 + 
+                           baryCoords[1] * uv1 +
                            baryCoords[2] * uv2);
 
             bool opaque = (*alphaMap)(uv);
@@ -460,7 +460,7 @@ class GPUPrimitiveTriangle final
         std::map<uint32_t, Vector2ul>           batchRanges;
         std::map<uint32_t, Vector2ul>           batchDataRanges;
         std::map<uint32_t, AABB3>               batchAABBs;
-        
+
     protected:
     public:
         // Constructors & Destructor
@@ -483,7 +483,7 @@ class GPUPrimitiveTriangle final
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
 
         // Primitive Transform Info for accelerator
-        PrimTransformType                       TransformType() const;
+        PrimTransformType                       TransformType() const override;
 
         // Error check
         // Queries in order to check if this primitive group supports certain primitive data

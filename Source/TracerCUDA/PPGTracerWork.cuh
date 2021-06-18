@@ -19,7 +19,7 @@
 
 template<class MGroup, class PGroup>
 class PPGBoundaryWork
-    : public GPUWorkBatch<PPGTracerGlobalState, 
+    : public GPUWorkBatch<PPGTracerGlobalState,
                           PPGTracerLocalState, RayAuxPPG,
                           MGroup, PGroup, PPGTracerBoundaryWork<MGroup>,
                           PGroup::GetSurfaceFunction>
@@ -27,6 +27,11 @@ class PPGBoundaryWork
     private:
         bool                            neeOn;
         bool                            misOn;
+
+        using Base = GPUWorkBatch<PPGTracerGlobalState,
+                                  PPGTracerLocalState, RayAuxPPG,
+                                  MGroup, PGroup, PPGTracerBoundaryWork<MGroup>,
+                                  PGroup::GetSurfaceFunction>;
 
     protected:
     public:
@@ -41,12 +46,12 @@ class PPGBoundaryWork
         void                            GetReady() override {}
         uint8_t                         OutRayCount() const override { return 0; }
 
-        const char*                     Type() const override { return TypeName(); }
+        const char*                     Type() const override { return Base::TypeName(); }
 };
 
 template<class MGroup, class PGroup>
 class PPGWork
-    : public GPUWorkBatch<PPGTracerGlobalState, 
+    : public GPUWorkBatch<PPGTracerGlobalState,
                           PPGTracerLocalState, RayAuxPPG,
                           MGroup, PGroup, PPGTracerPathWork<MGroup>,
                           PGroup::GetSurfaceFunction>
@@ -55,19 +60,24 @@ class PPGWork
         bool                            neeOn;
         bool                            misOn;
 
+        using Base = GPUWorkBatch<PPGTracerGlobalState,
+                                  PPGTracerLocalState, RayAuxPPG,
+                                  MGroup, PGroup, PPGTracerPathWork<MGroup>,
+                                  PGroup::GetSurfaceFunction>;
+
     protected:
     public:
         // Constrcutors & Destructor
                                         PPGWork(const GPUMaterialGroupI& mg,
-                                                    const GPUPrimitiveGroupI& pg,
-                                                    const GPUTransformI* const* t,
-                                                    bool neeOn, bool misOn);
+                                                const GPUPrimitiveGroupI& pg,
+                                                const GPUTransformI* const* t,
+                                                bool neeOn, bool misOn);
                                         ~PPGWork() = default;
 
         void                            GetReady() override {}
         uint8_t                         OutRayCount() const override;
 
-        const char*                     Type() const override { return TypeName(); }
+        const char*                     Type() const override { return Base::TypeName(); }
 };
 
 template<class M, class P>
@@ -76,7 +86,7 @@ PPGBoundaryWork<M, P>::PPGBoundaryWork(const GPUMaterialGroupI& mg,
                                        const GPUTransformI* const* t,
                                        bool neeOn, bool misOn,
                                        bool emptyPrimitive)
-    : GPUWorkBatch<PPGTracerGlobalState, 
+    : GPUWorkBatch<PPGTracerGlobalState,
                    PPGTracerLocalState, RayAuxPPG,
                    M, P, PPGTracerBoundaryWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
@@ -84,7 +94,7 @@ PPGBoundaryWork<M, P>::PPGBoundaryWork(const GPUMaterialGroupI& mg,
     , misOn(misOn)
 {
     // Populate localData
-    localData.emptyPrimitive = emptyPrimitive;
+    this->localData.emptyPrimitive = emptyPrimitive;
 }
 
 template<class M, class P>
@@ -92,7 +102,7 @@ PPGWork<M, P>::PPGWork(const GPUMaterialGroupI& mg,
                        const GPUPrimitiveGroupI& pg,
                        const GPUTransformI* const* t,
                        bool neeOn, bool misOn)
-    : GPUWorkBatch<PPGTracerGlobalState, 
+    : GPUWorkBatch<PPGTracerGlobalState,
                    PPGTracerLocalState, RayAuxPPG,
                    M, P, PPGTracerPathWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
@@ -100,7 +110,7 @@ PPGWork<M, P>::PPGWork(const GPUMaterialGroupI& mg,
     , misOn(misOn)
 {
     // Populate localData
-    localData.emptyPrimitive = false;
+    this->localData.emptyPrimitive = false;
 }
 
 template<class M, class P>
@@ -108,22 +118,22 @@ uint8_t PPGWork<M, P>::OutRayCount() const
 {
     // Incorporate NEE Ray as an addition
     // If material can be sampled (i.e no Dirac Delta BxDF)
-    if(!materialGroup.CanBeSampled())
+    if(!this->materialGroup.CanBeSampled())
     {
         // Material Cannot be sampled just allocate whatever
         // the material is requesting
-        return materialGroup.SampleStrategyCount();
+        return this->materialGroup.SampleStrategyCount();
     }
-    else if(materialGroup.SampleStrategyCount() != 0)
+    else if(this->materialGroup.SampleStrategyCount() != 0)
     {
-        // Material can be sampled 
+        // Material can be sampled
         // Add one extra nee ray allocation
         uint8_t neeRay = (neeOn) ? 1 : 0;
         // Add one extra MIS ray for allocation
         // MIS ray is extra NEE ray for multiple importance sampling
         uint8_t misRay = (neeOn && misOn) ? 1 : 0;
 
-        return materialGroup.SampleStrategyCount() + misRay + neeRay;
+        return this->materialGroup.SampleStrategyCount() + misRay + neeRay;
     }
     // Material does not require any samples meaning it is boundary material
     // Do not allocate any rays for this kind of material

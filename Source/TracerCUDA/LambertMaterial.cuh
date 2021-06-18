@@ -80,10 +80,10 @@ class LambertMat final
         size_t                  UsedGPUMemory(uint32_t materialId) const override;
         size_t                  UsedCPUMemory(uint32_t materialId) const override;
 
-        uint8_t                 SampleStrategyCount() const { return 1; };
+        uint8_t                 SampleStrategyCount() const override { return 1; };
         // No Texture
-        uint8_t                 UsedTextureCount() const;
-        std::vector<uint32_t>   UsedTextureIds() const;
+        uint8_t                 UsedTextureCount() const override;
+        std::vector<uint32_t>   UsedTextureIds() const override;
 };
 
 static_assert(IsMaterialGroupClass<LambertMat>::value,

@@ -60,10 +60,10 @@ class BoundaryMatConstant final
                                                   Vector2ui& dim,
                                                   uint32_t innerId) const override;
 
-        uint8_t                     SampleStrategyCount() const { return 0; };
+        uint8_t                     SampleStrategyCount() const override { return 0; };
         // No Texture
-        uint8_t                     UsedTextureCount() const { return 0; }
-        std::vector<uint32_t>       UsedTextureIds() const { return std::vector<uint32_t>(); }
+        uint8_t                     UsedTextureCount() const override { return 0; }
+        std::vector<uint32_t>       UsedTextureIds() const override { return std::vector<uint32_t>(); }
 };
 
 class BoundaryMatTextured final
@@ -113,16 +113,16 @@ class BoundaryMatTextured final
         size_t                  UsedCPUMemory() const override { return sizeof(LightMatTexData); }
         size_t                  UsedGPUMemory(uint32_t materialId) const override;
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
-        
+
         // Light Material Interface
         TracerError                 LuminanceData(std::vector<float>& lumData,
                                                   Vector2ui& dim,
                                                   uint32_t innerId) const override;
 
-        uint8_t                     SampleStrategyCount() const { return 0; };
+        uint8_t                     SampleStrategyCount() const override { return 0; };
         // No Texture
-        uint8_t                     UsedTextureCount() const { return 0; }
-        std::vector<uint32_t>       UsedTextureIds() const { return std::vector<uint32_t>(); }
+        uint8_t                     UsedTextureCount() const override { return 0; }
+        std::vector<uint32_t>       UsedTextureIds() const override { return std::vector<uint32_t>(); }
 };
 
 class BoundaryMatSkySphere final
@@ -177,11 +177,11 @@ class BoundaryMatSkySphere final
         TracerError                 LuminanceData(std::vector<float>& lumData,
                                                   Vector2ui& dim,
                                                   uint32_t innerId) const override;
-        
-        uint8_t                     SampleStrategyCount() const { return 0; };
+
+        uint8_t                     SampleStrategyCount() const override { return 0; };
         // No Texture
-        uint8_t                     UsedTextureCount() const { return 0; }
-        std::vector<uint32_t>       UsedTextureIds() const { return std::vector<uint32_t>(); }
+        uint8_t                     UsedTextureCount() const override { return 0; }
+        std::vector<uint32_t>       UsedTextureIds() const override { return std::vector<uint32_t>(); }
 };
 
 inline size_t BoundaryMatTextured::UsedGPUMemory() const

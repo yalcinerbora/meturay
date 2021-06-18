@@ -54,6 +54,16 @@ else()
     message(FATAL_ERROR "Unknown platform... Terminating CMake.")
 endif()
 
+# Force Colored Output on Ninja
+if ((CMAKE_GENERATOR MATCHES "Ninja") AND UNIX)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        add_compile_options(-fcolor-diagnostics)
+        add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:--compiler-bindir=${CMAKE_C_COMPILER}>)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        add_compile_options(-fdiagnostics-color=always)
+    endif()
+endif()
+
 # Platform Specific Lib Bin Folders
 set(MRAY_PLATFORM_LIB_DIRECTORY ${MRAY_LIB_DIRECTORY}/${MRAY_PLATFORM_NAME})
 set(MRAY_PLATFORM_BIN_DIRECTORY ${MRAY_BIN_DIRECTORY}/${MRAY_PLATFORM_NAME})

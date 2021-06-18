@@ -130,7 +130,7 @@ int main(int argc, const char* argv[])
                                              visorOpts,
                                              resolution,
                                              PixelFormat::RGBA_FLOAT);
-    ERROR_CHECK(DLLError, dError);
+    ERROR_CHECK_INT(DLLError, dError);
     visorInput = std::make_unique<VisorWindowInput>(std::move(keyBinds),
                                                     std::move(mouseBinds),
                                                     std::move(movementSchemeList));
@@ -139,9 +139,9 @@ int main(int argc, const char* argv[])
     // Generate Tracer
     SharedLib tracerDLL(tracerDLLName);
     dError = tracerDLL.GenerateObject(tracerSystem, tracerDLLEntryFunctionNames);
-    ERROR_CHECK(DLLError, dError);
+    ERROR_CHECK_INT(DLLError, dError);
     tError = tracerSystem->Initialize(surfaceLoaderLibraries, scenePartitionType);
-    ERROR_CHECK(TracerError, tError);
+    ERROR_CHECK_INT(TracerError, tError);
 
     // Create a Self Node
     SelfNode selfNode(*visor, *tracerSystem,
@@ -150,7 +150,7 @@ int main(int argc, const char* argv[])
                       Vector2i(resolution.data()));
     nError = selfNode.Initialize();
     visorInput->AttachVisorCallback(selfNode);
-    ERROR_CHECK(NodeError, nError);
+    ERROR_CHECK_INT(NodeError, nError);
 
     // Do work loop of the self node
     try

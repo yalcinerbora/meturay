@@ -439,7 +439,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     {
         boundaryTransformId = SceneIO::LoadNumber<uint32_t>(*boundaryTransformNode, time);
         if((e = AttachTransform(boundaryTransformId)) != SceneError::OK)
-            return e;        
+            return e;
     }
 
     // Process Lights
@@ -596,10 +596,10 @@ SceneError GPUSceneJson::GenerateMaterialGroups(const MultiGPUMatNodes& matGroup
         const auto& matNodes = matGroupN.second;
         //
         GPUMatGPtr matGroup = GPUMatGPtr(nullptr, nullptr);
-        if(e = logicGenerator.GenerateMaterialGroup(matGroup, *gpu, matTypeName))
+        if((e = logicGenerator.GenerateMaterialGroup(matGroup, *gpu, matTypeName)) != SceneError::OK)
             return e;
-        if(e = matGroup->InitializeGroup(matNodes, textureNodes,
-                                         mediumIdMappings, time, parentPath))
+        if((e = matGroup->InitializeGroup(matNodes, textureNodes,
+                                         mediumIdMappings, time, parentPath)) != SceneError::OK)
             return e;
         materials.emplace(std::make_pair(matTypeName, gpu), std::move(matGroup));
     }
@@ -657,10 +657,10 @@ SceneError GPUSceneJson::GeneratePrimitiveGroups(const PrimitiveNodeList& primGr
         const auto& primNodes = primGroup.second;
         //
         GPUPrimGPtr pg = GPUPrimGPtr(nullptr, nullptr);
-        if(e = logicGenerator.GeneratePrimitiveGroup(pg, primTypeName))
+        if((e = logicGenerator.GeneratePrimitiveGroup(pg, primTypeName)) != SceneError::OK)
             return e;
-        if(e = pg->InitializeGroup(primNodes, time, surfaceLoaderGenerator,
-                                   textureNodes, parentPath))
+        if((e = pg->InitializeGroup(primNodes, time, surfaceLoaderGenerator,
+                                   textureNodes, parentPath)) != SceneError::OK)
             return e;
 
         ExpandHitStructSize(*pg.get());
@@ -783,9 +783,9 @@ SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& transf
         const auto& transNodes = transformGroup.second;
         //
         CPUTransformGPtr tg = CPUTransformGPtr(nullptr, nullptr);
-        if(e = logicGenerator.GenerateTransformGroup(tg, transTypeName))
+        if((e = logicGenerator.GenerateTransformGroup(tg, transTypeName)) != SceneError::OK)
             return e;
-        if(e = tg->InitializeGroup(transNodes, time, parentPath))
+        if((e = tg->InitializeGroup(transNodes, time, parentPath)) != SceneError::OK)
             return e;
         transforms.emplace(transTypeName, std::move(tg));
 
@@ -829,9 +829,9 @@ SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdM
         const auto& mediumNodes = mediumGroup.second;
         //
         CPUMediumGPtr mg = CPUMediumGPtr(nullptr, nullptr);
-        if(e = logicGenerator.GenerateMediumGroup(mg, mediumTypeName))
+        if((e = logicGenerator.GenerateMediumGroup(mg, mediumTypeName)) != SceneError::OK)
             return e;
-        if(e = mg->InitializeGroup(mediumNodes, time, parentPath))
+        if((e = mg->InitializeGroup(mediumNodes, time, parentPath)) != SceneError::OK)
             return e;
         mediums.emplace(mediumTypeName, std::move(mg));
 
@@ -872,14 +872,14 @@ SceneError GPUSceneJson::GenerateCameras(const CameraNodeList& camGroupList,
         const auto& camNodes = camGroup.second;
 
         CPUCameraGPtr cg = CPUCameraGPtr(nullptr, nullptr);
-        if(e = logicGenerator.GenerateCameraGroup(cg, camTypeName))
+        if((e = logicGenerator.GenerateCameraGroup(cg, camTypeName)) != SceneError::OK)
             return e;
-        if(e = cg->InitializeGroup(camNodes,
+        if((e = cg->InitializeGroup(camNodes,
                                    mediumIdMappings,
                                    transformIdMappings,
                                    cameraBatchId,
                                    time,
-                                   parentPath))
+                                   parentPath)) != SceneError::OK)
             return e;
         cameras.emplace(camTypeName, std::move(cg));
     }
@@ -906,15 +906,15 @@ SceneError GPUSceneJson::GenerateLights(const LightNodeList& lightGroupList,
             primGroup = primitives.at(primTypeName).get();
 
         CPULightGPtr lg = CPULightGPtr(nullptr, nullptr);
-        if(e = logicGenerator.GenerateLightGroup(lg, primGroup, 
-                                                 (isPrimLight) ? primTypeName : lightTypeName))
+        if((e = logicGenerator.GenerateLightGroup(lg, primGroup,
+                                                 (isPrimLight) ? primTypeName : lightTypeName)) != SceneError::OK)
             return e;
-        if(e = lg->InitializeGroup(lightNodes,
+        if((e = lg->InitializeGroup(lightNodes,
                                    mediumIdMappings,
                                    transformIdMappings,
                                    materialKeys,
                                    time,
-                                   parentPath))
+                                   parentPath)) != SceneError::OK)
             return e;
         lights.emplace(lightTypeName, std::move(lg));
     }
@@ -973,7 +973,7 @@ SceneError GPUSceneJson::LoadAll(double time)
 
     // Transforms
     std::map<uint32_t, uint32_t> transformIdMappings;
-    if((e = GenerateTransforms(transformIdMappings, 
+    if((e = GenerateTransforms(transformIdMappings,
                                identityTransformIndex,
                                boundaryTransformIndex,
                                transformGroupNodes,

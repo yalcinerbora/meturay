@@ -1,7 +1,7 @@
 #pragma once
 
 #include "TMOptionWindow.h"
-#include <gl/glew.h>
+#include <GL/glew.h>
 
 #include "RayLib/Vector.h"
 
@@ -24,12 +24,12 @@ class VisorGUI
         void                            Render(GLuint sdrTex,
                                                const Vector2i& resolution);
         // Access GUI Controlled Parameters
-        const ToneMapOptions&           ToneMapOptions() const;
+        const ToneMapOptions&           TMOptions() const;
 
         // Callbacks of the GUI
 };
 
-inline const ToneMapOptions& VisorGUI::ToneMapOptions() const
+inline const ToneMapOptions& VisorGUI::TMOptions() const
 {
-    return tmWindow.GetToneMapOptions();
+    return tmWindow.TMOptions();
 }

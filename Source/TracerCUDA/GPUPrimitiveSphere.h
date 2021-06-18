@@ -72,7 +72,7 @@ struct SphrFunctions
 
         Vector3f sphrLoc = center + radius * unitPos;
 
-        normal = unitPos;        
+        normal = unitPos;
         return sphrLoc;
     }
 
@@ -102,7 +102,7 @@ struct SphrFunctions
         sphrPos = transform.LocalToWorld(sphrPos);
         normal = (position - sphrPos).Normalize();
 
-        // Return non zero if it intersected        
+        // Return non zero if it intersected
         if(intersects)
             pdf = 1.0f / SphrFunctions::Area(primitiveId, primData);
         else pdf = 0.0f;
@@ -308,7 +308,7 @@ class GPUPrimitiveSphere final
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
 
         // Primitive Transform Info for accelerator
-        PrimTransformType                       TransformType() const;
+        PrimTransformType                       TransformType() const override;
 
         // Error check
         // Queries in order to check if this primitive group supports certain primitive data

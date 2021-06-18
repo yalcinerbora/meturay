@@ -29,14 +29,14 @@ using WorkFunc = void(*)(// Output
                          // Input as registers
                          const RayReg& ray,
                          const RayAuxiliary& aux,
-                         const MGroup::Surface& surface,
+                         const typename MGroup::Surface& surface,
                          const RayId rayId,
                          // I-O
                          LocalState& gLocalState,
                          GlobalState& gRenderState,
                          RandomGPU& rng,
                          // Constants
-                         const MGroup::Data& gMatData,
+                         const typename MGroup::Data& gMatData,
                          const HitKey matId,
                          const PrimitiveId primId);
 
@@ -44,9 +44,9 @@ using WorkFunc = void(*)(// Output
 template<class GlobalState, class LocalState,
          class RayAuxiliary, class PGroup, class MGroup,
          WorkFunc<GlobalState, LocalState, RayAuxiliary, MGroup> WFunc,
-         SurfaceFunc<MGroup::Surface,
-                     PGroup::HitData,
-                     PGroup::PrimitiveData> SurfFunc>
+         SurfaceFunc<typename MGroup::Surface,
+                     typename PGroup::HitData,
+                     typename PGroup::PrimitiveData> SurfFunc>
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCWork(// Output
             HitKey* gOutBoundKeys,
@@ -68,8 +68,8 @@ void KCWork(// Output
             RNGGMem gRNGStates,
             // Constants
             const uint32_t rayCount,
-            const MGroup::Data matData,
-            const PGroup::PrimitiveData primData,
+            const typename MGroup::Data matData,
+            const typename PGroup::PrimitiveData primData,
             const GPUTransformI* const* gTransforms)
 {
     // Fetch Types from Template Classes

@@ -84,7 +84,7 @@ class DeviceMemoryCPUBacked : public DeviceLocalMemoryI
         // Misc
         size_t                      Size() const override;
         // Interface
-        void                        MigrateToOtherDevice(int deviceTo, cudaStream_t stream = (cudaStream_t)0);
+        void                        MigrateToOtherDevice(int deviceTo, cudaStream_t stream = (cudaStream_t)0) override;
 };
 
 // Generic Device Memory (most of the cases this should be used)

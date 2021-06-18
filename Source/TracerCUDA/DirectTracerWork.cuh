@@ -18,12 +18,17 @@
 
 template<class MGroup, class PGroup>
 class DirectTracerWork
-    : public GPUWorkBatch<DirectTracerGlobalState, 
+    : public GPUWorkBatch<DirectTracerGlobalState,
                           DirectTracerLocalState, RayAuxBasic,
                           MGroup, PGroup, DirectWork<MGroup>,
                           PGroup::GetSurfaceFunction>
 {
     private:
+        using Base = GPUWorkBatch<DirectTracerGlobalState,
+                                  DirectTracerLocalState, RayAuxBasic,
+                                  MGroup, PGroup, DirectWork<MGroup>,
+                                  PGroup::GetSurfaceFunction>;
+
     protected:
     public:
         // Constrcutors & Destructor
@@ -36,14 +41,14 @@ class DirectTracerWork
         // We will not bounce more than once
         uint8_t                         OutRayCount() const override { return 0; }
 
-        const char*                     Type() const override { return TypeName(); }
+        const char*                     Type() const override { return Base::TypeName(); }
 };
 
 template<class M, class P>
 DirectTracerWork<M, P>::DirectTracerWork(const GPUMaterialGroupI& mg,
                                          const GPUPrimitiveGroupI& pg,
                                          const GPUTransformI* const* t)
-    : GPUWorkBatch<DirectTracerGlobalState, 
+    : GPUWorkBatch<DirectTracerGlobalState,
                    DirectTracerLocalState, RayAuxBasic,
                    M, P, DirectWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
