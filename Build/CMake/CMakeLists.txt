@@ -54,11 +54,14 @@ else()
     message(FATAL_ERROR "Unknown platform... Terminating CMake.")
 endif()
 
+# Use currently selected compiler
+#set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_C_COMPILER})
+add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:--compiler-bindir=${CMAKE_C_COMPILER}>)
+
 # Force Colored Output on Ninja
 if ((CMAKE_GENERATOR MATCHES "Ninja") AND UNIX)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         add_compile_options(-fcolor-diagnostics)
-        add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:--compiler-bindir=${CMAKE_C_COMPILER}>)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         add_compile_options(-fdiagnostics-color=always)
     endif()
