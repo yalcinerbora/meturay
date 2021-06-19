@@ -341,6 +341,7 @@ __pycache__/
 
 # No VS Code stuff
 .vscode
+*.code-workspace
 
 # Keep Provided Libraries
 !Lib/**/
