@@ -1,16 +1,17 @@
 #include "VisorGUI.h"
 
-#include <glfw/glfw3.h>
 #include <Imgui/imgui_impl_glfw.h>
 #include <Imgui/imgui_impl_opengl3.h>
+#include <glfw/glfw3.h>
 
 VisorGUI::VisorGUI(GLFWwindow* window)
 {
     init = true;
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
     // ImGUI Dark
     ImGui::StyleColorsDark();
@@ -34,13 +35,13 @@ void VisorGUI::Render(GLuint sdrTex, const Vector2i& resolution)
     ImGui::NewFrame();
 
     bool showDemo = true;
-    bool open = true;
-    //ImGui::ShowDemoWindow(&showDemo);
+    bool open     = true;
+    // ImGui::ShowDemoWindow(&showDemo);
 
-    //ImGui::Begin("TestWindow", &open);
+    // ImGui::Begin("TestWindow", &open);
 
-    //ImVec2 ws = ImGui::GetWindowSize();
-    //ImGui::Image((void*)(intptr_t)sdrTex,
+    // ImVec2 ws = ImGui::GetWindowSize();
+    // ImGui::Image((void*)(intptr_t)sdrTex,
     //             ImVec2(ws.x - 10,
     //                    ws.y),
     //             //ImVec2(static_cast<float>(640),
@@ -49,9 +50,9 @@ void VisorGUI::Render(GLuint sdrTex, const Vector2i& resolution)
     //             //       static_cast<float>(resolution[1])),
     //             ImVec2(0, 1), ImVec2(1, 0));
     ////ImGui::SetWindowSize()
-    //ImGui::SetWindowSize(ImVec2());
+    // ImGui::SetWindowSize(ImVec2());
 
-    //ImGui::End();
+    // ImGui::End();
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
