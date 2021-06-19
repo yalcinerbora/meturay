@@ -311,7 +311,6 @@ void PPGTracerPathWork(// Output
         //static constexpr uint32_t PRIME = 7577;
         //reflectance = DEBUG_COLORS[(dTreeIndex) % 27] * 2.0f;
         reflectance = Utility::RandomColorRGB(dTreeIndex);
-
         //// Calculate BxDF
         //reflectance = MGroup::Evaluate(// Input
         //                               direction,
