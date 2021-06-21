@@ -262,6 +262,8 @@ void STree::AccumulateRaidances(const PathGuidingNode* dPGNodes,
                                 uint32_t maxPathNodePerRay,                                
                                 const CudaSystem& system)
 {   
+    if(totalNodeCount == 0) return;
+
     const CudaGPU& bestGPU = system.BestGPU();
 
     std::set<ArrayPortion<uint32_t>> partitions;

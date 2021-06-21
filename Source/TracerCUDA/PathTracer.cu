@@ -219,6 +219,11 @@ TracerError PathTracer::SetOptions(const TracerOptionsI& opts)
 
 bool PathTracer::Render()
 {
+    // Check tracer termination conditions
+    // Either there is no ray left for iteration or maximum depth is exceeded
+    if(currentRayCount == 0 || currentDepth >= options.maximumDepth)
+        return false;
+
     HitAndPartitionRays();
 
     //Debug::DumpMemToFile("auxIn",
@@ -293,14 +298,12 @@ bool PathTracer::Render()
     //                     totalOutRayCount);
     //Debug::DumpMemToFile("rayIdOut", rayMemory.CurrentIds(),
     //                     totalOutRayCount);
-
+  
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration
     SwapAuxBuffers();
-    // Check tracer termination conditions
+    // Increase Depth
     currentDepth++;
-    if(totalOutRayCount == 0 || currentDepth >= options.maximumDepth)
-        return false;
     return true;
 }
 

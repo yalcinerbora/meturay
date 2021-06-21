@@ -85,7 +85,8 @@ class PPGTracer final : public RayTracer
                                                                const std::string&);
         TracerError                     ConstructLightSampler();
         void                            ResizeAndInitPathMemory();
-        uint32_t                        TotalPathNodeCount() const;       
+        uint32_t                        TotalPathNodeCount() const;
+        uint32_t                        MaximumPathNodePerPath() const;
 
     protected:
     public:

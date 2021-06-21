@@ -225,8 +225,6 @@ void DTree::AddRadiancesFromPaths(const uint32_t* dNodeIndexArray,
     CUDA_CHECK(cudaMemcpy(&hSamples, &writeTree.TreeGPU()->totalSamples,
                           sizeof(uint32_t), cudaMemcpyDeviceToHost));
     hSamples += totalSampleCount;
-
-    METU_LOG("NewSamples %u-------------------", hSamples);
     CUDA_CHECK(cudaMemcpy(&writeTree.TreeGPU()->totalSamples, &hSamples,
                           sizeof(uint32_t), cudaMemcpyHostToDevice));               
 }

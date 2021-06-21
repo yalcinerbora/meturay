@@ -3,11 +3,7 @@
 #include <cstdint>
 #include "RayLib/Vector.h"
 
-#include <cuda_fp16.h>
-
 struct RayReg;
-
-using PathId = HitKeyT<uint32_t, 26, 6>;
 
 enum class RayType : uint8_t
 {
@@ -65,7 +61,7 @@ static const RayAuxPath InitialPathAux = RayAuxPath
 {
     Vector3f(1.0f, 1.0f, 1.0f),
     0, 0, 0,
-    1,
+    0,
     RayType::CAMERA_RAY
 };
 

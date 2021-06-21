@@ -51,7 +51,7 @@ static void KCInitializePaths(PathGuidingNode* gPathNodes,
         node.radFactor = Vector3f(1.0f);
         node.prevNext = Vector<2, PathGuidingNode::IndexType>(PathGuidingNode::InvalidIndex);
         node.totalRadiance = Zero3;
-        node.worldPosition = Zero3;
+        node.worldPosition = Zero3;// Vector3f(99.0f, 99.0f, 99.0f);
 
         gPathNodes[globalId] = node;
     }
@@ -134,19 +134,25 @@ void PPGTracer::ResizeAndInitPathMemory()
 
     // Initialize Paths
     const CudaGPU& bestGPU = cudaSystem.BestGPU();
-    bestGPU.KC_X(0, 0, totalPathNodeCount,
-                 //
-                 KCInitializePaths,
-                 //
-                 dPathNodes,
-                 static_cast<uint32_t>(totalPathNodeCount));
+    if(totalPathNodeCount > 0)
+        bestGPU.KC_X(0, 0, totalPathNodeCount,
+                     //
+                     KCInitializePaths,
+                     //
+                     dPathNodes,
+                     static_cast<uint32_t>(totalPathNodeCount));
 
 }
 
 uint32_t PPGTracer::TotalPathNodeCount() const
 {
     return (imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1] *
-            options.sampleCount * options.sampleCount) * options.maximumDepth;
+            options.sampleCount * options.sampleCount) * MaximumPathNodePerPath();
+}
+
+uint32_t PPGTracer::MaximumPathNodePerPath() const
+{
+    return (options.maximumDepth == 0) ? 0 : (options.maximumDepth + 1);
 }
 
 PPGTracer::PPGTracer(const CudaSystem& s,
@@ -250,6 +256,11 @@ TracerError PPGTracer::SetOptions(const TracerOptionsI& opts)
 
 bool PPGTracer::Render()
 {
+    // Check tracer termination conditions
+    // Either there is no ray left for iteration or maximum depth is exceeded
+    if(currentRayCount == 0 || currentDepth >= options.maximumDepth)
+        return false;
+
     HitAndPartitionRays();
 
     //Debug::DumpMemToFile("auxIn",
@@ -285,7 +296,7 @@ bool PPGTracer::Render()
     globalData.gWriteDTrees = dWriteDTrees;
     //
     globalData.gPathNodes = dPathNodes;
-    globalData.maximumPathNodePerRay = options.maximumDepth;
+    globalData.maximumPathNodePerRay = MaximumPathNodePerPath();
     // Todo change these later
     globalData.rawPathGuiding = true;
     globalData.nee = options.nextEventEstimation;
@@ -342,15 +353,11 @@ bool PPGTracer::Render()
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration
     SwapAuxBuffers();
+    // Increase Depth
     currentDepth++;
 
     //
     //METU_LOG("PASS ENDED=============================================================");
-
-    // Check tracer termination conditions
-    // Either there is no ray left for iteration or maximum depth is exceeded
-    if(totalOutRayCount == 0 || currentDepth >= options.maximumDepth)
-        return false;
     return true;
 }
 
@@ -372,7 +379,7 @@ void PPGTracer::Finalize()
 
     // Accumulate the finished radiances to the STree
     sTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
-                               options.maximumDepth, cudaSystem);
+                               MaximumPathNodePerPath(), cudaSystem);
     // We iterated once
     currentTreeIteration += 1;// options.sampleCount* options.sampleCount;
     // Swap the trees if we achieved treshold
@@ -383,9 +390,10 @@ void PPGTracer::Finalize()
         nextTreeSwap <<= 1;
 
         uint32_t treeSwapIterationCount = Utility::FindLastSet32(nextTreeSwap) - 1;
-        uint32_t currentSTreeSplitThreshold = static_cast<uint32_t>((std::pow(2.0f, treeSwapIterationCount) *
-                                                                     options.sTreeSplitThreshold));
-        METU_LOG("STreeSplit %u", currentSTreeSplitThreshold);
+        uint64_t sTreeSplit64 = static_cast<uint64_t>((std::pow(2.0f, treeSwapIterationCount) *
+                                                       options.sTreeSplitThreshold));
+        uint32_t currentSTreeSplitThreshold = static_cast<uint32_t>(std::min<uint64_t>(sTreeSplit64,
+                                                                                       std::numeric_limits<uint32_t>::max()));
         // Split and Swap the trees
         sTree->SplitAndSwapTrees(currentSTreeSplitThreshold,
                                  options.dTreeSplitThreshold,
@@ -393,32 +401,33 @@ void PPGTracer::Finalize()
                                  cudaSystem);
 
         size_t mbSize = sTree->UsedGPUMemory() / 1024 / 1024;
-        METU_LOG("%4u: Splitting and Swapping Trees Size %llu Mib, Trees: %u",
+        METU_LOG("%u: Splitting and Swapping => Split: %u, Trees Size: %llu Mib, Trees: %u",
                  currentTreeIteration,
+                 currentSTreeSplitThreshold,
                  mbSize,
                  sTree->TotalTreeCount());
 
-        // DEBUG
-        CUDA_CHECK(cudaDeviceSynchronize());
-        //std::string iterAsString = std::to_string(currentTreeIteration);
-        std::string iterAsString = "";
-        // STree
-        STreeGPU sTreeGPU;
-        std::vector<STreeNode> sNodes;
-        sTree->GetTreeToCPU(sTreeGPU, sNodes);
-        Debug::DumpMemToFile(iterAsString + "_sTree", &sTreeGPU, 1, true);
-        Debug::DumpMemToFile(iterAsString + "_sTree_N", sNodes.data(), sNodes.size(), true);
-        // PrintEveryDTree
-        std::vector<DTreeGPU> dTreeGPUs;
-        std::vector<std::vector<DTreeNode>> dTreeNodes;
-        sTree->GetAllDTreesToCPU(dTreeGPUs, dTreeNodes, true);
-        Debug::DumpMemToFile(iterAsString + "__dTrees",
-                             dTreeGPUs.data(), dTreeGPUs.size(), true);
-        for(size_t i = 0; i < dTreeNodes.size(); i++)
-        {
-            Debug::DumpMemToFile(iterAsString + "__dTree_N",
-                                 dTreeNodes[i].data(), dTreeNodes[i].size(), true);
-        }
+        //// DEBUG
+        //CUDA_CHECK(cudaDeviceSynchronize());
+        ////std::string iterAsString = std::to_string(currentTreeIteration);
+        //std::string iterAsString = "";
+        //// STree
+        //STreeGPU sTreeGPU;
+        //std::vector<STreeNode> sNodes;
+        //sTree->GetTreeToCPU(sTreeGPU, sNodes);
+        //Debug::DumpMemToFile(iterAsString + "_sTree", &sTreeGPU, 1, true);
+        //Debug::DumpMemToFile(iterAsString + "_sTree_N", sNodes.data(), sNodes.size(), true);
+        //// PrintEveryDTree
+        //std::vector<DTreeGPU> dTreeGPUs;
+        //std::vector<std::vector<DTreeNode>> dTreeNodes;
+        //sTree->GetAllDTreesToCPU(dTreeGPUs, dTreeNodes, true);
+        //Debug::DumpMemToFile(iterAsString + "__dTrees",
+        //                     dTreeGPUs.data(), dTreeGPUs.size(), true);
+        //for(size_t i = 0; i < dTreeNodes.size(); i++)
+        //{
+        //    Debug::DumpMemToFile(iterAsString + "__dTree_N",
+        //                         dTreeNodes[i].data(), dTreeNodes[i].size(), true);
+        //}
 
         // Completely Reset the Image
         // This is done to eliminate variance from prev samples
