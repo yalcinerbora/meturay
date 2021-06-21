@@ -80,6 +80,6 @@ DLLError SharedLib::GenerateObjectWithArgs(SharedLibPtr<T>& ptr,
     ObjDestroyerFunc<T> destFunc = reinterpret_cast<ObjDestroyerFunc<T>>(GetProcAdressInternal(mangledNames.mangledDestructorName));
     if(!genFunc) return DLLError::MANGLED_NAME_NOT_FOUND;
     if(!destFunc) return DLLError::MANGLED_NAME_NOT_FOUND;
-        ptr = SharedLibPtr<T>(genFunc(std::forward<Args&&>(args)...), destFunc);
+    ptr = SharedLibPtr<T>(genFunc(std::forward<Args&&>(args)...), destFunc);
     return DLLError::OK;
 }

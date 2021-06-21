@@ -354,7 +354,10 @@ set_target_properties(TracerCUDA PROPERTIES
                       CUDA_SEPARABLE_COMPILATION ON
                       CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
-target_link_libraries(TracerCUDA RayLib freeimage)
+target_link_libraries(TracerCUDA
+                        RayLib
+                        freeimage
+                        tbb)
 
 # Object Group for testing
 add_library(TracerCUDA_ForTest STATIC ${SRC_ALL})
@@ -371,4 +374,7 @@ set_target_properties(TracerCUDA_ForTest PROPERTIES
                       CUDA_SEPARABLE_COMPILATION ON
                       CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
-target_link_libraries(TracerCUDA_ForTest RayLib freeimage)
+target_link_libraries(TracerCUDA_ForTest
+                        RayLib
+                        freeimage
+                        tbb)

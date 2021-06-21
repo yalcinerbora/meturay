@@ -21,9 +21,11 @@ CudaGPU::WorkGroup::WorkGroup(int deviceId, int streamCount)
     {
         //CUDA_CHECK(cudaStreamCreate(&works[i]));
         CUDA_CHECK(cudaStreamCreateWithFlags(&works[i], cudaStreamNonBlocking));
-        CUDA_CHECK(cudaEventCreateWithFlags(&events[i], cudaEventDisableTiming));
+        CUDA_CHECK(cudaEventCreateWithFlags(&events[i], cudaEventDisableTiming |
+                                                        cudaEventBlockingSync));
     }
-    CUDA_CHECK(cudaEventCreateWithFlags(&mainEvent, cudaEventDisableTiming));
+    CUDA_CHECK(cudaEventCreateWithFlags(&mainEvent, cudaEventDisableTiming |
+                                                    cudaEventBlockingSync));
 }
 
 CudaGPU::WorkGroup::WorkGroup(WorkGroup&& other)

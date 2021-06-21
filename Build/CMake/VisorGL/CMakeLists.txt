@@ -61,7 +61,7 @@ target_include_directories(VisorGL PRIVATE
                            ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
 
-target_compile_definitions(VisorGL PRIVATE ${PREPROCESSOR_GENERIC})
+target_compile_definitions(VisorGL PRIVATE ${MRAY_PREPROCESSOR_DEFS_GENERIC})
 
 target_link_libraries(VisorGL
                       RayLib
