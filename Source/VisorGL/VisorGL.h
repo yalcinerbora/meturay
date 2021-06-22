@@ -52,20 +52,13 @@ struct VisorGLCommand
         VisorGLCommand&         operator=(VisorGLCommand&&) = default;
 };
 
-class WindowGL : WindowI
-{
-    private:
-        WindowInputI&   windowInput;
-        GLFWwindow*     window;
-
-    protected:
-    public:
-        
-
-};
-
 class VisorGL : public VisorI
 {
+    public:
+        // Hacky solution for direct member set when
+        // windows are closed etc. but it works...
+        friend class                GLFWCallbackDelegator;
+
     private:
         static constexpr float      PostProcessTriData[6] =
         {
@@ -147,6 +140,9 @@ class VisorGL : public VisorI
         // Internal Command Handling
         void                        ProcessCommand(const VisorGLCommand&);
         void                        RenderImage();
+
+        void                        SetFBSizeInternal();
+        void                        SetWindowSizeInternal();
 
     protected:
     public:

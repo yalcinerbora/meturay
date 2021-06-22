@@ -22,7 +22,6 @@
     <ClInclude Include="..\..\..\Source\VisorGL\ShaderGL.h">
       <Filter>GL</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\VisorGL\WindowGL.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GLFWCallbackDelegator.h" />
   </ItemGroup>
   <ItemGroup>
@@ -40,7 +39,6 @@
     <ClCompile Include="..\..\..\Source\VisorGL\ShaderGL.cpp">
       <Filter>GL</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\VisorGL\WindowGL.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\GLFWCallbackDelegator.cpp" />
   </ItemGroup>
   <ItemGroup>

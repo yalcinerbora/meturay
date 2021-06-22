@@ -3,6 +3,8 @@
 #include "RayLib/Log.h"
 #include "RayLib/VisorError.h"
 
+#include "VisorGL.h"
+
 GLFWCallbackDelegator& GLFWCallbackDelegator::Instance()
 {
     static GLFWCallbackDelegator ins;
@@ -181,98 +183,102 @@ void GLFWCallbackDelegator::ErrorCallbackGLFW(int error, const char* description
 
 void GLFWCallbackDelegator::WindowPosGLFW(GLFWwindow* w, int x, int y)
 {
-    const auto& inputMap = Instance().windowInputs;
+    const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend())
-        loc->second->WindowPosChanged(x, y);
+    if(loc != inputMap.cend() && loc->second->input)
+        loc->second->input->WindowPosChanged(x, y);
 }
 
 void GLFWCallbackDelegator::WindowFBGLFW(GLFWwindow* w, int width, int height)
 {
-    assert(instance->window == w);
-    Vector2i size(width, height);
-    instance->viewportSize = size;
-    if(instance->input)
-        instance->input->WindowFBChanged(width, height);
+    const auto& inputMap = Instance().windowMappings;
+    auto loc = inputMap.find(w);
+    if(loc != inputMap.cend() && loc->second->input)
+    {
+        loc->second->viewportSize = Vector2i(width, height);
+        loc->second->input->WindowFBChanged(width, height);
+    }        
 }
 
 void GLFWCallbackDelegator::WindowSizeGLFW(GLFWwindow* w, int width, int height)
 {
-    assert(instance->window == w);
-    if(instance->input)
-    {
-        Vector2i size(width, height);
-        instance->vOpts.wSize = size;
-        instance->input->WindowSizeChanged(width, height);
+    const auto& inputMap = Instance().windowMappings;
+    auto loc = inputMap.find(w);
+    if(loc != inputMap.cend() && loc->second->input)
+    {        
+        loc->second->vOpts.wSize = Vector2i(width, height);;
+        loc->second->input->WindowSizeChanged(width, height);
     }
 }
 
 void GLFWCallbackDelegator::WindowCloseGLFW(GLFWwindow* w)
 {
-    const auto& inputMap = Instance().windowInputs;
+    const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend())
-        loc->second->WindowClosed();
-    instance->open = false;
+    if(loc != inputMap.cend() && loc->second->input)
+    {
+        loc->second->input->WindowClosed();
+        loc->second->open = false;
+    }
 }
 
 void GLFWCallbackDelegator::WindowRefreshGLFW(GLFWwindow* w)
 {
-    const auto& inputMap = Instance().windowInputs;
+    const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
     if(loc != inputMap.cend())
-        loc->second->WindowRefreshed();
+        loc->second->input->WindowRefreshed();
 }
 
 void GLFWCallbackDelegator::WindowFocusedGLFW(GLFWwindow* w, int b)
 {
-    const auto& inputMap = Instance().windowInputs;
+    const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend())
-        loc->second->WindowFocused(b);
+    if(loc != inputMap.cend() && loc->second->input)
+        loc->second->input->WindowFocused(b);
 }
 
 void GLFWCallbackDelegator::WindowMinimizedGLFW(GLFWwindow* w, int b)
 {
-    const auto& inputMap = Instance().windowInputs;
+    const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend())
-        loc->second->WindowMinimized(b);
+    if(loc != inputMap.cend() && loc->second->input)
+        loc->second->input->WindowMinimized(b);
 }
 
 void GLFWCallbackDelegator::KeyboardUsedGLFW(GLFWwindow* w, int key, int scanCode,
                                int action, int modifiers)
 {
-    const auto& inputMap = Instance().windowInputs;
+    const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend())
-        loc->second->KeyboardUsed(DetermineKey(key), 
-                                  DetermineAction(action));
+    if(loc != inputMap.cend() && loc->second->input)
+        loc->second->input->KeyboardUsed(DetermineKey(key),
+                                         DetermineAction(action));
 }
 
 void GLFWCallbackDelegator::MouseMovedGLFW(GLFWwindow* w, double x, double y)
 {
-    const auto& inputMap = Instance().windowInputs;
+    const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend())
-        loc->second->MouseMoved(x, y);
+    if(loc != inputMap.cend() && loc->second->input)
+        loc->second->input->MouseMoved(x, y);
 }
 
 void GLFWCallbackDelegator::MousePressedGLFW(GLFWwindow* w, int button, int action, int modifier)
 {
-    const auto& inputMap = Instance().windowInputs;
+    const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend())
-        loc->second->MouseButtonUsed(DetermineMouseButton(button),
-                                     DetermineAction(action));
+    if(loc != inputMap.cend() && loc->second->input)
+        loc->second->input->MouseButtonUsed(DetermineMouseButton(button),
+                                            DetermineAction(action));
 }
 
 void GLFWCallbackDelegator::MouseScrolledGLFW(GLFWwindow* w, double x, double y)
 {
-    const auto& inputMap = Instance().windowInputs;
+    const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend())
-        loc->second->MouseScrolled(x, y);
+    if(loc != inputMap.cend() && loc->second->input)
+        loc->second->input->MouseScrolled(x, y);
 }
 
 GLFWCallbackDelegator::GLFWCallbackDelegator()
@@ -291,29 +297,29 @@ GLFWCallbackDelegator::~GLFWCallbackDelegator()
     glfwTerminate();
 }
 
-void GLFWCallbackDelegator::AttachWindow(GLFWwindow* window, WindowInputI* input)
+void GLFWCallbackDelegator::AttachWindow(GLFWwindow* glfwWindow, VisorGL* window)
 {
-    auto ret = windowInputs.emplace(window, input);
+    auto ret = windowMappings.emplace(glfwWindow, window);
     // Override old callbacks
     if(!ret.second)
-        ret.first->second = input;
+        ret.first->second = window;
 
     // Set Callbacks
-    glfwSetWindowPosCallback(window, GLFWCallbackDelegator::WindowPosGLFW);
-    glfwSetFramebufferSizeCallback(window, GLFWCallbackDelegator::WindowFBGLFW);
-    glfwSetWindowSizeCallback(window, GLFWCallbackDelegator::WindowSizeGLFW);
-    glfwSetWindowCloseCallback(window, GLFWCallbackDelegator::WindowCloseGLFW);
-    glfwSetWindowRefreshCallback(window, GLFWCallbackDelegator::WindowRefreshGLFW);
-    glfwSetWindowFocusCallback(window, GLFWCallbackDelegator::WindowFocusedGLFW);
-    glfwSetWindowIconifyCallback(window, GLFWCallbackDelegator::WindowMinimizedGLFW);
+    glfwSetWindowPosCallback(glfwWindow, GLFWCallbackDelegator::WindowPosGLFW);
+    glfwSetFramebufferSizeCallback(glfwWindow, GLFWCallbackDelegator::WindowFBGLFW);
+    glfwSetWindowSizeCallback(glfwWindow, GLFWCallbackDelegator::WindowSizeGLFW);
+    glfwSetWindowCloseCallback(glfwWindow, GLFWCallbackDelegator::WindowCloseGLFW);
+    glfwSetWindowRefreshCallback(glfwWindow, GLFWCallbackDelegator::WindowRefreshGLFW);
+    glfwSetWindowFocusCallback(glfwWindow, GLFWCallbackDelegator::WindowFocusedGLFW);
+    glfwSetWindowIconifyCallback(glfwWindow, GLFWCallbackDelegator::WindowMinimizedGLFW);
 
-    glfwSetKeyCallback(window, GLFWCallbackDelegator::KeyboardUsedGLFW);
-    glfwSetCursorPosCallback(window, GLFWCallbackDelegator::MouseMovedGLFW);
-    glfwSetMouseButtonCallback(window, GLFWCallbackDelegator::MousePressedGLFW);
-    glfwSetScrollCallback(window, GLFWCallbackDelegator::MouseScrolledGLFW);
+    glfwSetKeyCallback(glfwWindow, GLFWCallbackDelegator::KeyboardUsedGLFW);
+    glfwSetCursorPosCallback(glfwWindow, GLFWCallbackDelegator::MouseMovedGLFW);
+    glfwSetMouseButtonCallback(glfwWindow, GLFWCallbackDelegator::MousePressedGLFW);
+    glfwSetScrollCallback(glfwWindow, GLFWCallbackDelegator::MouseScrolledGLFW);
 }
 
-void GLFWCallbackDelegator::DetachWindow(GLFWwindow* window)
+void GLFWCallbackDelegator::DetachWindow(GLFWwindow* glfwWindow)
 {
-    windowInputs.erase(window);
+    windowMappings.erase(glfwWindow);
 }

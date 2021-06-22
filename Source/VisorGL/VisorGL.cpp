@@ -10,8 +10,6 @@
 #include <cassert>
 #include <thread>
 
-VisorGL* VisorGL::instance = nullptr;
-
 void VisorGL::OGLCallbackRender(GLenum,
                                 GLenum type,
                                 GLuint id,
@@ -218,6 +216,16 @@ void VisorGL::RenderImage()
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
+void VisorGL::SetFBSizeInternal()
+{
+
+}
+
+void VisorGL::SetWindowSizeInternal()
+{
+
+}
+
 VisorGL::VisorGL(const VisorOptions& opts,
                  const Vector2i& imgRes,
                  const PixelFormat& imagePixelFormat)
@@ -360,7 +368,7 @@ void VisorGL::SetInputScheme(VisorInputI& i)
 {
     input = &i;
     // Set Callbacks
-    GLFWCallbackDelegator::Instance().AttachWindow(window, input);
+    GLFWCallbackDelegator::Instance().AttachWindow(window, this);
 }
 
 void VisorGL::SetImageRes(Vector2i resolution)

@@ -111,7 +111,6 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     <ClInclude Include="..\..\..\Source\VisorGL\VisorGLEntry.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\VisorGUI.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\VisorGUIWindowI.h" />
-    <ClInclude Include="..\..\..\Source\VisorGL\WindowGL.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\VisorGL\GLFWCallbackDelegator.cpp" />
@@ -121,7 +120,6 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGL.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGLEntry.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGUI.cpp" />
-    <ClCompile Include="..\..\..\Source\VisorGL\WindowGL.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">

@@ -31,9 +31,7 @@ set(SRC_COMMON
     ${CURRENT_SOURCE_DIR}/VisorGL.cpp
     ${CURRENT_SOURCE_DIR}/VisorGL.h
     ${CURRENT_SOURCE_DIR}/VisorGLEntry.cpp
-    ${CURRENT_SOURCE_DIR}/VisorGLEntry.h
-    ${CURRENT_SOURCE_DIR}/WindowGL.cpp
-    ${CURRENT_SOURCE_DIR}/WindowGL.h)
+    ${CURRENT_SOURCE_DIR}/VisorGLEntry.h)
 
 set(SRC_ALL
     ${SRC_GL}

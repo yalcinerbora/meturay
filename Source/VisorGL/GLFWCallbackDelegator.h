@@ -1,7 +1,12 @@
 #pragma once
 
-#include "VisorGL.h"
-#include "WindowGL.h"
+#include <map>
+#include <gl/glew.h>
+#include <glfw/glfw3.h>
+
+#include "RayLib/VisorInputStructs.h"
+
+class VisorGL;
 
 class GLFWCallbackDelegator
 {
@@ -9,7 +14,7 @@ class GLFWCallbackDelegator
         static GLFWCallbackDelegator&       Instance();
 
     private:
-        std::map<GLFWwindow*, WindowInputI*> windowInputs;
+        std::map<GLFWwindow*, VisorGL*>     windowMappings;
 
         // METUray => GLFW converters
         static KeyAction                    DetermineAction(int);
@@ -44,6 +49,6 @@ class GLFWCallbackDelegator
                                             ~GLFWCallbackDelegator();
                                             
 
-        void                                AttachWindow(GLFWwindow* window, WindowInputI*);
+        void                                AttachWindow(GLFWwindow* glfwWindow, VisorGL* window);
         void                                DetachWindow(GLFWwindow* window);
 };

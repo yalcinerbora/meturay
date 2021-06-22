@@ -18,7 +18,6 @@ Visor
 #include "Constants.h"
 
 class VisorInputI;
-class WindowInputI;
 class VisorCallbacksI;
 
 struct VisorError;
@@ -40,38 +39,13 @@ struct VisorOptions
     bool                enableTMO;
 };
 
-class WindowI
+class VisorI
 {
-    public:
-        virtual                         ~WindowI() = default;
-
-        // Interface
-        virtual VisorError              Initialize() = 0;
-        virtual void                    SwapBuffers() = 0;
-        // Main Thread only Calls
-        virtual void                    ProcessInputs() = 0;
-
-        virtual void                    SetInputScheme(WindowInputI&) = 0;
-
-        virtual void                    SetWindowSize(const Vector2i& size) = 0;
-        virtual void                    SetFPSLimit(float) = 0;
-        virtual Vector2i                MonitorResolution() const = 0;
-        // Setting/Releasing rendering context on current thread
-        virtual void                    SetRenderingContextCurrent() = 0;
-        virtual void                    ReleaseRenderingContext() = 0;        
-};
-
-class VisorI : public WindowI
-{
-    private:
-        // Hide these for VisorI (Kinda bad fix but w/e)
-        void                            SwapBuffers() override {};
-        void                            SetInputScheme(WindowInputI&) override {};
-
     public:
         virtual                         ~VisorI() = default;
 
         // Interface
+        virtual VisorError              Initialize() = 0;
         virtual bool                    IsOpen() = 0;
         virtual void                    Render() = 0;
         // Input System
@@ -91,6 +65,15 @@ class VisorI : public WindowI
                                                           Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
         // Options
         virtual const VisorOptions&     VisorOpts() const = 0;
+        // Misc
+        virtual void                    SetWindowSize(const Vector2i& size) = 0;
+        virtual void                    SetFPSLimit(float) = 0;
+        virtual Vector2i                MonitorResolution() const = 0;
+        // Setting/Releasing rendering context on current thread
+        virtual void                    SetRenderingContextCurrent() = 0;
+        virtual void                    ReleaseRenderingContext() = 0;
+        // Main Thread only Calls
+        virtual void                    ProcessInputs() = 0;
         // Camera Related (Tracer Callbacks)
         virtual void                    SetCamera(const VisorCamera&) = 0;
         virtual void                    SetSceneCameraCount(uint32_t) = 0;
