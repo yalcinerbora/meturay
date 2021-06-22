@@ -3,4 +3,9 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\MVisor\main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Filter Include="GuideDebug">
+      <UniqueIdentifier>{67b7613a-5534-49bc-a74e-b2a3e20e6c4e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
 </Project>

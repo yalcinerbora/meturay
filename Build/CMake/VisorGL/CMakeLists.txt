@@ -25,11 +25,15 @@ set(SRC_SHADERS
     ${SHADER_SOURCE_DIR}/TonemapAndGamma.comp)
 
 set(SRC_COMMON
+    ${CURRENT_SOURCE_DIR}/GLFWCallbackDelegator.h
+    ${CURRENT_SOURCE_DIR}/GLFWCallbackDelegator.cpp
     ${CURRENT_SOURCE_DIR}/Structs.h
     ${CURRENT_SOURCE_DIR}/VisorGL.cpp
     ${CURRENT_SOURCE_DIR}/VisorGL.h
     ${CURRENT_SOURCE_DIR}/VisorGLEntry.cpp
-    ${CURRENT_SOURCE_DIR}/VisorGLEntry.h)
+    ${CURRENT_SOURCE_DIR}/VisorGLEntry.h
+    ${CURRENT_SOURCE_DIR}/WindowGL.cpp
+    ${CURRENT_SOURCE_DIR}/WindowGL.h)
 
 set(SRC_ALL
     ${SRC_GL}

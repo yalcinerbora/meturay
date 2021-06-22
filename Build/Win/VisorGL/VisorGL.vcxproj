@@ -102,6 +102,7 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\VisorGL\GLConversionFunctions.h" />
+    <ClInclude Include="..\..\..\Source\VisorGL\GLFWCallbackDelegator.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\ShaderGL.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\Structs.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\TMOptionWindow.h" />
@@ -110,14 +111,17 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     <ClInclude Include="..\..\..\Source\VisorGL\VisorGLEntry.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\VisorGUI.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\VisorGUIWindowI.h" />
+    <ClInclude Include="..\..\..\Source\VisorGL\WindowGL.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\Source\VisorGL\GLFWCallbackDelegator.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\ShaderGL.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\TMOptionWindow.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\ToneMapGL.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGL.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGLEntry.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGUI.cpp" />
+    <ClCompile Include="..\..\..\Source\VisorGL\WindowGL.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">

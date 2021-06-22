@@ -52,11 +52,21 @@ struct VisorGLCommand
         VisorGLCommand&         operator=(VisorGLCommand&&) = default;
 };
 
+class WindowGL : WindowI
+{
+    private:
+        WindowInputI&   windowInput;
+        GLFWwindow*     window;
+
+    protected:
+    public:
+        
+
+};
+
 class VisorGL : public VisorI
 {
     private:
-        static VisorGL*             instance;
-
         static constexpr float      PostProcessTriData[6] =
         {
             3.0f, -1.0f,
@@ -93,7 +103,7 @@ class VisorGL : public VisorI
         Vector2i                    imageSize;
         PixelFormat                 imagePixFormat;
 
-        // GLClasses
+        // GL Classes
         ToneMapGL                   toneMapGL;
 
         // Image portion list
@@ -121,26 +131,6 @@ class VisorGL : public VisorI
 
         // GUI
         std::unique_ptr<VisorGUI>   visorGUI;
-
-        static KeyAction            DetermineAction(int);
-        static MouseButtonType      DetermineMouseButton(int);
-        static KeyboardKeyType      DetermineKey(int);
-
-        // Callbacks
-        // GLFW
-        static void                 ErrorCallbackGLFW(int, const char*);
-        static void                 WindowPosGLFW(GLFWwindow*, int, int);
-        static void                 WindowFBGLFW(GLFWwindow*, int, int);
-        static void                 WindowSizeGLFW(GLFWwindow*, int, int);
-        static void                 WindowCloseGLFW(GLFWwindow*);
-        static void                 WindowRefreshGLFW(GLFWwindow*);
-        static void                 WindowFocusedGLFW(GLFWwindow*, int);
-        static void                 WindowMinimizedGLFW(GLFWwindow*, int);
-
-        static void                 KeyboardUsedGLFW(GLFWwindow*, int, int, int, int);
-        static void                 MouseMovedGLFW(GLFWwindow*, double, double);
-        static void                 MousePressedGLFW(GLFWwindow*, int, int, int);
-        static void                 MouseScrolledGLFW(GLFWwindow*, double, double);
 
         // OGL Debug Context Callback
         static void                 OGLCallbackRender(GLenum source,

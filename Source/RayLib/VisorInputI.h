@@ -17,22 +17,20 @@ using MouseButtonCallbacks = std::multimap<std::pair<MouseButtonType, KeyAction>
 
 struct VisorCamera;
 
-class VisorInputI
+class WindowInputI
 {
     private:
+    protected:
         KeyCallbacks                        keyCallbacks;
         MouseButtonCallbacks                buttonCallbacks;
 
         void                                KeyboardUsedWithCallbacks(KeyboardKeyType key, KeyAction action);
         void                                MouseButtonUsedWithCallbacks(MouseButtonType button, KeyAction action);
 
-    protected:
     public:
-        virtual                             ~VisorInputI() = default;
+        virtual                             ~WindowInputI() = default;
 
         // Interface
-        virtual void                        AttachVisorCallback(VisorCallbacksI&) = 0;
-
         virtual void                        WindowPosChanged(int posX, int posY) = 0;
         virtual void                        WindowFBChanged(int fbWidth, int fbHeight) = 0;
         virtual void                        WindowSizeChanged(int width, int height) = 0;
@@ -47,9 +45,6 @@ class VisorInputI
         virtual void                        KeyboardUsed(KeyboardKeyType key, KeyAction action) = 0;
         virtual void                        MouseButtonUsed(MouseButtonType button, KeyAction action) = 0;
 
-        virtual void                        SetCamera(const VisorCamera&) = 0;
-        virtual void                        SetSceneCameraCount(uint32_t) = 0;
-
         // Defining Custom Callback
         template <class Function, class... Args>
         void                                AddKeyCallback(KeyboardKeyType, KeyAction,
@@ -59,8 +54,20 @@ class VisorInputI
                                                               Function&& f, Args&&... args);
 };
 
+class VisorInputI : public WindowInputI
+{
+    public:
+        virtual                             ~VisorInputI() = default;
+
+        // Interface
+        virtual void                        AttachVisorCallback(VisorCallbacksI&) = 0;
+
+        virtual void                        SetCamera(const VisorCamera&) = 0;
+        virtual void                        SetSceneCameraCount(uint32_t) = 0;
+};
+
 template <class Function, class... Args>
-void VisorInputI::AddKeyCallback(KeyboardKeyType key, KeyAction action,
+void WindowInputI::AddKeyCallback(KeyboardKeyType key, KeyAction action,
                                  Function&& f, Args&&... args)
 {
     std::function<void()> func = std::bind(f, args...);
@@ -68,14 +75,14 @@ void VisorInputI::AddKeyCallback(KeyboardKeyType key, KeyAction action,
 }
 
 template <class Function, class... Args>
-void VisorInputI::AddButtonCallback(MouseButtonType button, KeyAction action,
+void WindowInputI::AddButtonCallback(MouseButtonType button, KeyAction action,
                                     Function&& f, Args&&... args)
 {
     std::function<void()> func = std::bind(f, args...);
     buttonCallbacks.emplace(std::make_pair(button, action), func);
 }
 
-inline void VisorInputI::KeyboardUsedWithCallbacks(KeyboardKeyType key, KeyAction action)
+inline void WindowInputI::KeyboardUsedWithCallbacks(KeyboardKeyType key, KeyAction action)
 {
     KeyboardUsed(key, action);
 
@@ -87,7 +94,7 @@ inline void VisorInputI::KeyboardUsedWithCallbacks(KeyboardKeyType key, KeyActio
     }
 }
 
-inline void VisorInputI::MouseButtonUsedWithCallbacks(MouseButtonType button, KeyAction action)
+inline void WindowInputI::MouseButtonUsedWithCallbacks(MouseButtonType button, KeyAction action)
 {
     MouseButtonUsed(button, action);
 

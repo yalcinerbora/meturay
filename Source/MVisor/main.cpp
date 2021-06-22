@@ -27,19 +27,24 @@ int main(int argc, const char* argv[])
     const std::string Description = "Tracer or Debug Visualizer";
     const std::string header = (BundleName + " - " + AppName + " " + Description);
 
-    bool guiderDebug;
-    std::string guideDebugConfig;
+    bool guiderDebug = false;
+    std::string guideDebugConfig = "";
 
     // Command Line Arguments
     CLI::App app{header};
     app.footer(ProgramConstants::Footer);
 
-    CLI::Option* gdbConfOpt = app.add_option("-gdbc, --guideDebugConfig", guideDebugConfig, "Guider debugging configuration file");
 
-    app.add_option("-gdb,--guideDebug", guiderDebug, "Debug visualize provided path guiders")
-        ->needs(gdbConfOpt)
-        ->expected(1)
-        ->check(CLI::ExistingFile);
+    CLI::Option* debugOptOn = app.add_flag("--gdb,--guideDebug", guiderDebug,
+                                             "Visualize path guiders provided in the config file");
+
+    app.add_option("--gdbc,--guideDebugConfig",
+                   guideDebugConfig,
+                   "Guider debugging configuration file")
+        ->check(CLI::ExistingFile)
+        ->needs(debugOptOn);
+
+
 
     if(argc == 1)
     {
@@ -57,7 +62,26 @@ int main(int argc, const char* argv[])
     }
 
     // Load VisorGL
+    if(guiderDebug)
+    {
 
+        // Initialize a Visor
+
+
+
+
+
+
+
+
+
+
+
+    }
+    else
+    {
+        METU_ERROR_LOG("MVisor currently only support path guider visualzation..");
+    }
 
     return 0;
 }
