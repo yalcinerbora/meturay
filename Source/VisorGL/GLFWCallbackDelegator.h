@@ -6,7 +6,7 @@
 
 #include "RayLib/VisorInputStructs.h"
 
-class VisorGL;
+class WindowGLI;
 
 class GLFWCallbackDelegator
 {
@@ -14,7 +14,7 @@ class GLFWCallbackDelegator
         static GLFWCallbackDelegator&       Instance();
 
     private:
-        std::map<GLFWwindow*, VisorGL*>     windowMappings;
+        std::map<GLFWwindow*, WindowGLI*>   windowMappings;
 
         // METUray => GLFW converters
         static KeyAction                    DetermineAction(int);
@@ -49,6 +49,12 @@ class GLFWCallbackDelegator
                                             ~GLFWCallbackDelegator();
                                             
 
-        void                                AttachWindow(GLFWwindow* glfwWindow, VisorGL* window);
+        void                                AttachWindow(GLFWwindow* glfwWindow, WindowGLI* window);
         void                                DetachWindow(GLFWwindow* window);
+
+        // OGL Debug write
+        static void                         OGLDebugLog(GLenum type,
+                                                        GLuint id,
+                                                        GLenum severity,
+                                                        const char* message);
 };

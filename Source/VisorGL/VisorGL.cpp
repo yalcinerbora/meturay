@@ -3,6 +3,8 @@
 #include "RayLib/Log.h"
 #include "RayLib/CPUTimer.h"
 #include "RayLib/VisorError.h"
+#include "RayLib/VisorInputI.h"
+
 #include "GLConversionFunctions.h"
 #include "GLFWCallbackDelegator.h"
 
@@ -18,53 +20,7 @@ void VisorGL::OGLCallbackRender(GLenum,
                                 const char* message,
                                 const void*)
 {
-    // Dont Show Others For Now
-    if(type == GL_DEBUG_TYPE_OTHER ||   //
-       id == 131186 ||                  // Buffer Copy warning omit
-       id == 131218)                    // Shader recompile cuz of state mismatch omit
-        return;
-
-    METU_DEBUG_LOG("---------------------OGL-Callback-Render------------");
-    METU_DEBUG_LOG("Message: %s", message);
-    switch(type)
-    {
-        case GL_DEBUG_TYPE_ERROR:
-            METU_DEBUG_LOG("Type: ERROR");
-            break;
-        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-            METU_DEBUG_LOG("Type: DEPRECATED_BEHAVIOR");
-            break;
-        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-            METU_DEBUG_LOG("Type: UNDEFINED_BEHAVIOR");
-            break;
-        case GL_DEBUG_TYPE_PORTABILITY:
-            METU_DEBUG_LOG("Type: PORTABILITY");
-            break;
-        case GL_DEBUG_TYPE_PERFORMANCE:
-            METU_DEBUG_LOG("Type: PERFORMANCE");
-            break;
-        case GL_DEBUG_TYPE_OTHER:
-            METU_DEBUG_LOG("Type: OTHER");
-            break;
-    }
-
-    METU_DEBUG_LOG("ID: %d", id);
-    switch(severity)
-    {
-        case GL_DEBUG_SEVERITY_LOW:
-            METU_DEBUG_LOG("Severity: LOW");
-            break;
-        case GL_DEBUG_SEVERITY_MEDIUM:
-            METU_DEBUG_LOG("Severity: MEDIUM");
-            break;
-        case GL_DEBUG_SEVERITY_HIGH:
-            METU_DEBUG_LOG("Severity: HIGH");
-            break;
-        default:
-            METU_DEBUG_LOG("Severity: NONE");
-            break;
-    }
-    METU_DEBUG_LOG("---------------------OGL-Callback-Render-End--------------");
+    GLFWCallbackDelegator::OGLDebugLog(type, id, severity, message);
 }
 
 void VisorGL::ReallocImages()
@@ -216,14 +172,24 @@ void VisorGL::RenderImage()
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-void VisorGL::SetFBSizeInternal()
+void VisorGL::SetFBSizeFromInput(const Vector2i& fbSize)
 {
-
+    viewportSize = fbSize;
 }
 
-void VisorGL::SetWindowSizeInternal()
+void VisorGL::SetWindowSizeFromInput(const Vector2i& winSize)
 {
+    vOpts.wSize = winSize;
+}
 
+void VisorGL::SetOpenStateFromInput(bool b)
+{
+    open = b;
+}
+
+VisorInputI* VisorGL::InputInterface()
+{
+    return input;
 }
 
 VisorGL::VisorGL(const VisorOptions& opts,
@@ -279,6 +245,7 @@ VisorGL::~VisorGL()
     if(visorGUI) visorGUI = nullptr;
 
     if(window != nullptr) glfwDestroyWindow(window);
+    GLFWCallbackDelegator::Instance().DetachWindow(window);
 }
 
 bool VisorGL::IsOpen()
@@ -367,8 +334,6 @@ void VisorGL::Render()
 void VisorGL::SetInputScheme(VisorInputI& i)
 {
     input = &i;
-    // Set Callbacks
-    GLFWCallbackDelegator::Instance().AttachWindow(window, this);
 }
 
 void VisorGL::SetImageRes(Vector2i resolution)
@@ -580,13 +545,16 @@ VisorError VisorGL::Initialize()
 
     window = glfwCreateWindow(vOpts.wSize[0],
                               vOpts.wSize[1],
-                              "METU Visor",
+                              "METUray Visor",
                               nullptr,
                               nullptr);
     if(window == nullptr)
     {
         return VisorError::WINDOW_GENERATION_ERROR;
     }
+    // Set Callbacks
+    glfwCallback.AttachWindow(window, this);
+
     glfwMakeContextCurrent(window);
 
     // Initial Option set

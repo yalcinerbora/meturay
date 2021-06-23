@@ -1,0 +1,215 @@
+#include "GuideDebugGL.h"
+#include "RayLib/VisorError.h"
+#include "RayLib/Log.h"
+#include "GLFWCallbackDelegator.h"
+
+void GuideDebugGL::OGLCallbackRender(GLenum,
+                                     GLenum type,
+                                     GLuint id,
+                                     GLenum severity,
+                                     GLsizei,
+                                     const char* message,
+                                     const void*)
+{
+    GLFWCallbackDelegator::OGLDebugLog(type, id, severity, message);
+}
+
+void GuideDebugGL::SetFBSizeFromInput(const Vector2i& fbs)
+{
+    viewportSize = fbs;
+}
+
+void GuideDebugGL::SetWindowSizeFromInput(const Vector2i& ws)
+{
+    windowSize = ws;
+}
+
+void GuideDebugGL::SetOpenStateFromInput(bool b)
+{
+    open = b;
+}
+
+VisorInputI* GuideDebugGL::InputInterface()
+{
+    return input;
+}
+
+
+GuideDebugGL::GuideDebugGL(const Vector2i& ws,
+                           const std::u8string& guideDebugFile)
+    : windowSize(ws)
+    , viewportSize(ws)
+    , glfwWindow(nullptr)
+    , dummyVOpts{}
+    , configFile(guideDebugFile)
+{
+    VisorError e = Initialize();
+    if(e != VisorError::OK) throw VisorException(e);
+}
+
+GuideDebugGL::~GuideDebugGL()
+{
+    if(glfwWindow != nullptr) glfwDestroyWindow(glfwWindow);
+    GLFWCallbackDelegator::Instance().DetachWindow(glfwWindow);
+}
+
+VisorError GuideDebugGL::Initialize()
+{
+    GLFWCallbackDelegator& glfwCallback = GLFWCallbackDelegator::Instance();
+
+    // Common Window Hints
+    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+
+    // This was buggy on nvidia cards couple of years ago
+    // So instead manually convert image using
+    // computer shader or w/e sRGB space
+    glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_FALSE);
+
+    glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
+    glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    glfwWindowHint(GLFW_CONTEXT_RELEASE_BEHAVIOR, GLFW_RELEASE_BEHAVIOR_FLUSH);
+
+    glfwWindowHint(GLFW_STEREO, GLFW_FALSE);
+
+    glfwWindowHint(GLFW_RED_BITS, 8);
+    glfwWindowHint(GLFW_GREEN_BITS, 8);
+    glfwWindowHint(GLFW_BLUE_BITS, 8);
+    glfwWindowHint(GLFW_ALPHA_BITS, 8);
+
+    // No depth buffer or stencil buffer etc
+    glfwWindowHint(GLFW_DEPTH_BITS, 0);
+    glfwWindowHint(GLFW_STENCIL_BITS, 0);
+
+    glfwWindow = glfwCreateWindow(windowSize[0],
+                                  windowSize[1],
+                                  "METUray GuideDebug",
+                                  nullptr,
+                                  nullptr);
+
+    if(glfwWindow == nullptr)
+    {
+        return VisorError::WINDOW_GENERATION_ERROR;
+    }
+
+    // Set Callbacks
+    glfwCallback.AttachWindow(glfwWindow, this);
+
+    glfwMakeContextCurrent(glfwWindow);
+    glfwSwapInterval(0);
+
+    // Now Init GLEW
+    glewExperimental = GL_TRUE;
+    GLenum err = glewInit();
+    if(err != GLEW_OK)
+    {
+        METU_ERROR_LOG("%s", glewGetErrorString(err));
+        return VisorError::RENDER_FUCTION_GENERATOR_ERROR;
+    }
+
+    // Print Stuff Now
+    // Window Done
+    METU_LOG("Window Initialized.");
+    METU_LOG("GLEW\t: %s", glewGetString(GLEW_VERSION));
+    METU_LOG("GLFW\t: %s", glfwGetVersionString());
+    METU_LOG("");
+    METU_LOG("Renderer Information...");
+    METU_LOG("OpenGL\t: %s", glGetString(GL_VERSION));
+    METU_LOG("GLSL\t: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+    METU_LOG("Device\t: %s", glGetString(GL_RENDERER));
+    METU_LOG("");
+
+    if constexpr(IS_DEBUG_MODE)
+    {
+        // Add Callback
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(GuideDebugGL::OGLCallbackRender, nullptr);
+        glDebugMessageControl(GL_DONT_CARE,
+                              GL_DONT_CARE,
+                              GL_DONT_CARE,
+                              0,
+                              nullptr,
+                              GL_TRUE);
+    }
+
+    // Pre-Bind Everything
+    // States
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
+    glfwShowWindow(glfwWindow);
+    open = true;
+
+    // Init GUI aswell
+    gui = std::make_unique<GuideDebugGUI>(glfwWindow);
+
+    glfwMakeContextCurrent(nullptr);
+    return VisorError::OK;
+}
+
+bool GuideDebugGL::IsOpen()
+{
+    return open;
+}
+
+void GuideDebugGL::Render()
+{
+    glfwMakeContextCurrent(glfwWindow);
+
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    gui->Render();
+
+    glfwSwapBuffers(glfwWindow);
+}
+
+// Input System
+void GuideDebugGL::SetInputScheme(VisorInputI& i)
+{
+    input = &i;
+}
+
+// Misc
+void GuideDebugGL::SetWindowSize(const Vector2i& size)
+{
+    glfwSetWindowSize(glfwWindow, size[0], size[1]);
+}
+
+void GuideDebugGL::SetFPSLimit(float)
+{
+
+}
+
+Vector2i GuideDebugGL::MonitorResolution() const
+{
+    GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+
+    return Vector2i(mode->width, mode->height);
+}
+
+void GuideDebugGL::SetRenderingContextCurrent()
+{
+    glfwMakeContextCurrent(glfwWindow);
+}
+
+void GuideDebugGL::ReleaseRenderingContext()
+{
+    glfwMakeContextCurrent(nullptr);
+}
+
+
+void GuideDebugGL::ProcessInputs()
+{
+    glfwPollEvents();
+}

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <string>
+#include "VisorCamera.h"
 
-struct VisorCamera;
 struct TracerCommonOptions;
 
 enum class ImageType;
@@ -25,4 +25,17 @@ class CommandCallbacksI
         // Control Flow of the Simulation
         virtual void        StartStopTrace(const bool) = 0;
         virtual void        PauseContTrace(const bool) = 0;
+};
+
+class EmptyCommandCallback : public CommandCallbacksI
+{
+    void    ChangeScene(const std::u8string) override {}
+    void    ChangeTime(const double) override {}
+    void    IncreaseTime(const double) override {}
+    void    DecreaseTime(const double) override {}
+
+    void    ChangeCamera(const VisorCamera) override {}
+    void    ChangeCamera(const unsigned int) override {}
+    void    StartStopTrace(const bool) override {}
+    void    PauseContTrace(const bool) override {}
 };

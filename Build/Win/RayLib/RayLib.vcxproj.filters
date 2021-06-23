@@ -258,6 +258,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\RandomColor.h">
       <Filter>Utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\FreeImgRAII.h">
+      <Filter>FileI-O</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

@@ -2,6 +2,7 @@
 
 #include "RayLib/Log.h"
 #include "RayLib/VisorError.h"
+#include "RayLib/VisorInputI.h"
 
 #include "VisorGL.h"
 
@@ -176,6 +177,60 @@ KeyboardKeyType GLFWCallbackDelegator::DetermineKey(int key)
     return keyMap[key];
 }
 
+void GLFWCallbackDelegator::OGLDebugLog(GLenum type,
+                                        GLuint id,
+                                        GLenum severity,
+                                        const char* message)
+{   
+    // Dont Show Others For Now
+    if(type == GL_DEBUG_TYPE_OTHER ||    //
+        id == 131186 ||                  // Buffer Copy warning omit
+        id == 131218)                    // Shader recompile cuz of state mismatch omit
+        return;
+
+    METU_DEBUG_LOG("---------------------OGL-Callback-Render------------");
+    METU_DEBUG_LOG("Message: %s", message);
+    switch(type)
+    {
+        case GL_DEBUG_TYPE_ERROR:
+            METU_DEBUG_LOG("Type: ERROR");
+            break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+            METU_DEBUG_LOG("Type: DEPRECATED_BEHAVIOR");
+            break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+            METU_DEBUG_LOG("Type: UNDEFINED_BEHAVIOR");
+            break;
+        case GL_DEBUG_TYPE_PORTABILITY:
+            METU_DEBUG_LOG("Type: PORTABILITY");
+            break;
+        case GL_DEBUG_TYPE_PERFORMANCE:
+            METU_DEBUG_LOG("Type: PERFORMANCE");
+            break;
+        case GL_DEBUG_TYPE_OTHER:
+            METU_DEBUG_LOG("Type: OTHER");
+            break;
+    }
+
+    METU_DEBUG_LOG("ID: %d", id);
+    switch(severity)
+    {
+        case GL_DEBUG_SEVERITY_LOW:
+            METU_DEBUG_LOG("Severity: LOW");
+            break;
+        case GL_DEBUG_SEVERITY_MEDIUM:
+            METU_DEBUG_LOG("Severity: MEDIUM");
+            break;
+        case GL_DEBUG_SEVERITY_HIGH:
+            METU_DEBUG_LOG("Severity: HIGH");
+            break;
+        default:
+            METU_DEBUG_LOG("Severity: NONE");
+            break;
+    }
+    METU_DEBUG_LOG("---------------------OGL-Callback-Render-End--------------");
+}
+
 void GLFWCallbackDelegator::ErrorCallbackGLFW(int error, const char* description)
 {
     METU_ERROR_LOG("GLFW %d: %s", error, description);
@@ -185,18 +240,18 @@ void GLFWCallbackDelegator::WindowPosGLFW(GLFWwindow* w, int x, int y)
 {
     const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend() && loc->second->input)
-        loc->second->input->WindowPosChanged(x, y);
+    if(loc != inputMap.cend() && loc->second->InputInterface())
+        loc->second->InputInterface()->WindowPosChanged(x, y);
 }
 
 void GLFWCallbackDelegator::WindowFBGLFW(GLFWwindow* w, int width, int height)
 {
     const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend() && loc->second->input)
+    if(loc != inputMap.cend() && loc->second->InputInterface())
     {
-        loc->second->viewportSize = Vector2i(width, height);
-        loc->second->input->WindowFBChanged(width, height);
+        loc->second->SetFBSizeFromInput(Vector2i(width, height));
+        loc->second->InputInterface()->WindowFBChanged(width, height);
     }        
 }
 
@@ -204,10 +259,10 @@ void GLFWCallbackDelegator::WindowSizeGLFW(GLFWwindow* w, int width, int height)
 {
     const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend() && loc->second->input)
+    if(loc != inputMap.cend() && loc->second->InputInterface())
     {        
-        loc->second->vOpts.wSize = Vector2i(width, height);;
-        loc->second->input->WindowSizeChanged(width, height);
+        loc->second->SetWindowSizeFromInput(Vector2i(width, height));
+        loc->second->InputInterface()->WindowSizeChanged(width, height);
     }
 }
 
@@ -215,10 +270,10 @@ void GLFWCallbackDelegator::WindowCloseGLFW(GLFWwindow* w)
 {
     const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend() && loc->second->input)
+    if(loc != inputMap.cend() && loc->second->InputInterface())
     {
-        loc->second->input->WindowClosed();
-        loc->second->open = false;
+        loc->second->InputInterface()->WindowClosed();
+        loc->second->SetOpenStateFromInput(false);
     }
 }
 
@@ -227,23 +282,23 @@ void GLFWCallbackDelegator::WindowRefreshGLFW(GLFWwindow* w)
     const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
     if(loc != inputMap.cend())
-        loc->second->input->WindowRefreshed();
+        loc->second->InputInterface()->WindowRefreshed();
 }
 
 void GLFWCallbackDelegator::WindowFocusedGLFW(GLFWwindow* w, int b)
 {
     const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend() && loc->second->input)
-        loc->second->input->WindowFocused(b);
+    if(loc != inputMap.cend() && loc->second->InputInterface())
+        loc->second->InputInterface()->WindowFocused(b);
 }
 
 void GLFWCallbackDelegator::WindowMinimizedGLFW(GLFWwindow* w, int b)
 {
     const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend() && loc->second->input)
-        loc->second->input->WindowMinimized(b);
+    if(loc != inputMap.cend() && loc->second->InputInterface())
+        loc->second->InputInterface()->WindowMinimized(b);
 }
 
 void GLFWCallbackDelegator::KeyboardUsedGLFW(GLFWwindow* w, int key, int scanCode,
@@ -251,34 +306,34 @@ void GLFWCallbackDelegator::KeyboardUsedGLFW(GLFWwindow* w, int key, int scanCod
 {
     const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend() && loc->second->input)
-        loc->second->input->KeyboardUsed(DetermineKey(key),
-                                         DetermineAction(action));
+    if(loc != inputMap.cend() && loc->second->InputInterface())
+        loc->second->InputInterface()->KeyboardUsed(DetermineKey(key),
+                                                    DetermineAction(action));
 }
 
 void GLFWCallbackDelegator::MouseMovedGLFW(GLFWwindow* w, double x, double y)
 {
     const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend() && loc->second->input)
-        loc->second->input->MouseMoved(x, y);
+    if(loc != inputMap.cend() && loc->second->InputInterface())
+        loc->second->InputInterface()->MouseMoved(x, y);
 }
 
 void GLFWCallbackDelegator::MousePressedGLFW(GLFWwindow* w, int button, int action, int modifier)
 {
     const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend() && loc->second->input)
-        loc->second->input->MouseButtonUsed(DetermineMouseButton(button),
-                                            DetermineAction(action));
+    if(loc != inputMap.cend() && loc->second->InputInterface())
+        loc->second->InputInterface()->MouseButtonUsed(DetermineMouseButton(button),
+                                                       DetermineAction(action));
 }
 
 void GLFWCallbackDelegator::MouseScrolledGLFW(GLFWwindow* w, double x, double y)
 {
     const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
-    if(loc != inputMap.cend() && loc->second->input)
-        loc->second->input->MouseScrolled(x, y);
+    if(loc != inputMap.cend() && loc->second->InputInterface())
+        loc->second->InputInterface()->MouseScrolled(x, y);
 }
 
 GLFWCallbackDelegator::GLFWCallbackDelegator()
@@ -297,7 +352,7 @@ GLFWCallbackDelegator::~GLFWCallbackDelegator()
     glfwTerminate();
 }
 
-void GLFWCallbackDelegator::AttachWindow(GLFWwindow* glfwWindow, VisorGL* window)
+void GLFWCallbackDelegator::AttachWindow(GLFWwindow* glfwWindow, WindowGLI* window)
 {
     auto ret = windowMappings.emplace(glfwWindow, window);
     // Override old callbacks

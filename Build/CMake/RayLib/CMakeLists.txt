@@ -27,6 +27,7 @@ set(SRC_FILE_IO
     ${CURRENT_SOURCE_DIR}/EnumStringConversions.h
     ${CURRENT_SOURCE_DIR}/ImageIO.cpp
     ${CURRENT_SOURCE_DIR}/ImageIO.h
+    ${CURRENT_SOURCE_DIR}/FreeImgRAII.h
     ${CURRENT_SOURCE_DIR}/MayaCacheIO.cpp
     ${CURRENT_SOURCE_DIR}/MayaCacheIO.h
     ${CURRENT_SOURCE_DIR}/SceneIO.cpp

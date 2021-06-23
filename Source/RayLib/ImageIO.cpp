@@ -1,7 +1,35 @@
 #include "ImageIO.h"
-#include "FreeImage.h"
+#include "FreeImgRAII.h"
 
-std::unique_ptr<ImageIO> ImageIO::instance = nullptr;
+ImageIO& ImageIO::Instance()
+{
+    static std::unique_ptr<ImageIO> instance = nullptr;
+
+    if(instance == nullptr)
+        instance = std::make_unique<ImageIO>();
+    return *(instance.get());
+}
+
+static PixelFormat ConvertFreeImgFormat(FREE_IMAGE_TYPE t, uint32_t bpp)
+{
+    switch(t)
+    {
+        case FREE_IMAGE_TYPE::FIT_BITMAP:
+        {
+            switch(bpp)
+            {
+                case 24: return PixelFormat::RGB8_UNORM;
+                case 32: return PixelFormat::RGBA8_UNORM;
+            }
+            break;
+        }
+        case FREE_IMAGE_TYPE::FIT_RGB16: return PixelFormat::RGB16_UNORM;
+        case FREE_IMAGE_TYPE::FIT_RGBA16: return PixelFormat::RGBA16_UNORM;
+        case FREE_IMAGE_TYPE::FIT_RGBF: return PixelFormat::RGB_FLOAT;
+        case FREE_IMAGE_TYPE::FIT_RGBAF: return PixelFormat::RGBA_FLOAT;
+    }
+    return PixelFormat::END;
+}
 
 ImageIO::ImageIO()
 {
@@ -11,14 +39,6 @@ ImageIO::ImageIO()
 ImageIO::~ImageIO()
 {
     FreeImage_DeInitialise();
-}
-
-ImageIO& ImageIO::System()
-{
-    if(instance == nullptr)
-        instance = std::make_unique<ImageIO>();
-
-    return *instance;
 }
 
 bool ImageIO::ReadHDR(std::vector<Vector4>& image,
@@ -74,6 +94,49 @@ bool ImageIO::ReadHDR(std::vector<Vector4>& image,
             image[j * header->biWidth + i] = pixel;
         }
     }
+    return true;
+}
+
+bool ImageIO::ReadImage(std::vector<Byte>& pixels,
+                        PixelFormat& format, Vector2ui& size,
+                        const std::string& filePath) const
+{
+    FREE_IMAGE_FORMAT f;
+    // Check file to find type
+    if((f = FreeImage_GetFileType(filePath.c_str())) == FIF_UNKNOWN)
+        // Use file extension to determine type
+        f = FreeImage_GetFIFFromFilename(filePath.c_str());
+    // If it is still unknown just return error
+    if(f == FIF_UNKNOWN) return false;
+
+    FreeImgRAII imgCPU(f, filePath.c_str());
+    if(!imgCPU) return false;
+
+    // Bit per pixel
+    uint32_t bpp = FreeImage_GetBPP(imgCPU);
+    uint32_t w = FreeImage_GetWidth(imgCPU);
+    uint32_t h = FreeImage_GetHeight(imgCPU);
+    uint32_t pitch = FreeImage_GetPitch(imgCPU);
+    size = Vector2ui(w, h);
+
+    FREE_IMAGE_TYPE imgType = FreeImage_GetImageType(imgCPU);
+    FREE_IMAGE_COLOR_TYPE colorType = FreeImage_GetColorType(imgCPU);
+
+    format = ConvertFreeImgFormat(imgType, bpp);
+    if(format == PixelFormat::END) return false;
+
+
+    BYTE* pixelsFreeImg = FreeImage_GetBits(imgCPU);
+    pixels.resize(bpp * w * h / BYTE_BITS);
+    size_t rowSize = bpp / BYTE_BITS * w;
+    // Compact the buffer 
+    for(uint32_t j = 0; j < h; j++)
+    {
+        std::memcpy(pixels.data() + j * rowSize,
+                    pixelsFreeImg + j * pitch,
+                    rowSize);
+    }
+    // All done!
     return true;
 }
 

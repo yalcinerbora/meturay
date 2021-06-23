@@ -6,6 +6,8 @@ set(SRC_GL
     ${CURRENT_SOURCE_DIR}/GLConversionFunctions.h
     ${CURRENT_SOURCE_DIR}/ShaderGL.cpp
     ${CURRENT_SOURCE_DIR}/ShaderGL.h
+    ${CURRENT_SOURCE_DIR}/TextureGL.cpp
+    ${CURRENT_SOURCE_DIR}/TextureGL.h
     ${CURRENT_SOURCE_DIR}/ToneMapGL.cpp
     ${CURRENT_SOURCE_DIR}/ToneMapGL.h)
 
@@ -24,6 +26,13 @@ set(SRC_SHADERS
     ${SHADER_SOURCE_DIR}/PProcessGeneric.vert
     ${SHADER_SOURCE_DIR}/TonemapAndGamma.comp)
 
+set(GUIDE_DEBUG
+    ${CURRENT_SOURCE_DIR}/GuideDebugGL.cpp
+    ${CURRENT_SOURCE_DIR}/GuideDebugGL.h
+    ${CURRENT_SOURCE_DIR}/GuideDebugGUI.cpp
+    ${CURRENT_SOURCE_DIR}/GuideDebugGUI.h)
+
+
 set(SRC_COMMON
     ${CURRENT_SOURCE_DIR}/GLFWCallbackDelegator.h
     ${CURRENT_SOURCE_DIR}/GLFWCallbackDelegator.cpp
@@ -36,11 +45,13 @@ set(SRC_COMMON
 set(SRC_ALL
     ${SRC_GL}
     ${SRC_GUI}
+    ${GUIDE_DEBUG}
     ${SRC_SHADERS}
     ${SRC_COMMON})
 
 source_group("GL" FILES ${SRC_GL})
 source_group("GUI" FILES ${SRC_GUI})
+source_group("GuideDebug" FILES ${GUIDE_DEBUG})
 source_group("Shaders" FILES ${SRC_SHADERS})
 source_group("" FILES ${SRC_COMMON})
 

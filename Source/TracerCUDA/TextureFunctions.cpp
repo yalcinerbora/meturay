@@ -1,35 +1,16 @@
 #include "TextureFunctions.h"
+#include "RayLib/FreeImgRAII.h"
+
 //#include "TracerDebug.h"
 
-// Simple RAII Pattern for FreeImage Struct
-// in order to prevent leaks
-class FreeImgRAII
+TextureLoader& TextureLoader::Instance()
 {
-    private:
-        FIBITMAP* imgCPU;
-    protected:
-    public:
-        // Constructors & Destructor
-        FreeImgRAII(FREE_IMAGE_FORMAT fmt, const char* fName, int flags = 0)
-        {
-            imgCPU = FreeImage_Load(fmt, fName, flags);
-        }
-        FreeImgRAII(const FreeImgRAII&) = delete;
-        FreeImgRAII& operator=(const FreeImgRAII&) = delete;
-        ~FreeImgRAII()
-        {
-            if(imgCPU) FreeImage_Unload(imgCPU);
-        }
-        //
-        operator FIBITMAP* ()
-        {
-            return imgCPU;
-        }
-        operator const FIBITMAP* () const
-        {
-            return imgCPU;
-        }
-};
+    // Singleton using unique_ptr
+    static std::unique_ptr<TextureLoader> tMan = nullptr;
+    if(tMan == nullptr)
+        tMan = std::make_unique<TextureLoader>();
+    return *(tMan.get());
+}
 
 // Template Utility for Loading Bitmaps
 template <class T, class C>
@@ -413,8 +394,8 @@ SceneError TextureFunctions::LoadBitMap(// Returned Bitmap Data
 
     // Load the texture to the CPU first
     SceneError e = SceneError::OK;
-    if((e = TextureLoader::Instance()->LoadBitMapFromTexture(bits, dimension, channel,
-                                                             combinedPath)) != SceneError::OK)
+    if((e = TextureLoader::Instance().LoadBitMapFromTexture(bits, dimension, channel,
+                                                            combinedPath)) != SceneError::OK)
         return e;
 
     // All done

@@ -3,9 +3,11 @@
 
 #include "RayLib/System.h"
 #include "RayLib/Log.h"
+#include "RayLib/SharedLib.h"
 
 // Visor
 #include "RayLib/VisorI.h"
+#include "RayLib/VisorCallbacksI.h"
 #include "RayLib/VisorWindowInput.h"
 #include "RayLib/MovementSchemes.h"
 
@@ -19,6 +21,10 @@ int main(int argc, const char* argv[])
     // Fancy CMD
     EnableVTMode();
 
+    // Error structs
+    DLLError dError = DLLError::OK;
+
+    // Arg Parsing
     std::string visorConfigFileName;
 
     // Header
@@ -34,17 +40,12 @@ int main(int argc, const char* argv[])
     CLI::App app{header};
     app.footer(ProgramConstants::Footer);
 
-
     CLI::Option* debugOptOn = app.add_flag("--gdb,--guideDebug", guiderDebug,
                                              "Visualize path guiders provided in the config file");
-
-    app.add_option("--gdbc,--guideDebugConfig",
-                   guideDebugConfig,
+    app.add_option("--gdbc,--guideDebugConfig", guideDebugConfig,
                    "Guider debugging configuration file")
         ->check(CLI::ExistingFile)
         ->needs(debugOptOn);
-
-
 
     if(argc == 1)
     {
@@ -64,19 +65,39 @@ int main(int argc, const char* argv[])
     // Load VisorGL
     if(guiderDebug)
     {
-
+        // Load VisorGL.dll
+        SharedLib visorDLL("VisorGL");
         // Initialize a Visor
+        SharedLibPtr<VisorI> debugVisor = {nullptr, nullptr};
+        dError = visorDLL.GenerateObjectWithArgs(debugVisor, 
+                                                 SharedLibArgs{
+                                                    "CreateGuideDebugGL",
+                                                    "DeleteVisorGL"},
+                                                 // Args
+                                                 Vector2i(1600, 900),
+                                                 visorConfigFileName);
+        ERROR_CHECK_INT(DLLError, dError);
 
+        
+        // Set an input scheme
+        EmptyVisorCallback emptyCallback;
+        KeyboardKeyBindings kb = VisorConstants::DefaultKeyBinds;
+        MouseKeyBindings bb = VisorConstants::DefaultButtonBinds;
+        auto visorInput = std::make_unique<VisorWindowInput>(std::move(kb), std::move(bb),
+                                                             std::move(MovementSchemeList()));
+        debugVisor->SetInputScheme(*visorInput);
+        visorInput->AttachVisorCallback(emptyCallback);
 
+        // Render Loop
+        while(debugVisor->IsOpen())
+        {
+            debugVisor->Render();
+            debugVisor->ProcessInputs();
+        }
 
-
-
-
-
-
-
-
-
+        // Orderly Delete Unique Ptrs
+        debugVisor = SharedLibPtr<VisorI>(nullptr, nullptr);
+        return 0;
     }
     else
     {

@@ -12,6 +12,7 @@ TODO: improve, atomic etc...
 #include <vector>
 #include <mutex>
 #include <condition_variable>
+#include <cassert>
 
 template<class T>
 class MPMCQueue

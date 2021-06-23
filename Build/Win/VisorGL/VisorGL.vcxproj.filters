@@ -23,6 +23,16 @@
       <Filter>GL</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\VisorGL\GLFWCallbackDelegator.h" />
+    <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugGL.h">
+      <Filter>GuideDebug</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\VisorGL\WindowGLI.h" />
+    <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugGUI.h">
+      <Filter>GuideDebug</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\VisorGL\TextureGL.h">
+      <Filter>GL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGL.cpp" />
@@ -40,6 +50,15 @@
       <Filter>GL</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\VisorGL\GLFWCallbackDelegator.cpp" />
+    <ClCompile Include="..\..\..\Source\VisorGL\GuideDebugGL.cpp">
+      <Filter>GuideDebug</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\VisorGL\GuideDebugGUI.cpp">
+      <Filter>GuideDebug</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\VisorGL\TextureGL.cpp">
+      <Filter>GL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -50,6 +69,9 @@
     </Filter>
     <Filter Include="GL">
       <UniqueIdentifier>{55843f24-c2a7-4855-bd55-62fdc4e2616b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GuideDebug">
+      <UniqueIdentifier>{193e1764-49e2-4431-afa7-3e668744bf3f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

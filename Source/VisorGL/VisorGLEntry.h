@@ -15,4 +15,9 @@ VisorI* CreateVisorGL(const VisorOptions&,
                                 const PixelFormat&);
 
 extern "C" METU_SHARED_VISORGL_ENTRY_POINT
+VisorI * CreateGuideDebugGL(const Vector2i& winSize,
+                            const std::u8string& guideDebugFile);
+
+
+extern "C" METU_SHARED_VISORGL_ENTRY_POINT
 void DeleteVisorGL(VisorI*);

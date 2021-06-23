@@ -29,7 +29,7 @@ using Tex1DEnable = typename std::enable_if<D == 1, RType>::type;
 class TextureLoader
 {
     public:
-        static std::unique_ptr<TextureLoader>& Instance();
+        static TextureLoader&       Instance();
 
     private:
         static uint32_t             ColorTypeToChannelCount(FREE_IMAGE_COLOR_TYPE cType);
@@ -170,15 +170,6 @@ void TextureLoader::PackImageChannelToBits(std::vector<Byte>& bitmap,
             }
         }
     }
-}
-
-inline std::unique_ptr<TextureLoader>& TextureLoader::Instance()
-{
-    // Singleton using unique_ptr
-    static std::unique_ptr<TextureLoader> tMan = nullptr;
-    if(tMan) return tMan;
-    tMan = std::make_unique<TextureLoader>();
-    return tMan;
 }
 
 namespace TextureFunctions

@@ -13,15 +13,13 @@ the VisorGL singleton.
 #include <memory>
 #include <mutex>
 
-#include "RayLib/VisorI.h"
-#include "RayLib/VisorInputI.h"
-
 #include "RayLib/MPMCQueue.h"
 #include "RayLib/ThreadVariable.h"
 
 #include "ShaderGL.h"
 #include "VisorGUI.h"
 #include "ToneMapGL.h"
+#include "WindowGLI.h"
 
 // Basic command list implementation
 struct VisorGLCommand
@@ -52,13 +50,8 @@ struct VisorGLCommand
         VisorGLCommand&         operator=(VisorGLCommand&&) = default;
 };
 
-class VisorGL : public VisorI
+class VisorGL : public WindowGLI
 {
-    public:
-        // Hacky solution for direct member set when
-        // windows are closed etc. but it works...
-        friend class                GLFWCallbackDelegator;
-
     private:
         static constexpr float      PostProcessTriData[6] =
         {
@@ -141,8 +134,10 @@ class VisorGL : public VisorI
         void                        ProcessCommand(const VisorGLCommand&);
         void                        RenderImage();
 
-        void                        SetFBSizeInternal();
-        void                        SetWindowSizeInternal();
+         void                       SetFBSizeFromInput(const Vector2i&) override;
+         void                       SetWindowSizeFromInput(const Vector2i&) override;
+         void                       SetOpenStateFromInput(bool) override;
+         VisorInputI*               InputInterface() override;
 
     protected:
     public:
