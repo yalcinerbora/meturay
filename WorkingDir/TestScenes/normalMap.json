@@ -1,0 +1,86 @@
+{
+    "Cameras": [
+    {
+		"id": 0,
+		"type": "Pinhole",
+
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"gaze": [0.0, 0.0, 0.0],
+		"planes": [0.1, 20.0],
+		"position": [0.0, 0.0, 5.0],
+		"up": [0.0, 1.0, 0.0]
+	}],
+
+	"Textures":[
+	{
+		"id": 0,
+		"signed": true,
+		"file": "../Textures/normal_test_4k-2.png"
+	}],
+
+	"Lights": [],
+
+	"Mediums": [
+	{
+		"id" : 0,
+		"type" : "Vacuum"
+	}],
+
+	"Transforms":[
+		{"id": 0, "type": "Identity"},
+		{
+			"id":1,
+			"type": "Single",
+			"layout": "matrix4x4",
+			"matrix": [1, 0,  0, 0,
+					   0, 0, -1, 0,
+					   0, 1,  0, 0,
+					   0, 0,  0, 1]
+		}],
+
+	"Materials":[
+    {
+		// Light Boundary Material
+		"id": 0,
+		"type": "BConstant",
+		"radiance" : [1, 1, 1]
+    },
+    {
+		"id": 1,
+		"type" : "Lambert",
+		"albedo" : [1.0, 1.0, 1.0],
+		"normal": {"texture": 0, "channels": "rgb"}
+	}],
+
+	"Primitives":[{
+		"id": 0,
+		"type": "Sphere",
+		"name": ".nodeSphere",
+		"position": [0, 0, 0],
+		"radius": 2
+	}],
+
+	"Accelerators": [{"id" : 0, "type" : "Linear"}],
+
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "Linear"},
+    "BaseBoundaryMaterial": 0,
+    "BaseMedium" : 0,
+
+	"Surfaces": [
+    {
+		"transform": 1,
+		"accelerator": 0,
+		"material": 1,
+		"primitive": 0
+	}],
+
+	"LightSurfaces": [],
+
+    "CameraSurfaces": [{"camera": 0}]
+}

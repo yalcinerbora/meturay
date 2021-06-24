@@ -255,13 +255,13 @@ SceneError TextureFunctions::AllocateTexture(// Returned Texture Ptr
     // Load the texture to the CPU first
     SceneError e = SceneError::OK;
     std::unique_ptr<TextureI<D>> ptr;
-    if((e = TextureLoader::Instance()->LoadTexture(ptr,
-                                                   edgeResolve, interp,
-                                                   normalizeIntegers,
-                                                   normalizeCoordinates,
-                                                   s.isSigned,
-                                                   gpu,
-                                                   combinedPath)) != SceneError::OK)
+    if((e = TextureLoader::Instance().LoadTexture(ptr,
+                                                  edgeResolve, interp,
+                                                  normalizeIntegers,
+                                                  normalizeCoordinates,
+                                                  s.isSigned,
+                                                  gpu,
+                                                  combinedPath)) != SceneError::OK)
         return e;
 
     // Emplace the loaded texture to the memory

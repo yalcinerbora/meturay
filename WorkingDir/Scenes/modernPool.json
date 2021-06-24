@@ -38,6 +38,19 @@
 		"gaze": [47.4224, 23.3561, 32.964],
 		"position": [42.256, 23.305, 34.4823],
 		"up": [0.0, 1.0, 0.0]
+    },
+    {
+        // Tree Shadow
+		"id": 3,
+		"type": "Pinhole",
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+        "planes": [0.01, 2000.0],
+		"gaze": [-44.6945, 34.2308, -17.589],
+		"position": [-48.4085, 37.8739, -16.1982],
+		"up": [0.0, 1.0, 0.0]
     }
     ],
 
@@ -541,6 +554,8 @@
         // Pool Camera
         {"camera": 1, "medium": 2},
         // Reflection of Caustics Camera
-        {"camera": 2}
+        {"camera": 2},
+        // Tree Shadow Camera
+        {"camera": 3}
     ]
 }

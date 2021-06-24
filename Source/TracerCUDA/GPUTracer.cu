@@ -516,12 +516,12 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
     }
     currentRayCount = totalRayOut;
 
-    METU_LOG("Before Sync");
+    //METU_LOG("Before Sync");
     // Again wait all of the GPU's since
     // CUDA functions will be on multiple-gpus
     cudaSystem.SyncAllGPUs();
 
-    METU_LOG("After Sync");
+    //METU_LOG("After Sync");
 
     //Debug::DumpMemToFile("workKeyOut", rayMemory.WorkKeys(), totalRayOut);
 

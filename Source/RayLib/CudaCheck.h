@@ -12,6 +12,7 @@ Utility header for header only cuda vector and cpu vector implementations
 #ifdef METU_CUDA
     #include <cuda.h>
     #include <cuda_runtime.h>
+
     inline static constexpr void GPUAssert(cudaError_t code, const char *file, int line)
     {
         if(code != cudaSuccess)
@@ -20,6 +21,7 @@ Utility header for header only cuda vector and cpu vector implementations
             assert(false);
         }
     }
+
     inline static constexpr void GPUMemoryCheck(cudaError_t code)
     {
         //if(code == cudaErrorMemoryAllocation)
