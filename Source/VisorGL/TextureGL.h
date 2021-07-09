@@ -42,6 +42,9 @@ class TextureGL
 
 
         GLuint          TexId();
+        uint32_t        Width() const;
+        uint32_t        Height() const;
+        Vector2ui       Size() const;
 
         void            CopyToImage(const std::vector<Byte>& pixels,
                                     const Vector2ui& start,
@@ -72,6 +75,21 @@ class SamplerGL
 inline GLuint TextureGL::TexId()
 {
     return texId;
+}
+
+inline uint32_t TextureGL::Width() const
+{
+    return dimensions[0];
+}
+
+inline uint32_t TextureGL::Height() const
+{
+    return dimensions[1];
+}
+
+inline Vector2ui TextureGL::Size() const
+{
+    return dimensions;
 }
 
 inline SamplerGL::SamplerGL(SamplerGLEdgeResolveType edgeResolve,

@@ -4,17 +4,24 @@
 #include <glfw/glfw3.h>
 #include <vector>
 
+#include "TextureGL.h"
+
 class GuideDebugGUI
 {
     public:
         static constexpr const char* IMGUI_GLSL_STRING = "#version 430 core";
 
     private:
-        bool                    fullscreenShow;
+        // Main Window
         GLFWwindow*             window;
 
-        GLuint                  mainTexture;
-        std::vector<GLuint>     guideTextues;
+        // GUI Related
+        bool                    fullscreenShow;
+
+        // Main texture that shows the scene
+        TextureGL               refTexture;
+        // Textures that are rendered by different visors
+        std::vector<TextureGL>  guideTextues;
 
         // Main Image Aspect Ratio
         float                   ratio;
@@ -23,7 +30,8 @@ class GuideDebugGUI
 
     public:
         // Constructors & Destructor
-                        GuideDebugGUI(GLFWwindow* window);
+                        GuideDebugGUI(GLFWwindow* window,
+                                      const std::string& refFileName);
                         ~GuideDebugGUI();
 
         void            Render();

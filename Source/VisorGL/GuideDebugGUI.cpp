@@ -5,9 +5,12 @@
 #include <Imgui/imgui_impl_opengl3.h>
 
 
-GuideDebugGUI::GuideDebugGUI(GLFWwindow* w)
+GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
+                             const std::string& refFileName)
     : fullscreenShow(true)
     , window(w)
+    , refTexture(refFileName)
+    , ratio(static_cast<float>(refTexture.Width()) / static_cast<float>(refTexture.Height()))
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -21,6 +24,7 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w)
     // Initi renderer & platform
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(IMGUI_GLSL_STRING);
+
 }
 
 GuideDebugGUI::~GuideDebugGUI()
@@ -35,9 +39,7 @@ void GuideDebugGUI::Render()
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-
-    //ImGui::ShowDemoWindow(&optionWinShow);
-
+   
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -51,7 +53,7 @@ void GuideDebugGUI::Render()
 
     ImGui::Text("TESTOOO");
 
-
+    
     ImGui::End();
     //ImGui::Image((void*)(intptr_t) mainTexture,
     //             ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);

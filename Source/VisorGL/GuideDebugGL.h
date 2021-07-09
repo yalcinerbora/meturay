@@ -5,13 +5,16 @@
 
 #include "WindowGLI.h"
 #include "GuideDebugGUI.h"
+#include "GuideDebugStructs.h"
 
 class GuideDebugGL : public WindowGLI
 {    
     private:
         const VisorOptions              dummyVOpts;
-
         const std::u8string             configFile;
+
+        std::string                     configPath;
+        GuideDebugConfig                config;
 
         VisorInputI*                    input;
         GLFWwindow*                     glfwWindow;

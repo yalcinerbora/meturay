@@ -1,6 +1,8 @@
 #include "TextureGL.h"
 #include "GLConversionFunctions.h"
+
 #include "RayLib/ImageIO.h"
+#include "RayLib/UTF8StringConversion.h"
 
 TextureGL::TextureGL(const Vector2ui& dim,
                      PixelFormat fmt)

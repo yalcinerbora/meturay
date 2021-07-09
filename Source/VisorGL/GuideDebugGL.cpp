@@ -1,7 +1,11 @@
 #include "GuideDebugGL.h"
+#include "GLFWCallbackDelegator.h"
+
 #include "RayLib/VisorError.h"
 #include "RayLib/Log.h"
-#include "GLFWCallbackDelegator.h"
+#include "RayLib/FileSystemUtility.h"
+
+#include <filesystem>
 
 void GuideDebugGL::OGLCallbackRender(GLenum,
                                      GLenum type,
@@ -42,7 +46,11 @@ GuideDebugGL::GuideDebugGL(const Vector2i& ws,
     , glfwWindow(nullptr)
     , dummyVOpts{}
     , configFile(guideDebugFile)
+    , configPath(std::filesystem::path(guideDebugFile).parent_path().string())
 {
+    bool configParsed = GuideDebug::ParseConfigFile(config, configFile);
+    if(!configParsed) throw VisorException(VisorError::WINDOW_GENERATION_ERROR);
+
     VisorError e = Initialize();
     if(e != VisorError::OK) throw VisorException(e);
 }
@@ -150,8 +158,9 @@ VisorError GuideDebugGL::Initialize()
     glfwShowWindow(glfwWindow);
     open = true;
 
-    // Init GUI aswell
-    gui = std::make_unique<GuideDebugGUI>(glfwWindow);
+    gui = std::make_unique<GuideDebugGUI>(glfwWindow, 
+                                          Utility::MergeFileFolder(configPath, 
+                                                                   config.refImage));
 
     glfwMakeContextCurrent(nullptr);
     return VisorError::OK;

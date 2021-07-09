@@ -101,10 +101,13 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\Source\VisorGL\GDebugPPG.h" />
+    <ClInclude Include="..\..\..\Source\VisorGL\GDebugRendererI.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GLConversionFunctions.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GLFWCallbackDelegator.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugGL.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugGUI.h" />
+    <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugStructs.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\ShaderGL.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\Structs.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\TextureGL.h" />
@@ -117,6 +120,7 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     <ClInclude Include="..\..\..\Source\VisorGL\WindowGLI.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\Source\VisorGL\GDebugPPG.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\GLFWCallbackDelegator.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\GuideDebugGL.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\GuideDebugGUI.cpp" />
