@@ -5,6 +5,10 @@
 #include "RayLib/Log.h"
 #include "RayLib/FileSystemUtility.h"
 
+// Debug Renderers
+#include "GDebugRendererPPG.h"
+//#include "GDebugRendererReference.h"
+
 #include <filesystem>
 
 void GuideDebugGL::OGLCallbackRender(GLenum,
@@ -47,7 +51,21 @@ GuideDebugGL::GuideDebugGL(const Vector2i& ws,
     , dummyVOpts{}
     , configFile(guideDebugFile)
     , configPath(std::filesystem::path(guideDebugFile).parent_path().string())
+    , gradientTexture(Zero2ui, PixelFormat::RGB8_UNORM)
 {
+
+    // Initially Create Generator Map
+    gdbGenerators.emplace(GDebugRendererPPG::TypeName,
+                          GDBRendererGen(GDBRendererConstruct<GDebugRendererI, 
+                                                              GDebugRendererPPG>));
+    //gdbGenerators.emplace(GDebugRendererReference::TypeName,
+    //                      GDBRendererGen(GDBRendererConstruct<GDebugRendererI, 
+    //                                                          GDebugRendererReference>));
+
+
+
+
+
     bool configParsed = GuideDebug::ParseConfigFile(config, configFile);
     if(!configParsed) throw VisorException(VisorError::WINDOW_GENERATION_ERROR);
 
@@ -155,12 +173,38 @@ VisorError GuideDebugGL::Initialize()
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
+
+    // Generate Gradient Texture
+    Vector2ui gradientDimensions = Vector2ui(1, config.gradientValues.size());
+    std::vector<Byte> packedData(sizeof(Vector3f) * gradientDimensions[1]);
+    memcpy(packedData.data(), config.gradientValues.data(), packedData.size());
+    gradientTexture = TextureGL(gradientDimensions, PixelFormat::RGB8_UNORM);
+    gradientTexture.CopyToImage(packedData,
+                                Zero2ui, gradientDimensions, 
+                                PixelFormat::RGB_FLOAT);
+
+    // Generate DebugRenderers
+    for(const auto& gc : config.guiderConfigs)
+    {
+        const std::string& guiderType = gc.first;
+        const nlohmann::json& guiderConfig = gc.second;
+
+        DebugRendererPtr gdbPtr = nullptr;
+        auto loc = gdbGenerators.find(guiderType);
+        if(loc == gdbGenerators.end()) return VisorError::NO_LOGIC_FOR_GUIDE_DEBUGGER;
+
+        gdbPtr = loc->second(guiderConfig, gradientTexture);
+        debugRenderers.emplace_back(std::move(gdbPtr));
+    }
+
+
+    // Create GUI
+    gui = std::make_unique<GuideDebugGUI>(glfwWindow, 
+                                          Utility::MergeFileFolder(configPath, config.refImage),
+                                          debugRenderers);
+
     glfwShowWindow(glfwWindow);
     open = true;
-
-    gui = std::make_unique<GuideDebugGUI>(glfwWindow, 
-                                          Utility::MergeFileFolder(configPath, 
-                                                                   config.refImage));
 
     glfwMakeContextCurrent(nullptr);
     return VisorError::OK;

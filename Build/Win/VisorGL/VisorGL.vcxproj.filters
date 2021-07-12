@@ -36,11 +36,14 @@
     <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugStructs.h">
       <Filter>GuideDebug</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\VisorGL\GDebugRendererI.h">
-      <Filter>GuideDebug</Filter>
+    <ClInclude Include="..\..\..\Source\VisorGL\GDebugRendererPPG.h">
+      <Filter>GuideDebug\Debug Renderers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\VisorGL\GDebugPPG.h">
-      <Filter>GuideDebug\Debuggers</Filter>
+    <ClInclude Include="..\..\..\Source\VisorGL\GDebugRendererI.h">
+      <Filter>GuideDebug\Debug Renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugTypeGen.h">
+      <Filter>GuideDebug</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -68,8 +71,8 @@
     <ClCompile Include="..\..\..\Source\VisorGL\TextureGL.cpp">
       <Filter>GL</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Source\VisorGL\GDebugPPG.cpp">
-      <Filter>GuideDebug\Debuggers</Filter>
+    <ClCompile Include="..\..\..\Source\VisorGL\GDebugRendererPPG.cpp">
+      <Filter>GuideDebug\Debug Renderers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -85,7 +88,7 @@
     <Filter Include="GuideDebug">
       <UniqueIdentifier>{193e1764-49e2-4431-afa7-3e668744bf3f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="GuideDebug\Debuggers">
+    <Filter Include="GuideDebug\Debug Renderers">
       <UniqueIdentifier>{fd238788-abb0-4dc1-81a6-c94bc8beae5f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>

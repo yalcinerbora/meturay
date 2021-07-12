@@ -3,15 +3,20 @@
 #include <nlohmann/json.hpp>
 #include <filesystem>
 #include <fstream>
+
 #include "RayLib/StripComments.h"
+#include "RayLib/SceneIO.h"
 
 using GuiderConfigs = std::map<std::string, nlohmann::json>;
 
 struct GuideDebugConfig
 {
-    std::string     refImage;
-    uint32_t        depthCount;
-    GuiderConfigs   guiderConfigs;
+    std::string             refImage;
+    uint32_t                depthCount;
+
+    std::vector<Vector3f>   gradientValues;
+
+    GuiderConfigs           guiderConfigs;
 };
 
 namespace GuideDebug
@@ -19,6 +24,8 @@ namespace GuideDebug
     //static constexpr const char* NAME = "name";
     static constexpr const char* TYPE = "type";
 
+
+    static constexpr const char* DATA_GRADIENT_NAME = "DataGradient";
     static constexpr const char* SCENE_NAME = "Scene";
     static constexpr const char* SCENE_IMAGE = "img";
     static constexpr const char* SCENE_DEPTH = "depth";
@@ -47,6 +54,12 @@ inline bool GuideDebug::ParseConfigFile(GuideDebugConfig& s, const std::u8string
     for(const nlohmann::json& j : jsonFile[PG_NAME])
     {
         s.guiderConfigs.emplace(j[TYPE], j);
-    }        
+    }
+
+    // Load Gradient Values
+    for(const nlohmann::json& j : jsonFile[DATA_GRADIENT_NAME])
+    {
+        s.gradientValues.emplace_back(SceneIO::LoadVector<3,float>(j));
+    }      
     return true;
 }

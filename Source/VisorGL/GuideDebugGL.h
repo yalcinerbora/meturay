@@ -10,20 +10,27 @@
 class GuideDebugGL : public WindowGLI
 {    
     private:
-        const VisorOptions              dummyVOpts;
-        const std::u8string             configFile;
+        const VisorOptions                      dummyVOpts;
+        const std::u8string                     configFile;
 
-        std::string                     configPath;
-        GuideDebugConfig                config;
+        std::map<std::string, GDBRendererGen>   gdbGenerators;
 
-        VisorInputI*                    input;
-        GLFWwindow*                     glfwWindow;
+        std::string                             configPath;
+        GuideDebugConfig                        config;
 
-        bool                            open;
-        Vector2i                        viewportSize;
-        Vector2i                        windowSize;
+        VisorInputI*                            input;
+        GLFWwindow*                             glfwWindow;
 
-        std::unique_ptr<GuideDebugGUI>  gui;
+        bool                                    open;
+        Vector2i                                viewportSize;
+        Vector2i                                windowSize;
+
+        // OGL Types
+        TextureGL                               gradientTexture;
+
+        // Debugger Related
+        std::vector<DebugRendererPtr>           debugRenderers;
+        std::unique_ptr<GuideDebugGUI>          gui;
 
         static void             OGLCallbackRender(GLenum source,
                                                   GLenum type,

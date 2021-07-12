@@ -21,6 +21,9 @@ struct VisorError : public ErrorI
             WINDOW_GENERATION_ERROR,
             RENDER_FUCTION_GENERATOR_ERROR,
 
+            // Guide Debug Related
+            NO_LOGIC_FOR_GUIDE_DEBUGGER,
+
             // End
             END
         };
@@ -71,7 +74,9 @@ inline VisorError::operator std::string() const
         "OK",
         "Window generator failed to initialize",
         "Window generator is unable to generate window",
-        "Render function generator failed to initialize"
+        "Render function generator failed to initialize",
+        // Guide Debug Related
+        "No logic found for that guide debugger type"
     };
     static_assert(std::extent<decltype(ErrorStrings)>::value == static_cast<size_t>(VisorError::END),
                   "Enum and enum string list size mismatch.");

@@ -6,11 +6,13 @@
 
 
 GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
-                             const std::string& refFileName)
+                             const std::string& refFileName,
+                             const std::vector<DebugRendererPtr>& dRenderers)
     : fullscreenShow(true)
     , window(w)
     , refTexture(refFileName)
     , ratio(static_cast<float>(refTexture.Width()) / static_cast<float>(refTexture.Height()))
+    , debugRenderers(dRenderers)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
