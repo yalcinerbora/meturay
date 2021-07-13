@@ -11,7 +11,8 @@ using DebugRendererPtr = std::unique_ptr<GDebugRendererI>;
 
 template<class GDebugRendererI>
 using GDBRendererGenFunc = GDebugRendererI * (*)(const nlohmann::json& config,
-                                                 const TextureGL& gradientTexture);
+                                                 const TextureGL& gradientTexture,
+                                                 const std::string& configPath);
 
 class GDBRendererGen
 {
@@ -25,16 +26,19 @@ class GDBRendererGen
     {}
 
     DebugRendererPtr operator()(const nlohmann::json& config,
-                                const TextureGL& gradientTexture)
+                                const TextureGL& gradientTexture,
+                                const std::string& configPath)
     {
-        GDebugRendererI* renderer = gFunc(config, gradientTexture);
+        GDebugRendererI* renderer = gFunc(config, gradientTexture,
+                                          configPath);
         return DebugRendererPtr(renderer);
     }
 };
 
 template <class Base, class GDBRenderer>
 Base* GDBRendererConstruct(const nlohmann::json& config,
-                           const TextureGL& gradientTexture)
+                           const TextureGL& gradientTexture,
+                           const std::string& configPath)
 {
-    return new GDBRenderer(config, gradientTexture);
+    return new GDBRenderer(config, gradientTexture, configPath);
 }

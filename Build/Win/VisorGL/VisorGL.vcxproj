@@ -154,6 +154,8 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
   <ItemGroup>
     <None Include="..\..\..\WorkingDir\Shaders\AvgDivisor.comp" />
     <None Include="..\..\..\WorkingDir\Shaders\LumReduction.comp" />
+    <None Include="..\..\..\WorkingDir\Shaders\DTreeRender.frag" />
+    <None Include="..\..\..\WorkingDir\Shaders\DTreeRender.vert" />
     <None Include="..\..\..\WorkingDir\Shaders\TonemapAndGamma.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

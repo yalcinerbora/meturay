@@ -2,7 +2,7 @@
 /*	
 	**Generic Post Process Shader**
 	
-	File Name	: PProcessGeneric.frag 
+	File Name	: PProcessGeneric.vert 
 	Author		: Bora Yalciner
 	Description	:
 

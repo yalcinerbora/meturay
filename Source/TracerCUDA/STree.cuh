@@ -16,7 +16,8 @@ This is a GPU-oriented implementation of such tree
 #include "DeviceMemory.h"
 #include "DTree.cuh"
 
-#include <RayLib/AABB.h>
+#include "RayLib/Types.h"
+#include "RayLib/AABB.h"
 
 class CudaSystem;
 
@@ -90,6 +91,9 @@ class STree
         void                GetAllDTreesToCPU(std::vector<DTreeGPU>&,
                                               std::vector<std::vector<DTreeNode>>&,
                                               bool fetchReadTree) const;
+
+        void                DumpSDTreeAsBinary(std::vector<Byte>& data,
+                                               bool fetchReadTree) const;
 
 };
 

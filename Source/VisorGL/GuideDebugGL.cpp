@@ -193,7 +193,7 @@ VisorError GuideDebugGL::Initialize()
         auto loc = gdbGenerators.find(guiderType);
         if(loc == gdbGenerators.end()) return VisorError::NO_LOGIC_FOR_GUIDE_DEBUGGER;
 
-        gdbPtr = loc->second(guiderConfig, gradientTexture);
+        gdbPtr = loc->second(guiderConfig, gradientTexture, configPath);
         debugRenderers.emplace_back(std::move(gdbPtr));
     }
 

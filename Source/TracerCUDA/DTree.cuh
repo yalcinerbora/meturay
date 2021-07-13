@@ -11,6 +11,7 @@ STree Implementation from PPG
 #include "DeviceMemory.h"
 
 #include "RayLib/ArrayPortion.h"
+#include "RayLib/Types.h"
 
 #include <vector>
 
@@ -54,6 +55,7 @@ class DTree
                 size_t              UsedGPUMemory() const;
 
                 void                DumpTree(DTreeGPU&, std::vector<DTreeNode>&) const;
+                void                DumpTreeAsBinary(std::vector<Byte>&) const;
         };
 
     private:
@@ -87,9 +89,12 @@ class DTree
         size_t                  UsedGPUMemory() const;
         size_t                  UsedCPUMemory() const;
 
+        size_t                  NodeCount(bool readOrWriteTree) const;
+
         // Debugging
         void                    GetReadTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
         void                    GetWriteTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
+        void                    DumpTreeAsBinary(std::vector<Byte>&, bool fetchReadTree) const;
 
 };
 
@@ -133,4 +138,12 @@ inline size_t DTree::UsedGPUMemory() const
 inline size_t DTree::UsedCPUMemory() const
 {
     return sizeof(DTree);
+}
+
+inline size_t DTree::NodeCount(bool readOrWriteTree) const
+{
+    if(readOrWriteTree)
+        return readTree.NodeCount();
+    else
+        return writeTree.NodeCount();
 }

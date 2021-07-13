@@ -360,3 +360,68 @@ void STree::GetAllDTreesToCPU(std::vector<DTreeGPU>& dTreeStructs,
         dTreeNodes.push_back(std::move(currentNodes));
     }
 }
+
+void STree::DumpSDTreeAsBinary(std::vector<Byte>& data,
+                               bool fetchReadTree) const
+{
+    std::vector<Byte> sTree;
+    std::vector<std::vector<Byte>> dTreeBinary(dTrees.size());
+    std::vector<Vector2ul> countOffsetPairs(dTrees.size());
+
+    uint64_t sTreeStartOffset = (sizeof(uint64_t) +
+                                 sizeof(uint64_t) +
+                                 sizeof(uint64_t) +
+                                 sizeof(Vector2ul) * dTrees.size());
+
+    uint32_t i = 0;
+    size_t offset = (sTreeStartOffset + 
+                     sizeof(STreeGPU) + 
+                     nodeCount * sizeof(STreeNode));
+    for(const DTree& dTree : dTrees)
+    {
+        dTree.DumpTreeAsBinary(dTreeBinary[i], fetchReadTree);
+        countOffsetPairs[i] = Vector2ul(static_cast<uint64_t>(dTree.NodeCount(fetchReadTree)),
+                                        static_cast<uint64_t>(offset));
+        offset += dTreeBinary[i].size();
+        i++;
+    }
+    data.reserve(offset);
+
+    // Write STree Start Offset
+    data.insert(data.end(),
+                reinterpret_cast<Byte*>(&sTreeStartOffset),
+                reinterpret_cast<Byte*>(&sTreeStartOffset) + sizeof(uint64_t));
+    // Write STree Node Count
+    uint64_t sTreeNodeCount = static_cast<uint64_t>(nodeCount);
+    data.insert(data.end(),
+                reinterpret_cast<Byte*>(&sTreeNodeCount),
+                reinterpret_cast<Byte*>(&sTreeNodeCount) + sizeof(uint64_t));
+    // Write DTree Count
+    uint64_t dTreeCount = static_cast<uint64_t>(dTrees.size());
+    assert(countOffsetPairs.size() == dTreeCount);
+    data.insert(data.end(),
+                reinterpret_cast<Byte*>(&dTreeCount),
+                reinterpret_cast<Byte*>(&dTreeCount) + sizeof(uint64_t));
+    // Write DTree Offset/Count Pairs
+    data.insert(data.end(),
+                reinterpret_cast<Byte*>(countOffsetPairs.data()),
+                (reinterpret_cast<Byte*>(countOffsetPairs.data()) + 
+                 sizeof(Vector2ul) * countOffsetPairs.size()));
+    // Write STree
+    STreeGPU sTreeBase;
+    std::vector<STreeNode> sTreeNodes;
+    GetTreeToCPU(sTreeBase, sTreeNodes);
+    data.insert(data.end(),
+                reinterpret_cast<Byte*>(&sTreeBase.extents),
+                reinterpret_cast<Byte*>(&sTreeBase.extents) + sizeof(AABB3f));
+    data.insert(data.end(),
+                reinterpret_cast<Byte*>(sTreeNodes.data()),
+                (reinterpret_cast<Byte*>(sTreeNodes.data()) +
+                 sizeof(STreeNode) * sTreeNodes.size()));
+
+    // Write DTrees in order
+    for(const std::vector<Byte>& dTree : dTreeBinary)
+    {
+        data.insert(data.end(), dTree.cbegin(), dTree.cend());
+    }
+}

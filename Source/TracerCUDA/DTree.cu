@@ -111,7 +111,25 @@ void DTree::DTreeBuffer::DumpTree(DTreeGPU& treeCPU, std::vector<DTreeNode>& nod
                           cudaMemcpyDeviceToHost));
 }
 
-#include "TracerDebug.h"
+void DTree::DTreeBuffer::DumpTreeAsBinary(std::vector<Byte>& data) const
+{
+    // Get Data to CPU
+    DTreeGPU treeBase;
+    std::vector<DTreeNode> nodes;
+    DumpTree(treeBase, nodes);
+
+    // Directly copy it to the buffer
+    data.insert(data.end(), 
+                reinterpret_cast<Byte*>(&treeBase.totalSamples),
+                reinterpret_cast<Byte*>(&treeBase.totalSamples) + sizeof(uint32_t));
+    data.insert(data.end(), 
+                reinterpret_cast<Byte*>(&treeBase.irradiance),
+                reinterpret_cast<Byte*>(&treeBase.irradiance) + sizeof(float));
+    data.insert(data.end(), 
+                reinterpret_cast<Byte*>(nodes.data()),
+                reinterpret_cast<Byte*>(nodes.data()) + 
+                (sizeof(DTreeNode) * nodes.size()));
+}
 
 void DTree::SwapTrees(float fluxRatio, uint32_t depthLimit,
                       const CudaGPU& gpu)
@@ -236,4 +254,12 @@ void DTree::GetReadTreeToCPU(DTreeGPU& tree, std::vector<DTreeNode>& nodes) cons
 void DTree::GetWriteTreeToCPU(DTreeGPU& tree, std::vector<DTreeNode>& nodes) const
 {
     writeTree.DumpTree(tree, nodes);
+}
+
+void DTree::DumpTreeAsBinary(std::vector<Byte>& data, bool fetchReadTree) const
+{
+    if(fetchReadTree)
+        readTree.DumpTreeAsBinary(data);
+    else
+        writeTree.DumpTreeAsBinary(data);
 }
