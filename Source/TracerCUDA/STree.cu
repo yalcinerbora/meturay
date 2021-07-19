@@ -380,8 +380,8 @@ void STree::DumpSDTreeAsBinary(std::vector<Byte>& data,
     for(const DTree& dTree : dTrees)
     {
         dTree.DumpTreeAsBinary(dTreeBinary[i], fetchReadTree);
-        countOffsetPairs[i] = Vector2ul(static_cast<uint64_t>(dTree.NodeCount(fetchReadTree)),
-                                        static_cast<uint64_t>(offset));
+        countOffsetPairs[i] = Vector2ul(static_cast<uint64_t>(offset),
+                                        static_cast<uint64_t>(dTree.NodeCount(fetchReadTree)));
         offset += dTreeBinary[i].size();
         i++;
     }

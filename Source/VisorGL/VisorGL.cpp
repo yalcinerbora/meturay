@@ -630,7 +630,7 @@ VisorError VisorGL::Initialize()
     glBindVertexBuffer(0, vBuffer, 0, sizeof(float) * 2);
     glEnableVertexAttribArray(IN_POS);
     glVertexAttribFormat(IN_POS, 2, GL_FLOAT, false, 0);
-    glVertexAttribBinding(IN_POS, 0);
+    glVertexAttribBinding(IN_POS, IN_POS);
 
     // Pre-Bind Everything
     // States

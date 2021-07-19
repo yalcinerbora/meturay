@@ -24,13 +24,13 @@ in IN_POS vec2 vPos;
 // Per Instance
 in IN_OFFSET vec2 vOffset;
 in IN_DEPTH uint vDepth;
-in IN_RADIANCE uint vRadiance;
+in IN_RADIANCE float vRadiance;
 
 // Output
 out gl_PerVertex {vec4 gl_Position;};	// Mandatory
 out OUT_UV vec2 fUV;
 
-// Unfiroms
+// Uniforms
 U_MAX_RADIANCE uniform float maxRadiance;
 
 void main(void)

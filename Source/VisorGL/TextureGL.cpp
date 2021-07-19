@@ -69,3 +69,9 @@ void TextureGL::CopyToImage(const std::vector<Byte>& pixels,
                     PixelFormatToTypeGL(format),
                     pixels.data());
 }
+
+void TextureGL::BindTexture(GLuint bindingIndex) const
+{
+    glActiveTexture(GL_TEXTURE0 + bindingIndex);
+    glBindTexture(GL_TEXTURE_2D, texId);
+}

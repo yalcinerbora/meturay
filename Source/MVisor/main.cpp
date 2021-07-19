@@ -25,8 +25,6 @@ int main(int argc, const char* argv[])
     DLLError dError = DLLError::OK;
 
     // Arg Parsing
-    std::string visorConfigFileName;
-
     // Header
     const std::string BundleName = ProgramConstants::ProgramName;
     const std::string AppName = "MVisor";
@@ -75,7 +73,7 @@ int main(int argc, const char* argv[])
                                                     "DeleteVisorGL"},
                                                  // Args
                                                  Vector2i(1600, 900),
-                                                 visorConfigFileName);
+                                                 guideDebugConfig);
         ERROR_CHECK_INT(DLLError, dError);
 
         

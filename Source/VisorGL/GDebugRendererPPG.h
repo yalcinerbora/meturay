@@ -4,8 +4,10 @@
 #include "GDebugRendererI.h"
 
 #include <nlohmann/json_fwd.hpp>
+#include <GL/glew.h>
 
 #include "RayLib/AABB.h"
+#include "ShaderGL.h"
 
 struct DTreeNode
 {
@@ -65,7 +67,7 @@ struct SDTree
     std::vector<std::vector<DTreeNode>>     dTreeNodes;
     std::vector<std::pair<uint32_t, float>> dTrees;
  
-    uint32_t FindDTree(const Vector3f& worldPos)
+    uint32_t FindDTree(const Vector3f& worldPos) const
     {
         uint32_t dTreeIndex = UINT32_MAX;
         if(sTree.size() == 0) return dTreeIndex;
@@ -99,15 +101,44 @@ class GDebugRendererPPG : public GDebugRendererI
     public:
         static constexpr const char* TypeName = "PPG";
 
+        // Shader Binding Locations
+        // Vertex In (Per Vertex)
+        static constexpr GLenum     IN_POS = 0;
+        // Vertex In  (Per Instance)
+        static constexpr GLenum     IN_OFFSET = 1;
+        static constexpr GLenum     IN_DEPTH = 2;
+        static constexpr GLenum     IN_RADIANCE = 3;
+        // Uniforms
+        static constexpr GLenum     U_MAX_RADIANCE = 0;
+        static constexpr GLenum     U_PERIMIETER_ON = 1;
+        static constexpr GLenum     U_PERIMIETER_COLOR = 2;
+        // Textures
+        static constexpr GLenum     T_IN_GRADIENT = 0;        
+
     private:
         static constexpr const char* SD_TREE_NAME = "SDTrees";
 
-        const TextureGL&        gradientTexture;
+        const TextureGL&        gradientTexture;        
         const std::string&      configPath;
-
+        uint32_t                depthCount;
         // All SD Trees that are loaded
         std::vector<SDTree>     sdTrees;
 
+        Vector3f                perimeterColor;
+
+        // OGL Related 
+        // FBO (Since we use raster pipeline to render)
+        // VAO etc..
+        GLuint                  fbo;
+        GLuint                  vao;
+        GLuint                  vPos;
+        GLuint                  indexBuffer;
+        GLuint                  vPosBuffer;
+        GLuint                  treeBuffer;
+        size_t                  treeBufferSize;
+
+        ShaderGL                vertDTreeRender;
+        ShaderGL                fragDTreeRender;
 
         static bool             LoadSDTree(SDTree&, 
                                            const nlohmann::json& config,
@@ -120,10 +151,11 @@ class GDebugRendererPPG : public GDebugRendererI
         // Constructors & Destructor
                             GDebugRendererPPG(const nlohmann::json& config,
                                               const TextureGL& gradientTexture,
-                                              const std::string& configPath);
+                                              const std::string& configPath,
+                                              uint32_t depthCount);
                             GDebugRendererPPG(const GDebugRendererPPG&) = delete;
         GDebugRendererPPG&  operator=(const GDebugRendererPPG&) = delete;
-                            ~GDebugRendererPPG() = default;
+                            ~GDebugRendererPPG();
 
         // Interface
         void                RenderSpatial(TextureGL&, uint32_t depth) override;

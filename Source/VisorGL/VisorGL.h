@@ -74,7 +74,6 @@ class VisorGL : public WindowGLI
         static constexpr GLenum     I_SAMPLE = 1;
 
         static constexpr GLenum     IN_POS = 0;
-        static constexpr GLenum     IN_UV = 0;
 
         static constexpr GLenum     U_RES = 0;
         static constexpr GLenum     U_START = 1;

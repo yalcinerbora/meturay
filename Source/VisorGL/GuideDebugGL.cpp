@@ -51,7 +51,7 @@ GuideDebugGL::GuideDebugGL(const Vector2i& ws,
     , dummyVOpts{}
     , configFile(guideDebugFile)
     , configPath(std::filesystem::path(guideDebugFile).parent_path().string())
-    , gradientTexture(Zero2ui, PixelFormat::RGB8_UNORM)
+    , gradientTexture(nullptr)
 {
 
     // Initially Create Generator Map
@@ -178,8 +178,8 @@ VisorError GuideDebugGL::Initialize()
     Vector2ui gradientDimensions = Vector2ui(1, config.gradientValues.size());
     std::vector<Byte> packedData(sizeof(Vector3f) * gradientDimensions[1]);
     memcpy(packedData.data(), config.gradientValues.data(), packedData.size());
-    gradientTexture = TextureGL(gradientDimensions, PixelFormat::RGB8_UNORM);
-    gradientTexture.CopyToImage(packedData,
+    gradientTexture = std::make_unique<TextureGL>(gradientDimensions, PixelFormat::RGB8_UNORM);
+    gradientTexture->CopyToImage(packedData,
                                 Zero2ui, gradientDimensions, 
                                 PixelFormat::RGB_FLOAT);
 
@@ -193,7 +193,7 @@ VisorError GuideDebugGL::Initialize()
         auto loc = gdbGenerators.find(guiderType);
         if(loc == gdbGenerators.end()) return VisorError::NO_LOGIC_FOR_GUIDE_DEBUGGER;
 
-        gdbPtr = loc->second(guiderConfig, gradientTexture, configPath);
+        gdbPtr = loc->second(guiderConfig, *gradientTexture, configPath);
         debugRenderers.emplace_back(std::move(gdbPtr));
     }
 

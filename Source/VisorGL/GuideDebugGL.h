@@ -26,7 +26,7 @@ class GuideDebugGL : public WindowGLI
         Vector2i                                windowSize;
 
         // OGL Types
-        TextureGL                               gradientTexture;
+        std::unique_ptr<TextureGL>              gradientTexture;
 
         // Debugger Related
         std::vector<DebugRendererPtr>           debugRenderers;

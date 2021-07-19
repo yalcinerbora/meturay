@@ -40,6 +40,7 @@ class TextureGL
         TextureGL&      operator=(TextureGL&&) = default;
                         ~TextureGL();
 
+        void            BindTexture(GLuint bindingIndex) const;
 
         GLuint          TexId();
         uint32_t        Width() const;
