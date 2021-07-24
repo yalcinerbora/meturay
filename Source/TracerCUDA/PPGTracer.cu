@@ -251,6 +251,8 @@ TracerError PPGTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = opts.GetUInt(options.sTreeSplitThreshold, S_TREE_SAMPLE_SPLIT_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetBool(options.dumpDebugData, DUMP_DEBUG_NAME)) != TracerError::OK)
+        return err;
 
     return TracerError::OK;
 }
@@ -408,31 +410,55 @@ void PPGTracer::Finalize()
                  mbSize,
                  sTree->TotalTreeCount());
 
-        // Debug
-        std::vector<Byte> sdTree;
-        sTree->DumpSDTreeAsBinary(sdTree, true);
-        std::string iterAsString = std::to_string(currentTreeIteration);
-        Utility::DumpStdVectorToFile(sdTree, iterAsString + "_sdTree");
 
-        // DEBUG
-        CUDA_CHECK(cudaDeviceSynchronize());
-        // STree
-        STreeGPU sTreeGPU;
-        std::vector<STreeNode> sNodes;
-        sTree->GetTreeToCPU(sTreeGPU, sNodes);
-        Debug::DumpMemToFile(iterAsString + "_sTree", &sTreeGPU, 1, true);
-        Debug::DumpMemToFile(iterAsString + "_sTree_N", sNodes.data(), sNodes.size(), true);
-        // PrintEveryDTree
-        std::vector<DTreeGPU> dTreeGPUs;
-        std::vector<std::vector<DTreeNode>> dTreeNodes;
-        sTree->GetAllDTreesToCPU(dTreeGPUs, dTreeNodes, true);
-        Debug::DumpMemToFile(iterAsString + "__dTrees",
-                             dTreeGPUs.data(), dTreeGPUs.size(), true);
-        for(size_t i = 0; i < dTreeNodes.size(); i++)
+
+        // Debug Dump
+        if(options.dumpDebugData)
         {
-            Debug::DumpMemToFile(iterAsString + "__dTree_N",
-                                 dTreeNodes[i].data(), dTreeNodes[i].size(), true);
+            // Write SD Tree File
+            std::vector<Byte> sdTree;
+            sTree->DumpSDTreeAsBinary(sdTree, true);
+            std::string iterAsString = std::to_string(currentTreeIteration);
+            Utility::DumpStdVectorToFile(sdTree, iterAsString + "_ppg_sdTree");
+
+            //// Write reference image
+            //Vector2i pixelCount = imgMemory.SegmentSize();
+            //std::vector<Byte> imageData = imgMemory.GetImageToCPU(cudaSystem);
+            //Debug::DumpImage("PPG_Reference.png",
+            //         reinterpret_cast<Vector4*>(imageData.data()),
+            //         Vector2ui(pixelCount[0], pixelCount[1]));
+
+            //// Write position buffer
+            //// Do a simple ray trace.
+            //size_t pixelCount1D = static_cast<size_t>(pixelCount[0]) * pixelCount[1];
+            //std::vector<Vector3f> pixelPositionsCPU(pixelCount1D);
+
+            //..
+
+            //Utility::DumpStdVectorToFile(pixelPositionsCPU, "PPG_PosBuffer");
         }
+
+        
+
+        //// DEBUG
+        //CUDA_CHECK(cudaDeviceSynchronize());
+        //// STree
+        //STreeGPU sTreeGPU;
+        //std::vector<STreeNode> sNodes;
+        //sTree->GetTreeToCPU(sTreeGPU, sNodes);
+        //Debug::DumpMemToFile(iterAsString + "_sTree", &sTreeGPU, 1, true);
+        //Debug::DumpMemToFile(iterAsString + "_sTree_N", sNodes.data(), sNodes.size(), true);
+        //// PrintEveryDTree
+        //std::vector<DTreeGPU> dTreeGPUs;
+        //std::vector<std::vector<DTreeNode>> dTreeNodes;
+        //sTree->GetAllDTreesToCPU(dTreeGPUs, dTreeNodes, true);
+        //Debug::DumpMemToFile(iterAsString + "__dTrees",
+        //                     dTreeGPUs.data(), dTreeGPUs.size(), true);
+        //for(size_t i = 0; i < dTreeNodes.size(); i++)
+        //{
+        //    Debug::DumpMemToFile(iterAsString + "__dTree_N",
+        //                         dTreeNodes[i].data(), dTreeNodes[i].size(), true);
+        //}
 
         // Completely Reset the Image
         // This is done to eliminate variance from prev samples

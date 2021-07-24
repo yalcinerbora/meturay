@@ -16,6 +16,7 @@ using KeyCallbacks = std::multimap<std::pair<KeyboardKeyType, KeyAction>, std::f
 using MouseButtonCallbacks = std::multimap<std::pair<MouseButtonType, KeyAction>, std::function<void()>>;
 
 struct VisorCamera;
+class VisorI;
 
 class WindowInputI
 {
@@ -31,6 +32,8 @@ class WindowInputI
         virtual                             ~WindowInputI() = default;
 
         // Interface
+        virtual void                        AttachVisor(VisorI&) = 0;
+
         virtual void                        WindowPosChanged(int posX, int posY) = 0;
         virtual void                        WindowFBChanged(int fbWidth, int fbHeight) = 0;
         virtual void                        WindowSizeChanged(int width, int height) = 0;

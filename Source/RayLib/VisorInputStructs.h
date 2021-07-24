@@ -158,9 +158,9 @@ enum class VisorActionType
     MOVE_BACKWARD,
     MOVE_RIGHT,
     MOVE_LEFT,
-    MOUSE_MOVE_TOGGLE,
-    MOUSE_TRANSLATE_TOGGLE,
-    FAST_MOVE_TOGGLE,
+    MOUSE_MOVE_MODIFIER,
+    MOUSE_TRANSLATE_MODIFIER,
+    FAST_MOVE_MODIFIER,
     // Change Camera Movement Type
     MOVE_TYPE_NEXT,
     MOVE_TYPE_PREV,
@@ -180,6 +180,7 @@ enum class VisorActionType
     FRAME_PREV,
     // Image Related
     SAVE_IMAGE,
+    SAVE_IMAGE_HDR,
     // Lifetime Realted
     CLOSE,
 

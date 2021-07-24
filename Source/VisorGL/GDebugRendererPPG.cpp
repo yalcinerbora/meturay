@@ -76,10 +76,12 @@ GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,
     glBindVertexArray(0);
 
     // Load SDTrees to memory
-    sdTrees.resize(...)
-
-
-
+    sdTrees.resize(depthCount);
+    for(uint32_t i = 0; i < depthCount; i++)
+    {
+        LoadSDTree(sdTrees[i], config, configPath, i);
+    }
+    // All done!
 }
 
 GDebugRendererPPG::~GDebugRendererPPG()
@@ -94,7 +96,7 @@ bool GDebugRendererPPG::LoadSDTree(SDTree& sdTree,
 {
     auto loc = config.find(SD_TREE_NAME);
     if(loc == config.end()) return false;
-    if(loc->size() >= depth) return false;
+    if(depth >= loc->size()) return false;
 
     std::string fileName = (*loc)[depth];
     std::string fileMergedPath = Utility::MergeFileFolder(configPath, fileName);
@@ -114,8 +116,12 @@ bool GDebugRendererPPG::LoadSDTree(SDTree& sdTree,
     std::vector<Vector2ul> offsetCountPairs(dTreeCount);
     file.read(reinterpret_cast<char*>(offsetCountPairs.data()), sizeof(Vector2ul) * dTreeCount);
     // Read STree
-    sdTree.extents;
+    // Extents
     file.read(reinterpret_cast<char*>(&sdTree.extents), sizeof(AABB3f));
+    // Nodes
+    sdTree.sTreeNodes.resize(sTreeNodeCount);
+    file.read(reinterpret_cast<char*>(sdTree.sTreeNodes.data()),
+              sizeof(STreeNode) * sTreeNodeCount);
     // Read DTrees in order
     for(uint64_t i = 0; i < dTreeCount; i++)
     {

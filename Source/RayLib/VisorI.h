@@ -49,7 +49,7 @@ class VisorI
         virtual bool                    IsOpen() = 0;
         virtual void                    Render() = 0;
         // Input System
-        virtual void                    SetInputScheme(VisorInputI&) = 0;
+        virtual void                    WireWindowCallbacks(VisorInputI&) = 0;
         // Data Related
         // Set the resolution of the rendering data
         virtual void                    SetImageRes(Vector2i resolution) = 0;

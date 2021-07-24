@@ -375,7 +375,7 @@ void STree::DumpSDTreeAsBinary(std::vector<Byte>& data,
 
     uint32_t i = 0;
     size_t offset = (sTreeStartOffset + 
-                     sizeof(STreeGPU) + 
+                     sizeof(AABB3f) + 
                      nodeCount * sizeof(STreeNode));
     for(const DTree& dTree : dTrees)
     {

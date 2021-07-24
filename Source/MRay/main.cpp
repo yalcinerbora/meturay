@@ -134,6 +134,8 @@ int main(int argc, const char* argv[])
     visorInput = std::make_unique<VisorWindowInput>(std::move(keyBinds),
                                                     std::move(mouseBinds),
                                                     std::move(movementSchemeList));
+    // Attach visors window callbacks to this input scheme
+    // Additionally attach this specific visor to this?????????????
     visor->SetInputScheme(*visorInput);
 
     // Generate Tracer

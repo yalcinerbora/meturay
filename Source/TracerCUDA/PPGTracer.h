@@ -26,7 +26,8 @@ class PPGTracer final : public RayTracer
         static constexpr const char* D_TREE_MAX_DEPTH_NAME      = "DTreeMaximumDepth";
         static constexpr const char* D_TREE_FLUX_RATIO_NAME     = "DTreeFluxRatio";
         static constexpr const char* S_TREE_SAMPLE_SPLIT_NAME   = "STreeMaxSamples";
-
+        static constexpr const char* DUMP_DEBUG_NAME            = "DumpDebugData";
+        
         enum LightSamplerType
         {
             UNIFORM,
@@ -53,9 +54,10 @@ class PPGTracer final : public RayTracer
             bool                alwaysSendSamples   = false;
             bool                rawPathGuiding      = true;
 
-
             bool                nextEventEstimation = true;            
             bool                directLightMIS      = false;
+
+            bool                dumpDebugData       = false;
             
         };
 

@@ -6,6 +6,7 @@
 #include "VisorCallbacksI.h"
 #include "Quaternion.h"
 #include "Log.h"
+#include "VisorI.h"
 
 void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
 {
@@ -93,6 +94,10 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
         {
             break;
         }
+        case VisorActionType::SAVE_IMAGE_HDR:
+        {
+            break;
+        }
         case VisorActionType::CLOSE:
         {
             if(action != KeyAction::RELEASED) break;
@@ -130,6 +135,12 @@ void VisorWindowInput::ChangeDeltaT(double dT)
 void VisorWindowInput::AttachVisorCallback(VisorCallbacksI& vc)
 {
     visorCallbacks = &vc;
+}
+
+void VisorWindowInput::AttachVisor(VisorI& v)
+{
+    visor = &v;
+    v.WireWindowCallbacks(*this);
 }
 
 void VisorWindowInput::WindowPosChanged(int posX, int posY)

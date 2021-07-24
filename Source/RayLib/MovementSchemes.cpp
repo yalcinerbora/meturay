@@ -21,18 +21,18 @@ bool MovementSchemeFPS::InputAction(VisorCamera& camera,
                                     KeyAction action)
 {
     // Shift modifier
-    if(action == KeyAction::PRESSED && visorAction == VisorActionType::FAST_MOVE_TOGGLE)
+    if(action == KeyAction::PRESSED && visorAction == VisorActionType::FAST_MOVE_MODIFIER)
     {
         currentMovementRatio = MoveRatio * MoveRatioModifier;
         return false;
     }
-    else if(action == KeyAction::RELEASED && visorAction == VisorActionType::FAST_MOVE_TOGGLE)
+    else if(action == KeyAction::RELEASED && visorAction == VisorActionType::FAST_MOVE_MODIFIER)
     {
         currentMovementRatio = MoveRatio;
         return false;
     }
 
-    if(visorAction == VisorActionType::MOUSE_MOVE_TOGGLE)
+    if(visorAction == VisorActionType::MOUSE_MOVE_MODIFIER)
     {
         mouseToggle = (action == KeyAction::RELEASED) ? false : true;
         return false;
@@ -142,12 +142,12 @@ bool MovementSchemeMaya::InputAction(VisorCamera&,
 {
     switch(visorAction)
     {
-        case VisorActionType::MOUSE_MOVE_TOGGLE:
+        case VisorActionType::MOUSE_MOVE_MODIFIER:
         {
             moveMode = (action == KeyAction::RELEASED) ? false : true;
             break;
         }
-        case VisorActionType::MOUSE_TRANSLATE_TOGGLE:
+        case VisorActionType::MOUSE_TRANSLATE_MODIFIER:
         {
             translateMode = (action == KeyAction::RELEASED) ? false : true;
             break;

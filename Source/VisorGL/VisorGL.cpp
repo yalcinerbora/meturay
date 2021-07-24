@@ -332,8 +332,12 @@ void VisorGL::Render()
     }
 }
 
-void VisorGL::SetInputScheme(VisorInputI& i)
+void VisorGL::WireWindowCallbacks(VisorInputI& i)
 {
+    GLFWCallbackDelegator& glfwCallback = GLFWCallbackDelegator::Instance();
+    // Set Callbacks
+    glfwCallback.AttachWindow(window, this);
+    ..............
     input = &i;
 }
 
@@ -451,8 +455,6 @@ void VisorGL::ReleaseRenderingContext()
 
 VisorError VisorGL::Initialize()
 {
-    GLFWCallbackDelegator& glfwCallback = GLFWCallbackDelegator::Instance();
-
     // Common Window Hints
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
     glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
@@ -553,8 +555,6 @@ VisorError VisorGL::Initialize()
     {
         return VisorError::WINDOW_GENERATION_ERROR;
     }
-    // Set Callbacks
-    glfwCallback.AttachWindow(window, this);
 
     glfwMakeContextCurrent(window);
 

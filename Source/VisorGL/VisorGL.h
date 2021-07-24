@@ -154,7 +154,7 @@ class VisorGL : public WindowGLI
         bool                    IsOpen() override;
         void                    Render() override;
         // Input System
-        void                    SetInputScheme(VisorInputI&) override;
+        void                    WireWindowCallbacks(VisorInputI&) override;
         // Data Related
         void                    SetImageRes(Vector2i resolution) override;
         void                    SetImageFormat(PixelFormat f) override;

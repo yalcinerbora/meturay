@@ -63,20 +63,20 @@ struct STreeNode
 struct SDTree
 {
     AABB3f                                  extents;
-    std::vector<STreeNode>                  sTree;
+    std::vector<STreeNode>                  sTreeNodes;
     std::vector<std::vector<DTreeNode>>     dTreeNodes;
     std::vector<std::pair<uint32_t, float>> dTrees;
  
     uint32_t FindDTree(const Vector3f& worldPos) const
     {
         uint32_t dTreeIndex = UINT32_MAX;
-        if(sTree.size() == 0) return dTreeIndex;
+        if(sTreeNodes.size() == 0) return dTreeIndex;
 
         // Convert to Normalized Tree Space
         Vector3f normalizedCoords = worldPos - extents.Min();
         normalizedCoords /= (extents.Max() - extents.Min());
 
-        const STreeNode* node = sTree.data();
+        const STreeNode* node = sTreeNodes.data();
         while(true)
         {
             if(node->isLeaf)
@@ -89,7 +89,7 @@ struct SDTree
                 bool leftRight = node->DetermineChild(normalizedCoords);
                 normalizedCoords = node->NormalizeCoordsForChild(leftRight, normalizedCoords);
                 // Traverse...
-                node = sTree.data() + node->index + ((leftRight) ? 0 : 1);
+                node = sTreeNodes.data() + node->index + ((leftRight) ? 0 : 1);
             }
         }
         return dTreeIndex;

@@ -214,6 +214,7 @@ class SimpleTracerSetup
             //{"DTreeFluxRatio", OptionVariable(0.01f)},
             //{"STreeMaxSamples", OptionVariable(MAX_S_TREE)},
             {"STreeMaxSamples", OptionVariable(12000u)},
+            {"DumpDebugData", OptionVariable(false)},
         };
 
         // Tracer Related

@@ -46,7 +46,7 @@ namespace VisorConstants
         {KeyboardKeyType::D, VisorActionType::MOVE_RIGHT},
         {KeyboardKeyType::A, VisorActionType::MOVE_LEFT},
 
-        {KeyboardKeyType::LEFT_SHIFT, VisorActionType::FAST_MOVE_TOGGLE},
+        {KeyboardKeyType::LEFT_SHIFT, VisorActionType::FAST_MOVE_MODIFIER},
 
         {KeyboardKeyType::KP_9, VisorActionType::MOVE_TYPE_NEXT},
         {KeyboardKeyType::KP_7, VisorActionType::MOVE_TYPE_PREV},
@@ -64,17 +64,18 @@ namespace VisorConstants
         {KeyboardKeyType::RIGHT, VisorActionType::FRAME_NEXT},
         {KeyboardKeyType::LEFT, VisorActionType::FRAME_PREV},
         // Image Related
-        {KeyboardKeyType::SPACE, VisorActionType::SAVE_IMAGE},
+        {KeyboardKeyType::H, VisorActionType::SAVE_IMAGE},
+        {KeyboardKeyType::G, VisorActionType::SAVE_IMAGE_HDR},
         // Lifetime Realted
         {KeyboardKeyType::ESCAPE, VisorActionType::CLOSE}
     };
 
     static const MouseKeyBindings DefaultButtonBinds =
     {
-        {MouseButtonType::LEFT, VisorActionType::MOUSE_MOVE_TOGGLE},
-        {MouseButtonType::RIGHT, VisorActionType::MOUSE_MOVE_TOGGLE},
+        {MouseButtonType::LEFT, VisorActionType::MOUSE_MOVE_MODIFIER},
+        {MouseButtonType::RIGHT, VisorActionType::MOUSE_MOVE_MODIFIER},
 
-        {MouseButtonType::MIDDLE, VisorActionType::MOUSE_TRANSLATE_TOGGLE}
+        {MouseButtonType::MIDDLE, VisorActionType::MOUSE_TRANSLATE_MODIFIER}
     };
 }
 
