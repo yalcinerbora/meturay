@@ -10,6 +10,7 @@
 #include "RayLib/VisorCallbacksI.h"
 #include "RayLib/VisorWindowInput.h"
 #include "RayLib/MovementSchemes.h"
+#include "RayLib/VisorError.h"
 
 // Args Parser
 #include <CLI11.hpp>
@@ -75,15 +76,16 @@ int main(int argc, const char* argv[])
                                                  Vector2i(1600, 900),
                                                  guideDebugConfig);
         ERROR_CHECK_INT(DLLError, dError);
-
         
         // Set an input scheme
         EmptyVisorCallback emptyCallback;
         KeyboardKeyBindings kb = VisorConstants::DefaultKeyBinds;
         MouseKeyBindings bb = VisorConstants::DefaultButtonBinds;
         auto visorInput = std::make_unique<VisorWindowInput>(std::move(kb), std::move(bb),
-                                                             std::move(MovementSchemeList()));
-        debugVisor->SetInputScheme(*visorInput);
+                                                             std::move(MovementSchemeList()));        
+        // Init Visor with input scheme
+        VisorError vError = debugVisor->Initialize(*visorInput);
+        ERROR_CHECK_INT(VisorError, vError);
         visorInput->AttachVisorCallback(emptyCallback);
 
         // Render Loop

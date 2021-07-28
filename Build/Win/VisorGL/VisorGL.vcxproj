@@ -45,12 +45,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\$(ProjectName)\</IntDir>
-    <TargetName>visorGL</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\$(ProjectName)\</IntDir>
-    <TargetName>visorGL</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

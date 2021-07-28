@@ -58,6 +58,8 @@ class GuideDebugGL : public WindowGLI
                                                   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void                    SetCamera(const VisorCamera&) override;
         void                    SetSceneCameraCount(uint32_t) override;
+        //
+        void                    SaveImage(bool saveAsHDR) override;
 
     protected:
     public:
@@ -70,12 +72,10 @@ class GuideDebugGL : public WindowGLI
 
 
         // Interface
-        VisorError              Initialize() override;
+        VisorError              Initialize(VisorInputI&) override;
 
         bool                    IsOpen() override;
         void                    Render() override;
-        // Input System
-        void                    SetInputScheme(VisorInputI&) override;
         // Misc
         void                    SetWindowSize(const Vector2i& size) override;
         void                    SetFPSLimit(float) override;
@@ -97,3 +97,5 @@ inline void GuideDebugGL::AccumulatePortion(const std::vector<Byte>,
                                           PixelFormat, size_t, Vector2i, Vector2i) {}
 inline void GuideDebugGL::SetCamera(const VisorCamera&) {}
 inline void GuideDebugGL::SetSceneCameraCount(uint32_t) {}
+
+inline void GuideDebugGL::SaveImage(bool saveAsHDR) {}

@@ -4,6 +4,7 @@
 #include "RayLib/CPUTimer.h"
 #include "RayLib/VisorError.h"
 #include "RayLib/VisorInputI.h"
+#include "RayLib/ImageIO.h"
 
 #include "GLConversionFunctions.h"
 #include "GLFWCallbackDelegator.h"
@@ -144,6 +145,32 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             currentIndex = nextIndex;
             break;
         }
+        case VisorGLCommand::SAVE_IMAGE:
+        case VisorGLCommand::SAVE_IMAGE_HDR:
+        {
+            PixelFormatToSizedGL(imagePixFormat);
+            GLuint currentTexture = outputTextures[currentIndex];
+            std::vector<Vector4f> pixels(imageSize[0] * imageSize[1]);
+
+            glBindTexture(GL_TEXTURE_2D, currentTexture);
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT,
+                          pixels.data());
+            
+            // Write Op
+            if(c.type == VisorGLCommand::SAVE_IMAGE_HDR)
+            {
+                ImageIO::Instance().WriteAsPNG(pixels.data(),
+                                               Vector2ui(imageSize[0], imageSize[1]),
+                                               "imgOut.png");
+            }
+            else
+            {
+                ImageIO::Instance().WriteAsEXR(pixels.data(),
+                                               Vector2ui(imageSize[0], imageSize[1]),
+                                               "imgOut.exr");
+            }            
+            break;
+        }        
     };
 }
 
@@ -213,9 +240,7 @@ VisorGL::VisorGL(const VisorOptions& opts,
     , imageSize(imgRes)
     , imagePixFormat(imagePixelFormat)
     , visorGUI(nullptr)
-{
-    Initialize();
-}
+{}
 
 VisorGL::~VisorGL()
 {
@@ -332,15 +357,6 @@ void VisorGL::Render()
     }
 }
 
-void VisorGL::WireWindowCallbacks(VisorInputI& i)
-{
-    GLFWCallbackDelegator& glfwCallback = GLFWCallbackDelegator::Instance();
-    // Set Callbacks
-    glfwCallback.AttachWindow(window, this);
-    ..............
-    input = &i;
-}
-
 void VisorGL::SetImageRes(Vector2i resolution)
 {
     imageSize = resolution;
@@ -453,8 +469,12 @@ void VisorGL::ReleaseRenderingContext()
     glfwMakeContextCurrent(nullptr);
 }
 
-VisorError VisorGL::Initialize()
+VisorError VisorGL::Initialize(VisorInputI& vInput)
 {
+    input = &vInput;
+
+    GLFWCallbackDelegator& glfwCallback = GLFWCallbackDelegator::Instance();
+
     // Common Window Hints
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
     glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
@@ -556,8 +576,12 @@ VisorError VisorGL::Initialize()
         return VisorError::WINDOW_GENERATION_ERROR;
     }
 
-    glfwMakeContextCurrent(window);
 
+    // Set Callbacks
+    vInput.SetVisor(*this);
+    glfwCallback.AttachWindow(window, this);
+
+    glfwMakeContextCurrent(window);
     // Initial Option set
     glfwSwapInterval((vOpts.vSyncOn) ? 1 : 0);
 
@@ -665,4 +689,15 @@ VisorError VisorGL::Initialize()
     // thread after initialization
     glfwMakeContextCurrent(nullptr);
     return VisorError::OK;
+}
+
+void VisorGL::SaveImage(bool saveAsHDR)
+{
+
+    VisorGLCommand command;
+    command.type = saveAsHDR 
+                    ? VisorGLCommand::SAVE_IMAGE_HDR 
+                    : VisorGLCommand::SAVE_IMAGE;
+
+    commandList.Enqueue(std::move(command));
 }

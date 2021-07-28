@@ -18,6 +18,7 @@
 #include "RayLib/VisorWindowInput.h"
 #include "RayLib/MovementSchemes.h"
 #include "VisorGL/VisorGLEntry.h"
+#include "RayLib/VisorError.h"
 
 // Node
 #include "RayLib/VisorCallbacksI.h"
@@ -323,8 +324,11 @@ inline bool SimpleTracerSetup::Init()
     visorView = std::unique_ptr<VisorI>(CreateVisorGL(visorOpts,
                                                       MockNode::IMAGE_RESOLUTION,
                                                       IMAGE_PIXEL_FORMAT));
+
+    VisorError vError = visorView->Initialize(*visorInput);
+    ERROR_CHECK(VisorError, vError);
+
     visorView->SetRenderingContextCurrent();
-    visorView->SetInputScheme(*visorInput);
     visorView->SetImageFormat(IMAGE_PIXEL_FORMAT);
     visorView->SetImageRes(MockNode::IMAGE_RESOLUTION);
     // Set Window Res wrt. monitor resolution

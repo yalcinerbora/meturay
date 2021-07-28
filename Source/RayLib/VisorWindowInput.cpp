@@ -92,10 +92,12 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
         }
         case VisorActionType::SAVE_IMAGE:
         {
+            if(visor) visor->SaveImage(false);
             break;
         }
         case VisorActionType::SAVE_IMAGE_HDR:
         {
+            if(visor) visor->SaveImage(true);
             break;
         }
         case VisorActionType::CLOSE:
@@ -137,10 +139,9 @@ void VisorWindowInput::AttachVisorCallback(VisorCallbacksI& vc)
     visorCallbacks = &vc;
 }
 
-void VisorWindowInput::AttachVisor(VisorI& v)
+void VisorWindowInput::SetVisor(VisorI& v)
 {
     visor = &v;
-    v.WireWindowCallbacks(*this);
 }
 
 void VisorWindowInput::WindowPosChanged(int posX, int posY)

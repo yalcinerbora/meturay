@@ -4,6 +4,7 @@
 #include "RayLib/VisorError.h"
 #include "RayLib/Log.h"
 #include "RayLib/FileSystemUtility.h"
+#include "RayLib/VisorInputI.h"
 
 // Debug Renderers
 #include "GDebugRendererPPG.h"
@@ -42,7 +43,6 @@ VisorInputI* GuideDebugGL::InputInterface()
     return input;
 }
 
-
 GuideDebugGL::GuideDebugGL(const Vector2i& ws,
                            const std::u8string& guideDebugFile)
     : windowSize(ws)
@@ -52,6 +52,7 @@ GuideDebugGL::GuideDebugGL(const Vector2i& ws,
     , configFile(guideDebugFile)
     , configPath(std::filesystem::path(guideDebugFile).parent_path().string())
     , gradientTexture(nullptr)
+    , input(nullptr)
 {
 
     // Initially Create Generator Map
@@ -62,15 +63,8 @@ GuideDebugGL::GuideDebugGL(const Vector2i& ws,
     //                      GDBRendererGen(GDBRendererConstruct<GDebugRendererI, 
     //                                                          GDebugRendererReference>));
 
-
-
-
-
     bool configParsed = GuideDebug::ParseConfigFile(config, configFile);
     if(!configParsed) throw VisorException(VisorError::WINDOW_GENERATION_ERROR);
-
-    VisorError e = Initialize();
-    if(e != VisorError::OK) throw VisorException(e);
 }
 
 GuideDebugGL::~GuideDebugGL()
@@ -79,8 +73,10 @@ GuideDebugGL::~GuideDebugGL()
     GLFWCallbackDelegator::Instance().DetachWindow(glfwWindow);
 }
 
-VisorError GuideDebugGL::Initialize()
+VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
 {
+    input = &vInput;
+
     GLFWCallbackDelegator& glfwCallback = GLFWCallbackDelegator::Instance();
 
     // Common Window Hints
@@ -128,6 +124,7 @@ VisorError GuideDebugGL::Initialize()
     }
 
     // Set Callbacks
+    vInput.SetVisor(*this);
     glfwCallback.AttachWindow(glfwWindow, this);
 
     glfwMakeContextCurrent(glfwWindow);
@@ -141,6 +138,7 @@ VisorError GuideDebugGL::Initialize()
         METU_ERROR_LOG("%s", glewGetErrorString(err));
         return VisorError::RENDER_FUCTION_GENERATOR_ERROR;
     }
+
 
     // Print Stuff Now
     // Window Done
@@ -172,7 +170,6 @@ VisorError GuideDebugGL::Initialize()
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-
 
     // Generate Gradient Texture
     Vector2ui gradientDimensions = Vector2ui(1, config.gradientValues.size());
@@ -224,12 +221,6 @@ void GuideDebugGL::Render()
     gui->Render();
 
     glfwSwapBuffers(glfwWindow);
-}
-
-// Input System
-void GuideDebugGL::SetInputScheme(VisorInputI& i)
-{
-    input = &i;
 }
 
 // Misc

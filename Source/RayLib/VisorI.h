@@ -45,11 +45,9 @@ class VisorI
         virtual                         ~VisorI() = default;
 
         // Interface
-        virtual VisorError              Initialize() = 0;
+        virtual VisorError              Initialize(VisorInputI&) = 0;
         virtual bool                    IsOpen() = 0;
         virtual void                    Render() = 0;
-        // Input System
-        virtual void                    WireWindowCallbacks(VisorInputI&) = 0;
         // Data Related
         // Set the resolution of the rendering data
         virtual void                    SetImageRes(Vector2i resolution) = 0;
@@ -77,4 +75,6 @@ class VisorI
         // Camera Related (Tracer Callbacks)
         virtual void                    SetCamera(const VisorCamera&) = 0;
         virtual void                    SetSceneCameraCount(uint32_t) = 0;
+        // Image Save Related
+        virtual void                    SaveImage(bool saveAsHDR) = 0;
 };

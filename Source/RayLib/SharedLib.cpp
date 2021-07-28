@@ -1,5 +1,6 @@
 #include "SharedLib.h"
 #include "System.h"
+#include "Log.h"
 
 // Env Headers
 #if defined METURAY_WIN
@@ -57,6 +58,23 @@ SharedLib::SharedLib(const std::string& libName)
     #if defined METURAY_WIN
         libWithExt += WinDLLExt;
         libHandle = (void*)LoadLibrary(ConvertWinWchar(libWithExt).c_str());
+        if(libHandle == nullptr)
+        {
+            DWORD errorMessageID = GetLastError();
+
+            LPSTR messageBuffer = nullptr;
+            size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+                                         FORMAT_MESSAGE_FROM_SYSTEM | 
+                                         FORMAT_MESSAGE_IGNORE_INSERTS,
+                                         NULL, errorMessageID, 
+                                         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
+                                         (LPSTR)&messageBuffer, 0, NULL);
+
+            // Get the buffer
+            std::string message(messageBuffer, size);
+            METU_ERROR_LOG(message.c_str());
+            LocalFree(messageBuffer);
+        }
     #elif defined METURAY_LINUX
         libWithExt = "lib";
         libWithExt += libName;

@@ -32,7 +32,7 @@ class WindowInputI
         virtual                             ~WindowInputI() = default;
 
         // Interface
-        virtual void                        AttachVisor(VisorI&) = 0;
+        virtual void                        SetVisor(VisorI&) = 0;
 
         virtual void                        WindowPosChanged(int posX, int posY) = 0;
         virtual void                        WindowFBChanged(int fbWidth, int fbHeight) = 0;

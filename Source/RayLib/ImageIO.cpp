@@ -1,6 +1,13 @@
 #include "ImageIO.h"
 #include "FreeImgRAII.h"
 
+#include <execution>
+#include <algorithm>
+
+#include <OpenEXR/ImfRgbaFile.h>
+//#include <OpenEXR/ImfConvert.h>
+#include <OpenEXR/ImfRgba.h>
+
 ImageIO& ImageIO::Instance()
 {
     static std::unique_ptr<ImageIO> instance = nullptr;
@@ -140,6 +147,26 @@ bool ImageIO::ReadImage(std::vector<Byte>& pixels,
     return true;
 }
 
+bool ImageIO::WriteAsEXR(const Vector4f* image,
+                         const Vector2ui& size,
+                         const std::string& fileName) const
+{
+    std::vector<Imf::Rgba> convertedData(size[0] * size[1]);
+    std::transform(std::execution::par_unseq,
+                   image, image + size[0] * size[1],
+                   convertedData.begin(), [] (const Vector4f& v) -> Imf::Rgba
+                   {
+                       return Imf::Rgba(v[0], v[1], v[2], v[3]);
+                   });
+    
+    Imf::RgbaOutputFile file(fileName.c_str(), 
+                             size[0], size[1], 
+                             Imf::RgbaChannels::WRITE_RGBA);
+    file.setFrameBuffer(convertedData.data(), 1, size[0]);
+    file.writePixels(size[1]);
+    return true;
+}
+
 bool ImageIO::WriteAsPNG(const Vector4f* image,
                          const Vector2ui& size,
                          const std::string& fileName) const
@@ -149,8 +176,6 @@ bool ImageIO::WriteAsPNG(const Vector4f* image,
     for(uint32_t j = 0; j < size[1]; j++)
     for(uint32_t i = 0; i < size[0]; i++)
     {
-        //uint32_t jImg = size[1] - j - 1;
-
         RGBQUAD color;
         Vector4f rgbImage = image[j * size[0] + i];
 

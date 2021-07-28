@@ -64,8 +64,8 @@ namespace VisorConstants
         {KeyboardKeyType::RIGHT, VisorActionType::FRAME_NEXT},
         {KeyboardKeyType::LEFT, VisorActionType::FRAME_PREV},
         // Image Related
-        {KeyboardKeyType::H, VisorActionType::SAVE_IMAGE},
-        {KeyboardKeyType::G, VisorActionType::SAVE_IMAGE_HDR},
+        {KeyboardKeyType::G, VisorActionType::SAVE_IMAGE},
+        {KeyboardKeyType::H, VisorActionType::SAVE_IMAGE_HDR},
         // Lifetime Realted
         {KeyboardKeyType::ESCAPE, VisorActionType::CLOSE}
     };

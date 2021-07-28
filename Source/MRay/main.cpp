@@ -9,6 +9,7 @@
 #include "RayLib/VisorI.h"
 #include "RayLib/VisorWindowInput.h"
 #include "RayLib/MovementSchemes.h"
+#include "RayLib/VisorError.h"
 // Tracer
 #include "RayLib/TracerOptions.h"
 #include "RayLib/TracerSystemI.h"
@@ -77,6 +78,7 @@ int main(int argc, const char* argv[])
     TracerError tError = TracerError::OK;
     DLLError dError = DLLError::OK;
     NodeError nError = NodeError::OK;
+    VisorError vError = VisorError::OK;
 
     // Variables Related to the MRay
     SharedLibPtr<TracerSystemI> tracerSystem = {nullptr, nullptr};
@@ -123,6 +125,12 @@ int main(int argc, const char* argv[])
     }
 
     // Generate Visor
+    // First create visor input with teh specific key binds
+    visorInput = std::make_unique<VisorWindowInput>(std::move(keyBinds),
+                                                    std::move(mouseBinds),
+                                                    std::move(movementSchemeList));
+    // Attach visors window callbacks to this input scheme
+    // Additionally attach this specific visor to this?????????????   
     SharedLib visorDLL(visorDLLName);
     SharedLibPtr<VisorI> visor = {nullptr, nullptr};
     dError = visorDLL.GenerateObjectWithArgs(visor, visorDLLEntryFunctionNames,
@@ -131,12 +139,8 @@ int main(int argc, const char* argv[])
                                              resolution,
                                              PixelFormat::RGBA_FLOAT);
     ERROR_CHECK_INT(DLLError, dError);
-    visorInput = std::make_unique<VisorWindowInput>(std::move(keyBinds),
-                                                    std::move(mouseBinds),
-                                                    std::move(movementSchemeList));
-    // Attach visors window callbacks to this input scheme
-    // Additionally attach this specific visor to this?????????????
-    visor->SetInputScheme(*visorInput);
+    vError = visor->Initialize(*visorInput);
+    ERROR_CHECK_INT(VisorError, dError);
 
     // Generate Tracer
     SharedLib tracerDLL(tracerDLLName);

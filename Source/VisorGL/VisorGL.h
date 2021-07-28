@@ -29,7 +29,9 @@ struct VisorGLCommand
         {
             SET_PORTION,
             RESET_IMAGE,
-            REALLOC_IMAGES
+            REALLOC_IMAGES,
+            SAVE_IMAGE,
+            SAVE_IMAGE_HDR
         };
 
     public:
@@ -141,7 +143,7 @@ class VisorGL : public WindowGLI
     protected:
     public:
         // Constructors & Destructor
-                                VisorGL(const VisorOptions&,
+                                VisorGL(const VisorOptions&,                                        
                                         const Vector2i& imgRes,
                                         const PixelFormat& imagePixelFormat);
                                 VisorGL(const VisorGL&) = delete;
@@ -149,12 +151,10 @@ class VisorGL : public WindowGLI
                                 ~VisorGL();
 
         // Interface
-        VisorError              Initialize() override;
+        VisorError              Initialize(VisorInputI&) override;
 
         bool                    IsOpen() override;
         void                    Render() override;
-        // Input System
-        void                    WireWindowCallbacks(VisorInputI&) override;
         // Data Related
         void                    SetImageRes(Vector2i resolution) override;
         void                    SetImageFormat(PixelFormat f) override;
@@ -181,4 +181,6 @@ class VisorGL : public WindowGLI
         void                    ReleaseRenderingContext() override;
         // Main Thread only Calls
         void                    ProcessInputs() override;
+        //
+        void                    SaveImage(bool saveAsHDR) override;
 };
