@@ -18,6 +18,15 @@
 //    return stream;
 //}
 
+const std::array<std::string, DirectTracer::RenderType::END> DirectTracer::RenderTypeNames =
+{
+    "Furnace",
+    "Position",
+    "Normal",
+    "LinearDepth",
+    "LogDepth"
+};
+
 DirectTracer::DirectTracer(const CudaSystem& s,
                            const GPUSceneI& scene,
                            const TracerParameters& p)
@@ -26,10 +35,36 @@ DirectTracer::DirectTracer(const CudaSystem& s,
     workPool.AppendGenerators(DirectTracerWorkerList{});
 }
 
+TracerError DirectTracer::StringToRenderType(RenderType& rt, const std::string& s)
+{
+    uint32_t i = 0;
+    for(const std::string name : RenderTypeNames)
+    {
+        if(name == s)
+        {
+            rt = static_cast<RenderType>(i);
+            return TracerError::OK;
+        }
+        i++;
+    }
+    return TracerError::UNABLE_TO_INITIALIZE;
+}
+
+std::string DirectTracer::RenderTypeToString(RenderType rt)
+{
+    return RenderTypeNames[static_cast<int>(rt)];
+}
+
 TracerError DirectTracer::SetOptions(const TracerOptionsI& opts)
 {
     TracerError err = TracerError::OK;
     if((err = opts.GetInt(options.sampleCount, SAMPLE_NAME)) != TracerError::OK)
+       return err;
+
+    std::string renderTypeString;
+    if((err = opts.GetString(renderTypeString, RENDER_TYPE_NAME)) != TracerError::OK)
+        return err;
+    if((err = StringToRenderType(options.renderType, renderTypeString)) != TracerError::OK)
        return err;
    return TracerError::OK;
 }

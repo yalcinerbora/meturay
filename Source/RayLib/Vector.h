@@ -207,6 +207,11 @@ using Vector2s = Vector<2, uint16_t>;
 using Vector2us = Vector<2, uint16_t>;
 using Vector4s = Vector<2, uint16_t>;
 using Vector4us = Vector<2, uint16_t>;
+// Byte
+using Vector2c = Vector<2, uint8_t>;
+using Vector2uc = Vector<2, uint8_t>;
+using Vector4c = Vector<2, uint8_t>;
+using Vector4uc = Vector<2, uint8_t>;
 
 // Requirements of Vectors
 //static_assert(std::is_literal_type<Vector3>::value == true, "Vectors has to be literal types");

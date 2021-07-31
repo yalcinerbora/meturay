@@ -146,29 +146,30 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             break;
         }
         case VisorGLCommand::SAVE_IMAGE:
-        case VisorGLCommand::SAVE_IMAGE_HDR:
         {
-            PixelFormatToSizedGL(imagePixFormat);
-            GLuint currentTexture = outputTextures[currentIndex];
+            // TODO: load as 8-bit color (but alignment trolls i think heap gets corrupted)
             std::vector<Vector4f> pixels(imageSize[0] * imageSize[1]);
-
-            glBindTexture(GL_TEXTURE_2D, currentTexture);
+            GLuint readTexture = sdrTexture;
+            glBindTexture(GL_TEXTURE_2D, readTexture);
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT,
                           pixels.data());
-            
-            // Write Op
-            if(c.type == VisorGLCommand::SAVE_IMAGE_HDR)
-            {
-                ImageIO::Instance().WriteAsPNG(pixels.data(),
-                                               Vector2ui(imageSize[0], imageSize[1]),
-                                               "imgOut.png");
-            }
-            else
-            {
-                ImageIO::Instance().WriteAsEXR(pixels.data(),
-                                               Vector2ui(imageSize[0], imageSize[1]),
-                                               "imgOut.exr");
-            }            
+            ImageIO::Instance().WriteAsPNG(pixels.data(),
+                                           Vector2ui(imageSize[0], imageSize[1]),
+                                           "imgOut.png");
+            break;
+        }
+        case VisorGLCommand::SAVE_IMAGE_HDR:
+        {   
+            std::vector<Vector4f> pixels(imageSize[0] * imageSize[1]);
+            GLuint readTexture = outputTextures[currentIndex];            
+            glBindTexture(GL_TEXTURE_2D, readTexture);
+            //// Thightly pack pixels for reading
+            //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT,
+                          pixels.data());            
+            ImageIO::Instance().WriteAsEXR(pixels.data(),
+                                            Vector2ui(imageSize[0], imageSize[1]),
+                                            "imgOut.exr");
             break;
         }        
     };
@@ -327,8 +328,7 @@ void VisorGL::Render()
         toneMapGL.ToneMap(sdrTexture,
                           PixelFormat::RGBA8_UNORM,
                           outputTextures[currentIndex],
-                          tmOpts,
-                          imageSize);
+                          tmOpts, imageSize);
     }
 
     // Render Image

@@ -5,18 +5,36 @@
 
 class DirectTracer : public RayTracer
 {
-        public:
+    public:
         static constexpr const char*    TypeName() { return "DirectTracer"; }
+        static constexpr const char*    RENDER_TYPE_NAME = "RenderType";
+
+        enum RenderType
+        {
+            RENDER_FURNACE,
+            RENDER_POSITION,
+            RENDER_NORMAL,
+            RENDER_LIN_DEPTH,
+            RENDER_LOG_DEPTH,
+
+            END
+        };       
 
         struct Options
         {
             int32_t     sampleCount = 1;    // Per-axis sample per pixel
+            RenderType  renderType = RenderType::RENDER_FURNACE;
         };
 
     private:
+        static const std::array<std::string, RenderType::END> RenderTypeNames;
+
         Options                 options;
         WorkBatchMap            workMap;
         WorkPool<>              workPool;
+
+        static TracerError      StringToRenderType(RenderType&, const std::string&);
+        static std::string      RenderTypeToString(RenderType);
 
     protected:
     public:

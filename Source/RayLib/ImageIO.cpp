@@ -193,6 +193,27 @@ bool ImageIO::WriteAsPNG(const Vector4f* image,
     return result;
 }
 
+bool ImageIO::WriteAsPNG(const Vector4uc* image,
+                         const Vector2ui& size,
+                         const std::string& fileName) const
+{
+    auto* bitmap = FreeImage_Allocate(size[0], size[1], 24);
+
+    for(uint32_t j = 0; j < size[1]; j++)
+        for(uint32_t i = 0; i < size[0]; i++)
+        {
+            RGBQUAD color;
+            Vector4uc rgbImage = image[j * size[0] + i];
+            color.rgbRed = rgbImage[0];
+            color.rgbGreen = rgbImage[1];
+            color.rgbBlue = rgbImage[2];
+            FreeImage_SetPixelColor(bitmap, i, j, &color);
+        }
+    bool result = FreeImage_Save(FIF_PNG, bitmap, fileName.c_str());
+    FreeImage_Unload(bitmap);
+    return result;
+}
+
 bool ImageIO::WriteBitmap(const Byte* bits,
                           const Vector2ui& size,
                           const std::string& fileName) const

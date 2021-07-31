@@ -31,12 +31,14 @@ class PathTracer final : public RayTracer
             bool                nextEventEstimation = true;
             uint32_t            rrStart             = 3;
             bool                directLightMIS      = false;
-            std::string         lightSamplerType    = "Uniform";
+            LightSamplerType    lightSamplerType    = LightSamplerType::UNIFORM;
         };
 
         static constexpr bool   USE_SINGLE_PATH_KERNEL = true;
 
     private:
+        static const std::array<std::string, LightSamplerType::END> SamplerNames;
+
         Options                         options;
         uint32_t                        currentDepth;
         WorkBatchMap                    workMap;
@@ -52,8 +54,9 @@ class PathTracer final : public RayTracer
         DeviceMemory                    memory;
         const GPUDirectLightSamplerI*   lightSampler;
         // Misc
-        static TracerError              LightSamplerNameToEnum(LightSamplerType&,
+        static TracerError              StringToLightSamplerType(LightSamplerType&,
                                                                const std::string&);
+        static std::string              LightSamplerTypeToString(LightSamplerType);
         TracerError                     ConstructLightSampler();
 
     protected:

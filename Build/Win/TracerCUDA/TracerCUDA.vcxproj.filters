@@ -480,7 +480,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracer.h">
       <Filter>Tracers\DirectTracer</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerWork.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerWorks.cuh">
       <Filter>Tracers\DirectTracer</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\AOTracerWork.cuh">
@@ -635,7 +635,7 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracer.cu">
       <Filter>Tracers\DirectTracer</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracerWork.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracerWorks.cu">
       <Filter>Tracers\DirectTracer</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracerWork.cu">

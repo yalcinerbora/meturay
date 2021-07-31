@@ -20,7 +20,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\CameraFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CudaSystem.hpp" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerKC.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerWork.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerWorks.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DTree.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DTreeKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUDirectLightSamplerI.h" />
@@ -147,7 +147,7 @@
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerSystemCUDA.cpp" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracerWork.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracerWork.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracerWorks.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DTree.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightDisk.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.cu" />

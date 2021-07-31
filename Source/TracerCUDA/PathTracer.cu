@@ -36,6 +36,11 @@
 //    return stream;
 //}
 
+const std::array<std::string, PathTracer::LightSamplerType::END> PathTracer::SamplerNames =
+{
+    "Uniform"
+};
+
 template <class T>
 __global__ void KCConstructLightSampler(T* loc,
                                         const GPULightI** gLights,
@@ -48,16 +53,11 @@ __global__ void KCConstructLightSampler(T* loc,
     }
 }
 
-TracerError PathTracer::LightSamplerNameToEnum(PathTracer::LightSamplerType& ls,
+TracerError PathTracer::StringToLightSamplerType(PathTracer::LightSamplerType& ls,
                                                const std::string& lsName)
-{
-    const std::array<std::string, LightSamplerType::END> samplerNames =
-    {
-        "Uniform"
-    };
-
+{    
     uint32_t i = 0;
-    for(const std::string s : samplerNames)
+    for(const std::string s : SamplerNames)
     {
         if(lsName == s)
         {
@@ -69,15 +69,14 @@ TracerError PathTracer::LightSamplerNameToEnum(PathTracer::LightSamplerType& ls,
     return TracerError::UNABLE_TO_INITIALIZE;
 }
 
+std::string PathTracer::LightSamplerTypeToString(LightSamplerType t)
+{
+    return SamplerNames[static_cast<int>(t)];
+}
+
 TracerError PathTracer::ConstructLightSampler()
 {
-    LightSamplerType lst;
-    TracerError e = LightSamplerNameToEnum(lst, options.lightSamplerType);
-
-    if(e != TracerError::OK)
-        return e;
-
-    switch(lst)
+    switch(options.lightSamplerType)
     {
         case LightSamplerType::UNIFORM:
         {
@@ -211,9 +210,12 @@ TracerError PathTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = opts.GetBool(options.directLightMIS, DIRECT_LIGHT_MIS_NAME)) != TracerError::OK)
         return err;
-    if((err = opts.GetString(options.lightSamplerType, LIGHT_SAMPLER_TYPE_NAME)) != TracerError::OK)
-        return err;
 
+    std::string lightSamplerTypeString;
+    if((err = opts.GetString(lightSamplerTypeString, LIGHT_SAMPLER_TYPE_NAME)) != TracerError::OK)
+        return err;
+    if((err = StringToLightSamplerType(options.lightSamplerType, lightSamplerTypeString)) != TracerError::OK)
+        return err;
     return TracerError::OK;
 }
 

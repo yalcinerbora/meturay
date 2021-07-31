@@ -15,6 +15,11 @@ void PathTracer::AskOptions()
     list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
     list.emplace(MAX_DEPTH_NAME, OptionVariable(options.maximumDepth));
     list.emplace(NEE_NAME, OptionVariable(options.nextEventEstimation));
+    list.emplace(DIRECT_LIGHT_MIS_NAME, OptionVariable(options.directLightMIS));
+    list.emplace(RR_START_NAME, OptionVariable(options.rrStart));
+
+    std::string lightSamplerTypeString = LightSamplerTypeToString(options.lightSamplerType);
+    list.emplace(LIGHT_SAMPLER_TYPE_NAME, OptionVariable(lightSamplerTypeString));
 
     if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
 }
@@ -24,6 +29,8 @@ void DirectTracer::AskOptions()
     // Generate Tracer Object
     VariableList list;
     list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
+    std::string renderTypeString = RenderTypeToString(options.renderType);
+    list.emplace(RENDER_TYPE_NAME, OptionVariable(renderTypeString));
 
     if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
 }
