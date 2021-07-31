@@ -8,48 +8,6 @@
 
 class RandomGPU;
 
-//__device__ inline
-//Vector3 ConstantSample(// Sampled Output
-//                       RayF& wo,
-//                       float& pdf,
-//                       const GPUMediumI*& outMedium,
-//                       // Input
-//                       const Vector3& wi,
-//                       const Vector3& pos,
-//                       const GPUMediumI& m,
-//                       //
-//                       const EmptySurface& surface,
-//                       // I-O
-//                       RandomGPU& rng,
-//                       // Constants
-//                       const AlbedoMatData& matData,
-//                       const HitKey::Type& matId,
-//                       uint32_t sampleIndex)
-//{
-//    // No medium change
-//    outMedium = &m;
-//
-//    static constexpr Vector3 ZERO = Zero3;
-//    pdf = 1.0f;
-//    wo = RayF(ZERO, ZERO);
-//    return matData.dAlbedo[matId];
-//}
-//
-//__device__ inline
-//Vector3 ConstantEvaluate(// Input
-//                         const Vector3& wo,
-//                         const Vector3& wi,
-//                         const Vector3& pos,
-//                         const GPUMediumI& m,
-//                         //
-//                         const EmptySurface& surface,
-//                         // Constants
-//                         const AlbedoMatData& matData,
-//                         const HitKey::Type& matId)
-//{
-//    return matData.dAlbedo[matId];
-//}
-
 __device__ __forceinline__
 Vector3 BarycentricSample(// Sampled Output
                           RayF& wo,

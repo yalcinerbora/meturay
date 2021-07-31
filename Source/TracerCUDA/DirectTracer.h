@@ -13,12 +13,12 @@ class DirectTracer : public RayTracer
         {
             RENDER_FURNACE,
             RENDER_POSITION,
-            RENDER_NORMAL,
+            RENDER_WORLD_NORMAL,
             RENDER_LIN_DEPTH,
             RENDER_LOG_DEPTH,
 
             END
-        };       
+        };
 
         struct Options
         {
@@ -31,7 +31,10 @@ class DirectTracer : public RayTracer
 
         Options                 options;
         WorkBatchMap            workMap;
-        WorkPool<>              workPool;
+
+        // Work Pools
+        WorkPool<>              furnaceWorkPool;
+        WorkPool<>              normalWorkPool;
 
         static TracerError      StringToRenderType(RenderType&, const std::string&);
         static std::string      RenderTypeToString(RenderType);

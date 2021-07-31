@@ -25,6 +25,11 @@ class GPUCameraI : public GPUEndpointI
         __device__
         virtual uint32_t        FindPixelId(const RayReg& r,
                                             const Vector2i& resolution) const = 0;
+
+        __device__
+        virtual Matrix4x4       VPMatrix() const = 0;
+        __device__
+        virtual Vector2f        NearFar() const = 0;
 };
 
 using GPUCameraList = std::vector<const GPUCameraI*>;

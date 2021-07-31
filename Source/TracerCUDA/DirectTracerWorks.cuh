@@ -17,25 +17,80 @@
 #include "GPUWork.cuh"
 
 template<class MGroup, class PGroup>
-class DirectTracerWork
+class DirectTracerFurnaceWork
     : public GPUWorkBatch<DirectTracerGlobalState,
                           DirectTracerLocalState, RayAuxBasic,
-                          MGroup, PGroup, DirectWork<MGroup>,
+                          MGroup, PGroup, DirectFurnaceWork<MGroup>,
                           PGroup::GetSurfaceFunction>
 {
     private:
         using Base = GPUWorkBatch<DirectTracerGlobalState,
                                   DirectTracerLocalState, RayAuxBasic,
-                                  MGroup, PGroup, DirectWork<MGroup>,
+                                  MGroup, PGroup, DirectFurnaceWork<MGroup>,
                                   PGroup::GetSurfaceFunction>;
 
     protected:
     public:
         // Constrcutors & Destructor
-                                        DirectTracerWork(const GPUMaterialGroupI& mg,
-                                                         const GPUPrimitiveGroupI& pg,
-                                                         const GPUTransformI* const* t);
-                                        ~DirectTracerWork() = default;
+                                        DirectTracerFurnaceWork(const GPUMaterialGroupI& mg,
+                                                                const GPUPrimitiveGroupI& pg,
+                                                                const GPUTransformI* const* t);
+                                        ~DirectTracerFurnaceWork() = default;
+
+        void                            GetReady() override {}
+        // We will not bounce more than once
+        uint8_t                         OutRayCount() const override { return 0; }
+
+        const char*                     Type() const override { return Base::TypeName(); }
+};
+
+class DirectTracerPositionWork
+    : public GPUWorkBatch<DirectTracerGlobalState,
+                          DirectTracerPositionLocalState, RayAuxBasic,
+                          EmptyMat<EmptySurface>, GPUPrimitiveEmpty, DirectPositionWork,
+                          GPUPrimitiveEmpty::GetSurfaceFunction>
+{
+    private:
+        using Base = GPUWorkBatch<DirectTracerGlobalState,
+                                  DirectTracerPositionLocalState, RayAuxBasic,
+                                  EmptyMat<EmptySurface>, GPUPrimitiveEmpty, DirectPositionWork,
+                                  GPUPrimitiveEmpty::GetSurfaceFunction>;
+
+    protected:
+    public:
+        // Constrcutors & Destructor
+                                        DirectTracerPositionWork(const GPUMaterialGroupI& mg,
+                                                                 const GPUPrimitiveGroupI& pg,
+                                                                 const GPUTransformI* const* t);
+                                        ~DirectTracerPositionWork() = default;
+
+        void                            GetReady() override {}
+        // We will not bounce more than once
+        uint8_t                         OutRayCount() const override { return 0; }
+
+        const char*                     Type() const override { return Base::TypeName(); }
+};
+
+template <class PGroup>
+class DirectTracerNormalWork
+    : public GPUWorkBatch<DirectTracerGlobalState,
+                          DirectTracerLocalState, RayAuxBasic,
+                          NormalRenderMat, PGroup, DirectNormalWork,
+                          PGroup::GetSurfaceFunction>
+{
+    private:
+        using Base = GPUWorkBatch<DirectTracerGlobalState,
+                                  DirectTracerLocalState, RayAuxBasic,
+                                  NormalRenderMat, PGroup, DirectNormalWork,
+                                  PGroup::GetSurfaceFunction>;
+
+    protected:
+    public:
+        // Constrcutors & Destructor
+                                        DirectTracerNormalWork(const GPUMaterialGroupI& mg,
+                                                               const GPUPrimitiveGroupI& pg,
+                                                               const GPUTransformI* const* t);
+                                        ~DirectTracerNormalWork() = default;
 
         void                            GetReady() override {}
         // We will not bounce more than once
@@ -45,49 +100,68 @@ class DirectTracerWork
 };
 
 template<class M, class P>
-DirectTracerWork<M, P>::DirectTracerWork(const GPUMaterialGroupI& mg,
-                                         const GPUPrimitiveGroupI& pg,
-                                         const GPUTransformI* const* t)
+DirectTracerFurnaceWork<M, P>::DirectTracerFurnaceWork(const GPUMaterialGroupI& mg,
+                                                       const GPUPrimitiveGroupI& pg,
+                                                       const GPUTransformI* const* t)
     : GPUWorkBatch<DirectTracerGlobalState,
                    DirectTracerLocalState, RayAuxBasic,
                    M, P, DirectWork<M>,
                    P::GetSurfaceFunction>(mg, pg, t)
 {}
 
+inline
+DirectTracerPositionWork::DirectTracerPositionWork(const GPUMaterialGroupI& mg,
+                                                   const GPUPrimitiveGroupI& pg,
+                                                   const GPUTransformI* const* t)
+    : Base(mg, pg, t)
+{}
+
+template <class P>
+DirectTracerNormalWork<P>::DirectTracerNormalWork(const GPUMaterialGroupI& mg,
+                                                  const GPUPrimitiveGroupI& pg,
+                                                  const GPUTransformI* const* t)
+    : Base(mg, pg, t)
+{}
+
+
 // ===================================================
 // Direct Tracer Work Batches
-extern template class DirectTracerWork<BarycentricMat, GPUPrimitiveTriangle>;
-extern template class DirectTracerWork<SphericalMat, GPUPrimitiveSphere>;
+extern template class DirectTracerFurnaceWork<BarycentricMat, GPUPrimitiveTriangle>;
+extern template class DirectTracerFurnaceWork<SphericalMat, GPUPrimitiveSphere>;
 
-extern template class DirectTracerWork<NormalRenderMat, GPUPrimitiveTriangle>;
-extern template class DirectTracerWork<NormalRenderMat, GPUPrimitiveSphere>;
+extern template class DirectTracerFurnaceWork<NormalRenderMat, GPUPrimitiveTriangle>;
+extern template class DirectTracerFurnaceWork<NormalRenderMat, GPUPrimitiveSphere>;
 
-extern template class DirectTracerWork<LambertMat, GPUPrimitiveTriangle>;
-extern template class DirectTracerWork<LambertMat, GPUPrimitiveSphere>;
+extern template class DirectTracerFurnaceWork<LambertMat, GPUPrimitiveTriangle>;
+extern template class DirectTracerFurnaceWork<LambertMat, GPUPrimitiveSphere>;
 
-extern template class DirectTracerWork<UnrealMat, GPUPrimitiveTriangle>;
-extern template class DirectTracerWork<UnrealMat, GPUPrimitiveSphere>;
+extern template class DirectTracerFurnaceWork<UnrealMat, GPUPrimitiveTriangle>;
+extern template class DirectTracerFurnaceWork<UnrealMat, GPUPrimitiveSphere>;
 
-extern template class DirectTracerWork<BoundaryMatConstant, GPUPrimitiveEmpty>;
-extern template class DirectTracerWork<BoundaryMatConstant, GPUPrimitiveTriangle>;
-extern template class DirectTracerWork<BoundaryMatConstant, GPUPrimitiveSphere>;
+extern template class DirectTracerFurnaceWork<BoundaryMatConstant, GPUPrimitiveEmpty>;
+extern template class DirectTracerFurnaceWork<BoundaryMatConstant, GPUPrimitiveTriangle>;
+extern template class DirectTracerFurnaceWork<BoundaryMatConstant, GPUPrimitiveSphere>;
 
-extern template class DirectTracerWork<BoundaryMatTextured, GPUPrimitiveTriangle>;
-extern template class DirectTracerWork<BoundaryMatTextured, GPUPrimitiveSphere>;
+extern template class DirectTracerFurnaceWork<BoundaryMatTextured, GPUPrimitiveTriangle>;
+extern template class DirectTracerFurnaceWork<BoundaryMatTextured, GPUPrimitiveSphere>;
 
-extern template class DirectTracerWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
+extern template class DirectTracerFurnaceWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
 // ===================================================
-using DirectTracerWorkerList = TypeList<DirectTracerWork<BarycentricMat, GPUPrimitiveTriangle>,
-                                        DirectTracerWork<SphericalMat, GPUPrimitiveSphere>,
-                                        DirectTracerWork<NormalRenderMat, GPUPrimitiveTriangle>,
-                                        DirectTracerWork<NormalRenderMat, GPUPrimitiveSphere>,
-                                        DirectTracerWork<LambertMat, GPUPrimitiveTriangle>,
-                                        DirectTracerWork<LambertMat, GPUPrimitiveSphere>,
-                                        DirectTracerWork<UnrealMat, GPUPrimitiveTriangle>,
-                                        DirectTracerWork<UnrealMat, GPUPrimitiveSphere>,
-                                        DirectTracerWork<BoundaryMatConstant, GPUPrimitiveEmpty>,
-                                        DirectTracerWork<BoundaryMatConstant, GPUPrimitiveTriangle>,
-                                        DirectTracerWork<BoundaryMatConstant, GPUPrimitiveSphere>,
-                                        DirectTracerWork<BoundaryMatTextured, GPUPrimitiveTriangle>,
-                                        DirectTracerWork<BoundaryMatTextured, GPUPrimitiveSphere>,
-                                        DirectTracerWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>>;
+extern template class DirectTracerNormalWork<GPUPrimitiveEmpty>;
+extern template class DirectTracerNormalWork<GPUPrimitiveTriangle>;
+extern template class DirectTracerNormalWork<GPUPrimitiveSphere>;
+// ===================================================
+using DirectTracerWorkerList = TypeList<DirectTracerFurnaceWork<BarycentricMat, GPUPrimitiveTriangle>,
+                                        DirectTracerFurnaceWork<SphericalMat, GPUPrimitiveSphere>,
+                                        DirectTracerFurnaceWork<NormalRenderMat, GPUPrimitiveTriangle>,
+                                        DirectTracerFurnaceWork<NormalRenderMat, GPUPrimitiveSphere>,
+                                        DirectTracerFurnaceWork<LambertMat, GPUPrimitiveTriangle>,
+                                        DirectTracerFurnaceWork<LambertMat, GPUPrimitiveSphere>,
+                                        DirectTracerFurnaceWork<UnrealMat, GPUPrimitiveTriangle>,
+                                        DirectTracerFurnaceWork<UnrealMat, GPUPrimitiveSphere>,
+                                        DirectTracerFurnaceWork<BoundaryMatConstant, GPUPrimitiveEmpty>,
+                                        DirectTracerFurnaceWork<BoundaryMatConstant, GPUPrimitiveTriangle>,
+                                        DirectTracerFurnaceWork<BoundaryMatConstant, GPUPrimitiveSphere>,
+                                        DirectTracerFurnaceWork<BoundaryMatTextured, GPUPrimitiveTriangle>,
+                                        DirectTracerFurnaceWork<BoundaryMatTextured, GPUPrimitiveSphere>,
+                                        DirectTracerFurnaceWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>>;

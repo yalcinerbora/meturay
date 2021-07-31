@@ -41,7 +41,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
     __device__ __host__                 Matrix(const Vector<N, T> columns[]);
     template <int M, typename = std::enable_if_t<(M >= N)>>
     __device__ __host__                 Matrix(const Matrix<M, T>&);
-    ~Matrix() = default;
+                                        ~Matrix() = default;
 
     // MVC bug? these trigger std::trivially_copyable static assert
     //                                  Matrix(const Matrix&) = default;

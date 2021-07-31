@@ -2,7 +2,7 @@
 #include "RayTracer.hpp"
 
 #include "GPUWork.cuh"
-#include "DirectTracerWork.cuh"
+#include "DirectTracerWorks.cuh"
 
 #include "RayLib/GPUSceneI.h"
 #include "RayLib/TracerCallbacksI.h"
@@ -22,7 +22,7 @@ const std::array<std::string, DirectTracer::RenderType::END> DirectTracer::Rende
 {
     "Furnace",
     "Position",
-    "Normal",
+    "WorldNormal",
     "LinearDepth",
     "LogDepth"
 };

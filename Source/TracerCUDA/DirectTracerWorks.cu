@@ -1,23 +1,27 @@
-﻿#include "DirectTracerWork.cuh"
+﻿#include "DirectTracerWorks.cuh"
 // ===================================================
 // Direct Tracer Work Batches
-template class DirectTracerWork<BarycentricMat, GPUPrimitiveTriangle>;
-template class DirectTracerWork<SphericalMat, GPUPrimitiveSphere>;
+template class DirectTracerFurnaceWork<BarycentricMat, GPUPrimitiveTriangle>;
+template class DirectTracerFurnaceWork<SphericalMat, GPUPrimitiveSphere>;
 
-template class DirectTracerWork<NormalRenderMat, GPUPrimitiveTriangle>;
-template class DirectTracerWork<NormalRenderMat, GPUPrimitiveSphere>;
+template class DirectTracerFurnaceWork<NormalRenderMat, GPUPrimitiveTriangle>;
+template class DirectTracerFurnaceWork<NormalRenderMat, GPUPrimitiveSphere>;
 
-template class DirectTracerWork<LambertMat, GPUPrimitiveTriangle>;
-template class DirectTracerWork<LambertMat, GPUPrimitiveSphere>;
+template class DirectTracerFurnaceWork<LambertMat, GPUPrimitiveTriangle>;
+template class DirectTracerFurnaceWork<LambertMat, GPUPrimitiveSphere>;
 
-template class DirectTracerWork<UnrealMat, GPUPrimitiveTriangle>;
-template class DirectTracerWork<UnrealMat, GPUPrimitiveSphere>;
+template class DirectTracerFurnaceWork<UnrealMat, GPUPrimitiveTriangle>;
+template class DirectTracerFurnaceWork<UnrealMat, GPUPrimitiveSphere>;
 
-template class DirectTracerWork<BoundaryMatConstant, GPUPrimitiveEmpty>;
-template class DirectTracerWork<BoundaryMatConstant, GPUPrimitiveTriangle>;
-template class DirectTracerWork<BoundaryMatConstant, GPUPrimitiveSphere>;
+template class DirectTracerFurnaceWork<BoundaryMatConstant, GPUPrimitiveEmpty>;
+template class DirectTracerFurnaceWork<BoundaryMatConstant, GPUPrimitiveTriangle>;
+template class DirectTracerFurnaceWork<BoundaryMatConstant, GPUPrimitiveSphere>;
 
-template class DirectTracerWork<BoundaryMatTextured, GPUPrimitiveTriangle>;
-template class DirectTracerWork<BoundaryMatTextured, GPUPrimitiveSphere>;
+template class DirectTracerFurnaceWork<BoundaryMatTextured, GPUPrimitiveTriangle>;
+template class DirectTracerFurnaceWork<BoundaryMatTextured, GPUPrimitiveSphere>;
 
-template class DirectTracerWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
+template class DirectTracerFurnaceWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
+// ===================================================
+template class DirectTracerNormalWork<GPUPrimitiveEmpty>;
+template class DirectTracerNormalWork<GPUPrimitiveTriangle>;
+template class DirectTracerNormalWork<GPUPrimitiveSphere>;

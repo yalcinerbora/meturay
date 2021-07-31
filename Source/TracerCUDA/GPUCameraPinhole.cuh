@@ -16,6 +16,7 @@ class GPUCameraPinhole final : public GPUCameraI
         Vector3                 bottomLeft;
         Vector2                 planeSize;
         Vector2                 nearFar;
+        Vector2                 fov;
 
     protected:
     public:
@@ -57,6 +58,9 @@ class GPUCameraPinhole final : public GPUCameraI
 
         __device__ bool             CanBeSampled() const override;
         __device__ PrimitiveId      PrimitiveIndex() const override;
+
+        __device__ Matrix4x4        VPMatrix() const override;
+        __device__ Vector2f         NearFar() const override;
 };
 
 class CPUCameraGroupPinhole final : public CPUCameraGroupI
@@ -136,6 +140,7 @@ inline GPUCameraPinhole::GPUCameraPinhole(const Vector3& pos,
     , position(transform.LocalToWorld(pos))
     , up(transform.LocalToWorld(upp))
     , nearFar(nearFar)
+    , fov(fov)
 {
     Vector3 gazePoint = transform.LocalToWorld(gz);
     float nearPlane = nearFar[0];
@@ -252,6 +257,22 @@ __device__
 inline PrimitiveId GPUCameraPinhole::PrimitiveIndex() const
 {
     return 0;
+}
+
+__device__ 
+Matrix4x4 GPUCameraPinhole::VPMatrix() const
+{
+    Matrix4x4 p = TransformGen::Perspective(fov[0], fov[0] / fov[1],
+                                            nearFar[0], nearFar[1]);
+    Matrix3x3 v;
+    TransformGen::Space(v, right, up, Cross(right, up));
+
+    return v * p;
+}
+
+__device__ Vector2f GPUCameraPinhole::NearFar() const
+{
+    return nearFar;
 }
 
 inline CPUCameraGroupPinhole::CPUCameraGroupPinhole()
