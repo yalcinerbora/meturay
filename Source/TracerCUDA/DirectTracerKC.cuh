@@ -142,7 +142,7 @@ inline void DirectPositionWork(// Output
         {
             float depth;
             Vector2f nearFar = gLocalState.gCurrentCam->NearFar();
-            Vector4f ndc = worldPos * gLocalState.gCurrentCam->VPMatrix();
+            Vector4f ndc = gLocalState.gCurrentCam->VPMatrix() * worldPos;
 
             if(gLocalState.posRenderType == PositionRenderType::LINEAR_DEPTH)
                 depth = ndc[3];

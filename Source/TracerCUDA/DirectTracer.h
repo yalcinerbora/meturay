@@ -3,6 +3,9 @@
 #include "RayTracer.h"
 #include "WorkPool.h"
 
+#include "EmptyMaterial.cuh"
+#include "GPUPrimitiveEmpty.h"
+
 class DirectTracer : public RayTracer
 {
     public:
@@ -22,8 +25,8 @@ class DirectTracer : public RayTracer
 
         struct Options
         {
-            int32_t     sampleCount = 1;    // Per-axis sample per pixel
-            RenderType  renderType = RenderType::RENDER_FURNACE;
+            int32_t     sampleCount     = 1;                            // Per-axis sample per pixel
+            RenderType  renderType      = RenderType::RENDER_FURNACE;   // What to render?
         };
 
     private:
@@ -35,6 +38,11 @@ class DirectTracer : public RayTracer
         // Work Pools
         WorkPool<>              furnaceWorkPool;
         WorkPool<>              normalWorkPool;
+        WorkPool<>              positionWorkPool;
+
+        // Empty Prim and Material (For generating custom work for hits)
+        GPUPrimitiveEmpty       emptyPrim;
+        EmptyMat<BasicSurface>  emptyMat;
 
         static TracerError      StringToRenderType(RenderType&, const std::string&);
         static std::string      RenderTypeToString(RenderType);

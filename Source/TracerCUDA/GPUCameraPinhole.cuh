@@ -260,17 +260,17 @@ inline PrimitiveId GPUCameraPinhole::PrimitiveIndex() const
 }
 
 __device__ 
-Matrix4x4 GPUCameraPinhole::VPMatrix() const
+inline Matrix4x4 GPUCameraPinhole::VPMatrix() const
 {
     Matrix4x4 p = TransformGen::Perspective(fov[0], fov[0] / fov[1],
                                             nearFar[0], nearFar[1]);
-    Matrix3x3 v;
-    TransformGen::Space(v, right, up, Cross(right, up));
-
-    return v * p;
+    Matrix3x3 rotMatrix;
+    TransformGen::Space(rotMatrix, right, up, Cross(right, up));
+    return ToMatrix4x4(rotMatrix) * p;
 }
 
-__device__ Vector2f GPUCameraPinhole::NearFar() const
+__device__ 
+inline Vector2f GPUCameraPinhole::NearFar() const
 {
     return nearFar;
 }

@@ -31,8 +31,11 @@ DirectTracer::DirectTracer(const CudaSystem& s,
                            const GPUSceneI& scene,
                            const TracerParameters& p)
     : RayTracer(s, scene, p)
+    , emptyMat(s.BestGPU())
 {
-    workPool.AppendGenerators(DirectTracerWorkerList{});
+    furnaceWorkPool.AppendGenerators(DirectTracerFurnaceWorkerList{});
+    normalWorkPool.AppendGenerators(DirectTracerNormalWorkerList{});
+    positionWorkPool.AppendGenerators(DirectTracerPositionWorkerList{});
 }
 
 TracerError DirectTracer::StringToRenderType(RenderType& rt, const std::string& s)
@@ -84,9 +87,43 @@ TracerError DirectTracer::Initialize()
         uint32_t batchId = std::get<0>(workInfo);
 
         GPUWorkBatchI* batch = nullptr;
-        if((err = workPool.GenerateWorkBatch(batch, mg, pg,
-                                             dTransforms)) != TracerError::OK)
-            return err;
+        switch(options.renderType)
+        {
+            case RenderType::RENDER_FURNACE:
+            {
+                if((err = furnaceWorkPool.GenerateWorkBatch(batch, mg, pg,
+                                                     dTransforms)) != TracerError::OK)
+                    return err;
+                break;
+            }
+            case RenderType::RENDER_POSITION:
+            case RenderType::RENDER_LIN_DEPTH:
+            case RenderType::RENDER_LOG_DEPTH:
+            {
+                if((err = positionWorkPool.GenerateWorkBatch(batch, DirectTracerPositionWork::TypeName(),
+                                                             emptyMat, emptyPrim,
+                                                             dTransforms)) != TracerError::OK)
+                break;
+            }
+            case RenderType::RENDER_WORLD_NORMAL:
+            {
+                const std::string workTypeName = MangledNames::WorkBatch(pg.Type(), "DirectNormal");
+
+                // Skip empty primitives since those wont have any normal info
+                if(std::string(pg.Type()) == std::string(BaseConstants::EMPTY_PRIMITIVE_NAME))
+                {
+                    workMap.emplace(batchId, WorkBatchArray{batch});
+                    continue;
+                }
+
+                // Generate work batch from appropirate work pool
+                if((err = normalWorkPool.GenerateWorkBatch(batch, workTypeName.c_str(),
+                                                           emptyMat, pg, dTransforms)) != TracerError::OK)
+                    return err;
+                break;
+            }
+        }
+        
         workMap.emplace(batchId, WorkBatchArray{batch});
     }
     return err;

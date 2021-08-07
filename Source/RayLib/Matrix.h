@@ -169,9 +169,13 @@ using Matrix4x4ui = Matrix<4, unsigned int>;
 static_assert(std::is_trivially_copyable<Matrix3x3>::value == true, "Matrices has to be trivially copyable");
 static_assert(std::is_polymorphic<Matrix3x3>::value == false, "Matrices should not be polymorphic");
 
-// Special 4x4 Matrix Operation
+//// Special 4x4 Matrix Operation
+//template<class T>
+//static __device__ __host__ Vector<3, T> ExtractScaleInfo(const Matrix<4, T>&);
+
+// Spacial Matrix4x4 -> Matrix3x3
 template<class T>
-static __device__ __host__ Vector<3, T> ExtractScaleInfo(const Matrix<4, T>&);
+static __device__ __host__ Matrix<4, T> ToMatrix4x4(const Matrix<3, T>&);
 
 // Transformation Matrix Generation
 namespace TransformGen

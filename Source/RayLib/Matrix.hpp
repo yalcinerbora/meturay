@@ -850,6 +850,17 @@ Matrix<N, T> operator*(float t, const Matrix<N, T>& mat)
     return mat * t;
 }
 
+// Spacial Matrix4x4 -> Matrix3x3
+template<class T>
+static __device__ __host__ 
+Matrix<4, T> ToMatrix4x4(const Matrix<3, T>& m)
+{
+    return Matrix<4, T>(m[0], m[3], m[6], 0,
+                        m[1], m[4], m[7], 0,
+                        m[2], m[5], m[8], 0,
+                        0,    0,    0,    1);
+}
+
 template<class T, typename>
 __device__ __host__
 Vector<3, T> TransformGen::ExtractScale(const Matrix<4, T>& m)
