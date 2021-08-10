@@ -12,6 +12,7 @@ using GuiderConfigs = std::map<std::string, nlohmann::json>;
 struct GuideDebugConfig
 {
     std::string             refImage;
+    std::string             posImage;
     uint32_t                depthCount;
 
     std::vector<Vector3f>   gradientValues;
@@ -27,9 +28,10 @@ namespace GuideDebug
 
     static constexpr const char* DATA_GRADIENT_NAME = "DataGradient";
     static constexpr const char* SCENE_NAME = "Scene";
-    static constexpr const char* SCENE_IMAGE = "img";
+    static constexpr const char* SCENE_IMAGE = "refImage";
+    static constexpr const char* SCENE_POS_IMAGE = "posImage";
     static constexpr const char* SCENE_DEPTH = "depth";
-
+   
     static constexpr const char* PG_NAME = "PathGuiders";
 
     bool ParseConfigFile(GuideDebugConfig&, const std::u8string& fileName);
@@ -49,6 +51,7 @@ inline bool GuideDebug::ParseConfigFile(GuideDebugConfig& s, const std::u8string
     stream >> (jsonFile);
 
     s.refImage = jsonFile[SCENE_NAME][SCENE_IMAGE];
+    s.posImage = jsonFile[SCENE_NAME][SCENE_POS_IMAGE];
     s.depthCount = jsonFile[SCENE_NAME][SCENE_DEPTH];
     
     for(const nlohmann::json& j : jsonFile[PG_NAME])

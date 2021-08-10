@@ -46,7 +46,9 @@ class GPUEndpointI
                                                 const Vector2i& sampleId,
                                                 const Vector2i& sampleMax,
                                                 // I-O
-                                                RandomGPU&) const = 0;
+                                                RandomGPU&,
+                                                // Options
+                                                bool antiAliasOn = true) const = 0;
         virtual __device__ float    Pdf(const Vector3& direction,
                                         const Vector3 position) const = 0;
 

@@ -100,21 +100,19 @@ TracerError DirectTracer::Initialize()
             case RenderType::RENDER_LIN_DEPTH:
             case RenderType::RENDER_LOG_DEPTH:
             {
+                // Skip empty primitives since those wont have any normal info
+                if(std::string(pg.Type()) == std::string(BaseConstants::EMPTY_PRIMITIVE_NAME))
+                    continue;
+
                 if((err = positionWorkPool.GenerateWorkBatch(batch, DirectTracerPositionWork::TypeName(),
                                                              emptyMat, emptyPrim,
                                                              dTransforms)) != TracerError::OK)
+                    return err;
                 break;
             }
             case RenderType::RENDER_WORLD_NORMAL:
             {
                 const std::string workTypeName = MangledNames::WorkBatch(pg.Type(), "DirectNormal");
-
-                // Skip empty primitives since those wont have any normal info
-                if(std::string(pg.Type()) == std::string(BaseConstants::EMPTY_PRIMITIVE_NAME))
-                {
-                    workMap.emplace(batchId, WorkBatchArray{batch});
-                    continue;
-                }
 
                 // Generate work batch from appropirate work pool
                 if((err = normalWorkPool.GenerateWorkBatch(batch, workTypeName.c_str(),
@@ -134,10 +132,6 @@ bool DirectTracer::Render()
     // Do Hit Loop
     HitAndPartitionRays();
 
-    // Generate Global Data Struct
-    DirectTracerGlobalState globalData;
-    globalData.gImage = imgMemory.GMem<Vector4>();
-
     // Generate output partitions
     uint32_t totalOutRayCount = 0;
     auto outPartitions = PartitionOutputRays(totalOutRayCount, workMap);
@@ -151,7 +145,6 @@ bool DirectTracer::Render()
     //for(auto pIt = work+Partition.crbegin();
     //    pIt != workPartition.crend(); pIt++)
     for(auto p : outPartitions)
-
     {
         // Skip if null batch or unfound material
         if(p.portionId == HitKey::NullBatch) continue;
@@ -160,16 +153,53 @@ bool DirectTracer::Render()
 
         // Set pointers
         const RayAuxBasic* dAuxInGlobal = static_cast<const RayAuxBasic*>(*dAuxIn);
-        using WorkData = GPUWorkBatchD<DirectTracerGlobalState, RayAuxBasic>;
-        int i = 0;
-        for(auto& work : loc->second)
-        {
-            RayAuxBasic* dAuxOutLocal = static_cast<RayAuxBasic*>(*dAuxOut) + p.offsets[i];
 
-            auto& wData = static_cast<WorkData&>(*work);
-            wData.SetGlobalData(globalData);
-            wData.SetRayDataPtrs(dAuxOutLocal, dAuxInGlobal);
-            i++;
+        if(options.renderType == RenderType::RENDER_POSITION ||
+           options.renderType == RenderType::RENDER_LOG_DEPTH ||
+           options.renderType == RenderType::RENDER_LIN_DEPTH)
+        {
+            using WorkData = GPUWorkBatchD<DirectTracerPositionGlobalState, RayAuxBasic>;
+
+            // Generate Global Data Struct
+            DirectTracerPositionGlobalState globalData;
+            globalData.gImage = imgMemory.GMem<Vector4>();
+            globalData.gCurrentCam = dCameras[currentCameraId];
+            if(options.renderType == RenderType::RENDER_POSITION)
+                globalData.posRenderType = PositionRenderType::VECTOR3;
+            else if(options.renderType == RenderType::RENDER_LOG_DEPTH)
+                globalData.posRenderType = PositionRenderType::LOG_DEPTH;
+            else
+                globalData.posRenderType = PositionRenderType::LINEAR_DEPTH;
+
+            int i = 0;
+            for(auto& work : loc->second)
+            {
+                RayAuxBasic* dAuxOutLocal = static_cast<RayAuxBasic*>(*dAuxOut) + p.offsets[i];
+
+                auto& wData = static_cast<WorkData&>(*work);
+                wData.SetGlobalData(globalData);
+                wData.SetRayDataPtrs(dAuxOutLocal, dAuxInGlobal);
+                i++;
+            }
+        }
+        else
+        {
+            using WorkData = GPUWorkBatchD<DirectTracerGlobalState, RayAuxBasic>;
+
+            // Generate Global Data Struct
+            DirectTracerGlobalState globalData;
+            globalData.gImage = imgMemory.GMem<Vector4>();
+
+            int i = 0;
+            for(auto& work : loc->second)
+            {
+                RayAuxBasic* dAuxOutLocal = static_cast<RayAuxBasic*>(*dAuxOut) + p.offsets[i];
+
+                auto& wData = static_cast<WorkData&>(*work);
+                wData.SetGlobalData(globalData);
+                wData.SetRayDataPtrs(dAuxOutLocal, dAuxInGlobal);
+                i++;
+            }
         }
     }
 
@@ -190,15 +220,24 @@ void DirectTracer::GenerateWork(int cameraId)
 {
     if(callbacks)
         callbacks->SendCurrentCamera(SceneCamToVisorCam(cameraId));
-
+    // Save Camera Id for potential depth generation
+    currentCameraId = cameraId;
+    // Only use anti-alias when furnace mode is on
+    bool antiAlias = (options.renderType == RenderType::RENDER_FURNACE) ? true : false;
     // Generate Rays
     GenerateRays<RayAuxBasic, RayAuxInitBasic>(cameraId,
                                                options.sampleCount,
-                                               RayAuxInitBasic(InitialBasicAux));
+                                               RayAuxInitBasic(InitialBasicAux),
+                                               antiAlias);
 }
 
 void DirectTracer::GenerateWork(const VisorCamera& c)
 {
+    // TODO: Save Visor Camera to GPU memory for depth map generation;
+    currentCameraId = 0;
+    // Only use anti-alias when furnace mode is on
+    bool antiAlias = (options.renderType == RenderType::RENDER_FURNACE) ? true : false;
     GenerateRays<RayAuxBasic, RayAuxInitBasic>(c, options.sampleCount,
-                                               RayAuxInitBasic(InitialBasicAux));
+                                               RayAuxInitBasic(InitialBasicAux),
+                                               antiAlias);
 }

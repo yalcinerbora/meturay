@@ -26,17 +26,18 @@ enum class PositionRenderType
 
 struct DirectTracerGlobalState
 {
-    ImageGMem<Vector4> gImage;
+    ImageGMem<Vector4>  gImage;
+};
+
+// Position Render Specific States
+struct DirectTracerPositionGlobalState : public DirectTracerGlobalState
+{
+    PositionRenderType  posRenderType;
+    const GPUCameraI*   gCurrentCam;
 };
 
 // No Local State
 struct DirectTracerLocalState {};
-
-struct DirectTracerPositionLocalState 
-{
-    PositionRenderType posRenderType;
-    GPUCameraI* gCurrentCam;
-};
 
 template <class MGroup>
 __device__
@@ -117,8 +118,8 @@ inline void DirectPositionWork(// Output
                                const typename EmptyMat<EmptySurface>::Surface& surface,
                                const RayId rayId,
                                // I-O
-                               DirectTracerPositionLocalState& gLocalState,
-                               DirectTracerGlobalState& gRenderState,
+                               DirectTracerLocalState& gLocalState,
+                               DirectTracerPositionGlobalState& gRenderState,
                                RandomGPU& rng,
                                // Constants
                                const typename EmptyMat<EmptySurface>::Data& gMatData,
@@ -130,7 +131,7 @@ inline void DirectPositionWork(// Output
     auto& img = gRenderState.gImage;
     const RayF& r = ray.ray;
     Vector4f worldPos = Vector4f(r.AdvancedPos(ray.tMax), 1.0f);
-    switch(gLocalState.posRenderType)
+    switch(gRenderState.posRenderType)
     {
         case PositionRenderType::VECTOR3:
         {            
@@ -141,15 +142,15 @@ inline void DirectPositionWork(// Output
         case PositionRenderType::LOG_DEPTH:
         {
             float depth;
-            Vector2f nearFar = gLocalState.gCurrentCam->NearFar();
-            Vector4f ndc = gLocalState.gCurrentCam->VPMatrix() * worldPos;
+            Vector2f nearFar = gRenderState.gCurrentCam->NearFar();
+            Vector4f ndc = gRenderState.gCurrentCam->VPMatrix() * worldPos;
 
-            if(gLocalState.posRenderType == PositionRenderType::LINEAR_DEPTH)
+            if(gRenderState.posRenderType == PositionRenderType::LINEAR_DEPTH)
                 depth = ndc[3];
             else
                 depth = log(C * ndc[3] + 1.0f) / log(C * nearFar[1] + 1.0f);
 
-            ImageAccumulatePixel(img, aux.pixelIndex, Vector4(depth, 0.0f, 0.0f, 1.0f));
+            ImageAccumulatePixel(img, aux.pixelIndex, Vector4(depth, depth, depth, 1.0f));
             break;
         }        
     }
@@ -158,23 +159,23 @@ inline void DirectPositionWork(// Output
 
 __device__
 inline void DirectNormalWork(// Output
-                               HitKey* gOutBoundKeys,
-                               RayGMem* gOutRays,
-                               RayAuxBasic* gOutRayAux,
-                               const uint32_t maxOutRay,
-                               // Input as registers
-                               const RayReg& ray,
-                               const RayAuxBasic& aux,
-                               const typename NormalRenderMat::Surface& surface,
-                               const RayId rayId,
-                               // I-O
-                               DirectTracerLocalState& gLocalState,
-                               DirectTracerGlobalState& gRenderState,
-                               RandomGPU& rng,
-                               // Constants
-                               const typename NormalRenderMat::Data& gMatData,
-                               const HitKey matId,
-                               const PrimitiveId primId)
+                             HitKey* gOutBoundKeys,
+                             RayGMem* gOutRays,
+                             RayAuxBasic* gOutRayAux,
+                             const uint32_t maxOutRay,
+                             // Input as registers
+                             const RayReg& ray,
+                             const RayAuxBasic& aux,
+                             const typename NormalRenderMat::Surface& surface,
+                             const RayId rayId,
+                             // I-O
+                             DirectTracerLocalState& gLocalState,
+                             DirectTracerGlobalState& gRenderState,
+                             RandomGPU& rng,
+                             // Constants
+                             const typename NormalRenderMat::Data& gMatData,
+                             const HitKey matId,
+                             const PrimitiveId primId)
 {
     auto& img = gRenderState.gImage;
     Vector3f ZERO = Zero3;

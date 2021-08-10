@@ -45,14 +45,14 @@ class DirectTracerFurnaceWork
 };
 
 class DirectTracerPositionWork
-    : public GPUWorkBatch<DirectTracerGlobalState,
-                          DirectTracerPositionLocalState, RayAuxBasic,
+    : public GPUWorkBatch<DirectTracerPositionGlobalState,
+                          DirectTracerLocalState, RayAuxBasic,
                           EmptyMat<EmptySurface>, GPUPrimitiveEmpty, DirectPositionWork,
                           GPUPrimitiveEmpty::GetSurfaceFunction>
 {
     private:
-        using Base = GPUWorkBatch<DirectTracerGlobalState,
-                                  DirectTracerPositionLocalState, RayAuxBasic,
+        using Base = GPUWorkBatch<DirectTracerPositionGlobalState,
+                                  DirectTracerLocalState, RayAuxBasic,
                                   EmptyMat<EmptySurface>, GPUPrimitiveEmpty, DirectPositionWork,
                                   GPUPrimitiveEmpty::GetSurfaceFunction>;
 

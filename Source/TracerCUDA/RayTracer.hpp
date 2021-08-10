@@ -6,7 +6,8 @@
 
 template <class AuxStruct, class AuxInitFunctor>
 void RayTracer::GenerateRays(uint32_t sceneCamId, int32_t sampleCount,
-                             const AuxInitFunctor& initFunctor)
+                             const AuxInitFunctor& initFunctor,
+                             bool antiAliasOn)
 {
     int32_t sampleCountSqr = sampleCount * sampleCount;
 
@@ -79,7 +80,9 @@ void RayTracer::GenerateRays(uint32_t sceneCamId, int32_t sampleCount,
             localPixelStart,
             localPixelEnd,
             // Functor to initialize auxiliary base data
-            initFunctor
+            initFunctor,
+            // Options
+            antiAliasOn
         );
 
         // Adjust for next call
@@ -94,8 +97,9 @@ void RayTracer::GenerateRays(uint32_t sceneCamId, int32_t sampleCount,
 }
 
 template <class AuxStruct, class AuxInitFunctor>
-void RayTracer::GenerateRays(const VisorCamera& cam, int32_t sampleCount,
-                             const AuxInitFunctor& initFunctor)
+void RayTracer::GenerateRays(const VisorCamera& cam, int32_t sampleCount,                             
+                             const AuxInitFunctor& initFunctor,
+                             bool antiAliasOn)
 {
     // Visor Camera is GUI represented camera
     // Its fov values are in degrees (since its more intuitive to show as such
@@ -171,7 +175,9 @@ void RayTracer::GenerateRays(const VisorCamera& cam, int32_t sampleCount,
             localPixelStart,
             localPixelEnd,
             // Functor to initialize auxiliary base data
-            initFunctor
+            initFunctor,
+            // Options
+            antiAliasOn
         );
         // Adjust for next call
         localPixelStart = localPixelEnd;

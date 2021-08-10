@@ -40,7 +40,9 @@ class GPULightSkySphere : public GPULightI
                                                     const Vector2i& sampleId,
                                                     const Vector2i& sampleMax,
                                                     // I-O
-                                                    RandomGPU&) const override;
+                                                    RandomGPU&,
+                                                    // Options
+                                                    bool antiAliasOn = true) const override;
 
         __device__ float                Pdf(const Vector3& direction,
                                             const Vector3 position) const override;
@@ -149,7 +151,9 @@ inline void GPULightSkySphere::GenerateRay(// Output
                                            const Vector2i& sampleId,
                                            const Vector2i& sampleMax,
                                            // I-O
-                                           RandomGPU& rng) const
+                                           RandomGPU& rng,
+                                           // Options
+                                           bool antiAliasOn) const
 {
     // TODO: implement
 }

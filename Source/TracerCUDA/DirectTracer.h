@@ -44,6 +44,8 @@ class DirectTracer : public RayTracer
         GPUPrimitiveEmpty       emptyPrim;
         EmptyMat<BasicSurface>  emptyMat;
 
+        uint32_t                currentCameraId;
+
         static TracerError      StringToRenderType(RenderType&, const std::string&);
         static std::string      RenderTypeToString(RenderType);
 

@@ -48,6 +48,13 @@ ImageIO::~ImageIO()
     FreeImage_DeInitialise();
 }
 
+bool ImageIO::ReadEXR(std::vector<Vector4>& image,
+                      Vector2ui& size,
+                      const std::string& fileName) const
+{
+    return false;
+}
+
 bool ImageIO::ReadHDR(std::vector<Vector4>& image,
                       Vector2ui& size,
                       const std::string& fileName) const
@@ -152,15 +159,33 @@ bool ImageIO::WriteAsEXR(const Vector4f* image,
                          const std::string& fileName) const
 {
     std::vector<Imf::Rgba> convertedData(size[0] * size[1]);
-    std::transform(std::execution::par_unseq,
-                   image, image + size[0] * size[1],
-                   convertedData.begin(), [] (const Vector4f& v) -> Imf::Rgba
-                   {
-                       return Imf::Rgba(v[0], v[1], v[2], v[3]);
-                   });
+    // Cant invert the image while using std::transform easily
+    //std::transform(std::execution::par_unseq,
+    //               image, image + size[0] * size[1],
+    //               convertedData.begin(), [] (const Vector4f& v) -> Imf::Rgba
+    //               {
+    //                   return Imf::Rgba(v[0], v[1], v[2], v[3]);
+    //               });
     
+    // Instead using simple loops
+    for(uint32_t y = 0; y < size[1]; y++)
+    for(uint32_t x = 0; x < size[0]; x++)
+    {
+        uint32_t inIndex = y * size[0] + x;
+        uint32_t invertexY = size[1] - y - 1;
+        uint32_t outIndex = invertexY * size[0] + x;
+        
+        const Vector4f& v = image[inIndex];
+        convertedData[outIndex] = Imf::Rgba(v[0], v[1], v[2], v[3]);
+    }
+
+    // In this header file INCREASING_Y does not invert image
+    // I think it is only for memory layout
+    //Imf::Header header(size[0], size[1], 1.0f, 
+    //                   Imath::V2f(0, 0), 1.0f, 
+    //                   Imf::DECREASING_Y);
     Imf::RgbaOutputFile file(fileName.c_str(), 
-                             size[0], size[1], 
+                             size[0], size[1],
                              Imf::RgbaChannels::WRITE_RGBA);
     file.setFrameBuffer(convertedData.data(), 1, size[0]);
     file.writePixels(size[1]);

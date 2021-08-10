@@ -38,7 +38,9 @@ void KCGenerateCameraRaysCPU(// Output
                              const Vector2i pixelStart,
                              const Vector2i pixelCount,
                              // Functor to initialize auxiliary base data
-                             const AuxInitFunctor auxInitF)
+                             const AuxInitFunctor auxInitF,
+                             // Options
+                             bool antiAliasOn)
 {
     RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
 
@@ -78,10 +80,10 @@ void KCGenerateCameraRaysCPU(// Output
         Vector2i globalPixelId = pixelStart + (threadId2d / samplePerLocation);
 
         // Create random location over sample rectangle
-        float dX = GPUDistribution::Uniform<float>(rng);
-        float dY = GPUDistribution::Uniform<float>(rng);
-        Vector2 randomOffset = Vector2(dX, dY);
-        //Vector2 randomOffset = Vector2(0.5f);
+        Vector2 randomOffset = (antiAliasOn)
+            ? Vector2(GPUDistribution::Uniform<float>(rng),
+                      GPUDistribution::Uniform<float>(rng))
+            : Vector2(0.5f);
 
         // Ray's world position over canvas
         Vector2 sampleDistance = Vector2(static_cast<float>(globalSampleId[0]),
@@ -134,7 +136,9 @@ void KCGenerateCameraRaysGPU(// Output
                              const Vector2i pixelStart,
                              const Vector2i pixelCount,
                              // Functor to initialize auxiliary base data
-                             const AuxInitFunctor auxInitF)
+                             const AuxInitFunctor auxInitF,
+                             // Options
+                             bool antiAliasOn)
 {
     RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
 
@@ -162,7 +166,9 @@ void KCGenerateCameraRaysGPU(// Output
                           //
                           globalSampleId,
                           totalSamples,
-                          rng);
+                          rng,
+                          //
+                          antiAliasOn);
         // Generate Required Parameters
         Vector2i pixelSampleId = threadId2d % samplePerLocation;
         Vector2i localPixelId = globalPixelId - pixelStart;

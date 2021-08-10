@@ -18,11 +18,14 @@ class GuideDebugGUI
         // GUI Related
         bool                                    fullscreenShow;
         // Main texture that shows the scene
-        TextureGL                               refTexture;
+        TextureGL                               refTexture;        
         // Textures that are rendered by different visors
         std::vector<TextureGL>                  guideTextues;
         const std::vector<DebugRendererPtr>&    debugRenderers;
         
+        // Reference Image's Pixel Values
+        std::vector<Vector4f>                   depthValues;
+
         // Main Image Aspect Ratio
         float                                   ratio;
 
@@ -32,6 +35,7 @@ class GuideDebugGUI
         // Constructors & Destructor
                         GuideDebugGUI(GLFWwindow* window,
                                       const std::string& refFileName,
+                                      const std::string& posFileName,
                                       const std::vector<DebugRendererPtr>& dRenderers);
                         ~GuideDebugGUI();
 

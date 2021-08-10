@@ -53,7 +53,9 @@ class GPULight : public GPULightI
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
                                             // I-O
-                                            RandomGPU&) const override;
+                                            RandomGPU&,
+                                            // Options
+                                            bool antiAliasOn = true) const override;
 
         __device__ float        Pdf(const Vector3& direction,
                                     const Vector3 position) const override;
@@ -163,7 +165,9 @@ __device__ void  GPULight<PGroup>::GenerateRay(// Output
                                                const Vector2i& sampleId,
                                                const Vector2i& sampleMax,
                                                // I-O
-                                               RandomGPU& rng) const
+                                               RandomGPU& rng,
+                                               // Options
+                                               bool antiAliasOn) const
 {
     // TODO: Add 2D segmentation (Distributed RT)
     float pdf;

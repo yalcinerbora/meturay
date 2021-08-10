@@ -42,7 +42,9 @@ class GPULightDisk final : public GPULightI
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
                                             // I-O
-                                            RandomGPU&) const override;
+                                            RandomGPU&,
+                                            // Options
+                                            bool antiAliasOn = true) const override;
         __device__ float        Pdf(const Vector3& direction,
                                     const Vector3 position) const override;
 
@@ -171,7 +173,9 @@ inline void GPULightDisk::GenerateRay(// Output
                                       const Vector2i& sampleId,
                                       const Vector2i& sampleMax,
                                       // I-O
-                                      RandomGPU&) const
+                                      RandomGPU&,
+                                      // Options
+                                      bool antiAliasOn) const
 {
     // TODO: Implement
 }

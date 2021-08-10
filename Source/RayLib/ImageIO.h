@@ -26,6 +26,9 @@ class ImageIO
         bool                 ReadHDR(std::vector<Vector4>& image,
                                      Vector2ui& size,
                                      const std::string& fileName) const;
+        bool                 ReadEXR(std::vector<Vector4>& image,
+                                     Vector2ui& size,
+                                     const std::string& fileName) const;
         bool                 ReadImage(std::vector<Byte>& pixels,
                                        PixelFormat&, Vector2ui& size,
                                        const std::string& filePath) const;

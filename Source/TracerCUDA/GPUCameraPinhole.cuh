@@ -48,7 +48,9 @@ class GPUCameraPinhole final : public GPUCameraI
                                         const Vector2i& sampleId,
                                         const Vector2i& sampleMax,
                                         // I-O
-                                        RandomGPU&) const override;
+                                        RandomGPU&,
+                                        // Options
+                                        bool antiAliasOn) const override;
         __device__ float    Pdf(const Vector3& direction,
                                 const Vector3 position) const override;
 
@@ -189,17 +191,19 @@ inline void GPUCameraPinhole::GenerateRay(// Output
                                           const Vector2i& sampleId,
                                           const Vector2i& sampleMax,
                                           // I-O
-                                          RandomGPU& rng) const
+                                          RandomGPU& rng,
+                                          // Options
+                                          bool antiAliasOn) const
 {
     // DX DY from stratfied sample
     Vector2 delta = Vector2(planeSize[0] / static_cast<float>(sampleMax[0]),
                             planeSize[1] / static_cast<float>(sampleMax[1]));
 
     // Create random location over sample rectangle
-    float dX = GPUDistribution::Uniform<float>(rng);
-    float dY = GPUDistribution::Uniform<float>(rng);
-    Vector2 randomOffset = Vector2(dX, dY);
-    //Vector2 randomOffset = Vector2(0.5f);
+    Vector2 randomOffset = (antiAliasOn)
+                            ? Vector2(GPUDistribution::Uniform<float>(rng),
+                                      GPUDistribution::Uniform<float>(rng))
+                            : Vector2(0.5f);
 
     Vector2 sampleDistance = Vector2(static_cast<float>(sampleId[0]),
                                      static_cast<float>(sampleId[1])) * delta;
@@ -266,7 +270,7 @@ inline Matrix4x4 GPUCameraPinhole::VPMatrix() const
                                             nearFar[0], nearFar[1]);
     Matrix3x3 rotMatrix;
     TransformGen::Space(rotMatrix, right, up, Cross(right, up));
-    return ToMatrix4x4(rotMatrix) * p;
+    return p * ToMatrix4x4(rotMatrix);
 }
 
 __device__ 
