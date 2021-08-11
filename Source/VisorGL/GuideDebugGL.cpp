@@ -199,6 +199,7 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
     gui = std::make_unique<GuideDebugGUI>(glfwWindow, 
                                           Utility::MergeFileFolder(configPath, config.refImage),
                                           Utility::MergeFileFolder(configPath, config.posImage),
+                                          config.sceneName,
                                           debugRenderers);
 
     glfwShowWindow(glfwWindow);

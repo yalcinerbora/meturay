@@ -24,9 +24,9 @@
 #include "ImfFrameBuffer.h"
 #include "ImfRgba.h"
 
-#include "Imath/ImathVec.h"
-#include "Imath/ImathBox.h"
-#include "Imath/half.h"
+#include <ImathVec.h>
+#include <ImathBox.h>
+#include <half.h>
 #include "ImfThreading.h"
 #include <string>
 

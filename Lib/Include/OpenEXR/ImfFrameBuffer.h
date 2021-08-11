@@ -19,7 +19,7 @@
 #include "ImfName.h"
 #include "ImfPixelType.h"
 
-#include "Imath/ImathBox.h"
+#include <ImathBox.h>
 
 #include <map>
 #include <string>

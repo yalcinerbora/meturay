@@ -18,7 +18,7 @@
 // flags. It is also overrided by the IMATH_HALF_NO_LOOKUP_TABLE
 // macro, if defined.
 //
-#define IMATH_HALF_USE_LOOKUP_TABLE
+/* #undef IMATH_HALF_USE_LOOKUP_TABLE */
 
 //
 // Define if the target system has support for large

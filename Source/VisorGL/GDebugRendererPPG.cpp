@@ -298,3 +298,9 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
     glBindVertexArray(0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
+const std::string& GDebugRendererPPG::Name() const
+{
+    static std::string TypeNameCPPString(TypeName);
+    return TypeNameCPPString;
+}

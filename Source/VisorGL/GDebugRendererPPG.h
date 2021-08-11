@@ -162,4 +162,5 @@ class GDebugRendererPPG : public GDebugRendererI
         void                RenderDirectional(TextureGL&, const Vector3f& worldPos, 
                                               uint32_t depth) override;
 
+        const std::string&  Name() const override;
 };

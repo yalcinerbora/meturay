@@ -19,8 +19,8 @@
 #include "ImfCompression.h"
 #include "ImfName.h"
 #include "ImfTileDescription.h"
-#include "Imath/ImathVec.h"
-#include "Imath/ImathBox.h"
+#include "ImathVec.h"
+#include "ImathBox.h"
 #include "IexBaseExc.h"
 
 #include "ImfAttribute.h"

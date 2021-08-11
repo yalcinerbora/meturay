@@ -8,15 +8,52 @@
 #include "RayLib/HybridFunctions.h"
 #include "RayLib/ImageIO.h"
 
+float GuideDebugGUI::CenteredTextLocation(const char* text, float centeringWidth)
+{
+    float widthText = ImGui::CalcTextSize(text).x;
+    // Handle overflow
+    if(widthText > centeringWidth) return 0;
+    
+    return (centeringWidth - widthText) * 0.5f;
+}
+
+void GuideDebugGUI::CalculateImageSizes(float& paddingY,
+                                        ImVec2& paddingX,
+                                        ImVec2& refImgSize,
+                                        ImVec2& pgImgSize,
+                                        const ImVec2& viewportSize)
+{
+    // TODO: Dont assume that we would have at most 4 pg images (excluding ref pg image)
+    constexpr float REF_IMG_ASPECT = 16.0f / 9.0f;
+    constexpr float PADDING_PERCENT_Y = 0.05f;
+    
+    // Calculate Y padding between refImage and pgImages
+    // Calculate ySize of the both images
+    paddingY = viewportSize.y * PADDING_PERCENT_Y;
+    float ySize = (viewportSize.y - 3.0f * paddingY) * 0.5f;
+    // PG Images are always square so pgImage has size of ySize, ySize
+    pgImgSize = ImVec2(ySize, ySize);
+    // Ref images are always assumed to have 16/9 aspect
+    float xSize = ySize * REF_IMG_ASPECT;
+    refImgSize = ImVec2(xSize, ySize);
+
+    // X value of padding X is the upper padding between refImage and ref PG Image
+    // Y value is the bottom x padding between pg images
+    paddingX.x = (viewportSize.x - refImgSize.x - pgImgSize.x) * (1.0f / 3.0f);
+    paddingX.y = (viewportSize.x - MAX_PG_IMAGE * pgImgSize.x) / (MAX_PG_IMAGE + 2);
+}
+
 GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
                              const std::string& refFileName,
                              const std::string& posFileName,
+                             const std::string& sceneName,
                              const std::vector<DebugRendererPtr>& dRenderers)
     : fullscreenShow(true)
     , window(w)
     , refTexture(refFileName)
-    , ratio(static_cast<float>(refTexture.Width()) / static_cast<float>(refTexture.Height()))
     , debugRenderers(dRenderers)
+    , initialSelection(false)
+    , sceneName(sceneName)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -34,13 +71,18 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
 
     // Load Position Buffer
     Vector2ui size;
-    if(!ImageIO::Instance().ReadHDR(depthValues, size, posFileName))
+    if(!ImageIO::Instance().ReadEXR(depthValues, size, posFileName))
     {
+        // TODO: create VisorException for this
         METU_ERROR_LOG("Unable to Read Position Image");
+     
+        std::abort();
     }
     if(size != refTexture.Size())
     {
+        // TODO: create VisorException for this
         METU_ERROR_LOG("\"Position Image - Reference Image\" size mismatch");
+        std::abort();
     }
 }
 
@@ -63,6 +105,14 @@ void GuideDebugGUI::Render()
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
 
+    float paddingY;
+    ImVec2 paddingX;
+    ImVec2 refImgSize;
+    ImVec2 pgImgSize;
+    ImVec2 vpSize = ImVec2(viewport->Size.x - viewport->Pos.x,
+                           viewport->Size.y - viewport->Pos.y);
+    CalculateImageSizes(paddingY, paddingX, refImgSize, pgImgSize, vpSize);
+
     ImGui::Begin("guideDebug", &fullscreenShow,
                  ImGuiWindowFlags_NoBackground |
                  ImGuiWindowFlags_NoDecoration | 
@@ -70,71 +120,132 @@ void GuideDebugGUI::Render()
                  ImGuiWindowFlags_NoResize | 
                  ImGuiWindowFlags_NoSavedSettings);
 
-    ImGui::Text("TESTOOO");
+    // Titles
+    // Scene Name
+    ImGui::Dummy(ImVec2(0.0f, std::max(0.0f, paddingY - ImGui::GetFontSize())));
+    float sceneNameOffset = CenteredTextLocation(sceneName.c_str(), refImgSize.x);
+    ImGui::SetCursorPosX(paddingX.x + sceneNameOffset);
+    ImGui::Text(sceneName.c_str());
 
-    //ImGui::BeginChild("Reference Image", refImageSize, false,
-    //                  ImGuiWindowFlags_NoDecoration |
-    //                  ImGuiWindowFlags_NoMove);
+    // Reference Path Guiding Image Name
+    float refTextOffset = CenteredTextLocation(REFERENCE_TEXT, pgImgSize.x);
+    ImGui::SameLine(0.0f, sceneNameOffset + paddingX.x + refTextOffset);
+    ImGui::Text(REFERENCE_TEXT);
 
-    ImVec2 refImageSize(static_cast<float>(refTexture.Width()),
-                        static_cast<float>(refTexture.Height()));
-    ImVec2 pos = ImGui::GetCursorScreenPos();
-    ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
-    ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
-    ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
-    ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
-
-    ImGui::Image((void*)(intptr_t)refTexture.TexId(),
-                 refImageSize);
+    // Reference Image Texture
+    ImTextureID refTexId = (void*)(intptr_t)refTexture.TexId();
+    ImGui::SetCursorPosX(paddingX.x);
+    ImVec2 refImgPos = ImGui::GetCursorScreenPos();
+    ImGui::Image(refTexId, refImgSize);
     if(ImGui::IsItemHovered())
     {
+        constexpr float ZOOM_FACTOR = 4.0f;
+
         ImGuiIO& io = ImGui::GetIO();
 
         // Zoomed Tooltip
         ImGui::BeginTooltip();
         float region_sz = 16.0f;
-        float pixel_x = io.MousePos.x - pos.x;        
-        float pixel_y = io.MousePos.y - pos.y;
-        
-        float zoom = 5.0f;
+        float screenPixel_x = io.MousePos.x - refImgPos.x;
+        float screenPixel_y = io.MousePos.y - refImgPos.y;
 
         // Clamp Region
-        float region_x = pixel_x - region_sz * 0.5f;
-        region_x = HybridFuncs::Clamp(pixel_x, 0.0f,
+        float region_x = screenPixel_x - region_sz * 0.5f;
+        region_x = HybridFuncs::Clamp(screenPixel_x, 0.0f,
                                       refTexture.Width() - region_sz);
-        float region_y = pixel_y - region_sz * 0.5f;
-        region_y = HybridFuncs::Clamp(pixel_y, 0.0f,
+        float region_y = screenPixel_y - region_sz * 0.5f;
+        region_y = HybridFuncs::Clamp(screenPixel_y, 0.0f,
                                       refTexture.Height() - region_sz);
        
-        ImGui::Text("Pixel: (%.2f, %.2f)", pixel_x, pixel_y);
+
+        // Calculate Actual Pixel
+        float imagePixel_x = screenPixel_x * static_cast<float>(refTexture.Width()) / refImgSize.x;
+        float imagePixel_y = screenPixel_y * static_cast<float>(refTexture.Height()) / refImgSize.y;
+
+        ImGui::Text("Pixel: (%.2f, %.2f)", imagePixel_x, imagePixel_y);
+
+        uint32_t linearIndex = (static_cast<uint32_t>(imagePixel_y) * refTexture.Size()[0] +
+                                static_cast<uint32_t>(imagePixel_x));
+        Vector4f worldPos = depthValues[linearIndex];
+        if(worldPos[3] == 0.0f)
+        {
+            worldPos[0] = std::numeric_limits<float>::infinity();
+            worldPos[1] = std::numeric_limits<float>::infinity();
+            worldPos[2] = std::numeric_limits<float>::infinity();
+        }
+        ImGui::Text("Position: (%.4f, %.4f, %.4f)",
+                    worldPos[0], worldPos[1], worldPos[2]);
 
         // Calculate Zoom UV;
         ImVec2 uv0 = ImVec2((region_x) / refTexture.Width(), 
                             (region_y) / refTexture.Height());
         ImVec2 uv1 = ImVec2((region_x + region_sz) / refTexture.Width(), 
                             (region_y + region_sz) / refTexture.Height());
-        ImGui::Image((void*)(intptr_t)refTexture.TexId(), 
-                     ImVec2(region_sz * zoom, region_sz * zoom), 
-                     uv0, uv1);
+
+
+        // Center the image on the tooltip window
+        ImVec2 ttImgSize(region_sz * ZOOM_FACTOR,
+                         region_sz * ZOOM_FACTOR);        
+        ImGui::Image(refTexId, ttImgSize, uv0, uv1);
         ImGui::EndTooltip();
 
+        // Click Action will require us to send draw calls to all Debug Renderers
+        // Aswell we need to draw a circle
         if(ImGui::IsMouseClicked(ImGuiMouseButton_::ImGuiMouseButton_Left))
-        {
-            METU_LOG("MouseClicked!");
+        {            
+            initialSelection = true;
+            selectedPixel = Vector2f(imagePixel_x, imagePixel_y);
         }
 
     }
+    // Draw a circle on the selected location
+    if(initialSelection)
+    {
+        // Calculate Screen Pixel
+        float imagePixel_x = selectedPixel[0] * refImgSize.x / static_cast<float>(refTexture.Width());
+        float imagePixel_y = selectedPixel[1] * refImgSize.y / static_cast<float>(refTexture.Height());
 
-    ////uv_min, uv_max, tint_col, border_col);
-    //ImGui::EndChild();
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        ImVec2 p0 = ImGui::GetCursorScreenPos();
+        drawList->AddCircle(ImVec2(refImgPos.x + imagePixel_x,
+                                   refImgPos.y + imagePixel_y),
+                            3.0f,
+                            ImColor(0.0f, 1.0f, 0.0f), 0, 1.5f);
+    }   
+    // Reference Image
+    ImGui::SameLine(0.0f, paddingX.x);
+    ImGui::Image(refTexId, pgImgSize);
+    // New Line and Path Guider Images
+    ImGui::Dummy(ImVec2(0.0f, std::max(0.0f, paddingY - ImGui::GetFontSize())));
+
+    // Render Reference Images
+    ImGui::SetCursorPosX(paddingX.y);
+    float prevTextOffset = 0.0f;
+    // TODO: More Generic PG Rendering
+    assert(guideTextues.size() <= MAX_PG_IMAGE);
+    assert(debugRenderers.size() <= MAX_PG_IMAGE);
+    for(size_t i = 0; i < guideTextues.size(); i++)
+    {
+        const std::string& name = debugRenderers[i]->Name();
+        float offset = CenteredTextLocation(name.c_str(), pgImgSize.x);
+
+        ImGui::SameLine(0.0f, prevTextOffset + paddingX.y + offset);
+        prevTextOffset = offset;
+        ImGui::Text(name.c_str());        
+    }
+    // Force New Line then render Images
+    ImGui::NewLine();
+
+    //ImGui::SetCursorPosX(paddingX.y);
+    //for(size_t i = 0; i < guideTextues.size(); i++)
+    //{       
+    //    ImTextureID refTexId = (void*)(intptr_t) guideTextues[i].TexId();
+    //    ImGui::Image(refTexId, pgImgSize);
+    //    ImGui::SameLine(0.0f, paddingX.y);
+    //}
+
 
     ImGui::End();
-
-
-
-
-
-
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

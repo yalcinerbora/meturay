@@ -76,7 +76,7 @@
 #include "ImfNamespace.h"
 
 #include "IexMathExc.h"
-#include "Imath/half.h"
+#include <half.h>
 #include <limits.h>
 #include <cstdint>
 

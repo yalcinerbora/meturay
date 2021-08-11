@@ -11,6 +11,7 @@ using GuiderConfigs = std::map<std::string, nlohmann::json>;
 
 struct GuideDebugConfig
 {
+    std::string             sceneName;
     std::string             refImage;
     std::string             posImage;
     uint32_t                depthCount;
@@ -31,6 +32,7 @@ namespace GuideDebug
     static constexpr const char* SCENE_IMAGE = "refImage";
     static constexpr const char* SCENE_POS_IMAGE = "posImage";
     static constexpr const char* SCENE_DEPTH = "depth";
+    static constexpr const char* NAME = "name";
    
     static constexpr const char* PG_NAME = "PathGuiders";
 
@@ -50,6 +52,7 @@ inline bool GuideDebug::ParseConfigFile(GuideDebugConfig& s, const std::u8string
     nlohmann::json jsonFile;
     stream >> (jsonFile);
 
+    s.sceneName = jsonFile[SCENE_NAME][NAME];
     s.refImage = jsonFile[SCENE_NAME][SCENE_IMAGE];
     s.posImage = jsonFile[SCENE_NAME][SCENE_POS_IMAGE];
     s.depthCount = jsonFile[SCENE_NAME][SCENE_DEPTH];

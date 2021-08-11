@@ -7,6 +7,7 @@
 #include <OpenEXR/ImfRgbaFile.h>
 //#include <OpenEXR/ImfConvert.h>
 #include <OpenEXR/ImfRgba.h>
+#include <OpenEXR/ImfArray.h>
 
 ImageIO& ImageIO::Instance()
 {
@@ -52,7 +53,33 @@ bool ImageIO::ReadEXR(std::vector<Vector4>& image,
                       Vector2ui& size,
                       const std::string& fileName) const
 {
-    return false;
+    Imf::Array2D<Imf::Rgba> pixels;
+
+    Imf::RgbaInputFile file(fileName.c_str());
+    Imath::Box2i dw = file.dataWindow();
+    size[0] = dw.max.x - dw.min.x + 1;
+    size[1] = dw.max.y - dw.min.y + 1;
+    pixels.resizeErase(size[1], size[0]);
+    file.setFrameBuffer(&pixels[0][0] - dw.min.x - dw.min.y * size[0], 1, size[0]);
+    file.readPixels(dw.min.y, dw.max.y);
+
+    // Convert to Vector4f and Invert Y Axis
+    image.resize(size[0] * size[1]);
+    for(uint32_t y = 0; y < size[1]; y++)
+    for(uint32_t x = 0; x < size[0]; x++)
+    {
+        uint32_t inIndex = y * size[0] + x;
+        uint32_t invertexY = size[1] - y - 1;
+        uint32_t outIndex = invertexY * size[0] + x;
+        
+        const Imf::Rgba& v = pixels[y][x];
+
+        image[outIndex] = Vector4f(static_cast<float>(v.r),
+                                   static_cast<float>(v.g),
+                                   static_cast<float>(v.b),
+                                   static_cast<float>(v.a));
+    }
+    return true;
 }
 
 bool ImageIO::ReadHDR(std::vector<Vector4>& image,
