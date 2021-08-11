@@ -119,12 +119,14 @@ class GDebugRendererPPG : public GDebugRendererI
         static constexpr const char* SD_TREE_NAME = "SDTrees";
 
         const TextureGL&        gradientTexture;        
-        const std::string&      configPath;
+        const std::string&      configPath;        
         uint32_t                depthCount;
         // All SD Trees that are loaded
         std::vector<SDTree>     sdTrees;
-
+        // Color of the perimeter (In order to visualize D-Trees Properly
         Vector3f                perimeterColor;
+        // Name of the Guider (shown in GUI
+        std::string             name;
 
         // OGL Related 
         // FBO (Since we use raster pipeline to render)

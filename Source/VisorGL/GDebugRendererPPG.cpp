@@ -6,7 +6,9 @@
 #include <atomic>
 
 #include "RayLib/FileSystemUtility.h"
+
 #include "TextureGL.h"
+#include "GuideDebugStructs.h"
 
 static const uint8_t QUAD_INDICES[6] = { 0, 1, 2, 0, 2, 3};
 static const float QUAD_VERTEX_POS[4 * 3] =
@@ -74,7 +76,9 @@ GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,
     glVertexAttribDivisor(IN_RADIANCE, 1);    
 
     glBindVertexArray(0);
-
+    
+    // Load the Name
+    name = config[GuideDebug::NAME];
     // Load SDTrees to memory
     sdTrees.resize(depthCount);
     for(uint32_t i = 0; i < depthCount; i++)
@@ -301,6 +305,5 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
 
 const std::string& GDebugRendererPPG::Name() const
 {
-    static std::string TypeNameCPPString(TypeName);
-    return TypeNameCPPString;
+    return name;
 }

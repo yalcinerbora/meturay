@@ -15,8 +15,10 @@ class GuideDebugGUI
         static constexpr const char*    IMGUI_GLSL_STRING = "#version 430 core";
         // GUI Texts
         static constexpr const char*    REFERENCE_TEXT = "Reference";
-        // Limits (TODO: Dont limit this in future)
+        // Constants & Limits 
+        // (TODO: Dont limit this in future)
         static constexpr uint32_t       MAX_PG_IMAGE = 4;
+        static constexpr uint32_t       PG_TEXTURE_SIZE = 1024;
 
     private:
         // Main Window

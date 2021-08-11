@@ -68,7 +68,6 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(IMGUI_GLSL_STRING);
 
-
     // Load Position Buffer
     Vector2ui size;
     if(!ImageIO::Instance().ReadEXR(depthValues, size, posFileName))
@@ -84,6 +83,10 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
         METU_ERROR_LOG("\"Position Image - Reference Image\" size mismatch");
         std::abort();
     }
+
+    // Generate Textures
+    for(size_t i = 0; i < debugRenderers.size(); i++)
+        guideTextues.emplace_back(Vector2ui(PG_TEXTURE_SIZE), PixelFormat::RGB8_UNORM);
 }
 
 GuideDebugGUI::~GuideDebugGUI()
@@ -224,17 +227,19 @@ void GuideDebugGUI::Render()
     // TODO: More Generic PG Rendering
     assert(guideTextues.size() <= MAX_PG_IMAGE);
     assert(debugRenderers.size() <= MAX_PG_IMAGE);
-    for(size_t i = 0; i < guideTextues.size(); i++)
-    {
-        const std::string& name = debugRenderers[i]->Name();
-        float offset = CenteredTextLocation(name.c_str(), pgImgSize.x);
+    // Dummy here to prevent first same line to effect the other dummy
+    ImGui::Dummy(ImVec2(0.0f, 0.0f));
+    //for(size_t i = 0; i < guideTextues.size(); i++)
+    //{
+    //    const std::string& name = debugRenderers[i]->Name();
+    //    float offset = CenteredTextLocation(name.c_str(), pgImgSize.x);
 
-        ImGui::SameLine(0.0f, prevTextOffset + paddingX.y + offset);
-        prevTextOffset = offset;
-        ImGui::Text(name.c_str());        
-    }
-    // Force New Line then render Images
-    ImGui::NewLine();
+    //    ImGui::SameLine(0.0f, prevTextOffset + paddingX.y + offset);
+    //    prevTextOffset = offset;
+    //    ImGui::Text(name.c_str());        
+    //}
+    //// Force New Line then render Images
+    //ImGui::NewLine();
 
     //ImGui::SetCursorPosX(paddingX.y);
     //for(size_t i = 0; i < guideTextues.size(); i++)
@@ -243,6 +248,25 @@ void GuideDebugGUI::Render()
     //    ImGui::Image(refTexId, pgImgSize);
     //    ImGui::SameLine(0.0f, paddingX.y);
     //}
+    
+    // DEBUG TEST
+    ImGui::Dummy(ImVec2(0.0f, 0.0f));
+    for(size_t i = 0; i < 4; i++)
+    {
+        const std::string name = std::string("PPG ") + std::to_string(i);        
+        float offset = CenteredTextLocation(name.c_str(), pgImgSize.x);
+        ImGui::SameLine(0.0f, prevTextOffset + paddingX.y + offset);
+        prevTextOffset = offset;
+        ImGui::Text(name.c_str());
+    }
+
+    ImGui::SetCursorPosX(paddingX.y);
+    for(size_t i = 0; i < 4; i++)
+    {
+        ImTextureID refTexId = (void*)(intptr_t)refTexture.TexId();
+        ImGui::Image(refTexId, pgImgSize);
+        ImGui::SameLine(0.0f, paddingX.y);
+    }
 
 
     ImGui::End();

@@ -165,6 +165,9 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
                               GL_TRUE);
     }
 
+    // Limit Aspect Ratio (GUI is adjusted for only 1)
+    glfwSetWindowAspectRatio(glfwWindow, 16, 9);
+
     // Pre-Bind Everything
     // States
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
