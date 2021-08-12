@@ -68,12 +68,10 @@ bool ImageIO::ReadEXR(std::vector<Vector4>& image,
     for(uint32_t y = 0; y < size[1]; y++)
     for(uint32_t x = 0; x < size[0]; x++)
     {
-        uint32_t inIndex = y * size[0] + x;
         uint32_t invertexY = size[1] - y - 1;
         uint32_t outIndex = invertexY * size[0] + x;
-        
+          
         const Imf::Rgba& v = pixels[y][x];
-
         image[outIndex] = Vector4f(static_cast<float>(v.r),
                                    static_cast<float>(v.g),
                                    static_cast<float>(v.b),

@@ -27,14 +27,16 @@ class GuideDebugGUI
         const std::string&                      sceneName;
         bool                                    fullscreenShow;
         // Main texture that shows the scene
-        TextureGL                               refTexture;        
+        TextureGL                               refTexture;  
         // Textures that are rendered by different visors
         std::vector<TextureGL>                  guideTextues;
-        const std::vector<DebugRendererPtr>&    debugRenderers;
-        
+        const std::vector<DebugRendererPtr>&    debugRenderers;        
         // Reference Image's Pixel Values
-        std::vector<Vector4f>                   depthValues;
-
+        std::vector<Vector4f>                   worldPositions;
+        // Current Depth Value
+        const uint32_t                          MaxDepth;
+        uint32_t                                currentDepth;
+        
         // Selected Pixel Location Related
         bool                                    initialSelection;
         Vector2f                                selectedPixel;
@@ -46,11 +48,15 @@ class GuideDebugGUI
                                                                     ImVec2& pgImgSize,
                                                                     const ImVec2& viewportSize);
 
+        bool                                    IncrementDepth();
+        bool                                    DecrementDepth();
+
     protected:
 
     public:
         // Constructors & Destructor
                         GuideDebugGUI(GLFWwindow* window,
+                                      uint32_t maxDepth,
                                       const std::string& refFileName,
                                       const std::string& posFileName,
                                       const std::string& sceneName,

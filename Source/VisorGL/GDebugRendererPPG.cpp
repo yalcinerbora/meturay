@@ -6,17 +6,19 @@
 #include <atomic>
 
 #include "RayLib/FileSystemUtility.h"
+#include "RayLib/Log.h"
 
 #include "TextureGL.h"
 #include "GuideDebugStructs.h"
 
+
 static const uint8_t QUAD_INDICES[6] = { 0, 1, 2, 0, 2, 3};
 static const float QUAD_VERTEX_POS[4 * 3] =
 {
-    0, 0, 0,
-    1, 0, 0,
-    1, 1, 0,
-    0, 1, 0
+    0, 0,
+    1, 0,
+    1, 1,
+    0, 1
 };
 
 GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,                                     
@@ -33,15 +35,18 @@ GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,
     , vPosBuffer(0)
     , treeBuffer(0)
     , treeBufferSize(0)
+    , perimeterColor(1.0f, 1.0f, 1.0f)
     , vertDTreeRender(ShaderType::VERTEX, u8"Shaders/DTreeRender.vert")
     , fragDTreeRender(ShaderType::FRAGMENT, u8"Shaders/DTreeRender.frag")
+    , linearSampler(SamplerGLEdgeResolveType::CLAMP,
+                    SamplerGLInterpType::LINEAR)
 {
     glGenFramebuffers(1, &fbo);
 
     // Create Static Buffers
     glGenBuffers(1, &vPosBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vPosBuffer);
-    glBufferStorage(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), QUAD_VERTEX_POS, 0);
+    glBufferStorage(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), QUAD_VERTEX_POS, 0);
 
     glGenBuffers(1, &indexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, indexBuffer);
@@ -54,7 +59,7 @@ GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,
     // Vertex Position
     constexpr GLenum VPOS_ATTRIB = 0;
     glEnableVertexAttribArray(IN_POS);
-    glVertexAttribFormat(IN_POS, 3, GL_FLOAT, false, 0);
+    glVertexAttribFormat(IN_POS, 2, GL_FLOAT, false, 0);
     glVertexAttribBinding(IN_POS, IN_POS);
     glBindVertexBuffer(IN_POS, vPosBuffer, 0, sizeof(float) * 2);
     // Vertex Indices
@@ -159,7 +164,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
     uint32_t dTreeIndex = currentSDTree.FindDTree(worldPos);
     const auto& dDTreeNodes = currentSDTree.dTreeNodes[dTreeIndex];
     // Find out leaf count (a.k.a square count)
-    size_t squareCount = 0;
+    std::atomic_size_t squareCount = 0;
     if(dDTreeNodes.size() == 1)
         squareCount = 1;
     else
@@ -180,12 +185,12 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
     Vector2f* offsetStart = reinterpret_cast<Vector2f*>(treeBufferCPU.data() + offset);
     offset += squareCount * sizeof(Vector2f);
     uint32_t* depthStart = reinterpret_cast<uint32_t*>(treeBufferCPU.data() + offset);
-    offset = squareCount * sizeof(uint32_t);
+    offset += squareCount * sizeof(uint32_t);
     float* radianceStart = reinterpret_cast<float*>(treeBufferCPU.data() + offset);
-    offset = squareCount * sizeof(float);
+    offset += squareCount * sizeof(float);
     assert(newTreeSize == offset);
     // Generate GPU Data    
-    float maxRadiance = -std::numeric_limits<float>::max();
+    std::atomic<float> maxRadiance = -std::numeric_limits<float>::max();
     std::atomic_uint32_t allocator = 0;
     auto CalculateGPUData = [&] (const DTreeNode& node)
     {
@@ -196,11 +201,15 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
             uint32_t location = allocator++;
             // Calculate Irrad max irrad etc.
             float irrad = node.irradianceEstimates[i];
-            maxRadiance = std::max(maxRadiance, irrad);
+
+            // Atomic MAX
+            float expected = maxRadiance.load();
+            while(!maxRadiance.compare_exchange_strong(expected, std::max(expected, irrad)));
+            
             radianceStart[location] = irrad;
             // Calculate Depth & Offset
-            uint32_t depth = 0;
-            Vector2f offset = Zero2f;
+            uint32_t depth = 1;
+            Vector2f offset = Vector2f(0.5f);//Zero2f;
             // Leaf -> Root Traverse
             const DTreeNode* curNode = &node;
             while(!curNode->IsRoot())
@@ -224,7 +233,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
             depthStart[location] = depth;
             offsetStart[location] = offset;
         }
-    };
+    };    
     // Edge case of node is parent and leaf
     if(dDTreeNodes.size() == 1)
     {
@@ -235,11 +244,23 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
         radianceStart[0] = 1.0f;
     }
     else
+    {
         std::for_each(std::execution::par_unseq,
                       dDTreeNodes.cbegin(),
                       dDTreeNodes.cend(),
                       CalculateGPUData);
-    
+        // Check that we properly did all
+        assert(allocator.load() == squareCount.load());
+    }
+
+    // Debug    
+    std::ofstream file = std::ofstream("TESTO");
+    for(size_t i = 0; i < squareCount; i++)
+    {
+        file << "{" << offsetStart[i][0] << ", " << offsetStart[i][0] << "}, "
+            << depthStart[i] << ", " << radianceStart[i] << std::endl;         
+    }
+    file.close();
 
     // Generate/Resize Buffer
     if(treeBufferSize < newTreeSize)
@@ -270,20 +291,23 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
     glViewport(0, 0, tex.Width(), tex.Height());
 
     // Global States
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glDisable(GL_DEPTH_TEST);
+    glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+    //glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT);
 
     // ==========================//
     //   Render Filled Squares   //
     // ==========================//
     // Bind Texture
-    gradientTexture.BindTexture(T_IN_GRADIENT);
-    // Bind Shaders
+    gradientTexture.Bind(T_IN_GRADIENT);
+    linearSampler.Bind(T_IN_GRADIENT);        
+    // Bind V Shader
     vertDTreeRender.Bind();
-    fragDTreeRender.Bind();
-    // Bind Uniforms
+    // Uniformd
     glUniform1f(U_MAX_RADIANCE, maxRadiance);
+    // Bind F Shader
+    fragDTreeRender.Bind();
+    // Uniforms
     glUniform1i(U_PERIMIETER_ON, 0);    
     // Draw Call
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, nullptr, 
@@ -292,15 +316,18 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
     //   Render Lines  //
     //=================//
     // Same thing but only push a different uniforms and draw call
-    // Bind Uniforms
+    // Bind Uniforms (Frag Shader is Already Bound
     glUniform1i(U_PERIMIETER_ON, 1);
-    glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);
+    glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);    
+    // Set Line Width
+    glEnable(GL_LINE_SMOOTH);
+    glLineWidth(5.0f);
     // Draw Call
     glDrawArraysInstanced(GL_LINE_LOOP, 0, 4, static_cast<GLsizei>(squareCount));
-
+    
     // Rebind the window framebuffer etc..
-    glBindVertexArray(0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
 }
 
 const std::string& GDebugRendererPPG::Name() const

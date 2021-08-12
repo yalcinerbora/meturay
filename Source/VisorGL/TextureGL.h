@@ -40,7 +40,7 @@ class TextureGL
         TextureGL&      operator=(TextureGL&&) = default;
                         ~TextureGL();
 
-        void            BindTexture(GLuint bindingIndex) const;
+        void            Bind(GLuint bindingIndex) const;
 
         GLuint          TexId();
         uint32_t        Width() const;
@@ -71,6 +71,7 @@ class SamplerGL
                         ~SamplerGL();
 
         GLuint          SamplerId();
+        void            Bind(GLuint bindingIndex) const;
 };
 
 inline GLuint TextureGL::TexId()

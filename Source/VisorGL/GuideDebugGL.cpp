@@ -97,9 +97,12 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 
     glfwWindowHint(GLFW_CONTEXT_RELEASE_BEHAVIOR, GLFW_RELEASE_BEHAVIOR_FLUSH);
+
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, IS_DEBUG_MODE);
 
     glfwWindowHint(GLFW_STEREO, GLFW_FALSE);
 
@@ -139,7 +142,6 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
         return VisorError::RENDER_FUCTION_GENERATOR_ERROR;
     }
 
-
     // Print Stuff Now
     // Window Done
     METU_LOG("Window Initialized.");
@@ -172,16 +174,16 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
     // States
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE); 
 
     // Generate Gradient Texture
-    Vector2ui gradientDimensions = Vector2ui(1, config.gradientValues.size());
-    std::vector<Byte> packedData(sizeof(Vector3f) * gradientDimensions[1]);
+    Vector2ui gradientDimensions = Vector2ui(config.gradientValues.size(), 1);
+    std::vector<Byte> packedData(sizeof(Vector3f) * gradientDimensions[0]);
     memcpy(packedData.data(), config.gradientValues.data(), packedData.size());
     gradientTexture = std::make_unique<TextureGL>(gradientDimensions, PixelFormat::RGB8_UNORM);
     gradientTexture->CopyToImage(packedData,
-                                Zero2ui, gradientDimensions, 
-                                PixelFormat::RGB_FLOAT);
+                                 Zero2ui, gradientDimensions,
+                                 PixelFormat::RGB_FLOAT);
 
     // Generate DebugRenderers
     for(const auto& gc : config.guiderConfigs)
@@ -200,6 +202,7 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
 
     // Create GUI
     gui = std::make_unique<GuideDebugGUI>(glfwWindow, 
+                                          config.depthCount,
                                           Utility::MergeFileFolder(configPath, config.refImage),
                                           Utility::MergeFileFolder(configPath, config.posImage),
                                           config.sceneName,
@@ -208,7 +211,7 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
     glfwShowWindow(glfwWindow);
     open = true;
 
-    glfwMakeContextCurrent(nullptr);
+    //glfwMakeContextCurrent(nullptr);
     return VisorError::OK;
 }
 
@@ -219,9 +222,11 @@ bool GuideDebugGL::IsOpen()
 
 void GuideDebugGL::Render()
 {
-    glfwMakeContextCurrent(glfwWindow);
-
+    //glfwMakeContextCurrent(glfwWindow);
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+    glViewport(0, 0, viewportSize[0], viewportSize[1]);
 
     gui->Render();
 

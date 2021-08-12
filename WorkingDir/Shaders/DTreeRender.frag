@@ -24,8 +24,8 @@ in IN_UV vec2 fUV;
 // Output
 out OUT_COLOR vec4 fboColor;
 // Uniforms
-uniform U_PERIMIETER_ON bool perimeterOn;
-uniform U_PERIMIETER_COLOR vec3 perimeterColor;
+U_PERIMIETER_ON uniform bool perimeterOn;
+U_PERIMIETER_COLOR uniform vec3 perimeterColor;
 
 // Textures
 uniform T_IN_GRADIENT sampler2D tGradient;
@@ -33,7 +33,7 @@ uniform T_IN_GRADIENT sampler2D tGradient;
 void main(void)
 {
 	if(perimeterOn)
-		fboColor = vec4(texture(tGradient, fUV).xyz, 1.0f);
-	else
 		fboColor = vec4(perimeterColor, 1.0f);
+	else
+		fboColor = vec4(texture(tGradient, fUV).xyz, 1.0f);	
 }

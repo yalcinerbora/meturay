@@ -41,6 +41,9 @@ void main(void)
 	// Determine Gradient UV
 	fUV = vec2(vRadiance / maxRadiance, 0.5f);
 
-	// Actual Position
-	gl_Position = vec4((vPos * scale + vOffset), 0.0f, 1.0f);
+	// [0,1] normalized position
+	vec2 position = vPos * scale + vOffset;
+
+	// Actual Position [-1, 1] (NDC)
+	gl_Position = vec4(position * 2.0f - 1.0f , 0.0f, 1.0f);
 }

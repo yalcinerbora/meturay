@@ -8,6 +8,7 @@
 
 #include "RayLib/AABB.h"
 #include "ShaderGL.h"
+#include "TextureGL.h"
 
 struct DTreeNode
 {
@@ -118,6 +119,7 @@ class GDebugRendererPPG : public GDebugRendererI
     private:
         static constexpr const char* SD_TREE_NAME = "SDTrees";
 
+        const SamplerGL         linearSampler;
         const TextureGL&        gradientTexture;        
         const std::string&      configPath;        
         uint32_t                depthCount;

@@ -44,6 +44,11 @@ TextureGL::TextureGL(const std::string& filePath)
                     PixelFormatToGL(pixFormat),
                     PixelFormatToTypeGL(pixFormat),
                     pixels.data());
+
+    // Override Filtering to Nearest
+    // Usefull for imgui etc.
+    glTextureParameteri(texId, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTextureParameteri(texId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
 
 TextureGL::~TextureGL()
@@ -70,8 +75,13 @@ void TextureGL::CopyToImage(const std::vector<Byte>& pixels,
                     pixels.data());
 }
 
-void TextureGL::BindTexture(GLuint bindingIndex) const
+void TextureGL::Bind(GLuint bindingIndex) const
 {
     glActiveTexture(GL_TEXTURE0 + bindingIndex);
     glBindTexture(GL_TEXTURE_2D, texId);
+}
+
+void SamplerGL::Bind(GLuint bindingIndex) const
+{
+    glBindSampler(bindingIndex, samplerId);
 }
