@@ -522,6 +522,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerKC.cuh">
       <Filter>Tracers\PPGTracer</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraSpherical.cuh">
+      <Filter>Cameras</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">
@@ -655,6 +658,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerDebug.cu">
       <Filter>Debug</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUCameraSpherical.cu">
+      <Filter>Cameras</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

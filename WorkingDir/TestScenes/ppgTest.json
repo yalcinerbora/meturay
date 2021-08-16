@@ -12,6 +12,22 @@
 		"planes": [0.4, 100.0],
 		"position": [0.747137, 2.9778, 17.7901],
 		"up": [0.0, 1.0, 0.0]
+	},
+	{
+		"id": 1,
+		"type": "Spherical",
+
+		// Ratio of the Pixels
+		"pixelRatio": 1.0,
+		// Camera Position
+		"position": [0.0, 2.5, 0],
+		// Near & Far Planes
+		"planes": [0.4, 100.0],
+
+		// These are to determine the transformation
+		// where the spherical coordinates start
+		"direction": [0.0, 0.0, 1.0],
+		"up": [0.0, 1.0, 0.0]
 	}],
 
 	"Lights": [],
@@ -80,13 +96,16 @@
 
 	"Surfaces": [
 	    {"transform": 0, "accelerator": 0,"material": 3,"primitive": 1},
-        {"transform": 0, "accelerator": 0,"material": 3,"primitive": 3},
+        {"transform": 0, "accelerator": 0,"material": 3,"primitive": 3}
         // {"transform": 0, "accelerator": 0,"material": 3,"primitive": 4},
         // {"transform": 0, "accelerator": 0,"material": 3,"primitive": 5},
-	    {"transform": 0, "accelerator": 0,"material": 2,"primitive": 2}
+	    //{"transform": 0, "accelerator": 0,"material": 2,"primitive": 2}
     ],
 
 	"LightSurfaces": [{"transform": 0, "accelerator": 0, "material": 1, "primitive": 0}],
 
-    "CameraSurfaces": [{"camera": 0}]
+    "CameraSurfaces": [
+		//{"camera": 0}
+		{"camera": 1}
+	]
 }

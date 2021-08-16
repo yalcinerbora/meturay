@@ -162,13 +162,14 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
     // Find DTree
     const SDTree& currentSDTree = sdTrees[depth];
     uint32_t dTreeIndex = currentSDTree.FindDTree(worldPos);
-    const auto& dDTreeNodes = currentSDTree.dTreeNodes[dTreeIndex];
+    const auto& dTreeNodes = currentSDTree.dTreeNodes[dTreeIndex];
+    const auto& dTreeValues = currentSDTree.dTrees[dTreeIndex];
     // Find out leaf count (a.k.a square count)
     std::atomic_size_t squareCount = 0;
-    if(dDTreeNodes.size() == 1)
+    if(dTreeNodes.size() == 0)
         squareCount = 1;
     else
-        std::for_each(std::execution::par_unseq, dDTreeNodes.cbegin(), dDTreeNodes.cend(),
+        std::for_each(std::execution::par_unseq, dTreeNodes.cbegin(), dTreeNodes.cend(),
                       [&squareCount] (const DTreeNode& node)
                       {
                           if(node.IsLeaf(0)) squareCount++;
@@ -209,13 +210,16 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
             radianceStart[location] = irrad;
             // Calculate Depth & Offset
             uint32_t depth = 1;
-            Vector2f offset = Vector2f(0.5f);//Zero2f;
+            //Vector2f offset = Vector2f(0.5f);//Zero2f;
+            Vector2f offset(((i >> 0) & 0b01) ? 0.5f : 0.0f,
+                            ((i >> 1) & 0b01) ? 0.5f : 0.0f);
+
             // Leaf -> Root Traverse
             const DTreeNode* curNode = &node;
             while(!curNode->IsRoot())
             {
-                const DTreeNode* parentNode = &dDTreeNodes[curNode->parentIndex];
-                uint32_t nodeIndex = static_cast<uint32_t>(curNode - dDTreeNodes.data());
+                const DTreeNode* parentNode = &dTreeNodes[curNode->parentIndex];
+                uint32_t nodeIndex = static_cast<uint32_t>(curNode - dTreeNodes.data());
                 // Determine which child are you
                 uint32_t childId = UINT32_MAX;
                 childId = (parentNode->childIndices[0] == nodeIndex) ? 0 : childId;
@@ -229,35 +233,37 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
                 depth++;
                 // Traverse upwards
                 curNode = parentNode;
-            }
+            }            
             depthStart[location] = depth;
             offsetStart[location] = offset;
         }
     };    
     // Edge case of node is parent and leaf
-    if(dDTreeNodes.size() == 1)
+    if(dTreeNodes.size() == 0)
     {
         depthStart[0] = 0;
         offsetStart[0] = Zero2f;
-        // TODO: fix
-        maxRadiance = 1.0f;
-        radianceStart[0] = 1.0f;
+        
+        maxRadiance =  dTreeValues.second;
+        radianceStart[0] = dTreeValues.second;
     }
     else
     {
         std::for_each(std::execution::par_unseq,
-                      dDTreeNodes.cbegin(),
-                      dDTreeNodes.cend(),
+                      dTreeNodes.cbegin(),
+                      dTreeNodes.cend(),
                       CalculateGPUData);
         // Check that we properly did all
         assert(allocator.load() == squareCount.load());
     }
 
+    METU_LOG("Max Rad %f", maxRadiance.load());
+
     // Debug    
     std::ofstream file = std::ofstream("TESTO");
     for(size_t i = 0; i < squareCount; i++)
     {
-        file << "{" << offsetStart[i][0] << ", " << offsetStart[i][0] << "}, "
+        file << "{" << offsetStart[i][0] << ", " << offsetStart[i][1] << "}, "
             << depthStart[i] << ", " << radianceStart[i] << std::endl;         
     }
     file.close();
@@ -321,7 +327,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
     glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);    
     // Set Line Width
     glEnable(GL_LINE_SMOOTH);
-    glLineWidth(5.0f);
+    glLineWidth(3.0f);
     // Draw Call
     glDrawArraysInstanced(GL_LINE_LOOP, 0, 4, static_cast<GLsizei>(squareCount));
     

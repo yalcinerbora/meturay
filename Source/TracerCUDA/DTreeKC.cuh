@@ -119,7 +119,8 @@ Vector2f DTreeGPU::WorldDirToTreeCoords(float& pdf, const Vector3f& worldDir)
     Vector2f thetaPhi = Utility::CartesianToSphericalUnit(wZup);
     // Normalize to generate UV [0, 1]
      // tetha range [-pi, pi]
-    float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
+    //float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
+    float u = (thetaPhi[0] * MathConstants::InvPi * 0.5f);
     // phi range [0, pi]
     float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);
 
@@ -146,7 +147,9 @@ Vector3f DTreeGPU::TreeCoordsToWorldDir(float& pdf, const Vector2f& discreteCoor
     // Convert the Local 2D cartesian coords to spherical coords
     const Vector2f& uv = discreteCoords;
     Vector2f thetaPhi = Vector2f(// [-pi, pi]
-                                 (uv[0] * MathConstants::Pi * 2.0f) - MathConstants::Pi,
+                                 //(uv[0] * MathConstants::Pi * 2.0f) - MathConstants::Pi,
+                                 // [0, 2 * pi]
+                                 (uv[0] * MathConstants::Pi * 2.0f),
                                  // [0, pi]
                                  (1.0f - uv[1]) * MathConstants::Pi);
     Vector3 dirZUp = Utility::SphericalToCartesianUnit(thetaPhi);

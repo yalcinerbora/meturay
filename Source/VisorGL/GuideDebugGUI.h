@@ -38,7 +38,7 @@ class GuideDebugGUI
         uint32_t                                currentDepth;
         
         // Selected Pixel Location Related
-        bool                                    initialSelection;
+        bool                                    pixelSelected;
         Vector2f                                selectedPixel;
 
         static float                            CenteredTextLocation(const char* text, float centeringWidth);

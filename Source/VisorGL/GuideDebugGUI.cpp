@@ -67,7 +67,7 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
     , window(w)
     , refTexture(refFileName)
     , debugRenderers(dRenderers)
-    , initialSelection(false)
+    , pixelSelected(false)
     , sceneName(sceneName)
     , MaxDepth(maxDepth)
     , currentDepth(0)
@@ -156,7 +156,7 @@ void GuideDebugGUI::Render()
 
     // Titles
     // Scene Name
-    ImGui::Dummy(ImVec2(0.0f, std::max(0.0f, paddingY - ImGui::GetFontSize())));
+    ImGui::Dummy(ImVec2(0.0f, std::max(0.0f, paddingY - ImGui::GetFontSize()) * 0.95f));
     float sceneNameOffset = CenteredTextLocation(sceneName.c_str(), refImgSize.x);
     ImGui::SetCursorPosX(paddingX.x + sceneNameOffset);
     ImGui::Text(sceneName.c_str());
@@ -230,7 +230,7 @@ void GuideDebugGUI::Render()
         // Aswell we need to draw a circle
         if(ImGui::IsMouseClicked(ImGuiMouseButton_::ImGuiMouseButton_Left))
         {            
-            initialSelection = true;
+            pixelSelected = true;
             Vector2f newSelectedPixel = Vector2f(imagePixel_x, imagePixel_y);
             updateDirectionalTextures = (selectedPixel != newSelectedPixel);
             selectedPixel = newSelectedPixel;
@@ -238,7 +238,7 @@ void GuideDebugGUI::Render()
         }
     }
     // Draw a circle on the selected location
-    if(initialSelection)
+    if(pixelSelected)
     {
         // Calculate Screen Pixel
         float screenPixel_x = selectedPixel[0] * refImgSize.x / static_cast<float>(refTexture.Width());
@@ -258,7 +258,7 @@ void GuideDebugGUI::Render()
     ImGui::SameLine(0.0f, paddingX.x);
     ImGui::Image(refTexId, pgImgSize, ImVec2(0, 1), ImVec2(1, 0));
     // New Line and Path Guider Images
-    ImGui::Dummy(ImVec2(0.0f, std::max(0.0f, paddingY - ImGui::GetFontSize())));
+    ImGui::Dummy(ImVec2(0.0f, std::max(0.0f, (paddingY - ImGui::GetFontSize()) * 0.95f)));
 
     // Render Reference Images
     ImGui::SetCursorPosX(paddingX.y);
@@ -284,8 +284,57 @@ void GuideDebugGUI::Render()
     for(size_t i = 0; i < guideTextues.size(); i++)
     {       
         ImTextureID refTexId = (void*)(intptr_t) guideTextues[i].TexId();
+        ImVec2 pgImgPos = ImGui::GetCursorScreenPos();        
         ImGui::Image(refTexId, pgImgSize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::SameLine(0.0f, paddingX.y);
+
+        if(ImGui::IsItemHovered())
+        {
+            constexpr float ZOOM_FACTOR = 4.0f;
+            ImGuiIO& io = ImGui::GetIO();
+
+            // Zoomed Tooltip
+            ImGui::BeginTooltip();
+            float region_sz = 16.0f;
+            float screenPixel_x = io.MousePos.x - pgImgPos.x;
+            float screenPixel_y = io.MousePos.y - pgImgPos.y;
+
+            //METU_LOG("pgImgPos (%f, %f) == (%f, %f)", 
+            //         pgImgPos.x, pgImgPos.y,
+            //         io.MousePos.x, io.MousePos.y);
+
+            // Calculate Actual Pixel
+            float imagePixel_x = screenPixel_x * static_cast<float>(PG_TEXTURE_SIZE) / pgImgSize.x;
+            float imagePixel_y = screenPixel_y * static_cast<float>(PG_TEXTURE_SIZE) / pgImgSize.y;
+            imagePixel_x = std::floor(imagePixel_x);
+            imagePixel_y = std::floor(imagePixel_y);
+            // Invert the Y axis
+            imagePixel_y = PG_TEXTURE_SIZE - imagePixel_y - 1;
+
+            ImGui::Text("Pixel: (%.2f, %.2f)", imagePixel_x, imagePixel_y);
+
+            // Calculate Zoom UV
+            float region_x = imagePixel_x - region_sz * 0.5f;
+            region_x = HybridFuncs::Clamp(region_x, 0.0f,
+                                          PG_TEXTURE_SIZE - region_sz);
+            float region_y = imagePixel_y - region_sz * 0.5f;
+            region_y = HybridFuncs::Clamp(region_y, 0.0f,
+                                          PG_TEXTURE_SIZE - region_sz);
+
+            ImVec2 uv0 = ImVec2((region_x) / PG_TEXTURE_SIZE,
+                                (region_y) / PG_TEXTURE_SIZE);
+            ImVec2 uv1 = ImVec2((region_x + region_sz) / PG_TEXTURE_SIZE,
+                                (region_y + region_sz) / PG_TEXTURE_SIZE);
+            // Invert Y (.......)
+            std::swap(uv0.y, uv1.y);
+
+            // Center the image on the tooltip window
+            ImVec2 ttImgSize(region_sz* ZOOM_FACTOR,
+                             region_sz* ZOOM_FACTOR);
+            ImGui::Image(refTexId, ttImgSize, uv0, uv1);
+            ImGui::EndTooltip();
+        }
+
     }
     
     //// DEBUG TEST
@@ -311,7 +360,7 @@ void GuideDebugGUI::Render()
     ImGui::End();
 
     // Before Render the Frame Update the Directional Textures if requested
-    //if(updateDirectionalTextures)
+    if(updateDirectionalTextures && pixelSelected)
     {
         uint32_t linearIndex = (static_cast<uint32_t>(selectedPixel[1]) * refTexture.Size()[0] +
                                 static_cast<uint32_t>(selectedPixel[0]));
