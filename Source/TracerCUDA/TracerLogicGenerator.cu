@@ -35,6 +35,7 @@
 #include "GPULightSkySphere.cuh"
 
 #include "GPUCameraPinhole.cuh"
+#include "GPUCameraSpherical.cuh"
 
 #include "GPUMaterialI.h"
 
@@ -190,6 +191,9 @@ TracerLogicGenerator::TracerLogicGenerator()
     // Camera Types
     camGroupGenerators.emplace(CPUCameraGroupPinhole::TypeName(),
                                CPUCameraGen(DefaultConstruct<CPUCameraGroupI, CPUCameraGroupPinhole>,
+                                            DefaultDestruct<CPUCameraGroupI>));
+    camGroupGenerators.emplace(CPUCameraGroupSpherical::TypeName(),
+                               CPUCameraGen(DefaultConstruct<CPUCameraGroupI, CPUCameraGroupSpherical>,
                                             DefaultDestruct<CPUCameraGroupI>));
     // Tracers
     tracerGenerators.emplace(DirectTracer::TypeName(),
