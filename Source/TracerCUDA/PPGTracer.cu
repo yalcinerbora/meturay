@@ -381,8 +381,8 @@ void PPGTracer::Finalize()
     //}
 
     // Accumulate the finished radiances to the STree
-    sTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
-                               MaximumPathNodePerPath(), cudaSystem);
+    //sTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
+    //                           MaximumPathNodePerPath(), cudaSystem);
     // We iterated once
     currentTreeIteration += 1;// options.sampleCount* options.sampleCount;
     // Swap the trees if we achieved treshold

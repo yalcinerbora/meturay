@@ -103,7 +103,11 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
 
     // Generate Textures
     for(size_t i = 0; i < debugRenderers.size(); i++)
+    {
         guideTextues.emplace_back(Vector2ui(PG_TEXTURE_SIZE), PixelFormat::RGB8_UNORM);
+        guidePixValues.emplace_back(PG_TEXTURE_SIZE * PG_TEXTURE_SIZE);
+    }
+        
 }
 
 GuideDebugGUI::~GuideDebugGUI()
@@ -311,7 +315,11 @@ void GuideDebugGUI::Render()
             // Invert the Y axis
             imagePixel_y = PG_TEXTURE_SIZE - imagePixel_y - 1;
 
+
+            uint32_t linearIndex = (PG_TEXTURE_SIZE * static_cast<uint32_t>(imagePixel_y)
+                                    + static_cast<uint32_t>(imagePixel_x));
             ImGui::Text("Pixel: (%.2f, %.2f)", imagePixel_x, imagePixel_y);
+            ImGui::Text("Value: %f", guidePixValues[i][linearIndex]);
 
             // Calculate Zoom UV
             float region_x = imagePixel_x - region_sz * 0.5f;
@@ -375,6 +383,7 @@ void GuideDebugGUI::Render()
         for(size_t i = 0; i < guideTextues.size(); i++)
         {
             debugRenderers[i]->RenderDirectional(guideTextues[i],
+                                                 guidePixValues[i],
                                                  worldPos, currentDepth);
         }
     }

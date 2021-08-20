@@ -115,12 +115,15 @@ class GDebugRendererPPG : public GDebugRendererI
         static constexpr GLenum     U_PERIMIETER_COLOR = 2;
         // Textures
         static constexpr GLenum     T_IN_GRADIENT = 0;        
+        // FBO Outputs
+        static constexpr GLenum     OUT_COLOR = 0;
+        static constexpr GLenum     OUT_VALUE = 1;
 
     private:
         static constexpr const char* SD_TREE_NAME = "SDTrees";
 
         const SamplerGL         linearSampler;
-        const TextureGL&        gradientTexture;        
+        const TextureGL&        gradientTexture;
         const std::string&      configPath;        
         uint32_t                depthCount;
         // All SD Trees that are loaded
@@ -129,6 +132,8 @@ class GDebugRendererPPG : public GDebugRendererI
         Vector3f                perimeterColor;
         // Name of the Guider (shown in GUI
         std::string             name;
+        // 
+        std::vector<float>      irradianceValues;
 
         // OGL Related 
         // FBO (Since we use raster pipeline to render)
@@ -163,7 +168,9 @@ class GDebugRendererPPG : public GDebugRendererI
 
         // Interface
         void                RenderSpatial(TextureGL&, uint32_t depth) override;
-        void                RenderDirectional(TextureGL&, const Vector3f& worldPos, 
+        void                RenderDirectional(TextureGL&,
+                                              std::vector<float>& values,
+                                              const Vector3f& worldPos, 
                                               uint32_t depth) override;
 
         const std::string&  Name() const override;

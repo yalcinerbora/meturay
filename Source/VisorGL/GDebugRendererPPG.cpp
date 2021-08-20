@@ -157,7 +157,10 @@ void GDebugRendererPPG::RenderSpatial(TextureGL&, uint32_t depth)
     // TODO:
 }
 
-void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldPos, uint32_t depth)
+void GDebugRendererPPG::RenderDirectional(TextureGL& tex, 
+                                          std::vector<float>& values,
+                                          const Vector3f& worldPos, 
+                                          uint32_t depth)
 {
     // Find DTree
     const SDTree& currentSDTree = sdTrees[depth];
@@ -268,6 +271,9 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
     }
     file.close();
 
+    // Gen Temp Texture for Value rendering
+    TextureGL valueTex(tex.Size(), PixelFormat::R_FLOAT);
+
     // Generate/Resize Buffer
     if(treeBufferSize < newTreeSize)
     {
@@ -292,8 +298,20 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
     
     // Bind FBO
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);    
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex.TexId(), 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, 
+                           GL_COLOR_ATTACHMENT0 + OUT_COLOR, 
+                           GL_TEXTURE_2D, tex.TexId(), 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, 
+                           GL_COLOR_ATTACHMENT0 + OUT_VALUE, 
+                           GL_TEXTURE_2D, valueTex.TexId(), 0);
     assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+
+    // Enable 2 Color Channels
+    const GLenum Attachments[2] = {GL_COLOR_ATTACHMENT0 + OUT_COLOR,
+                               GL_COLOR_ATTACHMENT0 + OUT_VALUE};
+    glDrawBuffers(2, Attachments);
+
+    // Change Viewport
     glViewport(0, 0, tex.Width(), tex.Height());
 
     // Global States
@@ -318,22 +336,29 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex, const Vector3f& worldP
     // Draw Call
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, nullptr, 
                             static_cast<GLsizei>(squareCount));
-    //=================//
-    //   Render Lines  //
-    //=================//
-    // Same thing but only push a different uniforms and draw call
-    // Bind Uniforms (Frag Shader is Already Bound
-    glUniform1i(U_PERIMIETER_ON, 1);
-    glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);    
-    // Set Line Width
-    glEnable(GL_LINE_SMOOTH);
-    glLineWidth(3.0f);
-    // Draw Call
-    glDrawArraysInstanced(GL_LINE_LOOP, 0, 4, static_cast<GLsizei>(squareCount));
-    
+    ////=================//
+    ////   Render Lines  //
+    ////=================//
+    //// Same thing but only push a different uniforms and draw call
+    //// Bind Uniforms (Frag Shader is Already Bound
+    //glUniform1i(U_PERIMIETER_ON, 1);
+    //glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);    
+    //// Set Line Width
+    //glEnable(GL_LINE_SMOOTH);
+    //glLineWidth(3.0f);
+    //// Draw Call
+    //glDrawArraysInstanced(GL_LINE_LOOP, 0, 4, static_cast<GLsizei>(squareCount));
+
     // Rebind the window framebuffer etc..
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
+
+    // Get Value Buffer to CPU
+    values.resize(tex.Size()[0] * tex.Size()[1]);
+    glBindTexture(GL_TEXTURE_2D, valueTex.TexId());
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT,
+                  values.data());
+
+    // All Done!
 }
 
 const std::string& GDebugRendererPPG::Name() const

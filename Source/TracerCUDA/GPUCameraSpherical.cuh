@@ -192,7 +192,7 @@ inline void GPUCameraSpherical::GenerateRay(// Output
                                           GPUDistribution::Uniform<float>(rng))
                                 : Vector2(0.5f);
 
-    // Normalize Coordinates X = [0, 1] Y = [-0.5, 0.5]
+    // Normalize Coordinates X & Y = [0, 1]
     Vector2f normCoords = Vector2(static_cast<float>(sampleId[0]),
                                   static_cast<float>(sampleId[1]));
     normCoords += randomOffset;
@@ -201,9 +201,7 @@ inline void GPUCameraSpherical::GenerateRay(// Output
 
     // Calculate Spherical Coordinates
     Vector2f sphericalCoords = Vector2f(// [-pi, pi]
-                                        //(normCoords[0] * MathConstants::Pi * 2.0f) - MathConstants::Pi,
-                                        // [0, 2 * pi]
-                                        (normCoords[0] * MathConstants::Pi * 2.0f),
+                                        (normCoords[0] * MathConstants::Pi * 2.0f) - MathConstants::Pi,
                                         // [0, pi]
                                         (1.0f - normCoords[1]) * MathConstants::Pi);
 

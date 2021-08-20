@@ -322,7 +322,7 @@ std::vector<size_t> SceneNodeJson::AccessListCount(const std::string& name) cons
     for(const auto& list : idIndexPairs)
     {
         const InnerIndex i = list.second;
-        const nlohmann::json& node = (idIndexPairs.size() > 1) ? nodeInner[i] : nodeInner;
+        const nlohmann::json& node = (isMultiNode) ? nodeInner[i] : nodeInner;
 
         result.push_back(node.size());
     }

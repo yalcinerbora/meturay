@@ -10,8 +10,10 @@
 
 // Definitions
 #define IN_UV layout(location = 0)
+#define IN_VALUE layout(location = 1)
 
 #define OUT_COLOR layout(location = 0)
+#define OUT_VALUE layout(location = 1)
 
 #define T_IN_GRADIENT layout(binding = 0)
 
@@ -20,9 +22,11 @@
 
 // Input
 in IN_UV vec2 fUV;
+in IN_VALUE float fValue;
 
 // Output
 out OUT_COLOR vec4 fboColor;
+out OUT_VALUE float fboValue;
 // Uniforms
 U_PERIMIETER_ON uniform bool perimeterOn;
 U_PERIMIETER_COLOR uniform vec3 perimeterColor;
@@ -35,5 +39,8 @@ void main(void)
 	if(perimeterOn)
 		fboColor = vec4(perimeterColor, 1.0f);
 	else
+	{
 		fboColor = vec4(texture(tGradient, fUV).xyz, 1.0f);	
+		fboValue = fValue;
+	}
 }

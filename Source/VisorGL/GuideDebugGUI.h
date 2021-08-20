@@ -29,6 +29,7 @@ class GuideDebugGUI
         // Main texture that shows the scene
         TextureGL                               refTexture;  
         // Textures that are rendered by different visors
+        std::vector<std::vector<float>>         guidePixValues;
         std::vector<TextureGL>                  guideTextues;
         const std::vector<DebugRendererPtr>&    debugRenderers;        
         // Reference Image's Pixel Values

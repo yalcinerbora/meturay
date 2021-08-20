@@ -26,7 +26,7 @@
 
 		// These are to determine the transformation
 		// where the spherical coordinates start
-		"direction": [0.0, 0.0, 1.0],
+		"direction": [0.0, 0.0, -1.0],
 		"up": [0.0, 1.0, 0.0]
 	}],
 
@@ -83,7 +83,15 @@
 		"name": "../Surfaces/box.obj",
 		"tag": "assimp_",
 		"innerIndex": 0
-	}],
+	},
+	{
+		"id": 6,
+		"type": "Sphere",
+		"name": ".nodeSphere",
+		"position": [0, 2.5, 0],
+		"radius": 0.1
+	}
+	],
 
 	"Accelerators": [{"id" : 0, "type" : "Linear"}],
 
@@ -95,17 +103,24 @@
     "BaseMedium" : 0,
 
 	"Surfaces": [
-	    {"transform": 0, "accelerator": 0,"material": 3,"primitive": 1},
-        {"transform": 0, "accelerator": 0,"material": 3,"primitive": 3}
+	    // {"transform": 0, "accelerator": 0,"material": 3,"primitive": 1},
+        // {"transform": 0, "accelerator": 0,"material": 3,"primitive": 3},
         // {"transform": 0, "accelerator": 0,"material": 3,"primitive": 4},
         // {"transform": 0, "accelerator": 0,"material": 3,"primitive": 5},
+		// Box
 	    //{"transform": 0, "accelerator": 0,"material": 2,"primitive": 2}
+		// Sphere
+		{"transform": 0, "accelerator": 0,"material": 2,"primitive": 6}
+
     ],
 
-	"LightSurfaces": [{"transform": 0, "accelerator": 0, "material": 1, "primitive": 0}],
+	"LightSurfaces": [
+		{"transform": 0, "accelerator": 0, "material": 1, "primitive": 0}
+	    //{"transform": 0, "accelerator": 0,"material": 1,"primitive": 5}
+	],
 
     "CameraSurfaces": [
-		//{"camera": 0}
-		{"camera": 1}
+		{"camera": 0}
+		//{"camera": 1}
 	]
 }

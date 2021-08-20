@@ -7,7 +7,7 @@
 #include "RayLib/StripComments.h"
 #include "RayLib/SceneIO.h"
 
-using GuiderConfigs = std::map<std::string, nlohmann::json>;
+using GuiderConfigs = std::vector<std::pair<std::string, nlohmann::json>>;
 
 struct GuideDebugConfig
 {
@@ -59,7 +59,7 @@ inline bool GuideDebug::ParseConfigFile(GuideDebugConfig& s, const std::u8string
     
     for(const nlohmann::json& j : jsonFile[PG_NAME])
     {
-        s.guiderConfigs.emplace(j[TYPE], j);
+        s.guiderConfigs.emplace_back(j[TYPE], j);
     }
 
     // Load Gradient Values

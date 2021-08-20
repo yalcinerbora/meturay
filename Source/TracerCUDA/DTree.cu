@@ -9,6 +9,8 @@
 #include "RayLib/Log.h"
 #include "RayLib/CPUTimer.h"
 
+#include "TracerDebug.h"
+
 static constexpr size_t AlignedOffsetDTreeGPU = Memory::AlignSize(sizeof(DTreeGPU));
 
 void DTree::DTreeBuffer::FixPointers()
@@ -143,6 +145,12 @@ void DTree::SwapTrees(float fluxRatio, uint32_t depthLimit,
     //Debug::DumpMemToFile("WT_PC_N", nodes.data(), nodes.size());
     //Debug::DumpMemToFile("WT_PC", &treeGPU, 1);
 
+    //DTreeGPU treeGPU2;
+    //std::vector<DTreeNode> nodes2;
+    //readTree.DumpTree(treeGPU, nodes);
+    //Debug::DumpMemToFile("RT_PC_N", nodes2.data(), nodes2.size());
+    //Debug::DumpMemToFile("RT_PC", &treeGPU2, 1);
+
     // Currently build tree that has its only leafs
     // are valid. Write values to the all nodes
     uint32_t nodeCount = static_cast<uint32_t>(writeTree.NodeCount());
@@ -217,6 +225,11 @@ void DTree::SwapTrees(float fluxRatio, uint32_t depthLimit,
 
     // Finally swap the trees
     std::swap(readTree, writeTree);
+
+    //writeTree.DumpTree(treeGPU, nodes);
+    //Debug::DumpMemToFile("WT_FINAL_N", nodes.data(), nodes.size());
+    //Debug::DumpMemToFile("WT_FINAL", &treeGPU, 1);
+
 }
 
 void DTree::AddRadiancesFromPaths(const uint32_t* dNodeIndexArray,
