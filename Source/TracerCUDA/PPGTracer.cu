@@ -103,15 +103,15 @@ TracerError PPGTracer::ConstructLightSampler()
     {
         case LightSamplerType::UNIFORM:
         {
-            DeviceMemory::EnlargeBuffer(pathMemory, sizeof(GPULightSamplerUniform));
-            dLightSampler = static_cast<const GPUDirectLightSamplerI*>(pathMemory);
+            DeviceMemory::EnlargeBuffer(lightSamplerMemory, sizeof(GPULightSamplerUniform));
+            dLightSampler = static_cast<const GPUDirectLightSamplerI*>(lightSamplerMemory);
 
             const auto& gpu = cudaSystem.BestGPU();
             gpu.KC_X(0, (cudaStream_t)0, 1,
                      // Kernel
                      KCConstructLightSampler<GPULightSamplerUniform>,
                      // Args
-                     static_cast<GPULightSamplerUniform*>(pathMemory),
+                     static_cast<GPULightSamplerUniform*>(lightSamplerMemory),
                      dLights,
                      lightCount);
 
@@ -176,7 +176,8 @@ TracerError PPGTracer::Initialize()
         return err;
 
     // Generate Light Sampler (for nee)
-    ConstructLightSampler();
+    if((err = ConstructLightSampler()) != TracerError::OK)
+        return err;
 
     // Generate your worklist
     const auto& infoList = scene.WorkBatchInfo();

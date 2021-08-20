@@ -121,7 +121,8 @@ TracerError PathTracer::Initialize()
         return err;
 
     // Generate Light Sampler (for nee)
-    ConstructLightSampler();
+    if((err = ConstructLightSampler()) != TracerError::OK)
+        return err;
 
     // Generate your worklist
     const auto& infoList = scene.WorkBatchInfo();

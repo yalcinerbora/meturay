@@ -405,6 +405,7 @@ void PPGTracerPathWork(// Output
     Vector3 lDirection;
     uint32_t lightIndex;
     Vector3f neeReflectance = Zero3;
+
     if(renderState.lightSampler->SampleLight(matLight,
                                              lightIndex,
                                              lDirection,
@@ -457,28 +458,28 @@ void PPGTracerPathWork(// Output
     // towards light's sampled position
     Vector3 neeRadianceFactor = radianceFactor * neeReflectance;
     neeRadianceFactor = (pdfNEE == 0.0f) ? Zero3 : (neeRadianceFactor / pdfNEE);
-    //if(neeRadianceFactor != ZERO_3)
-    //{
-    //    // Generate & Write Ray
-    //    RayF rayNEE = RayF(lDirection, position);
-    //    rayNEE.AdvanceSelf(MathConstants::Epsilon);
+    if(neeRadianceFactor != ZERO_3)
+    {
+        // Generate & Write Ray
+        RayF rayNEE = RayF(lDirection, position);
+        rayNEE.AdvanceSelf(MathConstants::Epsilon);
 
-    //    RayReg rayOut;
-    //    rayOut.ray = rayNEE;
-    //    rayOut.tMin = 0.0f;
-    //    rayOut.tMax = lDistance;
-    //    rayOut.Update(gOutRays, NEE_RAY_INDEX);
+        RayReg rayOut;
+        rayOut.ray = rayNEE;
+        rayOut.tMin = 0.0f;
+        rayOut.tMax = lDistance;
+        rayOut.Update(gOutRays, NEE_RAY_INDEX);
 
-    //    RayAuxPPG auxOut = aux;
-    //    auxOut.radianceFactor = neeRadianceFactor;
-    //    auxOut.endPointIndex = lightIndex;
-    //    auxOut.type = RayType::NEE_RAY;
+        RayAuxPPG auxOut = aux;
+        auxOut.radianceFactor = neeRadianceFactor;
+        auxOut.endPointIndex = lightIndex;
+        auxOut.type = RayType::NEE_RAY;
+        auxOut.depth++;
 
-    //    gOutRayAux[NEE_RAY_INDEX] = auxOut;
-    //    gOutBoundKeys[NEE_RAY_INDEX] = matLight;
-    //}
-    //else 
-    //InvalidRayWrite(NEE_RAY_INDEX);
+        gOutRayAux[NEE_RAY_INDEX] = auxOut;
+        gOutBoundKeys[NEE_RAY_INDEX] = matLight;
+    }
+    else InvalidRayWrite(NEE_RAY_INDEX);
 
     //// Check MIS Ray return if not requested (since no ray is allocated for it)
     //if(!renderState.directLightMIS) return;
