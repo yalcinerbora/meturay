@@ -113,6 +113,8 @@ class GDebugRendererPPG : public GDebugRendererI
         static constexpr GLenum     U_MAX_RADIANCE = 0;
         static constexpr GLenum     U_PERIMIETER_ON = 1;
         static constexpr GLenum     U_PERIMIETER_COLOR = 2;
+        static constexpr GLenum     U_MAX_DEPTH = 3;
+        
         // Textures
         static constexpr GLenum     T_IN_GRADIENT = 0;        
         // FBO Outputs

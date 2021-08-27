@@ -18,6 +18,7 @@
 #define OUT_VALUE layout(location = 1)
 
 #define U_MAX_RADIANCE layout(location = 0)
+#define U_MAX_DEPTH layout(location = 3)
 
 // Input
 // Per Vertex
@@ -34,6 +35,7 @@ out OUT_VALUE float fValue;
 
 // Uniforms
 U_MAX_RADIANCE uniform float maxRadiance;
+U_MAX_DEPTH uniform uint maxDepth;
 
 void main(void)
 {
@@ -41,7 +43,8 @@ void main(void)
 	float scale = pow(0.5f, vDepth);
 
 	// Determine Gradient UV
-	fUV = vec2(vRadiance / maxRadiance, 0.5f);
+	float u = (vRadiance / maxRadiance) / float(1 << (2 * (maxDepth - vDepth)));
+	fUV = vec2(u, 0.5f);
 
 	// Pass Value to Fragment Shader
 	fValue = vRadiance;

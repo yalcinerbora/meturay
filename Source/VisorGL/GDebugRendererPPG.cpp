@@ -195,6 +195,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
     assert(newTreeSize == offset);
     // Generate GPU Data    
     std::atomic<float> maxRadiance = -std::numeric_limits<float>::max();
+    std::atomic_uint32_t maxDepth = 0;
     std::atomic_uint32_t allocator = 0;
     auto CalculateGPUData = [&] (const DTreeNode& node)
     {
@@ -204,16 +205,9 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
             // Allocate an index
             uint32_t location = allocator++;
             // Calculate Irrad max irrad etc.
-            float irrad = node.irradianceEstimates[i];
-
-            // Atomic MAX
-            float expected = maxRadiance.load();
-            while(!maxRadiance.compare_exchange_strong(expected, std::max(expected, irrad)));
-            
-            radianceStart[location] = irrad;
+            float irrad = node.irradianceEstimates[i];                        
             // Calculate Depth & Offset
             uint32_t depth = 1;
-            //Vector2f offset = Vector2f(0.5f);//Zero2f;
             Vector2f offset(((i >> 0) & 0b01) ? 0.5f : 0.0f,
                             ((i >> 1) & 0b01) ? 0.5f : 0.0f);
 
@@ -236,11 +230,32 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
                 depth++;
                 // Traverse upwards
                 curNode = parentNode;
-            }            
+            }
+
+            // Atomic MAX DEPTH
+            uint32_t expectedDepth = maxDepth.load();
+            while(!maxDepth.compare_exchange_strong(expectedDepth, 
+                                                    std::max(expectedDepth, depth)));
+            // Store
+            radianceStart[location] = irrad;
             depthStart[location] = depth;
             offsetStart[location] = offset;
         }
-    };    
+    };   
+    auto CalculateMaxIrrad = [&] (uint32_t index)
+    {        
+        float irrad = radianceStart[index];
+        uint32_t depth = depthStart[index];
+
+        // Normalize irrad using depth/maxDept;
+        irrad /= static_cast<float>(1 << (2 * (maxDepth - depth)));
+
+        // Atomic MAX IRRAD          
+        float expectedIrrad = maxRadiance.load();
+        while(!maxRadiance.compare_exchange_strong(expectedIrrad,
+                                                   std::max(expectedIrrad, irrad)));
+    };
+
     // Edge case of node is parent and leaf
     if(dTreeNodes.size() == 0)
     {
@@ -256,6 +271,14 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
                       dTreeNodes.cbegin(),
                       dTreeNodes.cend(),
                       CalculateGPUData);
+        // After that calculate max irradiance
+        // TODO: use ranges (c++20) when available
+        std::vector<uint32_t> indices(squareCount);
+        std::iota(indices.begin(), indices.end(), 0);
+        std::for_each(std::execution::par_unseq,
+                      indices.cbegin(),
+                      indices.cend(),
+                      CalculateMaxIrrad);
         // Check that we properly did all
         assert(allocator.load() == squareCount.load());
     }
@@ -308,7 +331,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
 
     // Enable 2 Color Channels
     const GLenum Attachments[2] = {GL_COLOR_ATTACHMENT0 + OUT_COLOR,
-                               GL_COLOR_ATTACHMENT0 + OUT_VALUE};
+                                   GL_COLOR_ATTACHMENT0 + OUT_VALUE};
     glDrawBuffers(2, Attachments);
 
     // Change Viewport
@@ -329,6 +352,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
     vertDTreeRender.Bind();
     // Uniformd
     glUniform1f(U_MAX_RADIANCE, maxRadiance);
+    glUniform1ui(U_MAX_DEPTH, maxDepth);
     // Bind F Shader
     fragDTreeRender.Bind();
     // Uniforms
