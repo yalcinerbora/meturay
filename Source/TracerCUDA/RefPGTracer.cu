@@ -1,4 +1,4 @@
-﻿#include "PPGTracer.h"
+﻿#include "RefPGTracer.h"
 #include "RayTracer.hpp"
 
 #include "RayLib/GPUSceneI.h"
@@ -40,24 +40,6 @@ std::ostream& operator<<(std::ostream& stream, const RayAuxPPG& v)
     return stream;
 }
 
-__global__
-static void KCInitializePaths(PathGuidingNode* gPathNodes,
-                              uint32_t totalNodeCount)
-{
-    uint32_t globalId = threadIdx.x + blockIdx.x * blockDim.x;
-    if(globalId < totalNodeCount)
-    {
-        PathGuidingNode node;
-        node.nearestDTreeIndex = STree::InvalidDTreeIndex;
-        node.radFactor = Vector3f(1.0f);
-        node.prevNext = Vector<2, PathGuidingNode::IndexType>(PathGuidingNode::InvalidIndex);
-        node.totalRadiance = Zero3;
-        node.worldPosition = Zero3;// Vector3f(99.0f, 99.0f, 99.0f);
-
-        gPathNodes[globalId] = node;
-    }
-}
-
 template <class T>
 __global__ void KCConstructLightSampler(T* loc,
                                         const GPULightI** gLights,
@@ -70,8 +52,8 @@ __global__ void KCConstructLightSampler(T* loc,
     }
 }
 
-TracerError PPGTracer::LightSamplerNameToEnum(PPGTracer::LightSamplerType& ls,
-                                              const std::string& lsName)
+TracerError RefPGTracer::LightSamplerNameToEnum(RefPGTracer::LightSamplerType& ls,
+                                                const std::string& lsName)
 {
     const std::array<std::string, LightSamplerType::END> samplerNames =
     {
@@ -91,7 +73,7 @@ TracerError PPGTracer::LightSamplerNameToEnum(PPGTracer::LightSamplerType& ls,
     return TracerError::UNABLE_TO_INITIALIZE;
 }
 
-TracerError PPGTracer::ConstructLightSampler()
+TracerError RefPGTracer::ConstructLightSampler()
 {
     LightSamplerType lst;
     TracerError e = LightSamplerNameToEnum(lst, options.lightSamplerType);
@@ -124,41 +106,9 @@ TracerError PPGTracer::ConstructLightSampler()
     return TracerError::UNABLE_TO_INITIALIZE;
 }
 
-void PPGTracer::ResizeAndInitPathMemory()
-{
-    size_t totalPathNodeCount = TotalPathNodeCount();
-    //METU_LOG("Allocating PPGTracer global path buffer: Size %llu MiB",
-    //         totalPathNodeCount * sizeof(PathGuidingNode) / 1024 / 1024);
-
-    DeviceMemory::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(PathGuidingNode));
-    dPathNodes = static_cast<PathGuidingNode*>(pathMemory);
-
-    // Initialize Paths
-    const CudaGPU& bestGPU = cudaSystem.BestGPU();
-    if(totalPathNodeCount > 0)
-        bestGPU.KC_X(0, 0, totalPathNodeCount,
-                     //
-                     KCInitializePaths,
-                     //
-                     dPathNodes,
-                     static_cast<uint32_t>(totalPathNodeCount));
-
-}
-
-uint32_t PPGTracer::TotalPathNodeCount() const
-{
-    return (imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1] *
-            options.sampleCount * options.sampleCount) * MaximumPathNodePerPath();
-}
-
-uint32_t PPGTracer::MaximumPathNodePerPath() const
-{
-    return (options.maximumDepth == 0) ? 0 : (options.maximumDepth + 1);
-}
-
-PPGTracer::PPGTracer(const CudaSystem& s,
-                      const GPUSceneI& scene,
-                      const TracerParameters& p)
+RefPGTracer::RefPGTracer(const CudaSystem& s,
+                         const GPUSceneI& scene,
+                         const TracerParameters& p)
     : RayTracer(s, scene, p)
     , currentDepth(0)
     , currentTreeIteration(0)
@@ -169,7 +119,7 @@ PPGTracer::PPGTracer(const CudaSystem& s,
     pathWorkPool.AppendGenerators(PPGPathWorkerList{});
 }
 
-TracerError PPGTracer::Initialize()
+TracerError RefPGTracer::Initialize()
 {
     TracerError err = TracerError::OK;
     if((err = RayTracer::Initialize()) != TracerError::OK)
@@ -224,7 +174,7 @@ TracerError PPGTracer::Initialize()
     return TracerError::OK;
 }
 
-TracerError PPGTracer::SetOptions(const TracerOptionsI& opts)
+TracerError RefPGTracer::SetOptions(const TracerOptionsI& opts)
 {
     TracerError err = TracerError::OK;
     if((err = opts.GetUInt(options.maximumDepth, MAX_DEPTH_NAME)) != TracerError::OK)
@@ -241,24 +191,12 @@ TracerError PPGTracer::SetOptions(const TracerOptionsI& opts)
     if((err = opts.GetBool(options.directLightMIS, DIRECT_LIGHT_MIS_NAME)) != TracerError::OK)
         return err;
 
-    if((err = opts.GetBool(options.rawPathGuiding, RAW_PG_NAME)) != TracerError::OK)
-        return err;
-    if((err = opts.GetBool(options.alwaysSendSamples, ALWAYS_SEND_NAME)) != TracerError::OK)
-        return err;
-
-    if((err = opts.GetUInt(options.maxDTreeDepth, D_TREE_MAX_DEPTH_NAME)) != TracerError::OK)
-        return err;
-    if((err = opts.GetFloat(options.dTreeSplitThreshold, D_TREE_FLUX_RATIO_NAME)) != TracerError::OK)
-        return err;
-    if((err = opts.GetUInt(options.sTreeSplitThreshold, S_TREE_SAMPLE_SPLIT_NAME)) != TracerError::OK)
-        return err;
-    if((err = opts.GetBool(options.dumpDebugData, DUMP_DEBUG_NAME)) != TracerError::OK)
-        return err;
-
+    if((err = opts.GetUInt(options.maxSampleCount, MAX_SAMPLE_NAME)) != TracerError::OK)
+        return err;    
     return TracerError::OK;
 }
 
-bool PPGTracer::Render()
+bool RefPGTracer::Render()
 {
     // Check tracer termination conditions
     // Either there is no ray left for iteration or maximum depth is exceeded
@@ -365,7 +303,7 @@ bool PPGTracer::Render()
     return true;
 }
 
-void PPGTracer::Finalize()
+void RefPGTracer::Finalize()
 {
     cudaSystem.SyncAllGPUs();
 
@@ -476,7 +414,7 @@ void PPGTracer::Finalize()
     }
 }
 
-void PPGTracer::GenerateWork(int cameraId)
+void RefPGTracer::GenerateWork(int cameraId)
 {
     if(callbacks)
         callbacks->SendCurrentCamera(SceneCamToVisorCam(cameraId));
@@ -491,7 +429,7 @@ void PPGTracer::GenerateWork(int cameraId)
     currentDepth = 0;
 }
 
-void PPGTracer::GenerateWork(const VisorCamera& cam)
+void RefPGTracer::GenerateWork(const VisorCamera& cam)
 {
     GenerateRays<RayAuxPPG, RayAuxInitPPG>(cam, options.sampleCount,
                                            RayAuxInitPPG(InitialPPGAux,

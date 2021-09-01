@@ -100,6 +100,9 @@
     <Filter Include="Tracers\PPGTracer\Aux Classes">
       <UniqueIdentifier>{7394a667-89ad-4994-ad2c-baae0185247f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Tracers\RefPGTracer">
+      <UniqueIdentifier>{39ee0dcd-7b4d-42ee-b980-9291c264f916}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveSphere.cpp">
@@ -525,6 +528,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraSpherical.cuh">
       <Filter>Cameras</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracer.h">
+      <Filter>Tracers\RefPGTracer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">
@@ -661,6 +667,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUCameraSpherical.cu">
       <Filter>Cameras</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RefPGTracer.cu">
+      <Filter>Tracers\RefPGTracer</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

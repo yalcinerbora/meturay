@@ -135,7 +135,8 @@ void PPGTracerBoundaryWork(// Output
             uint32_t dTreeIndex = gLocalPathNodes[aux.depth].nearestDTreeIndex;
             DTreeGPU* dWriteTree = renderState.gWriteDTrees[dTreeIndex];
             
-            dWriteTree->AddRadianceToLeaf(r.getDirection(), Utility::RGBToLuminance(total));
+            dWriteTree->AddRadianceToLeaf(r.getDirection(), Utility::RGBToLuminance(total),
+                                          true);
             //dWriteTree->AddRadianceToLeaf(r.getDirection(), 1.0f);
 
             //if(total != Vector3f(0.0f))

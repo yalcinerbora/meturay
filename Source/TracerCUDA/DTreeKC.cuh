@@ -46,7 +46,8 @@ struct DTreeGPU
     __device__ Vector3f         Sample(float& pdf, RandomGPU& rng) const;
     __device__ float            Pdf(const Vector3f& worldDir) const;
     __device__ void             AddRadianceToLeaf(const Vector3f& worldDir,
-                                                  float radiance);
+                                                  float radiance,
+                                                  bool incrementSampleCount = false);
 };
 
 __device__ __forceinline__
@@ -326,7 +327,8 @@ float DTreeGPU::Pdf(const Vector3f& worldDir) const
 }
 
 __device__ __forceinline__
-void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance)
+void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance, 
+                                 bool incrementSampleCount)
 {    
     Vector2f discreteCoords = WorldDirToTreeCoords(worldDir);
     assert(discreteCoords <= Vector2f(1.0f) && discreteCoords >= Vector2f(0.0f));
@@ -356,6 +358,9 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance)
         localCoords = node->NormalizeCoordsForChild(childIndex, localCoords);
         node = gRoot + node->childIndices[childIndex];
     }
+
+    // Finally add a sample if required
+    if(incrementSampleCount) atomicAdd(&totalSamples, 1);
 }
 
 __device__ __forceinline__ 
