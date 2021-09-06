@@ -1,6 +1,8 @@
 #pragma once
 
-#include "RayTracer.h"
+#include "PathTracer.h"
+#include "DirectTracer.h"
+
 #include "WorkPool.h"
 #include "GPULightI.h"
 #include "STree.cuh"
@@ -8,10 +10,10 @@
 class GPUDirectLightSamplerI;
 struct PathGuidingNode;
 
-class RefPGTracer final : public RayTracer
+class RefPGTracer : public GPUTracerI
 {
     public:
-        static constexpr const char* TypeName() { return "PPGTracer"; }
+        static constexpr const char* TypeName() { return "RefPGTracer"; }
 
         static constexpr const char* MAX_DEPTH_NAME             = "MaxDepth";
         static constexpr const char* SAMPLE_NAME                = "Samples";        
@@ -21,13 +23,6 @@ class RefPGTracer final : public RayTracer
         
         static constexpr const char* NEE_NAME                   = "NextEventEstimation";
         static constexpr const char* DIRECT_LIGHT_MIS_NAME      = "DirectLightMIS";
-        
-        enum LightSamplerType
-        {
-            UNIFORM,
-
-            END
-        };
 
         struct Options
         {
@@ -37,50 +32,35 @@ class RefPGTracer final : public RayTracer
 
             uint32_t            rrStart             = 3;
 
+            //
+            Vector2i            resolution          = Vector2i(1024);
+
             std::string         lightSamplerType    = "Uniform";
-
-            // Paper Related
-            uint32_t            maxDTreeDepth       = 32;
-            uint32_t            maxSDTreeSizeMB     = 512;
-            uint32_t            sTreeSplitThreshold = 12000;
-            float               dTreeSplitThreshold = 0.01f;
-
             // Misc
-            bool                alwaysSendSamples   = false;
-            bool                rawPathGuiding      = true;
-
             bool                nextEventEstimation = true;            
-            bool                directLightMIS      = false;
-
-            bool                dumpDebugData       = false;
-            
+            bool                directLightMIS      = false;            
         };
 
-        static constexpr bool   USE_SINGLE_PATH_KERNEL = true;
-
     private:
-        Options                         options;
-        uint32_t                        currentDepth;
-        WorkBatchMap                    workMap;
-        // Work Pools
-        WorkPool<bool, bool, bool>      boundaryWorkPool;
-        WorkPool<bool, bool>            pathWorkPool;
-        // Light Sampler Memory and Pointer
-        DeviceMemory                    lightSamplerMemory;
-        const GPUDirectLightSamplerI*   dLightSampler;
-        // Path Memory
-        DeviceMemory                    pathMemory;
-        PathGuidingNode*                dPathNodes;
-        // Global STree
-        std::unique_ptr<STree>          sTree;
+        Options                         options;              
         // Internal State
-        uint32_t                        currentTreeIteration;
-        uint32_t                        nextTreeSwap;
-        // Misc
-
-        static TracerError              LightSamplerNameToEnum(LightSamplerType&,
-                                                               const std::string&);
-        TracerError                     ConstructLightSampler();
+        uint32_t                        currentPixel;
+        uint32_t                        currentDepth;
+        uint32_t                        currentSample;
+        // Tracers
+        PathTracer                      pathTracer;
+        DirectTracer                    directTracer;
+        // Callbacks
+        TracerCallbacksI*               callbacks;
+        bool                            crashed;
+        // Params
+        TracerParameters                params;
+        Vector2i                        portionStart; 
+        Vector2i                        portionEnd;
+        //
+        //const CudaSystem&               cudaSystem;
+        // List of Pixel Locations
+        std::vector<Vector3f>           pixelLocations;
 
     protected:
     public:
@@ -98,7 +78,24 @@ class RefPGTracer final : public RayTracer
         void                    GenerateWork(const VisorCamera&) override;
         bool                    Render() override;
         void                    Finalize() override;
+
+        // Response form Tracer
+        void                    AttachTracerCallbacks(TracerCallbacksI&) override;
+        // Commands to Tracer
+        void                    SetParameters(const TracerParameters&) override;
+        void                    AskParameters() override;
+        // Image Related Commands
+        void                    SetImagePixelFormat(PixelFormat) override;
+        void                    ReportionImage(Vector2i start = Zero2i,
+                                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+        void                    ResizeImage(Vector2i resolution) override;
+        void                    ResetImage() override;
 };
+
+inline void RefPGTracer::AttachTracerCallbacks(TracerCallbacksI& tc)
+{
+    callbacks = &tc;
+}
 
 static_assert(IsTracerClass<RefPGTracer>::value,
               "RefPGTracer is not a Tracer Class.");
