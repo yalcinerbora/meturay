@@ -7,8 +7,7 @@
 #include "GPULightI.h"
 #include "STree.cuh"
 
-class GPUDirectLightSamplerI;
-struct PathGuidingNode;
+class GPUCameraSpherical;
 
 class RefPGTracer : public GPUTracerI
 {
@@ -58,9 +57,12 @@ class RefPGTracer : public GPUTracerI
         Vector2i                        portionStart; 
         Vector2i                        portionEnd;
         //
-        //const CudaSystem&               cudaSystem;
+        const CudaSystem&               cudaSystem;
         // List of Pixel Locations
         std::vector<Vector3f>           pixelLocations;
+        // Spherical Camera (for PT Rendering=
+        DeviceMemory                    memory;
+        GPUCameraSpherical*             dSphericalCamera;
 
     protected:
     public:

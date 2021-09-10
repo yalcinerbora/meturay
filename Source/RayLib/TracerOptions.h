@@ -17,7 +17,7 @@ using OptionVariable = std::variant<bool, int32_t, uint32_t, float,
                                     Vector2i, Vector2ui,
                                     Vector2, Vector3, Vector4,
                                     std::string>;
-// Cuda did not liked this :(
+// Cuda (nvcc) did not liked this :(
 
 using VariableList = std::map<std::string, OptionVariable>;
 

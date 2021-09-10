@@ -2,16 +2,17 @@
 #include "CudaSystem.hpp"
 #include "RayLib/MemoryAlignment.h"
 
-__global__ void KCConstructGPUCameraSpherical(GPUCameraSpherical* gCameraLocations,
-                                              //
-                                              const CPUCameraGroupSpherical::Data* gData,
-                                              //
-                                              const TransformId* gTransformIds,
-                                              const uint16_t* gMediumIndices,
-                                              const HitKey* gCameraMaterialIds,
-                                              //
-                                              const GPUTransformI** gTransforms,
-                                              uint32_t lightCount)
+__global__
+void KCConstructGPUCameraSpherical(GPUCameraSpherical* gCameraLocations,
+                                   //
+                                   const CPUCameraGroupSpherical::Data* gData,
+                                   //
+                                   const TransformId* gTransformIds,
+                                   const uint16_t* gMediumIndices,
+                                   const HitKey* gCameraMaterialIds,
+                                   //
+                                   const GPUTransformI** gTransforms,
+                                   uint32_t lightCount)
 {
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < lightCount;
