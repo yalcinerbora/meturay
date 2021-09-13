@@ -29,6 +29,10 @@ class RayTracer : public GPUTracer
                                              const AuxInitFunctor& initFunctor,
                                              bool antiAliasOn = true);
         template <class AuxStruct, class AuxInitFunctor>
+        void                    GenerateRays(const GPUCameraI& dCamera, int32_t sampleCount,
+                                             const AuxInitFunctor& initFunctor,
+                                             bool antiAliasOn = true);
+        template <class AuxStruct, class AuxInitFunctor>
         void                    GenerateRays(const VisorCamera& camera, int32_t sampleCount,
                                              const AuxInitFunctor& initFunctor,
                                              bool antiAliasOn = true);

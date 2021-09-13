@@ -327,3 +327,12 @@ void PathTracer::GenerateWork(const VisorCamera& cam)
                                              RayAuxInitPath(InitialPathAux));
     currentDepth = 0;
 }
+
+void PathTracer::GenerateWork(const GPUCameraI& dCam)
+{
+    GenerateRays<RayAuxPPG, RayAuxInitPPG>(dCam, options.sampleCount,
+                                           RayAuxInitPPG(InitialPPGAux,
+                                                         options.sampleCount *
+                                                         options.sampleCount));
+    currentDepth = 0;
+}

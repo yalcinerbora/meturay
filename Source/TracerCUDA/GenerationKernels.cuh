@@ -120,30 +120,25 @@ void KCGenerateCameraRaysCPU(// Output
     }
 }
 
-// Templated Camera Ray Generation Kernel
 template<class RayAuxData, class AuxInitFunctor>
-__global__ CUDA_LAUNCH_BOUNDS_1D
-void KCGenerateCameraRaysGPU(// Output
-                             RayGMem* gRays,
-                             RayAuxData* gAuxiliary,
-                             ImageGMem<Vector4f> imgMem,
-                             // Input
-                             RNGGMem gRNGStates,
-                             const GPUCameraI** gCameras,
-                             const uint32_t sceneCamId,
-                             const uint32_t samplePerLocation,
-                             const Vector2i resolution,
-                             const Vector2i pixelStart,
-                             const Vector2i pixelCount,
-                             // Functor to initialize auxiliary base data
-                             const AuxInitFunctor auxInitF,
-                             // Options
-                             bool antiAliasOn)
+__device__ __forceinline__
+void GenerateCameraRaysGPU(// Output
+                           RayGMem* gRays,
+                           RayAuxData* gAuxiliary,
+                           ImageGMem<Vector4f> imgMem,
+                           // Input
+                           RNGGMem gRNGStates,
+                           const GPUCameraI& gCamera,
+                           const uint32_t samplePerLocation,
+                           const Vector2i resolution,
+                           const Vector2i pixelStart,
+                           const Vector2i pixelCount,
+                           // Functor to initialize auxiliary base data
+                           const AuxInitFunctor auxInitF,
+                           // Options
+                           bool antiAliasOn)
 {
     RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
-
-    // Fetch Camera
-    const GPUCameraI* gCam = gCameras[sceneCamId];
 
     // Total work
     const Vector2i totalSamples = Vector2i(pixelCount[0] * samplePerLocation,
@@ -162,7 +157,7 @@ void KCGenerateCameraRaysGPU(// Output
         Vector2i globalPixelId = pixelStart + (threadId2d / samplePerLocation);
 
         RayReg ray;
-        gCam->GenerateRay(ray,
+        gCamera.GenerateRay(ray,
                           //
                           globalSampleId,
                           totalSamples,
@@ -183,11 +178,87 @@ void KCGenerateCameraRaysGPU(// Output
                  // Input
                  ray,
                  // Index
-                 gCam->MediumIndex(),
+                 gCamera.MediumIndex(),
                  pixelIdLinear,
                  sampleIdLinear);
 
         // Initialize Samples
         ImageAddSample(imgMem, pixelIdLinear, 1);
     }
+}
+
+// Templated Camera Ray Generation Kernel
+template<class RayAuxData, class AuxInitFunctor>
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void KCGenCameraRaysFromArrayGPU(// Output
+                                 RayGMem* gRays,
+                                 RayAuxData* gAuxiliary,
+                                 ImageGMem<Vector4f> imgMem,
+                                 // Input
+                                 RNGGMem gRNGStates,
+                                 const GPUCameraI** gCameras,
+                                 const uint32_t sceneCamId,
+                                 const uint32_t samplePerLocation,
+                                 const Vector2i resolution,
+                                 const Vector2i pixelStart,
+                                 const Vector2i pixelCount,
+                                 // Functor to initialize auxiliary base data
+                                 const AuxInitFunctor auxInitF,
+                                 // Options
+                                 bool antiAliasOn)
+{
+    // Fetch Camera
+    const GPUCameraI* gCam = gCameras[sceneCamId];
+
+    GenerateCameraRaysGPU(// Output
+                          gRays,
+                          gAuxiliary,
+                          imgMem,
+                          // Input
+                          gRNGStates,
+                          *gCam,
+                          samplePerLocation,
+                          resolution,
+                          pixelStart,
+                          pixelCount,
+                          // Functor to initialize auxiliary base data
+                          auxInitF,
+                          // Options
+                          antiAliasOn);
+}
+
+// Templated Camera Ray Generation Kernel
+template<class RayAuxData, class AuxInitFunctor>
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void KCGenCameraRaysFromObjectGPU(// Output
+                                  RayGMem* gRays,
+                                  RayAuxData* gAuxiliary,
+                                  ImageGMem<Vector4f> imgMem,
+                                  // Input
+                                  RNGGMem gRNGStates,
+                                  const GPUCameraI& gCamera,
+                                  const uint32_t samplePerLocation,
+                                  const Vector2i resolution,
+                                  const Vector2i pixelStart,
+                                  const Vector2i pixelCount,
+                                  // Functor to initialize auxiliary base data
+                                  const AuxInitFunctor auxInitF,
+                                  // Options
+                                  bool antiAliasOn)
+{
+    GenerateCameraRaysGPU(// Output
+                          gRays,
+                          gAuxiliary,
+                          imgMem,
+                          // Input
+                          gRNGStates,
+                          gCamera,
+                          samplePerLocation,
+                          resolution,
+                          pixelStart,
+                          pixelCount,
+                          // Functor to initialize auxiliary base data
+                          auxInitF,
+                          // Options
+                          antiAliasOn);
 }

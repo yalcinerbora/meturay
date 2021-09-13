@@ -241,3 +241,16 @@ void DirectTracer::GenerateWork(const VisorCamera& c)
                                                RayAuxInitBasic(InitialBasicAux),
                                                antiAlias);
 }
+
+void DirectTracer::GenerateWork(const GPUCameraI& dCam)
+{
+    // TODO: Save This GPU Camera to GPU memory for depth map generation;
+    currentCameraId = 0;
+    // Only use anti-alias when furnace mode is on
+    bool antiAlias = (options.renderType == RenderType::RENDER_FURNACE) ? true : false;
+    // Generate Rays
+    GenerateRays<RayAuxBasic, RayAuxInitBasic>(dCam,
+                                               options.sampleCount,
+                                               RayAuxInitBasic(InitialBasicAux),
+                                               antiAlias);
+}

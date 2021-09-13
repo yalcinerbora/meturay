@@ -500,3 +500,13 @@ void PPGTracer::GenerateWork(const VisorCamera& cam)
     ResizeAndInitPathMemory();
     currentDepth = 0;
 }
+
+void PPGTracer::GenerateWork(const GPUCameraI& dCam)
+{
+    GenerateRays<RayAuxPPG, RayAuxInitPPG>(dCam, options.sampleCount,
+                                           RayAuxInitPPG(InitialPPGAux,
+                                                         options.sampleCount *
+                                                         options.sampleCount));
+    ResizeAndInitPathMemory();
+    currentDepth = 0;
+}
