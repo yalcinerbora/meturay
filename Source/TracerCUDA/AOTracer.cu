@@ -105,6 +105,15 @@ void AOTracer::GenerateWork(const VisorCamera& cam)
                                          RayAuxInitAO(InitialAOAux));
 }
 
+void AOTracer::GenerateWork(const GPUCameraI& dCam)
+{
+    depth = 0;
+    hitPhase = false;
+    GenerateRays<RayAuxAO, RayAuxInitAO>(dCam,
+                                         options.sampleCount,
+                                         RayAuxInitAO(InitialAOAux));
+}
+
 bool AOTracer::Render()
 {
     HitAndPartitionRays();

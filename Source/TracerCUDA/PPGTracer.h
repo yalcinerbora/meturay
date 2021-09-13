@@ -104,6 +104,7 @@ class PPGTracer final : public RayTracer
 
         void                    GenerateWork(int cameraId) override;
         void                    GenerateWork(const VisorCamera&) override;
+        void                    GenerateWork(const GPUCameraI&) override;
         bool                    Render() override;
         void                    Finalize() override;
 };
