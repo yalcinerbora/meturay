@@ -49,7 +49,7 @@ SceneError CPUCameraGroupSpherical::InitializeGroup(const CameraGroupDataList& c
     for(const auto& node : cameraNodes)
     {
         // Convert Ids to inner index
-        uint32_t mediumIndex = mediumIdIndexPairs.at(node.mediumId);
+        uint16_t mediumIndex = static_cast<uint16_t>(mediumIdIndexPairs.at(node.mediumId));
         uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
         HitKey materialKey = HitKey::CombinedKey(cameraMaterialBatchId,
                                                  innerIndex);
@@ -76,7 +76,7 @@ SceneError CPUCameraGroupSpherical::InitializeGroup(const CameraGroupDataList& c
         // TODO: Fix
         visorCameraList.push_back(VisorCamera
                                   {
-                                      static_cast<uint16_t>(mediumIndex),
+                                      mediumIndex,
                                       materialKey,
                                       positions[0] + directions[0],
                                       nearFar[0][0],

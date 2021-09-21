@@ -14,8 +14,8 @@ std::vector<T> SceneNodeJson::AccessSingle(const std::string& name,
     for(const auto& list : idIndexPairs)
     {
         const InnerIndex i = list.second;
-        const nlohmann::json& node = (isMultiNode) ? nodeInner[i] : nodeInner;
-        result.push_back(LoadF(node, time));
+        const nlohmann::json& innerNode = (isMultiNode) ? nodeInner[i] : nodeInner;
+        result.push_back(LoadF(innerNode, time));
     }
     return std::move(result);
 }
@@ -74,9 +74,9 @@ std::vector<std::vector<T>> SceneNodeJson::AccessList(const std::string& name,
         result.emplace_back();
 
         const InnerIndex i = list.second;
-        const nlohmann::json& node = (isMultiNode) ? nodeInner[i] : nodeInner;
+        const nlohmann::json& innerNode = (isMultiNode) ? nodeInner[i] : nodeInner;
 
-        for(const nlohmann::json& n : node)
+        for(const nlohmann::json& n : innerNode)
             result.back().push_back(LoadF(n, time));
     }
     return std::move(result);
@@ -105,19 +105,19 @@ OptionalNodeList<T> SceneNodeJson::AccessOptional(const std::string& name,
     for(const auto& list : idIndexPairs)
     {
         const InnerIndex i = list.second;
-        const nlohmann::json& node = (isMultiNode) ? nodeInner[i] : nodeInner;
+        const nlohmann::json& innerNode = (isMultiNode) ? nodeInner[i] : nodeInner;
 
         OptionalNode<T> optNode;
-        if(node.is_string())
+        if(innerNode.is_string())
         {
-            std::string s = node;
+            std::string s = innerNode;
             if(s == "")
                 optNode.first = false;
         }
         else
         {
             optNode.first = true;
-            optNode.second = LoadF(node, time);
+            optNode.second = LoadF(innerNode, time);
         }
         result.push_back(optNode);
     }
@@ -146,19 +146,19 @@ TexturedDataNodeList<T> SceneNodeJson::AccessTextured(const std::string& name,
     for(const auto& list : idIndexPairs)
     {
         const InnerIndex i = list.second;
-        const nlohmann::json& node = (isMultiNode) ? nodeInner[i] : nodeInner;
+        const nlohmann::json& innerNode = (isMultiNode) ? nodeInner[i] : nodeInner;
 
         TexturedDataNode<T> texNode;
-        if(node.is_object())
+        if(innerNode.is_object())
         {
-            NodeTextureStruct n = SceneIO::LoadNodeTextureStruct(node, time);
+            NodeTextureStruct n = SceneIO::LoadNodeTextureStruct(innerNode, time);
             texNode.isTexture = true;
             texNode.texNode = n;
         }
         else
         {
             texNode.isTexture = false;
-            texNode.data = LoadF(node, time);
+            texNode.data = LoadF(innerNode, time);
         }
         result.push_back(texNode);
     }
@@ -176,8 +176,8 @@ SceneNodeJson::SceneNodeJson(const nlohmann::json& jsn, NodeId id, bool forceFet
         {
             isMultiNode = true;
             uint32_t i = 0;
-            for(uint32_t id : idList)
-                AddIdIndexPair(id, i);
+            for(uint32_t idNo : idList)
+                AddIdIndexPair(idNo, i);
         }
         else AddIdIndexPair(idList, 0);
     }
@@ -322,9 +322,9 @@ std::vector<size_t> SceneNodeJson::AccessListCount(const std::string& name) cons
     for(const auto& list : idIndexPairs)
     {
         const InnerIndex i = list.second;
-        const nlohmann::json& node = (isMultiNode) ? nodeInner[i] : nodeInner;
+        const nlohmann::json& innerNode = (isMultiNode) ? nodeInner[i] : nodeInner;
 
-        result.push_back(node.size());
+        result.push_back(innerNode.size());
     }
     return std::move(result);
 }

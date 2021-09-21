@@ -52,7 +52,7 @@ class GPUCameraPinhole final : public GPUCameraI
                                         // Options
                                         bool antiAliasOn) const override;
         __device__ float    Pdf(const Vector3& direction,
-                                const Vector3 position) const override;
+                                const Vector3& position) const override;
 
 
         __device__ uint32_t         FindPixelId(const RayReg& r,
@@ -122,7 +122,7 @@ class CPUCameraGroupPinhole final : public CPUCameraGroupI
                                                    const std::string& scenePath) override;
         TracerError					    ConstructCameras(const CudaSystem&,
                                                          const GPUTransformI**) override;
-        uint32_t					    CameraCount() const override;
+        uint32_t					        CameraCount() const override;
 
         size_t						    UsedGPUMemory() const override;
         size_t						    UsedCPUMemory() const override;
@@ -219,8 +219,8 @@ inline void GPUCameraPinhole::GenerateRay(// Output
 }
 
 __device__ 
-inline float GPUCameraPinhole::Pdf(const Vector3& direction,
-                                   const Vector3 position) const
+inline float GPUCameraPinhole::Pdf(const Vector3& worldDir,
+                                   const Vector3& worldPos) const
 {
     return 0.0f;
 }

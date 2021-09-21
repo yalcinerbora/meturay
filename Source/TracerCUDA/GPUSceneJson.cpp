@@ -34,7 +34,7 @@ void GPUSceneJson::ExpandHitStructSize(const GPUPrimitiveGroupI& pg)
     hitStructSize = std::max(hitStructSize, newHit);
 }
 
-SceneError GPUSceneJson::OpenFile(const std::u8string& fileName)
+SceneError GPUSceneJson::OpenFile(const std::u8string& filePath)
 {
     // TODO: get a lightweight lexer and strip comments
     // from json since json does not support comments
@@ -42,7 +42,7 @@ SceneError GPUSceneJson::OpenFile(const std::u8string& fileName)
     // not convenient without comments.
 
     // Always assume filenames are UTF-8
-    const auto path = std::filesystem::path(fileName);
+    const auto path = std::filesystem::path(filePath);
     std::ifstream file(path);
 
     if(!file.is_open()) return SceneError::FILE_NOT_FOUND;
@@ -100,8 +100,8 @@ SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
             auto r = result.emplace(jsn[NodeNames::ID], std::make_pair(i, 0));
             if(!r.second)
             {
-                unsigned int i = static_cast<int>(SceneError::DUPLICATE_ACCELERATOR_ID) + t;
-                return static_cast<SceneError::Type>(i);
+                unsigned int scnErrInt = static_cast<int>(SceneError::DUPLICATE_ACCELERATOR_ID) + t;
+                return static_cast<SceneError::Type>(scnErrInt);
             }
         }
         else
@@ -163,17 +163,17 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                                                   double time)
 {
     const nlohmann::json emptyJson;
-    const nlohmann::json* surfaces = nullptr;
-    const nlohmann::json* primitives = nullptr;
-    const nlohmann::json* materials = nullptr;
-    const nlohmann::json* lights = nullptr;
-    const nlohmann::json* cameras = nullptr;
-    const nlohmann::json* accelerators = nullptr;
-    const nlohmann::json* transforms = nullptr;
-    const nlohmann::json* mediums = nullptr;
-    const nlohmann::json* cameraSurfaces = nullptr;
-    const nlohmann::json* lightSurfaces = nullptr;
-    const nlohmann::json* textures = nullptr;
+    const nlohmann::json* surfacesJson = nullptr;
+    const nlohmann::json* primitivesJson = nullptr;
+    const nlohmann::json* materialsJson = nullptr;
+    const nlohmann::json* lightsJson = nullptr;
+    const nlohmann::json* camerasJson = nullptr;
+    const nlohmann::json* acceleratorsJson = nullptr;
+    const nlohmann::json* transformsJson = nullptr;
+    const nlohmann::json* mediumsJson = nullptr;
+    const nlohmann::json* cameraSurfacesJson = nullptr;
+    const nlohmann::json* lightSurfacesJson = nullptr;
+    const nlohmann::json* texturesJson = nullptr;
     uint32_t identityTransformId = std::numeric_limits<uint32_t>::max();
 
     IndexLookup primList;
@@ -191,7 +191,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         {
             const NodeIndex nIndex = loc->second.first;
             const InnerIndex iIndex = loc->second.second;
-            const auto& jsnNode = (*mediums)[nIndex];
+            const auto& jsnNode = (*mediumsJson)[nIndex];
             std::string mediumType = jsnNode[NodeNames::TYPE];
 
             auto& mediumSet = mediumGroupNodes.emplace(mediumType, NodeListing()).first->second;
@@ -225,7 +225,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         {
             const NodeIndex nIndex = loc->second.first;
             const InnerIndex iIndex = loc->second.second;
-            const auto& jsnNode = (*materials)[nIndex];
+            const auto& jsnNode = (*materialsJson)[nIndex];
 
             std::string matName = jsnNode[NodeNames::TYPE];
             const std::string matGroupType = matName;
@@ -254,7 +254,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         {
             const NodeIndex nIndex = loc->second.first;
             const InnerIndex iIndex = loc->second.second;
-            const auto& jsnNode = (*transforms)[nIndex];
+            const auto& jsnNode = (*transformsJson)[nIndex];
             std::string transformType = jsnNode[NodeNames::TYPE];
 
             if(transformType == NodeNames::TRANSFORM_IDENTITY)
@@ -279,7 +279,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         if(auto loc = acceleratorList.find(accId); loc != acceleratorList.end())
         {
             accIndex = loc->second.first;
-            accNode = &(*accelerators)[accIndex];
+            accNode = &(*acceleratorsJson)[accIndex];
             accType = (*accNode)[NodeNames::TYPE];
         }
         else return SceneError::ACCELERATOR_ID_NOT_FOUND;
@@ -304,30 +304,30 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     SceneError e = SceneError::OK;
 
     // Load Id Based Arrays
-    if(!FindNode(cameraSurfaces, NodeNames::CAMERA_SURFACE_BASE)) return SceneError::CAMERA_SURFACES_ARRAY_NOT_FOUND;
-    if(!FindNode(lightSurfaces, NodeNames::LIGHT_SURFACE_BASE)) return SceneError::LIGHT_SURFACES_ARRAY_NOT_FOUND;
-    if(!FindNode(surfaces, NodeNames::SURFACE_BASE)) return SceneError::SURFACES_ARRAY_NOT_FOUND;
-    if(!FindNode(primitives, NodeNames::PRIMITIVE_BASE)) return SceneError::PRIMITIVES_ARRAY_NOT_FOUND;
-    if(!FindNode(materials, NodeNames::MATERIAL_BASE)) return SceneError::MATERIALS_ARRAY_NOT_FOUND;
-    if(!FindNode(lights, NodeNames::LIGHT_BASE)) return SceneError::LIGHTS_ARRAY_NOT_FOUND;
-    if(!FindNode(cameras, NodeNames::CAMERA_BASE)) return SceneError::CAMERAS_ARRAY_NOT_FOUND;
-    if(!FindNode(accelerators, NodeNames::ACCELERATOR_BASE)) return SceneError::ACCELERATORS_ARRAY_NOT_FOUND;
-    if(!FindNode(transforms, NodeNames::TRANSFORM_BASE)) return SceneError::TRANSFORMS_ARRAY_NOT_FOUND;
-    if(!FindNode(mediums, NodeNames::MEDIUM_BASE)) return SceneError::MEDIUM_ARRAY_NOT_FOUND;
-    if(!FindNode(textures, NodeNames::TEXTURE_BASE)) textures = &emptyJson;
-    if((e = GenIdLookup(primList, *primitives, PRIMITIVE)) != SceneError::OK)
+    if(!FindNode(cameraSurfacesJson, NodeNames::CAMERA_SURFACE_BASE)) return SceneError::CAMERA_SURFACES_ARRAY_NOT_FOUND;
+    if(!FindNode(lightSurfacesJson, NodeNames::LIGHT_SURFACE_BASE)) return SceneError::LIGHT_SURFACES_ARRAY_NOT_FOUND;
+    if(!FindNode(surfacesJson, NodeNames::SURFACE_BASE)) return SceneError::SURFACES_ARRAY_NOT_FOUND;
+    if(!FindNode(primitivesJson, NodeNames::PRIMITIVE_BASE)) return SceneError::PRIMITIVES_ARRAY_NOT_FOUND;
+    if(!FindNode(materialsJson, NodeNames::MATERIAL_BASE)) return SceneError::MATERIALS_ARRAY_NOT_FOUND;
+    if(!FindNode(lightsJson, NodeNames::LIGHT_BASE)) return SceneError::LIGHTS_ARRAY_NOT_FOUND;
+    if(!FindNode(camerasJson, NodeNames::CAMERA_BASE)) return SceneError::CAMERAS_ARRAY_NOT_FOUND;
+    if(!FindNode(acceleratorsJson, NodeNames::ACCELERATOR_BASE)) return SceneError::ACCELERATORS_ARRAY_NOT_FOUND;
+    if(!FindNode(transformsJson, NodeNames::TRANSFORM_BASE)) return SceneError::TRANSFORMS_ARRAY_NOT_FOUND;
+    if(!FindNode(mediumsJson, NodeNames::MEDIUM_BASE)) return SceneError::MEDIUM_ARRAY_NOT_FOUND;
+    if(!FindNode(texturesJson, NodeNames::TEXTURE_BASE)) texturesJson = &emptyJson;
+    if((e = GenIdLookup(primList, *primitivesJson, PRIMITIVE)) != SceneError::OK)
         return e;
-    if((e = GenIdLookup(materialList, *materials, MATERIAL)) != SceneError::OK)
+    if((e = GenIdLookup(materialList, *materialsJson, MATERIAL)) != SceneError::OK)
         return e;
-    if((e = GenIdLookup(acceleratorList, *accelerators, ACCELERATOR)) != SceneError::OK)
+    if((e = GenIdLookup(acceleratorList, *acceleratorsJson, ACCELERATOR)) != SceneError::OK)
         return e;
-    if((e = GenIdLookup(transformList, *transforms, TRANSFORM)) != SceneError::OK)
+    if((e = GenIdLookup(transformList, *transformsJson, TRANSFORM)) != SceneError::OK)
         return e;
-    if((e = GenIdLookup(mediumList, *mediums, MEDIUM)) != SceneError::OK)
+    if((e = GenIdLookup(mediumList, *mediumsJson, MEDIUM)) != SceneError::OK)
         return e;
-    if((e = GenIdLookup(lightList, *lights, LIGHT)) != SceneError::OK)
+    if((e = GenIdLookup(lightList, *lightsJson, LIGHT)) != SceneError::OK)
         return e;
-    if((e = GenIdLookup(cameraList, *cameras, CAMERA)) != SceneError::OK)
+    if((e = GenIdLookup(cameraList, *camerasJson, CAMERA)) != SceneError::OK)
         return e;
 
     // Initially Find Identity Transform If available
@@ -336,7 +336,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     for(const auto& tNode : transformList)
     {
         const NodeIndex nIndex = tNode.second.first;
-        const auto& jsnNode = (*transforms)[nIndex];
+        const auto& jsnNode = (*transformsJson)[nIndex];
         std::string transformType = jsnNode[NodeNames::TYPE];
         if(transformType == NodeNames::TRANSFORM_IDENTITY)
         {
@@ -358,7 +358,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     // Iterate over surfaces
     // and collect data for groups and batches
     uint32_t surfId = 0;
-    for(const auto& jsn : (*surfaces))
+    for(const auto& jsn : (*surfacesJson))
     {
         SurfaceStruct surf = SceneIO::LoadSurface(jsn);
         const uint32_t transformId = surf.transformId;
@@ -378,7 +378,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             {
                 const NodeIndex nIndex = loc->second.first;
                 const InnerIndex iIndex = loc->second.second;
-                const auto& jsnNode = (*primitives)[nIndex];
+                const auto& jsnNode = (*primitivesJson)[nIndex];
 
                 std::string currentType = jsnNode[NodeNames::TYPE];
 
@@ -443,7 +443,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     }
 
     // Process Lights
-    for(const auto& jsn : (*lightSurfaces))
+    for(const auto& jsn : (*lightSurfacesJson))
     {
         LightSurfaceStruct s = SceneIO::LoadLightSurface(baseMediumId,
                                                          identityTransformId,
@@ -459,7 +459,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             {
                 const NodeIndex nIndex = loc->second.first;
                 const InnerIndex iIndex = loc->second.second;
-                const auto& jsnNode = (*primitives)[nIndex];
+                const auto& jsnNode = (*primitivesJson)[nIndex];
 
                 primTypeName = jsnNode[NodeNames::TYPE];
 
@@ -502,7 +502,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             {
                 const NodeIndex nIndex = loc->second.first;
                 const InnerIndex iIndex = loc->second.second;
-                const auto& jsnNode = (*lights)[nIndex];
+                const auto& jsnNode = (*lightsJson)[nIndex];
                 lightTypeName = jsnNode[NodeNames::TYPE];
 
                 lightNode = std::make_unique<SceneNodeJson>(jsnNode, nIndex);
@@ -531,8 +531,8 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     }
 
     // Process Cameras
-    cameraCount = static_cast<uint32_t>(cameraSurfaces->size());
-    for(const auto& jsn : (*cameraSurfaces))
+    cameraCount = static_cast<uint32_t>(cameraSurfacesJson->size());
+    for(const auto& jsn : (*cameraSurfacesJson))
     {
         CameraSurfaceStruct s = SceneIO::LoadCameraSurface(baseMediumId,
                                                            identityTransformId,
@@ -545,7 +545,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         {
             const NodeIndex nIndex = loc->second.first;
             const InnerIndex iIndex = loc->second.second;
-            const auto& jsnNode = (*cameras)[nIndex];
+            const auto& jsnNode = (*camerasJson)[nIndex];
 
             camTypeName = jsnNode[NodeNames::TYPE];
 
@@ -573,10 +573,10 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
 
     // Finally Load Texture Info for material access
     // Load all textures here materials will actually load the textures
-    for(const auto& jsn : (*textures))
+    for(const auto& jsn : (*texturesJson))
     {
-        std::vector<TextureStruct> textures = SceneIO::LoadTexture(jsn);
-        for(const auto& t : textures)
+        std::vector<TextureStruct> texStructs = SceneIO::LoadTexture(jsn);
+        for(const auto& t : texStructs)
             textureNodes.emplace(t.texId, t);
     }
     return e;
@@ -776,7 +776,7 @@ SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& transf
     // Generate Transform Groups
     SceneError e = SceneError::OK;
     uint32_t linearIndex = 0;
-    bool hadIdentityTransform = false;
+    //bool hadIdentityTransform = false;
     for(const auto& transformGroup : transformList)
     {
         std::string transTypeName = transformGroup.first;
@@ -809,7 +809,6 @@ SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& transf
 }
 
 SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdMappings,
-                                         uint32_t& baseMIndex,
                                          const MediumNodeList& mediumList,
                                          double time)
 {
@@ -819,8 +818,8 @@ SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdM
         return SceneError::BASE_MEDIUM_NODE_NOT_FOUND;
     uint32_t baseMediumId = SceneIO::LoadNumber<uint32_t>(*baseMediumNode, time);
 
-    // Generate Transform Groups
-    uint32_t linearIndex = 0;
+    // Generate Medium Groups
+    uint16_t linearIndex = 0;
     bool baseMediumFound = false;
     SceneError e = SceneError::OK;
     for(const auto& mediumGroup : mediumList)
@@ -993,7 +992,7 @@ SceneError GPUSceneJson::LoadAll(double time)
 
     // Mediums
     std::map<uint32_t, uint32_t> mediumIdMappings;
-    if((e = GenerateMediums(mediumIdMappings, baseMediumIndex,
+    if((e = GenerateMediums(mediumIdMappings,
                             mediumGroupNodes,
                             time)) != SceneError::OK)
         return e;
@@ -1078,12 +1077,12 @@ SceneError GPUSceneJson::LoadScene(double time)
     catch (SceneException const& e)
     {
         if(e.what() != nullptr)
-            METU_ERROR_LOG("%s", e.what());
+            METU_ERROR_LOG(e.what());
         return e;
     }
     catch(nlohmann::json::parse_error const& e)
     {
-        METU_ERROR_LOG("%s", e.what());
+        METU_ERROR_LOG(e.what());
         return SceneError::JSON_FILE_PARSE_ERROR;
     }
     return e;
@@ -1161,7 +1160,7 @@ const NamedList<CPUMediumGPtr>& GPUSceneJson::Mediums() const
     return mediums;
 }
 
-uint32_t GPUSceneJson::BaseMediumIndex() const
+uint16_t GPUSceneJson::BaseMediumIndex() const
 {
     return baseMediumIndex;
 }

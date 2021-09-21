@@ -43,7 +43,7 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const LightGroupDataList& ligh
 
         // Convert Ids to inner index
         Vector2ul primitiveRange = primGroup.PrimitiveBatchRange(primitiveId);
-        uint32_t mediumIndex = mediumIdIndexPairs.at(node.mediumId);
+        uint16_t mediumIndex = static_cast<uint16_t>(mediumIdIndexPairs.at(node.mediumId));
         uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
         HitKey materialKey = allMaterialKeys.at(std::make_pair(primGroup.Type(), node.materialId));
 

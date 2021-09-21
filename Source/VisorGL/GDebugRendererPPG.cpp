@@ -283,7 +283,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
         assert(allocator.load() == squareCount.load());
     }
 
-    METU_LOG("Max Rad %f", maxRadiance.load());
+    METU_LOG("Max Rad {:f}", maxRadiance.load());
 
     // Debug    
     std::ofstream file = std::ofstream("TESTO");

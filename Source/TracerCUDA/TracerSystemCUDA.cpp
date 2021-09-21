@@ -24,7 +24,7 @@ TracerError TracerSystemCUDA::Initialize(const std::vector<SurfaceLoaderSharedLi
                                                      sl.mangledName);
         if(dllE != DLLError::OK)
         {
-            METU_ERROR_LOG("%s", static_cast<std::string>(dllE).c_str());
+            METU_ERROR_LOG(static_cast<std::string>(dllE));
             return TracerError::UNABLE_TO_INITIALIZE;
         }
     }
@@ -33,7 +33,7 @@ TracerError TracerSystemCUDA::Initialize(const std::vector<SurfaceLoaderSharedLi
     CudaError cudaE = cudaSystem->Initialize();
     if(cudaE != CudaError::OK)
     {
-        METU_ERROR_LOG("%s", static_cast<std::string>(cudaE).c_str());
+        METU_ERROR_LOG(static_cast<std::string>(cudaE));
         return TracerError::UNABLE_TO_INITIALIZE;
     }
     switch(partitionerType)

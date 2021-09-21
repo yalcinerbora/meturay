@@ -72,7 +72,7 @@ SharedLib::SharedLib(const std::string& libName)
 
             // Get the buffer
             std::string message(messageBuffer, size);
-            METU_ERROR_LOG(message.c_str());
+            METU_ERROR_LOG(message);
             LocalFree(messageBuffer);
         }
     #elif defined METURAY_LINUX

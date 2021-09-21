@@ -130,13 +130,13 @@ void GuideDebugGUI::Render()
        DecrementDepth())
     {        
         updateDirectionalTextures = true;
-        METU_LOG("Depth %d", currentDepth);
+        METU_LOG("Depth {:d}", currentDepth);
     }
     if(ImGui::IsKeyReleased(GLFW_KEY_RIGHT) &&
        IncrementDepth())
     {
         updateDirectionalTextures = true;
-        METU_LOG("Depth %d", currentDepth);
+        METU_LOG("Depth {:d}", currentDepth);
     }
     
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -287,9 +287,9 @@ void GuideDebugGUI::Render()
     ImGui::SetCursorPosX(paddingX.y);
     for(size_t i = 0; i < guideTextues.size(); i++)
     {       
-        ImTextureID refTexId = (void*)(intptr_t) guideTextues[i].TexId();
+        ImTextureID guideTexId = (void*)(intptr_t) guideTextues[i].TexId();
         ImVec2 pgImgPos = ImGui::GetCursorScreenPos();        
-        ImGui::Image(refTexId, pgImgSize, ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::Image(guideTexId, pgImgSize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::SameLine(0.0f, paddingX.y);
 
         if(ImGui::IsItemHovered())
@@ -303,7 +303,7 @@ void GuideDebugGUI::Render()
             float screenPixel_x = io.MousePos.x - pgImgPos.x;
             float screenPixel_y = io.MousePos.y - pgImgPos.y;
 
-            //METU_LOG("pgImgPos (%f, %f) == (%f, %f)", 
+            //METU_LOG("pgImgPos ({:f}, {:f}) == ({:f}, {:f}", 
             //         pgImgPos.x, pgImgPos.y,
             //         io.MousePos.x, io.MousePos.y);
 
@@ -318,8 +318,8 @@ void GuideDebugGUI::Render()
 
             uint32_t linearIndex = (PG_TEXTURE_SIZE * static_cast<uint32_t>(imagePixel_y)
                                     + static_cast<uint32_t>(imagePixel_x));
-            ImGui::Text("Pixel: (%.2f, %.2f)", imagePixel_x, imagePixel_y);
-            ImGui::Text("Value: %f", guidePixValues[i][linearIndex]);
+            ImGui::Text("Pixel: ({:.2f}, {:.2f})", imagePixel_x, imagePixel_y);
+            ImGui::Text("Value: {:f}", guidePixValues[i][linearIndex]);
 
             // Calculate Zoom UV
             float region_x = imagePixel_x - region_sz * 0.5f;
@@ -339,7 +339,7 @@ void GuideDebugGUI::Render()
             // Center the image on the tooltip window
             ImVec2 ttImgSize(region_sz* ZOOM_FACTOR,
                              region_sz* ZOOM_FACTOR);
-            ImGui::Image(refTexId, ttImgSize, uv0, uv1);
+            ImGui::Image(guideTexId, ttImgSize, uv0, uv1);
             ImGui::EndTooltip();
         }
 

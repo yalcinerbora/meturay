@@ -88,12 +88,12 @@ void SelfNode::SendCrashSignal()
 
 void SelfNode::SendLog(const std::string s)
 {
-    METU_LOG("Tracer: %s", s.c_str());
+    METU_LOG("Tracer: {:s}", s);
 }
 
 void SelfNode::SendError(TracerError err)
 {
-    METU_ERROR_LOG("Tracer: %s", static_cast<std::string>(err).c_str());
+    METU_ERROR_LOG("Tracer: {:s}", static_cast<std::string>(err));
 }
 
 void SelfNode::SendAnalyticData(AnalyticData data)

@@ -3,7 +3,9 @@
 #include <cassert>
 
 #include "ShaderGL.h"
+
 #include "RayLib/Log.h"
+#include "RayLib/UTF8StringConversion.h"
 
 #include <filesystem>
 
@@ -77,14 +79,15 @@ ShaderGL::ShaderGL(ShaderType t, const std::u8string& path)
         glGetProgramiv(shaderID, GL_INFO_LOG_LENGTH, &blen);
         if(blen > 1)
         {
-            std::vector<GLchar> log(blen);
-            glGetProgramInfoLog(shaderID, blen, &blen, &log[0]);
-            METU_ERROR_LOG("Shader Compilation Error on File %s :\n%s", onlyFileName.c_str(), &log[0]);
+            static_assert(std::is_same_v<char, GLchar>, "TypeMismatch: GLchar != char");
+            std::string log(blen + 1, '\0');
+            glGetProgramInfoLog(shaderID, blen, &blen, log.data());
+            METU_ERROR_LOG("Shader Compilation Error on File {:s} :\n{:s}", Utility::CopyU8ToString(onlyFileName), log);
         }
     }
     else
     {
-        METU_LOG("Shader Compiled Successfully. Shader ID: %d, Name: %s", shaderID, onlyFileName.c_str());
+        METU_LOG("Shader Compiled Successfully. Shader ID: {:d}, Name: {:s}", shaderID, Utility::CopyU8ToString(onlyFileName));
         valid = true;
     }
     shaderCount++;
@@ -104,7 +107,7 @@ ShaderGL& ShaderGL::operator=(ShaderGL&& other) noexcept
     glDeleteProgram(shaderID);
     if(shaderID != 0)
     {
-        METU_LOG("Shader Deleted. Shader ID: %d", shaderID);
+        METU_LOG("Shader Deleted. Shader ID: {:d}", shaderID);
         // Deleting shader pipeline if no shader is left
         shaderCount--;
         if(shaderCount == 0)
@@ -126,7 +129,7 @@ ShaderGL::~ShaderGL()
     if(shaderID)
     {
         glDeleteProgram(shaderID);
-        METU_LOG("Shader Deleted. Shader ID: %d", shaderID);
+        METU_LOG("Shader Deleted. Shader ID: {:d}", shaderID);
 
         // Deleting shader pipeline if no shader is left
         shaderCount--;

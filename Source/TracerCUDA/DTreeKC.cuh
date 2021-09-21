@@ -182,7 +182,7 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
     // First we need to find the sphr coords from the tree
     Vector2f discreteCoords = Zero2f;
     // Use double here for higher numeric precision
-    double descentFactor = 1;
+    //double descentFactor = 1;
 
     // If total irrad is zero in this node fetch data uniformly
     pdf = 1.0f;

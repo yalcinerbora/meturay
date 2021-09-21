@@ -95,7 +95,7 @@ class TracerThread : public LoopingThreadI
 template<class Error>
 void TracerThread::PrintErrorAndSignalTerminate(Error err)
 {
-    METU_ERROR_LOG("Tracer Thread, %s",
-                   static_cast<std::string>(err).c_str());
+    METU_ERROR_LOG("Tracer Thread, {:s}",
+                   static_cast<std::string>(err));
     tracerCrashSignal = true;
 }

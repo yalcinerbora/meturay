@@ -40,7 +40,7 @@ class GPULightDirectional : public GPULightI
                                             bool antiAliasOn = true) const override;
 
         __device__ float        Pdf(const Vector3& direction,
-                                    const Vector3 position) const override;
+                                    const Vector3& position) const override;
 
         __device__ bool         CanBeSampled() const override;
 
@@ -133,8 +133,8 @@ inline void GPULightDirectional::GenerateRay(// Output
 }
 
 __device__
-inline float GPULightDirectional::Pdf(const Vector3& direction,
-                               const Vector3 position) const
+inline float GPULightDirectional::Pdf(const Vector3& worldDir,
+                                      const Vector3& worldPos) const
 {
     return 0.0f;
 }

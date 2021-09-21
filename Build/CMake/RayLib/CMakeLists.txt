@@ -173,12 +173,21 @@ source_group("Utility" FILES ${SRC_UTILITY})
 source_group("VisorInput" FILES ${SRC_VISOR_INPUT})
 source_group("" FILES ${SRC_COMMON})
 
+# OpenEXR Library Header Inclusion (Imath)
+set(MRAY_OPENEXR_INCLUDE_DIRECTORY ${MRAY_LIB_INCLUDE_DIRECTORY}/Imath)
+
 # DLL File
 add_library(RayLib STATIC ${SRC_ALL})
 
 target_include_directories(RayLib PRIVATE
+                           ${MRAY_OPENEXR_INCLUDE_DIRECTORY}
                            ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
+
+target_link_libraries(RayLib 
+                      OpenEXR
+                      freeimage
+                      fmt)
 
 target_compile_definitions(RayLib PRIVATE ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC})
 
@@ -186,3 +195,15 @@ set_target_properties(RayLib PROPERTIES
                       POSITION_INDEPENDENT_CODE ON
                       CUDA_SEPARABLE_COMPILATION ON
                       CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+
+# Copy DLLS
+if(MSVC)
+    add_custom_command(TARGET RayLib POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/FreeImage.dll"
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/OpenEXR.dll"
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/Imath.dll"
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/IlmThread.dll"
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/Iex.dll"
+                       ${MRAY_CONFIG_BIN_DIRECTORY})
+endif()

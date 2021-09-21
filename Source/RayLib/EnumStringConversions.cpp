@@ -232,7 +232,6 @@ template<class T>
 inline T StrToEnum(const std::string& s,
                    const EnumNameList<T>& nameList)
 {
-    uint32_t i = 0;
     for(uint32_t i = 0; i < nameList.size(); i++)
     {
         std::string str = nameList[i];

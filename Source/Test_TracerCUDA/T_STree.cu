@@ -160,7 +160,7 @@ TEST(PPG_STree, Split)
         testTree.AccumulateRaidances(dPathNodes, PATH_PER_ITERATION, PATH_PER_RAY, system);
         system.SyncAllGPUs();
         //t.Lap();
-        //METU_LOG("Accum-Rad %f", t.Elapsed<CPUTimeSeconds>());
+        //METU_LOG("Accum-Rad {:f}", t.Elapsed<CPUTimeSeconds>());
 
         // Split and Swap trees
         testTree.SplitAndSwapTrees(S_SPLIT, D_FLUX_SPLIT, D_MAX_DEPT, system);
@@ -168,10 +168,10 @@ TEST(PPG_STree, Split)
 
         //// DEBUGGING
         //t.Lap();
-        //METU_LOG("Split&Swap %f", t.Elapsed<CPUTimeSeconds>());
+        //METU_LOG("Split&Swap {:f}", t.Elapsed<CPUTimeSeconds>());
         //testTree.GetTreeToCPU(treeGPU, nodes);
         //Debug::DumpMemToFile("AS-Nodes", nodes.data(), nodes.size());
-        //METU_LOG("iter %u", iCount);
+        //METU_LOG("iter {:d}", iCount);
         //METU_LOG("-----------------------------------------------------");
     }
 

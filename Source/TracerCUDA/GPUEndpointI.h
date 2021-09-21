@@ -50,7 +50,7 @@ class GPUEndpointI
                                                 // Options
                                                 bool antiAliasOn = true) const = 0;
         virtual __device__ float    Pdf(const Vector3& direction,
-                                        const Vector3 position) const = 0;
+                                        const Vector3& position) const = 0;
 
         virtual __device__ PrimitiveId  PrimitiveIndex() const = 0;
         virtual __device__ bool         CanBeSampled() const = 0;

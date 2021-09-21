@@ -109,12 +109,12 @@ inline MockNode::MockNode(VisorI& v, GPUTracerI& t,
 
 inline void MockNode::SendLog(const std::string s)
 {
-    METU_LOG("Tracer: %s", s.c_str());
+    METU_LOG("Tracer: {:s}", s);
 }
 
 inline void MockNode::SendError(TracerError err)
 {
-    METU_ERROR_LOG("Tracer: %s", static_cast<std::string>(err).c_str());
+    METU_ERROR_LOG("Tracer: {:s}", static_cast<std::string>(err));
 }
 
 inline void MockNode::SendImage(const std::vector<Byte> data,
@@ -373,7 +373,7 @@ inline void SimpleTracerSetup::Body()
     catch(TracerException const& e)
     {
         std::string err = static_cast<TracerError>(e);
-        METU_ERROR_LOG("%s (%s)", err.c_str(), e.what());
+        METU_ERROR_LOG("{:s} ({:s})", err.c_str(), e.what());
         GTEST_FAIL();
     }
 }

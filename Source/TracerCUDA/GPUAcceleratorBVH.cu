@@ -121,8 +121,8 @@ void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
             }
 
             // Test this split
-            if(splitStart != start ||
-               splitStart != end)
+            if(splitStart != static_cast<int64_t>(start) ||
+               splitStart != static_cast<int64_t>(end))
             {
                 // This is a good split save and break
                 splitLoc = splitStart;
@@ -358,7 +358,7 @@ TracerError GPUBaseAcceleratorBVH::Constrcut(const CudaSystem&,
                           cudaMemcpyHostToDevice));
 
     t.Stop();
-    METU_LOG("Base BVH(d=%u) generated in %f seconds.",
+    METU_LOG("Base BVH(d={:d}) generated in {:f} seconds.",
              maxDepth, t.Elapsed<CPUTimeSeconds>());
 
     return TracerError::OK;

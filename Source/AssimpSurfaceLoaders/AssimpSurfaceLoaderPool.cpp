@@ -26,8 +26,10 @@ AssimpSurfaceLoaderPool::AssimpSurfaceLoaderPool()
     static_assert(sizeof(aiVector2D) == sizeof(Vector2), "assimp Vector2 Vector2 mismatch");
 
     // Start Logging
-    Assimp::DefaultLogger::create("", Assimp::Logger::NORMAL,
-                                  aiDefaultLogStream_STDOUT);
+    Assimp::DefaultLogger::create(AssimpLogFileName.data(),
+                                  Assimp::Logger::VERBOSE);
+                                  //,
+                                  //aiDefaultLogStream_STDOUT);
 
     // Do not import line or points
     importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,

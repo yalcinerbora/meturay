@@ -47,7 +47,7 @@ class GPULightRectangular final : public GPULightI
                                             bool antiAliasOn = true) const override;
 
         __device__ float        Pdf(const Vector3& direction,
-                                    const Vector3 position) const override;
+                                    const Vector3& position) const override;
 
         __device__ bool         CanBeSampled() const override;
 
@@ -170,7 +170,7 @@ inline GPULightRectangular::GenerateRay(// Output
 
 __device__
 inline float GPULightRectangular::Pdf(const Vector3& direction,
-                                      const Vector3 worldLoc) const
+                                      const Vector3& worldLoc) const
 {
     // Generate 2 Triangle
     Vector3f positions[4] = 

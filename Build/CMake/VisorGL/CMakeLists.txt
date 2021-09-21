@@ -20,7 +20,9 @@ set(SRC_GUI
 
 set(SRC_SHADERS
     ${SHADER_SOURCE_DIR}/AccumInput.comp
-    ${SHADER_SOURCE_DIR}/AvgDivisor.comp
+    ${SHADER_SOURCE_DIR}/AvgDivisor.comp    
+    ${SHADER_SOURCE_DIR}/DTreeRender.frag
+    ${SHADER_SOURCE_DIR}/DTreeRender.vert
     ${SHADER_SOURCE_DIR}/LumReduction.comp
     ${SHADER_SOURCE_DIR}/PProcessGeneric.frag
     ${SHADER_SOURCE_DIR}/PProcessGeneric.vert
@@ -30,8 +32,14 @@ set(GUIDE_DEBUG
     ${CURRENT_SOURCE_DIR}/GuideDebugGL.cpp
     ${CURRENT_SOURCE_DIR}/GuideDebugGL.h
     ${CURRENT_SOURCE_DIR}/GuideDebugGUI.cpp
-    ${CURRENT_SOURCE_DIR}/GuideDebugGUI.h)
+    ${CURRENT_SOURCE_DIR}/GuideDebugGUI.h
+    ${CURRENT_SOURCE_DIR}/GuideDebugStructs.h
+    ${CURRENT_SOURCE_DIR}/GuideDebugTypeGen.h)
 
+set(GUIDE_DEBUG_RENDERERS
+    ${CURRENT_SOURCE_DIR}/GDebugRendererI.h
+    ${CURRENT_SOURCE_DIR}/GDebugRendererPPG.cpp
+    ${CURRENT_SOURCE_DIR}/GDebugRendererPPG.h)
 
 set(SRC_COMMON
     ${CURRENT_SOURCE_DIR}/GLFWCallbackDelegator.h
@@ -40,18 +48,21 @@ set(SRC_COMMON
     ${CURRENT_SOURCE_DIR}/VisorGL.cpp
     ${CURRENT_SOURCE_DIR}/VisorGL.h
     ${CURRENT_SOURCE_DIR}/VisorGLEntry.cpp
-    ${CURRENT_SOURCE_DIR}/VisorGLEntry.h)
+    ${CURRENT_SOURCE_DIR}/VisorGLEntry.h
+    ${CURRENT_SOURCE_DIR}/WindowGLI.h)
 
 set(SRC_ALL
     ${SRC_GL}
     ${SRC_GUI}
     ${GUIDE_DEBUG}
+    ${GUIDE_DEBUG_RENDERERS}
     ${SRC_SHADERS}
     ${SRC_COMMON})
 
 source_group("GL" FILES ${SRC_GL})
 source_group("GUI" FILES ${SRC_GUI})
 source_group("GuideDebug" FILES ${GUIDE_DEBUG})
+source_group("GuideDebug/Debug Renderers" FILES ${GUIDE_DEBUG_RENDERER})
 source_group("Shaders" FILES ${SRC_SHADERS})
 source_group("" FILES ${SRC_COMMON})
 
@@ -62,7 +73,7 @@ set(PREPROCESSOR_GENERIC
 
 # Platform Specific Libraries
 if(MSVC)
-    set(PLATFORM_SPEC_LIBRARIES opengl32 glew32 glfw3Lib)
+    set(PLATFORM_SPEC_LIBRARIES opengl32 glew32 glfw3dll)
 elseif(UNIX)
     set(PLATFORM_SPEC_LIBRARIES GLEW glfw)
 endif()
@@ -74,7 +85,7 @@ target_include_directories(VisorGL PRIVATE
                            ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
 
-target_compile_definitions(VisorGL PRIVATE ${MRAY_PREPROCESSOR_DEFS_GENERIC})
+target_compile_definitions(VisorGL PRIVATE ${PREPROCESSOR_GENERIC})
 
 target_link_libraries(VisorGL
                       RayLib
@@ -82,7 +93,10 @@ target_link_libraries(VisorGL
                       ${PLATFORM_SPEC_LIBRARIES})
 
 # Copy DLLS
-# add_custom_command(TARGET MyTest POST_BUILD
-#     COMMAND ${CMAKE_COMMAND} -E copy_directory
-#         "${PROJECT_SOURCE_DIR}/libs/$<CONFIGURATION>"
-#         $<TARGET_FILE_DIR:MyTest>)
+if(MSVC)
+    add_custom_command(TARGET VisorGL POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/glfw3.dll"
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/glew32.dll"
+                       ${MRAY_CONFIG_BIN_DIRECTORY})
+endif()

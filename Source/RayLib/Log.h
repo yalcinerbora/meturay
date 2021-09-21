@@ -2,42 +2,39 @@
 
 #include <string>
 
+#include <fmt/core.h>
+#include <fmt/color.h>
+
 // Debug
 #ifdef METU_DEBUG
     static constexpr bool IS_DEBUG_MODE = true;
 
     template<class... Args>
-    inline void METU_DEBUG_LOG(const char* string, Args... args)
+    inline void METU_DEBUG_LOG(Args&&... args)
     {
-        std::string s;
-        s += "\33[2K\r";
-        s += string;
-        s += "\n";
-        fprintf(stdout, s.c_str(), args...);
+        std::string s = fmt::format(std::forward<Args>(args)...);
+        fmt::print(stdout, "{:s}: {:s}\n",
+                   fmt::format(fg(fmt::color::blanched_almond), "Debug"),
+                   s);
     }
 #else
     static constexpr bool IS_DEBUG_MODE = false;
     template<class... Args>
-    inline constexpr void METU_DEBUG_LOG(const char* string, Args... args) {}
+    inline constexpr void METU_DEBUG_LOG(Args&&... args) {}
 #endif
 
 template<class... Args>
-inline void METU_LOG(const char* string, Args... args)
+inline void METU_LOG(Args&&... args)
 {
-    std::string s;
-    //s += "\33[2K\r";
-    s += string;
-    s += "\n";
-    fprintf(stdout, s.c_str(), args...);
+    std::string s = fmt::format(std::forward<Args>(args)...);
+    fmt::print(stdout, "{:s}\n", s);
 }
 
 template<class... Args>
-inline void METU_ERROR_LOG(const char* string, Args... args)
+inline void METU_ERROR_LOG(Args&&... args)
 {
-    std::string s;
-    //s += "\33[2K\r";
-    s += "Error: ";
-    s += string;
-    s += "\n";
-    fprintf(stderr, s.c_str(), args...);
+    std::string s = fmt::format(std::forward<Args>(args)...);
+    fmt::print(stderr, "{:s}: {:s}\n",
+               fmt::format(fg(fmt::color::crimson), "Error"),
+               s);
 }

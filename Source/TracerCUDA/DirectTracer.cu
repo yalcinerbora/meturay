@@ -80,11 +80,11 @@ TracerError DirectTracer::Initialize()
 
     // Generate your worklist
     const auto& infoList = scene.WorkBatchInfo();
-    for(const auto& workInfo : infoList)
+    for(const auto& wInfo : infoList)
     {
-        const GPUPrimitiveGroupI& pg = *std::get<1>(workInfo);
-        const GPUMaterialGroupI& mg = *std::get<2>(workInfo);
-        uint32_t batchId = std::get<0>(workInfo);
+        const GPUPrimitiveGroupI& pg = *std::get<1>(wInfo);
+        const GPUMaterialGroupI& mg = *std::get<2>(wInfo);
+        uint32_t batchId = std::get<0>(wInfo);
 
         GPUWorkBatchI* batch = nullptr;
         switch(options.renderType)

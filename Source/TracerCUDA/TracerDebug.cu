@@ -57,7 +57,7 @@ void Debug::PrintHitPairs(const RayId* ids, const HitKey* keys, size_t count)
 {
     std::stringstream s;
     Detail::OutputHitPairs(s, ids, keys, count);
-    METU_LOG("%s", s.str().c_str());
+    METU_LOG(s.str());
 }
 
 void Debug::WriteHitPairs(const RayId* ids, const HitKey* keys, size_t count, const std::string& file)

@@ -384,7 +384,7 @@ TEST(PPG_DTree, SwapStress)
         // Maximum allowed depth of the tree
         uint32_t depthLimit = DEPTH_MIN + static_cast<uint32_t>(uniformDist(rng) * (DEPTH_MAX - DEPTH_MIN));
 
-        //METU_LOG("Depth %u, Flux %f", depthLimit, fluxRatio);
+        //METU_LOG("Depth {:d}, Flux {:f}", depthLimit, fluxRatio);
 
         for(size_t i = 0; i < PATH_PER_ITERATION; i++)
         {
@@ -773,8 +773,8 @@ TEST(PPG_DTree, SampleDeep)
     std::mt19937 rng;
     rng.seed(0);
     // Check buffer
-    DTreeGPU treeGPU;
-    std::vector<DTreeNode> nodes;
+    //DTreeGPU treeGPU;
+    //std::vector<DTreeNode> nodes;
     // GPU Buffers
     DeviceMemory pathNodeMemory(PATH_PER_ITERATION * sizeof(PathGuidingNode));
     PathGuidingNode* dPathNodes = static_cast<PathGuidingNode*>(pathNodeMemory);
@@ -906,11 +906,8 @@ TEST(PPG_DTree, DirToCoord)
     for(uint32_t i = 0;i < INTERVAL_COUNT; i++)
     { 
         float interval = 1.0f / static_cast<float>(INTERVAL_COUNT);
-        float x = interval * static_cast<float>(i);
-        
-        Vector2f coords(x, 0.75f);
-
-        coordsCPU[i] = coords;
+        float x = interval * static_cast<float>(i);       
+        coordsCPU[i] = Vector2f(x, 0.75f);
     }
     CUDA_CHECK(cudaMemcpy(static_cast<Vector2f*>(coords), 
                           coordsCPU.data(),

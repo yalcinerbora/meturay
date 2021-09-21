@@ -61,7 +61,7 @@
 //    float* h_data = static_cast<float*>(samples);
 //    for(uint32_t i = 0; i < SAMPLE_COUNT; i++)
 //    {
-//        METU_LOG("%f", h_data[i]);
+//        METU_LOG("{:f}", h_data[i]);
 //    }
 //}
 //

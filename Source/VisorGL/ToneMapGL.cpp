@@ -50,7 +50,7 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
         //glBindBuffer(GL_COPY_READ_BUFFER, luminanceBuffer);
         //glGetBufferSubData(GL_COPY_READ_BUFFER, 0, sizeof(Vector2),
         //                   &v);
-        //METU_LOG("max %f, avg %f", v[0], v[1]);
+        //METU_LOG("max {:f}, avg {:f}", v[0], v[1]);
     }
     // Either gamma or not, call ToneMap shader
     // since we need to transport image to SDR image

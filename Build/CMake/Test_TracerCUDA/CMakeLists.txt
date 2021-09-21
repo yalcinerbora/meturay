@@ -51,4 +51,12 @@ if(MSVC)
     set_target_properties(Test_TracerCUDA PROPERTIES
                           VS_DEBUGGER_WORKING_DIRECTORY ${MRAY_WORKING_DIRECTORY}
                           VS_DEBUGGER_COMMAND_ARGUMENTS ${DEBUG_ARGS})
+
+    # Copy DLLS
+    add_custom_command(TARGET Test_TracerCUDA POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/gmock$<$<CONFIG:Debug>:d>.dll"
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/gtest$<$<CONFIG:Debug>:d>.dll"
+                       ${MRAY_CONFIG_BIN_DIRECTORY})
+
 endif()

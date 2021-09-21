@@ -3,14 +3,14 @@
 #define ERROR_CHECK(ErrType, e) \
 if(e != ErrType::OK) \
 {\
-    METU_ERROR_LOG("%s", static_cast<std::string>(e).c_str()); \
+    METU_ERROR_LOG(static_cast<std::string>(e)); \
     return false;\
 }
 
 #define ERROR_CHECK_INT(ErrType, e) \
 if(e != ErrType::OK) \
 {\
-    METU_ERROR_LOG("%s", static_cast<std::string>(e).c_str()); \
+    METU_ERROR_LOG(static_cast<std::string>(e)); \
     return 1;\
 }
 

@@ -188,52 +188,59 @@ void GLFWCallbackDelegator::OGLDebugLog(GLenum type,
         id == 131218)                    // Shader recompile cuz of state mismatch omit
         return;
 
-    METU_DEBUG_LOG("---------------------OGL-Callback-Render------------");
-    METU_DEBUG_LOG("Message: %s", message);
+    std::stringstream sStream;
+
+    sStream << "\n---------------------OGL-Callback-Render---------------------\n";
+    sStream << "Message  : " << message << '\n';
+    sStream << "Type     : ";
     switch(type)
     {
         case GL_DEBUG_TYPE_ERROR:
-            METU_DEBUG_LOG("Type: ERROR");
+            sStream << "ERROR";
             break;
         case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-            METU_DEBUG_LOG("Type: DEPRECATED_BEHAVIOR");
+            sStream << "DEPRECATED_BEHAVIOR";
             break;
         case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-            METU_DEBUG_LOG("Type: UNDEFINED_BEHAVIOR");
+            sStream << "UNDEFINED_BEHAVIOR";
             break;
         case GL_DEBUG_TYPE_PORTABILITY:
-            METU_DEBUG_LOG("Type: PORTABILITY");
+            sStream << "PORTABILITY";
             break;
         case GL_DEBUG_TYPE_PERFORMANCE:
-            METU_DEBUG_LOG("Type: PERFORMANCE");
+            sStream << "PERFORMANCE";
             break;
         case GL_DEBUG_TYPE_OTHER:
-            METU_DEBUG_LOG("Type: OTHER");
+            sStream << "OTHER";
             break;
     }
-
-    METU_DEBUG_LOG("ID: %d", id);
+    sStream << '\n';
+    sStream << "ID       : " << id << '\n';
+    sStream << "Severity : ";
     switch(severity)
     {
         case GL_DEBUG_SEVERITY_LOW:
-            METU_DEBUG_LOG("Severity: LOW");
+            sStream << "LOW";
             break;
         case GL_DEBUG_SEVERITY_MEDIUM:
-            METU_DEBUG_LOG("Severity: MEDIUM");
+            sStream << "MEDIUM";
             break;
         case GL_DEBUG_SEVERITY_HIGH:
-            METU_DEBUG_LOG("Severity: HIGH");
+            sStream << "HIGH";
             break;
         default:
-            METU_DEBUG_LOG("Severity: NONE");
+            sStream << "NONE";
             break;
     }
-    METU_DEBUG_LOG("---------------------OGL-Callback-Render-End--------------");
+    sStream << '\n';
+    sStream << "-----------------OGL-Callback-Render-End-----------------\n";
+
+    METU_DEBUG_LOG(sStream.str());
 }
 
 void GLFWCallbackDelegator::ErrorCallbackGLFW(int error, const char* description)
 {
-    METU_ERROR_LOG("GLFW %d: %s", error, description);
+    METU_ERROR_LOG("GLFW {:d}: {:s}", error, description);
 }
 
 void GLFWCallbackDelegator::WindowPosGLFW(GLFWwindow* w, int x, int y)

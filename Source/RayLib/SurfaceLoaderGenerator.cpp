@@ -71,8 +71,8 @@ DLLError SurfaceLoaderGenerator::IncludeLoadersFromDLL(const std::string& libNam
     {
         try
         {
-            auto it = openedLibs.emplace(libName, SharedLib(libName));
-            libOut = &it.first->second;
+            auto newLibIt = openedLibs.emplace(libName, SharedLib(libName));
+            libOut = &newLibIt.first->second;
         }
         catch(const DLLException & e)
         {
@@ -95,8 +95,8 @@ DLLError SurfaceLoaderGenerator::IncludeLoadersFromDLL(const std::string& libNam
         SurfaceLoaderPoolPtr ptr = {nullptr, nullptr};
         e = libKey.first->GenerateObject<SurfaceLoaderPoolI>(ptr, libKey.second);
         if(e != DLLError::OK) return e;
-        auto it = generatedPools.emplace(libKey, std::move(ptr));
-        pool = &(it.first->second);
+        auto newLoaderIt = generatedPools.emplace(libKey, std::move(ptr));
+        pool = &(newLoaderIt.first->second);
     }
 
     const auto newLoaders = (*pool)->SurfaceLoaders(regex);

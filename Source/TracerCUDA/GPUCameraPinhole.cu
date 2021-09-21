@@ -48,7 +48,7 @@ SceneError CPUCameraGroupPinhole::InitializeGroup(const CameraGroupDataList& cam
     for(const auto& node : cameraNodes)
     {
         // Convert Ids to inner index
-        uint32_t mediumIndex = mediumIdIndexPairs.at(node.mediumId);
+        uint16_t mediumIndex = static_cast<uint16_t>(mediumIdIndexPairs.at(node.mediumId));
         uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
         HitKey materialKey = HitKey::CombinedKey(cameraMaterialBatchId,
                                                  innerIndex);
@@ -75,7 +75,7 @@ SceneError CPUCameraGroupPinhole::InitializeGroup(const CameraGroupDataList& cam
         // Generate VisorCamera
         visorCameraList.push_back(VisorCamera
                                   {
-                                      static_cast<uint16_t>(mediumIndex),
+                                      mediumIndex,
                                       materialKey,
                                       gazes[0],
                                       nearFar[0][0],

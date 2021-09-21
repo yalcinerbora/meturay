@@ -55,9 +55,11 @@ else()
 endif()
 
 # Use currently selected compiler
-#set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_C_COMPILER})
-add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:--compiler-bindir=${CMAKE_C_COMPILER}>)
-
+if(MSVC)
+    set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_C_COMPILER})
+else()
+    add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:--compiler-bindir=${CMAKE_C_COMPILER}>)
+endif()
 # Force Colored Output on Ninja
 if ((CMAKE_GENERATOR MATCHES "Ninja") AND UNIX)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -65,6 +67,16 @@ if ((CMAKE_GENERATOR MATCHES "Ninja") AND UNIX)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         add_compile_options(-fdiagnostics-color=always)
     endif()
+endif()
+
+# Generic Compile Options
+if(MSVC)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/W3>)
+else()
+    # Prob Clang / GCC both use same syntax
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wall> 
+                        $<$<COMPILE_LANGUAGE:CXX>:-Wextra> 
+                        $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>)
 endif()
 
 # Platform Specific Lib Bin Folders

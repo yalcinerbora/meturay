@@ -32,6 +32,10 @@ target_link_libraries(AssimpSurfaceLoaders PRIVATE
                       RayLib
                       assimp)
 
-
-
-#add_dependencies(AssimpSurfaceLoaders RayLib)
+                      # Copy DLLS
+if(MSVC)
+    add_custom_command(TARGET AssimpSurfaceLoaders POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/assimp.dll"                       
+                       ${MRAY_CONFIG_BIN_DIRECTORY})
+endif()

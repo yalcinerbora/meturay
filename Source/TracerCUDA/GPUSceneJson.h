@@ -54,7 +54,7 @@ class GPUSceneJson : public GPUSceneI
         uint32_t                                hitStructSize;
         uint32_t                                identityTransformIndex;
         uint32_t                                boundaryTransformIndex;
-        uint32_t                                baseMediumIndex;
+        uint16_t                                baseMediumIndex;
         uint32_t                                cameraCount;
 
         // GPU Memory
@@ -131,7 +131,6 @@ class GPUSceneJson : public GPUSceneI
                                            uint32_t boundaryTransformId,
                                            double time = 0.0);
         SceneError      GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdMappings,
-                                        uint32_t& baseMediumIndex,
                                         const MediumNodeList& mediumList,
                                         double time = 0.0);
         SceneError      GenerateCameras(const CameraNodeList&,
@@ -184,7 +183,7 @@ class GPUSceneJson : public GPUSceneI
         const NamedList<CPUTransformGPtr>&  Transforms() const override;
         const NamedList<CPUMediumGPtr>&     Mediums() const override;
 
-        uint32_t                            BaseMediumIndex() const override;
+        uint16_t                            BaseMediumIndex() const override;
         uint32_t                            IdentityTransformIndex() const override;
         uint32_t                            BoundaryTransformIndex() const override;
 

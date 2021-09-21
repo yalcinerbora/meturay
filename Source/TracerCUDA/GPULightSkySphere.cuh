@@ -45,7 +45,7 @@ class GPULightSkySphere : public GPULightI
                                                     bool antiAliasOn = true) const override;
 
         __device__ float                Pdf(const Vector3& direction,
-                                            const Vector3 position) const override;
+                                            const Vector3& position) const override;
 
         __device__ bool                 CanBeSampled() const override;
 
@@ -160,7 +160,7 @@ inline void GPULightSkySphere::GenerateRay(// Output
 
 __device__
 inline float GPULightSkySphere::Pdf(const Vector3& direction,
-                                    const Vector3 position) const
+                                    const Vector3& position) const
 {
     // Convert to spherical coordinates
     Vector3 dirYUp = transform.WorldToLocal(direction, true);

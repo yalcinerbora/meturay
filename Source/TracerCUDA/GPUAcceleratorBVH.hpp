@@ -152,8 +152,8 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
             }
 
             // Test this split
-            if(splitStart != start ||
-               splitStart != end)
+            if(splitStart != static_cast<int64_t>(start) ||
+               splitStart != static_cast<int64_t>(end))
             {
                 // This is a good split save and break
                 splitLoc = splitStart;
@@ -461,8 +461,8 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                         partitionOutSize +
                         tempMemSize);
 
-    DeviceMemory memory = DeviceMemory(totalSize);
-    Byte* memPtr = static_cast<Byte*>(memory);
+    DeviceMemory tempMemory = DeviceMemory(totalSize);
+    Byte* memPtr = static_cast<Byte*>(tempMemory);
 
     // Memory Set
     size_t offset = 0;
@@ -655,7 +655,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                           cudaMemcpyHostToDevice));
 
     t.Stop();
-    METU_LOG("Surface%u BVH(d=%u) generated in %f seconds.",
+    METU_LOG("Surface%u BVH(d={:d}) generated in {:f} seconds.",
              surface,
              maxDepth,
              t.Elapsed<CPUTimeSeconds>());

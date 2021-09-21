@@ -40,7 +40,7 @@ class GPULightPoint final : public GPULightI
                                             bool antiAliasOn = true) const override;
 
         __device__ float        Pdf(const Vector3& direction,
-                                    const Vector3 position) const override;
+                                    const Vector3& position) const override;
 
         __device__ bool         CanBeSampled() const override;
 
@@ -136,8 +136,8 @@ inline void GPULightPoint::GenerateRay(// Output
 }
 
 __device__
-inline float GPULightPoint::Pdf(const Vector3& direction,
-                                      const Vector3 position) const
+inline float GPULightPoint::Pdf(const Vector3& worldDir,
+                                const Vector3& worldPos) const
 {
     return 0.0f;
 }

@@ -19,7 +19,9 @@ set(SRC_ACCELS_COMMON
 
 set(SRC_CAMERAS
     ${CURRENT_SOURCE_DIR}/GPUCameraPinhole.cu
-    ${CURRENT_SOURCE_DIR}/GPUCameraPinhole.cuh)
+    ${CURRENT_SOURCE_DIR}/GPUCameraPinhole.cuh
+    ${CURRENT_SOURCE_DIR}/GPUCameraSpherical.cu
+    ${CURRENT_SOURCE_DIR}/GPUCameraSpherical.cuh)
 
 set(SRC_CUDA_SYSTEM
     ${CURRENT_SOURCE_DIR}/CudaSystem.cpp
@@ -215,8 +217,8 @@ set(SRC_DIRECT_TRACER
     ${CURRENT_SOURCE_DIR}/DirectTracer.cu
     ${CURRENT_SOURCE_DIR}/DirectTracer.h
     ${CURRENT_SOURCE_DIR}/DirectTracerKC.cuh
-    ${CURRENT_SOURCE_DIR}/DirectTracerWork.cu
-    ${CURRENT_SOURCE_DIR}/DirectTracerWork.cuh)
+    ${CURRENT_SOURCE_DIR}/DirectTracerWorks.cu
+    ${CURRENT_SOURCE_DIR}/DirectTracerWorks.cuh)
 
 set(SRC_PATH_TRACER
     ${CURRENT_SOURCE_DIR}/PathTracer.cu
@@ -239,6 +241,10 @@ set(SRC_PPG_TRACER_AUX_CLASSES
     ${CURRENT_SOURCE_DIR}/STree.cu
     ${CURRENT_SOURCE_DIR}/STree.cuh
     ${CURRENT_SOURCE_DIR}/STreeKC.cuh)
+
+set(SRC_REF_PG_TRACER
+    ${CURRENT_SOURCE_DIR}/RefPGTracer.cu
+    ${CURRENT_SOURCE_DIR}/RefPGTracer.h)
 
 set(SRC_TRANSFORMS
     ${CURRENT_SOURCE_DIR}/GPUTransformIdentity.cuh
@@ -287,6 +293,7 @@ set(SRC_ALL
     ${SRC_PATH_TRACER}
     ${SRC_PPG_TRACER}
     ${SRC_PPG_TRACER_AUX_CLASSES}
+    ${SRC_REF_PG_TRACER}
     ${SRC_TRANSFORMS}
     ${SRC_WORK}
     ${SRC_COMMON})
@@ -327,6 +334,7 @@ source_group("Tracers/DirectTracer" FILES ${SRC_DIRECT_TRACER})
 source_group("Tracers/PathTracer" FILES ${SRC_PATH_TRACER})
 source_group("Tracers/PPGTracer" FILES ${SRC_PPG_TRACER})
 source_group("Tracers/PPGTracer/Aux Classes" FILES ${SRC_PPG_TRACER_AUX_CLASSES})
+source_group("Tracers/RefPGTracer" FILES ${SRC_REF_PG_TRACER})
 
 source_group("Transforms" FILES ${SRC_TRANSFORMS})
 source_group("Work" FILES ${SRC_WORK})
@@ -337,6 +345,13 @@ source_group("" FILES ${SRC_COMMON})
 set(PREPROCESSOR_GENERIC
     ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC}
     METU_SHARED_TRACER_CUDA)
+
+# TBB for std::exectuion (clang & GCC)
+if(MSVC)
+    set(PLATFORM_SPEC_LIBRARIES)
+elseif(UNIX)
+    set(PLATFORM_SPEC_LIBRARIES tbb)
+endif()
 
 # DLL File
 add_library(TracerCUDA SHARED ${SRC_ALL})
@@ -355,9 +370,8 @@ set_target_properties(TracerCUDA PROPERTIES
                       CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
 target_link_libraries(TracerCUDA
-                        RayLib
-                        freeimage
-                        tbb)
+                      RayLib
+                      ${PLATFORM_SPEC_LIBRARIES})
 
 # Object Group for testing
 add_library(TracerCUDA_ForTest STATIC ${SRC_ALL})
@@ -375,6 +389,5 @@ set_target_properties(TracerCUDA_ForTest PROPERTIES
                       CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
 target_link_libraries(TracerCUDA_ForTest
-                        RayLib
-                        freeimage
-                        tbb)
+                      RayLib
+                      ${PLATFORM_SPEC_LIBRARIES})

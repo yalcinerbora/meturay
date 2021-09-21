@@ -221,17 +221,17 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                              AABBUnion(), NegativeAABB3f));
 
         size_t aabbSizes = (totalAABBCount + 1) * sizeof(AABB3f);
-        DeviceMemory memory(aabbSizes + cubTempStorageSize);
+        DeviceMemory tempMemory(aabbSizes + cubTempStorageSize);
 
         size_t offset = 0;
-        Byte* memPtr = static_cast<Byte*>(memory);
+        Byte* memPtr = static_cast<Byte*>(tempMemory);
         dInAABBs = reinterpret_cast<AABB3f*>(memPtr + offset);
         offset += totalAABBCount * sizeof(AABB3f);
         dOutAABB = reinterpret_cast<AABB3f*>(memPtr + offset);
         offset += sizeof(AABB3f);
         void* dTempStorage = memPtr + offset;
         offset += cubTempStorageSize;
-        assert(offset == memory.Size());
+        assert(offset == tempMemory.Size());
 
         CUDA_CHECK(cub::DeviceReduce::Reduce(dTempStorage, cubTempStorageSize,
                                              dInAABBs, dOutAABB,
@@ -260,7 +260,7 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
             aabbOffset += aabbCount;
         }
-        assert(aabbOffset = static_cast<uint32_t>(accRanges[index][1] - accRanges[index][0]));
+        assert(aabbOffset == static_cast<uint32_t>(accRanges[index][1] - accRanges[index][0]));
 
         // Sync device to access gpu memory from host
         AABB3f hostAABB;

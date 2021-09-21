@@ -43,6 +43,7 @@ class AssimpSurfaceLoaderPool : public SurfaceLoaderPoolI
 {
     private:
         static constexpr std::string_view    AssimpPrefix = "assimp_";
+        static constexpr std::string_view    AssimpLogFileName = "assimp_log";
 
         // TODO: Do a multi thread system(for this)
         Assimp::Importer                            importer;

@@ -240,22 +240,22 @@ namespace MayaCache
         // Assert that Data Count and Byte Size is ok
         if(tagFORMAT == NSChannelHeader::DataChannelNames[NSChannelHeader::FVCA])
         {
-            assert(bufferByteSize == channelDataCount * 3u * sizeof(float));
+            assert(static_cast<unsigned int>(bufferByteSize) == channelDataCount * 3u * sizeof(float));
             header.type = NSChannelHeader::FVCA;
         }
         else if(tagFORMAT == NSChannelHeader::DataChannelNames[NSChannelHeader::DVCA])
         {
-            assert(bufferByteSize == channelDataCount * 3u * sizeof(double));
+            assert(static_cast<unsigned int>(bufferByteSize) == channelDataCount * 3u * sizeof(double));
             header.type = NSChannelHeader::DVCA;
         }
         else if(tagFORMAT == NSChannelHeader::DataChannelNames[NSChannelHeader::FBCA])
         {
-            assert(bufferByteSize == channelDataCount * sizeof(float));
+            assert(static_cast<unsigned int>(bufferByteSize) == channelDataCount * sizeof(float));
             header.type = NSChannelHeader::FBCA;
         }
         else if(tagFORMAT == NSChannelHeader::DataChannelNames[NSChannelHeader::DBLA])
         {
-            assert(bufferByteSize == channelDataCount * sizeof(double));
+            assert(static_cast<unsigned int>(bufferByteSize) == channelDataCount * sizeof(double));
             header.type = NSChannelHeader::DBLA;
         }
         else return IOError::NCACHE_INVALID_FORMAT;

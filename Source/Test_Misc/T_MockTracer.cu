@@ -256,7 +256,7 @@ using namespace std::chrono_literals;
 //    CUDA_CHECK(cudaDeviceSynchronize());
 //
 //    // Each Individual Hit segment writes the actual hit result
-//    METU_LOG("Stub Accelerator Work %u", rayCount);
+//    METU_LOG("Stub Accelerator Work {:d}", rayCount);
 //    std::stringstream s;
 //    for(uint32_t i = 0; i < rayCount; i++)
 //    {
@@ -310,7 +310,7 @@ using namespace std::chrono_literals;
 //    // Go To CPU
 //    CUDA_CHECK(cudaDeviceSynchronize());
 //
-//    METU_LOG("Stub Material Work %u", rayCount);
+//    METU_LOG("Stub Material Work {:d}", rayCount);
 //    for(uint32_t i = 0; i < rayCount; i++)
 //    {
 //        RayId rayId = dRayIds[i];

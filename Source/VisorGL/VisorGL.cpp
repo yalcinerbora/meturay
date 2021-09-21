@@ -118,7 +118,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             glBindTexture(GL_TEXTURE_2D, bufferTexture);
             glActiveTexture(GL_TEXTURE0 + T_IN_SAMPLE);
             glBindTexture(GL_TEXTURE_2D, sampleTexture);
-            glActiveTexture(GL_TEXTURE0 + T_IN_COLOR);
+            glActiveTexture(GL_TEXTURE0 + T_IN_COLOR);            
             glBindTexture(GL_TEXTURE_2D, inTexture);
 
             // Images
@@ -460,7 +460,7 @@ void VisorGL::SetRenderingContextCurrent()
     GLenum err = glewInit();
     if(err != GLEW_OK)
     {
-        METU_ERROR_LOG("%s", glewGetErrorString(err));
+        METU_ERROR_LOG("{:s}", glewGetErrorString(err));
     }
 }
 
@@ -590,20 +590,20 @@ VisorError VisorGL::Initialize(VisorInputI& vInput)
     GLenum err = glewInit();
     if(err != GLEW_OK)
     {
-        METU_ERROR_LOG("%s", glewGetErrorString(err));
+        METU_ERROR_LOG("{:s}", glewGetErrorString(err));
         return VisorError::RENDER_FUCTION_GENERATOR_ERROR;
     }
 
     // Print Stuff Now
     // Window Done
     METU_LOG("Window Initialized.");
-    METU_LOG("GLEW\t: %s", glewGetString(GLEW_VERSION));
-    METU_LOG("GLFW\t: %s", glfwGetVersionString());
+    METU_LOG("GLEW\t: {:s}", glewGetString(GLEW_VERSION));
+    METU_LOG("GLFW\t: {:s}", glfwGetVersionString());
     METU_LOG("");
     METU_LOG("Renderer Information...");
-    METU_LOG("OpenGL\t: %s", glGetString(GL_VERSION));
-    METU_LOG("GLSL\t: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
-    METU_LOG("Device\t: %s", glGetString(GL_RENDERER));
+    METU_LOG("OpenGL\t: {:s}", glGetString(GL_VERSION));
+    METU_LOG("GLSL\t: {:s}", glGetString(GL_SHADING_LANGUAGE_VERSION));
+    METU_LOG("Device\t: {:s}", glGetString(GL_RENDERER));
     METU_LOG("");
 
     if constexpr(IS_DEBUG_MODE)

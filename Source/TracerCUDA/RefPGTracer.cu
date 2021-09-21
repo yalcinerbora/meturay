@@ -49,12 +49,12 @@ void KCConstructSingleGPUCameraSpherical(GPUCameraSpherical* gCameraLocations,
 
 void PathTracerMiddleCallback::SendLog(const std::string s)
 {
-    METU_LOG(s.c_str());
+    METU_LOG(std::move(s));
 }
 
 void PathTracerMiddleCallback::SendError(TracerError e)
 {
-    METU_ERROR_LOG(static_cast<std::string>(e).c_str());
+    METU_ERROR_LOG(static_cast<std::string>(e));
 }
 
 void PathTracerMiddleCallback::SendImageSectionReset(Vector2i start, Vector2i end)
@@ -79,12 +79,12 @@ void PathTracerMiddleCallback::SendImage(const std::vector<Byte> data,
 
 void DirectTracerMiddleCallback::SendLog(const std::string s)
 {
-    METU_LOG(s.c_str());
+    METU_LOG(std::move(s));
 }
 
 void DirectTracerMiddleCallback::SendError(TracerError e)
 {
-    METU_ERROR_LOG(static_cast<std::string>(e).c_str());
+    METU_ERROR_LOG(static_cast<std::string>(e));
 }
 
 void DirectTracerMiddleCallback::SendImageSectionReset(Vector2i start, Vector2i end)

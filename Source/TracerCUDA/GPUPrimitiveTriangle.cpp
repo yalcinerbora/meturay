@@ -62,7 +62,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         }
         catch(SceneException const& e)
         {
-            if(e.what()[0] != '\0') METU_ERROR_LOG("%s", e.what());
+            if(e.what()[0] != '\0') METU_ERROR_LOG(e.what());
             return e;
         }
 
@@ -180,7 +180,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     size_t i = 0;
     for(const auto& loader : loaders)
     {
-        const SceneNodeI& node = loader->SceneNode();
+        //const SceneNodeI& node = loader->SceneNode();
 
         const size_t offsetVertex = loaderVOffsets[i];
         const size_t offsetIndex = loaderIOffsets[i];
@@ -206,11 +206,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
 
         // Check if tangents are available
         bool hasTangent;
-        size_t tangentCount;
         if((e = loader->HasPrimitiveData(hasTangent, PrimitiveDataType::TANGENT)) != SceneError::OK)
-            return e;
-        if(hasTangent &&
-           (e = loader->PrimitiveDataCount(tangentCount, PrimitiveDataType::TANGENT)) != SceneError::OK)
             return e;
 
         // Access index three by three for data generation
@@ -222,6 +218,10 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         Vector3* normalsIn = normals.data();
         if(hasTangent)
         {
+            size_t tangentCount;
+            if((e = loader->PrimitiveDataCount(tangentCount, PrimitiveDataType::TANGENT)) != SceneError::OK)
+                return e;
+
             tangents.resize(tangentCount);
             if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(tangents.data()),
                                              PrimitiveDataType::TANGENT)) != SceneError::OK)

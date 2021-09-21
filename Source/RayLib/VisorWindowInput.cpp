@@ -57,7 +57,7 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
             if(action != KeyAction::RELEASED) break;
 
             std::string vCamAsString = VisorCameraToString(customCamera);
-            METU_LOG("%s", vCamAsString.c_str());
+            METU_LOG(vCamAsString);
             break;
         }
         case VisorActionType::START_STOP_TRACE:

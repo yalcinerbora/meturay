@@ -52,7 +52,7 @@ class GPUCameraSpherical final : public GPUCameraI
                                         // Options
                                         bool antiAliasOn) const override;
         __device__ float    Pdf(const Vector3& direction,
-                                const Vector3 position) const override;
+                                const Vector3& position) const override;
 
 
         __device__ uint32_t         FindPixelId(const RayReg& r,
@@ -122,7 +122,7 @@ class CPUCameraGroupSpherical final : public CPUCameraGroupI
                                                    const std::string& scenePath) override;
         TracerError					    ConstructCameras(const CudaSystem&,
                                                          const GPUTransformI**) override;
-        uint32_t					    CameraCount() const override;
+        uint32_t					        CameraCount() const override;
 
         size_t						    UsedGPUMemory() const override;
         size_t						    UsedCPUMemory() const override;
@@ -154,7 +154,7 @@ inline GPUCameraSpherical::GPUCameraSpherical(float pixelRatio,
 __device__
 inline void GPUCameraSpherical::Sample(// Output
                                        float& distance,
-                                       Vector3& direction,
+                                       Vector3& dirOut,
                                        float& pdf,
                                        // Input
                                        const Vector3& sampleLoc,
@@ -162,9 +162,9 @@ inline void GPUCameraSpherical::Sample(// Output
                                        RandomGPU&) const
 {
     // One
-    direction = sampleLoc - position;
-    distance = direction.Length();
-    direction.NormalizeSelf();
+    dirOut = sampleLoc - position;
+    distance = dirOut.Length();
+    dirOut.NormalizeSelf();
     pdf = 1.0f;
 }
 
@@ -231,8 +231,8 @@ inline void GPUCameraSpherical::GenerateRay(// Output
 }
 
 __device__
-inline float GPUCameraSpherical::Pdf(const Vector3& direction,
-                                     const Vector3 position) const
+inline float GPUCameraSpherical::Pdf(const Vector3& worldDir,
+                                     const Vector3& worldPos) const
 {
     return 0.0f;
 }

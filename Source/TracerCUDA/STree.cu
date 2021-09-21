@@ -168,7 +168,7 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
         DeviceMemory::EnlargeBuffer(selectedIndices, (processedNodeCount + 1) *sizeof(uint32_t));
         // Get a new write tree list
         LinearizeDTreeGPUPtrs(writeDTreeGPUBuffer, false);
-        DTreeGPU** dWriteDTrees = static_cast<DTreeGPU**>(writeDTreeGPUBuffer);
+        DTreeGPU** dWriteDTreesTemp = static_cast<DTreeGPU**>(writeDTreeGPUBuffer);
 
         // Mark Leafs
         gpu.GridStrideKC_X(0, 0, nodeCount,
@@ -177,7 +177,7 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
                            //
                            static_cast<uint32_t*>(splitMarks),
                            *dSTree,
-                           dWriteDTrees,
+                           dWriteDTreesTemp,
                            maxSamplesPerNode,
                            offset,
                            static_cast<uint32_t>(processedNodeCount));

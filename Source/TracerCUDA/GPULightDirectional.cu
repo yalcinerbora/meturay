@@ -43,7 +43,7 @@ SceneError CPULightGroupDirectional::InitializeGroup(const LightGroupDataList& l
     for(const auto& node : lightNodes)
     {
         // Convert Ids to inner index
-        uint32_t mediumIndex = mediumIdIndexPairs.at(node.mediumId);
+        uint16_t mediumIndex = static_cast<uint16_t>(mediumIdIndexPairs.at(node.mediumId));
         uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
         HitKey materialKey = allMaterialKeys.at(std::make_pair(BaseConstants::EMPTY_PRIMITIVE_NAME,
                                                                node.materialId));

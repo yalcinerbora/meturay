@@ -58,7 +58,7 @@ class GPULight : public GPULightI
                                             bool antiAliasOn = true) const override;
 
         __device__ float        Pdf(const Vector3& direction,
-                                    const Vector3 position) const override;
+                                    const Vector3& position) const override;
 
         __device__ bool         CanBeSampled() const override;
 
@@ -199,7 +199,7 @@ __device__ void  GPULight<PGroup>::GenerateRay(// Output
 
 template <class PGroup>
 __device__ float GPULight<PGroup>::Pdf(const Vector3& direction,
-                                       const Vector3 position) const
+                                       const Vector3& position) const
 {    
     // First check if we are actually intersecting
     float distance, pdf;

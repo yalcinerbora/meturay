@@ -134,7 +134,7 @@ bool ConfigParser::ParseVisorOptions(// Visor Input Related
     }
     catch(nlohmann::json::parse_error const& e)
     {
-        METU_ERROR_LOG("%s", e.what());
+        METU_ERROR_LOG(e.what());
         return false;
     }
     return true;
@@ -268,7 +268,7 @@ bool ConfigParser::ParseTracerOptions(// Tracer Related
     }
     catch(nlohmann::json::exception const& e)
     {
-        METU_ERROR_LOG("%s", e.what());
+        METU_ERROR_LOG(e.what());
         return false;
     }
     return true;

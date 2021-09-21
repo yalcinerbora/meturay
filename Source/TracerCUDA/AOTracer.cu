@@ -48,11 +48,11 @@ TracerError AOTracer::Initialize()
 
     // Generate your worklist
     const auto& infoList = scene.WorkBatchInfo();
-    for(const auto& workInfo : infoList)
+    for(const auto& wInfo : infoList)
     {
         // Dont fetch mat group since we are not going to use it
-        const GPUPrimitiveGroupI& pg = *std::get<1>(workInfo);
-        uint32_t batchId = std::get<0>(workInfo);
+        const GPUPrimitiveGroupI& pg = *std::get<1>(wInfo);
+        uint32_t batchId = std::get<0>(wInfo);
 
         const std::string workTypeName = MangledNames::WorkBatch(pg.Type(), "AO");
 

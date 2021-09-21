@@ -201,7 +201,7 @@ void DTree::SwapTrees(float fluxRatio, uint32_t depthLimit,
     // Root does not have any parent so we need to manually include here
     newNodeCount++;
 
-    //METU_LOG("NEW_NODE_COUT %u", newNodeCount);
+    //METU_LOG("NEW_NODE_COUT {:d}", newNodeCount);
 
     // Reserve enough nodes on the other tree for construction
     readTree.ResetAndReserve(newNodeCount, gpu, stream);

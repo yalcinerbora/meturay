@@ -56,7 +56,7 @@ int main(int argc, const char* argv[])
 
     if(argc == 1)
     {
-        METU_LOG(app.help().c_str());
+        METU_LOG(app.help());
         return 0;
     }
 
@@ -171,7 +171,7 @@ int main(int argc, const char* argv[])
     catch(TracerException const& e)
     {
         std::string err = static_cast<TracerError>(e);
-        METU_ERROR_LOG("%s (%s)", err.c_str(), e.what());
+        METU_ERROR_LOG("{:s} ({:s})", err.c_str(), e.what());
         return 1;
     }
 
