@@ -6,16 +6,12 @@
 #include "RayLib/BitManipulation.h"
 #include "RayLib/FileUtility.h"
 
-#include "PPGTracerWork.cuh"
-#include "GPULightSamplerUniform.cuh"
-#include "GenerationKernels.cuh"
-#include "GPUWork.cuh"
-#include "GPUAcceleratorI.h"
-
 #include "TracerDebug.h"
 
 #include "GPUCameraSpherical.cuh"
 #include "GPUTransformIdentity.cuh"
+
+#include "DeviceMemory.h"
 
 __global__
 void KCConstructSingleGPUCameraSpherical(GPUCameraSpherical* gCameraLocations,
@@ -29,6 +25,8 @@ void KCConstructSingleGPUCameraSpherical(GPUCameraSpherical* gCameraLocations,
                                          //
                                          const uint16_t gMediumIndex)
 {
+    if(threadIdx.x != 0) return;
+
     // Our transform is always identity
     GPUTransformIdentity identityTransform;
     // Get Camera Material Index
@@ -114,7 +112,7 @@ void DirectTracerMiddleCallback::SendImage(const std::vector<Byte> data,
     assert(portionStart == start);
     assert(portionEnd == end);
     // We did set this
-    assert(pf == PixelFormat::RGB_FLOAT);
+    assert(pf == PixelFormat::RGBA_FLOAT);
 
     // Directly copy data to pixelLocation buffer;
     const Vector3f* pixels = reinterpret_cast<const Vector3f*>(data.data());
@@ -153,6 +151,7 @@ TracerError RefPGTracer::Initialize()
 
     // Allocate a SphericalCamera Memory (construct when needed)
     memory = DeviceMemory(sizeof(GPUCameraSpherical));
+    dSphericalCamera = static_cast<GPUCameraSpherical*>(memory);
 
     // Set Custom Options for path tracer
     // Set path tracer image format
@@ -190,6 +189,9 @@ TracerError RefPGTracer::SetOptions(const TracerOptionsI& opts)
     // Delegate these to path tracer
     pathTracer.SetOptions(opts);
 
+    // Set Direct Tracer Options
+    directTracer.SetOptions(*GenerateDirectTracerOptions());
+
     return TracerError::OK;
 }
 
@@ -210,7 +212,8 @@ void RefPGTracer::Finalize()
 void RefPGTracer::GenerateWork(int cameraId)
 {
     // Check if the camera is changed
-    if(doInitCameraCreation || currentCamera != cameraId)
+    if(currentCamera != cameraId ||
+       doInitCameraCreation)
     {
         currentCamera = cameraId;
 
@@ -224,7 +227,8 @@ void RefPGTracer::GenerateWork(int cameraId)
     }
 
     // Change camera if we had enough samples
-    if(currentSampleCount >= options.totalSamplePerPixel)
+    if(currentSampleCount >= options.totalSamplePerPixel ||
+       doInitCameraCreation)
     {
         currentPixel++;
         const Vector3f& position = dtCallbacks.Pixel(currentPixel);
@@ -234,8 +238,10 @@ void RefPGTracer::GenerateWork(int cameraId)
         uint16_t gMediumIndex = scene.BaseMediumIndex();
         // Construct a New camera
         cudaSystem.BestGPU().KC_X(0, (cudaStream_t)0, 1,
+                                  // Function
                                   KCConstructSingleGPUCameraSpherical,
-                                  static_cast<GPUCameraSpherical*>(memory),
+                                  // Args
+                                  dSphericalCamera,
                                   !doInitCameraCreation,
                                   //
                                   1.0f,
@@ -283,7 +289,7 @@ void RefPGTracer::AskParameters()
 
 void RefPGTracer::SetImagePixelFormat(PixelFormat f)
 {
-    pathTracer.SetImagePixelFormat(f);
+    directTracer.SetImagePixelFormat(f);
 }
 
 void RefPGTracer::ReportionImage(Vector2i start, Vector2i end)

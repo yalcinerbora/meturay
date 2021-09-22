@@ -79,6 +79,10 @@ else()
                         $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>)
 endif()
 
+# Cuda Compile Options
+add_compile_options($<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:CUDA>>:-G>
+                    $<$<AND:$<CONFIG:Release>,$<COMPILE_LANGUAGE:CUDA>>:-lineinfo>)
+
 # Platform Specific Lib Bin Folders
 set(MRAY_PLATFORM_LIB_DIRECTORY ${MRAY_LIB_DIRECTORY}/${MRAY_PLATFORM_NAME})
 set(MRAY_PLATFORM_BIN_DIRECTORY ${MRAY_BIN_DIRECTORY}/${MRAY_PLATFORM_NAME})

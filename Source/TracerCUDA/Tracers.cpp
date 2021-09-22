@@ -70,3 +70,13 @@ void RefPGTracer::AskOptions()
 void PathTracerMiddleCallback::SendCurrentOptions(TracerOptions){}
 
 void DirectTracerMiddleCallback::SendCurrentOptions(TracerOptions) {}
+
+std::unique_ptr<TracerOptionsI> RefPGTracer::GenerateDirectTracerOptions()
+{
+    VariableList list;
+    list.emplace(DirectTracer::RENDER_TYPE_NAME, 
+                 OptionVariable(DirectTracer::RenderTypeToString(DirectTracer::RENDER_POSITION)));
+    list.emplace(SAMPLE_NAME, OptionVariable(1));
+
+    return std::make_unique<TracerOptions>(std::move(list));
+}

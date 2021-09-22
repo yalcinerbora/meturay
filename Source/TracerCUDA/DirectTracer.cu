@@ -18,7 +18,7 @@
 //    return stream;
 //}
 
-const std::array<std::string, DirectTracer::RenderType::END> DirectTracer::RenderTypeNames =
+const std::array<std::string, DirectTracer::END> DirectTracer::RenderTypeNames =
 {
     "Furnace",
     "Position",

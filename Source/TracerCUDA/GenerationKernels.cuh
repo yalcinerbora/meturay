@@ -158,12 +158,12 @@ void GenerateCameraRaysGPU(// Output
 
         RayReg ray;
         gCamera.GenerateRay(ray,
-                          //
-                          globalSampleId,
-                          totalSamples,
-                          rng,
-                          //
-                          antiAliasOn);
+                            //
+                            globalSampleId,
+                            totalSamples,
+                            rng,
+                            //
+                            antiAliasOn);
         // Generate Required Parameters
         Vector2i pixelSampleId = threadId2d % samplePerLocation;
         Vector2i localPixelId = globalPixelId - pixelStart;

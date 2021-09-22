@@ -16,10 +16,25 @@ class GPUCameraSpherical;
 class PathTracerMiddleCallback : public TracerCallbacksI
 {
     private:
-        TracerCallbacksI*   callbacks;
+        TracerCallbacksI*       callbacks;
+
+        // Image Related
+        uint32_t                maxSamplePerPixel;
+        Vector2i                resolution;
+
+        // Output Name
+
+        std::vector<Vector3>    image;
 
     public:
         // Constructors & Destructor
+                //PathTracerMiddleCallback(TracerCallbacksI*,
+                //                         uint32_t maxSamplePerPixel,
+                //                         const Vector2i& resolution);
+                ~PathTracerMiddleCallback() = default;
+
+        // Methods
+        void    SaveImage();
 
         // Interface
         void    SendCrashSignal() override {};
@@ -87,6 +102,7 @@ class RefPGTracer : public GPUTracerI
         static constexpr const char* LIGHT_SAMPLER_TYPE_NAME    = "NEESampler";
         static constexpr const char* MAX_SAMPLE_NAME            = "TotalSamplePerPixel";
         static constexpr const char* RESOLUTION_NAME            = "Resolution";
+        static constexpr const char* IMAGE_NAME                 = "ImageName";
         
         static constexpr const char* NEE_NAME                   = "NextEventEstimation";
         static constexpr const char* DIRECT_LIGHT_MIS_NAME      = "DirectLightMIS";
@@ -134,6 +150,8 @@ class RefPGTracer : public GPUTracerI
         GPUCameraSpherical*             dSphericalCamera;
         bool                            doInitCameraCreation;
 
+        std::unique_ptr<TracerOptionsI> GenerateDirectTracerOptions();
+
     protected:
     public:
         // Constructors & Destructor
@@ -180,6 +198,7 @@ inline void DirectTracerMiddleCallback::SetSection(const Vector2i& start,
 {
     portionStart = start;
     portionEnd = end;
+    portionEnd = Vector2i::Min(portionEnd, resolution);
 
     // Allocate an image section
     Vector2i size = portionEnd - portionStart;

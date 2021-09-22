@@ -82,7 +82,7 @@
       <FastMath>false</FastMath>
     </CudaCompile>
     <Lib>
-      <AdditionalDependencies>OpenEXR.lib;FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
+      <AdditionalDependencies>fmt.lib;OpenEXR.lib;FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration)</AdditionalLibraryDirectories>
     </Lib>
     <PostBuildEvent>
@@ -137,7 +137,7 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\Imath.dll" "$(OutDir)"</Command>
       <FastMath>false</FastMath>
     </CudaCompile>
     <Lib>
-      <AdditionalDependencies>OpenEXR.lib;FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
+      <AdditionalDependencies>fmt.lib;OpenEXR.lib;FreeImage.lib;Ws2_32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\..\Lib\Win;$(SolutionDir)..\..\Lib\Win\$(Configuration)</AdditionalLibraryDirectories>
     </Lib>
     <PostBuildEvent>

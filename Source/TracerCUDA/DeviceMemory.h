@@ -13,11 +13,15 @@ All of the operations (execpt allocation) are asyncronious.
 TODO: should we interface these?
 
 */
-#include <limits>
 #include <cuda_runtime.h>
 
+#include <limits>
 #include <fstream>
 #include <iostream>
+#include <tuple>
+
+#include "RayLib/MemoryAlignment.h"
+#include "RayLib/Types.h"
 
 class DeviceMemoryI
 {
@@ -119,6 +123,11 @@ class DeviceMemory : public DeviceMemoryI
         size_t                      Size() const override;
 
         static void                 EnlargeBuffer(DeviceMemory&, size_t);
+
+        template <class... Args>
+        static void                 AllocateMultiData(std::tuple<Args*&...>& pointers, DeviceMemory& memory,
+                                                      const std::array<size_t, sizeof...(Args)>& sizeList,
+                                                      size_t alignment);
 };
 
 template<class T>
@@ -174,4 +183,72 @@ inline void DeviceMemory::EnlargeBuffer(DeviceMemory& mem, size_t s)
         mem = std::move(DeviceMemory());
         mem = std::move(DeviceMemory(s));
     }
+}
+
+namespace DeviceMemDetail
+{
+    template<size_t I = 0, class... Tp>
+    inline typename std::enable_if<I == sizeof...(Tp), size_t>::type
+    AcquireTotalSize(std::array<size_t, sizeof...(Tp)>& alignedSizeList,
+                     const std::array<size_t, sizeof...(Tp)>& countList,
+                     size_t alignment)
+    { 
+        return 0;
+    }
+
+    template<std::size_t I = 0, class... Tp>
+    inline typename std::enable_if<(I < sizeof...(Tp)), size_t>::type
+    AcquireTotalSize(std::array<size_t, sizeof...(Tp)>& alignedSizeList,
+                     const std::array<size_t, sizeof...(Tp)>& countList,
+                     size_t alignment)
+    {
+        using CurrentType = typename std::tuple_element_t<I, std::tuple<Tp...>>;
+
+        size_t alignedSize = Memory::AlignSize(sizeof(CurrentType) * countList[I],
+                                        alignment);
+
+        alignedSizeList[I] = alignedSize;
+
+        return alignedSize + AcquireTotalSize<I + 1, Tp...>(alignedSizeList, countList, alignment);
+    }
+
+    template<std::size_t I = 0, class... Tp>
+    inline typename std::enable_if<I == sizeof...(Tp), void>::type
+    CalculatePointers(std::tuple<Tp*&...>& t, size_t& offset, Byte* memory,
+                      const std::array<size_t, sizeof...(Tp)>& alignedSizeList)
+    {}
+
+    template<std::size_t I = 0, class... Tp>
+    inline typename std::enable_if<(I < sizeof...(Tp)), void>::type
+    CalculatePointers(std::tuple<Tp*&...>& t, size_t& offset, Byte* memory,
+                      const std::array<size_t, sizeof...(Tp)>& alignedSizeList)
+    {
+        using CurrentType = typename std::tuple_element_t<I, std::tuple<Tp...>>;
+        // Set Pointer
+        std::get<I>(t) = reinterpret_cast<CurrentType*>(memory + offset);
+        // Increment Offset
+        offset += alignedSizeList[I];
+        // Statically Recurse
+        CalculatePointers<I + 1, Tp...>(t, offset, memory, alignedSizeList);
+    }
+}
+
+template <class... Args>
+void DeviceMemory::AllocateMultiData(std::tuple<Args*&...>& pointers, DeviceMemory& memory,
+                                     const std::array<size_t, sizeof...(Args)>& countList,
+                                     size_t alignment)
+{
+    std::array<size_t, sizeof...(Args)> alignedSizeList;
+    // Acquire total size & allocation size of each array
+    size_t totalSize = DeviceMemDetail::AcquireTotalSize<0, Args...>(alignedSizeList, 
+                                                                     countList, 
+                                                                     alignment);
+    // Allocate Memory
+    DeviceMemory::EnlargeBuffer(memory, totalSize);
+    Byte* ptr = static_cast<Byte*>(memory);
+    // Populate pointers
+    size_t offset = 0;
+    DeviceMemDetail::CalculatePointers(pointers, offset, ptr, alignedSizeList);
+
+    assert(totalSize == offset);
 }

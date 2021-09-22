@@ -29,6 +29,9 @@ class DirectTracer : public RayTracer
             RenderType  renderType      = RenderType::RENDER_FURNACE;   // What to render?
         };
 
+        static TracerError      StringToRenderType(RenderType&, const std::string&);
+        static std::string      RenderTypeToString(RenderType);
+
     private:
         static const std::array<std::string, RenderType::END> RenderTypeNames;
 
@@ -45,9 +48,6 @@ class DirectTracer : public RayTracer
         EmptyMat<BasicSurface>  emptyMat;
 
         uint32_t                currentCameraId;
-
-        static TracerError      StringToRenderType(RenderType&, const std::string&);
-        static std::string      RenderTypeToString(RenderType);
 
     protected:
     public:
