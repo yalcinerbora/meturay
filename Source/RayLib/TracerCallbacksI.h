@@ -26,7 +26,7 @@ class TracerCallbacksI
         virtual void    SendImageSectionReset(Vector2i start = Zero2i,
                                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
         virtual void    SendImage(const std::vector<Byte> data,
-                                  PixelFormat, size_t sampleCount,
+                                  PixelFormat, size_t offset,
                                   Vector2i start = Zero2i,
                                   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
         virtual void    SendCurrentOptions(TracerOptions) = 0;

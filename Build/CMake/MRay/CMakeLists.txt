@@ -15,6 +15,12 @@ target_compile_definitions(MRay PRIVATE ${MRAY_PREPROCESSOR_DEFS_GENERIC})
 target_link_libraries(MRay PRIVATE
                       RayLib)
 
+# Not-linked but dependent targets
+add_dependencies(MRay 
+                 TracerCUDA
+                 VisorGL)
+
+# Debug Parameters
 if(MSVC)
 
     set(DEBUG_ARGS

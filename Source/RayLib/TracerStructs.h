@@ -52,7 +52,7 @@ using WorkBatchCreationInfo = std::vector<std::tuple<uint32_t,
 // Logic Independent parameters for tracer
 // Logic Dependent ones will be provided by TracerOptionsI
 struct TracerParameters
-{
-    bool        verbose;
-    uint32_t    seed;
+{    
+    bool        verbose;    // Let Tracer to Log what it is doing   
+    uint32_t    seed;       // RNG Seed
 };

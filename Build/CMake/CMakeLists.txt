@@ -10,7 +10,7 @@ if(UNIX)
 endif()
 
 # Architecture
-set(CMAKE_CUDA_ARCHITECTURES "52" CACHE STRING "Architecture chosen by the user at CMake configure time")
+set(CMAKE_CUDA_ARCHITECTURES "61" CACHE STRING "Architecture chosen by the user at CMake configure time")
 set_property(CACHE CMAKE_CUDA_ARCHITECTURES PROPERTY STRINGS 52 60 61 70 72 75 86)
 
 # Globals

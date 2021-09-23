@@ -34,6 +34,9 @@ class ImageIO
                                        const std::string& filePath) const;
 
         // Write
+        bool                WriteAsEXR(const float* image,
+                                       const Vector2ui& size,
+                                       const std::string& fileName) const;
         bool                 WriteAsEXR(const Vector4f* image,
                                         const Vector2ui& size,
                                         const std::string& fileName) const;

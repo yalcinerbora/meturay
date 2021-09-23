@@ -4,7 +4,9 @@
 #include "RayLib/GPUSceneI.h"
 #include "RayLib/TracerCallbacksI.h"
 #include "RayLib/BitManipulation.h"
+#include "RayLib/ColorConversion.h"
 #include "RayLib/FileUtility.h"
+#include "RayLib/ImageIO.h"
 
 #include "TracerDebug.h"
 
@@ -33,7 +35,7 @@ void KCConstructSingleGPUCameraSpherical(GPUCameraSpherical* gCameraLocations,
     // TODO: Assign a proper material (for bi-directional stuff)
     HitKey gCameraMaterialId = HitKey::InvalidKey;
 
-    if(deletePrevious) delete gCameraLocations;
+    if(deletePrevious) gCameraLocations->~GPUCameraSpherical();
     new (gCameraLocations) GPUCameraSpherical(pixelRatio,
                                               position,
                                               direction,
@@ -43,6 +45,18 @@ void KCConstructSingleGPUCameraSpherical(GPUCameraSpherical* gCameraLocations,
                                               //
                                               gMediumIndex,
                                               gCameraMaterialId);
+}
+
+PathTracerMiddleCallback::PathTracerMiddleCallback(const Vector2i& resolution)
+    : callbacks(nullptr)
+    , resolution(resolution)
+    , lumPixels(resolution[0] * resolution[1], 0.0f)
+    , totalSampleCounts(resolution[0] * resolution[1], 0)
+{}
+
+void PathTracerMiddleCallback::SetCallbacks(TracerCallbacksI* cb)
+{
+    callbacks = cb;
 }
 
 void PathTracerMiddleCallback::SendLog(const std::string s)
@@ -61,18 +75,50 @@ void PathTracerMiddleCallback::SendImageSectionReset(Vector2i start, Vector2i en
 }
 
 void PathTracerMiddleCallback::SendImage(const std::vector<Byte> data,
-                                         PixelFormat pf, size_t sampleCount,
+                                         PixelFormat pf, size_t offset,
                                          Vector2i start, Vector2i end)
 {
-    // Accumulate image???????
-    //...
+    // Entire image should be here
+    assert(end == resolution);
+    assert(start == Zero2i);
+    assert(pf == PixelFormat::RGBA_FLOAT);
+    
+    // Convert to Luminance & Calculate Average
+    const uint32_t* newSampleCounts = reinterpret_cast<const uint32_t*>(data.data() + offset);
+    const Vector4f* pixels = reinterpret_cast<const Vector4f*>(data.data());
+    for(size_t i = 0; i < (resolution[0] * resolution[1]); i++)
+    {
+        // Incoming Samples
+        float incLum = Utility::RGBToLuminance(pixels[i]);
+        uint32_t incSampleCount = newSampleCounts[i];
 
-    // Accumulate the data yourself ??
+        // Old
+        float oldLum = lumPixels[i];
+        uint32_t oldSampleCount = totalSampleCounts[i];
 
+        uint32_t newSampleCount = incSampleCount + oldSampleCount;
+        float newAvg = (oldLum * oldSampleCount) + (incLum * incSampleCount);
+        newAvg /= static_cast<float>(newSampleCount);
+
+        lumPixels[i] = newAvg;
+        totalSampleCounts[i] = newSampleCount;
+    }
 
     // Delegate the to the visor for visual feedback
-    if(callbacks) callbacks->SendImage(std::move(data), pf, sampleCount,
+    if(callbacks) callbacks->SendImage(std::move(data), pf, offset,
                                        start, end);
+}
+
+void PathTracerMiddleCallback::SaveImage(const std::string& baseName, int pixelId)
+{
+    std::stringstream pixelIdStr;
+    pixelIdStr << std::setw(6) << std::setfill('0') << pixelId;
+    std::string path = pixelIdStr.str() + baseName + ".exr";
+
+    ImageIO::Instance().WriteAsEXR(lumPixels.data(),
+                                   Vector2ui(resolution[0], resolution[1]),
+                                   path);
+
 }
 
 void DirectTracerMiddleCallback::SendLog(const std::string s)
@@ -102,7 +148,7 @@ void DirectTracerMiddleCallback::SendImageSectionReset(Vector2i start, Vector2i 
 }
 
 void DirectTracerMiddleCallback::SendImage(const std::vector<Byte> data,
-                                           PixelFormat pf, size_t sampleCount,
+                                           PixelFormat pf, size_t offset,
                                            Vector2i start, Vector2i end)
 {
     end = Vector2i::Min(end, resolution);
@@ -135,6 +181,7 @@ RefPGTracer::RefPGTracer(const CudaSystem& s,
     , cudaSystem(s)
     , doInitCameraCreation(true)
     , scene(scene)
+    , ptCallbacks(Zero2i)
 {}
 
 TracerError RefPGTracer::Initialize()
@@ -155,10 +202,12 @@ TracerError RefPGTracer::Initialize()
 
     // Set Custom Options for path tracer
     // Set path tracer image format
-    pathTracer.SetImagePixelFormat(PixelFormat::RGB_FLOAT);
+    pathTracer.SetImagePixelFormat(PixelFormat::RGBA_FLOAT);
     pathTracer.ResizeImage(options.resolution);
     pathTracer.ReportionImage();
-
+    // Generate a Proper Callback for Path Tracer
+    ptCallbacks = std::move(PathTracerMiddleCallback(options.resolution));
+    ptCallbacks.SetCallbacks(callbacks);
 
     return TracerError::OK;
 }
@@ -185,6 +234,8 @@ TracerError RefPGTracer::SetOptions(const TracerOptionsI& opts)
 
     if((err = opts.GetVector2i(options.resolution, RESOLUTION_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetString(options.refPGOutputName, IMAGE_NAME)) != TracerError::OK)
+        return err;
 
     // Delegate these to path tracer
     pathTracer.SetOptions(opts);
@@ -207,6 +258,12 @@ void RefPGTracer::Finalize()
     currentSampleCount += options.samplePerIteration * options.samplePerIteration;
     // Finalize the path tracer
     pathTracer.Finalize();
+
+    // Save the image 
+    if(currentSampleCount >= options.totalSamplePerPixel)
+    {
+        ptCallbacks.SaveImage(options.refPGOutputName, currentPixel);
+    }
 }
 
 void RefPGTracer::GenerateWork(int cameraId)
@@ -257,6 +314,7 @@ void RefPGTracer::GenerateWork(int cameraId)
 
         // Reset the shown image
         if(callbacks) callbacks->SendImageSectionReset();
+        doInitCameraCreation = false;
     }
 
     // Generate Work for current Camera

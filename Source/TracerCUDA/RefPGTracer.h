@@ -19,22 +19,20 @@ class PathTracerMiddleCallback : public TracerCallbacksI
         TracerCallbacksI*       callbacks;
 
         // Image Related
-        uint32_t                maxSamplePerPixel;
         Vector2i                resolution;
 
         // Output Name
-
-        std::vector<Vector3>    image;
+        std::vector<float>      lumPixels;
+        std::vector<uint32_t>   totalSampleCounts;
 
     public:
         // Constructors & Destructor
-                //PathTracerMiddleCallback(TracerCallbacksI*,
-                //                         uint32_t maxSamplePerPixel,
-                //                         const Vector2i& resolution);
+                PathTracerMiddleCallback(const Vector2i& resolution);
                 ~PathTracerMiddleCallback() = default;
 
         // Methods
-        void    SaveImage();
+        void    SaveImage(const std::string& baseName, int pixelId);
+        void    SetCallbacks(TracerCallbacksI*);
 
         // Interface
         void    SendCrashSignal() override {};
@@ -44,7 +42,7 @@ class PathTracerMiddleCallback : public TracerCallbacksI
         void    SendImageSectionReset(Vector2i start = Zero2i,
                                       Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void    SendImage(const std::vector<Byte> data,
-                          PixelFormat, size_t sampleCount,
+                          PixelFormat, size_t offset,
                           Vector2i start = Zero2i,
                           Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void    SendCurrentOptions(TracerOptions) override;
@@ -73,7 +71,7 @@ class DirectTracerMiddleCallback : public TracerCallbacksI
         void    SendImageSectionReset(Vector2i start = Zero2i,
                                       Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void    SendImage(const std::vector<Byte> data,
-                          PixelFormat, size_t sampleCount,
+                          PixelFormat, size_t offset,
                           Vector2i start = Zero2i,
                           Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void    SendCurrentOptions(TracerOptions) override;
@@ -107,6 +105,7 @@ class RefPGTracer : public GPUTracerI
         static constexpr const char* NEE_NAME                   = "NextEventEstimation";
         static constexpr const char* DIRECT_LIGHT_MIS_NAME      = "DirectLightMIS";
 
+
         struct Options
         {
             uint32_t            totalSamplePerPixel = 65536;
@@ -117,6 +116,7 @@ class RefPGTracer : public GPUTracerI
 
             //
             Vector2i            resolution          = Vector2i(1024);
+            std::string         refPGOutputName     = "refPGOut";
 
             std::string         lightSamplerType    = "Uniform";
             // Misc
@@ -186,6 +186,7 @@ class RefPGTracer : public GPUTracerI
 inline void RefPGTracer::AttachTracerCallbacks(TracerCallbacksI& tc)
 {
     callbacks = &tc;
+    ptCallbacks.SetCallbacks(callbacks);
 }
 
 inline const Vector3f& DirectTracerMiddleCallback::Pixel(uint32_t pixelIndex) const

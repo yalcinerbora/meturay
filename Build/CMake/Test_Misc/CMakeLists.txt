@@ -57,6 +57,10 @@ target_link_libraries(Test_Misc PRIVATE
                       $<$<CONFIG:Release>:gtest>
                       $<$<CONFIG:Release>:gmock>)
 
+# Not-linked but dependent targets
+add_dependencies(Test_Misc TracerCUDA)
+
+
 if(MSVC)
 
     set(DEBUG_ARGS "--gtest_filter=*.* --gtest_catch_exceptions=0 --gtest_repeat=1 --gtest_shuffle=0")

@@ -5,9 +5,11 @@
 #include <algorithm>
 
 #include <OpenEXR/ImfRgbaFile.h>
-//#include <OpenEXR/ImfConvert.h>
 #include <OpenEXR/ImfRgba.h>
 #include <OpenEXR/ImfArray.h>
+
+#include <OpenEXR/ImfOutputFile.h>
+#include <OpenEXR/ImfChannelList.h>
 
 ImageIO& ImageIO::Instance()
 {
@@ -176,6 +178,39 @@ bool ImageIO::ReadImage(std::vector<Byte>& pixels,
                     rowSize);
     }
     // All done!
+    return true;
+}
+
+bool ImageIO::WriteAsEXR(const float* image,
+                         const Vector2ui& size,
+                         const std::string& fileName) const
+{
+    std::vector<Imath::half> convertedData(size[0] * size[1]);
+    // Y Invert data and convert to half
+    for(uint32_t y = 0; y < size[1]; y++)
+    for(uint32_t x = 0; x < size[0]; x++)
+    {
+        uint32_t inIndex = y * size[0] + x;
+        uint32_t invertexY = size[1] - y - 1;
+        uint32_t outIndex = invertexY * size[0] + x;
+        
+        convertedData[outIndex] = image[inIndex];
+    }
+
+    Imf::Header header(size[0], size[1]);
+    header.channels().insert("Y", Imf::Channel(Imf::HALF));    
+
+    Imf::OutputFile file(fileName.c_str(), header);
+    Imf::FrameBuffer frameBuffer; 
+    Imf::Slice lumSlice = Imf::Slice(Imf::HALF,
+                                     reinterpret_cast<char*>(convertedData.data()), // base // 8
+                                     sizeof(Imath::half),
+                                     sizeof(Imath::half) * size[0]);
+    frameBuffer.insert("Y", lumSlice);
+                       
+    file.setFrameBuffer(frameBuffer);
+    file.writePixels(size[1]);
+
     return true;
 }
 
