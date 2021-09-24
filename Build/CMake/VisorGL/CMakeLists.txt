@@ -98,5 +98,8 @@ if(MSVC)
                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
                        "${MRAY_CONFIG_LIB_DIRECTORY}/glfw3.dll"
                        "${MRAY_CONFIG_LIB_DIRECTORY}/glew32.dll"
+                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/glfw3.pdb">
+                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/glew32.pdb">
+                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/Imgui.pdb">
                        ${MRAY_CONFIG_BIN_DIRECTORY})
 endif()

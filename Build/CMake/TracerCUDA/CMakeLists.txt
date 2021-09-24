@@ -374,7 +374,9 @@ target_link_libraries(TracerCUDA
                       ${PLATFORM_SPEC_LIBRARIES})
 
 # Object Group for testing
-add_library(TracerCUDA_ForTest STATIC ${SRC_ALL})
+#add_library(TracerCUDA_ForTest STATIC ${SRC_ALL})
+add_library(TracerCUDA_ForTest STATIC $<TARGET_OBJECTS:TracerCUDA>)
+
 target_include_directories(TracerCUDA_ForTest PRIVATE
                            ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})

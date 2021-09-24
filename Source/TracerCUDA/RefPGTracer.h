@@ -31,7 +31,7 @@ class PathTracerMiddleCallback : public TracerCallbacksI
                 ~PathTracerMiddleCallback() = default;
 
         // Methods
-        void    SaveImage(const std::string& baseName, int pixelId);
+        void    SaveImage(const std::string& baseName, Vector2i pixelId);
         void    SetCallbacks(TracerCallbacksI*);
 
         // Interface
@@ -54,36 +54,38 @@ class PathTracerMiddleCallback : public TracerCallbacksI
 class DirectTracerMiddleCallback : public TracerCallbacksI
 {
     private:
-        std::vector<Vector3f>   pixelLocations;
+        std::vector<Vector4f>   pixelLocations;
         Vector2i                portionStart;
         Vector2i                portionEnd;
         Vector2i                resolution;
 
     public:
         // Constructors & Destructor
-                DirectTracerMiddleCallback() = default;
+                    DirectTracerMiddleCallback() = default;
 
+        // Methods
+        Vector2i    PixelGlobalId(int linearLocalPixelId);
         //  Interface
-        void    SendCrashSignal() override {};
-        void    SendLog(const std::string) override;
-        void    SendError(TracerError) override;
-        void    SendAnalyticData(AnalyticData) override {};
-        void    SendImageSectionReset(Vector2i start = Zero2i,
-                                      Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-        void    SendImage(const std::vector<Byte> data,
-                          PixelFormat, size_t offset,
-                          Vector2i start = Zero2i,
-                          Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-        void    SendCurrentOptions(TracerOptions) override;
-        void    SendCurrentParameters(TracerParameters) override {};
-        void    SendCurrentCamera(VisorCamera) override {};
-        void    SendCurrentSceneCameraCount(uint32_t) override {};
+        void        SendCrashSignal() override {};
+        void        SendLog(const std::string) override;
+        void        SendError(TracerError) override;
+        void        SendAnalyticData(AnalyticData) override {};
+        void        SendImageSectionReset(Vector2i start = Zero2i,
+                                          Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+        void        SendImage(const std::vector<Byte> data,
+                              PixelFormat, size_t offset,
+                              Vector2i start = Zero2i,
+                              Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+        void        SendCurrentOptions(TracerOptions) override;
+        void        SendCurrentParameters(TracerParameters) override {};
+        void        SendCurrentCamera(VisorCamera) override {};
+        void        SendCurrentSceneCameraCount(uint32_t) override {};
 
         // Setters
         void                SetSection(const Vector2i&, const Vector2i&);
         void                SetResolution(const Vector2i&);
 
-        const Vector3f&     Pixel(uint32_t pixelIndex) const;
+        const Vector4f&     Pixel(uint32_t pixelIndex) const;
         const Vector2i&     Start() const;
         const Vector2i&     End() const;
         const Vector2i&     Resolution() const;
@@ -189,7 +191,15 @@ inline void RefPGTracer::AttachTracerCallbacks(TracerCallbacksI& tc)
     ptCallbacks.SetCallbacks(callbacks);
 }
 
-inline const Vector3f& DirectTracerMiddleCallback::Pixel(uint32_t pixelIndex) const
+inline Vector2i DirectTracerMiddleCallback::PixelGlobalId(int linearLocalPixelId)
+{
+    Vector2i segmentSize = portionEnd - portionStart;
+    Vector2i localPixelId2D(linearLocalPixelId % segmentSize[0],
+                            linearLocalPixelId / segmentSize[0]);
+    return portionStart + localPixelId2D;
+}
+
+inline const Vector4f& DirectTracerMiddleCallback::Pixel(uint32_t pixelIndex) const
 {
     return pixelLocations[pixelIndex];
 }

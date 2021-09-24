@@ -57,6 +57,8 @@ if(MSVC)
                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
                        "${MRAY_CONFIG_LIB_DIRECTORY}/gmock$<$<CONFIG:Debug>:d>.dll"
                        "${MRAY_CONFIG_LIB_DIRECTORY}/gtest$<$<CONFIG:Debug>:d>.dll"
+                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/gmock$<$<CONFIG:Debug>:d>.pdb">
+                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/gtest$<$<CONFIG:Debug>:d>.pdb">
                        ${MRAY_CONFIG_BIN_DIRECTORY})
 
 endif()

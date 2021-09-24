@@ -6,6 +6,7 @@
 #include "RayLib/BitManipulation.h"
 #include "RayLib/ColorConversion.h"
 #include "RayLib/FileUtility.h"
+#include "RayLib/FileSystemUtility.h"
 #include "RayLib/ImageIO.h"
 
 #include "TracerDebug.h"
@@ -109,15 +110,33 @@ void PathTracerMiddleCallback::SendImage(const std::vector<Byte> data,
                                        start, end);
 }
 
-void PathTracerMiddleCallback::SaveImage(const std::string& baseName, int pixelId)
+void PathTracerMiddleCallback::SaveImage(const std::string& baseName, Vector2i
+                                         pixelId)
 {
-    std::stringstream pixelIdStr;
-    pixelIdStr << std::setw(6) << std::setfill('0') << pixelId;
-    std::string path = pixelIdStr.str() + baseName + ".exr";
 
-    ImageIO::Instance().WriteAsEXR(lumPixels.data(),
-                                   Vector2ui(resolution[0], resolution[1]),
-                                   path);
+    std::stringstream pixelIdStr;
+    pixelIdStr << '['  << std::setw(4) << std::setfill('0') << pixelId[1]
+               << ", " << std::setw(4) << std::setfill('0') << pixelId[0]
+               << ']';
+    std::string path = Utility::PrependToFileInPath(baseName, pixelIdStr.str()) + ".exr";
+
+    Utility::ForceMakeDirectoriesInPath(path);
+
+    bool result = ImageIO::Instance().WriteAsEXR(lumPixels.data(),
+                                                 Vector2ui(resolution[0], resolution[1]),
+                                                 path);
+
+    if(callbacks && result)
+    {
+        std::string s = fmt::format("Pixel ({:d},{:d}) reference is written as \"{:s}\"",
+                                    pixelId[0], pixelId[1], path);
+        callbacks->SendLog(s);
+    }
+    else if(callbacks)
+    {
+        std::string s = fmt::format("Unable to Save\"{:s}\"", path);
+        callbacks->SendLog(s);
+    }
 
 }
 
@@ -141,9 +160,9 @@ void DirectTracerMiddleCallback::SendImageSectionReset(Vector2i start, Vector2i 
     
     // Zero (in this case infinity) out the pixels
     std::for_each(pixelLocations.begin(), pixelLocations.end(),
-                  [] (Vector3f& pixel)
+                  [] (Vector4f& pixel)
                   {
-                      pixel = Vector3f(std::numeric_limits<float>::infinity());
+                      pixel = Vector4f(std::numeric_limits<float>::infinity());
                   });    
 }
 
@@ -161,7 +180,7 @@ void DirectTracerMiddleCallback::SendImage(const std::vector<Byte> data,
     assert(pf == PixelFormat::RGBA_FLOAT);
 
     // Directly copy data to pixelLocation buffer;
-    const Vector3f* pixels = reinterpret_cast<const Vector3f*>(data.data());
+    const Vector4f* pixels = reinterpret_cast<const Vector4f*>(data.data());
     int pixelCount = size[0] * size[1];
 
     // Copy that data
@@ -262,7 +281,8 @@ void RefPGTracer::Finalize()
     // Save the image 
     if(currentSampleCount >= options.totalSamplePerPixel)
     {
-        ptCallbacks.SaveImage(options.refPGOutputName, currentPixel);
+        ptCallbacks.SaveImage(options.refPGOutputName, 
+                              dtCallbacks.PixelGlobalId(currentPixel));
     }
 }
 

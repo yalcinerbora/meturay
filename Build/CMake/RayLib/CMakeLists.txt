@@ -205,5 +205,8 @@ if(MSVC)
                        "${MRAY_CONFIG_LIB_DIRECTORY}/Imath.dll"
                        "${MRAY_CONFIG_LIB_DIRECTORY}/IlmThread.dll"
                        "${MRAY_CONFIG_LIB_DIRECTORY}/Iex.dll"
+                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/FreeImage.pdb">
+                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/OpenEXR.pdb">
+                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/fmt.pdb">
                        ${MRAY_CONFIG_BIN_DIRECTORY})
 endif()
