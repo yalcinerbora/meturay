@@ -163,7 +163,10 @@ int main(int argc, const char* argv[])
     {
         // If scene file is provided as a argument set scene for the node
         if(!sceneFileName.empty())
+        {
             selfNode.ChangeScene(Utility::CopyStringU8(sceneFileName));
+            selfNode.ChangeTime(0.0);
+        }
 
         // Work returns when a crash occurs or user terminates
         selfNode.Work();

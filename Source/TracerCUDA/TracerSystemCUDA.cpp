@@ -53,6 +53,14 @@ TracerError TracerSystemCUDA::Initialize(const std::vector<SurfaceLoaderSharedLi
     return TracerError::OK;
 }
 
+void TracerSystemCUDA::ClearScene()
+{
+    // Clear Logic List by constructing new logic generator
+    logicGenerator = std::make_unique<TracerLogicGenerator>();
+    // Clear Scene
+    gpuScene = nullptr;
+}
+
 void TracerSystemCUDA::GenerateScene(GPUSceneI*& newScene,
                                      const std::u8string& scenePath)
 {

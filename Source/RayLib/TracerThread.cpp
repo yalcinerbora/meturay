@@ -19,6 +19,7 @@ TracerThread::TracerThread(TracerSystemI& t,
     , tracerParameters(params)
     , tracerTypeName(tracerTypeName)
     , tracerCallbacks(tracerCallbacks)
+    , isPrevStopped(false)
 {}
 
 bool TracerThread::InternallyTerminated() const
@@ -46,7 +47,7 @@ void TracerThread::LoopWork()
 
     // First check that the scene is changed
     std::u8string newScene;
-    if(currentScenePath.CheckChanged(newScene))
+    if(currentScenePath.CheckChanged(newScene) || isPrevStopped)
     {
         newSceneGenerated = true;
         // First Generate Scene
@@ -61,26 +62,23 @@ void TracerThread::LoopWork()
     // Check if the time is changed
     SceneError sError = SceneError::OK;
     double newTime;
-    if(currentTime.CheckChanged(newTime))
+    bool timeChanged = currentTime.CheckChanged(newTime);
+    // Generate Scene (time change is implicit)
+    if(newSceneGenerated)
     {
-        if(newSceneGenerated &&
-           (sError = currentScene->LoadScene(newTime)) != SceneError::OK)
-        {
-            PrintErrorAndSignalTerminate(sError);
-            return;
-        }
-        else if((sError = currentScene->ChangeTime(newTime)) != SceneError::OK)
+        if((sError = currentScene->LoadScene(newTime)) != SceneError::OK)
         {
             PrintErrorAndSignalTerminate(sError);
             return;
         }
     }
-    else if(newSceneGenerated &&
-            (sError = currentScene->LoadScene(newTime)) != SceneError::OK)
+    // Change time if required
+    else if(timeChanged && 
+            ((sError = currentScene->ChangeTime(newTime)) != SceneError::OK))
     {
         PrintErrorAndSignalTerminate(sError);
         return;
-    }
+    }    
 
     // Send new camera count to the visor(s)
     if(newSceneGenerated)
@@ -107,6 +105,8 @@ void TracerThread::LoopWork()
 
         imageAlreadyChanged = true;
     }
+
+    // TODO: wtf is this?
     if(!tracer) return;
 
     // Check if image is changed
@@ -146,12 +146,15 @@ void TracerThread::LoopWork()
     // (send the generated image to the visor etc.)
     tracer->Finalize();
 
+    // Set previously stopped to false since we cycled once
+    isPrevStopped = false;
+
+    // These timer operations
     timer.Stop();
     double elapsedS = timer.Elapsed<CPUTimeSeconds>();
     double rps = resolution.Get()[0] * resolution.Get()[1];
     rps *= (1.0 / elapsedS);
     rps /= 1'000'000.0;
-
     fprintf(stdout, "%c[2K", 27);
     fprintf(stdout, "Time: %fs Rps: %fM ray/s\r",
             elapsedS, rps);
@@ -159,8 +162,14 @@ void TracerThread::LoopWork()
 
 void TracerThread::FinalWork()
 {
-    // No final work for tracer
-    // Eveything should destroy gracefully
+    // In final work (after loop),
+    // just set previously stopped
+    isPrevStopped = true;
+    // Clear the scene
+    tracerSystem.ClearScene();
+    currentScene = nullptr;
+
+    // Eveything else should destroy gracefully
 }
 
 TracerError TracerThread::RecreateTracer()
@@ -230,15 +239,10 @@ void TracerThread::ChangeCamera(VisorCamera cam)
 
 void TracerThread::StartStopTrace(bool start)
 {
-    //// This command only be callsed when the tracer thread is
-    //// already available
-    //// Start(), Stop() functions cannot be used here we need to utilize new
-    //// condition_var mutex pair for this
-
-    //if(start)
-    //    Start();
-    //else
-    //    Stop();
+    if(start) 
+        Start();
+    else
+        Stop();
 }
 
 void TracerThread::PauseContTrace(bool pause)

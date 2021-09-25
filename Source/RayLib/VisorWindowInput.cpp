@@ -72,8 +72,8 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
         {
             if(action != KeyAction::RELEASED) break;
 
-            visorCallbacks->PauseContTrace(pauseCont);
             pauseCont = !pauseCont;
+            visorCallbacks->PauseContTrace(pauseCont);
             break;
         }
         case VisorActionType::FRAME_NEXT:

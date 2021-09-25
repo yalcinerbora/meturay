@@ -38,7 +38,7 @@ class TracerSystemI
         // Interface
         virtual TracerError             Initialize(const std::vector<SurfaceLoaderSharedLib>&,
                                                    ScenePartitionerType) = 0;
-
+        virtual void                    ClearScene() = 0;
         virtual void                    GenerateScene(GPUSceneI*&,
                                                       const std::u8string& scenePath) = 0;
         virtual TracerError             GenerateTracer(GPUTracerPtr&,

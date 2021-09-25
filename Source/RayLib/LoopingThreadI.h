@@ -57,7 +57,7 @@ inline void LoopingThreadI::THRDEntry()
         // Condition
         {
             std::unique_lock<std::mutex> lock(mutex);
-            // Wait if queue is empty
+            // Wait if paused (or stop signal is set)
             conditionVar.wait(lock, [&]
             {
                 return stopSignal || !pauseSignal;
@@ -82,6 +82,11 @@ inline LoopingThreadI::~LoopingThreadI()
 
 inline void LoopingThreadI::Start()
 {
+    // If the system was previously paused
+    // ignore that
+    pauseSignal = false;
+
+    // Launch a new thread
     thread = std::thread(&LoopingThreadI::THRDEntry, this);
 }
 
@@ -105,5 +110,5 @@ inline void LoopingThreadI::Pause(bool pause)
 
 inline bool LoopingThreadI::IsTerminated()
 {
-    return !thread.joinable() || InternallyTerminated();
+    return /*!thread.joinable() ||*/ InternallyTerminated();
 }

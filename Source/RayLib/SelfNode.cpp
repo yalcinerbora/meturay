@@ -61,14 +61,16 @@ void SelfNode::ChangeCamera(const unsigned int cameraId)
     tracerThread.ChangeCamera(cameraId);
 }
 
-void SelfNode::StartStopTrace(const bool)
+void SelfNode::StartStopTrace(const bool started)
 {
-    // TOD:: Adjust tracer thread
+    SendLog(std::string("Tracer is ") + ((started) ? "started" : "stopped"));
+    tracerThread.StartStopTrace(started);
 }
 
-void SelfNode::PauseContTrace(const bool)
+void SelfNode::PauseContTrace(const bool paused)
 {
-    //TODO: Adjust tracer thread
+    SendLog(std::string("Tracer is ") + ((paused) ? "paused" : "continued"));
+    tracerThread.PauseContTrace(paused);
 }
 
 void SelfNode::WindowMinimizeAction(bool minimized)
@@ -78,8 +80,10 @@ void SelfNode::WindowMinimizeAction(bool minimized)
 
 void SelfNode::WindowCloseAction()
 {
+    // Set a variable
+
     // TODO:: Terminate the tracer thread
-    tracerThread.Stop();
+    //tracerThread.Stop();
 }
 
 void SelfNode::SendCrashSignal()

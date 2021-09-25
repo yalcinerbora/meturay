@@ -41,6 +41,11 @@ class TracerThread : public LoopingThreadI
         // If Tracer uses multiple threads (which it should not
         // since it is GPU based) this will come in handy
         std::atomic_bool            tracerCrashSignal;
+        // Not initialized Bool
+        // Only accesed from the thread
+        // If system is stopped and started again
+        // All objects needs to be re-initialized (re-constructed)
+        bool                        isPrevStopped;
 
         // State variables
         // Camera Related
