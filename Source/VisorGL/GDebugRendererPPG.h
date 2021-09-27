@@ -122,7 +122,7 @@ class GDebugRendererPPG : public GDebugRendererI
         static constexpr GLenum     OUT_VALUE = 1;
 
     private:
-        static constexpr const char* SD_TREE_NAME = "SDTrees";
+        static constexpr const char* SD_TREE_NAME = "sdTrees";
 
         const SamplerGL         linearSampler;
         const TextureGL&        gradientTexture;

@@ -126,7 +126,8 @@ set(SRC_UTILITY
     ${CURRENT_SOURCE_DIR}/StripComments.h
     ${CURRENT_SOURCE_DIR}/TypeTraits.h
     ${CURRENT_SOURCE_DIR}/UTF8StringConversion.h
-    ${CURRENT_SOURCE_DIR}/RandomColor.h)
+    ${CURRENT_SOURCE_DIR}/RandomColor.h
+    ${CURRENT_SOURCE_DIR}/StringUtility.h)
 
 set(SRC_VISOR_INPUT
     ${CURRENT_SOURCE_DIR}/MovementSchemes.cpp

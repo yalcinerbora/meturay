@@ -103,6 +103,7 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\VisorGL\GDebugRendererPPG.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GDebugRendererI.h" />
+    <ClInclude Include="..\..\..\Source\VisorGL\GDebugRendererReference.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GLConversionFunctions.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GLFWCallbackDelegator.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugGL.h" />
@@ -122,6 +123,7 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\VisorGL\GDebugRendererPPG.cpp" />
+    <ClCompile Include="..\..\..\Source\VisorGL\GDebugRendererReference.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\GLFWCallbackDelegator.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\GuideDebugGL.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\GuideDebugGUI.cpp" />

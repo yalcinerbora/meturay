@@ -39,7 +39,9 @@ set(GUIDE_DEBUG
 set(GUIDE_DEBUG_RENDERERS
     ${CURRENT_SOURCE_DIR}/GDebugRendererI.h
     ${CURRENT_SOURCE_DIR}/GDebugRendererPPG.cpp
-    ${CURRENT_SOURCE_DIR}/GDebugRendererPPG.h)
+    ${CURRENT_SOURCE_DIR}/GDebugRendererPPG.h
+    ${CURRENT_SOURCE_DIR}/GDebugRendererReference.h
+    ${CURRENT_SOURCE_DIR}/GDebugRendererReference.cpp)
 
 set(SRC_COMMON
     ${CURRENT_SOURCE_DIR}/GLFWCallbackDelegator.h
@@ -62,7 +64,7 @@ set(SRC_ALL
 source_group("GL" FILES ${SRC_GL})
 source_group("GUI" FILES ${SRC_GUI})
 source_group("GuideDebug" FILES ${GUIDE_DEBUG})
-source_group("GuideDebug/Debug Renderers" FILES ${GUIDE_DEBUG_RENDERER})
+source_group("GuideDebug/Debug Renderers" FILES ${GUIDE_DEBUG_RENDERERS})
 source_group("Shaders" FILES ${SRC_SHADERS})
 source_group("" FILES ${SRC_COMMON})
 

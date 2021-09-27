@@ -8,6 +8,8 @@
 #include "RayLib/HybridFunctions.h"
 #include "RayLib/ImageIO.h"
 
+#include "GDebugRendererReference.h"
+
 float GuideDebugGUI::CenteredTextLocation(const char* text, float centeringWidth)
 {
     float widthText = ImGui::CalcTextSize(text).x;
@@ -62,7 +64,8 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
                              const std::string& refFileName,
                              const std::string& posFileName,
                              const std::string& sceneName,
-                             const std::vector<DebugRendererPtr>& dRenderers)
+                             const std::vector<DebugRendererPtr>& dRenderers,
+                             const GDebugRendererRef& dRef)
     : fullscreenShow(true)
     , window(w)
     , refTexture(refFileName)
@@ -71,19 +74,32 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
     , sceneName(sceneName)
     , MaxDepth(maxDepth)
     , currentDepth(0)
+    , debugReference(dRef)
+    , debugRefTexture(Zero2ui, PixelFormat::END)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    (void)io;
-    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
     // ImGUI Dark
     ImGui::StyleColorsDark();
+    
+    float x, y;
+    glfwGetWindowContentScale(window, &x, &y);
 
     // Initi renderer & platform
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(IMGUI_GLSL_STRING);
+
+    // Scale everything according to the DPI
+    assert(x == y);
+    ImGui::GetStyle().ScaleAllSizes(x);
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->Clear();
+    ImFontConfig config;
+    config.SizePixels = std::roundf(14.0f * x);
+    config.OversampleH = config.OversampleV = 2;
+    config.PixelSnapH = true;    
+    io.Fonts->AddFontDefault(&config);
 
     // Load Position Buffer
     Vector2ui size;
@@ -258,9 +274,10 @@ void GuideDebugGUI::Render()
                             3.0f,
                             ImColor(0.0f, 1.0f, 0.0f), 0, 1.5f);
     }   
-    // Reference Image
+    // Debug Reference Image
+    ImTextureID dRefTexId = (void*)(intptr_t)debugRefTexture.TexId();
     ImGui::SameLine(0.0f, paddingX.x);
-    ImGui::Image(refTexId, pgImgSize, ImVec2(0, 1), ImVec2(1, 0));
+    ImGui::Image(dRefTexId, pgImgSize, ImVec2(0, 1), ImVec2(1, 0));
     // New Line and Path Guider Images
     ImGui::Dummy(ImVec2(0.0f, std::max(0.0f, (paddingY - ImGui::GetFontSize()) * 0.95f)));
 
@@ -380,6 +397,13 @@ void GuideDebugGUI::Render()
             worldPos[2] = std::numeric_limits<float>::infinity();
         }
 
+        debugReference.RenderDirectional(refTexture,
+                                         Vector2i(static_cast<int32_t>(selectedPixel[0]),
+                                                  static_cast<int32_t>(selectedPixel[1])),
+                                         Vector2i(static_cast<int32_t>(refTexture.Size()[0]),
+                                                  static_cast<int32_t>(refTexture.Size()[1])));
+
+        // Do Guide Debuggers
         for(size_t i = 0; i < guideTextues.size(); i++)
         {
             debugRenderers[i]->RenderDirectional(guideTextues[i],

@@ -138,9 +138,9 @@ bool ImageIO::ReadHDR(std::vector<Vector4>& image,
     return true;
 }
 
-bool ImageIO::ReadImage(std::vector<Byte>& pixels,
-                        PixelFormat& format, Vector2ui& size,
-                        const std::string& filePath) const
+bool ImageIO::ReadSDR(std::vector<Byte>& pixels,
+                      PixelFormat& format, Vector2ui& size,
+                      const std::string& filePath) const
 {
     FREE_IMAGE_FORMAT f;
     // Check file to find type
@@ -148,7 +148,10 @@ bool ImageIO::ReadImage(std::vector<Byte>& pixels,
         // Use file extension to determine type
         f = FreeImage_GetFIFFromFilename(filePath.c_str());
     // If it is still unknown just return error
-    if(f == FIF_UNKNOWN) return false;
+    if(f == FIF_UNKNOWN ||
+       f == FIF_HDR ||
+       f == FIF_EXR) 
+        return false;
 
     FreeImgRAII imgCPU(f, filePath.c_str());
     if(!imgCPU) return false;
@@ -179,6 +182,13 @@ bool ImageIO::ReadImage(std::vector<Byte>& pixels,
     }
     // All done!
     return true;
+}
+
+bool ImageIO::ReadImage(std::vector<Byte>& pixels,
+                        PixelFormat&, Vector2ui& size,
+                        const std::string& filePath) const
+{
+    return false;
 }
 
 bool ImageIO::WriteAsEXR(const float* image,

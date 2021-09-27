@@ -45,6 +45,9 @@
     <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugTypeGen.h">
       <Filter>GuideDebug</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\VisorGL\GDebugRendererReference.h">
+      <Filter>GuideDebug\Debug Renderers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGL.cpp" />
@@ -72,6 +75,9 @@
       <Filter>GL</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\VisorGL\GDebugRendererPPG.cpp">
+      <Filter>GuideDebug\Debug Renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\VisorGL\GDebugRendererReference.cpp">
       <Filter>GuideDebug\Debug Renderers</Filter>
     </ClCompile>
   </ItemGroup>

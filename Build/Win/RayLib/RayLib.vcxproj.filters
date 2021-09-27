@@ -264,6 +264,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\FileUtility.h">
       <Filter>Utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\StringUtility.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">

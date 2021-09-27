@@ -8,7 +8,6 @@
 
 // Debug Renderers
 #include "GDebugRendererPPG.h"
-//#include "GDebugRendererReference.h"
 
 #include <filesystem>
 
@@ -65,6 +64,9 @@ GuideDebugGL::GuideDebugGL(const Vector2i& ws,
 
     bool configParsed = GuideDebug::ParseConfigFile(config, configFile);
     if(!configParsed) throw VisorException(VisorError::WINDOW_GENERATION_ERROR);
+
+    // Construct Reference Debug Renderer
+    referenceDebugRenderer = std::make_unique<GDebugRendererRef>(config.refGuideConfig, *gradientTexture);
 }
 
 GuideDebugGL::~GuideDebugGL()
@@ -132,6 +134,16 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
 
     glfwMakeContextCurrent(glfwWindow);
     glfwSwapInterval(0);
+
+    // Set Window to 3/4 of the monitor
+    // TODO: find the monitor that this window is currently resides on
+    // if partially on a monitor use the monitor that the top left of the window is on
+    //GLFWmonitor* glfwMonitor = glfwGetWindowMonitor(glfwWindow);
+    GLFWmonitor* glfwMonitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(glfwMonitor);
+    int scaledW = mode->width * 3 / 4;
+    int scaledH = mode->height * 3 / 4;
+    glfwSetWindowSize(glfwWindow, scaledW, scaledH);
 
     // Now Init GLEW
     glewExperimental = GL_TRUE;
@@ -206,7 +218,8 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
                                           Utility::MergeFileFolder(configPath, config.refImage),
                                           Utility::MergeFileFolder(configPath, config.posImage),
                                           config.sceneName,
-                                          debugRenderers);
+                                          debugRenderers,
+                                          *referenceDebugRenderer);
 
     glfwShowWindow(glfwWindow);
     open = true;

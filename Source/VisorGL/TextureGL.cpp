@@ -3,6 +3,7 @@
 
 #include "RayLib/ImageIO.h"
 #include "RayLib/UTF8StringConversion.h"
+#include "RayLib/Log.h"
 
 TextureGL::TextureGL(const Vector2ui& dim,
                      PixelFormat fmt)
@@ -23,12 +24,18 @@ TextureGL::TextureGL(const std::string& filePath)
     , pixFormat(PixelFormat::END)
 {
     std::vector<Byte> pixels;
-    bool loaded = ImageIO::Instance().ReadImage(pixels, 
-                                                pixFormat, 
+    bool loaded = ImageIO::Instance().ReadImage(pixels,
+                                                pixFormat,
                                                 dimensions,
                                                 filePath);
     // TODO: Throw some execption
-    if(!loaded) return;
+    if(!loaded)
+    {
+        METU_ERROR_LOG("Unable to Load Texture File \"{}\"",
+                       filePath);
+        return;
+    }
+        
 
     glGenTextures(1, &texId);
     glBindTexture(GL_TEXTURE_2D, texId);

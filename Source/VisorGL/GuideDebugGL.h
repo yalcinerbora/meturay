@@ -6,6 +6,7 @@
 #include "WindowGLI.h"
 #include "GuideDebugGUI.h"
 #include "GuideDebugStructs.h"
+#include "GDebugRendererReference.h"
 
 class GuideDebugGL : public WindowGLI
 {    
@@ -13,6 +14,7 @@ class GuideDebugGL : public WindowGLI
         const VisorOptions                      dummyVOpts;
         const std::u8string                     configFile;
 
+        // GDB Generators
         std::map<std::string, GDBRendererGen>   gdbGenerators;
 
         std::string                             configPath;
@@ -29,6 +31,7 @@ class GuideDebugGL : public WindowGLI
         std::unique_ptr<TextureGL>              gradientTexture;
 
         // Debugger Related
+        std::unique_ptr<GDebugRendererRef>      referenceDebugRenderer;
         std::vector<DebugRendererPtr>           debugRenderers;
         std::unique_ptr<GuideDebugGUI>          gui;
 

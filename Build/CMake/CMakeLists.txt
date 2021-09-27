@@ -119,8 +119,8 @@ add_subdirectory(VisorGL)
 
 # Execs
 add_subdirectory(MRay)
+add_subdirectory(MVisor)
 #add_subdirectory(MTracer)
-#add_subdirectory(MVisor)
 
 # Tests
 add_subdirectory(Test_TracerCUDA)

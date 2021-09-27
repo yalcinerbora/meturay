@@ -8,6 +8,7 @@
 #include "GuideDebugTypeGen.h"
 
 struct ImVec2;
+class GDebugRendererRef;
 
 class GuideDebugGUI
 {
@@ -31,7 +32,10 @@ class GuideDebugGUI
         // Textures that are rendered by different visors
         std::vector<std::vector<float>>         guidePixValues;
         std::vector<TextureGL>                  guideTextues;
+        // Reference Texture
+        TextureGL                               debugRefTexture;
         const std::vector<DebugRendererPtr>&    debugRenderers;        
+        const GDebugRendererRef&                debugReference;
         // Reference Image's Pixel Values
         std::vector<Vector4f>                   worldPositions;
         // Current Depth Value
@@ -61,7 +65,8 @@ class GuideDebugGUI
                                       const std::string& refFileName,
                                       const std::string& posFileName,
                                       const std::string& sceneName,
-                                      const std::vector<DebugRendererPtr>& dRenderers);
+                                      const std::vector<DebugRendererPtr>& dRenderers,
+                                      const GDebugRendererRef&);
                         ~GuideDebugGUI();
 
         void            Render();

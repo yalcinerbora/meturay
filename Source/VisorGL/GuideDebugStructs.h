@@ -18,6 +18,8 @@ struct GuideDebugConfig
 
     std::vector<Vector3f>   gradientValues;
 
+    nlohmann::json          refGuideConfig;
+
     GuiderConfigs           guiderConfigs;
 };
 
@@ -26,15 +28,15 @@ namespace GuideDebug
     //static constexpr const char* NAME = "name";
     static constexpr const char* TYPE = "type";
 
-
     static constexpr const char* DATA_GRADIENT_NAME = "DataGradient";
     static constexpr const char* SCENE_NAME = "Scene";
     static constexpr const char* SCENE_IMAGE = "refImage";
     static constexpr const char* SCENE_POS_IMAGE = "posImage";
     static constexpr const char* SCENE_DEPTH = "depth";
     static constexpr const char* NAME = "name";
-   
+      
     static constexpr const char* PG_NAME = "PathGuiders";
+    static constexpr const char* REFERENCE_NAME = "Reference";
 
     bool ParseConfigFile(GuideDebugConfig&, const std::u8string& fileName);
 }
@@ -56,7 +58,10 @@ inline bool GuideDebug::ParseConfigFile(GuideDebugConfig& s, const std::u8string
     s.refImage = jsonFile[SCENE_NAME][SCENE_IMAGE];
     s.posImage = jsonFile[SCENE_NAME][SCENE_POS_IMAGE];
     s.depthCount = jsonFile[SCENE_NAME][SCENE_DEPTH];
-    
+
+    // Reference Config
+    s.refGuideConfig = jsonFile[REFERENCE_NAME];
+
     for(const nlohmann::json& j : jsonFile[PG_NAME])
     {
         s.guiderConfigs.emplace_back(j[TYPE], j);

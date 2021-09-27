@@ -29,6 +29,9 @@ class ImageIO
         bool                 ReadEXR(std::vector<Vector4>& image,
                                      Vector2ui& size,
                                      const std::string& fileName) const;
+        bool                 ReadSDR(std::vector<Byte>& pixels,
+                                     PixelFormat&, Vector2ui& size,
+                                     const std::string& filePath) const;
         bool                 ReadImage(std::vector<Byte>& pixels,
                                        PixelFormat&, Vector2ui& size,
                                        const std::string& filePath) const;
@@ -37,16 +40,16 @@ class ImageIO
         bool                WriteAsEXR(const float* image,
                                        const Vector2ui& size,
                                        const std::string& fileName) const;
-        bool                 WriteAsEXR(const Vector4f* image,
-                                        const Vector2ui& size,
-                                        const std::string& fileName) const;
-        bool                 WriteAsPNG(const Vector4f* image,
-                                        const Vector2ui& size,
-                                        const std::string& fileName) const;
-        bool                 WriteAsPNG(const Vector4uc* image,
-                                        const Vector2ui& size,
-                                        const std::string& fileName) const;
-        bool                 WriteBitmap(const Byte* bits,
-                                        const Vector2ui& size,
-                                        const std::string& fileName) const;
+        bool                WriteAsEXR(const Vector4f* image,
+                                       const Vector2ui& size,
+                                       const std::string& fileName) const;
+        bool                WriteAsPNG(const Vector4f* image,
+                                       const Vector2ui& size,
+                                       const std::string& fileName) const;
+        bool                WriteAsPNG(const Vector4uc* image,
+                                       const Vector2ui& size,
+                                       const std::string& fileName) const;
+        bool                WriteBitmap(const Byte* bits,
+                                       const Vector2ui& size,
+                                       const std::string& fileName) const;
 };
