@@ -89,8 +89,9 @@ target_include_directories(VisorGL PRIVATE
 
 target_compile_definitions(VisorGL PRIVATE ${PREPROCESSOR_GENERIC})
 
-target_link_libraries(VisorGL
+target_link_libraries(VisorGL PRIVATE
                       RayLib
+                      ImageIO
                       Imgui
                       ${PLATFORM_SPEC_LIBRARIES})
 

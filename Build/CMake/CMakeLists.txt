@@ -71,9 +71,11 @@ endif()
 
 # Generic Compile Options
 if(MSVC)
+    # Warnings
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/W3>)
 else()
-    # Prob Clang / GCC both use same syntax
+    # Clang / GCC both use same syntax
+    # Warnings
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wall> 
                         $<$<COMPILE_LANGUAGE:CXX>:-Wextra> 
                         $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>)
@@ -107,13 +109,13 @@ set(MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC
     ${MRAY_PREPROCESSOR_DEFS_GENERIC}
     METU_CUDA)
 
-# Generic compile options
-
+# BUILDS
 # Libs
 add_subdirectory(RayLib)
 
 # DLLs
 add_subdirectory(AssimpSurfaceLoaders)
+add_subdirectory(ImageIO)
 add_subdirectory(TracerCUDA)
 add_subdirectory(VisorGL)
 

@@ -159,7 +159,7 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUPiecewiseDistribution.cu" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveEmpty.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveSphere.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveTriangle.cpp"/>
+    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveTriangle.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUSceneJson.cpp" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUCameraPinhole.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightDirectional.cu" />
@@ -170,19 +170,19 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightSpot.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\BoundaryMaterials.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUMediumHomogenous.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\ImageMemory.cu"/>      
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\ImageMemory.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\LambertMaterial.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracerWorks.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracerWork.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RefPGTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RNGMemory.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUTransformSingle.cu"/>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUTransformSingle.cu" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\MangledNames.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\SceneNodeJson.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\ScenePartitioner.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\Texture.cpp" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerDebug.cu"/>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerDebug.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DebugMaterials.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracer.cu" />
@@ -207,6 +207,9 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerLogicGenerator.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ImageIO\ImageIO.vcxproj">
+      <Project>{66a81375-d1be-4f2b-a31c-233d6409111e}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">
       <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
     </ProjectReference>

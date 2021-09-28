@@ -33,6 +33,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test_Misc", "Test_Misc\Test
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MVisor", "MVisor\MVisor.vcxproj", "{EFE79085-324C-4013-88E6-BC74537B1BB4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImageIO", "ImageIO\ImageIO.vcxproj", "{66A81375-D1BE-4F2B-A31C-233D6409111E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -97,6 +99,14 @@ Global
 		{EFE79085-324C-4013-88E6-BC74537B1BB4}.Release|x64.Build.0 = Release|x64
 		{EFE79085-324C-4013-88E6-BC74537B1BB4}.Release|x86.ActiveCfg = Release|Win32
 		{EFE79085-324C-4013-88E6-BC74537B1BB4}.Release|x86.Build.0 = Release|Win32
+		{66A81375-D1BE-4F2B-A31C-233D6409111E}.Debug|x64.ActiveCfg = Debug|x64
+		{66A81375-D1BE-4F2B-A31C-233D6409111E}.Debug|x64.Build.0 = Debug|x64
+		{66A81375-D1BE-4F2B-A31C-233D6409111E}.Debug|x86.ActiveCfg = Debug|Win32
+		{66A81375-D1BE-4F2B-A31C-233D6409111E}.Debug|x86.Build.0 = Debug|Win32
+		{66A81375-D1BE-4F2B-A31C-233D6409111E}.Release|x64.ActiveCfg = Release|x64
+		{66A81375-D1BE-4F2B-A31C-233D6409111E}.Release|x64.Build.0 = Release|x64
+		{66A81375-D1BE-4F2B-A31C-233D6409111E}.Release|x86.ActiveCfg = Release|Win32
+		{66A81375-D1BE-4F2B-A31C-233D6409111E}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

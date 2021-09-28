@@ -51,9 +51,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\SceneIO.h">
       <Filter>FileI-O</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\ImageIO.h">
-      <Filter>FileI-O</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\IOError.h">
       <Filter>Errors</Filter>
     </ClInclude>
@@ -258,14 +255,14 @@
     <ClInclude Include="..\..\..\Source\RayLib\RandomColor.h">
       <Filter>Utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\FreeImgRAII.h">
-      <Filter>FileI-O</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\FileUtility.h">
       <Filter>Utility</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\StringUtility.h">
       <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\ImageIOError.h">
+      <Filter>Errors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -315,9 +312,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp">
       <Filter>Threads</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Source\RayLib\ImageIO.cpp">
-      <Filter>FileI-O</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\SceneIO.cpp">
       <Filter>FileI-O</Filter>

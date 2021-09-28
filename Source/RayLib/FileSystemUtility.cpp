@@ -66,3 +66,8 @@ std::vector<std::string> Utility::ListFilesInFolder(const std::string& folder,
     }        
     return result;
 }
+
+bool Utility::CheckFileExistance(const std::string& path)
+{
+    return std::filesystem::exists(path);
+}

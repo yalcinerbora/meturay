@@ -136,6 +136,9 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGUI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ImageIO\ImageIO.vcxproj">
+      <Project>{66a81375-d1be-4f2b-a31c-233d6409111e}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\RayLib\RayLib.vcxproj">
       <Project>{dfcd1274-cd37-4e84-a1dc-96f619b04eea}</Project>
     </ProjectReference>

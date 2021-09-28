@@ -18,16 +18,14 @@ set(SRC_ERRORS
     ${CURRENT_SOURCE_DIR}/NodeError.h
     ${CURRENT_SOURCE_DIR}/SceneError.h
     ${CURRENT_SOURCE_DIR}/TracerError.h
-    ${CURRENT_SOURCE_DIR}/VisorError.h)
+    ${CURRENT_SOURCE_DIR}/VisorError.h
+    ${CURRENT_SOURCE_DIR}/ImageIOError.h)
 
 set(SRC_FILE_IO
     ${CURRENT_SOURCE_DIR}/ConfigParsers.cpp
     ${CURRENT_SOURCE_DIR}/ConfigParsers.h
     ${CURRENT_SOURCE_DIR}/EnumStringConversions.cpp
     ${CURRENT_SOURCE_DIR}/EnumStringConversions.h
-    ${CURRENT_SOURCE_DIR}/ImageIO.cpp
-    ${CURRENT_SOURCE_DIR}/ImageIO.h
-    ${CURRENT_SOURCE_DIR}/FreeImgRAII.h
     ${CURRENT_SOURCE_DIR}/MayaCacheIO.cpp
     ${CURRENT_SOURCE_DIR}/MayaCacheIO.h
     ${CURRENT_SOURCE_DIR}/SceneIO.cpp
@@ -174,20 +172,14 @@ source_group("Utility" FILES ${SRC_UTILITY})
 source_group("VisorInput" FILES ${SRC_VISOR_INPUT})
 source_group("" FILES ${SRC_COMMON})
 
-# OpenEXR Library Header Inclusion (Imath)
-set(MRAY_OPENEXR_INCLUDE_DIRECTORY ${MRAY_LIB_INCLUDE_DIRECTORY}/Imath)
-
 # DLL File
 add_library(RayLib STATIC ${SRC_ALL})
 
 target_include_directories(RayLib PRIVATE
-                           ${MRAY_OPENEXR_INCLUDE_DIRECTORY}
                            ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
 
-target_link_libraries(RayLib 
-                      OpenEXR
-                      freeimage
+target_link_libraries(RayLib                       
                       fmt)
 
 target_compile_definitions(RayLib PRIVATE ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC})
@@ -201,13 +193,6 @@ set_target_properties(RayLib PROPERTIES
 if(MSVC)
     add_custom_command(TARGET RayLib POST_BUILD
                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                       "${MRAY_CONFIG_LIB_DIRECTORY}/FreeImage.dll"
-                       "${MRAY_CONFIG_LIB_DIRECTORY}/OpenEXR.dll"
-                       "${MRAY_CONFIG_LIB_DIRECTORY}/Imath.dll"
-                       "${MRAY_CONFIG_LIB_DIRECTORY}/IlmThread.dll"
-                       "${MRAY_CONFIG_LIB_DIRECTORY}/Iex.dll"
-                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/FreeImage.pdb">
-                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/OpenEXR.pdb">
                        $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/fmt.pdb">
                        ${MRAY_CONFIG_BIN_DIRECTORY})
 endif()

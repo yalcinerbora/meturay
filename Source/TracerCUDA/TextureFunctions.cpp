@@ -1,5 +1,6 @@
 #include "TextureFunctions.h"
-#include "RayLib/FreeImgRAII.h"
+
+#include "ImageIO/FreeImgRAII.h"
 
 //#include "TracerDebug.h"
 

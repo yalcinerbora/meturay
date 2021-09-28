@@ -1,12 +1,13 @@
+#include "ImageIO/EntryPoint.h"
 
 #include "GuideDebugGUI.h"
+
 #include <Imgui/imgui.h>
 #include <Imgui/imgui_impl_glfw.h>
 #include <Imgui/imgui_impl_opengl3.h>
 
 #include "RayLib/Log.h"
 #include "RayLib/HybridFunctions.h"
-#include "RayLib/ImageIO.h"
 
 #include "GDebugRendererReference.h"
 
@@ -103,7 +104,9 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
 
     // Load Position Buffer
     Vector2ui size;
-    if(!ImageIO::Instance().ReadEXR(worldPositions, size, posFileName))
+    if(!ImageIOInstance().ReadAndConvertImage(worldPositions, size, 
+                                              PixelFormat::RGB_FLOAT, 
+                                              posFileName))
     {
         // TODO: create VisorException for this
         METU_ERROR_LOG("Unable to Read Position Image");

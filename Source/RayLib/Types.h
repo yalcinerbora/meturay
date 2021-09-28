@@ -33,6 +33,22 @@ enum class PixelFormat
     RGB_FLOAT,
     RGBA_FLOAT,
 
+    // Graphics Related Compressed Images
+    // https://docs.microsoft.com/en-us/windows/win32/direct3d11/texture-block-compression-in-direct3d-11
+    // CUDA also support these but it is pain in the ass to properly load into
+    // textureObjects
+    // https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html#group__CUDART__TYPES_1g6b3a50368a0aa592f65e928adca9b929
+    BC1_U,
+    BC2_U,
+    BC3_U,
+    BC4_U,
+    BC4_S,
+    BC5_U,
+    BC5_S,
+    BC6H_U,
+    BC6H_S,
+    BC7_U,
+
     END
 };
 

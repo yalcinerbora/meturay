@@ -2,11 +2,11 @@
 #include "ImageMemory.h"
 #include "DefaultLeaf.h"
 
-#include "RayLib/ImageIO.h"
-
 #include "DTreeKC.cuh"
 #include "STreeKC.cuh"
 #include "PathNode.cuh"
+
+#include "ImageIO/EntryPoint.h"
 
 namespace Debug
 {
@@ -30,27 +30,40 @@ void Debug::DumpImage(const std::string& fName,
                       const ImageMemory& iMem)
 {
     CUDA_CHECK(cudaDeviceSynchronize());
-    ImageIO io;
+    const ImageIOI& io = ImageIOInstance();
     Vector2ui size(iMem.SegmentSize()[0],
                    iMem.SegmentSize()[1]);
     auto image = iMem.GMem<Vector4f>();
-    io.WriteAsPNG(image.gPixels, size, fName);
+
+    ImageIOError e = ImageIOError::OK;
+    if((e = io.WriteImage(reinterpret_cast<const Byte*>(image.gPixels),
+                          size,
+                          iMem.Format(), ImageType::PNG,
+                          fName)) != ImageIOError::OK)
+        METU_ERROR_LOG(static_cast<std::string>(e));
 }
 
 void Debug::DumpImage(const std::string& fName,
                       const Vector4* iMem,
                       const Vector2ui& resolution)
 {
-    ImageIO io;
-    io.WriteAsPNG(iMem, resolution, fName);
+    const ImageIOI& io = ImageIOInstance();
+    ImageIOError e = ImageIOError::OK;
+    if((e = io.WriteImage(reinterpret_cast<const Byte*>(iMem),
+                          resolution,
+                          PixelFormat::RGBA_FLOAT, ImageType::PNG,
+                          fName)) != ImageIOError::OK)
+        METU_ERROR_LOG(static_cast<std::string>(e));
 }
 
 void Debug::DumpBitmap(const std::string& fName,
                        const Byte* bits,
                        const Vector2ui& resolution)
 {
-    ImageIO io;
-    io.WriteBitmap(bits, resolution, fName);
+    const ImageIOI& io = ImageIOInstance();
+    ImageIOError e = ImageIOError::OK;
+    if((e = io.WriteBitmap(bits, resolution, fName)) != ImageIOError::OK)
+        METU_ERROR_LOG(static_cast<std::string>(e));
 }
 
 void Debug::PrintHitPairs(const RayId* ids, const HitKey* keys, size_t count)

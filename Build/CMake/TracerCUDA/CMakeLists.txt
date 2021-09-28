@@ -371,6 +371,7 @@ set_target_properties(TracerCUDA PROPERTIES
 
 target_link_libraries(TracerCUDA
                       RayLib
+                      ImageIO
                       ${PLATFORM_SPEC_LIBRARIES})
 
 # Object Group for testing
@@ -392,4 +393,5 @@ set_target_properties(TracerCUDA_ForTest PROPERTIES
 
 target_link_libraries(TracerCUDA_ForTest
                       RayLib
+                      ImageIO
                       ${PLATFORM_SPEC_LIBRARIES})

@@ -192,26 +192,30 @@ using Vector2d = Vector<2, double>;
 using Vector3d = Vector<3, double>;
 using Vector4d = Vector<4, double>;
 // Integer Type
-using Vector2i = Vector<2, int>;
-using Vector3i = Vector<3, int>;
-using Vector4i = Vector<4, int>;
+using Vector2i = Vector<2, int32_t>;
+using Vector3i = Vector<3, int32_t>;
+using Vector4i = Vector<4, int32_t>;
 // Unsigned Integer Type
-using Vector2ui = Vector<2, unsigned int>;
-using Vector3ui = Vector<3, unsigned int>;
-using Vector4ui = Vector<4, unsigned int>;
+using Vector2ui = Vector<2, uint32_t>;
+using Vector3ui = Vector<3, uint32_t>;
+using Vector4ui = Vector<4, uint32_t>;
 // Long Types
-using Vector2l = Vector<2, int64_t>;
+using Vector2l  = Vector<2, int64_t>;
 using Vector2ul = Vector<2, uint64_t>;
 // Short
-using Vector2s = Vector<2, uint16_t>;
-using Vector2us = Vector<2, uint16_t>;
-using Vector4s = Vector<2, uint16_t>;
-using Vector4us = Vector<2, uint16_t>;
+using Vector2s   = Vector<2, int16_t>;
+using Vector2us  = Vector<2, uint16_t>;
+using Vector3s   = Vector<3, int16_t>;
+using Vector3us  = Vector<3, uint16_t>;
+using Vector4s   = Vector<4, int16_t>;
+using Vector4us  = Vector<4, uint16_t>;
 // Byte
-using Vector2c = Vector<2, uint8_t>;
-using Vector2uc = Vector<2, uint8_t>;
-using Vector4c = Vector<2, uint8_t>;
-using Vector4uc = Vector<2, uint8_t>;
+using Vector2c   = Vector<2, int8_t>;
+using Vector2uc  = Vector<2, uint8_t>;
+using Vector3c   = Vector<3, int8_t>;
+using Vector3uc  = Vector<3, uint8_t>;
+using Vector4c   = Vector<4, int8_t>;
+using Vector4uc  = Vector<4, uint8_t>;
 
 // Requirements of Vectors
 //static_assert(std::is_literal_type<Vector3>::value == true, "Vectors has to be literal types");
@@ -291,27 +295,37 @@ struct IsVectorType
         std::is_same<T, Vector4us>::value;
 };
 
-// Vector Etern
+// Vector Extern
+// Float Type
 extern template class Vector<2, float>;
-extern template class Vector<2, double>;
-extern template class Vector<2, int>;
-extern template class Vector<2, unsigned int>;
-
 extern template class Vector<3, float>;
-extern template class Vector<3, double>;
-extern template class Vector<3, int>;
-extern template class Vector<3, unsigned int>;
-
 extern template class Vector<4, float>;
+// Double Type
+extern template class Vector<2, double>;
+extern template class Vector<3, double>;
 extern template class Vector<4, double>;
-extern template class Vector<4, int>;
-extern template class Vector<4, unsigned int>;
-
+// Integer Type
+extern template class Vector<2, int32_t>;
+extern template class Vector<3, int32_t>;
+extern template class Vector<4, int32_t>;
+// Unsigned Integer Type
+extern template class Vector<2, uint32_t>;
+extern template class Vector<3, uint32_t>;
+extern template class Vector<4, uint32_t>;
+// Long Types
 extern template class Vector<2, int64_t>;
 extern template class Vector<2, uint64_t>;
-
+// Short
 extern template class Vector<2, int16_t>;
 extern template class Vector<2, uint16_t>;
-
+extern template class Vector<3, int16_t>;
+extern template class Vector<3, uint16_t>;
 extern template class Vector<4, int16_t>;
 extern template class Vector<4, uint16_t>;
+// Byte
+extern template class Vector<2, int8_t>;
+extern template class Vector<2, uint8_t>;
+extern template class Vector<3, int8_t>;
+extern template class Vector<3, uint8_t>;
+extern template class Vector<4, int8_t>;
+extern template class Vector<4, uint8_t>;

@@ -1,10 +1,11 @@
+#include "ImageIO/EntryPoint.h"
+
 #include "VisorGL.h"
 
 #include "RayLib/Log.h"
 #include "RayLib/CPUTimer.h"
 #include "RayLib/VisorError.h"
 #include "RayLib/VisorInputI.h"
-#include "RayLib/ImageIO.h"
 
 #include "GLConversionFunctions.h"
 #include "GLFWCallbackDelegator.h"
@@ -153,9 +154,16 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             glBindTexture(GL_TEXTURE_2D, readTexture);
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT,
                           pixels.data());
-            ImageIO::Instance().WriteAsPNG(pixels.data(),
-                                           Vector2ui(imageSize[0], imageSize[1]),
-                                           "imgOut.png");
+
+            ImageIOError e = ImageIOError::OK;
+            const ImageIOI& io = ImageIOInstance();
+            if((e = io.WriteImage(pixels,
+                                  Vector2ui(imageSize[0], imageSize[1]),
+                                  PixelFormat::RGBA_FLOAT, ImageType::PNG,
+                                  "imgOut.png")) != ImageIOError::OK)
+            {
+                METU_ERROR_LOG(static_cast<std::string>(e));
+            }
             break;
         }
         case VisorGLCommand::SAVE_IMAGE_HDR:
@@ -167,9 +175,16 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT,
                           pixels.data());            
-            ImageIO::Instance().WriteAsEXR(pixels.data(),
-                                            Vector2ui(imageSize[0], imageSize[1]),
-                                            "imgOut.exr");
+
+            ImageIOError e = ImageIOError::OK;
+            const ImageIOI& io = ImageIOInstance();
+            if((e = io.WriteImage(pixels,
+                                  Vector2ui(imageSize[0], imageSize[1]),
+                                  PixelFormat::RGBA_FLOAT, ImageType::EXR,
+                                  "imgOut.exr")) != ImageIOError::OK)
+            {
+                METU_ERROR_LOG(static_cast<std::string>(e));
+            }
             break;
         }        
     };

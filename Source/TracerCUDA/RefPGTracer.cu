@@ -7,7 +7,6 @@
 #include "RayLib/ColorConversion.h"
 #include "RayLib/FileUtility.h"
 #include "RayLib/FileSystemUtility.h"
-#include "RayLib/ImageIO.h"
 
 #include "TracerDebug.h"
 
@@ -15,6 +14,8 @@
 #include "GPUTransformIdentity.cuh"
 
 #include "DeviceMemory.h"
+
+#include "ImageIO/EntryPoint.h"
 
 __global__
 void KCConstructSingleGPUCameraSpherical(GPUCameraSpherical* gCameraLocations,
@@ -114,19 +115,22 @@ void PathTracerMiddleCallback::SaveImage(const std::string& baseName, Vector2i
                                          pixelId)
 {
 
+    // Generate File Name
     std::stringstream pixelIdStr;
     pixelIdStr << '['  << std::setw(4) << std::setfill('0') << pixelId[1]
                << ", " << std::setw(4) << std::setfill('0') << pixelId[0]
                << ']';
     std::string path = Utility::PrependToFileInPath(baseName, pixelIdStr.str()) + ".exr";
 
+    // Create Directories if not available
     Utility::ForceMakeDirectoriesInPath(path);
 
-    bool result = ImageIO::Instance().WriteAsEXR(lumPixels.data(),
-                                                 Vector2ui(resolution[0], resolution[1]),
-                                                 path);
-
-    if(callbacks && result)
+    // Write Image
+    ImageIOError e = ImageIOInstance().WriteImage(lumPixels,
+                                                  Vector2ui(resolution[0], resolution[1]),
+                                                  PixelFormat::R_FLOAT, ImageType::EXR,
+                                                  path);
+    if(callbacks && e == ImageIOError::OK)
     {
         std::string s = fmt::format("Pixel ({:d},{:d}) reference is written as \"{:s}\"",
                                     pixelId[0], pixelId[1], path);
@@ -134,10 +138,9 @@ void PathTracerMiddleCallback::SaveImage(const std::string& baseName, Vector2i
     }
     else if(callbacks)
     {
-        std::string s = fmt::format("Unable to Save\"{:s}\"", path);
+        std::string s = fmt::format("Unable to Save\"{:s}\", ({})", path, e);
         callbacks->SendLog(s);
     }
-
 }
 
 void DirectTracerMiddleCallback::SendLog(const std::string s)

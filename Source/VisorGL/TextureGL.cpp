@@ -1,9 +1,10 @@
 #include "TextureGL.h"
 #include "GLConversionFunctions.h"
 
-#include "RayLib/ImageIO.h"
 #include "RayLib/UTF8StringConversion.h"
 #include "RayLib/Log.h"
+
+#include "ImageIO/EntryPoint.h"
 
 TextureGL::TextureGL(const Vector2ui& dim,
                      PixelFormat fmt)
@@ -24,10 +25,10 @@ TextureGL::TextureGL(const std::string& filePath)
     , pixFormat(PixelFormat::END)
 {
     std::vector<Byte> pixels;
-    bool loaded = ImageIO::Instance().ReadImage(pixels,
-                                                pixFormat,
-                                                dimensions,
-                                                filePath);
+    bool loaded = ImageIOInstance().ReadImage(pixels,
+                                              pixFormat,
+                                              dimensions,
+                                              filePath);
     // TODO: Throw some execption
     if(!loaded)
     {

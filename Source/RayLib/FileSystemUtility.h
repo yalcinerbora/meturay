@@ -23,4 +23,6 @@ namespace Utility
                                                   const std::regex& regex = std::regex("*."));;
 
     void                        ForceMakeDirectoriesInPath(const std::string& path);
+
+    bool                        CheckFileExistance(const std::string& path);
 }
