@@ -48,6 +48,16 @@ int ImageMemory::PixelFormatToSize(PixelFormat f)
         6,
         8,
 
+        1,
+        2,
+        3,
+        4,
+
+        2,
+        4,
+        6,
+        8,
+
         2,
         4,
         6,

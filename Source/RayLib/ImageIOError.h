@@ -13,8 +13,7 @@ struct ImageIOError : public ErrorI
             UNKNOWN_PIXEL_FORMAT,
             UNKNOWN_IMAGE_TYPE,
             // Conversion
-            TEMPLATE_TYPE_IS_NOT_COMPATIBLE,
-            FORMATS_ARE_NOT_CONVERTIBLE,
+            TYPE_IS_NOT_SIGN_CONVERTIBLE,
             // Internal Errors
             READ_INTERNAL_ERROR,
 
@@ -81,8 +80,8 @@ inline ImageIOError::operator std::string() const
         "Unknown pixel format",
         "Unknown image type",
         // Conversion
-        "Template type is not compatible wrt the compatible format",
-        "Image format and requested format are not convertible",
+        "Pixel Format is not sign convertible",
+        //"Pixel Format is not 3C->4C expandable (not a 3 Channel type)",
         // Internal Errors
         "Read operation internal error"
     };

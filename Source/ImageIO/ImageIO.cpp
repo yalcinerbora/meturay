@@ -3,6 +3,7 @@
 
 #include <execution>
 #include <algorithm>
+#include <array>
 
 #include <OpenEXR/ImfRgbaFile.h>
 #include <OpenEXR/ImfRgba.h>
@@ -13,6 +14,58 @@
 
 #include "RayLib/FileSystemUtility.h"
 
+template <class T>
+void ChannelSignConvert(T& t)
+{   
+    static_assert(std::is_signed_v<T>, "Type should be a signed type");
+
+    constexpr T mid = static_cast<T>(0x1 << ((sizeof(T) * BYTE_BITS) - 1));
+    t -= mid;
+}
+
+static
+void SignConvert(std::array<Byte, 8>& pixel, PixelFormat fmt)
+{
+    int8_t channelCount = ImageIOI::FormatToChannelCount(fmt);
+    
+    switch(fmt)
+    {
+        case PixelFormat::R8_UNORM:
+        case PixelFormat::RG8_UNORM:
+        case PixelFormat::RGB8_UNORM:
+        case PixelFormat::RGBA8_UNORM:
+        case PixelFormat::R8_SNORM:
+        case PixelFormat::RG8_SNORM:
+        case PixelFormat::RGB8_SNORM:
+        case PixelFormat::RGBA8_SNORM:
+        {
+            for(int8_t channel = 0; channel < channelCount; channel++)
+            {
+                int8_t* data = reinterpret_cast<int8_t*>(pixel.data() + (channel * sizeof(Byte)));
+                ChannelSignConvert<int8_t>(*data);
+            }
+            break;
+        }
+        case PixelFormat::R16_UNORM:
+        case PixelFormat::RG16_UNORM:
+        case PixelFormat::RGB16_UNORM:
+        case PixelFormat::RGBA16_UNORM:        
+        case PixelFormat::R16_SNORM:
+        case PixelFormat::RG16_SNORM:
+        case PixelFormat::RGB16_SNORM:
+        case PixelFormat::RGBA16_SNORM:
+        {
+            for(int8_t channel = 0; channel < channelCount; channel++)
+            {
+                int16_t* data = reinterpret_cast<int16_t*>(pixel.data() + (channel * sizeof(int16_t)));
+                ChannelSignConvert<int16_t>(*data);
+            }
+            break;
+        }
+        // Others cannot be sign converted
+        default: break;
+    }
+}
 
 ImageIOError ImageIO::ConvertFreeImgFormat(PixelFormat& pf, FREE_IMAGE_TYPE t, uint32_t bpp)
 {
@@ -24,96 +77,50 @@ ImageIOError ImageIO::ConvertFreeImgFormat(PixelFormat& pf, FREE_IMAGE_TYPE t, u
         {
             switch(bpp)
             {
+                case 8:  pf = PixelFormat::R8_UNORM; break;
                 case 24: pf = PixelFormat::RGB8_UNORM; break;
                 case 32: pf = PixelFormat::RGBA8_UNORM; break;
                 default: return ImageIOError::UNKNOWN_PIXEL_FORMAT;
             }
             break;
         }
-        case FIT_UINT16:
-            break;
-        case FIT_INT16:
-            break;
-        case FIT_UINT32:
-            break;
-        case FIT_INT32:
-            break;
-        case FIT_FLOAT:
-            break;
-        case FIT_DOUBLE:
-            break;
-        case FIT_COMPLEX:
-            break;
         case FIT_RGB16:
-            break;
         case FIT_RGBA16:
+        {
+            // Only these two are supported
+            switch(bpp)
+            {
+                case 48: pf = PixelFormat::RGB16_UNORM; break;
+                case 64: pf = PixelFormat::RGBA16_UNORM; break;
+                default: return ImageIOError::UNKNOWN_PIXEL_FORMAT;
+            }
             break;
+        }
+        case FIT_FLOAT:
         case FIT_RGBF:
-            break;
         case FIT_RGBAF:
+        {
+            // Only these are supported
+            switch(bpp)
+            {
+                case 32:  pf = PixelFormat::R_FLOAT; break;
+                case 96:  pf = PixelFormat::RGB_FLOAT; break;
+                case 128: pf = PixelFormat::RGBA_FLOAT; break;
+                default: return ImageIOError::UNKNOWN_PIXEL_FORMAT;
+            }
             break;
+        }
+
+        // Skip these
+        case FIT_UINT16:
+        case FIT_INT16:
+        case FIT_UINT32:
+        case FIT_INT32:
+        case FIT_DOUBLE:
+        case FIT_COMPLEX:
         default: return ImageIOError::UNKNOWN_PIXEL_FORMAT;
     }
-
-    //switch(t)
-    //{
-    //    case FREE_IMAGE_TYPE::FIT_BITMAP:
-    //    {
-    //        
-    //    }
-    //    case FREE_IMAGE_TYPE::FIT_RGB16: return PixelFormat::RGB16_UNORM;
-    //    case FREE_IMAGE_TYPE::FIT_RGBA16: return PixelFormat::RGBA16_UNORM;
-    //    case FREE_IMAGE_TYPE::FIT_RGBF: return PixelFormat::RGB_FLOAT;
-    //    case FREE_IMAGE_TYPE::FIT_RGBAF: return PixelFormat::RGBA_FLOAT;
-    //}
     return ImageIOError::OK;
-}
-
-size_t ImageIO::FormatToPixelSize(PixelFormat pf)
-{
-    // Sanity Check of Imath::half (may be it will have a padding etc.)
-    static_assert(sizeof(Imath::half) == sizeof(uint16_t), "Imath size is not 16-bit");
-    // Yolo switch
-    switch(pf)
-    {
-        // UNORM_INT8 Types
-        case PixelFormat::R8_UNORM:     return sizeof(uint8_t) * 1;
-        case PixelFormat::RG8_UNORM:    return sizeof(uint8_t) * 2;
-        case PixelFormat::RGB8_UNORM:   return sizeof(uint8_t) * 3;
-        case PixelFormat::RGBA8_UNORM:  return sizeof(uint8_t) * 4;
-        // UNORM_INT16 Types
-        case PixelFormat::R16_UNORM:    return sizeof(uint16_t) * 1;
-        case PixelFormat::RG16_UNORM:   return sizeof(uint16_t) * 2;
-        case PixelFormat::RGB16_UNORM:  return sizeof(uint16_t) * 3;
-        case PixelFormat::RGBA16_UNORM: return sizeof(uint16_t) * 4;
-        // Half Types
-        case PixelFormat::R_HALF:       return sizeof(Imath::half) * 1;
-        case PixelFormat::RG_HALF:      return sizeof(Imath::half) * 2;
-        case PixelFormat::RGB_HALF:     return sizeof(Imath::half) * 3;
-        case PixelFormat::RGBA_HALF:    return sizeof(Imath::half) * 4;
-
-        case PixelFormat::R_FLOAT:      return sizeof(float) * 1;
-        case PixelFormat::RG_FLOAT:     return sizeof(float) * 1;
-        case PixelFormat::RGB_FLOAT:    return sizeof(float) * 1;
-        case PixelFormat::RGBA_FLOAT:   return sizeof(float) * 1;
-        // BC Types
-        // TODO: Implement these
-        case PixelFormat::BC1_U:    return 0;
-        case PixelFormat::BC2_U:    return 0;
-        case PixelFormat::BC3_U:    return 0;
-        case PixelFormat::BC4_U:    return 0;
-        case PixelFormat::BC4_S:    return 0;
-        case PixelFormat::BC5_U:    return 0;
-        case PixelFormat::BC5_S:    return 0;
-        case PixelFormat::BC6H_U:   return 0;
-        case PixelFormat::BC6H_S:   return 0;
-        case PixelFormat::BC7_U:    return 0;
-        // Unknown Type
-        case PixelFormat::END:
-        default: 
-            return 0;
-            
-    }
 }
 
 ImageIO::ImageIO()
@@ -143,17 +150,17 @@ bool ImageIO::ReadEXR(std::vector<Vector4>& image,
     // Convert to Vector4f and Invert Y Axis
     image.resize(size[0] * size[1]);
     for(uint32_t y = 0; y < size[1]; y++)
-        for(uint32_t x = 0; x < size[0]; x++)
-        {
-            uint32_t invertexY = size[1] - y - 1;
-            uint32_t outIndex = invertexY * size[0] + x;
+    for(uint32_t x = 0; x < size[0]; x++)
+    {
+        uint32_t invertexY = size[1] - y - 1;
+        uint32_t outIndex = invertexY * size[0] + x;
 
-            const Imf::Rgba& v = pixels[y][x];
-            image[outIndex] = Vector4f(static_cast<float>(v.r),
-                                       static_cast<float>(v.g),
-                                       static_cast<float>(v.b),
-                                       static_cast<float>(v.a));
-        }
+        const Imf::Rgba& v = pixels[y][x];
+        image[outIndex] = Vector4f(static_cast<float>(v.r),
+                                   static_cast<float>(v.g),
+                                   static_cast<float>(v.b),
+                                   static_cast<float>(v.a));
+    }
     return true;
 }
 
@@ -220,14 +227,14 @@ bool ImageIO::WriteAsEXR(const float* image,
     std::vector<Imath::half> convertedData(size[0] * size[1]);
     // Y Invert data and convert to half
     for(uint32_t y = 0; y < size[1]; y++)
-        for(uint32_t x = 0; x < size[0]; x++)
-        {
-            uint32_t inIndex = y * size[0] + x;
-            uint32_t invertexY = size[1] - y - 1;
-            uint32_t outIndex = invertexY * size[0] + x;
+    for(uint32_t x = 0; x < size[0]; x++)
+    {
+        uint32_t inIndex = y * size[0] + x;
+        uint32_t invertexY = size[1] - y - 1;
+        uint32_t outIndex = invertexY * size[0] + x;
 
-            convertedData[outIndex] = image[inIndex];
-        }
+        convertedData[outIndex] = image[inIndex];
+    }
 
     Imf::Header header(size[0], size[1]);
     header.channels().insert("Y", Imf::Channel(Imf::HALF));
@@ -261,15 +268,15 @@ bool ImageIO::WriteAsEXR(const Vector4f* image,
 
     // Instead using simple loops
     for(uint32_t y = 0; y < size[1]; y++)
-        for(uint32_t x = 0; x < size[0]; x++)
-        {
-            uint32_t inIndex = y * size[0] + x;
-            uint32_t invertexY = size[1] - y - 1;
-            uint32_t outIndex = invertexY * size[0] + x;
+    for(uint32_t x = 0; x < size[0]; x++)
+    {
+        uint32_t inIndex = y * size[0] + x;
+        uint32_t invertexY = size[1] - y - 1;
+        uint32_t outIndex = invertexY * size[0] + x;
 
-            const Vector4f& v = image[inIndex];
-            convertedData[outIndex] = Imf::Rgba(v[0], v[1], v[2], v[3]);
-        }
+        const Vector4f& v = image[inIndex];
+        convertedData[outIndex] = Imf::Rgba(v[0], v[1], v[2], v[3]);
+    }
 
         // In this header file INCREASING_Y does not invert image
         // I think it is only for memory layout
@@ -345,7 +352,8 @@ bool ImageIO::CheckIfEXR(const std::string& filePath)
     return false;
 }
 
-ImageIOError ImageIO::ReadImage_FreeImage(std::vector<Byte>& pixels,
+ImageIOError ImageIO::ReadImage_FreeImage(FreeImgRAII& freeImg,
+                                          //std::vector<Byte>& pixels,
                                           PixelFormat& format, Vector2ui& dimension,
                                           const std::string& filePath) const
 {
@@ -359,37 +367,39 @@ ImageIOError ImageIO::ReadImage_FreeImage(std::vector<Byte>& pixels,
         return ImageIOError(ImageIOError::UNKNOWN_IMAGE_TYPE, filePath);
 
     // Generate Object
-    FreeImgRAII imgCPU(f, filePath.c_str());
+    //FreeImgRAII imgCPU(f, filePath.c_str());
+    freeImg = FreeImgRAII(f, filePath.c_str());
     // If imgCPU not avail fail
-    if(!imgCPU) return ImageIOError(ImageIOError::READ_INTERNAL_ERROR, filePath);
+    if(!freeImg) return ImageIOError(ImageIOError::READ_INTERNAL_ERROR, filePath);
    
     // Bit per pixel
-    uint32_t bpp = FreeImage_GetBPP(imgCPU);
-    uint32_t w = FreeImage_GetWidth(imgCPU);
-    uint32_t h = FreeImage_GetHeight(imgCPU);
-    uint32_t pitch = FreeImage_GetPitch(imgCPU);
+    uint32_t bpp = FreeImage_GetBPP(freeImg);
+    uint32_t w = FreeImage_GetWidth(freeImg);
+    uint32_t h = FreeImage_GetHeight(freeImg);
+    uint32_t pitch = FreeImage_GetPitch(freeImg);
     dimension = Vector2ui(w, h);
 
-    FREE_IMAGE_TYPE imgType = FreeImage_GetImageType(imgCPU);
-    FREE_IMAGE_COLOR_TYPE colorType = FreeImage_GetColorType(imgCPU);
+    FREE_IMAGE_TYPE imgType = FreeImage_GetImageType(freeImg);
+    //FREE_IMAGE_COLOR_TYPE colorType = FreeImage_GetColorType(freeImg);
 
     ImageIOError e = ImageIOError::OK;
     if((e = ConvertFreeImgFormat(format, imgType, bpp)) != ImageIOError::OK)
-    {
         return ImageIOError(e, filePath);
-    }
 
-    // Now start to load
-    BYTE* pixelsFreeImg = FreeImage_GetBits(imgCPU);
-    pixels.resize(bpp * w * h / BYTE_BITS);
-    size_t rowSize = bpp / BYTE_BITS * w;
-    // Compact the buffer 
-    for(uint32_t j = 0; j < h; j++)
-    {
-        std::memcpy(pixels.data() + j * rowSize,
-                    pixelsFreeImg + j * pitch,
-                    rowSize);
-    }
+    //// Allocate 
+    ////pixels.resize(dimension[0] * dimension[1] * FormatToPixelSize(format));
+
+    //// Do copy over
+    //BYTE* imgPixels = FreeImage_GetBits(imgCPU);
+    //size_t outPitch = dimension[0] * FormatToPixelSize(format);
+    //
+    //// TODO: Parallelize this 
+    //for(uint32_t y = 0; y < dimension[1]; y++)
+    //{
+    //    Byte* outRowPtr = pixels.data() + outPitch * y;
+    //    const Byte* srcRowPtr = imgPixels + pitch * y;
+    //    std::memcpy(outRowPtr, srcRowPtr, outPitch);
+    //}
     // All done!
     return ImageIOError::OK;
 }
@@ -401,36 +411,141 @@ ImageIOError ImageIO::ReadImage_OpenEXR(std::vector<Byte>& pixels,
     return ImageIOError::READ_INTERNAL_ERROR;
 }
 
-bool ImageIO::IsConvertible(PixelFormat toFormat, PixelFormat fromFormat) const
+void ImageIO::ConvertPixels(Byte* toData, PixelFormat toFormat,
+                            const Byte* fromData, PixelFormat fromFormat, size_t fromPitch,
+                            const Vector2ui& dimension) const
 {
-    return false;
-}
+    // Just to paralleize create a iota
+    // TODO: change to parallelizable ranges C++23 or after
+    // This is static just to prevent some alloc/unalloc etc 
+    static std::vector<uint32_t> indices;
+    size_t newSize = (toFormat == fromFormat) 
+                        ? dimension[1] 
+                        : (dimension[0] * dimension[1]);
+    // Do iota only if the size is increased
+    // and do the new parts
+    if(newSize > indices.size())
+    {
+        size_t oldSize = indices.size();
+        indices.resize(newSize);
+        std::iota(std::next(indices.begin(), oldSize), indices.end(), 
+                  static_cast<uint32_t>(oldSize));
+    }
 
-void ImageIO::CopyPixels(Byte* toData, PixelFormat toFormat,
-                         const Byte* fromData, PixelFormat fromFormat,
-                         const Vector2ui& dimension) const
-{
+    // We did check if this can be converted etc
+    // Just do it
+    const size_t toPixelSize = FormatToPixelSize(fromFormat);
+    const size_t fromPixelSize = FormatToPixelSize(toFormat);
 
+    auto ConvertFunc = [&] (const uint32_t pixelId)
+    {
+        uint32_t x = pixelId % dimension[0];
+        uint32_t y = pixelId / dimension[1];
+
+        Byte* toPixelPtr = toData + (y * dimension[0] + x) * toPixelSize;
+        const Byte* fromPixelPtr = fromData + (y * fromPitch + x) * fromPixelSize;
+
+        // Copy Pixel to Stack
+        std::array<Byte, 8> fromPixel;
+        std::memcpy(fromPixel.data(), toPixelPtr, toPixelSize);
+
+        if(HasSignConversion(toFormat, fromFormat))
+        {
+            SignConvert(fromPixel, toFormat);
+        }
+        // Copy (automatic 3D->4D expansion)
+        std::memcpy(toPixelPtr, fromPixel.data(), toPixelSize);
+    };
+
+    auto PackFunc = [&](const uint32_t y)
+    {
+        Byte* toPixelRowPtr = toData + (y * dimension[0]) * toPixelSize;
+        const Byte* fromPixelRowPtr = fromData + (y * fromPitch) * fromPixelSize;
+        size_t toPitch = dimension[0] * toPixelSize;
+        std::memcpy(toPixelRowPtr, fromPixelRowPtr, toPitch);
+    };
+   
+    if(fromFormat == toFormat)
+        std::for_each_n(std::execution::par_unseq,
+                        indices.cbegin(), dimension[1],
+                        PackFunc);
+    else std::for_each_n(std::execution::par_unseq,
+                         indices.cbegin(), dimension[0] * dimension[1],
+                         ConvertFunc);
 }
 
 ImageIOError ImageIO::ReadImage(std::vector<Byte>& pixels,
                                 PixelFormat& pf, Vector2ui& dimension,
-                                const std::string& filePath) const
+                                const std::string& filePath,
+                                const ImageIOFlags flags) const
 {
     // First check if the file exists
     if(!Utility::CheckFileExistance(filePath))
         return ImageIOError(ImageIOError::IMAGE_NOT_FOUND, filePath);
-    if(CheckIfEXR(filePath))
-        return ReadImage_FreeImage(pixels, pf, dimension, filePath);
+
+    bool isEXRFile = CheckIfEXR(filePath);
+
+    ImageIOError e = ImageIOError::OK;
+    FreeImgRAII freeImg;
+    if(isEXRFile)
+        e = ReadImage_OpenEXR(pixels, pf, dimension, filePath);
     else 
-       return ReadImage_OpenEXR(pixels, pf, dimension, filePath);
+        e = ReadImage_FreeImage(freeImg, pf, dimension, filePath);
+    
+    if(e != ImageIOError::OK)
+        return ImageIOError(e, filePath);        
+
+    // Check Flags
+    if(flags[ImageIOI::LOAD_AS_SIGNED] && !IsSignConvertible(pf))
+    { 
+        return ImageIOError(ImageIOError::TYPE_IS_NOT_SIGN_CONVERTIBLE, filePath);
+    }
+    
+    PixelFormat convertedFormat = pf;
+    size_t newPixelSize = FormatToPixelSize(convertedFormat);
+    // Check the conversion
+    if(Is4CExpandable(pf) && flags[ImageIOI::TRY_3C_4C_CONVERSION])
+    {
+        // Determine new format
+        convertedFormat = (flags[ImageIOI::LOAD_AS_SIGNED])
+                ? Expanded4CFormat(SignConvertedFormat(pf))
+                : Expanded4CFormat(pf);
+
+        newPixelSize = FormatToPixelSize(convertedFormat);        
+    }
+    // Only Signed Conversion
+    else if(IsSignConvertible(pf) && flags[ImageIOI::LOAD_AS_SIGNED])
+    {    
+        convertedFormat = SignConvertedFormat(pf);
+        newPixelSize = FormatToPixelSize(convertedFormat);
+    }
+
+    // Resize Output Buffer
+    pixels.resize(dimension[0] * dimension[1] * newPixelSize);
+
+    // Do the conversion
+    if(isEXRFile)
+    {
+
+    }
+    else
+    {
+        // Directly Convert from FreeImg Buffer
+        ConvertPixels(pixels.data(), convertedFormat, 
+                      freeImg.Data(), pf, freeImg.Pitch(),
+                      dimension);
+    }
+    pf = convertedFormat;
+    return ImageIOError::OK;
 }
 
-ImageIOError ImageIO::ReadImageAlphaChannelAsBitMap(std::vector<Byte>&,
-                                                    Vector2ui& dimension,
-                                                    const std::string& filePath) const
+ImageIOError ImageIO::ReadImageChannelAsBitMap(std::vector<Byte>& bits,
+                                               Vector2ui& dimension,
+                                               ChannelType,
+                                               const std::string& filePath,
+                                               ImageIOFlags) const
 {
-    return ImageIOError(ImageIOError::IMAGE_NOT_FOUND, filePath);
+    return ImageIOError::UNKNOWN_IMAGE_TYPE;
 }
 
 ImageIOError ImageIO::WriteImage(const Byte* data,

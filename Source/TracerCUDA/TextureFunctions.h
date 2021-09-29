@@ -12,7 +12,6 @@
 
 #include <string>
 #include <cstring>
-#include <FreeImage.h>
 
 template <int D>
 using TextureAllocationMap = std::map<uint32_t, std::unique_ptr<TextureI<D>>>;
@@ -32,7 +31,7 @@ class TextureLoader
         static TextureLoader&       Instance();
 
     private:
-        static uint32_t             ColorTypeToChannelCount(FREE_IMAGE_COLOR_TYPE cType);
+        //static uint32_t             ColorTypeToChannelCount(FREE_IMAGE_COLOR_TYPE cType);
 
     protected:
     public:
@@ -272,21 +271,21 @@ SceneError TextureFunctions::AllocateTexture(// Returned Texture Ptr
     return SceneError::OK;
 }
 
-inline uint32_t TextureLoader::ColorTypeToChannelCount(FREE_IMAGE_COLOR_TYPE cType)
-{
-    switch(cType)
-    {
-        case FREE_IMAGE_COLOR_TYPE::FIC_RGB:
-        case FREE_IMAGE_COLOR_TYPE::FIC_CMYK:
-            return 3;
-        case FREE_IMAGE_COLOR_TYPE::FIC_RGBALPHA:
-            return 4;
-        case FREE_IMAGE_COLOR_TYPE::FIC_MINISBLACK:
-            return 1;
-        default:
-            return 0;
-    }
-}
+//inline uint32_t TextureLoader::ColorTypeToChannelCount(FREE_IMAGE_COLOR_TYPE cType)
+//{
+//    switch(cType)
+//    {
+//        case FREE_IMAGE_COLOR_TYPE::FIC_RGB:
+//        case FREE_IMAGE_COLOR_TYPE::FIC_CMYK:
+//            return 3;
+//        case FREE_IMAGE_COLOR_TYPE::FIC_RGBALPHA:
+//            return 4;
+//        case FREE_IMAGE_COLOR_TYPE::FIC_MINISBLACK:
+//            return 1;
+//        default:
+//            return 0;
+//    }
+//}
 
 template <int D>
 SceneError TextureLoader::LoadTexture(std::unique_ptr<TextureI<D>>& t,

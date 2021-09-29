@@ -104,9 +104,10 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
 
     // Load Position Buffer
     Vector2ui size;
-    if(!ImageIOInstance().ReadAndConvertImage(worldPositions, size, 
-                                              PixelFormat::RGB_FLOAT, 
-                                              posFileName))
+    PixelFormat pf;
+    if(!ImageIOInstance().ReadImage(worldPositions, 
+                                    pf, size,
+                                    posFileName))
     {
         // TODO: create VisorException for this
         METU_ERROR_LOG("Unable to Read Position Image");

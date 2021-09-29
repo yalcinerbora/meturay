@@ -17,6 +17,7 @@ Object oriented design and openGL like access
 #include "DeviceMemory.h"
 
 #include <cuda_runtime.h>
+#include <cuda_fp16.h>
 #include <cstddef>
 
 enum class InterpolationType
@@ -104,7 +105,8 @@ struct is_TextureType
                                           int, int2, int4,
                                           unsigned char, uchar2, uchar4,
                                           unsigned short, ushort2, ushort4,
-                                          unsigned int, uint2, uint4>::value;
+                                          unsigned int, uint2, uint4,
+                                          half, half2 /*half4*/>::value;
 };
 
 template <class T>
