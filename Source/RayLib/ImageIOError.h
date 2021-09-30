@@ -16,6 +16,7 @@ struct ImageIOError : public ErrorI
             TYPE_IS_NOT_SIGN_CONVERTIBLE,
             // Internal Errors
             READ_INTERNAL_ERROR,
+            WRITE_INTERNAL_ERROR,
 
             END
         };
@@ -83,7 +84,8 @@ inline ImageIOError::operator std::string() const
         "Pixel Format is not sign convertible",
         //"Pixel Format is not 3C->4C expandable (not a 3 Channel type)",
         // Internal Errors
-        "Read operation internal error"
+        "Read operation internal error",
+        "Write operation internal error"
     };
     static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(ImageIOError::END),
                   "Enum and enum string list size mismatch.");

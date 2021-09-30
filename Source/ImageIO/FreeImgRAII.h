@@ -12,6 +12,7 @@ class FreeImgRAII
     public:
         // Constructors & Destructor
                         FreeImgRAII();
+                        FreeImgRAII(FIBITMAP*);
                         FreeImgRAII(FREE_IMAGE_FORMAT fmt,
                                     const char* fName, int flags = 0);    
                         FreeImgRAII(const FreeImgRAII&) = delete;
@@ -31,6 +32,10 @@ class FreeImgRAII
 
 inline FreeImgRAII::FreeImgRAII()
     : imgCPU(nullptr)
+{}
+
+inline FreeImgRAII::FreeImgRAII(FIBITMAP* fbm)
+    : imgCPU(fbm)
 {}
 
 inline FreeImgRAII::FreeImgRAII(FREE_IMAGE_FORMAT fmt,

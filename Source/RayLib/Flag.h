@@ -2,6 +2,9 @@
 
 #include <bitset>
 
+template<class Enum, int S> class Flags;
+template <class Enum, int S> Flags<Enum, S> operator|(Enum e1, Enum e2);
+
 template<class Enum, int S = static_cast<int>(Enum::END)>
 class Flags
 {
@@ -20,23 +23,24 @@ class Flags
 
     public:
         // Constructors & Destructor
-                Flags() = default;
-                Flags(Enum);
-                template <int C> 
-                Flags(const std::array<Enum, C>& vals);
-                Flags(const Flags&) = default;
-                Flags(Flags&&) = default;
-        Flags&  operator=(const Flags&) = default;
-        Flags&  operator=(Flags&&) = default;
-                ~Flags() = default;
+                        Flags() = default;
+                        Flags(Enum);
+                        template <int C> 
+                        Flags(const std::array<Enum, C>& vals);
+                        Flags(const Flags&) = default;
+                        Flags(Flags&&) = default;
+        Flags&          operator=(const Flags&) = default;
+        Flags&          operator=(Flags&&) = default;
+                        ~Flags() = default;
 
-        bool&   operator[](Enum);
-        bool    operator[](Enum) const;
-        
-        Flags&  operator|(Enum);
-        Flags&  operator|=(Enum);
+        bool&           operator[](Enum);
+        bool            operator[](Enum) const;
 
-        friend Flags   operator|(Enum, Enum);
+        Flags&          operator|(Enum);
+        Flags&          operator|=(Enum);
+
+        template<class Enum, int S>
+        friend Flags    operator|(Enum, Enum);
 };
 
 template <class Enum, int S = static_cast<int>(Enum::END)>

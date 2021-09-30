@@ -12,27 +12,16 @@ class FreeImgRAII;
 class ImageIO : public ImageIOI
 {
     private:
+        static constexpr size_t PARALLEL_EXEC_TRESHOLD = 2048;
+
         // Methods
-        // Read
-        bool        ReadHDR(std::vector<Vector4>& image,
-                            Vector2ui& size,
-                            const std::string& fileName) const;
-        bool        ReadEXR(std::vector<Vector4>& image,
-                            Vector2ui& size,
-                            const std::string& fileName) const;
         // Write
-        bool        WriteAsEXR(const float* image,
-                               const Vector2ui& size,
-                               const std::string& fileName) const;
-        bool        WriteAsEXR(const Vector4f* image,
-                               const Vector2ui& size,
-                               const std::string& fileName) const;
-        bool        WriteAsPNG(const Vector4f* image,
-                               const Vector2ui& size,
-                               const std::string& fileName) const;
-        bool        WriteAsPNG(const Vector4uc* image,
-                               const Vector2ui& size,
-                               const std::string& fileName) const;
+        ImageIOError            WriteAsEXR(const Byte* pixels,
+                                   const Vector2ui& dimension, PixelFormat,
+                                   const std::string& fileName) const;
+        ImageIOError            WriteUsingFreeImage(const Byte* pixels,
+                                            const Vector2ui& dimension, PixelFormat,
+                                            const std::string& fileName) const;
 
         static bool             CheckIfEXR(const std::string& fileName);
         static ImageIOError     ConvertFreeImgFormat(PixelFormat& pf, FREE_IMAGE_TYPE t, uint32_t bpp);
@@ -46,6 +35,10 @@ class ImageIO : public ImageIOI
                                               const std::string& filePath) const;
 
     protected:        
+        void                PackChannelBits(Byte* bits,
+                                            const Byte* fromData, PixelFormat fromFormat,
+                                            size_t pitch, ImageChannelType, 
+                                            const Vector2ui& dimension) const;
         void                ConvertPixels(Byte* toData, PixelFormat toFormat,
                                           const Byte* fromData, PixelFormat fromFormat, size_t fromPitch,
                                           const Vector2ui& dimension) const;
@@ -64,7 +57,7 @@ class ImageIO : public ImageIOI
                                       const ImageIOFlags = ImageIOFlags()) const override;
         ImageIOError        ReadImageChannelAsBitMap(std::vector<Byte>&,
                                                      Vector2ui& dimension,
-                                                     ChannelType,
+                                                     ImageChannelType,
                                                      const std::string& filePath,
                                                      ImageIOFlags = ImageIOFlags()) const override;
 
@@ -73,6 +66,6 @@ class ImageIO : public ImageIOI
                                        PixelFormat, ImageType,
                                        const std::string& filePath) const override;
         ImageIOError        WriteBitmap(const Byte* bits,
-                                        const Vector2ui& dimension,
+                                        const Vector2ui& dimension, ImageType,
                                         const std::string& filePath) const override;
 };

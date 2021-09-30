@@ -354,7 +354,9 @@ elseif(UNIX)
 endif()
 
 # DLL File
-add_library(TracerCUDA SHARED ${SRC_ALL})
+add_library(TracerCUDA SHARED)
+
+target_sources(TracerCUDA PUBLIC ${SRC_ALL})
 
 target_include_directories(TracerCUDA PRIVATE
                            ${MRAY_LIB_INCLUDE_DIRECTORY}

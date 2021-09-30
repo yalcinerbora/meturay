@@ -21,7 +21,7 @@ enum class ImageType
     EXR
 };
 
-enum class ChannelType
+enum class ImageChannelType
 {
     R, G, B, A
 };
@@ -40,16 +40,14 @@ class ImageIOI
         using ImageIOFlags = Flags<FlagTypes>;
 
     private:
-    protected:        
-        //virtual void            ConvertPixels(Byte* toData, PixelFormat toFormat,
-        //                                      const Byte* fromData, PixelFormat fromFormat,
-        //                                      const Vector2ui& dimension) const = 0;
-
-
+    protected:                
     public:        
         virtual                 ~ImageIOI() = default;
 
+        //
+        static int8_t           ChannelTypeToChannelIndex(ImageChannelType);
         // Statics
+        static size_t           FormatToChannelSize(PixelFormat pf);
         static size_t           FormatToPixelSize(PixelFormat);
         static int8_t           FormatToChannelCount(PixelFormat);
         // Sign Conversion Related
@@ -76,7 +74,7 @@ class ImageIOI
         // Read a channel as alpha bit map
         virtual ImageIOError   ReadImageChannelAsBitMap(std::vector<Byte>&,
                                                         Vector2ui& dimension,
-                                                        ChannelType,
+                                                        ImageChannelType,
                                                         const std::string& filePath,
                                                         const ImageIOFlags = ImageIOFlags()) const = 0;
         
@@ -88,6 +86,7 @@ class ImageIOI
                                            const std::string& filePath) const = 0;
         virtual ImageIOError    WriteBitmap(const Byte* bits,
                                             const Vector2ui& dimension,
+                                            ImageType,
                                             const std::string& filePath) const = 0;
         template<class T>
         ImageIOError            WriteImage(const std::vector<T>& data,                                           
@@ -98,6 +97,11 @@ class ImageIOI
 
 // TODO: is this a good pattern???
 using ImageIOFlags = ImageIOI::ImageIOFlags;
+
+inline int8_t ImageIOI::ChannelTypeToChannelIndex(ImageChannelType channel)
+{
+    return static_cast<uint32_t>(channel);
+}
 
 inline int8_t ImageIOI::FormatToChannelCount(PixelFormat pf)
 {
@@ -139,29 +143,95 @@ inline int8_t ImageIOI::FormatToChannelCount(PixelFormat pf)
 
 inline size_t ImageIOI::FormatToPixelSize(PixelFormat pf)
 {
+    size_t channelSize = FormatToChannelSize(pf);
     // Yolo switch
     switch(pf)
     {
-        // UNORM_INT8 Types
-        case PixelFormat::R8_UNORM:     return sizeof(uint8_t) * 1;
-        case PixelFormat::RG8_UNORM:    return sizeof(uint8_t) * 2;
-        case PixelFormat::RGB8_UNORM:   return sizeof(uint8_t) * 3;
-        case PixelFormat::RGBA8_UNORM:  return sizeof(uint8_t) * 4;
-        // UNORM_INT16 Types
-        case PixelFormat::R16_UNORM:    return sizeof(uint16_t) * 1;
-        case PixelFormat::RG16_UNORM:   return sizeof(uint16_t) * 2;
-        case PixelFormat::RGB16_UNORM:  return sizeof(uint16_t) * 3;
-        case PixelFormat::RGBA16_UNORM: return sizeof(uint16_t) * 4;
-        // Half Types
-        case PixelFormat::R_HALF:       return sizeof(uint16_t) * 1;
-        case PixelFormat::RG_HALF:      return sizeof(uint16_t) * 2;
-        case PixelFormat::RGB_HALF:     return sizeof(uint16_t) * 3;
-        case PixelFormat::RGBA_HALF:    return sizeof(uint16_t) * 4;
+        // 1 Channels
+        case PixelFormat::R8_UNORM:
+        case PixelFormat::R8_SNORM: 
+        case PixelFormat::R16_UNORM:
+        case PixelFormat::R16_SNORM:
+        case PixelFormat::R_HALF:
+        case PixelFormat::R_FLOAT:
+            return channelSize * 1;
+        // 2 Channels
+        case PixelFormat::RG8_UNORM:
+        case PixelFormat::RG8_SNORM:
+        case PixelFormat::RG16_UNORM:
+        case PixelFormat::RG16_SNORM:
+        case PixelFormat::RG_HALF:
+        case PixelFormat::RG_FLOAT:
+            return channelSize * 2;
+        // 3 Channels
+        case PixelFormat::RGB8_UNORM:
+        case PixelFormat::RGB8_SNORM:
+        case PixelFormat::RGB16_UNORM:
+        case PixelFormat::RGB16_SNORM:
+        case PixelFormat::RGB_HALF:
+        case PixelFormat::RGB_FLOAT:
+            return channelSize * 3;
+                // 3 Channels
+        case PixelFormat::RGBA8_UNORM:
+        case PixelFormat::RGBA8_SNORM:
+        case PixelFormat::RGBA16_UNORM:
+        case PixelFormat::RGBA16_SNORM:
+        case PixelFormat::RGBA_HALF:
+        case PixelFormat::RGBA_FLOAT:
+            return channelSize * 4;
+        // BC Types
+        // TODO: Implement these
+        case PixelFormat::BC1_U:    return 0;
+        case PixelFormat::BC2_U:    return 0;
+        case PixelFormat::BC3_U:    return 0;
+        case PixelFormat::BC4_U:    return 0;
+        case PixelFormat::BC4_S:    return 0;
+        case PixelFormat::BC5_U:    return 0;
+        case PixelFormat::BC5_S:    return 0;
+        case PixelFormat::BC6H_U:   return 0;
+        case PixelFormat::BC6H_S:   return 0;
+        case PixelFormat::BC7_U:    return 0;
+        // Unknown Type
+        case PixelFormat::END:
+        default: 
+            return 0;
+            
+    }
+}
 
-        case PixelFormat::R_FLOAT:      return sizeof(float) * 1;
-        case PixelFormat::RG_FLOAT:     return sizeof(float) * 1;
-        case PixelFormat::RGB_FLOAT:    return sizeof(float) * 1;
-        case PixelFormat::RGBA_FLOAT:   return sizeof(float) * 1;
+inline size_t ImageIOI::FormatToChannelSize(PixelFormat pf)
+{
+    // Yolo switch
+    switch(pf)
+    {
+        // SNORM & UNORM INT8 Types
+        case PixelFormat::R8_UNORM:
+        case PixelFormat::R8_SNORM:     return sizeof(uint8_t);
+        case PixelFormat::RG8_UNORM:
+        case PixelFormat::RG8_SNORM:    return sizeof(uint8_t);
+        case PixelFormat::RGB8_UNORM:
+        case PixelFormat::RGB8_SNORM:   return sizeof(uint8_t);
+        case PixelFormat::RGBA8_UNORM:
+        case PixelFormat::RGBA8_SNORM:  return sizeof(uint8_t);
+        // SNORM & UNORM INT16 Types
+        case PixelFormat::R16_UNORM:
+        case PixelFormat::R16_SNORM:    return sizeof(uint16_t);
+        case PixelFormat::RG16_UNORM:
+        case PixelFormat::RG16_SNORM:   return sizeof(uint16_t);
+        case PixelFormat::RGB16_UNORM:
+        case PixelFormat::RGB16_SNORM:  return sizeof(uint16_t);
+        case PixelFormat::RGBA16_UNORM:
+        case PixelFormat::RGBA16_SNORM: return sizeof(uint16_t);
+        // Half Types
+        case PixelFormat::R_HALF:       return sizeof(uint16_t);
+        case PixelFormat::RG_HALF:      return sizeof(uint16_t);
+        case PixelFormat::RGB_HALF:     return sizeof(uint16_t);
+        case PixelFormat::RGBA_HALF:    return sizeof(uint16_t);
+
+        case PixelFormat::R_FLOAT:      return sizeof(float);
+        case PixelFormat::RG_FLOAT:     return sizeof(float);
+        case PixelFormat::RGB_FLOAT:    return sizeof(float);
+        case PixelFormat::RGBA_FLOAT:   return sizeof(float);
         // BC Types
         // TODO: Implement these
         case PixelFormat::BC1_U:    return 0;
@@ -325,6 +395,6 @@ ImageIOError ImageIOI::ReadImage(std::vector<T>& data,
                                  Vector2ui& dimension,
                                  const std::string& filePath,
                                  ImageIOFlags flags)
-{
+{    
     return ImageIOError::IMAGE_NOT_FOUND;
 }
