@@ -8,6 +8,7 @@
 
 #include "RayLib/Log.h"
 #include "RayLib/HybridFunctions.h"
+#include "RayLib/VisorError.h"
 
 #include "GDebugRendererReference.h"
 
@@ -76,7 +77,7 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
     , MaxDepth(maxDepth)
     , currentDepth(0)
     , debugReference(dRef)
-    , debugRefTexture(Zero2ui, PixelFormat::END)
+    , debugRefTexture()
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -104,21 +105,29 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
 
     // Load Position Buffer
     Vector2ui size;
-    PixelFormat pf;
-    if(!ImageIOInstance().ReadImage(worldPositions, 
-                                    pf, size,
-                                    posFileName))
+    PixelFormat pf;  
+    std::vector<Byte> wpByte;
+    ImageIOError e = ImageIOInstance().ReadImage(wpByte,
+                                                 pf, size,
+                                                 posFileName);
+    
+    if(e != ImageIOError::OK) throw ImageIOException(e);
+    else if(pf != PixelFormat::RGB_FLOAT)
     {
-        // TODO: create VisorException for this
-        METU_ERROR_LOG("Unable to Read Position Image");
-     
-        std::abort();
+        throw VisorException(VisorError::IMAGE_IO_ERROR,
+                             "Reference Image Must have RGB format");
     }
-    if(size != refTexture.Size())
+    else if(size != refTexture.Size())
     {
-        // TODO: create VisorException for this
-        METU_ERROR_LOG("\"Position Image - Reference Image\" size mismatch");
-        std::abort();
+        throw VisorException(VisorError::IMAGE_IO_ERROR,
+                             "\"Position Image - Reference Image\" size mismatch");
+    }
+    // All fine, copy it to other vector
+    else
+    {
+        worldPositions.resize(size[0] * size[1]);
+        std::memcpy(reinterpret_cast<Byte*>(worldPositions.data()),
+                    wpByte.data(),wpByte.size());
     }
 
     // Generate Textures

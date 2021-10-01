@@ -6,6 +6,13 @@
 
 #include "ImageIO/EntryPoint.h"
 
+
+TextureGL::TextureGL()
+    : texId(0)
+    , dimensions(Zero2ui)
+    , pixFormat(PixelFormat::END)
+{}
+
 TextureGL::TextureGL(const Vector2ui& dim,
                      PixelFormat fmt)
     : texId(0)
@@ -25,16 +32,13 @@ TextureGL::TextureGL(const std::string& filePath)
     , pixFormat(PixelFormat::END)
 {
     std::vector<Byte> pixels;
-    bool loaded = ImageIOInstance().ReadImage(pixels,
-                                              pixFormat,
-                                              dimensions,
-                                              filePath);
-    // TODO: Throw some execption
-    if(!loaded)
+    ImageIOError e = ImageIOInstance().ReadImage(pixels,
+                                                 pixFormat,
+                                                 dimensions,
+                                                 filePath);
+    if(e != ImageIOError::OK)
     {
-        METU_ERROR_LOG("Unable to Load Texture File \"{}\"",
-                       filePath);
-        return;
+        throw ImageIOException(ImageIOError(e, filePath));
     }
         
 

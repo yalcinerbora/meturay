@@ -149,17 +149,19 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
         case VisorGLCommand::SAVE_IMAGE:
         {
             // TODO: load as 8-bit color (but alignment trolls i think heap gets corrupted)
-            std::vector<Vector4f> pixels(imageSize[0] * imageSize[1]);
+            std::vector<Vector4uc> pixels(imageSize[0] * imageSize[1]);
             GLuint readTexture = sdrTexture;
+            glPixelStorei(GL_PACK_ALIGNMENT, 1);
             glBindTexture(GL_TEXTURE_2D, readTexture);
-            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT,
-                          pixels.data());
+            glGetnTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                           static_cast<GLsizei>(pixels.size() * sizeof(Vector4uc)),
+                           pixels.data());
 
             ImageIOError e = ImageIOError::OK;
             const ImageIOI& io = ImageIOInstance();
             if((e = io.WriteImage(pixels,
                                   Vector2ui(imageSize[0], imageSize[1]),
-                                  PixelFormat::RGBA_FLOAT, ImageType::PNG,
+                                  PixelFormat::RGBA8_UNORM, ImageType::PNG,
                                   "imgOut.png")) != ImageIOError::OK)
             {
                 METU_ERROR_LOG(static_cast<std::string>(e));

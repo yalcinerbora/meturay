@@ -68,38 +68,59 @@ void SignConvert(std::array<Byte, 16>& pixel, PixelFormat fmt)
     }
 }
 
-static 
+static
 ImageIOError PixelFormatFromEXR(PixelFormat& pf, const Imf::Header& header)
 {
-    //const Imf::ChannelList& channels = header.channels();
+    // TODO: Implement properly
+    int channelCount = 0;
+    const Imf::ChannelList& channels = header.channels();
 
-    //Imf::PixelType consistentType;
-    //for(channels.)
-    //{
-    //    Imf::PixelType currentType = consistentType;
-    //    //switch(c.type)
-    //    //{
-    //    //    
-    //    //    Imf::PixelType::HALF = 1,		// half (16 bit floating point)
-    //    //        FLOAT = 2,		// float (32 bit floating point)
+    // Get Pixel Type & Channel Count
+    Imf::PixelType consistentType;
+    for(auto c = channels.begin(); c != channels.end(); c++)
+    {
+        channelCount++;
+        const Imf::Channel& channel = c.channel();
+        if(c == channels.begin())
+        {
+            consistentType = channel.type;
+            continue;
+        }
 
-    //    //    // We dont have 32-bit uint format
-    //    //    case Imf::PixelType::UINT:
-    //    //    default:
-    //    //        break;
-    //    //}
-    //}
-    return ImageIOError::OK;
+        if(channel.type != consistentType)
+            return ImageIOError::READ_INTERNAL_ERROR;
+    }
     
+    // OpenEXR is quite complex but use it as if single image is present
+    // with specific channels
+    if(channelCount >= 5 || channelCount == 0)
+        return ImageIOError::READ_INTERNAL_ERROR;
+    // Also only read Float/Half types
+    if(consistentType == Imf::PixelType::UINT)
+        return ImageIOError::READ_INTERNAL_ERROR;
+
+    switch(consistentType)
+    {
+        case Imf::HALF: 
+            if(channelCount == 1) { pf = PixelFormat::R_HALF; break;}
+            if(channelCount == 2) { pf = PixelFormat::RG_HALF; break; }
+            if(channelCount == 3) { pf = PixelFormat::RGB_HALF; break; }
+            if(channelCount == 4) { pf = PixelFormat::RGBA_HALF; break; }
+        case Imf_3_1::FLOAT:
+            if(channelCount == 1) { pf = PixelFormat::R_FLOAT; break; }
+            if(channelCount == 2) { pf = PixelFormat::RG_FLOAT; break; }
+            if(channelCount == 3) { pf = PixelFormat::RGB_FLOAT; break; }
+            if(channelCount == 4) { pf = PixelFormat::RGBA_FLOAT; break; }
+    }
+    return ImageIOError::OK;
 }
-   
 
 ImageIOError ImageIO::ConvertFreeImgFormat(PixelFormat& pf, FREE_IMAGE_TYPE t, uint32_t bpp)
 {
     switch(t)
     {
         case FIT_UNKNOWN: return ImageIOError::UNKNOWN_PIXEL_FORMAT;
-            
+
         case FIT_BITMAP:
         {
             switch(bpp)
@@ -150,6 +171,58 @@ ImageIOError ImageIO::ConvertFreeImgFormat(PixelFormat& pf, FREE_IMAGE_TYPE t, u
     return ImageIOError::OK;
 }
 
+ImageIOError ImageIO::ConvertImageTypeToFreeImgType(FREE_IMAGE_FORMAT& fit, ImageType it)
+{
+    switch(it)
+    {
+        case ImageType::PNG: fit = FIF_PNG;  break;
+        case ImageType::JPG: fit = FIF_JPEG; break;
+        case ImageType::BMP: fit = FIF_BMP;  break;
+        case ImageType::HDR: fit = FIF_HDR;  break;
+        // Rest is not used by FreeImage
+        default: return ImageIOError::WRITE_INTERNAL_ERROR;
+    }
+    return ImageIOError::OK;
+}
+
+ImageIOError ImageIO::ConvertPixelFormatToFreeImgType(FREE_IMAGE_TYPE& t, PixelFormat pf)
+{
+    switch(pf)
+    {
+        case PixelFormat::R8_UNORM:
+        case PixelFormat::RG8_UNORM:
+        case PixelFormat::RGB8_UNORM:
+        case PixelFormat::RGBA8_UNORM:
+        case PixelFormat::R8_SNORM:
+        case PixelFormat::RG8_SNORM:
+        case PixelFormat::RGB8_SNORM:
+        case PixelFormat::RGBA8_SNORM:
+            t = FIT_BITMAP; break;
+
+        case PixelFormat::RGB_FLOAT:  t = FIT_RGBF; break;
+        case PixelFormat::RGBA_FLOAT: t = FIT_RGBAF; break;
+            
+        // Maybe Implement later
+        case PixelFormat::R16_UNORM:
+        case PixelFormat::RG16_UNORM:
+        case PixelFormat::RGB16_UNORM:
+        case PixelFormat::RGBA16_UNORM:
+        case PixelFormat::R16_SNORM:
+        case PixelFormat::RG16_SNORM:
+        case PixelFormat::RGB16_SNORM:
+        case PixelFormat::RGBA16_SNORM:
+        case PixelFormat::R_HALF:
+        case PixelFormat::RG_HALF:
+        case PixelFormat::RGB_HALF:
+        case PixelFormat::RGBA_HALF:
+        case PixelFormat::R_FLOAT:
+        case PixelFormat::RG_FLOAT:
+        default:
+            return ImageIOError::READ_INTERNAL_ERROR;
+    }
+    return ImageIOError::OK;
+}
+
 ImageIO::ImageIO()
 {
     FreeImage_Initialise();
@@ -160,188 +233,104 @@ ImageIO::~ImageIO()
     FreeImage_DeInitialise();
 }
 
-//bool ImageIO::ReadHDR(std::vector<Vector4>& image,
-//                      Vector2ui& size,
-//                      const std::string& fileName) const
-//{
-//    FIBITMAP* dib2 = nullptr;
-//    FREE_IMAGE_FORMAT fif = FreeImage_GetFIFFromFilename(fileName.c_str());
-//
-//    dib2 = FreeImage_Load(fif, fileName.c_str());
-//    if(dib2 == nullptr)
-//    {
-//        return false;
-//    }
-//    FIBITMAP* dib1 = FreeImage_ConvertToRGBAF(dib2);
-//    //FIBITMAP *dib1 = FreeImage_TmoReinhard05Ex(dib2);
-//    FreeImage_Unload(dib2);
-//
-//    BITMAPINFOHEADER* header = FreeImage_GetInfoHeader(dib1);
-//
-//    // Size
-//    size[0] = header->biWidth;
-//    size[1] = header->biHeight;
-//    image.resize(size[0] * size[1]);
-//
-//    for(int j = 0; j < header->biHeight; j++)
-//    {
-//        FIRGBAF* bits = (FIRGBAF*)FreeImage_GetScanLine(dib1, j);
-//        for(int i = 0; i < header->biWidth; i++)
-//        {
-//        /*  RGBQUAD rgb;
-//            bool fetched = FreeImage_GetPixelColor(dib1, i, header->biHeight - j - 1, &rgb);*/
-//
-//            Vector4 pixel;
-//            //pixel[0] = static_cast<float>(rgb.rgbRed) / 255.0f;
-//            //pixel[1] = static_cast<float>(rgb.rgbGreen) / 255.0f;
-//            //pixel[2] = static_cast<float>(rgb.rgbBlue) / 255.0f;
-//            //pixel[3] = 0.0f;
-//
-//            pixel[0] = bits[i].red * 2.5f;
-//            pixel[1] = bits[i].green * 2.5f;
-//            pixel[2] = bits[i].blue * 2.5f;
-//            pixel[3] = 0.0f;
-//
-//            //if(pixel[0] > 1.0f)
-//            //  printf("%f ", pixel[0]);
-//            //if(pixel[1] > 1.0f)
-//            //  printf("%f ", pixel[1]);
-//            //if(pixel[2] > 1.0f)
-//            //  printf("%f ", pixel[2]);
-//            //printf("\n");
-//
-//            image[j * header->biWidth + i] = pixel;
-//        }
-//    }
-//    return true;
-//}
-
-//bool ImageIO::WriteAsEXR(const float* image,
-//                         const Vector2ui& size,
-//                         const std::string& fileName) const
-//{
-//    std::vector<Imath::half> convertedData(size[0] * size[1]);
-//    // Y Invert data and convert to half
-//    for(uint32_t y = 0; y < size[1]; y++)
-//    for(uint32_t x = 0; x < size[0]; x++)
-//    {
-//        uint32_t inIndex = y * size[0] + x;
-//        uint32_t invertexY = size[1] - y - 1;
-//        uint32_t outIndex = invertexY * size[0] + x;
-//
-//        convertedData[outIndex] = image[inIndex];
-//    }
-//
-//    Imf::Header header(size[0], size[1]);
-//    header.channels().insert("Y", Imf::Channel(Imf::HALF));
-//
-//    Imf::OutputFile file(fileName.c_str(), header);
-//    Imf::FrameBuffer frameBuffer;
-//    Imf::Slice lumSlice = Imf::Slice(Imf::HALF,
-//                                     reinterpret_cast<char*>(convertedData.data()), // base // 8
-//                                     sizeof(Imath::half),
-//                                     sizeof(Imath::half) * size[0]);
-//    frameBuffer.insert("Y", lumSlice);
-//
-//    file.setFrameBuffer(frameBuffer);
-//    file.writePixels(size[1]);
-//
-//    return true;
-//}
-
 ImageIOError ImageIO::WriteAsEXR(const Byte* pixels,
                                  const Vector2ui& dimension, PixelFormat pf,
                                  const std::string& fileName) const
 {
-    return  ImageIOError::WRITE_INTERNAL_ERROR;
+    // TODO: This code is quite awful change it to a more generic version
+    const int channelCount = FormatToChannelCount(pf);
 
-    //std::vector<Imf::Rgba> convertedData(dimension[0] * dimension[1]);
-    //// Cant invert the image while using std::transform easily
-    ////std::transform(std::execution::par_unseq,
-    ////               image, image + size[0] * size[1],
-    ////               convertedData.begin(), [] (const Vector4f& v) -> Imf::Rgba
-    ////               {
-    ////                   return Imf::Rgba(v[0], v[1], v[2], v[3]);
-    ////               });
+    // Always try to write as half
+    size_t pixelSizeLinear = dimension[0] * dimension[1];
+    std::vector<Imath::half> convertedData(pixelSizeLinear * channelCount);
+    
+    // Call appropriate function
 
-    //// Instead using simple loops
-    //for(uint32_t y = 0; y < dimension[1]; y++)
-    //for(uint32_t x = 0; x < dimension[0]; x++)
-    //{
-    //    uint32_t inIndex = y * dimension[0] + x;
-    //    uint32_t invertexY = dimension[1] - y - 1;
-    //    uint32_t outIndex = invertexY * dimension[0] + x;
+    auto ConvtForEXRWrap = [&]<class T>()
+    {
+        ConvertForEXR(convertedData.data(),
+                      reinterpret_cast<const T*>(pixels),
+                      pf, dimension);
+    };
 
-    //    const Vector4f& v = image[inIndex];
-    //    convertedData[outIndex] = Imf::Rgba(v[0], v[1], v[2], v[3]);
-    //}
+    switch(pf)
+    {
+        case PixelFormat::R_FLOAT:      
+        case PixelFormat::RG_FLOAT:  
+        case PixelFormat::RGB_FLOAT: 
+        case PixelFormat::RGBA_FLOAT:
+            ConvtForEXRWrap.operator()<float>(); 
+            break;
+        default: return ImageIOError::WRITE_INTERNAL_ERROR;
+    }
 
-    //    // In this header file INCREASING_Y does not invert image
-    //    // I think it is only for memory layout
-    //    //Imf::Header header(size[0], size[1], 1.0f, 
-    //    //                   Imath::V2f(0, 0), 1.0f, 
-    //    //                   Imf::DECREASING_Y);
-    //Imf::RgbaOutputFile file(fileName.c_str(),
-    //                         size[0], size[1],
-    //                         Imf::RgbaChannels::WRITE_RGBA);
-    //file.setFrameBuffer(convertedData.data(), 1, size[0]);
-    //file.writePixels(size[1]);
-    //return  ImageIOError::OK;
+    // Set Channels
+    Imf::Header header(dimension[0], dimension[1]);
+    std::array<std::string, 4> channelNames = 
+    {
+        (pf == PixelFormat::R_FLOAT) ? "Y" : "R", 
+        "G", "B", "A"
+    };
+    for(int i = 0; i < channelCount; i++)
+    {
+        header.channels().insert(channelNames[i], Imf::Channel(Imf::HALF));
+    }
+
+    Imf::OutputFile file(fileName.c_str(), header);
+    Imf::FrameBuffer frameBuffer;
+    for(int i = 0; i < channelCount; i++)
+    {
+        Imf::Slice lumSlice = Imf::Slice(Imf::HALF,
+                                         reinterpret_cast<char*>(convertedData.data() + i), // base // 8
+                                         sizeof(Imath::half) * channelCount,
+                                         sizeof(Imath::half) * dimension[0] * channelCount);
+        frameBuffer.insert(channelNames[i], lumSlice);
+    }
+    file.setFrameBuffer(frameBuffer);
+
+    // Finally write    
+    file.writePixels(dimension[1]);
+    return ImageIOError::OK;
 }
 
 ImageIOError ImageIO::WriteUsingFreeImage(const Byte* pixels,
-                                          const Vector2ui& dimension, PixelFormat,
+                                          const Vector2ui& dimension, 
+                                          PixelFormat pf, ImageType it,
                                           const std::string& fileName) const
 {
-    return  ImageIOError::WRITE_INTERNAL_ERROR;
+    FREE_IMAGE_TYPE fit;
+    ImageIOError e = ImageIOError::OK;
+
+    if((e = ConvertPixelFormatToFreeImgType(fit, pf)) != ImageIOError::OK)
+        return e;
+
+    size_t pixelSize = FormatToPixelSize(pf);
+    size_t bpp = pixelSize * BYTE_BITS;
+
+    FreeImgRAII fImg = FreeImgRAII(FreeImage_AllocateT(fit,
+                                                       dimension[0],
+                                                       dimension[1],
+                                                       static_cast<int>(bpp)));
+
+    for(uint32_t j = 0; j < dimension[1]; j++)
+    {
+        size_t scanLineSize = pixelSize * dimension[0];
+
+        Byte* outScanLine = FreeImage_GetScanLine(fImg, j);
+        const Byte* inScanLine = pixels + j * pixelSize * dimension[0];
+      
+        std::memcpy(outScanLine, inScanLine, scanLineSize);
+    }
+
+    FREE_IMAGE_FORMAT fif;
+    if((e = ConvertImageTypeToFreeImgType(fif, it)) != ImageIOError::OK)
+        return e;
+    
+    if(!FreeImage_Save(fif, fImg, fileName.c_str()))
+        return ImageIOError::WRITE_INTERNAL_ERROR;
+
+    return ImageIOError::OK;
 }
-
-//bool ImageIO::WriteAsPNG(const Vector4f* image,
-//                         const Vector2ui& size,
-//                         const std::string& fileName) const
-//{
-//    auto* bitmap = FreeImage_Allocate(size[0], size[1], 24);
-//
-//    for(uint32_t j = 0; j < size[1]; j++)
-//        for(uint32_t i = 0; i < size[0]; i++)
-//        {
-//            RGBQUAD color;
-//            Vector4f rgbImage = image[j * size[0] + i];
-//
-//            rgbImage.ClampSelf(0.0f, 1.0f);
-//            rgbImage *= 255.0f;
-//
-//            color.rgbRed = static_cast<BYTE>(rgbImage[0]);
-//            color.rgbGreen = static_cast<BYTE>(rgbImage[1]);
-//            color.rgbBlue = static_cast<BYTE>(rgbImage[2]);
-//
-//            FreeImage_SetPixelColor(bitmap, i, j, &color);
-//        }
-//    bool result = FreeImage_Save(FIF_PNG, bitmap, fileName.c_str());
-//    FreeImage_Unload(bitmap);
-//    return result;
-//}
-
-//bool ImageIO::WriteAsPNG(const Vector4uc* image,
-//                         const Vector2ui& size,
-//                         const std::string& fileName) const
-//{
-//    auto* bitmap = FreeImage_Allocate(size[0], size[1], 24);
-//
-//    for(uint32_t j = 0; j < size[1]; j++)
-//        for(uint32_t i = 0; i < size[0]; i++)
-//        {
-//            RGBQUAD color;
-//            Vector4uc rgbImage = image[j * size[0] + i];
-//            color.rgbRed = rgbImage[0];
-//            color.rgbGreen = rgbImage[1];
-//            color.rgbBlue = rgbImage[2];
-//            FreeImage_SetPixelColor(bitmap, i, j, &color);
-//        }
-//    bool result = FreeImage_Save(FIF_PNG, bitmap, fileName.c_str());
-//    FreeImage_Unload(bitmap);
-//    return result;
-//}
 
 bool ImageIO::CheckIfEXR(const std::string& filePath)
 {
@@ -412,24 +401,40 @@ ImageIOError ImageIO::ReadImage_FreeImage(FreeImgRAII& freeImg,
 ImageIOError ImageIO::ReadImage_OpenEXR(std::vector<Byte>& pixels,
                                         PixelFormat& pf, Vector2ui& size,
                                         const std::string& filePath) const
-{
-    return ImageIOError::UNKNOWN_IMAGE_TYPE;
-
-    //ImageIOError e = ImageIOError::OK;
+{    
+    ImageIOError e = ImageIOError::OK;
 
     //Imf::InputFile file(filePath.c_str());
-    //if((e = PixelFormatFromEXR(pf, file.header())) != ImageIOError::OK)
-    //    return e;
-    
-    //Imf::Array2D<Imf::Rgba> exrPixels;
+    Imf::RgbaInputFile file(filePath.c_str());
+    if((e = PixelFormatFromEXR(pf, file.header())) != ImageIOError::OK)
+        return e;
 
-    //Imf::RgbaInputFile file(filePath.c_str());
-    //Imath::Box2i dw = file.dataWindow();
-    //size[0] = dw.max.x - dw.min.x + 1;
-    //size[1] = dw.max.y - dw.min.y + 1;
-    //exrPixels.resizeErase(size[1], size[0]);
-    //file.setFrameBuffer(&exrPixels[0][0] - dw.min.x - dw.min.y * size[0], 1, size[0]);
-    //file.readPixels(dw.min.y, dw.max.y);
+    // Implement This properly (directly write to vector)
+    Imf::Array2D<Imf::Rgba> exrPixels;    
+    Imath::Box2i dw = file.dataWindow();
+    size[0] = dw.max.x - dw.min.x + 1;
+    size[1] = dw.max.y - dw.min.y + 1;
+    exrPixels.resizeErase(size[1], size[0]);
+    file.setFrameBuffer(&exrPixels[0][0] - dw.min.x - dw.min.y * size[0], 1, size[0]);
+    file.readPixels(dw.min.y, dw.max.y);
+
+    // ?
+    return ImageIOError::READ_INTERNAL_ERROR;
+
+    // TODO: 
+    // Convert to Vector4f and Invert Y Axis
+    for(uint32_t y = 0; y < size[1]; y++)
+    for(uint32_t x = 0; x < size[0]; x++)
+    {
+        uint32_t invertexY = size[1] - y - 1;
+        uint32_t outIndex = invertexY * size[0] + x;
+
+        const Imf::Rgba& v = pixels[y][x];
+        image[outIndex] = Vector4f(static_cast<float>(v.r),
+                                   static_cast<float>(v.g),
+                                   static_cast<float>(v.b),
+                                   static_cast<float>(v.a));
+    }
 
     //int8_t channelCount = FormatToChannelCount(pf);
 
@@ -548,8 +553,7 @@ void ImageIO::ConvertPixels(Byte* toData, PixelFormat toFormat,
    
     // Do sequential if data is not large
     size_t iterationCount = newSize;       
-    //if(iterationCount <= PARALLEL_EXEC_TRESHOLD)
-    if(true)
+    if(iterationCount <= PARALLEL_EXEC_TRESHOLD)
     {
         if(fromFormat == toFormat)
             std::for_each_n(indices.cbegin(), iterationCount,
@@ -568,6 +572,8 @@ void ImageIO::ConvertPixels(Byte* toData, PixelFormat toFormat,
                              ConvertFunc);
     }
 }
+
+
 
 ImageIOError ImageIO::ReadImage(std::vector<Byte>& pixels,
                                 PixelFormat& pf, Vector2ui& dimension,
@@ -707,7 +713,7 @@ ImageIOError ImageIO::WriteImage(const Byte* data,
         case ImageType::JPG:
         case ImageType::BMP:
         case ImageType::HDR:
-            return WriteUsingFreeImage(data, dimension, pf, filePath);
+            return WriteUsingFreeImage(data, dimension, pf, it, filePath);
         case ImageType::EXR:
             return WriteAsEXR(data, dimension, pf, filePath);
         default:
@@ -719,6 +725,7 @@ ImageIOError ImageIO::WriteBitmap(const Byte* bits,
                                   const Vector2ui& size, ImageType it,
                                   const std::string& fileName) const
 {
+    ImageIOError e = ImageIOError::OK;
     FreeImgRAII fImg(FreeImage_Allocate(size[0], size[1], 8, 255));
 
     if(fImg == nullptr)
@@ -741,22 +748,11 @@ ImageIOError ImageIO::WriteBitmap(const Byte* bits,
         bool pixLoaded = FreeImage_SetPixelColor(fImg, i, j, &color);
     }
 
-    auto ConvertImageTypeToFreeImgType = [](ImageType t)
-    {
-        switch(t)
-        {
-            case ImageType::PNG: return FIF_PNG;
-            case ImageType::JPG: return FIF_JPEG;
-            case ImageType::BMP: return FIF_BMP;
-            case ImageType::HDR: return FIF_HDR;
-            case ImageType::EXR:
-            default: 
-                return ImageIOError::WRITE_INTERNAL_ERROR;
-        }
-    };
+    FREE_IMAGE_FORMAT fif;
+    if((e = ConvertImageTypeToFreeImgType(fif, it)) != ImageIOError::OK)
+        return e;
 
-    bool result = FreeImage_Save(ConvertImageTypeToFreeImgType(it),
-                                 fImg, fileName.c_str());
+    bool result = FreeImage_Save(fif, fImg, fileName.c_str());
     if(!result) ImageIOError::WRITE_INTERNAL_ERROR;
     return ImageIOError::OK;
 }

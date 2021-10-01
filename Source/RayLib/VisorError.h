@@ -21,6 +21,9 @@ struct VisorError : public ErrorI
             WINDOW_GENERATION_ERROR,
             RENDER_FUCTION_GENERATOR_ERROR,
 
+            // Image Related
+            IMAGE_IO_ERROR,
+
             // Guide Debug Related
             NO_LOGIC_FOR_GUIDE_DEBUGGER,
 
@@ -75,6 +78,8 @@ inline VisorError::operator std::string() const
         "Window generator failed to initialize",
         "Window generator is unable to generate window",
         "Render function generator failed to initialize",
+        // Image Related
+        "ImageIO Error",
         // Guide Debug Related
         "No logic found for that guide debugger type"
     };

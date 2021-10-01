@@ -231,6 +231,8 @@ TracerError RefPGTracer::Initialize()
     ptCallbacks = std::move(PathTracerMiddleCallback(options.resolution));
     ptCallbacks.SetCallbacks(callbacks);
 
+    // Initialize the required members
+
     return TracerError::OK;
 }
 
@@ -286,14 +288,21 @@ void RefPGTracer::Finalize()
     {
         ptCallbacks.SaveImage(options.refPGOutputName, 
                               dtCallbacks.PixelGlobalId(currentPixel));
+        currentPixel++;
+    }
+
+    uint32_t totalPixels = static_cast<uint32_t>(dtCallbacks.Resolution()[0] * dtCallbacks.Resolution()[1]);
+    if(currentPixel >= totalPixels && callbacks)
+    {
+        callbacks->SendLog("Finished All Pixels");
+        callbacks->SendCrashSignal();
     }
 }
 
 void RefPGTracer::GenerateWork(int cameraId)
 {
     // Check if the camera is changed
-    if(currentCamera != cameraId ||
-       doInitCameraCreation)
+    if(currentCamera != cameraId)
     {
         currentCamera = cameraId;
 
@@ -310,7 +319,6 @@ void RefPGTracer::GenerateWork(int cameraId)
     if(currentSampleCount >= options.totalSamplePerPixel ||
        doInitCameraCreation)
     {
-        currentPixel++;
         const Vector3f& position = dtCallbacks.Pixel(currentPixel);
         // Get Camera Medium index
         // Always use current camera's medium

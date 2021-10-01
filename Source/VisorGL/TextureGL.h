@@ -31,6 +31,7 @@ class TextureGL
     protected:
     public:
         // Constructors & Destructor
+                        TextureGL();
                         TextureGL(const Vector2ui& dimensions,
                                   PixelFormat);
                         TextureGL(const std::string& filePath);

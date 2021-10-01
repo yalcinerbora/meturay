@@ -92,11 +92,15 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
         }
         case VisorActionType::SAVE_IMAGE:
         {
+            if(action != KeyAction::RELEASED) break;
+
             if(visor) visor->SaveImage(false);
             break;
         }
         case VisorActionType::SAVE_IMAGE_HDR:
         {
+            if(action != KeyAction::RELEASED) break;
+
             if(visor) visor->SaveImage(true);
             break;
         }

@@ -66,11 +66,11 @@ class ImageIOI
                                           const std::string& filePath,
                                           const ImageIOFlags = ImageIOFlags()) const = 0;
         // Read Image but convert it to the non-byte vector
-        template<class T, typename = std::enable_if_t<!std::is_same_v<T, Byte>>>
-        ImageIOError            ReadImage(std::vector<T>&, 
-                                          PixelFormat&, Vector2ui& dimension,
-                                          const std::string& filePath,
-                                          const ImageIOFlags = ImageIOFlags());
+        //template<class T, typename = std::enable_if_t<!std::is_same_v<T, Byte>>>
+        //ImageIOError            ReadImage(std::vector<T>&, 
+        //                                  PixelFormat&, Vector2ui& dimension,
+        //                                  const std::string& filePath,
+        //                                  const ImageIOFlags = ImageIOFlags());
         // Read a channel as alpha bit map
         virtual ImageIOError   ReadImageChannelAsBitMap(std::vector<Byte>&,
                                                         Vector2ui& dimension,
@@ -389,12 +389,12 @@ ImageIOError ImageIOI::WriteImage(const std::vector<T>& data,
     return WriteImage(dataPtr, dimension, pf, it, filePath);
 }
 
-template<class T, typename>
-ImageIOError ImageIOI::ReadImage(std::vector<T>& data, 
-                                 PixelFormat& pf, 
-                                 Vector2ui& dimension,
-                                 const std::string& filePath,
-                                 ImageIOFlags flags)
-{    
-    return ImageIOError::IMAGE_NOT_FOUND;
-}
+//template<class T, typename>
+//ImageIOError ImageIOI::ReadImage(std::vector<T>& data, 
+//                                 PixelFormat& pf, 
+//                                 Vector2ui& dimension,
+//                                 const std::string& filePath,
+//                                 ImageIOFlags flags)
+//{    
+//    return ImageIOError::IMAGE_NOT_FOUND;
+//}

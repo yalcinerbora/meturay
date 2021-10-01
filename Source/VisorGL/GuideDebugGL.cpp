@@ -2,6 +2,8 @@
 #include "GLFWCallbackDelegator.h"
 
 #include "RayLib/VisorError.h"
+#include "RayLib/ImageIOError.h"
+
 #include "RayLib/Log.h"
 #include "RayLib/FileSystemUtility.h"
 #include "RayLib/VisorInputI.h"
@@ -213,13 +215,21 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
 
 
     // Create GUI
-    gui = std::make_unique<GuideDebugGUI>(glfwWindow, 
-                                          config.depthCount,
-                                          Utility::MergeFileFolder(configPath, config.refImage),
-                                          Utility::MergeFileFolder(configPath, config.posImage),
-                                          config.sceneName,
-                                          debugRenderers,
-                                          *referenceDebugRenderer);
+    try
+    {
+        gui = std::make_unique<GuideDebugGUI>(glfwWindow,
+                                              config.depthCount,
+                                              Utility::MergeFileFolder(configPath, config.refImage),
+                                              Utility::MergeFileFolder(configPath, config.posImage),
+                                              config.sceneName,
+                                              debugRenderers,
+                                              *referenceDebugRenderer);
+    }
+    catch(ImageIOException const& e)
+    {
+        METU_ERROR_LOG(static_cast<std::string>(ImageIOError(e)));
+        return VisorError::IMAGE_IO_ERROR;
+    }
 
     glfwShowWindow(glfwWindow);
     open = true;

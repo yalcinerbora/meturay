@@ -62,7 +62,7 @@ void Debug::DumpBitmap(const std::string& fName,
 {
     const ImageIOI& io = ImageIOInstance();
     ImageIOError e = ImageIOError::OK;
-    if((e = io.WriteBitmap(bits, resolution, fName)) != ImageIOError::OK)
+    if((e = io.WriteBitmap(bits, resolution, ImageType::PNG, fName)) != ImageIOError::OK)
         METU_ERROR_LOG(static_cast<std::string>(e));
 }
 

@@ -3,7 +3,9 @@
 #include <vector>
 #include <string>
 #include <memory>
+
 #include <FreeImage.h>
+#include <Imath/half.h>
 
 #include "ImageIOI.h"
 
@@ -20,19 +22,22 @@ class ImageIO : public ImageIOI
                                    const Vector2ui& dimension, PixelFormat,
                                    const std::string& fileName) const;
         ImageIOError            WriteUsingFreeImage(const Byte* pixels,
-                                            const Vector2ui& dimension, PixelFormat,
-                                            const std::string& fileName) const;
+                                                    const Vector2ui& dimension, 
+                                                    PixelFormat, ImageType,
+                                                    const std::string& fileName) const;
 
         static bool             CheckIfEXR(const std::string& fileName);
-        static ImageIOError     ConvertFreeImgFormat(PixelFormat& pf, FREE_IMAGE_TYPE t, uint32_t bpp);
+        
+        static ImageIOError     ConvertFreeImgFormat(PixelFormat&, FREE_IMAGE_TYPE t, uint32_t bpp);
+        static ImageIOError     ConvertImageTypeToFreeImgType(FREE_IMAGE_FORMAT&, ImageType);
+        static ImageIOError     ConvertPixelFormatToFreeImgType(FREE_IMAGE_TYPE& t, PixelFormat);
 
-
-        ImageIOError        ReadImage_FreeImage(FreeImgRAII&,
-                                                PixelFormat&, Vector2ui& dimension,
-                                                const std::string& filePath) const;
-        ImageIOError        ReadImage_OpenEXR(std::vector<Byte>& pixels,
-                                              PixelFormat&, Vector2ui& size,
-                                              const std::string& filePath) const;
+        ImageIOError            ReadImage_FreeImage(FreeImgRAII&,
+                                                    PixelFormat&, Vector2ui& dimension,
+                                                    const std::string& filePath) const;
+        ImageIOError            ReadImage_OpenEXR(std::vector<Byte>& pixels,
+                                                  PixelFormat&, Vector2ui& size,
+                                                  const std::string& filePath) const;
 
     protected:        
         void                PackChannelBits(Byte* bits,
@@ -42,6 +47,11 @@ class ImageIO : public ImageIOI
         void                ConvertPixels(Byte* toData, PixelFormat toFormat,
                                           const Byte* fromData, PixelFormat fromFormat, size_t fromPitch,
                                           const Vector2ui& dimension) const;
+
+        template <class T>
+        static void         ConvertForEXR(Imath::half* toData,
+                                          const T* fromData, PixelFormat fromFormat,
+                                          const Vector2ui& dimension);
 
     public:
         // Constructors & Destructor
@@ -69,3 +79,31 @@ class ImageIO : public ImageIOI
                                         const Vector2ui& dimension, ImageType,
                                         const std::string& filePath) const override;
 };
+
+template <class T>
+void ImageIO::ConvertForEXR(Imath::half* toData,
+                            const T* fromData, PixelFormat fromFormat,
+                            const Vector2ui& dimension)
+{
+    const int channelCount = FormatToChannelCount(fromFormat);
+
+    for(uint32_t j = 0; j < dimension[1]; j++)
+    for(uint32_t i = 0; i < dimension[0]; i++)
+    {
+        // Dont forget to convert pixels
+        uint32_t inIndex = j * dimension[0] + i;
+        uint32_t invertexY = dimension[1] - j - 1;
+        uint32_t outIndex = invertexY * dimension[0] + i;
+
+        const T* inPixel = fromData + inIndex * channelCount;
+        Imath::half* outPixel = toData + outIndex * channelCount;
+
+        for(int i = 0; i < channelCount; i++)
+        {
+            // TODO: ignore alpha
+            if(i == 3) outPixel[i] = 1.0f;
+            else outPixel[i] = inPixel[i];            
+        }
+    }
+
+}
