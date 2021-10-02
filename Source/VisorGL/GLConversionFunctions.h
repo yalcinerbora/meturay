@@ -7,32 +7,32 @@ static GLenum PixelFormatToGL(PixelFormat f)
 {
     static constexpr GLenum TypeList[static_cast<int>(PixelFormat::END)] =
     {
-        GL_R,
+        GL_RED,
         GL_RG,
         GL_RGB,
         GL_RGBA,
 
-        GL_R,
+        GL_RED,
         GL_RG,
         GL_RGB,
         GL_RGBA,
 
-        GL_R,
+        GL_RED,
         GL_RG,
         GL_RGB,
         GL_RGBA,
 
-        GL_R,
+        GL_RED,
         GL_RG,
         GL_RGB,
         GL_RGBA,
 
-        GL_R,
+        GL_RED,
         GL_RG,
         GL_RGB,
         GL_RGBA,
 
-        GL_R,
+        GL_RED,
         GL_RG,
         GL_RGB,
         GL_RGBA,
@@ -113,20 +113,20 @@ static GLenum PixelFormatToTypeGL(PixelFormat f)
         GL_UNSIGNED_SHORT,
         GL_UNSIGNED_SHORT,
 
-        GL_UNSIGNED_BYTE,
-        GL_UNSIGNED_BYTE,
-        GL_UNSIGNED_BYTE,
-        GL_UNSIGNED_BYTE,
+        GL_BYTE,
+        GL_BYTE,
+        GL_BYTE,
+        GL_BYTE,
 
-        GL_UNSIGNED_SHORT,
-        GL_UNSIGNED_SHORT,
-        GL_UNSIGNED_SHORT,
-        GL_UNSIGNED_SHORT,
+        GL_SHORT,
+        GL_SHORT,
+        GL_SHORT,
+        GL_SHORT,
 
-        GL_SHORT,  // TODO: Wrong
-        GL_SHORT,  // TODO: Wrong
-        GL_SHORT,  // TODO: Wrong
-        GL_SHORT,  // TODO: Wrong
+        GL_HALF_FLOAT,  // TODO: Wrong
+        GL_HALF_FLOAT,  // TODO: Wrong
+        GL_HALF_FLOAT,  // TODO: Wrong
+        GL_HALF_FLOAT,  // TODO: Wrong
 
         GL_FLOAT,
         GL_FLOAT,

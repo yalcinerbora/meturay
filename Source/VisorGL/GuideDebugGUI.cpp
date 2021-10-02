@@ -112,7 +112,7 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
                                                  posFileName);
     
     if(e != ImageIOError::OK) throw ImageIOException(e);
-    else if(pf != PixelFormat::RGB_FLOAT)
+    else if(pf != PixelFormat::RGBA_FLOAT)
     {
         throw VisorException(VisorError::IMAGE_IO_ERROR,
                              "Reference Image Must have RGB format");
@@ -127,7 +127,7 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
     {
         worldPositions.resize(size[0] * size[1]);
         std::memcpy(reinterpret_cast<Byte*>(worldPositions.data()),
-                    wpByte.data(),wpByte.size());
+                    wpByte.data(), wpByte.size());
     }
 
     // Generate Textures
@@ -410,7 +410,7 @@ void GuideDebugGUI::Render()
             worldPos[2] = std::numeric_limits<float>::infinity();
         }
 
-        debugReference.RenderDirectional(refTexture,
+        debugReference.RenderDirectional(debugRefTexture,
                                          Vector2i(static_cast<int32_t>(selectedPixel[0]),
                                                   static_cast<int32_t>(selectedPixel[1])),
                                          Vector2i(static_cast<int32_t>(refTexture.Size()[0]),

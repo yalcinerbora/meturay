@@ -36,9 +36,9 @@ class TextureGL
                                   PixelFormat);
                         TextureGL(const std::string& filePath);
                         TextureGL(const TextureGL&) = delete;
-                        TextureGL(TextureGL&&) = default;
+                        TextureGL(TextureGL&&);
         TextureGL&      operator=(const TextureGL&) = delete;
-        TextureGL&      operator=(TextureGL&&) = default;
+        TextureGL&      operator=(TextureGL&&);
                         ~TextureGL();
 
         void            Bind(GLuint bindingIndex) const;

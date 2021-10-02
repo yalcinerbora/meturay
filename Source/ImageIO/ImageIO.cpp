@@ -399,7 +399,7 @@ ImageIOError ImageIO::ReadImage_FreeImage(FreeImgRAII& freeImg,
 }
 
 ImageIOError ImageIO::ReadImage_OpenEXR(std::vector<Byte>& pixels,
-                                        PixelFormat& pf, Vector2ui& size,
+                                        PixelFormat& pf, Vector2ui& dimension,
                                         const std::string& filePath) const
 {    
     ImageIOError e = ImageIOError::OK;
@@ -409,57 +409,51 @@ ImageIOError ImageIO::ReadImage_OpenEXR(std::vector<Byte>& pixels,
     if((e = PixelFormatFromEXR(pf, file.header())) != ImageIOError::OK)
         return e;
 
-    // Implement This properly (directly write to vector)
+    // TODO: Implement This properly (directly write to vector)
+    // Using Imf::Framebuffer etc.
     Imf::Array2D<Imf::Rgba> exrPixels;    
     Imath::Box2i dw = file.dataWindow();
-    size[0] = dw.max.x - dw.min.x + 1;
-    size[1] = dw.max.y - dw.min.y + 1;
-    exrPixels.resizeErase(size[1], size[0]);
-    file.setFrameBuffer(&exrPixels[0][0] - dw.min.x - dw.min.y * size[0], 1, size[0]);
+    dimension[0] = dw.max.x - dw.min.x + 1;
+    dimension[1] = dw.max.y - dw.min.y + 1;
+    exrPixels.resizeErase(dimension[1], dimension[0]);
+    file.setFrameBuffer(&exrPixels[0][0] - dw.min.x - dw.min.y * dimension[0], 1, dimension[0]);
     file.readPixels(dw.min.y, dw.max.y);
+  
 
-    // ?
-    return ImageIOError::READ_INTERNAL_ERROR;
-
-    // TODO: 
-    // Convert to Vector4f and Invert Y Axis
-    for(uint32_t y = 0; y < size[1]; y++)
-    for(uint32_t x = 0; x < size[0]; x++)
+    // TODO: Allow writing half fromat 
+    // since we dont have a half library available currently
+    // just convert it to float type    
+    switch(pf)
     {
-        uint32_t invertexY = size[1] - y - 1;
-        uint32_t outIndex = invertexY * size[0] + x;
-
-        const Imf::Rgba& v = pixels[y][x];
-        image[outIndex] = Vector4f(static_cast<float>(v.r),
-                                   static_cast<float>(v.g),
-                                   static_cast<float>(v.b),
-                                   static_cast<float>(v.a));
+        case PixelFormat::R_HALF:    pf = PixelFormat::R_FLOAT; break;
+        case PixelFormat::RG_HALF:   pf = PixelFormat::RG_FLOAT; break;
+        case PixelFormat::RGB_HALF:  pf = PixelFormat::RGB_FLOAT; break;
+        case PixelFormat::RGBA_HALF: pf = PixelFormat::RGBA_FLOAT; break;
+        default: break;
     }
-
-    //int8_t channelCount = FormatToChannelCount(pf);
-
-    //file.setFrameBuffer(framebuffer);
-    //file.readPixels(data_window.min.y, data_window.max.y);
-
-    //Imf::FrameBuffer framebuffer;
-    //framebuffer.insert();
-
-    // Convert to Vector4f and Invert Y Axis
-   /* image.resize(size[0] * size[1]);
-    for(uint32_t y = 0; y < size[1]; y++)
-    for(uint32_t x = 0; x < size[0]; x++)
+    
+    // Convert to float vector and Invert Y Axis
+    pixels.resize(dimension[0] * dimension[1] * FormatToPixelSize(pf));
+    for(uint32_t y = 0; y < dimension[1]; y++)
+    for(uint32_t x = 0; x < dimension[0]; x++)
     {
-        uint32_t invertexY = size[1] - y - 1;
-        uint32_t outIndex = invertexY * size[0] + x;
+        uint32_t invertexY = dimension[1] - y - 1;
+        uint32_t outIndex = invertexY * dimension[0] + x;
 
-        const Imf::Rgba& v = pixels[y][x];
-        image[outIndex] = Vector4f(static_cast<float>(v.r),
-                                   static_cast<float>(v.g),
-                                   static_cast<float>(v.b),
-                                   static_cast<float>(v.a));
+        const Imf::Rgba& inPixel = exrPixels[y][x];
+        float* outPixelPtr = reinterpret_cast<float*>(pixels.data() + outIndex * FormatToPixelSize(pf));
+
+        for(int8_t i = 0; i < FormatToChannelCount(pf); i++)
+        {
+            Imath::half channel = (i == 0) ? inPixel.r :
+                                  (i == 1) ? inPixel.g :
+                                  (i == 2) ? inPixel.b :
+                                  (i == 3) ? inPixel.a : Imath::half();
+                                
+            outPixelPtr[i] = static_cast<float>(channel);
+        }
     }
-    return true;*/
-    return ImageIOError::READ_INTERNAL_ERROR;
+    return ImageIOError::OK;
 }
 
 void ImageIO::PackChannelBits(Byte* bits,

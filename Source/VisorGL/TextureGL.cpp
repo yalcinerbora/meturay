@@ -63,6 +63,27 @@ TextureGL::TextureGL(const std::string& filePath)
     glTextureParameteri(texId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
 
+TextureGL::TextureGL(TextureGL&& other)
+    : texId(other.texId)
+    , dimensions(other.dimensions)
+    , pixFormat(other.pixFormat)
+{
+    other.texId = 0;
+}
+
+TextureGL& TextureGL::operator=(TextureGL&& other)
+{
+    assert(this != &other);
+
+    if(texId) glDeleteTextures(1, &texId);
+    texId = other.texId;
+    dimensions = other.dimensions;
+    pixFormat = other.pixFormat;
+
+    other.texId = 0;
+    return *this;
+}
+
 TextureGL::~TextureGL()
 {
     glDeleteTextures(1, &texId);
