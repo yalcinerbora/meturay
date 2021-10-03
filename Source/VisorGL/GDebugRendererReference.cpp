@@ -1,8 +1,11 @@
 #include "GDebugRendererReference.h"
+#include "GLConversionFunctions.h"
 
 #include "RayLib/SceneIO.h"
 #include "RayLib/FileSystemUtility.h"
 #include "RayLib/StringUtility.h"
+
+#include "RayLib/Log.h"
 
 #include <regex>
 
@@ -82,6 +85,10 @@ void GDebugRendererRef::LoadPaths(const Vector2i& resolution,
 GDebugRendererRef::GDebugRendererRef(const nlohmann::json& config,
                                      const TextureGL& gradTex)
     : gradientTex(gradTex)
+    , compReduction(ShaderType::COMPUTE, u8"Shaders/TextureMaxReduction.comp")
+    , compRefRender(ShaderType::COMPUTE, u8"Shaders/PGReferenceRender.comp")
+    , linearSampler(SamplerGLEdgeResolveType::CLAMP,
+                    SamplerGLInterpType::LINEAR)
 {
     resolution = SceneIO::LoadVector<2, int32_t>(config[RESOLUTION_NAME]);
     std::string pathRegex = SceneIO::LoadString(config[IMAGES_NAME]);
@@ -100,7 +107,7 @@ void GDebugRendererRef::RenderDirectional(TextureGL& tex,
 {
     // Convert pixel Location to the local pixel
     Vector2f ratio = (Vector2f(resolution[0], resolution[1]) /
-                          Vector2f(refResolution[0], refResolution[1]));
+                      Vector2f(refResolution[0], refResolution[1]));
 
     Vector2f mappedPix = Vector2f(pixel[0], pixel[1]) * ratio;
 
@@ -108,8 +115,79 @@ void GDebugRendererRef::RenderDirectional(TextureGL& tex,
     uint32_t pixelLinear = resolution[0] * pixelInt[1] + pixelInt[0];
 
     const std::string& file = referencePaths[pixelLinear];
-    //TextureGL exrTex = TextureGL(file);
-    tex = std::move(TextureGL(file));
+    
+    // Temp Load Lum Texture
+    TextureGL lumTexture = TextureGL(file);
 
-    //TODO: 
+    if(lumTexture.Size() != tex.Size())
+    {
+        tex = TextureGL(lumTexture.Size(), PixelFormat::RGBA8_UNORM);
+    }
+
+    // Get a max luminance buffer;
+    float initalMaxData = 0.0f;
+    GLuint maxBuffer;
+    glGenBuffers(1, &maxBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, maxBuffer);
+    glBufferStorage(GL_SHADER_STORAGE_BUFFER, 1 * sizeof(float), &initalMaxData, 0);
+
+    // Both of these compute shaders total work count is same
+    const GLuint workCount = lumTexture.Size()[1] * lumTexture.Size()[0];
+    // Some WG Definitions (statically defined in shader)
+    static constexpr GLuint WORK_GROUP_1D_X = 256;
+    static constexpr GLuint WORK_GROUP_2D_X = 16;
+    static constexpr GLuint WORK_GROUP_2D_Y = 16;
+
+    // =======================================================
+    // Set Max Shader
+    compReduction.Bind();
+    // Bind Uniforms
+    glUniform2ui(U_RES, lumTexture.Size()[0], lumTexture.Size()[1]);
+    // Bind SSBO
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSB_MAX_LUM, maxBuffer);
+    // Textures
+    lumTexture.Bind(T_IN_LUM_TEX);
+    // Dispatch Max Shader
+    // Max shader is 1D shader set data accordingly
+    GLuint gridX_1D = (workCount + WORK_GROUP_1D_X - 1) / WORK_GROUP_1D_X;
+    glDispatchCompute(gridX_1D, 1, 1);
+    glMemoryBarrier(GL_UNIFORM_BARRIER_BIT |
+                    GL_SHADER_STORAGE_BARRIER_BIT);
+    // =======================================================
+    // Unbind SSBO just to be sure
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSB_MAX_LUM, 0);
+
+    //// Debug check of the reduced value
+    //float v;
+    //glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+    //glBindBuffer(GL_COPY_READ_BUFFER, maxBuffer);
+    //glGetBufferSubData(GL_COPY_READ_BUFFER, 0, sizeof(float), &v);
+    //METU_LOG("Max {:f}", v);
+
+    // =======================================================
+    // Set Render Shader
+    compRefRender.Bind();
+    // Bind Uniforms
+    glUniform2ui(U_RES, lumTexture.Size()[0], lumTexture.Size()[1]);
+    //
+    // UBOs    
+    glBindBufferBase(GL_UNIFORM_BUFFER, UB_MAX_LUM, maxBuffer);
+    // Textures    
+    lumTexture.Bind(T_IN_LUM_TEX);
+    gradientTex.Bind(T_IN_GRAD_TEX);  linearSampler.Bind(T_IN_GRAD_TEX);
+    // Images
+    glBindImageTexture(I_OUT_REF_IMAGE, tex.TexId(),
+                       0, false, 0, GL_WRITE_ONLY,                       
+                       PixelFormatToSizedGL(tex.Format()));
+    // Dispatch Render Shader
+    // Max shader is 2D shader set data accordingly
+    GLuint gridX_2D = (lumTexture.Size()[0] + WORK_GROUP_2D_X - 1) / WORK_GROUP_2D_X;
+    GLuint gridY_2D = (lumTexture.Size()[1] + WORK_GROUP_2D_Y - 1) / WORK_GROUP_2D_Y;
+    glDispatchCompute(gridX_2D, gridY_2D, 1);
+    // =======================================================
+    // All done!!!
+
+    // Delete Temp Max Buffer
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glDeleteBuffers(1, &maxBuffer);
 }

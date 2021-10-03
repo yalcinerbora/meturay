@@ -2,10 +2,11 @@
 
 #include <string>
 #include <vector>
-#include "RayLib/Vector.h"
 #include <nlohmann/json_fwd.hpp>
 
+#include "RayLib/Vector.h"
 #include "TextureGL.h"
+#include "ShaderGL.h"
 
 class GDebugRendererRef
 {
@@ -15,9 +16,27 @@ class GDebugRendererRef
         static constexpr const char*  RESOLUTION_NAME = "resolution";
         static constexpr const char* IMAGES_NAME = "images";
 
+        // Shader Bind Points
+        // SSBOs
+        static constexpr GLuint     SSB_MAX_LUM = 0;
+        // UBOs
+        static constexpr GLuint     UB_MAX_LUM = 0;
+        // Uniforms
+        static constexpr GLuint     U_RES = 0;
+        // Textures
+        static constexpr GLuint     T_IN_LUM_TEX = 0;
+        static constexpr GLuint     T_IN_GRAD_TEX = 1;
+        // Images
+        static constexpr GLuint     I_OUT_REF_IMAGE = 0;
+
     private:
         Vector2i            resolution;
         PathList            referencePaths;
+
+        ShaderGL            compReduction;
+        ShaderGL            compRefRender;
+
+        SamplerGL           linearSampler;
 
         const TextureGL&    gradientTex;
 

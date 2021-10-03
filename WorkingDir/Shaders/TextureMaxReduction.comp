@@ -1,0 +1,117 @@
+#version 430
+/*
+	**Texture Max Reduction Shader**
+
+	File Name	: TextureMaxReduction.comp
+	Author		: Bora Yalciner
+	Description	:
+
+		Texture Max Reduction Shader is a parallel reduction shader
+		that generates max luminance of the texture
+
+		It assumes image is R format (Single Channel Texutre)
+		
+*/
+
+// Defines
+#define U_RES layout(location = 0)
+
+#define T_IN_LUM_TEX layout(binding = 0)
+
+#define SSB_MAX_LUM layout(std430, binding = 0) coherent volatile
+
+// WorkGroup Dimension
+#define WORK_X 256
+
+// Textures
+uniform T_IN_LUM_TEX sampler2D tInImage;
+
+// SSBOs
+SSB_MAX_LUM buffer MaxData
+{
+	// Float atomics are not in standard
+	// so we use uint and convert its bits etc.
+	uint outMaxLum;
+};
+
+// Uniforms
+U_RES uniform uvec2 resolution;
+
+// Shared Memory
+shared float reduceBuffer[WORK_X];
+
+// Functions
+void AtomicMaxToSSBO(float val)
+{
+	// CAS Atomic operation for Atomic Max for floats
+	// https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#atomic-functions
+	uint assumed;
+	uint old = outMaxLum;	
+	do
+	{
+		assumed = old;
+		uint newVal = floatBitsToUint(max(uintBitsToFloat(assumed),val));
+		old = atomicCompSwap(outMaxLum, assumed, newVal);
+	} while(assumed != old);
+}
+
+void ReduceBlock(out float maxLum, in float lum)
+{
+	uint localId = gl_LocalInvocationID.x;
+
+	// Do this for max aswell
+	reduceBuffer[localId] = lum;
+	memoryBarrierShared(); barrier();
+	if(localId < 128) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 128]);
+	memoryBarrierShared(); barrier();
+	if(localId < 64) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 64]);
+	memoryBarrierShared(); barrier();
+	if(localId < 32) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 32]);
+	memoryBarrierShared(); barrier();
+	if(localId < 16) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 16]);
+	memoryBarrierShared(); barrier();
+	if(localId < 8) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 8]);
+	memoryBarrierShared(); barrier();
+	if(localId < 4) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 4]);
+	memoryBarrierShared(); barrier();
+	if(localId < 2) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 2]);
+	memoryBarrierShared(); barrier();
+	if(localId < 1) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 1]);
+	memoryBarrierShared(); barrier();
+	if(localId == 0) maxLum = reduceBuffer[localId];	
+}
+
+// 16x16 block is always nice
+layout (local_size_x = WORK_X, local_size_y = 1, local_size_z = 1) in;
+void main(void)
+{
+	// Call logic is per pixel
+	uint globalId = gl_GlobalInvocationID.x;
+	// Generate pixelIds
+	ivec2 pixId = ivec2(globalId % uint(resolution[0]),
+						globalId / uint(resolution[0]));
+
+	// Skip out of image threads
+	float luminance = 0.0f;
+	if(all(lessThan(pixId, resolution)))	
+	{
+		// Read from current buffer buffers
+		luminance = texelFetch(tInImage, pixId, 0).x;
+	}
+	// Do parallel reduction
+	float maxLum = 0;
+	ReduceBlock(maxLum, luminance);
+
+	// Local main thread will write to global memory
+	// in an atomic manner. 
+	// Normally for large images that does not fit into single block
+	// (which most of the images are) you call this function again 
+	// with a newly generated image (but it is more complex)
+	// instead we atomically combine each blocks result
+	if(gl_LocalInvocationID.x == 0u)
+	{	
+		// No support for float atomics
+		// Create your own using atomicCAS
+		AtomicMaxToSSBO(maxLum);
+	}
+}

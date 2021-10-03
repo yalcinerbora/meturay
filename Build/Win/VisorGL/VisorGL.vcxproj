@@ -161,6 +161,8 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     <None Include="..\..\..\WorkingDir\Shaders\LumReduction.comp" />
     <None Include="..\..\..\WorkingDir\Shaders\DTreeRender.frag" />
     <None Include="..\..\..\WorkingDir\Shaders\DTreeRender.vert" />
+    <None Include="..\..\..\WorkingDir\Shaders\PGReferenceRender.comp" />
+    <None Include="..\..\..\WorkingDir\Shaders\TextureMaxReduction.comp" />
     <None Include="..\..\..\WorkingDir\Shaders\TonemapAndGamma.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

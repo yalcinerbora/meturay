@@ -46,7 +46,7 @@ class ShaderGL
                             ~ShaderGL();
 
         // Renderer Usage
-        void                Bind();
+        void                Bind() const;
         bool                IsValid() const;
 
         static void         Unbind(ShaderType);

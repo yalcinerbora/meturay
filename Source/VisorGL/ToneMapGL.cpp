@@ -2,6 +2,7 @@
 #include "GLConversionFunctions.h"
 #include "RayLib/Log.h"
 #include <vector>
+
 void ToneMapGL::ToneMap(GLuint sdrTexture,
                         const PixelFormat sdrPixelFormat,
                         const GLuint hdrTexture,
@@ -37,7 +38,7 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
         glMemoryBarrier(GL_UNIFORM_BARRIER_BIT |
                         GL_SHADER_STORAGE_BARRIER_BIT);
 
-        // Now Call simle Average Kernel
+        // Now Call simple Average Kernel
         compAvgDivisor.Bind();
         // Bind Uniforms
         glUniform2iv(U_RES, 1, static_cast<const int*>(resolution));

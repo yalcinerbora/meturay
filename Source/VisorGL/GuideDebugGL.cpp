@@ -66,9 +66,6 @@ GuideDebugGL::GuideDebugGL(const Vector2i& ws,
 
     bool configParsed = GuideDebug::ParseConfigFile(config, configFile);
     if(!configParsed) throw VisorException(VisorError::WINDOW_GENERATION_ERROR);
-
-    // Construct Reference Debug Renderer
-    referenceDebugRenderer = std::make_unique<GDebugRendererRef>(config.refGuideConfig, *gradientTexture);
 }
 
 GuideDebugGL::~GuideDebugGL()
@@ -198,6 +195,10 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
     gradientTexture->CopyToImage(packedData,
                                  Zero2ui, gradientDimensions,
                                  PixelFormat::RGB_FLOAT);
+
+    // Generate Reference Debug Renderer
+    referenceDebugRenderer = std::make_unique<GDebugRendererRef>(config.refGuideConfig, 
+                                                                 *gradientTexture);
 
     // Generate DebugRenderers
     for(const auto& gc : config.guiderConfigs)

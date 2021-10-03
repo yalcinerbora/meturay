@@ -24,8 +24,10 @@ set(SRC_SHADERS
     ${SHADER_SOURCE_DIR}/DTreeRender.frag
     ${SHADER_SOURCE_DIR}/DTreeRender.vert
     ${SHADER_SOURCE_DIR}/LumReduction.comp
+    ${SHADER_SOURCE_DIR}/PGReferenceRender.comp
     ${SHADER_SOURCE_DIR}/PProcessGeneric.frag
     ${SHADER_SOURCE_DIR}/PProcessGeneric.vert
+    ${SHADER_SOURCE_DIR}/TextureMaxReduction.comp
     ${SHADER_SOURCE_DIR}/TonemapAndGamma.comp)
 
 set(GUIDE_DEBUG

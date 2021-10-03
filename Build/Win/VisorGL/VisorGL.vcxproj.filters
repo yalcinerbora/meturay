@@ -125,5 +125,11 @@
     <None Include="..\..\..\WorkingDir\Shaders\DTreeRender.frag">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="..\..\..\WorkingDir\Shaders\PGReferenceRender.comp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\..\..\WorkingDir\Shaders\TextureMaxReduction.comp">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

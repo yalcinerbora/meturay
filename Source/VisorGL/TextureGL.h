@@ -47,6 +47,7 @@ class TextureGL
         uint32_t        Width() const;
         uint32_t        Height() const;
         Vector2ui       Size() const;
+        PixelFormat     Format() const;
 
         void            CopyToImage(const std::vector<Byte>& pixels,
                                     const Vector2ui& start,
@@ -93,6 +94,11 @@ inline uint32_t TextureGL::Height() const
 inline Vector2ui TextureGL::Size() const
 {
     return dimensions;
+}
+
+inline PixelFormat TextureGL::Format() const
+{
+    return pixFormat;
 }
 
 inline SamplerGL::SamplerGL(SamplerGLEdgeResolveType edgeResolve,

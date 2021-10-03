@@ -53,7 +53,9 @@ ShaderGL::ShaderGL(ShaderType t, const std::u8string& path)
 {
     const std::u8string onlyFileName = std::filesystem::path(path).filename().u8string();
 
-    std::streamoff size = std::ifstream(std::filesystem::path(path), std::ifstream::ate | std::ifstream::binary).tellg();
+    std::streamoff size = std::ifstream(std::filesystem::path(path), 
+                                        std::ifstream::ate | 
+                                        std::ifstream::binary).tellg();
     std::vector<char> source(size + 1, 0);
     std::ifstream shaderFile = std::ifstream(std::filesystem::path(path));
     assert(shaderFile.is_open());
@@ -143,7 +145,7 @@ ShaderGL::~ShaderGL()
     shaderID = 0;
 }
 
-void ShaderGL::Bind()
+void ShaderGL::Bind() const
 {
     glUseProgramStages(shaderPipelineID, ShaderTypeToGLBit(shaderType), shaderID);
     glActiveShaderProgram(shaderPipelineID, shaderID);
