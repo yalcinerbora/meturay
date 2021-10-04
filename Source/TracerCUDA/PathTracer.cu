@@ -5,7 +5,6 @@
 #include "RayLib/TracerCallbacksI.h"
 
 #include "PathTracerWorks.cuh"
-#include "GPULightSamplerUniform.cuh"
 #include "GenerationKernels.cuh"
 #include "GPUWork.cuh"
 
@@ -36,70 +35,6 @@
 //    return stream;
 //}
 
-const std::array<std::string, PathTracer::LightSamplerType::END> PathTracer::SamplerNames =
-{
-    "Uniform"
-};
-
-template <class T>
-__global__ void KCConstructLightSampler(T* loc,
-                                        const GPULightI** gLights,
-                                        const uint32_t lightCount)
-{
-    uint32_t globalId = threadIdx.x + blockIdx.x * blockDim.x;
-    if(globalId == 0)
-    {
-        T* lightSampler = new (loc) T(gLights, lightCount);
-    }
-}
-
-TracerError PathTracer::StringToLightSamplerType(PathTracer::LightSamplerType& ls,
-                                               const std::string& lsName)
-{    
-    uint32_t i = 0;
-    for(const std::string s : SamplerNames)
-    {
-        if(lsName == s)
-        {
-            ls = static_cast<LightSamplerType>(i);
-            return TracerError::OK;
-        }
-        i++;
-    }
-    return TracerError::UNABLE_TO_INITIALIZE;
-}
-
-std::string PathTracer::LightSamplerTypeToString(LightSamplerType t)
-{
-    return SamplerNames[static_cast<int>(t)];
-}
-
-TracerError PathTracer::ConstructLightSampler()
-{
-    switch(options.lightSamplerType)
-    {
-        case LightSamplerType::UNIFORM:
-        {
-            DeviceMemory::EnlargeBuffer(memory, sizeof(GPULightSamplerUniform));
-            lightSampler = static_cast<const GPUDirectLightSamplerI*>(memory);
-
-            const auto& gpu = cudaSystem.BestGPU();
-            gpu.KC_X(0, (cudaStream_t)0, 1,
-                     // Kernel
-                     KCConstructLightSampler<GPULightSamplerUniform>,
-                     // Args
-                     static_cast<GPULightSamplerUniform*>(memory),
-                     dLights,
-                     lightCount);
-
-            return TracerError::OK;
-        }
-        default:
-            return TracerError::UNABLE_TO_INITIALIZE;
-    }
-    return TracerError::UNABLE_TO_INITIALIZE;
-}
-
 PathTracer::PathTracer(const CudaSystem& s,
                        const GPUSceneI& scene,
                        const TracerParameters& p)
@@ -121,7 +56,12 @@ TracerError PathTracer::Initialize()
         return err;
 
     // Generate Light Sampler (for nee)
-    if((err = ConstructLightSampler()) != TracerError::OK)
+    if((err = LightSamplerCommon::ConstructLightSampler(memory,
+                                                        dLightSampler,
+                                                        options.lightSamplerType,
+                                                        dLights,
+                                                        lightCount,
+                                                        cudaSystem)) != TracerError::OK)
         return err;
 
     // Generate your worklist
@@ -215,7 +155,7 @@ TracerError PathTracer::SetOptions(const TracerOptionsI& opts)
     std::string lightSamplerTypeString;
     if((err = opts.GetString(lightSamplerTypeString, LIGHT_SAMPLER_TYPE_NAME)) != TracerError::OK)
         return err;
-    if((err = StringToLightSamplerType(options.lightSamplerType, lightSamplerTypeString)) != TracerError::OK)
+    if((err = LightSamplerCommon::StringToLightSamplerType(options.lightSamplerType, lightSamplerTypeString)) != TracerError::OK)
         return err;
     return TracerError::OK;
 }
@@ -252,7 +192,7 @@ bool PathTracer::Render()
     globalData.nee = options.nextEventEstimation;
     globalData.rrStart = options.rrStart;
     globalData.directLightMIS = options.directLightMIS;
-    globalData.lightSampler = lightSampler;
+    globalData.lightSampler = dLightSampler;
 
     // Generate output partitions
     uint32_t totalOutRayCount = 0;

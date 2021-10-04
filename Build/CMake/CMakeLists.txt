@@ -72,7 +72,7 @@ endif()
 # Generic Compile Options
 if(MSVC)
     # Warnings
-    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/W3>)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/W3>)    
 else()
     # Clang / GCC both use same syntax
     # Warnings
@@ -84,6 +84,12 @@ endif()
 # Cuda Compile Options
 add_compile_options($<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:CUDA>>:-G>
                     $<$<AND:$<CONFIG:Release>,$<COMPILE_LANGUAGE:CUDA>>:-lineinfo>)
+
+# All kernels started to show this warning (if a kernel uses a virtual funcion)
+# Supress that warning
+#add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:--nvlink-options=-suppress-stack-size-warning>)
+#add_link_options($<$<COMPILE_LANGUAGE:CUDA>:>)
+add_link_options($<DEVICE_LINK:--nvlink-options=-suppress-stack-size-warning>)
 
 # Platform Specific Lib Bin Folders
 set(MRAY_PLATFORM_LIB_DIRECTORY ${MRAY_LIB_DIRECTORY}/${MRAY_PLATFORM_NAME})

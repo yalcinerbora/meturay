@@ -1,97 +1,98 @@
 #pragma once
 
-#include "PathTracer.h"
-#include "DirectTracer.h"
+#include "RayTracer.h"
 
 #include "WorkPool.h"
 #include "GPULightI.h"
 #include "STree.cuh"
+#include "Tracers.h"
 
 #include "RayLib/TracerCallbacksI.h"
 #include "RayLib/AnalyticData.h"
 #include "RayLib/VisorCamera.h"
 
-class GPUCameraSpherical;
+struct ImageIOError;
+class GPUCameraPixel;
 
-class PathTracerMiddleCallback : public TracerCallbacksI
-{
-    private:
-        TracerCallbacksI*       callbacks;
+//class PathTracerMiddleCallback : public TracerCallbacksI
+//{
+//    private:
+//        TracerCallbacksI*       callbacks;
+//
+//        // Image Related
+//        Vector2i                resolution;
+//
+//        // Output Name
+//        std::vector<float>      lumPixels;
+//        std::vector<uint32_t>   totalSampleCounts;
+//
+//    public:
+//        // Constructors & Destructor
+//                PathTracerMiddleCallback(const Vector2i& resolution);
+//                ~PathTracerMiddleCallback() = default;
+//
+//        // Methods
+//        void    SaveImage(const std::string& baseName, Vector2i pixelId);
+//        void    SetCallbacks(TracerCallbacksI*);
+//
+//        // Interface
+//        void    SendCrashSignal() override {};
+//        void    SendLog(const std::string) override;
+//        void    SendError(TracerError) override;
+//        void    SendAnalyticData(AnalyticData) override {};
+//        void    SendImageSectionReset(Vector2i start = Zero2i,
+//                                      Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+//        void    SendImage(const std::vector<Byte> data,
+//                          PixelFormat, size_t offset,
+//                          Vector2i start = Zero2i,
+//                          Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+//        void    SendCurrentOptions(TracerOptions) override;
+//        void    SendCurrentParameters(TracerParameters) override {};
+//        void    SendCurrentCamera(VisorCamera) override {};
+//        void    SendCurrentSceneCameraCount(uint32_t) override {};
+//};
+//
+//class DirectTracerMiddleCallback : public TracerCallbacksI
+//{
+//    private:
+//        std::vector<Vector4f>   pixelLocations;
+//        Vector2i                portionStart;
+//        Vector2i                portionEnd;
+//        Vector2i                resolution;
+//
+//    public:
+//        // Constructors & Destructor
+//                    DirectTracerMiddleCallback() = default;
+//
+//        // Methods
+//        Vector2i    PixelGlobalId(int linearLocalPixelId);
+//        //  Interface
+//        void        SendCrashSignal() override {};
+//        void        SendLog(const std::string) override;
+//        void        SendError(TracerError) override;
+//        void        SendAnalyticData(AnalyticData) override {};
+//        void        SendImageSectionReset(Vector2i start = Zero2i,
+//                                          Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+//        void        SendImage(const std::vector<Byte> data,
+//                              PixelFormat, size_t offset,
+//                              Vector2i start = Zero2i,
+//                              Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
+//        void        SendCurrentOptions(TracerOptions) override;
+//        void        SendCurrentParameters(TracerParameters) override {};
+//        void        SendCurrentCamera(VisorCamera) override {};
+//        void        SendCurrentSceneCameraCount(uint32_t) override {};
+//
+//        // Setters
+//        void                SetSection(const Vector2i&, const Vector2i&);
+//        void                SetResolution(const Vector2i&);
+//
+//        const Vector4f&     Pixel(uint32_t pixelIndex) const;
+//        const Vector2i&     Start() const;
+//        const Vector2i&     End() const;
+//        const Vector2i&     Resolution() const;
+//};
 
-        // Image Related
-        Vector2i                resolution;
-
-        // Output Name
-        std::vector<float>      lumPixels;
-        std::vector<uint32_t>   totalSampleCounts;
-
-    public:
-        // Constructors & Destructor
-                PathTracerMiddleCallback(const Vector2i& resolution);
-                ~PathTracerMiddleCallback() = default;
-
-        // Methods
-        void    SaveImage(const std::string& baseName, Vector2i pixelId);
-        void    SetCallbacks(TracerCallbacksI*);
-
-        // Interface
-        void    SendCrashSignal() override {};
-        void    SendLog(const std::string) override;
-        void    SendError(TracerError) override;
-        void    SendAnalyticData(AnalyticData) override {};
-        void    SendImageSectionReset(Vector2i start = Zero2i,
-                                      Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-        void    SendImage(const std::vector<Byte> data,
-                          PixelFormat, size_t offset,
-                          Vector2i start = Zero2i,
-                          Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-        void    SendCurrentOptions(TracerOptions) override;
-        void    SendCurrentParameters(TracerParameters) override {};
-        void    SendCurrentCamera(VisorCamera) override {};
-        void    SendCurrentSceneCameraCount(uint32_t) override {};
-};
-
-class DirectTracerMiddleCallback : public TracerCallbacksI
-{
-    private:
-        std::vector<Vector4f>   pixelLocations;
-        Vector2i                portionStart;
-        Vector2i                portionEnd;
-        Vector2i                resolution;
-
-    public:
-        // Constructors & Destructor
-                    DirectTracerMiddleCallback() = default;
-
-        // Methods
-        Vector2i    PixelGlobalId(int linearLocalPixelId);
-        //  Interface
-        void        SendCrashSignal() override {};
-        void        SendLog(const std::string) override;
-        void        SendError(TracerError) override;
-        void        SendAnalyticData(AnalyticData) override {};
-        void        SendImageSectionReset(Vector2i start = Zero2i,
-                                          Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-        void        SendImage(const std::vector<Byte> data,
-                              PixelFormat, size_t offset,
-                              Vector2i start = Zero2i,
-                              Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-        void        SendCurrentOptions(TracerOptions) override;
-        void        SendCurrentParameters(TracerParameters) override {};
-        void        SendCurrentCamera(VisorCamera) override {};
-        void        SendCurrentSceneCameraCount(uint32_t) override {};
-
-        // Setters
-        void                SetSection(const Vector2i&, const Vector2i&);
-        void                SetResolution(const Vector2i&);
-
-        const Vector4f&     Pixel(uint32_t pixelIndex) const;
-        const Vector2i&     Start() const;
-        const Vector2i&     End() const;
-        const Vector2i&     Resolution() const;
-};
-
-class RefPGTracer : public GPUTracerI
+class RefPGTracer : public RayTracer
 {
     public:
         static constexpr const char* TypeName() { return "RefPGTracer"; }
@@ -120,7 +121,7 @@ class RefPGTracer : public GPUTracerI
             Vector2i            resolution          = Vector2i(1024);
             std::string         refPGOutputName     = "refPGOut";
 
-            std::string         lightSamplerType    = "Uniform";
+            LightSamplerType    lightSamplerType    = LightSamplerType::UNIFORM;
             // Misc
             bool                nextEventEstimation = true;            
             bool                directLightMIS      = false;            
@@ -132,27 +133,29 @@ class RefPGTracer : public GPUTracerI
         uint32_t                        currentPixel;
         uint32_t                        currentSampleCount;
         int                             currentCamera;
-        // Tracers
-        PathTracer                      pathTracer;
-        DirectTracer                    directTracer;
-        // Callbacks
-        TracerCallbacksI*               callbacks;
-        bool                            crashed;
-        // Params
-        TracerParameters                params;
-        //
-        const CudaSystem&               cudaSystem;
-        //
-        const GPUSceneI&                scene;
-        // Callbacks for each Tracer
-        DirectTracerMiddleCallback      dtCallbacks;
-        PathTracerMiddleCallback        ptCallbacks;
-        // Spherical Camera (for PT Rendering)
-        DeviceMemory                    memory;
-        GPUCameraSpherical*             dSphericalCamera;
+        uint32_t                        currentDepth;
+        // Works
+        WorkBatchMap                    workMap;
+        // Work Kernel Loaders
+        WorkPool<bool, bool, bool>      boundaryWorkPool;
+        WorkPool<bool, bool>            pathWorkPool;        
+        // Light Sampler Memory and Pointer
+        DeviceMemory                    lsMemory;
+        const GPUDirectLightSamplerI*   dLightSampler;
+        // Pixel Camera
+        DeviceMemory                    camMemory;
+        GPUCameraPixel*                 dPixelCamera;
         bool                            doInitCameraCreation;
+        // Image Related
+        Vector2i                        resolution;
+        Vector2i                        iPortionStart;
+        Vector2i                        iPortionEnd;
+        //
+        ImageMemory                     accumulationBuffer;
 
-        std::unique_ptr<TracerOptionsI> GenerateDirectTracerOptions();
+
+        // Misc Methods
+        ImageIOError                    SaveAndResetAccumImage(const Vector2i& pixelId);
 
     protected:
     public:
@@ -172,69 +175,57 @@ class RefPGTracer : public GPUTracerI
         bool                    Render() override;
         void                    Finalize() override;
 
-        // Response form Tracer
-        void                    AttachTracerCallbacks(TracerCallbacksI&) override;
-        // Commands to Tracer
-        void                    SetParameters(const TracerParameters&) override;
         void                    AskParameters() override;
         // Image Related Commands
-        void                    SetImagePixelFormat(PixelFormat) override;
         void                    ReportionImage(Vector2i start = Zero2i,
                                                Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void                    ResizeImage(Vector2i resolution) override;
-        void                    ResetImage() override;
 };
 
-inline void RefPGTracer::AttachTracerCallbacks(TracerCallbacksI& tc)
-{
-    callbacks = &tc;
-    ptCallbacks.SetCallbacks(callbacks);
-}
-
-inline Vector2i DirectTracerMiddleCallback::PixelGlobalId(int linearLocalPixelId)
-{
-    Vector2i segmentSize = portionEnd - portionStart;
-    Vector2i localPixelId2D(linearLocalPixelId % segmentSize[0],
-                            linearLocalPixelId / segmentSize[0]);
-    return portionStart + localPixelId2D;
-}
-
-inline const Vector4f& DirectTracerMiddleCallback::Pixel(uint32_t pixelIndex) const
-{
-    return pixelLocations[pixelIndex];
-}
-
-inline void DirectTracerMiddleCallback::SetSection(const Vector2i& start,
-                                                   const Vector2i& end)
-{
-    portionStart = start;
-    portionEnd = end;
-    portionEnd = Vector2i::Min(portionEnd, resolution);
-
-    // Allocate an image section
-    Vector2i size = portionEnd - portionStart;
-    pixelLocations.resize(size[0] * size[1]);
-}
-
-inline void DirectTracerMiddleCallback::SetResolution(const Vector2i& v)
-{
-    resolution = v;
-}
-
-inline const Vector2i& DirectTracerMiddleCallback::Start() const
-{
-    return portionStart;
-}
-
-inline const Vector2i& DirectTracerMiddleCallback::End() const
-{
-    return portionEnd;
-}
-
-inline const Vector2i& DirectTracerMiddleCallback::Resolution() const
-{
-    return resolution;
-}
+//inline Vector2i DirectTracerMiddleCallback::PixelGlobalId(int linearLocalPixelId)
+//{
+//    Vector2i segmentSize = portionEnd - portionStart;
+//    Vector2i localPixelId2D(linearLocalPixelId % segmentSize[0],
+//                            linearLocalPixelId / segmentSize[0]);
+//    return portionStart + localPixelId2D;
+//}
+//
+//inline const Vector4f& DirectTracerMiddleCallback::Pixel(uint32_t pixelIndex) const
+//{
+//    return pixelLocations[pixelIndex];
+//}
+//
+//inline void DirectTracerMiddleCallback::SetSection(const Vector2i& start,
+//                                                   const Vector2i& end)
+//{
+//    portionStart = start;
+//    portionEnd = end;
+//    portionEnd = Vector2i::Min(portionEnd, resolution);
+//
+//    // Allocate an image section
+//    Vector2i size = portionEnd - portionStart;
+//    pixelLocations.resize(size[0] * size[1]);
+//}
+//
+//inline void DirectTracerMiddleCallback::SetResolution(const Vector2i& v)
+//{
+//    resolution = v;
+//}
+//
+//inline const Vector2i& DirectTracerMiddleCallback::Start() const
+//{
+//    return portionStart;
+//}
+//
+//inline const Vector2i& DirectTracerMiddleCallback::End() const
+//{
+//    return portionEnd;
+//}
+//
+//inline const Vector2i& DirectTracerMiddleCallback::Resolution() const
+//{
+//    return resolution;
+//}
 
 static_assert(IsTracerClass<RefPGTracer>::value,
               "RefPGTracer is not a Tracer Class.");

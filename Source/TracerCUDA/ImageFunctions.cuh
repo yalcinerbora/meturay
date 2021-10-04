@@ -38,6 +38,14 @@ void ImageAccumulatePixel(ImageGMem<Vector3f>& img, uint32_t location, const Vec
 	atomicAdd(&img.gPixels[location][2], data[2]);
 }
 
+template<>
+__device__ __forceinline__
+void ImageAccumulatePixel(ImageGMem<float>& img, uint32_t location, const float& data)
+{
+	// Add value
+	atomicAdd(&img.gPixels[location], data);	
+}
+
 template<class T>
 __device__
 void ImageSetSample<T>(ImageGMem<T>& img, uint32_t location, uint32_t sampleCount)

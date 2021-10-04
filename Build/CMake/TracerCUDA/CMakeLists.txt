@@ -18,6 +18,8 @@ set(SRC_ACCELS_COMMON
     ${CURRENT_SOURCE_DIR}/GPUAcceleratorCommonKC.cuh)
 
 set(SRC_CAMERAS
+    ${CURRENT_SOURCE_DIR}/GPUCameraPixel.cu
+    ${CURRENT_SOURCE_DIR}/GPUCameraPixel.cuh
     ${CURRENT_SOURCE_DIR}/GPUCameraPinhole.cu
     ${CURRENT_SOURCE_DIR}/GPUCameraPinhole.cuh
     ${CURRENT_SOURCE_DIR}/GPUCameraSpherical.cu
@@ -200,7 +202,9 @@ set(SRC_TRACERS_COMMON
     ${CURRENT_SOURCE_DIR}/RayTracer.h
     ${CURRENT_SOURCE_DIR}/RayTracer.hpp
     ${CURRENT_SOURCE_DIR}/TracerFunctions.cuh
-    ${CURRENT_SOURCE_DIR}/Tracers.cpp)
+    ${CURRENT_SOURCE_DIR}/Tracers.cu
+    ${CURRENT_SOURCE_DIR}/Tracers.cpp
+    ${CURRENT_SOURCE_DIR}/Tracers.h)
 
 set(SRC_TRACERS_STRUCTS
     ${CURRENT_SOURCE_DIR}/PathNode.cuh
@@ -244,7 +248,10 @@ set(SRC_PPG_TRACER_AUX_CLASSES
 
 set(SRC_REF_PG_TRACER
     ${CURRENT_SOURCE_DIR}/RefPGTracer.cu
-    ${CURRENT_SOURCE_DIR}/RefPGTracer.h)
+    ${CURRENT_SOURCE_DIR}/RefPGTracer.h
+    ${CURRENT_SOURCE_DIR}/RefPGTracerKC.cuh
+    ${CURRENT_SOURCE_DIR}/RefPGTracerWorks.cu
+    ${CURRENT_SOURCE_DIR}/RefPGTracerWorks.cuh)
 
 set(SRC_TRANSFORMS
     ${CURRENT_SOURCE_DIR}/GPUTransformIdentity.cuh

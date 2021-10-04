@@ -26,6 +26,9 @@ class SelfNode
         TracerThread    tracerThread;
         VisorI&         visor;
 
+        std::atomic_bool tracerCrashed;
+
+
     protected:
     public:
         // Constructor & Destructor

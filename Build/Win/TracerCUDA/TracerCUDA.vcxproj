@@ -23,6 +23,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerWorks.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DTree.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DTreeKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraPixel.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraSpherical.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUDirectLightSamplerI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\EmptyMaterial.cuh" />
@@ -79,6 +80,8 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerWork.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracer.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracerKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracerWorks.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\STree.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\STreeKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureFunctions.h" />
@@ -86,6 +89,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReference.hpp" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureReferenceGenerators.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerConstants.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\Tracers.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TransformFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterialKC.cuh" />
@@ -151,6 +155,7 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracerWork.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracerWorks.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DTree.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUCameraPixel.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUCameraSpherical.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightDisk.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.cu" />
@@ -176,6 +181,7 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracerWork.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RefPGTracer.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RefPGTracerWorks.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RNGMemory.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUTransformSingle.cu" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\MangledNames.cpp" />
@@ -189,6 +195,7 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\SimpleMaterials.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\STree.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\Tracers.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cu" />
   </ItemGroup>
   <ItemGroup>

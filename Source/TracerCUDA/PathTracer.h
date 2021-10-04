@@ -3,6 +3,7 @@
 #include "RayTracer.h"
 #include "WorkPool.h"
 #include "GPULightI.h"
+#include "Tracers.h"
 
 class GPUDirectLightSamplerI;
 
@@ -17,13 +18,6 @@ class PathTracer final : public RayTracer
         static constexpr const char*    DIRECT_LIGHT_MIS_NAME = "DirectLightMIS";
         static constexpr const char*    LIGHT_SAMPLER_TYPE_NAME = "NEESampler";
         
-        enum LightSamplerType
-        {
-            UNIFORM,
-
-            END
-        };
-
         struct Options
         {
             int32_t             sampleCount         = 1;
@@ -37,8 +31,6 @@ class PathTracer final : public RayTracer
         static constexpr bool   USE_SINGLE_PATH_KERNEL = true;
 
     private:
-        static const std::array<std::string, LightSamplerType::END> SamplerNames;
-
         Options                         options;
         uint32_t                        currentDepth;
         WorkBatchMap                    workMap;
@@ -52,12 +44,7 @@ class PathTracer final : public RayTracer
         WorkPool<bool, bool>            comboWorkPool;
         // Light Sampler Memory and Pointer
         DeviceMemory                    memory;
-        const GPUDirectLightSamplerI*   lightSampler;
-        // Misc
-        static TracerError              StringToLightSamplerType(LightSamplerType&,
-                                                               const std::string&);
-        static std::string              LightSamplerTypeToString(LightSamplerType);
-        TracerError                     ConstructLightSampler();
+        const GPUDirectLightSamplerI*   dLightSampler;
 
     protected:
     public:

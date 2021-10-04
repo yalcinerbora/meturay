@@ -12,6 +12,7 @@ SelfNode::SelfNode(VisorI& v, TracerSystemI& t,
                    const Vector2i& resolution)
     : tracerThread(t, opts, params, *this, tracerTypeName)
     , visor(v)
+    , tracerCrashed(false)
 {
     tracerThread.SetImageResolution(resolution);
     // Self Node has only one tracer
@@ -88,6 +89,7 @@ void SelfNode::WindowCloseAction()
 
 void SelfNode::SendCrashSignal()
 {
+    tracerCrashed = true;
 }
 
 void SelfNode::SendLog(const std::string s)
@@ -154,8 +156,14 @@ NodeError SelfNode::Initialize()
 
 void SelfNode::Work()
 {
-    while(visor.IsOpen() &&
-          !tracerThread.IsTerminated())
+    // Self Node will terminate if
+    while(// Visor is Closed
+          visor.IsOpen() &&
+          // Tracer Thread unable to do stuff 
+          // (i.e. unable to load a tracer scene etc)
+          !tracerThread.IsTerminated() &&
+          // Tracer itself is crashed (some internal runtime error etc)
+          !tracerCrashed)
     {
         // Render Loop
         visor.Render();

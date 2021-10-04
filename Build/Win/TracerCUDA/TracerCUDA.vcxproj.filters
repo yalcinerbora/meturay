@@ -531,6 +531,18 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracer.h">
       <Filter>Tracers\RefPGTracer</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraPixel.cuh">
+      <Filter>Cameras</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\Tracers.h">
+      <Filter>Tracers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracerKC.cuh">
+      <Filter>Tracers\RefPGTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracerWorks.cuh">
+      <Filter>Tracers\RefPGTracer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">
@@ -669,6 +681,15 @@
       <Filter>Cameras</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RefPGTracer.cu">
+      <Filter>Tracers\RefPGTracer</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUCameraPixel.cu">
+      <Filter>Cameras</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\Tracers.cu">
+      <Filter>Tracers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RefPGTracerWorks.cu">
       <Filter>Tracers\RefPGTracer</Filter>
     </CudaCompile>
   </ItemGroup>

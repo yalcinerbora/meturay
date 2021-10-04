@@ -131,9 +131,9 @@ namespace MathConstants
     static constexpr float DegToRadCoef = static_cast<float>(DegToRadCoef_d);
     static constexpr float RadToDegCoef = static_cast<float>(RadToDegCoef_d);
 
-    static constexpr double VerySmallEpsilon = static_cast<float>(VerySmallEpsilon_d);
-    static constexpr double SmallEpsilon = static_cast<float>(SmallEpsilon_d);
-    static constexpr double Epsilon = static_cast<float>(Epsilon_d);
-    static constexpr double LargeEpsilon = static_cast<float>(LargeEpsilon_d);
-    static constexpr double VeryLargeEpsilon = static_cast<float>(VeryLargeEpsilon_d);
+    static constexpr float VerySmallEpsilon = static_cast<float>(VerySmallEpsilon_d);
+    static constexpr float SmallEpsilon = static_cast<float>(SmallEpsilon_d);
+    static constexpr float Epsilon = static_cast<float>(Epsilon_d);
+    static constexpr float LargeEpsilon = static_cast<float>(LargeEpsilon_d);
+    static constexpr float VeryLargeEpsilon = static_cast<float>(VeryLargeEpsilon_d);
 }

@@ -1,11 +1,38 @@
 #include "RayLib/TracerOptions.h"
 #include "RayLib/TracerCallbacksI.h"
 
+#include "Tracers.h"
 #include "DirectTracer.h"
 #include "PathTracer.h"
 #include "AOTracer.h"
 #include "PPGTracer.h"
 #include "RefPGTracer.h"
+
+const std::array<std::string, static_cast<size_t>(LightSamplerType::END)> SamplerNames =
+{
+    "Uniform"
+};
+
+TracerError LightSamplerCommon::StringToLightSamplerType(LightSamplerType& ls,
+                                                         const std::string& lsName)
+{
+    uint32_t i = 0;
+    for(const std::string s : SamplerNames)
+    {
+        if(lsName == s)
+        {
+            ls = static_cast<LightSamplerType>(i);
+            return TracerError::OK;
+        }
+        i++;
+    }
+    return TracerError::UNABLE_TO_INITIALIZE;
+}
+
+std::string LightSamplerCommon::LightSamplerTypeToString(LightSamplerType t)
+{
+    return SamplerNames[static_cast<int>(t)];
+}
 
 // Variant Does not compile on cuda code
 // special cpp for functions that uses "TracerOptions"
@@ -19,7 +46,7 @@ void PathTracer::AskOptions()
     list.emplace(DIRECT_LIGHT_MIS_NAME, OptionVariable(options.directLightMIS));
     list.emplace(RR_START_NAME, OptionVariable(options.rrStart));
 
-    std::string lightSamplerTypeString = LightSamplerTypeToString(options.lightSamplerType);
+    std::string lightSamplerTypeString = LightSamplerCommon::LightSamplerTypeToString(options.lightSamplerType);
     list.emplace(LIGHT_SAMPLER_TYPE_NAME, OptionVariable(lightSamplerTypeString));
 
     if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
@@ -65,18 +92,4 @@ void RefPGTracer::AskOptions()
     list.emplace(NEE_NAME, OptionVariable(options.nextEventEstimation));
 
     if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
-}
-
-void PathTracerMiddleCallback::SendCurrentOptions(TracerOptions){}
-
-void DirectTracerMiddleCallback::SendCurrentOptions(TracerOptions) {}
-
-std::unique_ptr<TracerOptionsI> RefPGTracer::GenerateDirectTracerOptions()
-{
-    VariableList list;
-    list.emplace(DirectTracer::RENDER_TYPE_NAME, 
-                 OptionVariable(DirectTracer::RenderTypeToString(DirectTracer::RENDER_POSITION)));
-    list.emplace(SAMPLE_NAME, OptionVariable(1));
-
-    return std::make_unique<TracerOptions>(std::move(list));
 }
