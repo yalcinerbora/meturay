@@ -140,15 +140,24 @@ ImageIOError RefPGTracer::SaveAndResetAccumImage(const Vector2i& pixelId)
     std::vector<Byte> pixels = accumulationBuffer.GetImageToCPU(cudaSystem);
 
     ImageIOError e = ImageIOError::OK;
-    if((e = ImageIOInstance().WriteImage(pixels.data(),
-                                         Vector2ui(accumulationBuffer.SegmentSize()[0],
-                                                   accumulationBuffer.SegmentSize()[1]),
-                                         accumulationBuffer.Format(), ImageType::EXR,
+    e = ImageIOInstance().WriteImage(pixels.data(),
+                                     Vector2ui(accumulationBuffer.SegmentSize()[0],
+                                               accumulationBuffer.SegmentSize()[1]),
+                                     accumulationBuffer.Format(), ImageType::EXR,
+                                     path);
 
-                                         path)) != ImageIOError::OK)
-        return e;
-
-    return ImageIOError::OK;
+    if(callbacks && e == ImageIOError::OK)
+    {
+        std::string s = fmt::format("Pixel ({:d},{:d}) reference is written as \"{:s}\"",
+                                    pixelId[0], pixelId[1], path);
+        callbacks->SendLog(s);
+    }
+    else if(callbacks)
+    {
+        std::string s = fmt::format("Unable to Save\"{:s}\"", path);
+        callbacks->SendLog(s);        
+    }
+    return e;
 }
 
 RefPGTracer::RefPGTracer(const CudaSystem& s,
@@ -366,7 +375,7 @@ void RefPGTracer::Finalize()
     {
         Vector2i pixelId2D = LocalPixel1DToPixel2D();
         ImageIOError e = ImageIOError::OK;
-        if((e = SaveAndResetAccumImage(pixelId2D)) != ImageIOError::OK)           
+        if((e = SaveAndResetAccumImage(pixelId2D)) != ImageIOError::OK)
         {
             METU_ERROR_LOG("Tracer, {}", std::string(e));
             if(callbacks) callbacks->SendCrashSignal();
@@ -420,7 +429,10 @@ void RefPGTracer::GenerateWork(int cameraId)
         currentSampleCount = 0;
 
         // Reset the shown image
-        ResetImage();
+        if(callbacks)
+        {
+            callbacks->SendImageSectionReset(iPortionStart, iPortionEnd);
+        }
     }
 
     // Generate Work for current Camera
@@ -493,11 +505,4 @@ void RefPGTracer::ResetImage()
     doInitCameraCreation = true;
     currentCamera = std::numeric_limits<uint32_t>::max();
     ResetIterationVariables();
-
-    if(callbacks)
-    {
-        Vector2i start = imgMemory.SegmentOffset();
-        Vector2i end = start + imgMemory.SegmentSize();
-        callbacks->SendImageSectionReset(start, end);
-    }
 }

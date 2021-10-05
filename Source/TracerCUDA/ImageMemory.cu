@@ -10,7 +10,7 @@
 // Template lambda to ease of read
 
 template <class T>
-using ImgKernelFunc = void(*)(ImageGMem<T> mem, size_t totalPixelCount);
+using ImgKernelFunc = void(&)(ImageGMem<T> mem, size_t totalPixelCount);
 
 template <class T, ImgKernelFunc<T> KF>
 struct KC
@@ -57,7 +57,7 @@ void ChangeNaNToColor(T& pixel)
 
 template <class T>
 __global__ 
-void KCChekPixels(ImageGMem<T> mem, size_t totalPixelCount)
+void KCCheckPixels(ImageGMem<T> mem, size_t totalPixelCount)
 {
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
         threadId < totalPixelCount;
@@ -98,13 +98,13 @@ ImageMemory::ImageMemory(const Vector2i& offset,
     , segmentOffset(offset)
     , resolution(resolution)
     , format(f)
-    , pixelSize(ImageIOI::FormatToPixelSize(format))
+    , pixelSize(static_cast<int>(ImageIOI::FormatToPixelSize(format)))
 {}
 
 void ImageMemory::SetPixelFormat(PixelFormat f, const CudaSystem& s)
 {
     format = f;
-    pixelSize = ImageIOI::FormatToPixelSize(f);
+    pixelSize = static_cast<int>(ImageIOI::FormatToPixelSize(f));
     Reportion(segmentOffset, segmentSize, s);
 }
 
@@ -178,10 +178,10 @@ std::vector<Byte> ImageMemory::GetImageToCPU(const CudaSystem& system)
 
         switch(format)
         {
-            case PixelFormat::R_FLOAT: KC<float, KCChekPixels>{pixelCount, *this, gpu}(); break;
-            case PixelFormat::RG_FLOAT: KC<Vector2f, KCChekPixels>{pixelCount, *this, gpu}(); break;
-            case PixelFormat::RGB_FLOAT: KC<Vector3f, KCChekPixels>{pixelCount, *this, gpu}(); break;
-            case PixelFormat::RGBA_FLOAT: KC<Vector4f, KCChekPixels>{pixelCount, *this, gpu}(); break;
+            case PixelFormat::R_FLOAT: KC<float, KCCheckPixels>{pixelCount, *this, gpu}(); break;
+            case PixelFormat::RG_FLOAT: KC<Vector2f, KCCheckPixels>{pixelCount, *this, gpu}(); break;
+            case PixelFormat::RGB_FLOAT: KC<Vector3f, KCCheckPixels>{pixelCount, *this, gpu}(); break;
+            case PixelFormat::RGBA_FLOAT: KC<Vector4f, KCCheckPixels>{pixelCount, *this, gpu}(); break;
                 break;
             default:
                 METU_ERROR_LOG("Image Memory Fatal Error: "
