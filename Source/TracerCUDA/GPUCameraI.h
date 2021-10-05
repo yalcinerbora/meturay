@@ -15,6 +15,8 @@ class RandomGPU;
 
 struct VisorCamera;
 
+class GPUCameraPixel;
+
 class GPUCameraI : public GPUEndpointI
 {
     public:
@@ -25,11 +27,19 @@ class GPUCameraI : public GPUEndpointI
         __device__
         virtual uint32_t        FindPixelId(const RayReg& r,
                                             const Vector2i& resolution) const = 0;
-
+        // View Projection Matrix of the Camera
+        // If camera projection is linearly transformable 
+        // else it returns only the view matrix
         __device__
         virtual Matrix4x4       VPMatrix() const = 0;
+        // Distance of near and far planes of the Camera
+        // in world space distances
         __device__
         virtual Vector2f        NearFar() const = 0;
+
+        __device__
+        virtual GPUCameraPixel  GeneratePixelCamera(const Vector2i& pixelId,
+                                                    const Vector2i& resolution) const = 0;
 };
 
 using GPUCameraList = std::vector<const GPUCameraI*>;

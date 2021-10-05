@@ -4,71 +4,82 @@
 #include "CudaSystem.hpp"
 
 #include "RayLib/MemoryAlignment.h"
+#include "RayLib/Log.h"
+#include "ImageIO/ImageIOI.h"
 
-__global__ void KCChekPixels(ImageGMem<Vector4f> mem, size_t totalPixelCount)
+// Template lambda to ease of read
+
+template <class T>
+using ImgKernelFunc = void(*)(ImageGMem<T> mem, size_t totalPixelCount);
+
+template <class T, ImgKernelFunc<T> KF>
+struct KC
+{
+    size_t          pixelCount;
+    ImageMemory&    mem;
+    const CudaGPU&  gpu;
+
+    void operator()() const
+    {
+        gpu.GridStrideKC_X(0, (cudaStream_t)0,
+                           pixelCount,
+                           KF,
+                           //
+                           mem.GMem<T>(),
+                           pixelCount);
+    }    
+};
+
+template <class T>
+__device__
+void ChangeNaNToColor(T& pixel);
+
+template <>
+__device__
+void ChangeNaNToColor(float& pixel)
+{
+    if(isnan(pixel))
+    {
+        pixel = 1.0e30;
+    }
+}
+
+template <class T>
+__device__
+void ChangeNaNToColor(T& pixel)
+{    
+    if(pixel.HasNaN())
+    {
+        // Push bright magenta to visualize NaN
+        pixel = Vector4(1.0e30, 0.0, 1.0e30, 1.0f);        
+    }
+}
+
+template <class T>
+__global__ 
+void KCChekPixels(ImageGMem<T> mem, size_t totalPixelCount)
 {
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
         threadId < totalPixelCount;
         threadId += (blockDim.x * gridDim.x))
     {
-        Vector4 pixel = mem.gPixels[threadId];
-        if(pixel.HasNaN())
-        {
-            // Push bright magenta to visualize NaN
-            pixel = Vector4(1.0e30, 0.0, 1.0e30, 1.0f);
-            mem.gPixels[threadId] = pixel;
-        }
+        T pixel = mem.gPixels[threadId];
+        ChangeNaNToColor(pixel);
+        mem.gPixels[threadId] = pixel;
     }
 }
 
-__global__ void KCResetSamples(ImageGMem<Vector4f> mem, size_t totalPixelCount)
+template <class T>
+__global__ 
+void KCResetSamples(ImageGMem<T> mem, size_t totalPixelCount)
 {
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
         threadId < totalPixelCount;
         threadId += (blockDim.x * gridDim.x))
     {
         mem.gSampleCounts[threadId] = 0;
-        mem.gPixels[threadId][0] = 0.0f;
-        mem.gPixels[threadId][1] = 0.0f;
-        mem.gPixels[threadId][2] = 0.0f;
+        mem.gPixels[threadId] = Zero4f;        
     }
-}
-
-int ImageMemory::PixelFormatToSize(PixelFormat f)
-{
-    static constexpr int SizeList[static_cast<int>(PixelFormat::END)] =
-    {
-        1,
-        2,
-        3,
-        4,
-
-        2,
-        4,
-        6,
-        8,
-
-        1,
-        2,
-        3,
-        4,
-
-        2,
-        4,
-        6,
-        8,
-
-        2,
-        4,
-        6,
-        8,
-
-        4,
-        8,
-        12,
-        16
-    };
-    return SizeList[static_cast<int>(f)];
 }
 
 ImageMemory::ImageMemory()
@@ -87,13 +98,13 @@ ImageMemory::ImageMemory(const Vector2i& offset,
     , segmentOffset(offset)
     , resolution(resolution)
     , format(f)
-    , pixelSize(PixelFormatToSize(format))
+    , pixelSize(ImageIOI::FormatToPixelSize(format))
 {}
 
 void ImageMemory::SetPixelFormat(PixelFormat f, const CudaSystem& s)
 {
     format = f;
-    pixelSize = PixelFormatToSize(f);
+    pixelSize = ImageIOI::FormatToPixelSize(f);
     Reportion(segmentOffset, segmentSize, s);
 }
 
@@ -106,7 +117,7 @@ void ImageMemory::Reportion(Vector2i start,
     segmentSize = end - start;
 
     size_t pixelCount = static_cast<size_t>(segmentSize[0]) * segmentSize[1];
-    size_t sizeOfPixels = PixelFormatToSize(format) * pixelCount;
+    size_t sizeOfPixels = ImageIOI::FormatToPixelSize(format) * pixelCount;
     sizeOfPixels = Memory::AlignSize(sizeOfPixels);
     size_t sizeOfPixelCounts = sizeof(uint32_t) * pixelCount;
 
@@ -147,7 +158,7 @@ void ImageMemory::Reset(const CudaSystem& system)
         //                   GMem<Vector4f>(),
         //                   pixelCount);
 
-        size_t totalBytes = PixelFormatToSize(format) * pixelCount +
+        size_t totalBytes = ImageIOI::FormatToPixelSize(format) * pixelCount +
                             sizeof(uint32_t) * pixelCount;
         CUDA_CHECK(cudaMemset(memory, 0x0, totalBytes));
     }
@@ -156,27 +167,36 @@ void ImageMemory::Reset(const CudaSystem& system)
 std::vector<Byte> ImageMemory::GetImageToCPU(const CudaSystem& system)
 {
     size_t pixelCount = static_cast<size_t>(segmentSize[0]) * segmentSize[1];
-    size_t totalBytes = PixelFormatToSize(format) * pixelCount +
+    size_t totalBytes = ImageIOI::FormatToPixelSize(format) * pixelCount +
                         sizeof(uint32_t) * pixelCount;
-    size_t sampleStart = PixelFormatToSize(format) * pixelCount;
+    size_t sampleStart = ImageIOI::FormatToPixelSize(format) * pixelCount;
 
     if(pixelCount != 0)
     {
         // Pixel Count is relatively small single GPU should handle it
         const CudaGPU& gpu =system.BestGPU();
-        gpu.GridStrideKC_X(0, (cudaStream_t)0,
-                           pixelCount,
-                           KCChekPixels,
-                           //
-                           GMem<Vector4f>(),
-                           pixelCount);
+
+        switch(format)
+        {
+            case PixelFormat::R_FLOAT: KC<float, KCChekPixels>{pixelCount, *this, gpu}(); break;
+            case PixelFormat::RG_FLOAT: KC<Vector2f, KCChekPixels>{pixelCount, *this, gpu}(); break;
+            case PixelFormat::RGB_FLOAT: KC<Vector3f, KCChekPixels>{pixelCount, *this, gpu}(); break;
+            case PixelFormat::RGBA_FLOAT: KC<Vector4f, KCChekPixels>{pixelCount, *this, gpu}(); break;
+                break;
+            default:
+                METU_ERROR_LOG("Image Memory Fatal Error: "
+                               "unable to find proper pixel format "
+                               "kernel for \"KCCheckPixels\"");
+                std::abort();
+                break;
+        }
     }
 
     std::vector<Byte> result(totalBytes);
     // Copy Pixels
     CUDA_CHECK(cudaMemcpy(result.data(),
                           dPixels,
-                          PixelFormatToSize(format) * pixelCount,
+                          ImageIOI::FormatToPixelSize(format) * pixelCount,
                           cudaMemcpyDeviceToHost));
     // Copy Sample Counts
     CUDA_CHECK(cudaMemcpy(result.data() + sampleStart,

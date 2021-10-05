@@ -4,16 +4,17 @@
 
 __global__
 void KCConstructSingleGPUCameraPixel(GPUCameraPixel* gCameraLocations,
-                                     bool deletePrevious,
                                      //
                                      const GPUCameraI& baseCam,
-                                     int32_t pixelIndex,
+                                     Vector2i pixelIndex,
                                      Vector2i resolution)
 {
     if(threadIdx.x != 0) return;
 
-    if(deletePrevious) gCameraLocations->~GPUCameraPixel();
-    new (gCameraLocations) GPUCameraPixel(baseCam,
-                                          pixelIndex,
-                                          resolution);
+    GPUCameraPixel pCam = baseCam.GeneratePixelCamera(pixelIndex,
+                                                      resolution);
+    // TODO: WTF? this does not copy vptr
+    //*gCameraLocations = pCam;
+    // But this does?
+    new (gCameraLocations) GPUCameraPixel(pCam);
 }

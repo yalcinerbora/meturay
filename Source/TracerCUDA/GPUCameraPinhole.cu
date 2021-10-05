@@ -11,10 +11,10 @@ __global__ void KCConstructGPUCameraPinhole(GPUCameraPinhole* gCameraLocations,
                                             const HitKey* gCameraMaterialIds,
                                             //
                                             const GPUTransformI** gTransforms,
-                                            uint32_t lightCount)
+                                            uint32_t camCaount)
 {
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-        globalId < lightCount;
+        globalId < camCaount;
         globalId += blockDim.x * gridDim.x)
     {
         CPUCameraGroupPinhole::Data data = gData[globalId];

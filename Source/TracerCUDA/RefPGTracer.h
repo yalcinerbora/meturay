@@ -147,14 +147,18 @@ class RefPGTracer : public RayTracer
         GPUCameraPixel*                 dPixelCamera;
         bool                            doInitCameraCreation;
         // Image Related
-        Vector2i                        resolution;
-        Vector2i                        iPortionStart;
-        Vector2i                        iPortionEnd;
+        Vector2i                        resolution;     // Image Resolution
+        Vector2i                        iPortionStart;  // Our image portion
+        Vector2i                        iPortionEnd; 
+        PixelFormat                     iPixelFormat;    // Requested Pixel Format
         //
         ImageMemory                     accumulationBuffer;
 
 
         // Misc Methods
+        void                            SendPixel() const;
+        Vector2i                        LocalPixel1DToPixel2D() const;
+        void                            ResetIterationVariables();
         ImageIOError                    SaveAndResetAccumImage(const Vector2i& pixelId);
 
     protected:
@@ -177,9 +181,11 @@ class RefPGTracer : public RayTracer
 
         void                    AskParameters() override;
         // Image Related Commands
+        void                    SetImagePixelFormat(PixelFormat) override;
         void                    ReportionImage(Vector2i start = Zero2i,
                                                Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void                    ResizeImage(Vector2i resolution) override;
+        void                    ResetImage() override;
 };
 
 //inline Vector2i DirectTracerMiddleCallback::PixelGlobalId(int linearLocalPixelId)

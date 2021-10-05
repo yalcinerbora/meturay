@@ -27,8 +27,6 @@ class ImageMemory
         Vector2i                    segmentOffset;
         Vector2i                    resolution;
 
-        static int                  PixelFormatToSize(PixelFormat);
-
         void*                       dPixels;
         uint32_t*                   dSampleCounts;
 
@@ -47,8 +45,8 @@ class ImageMemory
                             ~ImageMemory() = default;
 
         void                SetPixelFormat(PixelFormat, const CudaSystem& s);
-        void                Reportion(Vector2i offset,
-                                      Vector2i size,
+        void                Reportion(Vector2i start,
+                                      Vector2i end,
                                       const CudaSystem& system);
         void                Resize(Vector2i resolution);
         void                Reset(const CudaSystem& system);

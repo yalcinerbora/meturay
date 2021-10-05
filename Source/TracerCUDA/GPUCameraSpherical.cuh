@@ -4,6 +4,7 @@
 #include "DeviceMemory.h"
 #include "GPUTransformI.h"
 #include "TypeTraits.h"
+#include "GPUCameraPixel.cuh"
 
 #include "RayLib/VisorCamera.h"
 #include "RayLib/CoordinateConversion.h"
@@ -63,6 +64,9 @@ class GPUCameraSpherical final : public GPUCameraI
 
         __device__ Matrix4x4        VPMatrix() const override;
         __device__ Vector2f         NearFar() const override;
+
+        __device__ GPUCameraPixel   GeneratePixelCamera(const Vector2i& pixelId,
+                                                        const Vector2i& resolution) const override;
 };
 
 class CPUCameraGroupSpherical final : public CPUCameraGroupI
@@ -270,6 +274,25 @@ __device__
 inline Vector2f GPUCameraSpherical::NearFar() const
 {
     return nearFar;
+}
+
+__device__
+inline GPUCameraPixel GPUCameraSpherical::GeneratePixelCamera(const Vector2i& pixelId,
+                                                              const Vector2i& resolution) const
+{
+    const auto ZERO3 = Zero3;
+    const auto ZERO2 = Zero2;
+    // TODO: Implement
+    return GPUCameraPixel(ZERO3,
+                          ZERO3,
+                          ZERO3,
+                          ZERO3,
+                          ZERO2,
+                          ZERO3,
+                          pixelId,
+                          resolution,
+                          mediumIndex,
+                          boundaryMaterialKey);
 }
 
 inline CPUCameraGroupSpherical::CPUCameraGroupSpherical()

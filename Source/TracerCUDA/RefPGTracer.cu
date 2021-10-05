@@ -12,159 +12,117 @@
 #include "RayLib/ImageIOError.h"
 
 #include "RefPGTracerWorks.cuh"
-
 #include "GPUCameraPixel.cuh"
 #include "GPUTransformIdentity.cuh"
 #include "DeviceMemory.h"
+#include "ParallelReduction.cuh"
 
 #include "ImageIO/EntryPoint.h"
 
 #include <iomanip>
 
+__global__
+void KCAccumulateToBuffer(ImageGMem<float> accumBuffer,
+                          ImageGMemConst<float> newSamples,
+                          uint32_t pixelCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < pixelCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        float data0 = accumBuffer.gPixels[threadId];
+        uint32_t sample0 = accumBuffer.gSampleCounts[threadId];
 
-//#include "TracerDebug.h"
-//PathTracerMiddleCallback::PathTracerMiddleCallback(const Vector2i& resolution)
-//    : callbacks(nullptr)
-//    , resolution(resolution)
-//    , lumPixels(resolution[0] * resolution[1], 0.0f)
-//    , totalSampleCounts(resolution[0] * resolution[1], 0)
-//{}
-//
-//void PathTracerMiddleCallback::SetCallbacks(TracerCallbacksI* cb)
-//{
-//    callbacks = cb;
-//}
-//
-//void PathTracerMiddleCallback::SendLog(const std::string s)
-//{
-//    METU_LOG(std::move(s));
-//}
-//
-//void PathTracerMiddleCallback::SendError(TracerError e)
-//{
-//    METU_ERROR_LOG(static_cast<std::string>(e));
-//}
-//
-//void PathTracerMiddleCallback::SendImageSectionReset(Vector2i start, Vector2i end)
-//{
-//    // Empty callback since we dont reset visor samples
-//}
-//
-//void PathTracerMiddleCallback::SendImage(const std::vector<Byte> data,
-//                                         PixelFormat pf, size_t offset,
-//                                         Vector2i start, Vector2i end)
-//{
-//    // Entire image should be here
-//    assert(end == resolution);
-//    assert(start == Zero2i);
-//    assert(pf == PixelFormat::RGBA_FLOAT);
-//    
-//    // Convert to Luminance & Calculate Average
-//    const uint32_t* newSampleCounts = reinterpret_cast<const uint32_t*>(data.data() + offset);
-//    const Vector4f* pixels = reinterpret_cast<const Vector4f*>(data.data());
-//    for(size_t i = 0; i < (resolution[0] * resolution[1]); i++)
-//    {
-//        // Incoming Samples
-//        float incLum = Utility::RGBToLuminance(pixels[i]);
-//        uint32_t incSampleCount = newSampleCounts[i];
-//
-//        // Old
-//        float oldLum = lumPixels[i];
-//        uint32_t oldSampleCount = totalSampleCounts[i];
-//
-//        uint32_t newSampleCount = incSampleCount + oldSampleCount;
-//        float newAvg = (oldLum * oldSampleCount) + (incLum * incSampleCount);
-//        newAvg /= static_cast<float>(newSampleCount);
-//
-//        lumPixels[i] = newAvg;
-//        totalSampleCounts[i] = newSampleCount;
-//    }
-//
-//    // Delegate the to the visor for visual feedback
-//    if(callbacks) callbacks->SendImage(std::move(data), pf, offset,
-//                                       start, end);
-//}
-//
-//void PathTracerMiddleCallback::SaveImage(const std::string& baseName, Vector2i
-//                                         pixelId)
-//{
-//
-//    // Generate File Name
-//    std::stringstream pixelIdStr;
-//    pixelIdStr << '['  << std::setw(4) << std::setfill('0') << pixelId[1]
-//               << ", " << std::setw(4) << std::setfill('0') << pixelId[0]
-//               << ']';
-//    std::string path = Utility::PrependToFileInPath(baseName, pixelIdStr.str()) + ".exr";
-//
-//    // Create Directories if not available
-//    Utility::ForceMakeDirectoriesInPath(path);
-//
-//    // Write Image
-//    ImageIOError e = ImageIOInstance().WriteImage(lumPixels,
-//                                                  Vector2ui(resolution[0], resolution[1]),
-//                                                  PixelFormat::R_FLOAT, ImageType::EXR,
-//                                                  path);
-//    if(callbacks && e == ImageIOError::OK)
-//    {
-//        std::string s = fmt::format("Pixel ({:d},{:d}) reference is written as \"{:s}\"",
-//                                    pixelId[0], pixelId[1], path);
-//        callbacks->SendLog(s);
-//    }
-//    else if(callbacks)
-//    {
-//        std::string s = fmt::format("Unable to Save\"{:s}\", ({})", path, e);
-//        callbacks->SendLog(s);
-//    }
-//}
-//
-//void DirectTracerMiddleCallback::SendLog(const std::string s)
-//{
-//    METU_LOG(std::move(s));
-//}
-//
-//void DirectTracerMiddleCallback::SendError(TracerError e)
-//{
-//    METU_ERROR_LOG(static_cast<std::string>(e));
-//}
-//
-//void DirectTracerMiddleCallback::SendImageSectionReset(Vector2i start, Vector2i end)
-//{
-//    end = Vector2i::Min(end, resolution);
-//    Vector2i size = portionEnd - portionStart;
-//
-//    assert(portionStart == start);
-//    assert(portionEnd == end);
-//    
-//    // Zero (in this case infinity) out the pixels
-//    std::for_each(pixelLocations.begin(), pixelLocations.end(),
-//                  [] (Vector4f& pixel)
-//                  {
-//                      pixel = Vector4f(std::numeric_limits<float>::infinity());
-//                  });    
-//}
-//
-//void DirectTracerMiddleCallback::SendImage(const std::vector<Byte> data,
-//                                           PixelFormat pf, size_t offset,
-//                                           Vector2i start, Vector2i end)
-//{
-//    end = Vector2i::Min(end, resolution);
-//    Vector2i size = portionEnd - portionStart;
-//
-//    // Check that segments match
-//    assert(portionStart == start);
-//    assert(portionEnd == end);
-//    // We did set this
-//    assert(pf == PixelFormat::RGBA_FLOAT);
-//
-//    // Directly copy data to pixelLocation buffer;
-//    const Vector4f* pixels = reinterpret_cast<const Vector4f*>(data.data());
-//    int pixelCount = size[0] * size[1];
-//
-//    // Copy that data
-//    std::copy(pixels, pixels + pixelCount,
-//              pixelLocations.begin());
-//
-//}
+        float data1 = newSamples.gPixels[threadId];
+        uint32_t sample1 = newSamples.gSampleCounts[threadId];
+
+        float avgData = (data0 * static_cast<float>(sample0) + 
+                         data1 * static_cast<float>(sample1));
+        uint32_t newSampleCount = sample0 + sample1;
+        
+        avgData /= static_cast<float>(newSampleCount);
+
+        // Make NaN bright to make them easier to find
+        if(isnan(avgData)) avgData = 1e30;
+
+        accumBuffer.gPixels[threadId] = avgData;
+        accumBuffer.gSampleCounts[threadId] = newSampleCount;
+    }
+}
+
+void RefPGTracer::SendPixel() const
+{
+    size_t workCount = (imgMemory.SegmentSize()[0] *
+                        imgMemory.SegmentSize()[1]);
+    // Do Parallel Reduction over the image
+    size_t pixelSize = ImageIOI::FormatToPixelSize(iPixelFormat);
+    float accumPixel;
+    uint32_t totalSamples;
+    ReduceArrayGPU<float, ReduceAdd<float>, cudaMemcpyDeviceToHost>
+    (
+        accumPixel,
+        accumulationBuffer.GMem<float>().gPixels,
+        workCount, 0.0f
+    );
+    ReduceArrayGPU<uint32_t, ReduceAdd<uint32_t>, cudaMemcpyDeviceToHost>
+    (
+        totalSamples,
+        accumulationBuffer.GMem<float>().gSampleCounts,
+        workCount, 0u
+    );
+
+    // Convert Accum Pixel to Requested format
+    std::array<Byte, 16> convertedPixel;
+    switch(iPixelFormat)
+    {
+        case PixelFormat::R_FLOAT: 
+            *reinterpret_cast<float*>(convertedPixel.data()) = accumPixel; break;
+        case PixelFormat::RG_FLOAT:
+            *reinterpret_cast<Vector2f*>(convertedPixel.data()) = Vector2f(accumPixel); break;
+        case PixelFormat::RGB_FLOAT:
+            *reinterpret_cast<Vector3f*>(convertedPixel.data()) = Vector3f(accumPixel); break;
+        case PixelFormat::RGBA_FLOAT:
+            *reinterpret_cast<Vector4f*>(convertedPixel.data()) = Vector4f(Vector3f(accumPixel), 1.0f); break;
+            break;
+        default:
+            
+            METU_ERROR_LOG("RPG Tracer is unable to convert "
+                           "unable to convert to Visor pixel format");
+            if(callbacks) callbacks->SendCrashSignal();
+            return;
+    }
+
+    // Copy data to the vector
+    std::vector<Byte> convertedData(pixelSize + sizeof(uint32_t));
+    std::memcpy(convertedData.data(), convertedPixel.data(), pixelSize);
+    std::memcpy(convertedData.data() + pixelSize,
+                &totalSamples, sizeof(uint32_t));
+
+
+    Vector2i currentPixel2D = LocalPixel1DToPixel2D();
+    if(callbacks) callbacks->SendImage(std::move(convertedData),
+                                       iPixelFormat,
+                                       pixelSize,
+                                       // Only send one pixel
+                                       currentPixel2D,
+                                       currentPixel2D + Vector2i(1));
+}
+
+Vector2i RefPGTracer::LocalPixel1DToPixel2D() const
+{
+    Vector2i segmentSize = iPortionEnd - iPortionStart;
+    Vector2i localPixel2D = Vector2i(currentPixel % segmentSize[0],
+                                     currentPixel / segmentSize[0]);
+    return iPortionStart + localPixel2D;
+}
+
+void RefPGTracer::ResetIterationVariables()
+{
+    doInitCameraCreation = true;
+    currentPixel = 0;
+    currentSampleCount = 0;
+    currentDepth = 0;
+}
 
 ImageIOError RefPGTracer::SaveAndResetAccumImage(const Vector2i& pixelId)
 {
@@ -260,7 +218,6 @@ TracerError RefPGTracer::Initialize()
         }
         workMap.emplace(batchId, workBatchList);
     }
-    return TracerError::OK;
 
     // Allocate a pixel camera
     // (it will be initialized (will be constructed later)   
@@ -305,6 +262,8 @@ TracerError RefPGTracer::SetOptions(const TracerOptionsI& opts)
 
 bool RefPGTracer::Render()
 {
+    if(crashed) return false;
+
     // Check tracer termination conditions
     // Either there is no ray left for iteration or maximum depth is exceeded
     if(currentRayCount == 0 || currentDepth >= options.maximumDepth)
@@ -323,6 +282,7 @@ bool RefPGTracer::Render()
     globalData.rrStart = options.rrStart;
     globalData.directLightMIS = options.directLightMIS;
     globalData.gLightSampler = dLightSampler;
+    globalData.resolution = options.resolution;
 
     // Generate output partitions
     uint32_t totalOutRayCount = 0;
@@ -374,22 +334,39 @@ bool RefPGTracer::Render()
 
 void RefPGTracer::Finalize()
 {
+    if(crashed) return;
+
+    cudaSystem.SyncAllGPUs();
     // Increment Sample count
-    currentSampleCount += options.samplePerIteration * options.samplePerIteration;
+    uint32_t finalizedSampleCount = options.samplePerIteration * options.samplePerIteration;
+    currentSampleCount += finalizedSampleCount;
 
-    // Finalize the path tracer
+    // Finalize the tracing
     // Accumulate the image to the buffer
-    //....
+    const auto& gpu = cudaSystem.BestGPU();
+    // Average the finalized data
+    size_t workCount = imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1];
+    gpu.KC_X(0, cudaStream_t(0), workCount,
+             //
+             KCAccumulateToBuffer,
+             //
+             accumulationBuffer.GMem<float>(),
+             std::as_const(imgMemory).GMem<float>(),
+             static_cast<uint32_t>(workCount));
 
-    // If we calculated enough samples pixel out
-    // Save the image 
+    // Send the img memory as pixel
+    SendPixel();
+
+    // Now we can reset the image
+    imgMemory.Reset(cudaSystem);
+
+    // If we calculated enough samples of this
+    // Save the image & go to the next pixel
     if(currentSampleCount >= options.totalSamplePerPixel)
     {
-        Vector2i pixelId = Vector2i(currentPixel % resolution[0],
-                                    currentPixel / resolution[0]);
-
+        Vector2i pixelId2D = LocalPixel1DToPixel2D();
         ImageIOError e = ImageIOError::OK;
-        if((e = SaveAndResetAccumImage(pixelId)) != ImageIOError::OK)           
+        if((e = SaveAndResetAccumImage(pixelId2D)) != ImageIOError::OK)           
         {
             METU_ERROR_LOG("Tracer, {}", std::string(e));
             if(callbacks) callbacks->SendCrashSignal();
@@ -397,7 +374,8 @@ void RefPGTracer::Finalize()
         currentPixel++;
     }
 
-    uint32_t totalPixels = static_cast<uint32_t>(resolution[0] * resolution[1]);
+    Vector2i segmentSize = iPortionStart - iPortionEnd;
+    uint32_t totalPixels = static_cast<uint32_t>(segmentSize[0] * segmentSize[1]);
     if(currentPixel >= totalPixels && callbacks)
     {
         callbacks->SendLog("Finished All Pixels");
@@ -414,37 +392,35 @@ void RefPGTracer::GenerateWork(int cameraId)
         accumulationBuffer.Reset(cudaSystem);        
         // Reset currents
         currentCamera = cameraId;
-        currentPixel = 0;
-        currentSampleCount = 0;
-        currentDepth = 0;
+        ResetIterationVariables();
     }
 
     // Change pixel if we had enough samples
     if(currentSampleCount >= options.totalSamplePerPixel ||
        doInitCameraCreation)
     {
-        // Get Camera Medium index
-        // Always use current camera's medium
-        // TODO: change this to proper implementation
-        uint16_t gMediumIndex = scene.BaseMediumIndex();
+        doInitCameraCreation = false;
+        
+        // Find world pixel 2D id
+        Vector2i segmentSize = iPortionStart - iPortionEnd;
+        Vector2i localPixel2D = Vector2i(currentPixel % segmentSize[0],
+                                         currentPixel / segmentSize[0]);        
         // Construct a New camera
         cudaSystem.BestGPU().KC_X(0, (cudaStream_t)0, 1,
                                   // Function
                                   KCConstructSingleGPUCameraPixel,
                                   // Args
-                                  dPixelCamera,
-                                  !doInitCameraCreation,
+                                  dPixelCamera,                                  
                                   //
                                   *(dCameras[cameraId]),
-                                  currentPixel,
+                                  iPortionStart + localPixel2D,
                                   resolution);
 
         // Reset sample count for this img
         currentSampleCount = 0;
 
         // Reset the shown image
-        if(callbacks) callbacks->SendImageSectionReset();
-        doInitCameraCreation = false;
+        ResetImage();
     }
 
     // Generate Work for current Camera
@@ -470,19 +446,58 @@ void RefPGTracer::AskParameters()
     if(callbacks) callbacks->SendCurrentParameters(params);
 }
 
+void RefPGTracer::SetImagePixelFormat(PixelFormat pf)
+{
+    // Ignore pixel format change calls since we generate
+    // single channel images
+    // but call pixel format change function anyway (it may change the state of image mem)
+    imgMemory.SetPixelFormat(PixelFormat::R_FLOAT, cudaSystem);
+    accumulationBuffer.SetPixelFormat(PixelFormat::R_FLOAT, cudaSystem);
+
+    // Save the format tho
+    // we will use it to convert single channel image to multi channel image
+    // when we are sending it to Visor
+    iPixelFormat = pf;
+}
+
 void RefPGTracer::ReportionImage(Vector2i start, Vector2i end)
 {
     end = Vector2i::Min(resolution, end);
 
     iPortionStart = start;
     iPortionEnd = end;
+
+    ResetIterationVariables();
+
+    // Reportion the image buffers aswell 
+    imgMemory.Reportion(Zero2i, options.resolution, cudaSystem);
+    accumulationBuffer.Reportion(Zero2i, options.resolution, cudaSystem);
 }
 
 void RefPGTracer::ResizeImage(Vector2i res)
 {
     // Save the resolution
     resolution = res;
+    ResetIterationVariables();
 
-    // Re-init camera etc..
-    // TODO:
+    imgMemory.Resize(options.resolution);
+    accumulationBuffer.Resize(options.resolution);
+}
+
+void RefPGTracer::ResetImage()
+{
+    imgMemory.Reset(cudaSystem);
+    accumulationBuffer.Reset(cudaSystem);
+
+    // Reset currents
+    doInitCameraCreation = true;
+    currentCamera = std::numeric_limits<uint32_t>::max();
+    ResetIterationVariables();
+
+    if(callbacks)
+    {
+        Vector2i start = imgMemory.SegmentOffset();
+        Vector2i end = start + imgMemory.SegmentSize();
+        callbacks->SendImageSectionReset(start, end);
+    }
 }

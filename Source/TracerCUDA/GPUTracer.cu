@@ -644,7 +644,7 @@ void GPUTracer::Finalize()
     Vector2i pixelCount = imgMemory.SegmentSize();
     Vector2i start = imgMemory.SegmentOffset();
     Vector2i end = start + imgMemory.SegmentSize();
-    size_t offset = (static_cast<size_t>(pixelCount[0])* pixelCount[1] *
+    size_t offset = (static_cast<size_t>(pixelCount[0]) * pixelCount[1] *
                      imgMemory.PixelSize());
 
     // Flush Devices and Get the Image

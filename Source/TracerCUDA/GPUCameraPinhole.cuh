@@ -6,10 +6,12 @@
 #include "TypeTraits.h"
 
 #include "RayLib/VisorCamera.h"
+#include "GPUCameraPixel.cuh"
 
 class GPUCameraPinhole final : public GPUCameraI
 {
     private:
+    protected:
         Vector3                 position;
         Vector3                 right;
         Vector3                 up;
@@ -56,13 +58,16 @@ class GPUCameraPinhole final : public GPUCameraI
 
 
         __device__ uint32_t         FindPixelId(const RayReg& r,
-                                               const Vector2i& resolution) const override;
+                                                const Vector2i& resolution) const override;
 
         __device__ bool             CanBeSampled() const override;
         __device__ PrimitiveId      PrimitiveIndex() const override;
 
         __device__ Matrix4x4        VPMatrix() const override;
         __device__ Vector2f         NearFar() const override;
+
+        __device__ GPUCameraPixel   GeneratePixelCamera(const Vector2i& pixelId,
+                                                        const Vector2i& resolution) const override;
 };
 
 class CPUCameraGroupPinhole final : public CPUCameraGroupI
@@ -252,7 +257,8 @@ inline uint32_t GPUCameraPinhole::FindPixelId(const RayReg& r,
     return pixelId;
 }
 
-inline __device__ bool GPUCameraPinhole::CanBeSampled() const
+__device__
+inline bool GPUCameraPinhole::CanBeSampled() const
 {
     return false;
 }
@@ -277,6 +283,31 @@ __device__
 inline Vector2f GPUCameraPinhole::NearFar() const
 {
     return nearFar;
+}
+
+__device__
+inline GPUCameraPixel GPUCameraPinhole::GeneratePixelCamera(const Vector2i& pixelId,
+                                                            const Vector2i& resolution) const
+{
+    // DX DY from stratfied sample
+    Vector2 delta = Vector2(planeSize[0] / static_cast<float>(resolution[0]),
+                            planeSize[1] / static_cast<float>(resolution[1]));
+
+    Vector2 pixelDistance = Vector2(static_cast<float>(pixelId[0]),
+                                    static_cast<float>(pixelId[1])) * delta;
+    Vector3 pixelBottomLeft = bottomLeft + ((pixelDistance[0] * right) +
+                                            (pixelDistance[1] * up));
+
+    return GPUCameraPixel(position,
+                          right,
+                          up,
+                          pixelBottomLeft,
+                          delta,
+                          nearFar,
+                          pixelId,
+                          resolution,
+                          mediumIndex,
+                          boundaryMaterialKey);
 }
 
 inline CPUCameraGroupPinhole::CPUCameraGroupPinhole()

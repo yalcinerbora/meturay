@@ -185,14 +185,14 @@ bool PathTracer::Render()
     // Generate Global Data Struct
     PathTracerGlobalState globalData;
     globalData.gImage = imgMemory.GMem<Vector4>();
-    globalData.lightList = dLights;
+    globalData.gLightList = dLights;
     globalData.totalLightCount = lightCount;
     globalData.mediumList = dMediums;
     globalData.totalMediumCount = mediumCount;
     globalData.nee = options.nextEventEstimation;
     globalData.rrStart = options.rrStart;
     globalData.directLightMIS = options.directLightMIS;
-    globalData.lightSampler = dLightSampler;
+    globalData.gLightSampler = dLightSampler;
 
     // Generate output partitions
     uint32_t totalOutRayCount = 0;

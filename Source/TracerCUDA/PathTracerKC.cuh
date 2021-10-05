@@ -14,9 +14,9 @@ struct PathTracerGlobalState
     // Output Image
     ImageGMem<Vector4>              gImage;
     // Light Related
-    const GPULightI**               lightList;
+    const GPULightI**               gLightList;
     uint32_t                        totalLightCount;
-    const GPUDirectLightSamplerI*   lightSampler;
+    const GPUDirectLightSamplerI*   gLightSampler;
     // Medium Related
     const GPUMediumI**              mediumList;
     uint32_t                        totalMediumCount;
@@ -63,7 +63,7 @@ void PathTracerBoundaryWork(// Output
     bool neeMatch = (!gRenderState.nee);
     if(gRenderState.nee && aux.type == RayType::NEE_RAY)
     {
-        const GPUEndpointI* endPoint = gRenderState.lightList[aux.endPointIndex];
+        const GPUEndpointI* endPoint = gRenderState.gLightList[aux.endPointIndex];
         PrimitiveId neePrimId = endPoint->PrimitiveIndex();
         HitKey neeKey = endPoint->BoundaryMaterial();
 
@@ -270,14 +270,14 @@ void PathTracerComboWork(// Output
     Vector3 lDirection;
     uint32_t lightIndex;
     Vector3f neeReflectance = Zero3;
-    if(gRenderState.lightSampler->SampleLight(matLight,
-                                              lightIndex,
-                                              lDirection,
-                                              lDistance,
-                                              pdfLight,
-                                              // Input
-                                              position,
-                                              rng))
+    if(gRenderState.gLightSampler->SampleLight(matLight,
+                                               lightIndex,
+                                               lDirection,
+                                               lDistance,
+                                               pdfLight,
+                                               // Input
+                                               position,
+                                               rng))
     {
         // Evaluate mat for this direction
         neeReflectance = MGroup::Evaluate(// Input
@@ -296,7 +296,7 @@ void PathTracerComboWork(// Output
     bool launchedMISRay = (gRenderState.directLightMIS &&
                            // Check if light can be sampled (meaning it is not a
                            // dirac delta light (point light spot light etc.)
-                           gRenderState.lightList[lightIndex]->CanBeSampled());
+                           gRenderState.gLightList[lightIndex]->CanBeSampled());
 
     float pdfNEE = pdfLight;
     if(launchedMISRay)
@@ -369,9 +369,9 @@ void PathTracerComboWork(// Output
 
         // Find out the pdf of the light
         float pdfLightM, pdfLightC;
-        gRenderState.lightSampler->Pdf(pdfLightM, pdfLightC,
-                                       lightIndex, position,
-                                       rayMIS.getDirection());
+        gRenderState.gLightSampler->Pdf(pdfLightM, pdfLightC,
+                                        lightIndex, position,
+                                        rayMIS.getDirection());
         // We are subsampling (discretely sampling) a single light 
         // pdf of BxDF should also incorporate this
         pdfMIS *= pdfLightM;
@@ -629,14 +629,14 @@ void PathTracerNEEWork(// Output
     Vector3 lDirection;
     uint32_t lightIndex;
     Vector3f neeReflectance = Zero3;
-    if(gRenderState.lightSampler->SampleLight(matLight,
-                                              lightIndex,
-                                              lDirection,
-                                              lDistance,
-                                              pdfLight,
-                                              // Input
-                                              position,
-                                              rng))
+    if(gRenderState.gLightSampler->SampleLight(matLight,
+                                               lightIndex,
+                                               lDirection,
+                                               lDistance,
+                                               pdfLight,
+                                               // Input
+                                               position,
+                                               rng))
     {
         // Evaluate mat for this direction
         neeReflectance = MGroup::Evaluate(// Input
@@ -655,7 +655,7 @@ void PathTracerNEEWork(// Output
     bool launchedMISRay = (gRenderState.directLightMIS &&
                            // Check if light can be sampled (meaning it is not a
                            // dirac delta light (point light spot light etc.)
-                           gRenderState.lightList[lightIndex]->CanBeSampled());
+                           gRenderState.gLightList[lightIndex]->CanBeSampled());
 
     float pdfNEE = pdfLight;
     if(launchedMISRay)
@@ -774,7 +774,7 @@ void PathTracerMISWork(// Output
     //bool launchedMISRay = (gRenderState.directLightMIS &&
     //                       // Check if light can be sampled (meaning it is not a
     //                       // dirac delta light (point light spot light etc.)
-    //                       gRenderState.lightList[lightIndex]->CanBeSampled());
+    //                       gRenderState.gLightList[lightIndex]->CanBeSampled());
 
     //// Sample Another ray for MIS (from BxDF)
     //float pdfMIS = 0.0f;
@@ -799,9 +799,9 @@ void PathTracerMISWork(// Output
 
     //    // We are subsampling a single light pdf of BxDF also incorporate this
     //    float pdfLightM, pdfLightC;
-    //    gRenderState.lightSampler->Pdf(pdfLightM, pdfLightC,
-    //                                   lightIndex, position,
-    //                                   rayMIS.getDirection());
+    //    gRenderState.gLightSampler->Pdf(pdfLightM, pdfLightC,
+    //                                    lightIndex, position,
+    //                                    rayMIS.getDirection());
 
     //    pdfMIS /= TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLightC);
     //    pdfMIS /= pdfLightM;

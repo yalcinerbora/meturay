@@ -15,5 +15,5 @@ template<class T>
 struct ImageGMemConst
 {
     const T* gPixels;
-    const uint32_t* gSampleCount;
+    const uint32_t* gSampleCounts;
 };

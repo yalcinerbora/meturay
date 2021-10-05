@@ -16,7 +16,7 @@ class GPUEndpointI
         // In order to acquire light visibility
         // Launch a ray using this key
         // if nothing hits Tracer batches the ray with this key
-        HitKey                  boundaryMaterialKey;
+        HitKey                      boundaryMaterialKey;
         // Medium of the endpoint
         // used to initialize rays when generated
         uint16_t                    mediumIndex;

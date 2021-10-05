@@ -79,11 +79,6 @@ namespace VisorConstants
     };
 }
 
-namespace TracerConstants
-{
-    //static constexpr TracerCommonOpts DefaultTracerCommonOptions = {false};
-}
-
 namespace BaseConstants
 {
     static constexpr const char* EMPTY_PRIMITIVE_NAME = "Empty";

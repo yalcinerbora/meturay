@@ -1,27 +1,34 @@
 #pragma once
 
 #include "GPUCameraI.h"
-#include "DeviceMemory.h"
-#include "GPUTransformI.h"
-#include "TypeTraits.h"
-#include "GPUCameraPinhole.cuh"
-
-#include "RayLib/VisorCamera.h"
 
 class GPUCameraPixel final : public GPUCameraI
 {
-    private:
-        const GPUCameraI&       baseCamera;
+    private:        
         // Pixel Location Related
-        int32_t                 pixelId;
+        Vector3                 position;
+        Vector3                 right;
+        Vector3                 up;
+        Vector3                 bottomLeft;
+        Vector2                 planeSize;
+        Vector2                 nearFar;
+
+        Vector2i                pixelId;
         Vector2i                resolution;
 
     protected:
     public:
         // Constructors & Destructor
-        __device__          GPUCameraPixel(const GPUCameraI& baseCamera,
-                                           int32_t pixelId,
-                                           const Vector2i& resolution);
+        __device__          GPUCameraPixel(const Vector3& position,
+                                           const Vector3& right,
+                                           const Vector3& up,
+                                           const Vector3& bottomLeft,
+                                           const Vector2& planeSize,
+                                           const Vector2& nearFar,
+                                           const Vector2i& pixelId,
+                                           const Vector2i& resolution,
+                                           uint16_t mediumId,
+                                           HitKey materialKey);
                             ~GPUCameraPixel() = default;
 
         // Interface
@@ -55,14 +62,29 @@ class GPUCameraPixel final : public GPUCameraI
 
         __device__ Matrix4x4        VPMatrix() const override;
         __device__ Vector2f         NearFar() const override;
+
+        __device__ GPUCameraPixel   GeneratePixelCamera(const Vector2i& pixelId,
+                                                        const Vector2i& resolution) const override;
 };
 
 __device__
-inline GPUCameraPixel::GPUCameraPixel(const GPUCameraI& baseCamera,
-                                      int32_t pixelId,
-                                      const Vector2i& resolution)
-    : GPUCameraI(baseCamera.BoundaryMaterial(), baseCamera.MediumIndex())
-    , baseCamera(baseCamera)
+inline GPUCameraPixel::GPUCameraPixel(const Vector3& position,
+                                      const Vector3& right,
+                                      const Vector3& up,
+                                      const Vector3& bottomLeft,
+                                      const Vector2& planeSize,
+                                      const Vector2& nearFar,
+                                      const Vector2i& pixelId,
+                                      const Vector2i& resolution,
+                                      uint16_t mediumId,
+                                      HitKey materialKey)
+    : GPUCameraI(materialKey, mediumId)
+    , position(position)
+    , right(right)
+    , up(up)
+    , bottomLeft(bottomLeft)
+    , planeSize(planeSize)
+    , nearFar(nearFar)
     , pixelId(pixelId)
     , resolution(resolution)
 {}
@@ -77,8 +99,11 @@ inline void GPUCameraPixel::Sample(// Output
                                    // I-O
                                    RandomGPU& rng) const
 {
-    // TODO: fix this
-    baseCamera.Sample(distance, direction, pdf, sampleLoc, rng);
+    // One
+    direction = sampleLoc - position;
+    distance = direction.Length();
+    direction.NormalizeSelf();
+    pdf = 1.0f;
 }
 
 __device__
@@ -92,53 +117,115 @@ inline void GPUCameraPixel::GenerateRay(// Output
                                         // Options
                                         bool antiAliasOn) const
 {
-    
+    // DX DY from stratfied sample
+    Vector2 delta = Vector2(planeSize[0] / static_cast<float>(sampleMax[0]),
+                            planeSize[1] / static_cast<float>(sampleMax[1]));
+
+    // Create random location over sample rectangle
+    Vector2 randomOffset = (antiAliasOn)
+                            ? Vector2(GPUDistribution::Uniform<float>(rng),
+                                      GPUDistribution::Uniform<float>(rng))
+                            : Vector2(0.5f);
+
+    Vector2 sampleDistance = Vector2(static_cast<float>(sampleId[0]),
+                                     static_cast<float>(sampleId[1])) * delta;
+    sampleDistance += (randomOffset * delta);
+    Vector3 samplePoint = bottomLeft + ((sampleDistance[0] * right) +
+                                        (sampleDistance[1] * up));
+    Vector3 rayDir = (samplePoint - position).Normalize();
+
+    // Initialize Ray
+    ray.ray = RayF(rayDir, position);
+    ray.tMin = nearFar[0];
+    ray.tMax = nearFar[1];
 }
 
 __device__
 inline float GPUCameraPixel::Pdf(const Vector3& worldDir,
                                  const Vector3& worldPos) const
 {
-    // TODO: Change this
-    return baseCamera.Pdf(worldDir, worldPos);
+    return 0.0f;
 }
 
 __device__
 inline uint32_t GPUCameraPixel::FindPixelId(const RayReg& r,
                                             const Vector2i& resolution) const
 {
-    uint32_t pixelId = baseCamera.FindPixelId(r, resolution);
-    // TODO change this
+   Vector3f normal = Cross(up, right);
+   Vector3 planePoint = r.ray.AdvancedPos(r.tMax);
+   Vector3 p = planePoint - position;
+
+    Matrix3x3 invRot(right[0], right[1], right[2],
+                     up[0], up[1], up[2],
+                     normal[0], normal[1], normal[2]);
+    Vector3 localP = invRot * p;
+    // Convert to Pixelated System
+    Vector2i coords = Vector2i((Vector2(localP) / planeSize).Floor());
+
+    uint32_t pixelId = coords[1] * resolution[0] + coords[0];
     return pixelId;
 }
 
 inline __device__ bool GPUCameraPixel::CanBeSampled() const
 {
-    return baseCamera.CanBeSampled();
+    return false;
 }
 
 __device__
 inline PrimitiveId GPUCameraPixel::PrimitiveIndex() const
 {
-    return baseCamera.PrimitiveIndex();
+    return 0;
 }
 
 __device__ 
 inline Matrix4x4 GPUCameraPixel::VPMatrix() const
 {
-    return baseCamera.VPMatrix();
+    Vector3 blDir = (bottomLeft - position).Normalize();
+    Vector3 bottomRight = bottomLeft + planeSize[0] * right;
+    Vector3 brDir = (bottomRight - position).Normalize();
+    float cosFovX = brDir.Dot(blDir);
+    float fovX = acos(cosFovX);
+
+    Matrix4x4 p = TransformGen::Perspective(fovX, 1.0f, nearFar[0], nearFar[1]);
+    Matrix3x3 rotMatrix;
+    TransformGen::Space(rotMatrix, right, up, Cross(right, up));
+    return p * ToMatrix4x4(rotMatrix);
 }
 
 __device__ 
 inline Vector2f GPUCameraPixel::NearFar() const
 {
-    return baseCamera.NearFar();
+    return nearFar;
+}
+
+__device__ 
+inline GPUCameraPixel GPUCameraPixel::GeneratePixelCamera(const Vector2i& pixelId,
+                                                          const Vector2i& resolution) const
+{
+    // DX DY from stratfied sample
+    Vector2 delta = Vector2(planeSize[0] / static_cast<float>(resolution[0]),
+                            planeSize[1] / static_cast<float>(resolution[1]));
+
+    Vector2 pixelDistance = Vector2(static_cast<float>(pixelId[0]),
+                                    static_cast<float>(pixelId[1])) * delta;
+    Vector3 pixelBottomLeft = bottomLeft + ((pixelDistance[0] * right) +
+                                            (pixelDistance[1] * up));
+
+    return GPUCameraPixel(position,
+                          right,
+                          up,
+                          pixelBottomLeft,
+                          delta,
+                          nearFar,
+                          pixelId,
+                          resolution,
+                          mediumIndex,
+                          boundaryMaterialKey);
 }
 
 __global__
 void KCConstructSingleGPUCameraPixel(GPUCameraPixel* gCameraLocations,
-                                     bool deletePrevious,
                                      //
                                      const GPUCameraI& baseCam,
-                                     int32_t pixelIndex,
+                                     Vector2i pixelIndex,
                                      Vector2i resolution);
