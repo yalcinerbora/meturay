@@ -21,6 +21,8 @@
 
 #include <iomanip>
 
+#include "TracerDebug.h"
+
 __global__
 void KCAccumulateToBuffer(ImageGMem<float> accumBuffer,
                           ImageGMemConst<float> newSamples,
@@ -58,19 +60,32 @@ void RefPGTracer::SendPixel() const
     size_t pixelSize = ImageIOI::FormatToPixelSize(iPixelFormat);
     float accumPixel;
     uint32_t totalSamples;
+    CUDA_CHECK(cudaSetDevice(cudaSystem.BestGPU().DeviceId()));
+
+    // DEBUG
+    Vector2i cp = GlobalPixel2D();
+    if(cp[0] == 6 && cp[1] == 4)
+    {
+        Debug::DumpMemToFile("samples", imgMemory.GMem<float>().gSampleCounts,
+                             workCount);
+        METU_LOG("Dumped File!!!");
+    }
+
     ReduceArrayGPU<float, ReduceAdd<float>, cudaMemcpyDeviceToHost>
     (
         accumPixel,
-        accumulationBuffer.GMem<float>().gPixels,
+        imgMemory.GMem<float>().gPixels,
         workCount, 0.0f
     );
     ReduceArrayGPU<uint32_t, ReduceAdd<uint32_t>, cudaMemcpyDeviceToHost>
     (
         totalSamples,
-        accumulationBuffer.GMem<float>().gSampleCounts,
+        imgMemory.GMem<float>().gSampleCounts,
         workCount, 0u
     );
-
+    CUDA_CHECK(cudaStreamSynchronize((cudaStream_t)0));
+    //CUDA_CHECK(cudaDeviceSynchronize());
+    METU_LOG("{:f}, {:d}", accumPixel, totalSamples);
     // Convert Accum Pixel to Requested format
     std::array<Byte, 16> convertedPixel;
     switch(iPixelFormat)
@@ -99,7 +114,7 @@ void RefPGTracer::SendPixel() const
                 &totalSamples, sizeof(uint32_t));
 
 
-    Vector2i currentPixel2D = LocalPixel1DToPixel2D();
+    Vector2i currentPixel2D = GlobalPixel2D();
     if(callbacks) callbacks->SendImage(std::move(convertedData),
                                        iPixelFormat,
                                        pixelSize,
@@ -108,7 +123,7 @@ void RefPGTracer::SendPixel() const
                                        currentPixel2D + Vector2i(1));
 }
 
-Vector2i RefPGTracer::LocalPixel1DToPixel2D() const
+Vector2i RefPGTracer::GlobalPixel2D() const
 {
     Vector2i segmentSize = iPortionEnd - iPortionStart;
     Vector2i localPixel2D = Vector2i(currentPixel % segmentSize[0],
@@ -373,12 +388,13 @@ void RefPGTracer::Finalize()
     // Save the image & go to the next pixel
     if(currentSampleCount >= options.totalSamplePerPixel)
     {
-        Vector2i pixelId2D = LocalPixel1DToPixel2D();
+        Vector2i pixelId2D = GlobalPixel2D();
         ImageIOError e = ImageIOError::OK;
         if((e = SaveAndResetAccumImage(pixelId2D)) != ImageIOError::OK)
         {
             METU_ERROR_LOG("Tracer, {}", std::string(e));
             if(callbacks) callbacks->SendCrashSignal();
+            crashed = true;
         }
         currentPixel++;
     }
@@ -394,14 +410,16 @@ void RefPGTracer::Finalize()
 
 void RefPGTracer::GenerateWork(int cameraId)
 {
+    if(crashed) return;
     // Check if the camera is changed
     if(currentCamera != cameraId)
     {
-        // Reset the accum buffer
-        accumulationBuffer.Reset(cudaSystem);        
         // Reset currents
         currentCamera = cameraId;
         ResetIterationVariables();
+
+        // Reset the shown image
+        if(callbacks) callbacks->SendImageSectionReset(iPortionStart, iPortionEnd);
     }
 
     // Change pixel if we had enough samples
@@ -410,10 +428,11 @@ void RefPGTracer::GenerateWork(int cameraId)
     {
         doInitCameraCreation = false;
         
+        // Reset the accum buffer
+        accumulationBuffer.Reset(cudaSystem);
+
         // Find world pixel 2D id
-        Vector2i segmentSize = iPortionStart - iPortionEnd;
-        Vector2i localPixel2D = Vector2i(currentPixel % segmentSize[0],
-                                         currentPixel / segmentSize[0]);        
+        Vector2i pixelId = GlobalPixel2D();                                        
         // Construct a New camera
         cudaSystem.BestGPU().KC_X(0, (cudaStream_t)0, 1,
                                   // Function
@@ -422,17 +441,11 @@ void RefPGTracer::GenerateWork(int cameraId)
                                   dPixelCamera,                                  
                                   //
                                   *(dCameras[cameraId]),
-                                  iPortionStart + localPixel2D,
+                                  pixelId,
                                   resolution);
 
         // Reset sample count for this img
         currentSampleCount = 0;
-
-        // Reset the shown image
-        if(callbacks)
-        {
-            callbacks->SendImageSectionReset(iPortionStart, iPortionEnd);
-        }
     }
 
     // Generate Work for current Camera
@@ -505,4 +518,6 @@ void RefPGTracer::ResetImage()
     doInitCameraCreation = true;
     currentCamera = std::numeric_limits<uint32_t>::max();
     ResetIterationVariables();
+    // Reset the shown image
+    if(callbacks) callbacks->SendImageSectionReset(iPortionStart, iPortionEnd);
 }

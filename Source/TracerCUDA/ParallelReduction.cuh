@@ -169,7 +169,7 @@ __host__ void ReduceArrayGPU(Type& result,
         inData = dRead;
     } while(dataSize > 1);
 
-    // Just get the data from gpu (first element at dRead
+    // Just get the data from gpu (first element at dRead)
     CUDA_CHECK(cudaMemcpyAsync(&result, dRead, sizeof(Type), cpyKind, stream));
 }
 
@@ -208,7 +208,7 @@ __host__ void ReduceTextureGPU(Type& result,
                             identityElement,
                             stream);
     CUDA_KERNEL_CHECK();
-    // Just get the data from gpu (first element at dRead
+    // Just get the data from gpu (first element at dRead)
     CUDA_CHECK(cudaMemcpyAsync(&result, dReduceBuffer, sizeof(Type), cpyKind, stream));
 }
 

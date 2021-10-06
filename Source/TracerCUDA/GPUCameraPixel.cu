@@ -13,6 +13,7 @@ void KCConstructSingleGPUCameraPixel(GPUCameraPixel* gCameraLocations,
 
     GPUCameraPixel pCam = baseCam.GeneratePixelCamera(pixelIndex,
                                                       resolution);
+
     // TODO: WTF? this does not copy vptr
     //*gCameraLocations = pCam;
     // But this does?

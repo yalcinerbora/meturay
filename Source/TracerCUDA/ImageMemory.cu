@@ -78,7 +78,7 @@ void KCResetSamples(ImageGMem<T> mem, size_t totalPixelCount)
         threadId += (blockDim.x * gridDim.x))
     {
         mem.gSampleCounts[threadId] = 0;
-        mem.gPixels[threadId] = Zero4f;        
+        mem.gPixels[threadId] = Zero4f;
     }
 }
 
@@ -149,7 +149,7 @@ void ImageMemory::Reset(const CudaSystem& system)
     if(pixelCount != 0)
     {
         // Pixel Count is relatively small single GPU should handle it
-        const CudaGPU& gpu = system.BestGPU(); //*(system.GPUList().begin());
+        //const CudaGPU& gpu = system.BestGPU();
         //// TODO: Do generic image handling
         //gpu.GridStrideKC_X(0, (cudaStream_t)0,
         //                   pixelCount,

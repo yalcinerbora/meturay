@@ -298,6 +298,14 @@ inline GPUCameraPixel GPUCameraPinhole::GeneratePixelCamera(const Vector2i& pixe
     Vector3 pixelBottomLeft = bottomLeft + ((pixelDistance[0] * right) +
                                             (pixelDistance[1] * up));
 
+    printf("Generated Pix Cam:\n"
+           "PBL   : %f %f %f\n"
+           "Plane : %f %f\n"
+           "P     : [%d, %d]\n",
+           pixelBottomLeft[0], pixelBottomLeft[1], pixelBottomLeft[2],
+           delta[0], delta[1],
+           pixelId[0], pixelId[1]);
+
     return GPUCameraPixel(position,
                           right,
                           up,

@@ -183,7 +183,7 @@ void GenerateCameraRaysGPU(// Output
                  sampleIdLinear);
 
         // Initialize Samples
-        ImageAddSample(imgMem, pixelIdLinear, 1);
+        //ImageAddSample(imgMem, pixelIdLinear, 1);
     }
 }
 

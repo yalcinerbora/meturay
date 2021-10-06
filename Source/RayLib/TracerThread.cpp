@@ -98,10 +98,14 @@ void TracerThread::LoopWork()
             return;
         }
         // Reset the Image aswell
+        Vector2i newRes, newStart, newEnd;
+        resolution.CheckChanged(newRes);
+        imgPortionStart.CheckChanged(newStart);
+        imgPortionEnd.CheckChanged(newEnd);
+
         tracer->SetImagePixelFormat(PixelFormat::RGBA_FLOAT);
-        tracer->ResizeImage(resolution.Get());
-        tracer->ReportionImage(imgPortionStart.Get(),
-                               imgPortionEnd.Get());
+        tracer->ResizeImage(newRes);
+        tracer->ReportionImage(newStart, newEnd);
 
         imageAlreadyChanged = true;
     }
@@ -113,7 +117,7 @@ void TracerThread::LoopWork()
     Vector2i newRes;
     if(!imageAlreadyChanged && resolution.CheckChanged(newRes))
     {
-        tracer->ResizeImage(resolution.Get());
+        tracer->ResizeImage(newRes);
     }
     Vector2i newStart;
     Vector2i newEnd;

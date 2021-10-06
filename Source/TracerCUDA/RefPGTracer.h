@@ -157,7 +157,7 @@ class RefPGTracer : public RayTracer
 
         // Misc Methods
         void                            SendPixel() const;
-        Vector2i                        LocalPixel1DToPixel2D() const;
+        Vector2i                        GlobalPixel2D() const;
         void                            ResetIterationVariables();
         ImageIOError                    SaveAndResetAccumImage(const Vector2i& pixelId);
 
