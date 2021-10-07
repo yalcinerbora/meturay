@@ -7,6 +7,7 @@
 template <class AuxStruct, class AuxInitFunctor>
 void RayTracer::GenerateRays(uint32_t sceneCamId, int32_t sampleCount,
                              const AuxInitFunctor& initFunctor,
+                             bool incSampleCount,
                              bool antiAliasOn)
 {
     int32_t sampleCountSqr = sampleCount * sampleCount;
@@ -82,6 +83,7 @@ void RayTracer::GenerateRays(uint32_t sceneCamId, int32_t sampleCount,
             // Functor to initialize auxiliary base data
             initFunctor,
             // Options
+            incSampleCount,
             antiAliasOn
         );
 
@@ -99,6 +101,7 @@ void RayTracer::GenerateRays(uint32_t sceneCamId, int32_t sampleCount,
 template <class AuxStruct, class AuxInitFunctor>
 void RayTracer::GenerateRays(const GPUCameraI& dCamera, int32_t sampleCount,
                              const AuxInitFunctor& initFunctor,
+                             bool incSampleCount,
                              bool antiAliasOn)
 {
     // TODO: shouldn't have copy pasted this code but
@@ -176,6 +179,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera, int32_t sampleCount,
             // Functor to initialize auxiliary base data
             initFunctor,
             // Options
+            incSampleCount,
             antiAliasOn
         );
 
@@ -193,6 +197,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera, int32_t sampleCount,
 template <class AuxStruct, class AuxInitFunctor>
 void RayTracer::GenerateRays(const VisorCamera& cam, int32_t sampleCount,                             
                              const AuxInitFunctor& initFunctor,
+                             bool incSampleCount,
                              bool antiAliasOn)
 {
     // Visor Camera is GUI represented camera
@@ -271,6 +276,7 @@ void RayTracer::GenerateRays(const VisorCamera& cam, int32_t sampleCount,
             // Functor to initialize auxiliary base data
             initFunctor,
             // Options
+            incSampleCount,
             antiAliasOn
         );
         // Adjust for next call

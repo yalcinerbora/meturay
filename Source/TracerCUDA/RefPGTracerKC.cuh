@@ -48,10 +48,28 @@ uint32_t CalculateSphericalPixelId(const Vector3& dir,
     // phi range [0, pi]
     float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);
 
+    // Check for numeric unstaibility (just clamp the data)
+    u = HybridFuncs::Clamp(u, 0.0f, 1.0f - MathConstants::Epsilon);
+    v = HybridFuncs::Clamp(v, 0.0f, 1.0f - MathConstants::Epsilon);    
+    assert(u >= 0.0f && u < 1.0f);
+    assert(v >= 0.0f && v < 1.0f);
+
     Vector2i pixelId2D = Vector2i(u * resolution[0],
                                   v * resolution[1]);
-
-    return pixelId2D[1] * resolution[0] + pixelId2D[0];
+    uint32_t pixel1D = pixelId2D[1] * resolution[0] + pixelId2D[0]; 
+    
+    if(pixel1D >= resolution[0] * resolution[1])
+    {
+        printf("pixel out of range :\n"
+               "uv   : [%f, %f]\n"
+               "pix  : [%d, %d]\n"
+               "pix1D: %u\n",
+               u, v,
+               pixelId2D[0], pixelId2D[1], 
+               pixel1D);
+    }
+    
+    return pixel1D;
 }
 
 template <class MGroup>
@@ -96,7 +114,9 @@ void RPGTracerBoundaryWork(// Output
         if(!gLocalState.emptyPrimitive)
             neeMatch &= (primId == neePrimId);
     }
-    if(neeMatch || aux.type == RayType::SPECULAR_PATH_RAY)
+    if(neeMatch || 
+       (aux.depth == 2 && aux.type == RayType::PATH_RAY) ||
+       aux.type == RayType::SPECULAR_PATH_RAY)
     {
         const RayF& r = ray.ray;
         HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
@@ -212,12 +232,11 @@ void RPGTracerPathWork(// Output
 
         Vector3f total = emission * radianceFactor;
         // Output image
-        auto& img = gRenderState.gImage;
-
         // Only accum for non-camera rays
         if(aux.type != RayType::CAMERA_RAY)
         {
             float luminance = Utility::RGBToLuminance(total);
+            auto& img = gRenderState.gImage;
             ImageAccumulatePixel(img, aux.pixelIndex, luminance);
         }       
     }
@@ -270,8 +289,12 @@ void RPGTracerPathWork(// Output
 
         // Chane pixel index upcoming paths
         if(aux.type == RayType::CAMERA_RAY)
-            auxOut.pixelIndex = CalculateSphericalPixelId(rayPath.getDirection(), 
+        {
+            auxOut.pixelIndex = CalculateSphericalPixelId(rayPath.getDirection(),
                                                           gRenderState.resolution);
+            auto& img = gRenderState.gImage;
+            ImageAddSample(img, auxOut.pixelIndex, 1);
+        }
 
         auxOut.mediumIndex = static_cast<uint16_t>(outM->GlobalIndex());
         auxOut.radianceFactor = pathRadianceFactor;
@@ -289,7 +312,7 @@ void RPGTracerPathWork(// Output
     // Check if nee is requested
     if(isSpecularMat && maxOutRay == 1)
         return;
-    else if(isSpecularMat)
+    else if(isSpecularMat || (aux.type == RayType::CAMERA_RAY))
     {
         // Write invalid rays then return
         InvalidRayWrite(NEE_RAY_INDEX);
@@ -369,12 +392,6 @@ void RPGTracerPathWork(// Output
         rayOut.Update(gOutRays, NEE_RAY_INDEX);
 
         RayAuxPath auxOut = aux;
-
-        // Chane pixel index upcoming paths
-        if(aux.type == RayType::CAMERA_RAY)
-            auxOut.pixelIndex = CalculateSphericalPixelId(rayPath.getDirection(), 
-                                                          gRenderState.resolution);
-
         auxOut.radianceFactor = neeRadianceFactor;
         auxOut.endPointIndex = lightIndex;
         auxOut.type = RayType::NEE_RAY;
@@ -438,12 +455,6 @@ void RPGTracerPathWork(// Output
 
         // Write Aux
         RayAuxPath auxOut = aux;
-
-        // Chane pixel index upcoming paths
-        if(aux.type == RayType::CAMERA_RAY)
-            auxOut.pixelIndex = CalculateSphericalPixelId(rayPath.getDirection(),
-                                                          gRenderState.resolution);
-
         auxOut.mediumIndex = static_cast<uint16_t>(outMMIS->GlobalIndex());
         auxOut.radianceFactor = misRadianceFactor;
         auxOut.endPointIndex = lightIndex;

@@ -42,7 +42,9 @@ void KCAccumulateToBuffer(ImageGMem<float> accumBuffer,
                          data1 * static_cast<float>(sample1));
         uint32_t newSampleCount = sample0 + sample1;
         
-        avgData /= static_cast<float>(newSampleCount);
+        avgData = (newSampleCount == 0) 
+                    ? 0.0f
+                    : avgData / static_cast<float>(newSampleCount);
 
         // Make NaN bright to make them easier to find
         if(isnan(avgData)) avgData = 1e30;
@@ -54,23 +56,24 @@ void KCAccumulateToBuffer(ImageGMem<float> accumBuffer,
 
 void RefPGTracer::SendPixel() const
 {
-    size_t workCount = (imgMemory.SegmentSize()[0] *
-                        imgMemory.SegmentSize()[1]);
+    const Vector2i currentPixel2D = GlobalPixel2D();
+    const size_t workCount = (imgMemory.SegmentSize()[0] *
+                              imgMemory.SegmentSize()[1]);
     // Do Parallel Reduction over the image
     size_t pixelSize = ImageIOI::FormatToPixelSize(iPixelFormat);
     float accumPixel;
     uint32_t totalSamples;
-    CUDA_CHECK(cudaSetDevice(cudaSystem.BestGPU().DeviceId()));
-
+    
     // DEBUG
-    Vector2i cp = GlobalPixel2D();
-    if(cp[0] == 6 && cp[1] == 4)
+    if(currentPixel2D[0] == 6 && currentPixel2D[1] == 4)
     {
         Debug::DumpMemToFile("samples", imgMemory.GMem<float>().gSampleCounts,
                              workCount);
         METU_LOG("Dumped File!!!");
     }
 
+    // Reduction Kernels
+    CUDA_CHECK(cudaSetDevice(cudaSystem.BestGPU().DeviceId()));
     ReduceArrayGPU<float, ReduceAdd<float>, cudaMemcpyDeviceToHost>
     (
         accumPixel,
@@ -84,8 +87,10 @@ void RefPGTracer::SendPixel() const
         workCount, 0u
     );
     CUDA_CHECK(cudaStreamSynchronize((cudaStream_t)0));
-    //CUDA_CHECK(cudaDeviceSynchronize());
-    METU_LOG("{:f}, {:d}", accumPixel, totalSamples);
+
+    METU_LOG("[{:d}, {:d}]   {:f}, {:d}                  ", 
+             currentPixel2D[0], currentPixel2D[1],
+             accumPixel, totalSamples);
     // Convert Accum Pixel to Requested format
     std::array<Byte, 16> convertedPixel;
     switch(iPixelFormat)
@@ -113,8 +118,6 @@ void RefPGTracer::SendPixel() const
     std::memcpy(convertedData.data() + pixelSize,
                 &totalSamples, sizeof(uint32_t));
 
-
-    Vector2i currentPixel2D = GlobalPixel2D();
     if(callbacks) callbacks->SendImage(std::move(convertedData),
                                        iPixelFormat,
                                        pixelSize,
@@ -450,7 +453,8 @@ void RefPGTracer::GenerateWork(int cameraId)
 
     // Generate Work for current Camera
     GenerateRays<RayAuxPath, RayAuxInitPath>(*dPixelCamera, options.samplePerIteration,
-                                             RayAuxInitPath(InitialPathAux));
+                                             RayAuxInitPath(InitialPathAux), 
+                                             false);
     currentDepth = 0;
 }
 

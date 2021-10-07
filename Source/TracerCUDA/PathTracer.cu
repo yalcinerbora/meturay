@@ -257,20 +257,23 @@ void PathTracer::GenerateWork(int cameraId)
 
     GenerateRays<RayAuxPath, RayAuxInitPath>(cameraId,
                                              options.sampleCount,
-                                             RayAuxInitPath(InitialPathAux));
+                                             RayAuxInitPath(InitialPathAux),
+                                             true);
     currentDepth = 0;
 }
 
 void PathTracer::GenerateWork(const VisorCamera& cam)
 {
     GenerateRays<RayAuxPath, RayAuxInitPath>(cam, options.sampleCount,
-                                             RayAuxInitPath(InitialPathAux));
+                                             RayAuxInitPath(InitialPathAux),
+                                             true);
     currentDepth = 0;
 }
 
 void PathTracer::GenerateWork(const GPUCameraI& dCam)
 {
     GenerateRays<RayAuxPath, RayAuxInitPath>(dCam, options.sampleCount,
-                                             RayAuxInitPath(InitialPathAux));
+                                             RayAuxInitPath(InitialPathAux),
+                                             true);
     currentDepth = 0;
 }

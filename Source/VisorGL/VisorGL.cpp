@@ -41,7 +41,7 @@ void VisorGL::ReallocImages()
     glDeleteTextures(1, &sampleCountTexture);
     glGenTextures(1, &sampleCountTexture);
     glBindTexture(GL_TEXTURE_2D, sampleCountTexture);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32I,
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI,
                    imageSize[0], imageSize[1]);
     // Buffer input texture
     glDeleteTextures(1, &bufferTexture);
@@ -53,7 +53,7 @@ void VisorGL::ReallocImages()
     glDeleteTextures(1, &sampleTexture);
     glGenTextures(1, &sampleTexture);
     glBindTexture(GL_TEXTURE_2D, sampleTexture);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32I,
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI,
                    imageSize[0], imageSize[1]);
     // SDR Texture
     glDeleteTextures(1, &sdrTexture);
@@ -81,12 +81,23 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
         case VisorGLCommand::RESET_IMAGE:
         {
             // Just clear the sample count to zero
-            const GLuint clearData = 0;
+            const GLuint clearDataInt = 0;
+            const Vector4f clearDataFloat = Vector4f(0.0f);
             glBindTexture(GL_TEXTURE_2D, sampleCountTexture);
             glClearTexSubImage(sampleCountTexture, 0,
                                c.start[0], c.start[1], 0,
                                inSize[0], inSize[1], 1,
-                               GL_RED_INTEGER, GL_UNSIGNED_INT, &clearData);
+                               GL_RED_INTEGER, GL_UNSIGNED_INT, &clearDataInt);
+            glClearTexSubImage(outputTextures[0], 0,
+                               c.start[0], c.start[1], 0,
+                               inSize[0], inSize[1], 1,
+                               PixelFormatToGL(c.format),
+                               GL_FLOAT, &clearDataFloat);
+            glClearTexSubImage(outputTextures[1], 0,
+                               c.start[0], c.start[1], 0,
+                               inSize[0], inSize[1], 1,
+                               PixelFormatToGL(c.format),
+                               GL_FLOAT, &clearDataFloat);
             break;
         }
         case VisorGLCommand::SET_PORTION:
@@ -149,11 +160,12 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
         case VisorGLCommand::SAVE_IMAGE:
         {
             // TODO: load as 8-bit color (but alignment trolls i think heap gets corrupted)
-            std::vector<Vector4uc> pixels(imageSize[0] * imageSize[1]);
+            std::vector<Vector3uc> pixels(imageSize[0] * imageSize[1]);
             GLuint readTexture = sdrTexture;
+            // Thightly pack pixels for reading
             glPixelStorei(GL_PACK_ALIGNMENT, 1);
             glBindTexture(GL_TEXTURE_2D, readTexture);
-            glGetnTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+            glGetnTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE,
                            static_cast<GLsizei>(pixels.size() * sizeof(Vector4uc)),
                            pixels.data());
 
@@ -161,7 +173,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             const ImageIOI& io = ImageIOInstance();
             if((e = io.WriteImage(pixels,
                                   Vector2ui(imageSize[0], imageSize[1]),
-                                  PixelFormat::RGBA8_UNORM, ImageType::PNG,
+                                  PixelFormat::RGB8_UNORM, ImageType::PNG,
                                   "imgOut.png")) != ImageIOError::OK)
             {
                 METU_ERROR_LOG(static_cast<std::string>(e));
@@ -170,19 +182,19 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
         }
         case VisorGLCommand::SAVE_IMAGE_HDR:
         {   
-            std::vector<Vector4f> pixels(imageSize[0] * imageSize[1]);
+            std::vector<Vector3f> pixels(imageSize[0] * imageSize[1]);
             GLuint readTexture = outputTextures[currentIndex];            
             glBindTexture(GL_TEXTURE_2D, readTexture);
-            //// Thightly pack pixels for reading
-            //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT,
+            // Thightly pack pixels for reading
+            glPixelStorei(GL_PACK_ALIGNMENT, 1);
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT,
                           pixels.data());            
 
             ImageIOError e = ImageIOError::OK;
             const ImageIOI& io = ImageIOInstance();
             if((e = io.WriteImage(pixels,
                                   Vector2ui(imageSize[0], imageSize[1]),
-                                  PixelFormat::RGBA_FLOAT, ImageType::EXR,
+                                  PixelFormat::RGB_FLOAT, ImageType::EXR,
                                   "imgOut.exr")) != ImageIOError::OK)
             {
                 METU_ERROR_LOG(static_cast<std::string>(e));
@@ -321,7 +333,7 @@ void VisorGL::Render()
 
     // Do Tone Map
     // Only do tone map if HDR image is modified
-    if(imageModified)
+    //if(imageModified)
     {
         ToneMapOptions tmOpts;
         if(!vOpts.enableTMO)

@@ -228,7 +228,7 @@ void DirectTracer::GenerateWork(int cameraId)
     GenerateRays<RayAuxBasic, RayAuxInitBasic>(cameraId,
                                                options.sampleCount,
                                                RayAuxInitBasic(InitialBasicAux),
-                                               antiAlias);
+                                               true, antiAlias);
 }
 
 void DirectTracer::GenerateWork(const VisorCamera& c)
@@ -239,7 +239,7 @@ void DirectTracer::GenerateWork(const VisorCamera& c)
     bool antiAlias = (options.renderType == RenderType::RENDER_FURNACE) ? true : false;
     GenerateRays<RayAuxBasic, RayAuxInitBasic>(c, options.sampleCount,
                                                RayAuxInitBasic(InitialBasicAux),
-                                               antiAlias);
+                                               true, antiAlias);
 }
 
 void DirectTracer::GenerateWork(const GPUCameraI& dCam)
@@ -252,5 +252,5 @@ void DirectTracer::GenerateWork(const GPUCameraI& dCam)
     GenerateRays<RayAuxBasic, RayAuxInitBasic>(dCam,
                                                options.sampleCount,
                                                RayAuxInitBasic(InitialBasicAux),
-                                               antiAlias);
+                                               true, antiAlias);
 }

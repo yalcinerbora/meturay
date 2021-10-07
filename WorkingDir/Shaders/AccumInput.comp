@@ -15,7 +15,7 @@
 
 // Defines
 #define I_OUT_COLOR layout(binding = 0) restrict writeonly
-#define I_SAMPLE layout(r32i, binding = 1) restrict
+#define I_SAMPLE layout(r32ui, binding = 1) restrict
 
 #define U_RES layout(location = 0)
 #define U_START layout(location = 1)
@@ -27,11 +27,11 @@
 
 // Images
 uniform I_OUT_COLOR image2D iColor;
-uniform I_SAMPLE iimage2D iSample;
+uniform I_SAMPLE uimage2D iSample;
 
 // Textures
 uniform T_IN_COLOR sampler2D tInColor;
-uniform T_IN_SAMPLE isampler2D tInSample;
+uniform T_IN_SAMPLE usampler2D tInSample;
 uniform T_IN_BUFFER sampler2D tInBuffer;
 
 // Uniforms
@@ -60,18 +60,21 @@ void main(void)
 	{
 		// We are at pixel update range
 		// Do update
-		int sampleCount = imageLoad(iSample, pixIdOut).x;
+		uint sampleCount = imageLoad(iSample, pixIdOut).x;
 		// Read the requested from
 		vec4 bufferIn = texelFetch(tInBuffer, pixIdIn, 0);
-		int sampleIn = texelFetch(tInSample, pixIdIn, 0).x;
+		uint sampleIn = texelFetch(tInSample, pixIdIn, 0).x;
 		// Calculate
-		int totalSamples = sampleCount + sampleIn;
-		if(sampleIn == 0)
-			colorOut = colorIn;
-		else
-			colorOut = (sampleCount * colorIn + bufferIn * 1) / totalSamples;
-		// Write
-		imageStore(iSample, pixIdOut, ivec4(totalSamples));
+		uint totalSamples = sampleCount + sampleIn;
+		
+		if(totalSamples != 0)
+		{
+			colorOut = (sampleCount * colorIn + 
+						 sampleIn   *  bufferIn) / totalSamples;
+
+			// Set new sample count
+			imageStore(iSample, pixIdOut, ivec4(totalSamples));
+		}		
 	}
 	// Copy
 	imageStore(iColor, pixIdOut, colorOut);

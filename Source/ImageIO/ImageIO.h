@@ -98,11 +98,10 @@ void ImageIO::ConvertForEXR(Imath::half* toData,
         const T* inPixel = fromData + inIndex * channelCount;
         Imath::half* outPixel = toData + outIndex * channelCount;
 
+        // Use = operator to convert from half to float
         for(int i = 0; i < channelCount; i++)
         {
-            // TODO: ignore alpha
-            if(i == 3) outPixel[i] = 1.0f;
-            else outPixel[i] = inPixel[i];            
+            outPixel[i] = inPixel[i];
         }
     }
 

@@ -40,6 +40,7 @@ void KCGenerateCameraRaysCPU(// Output
                              // Functor to initialize auxiliary base data
                              const AuxInitFunctor auxInitF,
                              // Options
+                             bool incSampleCount,
                              bool antiAliasOn)
 {
     RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
@@ -116,7 +117,7 @@ void KCGenerateCameraRaysCPU(// Output
                  sampleIdLinear);
 
         // Initialize Samples
-        ImageAddSample(imgMem, pixelIdLinear, 1);
+        if(incSampleCount) ImageAddSample(imgMem, pixelIdLinear, 1);
     }
 }
 
@@ -136,6 +137,7 @@ void GenerateCameraRaysGPU(// Output
                            // Functor to initialize auxiliary base data
                            const AuxInitFunctor auxInitF,
                            // Options
+                           bool incSampleCount,
                            bool antiAliasOn)
 {
     RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
@@ -183,7 +185,7 @@ void GenerateCameraRaysGPU(// Output
                  sampleIdLinear);
 
         // Initialize Samples
-        //ImageAddSample(imgMem, pixelIdLinear, 1);
+        if(incSampleCount) ImageAddSample(imgMem, pixelIdLinear, 1);
     }
 }
 
@@ -205,6 +207,7 @@ void KCGenCameraRaysFromArrayGPU(// Output
                                  // Functor to initialize auxiliary base data
                                  const AuxInitFunctor auxInitF,
                                  // Options
+                                 bool incSampleCount,
                                  bool antiAliasOn)
 {
     // Fetch Camera
@@ -224,6 +227,7 @@ void KCGenCameraRaysFromArrayGPU(// Output
                           // Functor to initialize auxiliary base data
                           auxInitF,
                           // Options
+                          incSampleCount,
                           antiAliasOn);
 }
 
@@ -244,6 +248,7 @@ void KCGenCameraRaysFromObjectGPU(// Output
                                   // Functor to initialize auxiliary base data
                                   const AuxInitFunctor auxInitF,
                                   // Options
+                                  bool incSampleCount,
                                   bool antiAliasOn)
 {
     GenerateCameraRaysGPU(// Output
@@ -260,5 +265,6 @@ void KCGenCameraRaysFromObjectGPU(// Output
                           // Functor to initialize auxiliary base data
                           auxInitF,
                           // Options
+                          incSampleCount,
                           antiAliasOn);
 }

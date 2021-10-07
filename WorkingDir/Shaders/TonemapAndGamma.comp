@@ -1,6 +1,6 @@
 #version 430
 /*
-	**Reinhard 2002 Tone Map & Gamma correction Shader**
+	**Reinhard 2005 Tone Map & Gamma correction Shader**
 
 	File Name	: TonemapAndGamma.comp
 	Author		: Bora Yalciner
