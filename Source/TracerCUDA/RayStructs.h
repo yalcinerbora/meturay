@@ -36,9 +36,9 @@ struct RayReg
 
     // Save
     __device__ __host__ void        Update(RayGMem* mem,
-                                           unsigned int loc);
+                                           unsigned int loc) const;
     __device__ __host__ void        UpdateTMax(RayGMem* mem,
-                                               unsigned int loc);
+                                               unsigned int loc) const;
 
     __device__ __host__ bool        IsInvalidRay() const;
 };
@@ -68,7 +68,7 @@ inline RayReg::RayReg(const RayGMem* mem,
 
 __device__ __host__
 inline void RayReg::Update(RayGMem* mem,
-                           unsigned int loc)
+                           unsigned int loc) const
 {
     RayGMem rayGMem =
     {
@@ -82,7 +82,7 @@ inline void RayReg::Update(RayGMem* mem,
 
 __device__ __host__
 inline void RayReg::UpdateTMax(RayGMem* mem,
-                               unsigned int loc)
+                               unsigned int loc) const
 {
     mem[loc].tMax = tMax;
 }

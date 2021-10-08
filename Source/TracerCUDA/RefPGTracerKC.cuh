@@ -114,8 +114,12 @@ void RPGTracerBoundaryWork(// Output
         if(!gLocalState.emptyPrimitive)
             neeMatch &= (primId == neePrimId);
     }
+
+    // If a path ray is hit
+    bool isFirstDepthPathRay = (aux.depth == 1) && (aux.type == RayType::PATH_RAY);
+
     if(neeMatch || 
-       (aux.depth == 2 && aux.type == RayType::PATH_RAY) ||
+       isFirstDepthPathRay ||
        aux.type == RayType::SPECULAR_PATH_RAY)
     {
         const RayF& r = ray.ray;
@@ -308,11 +312,16 @@ void RPGTracerPathWork(// Output
     // or material is highly specula
     if(!gRenderState.nee) return;
 
+    // Do not launch NEE and MIS kernel
+    // Incoming ray is camera ray
+    // or material is specular
+    bool skipNEEAndMIS = (isSpecularMat || (aux.type == RayType::CAMERA_RAY));
+
     // Renderer requested a NEE Ray but material is highly specular
     // Check if nee is requested
-    if(isSpecularMat && maxOutRay == 1)
+    if(skipNEEAndMIS && maxOutRay == 1)
         return;
-    else if(isSpecularMat || (aux.type == RayType::CAMERA_RAY))
+    else if(skipNEEAndMIS)
     {
         // Write invalid rays then return
         InvalidRayWrite(NEE_RAY_INDEX);
@@ -459,7 +468,7 @@ void RPGTracerPathWork(// Output
         auxOut.radianceFactor = misRadianceFactor;
         auxOut.endPointIndex = lightIndex;
         auxOut.type = RayType::NEE_RAY;
-
+        
         gOutBoundKeys[MIS_RAY_INDEX] = matLight;
         gOutRayAux[MIS_RAY_INDEX] = auxOut;
     }

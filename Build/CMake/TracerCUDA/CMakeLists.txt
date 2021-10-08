@@ -204,7 +204,8 @@ set(SRC_TRACERS_COMMON
     ${CURRENT_SOURCE_DIR}/TracerFunctions.cuh
     ${CURRENT_SOURCE_DIR}/Tracers.cu
     ${CURRENT_SOURCE_DIR}/Tracers.cpp
-    ${CURRENT_SOURCE_DIR}/Tracers.h)
+    ${CURRENT_SOURCE_DIR}/Tracers.h
+    ${CURRENT_SOURCE_DIR}/WorkOutputWriter.cuh)
 
 set(SRC_TRACERS_STRUCTS
     ${CURRENT_SOURCE_DIR}/PathNode.cuh

@@ -62,16 +62,7 @@ void RefPGTracer::SendPixel() const
     // Do Parallel Reduction over the image
     size_t pixelSize = ImageIOI::FormatToPixelSize(iPixelFormat);
     float accumPixel;
-    uint32_t totalSamples;
-    
-    // DEBUG
-    if(currentPixel2D[0] == 6 && currentPixel2D[1] == 4)
-    {
-        Debug::DumpMemToFile("samples", imgMemory.GMem<float>().gSampleCounts,
-                             workCount);
-        METU_LOG("Dumped File!!!");
-    }
-
+    uint32_t totalSamples;    
     // Reduction Kernels
     CUDA_CHECK(cudaSetDevice(cudaSystem.BestGPU().DeviceId()));
     ReduceArrayGPU<float, ReduceAdd<float>, cudaMemcpyDeviceToHost>
@@ -88,9 +79,6 @@ void RefPGTracer::SendPixel() const
     );
     CUDA_CHECK(cudaStreamSynchronize((cudaStream_t)0));
 
-    METU_LOG("[{:d}, {:d}]   {:f}, {:d}                  ", 
-             currentPixel2D[0], currentPixel2D[1],
-             accumPixel, totalSamples);
     // Convert Accum Pixel to Requested format
     std::array<Byte, 16> convertedPixel;
     switch(iPixelFormat)
@@ -169,6 +157,9 @@ ImageIOError RefPGTracer::SaveAndResetAccumImage(const Vector2i& pixelId)
         std::string s = fmt::format("Pixel ({:d},{:d}) reference is written as \"{:s}\"",
                                     pixelId[0], pixelId[1], path);
         callbacks->SendLog(s);
+
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        std::abort();
     }
     else if(callbacks)
     {

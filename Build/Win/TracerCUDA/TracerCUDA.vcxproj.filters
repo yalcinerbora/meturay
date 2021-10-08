@@ -543,6 +543,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracerWorks.cuh">
       <Filter>Tracers\RefPGTracer</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\WorkOutputWriter.cuh">
+      <Filter>Tracers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">

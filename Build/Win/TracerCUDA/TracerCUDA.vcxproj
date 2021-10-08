@@ -93,6 +93,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\TransformFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\UnrealMaterialKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\WorkOutputWriter.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\WorkPool.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TracerTypeGenerators.h" />

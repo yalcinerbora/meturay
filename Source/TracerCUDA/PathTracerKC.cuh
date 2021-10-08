@@ -9,6 +9,8 @@
 #include "TracerFunctions.cuh"
 #include "TracerConstants.h"
 
+#include "WorkOutputWriter.cuh"
+
 struct PathTracerGlobalState
 {
     // Output Image
@@ -129,6 +131,11 @@ void PathTracerComboWork(// Output
     static constexpr int PATH_RAY_INDEX = 0;
     static constexpr int NEE_RAY_INDEX = 1;
     static constexpr int MIS_RAY_INDEX = 2;
+    // Helper Class for better code readibiliy
+    OutputWriter<RayAuxPath> outputWriter(gOutBoundKeys,
+                                          gOutRays,
+                                          gOutRayAux,
+                                          maxOutRay);
 
     // Inputs
     // Current Ray
@@ -148,27 +155,9 @@ void PathTracerComboWork(// Output
     float specularity = MGroup::Specularity(surface, gMatData, matIndex);
     bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
    
-    // Invalid Ray Write Helper Function
-    auto InvalidRayWrite = [&gOutRays, &gOutBoundKeys, &gOutRayAux, &sampleCount](int index)
-    {
-        assert(index < sampleCount);
-
-        // Generate Dummy Ray and Terminate
-        RayReg rDummy = EMPTY_RAY_REGISTER;
-        rDummy.Update(gOutRays, index);
-        gOutBoundKeys[index] = HitKey::InvalidKey;
-        gOutRayAux[index].pixelIndex = UINT32_MAX;
-     };
-
     // If NEE ray hits to this material
     // just skip since this is not a light material
-    if(aux.type == RayType::NEE_RAY)
-    {
-        // Write invalids for out rays
-        for(uint32_t i = 0; i < sampleCount; i++)
-            InvalidRayWrite(i);
-        return;
-    }
+    if(aux.type == RayType::NEE_RAY) return;
     
     // Calculate Transmittance factor of the medium
     Vector3 transFactor = m.Transmittance(ray.tMax);
@@ -229,39 +218,28 @@ void PathTracerComboWork(// Output
         // Do not waste rays on zero radiance paths
         pathRadianceFactor != ZERO_3)
     {
-        // Write Ray
+        // Ray
         RayReg rayOut;
         rayOut.ray = rayPath;
         rayOut.tMin = 0.0f;
         rayOut.tMax = INFINITY;
-        rayOut.Update(gOutRays, PATH_RAY_INDEX);
-
-        // Write Aux
+        // Aux
         RayAuxPath auxOut = aux;
         auxOut.mediumIndex = static_cast<uint16_t>(outM->GlobalIndex());
         auxOut.radianceFactor = pathRadianceFactor;
         auxOut.type = (isSpecularMat) ? RayType::SPECULAR_PATH_RAY : RayType::PATH_RAY;
         auxOut.depth++;
-        gOutRayAux[PATH_RAY_INDEX] = auxOut;
+
+        // Wrie
+        outputWriter.Write(PATH_RAY_INDEX, rayOut, auxOut);
     }
-    else InvalidRayWrite(PATH_RAY_INDEX);
 
     // Dont launch NEE if not requested
     // or material is highly specula
     if(!gRenderState.nee) return;
-
     // Renderer requested a NEE Ray but material is highly specular
     // Check if nee is requested
-    if(isSpecularMat && maxOutRay == 1)
-        return;
-    else if(isSpecularMat)
-    {
-        // Write invalid rays then return
-        InvalidRayWrite(NEE_RAY_INDEX);
-        if(gRenderState.directLightMIS)
-            InvalidRayWrite(MIS_RAY_INDEX);
-        return;
-    }
+    if(isSpecularMat) return; 
 
     // Material is not specular & tracer requested a NEE ray
     // Generate a NEE Ray
@@ -323,25 +301,21 @@ void PathTracerComboWork(// Output
     neeRadianceFactor = (pdfNEE == 0.0f) ? Zero3 : (neeRadianceFactor / pdfNEE);
     if(neeRadianceFactor != ZERO_3)
     {
-        // Generate & Write Ray
+        // Generate Ray
         RayF rayNEE = RayF(lDirection, position);
         rayNEE.AdvanceSelf(MathConstants::Epsilon);
-
         RayReg rayOut;
         rayOut.ray = rayNEE;
         rayOut.tMin = 0.0f;
-        rayOut.tMax = lDistance;
-        rayOut.Update(gOutRays, NEE_RAY_INDEX);
-
+        rayOut.tMax = lDistance;        
+        // Aux
         RayAuxPath auxOut = aux;
         auxOut.radianceFactor = neeRadianceFactor;
         auxOut.endPointIndex = lightIndex;
         auxOut.type = RayType::NEE_RAY;
 
-        gOutRayAux[NEE_RAY_INDEX] = auxOut;
-        gOutBoundKeys[NEE_RAY_INDEX] = matLight;
+        outputWriter.Write(NEE_RAY_INDEX, rayOut, auxOut, matLight);
     }
-    else InvalidRayWrite(NEE_RAY_INDEX);
 
     // Check MIS Ray return if not requested (since no ray is allocated for it)
     if(!gRenderState.directLightMIS) return;
@@ -388,25 +362,20 @@ void PathTracerComboWork(// Output
     misRadianceFactor = (pdfMIS == 0.0f) ? Zero3 : (misRadianceFactor / pdfMIS);
     if(launchedMISRay && misRadianceFactor != ZERO_3)
     {
-        // Write Ray
+        // Ray
         RayReg rayOut;
         rayOut.ray = rayMIS;
         rayOut.tMin = 0.0f;
         rayOut.tMax = INFINITY;
-        rayOut.Update(gOutRays, MIS_RAY_INDEX);
-
-        // Write Aux
+        // Aux
         RayAuxPath auxOut = aux;
         auxOut.mediumIndex = static_cast<uint16_t>(outMMIS->GlobalIndex());
         auxOut.radianceFactor = misRadianceFactor;
         auxOut.endPointIndex = lightIndex;
         auxOut.type = RayType::NEE_RAY;
 
-        gOutBoundKeys[MIS_RAY_INDEX] = matLight;
-        gOutRayAux[MIS_RAY_INDEX] = auxOut;
-    }
-    else InvalidRayWrite(MIS_RAY_INDEX);
-
+        outputWriter.Write(MIS_RAY_INDEX, rayOut, auxOut, matLight);
+    }    
     // All Done!
 }
 
