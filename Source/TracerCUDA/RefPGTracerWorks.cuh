@@ -19,19 +19,19 @@
 
 template<class MGroup, class PGroup>
 class RPGBoundaryWork
-    : public GPUWorkBatch<RPGTracerGlobalState,
-                          RPGTracerLocalState, RayAuxPath,
-                          MGroup, PGroup, RPGTracerBoundaryWork<MGroup>,
-                          PGroup::GetSurfaceFunction>
+    : public GPUBoundaryWorkBatch<RPGTracerGlobalState,
+                                  RPGTracerLocalState, RayAuxPath,
+                                  MGroup, PGroup, RPGTracerBoundaryWork<MGroup>,
+                                  PGroup::GetSurfaceFunction>
 {
     private:
         bool                            neeOn;
         bool                            misOn;
 
-        using Base = GPUWorkBatch<RPGTracerGlobalState,
-                                  RPGTracerLocalState, RayAuxPath,
-                                  MGroup, PGroup, RPGTracerBoundaryWork<MGroup>,
-                                  PGroup::GetSurfaceFunction>;
+        using Base = GPUBoundaryWorkBatch<RPGTracerGlobalState,
+                                          RPGTracerLocalState, RayAuxPath,
+                                          MGroup, PGroup, RPGTracerBoundaryWork<MGroup>,
+                                          PGroup::GetSurfaceFunction>;
 
     protected:
     public:

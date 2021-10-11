@@ -38,7 +38,7 @@ class CPULightGroupI
 		virtual TracerError						ConstructLights(const CudaSystem&,
 																const GPUTransformI**,
 																const KeyMaterialMap&) = 0;
-		virtual uint32_t						LightCount() const = 0;
+		virtual uint32_t							LightCount() const = 0;
 
 		virtual size_t							UsedGPUMemory() const = 0;
 		virtual size_t							UsedCPUMemory() const = 0;

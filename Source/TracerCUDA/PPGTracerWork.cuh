@@ -19,19 +19,19 @@
 
 template<class MGroup, class PGroup>
 class PPGBoundaryWork
-    : public GPUWorkBatch<PPGTracerGlobalState,
-                          PPGTracerLocalState, RayAuxPPG,
-                          MGroup, PGroup, PPGTracerBoundaryWork<MGroup>,
-                          PGroup::GetSurfaceFunction>
+    : public GPUBoundaryWorkBatch<PPGTracerGlobalState,
+                                  PPGTracerLocalState, RayAuxPPG,
+                                  MGroup, PGroup, PPGTracerBoundaryWork<MGroup>,
+                                  PGroup::GetSurfaceFunction>
 {
     private:
         bool                            neeOn;
         bool                            misOn;
 
-        using Base = GPUWorkBatch<PPGTracerGlobalState,
-                                  PPGTracerLocalState, RayAuxPPG,
-                                  MGroup, PGroup, PPGTracerBoundaryWork<MGroup>,
-                                  PGroup::GetSurfaceFunction>;
+        using Base = GPUBoundaryWorkBatch<PPGTracerGlobalState,
+                                          PPGTracerLocalState, RayAuxPPG,
+                                          MGroup, PGroup, PPGTracerBoundaryWork<MGroup>,
+                                          PGroup::GetSurfaceFunction>;
 
     protected:
     public:
@@ -86,10 +86,7 @@ PPGBoundaryWork<M, P>::PPGBoundaryWork(const GPUMaterialGroupI& mg,
                                        const GPUTransformI* const* t,
                                        bool neeOn, bool misOn,
                                        bool emptyPrimitive)
-    : GPUWorkBatch<PPGTracerGlobalState,
-                   PPGTracerLocalState, RayAuxPPG,
-                   M, P, PPGTracerBoundaryWork<M>,
-                   P::GetSurfaceFunction>(mg, pg, t)
+    : Base(mg, pg, t)
     , neeOn(neeOn)
     , misOn(misOn)
 {
@@ -102,10 +99,7 @@ PPGWork<M, P>::PPGWork(const GPUMaterialGroupI& mg,
                        const GPUPrimitiveGroupI& pg,
                        const GPUTransformI* const* t,
                        bool neeOn, bool misOn)
-    : GPUWorkBatch<PPGTracerGlobalState,
-                   PPGTracerLocalState, RayAuxPPG,
-                   M, P, PPGTracerPathWork<M>,
-                   P::GetSurfaceFunction>(mg, pg, t)
+    : Base(mg, pg, t)
     , neeOn(neeOn)
     , misOn(misOn)
 {

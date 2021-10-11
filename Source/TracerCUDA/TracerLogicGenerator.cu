@@ -5,6 +5,8 @@
 #include "GPUPrimitiveSphere.h"
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveEmpty.h"
+#include "GPUPrimitiveDirectional.h"
+#include "GPUPrimitiveSkySphere.h"
 
 #include "GPUAcceleratorLinear.cuh"
 #include "GPUAcceleratorBVH.cuh"
@@ -87,6 +89,12 @@ TracerLogicGenerator::TracerLogicGenerator()
     primGroupGenerators.emplace(GPUPrimitiveEmpty::TypeName(),
                                 GPUPrimGroupGen(DefaultConstruct<GPUPrimitiveGroupI, GPUPrimitiveEmpty>,
                                                 DefaultDestruct<GPUPrimitiveGroupI>));
+    primGroupGenerators.emplace(GPUPrimitiveSkySphere::TypeName(),
+                                GPUPrimGroupGen(DefaultConstruct<GPUPrimitiveGroupI, GPUPrimitiveSkySphere>,
+                                                DefaultDestruct<GPUPrimitiveGroupI>));
+    primGroupGenerators.emplace(GPUPrimitiveDirectional::TypeName(),
+                                GPUPrimGroupGen(DefaultConstruct<GPUPrimitiveGroupI, GPUPrimitiveDirectional>,
+                                                DefaultDestruct<GPUPrimitiveGroupI>));
 
     // Accelerator Types
     accelGroupGenerators.emplace(GPUAccTriLinearGroup::TypeName(),
@@ -164,29 +172,35 @@ TracerLogicGenerator::TracerLogicGenerator()
                                             DefaultDestruct<CPUMediumGroupI>));
 
     // Light Types
-    lightGroupGenerators.emplace(CPULightGroupPoint::TypeName(),
-                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupPoint>,
-                                                  DefaultDestruct<CPULightGroupI>));
-    lightGroupGenerators.emplace(CPULightGroupDirectional::TypeName(),
-                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupDirectional>,
-                                                  DefaultDestruct<CPULightGroupI>));
-    lightGroupGenerators.emplace(CPULightGroupDisk::TypeName(),
-                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupDisk>,
-                                                  DefaultDestruct<CPULightGroupI>));
-    lightGroupGenerators.emplace(CPULightGroupRectangular::TypeName(),
-                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupRectangular>,
-                                                  DefaultDestruct<CPULightGroupI>));
-    lightGroupGenerators.emplace(CPULightGroupSpot::TypeName(),
-                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupSpot>,
-                                                  DefaultDestruct<CPULightGroupI>));
-    lightGroupGenerators.emplace(CPULightGroupSkySphere::TypeName(),
-                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupSkySphere>,
-                                                  DefaultDestruct<CPULightGroupI>));
+    //lightGroupGenerators.emplace(CPULightGroupPoint::TypeName(),
+    //                             CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupPoint>,
+    //                                              DefaultDestruct<CPULightGroupI>));
+    //lightGroupGenerators.emplace(CPULightGroupDirectional::TypeName(),
+    //                             CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupDirectional>,
+    //                                              DefaultDestruct<CPULightGroupI>));
+    //lightGroupGenerators.emplace(CPULightGroupDisk::TypeName(),
+    //                             CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupDisk>,
+    //                                              DefaultDestruct<CPULightGroupI>));
+    //lightGroupGenerators.emplace(CPULightGroupRectangular::TypeName(),
+    //                             CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupRectangular>,
+    //                                              DefaultDestruct<CPULightGroupI>));
+    //lightGroupGenerators.emplace(CPULightGroupSpot::TypeName(),
+    //                             CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupSpot>,
+    //                                              DefaultDestruct<CPULightGroupI>));
+    //lightGroupGenerators.emplace(CPULightGroupSkySphere::TypeName(),
+    //                             CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupSkySphere>,
+    //                                              DefaultDestruct<CPULightGroupI>));
     lightGroupGenerators.emplace(CPULightGroup<GPUPrimitiveTriangle>::TypeName(),
                                  CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroup<GPUPrimitiveTriangle>>,
                                                   DefaultDestruct<CPULightGroupI>));
     lightGroupGenerators.emplace(CPULightGroup<GPUPrimitiveSphere>::TypeName(),
                                  CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroup<GPUPrimitiveSphere>>,
+                                                  DefaultDestruct<CPULightGroupI>));
+    lightGroupGenerators.emplace(CPULightGroup<GPUPrimitiveSkySphere>::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroup<GPUPrimitiveSkySphere>>,
+                                                  DefaultDestruct<CPULightGroupI>));
+    lightGroupGenerators.emplace(CPULightGroup<GPUPrimitiveDirectional>::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroup<GPUPrimitiveDirectional>>,
                                                   DefaultDestruct<CPULightGroupI>));
 
     // Camera Types

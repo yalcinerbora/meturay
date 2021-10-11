@@ -125,9 +125,9 @@ class DeviceMemory : public DeviceMemoryI
         static void                 EnlargeBuffer(DeviceMemory&, size_t);
 
         template <class... Args>
-        static void                 AllocateMultiData(std::tuple<Args*&...>& pointers, DeviceMemory& memory,
+        static void                 AllocateMultiData(std::tuple<Args*&...> pointers, DeviceMemory& memory,
                                                       const std::array<size_t, sizeof...(Args)>& sizeList,
-                                                      size_t alignment);
+                                                      size_t alignment = Memory::AlignByteCount);
 };
 
 template<class T>
@@ -234,7 +234,7 @@ namespace DeviceMemDetail
 }
 
 template <class... Args>
-void DeviceMemory::AllocateMultiData(std::tuple<Args*&...>& pointers, DeviceMemory& memory,
+void DeviceMemory::AllocateMultiData(std::tuple<Args*&...> pointers, DeviceMemory& memory,
                                      const std::array<size_t, sizeof...(Args)>& countList,
                                      size_t alignment)
 {

@@ -27,10 +27,11 @@ class GPUCameraSpherical final : public GPUCameraI
                                                const Vector3& direction,
                                                const Vector3& up,
                                                const Vector2& nearFar,
-                                               const GPUTransformI& transform,
-                                               //
+                                               // Base Class Related
                                                uint16_t mediumId,
-                                               HitKey materialKey);
+                                               HitKey, TransformId,
+                                               const GPUTransformI&,
+                                               PrimitiveId = 0);
                             ~GPUCameraSpherical() = default;
 
         // Interface
@@ -60,7 +61,6 @@ class GPUCameraSpherical final : public GPUCameraI
                                                const Vector2i& resolution) const override;
 
         __device__ bool             CanBeSampled() const override;
-        __device__ PrimitiveId      PrimitiveIndex() const override;
 
         __device__ Matrix4x4        VPMatrix() const override;
         __device__ Vector2f         NearFar() const override;
@@ -138,14 +138,15 @@ inline GPUCameraSpherical::GPUCameraSpherical(float pixelRatio,
                                               const Vector3& dir,
                                               const Vector3& upp,
                                               const Vector2& nearFar,
-                                              const GPUTransformI& transform,
-                                              //
+                                              // Base Class Related
                                               uint16_t mediumId,
-                                              HitKey materialKey)
-    : GPUCameraI(materialKey, mediumId)
-    , position(transform.LocalToWorld(pos))
-    , up(transform.LocalToWorld(upp))
-    , direction(transform.LocalToWorld(dir))
+                                              HitKey hK, TransformId tId,
+                                              const GPUTransformI& gTrans,
+                                              PrimitiveId pId)
+    : GPUCameraI(mediumId, hK, tId, gTrans, pId)
+    , position(gTrans.LocalToWorld(pos))
+    , up(gTrans.LocalToWorld(upp))
+    , direction(gTrans.LocalToWorld(dir))
     , nearFar(nearFar)
     , pixelRatio(pixelRatio)
 {    
@@ -254,12 +255,6 @@ inline __device__ bool GPUCameraSpherical::CanBeSampled() const
     return false;
 }
 
-__device__
-inline PrimitiveId GPUCameraSpherical::PrimitiveIndex() const
-{
-    return 0;
-}
-
 __device__ 
 inline Matrix4x4 GPUCameraSpherical::VPMatrix() const
 {
@@ -292,7 +287,10 @@ inline GPUCameraPixel GPUCameraSpherical::GeneratePixelCamera(const Vector2i& pi
                           pixelId,
                           resolution,
                           mediumIndex,
-                          boundaryMaterialKey);
+                          materialKey,
+                          transformId,
+                          gTransform,
+                          primitiveId);
 }
 
 inline CPUCameraGroupSpherical::CPUCameraGroupSpherical()

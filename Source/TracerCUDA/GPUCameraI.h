@@ -20,7 +20,10 @@ class GPUCameraPixel;
 class GPUCameraI : public GPUEndpointI
 {
     public:
-        __device__              GPUCameraI(HitKey k, uint16_t mediumIndex);
+        __device__              GPUCameraI(uint16_t mediumIndex,
+                                           HitKey, TransformId,
+                                           const GPUTransformI&,
+                                           PrimitiveId = 0);
         virtual                 ~GPUCameraI() = default;
 
         // Interface
@@ -45,11 +48,6 @@ class GPUCameraI : public GPUEndpointI
 using GPUCameraList = std::vector<const GPUCameraI*>;
 using VisorCameraList = std::vector<VisorCamera>;
 
-__device__
-inline GPUCameraI::GPUCameraI(HitKey k, uint16_t mediumIndex)
-    : GPUEndpointI(k, mediumIndex)
-{}
-
 class CPUCameraGroupI
 {
     public:
@@ -69,8 +67,16 @@ class CPUCameraGroupI
                                                        const std::string& scenePath) = 0;
         virtual TracerError					ConstructCameras(const CudaSystem&,
                                                              const GPUTransformI**) = 0;
-        virtual uint32_t					CameraCount() const = 0;
+        virtual uint32_t					    CameraCount() const = 0;
 
         virtual size_t						UsedGPUMemory() const = 0;
         virtual size_t						UsedCPUMemory() const = 0;
 };
+
+__device__
+inline GPUCameraI::GPUCameraI(uint16_t mediumIndex,
+                              HitKey hK, TransformId tId,
+                              const GPUTransformI& gTrans,
+                              PrimitiveId pId)
+    : GPUEndpointI(mediumIndex, hK, tId, pId, gTrans)
+{}

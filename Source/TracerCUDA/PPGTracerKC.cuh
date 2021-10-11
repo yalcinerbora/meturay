@@ -66,37 +66,30 @@ void PPGTracerBoundaryWork(// Output
                            PPGTracerGlobalState& renderState,
                            RandomGPU& rng,
                            // Constants
+                           const uint32_t endPointIndex,
                            const typename MGroup::Data& gMatData,
-                           const HitKey matId,
-                           const PrimitiveId primId)
+                           const HitKey::Type matIndex)
 {
     uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
     PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // Check Material Sample Strategy
     assert(maxOutRay == 0);
-    auto& img = renderState.gImage;
+    
+    const bool isCameraRay = aux.type == RayType::CAMERA_RAY;
+    const bool isSpecularPathRay = aux.type == RayType::SPECULAR_PATH_RAY;
+    // Always eval boundary mat if NEE is off
+    // or NEE is on and hit endpoint and requested endpoint is same
+    const bool isCorrectNEERay = ((!renderState.nee) ||
+                                  (aux.endPointIndex == endPointIndex &&
+                                   aux.type == RayType::NEE_RAY));
 
-    // If NEE ray hits to this material
-    // sample it or just sample it anyway if NEE is not activated
-    bool neeMatch = (!renderState.nee);
-    if(renderState.nee && aux.type == RayType::NEE_RAY)
-    {
-        const GPUEndpointI* endPoint = renderState.lightList[aux.endPointIndex];
-        PrimitiveId neePrimId = endPoint->PrimitiveIndex();
-        HitKey neeKey = endPoint->BoundaryMaterial();
-
-        // Check if NEE ray actual hit the requested light
-        neeMatch = (matId.value == neeKey.value);
-        if(!localState.emptyPrimitive)
-            neeMatch &= (primId == neePrimId);
-    }
-    if(neeMatch ||
-       aux.type == RayType::CAMERA_RAY ||
-       aux.type == RayType::SPECULAR_PATH_RAY)
+    // Accumulate Light if
+    if(isCorrectNEERay   || // We hit the correct light as a NEE ray
+       isCameraRay       || // We hit as a camera ray which should not be culled when NEE is on
+       isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should be hit
     {
         const RayF& r = ray.ray;
-        HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
         Vector3 position = r.AdvancedPos(ray.tMax);
         const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
 
@@ -117,7 +110,9 @@ void PPGTracerBoundaryWork(// Output
         // And accumulate pixel
         // and add as a sample
         Vector3f total = emission * radianceFactor;
-        ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
+        ImageAccumulatePixel(renderState.gImage, 
+                             aux.pixelIndex, 
+                             Vector4f(total, 1.0f));
 
         // Also backpropogate this radiance to the path nodes
         //if(emission != Vector3(0.0f))
@@ -169,8 +164,7 @@ void PPGTracerPathWork(// Output
                        RandomGPU& rng,
                        // Constants
                        const typename MGroup::Data& gMatData,
-                       const HitKey matId,
-                       const PrimitiveId primId)
+                       const HitKey::Type matIndex)
 {
     static constexpr Vector3 ZERO_3 = Zero3;
 
@@ -185,8 +179,6 @@ void PPGTracerPathWork(// Output
     // Inputs
     // Current Ray
     const RayF& r = ray.ray;
-    // Current Material Index
-    HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
     // Hit Position
     Vector3 position = r.AdvancedPos(ray.tMax);
     // Wi (direction is swapped as if it is coming out of the surface
@@ -241,8 +233,9 @@ void PPGTracerPathWork(// Output
 
         Vector3f total = emission * radianceFactor;
         // Output image
-        auto& img = renderState.gImage;
-        ImageAccumulatePixel(img, aux.pixelIndex, Vector4f(total, 1.0f));
+        ImageAccumulatePixel(renderState.gImage, 
+                             aux.pixelIndex, 
+                             Vector4f(total, 1.0f));
 
         //if(emission != Vector3(0.0f))
         //    printf("AddingRadiance: E:(%f %f %f) RF:(%f %f %f) Path %u + %u\n",

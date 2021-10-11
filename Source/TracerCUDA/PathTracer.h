@@ -27,21 +27,14 @@ class PathTracer final : public RayTracer
             bool                directLightMIS      = false;
             LightSamplerType    lightSamplerType    = LightSamplerType::UNIFORM;
         };
-
-        static constexpr bool   USE_SINGLE_PATH_KERNEL = true;
-
     private:
         Options                         options;
         uint32_t                        currentDepth;
         WorkBatchMap                    workMap;
         // Work Pools
         WorkPool<bool, bool, bool>      boundaryWorkPool;
-        // De-composed kernels
-        WorkPool<>                      pathWorkPool;
-        WorkPool<bool>                  neeWorkPool;
-        WorkPool<>                      misWorkPool;
         // Single large kernel
-        WorkPool<bool, bool>            comboWorkPool;
+        WorkPool<bool, bool>            pathWorkPool;
         // Light Sampler Memory and Pointer
         DeviceMemory                    memory;
         const GPUDirectLightSamplerI*   dLightSampler;

@@ -13,7 +13,6 @@ typedef uint64_t PrimitiveId;
 
 static constexpr PrimitiveId INVALID_PRIMITIVE_ID = std::numeric_limits<PrimitiveId>::max();
 
-// TODO: Implement
 struct HitStructPtr
 {
     private:
@@ -61,7 +60,7 @@ struct alignas(sizeof(T)) HitKeyT
     __device__ __host__
     static constexpr T              FetchIdPortion(HitKeyT key);
     __device__ __host__
-    static constexpr uint16_t       FetchBatchPortion(HitKeyT key);
+    static constexpr T              FetchBatchPortion(HitKeyT key);
 
     static constexpr uint32_t       BatchBits = BBits;
     static constexpr uint32_t       IdBits = IBits;
@@ -108,13 +107,13 @@ constexpr T HitKeyT<T, BatchBits, IdBits>::FetchIdPortion(HitKeyT key)
 
 template <class T, uint32_t BatchBits, uint32_t IdBits>
 __device__ __host__
-constexpr  uint16_t HitKeyT<T, BatchBits, IdBits>::FetchBatchPortion(HitKeyT key)
+constexpr T HitKeyT<T, BatchBits, IdBits>::FetchBatchPortion(HitKeyT key)
 {
-    return static_cast<uint16_t>((static_cast<T>(key) & BatchMask) >> IdBits);
+    return ((static_cast<T>(key) & BatchMask) >> IdBits);
 }
 
 // Id-Key pair which will be used in sorting for kernel partitioning
-typedef uint32_t RayId;
+using RayId = uint32_t;
 
 using HitKeyType = uint32_t;
 using HitKey = HitKeyT<HitKeyType, 8u, 24u>;

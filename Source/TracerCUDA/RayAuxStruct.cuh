@@ -35,6 +35,9 @@ struct RayAuxPath
     uint16_t        mediumIndex;    // Current Medium of the Ray
     uint8_t         depth;          // Current path depth
     RayType         type;           // Ray Type
+
+    float           prevPDF;        // Previous Intersections BxDF pdf
+                                    // (is used when a path ray hits a light (MIS))
 };
 
 struct RayAuxPPG

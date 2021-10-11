@@ -19,16 +19,17 @@ void KCConstructGPUCameraSpherical(GPUCameraSpherical* gCameraLocations,
         globalId += blockDim.x * gridDim.x)
     {
         CPUCameraGroupSpherical::Data data = gData[globalId];
+        TransformId tId = gTransformIds[globalId];
 
         new (gCameraLocations + globalId) GPUCameraSpherical(data.pixelRatio,
                                                              data.position,
                                                              data.direction,
                                                              data.up,
                                                              data.nearFar,
-                                                             *gTransforms[gTransformIds[globalId]],
-                                                             //
+                                                             // Base Class
                                                              gMediumIndices[globalId],
-                                                             gCameraMaterialIds[globalId]);
+                                                             gCameraMaterialIds[globalId],
+                                                             tId, *gTransforms[tId]);
     }
 }
 

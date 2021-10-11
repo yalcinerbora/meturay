@@ -52,19 +52,16 @@ inline void DirectFurnaceWork(// Output
                               const typename MGroup::Surface& surface,
                               const RayId rayId,
                               // I-O
-                              DirectTracerLocalState& gLocalState,
-                              DirectTracerGlobalState& gRenderState,
+                              DirectTracerLocalState& localState,
+                              DirectTracerGlobalState& renderState,
                               RandomGPU& rng,
                               // Constants
                               const typename MGroup::Data& gMatData,
-                              const HitKey matId,
-                              const PrimitiveId primId)
+                              const HitKey::Type matIndex)
 {
     // Just evaluate kernel
     // Write to image
-    auto& img = gRenderState.gImage;
     const RayF& r = ray.ray;
-    HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
 
     const GPUMediumVacuum m(0);
     const GPUMediumI* outM;
@@ -103,7 +100,9 @@ inline void DirectFurnaceWork(// Output
     //       pdf);
 
     // And accumulate pixel
-    ImageAccumulatePixel(img, aux.pixelIndex, Vector4(radiance, 1.0f));
+    ImageAccumulatePixel(renderState.gImage, 
+                         aux.pixelIndex, 
+                         Vector4(radiance, 1.0f));
 }
 
 __device__
@@ -118,20 +117,18 @@ inline void DirectPositionWork(// Output
                                const typename EmptyMat<EmptySurface>::Surface& surface,
                                const RayId rayId,
                                // I-O
-                               DirectTracerLocalState& gLocalState,
-                               DirectTracerPositionGlobalState& gRenderState,
+                               DirectTracerLocalState& localState,
+                               DirectTracerPositionGlobalState& renderState,
                                RandomGPU& rng,
                                // Constants
                                const typename EmptyMat<EmptySurface>::Data& gMatData,
-                               const HitKey matId,
-                               const PrimitiveId primId)
+                               const HitKey::Type matIndex)
 {   
     static constexpr float C = 1.0f;
 
-    auto& img = gRenderState.gImage;
     const RayF& r = ray.ray;
     Vector4f worldPos = Vector4f(r.AdvancedPos(ray.tMax), 1.0f);
-    switch(gRenderState.posRenderType)
+    switch(renderState.posRenderType)
     {
         case PositionRenderType::VECTOR3:
         {            
@@ -142,15 +139,17 @@ inline void DirectPositionWork(// Output
         case PositionRenderType::LOG_DEPTH:
         {
             float depth;
-            Vector2f nearFar = gRenderState.gCurrentCam->NearFar();
-            Vector4f ndc = gRenderState.gCurrentCam->VPMatrix() * worldPos;
+            Vector2f nearFar = renderState.gCurrentCam->NearFar();
+            Vector4f ndc = renderState.gCurrentCam->VPMatrix() * worldPos;
 
-            if(gRenderState.posRenderType == PositionRenderType::LINEAR_DEPTH)
+            if(renderState.posRenderType == PositionRenderType::LINEAR_DEPTH)
                 depth = ndc[3];
             else
                 depth = log(C * ndc[3] + 1.0f) / log(C * nearFar[1] + 1.0f);
 
-            ImageAccumulatePixel(img, aux.pixelIndex, Vector4(depth, depth, depth, 1.0f));
+            ImageAccumulatePixel(renderState.gImage, 
+                                 aux.pixelIndex, 
+                                 Vector4(depth, depth, depth, 1.0f));
             break;
         }        
     }
@@ -169,18 +168,17 @@ inline void DirectNormalWork(// Output
                              const typename NormalRenderMat::Surface& surface,
                              const RayId rayId,
                              // I-O
-                             DirectTracerLocalState& gLocalState,
-                             DirectTracerGlobalState& gRenderState,
+                             DirectTracerLocalState& localState,
+                             DirectTracerGlobalState& renderState,
                              RandomGPU& rng,
                              // Constants
                              const typename NormalRenderMat::Data& gMatData,
-                             const HitKey matId,
-                             const PrimitiveId primId)
+                             const HitKey::Type matIndex)
 {
-    auto& img = gRenderState.gImage;
     Vector3f ZERO = Zero3;
     const GPUMediumVacuum m(0);
-    HitKey::Type matIndex = HitKey::FetchIdPortion(matId);
     Vector3f normal = NormalEvaluate(ZERO, ZERO, ZERO, m, surface, gMatData, matIndex);    
-    ImageAccumulatePixel(img, aux.pixelIndex, Vector4(normal, 1.0f));
+    ImageAccumulatePixel(renderState.gImage, 
+                         aux.pixelIndex, 
+                         Vector4(normal, 1.0f));
 }

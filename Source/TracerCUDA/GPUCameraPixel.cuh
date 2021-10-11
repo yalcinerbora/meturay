@@ -27,8 +27,11 @@ class GPUCameraPixel final : public GPUCameraI
                                            const Vector2& nearFar,
                                            const Vector2i& pixelId,
                                            const Vector2i& resolution,
+                                           // Base Class Related
                                            uint16_t mediumId,
-                                           HitKey materialKey);
+                                           HitKey, TransformId,
+                                           const GPUTransformI&,
+                                           PrimitiveId = 0);
                             ~GPUCameraPixel() = default;
 
         // Interface
@@ -58,7 +61,6 @@ class GPUCameraPixel final : public GPUCameraI
                                                const Vector2i& resolution) const override;
 
         __device__ bool             CanBeSampled() const override;
-        __device__ PrimitiveId      PrimitiveIndex() const override;
 
         __device__ Matrix4x4        VPMatrix() const override;
         __device__ Vector2f         NearFar() const override;
@@ -76,9 +78,12 @@ inline GPUCameraPixel::GPUCameraPixel(const Vector3& position,
                                       const Vector2& nearFar,
                                       const Vector2i& pixelId,
                                       const Vector2i& resolution,
+                                      // Base Class Related
                                       uint16_t mediumId,
-                                      HitKey materialKey)
-    : GPUCameraI(materialKey, mediumId)
+                                      HitKey hK, TransformId tId,
+                                      const GPUTransformI& gTrans,
+                                      PrimitiveId pId)
+    : GPUCameraI(mediumId, hK, tId, gTrans, pId)
     , position(position)
     , right(right)
     , up(up)
@@ -171,12 +176,6 @@ inline __device__ bool GPUCameraPixel::CanBeSampled() const
     return false;
 }
 
-__device__
-inline PrimitiveId GPUCameraPixel::PrimitiveIndex() const
-{
-    return 0;
-}
-
 __device__ 
 inline Matrix4x4 GPUCameraPixel::VPMatrix() const
 {
@@ -220,7 +219,10 @@ inline GPUCameraPixel GPUCameraPixel::GeneratePixelCamera(const Vector2i& pixelI
                           pixelId,
                           resolution,
                           mediumIndex,
-                          boundaryMaterialKey);
+                          materialKey,
+                          transformId,
+                          gTransform,
+                          primitiveId);
 }
 
 __global__

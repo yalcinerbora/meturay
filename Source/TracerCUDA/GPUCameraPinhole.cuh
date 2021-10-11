@@ -27,11 +27,12 @@ class GPUCameraPinhole final : public GPUCameraI
                                              const Vector3& gaze,
                                              const Vector3& up,
                                              const Vector2& nearFar,
-                                             const Vector2& fov,
-                                             const GPUTransformI& transform,
-                                             //
+                                             const Vector2& fov,                                             
+                                             // Base Class Related
                                              uint16_t mediumId,
-                                             HitKey materialKey);
+                                             HitKey, TransformId,
+                                             const GPUTransformI&,
+                                             PrimitiveId = 0);
                             ~GPUCameraPinhole() = default;
 
         // Interface
@@ -61,7 +62,6 @@ class GPUCameraPinhole final : public GPUCameraI
                                                 const Vector2i& resolution) const override;
 
         __device__ bool             CanBeSampled() const override;
-        __device__ PrimitiveId      PrimitiveIndex() const override;
 
         __device__ Matrix4x4        VPMatrix() const override;
         __device__ Vector2f         NearFar() const override;
@@ -137,19 +137,20 @@ __device__
 inline GPUCameraPinhole::GPUCameraPinhole(const Vector3& pos,
                                           const Vector3& gz,
                                           const Vector3& upp,
-                                          const Vector2& nearFar,
+                                          const Vector2& nF,
                                           const Vector2& fov,
-                                          const GPUTransformI& transform,
-                                          //
+                                          // Base Class Related
                                           uint16_t mediumId,
-                                          HitKey materialKey)
-    : GPUCameraI(materialKey, mediumId)
-    , position(transform.LocalToWorld(pos))
-    , up(transform.LocalToWorld(upp))
-    , nearFar(nearFar)
+                                          HitKey hK, TransformId tId,
+                                          const GPUTransformI& gTrans,
+                                          PrimitiveId pId)
+    : GPUCameraI(mediumId, hK, tId, gTrans, pId)
+    , position(gTrans.LocalToWorld(pos))
+    , up(gTrans.LocalToWorld(upp))
+    , nearFar(nF)
     , fov(fov)
 {
-    Vector3 gazePoint = transform.LocalToWorld(gz);
+    Vector3 gazePoint = gTrans.LocalToWorld(gz);
     float nearPlane = nearFar[0];
     float farPLane = nearFar[1];
 
@@ -263,12 +264,6 @@ inline bool GPUCameraPinhole::CanBeSampled() const
     return false;
 }
 
-__device__
-inline PrimitiveId GPUCameraPinhole::PrimitiveIndex() const
-{
-    return 0;
-}
-
 __device__ 
 inline Matrix4x4 GPUCameraPinhole::VPMatrix() const
 {
@@ -315,7 +310,10 @@ inline GPUCameraPixel GPUCameraPinhole::GeneratePixelCamera(const Vector2i& pixe
                           pixelId,
                           resolution,
                           mediumIndex,
-                          boundaryMaterialKey);
+                          materialKey,
+                          transformId,
+                          gTransform,
+                          primitiveId);
 }
 
 inline CPUCameraGroupPinhole::CPUCameraGroupPinhole()

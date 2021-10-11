@@ -117,6 +117,9 @@ class GPUPrimitiveGroup
         virtual             ~GPUPrimitiveGroup() = default;
 
         uint32_t            PrimitiveHitSize() const override { return sizeof(HitData); };
+        // Most primitives are intersectable
+        // Derived classes that are not intersectable should override this
+        bool                IsIntersectable() const override { return true; }
 };
 
 struct PrimDataAccessor

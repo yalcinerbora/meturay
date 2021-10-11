@@ -296,7 +296,7 @@ class GPUPrimitiveSphere final
         // Pirmitive type is used for delegating scene info to this class
         const char*                             Type() const override;
         // Allocates and Generates Data
-        SceneError                              InitializeGroup(const NodeListing& surfaceDatalNodes, double time,
+        SceneError                              InitializeGroup(const NodeListing& surfaceDataNodes, double time,
                                                                 const SurfaceLoaderGeneratorI& loaderGen,
                                                                 const TextureNodeMap& textureNodes,
                                                                 const std::string& scenePath) override;

@@ -19,9 +19,7 @@ class GPULight : public GPULightI
     public:
         using PData = typename PGroup::PrimitiveData;
 
-    private:
-        PrimitiveId                         primId;
-        const GPUTransformI&                transform;
+    private:        
         const PData&                        gPData;
 
         static constexpr auto PrimSample    = PGroup::Sample;
@@ -30,12 +28,13 @@ class GPULight : public GPULightI
     protected:
     public:
         // Constructors & Destructor
-        __device__              GPULight(HitKey k,
-                                         uint16_t mediumIndex,
-                                         PrimitiveId pId,
-                                         const GPUTransformI& gTransform,
-                                         // Common Data
-                                         const PData& pData);
+        __device__              GPULight(// Common Data
+                                         const PData& pData,
+                                         // Base Class Related
+                                         uint16_t mediumId,
+                                         HitKey, TransformId,
+                                         const GPUTransformI&,
+                                         PrimitiveId = 0);
                                 ~GPULight() = default;
         // Interface
         __device__ void         Sample(// Output
@@ -61,8 +60,6 @@ class GPULight : public GPULightI
                                     const Vector3& position) const override;
 
         __device__ bool         CanBeSampled() const override;
-
-        __device__ PrimitiveId  PrimitiveIndex() const override;
 };
 
 template <class PGroup>
@@ -86,7 +83,7 @@ class CPULightGroup : public CPULightGroupI
         // Allocations of the GPU Class
         const GPULight<PGroup>*         dGPULights;
         // GPU pointers to those allocated classes on the CPU
-        GPULightList				    gpuLightList;
+        GPULightList				        gpuLightList;
         uint32_t                        lightCount;
 
     protected:
@@ -97,33 +94,33 @@ class CPULightGroup : public CPULightGroupI
 
         const char*				    Type() const override;
 		const GPULightList&		    GPULights() const override;
-		SceneError				    InitializeGroup(const LightGroupDataList& lightNodes,
+        SceneError				    InitializeGroup(const LightGroupDataList& lightNodes,
                                                     const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                     const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                                     const MaterialKeyListing& allMaterialKeys,
-								    				double time,
-								    				const std::string& scenePath) override;
-		SceneError				    ChangeTime(const NodeListing& lightNodes, double time,
-								    		   const std::string& scenePath) override;
+                                                    double time,
+                                                    const std::string& scenePath) override;
+        SceneError				    ChangeTime(const NodeListing& lightNodes, double time,
+                                               const std::string& scenePath) override;
 		TracerError				    ConstructLights(const CudaSystem&,
                                                     const GPUTransformI**,
                                                     const KeyMaterialMap&) override;
-		uint32_t				    LightCount() const override;
+		uint32_t				        LightCount() const override;
 
 		size_t					    UsedGPUMemory() const override;
         size_t					    UsedCPUMemory() const override;
 };
 
 template <class PGroup>
-__device__ GPULight<PGroup>::GPULight(HitKey k,
-                                      uint16_t mediumIndex,
-                                      PrimitiveId pId,
-                                      const GPUTransformI& gTransform,
-                                      // Common Data
-                                      const PData& gPData)
-    : GPULightI(k, mediumIndex)
-    , transform(gTransform)
-    , primId(pId)
+__device__ GPULight<PGroup>::GPULight(// Common Data
+                                      const PData& pData,
+                                      // Base Class Related
+                                      uint16_t mediumId,
+                                      HitKey hK, TransformId tId,
+                                      const GPUTransformI& gTrans,
+                                      PrimitiveId pId)
+    : GPULightI(mediumId, hK, 
+                tId, pId, gTrans)    
     , gPData(gPData)
 {}
 
@@ -141,12 +138,12 @@ __device__ void GPULight<PGroup>::Sample(// Output
     Vector3 position = PrimSample(normal,
                                   pdf,
                                   //
-                                  primId,
+                                  primitiveId,
                                   gPData,
                                   rng);
     // Transform
-    position = transform.LocalToWorld(position);
-    normal = transform.LocalToWorld(normal, true);
+    position = gTransform.LocalToWorld(position);
+    normal = gTransform.LocalToWorld(normal, true);
 
     direction = position - worldLoc;
     float distanceSqr = direction.LengthSqr();
@@ -175,7 +172,7 @@ __device__ void  GPULight<PGroup>::GenerateRay(// Output
     Vector3 position = PrimSample(normal,
                                   pdf,
                                   //
-                                  primId,
+                                  primitiveId,
                                   gPData,
                                   rng);
 
@@ -190,8 +187,8 @@ __device__ void  GPULight<PGroup>::GenerateRay(// Output
     direction = q.ApplyRotation(direction);
 
     // Convert Ray to Worldspace
-    position = transform.LocalToWorld(position);
-    direction = transform.LocalToWorld(direction);
+    position = gTransform.LocalToWorld(position);
+    direction = gTransform.LocalToWorld(direction);
 
     RayF ray = {position, direction};
     rReg = RayReg(ray, 0, INFINITY);
@@ -210,8 +207,8 @@ __device__ float GPULight<PGroup>::Pdf(const Vector3& direction,
             //
             position,
             direction,
-            transform,
-            primId, 
+            gTransform,
+            primitiveId, 
             gPData);
 
     if(isnan(pdf))
@@ -235,12 +232,6 @@ template <class PGroup>
 __device__ bool GPULight<PGroup>::CanBeSampled() const
 {
     return true;
-}
-
-template <class PGroup>
-__device__ PrimitiveId GPULight<PGroup>::PrimitiveIndex() const
-{
-    return primId;
 }
 
 template <class PGroup>

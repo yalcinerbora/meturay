@@ -145,6 +145,12 @@
     <ClCompile Include="..\..\..\Source\TracerCUDA\CudaSystem.cpp">
       <Filter>Cuda System</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveDirectional.cpp">
+      <Filter>Primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveSkySphere.cpp">
+      <Filter>Primitives</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\TracerCUDA\ImageMemory.h">
@@ -545,6 +551,18 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\WorkOutputWriter.cuh">
       <Filter>Tracers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUPrimitiveDirectional.h">
+      <Filter>Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUPrimitiveSkySphere.h">
+      <Filter>Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\EndpointFinder.cuh">
+      <Filter>Work</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULocation.h">
+      <Filter>GPU Interfaces</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

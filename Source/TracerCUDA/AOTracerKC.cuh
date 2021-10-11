@@ -34,18 +34,17 @@ inline void AOMissWork(// Output
                        const typename MGroup::Surface& surface,
                        const RayId rayId,
                        // I-O
-                       AmbientOcclusionLocalState& gLocalState,
-                       AmbientOcclusionGlobalState& gRenderState,
+                       AmbientOcclusionLocalState& localState,
+                       AmbientOcclusionGlobalState& renderState,
                        RandomGPU& rng,
                        // Constants
                        const typename MGroup::Data& gMatData,
-                       const HitKey matId,
-                       const PrimitiveId primId)
+                       const HitKey::Type matIndex)
 {
-    // We did not hit anything just accumulate accumulate
-    auto& img = gRenderState.gImage;
+    // We did not hit anything just accumulate
     Vector4f result = Vector4f(aux.aoFactor, 1.0f);
-    ImageAccumulatePixel(img, aux.pixelIndex, result);
+    ImageAccumulatePixel(renderState.gImage, 
+                         aux.pixelIndex, result);
 }
 
 template <class MGroup>
@@ -61,16 +60,15 @@ inline void AOWork(// Output
                    const typename MGroup::Surface& surface,
                    const RayId rayId,
                    // I-O
-                   AmbientOcclusionLocalState& gLocalState,
-                   AmbientOcclusionGlobalState& gRenderState,
+                   AmbientOcclusionLocalState& localState,
+                   AmbientOcclusionGlobalState& renderState,
                    RandomGPU& rng,
                    // Constants
                    const typename MGroup::Data& gMatData,
-                   const HitKey matId,
-                   const PrimitiveId primId)
+                   const HitKey::Type matIndex)
 {
     // Check pass
-    if(gRenderState.hitPhase)
+    if(renderState.hitPhase)
     {
         // On hit phase
         // If AO kernel is called that means we hit something
@@ -113,11 +111,11 @@ inline void AOWork(// Output
         // Finally Write
         rayOut.ray = ray;
         rayOut.tMin = 0.0f;
-        rayOut.tMax = gRenderState.maxDistance;
+        rayOut.tMax = renderState.maxDistance;
         rayOut.Update(gOutRays, 0);
         // Write Aux
         gOutRayAux[0] = auxOut;
         // Here Write the Hit shaders specific boundary material
-        gOutBoundKeys[0] = gRenderState.aoMissKey;
+        gOutBoundKeys[0] = renderState.aoMissKey;
     }
 }

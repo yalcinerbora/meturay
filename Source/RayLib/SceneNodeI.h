@@ -124,6 +124,24 @@ class SceneNodeI
         virtual std::vector<UIntList>       AccessUIntList(const std::string& name, double time = 0.0) const = 0;
         virtual std::vector<UInt64List>     AccessUInt64List(const std::string& name, double time = 0.0) const = 0;
 
+        virtual OptionalNodeList<bool>           AccessOptionalBool(const std::string& name, double time = 0.0) const = 0;
+        virtual OptionalNodeList<float>          AccessOptionalFloat(const std::string& name, double time = 0.0) const = 0;
+        virtual OptionalNodeList<Vector2>        AccessOptionalVector2(const std::string& name, double time = 0.0) const = 0;
+        virtual OptionalNodeList<Vector3>        AccessOptionalVector3(const std::string& name, double time = 0.0) const = 0;
+        virtual OptionalNodeList<Vector4>        AccessOptionalVector4(const std::string& name, double time = 0.0) const = 0;
+        virtual OptionalNodeList<Matrix4x4>      AccessOptionalMatrix4x4(const std::string& name, double time = 0.0) const = 0;
+        virtual OptionalNodeList<uint32_t>       AccessOptionalUInt(const std::string& name, double time = 0.0) const = 0;
+        virtual OptionalNodeList<uint64_t>       AccessOptionalUInt64(const std::string& name, double time = 0.0) const = 0;
+
+        virtual OptionalNodeList<BoolList>       AccessOptionalBoolList(const std::string& name, double time = 0.0) const = 0;
+        virtual OptionalNodeList<FloatList>      AccessOptionalFloatList(const std::string& name, double time) const = 0;
+        virtual OptionalNodeList<Vector2List>    AccessOptionalVector2List(const std::string& name, double time = 0.0) const = 0;
+        virtual OptionalNodeList<Vector3List>    AccessOptionalVector3List(const std::string& name, double time = 0.0) const = 0;
+        virtual OptionalNodeList<Vector4List>    AccessOptionalVector4List(const std::string& name, double time = 0.0) const = 0;
+        virtual OptionalNodeList<Matrix4x4List>  AccessOptionalMatrix4x4List(const std::string& name, double time = 0.0) const = 0;
+        virtual OptionalNodeList<UIntList>       AccessOptionalUIntList(const std::string& name, double time = 0.0) const = 0;
+        virtual OptionalNodeList<UInt64List>     AccessOptionalUInt64List(const std::string& name, double time = 0.0) const = 0;
+
         // Texture Related
         virtual std::vector<NodeTextureStruct>          AccessTextureNode(const std::string& name,
                                                                           double time = 0.0) const = 0;

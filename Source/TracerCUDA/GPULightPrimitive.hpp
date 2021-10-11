@@ -14,11 +14,13 @@ __global__ void KCConstructGPULight(GPULight<PGroup>* gLightLocations,
         globalId < lightCount;
         globalId += blockDim.x * gridDim.x)
     {
-        new (gLightLocations + globalId) GPULight<PGroup>(gLightMaterialIds[globalId],
+        TransformId tId = gTransformIds[globalId];
+        new (gLightLocations + globalId) GPULight<PGroup>(pData,
+                                                          // Base Class
                                                           gMediumIndices[globalId],
-                                                          gPrimitiveIds[globalId],
-                                                          *gTransforms[gTransformIds[globalId]],
-                                                          pData);
+                                                          gLightMaterialIds[globalId],
+                                                          tId, *gTransforms[tId],
+                                                          gPrimitiveIds[globalId]);
     }
 }
 

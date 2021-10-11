@@ -95,7 +95,7 @@ inline bool GPULightSamplerUniform::SampleLight(// Outputs
     // Incorporate the PDF of selecting that ligjt
     pdf *= (1.0f / static_cast<float>(lightCount));
     lightIndex = index;
-    key = light->BoundaryMaterial();
+    key = light->MaterialKey();
 
     // Return infinite (or very large distance) for
     // primitive lights since those have to hit in order to function properly

@@ -125,6 +125,49 @@ OptionalNodeList<T> SceneNodeJson::AccessOptional(const std::string& name,
 }
 
 template <class T, LoadFunc<T> LoadF>
+OptionalNodeList<std::vector<T>> SceneNodeJson::AccessOptionalList(const std::string& name,
+                                                                   double time) const
+{
+    OptionalNodeList<std::vector<T>> result;
+    result.reserve(idIndexPairs.size());
+
+    // Check if entire data is missing then allocate for each innerId a empty node
+    auto it = node.cend();
+    if((it = node.find(name)) == node.cend())
+    {
+        OptionalNode<std::vector<T>> optNode;
+        optNode.first = false;
+        result.resize(idIndexPairs.size(), optNode);
+        return std::move(result);
+    }
+
+    // Access the node and continue
+    const nlohmann::json& nodeInner = node[name];
+
+    for(const auto& list : idIndexPairs)
+    {
+        const InnerIndex i = list.second;
+        const nlohmann::json& innerNode = (isMultiNode) ? nodeInner[i] : nodeInner;
+
+        OptionalNode<std::vector<T>> optNode;
+        if(innerNode.is_string())
+        {
+            std::string s = innerNode;
+            if(s == "")
+                optNode.first = false;
+        }
+        else
+        {
+            optNode.first = true;
+            for(const nlohmann::json& n : innerNode)
+                optNode.second.push_back(LoadF(n, time));            
+        }
+        result.push_back(optNode);
+    }
+    return std::move(result);
+}
+
+template <class T, LoadFunc<T> LoadF>
 std::vector<T> SceneNodeJson::CommonList(const std::string& name,
                                          double time) const
 {
@@ -432,6 +475,88 @@ std::vector<UInt64List> SceneNodeJson::AccessUInt64List(const std::string& name,
 std::vector<NodeTextureStruct> SceneNodeJson::AccessTextureNode(const std::string& name, double time) const
 {
     return AccessSingle<NodeTextureStruct, SceneIO::LoadNodeTextureStruct>(name, time);
+}
+
+OptionalNodeList<bool> SceneNodeJson::AccessOptionalBool(const std::string& name, double time) const
+{
+    return AccessOptional<bool, SceneIO::LoadBool>(name, time);
+}
+
+
+OptionalNodeList<float> SceneNodeJson::AccessOptionalFloat(const std::string& name, double time) const
+{
+    return AccessOptional<float, SceneIO::LoadNumber<float>>(name, time);
+}
+
+OptionalNodeList<Vector2> SceneNodeJson::AccessOptionalVector2(const std::string& name, double time) const
+{
+    return AccessOptional<Vector2, SceneIO::LoadVector<2, float>>(name, time);
+}
+
+OptionalNodeList<Vector3> SceneNodeJson::AccessOptionalVector3(const std::string& name, double time) const
+{
+    return AccessOptional<Vector3, SceneIO::LoadVector<3, float>>(name, time);
+}
+
+OptionalNodeList<Vector4> SceneNodeJson::AccessOptionalVector4(const std::string& name, double time) const
+{
+    return AccessOptional<Vector4, SceneIO::LoadVector<4, float>>(name, time);
+}
+
+OptionalNodeList<Matrix4x4> SceneNodeJson::AccessOptionalMatrix4x4(const std::string& name, double time) const
+{
+    return AccessOptional<Matrix4x4, SceneIO::LoadMatrix<4,float>>(name, time);
+}
+
+OptionalNodeList<uint32_t> SceneNodeJson::AccessOptionalUInt(const std::string& name, double time) const
+{
+    return AccessOptional<uint32_t, SceneIO::LoadNumber<uint32_t>>(name, time);
+}
+
+OptionalNodeList<uint64_t> SceneNodeJson::AccessOptionalUInt64(const std::string& name, double time) const
+{
+    return AccessOptional<uint64_t, SceneIO::LoadNumber<uint64_t>>(name, time);
+}
+
+OptionalNodeList<BoolList> SceneNodeJson::AccessOptionalBoolList(const std::string& name, double time) const
+{
+    return AccessOptionalList<bool, SceneIO::LoadBool>(name, time);
+}
+
+
+OptionalNodeList<FloatList> SceneNodeJson::AccessOptionalFloatList(const std::string& name, double time) const
+{
+    return AccessOptionalList<float, SceneIO::LoadNumber<float>>(name, time);
+}
+
+OptionalNodeList<Vector2List> SceneNodeJson::AccessOptionalVector2List(const std::string& name, double time) const
+{
+    return AccessOptionalList<Vector2, SceneIO::LoadVector<2, float>>(name, time);
+}
+
+OptionalNodeList<Vector3List> SceneNodeJson::AccessOptionalVector3List(const std::string& name, double time) const
+{
+    return AccessOptionalList<Vector3, SceneIO::LoadVector<3, float>>(name, time);
+}
+
+OptionalNodeList<Vector4List> SceneNodeJson::AccessOptionalVector4List(const std::string& name, double time) const
+{
+    return AccessOptionalList<Vector4, SceneIO::LoadVector<4, float>>(name, time);
+}
+
+OptionalNodeList<Matrix4x4List> SceneNodeJson::AccessOptionalMatrix4x4List(const std::string& name, double time) const
+{
+    return AccessOptionalList<Matrix4x4, SceneIO::LoadMatrix<4, float>>(name, time);
+}
+
+OptionalNodeList<UIntList> SceneNodeJson::AccessOptionalUIntList(const std::string& name, double time) const
+{
+    return AccessOptionalList<uint32_t, SceneIO::LoadNumber<uint32_t>>(name, time);
+}
+
+OptionalNodeList<UInt64List> SceneNodeJson::AccessOptionalUInt64List(const std::string& name, double time) const
+{
+    return AccessOptionalList<uint64_t, SceneIO::LoadNumber<uint64_t>>(name, time);
 }
 
 TexturedDataNodeList<float> SceneNodeJson::AccessTexturedDataFloat(const std::string& name, double time) const

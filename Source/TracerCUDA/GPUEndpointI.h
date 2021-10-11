@@ -3,26 +3,26 @@
 #include "RayLib/Vector.h"
 #include "RayLib/HitStructs.h"
 
+#include "GPULocation.h"
+
 class RandomGPU;
 struct RayReg;
 
 // Endpoint interface
 // it is either camera or a light source
 // Only dynamic polymorphism case for tracer
-class GPUEndpointI
+class GPUEndpointI : public GPULocation
 {
     protected:
-        // Material of the Endpoint
-        // In order to acquire light visibility
-        // Launch a ray using this key
-        // if nothing hits Tracer batches the ray with this key
-        HitKey                      boundaryMaterialKey;
         // Medium of the endpoint
         // used to initialize rays when generated
         uint16_t                    mediumIndex;
 
     public:
-        __device__                  GPUEndpointI(HitKey k, uint16_t mediumIndex);
+        __device__                  GPUEndpointI(uint16_t mediumIndex,
+                                                 HitKey, TransformId, 
+                                                 PrimitiveId,
+                                                 const GPUTransformI&);
         virtual                     ~GPUEndpointI() = default;
 
         // Interface
@@ -51,24 +51,18 @@ class GPUEndpointI
                                                 bool antiAliasOn = true) const = 0;
         virtual __device__ float    Pdf(const Vector3& direction,
                                         const Vector3& position) const = 0;
+        virtual __device__ bool     CanBeSampled() const = 0;
 
-        virtual __device__ PrimitiveId  PrimitiveIndex() const = 0;
-        virtual __device__ bool         CanBeSampled() const = 0;
-        __device__ HitKey               BoundaryMaterial() const;
-        __device__ uint16_t             MediumIndex() const;
+        __device__ uint16_t         MediumIndex() const;
 };
 
 __device__
-inline  GPUEndpointI::GPUEndpointI(HitKey k, uint16_t mediumIndex)
-    : boundaryMaterialKey(k)
+inline  GPUEndpointI::GPUEndpointI(uint16_t mediumIndex,
+                                   HitKey mK, TransformId tId, PrimitiveId pId,
+                                   const GPUTransformI& gTrans)
+    : GPULocation(mK, tId, pId, gTrans)
     , mediumIndex(mediumIndex)
 {}
-
-__device__
-inline HitKey GPUEndpointI::BoundaryMaterial() const
-{
-    return boundaryMaterialKey;
-}
 
 __device__
 inline uint16_t GPUEndpointI::MediumIndex() const

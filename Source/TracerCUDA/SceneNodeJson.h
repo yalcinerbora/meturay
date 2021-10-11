@@ -13,22 +13,25 @@ class SceneNodeJson final : public SceneNodeI
         const nlohmann::json&           node;
 
         template <class T, LoadFunc<T>>
-        std::vector<std::vector<T>>     AccessList(const std::string& name,
+        std::vector<std::vector<T>>         AccessList(const std::string& name,
                                                    double time) const;
         template <class T, LoadFunc<T>>
-        std::vector<T>                  AccessSingle(const std::string& name,
+        std::vector<T>                      AccessSingle(const std::string& name,
                                                      double time) const;
         template <class T>
-        std::vector<T>                  AccessRanged(const std::string& name) const;
+        std::vector<T>                      AccessRanged(const std::string& name) const;
         template <class T, LoadFunc<T>>
-        std::vector<T>                  CommonList(const std::string& name,
+        std::vector<T>                      CommonList(const std::string& name,
                                                    double time) const;
         template <class T, LoadFunc<T>>
-        TexturedDataNodeList<T>         AccessTextured(const std::string& name,
-                                                       double time) const;
+        TexturedDataNodeList<T>             AccessTextured(const std::string& name,
+                                                           double time) const;
         template <class T, LoadFunc<T>>
-        OptionalNodeList<T>             AccessOptional(const std::string& name,
-                                                       double time) const;
+        OptionalNodeList<T>                 AccessOptional(const std::string& name,
+                                                           double time) const;
+        template <class T, LoadFunc<T> LoadF>
+        OptionalNodeList<std::vector<T>>    AccessOptionalList(const std::string& name,
+                                                               double time) const;
 
     protected:
     public:
@@ -93,6 +96,24 @@ class SceneNodeJson final : public SceneNodeI
         std::vector<Matrix4x4List>      AccessMatrix4x4List(const std::string& name, double time = 0.0) const override;
         std::vector<UIntList>           AccessUIntList(const std::string& name, double time = 0.0) const override;
         std::vector<UInt64List>         AccessUInt64List(const std::string& name, double time = 0.0) const override;
+
+        OptionalNodeList<bool>          AccessOptionalBool(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<float>         AccessOptionalFloat(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<Vector2>       AccessOptionalVector2(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<Vector3>       AccessOptionalVector3(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<Vector4>       AccessOptionalVector4(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<Matrix4x4>     AccessOptionalMatrix4x4(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<uint32_t>      AccessOptionalUInt(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<uint64_t>      AccessOptionalUInt64(const std::string& name, double time = 0.0) const override;
+
+        OptionalNodeList<BoolList>       AccessOptionalBoolList(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<FloatList>      AccessOptionalFloatList(const std::string& name, double time) const override;
+        OptionalNodeList<Vector2List>    AccessOptionalVector2List(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<Vector3List>    AccessOptionalVector3List(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<Vector4List>    AccessOptionalVector4List(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<Matrix4x4List>  AccessOptionalMatrix4x4List(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<UIntList>       AccessOptionalUIntList(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<UInt64List>     AccessOptionalUInt64List(const std::string& name, double time = 0.0) const override;
 
         // Texture Related
         std::vector<NodeTextureStruct>          AccessTextureNode(const std::string& name,

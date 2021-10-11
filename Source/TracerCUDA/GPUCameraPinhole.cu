@@ -19,15 +19,16 @@ __global__ void KCConstructGPUCameraPinhole(GPUCameraPinhole* gCameraLocations,
     {
         CPUCameraGroupPinhole::Data data = gData[globalId];
 
+        TransformId tId = gTransformIds[globalId];
         new (gCameraLocations + globalId) GPUCameraPinhole(data.position,
                                                            data.gaze,
                                                            data.up,
                                                            data.nearFar,
                                                            data.fov,
-                                                           *gTransforms[gTransformIds[globalId]],
-                                                           //
+                                                           // Base class
                                                            gMediumIndices[globalId],
-                                                           gCameraMaterialIds[globalId]);
+                                                           gCameraMaterialIds[globalId],
+                                                           tId, *gTransforms[tId]);
     }
 }
 

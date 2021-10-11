@@ -43,7 +43,6 @@ struct TriData
     const bool*         cullFace;
     const uint64_t*     primOffsets;
     uint32_t            primBatchCount;
-    // TODO: add alpha map
 
     // Per vertex attributes
     const Vector3f*     positions;

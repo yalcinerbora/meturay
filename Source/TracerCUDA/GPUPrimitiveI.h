@@ -66,6 +66,8 @@ class GPUPrimitiveGroupI
 
         // Primitive Transform Info for accelerator
         virtual PrimTransformType   TransformType() const = 0;
+        // If primitive (by definition) is intersectable or not
+        virtual bool                IsIntersectable() const = 0;
 
         // Error check
         // Queries in order to check if this primitive group supports certain primitive data
