@@ -58,7 +58,9 @@
     {
         "id": 0,
         "type": "SkySphere",
-        "isHemispherical": false
+        "isHemispherical": false,
+
+        "radiance" : {"texture": 17, "channels": "rgb"}
     }
 ],
 
@@ -546,7 +548,7 @@
     }],
 
     // Lights
-    "LightSurfaces": [{"light": 0, "material": 0, "transform": 1}],
+    "LightSurfaces": [{"light": 0, "transform": 1}],
     // Cameras
     "CameraSurfaces": [
         // Overall View

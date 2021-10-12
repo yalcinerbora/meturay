@@ -29,9 +29,7 @@ class GPUCameraPixel final : public GPUCameraI
                                            const Vector2i& resolution,
                                            // Base Class Related
                                            uint16_t mediumId,
-                                           HitKey, TransformId,
-                                           const GPUTransformI&,
-                                           PrimitiveId = 0);
+                                           const GPUTransformI&);
                             ~GPUCameraPixel() = default;
 
         // Interface
@@ -80,10 +78,8 @@ inline GPUCameraPixel::GPUCameraPixel(const Vector3& position,
                                       const Vector2i& resolution,
                                       // Base Class Related
                                       uint16_t mediumId,
-                                      HitKey hK, TransformId tId,
-                                      const GPUTransformI& gTrans,
-                                      PrimitiveId pId)
-    : GPUCameraI(mediumId, hK, tId, gTrans, pId)
+                                      const GPUTransformI& gTrans)
+    : GPUCameraI(mediumId, gTrans)
     , position(position)
     , right(right)
     , up(up)
@@ -219,10 +215,7 @@ inline GPUCameraPixel GPUCameraPixel::GeneratePixelCamera(const Vector2i& pixelI
                           pixelId,
                           resolution,
                           mediumIndex,
-                          materialKey,
-                          transformId,
-                          gTransform,
-                          primitiveId);
+                          gTransform);
 }
 
 __global__

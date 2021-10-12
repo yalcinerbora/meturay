@@ -17,12 +17,12 @@
 #include "GPUWork.cuh"
 #include "RayAuxStruct.cuh"
 
-template<class MGroup, class PGroup>
+template<class EGroup>
 class PTBoundaryWork
     : public GPUBoundaryWorkBatch<PathTracerGlobalState,
                                   PathTracerLocalState, RayAuxPath,
-                                  MGroup, PGroup, PathTracerBoundaryWork<MGroup>,
-                                  PGroup::GetSurfaceFunction>
+                                  EGroup, PathTracerBoundaryWork<MGroup>,
+                                  EGroup::GetSurfaceFunction>
 {
     private:
         bool                neeOn;

@@ -101,14 +101,10 @@ class GPUAccBVHGroup final
         // Loads required data to CPU cache for
         SceneError              InitializeGroup(// Accelerator Option Node
                                                 const SceneNodePtr& node,
-                                                // Map of hit keys for all materials
-                                                // w.r.t matId and primitive type
-                                                const std::map<TypeIdPair, HitKey>&,
                                                 // List of surface/material
                                                 // pairings that uses this accelerator type
                                                 // and primitive type
-                                                const std::map<uint32_t, IdPairs>& pairingList,
-                                                const std::vector<uint32_t>& transformList,
+                                                const std::map<uint32_t, SurfaceDefinition>& surfaceList,
                                                 double time) override;
 
         // Surface Queries

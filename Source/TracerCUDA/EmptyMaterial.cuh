@@ -2,17 +2,12 @@
 
 #include "GPUMaterialP.cuh"
 #include "TypeTraits.h"
-#include "MetaMaterialFunctions.cuh"
 #include "EmptyMaterialKC.cuh"
 
 template <class Surface>
 class EmptyMat final
     : public GPUMaterialGroup<NullData, Surface,
-                              EmptySample<Surface>, EmptyEvaluate<Surface>,
-                              PdfZero<NullData, Surface>,
-                              EmitEmpty<NullData, Surface>,
-                              IsEmissiveFalse<NullData>,
-                              SpecularityPerfect<NullData, Surface>>
+                              EmptyMatFuncs<Surface>>
 {
     public:
         static const char*      TypeName() { return "Empty"; }
@@ -53,10 +48,5 @@ class EmptyMat final
 
 template <class S>
 EmptyMat<S>::EmptyMat(const CudaGPU& gpu)
-    : GPUMaterialGroup<NullData, S,
-                       EmptySample<S>, EmptyEvaluate<S>,
-                       PdfZero<NullData, S>,
-                       EmitEmpty<NullData, S>,
-                       IsEmissiveFalse<NullData>,
-                       SpecularityPerfect<NullData, S>>(gpu)
+    : GPUMaterialGroup<NullData, S, EmptyMatFuncs<S>>(gpu)
 {}

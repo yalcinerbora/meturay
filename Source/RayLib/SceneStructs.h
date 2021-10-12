@@ -4,6 +4,7 @@
 #include <array>
 #include <set>
 #include <map>
+#include <tuple>
 
 #include "Vector.h"
 #include "Matrix.h"
@@ -40,11 +41,20 @@ using InnerIndex = uint32_t;    // Inner Index is sub index of the node
                                 // Each node can define multiple ids
 
 using TypeIdPair = std::pair<std::string, uint32_t>;
+
 using IdPair = std::pair<uint32_t, uint32_t>;
 using IdPairs = std::array<IdPair, SceneConstants::MaxPrimitivePerSurface>;
-using IdList = std::vector<uint32_t>;
 
-using IdPairsWithAnId = std::pair<uint32_t, IdPairs>;
+using IdKeyPair = std::pair<uint32_t, HitKey>;
+using IdKeyPairs = std::array<IdKeyPair, SceneConstants::MaxPrimitivePerSurface>;
+
+using TypeIdIdTriplet = std::tuple<std::string, uint32_t, uint32_t>;
+
+//using IdList = std::vector<uint32_t>;
+//
+//using IdPairsWithAnId = std::pair<uint32_t, IdPairs>;
+
+using IndexLookup = std::map<NodeId, std::pair<NodeIndex, InnerIndex>>;
 
 class SceneNodeI;
 
@@ -68,10 +78,23 @@ enum class TextureAccessLayout
 // Compiled Data which will be used to create actual class later
 struct AccelGroupData
 {
+    struct SurfaceDef
+    {
+        uint32_t    transformId;
+        IdPairs     matPrimIdPairs;
+    };
+    struct LSurfaceDef
+    {
+        uint32_t    transformId;
+        uint32_t    primId;
+    };
+
     std::string                     accelType;
     std::string                     primType;
-    std::map<uint32_t, IdPairs>     matPrimIdPairs;
-    std::vector<uint32_t>           transformIds;
+    // List of Surfaces
+    std::map<uint32_t, SurfaceDef>  surfaces;
+    // If available List of light surfaces
+    std::map<uint32_t, LSurfaceDef> lightSurfaces;
     std::unique_ptr<SceneNodeI>     accelNode;
 };
 
@@ -85,30 +108,28 @@ struct WorkBatchData
 // Construction data is used to create camera or lights
 // SceneNode Interface is used singular in this case
 // meaning only single element on the node is enabled
-struct CameraConstructionData
+struct EndpointConstructionData
 {
+    uint32_t                        surfaceId;
     uint32_t                        transformId;
     uint32_t                        mediumId;
     uint32_t                        constructionId;
+    uint32_t                        primitiveId;
     std::unique_ptr<SceneNodeI>     node;
 };
 
-struct LightConstructionData : public CameraConstructionData
-{
-    uint32_t                        materialId;
-};
-
 struct LightGroupData
-{
-    bool                                isPrimitive;
-    std::string                         primTypeName;
-    std::vector<LightConstructionData>  constructionInfo;
+{    
+    std::string                             primTypeName;
+    std::vector<EndpointConstructionData>   constructionInfo;
+
+    bool IsPrimitiveLight() const { return primTypeName.empty(); }
 };
 
-using LightGroupDataList = std::vector<LightConstructionData>;
-using CameraGroupDataList = std::vector<CameraConstructionData>;
+using EndpointGroupDataList = std::vector<EndpointConstructionData>;
 
 using MaterialKeyListing = std::map<TypeIdPair, HitKey>;
+using BoundaryMaterialKeyListing = std::map<TypeIdIdTriplet, HitKey>;
 
 struct EndpointStruct
 {
@@ -135,8 +156,8 @@ struct LightSurfaceStruct
     uint32_t    mediumId;
     uint32_t    transformId;
     uint32_t    acceleratorId;
-    uint32_t    materialId;
-    uint32_t    lightOrPrimId;
+    uint32_t    primId;
+    uint32_t    lightId;
 };
 
 struct CameraSurfaceStruct

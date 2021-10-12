@@ -2,18 +2,11 @@
 
 #include "GPUMaterialP.cuh"
 #include "TypeTraits.h"
-#include "MetaMaterialFunctions.cuh"
 #include "DeviceMemory.h"
 #include "DebugMaterialsKC.cuh"
 
 class BarycentricMat final
-    : public GPUMaterialGroup<NullData, BarySurface,
-                              BarycentricSample,
-                              BarycentricEvaluate,
-                              PdfOne<NullData, BarySurface>,
-                              EmitEmpty<NullData, BarySurface>,
-                              IsEmissiveFalse<NullData>,
-                              SpecularityDiffuse<NullData, BarySurface>>
+    : public GPUMaterialGroup<NullData, BarySurface, BaryMatFuncs>                              
 {
    public:
         static const char*      TypeName() { return "Barycentric"; }
@@ -23,13 +16,8 @@ class BarycentricMat final
     public:
         // Constructors & Destructor
                                 BarycentricMat(const CudaGPU& gpu)
-                                    : GPUMaterialGroup<NullData, BarySurface,
-                                                       BarycentricSample,
-                                                       BarycentricEvaluate,
-                                                       PdfOne<NullData, BarySurface>,
-                                                       EmitEmpty<NullData, BarySurface>,
-                                                       IsEmissiveFalse<NullData>,
-                                                       SpecularityDiffuse<NullData, BarySurface>>(gpu) {}
+                                    : GPUMaterialGroup<NullData, BarySurface, 
+                                                       BaryMatFuncs>(gpu) {}
                                 ~BarycentricMat() = default;
 
         // Interface
@@ -39,7 +27,7 @@ class BarycentricMat final
         SceneError              InitializeGroup(const NodeListing& materialNodes,
                                                 const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
-                                                double time, const std::string& scenePath) override {return GenerateInnerIds(materialNodes);}
+                                                double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override {return SceneError::OK;}
 
@@ -59,13 +47,7 @@ class BarycentricMat final
 };
 
 class SphericalMat final
-    : public GPUMaterialGroup<NullData, SphrSurface,
-                              SphericalSample,
-                              SphericalEvaluate,
-                              PdfOne<NullData, SphrSurface>,
-                              EmitEmpty<NullData, SphrSurface>,
-                              IsEmissiveFalse<NullData>,
-                              SpecularityDiffuse<NullData, SphrSurface>>
+    : public GPUMaterialGroup<NullData, SphrSurface, SphericalMatFuncs>
 {
     public:
         static const char*      TypeName() { return "Spherical"; }
@@ -76,12 +58,7 @@ class SphericalMat final
         // Constructors & Destructor
                                 SphericalMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<NullData, SphrSurface,
-                                                       SphericalSample,
-                                                       SphericalEvaluate,
-                                                       PdfOne<NullData, SphrSurface>,
-                                                       EmitEmpty<NullData, SphrSurface>,
-                                                       IsEmissiveFalse<NullData>,
-                                                       SpecularityDiffuse<NullData, SphrSurface>>(gpu) {}
+                                                       SphericalMatFuncs>(gpu) {}
                                 ~SphericalMat() = default;
 
         // Interface
@@ -91,7 +68,7 @@ class SphericalMat final
         SceneError              InitializeGroup(const NodeListing& materialNodes,
                                                 const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
-                                                double time, const std::string& scenePath) override {return GenerateInnerIds(materialNodes);}
+                                                double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override {return SceneError::OK;}
 
@@ -112,12 +89,7 @@ class SphericalMat final
 
 class NormalRenderMat final
     : public GPUMaterialGroup<NullData, BasicSurface,
-                              NormalSample,
-                              NormalEvaluate,
-                              PdfOne<NullData, BasicSurface>,
-                              EmitEmpty<NullData, BasicSurface>,
-                              IsEmissiveFalse<NullData>,
-                              SpecularityDiffuse<NullData, BasicSurface>>
+                              NormalRenderMatFuncs>
 {
    public:
         static const char*      TypeName() { return "NormalRender"; }
@@ -128,12 +100,7 @@ class NormalRenderMat final
         // Constructors & Destructor
                                 NormalRenderMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<NullData, BasicSurface,
-                                                       NormalSample,
-                                                       NormalEvaluate,
-                                                       PdfOne<NullData, BasicSurface>,
-                                                       EmitEmpty<NullData, BasicSurface>,
-                                                       IsEmissiveFalse<NullData>,
-                                                       SpecularityDiffuse<NullData, BasicSurface>>(gpu) {}
+                                                       NormalRenderMatFuncs>(gpu) {}
                                 ~NormalRenderMat() = default;
 
         // Interface
@@ -143,7 +110,7 @@ class NormalRenderMat final
         SceneError              InitializeGroup(const NodeListing& materialNodes,
                                                 const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
-                                                double time, const std::string& scenePath) override {return GenerateInnerIds(materialNodes);}
+                                                double time, const std::string& scenePath) override;
         SceneError              ChangeTime(const NodeListing& materialNodes, double time,
                                            const std::string& scenePath) override {return SceneError::OK;}
 

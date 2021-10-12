@@ -47,6 +47,8 @@ namespace NodeNames
     static constexpr const char* TEXTURE_SIGNED = "signed";
     static constexpr const char* TEXTURE_CHANNEL = "channels";
     static constexpr const char* TEXTURE_NAME = "texture";
+    // Light Related
+    static constexpr const char* LIGHT_TYPE_PRIMITIVE = "Primitive";
 
     // Indentity Transform Type Name
     static constexpr const char* TRANSFORM_IDENTITY = "Identity";

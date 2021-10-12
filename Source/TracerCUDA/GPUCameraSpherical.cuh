@@ -29,9 +29,7 @@ class GPUCameraSpherical final : public GPUCameraI
                                                const Vector2& nearFar,
                                                // Base Class Related
                                                uint16_t mediumId,
-                                               HitKey, TransformId,
-                                               const GPUTransformI&,
-                                               PrimitiveId = 0);
+                                               const GPUTransformI&);
                             ~GPUCameraSpherical() = default;
 
         // Interface
@@ -103,6 +101,7 @@ class CPUCameraGroupSpherical final : public CPUCameraGroupI
         std::vector<Data>               hCameraData;
 
         GPUCameraList                   gpuCameraList;
+        GPUEndpointList                 gpuEndpointList;
         VisorCameraList                 visorCameraList;
         uint32_t                        cameraCount;
 
@@ -113,20 +112,22 @@ class CPUCameraGroupSpherical final : public CPUCameraGroupI
                                         ~CPUCameraGroupSpherical() = default;
 
         // Interface
-        const char*                     Type() const override;
         const GPUCameraList&            GPUCameras() const override;
         const VisorCameraList&          VisorCameras() const override;
-        SceneError					    InitializeGroup(const CameraGroupDataList& cameraNodes,
+
+        const char*                     Type() const override;
+        const GPUEndpointList&          GPUEndpoints() const override;
+        SceneError					    InitializeGroup(const EndpointGroupDataList& cameraNodes,
+                                                        const TextureNodeMap& textures,
                                                         const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                         const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
-                                                        uint32_t cameraMaterialBatchId,
-                                                        double time,
+                                                        uint32_t batchId, double time,
                                                         const std::string& scenePath) override;
         SceneError					    ChangeTime(const NodeListing& lightNodes, double time,
                                                    const std::string& scenePath) override;
-        TracerError					    ConstructCameras(const CudaSystem&,
-                                                         const GPUTransformI**) override;
-        uint32_t					        CameraCount() const override;
+        TracerError					    ConstructEndpoints(const GPUTransformI**,
+                                                           const CudaSystem&) override;
+        uint32_t					        EndpointCount() const override;
 
         size_t						    UsedGPUMemory() const override;
         size_t						    UsedCPUMemory() const override;
@@ -140,10 +141,8 @@ inline GPUCameraSpherical::GPUCameraSpherical(float pixelRatio,
                                               const Vector2& nearFar,
                                               // Base Class Related
                                               uint16_t mediumId,
-                                              HitKey hK, TransformId tId,
-                                              const GPUTransformI& gTrans,
-                                              PrimitiveId pId)
-    : GPUCameraI(mediumId, hK, tId, gTrans, pId)
+                                              const GPUTransformI& gTrans)
+    : GPUCameraI(mediumId, gTrans)
     , position(gTrans.LocalToWorld(pos))
     , up(gTrans.LocalToWorld(upp))
     , direction(gTrans.LocalToWorld(dir))
@@ -287,10 +286,7 @@ inline GPUCameraPixel GPUCameraSpherical::GeneratePixelCamera(const Vector2i& pi
                           pixelId,
                           resolution,
                           mediumIndex,
-                          materialKey,
-                          transformId,
-                          gTransform,
-                          primitiveId);
+                          gTransform);
 }
 
 inline CPUCameraGroupSpherical::CPUCameraGroupSpherical()
@@ -303,6 +299,11 @@ inline const char* CPUCameraGroupSpherical::Type() const
     return TypeName();
 }
 
+inline const GPUEndpointList& CPUCameraGroupSpherical::GPUEndpoints() const
+{
+    return gpuEndpointList;
+}
+
 inline const GPUCameraList& CPUCameraGroupSpherical::GPUCameras() const
 {
     return gpuCameraList;
@@ -313,7 +314,7 @@ inline const VisorCameraList& CPUCameraGroupSpherical::VisorCameras() const
     return visorCameraList;
 }
 
-inline uint32_t CPUCameraGroupSpherical::CameraCount() const
+inline uint32_t CPUCameraGroupSpherical::EndpointCount() const
 {
     return cameraCount;
 }

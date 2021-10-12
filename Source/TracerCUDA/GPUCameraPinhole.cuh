@@ -9,7 +9,7 @@
 #include "GPUCameraPixel.cuh"
 
 class GPUCameraPinhole final : public GPUCameraI
-{
+{    
     private:
     protected:
         Vector3                 position;
@@ -27,12 +27,10 @@ class GPUCameraPinhole final : public GPUCameraI
                                              const Vector3& gaze,
                                              const Vector3& up,
                                              const Vector2& nearFar,
-                                             const Vector2& fov,                                             
+                                             const Vector2& fov,
                                              // Base Class Related
-                                             uint16_t mediumId,
-                                             HitKey, TransformId,
-                                             const GPUTransformI&,
-                                             PrimitiveId = 0);
+                                             uint16_t mediumId,                                             
+                                             const GPUTransformI&);
                             ~GPUCameraPinhole() = default;
 
         // Interface
@@ -70,6 +68,7 @@ class GPUCameraPinhole final : public GPUCameraI
                                                         const Vector2i& resolution) const override;
 };
 
+
 class CPUCameraGroupPinhole final : public CPUCameraGroupI
 {
     public:
@@ -103,6 +102,7 @@ class CPUCameraGroupPinhole final : public CPUCameraGroupI
         std::vector<TransformId>        hTransformIds;
         std::vector<Data>               hCameraData;
 
+        GPUEndpointList                 gpuEndpointList;
         GPUCameraList                   gpuCameraList;
         VisorCameraList                 visorCameraList;
         uint32_t                        cameraCount;
@@ -114,20 +114,22 @@ class CPUCameraGroupPinhole final : public CPUCameraGroupI
                                         ~CPUCameraGroupPinhole() = default;
 
         // Interface
-        const char*                     Type() const override;
         const GPUCameraList&            GPUCameras() const override;
         const VisorCameraList&          VisorCameras() const override;
-        SceneError					    InitializeGroup(const CameraGroupDataList& cameraNodes,
+
+        const char*                     Type() const override;
+        const GPUEndpointList&          GPUEndpoints() const override;
+        SceneError					    InitializeGroup(const EndpointGroupDataList& cameraNodes,
+                                                        const TextureNodeMap& textures,
                                                         const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                         const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
-                                                        uint32_t cameraMaterialBatchId,
-                                                        double time,
+                                                        uint32_t batchId, double time,
                                                         const std::string& scenePath) override;
         SceneError					    ChangeTime(const NodeListing& lightNodes, double time,
                                                    const std::string& scenePath) override;
-        TracerError					    ConstructCameras(const CudaSystem&,
-                                                         const GPUTransformI**) override;
-        uint32_t					        CameraCount() const override;
+        TracerError					    ConstructEndpoints(const GPUTransformI**,
+                                                           const CudaSystem&) override;
+        uint32_t					        EndpointCount() const override;
 
         size_t						    UsedGPUMemory() const override;
         size_t						    UsedCPUMemory() const override;
@@ -140,11 +142,9 @@ inline GPUCameraPinhole::GPUCameraPinhole(const Vector3& pos,
                                           const Vector2& nF,
                                           const Vector2& fov,
                                           // Base Class Related
-                                          uint16_t mediumId,
-                                          HitKey hK, TransformId tId,
-                                          const GPUTransformI& gTrans,
-                                          PrimitiveId pId)
-    : GPUCameraI(mediumId, hK, tId, gTrans, pId)
+                                          uint16_t mediumId,                                          
+                                          const GPUTransformI& gTrans)
+    : GPUCameraI(mediumId, gTrans)
     , position(gTrans.LocalToWorld(pos))
     , up(gTrans.LocalToWorld(upp))
     , nearFar(nF)
@@ -310,10 +310,7 @@ inline GPUCameraPixel GPUCameraPinhole::GeneratePixelCamera(const Vector2i& pixe
                           pixelId,
                           resolution,
                           mediumIndex,
-                          materialKey,
-                          transformId,
-                          gTransform,
-                          primitiveId);
+                          gTransform);
 }
 
 inline CPUCameraGroupPinhole::CPUCameraGroupPinhole()
@@ -326,6 +323,11 @@ inline const char* CPUCameraGroupPinhole::Type() const
     return TypeName();
 }
 
+inline const GPUEndpointList& CPUCameraGroupPinhole::GPUEndpoints() const
+{
+    return gpuEndpointList;
+}
+
 inline const GPUCameraList& CPUCameraGroupPinhole::GPUCameras() const
 {
     return gpuCameraList;
@@ -336,7 +338,7 @@ inline const VisorCameraList& CPUCameraGroupPinhole::VisorCameras() const
     return visorCameraList;
 }
 
-inline uint32_t CPUCameraGroupPinhole::CameraCount() const
+inline uint32_t CPUCameraGroupPinhole::EndpointCount() const
 {
     return cameraCount;
 }

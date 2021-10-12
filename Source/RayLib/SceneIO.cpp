@@ -174,40 +174,53 @@ SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn)
 
 LightSurfaceStruct SceneIO::LoadLightSurface(uint32_t baseMediumId,
                                              uint32_t identityTransformId,
-                                             const nlohmann::json& jsn)
+                                             const nlohmann::json& jsnNode,
+                                             const nlohmann::json& jsnLights,
+                                             const IndexLookup& lightIndexLookup)
 {
     LightSurfaceStruct s;
 
     // Transform
-    auto i = jsn.end();
-    if((i = jsn.find(TRANSFORM)) != jsn.end())
+    auto i = jsnNode.end();
+    if((i = jsnNode.find(TRANSFORM)) != jsnNode.end())
         s.transformId = *i;
     else s.transformId = identityTransformId;
 
     // Medium
-    i = jsn.end();
-    if((i = jsn.find(MEDIUM)) != jsn.end())
+    i = jsnNode.end();
+    if((i = jsnNode.find(MEDIUM)) != jsnNode.end())
         s.mediumId = *i;
     else s.mediumId = baseMediumId;
 
-    // PrimId or LightId
-    i = jsn.end();
-    if((i = jsn.find(LIGHT)) != jsn.end())
+    // Light Id
+    if((i = jsnNode.find(LIGHT)) != jsnNode.end())
     {
-        s.isPrimitive = false;
-        s.lightOrPrimId = *i;
-        s.acceleratorId = std::numeric_limits<uint32_t>::max();
-    }
-    else if((i = jsn.find(PRIMITIVE)) != jsn.end())
-    {
-        s.isPrimitive = true;
-        s.acceleratorId = jsn[ACCELERATOR];
-        s.lightOrPrimId = *i;
+        s.lightId = *i;        
     }
     else throw SceneException(SceneError::TYPE_MISMATCH);
 
-    // Material
-    s.materialId = jsn[MATERIAL];
+    // Check if this light is primitive
+    if(auto loc = lightIndexLookup.find(s.lightId); loc != lightIndexLookup.end())
+    {
+        const NodeIndex nIndex = loc->second.first;
+        const InnerIndex iIndex = loc->second.second;
+
+        const auto& jsnNode = jsnLights[nIndex];
+        std::string lightTypeName = jsnNode[NodeNames::TYPE];
+
+        s.isPrimitive = (lightTypeName == NodeNames::LIGHT_TYPE_PRIMITIVE);
+        if(s.isPrimitive)
+        {
+            s.acceleratorId = jsnNode[NodeNames::ACCELERATOR];
+            s.primId = jsnNode[NodeNames::PRIMITIVE];
+        }
+        else
+        {
+            s.acceleratorId = std::numeric_limits<uint32_t>::max();
+            s.primId = std::numeric_limits<uint32_t>::max();
+        }        
+    }
+    else throw SceneException(SceneError::LIGHT_ID_NOT_FOUND);
 
     return s;
 }

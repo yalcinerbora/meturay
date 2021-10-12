@@ -36,7 +36,7 @@ struct PathTracerLocalState
 };
 
 
-template <class MGroup>
+template <class EGroup>
 __device__ __forceinline__
 void PathTracerBoundaryWork(// Output
                             HitKey* gOutBoundKeys,
@@ -46,19 +46,22 @@ void PathTracerBoundaryWork(// Output
                             // Input as registers
                             const RayReg& ray,
                             const RayAuxPath& aux,
-                            const typename MGroup::Surface& surface,
+                            const typename EGroup::Surface& surface,
                             const RayId rayId,
                             // I-O
                             PathTracerLocalState& localState,
                             PathTracerGlobalState& renderState,
                             RandomGPU& rng,
                             // Constants
-                            const uint32_t endPointIndex,
-                            const typename MGroup::Data& gMatData,
-                            const HitKey::Type matIndex)
+                            const typename EGroup::GPUType* gLights,                            
+                            const HitKey::Type workIndex)
 {
+    using GPUType = typename EGroup::GPUType;
+
     // Check Material Sample Strategy
     assert(maxOutRay == 0);
+
+    const GPULightType& gLight = *gLights[workIndex];
 
     const bool isPathRayAsMISRay = renderState.directLightMIS && (aux.type == RayType::PATH_RAY);
     const bool isCameraRay = aux.type == RayType::CAMERA_RAY;
@@ -66,7 +69,7 @@ void PathTracerBoundaryWork(// Output
     // Always eval boundary mat if NEE is off
     // or NEE is on and hit endpoint and requested endpoint is same
     const bool isCorrectNEERay = ((!renderState.nee) ||
-                                  (aux.endPointIndex == endPointIndex &&
+                                  (aux.endPointId == gLight.EndpointId() &&
                                    aux.type == RayType::NEE_RAY));
 
     float misWeight = 1.0f;
@@ -104,15 +107,10 @@ void PathTracerBoundaryWork(// Output
         Vector3 transFactor = m.Transmittance(ray.tMax);
         Vector3 radianceFactor = aux.radianceFactor * transFactor;
 
-        Vector3 emission = MGroup::Emit(// Input
-                                        -r.getDirection(),
-                                        position,
-                                        m,
-                                        //
-                                        surface,
-                                        // Constants
-                                        gMatData,
-                                        matIndex);
+        Vector3 emission = gLight.Emittance(// Input
+                                            -r.getDirection(),
+                                            position,
+                                            surface);
 
         // And accumulate pixel// and add as a sample         
         Vector3f total =  emission * radianceFactor;

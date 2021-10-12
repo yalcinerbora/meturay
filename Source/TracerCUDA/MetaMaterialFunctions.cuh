@@ -59,6 +59,7 @@ Vector3 SampleEmpty(// Sampled Output
                     const HitKey::Type& matId,
                     uint32_t sampleIndex)
 {
+    outMedium = &m;
     wo = InvalidRayF;
     pdf = 0.0f;
     return Zero3f;

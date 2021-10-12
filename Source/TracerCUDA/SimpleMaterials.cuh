@@ -2,7 +2,6 @@
 
 #include "SimpleMaterialsKC.cuh"
 
-#include "MetaMaterialFunctions.cuh"
 #include "GPUMaterialP.cuh"
 #include "TypeTraits.h"
 #include "DeviceMemory.h"
@@ -10,11 +9,7 @@
 // Constant Lambert Material
 class LambertCMat final
     : public GPUMaterialGroup<AlbedoMatData, BasicSurface,
-                              LambertCSample, LambertCEvaluate,
-                              LambertCPdf,
-                              EmitEmpty<AlbedoMatData, BasicSurface>,
-                              IsEmissiveFalse<AlbedoMatData>,
-                              SpecularityDiffuse<AlbedoMatData>>
+                              LambertConstFuncs>
 {
     public:
         static const char*              TypeName() { return "LambertC"; }
@@ -27,11 +22,7 @@ class LambertCMat final
         // Constructors & Destructor
                                 LambertCMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<AlbedoMatData, BasicSurface,
-                                                       LambertCSample, LambertCEvaluate,
-                                                       LambertCPdf,
-                                                       EmitEmpty<AlbedoMatData, BasicSurface>,
-                                                       IsEmissiveFalse<AlbedoMatData>,
-                                                       SpecularityDiffuse<AlbedoMatData>>(gpu) {}
+                                                       LambertConstFuncs>(gpu) {}
                                 ~LambertCMat() = default;
 
         // Interface
@@ -60,11 +51,7 @@ class LambertCMat final
 // Delta distribution reflect material
 class ReflectMat final
     : public GPUMaterialGroup<ReflectMatData, BasicSurface,
-                              ReflectSample, ReflectEvaluate,
-                              PdfZero<ReflectMatData, BasicSurface>,
-                              EmitEmpty<ReflectMatData, BasicSurface>,
-                              IsEmissiveFalse<ReflectMatData>,
-                              SpecularityPerfect<ReflectMatData>>
+                              ReflectMatFuncs>
 {
     public:
         static const char*              TypeName() { return "Reflect"; }
@@ -77,11 +64,7 @@ class ReflectMat final
         // Constructors & Destructor
                                 ReflectMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<ReflectMatData, BasicSurface,
-                                                       ReflectSample, ReflectEvaluate,
-                                                       PdfZero<ReflectMatData, BasicSurface>,
-                                                       EmitEmpty<ReflectMatData, BasicSurface>,
-                                                       IsEmissiveFalse<ReflectMatData>,
-                                                       SpecularityPerfect<ReflectMatData>>(gpu) {}
+                                                       ReflectMatFuncs>(gpu) {}
                                 ~ReflectMat() = default;
 
         // Interface
@@ -113,11 +96,7 @@ class ReflectMat final
 // Delta distribution refract material
 class RefractMat final
     : public GPUMaterialGroup<RefractMatData, BasicSurface,
-                              RefractSample, RefractEvaluate,
-                              PdfZero<RefractMatData, BasicSurface>,
-                              EmitEmpty<RefractMatData, BasicSurface>,
-                              IsEmissiveFalse<RefractMatData>,
-                              SpecularityPerfect<RefractMatData, BasicSurface>>
+                              RefractMatFuncs>                             
 {
     public:
         static const char*      TypeName() { return "Refract"; }
@@ -130,11 +109,7 @@ class RefractMat final
         // Constructors & Destructor
                                 RefractMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<RefractMatData, BasicSurface,
-                                                       RefractSample, RefractEvaluate,
-                                                       PdfZero<RefractMatData, BasicSurface>,
-                                                       EmitEmpty<RefractMatData, BasicSurface>,
-                                                       IsEmissiveFalse<RefractMatData>,
-                                                       SpecularityPerfect<RefractMatData, BasicSurface>>(gpu) {}
+                                                       RefractMatFuncs>(gpu) {}
                                 ~RefractMat() = default;
 
         // Interface

@@ -31,7 +31,8 @@ template<class Accel>
 using AccelGroupGeneratorFunc = Accel* (*)(const GPUPrimitiveGroupI&);
 
 template<class Light>
-using LightGroupGeneratorFunc = Light* (*)(const GPUPrimitiveGroupI*);
+using LightGroupGeneratorFunc = Light* (*)(const CudaGPU&, 
+                                           const GPUPrimitiveGroupI*);
 
 template<class MaterialGroup>
 using MaterialGroupGeneratorFunc = MaterialGroup* (*)(const CudaGPU& gpuId);
@@ -122,9 +123,10 @@ class CPULightGroupGen
             , dFunc(d)
         {}
 
-        CPULightGPtr operator()(const GPUPrimitiveGroupI* pg)
+        CPULightGPtr operator()(const CudaGPU& gpu, 
+                                const GPUPrimitiveGroupI* pg)
         {
-            CPULightGroupI* light = gFunc(pg);
+            CPULightGroupI* light = gFunc(gpu, pg);
             return CPULightGPtr(light, dFunc);
         }
 };
@@ -152,8 +154,9 @@ namespace TypeGenWrappers
     }
 
     template <class Base, class LightGroup>
-    Base* LightGroupConstruct(const GPUPrimitiveGroupI* pg)
+    Base* LightGroupConstruct(const CudaGPU& gpu,
+                              const GPUPrimitiveGroupI* pg)
     {
-        return new LightGroup(pg);
+        return new LightGroup(gpu, pg);
     }
 }

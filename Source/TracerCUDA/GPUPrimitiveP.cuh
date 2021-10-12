@@ -82,13 +82,7 @@ class GPUPrimitiveGroupP
 
 template <class HitD, class PrimitiveD, class LeafD,
           class SurfaceFuncGenerator,
-          AcceptHitFunction<HitD, PrimitiveD, LeafD> HitF,
-          LeafGenFunction<PrimitiveD, LeafD> LeafF,
-          BoxGenFunction<PrimitiveD> BoxF,
-          AreaGenFunction<PrimitiveD> AreaF,
-          CenterGenFunction<PrimitiveD> CenterF,
-          SampleFunction<PrimitiveD> SampleF,
-          PDFFunction<PrimitiveD> PDFF>
+          class PrimDeviceFunctions>
 class GPUPrimitiveGroup
     : public GPUPrimitiveGroupI
     , public GPUPrimitiveGroupP<PrimitiveD>
@@ -99,15 +93,43 @@ class GPUPrimitiveGroup
         using PrimitiveData                 = PrimitiveD;
         using HitData                       = HitD;
         using LeafData                      = LeafD;
+
+        //TriFunctions::Hit,
+        //    TriFunctions::Leaf, TriFunctions::AABB,
+        //    TriFunctions::Area, TriFunctions::Center,
+        //    TriFunctions::Sample,
+        //    TriFunctions::PDF
+        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::Hit),
+                                     AcceptHitFunction<HitD, PrimitiveD, LeafD>>,
+                      "PrimDeviceFunctions Class Member 'Hit' does not have correct signature");
+        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::Leaf),
+                                     LeafGenFunction<PrimitiveD, LeafD>>,
+                      "PrimDeviceFunctions Class Member 'Leaf' does not have correct signature");
+        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::AABB),
+                                     BoxGenFunction<PrimitiveD>>,
+                      "PrimDeviceFunctions Class Member 'AABB' does not have correct signature");
+        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::Area),
+                                     AreaGenFunction<PrimitiveD>>,
+                      "PrimDeviceFunctions Class Member 'Area' does not have correct signature");
+        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::Center),
+                                     CenterGenFunction<PrimitiveD>>,
+                      "PrimDeviceFunctions Class Member 'Center' does not have correct signature");
+        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::SamplePosition),
+                                     SamplePosFunction<PrimitiveD>>,
+                      "PrimDeviceFunctions Class Member 'SamplePosition' does not have correct signature");
+        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::PdfPosition),
+                                     PDFPosFunction<PrimitiveD>>,
+                      "PrimDeviceFunctions Class Member 'PdfPosition' does not have correct signature");
+
         // Function Definitions
         // Used by accelerator definitions etc.
-        static constexpr auto Hit       = HitF;
-        static constexpr auto Leaf      = LeafF;
-        static constexpr auto AABB      = BoxF;
-        static constexpr auto Area      = AreaF;
-        static constexpr auto Center    = CenterF;
-        static constexpr auto Sample    = SampleF;
-        static constexpr auto Pdf       = PDFF;
+        static constexpr auto Hit               = PrimDeviceFunctions::Hit;
+        static constexpr auto Leaf              = PrimDeviceFunctions::Leaf;
+        static constexpr auto AABB              = PrimDeviceFunctions::AABB;
+        static constexpr auto Area              = PrimDeviceFunctions::Area;
+        static constexpr auto Center            = PrimDeviceFunctions::Center;
+        static constexpr auto SamplePosition    = PrimDeviceFunctions::SamplePosition;
+        static constexpr auto PdfPosition       = PrimDeviceFunctions::PdfPosition;
 
     private:
     protected:

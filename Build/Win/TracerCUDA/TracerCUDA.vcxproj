@@ -23,7 +23,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerWorks.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DTree.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DTreeKC.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\EndpointFinder.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraPixel.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraSpherical.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUDirectLightSamplerI.h" />
@@ -32,6 +31,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorCommonKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUBitmap.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraPinhole.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightSamplerUniform.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightDisk.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightPrimitive.cuh" />
@@ -41,11 +41,8 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightRectangular.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightSkySphere.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightSpot.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULocation.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMediumI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMediumVacuum.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUPrimitiveDirectional.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUPrimitiveSkySphere.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformIdentity.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformSingle.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.cuh" />
@@ -153,8 +150,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\EntryPoint.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveDirectional.cpp" />
-    <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveSkySphere.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\TextureFunctions.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\Tracers.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerSystemCUDA.cpp" />

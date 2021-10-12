@@ -1,10 +1,10 @@
 template <class PGroup>
 __global__ void KCConstructGPULight(GPULight<PGroup>* gLightLocations,
-                                    //
-                                    const TransformId* gTransformIds,
                                     const PrimitiveId* gPrimitiveIds,
+                                    //
+                                    const TextureRefI<2, Vector3f>** gRads,
+                                    const TransformId* gTransformIds,
                                     const uint16_t* gMediumIndices,
-                                    const HitKey* gLightMaterialIds,
                                     //
                                     const typename PGroup::PrimitiveData& pData,
                                     const GPUTransformI** gTransforms,
@@ -16,29 +16,28 @@ __global__ void KCConstructGPULight(GPULight<PGroup>* gLightLocations,
     {
         TransformId tId = gTransformIds[globalId];
         new (gLightLocations + globalId) GPULight<PGroup>(pData,
+                                                          gPrimitiveIds[globalId],
                                                           // Base Class
+                                                          *gRads[globalId],
                                                           gMediumIndices[globalId],
-                                                          gLightMaterialIds[globalId],
-                                                          tId, *gTransforms[tId],
-                                                          gPrimitiveIds[globalId]);
+                                                          *gTransforms[tId]);
     }
 }
 
 template <class PGroup>
-SceneError CPULightGroup<PGroup>::InitializeGroup(const LightGroupDataList& lightNodes,
+SceneError CPULightGroup<PGroup>::InitializeGroup(const EndpointGroupDataList& lightNodes,
+                                                  const TextureNodeMap& textures,
                                                   const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                   const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
-                                                  const MaterialKeyListing& allMaterialKeys,
-                                                  double time,
+                                                  uint32_t batchId, double time,
                                                   const std::string& scenePath)
 {
     lightCount = static_cast<uint32_t>(lightNodes.size());
-    hHitKeys.reserve(lightCount);
     hMediumIds.reserve(lightCount);
     hPrimitiveIds.reserve(lightCount);
     hTransformIds.reserve(lightCount);
 
-    lightCount = 0;
+    uint32_t innerId = 0;
     for(const auto& node : lightNodes)
     {
         uint32_t primitiveId = node.constructionId;
@@ -47,34 +46,24 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const LightGroupDataList& ligh
         Vector2ul primitiveRange = primGroup.PrimitiveBatchRange(primitiveId);
         uint16_t mediumIndex = static_cast<uint16_t>(mediumIdIndexPairs.at(node.mediumId));
         uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
-        HitKey materialKey = allMaterialKeys.at(std::make_pair(primGroup.Type(), node.materialId));
-
+        
         lightCount += static_cast<uint32_t>(primitiveRange[1] - primitiveRange[0]);
         for(PrimitiveId primId = primitiveRange[0]; primId < primitiveRange[1]; primId++)
         {
+            HitKey materialKey = HitKey::CombinedKey(batchId, innerId);
+
             // Load to host memory
-            hHitKeys.push_back(materialKey);
             hMediumIds.push_back(mediumIndex);
             hPrimitiveIds.push_back(primId);
             hTransformIds.push_back(transformIndex);
+
+            innerId++;
         }
     }
 
-    // Allocate for GPULight classes
-    size_t totalClassSize = sizeof(GPULight<PGroup>) * lightCount;
-    totalClassSize = Memory::AlignSize(totalClassSize);
-    size_t totalPDataSize = sizeof(PData);
-    totalPDataSize = Memory::AlignSize(totalPDataSize);
-
-    DeviceMemory::EnlargeBuffer(memory, (totalClassSize + totalPDataSize));
-
-    size_t offset = 0;
-    std::uint8_t* dBasePtr = static_cast<uint8_t*>(memory);
-    dGPULights = reinterpret_cast<const GPULight<PGroup>*>(dBasePtr + offset);
-    offset += totalClassSize;
-    dPData = reinterpret_cast<const PData*>(dBasePtr + offset);
-    offset += totalPDataSize;
-    assert((totalClassSize + totalPDataSize) == offset);
+    // Allocate Data
+    DeviceMemory::AllocateMultiData(std::tie(dGPULights, dPData),
+                                    gpuMemory, {lightCount, 1});
 
     // Get PData from Primitive Group
     const PData primData = PrimDataAccessor::Data(primGroup);
@@ -93,48 +82,23 @@ SceneError CPULightGroup<PGroup>::ChangeTime(const NodeListing& lightNodes, doub
 }
 
 template <class PGroup>
-TracerError CPULightGroup<PGroup>::ConstructLights(const CudaSystem& system,
-                                                   const GPUTransformI** dGlobalTransformArray,
-                                                   const KeyMaterialMap&)
+TracerError CPULightGroup<PGroup>::ConstructEndpoints(const GPUTransformI** dGlobalTransformArray,
+                                                      const CudaSystem&)
 {
     // Gen Temporary Memory
     DeviceMemory tempMemory;
-    // Allocate for GPULight classes
-    size_t matKeySize = sizeof(HitKey) * lightCount;
-    matKeySize = Memory::AlignSize(matKeySize);
-    size_t mediumSize = sizeof(uint16_t) * lightCount;
-    mediumSize = Memory::AlignSize(mediumSize);
-    size_t primIdSize = sizeof(PrimitiveId) * lightCount;
-    primIdSize = Memory::AlignSize(primIdSize);
-    size_t transformIdSize = sizeof(TransformId) * lightCount;
-    transformIdSize = Memory::AlignSize(transformIdSize);
 
-    size_t totalSize = (matKeySize +
-                        mediumSize +
-                        primIdSize +
-                        transformIdSize);
-    DeviceMemory::EnlargeBuffer(tempMemory, totalSize);
-
-    size_t offset = 0;
-    std::uint8_t* dBasePtr = static_cast<uint8_t*>(tempMemory);
-    const HitKey* dLightMaterialIds = reinterpret_cast<const HitKey*>(dBasePtr + offset);
-    offset += matKeySize;
-    const uint16_t* dMediumIndices = reinterpret_cast<const uint16_t*>(dBasePtr + offset);
-    offset += mediumSize;
-    const PrimitiveId* dPrimitiveIds = reinterpret_cast<const PrimitiveId*>(dBasePtr + offset);
-    offset += primIdSize;
-    const TransformId* dTransformIds = reinterpret_cast<const TransformId*>(dBasePtr + offset);
-    offset += transformIdSize;
-    assert(totalSize == offset);
-
-    // Set a GPU
-    const CudaGPU& gpu = system.BestGPU();
+    const PrimitiveId* dPrimitiveIds;
+    const TransformId* dTransformIds;
+    const uint16_t* dMediumIndices;
+    DeviceMemory::AllocateMultiData(std::tie(dPrimitiveIds,
+                                             dTransformIds,
+                                             dMediumIndices),
+                                    tempMemory,
+                                    {lightCount, lightCount, lightCount});
+    // Set a GPU    
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
-    // Load Data to Temp Memory
-    CUDA_CHECK(cudaMemcpy(const_cast<HitKey*>(dLightMaterialIds),
-                          hHitKeys.data(),
-                          sizeof(HitKey) * lightCount,
-                          cudaMemcpyHostToDevice));
+    // Load Data to Temp Memory    
     CUDA_CHECK(cudaMemcpy(const_cast<uint16_t*>(dMediumIndices),
                           hMediumIds.data(),
                           sizeof(uint16_t) * lightCount,
@@ -150,28 +114,24 @@ TracerError CPULightGroup<PGroup>::ConstructLights(const CudaSystem& system,
 
     // Call allocation kernel
     gpu.GridStrideKC_X(0, 0,
-                       LightCount(),
+                       lightCount,
                        //
                        KCConstructGPULight<PGroup>,
                        //
                        const_cast<GPULight<PGroup>*>(dGPULights),
-                       //
-                       dTransformIds,
                        dPrimitiveIds,
+                       //
+                       dRadiances,
+                       dTransformIds,
                        dMediumIndices,
-                       dLightMaterialIds,
 
                        *dPData,
                        dGlobalTransformArray,
-                       LightCount());
+                       lightCount);
 
     gpu.WaitMainStream();
 
-    // Generate transform list
-    for(uint32_t i = 0; i < LightCount(); i++)
-    {
-        const auto* ptr = static_cast<const GPULightI*>(dGPULights + i);
-        gpuLightList.push_back(ptr);
-    }
+    SetLightList();
+
     return TracerError::OK;
 }

@@ -274,6 +274,36 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         NodeIndex accIndex;
         std::string accType = "";
         const nlohmann::json* accNode = nullptr;
+      
+        if(auto loc = acceleratorList.find(accId); loc != acceleratorList.end())
+        {
+            accIndex = loc->second.first;
+            accNode = &(*acceleratorsJson)[accIndex];
+            accType = (*accNode)[NodeNames::TYPE];
+        }
+        else return SceneError::ACCELERATOR_ID_NOT_FOUND;
+        const std::string acceleratorGroupType = MangledNames::AcceleratorGroup(primGroupType.c_str(),
+                                                                                accType.c_str());
+        AccelGroupData accGData =
+        {
+            acceleratorGroupType,
+            primGroupType,
+            std::map<uint32_t, AccelGroupData::SurfaceDef>(),
+            std::map<uint32_t, AccelGroupData::LSurfaceDef>(),            
+            std::make_unique<SceneNodeJson>(*accNode, accIndex)
+        };
+        const auto& result = requiredAccelListings.emplace(acceleratorGroupType,
+                                                           std::move(accGData)).first;
+        result->second.surfaces.emplace(surfId, AccelGroupData::SurfaceDef{transformId, idPairs});
+        return SceneError::OK;
+    };
+    auto AttachAcceleratorForLight = [&](uint32_t accId, uint32_t surfId, uint32_t transformId,
+                                         const std::string& primGroupType,
+                                         const uint32_t primitiveId)
+    {
+        NodeIndex accIndex;
+        std::string accType = "";
+        const nlohmann::json* accNode = nullptr;
 
         //const uint32_t accId = surf.acceleratorId;
         if(auto loc = acceleratorList.find(accId); loc != acceleratorList.end())
@@ -289,14 +319,13 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         {
             acceleratorGroupType,
             primGroupType,
-            std::map<uint32_t, IdPairs>(),
-            std::vector<uint32_t>(),
+            std::map<uint32_t, AccelGroupData::SurfaceDef>(),
+            std::map<uint32_t, AccelGroupData::LSurfaceDef>(),            
             std::make_unique<SceneNodeJson>(*accNode, accIndex)
         };
         const auto& result = requiredAccelListings.emplace(acceleratorGroupType,
                                                            std::move(accGData)).first;
-        result->second.matPrimIdPairs.emplace(surfId, idPairs);
-        result->second.transformIds.emplace_back(transformId);
+        result->second.lightSurfaces.emplace(surfId, AccelGroupData::LSurfaceDef{transformId, primitiveId});
         return SceneError::OK;
     };
 
@@ -447,7 +476,8 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
     {
         LightSurfaceStruct s = SceneIO::LoadLightSurface(baseMediumId,
                                                          identityTransformId,
-                                                         jsn);
+                                                         jsn, (*lightsJson),
+                                                         lightList);
 
         // Fetch type name
         std::string primTypeName = BaseConstants::EMPTY_PRIMITIVE_NAME;
@@ -455,7 +485,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         {
             // Find Prim Type
             // And attach primitive
-            if(auto loc = primList.find(s.lightOrPrimId); loc != primList.end())
+            if(auto loc = primList.find(s.primId); loc != primList.end())
             {
                 const NodeIndex nIndex = loc->second.first;
                 const InnerIndex iIndex = loc->second.second;
@@ -465,31 +495,24 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
 
                 auto& primSet = primGroupNodes.emplace(primTypeName, NodeListing()).first->second;
                 auto& node = *primSet.emplace(std::make_unique<SceneNodeJson>(jsnNode, nIndex)).first;
-                node->AddIdIndexPair(s.lightOrPrimId, iIndex);
+                node->AddIdIndexPair(s.primId, iIndex);
             }
             else return SceneError::PRIMITIVE_ID_NOT_FOUND;
 
-            // Create Pairs for this object
-            IdPairs pairs;
-            pairs.fill(std::make_pair(std::numeric_limits<uint32_t>::max(),
-                                      std::numeric_limits<uint32_t>::max()));
-            pairs[0].first = s.materialId;
-            pairs[0].second = s.lightOrPrimId;
-
-            // Find Accelerator &
-            // Add Accelerator Group to generation list
-            if((e = AttachAccelerator(s.acceleratorId, surfId, s.transformId,
-                                      primTypeName, pairs)) != SceneError::OK)
+            // Attach Accelerator
+            if((e = AttachAcceleratorForLight(s.acceleratorId, surfId, s.transformId,
+                                      primTypeName, s.primId)) != SceneError::OK)
                 return e;
-            surfId++;
+        }
+        else
+        {
+            // Only Attach medium if light is not a primitive
+            if((e = AttachMedium(s.mediumId)) != SceneError::OK)
+                return e;
         }
 
         // Add Transform Group to generation list
         if((e = AttachTransform(s.transformId)) != SceneError::OK)
-            return e;
-
-        // Request material for loading
-        if((e = AttachMatAll(primTypeName, s.materialId)) != SceneError::OK)
             return e;
 
         // Finally add to required lights
@@ -498,7 +521,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         if(!s.isPrimitive)
         {
             // Find the light node
-            if(auto loc = lightList.find(s.lightOrPrimId); loc != lightList.end())
+            if(auto loc = lightList.find(s.lightId); loc != lightList.end())
             {
                 const NodeIndex nIndex = loc->second.first;
                 const InnerIndex iIndex = loc->second.second;
@@ -506,7 +529,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
                 lightTypeName = jsnNode[NodeNames::TYPE];
 
                 lightNode = std::make_unique<SceneNodeJson>(jsnNode, nIndex);
-                lightNode->AddIdIndexPair(s.lightOrPrimId, iIndex);
+                lightNode->AddIdIndexPair(s.lightId, iIndex);
             }
             else return SceneError::LIGHT_ID_NOT_FOUND;
         }
@@ -514,20 +537,21 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         // Emplace to the list
         LightGroupData data =
         {
-            s.isPrimitive,
             (s.isPrimitive) ? primTypeName : "",
-            std::vector<LightConstructionData>()
+            std::vector<EndpointConstructionData>()
         };
         auto& lightData = lightGroupNodes.emplace(lightTypeName, std::move(data)).first->second;
         auto& constructionInfo = lightData.constructionInfo;
-        constructionInfo.emplace_back(LightConstructionData
+        constructionInfo.emplace_back(EndpointConstructionData
                                       {
+                                          surfId,
                                           s.transformId,
                                           s.mediumId,
-                                          s.lightOrPrimId,
+                                          s.lightId,
+                                          s.primId,
                                           std::move(lightNode),
-                                          s.materialId
                                       });
+        surfId++;
     }
 
     // Process Cameras
@@ -561,18 +585,23 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
             return e;
 
         // Emplace to the list
-        auto& camConstructionInfo = cameraGroupNodes.emplace(camTypeName, std::vector<CameraConstructionData>()).first->second;
-        camConstructionInfo.emplace_back(CameraConstructionData
+        auto& camConstructionInfo = cameraGroupNodes.emplace(camTypeName, std::vector<EndpointConstructionData>()).first->second;
+        camConstructionInfo.emplace_back(EndpointConstructionData
                                          {
+                                             surfId,
                                              s.transformId,
                                              s.mediumId,
                                              s.cameraId,
+                                             std::numeric_limits<uint32_t>::max(),
                                              std::move(cameraNode)
                                          });
+
+        surfId++;
     }
 
     // Finally Load Texture Info for material access
-    // Load all textures here materials will actually load the textures
+    // Load all textures here (as node). 
+    // Materials will actually load the textures
     for(const auto& jsn : (*texturesJson))
     {
         std::vector<TextureStruct> texStructs = SceneIO::LoadTexture(jsn);
@@ -672,7 +701,9 @@ SceneError GPUSceneJson::GeneratePrimitiveGroups(const PrimitiveNodeList& primGr
 SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, HitKey>& accHitKeyList,
                                               //
                                               const AcceleratorBatchList& acceleratorBatchList,
-                                              const MaterialKeyListing& matHitKeyList,
+
+                                              const MaterialKeyListing& workKeyList,
+                                              const BoundaryMaterialKeyListing& boundaryWorkKeyList,
                                               //
                                               const std::map<uint32_t, uint32_t>& transformIdMappings,
                                               double time)
@@ -691,22 +722,53 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, HitKey>& accHit
 
         const std::string& accelGroupName = accelGroupBatch.second.accelType;
         const auto& primTName = accelGroupBatch.second.primType;
-        const auto& pairsList = accelGroupBatch.second.matPrimIdPairs;
+        const auto& surfaceList = accelGroupBatch.second.surfaces;
+        const auto& lightSurfaceList = accelGroupBatch.second.lightSurfaces;
         const auto& accelNode = accelGroupBatch.second.accelNode;
 
-        // Convert TransformIdList to transformIndexList
-        auto& transformIdList = accelGroupBatch.second.transformIds;
 
-        std::vector<uint32_t> transformIndexList;
-        transformIndexList.resize(transformIdList.size());
-        std::transform(std::execution::par_unseq,
-                       transformIdList.cbegin(), transformIdList.cend(),
-                       transformIndexList.begin(),
-        [&indexLookup = std::as_const(transformIdMappings)](uint32_t id)
+        std::map<uint32_t, SurfaceDefinition> surfaces;
+        for(const auto& s : surfaceList)
         {
-            // Convert id to index
-            return indexLookup.at(id);
-        });
+            SurfaceDefinition surfaceDef;
+            surfaceDef.primIdWorkKeyPairs.fill(IdKeyPair{std::numeric_limits<uint32_t>::max(),
+                                                         HitKey::InvalidKey});
+            const AccelGroupData::SurfaceDef& surface = s.second;
+
+            // Find Transform Index
+            surfaceDef.globalTransformIndex = transformIdMappings.at(surface.transformId);
+            
+            // Convert Prim / Material Ids with Work Keys
+            for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
+            {
+                const IdKeyPair& p = surface.matPrimIdPairs[i];
+                if(p.first == std::numeric_limits<uint32_t>::max())
+                    break;
+
+                const auto matLookupKey = std::make_pair(primTName, p.first);
+                HitKey workKey = workKeyList.at(matLookupKey);
+                surfaceDef.primIdWorkKeyPairs[i] = IdKeyPair{p.second, workKey};
+            }
+            surfaces.emplace(s.first, surfaceDef);
+        }
+        for(const auto& s : lightSurfaceList)
+        {
+            SurfaceDefinition surfaceDef;
+            const AccelGroupData::LSurfaceDef& lightSurface = s.second;
+
+            uint32_t transformId = lightSurface.transformId;
+            uint32_t primitiveId = lightSurface.primId;
+
+            // Find Transform Index
+            surfaceDef.globalTransformIndex = transformIdMappings.at(lightSurface.transformId);
+
+            // Find Boundary Material Key for this transform/prim
+            const auto matLookupKey = std::make_tuple(primTName, primitiveId, transformId);
+            HitKey workKey = boundaryWorkKeyList.at(matLookupKey);
+            surfaceDef.primIdWorkKeyPairs[0] = IdKeyPair{primitiveId, workKey};
+
+            surfaces.emplace(s.first, surfaceDef);
+        }
 
         // Fetch Primitive
         GPUPrimitiveGroupI* pGroup = primitives.at(primTName).get();
@@ -715,8 +777,8 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, HitKey>& accHit
         GPUAccelGPtr aGroup = GPUAccelGPtr(nullptr, nullptr);
         if((e = logicGenerator.GenerateAcceleratorGroup(aGroup, *pGroup, accelGroupName)) != SceneError::OK)
             return e;
-        if((e = aGroup->InitializeGroup(accelNode, matHitKeyList,
-                                        pairsList, transformIndexList,
+        if((e = aGroup->InitializeGroup(accelNode, 
+                                        surfaces,
                                         time)) != SceneError::OK)
             return e;
 
@@ -726,14 +788,32 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, HitKey>& accHit
         // Now Keys
         // Generate Accelerator Keys...
         const GPUAcceleratorGroupI& accGroup = *aGroup;
-        for(const auto& pairings : accelGroupBatch.second.matPrimIdPairs)
+        for(const auto& surf : accelGroupBatch.second.surfaces)
         {
-            const uint32_t surfId = pairings.first;
+            const uint32_t surfId = surf.first;
             uint32_t innerId = accGroup.InnerId(surfId);
             HitKey key = HitKey::CombinedKey(accelId, innerId);
             accHitKeyList.emplace(surfId, key);
 
             maxAccelIds = Vector2i::Max(maxAccelIds, Vector2i(accelId, innerId));
+
+            if(innerId >= (1 << HitKey::IdBits))
+                return SceneError::TOO_MANY_ACCELERATOR_IN_GROUP;
+
+            // Attach keys of accelerators
+            accHitKeyList.emplace(surfId, key);
+        }
+        for(const auto& lightSurf : accelGroupBatch.second.lightSurfaces)
+        {
+            const uint32_t surfId = lightSurf.first;
+            uint32_t innerId = accGroup.InnerId(surfId);
+            HitKey key = HitKey::CombinedKey(accelId, innerId);
+            accHitKeyList.emplace(surfId, key);
+
+            maxAccelIds = Vector2i::Max(maxAccelIds, Vector2i(accelId, innerId));
+
+            if(innerId >= (1 << HitKey::IdBits))
+                return SceneError::TOO_MANY_ACCELERATOR_IN_GROUP;
 
             // Attach keys of accelerators
             accHitKeyList.emplace(surfId, key);
@@ -854,19 +934,25 @@ SceneError GPUSceneJson::GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdM
     return e;
 }
 
-SceneError GPUSceneJson::GenerateCameras(const CameraNodeList& camGroupList,
+SceneError GPUSceneJson::GenerateCameras(BoundaryMaterialKeyListing& boundaryWorkKeyList, 
+                                         const CameraNodeList& camGroupList,
+                                         const TextureNodeMap& textureNodes,
                                          const std::map<uint32_t, uint32_t>& transformIdMappings,
-                                         const std::map<uint32_t, uint32_t>& mediumIdMappings,
-                                         const MaterialKeyListing& materialKeys,
+                                         const std::map<uint32_t, uint32_t>& mediumIdMappings,                                         
                                          double time)
 {
-    // Generate a special Camera Material Id
-    uint32_t cameraBatchId = maxMatIds[0] + 1;
-    maxMatIds[0] += 1;
+    // Continue from the max batch
+    uint32_t batchId = maxMatIds[0];
 
+    // Generate a special Camera Material Id
     SceneError e = SceneError::OK;
     for(const auto& camGroup : camGroupList)
     {
+        batchId++;
+
+        //boundaryWorkKeyList.emplace(batchId, std::make_tuple(camGroup.first,
+        //                                                     cam))
+
         const std::string& camTypeName = camGroup.first;
         const auto& camNodes = camGroup.second;
 
@@ -874,29 +960,36 @@ SceneError GPUSceneJson::GenerateCameras(const CameraNodeList& camGroupList,
         if((e = logicGenerator.GenerateCameraGroup(cg, camTypeName)) != SceneError::OK)
             return e;
         if((e = cg->InitializeGroup(camNodes,
-                                   mediumIdMappings,
-                                   transformIdMappings,
-                                   cameraBatchId,
-                                   time,
-                                   parentPath)) != SceneError::OK)
+                                    textureNodes,
+                                    mediumIdMappings,
+                                    transformIdMappings,
+                                    batchId,
+                                    time,
+                                    parentPath)) != SceneError::OK)
             return e;
         cameras.emplace(camTypeName, std::move(cg));
     }
     return SceneError::OK;
 }
 
-SceneError GPUSceneJson::GenerateLights(const LightNodeList& lightGroupList,
+SceneError GPUSceneJson::GenerateLights(BoundaryMaterialKeyListing& boundaryWorkKeyList,
+                                        const LightNodeList& lightGroupList,
+                                        const TextureNodeMap& textureNodes,
                                         const std::map<uint32_t, uint32_t>& transformIdMappings,
                                         const std::map<uint32_t, uint32_t>& mediumIdMappings,
-                                        const MaterialKeyListing& materialKeys,
                                         double time)
 {
+    // Continue from the max batch
+    uint32_t batchId = maxMatIds[0];
+
     SceneError e = SceneError::OK;
     for(const auto& lightGroup : lightGroupList)
     {
+        batchId++;
+
         const std::string& lightTypeName = lightGroup.first;
         const std::string& primTypeName = lightGroup.second.primTypeName;
-        bool isPrimLight = lightGroup.second.isPrimitive;
+        bool isPrimLight = lightGroup.second.IsPrimitiveLight();
         const auto& lightNodes = lightGroup.second.constructionInfo;
 
         // Find Primitive
@@ -905,16 +998,26 @@ SceneError GPUSceneJson::GenerateLights(const LightNodeList& lightGroupList,
             primGroup = primitives.at(primTypeName).get();
 
         CPULightGPtr lg = CPULightGPtr(nullptr, nullptr);
-        if((e = logicGenerator.GenerateLightGroup(lg, primGroup,
-                                                 (isPrimLight) ? primTypeName : lightTypeName)) != SceneError::OK)
+        const std::string& lgTypeName = (isPrimLight) ? primTypeName : lightTypeName;
+        if((e = logicGenerator.GenerateLightGroup(lg, cudaSystem.BestGPU(),
+                                                  primGroup, lgTypeName)) != SceneError::OK)
             return e;
+
         if((e = lg->InitializeGroup(lightNodes,
-                                   mediumIdMappings,
-                                   transformIdMappings,
-                                   materialKeys,
-                                   time,
-                                   parentPath)) != SceneError::OK)
+                                    textureNodes,
+                                    mediumIdMappings,
+                                    transformIdMappings,
+                                    batchId,
+                                    time,
+                                    parentPath)) != SceneError::OK)
             return e;
+
+        //for(const auto& cInfo : lightGroup.second.constructionInfo)
+        //{
+        //    
+        //}
+        //maxMatIds = Vector2i::Max(maxMatIds, Vector2i(batchId, innerId));
+
         lights.emplace(lightTypeName, std::move(lg));
     }
     return SceneError::OK;
@@ -980,6 +1083,13 @@ SceneError GPUSceneJson::LoadAll(double time)
                                time)) != SceneError::OK)
         return e;
 
+    // Mediums
+    std::map<uint32_t, uint32_t> mediumIdMappings;
+    if((e = GenerateMediums(mediumIdMappings,
+                            mediumGroupNodes,
+                            time)) != SceneError::OK)
+        return e;
+
     // Partition Material Data to Multi GPU Material Data
     MultiGPUMatNodes multiGPUMatNodes;
     MultiGPUWorkBatches multiGPUWorkBatches;
@@ -988,13 +1098,6 @@ SceneError GPUSceneJson::LoadAll(double time)
                                            //
                                            matGroupNodes,
                                            workListings)))
-        return e;
-
-    // Mediums
-    std::map<uint32_t, uint32_t> mediumIdMappings;
-    if((e = GenerateMediums(mediumIdMappings,
-                            mediumGroupNodes,
-                            time)) != SceneError::OK)
         return e;
 
     // Using those constructs generate
@@ -1006,16 +1109,40 @@ SceneError GPUSceneJson::LoadAll(double time)
     if((e = GenerateMaterialGroups(multiGPUMatNodes, textureNodes,
                                    mediumIdMappings, time)) != SceneError::OK)
         return e;
+
     // Work Batches
-    MaterialKeyListing allMaterialKeys;
+    MaterialKeyListing allMaterialKeys;    
     if((e = GenerateWorkBatches(allMaterialKeys,
                                 multiGPUWorkBatches,
                                 time)) != SceneError::OK)
         return e;
+
+    // Generate Endpoints
+    // in meantime generate allBoundaryWorkKeysAswell
+    BoundaryMaterialKeyListing allBoundaryMaterialKeys;
+    // Cameras
+    if((e = GenerateCameras(allBoundaryMaterialKeys, 
+                            camListings,
+                            textureNodes,
+                            transformIdMappings,
+                            mediumIdMappings,
+                            time)) != SceneError::OK)
+        return e;
+    // Lights
+    if((e = GenerateLights(allBoundaryMaterialKeys,
+                           lightListings,
+                           textureNodes,
+                           transformIdMappings,
+                           mediumIdMappings,
+                           time)) != SceneError::OK)
+        return e;
+
     // Accelerators
     std::map<uint32_t, HitKey> accHitKeyList;
     if((e = GenerateAccelerators(accHitKeyList, accelListings,
-                                 allMaterialKeys, transformIdMappings,
+                                 allMaterialKeys, 
+                                 allBoundaryMaterialKeys,
+                                 transformIdMappings,
                                  time)) != SceneError::OK)
         return e;
     // Base Accelerator
@@ -1024,20 +1151,6 @@ SceneError GPUSceneJson::LoadAll(double time)
     // Boundary Material
     if((e = FindBoundaryMaterial(allMaterialKeys, time)) != SceneError::OK)
        return e;
-    // Cameras
-    if((e = GenerateCameras(camListings,
-                            transformIdMappings,
-                            mediumIdMappings,
-                            allMaterialKeys,
-                            time)) != SceneError::OK)
-        return e;
-    // Lights
-    if((e = GenerateLights(lightListings,
-                           transformIdMappings,
-                           mediumIdMappings,
-                           allMaterialKeys,
-                           time)) != SceneError::OK)
-        return e;
 
     // MaxIds are generated but those are inclusive
     // Make them exclusve
