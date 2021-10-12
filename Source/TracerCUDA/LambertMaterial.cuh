@@ -1,7 +1,7 @@
 #pragma once
 
 #include "LambertMaterialKC.cuh"
-#include "MetaMaterialFunctions.cuh"
+
 #include "GPUMaterialP.cuh"
 #include "TypeTraits.h"
 #include "DeviceMemory.h"
@@ -10,11 +10,7 @@
 // Delta distribution refract material
 class LambertMat final
     : public GPUMaterialGroup<LambertMatData, UVSurface,
-                              LambertSample, LambertEvaluate,
-                              LambertPDF,
-                              EmitEmpty<LambertMatData, UVSurface>,
-                              IsEmissiveFalse<LambertMatData>,
-                              SpecularityDiffuse<LambertMatData, UVSurface>>
+                              LambertMatFuncs>                              
 {
     public:
         static const char*      TypeName() { return "Lambert"; }
@@ -54,11 +50,7 @@ class LambertMat final
         // Constructors & Destructor
                                 LambertMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<LambertMatData, UVSurface,
-                                                       LambertSample, LambertEvaluate,
-                                                       LambertPDF,
-                                                       EmitEmpty<LambertMatData, UVSurface>,
-                                                       IsEmissiveFalse<LambertMatData>,
-                                                       SpecularityDiffuse<LambertMatData, UVSurface>>(gpu) {}
+                                                       LambertMatFuncs>(gpu) {}
                                 ~LambertMat() = default;
 
         // Interface

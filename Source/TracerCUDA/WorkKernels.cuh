@@ -43,7 +43,7 @@ using WorkFunc = void(*)(// Output
 // Boundary Work Function is Slightly Different
 // It also provides the actual enpoint that is being hit
 template <class GlobalState, class LocalState,
-          class RayAuxiliary, class MGroup>
+          class RayAuxiliary, class EGroup>
 using BoundaryWorkFunc = void(*)(// Output
                                  HitKey* gOutBoundKeys,
                                  RayGMem* gOutRays,
@@ -52,16 +52,15 @@ using BoundaryWorkFunc = void(*)(// Output
                                  // Input as registers
                                  const RayReg& ray,
                                  const RayAuxiliary& aux,
-                                 const typename MGroup::Surface& surface,
+                                 const typename EGroup::Surface& surface,
                                  const RayId rayId,
                                  // I-O
                                  LocalState& localState,
                                  GlobalState& renderState,
                                  RandomGPU& rng,
                                  // Constants
-                                 const uint32_t endPointIndex,
-                                 const typename MGroup::Data& gMatData,
-                                 const HitKey::Type matIndex);
+                                 const typename EGroup::Data& gMatData,
+                                 const HitKey workKey);
 
 // Meta Kernel for divding work.
 template<class GlobalState, class LocalState,
@@ -157,11 +156,11 @@ void KCWork(// Output
 
 // Meta Kernel for divding work.
 template<class GlobalState, class LocalState,
-         class RayAuxiliary, class PGroup, class MGroup,
-         BoundaryWorkFunc<GlobalState, LocalState, RayAuxiliary, MGroup> BWFunc,
-         SurfaceFunc<typename MGroup::Surface,
-                     typename PGroup::HitData,
-                     typename PGroup::PrimitiveData> SurfFunc>
+         class RayAuxiliary, class EGroup,
+         BoundaryWorkFunc<GlobalState, LocalState, RayAuxiliary, EGroup> BWFunc,
+         SurfaceFunc<typename EGroup::Surface,
+                     typename EGroup::HitData,
+                     typename EGroup::PrimitiveData> SurfFunc>
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCBoundaryWork(// Output
                     HitKey* gOutBoundKeys,
@@ -183,14 +182,13 @@ void KCBoundaryWork(// Output
                     RNGGMem gRNGStates,
                     // Constants
                     const uint32_t rayCount,
-                    const EndpointFinder endpointFinder,
-                    const typename MGroup::Data matData,
-                    const typename PGroup::PrimitiveData primData,            
+                    const typename EGroup::Endpoints* gEndpoints,
+                    const typename EGroup::PrimitiveData primData,            
                     const GPUTransformI* const* gTransforms)
 {
     // Fetch Types from Template Classes
-    using HitData = typename PGroup::HitData;   // HitData is defined by primitive
-    using Surface = typename MGroup::Surface;   // Surface is defined by material group
+    using HitData = typename EGroup::HitData;   // HitData is defined by primitive
+    using Surface = typename EGroup::Surface;   // Surface is defined by material group
 
     // Pre-grid stride loop
     // RNG is allocated for each SM (not for each thread)
@@ -211,9 +209,6 @@ void KCBoundaryWork(// Output
 
         // Acquire transform for surface generation
         const GPUTransformI& transform = *gTransforms[transformId];
-
-        // Binary Search the endpoint that is being hit
-        uint32_t endpointIndex = endpointFinder.FindEndPointIndex(primitiveId, transformId);
 
         // Generate surface data from hit
         const HitData hit = gHitStructs.Ref<HitData>(rayId);
@@ -246,8 +241,7 @@ void KCBoundaryWork(// Output
                renderState,
                rng,
                // Constants
-               endpointIndex,
                matData,
-               HitKey::FetchIdPortion(hitKey));
+               hitKey);
     }
 }

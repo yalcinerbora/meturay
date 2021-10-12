@@ -70,7 +70,6 @@ set(SRC_GPU_INTERFACES
     ${CURRENT_SOURCE_DIR}/GPUAcceleratorI.h
     ${CURRENT_SOURCE_DIR}/GPUCameraI.h
     ${CURRENT_SOURCE_DIR}/GPUDirectLightSamplerI.h
-    ${CURRENT_SOURCE_DIR}/GPULocation.h
     ${CURRENT_SOURCE_DIR}/GPUEndpointI.h
     ${CURRENT_SOURCE_DIR}/GPULightI.h
     ${CURRENT_SOURCE_DIR}/GPUMaterialI.h
@@ -153,14 +152,11 @@ set(SRC_MEMORY
 set(SRC_PARTIAL_IMPLEMENTATIONS
     ${CURRENT_SOURCE_DIR}/GPUAcceleratorP.cuh
     ${CURRENT_SOURCE_DIR}/GPUMaterialP.cuh
-    ${CURRENT_SOURCE_DIR}/GPUPrimitiveP.cuh)
+    ${CURRENT_SOURCE_DIR}/GPUPrimitiveP.cuh
+    ${CURRENT_SOURCE_DIR}/GPULightP.cuh)
 
 set(SRC_PRIMITIVES
     ${CURRENT_SOURCE_DIR}/DefaultLeaf.h
-    ${CURRENT_SOURCE_DIR}/GPUPrimitiveDirectional.cpp
-    ${CURRENT_SOURCE_DIR}/GPUPrimitiveDirectional.h
-    ${CURRENT_SOURCE_DIR}/GPUPrimitiveSkySphere.cpp
-    ${CURRENT_SOURCE_DIR}/GPUPrimitiveSkySphere.h
     ${CURRENT_SOURCE_DIR}/GPUPrimitiveEmpty.cpp
     ${CURRENT_SOURCE_DIR}/GPUPrimitiveEmpty.h
     ${CURRENT_SOURCE_DIR}/GPUPrimitiveTriangle.cpp
@@ -266,8 +262,7 @@ set(SRC_TRANSFORMS
 
 set(SRC_WORK
     ${CURRENT_SOURCE_DIR}/GPUWork.cuh
-    ${CURRENT_SOURCE_DIR}/WorkPool.h
-    ${CURRENT_SOURCE_DIR}/EndpointFinder.cuh)
+    ${CURRENT_SOURCE_DIR}/WorkPool.h)
 
 set(SRC_COMMON
     ${CURRENT_SOURCE_DIR}/MangledNames.cpp

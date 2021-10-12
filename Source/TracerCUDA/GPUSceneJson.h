@@ -15,14 +15,12 @@ class SceneNodeI;
 class TracerLogicGeneratorI;
 class SurfaceLoaderGeneratorI;
 
-using IndexLookup = std::map<NodeId, std::pair<NodeIndex, InnerIndex>>;
-
 using MediumNodeList = std::map<std::string, NodeListing>;
 using TransformNodeList = std::map<std::string, NodeListing>;
 using PrimitiveNodeList = std::map<std::string, NodeListing>;
 using AcceleratorBatchList = std::map<std::string, AccelGroupData>;
 using LightNodeList = std::map<std::string, LightGroupData>;
-using CameraNodeList = std::map<std::string, CameraGroupDataList>;
+using CameraNodeList = std::map<std::string, EndpointGroupDataList>;
 using TextureNodeMap = std::map<uint32_t, TextureStruct>;
 
 class GPUSceneJson : public GPUSceneI
@@ -64,6 +62,7 @@ class GPUSceneJson : public GPUSceneI
         NamedList<GPUPrimGPtr>                  primitives;
         // Information of the partitioning
         WorkBatchCreationInfo                   workInfo;
+        BoundaryWorkBatchCreationInfo           boundaryWorkInfo;
         AcceleratorBatchMap                     accelMap;
 
         // File Related
@@ -118,8 +117,10 @@ class GPUSceneJson : public GPUSceneI
         SceneError      GenerateAccelerators(std::map<uint32_t, HitKey>& accHitKeyList,
                                              //
                                              const AcceleratorBatchList& acceleratorBatchList,
-                                             const MaterialKeyListing& matHitKeyList,
-                                             //
+                                             // Material Key Fetch Related
+                                             const MaterialKeyListing& workKeyList,
+                                             const BoundaryMaterialKeyListing& boundaryWorkKeyList,
+                                             // Transform Id to Global Transform Index
                                              const std::map<uint32_t, uint32_t>& transformIdMappings,
                                              double time = 0.0);
         SceneError      GenerateBaseAccelerator(const std::map<uint32_t, HitKey>& accHitKeyList,
@@ -133,15 +134,17 @@ class GPUSceneJson : public GPUSceneI
         SceneError      GenerateMediums(std::map<uint32_t, uint32_t>& mediumIdMappings,
                                         const MediumNodeList& mediumList,
                                         double time = 0.0);
-        SceneError      GenerateCameras(const CameraNodeList&,
+        SceneError      GenerateCameras(BoundaryMaterialKeyListing&,
+                                        const CameraNodeList&,
+                                        const TextureNodeMap&,
                                         const std::map<uint32_t, uint32_t>& transformIdMappings,
                                         const std::map<uint32_t, uint32_t>& mediumIdMappings,
-                                        const MaterialKeyListing& materialKeys,
                                         double time = 0.0);
-        SceneError      GenerateLights(const LightNodeList&,
+        SceneError      GenerateLights(BoundaryMaterialKeyListing&,
+                                       const LightNodeList&,
+                                       const TextureNodeMap&,
                                        const std::map<uint32_t, uint32_t>& transformIdMappings,
                                        const std::map<uint32_t, uint32_t>& mediumIdMappings,
-                                       const MaterialKeyListing& materialKeys,
                                        double time = 0.0);
 
         SceneError      FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,

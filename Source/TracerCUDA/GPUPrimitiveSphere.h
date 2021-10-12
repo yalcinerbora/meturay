@@ -38,14 +38,14 @@ using SphereHit = Vector2f;
 struct SphrFunctions
 {
     __device__ __forceinline__
-    static Vector3f Sample(// Output
-                           Vector3f& normal,
-                           float& pdf,
-                           // Input
-                           PrimitiveId primitiveId,
-                           const SphereData& primData,
-                           // I-O
-                           RandomGPU& rng)
+    static Vector3f SamplePosition(// Output
+                                   Vector3f& normal,
+                                   float& pdf,
+                                   // Input
+                                   PrimitiveId primitiveId,
+                                   const SphereData& primData,
+                                   // I-O
+                                   RandomGPU& rng)
     {
         Vector4f data = primData.centerRadius[primitiveId];
         Vector3f center = data;
@@ -77,16 +77,16 @@ struct SphrFunctions
     }
 
     __device__ __forceinline__
-    static void PDF(// Outputs
-                    Vector3f& normal,
-                    float& pdf,
-                    float& distance,
-                    // Inputs
-                    const Vector3f& position,
-                    const Vector3f& direction,
-                    const GPUTransformI& transform,
-                    const PrimitiveId primitiveId,
-                    const SphereData& primData)
+    static void PdfPosition(// Outputs
+                            Vector3f& normal,
+                            float& pdf,
+                            float& distance,
+                            // Inputs
+                            const Vector3f& position,
+                            const Vector3f& direction,
+                            const GPUTransformI& transform,
+                            const PrimitiveId primitiveId,
+                            const SphereData& primData)
     {
         Vector4f data = primData.centerRadius[primitiveId];
         Vector3f center = data;
@@ -185,7 +185,7 @@ struct SphrFunctions
         return center;
     }
 
-    static constexpr auto Leaf          = GenerateDefaultLeaf<SphereData>;
+    static constexpr auto& Leaf = GenerateDefaultLeaf<SphereData>;
 };
 
 struct SphereSurfaceGenerator
@@ -267,11 +267,8 @@ struct SphereSurfaceGenerator
 
 class GPUPrimitiveSphere final
     : public GPUPrimitiveGroup<SphereHit, SphereData, DefaultLeaf,
-                               SphereSurfaceGenerator, SphrFunctions::Hit,
-                               SphrFunctions::Leaf, SphrFunctions::AABB,
-                               SphrFunctions::Area, SphrFunctions::Center,
-                               SphrFunctions::Sample,
-                               SphrFunctions::PDF>
+                               SphereSurfaceGenerator, 
+                               SphrFunctions>
 {
     public:
         static constexpr const char*            TypeName() { return "Sphere"; }

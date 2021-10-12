@@ -18,6 +18,7 @@ class CPUMediumGroupI;
 class CPUTransformGroupI;
 class CPUCameraGroupI;
 class CPULightGroupI;
+class CPUEndpointGroupI;
 
 class GPUBaseAcceleratorI;
 class GPUAcceleratorGroupI;
@@ -48,6 +49,7 @@ using WorkBatchMap = std::map<uint32_t, WorkBatchArray>;
 using WorkBatchCreationInfo = std::vector<std::tuple<uint32_t,
                                                      const GPUPrimitiveGroupI*,
                                                      const GPUMaterialGroupI*>>;
+using BoundaryWorkBatchCreationInfo = std::vector<const CPUEndpointGroupI*>;
 
 // Logic Independent parameters for tracer
 // Logic Dependent ones will be provided by TracerOptionsI

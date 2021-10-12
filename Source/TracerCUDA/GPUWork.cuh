@@ -104,65 +104,56 @@ class GPUWorkBatch
 };
 
 template<class GlobalData, class LocalData, class RayData,
-         class MGroup, class PGroup,
-         BoundaryWorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
-         SurfaceFuncGenerator<typename MGroup::Surface,
-                              typename PGroup::HitData,
-                              typename PGroup::PrimitiveData> SGen>
+         class EGroup,
+         BoundaryWorkFunc<GlobalData, LocalData, RayData, EGroup> WFunc,
+         SurfaceFuncGenerator<typename EGroup::Surface,
+                              typename EGroup::HitData,
+                              typename EGroup::PrimitiveData> SGen>
 class GPUBoundaryWorkBatch 
     : public GPUWorkBatchD<GlobalData, RayData>
 {
     public:
-        static const char*              TypeNameGen(const char* mgOverride = nullptr,
-                                                    const char* pgOverride = nullptr);
+        static const char*              TypeNameGen(const char* nameOverride = nullptr);
         static const char*              TypeName() {return TypeNameGen();}
 
     private:
-        using SF =                      SurfaceFunc<typename MGroup::Surface,
-                                                    typename PGroup::HitData,
-                                                    typename PGroup::PrimitiveData>;
+        using SF =                      SurfaceFunc<typename EGroup::Surface,
+                                                    typename EGroup::HitData,
+                                                    typename EGroup::PrimitiveData>;
         using WF =                      BoundaryWorkFunc<GlobalData, LocalData,
-                                                         RayData, MGroup>;
+                                                         RayData, EGroup>;
 
         static constexpr SF             SurfF = SGen();
         static constexpr WF             WorkF = WFunc;
 
     protected:
-        const MGroup&                   materialGroup;
-        const PGroup&                   primitiveGroup;
+        const EGroup&                   endpointGroup;
 
         const GPUTransformI* const*     dTransforms;
-
-        // Endpoint Finder
-        DeviceMemory                    endPointFinderMemory;
-        EndpointFinder                  endpointFinder;
 
         // Per-Bathch Data
         LocalData                       localData;
 
     public:
         // Constrcutors & Destructor
-                                        GPUBoundaryWorkBatch(const GPUMaterialGroupI& mg,
-                                                             const GPUPrimitiveGroupI& pg,
+                                        GPUBoundaryWorkBatch(const GPUEndpointGroupI& eg,
                                                              const GPUTransformI* const* t);
                                         ~GPUBoundaryWorkBatch() = default;
 
-        TracerError                    GenerateEndpointFinder(const GPUEndpointI* const* sceneEndPoints);
-
         void                            Work(// Output
-                                             HitKey* dBoundMatOut,
-                                             RayGMem* dRayOut,
-                                             //  Input
-                                             const RayGMem* dRayIn,
-                                             const PrimitiveId* dPrimitiveIds,
-                                             const TransformId* dTransformIds,
-                                             const HitStructPtr dHitStructs,
-                                             // Ids
-                                             const HitKey* dMatIds,
-                                             const RayId* dRayIds,
-                                             //
-                                             const uint32_t rayCount,
-                                             RNGMemory& rngMem) override;
+                                              HitKey* dBoundMatOut,
+                                              RayGMem* dRayOut,
+                                              //  Input
+                                              const RayGMem* dRayIn,
+                                              const PrimitiveId* dPrimitiveIds,
+                                              const TransformId* dTransformIds,
+                                              const HitStructPtr dHitStructs,
+                                              // Ids
+                                              const HitKey* dMatIds,
+                                              const RayId* dRayIds,
+                                              //
+                                              const uint32_t rayCount,
+                                              RNGMemory& rngMem) override;
 
         const GPUPrimitiveGroupI&       PrimitiveGroup() const override { return primitiveGroup; }
         const GPUMaterialGroupI&        MaterialGroup() const override { return materialGroup; }
@@ -288,48 +279,47 @@ void GPUWorkBatch<GlobalData, LocalData, RayData,
     );
 }
 
-template<class GlobalData, class LocalData, class RayData,
-         class MGroup, class PGroup,
-         BoundaryWorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
-         SurfaceFuncGenerator<typename MGroup::Surface,
-                              typename PGroup::HitData,
-                              typename PGroup::PrimitiveData> SGen>
-inline const char* GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
-                                        MGroup, PGroup, WFunc, SGen>::TypeNameGen(const char* mgOverride,
-                                                                                  const char* pgOverride)
-{
-    const char* pgName = PGroup::TypeName();
-    const char* mgName = MGroup::TypeName();
-    if(pgOverride) pgName = pgOverride;
-    if(mgOverride) mgName = mgOverride;
+// ======================================================= //
+//                      BOUNDARY WORK                      //
+// ======================================================= //
 
-    static std::string typeName = MangledNames::WorkBatch(pgName,
-                                                          mgName);
+template<class GlobalData, class LocalData, class RayData,
+         class EGroup,
+         BoundaryWorkFunc<GlobalData, LocalData, RayData, EGroup> WFunc,
+         SurfaceFuncGenerator<typename EGroup::Surface,
+                              typename EGroup::HitData,
+                              typename EGroup::PrimitiveData> SGen>
+inline const char* GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
+                                        EGroup, WFunc, SGen>::TypeNameGen(const char* nameOverride)
+{
+    const char* name = EGroup::TypeName();    
+    if(nameOverride) name = nameOverride;
+
+    static std::string typeName(name);
     return typeName.c_str();
 }
 
 template<class GlobalData, class LocalData, class RayData,
-         class MGroup, class PGroup,
-         BoundaryWorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
-         SurfaceFuncGenerator<typename MGroup::Surface,
-                              typename PGroup::HitData,
-                              typename PGroup::PrimitiveData> SGen>
+         class EGroup,
+         BoundaryWorkFunc<GlobalData, LocalData, RayData, EGroup> WFunc,
+         SurfaceFuncGenerator<typename EGroup::Surface,
+                              typename EGroup::HitData,
+                              typename EGroup::PrimitiveData> SGen>
 GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
-                     MGroup, PGroup, WFunc, SGen>::GPUBoundaryWorkBatch(const GPUMaterialGroupI& mg,
-                                                                        const GPUPrimitiveGroupI& pg,
-                                                                        const GPUTransformI* const* t)
-    : materialGroup(static_cast<const MGroup&>(mg))
-    , primitiveGroup(static_cast<const PGroup&>(pg))
+                     EGroup, WFunc, SGen>::GPUBoundaryWorkBatch(const GPUEndpointGroupI& eg,                                                                
+                                                                const GPUTransformI* const* t)
+    : materialGroup(static_cast<const EGroup&>(eg))
     , dTransforms(t)
 {}
 
-template<class GlobalData, class LocalData, class RayData, class MGroup, class PGroup,
-         BoundaryWorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
-         SurfaceFuncGenerator<typename MGroup::Surface,
-                              typename PGroup::HitData,
-                              typename PGroup::PrimitiveData> SGen>
+template<class GlobalData, class LocalData, class RayData,
+         class EGroup,
+         BoundaryWorkFunc<GlobalData, LocalData, RayData, EGroup> WFunc,
+         SurfaceFuncGenerator<typename EGroup::Surface,
+                              typename EGroup::HitData,
+                              typename EGroup::PrimitiveData> SGen>
 void GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
-                          MGroup, PGroup, WFunc, SGen>::Work(// Output
+                          EGroup, WFunc, SGen>::Work(// Output
                                                      HitKey* dBoundMatOut,
                                                      RayGMem* dRayOut,
                                                      //  Input
@@ -393,16 +383,4 @@ void GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
         primData,
         dTransforms
     );
-}
-
-template<class GlobalData, class LocalData, class RayData, class MGroup, class PGroup,
-         BoundaryWorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
-         SurfaceFuncGenerator<typename MGroup::Surface,
-                              typename PGroup::HitData,
-                              typename PGroup::PrimitiveData> SGen>
-TracerError GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
-                         MGroup, PGroup, WFunc, SGen>::GenerateEndpointFinder(const GPUEndpointI* const* sceneEndPoints)
-{
-    // TODO:
-    return TracerError::UNABLE_TO_GENERATE_WORK;
 }

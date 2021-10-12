@@ -28,16 +28,15 @@ void KCConstructGPUCameraSpherical(GPUCameraSpherical* gCameraLocations,
                                                              data.nearFar,
                                                              // Base Class
                                                              gMediumIndices[globalId],
-                                                             gCameraMaterialIds[globalId],
-                                                             tId, *gTransforms[tId]);
+                                                             *gTransforms[tId]);
     }
 }
 
-SceneError CPUCameraGroupSpherical::InitializeGroup(const CameraGroupDataList& cameraNodes,
+SceneError CPUCameraGroupSpherical::InitializeGroup(const EndpointGroupDataList& cameraNodes,
+                                                    const TextureNodeMap& textures,
                                                     const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                     const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
-                                                    uint32_t cameraMaterialBatchId,
-                                                    double time,
+                                                    uint32_t batchId, double time,
                                                     const std::string& scenePath)
 {
     cameraCount = static_cast<uint32_t>(cameraNodes.size());
@@ -52,8 +51,7 @@ SceneError CPUCameraGroupSpherical::InitializeGroup(const CameraGroupDataList& c
         // Convert Ids to inner index
         uint16_t mediumIndex = static_cast<uint16_t>(mediumIdIndexPairs.at(node.mediumId));
         uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
-        HitKey materialKey = HitKey::CombinedKey(cameraMaterialBatchId,
-                                                 innerIndex);
+        HitKey materialKey = HitKey::CombinedKey(batchId, innerIndex);
 
         const auto positions = node.node->AccessVector3(NAME_POSITION);
         const auto ups = node.node->AccessVector3(NAME_UP);
@@ -117,8 +115,8 @@ SceneError CPUCameraGroupSpherical::ChangeTime(const NodeListing& lightNodes, do
     return SceneError::CAMERA_TYPE_INTERNAL_ERROR;
 }
 
-TracerError CPUCameraGroupSpherical::ConstructCameras(const CudaSystem& system,
-                                                      const GPUTransformI** dGlobalTransformArray)
+TracerError CPUCameraGroupSpherical::ConstructEndpoints(const GPUTransformI** dGlobalTransformArray,
+                                                        const CudaSystem& system)
 {
     // Gen Temporary Memory
     DeviceMemory tempMemory;
@@ -173,7 +171,7 @@ TracerError CPUCameraGroupSpherical::ConstructCameras(const CudaSystem& system,
 
     // Call allocation kernel
     gpu.GridStrideKC_X(0, 0,
-                       CameraCount(),
+                       cameraCount,
                        //
                        KCConstructGPUCameraSpherical,
                        //
@@ -186,15 +184,16 @@ TracerError CPUCameraGroupSpherical::ConstructCameras(const CudaSystem& system,
                        dCameraMaterialIds,
                        //
                        dGlobalTransformArray,
-                       CameraCount());
+                       cameraCount);
 
     gpu.WaitMainStream();
 
     // Generate transform list
-    for(uint32_t i = 0; i < CameraCount(); i++)
+    for(uint32_t i = 0; i < cameraCount; i++)
     {
         const auto* ptr = static_cast<const GPUCameraI*>(dGPUCameras + i);
         gpuCameraList.push_back(ptr);
+        gpuEndpointList.push_back(ptr);
     }
     return TracerError::OK;
 }

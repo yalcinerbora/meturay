@@ -132,7 +132,9 @@ inline void DirectPositionWork(// Output
     {
         case PositionRenderType::VECTOR3:
         {            
-            ImageAccumulatePixel(img, aux.pixelIndex, worldPos);
+            ImageAccumulatePixel(renderState.gImage, 
+                                 aux.pixelIndex, 
+                                 worldPos);
             return;
         }
         case PositionRenderType::LINEAR_DEPTH:
@@ -177,7 +179,7 @@ inline void DirectNormalWork(// Output
 {
     Vector3f ZERO = Zero3;
     const GPUMediumVacuum m(0);
-    Vector3f normal = NormalEvaluate(ZERO, ZERO, ZERO, m, surface, gMatData, matIndex);    
+    Vector3f normal = NormalRenderMat::Evaluate(ZERO, ZERO, ZERO, m, surface, gMatData, matIndex);    
     ImageAccumulatePixel(renderState.gImage, 
                          aux.pixelIndex, 
                          Vector4(normal, 1.0f));

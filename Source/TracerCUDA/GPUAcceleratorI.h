@@ -30,6 +30,12 @@ class GPUTransformI;
 using SceneNodePtr = std::unique_ptr<SceneNodeI>;
 using SurfaceAABBList = std::map<uint32_t, AABB3f>;
 
+struct SurfaceDefinition
+{
+    uint32_t    globalTransformIndex;
+    IdKeyPairs  primIdWorkKeyPairs;
+};
+
 // Accelerator Group defines same type of accelerators
 // This struct holds accelerator data
 // Unlike material group there is one to one relationship between
@@ -46,14 +52,10 @@ class GPUAcceleratorGroupI
         // Loads required data to CPU cache for
         virtual SceneError      InitializeGroup(// Accelerator Option Node
                                                 const SceneNodePtr& node,
-                                                // Map of hit keys for all materials
-                                                // w.r.t matId and primitive type
-                                                const std::map<TypeIdPair, HitKey>&,
                                                 // List of surface/material
                                                 // pairings that uses this accelerator type
                                                 // and primitive type
-                                                const std::map<uint32_t, IdPairs>& pairingList,
-                                                const std::vector<uint32_t>& transformList,
+                                                const std::map<uint32_t, SurfaceDefinition>& surfaceList,
                                                 double time) = 0;
 
         // Surface Queries

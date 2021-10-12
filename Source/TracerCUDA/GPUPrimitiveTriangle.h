@@ -59,14 +59,14 @@ using TriangleHit = Vector2f;
 struct TriFunctions
 {
     __device__ __forceinline__
-    static Vector3f Sample(// Output
-                           Vector3f& normal,
-                           float& pdf,
-                           // Input
-                           PrimitiveId primitiveId,
-                           const TriData& primData,
-                           // I-O
-                           RandomGPU& rng)
+    static Vector3f SamplePosition(// Output
+                                   Vector3f& normal,
+                                   float& pdf,
+                                   // Input
+                                   PrimitiveId primitiveId,
+                                   const TriData& primData,
+                                   // I-O
+                                   RandomGPU& rng)
     {
         float r1 = sqrt(GPUDistribution::Uniform<float>(rng));
         float r2 = GPUDistribution::Uniform<float>(rng);
@@ -105,16 +105,16 @@ struct TriFunctions
     }
 
     __device__ __forceinline__
-    static void PDF(// Outputs
-                    Vector3f& normal,
-                    float& pdf,
-                    float& distance,
-                    // Inputs
-                    const Vector3f& position,
-                    const Vector3f& direction,
-                    const GPUTransformI& transform,
-                    const PrimitiveId primitiveId,
-                    const TriData& primData)
+    static void PdfPosition(// Outputs
+                            Vector3f& normal,
+                            float& pdf,
+                            float& distance,
+                            // Inputs
+                            const Vector3f& position,
+                            const Vector3f& direction,
+                            const GPUTransformI& transform,
+                            const PrimitiveId primitiveId,
+                            const TriData& primData)
     {
         // Find the primitive
         float index;
@@ -333,7 +333,7 @@ struct TriFunctions
                 position2 * 0.33333f);
     }
 
-    static constexpr auto Leaf = GenerateDefaultLeaf<TriData>;
+    static constexpr auto& Leaf = GenerateDefaultLeaf<TriData>;
 };
 
 class GPUPrimitiveTriangle;
@@ -426,12 +426,7 @@ struct TriangleSurfaceGenerator
 
 class GPUPrimitiveTriangle final
     : public GPUPrimitiveGroup<TriangleHit, TriData, DefaultLeaf,
-                               TriangleSurfaceGenerator,
-                               TriFunctions::Hit,
-                               TriFunctions::Leaf, TriFunctions::AABB,
-                               TriFunctions::Area, TriFunctions::Center,
-                               TriFunctions::Sample,
-                               TriFunctions::PDF>
+                               TriangleSurfaceGenerator, TriFunctions>
 {
     public:
         static constexpr const char*            TypeName() { return "Triangle"; }

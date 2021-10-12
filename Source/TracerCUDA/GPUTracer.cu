@@ -27,7 +27,7 @@ TracerError GPUTracer::LoadCameras(std::vector<const GPUCameraI*>& dGPUCameras)
     for(auto& camera : cameras)
     {
         CPUCameraGroupI& c = *(camera.second);
-        if((e = c.ConstructCameras(cudaSystem, dTransforms)) != TracerError::OK)
+        if((e = c.ConstructEndpoints(dTransforms, cudaSystem)) != TracerError::OK)
             return e;
         const auto& dCList = c.GPUCameras();
         const auto& vCams = c.VisorCameras();
@@ -40,26 +40,14 @@ TracerError GPUTracer::LoadCameras(std::vector<const GPUCameraI*>& dGPUCameras)
 
 TracerError GPUTracer::LoadLights(std::vector<const GPULightI*>& dGPULights)
 {
-    // Generate Global Key Material Map for Light Construction
-    KeyMaterialMap hitKeyMaterialMap;
-    for(const auto& w : workInfo)
-    {
-        const GPUMaterialGroupI* matG = std::get<2>(w);
-        if(matG->IsBoundary())
-        {
-            const GPUBoundaryMaterialGroupI* bMatG = static_cast<const GPUBoundaryMaterialGroupI*>(matG);
-            hitKeyMaterialMap.emplace(std::get<0>(w), bMatG);
-        }        
-    }
 
     TracerError e = TracerError::OK;
     for(auto& light : lights)
     {
         CPULightGroupI& l = *(light.second);
-        if((e = l.ConstructLights(cudaSystem, dTransforms,
-                                  hitKeyMaterialMap)) != TracerError::OK)
+        if((e = l.ConstructEndpoints(dTransforms, cudaSystem)) != TracerError::OK)
             return e;
-        const auto& dLList = l.GPULights();
+        const auto& dLList = l.GPUEndpoints();
         dGPULights.insert(dGPULights.end(), dLList.begin(), dLList.end());
     }
     lightCount = static_cast<uint32_t>(dGPULights.size());
@@ -152,12 +140,12 @@ TracerError GPUTracer::Initialize()
     std::for_each(lights.cbegin(), lights.cend(),
                   [&lCount](const auto& light)
                   {
-                      lCount += light.second->LightCount();
+                      lCount += light.second->EndpointCount();
                   });
     std::for_each(cameras.cbegin(), cameras.cend(),
                   [&cCount](const auto& camera)
                   {
-                      cCount += camera.second->CameraCount();
+                      cCount += camera.second->EndpointCount();
                   });
     transformCount = static_cast<uint32_t>(tCount);
     mediumCount = static_cast<uint32_t>(mCount);

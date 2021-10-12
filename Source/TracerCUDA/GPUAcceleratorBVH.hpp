@@ -274,55 +274,55 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
 template <class PGroup>
 SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
                                                    const SceneNodePtr& node,
-                                                   // Map of hit keys for all materials
-                                                   // w.r.t matId and primitive type
-                                                   const std::map<TypeIdPair, HitKey>& allHitKeys,
                                                    // List of surface/material
                                                    // pairings that uses this accelerator type
                                                    // and primitive type
-                                                   const std::map<uint32_t, IdPairs>& pairingList,
-                                                   const std::vector<uint32_t>& transformList,
+                                                   const std::map<uint32_t, SurfaceDefinition>& surfaceList,
                                                    double time)
 {
     const char* primGroupTypeName = this->primitiveGroup.Type();
+
+    std::vector<uint32_t> hTransformIndices;
+    hTransformIndices.reserve(surfaceList.size());
 
     // Get params
     bool useStack = node->CommonBool(USE_STACK_NAME);
     params.useStack = useStack;
 
     // Iterate over pairings
-    int j = 0;
-    for(const auto& pairings : pairingList)
+    int surfaceInnerId = 0;
+    for(const auto& surface : surfaceList)
     {
         PrimitiveRangeList primRangeList;
         HitKeyList hitKeyList;
         primRangeList.fill(Vector2ul(std::numeric_limits<uint64_t>::max()));
         hitKeyList.fill(HitKey::InvalidKey);
 
-        const IdPairs& pList = pairings.second;
+        const IdKeyPairs& pList = surface.second.primIdWorkKeyPairs;
         for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
         {
-            const auto& p = pList[i];
+            const IdKeyPair& p = pList[i];
             if(p.first == std::numeric_limits<uint32_t>::max())
                 break;
 
-            primRangeList[i] = this->primitiveGroup.PrimitiveBatchRange(p.second);
-            hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.first));
+            primRangeList[i] = this->primitiveGroup.PrimitiveBatchRange(p.first);
+            hitKeyList[i] = p.second;
         }
-        // Put generated AABB
+
+        hTransformIndices.push_back(surface.second.globalTransformIndex);
         primitiveRanges.push_back(primRangeList);
         primitiveMaterialKeys.push_back(hitKeyList);
-        idLookup.emplace(pairings.first, j);
-        j++;
+        idLookup.emplace(surface.first, surfaceInnerId);
+        surfaceInnerId++;
     }
-    // Allocate Empty Device memory Objects
-    bvhDepths.resize(j, 0);
-    bvhMemories.resize(j);
+    assert(surfaceInnerId == hTransformIndices.size());
 
     // Allocate device memory for BVH root ptrs
     // and transform indices
-    assert(j == transformList.size());
-    uint32_t bvhCount = j;
+    uint32_t bvhCount = surfaceInnerId;
+    // Allocate Empty Device memory Objects
+    bvhDepths.resize(bvhCount, 0);
+    bvhMemories.resize(bvhCount);
 
     // Finally Allocate and load to GPU memory
     size_t sizeOfTransformIndices = sizeof(uint32_t) * bvhCount;
@@ -345,7 +345,7 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
 
     // Copy Transforms
     CUDA_CHECK(cudaMemcpy(dAccTransformIds,
-                          transformList.data(),
+                          hTransformIndices.data(),
                           bvhCount * sizeof(uint32_t),
                           cudaMemcpyHostToDevice));
 

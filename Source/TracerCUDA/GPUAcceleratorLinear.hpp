@@ -14,14 +14,10 @@ const char* GPUAccLinearGroup<PGroup>::Type() const
 template <class PGroup>
 SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
                                                       const SceneNodePtr& node,
-                                                      // Map of hit keys for all materials
-                                                      // w.r.t matId and primitive type
-                                                      const std::map<TypeIdPair, HitKey>& allHitKeys,
                                                       // List of surface/material
                                                       // pairings that uses this accelerator type
                                                       // and primitive type
-                                                      const std::map<uint32_t, IdPairs>& pairingList,
-                                                      const std::vector<uint32_t>& transformList,
+                                                      const std::map<uint32_t, SurfaceDefinition>& surfaceList,
                                                       double time)
 {
     accRanges.clear();
@@ -31,10 +27,13 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
 
     const char* primGroupTypeName = this->primitiveGroup.Type();
 
+    std::vector<uint32_t> hTransformIndices;
+    hTransformIndices.reserve(surfaceList.size());
+
     // Iterate over pairings
-    int j = 0;
+    int surfaceInnerId = 0;
     size_t totalSize = 0;
-    for(const auto& pairings : pairingList)
+    for(const auto& surface : surfaceList)
     {
         PrimitiveIdList primIdList;
         PrimitiveRangeList primRangeList;
@@ -46,36 +45,37 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
         Vector2ul range = Vector2ul(totalSize, 0);
 
         size_t localSize = 0;
-        const IdPairs& pList = pairings.second;
+        const IdKeyPairs& pList = surface.second.primIdWorkKeyPairs;
         for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
         {
-            const auto& p = pList[i];
+            const IdKeyPair& p = pList[i];
             if(p.first == std::numeric_limits<uint32_t>::max()) break;
 
-            primIdList[i] = p.second;
-            primRangeList[i] = this->primitiveGroup.PrimitiveBatchRange(p.second);
-            hitKeyList[i] = allHitKeys.at(std::make_pair(primGroupTypeName, p.first));
+            primIdList[i] = p.first;
+            primRangeList[i] = this->primitiveGroup.PrimitiveBatchRange(p.first);
+            hitKeyList[i] = p.second;
             localSize += primRangeList[i][1] - primRangeList[i][0];
         }
         range[1] = range[0] + localSize;
         totalSize += localSize;
 
-        // Put generated AABB
+        
+        hTransformIndices.push_back(surface.second.globalTransformIndex);
         primitiveIds.push_back(primIdList);
         primitiveRanges.push_back(primRangeList);
         primitiveMaterialKeys.push_back(hitKeyList);
         accRanges.push_back(range);
-        idLookup.emplace(pairings.first, j);
-        j++;
+        idLookup.emplace(surface.first, surfaceInnerId);
+        surfaceInnerId++;
     }
     assert(primitiveRanges.size() == primitiveMaterialKeys.size());
     assert(primitiveMaterialKeys.size() == idLookup.size());
     assert(idLookup.size() == accRanges.size());
+    assert(surfaceInnerId == hTransformIndices.size());
 
+    
+    uint32_t bvhCount = surfaceInnerId;
     // Allocate memory
-    assert(j == transformList.size());
-    uint32_t bvhCount = j;
-
     // Finally Allocate and load to GPU memory
     size_t sizeOfTransformIndices = sizeof(uint32_t) * bvhCount;
     sizeOfTransformIndices = Memory::AlignSize(sizeOfTransformIndices);
@@ -105,7 +105,7 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
                           cudaMemcpyHostToDevice));
         // Copy Transforms
     CUDA_CHECK(cudaMemcpy(dAccTransformIds,
-                          transformList.data(),
+                          hTransformIndices.data(),
                           bvhCount * sizeof(uint32_t),
                           cudaMemcpyHostToDevice));
 

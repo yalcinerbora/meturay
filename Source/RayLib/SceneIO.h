@@ -62,7 +62,9 @@ namespace SceneIO
     SurfaceStruct               LoadSurface(const nlohmann::json&);
     LightSurfaceStruct          LoadLightSurface(uint32_t baseMediumId,
                                                  uint32_t identityTransformId,
-                                                 const nlohmann::json& jsn);
+                                                 const nlohmann::json& jsnNode,
+                                                 const nlohmann::json& jsnLights,
+                                                 const IndexLookup& lightIndexLookup);
     CameraSurfaceStruct         LoadCameraSurface(uint32_t baseMediumId,
                                                   uint32_t identityTransformId,
                                                   const nlohmann::json& jsn);

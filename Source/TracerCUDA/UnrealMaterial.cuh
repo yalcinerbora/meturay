@@ -11,7 +11,6 @@ Implementation of Microfacet Shader definition of the Unreal Engine
 
 #include "UnrealMaterialKC.cuh"
 
-#include "MetaMaterialFunctions.cuh"
 #include "GPUSurface.h"
 #include "GPUMaterialP.cuh"
 #include "TypeTraits.h"
@@ -20,11 +19,7 @@ Implementation of Microfacet Shader definition of the Unreal Engine
 
 class UnrealMat final
     : public GPUMaterialGroup<UnrealMatData, UVSurface,
-                              UnrealSample, UnrealEvaluate,
-                              UnrealPdf,
-                              EmitEmpty<UnrealMatData, UVSurface>,
-                              IsEmissiveFalse<UnrealMatData>,
-                              UnrealSpecularity>
+                              UnrealDeviceFuncs>
 {
     public:
         static const char*          TypeName() { return "Unreal"; }
@@ -119,11 +114,7 @@ class UnrealMat final
         // Constructors & Destructor
                                 UnrealMat(const CudaGPU& gpu)
                                     : GPUMaterialGroup<UnrealMatData, UVSurface,
-                                                       UnrealSample, UnrealEvaluate,
-                                                       UnrealPdf,
-                                                       EmitEmpty<UnrealMatData, UVSurface>,
-                                                       IsEmissiveFalse<UnrealMatData>,
-                                                       UnrealSpecularity>(gpu) {}
+                                                       UnrealDeviceFuncs>(gpu) {}
                                 ~UnrealMat() = default;
 
         // Interface

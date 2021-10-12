@@ -8,8 +8,7 @@ class GPUDirectLightSamplerI;
 class DeviceMemory;
 class CudaSystem;
 
-class GPUEndpointI;
-using GPULightI = GPUEndpointI;
+class GPULightI;
 
 enum class LightSamplerType
 {

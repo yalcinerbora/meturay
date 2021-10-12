@@ -65,6 +65,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
                                                         const std::string& cameraType) override;
         // Light
         SceneError                  GenerateLightGroup(CPULightGPtr&,
+                                                       const CudaGPU&,
                                                        const GPUPrimitiveGroupI*,
                                                        const std::string& lightType) override;
         // Tracer Logic

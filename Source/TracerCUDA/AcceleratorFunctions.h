@@ -73,27 +73,27 @@ using CenterGenFunction = Vector3(*)(const GPUTransformI& transform,
 
 // Sample function for generating rays and/or finding an arbitrary point
 template <class PrimitiveData>
-using SampleFunction = Vector3(*)(Vector3& normal,
-                                  float& pdf,
-
-                                  PrimitiveId primitiveId,
-                                  const PrimitiveData&,
-                                  // I-O
-                                  RandomGPU& rng);
+using SamplePosFunction = Vector3(*)(Vector3& normal,
+                                     float& pdf,
+                                     
+                                     PrimitiveId primitiveId,
+                                     const PrimitiveData&,
+                                     // I-O
+                                     RandomGPU& rng);
 
 // PDF function for calculating a PDF function for hitting from such
 // position/direction
 template <class PrimitiveData>
-using PDFFunction = void(*)(// Outputs
-                            Vector3f& normal,
-                            float& pdf,
-                            float& distance,
-                            // Inputs
-                            const Vector3f& position,
-                            const Vector3f& direction,
-                            const GPUTransformI& transform,
-                            const PrimitiveId primitiveId,
-                            const PrimitiveData& primData);
+using PDFPosFunction = void(*)(// Outputs
+                               Vector3f& normal,
+                               float& pdf,
+                               float& distance,
+                               // Inputs
+                               const Vector3f& position,
+                               const Vector3f& direction,
+                               const GPUTransformI& transform,
+                               const PrimitiveId primitiveId,
+                               const PrimitiveData& primData);
 
 // Common Functors for gpu AABB Generation
 template<class PrimitiveGroup>
@@ -156,3 +156,74 @@ struct AABBUnion
         return a.Union(b);
     }
 };
+
+// Default (Empty Implementations of above classes
+template <class HitData, class PrimitiveData, class LeafData>
+HitResult DefaultAcceptHit(// Output
+                           HitKey&,
+                           PrimitiveId&,
+                           HitData&,
+                           // I-O
+                           RayReg&,
+                           // Input
+                           const GPUTransformI&,
+                           const LeafData&,
+                           const PrimitiveData&)
+{    
+    return HitResult{false, false};
+}
+
+// Custom bounding box generation function
+// For primitive
+template <class PrimitiveData>
+AABB3f DefaultAABBGen(const GPUTransformI&,
+                      PrimitiveId,
+                      const PrimitiveData&)
+{
+    Vector3f minInf(-INFINITY);
+    return AABB3f(minInf, minInf);
+}
+
+// Surface area generation function for bound hierarcy generation
+template <class PrimitiveData>
+float DefaultAreaGen(PrimitiveId, const PrimitiveData&)
+{
+    return 0.0f;
+}
+
+// Center generation function for bound hierarcy generation
+template <class PrimitiveData>
+Vector3 DefaultCenterGen(const GPUTransformI&,
+                         PrimitiveId, const PrimitiveData&)
+{
+    return Vector3f(INFINITY);
+}
+
+template <class PrimitiveData>
+Vector3 DefaultSamplePos(Vector3& normal, float& pdf,
+                         PrimitiveId,
+                         const PrimitiveData&,
+                         // I-O
+                         RandomGPU& rng)
+{
+    normal = Vector3f(INFINITY);
+    pdf = 0.0f;
+    return Vector3f(INFINITY);
+}
+
+template <class PrimitiveData>
+void DefaultPDFPos(// Outputs
+                   Vector3f& normal,
+                   float& pdf,
+                   float& distance,
+                   // Inputs
+                   const Vector3f&,
+                   const Vector3f&,
+                   const GPUTransformI&,
+                   const PrimitiveId,
+                   const PrimitiveData&)
+{
+    normal = Vector3f(INFINITY);
+    pdf = 0.0f;
+    distance = INFINITY;
+}

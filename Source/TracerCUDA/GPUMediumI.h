@@ -39,8 +39,7 @@ class CPUMediumGroupI
         virtual const char*             Type() const = 0;
         virtual const GPUMediumList&    GPUMediums() const = 0;
         virtual SceneError				InitializeGroup(const NodeListing& transformNodes,
-                                                double time,
-                                                const std::string& scenePath) = 0;
+                                                        double time, const std::string& scenePath) = 0;
         virtual SceneError				ChangeTime(const NodeListing& mediumNodes, double time,
                                                    const std::string& scenePath) = 0;
         virtual TracerError				ConstructMediums(const CudaSystem&,

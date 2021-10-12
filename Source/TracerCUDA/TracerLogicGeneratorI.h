@@ -51,6 +51,7 @@ class TracerLogicGeneratorI
 
         // Light
         virtual SceneError      GenerateLightGroup(CPULightGPtr&,
+                                                   const CudaGPU&,
                                                    const GPUPrimitiveGroupI*,
                                                    const std::string& lightType) = 0;
 
