@@ -25,8 +25,8 @@ class GPULightP : public GPULightI
         virtual                 ~GPULightP() = default;
 
         __device__ Vector3f     Emit(const Vector3& wo,
-                                     const Vector3& pos,
-                                     //
+                                          const Vector3& pos,
+                                          //
                                      const UVSurface&) override;
         
 };
@@ -96,8 +96,8 @@ inline GPULightP::GPULightP(const TextureRefI<2, Vector3f>& gRadiance,
 
 __device__
 inline Vector3f GPULightP::Emit(const Vector3& wo,
-                                const Vector3& pos,
-                                //
+                                     const Vector3& pos,
+                                     //
                                 const UVSurface& surface)
 {
     return gRadianceRef(surface.uv);
