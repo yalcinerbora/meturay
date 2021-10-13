@@ -7,13 +7,14 @@ class GPULightSamplerUniform : public GPUDirectLightSamplerI
 {
     private:
         const GPULightI**   gLights;
+        
         uint32_t            lightCount;
 
     protected:
     public:
         // Constructors & Destructor
         __device__          GPULightSamplerUniform(const GPULightI** gLights,
-                                                         uint32_t lightCount);
+                                                   uint32_t lightCount);
                             ~GPULightSamplerUniform() = default;
 
         // Interface
@@ -95,14 +96,12 @@ inline bool GPULightSamplerUniform::SampleLight(// Outputs
     // Incorporate the PDF of selecting that ligjt
     pdf *= (1.0f / static_cast<float>(lightCount));
     lightIndex = index;
-    key = light->MaterialKey();
+    key = light->WorkKey();
 
     // Return infinite (or very large distance) for
     // primitive lights since those have to hit in order to function properly
     // with the light materials
-    lDistance = (light->PrimitiveIndex() != INVALID_PRIMITIVE_ID)
-                ? FLT_MAX
-                : (lDistance + MathConstants::Epsilon);
+    lDistance += MathConstants::Epsilon;
     return true;
 }
 

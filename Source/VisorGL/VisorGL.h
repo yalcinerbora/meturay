@@ -143,7 +143,7 @@ class VisorGL : public WindowGLI
     protected:
     public:
         // Constructors & Destructor
-                                VisorGL(const VisorOptions&,                                        
+                                VisorGL(const VisorOptions&,
                                         const Vector2i& imgRes,
                                         const PixelFormat& imagePixelFormat);
                                 VisorGL(const VisorGL&) = delete;
@@ -173,7 +173,7 @@ class VisorGL : public WindowGLI
         void                    SetWindowSize(const Vector2i& size) override;
         void                    SetFPSLimit(float) override;
         Vector2i                MonitorResolution() const override;
-        void                    SetCamera(const VisorCamera&) override;
+        void                    SetTransform(const VisorTransform&) override;
         void                    SetSceneCameraCount(uint32_t) override;
 
         // Setting rendering context on current thread

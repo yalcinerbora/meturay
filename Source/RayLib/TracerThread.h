@@ -3,7 +3,7 @@
 
 #include "LoopingThreadI.h"
 #include "TracerStructs.h"
-#include "VisorCamera.h"
+#include "VisorTransform.h"
 #include "ThreadVariable.h"
 #include "Constants.h"
 #include "TracerOptions.h"
@@ -12,8 +12,6 @@
 class TracerSystemI;
 class GPUSceneI;
 class TracerCallbacksI;
-
-struct VisorCamera;
 
 class TracerThread : public LoopingThreadI
 {
@@ -50,7 +48,7 @@ class TracerThread : public LoopingThreadI
         // State variables
         // Camera Related
         ThreadVariable<bool>            isSceneCameraActive;
-        ThreadVariable<VisorCamera>     visorCam;
+        ThreadVariable<VisorTransform>  visorTransform;
         ThreadVariable<uint32_t>        sceneCam;
 
         // Scene Related
@@ -88,7 +86,7 @@ class TracerThread : public LoopingThreadI
         void            IncreaseTime(double);
         void            DecreaseTime(double);
         void            ChangeCamera(unsigned int);
-        void            ChangeCamera(VisorCamera);
+        void            ChangeTransform(VisorTransform);
         void            StartStopTrace(bool);
         void            PauseContTrace(bool);
 

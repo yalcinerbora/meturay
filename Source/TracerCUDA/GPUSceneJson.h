@@ -192,8 +192,9 @@ class GPUSceneJson : public GPUSceneI
 
         // Generated Classes of Materials / Accelerators
         // Work Maps
-        const WorkBatchCreationInfo&        WorkBatchInfo() const override;
-        const AcceleratorBatchMap&          AcceleratorBatchMappings() const override;
+        const WorkBatchCreationInfo&            WorkBatchInfo() const override;
+        const BoundaryWorkBatchCreationInfo&    BoundarWorkBatchInfo() const override;
+        const AcceleratorBatchMap&              AcceleratorBatchMappings() const override;
 
         // Allocated Types
         // All of which are allocated on the GPU

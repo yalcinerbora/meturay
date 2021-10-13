@@ -7,8 +7,6 @@
 #include "RNGMemory.h"
 #include "MangledNames.h"
 #include "WorkKernels.cuh"
-#include "EndpointFinder.cuh"
-#include "GPUEndpointI.h"
 
 #include "RayLib/TracerError.h"
 
@@ -44,6 +42,25 @@ class GPUWorkBatchD : public GPUWorkBatchI
                                        const RayData* rayDataInGlobal);
 };
 
+template<class GlobalData, class RayData>
+class GPUWorkBatchIntermediateI : public GPUWorkBatchD<GlobalData, RayData>
+{
+    public:
+        virtual                             ~GPUWorkBatchIntermediateI() = default;
+        // Every MaterialBatch is available for a specific primitive / material data
+        virtual const GPUPrimitiveGroupI&   PrimitiveGroup() const = 0;
+        virtual const GPUMaterialGroupI&    MaterialGroup() const = 0;
+};
+
+template<class GlobalData, class RayData>
+class GPUWorkBatchBoundaryI : public GPUWorkBatchD<GlobalData, RayData>
+{
+    public:
+        virtual                             ~GPUWorkBatchBoundaryI() = default;
+        // Every MaterialBatch is available for a specific primitive / material data
+        virtual const CPUEndpointGroupI&    EndpointGroup() const = 0;
+};
+
 template<class GlobalData, class LocalData, class RayData,
          class MGroup, class PGroup,
          WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
@@ -51,7 +68,7 @@ template<class GlobalData, class LocalData, class RayData,
                               typename PGroup::HitData,
                               typename PGroup::PrimitiveData> SGen>
 class GPUWorkBatch
-    : public GPUWorkBatchD<GlobalData, RayData>
+    : public GPUWorkBatchIntermediateI<GlobalData, RayData>
 {
     public:
         static const char*              TypeNameGen(const char* mgOverride = nullptr,
@@ -103,14 +120,11 @@ class GPUWorkBatch
         const GPUMaterialGroupI&        MaterialGroup() const override { return materialGroup; }
 };
 
-template<class GlobalData, class LocalData, class RayData,
-         class EGroup,
-         BoundaryWorkFunc<GlobalData, LocalData, RayData, EGroup> WFunc,
-         SurfaceFuncGenerator<typename EGroup::Surface,
-                              typename EGroup::HitData,
-                              typename EGroup::PrimitiveData> SGen>
-class GPUBoundaryWorkBatch 
-    : public GPUWorkBatchD<GlobalData, RayData>
+template<class GlobalData, class LocalData,
+         class RayData, class EGroup,
+         BoundaryWorkFunc<GlobalData, LocalData, RayData, EGroup> WFunc>
+class GPUBoundaryWorkBatch
+    : public GPUWorkBatchBoundaryI<GlobalData, RayData>
 {
     public:
         static const char*              TypeNameGen(const char* nameOverride = nullptr);
@@ -123,7 +137,7 @@ class GPUBoundaryWorkBatch
         using WF =                      BoundaryWorkFunc<GlobalData, LocalData,
                                                          RayData, EGroup>;
 
-        static constexpr SF             SurfF = SGen();
+        static constexpr SF             SurfF = EGroup::SurfF;
         static constexpr WF             WorkF = WFunc;
 
     protected:
@@ -136,27 +150,26 @@ class GPUBoundaryWorkBatch
 
     public:
         // Constrcutors & Destructor
-                                        GPUBoundaryWorkBatch(const GPUEndpointGroupI& eg,
+                                        GPUBoundaryWorkBatch(const CPUEndpointGroupI& eg,
                                                              const GPUTransformI* const* t);
                                         ~GPUBoundaryWorkBatch() = default;
 
         void                            Work(// Output
-                                              HitKey* dBoundMatOut,
-                                              RayGMem* dRayOut,
-                                              //  Input
-                                              const RayGMem* dRayIn,
-                                              const PrimitiveId* dPrimitiveIds,
-                                              const TransformId* dTransformIds,
-                                              const HitStructPtr dHitStructs,
-                                              // Ids
-                                              const HitKey* dMatIds,
-                                              const RayId* dRayIds,
-                                              //
-                                              const uint32_t rayCount,
-                                              RNGMemory& rngMem) override;
+                                             HitKey* dBoundMatOut,
+                                             RayGMem* dRayOut,
+                                             //  Input
+                                             const RayGMem* dRayIn,
+                                             const PrimitiveId* dPrimitiveIds,
+                                             const TransformId* dTransformIds,
+                                             const HitStructPtr dHitStructs,
+                                             // Ids
+                                             const HitKey* dMatIds,
+                                             const RayId* dRayIds,
+                                             //
+                                             const uint32_t rayCount,
+                                             RNGMemory& rngMem) override;
 
-        const GPUPrimitiveGroupI&       PrimitiveGroup() const override { return primitiveGroup; }
-        const GPUMaterialGroupI&        MaterialGroup() const override { return materialGroup; }
+        const CPUEndpointGroupI&       EndpointGroup() const override { return endpointGroup; }
 };
 
 template<class GD, class RD>
@@ -283,80 +296,71 @@ void GPUWorkBatch<GlobalData, LocalData, RayData,
 //                      BOUNDARY WORK                      //
 // ======================================================= //
 
-template<class GlobalData, class LocalData, class RayData,
-         class EGroup,
-         BoundaryWorkFunc<GlobalData, LocalData, RayData, EGroup> WFunc,
-         SurfaceFuncGenerator<typename EGroup::Surface,
-                              typename EGroup::HitData,
-                              typename EGroup::PrimitiveData> SGen>
+template<class GlobalData, class LocalData,
+         class RayData, class EGroup,
+         BoundaryWorkFunc<GlobalData, LocalData, RayData, EGroup> WFunc>
 inline const char* GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
-                                        EGroup, WFunc, SGen>::TypeNameGen(const char* nameOverride)
+                                        EGroup, WFunc>::TypeNameGen(const char* nameOverride)
 {
-    const char* name = EGroup::TypeName();    
+    const char* name = EGroup::TypeName();
     if(nameOverride) name = nameOverride;
 
-    static std::string typeName(name);
+    static std::string typeName = MangledNames::BoundaryWorkBatch(name);
     return typeName.c_str();
 }
 
-template<class GlobalData, class LocalData, class RayData,
-         class EGroup,
-         BoundaryWorkFunc<GlobalData, LocalData, RayData, EGroup> WFunc,
-         SurfaceFuncGenerator<typename EGroup::Surface,
-                              typename EGroup::HitData,
-                              typename EGroup::PrimitiveData> SGen>
+template<class GlobalData, class LocalData,
+         class RayData, class EGroup,
+         BoundaryWorkFunc<GlobalData, LocalData, RayData, EGroup> WFunc>
 GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
-                     EGroup, WFunc, SGen>::GPUBoundaryWorkBatch(const GPUEndpointGroupI& eg,                                                                
-                                                                const GPUTransformI* const* t)
-    : materialGroup(static_cast<const EGroup&>(eg))
+                     EGroup, WFunc>::GPUBoundaryWorkBatch(const CPUEndpointGroupI& eg,
+                                                          const GPUTransformI* const* t)
+    : endpointGroup(static_cast<const EGroup&>(eg))
     , dTransforms(t)
 {}
 
-template<class GlobalData, class LocalData, class RayData,
-         class EGroup,
-         BoundaryWorkFunc<GlobalData, LocalData, RayData, EGroup> WFunc,
-         SurfaceFuncGenerator<typename EGroup::Surface,
-                              typename EGroup::HitData,
-                              typename EGroup::PrimitiveData> SGen>
+template<class GlobalData, class LocalData,
+         class RayData, class EGroup,
+         BoundaryWorkFunc<GlobalData, LocalData, RayData, EGroup> WFunc>
 void GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
-                          EGroup, WFunc, SGen>::Work(// Output
-                                                     HitKey* dBoundMatOut,
-                                                     RayGMem* dRayOut,
-                                                     //  Input
-                                                     const RayGMem* dRayIn,
-                                                     const PrimitiveId* dPrimitiveIds,
-                                                     const TransformId* dTransformIds,
-                                                     const HitStructPtr dHitStructs,
-                                                     // Ids
-                                                     const HitKey* dMatIds,
-                                                     const RayId* dRayIds,
-                                                     //
-                                                     const uint32_t rayCount,
-                                                     RNGMemory& rngMem)
+                          EGroup, WFunc>::Work(// Output
+                                               HitKey* dBoundMatOut,
+                                               RayGMem* dRayOut,
+                                               //  Input
+                                               const RayGMem* dRayIn,
+                                               const PrimitiveId* dPrimitiveIds,
+                                               const TransformId* dTransformIds,
+                                               const HitStructPtr dHitStructs,
+                                               // Ids
+                                               const HitKey* dMatIds,
+                                               const RayId* dRayIds,
+                                               //
+                                               const uint32_t rayCount,
+                                               RNGMemory& rngMem)
 {
     // Do Pre-work (initialize local data etc.)
     this->GetReady();
 
-    using PrimitiveGroup = PGroup;
-    using PrimitiveData = typename PGroup::PrimitiveData;
-    using HitData = typename PGroup::HitData;
-    using MaterialData = typename MGroup::Data;
-    using MaterialSurface = typename MGroup::Surface;
+    using PrimitiveGroup    = typename EGroup::PrimitiveGroup;
+    using PrimitiveData     = typename EGroup::PrimitiveData;
+    using HitData           = typename EGroup::HitData;
+    using Surface           = typename EGroup::Surface;
+    using GPUEndpointType   = typename EGroup::GPUType;
 
     // Get Data
-    const PrimitiveData primData = PrimDataAccessor::Data(primitiveGroup);
-    const MaterialData matData = MatDataAccessor::Data(materialGroup);
+    const PrimitiveData primData = PrimDataAccessor::Data(endpointGroup.PrimGroup());
+
+    const GPUEndpointType* dEndpoints = endpointGroup.GPULightsDerived();
 
     const uint32_t outRayCount = this->OutRayCount();
-
-    const CudaGPU& gpu = materialGroup.GPU();
+    const CudaGPU& gpu = endpointGroup.GPU();
     gpu.AsyncGridStrideKC_X
     (
         0,
         rayCount,
         //
-        KCBoundaryWork<GlobalData, LocalData, RayData, PGroup,
-                       MGroup, WorkF, SurfF>,
+        KCBoundaryWork<GlobalData, LocalData, RayData,
+                       EGroup, WorkF, SurfF>,
         // Args
         // Output
         dBoundMatOut,
@@ -378,8 +382,7 @@ void GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
         rngMem.RNGData(gpu),
         // Constants
         rayCount,
-        endpointFinder,
-        matData,
+        dEndpoints,
         primData,
         dTransforms
     );

@@ -71,7 +71,7 @@ class MockNode
         void        ChangeTime(const double) override {}
         void        IncreaseTime(const double) override {}
         void        DecreaseTime(const double) override {}
-        void        ChangeCamera(const VisorCamera) override {}
+        void        ChangeCamera(const VisorTransform) override {}
         void        ChangeCamera(const unsigned int) override {}
         void        StartStopTrace(const bool) override {}
         void        PauseContTrace(const bool) override {}
@@ -91,7 +91,7 @@ class MockNode
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void        SendCurrentOptions(TracerOptions) override {};
         void        SendCurrentParameters(TracerParameters) override {};
-        void        SendCurrentCamera(VisorCamera) override {};
+        void        SendCurrentTransform(VisorTransform) override {};
         void        SendCurrentSceneCameraCount(uint32_t) override {};
 
         // From Node Interface
@@ -274,8 +274,6 @@ inline bool SimpleTracerSetup::Init()
         0,
 
         0,
-
-        VisorCamera{},
 
         MockNode::IMAGE_RESOLUTION,
         IMAGE_PIXEL_FORMAT,

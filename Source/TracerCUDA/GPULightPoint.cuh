@@ -2,7 +2,6 @@
 
 #include "GPULightP.cuh"
 #include "GPUTransformI.h"
-#include "DeviceMemory.h"
 #include "TypeTraits.h"
 
 class GPULightPoint final : public GPULightP
@@ -17,7 +16,7 @@ class GPULightPoint final : public GPULightP
                                               const Vector3f& position,
                                               // Base Class Related
                                               const TextureRefI<2, Vector3f>& gRad,
-                                              uint16_t mediumId,
+                                              uint16_t mediumId, HitKey,
                                               const GPUTransformI& gTrans);
                                 ~GPULightPoint() = default;
         // Interface
@@ -51,7 +50,9 @@ class CPULightGroupPoint final : public CPULightGroupP<GPULightPoint>
     public:
         static constexpr const char*    TypeName(){return "Point"; }
 
-        static constexpr const char*    NAME_POSITION = "position";
+        static constexpr const char*    POSITION_NAME = "position";
+
+        using Base = CPULightGroupP<GPULightPoint>;
 
     private:
         std::vector<Vector3f>           hPositions;
@@ -59,8 +60,8 @@ class CPULightGroupPoint final : public CPULightGroupP<GPULightPoint>
     protected:
     public:
         // Cosntructors & Destructor
-                                    CPULightGroupPoint(const CudaGPU& gpu,
-                                                       const GPUPrimitiveGroupI*);
+                                    CPULightGroupPoint(const GPUPrimitiveGroupI*,
+                                                       const CudaGPU&);
                                     ~CPULightGroupPoint() = default;
 
         const char*				    Type() const override;
@@ -70,11 +71,11 @@ class CPULightGroupPoint final : public CPULightGroupP<GPULightPoint>
                                                     const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
                                                     uint32_t batchId, double time,
                                                     const std::string& scenePath) override;
-		SceneError				    ChangeTime(const NodeListing& lightNodes, double time,
-								    		   const std::string& scenePath) override;
+        SceneError				    ChangeTime(const NodeListing& lightNodes, double time,
+                                               const std::string& scenePath) override;
         TracerError				    ConstructEndpoints(const GPUTransformI**,
                                                        const CudaSystem&) override;
-		
+
 		size_t					    UsedCPUMemory() const override;
 };
 
@@ -83,9 +84,9 @@ inline GPULightPoint::GPULightPoint(// Per Light Data
                                     const Vector3f& position,
                                     // Base Class Related
                                     const TextureRefI<2, Vector3f>& gRad,
-                                    uint16_t mediumId,
+                                    uint16_t mediumId, HitKey hk,
                                     const GPUTransformI& gTrans)
-    : GPULightP(gRad, mediumIndex, gTransform)
+    : GPULightP(gRad, mediumIndex, hk, gTransform)
     , position(gTrans.LocalToWorld(position))
 {}
 
@@ -134,9 +135,9 @@ inline bool GPULightPoint::CanBeSampled() const
     return false;
 }
 
-inline CPULightGroupPoint::CPULightGroupPoint(const CudaGPU& gpu,
-                                              const GPUPrimitiveGroupI*)
-    : CPULightGroupP<GPULightPoint>(gpu)    
+inline CPULightGroupPoint::CPULightGroupPoint(const GPUPrimitiveGroupI* pg,
+                                              const CudaGPU& gpu)
+    : Base(*pg, gpu)
 {}
 
 inline const char* CPULightGroupPoint::Type() const
@@ -146,7 +147,7 @@ inline const char* CPULightGroupPoint::Type() const
 
 inline size_t CPULightGroupPoint::UsedCPUMemory() const
 {
-    size_t totalSize = (CPULightGroupP<GPULightPoint>::UsedCPUMemory() +
+    size_t totalSize = (Base::UsedCPUMemory() +
                         hPositions.size() * sizeof(Vector3f));
     return totalSize;
 }

@@ -1,10 +1,11 @@
 #pragma once
 
 #include "GPUCameraI.h"
+#include "RayLib/VisorTransform.h"
 
 class GPUCameraPixel final : public GPUCameraI
 {
-    private:        
+    private:
         // Pixel Location Related
         Vector3                 position;
         Vector3                 right;
@@ -28,8 +29,8 @@ class GPUCameraPixel final : public GPUCameraI
                                            const Vector2i& pixelId,
                                            const Vector2i& resolution,
                                            // Base Class Related
-                                           uint16_t mediumId,
-                                           const GPUTransformI&);
+                                           uint16_t mediumId, HitKey hk,
+                                           const GPUTransformI& gTrans);
                             ~GPUCameraPixel() = default;
 
         // Interface
@@ -63,6 +64,8 @@ class GPUCameraPixel final : public GPUCameraI
         __device__ Matrix4x4        VPMatrix() const override;
         __device__ Vector2f         NearFar() const override;
 
+        __device__ VisorTransform   GenVisorTransform() const override;
+
         __device__ GPUCameraPixel   GeneratePixelCamera(const Vector2i& pixelId,
                                                         const Vector2i& resolution) const override;
 };
@@ -77,9 +80,9 @@ inline GPUCameraPixel::GPUCameraPixel(const Vector3& position,
                                       const Vector2i& pixelId,
                                       const Vector2i& resolution,
                                       // Base Class Related
-                                      uint16_t mediumId,
+                                      uint16_t mediumId, HitKey hk,
                                       const GPUTransformI& gTrans)
-    : GPUCameraI(mediumId, gTrans)
+    : GPUCameraI(mediumId, hk, gTrans)
     , position(position)
     , right(right)
     , up(up)
@@ -172,7 +175,7 @@ inline __device__ bool GPUCameraPixel::CanBeSampled() const
     return false;
 }
 
-__device__ 
+__device__
 inline Matrix4x4 GPUCameraPixel::VPMatrix() const
 {
     Vector3 blDir = (bottomLeft - position).Normalize();
@@ -187,13 +190,25 @@ inline Matrix4x4 GPUCameraPixel::VPMatrix() const
     return p * ToMatrix4x4(rotMatrix);
 }
 
-__device__ 
+__device__
 inline Vector2f GPUCameraPixel::NearFar() const
 {
     return nearFar;
 }
 
-__device__ 
+__device__
+inline VisorTransform GPUCameraPixel::GenVisorTransform() const
+{
+    Vector3 dir = Cross(up, right).Normalize();
+    return VisorTransform
+    {
+        position,
+        position + dir,
+        up
+    };
+}
+
+__device__
 inline GPUCameraPixel GPUCameraPixel::GeneratePixelCamera(const Vector2i& pixelId,
                                                           const Vector2i& resolution) const
 {
@@ -215,6 +230,7 @@ inline GPUCameraPixel GPUCameraPixel::GeneratePixelCamera(const Vector2i& pixelI
                           pixelId,
                           resolution,
                           mediumIndex,
+                          workKey,
                           gTransform);
 }
 

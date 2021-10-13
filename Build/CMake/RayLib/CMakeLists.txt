@@ -82,7 +82,7 @@ set(SRC_STRUCTS
     ${CURRENT_SOURCE_DIR}/SceneStructs.h
     ${CURRENT_SOURCE_DIR}/TracerStatus.h
     ${CURRENT_SOURCE_DIR}/TracerStructs.h
-    ${CURRENT_SOURCE_DIR}/VisorCamera.h
+    ${CURRENT_SOURCE_DIR}/VisorTransform.h
     ${CURRENT_SOURCE_DIR}/VisorInputStructs.h)
 
 set(SRC_SURFACE_LOADER
@@ -180,7 +180,7 @@ target_include_directories(RayLib PRIVATE
                            ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
 
-target_link_libraries(RayLib                       
+target_link_libraries(RayLib
                       fmt)
 
 target_compile_definitions(RayLib PRIVATE ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC})

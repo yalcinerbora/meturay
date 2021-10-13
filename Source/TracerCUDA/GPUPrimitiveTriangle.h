@@ -410,7 +410,7 @@ struct TriangleSurfaceGenerator
     };
 
     static constexpr auto GeneratorFunctionList =
-        std::make_tuple(SurfaceFunctionType<EmptySurface, GenEmptySurface<TriangleHit, TriData>>{},
+        std::make_tuple(SurfaceFunctionType<EmptySurface, DefaultGenEmptySurface<TriangleHit, TriData>>{},
                         SurfaceFunctionType<BasicSurface, GenBasicSurface>{},
                         SurfaceFunctionType<BarySurface, GenBarySurface>{},
                         SurfaceFunctionType<UVSurface, GenUVSurface>{});

@@ -11,6 +11,15 @@
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveSphere.h"
 #include "GPUPrimitiveEmpty.h"
+// Lights
+#include "GPULightPrimitive.cuh"
+#include "GPULightSkySphere.cuh"
+#include "GPULightPoint.cuh"
+#include "GPULightDirectional.cuh"
+#include "GPULightSpot.cuh"
+#include "GPULightDisk.cuh"
+#include "GPULightRectangular.cuh"
+
 // Misc
 #include "PathTracerKC.cuh"
 #include "WorkPool.h"
@@ -18,11 +27,10 @@
 #include "RayAuxStruct.cuh"
 
 template<class EGroup>
-class PTBoundaryWork
+class PTBoundaryWork final
     : public GPUBoundaryWorkBatch<PathTracerGlobalState,
                                   PathTracerLocalState, RayAuxPath,
-                                  EGroup, PathTracerBoundaryWork<MGroup>,
-                                  EGroup::GetSurfaceFunction>
+                                  EGroup, PathTracerBoundaryWork<EGroup>>
 {
     private:
         bool                neeOn;
@@ -30,17 +38,14 @@ class PTBoundaryWork
 
         using Base = GPUBoundaryWorkBatch<PathTracerGlobalState,
                                           PathTracerLocalState, RayAuxPath,
-                                          MGroup, PGroup, PathTracerBoundaryWork<MGroup>,
-                                          PGroup::GetSurfaceFunction>;
+                                          EGroup, PathTracerBoundaryWork<EGroup>>;
 
     protected:
     public:
         // Constrcutors & Destructor
-                                PTBoundaryWork(const GPUMaterialGroupI& mg,
-                                               const GPUPrimitiveGroupI& pg,
+                                PTBoundaryWork(const CPUEndpointGroupI& eg,
                                                const GPUTransformI* const* t,
-                                               bool neeOn, bool misOn,
-                                               bool emptyPrimitive);
+                                               bool neeOn, bool misOn);
                                 ~PTBoundaryWork() = default;
 
         void                    GetReady() override {}
@@ -50,7 +55,7 @@ class PTBoundaryWork
 };
 
 template<class MGroup, class PGroup>
-class PTPathWork
+class PTPathWork final
     : public GPUWorkBatch<PathTracerGlobalState,
                           PathTracerLocalState, RayAuxPath,
                           MGroup, PGroup, PathTracerPathWork<MGroup>,
@@ -79,19 +84,14 @@ class PTPathWork
         const char*         Type() const override { return Base::TypeName(); }
 };
 
-template<class M, class P>
-PTBoundaryWork<M, P>::PTBoundaryWork(const GPUMaterialGroupI& mg,
-                                     const GPUPrimitiveGroupI& pg,
-                                     const GPUTransformI* const* t,
-                                     bool neeOn, bool misOn,
-                                     bool emptyPrimitive)
-    : Base(mg, pg, t)
+template<class E>
+PTBoundaryWork<E>::PTBoundaryWork(const CPUEndpointGroupI& eg,
+                                  const GPUTransformI* const* t,
+                                  bool neeOn, bool misOn)
+    : Base(eg, t)
     , neeOn(neeOn)
     , misOn(neeOn && misOn)
-{
-    // Populate localData
-    this->localData.emptyPrimitive = emptyPrimitive;
-}
+{}
 
 template<class M, class P>
 PTPathWork<M, P>::PTPathWork(const GPUMaterialGroupI& mg,
@@ -137,14 +137,14 @@ uint8_t PTPathWork<M, P>::OutRayCount() const
 // Path Tracer Work Batches
 // ===================================================
 // Boundary
-extern template class PTBoundaryWork<BoundaryMatConstant, GPUPrimitiveEmpty>;
-extern template class PTBoundaryWork<BoundaryMatConstant, GPUPrimitiveTriangle>;
-extern template class PTBoundaryWork<BoundaryMatConstant, GPUPrimitiveSphere>;
-
-extern template class PTBoundaryWork<BoundaryMatTextured, GPUPrimitiveTriangle>;
-extern template class PTBoundaryWork<BoundaryMatTextured, GPUPrimitiveSphere>;
-
-extern template class PTBoundaryWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
+extern template class PTBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>;
+extern template class PTBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>;
+extern template class PTBoundaryWork<CPULightGroupSkySphere>;
+extern template class PTBoundaryWork<CPULightGroupPoint>;
+extern template class PTBoundaryWork<CPULightGroupDirectional>;
+extern template class PTBoundaryWork<CPULightGroupSpot>;
+extern template class PTBoundaryWork<CPULightGroupDisk>;
+extern template class PTBoundaryWork<CPULightGroupRectangular>;
 // ===================================================
 // Path
 extern template class PTPathWork<LambertCMat, GPUPrimitiveTriangle>;
@@ -162,12 +162,14 @@ extern template class PTPathWork<LambertMat, GPUPrimitiveSphere>;
 extern template class PTPathWork<UnrealMat, GPUPrimitiveTriangle>;
 extern template class PTPathWork<UnrealMat, GPUPrimitiveSphere>;
 // ===================================================
-using PTBoundaryWorkerList = TypeList<PTBoundaryWork<BoundaryMatConstant, GPUPrimitiveEmpty>,
-                                      PTBoundaryWork<BoundaryMatConstant, GPUPrimitiveTriangle>,
-                                      PTBoundaryWork<BoundaryMatConstant, GPUPrimitiveSphere>,
-                                      PTBoundaryWork<BoundaryMatTextured, GPUPrimitiveTriangle>,
-                                      PTBoundaryWork<BoundaryMatTextured, GPUPrimitiveSphere>,
-                                      PTBoundaryWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>>;
+using PTBoundaryWorkerList = TypeList<PTBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>,
+                                      PTBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>,
+                                      PTBoundaryWork<CPULightGroupSkySphere>,
+                                      PTBoundaryWork<CPULightGroupPoint>,
+                                      PTBoundaryWork<CPULightGroupDirectional>,
+                                      PTBoundaryWork<CPULightGroupSpot>,
+                                      PTBoundaryWork<CPULightGroupDisk>,
+                                      PTBoundaryWork<CPULightGroupRectangular>>;
 // ===================================================
 using PTPathWorkerList = TypeList<PTPathWork<LambertCMat, GPUPrimitiveTriangle>,
                                   PTPathWork<LambertCMat, GPUPrimitiveSphere>,

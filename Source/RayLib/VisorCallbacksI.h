@@ -19,7 +19,7 @@ class EmptyVisorCallback : public VisorCallbacksI
     void    IncreaseTime(const double) override {}
     void    DecreaseTime(const double) override {}
 
-    void    ChangeCamera(const VisorCamera) override {}
+    void    ChangeCamera(const VisorTransform) override {}
     void    ChangeCamera(const unsigned int) override {}
     void    StartStopTrace(const bool) override {}
     void    PauseContTrace(const bool) override {}

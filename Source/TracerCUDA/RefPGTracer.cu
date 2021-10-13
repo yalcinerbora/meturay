@@ -38,11 +38,11 @@ void KCAccumulateToBuffer(ImageGMem<float> accumBuffer,
         float data1 = newSamples.gPixels[threadId];
         uint32_t sample1 = newSamples.gSampleCounts[threadId];
 
-        float avgData = (data0 * static_cast<float>(sample0) + 
+        float avgData = (data0 * static_cast<float>(sample0) +
                          data1 * static_cast<float>(sample1));
         uint32_t newSampleCount = sample0 + sample1;
-        
-        avgData = (newSampleCount == 0) 
+
+        avgData = (newSampleCount == 0)
                     ? 0.0f
                     : avgData / static_cast<float>(newSampleCount);
 
@@ -62,7 +62,7 @@ void RefPGTracer::SendPixel() const
     // Do Parallel Reduction over the image
     size_t pixelSize = ImageIOI::FormatToPixelSize(iPixelFormat);
     float accumPixel;
-    uint32_t totalSamples;    
+    uint32_t totalSamples;
     // Reduction Kernels
     CUDA_CHECK(cudaSetDevice(cudaSystem.BestGPU().DeviceId()));
     ReduceArrayGPU<float, ReduceAdd<float>, cudaMemcpyDeviceToHost>
@@ -83,7 +83,7 @@ void RefPGTracer::SendPixel() const
     std::array<Byte, 16> convertedPixel;
     switch(iPixelFormat)
     {
-        case PixelFormat::R_FLOAT: 
+        case PixelFormat::R_FLOAT:
             *reinterpret_cast<float*>(convertedPixel.data()) = accumPixel; break;
         case PixelFormat::RG_FLOAT:
             *reinterpret_cast<Vector2f*>(convertedPixel.data()) = Vector2f(accumPixel); break;
@@ -93,7 +93,7 @@ void RefPGTracer::SendPixel() const
             *reinterpret_cast<Vector4f*>(convertedPixel.data()) = Vector4f(Vector3f(accumPixel), 1.0f); break;
             break;
         default:
-            
+
             METU_ERROR_LOG("RPG Tracer is unable to convert "
                            "unable to convert to Visor pixel format");
             if(callbacks) callbacks->SendCrashSignal();
@@ -137,7 +137,7 @@ ImageIOError RefPGTracer::SaveAndResetAccumImage(const Vector2i& pixelId)
     pixelIdStr << '['  << std::setw(4) << std::setfill('0') << pixelId[1]
                << ", " << std::setw(4) << std::setfill('0') << pixelId[0]
                << ']';
-    std::string path = Utility::PrependToFileInPath(options.refPGOutputName, 
+    std::string path = Utility::PrependToFileInPath(options.refPGOutputName,
                                                     pixelIdStr.str()) + ".exr";
 
     // Create Directories if not available
@@ -164,16 +164,16 @@ ImageIOError RefPGTracer::SaveAndResetAccumImage(const Vector2i& pixelId)
     else if(callbacks)
     {
         std::string s = fmt::format("Unable to Save\"{:s}\"", path);
-        callbacks->SendLog(s);        
+        callbacks->SendLog(s);
     }
     return e;
 }
 
 RefPGTracer::RefPGTracer(const CudaSystem& s,
                          const GPUSceneI& scene,
-                         const TracerParameters& p)    
+                         const TracerParameters& p)
     : RayTracer(s, scene, p)
-    , currentPixel(0)   
+    , currentPixel(0)
     , currentSampleCount(0)
     , currentCamera(std::numeric_limits<int>::max())
     , doInitCameraCreation(true)
@@ -201,44 +201,42 @@ TracerError RefPGTracer::Initialize()
     const auto& infoList = scene.WorkBatchInfo();
     for(const auto& wInfo : infoList)
     {
+        WorkBatchArray workBatchList;
+        uint32_t batchId = std::get<0>(wInfo);
         const GPUPrimitiveGroupI& pg = *std::get<1>(wInfo);
         const GPUMaterialGroupI& mg = *std::get<2>(wInfo);
-        uint32_t batchId = std::get<0>(wInfo);
 
-        // Generate work batch from appropirate work pool
-        WorkBatchArray workBatchList;
-        if(mg.IsBoundary())
-        {
-            // Boundary Materials have special kernels
-            bool emptyPrim = (std::string(pg.Type()) ==
-                              std::string(BaseConstants::EMPTY_PRIMITIVE_NAME));
-
-            WorkPool<bool, bool, bool>& wp = boundaryWorkPool;
-            GPUWorkBatchI* batch = nullptr;
-            if((err = wp.GenerateWorkBatch(batch, mg, pg, dTransforms,
-                                           options.nextEventEstimation,
-                                           options.directLightMIS,
-                                           emptyPrim)) != TracerError::OK)
-                return err;
-            workBatchList.push_back(batch);
-        }
-        else
-        {
-            // Generic Path work
-            WorkPool<bool, bool>& wpCombo = pathWorkPool;
-            GPUWorkBatchI* batch = nullptr;
-            if((err = wpCombo.GenerateWorkBatch(batch, mg, pg,
-                                                dTransforms,
-                                                options.nextEventEstimation,
-                                                options.directLightMIS)) != TracerError::OK)
-                return err;
-            workBatchList.push_back(batch);    
-        }
+        // Generic Path work
+        WorkPool<bool, bool>& wpCombo = pathWorkPool;
+        GPUWorkBatchI* batch = nullptr;
+        if((err = wpCombo.GenerateWorkBatch(batch, mg, pg,
+                                            dTransforms,
+                                            options.nextEventEstimation,
+                                            options.directLightMIS)) != TracerError::OK)
+            return err;
+        workBatchList.push_back(batch);
         workMap.emplace(batchId, workBatchList);
+    }
+    const auto& boundaryInfoList = scene.BoundarWorkBatchInfo();
+    for(const auto& wInfo : boundaryInfoList)
+    {
+        WorkBatchArray workBatchList;
+        uint32_t batchId = std::get<0>(wInfo);
+        const CPUEndpointGroupI& eg = *std::get<1>(wInfo);
+
+        BoundaryWorkPool<bool, bool>& wp = boundaryWorkPool;
+        GPUWorkBatchI* batch = nullptr;
+        if((err = wp.GenerateWorkBatch(batch, eg, dTransforms,
+                                       options.nextEventEstimation,
+                                       options.directLightMIS)) != TracerError::OK)
+            return err;
+        workBatchList.push_back(batch);
+        workMap.emplace(batchId, workBatchList);
+
     }
 
     // Allocate a pixel camera
-    // (it will be initialized (will be constructed later)   
+    // (it will be initialized (will be constructed later)
     camMemory = DeviceMemory(sizeof(GPUCameraPixel));
     dPixelCamera = static_cast<GPUCameraPixel*>(camMemory);
 
@@ -405,6 +403,10 @@ void RefPGTracer::Finalize()
 void RefPGTracer::GenerateWork(int cameraId)
 {
     if(crashed) return;
+
+    if(callbacks)
+        callbacks->SendCurrentTransform(SceneCamTransform(cameraId));
+
     // Check if the camera is changed
     if(currentCamera != cameraId)
     {
@@ -421,18 +423,18 @@ void RefPGTracer::GenerateWork(int cameraId)
        doInitCameraCreation)
     {
         doInitCameraCreation = false;
-        
+
         // Reset the accum buffer
         accumulationBuffer.Reset(cudaSystem);
 
         // Find world pixel 2D id
-        Vector2i pixelId = GlobalPixel2D();                                        
+        Vector2i pixelId = GlobalPixel2D();
         // Construct a New camera
         cudaSystem.BestGPU().KC_X(0, (cudaStream_t)0, 1,
                                   // Function
                                   KCConstructSingleGPUCameraPixel,
                                   // Args
-                                  dPixelCamera,                                  
+                                  dPixelCamera,
                                   //
                                   *(dCameras[cameraId]),
                                   pixelId,
@@ -444,15 +446,15 @@ void RefPGTracer::GenerateWork(int cameraId)
 
     // Generate Work for current Camera
     GenerateRays<RayAuxPath, RayAuxInitPath>(*dPixelCamera, options.samplePerIteration,
-                                             RayAuxInitPath(InitialPathAux), 
+                                             RayAuxInitPath(InitialPathAux),
                                              false);
     currentDepth = 0;
 }
 
-void RefPGTracer::GenerateWork(const VisorCamera& cam)
+void RefPGTracer::GenerateWork(const VisorTransform& t, int cameraId)
 {
     METU_ERROR_LOG("Cannot use custom camera for this Tracer.");
-    if(callbacks) callbacks->SendCrashSignal();    
+    if(callbacks) callbacks->SendCrashSignal();
 }
 
 void RefPGTracer::GenerateWork(const GPUCameraI& dCam)
@@ -489,7 +491,7 @@ void RefPGTracer::ReportionImage(Vector2i start, Vector2i end)
 
     ResetIterationVariables();
 
-    // Reportion the image buffers aswell 
+    // Reportion the image buffers aswell
     imgMemory.Reportion(Zero2i, options.resolution, cudaSystem);
     accumulationBuffer.Reportion(Zero2i, options.resolution, cudaSystem);
 }
@@ -511,7 +513,7 @@ void RefPGTracer::ResetImage()
 
     // Reset currents
     doInitCameraCreation = true;
-    currentCamera = std::numeric_limits<uint32_t>::max();
+    currentCamera = std::numeric_limits<int>::max();
     ResetIterationVariables();
     // Reset the shown image
     if(callbacks) callbacks->SendImageSectionReset(iPortionStart, iPortionEnd);

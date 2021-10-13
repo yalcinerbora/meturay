@@ -2,27 +2,27 @@
 // Path Tracer Work Batches
 // ===================================================
 // Boundary
-template class PTBoundaryWork<BoundaryMatConstant, GPUPrimitiveEmpty>;
-template class PTBoundaryWork<BoundaryMatConstant, GPUPrimitiveTriangle>;
-template class PTBoundaryWork<BoundaryMatConstant, GPUPrimitiveSphere>;
-
-template class PTBoundaryWork<BoundaryMatTextured, GPUPrimitiveTriangle>;
-template class PTBoundaryWork<BoundaryMatTextured, GPUPrimitiveSphere>;
-
-template class PTBoundaryWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
+template class PTBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>;
+template class PTBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>;
+template class PTBoundaryWork<CPULightGroupSkySphere>;
+template class PTBoundaryWork<CPULightGroupPoint>;
+template class PTBoundaryWork<CPULightGroupDirectional>;
+template class PTBoundaryWork<CPULightGroupSpot>;
+template class PTBoundaryWork<CPULightGroupDisk>;
+template class PTBoundaryWork<CPULightGroupRectangular>;
 // ===================================================
-// Combo
+// Path Work
 template class PTPathWork<LambertCMat, GPUPrimitiveTriangle>;
 template class PTPathWork<LambertCMat, GPUPrimitiveSphere>;
- 
+
 template class PTPathWork<ReflectMat, GPUPrimitiveTriangle>;
 template class PTPathWork<ReflectMat, GPUPrimitiveSphere>;
- 
+
 template class PTPathWork<RefractMat, GPUPrimitiveTriangle>;
 template class PTPathWork<RefractMat, GPUPrimitiveSphere>;
- 
+
 template class PTPathWork<LambertMat, GPUPrimitiveTriangle>;
 template class PTPathWork<LambertMat, GPUPrimitiveSphere>;
- 
+
 template class PTPathWork<UnrealMat, GPUPrimitiveTriangle>;
 template class PTPathWork<UnrealMat, GPUPrimitiveSphere>;

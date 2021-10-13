@@ -2,7 +2,7 @@
 
 #include "VisorInputStructs.h"
 
-struct VisorCamera;
+struct VisorTransform;
 
 class MovementSchemeI
 {
@@ -10,12 +10,12 @@ class MovementSchemeI
         virtual                 ~MovementSchemeI() = default;
 
         // Interface
-        virtual bool            InputAction(VisorCamera&,
+        virtual bool            InputAction(VisorTransform&,
                                             VisorActionType,
                                             KeyAction) = 0;
 
-        virtual bool            MouseMovementAction(VisorCamera&,
+        virtual bool            MouseMovementAction(VisorTransform&,
                                                     double x, double y) = 0;
-        virtual bool            MouseScrollAction(VisorCamera&,
+        virtual bool            MouseScrollAction(VisorTransform&,
                                                   double x, double y) = 0;
 };

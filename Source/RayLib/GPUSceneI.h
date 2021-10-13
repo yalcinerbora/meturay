@@ -37,8 +37,9 @@ class GPUSceneI
         virtual uint32_t                            BoundaryTransformIndex() const = 0;
         // Generated Classes of Materials / Accelerators
         // Work Maps
-        virtual const WorkBatchCreationInfo&        WorkBatchInfo() const = 0;
-        virtual const AcceleratorBatchMap&          AcceleratorBatchMappings() const = 0;
+        virtual const WorkBatchCreationInfo&            WorkBatchInfo() const = 0;
+        virtual const BoundaryWorkBatchCreationInfo&    BoundarWorkBatchInfo() const = 0;
+        virtual const AcceleratorBatchMap&              AcceleratorBatchMappings() const = 0;
         // Allocated Types
         // All of which are allocated on the GPU
         virtual const GPUBaseAccelPtr&                      BaseAccelerator() const = 0;

@@ -62,7 +62,7 @@ class DirectTracer : public RayTracer
         void                    AskOptions() override;
         //
         void                    GenerateWork(int cameraId) override;
-        void                    GenerateWork(const VisorCamera&) override;
+        void                    GenerateWork(const VisorTransform&, int cameraId) override;
         void                    GenerateWork(const GPUCameraI&) override;
         bool                    Render() override;
 };

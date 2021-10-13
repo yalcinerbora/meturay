@@ -17,7 +17,7 @@
 #include "GPUWork.cuh"
 
 template<class MGroup, class PGroup>
-class DirectTracerFurnaceWork
+class DirectTracerFurnaceWork final
     : public GPUWorkBatch<DirectTracerGlobalState,
                           DirectTracerLocalState, RayAuxBasic,
                           MGroup, PGroup, DirectFurnaceWork<MGroup>,
@@ -44,7 +44,7 @@ class DirectTracerFurnaceWork
         const char*                     Type() const override { return Base::TypeName(); }
 };
 
-class DirectTracerPositionWork
+class DirectTracerPositionWork final
     : public GPUWorkBatch<DirectTracerPositionGlobalState,
                           DirectTracerLocalState, RayAuxBasic,
                           EmptyMat<EmptySurface>, GPUPrimitiveEmpty, DirectPositionWork,
@@ -75,7 +75,7 @@ class DirectTracerPositionWork
 };
 
 template <class PGroup>
-class DirectTracerNormalWork
+class DirectTracerNormalWork final
     : public GPUWorkBatch<DirectTracerGlobalState,
                           DirectTracerLocalState, RayAuxBasic,
                           NormalRenderMat, PGroup, DirectNormalWork,

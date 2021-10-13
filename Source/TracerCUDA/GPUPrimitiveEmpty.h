@@ -48,9 +48,11 @@ struct EmptySurfaceGenerator
 
     static constexpr auto GeneratorFunctionList =
         std::make_tuple(SurfaceFunctionType<EmptySurface,
-                                            GenEmptySurface<EmptyHit, EmptyData>>{},
+                                            DefaultGenEmptySurface<EmptyHit, EmptyData>>{},
                         SurfaceFunctionType<BasicSurface,
-                                            GenBasicSurface<EmptyHit, EmptyData>>{});
+                                            DefaultGenBasicSurface<EmptyHit, EmptyData>>{},
+                        SurfaceFunctionType<UVSurface,
+                                            DefaultGenUvSurface<EmptyHit, EmptyData>>{});
 
     template<class Surface>
     static constexpr SurfaceFunc<Surface, EmptyHit, EmptyData> GetSurfaceFunction()

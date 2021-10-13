@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "VisorCamera.h"
+#include "VisorTransform.h"
 
 struct TracerCommonOptions;
 
@@ -19,7 +19,7 @@ class CommandCallbacksI
         virtual void        IncreaseTime(const double) = 0;
         virtual void        DecreaseTime(const double) = 0;
 
-        virtual void        ChangeCamera(const VisorCamera) = 0;
+        virtual void        ChangeCamera(const VisorTransform) = 0;
         virtual void        ChangeCamera(const unsigned int) = 0;
 
         // Control Flow of the Simulation
@@ -34,7 +34,7 @@ class EmptyCommandCallback : public CommandCallbacksI
     void    IncreaseTime(const double) override {}
     void    DecreaseTime(const double) override {}
 
-    void    ChangeCamera(const VisorCamera) override {}
+    void    ChangeCamera(const VisorTransform) override {}
     void    ChangeCamera(const unsigned int) override {}
     void    StartStopTrace(const bool) override {}
     void    PauseContTrace(const bool) override {}

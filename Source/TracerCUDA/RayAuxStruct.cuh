@@ -31,7 +31,7 @@ struct RayAuxPath
     Vector3f        radianceFactor;
 
     uint32_t        pixelIndex;     // Starting pixel index of the ray
-    uint32_t        endpointId;     // Destination of the ray if applicable (i.e. NEE Ray)
+    uint32_t        endpointIndex;  // Destination of the ray if applicable (i.e. NEE Ray)
     uint16_t        mediumIndex;    // Current Medium of the Ray
     uint8_t         depth;          // Current path depth
     RayType         type;           // Ray Type
@@ -47,11 +47,11 @@ struct RayAuxPPG
     Vector3f        radianceFactor;
 
     uint32_t        pixelIndex;     // Starting pixel index of the ray
-    uint32_t        endPointIndex;  // Destination of the ray if applicable (i.e. NEE Ray)
+    uint32_t        endpointIndex;  // Destination of the ray if applicable (i.e. NEE Ray)
     uint16_t        mediumIndex;    // Current Medium of the Ray
     uint8_t         depth;          // Current path depth
     RayType         type;           // Ray Type
-    
+
     uint32_t        pathIndex;      // Global path node index
 };
 
@@ -95,7 +95,7 @@ class RayAuxInitBasic
 
         __device__ __host__ HYBRID_INLINE
         void operator()(RayAuxBasic& gOutBasic,
-                        // Input    
+                        // Input
                         const RayReg& ray,
                         // Index
                         uint16_t medumIndex,
@@ -120,7 +120,7 @@ class RayAuxInitPath
 
         __device__ __host__ HYBRID_INLINE
         void operator()(RayAuxPath& gOutPath,
-                        // Input    
+                        // Input
                         const RayReg& ray,
                         // Index
                         uint16_t medumIndex,
@@ -148,7 +148,7 @@ class RayAuxInitAO
 
         __device__ __host__ HYBRID_INLINE
         void operator()(RayAuxAO& gOutAO,
-                        // Input    
+                        // Input
                         const RayReg& ray,
                         // Index
                         uint16_t medumIndex,
@@ -168,7 +168,7 @@ class RayAuxInitPPG
         uint32_t    samplePerPixel;
 
     public:
-        RayAuxInitPPG(const RayAuxPPG& aux, 
+        RayAuxInitPPG(const RayAuxPPG& aux,
                       uint32_t samplePerPixel)
             : defaultValue(aux)
             , samplePerPixel(samplePerPixel)
@@ -176,7 +176,7 @@ class RayAuxInitPPG
 
         __device__ __host__ HYBRID_INLINE
         void operator()(RayAuxPPG& gOutPPG,
-                        // Input    
+                        // Input
                         const RayReg& ray,
                         // Index
                         uint16_t medumIndex,

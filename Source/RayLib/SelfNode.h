@@ -44,7 +44,7 @@ class SelfNode
         void        ChangeTime(double) override;
         void        IncreaseTime(double) override;
         void        DecreaseTime(double) override;
-        void        ChangeCamera(VisorCamera) override;
+        void        ChangeCamera(VisorTransform) override;
         void        ChangeCamera(unsigned int) override;
         void        StartStopTrace(bool) override;
         void        PauseContTrace(bool) override;
@@ -65,7 +65,7 @@ class SelfNode
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
          void       SendCurrentOptions(TracerOptions) override;
          void       SendCurrentParameters(TracerParameters) override;
-         void       SendCurrentCamera(VisorCamera) override;
+         void       SendCurrentTransform(VisorTransform) override;
          void       SendCurrentSceneCameraCount(uint32_t) override;
 
         // From Node Interface

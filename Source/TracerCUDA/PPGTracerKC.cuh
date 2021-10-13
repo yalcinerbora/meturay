@@ -22,7 +22,7 @@ struct PPGTracerGlobalState
     // Output Image
     ImageGMem<Vector4>              gImage;
     // Light Related
-    const GPULightI**               lightList;
+    const GPULightI**               gLightList;
     uint32_t                        totalLightCount;
     const GPUDirectLightSamplerI*   lightSampler;
     // Medium Related
@@ -37,7 +37,7 @@ struct PPGTracerGlobalState
     uint32_t                        maximumPathNodePerRay;
     // Options
     // Path Guiding
-    bool                            rawPathGuiding;    
+    bool                            rawPathGuiding;
     // Options for NEE
     bool                            nee;
     // Russian Roulette
@@ -49,9 +49,9 @@ struct PPGTracerLocalState
     bool    emptyPrimitive;
 };
 
-template <class MGroup>
+template <class EGroup>
 __device__ __forceinline__
-void PPGTracerBoundaryWork(// Output                          
+void PPGTracerBoundaryWork(// Output
                            HitKey* gOutBoundKeys,
                            RayGMem* gOutRays,
                            RayAuxPPG* gOutRayAux,
@@ -59,30 +59,31 @@ void PPGTracerBoundaryWork(// Output
                            // Input as registers
                            const RayReg& ray,
                            const RayAuxPPG& aux,
-                           const typename MGroup::Surface& surface,
+                           const typename EGroup::Surface& surface,
                            const RayId rayId,
                            // I-O
                            PPGTracerLocalState& localState,
                            PPGTracerGlobalState& renderState,
                            RandomGPU& rng,
                            // Constants
-                           const uint32_t endPointIndex,
-                           const typename MGroup::Data& gMatData,
-                           const HitKey::Type matIndex)
+                           const typename EGroup::GPUType& gLight)
 {
+    using GPUType = typename EGroup::GPUType;
+
     uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
     PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // Check Material Sample Strategy
     assert(maxOutRay == 0);
-    
+
     const bool isCameraRay = aux.type == RayType::CAMERA_RAY;
     const bool isSpecularPathRay = aux.type == RayType::SPECULAR_PATH_RAY;
     // Always eval boundary mat if NEE is off
     // or NEE is on and hit endpoint and requested endpoint is same
+    const GPULightI* requestedLight = renderState.gLightList[aux.endpointIndex];
+    const bool isCorrectLight = (requestedLight->EndpointId() == gLight.EndpointId());
     const bool isCorrectNEERay = ((!renderState.nee) ||
-                                  (aux.endPointIndex == endPointIndex &&
-                                   aux.type == RayType::NEE_RAY));
+                                  (isCorrectLight && aux.type == RayType::NEE_RAY));
 
     // Accumulate Light if
     if(isCorrectNEERay   || // We hit the correct light as a NEE ray
@@ -97,21 +98,16 @@ void PPGTracerBoundaryWork(// Output
         Vector3 transFactor = m.Transmittance(ray.tMax);
         Vector3 radianceFactor = aux.radianceFactor * transFactor;
 
-        Vector3 emission = MGroup::Emit(// Input
-                                        -r.getDirection(),
-                                        position,
-                                        m,
-                                        //
-                                        surface,
-                                        // Constants
-                                        gMatData,
-                                        matIndex);
+        Vector3 emission = gLight.Emit(// Input
+                                       -r.getDirection(),
+                                       position,
+                                       surface);
 
         // And accumulate pixel
         // and add as a sample
         Vector3f total = emission * radianceFactor;
-        ImageAccumulatePixel(renderState.gImage, 
-                             aux.pixelIndex, 
+        ImageAccumulatePixel(renderState.gImage,
+                             aux.pixelIndex,
                              Vector4f(total, 1.0f));
 
         // Also backpropogate this radiance to the path nodes
@@ -120,16 +116,16 @@ void PPGTracerBoundaryWork(// Output
         //           emission[0], emission[1], emission[2],
         //           radianceFactor[0], radianceFactor[1], radianceFactor[2],
         //           aux.pathIndex, aux.depth);
-        if(total.HasNaN()) printf("NAN Found boundary!!!\n");       
+        if(total.HasNaN()) printf("NAN Found boundary!!!\n");
         // Accumulate to the write tree aswell (instead of creating a node for each NEE
         // end point directly accumulating to the tree will have less memory need)
         if(aux.type != RayType::CAMERA_RAY)
-        {                       
+        {
             gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
 
             uint32_t dTreeIndex = gLocalPathNodes[aux.depth].nearestDTreeIndex;
             DTreeGPU* dWriteTree = renderState.gWriteDTrees[dTreeIndex];
-            
+
             dWriteTree->AddRadianceToLeaf(r.getDirection(), Utility::RGBToLuminance(total),
                                           true);
             //dWriteTree->AddRadianceToLeaf(r.getDirection(), 1.0f);
@@ -233,8 +229,8 @@ void PPGTracerPathWork(// Output
 
         Vector3f total = emission * radianceFactor;
         // Output image
-        ImageAccumulatePixel(renderState.gImage, 
-                             aux.pixelIndex, 
+        ImageAccumulatePixel(renderState.gImage,
+                             aux.pixelIndex,
                              Vector4f(total, 1.0f));
 
         //if(emission != Vector3(0.0f))
@@ -255,11 +251,11 @@ void PPGTracerPathWork(// Output
     // Find nearest DTree
     uint32_t dTreeIndex = 0;
     renderState.gStree->AcquireNearestDTree(dTreeIndex, position);
-    
+
     float pdf;
     RayF rayPath;
     Vector3f reflectance;
-    const GPUMediumI* outM = &m;    
+    const GPUMediumI* outM = &m;
     //if(!isSpecularMat)
     //{
     //    // Sample a path using SDTree
@@ -269,10 +265,10 @@ void PPGTracerPathWork(// Output
     //    //if(isnan(pdf) | direction.HasNaN())
     //    //    printf("pdf % f, dir % f, % f, % f\n", pdf,
     //    //           direction[0], direction[1], direction[2]);
-    //    // 
+    //    //
     //    //printf("D: %f, %f, %f\n", direction[0], direction[1], direction[2]);
     //    //printf("%u  ", dTreeIndex);
-    //    // 
+    //    //
     //    //reflectance = Utility::RandomColorRGB(dTreeIndex);
     //    // Calculate BxDF
     //    reflectance = MGroup::Evaluate(// Input
@@ -295,7 +291,7 @@ void PPGTracerPathWork(// Output
     //}
     //else
     {
-        // Sample the BxDF        
+        // Sample the BxDF
         reflectance = MGroup::Sample(// Outputs
                                      rayPath, pdf, outM,
                                      // Inputs
@@ -311,7 +307,7 @@ void PPGTracerPathWork(// Output
                                      matIndex,
                                      0);
     }
-    
+
 
     // Factor the radiance of the surface
     Vector3f pathRadianceFactor = radianceFactor * reflectance;
@@ -329,7 +325,7 @@ void PPGTracerPathWork(// Output
     bool terminateRay = ((aux.depth > renderState.rrStart) &&
                          TracerFunctions::RussianRoulette(pathRadianceFactor, avgThroughput, rng));
 
-    // Do not terminate rays ever for specular mats 
+    // Do not terminate rays ever for specular mats
     if((!terminateRay || isSpecularMat) &&
         // Do not waste rays on zero radiance paths
        pathRadianceFactor != ZERO_3)
@@ -350,7 +346,7 @@ void PPGTracerPathWork(// Output
         gOutRayAux[PATH_RAY_INDEX] = auxOut;
     }
     else InvalidRayWrite(PATH_RAY_INDEX);
-   
+
 
     // Record this intersection on path chain
     uint8_t currentDepth = aux.depth + 1;
@@ -367,7 +363,7 @@ void PPGTracerPathWork(// Output
     node.worldPosition = position;
     node.nearestDTreeIndex = dTreeIndex;
     node.radFactor = pathRadianceFactor;
-    node.totalRadiance = Zero3;    
+    node.totalRadiance = Zero3;
     gLocalPathNodes[currentDepth] = node;
     // Set Previous Path node's next index
     gLocalPathNodes[prevDepth].prevNext[1] = currentDepth;
@@ -443,7 +439,7 @@ void PPGTracerPathWork(// Output
 
         pdfNEE /= TracerFunctions::PowerHeuristic(1, pdfLight, 1, pdfBxDF);
 
-        // PDF can become NaN if both BxDF pdf and light pdf is both zero 
+        // PDF can become NaN if both BxDF pdf and light pdf is both zero
         // (meaning both sampling schemes does not cover this direction)
         if(isnan(pdfNEE)) pdfNEE = 0.0f;
     }
@@ -466,7 +462,7 @@ void PPGTracerPathWork(// Output
 
         RayAuxPPG auxOut = aux;
         auxOut.radianceFactor = neeRadianceFactor;
-        auxOut.endPointIndex = lightIndex;
+        auxOut.endpointIndex = lightIndex;
         auxOut.type = RayType::NEE_RAY;
         auxOut.depth++;
 
@@ -504,13 +500,13 @@ void PPGTracerPathWork(// Output
     //    renderState.lightSampler->Pdf(pdfLightM, pdfLightC,
     //                                   lightIndex, position,
     //                                   rayMIS.getDirection());
-    //    // We are subsampling (discretely sampling) a single light 
+    //    // We are subsampling (discretely sampling) a single light
     //    // pdf of BxDF should also incorporate this
     //    pdfMIS *= pdfLightM;
 
     //    pdfMIS /= TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLightC * pdfLightM);
 
-    //    // PDF can become NaN if both BxDF pdf and light pdf is both zero 
+    //    // PDF can become NaN if both BxDF pdf and light pdf is both zero
     //    // (meaning both sampling schemes does not cover this direction)
     //    if(isnan(pdfMIS)) pdfMIS = 0.0f;
     //}
@@ -606,7 +602,7 @@ void PPGTracerPathWork(// Output
 
     //    pdfNEE /= TracerFunctions::PowerHeuristic(1, pdfLight, 1, pdfBxDF);
 
-    //    // PDF can become NaN if both BxDF pdf and light pdf is both zero 
+    //    // PDF can become NaN if both BxDF pdf and light pdf is both zero
     //    // (meaning both sampling schemes does not cover this direction)
     //    if(isnan(pdfNEE)) pdfNEE = 0.0f;
     //}
@@ -666,13 +662,13 @@ void PPGTracerPathWork(// Output
     //    renderState.lightSampler->Pdf(pdfLightM, pdfLightC,
     //                                   lightIndex, position,
     //                                   rayMIS.getDirection());
-    //    // We are subsampling (discretely sampling) a single light 
+    //    // We are subsampling (discretely sampling) a single light
     //    // pdf of BxDF should also incorporate this
     //    pdfMIS *= pdfLightM;
 
     //    pdfMIS /= TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLightC * pdfLightM);
 
-    //    // PDF can become NaN if both BxDF pdf and light pdf is both zero 
+    //    // PDF can become NaN if both BxDF pdf and light pdf is both zero
     //    // (meaning both sampling schemes does not cover this direction)
     //    if(isnan(pdfMIS)) pdfMIS = 0.0f;
     //}

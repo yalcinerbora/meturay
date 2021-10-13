@@ -16,8 +16,8 @@ class CudaGPU;
 
 class CPUMediumGroupI;
 class CPUTransformGroupI;
-class CPUCameraGroupI;
 class CPULightGroupI;
+class CPUCameraGroupI;
 class CPUEndpointGroupI;
 
 class GPUBaseAcceleratorI;
@@ -49,12 +49,12 @@ using WorkBatchMap = std::map<uint32_t, WorkBatchArray>;
 using WorkBatchCreationInfo = std::vector<std::tuple<uint32_t,
                                                      const GPUPrimitiveGroupI*,
                                                      const GPUMaterialGroupI*>>;
-using BoundaryWorkBatchCreationInfo = std::vector<const CPUEndpointGroupI*>;
+using BoundaryWorkBatchCreationInfo = std::vector<std::pair<uint32_t, const CPUEndpointGroupI*>>;
 
 // Logic Independent parameters for tracer
 // Logic Dependent ones will be provided by TracerOptionsI
 struct TracerParameters
-{    
-    bool        verbose;    // Let Tracer to Log what it is doing   
+{
+    bool        verbose;    // Let Tracer to Log what it is doing
     uint32_t    seed;       // RNG Seed
 };

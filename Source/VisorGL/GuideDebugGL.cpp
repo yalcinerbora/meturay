@@ -58,10 +58,10 @@ GuideDebugGL::GuideDebugGL(const Vector2i& ws,
 
     // Initially Create Generator Map
     gdbGenerators.emplace(GDebugRendererPPG::TypeName,
-                          GDBRendererGen(GDBRendererConstruct<GDebugRendererI, 
+                          GDBRendererGen(GDBRendererConstruct<GDebugRendererI,
                                                               GDebugRendererPPG>));
     //gdbGenerators.emplace(GDebugRendererReference::TypeName,
-    //                      GDBRendererGen(GDBRendererConstruct<GDebugRendererI, 
+    //                      GDBRendererGen(GDBRendererConstruct<GDebugRendererI,
     //                                                          GDebugRendererReference>));
 
     bool configParsed = GuideDebug::ParseConfigFile(config, configFile);
@@ -185,7 +185,7 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
     // States
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE); 
+    glDisable(GL_CULL_FACE);
 
     // Generate Gradient Texture
     Vector2ui gradientDimensions = Vector2ui(config.gradientValues.size(), 1);
@@ -197,7 +197,7 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
                                  PixelFormat::RGB_FLOAT);
 
     // Generate Reference Debug Renderer
-    referenceDebugRenderer = std::make_unique<GDebugRendererRef>(config.refGuideConfig, 
+    referenceDebugRenderer = std::make_unique<GDebugRendererRef>(config.refGuideConfig,
                                                                  *gradientTexture);
 
     // Generate DebugRenderers

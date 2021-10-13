@@ -32,6 +32,9 @@ class SceneNodeJson final : public SceneNodeI
         template <class T, LoadFunc<T> LoadF>
         OptionalNodeList<std::vector<T>>    AccessOptionalList(const std::string& name,
                                                                double time) const;
+        template <class T, LoadFunc<T> LoadF>
+        TexturedDataNode<T>                 CommonTextured(const std::string& name,
+                                                           double time) const;
 
     protected:
     public:
@@ -106,26 +109,26 @@ class SceneNodeJson final : public SceneNodeI
         OptionalNodeList<uint32_t>      AccessOptionalUInt(const std::string& name, double time = 0.0) const override;
         OptionalNodeList<uint64_t>      AccessOptionalUInt64(const std::string& name, double time = 0.0) const override;
 
-        OptionalNodeList<BoolList>       AccessOptionalBoolList(const std::string& name, double time = 0.0) const override;
-        OptionalNodeList<FloatList>      AccessOptionalFloatList(const std::string& name, double time) const override;
-        OptionalNodeList<Vector2List>    AccessOptionalVector2List(const std::string& name, double time = 0.0) const override;
-        OptionalNodeList<Vector3List>    AccessOptionalVector3List(const std::string& name, double time = 0.0) const override;
-        OptionalNodeList<Vector4List>    AccessOptionalVector4List(const std::string& name, double time = 0.0) const override;
-        OptionalNodeList<Matrix4x4List>  AccessOptionalMatrix4x4List(const std::string& name, double time = 0.0) const override;
-        OptionalNodeList<UIntList>       AccessOptionalUIntList(const std::string& name, double time = 0.0) const override;
-        OptionalNodeList<UInt64List>     AccessOptionalUInt64List(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<BoolList>      AccessOptionalBoolList(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<FloatList>     AccessOptionalFloatList(const std::string& name, double time) const override;
+        OptionalNodeList<Vector2List>   AccessOptionalVector2List(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<Vector3List>   AccessOptionalVector3List(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<Vector4List>   AccessOptionalVector4List(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<Matrix4x4List> AccessOptionalMatrix4x4List(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<UIntList>      AccessOptionalUIntList(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<UInt64List>    AccessOptionalUInt64List(const std::string& name, double time = 0.0) const override;
 
         // Texture Related
-        std::vector<NodeTextureStruct>          AccessTextureNode(const std::string& name,
-                                                                  double time = 0.0) const override;
-        TexturedDataNodeList<float>             AccessTexturedDataFloat(const std::string& name,
-                                                                        double time = 0.0) const override;
-        TexturedDataNodeList<Vector2>           AccessTexturedDataVector2(const std::string& name,
-                                                                          double time = 0.0) const override;
-        TexturedDataNodeList<Vector3>           AccessTexturedDataVector3(const std::string& name,
-                                                                          double time = 0.0) const override;
-        TexturedDataNodeList<Vector4>           AccessTexturedDataVector4(const std::string& name,
-                                                                          double time = 0.0) const override;
-        OptionalNodeList<NodeTextureStruct>     AccessOptionalTextureNode(const std::string& name,
-                                                                          double time = 0.0) const override;
+        NodeTextureStruct               CommonTextureNode(const std::string& name, double time = 0.0) const override;
+        TexturedDataNode<float>         CommonTexturedDataFloat(const std::string& name, double time = 0.0) const override;
+        TexturedDataNode<Vector2>       CommonTexturedDataVector2(const std::string& name, double time = 0.0) const override;
+        TexturedDataNode<Vector3>       CommonTexturedDataVector3(const std::string& name, double time = 0.0) const override;
+        TexturedDataNode<Vector4>       CommonTexturedDataVector4(const std::string& name, double time = 0.0) const override;
+
+        std::vector<NodeTextureStruct>          AccessTextureNode(const std::string& name, double time = 0.0) const override;
+        TexturedDataNodeList<float>             AccessTexturedDataFloat(const std::string& name, double time = 0.0) const override;
+        TexturedDataNodeList<Vector2>           AccessTexturedDataVector2(const std::string& name, double time = 0.0) const override;
+        TexturedDataNodeList<Vector3>           AccessTexturedDataVector3(const std::string& name, double time = 0.0) const override;
+        TexturedDataNodeList<Vector4>           AccessTexturedDataVector4(const std::string& name, double time = 0.0) const override;
+        OptionalNodeList<NodeTextureStruct>     AccessOptionalTextureNode(const std::string& name, double time = 0.0) const override;
 };

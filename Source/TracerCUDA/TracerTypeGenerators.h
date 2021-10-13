@@ -31,8 +31,11 @@ template<class Accel>
 using AccelGroupGeneratorFunc = Accel* (*)(const GPUPrimitiveGroupI&);
 
 template<class Light>
-using LightGroupGeneratorFunc = Light* (*)(const CudaGPU&, 
-                                           const GPUPrimitiveGroupI*);
+using LightGroupGeneratorFunc = Light* (*)(const GPUPrimitiveGroupI*,
+                                           const CudaGPU&);
+
+template<class Camera>
+using CameraGroupGeneratorFunc = Camera* (*)(const GPUPrimitiveGroupI*);
 
 template<class MaterialGroup>
 using MaterialGroupGeneratorFunc = MaterialGroup* (*)(const CudaGPU& gpuId);
@@ -42,7 +45,6 @@ using GPUPrimGroupGen = GeneratorNoArg<GPUPrimitiveGroupI>;
 
 using CPUTransformGen = GeneratorNoArg<CPUTransformGroupI>;
 using CPUMediumGen = GeneratorNoArg<CPUMediumGroupI>;
-using CPUCameraGen = GeneratorNoArg<CPUCameraGroupI>;
 
 class GPUTracerGen
 {
@@ -123,11 +125,32 @@ class CPULightGroupGen
             , dFunc(d)
         {}
 
-        CPULightGPtr operator()(const CudaGPU& gpu, 
-                                const GPUPrimitiveGroupI* pg)
+        CPULightGPtr operator()(const GPUPrimitiveGroupI* pg,
+                                const CudaGPU& gpu)
         {
-            CPULightGroupI* light = gFunc(gpu, pg);
+            CPULightGroupI* light = gFunc(pg, gpu);
             return CPULightGPtr(light, dFunc);
+        }
+};
+
+class CPUCameraGroupGen
+{
+    private:
+        CameraGroupGeneratorFunc<CPUCameraGroupI>    gFunc;
+        ObjDestroyerFunc<CPUCameraGroupI>            dFunc;
+
+    public:
+        // Constructor & Destructor
+        CPUCameraGroupGen(CameraGroupGeneratorFunc<CPUCameraGroupI> g,
+                          ObjDestroyerFunc<CPUCameraGroupI> d)
+            : gFunc(g)
+            , dFunc(d)
+        {}
+
+        CPUCameraGPtr operator()(const GPUPrimitiveGroupI* pg)
+        {
+            CPUCameraGroupI* camera = gFunc(pg);
+            return CPUCameraGPtr(camera, dFunc);
         }
 };
 
@@ -154,9 +177,15 @@ namespace TypeGenWrappers
     }
 
     template <class Base, class LightGroup>
-    Base* LightGroupConstruct(const CudaGPU& gpu,
-                              const GPUPrimitiveGroupI* pg)
+    Base* LightGroupConstruct(const GPUPrimitiveGroupI* pg,
+                              const CudaGPU& gpu)
     {
-        return new LightGroup(gpu, pg);
+        return new LightGroup(pg, gpu);
+    }
+
+    template <class Base, class CameraGroup>
+    Base* CameraGroupConstruct(const GPUPrimitiveGroupI* pg)
+    {
+        return new CameraGroup(pg);
     }
 }

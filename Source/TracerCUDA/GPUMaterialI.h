@@ -57,7 +57,6 @@ class GPUMaterialGroupI
         virtual size_t                      UsedGPUMemory(uint32_t materialId) const = 0;
         virtual size_t                      UsedCPUMemory(uint32_t materialId) const = 0;
         // NEE Related
-        virtual bool                        IsBoundary() const { return false; }
         virtual bool                        CanBeSampled() const { return true; }
         // Post initialization
         virtual void                        AttachGlobalMediumArray(const GPUMediumI* const*,
@@ -68,23 +67,4 @@ class GPUMaterialGroupI
         // Returns the cached textures
         virtual uint8_t                     UsedTextureCount() const = 0;
         virtual std::vector<uint32_t>       UsedTextureIds() const = 0;
-};
-
-// Additional Interface for light materials
-class GPUBoundaryMaterialGroupI : public GPUMaterialGroupI
-{
-    public:
-        virtual                             ~GPUBoundaryMaterialGroupI() = default;
-        // Implementations
-        bool                                IsBoundary() const override { return true; }
-        // Boundary Materials cannot be sampled
-        // since wo's (outgoing direction) are not defined for boundary materials
-        // (in reverse case)
-        bool                                CanBeSampled() const override { return false; }
-
-        // Interface
-        // Boundary Materials must
-        virtual TracerError                 LuminanceData(std::vector<float>& lumData,
-                                                          Vector2ui& dim,
-                                                          uint32_t innerId) const = 0;
 };

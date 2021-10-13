@@ -1,7 +1,7 @@
 #include "SelfNode.h"
 
 #include "TracerOptions.h"
-#include "VisorCamera.h"
+#include "VisorTransform.h"
 #include "AnalyticData.h"
 #include "VisorI.h"
 
@@ -40,21 +40,21 @@ void SelfNode::DecreaseTime(const double t)
     tracerThread.DecreaseTime(t);
 }
 
-void SelfNode::ChangeCamera(const VisorCamera c)
+void SelfNode::ChangeCamera(const VisorTransform t)
 {
-    //std::cout << "Gaze: [" 
-    //          << c.gazePoint[0] << ", " 
+    //std::cout << "Gaze: ["
+    //          << c.gazePoint[0] << ", "
     //          << c.gazePoint[1] << ", "
     //          << c.gazePoint[2] << "]" << std::endl;
-    //std::cout << "Pos: [" 
-    //          << c.position[0] << ", " 
+    //std::cout << "Pos: ["
+    //          << c.position[0] << ", "
     //          << c.position[1] << ", "
     //          << c.position[2] << "]" << std::endl;
-    //std::cout << "Up: [" 
-    //          << c.up[0] << ", " 
+    //std::cout << "Up: ["
+    //          << c.up[0] << ", "
     //          << c.up[1] << ", "
     //          << c.up[2] << "]" << std::endl;
-    tracerThread.ChangeCamera(c);
+    tracerThread.ChangeTransform(t);
 }
 
 void SelfNode::ChangeCamera(const unsigned int cameraId)
@@ -132,9 +132,9 @@ void SelfNode::SendCurrentParameters(TracerParameters)
     // Same as Tracer Options
 }
 
-void SelfNode::SendCurrentCamera(VisorCamera c)
+void SelfNode::SendCurrentTransform(VisorTransform t)
 {
-    visor.SetCamera(c);
+    visor.SetTransform(t);
 }
 
 void SelfNode::SendCurrentSceneCameraCount(uint32_t camCount)
@@ -159,7 +159,7 @@ void SelfNode::Work()
     // Self Node will terminate if
     while(// Visor is Closed
           visor.IsOpen() &&
-          // Tracer Thread unable to do stuff 
+          // Tracer Thread unable to do stuff
           // (i.e. unable to load a tracer scene etc)
           !tracerThread.IsTerminated() &&
           // Tracer itself is crashed (some internal runtime error etc)

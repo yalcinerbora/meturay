@@ -3,14 +3,14 @@
 // Ref PG Tracer Work Batches
 // ===================================================
 // Boundary
-template class RPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveEmpty>;
-template class RPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveTriangle>;
-template class RPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveSphere>;
-
-template class RPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveTriangle>;
-template class RPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveSphere>;
-
-template class RPGBoundaryWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
+template class RPGBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>;
+template class RPGBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>;
+template class RPGBoundaryWork<CPULightGroupSkySphere>;
+template class RPGBoundaryWork<CPULightGroupPoint>;
+template class RPGBoundaryWork<CPULightGroupDirectional>;
+template class RPGBoundaryWork<CPULightGroupSpot>;
+template class RPGBoundaryWork<CPULightGroupDisk>;
+template class RPGBoundaryWork<CPULightGroupRectangular>;
 // ===================================================
 // Path
 template class RPGPathWork<LambertCMat, GPUPrimitiveTriangle>;

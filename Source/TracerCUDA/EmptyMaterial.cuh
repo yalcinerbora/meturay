@@ -37,7 +37,6 @@ class EmptyMat final
         size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
 
         // NEE Related
-        bool                    IsBoundary() const override { return false; }
         bool                    CanBeSampled() const override { return false; }
 
         uint8_t                 SampleStrategyCount() const override { return 0; };

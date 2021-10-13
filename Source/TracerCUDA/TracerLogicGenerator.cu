@@ -119,7 +119,7 @@ TracerLogicGenerator::TracerLogicGenerator()
     //matGroupGenerators.emplace(BoundaryMatSkySphere::TypeName(),
     //                           GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BoundaryMatSkySphere>,
     //                           DefaultDestruct<GPUMaterialGroupI>));
-    // Debug Materials    
+    // Debug Materials
     matGroupGenerators.emplace(BarycentricMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BarycentricMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
@@ -167,18 +167,18 @@ TracerLogicGenerator::TracerLogicGenerator()
     lightGroupGenerators.emplace(CPULightGroupPoint::TypeName(),
                                  CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupPoint>,
                                                   DefaultDestruct<CPULightGroupI>));
-    //lightGroupGenerators.emplace(CPULightGroupDirectional::TypeName(),
-    //                             CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupDirectional>,
-    //                                              DefaultDestruct<CPULightGroupI>));
-    //lightGroupGenerators.emplace(CPULightGroupDisk::TypeName(),
-    //                             CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupDisk>,
-    //                                              DefaultDestruct<CPULightGroupI>));
-    //lightGroupGenerators.emplace(CPULightGroupRectangular::TypeName(),
-    //                             CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupRectangular>,
-    //                                              DefaultDestruct<CPULightGroupI>));
-    //lightGroupGenerators.emplace(CPULightGroupSpot::TypeName(),
-    //                             CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupSpot>,
-    //                                              DefaultDestruct<CPULightGroupI>));
+    lightGroupGenerators.emplace(CPULightGroupDirectional::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupDirectional>,
+                                                  DefaultDestruct<CPULightGroupI>));
+    lightGroupGenerators.emplace(CPULightGroupDisk::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupDisk>,
+                                                  DefaultDestruct<CPULightGroupI>));
+    lightGroupGenerators.emplace(CPULightGroupRectangular::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupRectangular>,
+                                                  DefaultDestruct<CPULightGroupI>));
+    lightGroupGenerators.emplace(CPULightGroupSpot::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupSpot>,
+                                                  DefaultDestruct<CPULightGroupI>));
     lightGroupGenerators.emplace(CPULightGroupSkySphere::TypeName(),
                                  CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupSkySphere>,
                                                   DefaultDestruct<CPULightGroupI>));
@@ -191,11 +191,11 @@ TracerLogicGenerator::TracerLogicGenerator()
 
     // Camera Types
     camGroupGenerators.emplace(CPUCameraGroupPinhole::TypeName(),
-                               CPUCameraGen(DefaultConstruct<CPUCameraGroupI, CPUCameraGroupPinhole>,
-                                            DefaultDestruct<CPUCameraGroupI>));
+                               CPUCameraGroupGen(CameraGroupConstruct<CPUCameraGroupI, CPUCameraGroupPinhole>,
+                                                 DefaultDestruct<CPUCameraGroupI>));
     camGroupGenerators.emplace(CPUCameraGroupSpherical::TypeName(),
-                               CPUCameraGen(DefaultConstruct<CPUCameraGroupI, CPUCameraGroupSpherical>,
-                                            DefaultDestruct<CPUCameraGroupI>));
+                               CPUCameraGroupGen(CameraGroupConstruct<CPUCameraGroupI, CPUCameraGroupSpherical>,
+                                                 DefaultDestruct<CPUCameraGroupI>));
     // Tracers
     tracerGenerators.emplace(DirectTracer::TypeName(),
                              GPUTracerGen(TracerLogicConstruct<GPUTracerI, DirectTracer>,
@@ -278,11 +278,12 @@ SceneError TracerLogicGenerator::GenerateTransformGroup(CPUTransformGPtr& tg,
 }
 
 SceneError TracerLogicGenerator::GenerateCameraGroup(CPUCameraGPtr& cam,
+                                                     const GPUPrimitiveGroupI* pg,
                                                      const std::string& cameraType)
 {
     auto loc = camGroupGenerators.find(cameraType);
     if(loc == camGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_CAMERA;
-    cam = std::move(loc->second());
+    cam = std::move(loc->second(pg));
     return SceneError::OK;
 }
 
@@ -293,7 +294,7 @@ SceneError TracerLogicGenerator::GenerateLightGroup(CPULightGPtr& light,
 {
     auto loc = lightGroupGenerators.find(lightType);
     if(loc == lightGroupGenerators.end()) return SceneError::NO_LOGIC_FOR_LIGHT;
-    light = std::move(loc->second(gpu, pg));
+    light = std::move(loc->second(pg, gpu));
     return SceneError::OK;
 }
 

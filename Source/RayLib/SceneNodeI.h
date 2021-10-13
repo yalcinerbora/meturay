@@ -143,18 +143,18 @@ class SceneNodeI
         virtual OptionalNodeList<UInt64List>     AccessOptionalUInt64List(const std::string& name, double time = 0.0) const = 0;
 
         // Texture Related
-        virtual std::vector<NodeTextureStruct>          AccessTextureNode(const std::string& name,
-                                                                          double time = 0.0) const = 0;
-        virtual TexturedDataNodeList<float>             AccessTexturedDataFloat(const std::string& name,
-                                                                                double time = 0.0) const = 0;
-        virtual TexturedDataNodeList<Vector2>           AccessTexturedDataVector2(const std::string& name,
-                                                                                  double time = 0.0) const = 0;
-        virtual TexturedDataNodeList<Vector3>           AccessTexturedDataVector3(const std::string& name,
-                                                                                  double time = 0.0) const = 0;
-        virtual TexturedDataNodeList<Vector4>           AccessTexturedDataVector4(const std::string& name,
-                                                                                  double time = 0.0) const = 0;
-        virtual OptionalNodeList<NodeTextureStruct>     AccessOptionalTextureNode(const std::string& name,
-                                                                                  double time = 0.0) const = 0;
+        virtual NodeTextureStruct               CommonTextureNode(const std::string& name, double time = 0.0) const = 0;
+        virtual TexturedDataNode<float>         CommonTexturedDataFloat(const std::string& name, double time = 0.0) const = 0;
+        virtual TexturedDataNode<Vector2>       CommonTexturedDataVector2(const std::string& name, double time = 0.0) const = 0;
+        virtual TexturedDataNode<Vector3>       CommonTexturedDataVector3(const std::string& name, double time = 0.0) const = 0;
+        virtual TexturedDataNode<Vector4>       CommonTexturedDataVector4(const std::string& name, double time = 0.0) const = 0;
+
+        virtual std::vector<NodeTextureStruct>          AccessTextureNode(const std::string& name, double time = 0.0) const = 0;
+        virtual TexturedDataNodeList<float>             AccessTexturedDataFloat(const std::string& name, double time = 0.0) const = 0;
+        virtual TexturedDataNodeList<Vector2>           AccessTexturedDataVector2(const std::string& name, double time = 0.0) const = 0;
+        virtual TexturedDataNodeList<Vector3>           AccessTexturedDataVector3(const std::string& name, double time = 0.0) const = 0;
+        virtual TexturedDataNodeList<Vector4>           AccessTexturedDataVector4(const std::string& name, double time = 0.0) const = 0;
+        virtual OptionalNodeList<NodeTextureStruct>     AccessOptionalTextureNode(const std::string& name, double time = 0.0) const = 0;
 };
 
 using SceneNodePtr = std::unique_ptr<SceneNodeI>;

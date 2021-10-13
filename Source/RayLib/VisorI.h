@@ -20,8 +20,8 @@ Visor
 class VisorInputI;
 class VisorCallbacksI;
 
+struct VisorTransform;
 struct VisorError;
-struct VisorCamera;
 
 struct VisorOptions
 {
@@ -73,7 +73,7 @@ class VisorI
         // Main Thread only Calls
         virtual void                    ProcessInputs() = 0;
         // Camera Related (Tracer Callbacks)
-        virtual void                    SetCamera(const VisorCamera&) = 0;
+        virtual void                    SetTransform(const VisorTransform&) = 0;
         virtual void                    SetSceneCameraCount(uint32_t) = 0;
         // Image Save Related
         virtual void                    SaveImage(bool saveAsHDR) = 0;

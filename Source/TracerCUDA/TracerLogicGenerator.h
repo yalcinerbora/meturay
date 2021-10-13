@@ -31,7 +31,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         std::map<std::string, CPUTransformGen>      transGroupGenerators;
         std::map<std::string, CPUMediumGen>         medGroupGenerators;
         std::map<std::string, CPULightGroupGen>     lightGroupGenerators;
-        std::map<std::string, CPUCameraGen>         camGroupGenerators;
+        std::map<std::string, CPUCameraGroupGen>    camGroupGenerators;
 
     public:
         // Constructor & Destructor
@@ -62,6 +62,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
                                                            const std::string& transformType) override;
         // Camera
         SceneError                  GenerateCameraGroup(CPUCameraGPtr&,
+                                                        const GPUPrimitiveGroupI*,
                                                         const std::string& cameraType) override;
         // Light
         SceneError                  GenerateLightGroup(CPULightGPtr&,

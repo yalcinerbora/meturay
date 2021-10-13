@@ -4,7 +4,7 @@
 */
 
 #include "VisorInputI.h"
-#include "VisorCamera.h"
+#include "VisorTransform.h"
 #include <memory>
 
 class MovementSchemeI;
@@ -25,7 +25,7 @@ class VisorWindowInput : public VisorInputI
         // Camera Related States
         unsigned int                    currentSceneCam;    // Currently selected scene camera
         CameraMode                      cameraMode;
-        VisorCamera                     customCamera;
+        VisorTransform                  customTransform;
         bool                            lockedCamera;
         uint32_t                        sceneCameraCount;
 
@@ -69,6 +69,6 @@ class VisorWindowInput : public VisorInputI
         void                    KeyboardUsed(KeyboardKeyType key, KeyAction action) override;
         void                    MouseButtonUsed(MouseButtonType button, KeyAction action) override;
 
-        void                    SetCamera(const VisorCamera&) override;
+        void                    SetTransform(const VisorTransform&) override;
         void                    SetSceneCameraCount(uint32_t) override;
 };

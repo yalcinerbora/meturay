@@ -6,6 +6,7 @@ namespace MangledNames
 {
     const std::string WorkBatch(const char* primitiveGroupName,
                                 const char* materialGroupName);
+    const std::string BoundaryWorkBatch(const char* endpointGroupName);
     const std::string AcceleratorGroup(const char* primitiveGroupName,
                                        const char* acceleratorGroupName);
 }

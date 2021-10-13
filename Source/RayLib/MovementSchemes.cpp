@@ -1,7 +1,7 @@
 #include "MovementSchemes.h"
 #include "Vector.h"
 #include "Quaternion.h"
-#include "VisorCamera.h"
+#include "VisorTransform.h"
 
 MovementSchemeFPS::MovementSchemeFPS(double sensitivity,
                                      double moveRatio,
@@ -16,7 +16,7 @@ MovementSchemeFPS::MovementSchemeFPS(double sensitivity,
 {}
 
 // Interface
-bool MovementSchemeFPS::InputAction(VisorCamera& camera,
+bool MovementSchemeFPS::InputAction(VisorTransform& transform,
                                     VisorActionType visorAction,
                                     KeyAction action)
 {
@@ -41,33 +41,33 @@ bool MovementSchemeFPS::InputAction(VisorCamera& camera,
     if(action != KeyAction::RELEASED)
     {
         bool camChanged = true;
-        Vector3 lookDir = (camera.gazePoint - camera.position).NormalizeSelf();
-        Vector3 side = Cross(camera.up, lookDir).NormalizeSelf();
+        Vector3 lookDir = (transform.gazePoint - transform.position).NormalizeSelf();
+        Vector3 side = Cross(transform.up, lookDir).NormalizeSelf();
         switch(visorAction)
         {
             // Movement
             case VisorActionType::MOVE_FORWARD:
             {
-                camera.position += lookDir * static_cast<float>(currentMovementRatio);
-                camera.gazePoint += lookDir * static_cast<float>(currentMovementRatio);
+                transform.position += lookDir * static_cast<float>(currentMovementRatio);
+                transform.gazePoint += lookDir * static_cast<float>(currentMovementRatio);
                 break;
             }
             case VisorActionType::MOVE_LEFT:
             {
-                camera.position += side * static_cast<float>(currentMovementRatio);
-                camera.gazePoint += side * static_cast<float>(currentMovementRatio);
+                transform.position += side * static_cast<float>(currentMovementRatio);
+                transform.gazePoint += side * static_cast<float>(currentMovementRatio);
                 break;
             }
             case VisorActionType::MOVE_BACKWARD:
             {
-                camera.position += lookDir * static_cast<float>(-currentMovementRatio);
-                camera.gazePoint += lookDir * static_cast<float>(-currentMovementRatio);
+                transform.position += lookDir * static_cast<float>(-currentMovementRatio);
+                transform.gazePoint += lookDir * static_cast<float>(-currentMovementRatio);
                 break;
             }
             case VisorActionType::MOVE_RIGHT:
             {
-                camera.position += side * static_cast<float>(-currentMovementRatio);
-                camera.gazePoint += side * static_cast<float>(-currentMovementRatio);
+                transform.position += side * static_cast<float>(-currentMovementRatio);
+                transform.gazePoint += side * static_cast<float>(-currentMovementRatio);
                 break;
             }
             default:
@@ -80,7 +80,7 @@ bool MovementSchemeFPS::InputAction(VisorCamera& camera,
     return false;
 }
 
-bool MovementSchemeFPS::MouseMovementAction(VisorCamera& camera,
+bool MovementSchemeFPS::MouseMovementAction(VisorTransform& transform,
                                             double x, double y)
 {
     // Check with latest recorded input
@@ -90,31 +90,31 @@ bool MovementSchemeFPS::MouseMovementAction(VisorCamera& camera,
     if(mouseToggle)
     {
         // X Rotation
-        Vector3 lookDir = camera.gazePoint - camera.position;
+        Vector3 lookDir = transform.gazePoint - transform.position;
         QuatF rotateX(static_cast<float>(-diffX * Sensitivity), YAxis);
         Vector3 rotated = rotateX.ApplyRotation(lookDir);
-        camera.gazePoint = camera.position + rotated;
+        transform.gazePoint = transform.position + rotated;
 
         // Y Rotation
-        lookDir = camera.gazePoint - camera.position;
-        Vector3 side = Cross(camera.up, lookDir).NormalizeSelf();
+        lookDir = transform.gazePoint - transform.position;
+        Vector3 side = Cross(transform.up, lookDir).NormalizeSelf();
         QuatF rotateY(static_cast<float>(diffY * Sensitivity), side);
         rotated = rotateY.ApplyRotation((lookDir));
-        camera.gazePoint = camera.position + rotated;
+        transform.gazePoint = transform.position + rotated;
 
         // Redefine up
         // Enforce an up vector which is ortogonal to the xz plane
-        camera.up = Cross(rotated, side);
-        camera.up[0] = 0.0f;
-        camera.up[1] = (camera.up[1] < 0.0f) ? -1.0f : 1.0f;
-        camera.up[2] = 0.0f;
+        transform.up = Cross(rotated, side);
+        transform.up[0] = 0.0f;
+        transform.up[1] = (transform.up[1] < 0.0f) ? -1.0f : 1.0f;
+        transform.up[2] = 0.0f;
     }
     prevMouseX = x;
     prevMouseY = y;
     return mouseToggle;
 }
 
-bool MovementSchemeFPS::MouseScrollAction(VisorCamera&,
+bool MovementSchemeFPS::MouseScrollAction(VisorTransform&,
                                           double x, double y)
 {
     return false;
@@ -136,7 +136,7 @@ MovementSchemeMaya::MovementSchemeMaya(double sensitivity,
 }
 
 // Interface
-bool MovementSchemeMaya::InputAction(VisorCamera&,
+bool MovementSchemeMaya::InputAction(VisorTransform&,
                                      VisorActionType visorAction,
                                      KeyAction action)
 {
@@ -157,7 +157,7 @@ bool MovementSchemeMaya::InputAction(VisorCamera&,
     return false;
 }
 
-bool MovementSchemeMaya::MouseMovementAction(VisorCamera& camera,
+bool MovementSchemeMaya::MouseMovementAction(VisorTransform& transform,
                                              double x, double y)
 {
     bool camChanged = false;
@@ -168,35 +168,35 @@ bool MovementSchemeMaya::MouseMovementAction(VisorCamera& camera,
 	if(moveMode)
 	{
 		// X Rotation
-		Vector3f lookDir = camera.gazePoint - camera.position;
+		Vector3f lookDir = transform.gazePoint - transform.position;
 		QuatF rotateX(static_cast<float>(-diffX * Sensitivity), YAxis);
         Vector3f rotated = rotateX.ApplyRotation(lookDir);
-		camera.position = camera.gazePoint - rotated;
+        transform.position = transform.gazePoint - rotated;
 
 		// Y Rotation
-		lookDir = camera.gazePoint - camera.position;
-        Vector3f left = Cross(camera.up, lookDir).NormalizeSelf();
+		lookDir = transform.gazePoint - transform.position;
+        Vector3f left = Cross(transform.up, lookDir).NormalizeSelf();
         QuatF rotateY(static_cast<float>(diffY * Sensitivity), left);
 		rotated = rotateY.ApplyRotation((lookDir));
-		camera.position = camera.gazePoint - rotated;
+        transform.position = transform.gazePoint - rotated;
 
 		// Redefine up
 		// Enforce an up vector which is ortogonal to the xz plane
-		camera.up = Cross(rotated, left);
-		camera.up[2] = 0.0f;
-		camera.up[0] = 0.0f;
-		camera.up.NormalizeSelf();
+        transform.up = Cross(rotated, left);
+        transform.up[2] = 0.0f;
+        transform.up[0] = 0.0f;
+        transform.up.NormalizeSelf();
         camChanged = true;
 	}
 	if(translateMode)
 	{
-        Vector3f lookDir = camera.gazePoint - camera.position;
-        Vector3f side = Cross(camera.up, lookDir).NormalizeSelf();
-		camera.position += static_cast<float>(diffX * TranslateModifier) * side;
-		camera.gazePoint += static_cast<float>(diffX * TranslateModifier) * side;
+        Vector3f lookDir = transform.gazePoint - transform.position;
+        Vector3f side = Cross(transform.up, lookDir).NormalizeSelf();
+        transform.position += static_cast<float>(diffX * TranslateModifier) * side;
+        transform.gazePoint += static_cast<float>(diffX * TranslateModifier) * side;
 
-		camera.position += static_cast<float>(diffY * TranslateModifier) * camera.up;
-		camera.gazePoint += static_cast<float>(diffY * TranslateModifier) * camera.up;
+        transform.position += static_cast<float>(diffY * TranslateModifier) * transform.up;
+        transform.gazePoint += static_cast<float>(diffY * TranslateModifier) * transform.up;
         camChanged = true;
 	}
 
@@ -205,15 +205,15 @@ bool MovementSchemeMaya::MouseMovementAction(VisorCamera& camera,
     return camChanged;
 }
 
-bool MovementSchemeMaya::MouseScrollAction(VisorCamera& camera,
+bool MovementSchemeMaya::MouseScrollAction(VisorTransform& transform,
                                            double x, double y)
 {
     // Zoom to the focus until some threshold
-    Vector3f lookDir = camera.position - camera.gazePoint;
+    Vector3f lookDir = transform.position - transform.gazePoint;
     lookDir *= static_cast<float>(1.0 - y * ZoomPercentage);
     if(lookDir.Length() > 0.1f)
     {
-        camera.position = lookDir + camera.gazePoint;
+        transform.position = lookDir + transform.gazePoint;
         return true;
     }
     return false;

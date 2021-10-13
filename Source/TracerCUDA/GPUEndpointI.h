@@ -33,10 +33,12 @@ class GPUEndpointI
         const GPUTransformI&    gTransform;
         // Unique Endpoint Id
         uint32_t                endpointId;
+        // Work key
+        HitKey                  workKey;
 
     public:
         __device__              GPUEndpointI(uint16_t mediumIndex,
-                                             const GPUTransformI&);
+                                             HitKey, const GPUTransformI&);
         virtual                 ~GPUEndpointI() = default;
 
         // Interface
@@ -77,6 +79,7 @@ class GPUEndpointI
         __device__ uint32_t                 EndpointId() const;
         __device__ uint16_t                 MediumIndex() const;
         __device__ const GPUTransformI&     Transform() const;
+        __device__ HitKey                   WorkKey() const;
 };
 
 class CPUEndpointGroupI
@@ -84,7 +87,7 @@ class CPUEndpointGroupI
 	public:
 		virtual								~CPUEndpointGroupI() = default;
 
-		// Interface	
+		// Interface
 		virtual const char*					Type() const = 0;
 		virtual const GPUEndpointList&		GPUEndpoints() const = 0;
 		virtual SceneError					InitializeGroup(const EndpointGroupDataList& endpointNodes,
@@ -97,7 +100,7 @@ class CPUEndpointGroupI
 													   const std::string& scenePath) = 0;
 		virtual TracerError					ConstructEndpoints(const GPUTransformI**,
                                                                const CudaSystem&) = 0;
-		virtual uint32_t						EndpointCount() const = 0;        
+		virtual uint32_t						EndpointCount() const = 0;
 
 		virtual size_t						UsedGPUMemory() const = 0;
 		virtual size_t						UsedCPUMemory() const = 0;
@@ -105,9 +108,11 @@ class CPUEndpointGroupI
 
 __device__
 inline GPUEndpointI::GPUEndpointI(uint16_t mediumIndex,
+                                  HitKey hk,
                                   const GPUTransformI& gTransform)
     : mediumIndex(mediumIndex)
     , gTransform(gTransform)
+    , workKey(hk)
     , endpointId(UINT32_MAX)
 {}
 
@@ -123,7 +128,7 @@ inline bool GPUEndpointI::operator!=(uint32_t eId) const
     return !(*this == eId);
 }
 
-__device__ 
+__device__
 inline void GPUEndpointI::SetEndpointId(uint32_t e)
 {
     endpointId = e;
@@ -147,3 +152,8 @@ inline const GPUTransformI& GPUEndpointI::Transform() const
     return gTransform;
 }
 
+__device__
+inline HitKey GPUEndpointI::WorkKey() const
+{
+    return workKey;
+}

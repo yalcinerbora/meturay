@@ -11,11 +11,11 @@ Can be attached to a Visor to capture window actions
 #include "VisorInputStructs.h"
 
 class VisorCallbacksI;
+struct VisorTransform;
 
 using KeyCallbacks = std::multimap<std::pair<KeyboardKeyType, KeyAction>, std::function<void()>>;
 using MouseButtonCallbacks = std::multimap<std::pair<MouseButtonType, KeyAction>, std::function<void()>>;
 
-struct VisorCamera;
 class VisorI;
 
 class WindowInputI
@@ -65,7 +65,7 @@ class VisorInputI : public WindowInputI
         // Interface
         virtual void                        AttachVisorCallback(VisorCallbacksI&) = 0;
 
-        virtual void                        SetCamera(const VisorCamera&) = 0;
+        virtual void                        SetTransform(const VisorTransform&) = 0;
         virtual void                        SetSceneCameraCount(uint32_t) = 0;
 };
 

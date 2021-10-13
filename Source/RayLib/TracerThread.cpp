@@ -3,7 +3,7 @@
 #include "GPUTracerI.h"
 #include "TracerCallbacksI.h"
 #include "Log.h"
-#include "VisorCamera.h"
+#include "VisorTransform.h"
 #include "SceneError.h"
 
 #include "RayLib/CPUTimer.h"
@@ -73,12 +73,12 @@ void TracerThread::LoopWork()
         }
     }
     // Change time if required
-    else if(timeChanged && 
+    else if(timeChanged &&
             ((sError = currentScene->ChangeTime(newTime)) != SceneError::OK))
     {
         PrintErrorAndSignalTerminate(sError);
         return;
-    }    
+    }
 
     // Send new camera count to the visor(s)
     if(newSceneGenerated)
@@ -132,15 +132,15 @@ void TracerThread::LoopWork()
     {
         uint32_t cam;
         if(sceneCam.CheckChanged(cam))
-            tracer->ResetImage();       
+            tracer->ResetImage();
         tracer->GenerateWork(cam);
     }
     else
     {
-        VisorCamera vc;
-        if(visorCam.CheckChanged(vc))
+        VisorTransform vt;
+        if(visorTransform.CheckChanged(vt))
             tracer->ResetImage();
-        tracer->GenerateWork(vc);
+        tracer->GenerateWork(vt, sceneCam.Get());
     }
 
     // Exaust all the generated work
@@ -234,16 +234,16 @@ void TracerThread::ChangeCamera(unsigned int sceneCamId)
     sceneCam = sceneCamId;
 }
 
-void TracerThread::ChangeCamera(VisorCamera cam)
+void TracerThread::ChangeTransform(VisorTransform t)
 {
     // Same as above
     isSceneCameraActive = false;
-    visorCam = cam;
+    visorTransform = t;
 }
 
 void TracerThread::StartStopTrace(bool start)
 {
-    if(start) 
+    if(start)
         Start();
     else
         Stop();

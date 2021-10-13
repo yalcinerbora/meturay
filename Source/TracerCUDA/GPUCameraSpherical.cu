@@ -7,9 +7,9 @@ void KCConstructGPUCameraSpherical(GPUCameraSpherical* gCameraLocations,
                                    //
                                    const CPUCameraGroupSpherical::Data* gData,
                                    //
-                                   const TransformId* gTransformIds,
                                    const uint16_t* gMediumIndices,
-                                   const HitKey* gCameraMaterialIds,
+                                   const HitKey* gWorkKeys,
+                                   const TransformId* gTransformIds,
                                    //
                                    const GPUTransformI** gTransforms,
                                    uint32_t camCaount)
@@ -19,16 +19,15 @@ void KCConstructGPUCameraSpherical(GPUCameraSpherical* gCameraLocations,
         globalId += blockDim.x * gridDim.x)
     {
         CPUCameraGroupSpherical::Data data = gData[globalId];
-        TransformId tId = gTransformIds[globalId];
-
         new (gCameraLocations + globalId) GPUCameraSpherical(data.pixelRatio,
                                                              data.position,
                                                              data.direction,
                                                              data.up,
                                                              data.nearFar,
-                                                             // Base Class
+                                                             // Base class
                                                              gMediumIndices[globalId],
-                                                             *gTransforms[tId]);
+                                                             gWorkKeys[globalId],
+                                                             *gTransforms[gTransformIds[globalId]]);
     }
 }
 
@@ -39,72 +38,34 @@ SceneError CPUCameraGroupSpherical::InitializeGroup(const EndpointGroupDataList&
                                                     uint32_t batchId, double time,
                                                     const std::string& scenePath)
 {
-    cameraCount = static_cast<uint32_t>(cameraNodes.size());
-    hHitKeys.reserve(cameraCount);
-    hMediumIds.reserve(cameraCount);
-    hTransformIds.reserve(cameraCount);
-    hCameraData.reserve(cameraCount);
+    SceneError e = SceneError::OK;
 
-    uint32_t innerIndex = 0;
+    if((e = InitializeCommon(cameraNodes, textures,
+                             mediumIdIndexPairs,
+                             transformIdIndexPairs,
+                             batchId, time,
+                             scenePath)) != SceneError::OK)
+        return e;
+
+
+    hCameraData.reserve(cameraCount);
     for(const auto& node : cameraNodes)
     {
-        // Convert Ids to inner index
-        uint16_t mediumIndex = static_cast<uint16_t>(mediumIdIndexPairs.at(node.mediumId));
-        uint32_t transformIndex = transformIdIndexPairs.at(node.transformId);
-        HitKey materialKey = HitKey::CombinedKey(batchId, innerIndex);
-
-        const auto positions = node.node->AccessVector3(NAME_POSITION);
-        const auto ups = node.node->AccessVector3(NAME_UP);
-        const auto directions = node.node->AccessVector3(NAME_DIR);
-        const auto nearFar = node.node->AccessVector2(NAME_PLANES);
-        const auto pixRatios = node.node->AccessFloat(NAME_PIX_RATIO);
-        assert(positions.size() == 1);
-        assert(ups.size() == 1);
-        assert(directions.size() == 1);
-        assert(nearFar.size() == 1);
-        assert(pixRatios.size() == 1);
-        assert(node.node->IdCount() == 1);
+        const auto position = node.node->CommonVector3(POSITION_NAME);
+        const auto up = node.node->CommonVector3(UP_NAME);
+        const auto direction = node.node->CommonVector3(DIR_NAME);
+        const auto nearFar = node.node->CommonVector2(PLANES_NAME);
+        const auto pixRatio = node.node->CommonFloat(PIX_RATIO_NAME);
 
         Data data = {};
-        data.position = positions[0];
-        data.up = ups[0];
-        data.direction = directions[0];
-        data.nearFar = nearFar[0];
-        data.pixelRatio = pixRatios[0];
+        data.position = position;
+        data.up = up;
+        data.direction = direction;
+        data.nearFar = nearFar;
+        data.pixelRatio = pixRatio;
 
-        // TODO: Fix
-        visorCameraList.push_back(VisorCamera
-                                  {
-                                      mediumIndex,
-                                      materialKey,
-                                      positions[0] + directions[0],
-                                      nearFar[0][0],
-                                      positions[0],
-                                      nearFar[0][1],
-                                      ups[0],
-                                      0.0f,
-                                      Vector2f(0.0f, 0.0f)
-                                  });
-
-        // Load to host memory
-        hHitKeys.push_back(materialKey);
-        hMediumIds.push_back(mediumIndex);
-        hTransformIds.push_back(transformIndex);
         hCameraData.push_back(data);
-        innerIndex++;
     }
-
-    // Allocate for GPULight classes
-    size_t totalClassSize = sizeof(GPUCameraSpherical) * cameraCount;
-    totalClassSize = Memory::AlignSize(totalClassSize);
-
-    DeviceMemory::EnlargeBuffer(memory, totalClassSize);
-
-    size_t offset = 0;
-    std::uint8_t* dBasePtr = static_cast<uint8_t*>(memory);
-    dGPUCameras = reinterpret_cast<const GPUCameraSpherical*>(dBasePtr + offset);
-    offset += totalClassSize;
-    assert(totalClassSize == offset);
 
     return SceneError::OK;
 }
@@ -120,42 +81,21 @@ TracerError CPUCameraGroupSpherical::ConstructEndpoints(const GPUTransformI** dG
 {
     // Gen Temporary Memory
     DeviceMemory tempMemory;
-    // Allocate for GPULight classes
-    size_t matKeySize = sizeof(HitKey) * cameraCount;
-    matKeySize = Memory::AlignSize(matKeySize);
-    size_t mediumSize = sizeof(uint16_t) * cameraCount;
-    mediumSize = Memory::AlignSize(mediumSize);
-    size_t transformIdSize = sizeof(TransformId) * cameraCount;
-    transformIdSize = Memory::AlignSize(transformIdSize);
-    size_t dataSize = sizeof(Data) * cameraCount;
-    dataSize = Memory::AlignSize(dataSize);
 
-    size_t totalSize = (matKeySize +
-                        mediumSize +
-                        transformIdSize +
-                        dataSize);
-    DeviceMemory::EnlargeBuffer(tempMemory, totalSize);
-
-    size_t offset = 0;
-    std::uint8_t* dBasePtr = static_cast<uint8_t*>(tempMemory);
-    const HitKey* dCameraMaterialIds = reinterpret_cast<const HitKey*>(dBasePtr + offset);
-    offset += matKeySize;
-    const uint16_t* dMediumIndices = reinterpret_cast<const uint16_t*>(dBasePtr + offset);
-    offset += mediumSize;
-    const TransformId* dTransformIds = reinterpret_cast<const TransformId*>(dBasePtr + offset);
-    offset += transformIdSize;
-    const Data* dDatas = reinterpret_cast<const Data*>(dBasePtr + offset);
-    offset += dataSize;
-    assert(totalSize == offset);
+    const uint16_t* dMediumIndices;
+    const TransformId* dTransformIds;
+    const HitKey* dWorkKeys;
+    const Data* dData;
+    DeviceMemory::AllocateMultiData(std::tie(dMediumIndices, dTransformIds,
+                                             dWorkKeys, dData),
+                                    tempMemory,
+                                    {cameraCount, cameraCount,
+                                    cameraCount, cameraCount});
 
     // Set a GPU
     const CudaGPU& gpu = system.BestGPU();
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
     // Load Data to Temp Memory
-    CUDA_CHECK(cudaMemcpy(const_cast<HitKey*>(dCameraMaterialIds),
-                          hHitKeys.data(),
-                          sizeof(HitKey) * cameraCount,
-                          cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemcpy(const_cast<uint16_t*>(dMediumIndices),
                           hMediumIds.data(),
                           sizeof(uint16_t) * cameraCount,
@@ -164,10 +104,15 @@ TracerError CPUCameraGroupSpherical::ConstructEndpoints(const GPUTransformI** dG
                           hTransformIds.data(),
                           sizeof(TransformId) * cameraCount,
                           cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy(const_cast<Data*>(dDatas),
+    CUDA_CHECK(cudaMemcpy(const_cast<HitKey*>(dWorkKeys),
+                          hWorkKeys.data(),
+                          sizeof(HitKey) * cameraCount,
+                          cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(const_cast<Data*>(dData),
                           hCameraData.data(),
                           sizeof(Data) * cameraCount,
                           cudaMemcpyHostToDevice));
+
 
     // Call allocation kernel
     gpu.GridStrideKC_X(0, 0,
@@ -177,23 +122,18 @@ TracerError CPUCameraGroupSpherical::ConstructEndpoints(const GPUTransformI** dG
                        //
                        const_cast<GPUCameraSpherical*>(dGPUCameras),
                        //
-                       dDatas,
+                       dData,
                        //
-                       dTransformIds,
                        dMediumIndices,
-                       dCameraMaterialIds,
+                       dWorkKeys,
+                       dTransformIds,
                        //
                        dGlobalTransformArray,
                        cameraCount);
 
     gpu.WaitMainStream();
 
-    // Generate transform list
-    for(uint32_t i = 0; i < cameraCount; i++)
-    {
-        const auto* ptr = static_cast<const GPUCameraI*>(dGPUCameras + i);
-        gpuCameraList.push_back(ptr);
-        gpuEndpointList.push_back(ptr);
-    }
+    SetCameraLists();
+
     return TracerError::OK;
 }

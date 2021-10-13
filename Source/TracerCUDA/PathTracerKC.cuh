@@ -53,24 +53,22 @@ void PathTracerBoundaryWork(// Output
                             PathTracerGlobalState& renderState,
                             RandomGPU& rng,
                             // Constants
-                            const typename EGroup::GPUType* gLights,                            
-                            const HitKey::Type workIndex)
+                            const typename EGroup::GPUType& gLight)
 {
     using GPUType = typename EGroup::GPUType;
 
     // Check Material Sample Strategy
     assert(maxOutRay == 0);
 
-    const GPULightType& gLight = *gLights[workIndex];
-
     const bool isPathRayAsMISRay = renderState.directLightMIS && (aux.type == RayType::PATH_RAY);
     const bool isCameraRay = aux.type == RayType::CAMERA_RAY;
     const bool isSpecularPathRay = aux.type == RayType::SPECULAR_PATH_RAY;
     // Always eval boundary mat if NEE is off
     // or NEE is on and hit endpoint and requested endpoint is same
+    const GPULightI* requestedLight = renderState.gLightList[aux.endpointIndex];
+    const bool isCorrectLight = (requestedLight->EndpointId() == gLight.EndpointId());
     const bool isCorrectNEERay = ((!renderState.nee) ||
-                                  (aux.endPointId == gLight.EndpointId() &&
-                                   aux.type == RayType::NEE_RAY));
+                                  (isCorrectLight && aux.type == RayType::NEE_RAY));
 
     float misWeight = 1.0f;
     if(isPathRayAsMISRay)
@@ -81,14 +79,14 @@ void PathTracerBoundaryWork(// Output
         // Find out the pdf of the light
         float pdfLightM, pdfLightC;
         renderState.gLightSampler->Pdf(pdfLightM, pdfLightC,
-                                       endPointIndex,
+                                       aux.endpointIndex,
                                        position,
                                        direction);
-        // We are subsampling (discretely sampling) a single light 
+        // We are subsampling (discretely sampling) a single light
         // pdf of BxDF should also incorporate this
         float bxdfPDF = aux.prevPDF;
-        misWeight = TracerFunctions::PowerHeuristic(1, bxdfPDF, 
-                                                    1, pdfLightC * pdfLightM);       
+        misWeight = TracerFunctions::PowerHeuristic(1, bxdfPDF,
+                                                    1, pdfLightC * pdfLightM);
     }
 
     // Accumulate Light if
@@ -107,20 +105,20 @@ void PathTracerBoundaryWork(// Output
         Vector3 transFactor = m.Transmittance(ray.tMax);
         Vector3 radianceFactor = aux.radianceFactor * transFactor;
 
-        Vector3 emission = gLight.Emittance(// Input
-                                            -r.getDirection(),
-                                            position,
-                                            surface);
+        Vector3 emission = gLight.Emit(// Input
+                                       -r.getDirection(),
+                                       position,
+                                       surface);
 
-        // And accumulate pixel// and add as a sample         
+        // And accumulate pixel// and add as a sample
         Vector3f total =  emission * radianceFactor;
-        // Incorporate MIS weight if applicable 
+        // Incorporate MIS weight if applicable
         // if path ray hits a light misWeight is calculated
         // else misWeight is 1.0f
         total *= misWeight;
         // Accumulate the pixel
-        ImageAccumulatePixel(renderState.gImage, 
-                             aux.pixelIndex, 
+        ImageAccumulatePixel(renderState.gImage,
+                             aux.pixelIndex,
                              Vector4f(total, 1.0f));
     }
 }
@@ -158,7 +156,7 @@ void PathTracerPathWork(// Output
 
     // Inputs
     // Current Ray
-    const RayF& r = ray.ray;    
+    const RayF& r = ray.ray;
     // Hit Position
     Vector3 position = r.AdvancedPos(ray.tMax);
     // Wi (direction is swapped as if it is coming out of the surface)
@@ -171,11 +169,11 @@ void PathTracerPathWork(// Output
     // Check Material's specularity;
     float specularity = MGroup::Specularity(surface, gMatData, matIndex);
     bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
-   
+
     // If NEE ray hits to this material
     // just skip since this is not a light material
     if(aux.type == RayType::NEE_RAY) return;
-    
+
     // Calculate Transmittance factor of the medium
     // And reduce the radiance wrt the medium transmittance
     Vector3 transFactor = m.Transmittance(ray.tMax);
@@ -194,11 +192,11 @@ void PathTracerPathWork(// Output
                                         gMatData,
                                         matIndex);
         Vector3f total = emission * radianceFactor;
-        ImageAccumulatePixel(renderState.gImage, 
-                             aux.pixelIndex, 
+        ImageAccumulatePixel(renderState.gImage,
+                             aux.pixelIndex,
                              Vector4f(total, 1.0f));
     }
-        
+
     // If this material does not require to have any samples just quit
     if(sampleCount == 0) return;
 
@@ -258,7 +256,7 @@ void PathTracerPathWork(// Output
 
             pdfNEE /= TracerFunctions::PowerHeuristic(1, pdfLight, 1, pdfBxDF);
 
-            // PDF can become NaN if both BxDF pdf and light pdf is both zero 
+            // PDF can become NaN if both BxDF pdf and light pdf is both zero
             // (meaning both sampling schemes does not cover this direction)
             if(isnan(pdfNEE)) pdfNEE = 0.0f;
         }
@@ -279,7 +277,7 @@ void PathTracerPathWork(// Output
             // Aux
             RayAuxPath auxOut = aux;
             auxOut.radianceFactor = neeRadianceFactor;
-            auxOut.endPointIndex = lightIndex;
+            auxOut.endpointIndex = lightIndex;
             auxOut.type = RayType::NEE_RAY;
             auxOut.prevPDF = NAN;
             outputWriter.Write(NEE_RAY_INDEX, rayOut, auxOut, matLight);
@@ -310,13 +308,13 @@ void PathTracerPathWork(// Output
     Vector3f pathRadianceFactor = radianceFactor * reflectance;
     // Check singularities
     pathRadianceFactor = (pdfPath == 0.0f) ? Zero3 : (pathRadianceFactor / pdfPath);
-    
+
     // Check Russian Roulette
     float avgThroughput = pathRadianceFactor.Dot(Vector3f(0.333f));
     bool terminateRay = ((aux.depth > renderState.rrStart) &&
                          TracerFunctions::RussianRoulette(pathRadianceFactor, avgThroughput, rng));
 
-    // Do not terminate rays ever for specular mats 
+    // Do not terminate rays ever for specular mats
     if((!terminateRay || isSpecularMat) &&
         // Do not waste rays on zero radiance paths
         pathRadianceFactor != ZERO_3)

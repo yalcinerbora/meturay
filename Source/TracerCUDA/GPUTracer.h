@@ -56,8 +56,10 @@ class GPUTracer : public GPUTracerI
         // GPU Memory
         DeviceMemory                                commonTypeMemory;
 
-        TracerError                                 LoadCameras(std::vector<const GPUCameraI*>&);
-        TracerError                                 LoadLights(std::vector<const GPULightI*>&);
+        TracerError                                 LoadCameras(std::vector<const GPUCameraI*>&,
+                                                                std::vector<const GPUEndpointI*>&);
+        TracerError                                 LoadLights(std::vector<const GPULightI*>&,
+                                                               std::vector<const GPUEndpointI*>&);
         TracerError                                 LoadTransforms(std::vector<const GPUTransformI*>&);
         TracerError                                 LoadMediums(std::vector<const GPUMediumI*>&);
 
@@ -75,14 +77,12 @@ class GPUTracer : public GPUTracerI
         const GPUMediumI**                  dMediums;
         const GPUCameraI**                  dCameras;
         const GPULightI**                   dLights;
+        const GPUEndpointI**                dEndpoints;
         // Indices for Identity Transform &
         // Base Medium
         const uint32_t                      baseMediumIndex;
         const uint32_t                      identityTransformIndex;
         const uint32_t                      boundaryTransformIndex;
-        // Visor Cam Representations of the current scene cameras
-        // These are sent to visor (if available)
-        std::vector<VisorCamera>            visorCams;
         //
         TracerParameters                    params;
         //
@@ -91,6 +91,7 @@ class GPUTracer : public GPUTracerI
         uint32_t                            mediumCount;
         uint32_t                            lightCount;
         uint32_t                            cameraCount;
+        uint32_t                            endpointCount;
         // Callbacks
         TracerCallbacksI*                   callbacks;
         bool                                crashed;
@@ -109,7 +110,7 @@ class GPUTracer : public GPUTracerI
                                                      uint32_t totalRayOut,
                                                      HitKey baseBoundMatKey);
         // Convert GPUCamera to VisorCam
-        VisorCamera                         SceneCamToVisorCam(uint32_t cameraInnerId);
+        VisorTransform                      SceneCamTransform(uint32_t cameraInnerId);
 
         // Internals
         template <class... Args>

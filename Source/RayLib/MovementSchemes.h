@@ -29,12 +29,12 @@ class MovementSchemeFPS final : public MovementSchemeI
                                               double moveRatioModifier = DefaultMoveRatioModifier);
 
         // Interface
-        bool                InputAction(VisorCamera&,
-                                           VisorActionType,
-                                           KeyAction) override;
-        bool                MouseMovementAction(VisorCamera&,
+        bool                InputAction(VisorTransform&,
+                                        VisorActionType,
+                                        KeyAction) override;
+        bool                MouseMovementAction(VisorTransform&,
                                                 double x, double y) override;
-        bool                MouseScrollAction(VisorCamera&,
+        bool                MouseScrollAction(VisorTransform&,
                                               double x, double y) override;
 };
 
@@ -55,8 +55,8 @@ class MovementSchemeMaya final : public MovementSchemeI
         const double                ZoomPercentage;
         const double                TranslateModifier;
 
-        bool						moveMode;
-        bool						translateMode;
+        bool						    moveMode;
+        bool						    translateMode;
         double						mouseX;
         double						mouseY;
 
@@ -68,11 +68,11 @@ class MovementSchemeMaya final : public MovementSchemeI
                                               double translateModifier = DefaultTranslateModifier);
 
         // Interface
-        bool                InputAction(VisorCamera&,
+        bool                InputAction(VisorTransform&,
                                         VisorActionType,
                                         KeyAction) override;
-        bool                MouseMovementAction(VisorCamera&,
+        bool                MouseMovementAction(VisorTransform&,
                                                 double x, double y) override;
-        bool                MouseScrollAction(VisorCamera&,
+        bool                MouseScrollAction(VisorTransform&,
                                               double x, double y) override;
 };

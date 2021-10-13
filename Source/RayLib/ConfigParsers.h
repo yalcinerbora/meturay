@@ -9,7 +9,6 @@
 class TracerOptions;
 class MovementSchemeI;
 
-struct VisorCamera;
 struct VisorOptions;
 struct TracerParameters;
 struct SharedLibArgs;

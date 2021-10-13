@@ -6,7 +6,6 @@
 #include "ImageStructs.h"
 #include "GPUPrimitiveP.cuh"
 #include "CudaSystem.hpp"
-#include "EndpointFinder.cuh"
 
 // Device Work Function Template
 //
@@ -59,8 +58,7 @@ using BoundaryWorkFunc = void(*)(// Output
                                  GlobalState& renderState,
                                  RandomGPU& rng,
                                  // Constants
-                                 const typename EGroup::Data& gMatData,
-                                 const HitKey workKey);
+                                 const typename EGroup::GPUType& gEndpoint);
 
 // Meta Kernel for divding work.
 template<class GlobalState, class LocalState,
@@ -182,13 +180,14 @@ void KCBoundaryWork(// Output
                     RNGGMem gRNGStates,
                     // Constants
                     const uint32_t rayCount,
-                    const typename EGroup::Endpoints* gEndpoints,
+                    const typename EGroup::GPUType* gEndpoints,
                     const typename EGroup::PrimitiveData primData,            
                     const GPUTransformI* const* gTransforms)
 {
     // Fetch Types from Template Classes
-    using HitData = typename EGroup::HitData;   // HitData is defined by primitive
-    using Surface = typename EGroup::Surface;   // Surface is defined by material group
+    using HitData   = typename EGroup::HitData; // HitData is defined by primitive
+    using Surface   = typename EGroup::Surface; // Surface is defined by material group
+    using GPUType = typename EGroup::GPUType;   // Endpoint GPU Class (Derived)
 
     // Pre-grid stride loop
     // RNG is allocated for each SM (not for each thread)
@@ -207,12 +206,15 @@ void KCBoundaryWork(// Output
         const PrimitiveId primitiveId = gPrimitiveIds[rayId];
         const TransformId transformId = gTransformIds[rayId];
 
+        HitKey::Type hitIndex = HitKey::FetchIdPortion(hitKey);
+
         // Acquire transform for surface generation
         const GPUTransformI& transform = *gTransforms[transformId];
 
         // Generate surface data from hit
         const HitData hit = gHitStructs.Ref<HitData>(rayId);
         const Surface surface = SurfFunc(hit, transform, primitiveId, primData);
+        const GPUType& gEndpoint = gEndpoints[hitIndex];
 
         // Determine Output Location
         // Make it locally indexable
@@ -241,7 +243,6 @@ void KCBoundaryWork(// Output
                renderState,
                rng,
                // Constants
-               matData,
-               hitKey);
+               gEndpoint);
     }
 }

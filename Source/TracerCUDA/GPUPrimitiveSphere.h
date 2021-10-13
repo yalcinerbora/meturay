@@ -251,7 +251,7 @@ struct SphereSurfaceGenerator
     };
 
     static constexpr auto GeneratorFunctionList =
-        std::make_tuple(SurfaceFunctionType<EmptySurface, GenEmptySurface<SphereHit, SphereData>>{},
+        std::make_tuple(SurfaceFunctionType<EmptySurface, DefaultGenEmptySurface<SphereHit, SphereData>>{},
                         SurfaceFunctionType<BasicSurface, GenBasicSurface>{},
                         SurfaceFunctionType<SphrSurface, GenSphrSurface>{},
                         SurfaceFunctionType<UVSurface, GenUVSurface>{});

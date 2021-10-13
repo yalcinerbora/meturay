@@ -1,12 +1,10 @@
 ﻿#pragma once
 
-#include "GPUCameraI.h"
-#include "DeviceMemory.h"
+#include "GPUCameraP.cuh"
 #include "GPUTransformI.h"
 #include "TypeTraits.h"
 #include "GPUCameraPixel.cuh"
 
-#include "RayLib/VisorCamera.h"
 #include "RayLib/CoordinateConversion.h"
 
 class GPUCameraSpherical final : public GPUCameraI
@@ -28,8 +26,8 @@ class GPUCameraSpherical final : public GPUCameraI
                                                const Vector3& up,
                                                const Vector2& nearFar,
                                                // Base Class Related
-                                               uint16_t mediumId,
-                                               const GPUTransformI&);
+                                               uint16_t mediumId, HitKey hk,
+                                               const GPUTransformI& gTrans);
                             ~GPUCameraSpherical() = default;
 
         // Interface
@@ -63,20 +61,22 @@ class GPUCameraSpherical final : public GPUCameraI
         __device__ Matrix4x4        VPMatrix() const override;
         __device__ Vector2f         NearFar() const override;
 
+        __device__ VisorTransform   GenVisorTransform() const override;
+
         __device__ GPUCameraPixel   GeneratePixelCamera(const Vector2i& pixelId,
                                                         const Vector2i& resolution) const override;
 };
 
-class CPUCameraGroupSpherical final : public CPUCameraGroupI
+class CPUCameraGroupSpherical final : public CPUCameraGroupP<GPUCameraSpherical>
 {
     public:
         static const char* TypeName() { return "Spherical"; }
         // Node Names
-        static constexpr const char* NAME_POSITION  = "position";
-        static constexpr const char* NAME_DIR       = "direction";
-        static constexpr const char* NAME_UP        = "up";
-        static constexpr const char* NAME_PLANES    = "planes";
-        static constexpr const char* NAME_PIX_RATIO = "pixelRatio";
+        static constexpr const char* POSITION_NAME  = "position";
+        static constexpr const char* DIR_NAME       = "direction";
+        static constexpr const char* UP_NAME        = "up";
+        static constexpr const char* PLANES_NAME    = "planes";
+        static constexpr const char* PIX_RATIO_NAME = "pixelRatio";
 
         struct Data
         {
@@ -89,34 +89,19 @@ class CPUCameraGroupSpherical final : public CPUCameraGroupI
             Vector2                 nearFar;
         };
 
-        //using Data = GPUCameraPinhole::Data;
+        using Base = CPUCameraGroupP<GPUCameraSpherical>;
 
     private:
-        DeviceMemory                    memory;
-        const GPUCameraSpherical*       dGPUCameras;
-
-        std::vector<HitKey>             hHitKeys;
-        std::vector<uint16_t>           hMediumIds;
-        std::vector<TransformId>        hTransformIds;
         std::vector<Data>               hCameraData;
-
-        GPUCameraList                   gpuCameraList;
-        GPUEndpointList                 gpuEndpointList;
-        VisorCameraList                 visorCameraList;
-        uint32_t                        cameraCount;
 
     protected:
     public:
         // Constructors & Destructor
-                                        CPUCameraGroupSpherical();
+                                        CPUCameraGroupSpherical(const GPUPrimitiveGroupI*);
                                         ~CPUCameraGroupSpherical() = default;
 
         // Interface
-        const GPUCameraList&            GPUCameras() const override;
-        const VisorCameraList&          VisorCameras() const override;
-
         const char*                     Type() const override;
-        const GPUEndpointList&          GPUEndpoints() const override;
         SceneError					    InitializeGroup(const EndpointGroupDataList& cameraNodes,
                                                         const TextureNodeMap& textures,
                                                         const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
@@ -127,9 +112,6 @@ class CPUCameraGroupSpherical final : public CPUCameraGroupI
                                                    const std::string& scenePath) override;
         TracerError					    ConstructEndpoints(const GPUTransformI**,
                                                            const CudaSystem&) override;
-        uint32_t					        EndpointCount() const override;
-
-        size_t						    UsedGPUMemory() const override;
         size_t						    UsedCPUMemory() const override;
 };
 
@@ -140,16 +122,16 @@ inline GPUCameraSpherical::GPUCameraSpherical(float pixelRatio,
                                               const Vector3& upp,
                                               const Vector2& nearFar,
                                               // Base Class Related
-                                              uint16_t mediumId,
+                                              uint16_t mediumId, HitKey hk,
                                               const GPUTransformI& gTrans)
-    : GPUCameraI(mediumId, gTrans)
+    : GPUCameraI(mediumId, hk, gTrans)
     , position(gTrans.LocalToWorld(pos))
     , up(gTrans.LocalToWorld(upp))
     , direction(gTrans.LocalToWorld(dir))
     , nearFar(nearFar)
     , pixelRatio(pixelRatio)
-{    
-    // Camera Vector Correction    
+{
+    // Camera Vector Correction
     right = Cross(direction, up).Normalize();
     up = Cross(right, direction).Normalize();
     direction = Cross(up, right).Normalize();
@@ -185,11 +167,11 @@ inline void GPUCameraSpherical::GenerateRay(// Output
 {
     //if(threadIdx.x == 0)
     //{
-    //    printf("SI: %d, %d | SM: %d, %d\n", 
+    //    printf("SI: %d, %d | SM: %d, %d\n",
     //           sampleId[0], sampleMax[1],
     //           sampleMax[0], sampleMax[1]);
     //}
-   
+
     // Create random location over sample pixel
     Vector2 randomOffset = (antiAliasOn)
                                 ? Vector2(GPUDistribution::Uniform<float>(rng),
@@ -212,7 +194,7 @@ inline void GPUCameraSpherical::GenerateRay(// Output
     // Incorporate pixel ratio
     // TODO: Incorporate Pix Ratio (for non-square textures)
     sphericalCoords[0] *= pixelRatio;
-    
+
     // Convert to Cartesian
     Vector3 dirZUp = Utility::SphericalToCartesianUnit(sphericalCoords);
     Vector3 dirYUp = Vector3(dirZUp[1], dirZUp[2], dirZUp[0]);
@@ -221,7 +203,7 @@ inline void GPUCameraSpherical::GenerateRay(// Output
     Matrix3x3 viewMat;
     TransformGen::Space(viewMat, right, up, direction);
     dirYUp = viewMat * dirYUp;
-    
+
     // DEBUG
     //printf("NC: (%f, %f), DIR: (%f, %f, %f)\n",
     //       normCoords[0], normCoords[1],
@@ -254,7 +236,7 @@ inline __device__ bool GPUCameraSpherical::CanBeSampled() const
     return false;
 }
 
-__device__ 
+__device__
 inline Matrix4x4 GPUCameraSpherical::VPMatrix() const
 {
     // Well we cant generate Projection Matrix (or a Matrix)
@@ -264,10 +246,21 @@ inline Matrix4x4 GPUCameraSpherical::VPMatrix() const
     return ToMatrix4x4(viewMatrix);
 }
 
-__device__ 
+__device__
 inline Vector2f GPUCameraSpherical::NearFar() const
 {
     return nearFar;
+}
+
+__device__
+inline VisorTransform GPUCameraSpherical::GenVisorTransform() const
+{
+    return VisorTransform
+    {
+        position,
+        position + direction,
+        up
+    };
 }
 
 __device__
@@ -286,12 +279,12 @@ inline GPUCameraPixel GPUCameraSpherical::GeneratePixelCamera(const Vector2i& pi
                           pixelId,
                           resolution,
                           mediumIndex,
+                          workKey,
                           gTransform);
 }
 
-inline CPUCameraGroupSpherical::CPUCameraGroupSpherical()
-    : dGPUCameras(nullptr)
-    , cameraCount(0)
+inline CPUCameraGroupSpherical::CPUCameraGroupSpherical(const GPUPrimitiveGroupI* pg)
+    : Base(*pg)
 {}
 
 inline const char* CPUCameraGroupSpherical::Type() const
@@ -299,37 +292,12 @@ inline const char* CPUCameraGroupSpherical::Type() const
     return TypeName();
 }
 
-inline const GPUEndpointList& CPUCameraGroupSpherical::GPUEndpoints() const
-{
-    return gpuEndpointList;
-}
-
-inline const GPUCameraList& CPUCameraGroupSpherical::GPUCameras() const
-{
-    return gpuCameraList;
-}
-
-inline const VisorCameraList& CPUCameraGroupSpherical::VisorCameras() const
-{
-    return visorCameraList;
-}
-
-inline uint32_t CPUCameraGroupSpherical::EndpointCount() const
-{
-    return cameraCount;
-}
-
-inline size_t CPUCameraGroupSpherical::UsedGPUMemory() const
-{
-    return memory.Size();
-}
 
 inline size_t CPUCameraGroupSpherical::UsedCPUMemory() const
 {
-    return (sizeof(HitKey) * hHitKeys.size() +
-            sizeof(uint16_t) * hMediumIds.size() +
-            sizeof(TransformId) * hTransformIds.size() +
-            sizeof(Data) * hCameraData.size());
+    size_t totalSize = (Base::UsedCPUMemory() +
+                        sizeof(Data) * hCameraData.size());
+    return totalSize;
 }
 
 static_assert(IsTracerClass<CPUCameraGroupSpherical>::value,

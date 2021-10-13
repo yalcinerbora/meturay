@@ -17,7 +17,7 @@ class PathTracer final : public RayTracer
         static constexpr const char*    RR_START_NAME = "RussianRouletteStart";
         static constexpr const char*    DIRECT_LIGHT_MIS_NAME = "DirectLightMIS";
         static constexpr const char*    LIGHT_SAMPLER_TYPE_NAME = "NEESampler";
-        
+
         struct Options
         {
             int32_t             sampleCount         = 1;
@@ -32,7 +32,7 @@ class PathTracer final : public RayTracer
         uint32_t                        currentDepth;
         WorkBatchMap                    workMap;
         // Work Pools
-        WorkPool<bool, bool, bool>      boundaryWorkPool;
+        BoundaryWorkPool<bool, bool>    boundaryWorkPool;
         // Single large kernel
         WorkPool<bool, bool>            pathWorkPool;
         // Light Sampler Memory and Pointer
@@ -52,7 +52,7 @@ class PathTracer final : public RayTracer
         void                    AskOptions() override;
 
         void                    GenerateWork(int cameraId) override;
-        void                    GenerateWork(const VisorCamera&) override;
+        void                    GenerateWork(const VisorTransform&, int cameraId) override;
         void                    GenerateWork(const GPUCameraI&) override;
         bool                    Render() override;
 };

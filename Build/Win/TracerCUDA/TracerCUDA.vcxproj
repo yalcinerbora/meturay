@@ -23,6 +23,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerWorks.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DTree.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DTreeKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraPixel.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraSpherical.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUDirectLightSamplerI.h" />

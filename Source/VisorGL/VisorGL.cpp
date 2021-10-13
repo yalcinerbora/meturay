@@ -130,7 +130,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             glBindTexture(GL_TEXTURE_2D, bufferTexture);
             glActiveTexture(GL_TEXTURE0 + T_IN_SAMPLE);
             glBindTexture(GL_TEXTURE_2D, sampleTexture);
-            glActiveTexture(GL_TEXTURE0 + T_IN_COLOR);            
+            glActiveTexture(GL_TEXTURE0 + T_IN_COLOR);
             glBindTexture(GL_TEXTURE_2D, inTexture);
 
             // Images
@@ -181,14 +181,14 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             break;
         }
         case VisorGLCommand::SAVE_IMAGE_HDR:
-        {   
+        {
             std::vector<Vector3f> pixels(imageSize[0] * imageSize[1]);
-            GLuint readTexture = outputTextures[currentIndex];            
+            GLuint readTexture = outputTextures[currentIndex];
             glBindTexture(GL_TEXTURE_2D, readTexture);
             // Thightly pack pixels for reading
             glPixelStorei(GL_PACK_ALIGNMENT, 1);
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT,
-                          pixels.data());            
+                          pixels.data());
 
             ImageIOError e = ImageIOError::OK;
             const ImageIOI& io = ImageIOInstance();
@@ -200,7 +200,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
                 METU_ERROR_LOG(static_cast<std::string>(e));
             }
             break;
-        }        
+        }
     };
 }
 
@@ -462,9 +462,9 @@ Vector2i VisorGL::MonitorResolution() const
     return Vector2i(mode->width, mode->height);
 }
 
-void VisorGL::SetCamera(const VisorCamera& c)
+void VisorGL::SetTransform(const VisorTransform& c)
 {
-    if(input) input->SetCamera(c);
+    if(input) input->SetTransform(c);
 }
 
 void VisorGL::SetSceneCameraCount(uint32_t c)
@@ -724,8 +724,8 @@ void VisorGL::SaveImage(bool saveAsHDR)
 {
 
     VisorGLCommand command;
-    command.type = saveAsHDR 
-                    ? VisorGLCommand::SAVE_IMAGE_HDR 
+    command.type = saveAsHDR
+                    ? VisorGLCommand::SAVE_IMAGE_HDR
                     : VisorGLCommand::SAVE_IMAGE;
 
     commandList.Enqueue(std::move(command));

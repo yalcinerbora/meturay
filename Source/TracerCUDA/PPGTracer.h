@@ -14,10 +14,10 @@ class PPGTracer final : public RayTracer
         static constexpr const char* TypeName() { return "PPGTracer"; }
 
         static constexpr const char* MAX_DEPTH_NAME             = "MaxDepth";
-        static constexpr const char* SAMPLE_NAME                = "Samples";        
-        static constexpr const char* RR_START_NAME              = "RussianRouletteStart";        
+        static constexpr const char* SAMPLE_NAME                = "Samples";
+        static constexpr const char* RR_START_NAME              = "RussianRouletteStart";
         static constexpr const char* LIGHT_SAMPLER_TYPE_NAME    = "NEESampler";
-        
+
         static constexpr const char* NEE_NAME                   = "NextEventEstimation";
         static constexpr const char* DIRECT_LIGHT_MIS_NAME      = "DirectLightMIS";
 
@@ -27,7 +27,7 @@ class PPGTracer final : public RayTracer
         static constexpr const char* D_TREE_FLUX_RATIO_NAME     = "DTreeFluxRatio";
         static constexpr const char* S_TREE_SAMPLE_SPLIT_NAME   = "STreeMaxSamples";
         static constexpr const char* DUMP_DEBUG_NAME            = "DumpDebugData";
-        
+
         enum LightSamplerType
         {
             UNIFORM,
@@ -54,11 +54,11 @@ class PPGTracer final : public RayTracer
             bool                alwaysSendSamples   = false;
             bool                rawPathGuiding      = true;
 
-            bool                nextEventEstimation = true;            
+            bool                nextEventEstimation = true;
             bool                directLightMIS      = false;
 
             bool                dumpDebugData       = false;
-            
+
         };
 
         static constexpr bool   USE_SINGLE_PATH_KERNEL = true;
@@ -68,7 +68,7 @@ class PPGTracer final : public RayTracer
         uint32_t                        currentDepth;
         WorkBatchMap                    workMap;
         // Work Pools
-        WorkPool<bool, bool, bool>      boundaryWorkPool;
+        BoundaryWorkPool<bool, bool>    boundaryWorkPool;
         WorkPool<bool, bool>            pathWorkPool;
         // Light Sampler Memory and Pointer
         DeviceMemory                    lightSamplerMemory;
@@ -103,7 +103,7 @@ class PPGTracer final : public RayTracer
         void                    AskOptions() override;
 
         void                    GenerateWork(int cameraId) override;
-        void                    GenerateWork(const VisorCamera&) override;
+        void                    GenerateWork(const VisorTransform&, int cameraId) override;
         void                    GenerateWork(const GPUCameraI&) override;
         bool                    Render() override;
         void                    Finalize() override;

@@ -549,6 +549,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightP.cuh">
       <Filter>Partial Implementations</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraP.cuh">
+      <Filter>Partial Implementations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">

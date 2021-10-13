@@ -6,6 +6,7 @@
 
 #include "RayLib/GPUSceneI.h"
 #include "RayLib/TracerCallbacksI.h"
+#include "RayLib/VisorTransform.h"
 
 //#include "TracerLib/TracerDebug.h"
 //std::ostream& operator<<(std::ostream& stream, const RayAuxBasic& v)
@@ -121,7 +122,7 @@ TracerError DirectTracer::Initialize()
                 break;
             }
         }
-        
+
         workMap.emplace(batchId, WorkBatchArray{batch});
     }
     return err;
@@ -219,7 +220,7 @@ bool DirectTracer::Render()
 void DirectTracer::GenerateWork(int cameraId)
 {
     if(callbacks)
-        callbacks->SendCurrentCamera(SceneCamToVisorCam(cameraId));
+        callbacks->SendCurrentTransform(SceneCamTransform(cameraId));
     // Save Camera Id for potential depth generation
     currentCameraId = cameraId;
     // Only use anti-alias when furnace mode is on
@@ -231,13 +232,13 @@ void DirectTracer::GenerateWork(int cameraId)
                                                true, antiAlias);
 }
 
-void DirectTracer::GenerateWork(const VisorCamera& c)
+void DirectTracer::GenerateWork(const VisorTransform& t, int cameraId)
 {
     // TODO: Save Visor Camera to GPU memory for depth map generation;
     currentCameraId = 0;
     // Only use anti-alias when furnace mode is on
     bool antiAlias = (options.renderType == RenderType::RENDER_FURNACE) ? true : false;
-    GenerateRays<RayAuxBasic, RayAuxInitBasic>(c, options.sampleCount,
+    GenerateRays<RayAuxBasic, RayAuxInitBasic>(t, cameraId, options.sampleCount,
                                                RayAuxInitBasic(InitialBasicAux),
                                                true, antiAlias);
 }

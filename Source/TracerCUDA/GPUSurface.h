@@ -130,20 +130,30 @@ struct UVSurface
 // (Primitive invariant functions)
 template <class HitData, class PrimData>
 __device__
-EmptySurface GenEmptySurface(const HitData&,
-                             const GPUTransformI&,
-                             PrimitiveId,
-                             const PrimData&)
+EmptySurface DefaultGenEmptySurface(const HitData&,
+                                    const GPUTransformI&,
+                                    PrimitiveId,
+                                    const PrimData&)
 {
     return EmptySurface{};
 }
 
 template <class HitData, class PrimData>
 __device__
-BasicSurface GenBasicSurface(const HitData&,
-                             const GPUTransformI& t,
-                             PrimitiveId,
-                             const PrimData&)
+BasicSurface DefaultGenBasicSurface(const HitData&,
+                                    const GPUTransformI& t,
+                                    PrimitiveId,
+                                    const PrimData&)
 {    
     return BasicSurface{t.ToLocalRotation()};
+}
+
+template <class HitData, class PrimData>
+__device__
+UVSurface DefaultGenUvSurface(const HitData&,
+                              const GPUTransformI& t,
+                              PrimitiveId,
+                              const PrimData&)
+{
+    return UVSurface{t.ToLocalRotation(), Zero2f};
 }

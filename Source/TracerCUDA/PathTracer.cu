@@ -3,6 +3,7 @@
 
 #include "RayLib/GPUSceneI.h"
 #include "RayLib/TracerCallbacksI.h"
+#include "RayLib/VisorTransform.h"
 
 #include "PathTracerWorks.cuh"
 #include "GenerationKernels.cuh"
@@ -65,40 +66,40 @@ TracerError PathTracer::Initialize()
     const auto& infoList = scene.WorkBatchInfo();
     for(const auto& wInfo : infoList)
     {
+        WorkBatchArray workBatchList;
+        uint32_t batchId = std::get<0>(wInfo);
         const GPUPrimitiveGroupI& pg = *std::get<1>(wInfo);
         const GPUMaterialGroupI& mg = *std::get<2>(wInfo);
-        uint32_t batchId = std::get<0>(wInfo);
 
-        // Generate work batch from appropirate work pool
-        WorkBatchArray workBatchList;
-        if(mg.IsBoundary())
-        {
-            bool emptyPrim = (std::string(pg.Type()) ==
-                              std::string(BaseConstants::EMPTY_PRIMITIVE_NAME));
-
-            WorkPool<bool, bool, bool>& wp = boundaryWorkPool;
-            GPUWorkBatchI* batch = nullptr;
-            if((err = wp.GenerateWorkBatch(batch, mg, pg, dTransforms,
-                                           options.nextEventEstimation,
-                                           options.directLightMIS,
-                                           emptyPrim)) != TracerError::OK)
-                return err;
-            workBatchList.push_back(batch);
-        }
-        else
-        {
-
-            WorkPool<bool, bool>& wpCombo = pathWorkPool;
-            GPUWorkBatchI* batch = nullptr;
-            if((err = wpCombo.GenerateWorkBatch(batch, mg, pg,
-                                                dTransforms,
-                                                options.nextEventEstimation,
-                                                options.directLightMIS)) != TracerError::OK)
-                return err;
-            workBatchList.push_back(batch);
-        }
+        WorkPool<bool, bool>& wpCombo = pathWorkPool;
+        GPUWorkBatchI* batch = nullptr;
+        if((err = wpCombo.GenerateWorkBatch(batch, mg, pg,
+                                            dTransforms,
+                                            options.nextEventEstimation,
+                                            options.directLightMIS)) != TracerError::OK)
+            return err;
+        workBatchList.push_back(batch);
         workMap.emplace(batchId, workBatchList);
     }
+
+    const auto& boundaryInfoList = scene.BoundarWorkBatchInfo();
+    for(const auto& wInfo : boundaryInfoList)
+    {
+        WorkBatchArray workBatchList;
+        uint32_t batchId = std::get<0>(wInfo);
+        const CPUEndpointGroupI& eg = *std::get<1>(wInfo);
+
+        BoundaryWorkPool<bool, bool>& wp = boundaryWorkPool;
+        GPUWorkBatchI* batch = nullptr;
+        if((err = wp.GenerateWorkBatch(batch, eg,
+                                       dTransforms,
+                                       options.nextEventEstimation,
+                                       options.directLightMIS)) != TracerError::OK)
+            return err;
+        workBatchList.push_back(batch);
+        workMap.emplace(batchId, workBatchList);
+    }
+
     return TracerError::OK;
 }
 
@@ -205,7 +206,7 @@ bool PathTracer::Render()
     //                     totalOutRayCount);
     //Debug::DumpMemToFile("rayIdOut", rayMemory.CurrentIds(),
     //                     totalOutRayCount);
-  
+
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration
     SwapAuxBuffers();
@@ -217,7 +218,7 @@ bool PathTracer::Render()
 void PathTracer::GenerateWork(int cameraId)
 {
     if(callbacks)
-        callbacks->SendCurrentCamera(SceneCamToVisorCam(cameraId));
+        callbacks->SendCurrentTransform(SceneCamTransform(cameraId));
 
     GenerateRays<RayAuxPath, RayAuxInitPath>(cameraId,
                                              options.sampleCount,
@@ -226,9 +227,9 @@ void PathTracer::GenerateWork(int cameraId)
     currentDepth = 0;
 }
 
-void PathTracer::GenerateWork(const VisorCamera& cam)
+void PathTracer::GenerateWork(const VisorTransform& t, int cameraId)
 {
-    GenerateRays<RayAuxPath, RayAuxInitPath>(cam, options.sampleCount,
+    GenerateRays<RayAuxPath, RayAuxInitPath>(t, cameraId, options.sampleCount,
                                              RayAuxInitPath(InitialPathAux),
                                              true);
     currentDepth = 0;

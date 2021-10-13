@@ -7,9 +7,11 @@
 #include "RayLib/GPUSceneI.h"
 #include "RayLib/MemoryAlignment.h"
 #include "RayLib/SceneStructs.h"
-#include "RayLib/VisorCamera.h"
+#include "RayLib/VisorTransform.h"
 
 #include "CudaSystem.h"
+#include "CudaSystem.hpp"
+
 #include "GPUAcceleratorI.h"
 #include "GPUWorkI.h"
 #include "GPUTransformI.h"
@@ -21,7 +23,30 @@
 
 #include "TracerDebug.h"
 
-TracerError GPUTracer::LoadCameras(std::vector<const GPUCameraI*>& dGPUCameras)
+__global__
+void KCFetchTransform(VisorTransform& gVTransform,
+                      const GPUCameraI& gCamera)
+{
+    if(threadIdx.x != 0) return;
+
+    gVTransform = gCamera.GenVisorTransform();
+
+}
+
+__global__
+void KCSetEndpointIds(GPUEndpointI** gEndpoints,
+                      uint32_t endpointCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < endpointCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        gEndpoints[threadId]->SetEndpointId(threadId);
+    }
+}
+
+TracerError GPUTracer::LoadCameras(std::vector<const GPUCameraI*>& dGPUCameras,
+                                   std::vector<const GPUEndpointI*>& dGPUEndpoints)
 {
     TracerError e = TracerError::OK;
     for(auto& camera : cameras)
@@ -30,15 +55,16 @@ TracerError GPUTracer::LoadCameras(std::vector<const GPUCameraI*>& dGPUCameras)
         if((e = c.ConstructEndpoints(dTransforms, cudaSystem)) != TracerError::OK)
             return e;
         const auto& dCList = c.GPUCameras();
-        const auto& vCams = c.VisorCameras();
+        const auto& dEList = c.GPUEndpoints();
         dGPUCameras.insert(dGPUCameras.end(), dCList.begin(), dCList.end());
-        visorCams.insert(visorCams.end(), vCams.cbegin(), vCams.cend());
+        dGPUEndpoints.insert(dGPUEndpoints.end(), dEList.begin(), dEList.end());
     }
     cameraCount = static_cast<uint32_t>(dGPUCameras.size());
     return TracerError::OK;
 }
 
-TracerError GPUTracer::LoadLights(std::vector<const GPULightI*>& dGPULights)
+TracerError GPUTracer::LoadLights(std::vector<const GPULightI*>& dGPULights,
+                                  std::vector<const GPUEndpointI*>& dGPUEndpoints)
 {
 
     TracerError e = TracerError::OK;
@@ -47,8 +73,10 @@ TracerError GPUTracer::LoadLights(std::vector<const GPULightI*>& dGPULights)
         CPULightGroupI& l = *(light.second);
         if((e = l.ConstructEndpoints(dTransforms, cudaSystem)) != TracerError::OK)
             return e;
-        const auto& dLList = l.GPUEndpoints();
+        const auto& dLList = l.GPULights();
+        const auto& dEList = l.GPUEndpoints();
         dGPULights.insert(dGPULights.end(), dLList.begin(), dLList.end());
+        dGPUEndpoints.insert(dGPUEndpoints.end(), dEList.begin(), dEList.end());
     }
     lightCount = static_cast<uint32_t>(dGPULights.size());
     return TracerError::OK;
@@ -121,6 +149,7 @@ TracerError GPUTracer::Initialize()
     std::vector<const GPUMediumI*> dGPUMediums;
     std::vector<const GPULightI*> dGPULights;
     std::vector<const GPUCameraI*> dGPUCameras;
+    std::vector<const GPUEndpointI*> dGPUEndpoints;
 
     // Calculate Total Sizes
     size_t tCount = 0;
@@ -147,40 +176,24 @@ TracerError GPUTracer::Initialize()
                   {
                       cCount += camera.second->EndpointCount();
                   });
+
     transformCount = static_cast<uint32_t>(tCount);
     mediumCount = static_cast<uint32_t>(mCount);
     lightCount = static_cast<uint32_t>(lCount);
     cameraCount = static_cast<uint32_t>(cCount);
+    endpointCount = static_cast<uint32_t>(cCount + lCount);
 
-    // Allocate
-    size_t transformSize = transformCount * sizeof(GPUTransformI*);
-    transformSize = Memory::AlignSize(transformSize, AlignByteCount);
-    size_t mediumSize = mediumCount * sizeof(GPUMediumI*);
-    mediumSize = Memory::AlignSize(mediumSize, AlignByteCount);
-    size_t lightSize = lightCount * sizeof(GPULightI*);
-    lightSize = Memory::AlignSize(lightSize, AlignByteCount);
-    size_t cameraSize = cameraCount * sizeof(GPUCameraI*);
-    cameraSize = Memory::AlignSize(cameraSize, AlignByteCount);
-
-    size_t totalSize = (transformSize +
-                        mediumSize +
-                        lightSize +
-                        cameraSize);
-
-    DeviceMemory::EnlargeBuffer(commonTypeMemory, totalSize);
-
-    // Determine pointers from allocation
-    size_t offset = 0;
-    Byte* memory = static_cast<Byte*>(commonTypeMemory);
-    dTransforms = reinterpret_cast<const GPUTransformI**>(memory + offset);
-    offset += transformSize;
-    dMediums = reinterpret_cast<const GPUMediumI**>(memory + offset);
-    offset += mediumSize;
-    dCameras = reinterpret_cast<const GPUCameraI**>(memory + offset);
-    offset += cameraSize;
-    dLights = reinterpret_cast<const GPULightI**>(memory + offset);
-    offset += lightSize;
-    assert(offset == totalSize);
+    DeviceMemory::AllocateMultiData(std::tie(dTransforms,
+                                             dMediums,
+                                             dLights,
+                                             dCameras,
+                                             dEndpoints),
+                                    commonTypeMemory,
+                                    {transformCount,
+                                    mediumCount,
+                                    lightCount,
+                                    cameraCount,
+                                    endpointCount});
 
     // Do transforms and Mediums fist
     // since materials and accelerators requires these objects
@@ -230,19 +243,36 @@ TracerError GPUTracer::Initialize()
 
     // Finally Construct GPU Light and Camera Lists
     // Lights
-    if((e = LoadLights(dGPULights)) != TracerError::OK)
+    if((e = LoadLights(dGPULights, dGPUEndpoints)) != TracerError::OK)
         return e;
     CUDA_CHECK(cudaMemcpy(const_cast<GPULightI**>(dLights),
                           dGPULights.data(),
                           dGPULights.size() * sizeof(GPULightI*),
                           cudaMemcpyHostToDevice));
     // Cameras
-    if((e = LoadCameras(dGPUCameras)) != TracerError::OK)
+    if((e = LoadCameras(dGPUCameras, dGPUEndpoints)) != TracerError::OK)
         return e;
     CUDA_CHECK(cudaMemcpy(const_cast<GPUCameraI**>(dCameras),
                           dGPUCameras.data(),
                           dGPUCameras.size() * sizeof(GPUCameraI*),
                           cudaMemcpyHostToDevice));
+
+    // Endpoints
+    CUDA_CHECK(cudaMemcpy(const_cast<GPUEndpointI**>(dEndpoints),
+                          dGPUEndpoints.data(),
+                          dGPUEndpoints.size() * sizeof(GPUEndpointI*),
+                          cudaMemcpyHostToDevice));
+
+
+    // Now Call all endpoints to generate their unique id (iota basically)
+    const auto& gpu = cudaSystem.BestGPU();
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, endpointCount,
+                       //
+                       KCSetEndpointIds,
+                       //
+                       const_cast<GPUEndpointI**>(dEndpoints),
+                       endpointCount);
+
 
     cudaSystem.SyncAllGPUs();
     return TracerError::OK;
@@ -482,7 +512,7 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
             // Output
             RayGMem* dRayOutStart = dRaysOut + pOut.offsets[i];
             HitKey* dBoundKeyStart = dBoundKeyOut + pOut.offsets[i];
-        
+
             workBatch->Work(dBoundKeyStart,
                             dRayOutStart,
                             //  Input
@@ -519,9 +549,24 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
     rayMemory.SwapRays();
 }
 
-VisorCamera GPUTracer::SceneCamToVisorCam(uint32_t cameraInnerId)
+VisorTransform GPUTracer::SceneCamTransform(uint32_t cameraInnerId)
 {
-    return visorCams[cameraInnerId];
+    DeviceMemory tempMem(sizeof(VisorTransform));
+    VisorTransform* dVisorTransform = static_cast<VisorTransform*>(tempMem);
+
+    const auto& gpu = cudaSystem.BestGPU();
+    gpu.KC_X(0, (cudaStream_t)0, 1,
+             //
+             KCFetchTransform,
+             //
+             *dVisorTransform,
+             *dCameras[cameraInnerId]);
+
+    VisorTransform hTransform;
+    CUDA_CHECK(cudaMemcpy(&hTransform, dVisorTransform, sizeof(VisorTransform),
+                          cudaMemcpyDeviceToHost));
+
+    return hTransform;
 }
 
 void GPUTracer::SetParameters(const TracerParameters& p)
@@ -605,7 +650,7 @@ RayPartitionsMulti<uint32_t> GPUTracer::PartitionOutputRays(uint32_t& totalOutRa
             offsets.push_back(totalOutRay);
             totalOutRay += count;
         }
-        
+
         outPartitions.emplace(MultiArrayPortion<uint32_t>
         {
             p.portionId,

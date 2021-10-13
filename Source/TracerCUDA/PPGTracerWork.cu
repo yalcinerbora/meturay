@@ -2,14 +2,14 @@
 // Path Tracer Work Batches
 // ===================================================
 // Boundary
-template class PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveEmpty>;
-template class PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveTriangle>;
-template class PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveSphere>;
-
-template class PPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveTriangle>;
-template class PPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveSphere>;
-
-template class PPGBoundaryWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
+template class PPGBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>;
+template class PPGBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>;
+template class PPGBoundaryWork<CPULightGroupSkySphere>;
+template class PPGBoundaryWork<CPULightGroupPoint>;
+template class PPGBoundaryWork<CPULightGroupDirectional>;
+template class PPGBoundaryWork<CPULightGroupSpot>;
+template class PPGBoundaryWork<CPULightGroupDisk>;
+template class PPGBoundaryWork<CPULightGroupRectangular>;
 // ===================================================
 // Combo
 template class PPGWork<LambertCMat, GPUPrimitiveTriangle>;

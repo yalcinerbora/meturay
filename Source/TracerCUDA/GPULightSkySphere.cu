@@ -9,8 +9,9 @@ __global__ void KCConstructGPULightSkySphere(GPULightSkySphere* gLightLocations,
                                              const GPUDistPiecewiseConst2D* gLuminanceDistributions,
                                              //
                                              const TextureRefI<2, Vector3f>** gRads,
-                                             const TransformId* gTransformIds,
                                              const uint16_t* gMediumIndices,
+                                             const HitKey* gWorkKeys,
+                                             const TransformId* gTransformIds,
                                              //
                                              const GPUTransformI** gTransforms,
                                              uint32_t lightCount)
@@ -23,6 +24,7 @@ __global__ void KCConstructGPULightSkySphere(GPULightSkySphere* gLightLocations,
                                                            //
                                                            *gRads[globalId],
                                                            gMediumIndices[globalId],
+                                                           gWorkKeys[globalId],
                                                            *gTransforms[gTransformIds[globalId]]);
     }
 }
@@ -36,11 +38,11 @@ SceneError CPULightGroupSkySphere::InitializeGroup(const EndpointGroupDataList& 
 {
     SceneError e = SceneError::OK;
 
-    if((e = CPULightGroupP<GPULightSkySphere>::InitializeGroup(lightNodes, textures,
-                                                               mediumIdIndexPairs,
-                                                               transformIdIndexPairs,
-                                                               batchId, time,
-                                                               scenePath)) != SceneError::OK)
+    if((e = InitializeCommon(lightNodes, textures,
+                             mediumIdIndexPairs,
+                             transformIdIndexPairs,
+                             batchId, time,
+                             scenePath)) != SceneError::OK)
         return e;
 
     //// Allocate for GPULight classes
@@ -79,7 +81,7 @@ TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGl
     ////// Acquire Luminance Information for each light
     ////TracerError err = TracerError::OK;
     ////for(HitKey& key : hHitKeys)
-    ////{     
+    ////{
     ////    const auto loc = materialMap.find(HitKey::FetchBatchPortion(key));
     ////    if(loc == materialMap.cend())
     ////        return TracerError::UNABLE_TO_CONSTRUCT_LIGHT;
@@ -91,7 +93,7 @@ TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGl
     ////    Vector2ui dimension;
     ////    std::vector<float> lumData;
     ////    if((err = matGroup->LuminanceData(lumData,
-    ////                                      dimension, 
+    ////                                      dimension,
     ////                                      HitKey::FetchIdPortion(key))) != TracerError::OK)
     ////        return err;
 
@@ -125,7 +127,7 @@ TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGl
     //isHemiSize = Memory::AlignSize(isHemiSize);
     //size_t totalSize = (matKeySize +
     //                    mediumSize +
-    //                    transformIdSize + 
+    //                    transformIdSize +
     //                    isHemiSize);
     //DeviceMemory::EnlargeBuffer(tempMemory, totalSize);
 

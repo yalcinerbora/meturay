@@ -10,18 +10,19 @@
 #include "RayStructs.h"
 #include "NodeListing.h"
 
+struct VisorTransform;
 class GPUTransformI;
 class RandomGPU;
-
-struct VisorCamera;
-
+class GPUCameraI;
 class GPUCameraPixel;
+
+using GPUCameraList = std::vector<const GPUCameraI*>;
 
 class GPUCameraI : public GPUEndpointI
 {
     public:
         __device__              GPUCameraI(uint16_t mediumIndex,
-                                           const GPUTransformI&);
+                                           HitKey, const GPUTransformI&);
         virtual                 ~GPUCameraI() = default;
 
         // Interface
@@ -29,7 +30,7 @@ class GPUCameraI : public GPUEndpointI
         virtual uint32_t        FindPixelId(const RayReg& r,
                                             const Vector2i& resolution) const = 0;
         // View Projection Matrix of the Camera
-        // If camera projection is linearly transformable 
+        // If camera projection is linearly transformable
         // else it returns only the view matrix
         __device__
         virtual Matrix4x4       VPMatrix() const = 0;
@@ -39,12 +40,12 @@ class GPUCameraI : public GPUEndpointI
         virtual Vector2f        NearFar() const = 0;
 
         __device__
+        virtual VisorTransform  GenVisorTransform() const = 0;
+
+        __device__
         virtual GPUCameraPixel  GeneratePixelCamera(const Vector2i& pixelId,
                                                     const Vector2i& resolution) const = 0;
 };
-
-using GPUCameraList = std::vector<const GPUCameraI*>;
-using VisorCameraList = std::vector<VisorCamera>;
 
 class CPUCameraGroupI : public CPUEndpointGroupI
 {
@@ -53,11 +54,10 @@ class CPUCameraGroupI : public CPUEndpointGroupI
 
         // Interface
         virtual const GPUCameraList&        GPUCameras() const = 0;
-        virtual const VisorCameraList&      VisorCameras() const = 0;
 };
 
 __device__
-inline GPUCameraI::GPUCameraI(uint16_t mediumIndex,                              
+inline GPUCameraI::GPUCameraI(uint16_t mediumIndex, HitKey hk,
                               const GPUTransformI& gTrans)
-    : GPUEndpointI(mediumIndex, gTrans)
+    : GPUEndpointI(mediumIndex, hk, gTrans)
 {}

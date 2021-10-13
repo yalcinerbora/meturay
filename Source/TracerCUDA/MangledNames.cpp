@@ -10,6 +10,12 @@ const std::string MangledNames::WorkBatch(const char* primitiveGroupName,
     return result;
 }
 
+const std::string MangledNames::BoundaryWorkBatch(const char* endpointGroupName)
+{
+    std::string result = "(E)"s + endpointGroupName;
+    return result;
+}
+
 const std::string MangledNames::AcceleratorGroup(const char* primitiveGroupName,
                                                  const char* acceleratorGroupName)
 {

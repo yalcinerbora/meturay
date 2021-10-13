@@ -1,15 +1,12 @@
 #pragma once
 
-#include "GPUCameraI.h"
-#include "DeviceMemory.h"
+#include "GPUCameraP.cuh"
 #include "GPUTransformI.h"
 #include "TypeTraits.h"
-
-#include "RayLib/VisorCamera.h"
 #include "GPUCameraPixel.cuh"
 
 class GPUCameraPinhole final : public GPUCameraI
-{    
+{
     private:
     protected:
         Vector3                 position;
@@ -29,8 +26,8 @@ class GPUCameraPinhole final : public GPUCameraI
                                              const Vector2& nearFar,
                                              const Vector2& fov,
                                              // Base Class Related
-                                             uint16_t mediumId,                                             
-                                             const GPUTransformI&);
+                                             uint16_t mediumId, HitKey hk,
+                                             const GPUTransformI& gTrans);
                             ~GPUCameraPinhole() = default;
 
         // Interface
@@ -64,21 +61,22 @@ class GPUCameraPinhole final : public GPUCameraI
         __device__ Matrix4x4        VPMatrix() const override;
         __device__ Vector2f         NearFar() const override;
 
+        __device__ VisorTransform   GenVisorTransform() const override;
+
         __device__ GPUCameraPixel   GeneratePixelCamera(const Vector2i& pixelId,
                                                         const Vector2i& resolution) const override;
 };
 
-
-class CPUCameraGroupPinhole final : public CPUCameraGroupI
+class CPUCameraGroupPinhole final : public CPUCameraGroupP<GPUCameraPinhole>
 {
     public:
         static const char* TypeName() { return "Pinhole"; }
         // Node Names
-        static constexpr const char* NAME_POSITION  = "position";
-        static constexpr const char* NAME_GAZE      = "gaze";
-        static constexpr const char* NAME_UP        = "up";
-        static constexpr const char* NAME_PLANES    = "planes";
-        static constexpr const char* NAME_FOV       = "fov";
+        static constexpr const char* POSITION_NAME  = "position";
+        static constexpr const char* GAZE_NAME      = "gaze";
+        static constexpr const char* UP_NAME        = "up";
+        static constexpr const char* PLANES_NAME    = "planes";
+        static constexpr const char* FOV_NAME       = "fov";
 
         struct Data
         {
@@ -91,34 +89,19 @@ class CPUCameraGroupPinhole final : public CPUCameraGroupI
             Vector2                 fov;
         };
 
-        //using Data = GPUCameraPinhole::Data;
+        using Base = CPUCameraGroupP<GPUCameraPinhole>;
 
     private:
-        DeviceMemory                    memory;
-        const GPUCameraPinhole*         dGPUCameras;
-
-        std::vector<HitKey>             hHitKeys;
-        std::vector<uint16_t>           hMediumIds;
-        std::vector<TransformId>        hTransformIds;
         std::vector<Data>               hCameraData;
-
-        GPUEndpointList                 gpuEndpointList;
-        GPUCameraList                   gpuCameraList;
-        VisorCameraList                 visorCameraList;
-        uint32_t                        cameraCount;
 
     protected:
     public:
         // Constructors & Destructor
-                                        CPUCameraGroupPinhole();
+                                        CPUCameraGroupPinhole(const GPUPrimitiveGroupI*);
                                         ~CPUCameraGroupPinhole() = default;
 
         // Interface
-        const GPUCameraList&            GPUCameras() const override;
-        const VisorCameraList&          VisorCameras() const override;
-
         const char*                     Type() const override;
-        const GPUEndpointList&          GPUEndpoints() const override;
         SceneError					    InitializeGroup(const EndpointGroupDataList& cameraNodes,
                                                         const TextureNodeMap& textures,
                                                         const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
@@ -129,9 +112,7 @@ class CPUCameraGroupPinhole final : public CPUCameraGroupI
                                                    const std::string& scenePath) override;
         TracerError					    ConstructEndpoints(const GPUTransformI**,
                                                            const CudaSystem&) override;
-        uint32_t					        EndpointCount() const override;
 
-        size_t						    UsedGPUMemory() const override;
         size_t						    UsedCPUMemory() const override;
 };
 
@@ -142,9 +123,9 @@ inline GPUCameraPinhole::GPUCameraPinhole(const Vector3& pos,
                                           const Vector2& nF,
                                           const Vector2& fov,
                                           // Base Class Related
-                                          uint16_t mediumId,                                          
+                                          uint16_t mediumId, HitKey hk,
                                           const GPUTransformI& gTrans)
-    : GPUCameraI(mediumId, gTrans)
+    : GPUCameraI(mediumId, hk, gTrans)
     , position(gTrans.LocalToWorld(pos))
     , up(gTrans.LocalToWorld(upp))
     , nearFar(nF)
@@ -224,7 +205,7 @@ inline void GPUCameraPinhole::GenerateRay(// Output
     ray.tMax = nearFar[1];
 }
 
-__device__ 
+__device__
 inline float GPUCameraPinhole::Pdf(const Vector3& worldDir,
                                    const Vector3& worldPos) const
 {
@@ -264,7 +245,7 @@ inline bool GPUCameraPinhole::CanBeSampled() const
     return false;
 }
 
-__device__ 
+__device__
 inline Matrix4x4 GPUCameraPinhole::VPMatrix() const
 {
     Matrix4x4 p = TransformGen::Perspective(fov[0], fov[0] / fov[1],
@@ -274,10 +255,22 @@ inline Matrix4x4 GPUCameraPinhole::VPMatrix() const
     return p * ToMatrix4x4(rotMatrix);
 }
 
-__device__ 
+__device__
 inline Vector2f GPUCameraPinhole::NearFar() const
 {
     return nearFar;
+}
+
+__device__
+inline VisorTransform GPUCameraPinhole::GenVisorTransform() const
+{
+    Vector3 dir = Cross(up, right).Normalize();
+    return VisorTransform
+    {
+        position,
+        position + dir,
+        up
+    };
 }
 
 __device__
@@ -310,12 +303,12 @@ inline GPUCameraPixel GPUCameraPinhole::GeneratePixelCamera(const Vector2i& pixe
                           pixelId,
                           resolution,
                           mediumIndex,
+                          workKey,
                           gTransform);
 }
 
-inline CPUCameraGroupPinhole::CPUCameraGroupPinhole()
-    : dGPUCameras(nullptr)
-    , cameraCount(0)
+inline CPUCameraGroupPinhole::CPUCameraGroupPinhole(const GPUPrimitiveGroupI* pg)
+    : Base(*pg)
 {}
 
 inline const char* CPUCameraGroupPinhole::Type() const
@@ -323,37 +316,11 @@ inline const char* CPUCameraGroupPinhole::Type() const
     return TypeName();
 }
 
-inline const GPUEndpointList& CPUCameraGroupPinhole::GPUEndpoints() const
-{
-    return gpuEndpointList;
-}
-
-inline const GPUCameraList& CPUCameraGroupPinhole::GPUCameras() const
-{
-    return gpuCameraList;
-}
-
-inline const VisorCameraList& CPUCameraGroupPinhole::VisorCameras() const
-{
-    return visorCameraList;
-}
-
-inline uint32_t CPUCameraGroupPinhole::EndpointCount() const
-{
-    return cameraCount;
-}
-
-inline size_t CPUCameraGroupPinhole::UsedGPUMemory() const
-{
-    return memory.Size();
-}
-
 inline size_t CPUCameraGroupPinhole::UsedCPUMemory() const
 {
-    return (sizeof(HitKey) * hHitKeys.size() +
-            sizeof(uint16_t) * hMediumIds.size() +
-            sizeof(TransformId) * hTransformIds.size() +
-            sizeof(Data) * hCameraData.size());
+    size_t totalSize = (Base::UsedCPUMemory() +
+                        sizeof(Data) * hCameraData.size());
+    return totalSize;
 }
 
 static_assert(IsTracerClass<CPUCameraGroupPinhole>::value,

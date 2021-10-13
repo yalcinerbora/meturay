@@ -11,18 +11,25 @@
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveSphere.h"
 #include "GPUPrimitiveEmpty.h"
+// Lights
+#include "GPULightPrimitive.cuh"
+#include "GPULightSkySphere.cuh"
+#include "GPULightPoint.cuh"
+#include "GPULightDirectional.cuh"
+#include "GPULightSpot.cuh"
+#include "GPULightDisk.cuh"
+#include "GPULightRectangular.cuh"
 // Misc
 #include "RefPGTracerKC.cuh"
 #include "WorkPool.h"
 #include "GPUWork.cuh"
 #include "RayAuxStruct.cuh"
 
-template<class MGroup, class PGroup>
-class RPGBoundaryWork
+template<class EGroup>
+class RPGBoundaryWork final
     : public GPUBoundaryWorkBatch<RPGTracerGlobalState,
                                   RPGTracerLocalState, RayAuxPath,
-                                  MGroup, PGroup, RPGTracerBoundaryWork<MGroup>,
-                                  PGroup::GetSurfaceFunction>
+                                  EGroup, RPGTracerBoundaryWork<EGroup>>
 {
     private:
         bool                            neeOn;
@@ -30,17 +37,14 @@ class RPGBoundaryWork
 
         using Base = GPUBoundaryWorkBatch<RPGTracerGlobalState,
                                           RPGTracerLocalState, RayAuxPath,
-                                          MGroup, PGroup, RPGTracerBoundaryWork<MGroup>,
-                                          PGroup::GetSurfaceFunction>;
+                                          EGroup, RPGTracerBoundaryWork<EGroup>>;
 
     protected:
     public:
         // Constrcutors & Destructor
-                                        RPGBoundaryWork(const GPUMaterialGroupI& mg,
-                                                       const GPUPrimitiveGroupI& pg,
-                                                       const GPUTransformI* const* t,
-                                                       bool neeOn, bool misOn,
-                                                       bool emptyPrimitive);
+                                        RPGBoundaryWork(const CPUEndpointGroupI& eg,
+                                                        const GPUTransformI* const* t,
+                                                        bool neeOn, bool misOn);
                                         ~RPGBoundaryWork() = default;
 
         void                            GetReady() override {}
@@ -81,19 +85,14 @@ class RPGPathWork
         const char*                     Type() const override { return Base::TypeName(); }
 };
 
-template<class M, class P>
-RPGBoundaryWork<M, P>::RPGBoundaryWork(const GPUMaterialGroupI& mg,
-                                       const GPUPrimitiveGroupI& pg,
-                                       const GPUTransformI* const* t,
-                                       bool neeOn, bool misOn,
-                                       bool emptyPrimitive)
-    : Base(mg, pg, t)
+template<class E>
+RPGBoundaryWork<E>::RPGBoundaryWork(const CPUEndpointGroupI& eg,
+                                    const GPUTransformI* const* t,
+                                    bool neeOn, bool misOn)
+    : Base(eg, t)
     , neeOn(neeOn)
     , misOn(misOn)
-{
-    // Populate localData
-    this->localData.emptyPrimitive = emptyPrimitive;
-}
+{}
 
 template<class M, class P>
 RPGPathWork<M, P>::RPGPathWork(const GPUMaterialGroupI& mg,
@@ -111,7 +110,7 @@ RPGPathWork<M, P>::RPGPathWork(const GPUMaterialGroupI& mg,
 template<class M, class P>
 uint8_t RPGPathWork<M, P>::OutRayCount() const
 {
-    // Incorporate NEE Ray as an addition
+// Incorporate NEE Ray as an addition
     // If material can be sampled (i.e no Dirac Delta BxDF)
     if(!this->materialGroup.CanBeSampled())
     {
@@ -124,11 +123,9 @@ uint8_t RPGPathWork<M, P>::OutRayCount() const
         // Material can be sampled
         // Add one extra nee ray allocation
         uint8_t neeRay = (neeOn) ? 1 : 0;
-        // Add one extra MIS ray for allocation
-        // MIS ray is extra NEE ray for multiple importance sampling
-        uint8_t misRay = (neeOn && misOn) ? 1 : 0;
-
-        return this->materialGroup.SampleStrategyCount() + misRay + neeRay;
+        // Do not allocate any extra rays for MIS Ray
+        // We will use path ray as MIS ray
+        return this->materialGroup.SampleStrategyCount() + neeRay;
     }
     // Material does not require any samples meaning it is boundary material
     // Do not allocate any rays for this kind of material
@@ -138,14 +135,14 @@ uint8_t RPGPathWork<M, P>::OutRayCount() const
 // Ref PG Tracer Work Batches
 // ===================================================
 // Boundary
-extern template class RPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveEmpty>;
-extern template class RPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveTriangle>;
-extern template class RPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveSphere>;
-
-extern template class RPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveTriangle>;
-extern template class RPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveSphere>;
-
-extern template class RPGBoundaryWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
+extern template class RPGBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>;
+extern template class RPGBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>;
+extern template class RPGBoundaryWork<CPULightGroupSkySphere>;
+extern template class RPGBoundaryWork<CPULightGroupPoint>;
+extern template class RPGBoundaryWork<CPULightGroupDirectional>;
+extern template class RPGBoundaryWork<CPULightGroupSpot>;
+extern template class RPGBoundaryWork<CPULightGroupDisk>;
+extern template class RPGBoundaryWork<CPULightGroupRectangular>;
 // ===================================================
 // Path
 extern template class RPGPathWork<LambertCMat, GPUPrimitiveTriangle>;
@@ -163,12 +160,14 @@ extern template class RPGPathWork<LambertMat, GPUPrimitiveSphere>;
 extern template class RPGPathWork<UnrealMat, GPUPrimitiveTriangle>;
 extern template class RPGPathWork<UnrealMat, GPUPrimitiveSphere>;
 // ===================================================
-using RPGBoundaryWorkerList = TypeList<RPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveEmpty>,
-                                       RPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveTriangle>,
-                                       RPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveSphere>,
-                                       RPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveTriangle>,
-                                       RPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveSphere>,
-                                       RPGBoundaryWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>>;
+using RPGBoundaryWorkerList = TypeList<RPGBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>,
+                                       RPGBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>,
+                                       RPGBoundaryWork<CPULightGroupSkySphere>,
+                                       RPGBoundaryWork<CPULightGroupPoint>,
+                                       RPGBoundaryWork<CPULightGroupDirectional>,
+                                       RPGBoundaryWork<CPULightGroupSpot>,
+                                       RPGBoundaryWork<CPULightGroupDisk>,
+                                       RPGBoundaryWork<CPULightGroupRectangular>>;
 // ===================================================
 using RPGPathWorkerList = TypeList<RPGPathWork<LambertCMat, GPUPrimitiveTriangle>,
                                    RPGPathWork<LambertCMat, GPUPrimitiveSphere>,

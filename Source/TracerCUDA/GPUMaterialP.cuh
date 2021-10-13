@@ -20,7 +20,7 @@ class GPUMaterialGroupD
 // Each material group responsible for providing these functions
 
 template <class D, class S,
-          class MatDeviceFunctions,          
+          class MatDeviceFunctions,
           class Parent>
 class GPUMaterialGroupT
     : public Parent
@@ -131,7 +131,7 @@ const CudaGPU& GPUMaterialGroupT<D, S, DF, P>::GPU() const
     return gpu;
 }
 
-template <class D, class S, class DF, class P>         
+template <class D, class S, class DF, class P>
 void GPUMaterialGroupT<D, S, DF, P>::AttachGlobalMediumArray(const GPUMediumI* const*,
                                                              uint32_t)
 {}
@@ -153,6 +153,3 @@ struct MatDataAccessor
 
 template <class D, class S, class DevFuncs>
 using GPUMaterialGroup = GPUMaterialGroupT<D, S, DevFuncs, GPUMaterialGroupI>;
-
-template <class D, class S, class DevFuncs>
-using GPUBoundaryMaterialGroup = GPUMaterialGroupT<D, S, DevFuncs, GPUBoundaryMaterialGroupI>;

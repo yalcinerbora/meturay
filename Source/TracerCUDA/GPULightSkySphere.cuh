@@ -3,10 +3,11 @@
 #include "GPULightP.cuh"
 #include "GPUPiecewiseDistribution.cuh"
 #include "GPUTransformI.h"
+#include "TypeTraits.h"
 
 #include "RayLib/CoordinateConversion.h"
 
-class GPULightSkySphere : public GPULightP
+class GPULightSkySphere final : public GPULightP
 {
     private:
         const GPUDistPiecewiseConst2D&  distribution;
@@ -18,7 +19,7 @@ class GPULightSkySphere : public GPULightP
                                                           const GPUDistPiecewiseConst2D&,
                                                           // Endpoint Related Data
                                                           const TextureRefI<2, Vector3f>& gRad,
-                                                          uint16_t mediumIndex,
+                                                          uint16_t mediumIndex, HitKey,
                                                           const GPUTransformI&);
                                         ~GPULightSkySphere() = default;
         // Interface
@@ -45,11 +46,13 @@ class GPULightSkySphere : public GPULightP
         __device__ bool                 CanBeSampled() const override;
 };
 
-class CPULightGroupSkySphere : public CPULightGroupP<GPULightSkySphere>
+class CPULightGroupSkySphere final : public CPULightGroupP<GPULightSkySphere>
 {
     public:
         static constexpr const char*    TypeName() { return "SkySphere"; }
-        
+
+        using Base = CPULightGroupP<GPULightSkySphere>;
+
     private:
         // CPU Permanent Allocations
         CPUDistGroupPiecewiseConst2D        hLuminanceDistributions;
@@ -59,8 +62,8 @@ class CPULightGroupSkySphere : public CPULightGroupP<GPULightSkySphere>
     protected:
     public:
         // Cosntructors & Destructor
-                                    CPULightGroupSkySphere(const CudaGPU& gpu,
-                                                           const GPUPrimitiveGroupI*);
+                                    CPULightGroupSkySphere(const GPUPrimitiveGroupI*,
+                                                           const CudaGPU&);
                                     ~CPULightGroupSkySphere() = default;
 
         const char*				    Type() const override;
@@ -84,9 +87,9 @@ inline GPULightSkySphere::GPULightSkySphere(// Per Light Data
                                             const GPUDistPiecewiseConst2D& dist,
                                             // Endpoint Related Data
                                             const TextureRefI<2, Vector3f>& gRad,
-                                            uint16_t mediumIndex,
+                                            uint16_t mediumIndex, HitKey hk,
                                             const GPUTransformI& gTransform)
-    : GPULightP(gRad, mediumIndex, gTransform)
+    : GPULightP(gRad, mediumIndex, hk, gTransform)
     , distribution(dist)
 {}
 
@@ -119,7 +122,7 @@ inline void GPULightSkySphere::Sample(// Output
     else pdf = pdf / (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
 
     // Sky is very far
-    distance = FLT_MAX;   
+    distance = FLT_MAX;
 }
 
 __device__
@@ -144,11 +147,11 @@ inline float GPULightSkySphere::Pdf(const Vector3& direction,
     Vector3 dirYUp = gTransform.WorldToLocal(direction, true);
     Vector3 dirZup = -Vector3(dirYUp[2], dirYUp[0], dirYUp[1]);
     Vector2 thetaPhi = Utility::CartesianToSphericalUnit(dirZup);
-        
+
     // Normalize to generate UV [0, 1]
     // tetha range [-pi, pi]
     float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
-    // If we are at edge point (u == 1) make it zero since 
+    // If we are at edge point (u == 1) make it zero since
     // piecewise constant function will not have that pdf (out of bounds)
     u = (u == 1.0f) ? 0.0f : u;
     // phi range [0, pi]
@@ -181,9 +184,9 @@ inline bool GPULightSkySphere::CanBeSampled() const
     return true;
 }
 
-inline CPULightGroupSkySphere::CPULightGroupSkySphere(const CudaGPU& gpu,
-                                                      const GPUPrimitiveGroupI*)
-    : CPULightGroupP<GPULightSkySphere>(gpu)
+inline CPULightGroupSkySphere::CPULightGroupSkySphere(const GPUPrimitiveGroupI* pg,
+                                                      const CudaGPU& gpu)
+    : CPULightGroupP<GPULightSkySphere>(*pg, gpu)
     , dLuminanceDistributions(nullptr)
 {}
 
@@ -193,8 +196,14 @@ inline const char* CPULightGroupSkySphere::Type() const
 }
 
 inline size_t CPULightGroupSkySphere::UsedCPUMemory() const
-{    
+{
     size_t totalSize = CPULightGroupP<GPULightSkySphere>::UsedCPUMemory();
+    return totalSize;
+}
+
+inline size_t CPULightGroupSkySphere::UsedGPUMemory() const
+{
+    size_t totalSize = CPULightGroupP<GPULightSkySphere>::UsedGPUMemory();
     return totalSize;
 }
 

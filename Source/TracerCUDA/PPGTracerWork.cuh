@@ -11,18 +11,25 @@
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveSphere.h"
 #include "GPUPrimitiveEmpty.h"
+// Lights
+#include "GPULightPrimitive.cuh"
+#include "GPULightSkySphere.cuh"
+#include "GPULightPoint.cuh"
+#include "GPULightDirectional.cuh"
+#include "GPULightSpot.cuh"
+#include "GPULightDisk.cuh"
+#include "GPULightRectangular.cuh"
 // Misc
 #include "PPGTracerKC.cuh"
 #include "WorkPool.h"
 #include "GPUWork.cuh"
 #include "RayAuxStruct.cuh"
 
-template<class MGroup, class PGroup>
+template<class EGroup>
 class PPGBoundaryWork
     : public GPUBoundaryWorkBatch<PPGTracerGlobalState,
                                   PPGTracerLocalState, RayAuxPPG,
-                                  MGroup, PGroup, PPGTracerBoundaryWork<MGroup>,
-                                  PGroup::GetSurfaceFunction>
+                                  EGroup, PPGTracerBoundaryWork<EGroup>>
 {
     private:
         bool                            neeOn;
@@ -30,17 +37,14 @@ class PPGBoundaryWork
 
         using Base = GPUBoundaryWorkBatch<PPGTracerGlobalState,
                                           PPGTracerLocalState, RayAuxPPG,
-                                          MGroup, PGroup, PPGTracerBoundaryWork<MGroup>,
-                                          PGroup::GetSurfaceFunction>;
+                                          EGroup, PPGTracerBoundaryWork<EGroup>>;
 
     protected:
     public:
         // Constrcutors & Destructor
-                                        PPGBoundaryWork(const GPUMaterialGroupI& mg,
-                                                        const GPUPrimitiveGroupI& pg,
+                                        PPGBoundaryWork(const CPUEndpointGroupI& eg,
                                                         const GPUTransformI* const* t,
-                                                        bool neeOn, bool misOn,
-                                                        bool emptyPrimitive);
+                                                        bool neeOn, bool misOn);
                                         ~PPGBoundaryWork() = default;
 
         void                            GetReady() override {}
@@ -80,19 +84,14 @@ class PPGWork
         const char*                     Type() const override { return Base::TypeName(); }
 };
 
-template<class M, class P>
-PPGBoundaryWork<M, P>::PPGBoundaryWork(const GPUMaterialGroupI& mg,
-                                       const GPUPrimitiveGroupI& pg,
-                                       const GPUTransformI* const* t,
-                                       bool neeOn, bool misOn,
-                                       bool emptyPrimitive)
-    : Base(mg, pg, t)
+template<class E>
+PPGBoundaryWork<E>::PPGBoundaryWork(const CPUEndpointGroupI& eg,
+                                    const GPUTransformI* const* t,
+                                    bool neeOn, bool misOn)
+    : Base(eg, t)
     , neeOn(neeOn)
     , misOn(misOn)
-{
-    // Populate localData
-    this->localData.emptyPrimitive = emptyPrimitive;
-}
+{}
 
 template<class M, class P>
 PPGWork<M, P>::PPGWork(const GPUMaterialGroupI& mg,
@@ -137,14 +136,14 @@ uint8_t PPGWork<M, P>::OutRayCount() const
 // PPG Tracer Work Batches
 // ===================================================
 // Boundary
-extern template class PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveEmpty>;
-extern template class PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveTriangle>;
-extern template class PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveSphere>;
-
-extern template class PPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveTriangle>;
-extern template class PPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveSphere>;
-
-extern template class PPGBoundaryWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>;
+extern template class PPGBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>;
+extern template class PPGBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>;
+extern template class PPGBoundaryWork<CPULightGroupSkySphere>;
+extern template class PPGBoundaryWork<CPULightGroupPoint>;
+extern template class PPGBoundaryWork<CPULightGroupDirectional>;
+extern template class PPGBoundaryWork<CPULightGroupSpot>;
+extern template class PPGBoundaryWork<CPULightGroupDisk>;
+extern template class PPGBoundaryWork<CPULightGroupRectangular>;
 // ===================================================
 // Path
 extern template class PPGWork<LambertCMat, GPUPrimitiveTriangle>;
@@ -162,12 +161,14 @@ extern template class PPGWork<LambertMat, GPUPrimitiveSphere>;
 extern template class PPGWork<UnrealMat, GPUPrimitiveTriangle>;
 extern template class PPGWork<UnrealMat, GPUPrimitiveSphere>;
 // ===================================================
-using PPGBoundaryWorkerList = TypeList<PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveEmpty>,
-                                       PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveTriangle>,
-                                       PPGBoundaryWork<BoundaryMatConstant, GPUPrimitiveSphere>,
-                                       PPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveTriangle>,
-                                       PPGBoundaryWork<BoundaryMatTextured, GPUPrimitiveSphere>,
-                                       PPGBoundaryWork<BoundaryMatSkySphere, GPUPrimitiveEmpty>>;
+using PPGBoundaryWorkerList = TypeList<PPGBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>,
+                                       PPGBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>,
+                                       PPGBoundaryWork<CPULightGroupSkySphere>,
+                                       PPGBoundaryWork<CPULightGroupPoint>,
+                                       PPGBoundaryWork<CPULightGroupDirectional>,
+                                       PPGBoundaryWork<CPULightGroupSpot>,
+                                       PPGBoundaryWork<CPULightGroupDisk>,
+                                       PPGBoundaryWork<CPULightGroupRectangular>>;
 // ===================================================
 using PPGPathWorkerList = TypeList<PPGWork<LambertCMat, GPUPrimitiveTriangle>,
                                    PPGWork<LambertCMat, GPUPrimitiveSphere>,

@@ -160,7 +160,7 @@ OptionalNodeList<std::vector<T>> SceneNodeJson::AccessOptionalList(const std::st
         {
             optNode.first = true;
             for(const nlohmann::json& n : innerNode)
-                optNode.second.push_back(LoadF(n, time));            
+                optNode.second.push_back(LoadF(n, time));
         }
         result.push_back(optNode);
     }
@@ -204,6 +204,26 @@ TexturedDataNodeList<T> SceneNodeJson::AccessTextured(const std::string& name,
             texNode.data = LoadF(innerNode, time);
         }
         result.push_back(texNode);
+    }
+    return std::move(result);
+}
+
+template <class T, LoadFunc<T> LoadF>
+TexturedDataNode<T> SceneNodeJson::CommonTextured(const std::string& name,
+                                                  double time) const
+{
+    const nlohmann::json& innerNode = node[name];
+    TexturedDataNode<T> result;
+    if(innerNode.is_object())
+    {
+        NodeTextureStruct n = SceneIO::LoadNodeTextureStruct(innerNode, time);
+        result.isTexture = true;
+        result.texNode = n;
+    }
+    else
+    {
+        result.isTexture = false;
+        result.data = LoadF(innerNode, time);
     }
     return std::move(result);
 }
@@ -557,6 +577,31 @@ OptionalNodeList<UIntList> SceneNodeJson::AccessOptionalUIntList(const std::stri
 OptionalNodeList<UInt64List> SceneNodeJson::AccessOptionalUInt64List(const std::string& name, double time) const
 {
     return AccessOptionalList<uint64_t, SceneIO::LoadNumber<uint64_t>>(name, time);
+}
+
+NodeTextureStruct SceneNodeJson::CommonTextureNode(const std::string& name, double time) const
+{
+    return SceneIO::LoadNodeTextureStruct(node[name], time);
+}
+
+TexturedDataNode<float> SceneNodeJson::CommonTexturedDataFloat(const std::string& name, double time) const
+{
+    return CommonTextured<float, SceneIO::LoadNumber<float>>(name, time);
+}
+
+TexturedDataNode<Vector2> SceneNodeJson::CommonTexturedDataVector2(const std::string& name, double time) const
+{
+    return CommonTextured<Vector2, SceneIO::LoadVector<2, float>>(name, time);
+}
+
+TexturedDataNode<Vector3> SceneNodeJson::CommonTexturedDataVector3(const std::string& name, double time) const
+{
+    return CommonTextured<Vector3, SceneIO::LoadVector<3, float>>(name, time);
+}
+
+TexturedDataNode<Vector4> SceneNodeJson::CommonTexturedDataVector4(const std::string& name, double time) const
+{
+    return CommonTextured<Vector4, SceneIO::LoadVector<4, float>>(name, time);
 }
 
 TexturedDataNodeList<float> SceneNodeJson::AccessTexturedDataFloat(const std::string& name, double time) const

@@ -58,11 +58,9 @@
     {
         "id": 0,
         "type": "SkySphere",
-        "isHemispherical": false,
 
         "radiance" : {"texture": 17, "channels": "rgb"}
-    }
-],
+    }],
 
     "Mediums":[
     {

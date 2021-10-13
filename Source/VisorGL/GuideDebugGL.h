@@ -9,7 +9,7 @@
 #include "GDebugRendererReference.h"
 
 class GuideDebugGL : public WindowGLI
-{    
+{
     private:
         const VisorOptions                      dummyVOpts;
         const std::u8string                     configFile;
@@ -59,7 +59,7 @@ class GuideDebugGL : public WindowGLI
                                                   PixelFormat, size_t offset,
                                                   Vector2i start = Zero2i,
                                                   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-        void                    SetCamera(const VisorCamera&) override;
+        void                    SetTransform(const VisorTransform&) override;
         void                    SetSceneCameraCount(uint32_t) override;
         //
         void                    SaveImage(bool saveAsHDR) override;
@@ -98,7 +98,7 @@ inline void GuideDebugGL::SetImageRes(Vector2i){};
 inline void GuideDebugGL::ResetSamples(Vector2i, Vector2i) {};
 inline void GuideDebugGL::AccumulatePortion(const std::vector<Byte>,
                                           PixelFormat, size_t, Vector2i, Vector2i) {}
-inline void GuideDebugGL::SetCamera(const VisorCamera&) {}
+inline void GuideDebugGL::SetTransform(const VisorTransform&) {}
 inline void GuideDebugGL::SetSceneCameraCount(uint32_t) {}
 
 inline void GuideDebugGL::SaveImage(bool saveAsHDR) {}

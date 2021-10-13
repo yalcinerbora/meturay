@@ -2,7 +2,7 @@
 #include "MovementSchemeI.h"
 
 #include "Vector.h"
-#include "VisorCamera.h"
+#include "VisorTransform.h"
 #include "VisorCallbacksI.h"
 #include "Quaternion.h"
 #include "Log.h"
@@ -27,8 +27,8 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
         case VisorActionType::TOGGLE_CUSTOM_SCENE_CAMERA:
         {
             if(action != KeyAction::RELEASED) break;
-            cameraMode = (cameraMode == CameraMode::CUSTOM_CAM) 
-                            ? CameraMode::SCENE_CAM 
+            cameraMode = (cameraMode == CameraMode::CUSTOM_CAM)
+                            ? CameraMode::SCENE_CAM
                             : CameraMode::CUSTOM_CAM;
             break;
         }
@@ -56,8 +56,8 @@ void VisorWindowInput::ProcessInput(VisorActionType vAction, KeyAction action)
         {
             if(action != KeyAction::RELEASED) break;
 
-            std::string vCamAsString = VisorCameraToString(customCamera);
-            METU_LOG(vCamAsString);
+            std::string tAsString = VisorTransformToString(customTransform);
+            METU_LOG(tAsString);
             break;
         }
         case VisorActionType::START_STOP_TRACE:
@@ -179,8 +179,8 @@ void VisorWindowInput::MouseScrolled(double xOffset, double yOffset)
     {
         MovementSchemeI& currentScheme = *(movementSchemes[currentMovementScheme]);
 
-        if(currentScheme.MouseScrollAction(customCamera, xOffset, yOffset))
-            visorCallbacks->ChangeCamera(customCamera);
+        if(currentScheme.MouseScrollAction(customTransform, xOffset, yOffset))
+            visorCallbacks->ChangeCamera(customTransform);
     }
 }
 
@@ -190,8 +190,8 @@ void VisorWindowInput::MouseMoved(double x, double y)
     {
         MovementSchemeI& currentScheme = *(movementSchemes[currentMovementScheme]);
 
-        if(currentScheme.MouseMovementAction(customCamera, x, y))
-            visorCallbacks->ChangeCamera(customCamera);
+        if(currentScheme.MouseMovementAction(customTransform, x, y))
+            visorCallbacks->ChangeCamera(customTransform);
     }
 }
 
@@ -207,8 +207,8 @@ void VisorWindowInput::KeyboardUsed(KeyboardKeyType key,
     if(cameraMode == CameraMode::CUSTOM_CAM && !lockedCamera)
     {
         MovementSchemeI& currentScheme = *(movementSchemes[currentMovementScheme]);
-        if(currentScheme.InputAction(customCamera, visorAction, action))
-            visorCallbacks->ChangeCamera(customCamera);
+        if(currentScheme.InputAction(customTransform, visorAction, action))
+            visorCallbacks->ChangeCamera(customTransform);
     }
 
     // Do other
@@ -226,18 +226,18 @@ void VisorWindowInput::MouseButtonUsed(MouseButtonType button, KeyAction action)
     if(cameraMode == CameraMode::CUSTOM_CAM && !lockedCamera)
     {
         MovementSchemeI& currentScheme = *(movementSchemes[currentMovementScheme]);
-        if(currentScheme.InputAction(customCamera, visorAction, action))
-            visorCallbacks->ChangeCamera(customCamera);
+        if(currentScheme.InputAction(customTransform, visorAction, action))
+            visorCallbacks->ChangeCamera(customTransform);
     }
 
     // Do Other
     ProcessInput(visorAction, action);
 }
 
-void VisorWindowInput::SetCamera(const VisorCamera& c)
+void VisorWindowInput::SetTransform(const VisorTransform& t)
 {
     if(cameraMode == CameraMode::SCENE_CAM)
-        customCamera = c;
+        customTransform = t;
 }
 
 void VisorWindowInput::SetSceneCameraCount(uint32_t camCount)

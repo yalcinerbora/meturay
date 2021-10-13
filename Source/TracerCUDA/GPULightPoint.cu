@@ -10,8 +10,9 @@ __global__ void KCConstructGPULightPoint(GPULightPoint* gLightLocations,
                                          const Vector3f* gPositions,
                                          //
                                          const TextureRefI<2, Vector3f>** gRads,
+                                         const uint16_t* gMediumIndices,
+                                         const HitKey* gWorkKeys,
                                          const TransformId* gTransformIds,
-                                         const uint16_t* gMediumIndices,                                         
                                          //
                                          const GPUTransformI** gTransforms,
                                          uint32_t lightCount)
@@ -20,10 +21,11 @@ __global__ void KCConstructGPULightPoint(GPULightPoint* gLightLocations,
         globalId < lightCount;
         globalId += blockDim.x * gridDim.x)
     {
-        new (gLightLocations + globalId) GPULightPoint(gPositions[globalId],                                                       
-                                                       //        
+        new (gLightLocations + globalId) GPULightPoint(gPositions[globalId],
+                                                       //
                                                        *gRads[globalId],
                                                        gMediumIndices[globalId],
+                                                       gWorkKeys[globalId],
                                                        *gTransforms[gTransformIds[globalId]]);
     }
 }
@@ -37,21 +39,21 @@ SceneError CPULightGroupPoint::InitializeGroup(const EndpointGroupDataList& ligh
 {
     SceneError e = SceneError::OK;
 
-    if((e = CPULightGroupP<GPULightPoint>::InitializeGroup(lightNodes, textures,
-                                                           mediumIdIndexPairs,
-                                                           transformIdIndexPairs,
-                                                           batchId, time,
-                                                           scenePath)) != SceneError::OK)
+    if((e = InitializeCommon(lightNodes, textures,
+                             mediumIdIndexPairs,
+                             transformIdIndexPairs,
+                             batchId, time,
+                             scenePath)) != SceneError::OK)
         return e;
 
     // Copy Data
     hPositions.reserve(lightCount);
     for(const auto& node : lightNodes)
     {
-        const auto positions = node.node->AccessVector3(NAME_POSITION);
+        Vector3 position = node.node->CommonVector3(POSITION_NAME);
         // Load to host memory
-        hPositions.insert(hPositions.end(), positions.begin(), positions.end());
-    }    
+        hPositions.push_back(position);
+    }
     return SceneError::OK;
 }
 
@@ -65,15 +67,23 @@ SceneError CPULightGroupPoint::ChangeTime(const NodeListing& lightNodes, double 
 TracerError CPULightGroupPoint::ConstructEndpoints(const GPUTransformI** dGlobalTransformArray,
                                                    const CudaSystem&)
 {
+    TracerError e = TracerError::OK;
+    // Construct Texture References
+    if((e = ConstructTextureReferences()) != TracerError::OK)
+        return e;
+
     // Gen Temporary Memory
     DeviceMemory tempMemory;
 
     const uint16_t* dMediumIndices;
     const TransformId* dTransformIds;
+    const HitKey* dWorkKeys;
     const Vector3f* dPositions;
-    DeviceMemory::AllocateMultiData(std::tie(dMediumIndices, dTransformIds, dPositions),
+    DeviceMemory::AllocateMultiData(std::tie(dMediumIndices, dTransformIds,
+                                             dWorkKeys, dPositions),
                                     tempMemory,
-                                    {lightCount, lightCount, lightCount});
+                                    {lightCount, lightCount,
+                                    lightCount, lightCount});
 
     // Set a GPU
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
@@ -85,6 +95,10 @@ TracerError CPULightGroupPoint::ConstructEndpoints(const GPUTransformI** dGlobal
     CUDA_CHECK(cudaMemcpy(const_cast<TransformId*>(dTransformIds),
                           hTransformIds.data(),
                           sizeof(TransformId) * lightCount,
+                          cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(const_cast<HitKey*>(dWorkKeys),
+                          hWorkKeys.data(),
+                          sizeof(HitKey) * lightCount,
                           cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemcpy(const_cast<Vector3*>(dPositions),
                           hPositions.data(),
@@ -102,15 +116,16 @@ TracerError CPULightGroupPoint::ConstructEndpoints(const GPUTransformI** dGlobal
                        dPositions,
                        //
                        dRadiances,
-                       dTransformIds,
                        dMediumIndices,
+                       dWorkKeys,
+                       dTransformIds,
                        //
                        dGlobalTransformArray,
                        lightCount);
 
     gpu.WaitMainStream();
 
-    SetLightList();
+    SetLightLists();
 
     return TracerError::OK;
 }
