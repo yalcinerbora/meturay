@@ -34,6 +34,7 @@ DirectTracer::DirectTracer(const CudaSystem& s,
     : RayTracer(s, scene, p)
     , emptyMat(s.BestGPU())
 {
+    boundaryWorkPool.AppendGenerators(DirectTracerBoundaryWorkerList{});
     furnaceWorkPool.AppendGenerators(DirectTracerFurnaceWorkerList{});
     normalWorkPool.AppendGenerators(DirectTracerNormalWorkerList{});
     positionWorkPool.AppendGenerators(DirectTracerPositionWorkerList{});
@@ -51,7 +52,7 @@ TracerError DirectTracer::StringToRenderType(RenderType& rt, const std::string& 
         }
         i++;
     }
-    return TracerError::UNABLE_TO_INITIALIZE;
+    return TracerError::UNABLE_TO_INITIALIZE_TRACER;
 }
 
 std::string DirectTracer::RenderTypeToString(RenderType rt)
@@ -93,7 +94,7 @@ TracerError DirectTracer::Initialize()
             case RenderType::RENDER_FURNACE:
             {
                 if((err = furnaceWorkPool.GenerateWorkBatch(batch, mg, pg,
-                                                     dTransforms)) != TracerError::OK)
+                                                            dTransforms)) != TracerError::OK)
                     return err;
                 break;
             }
@@ -125,6 +126,23 @@ TracerError DirectTracer::Initialize()
 
         workMap.emplace(batchId, WorkBatchArray{batch});
     }
+
+    const auto& boundaryInfoList = scene.BoundarWorkBatchInfo();
+    for(const auto& wInfo : boundaryInfoList)
+    {
+        WorkBatchArray workBatchList;
+        uint32_t batchId = std::get<0>(wInfo);
+        const CPUEndpointGroupI& eg = *std::get<1>(wInfo);
+
+        BoundaryWorkPool<>& wp = boundaryWorkPool;
+        GPUWorkBatchI* batch = nullptr;
+        if((err = wp.GenerateWorkBatch(batch, eg,
+                                       dTransforms)) != TracerError::OK)
+            return err;
+        workBatchList.push_back(batch);
+        workMap.emplace(batchId, workBatchList);
+    }
+
     return err;
 }
 
@@ -217,28 +235,28 @@ bool DirectTracer::Render()
     return true;
 }
 
-void DirectTracer::GenerateWork(int cameraId)
+void DirectTracer::GenerateWork(uint32_t cameraIndex)
 {
     if(callbacks)
-        callbacks->SendCurrentTransform(SceneCamTransform(cameraId));
+        callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
     // Save Camera Id for potential depth generation
-    currentCameraId = cameraId;
+    currentCameraId = cameraIndex;
     // Only use anti-alias when furnace mode is on
     bool antiAlias = (options.renderType == RenderType::RENDER_FURNACE) ? true : false;
     // Generate Rays
-    GenerateRays<RayAuxBasic, RayAuxInitBasic>(cameraId,
+    GenerateRays<RayAuxBasic, RayAuxInitBasic>(cameraIndex,
                                                options.sampleCount,
                                                RayAuxInitBasic(InitialBasicAux),
                                                true, antiAlias);
 }
 
-void DirectTracer::GenerateWork(const VisorTransform& t, int cameraId)
+void DirectTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
     // TODO: Save Visor Camera to GPU memory for depth map generation;
     currentCameraId = 0;
     // Only use anti-alias when furnace mode is on
     bool antiAlias = (options.renderType == RenderType::RENDER_FURNACE) ? true : false;
-    GenerateRays<RayAuxBasic, RayAuxInitBasic>(t, cameraId, options.sampleCount,
+    GenerateRays<RayAuxBasic, RayAuxInitBasic>(t, cameraIndex, options.sampleCount,
                                                RayAuxInitBasic(InitialBasicAux),
                                                true, antiAlias);
 }

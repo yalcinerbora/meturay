@@ -59,6 +59,8 @@ class GPUAccBVHGroup final
         std::vector<HitKeyList>             primitiveMaterialKeys;
         std::vector<uint8_t>                bvhDepths;
         std::map<uint32_t, uint32_t>        idLookup;
+        std::vector<bool>                   keyExpandOption;
+
         SurfaceAABBList                     surfaceAABBs;
         // GPU Memory
         DeviceMemory                        memory;
@@ -68,7 +70,7 @@ class GPUAccBVHGroup final
         TransformId*                        dAccTransformIds;
 
         // Recursive Construction
-        HitKey                  FindHitKey(uint32_t accIndex, PrimitiveId id);
+        HitKey                  FindHitKey(uint32_t accIndex, PrimitiveId id, bool doKeyExpand);
         void                    GenerateBVHNode(// Output
                                                 size_t& splitLoc,
                                                 BVHNode<LeafData>& node,
@@ -84,6 +86,7 @@ class GPUAccBVHGroup final
                                                 const Vector3f* dPrimCenters,
                                                 const AABB3f* dAABBs,
                                                 uint32_t accIndex,
+                                                bool doKeyExpand,
                                                 const CudaGPU& gpu,
                                                 // Call Related Args
                                                 uint32_t parentIndex,

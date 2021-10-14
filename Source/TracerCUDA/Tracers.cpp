@@ -26,7 +26,7 @@ TracerError LightSamplerCommon::StringToLightSamplerType(LightSamplerType& ls,
         }
         i++;
     }
-    return TracerError::UNABLE_TO_INITIALIZE;
+    return TracerError::UNABLE_TO_INITIALIZE_TRACER;
 }
 
 std::string LightSamplerCommon::LightSamplerTypeToString(LightSamplerType t)

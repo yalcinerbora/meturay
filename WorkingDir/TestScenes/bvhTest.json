@@ -14,7 +14,9 @@
 		"up": [0.0, 1.0, 0.0]
 	}],
 
-	"Lights": [],
+	"Lights": [
+		// Black Background
+		{ "id" : 0, "type" : "Null", "radiance": [0, 0, 0]}],
 
     "Mediums": [{ "id" : 0, "type" : "Vacuum"}],
 
@@ -23,9 +25,9 @@
 	"Materials":[
 	{
 		"id": [0, 1],
-		"type": "BConstant",
-        "radiance" : [[0, 0, 0],
-                      [0.5, 0.5, 0.5]]
+		"type": "LambertC",
+        "albedo" : [[0, 0, 0],
+                    [0.5, 0.5, 0.5]]
 	}],
 
 	"Primitives":[
@@ -44,7 +46,7 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "Linear"},
-    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryLight": 0,
     "BaseMedium" : 0,
 
 	"Surfaces": [

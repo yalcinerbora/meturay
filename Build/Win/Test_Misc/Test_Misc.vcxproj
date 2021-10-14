@@ -76,7 +76,7 @@ xcopy /Y "$(SolutionDir)..\..\Lib\Win\$(Configuration)\gtestd.dll" "$(OutDir)"</
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <AdditionalOptions>--expt-extended-lambda -Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>--expt-extended-lambda -Xcompiler /wd4984 -Xcompiler /wd4506 -std=c++17 %(AdditionalOptions)</AdditionalOptions>
       <GenerateLineInfo>false</GenerateLineInfo>
       <MaxRegCount>
       </MaxRegCount>
@@ -122,7 +122,7 @@ xcopy /Y "$(SolutionDir)..\..\Lib\Win\$(Configuration)\gtest.dll" "$(OutDir)"
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <AdditionalOptions>--expt-extended-lambda -Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>--expt-extended-lambda -Xcompiler /wd4984 -Xcompiler /wd4506 -std=c++17 %(AdditionalOptions)</AdditionalOptions>
       <GenerateLineInfo>true</GenerateLineInfo>
       <MaxRegCount>
       </MaxRegCount>

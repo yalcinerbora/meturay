@@ -39,6 +39,37 @@ struct DirectTracerPositionGlobalState : public DirectTracerGlobalState
 // No Local State
 struct DirectTracerLocalState {};
 
+template <class EGroup>
+__device__ __forceinline__
+void DirectBoundaryWork(// Output
+                        HitKey* gOutBoundKeys,
+                        RayGMem* gOutRays,
+                        RayAuxBasic* gOutRayAux,
+                        const uint32_t maxOutRay,
+                        // Input as registers
+                        const RayReg& ray,
+                        const RayAuxBasic& aux,
+                        const typename EGroup::Surface& surface,
+                        const RayId rayId,
+                        // I-O
+                        DirectTracerLocalState& localState,
+                        DirectTracerGlobalState& renderState,
+                        RandomGPU& rng,
+                        // Constants
+                        const typename EGroup::GPUType& gLight)
+{
+    const RayF& r = ray.ray;
+    Vector3 position = r.AdvancedPos(ray.tMax);
+
+    Vector3 emission = gLight.Emit(// Input
+                                   -r.getDirection(),
+                                   position,
+                                   surface);
+    ImageAccumulatePixel(renderState.gImage,
+                         aux.pixelIndex,
+                         Vector4f(emission, 1.0f));
+}
+
 template <class MGroup>
 __device__
 inline void DirectFurnaceWork(// Output
@@ -100,8 +131,8 @@ inline void DirectFurnaceWork(// Output
     //       pdf);
 
     // And accumulate pixel
-    ImageAccumulatePixel(renderState.gImage, 
-                         aux.pixelIndex, 
+    ImageAccumulatePixel(renderState.gImage,
+                         aux.pixelIndex,
                          Vector4(radiance, 1.0f));
 }
 
@@ -123,7 +154,7 @@ inline void DirectPositionWork(// Output
                                // Constants
                                const typename EmptyMat<EmptySurface>::Data& gMatData,
                                const HitKey::Type matIndex)
-{   
+{
     static constexpr float C = 1.0f;
 
     const RayF& r = ray.ray;
@@ -131,9 +162,9 @@ inline void DirectPositionWork(// Output
     switch(renderState.posRenderType)
     {
         case PositionRenderType::VECTOR3:
-        {            
-            ImageAccumulatePixel(renderState.gImage, 
-                                 aux.pixelIndex, 
+        {
+            ImageAccumulatePixel(renderState.gImage,
+                                 aux.pixelIndex,
                                  worldPos);
             return;
         }
@@ -149,13 +180,13 @@ inline void DirectPositionWork(// Output
             else
                 depth = log(C * ndc[3] + 1.0f) / log(C * nearFar[1] + 1.0f);
 
-            ImageAccumulatePixel(renderState.gImage, 
-                                 aux.pixelIndex, 
+            ImageAccumulatePixel(renderState.gImage,
+                                 aux.pixelIndex,
                                  Vector4(depth, depth, depth, 1.0f));
             break;
-        }        
+        }
     }
-    
+
 }
 
 __device__
@@ -179,8 +210,8 @@ inline void DirectNormalWork(// Output
 {
     Vector3f ZERO = Zero3;
     const GPUMediumVacuum m(0);
-    Vector3f normal = NormalRenderMat::Evaluate(ZERO, ZERO, ZERO, m, surface, gMatData, matIndex);    
-    ImageAccumulatePixel(renderState.gImage, 
-                         aux.pixelIndex, 
+    Vector3f normal = NormalRenderMat::Evaluate(ZERO, ZERO, ZERO, m, surface, gMatData, matIndex);
+    ImageAccumulatePixel(renderState.gImage,
+                         aux.pixelIndex,
                          Vector4(normal, 1.0f));
 }

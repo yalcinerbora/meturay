@@ -14,27 +14,24 @@
 		"up": [0.0, 1.0, 0.0]
 	}],
 
+	"Lights": [
+		// Black Background
+		{ "id" : 0, "type" : "Null", "radiance": [1, 0, 0]}],
+
 	"Mediums": [{"id" : 0, "type" : "Vacuum"}],
 	"Transforms":[{"id": 0, "type": "Identity"}],
 
-	"Materials":[	{
-		// Black Background
-		"id": 0,
-		"type": "BConstant",
-		"radiance" : [0, 0, 0]
-	}],
+	"Materials":[],
 
 	"Primitives":[],
 
 	"Accelerators": [],
 
-	"Lights": [],
-
     //================================================//
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "Linear"},
-    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryLight": 0,
     "BaseMedium" : 0,
 
 	"Surfaces": [],

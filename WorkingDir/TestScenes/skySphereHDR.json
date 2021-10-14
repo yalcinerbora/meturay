@@ -24,7 +24,7 @@
 	{
 		"id": 0,
 		"type": "SkySphere",
-		"isHemispherical": false
+		"radiance" : {"texture": 0, "channels": "rgb"}
 	}],
 
 	"Mediums": [
@@ -35,13 +35,7 @@
 
 	"Transforms":[{"id": 0, "type": "Identity"}],
 
-	"Materials":[
-    {
-		// Light Boundary Material
-		"id": 0,
-		"type": "BSkySphere",
-		"radiance" : {"texture": 0, "channels": "rgb"}
-    }],
+	"Materials":[],
 
 	"Primitives":[],
 
@@ -51,14 +45,12 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "Linear"},
-    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryLight": 0,
     "BaseMedium" : 0,
 
 	"Surfaces": [],
 
-	"LightSurfaces": [
-		{"light": 0, "material": 0}
-	],
+	"LightSurfaces": [],
 
     "CameraSurfaces": [{"camera": 0}]
 }

@@ -22,6 +22,7 @@ class GPULightP : public GPULightI
 {
     protected:
         const TextureRefI<2, Vector3f>&    gRadianceRef;
+        uint32_t                           globalLightIndex;
 
     public:
         // Constructors & Destructor
@@ -35,6 +36,9 @@ class GPULightP : public GPULightI
                                      const Vector3& pos,
                                      //
                                      const UVSurface&) const override;
+
+        __device__ uint32_t     GlobalLightIndex() const override;
+        __device__ void         SetGlobalLightIndex(uint32_t) override;
 
 };
 
@@ -112,6 +116,8 @@ class CPULightGroupP : public CPULightGroupI
         const GPULightList&             GPULights() const override;
         uint32_t                        EndpointCount() const override;
         const CudaGPU&                  GPU() const override;
+        const std::vector<HitKey>&      PackedHitKeys() const override;
+        uint32_t                        MaxInnerId() const override;
 
         const GPULight*                 GPULightsDerived() const;
         const PrimitiveGroup&           PrimGroup() const;
@@ -124,6 +130,7 @@ inline GPULightP::GPULightP(const TextureRefI<2, Vector3f>& gRadiance,
                             const GPUTransformI& gTransform)
     : GPULightI(mediumIndex, hk, gTransform)
     , gRadianceRef(gRadiance)
+    , globalLightIndex(UINT32_MAX)
 {}
 
 __device__
@@ -133,6 +140,18 @@ inline Vector3f GPULightP::Emit(const Vector3& wo,
                                 const UVSurface& surface) const
 {
     return gRadianceRef(surface.uv);
+}
+
+__device__
+inline uint32_t GPULightP::GlobalLightIndex() const
+{
+    return globalLightIndex;
+}
+
+__device__
+inline void GPULightP::SetGlobalLightIndex(uint32_t gli)
+{
+    globalLightIndex = gli;
 }
 
 template<class GPULight, class PGroup,
@@ -349,6 +368,25 @@ template<class GPULight, class PGroup,
 inline const CudaGPU& CPULightGroupP<GPULight, PGroup, SGen>::GPU() const
 {
     return gpu;
+}
+
+
+template<class GPULight, class PGroup,
+         SurfaceFuncGenerator<UVSurface,
+                              typename PGroup::HitData,
+                              typename PGroup::PrimitiveData> SGen>
+const std::vector<HitKey>& CPULightGroupP<GPULight, PGroup, SGen>::PackedHitKeys() const
+{
+    return hWorkKeys;
+}
+
+template<class GPULight, class PGroup,
+         SurfaceFuncGenerator<UVSurface,
+                              typename PGroup::HitData,
+                              typename PGroup::PrimitiveData> SGen>
+uint32_t CPULightGroupP<GPULight, PGroup, SGen>::MaxInnerId() const
+{
+    return lightCount;
 }
 
 template<class GPULight, class PGroup,

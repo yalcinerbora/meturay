@@ -27,7 +27,7 @@ class GPUDirectLightSamplerI
                                  // Inputs
                                  // World location of the current shading point
                                  const Vector3& position,
-                                 // 
+                                 //
                                  RandomGPU& rng) const = 0;
 
         // Probablity density of sampling a particular light
@@ -35,10 +35,16 @@ class GPUDirectLightSamplerI
         // Conditional is the chance of sampling this direction on a selected light
         // Marginal one returns chance of sampling this particular light
         __device__
-        virtual void Pdf(float& marginal,
-                         float& conditional, 
-                         // 
+        virtual void Pdf(// Outputs
+                         // pdf of selecting this light
+                         float& marginal,
+                         // Selected Lights' pdf
+                         float& conditional,
+                         // Inputs
                          uint32_t lightIndex,
+                         // From which world position and direction
+                         // we want the pdf to be calculated
+                         // (direction is towards the light)
                          const Vector3& position,
                          const Vector3& direction) const = 0;
 };

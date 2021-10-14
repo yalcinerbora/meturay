@@ -4,6 +4,7 @@
 #include "GPUPiecewiseDistribution.cuh"
 #include "GPUTransformI.h"
 #include "TypeTraits.h"
+#include "MangledNames.h"
 
 #include "RayLib/CoordinateConversion.h"
 
@@ -44,20 +45,28 @@ class GPULightSkySphere final : public GPULightP
         __device__ float                Pdf(const Vector3& direction,
                                             const Vector3& position) const override;
         __device__ bool                 CanBeSampled() const override;
+
+        // Specialize Emit
+        __device__ Vector3f             Emit(const Vector3& wo,
+                                             const Vector3& pos,
+                                             //
+                                             const UVSurface&) const override;
 };
 
 class CPULightGroupSkySphere final : public CPULightGroupP<GPULightSkySphere>
 {
     public:
-        static constexpr const char*    TypeName() { return "SkySphere"; }
+        TYPENAME_DEF(LightGroup, "SkySphere");
 
         using Base = CPULightGroupP<GPULightSkySphere>;
 
     private:
         // CPU Permanent Allocations
         CPUDistGroupPiecewiseConst2D        hLuminanceDistributions;
-        // GPU Pointer List
-        const GPUDistPiecewiseConst2D*      dLuminanceDistributions;
+
+        DeviceMemory                        gpuDsitributionMem;
+        const GPUDistPiecewiseConst2D*      dGPUDistributions;
+
 
     protected:
     public:
@@ -184,10 +193,48 @@ inline bool GPULightSkySphere::CanBeSampled() const
     return true;
 }
 
+__device__
+inline Vector3f GPULightSkySphere::Emit(const Vector3& wo,
+                                        const Vector3& pos,
+                                        //
+                                        const UVSurface& surface) const
+{
+    //printf("WtT: %f, %f, %f, %f\n",
+    //       surface.worldToTangent[0],
+    //       surface.worldToTangent[1],
+    //       surface.worldToTangent[2],
+    //       surface.worldToTangent[3]);
+
+    // Convert Y up from Z up
+    // Also invert since that direction is used to sample HDR texture
+    Vector3 woTrans = GPUSurface::ToTangent(wo, surface.worldToTangent);
+    Vector3 woZup = -Vector3(woTrans[2], woTrans[0], woTrans[1]);
+
+    // Convert to Spherical Coordinates
+    Vector2f thetaPhi = Utility::CartesianToSphericalUnit(woZup);
+
+    // Normalize to generate UV [0, 1]
+    // tetha range [-pi, pi]
+    float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
+    // phi range [0, pi]
+    float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);
+
+    //printf("Received Light from (%f, %f, %f)\n"
+    //       "Zup     : %f, %f, %f\n"
+    //       "UV      : %f, %f\n",
+    //       wo[0], wo[1], wo[2],
+    //       woZup[0], woZup[1], woZup[2],
+    //       u, v);
+
+    // Gen Directional vector
+    Vector2 uv = Vector2(u, v);
+    return gRadianceRef(uv);
+}
+
 inline CPULightGroupSkySphere::CPULightGroupSkySphere(const GPUPrimitiveGroupI* pg,
                                                       const CudaGPU& gpu)
     : CPULightGroupP<GPULightSkySphere>(*pg, gpu)
-    , dLuminanceDistributions(nullptr)
+    , dGPUDistributions(nullptr)
 {}
 
 inline const char* CPULightGroupSkySphere::Type() const

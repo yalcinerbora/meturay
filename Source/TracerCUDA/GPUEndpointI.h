@@ -102,6 +102,15 @@ class CPUEndpointGroupI
                                                                const CudaSystem&) = 0;
 		virtual uint32_t						EndpointCount() const = 0;
 
+        // This returns the packed keys,
+        // if a primitive endpoint (light) present
+        // it does only gives the first hit key of the primitive batch
+        virtual const std::vector<HitKey>&  PackedHitKeys() const = 0;
+        // Returns maximum used inner id number
+        // It will be used to determine how many bits
+        // should be used on radix sort
+        virtual uint32_t                    MaxInnerId() const = 0;
+
 		virtual size_t						UsedGPUMemory() const = 0;
 		virtual size_t						UsedCPUMemory() const = 0;
 };

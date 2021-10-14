@@ -73,14 +73,16 @@ void PathTracerBoundaryWork(// Output
     float misWeight = 1.0f;
     if(isPathRayAsMISRay)
     {
-        Vector3 position = ray.ray.AdvancedPos(ray.tMax);
+        Vector3 prevPosition = ray.ray.getPosition();
         Vector3 direction = ray.ray.getDirection().Normalize();
+        Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
 
         // Find out the pdf of the light
         float pdfLightM, pdfLightC;
         renderState.gLightSampler->Pdf(pdfLightM, pdfLightC,
-                                       aux.endpointIndex,
-                                       position,
+                                       //
+                                       gLight.GlobalLightIndex(),
+                                       prevPosition,
                                        direction);
         // We are subsampling (discretely sampling) a single light
         // pdf of BxDF should also incorporate this

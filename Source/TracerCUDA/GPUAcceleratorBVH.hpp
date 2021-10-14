@@ -38,7 +38,8 @@ const char* GPUAccBVHGroup<PGroup>::Type() const
 
 template <class PGroup>
 HitKey GPUAccBVHGroup<PGroup>::FindHitKey(uint32_t accIndex,
-                                          PrimitiveId id)
+                                          PrimitiveId id,
+                                          bool doKeyExpand)
 {
     const PrimitiveRangeList& pRanges = primitiveRanges[accIndex];
     for(uint32_t i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
@@ -47,8 +48,16 @@ HitKey GPUAccBVHGroup<PGroup>::FindHitKey(uint32_t accIndex,
         if(range[0] == std::numeric_limits<uint64_t>::max())
             break;
 
-        if(id >= range[0] &&
-           id < range[1])
+        if(id >= range[0] && id < range[1])
+        {
+            HitKey key = primitiveMaterialKeys[accIndex][i];
+            if(!doKeyExpand) return key;
+
+            PrimitiveId expansion = id - range[0];
+            PrimitiveId expandedId = HitKey::FetchIdPortion(key) + expansion;
+            key = HitKey::CombinedKey(HitKey::FetchBatchPortion(key),
+                                      static_cast<HitKey::Type>(expandedId));
+        }
             return primitiveMaterialKeys[accIndex][i];
     }
     return HitKey::InvalidKey;
@@ -70,6 +79,7 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
                                              const Vector3f* dPrimCenters,
                                              const AABB3f* dAABBs,
                                              uint32_t accIndex,
+                                             bool doKeyExpand,
                                              const CudaGPU& gpu,
                                              // Call Related Args
                                              uint32_t parentIndex,
@@ -90,7 +100,7 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
     {
         uint32_t index = dIndicesIn[start];
         PrimitiveId id = dPrimIds[index];
-        HitKey matKey = FindHitKey(accIndex, id);
+        HitKey matKey = FindHitKey(accIndex, id, doKeyExpand);
 
         node.isLeaf = true;
         node.leaf = PGroup::Leaf(matKey, id, primData);
@@ -313,6 +323,7 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
         primitiveRanges.push_back(primRangeList);
         primitiveMaterialKeys.push_back(hitKeyList);
         idLookup.emplace(surface.first, surfaceInnerId);
+        keyExpandOption.push_back(surface.second.doKeyExpansion);
         surfaceInnerId++;
     }
     assert(surfaceInnerId == hTransformIndices.size());
@@ -586,6 +597,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                         dPrimCenters,
                         dPrimAABBs,
                         innerIndex,
+                        keyExpandOption[innerIndex],
                         gpu,
                         // Call Related Args
                         current.parentId,

@@ -4,6 +4,7 @@
 #include "GPUTransformI.h"
 #include "TypeTraits.h"
 #include "GPUCameraPixel.cuh"
+#include "MangledNames.h"
 
 class GPUCameraPinhole final : public GPUCameraI
 {
@@ -62,6 +63,7 @@ class GPUCameraPinhole final : public GPUCameraI
         __device__ Vector2f         NearFar() const override;
 
         __device__ VisorTransform   GenVisorTransform() const override;
+        __device__ void             SwapTransform(const VisorTransform&) override;
 
         __device__ GPUCameraPixel   GeneratePixelCamera(const Vector2i& pixelId,
                                                         const Vector2i& resolution) const override;
@@ -70,7 +72,8 @@ class GPUCameraPinhole final : public GPUCameraI
 class CPUCameraGroupPinhole final : public CPUCameraGroupP<GPUCameraPinhole>
 {
     public:
-        static const char* TypeName() { return "Pinhole"; }
+        TYPENAME_DEF(CameraGroup, "Pinhole");
+
         // Node Names
         static constexpr const char* POSITION_NAME  = "position";
         static constexpr const char* GAZE_NAME      = "gaze";
@@ -271,6 +274,29 @@ inline VisorTransform GPUCameraPinhole::GenVisorTransform() const
         position + dir,
         up
     };
+}
+
+__device__
+inline void GPUCameraPinhole::SwapTransform(const VisorTransform& t)
+{
+    position = t.position;
+    up = t.up;
+    Vector3 gazePoint = t.gazePoint;
+
+    // Camera Vector Correction
+    Vector3 gazeDir = gazePoint - position;
+    right = Cross(gazeDir, up).Normalize();
+    up = Cross(right, gazeDir).Normalize();
+    gazeDir = Cross(up, right).Normalize();
+
+    // Camera parameters
+    float widthHalf = planeSize[0] * 0.5f;
+    float heightHalf = planeSize[1] * 0.5f;
+
+    bottomLeft = (position
+                    - right * widthHalf
+                    - up * heightHalf
+                    + gazeDir * nearFar[0]);
 }
 
 __device__

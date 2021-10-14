@@ -85,12 +85,9 @@ bool ConfigParser::ParseVisorOptions(// Visor Input Related
         std::ifstream file(path);
 
         if(!file.is_open()) return SceneError::FILE_NOT_FOUND;
-        auto stream = Utility::StripComments(file);
-
         // Parse Json
-        nlohmann::json configJson;
-        stream >> configJson;
-
+        nlohmann::json configJson = nlohmann::json::parse(file, nullptr,
+                                                          true, true);
         // Json is Loaded
         // Load Key Binds
         auto keyJson = configJson.end();
@@ -219,11 +216,9 @@ bool ConfigParser::ParseTracerOptions(// Tracer Related
         std::ifstream file(path);
 
         if(!file.is_open()) return SceneError::FILE_NOT_FOUND;
-        auto stream = Utility::StripComments(file);
-
         // Parse Json
-        nlohmann::json configJson;
-        stream >> configJson;
+        nlohmann::json configJson = nlohmann::json::parse(file, nullptr,
+                                                          true, true);
         // Json is Loaded
 
         // Load Tracer Options

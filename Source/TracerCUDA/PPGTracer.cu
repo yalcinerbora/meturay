@@ -89,7 +89,7 @@ TracerError PPGTracer::LightSamplerNameToEnum(PPGTracer::LightSamplerType& ls,
         }
         i++;
     }
-    return TracerError::UNABLE_TO_INITIALIZE;
+    return TracerError::UNABLE_TO_INITIALIZE_TRACER;
 }
 
 TracerError PPGTracer::ConstructLightSampler()
@@ -119,10 +119,10 @@ TracerError PPGTracer::ConstructLightSampler()
             return TracerError::OK;
         }
         default:
-            return TracerError::UNABLE_TO_INITIALIZE;
+            return TracerError::UNABLE_TO_INITIALIZE_TRACER;
 
     }
-    return TracerError::UNABLE_TO_INITIALIZE;
+    return TracerError::UNABLE_TO_INITIALIZE_TRACER;
 }
 
 void PPGTracer::ResizeAndInitPathMemory()
@@ -477,12 +477,12 @@ void PPGTracer::Finalize()
     }
 }
 
-void PPGTracer::GenerateWork(int cameraId)
+void PPGTracer::GenerateWork(uint32_t cameraIndex)
 {
     if(callbacks)
-        callbacks->SendCurrentTransform(SceneCamTransform(cameraId));
+        callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
-    GenerateRays<RayAuxPPG, RayAuxInitPPG>(cameraId,
+    GenerateRays<RayAuxPPG, RayAuxInitPPG>(cameraIndex,
                                            options.sampleCount,
                                            RayAuxInitPPG(InitialPPGAux,
                                                          options.sampleCount *
@@ -493,9 +493,9 @@ void PPGTracer::GenerateWork(int cameraId)
     currentDepth = 0;
 }
 
-void PPGTracer::GenerateWork(const VisorTransform& t, int cameraId)
+void PPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
-    GenerateRays<RayAuxPPG, RayAuxInitPPG>(t, cameraId, options.sampleCount,
+    GenerateRays<RayAuxPPG, RayAuxInitPPG>(t, cameraIndex, options.sampleCount,
                                            RayAuxInitPPG(InitialPPGAux,
                                                          options.sampleCount *
                                                          options.sampleCount),

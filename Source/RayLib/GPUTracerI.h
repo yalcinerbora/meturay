@@ -50,9 +50,9 @@ class GPUTracerI
 
         // Rendering Related
         // Generate Work for Scene Camera
-        virtual void                    GenerateWork(int cameraId) = 0;
+        virtual void                    GenerateWork(uint32_t cameraId) = 0;
         // Generate Work for Arbitrary Visor Transform
-        virtual void                    GenerateWork(const VisorTransform&, int cameraId) = 0;
+        virtual void                    GenerateWork(const VisorTransform&, uint32_t cameraId) = 0;
         // Generate Work for Arbitrary GPU Camera
         virtual void                    GenerateWork(const GPUCameraI&) = 0;
         virtual bool                    Render() = 0;   // Continue Working (untill no work is left)

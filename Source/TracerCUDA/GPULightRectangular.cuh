@@ -4,6 +4,7 @@
 #include "GPUTransformI.h"
 #include "Random.cuh"
 #include "TypeTraits.h"
+#include "MangledNames.h"
 
 class GPULightRectangular final : public GPULightP
 {
@@ -55,7 +56,7 @@ class GPULightRectangular final : public GPULightP
 class CPULightGroupRectangular final : public CPULightGroupP<GPULightRectangular>
 {
     public:
-        static constexpr const char*    TypeName(){return "Rectangular"; }
+        TYPENAME_DEF(LightGroup, "Rectangular");
 
         static constexpr const char* POSITION_NAME  = "topLeft";
         static constexpr const char* RECT_V0_NAME   = "right";

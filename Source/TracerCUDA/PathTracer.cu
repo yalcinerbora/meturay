@@ -215,21 +215,21 @@ bool PathTracer::Render()
     return true;
 }
 
-void PathTracer::GenerateWork(int cameraId)
+void PathTracer::GenerateWork(uint32_t cameraIndex)
 {
     if(callbacks)
-        callbacks->SendCurrentTransform(SceneCamTransform(cameraId));
+        callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
-    GenerateRays<RayAuxPath, RayAuxInitPath>(cameraId,
+    GenerateRays<RayAuxPath, RayAuxInitPath>(cameraIndex,
                                              options.sampleCount,
                                              RayAuxInitPath(InitialPathAux),
                                              true);
     currentDepth = 0;
 }
 
-void PathTracer::GenerateWork(const VisorTransform& t, int cameraId)
+void PathTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
-    GenerateRays<RayAuxPath, RayAuxInitPath>(t, cameraId, options.sampleCount,
+    GenerateRays<RayAuxPath, RayAuxInitPath>(t, cameraIndex, options.sampleCount,
                                              RayAuxInitPath(InitialPathAux),
                                              true);
     currentDepth = 0;

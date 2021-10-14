@@ -23,3 +23,13 @@ const std::string MangledNames::AcceleratorGroup(const char* primitiveGroupName,
                           "(A)"s + acceleratorGroupName;
     return result;
 }
+
+const std::string MangledNames::CameraGroup(const char* cameraGroupName)
+{
+    return "(C)"s + cameraGroupName;
+}
+
+const std::string MangledNames::LightGroup(const char* lightGroupName)
+{
+    return "(L)"s + lightGroupName;
+}

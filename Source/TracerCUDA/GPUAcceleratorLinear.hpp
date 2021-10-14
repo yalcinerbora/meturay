@@ -59,21 +59,24 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
         range[1] = range[0] + localSize;
         totalSize += localSize;
 
-        
+
         hTransformIndices.push_back(surface.second.globalTransformIndex);
         primitiveIds.push_back(primIdList);
         primitiveRanges.push_back(primRangeList);
         primitiveMaterialKeys.push_back(hitKeyList);
         accRanges.push_back(range);
+        keyExpandOption.push_back(surface.second.doKeyExpansion);
         idLookup.emplace(surface.first, surfaceInnerId);
         surfaceInnerId++;
     }
     assert(primitiveRanges.size() == primitiveMaterialKeys.size());
     assert(primitiveMaterialKeys.size() == idLookup.size());
     assert(idLookup.size() == accRanges.size());
+    assert(keyExpandOption.size() == idLookup.size());
     assert(surfaceInnerId == hTransformIndices.size());
 
-    
+
+
     uint32_t bvhCount = surfaceInnerId;
     // Allocate memory
     // Finally Allocate and load to GPU memory
@@ -170,7 +173,8 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         hkList,
         prList,
         primData,
-        index
+        index,
+        keyExpandOption[index]
     );
 
     // Acquire GPU Transform Ptr for this accelerator to the CPU

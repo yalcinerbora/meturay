@@ -53,7 +53,7 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const EndpointGroupDataList& l
     hWorkKeys.reserve(lightCount);
     hRadianceConstructionInfo.reserve(lightCount);
     textureIdList.reserve(lightCount);
-
+    hPackedWorkKeys.reserve(lightNodes.size());
     texDataCount = 0;
     constDataCount = 0;
 
@@ -96,6 +96,7 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const EndpointGroupDataList& l
         uint32_t primitiveId = node.primitiveId;
         Vector2ul primitiveRange = primGroup.PrimitiveBatchRange(primitiveId);
 
+        hPackedWorkKeys.push_back(HitKey::CombinedKey(batchId, innerIndex));
         for(PrimitiveId primId = primitiveRange[0]; primId < primitiveRange[1]; primId++)
         {
             HitKey materialKey = HitKey::CombinedKey(batchId, innerIndex);

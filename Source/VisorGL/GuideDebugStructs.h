@@ -34,7 +34,7 @@ namespace GuideDebug
     static constexpr const char* SCENE_POS_IMAGE = "posImage";
     static constexpr const char* SCENE_DEPTH = "depth";
     static constexpr const char* NAME = "name";
-      
+
     static constexpr const char* PG_NAME = "PathGuiders";
     static constexpr const char* REFERENCE_NAME = "Reference";
 
@@ -48,11 +48,9 @@ inline bool GuideDebug::ParseConfigFile(GuideDebugConfig& s, const std::u8string
     std::ifstream file(path);
 
     if(!file.is_open()) return false;
-    auto stream = Utility::StripComments(file);
-
     // Parse Json
-    nlohmann::json jsonFile;
-    stream >> (jsonFile);
+    nlohmann::json jsonFile = nlohmann::json::parse(file, nullptr,
+                                                    true, true);
 
     s.sceneName = jsonFile[SCENE_NAME][NAME];
     s.refImage = jsonFile[SCENE_NAME][SCENE_IMAGE];
@@ -71,6 +69,6 @@ inline bool GuideDebug::ParseConfigFile(GuideDebugConfig& s, const std::u8string
     for(const nlohmann::json& j : jsonFile[DATA_GRADIENT_NAME])
     {
         s.gradientValues.emplace_back(SceneIO::LoadVector<3,float>(j));
-    }      
+    }
     return true;
 }

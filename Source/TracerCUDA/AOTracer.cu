@@ -85,24 +85,24 @@ TracerError AOTracer::SetOptions(const TracerOptionsI& opts)
     return TracerError::OK;
 }
 
-void AOTracer::GenerateWork(int cameraId)
+void AOTracer::GenerateWork(uint32_t cameraIndex)
 {
     if(callbacks)
-        callbacks->SendCurrentTransform(SceneCamTransform(cameraId));
+        callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
     depth = 0;
     hitPhase = false;
-    GenerateRays<RayAuxAO, RayAuxInitAO>(cameraId,
+    GenerateRays<RayAuxAO, RayAuxInitAO>(cameraIndex,
                                          options.sampleCount,
                                          RayAuxInitAO(InitialAOAux),
                                          true);
 }
 
-void AOTracer::GenerateWork(const VisorTransform& t, int cameraId)
+void AOTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
     depth = 0;
     hitPhase = false;
-    GenerateRays<RayAuxAO, RayAuxInitAO>(t, cameraId,
+    GenerateRays<RayAuxAO, RayAuxInitAO>(t, cameraIndex,
                                          options.sampleCount,
                                          RayAuxInitAO(InitialAOAux),
                                          true);

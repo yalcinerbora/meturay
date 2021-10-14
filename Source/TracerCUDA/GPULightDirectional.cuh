@@ -4,6 +4,7 @@
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
 #include "TypeTraits.h"
+#include "MangledNames.h"
 
 class GPULightDirectional final : public GPULightP
 {
@@ -49,7 +50,7 @@ class GPULightDirectional final : public GPULightP
 class CPULightGroupDirectional final : public CPULightGroupP<GPULightDirectional>
 {
     public:
-        static constexpr const char*    TypeName() { return "Directional"; }
+        TYPENAME_DEF(LightGroup, "Directional");
 
         static constexpr const char*    DIRECTION_NAME = "direction";
 

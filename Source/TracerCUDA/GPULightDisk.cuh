@@ -4,6 +4,7 @@
 #include "GPUTransformI.h"
 #include "Random.cuh"
 #include "TypeTraits.h"
+#include "MangledNames.h"
 
 class GPULightDisk final : public GPULightP
 {
@@ -53,7 +54,7 @@ class GPULightDisk final : public GPULightP
 class CPULightGroupDisk final : public CPULightGroupP<GPULightDisk>
 {
     public:
-        static constexpr const char*    TypeName(){return "Disk"; }
+        TYPENAME_DEF(LightGroup, "Disk");
 
         static constexpr const char*    POSITION_NAME = "center";
         static constexpr const char*    NORMAL_NAME = "normal";

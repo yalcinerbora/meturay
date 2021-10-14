@@ -7,7 +7,7 @@ class GPULightSamplerUniform : public GPUDirectLightSamplerI
 {
     private:
         const GPULightI**   gLights;
-        
+
         uint32_t            lightCount;
 
     protected:
@@ -33,7 +33,7 @@ class GPULightSamplerUniform : public GPUDirectLightSamplerI
                                         // Inputs
                                         // World location of the current shading point
                                         const Vector3& position,
-                                        // 
+                                        //
                                         RandomGPU& rng) const override;
 
         // Probablity density of sampling a particular light
@@ -41,9 +41,16 @@ class GPULightSamplerUniform : public GPUDirectLightSamplerI
         // Conditional is the chance of sampling this direction on a selected light
         // Marginal one returns chance of sampling this particular light
         __device__
-        void               Pdf(float& marginal,
+        void               Pdf(// Outputs
+                               // pdf of selecting this light
+                               float& marginal,
+                               // Selected Lights' pdf
                                float& conditional,
+                               // Inputs
                                uint32_t lightIndex,
+                               // From which world position and direction
+                               // we want the pdf to be calculated
+                               // (direction is towards the light)
                                const Vector3& position,
                                const Vector3& direction) const override;
 };
@@ -58,7 +65,7 @@ inline GPULightSamplerUniform::GPULightSamplerUniform(const GPULightI** gLights,
 // Interface
 __device__
 inline bool GPULightSamplerUniform::SampleLight(// Outputs
-                                                // Work key if we "Hit" to the ray 
+                                                // Work key if we "Hit" to the ray
                                                 // (ray and light is not occluded)
                                                 HitKey& key,
                                                 // Index of the light
@@ -72,7 +79,7 @@ inline bool GPULightSamplerUniform::SampleLight(// Outputs
                                                 // Inputs
                                                 // World location of the current shading point
                                                 const Vector3& position,
-                                                // 
+                                                //
                                                 RandomGPU& rng) const
 {
     if(lightCount == 0) return false;
@@ -108,9 +115,16 @@ inline bool GPULightSamplerUniform::SampleLight(// Outputs
 // Probablity density of sampling a particular light
 // (indicated by lightIndex) towards a position and direction
 __device__
-inline void GPULightSamplerUniform::Pdf(float& marginal,
+inline void GPULightSamplerUniform::Pdf(// Outputs
+                                        // pdf of selecting this light
+                                        float& marginal,
+                                        // Selected Lights' pdf
                                         float& conditional,
+                                        // Inputs
                                         uint32_t lightIndex,
+                                        // From which world position and direction
+                                        // we want the pdf to be calculated
+                                        // (direction is towards the light)
                                         const Vector3& position,
                                         const Vector3& direction) const
 {

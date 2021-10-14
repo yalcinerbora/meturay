@@ -400,18 +400,18 @@ void RefPGTracer::Finalize()
     }
 }
 
-void RefPGTracer::GenerateWork(int cameraId)
+void RefPGTracer::GenerateWork(uint32_t cameraIndex)
 {
     if(crashed) return;
 
     if(callbacks)
-        callbacks->SendCurrentTransform(SceneCamTransform(cameraId));
+        callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
     // Check if the camera is changed
-    if(currentCamera != cameraId)
+    if(currentCamera != cameraIndex)
     {
         // Reset currents
-        currentCamera = cameraId;
+        currentCamera = cameraIndex;
         ResetIterationVariables();
 
         // Reset the shown image
@@ -436,7 +436,7 @@ void RefPGTracer::GenerateWork(int cameraId)
                                   // Args
                                   dPixelCamera,
                                   //
-                                  *(dCameras[cameraId]),
+                                  *(dCameras[cameraIndex]),
                                   pixelId,
                                   resolution);
 
@@ -451,7 +451,7 @@ void RefPGTracer::GenerateWork(int cameraId)
     currentDepth = 0;
 }
 
-void RefPGTracer::GenerateWork(const VisorTransform& t, int cameraId)
+void RefPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
     METU_ERROR_LOG("Cannot use custom camera for this Tracer.");
     if(callbacks) callbacks->SendCrashSignal();

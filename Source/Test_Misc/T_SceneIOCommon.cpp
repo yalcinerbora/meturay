@@ -12,10 +12,9 @@ static const std::string TestSceneName = "TestScenes/jsonRead.json";
 static nlohmann::json ReadTestFile(const std::string& fileName = TestSceneName)
 {
     std::ifstream file(fileName);
-    auto stream = Utility::StripComments(file);
-
-    nlohmann::json jsonFile;
-    stream >> jsonFile;
+    // Parse Json
+    nlohmann::json jsonFile = nlohmann::json::parse(file, nullptr,
+                                                      true, true);
     return jsonFile;
 }
 

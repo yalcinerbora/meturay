@@ -34,6 +34,7 @@ struct SurfaceDefinition
 {
     uint32_t    globalTransformIndex;
     IdKeyPairs  primIdWorkKeyPairs;
+    bool        doKeyExpansion;
 };
 
 // Accelerator Group defines same type of accelerators

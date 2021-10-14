@@ -65,6 +65,7 @@ class GPUCameraPixel final : public GPUCameraI
         __device__ Vector2f         NearFar() const override;
 
         __device__ VisorTransform   GenVisorTransform() const override;
+        __device__ void             SwapTransform(const VisorTransform&) override;
 
         __device__ GPUCameraPixel   GeneratePixelCamera(const Vector2i& pixelId,
                                                         const Vector2i& resolution) const override;
@@ -206,6 +207,29 @@ inline VisorTransform GPUCameraPixel::GenVisorTransform() const
         position + dir,
         up
     };
+}
+
+__device__
+inline void GPUCameraPixel::SwapTransform(const VisorTransform& t)
+{
+    position = t.position;
+    up = t.up;
+    Vector3 gazePoint = t.gazePoint;
+
+    // Camera Vector Correction
+    Vector3 gazeDir = gazePoint - position;
+    right = Cross(gazeDir, up).Normalize();
+    up = Cross(right, gazeDir).Normalize();
+    gazeDir = Cross(up, right).Normalize();
+
+    // Camera parameters
+    float widthHalf = planeSize[0] * 0.5f;
+    float heightHalf = planeSize[1] * 0.5f;
+
+    bottomLeft = (position
+                  - right * widthHalf
+                  - up * heightHalf
+                  + gazeDir * nearFar[0]);
 }
 
 __device__

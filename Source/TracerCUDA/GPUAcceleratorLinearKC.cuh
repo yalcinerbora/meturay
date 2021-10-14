@@ -59,7 +59,8 @@ static void KCConstructLinear(// O
                               const HKList mkList,
                               const PRList prList,
                               const typename PGroup::PrimitiveData primData,
-                              const uint32_t accIndex)
+                              const uint32_t accIndex,
+                              bool doKeyExpansion)
 {
     // Fetch Types from Template Classes
     using LeafData = typename PGroup::LeafData; // LeafStruct is defined by primitive
@@ -108,7 +109,13 @@ static void KCConstructLinear(// O
         // Determine  Prim Id and Hit Key
         PrimitiveId primitiveId = prList.primRanges[pairIndex][0] + localIndex;
         HitKey matKey = mkList.materialKeys[pairIndex];
-
+        if(doKeyExpansion)
+        {
+            PrimitiveId expansion = primitiveId - accRange[0];
+            PrimitiveId expandedId = HitKey::FetchIdPortion(matKey) + expansion;
+            matKey = HitKey::CombinedKey(HitKey::FetchBatchPortion(matKey),
+                                      static_cast<HitKey::Type>(expandedId));
+        }
         // Gen Leaf and write
         gAccLeafs[globalId] = PGroup::Leaf(matKey,
                                            primitiveId,

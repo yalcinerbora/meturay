@@ -1,32 +1,33 @@
 #include "TracerLogicGenerator.h"
 
 #include "RayLib/DLLError.h"
-
+// Primitives
 #include "GPUPrimitiveSphere.h"
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveEmpty.h"
-
+// Accelerators
 #include "GPUAcceleratorLinear.cuh"
 #include "GPUAcceleratorBVH.cuh"
-
+// Mediums
 #include "GPUMediumHomogenous.cuh"
 #include "GPUMediumVacuum.cuh"
-
+// Transforms
 #include "GPUTransformSingle.cuh"
 #include "GPUTransformIdentity.cuh"
-
+// Materials
 #include "BoundaryMaterials.cuh"
 #include "DebugMaterials.cuh"
 #include "SimpleMaterials.cuh"
 #include "LambertMaterial.cuh"
 #include "UnrealMaterial.cuh"
-
+// Tracers
 #include "DirectTracer.h"
 #include "PathTracer.h"
 #include "AOTracer.h"
 #include "PPGTracer.h"
 #include "RefPGTracer.h"
-
+// Lights
+#include "GPULightNull.cuh"
 #include "GPULightPrimitive.cuh"
 #include "GPULightDirectional.cuh"
 #include "GPULightRectangular.cuh"
@@ -34,11 +35,9 @@
 #include "GPULightSpot.cuh"
 #include "GPULightDisk.cuh"
 #include "GPULightSkySphere.cuh"
-
+// Cameras
 #include "GPUCameraPinhole.cuh"
 #include "GPUCameraSpherical.cuh"
-
-#include "GPUMaterialI.h"
 
 // Type to utilize the generated ones
 extern template class GPUAccLinearGroup<GPUPrimitiveTriangle>;
@@ -164,6 +163,9 @@ TracerLogicGenerator::TracerLogicGenerator()
                                             DefaultDestruct<CPUMediumGroupI>));
 
     // Light Types
+    lightGroupGenerators.emplace(CPULightGroupNull::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupNull>,
+                                                  DefaultDestruct<CPULightGroupI>));
     lightGroupGenerators.emplace(CPULightGroupPoint::TypeName(),
                                  CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupPoint>,
                                                   DefaultDestruct<CPULightGroupI>));

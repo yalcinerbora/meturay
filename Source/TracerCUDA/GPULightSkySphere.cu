@@ -2,7 +2,7 @@
 #include "CudaSystem.hpp"
 
 #include "RayLib/MemoryAlignment.h"
-#include "GPUMaterialI.h"
+#include "RayLib/ColorConversion.h"
 
 __global__ void KCConstructGPULightSkySphere(GPULightSkySphere* gLightLocations,
                                              //
@@ -29,6 +29,30 @@ __global__ void KCConstructGPULightSkySphere(GPULightSkySphere* gLightLocations,
     }
 }
 
+__global__
+void KCRGBTextureToLuminanceArray(float* gOutLuminance,
+                                  const TextureRefI<2, Vector3>* gTextureRef,
+                                  const Vector2ui dimension)
+{
+    uint32_t totalWorkCount = dimension[0] * dimension[1];
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < totalWorkCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        Vector2ui id2D = Vector2ui(threadId % dimension[0],
+                                   threadId / dimension[0]);
+        // Convert to UV coordinates
+        Vector2f invDim = Vector2f(1.0f) / Vector2f(dimension);
+        Vector2f uv = Vector2f(id2D) * invDim;
+        // Bypass linear interp
+        uv += Vector2f(0.5f) * invDim;
+
+        Vector3 rgb = (*gTextureRef)(uv);
+        float luminance = Utility::RGBToLuminance(rgb);
+        gOutLuminance[threadId] = luminance;
+    }
+}
+
 SceneError CPULightGroupSkySphere::InitializeGroup(const EndpointGroupDataList& lightNodes,
                                                    const TextureNodeMap& textures,
                                                    const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
@@ -45,21 +69,11 @@ SceneError CPULightGroupSkySphere::InitializeGroup(const EndpointGroupDataList& 
                              scenePath)) != SceneError::OK)
         return e;
 
-    //// Allocate for GPULight classes
-    //size_t totalClassSize = sizeof(GPULightSkySphere) * lightCount;
-    //totalClassSize = Memory::AlignSize(totalClassSize);
-    //size_t totalDistSize = sizeof(GPUDistPiecewiseConst2D) * lightCount;
-    //totalDistSize = Memory::AlignSize(totalDistSize);
-    //size_t totalSize = totalDistSize + totalClassSize;
-    //DeviceMemory::EnlargeBuffer(memory, totalSize);
 
-    //size_t offset = 0;
-    //std::uint8_t* dBasePtr = static_cast<uint8_t*>(memory);
-    //dGPULights = reinterpret_cast<const GPULightSkySphere*>(dBasePtr + offset);
-    //offset += totalClassSize;
-    //dLuminanceDistributions = reinterpret_cast<const GPUDistPiecewiseConst2D*>(dBasePtr + offset);
-    //offset += totalDistSize;
-    //assert(totalSize == offset);
+    // Allocate Distribution Memory
+    DeviceMemory::EnlargeBuffer(gpuDsitributionMem,
+                                sizeof(GPUDistPiecewiseConst2D) * lightCount);
+    dGPUDistributions = static_cast<GPUDistPiecewiseConst2D*>(gpuDsitributionMem);
 
     return SceneError::OK;
 }
@@ -75,121 +89,107 @@ SceneError CPULightGroupSkySphere::ChangeTime(const NodeListing& lightNodes,
 TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGlobalTransformArray,
                                                        const CudaSystem& system)
 {
-    //std::vector<std::vector<float>> hLuminances;
-    //std::vector<Vector2ui> hLuminanceSizes;
+    TracerError e = TracerError::OK;
+    // Construct Texture References
+    if((e = ConstructTextureReferences()) != TracerError::OK)
+        return e;
 
-    ////// Acquire Luminance Information for each light
-    ////TracerError err = TracerError::OK;
-    ////for(HitKey& key : hHitKeys)
-    ////{
-    ////    const auto loc = materialMap.find(HitKey::FetchBatchPortion(key));
-    ////    if(loc == materialMap.cend())
-    ////        return TracerError::UNABLE_TO_CONSTRUCT_LIGHT;
+    // TODO: We go to GPU -> CPU -> GPU here
+    // normaly distribution data were coming from another class
+    // Rewrite PWDistributions to be contructed directly from the GPUMemory as well
+    std::vector<std::vector<float>> hLuminances;
+    std::vector<Vector2ui> hLuminanceSizes;
+    hLuminances.reserve(lightCount);
+    hLuminanceSizes.reserve(lightCount);
 
-    ////    // Materials of light has to be LightMaterial
-    ////    // it should be safe to cast here
-    ////    const GPUBoundaryMaterialGroupI* matGroup = loc->second;
+    // Iterate over each light to generate
+    DeviceMemory luminanceBuffer;
+    for(uint32_t lightIndex = 0; lightIndex < lightCount; lightIndex++)
+    {
+        uint32_t texId = textureIdList[lightIndex];
+        Vector2ui dim = dTextureMemory.at(texId)->Dimensions();
+        uint32_t totalCount = dim[0] * dim[1];
 
-    ////    Vector2ui dimension;
-    ////    std::vector<float> lumData;
-    ////    if((err = matGroup->LuminanceData(lumData,
-    ////                                      dimension,
-    ////                                      HitKey::FetchIdPortion(key))) != TracerError::OK)
-    ////        return err;
+        DeviceMemory::EnlargeBuffer(luminanceBuffer, totalCount * sizeof(float));
+        float* dLumArray = static_cast<float*>(luminanceBuffer);
 
-    ////    hLuminances.push_back(std::move(lumData));
-    ////    hLuminanceSizes.push_back(dimension);
+        // Use your own gpu since texture resides there
+        gpu.GridStrideKC_X
+        (
+            0, (cudaStream_t)0, totalCount,
+             // Kernel
+            KCRGBTextureToLuminanceArray,
+            // Args
+            dLumArray,
+            dRadiances[lightIndex],
+            dim
+        );
 
-    ////}
+        hLuminances.emplace_back(totalCount);
+        CUDA_CHECK(cudaMemcpy(hLuminances.back().data(),
+                              dLumArray, totalCount * sizeof(float),
+                              cudaMemcpyDeviceToHost));
 
-    //// Construct Distribution Data
-    //std::vector<bool> factorInSpherical(hLuminances.size(), false);
-    //hLuminanceDistributions = CPUDistGroupPiecewiseConst2D(hLuminances, hLuminanceSizes,
-    //                                                       factorInSpherical, system);
+        hLuminanceSizes.push_back(dim);
+    }
 
-    //// Copy Generated GPU Distributions
-    //CUDA_CHECK(cudaMemcpy(const_cast<GPUDistPiecewiseConst2D*>(dLuminanceDistributions),
-    //           hLuminanceDistributions.DistributionGPU().data(),
-    //           lightCount * sizeof(GPUDistPiecewiseConst2D),
-    //           cudaMemcpyHostToDevice));
+    // Construct Distribution Data
+    std::vector<bool> factorInSpherical(hLuminances.size(), false);
+    hLuminanceDistributions = CPUDistGroupPiecewiseConst2D(hLuminances, hLuminanceSizes,
+                                                           factorInSpherical, system);
 
-    //// Gen Temporary Memory
-    //DeviceMemory tempMemory;
-    //// Allocate for GPULight classes
-    //size_t matKeySize = sizeof(HitKey) * lightCount;
-    //matKeySize = Memory::AlignSize(matKeySize);
-    //size_t mediumSize = sizeof(uint16_t) * lightCount;
-    //mediumSize = Memory::AlignSize(mediumSize);
-    //size_t transformIdSize = sizeof(TransformId) * lightCount;
-    //transformIdSize = Memory::AlignSize(transformIdSize);
-    //static_assert(sizeof(bool) == sizeof(Byte), "sizeof(bool) != sizeof(Byte)!");
-    //size_t isHemiSize = sizeof(bool) * lightCount;
-    //isHemiSize = Memory::AlignSize(isHemiSize);
-    //size_t totalSize = (matKeySize +
-    //                    mediumSize +
-    //                    transformIdSize +
-    //                    isHemiSize);
-    //DeviceMemory::EnlargeBuffer(tempMemory, totalSize);
+    // As a madlad directly copy the CPU residing GPU class to the GPU memory
+    CUDA_CHECK(cudaMemcpy(const_cast<GPUDistPiecewiseConst2D*>(dGPUDistributions),
+                          hLuminanceDistributions.DistributionGPU().data(),
+                          sizeof(GPUDistPiecewiseConst2D) * lightCount,
+                          cudaMemcpyHostToDevice));
 
-    //size_t offset = 0;
-    //std::uint8_t* dBasePtr = static_cast<uint8_t*>(tempMemory);
-    //const HitKey* dLightMaterialIds = reinterpret_cast<const HitKey*>(dBasePtr + offset);
-    //offset += matKeySize;
-    //const uint16_t* dMediumIndices = reinterpret_cast<const uint16_t*>(dBasePtr + offset);
-    //offset += mediumSize;
-    //const TransformId* dTransformIds = reinterpret_cast<const TransformId*>(dBasePtr + offset);
-    //offset += transformIdSize;
-    //const bool* dIsHemiOptions = reinterpret_cast<const bool*>(dBasePtr + offset);
-    //offset += isHemiSize;
-    //assert(totalSize == offset);
+    // Gen Temporary Memory
+    DeviceMemory tempMemory;
+    const uint16_t* dMediumIndices;
+    const TransformId* dTransformIds;
+    const HitKey* dWorkKeys;
+    DeviceMemory::AllocateMultiData(std::tie(dMediumIndices, dTransformIds, dWorkKeys),
+                                    tempMemory,
+                                    {lightCount, lightCount, lightCount});
 
-    //// Set a GPU
-    //const CudaGPU& gpu = system.BestGPU();
-    //CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
-    //// Load Data to Temp Memory
-    //CUDA_CHECK(cudaMemcpy(const_cast<HitKey*>(dLightMaterialIds),
-    //           hHitKeys.data(),
-    //           sizeof(HitKey) * lightCount,
-    //           cudaMemcpyHostToDevice));
-    //CUDA_CHECK(cudaMemcpy(const_cast<uint16_t*>(dMediumIndices),
-    //           hMediumIds.data(),
-    //           sizeof(uint16_t) * lightCount,
-    //           cudaMemcpyHostToDevice));
-    //CUDA_CHECK(cudaMemcpy(const_cast<TransformId*>(dTransformIds),
-    //           hTransformIds.data(),
-    //           sizeof(TransformId) * lightCount,
-    //           cudaMemcpyHostToDevice));
-    //CUDA_CHECK(cudaMemcpy(const_cast<bool*>(dIsHemiOptions),
-    //           hIsHemiOptions.data(),
-    //           sizeof(bool) * lightCount,
-    //           cudaMemcpyHostToDevice));
+    // Set a GPU
+    const CudaGPU& gpu = system.BestGPU();
+    CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+    CUDA_CHECK(cudaMemcpy(const_cast<uint16_t*>(dMediumIndices),
+               hMediumIds.data(),
+               sizeof(uint16_t) * lightCount,
+               cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(const_cast<TransformId*>(dTransformIds),
+               hTransformIds.data(),
+               sizeof(TransformId) * lightCount,
+               cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(const_cast<HitKey*>(dWorkKeys),
+                          hWorkKeys.data(),
+                          sizeof(HitKey) * lightCount,
+                          cudaMemcpyHostToDevice));
 
-    //// Call allocation kernel
-    //gpu.GridStrideKC_X(0, 0,
-    //                   LightCount(),
-    //                   //
-    //                   KCConstructGPULightSkySphere,
-    //                   //
-    //                   const_cast<GPULightSkySphere*>(dGPULights),
-    //                   //
-    //                   dLuminanceDistributions,
-    //                   dIsHemiOptions,
-    //                   //
-    //                   dTransformIds,
-    //                   dMediumIndices,
-    //                   dLightMaterialIds,
-    //                   //
-    //                   dGlobalTransformArray,
-    //                   LightCount());
+    // Call allocation kernel
+    gpu.GridStrideKC_X(0, 0,
+                       lightCount,
+                       //
+                       KCConstructGPULightSkySphere,
+                       //
+                       const_cast<GPULightSkySphere*>(dGPULights),
+                       //
+                       dGPUDistributions,
+                       //
+                       dRadiances,
+                       dMediumIndices,
+                       dWorkKeys,
+                       dTransformIds,
+                       //
+                       dGlobalTransformArray,
+                       lightCount);
 
-    //gpu.WaitMainStream();
+    gpu.WaitMainStream();
 
-    //// Generate transform list
-    //for(uint32_t i = 0; i < LightCount(); i++)
-    //{
-    //    const auto* ptr = static_cast<const GPULightI*>(dGPULights + i);
-    //    gpuLightList.push_back(ptr);
-    //}
+    SetLightLists();
 
     return TracerError::OK;
 }

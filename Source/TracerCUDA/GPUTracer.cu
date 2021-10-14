@@ -24,13 +24,23 @@
 #include "TracerDebug.h"
 
 __global__
-void KCFetchTransform(VisorTransform& gVTransform,
-                      const GPUCameraI& gCamera)
+void KCTransformCam(GPUCameraI* gCam, const VisorTransform t)
 {
     if(threadIdx.x != 0) return;
+    gCam->SwapTransform(t);
+}
 
-    gVTransform = gCamera.GenVisorTransform();
-
+__global__
+void KCFetchTransform(VisorTransform* gVTransforms,
+                      const GPUCameraI** gCameras,
+                      uint32_t cameraCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < cameraCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        gVTransforms[threadId] = gCameras[threadId]->GenVisorTransform();
+    }
 }
 
 __global__
@@ -42,6 +52,18 @@ void KCSetEndpointIds(GPUEndpointI** gEndpoints,
         threadId += (blockDim.x * gridDim.x))
     {
         gEndpoints[threadId]->SetEndpointId(threadId);
+    }
+}
+
+__global__
+void KCSetLightIds(GPULightI** gLights,
+                   uint32_t lightCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < lightCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        gLights[threadId]->SetGlobalLightIndex(threadId);
     }
 }
 
@@ -58,8 +80,35 @@ TracerError GPUTracer::LoadCameras(std::vector<const GPUCameraI*>& dGPUCameras,
         const auto& dEList = c.GPUEndpoints();
         dGPUCameras.insert(dGPUCameras.end(), dCList.begin(), dCList.end());
         dGPUEndpoints.insert(dGPUEndpoints.end(), dEList.begin(), dEList.end());
+
+        cameraGroupNames.push_back(camera.first);
     }
     cameraCount = static_cast<uint32_t>(dGPUCameras.size());
+
+    // Copy the pointers to the device
+    CUDA_CHECK(cudaMemcpy(const_cast<GPUCameraI**>(dCameras),
+                          dGPUCameras.data(),
+                          dGPUCameras.size() * sizeof(GPUCameraI*),
+                          cudaMemcpyHostToDevice));
+
+    // Calculate Visor Transforms & SceneIds
+    DeviceMemory tempMem(cameraCount * sizeof(VisorTransform));
+    VisorTransform* dVisorTransforms = static_cast<VisorTransform*>(tempMem);
+
+    const auto& gpu = cudaSystem.BestGPU();
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, cameraCount,
+                       //
+                       KCFetchTransform,
+                       //
+                       dVisorTransforms,
+                       dCameras,
+                       cameraCount);
+
+    cameraVisorTransforms.resize(cameraCount);
+    CUDA_CHECK(cudaMemcpy(cameraVisorTransforms.data(), dVisorTransforms,
+                          sizeof(VisorTransform) * cameraCount,
+                          cudaMemcpyDeviceToHost));
+
     return TracerError::OK;
 }
 
@@ -79,6 +128,13 @@ TracerError GPUTracer::LoadLights(std::vector<const GPULightI*>& dGPULights,
         dGPUEndpoints.insert(dGPUEndpoints.end(), dEList.begin(), dEList.end());
     }
     lightCount = static_cast<uint32_t>(dGPULights.size());
+
+    // Copy the pointers to the device
+    CUDA_CHECK(cudaMemcpy(const_cast<GPULightI**>(dLights),
+                          dGPULights.data(),
+                          dGPULights.size() * sizeof(GPULightI*),
+                          cudaMemcpyHostToDevice));
+
     return TracerError::OK;
 }
 
@@ -245,24 +301,16 @@ TracerError GPUTracer::Initialize()
     // Lights
     if((e = LoadLights(dGPULights, dGPUEndpoints)) != TracerError::OK)
         return e;
-    CUDA_CHECK(cudaMemcpy(const_cast<GPULightI**>(dLights),
-                          dGPULights.data(),
-                          dGPULights.size() * sizeof(GPULightI*),
-                          cudaMemcpyHostToDevice));
+
     // Cameras
     if((e = LoadCameras(dGPUCameras, dGPUEndpoints)) != TracerError::OK)
         return e;
-    CUDA_CHECK(cudaMemcpy(const_cast<GPUCameraI**>(dCameras),
-                          dGPUCameras.data(),
-                          dGPUCameras.size() * sizeof(GPUCameraI*),
-                          cudaMemcpyHostToDevice));
 
     // Endpoints
     CUDA_CHECK(cudaMemcpy(const_cast<GPUEndpointI**>(dEndpoints),
                           dGPUEndpoints.data(),
                           dGPUEndpoints.size() * sizeof(GPUEndpointI*),
                           cudaMemcpyHostToDevice));
-
 
     // Now Call all endpoints to generate their unique id (iota basically)
     const auto& gpu = cudaSystem.BestGPU();
@@ -273,6 +321,14 @@ TracerError GPUTracer::Initialize()
                        const_cast<GPUEndpointI**>(dEndpoints),
                        endpointCount);
 
+    // Also Call all lights to generate their globalIds
+    // (which will be used by direct light sampler etc..)
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, lightCount,
+                       //
+                       KCSetLightIds,
+                       //
+                       const_cast<GPULightI**>(dLights),
+                       lightCount);
 
     cudaSystem.SyncAllGPUs();
     return TracerError::OK;
@@ -549,24 +605,35 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
     rayMemory.SwapRays();
 }
 
-VisorTransform GPUTracer::SceneCamTransform(uint32_t cameraInnerId)
+VisorTransform GPUTracer::SceneCamTransform(uint32_t cameraIndex)
 {
-    DeviceMemory tempMem(sizeof(VisorTransform));
-    VisorTransform* dVisorTransform = static_cast<VisorTransform*>(tempMem);
+    return cameraVisorTransforms[cameraIndex];
+}
 
+const GPUCameraI* GPUTracer::GenerateCameraWithTransform(const VisorTransform& t,
+                                                         uint32_t cameraIndex)
+{
+    // Copy the newly selected camera
+    if(cameraIndex != currentCamera)
+    {
+        const std::string& camGroupName = cameraGroupNames[cameraIndex];
+        const auto& camGroup = cameras.at(camGroupName);
+        camGroup->CopyCamera(tempTransformedCam,
+                             dCameras[cameraIndex],
+                             cudaSystem);
+    }
+
+    // Apply Transform
     const auto& gpu = cudaSystem.BestGPU();
     gpu.KC_X(0, (cudaStream_t)0, 1,
-             //
-             KCFetchTransform,
-             //
-             *dVisorTransform,
-             *dCameras[cameraInnerId]);
+                //
+                KCTransformCam,
+                //
+                static_cast<GPUCameraI*>(tempTransformedCam),
+                t);
+    gpu.WaitMainStream();
 
-    VisorTransform hTransform;
-    CUDA_CHECK(cudaMemcpy(&hTransform, dVisorTransform, sizeof(VisorTransform),
-                          cudaMemcpyDeviceToHost));
-
-    return hTransform;
+    return static_cast<const GPUCameraI*>(tempTransformedCam);
 }
 
 void GPUTracer::SetParameters(const TracerParameters& p)

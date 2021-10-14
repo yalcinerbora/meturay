@@ -90,6 +90,7 @@ set(SRC_GPU_TEMPLATE_FUNCTIONS
     ${CURRENT_SOURCE_DIR}/ImageFunctions.cuh)
 
 set(SRC_LIGHTS
+    ${CURRENT_SOURCE_DIR}/GPULightNull.cuh
     ${CURRENT_SOURCE_DIR}/GPULightDirectional.cu
     ${CURRENT_SOURCE_DIR}/GPULightDirectional.cuh
     ${CURRENT_SOURCE_DIR}/GPULightDisk.cu

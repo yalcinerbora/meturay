@@ -87,6 +87,7 @@ struct AccelGroupData
     {
         uint32_t    transformId;
         uint32_t    primId;
+        uint32_t    lightId;
     };
 
     std::string                     accelType;
@@ -113,13 +114,13 @@ struct EndpointConstructionData
     uint32_t                        surfaceId;
     uint32_t                        transformId;
     uint32_t                        mediumId;
-    uint32_t                        constructionId;
+    uint32_t                        endpointId;
     uint32_t                        primitiveId;
     std::unique_ptr<SceneNodeI>     node;
 };
 
 struct LightGroupData
-{    
+{
     std::string                             primTypeName;
     std::vector<EndpointConstructionData>   constructionInfo;
 

@@ -52,6 +52,7 @@ class GPUAccLinearGroup final
         std::vector<PrimitiveRangeList>     primitiveRanges;
         std::vector<HitKeyList>             primitiveMaterialKeys;
         std::vector<Vector2ul>              accRanges;
+        std::vector<bool>                   keyExpandOption;
 
         std::map<uint32_t, uint32_t>        idLookup;
         SurfaceAABBList                     surfaceAABBs;
@@ -74,7 +75,7 @@ class GPUAccLinearGroup final
         const char*         Type() const override;
         // Loads required data to CPU cache for
         SceneError          InitializeGroup(// Accelerator Option Node
-                                            const SceneNodePtr& node,                                            
+                                            const SceneNodePtr& node,
                                             // List of surface/material
                                             // pairings that uses this accelerator type
                                             // and primitive type

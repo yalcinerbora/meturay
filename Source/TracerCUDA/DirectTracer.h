@@ -39,6 +39,7 @@ class DirectTracer : public RayTracer
         WorkBatchMap            workMap;
 
         // Work Pools
+        BoundaryWorkPool<>      boundaryWorkPool;
         WorkPool<>              furnaceWorkPool;
         WorkPool<>              normalWorkPool;
         WorkPool<>              positionWorkPool;
@@ -61,8 +62,8 @@ class DirectTracer : public RayTracer
         TracerError             SetOptions(const TracerOptionsI&) override;
         void                    AskOptions() override;
         //
-        void                    GenerateWork(int cameraId) override;
-        void                    GenerateWork(const VisorTransform&, int cameraId) override;
+        void                    GenerateWork(uint32_t cameraIndex) override;
+        void                    GenerateWork(const VisorTransform&, uint32_t cameraIndex) override;
         void                    GenerateWork(const GPUCameraI&) override;
         bool                    Render() override;
 };

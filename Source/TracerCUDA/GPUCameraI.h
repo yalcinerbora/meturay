@@ -15,6 +15,7 @@ class GPUTransformI;
 class RandomGPU;
 class GPUCameraI;
 class GPUCameraPixel;
+class DeviceMemory;
 
 using GPUCameraList = std::vector<const GPUCameraI*>;
 
@@ -41,6 +42,8 @@ class GPUCameraI : public GPUEndpointI
 
         __device__
         virtual VisorTransform  GenVisorTransform() const = 0;
+        __device__
+        virtual void            SwapTransform(const VisorTransform&) = 0;
 
         __device__
         virtual GPUCameraPixel  GeneratePixelCamera(const Vector2i& pixelId,
@@ -50,10 +53,14 @@ class GPUCameraI : public GPUEndpointI
 class CPUCameraGroupI : public CPUEndpointGroupI
 {
     public:
-        virtual								~CPUCameraGroupI() = default;
+        virtual							~CPUCameraGroupI() = default;
 
         // Interface
-        virtual const GPUCameraList&        GPUCameras() const = 0;
+        virtual const GPUCameraList&    GPUCameras() const = 0;
+
+        virtual void                    CopyCamera(DeviceMemory&,
+                                                   const GPUCameraI* gCamera,
+                                                   const CudaSystem& cudaSystem) = 0;
 };
 
 __device__

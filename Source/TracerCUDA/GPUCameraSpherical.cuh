@@ -4,6 +4,7 @@
 #include "GPUTransformI.h"
 #include "TypeTraits.h"
 #include "GPUCameraPixel.cuh"
+#include "MangledNames.h"
 
 #include "RayLib/CoordinateConversion.h"
 
@@ -62,6 +63,7 @@ class GPUCameraSpherical final : public GPUCameraI
         __device__ Vector2f         NearFar() const override;
 
         __device__ VisorTransform   GenVisorTransform() const override;
+        __device__ void             SwapTransform(const VisorTransform&) override;
 
         __device__ GPUCameraPixel   GeneratePixelCamera(const Vector2i& pixelId,
                                                         const Vector2i& resolution) const override;
@@ -70,7 +72,8 @@ class GPUCameraSpherical final : public GPUCameraI
 class CPUCameraGroupSpherical final : public CPUCameraGroupP<GPUCameraSpherical>
 {
     public:
-        static const char* TypeName() { return "Spherical"; }
+        TYPENAME_DEF(CameraGroup, "Spherical");
+
         // Node Names
         static constexpr const char* POSITION_NAME  = "position";
         static constexpr const char* DIR_NAME       = "direction";
@@ -261,6 +264,20 @@ inline VisorTransform GPUCameraSpherical::GenVisorTransform() const
         position + direction,
         up
     };
+}
+
+__device__
+inline void GPUCameraSpherical::SwapTransform(const VisorTransform& t)
+{
+    // Assume these are already transformed
+    position = t.position;
+    direction = (t.gazePoint - t.position).Normalize();
+    up = t.up;
+
+    // Camera Vector Correction
+    right = Cross(direction, up).Normalize();
+    up = Cross(right, direction).Normalize();
+    direction = Cross(up, right).Normalize();
 }
 
 __device__

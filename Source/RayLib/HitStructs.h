@@ -56,7 +56,7 @@ struct alignas(sizeof(T)) HitKeyT
     __device__ __host__             operator T&();
 
     __device__ __host__
-    static constexpr T              CombinedKey(uint32_t batch, uint64_t id);
+    static constexpr T              CombinedKey(T batch, T id);
     __device__ __host__
     static constexpr T              FetchIdPortion(HitKeyT key);
     __device__ __host__
@@ -92,7 +92,7 @@ __device__ __host__ HitKeyT<T, BatchBits, IdBits>::operator T&()
 
 template <class T, uint32_t BatchBits, uint32_t IdBits>
 __device__ __host__
-constexpr T HitKeyT<T, BatchBits, IdBits>::CombinedKey(uint32_t batch, uint64_t id)
+constexpr T HitKeyT<T, BatchBits, IdBits>::CombinedKey(T batch, T id)
 {
     return (static_cast<T>(batch) << IdBits) |
            (static_cast<T>(id) & IdMask);

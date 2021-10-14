@@ -4,6 +4,7 @@
 #include "GPUTransformI.h"
 #include "DeviceMemory.h"
 #include "TypeTraits.h"
+#include "MangledNames.h"
 
 class GPULightSpot final  : public GPULightP
 {
@@ -54,7 +55,7 @@ class GPULightSpot final  : public GPULightP
 class CPULightGroupSpot final : public CPULightGroupP<GPULightSpot>
 {
     public:
-        static constexpr const char*    TypeName(){return "Spot"; }
+        TYPENAME_DEF(LightGroup, "Spot");
 
         static constexpr const char*    POSITION_NAME = "position";
         static constexpr const char*    DIRECTION_NAME = "direction";

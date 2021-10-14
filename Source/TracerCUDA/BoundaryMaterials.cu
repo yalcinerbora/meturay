@@ -71,7 +71,7 @@
 //    // TODO: Implement
 //    return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 //}
-//        
+//
 //TracerError BoundaryMatConstant::LuminanceData(std::vector<float>& lumData,
 //                                               Vector2ui& dim,
 //                                               uint32_t innerId) const
@@ -84,7 +84,7 @@
 //               dData.dRadiances + innerId,
 //               sizeof(Vector3),
 //               cudaMemcpyDeviceToHost));
-//    
+//
 //    lumData.push_back(Utility::RGBToLuminance(radiance));
 //    dim = Vector2ui(1, 1);
 //    return TracerError::OK;
@@ -94,7 +94,7 @@
 //                                                const TextureNodeMap& textureNodes,
 //                                                const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
 //                                                double time, const std::string& scenePath)
-//  
+//
 //{
 //    constexpr const char* RADIANCE = "radiance";
 //    SceneError err = SceneError::OK;
@@ -157,12 +157,12 @@
 //        hTextureObjectList.push_back(static_cast<cudaTextureObject_t>(*t));
 //    }
 //
-//    // Allocate Temp Device Memory for 
+//    // Allocate Temp Device Memory for
 //    size_t totalMatCount = textureList.size();
 //    DeviceMemory tempMemory(sizeof(cudaTextureObject_t) * totalMatCount);
 //
 //    cudaTextureObject_t* dTextureObjects = static_cast<cudaTextureObject_t*>(tempMemory);
-//    CUDA_CHECK(cudaMemcpy(dTextureObjects, hTextureObjectList.data(), 
+//    CUDA_CHECK(cudaMemcpy(dTextureObjects, hTextureObjectList.data(),
 //                          hTextureObjectList.size() * sizeof(cudaTextureObject_t),
 //                          cudaMemcpyHostToDevice));
 //
@@ -182,7 +182,7 @@
 //TracerError BoundaryMatTextured::LuminanceData(std::vector<float>& lumData,
 //                                               Vector2ui& dim,
 //                                               uint32_t innerId) const
-//{   
+//{
 //    if(innerId >= innerIds.size())
 //        return TracerError::MATERIAL_CAN_NOT_GENERATE_LUMINANCE;
 //
@@ -223,7 +223,7 @@
 //    for(const auto& sceneNode : materialNodes)
 //    {
 //        TextureList radianceTextures = sceneNode->AccessTextureNode(RADIANCE);
-//        
+//
 //        // Calculate Distributions
 //        for(const NodeTextureStruct& texInfo : radianceTextures)
 //        {
@@ -277,13 +277,13 @@
 //        hTextureObjectList.push_back(static_cast<cudaTextureObject_t>(*t));
 //    }
 //
-//    // Allocate Temp Device Memory for 
+//    // Allocate Temp Device Memory for
 //    size_t totalMatCount = textureList.size();
 //    DeviceMemory tempMemory(sizeof(cudaTextureObject_t) * totalMatCount);
 //
 //    cudaTextureObject_t* dTextureObjects = static_cast<cudaTextureObject_t*>(tempMemory);
 //
-//    CUDA_CHECK(cudaMemcpy(dTextureObjects, hTextureObjectList.data(), 
+//    CUDA_CHECK(cudaMemcpy(dTextureObjects, hTextureObjectList.data(),
 //                          hTextureObjectList.size() * sizeof(cudaTextureObject_t),
 //                          cudaMemcpyHostToDevice));
 //

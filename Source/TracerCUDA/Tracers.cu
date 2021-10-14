@@ -23,7 +23,7 @@ TracerError LightSamplerCommon::ConstructLightSampler(DeviceMemory& memory,
                                                       LightSamplerType lt,
                                                       const GPULightI** dLights,
                                                       const uint32_t lightCount,
-                                                      
+
                                                       const CudaSystem& cudaSystem)
 {
     switch(lt)
@@ -45,7 +45,7 @@ TracerError LightSamplerCommon::ConstructLightSampler(DeviceMemory& memory,
             return TracerError::OK;
         }
         default:
-            return TracerError::UNABLE_TO_INITIALIZE;
+            return TracerError::UNABLE_TO_INITIALIZE_TRACER;
     }
-    return TracerError::UNABLE_TO_INITIALIZE;
+    return TracerError::UNABLE_TO_INITIALIZE_TRACER;
 }

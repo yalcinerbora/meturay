@@ -79,7 +79,7 @@ TracerError CPULightGroupDisk::ConstructEndpoints(const GPUTransformI** dGlobalT
     if((e = ConstructTextureReferences()) != TracerError::OK)
         return e;
 
-     // Gen Temporary Memory
+    // Gen Temporary Memory
     DeviceMemory tempMemory;
 
     const uint16_t* dMediumIndices;

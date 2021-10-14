@@ -14,7 +14,9 @@
 		"up": [0.0, 1.0, 0.0]
     }],
 
-	"Lights": [],
+	"Lights": [
+		// Black Background
+		{ "id" : 0, "type" : "Null", "radiance": [0, 0, 0]}],
 
     "Mediums": [{ "id" : 0, "type" : "Vacuum"}],
 
@@ -24,11 +26,6 @@
 	{
 		"id": 0,
 		"type": "Barycentric"
-	},
-	{
-		"id": 1,
-		"type": "BConstant",
-		"radiance" : [0, 0, 0]
 	}],
 
 	"Primitives":[
@@ -53,13 +50,14 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "Linear"},
-    "BaseBoundaryMaterial": 1,
+    "BaseBoundaryLight": 0,
 	"BaseMedium" : 0,
 
 	"Surfaces": [
 	{
-		"transform": 0,
-		"accelerator": 0,
+		"transform": 0, "accelerator": 0,
+		// You can define up to 8 mat/prim pairs here
+		// which will be constructed as a single accelerator
 		"material": 0,
 		"primitive": 0
 	}],

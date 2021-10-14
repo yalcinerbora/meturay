@@ -19,6 +19,7 @@ All Tracers should inherit this class
 
 #include "RayLib/TracerStructs.h"
 #include "RayLib/GPUTracerI.h"
+#include "RayLib/VisorTransform.h"
 
 #include "RNGMemory.h"
 #include "RayMemory.h"
@@ -54,6 +55,7 @@ class GPUTracer : public GPUTracerI
         const WorkBatchCreationInfo&                workInfo;
 
         // GPU Memory
+        DeviceMemory                                tempTransformedCam;
         DeviceMemory                                commonTypeMemory;
 
         TracerError                                 LoadCameras(std::vector<const GPUCameraI*>&,
@@ -78,6 +80,11 @@ class GPUTracer : public GPUTracerI
         const GPUCameraI**                  dCameras;
         const GPULightI**                   dLights;
         const GPUEndpointI**                dEndpoints;
+        // Camera Related Helper Types for fast access some data
+        std::vector<VisorTransform>         cameraVisorTransforms;
+        std::vector<std::string>            cameraGroupNames;
+        uint32_t                            currentCamera;
+
         // Indices for Identity Transform &
         // Base Medium
         const uint32_t                      baseMediumIndex;
@@ -110,7 +117,9 @@ class GPUTracer : public GPUTracerI
                                                      uint32_t totalRayOut,
                                                      HitKey baseBoundMatKey);
         // Convert GPUCamera to VisorCam
-        VisorTransform                      SceneCamTransform(uint32_t cameraInnerId);
+        VisorTransform                      SceneCamTransform(uint32_t cameraIndex);
+        const GPUCameraI*                   GenerateCameraWithTransform(const VisorTransform&,
+                                                                        uint32_t cameraIndex);
 
         // Internals
         template <class... Args>

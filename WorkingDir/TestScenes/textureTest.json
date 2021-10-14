@@ -14,7 +14,9 @@
         "up": [0.0, 1.0, 0.0]
     }],
 
-    "Lights":[],
+	"Lights": [
+		// Black Background
+		{ "id" : 0, "type" : "Null", "radiance": [1, 1, 1]}],
 
     "Mediums": [{ "id" : 0, "type" : "Vacuum"}],
 
@@ -27,12 +29,6 @@
     }],
 
     "Materials":[
-    {
-        // General Boundary Material
-        "id": 0,
-        "type": "BConstant",
-        "radiance" : [1, 1, 1]
-    },
     {
         // Main Walls
         "id": 1,
@@ -59,7 +55,7 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "Linear"},
-    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryLight": 0,
     "BaseMedium" : 0,
 
 	"Surfaces": [

@@ -6,6 +6,20 @@
 #include "GPUPrimitiveEmpty.h"
 #include "DeviceMemory.h"
 
+template <class GPUCamera>
+__global__ static
+void KCCopyCamera(GPUCamera* newCamera,
+                  const GPUCameraI* gRefCamera)
+{
+    if(threadIdx.x != 0) return;
+
+    // We should safely up cast here
+    const GPUCamera& gRefAsDerived = static_cast<const GPUCamera&>(*gRefCamera);
+    // Use inplace new here
+    new (newCamera) GPUCamera(gRefAsDerived);
+}
+
+
 // CUDA complains when generator function
 // is called as a static member function
 // instead we supply it as a template parameter
@@ -41,6 +55,9 @@ class CPUCameraGroupP : public CPUCameraGroupI
         std::vector<TransformId>        hTransformIds;
         std::vector<HitKey>             hWorkKeys;
 
+        // Camera id to inner id
+        std::map<uint32_t, uint32_t>    innerIds;
+
         GPUEndpointList				    gpuEndpointList;
         GPUCameraList				    gpuCameraList;
         uint32_t                        cameraCount;
@@ -67,6 +84,13 @@ class CPUCameraGroupP : public CPUCameraGroupI
         const GPUEndpointList&          GPUEndpoints() const override;
         const GPUCameraList&            GPUCameras() const override;
         uint32_t                        EndpointCount() const override;
+
+        void                            CopyCamera(DeviceMemory&,
+                                                   const GPUCameraI*,
+                                                   const CudaSystem&) override;
+
+        const std::vector<HitKey>&      PackedHitKeys() const override;
+        uint32_t                        MaxInnerId() const override;
 
         const GPUCamera*                GPUCamerasDerived() const;
         const PrimitiveGroup&           PrimGroup() const;
@@ -111,6 +135,7 @@ SceneError CPUCameraGroupP<GPUCamera, PGroup, SGen>::InitializeCommon(const Endp
         hMediumIds.push_back(mediumIndex);
         hTransformIds.push_back(transformIndex);
         hWorkKeys.push_back(HitKey::CombinedKey(batchId, innerIndex));
+        innerIds.emplace(node.endpointId, innerIndex);
 
         innerIndex++;
         if(innerIndex >= (1 << HitKey::IdBits))
@@ -171,6 +196,45 @@ template<class GPUCamera, class PGroup,
                               typename PGroup::HitData,
                               typename PGroup::PrimitiveData> SGen>
 inline uint32_t CPUCameraGroupP<GPUCamera, PGroup, SGen>::EndpointCount() const
+{
+    return cameraCount;
+}
+
+template<class GPUCamera, class PGroup,
+         SurfaceFuncGenerator<UVSurface,
+                              typename PGroup::HitData,
+                              typename PGroup::PrimitiveData> SGen>
+void CPUCameraGroupP<GPUCamera, PGroup, SGen>::CopyCamera(DeviceMemory& camMem,
+                                                          const GPUCameraI* gCamera,
+                                                          const CudaSystem& cudaSystem)
+{
+    DeviceMemory::EnlargeBuffer(camMem, sizeof(GPUCamera));
+    CUDA_CHECK(cudaMemset(camMem, 0x00, sizeof(GPUCamera)));
+
+    const auto& gpu = cudaSystem.BestGPU();
+    gpu.KC_X(0, (cudaStream_t)0, 1,
+             //
+             KCCopyCamera<GPUCamera>,
+             //
+             static_cast<GPUCamera*>(camMem),
+             gCamera);
+    gpu.WaitMainStream();
+}
+
+template<class GPUCamera, class PGroup,
+         SurfaceFuncGenerator<UVSurface,
+                              typename PGroup::HitData,
+                              typename PGroup::PrimitiveData> SGen>
+const std::vector<HitKey>& CPUCameraGroupP<GPUCamera, PGroup, SGen>::PackedHitKeys() const
+{
+    return hWorkKeys;
+}
+
+template<class GPUCamera, class PGroup,
+         SurfaceFuncGenerator<UVSurface,
+                              typename PGroup::HitData,
+                              typename PGroup::PrimitiveData> SGen>
+uint32_t CPUCameraGroupP<GPUCamera, PGroup, SGen>::MaxInnerId() const
 {
     return cameraCount;
 }

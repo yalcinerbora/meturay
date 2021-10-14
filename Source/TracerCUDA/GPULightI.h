@@ -24,6 +24,8 @@ class GPULightI : public GPUEndpointI
                                              const Vector3& pos,
                                              //
                                              const UVSurface&) const = 0;
+        virtual __device__ uint32_t     GlobalLightIndex() const = 0;
+        virtual __device__ void         SetGlobalLightIndex(uint32_t) = 0;
 };
 
 class CPULightGroupI : public CPUEndpointGroupI

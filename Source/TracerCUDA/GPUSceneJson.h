@@ -38,7 +38,6 @@ class GPUSceneJson : public GPUSceneI
         };
 
     private:
-
         // Fundamental Allocators
         TracerLogicGeneratorI&                  logicGenerator;
         ScenePartitionerI&                      partitioner;
@@ -94,6 +93,9 @@ class GPUSceneJson : public GPUSceneI
                                                  TransformNodeList& transformGroupNodes,
                                                  uint32_t& boundaryTransformId,
                                                  //
+                                                 std::string& bLightGroupTypeName,
+                                                 uint32_t& bLightId,
+                                                 //
                                                  MaterialNodeList& matGroupNodes,
                                                  WorkBatchList& matBatchListings,
                                                  AcceleratorBatchList& accelBatchListings,
@@ -112,6 +114,9 @@ class GPUSceneJson : public GPUSceneI
                                                const std::map<uint32_t, uint32_t>& mediumIdMappings,
                                                double time = 0.0);
         SceneError      GenerateWorkBatches(MaterialKeyListing&,
+                                            // I-O
+                                            uint32_t& currentBatchCount,
+                                            // Input
                                             const MultiGPUWorkBatches&,
                                             double time = 0.0);
         SceneError      GenerateAccelerators(std::map<uint32_t, HitKey>& accHitKeyList,
@@ -135,20 +140,28 @@ class GPUSceneJson : public GPUSceneI
                                         const MediumNodeList& mediumList,
                                         double time = 0.0);
         SceneError      GenerateCameras(BoundaryMaterialKeyListing&,
+                                        // I-O
+                                        uint32_t& currentBatchCount,
+                                        // Input
                                         const CameraNodeList&,
                                         const TextureNodeMap&,
                                         const std::map<uint32_t, uint32_t>& transformIdMappings,
                                         const std::map<uint32_t, uint32_t>& mediumIdMappings,
                                         double time = 0.0);
         SceneError      GenerateLights(BoundaryMaterialKeyListing&,
+                                       // I-O
+                                       uint32_t& currentBatchCount,
+                                       // Input
                                        const LightNodeList&,
                                        const TextureNodeMap&,
                                        const std::map<uint32_t, uint32_t>& transformIdMappings,
                                        const std::map<uint32_t, uint32_t>& mediumIdMappings,
                                        double time = 0.0);
 
-        SceneError      FindBoundaryMaterial(const MaterialKeyListing& matHitKeyList,
-                                             double time = 0.0);
+        SceneError      FindBoundaryLight(const BoundaryMaterialKeyListing& matHitKeyList,
+                                          const std::string& bLightGroupTypeName,
+                                          uint32_t bLightId,
+                                          double time = 0.0);
 
         SceneError      LoadAll(double time);
         SceneError      ChangeAll(double time);

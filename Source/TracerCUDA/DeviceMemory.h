@@ -192,7 +192,7 @@ namespace DeviceMemDetail
     AcquireTotalSize(std::array<size_t, sizeof...(Tp)>& alignedSizeList,
                      const std::array<size_t, sizeof...(Tp)>& countList,
                      size_t alignment)
-    { 
+    {
         return 0;
     }
 
@@ -240,8 +240,8 @@ void DeviceMemory::AllocateMultiData(std::tuple<Args*&...> pointers, DeviceMemor
 {
     std::array<size_t, sizeof...(Args)> alignedSizeList;
     // Acquire total size & allocation size of each array
-    size_t totalSize = DeviceMemDetail::AcquireTotalSize<0, Args...>(alignedSizeList, 
-                                                                     countList, 
+    size_t totalSize = DeviceMemDetail::AcquireTotalSize<0, Args...>(alignedSizeList,
+                                                                     countList,
                                                                      alignment);
     // Allocate Memory
     DeviceMemory::EnlargeBuffer(memory, totalSize);

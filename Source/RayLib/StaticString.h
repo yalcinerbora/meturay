@@ -3,73 +3,67 @@
 
 From:
 https://akrzemi1.wordpress.com/2017/06/28/compile-time-string-concatenation/
-
-This is simpler version (without literal reference)
-however it copies literals which means extra redundant storage
+https://stackoverflow.com/questions/60593058/is-it-possible-to-concatenate-two-strings-of-type-const-char-at-compile-time
 
 */
 
 #include <cassert>
 #include <type_traits>
 
-template <int N>
-class static_string
+template<std::size_t N>
+class StaticString
 {
     private:
-        char    str[N + 1];
+        char state[N+1] = {0};
 
-    protected:
     public:
-        constexpr static_string(const char (&strIn)[N + 1])
+        // Constructors & Destructor
+        constexpr StaticString(const char(&arr)[N+1] )
         {
-            assert(strIn[N] == '\0');
-            for(int i = 0; i < N; ++i)
-                str[i] = strIn[i];
-            str[N] = '\0';
+            for (std::size_t i = 0; i < N; ++i)
+                state[i] = arr[i];
+        }
+        constexpr StaticString() = default;
+        constexpr StaticString(const StaticString&) = default;
+        constexpr StaticString& operator=(const StaticString&) = default;
+
+        constexpr char          operator[](std::size_t i) const { return state[i]; }
+        constexpr char&         operator[](std::size_t i) { return state[i]; }
+
+        constexpr explicit      operator const char*() const { return state; }
+        constexpr std::size_t   Size() const { return N; }
+        constexpr char const*   Begin() const { return state; }
+        constexpr char const*   End() const { return Begin() + Size(); }
+
+        template<std::size_t M>
+        friend constexpr StaticString<N+M> operator+(StaticString lhs,
+                                                     StaticString<M> rhs )
+        {
+            StaticString<N+M> retval;
+            for (std::size_t i = 0; i < N; ++i)
+                retval[i] = lhs[i];
+            for (std::size_t i = 0; i < M; ++i)
+                retval[N+i] = rhs[i];
+            return retval;
         }
 
-        template <int M>
-        constexpr static_string(const char(&s1)[M],
-                                const char(&s2)[N - M])
-
+        friend constexpr bool operator==(StaticString lhs, StaticString rhs )
         {
-            for(int i = 0; i < M; ++i)
-                str[i] = s1[i];
-
-            for(int i = 0; i < N - M; ++i)
-                str[M + i] = s2[i];
-
-            str[N] = '\0';
+            for (std::size_t i = 0; i < N; ++i)
+                if (lhs[i] != rhs[i]) return false;
+            return true;
         }
-
-        constexpr char operator[](int i) const
+        friend constexpr bool operator!=(StaticString lhs, StaticString rhs )
         {
-            assert(i >= 0 && i < N);
-            return  str[i];
+            for (std::size_t i = 0; i < N; ++i)
+                if (lhs[i] != rhs[i]) return true;
+            return false;
         }
-
-        constexpr std::size_t size() const
-        {
-            return N;
-        }
-
-        constexpr const char* Str() const
-        {
-            return str;
-        }
+        template<std::size_t M, std::enable_if_t< M!=N, bool > = true>
+        friend constexpr bool       operator!=(StaticString lhs, StaticString<M> rhs ) { return true; }
+        template<std::size_t M, std::enable_if_t< M!=N, bool > = true>
+        friend constexpr bool       operator==(StaticString, StaticString<M> ) { return false; }
 };
 
-template <int N1, int N2>
-constexpr static_string<N1 + N2> operator+(const static_string<N1>& s1,
-                                           const static_string<N2>& s2)
-{
-    return static_string<N1 + N2>(s1, s2);
-}
-
-// Deduction guides for literal
-template <int N>
-static_string(const char(&)[N]) -> static_string<N - 1>;
-
-template <int N, int M>
-static_string(const char(&)[M],
-              const char(&)[N - M]) -> static_string<N>;
+template<std::size_t N>
+StaticString( char const(&)[N] )->StaticString<N-1>;

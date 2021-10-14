@@ -3,6 +3,7 @@
 #include "GPULightP.cuh"
 #include "GPUTransformI.h"
 #include "TypeTraits.h"
+#include "MangledNames.h"
 
 class GPULightPoint final : public GPULightP
 {
@@ -48,7 +49,7 @@ class GPULightPoint final : public GPULightP
 class CPULightGroupPoint final : public CPULightGroupP<GPULightPoint>
 {
     public:
-        static constexpr const char*    TypeName(){return "Point"; }
+        TYPENAME_DEF(LightGroup, "Point");
 
         static constexpr const char*    POSITION_NAME = "position";
 

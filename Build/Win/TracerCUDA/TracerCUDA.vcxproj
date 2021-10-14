@@ -32,6 +32,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorCommonKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUBitmap.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraPinhole.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightNull.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightSamplerUniform.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightDisk.cuh" />
@@ -288,7 +289,7 @@
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <MaxRegCount>
       </MaxRegCount>
-      <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 -std=c++17 %(AdditionalOptions)</AdditionalOptions>
       <FastMath>false</FastMath>
       <KeepDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\$(ProjectName)\Cuda</KeepDir>
     </CudaCompile>
@@ -325,7 +326,7 @@
       <PtxAsOptionV>false</PtxAsOptionV>
       <HostDebugInfo>true</HostDebugInfo>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
-      <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Xcompiler /wd4984 -Xcompiler /wd4506 -std=c++17 %(AdditionalOptions)</AdditionalOptions>
       <FastMath>false</FastMath>
       <KeepDir>$(SolutionDir)..\..\Bin\Win\$(Configuration)\$(ProjectName)\Cuda</KeepDir>
     </CudaCompile>

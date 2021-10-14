@@ -4,6 +4,7 @@
 #include "GPUTransformI.h"
 #include "RayStructs.h"
 #include "Random.cuh"
+#include "MangledNames.h"
 
 #include "RayLib/HemiDistribution.h"
 #include "RayLib/MemoryAlignment.h"
@@ -66,7 +67,7 @@ template <class PGroup>
 class CPULightGroup final : public CPULightGroupP<GPULight<PGroup>, PGroup>
 {
     public:
-        static constexpr const char*    TypeName() { return PGroup::TypeName(); }
+        TYPENAME_DEF(LightGroup, PGroup::TypeName());
 
         using PData                     = typename PGroup::PrimitiveData;
         using Base                      = CPULightGroupP<GPULight<PGroup>, PGroup>;
@@ -77,6 +78,7 @@ class CPULightGroup final : public CPULightGroupP<GPULight<PGroup>, PGroup>
         const PData*                    dPData;
         // Temp Host Data
         std::vector<PrimitiveId>        hPrimitiveIds;
+        std::vector<HitKey>             hPackedWorkKeys;
 
     protected:
     public:
@@ -97,6 +99,7 @@ class CPULightGroup final : public CPULightGroupP<GPULight<PGroup>, PGroup>
         TracerError				    ConstructEndpoints(const GPUTransformI**,
                                                        const CudaSystem&) override;
 
+        const std::vector<HitKey>&  PackedHitKeys() const override;
         size_t					    UsedCPUMemory() const override;
 };
 
@@ -243,6 +246,12 @@ size_t CPULightGroup<PGroup>::UsedCPUMemory() const
     size_t totalSize = (Base::UsedCPUMemory() + hPrimitiveIds.size());
 
     return totalSize;
+}
+
+template <class PGroup>
+const std::vector<HitKey>& CPULightGroup<PGroup>::PackedHitKeys() const
+{
+    return hPackedWorkKeys;
 }
 
 #include "GPULightPrimitive.hpp"

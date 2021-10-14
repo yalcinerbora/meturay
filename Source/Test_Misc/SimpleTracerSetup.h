@@ -205,6 +205,8 @@ class SimpleTracerSetup
             {"DirectLightMIS", OptionVariable(false)},
             {"RussianRouletteStart", OptionVariable(5u)},
             {"NEESampler", OptionVariable("Uniform")},
+            // Direct Tracer Related
+            {"RenderType", OptionVariable("Furnace")},
             // AO Related
             {"MaxDistance", OptionVariable(0.17f)},
             // PPG Related
