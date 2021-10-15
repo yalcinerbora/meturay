@@ -77,13 +77,11 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const EndpointGroupDataList& l
                                       gpu, scenePath)) != SceneError::OK)
                 return err;
             constructionInfo.tex = static_cast<cudaTextureObject_t>(*tex);
-            texDataCount++;
         }
         else
         {
             constructionInfo.data = radianceNode.data;
             constructionInfo.tex = 0;
-            constDataCount++;
         }
 
         uint32_t texId = radianceNode.isTexture
@@ -110,6 +108,10 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const EndpointGroupDataList& l
             textureIdList.push_back(texId);
 
             innerIndex++;
+            if(radianceNode.isTexture)
+                texDataCount++;
+            else
+                constDataCount++;
 
             if(innerIndex >= (1 << HitKey::IdBits))
                 return SceneError::TOO_MANY_MATERIAL_IN_GROUP;
@@ -117,10 +119,11 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const EndpointGroupDataList& l
     }
     // Allocate data for texture references etc...
     DeviceMemory::AllocateMultiData(std::tie(dGPULights, dConstantRadiance,
-                                             dTextureRadiance, dRadiances),
+                                             dTextureRadiance, dRadiances,
+                                             dPData),
                                     gpuLightMemory,
                                     {lightCount, constDataCount,
-                                     texDataCount, lightCount});
+                                     texDataCount, lightCount, 1});
 
     return SceneError::OK;
 }
@@ -144,7 +147,6 @@ TracerError CPULightGroup<PGroup>::ConstructEndpoints(const GPUTransformI** dGlo
 
     // Generate Temp Memory for Light list GPU Construction
     DeviceMemory tempMemory;
-
     const PrimitiveId*  dPrimitiveIds;
     const TransformId*  dTransformIds;
     const uint16_t*     dMediumIndices;
@@ -174,6 +176,13 @@ TracerError CPULightGroup<PGroup>::ConstructEndpoints(const GPUTransformI** dGlo
     CUDA_CHECK(cudaMemcpy(const_cast<HitKey*>(dWorkKeys),
                           hWorkKeys.data(),
                           sizeof(HitKey) * lightCount,
+                          cudaMemcpyHostToDevice));
+
+    // Get the prim data struct to GPU
+    const PData hPData = PrimDataAccessor::Data(primGroup);
+    CUDA_CHECK(cudaMemcpy(const_cast<PData*>(dPData),
+                          hWorkKeys.data(),
+                          sizeof(PrimitiveData) * 1,
                           cudaMemcpyHostToDevice));
 
     // Call allocation kernel

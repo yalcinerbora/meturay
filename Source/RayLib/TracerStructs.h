@@ -42,6 +42,12 @@ using CPULightGPtr = SharedLibPtr<CPULightGroupI>;
 template <class T>
 using NamedList = std::map<std::string, T>;
 
+enum class EndpointType
+{
+    LIGHT,
+    CAMERA
+};
+
 // Kernel Mappings
 using AcceleratorBatchMap = std::map<uint32_t, GPUAcceleratorGroupI*>;
 using WorkBatchArray = std::vector<GPUWorkBatchI*>;
@@ -49,7 +55,7 @@ using WorkBatchMap = std::map<uint32_t, WorkBatchArray>;
 using WorkBatchCreationInfo = std::vector<std::tuple<uint32_t,
                                                      const GPUPrimitiveGroupI*,
                                                      const GPUMaterialGroupI*>>;
-using BoundaryWorkBatchCreationInfo = std::vector<std::pair<uint32_t, const CPUEndpointGroupI*>>;
+using BoundaryWorkBatchCreationInfo = std::vector<std::tuple<uint32_t, EndpointType, const CPUEndpointGroupI*>>;
 
 // Logic Independent parameters for tracer
 // Logic Dependent ones will be provided by TracerOptionsI

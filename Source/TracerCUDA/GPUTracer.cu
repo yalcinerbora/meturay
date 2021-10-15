@@ -193,6 +193,7 @@ GPUTracer::GPUTracer(const CudaSystem& system,
     , callbacks(nullptr)
     , crashed(false)
     , currentRayCount(0)
+    , currentCameraIndex(std::numeric_limits<uint32_t>::max())
 {}
 
 TracerError GPUTracer::Initialize()
@@ -614,13 +615,14 @@ const GPUCameraI* GPUTracer::GenerateCameraWithTransform(const VisorTransform& t
                                                          uint32_t cameraIndex)
 {
     // Copy the newly selected camera
-    if(cameraIndex != currentCamera)
+    if(cameraIndex != currentCameraIndex)
     {
         const std::string& camGroupName = cameraGroupNames[cameraIndex];
         const auto& camGroup = cameras.at(camGroupName);
         camGroup->CopyCamera(tempTransformedCam,
                              dCameras[cameraIndex],
                              cudaSystem);
+        currentCameraIndex = cameraIndex;
     }
 
     // Apply Transform

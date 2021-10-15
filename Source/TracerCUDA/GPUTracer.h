@@ -53,6 +53,8 @@ class GPUTracer : public GPUTracerI
         const NamedList<CPULightGPtr>&              lights;
         const NamedList<CPUCameraGPtr>&             cameras;
         const WorkBatchCreationInfo&                workInfo;
+        // Current camera index for copying the camera for transform
+        uint32_t                                    currentCameraIndex;
 
         // GPU Memory
         DeviceMemory                                tempTransformedCam;
@@ -83,8 +85,6 @@ class GPUTracer : public GPUTracerI
         // Camera Related Helper Types for fast access some data
         std::vector<VisorTransform>         cameraVisorTransforms;
         std::vector<std::string>            cameraGroupNames;
-        uint32_t                            currentCamera;
-
         // Indices for Identity Transform &
         // Base Medium
         const uint32_t                      baseMediumIndex;

@@ -2,6 +2,7 @@
 // Path Tracer Work Batches
 // ===================================================
 // Boundary
+template class PPGBoundaryWork<CPULightGroupNull>;
 template class PPGBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>;
 template class PPGBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>;
 template class PPGBoundaryWork<CPULightGroupSkySphere>;

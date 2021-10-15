@@ -126,8 +126,9 @@ void GenerateCameraRaysGPU(// Output
                            RayGMem* gRays,
                            RayAuxData* gAuxiliary,
                            ImageGMem<Vector4f> imgMem,
-                           // Input
+                           // I-O
                            RNGGMem gRNGStates,
+                           // Input
                            const GPUCameraI& gCamera,
                            const uint32_t samplePerLocation,
                            const Vector2i resolution,
@@ -195,8 +196,9 @@ void KCGenCameraRaysFromArrayGPU(// Output
                                  RayGMem* gRays,
                                  RayAuxData* gAuxiliary,
                                  ImageGMem<Vector4f> imgMem,
-                                 // Input
+                                 // I-O
                                  RNGGMem gRNGStates,
+                                 // Input
                                  const GPUCameraI** gCameras,
                                  const uint32_t sceneCamId,
                                  const uint32_t samplePerLocation,
@@ -237,8 +239,9 @@ void KCGenCameraRaysFromObjectGPU(// Output
                                   RayGMem* gRays,
                                   RayAuxData* gAuxiliary,
                                   ImageGMem<Vector4f> imgMem,
-                                  // Input
+                                  // I-O
                                   RNGGMem gRNGStates,
+                                  // Input
                                   const GPUCameraI& gCamera,
                                   const uint32_t samplePerLocation,
                                   const Vector2i resolution,

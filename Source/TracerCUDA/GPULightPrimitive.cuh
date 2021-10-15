@@ -74,7 +74,7 @@ class CPULightGroup final : public CPULightGroupP<GPULight<PGroup>, PGroup>
 
     private:
         const PGroup&                   primGroup;
-        // Copy of the PData on GPU Memory (only pointer tho)
+        // Copy of the PData on GPU Memory (it contains only pointers)
         const PData*                    dPData;
         // Temp Host Data
         std::vector<PrimitiveId>        hPrimitiveIds;

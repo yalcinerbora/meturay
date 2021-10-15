@@ -35,7 +35,7 @@ class MockNode
     , public NodeI
 {
     public:
-        static constexpr uint32_t       MAX_BOUNCES = 2;
+        static constexpr uint32_t       MAX_BOUNCES = 10;
         static constexpr int            SAMPLE_COUNT = 1;
 
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(1, 1);
@@ -201,7 +201,7 @@ class SimpleTracerSetup
             // Mixed
             {"Samples", OptionVariable(MockNode::SAMPLE_COUNT)},
             {"MaxDepth", OptionVariable(MockNode::MAX_BOUNCES)},
-            {"NextEventEstimation", OptionVariable(false)},
+            {"NextEventEstimation", OptionVariable(true)},
             {"DirectLightMIS", OptionVariable(false)},
             {"RussianRouletteStart", OptionVariable(5u)},
             {"NEESampler", OptionVariable("Uniform")},

@@ -15,7 +15,7 @@
 	}],
 
 	"Lights": [
-		// Black Background
+		// Blue Background
 		{ "id" : 0, "type" : "Null", "radiance": [0, 0, 1]}],
 
 	"Mediums": [{"id" : 0, "type" : "Vacuum"}],

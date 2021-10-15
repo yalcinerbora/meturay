@@ -95,7 +95,7 @@ void CudaGPU::WorkGroup::WaitAllStreams() const
     for(int i = 0; i < totalStreams; i++)
     {
         CUDA_CHECK(cudaEventSynchronize(events[i]));
-    }    
+    }
     // Dont forget to wait on main stream as well
     WaitMainStream();
 }

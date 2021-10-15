@@ -111,10 +111,9 @@ static void KCConstructLinear(// O
         HitKey matKey = mkList.materialKeys[pairIndex];
         if(doKeyExpansion)
         {
-            PrimitiveId expansion = primitiveId - accRange[0];
-            PrimitiveId expandedId = HitKey::FetchIdPortion(matKey) + expansion;
+            PrimitiveId expandedId = HitKey::FetchIdPortion(matKey) + localIndex;
             matKey = HitKey::CombinedKey(HitKey::FetchBatchPortion(matKey),
-                                      static_cast<HitKey::Type>(expandedId));
+                                         static_cast<HitKey::Type>(expandedId));
         }
         // Gen Leaf and write
         gAccLeafs[globalId] = PGroup::Leaf(matKey,

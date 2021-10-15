@@ -798,6 +798,8 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, HitKey>& accHit
         for(const auto& s : lightSurfaceList)
         {
             SurfaceDefinition surfaceDef;
+            surfaceDef.primIdWorkKeyPairs.fill(IdKeyPair{std::numeric_limits<uint32_t>::max(),
+                                                         HitKey::InvalidKey});
             const AccelGroupData::LSurfaceDef& lightSurface = s.second;
 
             uint32_t transformId = lightSurface.transformId;
@@ -812,7 +814,8 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, HitKey>& accHit
             surfaceDef.doKeyExpansion = true;
 
             // Find Boundary Material Key for this transform/prim
-            const auto matLookupKey = std::make_tuple(primTName, lightId, transformId);
+            std::string lightTName = MangledNames::LightGroup(primTName.c_str());
+            const auto matLookupKey = std::make_tuple(lightTName, lightId, transformId);
             HitKey workKey = boundaryWorkKeyList.at(matLookupKey);
             surfaceDef.primIdWorkKeyPairs[0] = IdKeyPair{primitiveId, workKey};
 
@@ -1032,7 +1035,7 @@ SceneError GPUSceneJson::GenerateCameras(BoundaryMaterialKeyListing& boundaryWor
         }
 
         maxMatIds = Vector2i::Max(maxMatIds, Vector2i(currentBatchCount, cg->MaxInnerId()));
-        boundaryWorkInfo.emplace_back(currentBatchCount, cg.get());
+        boundaryWorkInfo.emplace_back(currentBatchCount, EndpointType::CAMERA, cg.get());
         cameras.emplace(camTypeName, std::move(cg));
     }
 
@@ -1092,7 +1095,7 @@ SceneError GPUSceneJson::GenerateLights(BoundaryMaterialKeyListing& boundaryWork
             i++;
         }
 
-        boundaryWorkInfo.emplace_back(currentBatchCount, lg.get());
+        boundaryWorkInfo.emplace_back(currentBatchCount, EndpointType::LIGHT, lg.get());
 
         maxMatIds = Vector2i::Max(maxMatIds, Vector2i(currentBatchCount, lg->MaxInnerId()));
         lights.emplace(lightTypeName, std::move(lg));

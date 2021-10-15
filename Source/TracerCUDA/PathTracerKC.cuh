@@ -107,10 +107,19 @@ void PathTracerBoundaryWork(// Output
         Vector3 transFactor = m.Transmittance(ray.tMax);
         Vector3 radianceFactor = aux.radianceFactor * transFactor;
 
+        //printf("%p\n", &gLight);
+
         Vector3 emission = gLight.Emit(// Input
                                        -r.getDirection(),
                                        position,
                                        surface);
+
+        //if constexpr(!std::is_same_v<GPUType, GPULightNull>)
+        //{
+        //    printf("%p: %f, %f, %f\n", &gLight,
+        //           emission[0], emission[1], emission[2]);
+        //}
+
 
         // And accumulate pixel// and add as a sample
         Vector3f total =  emission * radianceFactor;

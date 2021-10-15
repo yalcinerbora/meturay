@@ -94,8 +94,7 @@ template <class T, uint32_t BatchBits, uint32_t IdBits>
 __device__ __host__
 constexpr T HitKeyT<T, BatchBits, IdBits>::CombinedKey(T batch, T id)
 {
-    return (static_cast<T>(batch) << IdBits) |
-           (static_cast<T>(id) & IdMask);
+    return (batch << IdBits) | (id & IdMask);
 }
 
 template <class T, uint32_t BatchBits, uint32_t IdBits>

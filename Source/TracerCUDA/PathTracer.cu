@@ -85,10 +85,14 @@ TracerError PathTracer::Initialize()
     const auto& boundaryInfoList = scene.BoundarWorkBatchInfo();
     for(const auto& wInfo : boundaryInfoList)
     {
-        WorkBatchArray workBatchList;
         uint32_t batchId = std::get<0>(wInfo);
-        const CPUEndpointGroupI& eg = *std::get<1>(wInfo);
+        EndpointType et = std::get<1>(wInfo);
+        const CPUEndpointGroupI& eg = *std::get<2>(wInfo);
 
+        // Skip the camera types
+        if(et == EndpointType::CAMERA) continue;
+
+        WorkBatchArray workBatchList;
         BoundaryWorkPool<bool, bool>& wp = boundaryWorkPool;
         GPUWorkBatchI* batch = nullptr;
         if((err = wp.GenerateWorkBatch(batch, eg,

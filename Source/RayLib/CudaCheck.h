@@ -8,6 +8,7 @@ Utility header for header only cuda vector and cpu vector implementations
 #include <cstdio>
 #include <cassert>
 #include "TracerError.h"
+#include "Log.h"
 
 #ifdef METU_CUDA
     #include <cuda.h>
@@ -17,7 +18,7 @@ Utility header for header only cuda vector and cpu vector implementations
     {
         if(code != cudaSuccess)
         {
-            fprintf(stderr, "Cuda Failure: %s %s %d\n", cudaGetErrorString(code), file, line);
+            METU_ERROR_LOG("Cuda Failure: {:s} {:s} {:d}", cudaGetErrorString(code), file, line);
             assert(false);
         }
     }
@@ -68,16 +69,14 @@ static inline void KERNEL_DEBUG_LOG(const char* const string, Args... args)
                 CUDA_CHECK(cudaGetLastError())
 #else
     constexpr bool METU_DEBUG_BOOL = false;
-    #define CUDA_CHECK(func) func
     #define CUDA_CHECK_ERROR(err)
-    #define CUDA_KERNEL_CHECK()
     #define CUDA_KERNEL_PRINTF()
-    //#define CUDA_KERNEL_CHECK() \
-    //        CUDA_CHECK(cudaGetLastError())
+    #define CUDA_CHECK(func) func
+    #define CUDA_KERNEL_CHECK()
     //#define CUDA_CHECK(func) GPUAssert((func), __FILE__, __LINE__)
     //#define CUDA_KERNEL_CHECK() \
-    //        CUDA_CHECK(cudaDeviceSynchronize()); \
-    //        CUDA_CHECK(cudaGetLastError())
+    //            CUDA_CHECK(cudaDeviceSynchronize()); \
+    //            CUDA_CHECK(cudaGetLastError())
     // TODO: Check this from time to time..
     // Ok after kernels i need to put get last error
     // in order to properly synchronize i did not understand this

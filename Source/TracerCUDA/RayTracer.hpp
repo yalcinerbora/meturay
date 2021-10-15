@@ -73,8 +73,9 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
             gRays,
             gAuxiliary,
             gImgData,
-            // Input
+            // I-O
             rngData,
+            // Input
             dCameras,
             cameraIndex,
             sampleCount,
@@ -171,8 +172,9 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
             gRays,
             gAuxiliary,
             gImgData,
-            // Input
+            // I-O
             rngData,
+            // Input
             dCamera,
             sampleCount,
             resolution,
@@ -204,7 +206,6 @@ void RayTracer::GenerateRays(const VisorTransform& t, uint32_t cameraIndex,
                              bool antiAliasOn)
 {
     const GPUCameraI* dCamera = GenerateCameraWithTransform(t, cameraIndex);
-
     GenerateRays<AuxStruct, AuxInitFunctor>(*dCamera,
                                             sampleCount,
                                             initFunctor,

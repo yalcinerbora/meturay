@@ -59,8 +59,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUEndpointI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUEvent.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightI.h" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\BoundaryMaterials.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\BoundaryMaterialsKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMediumHomogenous.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUWorkI.h" />
@@ -177,7 +175,6 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightRectangular.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightSkySphere.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightSpot.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\BoundaryMaterials.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUMediumHomogenous.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\ImageMemory.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\LambertMaterial.cu" />

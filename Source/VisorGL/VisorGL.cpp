@@ -83,21 +83,10 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             // Just clear the sample count to zero
             const GLuint clearDataInt = 0;
             const Vector4f clearDataFloat = Vector4f(0.0f);
-            glBindTexture(GL_TEXTURE_2D, sampleCountTexture);
             glClearTexSubImage(sampleCountTexture, 0,
                                c.start[0], c.start[1], 0,
                                inSize[0], inSize[1], 1,
                                GL_RED_INTEGER, GL_UNSIGNED_INT, &clearDataInt);
-            glClearTexSubImage(outputTextures[0], 0,
-                               c.start[0], c.start[1], 0,
-                               inSize[0], inSize[1], 1,
-                               PixelFormatToGL(c.format),
-                               GL_FLOAT, &clearDataFloat);
-            glClearTexSubImage(outputTextures[1], 0,
-                               c.start[0], c.start[1], 0,
-                               inSize[0], inSize[1], 1,
-                               PixelFormatToGL(c.format),
-                               GL_FLOAT, &clearDataFloat);
             break;
         }
         case VisorGLCommand::SET_PORTION:

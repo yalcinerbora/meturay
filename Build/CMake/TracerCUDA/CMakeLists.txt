@@ -111,9 +111,6 @@ set(SRC_LIGHT_SAMPLERS
     ${CURRENT_SOURCE_DIR}/GPULightSamplerUniform.cuh)
 
 set(SRC_MATERIALS
-    ${CURRENT_SOURCE_DIR}/BoundaryMaterials.cu
-    ${CURRENT_SOURCE_DIR}/BoundaryMaterials.cuh
-    ${CURRENT_SOURCE_DIR}/BoundaryMaterialsKC.cuh
     ${CURRENT_SOURCE_DIR}/DebugMaterials.cu
     ${CURRENT_SOURCE_DIR}/DebugMaterials.cuh
     ${CURRENT_SOURCE_DIR}/DebugMaterialsKC.cuh

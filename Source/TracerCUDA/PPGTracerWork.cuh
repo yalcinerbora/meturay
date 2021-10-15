@@ -6,7 +6,6 @@
 #include "UnrealMaterial.cuh"
 #include "LambertMaterial.cuh"
 #include "EmptyMaterial.cuh"
-#include "BoundaryMaterials.cuh"
 // Primitives
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveSphere.h"
@@ -19,6 +18,7 @@
 #include "GPULightSpot.cuh"
 #include "GPULightDisk.cuh"
 #include "GPULightRectangular.cuh"
+#include "GPULightNull.cuh"
 // Misc
 #include "PPGTracerKC.cuh"
 #include "WorkPool.h"
@@ -161,7 +161,8 @@ extern template class PPGWork<LambertMat, GPUPrimitiveSphere>;
 extern template class PPGWork<UnrealMat, GPUPrimitiveTriangle>;
 extern template class PPGWork<UnrealMat, GPUPrimitiveSphere>;
 // ===================================================
-using PPGBoundaryWorkerList = TypeList<PPGBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>,
+using PPGBoundaryWorkerList = TypeList<PPGBoundaryWork<CPULightGroupNull>,
+                                       PPGBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>,
                                        PPGBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>,
                                        PPGBoundaryWork<CPULightGroupSkySphere>,
                                        PPGBoundaryWork<CPULightGroupPoint>,

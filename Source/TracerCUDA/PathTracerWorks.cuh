@@ -6,7 +6,6 @@
 #include "UnrealMaterial.cuh"
 #include "LambertMaterial.cuh"
 #include "EmptyMaterial.cuh"
-#include "BoundaryMaterials.cuh"
 // Primitives
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveSphere.h"
@@ -19,7 +18,7 @@
 #include "GPULightSpot.cuh"
 #include "GPULightDisk.cuh"
 #include "GPULightRectangular.cuh"
-
+#include "GPULightNull.cuh"
 // Misc
 #include "PathTracerKC.cuh"
 #include "WorkPool.h"
@@ -137,6 +136,7 @@ uint8_t PTPathWork<M, P>::OutRayCount() const
 // Path Tracer Work Batches
 // ===================================================
 // Boundary
+extern template class PTBoundaryWork<CPULightGroupNull>;
 extern template class PTBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>;
 extern template class PTBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>;
 extern template class PTBoundaryWork<CPULightGroupSkySphere>;
@@ -162,7 +162,8 @@ extern template class PTPathWork<LambertMat, GPUPrimitiveSphere>;
 extern template class PTPathWork<UnrealMat, GPUPrimitiveTriangle>;
 extern template class PTPathWork<UnrealMat, GPUPrimitiveSphere>;
 // ===================================================
-using PTBoundaryWorkerList = TypeList<PTBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>,
+using PTBoundaryWorkerList = TypeList<PTBoundaryWork<CPULightGroupNull>,
+                                      PTBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>,
                                       PTBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>,
                                       PTBoundaryWork<CPULightGroupSkySphere>,
                                       PTBoundaryWork<CPULightGroupPoint>,

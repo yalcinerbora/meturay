@@ -3,6 +3,7 @@
 // Ref PG Tracer Work Batches
 // ===================================================
 // Boundary
+template class RPGBoundaryWork<CPULightGroupNull>;
 template class RPGBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>;
 template class RPGBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>;
 template class RPGBoundaryWork<CPULightGroupSkySphere>;

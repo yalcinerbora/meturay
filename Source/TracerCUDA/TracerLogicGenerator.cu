@@ -15,7 +15,6 @@
 #include "GPUTransformSingle.cuh"
 #include "GPUTransformIdentity.cuh"
 // Materials
-#include "BoundaryMaterials.cuh"
 #include "DebugMaterials.cuh"
 #include "SimpleMaterials.cuh"
 #include "LambertMaterial.cuh"

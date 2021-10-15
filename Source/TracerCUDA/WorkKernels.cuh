@@ -181,7 +181,7 @@ void KCBoundaryWork(// Output
                     // Constants
                     const uint32_t rayCount,
                     const typename EGroup::GPUType* gEndpoints,
-                    const typename EGroup::PrimitiveData primData,            
+                    const typename EGroup::PrimitiveData primData,
                     const GPUTransformI* const* gTransforms)
 {
     // Fetch Types from Template Classes

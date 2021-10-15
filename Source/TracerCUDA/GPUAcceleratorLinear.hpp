@@ -75,8 +75,6 @@ SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
     assert(keyExpandOption.size() == idLookup.size());
     assert(surfaceInnerId == hTransformIndices.size());
 
-
-
     uint32_t bvhCount = surfaceInnerId;
     // Allocate memory
     // Finally Allocate and load to GPU memory
