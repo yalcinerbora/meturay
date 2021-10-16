@@ -20,7 +20,7 @@
 
     "Lights": [
 		// Black Background
-		{ "id" : 0, "type" : "Null", "radiance": [0, 0, 0]}],
+		{ "id" : 0, "type" : "Null"}],
 
 	"Materials":[
 	{

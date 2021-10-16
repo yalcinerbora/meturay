@@ -11,6 +11,7 @@
 
 #include "GPUPrimitiveP.cuh"
 #include "CudaSystem.hpp"
+#include "GPUSurface.h"
 
 // Meta Primitive Related Light
 template <class PGroup>
@@ -23,14 +24,15 @@ class GPULight final : public GPULightP
         const PData&        gPData;
         PrimitiveId         primId;
 
-        static constexpr auto PrimSamplePos    = PGroup::SamplePosition;
-        static constexpr auto PrimPdfPos       = PGroup::PdfPosition;
+        static constexpr auto PrimSamplePos     = PGroup::SamplePosition;
+        static constexpr auto PrimPosPdfRef     = PGroup::PositionPdfRef;
+        static constexpr auto PrimPosPdfHit     = PGroup::PositionPdfHit;
 
     protected:
     public:
         // Constructors & Destructor
         __device__              GPULight(// Common Data
-                                         const PData& pData,
+                                         const PData& gPData,
                                          PrimitiveId,
                                          // Base Class Related
                                          const TextureRefI<2, Vector3f>& gRad,
@@ -59,8 +61,13 @@ class GPULight final : public GPULightP
 
         __device__ float        Pdf(const Vector3& direction,
                                     const Vector3& position) const override;
+        __device__ float        Pdf(float distance,
+                                    const Vector3& hitPosition,
+                                    const Vector3& direction,
+                                    const QuatF& tbnRotation) const override;
 
         __device__ bool         CanBeSampled() const override;
+        __device__ bool         IsPrimitiveBackedLight() const override;
 };
 
 template <class PGroup>
@@ -69,13 +76,13 @@ class CPULightGroup final : public CPULightGroupP<GPULight<PGroup>, PGroup>
     public:
         TYPENAME_DEF(LightGroup, PGroup::TypeName());
 
-        using PData                     = typename PGroup::PrimitiveData;
         using Base                      = CPULightGroupP<GPULight<PGroup>, PGroup>;
+        using PrimitiveData             = typename Base::PrimitiveData;
 
     private:
         const PGroup&                   primGroup;
         // Copy of the PData on GPU Memory (it contains only pointers)
-        const PData*                    dPData;
+        const PrimitiveData*            dPData;
         // Temp Host Data
         std::vector<PrimitiveId>        hPrimitiveIds;
         std::vector<HitKey>             hPackedWorkKeys;
@@ -105,7 +112,7 @@ class CPULightGroup final : public CPULightGroupP<GPULight<PGroup>, PGroup>
 
 template <class PGroup>
 __device__ GPULight<PGroup>::GPULight(// Common Data
-                                      const PData& pData,
+                                      const PData& gPData,
                                       PrimitiveId pId,
                                       // Base Class Related
                                       const TextureRefI<2, Vector3f>& gRad,
@@ -193,18 +200,18 @@ __device__ float GPULight<PGroup>::Pdf(const Vector3& direction,
     // First check if we are actually intersecting
     float distance, pdf;
     Vector3 normal;
-    PrimPdfPos(normal,
-               pdf,
-               distance,
-               //
-               position,
-               direction,
-               gTransform,
-               primId,
-               gPData);
+    PrimPosPdfRef(normal,
+                  pdf,
+                  distance,
+                  //
+                  RayF(direction, position),
+                  gTransform,
+                  primId,
+                  gPData);
 
-    if(isnan(pdf))
-        printf("primPDF NAN\n");
+    return pdf;
+
+    if(isnan(pdf)) printf("primPDF NAN\n");
 
     if(pdf != 0.0f)
     {
@@ -212,8 +219,7 @@ __device__ float GPULight<PGroup>::Pdf(const Vector3& direction,
         float nDotL = abs(normal.Dot(-direction));
         pdf *= distanceSqr / nDotL;
 
-        if(isnan(pdf))
-            printf("2     primPDF NAN\n");
+        if(isnan(pdf)) printf("2     primPDF NAN\n");
 
         return pdf;
     }
@@ -221,7 +227,26 @@ __device__ float GPULight<PGroup>::Pdf(const Vector3& direction,
 }
 
 template <class PGroup>
+__device__ float GPULight<PGroup>::Pdf(float distance,
+                                       const Vector3& hitPosition,
+                                       const Vector3& direction,
+                                       const QuatF& tbnRotation) const
+{
+    float pdf = PrimPosPdfHit(hitPosition, direction,
+                              tbnRotation, primId, gPData);
+    Vector3f normal = GPUSurface::NormalWorld(tbnRotation);
+    float nDotL = abs(normal.Dot(-direction));
+    return pdf * distance * distance / nDotL;
+}
+
+template <class PGroup>
 __device__ bool GPULight<PGroup>::CanBeSampled() const
+{
+    return true;
+}
+
+template <class PGroup>
+__device__ bool GPULight<PGroup>::IsPrimitiveBackedLight() const
 {
     return true;
 }

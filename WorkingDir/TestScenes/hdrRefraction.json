@@ -24,7 +24,7 @@
 	{
 		"id": 0,
 		"type": "SkySphere",
-		"isHemispherical": false
+		"radiance" : {"texture": 0, "channels": "rgb"}
 	}],
 
 	"Mediums": [
@@ -45,12 +45,6 @@
 	"Transforms":[{"id": 0, "type": "Identity"}],
 
 	"Materials":[
-    {
-		// Light Boundary Material
-		"id": 0,
-		"type": "BSkySphere",
-		"radiance" : {"texture": 0, "channels": "rgb"}
-    },
     {
 		// Perfect Mirror
 		"id": 1,
@@ -86,7 +80,7 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "Linear"},
-    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryLight": 0,
     "BaseMedium" : 0,
 
 	"Surfaces": [
@@ -103,9 +97,7 @@
 		"primitive": 1
 	}],
 
-	"LightSurfaces": [
-		{"light": 0, "material": 0}
-	],
+	"LightSurfaces": [],
 
     "CameraSurfaces": [{"camera": 0}]
 }

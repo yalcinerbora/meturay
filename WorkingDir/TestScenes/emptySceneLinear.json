@@ -16,7 +16,7 @@
 
 	"Lights": [
 		// Red Background
-		{ "id" : 0, "type" : "Null", "radiance": [1, 0, 0]}],
+		{ "id" : 0, "type" : "Constant", "radiance": [1, 0, 0]}],
 
 	"Mediums": [{"id" : 0, "type" : "Vacuum"}],
 	"Transforms":[{"id": 0, "type": "Identity"}],

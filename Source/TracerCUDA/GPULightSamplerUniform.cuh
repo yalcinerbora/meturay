@@ -53,6 +53,21 @@ class GPULightSamplerUniform : public GPUDirectLightSamplerI
                                // (direction is towards the light)
                                const Vector3& position,
                                const Vector3& direction) const override;
+
+        __device__
+        void               Pdf(// Outputs
+                               // pdf of selecting this light
+                               float& marginal,
+                               // Selected Lights' pdf
+                               float& conditional,
+                               // Inputs
+                               uint32_t lightIndex,
+                               // From this hit location parameters
+                               // direction calculate the pdf
+                               float distance,
+                               const Vector3& hitPosition,
+                               const Vector3& direction,
+                               const QuatF& tbnRotation) const override;
 };
 
 __device__
@@ -107,8 +122,11 @@ inline bool GPULightSamplerUniform::SampleLight(// Outputs
 
     // Return infinite (or very large distance) for
     // primitive lights since those have to hit in order to function properly
-    // with the light materials
-    lDistance += MathConstants::Epsilon;
+    // For rest slightly nudge the distance for preventing
+    // numerical unstability
+    lDistance = (light->IsPrimitiveBackedLight())
+                    ? FLT_MAX
+                    : (lDistance + MathConstants::Epsilon);
     return true;
 }
 
@@ -140,6 +158,39 @@ inline void GPULightSamplerUniform::Pdf(// Outputs
 
     // Probability of sampling such direction from the particular light
     float pdfLight = gLights[lightIndex]->Pdf(direction, position);
+
+    marginal = pdf;
+    conditional = pdfLight;
+}
+
+__device__
+inline void GPULightSamplerUniform::Pdf(// Outputs
+                                        // pdf of selecting this light
+                                        float& marginal,
+                                        // Selected Lights' pdf
+                                        float& conditional,
+                                        // Inputs
+                                        uint32_t lightIndex,
+                                        // From this hit location parameters
+                                        // direction calculate the pdf
+                                        float distance,
+                                        const Vector3& hitPosition,
+                                        const Vector3& direction,
+                                        const QuatF& tbnRotation) const
+{
+    if(lightIndex >= lightCount)
+    {
+        marginal = 0.0f;
+        conditional = 0.0f;
+        return;
+    }
+
+    // Discrete sampling of such light (its uniform)
+    float pdf = 1.0f / static_cast<float>(lightCount);
+
+    // Pdf of light when it is hit from this location
+    float pdfLight = gLights[lightIndex]->Pdf(distance, hitPosition,
+                                              direction, tbnRotation);
     // Probabilities are conditional thus multiply
     marginal = pdf;
     conditional = pdfLight;

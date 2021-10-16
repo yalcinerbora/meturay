@@ -225,9 +225,10 @@ namespace DeviceMemDetail
     {
         using CurrentType = typename std::tuple_element_t<I, std::tuple<Tp...>>;
         // Set Pointer
-        std::get<I>(t) = reinterpret_cast<CurrentType*>(memory + offset);
+        size_t size = alignedSizeList[I];
+        std::get<I>(t) = (size == 0) ? nullptr : reinterpret_cast<CurrentType*>(memory + offset);
         // Increment Offset
-        offset += alignedSizeList[I];
+        offset += size;
         // Statically Recurse
         CalculatePointers<I + 1, Tp...>(t, offset, memory, alignedSizeList);
     }

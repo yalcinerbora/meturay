@@ -48,7 +48,6 @@ class PPGBoundaryWork
                                         ~PPGBoundaryWork() = default;
 
         void                            GetReady() override {}
-        uint8_t                         OutRayCount() const override { return 0; }
 
         const char*                     Type() const override { return Base::TypeName(); }
 };

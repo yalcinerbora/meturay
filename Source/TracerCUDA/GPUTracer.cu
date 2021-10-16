@@ -599,6 +599,7 @@ void GPUTracer::WorkRays(const WorkBatchMap& workMap,
     //METU_LOG("After Sync");
 
     //Debug::DumpMemToFile("workKeyOut", rayMemory.WorkKeys(), totalRayOut);
+    //Debug::DumpMemToFile("dPrimIdsUNsorted", dPrimitiveIds, totalRayOut);
 
     // Shading complete
     // Now make "RayOut" to "RayIn"

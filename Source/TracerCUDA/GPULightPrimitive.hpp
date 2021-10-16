@@ -7,7 +7,7 @@ __global__ void KCConstructGPULight(GPULight<PGroup>* gLightLocations,
                                     const HitKey* gWorkKeys,
                                     const TransformId* gTransformIds,
                                     //
-                                    const typename PGroup::PrimitiveData& pData,
+                                    const typename PGroup::PrimitiveData& gPData,
                                     const GPUTransformI** gTransforms,
                                     uint32_t lightCount)
 {
@@ -16,7 +16,7 @@ __global__ void KCConstructGPULight(GPULight<PGroup>* gLightLocations,
         globalId += blockDim.x * gridDim.x)
     {
         TransformId tId = gTransformIds[globalId];
-        new (gLightLocations + globalId) GPULight<PGroup>(pData,
+        new (gLightLocations + globalId) GPULight<PGroup>(gPData,
                                                           gPrimitiveIds[globalId],
                                                           // Base Class
                                                           *gRads[globalId],
@@ -179,10 +179,10 @@ TracerError CPULightGroup<PGroup>::ConstructEndpoints(const GPUTransformI** dGlo
                           cudaMemcpyHostToDevice));
 
     // Get the prim data struct to GPU
-    const PData hPData = PrimDataAccessor::Data(primGroup);
-    CUDA_CHECK(cudaMemcpy(const_cast<PData*>(dPData),
-                          hWorkKeys.data(),
-                          sizeof(PrimitiveData) * 1,
+    const PrimitiveData hPData = PrimDataAccessor::Data(primGroup);
+    CUDA_CHECK(cudaMemcpy(const_cast<PrimitiveData*>(dPData),
+                          &hPData,
+                          sizeof(PrimitiveData),
                           cudaMemcpyHostToDevice));
 
     // Call allocation kernel

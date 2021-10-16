@@ -14,7 +14,17 @@
 		"up": [0.0, 1.0, 0.0]
 	}],
 
-	"Lights": [],
+	"Lights": [
+		// Black Background
+		{ "id" : 0, "type" : "Null"},
+		{
+			// Primitive Light
+			"id" : 1, "type" : "Primitive",
+		  	"primitive": 2,
+		  	"accelerator": 1,
+		  	"radiance": [12, 12, 12]
+		}
+	],
 
 	"Mediums": [
 	{
@@ -33,20 +43,6 @@
 	"Transforms":[{"id": 0, "type": "Identity"}],
 
 	"Materials":[
-	{
-		// General Boundary Material
-		"id": 0,
-        "type": "BConstant",
-		"radiance" : [0, 0, 0]
-		//"radiance" : [1, 1, 1]
-
-    },
-    {
-		// Light Boundary Material
-		"id": 1,
-		"type": "BConstant",
-		"radiance" : [12, 12, 12]
-    },
 	{
 		// Green Diffuse Mat
 		"id": 2,
@@ -101,7 +97,7 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "Linear"},
-    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryLight": 0,
     "BaseMedium" : 0,
 
 	"Surfaces": [
@@ -120,9 +116,7 @@
         "primitive": 1
 	}],
 
-	"LightSurfaces": [
-		{"primitive": 2, "material": 1, "accelerator": 1}
-	],
+	"LightSurfaces": [{"light": 1}],
 
     "CameraSurfaces": [{"camera": 0}]
 }

@@ -77,22 +77,22 @@ struct SphrFunctions
     }
 
     __device__ __forceinline__
-    static void PdfPosition(// Outputs
-                            Vector3f& normal,
-                            float& pdf,
-                            float& distance,
-                            // Inputs
-                            const Vector3f& position,
-                            const Vector3f& direction,
-                            const GPUTransformI& transform,
-                            const PrimitiveId primitiveId,
-                            const SphereData& primData)
+    static void PositionPdfFromReference(// Outputs
+                                         Vector3f& normal,
+                                         float& pdf,
+                                         float& distance,
+                                         // Inputs
+                                         const RayF& ray,
+                                         const GPUTransformI& transform,
+                                         //
+                                         const PrimitiveId primitiveId,
+                                         const SphereData& primData)
     {
         Vector4f data = primData.centerRadius[primitiveId];
         Vector3f center = data;
         float radius = data[3];
 
-        RayF r(direction, position);
+        RayF r = ray;
         r = transform.WorldToLocal(r);
 
         Vector3 sphrPos;
@@ -100,12 +100,24 @@ struct SphrFunctions
                                              center, radius);
 
         sphrPos = transform.LocalToWorld(sphrPos);
-        normal = (position - sphrPos).Normalize();
+        normal = (ray.getPosition() - sphrPos).Normalize();
 
         // Return non zero if it intersected
         if(intersects)
             pdf = 1.0f / SphrFunctions::Area(primitiveId, primData);
         else pdf = 0.0f;
+    }
+
+    __device__ __forceinline__
+    static float PositionPdfFromHit(// Inputs
+                                    const Vector3f& hitPosition,
+                                    const Vector3f& hitDirection,
+                                    const QuatF& tbnRotation,
+                                    //
+                                    const PrimitiveId primitiveId,
+                                    const SphereData& primData)
+    {
+        return 1.0f / SphrFunctions::Area(primitiveId, primData);
     }
 
     // Sphere Hit Acceptance
@@ -267,7 +279,7 @@ struct SphereSurfaceGenerator
 
 class GPUPrimitiveSphere final
     : public GPUPrimitiveGroup<SphereHit, SphereData, DefaultLeaf,
-                               SphereSurfaceGenerator, 
+                               SphereSurfaceGenerator,
                                SphrFunctions>
 {
     public:

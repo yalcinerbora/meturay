@@ -52,6 +52,10 @@ class GPUCameraPinhole final : public GPUCameraI
                                         bool antiAliasOn) const override;
         __device__ float    Pdf(const Vector3& direction,
                                 const Vector3& position) const override;
+        __device__ float    Pdf(float distance,
+                                const Vector3& hitPosition,
+                                const Vector3& direction,
+                                const QuatF& tbnRotation) const override;
 
 
         __device__ uint32_t         FindPixelId(const RayReg& r,
@@ -211,6 +215,15 @@ inline void GPUCameraPinhole::GenerateRay(// Output
 __device__
 inline float GPUCameraPinhole::Pdf(const Vector3& worldDir,
                                    const Vector3& worldPos) const
+{
+    return 0.0f;
+}
+
+__device__
+inline float GPUCameraPinhole::Pdf(float distance,
+                               const Vector3& hitPosition,
+                               const Vector3& direction,
+                               const QuatF& tbnRotation) const
 {
     return 0.0f;
 }

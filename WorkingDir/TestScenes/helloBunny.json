@@ -16,11 +16,11 @@
 
 	"Lights": [
 		// Black Background
-		{ "id" : 0, "type" : "Null", "radiance": [0, 0, 0]},		
-		{ 
+		{ "id" : 0, "type" : "Null"},
+		{
 			// Primitive Light
-			"id" : 1, "type" : "Primitive", 
-		  	"primitive": 2, 
+			"id" : 1, "type" : "Primitive",
+		  	"primitive": 2,
 		  	"accelerator": 1,
 		  	"radiance": [12, 12, 12]
 		}
@@ -97,7 +97,7 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "Linear"},
-    "BaseBoundaryLight": 1,
+    "BaseBoundaryLight": 0,
     "BaseMedium" : 0,
 
 	"Surfaces": [

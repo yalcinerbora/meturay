@@ -117,9 +117,12 @@ class GPUPrimitiveGroup
         static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::SamplePosition),
                                      SamplePosFunction<PrimitiveD>>,
                       "PrimDeviceFunctions Class Member 'SamplePosition' does not have correct signature");
-        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::PdfPosition),
-                                     PDFPosFunction<PrimitiveD>>,
-                      "PrimDeviceFunctions Class Member 'PdfPosition' does not have correct signature");
+        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::PositionPdfFromReference),
+                                     PDFPosRefFunction<PrimitiveD>>,
+                      "PrimDeviceFunctions Class Member 'PositionPDFFromReference' does not have correct signature");
+        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::PositionPdfFromHit),
+                                     PDFPosHitFunction<PrimitiveD>>,
+                      "PrimDeviceFunctions Class Member 'PositionPDFFromHit' does not have correct signature");
 
         // Function Definitions
         // Used by accelerator definitions etc.
@@ -129,7 +132,8 @@ class GPUPrimitiveGroup
         static constexpr auto Area              = PrimDeviceFunctions::Area;
         static constexpr auto Center            = PrimDeviceFunctions::Center;
         static constexpr auto SamplePosition    = PrimDeviceFunctions::SamplePosition;
-        static constexpr auto PdfPosition       = PrimDeviceFunctions::PdfPosition;
+        static constexpr auto PositionPdfRef    = PrimDeviceFunctions::PositionPdfFromReference;
+        static constexpr auto PositionPdfHit    = PrimDeviceFunctions::PositionPdfFromHit;
 
     private:
     protected:

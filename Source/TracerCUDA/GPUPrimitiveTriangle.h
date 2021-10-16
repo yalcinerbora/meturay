@@ -105,16 +105,16 @@ struct TriFunctions
     }
 
     __device__ __forceinline__
-    static void PdfPosition(// Outputs
-                            Vector3f& normal,
-                            float& pdf,
-                            float& distance,
-                            // Inputs
-                            const Vector3f& position,
-                            const Vector3f& direction,
-                            const GPUTransformI& transform,
-                            const PrimitiveId primitiveId,
-                            const TriData& primData)
+    static void PositionPdfFromReference(// Outputs
+                                         Vector3f& normal,
+                                         float& pdf,
+                                         float& distance,
+                                         // Inputs
+                                         const RayF& ray,
+                                         const GPUTransformI& transform,
+                                         //
+                                         const PrimitiveId primitiveId,
+                                         const TriData& primData)
     {
         // Find the primitive
         float index;
@@ -133,7 +133,7 @@ struct TriFunctions
         Vector3 position1 = primData.positions[index1];
         Vector3 position2 = primData.positions[index2];
 
-        RayF r(direction, position);
+        RayF r = ray;
         r = transform.WorldToLocal(r);
 
         Vector3 baryCoords;
@@ -156,30 +156,43 @@ struct TriFunctions
 
             bool opaque = (*alphaMap)(uv);
             intersects &= opaque;
+        }
 
-            if(opaque)
-            {
-                QuatF q0 = primData.tbnRotations[index0].Normalize();
-                QuatF q1 = primData.tbnRotations[index1].Normalize();
-                QuatF q2 = primData.tbnRotations[index2].Normalize();
-                QuatF tbn = Quat::BarySLerp(q0, q1, q2,
-                                            baryCoords[0],
-                                            baryCoords[1]);
-                // Tangent Space to Local Space Transform
-                Vector3 Z_AXIS = ZAxis;
-                normal = tbn.Conjugate().ApplyRotation(Z_AXIS);
-                // Local Space to World Space Transform
-                normal = transform.LocalToWorld(normal);
-            }
+        if(intersects)
+        {
+            QuatF q0 = primData.tbnRotations[index0].Normalize();
+            QuatF q1 = primData.tbnRotations[index1].Normalize();
+            QuatF q2 = primData.tbnRotations[index2].Normalize();
+            QuatF tbn = Quat::BarySLerp(q0, q1, q2,
+                                        baryCoords[0],
+                                        baryCoords[1]);
+            // Tangent Space to Local Space Transform
+            Vector3 Z_AXIS = ZAxis;
+            normal = tbn.Conjugate().ApplyRotation(Z_AXIS);
+            // Local Space to World Space Transform
+            normal = transform.LocalToWorld(normal);
         }
 
         // TODO: THIS IS WRONG?
         // Since alpha map can cull particular positions of the primitive
         // pdf is not uniform (thus it is not 1/Area)
         // fix it later since it is not common to lights having alpha mapped primitive
+
         if(intersects)
             pdf = 1.0f / TriFunctions::Area(primitiveId, primData);
         else pdf = 0.0f;
+    }
+
+    __device__ __forceinline__
+    static float PositionPdfFromHit(// Inputs
+                                    const Vector3f& hitPosition,
+                                    const Vector3f& hitDirection,
+                                    const QuatF& tbnRotation,
+                                    //
+                                    const PrimitiveId primitiveId,
+                                    const TriData& primData)
+    {
+        return 1.0f / TriFunctions::Area(primitiveId, primData);
     }
 
     // Triangle Hit Acceptance

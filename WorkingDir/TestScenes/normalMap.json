@@ -19,9 +19,17 @@
 		"id": 0,
 		"signed": true,
 		"file": "../Textures/normal_test_4k-2.png"
+	},
+	{
+		"id": 1,
+		"file": "../Textures/hdr_test.hdr"
 	}],
 
-	"Lights": [],
+	"Lights": [{
+		"id": 0,
+		"type": "SkySphere",
+		"radiance" : {"texture": 1, "channels": "rgb"}
+	}],
 
 	"Mediums": [
 	{
@@ -43,12 +51,6 @@
 
 	"Materials":[
     {
-		// Light Boundary Material
-		"id": 0,
-		"type": "BConstant",
-		"radiance" : [1, 1, 1]
-    },
-    {
 		"id": 1,
 		"type" : "Lambert",
 		"albedo" : [1.0, 1.0, 1.0],
@@ -69,7 +71,7 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "Linear"},
-    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryLight": 0,
     "BaseMedium" : 0,
 
 	"Surfaces": [

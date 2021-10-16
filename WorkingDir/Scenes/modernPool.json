@@ -486,7 +486,7 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "BasicBVH"},
-    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryLight": 0,
     "BaseBoundaryTransform": 1,
 	"BaseMedium" : 0,
 
@@ -546,7 +546,7 @@
     }],
 
     // Lights
-    "LightSurfaces": [{"light": 0, "transform": 1}],
+    "LightSurfaces": [],
     // Cameras
     "CameraSurfaces": [
         // Overall View

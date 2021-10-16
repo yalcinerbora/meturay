@@ -7,6 +7,7 @@
 #include "RNGMemory.h"
 #include "MangledNames.h"
 #include "WorkKernels.cuh"
+#include "GPULightNull.cuh"
 
 #include "RayLib/TracerError.h"
 
@@ -169,7 +170,8 @@ class GPUBoundaryWorkBatch
                                              const uint32_t rayCount,
                                              RNGMemory& rngMem) override;
 
-        const CPUEndpointGroupI&       EndpointGroup() const override { return endpointGroup; }
+        uint8_t                         OutRayCount() const override { return 0; };
+        const CPUEndpointGroupI&        EndpointGroup() const override { return endpointGroup; }
 };
 
 template<class GD, class RD>
@@ -338,6 +340,10 @@ void GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
                                                const uint32_t rayCount,
                                                RNGMemory& rngMem)
 {
+    // Special Case Skip Null Light
+    if constexpr(std::is_same_v<EGroup, CPULightGroupNull>)
+        return;
+
     // Do Pre-work (initialize local data etc.)
     this->GetReady();
 
@@ -348,7 +354,11 @@ void GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
     using GPUEndpointType   = typename EGroup::GPUType;
 
     // Get Data
-    const PrimitiveData primData = PrimDataAccessor::Data(endpointGroup.PrimGroup());
+    PrimitiveData primData;
+    if constexpr(std::is_same_v<EGroup, CPULightGroupNull>)
+        primData = {};
+    else
+        primData = PrimDataAccessor::Data(endpointGroup.PrimGroup());
 
     const GPUEndpointType* dEndpoints = endpointGroup.GPULightsDerived();
 

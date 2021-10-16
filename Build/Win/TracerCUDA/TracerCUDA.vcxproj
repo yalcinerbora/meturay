@@ -32,6 +32,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorCommonKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUBitmap.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraPinhole.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightConstant.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightNull.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightSamplerUniform.cuh" />

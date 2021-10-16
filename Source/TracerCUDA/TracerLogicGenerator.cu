@@ -27,6 +27,7 @@
 #include "RefPGTracer.h"
 // Lights
 #include "GPULightNull.cuh"
+#include "GPULightConstant.cuh"
 #include "GPULightPrimitive.cuh"
 #include "GPULightDirectional.cuh"
 #include "GPULightRectangular.cuh"
@@ -164,6 +165,9 @@ TracerLogicGenerator::TracerLogicGenerator()
     // Light Types
     lightGroupGenerators.emplace(CPULightGroupNull::TypeName(),
                                  CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupNull>,
+                                                  DefaultDestruct<CPULightGroupI>));
+    lightGroupGenerators.emplace(CPULightGroupConstant::TypeName(),
+                                 CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupConstant>,
                                                   DefaultDestruct<CPULightGroupI>));
     lightGroupGenerators.emplace(CPULightGroupPoint::TypeName(),
                                  CPULightGroupGen(LightGroupConstruct<CPULightGroupI, CPULightGroupPoint>,

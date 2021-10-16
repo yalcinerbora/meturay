@@ -26,6 +26,7 @@ class GPULightI : public GPUEndpointI
                                              const UVSurface&) const = 0;
         virtual __device__ uint32_t     GlobalLightIndex() const = 0;
         virtual __device__ void         SetGlobalLightIndex(uint32_t) = 0;
+        virtual __device__ bool         IsPrimitiveBackedLight() const = 0;
 };
 
 class CPULightGroupI : public CPUEndpointGroupI

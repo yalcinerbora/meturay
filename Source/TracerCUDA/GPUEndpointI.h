@@ -67,6 +67,10 @@ class GPUEndpointI
                                                 bool antiAliasOn = true) const = 0;
         virtual __device__ float    Pdf(const Vector3& direction,
                                         const Vector3& position) const = 0;
+        virtual __device__ float    Pdf(float distance,
+                                        const Vector3& hitPosition,
+                                        const Vector3& direction,
+                                        const QuatF& tbnRotation) const = 0;
         virtual __device__ bool     CanBeSampled() const = 0;
 
         // Checkers

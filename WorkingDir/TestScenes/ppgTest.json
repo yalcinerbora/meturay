@@ -34,19 +34,30 @@
 		"up": [0.0, 1.0, 0.0]
 	}],
 
-	"Lights": [],
+	"Lights": [
+		// Black Background
+		{ "id" : 0, "type" : "Null", "radiance": [0, 0, 0]},
+		{
+			"id" : 1,
+			"type": "Primitive",
+			"primitive": 0,
+			"accelerator": 0,
+			"radiance": [5, 5, 5]
+		},
+		{
+			"id" : 2,
+			"type": "Primitive",
+			"primitive": 5,
+			"accelerator": 0,
+			"radiance": [5, 5, 5]
+		}
+	],
 
     "Mediums": [{ "id" : 0, "type" : "Vacuum"}],
 
 	"Transforms":[{"id": 0, "type": "Identity"}],
 
 	"Materials":[
-	{
-		"id": [0, 1],
-		"type": "BConstant",
-		"radiance" : [[0.0, 0.0, 0.0],
-					  [5, 5, 5]]
-	},
     {
 		"id": [2, 3],
 		"type": "LambertC",
@@ -103,7 +114,7 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "Linear"},
-    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryLight": 0,
     "BaseMedium" : 0,
 
 	"Surfaces": [
@@ -119,8 +130,8 @@
     ],
 
 	"LightSurfaces": [
-		{"transform": 0, "accelerator": 0, "material": 1, "primitive": 0}
-	    //{"transform": 0, "accelerator": 0,"material": 1,"primitive": 5}
+		{"light":1}
+		//{"light":2}
 	],
 
     "CameraSurfaces": [

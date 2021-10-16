@@ -86,83 +86,83 @@ bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
                                 const Vector<3, T>& t2,
                                 bool cullFace) const
 {
-    //// Moller-Trumbore
-    //// Ray-Tri Intersection
-    //Vector<3, T> e0 = t1 - t0;
-    //Vector<3, T> e1 = t2 - t0;
-    //Vector<3, T> p = Cross<T>(direction, e1);
-    //T det = e0.Dot(p);
+    // Moller-Trumbore
+    // Ray-Tri Intersection
+    Vector<3, T> e0 = t1 - t0;
+    Vector<3, T> e1 = t2 - t0;
+    Vector<3, T> p = Cross<T>(direction, e1);
+    T det = e0.Dot(p);
 
-    //if((cullFace && (det < MathConstants::SmallEpsilon)) ||
-    //   // Ray-Tri nearly parallel skip
-    //   (abs(det) < MathConstants::SmallEpsilon))
-    //    return false;
+    if((cullFace && (det < MathConstants::SmallEpsilon)) ||
+       // Ray-Tri nearly parallel skip
+       (abs(det) < MathConstants::SmallEpsilon))
+        return false;
 
-    //T invDet = 1 / det;
+    T invDet = 1 / det;
 
-    //Vector<3, T> tVec = position - t0;
-    //baryCoords[0] = tVec.Dot(p) * invDet;
-    //// Early Skip
-    //if(baryCoords[0] < 0 || baryCoords[0] > 1)
-    //    return false;
+    Vector<3, T> tVec = position - t0;
+    baryCoords[0] = tVec.Dot(p) * invDet;
+    // Early Skip
+    if(baryCoords[0] < 0 || baryCoords[0] > 1)
+        return false;
 
-    //Vector<3, T> qVec = Cross<T>(tVec, e0);
-    //baryCoords[1] = direction.Dot(qVec) * invDet;
-    //// Early Skip 2
-    //if((baryCoords[1] < 0) || (baryCoords[1] + baryCoords[0]) > 1)
-    //    return false;
+    Vector<3, T> qVec = Cross<T>(tVec, e0);
+    baryCoords[1] = direction.Dot(qVec) * invDet;
+    // Early Skip 2
+    if((baryCoords[1] < 0) || (baryCoords[1] + baryCoords[0]) > 1)
+        return false;
 
-    //t = e1.Dot(qVec) * invDet;
-    //if(t <= MathConstants::SmallEpsilon)
-    //    return false;
+    t = e1.Dot(qVec) * invDet;
+    if(t <= MathConstants::SmallEpsilon)
+        return false;
 
-    //// Calculate C
-    //baryCoords[2] = 1 - baryCoords[0] - baryCoords[1];
-    //baryCoords = Vector<3, T>(baryCoords[2],
-    //                          baryCoords[0],
-    //                          baryCoords[1]);
-    //return true;
+    // Calculate C
+    baryCoords[2] = 1 - baryCoords[0] - baryCoords[1];
+    baryCoords = Vector<3, T>(baryCoords[2],
+                              baryCoords[0],
+                              baryCoords[1]);
+    return true;
 
-    // Matrix Solution
-    // Kramers Rule
-    Vector<3, T> abDiff = t0 - t1;
-    Vector<3, T> acDiff = t0 - t2;
-    Vector<3, T> aoDiff = t0 - position;
+    //// Matrix Solution
+    //// Kramers Rule
+    //Vector<3, T> abDiff = t0 - t1;
+    //Vector<3, T> acDiff = t0 - t2;
+    //Vector<3, T> aoDiff = t0 - position;
 
-    if(cullFace)
-    {
-        // TODO this is wrong??
-        Vector<3, T> normal = Cross(abDiff, acDiff).Normalize();
-        T cos = direction.Dot(normal);
-        if(cos > 0) return false;
-    }
+    //if(cullFace)
+    //{
+    //    // TODO this is wrong??
+    //    Vector<3, T> normal = Cross(abDiff, acDiff).Normalize();
+    //    T cos = direction.Dot(normal);
+    //    if(cos > 0) return false;
+    //}
 
-    Vector<3, T> aData[] = {abDiff, acDiff, direction};
-    Vector<3, T> betaAData[] = {aoDiff, acDiff, direction};
-    Vector<3, T> gammaAData[] = {abDiff, aoDiff, direction};
-    Vector<3, T> tAData[] = {abDiff, acDiff, aoDiff};
+    //Vector<3, T> aData[] = {abDiff, acDiff, direction};
+    //Vector<3, T> betaAData[] = {aoDiff, acDiff, direction};
+    //Vector<3, T> gammaAData[] = {abDiff, aoDiff, direction};
+    //Vector<3, T> tAData[] = {abDiff, acDiff, aoDiff};
 
-    Matrix<3, T> A = Matrix<3, T>(aData);
-    Matrix<3, T> betaA = Matrix<3, T>(betaAData);
-    Matrix<3, T> gammaA = Matrix<3, T>(gammaAData);
-    Matrix<3, T> tA = Matrix<3, T>(tAData);
+    //Matrix<3, T> A = Matrix<3, T>(aData);
+    //Matrix<3, T> betaA = Matrix<3, T>(betaAData);
+    //Matrix<3, T> gammaA = Matrix<3, T>(gammaAData);
+    //Matrix<3, T> tA = Matrix<3, T>(tAData);
 
-    T aDetInv = 1.0f / A.Determinant();
-    T beta = betaA.Determinant() * aDetInv;
-    T gamma = gammaA.Determinant() * aDetInv;
-    T alpha = 1.0f - beta - gamma;
-    T rayT = tA.Determinant() * aDetInv;
+    //T aDetInv = 1.0f / A.Determinant();
+    //T beta = betaA.Determinant() * aDetInv;
+    //T gamma = gammaA.Determinant() * aDetInv;
+    //T alpha = 1.0f - beta - gamma;
+    //T rayT = tA.Determinant() * aDetInv;
 
-    if(beta >= 0.0f && beta <= 1.0f &&
-       gamma >= 0.0f && gamma <= 1.0f &&
-       alpha >= 0.0f && alpha <= 1.0f &&
-       rayT >= 0.0f)
-    {
-        baryCoords = Vector<3, T>(alpha, beta, gamma);
-        t = rayT;
-        return true;
-    }
-    else return false;
+    //if(beta >= 0.0f && beta <= 1.0f &&
+    //   gamma >= 0.0f && gamma <= 1.0f &&
+    //   alpha >= 0.0f && alpha <= 1.0f &&
+    //   rayT >= 0.0f)
+    //{
+    //    baryCoords = Vector<3, T>(alpha, beta, gamma);
+    //    t = rayT;
+    //    return true;
+    //}
+    //else return false;
 }
 
 template<class T>
@@ -177,7 +177,7 @@ bool Ray<T>::IntersectsPlane(Vector<3, T>& intersectPos, T& t,
     {
         t = INFINITY;
         return false;
-    }        
+    }
     t = (planePos - position).Dot(normal) / nDotD;
     intersectPos = position + t * direction;
     return true;

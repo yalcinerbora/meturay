@@ -39,6 +39,7 @@ class GPULightP : public GPULightI
 
         __device__ uint32_t     GlobalLightIndex() const override;
         __device__ void         SetGlobalLightIndex(uint32_t) override;
+        __device__ bool         IsPrimitiveBackedLight() const override;
 
 };
 
@@ -152,6 +153,12 @@ __device__
 inline void GPULightP::SetGlobalLightIndex(uint32_t gli)
 {
     globalLightIndex = gli;
+}
+
+__device__
+inline bool GPULightP::IsPrimitiveBackedLight() const
+{
+    return false;
 }
 
 template<class GPULight, class PGroup,

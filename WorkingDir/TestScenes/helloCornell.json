@@ -18,13 +18,13 @@
 
 	"Lights": [
 		// Black Background
-		{ "id" : 0, "type" : "Null", "radiance": [0, 0, 0]},
+		{ "id" : 0, "type" : "Null"},
 		// Ceiling Light
-		{ 
-			"id" : 1, 
-			"type" : "Primitive", 
+		{
+			"id" : 1,
+			"type" : "Primitive",
 			"primitive": 4,
-			"accelerator": 0, 
+			"accelerator": 0,
 			"radiance": [150, 150, 150]
 		}
 	],

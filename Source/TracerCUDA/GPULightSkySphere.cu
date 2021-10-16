@@ -31,9 +31,11 @@ __global__ void KCConstructGPULightSkySphere(GPULightSkySphere* gLightLocations,
 
 __global__
 void KCRGBTextureToLuminanceArray(float* gOutLuminance,
-                                  const TextureRefI<2, Vector3>* gTextureRef,
+                                  const TextureRefI<2, Vector3>** gTextureRefs,
+                                  uint32_t lightIndex,
                                   const Vector2ui dimension)
 {
+    const TextureRefI<2, Vector3>* gTextureRef = gTextureRefs[lightIndex];
     uint32_t totalWorkCount = dimension[0] * dimension[1];
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
         threadId < totalWorkCount;
@@ -121,7 +123,8 @@ TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGl
             KCRGBTextureToLuminanceArray,
             // Args
             dLumArray,
-            dRadiances[lightIndex],
+            dRadiances,
+            lightIndex,
             dim
         );
 

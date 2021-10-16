@@ -626,7 +626,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         constructionInfo.emplace_back(EndpointConstructionData
                                       {
                                           surfId,
-                                          identityTransformId,
+                                          boundaryTransformId,
                                           baseMediumId,
                                           lightId,
                                           std::numeric_limits<uint32_t>::max(),
@@ -1105,13 +1105,13 @@ SceneError GPUSceneJson::GenerateLights(BoundaryMaterialKeyListing& boundaryWork
 
 SceneError GPUSceneJson::FindBoundaryLight(const BoundaryMaterialKeyListing& bMatKeys,
                                            const std::string& bLightGroupTypeName,
-                                           uint32_t bLightId,
+                                           uint32_t bLightId, uint32_t bTransformId,
                                            double time)
 {
     SceneError e = SceneError::OK;
     // From that node find equavilent material,
     auto tripletKey = std::make_tuple(bLightGroupTypeName, bLightId,
-                                      identityTransformIndex);
+                                      bTransformId);
     auto loc = bMatKeys.find(tripletKey);
     if(loc == bMatKeys.end())
         return SceneError::LIGHT_ID_NOT_FOUND;
@@ -1235,7 +1235,7 @@ SceneError GPUSceneJson::LoadAll(double time)
     // Boundary Light
     if((e = FindBoundaryLight(allBoundaryMaterialKeys,
                               bLightGroupTypeName,
-                              bLightId,
+                              bLightId, boundaryTransformId,
                               time)) != SceneError::OK)
        return e;
 

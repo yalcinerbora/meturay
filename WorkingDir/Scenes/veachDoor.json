@@ -29,7 +29,18 @@
         "planes": [10, 2800]
     }],
 
-    "Lights":[],
+    "Lights":[
+        // Black Background
+        {"id": 0, "type": "Null"},
+        {
+            // Light Boundary Material
+            "id": 1,
+            "type": "Primitive",
+            "primitive": 20,
+            "accelerator": 1,
+            "radiance" : [1420, 1552, 1642]
+        }
+    ],
 
     "Mediums":[
     {
@@ -89,23 +100,10 @@
 
     "Materials":[
     {
-        // General Boundary Material
-        "id": 0,
-        "type": "BConstant",
-        "radiance" : [0.0, 0.0, 0.0]
-    },
-    {
-        // Light Boundary Material
-        "id": 1,
-        "type": "BConstant",
-        "radiance" : [1420, 1552, 1642]
-    },
-    {
         // Main Walls
         "id": 2,
         "type": "Lambert",
         "albedo": [0.73, 0.73, 0.73]
-        //"albedo": [0.0, 0.0, 0.0]
     },
     {
         // Table Legs
@@ -295,53 +293,46 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "BasicBVH"},
-    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryLight": 0,
 	"BaseMedium" : 0,
 
 	"Surfaces": [
-    {
-        // Table & Table Legs
-        "transform": 0, "accelerator":0,
-        "material": [11, 3, 3, 3, 3],
-        "primitive": [0, 1, 2, 3, 4]
-    },
-    // Teapots
-    // Metal
-    {"transform": 0, "accelerator":0, "material": 8, "primitive": 5},
-    // Marble
-    {"transform": 0, "accelerator":0, "material": 9, "primitive": 6},
-    // Glass
-    {"transform": 0, "accelerator":0, "material": 7, "primitive": 7},
-    // Entire Door
-    {
-        // Door & Door Frame
-        "transform": 0, "accelerator": 0,
-        "material": [4, 4, 4, 12, 5, 5, 5, 5],
-        "primitive": [8, 9, 10, 11, 12, 13, 14, 15]
-    },
-     // Floor Front
-     {"transform": 0, "accelerator": 1, "material": 10, "primitive": 16},
-     // Floor Back
-     {"transform": 0, "accelerator": 1, "material": 2, "primitive": 17},
-    // Picture Frame & Picture
-    {
-        "transform": 0, "accelerator": 1,
-        "material": [6, 13],
-        "primitive": [18, 19]
-    },
-    // Walls
-    {"transform": 1, "accelerator": 0, "material": 2, "primitive": 21}
+        {
+            // Table & Table Legs
+            "transform": 0, "accelerator":0,
+            "material": [11, 3, 3, 3, 3],
+            "primitive": [0, 1, 2, 3, 4]
+        },
+        // Teapots
+        // Metal
+        {"transform": 0, "accelerator":0, "material": 8, "primitive": 5},
+        // Marble
+        {"transform": 0, "accelerator":0, "material": 9, "primitive": 6},
+        // Glass
+        {"transform": 0, "accelerator":0, "material": 7, "primitive": 7},
+        // Entire Door
+        {
+            // Door & Door Frame
+            "transform": 0, "accelerator": 0,
+            "material": [4, 4, 4, 12, 5, 5, 5, 5],
+            "primitive": [8, 9, 10, 11, 12, 13, 14, 15]
+        },
+        // Floor Front
+        {"transform": 0, "accelerator": 1, "material": 10, "primitive": 16},
+        // Floor Back
+        {"transform": 0, "accelerator": 1, "material": 2, "primitive": 17},
+        // Picture Frame & Picture
+        {
+            "transform": 0, "accelerator": 1,
+            "material": [6, 13],
+            "primitive": [18, 19]
+        },
+        // Walls
+        {"transform": 1, "accelerator": 0, "material": 2, "primitive": 21}
     ],
 
     // Lights
-    "LightSurfaces": [
-    {
-        "transform": 0,
-        "primitive": 20,
-        "material": 1,
-        "accelerator": 1
-    }
-    ],
+    "LightSurfaces": [{"light" : 1}],
     // Cameras
     "CameraSurfaces": [{"camera": 0}, {"camera": 1}]
 }

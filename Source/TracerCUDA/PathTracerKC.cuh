@@ -84,6 +84,7 @@ void PathTracerBoundaryWork(// Output
                                        gLight.GlobalLightIndex(),
                                        prevPosition,
                                        direction);
+
         // We are subsampling (discretely sampling) a single light
         // pdf of BxDF should also incorporate this
         float bxdfPDF = aux.prevPDF;
@@ -113,6 +114,8 @@ void PathTracerBoundaryWork(// Output
                                        -r.getDirection(),
                                        position,
                                        surface);
+
+        //if(emission == Vector3f(0.0f)) return;
 
         //if constexpr(!std::is_same_v<GPUType, GPULightNull>)
         //{

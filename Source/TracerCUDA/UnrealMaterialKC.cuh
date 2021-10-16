@@ -99,7 +99,7 @@ struct UnrealDeviceFuncs
         // convert it to sampling probability of L Vector
         pdf /= (4.0f * (LdH));
 
-        // Shadowing Term (Schlick Model)    
+        // Shadowing Term (Schlick Model)
         float G = TracerFunctions::GSchlick(NdL, roughness) *
             TracerFunctions::GSchlick(NdV, roughness);
         // Frenel Term (Schlick's Approx)
@@ -110,7 +110,7 @@ struct UnrealDeviceFuncs
         // Normal is on tangent space so convert it to world space
         // Convert Normal to World Space
         Vector3f normalWorld = GPUSurface::ToWorld(N, surface.worldToTangent);
-        // Same is true for wo(aka L) 
+        // Same is true for wo(aka L)
         Vector3f woDir = GPUSurface::ToWorld(L, surface.worldToTangent);
         Vector3f woPos = pos + normalWorld * MathConstants::Epsilon;
 
@@ -118,7 +118,7 @@ struct UnrealDeviceFuncs
         //if(F.HasNaN()) printf("S: F Term NANn");
         //if(isnan(D)) printf("S: D Term NANn");
 
-        // Calculate Radiance    
+        // Calculate Radiance
         // Blend between albedo-black for metallic material
         Vector3f diffuseAlbedo = (1.0f - metallic) * albedo;
         Vector3f diffuseTerm = NdL * diffuseAlbedo * MathConstants::InvPi;
@@ -207,13 +207,13 @@ struct UnrealDeviceFuncs
 
         // GGX
         float D = TracerFunctions::DGGX(NdH, roughness);
-        // Shadowing Term (Schlick Model)    
+        // Shadowing Term (Schlick Model)
         float G = TracerFunctions::GSchlick(NdL, roughness) *
             TracerFunctions::GSchlick(NdV, roughness);
         // Frenel Term (Schlick's Approx)
         Vector3f f0 = CalculateF0(albedo, metallic, specular);
         Vector3f F = TracerFunctions::FSchlick(VdH, f0);
-        // Calculate Radiance    
+        // Calculate Radiance
         // Blend between albedo-black for metallic material
         Vector3f diffuseAlbedo = (1.0f - metallic) * albedo;
         Vector3f diffuseTerm = NdL * diffuseAlbedo * MathConstants::InvPi;

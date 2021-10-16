@@ -160,7 +160,7 @@ class GPUSceneJson : public GPUSceneI
 
         SceneError      FindBoundaryLight(const BoundaryMaterialKeyListing& matHitKeyList,
                                           const std::string& bLightGroupTypeName,
-                                          uint32_t bLightId,
+                                          uint32_t bLightId, uint32_t bTransformId,
                                           double time = 0.0);
 
         SceneError      LoadAll(double time);

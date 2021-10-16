@@ -16,41 +16,45 @@ class GPULightSkySphere final : public GPULightP
     protected:
     public:
         // Constructors & Destructor
-        __device__                      GPULightSkySphere(// Per Light Data
-                                                          const GPUDistPiecewiseConst2D&,
-                                                          // Endpoint Related Data
-                                                          const TextureRefI<2, Vector3f>& gRad,
-                                                          uint16_t mediumIndex, HitKey,
-                                                          const GPUTransformI&);
-                                        ~GPULightSkySphere() = default;
+        __device__              GPULightSkySphere(// Per Light Data
+                                                  const GPUDistPiecewiseConst2D&,
+                                                  // Endpoint Related Data
+                                                  const TextureRefI<2, Vector3f>& gRad,
+                                                  uint16_t mediumIndex, HitKey,
+                                                  const GPUTransformI&);
+                                ~GPULightSkySphere() = default;
         // Interface
-        __device__ void                 Sample(// Output
-                                               float& distance,
-                                               Vector3& direction,
-                                               float& pdf,
-                                               // Input
-                                               const Vector3& worldLoc,
-                                               // I-O
-                                               RandomGPU&) const override;
+        __device__ void         Sample(// Output
+                                       float& distance,
+                                       Vector3& direction,
+                                       float& pdf,
+                                       // Input
+                                       const Vector3& worldLoc,
+                                       // I-O
+                                       RandomGPU&) const override;
 
-        __device__ void                 GenerateRay(// Output
-                                                    RayReg&,
-                                                    // Input
-                                                    const Vector2i& sampleId,
-                                                    const Vector2i& sampleMax,
-                                                    // I-O
-                                                    RandomGPU&,
-                                                    // Options
-                                                    bool antiAliasOn = true) const override;
-        __device__ float                Pdf(const Vector3& direction,
-                                            const Vector3& position) const override;
-        __device__ bool                 CanBeSampled() const override;
+        __device__ void         GenerateRay(// Output
+                                            RayReg&,
+                                            // Input
+                                            const Vector2i& sampleId,
+                                            const Vector2i& sampleMax,
+                                            // I-O
+                                            RandomGPU&,
+                                            // Options
+                                            bool antiAliasOn = true) const override;
+        __device__ float        Pdf(const Vector3& direction,
+                                    const Vector3& position) const override;
+        __device__ float        Pdf(float distance,
+                                    const Vector3& hitPosition,
+                                    const Vector3& direction,
+                                    const QuatF& tbnRotation) const override;
+        __device__ bool         CanBeSampled() const override;
 
         // Specialize Emit
-        __device__ Vector3f             Emit(const Vector3& wo,
-                                             const Vector3& pos,
-                                             //
-                                             const UVSurface&) const override;
+        __device__ Vector3f     Emit(const Vector3& wo,
+                                     const Vector3& pos,
+                                     //
+                                     const UVSurface&) const override;
 };
 
 class CPULightGroupSkySphere final : public CPULightGroupP<GPULightSkySphere>
@@ -154,7 +158,7 @@ inline float GPULightSkySphere::Pdf(const Vector3& direction,
 {
     // Convert to spherical coordinates
     Vector3 dirYUp = gTransform.WorldToLocal(direction, true);
-    Vector3 dirZup = -Vector3(dirYUp[2], dirYUp[0], dirYUp[1]);
+    Vector3 dirZup = Vector3(dirYUp[2], dirYUp[0], dirYUp[1]);
     Vector2 thetaPhi = Utility::CartesianToSphericalUnit(dirZup);
 
     // Normalize to generate UV [0, 1]
@@ -188,6 +192,15 @@ inline float GPULightSkySphere::Pdf(const Vector3& direction,
 }
 
 __device__
+inline float GPULightSkySphere::Pdf(float distance,
+                                    const Vector3& hitPosition,
+                                    const Vector3& direction,
+                                    const QuatF& tbnRotation) const
+{
+    return Pdf(direction, Vector3f(0.0f));
+}
+
+__device__
 inline bool GPULightSkySphere::CanBeSampled() const
 {
     return true;
@@ -206,8 +219,7 @@ inline Vector3f GPULightSkySphere::Emit(const Vector3& wo,
     //       surface.worldToTangent[3]);
 
     // Convert Y up from Z up
-    // Also invert since that direction is used to sample HDR texture
-    Vector3 woTrans = GPUSurface::ToTangent(wo, surface.worldToTangent);
+    Vector3 woTrans = GPUSurface::ToTangent(wo, gTransform.ToLocalRotation());
     Vector3 woZup = -Vector3(woTrans[2], woTrans[0], woTrans[1]);
 
     // Convert to Spherical Coordinates

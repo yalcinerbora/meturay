@@ -75,7 +75,7 @@ using CenterGenFunction = Vector3(*)(const GPUTransformI& transform,
 template <class PrimitiveData>
 using SamplePosFunction = Vector3(*)(Vector3& normal,
                                      float& pdf,
-                                     
+                                     //
                                      PrimitiveId primitiveId,
                                      const PrimitiveData&,
                                      // I-O
@@ -84,16 +84,25 @@ using SamplePosFunction = Vector3(*)(Vector3& normal,
 // PDF function for calculating a PDF function for hitting from such
 // position/direction
 template <class PrimitiveData>
-using PDFPosFunction = void(*)(// Outputs
-                               Vector3f& normal,
-                               float& pdf,
-                               float& distance,
-                               // Inputs
-                               const Vector3f& position,
-                               const Vector3f& direction,
-                               const GPUTransformI& transform,
-                               const PrimitiveId primitiveId,
-                               const PrimitiveData& primData);
+using PDFPosRefFunction = void(*)(// Outputs
+                                  Vector3f& normal,
+                                  float& pdf,
+                                  float& distance,
+                                  // Inputs
+                                  const RayF& ray,
+                                  const GPUTransformI& transform,
+                                  //
+                                  const PrimitiveId primitiveId,
+                                  const PrimitiveData& primData);
+
+template <class PrimitiveData>
+using PDFPosHitFunction = float(*)(// Inputs
+                                   const Vector3f& hitPosition,
+                                   const Vector3f& hitDirection,
+                                   const QuatF& tbnRotation,
+                                   //
+                                   const PrimitiveId primitiveId,
+                                   const PrimitiveData& primData);
 
 // Common Functors for gpu AABB Generation
 template<class PrimitiveGroup>
@@ -169,7 +178,7 @@ HitResult DefaultAcceptHit(// Output
                            const GPUTransformI&,
                            const LeafData&,
                            const PrimitiveData&)
-{    
+{
     return HitResult{false, false};
 }
 
@@ -212,13 +221,12 @@ Vector3 DefaultSamplePos(Vector3& normal, float& pdf,
 }
 
 template <class PrimitiveData>
-void DefaultPDFPos(// Outputs
+void DefaultPDFPosRef(// Outputs
                    Vector3f& normal,
                    float& pdf,
                    float& distance,
                    // Inputs
-                   const Vector3f&,
-                   const Vector3f&,
+                   const RayF&,
                    const GPUTransformI&,
                    const PrimitiveId,
                    const PrimitiveData&)
@@ -226,4 +234,16 @@ void DefaultPDFPos(// Outputs
     normal = Vector3f(INFINITY);
     pdf = 0.0f;
     distance = INFINITY;
+}
+
+template <class PrimitiveData>
+float DefaultPDFPosHit(// Inputs
+                       const Vector3f& hitPosition,
+                       const Vector3f& hitDirection,
+                       const QuatF& tbnRotation,
+                       //
+                       const PrimitiveId primitiveId,
+                       const PrimitiveData& primData)
+{
+    return 0.0f;
 }

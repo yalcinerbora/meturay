@@ -47,6 +47,10 @@ class GPULightDisk final : public GPULightP
                                             bool antiAliasOn = true) const override;
         __device__ float        Pdf(const Vector3& direction,
                                     const Vector3& position) const override;
+        __device__ float        Pdf(float distance,
+                                    const Vector3& hitPosition,
+                                    const Vector3& direction,
+                                    const QuatF& tbnRotation) const override;
 
         __device__ bool         CanBeSampled() const override;
 };
@@ -181,6 +185,15 @@ inline float GPULightDisk::Pdf(const Vector3& direction,
 
     intersects &= (planeIntersectPos - center).LengthSqr() <= (radius * radius);
     return (intersects) ? (1.0f / area) : 0.0f;
+}
+
+__device__
+inline float GPULightDisk::Pdf(float distance,
+                               const Vector3& hitPosition,
+                               const Vector3& direction,
+                               const QuatF& tbnRotation) const
+{
+    return 1.0f / area;
 }
 
 __device__

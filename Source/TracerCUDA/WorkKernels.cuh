@@ -96,8 +96,8 @@ void KCWork(// Output
     using HitData = typename PGroup::HitData;   // HitData is defined by primitive
     using Surface = typename MGroup::Surface;   // Surface is defined by material group
 
-    // Pre-grid stride loop
-    // RNG is allocated for each SM (not for each thread)
+    // Pre-grid stride initialization
+    // RNG is allocated for each SM (not for each ray)
     RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
 
     // Grid Stride Loop
@@ -186,11 +186,11 @@ void KCBoundaryWork(// Output
 {
     // Fetch Types from Template Classes
     using HitData   = typename EGroup::HitData; // HitData is defined by primitive
-    using Surface   = typename EGroup::Surface; // Surface is defined by material group
-    using GPUType = typename EGroup::GPUType;   // Endpoint GPU Class (Derived)
+    using Surface   = typename EGroup::Surface; // Surface is defined by endpoint group
+    using GPUType   = typename EGroup::GPUType; // Endpoint GPU Class (Derived)
 
-    // Pre-grid stride loop
-    // RNG is allocated for each SM (not for each thread)
+    // Pre-grid stride initialization
+    // RNG is allocated for each SM (not for each ray)
     RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
 
     // Grid Stride Loop
@@ -199,22 +199,33 @@ void KCBoundaryWork(// Output
     {
         const RayId rayId = gRayIds[globalId];
         const HitKey hitKey = gMatIds[globalId];
-
         // Load Input to Registers
         const RayReg ray(gInRays, rayId);
         const RayAuxiliary aux = gInRayAux[rayId];
         const PrimitiveId primitiveId = gPrimitiveIds[rayId];
         const TransformId transformId = gTransformIds[rayId];
 
+        // Acquire the endpoint that is hit
         HitKey::Type hitIndex = HitKey::FetchIdPortion(hitKey);
+        const GPUType& gEndpoint = gEndpoints[hitIndex];
 
-        // Acquire transform for surface generation
-        const GPUTransformI& transform = *gTransforms[transformId];
+        // Skip if primitiveId is invalid only if the light is
+        // primitive backed.
+        // This happens when NEE generates a ray with a
+        // predefined workId (which did invoke this thread)
+        // However the light is missed somehow
+        // (planar rays, numeric unstability etc.)
+        // Because of that primitive id did not get populated
+        // Skip this ray
+        if(gEndpoint.IsPrimitiveBackedLight() &&
+           primitiveId >= INVALID_PRIMITIVE_ID)
+            continue;
 
+        // Acquire transform for surface generation &
         // Generate surface data from hit
+        const GPUTransformI& transform = *gTransforms[transformId];
         const HitData hit = gHitStructs.Ref<HitData>(rayId);
         const Surface surface = SurfFunc(hit, transform, primitiveId, primData);
-        const GPUType& gEndpoint = gEndpoints[hitIndex];
 
         // Determine Output Location
         // Make it locally indexable

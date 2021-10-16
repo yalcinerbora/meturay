@@ -28,13 +28,14 @@ struct EmptyHit {};
 
 struct EPrimFunctions
 {
-    static constexpr auto& Hit              = DefaultAcceptHit<EmptyHit, EmptyData, EmptyLeaf>;
-    static constexpr auto& AABB             = DefaultAABBGen<EmptyData>;
-    static constexpr auto& Area             = DefaultAreaGen<EmptyData>;
-    static constexpr auto& Center           = DefaultCenterGen<EmptyData>;
-    static constexpr auto& SamplePosition   = DefaultSamplePos<EmptyData>;
-    static constexpr auto& PdfPosition      = DefaultPDFPos<EmptyData>;
-    static constexpr auto& Leaf             = GenerateEmptyLeaf<EmptyData>;
+    static constexpr auto& Hit                      = DefaultAcceptHit<EmptyHit, EmptyData, EmptyLeaf>;
+    static constexpr auto& AABB                     = DefaultAABBGen<EmptyData>;
+    static constexpr auto& Area                     = DefaultAreaGen<EmptyData>;
+    static constexpr auto& Center                   = DefaultCenterGen<EmptyData>;
+    static constexpr auto& SamplePosition           = DefaultSamplePos<EmptyData>;
+    static constexpr auto& PositionPdfFromReference = DefaultPDFPosRef<EmptyData>;
+    static constexpr auto& PositionPdfFromHit       = DefaultPDFPosHit<EmptyData>;
+    static constexpr auto& Leaf                     = GenerateEmptyLeaf<EmptyData>;
 };
 
 struct EmptySurfaceGenerator
