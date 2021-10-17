@@ -38,8 +38,7 @@ void KCAccumulateToBuffer(ImageGMem<float> accumBuffer,
         float data1 = newSamples.gPixels[threadId];
         uint32_t sample1 = newSamples.gSampleCounts[threadId];
 
-        float avgData = (data0 * static_cast<float>(sample0) +
-                         data1 * static_cast<float>(sample1));
+        float avgData = (data0 * static_cast<float>(sample0) + data1);
         uint32_t newSampleCount = sample0 + sample1;
 
         avgData = (newSampleCount == 0)
@@ -157,9 +156,6 @@ ImageIOError RefPGTracer::SaveAndResetAccumImage(const Vector2i& pixelId)
         std::string s = fmt::format("Pixel ({:d},{:d}) reference is written as \"{:s}\"",
                                     pixelId[0], pixelId[1], path);
         callbacks->SendLog(s);
-
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        std::abort();
     }
     else if(callbacks)
     {

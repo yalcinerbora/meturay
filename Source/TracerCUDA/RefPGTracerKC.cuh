@@ -122,9 +122,12 @@ void RPGTracerBoundaryWork(// Output
         // Find out the pdf of the light
         float pdfLightM, pdfLightC;
         renderState.gLightSampler->Pdf(pdfLightM, pdfLightC,
-                                       aux.endpointIndex,
+                                       //
+                                       gLight.GlobalLightIndex(),
+                                       ray.tMax,
                                        position,
-                                       direction);
+                                       direction,
+                                       surface.worldToTangent);
         // We are subsampling (discretely sampling) a single light
         // pdf of BxDF should also incorporate this
         float bxdfPDF = aux.prevPDF;
