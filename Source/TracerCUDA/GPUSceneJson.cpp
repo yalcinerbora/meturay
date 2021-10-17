@@ -785,7 +785,7 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, HitKey>& accHit
             // Convert Prim / Material Ids with Work Keys
             for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
             {
-                const IdKeyPair& p = surface.matPrimIdPairs[i];
+                const IdPair& p = surface.matPrimIdPairs[i];
                 if(p.first == std::numeric_limits<uint32_t>::max())
                     break;
 

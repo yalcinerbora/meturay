@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Vector.h"
+#include "HybridFunctions.h"
 
 namespace Utility
 {
@@ -41,11 +42,12 @@ __host__ __device__
 FloatEnable<T, Vector<3, T>> Utility::CartesianToSpherical(const Vector<3, T>& cart)
 {
     // Convert to Spherical Coordinates
+    Vector<3, T> norm = cart.Normalize();
     T r = cart.Length();
     // range [-pi, pi]
-    T azimuth = atan2(cart[1], cart[0]);
+    T azimuth = atan2(norm[1], norm[0]);
     // range [0, pi]
-    T incl = acos(cart[2]);
+    T incl = acos(norm[2]);
     return Vector<3, T>(r, azimuth, incl);
 }
 
@@ -78,7 +80,9 @@ FloatEnable<T, Vector<2, T>> Utility::CartesianToSphericalUnit(const Vector<3, T
     // range [-pi, pi]
     T azimuth = atan2(cart[1], cart[0]);
     // range [0, pi]
-    T incl = acos(cart[2]);
+    // Sometimes normalized cartesian coords may invoke NaN here
+    // clamp it to the range
+    T incl = acos(HybridFuncs::Clamp(cart[2], -1.0f, 1.0f));
 
     return Vector<2, T>(azimuth, incl);
 }

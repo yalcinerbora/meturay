@@ -17,7 +17,7 @@
 using ::testing::FloatEq;
 
 __global__
-static void KCDirToCoord(Vector3f* dirs, 
+static void KCDirToCoord(Vector3f* dirs,
                          const Vector2f* coords,
                          size_t coordCount)
 {
@@ -45,7 +45,7 @@ static void KCCoordToDir(Vector2f* coords,
 
 
 
-__global__ 
+__global__
 static void KCSampleTree(Vector3f* gDirections,
                          float* gPdfs,
                          //
@@ -71,7 +71,7 @@ static void KCSampleTree(Vector3f* gDirections,
 __global__
 static void KCPdfDivide(Vector3f* gDirections,
                         const float* gPdfs,
-                        //                         
+                        //
                         uint32_t sampleCount)
 {
     // Grid Stride Loop
@@ -226,7 +226,7 @@ TEST(PPG_DTree, AddThenSwap)
         {
             directions.push_back(pathNodes[p.prevNext[1]].worldPosition - p.worldPosition);
             directions.back().NormalizeSelf();
-        }            
+        }
     }
 
     // Create Tree
@@ -305,7 +305,7 @@ TEST(PPG_DTree, AddThenSwap)
         childId = (parent.childIndices[2] == i) ? 2 : childId;
         childId = (parent.childIndices[3] == i) ? 3 : childId;
         EXPECT_FLOAT_EQ(total, parent.irradianceEstimates[childId]);
-    }    
+    }
     testTree.GetWriteTreeToCPU(treeGPU, nodes);
     for(size_t i = 0; i < nodes.size(); i++)
     {
@@ -324,7 +324,7 @@ TEST(PPG_DTree, AddThenSwap)
         EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[1]);
         EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[2]);
         EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[3]);
-    }  
+    }
 }
 
 TEST(PPG_DTree, SwapStress)
@@ -344,7 +344,7 @@ TEST(PPG_DTree, SwapStress)
     // Change depth on each iteration
     // just sto stress
     constexpr uint32_t DEPTH_MIN = 0;
-    constexpr uint32_t DEPTH_MAX = 16;    
+    constexpr uint32_t DEPTH_MAX = 16;
     // Also change the flux
     constexpr float FLUX_MIN = 0.001f;
     constexpr float FLUX_MAX = 0.1f;
@@ -368,7 +368,7 @@ TEST(PPG_DTree, SwapStress)
                           PATH_PER_ITERATION * sizeof(uint32_t),
                           cudaMemcpyHostToDevice));
     hIndices.clear();
-    
+
     // Check buffer
     DTreeGPU treeGPU;
     std::vector<DTreeNode> nodes;
@@ -391,7 +391,7 @@ TEST(PPG_DTree, SwapStress)
             uint32_t localIndex = i % PATH_PER_RAY;
             uint32_t prev = (localIndex == 0) ? PathGuidingNode::InvalidIndex : localIndex - 1;
             uint32_t next = (localIndex == (PATH_PER_RAY - 1)) ? PathGuidingNode::InvalidIndex : localIndex + 1;
-           
+
             Vector3f worldUniform(uniformDist(rng), uniformDist(rng), uniformDist(rng));
             Vector3f radianceUniform(uniformDist(rng), uniformDist(rng), uniformDist(rng));
 
@@ -438,7 +438,7 @@ TEST(PPG_DTree, SwapStress)
             if(node.childIndices[2] != std::numeric_limits<uint32_t>::max())
                 EXPECT_EQ(0.0f, node.irradianceEstimates[2]);
             if(node.childIndices[3] != std::numeric_limits<uint32_t>::max())
-                EXPECT_EQ(0.0f, node.irradianceEstimates[3]);            
+                EXPECT_EQ(0.0f, node.irradianceEstimates[3]);
         }
 
         testTree.SwapTrees(fluxRatio, depthLimit, system.BestGPU());
@@ -505,7 +505,7 @@ TEST(PPG_DTree, SwapStress)
         }
         //// DEBUG
         //Debug::DumpMemToFile("RT", &treeGPU, 1);
-        //Debug::DumpMemToFile("RTN", nodes.data(), nodes.size());    
+        //Debug::DumpMemToFile("RTN", nodes.data(), nodes.size());
     }
  }
 
@@ -525,7 +525,7 @@ TEST(PPG_DTree, LargeToSmall)
     // DTree parameters
     constexpr uint32_t DEPTH_LIMIT = 10;
     constexpr float FLUX_RATIO = 0.005f;
-    
+
     const Vector3f direction = Vector3f(1.0f).Normalize();
     const Vector3f worldBound = MAX_WORLD_BOUND - MIN_WORLD_BOUND;
     std::uniform_real_distribution<float> uniformDist(0.0f, 1.0f);
@@ -548,7 +548,7 @@ TEST(PPG_DTree, LargeToSmall)
                           PATH_PER_ITERATION * sizeof(uint32_t),
                           cudaMemcpyHostToDevice));
     hIndices.clear();
-    
+
     // First create a deep tree
     DTree testTree;
     std::vector<PathGuidingNode> paths(PATH_PER_ITERATION);
@@ -689,7 +689,7 @@ TEST(PPG_DTree, LargeToSmall)
     }
     //// DEBUG
     //Debug::DumpMemToFile("RT", &treeGPU, 1);
-    //Debug::DumpMemToFile("RTN", nodes.data(), nodes.size());    
+    //Debug::DumpMemToFile("RTN", nodes.data(), nodes.size());
 }
 
 TEST(PPG_DTree, SampleEmpty)
@@ -700,14 +700,14 @@ TEST(PPG_DTree, SampleEmpty)
     constexpr uint32_t SAMPLE_COUNT = 250'000'000;
     constexpr uint32_t SEED = 0;
     RNGMemory rngMem(SEED, system);
-    
+
     DTree testTree;
-    
+
     DeviceMemory directionMemory(SAMPLE_COUNT * sizeof(Vector3f));
     DeviceMemory pdfMemory(SAMPLE_COUNT * sizeof(float));
 
     // Just call
-    const CudaGPU& gpu = system.BestGPU();    
+    const CudaGPU& gpu = system.BestGPU();
     // Sample Tree
     gpu.GridStrideKC_X(0, 0, SAMPLE_COUNT,
                        //
@@ -719,7 +719,7 @@ TEST(PPG_DTree, SampleEmpty)
                        testTree.TreeGPU(true),
                        rngMem.RNGData(gpu),
                        SAMPLE_COUNT);
-    // Divide by pdf    
+    // Divide by pdf
     gpu.GridStrideKC_X(0, 0, SAMPLE_COUNT,
                        //
                        KCPdfDivide,
@@ -765,7 +765,7 @@ TEST(PPG_DTree, SampleDeep)
     // DTree parameters
     constexpr uint32_t DEPTH_LIMIT = 10;
     constexpr float FLUX_RATIO = 0.005f;
-    
+
     const Vector3f direction = Vector3f(1.0f).Normalize();
     const Vector3f worldBound = MAX_WORLD_BOUND - MIN_WORLD_BOUND;
     std::uniform_real_distribution<float> uniformDist(0.0f, 1.0f);
@@ -788,7 +788,7 @@ TEST(PPG_DTree, SampleDeep)
                           PATH_PER_ITERATION * sizeof(uint32_t),
                           cudaMemcpyHostToDevice));
     hIndices.clear();
-    
+
     // First create a deep tree
     DTree testTree;
     std::vector<PathGuidingNode> paths(PATH_PER_ITERATION);
@@ -830,7 +830,7 @@ TEST(PPG_DTree, SampleDeep)
     // Now sample buffers are quite large so remove any other gpu memory
     pathNodeMemory = DeviceMemory();
     indexMemory = DeviceMemory();
-            
+
     // Sample stuff
     DeviceMemory directionMemory(SAMPLE_COUNT * sizeof(Vector3f));
     DeviceMemory pdfMemory(SAMPLE_COUNT * sizeof(float));
@@ -838,7 +838,7 @@ TEST(PPG_DTree, SampleDeep)
     //// DEBUG
     //testTree.GetReadTreeToCPU(treeGPU, nodes);
     //Debug::DumpMemToFile("RT", &treeGPU, 1);
-    //Debug::DumpMemToFile("RTN", nodes.data(), nodes.size());  
+    //Debug::DumpMemToFile("RTN", nodes.data(), nodes.size());
 
     const CudaGPU& gpu = system.BestGPU();
     // Sample Tree
@@ -866,7 +866,7 @@ TEST(PPG_DTree, SampleDeep)
                           cudaMemcpyDeviceToHost));
 
     // TODO: Should we divide here?
-    // Divide by pdf    
+    // Divide by pdf
     //gpu.GridStrideKC_X(0, 0, SAMPLE_COUNT,
     //                   //
     //                   KCPdfDivide,
@@ -884,7 +884,7 @@ TEST(PPG_DTree, SampleDeep)
         SAMPLE_COUNT, Zero3
     );
     reducedResult /= static_cast<float>(SAMPLE_COUNT);
-    // On average it should be very close to the 
+    // On average it should be very close to the
     // initial direction that we did give
     EXPECT_NEAR(reducedResult[0], direction[0], 0.01f);
     EXPECT_NEAR(reducedResult[1], direction[1], 0.01f);
@@ -904,16 +904,16 @@ TEST(PPG_DTree, DirToCoord)
     // Generate Directions
     std::vector<Vector2f> coordsCPU(INTERVAL_COUNT);
     for(uint32_t i = 0;i < INTERVAL_COUNT; i++)
-    { 
+    {
         float interval = 1.0f / static_cast<float>(INTERVAL_COUNT);
-        float x = interval * static_cast<float>(i);       
+        float x = interval * static_cast<float>(i);
         coordsCPU[i] = Vector2f(x, 0.75f);
     }
-    CUDA_CHECK(cudaMemcpy(static_cast<Vector2f*>(coords), 
+    CUDA_CHECK(cudaMemcpy(static_cast<Vector2f*>(coords),
                           coordsCPU.data(),
                           sizeof(Vector2f) * INTERVAL_COUNT,
                           cudaMemcpyHostToDevice));
-    
+
     // Convert it to Coords
     gpu.GridStrideKC_X(0, 0, INTERVAL_COUNT,
                        //
@@ -921,11 +921,11 @@ TEST(PPG_DTree, DirToCoord)
                        //
                        static_cast<Vector3f*>(dirs),
                        static_cast<const Vector2f*>(coords),
-                       //                       
+                       //
                        INTERVAL_COUNT);
 
     // Reset Coord Memory
-    CUDA_CHECK(cudaMemset(static_cast<Byte*>(coords), 0x00, sizeof(Vector2f) * INTERVAL_COUNT));  
+    CUDA_CHECK(cudaMemset(static_cast<Byte*>(coords), 0x00, sizeof(Vector2f) * INTERVAL_COUNT));
 
     // Convert it back
     gpu.GridStrideKC_X(0, 0, INTERVAL_COUNT,
@@ -934,7 +934,7 @@ TEST(PPG_DTree, DirToCoord)
                        //
                        static_cast<Vector2f*>(coords),
                        static_cast<const Vector3f*>(dirs),
-                       //                       
+                       //
                        INTERVAL_COUNT);
 
     // Get to the CPU & Check

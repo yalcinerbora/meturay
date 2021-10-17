@@ -184,7 +184,7 @@ std::ostream& operator<<(std::ostream& s, const STreeGPU& n)
 std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
 {
     s << "W: { "
-      << n.worldPosition[0] << ", " 
+      << n.worldPosition[0] << ", "
       << n.worldPosition[1] << ", "
       << n.worldPosition[2] << "} "
       << "PN: {"
@@ -194,7 +194,7 @@ std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
       << n.totalRadiance[0] << ", "
       << n.totalRadiance[1] << ", "
       << n.totalRadiance[2] << "} "
-      << "DT: " 
+      << "DT: "
       << n.nearestDTreeIndex;
     return s;
 }
@@ -204,7 +204,7 @@ std::ostream& operator<<(std::ostream& s, const DTreeNode& n)
     constexpr uint32_t UINT32_T_MAX = std::numeric_limits<uint32_t>::max();
     constexpr uint16_t UINT16_T_MAX = std::numeric_limits<uint16_t>::max();
 
-    s << "P{"; 
+    s << "P{";
     if(n.parentIndex == UINT16_T_MAX) s << "-";
     else s << n.parentIndex;
     s << "} ";
@@ -233,6 +233,6 @@ std::ostream& operator<<(std::ostream& s, const DTreeGPU& n)
 {
     s << "Irradiane  : " << n.irradiance << std::endl;
     s << "NodeCount  : " << n.nodeCount << std::endl;
-    s << "SampleCount: " << n.totalSamples << std::endl;        
+    s << "SampleCount: " << n.totalSamples << std::endl;
     return s;
 }

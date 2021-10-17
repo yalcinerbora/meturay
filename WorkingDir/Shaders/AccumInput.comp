@@ -6,7 +6,7 @@
 	Author		: Bora Yalciner
 	Description	:
 
-		Shader Averages the current image that is 
+		Shader Averages the current image that is
 		being displayed with the new image that is
 		brought by Tracer System.
 
@@ -66,15 +66,14 @@ void main(void)
 		uint sampleIn = texelFetch(tInSample, pixIdIn, 0).x;
 		// Calculate
 		uint totalSamples = sampleCount + sampleIn;
-		
+
 		if(totalSamples != 0)
 		{
-			colorOut = (sampleCount * colorIn + 
-						 sampleIn   *  bufferIn) / totalSamples;
+			colorOut = (sampleCount * colorIn + bufferIn) / float(totalSamples);
 
 			// Set new sample count
 			imageStore(iSample, pixIdOut, ivec4(totalSamples));
-		}		
+		}
 	}
 	// Copy
 	imageStore(iColor, pixIdOut, colorOut);

@@ -16,24 +16,31 @@
 
     "Lights":[
         {
-            "id": 0,
-		    "type": "Rectangular",
-
-		    "topLeft": [2.0497, 5.144720, 0.97479],
-		    "right" : [4.0994, 0, 0],
-		    "down" : [0, 0, 1.272]
-        },
-        {
-            "id": 1,
-		    "type": "Rectangular",
-		    "topLeft": [2.0497, 5.144720, -2.24679],
-		    "right" : [4.0994, 0, 0],
-		    "down" : [0, 0, 1.272]
-        },
-        {
             "id": 2,
             "type": "SkySphere",
-            "isHemispherical": false
+            "radiance" : [0.3, 0.3, 0.3]
+        },
+        {
+            "id": 3,
+            "type": "Primitive",
+            "primitive": 89,
+            "accelerator": 1,
+            //"radiance" : [900, 900, 1000],
+            "radiance" : [9, 9, 10]
+        },
+        {
+            "id": 5,
+            "type": "Primitive",
+            "primitive": 7,
+            "accelerator": 0,
+            "radiance" :  [20, 3, 3]
+        },
+        {
+            "id": 6,
+            "type": "Primitive",
+            "primitive": 18,
+            "accelerator": 0,
+            "radiance" : [3.88628, 3.77255, 3.43137]
         }
     ],
 
@@ -79,19 +86,6 @@
     "Textures": [],
 
     "Materials":[
-        {
-            // Gray Background
-            "id": 0,
-            "type": "BConstant",
-            "radiance" : [0.3, 0.3, 0.3]
-        },
-        {
-            // Light 0
-            "id": 1,
-            "type": "BConstant",
-            //"radiance" : [900, 900, 1000],
-            "radiance" : [9, 9, 10]
-        },
         {
             // Dark Rubber
             "id": 2,
@@ -179,17 +173,7 @@
                 [0.1, 0.1, 0.1],
                 [0, 0, 0]
             ]
-        },
-        {
-            // Spaceship Lights
-            "id": [13, 14],
-            "type": "BConstant",
-            "radiance": [
-                [20, 3, 3],
-                [3.88628, 3.77255, 3.43137]
-            ]
         }
-
     ],
 
     "Primitives": [
@@ -586,7 +570,7 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "BasicBVH"},
-    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryLight": 2,
     "BaseBoundaryTransform": 0,
 	"BaseMedium" : 0,
 
@@ -685,11 +669,10 @@
 
      // Lights
      "LightSurfaces": [
-        { "light": 2, "material": 0},
-        { "accelerator": 1, "material": 1, "primitive": 89, "transform": 1 },
-        { "accelerator": 1, "material": 1, "primitive": 89, "transform": 2 },
-        { "accelerator": 0, "material": 13, "primitive": 7 },
-        { "accelerator": 0, "material": 14, "primitive": 18 }
+        { "light": 3, "transform": 1},
+        { "light": 3, "transform": 2},
+        { "light": 5},
+        { "light": 6}
     ],
     // Cameras
     "CameraSurfaces": [{"camera": 0}]

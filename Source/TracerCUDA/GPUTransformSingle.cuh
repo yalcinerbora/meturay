@@ -64,11 +64,11 @@ class CPUTransformSingle : public CPUTransformGroupI
 		static constexpr const char*	SCALE			= "scale";
 
     private:
-		DeviceMemory					memory;
-		const Matrix4x4*				dTransformMatrices;
-		const Matrix4x4*				dInvTransformMatrices;
+		DeviceMemory						memory;
+		const Matrix4x4*					dTransformMatrices;
+		const Matrix4x4*					dInvTransformMatrices;
 		const GPUTransformSingle*		dGPUTransforms;
-		GPUTransformList				gpuTransformList;
+		GPUTransformList					gpuTransformList;
 		uint32_t                        transformCount;
 
     protected:
@@ -86,7 +86,7 @@ class CPUTransformSingle : public CPUTransformGroupI
 		SceneError						ChangeTime(const NodeListing& transformNodes, double time,
 												   const std::string& scenePath) override;
 		TracerError						ConstructTransforms(const CudaSystem&) override;
-		uint32_t						TransformCount() const override;
+		uint32_t							TransformCount() const override;
 
 		size_t							UsedGPUMemory() const override;
 		size_t							UsedCPUMemory() const override;

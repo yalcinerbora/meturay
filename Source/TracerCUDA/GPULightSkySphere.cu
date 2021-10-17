@@ -109,7 +109,9 @@ TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGl
     for(uint32_t lightIndex = 0; lightIndex < lightCount; lightIndex++)
     {
         uint32_t texId = textureIdList[lightIndex];
-        Vector2ui dim = dTextureMemory.at(texId)->Dimensions();
+        Vector2ui dim = (texId == std::numeric_limits<uint32_t>::max())
+                            ? dim = Vector2ui(1u)
+                            : dim = dTextureMemory.at(texId)->Dimensions();
         uint32_t totalCount = dim[0] * dim[1];
 
         DeviceMemory::EnlargeBuffer(luminanceBuffer, totalCount * sizeof(float));
@@ -137,7 +139,7 @@ TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGl
     }
 
     // Construct Distribution Data
-    std::vector<bool> factorInSpherical(hLuminances.size(), false);
+    std::vector<bool> factorInSpherical(hLuminances.size(), true);
     hLuminanceDistributions = CPUDistGroupPiecewiseConst2D(hLuminances, hLuminanceSizes,
                                                            factorInSpherical, system);
 

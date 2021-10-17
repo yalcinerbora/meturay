@@ -39,7 +39,7 @@ namespace Debug
     template<class T>
     static void     DumpMemToFile(const std::string& fName,
                                   const T* mPtr, size_t count,
-                                  bool append = false, 
+                                  bool append = false,
                                   const char* seperator = "\n",
                                   bool hex = false);
     template<class T>

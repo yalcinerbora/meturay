@@ -53,17 +53,12 @@ HitKey GPUAccBVHGroup<PGroup>::FindHitKey(uint32_t accIndex,
             HitKey key = primitiveMaterialKeys[accIndex][i];
             if(!doKeyExpand) return key;
 
-            auto oldKey = key;
-
             PrimitiveId expansion = id - range[0];
             PrimitiveId expandedId = HitKey::FetchIdPortion(key) + expansion;
             key = HitKey::CombinedKey(HitKey::FetchBatchPortion(key),
-                                      static_cast<HitKey::Type>(expandedId));
-
-            METU_LOG("Expanded {}, matKey {}, newKey {}\n",
-                   expandedId, oldKey.value, key.value);
+                                        static_cast<HitKey::Type>(expandedId));
+            return key;
         }
-            return primitiveMaterialKeys[accIndex][i];
     }
     return HitKey::InvalidKey;
 }

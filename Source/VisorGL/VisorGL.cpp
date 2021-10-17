@@ -322,7 +322,7 @@ void VisorGL::Render()
 
     // Do Tone Map
     // Only do tone map if HDR image is modified
-    //if(imageModified)
+    if(imageModified)
     {
         ToneMapOptions tmOpts;
         if(!vOpts.enableTMO)

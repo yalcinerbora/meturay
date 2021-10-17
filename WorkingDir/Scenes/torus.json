@@ -19,7 +19,7 @@
     {
         "id": 0,
         "type": "SkySphere",
-        "isHemispherical": false
+        "radiance" : {"texture": 0, "channels": "rgb"}
     }],
 
     "Mediums":[
@@ -53,12 +53,6 @@
     "Textures": [{"id": 0, "file": "../Textures/Torus/flower_road_4k.hdr"}],
 
     "Materials":[
-    {
-        // Light Boundary Material
-        "id": 0,
-        "type": "BSkySphere",
-        "radiance" : {"texture": 0, "channels": "rgb"}
-    },
     {
         // Torus
         "id": 1,
@@ -126,7 +120,7 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "BasicBVH"},
-    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryLight": 0,
     "BaseBoundaryTransform": 1,
 	"BaseMedium" : 0,
 
@@ -143,7 +137,7 @@
     ],
 
     // Lights
-    "LightSurfaces": [{"light": 0, "material": 0, "transform": 1}],
+    "LightSurfaces": [],
     // Cameras
     "CameraSurfaces": [{"camera": 0}]
 }

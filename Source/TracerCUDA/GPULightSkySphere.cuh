@@ -158,8 +158,8 @@ inline float GPULightSkySphere::Pdf(const Vector3& direction,
 {
     // Convert to spherical coordinates
     Vector3 dirYUp = gTransform.WorldToLocal(direction, true);
-    Vector3 dirZup = Vector3(dirYUp[2], dirYUp[0], dirYUp[1]);
-    Vector2 thetaPhi = Utility::CartesianToSphericalUnit(dirZup);
+    Vector3 dirZUp = Vector3(dirYUp[2], dirYUp[0], dirYUp[1]);
+    Vector2 thetaPhi = Utility::CartesianToSphericalUnit(dirZUp);
 
     // Normalize to generate UV [0, 1]
     // tetha range [-pi, pi]
@@ -177,7 +177,7 @@ inline float GPULightSkySphere::Pdf(const Vector3& direction,
     Vector2f indexNorm = Vector2f(u, v);
 
     // Expand to size
-    Vector2f index = indexNorm * (distribution.Width(), distribution.Height());
+    Vector2f index = indexNorm * Vector2f(distribution.Width(), distribution.Height());
 
     // Fetch Conditional/Marginal Probs
     float pdf = distribution.Pdf(index);
@@ -187,6 +187,17 @@ inline float GPULightSkySphere::Pdf(const Vector3& direction,
     float sinPhi = sin(thetaPhi[1]);
     if(sinPhi == 0.0f) pdf = 0.0f;
     else pdf = pdf / (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
+
+    //if(isnan(pdf))
+    //    printf("NAN PDF %f, (uv) (%f, %f) phi %f\n"
+    //           " d  (%f, %f, %f)\n"
+    //           " dY (%f, %f, %f)\n"
+    //           " dZ (%f, %f, %f)\n"
+    //           "________________\n",
+    //           pdf, u, v, thetaPhi[1],
+    //           direction[0], direction[1], direction[2],
+    //           dirYUp[0], dirYUp[1], dirYUp[2],
+    //           dirZUp[0], dirZUp[1], dirZUp[2]);
 
     return pdf;
 }

@@ -755,8 +755,11 @@ void GPUTracer::Finalize()
     std::vector<Byte> imageData = imgMemory.GetImageToCPU(cudaSystem);
     size_t pixelCount1D = static_cast<size_t>(pixelCount[0]) * pixelCount[1];
 
-    //Debug::DumpMemToFile("TestFile",
+    //Debug::DumpMemToFile("OutPixels",
     //                     reinterpret_cast<Vector4*>(imageData.data()),
+    //                     pixelCount1D);
+    //Debug::DumpMemToFile("OutSamples",
+    //                     reinterpret_cast<uint32_t*>(imageData.data() + offset),
     //                     pixelCount1D);
     //Debug::DumpImage("SentImage.png",
     //                 reinterpret_cast<Vector4*>(imageData.data()),
