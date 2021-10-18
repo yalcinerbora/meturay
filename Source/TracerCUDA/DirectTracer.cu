@@ -127,6 +127,9 @@ TracerError DirectTracer::Initialize()
         workMap.emplace(batchId, WorkBatchArray{batch});
     }
 
+    if(!options.renderType == RenderType::RENDER_FURNACE)
+        return TracerError::OK;
+
     const auto& boundaryInfoList = scene.BoundarWorkBatchInfo();
     for(const auto& wInfo : boundaryInfoList)
     {
@@ -147,7 +150,7 @@ TracerError DirectTracer::Initialize()
         workMap.emplace(batchId, workBatchList);
     }
 
-    return err;
+    return TracerError::OK;
 }
 
 bool DirectTracer::Render()

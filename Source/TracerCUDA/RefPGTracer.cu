@@ -92,9 +92,8 @@ void RefPGTracer::SendPixel() const
             *reinterpret_cast<Vector4f*>(convertedPixel.data()) = Vector4f(Vector3f(accumPixel), 1.0f); break;
             break;
         default:
+            throw TracerException(TracerError::UNABLE_TO_CONVERT_TO_VISOR_PIXEL_FORMAT);
 
-            METU_ERROR_LOG("RPG Tracer is unable to convert "
-                           "unable to convert to Visor pixel format");
             if(callbacks) callbacks->SendCrashSignal();
             return;
     }
@@ -124,7 +123,7 @@ Vector2i RefPGTracer::GlobalPixel2D() const
 void RefPGTracer::ResetIterationVariables()
 {
     doInitCameraCreation = true;
-    currentPixel = 0;
+    currentPixel = 670;
     currentSampleCount = 0;
     currentDepth = 0;
 }
@@ -169,7 +168,7 @@ RefPGTracer::RefPGTracer(const CudaSystem& s,
                          const GPUSceneI& scene,
                          const TracerParameters& p)
     : RayTracer(s, scene, p)
-    , currentPixel(0)
+    , currentPixel(670)
     , currentSampleCount(0)
     , currentCamera(std::numeric_limits<int>::max())
     , doInitCameraCreation(true)
@@ -383,11 +382,8 @@ void RefPGTracer::Finalize()
         Vector2i pixelId2D = GlobalPixel2D();
         ImageIOError e = ImageIOError::OK;
         if((e = SaveAndResetAccumImage(pixelId2D)) != ImageIOError::OK)
-        {
-            METU_ERROR_LOG("Tracer, {}", std::string(e));
-            if(callbacks) callbacks->SendCrashSignal();
-            crashed = true;
-        }
+            throw ImageIOException(e);
+
         currentPixel++;
     }
 
@@ -396,6 +392,7 @@ void RefPGTracer::Finalize()
     if(currentPixel >= totalPixels && callbacks)
     {
         callbacks->SendLog("Finished All Pixels");
+
         callbacks->SendCrashSignal();
     }
 }
@@ -453,14 +450,14 @@ void RefPGTracer::GenerateWork(uint32_t cameraIndex)
 
 void RefPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
-    METU_ERROR_LOG("Cannot use custom camera for this Tracer.");
-    if(callbacks) callbacks->SendCrashSignal();
+    throw TracerException(TracerError(TracerError::TRACER_INTERNAL_ERROR),
+                          "Cannot use visor transformed camera for this Tracer.");
 }
 
 void RefPGTracer::GenerateWork(const GPUCameraI& dCam)
 {
-    METU_ERROR_LOG("Cannot use custom camera for this Tracer.");
-    if(callbacks) callbacks->SendCrashSignal();
+    throw TracerException(TracerError(TracerError::TRACER_INTERNAL_ERROR),
+                          "Cannot use custom camera for this Tracer.");
 }
 
 void RefPGTracer::AskParameters()

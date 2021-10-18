@@ -130,7 +130,7 @@ int main(int argc, const char* argv[])
                                                     std::move(mouseBinds),
                                                     std::move(movementSchemeList));
     // Attach visors window callbacks to this input scheme
-    // Additionally attach this specific visor to this?????????????   
+    // Additionally attach this specific visor to this?????????????
     SharedLib visorDLL(visorDLLName);
     SharedLibPtr<VisorI> visor = {nullptr, nullptr};
     dError = visorDLL.GenerateObjectWithArgs(visor, visorDLLEntryFunctionNames,

@@ -113,11 +113,13 @@ struct SceneError : public ErrorI
         };
 
     private:
-        Type             type;
+        Type            type;
+        std::string     extra;
 
     public:
         // Constructors & Destructor
                     SceneError(Type);
+                    SceneError(Type, const std::string&);
                     ~SceneError() = default;
 
         operator    Type() const;
@@ -135,15 +137,21 @@ class SceneException : public std::runtime_error
             : std::runtime_error("")
             , e(t)
         {}
-        SceneException(SceneError::Type t, const char* const err)
-            : std::runtime_error(err)
-            , e(t)
+        SceneException(SceneError::Type t, const std::string& s)
+            : std::runtime_error("")
+            , e(t, s)
         {}
         operator SceneError() const { return e; };
 };
 
 inline SceneError::SceneError(SceneError::Type t)
     : type(t)
+{}
+
+inline SceneError::SceneError(SceneError::Type t,
+                              const std::string& ext)
+    : type(t)
+    , extra(ext)
 {}
 
 inline SceneError::operator Type() const
@@ -253,5 +261,9 @@ inline SceneError::operator std::string() const
     static_assert((sizeof(ErrorStrings) / sizeof(const char*)) == static_cast<size_t>(SceneError::END),
                   "Enum and enum string list size mismatch.");
 
-    return ErrorStrings[static_cast<int>(type)];
+    if(extra.empty())
+        return ErrorStrings[static_cast<int>(type)];
+    else
+        return (std::string(ErrorStrings[static_cast<int>(type)])
+                + " (" + extra + ')');
 }

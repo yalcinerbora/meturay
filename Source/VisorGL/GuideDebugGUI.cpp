@@ -17,7 +17,7 @@ float GuideDebugGUI::CenteredTextLocation(const char* text, float centeringWidth
     float widthText = ImGui::CalcTextSize(text).x;
     // Handle overflow
     if(widthText > centeringWidth) return 0;
-    
+
     return (centeringWidth - widthText) * 0.5f;
 }
 
@@ -30,7 +30,7 @@ void GuideDebugGUI::CalculateImageSizes(float& paddingY,
     // TODO: Dont assume that we would have at most 4 pg images (excluding ref pg image)
     constexpr float REF_IMG_ASPECT = 16.0f / 9.0f;
     constexpr float PADDING_PERCENT_Y = 0.05f;
-    
+
     // Calculate Y padding between refImage and pgImages
     // Calculate ySize of the both images
     paddingY = viewportSize.y * PADDING_PERCENT_Y;
@@ -84,7 +84,7 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
 
     // ImGUI Dark
     ImGui::StyleColorsDark();
-    
+
     float x, y;
     glfwGetWindowContentScale(window, &x, &y);
 
@@ -100,22 +100,22 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
     ImFontConfig config;
     config.SizePixels = std::roundf(14.0f * x);
     config.OversampleH = config.OversampleV = 2;
-    config.PixelSnapH = true;    
+    config.PixelSnapH = true;
     io.Fonts->AddFontDefault(&config);
 
     // Load Position Buffer
     Vector2ui size;
-    PixelFormat pf;  
+    PixelFormat pf;
     std::vector<Byte> wpByte;
     ImageIOError e = ImageIOInstance().ReadImage(wpByte,
                                                  pf, size,
                                                  posFileName);
-    
+
     if(e != ImageIOError::OK) throw ImageIOException(e);
-    else if(pf != PixelFormat::RGBA_FLOAT)
+    else if(pf != PixelFormat::RGB_FLOAT)
     {
         throw VisorException(VisorError::IMAGE_IO_ERROR,
-                             "Reference Image Must have RGB format");
+                             "Position Image Must have RGB format");
     }
     else if(size != refTexture.Size())
     {
@@ -136,7 +136,7 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
         guideTextues.emplace_back(Vector2ui(PG_TEXTURE_SIZE), PixelFormat::RGB8_UNORM);
         guidePixValues.emplace_back(PG_TEXTURE_SIZE * PG_TEXTURE_SIZE);
     }
-        
+
 }
 
 GuideDebugGUI::~GuideDebugGUI()
@@ -151,13 +151,13 @@ void GuideDebugGUI::Render()
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-   
+
     // TODO: Properly do this no platform/lib dependent enums etc.
     // Check Input operation if left or right arrows are pressed to change the depth
     bool updateDirectionalTextures = false;
     if(ImGui::IsKeyReleased(GLFW_KEY_LEFT) &&
        DecrementDepth())
-    {        
+    {
         updateDirectionalTextures = true;
         METU_LOG("Depth {:d}", currentDepth);
     }
@@ -167,7 +167,7 @@ void GuideDebugGUI::Render()
         updateDirectionalTextures = true;
         METU_LOG("Depth {:d}", currentDepth);
     }
-    
+
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -182,9 +182,9 @@ void GuideDebugGUI::Render()
 
     ImGui::Begin("guideDebug", &fullscreenShow,
                  ImGuiWindowFlags_NoBackground |
-                 ImGuiWindowFlags_NoDecoration | 
-                 ImGuiWindowFlags_NoMove | 
-                 ImGuiWindowFlags_NoResize | 
+                 ImGuiWindowFlags_NoDecoration |
+                 ImGuiWindowFlags_NoMove |
+                 ImGuiWindowFlags_NoResize |
                  ImGuiWindowFlags_NoSavedSettings);
 
     // Titles
@@ -203,7 +203,7 @@ void GuideDebugGUI::Render()
     ImTextureID refTexId = (void*)(intptr_t)refTexture.TexId();
     ImGui::SetCursorPosX(paddingX.x);
     ImVec2 refImgPos = ImGui::GetCursorScreenPos();
-    ImGui::Image(refTexId, refImgSize, ImVec2(0, 1), ImVec2(1, 0));    
+    ImGui::Image(refTexId, refImgSize, ImVec2(0, 1), ImVec2(1, 0));
     if(ImGui::IsItemHovered())
     {
         constexpr float ZOOM_FACTOR = 4.0f;
@@ -215,26 +215,26 @@ void GuideDebugGUI::Render()
         float region_sz = 16.0f;
         float screenPixel_x = io.MousePos.x - refImgPos.x;
         float screenPixel_y = io.MousePos.y - refImgPos.y;
-        
+
         // Calculate Actual Pixel
         float imagePixel_x = screenPixel_x * static_cast<float>(refTexture.Width()) / refImgSize.x;
-        float imagePixel_y = screenPixel_y * static_cast<float>(refTexture.Height()) / refImgSize.y;        
+        float imagePixel_y = screenPixel_y * static_cast<float>(refTexture.Height()) / refImgSize.y;
         imagePixel_x = std::floor(imagePixel_x);
         imagePixel_y = std::floor(imagePixel_y);
         // Invert the Y axis
         imagePixel_y = refTexture.Height() - imagePixel_y - 1;
-       
+
         ImGui::Text("Pixel: (%.2f, %.2f)", imagePixel_x, imagePixel_y);
 
         uint32_t linearIndex = (static_cast<uint32_t>(imagePixel_y) * refTexture.Size()[0] +
                                 static_cast<uint32_t>(imagePixel_x));
-        Vector4f worldPos = worldPositions[linearIndex];
-        if(worldPos[3] == 0.0f)
-        {
-            worldPos[0] = std::numeric_limits<float>::infinity();
-            worldPos[1] = std::numeric_limits<float>::infinity();
-            worldPos[2] = std::numeric_limits<float>::infinity();
-        }
+        Vector3f worldPos = worldPositions[linearIndex];
+        //if(worldPos[3] == 0.0f)
+        //{
+        //    worldPos[0] = std::numeric_limits<float>::infinity();
+        //    worldPos[1] = std::numeric_limits<float>::infinity();
+        //    worldPos[2] = std::numeric_limits<float>::infinity();
+        //}
         ImGui::Text("Position: (%.4f, %.4f, %.4f)",
                     worldPos[0], worldPos[1], worldPos[2]);
 
@@ -246,23 +246,23 @@ void GuideDebugGUI::Render()
         region_y = HybridFuncs::Clamp(region_y, 0.0f,
                                       refTexture.Height() - region_sz);
 
-        ImVec2 uv0 = ImVec2((region_x) / refTexture.Width(), 
-                            (region_y) / refTexture.Height());        
-        ImVec2 uv1 = ImVec2((region_x + region_sz) / refTexture.Width(), 
+        ImVec2 uv0 = ImVec2((region_x) / refTexture.Width(),
+                            (region_y) / refTexture.Height());
+        ImVec2 uv1 = ImVec2((region_x + region_sz) / refTexture.Width(),
                             (region_y + region_sz) / refTexture.Height());
         // Invert Y (.......)
         std::swap(uv0.y, uv1.y);
-       
+
         // Center the image on the tooltip window
         ImVec2 ttImgSize(region_sz * ZOOM_FACTOR,
-                         region_sz * ZOOM_FACTOR);        
+                         region_sz * ZOOM_FACTOR);
         ImGui::Image(refTexId, ttImgSize, uv0, uv1);
         ImGui::EndTooltip();
 
         // Click Action will require us to send draw calls to all Debug Renderers
         // Aswell we need to draw a circle
         if(ImGui::IsMouseClicked(ImGuiMouseButton_::ImGuiMouseButton_Left))
-        {            
+        {
             pixelSelected = true;
             Vector2f newSelectedPixel = Vector2f(imagePixel_x, imagePixel_y);
             updateDirectionalTextures = (selectedPixel != newSelectedPixel);
@@ -286,7 +286,7 @@ void GuideDebugGUI::Render()
                                    refImgPos.y + screenPixel_y + 0.5f),
                             3.0f,
                             ImColor(0.0f, 1.0f, 0.0f), 0, 1.5f);
-    }   
+    }
     // Debug Reference Image
     ImTextureID dRefTexId = (void*)(intptr_t)debugRefTexture.TexId();
     ImGui::SameLine(0.0f, paddingX.x);
@@ -309,16 +309,16 @@ void GuideDebugGUI::Render()
 
         ImGui::SameLine(0.0f, prevTextOffset + paddingX.y + offset);
         prevTextOffset = offset;
-        ImGui::Text(name.c_str());        
+        ImGui::Text(name.c_str());
     }
     // Force New Line then render Images
     ImGui::NewLine();
 
     ImGui::SetCursorPosX(paddingX.y);
     for(size_t i = 0; i < guideTextues.size(); i++)
-    {       
+    {
         ImTextureID guideTexId = (void*)(intptr_t) guideTextues[i].TexId();
-        ImVec2 pgImgPos = ImGui::GetCursorScreenPos();        
+        ImVec2 pgImgPos = ImGui::GetCursorScreenPos();
         ImGui::Image(guideTexId, pgImgSize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::SameLine(0.0f, paddingX.y);
 
@@ -333,7 +333,7 @@ void GuideDebugGUI::Render()
             float screenPixel_x = io.MousePos.x - pgImgPos.x;
             float screenPixel_y = io.MousePos.y - pgImgPos.y;
 
-            //METU_LOG("pgImgPos ({:f}, {:f}) == ({:f}, {:f}", 
+            //METU_LOG("pgImgPos ({:f}, {:f}) == ({:f}, {:f}",
             //         pgImgPos.x, pgImgPos.y,
             //         io.MousePos.x, io.MousePos.y);
 
@@ -374,12 +374,12 @@ void GuideDebugGUI::Render()
         }
 
     }
-    
+
     //// DEBUG TEST
     //ImGui::Dummy(ImVec2(0.0f, 0.0f));
     //for(size_t i = 0; i < 4; i++)
     //{
-    //    const std::string name = std::string("PPG ") + std::to_string(i);        
+    //    const std::string name = std::string("PPG ") + std::to_string(i);
     //    float offset = CenteredTextLocation(name.c_str(), pgImgSize.x);
     //    ImGui::SameLine(0.0f, prevTextOffset + paddingX.y + offset);
     //    prevTextOffset = offset;
@@ -402,13 +402,13 @@ void GuideDebugGUI::Render()
     {
         uint32_t linearIndex = (static_cast<uint32_t>(selectedPixel[1]) * refTexture.Size()[0] +
                                 static_cast<uint32_t>(selectedPixel[0]));
-        Vector4f worldPos = worldPositions[linearIndex];
-        if(worldPos[3] == 0.0f)
-        {
-            worldPos[0] = std::numeric_limits<float>::infinity();
-            worldPos[1] = std::numeric_limits<float>::infinity();
-            worldPos[2] = std::numeric_limits<float>::infinity();
-        }
+        Vector3f worldPos = worldPositions[linearIndex];
+        //if(worldPos[3] == 0.0f)
+        //{
+        //    worldPos[0] = std::numeric_limits<float>::infinity();
+        //    worldPos[1] = std::numeric_limits<float>::infinity();
+        //    worldPos[2] = std::numeric_limits<float>::infinity();
+        //}
 
         debugReference.RenderDirectional(debugRefTexture,
                                          Vector2i(static_cast<int32_t>(selectedPixel[0]),
@@ -424,7 +424,7 @@ void GuideDebugGUI::Render()
                                                  worldPos, currentDepth);
         }
     }
-       
+
     // Render the GUI
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

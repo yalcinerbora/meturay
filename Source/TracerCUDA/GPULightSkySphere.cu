@@ -85,7 +85,9 @@ SceneError CPULightGroupSkySphere::ChangeTime(const NodeListing& lightNodes,
                                               const std::string& scenePath)
 {
     // TODO: Implement
-    return SceneError::LIGHT_TYPE_INTERNAL_ERRROR;
+    return SceneError(SceneError::LIGHT_TYPE_INTERNAL_ERRROR,
+                      "Change Time function on \"CPULightGroupSkySphere\""
+                      "is not yet implemented");
 }
 
 TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGlobalTransformArray,

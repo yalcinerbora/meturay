@@ -9,7 +9,7 @@ struct ImageIOError : public ErrorI
         {
             OK,
             // Common
-            IMAGE_NOT_FOUND,            
+            IMAGE_NOT_FOUND,
             UNKNOWN_PIXEL_FORMAT,
             UNKNOWN_IMAGE_TYPE,
             // Conversion

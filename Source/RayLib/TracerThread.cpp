@@ -7,6 +7,7 @@
 #include "SceneError.h"
 
 #include "RayLib/CPUTimer.h"
+#include "RayLib/ImageIOError.h"
 
 TracerThread::TracerThread(TracerSystemI& t,
                            const TracerOptions& opts,
@@ -143,12 +144,33 @@ void TracerThread::LoopWork()
         tracer->GenerateWork(vt, sceneCam.Get());
     }
 
-    // Exaust all the generated work
-    while(tracer->Render());
+    try
+    {
+        // Exaust all the generated work
+        while(tracer->Render());
 
-    // Finalaze the Works
-    // (send the generated image to the visor etc.)
-    tracer->Finalize();
+        // Finalaze the Works
+        // (send the generated image to the visor etc.)
+        tracer->Finalize();
+    }
+    catch(const TracerException& e)
+    {
+        PrintErrorAndSignalTerminate<TracerError>(e);
+        tracerCallbacks.SendError(e);
+        tracerCallbacks.SendCrashSignal();
+        return;
+    }
+    catch(const ImageIOException& e)
+    {
+        PrintErrorAndSignalTerminate<ImageIOError>(e);
+        // Convert it to a Tracer Error
+        TracerError err = TracerError(TracerError::TRACER_INTERNAL_ERROR,
+                                      static_cast<ImageIOError>(e));
+
+        tracerCallbacks.SendError(err);
+        tracerCallbacks.SendCrashSignal();
+        return;
+    }
 
     // Set previously stopped to false since we cycled once
     isPrevStopped = false;

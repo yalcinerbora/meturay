@@ -233,7 +233,8 @@ TracerError WorkPool<Args...>::GenerateWorkBatch(GPUWorkBatchI*& work,
         work = ptr.get();
         allocatedResources.emplace_back(std::move(ptr));
     }
-    else return TracerError::UNABLE_TO_GENERATE_WORK;
+    else return TracerError(TracerError::UNABLE_TO_GENERATE_WORK,
+                            mangledName);
     return TracerError::OK;
 }
 
@@ -252,7 +253,8 @@ TracerError WorkPool<Args...>::GenerateWorkBatch(GPUWorkBatchI*& work,
         work = ptr.get();
         allocatedResources.emplace_back(std::move(ptr));
     }
-    else return TracerError::UNABLE_TO_GENERATE_WORK;
+    else return TracerError(TracerError::UNABLE_TO_GENERATE_WORK,
+                            workNameOverride);
     return TracerError::OK;
 }
 
@@ -308,7 +310,7 @@ TracerError BoundaryWorkPool<Args...>::GenerateWorkBatch(GPUWorkBatchI*& work,
         work = ptr.get();
         allocatedResources.emplace_back(std::move(ptr));
     }
-    else return TracerError::UNABLE_TO_GENERATE_WORK;
+    else return TracerError(TracerError::UNABLE_TO_GENERATE_WORK, mangledName);
     return TracerError::OK;
 }
 
@@ -326,6 +328,6 @@ TracerError BoundaryWorkPool<Args...>::GenerateWorkBatch(GPUWorkBatchI*& work,
         work = ptr.get();
         allocatedResources.emplace_back(std::move(ptr));
     }
-    else return TracerError::UNABLE_TO_GENERATE_WORK;
+    else return TracerError(TracerError::UNABLE_TO_GENERATE_WORK, workNameOverride);
     return TracerError::OK;
 }

@@ -204,7 +204,7 @@ std::vector<Range<T>> SceneIO::LoadRangedNumbers(const nlohmann::json& jsn)
                 s >> end;
                 result.push_back(Range<T>{start, end + 1});
             }
-            else goto ERROR_TAG;            
+            else goto ERROR_TAG;
         }
         return result;
     }

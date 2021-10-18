@@ -5,6 +5,7 @@
 
 #include "RayLib/MemoryAlignment.h"
 #include "RayLib/Log.h"
+#include "RayLib/TracerError.h"
 #include "ImageIO/ImageIOI.h"
 
 // Template lambda to ease of read
@@ -27,7 +28,7 @@ struct KC
                            //
                            mem.GMem<T>(),
                            pixelCount);
-    }    
+    }
 };
 
 template <class T>
@@ -47,16 +48,16 @@ void ChangeNaNToColor(float& pixel)
 template <class T>
 __device__
 void ChangeNaNToColor(T& pixel)
-{    
+{
     if(pixel.HasNaN())
     {
         // Push bright magenta to visualize NaN
-        pixel = Vector4(1.0e30, 0.0, 1.0e30, 1.0f);        
+        pixel = Vector4(1.0e30, 0.0, 1.0e30, 1.0f);
     }
 }
 
 template <class T>
-__global__ 
+__global__
 void KCCheckPixels(ImageGMem<T> mem, size_t totalPixelCount)
 {
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
@@ -70,7 +71,7 @@ void KCCheckPixels(ImageGMem<T> mem, size_t totalPixelCount)
 }
 
 template <class T>
-__global__ 
+__global__
 void KCResetSamples(ImageGMem<T> mem, size_t totalPixelCount)
 {
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
@@ -184,11 +185,7 @@ std::vector<Byte> ImageMemory::GetImageToCPU(const CudaSystem& system)
             case PixelFormat::RGBA_FLOAT: KC<Vector4f, KCCheckPixels>{pixelCount, *this, gpu}(); break;
                 break;
             default:
-                METU_ERROR_LOG("Image Memory Fatal Error: "
-                               "unable to find proper pixel format "
-                               "kernel for \"KCCheckPixels\"");
-                std::abort();
-                break;
+                throw TracerException(TracerError::IMEM_UNKNOWN_PIXEL_FORMAT);
         }
     }
 

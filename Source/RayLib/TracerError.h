@@ -34,6 +34,11 @@ struct TracerError : public ErrorI
             UNABLE_TO_INITIALIZE_TRACER,
             UNKNOWN_SCENE_PARTITIONER_TYPE,
             NO_LOGIC_FOR_TRACER,
+            // Image Memory Related
+            IMEM_UNKNOWN_PIXEL_FORMAT,
+            UNABLE_TO_CONVERT_TO_VISOR_PIXEL_FORMAT,
+            // Misc
+            TRACER_INTERNAL_ERROR,
             // ...
 
             // End
@@ -42,10 +47,12 @@ struct TracerError : public ErrorI
 
     private:
         Type        type;
+        std::string extra;
 
     public:
         // Constructors & Destructor
                     TracerError(Type);
+                    TracerError(Type, const std::string&);
                     ~TracerError() = default;
 
         operator    Type() const;
@@ -72,6 +79,12 @@ class TracerException : public std::runtime_error
 
 inline TracerError::TracerError(TracerError::Type t)
     : type(t)
+{}
+
+inline TracerError::TracerError(TracerError::Type t,
+                                const std::string& ext)
+    : type(t)
+    , extra(ext)
 {}
 
 inline TracerError::operator Type() const
@@ -103,9 +116,18 @@ inline TracerError::operator std::string() const
         "Unable to initialize tracer",
         "Unknown scene partitioner type",
         "No logic found for that tracer",
+        // Image Memory Related
+        "Unable to utilize the provided pixel format",
+        "Unable to convert tracer pixel format to visor pixel format",
+        // Misc
+        "Tracer internal error"
     };
     static_assert(std::extent<decltype(ErrorStrings)>::value == static_cast<size_t>(TracerError::END),
                   "Enum and enum string list size mismatch.");
 
-    return ErrorStrings[static_cast<int>(type)];
+    if(extra.empty())
+        return ErrorStrings[static_cast<int>(type)];
+    else
+        return (std::string(ErrorStrings[static_cast<int>(type)])
+                + " (" + extra + ')');
 }
