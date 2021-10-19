@@ -32,9 +32,10 @@ class GuideDebugGUI
         // Textures that are rendered by different visors
         std::vector<std::vector<float>>         guidePixValues;
         std::vector<TextureGL>                  guideTextues;
-        // Reference Texture
-        TextureGL                               debugRefTexture;
         const std::vector<DebugRendererPtr>&    debugRenderers;
+        // Reference Texture
+        std::vector<float>                      debugRefPixValues;
+        TextureGL                               debugRefTexture;
         const GDebugRendererRef&                debugReference;
         // Reference Image's Pixel Values
         std::vector<Vector3f>                   worldPositions;

@@ -1,11 +1,11 @@
 #version 430
-/*	
+/*
 	**PPG DTree Render Shader**
-	
-	File Name	: DTreeRender.vert 
+
+	File Name	: DTreeRender.vert
 	Author		: Bora Yalciner
 	Description	:
-		
+
 */
 
 // Definitions
@@ -44,6 +44,7 @@ void main(void)
 
 	// Determine Gradient UV
 	float u = (vRadiance / maxRadiance) / float(1 << (2 * (maxDepth - vDepth)));
+	//float u = (vRadiance / maxRadiance);
 	fUV = vec2(u, 0.5f);
 
 	// Pass Value to Fragment Shader

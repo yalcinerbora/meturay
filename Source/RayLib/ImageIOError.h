@@ -14,6 +14,7 @@ struct ImageIOError : public ErrorI
             UNKNOWN_IMAGE_TYPE,
             // Conversion
             TYPE_IS_NOT_SIGN_CONVERTIBLE,
+            UNABLE_TO_CONVERT_BETWEEN_FORMATS,
             // Internal Errors
             READ_INTERNAL_ERROR,
             WRITE_INTERNAL_ERROR,
@@ -82,6 +83,7 @@ inline ImageIOError::operator std::string() const
         "Unknown image type",
         // Conversion
         "Pixel Format is not sign convertible",
+        "Unable to convert between formats",
         //"Pixel Format is not 3C->4C expandable (not a 3 Channel type)",
         // Internal Errors
         "Read operation internal error",

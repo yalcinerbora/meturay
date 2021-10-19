@@ -4,6 +4,7 @@
 #include "WorkPool.h"
 #include "GPULightI.h"
 #include "STree.cuh"
+#include "Tracers.h"
 
 class GPUDirectLightSamplerI;
 struct PathGuidingNode;
@@ -28,13 +29,6 @@ class PPGTracer final : public RayTracer
         static constexpr const char* S_TREE_SAMPLE_SPLIT_NAME   = "STreeMaxSamples";
         static constexpr const char* DUMP_DEBUG_NAME            = "DumpDebugData";
 
-        enum LightSamplerType
-        {
-            UNIFORM,
-
-            END
-        };
-
         struct Options
         {
             int32_t             sampleCount         = 1;
@@ -42,7 +36,7 @@ class PPGTracer final : public RayTracer
 
             uint32_t            rrStart             = 3;
 
-            std::string         lightSamplerType    = "Uniform";
+            LightSamplerType    lightSamplerType    = LightSamplerType::UNIFORM;
 
             // Paper Related
             uint32_t            maxDTreeDepth       = 32;
@@ -82,10 +76,6 @@ class PPGTracer final : public RayTracer
         uint32_t                        currentTreeIteration;
         uint32_t                        nextTreeSwap;
         // Misc
-
-        static TracerError              LightSamplerNameToEnum(LightSamplerType&,
-                                                               const std::string&);
-        TracerError                     ConstructLightSampler();
         void                            ResizeAndInitPathMemory();
         uint32_t                        TotalPathNodeCount() const;
         uint32_t                        MaximumPathNodePerPath() const;

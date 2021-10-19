@@ -80,7 +80,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\PathTracerWorks.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracer.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerKC.cuh" />
-    <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerWork.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerWorks.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracer.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracerWorks.cuh" />
@@ -181,7 +181,7 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\LambertMaterial.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracerWorks.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracer.cu" />
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracerWork.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracerWorks.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RefPGTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RefPGTracerWorks.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RNGMemory.cu" />

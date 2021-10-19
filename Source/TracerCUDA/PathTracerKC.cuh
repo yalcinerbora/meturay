@@ -22,11 +22,11 @@ struct PathTracerGlobalState
     // Medium Related
     const GPUMediumI**              mediumList;
     uint32_t                        totalMediumCount;
-
     // Options
     // Options for NEE
     bool                            directLightMIS;
     bool                            nee;
+    // Russian Roulette
     int                             rrStart;
 };
 
@@ -209,7 +209,7 @@ void PathTracerPathWork(// Output
     //              NEE PORTION              //
     // ===================================== //
     // Dont launch NEE if not requested
-    // or material is highly specula
+    // or material is highly specular
     if(renderState.nee && !isSpecularMat)
     {
         float pdfLight, lDistance;

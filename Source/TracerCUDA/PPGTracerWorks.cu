@@ -1,4 +1,4 @@
-﻿#include "PPGTracerWork.cuh"
+﻿#include "PPGTracerWorks.cuh"
 // Path Tracer Work Batches
 // ===================================================
 // Boundary

@@ -290,7 +290,60 @@ void GuideDebugGUI::Render()
     // Debug Reference Image
     ImTextureID dRefTexId = (void*)(intptr_t)debugRefTexture.TexId();
     ImGui::SameLine(0.0f, paddingX.x);
+    ImVec2 refPGImgPos = ImGui::GetCursorScreenPos();
     ImGui::Image(dRefTexId, pgImgSize, ImVec2(0, 1), ImVec2(1, 0));
+    if(ImGui::IsItemHovered() && debugRefTexture.Size() != Zero2ui)
+    {
+        constexpr float ZOOM_FACTOR = 8.0f;
+        ImGuiIO& io = ImGui::GetIO();
+
+        // Zoomed Tooltip
+        ImGui::BeginTooltip();
+        float region_sz = 16.0f;
+        float screenPixel_x = io.MousePos.x - refPGImgPos.x;
+        float screenPixel_y = io.MousePos.y - refPGImgPos.y;
+
+        //METU_LOG("pgImgPos ({:f}, {:f}) == ({:f}, {:f}",
+        //         pgImgPos.x, pgImgPos.y,
+        //         io.MousePos.x, io.MousePos.y);
+
+        // Calculate Actual Pixel
+        Vector2f refImageUV(static_cast<float>(screenPixel_x) / static_cast<float>(pgImgSize.x),
+                            static_cast<float>(screenPixel_y) / static_cast<float>(pgImgSize.y));
+        Vector2ui debugRefResolution = debugRefTexture.Size();
+        Vector2f debugRefPixelId = Vector2f(debugRefResolution[0] * refImageUV[0],
+                                            debugRefResolution[1] * refImageUV[1]);
+        debugRefPixelId.FloorSelf();
+        // Invert the Y axis
+        debugRefPixelId[1] = debugRefResolution[1] - debugRefPixelId[1] - 1;
+
+        uint32_t linearIndex = (debugRefResolution[0] * static_cast<uint32_t>(debugRefPixelId[1])
+                                + static_cast<uint32_t>(debugRefPixelId[0]));
+        ImGui::Text("Pixel: (%.2f, %.2f)", debugRefPixelId[0], debugRefPixelId[1]);
+        ImGui::Text("Value: %f", debugRefPixValues[linearIndex]);
+
+        // Calculate Zoom UV
+        float region_x = debugRefPixelId[0] - region_sz * 0.5f;
+        region_x = HybridFuncs::Clamp(region_x, 0.0f,
+                                      debugRefResolution[0] - region_sz);
+        float region_y = debugRefPixelId[1] - region_sz * 0.5f;
+        region_y = HybridFuncs::Clamp(region_y, 0.0f,
+                                      debugRefResolution[1] - region_sz);
+
+        ImVec2 uv0 = ImVec2((region_x) / debugRefResolution[0],
+                            (region_y) / debugRefResolution[1]);
+        ImVec2 uv1 = ImVec2((region_x + region_sz) / debugRefResolution[0],
+                            (region_y + region_sz) / debugRefResolution[1]);
+        // Invert Y (.......)
+        std::swap(uv0.y, uv1.y);
+
+        // Center the image on the tooltip window
+        ImVec2 ttImgSize(region_sz * ZOOM_FACTOR,
+                         region_sz * ZOOM_FACTOR);
+        ImGui::Image(dRefTexId, ttImgSize, uv0, uv1);
+        ImGui::EndTooltip();
+    }
+
     // New Line and Path Guider Images
     ImGui::Dummy(ImVec2(0.0f, std::max(0.0f, (paddingY - ImGui::GetFontSize()) * 0.95f)));
 
@@ -348,8 +401,8 @@ void GuideDebugGUI::Render()
 
             uint32_t linearIndex = (PG_TEXTURE_SIZE * static_cast<uint32_t>(imagePixel_y)
                                     + static_cast<uint32_t>(imagePixel_x));
-            ImGui::Text("Pixel: ({:.2f}, {:.2f})", imagePixel_x, imagePixel_y);
-            ImGui::Text("Value: {:f}", guidePixValues[i][linearIndex]);
+            ImGui::Text("Pixel: (%.2f, %.2f)", imagePixel_x, imagePixel_y);
+            ImGui::Text("Value: %f", guidePixValues[i][linearIndex]);
 
             // Calculate Zoom UV
             float region_x = imagePixel_x - region_sz * 0.5f;
@@ -410,7 +463,7 @@ void GuideDebugGUI::Render()
         //    worldPos[2] = std::numeric_limits<float>::infinity();
         //}
 
-        debugReference.RenderDirectional(debugRefTexture,
+        debugReference.RenderDirectional(debugRefTexture, debugRefPixValues,
                                          Vector2i(static_cast<int32_t>(selectedPixel[0]),
                                                   static_cast<int32_t>(selectedPixel[1])),
                                          Vector2i(static_cast<int32_t>(refTexture.Size()[0]),

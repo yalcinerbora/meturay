@@ -41,35 +41,27 @@ uint32_t CalculateSphericalPixelId(const Vector3& dir,
 {
     // Convert Y up from Z up
     Vector3 dirZup = Vector3(dir[2], dir[0], dir[1]);
-    // Convert to Spherical Coordinates
     Vector2f thetaPhi = Utility::CartesianToSphericalUnit(dirZup);
+
     // Normalize to generate UV [0, 1]
     // tetha range [-pi, pi]
     float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
+    // If we are at edge point (u == 1) make it zero since
+    // piecewise constant function will not have that pdf (out of bounds)
+    u = (u == 1.0f) ? 0.0f : u;
     // phi range [0, pi]
     float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);
+    // If (v == 1) then again pdf of would be out of bounds.
+    // make it inbound
+    v = (v == 1.0f) ? (v - MathConstants::SmallEpsilon) : v;
 
     // Check for numeric unstaibility (just clamp the data)
-    u = HybridFuncs::Clamp(u, 0.0f, 1.0f - MathConstants::Epsilon);
-    v = HybridFuncs::Clamp(v, 0.0f, 1.0f - MathConstants::Epsilon);
     assert(u >= 0.0f && u < 1.0f);
     assert(v >= 0.0f && v < 1.0f);
 
     Vector2i pixelId2D = Vector2i(u * resolution[0],
                                   v * resolution[1]);
     uint32_t pixel1D = pixelId2D[1] * resolution[0] + pixelId2D[0];
-
-    if(pixel1D >= resolution[0] * resolution[1])
-    {
-        printf("pixel out of range :\n"
-               "uv   : [%f, %f]\n"
-               "pix  : [%d, %d]\n"
-               "pix1D: %u\n",
-               u, v,
-               pixelId2D[0], pixelId2D[1],
-               pixel1D);
-    }
-
     return pixel1D;
 }
 
@@ -109,12 +101,12 @@ void RPGTracerBoundaryWork(// Output
     const bool isCorrectLight = (requestedLight->EndpointId() == gLight.EndpointId());
     const bool isCorrectNEERay = ((!renderState.nee) ||
                                   (isCorrectLight && aux.type == RayType::NEE_RAY));
+    // If a path ray is hit when NEE is off, consider it as a camera ray
+    bool isFirstDepthPathRay = (aux.depth == 2) && (aux.type == RayType::PATH_RAY);
 
-    // If a path ray is hit
-    bool isFirstDepthPathRay = (aux.depth == 1) && (aux.type == RayType::PATH_RAY);
-
+    // Only treat path ray as MIS ray if it is not calculates the direct lighting
     float misWeight = 1.0f;
-    if(isPathRayAsMISRay)
+    if(isPathRayAsMISRay && !isFirstDepthPathRay)
     {
         Vector3 position = ray.ray.AdvancedPos(ray.tMax);
         Vector3 direction = ray.ray.getDirection().Normalize();
@@ -189,7 +181,7 @@ void RPGTracerPathWork(// Output
                        const typename MGroup::Data& gMatData,
                        const HitKey::Type matIndex)
 {
-        static constexpr Vector3 ZERO_3 = Zero3;
+    static constexpr Vector3 ZERO_3 = Zero3;
 
     // TODO: change this currently only first strategy is sampled
     static constexpr int PATH_RAY_INDEX = 0;
@@ -201,6 +193,7 @@ void RPGTracerPathWork(// Output
                                           maxOutRay);
 
     // Inputs
+    const bool isCameraRay = (aux.type == RayType::CAMERA_RAY);
     // Current Ray
     const RayF& r = ray.ray;
     // Hit Position
@@ -255,9 +248,8 @@ void RPGTracerPathWork(// Output
     //              NEE PORTION              //
     // ===================================== //
     // Dont launch NEE if not requested
-    // or material is highly specula
-    if(renderState.nee && !isSpecularMat &&
-       (aux.type != RayType::CAMERA_RAY))
+    // or material is highly specular
+    if(renderState.nee && !isSpecularMat && !isCameraRay)
     {
         float pdfLight, lDistance;
         HitKey matLight;
@@ -291,7 +283,9 @@ void RPGTracerPathWork(// Output
                               // Check if light can be sampled (meaning it is not a
                               // dirac delta light (point light spot light etc.)
                               renderState.gLightList[lightIndex]->CanBeSampled() &&
-                              (aux.type != RayType::CAMERA_RAY));
+                              // If current ray is camera ray we dont launch NEE ray anyway so
+                              // this is kinda redundant
+                              !isCameraRay);
 
         float pdfNEE = pdfLight;
         // Weight the NEE if using MIS
@@ -379,7 +373,9 @@ void RPGTracerPathWork(// Output
         // Aux
         RayAuxPath auxOut = aux;
 
-        if(aux.type == RayType::CAMERA_RAY)
+        // Calculate the actual pixel id and add a sample
+        // when the very first path ray is launched
+        if(isCameraRay)
         {
             auxOut.pixelIndex = CalculateSphericalPixelId(rayPath.getDirection(),
                                                           renderState.resolution);

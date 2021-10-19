@@ -1,8 +1,8 @@
 #version 430
 /*
 	**PG Reference Render Shader**
-	
-	File Name	: DTreeRender.vert 
+
+	File Name	: DTreeRender.vert
 	Author		: Bora Yalciner
 	Description	:
 

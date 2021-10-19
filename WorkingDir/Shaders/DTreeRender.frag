@@ -1,8 +1,8 @@
 #version 430
 /*
 	**PPG DTree Render Shader**
-	
-	File Name	: DTreeRender.vert 
+
+	File Name	: DTreeRender.vert
 	Author		: Bora Yalciner
 	Description	:
 
@@ -40,7 +40,7 @@ void main(void)
 		fboColor = vec4(perimeterColor, 1.0f);
 	else
 	{
-		fboColor = vec4(texture(tGradient, fUV).xyz, 1.0f);	
+		fboColor = vec4(texture(tGradient, fUV).xyz, 1.0f);
 		fboValue = fValue;
 	}
 }

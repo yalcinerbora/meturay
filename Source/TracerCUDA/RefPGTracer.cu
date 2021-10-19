@@ -123,7 +123,7 @@ Vector2i RefPGTracer::GlobalPixel2D() const
 void RefPGTracer::ResetIterationVariables()
 {
     doInitCameraCreation = true;
-    currentPixel = 670;
+    currentPixel = 0;
     currentSampleCount = 0;
     currentDepth = 0;
 }
@@ -168,7 +168,7 @@ RefPGTracer::RefPGTracer(const CudaSystem& s,
                          const GPUSceneI& scene,
                          const TracerParameters& p)
     : RayTracer(s, scene, p)
-    , currentPixel(670)
+    , currentPixel(0)
     , currentSampleCount(0)
     , currentCamera(std::numeric_limits<int>::max())
     , doInitCameraCreation(true)
@@ -347,6 +347,57 @@ bool RefPGTracer::Render()
     return true;
 }
 
+void RefPGTracer::GenerateWork(uint32_t cameraIndex)
+{
+    if(crashed) return;
+
+    if(callbacks)
+        callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
+
+    // Check if the camera is changed
+    if(currentCamera != cameraIndex)
+    {
+        // Reset currents
+        currentCamera = cameraIndex;
+        ResetIterationVariables();
+
+        // Reset the shown image
+        if(callbacks) callbacks->SendImageSectionReset(iPortionStart, iPortionEnd);
+    }
+
+    // Change pixel if we had enough samples
+    if(currentSampleCount >= options.totalSamplePerPixel ||
+       doInitCameraCreation)
+    {
+        doInitCameraCreation = false;
+
+        // Reset the accum buffer
+        accumulationBuffer.Reset(cudaSystem);
+
+        // Find world pixel 2D id
+        Vector2i pixelId = GlobalPixel2D();
+        // Construct a New camera
+        cudaSystem.BestGPU().KC_X(0, (cudaStream_t)0, 1,
+                                  // Function
+                                  KCConstructSingleGPUCameraPixel,
+                                  // Args
+                                  dPixelCamera,
+                                  //
+                                  *(dCameras[cameraIndex]),
+                                  pixelId,
+                                  resolution);
+
+        // Reset sample count for this img
+        currentSampleCount = 0;
+    }
+
+    // Generate Work for current Camera
+    GenerateRays<RayAuxPath, RayAuxInitRefPG>(*dPixelCamera, options.samplePerIteration,
+                                              RayAuxInitRefPG(InitialPathAux),
+                                              false);
+    currentDepth = 0;
+}
+
 void RefPGTracer::Finalize()
 {
     if(crashed) return;
@@ -395,57 +446,6 @@ void RefPGTracer::Finalize()
 
         callbacks->SendCrashSignal();
     }
-}
-
-void RefPGTracer::GenerateWork(uint32_t cameraIndex)
-{
-    if(crashed) return;
-
-    if(callbacks)
-        callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
-
-    // Check if the camera is changed
-    if(currentCamera != cameraIndex)
-    {
-        // Reset currents
-        currentCamera = cameraIndex;
-        ResetIterationVariables();
-
-        // Reset the shown image
-        if(callbacks) callbacks->SendImageSectionReset(iPortionStart, iPortionEnd);
-    }
-
-    // Change pixel if we had enough samples
-    if(currentSampleCount >= options.totalSamplePerPixel ||
-       doInitCameraCreation)
-    {
-        doInitCameraCreation = false;
-
-        // Reset the accum buffer
-        accumulationBuffer.Reset(cudaSystem);
-
-        // Find world pixel 2D id
-        Vector2i pixelId = GlobalPixel2D();
-        // Construct a New camera
-        cudaSystem.BestGPU().KC_X(0, (cudaStream_t)0, 1,
-                                  // Function
-                                  KCConstructSingleGPUCameraPixel,
-                                  // Args
-                                  dPixelCamera,
-                                  //
-                                  *(dCameras[cameraIndex]),
-                                  pixelId,
-                                  resolution);
-
-        // Reset sample count for this img
-        currentSampleCount = 0;
-    }
-
-    // Generate Work for current Camera
-    GenerateRays<RayAuxPath, RayAuxInitPath>(*dPixelCamera, options.samplePerIteration,
-                                             RayAuxInitPath(InitialPathAux),
-                                             false);
-    currentDepth = 0;
 }
 
 void RefPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)

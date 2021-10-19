@@ -237,8 +237,8 @@ set(SRC_PPG_TRACER
     ${CURRENT_SOURCE_DIR}/PPGTracer.cu
     ${CURRENT_SOURCE_DIR}/PPGTracer.h
     ${CURRENT_SOURCE_DIR}/PPGTracerKC.cuh
-    ${CURRENT_SOURCE_DIR}/PPGTracerWork.cu
-    ${CURRENT_SOURCE_DIR}/PPGTracerWork.cuh)
+    ${CURRENT_SOURCE_DIR}/PPGTracerWorks.cu
+    ${CURRENT_SOURCE_DIR}/PPGTracerWorks.cuh)
 
 set(SRC_PPG_TRACER_AUX_CLASSES
     ${CURRENT_SOURCE_DIR}/DTree.cu

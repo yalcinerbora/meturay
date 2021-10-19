@@ -40,8 +40,8 @@ class ImageIOI
         using ImageIOFlags = Flags<FlagTypes>;
 
     private:
-    protected:                
-    public:        
+    protected:
+    public:
         virtual                 ~ImageIOI() = default;
 
         //
@@ -67,7 +67,7 @@ class ImageIOI
                                           const ImageIOFlags = ImageIOFlags()) const = 0;
         // Read Image but convert it to the non-byte vector
         //template<class T, typename = std::enable_if_t<!std::is_same_v<T, Byte>>>
-        //ImageIOError            ReadImage(std::vector<T>&, 
+        //ImageIOError            ReadImage(std::vector<T>&,
         //                                  PixelFormat&, Vector2ui& dimension,
         //                                  const std::string& filePath,
         //                                  const ImageIOFlags = ImageIOFlags());
@@ -77,7 +77,7 @@ class ImageIOI
                                                         ImageChannelType,
                                                         const std::string& filePath,
                                                         const ImageIOFlags = ImageIOFlags()) const = 0;
-        
+
 
         // Write Functions
         virtual ImageIOError    WriteImage(const Byte* data,
@@ -89,10 +89,15 @@ class ImageIOI
                                             ImageType,
                                             const std::string& filePath) const = 0;
         template<class T>
-        ImageIOError            WriteImage(const std::vector<T>& data,                                           
+        ImageIOError            WriteImage(const std::vector<T>& data,
                                            const Vector2ui& dimension,
                                            PixelFormat, ImageType,
                                            const std::string& filePath) const;
+
+        // Utility
+        virtual ImageIOError    ConvertPixels(Byte* toData, PixelFormat toFormat,
+                                              const Byte* fromData, PixelFormat fromFormat,
+                                              const Vector2ui& dimension) const = 0;
 };
 
 // TODO: is this a good pattern???
@@ -130,7 +135,7 @@ inline int8_t ImageIOI::FormatToChannelCount(PixelFormat pf)
             return 3;
         case PixelFormat::RGBA8_UNORM:
         case PixelFormat::RGBA16_UNORM:
-        case PixelFormat::RGBA8_SNORM:            
+        case PixelFormat::RGBA8_SNORM:
         case PixelFormat::RGBA16_SNORM:
         case PixelFormat::RGBA_HALF:
         case PixelFormat::RGBA_FLOAT:
@@ -149,7 +154,7 @@ inline size_t ImageIOI::FormatToPixelSize(PixelFormat pf)
     {
         // 1 Channels
         case PixelFormat::R8_UNORM:
-        case PixelFormat::R8_SNORM: 
+        case PixelFormat::R8_SNORM:
         case PixelFormat::R16_UNORM:
         case PixelFormat::R16_SNORM:
         case PixelFormat::R_HALF:
@@ -193,9 +198,9 @@ inline size_t ImageIOI::FormatToPixelSize(PixelFormat pf)
         case PixelFormat::BC7_U:    return 0;
         // Unknown Type
         case PixelFormat::END:
-        default: 
+        default:
             return 0;
-            
+
     }
 }
 
@@ -246,9 +251,9 @@ inline size_t ImageIOI::FormatToChannelSize(PixelFormat pf)
         case PixelFormat::BC7_U:    return 0;
         // Unknown Type
         case PixelFormat::END:
-        default: 
+        default:
             return 0;
-            
+
     }
 }
 
@@ -307,14 +312,14 @@ inline bool ImageIOI::HasSignConversion(PixelFormat toFormat, PixelFormat fromFo
 {
     switch(toFormat)
     {
-        case PixelFormat::R8_UNORM:     
-        case PixelFormat::RG8_UNORM:    
-        case PixelFormat::RGB8_UNORM:   
-        case PixelFormat::RGBA8_UNORM:  
-        case PixelFormat::R16_UNORM:    
-        case PixelFormat::RG16_UNORM:   
-        case PixelFormat::RGB16_UNORM:  
-        case PixelFormat::RGBA16_UNORM: 
+        case PixelFormat::R8_UNORM:
+        case PixelFormat::RG8_UNORM:
+        case PixelFormat::RGB8_UNORM:
+        case PixelFormat::RGBA8_UNORM:
+        case PixelFormat::R16_UNORM:
+        case PixelFormat::RG16_UNORM:
+        case PixelFormat::RGB16_UNORM:
+        case PixelFormat::RGBA16_UNORM:
         {
             return (fromFormat == PixelFormat::R8_SNORM     ||
                     fromFormat == PixelFormat::RG8_SNORM    ||
@@ -326,14 +331,14 @@ inline bool ImageIOI::HasSignConversion(PixelFormat toFormat, PixelFormat fromFo
                     fromFormat == PixelFormat::RGBA16_SNORM);
         }
 
-        case PixelFormat::R8_SNORM:     
-        case PixelFormat::RG8_SNORM:    
-        case PixelFormat::RGB8_SNORM:   
-        case PixelFormat::RGBA8_SNORM:  
-        case PixelFormat::R16_SNORM:    
-        case PixelFormat::RG16_SNORM:   
-        case PixelFormat::RGB16_SNORM:  
-        case PixelFormat::RGBA16_SNORM: 
+        case PixelFormat::R8_SNORM:
+        case PixelFormat::RG8_SNORM:
+        case PixelFormat::RGB8_SNORM:
+        case PixelFormat::RGBA8_SNORM:
+        case PixelFormat::R16_SNORM:
+        case PixelFormat::RG16_SNORM:
+        case PixelFormat::RGB16_SNORM:
+        case PixelFormat::RGBA16_SNORM:
         {
             return (fromFormat == PixelFormat::R8_UNORM     ||
                     fromFormat == PixelFormat::RG8_UNORM    ||
@@ -352,14 +357,14 @@ inline PixelFormat ImageIOI::Expanded4CFormat(PixelFormat pf)
 {
     switch(pf)
     {
-        
+
         case PixelFormat::RGB8_UNORM:     return PixelFormat::RGBA8_UNORM;
         case PixelFormat::RGB16_UNORM:    return PixelFormat::RGBA16_UNORM;
         case PixelFormat::RGB8_SNORM:     return PixelFormat::RGBA8_SNORM;
         case PixelFormat::RGB16_SNORM:    return PixelFormat::RGBA16_SNORM;
         case PixelFormat::RGB_HALF:       return PixelFormat::RGBA_HALF;
         case PixelFormat::RGB_FLOAT:      return PixelFormat::RGBA_FLOAT;
-            
+
         default: return PixelFormat::END;
     }
 }
@@ -368,12 +373,12 @@ inline bool ImageIOI::Is4CExpandable(PixelFormat pf)
 {
     switch(pf)
     {
-        case PixelFormat::RGB8_UNORM: 
+        case PixelFormat::RGB8_UNORM:
         case PixelFormat::RGB16_UNORM:
-        case PixelFormat::RGB8_SNORM: 
+        case PixelFormat::RGB8_SNORM:
         case PixelFormat::RGB16_SNORM:
-        case PixelFormat::RGB_HALF:   
-        case PixelFormat::RGB_FLOAT:  
+        case PixelFormat::RGB_HALF:
+        case PixelFormat::RGB_FLOAT:
             return true;
         default: return false;
     }
@@ -390,11 +395,11 @@ ImageIOError ImageIOI::WriteImage(const std::vector<T>& data,
 }
 
 //template<class T, typename>
-//ImageIOError ImageIOI::ReadImage(std::vector<T>& data, 
-//                                 PixelFormat& pf, 
+//ImageIOError ImageIOI::ReadImage(std::vector<T>& data,
+//                                 PixelFormat& pf,
 //                                 Vector2ui& dimension,
 //                                 const std::string& filePath,
 //                                 ImageIOFlags flags)
-//{    
+//{
 //    return ImageIOError::IMAGE_NOT_FOUND;
 //}

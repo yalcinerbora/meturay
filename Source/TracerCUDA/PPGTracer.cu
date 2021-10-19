@@ -7,7 +7,7 @@
 #include "RayLib/FileUtility.h"
 #include "RayLib/VisorTransform.h"
 
-#include "PPGTracerWork.cuh"
+#include "PPGTracerWorks.cuh"
 #include "GPULightSamplerUniform.cuh"
 #include "GenerationKernels.cuh"
 #include "GPUWork.cuh"
@@ -59,72 +59,6 @@ static void KCInitializePaths(PathGuidingNode* gPathNodes,
     }
 }
 
-template <class T>
-__global__ void KCConstructLightSampler(T* loc,
-                                        const GPULightI** gLights,
-                                        const uint32_t lightCount)
-{
-    uint32_t globalId = threadIdx.x + blockIdx.x * blockDim.x;
-    if(globalId == 0)
-    {
-        T* lightSampler = new (loc) T(gLights, lightCount);
-    }
-}
-
-TracerError PPGTracer::LightSamplerNameToEnum(PPGTracer::LightSamplerType& ls,
-                                              const std::string& lsName)
-{
-    const std::array<std::string, LightSamplerType::END> samplerNames =
-    {
-        "Uniform"
-    };
-
-    uint32_t i = 0;
-    for(const std::string s : samplerNames)
-    {
-        if(lsName == s)
-        {
-            ls = static_cast<LightSamplerType>(i);
-            return TracerError::OK;
-        }
-        i++;
-    }
-    return TracerError::UNABLE_TO_INITIALIZE_TRACER;
-}
-
-TracerError PPGTracer::ConstructLightSampler()
-{
-    LightSamplerType lst;
-    TracerError e = LightSamplerNameToEnum(lst, options.lightSamplerType);
-
-    if(e != TracerError::OK)
-        return e;
-
-    switch(lst)
-    {
-        case LightSamplerType::UNIFORM:
-        {
-            DeviceMemory::EnlargeBuffer(lightSamplerMemory, sizeof(GPULightSamplerUniform));
-            dLightSampler = static_cast<const GPUDirectLightSamplerI*>(lightSamplerMemory);
-
-            const auto& gpu = cudaSystem.BestGPU();
-            gpu.KC_X(0, (cudaStream_t)0, 1,
-                     // Kernel
-                     KCConstructLightSampler<GPULightSamplerUniform>,
-                     // Args
-                     static_cast<GPULightSamplerUniform*>(lightSamplerMemory),
-                     dLights,
-                     lightCount);
-
-            return TracerError::OK;
-        }
-        default:
-            return TracerError::UNABLE_TO_INITIALIZE_TRACER;
-
-    }
-    return TracerError::UNABLE_TO_INITIALIZE_TRACER;
-}
-
 void PPGTracer::ResizeAndInitPathMemory()
 {
     size_t totalPathNodeCount = TotalPathNodeCount();
@@ -143,6 +77,10 @@ void PPGTracer::ResizeAndInitPathMemory()
                      //
                      dPathNodes,
                      static_cast<uint32_t>(totalPathNodeCount));
+
+    //Debug::DumpBatchedMemToFile("PathNodes", dPathNodes,
+    //                            MaximumPathNodePerPath(),
+    //                            totalPathNodeCount);
 
 }
 
@@ -177,7 +115,12 @@ TracerError PPGTracer::Initialize()
         return err;
 
     // Generate Light Sampler (for nee)
-    if((err = ConstructLightSampler()) != TracerError::OK)
+    if((err = LightSamplerCommon::ConstructLightSampler(lightSamplerMemory,
+                                                        dLightSampler,
+                                                        options.lightSamplerType,
+                                                        dLights,
+                                                        lightCount,
+                                                        cudaSystem)) != TracerError::OK)
         return err;
 
     // Generate your worklist
@@ -238,7 +181,11 @@ TracerError PPGTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = opts.GetUInt(options.rrStart, RR_START_NAME)) != TracerError::OK)
         return err;
-    if((err = opts.GetString(options.lightSamplerType, LIGHT_SAMPLER_TYPE_NAME)) != TracerError::OK)
+
+    std::string lightSamplerTypeString;
+    if((err = opts.GetString(lightSamplerTypeString, LIGHT_SAMPLER_TYPE_NAME)) != TracerError::OK)
+        return err;
+    if((err = LightSamplerCommon::StringToLightSamplerType(options.lightSamplerType, lightSamplerTypeString)) != TracerError::OK)
         return err;
 
     if((err = opts.GetBool(options.nextEventEstimation, NEE_NAME)) != TracerError::OK)
@@ -290,7 +237,7 @@ bool PPGTracer::Render()
     globalData.gImage = imgMemory.GMem<Vector4>();
     globalData.gLightList = dLights;
     globalData.totalLightCount = lightCount;
-    globalData.lightSampler = dLightSampler;
+    globalData.gLightSampler = dLightSampler;
     //
     globalData.mediumList = dMediums;
     globalData.totalMediumCount = mediumCount;
@@ -309,6 +256,7 @@ bool PPGTracer::Render()
     // Todo change these later
     globalData.rawPathGuiding = true;
     globalData.nee = options.nextEventEstimation;
+    globalData.directLightMIS = options.directLightMIS;
     globalData.rrStart = options.rrStart;
 
     // Generate output partitions
@@ -365,6 +313,10 @@ bool PPGTracer::Render()
     // Increase Depth
     currentDepth++;
 
+    //Debug::DumpBatchedMemToFile("PathNodes", dPathNodes,
+    //                            MaximumPathNodePerPath(),
+    //                            TotalPathNodeCount());
+
     //
     //METU_LOG("PASS ENDED=============================================================");
     return true;
@@ -376,7 +328,8 @@ void PPGTracer::Finalize()
 
     uint32_t totalPathNodeCount = TotalPathNodeCount();
 
-    //Debug::DumpMemToFile("PathNodes", dPathNodes, totalPathNodeCount);
+    //Debug::DumpBatchedMemToFile("PathNodes", dPathNodes,
+    //                            MaximumPathNodePerPath(), totalPathNodeCount);
 
     //if(currentTreeIteration == 0)
     //{
@@ -393,7 +346,7 @@ void PPGTracer::Finalize()
     currentTreeIteration += 1;// options.sampleCount* options.sampleCount;
     // Swap the trees if we achieved treshold
     //if(currentTreeIteration <= 1)
-    if(currentTreeIteration == nextTreeSwap)
+    if(currentTreeIteration == nextTreeSwap * 10)
     {
         // Double the amount of iterations required for this
         nextTreeSwap <<= 1;
@@ -424,7 +377,7 @@ void PPGTracer::Finalize()
             // Write SD Tree File
             std::vector<Byte> sdTree;
             sTree->DumpSDTreeAsBinary(sdTree, true);
-            std::string iterAsString = std::to_string(currentTreeIteration);
+            std::string iterAsString = std::to_string(nextTreeSwap >> 1);
             Utility::DumpStdVectorToFile(sdTree, iterAsString + "_ppg_sdTree");
 
             //// Write reference image

@@ -513,7 +513,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\DTreeKC.cuh">
       <Filter>Tracers\PPGTracer\Aux Classes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerWork.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerWorks.cuh">
       <Filter>Tracers\PPGTracer</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerKC.cuh">
@@ -677,7 +677,7 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DTree.cu">
       <Filter>Tracers\PPGTracer\Aux Classes</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracerWork.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracerWorks.cu">
       <Filter>Tracers\PPGTracer</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerDebug.cu">

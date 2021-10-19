@@ -21,7 +21,7 @@ static const float QUAD_VERTEX_POS[4 * 3] =
     0, 1
 };
 
-GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,                                     
+GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,
                                      const TextureGL& gradientTexture,
                                      const std::string& configPath,
                                      uint32_t depthCount)
@@ -78,10 +78,10 @@ GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,
     glEnableVertexAttribArray(IN_RADIANCE);
     glVertexAttribFormat(IN_RADIANCE, 1, GL_FLOAT, false, 0);
     glVertexAttribBinding(IN_RADIANCE, IN_RADIANCE);
-    glVertexAttribDivisor(IN_RADIANCE, 1);    
+    glVertexAttribDivisor(IN_RADIANCE, 1);
 
     glBindVertexArray(0);
-    
+
     // Load the Name
     name = config[GuideDebug::NAME];
     // Load SDTrees to memory
@@ -98,7 +98,7 @@ GDebugRendererPPG::~GDebugRendererPPG()
     glDeleteFramebuffers(1, &fbo);
 }
 
-bool GDebugRendererPPG::LoadSDTree(SDTree& sdTree, 
+bool GDebugRendererPPG::LoadSDTree(SDTree& sdTree,
                                    const nlohmann::json& config,
                                    const std::string& configPath,
                                    uint32_t depth)
@@ -157,9 +157,9 @@ void GDebugRendererPPG::RenderSpatial(TextureGL&, uint32_t depth)
     // TODO:
 }
 
-void GDebugRendererPPG::RenderDirectional(TextureGL& tex, 
+void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
                                           std::vector<float>& values,
-                                          const Vector3f& worldPos, 
+                                          const Vector3f& worldPos,
                                           uint32_t depth)
 {
     // Find DTree
@@ -193,7 +193,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
     float* radianceStart = reinterpret_cast<float*>(treeBufferCPU.data() + offset);
     offset += squareCount * sizeof(float);
     assert(newTreeSize == offset);
-    // Generate GPU Data    
+    // Generate GPU Data
     std::atomic<float> maxRadiance = -std::numeric_limits<float>::max();
     std::atomic_uint32_t maxDepth = 0;
     std::atomic_uint32_t allocator = 0;
@@ -205,7 +205,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
             // Allocate an index
             uint32_t location = allocator++;
             // Calculate Irrad max irrad etc.
-            float irrad = node.irradianceEstimates[i];                        
+            float irrad = node.irradianceEstimates[i];
             // Calculate Depth & Offset
             uint32_t depth = 1;
             Vector2f offset(((i >> 0) & 0b01) ? 0.5f : 0.0f,
@@ -234,23 +234,23 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
 
             // Atomic MAX DEPTH
             uint32_t expectedDepth = maxDepth.load();
-            while(!maxDepth.compare_exchange_strong(expectedDepth, 
+            while(!maxDepth.compare_exchange_strong(expectedDepth,
                                                     std::max(expectedDepth, depth)));
             // Store
             radianceStart[location] = irrad;
             depthStart[location] = depth;
             offsetStart[location] = offset;
         }
-    };   
+    };
     auto CalculateMaxIrrad = [&] (uint32_t index)
-    {        
+    {
         float irrad = radianceStart[index];
         uint32_t depth = depthStart[index];
 
         // Normalize irrad using depth/maxDept;
         irrad /= static_cast<float>(1 << (2 * (maxDepth - depth)));
 
-        // Atomic MAX IRRAD          
+        // Atomic MAX IRRAD
         float expectedIrrad = maxRadiance.load();
         while(!maxRadiance.compare_exchange_strong(expectedIrrad,
                                                    std::max(expectedIrrad, irrad)));
@@ -261,7 +261,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
     {
         depthStart[0] = 0;
         offsetStart[0] = Zero2f;
-        
+
         maxRadiance =  dTreeValues.second;
         radianceStart[0] = dTreeValues.second;
     }
@@ -279,18 +279,25 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
                       indices.cbegin(),
                       indices.cend(),
                       CalculateMaxIrrad);
+        //maxRadiance = std::reduce(std::execution::par_unseq,
+        //                          radianceStart, radianceStart + squareCount,
+        //                          -std::numeric_limits<float>::max(),
+        //                          [](const float a, const float b)->float
+        //                          {
+        //                              return std::max(a, b);
+        //                          });
         // Check that we properly did all
         assert(allocator.load() == squareCount.load());
     }
 
     METU_LOG("Max Rad {:f}", maxRadiance.load());
 
-    // Debug    
+    // Debug
     std::ofstream file = std::ofstream("TESTO");
     for(size_t i = 0; i < squareCount; i++)
     {
         file << "{" << offsetStart[i][0] << ", " << offsetStart[i][1] << "}, "
-            << depthStart[i] << ", " << radianceStart[i] << std::endl;         
+            << depthStart[i] << ", " << radianceStart[i] << std::endl;
     }
     file.close();
 
@@ -303,7 +310,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
         glDeleteBuffers(1, &treeBuffer);
         glGenBuffers(1, &treeBuffer);
         glBindBuffer(GL_ARRAY_BUFFER, treeBuffer);
-        glBufferStorage(GL_ARRAY_BUFFER, newTreeSize, nullptr, GL_DYNAMIC_STORAGE_BIT);        
+        glBufferStorage(GL_ARRAY_BUFFER, newTreeSize, nullptr, GL_DYNAMIC_STORAGE_BIT);
         treeBufferSize = newTreeSize;
     }
     // Load Buffers
@@ -318,14 +325,14 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
     glBindVertexBuffer(IN_OFFSET, treeBuffer, 0, sizeof(float) * 2);
     glBindVertexBuffer(IN_DEPTH, treeBuffer, depthOffset, sizeof(uint32_t));
     glBindVertexBuffer(IN_RADIANCE, treeBuffer, radianceOffset, sizeof(float));
-    
+
     // Bind FBO
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);    
-    glFramebufferTexture2D(GL_FRAMEBUFFER, 
-                           GL_COLOR_ATTACHMENT0 + OUT_COLOR, 
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER,
+                           GL_COLOR_ATTACHMENT0 + OUT_COLOR,
                            GL_TEXTURE_2D, tex.TexId(), 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, 
-                           GL_COLOR_ATTACHMENT0 + OUT_VALUE, 
+    glFramebufferTexture2D(GL_FRAMEBUFFER,
+                           GL_COLOR_ATTACHMENT0 + OUT_VALUE,
                            GL_TEXTURE_2D, valueTex.TexId(), 0);
     assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
@@ -347,7 +354,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
     // ==========================//
     // Bind Texture
     gradientTexture.Bind(T_IN_GRADIENT);
-    linearSampler.Bind(T_IN_GRADIENT);        
+    linearSampler.Bind(T_IN_GRADIENT);
     // Bind V Shader
     vertDTreeRender.Bind();
     // Uniformd
@@ -356,9 +363,9 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
     // Bind F Shader
     fragDTreeRender.Bind();
     // Uniforms
-    glUniform1i(U_PERIMIETER_ON, 0);    
+    glUniform1i(U_PERIMIETER_ON, 0);
     // Draw Call
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, nullptr, 
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, nullptr,
                             static_cast<GLsizei>(squareCount));
     ////=================//
     ////   Render Lines  //
@@ -366,7 +373,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
     //// Same thing but only push a different uniforms and draw call
     //// Bind Uniforms (Frag Shader is Already Bound
     //glUniform1i(U_PERIMIETER_ON, 1);
-    //glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);    
+    //glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);
     //// Set Line Width
     //glEnable(GL_LINE_SMOOTH);
     //glLineWidth(3.0f);

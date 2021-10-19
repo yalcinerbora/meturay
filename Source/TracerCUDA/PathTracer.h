@@ -27,6 +27,7 @@ class PathTracer final : public RayTracer
             bool                directLightMIS      = false;
             LightSamplerType    lightSamplerType    = LightSamplerType::UNIFORM;
         };
+
     private:
         Options                         options;
         uint32_t                        currentDepth;
@@ -36,7 +37,7 @@ class PathTracer final : public RayTracer
         // Single large kernel
         WorkPool<bool, bool>            pathWorkPool;
         // Light Sampler Memory and Pointer
-        DeviceMemory                    memory;
+        DeviceMemory                    lightSamplerMemory;
         const GPUDirectLightSamplerI*   dLightSampler;
 
     protected:

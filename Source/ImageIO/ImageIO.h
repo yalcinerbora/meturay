@@ -22,12 +22,12 @@ class ImageIO : public ImageIOI
                                    const Vector2ui& dimension, PixelFormat,
                                    const std::string& fileName) const;
         ImageIOError            WriteUsingFreeImage(const Byte* pixels,
-                                                    const Vector2ui& dimension, 
+                                                    const Vector2ui& dimension,
                                                     PixelFormat, ImageType,
                                                     const std::string& fileName) const;
 
         static bool             CheckIfEXR(const std::string& fileName);
-        
+
         static ImageIOError     ConvertFreeImgFormat(PixelFormat&, FREE_IMAGE_TYPE t, uint32_t bpp);
         static ImageIOError     ConvertImageTypeToFreeImgType(FREE_IMAGE_FORMAT&, ImageType);
         static ImageIOError     ConvertPixelFormatToFreeImgType(FREE_IMAGE_TYPE& t, PixelFormat);
@@ -39,14 +39,14 @@ class ImageIO : public ImageIOI
                                                   PixelFormat&, Vector2ui& size,
                                                   const std::string& filePath) const;
 
-    protected:        
+    protected:
         void                PackChannelBits(Byte* bits,
                                             const Byte* fromData, PixelFormat fromFormat,
-                                            size_t pitch, ImageChannelType, 
+                                            size_t pitch, ImageChannelType,
                                             const Vector2ui& dimension) const;
-        void                ConvertPixels(Byte* toData, PixelFormat toFormat,
-                                          const Byte* fromData, PixelFormat fromFormat, size_t fromPitch,
-                                          const Vector2ui& dimension) const;
+        void                ConvertPixelsInternal(Byte* toData, PixelFormat toFormat,
+                                                  const Byte* fromData, PixelFormat fromFormat, size_t fromPitch,
+                                                  const Vector2ui& dimension) const;
 
         template <class T>
         static void         ConvertForEXR(Imath::half* toData,
@@ -78,6 +78,10 @@ class ImageIO : public ImageIOI
         ImageIOError        WriteBitmap(const Byte* bits,
                                         const Vector2ui& dimension, ImageType,
                                         const std::string& filePath) const override;
+
+        ImageIOError        ConvertPixels(Byte* toData, PixelFormat toFormat,
+                                          const Byte* fromData, PixelFormat fromFormat,
+                                          const Vector2ui& dimension) const override;
 };
 
 template <class T>

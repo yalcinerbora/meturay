@@ -8,6 +8,7 @@
 #include "PathNode.cuh"
 #include "RayStructs.h"
 #include "ImageStructs.h"
+#include "WorkOutputWriter.cuh"
 
 #include "TracerFunctions.cuh"
 #include "TracerConstants.h"
@@ -24,7 +25,7 @@ struct PPGTracerGlobalState
     // Light Related
     const GPULightI**               gLightList;
     uint32_t                        totalLightCount;
-    const GPUDirectLightSamplerI*   lightSampler;
+    const GPUDirectLightSamplerI*   gLightSampler;
     // Medium Related
     const GPUMediumI**              mediumList;
     uint32_t                        totalMediumCount;
@@ -39,6 +40,7 @@ struct PPGTracerGlobalState
     // Path Guiding
     bool                            rawPathGuiding;
     // Options for NEE
+    bool                            directLightMIS;
     bool                            nee;
     // Russian Roulette
     int                             rrStart;
@@ -70,12 +72,14 @@ void PPGTracerBoundaryWork(// Output
 {
     using GPUType = typename EGroup::GPUType;
 
-    uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
+    // Current Path
+    const uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
     PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // Check Material Sample Strategy
     assert(maxOutRay == 0);
 
+    const bool isPathRayAsMISRay = renderState.directLightMIS && (aux.type == RayType::PATH_RAY);
     const bool isCameraRay = aux.type == RayType::CAMERA_RAY;
     const bool isSpecularPathRay = aux.type == RayType::SPECULAR_PATH_RAY;
     // Always eval boundary mat if NEE is off
@@ -85,8 +89,32 @@ void PPGTracerBoundaryWork(// Output
     const bool isCorrectNEERay = ((!renderState.nee) ||
                                   (isCorrectLight && aux.type == RayType::NEE_RAY));
 
+    float misWeight = 1.0f;
+    if(isPathRayAsMISRay)
+    {
+        Vector3 position = ray.ray.AdvancedPos(ray.tMax);
+        Vector3 direction = ray.ray.getDirection().Normalize();
+
+        // Find out the pdf of the light
+        float pdfLightM, pdfLightC;
+        renderState.gLightSampler->Pdf(pdfLightM, pdfLightC,
+                                       //
+                                       gLight.GlobalLightIndex(),
+                                       ray.tMax,
+                                       position,
+                                       direction,
+                                       surface.worldToTangent);
+
+        // We are subsampling (discretely sampling) a single light
+        // pdf of BxDF should also incorporate this
+        float bxdfPDF = aux.prevPDF;
+        misWeight = TracerFunctions::PowerHeuristic(1, bxdfPDF,
+                                                    1, pdfLightC * pdfLightM);
+    }
+
     // Accumulate Light if
     if(isCorrectNEERay   || // We hit the correct light as a NEE ray
+       isPathRayAsMISRay || // We hit a light with a path ray while MIS option is enabled
        isCameraRay       || // We hit as a camera ray which should not be culled when NEE is on
        isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should be hit
     {
@@ -103,9 +131,13 @@ void PPGTracerBoundaryWork(// Output
                                        position,
                                        surface);
 
-        // And accumulate pixel
-        // and add as a sample
+        // And accumulate pixel// and add as a sample
         Vector3f total = emission * radianceFactor;
+        // Incorporate MIS weight if applicable
+        // if path ray hits a light misWeight is calculated
+        // else misWeight is 1.0f
+        total *= misWeight;
+        // Accumulate the pixel
         ImageAccumulatePixel(renderState.gImage,
                              aux.pixelIndex,
                              Vector4f(total, 1.0f));
@@ -126,7 +158,8 @@ void PPGTracerBoundaryWork(// Output
             uint32_t dTreeIndex = gLocalPathNodes[aux.depth].nearestDTreeIndex;
             DTreeGPU* dWriteTree = renderState.gWriteDTrees[dTreeIndex];
 
-            dWriteTree->AddRadianceToLeaf(r.getDirection(), Utility::RGBToLuminance(total),
+            dWriteTree->AddRadianceToLeaf(r.getDirection(),
+                                          Utility::RGBToLuminance(total),
                                           true);
             //dWriteTree->AddRadianceToLeaf(r.getDirection(), 1.0f);
 
@@ -164,23 +197,34 @@ void PPGTracerPathWork(// Output
 {
     static constexpr Vector3 ZERO_3 = Zero3;
 
+    // Path Memory
+    const uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
+    PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
+
     // TODO: change this currently only first strategy is sampled
     static constexpr int PATH_RAY_INDEX = 0;
-    static constexpr int NEE_RAY_INDEX = 1;
-    //static constexpr int MIS_RAY_INDEX = 2;
-
-    uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
-    PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
+    static constexpr int NEE_RAY_INDEX  = 1;
+    // Helper Class for better code readibiliy
+    OutputWriter<RayAuxPPG> outputWriter(gOutBoundKeys,
+                                         gOutRays,
+                                         gOutRayAux,
+                                         maxOutRay);
 
     // Inputs
     // Current Ray
     const RayF& r = ray.ray;
     // Hit Position
     Vector3 position = r.AdvancedPos(ray.tMax);
-    // Wi (direction is swapped as if it is coming out of the surface
+    // Wi (direction is swapped as if it is coming out of the surface)
     Vector3 wi = -(r.getDirection().Normalize());
     // Current ray's medium
     const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
+
+    // Nearest DTree
+    // Find nearest DTree
+    uint32_t dTreeIndex = UINT32_MAX;
+    renderState.gStree->AcquireNearestDTree(dTreeIndex, position);
+    assert(dTreeIndex != UINT32_MAX);
 
     // Check Material Sample Strategy
     uint32_t sampleCount = maxOutRay;
@@ -188,29 +232,12 @@ void PPGTracerPathWork(// Output
     float specularity = MGroup::Specularity(surface, gMatData, matIndex);
     bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
 
-    // Invalid Ray Write Helper Function
-    auto InvalidRayWrite = [&gOutRays, &gOutBoundKeys, &gOutRayAux, &sampleCount](int index)
-    {
-        assert(index < sampleCount);
-
-        // Generate Dummy Ray and Terminate
-        RayReg rDummy = EMPTY_RAY_REGISTER;
-        rDummy.Update(gOutRays, index);
-        gOutBoundKeys[index] = HitKey::InvalidKey;
-        gOutRayAux[index].pixelIndex = UINT32_MAX;
-    };
-
     // If NEE ray hits to this material
     // just skip since this is not a light material
-    if(aux.type == RayType::NEE_RAY)
-    {
-        // Write invalids for out rays
-        for(uint32_t i = 0; i < sampleCount; i++)
-            InvalidRayWrite(i);
-        return;
-    }
+    if(aux.type == RayType::NEE_RAY) return;
 
     // Calculate Transmittance factor of the medium
+    // And reduce the radiance wrt the medium transmittance
     Vector3 transFactor = m.Transmittance(ray.tMax);
     Vector3 radianceFactor = aux.radianceFactor * transFactor;
 
@@ -226,18 +253,10 @@ void PPGTracerPathWork(// Output
                                         // Constants
                                         gMatData,
                                         matIndex);
-
         Vector3f total = emission * radianceFactor;
-        // Output image
         ImageAccumulatePixel(renderState.gImage,
                              aux.pixelIndex,
                              Vector4f(total, 1.0f));
-
-        //if(emission != Vector3(0.0f))
-        //    printf("AddingRadiance: E:(%f %f %f) RF:(%f %f %f) Path %u + %u\n",
-        //           emission[0], emission[1], emission[2],
-        //           radianceFactor[0], radianceFactor[1], radianceFactor[2],
-        //           aux.pathIndex, aux.depth);
 
         // Accumulate this to the paths aswell
         if(total.HasNaN()) printf("NAN Found emissive!!!\n");
@@ -245,17 +264,101 @@ void PPGTracerPathWork(// Output
     }
 
     // If this material does not require to have any samples just quit
-    // no need to sat any ray invalid since there wont be any allocated rays
     if(sampleCount == 0) return;
 
-    // Find nearest DTree
-    uint32_t dTreeIndex = 0;
-    renderState.gStree->AcquireNearestDTree(dTreeIndex, position);
+    bool shouldLaunchMISRay = false;
+    // ===================================== //
+    //              NEE PORTION              //
+    // ===================================== //
+    // Dont launch NEE if not requested
+    // or material is highly specular
+    if(renderState.nee && !isSpecularMat)
+    {
+        float pdfLight, lDistance;
+        HitKey matLight;
+        Vector3 lDirection;
+        uint32_t lightIndex;
+        Vector3f neeReflectance = Zero3;
+        if(renderState.gLightSampler->SampleLight(matLight,
+                                                  lightIndex,
+                                                  lDirection,
+                                                  lDistance,
+                                                  pdfLight,
+                                                  // Input
+                                                  position,
+                                                  rng))
+        {
+            // Evaluate mat for this direction
+            neeReflectance = MGroup::Evaluate(// Input
+                                              lDirection,
+                                              wi,
+                                              position,
+                                              m,
+                                              //
+                                              surface,
+                                              // Constants
+                                              gMatData,
+                                              matIndex);
+        }
 
-    float pdf;
+        // Check if mis ray should be sampled
+        shouldLaunchMISRay = (renderState.directLightMIS &&
+                              // Check if light can be sampled (meaning it is not a
+                              // dirac delta light (point light spot light etc.)
+                              renderState.gLightList[lightIndex]->CanBeSampled());
+
+        float pdfNEE = pdfLight;
+        // Weight the NEE if using MIS
+        if(shouldLaunchMISRay)
+        {
+            float pdfBxDF = MGroup::Pdf(lDirection,
+                                        wi,
+                                        position,
+                                        m,
+                                        //
+                                        surface,
+                                        gMatData,
+                                        matIndex);
+
+            pdfNEE /= TracerFunctions::PowerHeuristic(1, pdfLight, 1, pdfBxDF);
+
+            // PDF can become NaN if both BxDF pdf and light pdf is both zero
+            // (meaning both sampling schemes does not cover this direction)
+            if(isnan(pdfNEE)) pdfNEE = 0.0f;
+        }
+
+        // Do not waste a ray if material does not reflect
+        // towards light's sampled position
+        Vector3 neeRadianceFactor = radianceFactor * neeReflectance;
+        neeRadianceFactor = (pdfNEE == 0.0f) ? Zero3 : (neeRadianceFactor / pdfNEE);
+        if(neeRadianceFactor != ZERO_3)
+        {
+            // Generate Ray
+            RayF rayNEE = RayF(lDirection, position);
+            rayNEE.AdvanceSelf(MathConstants::Epsilon);
+            RayReg rayOut;
+            rayOut.ray = rayNEE;
+            rayOut.tMin = 0.0f;
+            rayOut.tMax = lDistance;
+            // Aux
+            RayAuxPPG auxOut = aux;
+            auxOut.radianceFactor = neeRadianceFactor;
+            auxOut.endpointIndex = lightIndex;
+            auxOut.type = RayType::NEE_RAY;
+            auxOut.prevPDF = NAN;
+            outputWriter.Write(NEE_RAY_INDEX, rayOut, auxOut, matLight);
+        }
+    }
+
+    // ==================================== //
+    //             BxDF PORTION             //
+    // ==================================== //
+    // Sample a path from material
+    float pdfPath;
     RayF rayPath;
     Vector3f reflectance;
     const GPUMediumI* outM = &m;
+    // Sample a path using SDTree
     //if(!isSpecularMat)
     //{
     //    // Sample a path using SDTree
@@ -291,9 +394,8 @@ void PPGTracerPathWork(// Output
     //}
     //else
     {
-        // Sample the BxDF
         reflectance = MGroup::Sample(// Outputs
-                                     rayPath, pdf, outM,
+                                     rayPath, pdfPath, outM,
                                      // Inputs
                                      wi,
                                      position,
@@ -306,58 +408,59 @@ void PPGTracerPathWork(// Output
                                      gMatData,
                                      matIndex,
                                      0);
+
     }
 
-
-    // Factor the radiance of the surface
+     // Factor the radiance of the surface
     Vector3f pathRadianceFactor = radianceFactor * reflectance;
     // Check singularities
-    pathRadianceFactor = (pdf == 0.0f) ? Zero3 : (pathRadianceFactor / pdf);
+    pathRadianceFactor = (pdfPath == 0.0f) ? Zero3 : (pathRadianceFactor / pdfPath);
 
     if(pathRadianceFactor.HasNaN())
         printf("NAN PATH R: %f %f %f = {%f %f %f} * {%f %f %f} / %f  \n",
                pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
                radianceFactor[0], radianceFactor[1], radianceFactor[2],
-               reflectance[0], reflectance[1], reflectance[2], pdf);
+               reflectance[0], reflectance[1], reflectance[2], pdfPath);
 
     // Check Russian Roulette
     float avgThroughput = pathRadianceFactor.Dot(Vector3f(0.333f));
     bool terminateRay = ((aux.depth > renderState.rrStart) &&
                          TracerFunctions::RussianRoulette(pathRadianceFactor, avgThroughput, rng));
 
+
+
     // Do not terminate rays ever for specular mats
     if((!terminateRay || isSpecularMat) &&
         // Do not waste rays on zero radiance paths
-       pathRadianceFactor != ZERO_3)
+        pathRadianceFactor != ZERO_3)
     {
-        // Write Ray
+        // Ray
         RayReg rayOut;
         rayOut.ray = rayPath;
         rayOut.tMin = 0.0f;
         rayOut.tMax = INFINITY;
-        rayOut.Update(gOutRays, PATH_RAY_INDEX);
-
-        // Write Aux
+        // Aux
         RayAuxPPG auxOut = aux;
         auxOut.mediumIndex = static_cast<uint16_t>(outM->GlobalIndex());
         auxOut.radianceFactor = pathRadianceFactor;
         auxOut.type = (isSpecularMat) ? RayType::SPECULAR_PATH_RAY : RayType::PATH_RAY;
+        // Save BxDF pdf if we hit a light
+        // When we hit a light we will
+        auxOut.prevPDF = pdfPath;
         auxOut.depth++;
-        gOutRayAux[PATH_RAY_INDEX] = auxOut;
+        // Wrie
+        outputWriter.Write(PATH_RAY_INDEX, rayOut, auxOut);
     }
-    else InvalidRayWrite(PATH_RAY_INDEX);
-
 
     // Record this intersection on path chain
-    uint8_t currentDepth = aux.depth + 1;
-    uint8_t prevDepth = aux.depth;
+    uint8_t currentDepth = aux.depth;
+    uint8_t prevDepth = aux.depth - 1;
     PathGuidingNode node;
     //printf("WritingNode PC:(%u %u) W:(%f, %f, %f) RF:(%f, %f, %f) Path: %u DT %u\n",
     //       static_cast<uint32_t>(prevDepth), static_cast<uint32_t>(currentDepth),
     //       position[0], position[1], position[2],
     //       pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
     //       aux.pathIndex, dTreeIndex);
-
     node.prevNext[1] = PathGuidingNode::InvalidIndex;
     node.prevNext[0] = prevDepth;
     node.worldPosition = position;
@@ -368,334 +471,5 @@ void PPGTracerPathWork(// Output
     // Set Previous Path node's next index
     gLocalPathNodes[prevDepth].prevNext[1] = currentDepth;
 
-    // Dont launch NEE if not requested
-    // or material is highly specular
-    if(!renderState.nee) return;
-
-    //============================//
-    //        NEE PORTION         //
-    //============================//
-    // Renderer requested a NEE Ray but material is highly specular
-    // Check if nee is requested
-    if(isSpecularMat && maxOutRay == 1)
-        return;
-    else if(isSpecularMat)
-    {
-        // Write invalid rays then return
-        InvalidRayWrite(NEE_RAY_INDEX);
-        //if(renderState.directLightMIS)
-        //    InvalidRayWrite(MIS_RAY_INDEX);
-        return;
-    }
-
-    // Material is not specular & tracer requested a NEE ray
-    // Generate a NEE Ray
-    float pdfLight, lDistance;
-    HitKey matLight;
-    Vector3 lDirection;
-    uint32_t lightIndex;
-    Vector3f neeReflectance = Zero3;
-
-    if(renderState.lightSampler->SampleLight(matLight,
-                                             lightIndex,
-                                             lDirection,
-                                             lDistance,
-                                             pdfLight,
-                                             // Input
-                                             position,
-                                             rng))
-    {
-        // Evaluate mat for this direction
-        neeReflectance = MGroup::Evaluate(// Input
-                                          lDirection,
-                                          wi,
-                                          position,
-                                          m,
-                                          //
-                                          surface,
-                                          // Constants
-                                          gMatData,
-                                          matIndex);
-    }
-
-    // Check if mis ray should be sampled
-    //bool launchedMISRay = (renderState.directLightMIS &&
-    //                       // Check if light can be sampled (meaning it is not a
-    //                       // dirac delta light (point light spot light etc.)
-    //                       renderState.lightList[lightIndex]->CanBeSampled());
-    bool launchedMISRay = false;
-
-    float pdfNEE = pdfLight;
-    if(launchedMISRay)
-    {
-        float pdfBxDF = MGroup::Pdf(lDirection,
-                                    wi,
-                                    position,
-                                    m,
-                                    //
-                                    surface,
-                                    gMatData,
-                                    matIndex);
-
-        pdfNEE /= TracerFunctions::PowerHeuristic(1, pdfLight, 1, pdfBxDF);
-
-        // PDF can become NaN if both BxDF pdf and light pdf is both zero
-        // (meaning both sampling schemes does not cover this direction)
-        if(isnan(pdfNEE)) pdfNEE = 0.0f;
-    }
-
-    // Do not waste a ray if material does not reflect
-    // towards light's sampled position
-    Vector3 neeRadianceFactor = radianceFactor * neeReflectance;
-    neeRadianceFactor = (pdfNEE == 0.0f) ? Zero3 : (neeRadianceFactor / pdfNEE);
-    if(neeRadianceFactor != ZERO_3)
-    {
-        // Generate & Write Ray
-        RayF rayNEE = RayF(lDirection, position);
-        rayNEE.AdvanceSelf(MathConstants::Epsilon);
-
-        RayReg rayOut;
-        rayOut.ray = rayNEE;
-        rayOut.tMin = 0.0f;
-        rayOut.tMax = lDistance;
-        rayOut.Update(gOutRays, NEE_RAY_INDEX);
-
-        RayAuxPPG auxOut = aux;
-        auxOut.radianceFactor = neeRadianceFactor;
-        auxOut.endpointIndex = lightIndex;
-        auxOut.type = RayType::NEE_RAY;
-        auxOut.depth++;
-
-        gOutRayAux[NEE_RAY_INDEX] = auxOut;
-        gOutBoundKeys[NEE_RAY_INDEX] = matLight;
-    }
-    else InvalidRayWrite(NEE_RAY_INDEX);
-
-    //// Check MIS Ray return if not requested (since no ray is allocated for it)
-    //if(!renderState.directLightMIS) return;
-
-    //// Sample Another ray for MIS (from BxDF)
-    //float pdfMIS = 0.0f;
-    //RayF rayMIS; const GPUMediumI* outMMIS;
-    //Vector3f misReflectance = Zero3;
-    //if(launchedMISRay)
-    //{
-    //    misReflectance = MGroup::Sample(// Outputs
-    //                                    rayMIS, pdfMIS, outMMIS,
-    //                                    // Inputs
-    //                                    wi,
-    //                                    position,
-    //                                    m,
-    //                                    //
-    //                                    surface,
-    //                                    // I-O
-    //                                    rng,
-    //                                    // Constants
-    //                                    gMatData,
-    //                                    matIndex,
-    //                                    0);
-
-    //    // Find out the pdf of the light
-    //    float pdfLightM, pdfLightC;
-    //    renderState.lightSampler->Pdf(pdfLightM, pdfLightC,
-    //                                   lightIndex, position,
-    //                                   rayMIS.getDirection());
-    //    // We are subsampling (discretely sampling) a single light
-    //    // pdf of BxDF should also incorporate this
-    //    pdfMIS *= pdfLightM;
-
-    //    pdfMIS /= TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLightC * pdfLightM);
-
-    //    // PDF can become NaN if both BxDF pdf and light pdf is both zero
-    //    // (meaning both sampling schemes does not cover this direction)
-    //    if(isnan(pdfMIS)) pdfMIS = 0.0f;
-    //}
-
-    //// Calculate Combined PDF
-    //Vector3 misRadianceFactor = radianceFactor * misReflectance;
-    //misRadianceFactor = (pdfMIS == 0.0f) ? Zero3 : (misRadianceFactor / pdfMIS);
-    //if(launchedMISRay && misRadianceFactor != ZERO_3)
-    //{
-    //    // Write Ray
-    //    RayReg rayOut;
-    //    rayOut.ray = rayMIS;
-    //    rayOut.tMin = 0.0f;
-    //    rayOut.tMax = INFINITY;
-    //    rayOut.Update(gOutRays, MIS_RAY_INDEX);
-
-    //    // Write Aux
-    //    RayAuxPath auxOut = aux;
-    //    auxOut.mediumIndex = static_cast<uint16_t>(outMMIS->GlobalIndex());
-    //    auxOut.radianceFactor = misRadianceFactor;
-    //    auxOut.endPointIndex = lightIndex;
-    //    auxOut.type = RayType::NEE_RAY;
-
-    //    gOutBoundKeys[MIS_RAY_INDEX] = matLight;
-    //    gOutRayAux[MIS_RAY_INDEX] = auxOut;
-    //}
-    //else InvalidRayWrite(MIS_RAY_INDEX);
-
-    //// All Done!
-    //// Dont launch NEE if not requested
-    //// or material is highly specula
-    //if(!renderState.nee) return;
-
-    //// Renderer requested a NEE Ray but material is highly specular
-    //// Check if nee is requested
-    //if(isSpecularMat && maxOutRay == 1)
-    //    return;
-    //else if(isSpecularMat)
-    //{
-    //    // Write invalid rays then return
-    //    InvalidRayWrite(NEE_RAY_INDEX);
-    //    if(renderState.directLightMIS)
-    //        InvalidRayWrite(MIS_RAY_INDEX);
-    //    return;
-    //}
-
-    //// Material is not specular & tracer requested a NEE ray
-    //// Generate a NEE Ray
-    //float pdfLight, lDistance;
-    //HitKey matLight;
-    //Vector3 lDirection;
-    //uint32_t lightIndex;
-    //Vector3f neeReflectance = Zero3;
-    //if(renderState.lightSampler->SampleLight(matLight,
-    //                                          lightIndex,
-    //                                          lDirection,
-    //                                          lDistance,
-    //                                          pdfLight,
-    //                                          // Input
-    //                                          position,
-    //                                          rng))
-    //{
-    //    // Evaluate mat for this direction
-    //    neeReflectance = MGroup::Evaluate(// Input
-    //                                      lDirection,
-    //                                      wi,
-    //                                      position,
-    //                                      m,
-    //                                      //
-    //                                      surface,
-    //                                      // Constants
-    //                                      gMatData,
-    //                                      matIndex);
-    //}
-
-    //// Check if mis ray should be sampled
-    //bool launchedMISRay = (renderState.directLightMIS &&
-    //                       // Check if light can be sampled (meaning it is not a
-    //                       // dirac delta light (point light spot light etc.)
-    //                       renderState.lightList[lightIndex]->CanBeSampled());
-
-    //float pdfNEE = pdfLight;
-    //if(launchedMISRay)
-    //{
-    //    float pdfBxDF = MGroup::Pdf(lDirection,
-    //                                wi,
-    //                                position,
-    //                                m,
-    //                                //
-    //                                surface,
-    //                                gMatData,
-    //                                matIndex);
-
-    //    pdfNEE /= TracerFunctions::PowerHeuristic(1, pdfLight, 1, pdfBxDF);
-
-    //    // PDF can become NaN if both BxDF pdf and light pdf is both zero
-    //    // (meaning both sampling schemes does not cover this direction)
-    //    if(isnan(pdfNEE)) pdfNEE = 0.0f;
-    //}
-
-    //// Do not waste a ray if material does not reflect
-    //// towards light's sampled position
-    //Vector3 neeRadianceFactor = radianceFactor * neeReflectance;
-    //neeRadianceFactor = (pdfNEE == 0.0f) ? Zero3 : (neeRadianceFactor / pdfNEE);
-    //if(neeRadianceFactor != ZERO_3)
-    //{
-    //    // Generate & Write Ray
-    //    RayF rayNEE = RayF(lDirection, position);
-    //    rayNEE.AdvanceSelf(MathConstants::Epsilon);
-
-    //    RayReg rayOut;
-    //    rayOut.ray = rayNEE;
-    //    rayOut.tMin = 0.0f;
-    //    rayOut.tMax = lDistance;
-    //    rayOut.Update(gOutRays, NEE_RAY_INDEX);
-
-    //    RayAuxPath auxOut = aux;
-    //    auxOut.radianceFactor = neeRadianceFactor;
-    //    auxOut.endPointIndex = lightIndex;
-    //    auxOut.type = RayType::NEE_RAY;
-
-    //    gOutRayAux[NEE_RAY_INDEX] = auxOut;
-    //    gOutBoundKeys[NEE_RAY_INDEX] = matLight;
-    //}
-    //else InvalidRayWrite(NEE_RAY_INDEX);
-
-    //// Check MIS Ray return if not requested (since no ray is allocated for it)
-    //if(!renderState.directLightMIS) return;
-
-    //// Sample Another ray for MIS (from BxDF)
-    //float pdfMIS = 0.0f;
-    //RayF rayMIS; const GPUMediumI* outMMIS;
-    //Vector3f misReflectance = Zero3;
-    //if(launchedMISRay)
-    //{
-    //    misReflectance = MGroup::Sample(// Outputs
-    //                                    rayMIS, pdfMIS, outMMIS,
-    //                                    // Inputs
-    //                                    wi,
-    //                                    position,
-    //                                    m,
-    //                                    //
-    //                                    surface,
-    //                                    // I-O
-    //                                    rng,
-    //                                    // Constants
-    //                                    gMatData,
-    //                                    matIndex,
-    //                                    0);
-
-    //    // Find out the pdf of the light
-    //    float pdfLightM, pdfLightC;
-    //    renderState.lightSampler->Pdf(pdfLightM, pdfLightC,
-    //                                   lightIndex, position,
-    //                                   rayMIS.getDirection());
-    //    // We are subsampling (discretely sampling) a single light
-    //    // pdf of BxDF should also incorporate this
-    //    pdfMIS *= pdfLightM;
-
-    //    pdfMIS /= TracerFunctions::PowerHeuristic(1, pdfMIS, 1, pdfLightC * pdfLightM);
-
-    //    // PDF can become NaN if both BxDF pdf and light pdf is both zero
-    //    // (meaning both sampling schemes does not cover this direction)
-    //    if(isnan(pdfMIS)) pdfMIS = 0.0f;
-    //}
-
-    //// Calculate Combined PDF
-    //Vector3 misRadianceFactor = radianceFactor * misReflectance;
-    //misRadianceFactor = (pdfMIS == 0.0f) ? Zero3 : (misRadianceFactor / pdfMIS);
-    //if(launchedMISRay && misRadianceFactor != ZERO_3)
-    //{
-    //    // Write Ray
-    //    RayReg rayOut;
-    //    rayOut.ray = rayMIS;
-    //    rayOut.tMin = 0.0f;
-    //    rayOut.tMax = INFINITY;
-    //    rayOut.Update(gOutRays, MIS_RAY_INDEX);
-
-    //    // Write Aux
-    //    RayAuxPath auxOut = aux;
-    //    auxOut.mediumIndex = static_cast<uint16_t>(outMMIS->GlobalIndex());
-    //    auxOut.radianceFactor = misRadianceFactor;
-    //    auxOut.endPointIndex = lightIndex;
-    //    auxOut.type = RayType::NEE_RAY;
-
-    //    gOutBoundKeys[MIS_RAY_INDEX] = matLight;
-    //    gOutRayAux[MIS_RAY_INDEX] = auxOut;
-    //}
-    //else InvalidRayWrite(MIS_RAY_INDEX);
-
-    //// All Done!
+    // All Done!
 }

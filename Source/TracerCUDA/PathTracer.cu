@@ -54,7 +54,7 @@ TracerError PathTracer::Initialize()
         return err;
 
     // Generate Light Sampler (for nee)
-    if((err = LightSamplerCommon::ConstructLightSampler(memory,
+    if((err = LightSamplerCommon::ConstructLightSampler(lightSamplerMemory,
                                                         dLightSampler,
                                                         options.lightSamplerType,
                                                         dLights,

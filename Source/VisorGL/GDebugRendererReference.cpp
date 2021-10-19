@@ -4,8 +4,9 @@
 #include "RayLib/SceneIO.h"
 #include "RayLib/FileSystemUtility.h"
 #include "RayLib/StringUtility.h"
-
 #include "RayLib/Log.h"
+
+#include "ImageIO/EntryPoint.h"
 
 #include <regex>
 
@@ -28,12 +29,11 @@ void GDebugRendererRef::LoadPaths(const Vector2i& resolution,
     Utility::ReplaceAll(regexStr, ".", "\\.");
     Utility::ReplaceAll(fileRegexStr, ".", "\\.");
 
-
-    // Generate Actual regex 
+    // Generate Actual regex
     std::regex regexFull(regexStr);
     std::regex regexFileOnly(fileRegexStr);
     // List all files that match to the regex
-    std::vector<std::string> files = Utility::ListFilesInFolder(Utility::PathFolder(pathRegex), 
+    std::vector<std::string> files = Utility::ListFilesInFolder(Utility::PathFolder(pathRegex),
                                                                 regexFileOnly);
 
     // Now parse and sort these files
@@ -53,9 +53,6 @@ void GDebugRendererRef::LoadPaths(const Vector2i& resolution,
                                                pixelPortion.find_first_of(',')));
         res[0] = std::stoi(pixelPortion.substr(pixelPortion.find_first_of(", ") + 1,
                                                pixelPortion.find_first_of(']')));
-
-        
-
         return res;
     };
 
@@ -91,7 +88,7 @@ GDebugRendererRef::GDebugRendererRef(const nlohmann::json& config,
                     SamplerGLInterpType::LINEAR)
 {
     resolution = SceneIO::LoadVector<2, int32_t>(config[RESOLUTION_NAME]);
-    std::string pathRegex = SceneIO::LoadString(config[IMAGES_NAME]);
+    std::string pathRegex = config[IMAGES_NAME];
     // Generate Image Paths
     LoadPaths(resolution, pathRegex);
 }
@@ -102,27 +99,46 @@ void GDebugRendererRef::RenderSpatial(TextureGL& tex) const
 }
 
 void GDebugRendererRef::RenderDirectional(TextureGL& tex,
-                                          const Vector2i& pixel,
-                                          const Vector2i& refResolution) const
+                                          std::vector<float>& pixValues,
+                                          const Vector2i& worldPixel,
+                                          const Vector2i& worldRefResolution) const
 {
     // Convert pixel Location to the local pixel
     Vector2f ratio = (Vector2f(resolution[0], resolution[1]) /
-                      Vector2f(refResolution[0], refResolution[1]));
-
-    Vector2f mappedPix = Vector2f(pixel[0], pixel[1]) * ratio;
-
+                      Vector2f(worldRefResolution[0], worldRefResolution[1]));
+    Vector2f mappedPix = Vector2f(worldPixel[0], worldPixel[1]) * ratio;
     Vector2i pixelInt = Vector2i(mappedPix[0], mappedPix[1]);
     uint32_t pixelLinear = resolution[0] * pixelInt[1] + pixelInt[0];
 
     const std::string& file = referencePaths[pixelLinear];
-    
-    // Temp Load Lum Texture
-    TextureGL lumTexture = TextureGL(file);
 
+    // Temp Load Lum Texture
+    Vector2ui dim;
+    PixelFormat pf;
+    std::vector<Byte> pixels;
+    ImageIOInstance().ReadImage(pixels, pf, dim, file);
+
+
+    TextureGL lumTexture = TextureGL(dim, pf);
+    lumTexture.CopyToImage(pixels, Zero2ui, dim, pf);
     if(lumTexture.Size() != tex.Size())
     {
         tex = TextureGL(lumTexture.Size(), PixelFormat::RGBA8_UNORM);
     }
+
+    // Copy data to actual vector
+    assert(pf == PixelFormat::R_FLOAT ||
+           pf == PixelFormat::R_HALF);
+    size_t linearSize = dim[0] * dim[1];
+    pixValues.resize(linearSize);
+    ImageIOError e = ImageIOInstance().ConvertPixels(reinterpret_cast<Byte*>(pixValues.data()),
+                                                     PixelFormat::R_FLOAT,
+                                                     pixels.data(), pf,
+                                                     dim);
+    if(e != ImageIOError::OK)
+    {
+        METU_ERROR_LOG(static_cast<std::string>(e));
+    };
 
     // Get a max luminance buffer;
     float initalMaxData = 0.0f;
@@ -170,14 +186,14 @@ void GDebugRendererRef::RenderDirectional(TextureGL& tex,
     // Bind Uniforms
     glUniform2ui(U_RES, lumTexture.Size()[0], lumTexture.Size()[1]);
     //
-    // UBOs    
+    // UBOs
     glBindBufferBase(GL_UNIFORM_BUFFER, UB_MAX_LUM, maxBuffer);
-    // Textures    
+    // Textures
     lumTexture.Bind(T_IN_LUM_TEX);
     gradientTex.Bind(T_IN_GRAD_TEX);  linearSampler.Bind(T_IN_GRAD_TEX);
     // Images
     glBindImageTexture(I_OUT_REF_IMAGE, tex.TexId(),
-                       0, false, 0, GL_WRITE_ONLY,                       
+                       0, false, 0, GL_WRITE_ONLY,
                        PixelFormatToSizedGL(tex.Format()));
     // Dispatch Render Shader
     // Max shader is 2D shader set data accordingly

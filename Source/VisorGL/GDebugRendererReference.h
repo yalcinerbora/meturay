@@ -57,8 +57,8 @@ class GDebugRendererRef
 
         //
         void                    RenderSpatial(TextureGL&) const;
-        void                    RenderDirectional(TextureGL&, 
-                                                  const Vector2i& pixel,
-                                                  const Vector2i& resolution) const;
-
+        void                    RenderDirectional(TextureGL&,
+                                                  std::vector<float>& values,
+                                                  const Vector2i& worldPixel,
+                                                  const Vector2i& worldResolution) const;
 };

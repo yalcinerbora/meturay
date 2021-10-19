@@ -35,7 +35,6 @@ struct RayAuxPath
     uint16_t        mediumIndex;    // Current Medium of the Ray
     uint8_t         depth;          // Current path depth
     RayType         type;           // Ray Type
-
     float           prevPDF;        // Previous Intersections BxDF pdf
                                     // (is used when a path ray hits a light (MIS))
 };
@@ -51,7 +50,8 @@ struct RayAuxPPG
     uint16_t        mediumIndex;    // Current Medium of the Ray
     uint8_t         depth;          // Current path depth
     RayType         type;           // Ray Type
-
+    float           prevPDF;        // Previous Intersections BxDF pdf
+                                    // (is used when a path ray hits a light (MIS))
     uint32_t        pathIndex;      // Global path node index
 };
 
@@ -136,6 +136,34 @@ class RayAuxInitPath
         }
 };
 
+class RayAuxInitRefPG
+{
+     private:
+        RayAuxPath defaultValue;
+
+    public:
+        RayAuxInitRefPG(const RayAuxPath& aux)
+            : defaultValue(aux)
+        {}
+
+        __device__ __host__ HYBRID_INLINE
+        void operator()(RayAuxPath& gOutPath,
+                        // Input
+                        const RayReg& ray,
+                        // Index
+                        uint16_t medumIndex,
+                        const uint32_t localPixelId,
+                        const uint32_t pixelSampleId) const
+        {
+            RayAuxPath init = defaultValue;
+            init.pixelIndex = std::numeric_limits<uint32_t>::max();
+            init.type = RayType::CAMERA_RAY;
+            init.mediumIndex = medumIndex;
+            init.depth = 1;
+            gOutPath = init;
+        }
+};
+
 class RayAuxInitAO
 {
     private:
@@ -186,6 +214,7 @@ class RayAuxInitPPG
             RayAuxPPG init = defaultValue;
             init.pixelIndex = localPixelId;
             init.pathIndex = localPixelId * samplePerPixel;
+            init.depth = 1;
             gOutPPG = init;
         }
 };

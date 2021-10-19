@@ -40,17 +40,36 @@ namespace Debug
     static void     DumpMemToFile(const std::string& fName,
                                   const T* mPtr, size_t count,
                                   bool append = false,
-                                  const char* seperator = "\n",
-                                  bool hex = false);
+                                  bool hex = false,
+                                  const char* seperator = "\n");
+
+    template<class T>
+    static void     DumpBatchedMemToFile(const std::string& fName,
+                                         const T* mPtr,
+                                         size_t batchCount,
+                                         size_t totalCount,
+                                         bool append = false,
+                                         bool hex = false,
+                                         const char* batchSeperator = "=============================",
+                                         const char* elementSeperator = "\n");
+
     template<class T>
     static void     DumpMemToStdout(const T* mPtr, size_t count,
-                                    const char* seperator = "\n",
-                                    bool hex = false);
+                                    bool hex = false,
+                                    const char* seperator = "\n");
     template<class T>
     static void     DumpMemToStream(std::ostream& s,
                                     const T* mPtr, size_t count,
-                                    const char* seperator = "\n",
-                                    bool hex = false);
+                                    bool hex = false,
+                                    const char* seperator = "\n");
+    template<class T>
+    void            DumpBatchedMemToStream(std::ostream& s,
+                                           const T* mPtr,
+                                           size_t batchCount,
+                                           size_t totalCount,
+                                           bool hex,
+                                           const char* batchSeperator,
+                                           const char* elementSeperator);
 
     namespace Detail
     {
@@ -77,8 +96,8 @@ extern std::ostream& operator<<(std::ostream& stream, const PathGuidingNode&);
 template<class T>
 void Debug::DumpMemToFile(const std::string& fName,
                           const T* mPtr, size_t count,
-                          bool append, const char* seperator,
-                          bool hex)
+                          bool append, bool hex,
+                          const char* seperator)
 {
     std::ofstream file;
     if(append)
@@ -92,8 +111,32 @@ void Debug::DumpMemToFile(const std::string& fName,
 }
 
 template<class T>
+void Debug::DumpBatchedMemToFile(const std::string& fName,
+                                 const T* mPtr,
+                                 size_t batchCount,
+                                 size_t totalCount,
+                                 bool append, bool hex,
+                                 const char* batchSeperator,
+                                 const char* elementSeperator)
+{
+    std::ofstream file;
+    if(append)
+    {
+        file = std::ofstream(fName, std::ofstream::app);
+        file << "============================" << std::endl;
+    }
+    else
+        file = std::ofstream(fName);
+    DumpBatchedMemToStream(file, mPtr,
+                           batchCount, totalCount,
+                           hex,
+                           batchSeperator,
+                           elementSeperator);
+}
+
+template<class T>
 void Debug::DumpMemToStdout(const T* mPtr, size_t count,
-                            const char* seperator, bool hex)
+                            bool hex, const char* seperator)
 {
     DumpMemToStream(std::cout, mPtr, count, seperator, hex);
 }
@@ -101,7 +144,7 @@ void Debug::DumpMemToStdout(const T* mPtr, size_t count,
 template<class T>
 void Debug::DumpMemToStream(std::ostream& s,
                             const T* mPtr, size_t count,
-                            const char* seperator, bool hex)
+                            bool hex, const char* seperator)
 {
     CUDA_CHECK(cudaDeviceSynchronize());
 
@@ -109,6 +152,29 @@ void Debug::DumpMemToStream(std::ostream& s,
     for(size_t i = 0; i < count; i++)
     {
         s << mPtr[i] << seperator;
+    }
+    if(hex) s << std::dec;
+}
+
+template<class T>
+void Debug::DumpBatchedMemToStream(std::ostream& s,
+                                   const T* mPtr,
+                                   size_t batchCount,
+                                   size_t totalCount,
+                                   bool hex,
+                                   const char* batchSeperator,
+                                   const char* elementSeperator)
+{
+    CUDA_CHECK(cudaDeviceSynchronize());
+
+    if(hex) s << std::hex;
+    for(size_t i = 0; i < totalCount; i++)
+    {
+        if(i != 0 && i % batchCount == 0)
+            s << batchSeperator << "\n";
+
+        s << mPtr[i] << elementSeperator;
+
     }
     if(hex) s << std::dec;
 }

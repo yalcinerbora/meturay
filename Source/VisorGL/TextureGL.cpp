@@ -40,7 +40,6 @@ TextureGL::TextureGL(const std::string& filePath)
     {
         throw ImageIOException(ImageIOError(e, filePath));
     }
-        
 
     glGenTextures(1, &texId);
     glBindTexture(GL_TEXTURE_2D, texId);
