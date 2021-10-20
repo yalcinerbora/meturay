@@ -101,8 +101,9 @@ TEST(PPG_DTree, Empty)
     DTreeGPU tree;
 
     // Initialize Check
-    DTree testTree;
-    testTree.GetReadTreeToCPU(tree, nodes);
+    DTreeGroup testTree;
+    testTree.AllocateDefaultTrees(1);
+    testTree.GetReadTreeToCPU(tree, nodes, 0);
     EXPECT_EQ(0.0f, tree.irradiance);
     EXPECT_EQ(0, tree.totalSamples);
     EXPECT_EQ(1, tree.nodeCount);
@@ -116,7 +117,7 @@ TEST(PPG_DTree, Empty)
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[1]);
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[2]);
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[3]);
-    testTree.GetWriteTreeToCPU(tree, nodes);
+    testTree.GetWriteTreeToCPU(tree, nodes, 0);
     EXPECT_EQ(0.0f, tree.irradiance);
     EXPECT_EQ(0, tree.totalSamples);
     EXPECT_EQ(1, tree.nodeCount);
@@ -132,9 +133,9 @@ TEST(PPG_DTree, Empty)
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[3]);
 
     // After Swap Check
-    testTree.SwapTrees(FLUX_RATIO, DEPTH_LIMIT, system.BestGPU());
+    testTree.SwapTrees(FLUX_RATIO, DEPTH_LIMIT, system);
     system.SyncAllGPUs();
-    testTree.GetReadTreeToCPU(tree, nodes);
+    testTree.GetReadTreeToCPU(tree, nodes, 0);
     EXPECT_EQ(0.0f, tree.irradiance);
     EXPECT_EQ(0, tree.totalSamples);
     EXPECT_EQ(1, tree.nodeCount);
@@ -148,7 +149,7 @@ TEST(PPG_DTree, Empty)
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[1]);
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[2]);
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[3]);
-    testTree.GetWriteTreeToCPU(tree, nodes);
+    testTree.GetWriteTreeToCPU(tree, nodes, 0);
     EXPECT_EQ(0.0f, tree.irradiance);
     EXPECT_EQ(0, tree.totalSamples);
     EXPECT_EQ(1, tree.nodeCount);
@@ -230,7 +231,8 @@ TEST(PPG_DTree, AddThenSwap)
     }
 
     // Create Tree
-    DTree testTree;
+    DTreeGroup testTree;
+    testTree.AllocateDefaultTrees(1, system);
     // Copy Vertices to the GPU
     DeviceMemory pathNodeMemory(pathNodes.size() * sizeof(PathGuidingNode));
     PathGuidingNode* dPathNodes = static_cast<PathGuidingNode*>(pathNodeMemory);
@@ -238,23 +240,16 @@ TEST(PPG_DTree, AddThenSwap)
                           pathNodes.size() * sizeof(PathGuidingNode),
                           cudaMemcpyHostToDevice));
 
-    DeviceMemory indexMemory(pathNodes.size() * sizeof(uint32_t));
-    uint32_t* dIndices = static_cast<uint32_t*>(indexMemory);
-    std::vector<uint32_t> hIndices(pathNodes.size());
-    std::iota(hIndices.begin(), hIndices.end(), 0);
-    CUDA_CHECK(cudaMemcpy(dIndices, hIndices.data(),
-                          pathNodes.size() * sizeof(uint32_t),
-                          cudaMemcpyHostToDevice));
-
     // Push these values to the Tree
     const uint32_t PathNodePerRay = static_cast<uint32_t>(pathNodes.size());
-    testTree.AddRadiancesFromPaths(dIndices, dPathNodes,
-                                   ArrayPortion<uint32_t>{0, 0, pathNodes.size()},
-                                   PathNodePerRay, system.BestGPU());
+    testTree.AddRadiancesFromPaths(dPathNodes,
+                                   static_cast<uint32_t>(pathNodes.size()),
+                                   PathNodePerRay,
+                                   system);
     system.SyncAllGPUs();
 
     // Check Tree
-    testTree.GetWriteTreeToCPU(treeGPU, nodes);
+    testTree.GetWriteTreeToCPU(treeGPU, nodes, 0);
     for(size_t i = 0; i < nodes.size(); i++)
     {
         const DTreeNode& node = nodes[i];
@@ -279,11 +274,11 @@ TEST(PPG_DTree, AddThenSwap)
     }
 
     // Do the swap
-    testTree.SwapTrees(FLUX_RATIO, DEPTH_LIMIT, system.BestGPU());
+    testTree.SwapTrees(FLUX_RATIO, DEPTH_LIMIT, system);
     system.SyncAllGPUs();
 
     // Check again
-    testTree.GetReadTreeToCPU(treeGPU, nodes);
+    testTree.GetReadTreeToCPU(treeGPU, nodes, 0);
     for(size_t i = 0; i < nodes.size(); i++)
     {
         const DTreeNode& node = nodes[i];
@@ -306,7 +301,7 @@ TEST(PPG_DTree, AddThenSwap)
         childId = (parent.childIndices[3] == i) ? 3 : childId;
         EXPECT_FLOAT_EQ(total, parent.irradianceEstimates[childId]);
     }
-    testTree.GetWriteTreeToCPU(treeGPU, nodes);
+    testTree.GetWriteTreeToCPU(treeGPU, nodes, 0);
     for(size_t i = 0; i < nodes.size(); i++)
     {
         const DTreeNode& node = nodes[i];
@@ -358,23 +353,14 @@ TEST(PPG_DTree, SwapStress)
     // GPU Buffers
     DeviceMemory pathNodeMemory(PATH_PER_ITERATION * sizeof(PathGuidingNode));
     PathGuidingNode* dPathNodes = static_cast<PathGuidingNode*>(pathNodeMemory);
-    DeviceMemory indexMemory(PATH_PER_ITERATION * sizeof(uint32_t));
-    uint32_t* dIndices = static_cast<uint32_t*>(indexMemory);
-
-    // Copy redundant incrementing buffer to GPU (since we are not sorting stuff)
-    std::vector<uint32_t> hIndices(PATH_PER_ITERATION);
-    std::iota(hIndices.begin(), hIndices.end(), 0);
-    CUDA_CHECK(cudaMemcpy(dIndices, hIndices.data(),
-                          PATH_PER_ITERATION * sizeof(uint32_t),
-                          cudaMemcpyHostToDevice));
-    hIndices.clear();
 
     // Check buffer
     DTreeGPU treeGPU;
     std::vector<DTreeNode> nodes;
 
     // Stress the Tree by randomly adding data multiple times
-    DTree testTree;
+    DTreeGroup testTree;
+    testTree.AllocateDefaultTrees(1, system);
     std::vector<PathGuidingNode> paths(PATH_PER_ITERATION);
     for(int iCount = 0; iCount < ITERATION_COUNT; iCount++)
     {
@@ -411,13 +397,14 @@ TEST(PPG_DTree, SwapStress)
                               PATH_PER_ITERATION * sizeof(PathGuidingNode),
                               cudaMemcpyHostToDevice));
         // Do add radiance kernel
-        testTree.AddRadiancesFromPaths(dIndices, dPathNodes,
-                                       ArrayPortion<uint32_t>{DTREE_ID, 0, PATH_PER_ITERATION},
-                                       PATH_PER_RAY, system.BestGPU());
+        testTree.AddRadiancesFromPaths(dPathNodes,
+                                       PATH_PER_ITERATION,
+                                       PATH_PER_RAY,
+                                       system);
         system.SyncAllGPUs();
 
         // Check if radiance is properly added
-        testTree.GetWriteTreeToCPU(treeGPU, nodes);
+        testTree.GetWriteTreeToCPU(treeGPU, nodes, 0);
         for(size_t i = 0; i < nodes.size(); i++)
         {
             const DTreeNode& node = nodes[i];
@@ -441,11 +428,11 @@ TEST(PPG_DTree, SwapStress)
                 EXPECT_EQ(0.0f, node.irradianceEstimates[3]);
         }
 
-        testTree.SwapTrees(fluxRatio, depthLimit, system.BestGPU());
+        testTree.SwapTrees(fluxRatio, depthLimit, system);
         system.SyncAllGPUs();
 
         // Check integrity of the new write tree
-        testTree.GetWriteTreeToCPU(treeGPU, nodes);
+        testTree.GetWriteTreeToCPU(treeGPU, nodes, 0);
         for(size_t i = 0; i < nodes.size(); i++)
         {
             const DTreeNode& node = nodes[i];
@@ -480,7 +467,7 @@ TEST(PPG_DTree, SwapStress)
         //Debug::DumpMemToFile("WTN", nodes.data(), nodes.size());
 
         // Check integrity of the new read tree
-        testTree.GetReadTreeToCPU(treeGPU, nodes);
+        testTree.GetReadTreeToCPU(treeGPU, nodes, 0);
         for(size_t i = 0; i < nodes.size(); i++)
         {
             const DTreeNode& node = nodes[i];
@@ -538,19 +525,10 @@ TEST(PPG_DTree, LargeToSmall)
     // GPU Buffers
     DeviceMemory pathNodeMemory(PATH_PER_ITERATION * sizeof(PathGuidingNode));
     PathGuidingNode* dPathNodes = static_cast<PathGuidingNode*>(pathNodeMemory);
-    DeviceMemory indexMemory(PATH_PER_ITERATION * sizeof(uint32_t));
-    uint32_t* dIndices = static_cast<uint32_t*>(indexMemory);
-
-    // Copy redundant incrementing buffer to GPU (since we are not sorting stuff)
-    std::vector<uint32_t> hIndices(PATH_PER_ITERATION);
-    std::iota(hIndices.begin(), hIndices.end(), 0);
-    CUDA_CHECK(cudaMemcpy(dIndices, hIndices.data(),
-                          PATH_PER_ITERATION * sizeof(uint32_t),
-                          cudaMemcpyHostToDevice));
-    hIndices.clear();
 
     // First create a deep tree
-    DTree testTree;
+    DTreeGroup testTree;
+    testTree.AllocateDefaultTrees(1, system);
     std::vector<PathGuidingNode> paths(PATH_PER_ITERATION);
     for(int iCount = 0; iCount < ADD_ITERATION_COUNT; iCount++)
     {
@@ -577,13 +555,14 @@ TEST(PPG_DTree, LargeToSmall)
                               PATH_PER_ITERATION * sizeof(PathGuidingNode),
                               cudaMemcpyHostToDevice));
         // Do add radiance kernel
-        testTree.AddRadiancesFromPaths(dIndices, dPathNodes,
-                                       ArrayPortion<uint32_t>{DTREE_ID, 0, PATH_PER_ITERATION},
-                                       PATH_PER_RAY, system.BestGPU());
+        testTree.AddRadiancesFromPaths(dPathNodes,
+                                       PATH_PER_ITERATION,
+                                       PATH_PER_RAY,
+                                       system);
         system.SyncAllGPUs();
 
         // Swap the tree
-        testTree.SwapTrees(FLUX_RATIO, DEPTH_LIMIT, system.BestGPU());
+        testTree.SwapTrees(FLUX_RATIO, DEPTH_LIMIT, system);
         system.SyncAllGPUs();
     }
 
@@ -619,17 +598,17 @@ TEST(PPG_DTree, LargeToSmall)
                           PATH_PER_ITERATION * sizeof(PathGuidingNode),
                           cudaMemcpyHostToDevice));
     // Do add radiance kernel
-    testTree.AddRadiancesFromPaths(dIndices, dPathNodes,
-                                   ArrayPortion<uint32_t>{DTREE_ID, 0, PATH_PER_ITERATION},
-                                   PATH_PER_RAY, system.BestGPU());
+    testTree.AddRadiancesFromPaths(dPathNodes,
+                                   PATH_PER_ITERATION,
+                                   PATH_PER_RAY, system);
     system.SyncAllGPUs();
     // Swap tree
-    testTree.SwapTrees(FLUX_RATIO, DEPTH_LIMIT, system.BestGPU());
+    testTree.SwapTrees(FLUX_RATIO, DEPTH_LIMIT, system);
     system.SyncAllGPUs();
 
     // Now check the new trees (read and write)
     // Check integrity of the new write tree
-    testTree.GetWriteTreeToCPU(treeGPU, nodes);
+    testTree.GetWriteTreeToCPU(treeGPU, nodes, 0);
     for(size_t i = 0; i < nodes.size(); i++)
     {
         const DTreeNode& node = nodes[i];
@@ -664,7 +643,7 @@ TEST(PPG_DTree, LargeToSmall)
     //Debug::DumpMemToFile("WTN", nodes.data(), nodes.size());
 
     // Check integrity of the new read tree
-    testTree.GetReadTreeToCPU(treeGPU, nodes);
+    testTree.GetReadTreeToCPU(treeGPU, nodes, 0);
     for(size_t i = 0; i < nodes.size(); i++)
     {
         const DTreeNode& node = nodes[i];
@@ -701,7 +680,8 @@ TEST(PPG_DTree, SampleEmpty)
     constexpr uint32_t SEED = 0;
     RNGMemory rngMem(SEED, system);
 
-    DTree testTree;
+    DTreeGroup testTree;
+    testTree.AllocateDefaultTrees(1, system);
 
     DeviceMemory directionMemory(SAMPLE_COUNT * sizeof(Vector3f));
     DeviceMemory pdfMemory(SAMPLE_COUNT * sizeof(float));
@@ -716,7 +696,7 @@ TEST(PPG_DTree, SampleEmpty)
                        static_cast<Vector3f*>(directionMemory),
                        static_cast<float*>(pdfMemory),
                        //
-                       testTree.TreeGPU(true),
+                       testTree.ReadTrees(),
                        rngMem.RNGData(gpu),
                        SAMPLE_COUNT);
     // Divide by pdf
@@ -778,19 +758,10 @@ TEST(PPG_DTree, SampleDeep)
     // GPU Buffers
     DeviceMemory pathNodeMemory(PATH_PER_ITERATION * sizeof(PathGuidingNode));
     PathGuidingNode* dPathNodes = static_cast<PathGuidingNode*>(pathNodeMemory);
-    DeviceMemory indexMemory(PATH_PER_ITERATION * sizeof(uint32_t));
-    uint32_t* dIndices = static_cast<uint32_t*>(indexMemory);
-
-    // Copy redundant incrementing buffer to GPU (since we are not sorting stuff)
-    std::vector<uint32_t> hIndices(PATH_PER_ITERATION);
-    std::iota(hIndices.begin(), hIndices.end(), 0);
-    CUDA_CHECK(cudaMemcpy(dIndices, hIndices.data(),
-                          PATH_PER_ITERATION * sizeof(uint32_t),
-                          cudaMemcpyHostToDevice));
-    hIndices.clear();
 
     // First create a deep tree
-    DTree testTree;
+    DTreeGroup testTree;
+    testTree.AllocateDefaultTrees(1, system);
     std::vector<PathGuidingNode> paths(PATH_PER_ITERATION);
     for(int iCount = 0; iCount < ADD_ITERATION_COUNT; iCount++)
     {
@@ -817,19 +788,19 @@ TEST(PPG_DTree, SampleDeep)
                               PATH_PER_ITERATION * sizeof(PathGuidingNode),
                               cudaMemcpyHostToDevice));
         // Do add radiance kernel
-        testTree.AddRadiancesFromPaths(dIndices, dPathNodes,
-                                       ArrayPortion<uint32_t>{DTREE_ID, 0, PATH_PER_ITERATION},
-                                       PATH_PER_RAY, system.BestGPU());
+        testTree.AddRadiancesFromPaths(dPathNodes,
+                                       PATH_PER_ITERATION,
+                                       PATH_PER_RAY,
+                                       system);
         system.SyncAllGPUs();
 
         // Swap the tree
-        testTree.SwapTrees(FLUX_RATIO, DEPTH_LIMIT, system.BestGPU());
+        testTree.SwapTrees(FLUX_RATIO, DEPTH_LIMIT, system);
         system.SyncAllGPUs();
     }
 
     // Now sample buffers are quite large so remove any other gpu memory
     pathNodeMemory = DeviceMemory();
-    indexMemory = DeviceMemory();
 
     // Sample stuff
     DeviceMemory directionMemory(SAMPLE_COUNT * sizeof(Vector3f));
@@ -849,7 +820,7 @@ TEST(PPG_DTree, SampleDeep)
                        static_cast<Vector3f*>(directionMemory),
                        static_cast<float*>(pdfMemory),
                        //
-                       testTree.TreeGPU(true),
+                       testTree.ReadTrees(),
                        rngMem.RNGData(gpu),
                        SAMPLE_COUNT);
 

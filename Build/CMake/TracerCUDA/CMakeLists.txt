@@ -386,23 +386,23 @@ target_link_libraries(TracerCUDA
                       ${PLATFORM_SPEC_LIBRARIES})
 
 # Object Group for testing
-#add_library(TracerCUDA_ForTest STATIC ${SRC_ALL})
-add_library(TracerCUDA_ForTest STATIC $<TARGET_OBJECTS:TracerCUDA>)
+#add_library(TracerCUDA_Static STATIC ${SRC_ALL})
+add_library(TracerCUDA_Static STATIC $<TARGET_OBJECTS:TracerCUDA>)
 
-target_include_directories(TracerCUDA_ForTest PRIVATE
+target_include_directories(TracerCUDA_Static PRIVATE
                            ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
 
-target_compile_definitions(TracerCUDA_ForTest PRIVATE ${PREPROCESSOR_GENERIC})
+target_compile_definitions(TracerCUDA_Static PRIVATE ${PREPROCESSOR_GENERIC})
 
-target_compile_options(TracerCUDA_ForTest PRIVATE ${MRAY_COMPILER_FLAGS_GENERIC})
+target_compile_options(TracerCUDA_Static PRIVATE ${MRAY_COMPILER_FLAGS_GENERIC})
 
-set_target_properties(TracerCUDA_ForTest PROPERTIES
+set_target_properties(TracerCUDA_Static PROPERTIES
                       POSITION_INDEPENDENT_CODE ON
                       CUDA_SEPARABLE_COMPILATION ON
                       CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
-target_link_libraries(TracerCUDA_ForTest
+target_link_libraries(TracerCUDA_Static
                       RayLib
                       ImageIO
                       ${PLATFORM_SPEC_LIBRARIES})

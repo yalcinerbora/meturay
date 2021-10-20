@@ -6,7 +6,7 @@ STree Implementation from PPG
 
 [Müller et al. 2017] https://dl.acm.org/doi/10.1111/cgf.13227
 
-*/ 
+*/
 
 #include "DeviceMemory.h"
 
@@ -14,136 +14,299 @@ STree Implementation from PPG
 #include "RayLib/Types.h"
 
 #include <vector>
+#include <cassert>
 
 struct DTreeNode;
 struct DTreeGPU;
 struct PathGuidingNode;
 
-class CudaGPU;
+class CudaSystem;
 
-class DTree
+//class DTree
+//{
+//    public:
+//        class DTreeBuffer
+//        {
+//            private:
+//                DeviceMemory    memory;
+//                DTreeGPU*       dDTree;
+//                size_t          nodeCount;
+//
+//                void            FixPointers();
+//
+//            protected:
+//            public:
+//                // Constructors & Destructor
+//                                    DTreeBuffer();
+//                                    DTreeBuffer(const DTreeBuffer&);
+//                                    DTreeBuffer(DTreeBuffer&&) = default;
+//                DTreeBuffer&        operator=(const DTreeBuffer&);
+//                DTreeBuffer&        operator=(DTreeBuffer&&) = default;
+//                                    ~DTreeBuffer() = default;
+//
+//
+//                DTreeGPU*           TreeGPU();
+//                const DTreeGPU*     TreeGPU() const;
+//
+//                size_t              NodeCount() const;
+//                void                ResetAndReserve(size_t nodeCount,
+//                                                    const CudaGPU&,
+//                                                    cudaStream_t);
+//                void                CopyGPUNodeCountToCPU(cudaStream_t stream);
+//                size_t              UsedGPUMemory() const;
+//
+//                void                DumpTree(DTreeGPU&, std::vector<DTreeNode>&) const;
+//                void                DumpTreeAsBinary(std::vector<Byte>&) const;
+//        };
+//
+//    private:
+//        // Tree Nodes (one for read other for write
+//        DTreeBuffer            readTree;
+//        DTreeBuffer            writeTree;
+//
+//    protected:
+//    public:
+//        // Constructors & Destructor
+//                                DTree() = default;
+//                                DTree(const DTree&) = default;
+//                                DTree(DTree&&) = default;
+//        DTree&                  operator=(const DTree&) = default;
+//        DTree&                  operator=(DTree&&) = default;
+//                                ~DTree() = default;
+//
+//        // Members
+//        void                    SwapTrees(float fluxRatio,
+//                                          uint32_t depthLimit,
+//                                          const CudaGPU&);
+//        void                    AddRadiancesFromPaths(const uint32_t* dNodeIndexArray,
+//                                                      const PathGuidingNode* dPathNodes,
+//                                                      const ArrayPortion<uint32_t>& portion,
+//                                                      uint32_t maxPathNodePerRay,
+//                                                      const CudaGPU&);
+//        // Access
+//        DTreeGPU*               TreeGPU(bool readTree);
+//        const DTreeGPU*         TreeGPU(bool writeTree) const;
+//
+//        size_t                  UsedGPUMemory() const;
+//        size_t                  UsedCPUMemory() const;
+//
+//        size_t                  NodeCount(bool readOrWriteTree) const;
+//
+//        // Debugging
+//        void                    GetReadTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
+//        void                    GetWriteTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
+//        void                    DumpTreeAsBinary(std::vector<Byte>&, bool fetchReadTree) const;
+//
+//};
+//
+
+class DTreeGroup
 {
-    public: 
+    private:
         class DTreeBuffer
         {
             private:
-                DeviceMemory    memory;
-                DTreeGPU*       dDTree;
-                size_t          nodeCount;
+                DeviceMemory            treeNodeMemory;
+                DTreeNode*              dDTreeNodes;
 
-                void            FixPointers();
+                std::vector<uint32_t>   hDTreeNodeOffsets;
+
+                DeviceMemory            offsetMemory;
+                uint32_t*               dDTreeNodeOffsets;
+
+                DeviceMemory            treeMemory;
+                DTreeGPU*               dDTrees;
 
             protected:
             public:
                 // Constructors & Destructor
-                                    DTreeBuffer();
-                                    DTreeBuffer(const DTreeBuffer&);
-                                    DTreeBuffer(DTreeBuffer&&) = default;
-                DTreeBuffer&        operator=(const DTreeBuffer&);
-                DTreeBuffer&        operator=(DTreeBuffer&&) = default;
-                                    ~DTreeBuffer() = default;
+                                        DTreeBuffer();
+                                        DTreeBuffer(const DTreeBuffer&) = delete;
+                                        DTreeBuffer(DTreeBuffer&&) = default;
+                DTreeBuffer&            operator=(const DTreeBuffer&) = delete;
+                DTreeBuffer&            operator=(DTreeBuffer&&) = default;
+                                        ~DTreeBuffer() = default;
+
+                void                    AllocateDefaultTrees(uint32_t count, const CudaSystem& system);
+                void                    AllocateExtra(const std::vector<uint32_t>& oldTreeIds,
+                                                      const CudaSystem& system);
+                void                    ResetAndReserve(const uint32_t* newNodeCounts,
+                                                        uint32_t newTreeCount,
+                                                        const CudaSystem& system);
 
 
-                DTreeGPU*           TreeGPU();
-                const DTreeGPU*     TreeGPU() const;
+                uint32_t                DTreeCount() const;
+                uint32_t                DTreeTotalNodeCount() const;
+                uint32_t                DTreeNodeCount(uint32_t) const;
+                uint32_t                DTreeNodeOffset(uint32_t) const;
+                const uint32_t*         DTreeNodeOffsetsGPU() const;
 
-                size_t              NodeCount() const;
-                void                ResetAndReserve(size_t nodeCount,
-                                                    const CudaGPU&,
-                                                    cudaStream_t);
-                void                CopyGPUNodeCountToCPU(cudaStream_t stream);
-                size_t              UsedGPUMemory() const;
+                const DTreeGPU*         DTrees() const;
+                DTreeGPU*               DTrees();
 
-                void                DumpTree(DTreeGPU&, std::vector<DTreeNode>&) const;
-                void                DumpTreeAsBinary(std::vector<Byte>&) const;
+                size_t                  UsedGPUMemory() const;
+                size_t                  UsedCPUMemory() const;
+
+                void                    GetTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&, uint32_t treeIndex) const;
+                void                    DumpTreeAsBinary(std::vector<Byte>&, uint32_t treeIndex) const;
         };
 
+    public:
+        static constexpr uint32_t       InvalidDTreeIndex = std::numeric_limits<uint32_t>::max();
+
     private:
-        // Tree Nodes (one for read other for write
-        DTreeBuffer            readTree;
-        DTreeBuffer            writeTree;
+        DTreeBuffer             readTrees;
+        DTreeBuffer             writeTrees;
 
     protected:
     public:
         // Constructors & Destructor
-                                DTree() = default;
-                                DTree(const DTree&) = default;
-                                DTree(DTree&&) = default;
-        DTree&                  operator=(const DTree&) = default;
-        DTree&                  operator=(DTree&&) = default;
-                                ~DTree() = default;
+                                DTreeGroup() = default;
+                                DTreeGroup(const DTreeGroup&) = delete;
+                                DTreeGroup(DTreeGroup&&) = delete;
+        DTreeGroup&             operator=(const DTreeGroup&) = delete;
+        DTreeGroup&             operator=(DTreeGroup&&) = delete;
+                                ~DTreeGroup() = default;
 
-        // Members        
-        void                    SwapTrees(float fluxRatio, 
-                                          uint32_t depthLimit,
-                                          const CudaGPU&);
-        void                    AddRadiancesFromPaths(const uint32_t* dNodeIndexArray,
-                                                      const PathGuidingNode* dPathNodes,
-                                                      const ArrayPortion<uint32_t>& portion,
+
+        // Interface
+        // Allocate extra trees and copy them frommthe old tree idss
+        void                    AllocateDefaultTrees(uint32_t count, const CudaSystem& system);
+        void                    AllocateExtra(const std::vector<uint32_t>& oldTreeIds,
+                                              const CudaSystem& system);
+        void                    SwapTrees(float fluxRatio, uint32_t depthLimit,
+                                          const CudaSystem& system);
+        void                    AddRadiancesFromPaths(const PathGuidingNode* dPGNodes,
+                                                      uint32_t totalNodeCount,
                                                       uint32_t maxPathNodePerRay,
-                                                      const CudaGPU&);
-        // Access
-        DTreeGPU*               TreeGPU(bool readTree);
-        const DTreeGPU*         TreeGPU(bool writeTree) const;
+                                                      const CudaSystem& system);
 
+        uint32_t                TreeCount() const;
+        size_t                  NodeCount(uint32_t treeIndex, bool readOrWriteTree) const;
+
+        DTreeGPU*               ReadTrees();
+        const DTreeGPU*         ReadTrees() const;
+        DTreeGPU*               WriteTrees();
+        const DTreeGPU*         WriteTrees() const;
+        //
         size_t                  UsedGPUMemory() const;
         size_t                  UsedCPUMemory() const;
 
-        size_t                  NodeCount(bool readOrWriteTree) const;
-
         // Debugging
-        void                    GetReadTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
-        void                    GetWriteTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
-        void                    DumpTreeAsBinary(std::vector<Byte>&, bool fetchReadTree) const;
+        void                    GetReadTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&, uint32_t treeIndex) const;
+        void                    GetWriteTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&, uint32_t treeIndex) const;
+        void                    DumpTreeAsBinary(std::vector<Byte>&, uint32_t treeIndex, bool fetchReadTree) const;
 
 };
 
-inline DTreeGPU* DTree::DTreeBuffer::TreeGPU()
+inline DTreeGroup::DTreeBuffer::DTreeBuffer()
+    : dDTreeNodes(nullptr)
+    , dDTreeNodeOffsets(nullptr)
+    , dDTrees(nullptr)
+{}
+
+inline uint32_t DTreeGroup::DTreeBuffer::DTreeCount() const
 {
-    return dDTree;
-}
-inline const DTreeGPU* DTree::DTreeBuffer::TreeGPU() const
-{
-    return dDTree;
+    return static_cast<uint32_t>(hDTreeNodeOffsets.size() - 1);
 }
 
-inline size_t DTree::DTreeBuffer::NodeCount() const
+inline uint32_t DTreeGroup::DTreeBuffer::DTreeTotalNodeCount() const
 {
-    return nodeCount;
+    return hDTreeNodeOffsets.back();
 }
 
-inline size_t DTree::DTreeBuffer::UsedGPUMemory() const
+inline uint32_t DTreeGroup::DTreeBuffer::DTreeNodeCount(uint32_t treeIndex) const
 {
-    return memory.Size();
+    return hDTreeNodeOffsets[treeIndex + 1] - hDTreeNodeOffsets[treeIndex];
 }
 
-inline DTreeGPU* DTree::TreeGPU(bool fetchReadTree)
+inline uint32_t DTreeGroup::DTreeBuffer::DTreeNodeOffset(uint32_t treeIndex) const
 {
-    DTreeBuffer& b = (fetchReadTree) ? readTree : writeTree;
-    return b.TreeGPU();
+    return hDTreeNodeOffsets[treeIndex];
 }
 
-inline const DTreeGPU* DTree::TreeGPU(bool fetchReadTree) const
+inline const uint32_t* DTreeGroup::DTreeBuffer::DTreeNodeOffsetsGPU() const
 {
-    const DTreeBuffer& b = (fetchReadTree) ? readTree : writeTree;
-    return b.TreeGPU();
+    return dDTreeNodeOffsets;
 }
 
-inline size_t DTree::UsedGPUMemory() const
+inline const DTreeGPU* DTreeGroup::DTreeBuffer::DTrees() const
 {
-    return (writeTree.UsedGPUMemory() +
-            readTree.UsedGPUMemory());
+    return dDTrees;
 }
 
-inline size_t DTree::UsedCPUMemory() const
+inline DTreeGPU* DTreeGroup::DTreeBuffer::DTrees()
 {
-    return sizeof(DTree);
+    return dDTrees;
 }
 
-inline size_t DTree::NodeCount(bool readOrWriteTree) const
+inline size_t DTreeGroup::DTreeBuffer::UsedGPUMemory() const
 {
-    if(readOrWriteTree)
-        return readTree.NodeCount();
-    else
-        return writeTree.NodeCount();
+    return (offsetMemory.Size() +
+            treeMemory.Size() +
+            treeNodeMemory.Size());
+}
+
+inline size_t DTreeGroup::DTreeBuffer::UsedCPUMemory() const
+{
+    return (sizeof(DTreeBuffer) + hDTreeNodeOffsets.size() * sizeof(uint32_t));
+}
+
+inline uint32_t DTreeGroup::TreeCount() const
+{
+    assert(readTrees.DTreeCount() == writeTrees.DTreeCount());
+    return readTrees.DTreeCount();
+}
+
+inline size_t DTreeGroup::NodeCount(uint32_t treeIndex, bool readOrWriteTree) const
+{
+    const DTreeBuffer& treeBuffer = (readOrWriteTree) ? readTrees : writeTrees;
+    return treeBuffer.DTreeNodeCount(treeIndex);
+}
+
+inline DTreeGPU* DTreeGroup::ReadTrees()
+{
+    return readTrees.DTrees();
+}
+
+inline const DTreeGPU* DTreeGroup::ReadTrees() const
+{
+    return readTrees.DTrees();
+}
+
+inline DTreeGPU* DTreeGroup::WriteTrees()
+{
+    return writeTrees.DTrees();
+}
+
+inline const DTreeGPU* DTreeGroup::WriteTrees() const
+{
+    return writeTrees.DTrees();
+}
+
+inline size_t DTreeGroup::UsedGPUMemory() const
+{
+    return (writeTrees.UsedGPUMemory() +
+            readTrees.UsedGPUMemory());
+}
+inline size_t DTreeGroup::UsedCPUMemory() const
+{
+    return (writeTrees.UsedCPUMemory() +
+            readTrees.UsedCPUMemory());
+}
+
+inline void DTreeGroup::GetReadTreeToCPU(DTreeGPU& tree, std::vector<DTreeNode>& nodes, uint32_t treeIndex) const
+{
+    readTrees.GetTreeToCPU(tree, nodes, treeIndex);
+}
+
+inline void DTreeGroup::GetWriteTreeToCPU(DTreeGPU& tree, std::vector<DTreeNode>& nodes, uint32_t treeIndex) const
+{
+    writeTrees.GetTreeToCPU(tree, nodes, treeIndex);
+}
+
+inline void DTreeGroup::DumpTreeAsBinary(std::vector<Byte>& data, uint32_t treeIndex, bool fetchReadTree) const
+{
+    const DTreeBuffer& treeBuffer = (fetchReadTree) ? readTrees : writeTrees;
+    treeBuffer.DumpTreeAsBinary(data, treeIndex);
 }

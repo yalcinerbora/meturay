@@ -45,7 +45,7 @@ TEST(PPG_STree, Empty)
     ASSERT_EQ(CudaError::OK, system.Initialize());
     // Default Constructed STree
     STree tree(WorldAABB);
-    
+
     DeviceMemory outIndices(sizeof(uint32_t) * SAMPLE_COUNT);
     DeviceMemory inWorldPositions(sizeof(Vector3f) * SAMPLE_COUNT);
 
@@ -53,7 +53,7 @@ TEST(PPG_STree, Empty)
     std::vector<Vector3f> worldSamples(SAMPLE_COUNT);
     for(Vector3f& worldPos : worldSamples)
     {
-        worldPos = WorldAABB.Min() + WorldAABB.Span() * Vector3f(rng(), rng(), rng());           
+        worldPos = WorldAABB.Min() + WorldAABB.Span() * Vector3f(rng(), rng(), rng());
     }
     CUDA_CHECK(cudaMemcpy(static_cast<Vector3f*>(inWorldPositions),
                           worldSamples.data(),
@@ -64,8 +64,8 @@ TEST(PPG_STree, Empty)
     const CudaGPU& bestGPU = system.BestGPU();
 
     const STreeGPU* dSTreeGPU;
-    const DTreeGPU** dReadDTrees;
-    DTreeGPU** dWriteDTrees;
+    const DTreeGPU* dReadDTrees;
+    DTreeGPU* dWriteDTrees;
     tree.TreeGPU(dSTreeGPU, dReadDTrees, dWriteDTrees);
     bestGPU.GridStrideKC_X(0, 0, SAMPLE_COUNT,
                            //
@@ -99,7 +99,7 @@ TEST(PPG_STree, Split)
     static constexpr float D_FLUX_SPLIT = 0.001f;
     // Split a STree leaf when it reaches 100 samples
     static constexpr uint32_t S_SPLIT = 100;
-    // 
+    //
     static constexpr uint32_t ITERATION_COUNT = 15;
     static constexpr uint32_t PATH_PER_ITERATION = 100'000;
     static constexpr uint32_t RAY_COUNT = 10'000;

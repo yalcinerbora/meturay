@@ -19,6 +19,7 @@ TODO: should we interface these?
 #include <fstream>
 #include <iostream>
 #include <tuple>
+#include <cassert>
 
 #include "RayLib/MemoryAlignment.h"
 #include "RayLib/Types.h"

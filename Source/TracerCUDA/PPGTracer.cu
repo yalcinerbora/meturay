@@ -49,7 +49,7 @@ static void KCInitializePaths(PathGuidingNode* gPathNodes,
     if(globalId < totalNodeCount)
     {
         PathGuidingNode node;
-        node.nearestDTreeIndex = STree::InvalidDTreeIndex;
+        node.nearestDTreeIndex = DTreeGroup::InvalidDTreeIndex;
         node.radFactor = Vector3f(1.0f);
         node.prevNext = Vector<2, PathGuidingNode::IndexType>(PathGuidingNode::InvalidIndex);
         node.totalRadiance = Zero3;
@@ -244,8 +244,8 @@ bool PPGTracer::Render()
     //
     // Set SD Tree
     const STreeGPU* dSTree;
-    const DTreeGPU** dReadDTrees;
-    DTreeGPU** dWriteDTrees;
+    const DTreeGPU* dReadDTrees;
+    DTreeGPU* dWriteDTrees;
     sTree->TreeGPU(dSTree, dReadDTrees, dWriteDTrees);
     globalData.gStree = dSTree;
     globalData.gReadDTrees = dReadDTrees;

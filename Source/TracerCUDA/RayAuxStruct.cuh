@@ -156,7 +156,7 @@ class RayAuxInitRefPG
                         const uint32_t pixelSampleId) const
         {
             RayAuxPath init = defaultValue;
-            init.pixelIndex = std::numeric_limits<uint32_t>::max();
+            init.pixelIndex = UINT32_MAX;
             init.type = RayType::CAMERA_RAY;
             init.mediumIndex = medumIndex;
             init.depth = 1;

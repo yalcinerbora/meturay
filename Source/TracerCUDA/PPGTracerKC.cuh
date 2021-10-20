@@ -31,8 +31,8 @@ struct PPGTracerGlobalState
     uint32_t                        totalMediumCount;
     // SDTree Related
     const STreeGPU*                 gStree;
-    const DTreeGPU**                gReadDTrees;
-    DTreeGPU**                      gWriteDTrees;
+    const DTreeGPU*                 gReadDTrees;
+    DTreeGPU*                       gWriteDTrees;
     // Path Related
     PathGuidingNode*                gPathNodes;
     uint32_t                        maximumPathNodePerRay;
@@ -156,11 +156,11 @@ void PPGTracerBoundaryWork(// Output
             gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
 
             uint32_t dTreeIndex = gLocalPathNodes[aux.depth].nearestDTreeIndex;
-            DTreeGPU* dWriteTree = renderState.gWriteDTrees[dTreeIndex];
+            DTreeGPU& dWriteTree = renderState.gWriteDTrees[dTreeIndex];
 
-            dWriteTree->AddRadianceToLeaf(r.getDirection(),
-                                          Utility::RGBToLuminance(total),
-                                          true);
+            dWriteTree.AddRadianceToLeaf(r.getDirection(),
+                                         Utility::RGBToLuminance(total),
+                                         true);
             //dWriteTree->AddRadianceToLeaf(r.getDirection(), 1.0f);
 
             //if(total != Vector3f(0.0f))

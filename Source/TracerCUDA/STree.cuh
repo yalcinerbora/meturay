@@ -2,7 +2,7 @@
 
 /**
 
-STree Implementation from PPG 
+STree Implementation from PPG
 
 [Müller et al. 2017] https://dl.acm.org/doi/10.1111/cgf.13227
 
@@ -11,7 +11,7 @@ it holds a D-tree.
 
 This is a GPU-oriented implementation of such tree
 
-*/ 
+*/
 
 #include "DeviceMemory.h"
 #include "DTree.cuh"
@@ -26,9 +26,6 @@ struct STreeNode;
 
 class STree
 {
-    public:
-        static constexpr uint32_t InvalidDTreeIndex = std::numeric_limits<uint32_t>::max();
-
     private:
         static constexpr size_t INITIAL_NODE_CAPACITY = 1'000;
         static constexpr size_t INITIAL_TREE_RESERVE_COUNT = 10'000;
@@ -37,18 +34,10 @@ class STree
         DeviceMemory        memory;
         STreeGPU*           dSTree;
         size_t              nodeCount;
-       
-        // DTree Allocations
-        std::vector<DTree>  dTrees;
 
-        // DTree Buffer for Tracer
-        DeviceMemory        rwDTreeGPUBuffer;
-        const DTreeGPU**    dReadDTrees;
-        DTreeGPU**          dWriteDTrees;
-        
-        void                LinearizeDTreeGPUPtrs(DeviceMemory&,
-                                                  bool readTree, size_t offset = 0);
-        void                LinearizeDTreeGPUPtrs(DeviceMemory&);
+        // DTree Allocations
+        DTreeGroup          dTrees;
+
         void                ExpandTree(size_t newNodeCount);
         void                SplitLeaves(uint32_t maxSamplesPerNode,
                                         const CudaSystem&);
@@ -68,19 +57,19 @@ class STree
 
         // Members
         void                SplitAndSwapTrees(uint32_t sTreeMaxSamplePerLeaf,
-                                              float dTreeFluxRatio, 
-                                              uint32_t dTreeDepthLimit, 
+                                              float dTreeFluxRatio,
+                                              uint32_t dTreeDepthLimit,
                                               const CudaSystem& system);
-                            
-        void                AccumulateRaidances(const PathGuidingNode* dPGNodes, 
+
+        void                AccumulateRaidances(const PathGuidingNode* dPGNodes,
                                                 uint32_t totalNodeCount,
                                                 uint32_t maxPathNodePerRay,
                                                 const CudaSystem&);
 
 
-        void                TreeGPU(const STreeGPU*& dSTree,
-                                    const DTreeGPU**& dReadDTrees,
-                                    DTreeGPU**& dWriteDTrees) const;
+        void                TreeGPU(const STreeGPU*& dSTreeOut,
+                                    const DTreeGPU*& dReadDTreesOut,
+                                    DTreeGPU*& dWriteDTreesOut);
         uint32_t            TotalTreeCount() const;
 
         size_t              UsedGPUMemory() const;
@@ -98,31 +87,27 @@ class STree
 };
 
 inline void STree::TreeGPU(const STreeGPU*& dSTreeOut,
-                           const DTreeGPU**& dReadDTreesOut,
-                           DTreeGPU**& dWriteDTreesOut) const
+                           const DTreeGPU*& dReadDTreesOut,
+                           DTreeGPU*& dWriteDTreesOut)
 {
     dSTreeOut = dSTree;
-    dReadDTreesOut = dReadDTrees;
-    dWriteDTreesOut = dWriteDTrees;
+    dReadDTreesOut = dTrees.ReadTrees();
+    dWriteDTreesOut = dTrees.WriteTrees();
 }
 
 inline uint32_t STree::TotalTreeCount() const
 {
-    return static_cast<uint32_t>(dTrees.size());
+    return dTrees.TreeCount();
 }
 
 inline size_t STree::UsedGPUMemory() const
 {
-    size_t total = memory.Size();
-    for(const DTree& dt : dTrees)
-        total += dt.UsedGPUMemory();
+    size_t total = dTrees.UsedGPUMemory() + memory.Size();
     return total;
 }
 
 inline size_t STree::UsedCPUMemory() const
 {
-    size_t total = 0;
-    for(const DTree& dt : dTrees)
-        total += dt.UsedCPUMemory();
+    size_t total = dTrees.UsedCPUMemory();
     return total;
 }

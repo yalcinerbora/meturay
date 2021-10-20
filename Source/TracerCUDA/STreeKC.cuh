@@ -19,12 +19,12 @@ struct STreeNode
 
         END
     };
-    
+
     AxisType                splitAxis; // In which dimension this node is split
     bool                    isLeaf;    // Determines which data the index is holding
 
     // It is either DTree index or next child index
-    // Childs are always grouped (childs + 1 is the other child)    
+    // Childs are always grouped (childs + 1 is the other child)
     uint32_t                index;
 
     // True: left child (the small one), False: right child (the large one)
@@ -32,16 +32,16 @@ struct STreeNode
     // Normalize coordinates for the next iteration
     __device__ Vector3f     NormalizeCoordsForChild(bool leftRight,
                                                     const Vector3f& parentNormalizedCoords) const;
-    __device__ 
+    __device__
     static AxisType         NextAxis(AxisType t);
 };
 
 struct STreeGPU
-{    
+{
     STreeNode*          gRoot;
     uint32_t            nodeCount;
     AABB3f              extents;
-    
+
     __device__ void     AcquireNearestDTree(uint32_t& dTreeIndex, const Vector3f& worldPos) const;
 };
 
@@ -59,7 +59,7 @@ Vector3f STreeNode::NormalizeCoordsForChild(bool leftRight,
     Vector3f result = parentNormalizedCoords;
     int axis = static_cast<int>(splitAxis);
     if(leftRight) result[axis] -= 0.5;
-    result[axis] *= 2.0f;    
+    result[axis] *= 2.0f;
     return result;
 }
 
@@ -103,7 +103,7 @@ __global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCMarkSTreeSplitLeaf(uint32_t* leafIndices,
                                  //
                                  const STreeGPU& gTree,
-                                 DTreeGPU** gDTrees,
+                                 DTreeGPU* gDTrees,
                                  //
                                  uint32_t treeSplitThreshold,
                                  // Offset
@@ -121,15 +121,15 @@ static void KCMarkSTreeSplitLeaf(uint32_t* leafIndices,
         uint32_t output = INVALID_NODE;
         if(node->isLeaf)
         {
-            DTreeGPU* currentDTree = gDTrees[node->index];
+            DTreeGPU& currentDTree = gDTrees[node->index];
 
             // Check if this leaf should split
-            uint32_t totalSamples = gDTrees[node->index]->totalSamples;
+            uint32_t totalSamples = gDTrees[node->index].totalSamples;
             if(totalSamples > treeSplitThreshold)
             {
                 // Pre divide the sample count since this leaf will be split
-                currentDTree->totalSamples /= 2;
-                output = globalId;  
+                currentDTree.totalSamples /= 2;
+                output = globalId;
             }
         }
         leafIndices[globalId] = output;
@@ -158,8 +158,8 @@ static void KCSplitSTree(uint32_t* gOldTrees,
         // Determine child loc from allocation offsets
         uint32_t childrenLoc = leafAllocStartIndex + threadId * 2;
         uint32_t newTreeIndex = treeAllocStartIndex + threadId;
-        
-        // We are splitting             
+
+        // We are splitting
         STreeNode* gLeft = gTree.gRoot + childrenLoc;
         STreeNode* gRight = gLeft + 1;
         STreeNode::AxisType nextAxis = STreeNode::NextAxis(leafNode->splitAxis);

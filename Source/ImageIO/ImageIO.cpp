@@ -765,8 +765,8 @@ ImageIOError ImageIO::ConvertPixels(Byte* toData, PixelFormat toFormat,
     else if(toFormat == PixelFormat::R_FLOAT &&
             fromFormat == PixelFormat::R_HALF)
     {
-        for(int j = 0; j < dimension[1]; j++)
-        for(int i = 0; i < dimension[0]; i++)
+        for(uint32_t j = 0; j < dimension[1]; j++)
+        for(uint32_t i = 0; i < dimension[0]; i++)
         {
             const Byte* pixelIn = fromData + FormatToPixelSize(fromFormat) * (j * dimension[0] + i);
             Byte* pixelOut = toData + FormatToPixelSize(toFormat) * (j * dimension[0] + i);
