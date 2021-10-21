@@ -39,6 +39,7 @@ set(SRC_GPU_ALGORITHMS_COMMON
     ${CURRENT_SOURCE_DIR}/BinarySearch.cuh
     ${CURRENT_SOURCE_DIR}/ParallelPartition.cuh
     ${CURRENT_SOURCE_DIR}/ParallelReduction.cuh
+    ${CURRENT_SOURCE_DIR}/ParallelMemset.cuh
     ${CURRENT_SOURCE_DIR}/ParallelScan.cuh
     ${CURRENT_SOURCE_DIR}/ParallelSequence.cuh
     ${CURRENT_SOURCE_DIR}/ParallelTransform.cuh

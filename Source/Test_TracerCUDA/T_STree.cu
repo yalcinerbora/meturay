@@ -44,7 +44,7 @@ TEST(PPG_STree, Empty)
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
     // Default Constructed STree
-    STree tree(WorldAABB);
+    STree tree(WorldAABB, system);
 
     DeviceMemory outIndices(sizeof(uint32_t) * SAMPLE_COUNT);
     DeviceMemory inWorldPositions(sizeof(Vector3f) * SAMPLE_COUNT);
@@ -118,7 +118,7 @@ TEST(PPG_STree, Split)
     DeviceMemory pathNodeMemory(PATH_PER_ITERATION * sizeof(PathGuidingNode));
     PathGuidingNode* dPathNodes = static_cast<PathGuidingNode*>(pathNodeMemory);
 
-    STree testTree(WorldAABB);
+    STree testTree(WorldAABB, system);
     std::vector<PathGuidingNode> paths(PATH_PER_ITERATION);
     for(uint32_t iCount = 0; iCount < ITERATION_COUNT; iCount++)
     {

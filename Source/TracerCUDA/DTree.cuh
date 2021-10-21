@@ -12,6 +12,8 @@ STree Implementation from PPG
 
 #include "RayLib/ArrayPortion.h"
 #include "RayLib/Types.h"
+#include "RayLib/CudaCheck.h"
+#include "RayLib/Constants.h"
 
 #include <vector>
 #include <cassert>
@@ -127,7 +129,8 @@ class DTreeGroup
                 DTreeBuffer&            operator=(DTreeBuffer&&) = default;
                                         ~DTreeBuffer() = default;
 
-                void                    AllocateDefaultTrees(uint32_t count, const CudaSystem& system);
+                void                    AllocateDefaultTrees(uint32_t count, bool setRootIrrad,
+                                                             const CudaSystem& system);
                 void                    AllocateExtra(const std::vector<uint32_t>& oldTreeIds,
                                                       const CudaSystem& system);
                 void                    ResetAndReserve(const uint32_t* newNodeCounts,
@@ -141,6 +144,9 @@ class DTreeGroup
                 uint32_t                DTreeNodeOffset(uint32_t) const;
                 const uint32_t*         DTreeNodeOffsetsGPU() const;
 
+                const DTreeNode*        DTreeNodesGPU() const;
+                DTreeNode*              DTreeNodesGPU();
+
                 const DTreeGPU*         DTrees() const;
                 DTreeGPU*               DTrees();
 
@@ -153,6 +159,11 @@ class DTreeGroup
 
     public:
         static constexpr uint32_t       InvalidDTreeIndex = std::numeric_limits<uint32_t>::max();
+        static constexpr uint32_t       InvalidParentIndex = std::numeric_limits<uint32_t>::max();
+        static constexpr uint32_t       InvalidChildIndex = std::numeric_limits<uint32_t>::max();
+
+        // Everything is at least this value in order to prevent impossible regions
+        static constexpr float       MinIrradiance = MathConstants::Epsilon;
 
     private:
         DTreeBuffer             readTrees;
@@ -203,7 +214,12 @@ inline DTreeGroup::DTreeBuffer::DTreeBuffer()
     : dDTreeNodes(nullptr)
     , dDTreeNodeOffsets(nullptr)
     , dDTrees(nullptr)
-{}
+{
+    hDTreeNodeOffsets.push_back(0);
+    offsetMemory = DeviceMemory(sizeof(uint32_t));
+    dDTreeNodeOffsets = static_cast<uint32_t*>(offsetMemory);
+    CUDA_CHECK(cudaMemset(dDTreeNodeOffsets, 0x00, sizeof(uint32_t)));
+}
 
 inline uint32_t DTreeGroup::DTreeBuffer::DTreeCount() const
 {
@@ -238,6 +254,16 @@ inline const DTreeGPU* DTreeGroup::DTreeBuffer::DTrees() const
 inline DTreeGPU* DTreeGroup::DTreeBuffer::DTrees()
 {
     return dDTrees;
+}
+
+inline const DTreeNode* DTreeGroup::DTreeBuffer::DTreeNodesGPU() const
+{
+    return dDTreeNodes;
+}
+
+inline DTreeNode* DTreeGroup::DTreeBuffer::DTreeNodesGPU()
+{
+    return dDTreeNodes;
 }
 
 inline size_t DTreeGroup::DTreeBuffer::UsedGPUMemory() const

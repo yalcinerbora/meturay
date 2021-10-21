@@ -4,6 +4,8 @@
 #include <numeric>
 #include <random>
 
+#include "RayLib/ColorConversion.h"
+
 #include "TracerCUDA/DTree.cuh"
 #include "TracerCUDA/CudaSystem.h"
 #include "TracerCUDA/CudaSystem.hpp"
@@ -42,8 +44,6 @@ static void KCCoordToDir(Vector2f* coords,
         coords[globalId] = DTreeGPU::WorldDirToTreeCoords(dirs[globalId]);
     }
 }
-
-
 
 __global__
 static void KCSampleTree(Vector3f* gDirections,
@@ -92,8 +92,9 @@ TEST(PPG_DTree, Empty)
     ASSERT_EQ(CudaError::OK, system.Initialize());
 
     // Constants
-    // If a node has %10 or more total energy, split
-    static constexpr float FLUX_RATIO = 0.1f;
+    // If a node has %110 or more total energy, split
+    // Impossible case tree should not be split
+    static constexpr float FLUX_RATIO = 1.1f;
     // Maximum allowed depth of the tree
     static constexpr uint32_t DEPTH_LIMIT = 10;
 
@@ -102,9 +103,9 @@ TEST(PPG_DTree, Empty)
 
     // Initialize Check
     DTreeGroup testTree;
-    testTree.AllocateDefaultTrees(1);
+    testTree.AllocateDefaultTrees(1, system);
     testTree.GetReadTreeToCPU(tree, nodes, 0);
-    EXPECT_EQ(0.0f, tree.irradiance);
+    EXPECT_EQ(DTreeGroup::MinIrradiance * 4, tree.irradiance);
     EXPECT_EQ(0, tree.totalSamples);
     EXPECT_EQ(1, tree.nodeCount);
     EXPECT_EQ(1, nodes.size());
@@ -112,11 +113,11 @@ TEST(PPG_DTree, Empty)
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[1]);
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[2]);
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[3]);
-    EXPECT_EQ(std::numeric_limits<uint16_t>::max(), nodes.front().parentIndex);
-    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[0]);
-    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[1]);
-    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[2]);
-    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[3]);
+    EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().parentIndex);
+    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[0]);
+    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[1]);
+    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[2]);
+    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[3]);
     testTree.GetWriteTreeToCPU(tree, nodes, 0);
     EXPECT_EQ(0.0f, tree.irradiance);
     EXPECT_EQ(0, tree.totalSamples);
@@ -126,7 +127,7 @@ TEST(PPG_DTree, Empty)
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[1]);
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[2]);
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[3]);
-    EXPECT_EQ(std::numeric_limits<uint16_t>::max(), nodes.front().parentIndex);
+    EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().parentIndex);
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[0]);
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[1]);
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[2]);
@@ -136,7 +137,7 @@ TEST(PPG_DTree, Empty)
     testTree.SwapTrees(FLUX_RATIO, DEPTH_LIMIT, system);
     system.SyncAllGPUs();
     testTree.GetReadTreeToCPU(tree, nodes, 0);
-    EXPECT_EQ(0.0f, tree.irradiance);
+    EXPECT_EQ(DTreeGroup::MinIrradiance * 4, tree.irradiance);
     EXPECT_EQ(0, tree.totalSamples);
     EXPECT_EQ(1, tree.nodeCount);
     EXPECT_EQ(1, nodes.size());
@@ -144,11 +145,11 @@ TEST(PPG_DTree, Empty)
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[1]);
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[2]);
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[3]);
-    EXPECT_EQ(std::numeric_limits<uint16_t>::max(), nodes.front().parentIndex);
-    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[0]);
-    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[1]);
-    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[2]);
-    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[3]);
+    EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().parentIndex);
+    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[0]);
+    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[1]);
+    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[2]);
+    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[3]);
     testTree.GetWriteTreeToCPU(tree, nodes, 0);
     EXPECT_EQ(0.0f, tree.irradiance);
     EXPECT_EQ(0, tree.totalSamples);
@@ -158,7 +159,7 @@ TEST(PPG_DTree, Empty)
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[1]);
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[2]);
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[3]);
-    EXPECT_EQ(std::numeric_limits<uint16_t>::max(), nodes.front().parentIndex);
+    EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().parentIndex);
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[0]);
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[1]);
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[2]);
@@ -175,6 +176,7 @@ TEST(PPG_DTree, AddThenSwap)
     static constexpr float FLUX_RATIO = 0.001f;
     // Maximum allowed depth of the tree
     static constexpr uint32_t DEPTH_LIMIT = 10;
+    static constexpr Vector3f RADIANCE = Vector3f{10.0f, 10.0f, 10.0f};
 
     // Check buffers
     std::vector<DTreeNode> nodes;
@@ -185,31 +187,31 @@ TEST(PPG_DTree, AddThenSwap)
     camNode.prevNext = Vector<2, PathNode::IndexType>(PathNode::InvalidIndex, 1);
     camNode.radFactor = Zero3;
     camNode.nearestDTreeIndex = 0;
-    camNode.totalRadiance = Vector3f{10.0f, 10.0f, 10.0f};
+    camNode.totalRadiance = RADIANCE;
     PathGuidingNode midNode0;
-    midNode0.worldPosition = Vector3f{1.0f, 1.0f, 1.0f};
+    midNode0.worldPosition = Vector3f{10.0f, 10.0f, 0.0f};
     midNode0.prevNext = Vector<2, PathNode::IndexType>(0, 2);
     midNode0.radFactor = Zero3;
     midNode0.nearestDTreeIndex = 0;
-    midNode0.totalRadiance = Vector3f{30.0f, 30.0f, 30.0f};
+    midNode0.totalRadiance = RADIANCE;
     PathGuidingNode midNode1;
     midNode1.worldPosition = Vector3f{0.0f, 0.0f, 0.0f};
     midNode1.prevNext = Vector<2, PathNode::IndexType>(1, 3);
     midNode1.radFactor = Zero3;
     midNode1.nearestDTreeIndex = 0;
-    midNode1.totalRadiance = Vector3f{40.0f, 40.0f, 40.0f};
+    midNode1.totalRadiance = RADIANCE;
     PathGuidingNode midNode2;
-    midNode2.worldPosition = Vector3f{1.0f, 1.0f, -1.0f};
+    midNode2.worldPosition = Vector3f{-10.0f, 10.0f, 0.0f};
     midNode2.prevNext = Vector<2, PathNode::IndexType>(2, 4);
     midNode2.radFactor = Zero3;
     midNode2.nearestDTreeIndex = 0;
-    midNode2.totalRadiance = Vector3f{50.0f, 50.0f, 50.0f};
+    midNode2.totalRadiance = RADIANCE;
     PathGuidingNode endNode;
     endNode.worldPosition = Vector3f{0.0f, 0.0f, 0.0f};
     endNode.prevNext = Vector<2, PathNode::IndexType>(3, PathNode::InvalidIndex);
     endNode.radFactor = Zero3;
     endNode.nearestDTreeIndex = 0;
-    endNode.totalRadiance = Vector3f{0.0f, 0.0f, 0.0f};
+    endNode.totalRadiance = RADIANCE;
 
     std::vector<PathGuidingNode> pathNodes =
     {
@@ -250,27 +252,32 @@ TEST(PPG_DTree, AddThenSwap)
 
     // Check Tree
     testTree.GetWriteTreeToCPU(treeGPU, nodes, 0);
+    EXPECT_EQ(nodes.size(), 1);
     for(size_t i = 0; i < nodes.size(); i++)
     {
         const DTreeNode& node = nodes[i];
-        if(node.parentIndex == std::numeric_limits<uint16_t>::max())
+        if(node.parentIndex == std::numeric_limits<uint32_t>::max())
         {
             // This is root
             // Root should be the very first element
             EXPECT_EQ(0, i);
             EXPECT_EQ(treeGPU.totalSamples, pathNodes.size());
-            continue;
         }
 
-        // Only leafs should have value
-        if(node.childIndices[0] != std::numeric_limits<uint32_t>::max())
-            EXPECT_EQ(0.0f, node.irradianceEstimates[0]);
-        if(node.childIndices[1] != std::numeric_limits<uint32_t>::max())
-            EXPECT_EQ(0.0f, node.irradianceEstimates[1]);
-        if(node.childIndices[2] != std::numeric_limits<uint32_t>::max())
-            EXPECT_EQ(0.0f, node.irradianceEstimates[2]);
-        if(node.childIndices[3] != std::numeric_limits<uint32_t>::max())
-            EXPECT_EQ(0.0f, node.irradianceEstimates[3]);
+        // There should be only root note and each of its values
+        // should be RGB = Y of (10,10,10)
+        EXPECT_TRUE(node.childIndices[0] == std::numeric_limits<uint32_t>::max());
+        EXPECT_NEAR(Utility::RGBToLuminance(RADIANCE), node.irradianceEstimates[0],
+                    MathConstants::VeryLargeEpsilon);
+        EXPECT_TRUE(node.childIndices[1] == std::numeric_limits<uint32_t>::max());
+        EXPECT_NEAR(Utility::RGBToLuminance(RADIANCE), node.irradianceEstimates[1],
+                    MathConstants::VeryLargeEpsilon);
+        EXPECT_TRUE(node.childIndices[2] == std::numeric_limits<uint32_t>::max());
+        EXPECT_NEAR(Utility::RGBToLuminance(RADIANCE), node.irradianceEstimates[2],
+                    MathConstants::VeryLargeEpsilon);
+        EXPECT_TRUE(node.childIndices[3] == std::numeric_limits<uint32_t>::max());
+        EXPECT_NEAR(Utility::RGBToLuminance(RADIANCE), node.irradianceEstimates[3],
+                    MathConstants::VeryLargeEpsilon);
     }
 
     // Do the swap
@@ -283,13 +290,15 @@ TEST(PPG_DTree, AddThenSwap)
     {
         const DTreeNode& node = nodes[i];
         float total = node.irradianceEstimates.Sum();
-        if(node.parentIndex == std::numeric_limits<uint16_t>::max())
+        if(node.parentIndex == std::numeric_limits<uint32_t>::max())
         {
             // This is root
             // Root should be the very first element
             EXPECT_EQ(0, i);
             EXPECT_EQ(treeGPU.totalSamples, pathNodes.size());
             EXPECT_FLOAT_EQ(treeGPU.irradiance, total);
+            EXPECT_NEAR(Utility::RGBToLuminance(RADIANCE) * 4, total,
+                        MathConstants::VeryLargeEpsilon);
             continue;
         }
 
@@ -306,7 +315,7 @@ TEST(PPG_DTree, AddThenSwap)
     {
         const DTreeNode& node = nodes[i];
         float total = node.irradianceEstimates.Sum();
-        if(node.parentIndex == std::numeric_limits<uint16_t>::max())
+        if(node.parentIndex == std::numeric_limits<uint32_t>::max())
         {
             // This is root
             // Root should be the very first element
@@ -408,7 +417,7 @@ TEST(PPG_DTree, SwapStress)
         for(size_t i = 0; i < nodes.size(); i++)
         {
             const DTreeNode& node = nodes[i];
-            if(node.parentIndex == std::numeric_limits<uint16_t>::max())
+            if(node.parentIndex == std::numeric_limits<uint32_t>::max())
             {
                 // This is root
                 // Root should be the very first element
@@ -419,13 +428,13 @@ TEST(PPG_DTree, SwapStress)
 
             // Only leafs should have value
             if(node.childIndices[0] != std::numeric_limits<uint32_t>::max())
-                EXPECT_EQ(0.0f, node.irradianceEstimates[0]);
+                EXPECT_EQ(DTreeGroup::MinIrradiance, node.irradianceEstimates[0]);
             if(node.childIndices[1] != std::numeric_limits<uint32_t>::max())
-                EXPECT_EQ(0.0f, node.irradianceEstimates[1]);
+                EXPECT_EQ(DTreeGroup::MinIrradiance, node.irradianceEstimates[1]);
             if(node.childIndices[2] != std::numeric_limits<uint32_t>::max())
-                EXPECT_EQ(0.0f, node.irradianceEstimates[2]);
+                EXPECT_EQ(DTreeGroup::MinIrradiance, node.irradianceEstimates[2]);
             if(node.childIndices[3] != std::numeric_limits<uint32_t>::max())
-                EXPECT_EQ(0.0f, node.irradianceEstimates[3]);
+                EXPECT_EQ(DTreeGroup::MinIrradiance, node.irradianceEstimates[3]);
         }
 
         testTree.SwapTrees(fluxRatio, depthLimit, system);
@@ -441,7 +450,7 @@ TEST(PPG_DTree, SwapStress)
             EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[2]);
             EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[3]);
 
-            if(node.parentIndex == std::numeric_limits<uint16_t>::max())
+            if(node.parentIndex == std::numeric_limits<uint32_t>::max())
             {
                 // This is root
                 // Root should be the very first element
@@ -453,7 +462,7 @@ TEST(PPG_DTree, SwapStress)
 
             // Try to go to the parent
             const DTreeNode* n = &node;
-            while(n->parentIndex != std::numeric_limits<uint16_t>::max())
+            while(n->parentIndex != std::numeric_limits<uint32_t>::max())
             {
                 n = &nodes[n->parentIndex];
             }
@@ -472,7 +481,7 @@ TEST(PPG_DTree, SwapStress)
         {
             const DTreeNode& node = nodes[i];
             float total = node.irradianceEstimates.Sum();
-            if(node.parentIndex == std::numeric_limits<uint16_t>::max())
+            if(node.parentIndex == std::numeric_limits<uint32_t>::max())
             {
                 // This is root
                 // Root should be the very first element
@@ -617,7 +626,7 @@ TEST(PPG_DTree, LargeToSmall)
         EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[2]);
         EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[3]);
 
-        if(node.parentIndex == std::numeric_limits<uint16_t>::max())
+        if(node.parentIndex == std::numeric_limits<uint32_t>::max())
         {
             // This is root
             // Root should be the very first element
@@ -629,7 +638,7 @@ TEST(PPG_DTree, LargeToSmall)
 
         // Try to go to the parent
         const DTreeNode* n = &node;
-        while(n->parentIndex != std::numeric_limits<uint16_t>::max())
+        while(n->parentIndex != std::numeric_limits<uint32_t>::max())
         {
             n = &nodes[n->parentIndex];
         }
@@ -648,7 +657,7 @@ TEST(PPG_DTree, LargeToSmall)
     {
         const DTreeNode& node = nodes[i];
         float total = node.irradianceEstimates.Sum();
-        if(node.parentIndex == std::numeric_limits<uint16_t>::max())
+        if(node.parentIndex == std::numeric_limits<uint32_t>::max())
         {
             // This is root
             // Root should be the very first element

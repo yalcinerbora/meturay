@@ -198,6 +198,7 @@ DeviceMemory& DeviceMemory::operator=(const DeviceMemory& other)
 
 DeviceMemory& DeviceMemory::operator=(DeviceMemory&& other)
 {
+    assert(this != &other);
     CUDA_CHECK(cudaFree(m_ptr));
     m_ptr = other.m_ptr;
     size = other.size;

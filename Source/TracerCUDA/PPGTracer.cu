@@ -167,7 +167,7 @@ TracerError PPGTracer::Initialize()
 
     // Init sTree
     AABB3f worldAABB = scene.BaseAccelerator()->SceneExtents();
-    sTree = std::make_unique<STree>(worldAABB);
+    sTree = std::make_unique<STree>(worldAABB, cudaSystem);
 
     return TracerError::OK;
 }

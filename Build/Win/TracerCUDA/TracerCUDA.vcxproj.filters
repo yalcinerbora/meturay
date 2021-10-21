@@ -552,6 +552,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightNull.cuh">
       <Filter>Lights</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelMemset.cuh">
+      <Filter>GPU Algorithms</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">

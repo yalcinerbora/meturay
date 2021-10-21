@@ -48,7 +48,8 @@ class STree
 
     public:
         // Constructors & Destructor
-                            STree(const AABB3f& sceneExtents);
+                            STree(const AABB3f& sceneExtents,
+                                  const CudaSystem& system);
                             STree(const STree&) = delete;
                             STree(STree&&) = default;
         STree&              operator=(const STree&) = delete;

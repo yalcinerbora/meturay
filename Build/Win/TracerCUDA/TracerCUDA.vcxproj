@@ -72,6 +72,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUWork.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MetaMaterialFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUSurface.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelMemset.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelPartition.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelSequence.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelTransform.cuh" />

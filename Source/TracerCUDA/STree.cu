@@ -45,7 +45,8 @@ void STree::ExpandTree(size_t newNodeCount)
     memory = std::move(newMem);
 }
 
-STree::STree(const AABB3f& sceneExtents)
+STree::STree(const AABB3f& sceneExtents,
+             const CudaSystem& system)
     : nodeCount(0)
     , dSTree(nullptr)
 {
@@ -73,7 +74,7 @@ STree::STree(const AABB3f& sceneExtents)
     CUDA_CHECK(cudaMemcpy(nodeAABBLoc, &sceneAABB, sizeof(AABB3f),
                           cudaMemcpyHostToDevice));
 
-    dTrees.AllocateDefaultTrees(1);
+    dTrees.AllocateDefaultTrees(1, system);
 }
 
 void STree::SplitLeaves(uint32_t maxSamplesPerNode,

@@ -138,7 +138,7 @@ template<class T>
 void Debug::DumpMemToStdout(const T* mPtr, size_t count,
                             bool hex, const char* seperator)
 {
-    DumpMemToStream(std::cout, mPtr, count, seperator, hex);
+    DumpMemToStream(std::cout, mPtr, count, hex, seperator);
 }
 
 template<class T>
