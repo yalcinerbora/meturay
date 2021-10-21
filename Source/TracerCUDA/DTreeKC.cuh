@@ -342,6 +342,8 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance,
     // Descent and find the leaf
     DTreeNode* node = gRoot;
     Vector2f localCoords = discreteCoords;
+
+    int i = 0;
     while(true)
     {
         uint8_t childIndex = node->DetermineChild(localCoords);
@@ -363,6 +365,12 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance,
         // Continue Traversal
         localCoords = node->NormalizeCoordsForChild(childIndex, localCoords);
         node = gRoot + node->childIndices[childIndex];
+
+        if(i >= 500)
+        {
+            printf("INFINITE LOOP?\n");
+        }
+        i++;
     }
 
     // Finally add a sample if required
@@ -478,6 +486,7 @@ void CalculateParentIrradiance(// I-O
     sum += currentNode->IsLeaf(3) ? irrad[3] : 0.0f;
 
     // Back-propogate the sum towards the root
+    int i = 0;
     DTreeNode* n = currentNode;
     while(!(n->IsRoot()))
     {
@@ -494,6 +503,8 @@ void CalculateParentIrradiance(// I-O
         atomicAdd(&parentNode->irradianceEstimates[childId], sum);
         // Traverse upwards
         n = parentNode;
+
+        i++; if(i >= 500) printf("p INFINITE LOOP?\n");
     }
 
     // Finally add to the total aswell
@@ -633,8 +644,10 @@ void ReconstructEmptyTree(// Output
             // Allocate a new node
             uint32_t childNodeIndex = childGlobalOffset + childOffsets[i];
             DTreeNode* childNode = gDTree.gRoot + childNodeIndex;
-            childNode->parentIndex = static_cast<uint32_t>(punchedNodeId);
+
+            // Set the punched node's child id
             punchedNode->childIndices[i] = childNodeIndex;
+            childNode->parentIndex = static_cast<uint32_t>(punchedNodeId);
 
             //printf("Creating Child %u, local %u \n", childNodeIndex,
             //       static_cast<uint32_t>(i));

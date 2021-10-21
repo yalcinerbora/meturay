@@ -107,7 +107,7 @@ void Debug::DumpMemToFile(const std::string& fName,
     }
     else
         file = std::ofstream(fName);
-    DumpMemToStream(file, mPtr, count, seperator, hex);
+    DumpMemToStream(file, mPtr, count, hex, seperator);
 }
 
 template<class T>

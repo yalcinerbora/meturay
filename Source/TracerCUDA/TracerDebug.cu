@@ -202,10 +202,9 @@ std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
 std::ostream& operator<<(std::ostream& s, const DTreeNode& n)
 {
     constexpr uint32_t UINT32_T_MAX = std::numeric_limits<uint32_t>::max();
-    constexpr uint16_t UINT16_T_MAX = std::numeric_limits<uint16_t>::max();
 
     s << "P{";
-    if(n.parentIndex == UINT16_T_MAX) s << "-";
+    if(n.parentIndex == UINT32_T_MAX) s << "-";
     else s << n.parentIndex;
     s << "} ";
     s << "C{";

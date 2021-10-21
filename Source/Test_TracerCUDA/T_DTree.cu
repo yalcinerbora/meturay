@@ -401,6 +401,9 @@ TEST(PPG_DTree, SwapStress)
         }
 
 
+        testTree.GetWriteTreeToCPU(treeGPU, nodes, 0);
+        Debug::DumpMemToFile("nodes", nodes.data(), nodes.size());
+
         // Copy Vertices to the GPU
         CUDA_CHECK(cudaMemcpy(dPathNodes, paths.data(),
                               PATH_PER_ITERATION * sizeof(PathGuidingNode),
@@ -428,13 +431,13 @@ TEST(PPG_DTree, SwapStress)
 
             // Only leafs should have value
             if(node.childIndices[0] != std::numeric_limits<uint32_t>::max())
-                EXPECT_EQ(DTreeGroup::MinIrradiance, node.irradianceEstimates[0]);
+                EXPECT_EQ(0.0f, node.irradianceEstimates[0]);
             if(node.childIndices[1] != std::numeric_limits<uint32_t>::max())
-                EXPECT_EQ(DTreeGroup::MinIrradiance, node.irradianceEstimates[1]);
+                EXPECT_EQ(0.0f, node.irradianceEstimates[1]);
             if(node.childIndices[2] != std::numeric_limits<uint32_t>::max())
-                EXPECT_EQ(DTreeGroup::MinIrradiance, node.irradianceEstimates[2]);
+                EXPECT_EQ(0.0f, node.irradianceEstimates[2]);
             if(node.childIndices[3] != std::numeric_limits<uint32_t>::max())
-                EXPECT_EQ(DTreeGroup::MinIrradiance, node.irradianceEstimates[3]);
+                EXPECT_EQ(0.0f, node.irradianceEstimates[3]);
         }
 
         testTree.SwapTrees(fluxRatio, depthLimit, system);
@@ -487,7 +490,8 @@ TEST(PPG_DTree, SwapStress)
                 // Root should be the very first element
                 EXPECT_EQ(0, i);
                 EXPECT_EQ(treeGPU.totalSamples, PATH_PER_ITERATION);
-                EXPECT_FLOAT_EQ(treeGPU.irradiance, total);
+                EXPECT_NEAR(treeGPU.irradiance, total,
+                            MathConstants::VeryLargeEpsilon);
                 continue;
             }
 
@@ -663,7 +667,8 @@ TEST(PPG_DTree, LargeToSmall)
             // Root should be the very first element
             EXPECT_EQ(0, i);
             EXPECT_EQ(treeGPU.totalSamples, PATH_PER_ITERATION);
-            EXPECT_FLOAT_EQ(treeGPU.irradiance, total);
+            EXPECT_NEAR(treeGPU.irradiance, total,
+                        MathConstants::VeryLargeEpsilon);
             continue;
         }
 
@@ -685,7 +690,7 @@ TEST(PPG_DTree, SampleEmpty)
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
     //
-    constexpr uint32_t SAMPLE_COUNT = 250'000'000;
+    constexpr uint32_t SAMPLE_COUNT = 2'500'000;
     constexpr uint32_t SEED = 0;
     RNGMemory rngMem(SEED, system);
 
@@ -738,7 +743,7 @@ TEST(PPG_DTree, SampleDeep)
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
     //
-    //constexpr uint32_t SAMPLE_COUNT = 250'000'000;
+    //constexpr uint32_t SAMPLE_COUNT = 2'500'000;
     constexpr uint32_t SAMPLE_COUNT = 100;
     constexpr uint32_t SEED = 0;
     RNGMemory rngMem(SEED, system);

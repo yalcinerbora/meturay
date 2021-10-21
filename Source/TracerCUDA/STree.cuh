@@ -77,6 +77,7 @@ class STree
         size_t              UsedCPUMemory() const;
 
         // Debugging
+        const DTreeGroup&   DTrees() const;
         void                GetTreeToCPU(STreeGPU&, std::vector<STreeNode>&) const;
         void                GetAllDTreesToCPU(std::vector<DTreeGPU>&,
                                               std::vector<std::vector<DTreeNode>>&,

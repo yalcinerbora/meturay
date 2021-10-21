@@ -149,12 +149,24 @@ TEST(PPG_STree, Split)
                               PATH_PER_ITERATION * sizeof(PathGuidingNode),
                               cudaMemcpyHostToDevice));
 
-        //// DEBUGGING
-        //Utility::CPUTimer t;
-        //STreeGPU treeGPU;
-        //std::vector<STreeNode> nodes;
-        //testTree.GetTreeToCPU(treeGPU, nodes);
-        //Debug::DumpMemToFile("BS-Nodes", nodes.data(), nodes.size());
+        // DEBUGGING
+        for(uint32_t i = 0; i < testTree.DTrees().TreeCount(); i++)
+        {
+            using namespace std::string_literals;
+
+            DTreeGPU tree;
+            std::vector<DTreeNode> nodes;
+
+            testTree.DTrees().GetReadTreeToCPU(tree, nodes, i);
+            Debug::DumpMemToFile("BeforeSplit-readNodes"s,
+                                 nodes.data(), nodes.size(),
+                                 (i != 0));
+
+            testTree.DTrees().GetWriteTreeToCPU(tree, nodes, i);
+            Debug::DumpMemToFile("BeforeSplit-writeNodes"s,
+                                 nodes.data(), nodes.size(),
+                                 (i != 0));
+        }
         // Accumulate Radiances
         //t.Start();
         testTree.AccumulateRaidances(dPathNodes, PATH_PER_ITERATION, PATH_PER_RAY, system);
@@ -166,13 +178,25 @@ TEST(PPG_STree, Split)
         testTree.SplitAndSwapTrees(S_SPLIT, D_FLUX_SPLIT, D_MAX_DEPT, system);
         system.SyncAllGPUs();
 
-        //// DEBUGGING
-        //t.Lap();
-        //METU_LOG("Split&Swap {:f}", t.Elapsed<CPUTimeSeconds>());
-        //testTree.GetTreeToCPU(treeGPU, nodes);
-        //Debug::DumpMemToFile("AS-Nodes", nodes.data(), nodes.size());
-        //METU_LOG("iter {:d}", iCount);
-        //METU_LOG("-----------------------------------------------------");
+        // DEBUGGING
+        for(uint32_t i = 0; i < testTree.DTrees().TreeCount(); i++)
+        {
+            using namespace std::string_literals;
+
+            DTreeGPU tree;
+            std::vector<DTreeNode> nodes;
+
+            testTree.DTrees().GetReadTreeToCPU(tree, nodes, i);
+            Debug::DumpMemToFile("AfterSplit-readNodes"s,
+                                 nodes.data(), nodes.size(),
+                                 (i != 0));
+
+            testTree.DTrees().GetWriteTreeToCPU(tree, nodes, i);
+            Debug::DumpMemToFile("AfterSplit-writeNodes"s,
+                                 nodes.data(), nodes.size(),
+                                 (i != 0));
+        }
+        METU_LOG("-----------------------------------------------------");
     }
 
     //// DEBUGGING

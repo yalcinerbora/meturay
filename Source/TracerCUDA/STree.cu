@@ -4,6 +4,8 @@
 #include "CudaSystem.hpp"
 #include "STreeKC.cuh"
 
+#include "TracerDebug.h"
+
 #include "RayLib/MemoryAlignment.h"
 
 #include <cub/cub.cuh>
@@ -225,6 +227,11 @@ void STree::GetTreeToCPU(STreeGPU& treeCPU, std::vector<STreeNode>& nodesCPU) co
     CUDA_CHECK(cudaMemcpy(nodesCPU.data(), dSTreeNodes,
                           nodeCount * sizeof(STreeNode),
                           cudaMemcpyDeviceToHost));
+}
+
+const DTreeGroup& STree::DTrees() const
+{
+    return dTrees;
 }
 
 void STree::GetAllDTreesToCPU(std::vector<DTreeGPU>& dTreeStructs,
