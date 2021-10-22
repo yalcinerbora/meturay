@@ -24,84 +24,6 @@ struct PathGuidingNode;
 
 class CudaSystem;
 
-//class DTree
-//{
-//    public:
-//        class DTreeBuffer
-//        {
-//            private:
-//                DeviceMemory    memory;
-//                DTreeGPU*       dDTree;
-//                size_t          nodeCount;
-//
-//                void            FixPointers();
-//
-//            protected:
-//            public:
-//                // Constructors & Destructor
-//                                    DTreeBuffer();
-//                                    DTreeBuffer(const DTreeBuffer&);
-//                                    DTreeBuffer(DTreeBuffer&&) = default;
-//                DTreeBuffer&        operator=(const DTreeBuffer&);
-//                DTreeBuffer&        operator=(DTreeBuffer&&) = default;
-//                                    ~DTreeBuffer() = default;
-//
-//
-//                DTreeGPU*           TreeGPU();
-//                const DTreeGPU*     TreeGPU() const;
-//
-//                size_t              NodeCount() const;
-//                void                ResetAndReserve(size_t nodeCount,
-//                                                    const CudaGPU&,
-//                                                    cudaStream_t);
-//                void                CopyGPUNodeCountToCPU(cudaStream_t stream);
-//                size_t              UsedGPUMemory() const;
-//
-//                void                DumpTree(DTreeGPU&, std::vector<DTreeNode>&) const;
-//                void                DumpTreeAsBinary(std::vector<Byte>&) const;
-//        };
-//
-//    private:
-//        // Tree Nodes (one for read other for write
-//        DTreeBuffer            readTree;
-//        DTreeBuffer            writeTree;
-//
-//    protected:
-//    public:
-//        // Constructors & Destructor
-//                                DTree() = default;
-//                                DTree(const DTree&) = default;
-//                                DTree(DTree&&) = default;
-//        DTree&                  operator=(const DTree&) = default;
-//        DTree&                  operator=(DTree&&) = default;
-//                                ~DTree() = default;
-//
-//        // Members
-//        void                    SwapTrees(float fluxRatio,
-//                                          uint32_t depthLimit,
-//                                          const CudaGPU&);
-//        void                    AddRadiancesFromPaths(const uint32_t* dNodeIndexArray,
-//                                                      const PathGuidingNode* dPathNodes,
-//                                                      const ArrayPortion<uint32_t>& portion,
-//                                                      uint32_t maxPathNodePerRay,
-//                                                      const CudaGPU&);
-//        // Access
-//        DTreeGPU*               TreeGPU(bool readTree);
-//        const DTreeGPU*         TreeGPU(bool writeTree) const;
-//
-//        size_t                  UsedGPUMemory() const;
-//        size_t                  UsedCPUMemory() const;
-//
-//        size_t                  NodeCount(bool readOrWriteTree) const;
-//
-//        // Debugging
-//        void                    GetReadTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
-//        void                    GetWriteTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&) const;
-//        void                    DumpTreeAsBinary(std::vector<Byte>&, bool fetchReadTree) const;
-//
-//};
-//
-
 class DTreeGroup
 {
     private:
@@ -154,7 +76,7 @@ class DTreeGroup
                 size_t                  UsedCPUMemory() const;
 
                 void                    GetTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&, uint32_t treeIndex) const;
-                void                    DumpTreeAsBinary(std::vector<Byte>&, uint32_t treeIndex) const;
+                void                    DumpTreeAsBinary(std::vector<Byte>&, uint32_t& nodeCount, uint32_t treeIndex) const;
         };
 
     public:
@@ -206,7 +128,7 @@ class DTreeGroup
         // Debugging
         void                    GetReadTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&, uint32_t treeIndex) const;
         void                    GetWriteTreeToCPU(DTreeGPU&, std::vector<DTreeNode>&, uint32_t treeIndex) const;
-        void                    DumpTreeAsBinary(std::vector<Byte>&, uint32_t treeIndex, bool fetchReadTree) const;
+        void                    DumpTreeAsBinary(std::vector<Byte>&, uint32_t& nodeCount, uint32_t treeIndex, bool fetchReadTree) const;
 
 };
 
@@ -331,8 +253,9 @@ inline void DTreeGroup::GetWriteTreeToCPU(DTreeGPU& tree, std::vector<DTreeNode>
     writeTrees.GetTreeToCPU(tree, nodes, treeIndex);
 }
 
-inline void DTreeGroup::DumpTreeAsBinary(std::vector<Byte>& data, uint32_t treeIndex, bool fetchReadTree) const
+inline void DTreeGroup::DumpTreeAsBinary(std::vector<Byte>& data, uint32_t& nodeCount,
+                                         uint32_t treeIndex, bool fetchReadTree) const
 {
     const DTreeBuffer& treeBuffer = (fetchReadTree) ? readTrees : writeTrees;
-    treeBuffer.DumpTreeAsBinary(data, treeIndex);
+    treeBuffer.DumpTreeAsBinary(data, nodeCount, treeIndex);
 }

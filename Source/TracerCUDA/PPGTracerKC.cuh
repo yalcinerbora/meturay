@@ -158,6 +158,10 @@ void PPGTracerBoundaryWork(// Output
             uint32_t dTreeIndex = gLocalPathNodes[aux.depth].nearestDTreeIndex;
             DTreeGPU& dWriteTree = renderState.gWriteDTrees[dTreeIndex];
 
+            printf("Adding Rad Tree: %u = {NodePtr: %p, NodeCount: %u}\n",
+                   dTreeIndex, dWriteTree.gRoot,
+                   dWriteTree.nodeCount);
+
             dWriteTree.AddRadianceToLeaf(r.getDirection(),
                                          Utility::RGBToLuminance(total),
                                          true);

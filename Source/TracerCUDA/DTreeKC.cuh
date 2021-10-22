@@ -343,7 +343,6 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance,
     DTreeNode* node = gRoot;
     Vector2f localCoords = discreteCoords;
 
-    int i = 0;
     while(true)
     {
         uint8_t childIndex = node->DetermineChild(localCoords);
@@ -365,12 +364,6 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance,
         // Continue Traversal
         localCoords = node->NormalizeCoordsForChild(childIndex, localCoords);
         node = gRoot + node->childIndices[childIndex];
-
-        if(i >= 500)
-        {
-            printf("INFINITE LOOP?\n");
-        }
-        i++;
     }
 
     // Finally add a sample if required
@@ -486,7 +479,6 @@ void CalculateParentIrradiance(// I-O
     sum += currentNode->IsLeaf(3) ? irrad[3] : 0.0f;
 
     // Back-propogate the sum towards the root
-    int i = 0;
     DTreeNode* n = currentNode;
     while(!(n->IsRoot()))
     {
@@ -503,8 +495,6 @@ void CalculateParentIrradiance(// I-O
         atomicAdd(&parentNode->irradianceEstimates[childId], sum);
         // Traverse upwards
         n = parentNode;
-
-        i++; if(i >= 500) printf("p INFINITE LOOP?\n");
     }
 
     // Finally add to the total aswell
@@ -657,9 +647,8 @@ void ReconstructEmptyTree(// Output
 }
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
-static void KCAccumulateRadianceToLeaf(DTreeGPU* gDTree,
+static void KCAccumulateRadianceToLeaf(DTreeGPU* gDTrees,
                                        // Input
-                                       const uint32_t* gNodeIndices,
                                        const PathGuidingNode* gPathNodes,
                                        uint32_t nodeCount,
                                        uint32_t maxPathNodePerRay)
@@ -668,14 +657,20 @@ static void KCAccumulateRadianceToLeaf(DTreeGPU* gDTree,
         threadId < nodeCount;
         threadId += (blockDim.x * gridDim.x))
     {
-        uint32_t nodeIndex = gNodeIndices[threadId];
-        uint32_t pathStartIndex = nodeIndex / maxPathNodePerRay * maxPathNodePerRay;
+        const uint32_t nodeIndex = threadId;
+        const uint32_t pathStartIndex = nodeIndex / maxPathNodePerRay * maxPathNodePerRay;
 
         PathGuidingNode gPathNode = gPathNodes[nodeIndex];
+        const uint32_t treeIndex = gPathNode.nearestDTreeIndex;
+
+        // Skip if invalid tree
+        if(treeIndex == UINT32_MAX) continue;
+        // Skip if this node cannot calculate wi
         if(!gPathNode.HasNext()) continue;
 
         Vector3f wi = gPathNode.Wi<PathGuidingNode>(gPathNodes, pathStartIndex);
         float luminance = Utility::RGBToLuminance(gPathNode.totalRadiance);
-        gDTree->AddRadianceToLeaf(wi, luminance);
+        gDTrees[treeIndex].AddRadianceToLeaf(wi, luminance);
+        atomicAdd(&gDTrees[treeIndex].totalSamples, 1u);
     }
 }

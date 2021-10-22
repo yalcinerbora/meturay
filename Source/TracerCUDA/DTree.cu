@@ -11,7 +11,6 @@
 #include "RayLib/Types.h"
 #include "RayLib/MemoryAlignment.h"
 #include "RayLib/Log.h"
-#include "RayLib/CPUTimer.h"
 
 #include <numeric>
 
@@ -111,20 +110,6 @@ static void KCReconstructEmptyTrees(// Output
 }
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
-static void KCAddSampleCounts(DTreeGPU* gDTrees,
-                              const ArrayPortion<uint32_t>* gPortions,
-                              uint32_t portionCount)
-{
-    for(uint32_t globalId = threadIdx.x + blockDim.x * blockIdx.x;
-        globalId < portionCount;
-        globalId += (blockDim.x * gridDim.x))
-    {
-        const auto& gPortion = gPortions[globalId];
-        gDTrees[gPortion.portionId].totalSamples += gPortion.count;
-    }
-}
-
-__global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCCopyAndAdjustTrees(// Output
                                  DTreeGPU* gDTreesOut,
                                  // Input
@@ -141,7 +126,7 @@ static void KCCopyAndAdjustTrees(// Output
         globalId += (blockDim.x * gridDim.x))
     {
         uint32_t offset = gDTreeOffsets[globalId];
-        uint32_t nodeCount = gDTreeOffsets[globalId + 1] - offset;
+        //uint32_t nodeCount = gDTreeOffsets[globalId + 1] - offset;
 
         // Copy the old tree directly
         gDTreesOut[globalId] = gDTrees[gOldTreeIndices[globalId]];
@@ -150,7 +135,7 @@ static void KCCopyAndAdjustTrees(// Output
     }
 }
 
-__global__ CUDA_LAUNCH_BOUNDS_1D
+__global__ //CUDA_LAUNCH_BOUNDS_1D
 static void KCAdjustTreePointersAndReset(// Output
                                          DTreeGPU* gDTrees,
                                          // Input
@@ -166,11 +151,11 @@ static void KCAdjustTreePointersAndReset(// Output
     {
         uint32_t offset = gDTreeOffsets[globalId];
         uint32_t nodeCount = gDTreeOffsets[globalId + 1] - offset;
-        gDTrees->gRoot = const_cast<DTreeNode*>(gDTreeNodes + offset);
-        gDTrees->nodeCount = nodeCount;
+        gDTrees[globalId].gRoot = const_cast<DTreeNode*>(gDTreeNodes + offset);
+        gDTrees[globalId].nodeCount = nodeCount;
 
-        gDTrees->irradiance = (setRootIrrad) ? (DTreeGroup::MinIrradiance * 4.0f) : 0.0f;
-        gDTrees->totalSamples = 0;
+        gDTrees[globalId].irradiance = (setRootIrrad) ? (DTreeGroup::MinIrradiance * 4.0f) : 0.0f;
+        gDTrees[globalId].totalSamples = 0;
 
         // Init very first node
         constexpr DTreeNode nodeMin =
@@ -188,7 +173,7 @@ static void KCAdjustTreePointersAndReset(// Output
         };
 
         // Initialize the root node as well
-        *(gDTrees->gRoot) = (setRootIrrad) ? nodeMin : nodeZero;
+        *(gDTrees[globalId].gRoot) = (setRootIrrad) ? nodeMin : nodeZero;
     }
 }
 
@@ -390,7 +375,8 @@ void DTreeGroup::DTreeBuffer::ResetAndReserve(const uint32_t* dNewNodeCounts,
         totalNodeCount,
         dNewNodeCounts,
         newTreeCount,
-        0u
+        0u,
+        (cudaStream_t)0
     );
     gpu.WaitMainStream();
 
@@ -408,9 +394,17 @@ void DTreeGroup::DTreeBuffer::ResetAndReserve(const uint32_t* dNewNodeCounts,
     (
         dDTreeNodeOffsets + 1,
         dNewNodeCounts,
-        newTreeCount
+        newTreeCount,
+        (cudaStream_t)0
     );
-    CUDA_CHECK(cudaMemset(dDTreeNodeOffsets, 0x00, sizeof(uint32_t)));
+
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, 1,
+                       //
+                       KCMemset<uint32_t>,
+                       //
+                       dDTreeNodeOffsets,
+                       0u,
+                       1);
 
     gpu.GridStrideKC_X(0, (cudaStream_t)0, newTreeCount,
                        //
@@ -455,7 +449,9 @@ void DTreeGroup::DTreeBuffer::GetTreeToCPU(DTreeGPU& tree, std::vector<DTreeNode
                           cudaMemcpyDeviceToHost));
 }
 
-void DTreeGroup::DTreeBuffer::DumpTreeAsBinary(std::vector<Byte>& data, uint32_t treeIndex) const
+void DTreeGroup::DTreeBuffer::DumpTreeAsBinary(std::vector<Byte>& data,
+                                               uint32_t& nodeCount,
+                                               uint32_t treeIndex) const
 {
     // Get Data to CPU
     DTreeGPU treeBase;
@@ -464,15 +460,16 @@ void DTreeGroup::DTreeBuffer::DumpTreeAsBinary(std::vector<Byte>& data, uint32_t
 
     // Directly copy it to the buffer
     data.insert(data.end(),
-                reinterpret_cast<Byte*>(&treeBase.totalSamples),
-                reinterpret_cast<Byte*>(&treeBase.totalSamples) + sizeof(uint32_t));
+                reinterpret_cast<const Byte*>(&treeBase.totalSamples),
+                reinterpret_cast<const Byte*>(&treeBase.totalSamples) + sizeof(uint32_t));
     data.insert(data.end(),
-                reinterpret_cast<Byte*>(&treeBase.irradiance),
-                reinterpret_cast<Byte*>(&treeBase.irradiance) + sizeof(float));
+                reinterpret_cast<const Byte*>(&treeBase.irradiance),
+                reinterpret_cast<const Byte*>(&treeBase.irradiance) + sizeof(float));
     data.insert(data.end(),
-                reinterpret_cast<Byte*>(nodes.data()),
-                reinterpret_cast<Byte*>(nodes.data()) +
+                reinterpret_cast<const Byte*>(nodes.data()),
+                reinterpret_cast<const Byte*>(nodes.data()) +
                 (sizeof(DTreeNode) * nodes.size()));
+    nodeCount = nodes.size();
 }
 
 void DTreeGroup::AllocateDefaultTrees(uint32_t count, const CudaSystem& system)
@@ -541,14 +538,17 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        dNodeOffsets,
                        totalNodeCount);
 
-    //writeTree.DumpTree(treeGPU, nodes);
-    //Debug::DumpMemToFile("WT_AC_N", nodes.data(), nodes.size());
-    //Debug::DumpMemToFile("WT_AC", &treeGPU, 1);
+    //// DEBUG
+    //for(uint32_t i = 0; i < TreeCount(); i++)
+    //{
+    //    DTreeGPU tree;
+    //    std::vector<DTreeNode> nodes;
+    //    GetWriteTreeToCPU(tree, nodes, i);
+    //    Debug::DumpMemToFile("AfterBottomUp-writeNodes",
+    //                         nodes.data(), nodes.size(),
+    //                         (i != 0));
+    //}
 
-    //Byte* dIrrad = reinterpret_cast<Byte*>(readTree.TreeGPU()) + offsetof(DTreeGPU, irradiance);
-    //METU_LOG("TOTAL");
-    //Debug::DumpMemToStdout(reinterpret_cast<float*>(dIrrad), 1);
-    //METU_LOG("===================================================");
     // We have a valid tree now
     // New tree will be reconsturcted from this tree
     // Ask each node that how many child they will need
@@ -564,31 +564,30 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        // Constants
                        fluxRatio,
                        totalNodeCount);
+    gpu.WaitMainStream();
 
-    // Sum all values on the GPU
-    for(uint32_t treeIndex = 0; treeIndex < readTrees.DTreeCount(); treeIndex++)
-    {
-        cudaStream_t stream = gpu.DetermineStream();
-        uint32_t size = writeTrees.DTreeNodeCount(treeIndex);
-        ReduceArrayGPU<uint32_t, ReduceAdd<uint32_t>, cudaMemcpyDeviceToDevice>
-        (
-            *(dTreeChildCounts + treeIndex),
-            dNodeChildCounts + writeTrees.DTreeNodeOffset(treeIndex),
-            size,
-            0u,
-            stream
-        );
-    }
-    gpu.WaitAllStreams();
+    // Reduce each trees requested child count to find out total node count
+    SegmentedReduceArrayGPU<uint32_t, ReduceAdd<uint32_t>>
+    (
+        dTreeChildCounts,
+        dNodeChildCounts,
+        writeTrees.DTreeNodeOffsetsGPU(),
+        writeTrees.DTreeNodeOffsetsGPU() + 1,
+        writeTrees.DTreeCount(),
+        0u,
+        (cudaStream_t)0
+    );
 
     // Add root node (DTree will atleast have a root node)
     // And above kernel only checks if childs should be generated
     // Root does not have any parent so we need to manually include here
     TransformArrayGPU(dTreeChildCounts, treeCount,
-                      IncrementFunctor<uint32_t>());
+                      IncrementFunctor<uint32_t>(),
+                      (cudaStream_t)0);
 
     // Reserve enough nodes on the other tree for construction
     readTrees.ResetAndReserve(dTreeChildCounts, treeCount, system);
+
     // Set allocation counters to 1
     gpu.GridStrideKC_X(0, (cudaStream_t)0, treeCount,
                        //
@@ -596,10 +595,7 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        //
                        dTreeNodeAllocationCounters,
                        1u, treeCount);
-    // TODO: is this faster than a single kernel call?
-    //CUDA_CHECK(cudaMemset(dTreeNodeAllocationCounters, 0x00, sizeof(uint32_t) * treeCount));
-    //CUDA_CHECK(cudaMemset2D(dTreeNodeAllocationCounters, sizeof(uint32_t), 0x01,
-    //                        sizeof(uint8_t), treeCount));
+
     // Reconstruct a new read tree from the findings
     gpu.GridStrideKC_X(0, (cudaStream_t)0, totalNodeCount,
                        //
@@ -626,18 +622,8 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        readTrees.DTrees(),
                        dTreeNodeAllocationCounters,
                        treeCount);
-    //readTree.DumpTree(treeGPU, nodes);
-    //Debug::DumpMemToFile("RT_FINAL_N", nodes.data(), nodes.size());
-    //Debug::DumpMemToFile("RT_FINAL", &treeGPU, 1);
-
     // Finally swap the trees
     std::swap(readTrees, writeTrees);
-
-    //writeTree.DumpTree(treeGPU, nodes);
-    //Debug::DumpMemToFile("WT_FINAL_N", nodes.data(), nodes.size());
-    //Debug::DumpMemToFile("WT_FINAL", &treeGPU, 1);
-
-    gpu.WaitAllStreams();
 }
 
 
@@ -648,227 +634,14 @@ void DTreeGroup::AddRadiancesFromPaths(const PathGuidingNode* dPGNodes,
 {
     const CudaGPU& bestGPU = system.BestGPU();
 
-    std::set<ArrayPortion<uint32_t>> partitions;
-    DeviceMemory sortedIndices;
-
-    CUDA_CHECK(cudaSetDevice(bestGPU.DeviceId()));
-    PartitionGPU(partitions, sortedIndices,
-                 dPGNodes, totalNodeCount,
-                 FetchTreeIdFunctor(),
-                 TreeCount());
-
-    std::vector<ArrayPortion<uint32_t>> portionsAsVector;
-    portionsAsVector.reserve(partitions.size());
-
-    const GPUList& gpuList = system.SystemGPUs();
-    auto currentGPU = gpuList.cbegin();
-    // Call kernels
-    for(const auto& partition : partitions)
-    {
-        uint32_t treeIndex = partition.portionId;
-        // Skip if these nodes are invalid
-        if(treeIndex == InvalidDTreeIndex) continue;
-
-        uint32_t nodeCount = static_cast<uint32_t>(partition.count);
-
-        currentGPU->AsyncGridStrideKC_X(0, nodeCount,
-                                        //
-                                        KCAccumulateRadianceToLeaf,
-                                        //
-                                        writeTrees.DTrees() + treeIndex,
-                                        static_cast<const uint32_t*>(sortedIndices),
-                                        dPGNodes,
-                                        nodeCount,
-                                        maxPathNodePerRay);
-        portionsAsVector.push_back(partition);
-        // Get a next GPU if exausted all gpus
-        // rool back to start
-        currentGPU++;
-        if(currentGPU == gpuList.cend()) currentGPU = gpuList.cbegin();
-    }
-
-    // Add new samples as sample count
-    DeviceMemory tempPortionMem(portionsAsVector.size() * sizeof(ArrayPortion<uint32_t>));
-    CUDA_CHECK(cudaMemcpy(tempPortionMem, portionsAsVector.data(),
-                          portionsAsVector.size() * sizeof(ArrayPortion<uint32_t>),
-                          cudaMemcpyHostToDevice));
-    const CudaGPU& gpu = system.BestGPU();
-    gpu.GridStrideKC_X(0, (cudaStream_t)0, portionsAsVector.size(),
-                       //
-                       KCAddSampleCounts,
-                       //
-                       writeTrees.DTrees(),
-                       static_cast<const ArrayPortion<uint32_t>*>(tempPortionMem),
-                       static_cast<uint32_t>(portionsAsVector.size()));
-
-    // Wait all gpus to finish
-    system.SyncAllGPUs();
+    bestGPU.GridStrideKC_X(0, (cudaStream_t)0, totalNodeCount,
+                           //
+                           KCAccumulateRadianceToLeaf,
+                           //
+                           writeTrees.DTrees(),
+                           // Input
+                           dPGNodes,
+                           totalNodeCount,
+                           maxPathNodePerRay);
+    bestGPU.WaitMainStream();
 }
-
-//
-//void DTree::DTreeBuffer::FixPointers()
-//{
-//    Byte* nodeStart = static_cast<Byte*>(memory) + AlignedOffsetDTreeGPU;
-//    Byte* nodePtrLoc = static_cast<Byte*>(memory) + offsetof(DTreeGPU, gRoot);
-//    CUDA_CHECK(cudaMemcpy(nodePtrLoc, &nodeStart, sizeof(DTreeNode*),
-//                          cudaMemcpyHostToDevice));
-//}
-//
-//DTree::DTreeBuffer::DTreeBuffer()
-//    : dDTree(nullptr)
-//    , nodeCount(0)
-//{
-//    nodeCount = 1;
-//    DeviceMemory::EnlargeBuffer(memory, AlignedOffsetDTreeGPU + sizeof(DTreeNode));
-//    dDTree = static_cast<DTreeGPU*>(memory);
-//    DTreeNode* dDTreeNodes = reinterpret_cast<DTreeNode*>(static_cast<Byte*>(memory) + AlignedOffsetDTreeGPU);
-//
-//    // Init Tree
-//    DTreeGPU hDTree;
-//    hDTree.gRoot = dDTreeNodes;
-//    hDTree.nodeCount = 1;
-//    hDTree.irradiance = 0.0f;
-//    hDTree.totalSamples = 0;
-//    CUDA_CHECK(cudaMemcpy(dDTree, &hDTree, sizeof(DTreeGPU),
-//                          cudaMemcpyHostToDevice));
-//
-//    // Init very first node
-//    DTreeNode hNode;
-//    hNode.irradianceEstimates = Zero4;
-//    hNode.childIndices = Vector4ui(std::numeric_limits<uint32_t>::max());
-//    hNode.parentIndex = std::numeric_limits<uint16_t>::max();
-//    CUDA_CHECK(cudaMemcpy(dDTreeNodes, &hNode, sizeof(DTreeNode),
-//                          cudaMemcpyHostToDevice));
-//}
-//
-//DTree::DTreeBuffer::DTreeBuffer(const DTreeBuffer& other)
-//    : memory(other.memory.Size())
-//    , nodeCount(other.nodeCount)
-//    , dDTree(static_cast<DTreeGPU*>(memory))
-//{
-//    CUDA_CHECK(cudaMemcpy(memory, other.memory,
-//                          AlignedOffsetDTreeGPU + nodeCount * sizeof(DTreeNode),
-//                          cudaMemcpyDeviceToDevice));
-//    FixPointers();
-//}
-//
-//DTree::DTreeBuffer& DTree::DTreeBuffer::operator=(const DTreeBuffer& other)
-//{
-//    DeviceMemory::EnlargeBuffer(memory, other.memory.Size());
-//    nodeCount = other.nodeCount;
-//    dDTree = static_cast<DTreeGPU*>(memory);
-//
-//    CUDA_CHECK(cudaMemcpy(memory, other.memory,
-//                          AlignedOffsetDTreeGPU + nodeCount * sizeof(DTreeNode),
-//                          cudaMemcpyDeviceToDevice));
-//    FixPointers();
-//    return *this;
-//}
-//
-//void DTree::DTreeBuffer::ResetAndReserve(size_t newNodeCount,
-//                                         const CudaGPU& gpu,
-//                                         cudaStream_t stream)
-//{
-//    // Check capacity and if its not large enough
-//    // allocate larger memory
-//    size_t capacity = (memory.Size() - AlignedOffsetDTreeGPU) / sizeof(DTreeNode);
-//    if(capacity < newNodeCount)
-//    {
-//        size_t size = AlignedOffsetDTreeGPU + (newNodeCount * sizeof(DTreeNode));
-//        DeviceMemory::EnlargeBuffer(memory, size);
-//        dDTree = static_cast<DTreeGPU*>(memory);
-//        FixPointers();
-//    }
-//    // Reset all node values
-//    gpu.GridStrideKC_X(0, stream, newNodeCount,
-//                        //
-//                       KCInitDTreeNodes,
-//                       //
-//                       dDTree,
-//                       static_cast<uint32_t>(newNodeCount));
-//
-//    nodeCount = 0;
-//}
-//
-//void DTree::DTreeBuffer::CopyGPUNodeCountToCPU(cudaStream_t stream)
-//{
-//    CUDA_CHECK(cudaMemcpyAsync(&nodeCount, reinterpret_cast<Byte*>(dDTree) + offsetof(DTreeGPU, nodeCount),
-//                               sizeof(uint32_t), cudaMemcpyDeviceToHost, stream));
-//}
-//
-//void DTree::DTreeBuffer::DumpTree(DTreeGPU& treeCPU, std::vector<DTreeNode>& nodesCPU) const
-//{
-//    CUDA_CHECK(cudaMemcpy(&treeCPU, dDTree, sizeof(DTreeGPU),
-//                          cudaMemcpyDeviceToHost));
-//    nodesCPU.resize(nodeCount);
-//    const DTreeNode* dDTreeNodes = treeCPU.gRoot;
-//    CUDA_CHECK(cudaMemcpy(nodesCPU.data(), dDTreeNodes, nodeCount * sizeof(DTreeNode),
-//                          cudaMemcpyDeviceToHost));
-//}
-//
-//void DTree::DTreeBuffer::DumpTreeAsBinary(std::vector<Byte>& data) const
-//{
-//    // Get Data to CPU
-//    DTreeGPU treeBase;
-//    std::vector<DTreeNode> nodes;
-//    DumpTree(treeBase, nodes);
-//
-//    // Directly copy it to the buffer
-//    data.insert(data.end(),
-//                reinterpret_cast<Byte*>(&treeBase.totalSamples),
-//                reinterpret_cast<Byte*>(&treeBase.totalSamples) + sizeof(uint32_t));
-//    data.insert(data.end(),
-//                reinterpret_cast<Byte*>(&treeBase.irradiance),
-//                reinterpret_cast<Byte*>(&treeBase.irradiance) + sizeof(float));
-//    data.insert(data.end(),
-//                reinterpret_cast<Byte*>(nodes.data()),
-//                reinterpret_cast<Byte*>(nodes.data()) +
-//                (sizeof(DTreeNode) * nodes.size()));
-//}
-//
-
-//
-//void DTree::AddRadiancesFromPaths(const uint32_t* dNodeIndexArray,
-//                                  const PathGuidingNode* dPathNodes,
-//                                  const ArrayPortion<uint32_t>& portion,
-//                                  uint32_t maxPathNodePerRay,
-//                                  const CudaGPU& gpu)
-//{
-//    cudaStream_t stream = gpu.DetermineStream();
-//    uint32_t nodeCount = static_cast<uint32_t>(portion.count);
-//
-//    gpu.GridStrideKC_X(0, stream, portion.count,
-//                       //
-//                       KCAccumulateRadianceToLeaf,
-//                       //
-//                       writeTree.TreeGPU(),
-//                       dNodeIndexArray,
-//                       dPathNodes,
-//                       nodeCount,
-//                       maxPathNodePerRay);
-//
-//    uint32_t totalSampleCount = static_cast<uint32_t>(portion.count);
-//    uint32_t hSamples;
-//    CUDA_CHECK(cudaMemcpy(&hSamples, &writeTree.TreeGPU()->totalSamples,
-//                          sizeof(uint32_t), cudaMemcpyDeviceToHost));
-//    hSamples += totalSampleCount;
-//    CUDA_CHECK(cudaMemcpy(&writeTree.TreeGPU()->totalSamples, &hSamples,
-//                          sizeof(uint32_t), cudaMemcpyHostToDevice));
-//}
-//
-//void DTree::GetReadTreeToCPU(DTreeGPU& tree, std::vector<DTreeNode>& nodes) const
-//{
-//    readTree.DumpTree(tree, nodes);
-//}
-//void DTree::GetWriteTreeToCPU(DTreeGPU& tree, std::vector<DTreeNode>& nodes) const
-//{
-//    writeTree.DumpTree(tree, nodes);
-//}
-//
-//void DTree::DumpTreeAsBinary(std::vector<Byte>& data, bool fetchReadTree) const
-//{
-//    if(fetchReadTree)
-//        readTree.DumpTreeAsBinary(data);
-//    else
-//        writeTree.DumpTreeAsBinary(data);
-//}

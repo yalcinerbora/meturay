@@ -141,8 +141,6 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
         if(hSubdivisionCount == 0) break;
         // Each individual node will create two childs
         uint32_t extraChildCount = hSubdivisionCount * 2;
-        // And we need one extra tree
-        //uint32_t extraTreeCount = hSubdivisionCount;
 
         // Old Tree count will be the next "allocation"
         uint32_t oldTreeCount = dTrees.TreeCount();
@@ -216,6 +214,8 @@ void STree::SplitAndSwapTrees(uint32_t sTreeMaxSamplePerLeaf,
 {
     SplitLeaves(sTreeMaxSamplePerLeaf, system);
     SwapTrees(dTreeFluxRatio, dTreeDepthLimit, system);
+
+    system.SyncAllGPUs();
 }
 
 void STree::GetTreeToCPU(STreeGPU& treeCPU, std::vector<STreeNode>& nodesCPU) const
@@ -275,11 +275,11 @@ void STree::DumpSDTreeAsBinary(std::vector<Byte>& data,
                      nodeCount * sizeof(STreeNode));
     for(uint32_t i = 0; i < dTrees.TreeCount(); i++)
     {
-        dTrees.DumpTreeAsBinary(dTreeBinary[i], i, fetchReadTree);
+        uint32_t dTreeNodeCount;
+        dTrees.DumpTreeAsBinary(dTreeBinary[i], dTreeNodeCount, i, fetchReadTree);
         countOffsetPairs[i] = Vector2ul(static_cast<uint64_t>(offset),
-                                        static_cast<uint64_t>(dTrees.NodeCount(i, fetchReadTree)));
+                                        static_cast<uint64_t>(dTreeNodeCount));
         offset += dTreeBinary[i].size();
-        i++;
     }
     data.reserve(offset);
 

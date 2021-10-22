@@ -135,6 +135,7 @@ CudaGPU::GPUTier CudaGPU::DetermineGPUTier(cudaDeviceProp p)
     else if(p.major == 5) return GPU_MAXWELL;
     else if(p.major == 6) return GPU_PASCAL;
     else if(p.major >= 7) return GPU_TURING_VOLTA;
+    else if(p.major >= 8) return GPU_AMPERE;
     else return GPU_UNSUPPORTED;
 }
 

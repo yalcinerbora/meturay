@@ -261,7 +261,9 @@ TEST(PPG_DTree, AddThenSwap)
             // This is root
             // Root should be the very first element
             EXPECT_EQ(0, i);
-            EXPECT_EQ(treeGPU.totalSamples, pathNodes.size());
+            // Last node does not has next so total samples are
+            // pathNodeCount - pathCount
+            EXPECT_EQ(treeGPU.totalSamples, pathNodes.size() - 1);
         }
 
         // There should be only root note and each of its values
@@ -295,7 +297,9 @@ TEST(PPG_DTree, AddThenSwap)
             // This is root
             // Root should be the very first element
             EXPECT_EQ(0, i);
-            EXPECT_EQ(treeGPU.totalSamples, pathNodes.size());
+            // Last node does not has next so total samples are
+            // pathNodeCount - pathCount
+            EXPECT_EQ(treeGPU.totalSamples, pathNodes.size() - 1);
             EXPECT_FLOAT_EQ(treeGPU.irradiance, total);
             EXPECT_NEAR(Utility::RGBToLuminance(RADIANCE) * 4, total,
                         MathConstants::VeryLargeEpsilon);
@@ -379,8 +383,6 @@ TEST(PPG_DTree, SwapStress)
         // Maximum allowed depth of the tree
         uint32_t depthLimit = DEPTH_MIN + static_cast<uint32_t>(uniformDist(rng) * (DEPTH_MAX - DEPTH_MIN));
 
-        //METU_LOG("Depth {:d}, Flux {:f}", depthLimit, fluxRatio);
-
         for(size_t i = 0; i < PATH_PER_ITERATION; i++)
         {
             uint32_t localIndex = i % PATH_PER_RAY;
@@ -425,7 +427,9 @@ TEST(PPG_DTree, SwapStress)
                 // This is root
                 // Root should be the very first element
                 EXPECT_EQ(0, i);
-                EXPECT_EQ(treeGPU.totalSamples, PATH_PER_ITERATION);
+                // Last node does not has next so total samples are
+                // pathNodeCount - pathCount
+                EXPECT_EQ(treeGPU.totalSamples, PATH_PER_ITERATION - RAY_COUNT);
                 continue;
             }
 
@@ -474,9 +478,6 @@ TEST(PPG_DTree, SwapStress)
             ptrdiff_t index = n - nodes.data();
             EXPECT_EQ(0, index);
         }
-        //// DEBUG
-        //Debug::DumpMemToFile("WT", &treeGPU, 1);
-        //Debug::DumpMemToFile("WTN", nodes.data(), nodes.size());
 
         // Check integrity of the new read tree
         testTree.GetReadTreeToCPU(treeGPU, nodes, 0);
@@ -489,7 +490,9 @@ TEST(PPG_DTree, SwapStress)
                 // This is root
                 // Root should be the very first element
                 EXPECT_EQ(0, i);
-                EXPECT_EQ(treeGPU.totalSamples, PATH_PER_ITERATION);
+                // Last node does not has next so total samples are
+                // pathNodeCount - pathCount
+                EXPECT_EQ(treeGPU.totalSamples, PATH_PER_ITERATION - RAY_COUNT);
                 EXPECT_NEAR(treeGPU.irradiance, total,
                             MathConstants::VeryLargeEpsilon);
                 continue;
@@ -503,9 +506,6 @@ TEST(PPG_DTree, SwapStress)
             childId = (parent.childIndices[3] == i) ? 3 : childId;
             EXPECT_FLOAT_EQ(total, parent.irradianceEstimates[childId]);
         }
-        //// DEBUG
-        //Debug::DumpMemToFile("RT", &treeGPU, 1);
-        //Debug::DumpMemToFile("RTN", nodes.data(), nodes.size());
     }
  }
 
@@ -579,14 +579,6 @@ TEST(PPG_DTree, LargeToSmall)
         system.SyncAllGPUs();
     }
 
-    //// DEBUG
-    //testTree.GetReadTreeToCPU(treeGPU, nodes);
-    //Debug::DumpMemToFile("RT", &treeGPU, 1);
-    //Debug::DumpMemToFile("RTN", nodes.data(), nodes.size());
-    //testTree.GetWriteTreeToCPU(treeGPU, nodes);
-    //Debug::DumpMemToFile("WT", &treeGPU, 1);
-    //Debug::DumpMemToFile("WTN", nodes.data(), nodes.size());
-
     // Now we have very deep tree
     // Send data with zero radiance
     for(size_t i = 0; i < PATH_PER_ITERATION; i++)
@@ -651,9 +643,6 @@ TEST(PPG_DTree, LargeToSmall)
         ptrdiff_t index = n - nodes.data();
         EXPECT_EQ(0, index);
     }
-    //// DEBUG
-    //Debug::DumpMemToFile("WT", &treeGPU, 1);
-    //Debug::DumpMemToFile("WTN", nodes.data(), nodes.size());
 
     // Check integrity of the new read tree
     testTree.GetReadTreeToCPU(treeGPU, nodes, 0);
@@ -666,7 +655,9 @@ TEST(PPG_DTree, LargeToSmall)
             // This is root
             // Root should be the very first element
             EXPECT_EQ(0, i);
-            EXPECT_EQ(treeGPU.totalSamples, PATH_PER_ITERATION);
+            // Last node does not has next so total samples are
+            // pathNodeCount - pathCount
+            EXPECT_EQ(treeGPU.totalSamples, PATH_PER_ITERATION - RAY_COUNT);
             EXPECT_NEAR(treeGPU.irradiance, total,
                         MathConstants::VeryLargeEpsilon);
             continue;
@@ -680,9 +671,6 @@ TEST(PPG_DTree, LargeToSmall)
         childId = (parent.childIndices[3] == i) ? 3 : childId;
         EXPECT_FLOAT_EQ(total, parent.irradianceEstimates[childId]);
     }
-    //// DEBUG
-    //Debug::DumpMemToFile("RT", &treeGPU, 1);
-    //Debug::DumpMemToFile("RTN", nodes.data(), nodes.size());
 }
 
 TEST(PPG_DTree, SampleEmpty)
@@ -766,9 +754,6 @@ TEST(PPG_DTree, SampleDeep)
 
     std::mt19937 rng;
     rng.seed(0);
-    // Check buffer
-    //DTreeGPU treeGPU;
-    //std::vector<DTreeNode> nodes;
     // GPU Buffers
     DeviceMemory pathNodeMemory(PATH_PER_ITERATION * sizeof(PathGuidingNode));
     PathGuidingNode* dPathNodes = static_cast<PathGuidingNode*>(pathNodeMemory);
@@ -819,11 +804,6 @@ TEST(PPG_DTree, SampleDeep)
     // Sample stuff
     DeviceMemory directionMemory(SAMPLE_COUNT * sizeof(Vector3f));
     DeviceMemory pdfMemory(SAMPLE_COUNT * sizeof(float));
-
-    //// DEBUG
-    //testTree.GetReadTreeToCPU(treeGPU, nodes);
-    //Debug::DumpMemToFile("RT", &treeGPU, 1);
-    //Debug::DumpMemToFile("RTN", nodes.data(), nodes.size());
 
     const CudaGPU& gpu = system.BestGPU();
     // Sample Tree
@@ -936,14 +916,4 @@ TEST(PPG_DTree, DirToCoord)
 
         EXPECT_FLOAT_EQ(x, coordsCPU[i][0]);
     }
-    //// DEBUG
-    //std::vector<Vector3f> outDirsCPU(INTERVAL_COUNT);
-    //CUDA_CHECK(cudaMemcpy(outDirsCPU.data(),
-    //                      static_cast<Vector3f*>(dirs),
-    //                      sizeof(Vector3f) * INTERVAL_COUNT,
-    //                      cudaMemcpyDeviceToHost));
-    //for(uint32_t i = 0; i < INTERVAL_COUNT; i++)
-    //{
-    //    printf("%f %f\n", outDirsCPU[i][0], outDirsCPU[i][2]);
-    //}
 }

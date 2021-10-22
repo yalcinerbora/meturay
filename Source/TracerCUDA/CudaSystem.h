@@ -90,7 +90,8 @@ class CudaGPU
             GPU_KEPLER,
             GPU_MAXWELL,
             GPU_PASCAL,
-            GPU_TURING_VOLTA
+            GPU_TURING_VOLTA,
+            GPU_AMPERE
         };
 
         static GPUTier              DetermineGPUTier(cudaDeviceProp);

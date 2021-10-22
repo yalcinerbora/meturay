@@ -15,6 +15,8 @@ http://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler/
 #include "CudaSystem.h"
 #include "ReduceFunctions.cuh"
 
+#include <cub/cub.cuh>
+
 template <class Type, ReduceFunc<Type> F>
 __device__ inline void WarpReduce(Type& val)
 {
@@ -210,6 +212,37 @@ __host__ void ReduceTextureGPU(Type& result,
     CUDA_KERNEL_CHECK();
     // Just get the data from gpu (first element at dRead)
     CUDA_CHECK(cudaMemcpyAsync(&result, dReduceBuffer, sizeof(Type), cpyKind, stream));
+}
+
+
+template<class Type, ReduceFunc<Type> F>
+__host__ void SegmentedReduceArrayGPU(Type* dResultData,
+                                      const Type* dData,
+                                      const uint32_t* dOffsetsStart,
+                                      const uint32_t* dOffsetsEnd,
+                                      size_t segmentCount,
+                                      Type identityElement,
+                                      cudaStream_t stream = (cudaStream_t)0)
+{
+    using namespace cub;
+    size_t tempStorageSize;
+    CUDA_CHECK(DeviceSegmentedReduce::Reduce(nullptr, tempStorageSize,
+                                             dData, dResultData,
+                                             static_cast<int>(segmentCount),
+                                             dOffsetsStart, dOffsetsEnd,
+                                             ReduceWrapper<Type, F>(),
+                                             identityElement,
+                                             stream));
+
+    DeviceMemory tempMem = DeviceMemory(tempStorageSize);
+    CUDA_CHECK(DeviceSegmentedReduce::Reduce(tempMem, tempStorageSize,
+                                             dData, dResultData,
+                                             static_cast<int>(segmentCount),
+                                             dOffsetsStart, dOffsetsEnd,
+                                             ReduceWrapper<Type, F>(),
+                                             identityElement,
+                                             stream));
+    CUDA_KERNEL_CHECK();
 }
 
 // Meta Definition

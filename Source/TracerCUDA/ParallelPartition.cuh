@@ -119,7 +119,7 @@ __host__ void PartitionGPU(std::set<ArrayPortion<Key>>& segmentList,
         totalCount,
         f
     );
-   
+
     // Do not sort all 32-bits
     int bitStart = 0;
     int bitEnd = (maxKey == 0) ? 0 : (Utility::FindLastSet32(maxKey) + 1);
@@ -133,7 +133,7 @@ __host__ void PartitionGPU(std::set<ArrayPortion<Key>>& segmentList,
 
     size_t ifTempBufferSize;
     CUDA_CHECK(cub::DeviceSelect::If(nullptr, ifTempBufferSize,
-                                     static_cast<uint32_t*>(sortedIndexBuffer0), 
+                                     static_cast<uint32_t*>(sortedIndexBuffer0),
                                      static_cast<uint32_t*>(sortedIndexBuffer0),
                                      static_cast<uint32_t*>(sortedIndexBuffer0),
                                      static_cast<int>(totalCount),
@@ -153,23 +153,23 @@ __host__ void PartitionGPU(std::set<ArrayPortion<Key>>& segmentList,
     {
         sortedIds = std::move(sortedIdBuffer0);
         ifOutput = std::move(sortedIdBuffer1);
-    }        
+    }
     else
     {
         sortedIds = std::move(sortedIdBuffer1);
         ifOutput = std::move(sortedIdBuffer0);
-    }        
+    }
     DeviceMemory sortedIndices, ifInput;
     if(sortedIndexBuffer0 == dbIndices.Current())
     {
         sortedIndices = std::move(sortedIndexBuffer0);
         ifInput = std::move(sortedIndexBuffer1);
-    }        
+    }
     else
     {
         sortedIndices = std::move(sortedIndexBuffer1);
         ifInput = std::move(sortedIndexBuffer0);
-    }    
+    }
     // First find split locations
     uint32_t locCount = totalCount - 1;
     gridSize = static_cast<unsigned int>((totalCount + TPB - 1) / TPB);
@@ -228,5 +228,5 @@ __host__ void PartitionGPU(std::set<ArrayPortion<Key>>& segmentList,
     }
     // Done!
     segmentList = std::move(partitions);
-    sortedIndexBuffer = std::move(sortedIndices);    
+    sortedIndexBuffer = std::move(sortedIndices);
 }
