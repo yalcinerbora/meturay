@@ -153,14 +153,15 @@ void PPGTracerBoundaryWork(// Output
         // end point directly accumulating to the tree will have less memory need)
         if(aux.type != RayType::CAMERA_RAY)
         {
-            gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
+            uint8_t prevDepth = aux.depth - 1;
+            gLocalPathNodes[prevDepth].AccumRadianceDownChain(total, gLocalPathNodes);
 
-            uint32_t dTreeIndex = gLocalPathNodes[aux.depth].nearestDTreeIndex;
+            uint32_t dTreeIndex = gLocalPathNodes[prevDepth].nearestDTreeIndex;
             DTreeGPU& dWriteTree = renderState.gWriteDTrees[dTreeIndex];
 
-            printf("Adding Rad Tree: %u = {NodePtr: %p, NodeCount: %u}\n",
-                   dTreeIndex, dWriteTree.gRoot,
-                   dWriteTree.nodeCount);
+            //printf("Adding Rad Tree: %u = {NodePtr: %p, NodeCount: %u}\n",
+            //       dTreeIndex, dWriteTree.gRoot,
+            //       dWriteTree.nodeCount);
 
             dWriteTree.AddRadianceToLeaf(r.getDirection(),
                                          Utility::RGBToLuminance(total),
@@ -350,6 +351,7 @@ void PPGTracerPathWork(// Output
             auxOut.endpointIndex = lightIndex;
             auxOut.type = RayType::NEE_RAY;
             auxOut.prevPDF = NAN;
+            auxOut.depth++;
             outputWriter.Write(NEE_RAY_INDEX, rayOut, auxOut, matLight);
         }
     }

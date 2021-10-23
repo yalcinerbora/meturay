@@ -292,15 +292,6 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
 
     METU_LOG("Max Rad {:f}", maxRadiance.load());
 
-    // Debug
-    std::ofstream file = std::ofstream("TESTO");
-    for(size_t i = 0; i < squareCount; i++)
-    {
-        file << "{" << offsetStart[i][0] << ", " << offsetStart[i][1] << "}, "
-            << depthStart[i] << ", " << radianceStart[i] << std::endl;
-    }
-    file.close();
-
     // Gen Temp Texture for Value rendering
     TextureGL valueTex(tex.Size(), PixelFormat::R_FLOAT);
 

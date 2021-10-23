@@ -57,30 +57,32 @@ struct RayAuxPPG
 
 static const RayAuxBasic InitialBasicAux = RayAuxBasic
 {
-    0
+    UINT32_MAX
 };
 
 static const RayAuxPath InitialPathAux = RayAuxPath
 {
     Vector3f(1.0f, 1.0f, 1.0f),
-    0, 0, 0,
-    0,
-    RayType::CAMERA_RAY
+    UINT32_MAX, UINT32_MAX, UINT16_MAX,
+    0,  // Depth
+    RayType::CAMERA_RAY,
+    NAN
 };
 
 static const RayAuxAO InitialAOAux = RayAuxAO
 {
     Vector3f(1.0f, 1.0f, 1.0f),
-    0
+    UINT32_MAX
 };
 
 static const RayAuxPPG InitialPPGAux = RayAuxPPG
 {
     Vector3f(1.0f, 1.0f, 1.0f),
-    0, 0, 0,
-    0,
+    UINT32_MAX, UINT32_MAX, UINT16_MAX,
+    0,  // Depth
     RayType::CAMERA_RAY,
-    0
+    NAN,
+    UINT32_MAX
 };
 
 class RayAuxInitBasic
