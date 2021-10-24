@@ -51,6 +51,12 @@ struct PPGTracerLocalState
     bool    emptyPrimitive;
 };
 
+__device__ __forceinline__
+uint8_t DeterminePathIndex(uint8_t depth)
+{
+    return depth - 1;
+}
+
 template <class EGroup>
 __device__ __forceinline__
 void PPGTracerBoundaryWork(// Output
@@ -82,12 +88,13 @@ void PPGTracerBoundaryWork(// Output
     const bool isPathRayAsMISRay = renderState.directLightMIS && (aux.type == RayType::PATH_RAY);
     const bool isCameraRay = aux.type == RayType::CAMERA_RAY;
     const bool isSpecularPathRay = aux.type == RayType::SPECULAR_PATH_RAY;
+    const bool isNeeRayNEEOn = renderState.nee && aux.type == RayType::NEE_RAY;
+    const bool isPathRayNEEOff = (!renderState.nee) && (aux.type == RayType::PATH_RAY ||
+                                                        aux.type == RayType::SPECULAR_PATH_RAY);
     // Always eval boundary mat if NEE is off
     // or NEE is on and hit endpoint and requested endpoint is same
-    const GPULightI* requestedLight = renderState.gLightList[aux.endpointIndex];
-    const bool isCorrectLight = (requestedLight->EndpointId() == gLight.EndpointId());
-    const bool isCorrectNEERay = ((!renderState.nee) ||
-                                  (isCorrectLight && aux.type == RayType::NEE_RAY));
+    const GPULightI* requestedLight = (isNeeRayNEEOn) ? renderState.gLightList[aux.endpointIndex] : nullptr;
+    const bool isCorrectNEERay = (isNeeRayNEEOn && (requestedLight->EndpointId() == gLight.EndpointId()));
 
     float misWeight = 1.0f;
     if(isPathRayAsMISRay)
@@ -113,10 +120,11 @@ void PPGTracerBoundaryWork(// Output
     }
 
     // Accumulate Light if
-    if(isCorrectNEERay   || // We hit the correct light as a NEE ray
+    if(isPathRayNEEOff   || // We hit a light with a path ray while NEE is off
        isPathRayAsMISRay || // We hit a light with a path ray while MIS option is enabled
+       isCorrectNEERay   || // We hit the correct light as a NEE ray while NEE is on
        isCameraRay       || // We hit as a camera ray which should not be culled when NEE is on
-       isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should be hit
+       isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should contibute
     {
         const RayF& r = ray.ray;
         Vector3 position = r.AdvancedPos(ray.tMax);
@@ -153,29 +161,27 @@ void PPGTracerBoundaryWork(// Output
         // end point directly accumulating to the tree will have less memory need)
         if(aux.type != RayType::CAMERA_RAY)
         {
-            uint8_t prevDepth = aux.depth - 1;
-            gLocalPathNodes[prevDepth].AccumRadianceDownChain(total, gLocalPathNodes);
+            // Prevous Path's index
+            int8_t prevDepth = aux.depth - 1;
+            uint8_t pathIndex = DeterminePathIndex(prevDepth);
 
-            uint32_t dTreeIndex = gLocalPathNodes[prevDepth].nearestDTreeIndex;
+            // Directly write this contribution to the tree
+            // We did not allocate a path vertex for this node
+            // since paths are linear (does not branch)
+            // in case of NEE ray we need to directly write its contribution to the tree
+            // this applices to non NEE mode aswell (in order to save path memory)
+            uint32_t dTreeIndex = gLocalPathNodes[pathIndex].nearestDTreeIndex;
             DTreeGPU& dWriteTree = renderState.gWriteDTrees[dTreeIndex];
-
-            //printf("Adding Rad Tree: %u = {NodePtr: %p, NodeCount: %u}\n",
-            //       dTreeIndex, dWriteTree.gRoot,
-            //       dWriteTree.nodeCount);
-
             dWriteTree.AddRadianceToLeaf(r.getDirection(),
                                          Utility::RGBToLuminance(total),
                                          true);
-            //dWriteTree->AddRadianceToLeaf(r.getDirection(), 1.0f);
 
-            //if(total != Vector3f(0.0f))
-            //{
-            //    Vector3 position = r.AdvancedPos(ray.tMax);
-
-            //    printf("Final Add - D: %f %f %f = %f\n",
-            //           r.getDirection()[0], r.getDirection()[1], r.getDirection()[2],
-            //           Utility::RGBToLuminance(total));
-            //}
+            //// We need to write indirect contributions as well
+            //// If current path is the first vertex in the chain skip
+            //if(pathIndex == 0) return;
+            //// Accummulate Radiance from 2nd vertex (including this vertex) away
+            //uint8_t prevPathIndex = pathIndex - 1;
+            //gLocalPathNodes[prevPathIndex].AccumRadianceDownChain(total, gLocalPathNodes);
         }
     }
 }
@@ -360,10 +366,8 @@ void PPGTracerPathWork(// Output
     //             BxDF PORTION             //
     // ==================================== //
     // Sample a path from material
-    float pdfPath;
-    RayF rayPath;
+    RayF rayPath; float pdfPath; const GPUMediumI* outM;
     Vector3f reflectance;
-    const GPUMediumI* outM = &m;
     // Sample a path using SDTree
     //if(!isSpecularMat)
     //{
@@ -459,8 +463,9 @@ void PPGTracerPathWork(// Output
     }
 
     // Record this intersection on path chain
-    uint8_t currentDepth = aux.depth;
-    uint8_t prevDepth = aux.depth - 1;
+    uint8_t prevPathIndex = DeterminePathIndex(aux.depth - 1);
+    uint8_t curPathIndex = DeterminePathIndex(aux.depth);
+
     PathGuidingNode node;
     //printf("WritingNode PC:(%u %u) W:(%f, %f, %f) RF:(%f, %f, %f) Path: %u DT %u\n",
     //       static_cast<uint32_t>(prevDepth), static_cast<uint32_t>(currentDepth),
@@ -468,14 +473,15 @@ void PPGTracerPathWork(// Output
     //       pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
     //       aux.pathIndex, dTreeIndex);
     node.prevNext[1] = PathGuidingNode::InvalidIndex;
-    node.prevNext[0] = prevDepth;
+    node.prevNext[0] = prevPathIndex;
     node.worldPosition = position;
     node.nearestDTreeIndex = dTreeIndex;
     node.radFactor = pathRadianceFactor;
     node.totalRadiance = Zero3;
-    gLocalPathNodes[currentDepth] = node;
+    gLocalPathNodes[curPathIndex] = node;
     // Set Previous Path node's next index
-    gLocalPathNodes[prevDepth].prevNext[1] = currentDepth;
+    if(prevPathIndex != PathGuidingNode::InvalidIndex)
+        gLocalPathNodes[prevPathIndex].prevNext[1] = curPathIndex;
 
     // All Done!
 }

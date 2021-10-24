@@ -93,14 +93,14 @@ void RPGTracerBoundaryWork(// Output
     assert(maxOutRay == 0);
 
     const bool isPathRayAsMISRay = renderState.directLightMIS && (aux.type == RayType::PATH_RAY);
-    //const bool isCameraRay = aux.type == RayType::CAMERA_RAY;
     const bool isSpecularPathRay = aux.type == RayType::SPECULAR_PATH_RAY;
+    const bool isNeeRayNEEOn = renderState.nee && aux.type == RayType::NEE_RAY;
+    const bool isPathRayNEEOff = (!renderState.nee) && (aux.type == RayType::PATH_RAY ||
+                                                        aux.type == RayType::SPECULAR_PATH_RAY);
     // Always eval boundary mat if NEE is off
     // or NEE is on and hit endpoint and requested endpoint is same
-    const GPULightI* requestedLight = renderState.gLightList[aux.endpointIndex];
-    const bool isCorrectLight = (requestedLight->EndpointId() == gLight.EndpointId());
-    const bool isCorrectNEERay = ((!renderState.nee) ||
-                                  (isCorrectLight && aux.type == RayType::NEE_RAY));
+    const GPULightI* requestedLight = (isNeeRayNEEOn) ? renderState.gLightList[aux.endpointIndex] : nullptr;
+    const bool isCorrectNEERay = (isNeeRayNEEOn && (requestedLight->EndpointId() == gLight.EndpointId()));
     // If a path ray is hit when NEE is off, consider it as a camera ray
     bool isFirstDepthPathRay = (aux.depth == 2) && (aux.type == RayType::PATH_RAY);
 
@@ -128,11 +128,12 @@ void RPGTracerBoundaryWork(// Output
     }
 
     // Accumulate Light if
-    if(isCorrectNEERay      || // We hit the correct light as a NEE ray
-       isPathRayAsMISRay    || // We hit a light with a path ray while MIS option is enabled
-       isFirstDepthPathRay  || // These rays are "camera rays" of this surface
-                               // which should not be culled when NEE is on
-       isSpecularPathRay)      // We hit as spec ray which did not launched any NEE rays thus it should be hit
+    if(isPathRayNEEOff     || // We hit a light with a path ray while NEE is off
+       isPathRayAsMISRay   || // We hit a light with a path ray while MIS option is enabled
+       isCorrectNEERay     || // We hit the correct light as a NEE ray while NEE is on
+       isFirstDepthPathRay || // These rays are "camera rays" of this surface
+                              // which should not be culled when NEE is on
+       isSpecularPathRay)     // We hit as spec ray which did not launched any NEE rays thus it should be hit
     {
         // Data Fetch
         const RayF& r = ray.ray;

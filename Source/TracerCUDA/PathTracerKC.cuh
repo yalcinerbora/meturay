@@ -63,12 +63,13 @@ void PathTracerBoundaryWork(// Output
     const bool isPathRayAsMISRay = renderState.directLightMIS && (aux.type == RayType::PATH_RAY);
     const bool isCameraRay = aux.type == RayType::CAMERA_RAY;
     const bool isSpecularPathRay = aux.type == RayType::SPECULAR_PATH_RAY;
+    const bool isNeeRayNEEOn = renderState.nee && aux.type == RayType::NEE_RAY;
+    const bool isPathRayNEEOff = (!renderState.nee) && (aux.type == RayType::PATH_RAY ||
+                                                        aux.type == RayType::SPECULAR_PATH_RAY);
     // Always eval boundary mat if NEE is off
     // or NEE is on and hit endpoint and requested endpoint is same
-    const GPULightI* requestedLight = renderState.gLightList[aux.endpointIndex];
-    const bool isCorrectLight = (requestedLight->EndpointId() == gLight.EndpointId());
-    const bool isCorrectNEERay = ((!renderState.nee) ||
-                                  (isCorrectLight && aux.type == RayType::NEE_RAY));
+    const GPULightI* requestedLight = (isNeeRayNEEOn) ? renderState.gLightList[aux.endpointIndex] : nullptr;
+    const bool isCorrectNEERay = (isNeeRayNEEOn && (requestedLight->EndpointId() == gLight.EndpointId()));
 
     float misWeight = 1.0f;
     if(isPathRayAsMISRay)
@@ -94,10 +95,11 @@ void PathTracerBoundaryWork(// Output
     }
 
     // Accumulate Light if
-    if(isCorrectNEERay   || // We hit the correct light as a NEE ray
+    if(isPathRayNEEOff   || // We hit a light with a path ray while NEE is off
        isPathRayAsMISRay || // We hit a light with a path ray while MIS option is enabled
+       isCorrectNEERay   || // We hit the correct light as a NEE ray while NEE is on
        isCameraRay       || // We hit as a camera ray which should not be culled when NEE is on
-       isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should be hit
+       isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should contibute
     {
         // Data Fetch
         const RayF& r = ray.ray;

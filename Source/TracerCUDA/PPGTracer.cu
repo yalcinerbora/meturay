@@ -310,9 +310,8 @@ bool PPGTracer::Render()
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration
     SwapAuxBuffers();
-    // Increase Depth
-    currentDepth++;
 
+    currentDepth++;
     //Debug::DumpBatchedMemToFile("PathNodes", dPathNodes,
     //                            MaximumPathNodePerPath(),
     //                            TotalPathNodeCount());
@@ -328,7 +327,8 @@ void PPGTracer::Finalize()
 
     uint32_t totalPathNodeCount = TotalPathNodeCount();
 
-    //Debug::DumpBatchedMemToFile("PathNodes", dPathNodes,
+    //Debug::DumpBatchedMemToFile(std::to_string(currentTreeIteration) + "PathNodes",
+    //                            dPathNodes,
     //                            MaximumPathNodePerPath(), totalPathNodeCount);
 
     //if(currentTreeIteration == 0)

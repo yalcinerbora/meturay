@@ -43,8 +43,8 @@ void main(void)
 	float scale = pow(0.5f, vDepth);
 
 	// Determine Gradient UV
-	float u = (vRadiance / maxRadiance) / float(1 << (2 * (maxDepth - vDepth)));
-	//float u = (vRadiance / maxRadiance);
+	//float u = (vRadiance / maxRadiance) / float(1 << (2 * (maxDepth - vDepth)));
+	float u = (vRadiance / maxRadiance);
 	fUV = vec2(u, 0.5f);
 
 	// Pass Value to Fragment Shader

@@ -21,6 +21,7 @@ struct DTreeNode
     uint32_t                parentIndex;
     Vector4ui               childIndices;
     Vector4f                irradianceEstimates;
+    Vector4ui               sampleCounts;
 
     __device__ bool         IsRoot() const;
     __device__ bool         IsLeaf(uint8_t childId) const;
@@ -358,6 +359,8 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance,
             //    printf("%u  ", static_cast<uint32_t>(childIndex));
 
             atomicAdd(&node->irradianceEstimates[childIndex], radiance);
+            if(incrementSampleCount)
+                atomicAdd(&node->sampleCounts[childIndex], 1);
             break;
         }
 
@@ -458,18 +461,21 @@ void CalculateParentIrradiance(// I-O
     DTreeNode* currentNode = gDTree.gRoot + nodeIndex;
 
     Vector4f& irrad = currentNode->irradianceEstimates;
-
-    // Do some normalization to prevent numerical unstability
-    //float normFactor = (gDTree.totalSamples != 0)
-    //                    ? 0.25 * static_cast<float>(gDTree.totalSamples)
-    //                    : 1.0f;
-    float normFactor = 1.0f;
-
-    // Omit zeros on the tree
-    if(currentNode->IsLeaf(0)) irrad[0] = max(irrad[0] / normFactor, MathConstants::Epsilon);
-    if(currentNode->IsLeaf(1)) irrad[1] = max(irrad[1] / normFactor, MathConstants::Epsilon);
-    if(currentNode->IsLeaf(2)) irrad[2] = max(irrad[2] / normFactor, MathConstants::Epsilon);
-    if(currentNode->IsLeaf(3)) irrad[3] = max(irrad[3] / normFactor, MathConstants::Epsilon);
+    Vector4ui& sampleCounts = currentNode->sampleCounts;
+    // Omit zeros on the tree & average the value
+    auto AverageIrrad = [&](uint32_t i)
+    {
+        if(!currentNode->IsLeaf(i)) return;
+        //if(sampleCounts[i] == 0)
+        if(irrad[i] == 0.0f)
+            irrad[i] = MathConstants::Epsilon;
+        else
+            irrad[i] /= static_cast<float>(sampleCounts[i]);
+    };
+    AverageIrrad(0);
+    AverageIrrad(1);
+    AverageIrrad(2);
+    AverageIrrad(3);
 
     // Total leaf irrad
     float sum = 0.0f;
@@ -644,33 +650,4 @@ void ReconstructEmptyTree(// Output
         }
     }
     // All Done!
-}
-
-__global__ CUDA_LAUNCH_BOUNDS_1D
-static void KCAccumulateRadianceToLeaf(DTreeGPU* gDTrees,
-                                       // Input
-                                       const PathGuidingNode* gPathNodes,
-                                       uint32_t nodeCount,
-                                       uint32_t maxPathNodePerRay)
-{
-    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
-        threadId < nodeCount;
-        threadId += (blockDim.x * gridDim.x))
-    {
-        const uint32_t nodeIndex = threadId;
-        const uint32_t pathStartIndex = nodeIndex / maxPathNodePerRay * maxPathNodePerRay;
-
-        PathGuidingNode gPathNode = gPathNodes[nodeIndex];
-        const uint32_t treeIndex = gPathNode.nearestDTreeIndex;
-
-        // Skip if invalid tree
-        if(treeIndex == UINT32_MAX) continue;
-        // Skip if this node cannot calculate wi
-        if(!gPathNode.HasNext()) continue;
-
-        Vector3f wi = gPathNode.Wi<PathGuidingNode>(gPathNodes, pathStartIndex);
-        float luminance = Utility::RGBToLuminance(gPathNode.totalRadiance);
-        gDTrees[treeIndex].AddRadianceToLeaf(wi, luminance);
-        atomicAdd(&gDTrees[treeIndex].totalSamples, 1u);
-    }
 }

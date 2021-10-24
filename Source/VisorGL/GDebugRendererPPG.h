@@ -15,12 +15,13 @@ struct DTreeNode
     uint16_t    parentIndex;
     Vector4ui   childIndices;
     Vector4f    irradianceEstimates;
-    
+    Vector4ui   sampleCounts;
+
     bool IsRoot() const
     {
         return parentIndex == UINT16_MAX;
     }
-    
+
     bool IsLeaf(uint8_t childId) const
     {
         return childIndices[childId] == UINT32_MAX;
@@ -42,7 +43,7 @@ struct STreeNode
     bool        isLeaf;    // Determines which data the index is holding
 
     // It is either DTree index or next child index
-    // Childs are always grouped (childs + 1 is the other child)    
+    // Childs are always grouped (childs + 1 is the other child)
     uint32_t    index;
 
     bool DetermineChild(const Vector3f& normalizedCoords) const
@@ -67,7 +68,7 @@ struct SDTree
     std::vector<STreeNode>                  sTreeNodes;
     std::vector<std::vector<DTreeNode>>     dTreeNodes;
     std::vector<std::pair<uint32_t, float>> dTrees;
- 
+
     uint32_t FindDTree(const Vector3f& worldPos) const
     {
         uint32_t dTreeIndex = UINT32_MAX;
@@ -114,9 +115,9 @@ class GDebugRendererPPG : public GDebugRendererI
         static constexpr GLenum     U_PERIMIETER_ON = 1;
         static constexpr GLenum     U_PERIMIETER_COLOR = 2;
         static constexpr GLenum     U_MAX_DEPTH = 3;
-        
+
         // Textures
-        static constexpr GLenum     T_IN_GRADIENT = 0;        
+        static constexpr GLenum     T_IN_GRADIENT = 0;
         // FBO Outputs
         static constexpr GLenum     OUT_COLOR = 0;
         static constexpr GLenum     OUT_VALUE = 1;
@@ -126,7 +127,7 @@ class GDebugRendererPPG : public GDebugRendererI
 
         const SamplerGL         linearSampler;
         const TextureGL&        gradientTexture;
-        const std::string&      configPath;        
+        const std::string&      configPath;
         uint32_t                depthCount;
         // All SD Trees that are loaded
         std::vector<SDTree>     sdTrees;
@@ -134,10 +135,10 @@ class GDebugRendererPPG : public GDebugRendererI
         Vector3f                perimeterColor;
         // Name of the Guider (shown in GUI
         std::string             name;
-        // 
+        //
         std::vector<float>      irradianceValues;
 
-        // OGL Related 
+        // OGL Related
         // FBO (Since we use raster pipeline to render)
         // VAO etc..
         GLuint                  fbo;
@@ -151,13 +152,13 @@ class GDebugRendererPPG : public GDebugRendererI
         ShaderGL                vertDTreeRender;
         ShaderGL                fragDTreeRender;
 
-        static bool             LoadSDTree(SDTree&, 
+        static bool             LoadSDTree(SDTree&,
                                            const nlohmann::json& config,
                                            const std::string& configPath,
                                            uint32_t depth);
 
     protected:
-   
+
     public:
         // Constructors & Destructor
                             GDebugRendererPPG(const nlohmann::json& config,
@@ -172,7 +173,7 @@ class GDebugRendererPPG : public GDebugRendererI
         void                RenderSpatial(TextureGL&, uint32_t depth) override;
         void                RenderDirectional(TextureGL&,
                                               std::vector<float>& values,
-                                              const Vector3f& worldPos, 
+                                              const Vector3f& worldPos,
                                               uint32_t depth) override;
 
         const std::string&  Name() const override;

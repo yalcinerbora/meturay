@@ -273,19 +273,19 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
                       CalculateGPUData);
         // After that calculate max irradiance
         // TODO: use ranges (c++20) when available
-        std::vector<uint32_t> indices(squareCount);
-        std::iota(indices.begin(), indices.end(), 0);
-        std::for_each(std::execution::par_unseq,
-                      indices.cbegin(),
-                      indices.cend(),
-                      CalculateMaxIrrad);
-        //maxRadiance = std::reduce(std::execution::par_unseq,
-        //                          radianceStart, radianceStart + squareCount,
-        //                          -std::numeric_limits<float>::max(),
-        //                          [](const float a, const float b)->float
-        //                          {
-        //                              return std::max(a, b);
-        //                          });
+        //std::vector<uint32_t> indices(squareCount);
+        //std::iota(indices.begin(), indices.end(), 0);
+        //std::for_each(std::execution::par_unseq,
+        //              indices.cbegin(),
+        //              indices.cend(),
+        //              CalculateMaxIrrad);
+        maxRadiance = std::reduce(std::execution::par_unseq,
+                                  radianceStart, radianceStart + squareCount,
+                                  -std::numeric_limits<float>::max(),
+                                  [](const float a, const float b)->float
+                                  {
+                                      return std::max(a, b);
+                                  });
         // Check that we properly did all
         assert(allocator.load() == squareCount.load());
     }

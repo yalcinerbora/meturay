@@ -125,14 +125,14 @@ class RayAuxInitPath
                         // Input
                         const RayReg& ray,
                         // Index
-                        uint16_t medumIndex,
+                        uint16_t mediumIndex,
                         const uint32_t localPixelId,
                         const uint32_t pixelSampleId) const
         {
             RayAuxPath init = defaultValue;
             init.pixelIndex = localPixelId;
             init.type = RayType::CAMERA_RAY;
-            init.mediumIndex = medumIndex;
+            init.mediumIndex = mediumIndex;
             init.depth = 1;
             gOutPath = init;
         }
@@ -153,14 +153,14 @@ class RayAuxInitRefPG
                         // Input
                         const RayReg& ray,
                         // Index
-                        uint16_t medumIndex,
+                        uint16_t mediumIndex,
                         const uint32_t localPixelId,
                         const uint32_t pixelSampleId) const
         {
             RayAuxPath init = defaultValue;
             init.pixelIndex = UINT32_MAX;
             init.type = RayType::CAMERA_RAY;
-            init.mediumIndex = medumIndex;
+            init.mediumIndex = mediumIndex;
             init.depth = 1;
             gOutPath = init;
         }
@@ -217,6 +217,7 @@ class RayAuxInitPPG
             init.pixelIndex = localPixelId;
             init.pathIndex = localPixelId * samplePerPixel;
             init.depth = 1;
+            init.mediumIndex = medumIndex;
             gOutPPG = init;
         }
 };

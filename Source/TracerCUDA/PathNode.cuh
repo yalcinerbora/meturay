@@ -32,21 +32,21 @@ struct PathNode
     Vector3f                worldPosition;
     // By design all path chains are assumed to have
     // Camera -> Light ordering.
-    // Meaning that if you keep accessing next 
+    // Meaning that if you keep accessing next
     // you will end up on the light
     Vector<2, IndexType>    prevNext;
-    
+
     template <class Node>
     __device__ Vector3f     Wi(const Node* gNodeList, uint32_t pathStartIndex);
     template <class Node>
     __device__ Vector3f     Wo(const Node* gNodeList, uint32_t pathStartIndex);
-           
+
     __device__ bool         HasPrev();
     __device__ bool         HasNext();
 };
 
 template <class Node>
-__device__ __forceinline__ 
+__device__ __forceinline__
 Vector3f PathNode::Wi(const Node* gNodeList, uint32_t pathStartIndex)
 {
     IndexType next = prevNext[1];
@@ -58,7 +58,7 @@ Vector3f PathNode::Wi(const Node* gNodeList, uint32_t pathStartIndex)
 }
 
 template <class Node>
-__device__ __forceinline__ 
+__device__ __forceinline__
 Vector3f PathNode::Wo(const Node* gNodeList, uint32_t pathStartIndex)
 {
     IndexType prev = prevNext[0];
@@ -69,13 +69,13 @@ Vector3f PathNode::Wo(const Node* gNodeList, uint32_t pathStartIndex)
     return wi.Normalize();
 }
 
-__device__ __forceinline__ 
+__device__ __forceinline__
 bool PathNode::HasPrev()
 {
     return prevNext[0] != InvalidIndex;
 }
 
-__device__ __forceinline__ 
+__device__ __forceinline__
 bool PathNode::HasNext()
 {
     return prevNext[1] != InvalidIndex;
@@ -86,7 +86,7 @@ struct PathGuidingNode : public PathNode
     Vector3f            radFactor;          // A.k.a path throughput
     uint32_t            nearestDTreeIndex;
     Vector3f            totalRadiance;      // Total Radiance
-    
+
     // Accumulate the generated radiance to the path
     // Radiance provided has to be from the camera (or starting point)
     // of the path so that the class can utilize its own throuhput to calculate
@@ -114,7 +114,7 @@ void PathGuidingNode::AccumRadianceDownChain(const Vector3f& endPointRadiance,
 {
     // Add to yourself
     AccumRadiance(endPointRadiance);
-    for(IndexType i = prevNext[0]; 
+    for(IndexType i = prevNext[0];
         i != InvalidIndex;
         i = gLocalChain[i].prevNext[0])
     {

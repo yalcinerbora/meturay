@@ -135,7 +135,7 @@ static void KCCopyAndAdjustTrees(// Output
     }
 }
 
-__global__ //CUDA_LAUNCH_BOUNDS_1D
+__global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCAdjustTreePointersAndReset(// Output
                                          DTreeGPU* gDTrees,
                                          // Input
@@ -163,13 +163,15 @@ static void KCAdjustTreePointersAndReset(// Output
             UINT32_MAX,
             Vector4ui(UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX),
             Vector4f(DTreeGroup::MinIrradiance, DTreeGroup::MinIrradiance,
-                     DTreeGroup::MinIrradiance, DTreeGroup::MinIrradiance)
+                     DTreeGroup::MinIrradiance, DTreeGroup::MinIrradiance),
+            Vector4ui(0u, 0u, 0u, 0u)
         };
         constexpr DTreeNode nodeZero =
         {
             UINT32_MAX,
             Vector4ui(UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX),
-            Vector4f(0.0f, 0.0f, 0.0f, 0.0f)
+            Vector4f(0.0f, 0.0f, 0.0f, 0.0f),
+            Vector4ui(0u, 0u, 0u, 0u)
         };
 
         // Initialize the root node as well
@@ -214,6 +216,34 @@ static void KCDetermineTreeAndOffset(// Output
         uint32_t indexInt = static_cast<uint32_t>(index);
         gNodeTreeIndices[globalId] = indexInt;
         gNodeOffsets[globalId] = gDTreeNodeOffsets[indexInt];
+    }
+}
+
+__global__ CUDA_LAUNCH_BOUNDS_1D
+static void KCAccumulateRadianceToLeaf(DTreeGPU* gDTrees,
+                                       // Input
+                                       const PathGuidingNode* gPathNodes,
+                                       uint32_t nodeCount,
+                                       uint32_t maxPathNodePerRay)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < nodeCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        const uint32_t nodeIndex = threadId;
+        const uint32_t pathStartIndex = nodeIndex / maxPathNodePerRay * maxPathNodePerRay;
+
+        PathGuidingNode gPathNode = gPathNodes[nodeIndex];
+        const uint32_t treeIndex = gPathNode.nearestDTreeIndex;
+
+        // Skip if invalid tree
+        if(treeIndex == UINT32_MAX) continue;
+        // Skip if this node cannot calculate wi
+        if(!gPathNode.HasNext()) continue;
+
+        Vector3f wi = gPathNode.Wi<PathGuidingNode>(gPathNodes, pathStartIndex);
+        float luminance = Utility::RGBToLuminance(gPathNode.totalRadiance);
+        gDTrees[treeIndex].AddRadianceToLeaf(wi, luminance, true);
     }
 }
 
@@ -428,7 +458,8 @@ void DTreeGroup::DTreeBuffer::ResetAndReserve(const uint32_t* dNewNodeCounts,
                        {
                             std::numeric_limits<uint32_t>::max(),
                             Vector4ui(std::numeric_limits<uint32_t>::max()),
-                            Zero4f
+                            Zero4f,
+                            Zero4ui
                        },
                        totalNodeCount);
 
@@ -469,7 +500,7 @@ void DTreeGroup::DTreeBuffer::DumpTreeAsBinary(std::vector<Byte>& data,
                 reinterpret_cast<const Byte*>(nodes.data()),
                 reinterpret_cast<const Byte*>(nodes.data()) +
                 (sizeof(DTreeNode) * nodes.size()));
-    nodeCount = nodes.size();
+    nodeCount = static_cast<uint32_t>(nodes.size());
 }
 
 void DTreeGroup::AllocateDefaultTrees(uint32_t count, const CudaSystem& system)
