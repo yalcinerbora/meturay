@@ -119,70 +119,70 @@ void PPGTracerBoundaryWork(// Output
                                                     1, pdfLightC * pdfLightM);
     }
 
-    // Accumulate Light if
+    // Calculate the total contribution
+    const RayF& r = ray.ray;
+    Vector3 position = r.AdvancedPos(ray.tMax);
+    const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
+
+    // Calculate Transmittance factor of the medium
+    Vector3 transFactor = m.Transmittance(ray.tMax);
+    Vector3 radianceFactor = aux.radianceFactor * transFactor;
+
+    Vector3 emission = gLight.Emit(// Input
+                                   -r.getDirection(),
+                                   position,
+                                   surface);
+
+    // And accumulate pixel// and add as a sample
+    Vector3f total = emission * radianceFactor;
+    // Incorporate MIS weight if applicable
+    // if path ray hits a light misWeight is calculated
+    // else misWeight is 1.0f
+    total *= misWeight;
+
+    // Prevous Path's index
+    int8_t prevDepth = aux.depth - 1;
+    uint8_t pathIndex = DeterminePathIndex(prevDepth);
+
+    // Accumulate the contribution if
     if(isPathRayNEEOff   || // We hit a light with a path ray while NEE is off
        isPathRayAsMISRay || // We hit a light with a path ray while MIS option is enabled
        isCorrectNEERay   || // We hit the correct light as a NEE ray while NEE is on
        isCameraRay       || // We hit as a camera ray which should not be culled when NEE is on
        isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should contibute
     {
-        const RayF& r = ray.ray;
-        Vector3 position = r.AdvancedPos(ray.tMax);
-        const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
-
-        // Calculate Transmittance factor of the medium
-        Vector3 transFactor = m.Transmittance(ray.tMax);
-        Vector3 radianceFactor = aux.radianceFactor * transFactor;
-
-        Vector3 emission = gLight.Emit(// Input
-                                       -r.getDirection(),
-                                       position,
-                                       surface);
-
-        // And accumulate pixel// and add as a sample
-        Vector3f total = emission * radianceFactor;
-        // Incorporate MIS weight if applicable
-        // if path ray hits a light misWeight is calculated
-        // else misWeight is 1.0f
-        total *= misWeight;
         // Accumulate the pixel
         ImageAccumulatePixel(renderState.gImage,
                              aux.pixelIndex,
                              Vector4f(total, 1.0f));
 
         // Also backpropogate this radiance to the path nodes
-        //if(emission != Vector3(0.0f))
-        //    printf("AddingRadiance: E:(%f %f %f) RF:(%f %f %f) Path %u + %u\n",
-        //           emission[0], emission[1], emission[2],
-        //           radianceFactor[0], radianceFactor[1], radianceFactor[2],
-        //           aux.pathIndex, aux.depth);
-        if(total.HasNaN()) printf("NAN Found boundary!!!\n");
-        // Accumulate to the write tree aswell (instead of creating a node for each NEE
-        // end point directly accumulating to the tree will have less memory need)
-        if(aux.type != RayType::CAMERA_RAY)
+        if(aux.type != RayType::CAMERA_RAY &&
+           // If current path is the first vertex in the chain skip
+           pathIndex != 0)
         {
-            // Prevous Path's index
-            int8_t prevDepth = aux.depth - 1;
-            uint8_t pathIndex = DeterminePathIndex(prevDepth);
-
-            // Directly write this contribution to the tree
-            // We did not allocate a path vertex for this node
-            // since paths are linear (does not branch)
-            // in case of NEE ray we need to directly write its contribution to the tree
-            // this applices to non NEE mode aswell (in order to save path memory)
-            uint32_t dTreeIndex = gLocalPathNodes[pathIndex].nearestDTreeIndex;
-            DTreeGPU& dWriteTree = renderState.gWriteDTrees[dTreeIndex];
-            dWriteTree.AddRadianceToLeaf(r.getDirection(),
-                                         Utility::RGBToLuminance(total),
-                                         true);
-
-            //// We need to write indirect contributions as well
-            //// If current path is the first vertex in the chain skip
-            //if(pathIndex == 0) return;
-            //// Accummulate Radiance from 2nd vertex (including this vertex) away
-            //uint8_t prevPathIndex = pathIndex - 1;
-            //gLocalPathNodes[prevPathIndex].AccumRadianceDownChain(total, gLocalPathNodes);
+            // Accummulate Radiance from 2nd vertex (including this vertex) away
+            uint8_t prevPathIndex = pathIndex - 1;
+            gLocalPathNodes[prevPathIndex].AccumRadianceDownChain(total, gLocalPathNodes);
         }
+    }
+
+    // Accumulate to the write tree aswell for direct contribution
+    // Do this only if path ray hits the light
+    // regardless of nee is on or off
+    if(aux.type == RayType::PATH_RAY ||
+       aux.type == RayType::SPECULAR_PATH_RAY)
+    {
+        uint32_t dTreeIndex = gLocalPathNodes[pathIndex].nearestDTreeIndex;
+        DTreeGPU& dWriteTree = renderState.gWriteDTrees[dTreeIndex];
+
+        //Vector3f writeTotal = renderState.directLightMIS
+        //                        ? total / misWeight
+        //                        : total;
+
+        dWriteTree.AddRadianceToLeaf(r.getDirection(),
+                                     Utility::RGBToLuminance(emission),
+                                     true);
     }
 }
 
@@ -458,9 +458,13 @@ void PPGTracerPathWork(// Output
         // When we hit a light we will
         auxOut.prevPDF = pdfPath;
         auxOut.depth++;
-        // Wrie
+        // Write
         outputWriter.Write(PATH_RAY_INDEX, rayOut, auxOut);
     }
+
+    //// Add the sample towards that position on the tree
+    //DTreeGPU& dWriteTree = renderState.gWriteDTrees[dTreeIndex];
+    //dWriteTree.AddSampleToLeaf(rayPath.getDirection());
 
     // Record this intersection on path chain
     uint8_t prevPathIndex = DeterminePathIndex(aux.depth - 1);

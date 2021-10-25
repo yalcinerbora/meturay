@@ -325,6 +325,8 @@ void PPGTracer::Finalize()
 {
     cudaSystem.SyncAllGPUs();
 
+    //METU_LOG("Finalize");
+
     uint32_t totalPathNodeCount = TotalPathNodeCount();
 
     //Debug::DumpBatchedMemToFile(std::to_string(currentTreeIteration) + "PathNodes",

@@ -40,7 +40,6 @@ void KCAccumulateToBuffer(ImageGMem<float> accumBuffer,
 
         float avgData = (data0 * static_cast<float>(sample0) + data1);
         uint32_t newSampleCount = sample0 + sample1;
-
         avgData = (newSampleCount == 0)
                     ? 0.0f
                     : avgData / static_cast<float>(newSampleCount);

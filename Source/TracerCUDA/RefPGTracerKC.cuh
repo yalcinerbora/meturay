@@ -373,24 +373,31 @@ void RPGTracerPathWork(// Output
         rayOut.tMax = INFINITY;
         // Aux
         RayAuxPath auxOut = aux;
-
-        // Calculate the actual pixel id and add a sample
-        // when the very first path ray is launched
-        if(isCameraRay)
-        {
-            auxOut.pixelIndex = CalculateSphericalPixelId(rayPath.getDirection(),
-                                                          renderState.resolution);
-            ImageAddSample(renderState.gImage, auxOut.pixelIndex, 1);
-        }
-
         auxOut.mediumIndex = static_cast<uint16_t>(outM->GlobalIndex());
-        auxOut.radianceFactor = pathRadianceFactor;
         auxOut.type = (isSpecularMat) ? RayType::SPECULAR_PATH_RAY : RayType::PATH_RAY;
         // Save BxDF pdf if we hit a light
         // When we hit a light we will
         auxOut.prevPDF = pdfPath;
         auxOut.depth++;
-        // Wrie
+
+        // Calculate the actual pixel id and add a sample
+        // when the very first path ray is launched
+        // Dont multiply with BxDF here
+        if(isCameraRay)
+        {
+            auxOut.pixelIndex = CalculateSphericalPixelId(rayPath.getDirection(),
+                                                          renderState.resolution);
+            ImageAddSample(renderState.gImage, auxOut.pixelIndex, 1);
+            // Still divide with the path pdf since we sample the paths
+            // using BxDF
+            //auxOut.radianceFactor = Vector3(1.0f / pdfPath);
+            auxOut.radianceFactor = Vector3(1.0f);
+        }
+        else
+            auxOut.radianceFactor = pathRadianceFactor;
+
+
+        // Write
         outputWriter.Write(PATH_RAY_INDEX, rayOut, auxOut);
     }
     // All Done!

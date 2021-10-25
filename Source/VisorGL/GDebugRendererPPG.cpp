@@ -358,18 +358,18 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
     // Draw Call
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, nullptr,
                             static_cast<GLsizei>(squareCount));
-    ////=================//
-    ////   Render Lines  //
-    ////=================//
-    //// Same thing but only push a different uniforms and draw call
-    //// Bind Uniforms (Frag Shader is Already Bound
-    //glUniform1i(U_PERIMIETER_ON, 1);
-    //glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);
-    //// Set Line Width
-    //glEnable(GL_LINE_SMOOTH);
-    //glLineWidth(3.0f);
-    //// Draw Call
-    //glDrawArraysInstanced(GL_LINE_LOOP, 0, 4, static_cast<GLsizei>(squareCount));
+    //=================//
+    //   Render Lines  //
+    //=================//
+    // Same thing but only push a different uniforms and draw call
+    // Bind Uniforms (Frag Shader is Already Bound
+    glUniform1i(U_PERIMIETER_ON, 1);
+    glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);
+    // Set Line Width
+    glEnable(GL_LINE_SMOOTH);
+    glLineWidth(3.0f);
+    // Draw Call
+    glDrawArraysInstanced(GL_LINE_LOOP, 0, 4, static_cast<GLsizei>(squareCount));
 
     // Rebind the window framebuffer etc..
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

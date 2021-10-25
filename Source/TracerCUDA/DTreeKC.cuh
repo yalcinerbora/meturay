@@ -49,6 +49,7 @@ struct DTreeGPU
     __device__ void             AddRadianceToLeaf(const Vector3f& worldDir,
                                                   float radiance,
                                                   bool incrementSampleCount = false);
+    __device__ void             AddSampleToLeaf(const Vector3f& worldDir);
 };
 
 __device__ __forceinline__
@@ -374,6 +375,31 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance,
 }
 
 __device__ __forceinline__
+void DTreeGPU::AddSampleToLeaf(const Vector3f& worldDir)
+{
+    Vector2f discreteCoords = WorldDirToTreeCoords(worldDir);
+    assert(discreteCoords <= Vector2f(1.0f) && discreteCoords >= Vector2f(0.0f));
+    // Descent and find the leaf
+    DTreeNode* node = gRoot;
+    Vector2f localCoords = discreteCoords;
+    while(true)
+    {
+        uint8_t childIndex = node->DetermineChild(localCoords);
+        // If leaf atomically add the irrad value
+        if(node->IsLeaf(childIndex))
+        {
+            atomicAdd(&node->sampleCounts[childIndex], 1);
+            break;
+        }
+        // Continue Traversal
+        localCoords = node->NormalizeCoordsForChild(childIndex, localCoords);
+        node = gRoot + node->childIndices[childIndex];
+    }
+    // Also increment the total sampel count of the tree
+    atomicAdd(&totalSamples, 1);
+}
+
+__device__ __forceinline__
 uint32_t AtomicAllocateNode(bool& allocated,
                             uint8_t childId,
                             DTreeNode* gParentNode,
@@ -466,11 +492,9 @@ void CalculateParentIrradiance(// I-O
     auto AverageIrrad = [&](uint32_t i)
     {
         if(!currentNode->IsLeaf(i)) return;
-        //if(sampleCounts[i] == 0)
-        if(irrad[i] == 0.0f)
-            irrad[i] = MathConstants::Epsilon;
-        else
-            irrad[i] /= static_cast<float>(sampleCounts[i]);
+        irrad[i] = (sampleCounts[i] == 0)
+                    ? MathConstants::Epsilon
+                    : irrad[i] / static_cast<float>(sampleCounts[i]);
     };
     AverageIrrad(0);
     AverageIrrad(1);
