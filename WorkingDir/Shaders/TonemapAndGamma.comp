@@ -12,7 +12,7 @@
 
 		Only implemented Equation 1,2 and 4. Only global keys are supported
 		there are no any gaussian rings to select optimal key per pixel.
-		
+
 		Additionally it applies gamma correction to the image assuming
 		supplied image is in linear space
 */
@@ -74,7 +74,7 @@ vec3 YxyToRGB(in vec3 color)
 	float y = color.r;
 	float z = (1 - color.g - color.b) * yy;
 	vec3 xyz = vec3(x, y, z);
-	
+
     // https://en.wikipedia.org/wiki/SRGB
     // XYZ to RGB linear
     return vec3( 3.2410f * xyz.r - 1.5374f * xyz.g - 0.4986f * xyz.b,
@@ -120,14 +120,14 @@ void main(void)
 	vec4 hdrColorIn = texelFetch(tInImage, pixId, 0);
 
 	vec4 sdrColorOut;
-	if(doToneMap)	
+	if(doToneMap)
 		sdrColorOut = TonemapReinhard2005(hdrColorIn);
-	else 
+	else
 		sdrColorOut = hdrColorIn;
 
 	// Check gamma correction
 	if(doGamma)
 		sdrColorOut.rgb = pow(sdrColorOut.rgb, vec3(1.0f/gammaValue));
-	
+
 	imageStore(iSDROut, pixId, sdrColorOut);
 }

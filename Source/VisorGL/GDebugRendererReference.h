@@ -23,6 +23,7 @@ class GDebugRendererRef
         static constexpr GLuint     UB_MAX_LUM = 0;
         // Uniforms
         static constexpr GLuint     U_RES = 0;
+        static constexpr GLuint     U_LOG_ON = 1;
         // Textures
         static constexpr GLuint     T_IN_LUM_TEX = 0;
         static constexpr GLuint     T_IN_GRAD_TEX = 1;
@@ -59,6 +60,7 @@ class GDebugRendererRef
         void                    RenderSpatial(TextureGL&) const;
         void                    RenderDirectional(TextureGL&,
                                                   std::vector<float>& values,
+                                                  bool doLogScale,
                                                   const Vector2i& worldPixel,
                                                   const Vector2i& worldResolution) const;
 };

@@ -160,6 +160,7 @@ void GDebugRendererPPG::RenderSpatial(TextureGL&, uint32_t depth)
 void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
                                           std::vector<float>& values,
                                           const Vector3f& worldPos,
+                                          bool doLogScale,
                                           uint32_t depth)
 {
     // Find DTree
@@ -286,6 +287,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
                                   {
                                       return std::max(a, b);
                                   });
+
         // Check that we properly did all
         assert(allocator.load() == squareCount.load());
     }
@@ -348,9 +350,10 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
     linearSampler.Bind(T_IN_GRADIENT);
     // Bind V Shader
     vertDTreeRender.Bind();
-    // Uniformd
+    // Uniforms
     glUniform1f(U_MAX_RADIANCE, maxRadiance);
     glUniform1ui(U_MAX_DEPTH, maxDepth);
+    glUniform1i(U_LOG_ON, doLogScale ? 1 : 0);
     // Bind F Shader
     fragDTreeRender.Bind();
     // Uniforms
@@ -362,7 +365,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
     //   Render Lines  //
     //=================//
     // Same thing but only push a different uniforms and draw call
-    // Bind Uniforms (Frag Shader is Already Bound
+    // Bind Uniforms (Frag Shader is Already Bound)
     glUniform1i(U_PERIMIETER_ON, 1);
     glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);
     // Set Line Width

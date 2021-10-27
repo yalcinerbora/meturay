@@ -97,7 +97,7 @@ namespace MathConstants
     static constexpr double Pi_d = 3.1415926535897932384626433;
     static constexpr double PiSqr_d = Pi_d * Pi_d;
     static constexpr double InvPi_d = 1.0 / Pi_d;
-    static constexpr double InvPiSqr_d = 1.0 / (Pi_d * Pi_d);                                       
+    static constexpr double InvPiSqr_d = 1.0 / (Pi_d * Pi_d);
     static constexpr double SqrtPi_d = 1.772453850905516027298167;
     static constexpr double Sqrt2_d = 1.4142135623730950488016887;
     static constexpr double Sqrt3_d = 1.7320508075688772935274463;

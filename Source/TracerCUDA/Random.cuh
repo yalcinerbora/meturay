@@ -77,7 +77,13 @@ namespace GPUDistribution
     __device__ __forceinline__
     T Uniform(RandomGPU& r)
     {
+        // curand returns (0, 1]
+        // we need [0, 1) invert it
         T result = static_cast<T>(1.0f - curand_uniform(r));
+        // TODO: curand rarely returns 1.0f anyways
+        // (is it a bug?, or "1.0f - x" is causing the bug)
+        // Just if it returns 1.0f return nearest float closest to 1.0f
+        result  = (result == 1.0f) ? nextafter(result, 0.0f) : result;
         return result;
     }
 
@@ -85,12 +91,12 @@ namespace GPUDistribution
     __device__ __forceinline__
     T Uniform(RandomGPU& r, T min, T max)
     {
-        T result = static_cast<T>(1.0f - curand_uniform(r)) * (min - max) + min;        
+        T result = Uniform<T>(r) * (min - max) + min;
         return result;
     }
 
     template <class T, typename = FloatEnable<T>>
-    __device__ __forceinline__ 
+    __device__ __forceinline__
     T Normal(RandomGPU& r);
 
     template <class T, typename = FloatEnable<T>>

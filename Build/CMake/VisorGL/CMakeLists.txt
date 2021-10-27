@@ -20,7 +20,7 @@ set(SRC_GUI
 
 set(SRC_SHADERS
     ${SHADER_SOURCE_DIR}/AccumInput.comp
-    ${SHADER_SOURCE_DIR}/AvgDivisor.comp    
+    ${SHADER_SOURCE_DIR}/AvgDivisor.comp
     ${SHADER_SOURCE_DIR}/DTreeRender.frag
     ${SHADER_SOURCE_DIR}/DTreeRender.vert
     ${SHADER_SOURCE_DIR}/LumReduction.comp
@@ -95,6 +95,7 @@ target_link_libraries(VisorGL PRIVATE
                       RayLib
                       ImageIO
                       Imgui
+                      Imgui_tex_inspect
                       ${PLATFORM_SPEC_LIBRARIES})
 
 # Copy DLLS

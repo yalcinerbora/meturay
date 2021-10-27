@@ -100,6 +100,7 @@ void GDebugRendererRef::RenderSpatial(TextureGL& tex) const
 
 void GDebugRendererRef::RenderDirectional(TextureGL& tex,
                                           std::vector<float>& pixValues,
+                                          bool doLogScale,
                                           const Vector2i& worldPixel,
                                           const Vector2i& worldRefResolution) const
 {
@@ -185,6 +186,7 @@ void GDebugRendererRef::RenderDirectional(TextureGL& tex,
     compRefRender.Bind();
     // Bind Uniforms
     glUniform2ui(U_RES, lumTexture.Size()[0], lumTexture.Size()[1]);
+    glUniform1i(U_LOG_ON, doLogScale ? 1 : 0);
     //
     // UBOs
     glBindBufferBase(GL_UNIFORM_BUFFER, UB_MAX_LUM, maxBuffer);

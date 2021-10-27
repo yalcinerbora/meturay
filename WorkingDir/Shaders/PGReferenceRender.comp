@@ -11,6 +11,7 @@
 // Definitions
 // Defines
 #define U_RES layout(location = 0)
+#define U_LOG_ON layout(location = 1)
 
 #define T_IN_LUM_TEX layout(binding = 0)
 #define T_IN_GRAD_TEX layout(binding = 1)
@@ -30,6 +31,7 @@ UB_MAX_LUM uniform MaxLuminanceData
 };
 // Uniforms
 U_RES uniform uvec2 resolution;
+U_LOG_ON uniform bool doLogScale;
 // Textures
 uniform T_IN_LUM_TEX sampler2D tLum;
 uniform T_IN_GRAD_TEX sampler2D tGrad;
@@ -51,10 +53,17 @@ void main(void)
 	// Fetch Lum Value
 	float lum = texelFetch(tLum, pixId, 0).x;
 	// Gradiend Coords
-	vec2 uv = vec2(lum / maxLum, 0.5f);
+	float u;
+	// Do logaritmic scale if requested
+	if(doLogScale)
+		u = log(1 + lum) / log(1 + maxLum);
+	else
+		u = (lum / maxLum);
+	vec2 uv = vec2(u, 0.5f);
+
 	// Gradient data
-	vec4 gradValue = vec4(texture(tGrad, uv).xyz, 1.0f);
+	vec3 gradValue = texture(tGrad, uv).xyz;
+
 	// Store to the Image
-	//vec4 gradValue = vec4(1.0f, 0.5f, 0.0f, 1.0f);
-	imageStore(iRefOut, pixId, gradValue);
+	imageStore(iRefOut, pixId, vec4(gradValue, 1.0f));
 }

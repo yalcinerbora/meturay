@@ -7,7 +7,7 @@ class GLFWCallbackDelegator;
 
 class WindowGLI : public VisorI
 {
-    private:        
+    private:
         virtual void            SetFBSizeFromInput(const Vector2i&) = 0;
         virtual void            SetWindowSizeFromInput(const Vector2i&) = 0;
         virtual void            SetOpenStateFromInput(bool) = 0;

@@ -19,6 +19,7 @@
 
 #define U_MAX_RADIANCE layout(location = 0)
 #define U_MAX_DEPTH layout(location = 3)
+#define U_LOG_ON layout(location = 4)
 
 // Input
 // Per Vertex
@@ -36,6 +37,7 @@ out OUT_VALUE float fValue;
 // Uniforms
 U_MAX_RADIANCE uniform float maxRadiance;
 U_MAX_DEPTH uniform uint maxDepth;
+U_LOG_ON uniform bool doLogScale;
 
 void main(void)
 {
@@ -44,7 +46,14 @@ void main(void)
 
 	// Determine Gradient UV
 	//float u = (vRadiance / maxRadiance) / float(1 << (2 * (maxDepth - vDepth)));
-	float u = (vRadiance / maxRadiance);
+
+	// Do logaritmic scale if requested
+	float u;
+	if(doLogScale)
+		u = log(1 + vRadiance) / log(1 + maxRadiance);
+	else
+		u = (vRadiance / maxRadiance);
+
 	fUV = vec2(u, 0.5f);
 
 	// Pass Value to Fragment Shader

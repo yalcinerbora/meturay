@@ -115,6 +115,7 @@ class GDebugRendererPPG : public GDebugRendererI
         static constexpr GLenum     U_PERIMIETER_ON = 1;
         static constexpr GLenum     U_PERIMIETER_COLOR = 2;
         static constexpr GLenum     U_MAX_DEPTH = 3;
+        static constexpr GLenum     U_LOG_ON = 4;
 
         // Textures
         static constexpr GLenum     T_IN_GRADIENT = 0;
@@ -174,6 +175,7 @@ class GDebugRendererPPG : public GDebugRendererI
         void                RenderDirectional(TextureGL&,
                                               std::vector<float>& values,
                                               const Vector3f& worldPos,
+                                              bool doLogScale,
                                               uint32_t depth) override;
 
         const std::string&  Name() const override;

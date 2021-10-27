@@ -184,120 +184,123 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
 {
     Vector2f xi = Vector2f(GPUDistribution::Uniform<float>(rng),
                            GPUDistribution::Uniform<float>(rng));
-    xi[0] = (xi[0] == 1.0f) ? (xi[0] - MathConstants::VerySmallEpsilon) : xi[0];
-    xi[1] = (xi[1] == 1.0f) ? (xi[1] - MathConstants::VerySmallEpsilon) : xi[1];
+    //xi[0] = (xi[0] == 1.0f) ? (xi[0] - MathConstants::Epsilon) : xi[0];
+    //xi[1] = (xi[1] == 1.0f) ? (xi[1] - MathConstants::Epsilon) : xi[1];
 
     // First we need to find the sphr coords from the tree
     Vector2f discreteCoords = Zero2f;
     // Use double here for higher numeric precision
-    //double descentFactor = 1;
+    double descentFactor = 1.0;
 
     // If total irrad is zero in this node fetch data uniformly
     pdf = 1.0f;
-    //if(irradiance == 0.0f)
+    if(irradiance == 0.0f)
     {
         discreteCoords = xi;
     }
-    //else
-    //{
-    //    DTreeNode* node = gRoot;
-    //    int i = 0;
-    //    while(true)
-    //    {
-    //        // Generate Local CDF
-    //        float totalIrrad = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
-    //                            node->IrradianceEst(DTreeNode::BOTTOM_RIGHT) +
-    //                            node->IrradianceEst(DTreeNode::TOP_LEFT) +
-    //                            node->IrradianceEst(DTreeNode::TOP_RIGHT));
-    //        float totalIrradInverse = 1.0f / totalIrrad;
-    //        // Generate a 2 data CDF for determine the sample
-    //        // with these we will do the inverse sampling
-    //        // only split points are required since the other CDF data will
-    //        // implcitly be one
-    //        float cdfMidX = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
-    //                         node->IrradianceEst(DTreeNode::TOP_LEFT)) * totalIrradInverse;
-    //        float cdfMidY = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
-    //                         node->IrradianceEst(DTreeNode::BOTTOM_RIGHT)) * totalIrradInverse;
+    else
+    {
+        DTreeNode* node = gRoot;
+        int i = 0;
+        while(true)
+        {
+            Vector2f xiOld = xi;
 
-    //        uint8_t nextIndex = 0b00;
-    //        // Locate X pos
-    //        if(xi[0] < cdfMidX)
-    //        {
-    //            // Renormalize sample for next iteration
-    //            xi[0] = xi[0] / cdfMidX;
-    //        }
-    //        else
-    //        {
-    //            // Renormalize sample for next iteration
-    //            xi[0] = (xi[0] - cdfMidX) / (1.0f - cdfMidX);
-    //            // Set the X bit on the iteration
-    //            nextIndex |= (1 << 0) & (0b01);
-    //        }
-    //        // Locate Y Pos
-    //        if(xi[1] < cdfMidY)
-    //        {
-    //            // Renormalize sample for next iteration
-    //            xi[1] = xi[1] / cdfMidY;
-    //        }
-    //        else
-    //        {
-    //            // Renormalize sample for next iteration
-    //            xi[1] = (xi[1] - cdfMidY) / (1.0f - cdfMidY);
-    //            // Set the Y bit on the iteration
-    //            nextIndex |= (1 << 1) & (0b10);
-    //        }
+            // Generate Local CDF
+            float totalIrrad = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
+                                node->IrradianceEst(DTreeNode::BOTTOM_RIGHT) +
+                                node->IrradianceEst(DTreeNode::TOP_LEFT) +
+                                node->IrradianceEst(DTreeNode::TOP_RIGHT));
+            float totalIrradInverse = 1.0f / totalIrrad;
+            // Generate a 2 data CDF for determine the sample
+            // with these we will do the inverse sampling
+            // only split points are required since the other CDF data will
+            // implcitly be one
+            float cdfMidX = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
+                             node->IrradianceEst(DTreeNode::TOP_LEFT)) * totalIrradInverse;
+            float cdfMidY = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
+                             node->IrradianceEst(DTreeNode::BOTTOM_RIGHT)) * totalIrradInverse;
 
-    //        // Calculate current pdf and incorporate to the
-    //        // main pdf conditionally
-    //        if(xi[0] < 0.0f || xi[0] >= 1.0f)
-    //            printf("%d: XI[0] OUT OF RANGE %f = cdf(%f, %f), I(%f %f %f %f)\n",
-    //                   i, xi[0], cdfMidX, cdfMidY,
-    //                   node->irradianceEstimates[0],
-    //                   node->irradianceEstimates[1],
-    //                   node->irradianceEstimates[2],
-    //                   node->irradianceEstimates[3]);
-    //        if(xi[1] < 0.0f || xi[1] >= 1.0f)
-    //            printf("%d: XI[1] OUT OF RANGE %f = cdf(%f, %f), I(%f %f %f %f)\n",
-    //                   i, xi[1], cdfMidX, cdfMidY,
-    //                   node->irradianceEstimates[0],
-    //                   node->irradianceEstimates[1],
-    //                   node->irradianceEstimates[2],
-    //                   node->irradianceEstimates[3]);
+            uint8_t nextIndex = 0b00;
+            // Locate X pos
+            if(xi[0] < cdfMidX)
+            {
+                // Renormalize sample for next iteration
+                xi[0] = xi[0] / cdfMidX;
+            }
+            else
+            {
+                // Renormalize sample for next iteration
+                xi[0] = (xi[0] - cdfMidX) / (1.0f - cdfMidX);
+                // Set the X bit on the iteration
+                nextIndex |= (1 << 0) & (0b01);
+            }
+            // Locate Y Pos
+            if(xi[1] < cdfMidY)
+            {
+                // Renormalize sample for next iteration
+                xi[1] = xi[1] / cdfMidY;
+            }
+            else
+            {
+                // Renormalize sample for next iteration
+                xi[1] = (xi[1] - cdfMidY) / (1.0f - cdfMidY);
+                // Set the Y bit on the iteration
+                nextIndex |= (1 << 1) & (0b10);
+            }
 
-    //        float localPDF = node->LocalPDF(nextIndex);
-    //        if(isnan(localPDF) || discreteCoords.HasNaN() || xi.HasNaN())
-    //            printf("%d NAN PDF(%f) DC(%f, %f) xi(%f, %f) cdf(%f, %f) = (%f %f %f %f)\n", i, localPDF,
-    //                   discreteCoords[0], discreteCoords[1],
-    //                   xi[0], xi[1],
-    //                   cdfMidX, cdfMidY,
-    //                   node->irradianceEstimates[0],
-    //                   node->irradianceEstimates[1],
-    //                   node->irradianceEstimates[2],
-    //                   node->irradianceEstimates[3]);
-    //        pdf *= localPDF;
+            // Calculate current pdf and incorporate to the
+            // main pdf conditionally
+            if(xi[0] < 0.0f || xi[0] >= 1.0f)
+                printf("%d: XI[0] OUT OF RANGE (%f => %f), cdf(%f, %f), I(%f %f %f %f)\n",
+                       i, xiOld[0], xi[0], cdfMidX, cdfMidY,
+                       node->irradianceEstimates[0],
+                       node->irradianceEstimates[1],
+                       node->irradianceEstimates[2],
+                       node->irradianceEstimates[3]);
+            if(xi[1] < 0.0f || xi[1] >= 1.0f)
+                printf("%d: XI[1] OUT OF RANGE (%f => %f), cdf(%f, %f), I(%f %f %f %f)\n",
+                       i, xiOld[1], xi[1], cdfMidX, cdfMidY,
+                       node->irradianceEstimates[0],
+                       node->irradianceEstimates[1],
+                       node->irradianceEstimates[2],
+                       node->irradianceEstimates[3]);
 
-    //        Vector2f gridOffset(((nextIndex >> 0) & 0b01) ? 0.5f : 0.0f,
-    //                            ((nextIndex >> 1) & 0b01) ? 0.5f : 0.0f);
-    //        discreteCoords += gridOffset * descentFactor;
-    //        descentFactor *= 0.5;
+            float localPDF = node->LocalPDF(nextIndex);
+            if(isnan(localPDF) || discreteCoords.HasNaN() || xi.HasNaN())
+                printf("%d NAN PDF(%f) DC(%f, %f) xi(%f, %f) cdf(%f, %f) = (%f %f %f %f)\n",
+                       i, localPDF,
+                       discreteCoords[0], discreteCoords[1],
+                       xi[0], xi[1],
+                       cdfMidX, cdfMidY,
+                       node->irradianceEstimates[0],
+                       node->irradianceEstimates[1],
+                       node->irradianceEstimates[2],
+                       node->irradianceEstimates[3]);
+            pdf *= localPDF;
 
-    //        if(node->IsLeaf(nextIndex))
-    //        {
-    //            // On leaf directly use sample as offset
-    //            discreteCoords += xi * descentFactor;
-    //            break;
-    //        }
-    //        node = gRoot + node->childIndices[nextIndex];
-    //        i++;
-    //    }
-    //
-    //
-    //
-    //    if(isnan(pdf) || discreteCoords.HasNaN())
-    //        printf("%d NAN? PDF(%f) DC(%f, %f) xi(%f, %f)\n", i, pdf,
-    //               discreteCoords[0], discreteCoords[1],
-    //               xi[0], xi[1]);
-    //}
+            Vector2f gridOffset(((nextIndex >> 0) & 0b01) ? 0.5f : 0.0f,
+                                ((nextIndex >> 1) & 0b01) ? 0.5f : 0.0f);
+            discreteCoords += gridOffset * descentFactor;
+            descentFactor *= 0.5;
+
+            if(node->IsLeaf(nextIndex))
+            {
+                // On leaf directly use sample as offset
+                discreteCoords += xi * descentFactor;
+                break;
+            }
+            node = gRoot + node->childIndices[nextIndex];
+            i++;
+        }
+
+
+
+        if(isnan(pdf) || discreteCoords.HasNaN())
+            printf("%d NAN? PDF(%f) DC(%f, %f) xi(%f, %f)\n", i, pdf,
+                   discreteCoords[0], discreteCoords[1],
+                   xi[0], xi[1]);
+    }
 
     return TreeCoordsToWorldDir(pdf, discreteCoords);
     //float discretePdf = pdf;
@@ -492,7 +495,7 @@ void CalculateParentIrradiance(// I-O
     auto AverageIrrad = [&](uint32_t i)
     {
         if(!currentNode->IsLeaf(i)) return;
-        irrad[i] = (sampleCounts[i] == 0)
+        irrad[i] = (sampleCounts[i] == 0 || irrad[i] == 0.0f)
                     ? MathConstants::Epsilon
                     : irrad[i] / static_cast<float>(sampleCounts[i]);
     };
