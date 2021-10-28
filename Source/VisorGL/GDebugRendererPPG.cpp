@@ -4,12 +4,14 @@
 #include <fstream>
 #include <execution>
 #include <atomic>
+#include <Imgui/imgui.h>
 
 #include "RayLib/FileSystemUtility.h"
 #include "RayLib/Log.h"
 
 #include "TextureGL.h"
 #include "GuideDebugStructs.h"
+#include "GuideDebugGUIFuncs.h"
 
 
 static const uint8_t QUAD_INDICES[6] = { 0, 1, 2, 0, 2, 3};
@@ -40,6 +42,10 @@ GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,
     , fragDTreeRender(ShaderType::FRAGMENT, u8"Shaders/DTreeRender.frag")
     , linearSampler(SamplerGLEdgeResolveType::CLAMP,
                     SamplerGLInterpType::LINEAR)
+    , currentTexture(GuideDebugGUIFuncs::PG_TEXTURE_SIZE, PixelFormat::RGB8_UNORM)
+    , currentValues(GuideDebugGUIFuncs::PG_TEXTURE_SIZE[0] * GuideDebugGUIFuncs::PG_TEXTURE_SIZE[1], 0.0f)
+    , renderPerimeter(false)
+    , maxValue(0.0f)
 {
     glGenFramebuffers(1, &fbo);
 
@@ -157,9 +163,7 @@ void GDebugRendererPPG::RenderSpatial(TextureGL&, uint32_t depth)
     // TODO:
 }
 
-void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
-                                          std::vector<float>& values,
-                                          const Vector3f& worldPos,
+void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
                                           bool doLogScale,
                                           uint32_t depth)
 {
@@ -291,11 +295,10 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
         // Check that we properly did all
         assert(allocator.load() == squareCount.load());
     }
-
-    METU_LOG("Max Rad {:f}", maxRadiance.load());
+    maxValue = maxRadiance;
 
     // Gen Temp Texture for Value rendering
-    TextureGL valueTex(tex.Size(), PixelFormat::R_FLOAT);
+    TextureGL valueTex(currentTexture.Size(), PixelFormat::R_FLOAT);
 
     // Generate/Resize Buffer
     if(treeBufferSize < newTreeSize)
@@ -323,7 +326,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glFramebufferTexture2D(GL_FRAMEBUFFER,
                            GL_COLOR_ATTACHMENT0 + OUT_COLOR,
-                           GL_TEXTURE_2D, tex.TexId(), 0);
+                           GL_TEXTURE_2D, currentTexture.TexId(), 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER,
                            GL_COLOR_ATTACHMENT0 + OUT_VALUE,
                            GL_TEXTURE_2D, valueTex.TexId(), 0);
@@ -335,7 +338,7 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
     glDrawBuffers(2, Attachments);
 
     // Change Viewport
-    glViewport(0, 0, tex.Width(), tex.Height());
+    glViewport(0, 0, currentTexture.Width(), currentTexture.Height());
 
     // Global States
     glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
@@ -366,27 +369,51 @@ void GDebugRendererPPG::RenderDirectional(TextureGL& tex,
     //=================//
     // Same thing but only push a different uniforms and draw call
     // Bind Uniforms (Frag Shader is Already Bound)
-    glUniform1i(U_PERIMIETER_ON, 1);
-    glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);
-    // Set Line Width
-    glEnable(GL_LINE_SMOOTH);
-    glLineWidth(3.0f);
-    // Draw Call
-    glDrawArraysInstanced(GL_LINE_LOOP, 0, 4, static_cast<GLsizei>(squareCount));
-
+    if(renderPerimeter)
+    {
+        glUniform1i(U_PERIMIETER_ON, 1);
+        glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);
+        // Set Line Width
+        glEnable(GL_LINE_SMOOTH);
+        glLineWidth(3.0f);
+        // Draw Call
+        glDrawArraysInstanced(GL_LINE_LOOP, 0, 4, static_cast<GLsizei>(squareCount));
+    }
     // Rebind the window framebuffer etc..
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Get Value Buffer to CPU
-    values.resize(tex.Size()[0] * tex.Size()[1]);
+    currentValues.resize(currentTexture.Size()[0] * currentTexture.Size()[1]);
     glBindTexture(GL_TEXTURE_2D, valueTex.TexId());
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT,
-                  values.data());
+                  currentValues.data());
 
     // All Done!
 }
 
-const std::string& GDebugRendererPPG::Name() const
+bool GDebugRendererPPG::RenderGUI(const ImVec2& windowSize)
 {
-    return name;
+    bool changed = false;
+    using namespace GuideDebugGUIFuncs;
+
+    ImGui::BeginChild(("##" + name).c_str(), windowSize, false);
+    ImGui::SameLine(0.0f, CenteredTextLocation(name.c_str(), windowSize.x));
+    ImGui::Text(name.c_str());
+    ImVec2 remainingSize = FindRemainingSize(windowSize);
+    remainingSize.x = remainingSize.y;
+    ImGui::NewLine();
+    ImGui::SameLine(0.0f, (windowSize.x - remainingSize.x) * 0.5f - ImGui::GetStyle().WindowPadding.x);
+    RenderImageWithZoomTooltip(currentTexture, currentValues, remainingSize);
+
+    if(ImGui::BeginPopupContextItem(("texPopup" + name).c_str()))
+    {
+        changed |= ImGui::Checkbox("RenderGrid", &renderPerimeter);
+
+        ImGui::Text("Max Radiance %f", maxValue);
+
+        ImGui::EndPopup();
+
+    }
+    ImGui::EndChild();
+    return changed;
 }

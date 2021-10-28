@@ -134,10 +134,14 @@ class GDebugRendererPPG : public GDebugRendererI
         std::vector<SDTree>     sdTrees;
         // Color of the perimeter (In order to visualize D-Trees Properly
         Vector3f                perimeterColor;
-        // Name of the Guider (shown in GUI
+        // Name of the Guider (shown in GUI)
         std::string             name;
         //
-        std::vector<float>      irradianceValues;
+        TextureGL               currentTexture;
+        std::vector<float>      currentValues;
+        float                   maxValue;
+        // Options
+        bool                    renderPerimeter;
 
         // OGL Related
         // FBO (Since we use raster pipeline to render)
@@ -172,11 +176,9 @@ class GDebugRendererPPG : public GDebugRendererI
 
         // Interface
         void                RenderSpatial(TextureGL&, uint32_t depth) override;
-        void                RenderDirectional(TextureGL&,
-                                              std::vector<float>& values,
-                                              const Vector3f& worldPos,
+        void                UpdateDirectional(const Vector3f& worldPos,
                                               bool doLogScale,
                                               uint32_t depth) override;
 
-        const std::string&  Name() const override;
+        bool                RenderGUI(const ImVec2& windowSize) override;
 };

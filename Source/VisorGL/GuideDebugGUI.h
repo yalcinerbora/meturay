@@ -30,14 +30,9 @@ class GuideDebugGUI
         bool                                    fullscreenShow;
         // Main texture that shows the scene
         TextureGL                               refTexture;
-        // Textures that are rendered by different visors
-        std::vector<std::vector<float>>         guidePixValues;
-        std::vector<TextureGL>                  guideTextues;
+        // Debug Renderers
         const std::vector<DebugRendererPtr>&    debugRenderers;
-        // Reference Texture
-        std::vector<float>              debugRefPixValues;
-        TextureGL                       debugRefTexture;
-        const GDebugRendererRef&        debugReference;
+        GDebugRendererRef&                      debugReference;
         // Reference Image's Pixel Values
         std::vector<Vector3f>           worldPositions;
         // Current Depth Value
@@ -53,8 +48,6 @@ class GuideDebugGUI
         bool            IncrementDepth();
         bool            DecrementDepth();
 
-        static ImVec2   FindRemainingSize(const ImVec2& size);
-        static float    CenteredTextLocation(const char* text, float centeringWidth);
         static void     CalculateImageSizes(float& paddingY,
                                             ImVec2& paddingX,
                                             ImVec2& optionsSize,
@@ -63,17 +56,7 @@ class GuideDebugGUI
                                             ImVec2& pgImgSize,
                                             const ImVec2& viewportSize);
 
-        template<class T>
-        static std::enable_if_t<std::is_same_v<T, Vector3f> ||
-                                std::is_same_v<T, float>, std::tuple<bool, Vector2f>>
-                        RenderImageWithZoomTooltip(TextureGL&,
-                                                   const std::vector<T>& values,
-                                                   const ImVec2& size,
-                                                   bool renderCircle = false,
-                                                   const Vector2f& circleTexel = Zero2f);
-
     protected:
-
     public:
         // Constructors & Destructor
                         GuideDebugGUI(GLFWwindow* window,
@@ -81,8 +64,8 @@ class GuideDebugGUI
                                       const std::string& refFileName,
                                       const std::string& posFileName,
                                       const std::string& sceneName,
-                                      const std::vector<DebugRendererPtr>& dRenderers,
-                                      const GDebugRendererRef&);
+                                      GDebugRendererRef&,
+                                      const std::vector<DebugRendererPtr>& dRenderers);
                         ~GuideDebugGUI();
 
         void            Render();

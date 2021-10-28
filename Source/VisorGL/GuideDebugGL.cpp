@@ -223,8 +223,8 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
                                               Utility::MergeFileFolder(configPath, config.refImage),
                                               Utility::MergeFileFolder(configPath, config.posImage),
                                               config.sceneName,
-                                              debugRenderers,
-                                              *referenceDebugRenderer);
+                                              *referenceDebugRenderer,
+                                              debugRenderers);
     }
     catch(ImageIOException const& e)
     {

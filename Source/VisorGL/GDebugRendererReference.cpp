@@ -8,6 +8,9 @@
 
 #include "ImageIO/EntryPoint.h"
 
+#include <Imgui/imgui.h>
+#include "GuideDebugGUIFuncs.h"
+
 #include <regex>
 
 void GDebugRendererRef::LoadPaths(const Vector2i& resolution,
@@ -98,11 +101,9 @@ void GDebugRendererRef::RenderSpatial(TextureGL& tex) const
     // TODO: implement
 }
 
-void GDebugRendererRef::RenderDirectional(TextureGL& tex,
-                                          std::vector<float>& pixValues,
-                                          bool doLogScale,
+void GDebugRendererRef::UpdateDirectional(bool doLogScale,
                                           const Vector2i& worldPixel,
-                                          const Vector2i& worldRefResolution) const
+                                          const Vector2i& worldRefResolution)
 {
     // Convert pixel Location to the local pixel
     Vector2f ratio = (Vector2f(resolution[0], resolution[1]) /
@@ -122,17 +123,17 @@ void GDebugRendererRef::RenderDirectional(TextureGL& tex,
 
     TextureGL lumTexture = TextureGL(dim, pf);
     lumTexture.CopyToImage(pixels, Zero2ui, dim, pf);
-    if(lumTexture.Size() != tex.Size())
+    if(lumTexture.Size() != currentTexture.Size())
     {
-        tex = TextureGL(lumTexture.Size(), PixelFormat::RGBA8_UNORM);
+        currentTexture = TextureGL(lumTexture.Size(), PixelFormat::RGBA8_UNORM);
     }
 
     // Copy data to actual vector
     assert(pf == PixelFormat::R_FLOAT ||
            pf == PixelFormat::R_HALF);
     size_t linearSize = dim[0] * dim[1];
-    pixValues.resize(linearSize);
-    ImageIOError e = ImageIOInstance().ConvertPixels(reinterpret_cast<Byte*>(pixValues.data()),
+    currentValues.resize(linearSize);
+    ImageIOError e = ImageIOInstance().ConvertPixels(reinterpret_cast<Byte*>(currentValues.data()),
                                                      PixelFormat::R_FLOAT,
                                                      pixels.data(), pf,
                                                      dim);
@@ -194,9 +195,9 @@ void GDebugRendererRef::RenderDirectional(TextureGL& tex,
     lumTexture.Bind(T_IN_LUM_TEX);
     gradientTex.Bind(T_IN_GRAD_TEX);  linearSampler.Bind(T_IN_GRAD_TEX);
     // Images
-    glBindImageTexture(I_OUT_REF_IMAGE, tex.TexId(),
+    glBindImageTexture(I_OUT_REF_IMAGE, currentTexture.TexId(),
                        0, false, 0, GL_WRITE_ONLY,
-                       PixelFormatToSizedGL(tex.Format()));
+                       PixelFormatToSizedGL(currentTexture.Format()));
     // Dispatch Render Shader
     // Max shader is 2D shader set data accordingly
     GLuint gridX_2D = (lumTexture.Size()[0] + WORK_GROUP_2D_X - 1) / WORK_GROUP_2D_X;
@@ -208,4 +209,21 @@ void GDebugRendererRef::RenderDirectional(TextureGL& tex,
     // Delete Temp Max Buffer
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glDeleteBuffers(1, &maxBuffer);
+}
+
+void GDebugRendererRef::RenderGUI(const ImVec2& windowSize)
+{
+    ImGui::BeginChild("refPGTexture", windowSize, false);
+    ImGui::SameLine(0.0f, GuideDebugGUIFuncs::CenteredTextLocation(REFERENCE_TEXT, windowSize.x));
+    ImGui::Text(REFERENCE_TEXT);
+    ImVec2 remainingSize = GuideDebugGUIFuncs::FindRemainingSize(windowSize);
+    remainingSize.x = remainingSize.y;
+    ImGui::NewLine();
+    ImGui::SameLine(0.0f, (windowSize.x - remainingSize.x) * 0.5f - ImGui::GetStyle().WindowPadding.x);
+    // Debug Reference Image
+    if(currentTexture.Size() != Zero2ui)
+        GuideDebugGUIFuncs::RenderImageWithZoomTooltip(currentTexture, currentValues, remainingSize);
+    else
+        ImGui::Dummy(remainingSize);
+    ImGui::EndChild();
 }

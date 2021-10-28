@@ -8,13 +8,17 @@
 #include "TextureGL.h"
 #include "ShaderGL.h"
 
+struct ImVec2;
+
 class GDebugRendererRef
 {
     public:
         using PathList = std::vector<std::string>;
 
-        static constexpr const char*  RESOLUTION_NAME = "resolution";
-        static constexpr const char* IMAGES_NAME = "images";
+        static constexpr const char*    RESOLUTION_NAME = "resolution";
+        static constexpr const char*    IMAGES_NAME = "images";
+
+        static constexpr const char*    REFERENCE_TEXT = "Reference";
 
         // Shader Bind Points
         // SSBOs
@@ -41,6 +45,10 @@ class GDebugRendererRef
 
         const TextureGL&    gradientTex;
 
+        TextureGL           currentTexture;
+        std::vector<float>  currentValues;
+
+
         void                LoadPaths(const Vector2i& resolution,
                                       const std::string& pathRegex);
 
@@ -58,9 +66,9 @@ class GDebugRendererRef
 
         //
         void                    RenderSpatial(TextureGL&) const;
-        void                    RenderDirectional(TextureGL&,
-                                                  std::vector<float>& values,
-                                                  bool doLogScale,
+        void                    UpdateDirectional(bool doLogScale,
                                                   const Vector2i& worldPixel,
-                                                  const Vector2i& worldResolution) const;
+                                                  const Vector2i& worldResolution);
+
+        void                    RenderGUI(const ImVec2& windowSize);
 };

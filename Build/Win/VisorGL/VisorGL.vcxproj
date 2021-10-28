@@ -108,6 +108,7 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     <ClInclude Include="..\..\..\Source\VisorGL\GLFWCallbackDelegator.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugGL.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugGUI.h" />
+    <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugGUIFuncs.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugStructs.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugTypeGen.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\ShaderGL.h" />

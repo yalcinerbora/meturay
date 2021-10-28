@@ -48,6 +48,9 @@
     <ClInclude Include="..\..\..\Source\VisorGL\GDebugRendererReference.h">
       <Filter>GuideDebug\Debug Renderers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugGUIFuncs.h">
+      <Filter>GuideDebug</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGL.cpp" />

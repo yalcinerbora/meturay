@@ -35,6 +35,7 @@ set(GUIDE_DEBUG
     ${CURRENT_SOURCE_DIR}/GuideDebugGL.h
     ${CURRENT_SOURCE_DIR}/GuideDebugGUI.cpp
     ${CURRENT_SOURCE_DIR}/GuideDebugGUI.h
+    ${CURRENT_SOURCE_DIR}/GuideDebugGUIFuncs.h
     ${CURRENT_SOURCE_DIR}/GuideDebugStructs.h
     ${CURRENT_SOURCE_DIR}/GuideDebugTypeGen.h)
 
