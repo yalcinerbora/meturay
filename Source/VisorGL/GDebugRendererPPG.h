@@ -139,9 +139,10 @@ class GDebugRendererPPG : public GDebugRendererI
         //
         TextureGL               currentTexture;
         std::vector<float>      currentValues;
-        float                   maxValue;
+        float                   maxValueDisplay;
         // Options
         bool                    renderPerimeter;
+        bool                    renderSamples;
 
         // OGL Related
         // FBO (Since we use raster pipeline to render)

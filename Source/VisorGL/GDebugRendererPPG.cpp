@@ -45,7 +45,8 @@ GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,
     , currentTexture(GuideDebugGUIFuncs::PG_TEXTURE_SIZE, PixelFormat::RGB8_UNORM)
     , currentValues(GuideDebugGUIFuncs::PG_TEXTURE_SIZE[0] * GuideDebugGUIFuncs::PG_TEXTURE_SIZE[1], 0.0f)
     , renderPerimeter(false)
-    , maxValue(0.0f)
+    , renderSamples(false)
+    , maxValueDisplay(0.0f)
 {
     glGenFramebuffers(1, &fbo);
 
@@ -195,11 +196,11 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
     offset += squareCount * sizeof(Vector2f);
     uint32_t* depthStart = reinterpret_cast<uint32_t*>(treeBufferCPU.data() + offset);
     offset += squareCount * sizeof(uint32_t);
-    float* radianceStart = reinterpret_cast<float*>(treeBufferCPU.data() + offset);
+    float* valueStart = reinterpret_cast<float*>(treeBufferCPU.data() + offset);
     offset += squareCount * sizeof(float);
     assert(newTreeSize == offset);
     // Generate GPU Data
-    std::atomic<float> maxRadiance = -std::numeric_limits<float>::max();
+    std::atomic<float> maxValue = -std::numeric_limits<float>::max();
     std::atomic_uint32_t maxDepth = 0;
     std::atomic_uint32_t allocator = 0;
     auto CalculateGPUData = [&] (const DTreeNode& node)
@@ -210,7 +211,9 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
             // Allocate an index
             uint32_t location = allocator++;
             // Calculate Irrad max irrad etc.
-            float irrad = node.irradianceEstimates[i];
+            float value = renderSamples
+                            ? static_cast<uint32_t>(node.sampleCounts[i])
+                            : node.irradianceEstimates[i];
             // Calculate Depth & Offset
             uint32_t depth = 1;
             Vector2f offset(((i >> 0) & 0b01) ? 0.5f : 0.0f,
@@ -242,23 +245,23 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
             while(!maxDepth.compare_exchange_strong(expectedDepth,
                                                     std::max(expectedDepth, depth)));
             // Store
-            radianceStart[location] = irrad;
+            valueStart[location] = value;
             depthStart[location] = depth;
             offsetStart[location] = offset;
         }
     };
     auto CalculateMaxIrrad = [&] (uint32_t index)
     {
-        float irrad = radianceStart[index];
+        float irrad = valueStart[index];
         uint32_t depth = depthStart[index];
 
         // Normalize irrad using depth/maxDept;
         irrad /= static_cast<float>(1 << (2 * (maxDepth - depth)));
 
         // Atomic MAX IRRAD
-        float expectedIrrad = maxRadiance.load();
-        while(!maxRadiance.compare_exchange_strong(expectedIrrad,
-                                                   std::max(expectedIrrad, irrad)));
+        float expectedIrrad = maxValue.load();
+        while(!maxValue.compare_exchange_strong(expectedIrrad,
+                                                std::max(expectedIrrad, irrad)));
     };
 
     // Edge case of node is parent and leaf
@@ -267,8 +270,13 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
         depthStart[0] = 0;
         offsetStart[0] = Zero2f;
 
-        maxRadiance =  dTreeValues.second;
-        radianceStart[0] = dTreeValues.second;
+        if(renderSamples)
+            maxValue = static_cast<float>(dTreeValues.first);
+        else
+            maxValue = dTreeValues.second;
+
+        valueStart[0] = maxValue;
+
     }
     else
     {
@@ -284,8 +292,8 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
         //              indices.cbegin(),
         //              indices.cend(),
         //              CalculateMaxIrrad);
-        maxRadiance = std::reduce(std::execution::par_unseq,
-                                  radianceStart, radianceStart + squareCount,
+        maxValue = std::reduce(std::execution::par_unseq,
+                                  valueStart, valueStart + squareCount,
                                   -std::numeric_limits<float>::max(),
                                   [](const float a, const float b)->float
                                   {
@@ -295,7 +303,7 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
         // Check that we properly did all
         assert(allocator.load() == squareCount.load());
     }
-    maxValue = maxRadiance;
+    maxValueDisplay = maxValue;
 
     // Gen Temp Texture for Value rendering
     TextureGL valueTex(currentTexture.Size(), PixelFormat::R_FLOAT);
@@ -354,7 +362,7 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
     // Bind V Shader
     vertDTreeRender.Bind();
     // Uniforms
-    glUniform1f(U_MAX_RADIANCE, maxRadiance);
+    glUniform1f(U_MAX_RADIANCE, maxValue);
     glUniform1ui(U_MAX_DEPTH, maxDepth);
     glUniform1i(U_LOG_ON, doLogScale ? 1 : 0);
     // Bind F Shader
@@ -408,8 +416,9 @@ bool GDebugRendererPPG::RenderGUI(const ImVec2& windowSize)
     if(ImGui::BeginPopupContextItem(("texPopup" + name).c_str()))
     {
         changed |= ImGui::Checkbox("RenderGrid", &renderPerimeter);
+        changed |= ImGui::Checkbox("RenderSamples", &renderSamples);
 
-        ImGui::Text("Max Radiance %f", maxValue);
+        ImGui::Text("Max Value %f", maxValueDisplay);
 
         ImGui::EndPopup();
 

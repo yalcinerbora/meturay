@@ -215,7 +215,7 @@ class RayAuxInitPPG
         {
             RayAuxPPG init = defaultValue;
             init.pixelIndex = localPixelId;
-            init.pathIndex = localPixelId * samplePerPixel;
+            init.pathIndex = localPixelId * samplePerPixel + pixelSampleId;
             init.depth = 1;
             init.mediumIndex = medumIndex;
             gOutPPG = init;

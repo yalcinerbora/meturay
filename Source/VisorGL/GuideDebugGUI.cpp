@@ -160,13 +160,11 @@ void GuideDebugGUI::Render()
        DecrementDepth())
     {
         updateDirectionalTextures = true;
-        METU_LOG("Depth {:d}", currentDepth);
     }
     if(ImGui::IsKeyReleased(GLFW_KEY_RIGHT) &&
        IncrementDepth())
     {
         updateDirectionalTextures = true;
-        METU_LOG("Depth {:d}", currentDepth);
     }
 
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -200,6 +198,8 @@ void GuideDebugGUI::Render()
     // Options pane
     ImGui::SameLine(0.0f, paddingX.x);
     ImGui::BeginChild("optionsPane", optionsSize, true);
+    ImGui::Text("Depth: %u", currentDepth);
+    ImGui::NewLine();
     ImGui::SameLine(0.0f, GuideDebugGUIFuncs::CenteredTextLocation(OPTIONS_TEXT, optionsSize.x));
     ImGui::Text(OPTIONS_TEXT);
     updateDirectionalTextures |= ImGui::Checkbox("Log Scale", &doLogScale);
@@ -207,7 +207,6 @@ void GuideDebugGUI::Render()
 
     // Reference Image Texture
     ImGui::SameLine(0.0f, paddingX.x);
-    //ImVec2 childStart = ImGui::GetCursorPos
     ImGui::BeginChild("refTexture", refImgSize, false);
     ImGui::SameLine(0.0f, GuideDebugGUIFuncs::CenteredTextLocation(sceneName.c_str(), refImgSize.x));
     ImGui::Text(sceneName.c_str());

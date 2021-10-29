@@ -253,8 +253,8 @@ bool PPGTracer::Render()
     //
     globalData.gPathNodes = dPathNodes;
     globalData.maximumPathNodePerRay = MaximumPathNodePerPath();
-    // Todo change these later
-    globalData.rawPathGuiding = true;
+
+    globalData.rawPathGuiding = options.rawPathGuiding;
     globalData.nee = options.nextEventEstimation;
     globalData.directLightMIS = options.directLightMIS;
     globalData.rrStart = options.rrStart;
@@ -348,7 +348,7 @@ void PPGTracer::Finalize()
     currentTreeIteration += 1;// options.sampleCount* options.sampleCount;
     // Swap the trees if we achieved treshold
     //if(currentTreeIteration <= 1)
-    if(currentTreeIteration == nextTreeSwap * 10)
+    if(currentTreeIteration == nextTreeSwap)
     {
         // Double the amount of iterations required for this
         nextTreeSwap <<= 1;

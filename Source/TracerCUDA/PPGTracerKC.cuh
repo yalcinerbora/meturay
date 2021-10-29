@@ -369,40 +369,40 @@ void PPGTracerPathWork(// Output
     RayF rayPath; float pdfPath; const GPUMediumI* outM = &m;
     Vector3f reflectance;
     // Sample a path using SDTree
-    if(!isSpecularMat)
-    {
-        // Sample a path using SDTree
-        const DTreeGPU& dReadTree = renderState.gReadDTrees[dTreeIndex];
-        Vector3f direction = dReadTree.Sample(pdfPath, rng);
+    //if(!isSpecularMat)
+    //{
+    //    // Sample a path using SDTree
+    //    const DTreeGPU& dReadTree = renderState.gReadDTrees[dTreeIndex];
+    //    Vector3f direction = dReadTree.Sample(pdfPath, rng);
 
-        //if(isnan(pdf) | direction.HasNaN())
-        //    printf("pdf % f, dir % f, % f, % f\n", pdf,
-        //           direction[0], direction[1], direction[2]);
-        //
-        //printf("D: %f, %f, %f\n", direction[0], direction[1], direction[2]);
-        //printf("%u  ", dTreeIndex);
-        //
-        //reflectance = Utility::RandomColorRGB(dTreeIndex);
-        // Calculate BxDF
-        reflectance = MGroup::Evaluate(// Input
-                                       direction,
-                                       wi,
-                                       position,
-                                       m,
-                                       //
-                                       surface,
-                                       // Constants
-                                       gMatData,
-                                       matIndex);
+    //    //if(isnan(pdf) | direction.HasNaN())
+    //    //    printf("pdf % f, dir % f, % f, % f\n", pdf,
+    //    //           direction[0], direction[1], direction[2]);
+    //    //
+    //    //printf("D: %f, %f, %f\n", direction[0], direction[1], direction[2]);
+    //    //printf("%u  ", dTreeIndex);
+    //    //
+    //    //reflectance = Utility::RandomColorRGB(dTreeIndex);
+    //    // Calculate BxDF
+    //    reflectance = MGroup::Evaluate(// Input
+    //                                   direction,
+    //                                   wi,
+    //                                   position,
+    //                                   m,
+    //                                   //
+    //                                   surface,
+    //                                   // Constants
+    //                                   gMatData,
+    //                                   matIndex);
 
-        if(reflectance.HasNaN())
-            printf("NAN REFL %f %f %f\n",
-                   reflectance[0], reflectance[1], reflectance[2]);
+    //    if(reflectance.HasNaN())
+    //        printf("NAN REFL %f %f %f\n",
+    //               reflectance[0], reflectance[1], reflectance[2]);
 
-        rayPath = RayF(direction, position);
-        rayPath.AdvanceSelf(MathConstants::Epsilon);
-    }
-    else
+    //    rayPath = RayF(direction, position);
+    //    rayPath.AdvanceSelf(MathConstants::Epsilon);
+    //}
+    //else
     {
         reflectance = MGroup::Sample(// Outputs
                                      rayPath, pdfPath, outM,

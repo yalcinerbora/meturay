@@ -119,11 +119,11 @@
 
 	"Surfaces": [
 	    {"transform": 0, "accelerator": 0,"material": 3,"primitive": 1},
-        {"transform": 0, "accelerator": 0,"material": 3,"primitive": 3},
-        {"transform": 0, "accelerator": 0,"material": 3,"primitive": 4},
-        {"transform": 0, "accelerator": 0,"material": 3,"primitive": 5},
+        {"transform": 0, "accelerator": 0,"material": 3,"primitive": 3}
+        //{"transform": 0, "accelerator": 0,"material": 3,"primitive": 4},
+        //{"transform": 0, "accelerator": 0,"material": 3,"primitive": 5},
 		// Box
-	    {"transform": 0, "accelerator": 0,"material": 2,"primitive": 2}
+	    //{"transform": 0, "accelerator": 0,"material": 2,"primitive": 2}
 		// Sphere
 		//{"transform": 0, "accelerator": 0,"material": 2,"primitive": 6}
 
