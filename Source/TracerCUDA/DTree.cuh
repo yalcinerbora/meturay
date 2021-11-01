@@ -58,6 +58,10 @@ class DTreeGroup
                 void                    ResetAndReserve(const uint32_t* newNodeCounts,
                                                         uint32_t newTreeCount,
                                                         const CudaSystem& system);
+                void                    InitializeTrees(const std::vector<std::pair<uint32_t, float>>& hDTreeBases,
+                                                        const std::vector<std::vector<DTreeNode>>& hDTreeNodes,
+                                                        bool purgeValues,
+                                                        const CudaSystem&);
 
 
                 uint32_t                DTreeCount() const;
@@ -113,6 +117,11 @@ class DTreeGroup
                                                       uint32_t totalNodeCount,
                                                       uint32_t maxPathNodePerRay,
                                                       const CudaSystem& system);
+
+        //
+        void                    InitializeTrees(const std::vector<std::pair<uint32_t, float>>&,
+                                                const std::vector<std::vector<DTreeNode>>&,
+                                                const CudaSystem&);
 
         uint32_t                TreeCount() const;
         size_t                  NodeCount(uint32_t treeIndex, bool readOrWriteTree) const;

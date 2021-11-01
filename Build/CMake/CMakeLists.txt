@@ -78,8 +78,8 @@ if(MSVC)
 else()
     # Clang / GCC both use same syntax
     # Warnings
-    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wall> 
-                        $<$<COMPILE_LANGUAGE:CXX>:-Wextra> 
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wall>
+                        $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
                         $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>
                         $<$<COMPILE_LANGUAGE:CXX>:-g3>)
 endif()

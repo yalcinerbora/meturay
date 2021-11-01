@@ -27,8 +27,7 @@ struct STreeNode;
 class STree
 {
     private:
-        static constexpr size_t INITIAL_NODE_CAPACITY = 1'000;
-        static constexpr size_t INITIAL_TREE_RESERVE_COUNT = 10'000;
+        static constexpr size_t INITIAL_NODE_CAPACITY = 5'000;
 
         // Device Memory
         DeviceMemory        memory;
@@ -44,11 +43,16 @@ class STree
         void                SwapTrees(float fluxRatio,
                                       uint32_t depthLimit,
                                       const CudaSystem& system);
+        void                LoadSDTree(const std::string& path,
+                                       const CudaSystem& system);
+
     protected:
 
     public:
         // Constructors & Destructor
                             STree(const AABB3f& sceneExtents,
+                                  const CudaSystem& system);
+                            STree(const std::string& sdTreePath,
                                   const CudaSystem& system);
                             STree(const STree&) = delete;
                             STree(STree&&) = default;

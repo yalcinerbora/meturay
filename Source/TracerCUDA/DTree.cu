@@ -13,6 +13,7 @@
 #include "RayLib/Log.h"
 
 #include <numeric>
+#include <algorithm>
 
 #include "TracerDebug.h"
 
@@ -176,6 +177,54 @@ static void KCAdjustTreePointersAndReset(// Output
 
         // Initialize the root node as well
         *(gDTrees[globalId].gRoot) = (setRootIrrad) ? nodeMin : nodeZero;
+    }
+}
+
+__global__ CUDA_LAUNCH_BOUNDS_1D
+static void KCPurgeNodeValues(// Input - Output
+                              DTreeNode* gDTreeNodes,
+                              // Input
+                              uint32_t totalNodeCount)
+{
+    for(uint32_t globalId = threadIdx.x + blockDim.x * blockIdx.x;
+        globalId < totalNodeCount;
+        globalId += (blockDim.x * gridDim.x))
+    {
+        gDTreeNodes[globalId].irradianceEstimates = Zero4f;
+        gDTreeNodes[globalId].sampleCounts = Zero4ui;
+    }
+}
+
+__global__ CUDA_LAUNCH_BOUNDS_1D
+static void KCSetNodePointers(// Output
+                              DTreeGPU* gDTrees,
+                              // Input
+                              const DTreeNode* gDTreeNodes,
+                              const uint32_t* gDTreeOffsets,
+                              const std::pair<uint32_t, float>* dDTreeBaseValues,
+                              bool setTreeBases,
+                              uint32_t treeCount)
+{
+    // Kernel Grid - Stride Loop
+    for(uint32_t globalId = threadIdx.x + blockDim.x * blockIdx.x;
+        globalId < treeCount;
+        globalId += (blockDim.x * gridDim.x))
+    {
+        uint32_t offset = gDTreeOffsets[globalId];
+        uint32_t nodeCount = gDTreeOffsets[globalId + 1] - offset;
+        gDTrees[globalId].gRoot = const_cast<DTreeNode*>(gDTreeNodes + offset);
+        gDTrees[globalId].nodeCount = nodeCount;
+
+        if(setTreeBases)
+        {
+            gDTrees[globalId].totalSamples = dDTreeBaseValues[globalId].first;
+            gDTrees[globalId].irradiance = dDTreeBaseValues[globalId].second;
+        }
+        else
+        {
+            gDTrees[globalId].totalSamples = 0;
+            gDTrees[globalId].irradiance = 0.0f;
+        }
     }
 }
 
@@ -469,6 +518,89 @@ void DTreeGroup::DTreeBuffer::ResetAndReserve(const uint32_t* dNewNodeCounts,
                           cudaMemcpyDeviceToHost));
 }
 
+void  DTreeGroup::DTreeBuffer::InitializeTrees(const std::vector<std::pair<uint32_t, float>>& hDTreeBases,
+                                               const std::vector<std::vector<DTreeNode>>& hDTreeNodes,
+                                               bool purgeValues,
+                                               const CudaSystem& system)
+{
+    assert(hDTreeBases.size() == hDTreeNodes.size());
+    const auto& gpu = system.BestGPU();
+    CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+
+    hDTreeNodeOffsets.resize(hDTreeNodes.size() + 1);
+    hDTreeNodeOffsets.front() = 0;
+    std::transform_inclusive_scan(hDTreeNodes.cbegin(), hDTreeNodes.cend(),
+                                  std::next(hDTreeNodeOffsets.begin()),
+                                  std::plus<uint32_t>{},
+                                  [](const auto& vector) -> uint32_t
+                                  {
+                                      return static_cast<uint32_t>(vector.size());
+                                  },
+                                  0u);
+
+    // Realloc offset memory
+    offsetMemory = DeviceMemory(hDTreeNodeOffsets.size() * sizeof(uint32_t));
+    dDTreeNodeOffsets = static_cast<uint32_t*>(offsetMemory);
+    CUDA_CHECK(cudaMemcpy(dDTreeNodeOffsets, hDTreeNodeOffsets.data(),
+                          hDTreeNodeOffsets.size() * sizeof(uint32_t),
+                          cudaMemcpyHostToDevice));
+
+    // Realloc Tree Node Memory
+    treeNodeMemory = DeviceMemory(hDTreeNodeOffsets.back() * sizeof(DTreeNode));
+    dDTreeNodes = static_cast<DTreeNode*>(treeNodeMemory);
+
+    // Copy nodes to GPU Memory
+    uint32_t i = 0;
+    for(const auto hNodeVector : hDTreeNodes)
+    {
+        uint32_t nodeOffset = hDTreeNodeOffsets[i];
+        uint32_t nodeCount = hDTreeNodeOffsets[i + 1] - nodeOffset;
+        DTreeNode* dTreeNodes = dDTreeNodes + nodeOffset;
+
+        CUDA_CHECK(cudaMemcpyAsync(dTreeNodes, hNodeVector.data(),
+                                   nodeCount * sizeof(DTreeNode),
+                                   cudaMemcpyHostToDevice));
+        i++;
+    }
+    gpu.WaitMainStream();
+
+    // Realloc Tree Memory
+    treeMemory = DeviceMemory(sizeof(DTreeGPU) * hDTreeBases.size());
+    dDTrees = static_cast<DTreeGPU*>(treeMemory);
+
+    // Push tree base data to gpu temporarily
+    using UintFloatPair = std::pair<uint32_t, float>;
+    DeviceMemory dTempMemory = DeviceMemory(sizeof(UintFloatPair) * hDTreeBases.size());
+    UintFloatPair* dDTreeBaseVals = static_cast<UintFloatPair*>(dTempMemory);
+    CUDA_CHECK(cudaMemcpy(dDTreeBaseVals, hDTreeBases.data(),
+                          sizeof(UintFloatPair) * hDTreeBases.size(),
+                          cudaMemcpyHostToDevice));
+
+    // Adjust node pointers
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, DTreeCount(),
+                       //
+                       KCSetNodePointers,
+                       // Output
+                       dDTrees,
+                       // Input
+                       dDTreeNodes,
+                       dDTreeNodeOffsets,
+                       dDTreeBaseVals,
+                       // Constants
+                       !purgeValues,
+                       DTreeCount());
+
+    if(purgeValues)
+    {
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, DTreeTotalNodeCount(),
+                           //
+                           KCPurgeNodeValues,
+                           // Output
+                           dDTreeNodes,
+                           DTreeTotalNodeCount());
+    }
+}
+
 void DTreeGroup::DTreeBuffer::GetTreeToCPU(DTreeGPU& tree, std::vector<DTreeNode>& nodes, uint32_t treeIndex) const
 {
     CUDA_CHECK(cudaMemcpy(&tree, dDTrees + treeIndex, sizeof(DTreeGPU),
@@ -675,4 +807,12 @@ void DTreeGroup::AddRadiancesFromPaths(const PathGuidingNode* dPGNodes,
                            totalNodeCount,
                            maxPathNodePerRay);
     bestGPU.WaitMainStream();
+}
+
+void DTreeGroup::InitializeTrees(const std::vector<std::pair<uint32_t, float>>& hDTreeBase,
+                                 const std::vector<std::vector<DTreeNode>>& hDTreeNodes,
+                                 const CudaSystem&system)
+{
+    readTrees.InitializeTrees(hDTreeBase, hDTreeNodes, false, system);
+    readTrees.InitializeTrees(hDTreeBase, hDTreeNodes, true, system);
 }

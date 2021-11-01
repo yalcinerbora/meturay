@@ -165,10 +165,16 @@ TracerError PPGTracer::Initialize()
 
     }
 
-    // Init sTree
-    AABB3f worldAABB = scene.BaseAccelerator()->SceneExtents();
-    sTree = std::make_unique<STree>(worldAABB, cudaSystem);
-
+    if(options.sdTreePath.empty())
+    {
+        // Init sTree
+        AABB3f worldAABB = scene.BaseAccelerator()->SceneExtents();
+        sTree = std::make_unique<STree>(worldAABB, cudaSystem);
+    }
+    else
+    {
+        sTree = std::make_unique<STree>(options.sdTreePath, cudaSystem);
+    }
     return TracerError::OK;
 }
 
@@ -203,6 +209,8 @@ TracerError PPGTracer::SetOptions(const TracerOptionsI& opts)
     if((err = opts.GetFloat(options.dTreeSplitThreshold, D_TREE_FLUX_RATIO_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetUInt(options.sTreeSplitThreshold, S_TREE_SAMPLE_SPLIT_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetString(options.sdTreePath, SD_TREE_PATH_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetBool(options.dumpDebugData, DUMP_DEBUG_NAME)) != TracerError::OK)
         return err;
@@ -348,7 +356,8 @@ void PPGTracer::Finalize()
     currentTreeIteration += 1;// options.sampleCount* options.sampleCount;
     // Swap the trees if we achieved treshold
     //if(currentTreeIteration <= 1)
-    if(currentTreeIteration == nextTreeSwap)
+    if(false)
+    //if(currentTreeIteration == nextTreeSwap)
     {
         // Double the amount of iterations required for this
         nextTreeSwap <<= 1;

@@ -47,6 +47,72 @@ void STree::ExpandTree(size_t newNodeCount)
     memory = std::move(newMem);
 }
 
+void STree::LoadSDTree(const std::string& path, const CudaSystem& system)
+{
+
+    std::ifstream file(path, std::ios::binary);
+    std::istreambuf_iterator<char>fileIt(file);
+    static_assert(sizeof(char) == sizeof(Byte), "\"Byte\" is not have sizeof(char)");
+    // Read STree Start Offset
+    uint64_t sTreeOffset;
+    file.read(reinterpret_cast<char*>(&sTreeOffset), sizeof(uint64_t));
+    // Read STree Node Count
+    uint64_t sTreeNodeCount;
+    file.read(reinterpret_cast<char*>(&sTreeNodeCount), sizeof(uint64_t));
+    // Read DTree Count
+    uint64_t dTreeCount;
+    file.read(reinterpret_cast<char*>(&dTreeCount), sizeof(uint64_t));
+    // Read DTree Offset/Count Pairs
+    std::vector<Vector2ul> offsetCountPairs(dTreeCount);
+    file.read(reinterpret_cast<char*>(offsetCountPairs.data()), sizeof(Vector2ul) * dTreeCount);
+    // Read STree
+    // Extents
+    AABB3f sceneExtents;
+    file.read(reinterpret_cast<char*>(&sceneExtents), sizeof(AABB3f));
+    // Nodes
+    std::vector<STreeNode> hSTreeNodes(sTreeNodeCount);
+    file.read(reinterpret_cast<char*>(hSTreeNodes.data()),
+              sizeof(STreeNode) * sTreeNodeCount);
+    // Expand the Tree
+    ExpandTree(sTreeNodeCount);
+    Byte* extentsLoc = reinterpret_cast<Byte*>(dSTree) + offsetof(STreeGPU, extents);
+    CUDA_CHECK(cudaMemcpy(extentsLoc, &sceneExtents,
+                          sizeof(AABB3f), cudaMemcpyHostToDevice));
+    // Copy the nodes
+    STreeNode* dSTreeNodes;
+    const Byte* nodePtrLoc = reinterpret_cast<const Byte*>(dSTree) + offsetof(STreeGPU, gRoot);
+    CUDA_CHECK(cudaMemcpy(&dSTreeNodes, nodePtrLoc,
+                          sizeof(STreeNode*), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(dSTreeNodes, hSTreeNodes.data(),
+                          hSTreeNodes.size() * sizeof(STreeNode),
+                          cudaMemcpyHostToDevice));
+
+
+    // Read DTrees in order
+    std::vector<std::pair<uint32_t, float>> hDTreeBases;
+    std::vector<std::vector<DTreeNode>> hDTreeNodes;
+    for(uint64_t i = 0; i < dTreeCount; i++)
+    {
+        size_t fileOffset = offsetCountPairs[i][0];
+        size_t nodeCount = offsetCountPairs[i][1];
+
+        file.seekg(fileOffset);
+        // Read Base
+        std::pair<uint32_t, float> dTreeBase;
+        file.read(reinterpret_cast<char*>(&dTreeBase.first), sizeof(uint32_t));
+        file.read(reinterpret_cast<char*>(&dTreeBase.second), sizeof(float));
+        // Read Nodes
+        std::vector<DTreeNode> dTreeNodes(nodeCount);
+        file.read(reinterpret_cast<char*>(dTreeNodes.data()), nodeCount * sizeof(DTreeNode));
+        // Move to the struct
+        hDTreeBases.emplace_back(std::move(dTreeBase));
+        hDTreeNodes.emplace_back(std::move(dTreeNodes));
+    }
+
+    // Reset the d-trees using the data
+    dTrees.InitializeTrees(hDTreeBases, hDTreeNodes, system);
+}
+
 STree::STree(const AABB3f& sceneExtents,
              const CudaSystem& system)
     : nodeCount(0)
@@ -77,6 +143,12 @@ STree::STree(const AABB3f& sceneExtents,
                           cudaMemcpyHostToDevice));
 
     dTrees.AllocateDefaultTrees(1, system);
+}
+
+STree::STree(const std::string& sdTreePath,
+             const CudaSystem& system)
+{
+    LoadSDTree(sdTreePath, system);
 }
 
 void STree::SplitLeaves(uint32_t maxSamplesPerNode,

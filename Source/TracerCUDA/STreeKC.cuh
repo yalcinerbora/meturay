@@ -82,6 +82,7 @@ void STreeGPU::AcquireNearestDTree(uint32_t& dTreeIndex,
     normalizedCoords /= (extents.Max() - extents.Min());
 
     const STreeNode* node = gRoot;
+    int i = 0;
     while(true)
     {
         if(node->isLeaf)
@@ -96,6 +97,8 @@ void STreeGPU::AcquireNearestDTree(uint32_t& dTreeIndex,
             // Traverse...
             node = gRoot + node->index + ((leftRight) ? 0 : 1);
         }
+        i++;
+        if(i >= 500) printf("inf loop!   ");
     }
 }
 

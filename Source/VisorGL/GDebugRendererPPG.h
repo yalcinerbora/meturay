@@ -12,14 +12,14 @@
 
 struct DTreeNode
 {
-    uint16_t    parentIndex;
+    uint32_t    parentIndex;
     Vector4ui   childIndices;
     Vector4f    irradianceEstimates;
     Vector4ui   sampleCounts;
 
     bool IsRoot() const
     {
-        return parentIndex == UINT16_MAX;
+        return parentIndex == UINT32_MAX;
     }
 
     bool IsLeaf(uint8_t childId) const

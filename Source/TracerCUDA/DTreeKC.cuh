@@ -294,8 +294,6 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
             i++;
         }
 
-
-
         if(isnan(pdf) || discreteCoords.HasNaN())
             printf("%d NAN? PDF(%f) DC(%f, %f) xi(%f, %f)\n", i, pdf,
                    discreteCoords[0], discreteCoords[1],

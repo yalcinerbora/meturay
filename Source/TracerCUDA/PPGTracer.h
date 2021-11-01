@@ -27,6 +27,7 @@ class PPGTracer final : public RayTracer
         static constexpr const char* D_TREE_MAX_DEPTH_NAME      = "DTreeMaximumDepth";
         static constexpr const char* D_TREE_FLUX_RATIO_NAME     = "DTreeFluxRatio";
         static constexpr const char* S_TREE_SAMPLE_SPLIT_NAME   = "STreeMaxSamples";
+        static constexpr const char* SD_TREE_PATH_NAME          = "SDTreePath";
         static constexpr const char* DUMP_DEBUG_NAME            = "DumpDebugData";
 
         struct Options
@@ -43,6 +44,9 @@ class PPGTracer final : public RayTracer
             uint32_t            maxSDTreeSizeMB     = 512;
             uint32_t            sTreeSplitThreshold = 12000;
             float               dTreeSplitThreshold = 0.01f;
+
+            // Initial Tree
+            std::string         sdTreePath          = "";
 
             // Misc
             bool                alwaysSendSamples   = false;
