@@ -577,7 +577,8 @@ void  DTreeGroup::DTreeBuffer::InitializeTrees(const std::vector<std::pair<uint3
                           cudaMemcpyHostToDevice));
 
     // Adjust node pointers
-    gpu.GridStrideKC_X(0, (cudaStream_t)0, DTreeCount(),
+    uint32_t treeCount = DTreeCount();
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, treeCount,
                        //
                        KCSetNodePointers,
                        // Output
@@ -588,16 +589,17 @@ void  DTreeGroup::DTreeBuffer::InitializeTrees(const std::vector<std::pair<uint3
                        dDTreeBaseVals,
                        // Constants
                        !purgeValues,
-                       DTreeCount());
+                       treeCount);
 
     if(purgeValues)
     {
-        gpu.GridStrideKC_X(0, (cudaStream_t)0, DTreeTotalNodeCount(),
+        uint32_t totalNodeCount = DTreeTotalNodeCount();
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, totalNodeCount,
                            //
                            KCPurgeNodeValues,
                            // Output
                            dDTreeNodes,
-                           DTreeTotalNodeCount());
+                           totalNodeCount);
     }
 }
 
@@ -814,5 +816,5 @@ void DTreeGroup::InitializeTrees(const std::vector<std::pair<uint32_t, float>>& 
                                  const CudaSystem&system)
 {
     readTrees.InitializeTrees(hDTreeBase, hDTreeNodes, false, system);
-    readTrees.InitializeTrees(hDTreeBase, hDTreeNodes, true, system);
+    writeTrees.InitializeTrees(hDTreeBase, hDTreeNodes, true, system);
 }

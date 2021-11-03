@@ -73,8 +73,20 @@ float DTreeNode::IrradianceEst(NodeOrder o) const
 __device__ __forceinline__
 float DTreeNode::LocalPDF(uint8_t childIndex) const
 {
-    // I do not understand where this 4 is coming from
-    return 4.0f * irradianceEstimates[childIndex] / irradianceEstimates.Sum();
+    // Conditional PDF of x and y
+    float pdfX, pdfY;
+    pdfX = ((childIndex >> 0) & (0b01))
+        ? (IrradianceEst(TOP_LEFT) + IrradianceEst(TOP_RIGHT))
+        : (IrradianceEst(BOTTOM_LEFT) + IrradianceEst(BOTTOM_RIGHT));
+
+    pdfY = 1.0f / pdfX;
+    pdfX /= irradianceEstimates.Sum();
+    pdfY *= irradianceEstimates[childIndex];
+
+    return 4.0f * pdfX * pdfY;
+
+
+    //return 4.0f * irradianceEstimates[childIndex] / irradianceEstimates.Sum();
 }
 
 __device__ __forceinline__
@@ -184,127 +196,136 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
 {
     Vector2f xi = Vector2f(GPUDistribution::Uniform<float>(rng),
                            GPUDistribution::Uniform<float>(rng));
-    //xi[0] = (xi[0] == 1.0f) ? (xi[0] - MathConstants::Epsilon) : xi[0];
-    //xi[1] = (xi[1] == 1.0f) ? (xi[1] - MathConstants::Epsilon) : xi[1];
-
     // First we need to find the sphr coords from the tree
     Vector2f discreteCoords = Zero2f;
-    // Use double here for higher numeric precision
+    // Use double here for higher numeric precision for deep trees
     double descentFactor = 1.0;
-
-    // If total irrad is zero in this node fetch data uniformly
     pdf = 1.0f;
-    if(irradiance == 0.0f)
+
+    if(xi[0] < 0.0f || xi[0] >= 1.0f)
+        printf("xi[0] fail from start xi: %f\n", xi[0]);
+    if(xi[1] < 0.0f || xi[1] >= 1.0f)
+        printf("xi[1] fail from start xi: %f\n", xi[1]);
+
+    //if(threadIdx.x == 0)
+    //    printf("Start DC(%f, %f), pdf(%f), XI(%f, %f)\n",
+    //           discreteCoords[0], discreteCoords[1],
+    //           pdf,
+    //           xi[0], xi[1]);
+
+    DTreeNode* node = gRoot;
+    int i = 0;
+    while(true)
     {
-        discreteCoords = xi;
-    }
-    else
-    {
-        DTreeNode* node = gRoot;
-        int i = 0;
-        while(true)
+        Vector2f xiOld = xi;
+
+        // Generate Local CDF
+        float totalIrrad = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
+                            node->IrradianceEst(DTreeNode::BOTTOM_RIGHT) +
+                            node->IrradianceEst(DTreeNode::TOP_LEFT) +
+                            node->IrradianceEst(DTreeNode::TOP_RIGHT));
+        float totalIrradInverse = 1.0f / totalIrrad;
+        float totalLeft = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
+                            node->IrradianceEst(DTreeNode::TOP_LEFT));
+        float totalRight = (node->IrradianceEst(DTreeNode::BOTTOM_RIGHT) +
+                            node->IrradianceEst(DTreeNode::TOP_RIGHT));
+        // CDF of X Axis
+        float cdfMidX = totalLeft * totalIrradInverse;
+        // CDF of Y Axis is depends on the selection of X
+        float cdfMidY;
+
+        uint8_t nextIndex = 0b00;
+        // Locate X pos
+        if(xi[0] < cdfMidX)
         {
-            Vector2f xiOld = xi;
-
-            // Generate Local CDF
-            float totalIrrad = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
-                                node->IrradianceEst(DTreeNode::BOTTOM_RIGHT) +
-                                node->IrradianceEst(DTreeNode::TOP_LEFT) +
-                                node->IrradianceEst(DTreeNode::TOP_RIGHT));
-            float totalIrradInverse = 1.0f / totalIrrad;
-            // Generate a 2 data CDF for determine the sample
-            // with these we will do the inverse sampling
-            // only split points are required since the other CDF data will
-            // implcitly be one
-            float cdfMidX = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
-                             node->IrradianceEst(DTreeNode::TOP_LEFT)) * totalIrradInverse;
-            float cdfMidY = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
-                             node->IrradianceEst(DTreeNode::BOTTOM_RIGHT)) * totalIrradInverse;
-
-            uint8_t nextIndex = 0b00;
-            // Locate X pos
-            if(xi[0] < cdfMidX)
-            {
-                // Renormalize sample for next iteration
-                xi[0] = xi[0] / cdfMidX;
-            }
-            else
-            {
-                // Renormalize sample for next iteration
-                xi[0] = (xi[0] - cdfMidX) / (1.0f - cdfMidX);
-                // Set the X bit on the iteration
-                nextIndex |= (1 << 0) & (0b01);
-            }
-            // Locate Y Pos
-            if(xi[1] < cdfMidY)
-            {
-                // Renormalize sample for next iteration
-                xi[1] = xi[1] / cdfMidY;
-            }
-            else
-            {
-                // Renormalize sample for next iteration
-                xi[1] = (xi[1] - cdfMidY) / (1.0f - cdfMidY);
-                // Set the Y bit on the iteration
-                nextIndex |= (1 << 1) & (0b10);
-            }
-
-            // Calculate current pdf and incorporate to the
-            // main pdf conditionally
-            if(xi[0] < 0.0f || xi[0] >= 1.0f)
-                printf("%d: XI[0] OUT OF RANGE (%f => %f), cdf(%f, %f), I(%f %f %f %f)\n",
-                       i, xiOld[0], xi[0], cdfMidX, cdfMidY,
-                       node->irradianceEstimates[0],
-                       node->irradianceEstimates[1],
-                       node->irradianceEstimates[2],
-                       node->irradianceEstimates[3]);
-            if(xi[1] < 0.0f || xi[1] >= 1.0f)
-                printf("%d: XI[1] OUT OF RANGE (%f => %f), cdf(%f, %f), I(%f %f %f %f)\n",
-                       i, xiOld[1], xi[1], cdfMidX, cdfMidY,
-                       node->irradianceEstimates[0],
-                       node->irradianceEstimates[1],
-                       node->irradianceEstimates[2],
-                       node->irradianceEstimates[3]);
-
-            float localPDF = node->LocalPDF(nextIndex);
-            if(isnan(localPDF) || discreteCoords.HasNaN() || xi.HasNaN())
-                printf("%d NAN PDF(%f) DC(%f, %f) xi(%f, %f) cdf(%f, %f) = (%f %f %f %f)\n",
-                       i, localPDF,
-                       discreteCoords[0], discreteCoords[1],
-                       xi[0], xi[1],
-                       cdfMidX, cdfMidY,
-                       node->irradianceEstimates[0],
-                       node->irradianceEstimates[1],
-                       node->irradianceEstimates[2],
-                       node->irradianceEstimates[3]);
-            pdf *= localPDF;
-
-            Vector2f gridOffset(((nextIndex >> 0) & 0b01) ? 0.5f : 0.0f,
-                                ((nextIndex >> 1) & 0b01) ? 0.5f : 0.0f);
-            discreteCoords += gridOffset * descentFactor;
-            descentFactor *= 0.5;
-
-            if(node->IsLeaf(nextIndex))
-            {
-                // On leaf directly use sample as offset
-                discreteCoords += xi * descentFactor;
-                break;
-            }
-            node = gRoot + node->childIndices[nextIndex];
-            i++;
+            // Renormalize sample for next iteration
+            xi[0] = xi[0] / cdfMidX;
+        }
+        else
+        {
+            // Renormalize sample for next iteration
+            xi[0] = (xi[0] - cdfMidX) / (1.0f - cdfMidX);
+            // Set the X bit on the iteration
+            nextIndex |= (1 << 0) & (0b01);
         }
 
-        if(isnan(pdf) || discreteCoords.HasNaN())
-            printf("%d NAN? PDF(%f) DC(%f, %f) xi(%f, %f)\n", i, pdf,
+        // Determine Y CDF
+        cdfMidY = ((nextIndex >> 0) & (0b01))
+                   ? node->IrradianceEst(DTreeNode::BOTTOM_RIGHT) / totalRight
+                   : node->IrradianceEst(DTreeNode::BOTTOM_LEFT) / totalLeft;
+
+        // Locate Y Pos
+        if(xi[1] < cdfMidY)
+        {
+            // Renormalize sample for next iteration
+            xi[1] = xi[1] / cdfMidY;
+        }
+        else
+        {
+            // Renormalize sample for next iteration
+            xi[1] = (xi[1] - cdfMidY) / (1.0f - cdfMidY);
+            // Set the Y bit on the iteration
+            nextIndex |= (1 << 1) & (0b10);
+        }
+
+        // Calculate current pdf and incorporate to the
+        // main pdf conditionally
+        if(xi[0] < 0.0f || xi[0] >= 1.0f)
+            printf("%d: XI[0] OUT OF RANGE (%.10f => %.10f), cdf(%f, %f), NI: %u\n",
+                   i, xiOld[0], xi[0], cdfMidX, cdfMidY,
+                   static_cast<uint32_t>(nextIndex));
+        if(xi[1] < 0.0f || xi[1] >= 1.0f)
+            printf("%d: XI[1] OUT OF RANGE (%.10f => %.10f), cdf(%f, %f),  NI: %u\n",
+                   i, xiOld[1], xi[1], cdfMidX, cdfMidY,
+                   static_cast<uint32_t>(nextIndex));
+
+        float localPDF = node->LocalPDF(nextIndex);
+        if(isnan(localPDF) || discreteCoords.HasNaN() || xi.HasNaN())
+            printf("%d NAN PDF(%f) DC(%f, %f) xi(%f, %f) cdf(%f, %f) = (%f %f %f %f)\n",
+                   i, localPDF,
                    discreteCoords[0], discreteCoords[1],
-                   xi[0], xi[1]);
+                   xi[0], xi[1],
+                   cdfMidX, cdfMidY,
+                   node->irradianceEstimates[0],
+                   node->irradianceEstimates[1],
+                   node->irradianceEstimates[2],
+                   node->irradianceEstimates[3]);
+        pdf *= localPDF;
+
+        Vector2f gridOffset(((nextIndex >> 0) & 0b01) ? 0.5f : 0.0f,
+                            ((nextIndex >> 1) & 0b01) ? 0.5f : 0.0f);
+        discreteCoords += gridOffset * descentFactor;
+        descentFactor *= 0.5;
+
+        //if(threadIdx.x == 0)
+        //    printf("[%d] DC(%f, %f), pdf(%f), XI(%f, %f)\n",
+        //            i, discreteCoords[0], discreteCoords[1],
+        //            pdf, xi[0], xi[1]);
+
+        if(node->IsLeaf(nextIndex))
+        {
+            // On leaf directly use sample as offset
+            discreteCoords += xi * descentFactor;
+            break;
+        }
+        node = gRoot + node->childIndices[nextIndex];
+        i++;
     }
 
-    return TreeCoordsToWorldDir(pdf, discreteCoords);
-    //float discretePdf = pdf;
-    //Vector3f result = TreeCoordsToWorldDir(pdf, discreteCoords);
-    //printf("Final discrete pdf %f, final solid angle pdf %f\n", discretePdf, pdf);
-    //return result;
+    //if(isnan(pdf) || discreteCoords.HasNaN())
+    //    printf("%d NAN? PDF(%f) DC(%f, %f) xi(%f, %f)\n", i, pdf,
+    //           discreteCoords[0], discreteCoords[1],
+    //           xi[0], xi[1]);
+
+    //return TreeCoordsToWorldDir(pdf, discreteCoords);
+    float discretePdf = pdf;
+    Vector3f result = TreeCoordsToWorldDir(pdf, discreteCoords);
+    //if(threadIdx.x == 0)
+    //    printf("Final dPDF %f, sPDF %f, DC (%f, %f), W (%f, %f, %f)\n",
+    //           discretePdf, pdf,
+    //           discreteCoords[0], discreteCoords[1],
+    //           result[0], result[1], result[2]);
+    return result;
 }
 
 __device__ __forceinline__

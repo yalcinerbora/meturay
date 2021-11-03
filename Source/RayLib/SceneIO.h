@@ -78,7 +78,7 @@ namespace SceneIO
 inline bool SceneIO::IsTimeDependent(const nlohmann::json& jsn)
 {
     std::string s;
-    if(jsn.is_string() && (s = jsn).at(0) == '_')
+    if(jsn.is_string() && !(s = jsn).empty() && s.at(0) == '_')
     {
         return true;
     }

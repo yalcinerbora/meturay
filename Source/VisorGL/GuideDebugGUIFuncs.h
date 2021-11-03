@@ -174,6 +174,8 @@ GuideDebugGUIFuncs::RenderImageWithZoomTooltip(TextureGL& tex,
             using namespace HybridFuncs;
 
             ImVec2 texel = transform * ImGui::GetMousePos();
+            ImVec2 uv = ImVec2(texel.x / static_cast<float>(tex.Size()[0]),
+                               texel.y / static_cast<float>(tex.Size()[1]));
 
             float texelClampedX = Clamp(texel[0], 0.0f,
                                         static_cast<float>(tex.Size()[0] - 1));
@@ -192,20 +194,21 @@ GuideDebugGUIFuncs::RenderImageWithZoomTooltip(TextureGL& tex,
             float region_y = texel[1] - REGION_SIZE * 0.5f;
             region_y = Clamp(region_y, 0.0f, tex.Size()[1] - REGION_SIZE);
 
-            ImVec2 uv0 = ImVec2((region_x) / tex.Size()[0],
-                                (region_y) / tex.Size()[1]);
-            ImVec2 uv1 = ImVec2((region_x + REGION_SIZE) / tex.Size()[0],
-                                (region_y + REGION_SIZE) / tex.Size()[1]);
+            ImVec2 zoomUVStart = ImVec2((region_x) / tex.Size()[0],
+                                        (region_y) / tex.Size()[1]);
+            ImVec2 zoomUVEnd = ImVec2((region_x + REGION_SIZE) / tex.Size()[0],
+                                      (region_y + REGION_SIZE) / tex.Size()[1]);
             // Invert Y (.......)
-            std::swap(uv0.y, uv1.y);
+            std::swap(zoomUVStart.y, zoomUVEnd.y);
             // Center the image on the tooltip window
             ImVec2 ttImgSize(REGION_SIZE * ZOOM_FACTOR,
                              REGION_SIZE * ZOOM_FACTOR);
-            ImGui::Image(texId, ttImgSize, uv0, uv1);
+            ImGui::Image(texId, ttImgSize, zoomUVStart, zoomUVEnd);
 
             ImGui::SameLine();
             ImGui::BeginGroup();
             ImGui::Text("Pixel: (%.2f, %.2f)", texel[0], texel[1]);
+            ImGui::Text("UV   : (%.4f, %.4f)", uv[0], uv[1]);
             if constexpr(std::is_same_v<T, float>)
                 ImGui::Text("Value: %f", values[linearIndex]);
             else if constexpr(std::is_same_v<T, Vector3f>)

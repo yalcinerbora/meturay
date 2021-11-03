@@ -383,7 +383,7 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
         glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);
         // Set Line Width
         glEnable(GL_LINE_SMOOTH);
-        glLineWidth(3.0f);
+        //glLineWidth(3.0f);
         // Draw Call
         glDrawArraysInstanced(GL_LINE_LOOP, 0, 4, static_cast<GLsizei>(squareCount));
     }
