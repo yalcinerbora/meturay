@@ -49,7 +49,6 @@ void STree::ExpandTree(size_t newNodeCount)
 
 void STree::LoadSDTree(const std::string& path, const CudaSystem& system)
 {
-
     std::ifstream file(path, std::ios::binary);
     std::istreambuf_iterator<char>fileIt(file);
     static_assert(sizeof(char) == sizeof(Byte), "\"Byte\" is not have sizeof(char)");

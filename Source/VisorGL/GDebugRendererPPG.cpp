@@ -150,8 +150,8 @@ bool GDebugRendererPPG::LoadSDTree(SDTree& sdTree,
         file.read(reinterpret_cast<char*>(&dTreeBase.first), sizeof(uint32_t));
         file.read(reinterpret_cast<char*>(&dTreeBase.second), sizeof(float));
         // Read Nodes
-        std::vector<DTreeNode> dTreeNodes(nodeCount);
-        file.read(reinterpret_cast<char*>(dTreeNodes.data()), nodeCount * sizeof(DTreeNode));
+        std::vector<DTreeNodeCPU> dTreeNodes(nodeCount);
+        file.read(reinterpret_cast<char*>(dTreeNodes.data()), nodeCount * sizeof(DTreeNodeCPU));
         // Move to the struct
         sdTree.dTrees.push_back(std::move(dTreeBase));
         sdTree.dTreeNodes.push_back(std::move(dTreeNodes));
@@ -170,16 +170,16 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
 {
     // Find DTree
     const SDTree& currentSDTree = sdTrees[depth];
-    uint32_t dTreeIndex = currentSDTree.FindDTree(worldPos);
-    const auto& dTreeNodes = currentSDTree.dTreeNodes[dTreeIndex];
-    const auto& dTreeValues = currentSDTree.dTrees[dTreeIndex];
+    curDTreeIndex = currentSDTree.FindDTree(worldPos);
+    const auto& dTreeNodes = currentSDTree.dTreeNodes[curDTreeIndex];
+    const auto& dTreeValues = currentSDTree.dTrees[curDTreeIndex];
     // Find out leaf count (a.k.a square count)
     std::atomic_size_t squareCount = 0;
     if(dTreeNodes.size() == 0)
         squareCount = 1;
     else
         std::for_each(std::execution::par_unseq, dTreeNodes.cbegin(), dTreeNodes.cend(),
-                      [&squareCount] (const DTreeNode& node)
+                      [&squareCount] (const DTreeNodeCPU& node)
                       {
                           if(node.IsLeaf(0)) squareCount++;
                           if(node.IsLeaf(1)) squareCount++;
@@ -203,7 +203,7 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
     std::atomic<float> maxValue = -std::numeric_limits<float>::max();
     std::atomic_uint32_t maxDepth = 0;
     std::atomic_uint32_t allocator = 0;
-    auto CalculateGPUData = [&] (const DTreeNode& node)
+    auto CalculateGPUData = [&] (const DTreeNodeCPU& node)
     {
         for(uint8_t i = 0; i < 4; i++)
         {
@@ -220,10 +220,10 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
                             ((i >> 1) & 0b01) ? 0.5f : 0.0f);
 
             // Leaf -> Root Traverse
-            const DTreeNode* curNode = &node;
+            const DTreeNodeCPU* curNode = &node;
             while(!curNode->IsRoot())
             {
-                const DTreeNode* parentNode = &dTreeNodes[curNode->parentIndex];
+                const DTreeNodeCPU* parentNode = &dTreeNodes[curNode->parentIndex];
                 uint32_t nodeIndex = static_cast<uint32_t>(curNode - dTreeNodes.data());
                 // Determine which child are you
                 uint32_t childId = UINT32_MAX;
@@ -418,8 +418,8 @@ bool GDebugRendererPPG::RenderGUI(const ImVec2& windowSize)
         changed |= ImGui::Checkbox("RenderGrid", &renderPerimeter);
         changed |= ImGui::Checkbox("RenderSamples", &renderSamples);
 
-        ImGui::Text("Max Value %f", maxValueDisplay);
-
+        ImGui::Text("Max Value: %f", maxValueDisplay);
+        ImGui::Text("DTree Id : %u", curDTreeIndex);
         ImGui::EndPopup();
 
     }

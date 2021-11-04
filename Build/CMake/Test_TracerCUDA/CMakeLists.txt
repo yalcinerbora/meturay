@@ -37,6 +37,8 @@ set_target_properties(Test_TracerCUDA PROPERTIES
 
 target_link_libraries(Test_TracerCUDA PRIVATE
                       RayLib
+                      VisorGL
+                      ImageIO
                       TracerCUDA_Static
                       $<$<CONFIG:Debug>:gtestd>
                       $<$<CONFIG:Debug>:gmockd>

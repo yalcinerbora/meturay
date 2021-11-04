@@ -10,7 +10,7 @@
 #include "ShaderGL.h"
 #include "TextureGL.h"
 
-struct DTreeNode
+struct DTreeNodeCPU
 {
     uint32_t    parentIndex;
     Vector4ui   childIndices;
@@ -66,7 +66,7 @@ struct SDTree
 {
     AABB3f                                  extents;
     std::vector<STreeNode>                  sTreeNodes;
-    std::vector<std::vector<DTreeNode>>     dTreeNodes;
+    std::vector<std::vector<DTreeNodeCPU>>  dTreeNodes;
     std::vector<std::pair<uint32_t, float>> dTrees;
 
     uint32_t FindDTree(const Vector3f& worldPos) const
@@ -130,6 +130,7 @@ class GDebugRendererPPG : public GDebugRendererI
         const TextureGL&        gradientTexture;
         const std::string&      configPath;
         uint32_t                depthCount;
+        uint32_t                curDTreeIndex;
         // All SD Trees that are loaded
         std::vector<SDTree>     sdTrees;
         // Color of the perimeter (In order to visualize D-Trees Properly

@@ -3,6 +3,7 @@
 
 #include <numeric>
 #include <random>
+#include <execution>
 
 #include "RayLib/ColorConversion.h"
 
@@ -13,8 +14,9 @@
 #include "TracerCUDA/RNGMemory.h"
 #include "TracerCUDA/Random.cuh"
 #include "TracerCUDA/ParallelReduction.cuh"
-
 #include "TracerCUDA/TracerDebug.h"
+
+#include "ImageIO/EntryPoint.h"
 
 using ::testing::FloatEq;
 
@@ -85,6 +87,123 @@ static void KCPdfDivide(Vector3f* gDirections,
     }
 }
 
+//__global__
+//static void KCSampleDivide(float* gPixelsOut,
+//                           const float* gPixels,
+//                           const uint32_t* gSamples,
+//                           //
+//                           uint32_t sampleCount)
+//{
+//    // Grid Stride Loop
+//    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+//        globalId < sampleCount; globalId += blockDim.x * gridDim.x)
+//    {
+//        if(gSamples[globalId] == 0)
+//            gPixelsOut[globalId] = 0.0f;
+//        else
+//            gPixelsOut[globalId] = gPixels[globalId] / static_cast<float>(gSamples[globalId]);
+//    }
+//}
+
+__global__
+static void KCFurnaceDTree(// Output
+                           Vector3f* gValues,
+                           // I-O
+                           RNGGMem gRNGStates,
+                           // Input
+                           const DTreeGPU* gDTree,
+                           // Constants
+                           Vector2ui resolution,
+                           uint32_t sampleCount)
+{
+    RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
+
+    // Only there is a single tree
+    const DTreeGPU& gFirstTree = gDTree[0];
+
+    // Grid Stride Loop
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < sampleCount; globalId += blockDim.x * gridDim.x)
+    {
+        float pdf;
+        Vector3f direction = gFirstTree.Sample(pdf, rng);
+        // Write Samples
+        //pdf = 1.0f;
+        //Vector3f direction((GPUDistribution::Uniform<float>(rng) - 0.5f) * 2.0f,
+        //                   (GPUDistribution::Uniform<float>(rng) - 0.5f) * 2.0f,
+        //                   (GPUDistribution::Uniform<float>(rng) - 0.5f) * 2.0f);
+        //direction.NormalizeSelf();
+
+        direction = (pdf != 0.0f) ? (direction / pdf) : Zero3f;
+        //direction = (pdf != 0.0f) ? direction : Zero3f;
+        direction = (!direction.HasNaN()) ? direction : Zero3f;
+        gValues[globalId] += direction;
+
+        //// Convert Direction to 2D UV then to Linear Index
+        //// Convert to spherical coordinates
+        //Vector3 dirZUp = Vector3(direction[2], direction[0], direction[1]);
+        //Vector2 thetaPhi = Utility::CartesianToSphericalUnit(dirZUp);
+        //// Normalize to generate UV [0, 1]
+        //// tetha range [-pi, pi]
+        //float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
+        //// If we are at edge point (u == 1) make it zero since
+        //// piecewise constant function will not have that pdf (out of bounds)
+        //u = (u == 1.0f) ? 0.0f : u;
+        //// phi range [0, pi]
+        //float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);
+        //// If (v == 1) then again pdf of would be out of bounds.
+        //// make it inbound
+        //v = (v == 1.0f) ? (v - MathConstants::SmallEpsilon) : v;
+        //Vector2f uv = Vector2f(u, v);
+        //// Convert UV to linear Index
+        //Vector2f pixel2D = uv * Vector2f(resolution[0], resolution[1]);
+        //uint32_t linearIndex = (static_cast<uint32_t>(pixel2D[1]) * resolution[0] +
+        //                        static_cast<uint32_t>(pixel2D[0]));
+
+        //// Convert pdf back from solid angle
+        //// http://www.pbr-book.org/3ed-2018/Light_Transport_I_Surface_Reflection/Sampling_Light_Sources.html
+        //float sinPhi = sin(thetaPhi[1]);
+        //if(sinPhi == 0.0f) pdf = 0.0f;
+        //else pdf = pdf * (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
+
+        //atomicAdd(gValues + linearIndex, 1.0f / pdf);
+        ////atomicAdd(gValues + linearIndex, 1.0f);
+        //atomicAdd(gSamples + linearIndex, 1u);
+    }
+}
+
+static void LoadDTreeBinary(std::vector<DTreeNode>& nodes,
+                            std::pair<uint32_t, float>& treeValue,
+                            const std::string& fileName,
+                            uint32_t dTreeIndex)
+{
+    std::ifstream file(fileName, std::ios::binary);
+    std::istreambuf_iterator<char>fileIt(file);
+    static_assert(sizeof(char) == sizeof(Byte), "\"Byte\" is not have sizeof(char)");
+    // Read STree Start Offset
+    uint64_t sTreeOffset;
+    file.read(reinterpret_cast<char*>(&sTreeOffset), sizeof(uint64_t));
+    // Read STree Node Count
+    uint64_t sTreeNodeCount;
+    file.read(reinterpret_cast<char*>(&sTreeNodeCount), sizeof(uint64_t));
+    // Read DTree Count
+    uint64_t dTreeCount;
+    file.read(reinterpret_cast<char*>(&dTreeCount), sizeof(uint64_t));
+    // Read DTree Offset/Count Pairs
+    std::vector<Vector2ul> offsetCountPairs(dTreeCount);
+    file.read(reinterpret_cast<char*>(offsetCountPairs.data()), sizeof(Vector2ul) * dTreeCount);
+
+    // Read The Requested DTree DTrees in order
+    size_t fileOffset = offsetCountPairs[dTreeIndex][0];
+    size_t nodeCount = offsetCountPairs[dTreeIndex][1];
+    nodes.resize(nodeCount);
+    file.seekg(fileOffset);
+    // Read Base
+    file.read(reinterpret_cast<char*>(&treeValue.first), sizeof(uint32_t));
+    file.read(reinterpret_cast<char*>(&treeValue.second), sizeof(float));
+    // Read Nodes
+    file.read(reinterpret_cast<char*>(nodes.data()), nodeCount * sizeof(DTreeNode));
+}
 
 TEST(PPG_DTree, Empty)
 {
@@ -915,5 +1034,86 @@ TEST(PPG_DTree, DirToCoord)
         float x = interval * static_cast<float>(i);
 
         EXPECT_FLOAT_EQ(x, coordsCPU[i][0]);
+    }
+}
+
+TEST(PPG_DTree, SampleImg)
+{
+    using namespace std::string_literals;
+
+    static constexpr uint32_t SEED = 0;
+    static const std::string FILE_NAME = "TestData/test_sdTree_512"s;
+    //static constexpr uint32_t TREE_INDEX = 45830;
+    static constexpr uint32_t TREE_INDEX = 40638;
+    //static const std::string FILE_NAME = "TestData/test_sdTree_1"s;
+    //static constexpr uint32_t TREE_INDEX = 10;
+    //static constexpr Vector2ui RESOLUTION = Vector2ui(8, 8);
+    static constexpr Vector2ui RESOLUTION = Vector2ui(512, 512);
+    static constexpr Vector2ui WIN_RESOLUTION = Vector2ui(1024, 1024);
+    static constexpr uint32_t SAMPLE_PER_ITERATION = 1'000'000;
+    static constexpr uint64_t MAX_SAMPLE = 10'000'000'000;
+    //static constexpr uint32_t SAMPLE_PER_ITERATION = 1;
+
+    CudaSystem system;
+    ASSERT_EQ(CudaError::OK, system.Initialize());
+
+    std::vector<std::vector<DTreeNode>> treeNodes(1);
+    std::vector<std::pair<uint32_t, float>> treeBase(1);
+    LoadDTreeBinary(treeNodes.front(), treeBase.front(), FILE_NAME, TREE_INDEX);
+
+    DTreeGroup dTree;
+    dTree.InitializeTrees(treeBase, treeNodes, system);
+
+    // CUDA Stuff
+    DeviceMemory dDirections(SAMPLE_PER_ITERATION * sizeof(Vector3f));
+    CUDA_CHECK(cudaMemset(dDirections, 0x00, dDirections.Size()));
+    RNGMemory rngMem(SEED, system);
+
+    // Render Loop
+    uint64_t sampleCount = 0;
+    while(sampleCount < MAX_SAMPLE)
+    {
+        // Sample the Tree
+        const auto& gpu = system.BestGPU();
+
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, SAMPLE_PER_ITERATION,
+                           //
+                           KCFurnaceDTree,
+                           //
+                           static_cast<Vector3f*>(dDirections),
+                           //static_cast<float*>(dPixels),
+                           //static_cast<uint32_t*>(dSamples),
+                           rngMem.RNGData(gpu),
+                           dTree.ReadTrees(),
+                           RESOLUTION,
+                           SAMPLE_PER_ITERATION);
+
+        Vector3f avgDir;
+        ReduceArrayGPU<Vector3f, ReduceAdd<Vector3f>, cudaMemcpyDeviceToHost>
+        (
+            avgDir,
+            static_cast<Vector3f*>(dDirections),
+            SAMPLE_PER_ITERATION,
+            Zero3f
+        );
+
+        Vector3d avgDirD = Vector3d(avgDir[0] / static_cast<double>(sampleCount),
+                                    avgDir[1] / static_cast<double>(sampleCount),
+                                    avgDir[2] / static_cast<double>(sampleCount));
+        sampleCount += SAMPLE_PER_ITERATION;
+        gpu.WaitMainStream();
+
+        METU_LOG("{}, {}, {} = {}", avgDirD[0], avgDirD[1], avgDirD[2], sampleCount);
+
+        avgDirD.NormalizeSelf();
+        Vector3d wZup = Vector3d(avgDirD[2], avgDirD[0], avgDirD[1]);
+        Vector2d thetaPhi = Utility::CartesianToSphericalUnit(wZup);
+        double u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
+        u = (u == 1.0) ? 0.0 : u;
+        double v = 1.0 - (thetaPhi[1] / MathConstants::Pi);
+        v = (v == 1.0) ? (v - MathConstants::SmallEpsilon) : v;
+
+        METU_LOG("{}, {}", u, v);
+
     }
 }

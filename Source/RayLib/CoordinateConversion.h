@@ -82,7 +82,7 @@ FloatEnable<T, Vector<2, T>> Utility::CartesianToSphericalUnit(const Vector<3, T
     // range [0, pi]
     // Sometimes normalized cartesian coords may invoke NaN here
     // clamp it to the range
-    T incl = acos(HybridFuncs::Clamp(cart[2], -1.0f, 1.0f));
+    T incl = acos(HybridFuncs::Clamp<T>(cart[2], -1, 1));
 
     return Vector<2, T>(azimuth, incl);
 }

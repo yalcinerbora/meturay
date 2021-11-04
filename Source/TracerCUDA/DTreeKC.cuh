@@ -73,20 +73,21 @@ float DTreeNode::IrradianceEst(NodeOrder o) const
 __device__ __forceinline__
 float DTreeNode::LocalPDF(uint8_t childIndex) const
 {
-    // Conditional PDF of x and y
-    float pdfX, pdfY;
-    pdfX = ((childIndex >> 0) & (0b01))
-        ? (IrradianceEst(TOP_LEFT) + IrradianceEst(TOP_RIGHT))
-        : (IrradianceEst(BOTTOM_LEFT) + IrradianceEst(BOTTOM_RIGHT));
+    //// Conditional PDF of x and y
+    //float pdfX, pdfY;
+    //pdfX = //((childIndex >> 0) & (0b01))
+    //    ((childIndex % 2) == 1)
+    //    ? (IrradianceEst(TOP_LEFT) + IrradianceEst(TOP_RIGHT))
+    //    : (IrradianceEst(BOTTOM_LEFT) + IrradianceEst(BOTTOM_RIGHT));
 
-    pdfY = 1.0f / pdfX;
-    pdfX /= irradianceEstimates.Sum();
-    pdfY *= irradianceEstimates[childIndex];
+    //pdfY = 1.0f / pdfX;
+    //pdfX /= irradianceEstimates.Sum();
+    //pdfY *= irradianceEstimates[childIndex];
 
-    return 4.0f * pdfX * pdfY;
+    //return 4.0f * pdfX * pdfY;
 
 
-    //return 4.0f * irradianceEstimates[childIndex] / irradianceEstimates.Sum();
+    return 4.0f * irradianceEstimates[childIndex] / irradianceEstimates.Sum();
 }
 
 __device__ __forceinline__
@@ -317,15 +318,16 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
     //           discreteCoords[0], discreteCoords[1],
     //           xi[0], xi[1]);
 
-    //return TreeCoordsToWorldDir(pdf, discreteCoords);
-    float discretePdf = pdf;
-    Vector3f result = TreeCoordsToWorldDir(pdf, discreteCoords);
+    return TreeCoordsToWorldDir(pdf, discreteCoords);
+    //float discretePdf = pdf;
+    //Vector3f result = TreeCoordsToWorldDir(pdf, discreteCoords);
+    //pdf = discretePdf * 0.25f * MathConstants::InvPi;
     //if(threadIdx.x == 0)
     //    printf("Final dPDF %f, sPDF %f, DC (%f, %f), W (%f, %f, %f)\n",
     //           discretePdf, pdf,
     //           discreteCoords[0], discreteCoords[1],
     //           result[0], result[1], result[2]);
-    return result;
+    //return result;
 }
 
 __device__ __forceinline__
