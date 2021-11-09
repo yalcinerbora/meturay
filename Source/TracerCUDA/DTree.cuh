@@ -88,9 +88,6 @@ class DTreeGroup
         static constexpr uint32_t       InvalidParentIndex = std::numeric_limits<uint32_t>::max();
         static constexpr uint32_t       InvalidChildIndex = std::numeric_limits<uint32_t>::max();
 
-        // Everything is at least this value in order to prevent impossible regions
-        static constexpr float       MinIrradiance = MathConstants::Epsilon;
-
     private:
         DTreeBuffer             readTrees;
         DTreeBuffer             writeTrees;

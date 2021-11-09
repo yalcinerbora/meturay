@@ -107,13 +107,12 @@ static void KCPdfDivide(Vector3f* gDirections,
 
 __global__
 static void KCFurnaceDTree(// Output
-                           Vector3f* gValues,
+                           Vector3d* gValues,
                            // I-O
                            RNGGMem gRNGStates,
                            // Input
                            const DTreeGPU* gDTree,
                            // Constants
-                           Vector2ui resolution,
                            uint32_t sampleCount)
 {
     RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
@@ -137,38 +136,7 @@ static void KCFurnaceDTree(// Output
         direction = (pdf != 0.0f) ? (direction / pdf) : Zero3f;
         //direction = (pdf != 0.0f) ? direction : Zero3f;
         direction = (!direction.HasNaN()) ? direction : Zero3f;
-        gValues[globalId] += direction;
-
-        //// Convert Direction to 2D UV then to Linear Index
-        //// Convert to spherical coordinates
-        //Vector3 dirZUp = Vector3(direction[2], direction[0], direction[1]);
-        //Vector2 thetaPhi = Utility::CartesianToSphericalUnit(dirZUp);
-        //// Normalize to generate UV [0, 1]
-        //// tetha range [-pi, pi]
-        //float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
-        //// If we are at edge point (u == 1) make it zero since
-        //// piecewise constant function will not have that pdf (out of bounds)
-        //u = (u == 1.0f) ? 0.0f : u;
-        //// phi range [0, pi]
-        //float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);
-        //// If (v == 1) then again pdf of would be out of bounds.
-        //// make it inbound
-        //v = (v == 1.0f) ? (v - MathConstants::SmallEpsilon) : v;
-        //Vector2f uv = Vector2f(u, v);
-        //// Convert UV to linear Index
-        //Vector2f pixel2D = uv * Vector2f(resolution[0], resolution[1]);
-        //uint32_t linearIndex = (static_cast<uint32_t>(pixel2D[1]) * resolution[0] +
-        //                        static_cast<uint32_t>(pixel2D[0]));
-
-        //// Convert pdf back from solid angle
-        //// http://www.pbr-book.org/3ed-2018/Light_Transport_I_Surface_Reflection/Sampling_Light_Sources.html
-        //float sinPhi = sin(thetaPhi[1]);
-        //if(sinPhi == 0.0f) pdf = 0.0f;
-        //else pdf = pdf * (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
-
-        //atomicAdd(gValues + linearIndex, 1.0f / pdf);
-        ////atomicAdd(gValues + linearIndex, 1.0f);
-        //atomicAdd(gSamples + linearIndex, 1u);
+        gValues[globalId] += Vector3d(direction);
     }
 }
 
@@ -224,7 +192,7 @@ TEST(PPG_DTree, Empty)
     DTreeGroup testTree;
     testTree.AllocateDefaultTrees(1, system);
     testTree.GetReadTreeToCPU(tree, nodes, 0);
-    EXPECT_EQ(DTreeGroup::MinIrradiance * 4, tree.irradiance);
+    EXPECT_EQ(0.0f, tree.irradiance);
     EXPECT_EQ(0, tree.totalSamples);
     EXPECT_EQ(1, tree.nodeCount);
     EXPECT_EQ(1, nodes.size());
@@ -233,10 +201,10 @@ TEST(PPG_DTree, Empty)
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[2]);
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[3]);
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().parentIndex);
-    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[0]);
-    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[1]);
-    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[2]);
-    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[3]);
+    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[0]);
+    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[1]);
+    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[2]);
+    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[3]);
     testTree.GetWriteTreeToCPU(tree, nodes, 0);
     EXPECT_EQ(0.0f, tree.irradiance);
     EXPECT_EQ(0, tree.totalSamples);
@@ -256,7 +224,7 @@ TEST(PPG_DTree, Empty)
     testTree.SwapTrees(FLUX_RATIO, DEPTH_LIMIT, system);
     system.SyncAllGPUs();
     testTree.GetReadTreeToCPU(tree, nodes, 0);
-    EXPECT_EQ(DTreeGroup::MinIrradiance * 4, tree.irradiance);
+    EXPECT_EQ(0.0f, tree.irradiance);
     EXPECT_EQ(0, tree.totalSamples);
     EXPECT_EQ(1, tree.nodeCount);
     EXPECT_EQ(1, nodes.size());
@@ -265,10 +233,10 @@ TEST(PPG_DTree, Empty)
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[2]);
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[3]);
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().parentIndex);
-    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[0]);
-    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[1]);
-    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[2]);
-    EXPECT_EQ(DTreeGroup::MinIrradiance, nodes.front().irradianceEstimates[3]);
+    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[0]);
+    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[1]);
+    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[2]);
+    EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[3]);
     testTree.GetWriteTreeToCPU(tree, nodes, 0);
     EXPECT_EQ(0.0f, tree.irradiance);
     EXPECT_EQ(0, tree.totalSamples);
@@ -850,14 +818,13 @@ TEST(PPG_DTree, SampleDeep)
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
     //
-    //constexpr uint32_t SAMPLE_COUNT = 2'500'000;
-    constexpr uint32_t SAMPLE_COUNT = 100;
+    constexpr uint32_t SAMPLE_COUNT = 20'500'000;
     constexpr uint32_t SEED = 0;
     RNGMemory rngMem(SEED, system);
 
     constexpr int ADD_ITERATION_COUNT = 50;
-    constexpr int PATH_PER_ITERATION = 50;
-    constexpr int RAY_COUNT = 5;
+    constexpr int PATH_PER_ITERATION = 5000;
+    constexpr int RAY_COUNT = 500;
     constexpr int PATH_PER_RAY = PATH_PER_ITERATION / RAY_COUNT;
 
     constexpr int DTREE_ID = 0;
@@ -867,9 +834,9 @@ TEST(PPG_DTree, SampleDeep)
     constexpr uint32_t DEPTH_LIMIT = 10;
     constexpr float FLUX_RATIO = 0.005f;
 
-    const Vector3f direction = Vector3f(1.0f).Normalize();
-    const Vector3f worldBound = MAX_WORLD_BOUND - MIN_WORLD_BOUND;
-    std::uniform_real_distribution<float> uniformDist(0.0f, 1.0f);
+    std::uniform_real_distribution<float> posXDist(MIN_WORLD_BOUND[0], MAX_WORLD_BOUND[0]);
+    std::uniform_real_distribution<float> posYDist(MIN_WORLD_BOUND[1], MAX_WORLD_BOUND[1]);
+    std::uniform_real_distribution<float> posZDist(MIN_WORLD_BOUND[2], MAX_WORLD_BOUND[2]);
 
     std::mt19937 rng;
     rng.seed(0);
@@ -893,7 +860,7 @@ TEST(PPG_DTree, SampleDeep)
             Vector3f radiance(100.0f);
 
             PathGuidingNode p;
-            p.worldPosition = static_cast<float>(localIndex) * direction;
+            p.worldPosition = Vector3f(posXDist(rng), posYDist(rng), posZDist(rng));
             p.prevNext = Vector<2, PathGuidingNode::IndexType>(prev, next);
             p.totalRadiance = radiance;
             // Unnecessary Data for this operation
@@ -949,16 +916,15 @@ TEST(PPG_DTree, SampleDeep)
                           SAMPLE_COUNT * sizeof(float),
                           cudaMemcpyDeviceToHost));
 
-    // TODO: Should we divide here?
     // Divide by pdf
-    //gpu.GridStrideKC_X(0, 0, SAMPLE_COUNT,
-    //                   //
-    //                   KCPdfDivide,
-    //                   //
-    //                   static_cast<Vector3f*>(directionMemory),
-    //                   static_cast<const float*>(pdfMemory),
-    //                   //
-    //                   SAMPLE_COUNT);
+    gpu.GridStrideKC_X(0, 0, SAMPLE_COUNT,
+                       //
+                       KCPdfDivide,
+                       //
+                       static_cast<Vector3f*>(directionMemory),
+                       static_cast<const float*>(pdfMemory),
+                       //
+                       SAMPLE_COUNT);
     // Monte Carlo
     Vector3f reducedResult;
     ReduceArrayGPU<Vector3f, ReduceAdd<Vector3f>, cudaMemcpyDeviceToHost>
@@ -970,9 +936,9 @@ TEST(PPG_DTree, SampleDeep)
     reducedResult /= static_cast<float>(SAMPLE_COUNT);
     // On average it should be very close to the
     // initial direction that we did give
-    EXPECT_NEAR(reducedResult[0], direction[0], 0.01f);
-    EXPECT_NEAR(reducedResult[1], direction[1], 0.01f);
-    EXPECT_NEAR(reducedResult[2], direction[2], 0.01f);
+    EXPECT_NEAR(reducedResult[0], 0.0f, 0.01f);
+    EXPECT_NEAR(reducedResult[1], 0.0f, 0.01f);
+    EXPECT_NEAR(reducedResult[2], 0.0f, 0.01f);
 }
 
 TEST(PPG_DTree, DirToCoord)
@@ -1042,14 +1008,14 @@ TEST(PPG_DTree, SampleImg)
     using namespace std::string_literals;
 
     static constexpr uint32_t SEED = 0;
-    static const std::string FILE_NAME = "TestData/test_sdTree_512"s;
-    //static constexpr uint32_t TREE_INDEX = 45830;
-    static constexpr uint32_t TREE_INDEX = 40638;
+    //static const std::string FILE_NAME = "TestData/test_sdTree_512"s;
+    static const std::string FILE_NAME = "TestData/test_sdTree_128"s;
+    //static const std::string FILE_NAME = "TestData/test_sdTree_2"s;
+    //static const std::string FILE_NAME = "TestData/test_sdTree_4"s;
+    //static const std::string FILE_NAME = "TestData/test_sdTree_8"s;
+    static constexpr uint32_t TREE_INDEX = 40628;
+    //static constexpr uint32_t TREE_INDEX = 43136;
     //static const std::string FILE_NAME = "TestData/test_sdTree_1"s;
-    //static constexpr uint32_t TREE_INDEX = 10;
-    //static constexpr Vector2ui RESOLUTION = Vector2ui(8, 8);
-    static constexpr Vector2ui RESOLUTION = Vector2ui(512, 512);
-    static constexpr Vector2ui WIN_RESOLUTION = Vector2ui(1024, 1024);
     static constexpr uint32_t SAMPLE_PER_ITERATION = 1'000'000;
     static constexpr uint64_t MAX_SAMPLE = 10'000'000'000;
     //static constexpr uint32_t SAMPLE_PER_ITERATION = 1;
@@ -1065,55 +1031,74 @@ TEST(PPG_DTree, SampleImg)
     dTree.InitializeTrees(treeBase, treeNodes, system);
 
     // CUDA Stuff
-    DeviceMemory dDirections(SAMPLE_PER_ITERATION * sizeof(Vector3f));
+    DeviceMemory dDirections(SAMPLE_PER_ITERATION * sizeof(Vector3d));
     CUDA_CHECK(cudaMemset(dDirections, 0x00, dDirections.Size()));
     RNGMemory rngMem(SEED, system);
+
+    const auto& gpu = system.BestGPU();
 
     // Render Loop
     uint64_t sampleCount = 0;
     while(sampleCount < MAX_SAMPLE)
     {
         // Sample the Tree
-        const auto& gpu = system.BestGPU();
-
         gpu.GridStrideKC_X(0, (cudaStream_t)0, SAMPLE_PER_ITERATION,
                            //
                            KCFurnaceDTree,
                            //
-                           static_cast<Vector3f*>(dDirections),
-                           //static_cast<float*>(dPixels),
-                           //static_cast<uint32_t*>(dSamples),
+                           static_cast<Vector3d*>(dDirections),
                            rngMem.RNGData(gpu),
                            dTree.ReadTrees(),
-                           RESOLUTION,
                            SAMPLE_PER_ITERATION);
+        sampleCount += SAMPLE_PER_ITERATION;
 
-        Vector3f avgDir;
-        ReduceArrayGPU<Vector3f, ReduceAdd<Vector3f>, cudaMemcpyDeviceToHost>
+        Vector3d avgDir;
+        ReduceArrayGPU<Vector3d, ReduceAdd<Vector3d>, cudaMemcpyDeviceToHost>
         (
             avgDir,
-            static_cast<Vector3f*>(dDirections),
+            static_cast<Vector3d*>(dDirections),
             SAMPLE_PER_ITERATION,
-            Zero3f
+            Zero3d
         );
-
-        Vector3d avgDirD = Vector3d(avgDir[0] / static_cast<double>(sampleCount),
-                                    avgDir[1] / static_cast<double>(sampleCount),
-                                    avgDir[2] / static_cast<double>(sampleCount));
-        sampleCount += SAMPLE_PER_ITERATION;
         gpu.WaitMainStream();
 
-        METU_LOG("{}, {}, {} = {}", avgDirD[0], avgDirD[1], avgDirD[2], sampleCount);
+        METU_LOG("Samples {}", sampleCount);
+        avgDir /= static_cast<double>(sampleCount);
+        METU_LOG("{}, {}, {}", avgDir[0], avgDir[1], avgDir[2]);
+        avgDir.NormalizeSelf();
+        METU_LOG("{}, {}, {}", avgDir[0], avgDir[1], avgDir[2]);
 
-        avgDirD.NormalizeSelf();
-        Vector3d wZup = Vector3d(avgDirD[2], avgDirD[0], avgDirD[1]);
+        Vector3d wZup = Vector3d(avgDir[2], avgDir[0], avgDir[1]);
         Vector2d thetaPhi = Utility::CartesianToSphericalUnit(wZup);
-        double u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
-        u = (u == 1.0) ? 0.0 : u;
-        double v = 1.0 - (thetaPhi[1] / MathConstants::Pi);
-        v = (v == 1.0) ? (v - MathConstants::SmallEpsilon) : v;
-
-        METU_LOG("{}, {}", u, v);
-
+        METU_LOG("Theta : {} degrees, {} radians",
+                 thetaPhi[0] * MathConstants::RadToDegCoef_d,
+                 thetaPhi[0]);
     }
+
+    Vector3d avgDir;
+    ReduceArrayGPU<Vector3d, ReduceAdd<Vector3d>, cudaMemcpyDeviceToHost>
+    (
+        avgDir,
+        static_cast<Vector3d*>(dDirections),
+        SAMPLE_PER_ITERATION,
+        Zero3d
+    );
+    gpu.WaitMainStream();
+
+    METU_LOG("Samples {}", sampleCount);
+    avgDir /= static_cast<double>(sampleCount);
+    METU_LOG("{}, {}, {}", avgDir[0], avgDir[1], avgDir[2]);
+    avgDir.NormalizeSelf();
+    METU_LOG("{}, {}, {}", avgDir[0], avgDir[1], avgDir[2]);
+
+
+    Vector3d wZup = Vector3d(avgDir[2], avgDir[0], avgDir[1]);
+    Vector2d thetaPhi = Utility::CartesianToSphericalUnit(wZup);
+    double u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
+    u = (u == 1.0) ? 0.0 : u;
+    double v = 1.0 - (thetaPhi[1] / MathConstants::Pi);
+    v = (v == 1.0) ? (v - MathConstants::SmallEpsilon) : v;
+
+    METU_LOG("{}, {}", u, v);
+
 }

@@ -43,16 +43,18 @@ void main(void)
 {
 	// Calculate Scale
 	float scale = pow(0.5f, vDepth);
+	float radiance = vRadiance;
 
-	// Determine Gradient UV
-	//float u = (vRadiance / maxRadiance) / float(1 << (2 * (maxDepth - vDepth)));
+	// Normalize wrt square size
+	// (max radiance already normalized)
+	radiance /= float(1 << (2 * (maxDepth - vDepth)));
 
 	// Do logaritmic scale if requested
 	float u;
 	if(doLogScale)
-		u = log(1 + vRadiance) / log(1 + maxRadiance);
+		u = log(1 + radiance) / log(1 + maxRadiance);
 	else
-		u = (vRadiance / maxRadiance);
+		u = (radiance / maxRadiance);
 
 	fUV = vec2(u, 0.5f);
 

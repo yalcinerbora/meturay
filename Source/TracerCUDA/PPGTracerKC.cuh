@@ -372,10 +372,13 @@ void PPGTracerPathWork(// Output
         const DTreeGPU& dReadTree = renderState.gReadDTrees[dTreeIndex];
         Vector3f direction = dReadTree.Sample(pdfPath, rng);
 
-        //if(isnan(pdf) | direction.HasNaN())
-        //    printf("pdf % f, dir % f, % f, % f\n", pdf,
-        //           direction[0], direction[1], direction[2]);
-        //
+        direction.NormalizeSelf();
+
+        if(isnan(pdfPath) | direction.HasNaN())
+            printf("pdf % f, dir % f, % f, % f\n", pdfPath,
+                   direction[0], direction[1], direction[2]);
+
+        //pdfPath = 1.0f;
         //printf("D: %f, %f, %f\n", direction[0], direction[1], direction[2]);
         //printf("%u  ", dTreeIndex);
         //

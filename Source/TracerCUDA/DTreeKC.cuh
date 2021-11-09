@@ -73,21 +73,24 @@ float DTreeNode::IrradianceEst(NodeOrder o) const
 __device__ __forceinline__
 float DTreeNode::LocalPDF(uint8_t childIndex) const
 {
-    //// Conditional PDF of x and y
-    //float pdfX, pdfY;
-    //pdfX = //((childIndex >> 0) & (0b01))
-    //    ((childIndex % 2) == 1)
-    //    ? (IrradianceEst(TOP_LEFT) + IrradianceEst(TOP_RIGHT))
-    //    : (IrradianceEst(BOTTOM_LEFT) + IrradianceEst(BOTTOM_RIGHT));
+    // Conditional PDF of x and y
+    float pdfX, pdfY;
+    pdfX = ((childIndex >> 0) & (0b01))
+        ? (IrradianceEst(TOP_RIGHT) + IrradianceEst(BOTTOM_RIGHT))
+        : (IrradianceEst(TOP_LEFT) + IrradianceEst(BOTTOM_LEFT));
 
-    //pdfY = 1.0f / pdfX;
-    //pdfX /= irradianceEstimates.Sum();
-    //pdfY *= irradianceEstimates[childIndex];
+    pdfY = 1.0f / pdfX;
+    pdfX /= irradianceEstimates.Sum();
+    pdfY *= irradianceEstimates[childIndex];
 
-    //return 4.0f * pdfX * pdfY;
+    if(isnan(pdfX) || isinf(pdfX) ||
+       isnan(pdfY) || isinf(pdfY))
+        printf("pdfX %f, pdfY %f, childIndex %u\n",
+               pdfX, pdfX, static_cast<uint32_t>(childIndex));
 
+    return 4.0f * pdfX * pdfY;
 
-    return 4.0f * irradianceEstimates[childIndex] / irradianceEstimates.Sum();
+    //return 4.0f * irradianceEstimates[childIndex] / irradianceEstimates.Sum();
 }
 
 __device__ __forceinline__
@@ -175,6 +178,8 @@ Vector3f DTreeGPU::TreeCoordsToWorldDir(float& pdf, const Vector2f& discreteCoor
     // Spherical Coords calculates as Z up change it to Y up
     Vector3 dirYUp = Vector3(dirZUp[1], dirZUp[2], dirZUp[0]);
 
+    float incPDF = pdf;
+
     // Convert to solid angle pdf
     // http://www.pbr-book.org/3ed-2018/Light_Transport_I_Surface_Reflection/Sampling_Light_Sources.html
     float sinPhi = sin(thetaPhi[1]);
@@ -182,10 +187,10 @@ Vector3f DTreeGPU::TreeCoordsToWorldDir(float& pdf, const Vector2f& discreteCoor
     else pdf = pdf / (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
 
     if(isnan(pdf))
-        printf("PDF CONVERT NAN(%f) sinPhi %f, "
+        printf("PDF CONVERT NAN(%f) incPDF %f, sinPhi %f, "
                "discreteCoords %f %f, "
                "thetaPhi %f %f\n",
-               pdf, sinPhi,
+               pdf, incPDF, sinPhi,
                discreteCoords[0], discreteCoords[1],
                thetaPhi[0], thetaPhi[1]);
 
@@ -213,10 +218,13 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
     //           discreteCoords[0], discreteCoords[1],
     //           pdf,
     //           xi[0], xi[1]);
-
-    DTreeNode* node = gRoot;
     int i = 0;
-    while(true)
+    DTreeNode* node = gRoot;
+    if(irradiance == 0.0f)
+    {
+        discreteCoords = xi;
+    }
+    else while(true)
     {
         Vector2f xiOld = xi;
 
@@ -269,6 +277,11 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
             nextIndex |= (1 << 1) & (0b10);
         }
 
+        // Due to numerical precision, xi sometimes becomes one
+        // just eliminate that case
+        xi[0] = (xi[0] == 1.0f) ? nextafter(xi[0], 0.0f) : xi[0];
+        xi[1] = (xi[1] == 1.0f) ? nextafter(xi[1], 0.0f) : xi[1];
+
         // Calculate current pdf and incorporate to the
         // main pdf conditionally
         if(xi[0] < 0.0f || xi[0] >= 1.0f)
@@ -281,16 +294,6 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
                    static_cast<uint32_t>(nextIndex));
 
         float localPDF = node->LocalPDF(nextIndex);
-        if(isnan(localPDF) || discreteCoords.HasNaN() || xi.HasNaN())
-            printf("%d NAN PDF(%f) DC(%f, %f) xi(%f, %f) cdf(%f, %f) = (%f %f %f %f)\n",
-                   i, localPDF,
-                   discreteCoords[0], discreteCoords[1],
-                   xi[0], xi[1],
-                   cdfMidX, cdfMidY,
-                   node->irradianceEstimates[0],
-                   node->irradianceEstimates[1],
-                   node->irradianceEstimates[2],
-                   node->irradianceEstimates[3]);
         pdf *= localPDF;
 
         Vector2f gridOffset(((nextIndex >> 0) & 0b01) ? 0.5f : 0.0f,
@@ -516,9 +519,10 @@ void CalculateParentIrradiance(// I-O
     auto AverageIrrad = [&](uint32_t i)
     {
         if(!currentNode->IsLeaf(i)) return;
-        irrad[i] = (sampleCounts[i] == 0 || irrad[i] == 0.0f)
-                    ? MathConstants::Epsilon
-                    : irrad[i] / static_cast<float>(sampleCounts[i]);
+        irrad[i] = (sampleCounts[i] == 0)
+                    ? 0.0f
+                    //: irrad[i] / static_cast<float>(sampleCounts[i]);
+                    : irrad[i];
     };
     AverageIrrad(0);
     AverageIrrad(1);

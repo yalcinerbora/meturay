@@ -357,7 +357,7 @@ void PPGTracer::Finalize()
     // Swap the trees if we achieved treshold
     //if(currentTreeIteration <= 1)
     if(false)
-    //if(currentTreeIteration == nextTreeSwap * 30)
+    //if(currentTreeIteration == nextTreeSwap * 10)
     {
         // Double the amount of iterations required for this
         nextTreeSwap <<= 1;

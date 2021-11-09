@@ -250,9 +250,9 @@ static constexpr Vector2 Zero2f = Vector2(0.0f, 0.0f);
 static constexpr Vector3 Zero3f = Vector3(0.0f, 0.0f, 0.0f);
 static constexpr Vector4 Zero4f = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
 
-static constexpr Vector2 Zero2d = Vector2(0.0, 0.0);
-static constexpr Vector3 Zero3d = Vector3(0.0, 0.0, 0.0);
-static constexpr Vector4 Zero4d = Vector4(0.0, 0.0, 0.0, 0.0);
+static constexpr Vector2d Zero2d = Vector2d(0.0, 0.0);
+static constexpr Vector3d Zero3d = Vector3d(0.0, 0.0, 0.0);
+static constexpr Vector4d Zero4d = Vector4d(0.0, 0.0, 0.0, 0.0);
 
 static constexpr Vector2i Zero2i = Vector2i(0, 0);
 static constexpr Vector3i Zero3i = Vector3i(0, 0, 0);

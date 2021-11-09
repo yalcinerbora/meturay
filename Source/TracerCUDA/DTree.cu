@@ -155,7 +155,9 @@ static void KCAdjustTreePointersAndReset(// Output
         gDTrees[globalId].gRoot = const_cast<DTreeNode*>(gDTreeNodes + offset);
         gDTrees[globalId].nodeCount = nodeCount;
 
-        gDTrees[globalId].irradiance = (setRootIrrad) ? (DTreeGroup::MinIrradiance * 4.0f) : 0.0f;
+        static constexpr float MinIrradiance = 0.0f;
+
+        gDTrees[globalId].irradiance = (setRootIrrad) ? (MinIrradiance * 4.0f) : 0.0f;
         gDTrees[globalId].totalSamples = 0;
 
         // Init very first node
@@ -163,8 +165,8 @@ static void KCAdjustTreePointersAndReset(// Output
         {
             UINT32_MAX,
             Vector4ui(UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX),
-            Vector4f(DTreeGroup::MinIrradiance, DTreeGroup::MinIrradiance,
-                     DTreeGroup::MinIrradiance, DTreeGroup::MinIrradiance),
+            Vector4f(MinIrradiance, MinIrradiance,
+                     MinIrradiance, MinIrradiance),
             Vector4ui(0u, 0u, 0u, 0u)
         };
         constexpr DTreeNode nodeZero =
