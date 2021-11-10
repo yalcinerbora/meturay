@@ -50,6 +50,50 @@ static void KCCalculateParentIrradiance(DTreeGPU* gDTrees,
     }
 }
 
+//__global__ CUDA_LAUNCH_BOUNDS_1D
+//static void KCCalculateMaxDepth(// Outputs
+//                                uint32_t* gMaxDetphs,
+//                                // Inputs
+//                                const DTreeGPU* gDTrees,
+//                                const uint32_t* gTreeIndices,
+//                                const uint32_t* gNodeOffsets,
+//                                uint32_t totalNodeCount)
+//{
+//    for (uint32_t globalId = threadIdx.x + blockDim.x * blockIdx.x;
+//         globalId < totalNodeCount;
+//         globalId += (blockDim.x * gridDim.x))
+//    {
+//        uint32_t treeIndex = gTreeIndices[globalId];
+//        uint32_t localNodeIndex = globalId - gNodeOffsets[globalId];
+//
+//        CalculateMaxDepth(*(gMaxDetphs + treeIndex),
+//                          *(gDTrees + treeIndex),
+//                          localNodeIndex);
+//    }
+//}
+//
+//__global__ CUDA_LAUNCH_BOUNDS_1D
+//static void KCNormalizeIrradiances(// I-O
+//                                   DTreeGPU* gDTrees,
+//                                   // Inputs
+//                                   const uint32_t* gMaxDetphs,
+//                                   const uint32_t* gTreeIndices,
+//                                   const uint32_t* gNodeOffsets,
+//                                   uint32_t totalNodeCount)
+//{
+//    for (uint32_t globalId = threadIdx.x + blockDim.x * blockIdx.x;
+//         globalId < totalNodeCount;
+//         globalId += (blockDim.x * gridDim.x))
+//    {
+//        uint32_t treeIndex = gTreeIndices[globalId];
+//        uint32_t localNodeIndex = globalId - gNodeOffsets[globalId];
+//
+//        NormalizeIrradiances(*(gDTrees + treeIndex),
+//                             *(gMaxDetphs + treeIndex),
+//                             localNodeIndex);
+//    }
+//}
+
 __global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCMarkChildRequest(// Output
                                uint32_t* gRequestedChilds,
@@ -704,6 +748,37 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        dNodeTreeIndices,
                        dNodeOffsets,
                        totalNodeCount);
+
+    //// Normalize parent radiance wrt to the solid angle
+    //DeviceMemory tempMaxDepthMem(treeCount * sizeof(uint32_t));
+    //uint32_t* dMaxDepths = static_cast<uint32_t*>(tempMaxDepthMem);
+    //gpu.GridStrideKC_X(0, (cudaStream_t)0, treeCount,
+    //                   KCMemset<uint32_t>,
+    //                   dMaxDepths,
+    //                   0u,
+    //                   treeCount);
+
+    //gpu.GridStrideKC_X(0, (cudaStream_t)0, totalNodeCount,
+    //                    //
+    //                   KCCalculateMaxDepth,
+    //                   // Outputs
+    //                   dMaxDepths,
+    //                   // Inputs
+    //                   writeTrees.DTrees(),
+    //                   dNodeTreeIndices,
+    //                   dNodeOffsets,
+    //                   totalNodeCount);
+
+    //gpu.GridStrideKC_X(0, (cudaStream_t)0, totalNodeCount,
+    //                    //
+    //                   KCNormalizeIrradiances,
+    //                   // I-O
+    //                   writeTrees.DTrees(),
+    //                   // Inputs
+    //                   dMaxDepths,
+    //                   dNodeTreeIndices,
+    //                   dNodeOffsets,
+    //                   totalNodeCount);
 
     //// DEBUG
     //for(uint32_t i = 0; i < TreeCount(); i++)

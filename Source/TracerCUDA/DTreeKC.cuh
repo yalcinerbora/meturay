@@ -504,7 +504,6 @@ DTreeNode* PunchThroughNode(uint32_t& gNodeAllocLocation, DTreeGPU& gDTree,
     return node;
 }
 
-
 __device__ __forceinline__
 void CalculateParentIrradiance(// I-O
                                DTreeGPU& gDTree,
@@ -558,6 +557,62 @@ void CalculateParentIrradiance(// I-O
     // Finally add to the total aswell
     atomicAdd(&gDTree.irradiance, sum);
 }
+
+//__device__ __forceinline__
+//void CalculateMaxDepth(// Output
+//                       uint32_t& gMaxDepth,
+//                       // Input
+//                       const DTreeGPU& gDTree,
+//                       uint32_t nodeIndex)
+//{
+//    const DTreeNode& gMyNode = gDTree.gRoot[nodeIndex];
+//    // Only launch the loop if the all childs are leafs
+//    // since those will generate the max depth
+//    bool doMax = true;
+//    doMax &= gMyNode.IsLeaf(0);
+//    doMax &= gMyNode.IsLeaf(1);
+//    doMax &= gMyNode.IsLeaf(2);
+//    doMax &= gMyNode.IsLeaf(3);
+//
+//    if(doMax)
+//    {
+//        // Leaf -> Root Traverse (Bottom up)
+//        uint32_t depth = 1;
+//        for(const DTreeNode* curNode = &gMyNode;
+//            !curNode->IsRoot();
+//            curNode = gDTree.gRoot + curNode->parentIndex)
+//        {
+//            depth++;
+//        }
+//        // Atomic MAX DEPTH
+//        // Normally i should implement an transform_reduce function for gpu
+//        // but this works and simpler to implement
+//        atomicMax(&gMaxDepth, depth);
+//    }
+//}
+//
+//__device__ __forceinline__
+//void NormalizeIrradiances(// I-O
+//                          DTreeGPU& gDTree,
+//                          uint32_t maxDepth,
+//                          uint32_t nodeIndex)
+//{
+//    const DTreeNode& gMyNode = gDTree.gRoot[nodeIndex];
+//    // Leaf -> Root Traverse (Bottom up)
+//    uint32_t depth = 1;
+//    for(const DTreeNode* curNode = &gMyNode;
+//        !curNode->IsRoot();
+//        curNode = gDTree.gRoot + curNode->parentIndex)
+//    {
+//        depth++;
+//    }
+//    // Normalization factor
+//    float factor = static_cast<float>(1 << (2 * (maxDepth - depth)));
+//    gDTree.gRoot[nodeIndex].irradianceEstimates[0] *= factor;
+//    gDTree.gRoot[nodeIndex].irradianceEstimates[1] *= factor;
+//    gDTree.gRoot[nodeIndex].irradianceEstimates[2] *= factor;
+//    gDTree.gRoot[nodeIndex].irradianceEstimates[3] *= factor;
+//}
 
 __device__ __forceinline__
 void MarkChildRequest(// Output

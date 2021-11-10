@@ -29,6 +29,7 @@ UB_MAX_LUM uniform MaxLuminanceData
 {
 	float maxLum;
 };
+
 // Uniforms
 U_RES uniform uvec2 resolution;
 U_LOG_ON uniform bool doLogScale;
@@ -64,6 +65,10 @@ void main(void)
 	// Gradient data
 	vec3 gradValue = texture(tGrad, uv).xyz;
 
+	vec4 pixVal = (lum == 0.0f)
+						? vec4(0.1f)
+						: vec4(gradValue, 1.0f);
+
 	// Store to the Image
-	imageStore(iRefOut, pixId, vec4(gradValue, 1.0f));
+	imageStore(iRefOut, pixId, pixVal);
 }
