@@ -79,6 +79,9 @@ float DTreeNode::LocalPDF(uint8_t childIndex) const
         ? (IrradianceEst(TOP_RIGHT) + IrradianceEst(BOTTOM_RIGHT))
         : (IrradianceEst(TOP_LEFT) + IrradianceEst(BOTTOM_LEFT));
 
+    // Impossible to sample location
+    if(pdfX == 0.0f) return 0.0f;
+
     pdfY = 1.0f / pdfX;
     pdfX /= irradianceEstimates.Sum();
     pdfY *= irradianceEstimates[childIndex];
@@ -104,8 +107,8 @@ uint8_t DTreeNode::DetermineChild(const Vector2f& localCoords) const
     }
 
     uint8_t result = 0b00;
-    if(localCoords[0] > 0.5f) result |= (1 << 0) & (0b01);
-    if(localCoords[1] > 0.5f) result |= (1 << 1) & (0b10);
+    if(localCoords[0] >= 0.5f) result |= (1 << 0) & (0b01);
+    if(localCoords[1] >= 0.5f) result |= (1 << 1) & (0b10);
     return result;
 }
 
@@ -344,14 +347,7 @@ float DTreeGPU::Pdf(const Vector3f& worldDir) const
     while(true)
     {
         uint8_t childIndex = node->DetermineChild(localCoords);
-
-        float totalIrrad = (node->IrradianceEst(DTreeNode::BOTTOM_LEFT) +
-                            node->IrradianceEst(DTreeNode::BOTTOM_RIGHT) +
-                            node->IrradianceEst(DTreeNode::TOP_LEFT) +
-                            node->IrradianceEst(DTreeNode::BOTTOM_RIGHT));
-
         pdf *= node->LocalPDF(childIndex);
-
         // Stop if leaf
         if(node->IsLeaf(childIndex)) break;
         // Continue Traversal

@@ -368,42 +368,87 @@ void PPGTracerPathWork(// Output
     // Sample a path using SDTree
     if(!isSpecularMat)
     {
-        // Sample a path using SDTree
+        constexpr float BxDF_DTreeSampleRatio = 0.5f;
+        // Sample a chance
+        float xi = GPUDistribution::Uniform<float>(rng);
         const DTreeGPU& dReadTree = renderState.gReadDTrees[dTreeIndex];
-        Vector3f direction = dReadTree.Sample(pdfPath, rng);
 
-        direction.NormalizeSelf();
+        float pdfBxDF, pdfTree;
+        if(xi < BxDF_DTreeSampleRatio)
+        {
+            // Sample using BxDF
+            reflectance = MGroup::Sample(// Outputs
+                                         rayPath, pdfBxDF, outM,
+                                         // Inputs
+                                         wi,
+                                         position,
+                                         m,
+                                         //
+                                         surface,
+                                         // I-O
+                                         rng,
+                                         // Constants
+                                         gMatData,
+                                         matIndex,
+                                         0);
+            pdfTree = dReadTree.Pdf(rayPath.getDirection());
+        }
+        else
+        {
+            // Sample a path using SDTree
+            Vector3f direction = dReadTree.Sample(pdfTree, rng);
+            direction.NormalizeSelf();
+            // Calculate BxDF
+            reflectance = MGroup::Evaluate(// Input
+                                           direction,
+                                           wi,
+                                           position,
+                                           m,
+                                           //
+                                           surface,
+                                           // Constants
+                                           gMatData,
+                                           matIndex);
 
-        if(isnan(pdfPath) | direction.HasNaN())
-            printf("pdf % f, dir % f, % f, % f\n", pdfPath,
-                   direction[0], direction[1], direction[2]);
+            pdfBxDF = MGroup::Pdf(direction,
+                                  wi,
+                                  position,
+                                  m,
+                                  //
+                                  surface,
+                                  gMatData,
+                                  matIndex);
 
-        //pdfPath = 1.0f;
-        //printf("D: %f, %f, %f\n", direction[0], direction[1], direction[2]);
-        //printf("%u  ", dTreeIndex);
-        //
-        //reflectance = Utility::RandomColorRGB(dTreeIndex);
-        // Calculate BxDF
-        reflectance = MGroup::Evaluate(// Input
-                                       direction,
-                                       wi,
-                                       position,
-                                       m,
-                                       //
-                                       surface,
-                                       // Constants
-                                       gMatData,
-                                       matIndex);
+            // Generate a ray using the values
+            rayPath = RayF(direction, position);
+            rayPath.AdvanceSelf(MathConstants::Epsilon);
+        }
+        // Pdf Average
+        pdfPath = BxDF_DTreeSampleRatio          * pdfBxDF +
+                  (1.0f - BxDF_DTreeSampleRatio) * pdfTree;
 
+        if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfTree))
+            printf("NAN PDF = %f = w * %f + (1.0f - w) * %f, w: %f\n",
+                   pdfPath, pdfBxDF, pdfTree, BxDF_DTreeSampleRatio);
+        if(rayPath.getDirection().HasNaN())
+            printf("NAN DIR %f, %f, %f\n",
+                   rayPath.getDirection()[0],
+                   rayPath.getDirection()[1],
+                   rayPath.getDirection()[2]);
         if(reflectance.HasNaN())
             printf("NAN REFL %f %f %f\n",
-                   reflectance[0], reflectance[1], reflectance[2]);
+                   reflectance[0],
+                   reflectance[1],
+                   reflectance[2]);
 
-        rayPath = RayF(direction, position);
-        rayPath.AdvanceSelf(MathConstants::Epsilon);
+        if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfTree) ||
+           rayPath.getDirection().HasNaN() ||
+           reflectance.HasNaN())
+            return;
     }
     else
     {
+        // Specular Mat, Only sample using BxDF
         reflectance = MGroup::Sample(// Outputs
                                      rayPath, pdfPath, outM,
                                      // Inputs
