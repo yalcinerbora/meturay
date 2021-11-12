@@ -57,6 +57,7 @@ class GDebugRendererRef
         // Constructors & Destructor
                                 GDebugRendererRef() = default;
                                 GDebugRendererRef(const nlohmann::json& config,
+                                                  const std::string& configPath,
                                                   const TextureGL& gradientTex);
                                 GDebugRendererRef(const GDebugRendererRef&) = delete;
                                 GDebugRendererRef(GDebugRendererRef&&) = default;

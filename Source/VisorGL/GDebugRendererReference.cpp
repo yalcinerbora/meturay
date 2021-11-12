@@ -83,6 +83,7 @@ void GDebugRendererRef::LoadPaths(const Vector2i& resolution,
 }
 
 GDebugRendererRef::GDebugRendererRef(const nlohmann::json& config,
+                                     const std::string& configPath,
                                      const TextureGL& gradTex)
     : gradientTex(gradTex)
     , compReduction(ShaderType::COMPUTE, u8"Shaders/TextureMaxReduction.comp")
@@ -92,6 +93,7 @@ GDebugRendererRef::GDebugRendererRef(const nlohmann::json& config,
 {
     resolution = SceneIO::LoadVector<2, int32_t>(config[RESOLUTION_NAME]);
     std::string pathRegex = config[IMAGES_NAME];
+    pathRegex = Utility::MergeFileFolder(configPath, pathRegex);
     // Generate Image Paths
     LoadPaths(resolution, pathRegex);
 }

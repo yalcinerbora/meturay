@@ -10,7 +10,7 @@
 		that generates max luminance of the texture
 
 		It assumes image is R format (Single Channel Texutre)
-		
+
 */
 
 // Defines
@@ -46,7 +46,7 @@ void AtomicMaxToSSBO(float val)
 	// CAS Atomic operation for Atomic Max for floats
 	// https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#atomic-functions
 	uint assumed;
-	uint old = outMaxLum;	
+	uint old = outMaxLum;
 	do
 	{
 		assumed = old;
@@ -78,7 +78,7 @@ void ReduceBlock(out float maxLum, in float lum)
 	memoryBarrierShared(); barrier();
 	if(localId < 1) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 1]);
 	memoryBarrierShared(); barrier();
-	if(localId == 0) maxLum = reduceBuffer[localId];	
+	if(localId == 0) maxLum = reduceBuffer[localId];
 }
 
 // 16x16 block is always nice
@@ -93,23 +93,27 @@ void main(void)
 
 	// Skip out of image threads
 	float luminance = 0.0f;
-	if(all(lessThan(pixId, resolution)))	
+	if(all(lessThan(pixId, resolution)))
 	{
 		// Read from current buffer buffers
 		luminance = texelFetch(tInImage, pixId, 0).x;
 	}
+	// Prevent NaNs INFs
+	if(isnan(luminance) || isinf(luminance))
+		luminance = 0.0f;
+
 	// Do parallel reduction
 	float maxLum = 0;
 	ReduceBlock(maxLum, luminance);
 
 	// Local main thread will write to global memory
-	// in an atomic manner. 
+	// in an atomic manner.
 	// Normally for large images that does not fit into single block
-	// (which most of the images are) you call this function again 
+	// (which most of the images are) you call this function again
 	// with a newly generated image (but it is more complex)
 	// instead we atomically combine each blocks result
 	if(gl_LocalInvocationID.x == 0u)
-	{	
+	{
 		// No support for float atomics
 		// Create your own using atomicCAS
 		AtomicMaxToSSBO(maxLum);

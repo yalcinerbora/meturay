@@ -69,11 +69,16 @@ void SignConvert(std::array<Byte, 16>& pixel, PixelFormat fmt)
 }
 
 static
-ImageIOError PixelFormatFromEXR(PixelFormat& pf, const Imf::Header& header)
+ImageIOError PixelFormatFromEXR(Imf::FrameBuffer& fb,
+                                PixelFormat& pf,
+                                std::vector<Byte>& data,
+                                const Imf::Header& header)
 {
-    // TODO: Implement properly
     int channelCount = 0;
     const Imf::ChannelList& channels = header.channels();
+    const Imath::Box2i dw = header.dataWindow();
+    // OpenEXR is quite complex but use it as if single image is present
+    // with specific channels
 
     // Get Pixel Type & Channel Count
     Imf::PixelType consistentType;
@@ -84,16 +89,13 @@ ImageIOError PixelFormatFromEXR(PixelFormat& pf, const Imf::Header& header)
         if(c == channels.begin())
         {
             consistentType = channel.type;
-            continue;
         }
 
         if(channel.type != consistentType)
             return ImageIOError::READ_INTERNAL_ERROR;
     }
 
-    // OpenEXR is quite complex but use it as if single image is present
-    // with specific channels
-    if(channelCount >= 5 || channelCount == 0)
+    if(channelCount > 4 || channelCount == 0)
         return ImageIOError::READ_INTERNAL_ERROR;
     // Also only read Float/Half types
     if(consistentType == Imf::PixelType::UINT)
@@ -112,6 +114,50 @@ ImageIOError PixelFormatFromEXR(PixelFormat& pf, const Imf::Header& header)
             if(channelCount == 3) { pf = PixelFormat::RGB_FLOAT; break; }
             if(channelCount == 4) { pf = PixelFormat::RGBA_FLOAT; break; }
     }
+
+    // TODO: Allow reading half fromat
+    // since we dont have a half library available currently
+    // just convert it to float type
+    switch(pf)
+    {
+        case PixelFormat::R_HALF:    pf = PixelFormat::R_FLOAT; break;
+        case PixelFormat::RG_HALF:   pf = PixelFormat::RG_FLOAT; break;
+        case PixelFormat::RGB_HALF:  pf = PixelFormat::RGB_FLOAT; break;
+        case PixelFormat::RGBA_HALF: pf = PixelFormat::RGBA_FLOAT; break;
+        default: break;
+    }
+
+    // Generate FB
+    size_t pixelSize = ImageIO::FormatToPixelSize(pf);
+    size_t channelSize = ImageIO::FormatToChannelSize(pf);
+    uint32_t width = static_cast<uint32_t>(dw.max.x - dw.min.x + 1);
+    uint32_t height = static_cast<uint32_t>(dw.max.y - dw.min.y + 1);
+    data.resize(width * height * pixelSize);
+    uint32_t i = 0;
+    for(auto c = channels.begin(); c != channels.end(); c++)
+    {
+        const Imf::Channel& channel = c.channel();
+
+        // Force order to RGB (i.e. BGR is provided etc.)
+        uint32_t channelIndex;
+        if(std::string(c.name()) == "R")
+            channelIndex = 0;
+        else if(std::string(c.name()) == "G")
+            channelIndex = 1;
+        else if(std::string(c.name()) == "B")
+            channelIndex = 2;
+        // Just use the current order if name is not R,G,B
+        else channelIndex = i;
+
+        // TODO: change this when half precision textures etc. is implemented
+        // Force load float
+        Imf::Slice slice(Imf::PixelType::FLOAT,
+                         reinterpret_cast<char*>(data.data() + channelIndex * channelSize),
+                         pixelSize, pixelSize * width);
+        fb.insert(c.name(), slice);
+        i++;
+    }
+
     return ImageIOError::OK;
 }
 
@@ -281,7 +327,7 @@ ImageIOError ImageIO::WriteAsEXR(const Byte* pixels,
     for(int i = 0; i < channelCount; i++)
     {
         Imf::Slice lumSlice = Imf::Slice(Imf::HALF,
-                                         reinterpret_cast<char*>(convertedData.data() + i), // base // 8
+                                         reinterpret_cast<char*>(convertedData.data() + i),
                                          sizeof(Imath::half) * channelCount,
                                          sizeof(Imath::half) * dimension[0] * channelCount);
         frameBuffer.insert(channelNames[i], lumSlice);
@@ -404,55 +450,60 @@ ImageIOError ImageIO::ReadImage_OpenEXR(std::vector<Byte>& pixels,
 {
     ImageIOError e = ImageIOError::OK;
 
-    //Imf::InputFile file(filePath.c_str());
-    Imf::RgbaInputFile file(filePath.c_str());
-    if((e = PixelFormatFromEXR(pf, file.header())) != ImageIOError::OK)
+    Imf::InputFile file(filePath.c_str());
+    Imf::FrameBuffer framebuffer;
+    if((e = PixelFormatFromEXR(framebuffer, pf, pixels,
+                               file.header())) != ImageIOError::OK)
         return e;
 
-    // TODO: Implement This properly (directly write to vector)
-    // Using Imf::Framebuffer etc.
-    Imf::Array2D<Imf::Rgba> exrPixels;
-    Imath::Box2i dw = file.dataWindow();
+    Imath::Box2i dw = file.header().dataWindow();
     dimension[0] = dw.max.x - dw.min.x + 1;
     dimension[1] = dw.max.y - dw.min.y + 1;
-    exrPixels.resizeErase(dimension[1], dimension[0]);
-    file.setFrameBuffer(&exrPixels[0][0] - dw.min.x - dw.min.y * dimension[0], 1, dimension[0]);
+    file.setFrameBuffer(framebuffer);
     file.readPixels(dw.min.y, dw.max.y);
 
-
-    // TODO: Allow writing half fromat
-    // since we dont have a half library available currently
-    // just convert it to float type
-    switch(pf)
-    {
-        case PixelFormat::R_HALF:    pf = PixelFormat::R_FLOAT; break;
-        case PixelFormat::RG_HALF:   pf = PixelFormat::RG_FLOAT; break;
-        case PixelFormat::RGB_HALF:  pf = PixelFormat::RGB_FLOAT; break;
-        case PixelFormat::RGBA_HALF: pf = PixelFormat::RGBA_FLOAT; break;
-        default: break;
-    }
-
-    // Convert to float vector and Invert Y Axis
-    pixels.resize(dimension[0] * dimension[1] * FormatToPixelSize(pf));
-    for(uint32_t y = 0; y < dimension[1]; y++)
-    for(uint32_t x = 0; x < dimension[0]; x++)
+    // Invert Y Axis
+    std::vector<Byte> tempScanLine(dimension[0] * FormatToPixelSize(pf));
+    for(uint32_t y = 0; y < dimension[1] / 2; y++)
     {
         uint32_t invertexY = dimension[1] - y - 1;
-        uint32_t outIndex = invertexY * dimension[0] + x;
+        size_t scanLineSize = dimension[0] * FormatToPixelSize(pf);
+        Byte* scanLine0 = pixels.data() + y * scanLineSize;
+        Byte* scanLine1 = pixels.data() + invertexY * scanLineSize;
 
-        const Imf::Rgba& inPixel = exrPixels[y][x];
-        float* outPixelPtr = reinterpret_cast<float*>(pixels.data() + outIndex * FormatToPixelSize(pf));
-
-        for(int8_t i = 0; i < FormatToChannelCount(pf); i++)
-        {
-            Imath::half channel = (i == 0) ? inPixel.r :
-                                  (i == 1) ? inPixel.g :
-                                  (i == 2) ? inPixel.b :
-                                  (i == 3) ? inPixel.a : Imath::half();
-
-            outPixelPtr[i] = static_cast<float>(channel);
-        }
+        // Do scanline swap (using copy)
+        std::copy(scanLine0, scanLine0 + scanLineSize, tempScanLine.data());
+        std::copy(scanLine1, scanLine1 + scanLineSize, scanLine0);
+        std::copy(tempScanLine.data(), tempScanLine.data() + scanLineSize, scanLine1);
     }
+
+
+
+
+    //// Convert to float vector and Invert Y Axis
+    //pixels.resize(dimension[0] * dimension[1] * FormatToPixelSize(pf));
+    //for(uint32_t y = 0; y < dimension[1]; y++)
+    //for(uint32_t x = 0; x < dimension[0]; x++)
+    //{
+    //    uint32_t invertexY = dimension[1] - y - 1;
+    //    uint32_t outIndex = invertexY * dimension[0] + x;
+
+    //    const Imf::Rgba& inPixel = exrPixels[y][x];
+    //    float* outPixelPtr = reinterpret_cast<float*>(pixels.data() + outIndex * FormatToPixelSize(pf));
+
+    //    for(int8_t i = 0; i < FormatToChannelCount(pf); i++)
+    //    {
+    //        Imath::half channel = (i == 0) ? inPixel.r :
+    //                              (i == 1) ? inPixel.g :
+    //                              (i == 2) ? inPixel.b :
+    //                              (i == 3) ? inPixel.a : Imath::half();
+
+    //        if(channel.isNan() || channel.isInfinity())
+    //            METU_ERROR_LOG("HALF [{:d}, {:d}], pixel channel is {:f}", x, y, channel);
+
+    //        outPixelPtr[i] = static_cast<float>(channel);
+    //    }
+    //}
     return ImageIOError::OK;
 }
 
@@ -529,6 +580,17 @@ void ImageIO::ConvertPixelsInternal(Byte* toData, PixelFormat toFormat,
         std::array<Byte, 16> fromPixel;
         std::memcpy(fromPixel.data(), fromPixelPtr, fromPixelSize);
 
+        if(fromFormat == PixelFormat::RGB_FLOAT)
+        {
+            const float* channels = reinterpret_cast<const float*>(fromPixel.data());
+            if(std::isinf(channels[0]) || std::isnan(channels[0]))
+                METU_ERROR_LOG("[{:d}, {:d}], pixel channel is {:f}", x, y, channels[0]);
+            if(std::isinf(channels[1]) || std::isnan(channels[1]))
+                METU_ERROR_LOG("[{:d}, {:d}], pixel channel is {:f}", x, y, channels[1]);
+            if(std::isinf(channels[2]) || std::isnan(channels[2]))
+                METU_ERROR_LOG("[{:d}, {:d}], pixel channel is {:f}", x, y, channels[2]);
+        }
+
         if(HasSignConversion(toFormat, fromFormat))
         {
             SignConvert(fromPixel, toFormat);
@@ -558,16 +620,14 @@ void ImageIO::ConvertPixelsInternal(Byte* toData, PixelFormat toFormat,
     else
     {
         if(fromFormat == toFormat)
-            std::for_each_n(std::execution::par_unseq,
+            std::for_each_n(//std::execution::par_unseq,
                             indices.cbegin(), iterationCount,
                             PackFunc);
-        else std::for_each_n(std::execution::par_unseq,
+        else std::for_each_n(//std::execution::par_unseq,
                              indices.cbegin(), iterationCount,
                              ConvertFunc);
     }
 }
-
-
 
 ImageIOError ImageIO::ReadImage(std::vector<Byte>& pixels,
                                 PixelFormat& pf, Vector2ui& dimension,
@@ -634,7 +694,7 @@ ImageIOError ImageIO::ReadImage(std::vector<Byte>& pixels,
         ConvertPixelsInternal(pixels.data(), convertedFormat,
                               exrPixels.data(), pf,
                               // Exr pixels are packed tightly (atleast after load)
-                              dimension[0] * newPixelSize,
+                              dimension[0] * FormatToPixelSize(pf),
                               dimension);
     }
     // FreeImg files have pitch so directly convert from its buffer

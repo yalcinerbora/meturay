@@ -13,7 +13,7 @@
 
 		It assumes image is RGB[A] format and it converts It to YCbCr
 		color space and uses Y as Luminance value.
-		
+
 */
 
 // Defines
@@ -57,7 +57,7 @@ void AtomicAddToSSBO(float val)
 	// CAS Atomic operation for Atomic Max for floats
 	// https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#atomic-functions
 	uint assumed;
-	uint old = outMaxLum;	
+	uint old = outMaxLum;
 	do
 	{
 		assumed = old;
@@ -71,7 +71,7 @@ void AtomicMaxToSSBO(float val)
 	// CAS Atomic operation for Atomic Max for floats
 	// https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#atomic-functions
 	uint assumed;
-	uint old = outMaxLum;	
+	uint old = outMaxLum;
 	do
 	{
 		assumed = old;
@@ -124,7 +124,7 @@ void ReduceBlock(out float maxLum, out float avgLum,
 	memoryBarrierShared(); barrier();
 	if(localId < 1) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 1]);
 	memoryBarrierShared(); barrier();
-	if(localId == 0) maxLum = reduceBuffer[localId];	
+	if(localId == 0) maxLum = reduceBuffer[localId];
 }
 
 // 16x16 block is always nice
@@ -139,7 +139,7 @@ void main(void)
 
 	// Skip out of image threads
 	float luminance = 0.0f;
-	if(all(lessThan(pixId, resolution)))	
+	if(all(lessThan(pixId, resolution)))
 	{
 		// Read from current buffer buffers
 		vec4 colorIn = texelFetch(tInImage, pixId, 0);
@@ -150,16 +150,16 @@ void main(void)
 	ReduceBlock(maxLum, avgLum, luminance);
 
 	// Local main thread will write to global memory
-	// in an atomic manner. 
+	// in an atomic manner.
 	// Normally for large images that does not fit into single block
-	// (which most of the images are) you call this function again 
+	// (which most of the images are) you call this function again
 	// with a newly generated image (but it is more complex)
 	// instead we atomically combine each blocks result
 	if(gl_LocalInvocationID.x == 0u)
-	{	
+	{
 		// No support for float atomics
 		// Create your own using atomicCAS
-		AtomicAddToSSBO(avgLum);		
+		AtomicAddToSSBO(avgLum);
 		AtomicMaxToSSBO(maxLum);
 	}
 }

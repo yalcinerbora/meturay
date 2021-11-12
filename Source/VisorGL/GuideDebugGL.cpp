@@ -198,6 +198,7 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
 
     // Generate Reference Debug Renderer
     referenceDebugRenderer = std::make_unique<GDebugRendererRef>(config.refGuideConfig,
+                                                                 configPath,
                                                                  *gradientTexture);
 
     // Generate DebugRenderers

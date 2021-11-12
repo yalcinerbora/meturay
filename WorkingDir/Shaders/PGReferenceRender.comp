@@ -70,5 +70,9 @@ void main(void)
 						: vec4(gradValue, 1.0f);
 
 	// Store to the Image
-	imageStore(iRefOut, pixId, pixVal);
+	// Prevent NaNs
+	if(isnan(lum) || isinf(lum))
+		imageStore(iRefOut, pixId, vec4(1.0f));
+	else
+		imageStore(iRefOut, pixId, pixVal);
 }

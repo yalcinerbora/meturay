@@ -11,13 +11,13 @@ SceneError ConvertImageIOErrorToSceneError(ImageIOError e)
     switch(e)
     {
         case ImageIOError::IMAGE_NOT_FOUND:
-            return SceneError::TEXTURE_NOT_FOUND;        
+            return SceneError::TEXTURE_NOT_FOUND;
         case ImageIOError::UNKNOWN_IMAGE_TYPE:
             return SceneError::UNKNOWN_TEXTURE_TYPE;
 
         // TODO More Specific Texture Errors
         case ImageIOError::TYPE_IS_NOT_SIGN_CONVERTIBLE:
-        case ImageIOError::READ_INTERNAL_ERROR:            
+        case ImageIOError::READ_INTERNAL_ERROR:
         case ImageIOError::UNKNOWN_PIXEL_FORMAT:
         default:
             return SceneError::UNABLE_TO_LOAD_TEXTURE;
@@ -31,7 +31,7 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2>>& tex,
                                         bool asSigned,
                                         const CudaGPU& gpu,
                                         const std::string& filePath)
-{   
+{
     // Always try 3 Channel -> 4 Channel conversion
     // since CUDA does not support 3 Channel textures
     ImageIOFlags flags = ImageIOI::TRY_3C_4C_CONVERSION;
@@ -69,8 +69,8 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2>>& tex,
 
     // According to the pixel format allocate texture
     switch(pf)
-    {        
-        case PixelFormat::R8_UNORM:     tex = CT.operator()<Texture2D<uint8_t>>(); break;        
+    {
+        case PixelFormat::R8_UNORM:     tex = CT.operator()<Texture2D<uint8_t>>(); break;
         case PixelFormat::RG8_UNORM:    tex = CT.operator()<Texture2D<uchar2>>(); break;
         case PixelFormat::RGBA8_UNORM:  tex = CT.operator()<Texture2D<uchar4>>(); break;
 
@@ -88,7 +88,7 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2>>& tex,
 
         case PixelFormat::R_HALF:       tex = CT.operator()<Texture2D<half>>(true); break;
         case PixelFormat::RG_HALF:      tex = CT.operator()<Texture2D<half2>>(true); break;
-        case PixelFormat::RGBA_HALF:    
+        case PixelFormat::RGBA_HALF:
             // TODO: cuda does not have half4 type
             //tex = CT.operator()<Texture2D<half4>>(); break;
             return SceneError::UNABLE_TO_LOAD_TEXTURE;
@@ -111,7 +111,7 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2>>& tex,
         // Also we did convert so code should not come here
         case PixelFormat::RGB8_UNORM:
         case PixelFormat::RG8_SNORM:
-        case PixelFormat::RGB16_UNORM:        
+        case PixelFormat::RGB16_UNORM:
         case PixelFormat::RGB16_SNORM:
         case PixelFormat::RGB_HALF:
         case PixelFormat::RGB_FLOAT:
@@ -150,7 +150,7 @@ std::vector<TextureChannelType> TextureFunctions::TextureAccessLayoutToTextureCh
                     TextureChannelType::B,
                     TextureChannelType::A};
         default: return {};
-    }    
+    }
 }
 
 SceneError TextureFunctions::LoadBitMap(// Returned Bitmap Data
@@ -185,7 +185,7 @@ SceneError TextureFunctions::LoadBitMap(// Returned Bitmap Data
     if((e = ImageIOInstance().ReadImageChannelAsBitMap(bits, dimension,
                                                        TexCTypeToImgageCType(channel),
                                                        combinedPath)) != ImageIOError::OK)
-        return ConvertImageIOErrorToSceneError(e);  
+        return ConvertImageIOErrorToSceneError(e);
     // All done
     return SceneError::OK;
 }

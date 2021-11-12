@@ -99,7 +99,7 @@
 
         "layout": "trs",
         "translate": [0, 0, 0],
-        "rotate": [0, -150, -10],
+        "rotate": [0, -150, 0],
         "scale": [1, 1, 1]
     }],
 
@@ -160,7 +160,9 @@
         // HDR
         "id": 17,
         //"file": "../Textures/ModernPool/lakeside_4k.hdr"
-        "file": "../Textures/ModernPool/kiara_5_noon_4k.hdr"
+        //"file": "../Textures/ModernPool/kiara_5_noon_4k.hdr"
+        //"file": "../Textures/ModernPool/kloppenheim_05_4k.hdr"
+        "file": "../Textures/ModernPool/kloppenheim_05_4k.exr"
     },
     {
         // Tree Leaf
