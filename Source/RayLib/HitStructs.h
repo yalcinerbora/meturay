@@ -20,24 +20,22 @@ struct HitStructPtr
         uint32_t    combinedSize;
 
     public:
-                    HitStructPtr() : dPtr(nullptr), combinedSize(0) {}
-                    HitStructPtr(void* dPtr, int combinedSize)
-                        : dPtr(static_cast<Byte*>(dPtr))
-                        , combinedSize(combinedSize)
-                    {}
+        // Constructors & Destructor
+        __device__ __host__     HitStructPtr();
+                                HitStructPtr(const HitStructPtr&) = default;
+        HitStructPtr&           operator=(const HitStructPtr&) = default;
+        __device__ __host__     HitStructPtr(void* dPtr, int combinedSize);
+                                ~HitStructPtr() = default;
 
+        // Methods
         template<class T>
-        __device__ __host__
-        T& Ref(int i) { return *reinterpret_cast<T*>(dPtr + combinedSize * i); }
+        __device__ __host__ T&              Ref(int i);
         template<class T>
-        __device__ __host__
-        const T& Ref(int i) const { return *reinterpret_cast<T*>(dPtr + combinedSize * i); }
+        __device__ __host__ const T&        Ref(int i) const;
 
-        uint32_t CombinedSize() const { return combinedSize; }
+        __device__ __host__ uint32_t        CombinedSize() const;
 
-        //template<class T>
-        //__device__ __host__
-        //const T& operator[](int i) const { return *reinterpret_cast<const T&>(dPtr + combinedSize * i); }
+        __device__ __host__ HitStructPtr    AdvancedPtr(int i);
 };
 
 template <class T, uint32_t BBits, uint32_t IBits>
@@ -77,6 +75,44 @@ struct alignas(sizeof(T)) HitKeyT
     static constexpr uint16_t       NullBatch = NullBatchId;
     static constexpr T              InvalidKey = CombinedKey(NullBatch, 0);
 };
+
+__device__ __host__
+inline HitStructPtr::HitStructPtr()
+    : dPtr(nullptr)
+    , combinedSize(0)
+{}
+
+__device__ __host__
+inline HitStructPtr::HitStructPtr(void* dPtr, int combinedSize)
+    : dPtr(static_cast<Byte*>(dPtr))
+    , combinedSize(combinedSize)
+{}
+
+template<class T>
+__device__ __host__
+inline T& HitStructPtr::Ref(int i)
+{
+    return *reinterpret_cast<T*>(dPtr + combinedSize * i);
+}
+
+template<class T>
+__device__ __host__
+inline const T& HitStructPtr::Ref(int i) const
+{
+    return *reinterpret_cast<T*>(dPtr + combinedSize * i);
+}
+
+__device__ __host__
+inline uint32_t HitStructPtr::CombinedSize() const
+{
+    return combinedSize;
+}
+
+__device__ __host__
+inline HitStructPtr HitStructPtr::AdvancedPtr(int i)
+{
+    return HitStructPtr(dPtr + combinedSize * i, combinedSize);
+}
 
 template <class T, uint32_t BatchBits, uint32_t IdBits>
 __device__ __host__ HitKeyT<T, BatchBits, IdBits>::operator const T&() const

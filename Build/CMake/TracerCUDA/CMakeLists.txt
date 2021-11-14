@@ -13,9 +13,23 @@ set(SRC_ACCELS_LINEAR
     ${CURRENT_SOURCE_DIR}/GPUAcceleratorLinear.cuh
     ${CURRENT_SOURCE_DIR}/GPUAcceleratorLinear.hpp
     ${CURRENT_SOURCE_DIR}/GPUAcceleratorLinearKC.cuh)
-
 set(SRC_ACCELS_COMMON
     ${CURRENT_SOURCE_DIR}/GPUAcceleratorCommonKC.cuh)
+
+if(USE_OPTIX)
+    set(SRC_ACCELS_OPTIX
+        ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiX.cu
+        ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiX.cuh
+        ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiXKC.cu
+        ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiXKC.cuh)
+    # Additionally Define PTX Source
+    # Which will be passed to the Optix Compile Target
+    set(OPTIX_PTX_SOURCES
+        ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiXKC.cu)
+    # Make Optix Sources not participate in build
+    set_source_files_properties(${OPTIX_PTX_SOURCES}
+                                 PROPERTIES HEADER_FILE_ONLY TRUE)
+endif()
 
 set(SRC_CAMERAS
     ${CURRENT_SOURCE_DIR}/GPUCameraPixel.cu
@@ -274,6 +288,7 @@ set(SRC_COMMON
 set(SRC_ALL
     ${SRC_ACCELS_BVH}
     ${SRC_ACCELS_LINEAR}
+    ${SRC_ACCELS_OPTIX}
     ${SRC_ACCELS_COMMON}
     ${SRC_CAMERAS}
     ${SRC_CUDA_SYSTEM}
@@ -312,6 +327,7 @@ set(SRC_ALL
 source_group("Accelerators" FILES ${SRC_ACCELS_COMMON})
 source_group("Accelerators/BVH" FILES ${SRC_ACCELS_BVH})
 source_group("Accelerators/Linear" FILES ${SRC_ACCELS_LINEAR})
+source_group("Accelerators/OptiX" FILES ${SRC_ACCELS_OPTIX})
 
 source_group("Cameras" FILES ${SRC_CAMERAS})
 source_group("CudaSystem" FILES ${SRC_CUDA_SYSTEM})
@@ -351,6 +367,16 @@ source_group("Work" FILES ${SRC_WORK})
 
 source_group("" FILES ${SRC_COMMON})
 
+if(USE_OPTIX)
+    # Optix Compiles
+    NVCC_COMPILE_PTX(MAIN_TARGET TracerCUDA
+                     SOURCES ${OPTIX_PTX_SOURCES}
+                     GENERATED_TARGET PTX_TARGET
+                     EXTRA_OPTIONS "-I${CURRENT_SOURCE_DIR}"
+    )
+    source_group("Accelerators/OptiX/PTX" FILES ${OPTIX_PTX_OUTPUTS})
+endif()
+
 # Preprocessor Defs
 set(PREPROCESSOR_GENERIC
     ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC}
@@ -368,7 +394,12 @@ add_library(TracerCUDA SHARED)
 
 target_sources(TracerCUDA PUBLIC ${SRC_ALL})
 
+if(USE_OPTIX)
+    add_dependencies(TracerCUDA ${PTX_TARGET})
+endif()
+
 target_include_directories(TracerCUDA PRIVATE
+                           ${OPTIX_INCLUDE_DIR}
                            ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
 
@@ -390,7 +421,12 @@ target_link_libraries(TracerCUDA
 #add_library(TracerCUDA_Static STATIC ${SRC_ALL})
 add_library(TracerCUDA_Static STATIC $<TARGET_OBJECTS:TracerCUDA>)
 
+if(USE_OPTIX)
+    add_dependencies(TracerCUDA_Static ${PTX_TARGET})
+endif()
+
 target_include_directories(TracerCUDA_Static PRIVATE
+                           ${OPTIX_INCLUDE_DIR}
                            ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
 

@@ -285,27 +285,34 @@ ImageIOError ImageIO::WriteAsEXR(const Byte* pixels,
 {
     // TODO: This code is quite awful change it to a more generic version
     const int channelCount = FormatToChannelCount(pf);
+    const size_t channelSize = FormatToChannelSize(pf);
+    const size_t pixelSize = FormatToPixelSize(pf);
 
-    // Always try to write as half
-    size_t pixelSizeLinear = dimension[0] * dimension[1];
-    std::vector<Imath::half> convertedData(pixelSizeLinear * channelCount);
-
-    // Call appropriate function
-
-    auto ConvtForEXRWrap = [&]<class T>()
+    // Invert Y Axis
+    std::vector<Byte> invertedData(dimension[0] * dimension[1] * pixelSize);
+    for(uint32_t y = 0; y < dimension[1]; y++)
     {
-        ConvertForEXR(convertedData.data(),
-                      reinterpret_cast<const T*>(pixels),
-                      pf, dimension);
-    };
+        uint32_t invertexY = dimension[1] - y - 1;
+        size_t scanLineSize = dimension[0] * FormatToPixelSize(pf);
+        const Byte* scanLineIn = pixels + y * scanLineSize;
+        Byte* scanLineOut = invertedData.data() + invertexY * scanLineSize;
+        std::copy(scanLineIn, scanLineIn + scanLineSize, scanLineOut);
+    }
 
+    Imf::PixelType exrPixType;
     switch(pf)
     {
         case PixelFormat::R_FLOAT:
         case PixelFormat::RG_FLOAT:
         case PixelFormat::RGB_FLOAT:
         case PixelFormat::RGBA_FLOAT:
-            ConvtForEXRWrap.operator()<float>();
+            exrPixType = Imf::FLOAT;
+            break;
+        case PixelFormat::R_HALF:
+        case PixelFormat::RG_HALF:
+        case PixelFormat::RGB_HALF:
+        case PixelFormat::RGBA_HALF:
+            exrPixType = Imf::HALF;
             break;
         default: return ImageIOError::WRITE_INTERNAL_ERROR;
     }
@@ -319,17 +326,18 @@ ImageIOError ImageIO::WriteAsEXR(const Byte* pixels,
     };
     for(int i = 0; i < channelCount; i++)
     {
-        header.channels().insert(channelNames[i], Imf::Channel(Imf::HALF));
+        header.channels().insert(channelNames[i],
+                                 Imf::Channel(exrPixType,
+                                              1, 1, true));
     }
 
     Imf::OutputFile file(fileName.c_str(), header);
     Imf::FrameBuffer frameBuffer;
     for(int i = 0; i < channelCount; i++)
     {
-        Imf::Slice lumSlice = Imf::Slice(Imf::HALF,
-                                         reinterpret_cast<char*>(convertedData.data() + i),
-                                         sizeof(Imath::half) * channelCount,
-                                         sizeof(Imath::half) * dimension[0] * channelCount);
+        Imf::Slice lumSlice = Imf::Slice(exrPixType,
+                                         reinterpret_cast<char*>(invertedData.data() + i * channelSize),
+                                         pixelSize, pixelSize * dimension[0]);
         frameBuffer.insert(channelNames[i], lumSlice);
     }
     file.setFrameBuffer(frameBuffer);

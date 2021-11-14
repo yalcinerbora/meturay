@@ -67,12 +67,7 @@ struct EmptySurfaceGenerator
 class GPUPrimitiveEmpty final
     : public GPUPrimitiveGroup<EmptyHit, EmptyData, EmptyLeaf,
                                EmptySurfaceGenerator,
-    EPrimFunctions>
-                   /*            EPrimFunctions::Hit,
-                               EPrimFunctions::Leaf, EPrimFunctions::AABB,
-                               EPrimFunctions::Area, EPrimFunctions::Center,
-                               EPrimFunctions::Sample,
-                               EPrimFunctions::PDF>*/
+                               EPrimFunctions>
 {
     public:
         static constexpr const char*            TypeName() { return BaseConstants::EMPTY_PRIMITIVE_NAME; }

@@ -362,7 +362,15 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance,
                                  bool incrementSampleCount)
 {
     Vector2f discreteCoords = WorldDirToTreeCoords(worldDir);
-    assert(discreteCoords <= Vector2f(1.0f) && discreteCoords >= Vector2f(0.0f));
+    //assert(discreteCoords >= Vector2f(0.0f) && discreteCoords <= Vector2f(1.0f));
+
+    if(discreteCoords <= Vector2f(0.0f) ||
+       discreteCoords >= Vector2f(1.0f))
+    {
+        printf("Failed WorlDir = DC ((%f %f %f) = (%f %f))\n",
+               worldDir[0], worldDir[1], worldDir[2],
+               discreteCoords[0], discreteCoords[1]);
+    }
 
     // Descent and find the leaf
     DTreeNode* node = gRoot;

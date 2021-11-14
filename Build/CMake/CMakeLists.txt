@@ -1,48 +1,73 @@
 cmake_minimum_required(VERSION 3.20)
 
+# All CMake Related files is in the current folder
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}")
+
 # Only Debug and Release
 set(CMAKE_CONFIGURATION_TYPES Debug;Release CACHE STRING "Selected by user")
 #set(CMAKE_DEFAULT_BUILD_TYPE Release CACHE STRING "Selected by user")
 set(CMAKE_BUILD_TYPE Release CACHE STRING "Selected by user")
 
+# On Linux I dont know why but this is needs to be defined
+# TODO: Maybe CUDA did not installed to default directory?
 if(UNIX)
     set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
 endif()
 
 # Architecture
+# Use a dropdown menu for selecting Compute Capability
+# TODO: Add a "ReleaseAllCC" Configuration for final release compilation
+# including all compute capabilities etc.
 set(CMAKE_CUDA_ARCHITECTURES "61" CACHE STRING "Architecture chosen by the user at CMake configure time")
-set_property(CACHE CMAKE_CUDA_ARCHITECTURES PROPERTY STRINGS 52 60 61 70 72 75 86)
+set_property(CACHE CMAKE_CUDA_ARCHITECTURES PROPERTY STRINGS 52 60 61 70 72 75 86 All)
+if(${CMAKE_CUDA_ARCHITECTURES} STREQUAL "All")
+    set(CMAKE_CUDA_ARCHITECTURES 52 60 61 70 72 75 86)
+endif()
 
-# Globals
+option(USE_OPTIX "Try to find and use OptiX" OFF)
+
+# Globals Common for All Projects
+# TODO: Align CUDA Standart with CXX Standard
 set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED True)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CUDA_RUNTIME_LIBRARY Shared)
 
+# Find Optix If Available
+if(USE_OPTIX)
+    find_package(OPTIX 7)
+    if(NOT OPTIX_FOUND)
+        # Maybe we could not able to find the optix
+        # expose the OPTIX_DIR (in cmake-gui) so user can manually set it
+        message("Optix Not Found")
+        set(USE_OPTIX CACHE BOOL OFF)
+    endif()
+endif()
+
 project(METURay LANGUAGES CUDA CXX)
 
-# Some User Properties
-
+# CMAKE Project Definitions and Source, Library Folders are seperate
 # Directories
 set(MRAY_SOURCE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Source)
 set(MRAY_LIB_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Lib)
 set(MRAY_LIB_INCLUDE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Lib/Include)
 set(MRAY_BIN_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Bin)
-# Build is not used but its here for convenience
+# Build is probably not used but its here for convenience
 set(MRAY_BUILD_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Build)
 # Working Dir is used for debugging (currently shaders are here so...)
+# For Visual Studio Projects this is copied to WorkingDir property for executables
 set(MRAY_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../WorkingDir)
 
 # Determine Platform and Config
 if(MSVC)
     set(MRAY_PLATFORM_NAME Win)
     set(MRAY_PREPROCESSOR_DEFS_GENERIC -D_UNICODE -DUNICODE)
-    # Ignore inline function not defined warning
+    # Ignore inline functions are not defined warning
     add_compile_options(
         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4984>
         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4506>)
-    # Filter annoying ALL_BUILD ZERO_CHECK projects
+    # Filter ALL_BUILD and ZERO_CHECK projects
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
     set(PREDEFINED_TARGETS_FOLDER "CustomTargets")
 elseif(APPLE)
@@ -58,6 +83,7 @@ endif()
 if(MSVC)
     set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_C_COMPILER})
 else()
+    # This should be set automatically I think...
     add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:--compiler-bindir=${CMAKE_C_COMPILER}>)
 endif()
 # Force Colored Output on Ninja
@@ -88,10 +114,8 @@ endif()
 add_compile_options($<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:CUDA>>:-G>
                     $<$<AND:$<CONFIG:Release>,$<COMPILE_LANGUAGE:CUDA>>:-lineinfo>)
 
-# All kernels started to show this warning (if a kernel uses a virtual funcion)
+# All kernels started to show this warning (when a kernel uses a virtual funcion)
 # Supress that warning
-#add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:--nvlink-options=-suppress-stack-size-warning>)
-#add_link_options($<$<COMPILE_LANGUAGE:CUDA>:>)
 add_link_options($<DEVICE_LINK:--nvlink-options=-suppress-stack-size-warning>)
 
 # Platform Specific Lib Bin Folders
@@ -105,6 +129,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${MRAY_CONFIG_BIN_DIRECTORY})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${MRAY_CONFIG_BIN_DIRECTORY})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MRAY_CONFIG_BIN_DIRECTORY})
 # Meta library directory
+# All precompiled libraries are resides here
 link_directories(${MRAY_CONFIG_LIB_DIRECTORY}
                  ${MRAY_PLATFORM_LIB_DIRECTORY})
 
@@ -117,6 +142,13 @@ set(MRAY_PREPROCESSOR_DEFS_GENERIC
 set(MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC
     ${MRAY_PREPROCESSOR_DEFS_GENERIC}
     METU_CUDA)
+
+# After Everything is set
+# Include NVCC compile to ptx routine
+# Since Optix programs require pre-compiled *.ptx files
+if(USE_OPTIX)
+    include("NVCC_compile_ptx")
+endif()
 
 # BUILDS
 # Libs
