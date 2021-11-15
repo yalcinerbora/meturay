@@ -94,9 +94,6 @@ class CudaGPU
             GPU_AMPERE
         };
 
-        static GPUTier              DetermineGPUTier(cudaDeviceProp);
-
-    private:
         struct WorkGroup
         {
             static constexpr size_t                 MAX_STREAMS = 64;
@@ -126,6 +123,7 @@ class CudaGPU
         GPUTier                 tier;
         WorkGroup               workList;
 
+        static GPUTier          DetermineGPUTier(cudaDeviceProp);
     public:
         uint32_t                DetermineGridStrideBlock(uint32_t sharedMemSize,
                                                          uint32_t threadCount,
@@ -144,6 +142,7 @@ class CudaGPU
         //
         int                     DeviceId() const;
         std::string             Name() const;
+        std::string             CC() const;
         double                  TotalMemoryMB() const;
         double                  TotalMemoryGB() const;
         GPUTier                 Tier() const;
@@ -162,7 +161,7 @@ class CudaGPU
 
         bool                    operator<(const CudaGPU&) const;
 
-                // Classic GPU Calls
+        // Classic GPU Calls
         // Create just enough blocks according to work size
         template<class Function, class... Args>
         __host__ void           KC_X(uint32_t sharedMemSize,
@@ -179,7 +178,7 @@ class CudaGPU
 
         // Grid-Stride Kernels
         // Convenience Functions For Kernel Call
-        // Simple full GPU utilizing calls over a stream
+        // Simple partial/full GPU utilizing calls over a stream
         template<class Function, class... Args>
         __host__ void           GridStrideKC_X(uint32_t sharedMemSize,
                                                cudaStream_t stream,
@@ -196,7 +195,7 @@ class CudaGPU
 
         // Smart GPU Calls
         // Automatic stream split
-        // Only for grid strided kernels, and for specific GPU
+        // Only for grid strided kernels,
         // Material calls require difrrent GPUs (texture sharing)
         // TODO:
         template<class Function, class... Args>

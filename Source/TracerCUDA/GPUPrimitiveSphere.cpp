@@ -166,6 +166,16 @@ AABB3 GPUPrimitiveSphere::PrimitiveBatchAABB(uint32_t surfaceDataId) const
     return batchAABBs.at(surfaceDataId);
 }
 
+uint64_t GPUPrimitiveSphere::TotalPrimitiveCount() const
+{
+    return totalPrimitiveCount;
+}
+
+uint64_t GPUPrimitiveSphere::TotalDataCount() const
+{
+    return totalPrimitiveCount;
+}
+
 PrimTransformType GPUPrimitiveSphere::TransformType() const
 {
     return PrimTransformType::CONSTANT_LOCAL_TRANSFORM;

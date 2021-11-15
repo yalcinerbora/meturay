@@ -149,6 +149,11 @@ std::string CudaGPU::Name() const
     return props.name;
 }
 
+std::string CudaGPU::CC() const
+{
+    return std::to_string(props.major) + std::to_string(props.minor);
+}
+
 double CudaGPU::TotalMemoryMB() const
 {
     return static_cast<double>(props.totalGlobalMem) / 1000000000.0;

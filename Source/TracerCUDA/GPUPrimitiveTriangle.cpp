@@ -468,6 +468,16 @@ AABB3 GPUPrimitiveTriangle::PrimitiveBatchAABB(uint32_t surfaceDataId) const
     return batchAABBs.at(surfaceDataId);
 }
 
+uint64_t GPUPrimitiveTriangle::TotalPrimitiveCount() const
+{
+    return totalPrimitiveCount;
+}
+
+uint64_t GPUPrimitiveTriangle::TotalDataCount() const
+{
+    return totalDataCount;
+}
+
 PrimTransformType GPUPrimitiveTriangle::TransformType() const
 {
     return PrimTransformType::CONSTANT_LOCAL_TRANSFORM;

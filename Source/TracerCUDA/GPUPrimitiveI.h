@@ -69,6 +69,13 @@ class GPUPrimitiveGroupI
         // If primitive (by definition) is intersectable or not
         virtual bool                IsIntersectable() const = 0;
 
+        // Query
+        // How many primitives are available on this class
+        // This includes the indexed primitive count
+        virtual uint64_t            TotalPrimitiveCount() const = 0;
+        // Total primitive count but not indexed
+        virtual uint64_t            TotalDataCount() const = 0;
+
         // Error check
         // Queries in order to check if this primitive group supports certain primitive data
         // Material may need that data

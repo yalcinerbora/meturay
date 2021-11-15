@@ -19,9 +19,14 @@ set(SRC_ACCELS_COMMON
 if(USE_OPTIX)
     set(SRC_ACCELS_OPTIX
         ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiX.cu
+        ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiX.hpp
         ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiX.cuh
         ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiXKC.cu
         ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiXKC.cuh)
+    set(SRC_OPTIX_SYSTEM
+        ${CURRENT_SOURCE_DIR}/OptixSystem.cpp
+        ${CURRENT_SOURCE_DIR}/OptixSystem.h
+        ${CURRENT_SOURCE_DIR}/OptixCheck.h)
     # Additionally Define PTX Source
     # Which will be passed to the Optix Compile Target
     set(OPTIX_PTX_SOURCES
@@ -289,6 +294,7 @@ set(SRC_ALL
     ${SRC_ACCELS_BVH}
     ${SRC_ACCELS_LINEAR}
     ${SRC_ACCELS_OPTIX}
+    ${SRC_OPTIX_SYSTEM}
     ${SRC_ACCELS_COMMON}
     ${SRC_CAMERAS}
     ${SRC_CUDA_SYSTEM}
@@ -328,6 +334,7 @@ source_group("Accelerators" FILES ${SRC_ACCELS_COMMON})
 source_group("Accelerators/BVH" FILES ${SRC_ACCELS_BVH})
 source_group("Accelerators/Linear" FILES ${SRC_ACCELS_LINEAR})
 source_group("Accelerators/OptiX" FILES ${SRC_ACCELS_OPTIX})
+source_group("Accelerators/OptiX/System" FILES ${SRC_OPTIX_SYSTEM})
 
 source_group("Cameras" FILES ${SRC_CAMERAS})
 source_group("CudaSystem" FILES ${SRC_CUDA_SYSTEM})

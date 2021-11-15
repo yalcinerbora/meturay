@@ -8,6 +8,9 @@
 // Accelerators
 #include "GPUAcceleratorLinear.cuh"
 #include "GPUAcceleratorBVH.cuh"
+#ifdef MRAY_OPTIX
+    #include "GPUAcceleratorOptix.cuh"
+#endif
 // Mediums
 #include "GPUMediumHomogenous.cuh"
 #include "GPUMediumVacuum.cuh"
@@ -58,6 +61,13 @@ using GPUAccSphrLinearGroup = GPUAccLinearGroup<GPUPrimitiveSphere>;
 
 using GPUAccTriBVHGroup = GPUAccBVHGroup<GPUPrimitiveTriangle>;
 using GPUAccSphrBVHGroup = GPUAccBVHGroup<GPUPrimitiveSphere>;
+#ifdef MRAY_OPTIX
+    extern template class GPUAccOptiXGroup<GPUPrimitiveTriangle>;
+    extern template class GPUAccOptiXGroup<GPUPrimitiveSphere>;
+
+    using GPUAccTriOptiXGroup = GPUAccOptiXGroup<GPUPrimitiveTriangle>;
+    using GPUAccSphrOptiXGroup = GPUAccOptiXGroup<GPUPrimitiveSphere>;
+#endif
 
 // Some Instantiations
 // Constructors
@@ -100,6 +110,15 @@ TracerLogicGenerator::TracerLogicGenerator()
     accelGroupGenerators.emplace(GPUAccSphrBVHGroup::TypeName(),
                                  GPUAccelGroupGen(AccelGroupConstruct<GPUAcceleratorGroupI, GPUAccSphrBVHGroup>,
                                                   DefaultDestruct<GPUAcceleratorGroupI>));
+    #ifdef MRAY_OPTIX
+        accelGroupGenerators.emplace(GPUAccSphrOptiXGroup::TypeName(),
+                                     GPUAccelGroupGen(AccelGroupConstruct<GPUAcceleratorGroupI, GPUAccSphrOptiXGroup>,
+                                                      DefaultDestruct<GPUAcceleratorGroupI>));
+        accelGroupGenerators.emplace(GPUAccSphrOptiXGroup::TypeName(),
+                                     GPUAccelGroupGen(AccelGroupConstruct<GPUAcceleratorGroupI, GPUAccSphrOptiXGroup>,
+                                                      DefaultDestruct<GPUAcceleratorGroupI>));
+    #endif
+
     // Base Accelerator
     baseAccelGenerators.emplace(GPUBaseAcceleratorLinear::TypeName(),
                                 GPUBaseAccelGen(DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorLinear>,
@@ -107,7 +126,11 @@ TracerLogicGenerator::TracerLogicGenerator()
     baseAccelGenerators.emplace(GPUBaseAcceleratorBVH::TypeName(),
                                 GPUBaseAccelGen(DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorBVH>,
                                                 DefaultDestruct<GPUBaseAcceleratorI>));
-
+    #ifdef MRAY_OPTIX
+        baseAccelGenerators.emplace(GPUBaseAcceleratorOptiX::TypeName(),
+                                    GPUBaseAccelGen(DefaultConstruct<GPUBaseAcceleratorI, GPUBaseAcceleratorOptiX>,
+                                                    DefaultDestruct<GPUBaseAcceleratorI>));
+    #endif
     // Material Types
     //matGroupGenerators.emplace(BoundaryMatConstant::TypeName(),
     //                           GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BoundaryMatConstant>,

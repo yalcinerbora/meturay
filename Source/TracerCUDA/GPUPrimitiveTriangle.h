@@ -488,7 +488,12 @@ class GPUPrimitiveTriangle final
         // Access primitive range from Id
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
-
+        // Query
+        // How many primitives are available on this class
+        // This includes the indexed primitive count
+        uint64_t                                TotalPrimitiveCount() const override;
+        // Total primitive count but not indexed
+        uint64_t                                TotalDataCount() const override;
         // Primitive Transform Info for accelerator
         PrimTransformType                       TransformType() const override;
 

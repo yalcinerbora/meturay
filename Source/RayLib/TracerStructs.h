@@ -61,6 +61,7 @@ using BoundaryWorkBatchCreationInfo = std::vector<std::tuple<uint32_t, EndpointT
 // Logic Dependent ones will be provided by TracerOptionsI
 struct TracerParameters
 {
+    bool        forceOptiX; // Force use optix
     bool        verbose;    // Let Tracer to Log what it is doing
     uint32_t    seed;       // RNG Seed
 };

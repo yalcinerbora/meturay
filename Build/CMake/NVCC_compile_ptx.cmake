@@ -53,6 +53,7 @@ FUNCTION(NVCC_COMPILE_PTX)
         $<$<CONFIG:Debug>:-DMETU_DEBUG>
         $<$<CONFIG:Release>:-DNDEBUG>
         -DMETU_CUDA
+        $<$<CONFIG:Release>:-DNDEBUG>
         #${ALL_COMPILE_DEFS}
      )
 

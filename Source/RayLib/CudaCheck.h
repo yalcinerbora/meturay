@@ -14,7 +14,7 @@ Utility header for header only cuda vector and cpu vector implementations
     #include <cuda.h>
     #include <cuda_runtime.h>
 
-    inline static constexpr void GPUAssert(cudaError_t code, const char *file, int line)
+    inline static constexpr void GPUAssert(cudaError_t code, const char* file, int line)
     {
         if(code != cudaSuccess)
         {

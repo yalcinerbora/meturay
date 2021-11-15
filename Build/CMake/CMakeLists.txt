@@ -42,6 +42,8 @@ if(USE_OPTIX)
         # expose the OPTIX_DIR (in cmake-gui) so user can manually set it
         message("Optix Not Found")
         set(USE_OPTIX CACHE BOOL OFF)
+    else()
+        set(MRAY_PREPROCESSOR_DEFS_GENERIC ${MRAY_PREPROCESSOR_DEFS_GENERIC} -DMRAY_OPTIX)
     endif()
 endif()
 
@@ -62,7 +64,10 @@ set(MRAY_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../WorkingDir)
 # Determine Platform and Config
 if(MSVC)
     set(MRAY_PLATFORM_NAME Win)
-    set(MRAY_PREPROCESSOR_DEFS_GENERIC -D_UNICODE -DUNICODE)
+    set(MRAY_PREPROCESSOR_DEFS_GENERIC ${MRAY_PREPROCESSOR_DEFS_GENERIC}
+        -D_UNICODE
+        -DUNICODE
+        -DNOMINMAX)
     # Ignore inline functions are not defined warning
     add_compile_options(
         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4984>
