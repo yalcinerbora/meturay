@@ -16,7 +16,7 @@ const char* GPUBaseAcceleratorOptiX::Type() const
     return TypeName();
 }
 
-TracerError GPUBaseAcceleratorOptiX::LoadModule()
+TracerError GPUBaseAcceleratorOptiX::LoadModule(uint32_t hitStructSize)
 {
     OptixModuleCompileOptions moduleCompileOpts = {};
     OptixPipelineCompileOptions pipelineCompileOpts = {};
@@ -38,7 +38,7 @@ TracerError GPUBaseAcceleratorOptiX::LoadModule()
     pipelineCompileOpts.usesMotionBlur = false;
     pipelineCompileOpts.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
     pipelineCompileOpts.numPayloadValues      = 2;
-    pipelineCompileOpts.numAttributeValues    = 2;
+    pipelineCompileOpts.numAttributeValues    = (hitStructSize + sizeof(uint32_t) - 1) / sizeof(uint32_t);
     pipelineCompileOpts.pipelineLaunchParamsVariableName = "params";
 
     TracerError err = TracerError::OK;
@@ -55,14 +55,22 @@ void GPUBaseAcceleratorOptiX::GetReady(const CudaSystem& system,
 }
 
 void GPUBaseAcceleratorOptiX::Hit(const CudaSystem& system,
-                                // Output
+                                  // Output
                                   HitKey* dAcceleratorKeys,
                                   // Inputs
                                   const RayGMem* dRays,
                                   const RayId* dRayIds,
                                   const uint32_t rayCount) const
 {
-
+    //for(const auto& gpu : system.SystemGPUs())
+    //{
+    //    OPTIX_CHECK(optixLaunch(state.pipeline, (CUstream) 0,
+    //                            reinterpret_cast<CUdeviceptr>(dBaseAccelParams),
+    //                            sizeof(OpitXBaseAccelParams),
+    //                            &state.sbt,
+    //                            rayCount,
+    //                            1, 1));
+    //}
 }
 
 SceneError GPUBaseAcceleratorOptiX::Initialize(// Accelerator Option Node
@@ -84,8 +92,8 @@ SceneError GPUBaseAcceleratorOptiX::Initialize(// Accelerator Option Node
 }
 
 TracerError GPUBaseAcceleratorOptiX::Constrcut(const CudaSystem&,
-                                             // List of surface AABBs
-                                             const SurfaceAABBList& aabbMap)
+                                               // List of surface AABBs
+                                               const SurfaceAABBList& aabbMap)
 {
 
     return TracerError::OK;

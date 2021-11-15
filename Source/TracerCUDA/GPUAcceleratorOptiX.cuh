@@ -116,11 +116,12 @@ class GPUBaseAcceleratorOptiX final : public GPUBaseAcceleratorI
 
         // GPU Memory
         DeviceMemory                    memory;
+        OpitXBaseAccelParams*           dBaseAccelParams;
         // ...
         // OptiX Related
         std::unique_ptr<OptiXSystem>    optixSystem;
 
-        TracerError                     LoadModule();
+        TracerError                     LoadModule(uint32_t hitStructSize);
 
     public:
         // Constructors & Destructor
