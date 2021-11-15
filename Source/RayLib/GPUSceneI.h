@@ -5,8 +5,18 @@
 
 #include "TracerStructs.h"
 
+#include "RayLib/Flag.h"
+
 struct SceneError;
 struct TextureStruct;
+
+enum class SceneLoadFlagType
+{
+    FORCE_OPTIX_ACCELS,
+    END
+};
+
+using SceneLoadFlags = Flags<SceneLoadFlagType>;
 
 class GPUSceneI
 {

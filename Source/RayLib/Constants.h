@@ -90,6 +90,8 @@ namespace SceneConstants
 {
     // Fundamental Limitations (for convenience)
     static constexpr const int  MaxPrimitivePerSurface = 8;
+
+    static const std::string    OptiXAcceleratorTypeName = "OptiX";
 }
 
 namespace MathConstants

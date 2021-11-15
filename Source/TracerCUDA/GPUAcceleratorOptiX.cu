@@ -17,38 +17,6 @@ const char* GPUBaseAcceleratorOptiX::Type() const
     return TypeName();
 }
 
-TracerError GPUBaseAcceleratorOptiX::LoadModule(uint32_t hitStructSize)
-{
-    OptixModuleCompileOptions moduleCompileOpts = {};
-    OptixPipelineCompileOptions pipelineCompileOpts = {};
-    moduleCompileOpts.maxRegisterCount  = OPTIX_COMPILE_DEFAULT_MAX_REGISTER_COUNT;
-    if constexpr(METU_DEBUG_BOOL)
-    {
-        moduleCompileOpts.optLevel = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
-        moduleCompileOpts.debugLevel = OPTIX_COMPILE_DEBUG_LEVEL_FULL;
-        pipelineCompileOpts.exceptionFlags = (OPTIX_EXCEPTION_FLAG_DEBUG |
-                                              OPTIX_EXCEPTION_FLAG_TRACE_DEPTH |
-                                              OPTIX_EXCEPTION_FLAG_STACK_OVERFLOW);
-    }
-    else
-    {
-        moduleCompileOpts.optLevel = OPTIX_COMPILE_OPTIMIZATION_DEFAULT;
-        moduleCompileOpts.debugLevel = OPTIX_COMPILE_DEBUG_LEVEL_MINIMAL;
-        pipelineCompileOpts.exceptionFlags = OPTIX_EXCEPTION_FLAG_NONE;
-    }
-    pipelineCompileOpts.usesMotionBlur = false;
-    pipelineCompileOpts.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
-    pipelineCompileOpts.numPayloadValues      = 2;
-    pipelineCompileOpts.numAttributeValues    = (hitStructSize + sizeof(uint32_t) - 1) / sizeof(uint32_t);
-    pipelineCompileOpts.pipelineLaunchParamsVariableName = "params";
-
-    TracerError err = TracerError::OK;
-    if((err = optixSystem->OptixGenerateModules(moduleCompileOpts, pipelineCompileOpts,
-                                                MODULE_BASE_NAME)) != TracerError::OK)
-        return err;
-    return TracerError::OK;
-}
-
 void GPUBaseAcceleratorOptiX::GetReady(const CudaSystem& system,
                                        uint32_t rayCount)
 {
@@ -172,7 +140,7 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
     //  ACTUAL TRAVERSAL GENERATION  //
     //===============================//
     uint32_t deviceIndex = 0;
-    for(const auto [gpu, optixContext] : optixSystem->OptixCapableDevices())
+    for(const auto& [gpu, optixContext] : optixSystem->OptixCapableDevices())
     {
         DeviceTraversables& traversableData = optixTraverseMemory[deviceIndex];
 
@@ -281,9 +249,14 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
     return TracerError::OK;
 }
 
-const OptiXSystem* GPUBaseAcceleratorOptiX::GetOptiXSystem(const OptiXSystem* sys) const
+void GPUBaseAcceleratorOptiX::SetOptiXSystem(const OptiXSystem* sys)
 {
-    return optixSystem.get();
+    optixSystem = sys;
+}
+
+OptixTraversableHandle GPUBaseAcceleratorOptiX::GetBaseTraversable() const
+{
+    return baseTraversable;
 }
 
 // Accelerator Instancing for basic primitives

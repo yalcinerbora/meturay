@@ -27,30 +27,16 @@
     class OptiXSystem
     {
         public:
-            using OptixDevice = std::pair<CudaGPU&, OptixDeviceContext>;
-
-            struct OptixState
-            {
-                OptixDeviceContext  context  = nullptr;
-                OptixModule         module   = nullptr;
-                OptixPipeline       pipeline = nullptr;
-            };
+            using OptixDevice = std::pair<const CudaGPU&, OptixDeviceContext>;
 
         private:
             const CudaSystem&                   cudaSystem;
-            std::vector<OptixState>             deviceStates;
-
             std::vector<OptixDevice>            optixDevices;
 
             static void                         OptixLOG(unsigned int level,
                                                          const char* tag,
                                                          const char* message,
                                                          void*);
-
-            static TracerError                  LoadPTXFile(std::string& ptxSource,
-                                                            const CudaGPU&,
-                                                            const std::string& baseName);
-
         protected:
         public:
             // Constructors & Destructor
@@ -61,17 +47,9 @@
 
             const std::vector<OptixDevice>& OptixCapableDevices() const;
 
-            TracerError                     OptixGenerateModules(const OptixModuleCompileOptions&,
-                                                                 const OptixPipelineCompileOptions&,
-                                                                 const std::string& baseFileName);
-            TracerError                     OptixGeneratePipelines(const OptixPipelineCompileOptions& pOpts,
-                                                                   const OptixPipelineLinkOptions& lOpts,
-                                                                   const std::vector<OptixProgramGroup>& programs);
-
-            //
-            OptixDeviceContext              OptixContext(const CudaGPU&) const;
-            OptixModule                     OptixModule(const CudaGPU&) const;
-
+            static TracerError              LoadPTXFile(std::string& ptxSource,
+                                                        const CudaGPU&,
+                                                        const std::string& baseName);
 
     };
 #endif

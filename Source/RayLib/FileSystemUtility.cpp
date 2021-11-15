@@ -1,4 +1,5 @@
 #include "FileSystemUtility.h"
+#include "System.h"
 
 #include <filesystem>
 
@@ -62,12 +63,30 @@ std::vector<std::string> Utility::ListFilesInFolder(const std::string& folder,
     for(auto const& file : std::filesystem::directory_iterator{folderPath})
     {
         if(std::regex_match(file.path().filename().string(), regex))
-            result.push_back(file.path().string());            
-    }        
+            result.push_back(file.path().string());
+    }
     return result;
 }
 
 bool Utility::CheckFileExistance(const std::string& path)
 {
     return std::filesystem::exists(path);
+}
+
+std::string Utility::CurrentExecPath()
+{
+    static constexpr size_t MAX_PATH_LENGTH = 512;
+
+    #ifdef METURAY_WIN
+        std::wstring result(MAX_PATH_LENGTH, '\0');
+        GetModuleFileName(NULL, result.data(), result.size());
+        return std::filesystem::path(result).parent_path().string();
+
+    #elif METURAY_LINUX
+
+        std::string result(MAX_PATH_LENGTH, '\0');
+        int result = readlink("/proc/self/exe", result.c_str(), MAX_PATH_LENGTH);
+        assert(result != -1);
+        return result;
+    #endif
 }

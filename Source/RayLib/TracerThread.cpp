@@ -51,8 +51,13 @@ void TracerThread::LoopWork()
     if(currentScenePath.CheckChanged(newScene) || isPrevStopped)
     {
         newSceneGenerated = true;
+
+        SceneLoadFlags flags;
+        if(tracerParameters.forceOptiX)
+            flags |= SceneLoadFlagType::FORCE_OPTIX_ACCELS;
+
         // First Generate Scene
-        tracerSystem.GenerateScene(currentScene, newScene);
+        tracerSystem.GenerateScene(currentScene, newScene, flags);
         // We need to re-create tracer
         // since it is scene dependent
         // First deallocate tracer

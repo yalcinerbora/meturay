@@ -40,7 +40,8 @@ class TracerSystemI
                                                    ScenePartitionerType) = 0;
         virtual void                    ClearScene() = 0;
         virtual void                    GenerateScene(GPUSceneI*&,
-                                                      const std::u8string& scenePath) = 0;
+                                                      const std::u8string& scenePath,
+                                                      SceneLoadFlags = {}) = 0;
         virtual TracerError             GenerateTracer(GPUTracerPtr&,
                                                        const TracerParameters&,
                                                        const TracerOptions&,

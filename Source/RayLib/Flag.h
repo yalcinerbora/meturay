@@ -12,7 +12,7 @@ class Flags
         // I mean... lets just be sure
         static_assert(sizeof(Enum) <= sizeof(size_t),
                       "Flags -> Enum may have more than size_t amount of data");
-           
+
         using F = Enum;
 
 
@@ -25,7 +25,7 @@ class Flags
         // Constructors & Destructor
                         Flags() = default;
                         Flags(Enum);
-                        template <int C> 
+                        template <int C>
                         Flags(const std::array<Enum, C>& vals);
                         Flags(const Flags&) = default;
                         Flags(Flags&&) = default;

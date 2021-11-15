@@ -57,7 +57,8 @@ GPUSceneJson::GPUSceneJson(const std::u8string& fileName,
                            ScenePartitionerI& partitioner,
                            TracerLogicGeneratorI& lg,
                            const SurfaceLoaderGeneratorI& sl,
-                           const CudaSystem& system)
+                           const CudaSystem& system,
+                           SceneLoadFlags flags)
     : logicGenerator(lg)
     , cudaSystem(system)
     , partitioner(partitioner)
@@ -72,6 +73,7 @@ GPUSceneJson::GPUSceneJson(const std::u8string& fileName,
     , cameraCount(0)
     , sceneJson(nullptr)
     , baseAccelerator(nullptr, nullptr)
+    , loadFlags(flags)
 {}
 
 bool GPUSceneJson::FindNode(const nlohmann::json*& jsn, const char* c)
@@ -283,7 +285,9 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         {
             accIndex = loc->second.first;
             accNode = &(*acceleratorsJson)[accIndex];
-            accType = (*accNode)[NodeNames::TYPE];
+            accType = (std::as_const(loadFlags)[SceneLoadFlagType::FORCE_OPTIX_ACCELS])
+                        ? SceneConstants::OptiXAcceleratorTypeName
+                        : std::string((*accNode)[NodeNames::TYPE]);
         }
         else return SceneError(SceneError::ACCELERATOR_ID_NOT_FOUND, std::to_string(accId));
         const std::string acceleratorGroupType = MangledNames::AcceleratorGroup(primGroupType.c_str(),
@@ -315,7 +319,9 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         {
             accIndex = loc->second.first;
             accNode = &(*acceleratorsJson)[accIndex];
-            accType = (*accNode)[NodeNames::TYPE];
+            accType = (std::as_const(loadFlags)[SceneLoadFlagType::FORCE_OPTIX_ACCELS])
+                        ? SceneConstants::OptiXAcceleratorTypeName
+                        : std::string((*accNode)[NodeNames::TYPE]);
         }
         else return SceneError(SceneError::ACCELERATOR_ID_NOT_FOUND, std::to_string(accId));
         const std::string acceleratorGroupType = MangledNames::AcceleratorGroup(primGroupType.c_str(),
@@ -642,7 +648,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         bLightId = lightId;
         bLightGroupTypeName = groupName;
     }
-    else SceneError(SceneError::LIGHT_ID_NOT_FOUND, std::to_string(lightId));
+    else return SceneError(SceneError::LIGHT_ID_NOT_FOUND, std::to_string(lightId));
 
     // Finally Load Texture Info for material access
     // Load all textures here (as node).
@@ -896,8 +902,9 @@ SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, HitKey
     const nlohmann::json* baseAccel = nullptr;
     if(!FindNode(baseAccel, NodeNames::BASE_ACCELERATOR))
         return SceneError::BASE_ACCELERATOR_NODE_NOT_FOUND;
-    const std::string baseAccelType = (*baseAccel)[NodeNames::TYPE];
-
+    const std::string baseAccelType = (std::as_const(loadFlags)[SceneLoadFlagType::FORCE_OPTIX_ACCELS])
+                                        ? SceneConstants::OptiXAcceleratorTypeName
+                                        : std::string((*baseAccel)[NodeNames::TYPE]);
     // Generate Base Accelerator
     baseAccelerator = nullptr;
     if((e = logicGenerator.GenerateBaseAccelerator(baseAccelerator, baseAccelType)) != SceneError::OK)

@@ -114,8 +114,8 @@ TracerLogicGenerator::TracerLogicGenerator()
         accelGroupGenerators.emplace(GPUAccSphrOptiXGroup::TypeName(),
                                      GPUAccelGroupGen(AccelGroupConstruct<GPUAcceleratorGroupI, GPUAccSphrOptiXGroup>,
                                                       DefaultDestruct<GPUAcceleratorGroupI>));
-        accelGroupGenerators.emplace(GPUAccSphrOptiXGroup::TypeName(),
-                                     GPUAccelGroupGen(AccelGroupConstruct<GPUAcceleratorGroupI, GPUAccSphrOptiXGroup>,
+        accelGroupGenerators.emplace(GPUAccTriOptiXGroup::TypeName(),
+                                     GPUAccelGroupGen(AccelGroupConstruct<GPUAcceleratorGroupI, GPUAccTriOptiXGroup>,
                                                       DefaultDestruct<GPUAcceleratorGroupI>));
     #endif
 

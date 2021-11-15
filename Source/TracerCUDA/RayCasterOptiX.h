@@ -3,30 +3,57 @@
 
 #include "RayCasterI.h"
 #include "OptixSystem.h"
+#include "GPUAcceleratorOptiXKC.cuh"
 
 class GPUSceneI;
 class GPUAcceleratorI;
 
 class RayCasterOptiX : public RayCasterI
 {
+    public:
+        static constexpr const char*    MODULE_BASE_NAME = "OptiXShaders/GPUAcceleratorOptiXKC.o.ptx";
+        static constexpr const char*    RAYGEN_FUNC_NAME = "KCRayGenOptix";
+
+        using HitFunctionNames          = std::tuple<std::string, std::string, std::string>;
+        using ProgramGroups             = std::vector<OptixProgramGroup>;
+        //struct ProgramGroups
+        //{
+        //    OptixProgramGroup              raygenProgram;
+        //    std::vector<OptixProgramGroup> acceleratorHitPrograms;
+        //};
+
     private:
-        Vector2i                    maxAccelBits;
-        Vector2i                    maxWorkBits;
+        Vector2i                        maxAccelBits;
+        Vector2i                        maxWorkBits;
         // Combined hit struct size
-        const uint32_t              maxHitSize;
-        const uint32_t              boundaryTransformIndex;
+        const uint32_t                  maxHitSize;
+        const uint32_t                  boundaryTransformIndex;
         // Cuda System for GPU Kernel Launces
-        const CudaSystem&           cudaSystem;
+        const CudaSystem&               cudaSystem;
         // Accelerators
-        GPUBaseAcceleratorI&        baseAccelerator;
-        const AcceleratorBatchMap&  accelBatches;
+        GPUBaseAcceleratorI&            baseAccelerator;
+        const AcceleratorBatchMap&      accelBatches;
         // Misc
-        uint32_t                    currentRayCount;
-
+        uint32_t                        currentRayCount;
         // OptiX Related
-        OptiXSystem                 optixSystem;
-
+        OptiXSystem                     optixSystem;
+        // CPU Memory
+        std::vector<OptixPipeline>      hOptixPipelines;
+        std::vector<OptixModule>        hOptixModules;
+        std::vector<ProgramGroups>      hOptixPrograms;
         // GPU Memory
+        DeviceMemory                    memory;
+        OpitXBaseAccelParams*           dOptixLaunchParams;
+        //...
+
+        // Funcs
+        TracerError                 CreateProgramGroups(const std::string& rgFuncName,
+                                                        const std::vector<HitFunctionNames>&);
+        TracerError                 CreateModules(const OptixModuleCompileOptions& mOpts,
+                                                  const OptixPipelineCompileOptions& pOpts,
+                                                  const std::string& baseFileName);
+        TracerError                 CreatePipelines(const OptixPipelineCompileOptions& pOpts,
+                                                    const OptixPipelineLinkOptions& lOpts);
 
     protected:
     public:

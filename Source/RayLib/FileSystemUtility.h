@@ -25,4 +25,6 @@ namespace Utility
     void                        ForceMakeDirectoriesInPath(const std::string& path);
 
     bool                        CheckFileExistance(const std::string& path);
+
+    std::string                 CurrentExecPath();
 }

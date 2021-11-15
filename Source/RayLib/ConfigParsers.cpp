@@ -32,9 +32,11 @@ namespace ConfigParser
     {
         static constexpr const char* SEED_NAME = "seed";
         static constexpr const char* VERBOSE_NAME = "verbose";
+        static constexpr const char* FORCE_OPTIX_NAME = "forceOptiX";
 
         params.seed = SceneIO::LoadNumber<uint32_t>(paramsJson[SEED_NAME]);
         params.verbose = SceneIO::LoadBool(paramsJson[VERBOSE_NAME]);
+        params.forceOptiX = SceneIO::LoadBool(paramsJson[FORCE_OPTIX_NAME]);
     }
 
     void ParseVisorOptions(VisorOptions& opts,

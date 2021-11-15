@@ -55,13 +55,15 @@ SceneError GPUAccOptiXGroup<PGroup>::InitializeGroup(// Accelerator Option Node
     }
     assert(surfaceInnerId == hTransformIndices.size());
 
-    // Reserve Device Memories for traversal
-    optixTraverseMemory.resize(hTransformIndices.size());
+    // Copy transform ids to GPU Memory
+    transformIdMemory = DeviceMemory(sizeof(TransformId) * hTransformIndices.size());
+    dAccTransformIds = static_cast<TransformId*>(transformIdMemory);
+    CUDA_CHECK(cudaMemcpy(dAccTransformIds,
+                          hTransformIndices.data(),
+                          transformIdMemory.Size(),
+                          cudaMemcpyHostToDevice));
 
-    //DeviceMemory::EnlargeBuffer(memory,
-    //                            sizeof(TransformId) * hTransformIndices.size());
-
-    return SceneError::INTERNAL_DUPLICATE_ACCEL_ID;
+    return SceneError::OK;
 }
 
 template <class PGroup>

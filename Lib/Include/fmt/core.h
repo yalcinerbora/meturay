@@ -24,7 +24,8 @@
 #  define FMT_CLANG_VERSION 0
 #endif
 
-#if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER) && \
+    !defined(__NVCOMPILER)
 #  define FMT_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
 #else
 #  define FMT_GCC_VERSION 0
@@ -258,8 +259,8 @@
 #ifndef FMT_CONSTEVAL
 #  if ((FMT_GCC_VERSION >= 1000 || FMT_CLANG_VERSION >= 1101) &&      \
        __cplusplus > 201703L && !defined(__apple_build_version__)) || \
-      (defined(__cpp_consteval) &&                                    \
-       !FMT_MSC_VER)  // consteval is broken in MSVC and Apple clang 13.
+      (defined(__cpp_consteval) && (!FMT_MSC_VER || _MSC_FULL_VER >= 193030704))
+  // consteval is broken in MSVC before VS2022 and Apple clang 13.
 #    define FMT_CONSTEVAL consteval
 #    define FMT_HAS_CONSTEVAL
 #  else
@@ -1369,8 +1370,11 @@ template <typename Context> struct arg_mapper {
 
   // We use SFINAE instead of a const T* parameter to avoid conflicting with
   // the C array overload.
-  template <typename T, FMT_ENABLE_IF(std::is_pointer<T>::value)>
-  FMT_CONSTEXPR auto map(T) -> unformattable_pointer {
+  template <
+      typename T,
+      FMT_ENABLE_IF(std::is_convertible<const T&, const void*>::value &&
+                    !std::is_convertible<const T&, const char_type*>::value)>
+  FMT_CONSTEXPR auto map(const T&) -> unformattable_pointer {
     return {};
   }
 

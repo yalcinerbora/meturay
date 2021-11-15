@@ -62,7 +62,8 @@ void TracerSystemCUDA::ClearScene()
 }
 
 void TracerSystemCUDA::GenerateScene(GPUSceneI*& newScene,
-                                     const std::u8string& scenePath)
+                                     const std::u8string& scenePath,
+                                     SceneLoadFlags flags)
 {
     // Clear Logic List by constructing new logic generator
     logicGenerator = std::make_unique<TracerLogicGenerator>();
@@ -71,7 +72,8 @@ void TracerSystemCUDA::GenerateScene(GPUSceneI*& newScene,
                                               *scenePartitioner,
                                               *logicGenerator,
                                               *surfaceLoaders,
-                                              *cudaSystem);
+                                              *cudaSystem,
+                                              flags);
     newScene = gpuScene.get();
 }
 

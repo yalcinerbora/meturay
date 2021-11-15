@@ -42,10 +42,8 @@ class GPUAccOptiXGroup final
         std::vector<OptixTraversableHandle> hOptixTraversables;
         SurfaceAABBList                     surfaceAABBs;
         // GPU Memory
-        DeviceMemory                        transformIdMemory;
         std::vector<DeviceTraversables>     optixTraverseMemory;
-
-        // Per accelerator data
+        DeviceMemory                        transformIdMemory;
         TransformId*                        dAccTransformIds;
 
     public:
@@ -109,25 +107,18 @@ class GPUBaseAcceleratorOptiX final : public GPUBaseAcceleratorI
 {
     public:
         static const char*              TypeName();
-        static constexpr const char*    MODULE_BASE_NAME = "OptiXShaders/GPUAcceleratorOptiXKC.o.ptx";
 
     private:
         static constexpr size_t         AlignByteCount = 16;
 
         // CPU Memory
-
+        const OptiXSystem*              optixSystem;
         std::map<uint32_t, uint32_t>    idLookup;
         std::vector<BaseLeaf>           leafs;
         AABB3f                          sceneAABB;
-
+        OptixTraversableHandle          baseTraversable;
         // GPU Memory
-        DeviceMemory                    memory;
-        OpitXBaseAccelParams*           dBaseAccelParams;
-        // ...
-        // OptiX Related
-        std::unique_ptr<OptiXSystem>    optixSystem;
-
-        TracerError                     LoadModule(uint32_t hitStructSize);
+        DeviceMemory                    baseTraversableMemory;
 
     public:
         // Constructors & Destructor
@@ -167,7 +158,8 @@ class GPUBaseAcceleratorOptiX final : public GPUBaseAcceleratorI
         const AABB3f&               SceneExtents() const override;
 
         // OptiX Related
-        const OptiXSystem*          GetOptiXSystem(const OptiXSystem*) const;
+        void                        SetOptiXSystem(const OptiXSystem*);
+        OptixTraversableHandle      GetBaseTraversable() const;
 };
 
 #include "GPUAcceleratorOptiX.hpp"

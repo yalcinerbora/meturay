@@ -31,7 +31,8 @@ class TracerSystemCUDA final : public TracerSystemI
                                            ScenePartitionerType) override;
         void                    ClearScene() override;
         void                    GenerateScene(GPUSceneI*&,
-                                              const std::u8string& scenePath) override;
+                                              const std::u8string& scenePath,
+                                              SceneLoadFlags = {}) override;
         TracerError             GenerateTracer(GPUTracerPtr&,
                                                const TracerParameters&,
                                                const TracerOptions&,

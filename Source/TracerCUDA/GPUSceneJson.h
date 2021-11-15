@@ -43,6 +43,8 @@ class GPUSceneJson : public GPUSceneI
         ScenePartitionerI&                      partitioner;
         const SurfaceLoaderGeneratorI&          surfaceLoaderGenerator;
         const CudaSystem&                       cudaSystem;
+        // Flags
+        SceneLoadFlags                          loadFlags;
 
         // Loaded
         Vector2i                                maxAccelIds;
@@ -172,7 +174,8 @@ class GPUSceneJson : public GPUSceneI
                                                          ScenePartitionerI&,
                                                          TracerLogicGeneratorI&,
                                                          const SurfaceLoaderGeneratorI&,
-                                                         const CudaSystem&);
+                                                         const CudaSystem&,
+                                                         SceneLoadFlags = {});
                                             GPUSceneJson(const GPUSceneJson&) = delete;
                                             GPUSceneJson(GPUSceneJson&&) = default;
         GPUSceneJson&                       operator=(const GPUSceneJson&) = delete;

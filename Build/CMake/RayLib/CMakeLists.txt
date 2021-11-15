@@ -181,7 +181,8 @@ target_include_directories(RayLib PRIVATE
                            ${MRAY_SOURCE_DIRECTORY})
 
 target_link_libraries(RayLib
-                      fmt)
+                      fmt
+                      spdlog)
 
 target_compile_definitions(RayLib PRIVATE ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC})
 

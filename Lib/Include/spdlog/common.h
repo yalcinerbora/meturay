@@ -14,6 +14,7 @@
 #include <string>
 #include <type_traits>
 #include <functional>
+#include <cstdio>
 
 #ifdef SPDLOG_COMPILED_LIB
 #    undef SPDLOG_HEADER_ONLY
@@ -45,7 +46,7 @@
 #    define SPDLOG_FMT_RUNTIME(format_string) format_string
 #endif
 
-// visual studio upto 2013 does not support noexcept nor constexpr
+// visual studio up to 2013 does not support noexcept nor constexpr
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
 #    define SPDLOG_NOEXCEPT _NOEXCEPT
 #    define SPDLOG_CONSTEXPR
@@ -254,6 +255,17 @@ struct source_loc
     int line{0};
     const char *funcname{nullptr};
 };
+
+typedef struct file_event_handlers
+{
+    std::function<void(const filename_t &filename)> before_open;
+    std::function<void(const filename_t &filename, std::FILE *file_stream)> after_open;
+    std::function<void(const filename_t &filename, std::FILE *file_stream)> before_close;
+    std::function<void(const filename_t &filename)> after_close;
+
+    file_event_handlers(): before_open(nullptr), after_open(nullptr), before_close(nullptr), after_close(nullptr)
+    {}
+} file_event_handlers_t;
 
 namespace details {
 // make_unique support for pre c++14
