@@ -8,12 +8,27 @@
     #include <vector>
     #include "RayLib/TracerError.h"
 
+    #include "DeviceMemory.h"
+
+    static CUdeviceptr AsOptixPtr(DeviceMemory& mem)
+    {
+        return reinterpret_cast<CUdeviceptr>(static_cast<Byte*>(mem));
+    }
+
+    template<class T>
+    static CUdeviceptr AsOptixPtr(T* ptr)
+    {
+        return reinterpret_cast<CUdeviceptr>(ptr);
+    }
+
     class CudaSystem;
     class CudaGPU;
 
     class OptiXSystem
     {
         public:
+            using OptixDevice = std::pair<CudaGPU&, OptixDeviceContext>;
+
             struct OptixState
             {
                 OptixDeviceContext  context  = nullptr;
@@ -24,6 +39,8 @@
         private:
             const CudaSystem&                   cudaSystem;
             std::vector<OptixState>             deviceStates;
+
+            std::vector<OptixDevice>            optixDevices;
 
             static void                         OptixLOG(unsigned int level,
                                                          const char* tag,
@@ -42,6 +59,8 @@
             OptiXSystem&                    operator=(const OptiXSystem&) = delete;
                                             ~OptiXSystem();
 
+            const std::vector<OptixDevice>& OptixCapableDevices() const;
+
             TracerError                     OptixGenerateModules(const OptixModuleCompileOptions&,
                                                                  const OptixPipelineCompileOptions&,
                                                                  const std::string& baseFileName);
@@ -52,6 +71,8 @@
             //
             OptixDeviceContext              OptixContext(const CudaGPU&) const;
             OptixModule                     OptixModule(const CudaGPU&) const;
+
+
     };
 #endif
 #endif

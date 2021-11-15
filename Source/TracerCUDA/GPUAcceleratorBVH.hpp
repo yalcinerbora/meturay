@@ -506,7 +506,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         gpu.GridStrideKC_X(0, 0,
                            indexCount,
                            //
-                           KCInitIndices,
+                           KCInitPrimIdsAndIndices,
                            //
                            dIdsIn + indexOffset,
                            dPrimIds + indexOffset,
@@ -522,7 +522,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     gpu.GridStrideKC_X(0, 0,
                        totalPrimCount,
                        //
-                       KCGenCenters<PGroup>,
+                       KCGenCentersWithIndex<PGroup>,
                        //
                        dPrimCenters,
                        //
@@ -535,7 +535,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     gpu.GridStrideKC_X(0, 0,
                        totalPrimCount,
                        //
-                       KCGenAABBs<PGroup>,
+                       KCGenAABBsWithIndex<PGroup>,
                        //
                        dPrimAABBs,
                        //

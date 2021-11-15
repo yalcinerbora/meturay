@@ -25,9 +25,16 @@ class GPUAccOptiXGroup final
     public:
         using LeafData = typename PGroup::LeafData;
 
+        struct DeviceTraversables
+        {
+            std::vector<DeviceMemory>           tMemories;
+            std::vector<OptixTraversableHandle> traversables;
+        };
+
     private:
         // CPU Memory
-        const OptiXSystem*                  optiXSystem;
+        const OptiXSystem*                  optixSystem;
+        //
         std::vector<PrimitiveRangeList>     primitiveRanges;
         std::vector<HitKeyList>             primitiveMaterialKeys;
         std::map<uint32_t, uint32_t>        idLookup;
@@ -36,11 +43,10 @@ class GPUAccOptiXGroup final
         SurfaceAABBList                     surfaceAABBs;
         // GPU Memory
         DeviceMemory                        transformIdMemory;
-        std::vector<DeviceMemory>           optixTraverseMemory;
+        std::vector<DeviceTraversables>     optixTraverseMemory;
+
         // Per accelerator data
         TransformId*                        dAccTransformIds;
-        // OptixRelated
-        OptixModule                         ptxModule;
 
     public:
         // Constructors & Destructor

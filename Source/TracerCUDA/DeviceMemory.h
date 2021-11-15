@@ -120,6 +120,7 @@ class DeviceMemory : public DeviceMemoryI
         constexpr explicit          operator const T*() const;
         constexpr                   operator void*();
         constexpr                   operator const void*() const;
+
         // Misc
         size_t                      Size() const override;
 

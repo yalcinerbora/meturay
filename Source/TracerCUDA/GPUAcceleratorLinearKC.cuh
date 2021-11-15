@@ -30,25 +30,6 @@ struct PRList
     const Vector2ul primRanges[SceneConstants::MaxPrimitivePerSurface];
 };
 
-template <class PGroup>
-__global__
-void KCGenAABBs(// O
-                AABB3f* gAABBs,
-                // Input
-                Vector2ul primRange,
-                //
-                AABBGen<PGroup> aabbFunc,
-                uint32_t primCount)
-{
-    // Grid Stride Loop
-    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-        globalId < primCount; globalId += blockDim.x * gridDim.x)
-    {
-        PrimitiveId primId = primRange[0] + globalId;
-        gAABBs[globalId] = aabbFunc(primId);
-    }
-}
-
 // Fundamental Construction Kernel
 template <class PGroup>
 __global__ CUDA_LAUNCH_BOUNDS_1D

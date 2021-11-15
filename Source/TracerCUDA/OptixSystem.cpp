@@ -83,6 +83,11 @@ OptiXSystem::~OptiXSystem()
     }
 }
 
+const std::vector<OptiXSystem::OptixDevice>& OptiXSystem::OptixCapableDevices() const
+{
+    return optixDevices;
+}
+
 TracerError OptiXSystem::OptixGenerateModules(const OptixModuleCompileOptions& mOpts,
                                               const OptixPipelineCompileOptions& pOpts,
                                               const std::string& baseFileName)
@@ -119,7 +124,8 @@ TracerError OptiXSystem::OptixGeneratePipelines(const OptixPipelineCompileOption
     {
         OPTIX_CHECK(optixPipelineCreate(deviceStates[i].context,
                                         &pOpts, &lOpts,
-                                        programs.data(), programs.size(),
+                                        programs.data(),
+                                        static_cast<uint32_t>(programs.size()),
                                         nullptr, nullptr,
                                         &deviceStates[i].pipeline));
 

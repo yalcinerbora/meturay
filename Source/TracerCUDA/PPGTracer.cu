@@ -222,10 +222,11 @@ bool PPGTracer::Render()
 {
     // Check tracer termination conditions
     // Either there is no ray left for iteration or maximum depth is exceeded
-    if(currentRayCount == 0 || currentDepth >= options.maximumDepth)
+    if(rayCaster->CurrentRayCount() == 0 ||
+       currentDepth >= options.maximumDepth)
         return false;
 
-    HitAndPartitionRays();
+    const auto partitions = rayCaster->HitAndPartitionRays();
 
     //Debug::DumpMemToFile("auxIn",
     //                     static_cast<const RayAuxPPG*>(*dAuxIn),
@@ -269,7 +270,9 @@ bool PPGTracer::Render()
 
     // Generate output partitions
     uint32_t totalOutRayCount = 0;
-    auto outPartitions = PartitionOutputRays(totalOutRayCount, workMap);
+    auto outPartitions = RayCasterI::PartitionOutputRays(totalOutRayCount,
+                                                         partitions,
+                                                         workMap);
 
     // Allocate new auxiliary buffer
     // to fit all potential ray outputs
@@ -302,9 +305,10 @@ bool PPGTracer::Render()
     }
 
     // Launch Kernels
-    WorkRays(workMap, outPartitions,
-             totalOutRayCount,
-             scene.BaseBoundaryMaterial());
+    rayCaster->WorkRays(workMap, outPartitions,
+                        partitions, rngMemory,
+                        totalOutRayCount,
+                        scene.BaseBoundaryMaterial());
 
     //Debug::DumpMemToFile("auxOut",
     //                     static_cast<const RayAuxPPG*>(*dAuxOut),

@@ -22,7 +22,8 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
     size_t auxBufferSize = totalRayCount * sizeof(AuxStruct);
 
     // Allocate enough space for ray
-    rayMemory.ResizeRayOut(totalRayCount, scene.BaseBoundaryMaterial());
+    rayCaster->ResizeRayOut(totalRayCount, scene.BaseBoundaryMaterial());
+
     DeviceMemory::EnlargeBuffer(*dAuxOut, auxBufferSize);
 
     // Basic Tracer does classic camera to light tracing
@@ -55,7 +56,7 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
 
         // Kernel Specific Args
         // Output
-        RayGMem* gRays = rayMemory.RaysOut();
+        RayGMem* gRays = rayCaster->RaysOut();
         AuxStruct* gAuxiliary = static_cast<AuxStruct*>(*dAuxOut);
         // Input
         RNGGMem rngData = rngMemory.RNGData(gpu);
@@ -96,8 +97,7 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
     cudaSystem.SyncAllGPUs();
 
     SwapAuxBuffers();
-    rayMemory.SwapRays();
-    currentRayCount = totalRayCount;
+    rayCaster->SwapRays();
 }
 
 template <class AuxStruct, class AuxInitFunctor>
@@ -121,7 +121,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
     size_t auxBufferSize = totalRayCount * sizeof(AuxStruct);
 
     // Allocate enough space for ray
-    rayMemory.ResizeRayOut(totalRayCount, scene.BaseBoundaryMaterial());
+    rayCaster->ResizeRayOut(totalRayCount, scene.BaseBoundaryMaterial());
     DeviceMemory::EnlargeBuffer(*dAuxOut, auxBufferSize);
 
     // Basic Tracer does classic camera to light tracing
@@ -154,7 +154,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
 
         // Kernel Specific Args
         // Output
-        RayGMem* gRays = rayMemory.RaysOut();
+        RayGMem* gRays = rayCaster->RaysOut();
         AuxStruct* gAuxiliary = static_cast<AuxStruct*>(*dAuxOut);
         // Input
         RNGGMem rngData = rngMemory.RNGData(gpu);
@@ -194,8 +194,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
     cudaSystem.SyncAllGPUs();
 
     SwapAuxBuffers();
-    rayMemory.SwapRays();
-    currentRayCount = totalRayCount;
+    rayCaster->SwapRays();
 }
 
 template <class AuxStruct, class AuxInitFunctor>

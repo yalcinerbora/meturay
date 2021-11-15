@@ -38,6 +38,7 @@ struct TracerError : public ErrorI
             IMEM_UNKNOWN_PIXEL_FORMAT,
             UNABLE_TO_CONVERT_TO_VISOR_PIXEL_FORMAT,
             // Optix Related
+            OPTIX_ACCELERATOR_MISMATCH,
             OPTIX_PTX_FILE_NOT_FOUND,
             // Misc
             TRACER_INTERNAL_ERROR,
@@ -122,7 +123,8 @@ inline TracerError::operator std::string() const
         "Unable to utilize the provided pixel format",
         "Unable to convert tracer pixel format to visor pixel format",
         // Optix Related
-        "PTX file for Optix is not found",
+        "Scene file has OptiX/non-OptiX mixed accelerators",
+        "PTX file for OptiX is not found",
         // Misc
         "Tracer internal error"
     };

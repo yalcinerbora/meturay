@@ -31,8 +31,8 @@ TracerError AOTracer::Initialize()
     // Increment batch work id by one
     newMaxIds[0] += 1;
     // Check if we flipped a new bit
-    Vector2i newWorkBits = DetermineMaxBitFromId(newMaxIds);
-    maxWorkBits[0] = newWorkBits[0];
+    Vector2i newWorkBits = RayCasterI::DetermineMaxBitFromId(newMaxIds);
+    rayCaster->OverrideWorkBits(newWorkBits);
 
     // Generate Combined Key
     uint32_t aoMissWorkBatchId = newMaxIds[0];
@@ -120,7 +120,7 @@ void AOTracer::GenerateWork(const GPUCameraI& dCam)
 
 bool AOTracer::Render()
 {
-    HitAndPartitionRays();
+    const auto partitions = rayCaster->HitAndPartitionRays();
 
     cudaSystem.SyncAllGPUs();
 
@@ -133,7 +133,9 @@ bool AOTracer::Render()
 
     // Generate output partitions
     uint32_t totalOutRayCount = 0;
-    auto outPartitions = PartitionOutputRays(totalOutRayCount, workMap);
+    auto outPartitions = RayCasterI::PartitionOutputRays(totalOutRayCount,
+                                                         partitions,
+                                                         workMap);
 
     // Allocate new auxiliary buffer
     // to fit all potential ray outputs
@@ -164,9 +166,11 @@ bool AOTracer::Render()
     }
 
     // Launch Kernels
-    WorkRays(workMap, outPartitions,
-             totalOutRayCount,
-             scene.BaseBoundaryMaterial());
+    rayCaster->WorkRays(workMap, outPartitions,
+                        partitions,
+                        rngMemory,
+                        totalOutRayCount,
+                        scene.BaseBoundaryMaterial());
 
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration

@@ -27,6 +27,10 @@ if(USE_OPTIX)
         ${CURRENT_SOURCE_DIR}/OptixSystem.cpp
         ${CURRENT_SOURCE_DIR}/OptixSystem.h
         ${CURRENT_SOURCE_DIR}/OptixCheck.h)
+    set(SRC_RC_OPTIX
+        ${CURRENT_SOURCE_DIR}/RayCasterOptiX.cu
+        ${CURRENT_SOURCE_DIR}/RayCasterOptiX.h)
+
     # Additionally Define PTX Source
     # Which will be passed to the Optix Compile Target
     set(OPTIX_PTX_SOURCES
@@ -35,6 +39,11 @@ if(USE_OPTIX)
     set_source_files_properties(${OPTIX_PTX_SOURCES}
                                  PROPERTIES HEADER_FILE_ONLY TRUE)
 endif()
+
+set(SRC_RC
+    ${CURRENT_SOURCE_DIR}/RayCaster.cu
+    ${CURRENT_SOURCE_DIR}/RayCaster.h
+    ${CURRENT_SOURCE_DIR}/RayCasterI.h)
 
 set(SRC_CAMERAS
     ${CURRENT_SOURCE_DIR}/GPUCameraPixel.cu
@@ -327,7 +336,9 @@ set(SRC_ALL
     ${SRC_REF_PG_TRACER}
     ${SRC_TRANSFORMS}
     ${SRC_WORK}
-    ${SRC_COMMON})
+    ${SRC_COMMON}
+    ${SRC_RC}
+    ${SRC_RC_OPTIX})
 
 # IDE Filters
 source_group("Accelerators" FILES ${SRC_ACCELS_COMMON})
@@ -359,6 +370,11 @@ source_group("Scene" FILES ${SRC_SCENE})
 source_group("Shared Lib" FILES ${SRC_SHARED_LIB})
 source_group("Structs" FILES ${SRC_STRUCTS})
 source_group("Textures" FILES ${SRC_TEXTURES})
+
+source_group("RayCasters" FILES ${SRC_RC})
+if(USE_OPTIX)
+    source_group("RayCasters" FILES ${SRC_RC_OPTIX})
+endif()
 
 source_group("Tracers" FILES ${SRC_TRACERS_COMMON})
 source_group("Tracers/Structs" FILES ${SRC_TRACERS_STRUCTS})

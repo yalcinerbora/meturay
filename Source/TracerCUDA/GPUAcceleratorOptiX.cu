@@ -1,6 +1,7 @@
 #include "GPUAcceleratorOptix.cuh"
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveSphere.h"
+#include "CudaSystem.hpp"
 
 const char* GPUBaseAcceleratorOptiX::TypeName()
 {
@@ -62,15 +63,9 @@ void GPUBaseAcceleratorOptiX::Hit(const CudaSystem& system,
                                   const RayId* dRayIds,
                                   const uint32_t rayCount) const
 {
-    //for(const auto& gpu : system.SystemGPUs())
-    //{
-    //    OPTIX_CHECK(optixLaunch(state.pipeline, (CUstream) 0,
-    //                            reinterpret_cast<CUdeviceptr>(dBaseAccelParams),
-    //                            sizeof(OpitXBaseAccelParams),
-    //                            &state.sbt,
-    //                            rayCount,
-    //                            1, 1));
-    //}
+    // This call is not used for OptiX
+    // throw an execption if it is called
+    throw TracerException(TracerError::TRACER_INTERNAL_ERROR);
 }
 
 SceneError GPUBaseAcceleratorOptiX::Initialize(// Accelerator Option Node
@@ -95,6 +90,34 @@ TracerError GPUBaseAcceleratorOptiX::Constrcut(const CudaSystem&,
                                                // List of surface AABBs
                                                const SurfaceAABBList& aabbMap)
 {
+    //for(const auto& [surfId, aabb] : aabbMap)
+    //{
+    //    METU_LOG(surfId);
+    //}
+
+    //// Generate Temporary Instance
+    //DeviceMemory(sizeof(OptixInstance) * aabbMap.size());
+
+    //// Call Kernel
+
+    //OptixInstanceFlags flags = OPTIX_INSTANCE_FLAG_NONE;
+    //OptixInstance instance = {};
+    //instance.flags = flags;
+    //instance.instanceId = 0;
+    //instance.sbtOffset = 0;
+    //instance.visibilityMask = 0xFF;
+    //instance.transform = {1, 0, 0, 0,
+    //                      0, 1, 0, 0,
+    //                      0, 0, 1, 0};
+    //instance.traversableHandle = 0;
+
+
+
+
+    //{
+    //    float transform[12];
+    //};
+
 
     return TracerError::OK;
 }
@@ -145,117 +168,117 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
                                  system.BestGPU());
     }
 
-    uint32_t buildInputCount = 0;
-    std::array<OptixBuildInput, SceneConstants::MaxPrimitivePerSurface> buildInputs;
-    for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
+    //===============================//
+    //  ACTUAL TRAVERSAL GENERATION  //
+    //===============================//
+    uint32_t deviceIndex = 0;
+    for(const auto [gpu, optixContext] : optixSystem->OptixCapableDevices())
     {
-        buildInputCount++;
+        DeviceTraversables& traversableData = optixTraverseMemory[deviceIndex];
 
-        const auto& range = primRangeList[i];
-        if(range[0] == std::numeric_limits<uint64_t>::max())
-            break;
+        uint32_t buildInputCount = 0;
+        std::array<OptixBuildInput, SceneConstants::MaxPrimitivePerSurface> buildInputs;
+        for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
+        {
+            buildInputCount++;
 
-        uint32_t geometryFlag = OPTIX_GEOMETRY_FLAG_NONE;
+            const auto& range = primRangeList[i];
+            if(range[0] == std::numeric_limits<uint64_t>::max())
+                break;
 
-        uint32_t indexCount = static_cast<uint32_t>(primRangeList[i][1] - primRangeList[i][0]);
-        uint32_t offset = static_cast<uint32_t>(primRangeList[i][0]);
+            uint32_t geometryFlag = OPTIX_GEOMETRY_FLAG_NONE;
 
-        OptixBuildInput& buildInput = buildInputs[i];
-        buildInput = OptixBuildInput{};
-        buildInput.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
-        // Vertex
-        CUdeviceptr dPositions = reinterpret_cast<CUdeviceptr>(primData.positions);
-        CUdeviceptr dIndices = reinterpret_cast<CUdeviceptr>(primData.indexList);
-        // Vertex
-        buildInput.triangleArray.vertexFormat = OPTIX_VERTEX_FORMAT_FLOAT3;
-        buildInput.triangleArray.numVertices = static_cast<uint32_t>(totalVertexCount);
-        buildInput.triangleArray.vertexBuffers = &dPositions;
-        buildInput.triangleArray.vertexStrideInBytes = sizeof(Vector3f);
-        // Index
-        buildInput.triangleArray.indexFormat = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
-        buildInput.triangleArray.numIndexTriplets = indexCount;
-        buildInput.triangleArray.indexBuffer = dIndices;
-        // We store 64 bit values on index make stride as such
-        buildInput.triangleArray.indexStrideInBytes = sizeof(uint64_t) * 3;
-        buildInput.triangleArray.primitiveIndexOffset = offset;
-        // SBT
-        buildInput.triangleArray.flags = &geometryFlag;
-        buildInput.triangleArray.numSbtRecords = 1;
-        buildInput.triangleArray.sbtIndexOffsetBuffer = 0;
-        buildInput.triangleArray.sbtIndexOffsetSizeInBytes = sizeof(uint32_t);
-        buildInput.triangleArray.sbtIndexOffsetStrideInBytes = sizeof(uint32_t);
+            uint32_t indexCount = static_cast<uint32_t>(primRangeList[i][1] - primRangeList[i][0]);
+            uint32_t offset = static_cast<uint32_t>(primRangeList[i][0]);
+
+            OptixBuildInput& buildInput = buildInputs[i];
+            buildInput = OptixBuildInput{};
+            buildInput.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
+            // Vertex
+            CUdeviceptr dPositions = AsOptixPtr(primData.positions);
+            CUdeviceptr dIndices = AsOptixPtr(primData.indexList);
+            // Vertex
+            buildInput.triangleArray.vertexFormat = OPTIX_VERTEX_FORMAT_FLOAT3;
+            buildInput.triangleArray.numVertices = static_cast<uint32_t>(totalVertexCount);
+            buildInput.triangleArray.vertexBuffers = &dPositions;
+            buildInput.triangleArray.vertexStrideInBytes = sizeof(Vector3f);
+            // Index
+            buildInput.triangleArray.indexFormat = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
+            buildInput.triangleArray.numIndexTriplets = indexCount;
+            buildInput.triangleArray.indexBuffer = dIndices;
+            // We store 64 bit values on index make stride as such
+            buildInput.triangleArray.indexStrideInBytes = sizeof(uint64_t) * 3;
+            buildInput.triangleArray.primitiveIndexOffset = offset;
+            // SBT
+            buildInput.triangleArray.flags = &geometryFlag;
+            buildInput.triangleArray.numSbtRecords = 1;
+            buildInput.triangleArray.sbtIndexOffsetBuffer = 0;
+            buildInput.triangleArray.sbtIndexOffsetSizeInBytes = sizeof(uint32_t);
+            buildInput.triangleArray.sbtIndexOffsetStrideInBytes = sizeof(uint32_t);
+        }
+
+        OptixAccelBuildOptions accelOptions = {};
+        accelOptions.buildFlags = OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+        accelOptions.operation = OPTIX_BUILD_OPERATION_BUILD;
+
+        OptixAccelBufferSizes accelMemorySizes;
+        OPTIX_CHECK(optixAccelComputeMemoryUsage
+        (
+            optixContext,
+            &accelOptions, buildInputs.data(),
+            buildInputCount, &accelMemorySizes
+        ));
+
+        // Allocate Temp Buffer for Build
+        Byte* dTempBuild;
+        uint64_t* dCompactedSize;
+        DeviceMemory tempBuildBuffer;
+        DeviceMemory::AllocateMultiData(std::tie(dCompactedSize, dTempBuild), tempBuildBuffer,
+                                        {1, accelMemorySizes.outputSizeInBytes});
+        DeviceMemory tempMem(accelMemorySizes.tempSizeInBytes);
+
+        // While building fetch compacted output size
+        OptixAccelEmitDesc emitProperty = {};
+        emitProperty.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
+        emitProperty.result = AsOptixPtr(dCompactedSize);
+
+        OptixTraversableHandle traversable;
+        OPTIX_CHECK(optixAccelBuild(optixContext, (cudaStream_t)0,
+                                    &accelOptions,
+                                    buildInputs.data(),
+                                    buildInputCount,
+                                    AsOptixPtr(tempMem), tempMem.Size(),
+                                    AsOptixPtr(dTempBuild),
+                                    accelMemorySizes.outputSizeInBytes,
+                                    &traversable, &emitProperty, 1));
+
+        // Get compacted size to CPU
+        uint64_t hCompactAccelSize;
+        CUDA_CHECK(cudaMemcpy(&hCompactAccelSize, dCompactedSize,
+                              sizeof(uint64_t), cudaMemcpyDeviceToHost));
+
+        if(hCompactAccelSize < accelMemorySizes.outputSizeInBytes)
+        {
+            DeviceMemory compactedMemory(hCompactAccelSize);
+
+            // use handle as input and output
+            OPTIX_CHECK(optixAccelCompact(optixContext, (cudaStream_t)0,
+                                          traversable,
+                                          AsOptixPtr(compactedMemory),
+                                          hCompactAccelSize,
+                                          &traversable));
+
+            traversableData.tMemories[innerIndex] = std::move(compactedMemory);
+        }
+        else
+            traversableData.tMemories[innerIndex] = std::move(tempBuildBuffer);
+
+        traversableData.traversables[innerIndex] = traversable;
+        deviceIndex++;
     }
 
-    OptixAccelBuildOptions accelOptions = {};
-    accelOptions.buildFlags = OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
-    accelOptions.operation = OPTIX_BUILD_OPERATION_BUILD;
-
-    OptixAccelBufferSizes accelMemorySizes;
-    OPTIX_CHECK(optixAccelComputeMemoryUsage
-    (
-        optiXSystem->OptixContext(system.BestGPU()),
-        &accelOptions, buildInputs.data(),
-        buildInputCount, &accelMemorySizes
-    ));
-
-
-
-
-
-    uint64_t* dCompactedSize;
-    Byte* dTempBuild;
-
-    DeviceMemory tempBuildBuffer;
-    DeviceMemory::AllocateMultiData(std::tie(dCompactedSize, dTempBuild), tempBuildBuffer,
-                                    {1, accelMemorySizes.outputSizeInBytes});
-    DeviceMemory tempMem(accelMemorySizes.tempSizeInBytes);
-
-    // While building fetch compacted output size
-    OptixAccelEmitDesc emitProperty = {};
-    emitProperty.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
-    emitProperty.result = reinterpret_cast<CUdeviceptr>(dCompactedSize);
-
-    OptixTraversableHandle traversable;
-    OPTIX_CHECK(optixAccelBuild(optiXSystem->OptixContext(system.BestGPU()),
-                                0,                                  // CUDA stream
-                                &accelOptions,
-                                buildInputs.data(),
-                                buildInputCount,
-                                reinterpret_cast<CUdeviceptr>(static_cast<Byte*>(tempMem)), tempMem.Size(),
-                                reinterpret_cast<CUdeviceptr>(dTempBuild), accelMemorySizes.outputSizeInBytes,
-                                &traversable, &emitProperty, 1));
-
-
-    //CUDA_CHECK(cudaFree(reinterpret_cast<void*>(d_temp_buffer)));
-    //CUDA_CHECK(cudaFree(reinterpret_cast<void*>(d_mat_indices)));
-
-    // Get compacted size
-    size_t hCompactAccelSize;
-    CUDA_CHECK(cudaMemcpy(&hCompactAccelSize, dCompactedSize,
-                          sizeof(size_t), cudaMemcpyDeviceToHost));
-
-    if(hCompactAccelSize < accelMemorySizes.outputSizeInBytes)
-    {
-        //CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&state.d_gas_output_buffer), compacted_gas_size));
-
-        // use handle as input and output
-        OPTIX_CHECK(optixAccelCompact(optiXSystem->OptixContext(system.BestGPU()), 0,
-                                      traversable, /*CHANGE THIS*/0,
-                                      hCompactAccelSize,
-                                      &traversable));
-
-        //CUDA_CHECK(cudaFree((void*)d_buffer_temp_output_gas_and_compacted_size));
-    }
-    //else
-    //{
-    //    state.d_gas_output_buffer = d_buffer_temp_output_gas_and_compacted_size;
-    //}
-
-
-
-
-
-    return TracerError::UNABLE_TO_CONSTRUCT_ACCELERATOR;
+    // All Done!
+    return TracerError::OK;
 }
 
 const OptiXSystem* GPUBaseAcceleratorOptiX::GetOptiXSystem(const OptiXSystem* sys) const

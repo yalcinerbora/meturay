@@ -185,68 +185,6 @@ static void KCReduceCentroidsFirst(float* gCentersReduced,
     if(threadIdx.x == 0) gCentersReduced[blockIdx.x] = valReduced;
 }
 
-__global__
-static void KCInitIndices(// O
-                          uint32_t* gIndices,
-                          PrimitiveId* gPrimIds,
-                          // Input
-                          uint32_t indexStart,
-                          uint64_t rangeStart,
-                          uint32_t primCount)
-{
-    // Grid Stride Loop
-    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-        globalId < primCount; globalId += blockDim.x * gridDim.x)
-    {
-        gIndices[globalId] = indexStart + globalId;
-        gPrimIds[globalId] = rangeStart + globalId;
-    }
-}
-
-template <class PGroup>
-__global__
-void KCGenCenters(// O
-                  Vector3f* gCenters,
-                  // Input
-                  const uint32_t* gIndicies,
-                  const PrimitiveId* gPrimitiveIds,
-                  //
-                  CentroidGen<PGroup> centFunc,
-                  uint32_t primCount)
-{
-    // Grid Stride Loop
-    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-        globalId < primCount; globalId += blockDim.x * gridDim.x)
-    {
-        uint32_t id = gIndicies[globalId];
-        PrimitiveId primId = gPrimitiveIds[id];
-
-        gCenters[globalId] = centFunc(primId);
-    }
-}
-
-template <class PGroup>
-__global__
-void KCGenAABBs(// O
-                AABB3f* gAABBs,
-                // Input
-                const uint32_t* gIndicies,
-                const PrimitiveId* gPrimitiveIds,
-                //
-                AABBGen<PGroup> aabbFunc,
-                uint32_t primCount)
-{
-    // Grid Stride Loop
-    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-        globalId < primCount; globalId += blockDim.x * gridDim.x)
-    {
-        uint32_t id = gIndicies[globalId];
-        PrimitiveId primId = gPrimitiveIds[id];
-
-        gAABBs[globalId] = aabbFunc(primId);
-    }
-}
-
 template <class PGroup>
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCIntersectBVH(// O

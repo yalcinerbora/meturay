@@ -21,6 +21,7 @@ All Tracers should inherit this class
 #include "RayLib/GPUTracerI.h"
 #include "RayLib/VisorTransform.h"
 
+#include "RayCasterI.h"
 #include "RNGMemory.h"
 #include "RayMemory.h"
 #include "ImageMemory.h"
@@ -44,8 +45,8 @@ class GPUTracer : public GPUTracerI
         //
         const uint32_t                              maxHitSize;
         // Batches of Accelerator
-        GPUBaseAcceleratorI&                        baseAccelerator;
-        const AcceleratorBatchMap&                  accelBatches;
+        //GPUBaseAcceleratorI&                        baseAccelerator;
+        //const AcceleratorBatchMap&                  accelBatches;
         // Batches of Material
         const std::map<NameGPUPair, GPUMatGPtr>&    materialGroups;
         const NamedList<CPUTransformGPtr>&          transforms;
@@ -68,15 +69,17 @@ class GPUTracer : public GPUTracerI
         TracerError                                 LoadMediums(std::vector<const GPUMediumI*>&);
 
     protected:
-        // Max Bit Sizes for Efficient Sorting
-        Vector2i                            maxAccelBits;
-        Vector2i                            maxWorkBits;
         // Cuda System For Kernel Calls
         const CudaSystem&                   cudaSystem;
+        // Ray Caster
+        std::unique_ptr<RayCasterI>         rayCaster;
         // GPU Memory
         RNGMemory                           rngMemory;
-        RayMemory                           rayMemory;
         ImageMemory                         imgMemory;
+        // Linear List of all
+        // transforms, mediums, cameras & lights
+        // endpoints (combined list of camera & lights)
+        // of the scene
         const GPUTransformI**               dTransforms;
         const GPUMediumI**                  dMediums;
         const GPUCameraI**                  dCameras;
@@ -93,7 +96,6 @@ class GPUTracer : public GPUTracerI
         //
         TracerParameters                    params;
         //
-        uint32_t                            currentRayCount;
         uint32_t                            transformCount;
         uint32_t                            mediumCount;
         uint32_t                            lightCount;
@@ -102,20 +104,9 @@ class GPUTracer : public GPUTracerI
         // Callbacks
         TracerCallbacksI*                   callbacks;
         bool                                crashed;
-        // Current Work Partition
-        RayPartitions<uint32_t>             workPartition;
-
         // Interface
         virtual void                        ResetHitMemory(uint32_t rayCount,
                                                            HitKey baseBoundMatKey);
-
-        // Do a hit determination over current rays
-        void                                HitAndPartitionRays();
-        // Determine auxiliary size
-        void                                WorkRays(const WorkBatchMap&,
-                                                     const RayPartitionsMulti<uint32_t>& outPortions,
-                                                     uint32_t totalRayOut,
-                                                     HitKey baseBoundMatKey);
         // Convert GPUCamera to VisorCam
         VisorTransform                      SceneCamTransform(uint32_t cameraIndex);
         const GPUCameraI*                   GenerateCameraWithTransform(const VisorTransform&,
@@ -125,11 +116,6 @@ class GPUTracer : public GPUTracerI
         template <class... Args>
         void                                SendLog(const char*, Args...);
         void                                SendError(TracerError e, bool isFatal);
-
-        RayPartitionsMulti<uint32_t>        PartitionOutputRays(uint32_t& totalOutRay,
-                                                                const WorkBatchMap&) const;
-
-        static Vector2i                     DetermineMaxBitFromId(const Vector2i&);
 
     public:
         // Constructors & Destructor
