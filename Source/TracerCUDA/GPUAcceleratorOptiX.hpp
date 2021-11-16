@@ -13,6 +13,51 @@ const char* GPUAccOptiXGroup<PGroup>::Type() const
 }
 
 template <class PGroup>
+TracerError GPUAccOptiXGroup<PGroup>::FillLeaves(const CudaSystem& system,
+                                                 uint32_t surfaceId)
+{
+    using PrimitiveData = typename PGroup::PrimitiveData;
+    const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
+
+    const uint32_t index = idLookup.at(surfaceId);
+    //const Vector2ul& accelRange = acceleratorRanges[index];
+    const PrimitiveRangeList& rangeList = primitiveRanges[index];
+    const HitKeyList& hitList = primitiveMaterialKeys[index];
+
+    // Copy Locally to stack to send it to const memory of the GPU
+    HKList hkList = {{}};
+    PRList prList = {{}};
+    std::memcpy(const_cast<HitKey*>(hkList.materialKeys), hitList.data(),
+                sizeof(HitKey) * SceneConstants::MaxPrimitivePerSurface);
+    std::memcpy(const_cast<Vector2ul*>(prList.primRanges), rangeList.data(),
+                sizeof(Vector2ul) * SceneConstants::MaxPrimitivePerSurface);
+
+    size_t workCount = accRanges[index][1] - accRanges[index][0];
+
+    // TODO: Select a GPU
+    const CudaGPU& gpu = system.BestGPU();
+    // KC
+    gpu.AsyncGridStrideKC_X
+    (
+        0,
+        workCount,
+        //
+        KCInitializeLeafs<PGroup>,
+        // Args
+        // O
+        dLeafList,
+        // Input
+        dAccRanges,
+        hkList,
+        prList,
+        primData,
+        index,
+        keyExpandOption[index]
+    );
+    return TracerError::OK;
+}
+
+template <class PGroup>
 SceneError GPUAccOptiXGroup<PGroup>::InitializeGroup(// Accelerator Option Node
                                                      const SceneNodePtr& node,
                                                      // List of surface/material
@@ -21,6 +66,11 @@ SceneError GPUAccOptiXGroup<PGroup>::InitializeGroup(// Accelerator Option Node
                                                      const std::map<uint32_t, SurfaceDefinition>& surfaceList,
                                                      double time)
 {
+    accRanges.clear();
+    primitiveRanges.clear();
+    primitiveMaterialKeys.clear();
+    idLookup.clear();
+
     const char* primGroupTypeName = this->primitiveGroup.Type();
 
     std::vector<uint32_t> hTransformIndices;
@@ -28,39 +78,71 @@ SceneError GPUAccOptiXGroup<PGroup>::InitializeGroup(// Accelerator Option Node
 
     // Iterate over pairings
     int surfaceInnerId = 0;
+    size_t totalSize = 0;
     for(const auto& surface : surfaceList)
     {
+        PrimitiveIdList primIdList;
         PrimitiveRangeList primRangeList;
         HitKeyList hitKeyList;
         primRangeList.fill(Vector2ul(std::numeric_limits<uint64_t>::max()));
+        primIdList.fill(std::numeric_limits<uint32_t>::max());
         hitKeyList.fill(HitKey::InvalidKey);
 
+        Vector2ul range = Vector2ul(totalSize, 0);
+
+        size_t localSize = 0;
         const IdKeyPairs& pList = surface.second.primIdWorkKeyPairs;
         for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
         {
             const IdKeyPair& p = pList[i];
-            if(p.first == std::numeric_limits<uint32_t>::max())
-                break;
+            if(p.first == std::numeric_limits<uint32_t>::max()) break;
 
+            primIdList[i] = p.first;
             primRangeList[i] = this->primitiveGroup.PrimitiveBatchRange(p.first);
             hitKeyList[i] = p.second;
+            localSize += primRangeList[i][1] - primRangeList[i][0];
         }
+        range[1] = range[0] + localSize;
+        totalSize += localSize;
+
 
         hTransformIndices.push_back(surface.second.globalTransformIndex);
+        primitiveIds.push_back(primIdList);
         primitiveRanges.push_back(primRangeList);
         primitiveMaterialKeys.push_back(hitKeyList);
-        idLookup.emplace(surface.first, surfaceInnerId);
+        accRanges.push_back(range);
         keyExpandOption.push_back(surface.second.doKeyExpansion);
+        idLookup.emplace(surface.first, surfaceInnerId);
         surfaceInnerId++;
     }
+    assert(primitiveRanges.size() == primitiveMaterialKeys.size());
+    assert(primitiveMaterialKeys.size() == idLookup.size());
+    assert(idLookup.size() == accRanges.size());
+    assert(keyExpandOption.size() == idLookup.size());
     assert(surfaceInnerId == hTransformIndices.size());
 
-    // Copy transform ids to GPU Memory
-    transformIdMemory = DeviceMemory(sizeof(TransformId) * hTransformIndices.size());
-    dAccTransformIds = static_cast<TransformId*>(transformIdMemory);
+    uint32_t accelCount = surfaceInnerId;
+    leafCount = totalSize;
+
+    GPUMemFuncs::AllocateMultiData(std::tie(dAccRanges, dAccTransformIds,
+                                            dLeafList, dPrimData), memory,
+                                   {accelCount, accelCount,
+                                   leafCount, 1});
+
+    // Copy Leaf counts to cpu memory
+    CUDA_CHECK(cudaMemcpy(dAccRanges, accRanges.data(),
+                          accelCount * sizeof(Vector2ul),
+                          cudaMemcpyHostToDevice));
+    // Copy Transforms
     CUDA_CHECK(cudaMemcpy(dAccTransformIds,
                           hTransformIndices.data(),
-                          transformIdMemory.Size(),
+                          accelCount * sizeof(uint32_t),
+                          cudaMemcpyHostToDevice));
+    // Copy Prim Data
+    using PrimitiveData = typename PGroup::PrimitiveData;
+    const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
+    CUDA_CHECK(cudaMemcpy(dPrimData, &primData,
+                          sizeof(PrimitiveData),
                           cudaMemcpyHostToDevice));
 
     return SceneError::OK;
@@ -89,6 +171,10 @@ template <class PGroup>
 TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                                            const CudaSystem& system)
 {
+    TracerError err = TracerError::OK;
+    if((err = FillLeaves(system, surface)) != TracerError::OK)
+        return err;
+
     // Use bestGPU for temp data creation
     const CudaGPU& gpu = system.BestGPU();
 
@@ -248,6 +334,7 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                     // Output Memory
                                     AsOptixPtr(dTempBuild), accelMemorySizes.outputSizeInBytes,
                                     &traversable, &emitProperty, 1));
+        CUDA_KERNEL_CHECK();
 
         // Get compacted size to CPU
         uint64_t hCompactAccelSize;
@@ -264,6 +351,7 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                           AsOptixPtr(compactedMemory),
                                           hCompactAccelSize,
                                           &traversable));
+            CUDA_KERNEL_CHECK();
 
             gpuTraverseData.tMemories[innerIndex] = std::move(compactedMemory);
         }
@@ -354,7 +442,7 @@ void GPUAccOptiXGroup<PGroup>::Hit(const CudaGPU& gpu,
 template <class PGroup>
 const SurfaceAABBList& GPUAccOptiXGroup<PGroup>::AcceleratorAABBs() const
 {
-    return emptyAABBList;
+    return surfaceAABBs;
 }
 
 template <class PGroup>
@@ -380,4 +468,17 @@ void GPUAccOptiXGroup<PGroup>::SetOptiXSystem(const OptiXSystem* sys)
         gpuData.traversables.resize(acceleratorCount);
         i++;
     }
+}
+
+template <class PGroup>
+GPUAccGroupOptiXI::OptixTraversableList GPUAccOptiXGroup<PGroup>::GetOptixTraversables() const
+{
+    OptixTraversableList result(optixDataPerGPU.size());
+    uint32_t i = 0;
+    for(const auto& optixData : optixDataPerGPU)
+    {
+        result[i] = optixData.traversables;
+        i++;
+    }
+    return result;
 }

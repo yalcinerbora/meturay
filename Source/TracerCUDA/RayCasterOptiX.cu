@@ -17,7 +17,19 @@ RayCasterOptiX::RayCasterOptiX(const GPUSceneI& gpuScene,
     , cudaSystem(system)
     , currentRayCount(0)
     , optixSystem(system)
-{}
+{
+
+    optixGPUData.reserve(optixSystem.OptixCapableDevices().size());
+    for(const auto& [gpu, optixCosntext] : optixSystem.OptixCapableDevices())
+    {
+        optixGPUData.push_back(
+        {
+            DeviceLocalMemory(&gpu), nullptr,
+            nullptr, nullptr, {}, {}
+        });
+    }
+
+}
 
 TracerError RayCasterOptiX::CreateProgramGroups(const std::string& rgFuncName,
                                                 const std::vector<HitFunctionNames>& hitFuncNames)
@@ -28,10 +40,9 @@ TracerError RayCasterOptiX::CreateProgramGroups(const std::string& rgFuncName,
     uint32_t i = 0;
     for(const auto& [gpu, optixContext] : optixSystem.OptixCapableDevices())
     {
-        OptixModule gpuModule = hOptixModules[i];
+        OptixModule gpuModule = optixGPUData[i].mdl;
 
-        hOptixPrograms.emplace_back();
-        hOptixPrograms.back().emplace_back();
+        optixGPUData[i].programGroups.emplace_back();
 
         OptixProgramGroupDesc rhProgramDesc = {};
         rhProgramDesc.kind = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
@@ -42,12 +53,11 @@ TracerError RayCasterOptiX::CreateProgramGroups(const std::string& rgFuncName,
                                             &rhProgramDesc, 1,
                                             &pgOpts,
                                             nullptr, 0,
-                                            &hOptixPrograms.back().back()));
+                                            &optixGPUData[i].programGroups.back()));
 
         for(const auto& [chFuncName, ahFuncName, iFuncName] : hitFuncNames)
         {
-            hOptixPrograms.back().emplace_back();
-            auto& hitProgram = hOptixPrograms.back().back();
+            optixGPUData[i].programGroups.emplace_back();
 
             OptixProgramGroupDesc hProgramDesc = {};
             hProgramDesc.kind = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
@@ -62,7 +72,7 @@ TracerError RayCasterOptiX::CreateProgramGroups(const std::string& rgFuncName,
                                                 &hProgramDesc, 1,
                                                 &pgOpts,
                                                 nullptr, 0,
-                                                &hitProgram));
+                                                &optixGPUData[i].programGroups.back()));
         }
         i++;
     }
@@ -74,20 +84,21 @@ TracerError RayCasterOptiX::CreateModules(const OptixModuleCompileOptions& mOpts
                                           const std::string& baseFileName)
 {
     TracerError err = TracerError::OK;
+    uint32_t i = 0;
     for(const auto& [gpu, optixContext] : optixSystem.OptixCapableDevices())
     {
         std::string ptxSource;
         if((err = OptiXSystem::LoadPTXFile(ptxSource, gpu, baseFileName)) != TracerError::OK)
             return err;
 
-        hOptixModules.emplace_back();
         OPTIX_CHECK(optixModuleCreateFromPTX(optixContext,
                                              &mOpts, &pOpts,
                                              ptxSource.c_str(),
                                              ptxSource.size(),
                                              nullptr,
                                              nullptr,
-                                             &hOptixModules.back()));
+                                             &optixGPUData[i].mdl));
+        i++;
     }
     return TracerError::OK;
 }
@@ -100,16 +111,14 @@ TracerError RayCasterOptiX::CreatePipelines(const OptixPipelineCompileOptions& p
     uint32_t i = 0;
     for(const auto& [gpu, optixContext] : optixSystem.OptixCapableDevices())
     {
-        const ProgramGroups& pgs = hOptixPrograms[i];
-
-        hOptixPipelines.emplace_back();
+        const ProgramGroups& pgs = optixGPUData[i].programGroups;
 
         OPTIX_CHECK(optixPipelineCreate(optixContext,
                                         &pOpts, &lOpts,
                                         pgs.data(),
                                         static_cast<uint32_t>(pgs.size()),
                                         nullptr, nullptr,
-                                        &hOptixPipelines.back()));
+                                        &optixGPUData[i].pipeline));
 
         // We need to specify the max traversal depth.  Calculate the stack sizes, so we can specify all
         // parameters to optixPipelineSetStackSize.
@@ -128,7 +137,7 @@ TracerError RayCasterOptiX::CreatePipelines(const OptixPipelineCompileOptions& p
                                                &contStackSize));
 
         const uint32_t maxTraversalDepth = 2;
-        OPTIX_CHECK(optixPipelineSetStackSize(hOptixPipelines.back(),
+        OPTIX_CHECK(optixPipelineSetStackSize(optixGPUData[i].pipeline,
                                               dcStackSizeTraverse,
                                               dcStackSizeState,
                                               contStackSize,
@@ -152,6 +161,8 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
         auto accOptiX = dynamic_cast<GPUAccGroupOptiXI*>(acc);
         accOptiX->SetOptiXSystem(&optixSystem);
     }
+    auto& baseAccOptiX = dynamic_cast<GPUBaseAcceleratorOptiX&>(baseAccelerator);
+    baseAccOptiX.SetOptiXSystem(&optixSystem);
 
     // Construct Accelerators
     for(const auto& accBatch : accelBatches)
@@ -161,8 +172,15 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
             return e;
 
     }
-    // Construct Base accelerator using aabb list
-    if((e = baseAccelerator.Constrcut(cudaSystem, SurfaceAABBList())) != TracerError::OK)
+
+    // Get required data to construct
+    std::vector<std::vector<OptixTraversableHandle>> traversables;
+    std::vector<TransformId*> dTransformIds;
+    std::vector<PrimTransformType> primTransformTypes;
+
+    // Construct Base accelerator using the fetched data
+    if((e = baseAccOptiX.Constrcut(traversables, dTransformIds, primTransformTypes,
+                                   dTransforms)) != TracerError::OK)
         return e;
 
     // We constructed Accelerator
@@ -235,6 +253,53 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
 
 RayPartitions<uint32_t> RayCasterOptiX::HitAndPartitionRays()
 {
+    size_t optixGPUCount = optixSystem.OptixCapableDevices().size();
+    size_t rayPerGPU = (currentRayCount + optixGPUCount - 1) / optixGPUCount;
+    // Segment the system
+    size_t partitionedRayCount = 0;
+    std::vector<ArrayPortion<uint32_t>> portions(optixGPUCount);
+    for(const auto& [gpu, optixContext] : optixSystem.OptixCapableDevices())
+    {
+        ArrayPortion<uint32_t> portion;
+        portion.offset = partitionedRayCount;
+        size_t gpuRayCount = std::min(rayPerGPU,
+                                      currentRayCount - partitionedRayCount);
+
+        portion.count = gpuRayCount;
+        partitionedRayCount += gpuRayCount;
+        portion.portionId = 0;
+    }
+
+    // Split the and launch
+    uint32_t optixDeviceIndex = 0;
+    for(const auto& [gpu, optixContext] : optixSystem.OptixCapableDevices())
+    {
+        const auto& portion = portions[optixDeviceIndex];
+        const auto& launchData = optixGPUData[optixDeviceIndex];
+        const auto paramsPtr = AsOptixPtr(launchData.dOptixLaunchParams);
+
+        OpitXBaseAccelParams hParams = {};
+        //hParams.gHitStructs = nullptr + portions[optixDeviceIndex].offset;
+        //hParams.gPrimitiveIds = ;
+        //hParams.gRays = ;
+        //hParams.gTransformIds = ;
+        //hParams.gWorkKeys = ;
+
+        // Copy portioned pointer to Constant Memory
+        CUDA_CHECK(cudaMemcpyAsync(launchData.dOptixLaunchParams,
+                                   &hParams,
+                                   sizeof(OpitXBaseAccelParams),
+                                   cudaMemcpyHostToDevice,
+                                   (cudaStream_t)0));
+
+        OPTIX_CHECK(optixLaunch(launchData.pipeline, (cudaStream_t)0,
+                                paramsPtr, sizeof(OpitXBaseAccelParams),
+                                &launchData.sbt,
+                                static_cast<uint32_t>(portion.count),
+                                1, 1));
+        CUDA_KERNEL_CHECK();
+    }
+
     return RayPartitions<uint32_t>();
 }
 

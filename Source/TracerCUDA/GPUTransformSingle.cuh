@@ -47,6 +47,9 @@ class GPUTransformSingle : public GPUTransformI
 		QuatF			ToLocalRotation(const uint32_t* indices = nullptr,
 										const float* weights = nullptr,
 										uint32_t count = 0) const override;
+
+		__device__
+		Matrix4x4		GetLocalToWorldAsMatrix() const override;
 };
 
 class CPUTransformSingle : public CPUTransformGroupI
@@ -54,14 +57,14 @@ class CPUTransformSingle : public CPUTransformGroupI
 	public:
 		static const char*				TypeName() { return "Single"; }
 
-		static constexpr const char*	LAYOUT_MATRIX	= "matrix4x4";
-		static constexpr const char*	LAYOUT_TRS		= "trs";
+		static constexpr const char*		LAYOUT_MATRIX	= "matrix4x4";
+		static constexpr const char*		LAYOUT_TRS		= "trs";
 
-		static constexpr const char*	LAYOUT			= "layout";
-		static constexpr const char*	MATRIX			= "matrix";
-		static constexpr const char*	TRANSLATE		= "translate";
-		static constexpr const char*	ROTATE			= "rotate";
-		static constexpr const char*	SCALE			= "scale";
+		static constexpr const char*		LAYOUT			= "layout";
+		static constexpr const char*		MATRIX			= "matrix";
+		static constexpr const char*		TRANSLATE		= "translate";
+		static constexpr const char*		ROTATE			= "rotate";
+		static constexpr const char*		SCALE			= "scale";
 
     private:
 		DeviceMemory						memory;
@@ -184,6 +187,12 @@ inline QuatF GPUTransformSingle::ToLocalRotation(const uint32_t*, const float*,
 												 uint32_t) const
 {
 	return invRotation;
+}
+
+__device__
+inline Matrix4x4 GPUTransformSingle::GetLocalToWorldAsMatrix() const
+{
+	return transform;
 }
 
 inline const char* CPUTransformSingle::Type() const

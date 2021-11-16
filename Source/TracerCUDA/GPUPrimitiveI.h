@@ -32,7 +32,7 @@ class SceneNodeI;
 class SurfaceLoaderGeneratorI;
 class CudaSystem;
 
-enum class PrimTransformType
+enum class PrimTransformType : uint8_t
 {
     // Single transform is applied to the group of primitives
     CONSTANT_LOCAL_TRANSFORM,

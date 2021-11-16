@@ -30,7 +30,7 @@ TracerError LightSamplerCommon::ConstructLightSampler(DeviceMemory& memory,
     {
         case LightSamplerType::UNIFORM:
         {
-            DeviceMemory::EnlargeBuffer(memory, sizeof(GPULightSamplerUniform));
+            GPUMemFuncs::EnlargeBuffer(memory, sizeof(GPULightSamplerUniform));
             dLightSampler = static_cast<const GPUDirectLightSamplerI*>(memory);
 
             const auto& gpu = cudaSystem.BestGPU();

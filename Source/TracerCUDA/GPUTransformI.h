@@ -48,6 +48,13 @@ class GPUTransformI
 		virtual QuatF	ToLocalRotation(const uint32_t* indices = nullptr,
 									    const float* weights = nullptr,
 									    uint32_t count = 0) const = 0;
+
+		// Adding this function for optiX
+		// Optix requires 4x3 row-major matrices for instance accelerators
+		// If this transform cannot be represented by a single matrix
+		// (i.e skinned transforms etc.) this function should not be called anyway
+		__device__
+		virtual Matrix4x4 GetLocalToWorldAsMatrix() const = 0;
 };
 
 class CPUTransformGroupI

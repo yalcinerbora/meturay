@@ -162,7 +162,7 @@ TracerError GPUAccLinearGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         0,
         workCount,
         //
-        KCConstructLinear<PGroup>,
+        KCInitializeLeafs<PGroup>,
         // Args
         // O
         dLeafList,

@@ -10,7 +10,7 @@
 #include "GPUPrimitiveP.cuh"
 #include "GPUAcceleratorP.cuh"
 
-//#include "GPUAcceleratorOptixKC.cuh"
+#include "GPUAcceleratorOptixKC.cuh"
 #include "GPUAcceleratorCommonKC.cuh"
 
 #include "OptixSystem.h"
@@ -19,12 +19,15 @@
 class GPUAccGroupOptiXI
 {
     public:
-        virtual                 ~GPUAccGroupOptiXI() = default;
+        using OptixTraversableList = std::vector<std::vector<OptixTraversableHandle>>;
 
-        // Return the hit record list for each accelerator
-        virtual DeviceMemory    GetHitRecords() const = 0;
+    public:
+        virtual                         ~GPUAccGroupOptiXI() = default;
         //
-        virtual void            SetOptiXSystem(const OptiXSystem*) = 0;
+        virtual void                    SetOptiXSystem(const OptiXSystem*) = 0;
+        // Return the hit record list for each accelerator
+        virtual DeviceMemory            GetHitRecords() const = 0;
+        virtual OptixTraversableList    GetOptixTraversables() const = 0;
 };
 
 template <class PGroup>
@@ -37,6 +40,7 @@ class GPUAccOptiXGroup final
     public:
         using LeafData = typename PGroup::LeafData;
         using PrimData = typename PGroup::PrimitiveData;
+        using OptixTraversableList = GPUAccGroupOptiXI::OptixTraversableList;
 
         struct DeviceTraversables
         {
@@ -45,23 +49,28 @@ class GPUAccOptiXGroup final
         };
 
     private:
-        // Unsued
-        SurfaceAABBList                     emptyAABBList;
         // CPU Memory
         const OptiXSystem*                  optixSystem;
         //
+        std::vector<PrimitiveIdList>        primitiveIds;
         std::vector<PrimitiveRangeList>     primitiveRanges;
         std::vector<HitKeyList>             primitiveMaterialKeys;
-        std::map<uint32_t, uint32_t>        idLookup;
+        std::vector<Vector2ul>              accRanges;
         std::vector<bool>                   keyExpandOption;
+        //
+        std::map<uint32_t, uint32_t>        idLookup;
+        SurfaceAABBList                     surfaceAABBs;
+        size_t                              leafCount;
         // GPU Memory
         std::vector<DeviceTraversables>     optixDataPerGPU;
-        DeviceMemory                        transformIdMemory;
-        TransformId*                        dAccTransformIds;
         //
-        DeviceMemory                        leafAndPrimDataMemory;
-        LeafData*                           dLeafs;
+        DeviceMemory                        memory;
+        Vector2ul*                          dAccRanges;
+        LeafData*                           dLeafList;
+        TransformId*                        dAccTransformIds;
         PrimData*                           dPrimData;
+
+        TracerError                         FillLeaves(const CudaSystem&, uint32_t surfaceId);
 
     public:
         // Constructors & Destructor
@@ -118,9 +127,10 @@ class GPUAccOptiXGroup final
 
         // OptiX Implementation
         // Return the hit record list for each accelerator
-        DeviceMemory    GetHitRecords() const override;
+        DeviceMemory            GetHitRecords() const override;
         //
-        void            SetOptiXSystem(const OptiXSystem*) override;
+        void                    SetOptiXSystem(const OptiXSystem*) override;
+        OptixTraversableList    GetOptixTraversables() const override;
 
 };
 
@@ -129,17 +139,22 @@ class GPUBaseAcceleratorOptiX final : public GPUBaseAcceleratorI
     public:
         static const char*              TypeName();
 
+        struct OptixGPUData
+        {
+            DeviceLocalMemory           tMemory;
+            OptixTraversableHandle      traversable;
+        };
+
     private:
         static constexpr size_t         AlignByteCount = 16;
 
         // CPU Memory
         const OptiXSystem*              optixSystem;
-        std::map<uint32_t, uint32_t>    idLookup;
-        std::vector<BaseLeaf>           leafs;
         AABB3f                          sceneAABB;
-        OptixTraversableHandle          baseTraversable;
+        //
+        std::map<uint32_t, uint32_t>    idLookup;
         // GPU Memory
-        DeviceMemory                    baseTraversableMemory;
+        std::vector<OptixGPUData>       optixGPUData;
 
     public:
         // Constructors & Destructor
@@ -180,7 +195,11 @@ class GPUBaseAcceleratorOptiX final : public GPUBaseAcceleratorI
 
         // OptiX Related
         void                        SetOptiXSystem(const OptiXSystem*);
-        OptixTraversableHandle      GetBaseTraversable() const;
+        OptixTraversableHandle      GetBaseTraversable(int optixGPUIndex) const;
+        TracerError                 Constrcut(const std::vector<std::vector<OptixTraversableHandle>>&,
+                                              const std::vector<TransformId*>& dTransformIds,
+                                              const std::vector<PrimTransformType>& transformTypes,
+                                              const GPUTransformI** dTransforms);
 };
 
 #include "GPUAcceleratorOptiX.hpp"

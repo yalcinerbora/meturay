@@ -3,6 +3,39 @@
 #include "GPUPrimitiveSphere.h"
 #include "CudaSystem.hpp"
 
+__global__
+static void KCPopulateTransforms(// I-O
+                                 OptixInstance* gInstances,
+                                 // Inputs
+                                 const GPUTransformI** gGlobalTransformArray,
+                                 const TransformId* gTransformIds,
+                                 const PrimTransformType* gTransformTypes,
+                                 //
+                                 uint32_t instanceCount)
+{
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < instanceCount; globalId += blockDim.x * gridDim.x)
+    {
+        Matrix4x4 transform = Indentity4x4;
+        if(gTransformTypes[globalId] == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
+        {
+            const GPUTransformI* gTransform = gGlobalTransformArray[gTransformIds[globalId]];
+            transform = gTransform->GetLocalToWorldAsMatrix();
+            // Matrix4x4 is column-major matrix OptiX wants row-major
+            transform.TransposeSelf();
+        }
+        else
+        {
+            // This means that transform cannot be applied to the primitives constantly and
+            // accelerator is generated using that transform so just initialize with identity
+            transform = Indentity4x4;
+        }
+        // Can nvcc optimize this?
+        memcpy(gInstances[globalId].transform,
+               &transform, sizeof(float) * 12);
+    }
+}
+
 const char* GPUBaseAcceleratorOptiX::TypeName()
 {
     return "OptiX";
@@ -42,12 +75,12 @@ SceneError GPUBaseAcceleratorOptiX::Initialize(// Accelerator Option Node
                                                const std::map<uint32_t, HitKey>& keyMap)
 {
     idLookup.clear();
-    leafs.resize(keyMap.size());
+    //leafs.resize(keyMap.size());
 
     uint32_t i = 0;
     for(const auto& pair : keyMap)
     {
-        leafs[i].accKey = pair.second;
+        //leafs[i].accKey = pair.second;
         idLookup.emplace(pair.first, i);
         i++;
     }
@@ -58,34 +91,138 @@ TracerError GPUBaseAcceleratorOptiX::Constrcut(const CudaSystem&,
                                                // List of surface AABBs
                                                const SurfaceAABBList& aabbMap)
 {
-    //for(const auto& [surfId, aabb] : aabbMap)
-    //{
-    //    METU_LOG(surfId);
-    //}
-
-    //// Generate Temporary Instance
-    //DeviceMemory(sizeof(OptixInstance) * aabbMap.size());
-
-    //// Call Kernel
-
-    //OptixInstanceFlags flags = OPTIX_INSTANCE_FLAG_NONE;
-    //OptixInstance instance = {};
-    //instance.flags = flags;
-    //instance.instanceId = 0;
-    //instance.sbtOffset = 0;
-    //instance.visibilityMask = 0xFF;
-    //instance.transform = {1, 0, 0, 0,
-    //                      0, 1, 0, 0,
-    //                      0, 0, 1, 0};
-    //instance.traversableHandle = 0;
+    // This function is not used when OptiX is enabled
+    return TracerError::TRACER_INTERNAL_ERROR;
+}
 
 
+TracerError GPUBaseAcceleratorOptiX::Constrcut(const std::vector<std::vector<OptixTraversableHandle>>& gpuTraversables,
+                                               const std::vector<TransformId*>& dTransformIds,
+                                               const std::vector<PrimTransformType>& transformTypes,
+                                               const GPUTransformI** dGlobalTransformArray)
+{
+    assert(transformTypes.size() == dTransformIds.size());
+    assert(dTransformIds.size() == idLookup.size());
+    assert(idLookup.size() == gpuTraversables.front().size());
 
+    DeviceMemory transformTypeMemory(transformTypes.size() * sizeof(PrimTransformType));
+    PrimTransformType* dTransformTypes = static_cast<PrimTransformType*>(transformTypeMemory);
 
-    //{
-    //    float transform[12];
-    //};
+    //===============================//
+    //  ACTUAL TRAVERSAL GENERATION  //
+    //===============================//
+    uint32_t deviceIndex = 0;
+    for(const auto& [gpu, optixContext] : optixSystem->OptixCapableDevices())
+    {
+        CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+        auto& optixData = optixGPUData[deviceIndex];
+        const auto& traversables = gpuTraversables[deviceIndex];
 
+        // Allocate Temp
+        std::vector<OptixInstance> hInstances; hInstances.reserve(idLookup.size());
+        DeviceLocalMemory tempInstanceMemory(&gpu, hInstances.size() * sizeof(OptixInstance));
+        OptixInstance* dInstances = static_cast<OptixInstance*>(tempInstanceMemory);
+        hInstances.reserve(idLookup.size());
+
+        for(uint32_t i = 0; i < idLookup.size(); i++)
+        {
+            OptixInstance instance = {};
+            instance.traversableHandle = traversables[i];
+            instance.flags = OPTIX_INSTANCE_FLAG_NONE;
+            instance.instanceId = i;
+            instance.sbtOffset = i;
+            instance.visibilityMask = 0xFF;
+            // Leave Transform for now
+
+            hInstances.push_back(instance);
+        }
+
+        // Copy Instances to GPU
+        CUDA_CHECK(cudaMemcpy(dInstances, hInstances.data(),
+                              hInstances.size() * sizeof(OptixInstance),
+                              cudaMemcpyHostToDevice));
+
+        // Copy transforms (as matrices to the instance data)
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, hInstances.size(),
+                           //
+                           KCPopulateTransforms,
+                            // I-O
+                           dInstances,
+                           // Inputs
+                           dGlobalTransformArray,
+                           nullptr,
+                           //dTransformIds[],
+                           dTransformTypes,
+                           //
+                           static_cast<uint32_t>(hInstances.size()));
+
+        OptixBuildInput buildInput = OptixBuildInput{};
+        buildInput.type = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
+        buildInput.instanceArray.instances = AsOptixPtr(dInstances);
+        buildInput.instanceArray.numInstances = static_cast<uint32_t>(hInstances.size());
+        OptixAccelBuildOptions accelOptions = {};
+        accelOptions.buildFlags = OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+        accelOptions.operation = OPTIX_BUILD_OPERATION_BUILD;
+
+        OptixAccelBufferSizes accelMemorySizes;
+        OPTIX_CHECK(optixAccelComputeMemoryUsage
+        (
+            optixContext,
+            &accelOptions, &buildInput, 1,
+            &accelMemorySizes
+        ));
+
+        // Allocate Temp Buffer for Build
+        Byte* dTempBuild;
+        uint64_t* dCompactedSize;
+        Byte* dTempMem;
+        DeviceLocalMemory tempBuildBuffer(&gpu);
+        GPUMemFuncs::AllocateMultiData(std::tie(dTempBuild, dCompactedSize), tempBuildBuffer,
+                                        {accelMemorySizes.outputSizeInBytes, 1}, 128);
+        DeviceLocalMemory tempMem(&gpu, accelMemorySizes.tempSizeInBytes);
+        dTempMem = static_cast<Byte*>(tempMem);
+
+        // While building fetch compacted output size
+        OptixAccelEmitDesc emitProperty = {};
+        emitProperty.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
+        emitProperty.result = AsOptixPtr(dCompactedSize);
+
+        OptixTraversableHandle traversable;
+        OPTIX_CHECK(optixAccelBuild(optixContext, (cudaStream_t)0,
+                                    &accelOptions,
+                                    // Build Inputs
+                                    &buildInput, 1,
+                                    // Temp Memory
+                                    AsOptixPtr(dTempMem), accelMemorySizes.tempSizeInBytes,
+                                    // Output Memory
+                                    AsOptixPtr(dTempBuild), accelMemorySizes.outputSizeInBytes,
+                                    &traversable, &emitProperty, 1));
+        CUDA_KERNEL_CHECK();
+
+        // Get compacted size to CPU
+        uint64_t hCompactAccelSize;
+        CUDA_CHECK(cudaMemcpy(&hCompactAccelSize, dCompactedSize,
+                              sizeof(uint64_t), cudaMemcpyDeviceToHost));
+
+        if(hCompactAccelSize < tempBuildBuffer.Size())
+        {
+            DeviceLocalMemory compactedMemory(&gpu, hCompactAccelSize);
+
+            // use handle as input and output
+            OPTIX_CHECK(optixAccelCompact(optixContext, (cudaStream_t)0,
+                                          traversable,
+                                          AsOptixPtr(compactedMemory),
+                                          hCompactAccelSize,
+                                          &traversable));
+            CUDA_KERNEL_CHECK();
+
+            optixData.tMemory = std::move(compactedMemory);
+        }
+        else
+            optixData.tMemory = std::move(tempBuildBuffer);
+        optixData.traversable = traversable;
+        deviceIndex++;
+    }
 
     return TracerError::OK;
 }
@@ -224,6 +361,7 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
                                     // Output Memory
                                     AsOptixPtr(dTempBuild), accelMemorySizes.outputSizeInBytes,
                                     &traversable, &emitProperty, 1));
+        CUDA_KERNEL_CHECK();
 
         // Get compacted size to CPU
         uint64_t hCompactAccelSize;
@@ -240,6 +378,7 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
                                           AsOptixPtr(compactedMemory),
                                           hCompactAccelSize,
                                           &traversable));
+            CUDA_KERNEL_CHECK();
 
             gpuTraverseData.tMemories[innerIndex] = std::move(compactedMemory);
         }
@@ -257,12 +396,16 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
 void GPUBaseAcceleratorOptiX::SetOptiXSystem(const OptiXSystem* sys)
 {
     optixSystem = sys;
-
+    optixGPUData.reserve(sys->OptixCapableDevices().size());
+    for(const auto& [gpu, optixCosntext] : sys->OptixCapableDevices())
+    {
+        optixGPUData.push_back({DeviceLocalMemory(&gpu), 0});
+    }
 }
 
-OptixTraversableHandle GPUBaseAcceleratorOptiX::GetBaseTraversable() const
+OptixTraversableHandle GPUBaseAcceleratorOptiX::GetBaseTraversable(int optixGPUIndex) const
 {
-    return baseTraversable;
+    return optixGPUData[optixGPUIndex].traversable;
 }
 
 // Accelerator Instancing for basic primitives

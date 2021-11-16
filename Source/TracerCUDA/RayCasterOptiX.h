@@ -4,6 +4,7 @@
 #include "RayCasterI.h"
 #include "OptixSystem.h"
 #include "GPUAcceleratorOptiXKC.cuh"
+#include "GPUOptixPTX.cuh"
 
 class GPUSceneI;
 class GPUAcceleratorI;
@@ -22,6 +23,16 @@ class RayCasterOptiX : public RayCasterI
         //    std::vector<OptixProgramGroup> acceleratorHitPrograms;
         //};
 
+        struct OptixGPUData
+        {
+            DeviceLocalMemory           lpMemory;
+            OpitXBaseAccelParams*       dOptixLaunchParams;
+            OptixPipeline               pipeline;
+            OptixModule                 mdl;
+            ProgramGroups               programGroups;
+            OptixShaderBindingTable     sbt;
+        };
+
     private:
         Vector2i                        maxAccelBits;
         Vector2i                        maxWorkBits;
@@ -33,18 +44,16 @@ class RayCasterOptiX : public RayCasterI
         // Accelerators
         GPUBaseAcceleratorI&            baseAccelerator;
         const AcceleratorBatchMap&      accelBatches;
-
         // Misc
         uint32_t                        currentRayCount;
         // OptiX Related
         OptiXSystem                     optixSystem;
         // CPU Memory
-        std::vector<OptixPipeline>      hOptixPipelines;
-        std::vector<OptixModule>        hOptixModules;
-        std::vector<ProgramGroups>      hOptixPrograms;
         // GPU Memory
-        DeviceMemory                    memory;
-        OpitXBaseAccelParams*           dOptixLaunchParams;
+        std::vector<OptixGPUData>       optixGPUData;
+
+        DeviceMemory                    globalRayInMemory;
+        DeviceMemory                    globalRayOutMemory;
         //...
 
         // Funcs

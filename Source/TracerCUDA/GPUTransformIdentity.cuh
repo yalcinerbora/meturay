@@ -40,6 +40,9 @@ class GPUTransformIdentity : public GPUTransformI
 		QuatF			ToLocalRotation(const uint32_t* indices = nullptr,
 										const float* weights = nullptr,
 										uint32_t count = 0) const override;
+
+		__device__
+		Matrix4x4		GetLocalToWorldAsMatrix() const override;
 };
 
 class CPUTransformIdentity : public CPUTransformGroupI
@@ -113,6 +116,12 @@ inline QuatF GPUTransformIdentity::ToLocalRotation(const uint32_t*, const float*
 												   uint32_t) const
 {
 	return IdentityQuatF;
+}
+
+__device__
+inline Matrix4x4 GPUTransformIdentity::GetLocalToWorldAsMatrix() const
+{
+	return Indentity4x4;
 }
 
 inline const char* CPUTransformIdentity::Type() const
