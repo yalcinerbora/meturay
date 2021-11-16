@@ -1,6 +1,5 @@
 #include "OptixSystem.h"
 #include <optix_function_table_definition.h>
-#include <spdlog/sinks/basic_file_sink.h>
 
 #include "CudaSystem.h"
 #include "OptixCheck.h"
@@ -8,27 +7,23 @@
 #include "RayLib/FileSystemUtility.h"
 
 #include <fstream>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/spdlog.h>
 
 void OptiXSystem::OptixLOG(unsigned int level,
                            const char* tag,
                            const char* message,
                            void*)
 {
-    try
+    auto logger = spdlog::get(OPTIX_LOGGER_NAME);
+    switch(level)
     {
-        static auto logger = spdlog::basic_logger_mt("OptixLog", "optix_log");
-        switch(level)
-        {
-            case 1: logger->error("[FATAL]{:s}, {:s}\n", tag, message);
-            case 2: logger->error("{:s}, {:s}\n", tag, message);
-            case 3: logger->warn("{:s}, {:s}\n", tag, message);
-            case 4: logger->info("{:s}, {:s}\n", tag, message);
-        }
+        case 1: logger->error("[FATAL]{:s}, {:s}", tag, message); break;
+        case 2: logger->error("{:s}, {:s}", tag, message); break;
+        case 3: logger->warn("{:s}, {:s}", tag, message); break;
+        case 4: logger->info("{:s}, {:s}", tag, message); break;
     }
-    catch(const spdlog::spdlog_ex& ex)
-    {
-        METU_ERROR_LOG("Log init failed: {:S}", ex.what());
-    }
+    logger->flush();
 }
 
 TracerError OptiXSystem::LoadPTXFile(std::string& ptxSource,
@@ -55,6 +50,17 @@ OptiXSystem::OptiXSystem(const CudaSystem& system)
     : cudaSystem(system)
 {
     OPTIX_CHECK(optixInit());
+
+    try
+    {
+        auto logger = spdlog::basic_logger_mt(OPTIX_LOGGER_NAME,
+                                              OPTIX_LOGGER_FILE_NAME,
+                                              true);
+    }
+    catch(const spdlog::spdlog_ex& ex)
+    {
+        METU_ERROR_LOG("Log init failed: {:S}", ex.what());
+    }
 
     for(const CudaGPU& gpu : cudaSystem.SystemGPUs())
     {

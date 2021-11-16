@@ -117,7 +117,8 @@ static constexpr cudaTextureFilterMode DetermineFilterMode(InterpolationType i)
 
 template<int D>
 TextureI<D>::TextureI(TextureI&& other)
-    : texture(other.texture)
+    : DeviceLocalMemoryI(other.currentDevice)
+    , texture(other.texture)
     , dimensions(other.dimensions)
     , channelCount(other.channelCount)
 {
@@ -141,7 +142,8 @@ TextureI<D>& TextureI<D>::operator=(TextureI&& other)
 
 template<int D>
 TextureArrayI<D>::TextureArrayI(TextureArrayI&& other)
-    : texture(other.texture)
+    : DeviceLocalMemoryI(other.currentDevice)
+    , texture(other.texture)
     , dimensions(other.dimensions)
     , length(other.length)
     , channelCount(other.channelCount)
@@ -168,7 +170,7 @@ TextureArrayI<D>& TextureArrayI<D>::operator=(TextureArrayI&& other)
 }
 
 template<int D, class T>
-Texture<D, T>::Texture(int deviceId,
+Texture<D, T>::Texture(const CudaGPU* device,
                        InterpolationType interp,
                        EdgeResolveType eResolve,
                        bool normalizeIntegers,
@@ -176,13 +178,13 @@ Texture<D, T>::Texture(int deviceId,
                        bool convertSRGB,
                        const TexDimType_t<D>& dim,
                        int mipCount)
-    : TextureI<D>(dim, TextureChannelCount<T>::value, deviceId)
+    : TextureI<D>(dim, TextureChannelCount<T>::value, device)
     , interpType(interp)
     , edgeResolveType(eResolve)
 {
     cudaExtent extent = MakeCudaExtent<D>(this->dimensions);
     cudaChannelFormatDesc d = cudaCreateChannelDesc<ChannelDescType_t<T>>();
-    CUDA_CHECK(cudaSetDevice(deviceId));
+    CUDA_CHECK(cudaSetDevice(device->DeviceId()));
     CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, mipCount));
 
     // Allocation Done now generate texture
@@ -232,7 +234,7 @@ Texture<D, T>& Texture<D, T>::operator=(Texture&& other)
     assert(this != &other);
     if(data)
     {
-        CUDA_CHECK(cudaSetDevice(this->currentDevice));
+        CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
         CUDA_CHECK(cudaDestroyTextureObject(this->texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
@@ -251,7 +253,7 @@ Texture<D, T>::~Texture()
 {
     if(data)
     {
-        CUDA_CHECK(cudaSetDevice(this->currentDevice));
+        CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
         CUDA_CHECK(cudaDestroyTextureObject(this->texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
@@ -264,7 +266,7 @@ void Texture<D, T>::Copy(const Byte* sourceData,
                          int mipLevel)
 {
     cudaArray_t levelArray;
-    CUDA_CHECK(cudaSetDevice(this->currentDevice));
+    CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     cudaMemcpy3DParms p = {0};
@@ -289,7 +291,7 @@ GPUFence Texture<D, T>::CopyAsync(const Byte* sourceData,
                                   cudaStream_t stream)
 {
     cudaArray_t levelArray;
-    CUDA_CHECK(cudaSetDevice(this->currentDevice));
+    CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     cudaMemcpy3DParms p = {};
@@ -327,14 +329,14 @@ size_t Texture<D, T>::Size() const
 }
 
 template<int D, class T>
-void Texture<D, T>::MigrateToOtherDevice(int deviceTo, cudaStream_t stream)
+void Texture<D, T>::MigrateToOtherDevice(const CudaGPU* deviceTo, cudaStream_t stream)
 {
      // TODO: Implement texture migration
     assert(false);
 }
 
 template<int D, class T>
-TextureArray<D, T>::TextureArray(int deviceId,
+TextureArray<D, T>::TextureArray(const CudaGPU* device,
                                  InterpolationType interp,
                                  EdgeResolveType eResolve,
                                  bool normalizeIntegers,
@@ -343,13 +345,13 @@ TextureArray<D, T>::TextureArray(int deviceId,
                                  const TexDimType_t<D>& size,
                                  unsigned int length,
                                  int mipCount)
-    : TextureArrayI<D>(size, TextureChannelCount<T>::value, length, deviceId)
+    : TextureArrayI<D>(size, TextureChannelCount<T>::value, length, device)
     , interpType(interp)
     , edgeResolveType(eResolve)
 {
     cudaExtent extent = MakeCudaExtent<D>(this->dimensions, length);
     cudaChannelFormatDesc d = cudaCreateChannelDesc<ChannelDescType_t<T>>();
-    CUDA_CHECK(cudaSetDevice(deviceId));
+    CUDA_CHECK(cudaSetDevice(device->DeviceId()));
     CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, mipCount,
                                                cudaArrayLayered));
 
@@ -401,7 +403,7 @@ TextureArray<D, T>& TextureArray<D, T>::operator=(TextureArray&& other)
     assert(this != &other);
     if(data)
     {
-        CUDA_CHECK(cudaSetDevice(this->currentDevice));
+        CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
         CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
@@ -420,7 +422,7 @@ TextureArray<D, T>::~TextureArray()
 {
     if(data)
     {
-        CUDA_CHECK(cudaSetDevice(this->currentDevice));
+        CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
         CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
@@ -434,7 +436,7 @@ void TextureArray<D, T>::Copy(const Byte* sourceData,
                               int mipLevel)
 {
     cudaArray_t levelArray;
-    CUDA_CHECK(cudaSetDevice(this->currentDevice));
+    CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     cudaMemcpy3DParms p = {};
@@ -461,7 +463,7 @@ GPUFence TextureArray<D, T>::CopyAsync(const Byte* sourceData,
                                        cudaStream_t stream)
 {
     cudaArray_t levelArray;
-    CUDA_CHECK(cudaSetDevice(this->currentDevice));
+    CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     cudaMemcpy3DParms p = {};
@@ -499,28 +501,28 @@ size_t TextureArray<D, T>::Size() const
 }
 
 template<int D, class T>
-void TextureArray<D, T>::MigrateToOtherDevice(int deviceTo, cudaStream_t stream)
+void TextureArray<D, T>::MigrateToOtherDevice(const CudaGPU* deviceTo, cudaStream_t stream)
 {
      // TODO: Implement texture migration
     assert(false);
 }
 
 template <class T>
-TextureCube<T>::TextureCube(int deviceId,
+TextureCube<T>::TextureCube(const CudaGPU* device,
                             InterpolationType interp,
                             EdgeResolveType eResolve,
                             bool normalizeIntegers,
                             bool convertSRGB,
                             const Vector2ui& size,
                             int mipCount)
-    : TextureCubeI(size, TextureChannelCount<T>::value, deviceId)
+    : TextureCubeI(size, TextureChannelCount<T>::value, device)
     , interpType(interp)
     , edgeResolveType(eResolve)
 {
     assert(this->dimensions[0] == this->dimensions[1]);
     cudaExtent extent = make_cudaExtent(this->dimensions[0], this->dimensions[1], CUBE_FACE_COUNT);
     cudaChannelFormatDesc d = cudaCreateChannelDesc<ChannelDescType_t<T>>();
-    CUDA_CHECK(cudaSetDevice(deviceId));
+    CUDA_CHECK(cudaSetDevice(device->DeviceId()));
     CUDA_MEMORY_CHECK(cudaMallocMipmappedArray(&data, &d, extent, mipCount,
                                                cudaArrayCubemap));
 
@@ -572,7 +574,7 @@ TextureCube<T>& TextureCube<T>::operator=(TextureCube&& other)
     assert(this != &other);
     if(data)
     {
-        CUDA_CHECK(cudaSetDevice(this->currentDevice));
+        CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
         CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
@@ -590,7 +592,7 @@ TextureCube<T>::~TextureCube()
 {
     if(data)
     {
-        CUDA_CHECK(cudaSetDevice(this->currentDevice));
+        CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
         CUDA_CHECK(cudaDestroyTextureObject(texture));
         CUDA_CHECK(cudaFreeMipmappedArray(data));
     }
@@ -604,7 +606,7 @@ void TextureCube<T>::Copy(const Byte* sourceData,
                           int mipLevel)
 {
     cudaArray_t levelArray;
-    CUDA_CHECK(cudaSetDevice(this->currentDevice));
+    CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     size_t sideIndex = static_cast<size_t>(side);
@@ -633,7 +635,7 @@ GPUFence TextureCube<T>::CopyAsync(const Byte* sourceData,
                                    cudaStream_t stream)
 {
     cudaArray_t levelArray;
-    CUDA_CHECK(cudaSetDevice(this->currentDevice));
+    CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
     size_t sideIndex = static_cast<size_t>(side);
@@ -673,7 +675,7 @@ size_t TextureCube<T>::Size() const
 }
 
 template <class T>
-void TextureCube<T>::MigrateToOtherDevice(int deviceTo, cudaStream_t stream)
+void TextureCube<T>::MigrateToOtherDevice(const CudaGPU* deviceTo, cudaStream_t stream)
 {
     // TODO: Implement texture migration
     assert(false);

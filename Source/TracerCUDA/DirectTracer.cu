@@ -167,7 +167,7 @@ bool DirectTracer::Render()
     // Allocate new auxiliary buffer
     // to fit all potential ray outputs
     size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPath);
-    DeviceMemory::EnlargeBuffer(*dAuxOut, auxOutSize);
+    GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxOutSize);
 
     // Set Auxiliary Pointers
     //for(auto pIt = work+Partition.crbegin();

@@ -23,8 +23,7 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
 
     // Allocate enough space for ray
     rayCaster->ResizeRayOut(totalRayCount, scene.BaseBoundaryMaterial());
-
-    DeviceMemory::EnlargeBuffer(*dAuxOut, auxBufferSize);
+    GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxBufferSize);
 
     // Basic Tracer does classic camera to light tracing
     // Thus its initial rays are from camera
@@ -122,7 +121,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
 
     // Allocate enough space for ray
     rayCaster->ResizeRayOut(totalRayCount, scene.BaseBoundaryMaterial());
-    DeviceMemory::EnlargeBuffer(*dAuxOut, auxBufferSize);
+    GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxBufferSize);
 
     // Basic Tracer does classic camera to light tracing
     // Thus its initial rays are from camera

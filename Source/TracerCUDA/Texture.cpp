@@ -1,7 +1,8 @@
 #include "Texture.cuh"
 
 TextureCubeI::TextureCubeI(TextureCubeI&& other)
-    : texture(other.texture)
+    : DeviceLocalMemoryI(other.currentDevice)
+    , texture(other.texture)
     , dimensions(other.dimensions)
     , channelCount(other.channelCount)
 {

@@ -55,7 +55,7 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2>>& tex,
     auto CT = [&]<class T>(bool falseNorm = false) -> auto
     {
         bool normInts = (falseNorm) ? false : normalizeIntegers;
-        std::unique_ptr<T> ptr = std::make_unique<T>(gpu.DeviceId(),
+        std::unique_ptr<T> ptr = std::make_unique<T>(&gpu,
                                                      interp,
                                                      edgeR,
                                                      normInts,

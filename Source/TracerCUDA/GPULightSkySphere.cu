@@ -73,8 +73,8 @@ SceneError CPULightGroupSkySphere::InitializeGroup(const EndpointGroupDataList& 
 
 
     // Allocate Distribution Memory
-    DeviceMemory::EnlargeBuffer(gpuDsitributionMem,
-                                sizeof(GPUDistPiecewiseConst2D) * lightCount);
+    GPUMemFuncs::EnlargeBuffer(gpuDsitributionMem,
+                               sizeof(GPUDistPiecewiseConst2D) * lightCount);
     dGPUDistributions = static_cast<GPUDistPiecewiseConst2D*>(gpuDsitributionMem);
 
     return SceneError::OK;
@@ -116,7 +116,7 @@ TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGl
                             : dim = dTextureMemory.at(texId)->Dimensions();
         uint32_t totalCount = dim[0] * dim[1];
 
-        DeviceMemory::EnlargeBuffer(luminanceBuffer, totalCount * sizeof(float));
+        GPUMemFuncs::EnlargeBuffer(luminanceBuffer, totalCount * sizeof(float));
         float* dLumArray = static_cast<float*>(luminanceBuffer);
 
         // Use your own gpu since texture resides there
@@ -156,9 +156,9 @@ TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGl
     const uint16_t* dMediumIndices;
     const TransformId* dTransformIds;
     const HitKey* dWorkKeys;
-    DeviceMemory::AllocateMultiData(std::tie(dMediumIndices, dTransformIds, dWorkKeys),
-                                    tempMemory,
-                                    {lightCount, lightCount, lightCount});
+    GPUMemFuncs::AllocateMultiData(std::tie(dMediumIndices, dTransformIds, dWorkKeys),
+                                   tempMemory,
+                                   {lightCount, lightCount, lightCount});
 
     // Set a GPU
     const CudaGPU& gpu = system.BestGPU();

@@ -33,6 +33,7 @@ class RayCasterOptiX : public RayCasterI
         // Accelerators
         GPUBaseAcceleratorI&            baseAccelerator;
         const AcceleratorBatchMap&      accelBatches;
+
         // Misc
         uint32_t                        currentRayCount;
         // OptiX Related

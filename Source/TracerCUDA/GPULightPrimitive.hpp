@@ -118,12 +118,12 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const EndpointGroupDataList& l
         }
     }
     // Allocate data for texture references etc...
-    DeviceMemory::AllocateMultiData(std::tie(dGPULights, dConstantRadiance,
-                                             dTextureRadiance, dRadiances,
-                                             dPData),
-                                    gpuLightMemory,
-                                    {lightCount, constDataCount,
-                                     texDataCount, lightCount, 1});
+    GPUMemFuncs::AllocateMultiData(std::tie(dGPULights, dConstantRadiance,
+                                            dTextureRadiance, dRadiances,
+                                            dPData),
+                                   gpuLightMemory,
+                                   {lightCount, constDataCount,
+                                    texDataCount, lightCount, 1});
 
     return SceneError::OK;
 }
@@ -152,12 +152,12 @@ TracerError CPULightGroup<PGroup>::ConstructEndpoints(const GPUTransformI** dGlo
     const uint16_t*     dMediumIndices;
     const HitKey*       dWorkKeys;
 
-    DeviceMemory::AllocateMultiData(std::tie(dPrimitiveIds,
-                                             dTransformIds,
-                                             dMediumIndices,
-                                             dWorkKeys),
-                                    tempMemory,
-                                    {lightCount, lightCount, lightCount, lightCount});
+    GPUMemFuncs::AllocateMultiData(std::tie(dPrimitiveIds,
+                                            dTransformIds,
+                                            dMediumIndices,
+                                            dWorkKeys),
+                                   tempMemory,
+                                   {lightCount, lightCount, lightCount, lightCount});
     // Set a GPU
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
     // Load Data to Temp Memory

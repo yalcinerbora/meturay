@@ -21,8 +21,8 @@ if(USE_OPTIX)
         ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiX.cu
         ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiX.hpp
         ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiX.cuh
-        ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiXKC.cu
-        ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiXKC.cuh)
+        ${CURRENT_SOURCE_DIR}/GPUOptiXPTX.cu
+        ${CURRENT_SOURCE_DIR}/GPUOptiXPTX.cuh)
     set(SRC_OPTIX_SYSTEM
         ${CURRENT_SOURCE_DIR}/OptixSystem.cpp
         ${CURRENT_SOURCE_DIR}/OptixSystem.h
@@ -34,7 +34,7 @@ if(USE_OPTIX)
     # Additionally Define PTX Source
     # Which will be passed to the Optix Compile Target
     set(OPTIX_PTX_SOURCES
-        ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiXKC.cu)
+        ${CURRENT_SOURCE_DIR}/GPUOptiXPTX.cu)
     # Make Optix Sources not participate in build
     set_source_files_properties(${OPTIX_PTX_SOURCES}
                                  PROPERTIES HEADER_FILE_ONLY TRUE)
@@ -344,8 +344,6 @@ set(SRC_ALL
 source_group("Accelerators" FILES ${SRC_ACCELS_COMMON})
 source_group("Accelerators/BVH" FILES ${SRC_ACCELS_BVH})
 source_group("Accelerators/Linear" FILES ${SRC_ACCELS_LINEAR})
-source_group("Accelerators/OptiX" FILES ${SRC_ACCELS_OPTIX})
-source_group("Accelerators/OptiX/System" FILES ${SRC_OPTIX_SYSTEM})
 
 source_group("Cameras" FILES ${SRC_CAMERAS})
 source_group("CudaSystem" FILES ${SRC_CUDA_SYSTEM})
@@ -370,10 +368,12 @@ source_group("Scene" FILES ${SRC_SCENE})
 source_group("Shared Lib" FILES ${SRC_SHARED_LIB})
 source_group("Structs" FILES ${SRC_STRUCTS})
 source_group("Textures" FILES ${SRC_TEXTURES})
-
 source_group("RayCasters" FILES ${SRC_RC})
+
 if(USE_OPTIX)
-    source_group("RayCasters" FILES ${SRC_RC_OPTIX})
+    source_group("OptiX/RayCaster" FILES ${SRC_RC_OPTIX})
+    source_group("OptiX/Accelerator" FILES ${SRC_ACCELS_OPTIX})
+    source_group("OptiX" FILES ${SRC_OPTIX_SYSTEM})
 endif()
 
 source_group("Tracers" FILES ${SRC_TRACERS_COMMON})

@@ -92,7 +92,7 @@ inline SceneError CPUMediumVacuum::InitializeGroup(const NodeListing& medNodes,
        (*medNodes.begin())->IdCount() != 1)
         return SceneError::MEDIUM_TYPE_INTERNAL_ERROR;
 
-    DeviceMemory::EnlargeBuffer(memory, sizeof(GPUMediumVacuum));
+    GPUMemFuncs::EnlargeBuffer(memory, sizeof(GPUMediumVacuum));
     dGPUMediums = static_cast<GPUMediumVacuum*>(memory);
     return SceneError::OK;
 }

@@ -65,7 +65,7 @@ void PPGTracer::ResizeAndInitPathMemory()
     //METU_LOG("Allocating PPGTracer global path buffer: Size {:d} MiB",
     //         totalPathNodeCount * sizeof(PathGuidingNode) / 1024 / 1024);
 
-    DeviceMemory::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(PathGuidingNode));
+    GPUMemFuncs::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(PathGuidingNode));
     dPathNodes = static_cast<PathGuidingNode*>(pathMemory);
 
     // Initialize Paths
@@ -277,7 +277,7 @@ bool PPGTracer::Render()
     // Allocate new auxiliary buffer
     // to fit all potential ray outputs
     size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPPG);
-    DeviceMemory::EnlargeBuffer(*dAuxOut, auxOutSize);
+    GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxOutSize);
 
     // Set Auxiliary Pointers
     //for(auto pIt = workPartition.crbegin();

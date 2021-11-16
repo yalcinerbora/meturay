@@ -142,9 +142,9 @@ SceneError CPUCameraGroupP<GPUCamera, PGroup, SGen>::InitializeCommon(const Endp
             return SceneError::TOO_MANY_MATERIAL_IN_GROUP;
     }
     // Allocate data for texture references etc...
-    DeviceMemory::AllocateMultiData(std::tie(dGPUCameras),
-                                    gpuCameraMemory,
-                                    {cameraCount});
+    GPUMemFuncs::AllocateMultiData(std::tie(dGPUCameras),
+                                   gpuCameraMemory,
+                                   {cameraCount});
     return SceneError::OK;
 }
 
@@ -208,7 +208,7 @@ void CPUCameraGroupP<GPUCamera, PGroup, SGen>::CopyCamera(DeviceMemory& camMem,
                                                           const GPUCameraI* gCamera,
                                                           const CudaSystem& cudaSystem)
 {
-    DeviceMemory::EnlargeBuffer(camMem, sizeof(GPUCamera));
+    GPUMemFuncs::EnlargeBuffer(camMem, sizeof(GPUCamera));
     CUDA_CHECK(cudaMemset(camMem, 0x00, sizeof(GPUCamera)));
 
     const auto& gpu = cudaSystem.BestGPU();

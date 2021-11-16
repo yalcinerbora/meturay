@@ -118,7 +118,7 @@ void RayMemory::ResizeRayOut(uint32_t rayCount, HitKey baseBoundMatKey)
     //sizeOfAuxiliary = Memory::AlignSize(sizeOfAuxiliary);
 
     size_t requiredSize = sizeOfRays + sizeOfWorkKeys;
-    DeviceMemory::EnlargeBuffer(memOut, requiredSize);
+    GPUMemFuncs::EnlargeBuffer(memOut, requiredSize);
 
     size_t offset = 0;
     std::uint8_t* dRay = static_cast<uint8_t*>(memOut);
@@ -198,7 +198,7 @@ void RayMemory::ResetHitMemory(TransformId identityTransformIndex,
                            sizeOfTempMemory);
 
     // Reallocate if memory is not enough
-    DeviceMemory::EnlargeBuffer(memHit, requiredSize);
+    GPUMemFuncs::EnlargeBuffer(memHit, requiredSize);
 
     // Populate pointers
     size_t offset = 0;
@@ -253,7 +253,7 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
 
     // First sort internals
     int bitStart = 0;
-    int bitEnd = bitMaxValues[1];    
+    int bitEnd = bitMaxValues[1];
     if(bitStart != bitEnd)
     {
         CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(dTempMemory, cubSortMemSize,

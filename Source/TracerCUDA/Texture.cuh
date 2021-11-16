@@ -15,6 +15,7 @@ Object oriented design and openGL like access
 
 #include "GPUEvent.h"
 #include "DeviceMemory.h"
+#include "CudaSystem.h"
 
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
@@ -121,7 +122,7 @@ template<int D>
 class TextureI : public DeviceLocalMemoryI
 {
     private:
-        static constexpr uint32_t   DimensionCount  = D;       
+        static constexpr uint32_t   DimensionCount  = D;
 
     protected:
         uint32_t                    channelCount    = 0;
@@ -132,7 +133,7 @@ class TextureI : public DeviceLocalMemoryI
         // Constructors & Destructor
                                     TextureI(const TexDimType_t<D>& dim,
                                              uint32_t channelCount,
-                                             int deviceId);
+                                             const CudaGPU* device);
                                     TextureI(const TextureI&) = delete;
                                     TextureI(TextureI&&);
         TextureI&                   operator=(const TextureI&) = delete;
@@ -162,7 +163,7 @@ class TextureArrayI : public DeviceLocalMemoryI
                                     TextureArrayI(const TexDimType_t<D>& dim,
                                                   uint32_t channelCount,
                                                   uint32_t layerCount,
-                                                  int deviceId);
+                                                  const CudaGPU* device);
                                     TextureArrayI(const TextureArrayI&) = delete;
                                     TextureArrayI(TextureArrayI&&);
         TextureArrayI&              operator=(const TextureArrayI&) = delete;
@@ -192,7 +193,7 @@ class TextureCubeI : public DeviceLocalMemoryI
         // Constructors & Destructor
                                     TextureCubeI(const Vector2ui& dim,
                                                  uint32_t channelCount,
-                                                 int currentDevice);
+                                                 const CudaGPU* device);
                                     TextureCubeI(const TextureCubeI&) = delete;
                                     TextureCubeI(TextureCubeI&&);
         TextureCubeI&               operator=(const TextureCubeI&) = delete;
@@ -222,7 +223,7 @@ class Texture final : public TextureI<D>
     public:
         // Constructors & Destructor
                             Texture() = delete;
-                            Texture(int deviceId,
+                            Texture(const CudaGPU* device,
                                     InterpolationType,
                                     EdgeResolveType,
                                     bool normalizeIntegers,
@@ -255,7 +256,7 @@ class Texture final : public TextureI<D>
         size_t                  Size() const override;
 
         // Memory Migration
-        void                    MigrateToOtherDevice(int deviceTo,
+        void                    MigrateToOtherDevice(const CudaGPU* deviceTo,
                                                      cudaStream_t stream = nullptr) override;
 };
 
@@ -277,7 +278,7 @@ class TextureArray final : public TextureArrayI<D>
     public:
         // Constructors & Destructor
                             TextureArray() = delete;
-                            TextureArray(int deviceId,
+                            TextureArray(const CudaGPU* device,
                                          InterpolationType,
                                          EdgeResolveType,
                                          bool normalizeIntegers,
@@ -312,7 +313,7 @@ class TextureArray final : public TextureArrayI<D>
         // Misc
         size_t                  Size() const override;
 
-        void                    MigrateToOtherDevice(int deviceTo,
+        void                    MigrateToOtherDevice(const CudaGPU* deviceTo,
                                                      cudaStream_t stream = nullptr) override;
 };
 
@@ -336,7 +337,7 @@ class TextureCube final : public TextureCubeI
     public:
         // Constructors & Destructor
                             TextureCube() = delete;
-                            TextureCube(int deviceId,
+                            TextureCube(const CudaGPU* device,
                                         InterpolationType,
                                         EdgeResolveType,
                                         bool normalizeIntegers,
@@ -368,7 +369,7 @@ class TextureCube final : public TextureCubeI
         // Misc
         size_t              Size() const override;
 
-        void                MigrateToOtherDevice(int deviceTo, cudaStream_t stream = nullptr) override;
+        void                MigrateToOtherDevice(const CudaGPU* deviceTo, cudaStream_t stream = nullptr) override;
 };
 
 // Ease of use Template Types
@@ -382,7 +383,7 @@ template<class T> using Texture2DArray = TextureArray<2, T>;
 template<int D>
 inline TextureI<D>::TextureI(const TexDimType_t<D>& dim,
                              uint32_t channelCount,
-                             int currentDevice)
+                             const CudaGPU* currentDevice)
     : DeviceLocalMemoryI(currentDevice)
     , dimensions(dim)
     , channelCount(channelCount)
@@ -410,7 +411,7 @@ template<int D>
 inline TextureArrayI<D>::TextureArrayI(const TexDimType_t<D>& dim,
                                        uint32_t channelCount,
                                        uint32_t length,
-                                       int currentDevice)
+                                       const CudaGPU* currentDevice)
     : DeviceLocalMemoryI(currentDevice)
     , dimensions(dim)
     , length(length)
@@ -443,7 +444,7 @@ uint32_t TextureArrayI<D>::ChannelCount() const
 
 inline TextureCubeI::TextureCubeI(const Vector2ui& dim,
                                   uint32_t channelCount,
-                                  int currentDevice)
+                                  const CudaGPU* currentDevice)
     : DeviceLocalMemoryI(currentDevice)
     , dimensions(dim)
     , channelCount(channelCount)

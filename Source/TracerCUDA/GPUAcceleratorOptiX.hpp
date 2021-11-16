@@ -144,8 +144,8 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     AABB3f* dPrimAABBs;
     uint64_t* dPrimIds;
     DeviceMemory aabbTempBuffer;
-    DeviceMemory::AllocateMultiData(std::tie(dPrimAABBs, dPrimIds), aabbTempBuffer,
-                                    {totalPrimCount, totalPrimCount});
+    GPUMemFuncs::AllocateMultiData(std::tie(dPrimAABBs, dPrimIds), aabbTempBuffer,
+                                   {totalPrimCount, totalPrimCount});
 
     size_t indexOffset = 0;
     for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
@@ -175,9 +175,9 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     //  ACTUAL TRAVERSAL GENERATION  //
     //===============================//
     uint32_t deviceIndex = 0;
-    for(auto [gpu, optixContext] : optixSystem->OptixCapableDevices())
+    for(const auto& [gpu, optixContext] : optixSystem->OptixCapableDevices())
     {
-        DeviceTraversables& traversableData = optixTraverseMemory[deviceIndex];
+        DeviceTraversables& gpuTraverseData = optixDataPerGPU[deviceIndex];
 
         // Constant Params
         const uint32_t geometryFlag = OPTIX_GEOMETRY_FLAG_NONE;
@@ -186,11 +186,11 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         std::array<OptixBuildInput, SceneConstants::MaxPrimitivePerSurface> buildInputs;
         for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
         {
-            buildInputCount++;
-
             const auto& range = primRangeList[i];
             if(range[0] == std::numeric_limits<uint64_t>::max())
                 break;
+            buildInputCount++;
+
             uint32_t primCount = static_cast<uint32_t>(range[1] - range[0]);
 
             CUdeviceptr aabbBuffers[1] = {AsOptixPtr(dPrimAABBs + indexOffsets[i][0])};
@@ -226,10 +226,12 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
         Byte* dTempBuild;
         uint64_t* dCompactedSize;
-        DeviceMemory tempBuildBuffer;
-        DeviceMemory::AllocateMultiData(std::tie(dTempBuild, dCompactedSize), tempBuildBuffer,
-                                        {accelMemorySizes.outputSizeInBytes, 1}, 128);
-        DeviceMemory tempMem(accelMemorySizes.tempSizeInBytes);
+        Byte* dTempMem;
+        DeviceLocalMemory tempBuildBuffer(&gpu);
+        GPUMemFuncs::AllocateMultiData(std::tie(dTempBuild, dCompactedSize), tempBuildBuffer,
+                                       {accelMemorySizes.outputSizeInBytes, 1}, 128);
+        DeviceLocalMemory tempMem(&gpu, accelMemorySizes.tempSizeInBytes);
+        dTempMem = static_cast<Byte*>(tempMem);
 
         // While building fetch compacted output size
         OptixAccelEmitDesc emitProperty = {};
@@ -239,11 +241,12 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         OptixTraversableHandle traversable;
         OPTIX_CHECK(optixAccelBuild(optixContext, (cudaStream_t)0,
                                     &accelOptions,
-                                    buildInputs.data(),
-                                    buildInputCount,
-                                    AsOptixPtr(tempMem), tempMem.Size(),
-                                    AsOptixPtr(dTempBuild),
-                                    accelMemorySizes.outputSizeInBytes,
+                                    // Build Inputs
+                                    buildInputs.data(), buildInputCount,
+                                    // Temp Memory
+                                    AsOptixPtr(dTempMem), accelMemorySizes.tempSizeInBytes,
+                                    // Output Memory
+                                    AsOptixPtr(dTempBuild), accelMemorySizes.outputSizeInBytes,
                                     &traversable, &emitProperty, 1));
 
         // Get compacted size to CPU
@@ -253,7 +256,7 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
         if(hCompactAccelSize < accelMemorySizes.outputSizeInBytes)
         {
-            DeviceMemory compactedMemory(hCompactAccelSize);
+            DeviceLocalMemory compactedMemory(&gpu, hCompactAccelSize);
 
             // use handle as input and output
             OPTIX_CHECK(optixAccelCompact(optixContext, (cudaStream_t)0,
@@ -262,12 +265,12 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                           hCompactAccelSize,
                                           &traversable));
 
-            traversableData.tMemories[innerIndex] = std::move(compactedMemory);
+            gpuTraverseData.tMemories[innerIndex] = std::move(compactedMemory);
         }
         else
-            traversableData.tMemories[innerIndex] = std::move(tempBuildBuffer);
+            gpuTraverseData.tMemories[innerIndex] = std::move(tempBuildBuffer);
 
-        traversableData.traversables[innerIndex] = traversable;
+        gpuTraverseData.traversables[innerIndex] = traversable;
         deviceIndex++;
     }
 
@@ -351,11 +354,30 @@ void GPUAccOptiXGroup<PGroup>::Hit(const CudaGPU& gpu,
 template <class PGroup>
 const SurfaceAABBList& GPUAccOptiXGroup<PGroup>::AcceleratorAABBs() const
 {
-    return surfaceAABBs;
+    return emptyAABBList;
+}
+
+template <class PGroup>
+DeviceMemory GPUAccOptiXGroup<PGroup>::GetHitRecords() const
+{
+    return DeviceMemory();
 }
 
 template <class PGroup>
 void GPUAccOptiXGroup<PGroup>::SetOptiXSystem(const OptiXSystem* sys)
 {
     optixSystem = sys;
+
+    auto optixGPUCount = sys->OptixCapableDevices().size();
+    auto acceleratorCount = idLookup.size();
+    optixDataPerGPU.resize(optixGPUCount);
+
+    uint32_t i = 0;
+    for(auto& gpuData : optixDataPerGPU)
+    {
+        const auto& gpu = sys->OptixCapableDevices()[i].first;
+        gpuData.tMemories.resize(acceleratorCount, DeviceLocalMemory(&gpu));
+        gpuData.traversables.resize(acceleratorCount);
+        i++;
+    }
 }

@@ -176,9 +176,9 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
                               static_cast<int>(processedNodeCount),
                               IsSplittedLeafFunctor());
 
-        DeviceMemory::EnlargeBuffer(tempMemory, deviceIfTempMemSize);
-        DeviceMemory::EnlargeBuffer(splitMarks, processedNodeCount * sizeof(uint32_t));
-        DeviceMemory::EnlargeBuffer(selectedIndices, (processedNodeCount + 1) *sizeof(uint32_t));
+        GPUMemFuncs::EnlargeBuffer(tempMemory, deviceIfTempMemSize);
+        GPUMemFuncs::EnlargeBuffer(splitMarks, processedNodeCount * sizeof(uint32_t));
+        GPUMemFuncs::EnlargeBuffer(selectedIndices, (processedNodeCount + 1) *sizeof(uint32_t));
 
         // Mark Leafs
         gpu.GridStrideKC_X(0, 0, nodeCount,
@@ -220,7 +220,7 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
         ExpandTree(nodeCount + extraChildCount);
         nodeCount += extraChildCount;
 
-        DeviceMemory::EnlargeBuffer(oldTreeIds, hSubdivisionCount * sizeof(uint32_t));
+        GPUMemFuncs::EnlargeBuffer(oldTreeIds, hSubdivisionCount * sizeof(uint32_t));
         gpu.GridStrideKC_X(0, 0, hSubdivisionCount,
                            //
                            KCSplitSTree,

@@ -128,7 +128,7 @@ inline SceneError CPUTransformIdentity::InitializeGroup(const NodeListing& trans
 	   (*transformNodes.begin())->IdCount() != 1)
 		return SceneError::TRANSFORM_TYPE_INTERNAL_ERROR;
 
-	DeviceMemory::EnlargeBuffer(memory, sizeof(GPUTransformIdentity));
+	GPUMemFuncs::EnlargeBuffer(memory, sizeof(GPUTransformIdentity));
 	dGPUTransforms = static_cast<GPUTransformIdentity*>(memory);
 	return SceneError::OK;
 }

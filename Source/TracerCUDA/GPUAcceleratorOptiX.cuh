@@ -10,28 +10,43 @@
 #include "GPUPrimitiveP.cuh"
 #include "GPUAcceleratorP.cuh"
 
-#include "GPUAcceleratorOptixKC.cuh"
+//#include "GPUAcceleratorOptixKC.cuh"
 #include "GPUAcceleratorCommonKC.cuh"
 
 #include "OptixSystem.h"
 #include "OptixCheck.h"
 
+class GPUAccGroupOptiXI
+{
+    public:
+        virtual                 ~GPUAccGroupOptiXI() = default;
+
+        // Return the hit record list for each accelerator
+        virtual DeviceMemory    GetHitRecords() const = 0;
+        //
+        virtual void            SetOptiXSystem(const OptiXSystem*) = 0;
+};
+
 template <class PGroup>
 class GPUAccOptiXGroup final
     : public GPUAcceleratorGroup<PGroup>
+    , public GPUAccGroupOptiXI
 {
     ACCELERATOR_TYPE_NAME("OptiX", PGroup);
 
     public:
         using LeafData = typename PGroup::LeafData;
+        using PrimData = typename PGroup::PrimitiveData;
 
         struct DeviceTraversables
         {
-            std::vector<DeviceMemory>           tMemories;
+            std::vector<DeviceLocalMemory>      tMemories;
             std::vector<OptixTraversableHandle> traversables;
         };
 
     private:
+        // Unsued
+        SurfaceAABBList                     emptyAABBList;
         // CPU Memory
         const OptiXSystem*                  optixSystem;
         //
@@ -39,12 +54,14 @@ class GPUAccOptiXGroup final
         std::vector<HitKeyList>             primitiveMaterialKeys;
         std::map<uint32_t, uint32_t>        idLookup;
         std::vector<bool>                   keyExpandOption;
-        std::vector<OptixTraversableHandle> hOptixTraversables;
-        SurfaceAABBList                     surfaceAABBs;
         // GPU Memory
-        std::vector<DeviceTraversables>     optixTraverseMemory;
+        std::vector<DeviceTraversables>     optixDataPerGPU;
         DeviceMemory                        transformIdMemory;
         TransformId*                        dAccTransformIds;
+        //
+        DeviceMemory                        leafAndPrimDataMemory;
+        LeafData*                           dLeafs;
+        PrimData*                           dPrimData;
 
     public:
         // Constructors & Destructor
@@ -99,8 +116,12 @@ class GPUAccOptiXGroup final
 
         const SurfaceAABBList&  AcceleratorAABBs() const override;
 
-        void                    SetOptiXSystem(const OptiXSystem*);
-        //void                    SetPtXOptiXSystem(const OptiXSystem*);
+        // OptiX Implementation
+        // Return the hit record list for each accelerator
+        DeviceMemory    GetHitRecords() const override;
+        //
+        void            SetOptiXSystem(const OptiXSystem*) override;
+
 };
 
 class GPUBaseAcceleratorOptiX final : public GPUBaseAcceleratorI

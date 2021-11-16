@@ -1,7 +1,7 @@
 #include "RayCasterOptiX.h"
 #include "RayLib/GPUSceneI.h"
 #include "CudaSystem.h"
-#include "GPUAcceleratorI.h"
+#include "GPUAcceleratorOptiX.cuh"
 #include "OptixCheck.h"
 
 #include <optix_stack_size.h>
@@ -143,32 +143,30 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
 {
     TracerError e = TracerError::OK;
 
-    //// Attach Transform gpu pointer to the Accelerator Batches
-    //for(const auto& acc : accelBatches)
-    //{
-    //    static_cast<GPU
-    //    acc.second->AttachGlobalTransformArray(dTransforms, identityTransformIndex);
-    //}
+    // Attach Transform gpu pointer to the Accelerator Batches
+    // Get OptiX Base from the class and set the OptixSystem
+    for(auto& [_, acc] : accelBatches)
+    {
+        acc->AttachGlobalTransformArray(dTransforms, identityTransformIndex);
 
+        auto accOptiX = dynamic_cast<GPUAccGroupOptiXI*>(acc);
+        accOptiX->SetOptiXSystem(&optixSystem);
+    }
 
     // Construct Accelerators
-    SurfaceAABBList allSurfaceAABBs;
     for(const auto& accBatch : accelBatches)
     {
         GPUAcceleratorGroupI* acc = accBatch.second;
         if((e = acc->ConstructAccelerators(cudaSystem)) != TracerError::OK)
             return e;
-        // Acquire surface aabb listings for base accelerator consrtuction
-        allSurfaceAABBs.insert(acc->AcceleratorAABBs().cbegin(),
-                               acc->AcceleratorAABBs().cend());
+
     }
     // Construct Base accelerator using aabb list
-    if((e = baseAccelerator.Constrcut(cudaSystem, allSurfaceAABBs)) != TracerError::OK)
+    if((e = baseAccelerator.Constrcut(cudaSystem, SurfaceAABBList())) != TracerError::OK)
         return e;
 
     // We constructed Accelerator
     // Now do OptiX boilerplate
-
     // =============================== //
     //       MODULE GENERATION         //
     // =============================== //

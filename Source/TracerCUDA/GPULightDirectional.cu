@@ -76,11 +76,11 @@ TracerError CPULightGroupDirectional::ConstructEndpoints(const GPUTransformI** d
     const TransformId* dTransformIds;
     const HitKey* dWorkKeys;
     const Vector3f* dDirections;
-    DeviceMemory::AllocateMultiData(std::tie(dMediumIndices, dTransformIds,
-                                             dWorkKeys, dDirections),
-                                    tempMemory,
-                                    {lightCount, lightCount,
-                                    lightCount, lightCount});
+    GPUMemFuncs::AllocateMultiData(std::tie(dMediumIndices, dTransformIds,
+                                            dWorkKeys, dDirections),
+                                   tempMemory,
+                                   {lightCount, lightCount,
+                                   lightCount, lightCount});
 
     // Set a GPU
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));

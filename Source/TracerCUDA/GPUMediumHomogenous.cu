@@ -59,7 +59,7 @@ SceneError CPUMediumHomogenous::InitializeGroup(const NodeListing& mediumNodes,
     size_t requiredSize = (sizeOfData + sizeOfMediumClasses);
 
     // Reallocate if memory is not enough
-    DeviceMemory::EnlargeBuffer(memory, requiredSize);
+    GPUMemFuncs::EnlargeBuffer(memory, requiredSize);
 
     size_t offset = 0;
     std::uint8_t* dBasePtr = static_cast<uint8_t*>(memory);

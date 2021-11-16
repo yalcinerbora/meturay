@@ -277,17 +277,17 @@ TracerError GPUTracer::Initialize()
     cameraCount = static_cast<uint32_t>(cCount);
     endpointCount = static_cast<uint32_t>(cCount + lCount);
 
-    DeviceMemory::AllocateMultiData(std::tie(dTransforms,
-                                             dMediums,
-                                             dLights,
-                                             dCameras,
-                                             dEndpoints),
-                                    commonTypeMemory,
-                                    {transformCount,
-                                    mediumCount,
-                                    lightCount,
-                                    cameraCount,
-                                    endpointCount});
+    GPUMemFuncs::AllocateMultiData(std::tie(dTransforms,
+                                            dMediums,
+                                            dLights,
+                                            dCameras,
+                                            dEndpoints),
+                                   commonTypeMemory,
+                                   {transformCount,
+                                   mediumCount,
+                                   lightCount,
+                                   cameraCount,
+                                   endpointCount});
 
     // Do transforms and Mediums fist
     // since materials and accelerators requires these objects

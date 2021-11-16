@@ -86,11 +86,11 @@ TracerError CPUCameraGroupSpherical::ConstructEndpoints(const GPUTransformI** dG
     const TransformId* dTransformIds;
     const HitKey* dWorkKeys;
     const Data* dData;
-    DeviceMemory::AllocateMultiData(std::tie(dMediumIndices, dTransformIds,
-                                             dWorkKeys, dData),
-                                    tempMemory,
-                                    {cameraCount, cameraCount,
-                                    cameraCount, cameraCount});
+    GPUMemFuncs::AllocateMultiData(std::tie(dMediumIndices, dTransformIds,
+                                            dWorkKeys, dData),
+                                   tempMemory,
+                                   {cameraCount, cameraCount,
+                                   cameraCount, cameraCount});
 
     // Set a GPU
     const CudaGPU& gpu = system.BestGPU();

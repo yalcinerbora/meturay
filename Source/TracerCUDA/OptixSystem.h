@@ -10,7 +10,8 @@
 
     #include "DeviceMemory.h"
 
-    static CUdeviceptr AsOptixPtr(DeviceMemory& mem)
+    template<class GPUMem>
+    static CUdeviceptr AsOptixPtr(GPUMem& mem)
     {
         return reinterpret_cast<CUdeviceptr>(static_cast<Byte*>(mem));
     }
@@ -28,6 +29,9 @@
     {
         public:
             using OptixDevice = std::pair<const CudaGPU&, OptixDeviceContext>;
+            static constexpr const char* OPTIX_LOGGER_NAME = "OptiXLogger";
+            static constexpr const char* OPTIX_LOGGER_FILE_NAME = "optix_log";
+
 
         private:
             const CudaSystem&                   cudaSystem;

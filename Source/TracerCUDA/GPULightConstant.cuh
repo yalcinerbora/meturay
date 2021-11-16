@@ -210,9 +210,9 @@ inline TracerError CPULightGroupConstant::ConstructEndpoints(const GPUTransformI
     const uint16_t* dMediumIndices;
     const TransformId* dTransformIds;
     const HitKey* dWorkKeys;
-    DeviceMemory::AllocateMultiData(std::tie(dMediumIndices, dTransformIds, dWorkKeys),
-                                    tempMemory,
-                                    {lightCount, lightCount, lightCount});
+    GPUMemFuncs::AllocateMultiData(std::tie(dMediumIndices, dTransformIds, dWorkKeys),
+                                   tempMemory,
+                                   {lightCount, lightCount, lightCount});
 
     // Set a GPU
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));

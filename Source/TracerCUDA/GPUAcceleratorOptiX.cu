@@ -107,7 +107,7 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
 {
     // Specialized Triangle Primitive Function
 
-    uint64_t totalVertexCount = this->primitiveGroup.TotalDataCount() * 3;
+    uint64_t totalVertexCount = this->primitiveGroup.TotalDataCount();
     // Currently optix only supports 32-bit indices
     if(totalVertexCount >= std::numeric_limits<uint32_t>::max())
         return TracerError::UNABLE_TO_CONSTRUCT_ACCELERATOR;
@@ -142,17 +142,18 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
     uint32_t deviceIndex = 0;
     for(const auto& [gpu, optixContext] : optixSystem->OptixCapableDevices())
     {
-        DeviceTraversables& traversableData = optixTraverseMemory[deviceIndex];
+        CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+        DeviceTraversables& gpuTraverseData = optixDataPerGPU[deviceIndex];
 
         uint32_t buildInputCount = 0;
         std::array<OptixBuildInput, SceneConstants::MaxPrimitivePerSurface> buildInputs;
         for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
         {
-            buildInputCount++;
-
             const auto& range = primRangeList[i];
             if(range[0] == std::numeric_limits<uint64_t>::max())
                 break;
+
+            buildInputCount++;
 
             uint32_t geometryFlag = OPTIX_GEOMETRY_FLAG_NONE;
 
@@ -200,10 +201,13 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
         // Allocate Temp Buffer for Build
         Byte* dTempBuild;
         uint64_t* dCompactedSize;
-        DeviceMemory tempBuildBuffer;
-        DeviceMemory::AllocateMultiData(std::tie(dCompactedSize, dTempBuild), tempBuildBuffer,
-                                        {1, accelMemorySizes.outputSizeInBytes});
-        DeviceMemory tempMem(accelMemorySizes.tempSizeInBytes);
+        Byte* dTempMem;
+        DeviceLocalMemory tempBuildBuffer(&gpu);
+        GPUMemFuncs::AllocateMultiData(std::tie(dTempBuild, dCompactedSize), tempBuildBuffer,
+                                        {accelMemorySizes.outputSizeInBytes, 1}, 128);
+        DeviceLocalMemory tempMem(&gpu, accelMemorySizes.tempSizeInBytes);
+        dTempMem = static_cast<Byte*>(tempMem);
+
 
         // While building fetch compacted output size
         OptixAccelEmitDesc emitProperty = {};
@@ -213,11 +217,12 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
         OptixTraversableHandle traversable;
         OPTIX_CHECK(optixAccelBuild(optixContext, (cudaStream_t)0,
                                     &accelOptions,
-                                    buildInputs.data(),
-                                    buildInputCount,
-                                    AsOptixPtr(tempMem), tempMem.Size(),
-                                    AsOptixPtr(dTempBuild),
-                                    accelMemorySizes.outputSizeInBytes,
+                                    // Build Inputs
+                                    buildInputs.data(), buildInputCount,
+                                    // Temp Memory
+                                    AsOptixPtr(dTempMem), accelMemorySizes.tempSizeInBytes,
+                                    // Output Memory
+                                    AsOptixPtr(dTempBuild), accelMemorySizes.outputSizeInBytes,
                                     &traversable, &emitProperty, 1));
 
         // Get compacted size to CPU
@@ -225,9 +230,9 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
         CUDA_CHECK(cudaMemcpy(&hCompactAccelSize, dCompactedSize,
                               sizeof(uint64_t), cudaMemcpyDeviceToHost));
 
-        if(hCompactAccelSize < accelMemorySizes.outputSizeInBytes)
+        if(hCompactAccelSize < tempBuildBuffer.Size())
         {
-            DeviceMemory compactedMemory(hCompactAccelSize);
+            DeviceLocalMemory compactedMemory(&gpu, hCompactAccelSize);
 
             // use handle as input and output
             OPTIX_CHECK(optixAccelCompact(optixContext, (cudaStream_t)0,
@@ -236,12 +241,12 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
                                           hCompactAccelSize,
                                           &traversable));
 
-            traversableData.tMemories[innerIndex] = std::move(compactedMemory);
+            gpuTraverseData.tMemories[innerIndex] = std::move(compactedMemory);
         }
         else
-            traversableData.tMemories[innerIndex] = std::move(tempBuildBuffer);
+            gpuTraverseData.tMemories[innerIndex] = std::move(tempBuildBuffer);
 
-        traversableData.traversables[innerIndex] = traversable;
+        gpuTraverseData.traversables[innerIndex] = traversable;
         deviceIndex++;
     }
 
@@ -252,6 +257,7 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
 void GPUBaseAcceleratorOptiX::SetOptiXSystem(const OptiXSystem* sys)
 {
     optixSystem = sys;
+
 }
 
 OptixTraversableHandle GPUBaseAcceleratorOptiX::GetBaseTraversable() const

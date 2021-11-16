@@ -447,7 +447,7 @@ void DTreeGroup::DTreeBuffer::AllocateExtra(const std::vector<uint32_t>& oldTree
     dDTreeNodes = dNewNodes;
 
     // Allocate offsets on GPU aswell
-    DeviceMemory::EnlargeBuffer(offsetMemory, hDTreeNodeOffsets.size() * sizeof(uint32_t));
+    GPUMemFuncs::EnlargeBuffer(offsetMemory, hDTreeNodeOffsets.size() * sizeof(uint32_t));
     dDTreeNodeOffsets = static_cast<uint32_t*>(offsetMemory);
     CUDA_CHECK(cudaMemcpy(dDTreeNodeOffsets, hDTreeNodeOffsets.data(),
                           hDTreeNodeOffsets.size() * sizeof(uint32_t),
@@ -505,13 +505,13 @@ void DTreeGroup::DTreeBuffer::ResetAndReserve(const uint32_t* dNewNodeCounts,
     );
     gpu.WaitMainStream();
 
-    DeviceMemory::EnlargeBuffer(treeNodeMemory, totalNodeCount * sizeof(DTreeNode));
+    GPUMemFuncs::EnlargeBuffer(treeNodeMemory, totalNodeCount * sizeof(DTreeNode));
     dDTreeNodes = static_cast<DTreeNode*>(treeNodeMemory);
 
-    DeviceMemory::EnlargeBuffer(offsetMemory, (newTreeCount + 1) * sizeof(uint32_t));
+    GPUMemFuncs::EnlargeBuffer(offsetMemory, (newTreeCount + 1) * sizeof(uint32_t));
     dDTreeNodeOffsets = static_cast<uint32_t*>(offsetMemory);
 
-    DeviceMemory::EnlargeBuffer(treeMemory, newTreeCount * sizeof(DTreeGPU));
+    GPUMemFuncs::EnlargeBuffer(treeMemory, newTreeCount * sizeof(DTreeGPU));
     dDTrees = static_cast<DTreeGPU*>(treeMemory);
 
     // Reset the trees etc.
@@ -715,17 +715,17 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
     uint32_t* dNodeChildCounts;             // How many child each node needs
     uint32_t* dTreeChildCounts;             // How many child each tree needs
     uint32_t* dTreeNodeAllocationCounters;  // Tree allocation
-    DeviceMemory::AllocateMultiData(std::tie(dTreeChildCounts,
-                                             dNodeTreeIndices,
-                                             dNodeOffsets,
-                                             dNodeChildCounts,
-                                             dTreeNodeAllocationCounters),
-                                    tempMemory,
-                                    {treeCount,
-                                    totalNodeCount,
-                                    totalNodeCount,
-                                    totalNodeCount,
-                                    treeCount});
+    GPUMemFuncs::AllocateMultiData(std::tie(dTreeChildCounts,
+                                            dNodeTreeIndices,
+                                            dNodeOffsets,
+                                            dNodeChildCounts,
+                                            dTreeNodeAllocationCounters),
+                                   tempMemory,
+                                   {treeCount,
+                                   totalNodeCount,
+                                   totalNodeCount,
+                                   totalNodeCount,
+                                   treeCount});
 
     // Set node offsets etc.
     gpu.GridStrideKC_X(0, (cudaStream_t)0, totalNodeCount,

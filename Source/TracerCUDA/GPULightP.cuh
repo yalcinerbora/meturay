@@ -251,11 +251,11 @@ SceneError CPULightGroupP<GPULight, PGroup, SGen>::InitializeCommon(const Endpoi
             return SceneError::TOO_MANY_MATERIAL_IN_GROUP;
     }
     // Allocate data for texture references etc...
-    DeviceMemory::AllocateMultiData(std::tie(dGPULights, dConstantRadiance,
-                                             dTextureRadiance, dRadiances),
-                                    gpuLightMemory,
-                                    {lightCount, constDataCount,
-                                     texDataCount, lightCount});
+    GPUMemFuncs::AllocateMultiData(std::tie(dGPULights, dConstantRadiance,
+                                            dTextureRadiance, dRadiances),
+                                   gpuLightMemory,
+                                   {lightCount, constDataCount,
+                                    texDataCount, lightCount});
 
     return SceneError::OK;
 }
@@ -271,8 +271,8 @@ TracerError CPULightGroupP<GPULight, PGroup, SGen>::ConstructTextureReferences()
 
     uint32_t* dCounters;
     ConstructionInfo* dRadianceConstructionInfo;
-    DeviceMemory::AllocateMultiData(std::tie(dRadianceConstructionInfo, dCounters),
-                                    tempMemory, {lightCount, counterCount});
+    GPUMemFuncs::AllocateMultiData(std::tie(dRadianceConstructionInfo, dCounters),
+                                   tempMemory, {lightCount, counterCount});
 
     // Copy to GPU
     CUDA_CHECK(cudaMemset(dCounters, 0x00, sizeof(uint32_t) * counterCount));

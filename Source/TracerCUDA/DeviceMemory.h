@@ -24,6 +24,8 @@ TODO: should we interface these?
 #include "RayLib/MemoryAlignment.h"
 #include "RayLib/Types.h"
 
+class CudaGPU;
+
 class DeviceMemoryI
 {
     public:
@@ -31,7 +33,6 @@ class DeviceMemoryI
 
         // Interface
         virtual size_t      Size() const = 0;
-
 };
 
 // Basic semi-interface for memories that are static for each GPU
@@ -40,14 +41,47 @@ class DeviceLocalMemoryI : public DeviceMemoryI
 {
     private:
     protected:
-        int                     currentDevice;
+        const CudaGPU*          currentDevice;
 
     public:
-                                DeviceLocalMemoryI(int initalDevice = 0) : currentDevice(initalDevice) {}
+                                DeviceLocalMemoryI(const CudaGPU* gpu) : currentDevice(gpu) {}
         virtual                 ~DeviceLocalMemoryI() = default;
 
         // Interface
-        virtual void            MigrateToOtherDevice(int deviceTo, cudaStream_t stream = (cudaStream_t)0) = 0;
+        const CudaGPU*          Device() const;
+        virtual void            MigrateToOtherDevice(const CudaGPU* deviceTo, cudaStream_t stream = (cudaStream_t)0) = 0;
+};
+
+// Device Local Memory
+class DeviceLocalMemory : public DeviceLocalMemoryI
+{
+    private:
+        void*                       d_ptr;
+        size_t                      size;
+
+    protected:
+    public:
+        // Constructors & Destructor
+                                    DeviceLocalMemory(const CudaGPU* gpu);
+                                    DeviceLocalMemory(const CudaGPU* gpu, size_t sizeInBytes);
+                                    DeviceLocalMemory(const DeviceLocalMemory&);
+                                    DeviceLocalMemory(DeviceLocalMemory&&);
+                                    ~DeviceLocalMemory();
+        DeviceLocalMemory&          operator=(const DeviceLocalMemory&);
+        DeviceLocalMemory&          operator=(DeviceLocalMemory&&);
+
+        // Access
+        template<class T>
+        constexpr explicit          operator T* ();
+        template<class T>
+        constexpr explicit          operator const T* () const;
+        constexpr                   operator void* ();
+        constexpr                   operator const void* () const;
+
+        // Misc
+        size_t                      Size() const override;
+
+        void                        MigrateToOtherDevice(const CudaGPU* deviceTo, cudaStream_t stream = (cudaStream_t)0) override;
 };
 
 // Has a CPU Image of current memory
@@ -65,8 +99,8 @@ class DeviceMemoryCPUBacked : public DeviceLocalMemoryI
     protected:
     public:
         // Constructors & Destructor
-                                    DeviceMemoryCPUBacked();
-                                    DeviceMemoryCPUBacked(size_t sizeInBytes, int deviceId = 0);
+                                    DeviceMemoryCPUBacked(const CudaGPU* gpu);
+                                    DeviceMemoryCPUBacked(const CudaGPU* gpu, size_t sizeInBytes);
                                     DeviceMemoryCPUBacked(const DeviceMemoryCPUBacked&);
                                     DeviceMemoryCPUBacked(DeviceMemoryCPUBacked&&);
                                     ~DeviceMemoryCPUBacked();
@@ -89,7 +123,7 @@ class DeviceMemoryCPUBacked : public DeviceLocalMemoryI
         // Misc
         size_t                      Size() const override;
         // Interface
-        void                        MigrateToOtherDevice(int deviceTo, cudaStream_t stream = (cudaStream_t)0) override;
+        void                        MigrateToOtherDevice(const CudaGPU* deviceTo, cudaStream_t stream = (cudaStream_t)0) override;
 };
 
 // Generic Device Memory (most of the cases this should be used)
@@ -123,14 +157,45 @@ class DeviceMemory : public DeviceMemoryI
 
         // Misc
         size_t                      Size() const override;
-
-        static void                 EnlargeBuffer(DeviceMemory&, size_t);
-
-        template <class... Args>
-        static void                 AllocateMultiData(std::tuple<Args*&...> pointers, DeviceMemory& memory,
-                                                      const std::array<size_t, sizeof...(Args)>& sizeList,
-                                                      size_t alignment = Memory::AlignByteCount);
 };
+
+namespace GPUMemFuncs
+{
+    template <class GPUMem>
+    void    EnlargeBuffer(GPUMem&, size_t);
+
+    template <class GPUMem, class... Args>
+    void     AllocateMultiData(std::tuple<Args*&...> pointers, GPUMem& memory,
+                               const std::array<size_t, sizeof...(Args)>& sizeList,
+                               size_t alignment = Memory::AlignByteCount);
+};
+
+inline const CudaGPU* DeviceLocalMemoryI::Device() const
+{
+    return currentDevice;
+}
+
+template<class T>
+inline constexpr DeviceLocalMemory::operator T* ()
+{
+    return reinterpret_cast<T*>(d_ptr);
+}
+
+template<class T>
+inline constexpr DeviceLocalMemory::operator const T* () const
+{
+    return reinterpret_cast<T*>(d_ptr);
+}
+
+inline constexpr DeviceLocalMemory::operator void* ()
+{
+    return d_ptr;
+}
+
+inline constexpr DeviceLocalMemory::operator const void* () const
+{
+    return d_ptr;
+}
 
 template<class T>
 inline constexpr T* DeviceMemoryCPUBacked::DeviceData()
@@ -178,7 +243,18 @@ inline constexpr DeviceMemory::operator const void*() const
     return m_ptr;
 }
 
-inline void DeviceMemory::EnlargeBuffer(DeviceMemory& mem, size_t s)
+template <class GPUMem>
+void GPUMemFuncs::EnlargeBuffer(GPUMem& mem, size_t s)
+{
+    if(s > mem.Size())
+    {
+        mem = std::move(GPUMem(mem.Device()));
+        mem = std::move(GPUMem(mem.Device(), s));
+    }
+}
+
+template <>
+inline void GPUMemFuncs::EnlargeBuffer(DeviceMemory& mem, size_t s)
 {
     if(s > mem.Size())
     {
@@ -236,10 +312,10 @@ namespace DeviceMemDetail
     }
 }
 
-template <class... Args>
-void DeviceMemory::AllocateMultiData(std::tuple<Args*&...> pointers, DeviceMemory& memory,
-                                     const std::array<size_t, sizeof...(Args)>& countList,
-                                     size_t alignment)
+template <class GPUMem, class... Args>
+void GPUMemFuncs::AllocateMultiData(std::tuple<Args*&...> pointers, GPUMem& memory,
+                                    const std::array<size_t, sizeof...(Args)>& countList,
+                                    size_t alignment)
 {
     std::array<size_t, sizeof...(Args)> alignedSizeList;
     // Acquire total size & allocation size of each array
@@ -247,7 +323,7 @@ void DeviceMemory::AllocateMultiData(std::tuple<Args*&...> pointers, DeviceMemor
                                                                      countList,
                                                                      alignment);
     // Allocate Memory
-    DeviceMemory::EnlargeBuffer(memory, totalSize);
+    GPUMemFuncs::EnlargeBuffer(memory, totalSize);
     Byte* ptr = static_cast<Byte*>(memory);
     // Populate pointers
     size_t offset = 0;
