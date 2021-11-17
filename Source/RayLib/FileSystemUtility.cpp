@@ -79,7 +79,8 @@ std::string Utility::CurrentExecPath()
 
     #ifdef METURAY_WIN
         std::wstring result(MAX_PATH_LENGTH, '\0');
-        GetModuleFileName(NULL, result.data(), result.size());
+        GetModuleFileName(NULL, result.data(),
+                          static_cast<DWORD>(result.size()));
         return std::filesystem::path(result).parent_path().string();
 
     #elif METURAY_LINUX

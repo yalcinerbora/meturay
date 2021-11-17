@@ -496,7 +496,8 @@ class GPUPrimitiveTriangle final
         uint64_t                                TotalDataCount() const override;
         // Primitive Transform Info for accelerator
         PrimTransformType                       TransformType() const override;
-
+        //
+        bool                                    IsTriangle() const override;
         // Error check
         // Queries in order to check if this primitive group supports certain primitive data
         // Material may need that data

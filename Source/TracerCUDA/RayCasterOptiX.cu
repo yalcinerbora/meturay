@@ -3,6 +3,7 @@
 #include "CudaSystem.h"
 #include "GPUAcceleratorOptiX.cuh"
 #include "OptixCheck.h"
+#include "TracerDebug.h"
 
 #include <optix_stack_size.h>
 
@@ -17,6 +18,7 @@ RayCasterOptiX::RayCasterOptiX(const GPUSceneI& gpuScene,
     , cudaSystem(system)
     , currentRayCount(0)
     , optixSystem(system)
+    , rayMemory(system.BestGPU())
 {
 
     optixGPUData.reserve(optixSystem.OptixCapableDevices().size());
@@ -24,14 +26,17 @@ RayCasterOptiX::RayCasterOptiX(const GPUSceneI& gpuScene,
     {
         optixGPUData.push_back(
         {
-            DeviceLocalMemory(&gpu), nullptr,
-            nullptr, nullptr, {}, {}
+            0,
+            nullptr, nullptr, {},
+            nullptr, DeviceLocalMemory(&gpu),
+            {}, DeviceLocalMemory(&gpu)
         });
     }
 
 }
 
 TracerError RayCasterOptiX::CreateProgramGroups(const std::string& rgFuncName,
+                                                const std::string& missFuncName,
                                                 const std::vector<HitFunctionNames>& hitFuncNames)
 {
     OptixProgramGroupOptions pgOpts = {};
@@ -43,7 +48,6 @@ TracerError RayCasterOptiX::CreateProgramGroups(const std::string& rgFuncName,
         OptixModule gpuModule = optixGPUData[i].mdl;
 
         optixGPUData[i].programGroups.emplace_back();
-
         OptixProgramGroupDesc rhProgramDesc = {};
         rhProgramDesc.kind = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
         rhProgramDesc.raygen.module = gpuModule;
@@ -55,19 +59,36 @@ TracerError RayCasterOptiX::CreateProgramGroups(const std::string& rgFuncName,
                                             nullptr, 0,
                                             &optixGPUData[i].programGroups.back()));
 
+        optixGPUData[i].programGroups.emplace_back();
+        OptixProgramGroupDesc missProgramDesc = {};
+        missProgramDesc.kind = OPTIX_PROGRAM_GROUP_KIND_MISS;
+        missProgramDesc.miss.module = gpuModule;
+        missProgramDesc.miss.entryFunctionName = missFuncName.c_str();
+
+        OPTIX_CHECK(optixProgramGroupCreate(optixContext,
+                                            &missProgramDesc, 1,
+                                            &pgOpts,
+                                            nullptr, 0,
+                                            &optixGPUData[i].programGroups.back()));
+
         for(const auto& [chFuncName, ahFuncName, iFuncName] : hitFuncNames)
         {
             optixGPUData[i].programGroups.emplace_back();
 
             OptixProgramGroupDesc hProgramDesc = {};
             hProgramDesc.kind = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
-            hProgramDesc.hitgroup.moduleCH = gpuModule;
-            hProgramDesc.hitgroup.entryFunctionNameCH = (chFuncName.empty()) ? nullptr : chFuncName.c_str();
-            hProgramDesc.hitgroup.moduleAH = gpuModule;
-            hProgramDesc.hitgroup.entryFunctionNameAH = (ahFuncName.empty()) ? nullptr : ahFuncName.c_str();
-            hProgramDesc.hitgroup.moduleIS = gpuModule;
-            hProgramDesc.hitgroup.entryFunctionNameIS = (iFuncName.empty()) ? nullptr : iFuncName.c_str();
-
+            hProgramDesc.hitgroup.moduleCH = (chFuncName.empty()) ? nullptr : gpuModule;
+            hProgramDesc.hitgroup.entryFunctionNameCH = (chFuncName.empty())
+                                                            ? nullptr
+                                                            : chFuncName.c_str();
+            hProgramDesc.hitgroup.moduleAH = (ahFuncName.empty()) ? nullptr : gpuModule;
+            hProgramDesc.hitgroup.entryFunctionNameAH = (ahFuncName.empty())
+                                                            ? nullptr
+                                                            : ahFuncName.c_str();
+            hProgramDesc.hitgroup.moduleIS = (iFuncName.empty()) ? nullptr : gpuModule;
+            hProgramDesc.hitgroup.entryFunctionNameIS = (iFuncName.empty())
+                                                            ? nullptr
+                                                            : iFuncName.c_str();
             OPTIX_CHECK(optixProgramGroupCreate(optixContext,
                                                 &hProgramDesc, 1,
                                                 &pgOpts,
@@ -130,7 +151,7 @@ TracerError RayCasterOptiX::CreatePipelines(const OptixPipelineCompileOptions& p
         uint32_t dcStackSizeState;
         uint32_t contStackSize;
         OPTIX_CHECK(optixUtilComputeStackSizes(&stack_sizes,
-                                               2,   // max trace depth
+                                               1,   // max trace depth
                                                0, 0,
                                                &dcStackSizeTraverse,
                                                &dcStackSizeState,
@@ -147,41 +168,197 @@ TracerError RayCasterOptiX::CreatePipelines(const OptixPipelineCompileOptions& p
     return TracerError::OK;
 }
 
+TracerError RayCasterOptiX::CreateSBTs(const std::vector<std::pair<const void*, const void*>>& recordPointers,
+                                       const std::vector<uint32_t>& programGroupIds,
+                                       const TransformId* dAllAccelTransformIds)
+{
+    uint32_t i = 0;
+    for(const auto& [gpu, optixContext] : optixSystem.OptixCapableDevices())
+    {
+        auto& optixData = optixGPUData[i];
+        size_t acceleratorCount = recordPointers.size();
+
+        // I dont know what sbt record pack header wrties
+        // to the header maybe it is GPU specific
+        // set device beforehand
+        CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+
+        // Allocate Record data on device local memory
+        EmptyRecord* dRaygenRecord;
+        EmptyRecord* dMissRecord;
+        HitGroupRecord<void, void>* dHitRecords;
+        GPUMemFuncs::AllocateMultiData(std::tie(dRaygenRecord, dMissRecord, dHitRecords),
+                                       optixData.sbtMemory,
+                                       {1, 1, acceleratorCount},
+                                       OPTIX_SBT_RECORD_ALIGNMENT);
+
+
+        // Host Data
+        EmptyRecord hRGRecord = EmptyRecord{};
+        EmptyRecord hMissRecord = EmptyRecord{};
+        std::vector<HitGroupRecord<void, void>> hHitRecords(acceleratorCount,
+                                                            HitGroupRecord<void, void>{});
+
+        // Set Raygen Record
+        OPTIX_CHECK(optixSbtRecordPackHeader(optixData.programGroups[0], &hRGRecord));
+        CUDA_CHECK(cudaMemcpy(dRaygenRecord, &hRGRecord, sizeof(EmptyRecord),
+                              cudaMemcpyHostToDevice));
+        // Set Miss Record
+        OPTIX_CHECK(optixSbtRecordPackHeader(optixData.programGroups[1], &hMissRecord));
+        CUDA_CHECK(cudaMemcpy(dMissRecord, &hMissRecord, sizeof(EmptyRecord),
+                              cudaMemcpyHostToDevice));
+
+        int recordId = 0;
+        for(auto& record : hHitRecords)
+        {
+            optixSbtRecordPackHeader(optixData.programGroups[programGroupIds[recordId]],
+                                     &record);
+            record.data.primData = recordPointers[recordId].first;
+            record.data.gLeafs = recordPointers[recordId].second;
+            recordId++;
+        }
+        CUDA_CHECK(cudaMemcpy(dHitRecords, hHitRecords.data(),
+                              hHitRecords.size() * sizeof(HitGroupRecord<void, void>),
+                              cudaMemcpyHostToDevice));
+
+        optixData.sbt.raygenRecord = AsOptixPtr(dRaygenRecord);
+        // Although we do not use the miss shader
+        // Optix mandates these to be set
+        optixData.sbt.missRecordBase = AsOptixPtr(dMissRecord);
+        optixData.sbt.missRecordCount = 1;
+        optixData.sbt.missRecordStrideInBytes = sizeof(EmptyRecord);
+        //
+        optixData.sbt.hitgroupRecordBase = AsOptixPtr(dHitRecords);
+        optixData.sbt.hitgroupRecordStrideInBytes = sizeof(HitGroupRecord<void, void>);
+        optixData.sbt.hitgroupRecordCount = static_cast<uint32_t>(acceleratorCount);
+
+        i++;
+    }
+    return TracerError::OK;
+}
+
+TracerError RayCasterOptiX::AllocateParams()
+{
+    uint32_t i = 0;
+    for(const auto& [gpu, optixContext] : optixSystem.OptixCapableDevices())
+    {
+        optixGPUData[i].paramsMemory = DeviceLocalMemory(&gpu, sizeof(OpitXBaseAccelParams));
+        optixGPUData[i].dOptixLaunchParams = static_cast<OpitXBaseAccelParams*>(optixGPUData[i].paramsMemory);
+        i++;
+    }
+    return TracerError::OK;
+}
+
 TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransforms,
                                                   uint32_t identityTransformIndex)
 {
     TracerError e = TracerError::OK;
 
+    // Find out total accelerator count
+    size_t totalAcceleratorCount = 0;
+    for(auto& [_, acc] : accelBatches)
+    {
+        totalAcceleratorCount += acc->AcceleratorCount();
+    }
+
+    // Required Data for OptiX
+    // List of traversables for each accellerator, (for each optix GPU)
+    std::vector<std::vector<OptixTraversableHandle>> traversables;
+    // Primitive Transform type of the Accelerator Group's Primitive (for each AcceleratorGroup)
+    std::vector<PrimTransformType> hPrimTransformTypes;
+    // Primitive Data & Leaf Data pointers (for each Accelerator on the scene)
+    std::vector<std::pair<const void*, const void*>> hLeafAndPrimDataPtrs;
+    // List of all accelerator's transform ids (for each Acceleraor on the scene)
+    DeviceMemory allTransformIdMemory(totalAcceleratorCount * sizeof(TransformId));
+    TransformId* dAllTransformIds = static_cast<TransformId*>(allTransformIdMemory);
+    // Program Group index for each accelerator (for each Acceleraor on the scene)
+    std::vector<uint32_t> hProgramGroupIndices;
+    // Hit Function Names (for each accelerator group)
+    std::vector<HitFunctionNames> hfNames;
+    // Reserve Memory
+    traversables.reserve(optixSystem.OptixCapableDevices().size());
+    hPrimTransformTypes.reserve(accelBatches.size());
+    hLeafAndPrimDataPtrs.reserve(totalAcceleratorCount);
+    hProgramGroupIndices.reserve(totalAcceleratorCount);
+    hfNames.reserve(accelBatches.size());
     // Attach Transform gpu pointer to the Accelerator Batches
-    // Get OptiX Base from the class and set the OptixSystem
+    // Set the OptixSystem
+    // Get optix required data from the accelerator groups
+    size_t offset = 0;
+    // 0th index is for raygen group
+    // 1st index is for miss group
+    uint32_t programIndex = 2;
     for(auto& [_, acc] : accelBatches)
     {
         acc->AttachGlobalTransformArray(dTransforms, identityTransformIndex);
+        size_t acceleratorCount = acc->AcceleratorCount();
 
         auto accOptiX = dynamic_cast<GPUAccGroupOptiXI*>(acc);
         accOptiX->SetOptiXSystem(&optixSystem);
-    }
-    auto& baseAccOptiX = dynamic_cast<GPUBaseAcceleratorOptiX&>(baseAccelerator);
-    baseAccOptiX.SetOptiXSystem(&optixSystem);
 
-    // Construct Accelerators
-    for(const auto& accBatch : accelBatches)
-    {
-        GPUAcceleratorGroupI* acc = accBatch.second;
+        // Construct the Accelerator
         if((e = acc->ConstructAccelerators(cudaSystem)) != TracerError::OK)
             return e;
 
-    }
+        // Copy required data
+        // (for base accelerator module creation sbt etc..)
+        auto accTraversables = accOptiX->GetOptixTraversables();
+        traversables.emplace_back();
+        uint32_t i = 0;
+        for(auto& t : traversables)
+        {
+            t.insert(t.end(), accTraversables[i].cbegin(),
+                     accTraversables[i].cend());
+            accTraversables.clear();
+            i++;
+        }
 
-    // Get required data to construct
-    std::vector<std::vector<OptixTraversableHandle>> traversables;
-    std::vector<TransformId*> dTransformIds;
-    std::vector<PrimTransformType> primTransformTypes;
+        // Copy Primitive Transform Type
+        hPrimTransformTypes.push_back(accOptiX->GetPrimitiveTransformType());
+
+        // Copy Transform Ids to global linear memory
+        CUDA_CHECK(cudaMemcpy(dAllTransformIds + offset,
+                              accOptiX->GetDeviceTransformIdPtr(),
+                              acceleratorCount * sizeof(TransformId),
+                              cudaMemcpyDeviceToDevice));
+        offset += acceleratorCount;
+
+        const void* dPrimData = accOptiX->GetDevicePrimDataPtr();
+        const void* dLeafData = accOptiX->GetDeviceLeafPtr();
+        hLeafAndPrimDataPtrs.insert(hLeafAndPrimDataPtrs.end(), acceleratorCount,
+                                    std::make_pair(dPrimData, dLeafData));
+        hProgramGroupIndices.insert(hProgramGroupIndices.end(), acceleratorCount,
+                                    programIndex);
+        programIndex++;
+
+        const auto& pGroup = acc->PrimitiveGroup();
+        std::string primType = pGroup.Type();
+        HitFunctionNames names = {};
+        std::get<CH_INDEX>(names) = CHIT_FUNC_PREFIX + primType;
+        std::get<AH_INDEX>(names) = AHIT_FUNC_PREFIX + primType;
+        if(!pGroup.IsTriangle())
+            std::get<INTS_INDEX>(names) = INTERSECT_FUNC_PREFIX + primType;
+        hfNames.push_back(names);
+    }
+    assert(offset == totalAcceleratorCount);
+
+    // Set OptiX system for base accelerator as well
+    auto& baseAccOptiX = dynamic_cast<GPUBaseAcceleratorOptiX&>(baseAccelerator);
+    baseAccOptiX.SetOptiXSystem(&optixSystem);
+
+    gas = traversables[0][0];
 
     // Construct Base accelerator using the fetched data
-    if((e = baseAccOptiX.Constrcut(traversables, dTransformIds, primTransformTypes,
-                                   dTransforms)) != TracerError::OK)
+    if((e = baseAccOptiX.Construct(traversables, hPrimTransformTypes,
+                                   dAllTransformIds, dTransforms)) != TracerError::OK)
         return e;
+
+    // Get the traversable handles
+    int optixDeviceIndex = 0;
+    for(auto& optixData : optixGPUData)
+    {
+        optixData.baseAccelerator = baseAccOptiX.GetBaseTraversable(optixDeviceIndex);
+    }
 
     // We constructed Accelerator
     // Now do OptiX boilerplate
@@ -211,31 +388,28 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
         pipelineCompileOpts.exceptionFlags = OPTIX_EXCEPTION_FLAG_NONE;
     }
     pipelineCompileOpts.usesMotionBlur = false;
-    pipelineCompileOpts.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
-    pipelineCompileOpts.numPayloadValues = 2;
+    //pipelineCompileOpts.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
+    pipelineCompileOpts.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
+    pipelineCompileOpts.numPayloadValues = 0;
     pipelineCompileOpts.numAttributeValues = (maxHitSize + sizeof(uint32_t) - 1) / sizeof(uint32_t);
     pipelineCompileOpts.pipelineLaunchParamsVariableName = "params";
 
     if((e = CreateModules(moduleCompileOpts, pipelineCompileOpts,
                           MODULE_BASE_NAME)) != TracerError::OK)
         return e;
-    return TracerError::OK;
-
 
     // =============================== //
     //    PROGRAM GROUP GENERATION     //
     // =============================== //
-    std::vector<HitFunctionNames> hfNames;
-    // Query Accelerators & get hf names
-
-
-    if((e = CreateProgramGroups(RAYGEN_FUNC_NAME, hfNames)) != TracerError::OK)
+    if((e = CreateProgramGroups(RAYGEN_FUNC_NAME, MISS_FUNC_NAME,
+                                hfNames)) != TracerError::OK)
         return e;
 
     // =============================== //
     //         SBT GENERATION          //
     // =============================== //
-
+    if((e = CreateSBTs(hLeafAndPrimDataPtrs, hProgramGroupIndices, dAllTransformIds)) != TracerError::OK)
+        return e;
 
     // =============================== //
     //      PIPELINE GENERATION        //
@@ -244,7 +418,10 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
     pipelineLinkOpts.maxTraceDepth = 1;
     pipelineLinkOpts.debugLevel = moduleCompileOpts.debugLevel;
     if((e = CreatePipelines(pipelineCompileOpts,
-                            pipelineLinkOpts)) != TracerError::OK);
+                            pipelineLinkOpts)) != TracerError::OK)
+        return e;
+
+    if((e = AllocateParams()) != TracerError::OK)
         return e;
 
     // All Done!
@@ -253,11 +430,24 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
 
 RayPartitions<uint32_t> RayCasterOptiX::HitAndPartitionRays()
 {
+    // Reset Hit Memory
+    rayMemory.ResetHitMemory(boundaryTransformIndex, currentRayCount, maxHitSize);
+    // Ray Memory Pointers
+    RayGMem* dRays = rayMemory.Rays();
+    HitKey* dWorkKeys = rayMemory.WorkKeys();
+    TransformId* dTransfomIds = rayMemory.TransformIds();
+    PrimitiveId* dPrimitiveIds = rayMemory.PrimitiveIds();
+    HitStructPtr dHitStructs = rayMemory.HitStructs();
+
+    // =========================//
+    //       OPTIX LAUNCH       //
+    // =========================//
     size_t optixGPUCount = optixSystem.OptixCapableDevices().size();
     size_t rayPerGPU = (currentRayCount + optixGPUCount - 1) / optixGPUCount;
     // Segment the system
     size_t partitionedRayCount = 0;
-    std::vector<ArrayPortion<uint32_t>> portions(optixGPUCount);
+    std::vector<ArrayPortion<uint32_t>> portions;
+    portions.reserve(optixGPUCount);
     for(const auto& [gpu, optixContext] : optixSystem.OptixCapableDevices())
     {
         ArrayPortion<uint32_t> portion;
@@ -268,29 +458,34 @@ RayPartitions<uint32_t> RayCasterOptiX::HitAndPartitionRays()
         portion.count = gpuRayCount;
         partitionedRayCount += gpuRayCount;
         portion.portionId = 0;
+        portions.push_back(portion);
     }
 
     // Split the and launch
     uint32_t optixDeviceIndex = 0;
     for(const auto& [gpu, optixContext] : optixSystem.OptixCapableDevices())
     {
+        CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
         const auto& portion = portions[optixDeviceIndex];
         const auto& launchData = optixGPUData[optixDeviceIndex];
         const auto paramsPtr = AsOptixPtr(launchData.dOptixLaunchParams);
+        auto optixTraverseHandle = optixGPUData[optixDeviceIndex].baseAccelerator;
+        size_t offset = portion.offset;
 
         OpitXBaseAccelParams hParams = {};
-        //hParams.gHitStructs = nullptr + portions[optixDeviceIndex].offset;
-        //hParams.gPrimitiveIds = ;
-        //hParams.gRays = ;
-        //hParams.gTransformIds = ;
-        //hParams.gWorkKeys = ;
+        hParams.gHitStructs   = dHitStructs.AdvancedPtr(static_cast<uint32_t>(offset));
+        hParams.gPrimitiveIds = dPrimitiveIds + offset;
+        hParams.gRays         = dRays + offset;
+        hParams.gTransformIds = dTransfomIds + offset;
+        hParams.gWorkKeys     = dWorkKeys + offset;
+        //hParams.baseAcceleratorOptix = optixTraverseHandle;
+        hParams.baseAcceleratorOptix = gas;
 
         // Copy portioned pointer to Constant Memory
-        CUDA_CHECK(cudaMemcpyAsync(launchData.dOptixLaunchParams,
-                                   &hParams,
-                                   sizeof(OpitXBaseAccelParams),
-                                   cudaMemcpyHostToDevice,
-                                   (cudaStream_t)0));
+        CUDA_CHECK(cudaMemcpy(launchData.dOptixLaunchParams,
+                              &hParams,
+                              sizeof(OpitXBaseAccelParams),
+                              cudaMemcpyHostToDevice));
 
         OPTIX_CHECK(optixLaunch(launchData.pipeline, (cudaStream_t)0,
                                 paramsPtr, sizeof(OpitXBaseAccelParams),
@@ -299,32 +494,130 @@ RayPartitions<uint32_t> RayCasterOptiX::HitAndPartitionRays()
                                 1, 1));
         CUDA_KERNEL_CHECK();
     }
+    // Issue a global sync after optix calls
+    cudaSystem.SyncAllGPUs();
+    // =========================//
+    //     OPTIX LAUNCH END     //
+    // =========================//
 
-    return RayPartitions<uint32_t>();
+    //Debug::DumpMemToFile("workKeys", dWorkKeys, currentRayCount);
+    //Debug::DumpMemToFile("primIds", dPrimitiveIds, currentRayCount);
+    //Debug::DumpMemToFile("transformIds", dTransfomIds, currentRayCount);
+    //Debug::DumpMemToFile("barys", &dHitStructs.Ref<Vector2f>(0), currentRayCount);
+
+    // Partition rays for work kernel calls
+    HitKey* dCurrentKeys = rayMemory.CurrentKeys();
+    RayId* dCurrentRayIds = rayMemory.CurrentIds();
+    // Copy materialKeys to currentKeys
+    // to make it ready for sorting
+    rayMemory.FillMatIdsForSort(currentRayCount);
+    // Sort with respect to the materials keys
+    rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, currentRayCount, maxWorkBits);
+
+    // Parition w.r.t.material batch
+    RayPartitions<uint32_t> workPartition;
+    workPartition.clear();
+    workPartition = rayMemory.Partition(currentRayCount);
+
+    return std::move(workPartition);
 }
 
 void RayCasterOptiX::WorkRays(const WorkBatchMap& workMap,
-                         const RayPartitionsMulti<uint32_t>& outPortions,
-                         const RayPartitions<uint32_t>& inPartitions,
-                         RNGMemory& rngMemory,
-                         uint32_t totalRayOut,
-                         HitKey baseBoundMatKey)
+                              const RayPartitionsMulti<uint32_t>& outPortions,
+                              const RayPartitions<uint32_t>& inPartitions,
+                              RNGMemory& rngMemory,
+                              uint32_t totalRayOut,
+                              HitKey baseBoundMatKey)
 {
+        // Sort and Partition happens on leader device
+    CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
 
-}
+    // Ray Memory Pointers
+    const RayGMem* dRays = rayMemory.Rays();
+    const HitStructPtr dHitStructs = rayMemory.HitStructs();
+    const PrimitiveId* dPrimitiveIds = rayMemory.PrimitiveIds();
+    const TransformId* dTransformIds = rayMemory.TransformIds();
+    // These are sorted etc.
+    HitKey* dCurrentKeys = rayMemory.CurrentKeys();
+    RayId* dCurrentRayIds = rayMemory.CurrentIds();
 
-void RayCasterOptiX::ResizeRayOut(uint32_t rayCount,
-                                  HitKey baseBoundMatKey)
-{
+    // Allocate output ray memory
+    rayMemory.ResizeRayOut(totalRayOut, baseBoundMatKey);
+    RayGMem* dRaysOut = rayMemory.RaysOut();
+    HitKey* dBoundKeyOut = rayMemory.WorkKeys();
 
-}
+    // Reorder partitions for efficient calls
+    // (sort by gpu and order for better async access)
+    // ....
+    // TODO:
 
-void RayCasterOptiX::SwapRays()
-{
+    // Wait that "ResizeRayOut" is completed on the leader device
+    rayMemory.LeaderDevice().WaitMainStream();
 
-}
+    // For each partition
+    //for(auto pIt = workPartition.crbegin();
+    //    pIt != workPartition.crend(); pIt++)
+    for(const auto& p : inPartitions)
+    {
+        //const auto& p = (*pIt);
 
-RayGMem* RayCasterOptiX::RaysOut()
-{
-    return nullptr;
+        // Skip if null batch or unfound material
+        if(p.portionId == HitKey::NullBatch) continue;
+        auto loc = workMap.find(p.portionId);
+        if(loc == workMap.end()) continue;
+
+        // TODO: change this loop to combine iterator instead of find
+        //const auto& pIn = *(workPartition.find<uint32_t>(p.portionId));
+        const auto& pOut = *(outPortions.find(MultiArrayPortion<uint32_t>{p.portionId}));
+
+        // Relativize input & output pointers
+        const RayId* dRayIdStart = dCurrentRayIds + p.offset;
+        const HitKey* dKeyStart = dCurrentKeys + p.offset;
+
+        assert(pOut.counts.size() == pOut.offsets.size());
+        assert(pOut.counts.size() == loc->second.size());
+
+        // Actual Shade Calls
+        int i = 0;
+        for(auto& workBatch : loc->second)
+        {
+            // Output
+            RayGMem* dRayOutStart = dRaysOut + pOut.offsets[i];
+            HitKey* dBoundKeyStart = dBoundKeyOut + pOut.offsets[i];
+
+            workBatch->Work(dBoundKeyStart,
+                            dRayOutStart,
+                            //  Input
+                            dRays,
+                            dPrimitiveIds,
+                            dTransformIds,
+                            dHitStructs,
+                            // Ids
+                            dKeyStart,
+                            dRayIdStart,
+                            //
+                            static_cast<uint32_t>(p.count),
+                            rngMemory);
+
+            i++;
+        }
+        //cudaSystem.SyncGPUAll();
+        //METU_LOG("--------------------------");
+    }
+    currentRayCount = totalRayOut;
+
+    //METU_LOG("Before Sync");
+    // Again wait all of the GPU's since
+    // CUDA functions will be on multiple-gpus
+    cudaSystem.SyncAllGPUs();
+
+    //METU_LOG("After Sync");
+
+    //Debug::DumpMemToFile("workKeyOut", rayMemory.WorkKeys(), totalRayOut);
+    //Debug::DumpMemToFile("dPrimIdsUNsorted", dPrimitiveIds, totalRayOut);
+
+    // Shading complete
+    // Now make "RayOut" to "RayIn"
+    // and continue
+    rayMemory.SwapRays();
 }

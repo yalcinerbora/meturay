@@ -3,6 +3,8 @@
 #include "GPUPrimitiveSphere.h"
 #include "CudaSystem.hpp"
 
+#include <numeric>
+
 __global__
 static void KCPopulateTransforms(// I-O
                                  OptixInstance* gInstances,
@@ -87,7 +89,7 @@ SceneError GPUBaseAcceleratorOptiX::Initialize(// Accelerator Option Node
     return SceneError::OK;
 }
 
-TracerError GPUBaseAcceleratorOptiX::Constrcut(const CudaSystem&,
+TracerError GPUBaseAcceleratorOptiX::Construct(const CudaSystem&,
                                                // List of surface AABBs
                                                const SurfaceAABBList& aabbMap)
 {
@@ -96,17 +98,21 @@ TracerError GPUBaseAcceleratorOptiX::Constrcut(const CudaSystem&,
 }
 
 
-TracerError GPUBaseAcceleratorOptiX::Constrcut(const std::vector<std::vector<OptixTraversableHandle>>& gpuTraversables,
-                                               const std::vector<TransformId*>& dTransformIds,
-                                               const std::vector<PrimTransformType>& transformTypes,
+TracerError GPUBaseAcceleratorOptiX::Construct(const std::vector<std::vector<OptixTraversableHandle>>& gpuTraversables,
+                                               const std::vector<PrimTransformType>& hTransformTypes,
+                                               const TransformId* dAllTransformIds,
                                                const GPUTransformI** dGlobalTransformArray)
 {
-    assert(transformTypes.size() == dTransformIds.size());
-    assert(dTransformIds.size() == idLookup.size());
+    assert(hTransformTypes.size() == idLookup.size());
     assert(idLookup.size() == gpuTraversables.front().size());
 
-    DeviceMemory transformTypeMemory(transformTypes.size() * sizeof(PrimTransformType));
-    PrimTransformType* dTransformTypes = static_cast<PrimTransformType*>(transformTypeMemory);
+    DeviceMemory transformTempMemory;
+    PrimTransformType* dTransformTypes;
+    GPUMemFuncs::AllocateMultiData(std::tie(dTransformTypes), transformTempMemory,
+                                   {hTransformTypes.size()});
+    CUDA_CHECK(cudaMemcpy(dTransformTypes, hTransformTypes.data(),
+                          hTransformTypes.size() * sizeof(PrimTransformType),
+                          cudaMemcpyHostToDevice));
 
     //===============================//
     //  ACTUAL TRAVERSAL GENERATION  //
@@ -119,11 +125,8 @@ TracerError GPUBaseAcceleratorOptiX::Constrcut(const std::vector<std::vector<Opt
         const auto& traversables = gpuTraversables[deviceIndex];
 
         // Allocate Temp
-        std::vector<OptixInstance> hInstances; hInstances.reserve(idLookup.size());
-        DeviceLocalMemory tempInstanceMemory(&gpu, hInstances.size() * sizeof(OptixInstance));
-        OptixInstance* dInstances = static_cast<OptixInstance*>(tempInstanceMemory);
+        std::vector<OptixInstance> hInstances;
         hInstances.reserve(idLookup.size());
-
         for(uint32_t i = 0; i < idLookup.size(); i++)
         {
             OptixInstance instance = {};
@@ -136,6 +139,8 @@ TracerError GPUBaseAcceleratorOptiX::Constrcut(const std::vector<std::vector<Opt
 
             hInstances.push_back(instance);
         }
+        DeviceLocalMemory tempInstanceMemory(&gpu, hInstances.size() * sizeof(OptixInstance));
+        OptixInstance* dInstances = static_cast<OptixInstance*>(tempInstanceMemory);
 
         // Copy Instances to GPU
         CUDA_CHECK(cudaMemcpy(dInstances, hInstances.data(),
@@ -150,8 +155,7 @@ TracerError GPUBaseAcceleratorOptiX::Constrcut(const std::vector<std::vector<Opt
                            dInstances,
                            // Inputs
                            dGlobalTransformArray,
-                           nullptr,
-                           //dTransformIds[],
+                           dAllTransformIds,
                            dTransformTypes,
                            //
                            static_cast<uint32_t>(hInstances.size()));
@@ -242,8 +246,11 @@ template<>
 TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_t surface,
                                                                          const CudaSystem& system)
 {
-    // Specialized Triangle Primitive Function
+    TracerError err = TracerError::OK;
+    if((err = FillLeaves(system, surface)) != TracerError::OK)
+        return err;
 
+    // Specialized Triangle Primitive Function
     uint64_t totalVertexCount = this->primitiveGroup.TotalDataCount();
     // Currently optix only supports 32-bit indices
     if(totalVertexCount >= std::numeric_limits<uint32_t>::max())
@@ -282,6 +289,25 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
         CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
         DeviceTraversables& gpuTraverseData = optixDataPerGPU[deviceIndex];
 
+        // TODO:
+        // Copy the used triangles to the local memory
+
+        // DEBUG===================================
+        std::array<float, 9> positions = {0, 0.5, 0,
+                                          -0.5, -0.5, 0,
+                                          0.5, -0.5, 0};
+        std::array<uint32_t, 3> indices = {0, 1, 2};
+        DeviceLocalMemory debugMem(&gpu);
+        float* dPositionsDebug;
+        uint32_t* dIndicesDebug;
+        GPUMemFuncs::AllocateMultiData(std::tie(dPositionsDebug, dIndicesDebug),
+                                       debugMem, {9, 3}, 128);
+        CUDA_CHECK(cudaMemcpy(dPositionsDebug, positions.data(), sizeof(float) * 9,
+                              cudaMemcpyHostToDevice));
+        CUDA_CHECK(cudaMemcpy(dIndicesDebug, indices.data(), sizeof(uint32_t) * 3,
+                              cudaMemcpyHostToDevice));
+        // DEBUG===================================
+
         uint32_t buildInputCount = 0;
         std::array<OptixBuildInput, SceneConstants::MaxPrimitivePerSurface> buildInputs;
         for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
@@ -298,11 +324,13 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
             uint32_t offset = static_cast<uint32_t>(primRangeList[i][0]);
 
             OptixBuildInput& buildInput = buildInputs[i];
-            buildInput = OptixBuildInput{};
+            buildInput = {};
             buildInput.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
             // Vertex
-            CUdeviceptr dPositions = AsOptixPtr(primData.positions);
-            CUdeviceptr dIndices = AsOptixPtr(primData.indexList);
+            CUdeviceptr dPositions = AsOptixPtr(dPositionsDebug);
+            CUdeviceptr dIndices = AsOptixPtr(dIndicesDebug);
+            //CUdeviceptr dPositions = AsOptixPtr(primData.positions);
+            //CUdeviceptr dIndices = AsOptixPtr(primData.indexList);
             // Vertex
             buildInput.triangleArray.vertexFormat = OPTIX_VERTEX_FORMAT_FLOAT3;
             buildInput.triangleArray.numVertices = static_cast<uint32_t>(totalVertexCount);
@@ -313,7 +341,8 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
             buildInput.triangleArray.numIndexTriplets = indexCount;
             buildInput.triangleArray.indexBuffer = dIndices;
             // We store 64 bit values on index make stride as such
-            buildInput.triangleArray.indexStrideInBytes = sizeof(uint64_t) * 3;
+            buildInput.triangleArray.indexStrideInBytes = sizeof(uint32_t) * 3;
+            //buildInput.triangleArray.indexStrideInBytes = sizeof(uint64_t) * 3;
             buildInput.triangleArray.primitiveIndexOffset = offset;
             // SBT
             buildInput.triangleArray.flags = &geometryFlag;
@@ -336,14 +365,13 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
         ));
 
         // Allocate Temp Buffer for Build
-        Byte* dTempBuild;
+        DeviceLocalMemory buildBuffer(&gpu, accelMemorySizes.outputSizeInBytes);
+        Byte* dTempBuild = static_cast<Byte*>(buildBuffer);
+        Byte* dTemp;
         uint64_t* dCompactedSize;
-        Byte* dTempMem;
-        DeviceLocalMemory tempBuildBuffer(&gpu);
-        GPUMemFuncs::AllocateMultiData(std::tie(dTempBuild, dCompactedSize), tempBuildBuffer,
-                                        {accelMemorySizes.outputSizeInBytes, 1}, 128);
-        DeviceLocalMemory tempMem(&gpu, accelMemorySizes.tempSizeInBytes);
-        dTempMem = static_cast<Byte*>(tempMem);
+        DeviceLocalMemory tempMemory(&gpu);
+        GPUMemFuncs::AllocateMultiData(std::tie(dTemp, dCompactedSize), tempMemory,
+                                       {accelMemorySizes.tempSizeInBytes, 1}, 128);
 
 
         // While building fetch compacted output size
@@ -357,7 +385,7 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
                                     // Build Inputs
                                     buildInputs.data(), buildInputCount,
                                     // Temp Memory
-                                    AsOptixPtr(dTempMem), accelMemorySizes.tempSizeInBytes,
+                                    AsOptixPtr(dTemp), accelMemorySizes.tempSizeInBytes,
                                     // Output Memory
                                     AsOptixPtr(dTempBuild), accelMemorySizes.outputSizeInBytes,
                                     &traversable, &emitProperty, 1));
@@ -368,7 +396,7 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
         CUDA_CHECK(cudaMemcpy(&hCompactAccelSize, dCompactedSize,
                               sizeof(uint64_t), cudaMemcpyDeviceToHost));
 
-        if(hCompactAccelSize < tempBuildBuffer.Size())
+        if(hCompactAccelSize < buildBuffer.Size())
         {
             DeviceLocalMemory compactedMemory(&gpu, hCompactAccelSize);
 
@@ -383,7 +411,7 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
             gpuTraverseData.tMemories[innerIndex] = std::move(compactedMemory);
         }
         else
-            gpuTraverseData.tMemories[innerIndex] = std::move(tempBuildBuffer);
+            gpuTraverseData.tMemories[innerIndex] = std::move(buildBuffer);
 
         gpuTraverseData.traversables[innerIndex] = traversable;
         deviceIndex++;

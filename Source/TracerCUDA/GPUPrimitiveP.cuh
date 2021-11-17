@@ -146,6 +146,7 @@ class GPUPrimitiveGroup
         // Most primitives are intersectable
         // Derived classes that are not intersectable should override this
         bool                IsIntersectable() const override { return true; }
+        bool                IsTriangle() const override { return false; }
 };
 
 struct PrimDataAccessor

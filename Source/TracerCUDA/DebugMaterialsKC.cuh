@@ -29,13 +29,13 @@ struct BaryMatFuncs
                    uint32_t sampleIndex)
     {
         // No medium change
-        outMedium = &m;    
+        outMedium = &m;
         static constexpr Vector3 ZERO = Zero3;
         pdf = 1.0f;
         wo = RayF(ZERO, ZERO);
         return surface.baryCoords;
     }
-    
+
     __device__ __forceinline__ static
     Vector3 Evaluate(// Input
                      const Vector3& wo,
@@ -85,7 +85,7 @@ struct SphericalMatFuncs
                         surface.sphrCoords[1],
                         0.0f);
     }
-    
+
     __device__ __forceinline__ static
     Vector3 Evaluate(// Input
                      const Vector3& wo,
@@ -134,13 +134,13 @@ struct NormalRenderMatFuncs
         outMedium = &m;
         pdf = 1.0f;
         wo = InvalidRayF;
-    
+
         Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
         normal = 0.5f * normal + 0.5f;
-    
+
         return normal;
     }
-    
+
     __device__ __forceinline__ static
     Vector3 Evaluate(// Input
                      const Vector3& wo,
@@ -155,7 +155,7 @@ struct NormalRenderMatFuncs
     {
         Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
         normal = 0.5f * normal + 0.5f;
-    
+
         return normal;
     }
 

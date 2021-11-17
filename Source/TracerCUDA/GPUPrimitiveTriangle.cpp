@@ -489,3 +489,8 @@ bool GPUPrimitiveTriangle::CanGenerateData(const std::string& s) const
             s == PrimitiveDataTypeToString(PrimitiveDataType::NORMAL) ||
             s == PrimitiveDataTypeToString(PrimitiveDataType::UV));
 }
+
+bool GPUPrimitiveTriangle::IsTriangle() const
+{
+    return true;
+}

@@ -16,6 +16,22 @@ struct OpitXBaseAccelParams
     HitStructPtr    gHitStructs;
     // Inputs
     const RayGMem*  gRays;
+    // Constants
+    uint32_t        maxAttributeCount;
+};
+
+template <class PrimData, class LeafStruct>
+struct Record
+{
+    // This pointer is can be accessed by optixGetPrimitiveIndex() from Optix
+    const LeafStruct* gLeafs;
+    // Each Accelerator has its own accelerator Id
+    TransformId transformId;
+    // PrimData holds the global info of the primitive
+    // Data inside should be accesed as such:
+    //   int leafId = optixGetPrimitiveIndex();
+    //   (*primData).positions[gLeafs[leafId].primitiveId]
+    const PrimData* primData;
 };
 
 // Meta Hit Record
@@ -25,18 +41,7 @@ struct __align__(OPTIX_SBT_RECORD_ALIGNMENT) HitGroupRecord
 {
     __align__(OPTIX_SBT_RECORD_ALIGNMENT) char header[OPTIX_SBT_RECORD_HEADER_SIZE];
 
-    struct Data
-    {
-        // This pointer is can be accessed by optixGetPrimitiveIndex() from Optix
-        LeafStruct* gLeafs;
-        // Each Accelerator has its own accelerator Id
-        TransformId transformId;
-        // PrimData holds the global info of the primitive
-        // Data inside should be accesed as such:
-        //   int leafId = optixGetPrimitiveIndex();
-        //   (*primData).positions[gLeafs[leafId].primitiveId]
-        PrimData* primData;
-    };
+    Record<PrimData, LeafStruct> data;
 };
 
 // Other SBT Records are Empty (use this for those API calls)

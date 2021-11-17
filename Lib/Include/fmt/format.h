@@ -499,7 +499,7 @@ FMT_CONSTEXPR inline auto utf8_decode(const char* s, uint32_t* c, int* e)
   return next;
 }
 
-enum { invalid_code_point = ~uint32_t() };
+enum : uint32_t { invalid_code_point = ~uint32_t() };
 
 // Invokes f(cp, sv) for every code point cp in s with sv being the string view
 // corresponding to the code point. cp is invalid_code_point on error.
@@ -509,6 +509,8 @@ FMT_CONSTEXPR void for_each_codepoint(string_view s, F f) {
     auto cp = uint32_t();
     auto error = 0;
     auto end = utf8_decode(buf_ptr, &cp, &error);
+    // MRAY EDITED PART (MSVC complained about integer conversion
+    // resulted in a change of sign) (just casting error to uint)
     bool result = f(error ? invalid_code_point : cp,
                     string_view(ptr, to_unsigned(end - buf_ptr)));
     return result ? end : nullptr;

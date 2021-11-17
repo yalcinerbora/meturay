@@ -68,6 +68,10 @@ class GPUPrimitiveGroupI
         virtual PrimTransformType   TransformType() const = 0;
         // If primitive (by definition) is intersectable or not
         virtual bool                IsIntersectable() const = 0;
+        // If this primitive group consists of tiangle
+        // It may be usefull when a code (i.e. OptiX) can be optimized
+        // for triangles
+        virtual bool                IsTriangle() const = 0;
 
         // Query
         // How many primitives are available on this class

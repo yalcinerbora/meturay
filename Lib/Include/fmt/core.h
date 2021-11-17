@@ -388,7 +388,11 @@ template <typename T> inline auto convert_for_visit(T) -> monostate {
 template <typename Int>
 FMT_CONSTEXPR auto to_unsigned(Int value) ->
     typename std::make_unsigned<Int>::type {
-  FMT_ASSERT(value >= 0, "negative value");
+    // MRAY EDIT
+    // MSVC Complained about this code by "pointless comparison"
+    // just editing to make it only work for singed types
+    if constexpr (std::is_signed_v<Int>)
+        FMT_ASSERT(value >= 0, "negative value");
   return static_cast<typename std::make_unsigned<Int>::type>(value);
 }
 

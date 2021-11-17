@@ -197,6 +197,7 @@ void TracerThread::FinalWork()
     // just set previously stopped
     isPrevStopped = true;
     // Clear the scene
+    tracer = nullptr;
     tracerSystem.ClearScene();
     currentScene = nullptr;
 
@@ -215,7 +216,11 @@ TracerError TracerThread::RecreateTracer()
     tracer->AttachTracerCallbacks(tracerCallbacks);
 
     if((tError = tracer->Initialize()) != TracerError::OK)
+    {
+        // Remove the tracer
+        tracer = nullptr;
         return tError;
+    }
     return TracerError::OK;
 }
 

@@ -31,9 +31,9 @@ TracerError OptiXSystem::LoadPTXFile(std::string& ptxSource,
                                      const std::string& baseName)
 {
     std::string fileName = baseName;
-    std::string ccName = "CC_" + gpu.CC();
+    std::string ccName = ".CC_" + gpu.CC();
 
-    auto loc = fileName.find_last_of(".o.ptx");
+    auto loc = fileName.rfind(".o.ptx");
     fileName.insert(loc, ccName);
 
     std::ifstream file(Utility::MergeFileFolder(Utility::CurrentExecPath(), fileName));
@@ -72,7 +72,14 @@ OptiXSystem::OptiXSystem(const CudaSystem& system)
         OptixDeviceContextOptions options = {};
         options.logCallbackFunction = &OptiXSystem::OptixLOG;
         options.logCallbackLevel = 4;
+        if constexpr(METU_DEBUG_BOOL)
+            options.validationMode = OPTIX_DEVICE_CONTEXT_VALIDATION_MODE_ALL;
+
         OPTIX_CHECK(optixDeviceContextCreate(0, &options, &context));
+
+        // Disable caching for debugging purposes
+        // TODO: change this
+        optixDeviceContextSetCacheEnabled(context, 0);
 
         //optixDevices.emplace_back(std::make_pair(gpu, context));
         optixDevices.emplace_back(gpu, context);

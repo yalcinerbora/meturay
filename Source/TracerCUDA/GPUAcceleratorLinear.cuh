@@ -115,6 +115,7 @@ class GPUAccLinearGroup final
                                     const uint32_t rayCount) const override;
 
         const SurfaceAABBList&  AcceleratorAABBs() const override;
+        size_t                  AcceleratorCount() const override;
 };
 
 class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
@@ -166,7 +167,7 @@ class GPUBaseAcceleratorLinear final : public GPUBaseAcceleratorI
                                                // List of surface to leaf accelerator ids
                                                const std::map<uint32_t, HitKey>&) override;
 
-        TracerError                 Constrcut(const CudaSystem&,
+        TracerError                 Construct(const CudaSystem&,
                                               // List of surface AABBs
                                               const SurfaceAABBList&) override;
         TracerError                 Destruct(const CudaSystem&) override;

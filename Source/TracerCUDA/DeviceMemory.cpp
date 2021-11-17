@@ -48,7 +48,6 @@ DeviceLocalMemory& DeviceLocalMemory::operator=(const DeviceLocalMemory& other)
 
     // Det Device
     CUDA_CHECK(cudaSetDevice(currentDevice->DeviceId()));
-
     // Realloc if necessary
     if(size != other.size)
     {

@@ -93,6 +93,10 @@ TracerError TracerSystemCUDA::GenerateTracer(GPUTracerPtr& tracer,
     }
     TracerError trcE = tracer->SetOptions(opts);
     if(trcE != TracerError::OK)
+    {
+        tracer = nullptr;
         return trcE;
+    }
+
     return TracerError::OK;
 }

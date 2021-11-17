@@ -1,5 +1,8 @@
 #pragma once
 
+#include "TracerDebug.h"
+
+
 template <class PGroup>
 GPUAccOptiXGroup<PGroup>::GPUAccOptiXGroup(const GPUPrimitiveGroupI& pGroup)
     : GPUAcceleratorGroup<PGroup>(pGroup)
@@ -54,6 +57,9 @@ TracerError GPUAccOptiXGroup<PGroup>::FillLeaves(const CudaSystem& system,
         index,
         keyExpandOption[index]
     );
+
+    //Debug::DumpMemToFile("leafList" + std::to_string(index), dLeafList, workCount);
+
     return TracerError::OK;
 }
 
@@ -73,7 +79,7 @@ SceneError GPUAccOptiXGroup<PGroup>::InitializeGroup(// Accelerator Option Node
 
     const char* primGroupTypeName = this->primitiveGroup.Type();
 
-    std::vector<uint32_t> hTransformIndices;
+    //std::vector<uint32_t> hTransformIndices;
     hTransformIndices.reserve(surfaceList.size());
 
     // Iterate over pairings
@@ -123,7 +129,6 @@ SceneError GPUAccOptiXGroup<PGroup>::InitializeGroup(// Accelerator Option Node
 
     uint32_t accelCount = surfaceInnerId;
     leafCount = totalSize;
-
     GPUMemFuncs::AllocateMultiData(std::tie(dAccRanges, dAccTransformIds,
                                             dLeafList, dPrimData), memory,
                                    {accelCount, accelCount,
@@ -157,6 +162,13 @@ uint32_t GPUAccOptiXGroup<PGroup>::InnerId(uint32_t surfaceId) const
 template <class PGroup>
 TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerators(const CudaSystem& system)
 {
+    // Copy Prim Data
+    using PrimitiveData = typename PGroup::PrimitiveData;
+    const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
+    CUDA_CHECK(cudaMemcpy(dPrimData, &primData,
+                          sizeof(PrimitiveData),
+                          cudaMemcpyHostToDevice));
+
     // TODO: make this a single KC
     TracerError e = TracerError::OK;
     for(const auto& id : idLookup)
@@ -310,14 +322,14 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
             buildInputCount, &accelMemorySizes
         ));
 
-        Byte* dTempBuild;
+        // Allocate Temp Buffer for Build
+        DeviceLocalMemory buildBuffer(&gpu, accelMemorySizes.outputSizeInBytes);
+        Byte* dTempBuild = static_cast<Byte*>(buildBuffer);
+        Byte* dTemp;
         uint64_t* dCompactedSize;
-        Byte* dTempMem;
-        DeviceLocalMemory tempBuildBuffer(&gpu);
-        GPUMemFuncs::AllocateMultiData(std::tie(dTempBuild, dCompactedSize), tempBuildBuffer,
-                                       {accelMemorySizes.outputSizeInBytes, 1}, 128);
-        DeviceLocalMemory tempMem(&gpu, accelMemorySizes.tempSizeInBytes);
-        dTempMem = static_cast<Byte*>(tempMem);
+        DeviceLocalMemory tempMemory(&gpu);
+        GPUMemFuncs::AllocateMultiData(std::tie(dTemp, dCompactedSize), tempMemory,
+                                       {accelMemorySizes.tempSizeInBytes, 1}, 128);
 
         // While building fetch compacted output size
         OptixAccelEmitDesc emitProperty = {};
@@ -330,7 +342,7 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                     // Build Inputs
                                     buildInputs.data(), buildInputCount,
                                     // Temp Memory
-                                    AsOptixPtr(dTempMem), accelMemorySizes.tempSizeInBytes,
+                                    AsOptixPtr(dTemp), accelMemorySizes.tempSizeInBytes,
                                     // Output Memory
                                     AsOptixPtr(dTempBuild), accelMemorySizes.outputSizeInBytes,
                                     &traversable, &emitProperty, 1));
@@ -356,7 +368,7 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
             gpuTraverseData.tMemories[innerIndex] = std::move(compactedMemory);
         }
         else
-            gpuTraverseData.tMemories[innerIndex] = std::move(tempBuildBuffer);
+            gpuTraverseData.tMemories[innerIndex] = std::move(buildBuffer);
 
         gpuTraverseData.traversables[innerIndex] = traversable;
         deviceIndex++;
@@ -446,6 +458,12 @@ const SurfaceAABBList& GPUAccOptiXGroup<PGroup>::AcceleratorAABBs() const
 }
 
 template <class PGroup>
+size_t GPUAccOptiXGroup<PGroup>::AcceleratorCount() const
+{
+    return idLookup.size();
+}
+
+template <class PGroup>
 DeviceMemory GPUAccOptiXGroup<PGroup>::GetHitRecords() const
 {
     return DeviceMemory();
@@ -481,4 +499,28 @@ GPUAccGroupOptiXI::OptixTraversableList GPUAccOptiXGroup<PGroup>::GetOptixTraver
         i++;
     }
     return result;
+}
+
+template <class PGroup>
+TransformId* GPUAccOptiXGroup<PGroup>::GetDeviceTransformIdPtr() const
+{
+    return dAccTransformIds;
+}
+
+template <class PGroup>
+PrimTransformType GPUAccOptiXGroup<PGroup>::GetPrimitiveTransformType() const
+{
+    return primitiveGroup.TransformType();
+}
+
+template <class PGroup>
+const void* GPUAccOptiXGroup<PGroup>::GetDevicePrimDataPtr() const
+{
+    return dPrimData;
+}
+
+template <class PGroup>
+const void* GPUAccOptiXGroup<PGroup>::GetDeviceLeafPtr() const
+{
+    return dLeafList;
 }

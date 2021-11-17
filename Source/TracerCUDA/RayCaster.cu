@@ -41,7 +41,7 @@ TracerError RayCaster::ConstructAccelerators(const GPUTransformI** dTransforms,
                                acc->AcceleratorAABBs().cend());
     }
     // Construct Base accelerator using aabb list
-    if((e = baseAccelerator.Constrcut(cudaSystem, allSurfaceAABBs)) != TracerError::OK)
+    if((e = baseAccelerator.Construct(cudaSystem, allSurfaceAABBs)) != TracerError::OK)
         return e;
 
     return e;
@@ -225,7 +225,7 @@ void RayCaster::WorkRays(const WorkBatchMap& workMap,
                          uint32_t totalRayOut,
                          HitKey baseBoundMatKey)
 {
-       // Sort and Partition happens on leader device
+    // Sort and Partition happens on leader device
     CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
 
     // Ray Memory Pointers

@@ -50,9 +50,9 @@ FUNCTION(NVCC_COMPILE_PTX)
         "-I${MRAY_LIB_INCLUDE_DIRECTORY}"
         # OptiX Documentation says that -G'ed kernels may fail
         # So -lineinfo is used on both configurations
-        # $<$<CONFIG:Debug>:-G>
-        # $<$<CONFIG:Release>:-lineinfo>
-        -lineinfo
+        $<$<CONFIG:Debug>:-G>
+        $<$<CONFIG:Release>:-lineinfo>
+        #-lineinfo
         $<$<CONFIG:Debug>:-DMETU_DEBUG>
         $<$<CONFIG:Release>:-DNDEBUG>
         -DMETU_CUDA

@@ -807,3 +807,9 @@ const SurfaceAABBList& GPUAccBVHGroup<PGroup>::AcceleratorAABBs() const
 {
     return surfaceAABBs;
 }
+
+template <class PGroup>
+size_t GPUAccBVHGroup<PGroup>::AcceleratorCount() const
+{
+    return idLookup.size();
+}

@@ -18,7 +18,8 @@ Utility header for header only cuda vector and cpu vector implementations
     {
         if(code != cudaSuccess)
         {
-            METU_ERROR_LOG("Cuda Failure: {:s} {:s} {:d}", cudaGetErrorString(code), file, line);
+            METU_ERROR_LOG("CUDA Failure: {:s} {:s} {:d}",
+                           cudaGetErrorString(code), file, line);
             assert(false);
         }
     }

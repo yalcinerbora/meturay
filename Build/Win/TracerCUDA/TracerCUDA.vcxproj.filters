@@ -103,6 +103,18 @@
     <Filter Include="Tracers\RefPGTracer">
       <UniqueIdentifier>{39ee0dcd-7b4d-42ee-b980-9291c264f916}</UniqueIdentifier>
     </Filter>
+    <Filter Include="OptiX">
+      <UniqueIdentifier>{c8ca9efe-685e-4093-a44a-35dfff039480}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OptiX\Accelerator">
+      <UniqueIdentifier>{e1ff9bfa-90f9-48b6-8dc7-d38905203d51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OptiX\RayCaster">
+      <UniqueIdentifier>{72c0bbbb-b208-4bd6-9a3f-ab53db5ae899}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RayCaster">
+      <UniqueIdentifier>{c929825e-9173-41d3-bd22-ce9dd91a077a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveSphere.cpp">
@@ -144,6 +156,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\TracerCUDA\CudaSystem.cpp">
       <Filter>Cuda System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\TracerCUDA\OptixSystem.cpp">
+      <Filter>OptiX</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -555,6 +570,33 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelMemset.cuh">
       <Filter>GPU Algorithms</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayCasterOptiX.h">
+      <Filter>OptiX\RayCaster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorOptiX.cuh">
+      <Filter>OptiX\Accelerator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorOptiX.hpp">
+      <Filter>OptiX\Accelerator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\OptixCheck.h">
+      <Filter>OptiX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\OptixSystem.h">
+      <Filter>OptiX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUOptiXPTX.cuh">
+      <Filter>OptiX\Accelerator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayCaster.h">
+      <Filter>RayCaster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayCasterI.h">
+      <Filter>RayCaster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUOptiXPTX.cu">
+      <Filter>OptiX\Accelerator</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">
@@ -700,6 +742,15 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RefPGTracerWorks.cu">
       <Filter>Tracers\RefPGTracer</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RayCasterOptiX.cu">
+      <Filter>OptiX\RayCaster</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUAcceleratorOptiX.cu">
+      <Filter>OptiX\Accelerator</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RayCaster.cu">
+      <Filter>RayCaster</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

@@ -23,6 +23,8 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerWorks.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DTree.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DTreeKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorOptiX.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorOptiX.hpp" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraP.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraPixel.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUCameraSpherical.cuh" />
@@ -46,6 +48,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPULightSpot.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMediumI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMediumVacuum.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUOptiXPTX.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformIdentity.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformSingle.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.cuh" />
@@ -72,6 +75,8 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUWork.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MetaMaterialFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUSurface.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\OptixCheck.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\OptixSystem.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelMemset.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelPartition.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelSequence.cuh" />
@@ -82,6 +87,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracer.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\PPGTracerWorks.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayCaster.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayCasterI.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RayCasterOptiX.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracer.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracerWorks.cuh" />
@@ -152,6 +160,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\EntryPoint.cpp" />
+    <ClCompile Include="..\..\..\Source\TracerCUDA\OptixSystem.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\TextureFunctions.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\Tracers.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\TracerSystemCUDA.cpp" />
@@ -159,12 +168,16 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\AOTracerWork.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracerWorks.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DTree.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUAcceleratorOptiX.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUCameraPixel.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUCameraSpherical.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightDisk.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.cu" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\CudaSystem.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\DeviceMemory.cpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUOptiXPTX.cu">
+      <FileType>Document</FileType>
+    </ClInclude>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUPiecewiseDistribution.cu" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveEmpty.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveSphere.cpp" />
@@ -183,6 +196,8 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracerWorks.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracerWorks.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RayCaster.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RayCasterOptiX.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RefPGTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RefPGTracerWorks.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RNGMemory.cu" />

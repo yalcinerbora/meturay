@@ -37,6 +37,7 @@
             const CudaSystem&                   cudaSystem;
             std::vector<OptixDevice>            optixDevices;
 
+
             static void                         OptixLOG(unsigned int level,
                                                          const char* tag,
                                                          const char* message,

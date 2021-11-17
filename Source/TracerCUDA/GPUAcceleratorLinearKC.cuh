@@ -15,10 +15,7 @@ with ustom Intersection and Hit
 #include "GPUTransformIdentity.cuh"
 #include "CudaSystem.hpp"
 
-#pragma warning( push )
-#pragma warning( disable : 4834)
 #include <cub/cub.cuh>
-#pragma warning( pop )
 
 // This is fundemental Linear traversal kernel
 template <class PGroup>

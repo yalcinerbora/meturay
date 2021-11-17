@@ -102,7 +102,7 @@ SceneError GPUBaseAcceleratorLinear::Initialize(// Accelerator Option Node
     return SceneError::OK;
 }
 
-TracerError GPUBaseAcceleratorLinear::Constrcut(const CudaSystem&,
+TracerError GPUBaseAcceleratorLinear::Construct(const CudaSystem&,
                                                 // List of surface AABBs
                                                 const SurfaceAABBList& aabbMap)
 {

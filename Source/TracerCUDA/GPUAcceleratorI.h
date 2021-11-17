@@ -96,6 +96,7 @@ class GPUAcceleratorGroupI
         virtual const GPUPrimitiveGroupI&   PrimitiveGroup() const = 0;
         virtual void                        AttachGlobalTransformArray(const GPUTransformI** deviceTransforms,
                                                                        uint32_t identityTransformIndex) = 0;
+        virtual size_t                      AcceleratorCount() const = 0;
 };
 
 class GPUBaseAcceleratorI
@@ -127,7 +128,7 @@ class GPUBaseAcceleratorI
                                            const std::map<uint32_t, HitKey>&) = 0;
 
         // Construction & Destruction
-        virtual TracerError     Constrcut(const CudaSystem&,
+        virtual TracerError     Construct(const CudaSystem&,
                                           // List of surface AABBs
                                           const SurfaceAABBList&) = 0;
         virtual TracerError     Destruct(const CudaSystem&) = 0;

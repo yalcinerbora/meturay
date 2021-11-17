@@ -345,12 +345,13 @@ TracerError GPUTracer::Initialize()
 
     // Also Call all lights to generate their globalIds
     // (which will be used by direct light sampler etc..)
-    gpu.GridStrideKC_X(0, (cudaStream_t)0, lightCount,
-                       //
-                       KCSetLightIds,
-                       //
-                       const_cast<GPULightI**>(dLights),
-                       lightCount);
+    if(lightCount != 0)
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, lightCount,
+                           //
+                           KCSetLightIds,
+                           //
+                           const_cast<GPULightI**>(dLights),
+                           lightCount);
 
     cudaSystem.SyncAllGPUs();
     return TracerError::OK;
