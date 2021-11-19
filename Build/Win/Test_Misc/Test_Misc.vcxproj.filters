@@ -46,6 +46,9 @@
       <Filter>TracerMock</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\Test_Misc\main.cpp" />
+    <ClCompile Include="..\..\..\Source\Test_Misc\T_OptiX.cpp">
+      <Filter>TracerMock</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="SceneIO">

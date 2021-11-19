@@ -29,7 +29,6 @@ tree constructio would provide additional overhead.
 #include "GPUPrimitiveI.h"
 
 #include "GPUAcceleratorLinearKC.cuh"
-#include "GPUAcceleratorCommonKC.cuh"
 
 // This should be an array?
 // Most of the time each accelerator will be constructred with a

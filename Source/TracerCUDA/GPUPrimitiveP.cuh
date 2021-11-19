@@ -81,8 +81,8 @@ class GPUPrimitiveGroupP
 };
 
 template <class HitD, class PrimitiveD, class LeafD,
-          class SurfaceFuncGenerator,
-          class PrimDeviceFunctions>
+          class SurfaceFuncGenerator, class PrimDeviceFunctions,
+          PrimTransformType TType, uint32_t PositionPerPrimitive = 1>
 class GPUPrimitiveGroup
     : public GPUPrimitiveGroupI
     , public GPUPrimitiveGroupP<PrimitiveD>
@@ -90,18 +90,14 @@ class GPUPrimitiveGroup
 {
     public:
         // Type Definitions for kernel generations
-        using PrimitiveData                 = PrimitiveD;
-        using HitData                       = HitD;
-        using LeafData                      = LeafD;
+        using PrimitiveData                         = PrimitiveD;
+        using HitData                               = HitD;
+        using LeafData                              = LeafD;
 
-        //TriFunctions::Hit,
-        //    TriFunctions::Leaf, TriFunctions::AABB,
-        //    TriFunctions::Area, TriFunctions::Center,
-        //    TriFunctions::Sample,
-        //    TriFunctions::PDF
-        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::Hit),
-                                     AcceptHitFunction<HitD, PrimitiveD, LeafD>>,
-                      "PrimDeviceFunctions Class Member 'Hit' does not have correct signature");
+        // Constexpr Values
+        static constexpr auto TransType             = TType;
+        static constexpr uint32_t PositionPerPrim   = PositionPerPrimitive;
+
         static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::Leaf),
                                      LeafGenFunction<PrimitiveD, LeafD>>,
                       "PrimDeviceFunctions Class Member 'Leaf' does not have correct signature");
@@ -123,10 +119,18 @@ class GPUPrimitiveGroup
         static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::PositionPdfFromHit),
                                      PDFPosHitFunction<PrimitiveD>>,
                       "PrimDeviceFunctions Class Member 'PositionPDFFromHit' does not have correct signature");
+        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::AcquirePositions),
+                                              AcquirePosFunction<PrimitiveD, PositionPerPrim>>,
+                      "PrimDeviceFunctions Class Member 'AcquirePositions' does not have correct signature");
+        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::AlphaTest),
+                                              AlphaTestFunction<HitD, PrimitiveD, LeafD>>,
+                      "PrimDeviceFunctions Class Member 'AlphaTest' does not have correct signature");
+        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::Intersects),
+                                              IntersectsFunction<HitD, PrimitiveD, LeafD>>,
+                      "PrimDeviceFunctions Class Member 'Intersects' does not have correct signature");
 
         // Function Definitions
         // Used by accelerator definitions etc.
-        static constexpr auto Hit               = PrimDeviceFunctions::Hit;
         static constexpr auto Leaf              = PrimDeviceFunctions::Leaf;
         static constexpr auto AABB              = PrimDeviceFunctions::AABB;
         static constexpr auto Area              = PrimDeviceFunctions::Area;
@@ -134,6 +138,17 @@ class GPUPrimitiveGroup
         static constexpr auto SamplePosition    = PrimDeviceFunctions::SamplePosition;
         static constexpr auto PositionPdfRef    = PrimDeviceFunctions::PositionPdfFromReference;
         static constexpr auto PositionPdfHit    = PrimDeviceFunctions::PositionPdfFromHit;
+        static constexpr auto AcquirePositions  = PrimDeviceFunctions::AcquirePositions;
+        static constexpr auto AlphaTest         = PrimDeviceFunctions::AlphaTest;
+        static constexpr auto Intersects        = PrimDeviceFunctions::Intersects;
+
+        // Templated Intersects Function
+        // This is used by OptiX instead of virtual functions
+        template <class GPUTransform>
+        __device__ __forceinline__
+        static bool IntersectsT(float&, HitData&, const RayReg&,
+                                const GPUTransform&, const LeafData&,
+                                const PrimitiveData&);
 
     private:
     protected:
@@ -147,6 +162,7 @@ class GPUPrimitiveGroup
         // Derived classes that are not intersectable should override this
         bool                IsIntersectable() const override { return true; }
         bool                IsTriangle() const override { return false; }
+        PrimTransformType   TransformType() const override { return TType; };
 };
 
 struct PrimDataAccessor
@@ -163,3 +179,19 @@ struct PrimDataAccessor
         return static_cast<const GPUPrimitiveGroupP<P>&>(pg).dData;
     }
 };
+
+template <class HitD, class PrimitiveD, class LeafD,
+          class SurfaceFuncGenerator, class PrimDeviceFunctions,
+          PrimTransformType TType, uint32_t PositionPerPrimitive>
+template <class GPUTransform>
+__device__ __forceinline__
+bool GPUPrimitiveGroup<HitD, PrimitiveD, LeafD,
+                       SurfaceFuncGenerator,
+                       PrimDeviceFunctions,
+                       TType, PositionPerPrimitive>
+::IntersectsT(float& a, HitData& b, const RayReg& c,
+              const GPUTransform& d, const LeafData& e,
+              const PrimitiveData& f)
+{
+    return PrimDeviceFunctions::IntersectsT(a, b, c, d, e, f);
+}

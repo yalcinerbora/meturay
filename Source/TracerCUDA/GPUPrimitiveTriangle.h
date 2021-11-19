@@ -195,28 +195,24 @@ struct TriFunctions
         return 1.0f / TriFunctions::Area(primitiveId, primData);
     }
 
-    // Triangle Hit Acceptance
+    template <class GPUTransform>
     __device__ __forceinline__
-    static HitResult Hit(// Output
-                         HitKey& newMat,
-                         PrimitiveId& newPrim,
-                         TriangleHit& newHit,
-                         // I-O
-                         RayReg& rayData,
-                         // Input
-                         const GPUTransformI& transform,
-                         const DefaultLeaf& leaf,
-                         const TriData& primData)
+    static bool IntersectsT(// Output
+                            float& newT,
+                            TriangleHit& newHit,
+                            // I-O
+                            const RayReg& rayData,
+                            // Input
+                            const GPUTransform& transform,
+                            const DefaultLeaf& leaf,
+                            const TriData& primData)
     {
         // Find the primitive
-        float index;
-        GPUFunctions::BinarySearchInBetween(index, leaf.primitiveId, primData.primOffsets, primData.primBatchCount);
-        uint32_t indexInt = static_cast<uint32_t>(index);
+        float batchIndex;
+        GPUFunctions::BinarySearchInBetween(batchIndex, leaf.primitiveId, primData.primOffsets, primData.primBatchCount);
+        uint32_t batchIndexInt = static_cast<uint32_t>(batchIndex);
 
-        bool cullBackface = primData.cullFace[indexInt];
-
-        //if(leaf.matId.value == 0x2000002)
-        //    printf("PrimId %llu, MatId %x\n", leaf.primitiveId, leaf.matId.value);
+        const bool cullBackface = primData.cullFace[batchIndexInt];
 
         // Get Position
         uint64_t index0 = primData.indexList[leaf.primitiveId * 3 + 0];
@@ -227,60 +223,58 @@ struct TriFunctions
         Vector3 position1 = primData.positions[index1];
         Vector3 position2 = primData.positions[index2];
 
-        //bool cull = BinSearchCull(leaf.primitiveId);
-
         // Do Intersecton test on local space
         RayF r = transform.WorldToLocal(rayData.ray);
-        Vector3 baryCoords; float newT;
-        bool intersects = r.IntersectsTriangle(baryCoords, newT,
+        //
+        float t;
+        Vector3 baryCoords;
+        bool intersects = r.IntersectsTriangle(baryCoords, t,
                                                position0,
                                                position1,
                                                position2,
                                                cullBackface);
-
-        // Check if an alpha map exists and accept reject intersection
-        const GPUBitmap* alphaMap = primData.alphaMaps[indexInt];
-        if(alphaMap && intersects)
+        if(intersects)
         {
-            Vector2f uv0 = primData.uvs[index0];
-            Vector2f uv1 = primData.uvs[index1];
-            Vector2f uv2 = primData.uvs[index2];
-
-            Vector2f uv = (baryCoords[0] * uv0 +
-                           baryCoords[1] * uv1 +
-                           baryCoords[2] * uv2);
-
-            bool opaque = (*alphaMap)(uv);
-            intersects &= opaque;
+            newT = t;
+            newHit = Vector2f(baryCoords[0], baryCoords[1]);
         }
+        return intersects;
+    }
 
-        // Check if the hit is closer
-        bool closerHit = intersects && (newT < rayData.tMax);
-        if(closerHit)
-        {
-            rayData.tMax = newT;
-            newMat = leaf.matId;
-            newPrim = leaf.primitiveId;
-            newHit = TriangleHit(baryCoords[0], baryCoords[1]);
+    static constexpr auto& Intersects = IntersectsT<GPUTransformI>;
 
-            //if(0x3000000 == leaf.matId)
-            //{
-            //    printf("CloserHit-> Mat 0x%X, Prim %llu\n",
-            //           leaf.matId.value, leaf.primitiveId);
-            //}
-        }
-        //printf("ray dir{%f, %f, %f} "
-        //       "old %f new %f --- Testing Mat: %x -> {%s, %s}\n",
-        //       rayData.ray.getDirection()[0],
-        //       rayData.ray.getDirection()[1],
-        //       rayData.ray.getDirection()[2],
+    __device__ __forceinline__
+    static bool AlphaTest(// Input
+                          const TriangleHit& potentialHit,
+                          const DefaultLeaf& leaf,
+                          const TriData& primData)
+    {
+        // Find the primitive
+        float batchIndex;
+        GPUFunctions::BinarySearchInBetween(batchIndex, leaf.primitiveId, primData.primOffsets, primData.primBatchCount);
+        uint32_t batchIndexInt = static_cast<uint32_t>(batchIndex);
+        const GPUBitmap* alphaMap = primData.alphaMaps[batchIndexInt];
+        // Check if an alpha map does not exist
+        // Accept intersection
+        if(!alphaMap) return true;
 
-        //       oldT, newT,
-        //       leaf.matId.value,
-        //       closerHit ? "Close!" : "      ",
-        //       intersects ? "Intersects!" : "           ");
+        uint64_t index0 = primData.indexList[leaf.primitiveId * 3 + 0];
+        uint64_t index1 = primData.indexList[leaf.primitiveId * 3 + 1];
+        uint64_t index2 = primData.indexList[leaf.primitiveId * 3 + 2];
 
-        return HitResult{false, closerHit};
+        Vector3 baryCoords = Vector3f(potentialHit[0],
+                                      potentialHit[1],
+                                      1.0f - potentialHit[1] - potentialHit[0]);
+
+        Vector2f uv0 = primData.uvs[index0];
+        Vector2f uv1 = primData.uvs[index1];
+        Vector2f uv2 = primData.uvs[index2];
+
+        Vector2f uv = (baryCoords[0] * uv0 +
+                        baryCoords[1] * uv1 +
+                        baryCoords[2] * uv2);
+
+        return (*alphaMap)(uv);
     }
 
     __device__ __forceinline__
@@ -344,6 +338,22 @@ struct TriFunctions
         return (position0 * 0.33333f +
                 position1 * 0.33333f +
                 position2 * 0.33333f);
+    }
+
+    __device__ __forceinline__
+    static void AcquirePositions(// Output
+                                 Vector3f positions[3],
+                                 // Inputs
+                                 PrimitiveId primitiveId,
+                                 const TriData& primData)
+    {
+        uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
+        uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
+        uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
+
+        positions[0] = primData.positions[index0];
+        positions[1] = primData.positions[index1];
+        positions[2] = primData.positions[index2];
     }
 
     static constexpr auto& Leaf = GenerateDefaultLeaf<TriData>;
@@ -439,7 +449,9 @@ struct TriangleSurfaceGenerator
 
 class GPUPrimitiveTriangle final
     : public GPUPrimitiveGroup<TriangleHit, TriData, DefaultLeaf,
-                               TriangleSurfaceGenerator, TriFunctions>
+                               TriangleSurfaceGenerator, TriFunctions,
+                               PrimTransformType::CONSTANT_LOCAL_TRANSFORM,
+                               3>
 {
     public:
         static constexpr const char*            TypeName() { return "Triangle"; }
@@ -467,6 +479,7 @@ class GPUPrimitiveTriangle final
         std::map<uint32_t, Vector2ul>           batchRanges;
         std::map<uint32_t, Vector2ul>           batchDataRanges;
         std::map<uint32_t, AABB3>               batchAABBs;
+        std::map<uint32_t, bool>                batchAlphaMapFlag;
 
     protected:
     public:
@@ -488,6 +501,7 @@ class GPUPrimitiveTriangle final
         // Access primitive range from Id
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
+        bool                                    PrimitiveHasAlphaMap(uint32_t surfaceDataId) const override;
         // Query
         // How many primitives are available on this class
         // This includes the indexed primitive count
@@ -495,8 +509,6 @@ class GPUPrimitiveTriangle final
         // Total primitive count but not indexed
         uint64_t                                TotalDataCount() const override;
         // Primitive Transform Info for accelerator
-        PrimTransformType                       TransformType() const override;
-        //
         bool                                    IsTriangle() const override;
         // Error check
         // Queries in order to check if this primitive group supports certain primitive data

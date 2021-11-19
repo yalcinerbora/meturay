@@ -5,6 +5,37 @@
 
 #include <numeric>
 
+template <class PGroup>
+__global__
+static void KCCopyPrimPositions(Vector3f* gPositions,
+                                // Iputs
+                                typename PGroup::PrimitiveData pData,
+                                const Vector2ul primRanges)
+{
+    const uint32_t primCount = primRanges[1] - primRanges[0];
+
+    // Local Position Registers
+    constexpr uint32_t POS_PER_PRIM = PGroup::PositionPerPrim;
+    Vector3f positions[POS_PER_PRIM];
+
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < primCount; globalId += blockDim.x * gridDim.x)
+    {
+        // Read / Write Locations
+        uint32_t readIndex = globalId + primRanges[0];
+        uint32_t writeIndex = globalId;
+        // Copy to local registers
+        PGroup::AcquirePositions(positions, readIndex, pData);
+        // Write to global mem
+        Vector3f* gPositionsLocal = gPositions + POS_PER_PRIM * writeIndex;
+        #pragma unroll
+        for(uint32_t i = 0; i < POS_PER_PRIM; i++)
+        {
+            gPositionsLocal[i] = positions[i];
+        }
+    }
+}
+
 __global__
 static void KCPopulateTransforms(// I-O
                                  OptixInstance* gInstances,
@@ -250,18 +281,13 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
     if((err = FillLeaves(system, surface)) != TracerError::OK)
         return err;
 
-    // Specialized Triangle Primitive Function
-    uint64_t totalVertexCount = this->primitiveGroup.TotalDataCount();
-    // Currently optix only supports 32-bit indices
-    if(totalVertexCount >= std::numeric_limits<uint32_t>::max())
-        return TracerError::UNABLE_TO_CONSTRUCT_ACCELERATOR;
-
     using LeafData = typename GPUPrimitiveTriangle::LeafData;
     using PrimitiveData = typename GPUPrimitiveTriangle::PrimitiveData;
     const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
 
     uint32_t innerIndex = idLookup.at(surface);
     const PrimitiveRangeList& primRangeList = primitiveRanges[innerIndex];
+    const PrimitiveIdList& primIdList = primitiveIds[innerIndex];
     const PrimTransformType tType = this->primitiveGroup.TransformType();
 
     // Select Transform for construction
@@ -289,25 +315,51 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
         CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
         DeviceTraversables& gpuTraverseData = optixDataPerGPU[deviceIndex];
 
-        // TODO:
-        // Copy the used triangles to the local memory
+        // IMPORTANT
+        // Optix wants the triangles & Indices to be in a memory
+        // that is allocated with a "cudaMalloc" function
+        // Current METUray manages its memory using "cudaMallocManaged"
+        // for common memory except textures (which uses cudaArray allocation and
+        // it is not multi-device capable anyway)
+        // We need to copy data to device local memory for construction
+        // after that traversable does not refer to these memory so we can
+        // delete
+        // Acquire vertex sizes
+        size_t surfacePrimCount = 0;
+        for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
+        {
+            const auto& range = primRangeList[i];
+            if(range[0] == std::numeric_limits<uint64_t>::max())
+                break;
+            // Use primitive count as vertex count
+            surfacePrimCount += range[1] - range[0];
+        }
 
-        // DEBUG===================================
-        std::array<float, 9> positions = {0, 0.5, 0,
-                                          -0.5, -0.5, 0,
-                                          0.5, -0.5, 0};
-        std::array<uint32_t, 3> indices = {0, 1, 2};
-        DeviceLocalMemory debugMem(&gpu);
-        float* dPositionsDebug;
-        uint32_t* dIndicesDebug;
-        GPUMemFuncs::AllocateMultiData(std::tie(dPositionsDebug, dIndicesDebug),
-                                       debugMem, {9, 3}, 128);
-        CUDA_CHECK(cudaMemcpy(dPositionsDebug, positions.data(), sizeof(float) * 9,
-                              cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dIndicesDebug, indices.data(), sizeof(uint32_t) * 3,
-                              cudaMemcpyHostToDevice));
-        // DEBUG===================================
+        // Allocate Local Memory
+        DeviceLocalMemory localVertexMem(&gpu, (sizeof(Vector3f) * surfacePrimCount *
+                                                GPUPrimitiveTriangle::PositionPerPrim));
+        Vector3f* dPositions = static_cast<Vector3f*>(localVertexMem);
+        size_t offset = 0;
+        // Copy to Local Memory
+        for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
+        {
+            const auto& range = primRangeList[i];
+            if(range[0] == std::numeric_limits<uint64_t>::max())
+                break;
 
+            gpu.GridStrideKC_X(0, (cudaStream_t)0, surfacePrimCount,
+                               //
+                               KCCopyPrimPositions<GPUPrimitiveTriangle>,
+                               //
+                               dPositions + offset,
+                               primData,
+                               range);
+            offset += range[1] - range[0];
+        }
+        assert(offset == surfacePrimCount);
+
+        // Generate build input now
+        offset = 0;
         uint32_t buildInputCount = 0;
         std::array<OptixBuildInput, SceneConstants::MaxPrimitivePerSurface> buildInputs;
         for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
@@ -315,37 +367,35 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
             const auto& range = primRangeList[i];
             if(range[0] == std::numeric_limits<uint64_t>::max())
                 break;
-
             buildInputCount++;
 
-            uint32_t geometryFlag = OPTIX_GEOMETRY_FLAG_NONE;
+            // Gen Vertex Ptr
+            CUdeviceptr vertices = AsOptixPtr(dPositions + offset);
+            size_t localPrimCount = range[1] - range[0];
+            offset += localPrimCount;
+            size_t vertexCount = GPUPrimitiveTriangle::PositionPerPrim * localPrimCount;
 
-            uint32_t indexCount = static_cast<uint32_t>(primRangeList[i][1] - primRangeList[i][0]);
-            uint32_t offset = static_cast<uint32_t>(primRangeList[i][0]);
+            // Enable/Disable Any hit if batch has alpha map
+            uint32_t geometryFlags = OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT;
+            if(primitiveGroup.PrimitiveHasAlphaMap(primIdList[i]))
+                geometryFlags = OPTIX_GEOMETRY_FLAG_NONE;
 
             OptixBuildInput& buildInput = buildInputs[i];
             buildInput = {};
             buildInput.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
             // Vertex
-            CUdeviceptr dPositions = AsOptixPtr(dPositionsDebug);
-            CUdeviceptr dIndices = AsOptixPtr(dIndicesDebug);
-            //CUdeviceptr dPositions = AsOptixPtr(primData.positions);
-            //CUdeviceptr dIndices = AsOptixPtr(primData.indexList);
-            // Vertex
             buildInput.triangleArray.vertexFormat = OPTIX_VERTEX_FORMAT_FLOAT3;
-            buildInput.triangleArray.numVertices = static_cast<uint32_t>(totalVertexCount);
-            buildInput.triangleArray.vertexBuffers = &dPositions;
+            buildInput.triangleArray.numVertices = static_cast<uint32_t>(vertexCount);
+            buildInput.triangleArray.vertexBuffers = &vertices;
             buildInput.triangleArray.vertexStrideInBytes = sizeof(Vector3f);
-            // Index
-            buildInput.triangleArray.indexFormat = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
-            buildInput.triangleArray.numIndexTriplets = indexCount;
-            buildInput.triangleArray.indexBuffer = dIndices;
-            // We store 64 bit values on index make stride as such
-            buildInput.triangleArray.indexStrideInBytes = sizeof(uint32_t) * 3;
-            //buildInput.triangleArray.indexStrideInBytes = sizeof(uint64_t) * 3;
-            buildInput.triangleArray.primitiveIndexOffset = offset;
+            // Index (we dont use indices)
+            //buildInput.triangleArray.indexFormat = OPTIX_INDICES_FORMAT_NONE;
+            //buildInput.triangleArray.numIndexTriplets = 0;
+            //buildInput.triangleArray.indexBuffer = 0;
+            //buildInput.triangleArray.indexStrideInBytes = 0;
+            //buildInput.triangleArray.primitiveIndexOffset = 0;
             // SBT
-            buildInput.triangleArray.flags = &geometryFlag;
+            buildInput.triangleArray.flags = &geometryFlags;
             buildInput.triangleArray.numSbtRecords = 1;
             buildInput.triangleArray.sbtIndexOffsetBuffer = 0;
             buildInput.triangleArray.sbtIndexOffsetSizeInBytes = sizeof(uint32_t);

@@ -191,7 +191,8 @@ class SimpleTracerSetup
         static constexpr TracerParameters   TRACER_PARAMETERS =
         {
             false,  // Verbose
-            0       // Seed
+            0,      // Seed
+            false
         };
 
 
@@ -238,13 +239,15 @@ class SimpleTracerSetup
         const double                        sceneTime;
 
         bool                                enableTMO;
+        bool                                forceOptiX;
 
     public:
         // Constructors & Destructor
                             SimpleTracerSetup(std::string tracerType,
-                                              bool disableTMO,
                                               std::u8string sceneName,
-                                              double sceneTime);
+                                              double sceneTime,
+                                              bool disableTMO,
+                                              bool forceOptiX = false);
                             ~SimpleTracerSetup() = default;
 
         bool                Init();
@@ -252,9 +255,10 @@ class SimpleTracerSetup
 };
 
 inline SimpleTracerSetup::SimpleTracerSetup(std::string tracerType,
-                                            bool enableTMO,
                                             std::u8string sceneName,
-                                            double sceneTime)
+                                            double sceneTime,
+                                            bool enableTMO,
+                                            bool forceOptiX)
     : sceneName(sceneName)
     , sceneTime(sceneTime)
     , tracerType(tracerType)
@@ -266,10 +270,14 @@ inline SimpleTracerSetup::SimpleTracerSetup(std::string tracerType,
     , tracerDLL(TRACER_DLL)
     , tracer(nullptr, nullptr)
     , enableTMO(enableTMO)
+    , forceOptiX(forceOptiX)
 {}
 
 inline bool SimpleTracerSetup::Init()
 {
+    TracerParameters tracerParams = TRACER_PARAMETERS;
+    tracerParams.forceOptiX = forceOptiX;
+
     TracerStatus status =
     {
         sceneName,
@@ -285,7 +293,7 @@ inline bool SimpleTracerSetup::Init()
         false,
         false,
 
-        TRACER_PARAMETERS
+        tracerParams
     };
 
     // Load Tracer System DLL
@@ -297,7 +305,9 @@ inline bool SimpleTracerSetup::Init()
     ERROR_CHECK(TracerError, trcE);
 
     // Construct & Load Scene
-    tracerSystem->GenerateScene(gpuScene, sceneName);
+    SceneLoadFlags sceneFlags;
+    if(forceOptiX) sceneFlags |= SceneLoadFlagType::FORCE_OPTIX_ACCELS;
+    tracerSystem->GenerateScene(gpuScene, sceneName, sceneFlags);
     SceneError scnE = gpuScene->LoadScene(sceneTime);
     ERROR_CHECK(SceneError, scnE);
 
@@ -340,7 +350,7 @@ inline bool SimpleTracerSetup::Init()
 
     // Generate Tracer Object
     // & Set Options
-    trcE = tracerSystem->GenerateTracer(tracer, TRACER_PARAMETERS, opts,
+    trcE = tracerSystem->GenerateTracer(tracer, tracerParams, opts,
                                         tracerType);
     ERROR_CHECK(TracerError, trcE);
     tracer->SetImagePixelFormat(IMAGE_PIXEL_FORMAT);

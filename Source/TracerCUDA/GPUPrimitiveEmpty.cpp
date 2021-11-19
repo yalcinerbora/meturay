@@ -34,6 +34,11 @@ AABB3 GPUPrimitiveEmpty::PrimitiveBatchAABB(uint32_t surfaceDataId) const
     return AABB3f(minInf, minInf);
 }
 
+bool GPUPrimitiveEmpty::PrimitiveHasAlphaMap(uint32_t surfaceDataId) const
+{
+    return false;
+}
+
 uint64_t GPUPrimitiveEmpty::TotalPrimitiveCount() const
 {
     return 0;
@@ -42,11 +47,6 @@ uint64_t GPUPrimitiveEmpty::TotalPrimitiveCount() const
 uint64_t GPUPrimitiveEmpty::TotalDataCount() const
 {
     return 0;
-}
-
-PrimTransformType GPUPrimitiveEmpty::TransformType() const
-{
-    return PrimTransformType::CONSTANT_LOCAL_TRANSFORM;
 }
 
 bool GPUPrimitiveEmpty::CanGenerateData(const std::string& s) const

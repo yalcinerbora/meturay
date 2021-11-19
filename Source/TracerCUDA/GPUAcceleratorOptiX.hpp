@@ -2,7 +2,6 @@
 
 #include "TracerDebug.h"
 
-
 template <class PGroup>
 GPUAccOptiXGroup<PGroup>::GPUAccOptiXGroup(const GPUPrimitiveGroupI& pGroup)
     : GPUAcceleratorGroup<PGroup>(pGroup)
@@ -76,13 +75,16 @@ SceneError GPUAccOptiXGroup<PGroup>::InitializeGroup(// Accelerator Option Node
     primitiveRanges.clear();
     primitiveMaterialKeys.clear();
     idLookup.clear();
-
+    // PG Type
     const char* primGroupTypeName = this->primitiveGroup.Type();
-
-    //std::vector<uint32_t> hTransformIndices;
+    // Transform Indices
+    std::vector<uint32_t> hTransformIndices;
     hTransformIndices.reserve(surfaceList.size());
+    // List of Leaf Offsets
+    std::vector<size_t> sbtLeafOffsets;
 
     // Iterate over pairings
+    size_t sbtOffset = 0;
     int surfaceInnerId = 0;
     size_t totalSize = 0;
     for(const auto& surface : surfaceList)
@@ -106,11 +108,22 @@ SceneError GPUAccOptiXGroup<PGroup>::InitializeGroup(// Accelerator Option Node
             primIdList[i] = p.first;
             primRangeList[i] = this->primitiveGroup.PrimitiveBatchRange(p.first);
             hitKeyList[i] = p.second;
-            localSize += primRangeList[i][1] - primRangeList[i][0];
+
+            size_t subLocalSize = primRangeList[i][1] - primRangeList[i][0];
+            localSize += subLocalSize;
+            // Save the SBT leaf offset aswell
+            sbtLeafOffsets.push_back(sbtOffset);
+            sbtOffset += subLocalSize;
+
+            sbtRecords.push_back(Record<void, void>
+            {
+                nullptr,
+                surface.second.globalTransformIndex,
+                nullptr
+            });
         }
         range[1] = range[0] + localSize;
         totalSize += localSize;
-
 
         hTransformIndices.push_back(surface.second.globalTransformIndex);
         primitiveIds.push_back(primIdList);
@@ -126,6 +139,7 @@ SceneError GPUAccOptiXGroup<PGroup>::InitializeGroup(// Accelerator Option Node
     assert(idLookup.size() == accRanges.size());
     assert(keyExpandOption.size() == idLookup.size());
     assert(surfaceInnerId == hTransformIndices.size());
+    assert(sbtOffset == totalSize);
 
     uint32_t accelCount = surfaceInnerId;
     leafCount = totalSize;
@@ -149,6 +163,16 @@ SceneError GPUAccOptiXGroup<PGroup>::InitializeGroup(// Accelerator Option Node
     CUDA_CHECK(cudaMemcpy(dPrimData, &primData,
                           sizeof(PrimitiveData),
                           cudaMemcpyHostToDevice));
+
+    // After Ptrs Are Determined
+    // Set pointers on the records
+    uint32_t i = 0;
+    for(auto& record : sbtRecords)
+    {
+        record.gLeafs = dLeafList + sbtLeafOffsets[i];
+        record.gPrimData = dPrimData;
+        i++;
+    }
 
     return SceneError::OK;
 }
@@ -201,6 +225,7 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
     uint32_t innerIndex = idLookup.at(surface);
     const PrimitiveRangeList& primRangeList = primitiveRanges[innerIndex];
+    const PrimitiveIdList& primIdList = primitiveIds[innerIndex];
     const PrimTransformType tType = this->primitiveGroup.TransformType();
 
     // Select Transform for construction
@@ -223,63 +248,63 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     static_assert(sizeof(AABB3f) == sizeof(OptixAabb), "OptixAabb != AABB3f");
     static_assert((sizeof(AABB3f) % OPTIX_AABB_BUFFER_BYTE_ALIGNMENT) == 0, "AABB3f is not aligned");
 
-    // For this batch create a temp AABB Buffer
-    size_t currentOffset = 0;
-    PrimitiveRangeList indexOffsets;
-    for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
-    {
-        const auto& range = primRangeList[i];
-        if(range[0] == std::numeric_limits<uint64_t>::max())
-            break;
-
-        indexOffsets[i][0] = currentOffset;
-        currentOffset += (range[1] - range[0]);
-        indexOffsets[i][1] = currentOffset;
-    }
-    size_t totalPrimCount = currentOffset;
-
-    // Allocate & Generate AABBs
-    AABB3f* dPrimAABBs;
-    uint64_t* dPrimIds;
-    DeviceMemory aabbTempBuffer;
-    GPUMemFuncs::AllocateMultiData(std::tie(dPrimAABBs, dPrimIds), aabbTempBuffer,
-                                   {totalPrimCount, totalPrimCount});
-
-    size_t indexOffset = 0;
-    for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
-    {
-        const auto& range = primRangeList[i];
-        if(range[0] == std::numeric_limits<uint64_t>::max())
-            break;
-
-        uint32_t indexCount = static_cast<uint32_t>(range[1] - range[0]);
-         // Generate AABBs
-        gpu.GridStrideKC_X(0, 0, totalPrimCount,
-                           //
-                           KCGenAABBs<PGroup>,
-                           //
-                           dPrimAABBs + indexOffset,
-                           //
-                           range,
-                           //
-                           AABBGen<PGroup>(primData, *transform),
-                           static_cast<uint32_t>(totalPrimCount));
-
-        indexOffset += indexCount;
-    }
-    gpu.WaitMainStream();
-
     //===============================//
     //  ACTUAL TRAVERSAL GENERATION  //
     //===============================//
     uint32_t deviceIndex = 0;
     for(const auto& [gpu, optixContext] : optixSystem->OptixCapableDevices())
     {
+        CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
         DeviceTraversables& gpuTraverseData = optixDataPerGPU[deviceIndex];
 
-        // Constant Params
-        const uint32_t geometryFlag = OPTIX_GEOMETRY_FLAG_NONE;
+        // IMPORTANT
+        // Optix wants the triangles & Indices to be in a memory
+        // that is allocated with a "cudaMalloc" function
+        // Current METUray manages its memory using "cudaMallocManaged"
+        // for common memory except textures (which uses cudaArray allocation and
+        // it is not multi-device capable anyway)
+        // We need to copy data to device local memory for construction
+        // after that traversable does not refer to these memory so we can
+        // delete
+        size_t surfacePrimCount = 0;
+        for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
+        {
+            const auto& range = primRangeList[i];
+            if(range[0] == std::numeric_limits<uint64_t>::max())
+                break;
+            // Use primitive count as vertex count
+            surfacePrimCount += range[1] - range[0];
+        }
+
+        DeviceLocalMemory aabbTempBuffer(&gpu, sizeof(AABB3f) * surfacePrimCount);
+        AABB3f* dPrimAABBs = static_cast<AABB3f*>(aabbTempBuffer);
+
+        size_t offset = 0;
+        for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
+        {
+            const auto& range = primRangeList[i];
+            if(range[0] == std::numeric_limits<uint64_t>::max())
+                break;
+
+            uint32_t primCount = static_cast<uint32_t>(range[1] - range[0]);
+             // Generate AABBs
+            gpu.GridStrideKC_X(0, 0, primCount,
+                               //
+                               KCGenAABBs<PGroup>,
+                               //
+                               dPrimAABBs + offset,
+                               //
+                               range,
+                               //
+                               AABBGen<PGroup>(primData, *transform),
+                               static_cast<uint32_t>(primCount));
+
+            offset += surfacePrimCount;
+        }
+        assert(offset == surfacePrimCount);
+
         // Generate Build Params
+        offset = 0;
         uint32_t buildInputCount = 0;
         std::array<OptixBuildInput, SceneConstants::MaxPrimitivePerSurface> buildInputs;
         for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
@@ -289,25 +314,30 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                 break;
             buildInputCount++;
 
-            uint32_t primCount = static_cast<uint32_t>(range[1] - range[0]);
+            // Gen AABB Ptr
+            CUdeviceptr aabbs = AsOptixPtr(dPrimAABBs + offset);
+            size_t localPrimCount = range[1] - range[0];
+            offset += localPrimCount;
 
-            CUdeviceptr aabbBuffers[1] = {AsOptixPtr(dPrimAABBs + indexOffsets[i][0])};
+            // Enable/Disable Any hit if batch has alpha map
+            uint32_t geometryFlags = OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT;
+            if(primitiveGroup.PrimitiveHasAlphaMap(primIdList[i]))
+                geometryFlags = OPTIX_GEOMETRY_FLAG_NONE;
 
-            // Set Input Params
             OptixBuildInput& buildInput = buildInputs[i];
-            buildInput = OptixBuildInput{};
+            buildInput = {};
             buildInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
-            //
-            buildInput.customPrimitiveArray.aabbBuffers = aabbBuffers;
-            buildInput.customPrimitiveArray.numPrimitives = primCount;
+            // AABB
+            buildInput.customPrimitiveArray.aabbBuffers = &aabbs;
+            buildInput.customPrimitiveArray.numPrimitives = static_cast<uint32_t>(localPrimCount);
             buildInput.customPrimitiveArray.strideInBytes = sizeof(AABB3f);
-            buildInput.customPrimitiveArray.primitiveIndexOffset = static_cast<uint32_t>(range[0]);
+            buildInput.customPrimitiveArray.primitiveIndexOffset = 0;
             // SBT
-            buildInput.triangleArray.flags = &geometryFlag;
-            buildInput.triangleArray.numSbtRecords = 1;
-            buildInput.triangleArray.sbtIndexOffsetBuffer = 0;
-            buildInput.triangleArray.sbtIndexOffsetSizeInBytes = sizeof(uint32_t);
-            buildInput.triangleArray.sbtIndexOffsetStrideInBytes = sizeof(uint32_t);
+            buildInput.customPrimitiveArray.flags = &geometryFlags;
+            buildInput.customPrimitiveArray.numSbtRecords = 1;
+            buildInput.customPrimitiveArray.sbtIndexOffsetBuffer = 0;
+            buildInput.customPrimitiveArray.sbtIndexOffsetSizeInBytes = sizeof(uint32_t);
+            buildInput.customPrimitiveArray.sbtIndexOffsetStrideInBytes = sizeof(uint32_t);
         }
 
         OptixAccelBuildOptions accelOptions = {};
@@ -353,7 +383,7 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         CUDA_CHECK(cudaMemcpy(&hCompactAccelSize, dCompactedSize,
                               sizeof(uint64_t), cudaMemcpyDeviceToHost));
 
-        if(hCompactAccelSize < accelMemorySizes.outputSizeInBytes)
+        if(hCompactAccelSize < buildBuffer.Size())
         {
             DeviceLocalMemory compactedMemory(&gpu, hCompactAccelSize);
 
@@ -372,8 +402,8 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
         gpuTraverseData.traversables[innerIndex] = traversable;
         deviceIndex++;
-    }
 
+    }
     // All Done!
     return TracerError::OK;
 }
@@ -395,9 +425,14 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerators(const std::vector<ui
 }
 
 template <class PGroup>
-TracerError GPUAccOptiXGroup<PGroup>::DestroyAccelerators(const CudaSystem&)
+TracerError GPUAccOptiXGroup<PGroup>::DestroyAccelerators(const CudaSystem& system)
 {
-    // TODO: Implement
+    TracerError e = TracerError::OK;
+    for(const auto& id : idLookup)
+    {
+        if((e = DestroyAccelerator(id.first, system)) != TracerError::OK)
+            return e;
+    }
     return TracerError::OK;
 }
 
@@ -514,13 +549,7 @@ PrimTransformType GPUAccOptiXGroup<PGroup>::GetPrimitiveTransformType() const
 }
 
 template <class PGroup>
-const void* GPUAccOptiXGroup<PGroup>::GetDevicePrimDataPtr() const
+const GPUAccGroupOptiXI::RecordList& GPUAccOptiXGroup<PGroup>::GetRecords() const
 {
-    return dPrimData;
-}
-
-template <class PGroup>
-const void* GPUAccOptiXGroup<PGroup>::GetDeviceLeafPtr() const
-{
-    return dLeafList;
+    return sbtRecords;
 }

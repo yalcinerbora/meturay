@@ -1303,12 +1303,12 @@ SceneError GPUSceneJson::LoadScene(double time)
     catch (SceneException const& e)
     {
         if(e.what() != nullptr)
-            METU_ERROR_LOG(e.what());
+            METU_ERROR_LOG("{:s}", e.what());
         return e;
     }
     catch(nlohmann::json::parse_error const& e)
     {
-        METU_ERROR_LOG(e.what());
+        METU_ERROR_LOG("{:s}", e.what());
         return SceneError::JSON_FILE_PARSE_ERROR;
     }
     return e;

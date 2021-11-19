@@ -28,7 +28,6 @@ struct EmptyHit {};
 
 struct EPrimFunctions
 {
-    static constexpr auto& Hit                      = DefaultAcceptHit<EmptyHit, EmptyData, EmptyLeaf>;
     static constexpr auto& AABB                     = DefaultAABBGen<EmptyData>;
     static constexpr auto& Area                     = DefaultAreaGen<EmptyData>;
     static constexpr auto& Center                   = DefaultCenterGen<EmptyData>;
@@ -36,6 +35,9 @@ struct EPrimFunctions
     static constexpr auto& PositionPdfFromReference = DefaultPDFPosRef<EmptyData>;
     static constexpr auto& PositionPdfFromHit       = DefaultPDFPosHit<EmptyData>;
     static constexpr auto& Leaf                     = GenerateEmptyLeaf<EmptyData>;
+    static constexpr auto& AcquirePositions         = DefaultAcqPosition<EmptyData, 1>;
+    static constexpr auto& AlphaTest                = DefaultAlphaTest<EmptyHit, EmptyData, EmptyLeaf>;
+    static constexpr auto& Intersects               = DefaultIntersects<EmptyHit, EmptyData, EmptyLeaf>;
 };
 
 struct EmptySurfaceGenerator
@@ -66,8 +68,8 @@ struct EmptySurfaceGenerator
 
 class GPUPrimitiveEmpty final
     : public GPUPrimitiveGroup<EmptyHit, EmptyData, EmptyLeaf,
-                               EmptySurfaceGenerator,
-                               EPrimFunctions>
+                               EmptySurfaceGenerator, EPrimFunctions,
+                               PrimTransformType::CONSTANT_LOCAL_TRANSFORM>
 {
     public:
         static constexpr const char*            TypeName() { return BaseConstants::EMPTY_PRIMITIVE_NAME; }
@@ -93,15 +95,13 @@ class GPUPrimitiveEmpty final
         // Access primitive range from Id
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
+        bool                                    PrimitiveHasAlphaMap(uint32_t surfaceDataId) const override;
         // Query
         // How many primitives are available on this class
         // This includes the indexed primitive count
         uint64_t                                TotalPrimitiveCount() const override;
         // Total primitive count but not indexed
         uint64_t                                TotalDataCount() const override;
-        // Primitive Transform Info for accelerator
-        PrimTransformType                       TransformType() const override;
-
         // Error check
         // Queries in order to check if this primitive group supports certain primitive data
         // Material may need that data

@@ -14,6 +14,7 @@ set(SRC_SCENE_IO
 
 set(SRC_TRACER_MOCK
     ${CURRENT_SOURCE_DIR}/SimpleTracerSetup.h
+    ${CURRENT_SOURCE_DIR}/T_OptiX.cpp
     ${CURRENT_SOURCE_DIR}/T_AOTracers.cpp
     ${CURRENT_SOURCE_DIR}/T_MockTracer.cu
     ${CURRENT_SOURCE_DIR}/T_PathTracers.cpp

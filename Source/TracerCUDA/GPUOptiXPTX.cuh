@@ -2,6 +2,7 @@
 
 #include "RayLib/HitStructs.h"
 #include "RayStructs.h"
+#include "GPUTransformI.h"
 
 #include <optix_device.h>
 
@@ -10,14 +11,15 @@ struct OpitXBaseAccelParams
     OptixTraversableHandle baseAcceleratorOptix;
 
     // Outputs
-    HitKey*         gWorkKeys;
-    TransformId*    gTransformIds;
-    PrimitiveId*    gPrimitiveIds;
-    HitStructPtr    gHitStructs;
+    HitKey*                 gWorkKeys;
+    TransformId*            gTransformIds;
+    PrimitiveId*            gPrimitiveIds;
+    HitStructPtr            gHitStructs;
     // Inputs
-    const RayGMem*  gRays;
+    const RayGMem*          gRays;
     // Constants
-    uint32_t        maxAttributeCount;
+    uint32_t                maxAttributeCount;
+    const GPUTransformI**   gGlobalTransformArray;
 };
 
 template <class PrimData, class LeafStruct>
@@ -31,7 +33,7 @@ struct Record
     // Data inside should be accesed as such:
     //   int leafId = optixGetPrimitiveIndex();
     //   (*primData).positions[gLeafs[leafId].primitiveId]
-    const PrimData* primData;
+    const PrimData* gPrimData;
 };
 
 // Meta Hit Record
@@ -52,26 +54,26 @@ struct __align__(OPTIX_SBT_RECORD_ALIGNMENT) EmptyRecord
     void* data;
 };
 
-// Meta Functions
-template<class T>
-__forceinline__ __device__
-T* UInt2ToPointer(const uint2& ptrUInt2)
-{
-    static_assert(sizeof(T*) == sizeof(uint64_t));
-    uint64_t ptr = static_cast<uint64_t>(ptrUInt2.x) << 32;
-    ptr |= static_cast<uint64_t>(ptrUInt2.y);
-    return reinterpret_cast<T*>(ptr);
-}
-
-template<class T>
-__forceinline__ __device__
-uint2 PointerToUInt2(T* ptr)
-{
-    static_assert(sizeof(T*) == sizeof(uint64_t), "");
-    const uint64_t uptr = reinterpret_cast<uint64_t>(ptr);
-    return make_uint2(uptr >> 32,
-                      uptr & 0x00000000ffffffff);
-}
+//// Meta Functions
+//template<class T>
+//__forceinline__ __device__
+//T* UInt2ToPointer(const uint2& ptrUInt2)
+//{
+//    static_assert(sizeof(T*) == sizeof(uint64_t));
+//    uint64_t ptr = static_cast<uint64_t>(ptrUInt2.x) << 32;
+//    ptr |= static_cast<uint64_t>(ptrUInt2.y);
+//    return reinterpret_cast<T*>(ptr);
+//}
+//
+//template<class T>
+//__forceinline__ __device__
+//uint2 PointerToUInt2(T* ptr)
+//{
+//    static_assert(sizeof(T*) == sizeof(uint64_t), "");
+//    const uint64_t uptr = reinterpret_cast<uint64_t>(ptr);
+//    return make_uint2(uptr >> 32,
+//                      uptr & 0x00000000ffffffff);
+//}
 
 // ExternCWrapper Macro
 #define WRAP_FUCTION(NAME, FUNCTION) \

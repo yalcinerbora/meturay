@@ -7,6 +7,7 @@
 #include "AcceleratorFunctions.h"
 #include "GPUTransformIdentity.cuh"
 #include "CudaSystem.hpp"
+#include "GPUAcceleratorCommonKC.cuh"
 
 #pragma warning( push )
 #pragma warning( disable : 4834)
@@ -271,16 +272,16 @@ void KCIntersectBVH(// O
 
             if(currentNode->isLeaf)
             {
-                HitResult result = PGroup::Hit(// Output
-                                               materialKey,
-                                               primitiveId,
-                                               hit,
-                                               // I-O
-                                               ray,
-                                               // Input
-                                               *localTransform,
-                                               currentNode->leaf,
-                                               primData);
+                HitResult result = AcceptHit<PGroup>(// Output
+                                                     materialKey,
+                                                     primitiveId,
+                                                     hit,
+                                                     // I-O
+                                                     ray,
+                                                     // Input
+                                                     *localTransform,
+                                                     currentNode->leaf,
+                                                     primData);
 
                 hitModified |= result[1];
                 if(result[0]) break;
@@ -400,16 +401,16 @@ void KCIntersectBVHStackless(// O
                 // Leaf, so do its custom primitive intersection
                 if(currentNode->isLeaf)
                 {
-                    HitResult result = PGroup::Hit(// Output
-                                                   materialKey,
-                                                   primitiveId,
-                                                   hit,
-                                                   // I-O
-                                                   ray,
-                                                   // Input
-                                                   *localTransform,
-                                                   currentNode->leaf,
-                                                   primData);
+                    HitResult result = AcceptHit<PGroup>(// Output
+                                                         materialKey,
+                                                         primitiveId,
+                                                         hit,
+                                                         // I-O
+                                                         ray,
+                                                         // Input
+                                                         *localTransform,
+                                                         currentNode->leaf,
+                                                         primData);
                     hitModified |= result[1];
                     if(result[0]) break;
 

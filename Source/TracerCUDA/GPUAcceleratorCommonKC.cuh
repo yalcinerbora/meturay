@@ -13,6 +13,65 @@ struct PRList
     const Vector2ul primRanges[SceneConstants::MaxPrimitivePerSurface];
 };
 
+// Accept hit function
+// Return two booleans first boolean tells control flow to terminate
+// intersection checking (when finding any hit is enough),
+// other boolean is returns that the hit is accepted or not.
+//
+// If hit is accepted Accept hit function should return
+// valid material key, primitiveId, and hit.
+//
+// Material Key is the index of material
+// Primitive id is the index of the individual primitive
+// Hit is the interpolting weights of the primitive
+//
+// PrimitiveData struct holds the array of the primitive data
+// (normal, position etc..)
+template <class PGroup>
+__device__ __forceinline__
+static HitResult AcceptHit(// Output
+                           HitKey& newMat,
+                           PrimitiveId& newPrim,
+                           typename PGroup::HitData& newHit,
+                           // I-O
+                           RayReg& rayData,
+                           // Input
+                           const GPUTransformI& transform,
+                           const typename PGroup::LeafData& leaf,
+                           const typename PGroup::PrimitiveData& primData)
+{
+    using HitData = typename PGroup::HitData;
+
+    float newT;
+    HitData hitData;
+    bool intersects = PGroup::Intersects(// Output
+                                         newT,
+                                         hitData,
+                                         // I-O
+                                         rayData,
+                                         // Input
+                                         transform,
+                                         leaf,
+                                         primData);
+    bool closerHit = intersects && (newT < rayData.tMax);
+    // If intersected do alpha test aswell
+    if(closerHit)
+    {
+        bool opaque = PGroup::AlphaTest(hitData, leaf, primData);
+        closerHit &= opaque;
+    }
+
+    // Save the hit if it is closer
+    if(closerHit)
+    {
+        rayData.tMax = newT;
+        newMat = leaf.matId;
+        newPrim = leaf.primitiveId;
+        newHit = hitData;
+    }
+    return HitResult{false, closerHit};
+}
+
 template <class PGroup>
 __global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCInitializeLeafs(// O

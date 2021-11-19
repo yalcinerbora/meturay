@@ -13,6 +13,7 @@ with ustom Intersection and Hit
 
 #include "AcceleratorFunctions.h"
 #include "GPUTransformIdentity.cuh"
+#include "GPUAcceleratorCommonKC.cuh"
 #include "CudaSystem.hpp"
 
 #include <cub/cub.cuh>
@@ -81,16 +82,16 @@ static void KCIntersectLinear(// O
             // Get Leaf Data and
             // Do acceptance check
             const LeafData leaf = gLeaf[i];
-            HitResult result = PGroup::Hit(// Output
-                                           materialKey,
-                                           primitiveId,
-                                           hit,
-                                           // I-O
-                                           ray,
-                                           // Input
-                                           *localTransform,
-                                           leaf,
-                                           primData);
+            HitResult result = AcceptHit<PGroup>(// Output
+                                                 materialKey,
+                                                 primitiveId,
+                                                 hit,
+                                                 // I-O
+                                                 ray,
+                                                 // Input
+                                                 *localTransform,
+                                                 leaf,
+                                                 primData);
             hitModified |= result[1];
             if(result[0]) break;
         }

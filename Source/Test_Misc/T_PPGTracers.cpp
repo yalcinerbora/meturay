@@ -3,8 +3,8 @@
 TEST(PPGTracers, PPGDirection)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("PPGTracer", true,
-                            u8"TestScenes/ppgTest.json", 0.0);
+    SimpleTracerSetup setup("PPGTracer", u8"TestScenes/ppgTest.json", 0.0,
+                            true);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }
@@ -12,8 +12,8 @@ TEST(PPGTracers, PPGDirection)
 TEST(PPGTracers, CornellBox)
 {
     EnableVTMode();
-    SimpleTracerSetup setup("PPGTracer", true,
-                            u8"TestScenes/helloCornell.json", 0.0);
+    SimpleTracerSetup setup("PPGTracer", u8"TestScenes/helloCornell.json", 0.0,
+                            true);
     ASSERT_TRUE(setup.Init());
     setup.Body();
 }

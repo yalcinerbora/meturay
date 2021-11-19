@@ -597,6 +597,9 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUOptiXPTX.cu">
       <Filter>OptiX\Accelerator</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformEmpty.cuh">
+      <Filter>Transforms</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">

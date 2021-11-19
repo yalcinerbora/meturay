@@ -49,6 +49,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMediumI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUMediumVacuum.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUOptiXPTX.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformEmpty.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformIdentity.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformSingle.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorBVH.cuh" />

@@ -6,7 +6,7 @@
 #include "RayLib/SceneNodeNames.h"
 #include "TypeTraits.h"
 
-class GPUTransformIdentity : public GPUTransformI
+class GPUTransformIdentity final : public GPUTransformI
 {
     private:
     protected:
@@ -15,33 +15,33 @@ class GPUTransformIdentity : public GPUTransformI
 						GPUTransformIdentity() = default;
 		virtual			~GPUTransformIdentity() = default;
 
-		__device__
-		RayF			WorldToLocal(const RayF&,
-									 const uint32_t* indices = nullptr,
-									 const float* weights = nullptr,
-									 uint32_t count = 0) const override;
-		__device__
+		__device__ __forceinline__
+		RayF				WorldToLocal(const RayF&,
+										 const uint32_t* indices = nullptr,
+										 const float* weights = nullptr,
+										 uint32_t count = 0) const override;
+		__device__ __forceinline__
 		Vector3			WorldToLocal(const Vector3&, bool isDirection = false,
 									 const uint32_t* indices = nullptr,
 									 const float* weights = nullptr,
 									 uint32_t count = 0) const override;
-		__device__
+		__device__ __forceinline__
 		AABB3f			WorldToLocal(const AABB3f&) const override;
 
-		__device__
+		__device__ __forceinline__
 		Vector3			LocalToWorld(const Vector3&, bool isDirection = false,
 									 const uint32_t* indices = nullptr,
 									 const float* weights = nullptr,
 									 uint32_t count = 0) const override;
-		__device__
+		__device__ __forceinline__
 		AABB3f			LocalToWorld(const AABB3f&) const override;
 
-		__device__
+		__device__ __forceinline__
 		QuatF			ToLocalRotation(const uint32_t* indices = nullptr,
 										const float* weights = nullptr,
 										uint32_t count = 0) const override;
 
-		__device__
+		__device__ __forceinline__
 		Matrix4x4		GetLocalToWorldAsMatrix() const override;
 };
 
@@ -75,7 +75,7 @@ class CPUTransformIdentity : public CPUTransformGroupI
 		size_t						UsedCPUMemory() const override;
 };
 
-__device__
+__device__ __forceinline__
 inline RayF GPUTransformIdentity::WorldToLocal(const RayF& r,
 											   const uint32_t*, const float*,
 											   uint32_t) const
@@ -83,7 +83,7 @@ inline RayF GPUTransformIdentity::WorldToLocal(const RayF& r,
 	return r;
 }
 
-__device__
+__device__ __forceinline__
 inline Vector3f GPUTransformIdentity::WorldToLocal(const Vector3f& vec, bool,
 												   const uint32_t*, const float*,
 												   uint32_t) const
@@ -91,13 +91,13 @@ inline Vector3f GPUTransformIdentity::WorldToLocal(const Vector3f& vec, bool,
 	return vec;
 }
 
-__device__
+__device__ __forceinline__
 inline AABB3f GPUTransformIdentity::WorldToLocal(const AABB3f& aabb) const
 {
 	return aabb;
 }
 
-__device__
+__device__ __forceinline__
 inline Vector3 GPUTransformIdentity::LocalToWorld(const Vector3& vector, bool,
 												  const uint32_t*, const float*,
 												  uint32_t) const
@@ -105,20 +105,20 @@ inline Vector3 GPUTransformIdentity::LocalToWorld(const Vector3& vector, bool,
 	return vector;
 }
 
-__device__
+__device__ __forceinline__
 inline AABB3f GPUTransformIdentity::LocalToWorld(const AABB3f& aabb) const
 {
 	return aabb;
 }
 
-__device__
+__device__ __forceinline__
 inline QuatF GPUTransformIdentity::ToLocalRotation(const uint32_t*, const float*,
 												   uint32_t) const
 {
 	return IdentityQuatF;
 }
 
-__device__
+__device__ __forceinline__
 inline Matrix4x4 GPUTransformIdentity::GetLocalToWorldAsMatrix() const
 {
 	return Indentity4x4;

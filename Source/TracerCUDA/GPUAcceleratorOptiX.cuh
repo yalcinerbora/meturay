@@ -11,6 +11,7 @@
 #include "GPUAcceleratorP.cuh"
 
 #include "GPUAcceleratorCommonKC.cuh"
+#include "GPUOptiXPTX.cuh"
 
 #include "OptixSystem.h"
 #include "OptixCheck.h"
@@ -19,6 +20,7 @@ class GPUAccGroupOptiXI
 {
     public:
         using OptixTraversableList = std::vector<std::vector<OptixTraversableHandle>>;
+        using RecordList = std::vector<Record<void, void>>;
 
     public:
         virtual                         ~GPUAccGroupOptiXI() = default;
@@ -29,10 +31,8 @@ class GPUAccGroupOptiXI
         virtual OptixTraversableList    GetOptixTraversables() const = 0;
         virtual TransformId*            GetDeviceTransformIdPtr() const = 0;
         virtual PrimTransformType       GetPrimitiveTransformType() const = 0;
-        // These are not type safe unfortunely
-        // Kinda easy fix but it is generic enough
-        virtual const void*             GetDevicePrimDataPtr() const = 0;
-        virtual const void*             GetDeviceLeafPtr() const = 0;
+        // This is not type safe unfortunely
+        virtual const RecordList&       GetRecords() const = 0;
 };
 
 template <class PGroup>
@@ -57,14 +57,14 @@ class GPUAccOptiXGroup final
         // CPU Memory
         const OptiXSystem*                  optixSystem;
 
-
-        std::vector<uint32_t> hTransformIndices;
-        //
+        // Per Accelerator Data
         std::vector<PrimitiveIdList>        primitiveIds;
         std::vector<PrimitiveRangeList>     primitiveRanges;
         std::vector<HitKeyList>             primitiveMaterialKeys;
         std::vector<Vector2ul>              accRanges;
         std::vector<bool>                   keyExpandOption;
+        // OptiX SBT Related
+        std::vector<Record<void, void>>     sbtRecords;
         //
         std::map<uint32_t, uint32_t>        idLookup;
         SurfaceAABBList                     surfaceAABBs;
@@ -136,14 +136,13 @@ class GPUAccOptiXGroup final
 
         // OptiX Implementation
         // Return the hit record list for each accelerator
-        DeviceMemory            GetHitRecords() const override;
+        DeviceMemory                GetHitRecords() const override;
         //
-        void                    SetOptiXSystem(const OptiXSystem*) override;
-        OptixTraversableList    GetOptixTraversables() const override;
-        TransformId*            GetDeviceTransformIdPtr() const override;
-        PrimTransformType       GetPrimitiveTransformType() const override;
-        const void*             GetDevicePrimDataPtr() const override;
-        const void*             GetDeviceLeafPtr() const override;
+        void                        SetOptiXSystem(const OptiXSystem*) override;
+        OptixTraversableList        GetOptixTraversables() const override;
+        TransformId*                GetDeviceTransformIdPtr() const override;
+        PrimTransformType           GetPrimitiveTransformType() const override;
+        const RecordList&           GetRecords() const override;
 };
 
 class GPUBaseAcceleratorOptiX final : public GPUBaseAcceleratorI

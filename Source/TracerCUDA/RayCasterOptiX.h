@@ -17,7 +17,7 @@ class RayCasterOptiX : public RayCasterI
         static constexpr const char* MISS_FUNC_NAME         = "__miss__OptiX";
         static constexpr const char* CHIT_FUNC_PREFIX       = "__closesthit__";
         static constexpr const char* AHIT_FUNC_PREFIX       = "__anyhit__";
-        static constexpr const char* INTERSECT_FUNC_PREFIX  = "__instersection__";
+        static constexpr const char* INTERSECT_FUNC_PREFIX  = "__intersection__";
 
         static constexpr int CH_INDEX = 0;
         static constexpr int AH_INDEX = 1;
@@ -59,7 +59,7 @@ class RayCasterOptiX : public RayCasterI
         std::vector<OptixGPUData>       optixGPUData;
         // GPU Memory
         RayMemory                       rayMemory;
-
+        const GPUTransformI**           dGlobalTransformArray;
         // Debug
         OptixTraversableHandle          gas;
 
@@ -72,7 +72,7 @@ class RayCasterOptiX : public RayCasterI
                                                   const std::string& baseFileName);
         TracerError                 CreatePipelines(const OptixPipelineCompileOptions& pOpts,
                                                     const OptixPipelineLinkOptions& lOpts);
-        TracerError                 CreateSBTs(const std::vector<std::pair<const void*, const void*>>& recordPointers,
+        TracerError                 CreateSBTs(const std::vector<Record<void,void>>& recordPointers,
                                                const std::vector<uint32_t>& programGroupIds,
                                                const TransformId* dAllAccelTransformIds);
         TracerError                 AllocateParams();
@@ -84,7 +84,7 @@ class RayCasterOptiX : public RayCasterI
                                                    const CudaSystem& system);
                                     RayCasterOptiX(const RayCasterOptiX&) = delete;
         RayCasterOptiX&             operator=(const RayCasterOptiX&) = delete;
-                                    ~RayCasterOptiX() = default;
+                                    ~RayCasterOptiX();
 
         // Interface
         TracerError                 ConstructAccelerators(const GPUTransformI** dTransforms,

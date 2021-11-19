@@ -69,6 +69,14 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         // Check alpha maps
         auto alphaMaps = s.AccessOptionalTextureNode(ALPHA_MAP_NAME, time);
         alphaMapInfo.insert(alphaMapInfo.end(), alphaMaps.cbegin(), alphaMaps.cend());
+        // Add alpha map info for each surface
+        int i = 0;
+        for(const auto& pair : s.Ids())
+        {
+            NodeId id = pair.first;
+            batchAlphaMapFlag.emplace(id, alphaMaps[i].first);
+            i++;
+        }
 
         // Check optional cull flag
         std::vector<bool> cullData;
@@ -468,6 +476,11 @@ AABB3 GPUPrimitiveTriangle::PrimitiveBatchAABB(uint32_t surfaceDataId) const
     return batchAABBs.at(surfaceDataId);
 }
 
+bool GPUPrimitiveTriangle::PrimitiveHasAlphaMap(uint32_t surfaceDataId) const
+{
+    return batchAlphaMapFlag.at(surfaceDataId);
+}
+
 uint64_t GPUPrimitiveTriangle::TotalPrimitiveCount() const
 {
     return totalPrimitiveCount;
@@ -476,11 +489,6 @@ uint64_t GPUPrimitiveTriangle::TotalPrimitiveCount() const
 uint64_t GPUPrimitiveTriangle::TotalDataCount() const
 {
     return totalDataCount;
-}
-
-PrimTransformType GPUPrimitiveTriangle::TransformType() const
-{
-    return PrimTransformType::CONSTANT_LOCAL_TRANSFORM;
 }
 
 bool GPUPrimitiveTriangle::CanGenerateData(const std::string& s) const

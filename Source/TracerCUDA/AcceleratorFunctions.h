@@ -19,36 +19,10 @@ class RandomGPU;
 // It points to another accelerator pair
 struct /*alignas(16)*/ BaseLeaf
 {
-    Vector3f aabbMin;
-    HitKey accKey;
-    Vector3f aabbMax;
+    Vector3f    aabbMin;
+    HitKey      accKey;
+    Vector3f    aabbMax;
 };
-
-// Accept hit function
-// Return two booleans first boolean tells control flow to terminate
-// intersection checking (when finding any hit is enough),
-// other boolean is returns that the hit is accepted or not.
-//
-// If hit is accepted Accept hit function should return
-// valid material key, primitiveId, and hit.
-//
-// Material Key is the index of material
-// Primitive id is the index of the individual primitive
-// Hit is the interpolting weights of the primitive
-//
-// PrimitiveData struct holds the array of the primitive data
-// (normal, position etc..)
-template <class HitData, class PrimitiveData, class LeafData>
-using AcceptHitFunction = HitResult(*)(// Output
-                                       HitKey&,
-                                       PrimitiveId&,
-                                       HitData&,
-                                       // I-O
-                                       RayReg& r,
-                                       // Input
-                                       const GPUTransformI&,
-                                       const LeafData& data,
-                                       const PrimitiveData& gPrimData);
 
 template <class PrimitiveData, class LeafData>
 using LeafGenFunction = LeafData(*)(const HitKey matId,
@@ -103,6 +77,30 @@ using PDFPosHitFunction = float(*)(// Inputs
                                    //
                                    const PrimitiveId primitiveId,
                                    const PrimitiveData& primData);
+
+template <class PrimitiveData, uint32_t PosCount>
+using AcquirePosFunction = void(*)(// Output
+                                   Vector3f positions[PosCount],
+                                   // Inputs
+                                   PrimitiveId primitiveId,
+                                   const PrimitiveData& primData);
+
+template <class HitData, class PrimitiveData, class LeafData>
+using IntersectsFunction = bool(*)(// Output
+                                   float& newT,
+                                   HitData& newHit,
+                                   // I-O
+                                   const RayReg& rayData,
+                                   // Input
+                                   const GPUTransformI& transform,
+                                   const LeafData& leaf,
+                                   const PrimitiveData& primData);
+
+template <class HitData, class PrimitiveData, class LeafData>
+using AlphaTestFunction = bool(*)(// Input
+                                  const HitData& potentialHit,
+                                  const LeafData& leaf,
+                                  const PrimitiveData& primData);
 
 // Common Functors for gpu AABB Generation
 template<class PrimitiveGroup>
@@ -166,25 +164,11 @@ struct AABBUnion
     }
 };
 
-// Default (Empty Implementations of above classes
-template <class HitData, class PrimitiveData, class LeafData>
-HitResult DefaultAcceptHit(// Output
-                           HitKey&,
-                           PrimitiveId&,
-                           HitData&,
-                           // I-O
-                           RayReg&,
-                           // Input
-                           const GPUTransformI&,
-                           const LeafData&,
-                           const PrimitiveData&)
-{
-    return HitResult{false, false};
-}
-
+// Defaults (Empty Implementations of above classes)
 // Custom bounding box generation function
 // For primitive
 template <class PrimitiveData>
+__device__ __forceinline__
 AABB3f DefaultAABBGen(const GPUTransformI&,
                       PrimitiveId,
                       const PrimitiveData&)
@@ -195,6 +179,7 @@ AABB3f DefaultAABBGen(const GPUTransformI&,
 
 // Surface area generation function for bound hierarcy generation
 template <class PrimitiveData>
+__device__ __forceinline__
 float DefaultAreaGen(PrimitiveId, const PrimitiveData&)
 {
     return 0.0f;
@@ -202,6 +187,7 @@ float DefaultAreaGen(PrimitiveId, const PrimitiveData&)
 
 // Center generation function for bound hierarcy generation
 template <class PrimitiveData>
+__device__ __forceinline__
 Vector3 DefaultCenterGen(const GPUTransformI&,
                          PrimitiveId, const PrimitiveData&)
 {
@@ -209,6 +195,7 @@ Vector3 DefaultCenterGen(const GPUTransformI&,
 }
 
 template <class PrimitiveData>
+__device__ __forceinline__
 Vector3 DefaultSamplePos(Vector3& normal, float& pdf,
                          PrimitiveId,
                          const PrimitiveData&,
@@ -221,6 +208,7 @@ Vector3 DefaultSamplePos(Vector3& normal, float& pdf,
 }
 
 template <class PrimitiveData>
+__device__ __forceinline__
 void DefaultPDFPosRef(// Outputs
                    Vector3f& normal,
                    float& pdf,
@@ -237,6 +225,7 @@ void DefaultPDFPosRef(// Outputs
 }
 
 template <class PrimitiveData>
+__device__ __forceinline__
 float DefaultPDFPosHit(// Inputs
                        const Vector3f& hitPosition,
                        const Vector3f& hitDirection,
@@ -247,3 +236,40 @@ float DefaultPDFPosHit(// Inputs
 {
     return 0.0f;
 }
+
+template <class PrimitiveData, uint32_t PosCount>
+__device__ __forceinline__
+void DefaultAcqPosition(// Output
+                         Vector3f positions[PosCount],
+                         // Inputs
+                         PrimitiveId primitiveId,
+                         const PrimitiveData& primData)
+{
+    positions[0] = Zero3f;
+}
+
+template <class HitData, class PrimitiveData, class LeafData>
+__device__ __forceinline__
+bool DefaultAlphaTest(const HitData& potentialHit,
+                           const LeafData& leaf,
+                           const PrimitiveData& primData)
+{
+    return true;
+}
+
+template <class HitData, class PrimitiveData, class LeafData>
+__device__ __forceinline__
+bool DefaultIntersects(// Output
+                       float& newT,
+                       HitData& newHit,
+                       // I-O
+                       const RayReg& rayData,
+                       // Input
+                       const GPUTransformI& transform,
+                       const LeafData& leaf,
+                       const PrimitiveData& primData)
+{
+    // Always no Intersection
+    return false;
+}
+

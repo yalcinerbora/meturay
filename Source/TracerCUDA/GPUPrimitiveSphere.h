@@ -120,47 +120,46 @@ struct SphrFunctions
         return 1.0f / SphrFunctions::Area(primitiveId, primData);
     }
 
-    // Sphere Hit Acceptance
+    template <class GPUTransform>
     __device__ __forceinline__
-    static HitResult Hit(// Output
-                         HitKey& newMat,
-                         PrimitiveId& newPrimitive,
-                         SphereHit& newHit,
-                         // I-O
-                         RayReg& rayData,
-                         // Input
-                         const GPUTransformI& transform,
-                         const DefaultLeaf& leaf,
-                         const SphereData& primData)
+    static bool IntersectsT(// Output
+                            float& newT,
+                            SphereHit& newHit,
+                            // I-O
+                            const RayReg& rayData,
+                            // Input
+                            const GPUTransform& transform,
+                            const DefaultLeaf& leaf,
+                            const SphereData& primData)
     {
         // Get Packed data and unpack
-        Vector4f data = primData.centerRadius[leaf.primitiveId];
+        const Vector4f& data = primData.centerRadius[leaf.primitiveId];
         Vector3f center = data;
         float radius = data[3];
 
         // Do Intersecton test on local space
         RayF r = transform.WorldToLocal(rayData.ray);
-        Vector3 pos; float newT;
-        bool intersects = r.IntersectsSphere(pos, newT, center, radius);
+        Vector3 pos; float t;
+        bool intersects = r.IntersectsSphere(pos, t, center, radius);
 
-        // Check if the hit is closer
-        bool closerHit = intersects && (newT < rayData.tMax);
-        if(closerHit)
+        if(intersects)
         {
-            rayData.tMax = newT;
-            newMat = leaf.matId;
-            newPrimitive = leaf.primitiveId;
-
-            // Gen Spherical Coords (R can be fetched using primitiveId)
+            newT = t;
+            // Gen Spherical Coords (R can be fetched using primitiveId later)
             // Clamp acos input for singularity
             Vector3 relativeCoord = pos - center;
             float tethaCos = HybridFuncs::Clamp(relativeCoord[2] / radius, -1.0f, 1.0f);
             float tetha = acos(tethaCos);
             float phi = atan2(relativeCoord[1], relativeCoord[0]);
-            newHit = Vector2(tetha, phi);
+            newHit = SphereHit(tetha, phi);
         }
-        return HitResult{false, closerHit};
+        return intersects;
     }
+
+    static constexpr auto& Intersects = IntersectsT<GPUTransformI>;
+
+    // TODO: Implement Alpha test for Spheres
+    static constexpr auto& AlphaTest = DefaultAlphaTest<SphereHit, SphereData, DefaultLeaf>;
 
     __device__ __forceinline__
     static AABB3f AABB(const GPUTransformI& transform,
@@ -195,6 +194,16 @@ struct SphrFunctions
         Vector3f center = data;
 
         return center;
+    }
+
+    __device__ __forceinline__
+    static void AcquirePositions(// Output
+                                 Vector3f positions[1],
+                                 // Inputs
+                                 PrimitiveId primitiveId,
+                                 const SphereData& primData)
+    {
+        positions[0] = primData.centerRadius[primitiveId];
     }
 
     static constexpr auto& Leaf = GenerateDefaultLeaf<SphereData>;
@@ -279,8 +288,8 @@ struct SphereSurfaceGenerator
 
 class GPUPrimitiveSphere final
     : public GPUPrimitiveGroup<SphereHit, SphereData, DefaultLeaf,
-                               SphereSurfaceGenerator,
-                               SphrFunctions>
+                               SphereSurfaceGenerator, SphrFunctions,
+                               PrimTransformType::CONSTANT_LOCAL_TRANSFORM>
 {
     public:
         static constexpr const char*            TypeName() { return "Sphere"; }
@@ -315,14 +324,13 @@ class GPUPrimitiveSphere final
         // Access primitive range from Id
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
+        bool                                    PrimitiveHasAlphaMap(uint32_t surfaceDataId) const override;
         // Query
         // How many primitives are available on this class
         // This includes the indexed primitive count
         uint64_t                                TotalPrimitiveCount() const override;
         // Total primitive count but not indexed
         uint64_t                                TotalDataCount() const override;
-        // Primitive Transform Info for accelerator
-        PrimTransformType                       TransformType() const override;
 
         // Error check
         // Queries in order to check if this primitive group supports certain primitive data

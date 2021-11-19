@@ -166,6 +166,12 @@ AABB3 GPUPrimitiveSphere::PrimitiveBatchAABB(uint32_t surfaceDataId) const
     return batchAABBs.at(surfaceDataId);
 }
 
+bool GPUPrimitiveSphere::PrimitiveHasAlphaMap(uint32_t surfaceDataId) const
+{
+    // TODO: add alpha map support for sphere aswell
+    return false;
+}
+
 uint64_t GPUPrimitiveSphere::TotalPrimitiveCount() const
 {
     return totalPrimitiveCount;
@@ -174,11 +180,6 @@ uint64_t GPUPrimitiveSphere::TotalPrimitiveCount() const
 uint64_t GPUPrimitiveSphere::TotalDataCount() const
 {
     return totalPrimitiveCount;
-}
-
-PrimTransformType GPUPrimitiveSphere::TransformType() const
-{
-    return PrimTransformType::CONSTANT_LOCAL_TRANSFORM;
 }
 
 bool GPUPrimitiveSphere::CanGenerateData(const std::string& s) const
