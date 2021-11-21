@@ -33,10 +33,12 @@ static void KCCopyPrimPositions(Vector3f* gPositions,
         {
             gPositionsLocal[i] = positions[i];
         }
-        printf("Writing (%f, %f, %f), (%f, %f, %f), (%f, %f, %f)\n",
-               gPositionsLocal[0][0], gPositionsLocal[0][1], gPositionsLocal[0][2],
-               gPositionsLocal[1][0], gPositionsLocal[1][1], gPositionsLocal[1][2],
-               gPositionsLocal[2][0], gPositionsLocal[2][1], gPositionsLocal[2][2]);
+        printf("%u=>Writing (%f, %f, %f)\n"
+               "%u=>Writing (%f, %f, %f)\n"
+               "%u=>Writing (%f, %f, %f)\n",
+               POS_PER_PRIM * writeIndex, gPositionsLocal[0][0], gPositionsLocal[0][1], gPositionsLocal[0][2],
+               POS_PER_PRIM * writeIndex + 1, gPositionsLocal[1][0], gPositionsLocal[1][1], gPositionsLocal[1][2],
+               POS_PER_PRIM * writeIndex + 2, gPositionsLocal[2][0], gPositionsLocal[2][1], gPositionsLocal[2][2]);
     }
 }
 
@@ -358,13 +360,18 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
                                dPositions + offset,
                                primData,
                                range);
+
+            METU_LOG("======={}={}==========", subRangePrimCount, offset);
             offset += subRangePrimCount;
+
         }
         assert(offset == surfacePrimCount);
 
         // Generate build input now
         offset = 0;
         uint32_t buildInputCount = 0;
+        std::array<uint32_t, SceneConstants::MaxPrimitivePerSurface> geometryFlags;
+        std::array<CUdeviceptr, SceneConstants::MaxPrimitivePerSurface> vertexPtrs;
         std::array<OptixBuildInput, SceneConstants::MaxPrimitivePerSurface> buildInputs;
         for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
         {
@@ -374,23 +381,26 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
             buildInputCount++;
 
             // Gen Vertex Ptr
-            CUdeviceptr vertices = AsOptixPtr(dPositions + offset);
+            vertexPtrs[i] = AsOptixPtr(dPositions + offset);
             size_t localPrimCount = range[1] - range[0];
-            offset += localPrimCount;
             size_t vertexCount = GPUPrimitiveTriangle::PositionPerPrim * localPrimCount;
+            METU_LOG("VC: {}, Offset {}", vertexCount, offset);
+            offset += vertexCount;
+            //offset += localPrimCount;
 
             // Enable/Disable Any hit if batch has alpha map
-            uint32_t geometryFlags = OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT;
+            geometryFlags[i] = OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT;
             if(primitiveGroup.PrimitiveHasAlphaMap(primIdList[i]))
-                geometryFlags = OPTIX_GEOMETRY_FLAG_NONE;
+                geometryFlags[i] = OPTIX_GEOMETRY_FLAG_NONE;
 
             OptixBuildInput& buildInput = buildInputs[i];
             buildInput = {};
             buildInput.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
             // Vertex
+            static_assert(sizeof(float3) == sizeof(Vector3f));
             buildInput.triangleArray.vertexFormat = OPTIX_VERTEX_FORMAT_FLOAT3;
             buildInput.triangleArray.numVertices = static_cast<uint32_t>(vertexCount);
-            buildInput.triangleArray.vertexBuffers = &vertices;
+            buildInput.triangleArray.vertexBuffers = vertexPtrs.data() + i;
             buildInput.triangleArray.vertexStrideInBytes = sizeof(Vector3f);
             // Index (we dont use indices)
             //buildInput.triangleArray.indexFormat = OPTIX_INDICES_FORMAT_NONE;
@@ -399,12 +409,14 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
             //buildInput.triangleArray.indexStrideInBytes = 0;
             //buildInput.triangleArray.primitiveIndexOffset = 0;
             // SBT
-            buildInput.triangleArray.flags = &geometryFlags;
+            buildInput.triangleArray.flags = geometryFlags.data() + i;
             buildInput.triangleArray.numSbtRecords = 1;
             buildInput.triangleArray.sbtIndexOffsetBuffer = 0;
             buildInput.triangleArray.sbtIndexOffsetSizeInBytes = sizeof(uint32_t);
             buildInput.triangleArray.sbtIndexOffsetStrideInBytes = sizeof(uint32_t);
         }
+        assert(offset == (surfacePrimCount * GPUPrimitiveTriangle::PositionPerPrim));
+        METU_LOG("Offset {}", offset);
 
         OptixAccelBuildOptions accelOptions = {};
         accelOptions.buildFlags = OPTIX_BUILD_FLAG_ALLOW_COMPACTION;

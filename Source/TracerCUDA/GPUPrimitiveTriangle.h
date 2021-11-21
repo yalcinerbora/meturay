@@ -351,6 +351,8 @@ struct TriFunctions
         uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
         uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
 
+        printf("pid %llu, %llu, %llu, %llu\n",
+               primitiveId, index0, index1, index2);
         positions[0] = primData.positions[index0];
         positions[1] = primData.positions[index1];
         positions[2] = primData.positions[index2];

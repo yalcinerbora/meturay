@@ -39,10 +39,10 @@ class MockNode
         static constexpr int            SAMPLE_COUNT = 1;
 
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(1, 1);
-        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(16, 9);
+        static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(16, 9);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(32, 18);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(32, 32);
-        static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(320, 180);
+        //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(320, 180);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(640, 360);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(944, 531);
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(512, 512);

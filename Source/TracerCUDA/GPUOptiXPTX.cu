@@ -142,7 +142,8 @@ __device__ void KCClosestHit()
     // Fetch the workKey, transformId, primitiveId from table
     PrimitiveId pId = r->gLeafs[leafId].primitiveId;
     TransformId tId = r->transformId;
-    HitKey key = r->gLeafs[leafId].matId;
+    //HitKey key = r->gLeafs[leafId].matId;
+    HitKey key = HitKey::CombinedKey(1, 1);
 
     // Write to the global memory
     params.gPrimitiveIds[rayId] = pId;
