@@ -39,8 +39,8 @@ class Flags
         Flags&          operator|(Enum);
         Flags&          operator|=(Enum);
 
-        template<class Enum, int S>
-        friend Flags    operator|(Enum, Enum);
+        template<class E, int Sz>
+        friend Flags    operator|(E, E);
 };
 
 template <class Enum, int S = static_cast<int>(Enum::END)>

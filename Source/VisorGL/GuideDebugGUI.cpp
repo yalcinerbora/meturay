@@ -113,9 +113,9 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
     Vector2ui size;
     PixelFormat pf;
     std::vector<Byte> wpByte;
-    ImageIOError e = ImageIOInstance().ReadImage(wpByte,
-                                                 pf, size,
-                                                 posFileName);
+    ImageIOError e = ImageIOInstance()->ReadImage(wpByte,
+                                                  pf, size,
+                                                  posFileName);
 
     if(e != ImageIOError::OK) throw ImageIOException(e);
     else if(pf != PixelFormat::RGB_FLOAT)

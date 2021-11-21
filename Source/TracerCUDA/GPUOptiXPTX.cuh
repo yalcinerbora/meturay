@@ -76,5 +76,5 @@ struct __align__(OPTIX_SBT_RECORD_ALIGNMENT) EmptyRecord
 //}
 
 // ExternCWrapper Macro
-#define WRAP_FUCTION(NAME, FUNCTION) \
+#define WRAP_FUCTION(NAME, FUNCTION)
     extern "C" __global__ void NAME(){FUNCTION();}

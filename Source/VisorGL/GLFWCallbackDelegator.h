@@ -1,7 +1,7 @@
 #pragma once
 
 #include <map>
-#include <gl/glew.h>
+#include <GL/glew.h>
 #include <glfw/glfw3.h>
 
 #include "RayLib/VisorInputStructs.h"
@@ -40,14 +40,14 @@ class GLFWCallbackDelegator
         // Constructors
                                             GLFWCallbackDelegator();
     protected:
-    public:            
+    public:
         // Destructor
                                             GLFWCallbackDelegator(const GLFWCallbackDelegator&) = delete;
                                             GLFWCallbackDelegator(GLFWCallbackDelegator&&) = delete;
         GLFWCallbackDelegator&              operator=(const GLFWCallbackDelegator&) = delete;
         GLFWCallbackDelegator&              operator=(GLFWCallbackDelegator&&) = delete;
                                             ~GLFWCallbackDelegator();
-                                            
+
 
         void                                AttachWindow(GLFWwindow* glfwWindow, WindowGLI* window);
         void                                DetachWindow(GLFWwindow* window);

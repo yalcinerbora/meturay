@@ -159,7 +159,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
                            pixels.data());
 
             ImageIOError e = ImageIOError::OK;
-            const ImageIOI& io = ImageIOInstance();
+            const ImageIOI& io = *ImageIOInstance();
             if((e = io.WriteImage(pixels,
                                   Vector2ui(imageSize[0], imageSize[1]),
                                   PixelFormat::RGB8_UNORM, ImageType::PNG,
@@ -180,7 +180,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
                           pixels.data());
 
             ImageIOError e = ImageIOError::OK;
-            const ImageIOI& io = ImageIOInstance();
+            const ImageIOI& io = *ImageIOInstance();
             if((e = io.WriteImage(pixels,
                                   Vector2ui(imageSize[0], imageSize[1]),
                                   PixelFormat::RGB_FLOAT, ImageType::EXR,

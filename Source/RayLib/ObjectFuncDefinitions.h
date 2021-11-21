@@ -59,5 +59,5 @@ namespace TypeGenWrappers
     }
 
     template <class T>
-    void EmptyDestruct(T* t) {}
+    void EmptyDestruct(T*) {}
 }

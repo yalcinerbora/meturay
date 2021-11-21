@@ -41,7 +41,7 @@ Utility header for header only cuda vector and cpu vector implementations
     #define HYBRID_INLINE inline
     typedef int cudaError_t;
 
-    inline static constexpr void GPUAssert(cudaError_t code, const char *file, int line) {}
+    inline static constexpr void GPUAssert(cudaError_t, const char *, int) {}
 #endif
 
 #ifdef __CUDA_ARCH__
@@ -52,14 +52,14 @@ Utility header for header only cuda vector and cpu vector implementations
     #define UNROLL_LOOP_COUNT(count)
 #endif
 
-template<class... Args>
-__device__
-static inline void KERNEL_DEBUG_LOG(const char* const string, Args... args)
-{
-    #if defined(__CUDA_ARCH__) && defined(METU_DEBUG)
+#if defined(__CUDA_ARCH__) && defined(METU_DEBUG)
+    template<class... Args>
+    __device__
+    static inline void KERNEL_DEBUG_LOG(const char* const string, Args... args)
+    {
         printf(string, args...);
-    #endif
-}
+    }
+#endif
 
 #ifdef METU_DEBUG
     constexpr bool METU_DEBUG_BOOL = true;

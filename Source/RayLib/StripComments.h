@@ -20,5 +20,5 @@ inline std::stringstream Utility::StripComments(std::istream& source)
     modified = std::regex_replace(modified, commentli, "\n");
 
     std::stringstream result(modified);
-    return std::move(result);
+    return result;
 }

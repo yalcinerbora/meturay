@@ -6,6 +6,8 @@
 
 #include "VisorGL.h"
 
+#include <sstream>
+
 GLFWCallbackDelegator& GLFWCallbackDelegator::Instance()
 {
     static GLFWCallbackDelegator ins;
@@ -181,7 +183,7 @@ void GLFWCallbackDelegator::OGLDebugLog(GLenum type,
                                         GLuint id,
                                         GLenum severity,
                                         const char* message)
-{   
+{
     // Dont Show Others For Now
     if(type == GL_DEBUG_TYPE_OTHER ||    //
         id == 131186 ||                  // Buffer Copy warning omit
@@ -259,7 +261,7 @@ void GLFWCallbackDelegator::WindowFBGLFW(GLFWwindow* w, int width, int height)
     {
         loc->second->SetFBSizeFromInput(Vector2i(width, height));
         loc->second->InputInterface()->WindowFBChanged(width, height);
-    }        
+    }
 }
 
 void GLFWCallbackDelegator::WindowSizeGLFW(GLFWwindow* w, int width, int height)
@@ -267,7 +269,7 @@ void GLFWCallbackDelegator::WindowSizeGLFW(GLFWwindow* w, int width, int height)
     const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
     if(loc != inputMap.cend() && loc->second->InputInterface())
-    {        
+    {
         loc->second->SetWindowSizeFromInput(Vector2i(width, height));
         loc->second->InputInterface()->WindowSizeChanged(width, height);
     }

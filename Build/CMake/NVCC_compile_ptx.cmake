@@ -47,9 +47,11 @@ FUNCTION(NVCC_COMPILE_PTX)
         "--relocatable-device-code=true"
         "-I${OPTIX_INCLUDE_DIR}"
         "-I${MRAY_SOURCE_DIRECTORY}"
+        #"-I${MRAY_SOURCE_DIRECTORY}/${NVCC_COMPILE_PTX_MAIN_TARGET}"
         "-I${MRAY_LIB_INCLUDE_DIRECTORY}"
         # OptiX Documentation says that -G'ed kernels may fail
         # So -lineinfo is used on both configurations
+        --compiler-bindir=${CMAKE_C_COMPILER}
         $<$<CONFIG:Debug>:-G>
         $<$<CONFIG:Release>:-lineinfo>
         #-lineinfo

@@ -53,7 +53,7 @@ if(e != ErrType::OK) \
     //#define MRAY_DLL_EXPORT __attribute__((dllexport))
     #define MRAY_DLL_IMPORT
     #define MRAY_DLL_EXPORT
-
+    #include <unistd.h>
     static inline bool EnableVTMode()
     {
         return true;

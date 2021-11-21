@@ -10,7 +10,7 @@
 namespace TypeGenWrappers
 {
     template <class Base, class Loader>
-    Base* InNodeSurfaceLoaderConstruct(const std::string& scenePath,
+    Base* InNodeSurfaceLoaderConstruct(const std::string&,
                                        const SceneNodeI& properties,
                                        double time)
     {

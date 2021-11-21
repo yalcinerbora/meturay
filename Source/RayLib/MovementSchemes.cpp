@@ -7,11 +7,11 @@ MovementSchemeFPS::MovementSchemeFPS(double sensitivity,
                                      double moveRatio,
                                      double moveRatioModifier)
     : Sensitivity(sensitivity)
-    , MoveRatio(moveRatio)
-    , MoveRatioModifier(moveRatioModifier)
     , prevMouseX(0.0)
     , prevMouseY(0.0)
     , mouseToggle(false)
+    , MoveRatio(moveRatio)
+    , MoveRatioModifier(moveRatioModifier)
     , currentMovementRatio(MoveRatio)
 {}
 
@@ -115,7 +115,7 @@ bool MovementSchemeFPS::MouseMovementAction(VisorTransform& transform,
 }
 
 bool MovementSchemeFPS::MouseScrollAction(VisorTransform&,
-                                          double x, double y)
+                                          double, double)
 {
     return false;
 }

@@ -45,18 +45,18 @@ class MovementSchemeMaya final : public MovementSchemeI
         static constexpr double     DefaultZoomPercentage       = 0.1;
         static constexpr double     DefaultTranslateModifier    = 0.01;
     private:
-        double                      prevMouseX;
-        double                      prevMouseY;
+        //double                      prevMouseX;
+        //double                      prevMouseY;
 
-        bool                        mouseToggle;
+        //bool                        mouseToggle;
 
         // Camera Movement Constants
         const double                Sensitivity;
         const double                ZoomPercentage;
         const double                TranslateModifier;
 
-        bool						    moveMode;
-        bool						    translateMode;
+        bool						moveMode;
+        bool						translateMode;
         double						mouseX;
         double						mouseY;
 

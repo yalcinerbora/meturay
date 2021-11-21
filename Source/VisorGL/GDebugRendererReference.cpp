@@ -79,15 +79,15 @@ void GDebugRendererRef::LoadPaths(const Vector2i& resolution,
         referencePaths.push_back(i.second);
     }
 
-    assert((resolution[0] * resolution[1]) == referencePaths.size());
+    assert(static_cast<uint32_t>(resolution[0] * resolution[1]) == referencePaths.size());
 }
 
 GDebugRendererRef::GDebugRendererRef(const nlohmann::json& config,
                                      const std::string& configPath,
                                      const TextureGL& gradTex)
-    : gradientTex(gradTex)
-    , compReduction(ShaderType::COMPUTE, u8"Shaders/TextureMaxReduction.comp")
+    : compReduction(ShaderType::COMPUTE, u8"Shaders/TextureMaxReduction.comp")
     , compRefRender(ShaderType::COMPUTE, u8"Shaders/PGReferenceRender.comp")
+    , gradientTex(gradTex)
     , linearSampler(SamplerGLEdgeResolveType::CLAMP,
                     SamplerGLInterpType::LINEAR)
 {
@@ -98,7 +98,7 @@ GDebugRendererRef::GDebugRendererRef(const nlohmann::json& config,
     LoadPaths(resolution, pathRegex);
 }
 
-void GDebugRendererRef::RenderSpatial(TextureGL& tex) const
+void GDebugRendererRef::RenderSpatial(TextureGL&) const
 {
     // TODO: implement
 }
@@ -120,7 +120,7 @@ void GDebugRendererRef::UpdateDirectional(bool doLogScale,
     Vector2ui dim;
     PixelFormat pf;
     std::vector<Byte> pixels;
-    ImageIOInstance().ReadImage(pixels, pf, dim, file);
+    ImageIOInstance()->ReadImage(pixels, pf, dim, file);
 
 
     TextureGL lumTexture = TextureGL(dim, pf);
@@ -135,10 +135,10 @@ void GDebugRendererRef::UpdateDirectional(bool doLogScale,
            pf == PixelFormat::R_HALF);
     size_t linearSize = dim[0] * dim[1];
     currentValues.resize(linearSize);
-    ImageIOError e = ImageIOInstance().ConvertPixels(reinterpret_cast<Byte*>(currentValues.data()),
-                                                     PixelFormat::R_FLOAT,
-                                                     pixels.data(), pf,
-                                                     dim);
+    ImageIOError e = ImageIOInstance()->ConvertPixels(reinterpret_cast<Byte*>(currentValues.data()),
+                                                      PixelFormat::R_FLOAT,
+                                                      pixels.data(), pf,
+                                                      dim);
     if(e != ImageIOError::OK)
     {
         METU_ERROR_LOG(static_cast<std::string>(e));

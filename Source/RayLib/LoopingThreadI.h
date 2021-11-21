@@ -71,8 +71,8 @@ inline void LoopingThreadI::THRDEntry()
 }
 
 inline LoopingThreadI::LoopingThreadI()
-    : pauseSignal(false)
-    , stopSignal(false)
+    : stopSignal(false)
+    , pauseSignal(false)
 {}
 
 inline LoopingThreadI::~LoopingThreadI()

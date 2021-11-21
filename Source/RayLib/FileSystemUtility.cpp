@@ -2,6 +2,7 @@
 #include "System.h"
 
 #include <filesystem>
+#include <cassert>
 
 std::string Utility::PathFile(const std::string& path)
 {
@@ -82,12 +83,12 @@ std::string Utility::CurrentExecPath()
         GetModuleFileName(NULL, result.data(),
                           static_cast<DWORD>(result.size()));
         return std::filesystem::path(result).parent_path().string();
-
-    #elif METURAY_LINUX
-
-        std::string result(MAX_PATH_LENGTH, '\0');
-        int result = readlink("/proc/self/exe", result.c_str(), MAX_PATH_LENGTH);
-        assert(result != -1);
+    #endif
+    #ifdef METURAY_LINUX
+        char result[MAX_PATH_LENGTH + 1];
+        int error = readlink("/proc/self/exe", result, MAX_PATH_LENGTH);
+        assert(error != -1);
+        result[error + 1] = '\0';
         return result;
     #endif
 }

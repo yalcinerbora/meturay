@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gl/glew.h>
+#include <GL/glew.h>
 #include <vector>
 
 #include "RayLib/Vector.h"
@@ -110,7 +110,7 @@ inline SamplerGL::SamplerGL(SamplerGLEdgeResolveType edgeResolve,
     {
         glSamplerParameteri(samplerId, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glSamplerParameteri(samplerId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    }        
+    }
     else if(interp == SamplerGLInterpType::LINEAR)
     {
         glSamplerParameteri(samplerId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -129,7 +129,7 @@ inline SamplerGL::SamplerGL(SamplerGLEdgeResolveType edgeResolve,
         glSamplerParameteri(samplerId, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glSamplerParameteri(samplerId, GL_TEXTURE_WRAP_R, GL_REPEAT);
     }
-    
+
 }
 
 inline SamplerGL::~SamplerGL()

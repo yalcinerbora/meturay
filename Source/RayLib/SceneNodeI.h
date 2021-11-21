@@ -160,8 +160,8 @@ class SceneNodeI
 using SceneNodePtr = std::unique_ptr<SceneNodeI>;
 
 inline SceneNodeI::SceneNodeI(NodeIndex index, bool isMultiNode)
-    : nodeIndex(index)
-    , isMultiNode(isMultiNode)
+    : isMultiNode(isMultiNode)
+    , nodeIndex(index)
 {}
 
 inline uint32_t SceneNodeI::Index() const

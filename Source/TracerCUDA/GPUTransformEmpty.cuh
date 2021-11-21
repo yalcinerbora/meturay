@@ -48,50 +48,50 @@ class GPUTransformEmpty
 };
 
 __device__ __forceinline__
-inline RayF GPUTransformEmpty::WorldToLocal(const RayF& r,
-											const uint32_t*, const float*,
-											uint32_t) const
+RayF GPUTransformEmpty::WorldToLocal(const RayF& r,
+									 const uint32_t*, const float*,
+									 uint32_t) const
 {
 	return r;
 }
 
 __device__ __forceinline__
-inline Vector3f GPUTransformEmpty::WorldToLocal(const Vector3f& vec, bool,
-												const uint32_t*, const float*,
-												uint32_t) const
+Vector3f GPUTransformEmpty::WorldToLocal(const Vector3f& vec, bool,
+										 const uint32_t*, const float*,
+										 uint32_t) const
 {
 	return vec;
 }
 
 __device__ __forceinline__
-inline AABB3f GPUTransformEmpty::WorldToLocal(const AABB3f& aabb) const
+AABB3f GPUTransformEmpty::WorldToLocal(const AABB3f& aabb) const
 {
 	return aabb;
 }
 
 __device__ __forceinline__
-inline Vector3 GPUTransformEmpty::LocalToWorld(const Vector3& vector, bool,
-											   const uint32_t*, const float*,
-											   uint32_t) const
+Vector3 GPUTransformEmpty::LocalToWorld(const Vector3& vector, bool,
+										const uint32_t*, const float*,
+										uint32_t) const
 {
 	return vector;
 }
 
 __device__ __forceinline__
-inline AABB3f GPUTransformEmpty::LocalToWorld(const AABB3f& aabb) const
+AABB3f GPUTransformEmpty::LocalToWorld(const AABB3f& aabb) const
 {
 	return aabb;
 }
 
 __device__ __forceinline__
-inline QuatF GPUTransformEmpty::ToLocalRotation(const uint32_t*, const float*,
-												uint32_t) const
+QuatF GPUTransformEmpty::ToLocalRotation(const uint32_t*, const float*,
+										 uint32_t) const
 {
 	return IdentityQuatF;
 }
 
 __device__ __forceinline__
-inline Matrix4x4 GPUTransformEmpty::GetLocalToWorldAsMatrix() const
+Matrix4x4 GPUTransformEmpty::GetLocalToWorldAsMatrix() const
 {
 	return Indentity4x4;
 }

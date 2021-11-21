@@ -74,7 +74,6 @@ std::vector<TextureStruct> SceneIO::LoadTexture(const nlohmann::json& jsn)
     if(id.is_array())
     {
         // Pre-check singed data is avail
-        auto loc = jsn.cend();
         bool hasSignedNode = (jsn.find(TEXTURE_SIGNED) != jsn.cend());
 
         size_t texCount = id.size();
@@ -86,7 +85,7 @@ std::vector<TextureStruct> SceneIO::LoadTexture(const nlohmann::json& jsn)
             // Optional Signed data flag
             if(hasSignedNode)
                 tex.isSigned = jsn[TEXTURE_SIGNED][i];
-            else 
+            else
                 tex.isSigned = false;
 
             result.push_back(tex);
@@ -105,7 +104,7 @@ std::vector<TextureStruct> SceneIO::LoadTexture(const nlohmann::json& jsn)
 
         result.push_back(singleTex);
     }
-    return std::move(result);
+    return result;
 }
 
 SurfaceStruct SceneIO::LoadSurface(const nlohmann::json& jsn)
@@ -195,7 +194,7 @@ LightSurfaceStruct SceneIO::LoadLightSurface(uint32_t baseMediumId,
     // Light Id
     if((i = jsnNode.find(LIGHT)) != jsnNode.end())
     {
-        s.lightId = *i;        
+        s.lightId = *i;
     }
     else throw SceneException(SceneError::TYPE_MISMATCH);
 
@@ -203,7 +202,7 @@ LightSurfaceStruct SceneIO::LoadLightSurface(uint32_t baseMediumId,
     if(auto loc = lightIndexLookup.find(s.lightId); loc != lightIndexLookup.end())
     {
         const NodeIndex nIndex = loc->second.first;
-        const InnerIndex iIndex = loc->second.second;
+        //const InnerIndex iIndex = loc->second.second;
 
         const auto& jsnNode = jsnLights[nIndex];
         std::string lightTypeName = jsnNode[NodeNames::TYPE];
@@ -218,7 +217,7 @@ LightSurfaceStruct SceneIO::LoadLightSurface(uint32_t baseMediumId,
         {
             s.acceleratorId = std::numeric_limits<uint32_t>::max();
             s.primId = std::numeric_limits<uint32_t>::max();
-        }        
+        }
     }
     else throw SceneException(SceneError::LIGHT_ID_NOT_FOUND);
 
@@ -250,7 +249,7 @@ CameraSurfaceStruct SceneIO::LoadCameraSurface(uint32_t baseMediumId,
 }
 
 NodeTextureStruct SceneIO::LoadNodeTextureStruct(const nlohmann::json& node,
-                                                 double time)
+                                                 double)
 {
     NodeTextureStruct s;
     s.texId = LoadNumber<uint32_t>(node[TEXTURE_NAME]);

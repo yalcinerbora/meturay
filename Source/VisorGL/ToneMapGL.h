@@ -80,7 +80,7 @@ inline ToneMapGL::ToneMapGL(bool isOGLContextActive)
     compToneMap = ShaderGL(ShaderType::COMPUTE, u8"Shaders/TonemapAndGamma.comp");
     compAvgDivisor = ShaderGL(ShaderType::COMPUTE, u8"Shaders/AvgDivisor.comp");
 
-    size_t lumBufferSizeDebug = sizeof(LumBufferGL) + sizeof(float) * 64;
+    //size_t lumBufferSizeDebug = sizeof(LumBufferGL) + sizeof(float) * 64;
     // Allocate Buffers
     glGenBuffers(1, &luminanceBuffer);
     glBindBuffer(GL_COPY_WRITE_BUFFER, luminanceBuffer);

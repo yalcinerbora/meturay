@@ -50,10 +50,10 @@ GuideDebugGL::GuideDebugGL(const Vector2i& ws,
     , viewportSize(ws)
     , glfwWindow(nullptr)
     , dummyVOpts{}
-    , configFile(guideDebugFile)
     , configPath(std::filesystem::path(guideDebugFile).parent_path().string())
-    , gradientTexture(nullptr)
+    , configFile(guideDebugFile)
     , input(nullptr)
+    , gradientTexture(nullptr)
 {
 
     // Initially Create Generator Map

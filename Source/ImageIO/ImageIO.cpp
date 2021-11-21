@@ -113,6 +113,7 @@ ImageIOError PixelFormatFromEXR(Imf::FrameBuffer& fb,
             if(channelCount == 2) { pf = PixelFormat::RG_FLOAT; break; }
             if(channelCount == 3) { pf = PixelFormat::RGB_FLOAT; break; }
             if(channelCount == 4) { pf = PixelFormat::RGBA_FLOAT; break; }
+        default: break;
     }
 
     // TODO: Allow reading half fromat
@@ -136,7 +137,7 @@ ImageIOError PixelFormatFromEXR(Imf::FrameBuffer& fb,
     uint32_t i = 0;
     for(auto c = channels.begin(); c != channels.end(); c++)
     {
-        const Imf::Channel& channel = c.channel();
+        //const Imf::Channel& channel = c.channel();
 
         // Force order to RGB (i.e. BGR is provided etc.)
         uint32_t channelIndex;
@@ -424,7 +425,7 @@ ImageIOError ImageIO::ReadImage_FreeImage(FreeImgRAII& freeImg,
     uint32_t bpp = FreeImage_GetBPP(freeImg);
     uint32_t w = FreeImage_GetWidth(freeImg);
     uint32_t h = FreeImage_GetHeight(freeImg);
-    uint32_t pitch = FreeImage_GetPitch(freeImg);
+    //uint32_t pitch = FreeImage_GetPitch(freeImg);
     dimension = Vector2ui(w, h);
 
     FREE_IMAGE_TYPE imgType = FreeImage_GetImageType(freeImg);
@@ -808,6 +809,7 @@ ImageIOError ImageIO::WriteBitmap(const Byte* bits,
         //color.rgbBlue = static_cast<BYTE>(bit) * 255;
 
         bool pixLoaded = FreeImage_SetPixelColor(fImg, i, j, &color);
+        if(!pixLoaded) return ImageIOError::WRITE_INTERNAL_ERROR;
     }
 
     FREE_IMAGE_FORMAT fif;
@@ -815,7 +817,7 @@ ImageIOError ImageIO::WriteBitmap(const Byte* bits,
         return e;
 
     bool result = FreeImage_Save(fif, fImg, fileName.c_str());
-    if(!result) ImageIOError::WRITE_INTERNAL_ERROR;
+    if(!result) return ImageIOError::WRITE_INTERNAL_ERROR;
     return ImageIOError::OK;
 }
 

@@ -391,8 +391,8 @@ void TransformGen::Space(Quaternion<T>& q,
 
     // Coord Systems should match
     // both should be right-handed coord system
-    Vector3 crs = Cross(x, y);
-    Vector3 diff = crs - z;
+    //Vector3 crs = Cross(x, y);
+    //Vector3 diff = crs - z;
     assert((Cross(x, y) - z).Abs() <= Vector3(0.5));
 
     T t;

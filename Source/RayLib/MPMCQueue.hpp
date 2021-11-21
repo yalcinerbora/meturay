@@ -20,8 +20,8 @@ void MPMCQueue<T>::Increment(size_t& i)
 template<class T>
 MPMCQueue<T>::MPMCQueue(size_t bufferSize)
     : data(bufferSize)
-    , dequeueLoc(0)
     , enqueueLoc(1)
+    , dequeueLoc(0)
     , terminate(false)
 {
     assert(bufferSize > 1);

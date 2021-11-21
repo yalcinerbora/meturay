@@ -44,7 +44,7 @@ namespace ConfigParser
     {
         static constexpr const char* EVENT_BUFFER_SIZE_NAME = "eventBufferSize";
         static constexpr const char* STEREO_ON_NAME = "stereoRendering";
-        static constexpr const char* VSYNC_ON_NAME = "vSync";
+        //static constexpr const char* VSYNC_ON_NAME = "vSync";
         static constexpr const char* W_PIXEL_FORMAT_NAME = "windowPixelFormat";
         static constexpr const char* WINDOW_SIZE_NAME = "windowSize";
         static constexpr const char* FPS_LIMIT_NAME = "fpsLimit";

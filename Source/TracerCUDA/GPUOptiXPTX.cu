@@ -1,4 +1,4 @@
-#include  "GPUOptixPTX.cuh"
+#include  "GPUOptiXPTX.cuh"
 
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveSphere.h"

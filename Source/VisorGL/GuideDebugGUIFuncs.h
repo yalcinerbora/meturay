@@ -158,7 +158,7 @@ GuideDebugGUIFuncs::RenderImageWithZoomTooltip(TextureGL& tex,
 
     //flags |= ImGuiTexInspect::InspectorFlags_NoGrid;
 
-    ImVec2 imgStart = ImGui::GetCursorScreenPos();
+    //ImVec2 imgStart = ImGui::GetCursorScreenPos();
     if(ImGuiTexInspect::BeginInspectorPanel("##RefImage", texId,
                                             ImVec2(static_cast<float>(tex.Size()[0]),
                                                    static_cast<float>(tex.Size()[1])),

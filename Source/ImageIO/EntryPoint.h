@@ -10,4 +10,4 @@
 #endif
 
 extern "C" METU_SHARED_IMAGEIO_ENTRY_POINT
-ImageIOI& ImageIOInstance();
+ImageIOI* ImageIOInstance();

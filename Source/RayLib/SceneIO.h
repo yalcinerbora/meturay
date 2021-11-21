@@ -86,7 +86,7 @@ inline bool SceneIO::IsTimeDependent(const nlohmann::json& jsn)
 }
 
 template <class T>
-T SceneIO::LoadFromAnim(const std::string& fileName, double time)
+T SceneIO::LoadFromAnim(const std::string& fileName, double)
 {
     // Strip '_'
     std::string filePath = fileName.substr(1);

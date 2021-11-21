@@ -124,13 +124,14 @@ VisorWindowInput::VisorWindowInput(KeyboardKeyBindings&& keyBinds,
     , movementSchemes(std::move(movementSchemes))
     , currentMovementScheme(0)
     , currentSceneCam(0)
-    , sceneCameraCount(0)
     , cameraMode(CameraMode::SCENE_CAM)
     , lockedCamera(false)
+    , sceneCameraCount(0)
     , pauseCont(false)
     , startStop(false)
     , deltaT(1.0)
     , visorCallbacks(nullptr)
+    , visor(nullptr)
 {}
 
 void VisorWindowInput::ChangeDeltaT(double dT)
@@ -148,13 +149,13 @@ void VisorWindowInput::SetVisor(VisorI& v)
     visor = &v;
 }
 
-void VisorWindowInput::WindowPosChanged(int posX, int posY)
+void VisorWindowInput::WindowPosChanged(int, int)
 {}
 
-void VisorWindowInput::WindowFBChanged(int fbWidth, int fbHeight)
+void VisorWindowInput::WindowFBChanged(int, int)
 {}
 
-void VisorWindowInput::WindowSizeChanged(int width, int height)
+void VisorWindowInput::WindowSizeChanged(int, int)
 {}
 
 void VisorWindowInput::WindowClosed()

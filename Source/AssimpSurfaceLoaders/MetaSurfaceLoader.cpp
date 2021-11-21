@@ -15,8 +15,8 @@ AssimpMetaSurfaceLoader::AssimpMetaSurfaceLoader(Assimp::Importer& i,
                                                  double time)
     :SurfaceLoader(node, time)
     , importer(i)
-    , extension(fileExt)
     , scene(nullptr)
+    , extension(fileExt)
     , innerIds(node.AccessUIntRanged(InnerIdJSON))
 {
     // Get File Name

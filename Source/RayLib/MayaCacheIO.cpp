@@ -14,7 +14,7 @@ namespace MayaCache
     // Inner Tags
     static constexpr const char* FOR4 = "FOR4";
     static constexpr const char* FOR8 = "FOR8";
-    static constexpr const char* MYCH = "MYCH";
+    //static constexpr const char* MYCH = "MYCH";
 
     struct NSChannelHeader
     {
@@ -138,7 +138,7 @@ namespace MayaCache
         }
 
         // Read Data Size
-        T dataSize = ReadInt<T>(file);
+        //T dataSize = ReadInt<T>(file);
         // Read MYCH
         std::string tagMYCH = ReadTag<4>(file);
 

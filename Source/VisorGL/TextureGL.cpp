@@ -32,10 +32,10 @@ TextureGL::TextureGL(const std::string& filePath)
     , pixFormat(PixelFormat::END)
 {
     std::vector<Byte> pixels;
-    ImageIOError e = ImageIOInstance().ReadImage(pixels,
-                                                 pixFormat,
-                                                 dimensions,
-                                                 filePath);
+    ImageIOError e = ImageIOInstance()->ReadImage(pixels,
+                                                  pixFormat,
+                                                  dimensions,
+                                                  filePath);
     if(e != ImageIOError::OK)
     {
         throw ImageIOException(ImageIOError(e, filePath));
